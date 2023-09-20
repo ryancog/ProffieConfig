@@ -16,11 +16,18 @@ SOURCES += main.cpp \
         sources/bladespage.cpp \
         sources/hardwarepage.cpp
 
-HEADERS += include/* \
+HEADERS += include/generalpage.h \
+    include/presetspage.h \
+    include/bladespage.h \
+    include/hardwarepage.h \
+    include/defines.h \
+    include/misc.h \
+    include/configuration.h \
     include/appstate.h \
     include/initializer.h \
     include/mainwindow.h
 
 INCLUDEPATH += /usr/local/include/wx-3.3 \
-            /usr/local/lib/wx/include/gtk3-unicode-3.3/ \
             include/
+
+
