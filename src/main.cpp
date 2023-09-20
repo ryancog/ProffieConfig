@@ -5,13 +5,14 @@
 class ProffieConfig : public wxApp {
 public:
     virtual bool OnInit() {
-        Initializer* init = new Initializer();
-        init->Show(true);
+
+        //Initializer* init = new Initializer();
+        //init->Show(true);
 
         MainWindow *frame = new MainWindow();
-        frame->Show(false);
+        frame->Show(true);
 
-        Initializer::setup();
+        //Initializer::setup();
         return true;
     }
 };
