@@ -7,8 +7,8 @@
 #include <wx/spinctrl.h>
 #include <wx/combobox.h>
 
-#include "defines.h"
 #include "misc.h"
+#include "defines.h"
 
 class GeneralPage : public wxStaticBoxSizer
 {
