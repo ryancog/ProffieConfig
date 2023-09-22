@@ -7,8 +7,6 @@
 #include "bladespage.h"
 #include "hardwarepage.h"
 
-#include "defines.h"
-
 class MainWindow : public wxFrame {
 public:
     MainWindow();
