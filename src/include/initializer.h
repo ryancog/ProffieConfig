@@ -5,6 +5,7 @@
 #include <wx/progdlg.h>
 #include <wx/sizer.h>
 
+#include "appstate.h"
 
 class Initializer : public wxProgressDialog {
 public:
