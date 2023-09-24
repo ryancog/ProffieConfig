@@ -178,7 +178,7 @@ void MainWindow::CreateMenuBar() {
 
 void MainWindow::CreatePages() {
     master = new wxBoxSizer(wxVERTICAL);
-    windowSelect = new wxComboBox(this, Misc::ID_WindowSelect, "General", wxDefaultPosition, wxDefaultSize, {"General", "Presets", "Blades", "Hardware"}, wxCB_READONLY);
+    windowSelect = new wxComboBox(this, Misc::ID_WindowSelect, "General", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Presets", "Blades", "Hardware"}), wxCB_READONLY);
 
     general = new GeneralPage(this);
     presets = new PresetsPage(this);

@@ -84,7 +84,7 @@ void PresetsPage::update() {
     if ((int32_t)settings.bladeList->GetCount() - 1 < listSelection) listSelection -= 1;
     if (listSelection >= 0) settings.bladeList->SetSelection(listSelection);
 
-    for (const Configuration::presetConfig& preset : Configuration::presets) {
+    for (Configuration::presetConfig& preset : Configuration::presets) {
         // Calculate # of presets there should be prior.
         int32_t numBlades = 0;
         for (const Configuration::bladeConfig& blade : Configuration::blades) {
