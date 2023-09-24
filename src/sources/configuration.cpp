@@ -1,5 +1,11 @@
 #include "configuration.h"
 
+#include "defines.h"
+#include "generalpage.h"
+#include "presetspage.h"
+#include "bladespage.h"
+#include "hardwarepage.h"
+
 decltype(Configuration::defaults) Configuration::defaults;
 decltype(Configuration::boardConfig) Configuration::boardConfig;
 decltype(Configuration::propConfig) Configuration::propConfig;
@@ -38,7 +44,7 @@ void Configuration::outputConfig() {
         }
         configOutput << "#define NUM_BLADES " << [=]() -> int32_t {
             int32_t numBlades = 0;
-            for (Configuration::bladeConfig blade : Configuration::blades) numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
+            for (const Configuration::bladeConfig& blade : Configuration::blades) numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
             return numBlades;
         }() << std::endl;
         configOutput << "#define NUM_BUTTONS " << Configuration::general.numButtons << std::endl;
@@ -87,9 +93,9 @@ void Configuration::outputConfig() {
     {
         configOutput << "#ifdef CONFIG_PRESETS" << std::endl;
         configOutput << "Preset blade_in[] = {" << std::endl;
-        for (Configuration::presetConfig preset : Configuration::presets) {
+        for (const Configuration::presetConfig& preset : Configuration::presets) {
             configOutput << "\t{ \"" << preset.dirs << "\", \"" << preset.track << "\"," << std::endl;
-            if (preset.styles.size() > 0) for (std::string style : preset.styles) configOutput << "\t\t" << style << "," << std::endl;
+            if (preset.styles.size() > 0) for (const std::string& style : preset.styles) configOutput << "\t\t" << style << "," << std::endl;
             else configOutput << "\t\t," << std::endl;
             configOutput << "\t\t\"" << preset.name << "\"}";
             // If not the last one, add comma
@@ -131,7 +137,7 @@ void Configuration::outputConfig() {
         };
         configOutput << "BladeConfig blades[] = {" << std::endl;
         configOutput << "\t{ 0," << std::endl;
-        for (Configuration::bladeConfig blade : Configuration::blades) {
+        for (const Configuration::bladeConfig& blade : Configuration::blades) {
             if (blade.type == "NeoPixel (RGB)" || blade.type == "NeoPixel (RGBW)") {
                 bool firstSub = true;
                 if (blade.isSubBlade) for (Configuration::bladeConfig::subBladeInfo subBlade : blade.subBlades) {
@@ -246,11 +252,19 @@ void Configuration::updateGeneralConfig() {
     Configuration::boardConfig.massStorage = GeneralPage::settings.massStorage->GetValue();
     Configuration::boardConfig.webUSB = GeneralPage::settings.webUSB->GetValue();
 
-    Configuration::propConfig.prop = GeneralPage::settings.prop->GetValue() == "Default" ? Configuration::SABERPROP::DEFAULT :
-                                                                      GeneralPage::settings.prop->GetValue() == "SA22C" ? Configuration::SABERPROP::SA22C :
-                                                                                                             GeneralPage::settings.prop->GetValue() == "FETT263" ? Configuration::SABERPROP::FETT263 :
-                                                                                                                                                      GeneralPage::settings.prop->GetValue() == "Shtok" ? Configuration::SABERPROP::SHTOK :
-                                                                                                                                                                                             Configuration::SABERPROP::BC;
+    const auto propValue = GeneralPage::settings.prop->GetValue();
+    if (propValue == PR_DEFAULT) {
+        Configuration::propConfig.prop = Configuration::SABERPROP::DEFAULT;
+    } else if (propValue == PR_SA22C) {
+        Configuration::propConfig.prop = Configuration::SABERPROP::SA22C;
+    } else if (propValue == PR_FETT263) {
+        Configuration::propConfig.prop = Configuration::SABERPROP::FETT263;
+    } else if (propValue == PR_SHTOK) {
+        Configuration::propConfig.prop = Configuration::SABERPROP::SHTOK;
+    } else if (propValue == PR_BC) {
+        Configuration::propConfig.prop = Configuration::SABERPROP::BC;
+    }
+
     Configuration::propConfig.stabOn = GeneralPage::settings.stabOn->GetValue();
     Configuration::propConfig.swingOn = GeneralPage::settings.swingOn->GetValue();
     Configuration::propConfig.twistOn = GeneralPage::settings.twistOn->GetValue();

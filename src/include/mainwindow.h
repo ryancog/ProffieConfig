@@ -1,11 +1,11 @@
-#pragma once
-
 #include <wx/wx.h>
 
 #include "generalpage.h"
 #include "presetspage.h"
 #include "bladespage.h"
 #include "hardwarepage.h"
+
+#pragma once
 
 class MainWindow : public wxFrame {
 public:
