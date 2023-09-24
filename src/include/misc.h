@@ -1,3 +1,5 @@
+#include <initializer_list>
+#include <memory>
 #include <wx/sizer.h>
 #include <wx/spinctrl.h>
 #include <wx/stattext.h>
@@ -36,6 +38,15 @@ public:
 
     static numEntry createNumEntry(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, int32_t minVal, int32_t maxVal, int32_t defaultVal);
     static numEntry createNumEntryDouble(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, double minVal, double maxVal, double defaultVal);
+
+    static const wxArrayString createEntries(std::initializer_list<std::string> list) {
+        wxArrayString entries;
+        for (const std::string& entry : list) {
+          entries.Add(entry);
+        }
+
+        return entries;
+    }
 
 private:
     Misc();

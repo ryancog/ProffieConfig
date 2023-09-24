@@ -41,7 +41,7 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
 
 
     wxWrapSizer *bladeSetup = new wxWrapSizer(wxVERTICAL);
-    settings.bladeType = new wxComboBox(GetStaticBox(), Misc::ID_BladeType, "NeoPixel (RGB)", wxDefaultPosition, wxDefaultSize, {"NeoPixel (RGB)", "NeoPixel (RGBW)", "Tri-Star Cree", "Quad-Star Cree", "Single Color"}, wxCB_READONLY);
+    settings.bladeType = new wxComboBox(GetStaticBox(), Misc::ID_BladeType, "NeoPixel (RGB)", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"NeoPixel (RGB)", "NeoPixel (RGBW)", "Tri-Star Cree", "Quad-Star Cree", "Single Color"}), wxCB_READONLY);
     settings.usePowerPin1 = new wxCheckBox(GetStaticBox(), wxID_ANY, "Use Power Pin 1");
     settings.usePowerPin2 = new wxCheckBox(GetStaticBox(), wxID_ANY, "Use Power Pin 2");
     settings.usePowerPin3 = new wxCheckBox(GetStaticBox(), wxID_ANY, "Use Power Pin 3");
@@ -60,39 +60,39 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
 
     wxBoxSizer *bladeColor = new wxBoxSizer(wxVERTICAL);
     settings.bladeColorOrderLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Color Order");
-    settings.blade3ColorOrder = new wxComboBox(GetStaticBox(), wxID_ANY, "GRB", wxDefaultPosition, wxDefaultSize, {"BGR", "BRG", "GBR", "GRB", "RBG", "RGB"}, wxCB_READONLY);
-    settings.blade4ColorOrder = new wxComboBox(GetStaticBox(), wxID_ANY, "GRBW", wxDefaultPosition, wxDefaultSize, {"BGRW", "BRGW", "GBRW", "GRBW", "RBGW", "RGBW", "WBGR", "WBRG", "WGBR", "WGRB", "WRBG", "WRGB"}, wxCB_READONLY);
+    settings.blade3ColorOrder = new wxComboBox(GetStaticBox(), wxID_ANY, "GRB", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"BGR", "BRG", "GBR", "GRB", "RBG", "RGB"}), wxCB_READONLY);
+    settings.blade4ColorOrder = new wxComboBox(GetStaticBox(), wxID_ANY, "GRBW", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"BGRW", "BRGW", "GBRW", "GRBW", "RBGW", "RGBW", "WBGR", "WBRG", "WGBR", "WGRB", "WRBG", "WRGB"}), wxCB_READONLY);
     bladeColor->Add(settings.bladeColorOrderLabel, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10));
     bladeColor->Add(settings.blade3ColorOrder, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
     bladeColor->Add(settings.blade4ColorOrder, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 
     settings.blade4UseRGB = new wxCheckBox(GetStaticBox(), wxID_ANY, "Use RGB with White");
     settings.bladeDataPinLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Blade Data Pin");
-    settings.bladeDataPin = new wxComboBox(GetStaticBox(), wxID_ANY, "Pin 1", wxDefaultPosition, wxDefaultSize, {"Pin 1", "Pin 2", "Pin 3", "Pin 4"});
+    settings.bladeDataPin = new wxComboBox(GetStaticBox(), wxID_ANY, "Pin 1", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Pin 1", "Pin 2", "Pin 3", "Pin 4"}));
     settings.bladePixelsLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Number of Pixels");
     settings.bladePixels = new wxSpinCtrl(GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0, 144, 0);
 
     wxBoxSizer *star1Color = new wxBoxSizer(wxVERTICAL);
     settings.star1ColorLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Star 1 Color");
-    settings.star1Color = new wxComboBox(GetStaticBox(), wxID_ANY, "<None>", wxDefaultPosition, wxDefaultSize, {"Red", "Green", "Blue", "Amber", "RedOrange", "White", "<None>"}, wxCB_READONLY);
+    settings.star1Color = new wxComboBox(GetStaticBox(), wxID_ANY, "<None>", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", "<None>"}), wxCB_READONLY);
     star1Color->Add(settings.star1ColorLabel, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10));
     star1Color->Add(settings.star1Color, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 
     wxBoxSizer *star2Color = new wxBoxSizer(wxVERTICAL);
     settings.star2ColorLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Star 2 Color");
-    settings.star2Color = new wxComboBox(GetStaticBox(), wxID_ANY, "<None>", wxDefaultPosition, wxDefaultSize, {"Red", "Green", "Blue", "Amber", "RedOrange", "White", "<None>"}, wxCB_READONLY);
+    settings.star2Color = new wxComboBox(GetStaticBox(), wxID_ANY, "<None>", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", "<None>"}), wxCB_READONLY);
     star2Color->Add(settings.star2ColorLabel, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10));
     star2Color->Add(settings.star2Color, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 
     wxBoxSizer *star3Color = new wxBoxSizer(wxVERTICAL);
     settings.star3ColorLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Star 3 Color");
-    settings.star3Color = new wxComboBox(GetStaticBox(), wxID_ANY, "<None>", wxDefaultPosition, wxDefaultSize, {"Red", "Green", "Blue", "Amber", "RedOrange", "White", "<None>"}, wxCB_READONLY);
+    settings.star3Color = new wxComboBox(GetStaticBox(), wxID_ANY, "<None>", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", "<None>"}), wxCB_READONLY);
     star3Color->Add(settings.star3ColorLabel, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10));
     star3Color->Add(settings.star3Color, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 
     wxBoxSizer *star4Color = new wxBoxSizer(wxVERTICAL);
     settings.star4ColorLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Star 4 Color");
-    settings.star4Color = new wxComboBox(GetStaticBox(), wxID_ANY, "<None>", wxDefaultPosition, wxDefaultSize, {"Red", "Green", "Blue", "Amber", "RedOrange", "White", "<None>"}, wxCB_READONLY);
+    settings.star4Color = new wxComboBox(GetStaticBox(), wxID_ANY, "<None>", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", "<None>"}), wxCB_READONLY);
     star4Color->Add(settings.star4ColorLabel, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10));
     star4Color->Add(settings.star4Color, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 

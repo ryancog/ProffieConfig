@@ -24,7 +24,7 @@ GeneralPage::GeneralPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window
 
     // boardSetup
     {
-        settings.board = new wxComboBox(boardSetup->GetStaticBox(), wxID_ANY, "ProffieBoard V2", wxDefaultPosition, wxDefaultSize, {"ProffieBoard V1", "ProffieBoard V2", "ProffieBoard V3"}, wxCB_READONLY);
+      settings.board = new wxComboBox(boardSetup->GetStaticBox(), wxID_ANY, "ProffieBoard V2", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"ProffieBoard V1", "ProffieBoard V2", "ProffieBoard V3"}), wxCB_READONLY);
         settings.massStorage = new wxCheckBox(boardSetup->GetStaticBox(), wxID_ANY, "Enable Mass Storage");
         settings.webUSB = new wxCheckBox(boardSetup->GetStaticBox(), wxID_ANY, "Enable WebUSB");
 
@@ -36,7 +36,7 @@ GeneralPage::GeneralPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window
     // propSetup
     {
         // General
-        settings.prop = new wxComboBox(propSetup->GetStaticBox(), wxID_ANY, PR_SA22C, wxDefaultPosition, wxDefaultSize, {PR_DEFAULT, PR_SA22C, PR_FETT263, PR_SHTOK, PR_BC}, wxCB_READONLY);
+        settings.prop = new wxComboBox(propSetup->GetStaticBox(), wxID_ANY, PR_SA22C, wxDefaultPosition, wxDefaultSize, Misc::createEntries({PR_DEFAULT, PR_SA22C, PR_FETT263, PR_SHTOK, PR_BC}), wxCB_READONLY);
         settings.noLockupHold = new wxCheckBox(propSetup->GetStaticBox(), wxID_ANY, "Revert Lockup and Multi-Blast Trigger");
         // Add option when reading out buttons
         settings.stabOn = new wxCheckBox(propSetup->GetStaticBox(), wxID_ANY, "Stab To Turn On");
