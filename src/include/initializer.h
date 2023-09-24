@@ -1,11 +1,9 @@
-#pragma once
-
 #include <cstdio>
 
 #include <wx/progdlg.h>
 #include <wx/sizer.h>
 
-#include "appstate.h"
+#pragma once
 
 class Initializer : public wxProgressDialog {
 public:

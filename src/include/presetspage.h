@@ -1,5 +1,3 @@
-#pragma once
-
 #include <wx/textctrl.h>
 #include <wx/sizer.h>
 #include <wx/wrapsizer.h>
@@ -9,8 +7,7 @@
 #include <wx/listbox.h>
 #include <wx/button.h>
 
-#include "misc.h"
-#include "configuration.h"
+#pragma once
 
 class PresetsPage : public wxStaticBoxSizer
 {

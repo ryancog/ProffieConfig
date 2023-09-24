@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Workspace Name="ProffieConfig" Database="" Version="10000">
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
+      <Environment/>
+      <Project Name="ProffieConfig" ConfigName="Debug"/>
+      <Project Name="ProffieConfig" ConfigName="Debug"/>
+      <Project Name="Example" ConfigName="Debug"/>
+      <Project Name="ControlExample" ConfigName="Debug"/>
+    </WorkspaceConfiguration>
+    <WorkspaceConfiguration Name="Release" Selected="yes">
+      <Environment/>
+      <Project Name="ProffieConfig" ConfigName="Release"/>
+      <Project Name="ProffieConfig" ConfigName="Release"/>
+      <Project Name="Example" ConfigName="Release"/>
+      <Project Name="ControlExample" ConfigName="Release"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+</CodeLite_Workspace>

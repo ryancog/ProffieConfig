@@ -1,4 +1,5 @@
 #include "initializer.h"
+#include "appstate.h"
 
 std::string Initializer::message;
 uint8_t Initializer::progress;

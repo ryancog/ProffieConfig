@@ -1,7 +1,9 @@
-#pragma once
+#include <wx/stattext.h>
+#include <wx/sizer.h>
+#include <wx/checkbox.h>
+#include <wx/combobox.h>
 
-#include "misc.h"
-#include "configuration.h"
+#pragma once
 
 class HardwarePage : public wxStaticBoxSizer
 {

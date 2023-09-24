@@ -1,5 +1,3 @@
-#pragma once
-
 #include <wx/textctrl.h>
 #include <wx/sizer.h>
 #include <wx/wrapsizer.h>
@@ -7,8 +5,9 @@
 #include <wx/spinctrl.h>
 #include <wx/combobox.h>
 
-#include "defines.h"
 #include "misc.h"
+
+#pragma once
 
 class GeneralPage : public wxStaticBoxSizer
 {

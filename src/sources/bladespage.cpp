@@ -1,5 +1,13 @@
 #include "bladespage.h"
 
+#include <wx/stattext.h>
+#include <wx/sizer.h>
+#include <wx/statbox.h>
+
+#include "misc.h"
+#include "defines.h"
+#include "configuration.h"
+
 BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "Blades")
 {
     wxBoxSizer *bladeManager = new wxBoxSizer(wxHORIZONTAL);
