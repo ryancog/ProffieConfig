@@ -1,9 +1,9 @@
-#pragma once
-
 #include <wx/sizer.h>
 #include <wx/spinctrl.h>
 #include <wx/stattext.h>
 #include <wx/statbox.h>
+
+#pragma once
 
 class Misc
 {

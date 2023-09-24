@@ -1,5 +1,16 @@
 #include "mainwindow.h"
 
+#include <wx/combobox.h>
+#include <wx/arrstr.h>
+#include <wx/wx.h>
+#include <wx/statbox.h>
+#include <wx/sizer.h>
+#include <wx/list.h>
+#include <wx/string.h>
+
+#include "configuration.h"
+#include "defines.h"
+
 MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize) {
     CreateMenuBar();
     CreatePages();

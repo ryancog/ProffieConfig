@@ -1,6 +1,5 @@
-#pragma once
-
 #include <wx/textctrl.h>
+#include <wx/stattext.h>
 #include <wx/sizer.h>
 #include <wx/wrapsizer.h>
 #include <wx/checkbox.h>
@@ -9,8 +8,7 @@
 #include <wx/listbox.h>
 #include <wx/button.h>
 
-#include "misc.h"
-#include "configuration.h"
+#pragma once
 
 class BladesPage : public wxStaticBoxSizer
 {

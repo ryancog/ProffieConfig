@@ -1,6 +1,6 @@
 #include <wx/app.h>
-#include "mainwindow.h"
 #include "initializer.h"
+#include "mainwindow.h"
 
 class ProffieConfig : public wxApp {
 public:

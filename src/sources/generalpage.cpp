@@ -1,4 +1,14 @@
 #include "generalpage.h"
+#include "defines.h"
+#include <wx/textctrl.h>
+#include <wx/stattext.h>
+#include <wx/sizer.h>
+#include <wx/wrapsizer.h>
+#include <wx/checkbox.h>
+#include <wx/spinctrl.h>
+#include <wx/combobox.h>
+#include <wx/listbox.h>
+#include <wx/button.h>
 
 GeneralPage::GeneralPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, "General")
 {
@@ -26,7 +36,7 @@ GeneralPage::GeneralPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window
     // propSetup
     {
         // General
-        settings.prop = new wxComboBox(propSetup->GetStaticBox(), wxID_ANY, "SA22C", wxDefaultPosition, wxDefaultSize, {"Default", "SA22C", "FETT263", "Shtok", "NoSloppy"}, wxCB_READONLY);
+        settings.prop = new wxComboBox(propSetup->GetStaticBox(), wxID_ANY, PR_SA22C, wxDefaultPosition, wxDefaultSize, {PR_DEFAULT, PR_SA22C, PR_FETT263, PR_SHTOK, PR_BC}, wxCB_READONLY);
         settings.noLockupHold = new wxCheckBox(propSetup->GetStaticBox(), wxID_ANY, "Revert Lockup and Multi-Blast Trigger");
         // Add option when reading out buttons
         settings.stabOn = new wxCheckBox(propSetup->GetStaticBox(), wxID_ANY, "Stab To Turn On");

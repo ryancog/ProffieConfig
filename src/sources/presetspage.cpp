@@ -1,4 +1,7 @@
 #include "presetspage.h"
+#include "misc.h"
+#include "configuration.h"
+#include <string>
 
 PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "General")
 {
@@ -61,7 +64,7 @@ void PresetsPage::update() {
     int32_t bladeIndex = settings.bladeList->GetSelection();
     int32_t listSelection = presetIndex;
     settings.presetList->Clear();
-    for (Configuration::presetConfig preset : Configuration::presets) {
+    for (const Configuration::presetConfig& preset : Configuration::presets) {
         settings.presetList->Append(preset.name);
     }
     if ((int32_t)settings.presetList->GetCount() - 1 < listSelection) listSelection -= 1;
@@ -81,10 +84,10 @@ void PresetsPage::update() {
     if ((int32_t)settings.bladeList->GetCount() - 1 < listSelection) listSelection -= 1;
     if (listSelection >= 0) settings.bladeList->SetSelection(listSelection);
 
-    for (Configuration::presetConfig &preset : Configuration::presets) {
+    for (const Configuration::presetConfig& preset : Configuration::presets) {
         // Calculate # of presets there should be prior.
         int32_t numBlades = 0;
-        for (Configuration::bladeConfig blade : Configuration::blades) {
+        for (const Configuration::bladeConfig& blade : Configuration::blades) {
             numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
         }
 

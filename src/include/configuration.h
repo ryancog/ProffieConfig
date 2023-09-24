@@ -1,13 +1,8 @@
-#pragma once
-
 #include <vector>
 #include <string>
 #include <fstream>
 
-#include "generalpage.h"
-#include "presetspage.h"
-#include "bladespage.h"
-#include "hardwarepage.h"
+#pragma once
 
 class Configuration
 {

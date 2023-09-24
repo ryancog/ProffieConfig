@@ -15,3 +15,9 @@
 #define BD_ISCREE (BD_ISCREE3 || BD_ISCREE4)
 #define BD_ISSUB (BD_HASSELECTION && Configuration::blades[BladesPage::settings.bladeSelect->GetSelection()].isSubBlade)
 #define BD_ISFIRST (!BD_ISSUB || (BladesPage::settings.subBladeSelect->GetSelection() == 0))
+
+#define PR_DEFAULT "Default"
+#define PR_SA22C "SA22C"
+#define PR_FETT263 "FETT263"
+#define PR_SHTOK "Shtok"
+#define PR_BC "BC"
