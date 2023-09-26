@@ -120,7 +120,7 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
     bladeSettings->Add(settings.subBladeEndLabel, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10));
     bladeSettings->Add(settings.subBladeEnd, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 
-    Add(bladeManager, MENUITEMFLAGS);
+    Add(bladeManager, MENUITEMFLAGS.Expand());
     Add(bladeSetup, wxSizerFlags(0));
     Add(bladeSettings, wxSizerFlags(1));
 
