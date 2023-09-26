@@ -27,20 +27,20 @@ void Configuration::outputConfig() {
     Configuration::updateHardwareConfig();
     HardwarePage::update();
 
-    std::ofstream configOutput("./proffieConfig.h");
+    std::ofstream configOutput("./resources/ProffieOS/config/ProffieConfig_autogen.h");
 
     // CONFIG_TOP
     {
         configOutput << "#ifdef CONFIG_TOP" << std::endl;
         switch (Configuration::boardConfig.board) {
         case Configuration::PROFFIEBOARD::V1:
-            configOutput << "#include \"proffieboard_v1_Configuration::h\"" << std::endl;
+            configOutput << "#include \"proffieboard_v1_config.h\"" << std::endl;
             break;
         case Configuration::PROFFIEBOARD::V2:
-            configOutput << "#include \"proffieboard_v2_Configuration::h\"" << std::endl;
+            configOutput << "#include \"proffieboard_v2_config.h\"" << std::endl;
             break;
         case Configuration::PROFFIEBOARD::V3:
-            configOutput << "#include \"proffieboard_v3_Configuration::h\"" << std::endl;
+            configOutput << "#include \"proffieboard_v3_config.h\"" << std::endl;
         }
         configOutput << "#define NUM_BLADES " << [=]() -> int32_t {
             int32_t numBlades = 0;
@@ -49,7 +49,7 @@ void Configuration::outputConfig() {
         }() << std::endl;
         configOutput << "#define NUM_BUTTONS " << Configuration::general.numButtons << std::endl;
         configOutput << "#define VOLUME " << Configuration::general.volume << std::endl;
-        configOutput << "const unsigned int32_t maxLedsPerStrip = " << Configuration::general.maxLEDs << std::endl;
+        configOutput << "const unsigned int maxLedsPerStrip = " << Configuration::general.maxLEDs << ";" << std::endl;
         configOutput << "#define CLASH_THRESHOLD_G " << Configuration::general.clashThreshold << std::endl;
         // Implement Blade Detect Config
         configOutput << "#define ENABLE_AUDIO" << std::endl;
@@ -285,7 +285,7 @@ void Configuration::updateGeneralConfig() {
     Configuration::tweaks.devCommands = !GeneralPage::settings.disableDev->GetValue();
     Configuration::general.numButtons = GeneralPage::settings.buttons.num->GetValue();
     Configuration::general.volume = GeneralPage::settings.volume.num->GetValue();
-    Configuration::general.clashThreshold = GeneralPage::settings.clash.doubleNum->GetValue();
+    Configuration::general.clashThreshold = GeneralPage::settings.clash.num->GetValue();
 
     Configuration::tweaks.pliTimeout = GeneralPage::settings.pliTime.num->GetValue();
     Configuration::tweaks.idleTimout = GeneralPage::settings.idleTime.num->GetValue();

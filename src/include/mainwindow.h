@@ -4,29 +4,34 @@
 #include "presetspage.h"
 #include "bladespage.h"
 #include "hardwarepage.h"
+#include "progress.h"
+#include "threadrunner.h"
 
 #pragma once
 
 class MainWindow : public wxFrame {
 public:
-    MainWindow();
+  MainWindow();
+
+  static MainWindow* instance;
+  ThreadRunner* thread;
+  Progress* progDialog;
 
 private:
-    wxBoxSizer* master;
-    wxComboBox* windowSelect;
+  static wxBoxSizer* master;
+  static wxButton* refreshButton;
+  static wxComboBox* windowSelect;
+  static wxComboBox* devSelect;
+  static wxButton* applyButton;
 
-    GeneralPage* general;
-    PresetsPage* presets;
-    BladesPage* blades;
-    HardwarePage* hardware;
+  static GeneralPage* general;
+  static PresetsPage* presets;
+  static BladesPage* blades;
+  static HardwarePage* hardware;
 
-    void BindEvents();
-    void setConfigDefaults();
-    void CreateMenuBar();
-    void CreatePages();
-
-    void OnHello(wxCommandEvent& event);
-    void OnExit(wxCommandEvent& event);
-    void OnAbout(wxCommandEvent& event);
-    void OnButton(wxCommandEvent& event);
+  void BindEvents();
+  void setConfigDefaults();
+  void CreateMenuBar();
+  void CreatePages();
+  void Initialize();
 };
