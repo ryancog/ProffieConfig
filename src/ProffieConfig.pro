@@ -8,6 +8,7 @@ LIBS += $$system(wx-config --libs all)
 
 SOURCES += \
         main.cpp \
+        sources/arduino.cpp \
         sources/initializer.cpp \
         sources/mainwindow.cpp \
         sources/misc.cpp \
@@ -15,9 +16,11 @@ SOURCES += \
         sources/generalpage.cpp \
         sources/presetspage.cpp \
         sources/bladespage.cpp \
-        sources/hardwarepage.cpp
+        sources/hardwarepage.cpp \
+        sources/progress.cpp
 
 HEADERS += \
+    include/arduino.h \
     include/misc.h \
     include/defines.h \
     include/configuration.h \
@@ -27,7 +30,9 @@ HEADERS += \
     include/generalpage.h \
     include/presetspage.h \
     include/bladespage.h \
-    include/hardwarepage.h
+    include/hardwarepage.h \
+    include/progress.h \
+    include/threadrunner.h
 
 INCLUDEPATH += ./include
 
