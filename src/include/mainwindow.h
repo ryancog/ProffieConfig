@@ -30,7 +30,7 @@ private:
   static HardwarePage* hardware;
 
   void BindEvents();
-  void setConfigDefaults();
+  void SetConfigDefaults();
   void CreateMenuBar();
   void CreatePages();
   void Initialize();
