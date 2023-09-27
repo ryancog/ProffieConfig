@@ -1,0 +1,5 @@
+[submodule "resources/ProffieOS"]
+	path = resources/ProffieOS
+	url = https://github.com/profezzorn/ProffieOS
+[submodule "ProffieOS"]
+	branch = 7.x
