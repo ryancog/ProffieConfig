@@ -10,6 +10,7 @@ public:
     static void outputConfig();
     static void updateConfig();
     static void updateGeneralConfig();
+    static void updatePropConfig();
     static void updatePresetsConfig();
     static void updateBladesConfig();
     static void updateHardwareConfig();

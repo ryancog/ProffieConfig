@@ -3,7 +3,7 @@
 #include "configuration.h"
 #include <string>
 
-PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "General")
+PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "")
 {
     wxBoxSizer *presetSelect = new wxBoxSizer(wxVERTICAL);
     settings.presetsEditor = new wxTextCtrl(GetStaticBox(), Misc::ID_PresetEditor, "", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE);

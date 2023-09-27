@@ -17,7 +17,8 @@ SOURCES += \
         sources/presetspage.cpp \
         sources/bladespage.cpp \
         sources/hardwarepage.cpp \
-        sources/progress.cpp
+        sources/progress.cpp \
+        sources/proppage.cpp
 
 HEADERS += \
     include/arduino.h \
@@ -32,6 +33,7 @@ HEADERS += \
     include/bladespage.h \
     include/hardwarepage.h \
     include/progress.h \
+    include/proppage.h \
     include/threadrunner.h
 
 INCLUDEPATH += ./include
