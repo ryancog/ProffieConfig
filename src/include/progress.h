@@ -4,14 +4,17 @@
 
 class Progress : public wxProgressDialog {
 public:
-  struct DialogInfo {
+  class ProgressEvent : public wxCommandEvent {
+  public:
+    ProgressEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id);
+
     int progress;
     wxString message;
   };
 
   static void emitEvent(int, wxString);
-  static void handleEvent(Progress*, wxCommandEvent&);
+  static void handleEvent(Progress*, ProgressEvent*);
 
-  static const wxEventTypeTag<wxCommandEvent> EVT_UPDATE;
+  static wxEventTypeTag<wxCommandEvent> EVT_UPDATE;
   Progress(wxWindow* parent) : wxProgressDialog("", "", 100, parent, wxPD_APP_MODAL | wxPD_AUTO_HIDE) {}
 };

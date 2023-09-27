@@ -14,9 +14,6 @@
 #include "misc.h"
 #include "progress.h"
 #include "threadrunner.h"
-#include "wx/event.h"
-#include "wx/msgdlg.h"
-#include "wx/spinctrl.h"
 
 wxBoxSizer* MainWindow::master;
 wxButton* MainWindow::refreshButton;
@@ -36,14 +33,14 @@ MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPos
   CreateMenuBar();
   CreatePages();
   BindEvents();
-  setConfigDefaults();
+  SetConfigDefaults();
   SetMinClientSize(wxSize(0, 0));
 
   //Initialize();
 }
 
 void MainWindow::BindEvents() {
-  Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent(progDialog, event); }, wxID_ANY);
+  Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent(progDialog, (Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
         // TODO general->update();
         if (windowSelect->GetValue() == "General") {
@@ -236,7 +233,7 @@ void MainWindow::BindEvents() {
       }, Misc::ID_RemoveSubBlade);
 }
 
-void MainWindow::setConfigDefaults() {
+void MainWindow::SetConfigDefaults() {
   Configuration::presets.push_back(Configuration::Configuration::presetConfig());
   Configuration::presets[0].name = "My First Preset";
   Configuration::presets[0].dirs = "smthjedi";
@@ -293,15 +290,4 @@ void MainWindow::CreatePages() {
   master->Add(hardware, wxSizerFlags(/*proportion*/ 1).Border(wxALL, 10).Expand());
 
   SetSizerAndFit(master); // use the sizer for layout and set size and hints
-}
-
-void MainWindow::Initialize() {
-  progDialog = new Progress(this);
-
-  thread = new ThreadRunner([&]() {
-    progDialog->SetTitle("First Time Setup");
-
-    progDialog->Update(0, "Configuring arduino-cli...");
-    Arduino::init();
-  });
 }

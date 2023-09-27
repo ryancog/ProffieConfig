@@ -49,7 +49,8 @@ public:
     wxCheckBox *thrustOnNoBattle{nullptr};
     // Twist Off
     wxCheckBox *twistOff{nullptr};
-    wxCheckBox *twistOffNoPostOff{nullptr};
+    wxRadioButton *twistOffFast{nullptr};
+    wxRadioButton *twistOffPostoff{nullptr};
 
     // Battle Mode
     wxCheckBox *gestureEnBattle{nullptr};
@@ -124,5 +125,28 @@ public:
   static void updatePropOptions();
 
 private:
+  void createBoardSettings();
+
+  void createPropSettings();
+
+  wxStaticBoxSizer* guestures(wxStaticBoxSizer*);
+  wxStaticBoxSizer* stabOn(wxStaticBoxSizer*);
+  wxStaticBoxSizer* swingOn(wxStaticBoxSizer*);
+  wxStaticBoxSizer* thrustOn(wxStaticBoxSizer*);
+  wxStaticBoxSizer* twistOn(wxStaticBoxSizer*);
+  wxStaticBoxSizer* twistOff(wxStaticBoxSizer*);
+
+  wxStaticBoxSizer* controls(wxStaticBoxSizer*);
+  wxStaticBoxSizer* battleMode(wxStaticBoxSizer*);
+  wxStaticBoxSizer* forcePush(wxStaticBoxSizer*);
+
+  void createOptionSettings();
+
   GeneralPage();
+
+
+  wxBoxSizer *generalHoriz{nullptr};
+  wxStaticBoxSizer *boardSetup{nullptr};
+  wxStaticBoxSizer *propSetup{nullptr};
+  wxStaticBoxSizer *options{nullptr};
 };
