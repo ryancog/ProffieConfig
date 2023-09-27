@@ -8,7 +8,7 @@
 #include <wx/statbox.h>
 #include <wx/checkbox.h>
 
-HardwarePage::HardwarePage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "Hardware")
+HardwarePage::HardwarePage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "")
 {
   wxStaticBoxSizer *bladeDetect = new wxStaticBoxSizer(wxVERTICAL, GetStaticBox(), "Blade Detect");
   settings.bladeDetect = new wxCheckBox(bladeDetect->GetStaticBox(), wxID_ANY, "Blade Detect");
