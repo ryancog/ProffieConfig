@@ -8,7 +8,7 @@
 #include "defines.h"
 #include "configuration.h"
 
-BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "Blades")
+BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "")
 {
     wxBoxSizer *bladeManager = new wxBoxSizer(wxHORIZONTAL);
 

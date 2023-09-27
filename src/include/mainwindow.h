@@ -1,6 +1,7 @@
 #include <wx/wx.h>
 
 #include "generalpage.h"
+#include "proppage.h"
 #include "presetspage.h"
 #include "bladespage.h"
 #include "hardwarepage.h"
@@ -25,6 +26,7 @@ private:
   static wxButton* applyButton;
 
   static GeneralPage* general;
+  static PropPage* prop;
   static PresetsPage* presets;
   static BladesPage* blades;
   static HardwarePage* hardware;

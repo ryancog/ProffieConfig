@@ -3,7 +3,7 @@
 
 #define MENUITEMFLAGS  wxSizerFlags(0).Border(wxALL, 5)
 
-#define UPDATEWINDOW master->Layout();
+#define UPDATEWINDOW master->Layout(); SetSizerAndFit(master)
 
 
 #define BD_HASSELECTION (BladesPage::settings.bladeSelect->GetSelection() != -1)
