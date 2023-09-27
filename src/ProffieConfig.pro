@@ -35,4 +35,3 @@ HEADERS += \
     include/threadrunner.h
 
 INCLUDEPATH += ./include
-
