@@ -12,7 +12,8 @@
 #define ARDUINO_CLI(command) popen("../resources/win32/arduino-cli/arduino-cli.exe " command, "r")
 #define DRIVER_INSTALL popen("", "r")
 #elif defined(__WXOSX__)
-#define ARDUINO_CLI(command) "../resources/macOS/arduino-cli/arduino-cli " #command
+#define ARDUINO_CLI(command) popen("../resources/macOS/arduino-cli/arduino-cli " command, "r");
+#define DRIVER_INSTALL popen("", "r");
 #endif
 
 void Arduino::init() {
