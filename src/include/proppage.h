@@ -9,13 +9,13 @@
 class PropPage : public wxStaticBoxSizer {
 public:
   PropPage(wxWindow*);
-  static void updatePropOptions();
+  static void update();
 
   struct {
     wxComboBox *prop{nullptr};
     wxCheckBox *noLockupHold{nullptr};
 
-    wxCheckBox *disableGuestureNoBlade{nullptr};
+    wxCheckBox *disableguestureNoBlade{nullptr};
     wxCheckBox *guestureBattle{nullptr};
     // Stab On
     wxCheckBox *stabOn{nullptr};
@@ -44,7 +44,7 @@ public:
     wxRadioButton *twistOffPostoff{nullptr};
 
     // Battle Mode
-    wxCheckBox *gestureEnBattle{nullptr};
+    wxCheckBox *guestureEnBattle{nullptr};
     Misc::numEntry lockupDelay;
     wxRadioButton *battleModeToggle{nullptr};
     wxRadioButton *battleModeAlways{nullptr};
@@ -54,10 +54,11 @@ public:
 
     // Force Push
     wxCheckBox *forcePush{nullptr};
-    wxCheckBox *forcePushAlways{nullptr};
+    wxCheckBox *forcePushBM{nullptr};
     Misc::numEntry forcePushLength;
 
     // Edit Mode/Settings
+    wxCheckBox* editEnable{nullptr};
     wxRadioButton *editMode{nullptr};
     wxRadioButton *editSettings{nullptr};
 
@@ -71,18 +72,19 @@ public:
     wxCheckBox *pwrLockup{nullptr};
     wxCheckBox *pwrHoldOff{nullptr};
     wxCheckBox *auxHoldLockup{nullptr};
-    wxCheckBox *meltGuestureAlways{nullptr};
+    wxCheckBox *meltguestureAlways{nullptr};
     wxCheckBox *volumeCircular{nullptr};
     wxCheckBox *brightnessCircular{nullptr};
-    wxCheckBox *pwrWakeGuesture{nullptr};
+    wxCheckBox *pwrWakeguesture{nullptr};
+    wxRadioButton *noExtraEffects{nullptr};
     wxRadioButton *specialAbilities{nullptr};
     wxRadioButton *multiPhase{nullptr};
     wxCheckBox *spinMode{nullptr};
-    wxCheckBox *saveGuestureDisable{nullptr};
+    wxCheckBox *saveGuesture{nullptr};
     wxCheckBox *saveChoreo{nullptr};
     wxCheckBox *dualModeSound{nullptr};
     wxCheckBox *clashStrengthSound{nullptr};
-    Misc::numEntry maxClash;
+    Misc::numEntry clashStrengthSoundMaxClash;
     wxCheckBox *quickPresetSelect{nullptr};
     wxCheckBox *spokenColors{nullptr};
     wxRadioButton *spokenBatteryNone{nullptr};
@@ -96,24 +98,37 @@ public:
     wxCheckBox *presetCopyOTF{nullptr};
     wxCheckBox *battleToggle{nullptr};
     wxCheckBox *multiBlast{nullptr};
+    wxCheckBox *multiBlastDisableToggle{nullptr};
     wxCheckBox *multiBlastSwing{nullptr};
-    wxCheckBox *multiBlastToggle{nullptr};
   } static settings;
 
 private:
-  void createPropSettings();
+  class RStaticBox : public wxStaticBoxSizer {
+  public:
+    RStaticBox(int, wxWindow*, const wxString&);
+  };
 
-  wxStaticBoxSizer* guestures(wxStaticBoxSizer*);
-  wxStaticBoxSizer* stabOn(wxStaticBoxSizer*);
-  wxStaticBoxSizer* swingOn(wxStaticBoxSizer*);
-  wxStaticBoxSizer* thrustOn(wxStaticBoxSizer*);
-  wxStaticBoxSizer* twistOn(wxStaticBoxSizer*);
-  wxStaticBoxSizer* twistOff(wxStaticBoxSizer*);
+  static std::vector<RStaticBox*> boxes;
 
-  wxStaticBoxSizer* controls(wxStaticBoxSizer*);
+  RStaticBox* guestures(wxStaticBoxSizer*);
+  RStaticBox* stabOn(wxStaticBoxSizer*);
+  RStaticBox* swingOn(wxStaticBoxSizer*);
+  RStaticBox* thrustOn(wxStaticBoxSizer*);
+  RStaticBox* twistOn(wxStaticBoxSizer*);
+  RStaticBox* twistOff(wxStaticBoxSizer*);
 
-  wxStaticBoxSizer* features(wxStaticBoxSizer*);
-  wxStaticBoxSizer* forcePush(wxStaticBoxSizer*);
-  wxStaticBoxSizer* battleMode(wxStaticBoxSizer*);
+  RStaticBox* controls(wxStaticBoxSizer*);
+  RStaticBox* generalControls(wxStaticBoxSizer*);
+  RStaticBox* editMode(wxStaticBoxSizer*);
+  RStaticBox* interfaceOptions(wxStaticBoxSizer*);
 
+  RStaticBox* features(wxStaticBoxSizer*);
+  RStaticBox* forcePush(wxStaticBoxSizer*);
+  RStaticBox* quotePlayer(wxStaticBoxSizer*);
+  RStaticBox* generalFeatures(wxStaticBoxSizer*);
+
+  RStaticBox* battleMode(wxStaticBoxSizer*);
+  RStaticBox* activation(wxStaticBoxSizer*);
+  RStaticBox* lockup(wxStaticBoxSizer*);
+  RStaticBox* bmControls(wxStaticBoxSizer*);
 };
