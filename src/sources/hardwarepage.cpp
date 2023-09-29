@@ -10,15 +10,21 @@
 
 HardwarePage::HardwarePage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "")
 {
-  wxStaticBoxSizer *bladeDetect = new wxStaticBoxSizer(wxVERTICAL, GetStaticBox(), "Blade Detect");
+
+  Add(bladeDetect(this), MENUITEMFLAGS);
+}
+
+wxStaticBoxSizer* HardwarePage::bladeDetect(wxStaticBoxSizer* parent) {
+  wxStaticBoxSizer *bladeDetect = new wxStaticBoxSizer(wxVERTICAL, parent->GetStaticBox(), "Blade Detect");
+
   settings.bladeDetect = new wxCheckBox(bladeDetect->GetStaticBox(), wxID_ANY, "Blade Detect");
   settings.bladeDetectPinLabel = new wxStaticText(bladeDetect->GetStaticBox(), wxID_ANY, "Pin");
   settings.bladeDetectPin = new wxComboBox(bladeDetect->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"bladePin", "blade2Pin", "blade3Pin", "blade4Pin"}));
-  bladeDetect->Add(settings.bladeDetect, MENUITEMFLAGS);
+  bladeDetect->Add(settings.bladeDetect, FIRSTITEMFLAGS);
   bladeDetect->Add(settings.bladeDetectPinLabel, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10));
   bladeDetect->Add(settings.bladeDetectPin, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 
-  Add(bladeDetect, MENUITEMFLAGS);
+  return bladeDetect;
 }
 
 void HardwarePage::update() {

@@ -55,6 +55,7 @@ void MainWindow::BindEvents() {
           presets->Show(false);
           blades->Show(false);
           hardware->Show(false);
+          PropPage::update();
         } else if (windowSelect->GetValue() == "Presets") {
           general->Show(false);
           prop->Show(false);
@@ -137,20 +138,20 @@ void MainWindow::BindEvents() {
       }, wxID_ABOUT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::outputConfig(); }, Misc::ID_GenFile);
 
-  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { PropPage::updatePropOptions(); }, Misc::ID_PropSelect);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { PropPage::updatePropOptions(); }, Misc::ID_PropOption);
-  Bind(wxEVT_SPINCTRL, [&](wxCommandEvent) { PropPage::updatePropOptions(); }, Misc::ID_PropOption);
-  Bind(wxEVT_SPINCTRLDOUBLE, [&](wxCommandEvent&) { PropPage::updatePropOptions(); }, Misc::ID_PropOption);
+  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { PropPage::update(); UPDATEWINDOW; }, Misc::ID_PropSelect);
+  Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) { PropPage::update(); UPDATEWINDOW; }, Misc::ID_PropOption);
+  Bind(wxEVT_SPINCTRL, [&](wxCommandEvent) { PropPage::update(); UPDATEWINDOW; }, Misc::ID_PropOption);
+  Bind(wxEVT_SPINCTRLDOUBLE, [&](wxCommandEvent&) { PropPage::update(); UPDATEWINDOW; }, Misc::ID_PropOption);
 
-  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { Configuration::updatePresetsConfig(); PresetsPage::update(); }, Misc::ID_BladeList);
-  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { Configuration::updatePresetsConfig(); PresetsPage::update(); }, Misc::ID_PresetList);
+  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { Configuration::updateConfig(); PresetsPage::update(); }, Misc::ID_BladeList);
+  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { Configuration::updateConfig(); PresetsPage::update(); }, Misc::ID_PresetList);
   Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
         // Update Style Config
         if (PresetsPage::settings.presetList->GetSelection() >= 0 && PresetsPage::settings.bladeList->GetSelection() >= 0) {
           Configuration::presets[PresetsPage::settings.presetList->GetSelection()].styles[PresetsPage::settings.bladeList->GetSelection()] = PresetsPage::settings.presetsEditor->GetValue();
         } else PresetsPage::settings.presetsEditor->ChangeValue(wxString::FromUTF8(""));
 
-        Configuration::updatePresetsConfig();
+        Configuration::updateConfig();
         PresetsPage::update();
       }, Misc::ID_PresetEditor);
   Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
@@ -159,7 +160,7 @@ void MainWindow::BindEvents() {
           Configuration::presets[PresetsPage::settings.presetList->GetSelection()].name = PresetsPage::settings.nameInput->GetValue();
         } else PresetsPage::settings.nameInput->ChangeValue(wxString::FromUTF8(""));
 
-        Configuration::updatePresetsConfig(); PresetsPage::update();
+        Configuration::updateConfig(); PresetsPage::update();
       }, Misc::ID_PresetName);
   Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
         // Update Dir Config
@@ -167,7 +168,7 @@ void MainWindow::BindEvents() {
           Configuration::presets[PresetsPage::settings.presetList->GetSelection()].dirs = PresetsPage::settings.dirInput->GetValue();
         } else PresetsPage::settings.dirInput->ChangeValue(wxString::FromUTF8(""));
 
-        Configuration::updatePresetsConfig(); PresetsPage::update();
+        Configuration::updateConfig(); PresetsPage::update();
       }, Misc::ID_PresetDir);
   Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
         // Update Track Config
@@ -175,34 +176,34 @@ void MainWindow::BindEvents() {
           Configuration::presets[PresetsPage::settings.presetList->GetSelection()].track = PresetsPage::settings.trackInput->GetValue();
         } else PresetsPage::settings.trackInput->ChangeValue(wxString::FromUTF8(""));
 
-        Configuration::updatePresetsConfig(); PresetsPage::update();
+        Configuration::updateConfig(); PresetsPage::update();
       }, Misc::ID_PresetTrack);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         Configuration::presets.push_back(Configuration::Configuration::presetConfig());
         Configuration::presets[Configuration::presets.size() - 1].name = "New Preset";
 
-        Configuration::updatePresetsConfig();
+        Configuration::updateConfig();
         PresetsPage::update();
       }, Misc::ID_AddPreset);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         if (PresetsPage::settings.presetList->GetSelection() >= 0)
           Configuration::presets.erase(std::next(Configuration::presets.begin(), PresetsPage::settings.presetList->GetSelection()));
 
-        Configuration::updatePresetsConfig();
+        Configuration::updateConfig();
         PresetsPage::update();
       }, Misc::ID_RemovePreset);
   Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
-        Configuration::updateBladesConfig();
+        Configuration::updateConfig();
         BladesPage::update();
         UPDATEWINDOW;
       }, Misc::ID_BladeSelect);
   Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
-        Configuration::updateBladesConfig();
+        Configuration::updateConfig();
         BladesPage::update();
         UPDATEWINDOW;
       }, Misc::ID_SubBladeSelect);
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        Configuration::updateBladesConfig();
+        Configuration::updateConfig();
         BladesPage::update();
         UPDATEWINDOW;;
       }, Misc::ID_BladeType);
@@ -212,14 +213,14 @@ void MainWindow::BindEvents() {
         } else {
           Configuration::blades.push_back(Configuration::Configuration::bladeConfig());
         }
-        Configuration::updateBladesConfig();
+        Configuration::updateConfig();
         BladesPage::update();
         UPDATEWINDOW;
       }, Misc::ID_AddBlade);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         Configuration::blades[BladesPage::lastBladeSelection].isSubBlade = true;
         Configuration::blades[BladesPage::lastBladeSelection].subBlades.push_back(Configuration::Configuration::bladeConfig::subBladeInfo());
-        Configuration::updateBladesConfig();
+        Configuration::updateConfig();
         BladesPage::update();
         UPDATEWINDOW;
       }, Misc::ID_AddSubBlade);
@@ -227,7 +228,7 @@ void MainWindow::BindEvents() {
         if (BD_HASSELECTION) {
           Configuration::blades.erase(Configuration::blades.begin() + BladesPage::lastBladeSelection);
         }
-        Configuration::updateBladesConfig();
+        Configuration::updateConfig();
         BladesPage::update();
         UPDATEWINDOW;
       }, Misc::ID_RemoveBlade);
@@ -237,7 +238,7 @@ void MainWindow::BindEvents() {
           if (Configuration::blades[BladesPage::lastBladeSelection].subBlades.size() < 1) Configuration::blades[BladesPage::lastBladeSelection].isSubBlade = false;
           BladesPage::lastSubBladeSelection = -1;
         }
-        Configuration::updateBladesConfig();
+        Configuration::updateConfig();
         BladesPage::update();
         UPDATEWINDOW;
       }, Misc::ID_RemoveSubBlade);

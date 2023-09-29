@@ -37,13 +37,12 @@ public:
 
 
 private:
-  void createBoardSettings();
-  void createOptionSettings();
+  wxStaticBoxSizer* boardSettings(wxStaticBoxSizer*);
+  wxStaticBoxSizer* optionSettings(wxStaticBoxSizer*);
+  wxBoxSizer* boolOptions(wxStaticBoxSizer*);
+  wxBoxSizer* numOptions(wxStaticBoxSizer*);
+
 
   GeneralPage();
 
-
-  wxBoxSizer *generalHoriz{nullptr};
-  wxStaticBoxSizer *boardSetup{nullptr};
-  wxStaticBoxSizer *options{nullptr};
 };

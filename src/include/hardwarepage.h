@@ -8,15 +8,17 @@
 class HardwarePage : public wxStaticBoxSizer
 {
 public:
-    HardwarePage(wxWindow*);
+  HardwarePage(wxWindow*);
+  static void update();
 
-    static void update();
+  struct {
+    wxCheckBox *bladeDetect{nullptr};
+    wxStaticText *bladeDetectPinLabel{nullptr};
+    wxComboBox *bladeDetectPin{nullptr};
+  } static settings;
 
-    struct {
-        wxCheckBox *bladeDetect{nullptr};
-        wxStaticText *bladeDetectPinLabel{nullptr};
-        wxComboBox *bladeDetectPin{nullptr};
-    } static settings;
 private:
-    HardwarePage();
+  wxStaticBoxSizer* bladeDetect(wxStaticBoxSizer*);
+
+  HardwarePage();
 };

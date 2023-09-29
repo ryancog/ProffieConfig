@@ -9,7 +9,7 @@
 #define ARDUINO_CLI(command) popen("resources/arduino-cli/arduino-cli " command, "r")
 #define DRIVER_INSTALL popen("pkexec cp ~/.arduino15/packages/proffieboard/hardware/stm32l4/3.6/drivers/linux/*rules /etc/udev/rules.d", "r")
 #elif defined(__WXMSW__)
-#define ARDUINO_CLI(command) popen("../resources/win32/arduino-cli/arduino-cli.exe " command, "r")
+#define ARDUINO_CLI(command) popen("start ../resources/win32/arduino-cli/arduino-cli.exe " command, "r")
 #define DRIVER_INSTALL popen("", "r")
 #elif defined(__WXOSX__)
 #define ARDUINO_CLI(command) popen("../resources/macOS/arduino-cli/arduino-cli " command, "r");

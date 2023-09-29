@@ -10,7 +10,7 @@ Misc::numEntry Misc::createNumEntry(wxStaticBoxSizer *parent, wxString displayTe
     wxStaticText *text = new wxStaticText(parent->GetStaticBox(), wxID_ANY, displayText);
     wxSpinCtrl *numEntry = new wxSpinCtrl(parent->GetStaticBox(), ID, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, minVal, maxVal, defaultVal);
     numEntryBox->Add(text, MENUITEMFLAGS.Center());
-    numEntryBox->Add(numEntry);
+    numEntryBox->Add(numEntry, MENUITEMFLAGS.Border(wxRIGHT, 5));
 
     Misc::numEntry returnVal;
     returnVal.box = numEntryBox;
@@ -23,7 +23,7 @@ Misc::numEntryDouble Misc::createNumEntryDouble(wxStaticBoxSizer *parent, wxStri
     wxStaticText *text = new wxStaticText(parent->GetStaticBox(), wxID_ANY, displayText);
     wxSpinCtrlDouble *numEntry = new wxSpinCtrlDouble(parent->GetStaticBox(), ID, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, minVal, maxVal, defaultVal, 0.1);
     numEntryBox->Add(text, MENUITEMFLAGS.Center());
-    numEntryBox->Add(numEntry);
+    numEntryBox->Add(numEntry, MENUITEMFLAGS.Border(wxRIGHT, 5));
 
     Misc::numEntryDouble returnVal;
     returnVal.box = numEntryBox;
