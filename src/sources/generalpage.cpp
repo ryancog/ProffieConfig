@@ -47,12 +47,14 @@ wxBoxSizer* GeneralPage::boolOptions(wxStaticBoxSizer* parent) {
   settings.colorSave = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Save Color");
   settings.disableColor = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Color Change");
   settings.disableDev = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Developer Commands");
+  settings.maxLEDs = Misc::createNumEntry(parent, "Neopixel Max LEDs", wxID_ANY, 0, 1024, 144);
 
-  boolOptions->Add(settings.volumeSave, MENUITEMFLAGS);
+  boolOptions->Add(settings.volumeSave, FIRSTITEMFLAGS);
   boolOptions->Add(settings.presetSave, MENUITEMFLAGS);
   boolOptions->Add(settings.colorSave, MENUITEMFLAGS);
   boolOptions->Add(settings.disableColor, MENUITEMFLAGS);
   boolOptions->Add(settings.disableDev, MENUITEMFLAGS);
+  boolOptions->Add(settings.maxLEDs->box, MENUITEMFLAGS);
 
   return boolOptions;
 }
@@ -61,18 +63,18 @@ wxBoxSizer* GeneralPage::numOptions(wxStaticBoxSizer* parent) {
 
   settings.buttons = Misc::createNumEntry(parent, "Number of Buttons", wxID_ANY, 1, 3, 2);
   settings.volume = Misc::createNumEntry(parent, "Max Volume", wxID_ANY, 0, 3500, 2000);
-  settings.volume.num->SetIncrement(50);
+  settings.volume->num->SetIncrement(50);
   settings.clash = Misc::createNumEntryDouble(parent, "Clash Threshold", wxID_ANY, 0.1, 5, 3);
   settings.pliTime = Misc::createNumEntry(parent, "PLI Timeout", wxID_ANY, 1, 60, 2);
   settings.idleTime = Misc::createNumEntry(parent, "Idle Timeout", wxID_ANY, 1, 60, 10);
-  settings.motion = Misc::createNumEntry(parent, "Motion Timeout", wxID_ANY, 1, 60, 15);
+  settings.motionTime = Misc::createNumEntry(parent, "Motion Timeout", wxID_ANY, 1, 60, 15);
 
-  numOptions->Add(settings.buttons.box, MENUITEMFLAGS);
-  numOptions->Add(settings.volume.box, MENUITEMFLAGS);
-  numOptions->Add(settings.clash.box, MENUITEMFLAGS);
-  numOptions->Add(settings.pliTime.box, MENUITEMFLAGS);
-  numOptions->Add(settings.idleTime.box, MENUITEMFLAGS);
-  numOptions->Add(settings.motion.box, MENUITEMFLAGS);
+  numOptions->Add(settings.buttons->box, FIRSTITEMFLAGS);
+  numOptions->Add(settings.volume->box, MENUITEMFLAGS);
+  numOptions->Add(settings.clash->box, MENUITEMFLAGS);
+  numOptions->Add(settings.pliTime->box, MENUITEMFLAGS);
+  numOptions->Add(settings.idleTime->box, MENUITEMFLAGS);
+  numOptions->Add(settings.motionTime->box, MENUITEMFLAGS);
 
   return numOptions;
 }

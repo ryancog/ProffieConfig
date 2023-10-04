@@ -1,6 +1,5 @@
 #include "hardwarepage.h"
 #include "defines.h"
-#include "configuration.h"
 #include "misc.h"
 
 #include <wx/sizer.h>
@@ -10,8 +9,8 @@
 
 HardwarePage::HardwarePage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "")
 {
-
   Add(bladeDetect(this), MENUITEMFLAGS);
+  Add(OLED(this), MENUITEMFLAGS);
 }
 
 wxStaticBoxSizer* HardwarePage::bladeDetect(wxStaticBoxSizer* parent) {
@@ -26,11 +25,16 @@ wxStaticBoxSizer* HardwarePage::bladeDetect(wxStaticBoxSizer* parent) {
 
   return bladeDetect;
 }
+wxStaticBoxSizer* HardwarePage::OLED(wxStaticBoxSizer* parent) {
+  wxStaticBoxSizer* OLED = new wxStaticBoxSizer(wxVERTICAL, parent->GetStaticBox(), "OLED");
+
+  settings.OLED = new wxCheckBox(OLED->GetStaticBox(), wxID_ANY, "Has OLED");
+  OLED->Add(settings.OLED, FIRSTITEMFLAGS);
+
+  return OLED;
+}
 
 void HardwarePage::update() {
-  settings.bladeDetect->SetValue(Configuration::features.bladeDetect);
-  settings.bladeDetectPin->SetValue(Configuration::features.bladeDetectPin);
-
   settings.bladeDetect->Show();
   settings.bladeDetectPin->Show();
   settings.bladeDetectPinLabel->Show();

@@ -84,57 +84,11 @@ void MainWindow::BindEvents() {
         if (devSelect->GetValue() == "Select Device...") applyButton->Disable();
         else applyButton->Enable();
       }, Misc::ID_DevSelect);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        progDialog = new Progress(this);
-
-        thread = new ThreadRunner([&]() {
-          progDialog->SetTitle("Device Update");
-          Progress::emitEvent(0, "Initializing...");
-          wxString lastSel = MainWindow::devSelect->GetStringSelection();
-          devSelect->Clear();
-          Progress::emitEvent(20, "Fetching Devices...");
-          for (const std::string& item : Arduino::getBoards()) {
-            devSelect->Append(item);
-          }
-          devSelect->SetValue(lastSel);
-          Progress::emitEvent(100, "Done.");
-        });
-      }, Misc::ID_RefreshDevButton);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        progDialog = new Progress(this);
-
-        thread = new ThreadRunner([&]() {
-          progDialog->SetTitle("Apply Changes to Board");
-          Progress::emitEvent(0, "Initializing...");
-
-          Progress::emitEvent(10, "Checking board presence...");
-          if (Arduino::getBoards()[devSelect->GetSelection()] != devSelect->GetStringSelection()) {
-            Progress::emitEvent(100, "Error!");
-            wxMessageBox("Please refresh boards and try again!", "Board Selection Error", wxOK | wxICON_ERROR);
-            return;
-          }
-
-          Progress::emitEvent(20, "Generating configuration file...");
-          Configuration::updateConfig();
-          Configuration::outputConfig();
-
-          Progress::emitEvent(40, "Compiling ProffieOS...");
-          Arduino::compile();
-
-          Progress::emitEvent(65, "Uploading to ProffieBoard...");
-          Arduino::upload();
-
-          Progress::emitEvent(100, "Done.");
-
-          wxMessageBox("Changes Successfully Applied to ProffieBoard!", "Apply Changes to Board", wxOK | wxICON_INFORMATION);
-          // get err
-        });
-      }, Misc::ID_ApplyButton);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(this); }, Misc::ID_RefreshDevButton);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(this); }, Misc::ID_ApplyButton);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-        Close(true);
-      }, wxID_EXIT);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-        wxMessageBox("Tool for GUI Configuration and flashing of ProffieBoard\n\nCreated by Ryryog25", "About ProffieConfig", wxOK | wxICON_INFORMATION);
+        wxMessageBox("Tool for GUI Configuration and flashing of ProffieBoard (Created by Fredrik Hubbinette)\n\nTool Created by Ryryog25\n\nProffieOS v7.9 | Arduino Plugin v3.6.0 | Arduino CLI v0.34.2", "About ProffieConfig", wxOK | wxICON_INFORMATION);
       }, wxID_ABOUT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::outputConfig(); }, Misc::ID_GenFile);
 
@@ -143,15 +97,15 @@ void MainWindow::BindEvents() {
   Bind(wxEVT_SPINCTRL, [&](wxCommandEvent) { PropPage::update(); UPDATEWINDOW; }, Misc::ID_PropOption);
   Bind(wxEVT_SPINCTRLDOUBLE, [&](wxCommandEvent&) { PropPage::update(); UPDATEWINDOW; }, Misc::ID_PropOption);
 
-  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { Configuration::updateConfig(); PresetsPage::update(); }, Misc::ID_BladeList);
-  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { Configuration::updateConfig(); PresetsPage::update(); }, Misc::ID_PresetList);
+  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { Configuration::updateBladesConfig(); PresetsPage::update(); }, Misc::ID_BladeList);
+  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { Configuration::updateBladesConfig(); PresetsPage::update(); }, Misc::ID_PresetList);
   Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
         // Update Style Config
         if (PresetsPage::settings.presetList->GetSelection() >= 0 && PresetsPage::settings.bladeList->GetSelection() >= 0) {
           Configuration::presets[PresetsPage::settings.presetList->GetSelection()].styles[PresetsPage::settings.bladeList->GetSelection()] = PresetsPage::settings.presetsEditor->GetValue();
         } else PresetsPage::settings.presetsEditor->ChangeValue(wxString::FromUTF8(""));
 
-        Configuration::updateConfig();
+        Configuration::updateBladesConfig();
         PresetsPage::update();
       }, Misc::ID_PresetEditor);
   Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
@@ -160,7 +114,7 @@ void MainWindow::BindEvents() {
           Configuration::presets[PresetsPage::settings.presetList->GetSelection()].name = PresetsPage::settings.nameInput->GetValue();
         } else PresetsPage::settings.nameInput->ChangeValue(wxString::FromUTF8(""));
 
-        Configuration::updateConfig(); PresetsPage::update();
+        Configuration::updateBladesConfig(); PresetsPage::update();
       }, Misc::ID_PresetName);
   Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
         // Update Dir Config
@@ -168,7 +122,7 @@ void MainWindow::BindEvents() {
           Configuration::presets[PresetsPage::settings.presetList->GetSelection()].dirs = PresetsPage::settings.dirInput->GetValue();
         } else PresetsPage::settings.dirInput->ChangeValue(wxString::FromUTF8(""));
 
-        Configuration::updateConfig(); PresetsPage::update();
+        Configuration::updateBladesConfig(); PresetsPage::update();
       }, Misc::ID_PresetDir);
   Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
         // Update Track Config
@@ -176,34 +130,34 @@ void MainWindow::BindEvents() {
           Configuration::presets[PresetsPage::settings.presetList->GetSelection()].track = PresetsPage::settings.trackInput->GetValue();
         } else PresetsPage::settings.trackInput->ChangeValue(wxString::FromUTF8(""));
 
-        Configuration::updateConfig(); PresetsPage::update();
+        Configuration::updateBladesConfig(); PresetsPage::update();
       }, Misc::ID_PresetTrack);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         Configuration::presets.push_back(Configuration::Configuration::presetConfig());
         Configuration::presets[Configuration::presets.size() - 1].name = "New Preset";
 
-        Configuration::updateConfig();
+        Configuration::updateBladesConfig();
         PresetsPage::update();
       }, Misc::ID_AddPreset);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         if (PresetsPage::settings.presetList->GetSelection() >= 0)
           Configuration::presets.erase(std::next(Configuration::presets.begin(), PresetsPage::settings.presetList->GetSelection()));
 
-        Configuration::updateConfig();
+        Configuration::updateBladesConfig();
         PresetsPage::update();
       }, Misc::ID_RemovePreset);
   Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
-        Configuration::updateConfig();
+        Configuration::updateBladesConfig();
         BladesPage::update();
         UPDATEWINDOW;
       }, Misc::ID_BladeSelect);
   Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
-        Configuration::updateConfig();
+        Configuration::updateBladesConfig();
         BladesPage::update();
         UPDATEWINDOW;
       }, Misc::ID_SubBladeSelect);
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        Configuration::updateConfig();
+        Configuration::updateBladesConfig();
         BladesPage::update();
         UPDATEWINDOW;;
       }, Misc::ID_BladeType);
@@ -213,14 +167,14 @@ void MainWindow::BindEvents() {
         } else {
           Configuration::blades.push_back(Configuration::Configuration::bladeConfig());
         }
-        Configuration::updateConfig();
+        Configuration::updateBladesConfig();
         BladesPage::update();
         UPDATEWINDOW;
       }, Misc::ID_AddBlade);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         Configuration::blades[BladesPage::lastBladeSelection].isSubBlade = true;
         Configuration::blades[BladesPage::lastBladeSelection].subBlades.push_back(Configuration::Configuration::bladeConfig::subBladeInfo());
-        Configuration::updateConfig();
+        Configuration::updateBladesConfig();
         BladesPage::update();
         UPDATEWINDOW;
       }, Misc::ID_AddSubBlade);
@@ -228,7 +182,7 @@ void MainWindow::BindEvents() {
         if (BD_HASSELECTION) {
           Configuration::blades.erase(Configuration::blades.begin() + BladesPage::lastBladeSelection);
         }
-        Configuration::updateConfig();
+        Configuration::updateBladesConfig();
         BladesPage::update();
         UPDATEWINDOW;
       }, Misc::ID_RemoveBlade);
@@ -238,7 +192,7 @@ void MainWindow::BindEvents() {
           if (Configuration::blades[BladesPage::lastBladeSelection].subBlades.size() < 1) Configuration::blades[BladesPage::lastBladeSelection].isSubBlade = false;
           BladesPage::lastSubBladeSelection = -1;
         }
-        Configuration::updateConfig();
+        Configuration::updateBladesConfig();
         BladesPage::update();
         UPDATEWINDOW;
       }, Misc::ID_RemoveSubBlade);
