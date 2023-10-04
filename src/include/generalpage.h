@@ -6,7 +6,6 @@
 #include <wx/combobox.h>
 #include <wx/radiobut.h>
 
-#include "defines.h"
 #include "misc.h"
 
 #pragma once
@@ -17,24 +16,25 @@ public:
   GeneralPage(wxWindow*);
 
   struct {
-    wxComboBox *board{nullptr};
-    wxCheckBox *massStorage{nullptr};
-    wxCheckBox *webUSB{nullptr};
+    wxComboBox* board{nullptr};
+    wxCheckBox* massStorage{nullptr};
+    wxCheckBox* webUSB{nullptr};
 
-    Misc::numEntry buttons;
-    Misc::numEntry volume;
-    Misc::numEntryDouble clash;
-    Misc::numEntry pliTime;
-    Misc::numEntry idleTime;
-    Misc::numEntry motion;
-    wxCheckBox *volumeSave{nullptr};
-    wxCheckBox *presetSave{nullptr};
-    wxCheckBox *colorSave{nullptr};
-    wxCheckBox *disableColor{nullptr};
-    wxCheckBox *disableDev{nullptr};
+    Misc::numEntry* buttons;
+    Misc::numEntry* volume;
+    Misc::numEntryDouble* clash;
+    Misc::numEntry* pliTime;
+    Misc::numEntry* idleTime;
+    Misc::numEntry* motionTime;
+
+    Misc::numEntry* maxLEDs;
+
+    wxCheckBox* volumeSave{nullptr};
+    wxCheckBox* presetSave{nullptr};
+    wxCheckBox* colorSave{nullptr};
+    wxCheckBox* disableColor{nullptr};
+    wxCheckBox* disableDev{nullptr};
   } static settings;
-
-
 
 private:
   wxStaticBoxSizer* boardSettings(wxStaticBoxSizer*);
@@ -42,7 +42,5 @@ private:
   wxBoxSizer* boolOptions(wxStaticBoxSizer*);
   wxBoxSizer* numOptions(wxStaticBoxSizer*);
 
-
   GeneralPage();
-
 };

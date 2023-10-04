@@ -17,15 +17,15 @@ public:
     static void update();
 
     struct {
-        wxTextCtrl *presetsEditor{nullptr};
-        wxListBox *presetList{nullptr};
-        wxListBox *bladeList{nullptr};
-        wxButton *addPreset{nullptr};
-        wxButton *removePreset{nullptr};
+        wxTextCtrl* presetsEditor{nullptr};
+        wxListBox* presetList{nullptr};
+        wxListBox* bladeList{nullptr};
+        wxButton* addPreset{nullptr};
+        wxButton* removePreset{nullptr};
 
-        wxTextCtrl *nameInput{nullptr};
-        wxTextCtrl *dirInput{nullptr};
-        wxTextCtrl *trackInput{nullptr};
+        wxTextCtrl* nameInput{nullptr};
+        wxTextCtrl* dirInput{nullptr};
+        wxTextCtrl* trackInput{nullptr};
 
     } static settings;
 

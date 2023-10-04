@@ -10,48 +10,66 @@
 class Misc
 {
 public:
-    enum {
-        ID_WindowSelect,
-        ID_Initialize,
-        ID_RefreshDevButton,
-        ID_ApplyButton,
-        ID_DevSelect,
-        ID_PropSelect,
-        ID_PropOption,
-        ID_GenFile,
-        ID_PresetList,
-        ID_BladeList,
-        ID_PresetEditor,
-        ID_AddPreset,
-        ID_RemovePreset,
-        ID_PresetName,
-        ID_PresetDir,
-        ID_PresetTrack,
-        ID_BladeSelect,
-        ID_SubBladeSelect,
-        ID_AddBlade,
-        ID_RemoveBlade,
-        ID_AddSubBlade,
-        ID_RemoveSubBlade,
-        ID_BladeType
-    };
+  enum {
+    ID_WindowSelect,
+    ID_Initialize,
+    ID_RefreshDevButton,
+    ID_ApplyButton,
+    ID_DevSelect,
+    ID_PropSelect,
+    ID_PropOption,
+    ID_GenFile,
+    ID_PresetList,
+    ID_BladeList,
+    ID_PresetEditor,
+    ID_AddPreset,
+    ID_RemovePreset,
+    ID_PresetName,
+    ID_PresetDir,
+    ID_PresetTrack,
+    ID_BladeSelect,
+    ID_SubBladeSelect,
+    ID_AddBlade,
+    ID_RemoveBlade,
+    ID_AddSubBlade,
+    ID_RemoveSubBlade,
+    ID_BladeType
+  };
 
-    struct numEntry {
-        wxBoxSizer *box{nullptr};
-        wxSpinCtrl *num{nullptr};
-    };
+  struct numEntry {
+    wxBoxSizer *box{nullptr};
+    wxSpinCtrl *num{nullptr};
+  };
 
-    struct numEntryDouble {
-        wxBoxSizer *box{nullptr};
-        wxSpinCtrlDouble *num{nullptr};
-    };
+  struct numEntryDouble {
+    wxBoxSizer *box{nullptr};
+    wxSpinCtrlDouble *num{nullptr};
+  };
 
-    static numEntry createNumEntry(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, int32_t minVal, int32_t maxVal, int32_t defaultVal);
-    static numEntryDouble createNumEntryDouble(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, double minVal, double maxVal, double defaultVal);
+  static void importFile(wxWindow*);
+  static void exportFile(wxWindow*);
 
-    static const wxArrayString createEntries(std::vector<std::string> list);
-    static const wxArrayString createEntries(std::initializer_list<std::string> list);
+  static numEntry* createNumEntry(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, int32_t minVal, int32_t maxVal, int32_t defaultVal);
+  static numEntryDouble* createNumEntryDouble(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, double minVal, double maxVal, double defaultVal);
+
+  static const wxArrayString createEntries(std::vector<std::string> list);
+  static const wxArrayString createEntries(std::initializer_list<std::string> list);
 
 private:
-    Misc();
+  enum class ItemType {
+    TOP_DEFINE,
+    CONST_VAL,
+    INCLUDE,
+    PRESET_SECTION,
+    BLADE_SECTION,
+    NONE
+  };
+  static ItemType fileItemType(const std::string&);
+  static void readTopDefine(std::ifstream&);
+  static void readConst(std::ifstream&);
+  static void readInclude(std::ifstream&);
+  static void readPreset(std::ifstream&);
+  static void readBlade(std::ifstream&);
+
+  Misc();
 };
