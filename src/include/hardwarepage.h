@@ -12,13 +12,16 @@ public:
   static void update();
 
   struct {
-    wxCheckBox *bladeDetect{nullptr};
-    wxStaticText *bladeDetectPinLabel{nullptr};
-    wxComboBox *bladeDetectPin{nullptr};
+    wxCheckBox* bladeDetect{nullptr};
+    wxStaticText* bladeDetectPinLabel{nullptr};
+    wxComboBox* bladeDetectPin{nullptr};
+
+    wxCheckBox* OLED{nullptr};
   } static settings;
 
 private:
   wxStaticBoxSizer* bladeDetect(wxStaticBoxSizer*);
+  wxStaticBoxSizer* OLED(wxStaticBoxSizer*);
 
   HardwarePage();
 };

@@ -18,11 +18,12 @@ public:
   ThreadRunner* thread;
   Progress* progDialog;
 
+  static wxComboBox* windowSelect;
+  static wxComboBox* devSelect;
+
 private:
   static wxBoxSizer* master;
   static wxButton* refreshButton;
-  static wxComboBox* windowSelect;
-  static wxComboBox* devSelect;
   static wxButton* applyButton;
 
   static GeneralPage* general;

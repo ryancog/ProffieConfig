@@ -35,7 +35,7 @@ void PropPage::update() {
   settings.stabOnNoBattle->Show(FETT263);
   // Swing On
   settings.swingOn->Show(SA22C || FETT263 || BC);
-  settings.swingOnSpeed.box->Show(SA22C || FETT263);
+  settings.swingOnSpeed->box->Show(SA22C || FETT263);
   settings.swingOnFast->Show(FETT263);
   settings.swingOnPreon->Show(FETT263);
   settings.swingOnNoBattle->Show(FETT263);
@@ -56,24 +56,24 @@ void PropPage::update() {
 
   // Battle Mode
   settings.guestureEnBattle->Show(SA22C || BC);
-  settings.lockupDelay.box->Show(SA22C || FETT263 || BC);
+  settings.lockupDelay->box->Show(SA22C || FETT263 || BC);
   settings.battleModeToggle->Show(FETT263);
   settings.battleModeAlways->Show(FETT263);
   settings.battleModeOnStart->Show(FETT263);
   settings.battleModeDisablePWR->Show(FETT263);
-  settings.battleModeClash.box->Show(FETT263);
+  settings.battleModeClash->box->Show(FETT263);
 
   // Force Push
   settings.forcePush->Show(SA22C || FETT263 || BC);
   settings.forcePushBM->Show(FETT263);
-  settings.forcePushLength.box->Show(SA22C || FETT263 || BC);
+  settings.forcePushLength->box->Show(SA22C || FETT263 || BC);
   if (settings.forcePush->GetValue()) {
     settings.forcePushBM->SetValue(true);
     settings.forcePushBM->Disable();
-    settings.forcePushLength.num->Enable();
+    settings.forcePushLength->num->Enable();
   } else {
     settings.forcePushBM->Enable();
-    settings.forcePushLength.num->Disable();
+    settings.forcePushLength->num->Disable();
   }
 
   // Edit Mode/Settings
@@ -108,10 +108,10 @@ void PropPage::update() {
   settings.pwrClash->Show(CAIWYN);
   settings.pwrLockup->Show(CAIWYN);
   settings.pwrHoldOff->Show(FETT263);
-  if (GeneralPage::settings.buttons.num->GetValue() == 2) settings.pwrHoldOff->Enable();
+  if (GeneralPage::settings.buttons->num->GetValue() == 2) settings.pwrHoldOff->Enable();
   else settings.pwrHoldOff->Disable();
   settings.auxHoldLockup->Show(FETT263);
-  if (GeneralPage::settings.buttons.num->GetValue() == 2) settings.auxHoldLockup->Enable();
+  if (GeneralPage::settings.buttons->num->GetValue() == 2) settings.auxHoldLockup->Enable();
   else settings.auxHoldLockup->Disable();
 
   settings.meltguestureAlways->Show(FETT263);
@@ -133,9 +133,9 @@ void PropPage::update() {
   settings.saveChoreo->Show(FETT263);
   settings.dualModeSound->Show(FETT263);
   settings.clashStrengthSound->Show(FETT263);
-  settings.clashStrengthSoundMaxClash.box->Show(FETT263);
-  if (settings.clashStrengthSound->GetValue()) settings.clashStrengthSoundMaxClash.num->Enable();
-  else settings.clashStrengthSoundMaxClash.num->Disable();
+  settings.clashStrengthSoundMaxClash->box->Show(FETT263);
+  if (settings.clashStrengthSound->GetValue()) settings.clashStrengthSoundMaxClash->num->Enable();
+  else settings.clashStrengthSoundMaxClash->num->Disable();
   settings.quickPresetSelect->Show(FETT263);
   settings.spokenColors->Show(FETT263);
   settings.spokenBatteryNone->Show(FETT263);
@@ -195,6 +195,7 @@ PropPage::RStaticBox* PropPage::stabOn(wxStaticBoxSizer* parent) {
 
   return stabOn;
 }
+
 PropPage::RStaticBox* PropPage::swingOn(wxStaticBoxSizer* parent) {
   PropPage::RStaticBox* swingOn = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Swing On");
   settings.swingOn = new wxCheckBox(swingOn->GetStaticBox(), Misc::ID_PropOption, "Swing To Turn On");
@@ -206,7 +207,7 @@ PropPage::RStaticBox* PropPage::swingOn(wxStaticBoxSizer* parent) {
   swingOn->Add(settings.swingOnFast, MENUITEMFLAGS);
   swingOn->Add(settings.swingOnPreon, MENUITEMFLAGS);
   swingOn->Add(settings.swingOnNoBattle, MENUITEMFLAGS);
-  swingOn->Add(settings.swingOnSpeed.box, MENUITEMFLAGS);
+  swingOn->Add(settings.swingOnSpeed->box, MENUITEMFLAGS);
 
   return swingOn;
 }
@@ -340,7 +341,7 @@ PropPage::RStaticBox* PropPage::forcePush(wxStaticBoxSizer* parent) {
   settings.forcePush = new wxCheckBox(forcePush->GetStaticBox(), Misc::ID_PropOption, "Enable Force Push");
   settings.forcePushLength = Misc::createNumEntry(forcePush, "Force Push Length", Misc::ID_PropOption, 0, 10, 5);
   forcePush->Add(settings.forcePush, FIRSTITEMFLAGS);
-  forcePush->Add(settings.forcePushLength.box, MENUITEMFLAGS);
+  forcePush->Add(settings.forcePushLength->box, MENUITEMFLAGS);
 
   return forcePush;
 }
@@ -404,7 +405,7 @@ PropPage::RStaticBox* PropPage::generalFeatures(wxStaticBoxSizer* parent) {
   generalFeatures3->Add(settings.styleChangeOTF, MENUITEMFLAGS);
   generalFeatures3->Add(settings.presetCopyOTF, MENUITEMFLAGS);
   generalFeatures3->Add(settings.clashStrengthSound, MENUITEMFLAGS);
-  generalFeatures3->Add(settings.clashStrengthSoundMaxClash.box, MENUITEMFLAGS);
+  generalFeatures3->Add(settings.clashStrengthSoundMaxClash->box, MENUITEMFLAGS);
 
   generalFeatures->Add(generalFeatures1);
   generalFeatures->Add(generalFeatures2);
@@ -450,8 +451,8 @@ PropPage::RStaticBox* PropPage::lockup(wxStaticBoxSizer* parent) {
   settings.lockupDelay = Misc::createNumEntry(lockup, "Lockup Delay (ms)", Misc::ID_PropOption, 0, 3000, 200);
   settings.battleModeClash = Misc::createNumEntryDouble(lockup, "Battle Mode Clash/Lockup Threshold", Misc::ID_PropOption, 0, 8, 4);
 
-  lockup->Add(settings.lockupDelay.box, FIRSTITEMFLAGS);
-  lockup->Add(settings.battleModeClash.box, MENUITEMFLAGS);
+  lockup->Add(settings.lockupDelay->box, FIRSTITEMFLAGS);
+  lockup->Add(settings.battleModeClash->box, MENUITEMFLAGS);
 
   return lockup;
 }
