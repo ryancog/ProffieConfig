@@ -13,7 +13,6 @@
 #include "arduino.h"
 #include "misc.h"
 #include "progress.h"
-#include "threadrunner.h"
 
 wxBoxSizer* MainWindow::master{nullptr};
 wxButton* MainWindow::refreshButton{nullptr};
@@ -34,12 +33,13 @@ MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPos
   CreateMenuBar();
   CreatePages();
   BindEvents();
-  SetConfigDefaults();
+  Configuration::readConfig(this);
 
   SetSizerAndFit(master);
 }
 
 void MainWindow::BindEvents() {
+  // Main Window
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent(progDialog, (Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
         // TODO general->update();
@@ -92,17 +92,22 @@ void MainWindow::BindEvents() {
       }, wxID_ABOUT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::outputConfig(); }, Misc::ID_GenFile);
 
+  // Prop Page
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { PropPage::update(); UPDATEWINDOW; }, Misc::ID_PropSelect);
   Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) { PropPage::update(); UPDATEWINDOW; }, Misc::ID_PropOption);
+  Bind(wxEVT_RADIOBUTTON, [&](wxCommandEvent&) { PropPage::update(); UPDATEWINDOW; }, Misc::ID_PropOption);
   Bind(wxEVT_SPINCTRL, [&](wxCommandEvent) { PropPage::update(); UPDATEWINDOW; }, Misc::ID_PropOption);
   Bind(wxEVT_SPINCTRLDOUBLE, [&](wxCommandEvent&) { PropPage::update(); UPDATEWINDOW; }, Misc::ID_PropOption);
 
   Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { Configuration::updateBladesConfig(); PresetsPage::update(); }, Misc::ID_BladeList);
   Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { Configuration::updateBladesConfig(); PresetsPage::update(); }, Misc::ID_PresetList);
+
   Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
         // Update Style Config
         if (PresetsPage::settings.presetList->GetSelection() >= 0 && PresetsPage::settings.bladeList->GetSelection() >= 0) {
-          Configuration::presets[PresetsPage::settings.presetList->GetSelection()].styles[PresetsPage::settings.bladeList->GetSelection()] = PresetsPage::settings.presetsEditor->GetValue();
+          std::string style = PresetsPage::settings.presetsEditor->GetValue().ToStdString();
+          style.erase(std::remove(style.begin(), style.end(), ' '), style.end());
+          Configuration::presets[PresetsPage::settings.presetList->GetSelection()].styles[PresetsPage::settings.bladeList->GetSelection()].assign(style);
         } else PresetsPage::settings.presetsEditor->ChangeValue(wxString::FromUTF8(""));
 
         Configuration::updateBladesConfig();
@@ -111,7 +116,9 @@ void MainWindow::BindEvents() {
   Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
         // Update Name Config
         if (PresetsPage::settings.presetList->GetSelection() >= 0 && PresetsPage::settings.bladeList->GetSelection() >= 0) {
-          Configuration::presets[PresetsPage::settings.presetList->GetSelection()].name = PresetsPage::settings.nameInput->GetValue();
+          std::string name = PresetsPage::settings.nameInput->GetValue().ToStdString();
+          name.erase(std::remove(name.begin(), name.end(), ' '), name.end());
+          Configuration::presets[PresetsPage::settings.presetList->GetSelection()].name.assign(name);
         } else PresetsPage::settings.nameInput->ChangeValue(wxString::FromUTF8(""));
 
         Configuration::updateBladesConfig(); PresetsPage::update();
@@ -119,7 +126,9 @@ void MainWindow::BindEvents() {
   Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
         // Update Dir Config
         if (PresetsPage::settings.presetList->GetSelection() >= 0 && PresetsPage::settings.bladeList->GetSelection() >= 0) {
-          Configuration::presets[PresetsPage::settings.presetList->GetSelection()].dirs = PresetsPage::settings.dirInput->GetValue();
+          std::string dir =  PresetsPage::settings.dirInput->GetValue().ToStdString();
+          dir.erase(std::remove(dir.begin(), dir.end(), ' '), dir.end());
+          Configuration::presets[PresetsPage::settings.presetList->GetSelection()].dirs.assign(dir);
         } else PresetsPage::settings.dirInput->ChangeValue(wxString::FromUTF8(""));
 
         Configuration::updateBladesConfig(); PresetsPage::update();
@@ -127,13 +136,15 @@ void MainWindow::BindEvents() {
   Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
         // Update Track Config
         if (PresetsPage::settings.presetList->GetSelection() >= 0 && PresetsPage::settings.bladeList->GetSelection() >= 0) {
-          Configuration::presets[PresetsPage::settings.presetList->GetSelection()].track = PresetsPage::settings.trackInput->GetValue();
+          std::string track = PresetsPage::settings.trackInput->GetValue().ToStdString();
+          track.erase(std::remove(track.begin(), track.end(), ' '), track.end());
+          Configuration::presets[PresetsPage::settings.presetList->GetSelection()].track.assign(track);
         } else PresetsPage::settings.trackInput->ChangeValue(wxString::FromUTF8(""));
 
         Configuration::updateBladesConfig(); PresetsPage::update();
       }, Misc::ID_PresetTrack);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        Configuration::presets.push_back(Configuration::Configuration::presetConfig());
+        Configuration::presets.push_back(Configuration::presetConfig());
         Configuration::presets[Configuration::presets.size() - 1].name = "New Preset";
 
         Configuration::updateBladesConfig();
@@ -146,6 +157,8 @@ void MainWindow::BindEvents() {
         Configuration::updateBladesConfig();
         PresetsPage::update();
       }, Misc::ID_RemovePreset);
+
+  // Blades Page
   Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
         Configuration::updateBladesConfig();
         BladesPage::update();
@@ -161,6 +174,7 @@ void MainWindow::BindEvents() {
         BladesPage::update();
         UPDATEWINDOW;;
       }, Misc::ID_BladeType);
+  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { Configuration::updateBladesConfig(); BladesPage::update(); }, Misc::ID_BladeOption);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         if (BD_HASSELECTION) {
           Configuration::blades.insert(Configuration::blades.begin() + BladesPage::lastBladeSelection + 1, Configuration::Configuration::bladeConfig());
@@ -198,24 +212,14 @@ void MainWindow::BindEvents() {
       }, Misc::ID_RemoveSubBlade);
 }
 
-void MainWindow::SetConfigDefaults() {
-  Configuration::presets.push_back(Configuration::Configuration::presetConfig());
-  Configuration::presets[0].name = "My First Preset";
-  Configuration::presets[0].dirs = "smthjedi";
-  Configuration::presets[0].track = "tracks/track1.wav";
-  Configuration::presets[0].styles.push_back("StylePtr<Black>()");
-
-  Configuration::blades.push_back(Configuration::Configuration::bladeConfig());
-}
-
 void MainWindow::CreateMenuBar() {
   wxMenu *menuFile = new wxMenu;
   menuFile->Append(wxID_EXIT);
   menuFile->Append(wxID_ABOUT);
-  menuFile->Append(Misc::ID_Initialize, "Install Dependencies...");
+  menuFile->Append(Misc::ID_Initialize, "Install Dependencies...\tShift+D", "Install Platform-Specific Proffieboard Dependencies");
 
   wxMenu *menuConfig = new wxMenu;
-  menuConfig->Append(Misc::ID_GenFile, "&Generate Config\t", "Generate Config File");
+  menuConfig->Append(Misc::ID_GenFile, "Generate Config\tShift+C", "Generate Config File");
 
 
   wxMenuBar *menuBar = new wxMenuBar;

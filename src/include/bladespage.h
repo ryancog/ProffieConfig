@@ -7,6 +7,7 @@
 #include <wx/combobox.h>
 #include <wx/listbox.h>
 #include <wx/button.h>
+#include "misc.h"
 
 #pragma once
 
@@ -44,12 +45,16 @@ public:
         wxCheckBox *blade4UseRGB{nullptr};
         wxStaticText *star1ColorLabel{nullptr};
         wxComboBox *star1Color{nullptr};
+        Misc::numEntry* star1Resistance{nullptr};
         wxStaticText *star2ColorLabel{nullptr};
         wxComboBox *star2Color{nullptr};
+        Misc::numEntry* star2Resistance{nullptr};
         wxStaticText *star3ColorLabel{nullptr};
         wxComboBox *star3Color{nullptr};
+        Misc::numEntry* star3Resistance{nullptr};
         wxStaticText *star4ColorLabel{nullptr};
         wxComboBox *star4Color{nullptr};
+        Misc::numEntry* star4Resistance{nullptr};
 
         wxCheckBox *subBladeUseStride{nullptr};
         wxStaticText *subBladeStartLabel{nullptr};

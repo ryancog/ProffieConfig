@@ -1,3 +1,4 @@
+#pragma once
 #include <wx/textctrl.h>
 #include <wx/sizer.h>
 #include <wx/wrapsizer.h>
@@ -7,8 +8,6 @@
 #include <wx/radiobut.h>
 
 #include "misc.h"
-
-#pragma once
 
 class GeneralPage : public wxStaticBoxSizer
 {

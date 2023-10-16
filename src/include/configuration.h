@@ -1,14 +1,20 @@
+#pragma once
+
 #include <vector>
 #include <string>
 #include <fstream>
-
-#pragma once
+#include <variant>
+#include <wx/spinctrl.h>
+#include <wx/checkbox.h>
+#include <wx/radiobut.h>
+#include <wx/combobox.h>
 
 class Configuration
 {
 public:
   static void outputConfig();
   static void updateBladesConfig();
+  static void readConfig(wxWindow*);
 
 
   struct bladeConfig {
@@ -16,17 +22,17 @@ public:
 
     std::string dataPin{"Pin 1"};
     std::string colorType{"GRB"};
-    int32_t numPixels{144};
+    int32_t numPixels{0};
     bool useRGBWithWhite{false};
 
-    std::string Cree1{"Red"};
-    std::string Cree2{"Green"};
-    std::string Cree3{"Blue"};
-    std::string Cree4{"White"};
-    int32_t Cree1Resistance{1000};
+    std::string Cree1{"<None>"};
+    std::string Cree2{"<None>"};
+    std::string Cree3{"<None>"};
+    std::string Cree4{"<None>"};
+    int32_t Cree1Resistance{0};
     int32_t Cree2Resistance{0};
-    int32_t Cree3Resistance{240};
-    int32_t Cree4Resistance{550};
+    int32_t Cree3Resistance{0};
+    int32_t Cree4Resistance{0};
 
     bool usePowerPin1{false};
     bool usePowerPin2{false};
@@ -126,10 +132,9 @@ public:
   static std::vector<Configuration::presetConfig> presets;
   static std::vector<Configuration::bladeConfig> blades;
 
-
 private:
   Configuration();
-  Configuration(const Configuration& obj) = delete;
+  Configuration(const Configuration&) = delete;
 
   static ProffieBoard parseBoardType(const std::string&);
   static SaberProp parsePropSel(const std::string&);
@@ -139,13 +144,20 @@ private:
   static void outputConfigTopGeneral(std::ofstream&);
   static void outputConfigTopPropSpecific(std::ofstream&);
   static void outputConfigTopSA22C(std::ofstream&);
-
+  static void outputConfigTopFett263(std::ofstream&);
+  static void outputConfigTopBC(std::ofstream&);
+  static void outputConfigTopCaiwyn(std::ofstream&);
   static void outputConfigProp(std::ofstream&);
-
   static void outputConfigPresets(std::ofstream&);
   static void outputConfigPresetsStyles(std::ofstream&);
   static void outputConfigPresetsBlades(std::ofstream&);
   static void genWS281X(std::ofstream&, const Configuration::bladeConfig&);
-
   static void outputConfigButtons(std::ofstream&);
+
+  static void readConfigTop(std::ifstream&);
+  static void readDefine(std::string&);
+  static void readConfigProp(std::ifstream&);
+  static void readConfigPresets(std::ifstream&);
+  static void readPresetArray(std::ifstream&);
+  static void readBladeArray(std::ifstream&);
 };

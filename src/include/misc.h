@@ -1,11 +1,12 @@
+#pragma once
+
 #include <initializer_list>
 #include <memory>
 #include <wx/sizer.h>
 #include <wx/spinctrl.h>
 #include <wx/stattext.h>
 #include <wx/statbox.h>
-
-#pragma once
+#include <wx/checkbox.h>
 
 class Misc
 {
@@ -29,6 +30,8 @@ public:
     ID_PresetTrack,
     ID_BladeSelect,
     ID_SubBladeSelect,
+    ID_BladePower,
+    ID_BladeOption,
     ID_AddBlade,
     ID_RemoveBlade,
     ID_AddSubBlade,
@@ -46,9 +49,6 @@ public:
     wxSpinCtrlDouble *num{nullptr};
   };
 
-  static void importFile(wxWindow*);
-  static void exportFile(wxWindow*);
-
   static numEntry* createNumEntry(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, int32_t minVal, int32_t maxVal, int32_t defaultVal);
   static numEntryDouble* createNumEntryDouble(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, double minVal, double maxVal, double defaultVal);
 
@@ -56,20 +56,5 @@ public:
   static const wxArrayString createEntries(std::initializer_list<std::string> list);
 
 private:
-  enum class ItemType {
-    TOP_DEFINE,
-    CONST_VAL,
-    INCLUDE,
-    PRESET_SECTION,
-    BLADE_SECTION,
-    NONE
-  };
-  static ItemType fileItemType(const std::string&);
-  static void readTopDefine(std::ifstream&);
-  static void readConst(std::ifstream&);
-  static void readInclude(std::ifstream&);
-  static void readPreset(std::ifstream&);
-  static void readBlade(std::ifstream&);
-
   Misc();
 };
