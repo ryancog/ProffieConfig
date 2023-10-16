@@ -10,8 +10,8 @@
 #define ARDUINO_CLI(command) popen("resources/arduino-cli/arduino-cli " command, "r")
 #define DRIVER_INSTALL popen("pkexec cp ~/.arduino15/packages/proffieboard/hardware/stm32l4/3.6/drivers/linux/*rules /etc/udev/rules.d", "r")
 #elif defined(__WXMSW__)
-#define ARDUINO_CLI(command) popen("start ../resources/win32/arduino-cli/arduino-cli.exe " command, "r")
-#define DRIVER_INSTALL popen("", "r")
+#define ARDUINO_CLI(command) popen("start /min resources/arduino-cli/arduino-cli.exe " command, "r")
+#define DRIVER_INSTALL popen("start /min resources/proffie-dfu-setup.exe", "r")
 #elif defined(__WXOSX__)
 #define ARDUINO_CLI(command) popen("../resources/macOS/arduino-cli/arduino-cli " command, "r");
 #define DRIVER_INSTALL popen("", "r");
@@ -25,8 +25,10 @@ void Arduino::init() {
     FILE* install;
     char buffer[128];
 
+#ifndef __WXOSX__
 #ifdef __WXGTK__
     wxMessageBox("You will be prompted for your password.", "Driver Install", wxOK);
+#endif
 
     MainWindow::instance->progDialog->emitEvent(5, "Installing drivers...");
     install = DRIVER_INSTALL;
@@ -45,7 +47,10 @@ void Arduino::init() {
       return;
     }
     MainWindow::instance->progDialog->emitEvent(100, "Done.");
+
+#ifdef __WXGTK__
     wxMessageBox("Please restart your computer to apply changes.", "Dependency Installation Success", wxOK | wxICON_INFORMATION);
+#endif
   });
 }
 

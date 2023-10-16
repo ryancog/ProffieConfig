@@ -15,8 +15,8 @@ public:
     wxComboBox* prop{nullptr};
     wxCheckBox* noLockupHold{nullptr};
 
-    wxCheckBox* disableguestureNoBlade{nullptr};
-    wxCheckBox* guestureBattle{nullptr};
+    wxCheckBox* disableGestureNoBlade{nullptr};
+    wxCheckBox* gestureBattle{nullptr};
     // Stab On
     wxCheckBox* stabOn{nullptr};
     wxRadioButton* stabOnFast{nullptr};
@@ -44,7 +44,7 @@ public:
     wxRadioButton* twistOffPostoff{nullptr};
 
     // Battle Mode
-    wxCheckBox* guestureEnBattle{nullptr};
+    wxCheckBox* gestureEnBattle{nullptr};
     Misc::numEntry* lockupDelay;
     wxRadioButton* battleModeToggle{nullptr};
     wxRadioButton* battleModeAlways{nullptr};
@@ -72,15 +72,15 @@ public:
     wxCheckBox* pwrLockup{nullptr};
     wxCheckBox* pwrHoldOff{nullptr};
     wxCheckBox* auxHoldLockup{nullptr};
-    wxCheckBox* meltguestureAlways{nullptr};
+    wxCheckBox* meltGestureAlways{nullptr};
     wxCheckBox* volumeCircular{nullptr};
     wxCheckBox* brightnessCircular{nullptr};
-    wxCheckBox* pwrWakeguesture{nullptr};
+    wxCheckBox* pwrWakeGesture{nullptr};
     wxRadioButton* noExtraEffects{nullptr};
     wxRadioButton* specialAbilities{nullptr};
     wxRadioButton* multiPhase{nullptr};
     wxCheckBox* spinMode{nullptr};
-    wxCheckBox* saveGuesture{nullptr};
+    wxCheckBox* saveGesture{nullptr};
     wxCheckBox* saveChoreo{nullptr};
     wxCheckBox* dualModeSound{nullptr};
     wxCheckBox* clashStrengthSound{nullptr};
@@ -96,7 +96,7 @@ public:
     wxCheckBox* fontChangeOTF{nullptr};
     wxCheckBox* styleChangeOTF{nullptr};
     wxCheckBox* presetCopyOTF{nullptr};
-    wxCheckBox* battleToggle{nullptr};
+    wxCheckBox* battleModeNoToggle{nullptr};
     wxCheckBox* multiBlast{nullptr};
     wxCheckBox* multiBlastDisableToggle{nullptr};
     wxCheckBox* multiBlastSwing{nullptr};
@@ -110,7 +110,7 @@ private:
 
   static std::vector<RStaticBox*> boxes;
 
-  RStaticBox* guestures(wxStaticBoxSizer*);
+  RStaticBox* gestures(wxStaticBoxSizer*);
   RStaticBox* stabOn(wxStaticBoxSizer*);
   RStaticBox* swingOn(wxStaticBoxSizer*);
   RStaticBox* thrustOn(wxStaticBoxSizer*);
