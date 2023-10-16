@@ -7,10 +7,10 @@
 
 
 PropPage::PropPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, "") {
-  settings.prop = new wxComboBox(this->GetStaticBox(), Misc::ID_PropSelect, PR_SA22C, wxDefaultPosition, wxDefaultSize, Misc::createEntries({PR_DEFAULT, PR_SA22C, PR_FETT263, PR_SHTOK, PR_BC, PR_CAIWYN}), wxCB_READONLY);
+  settings.prop = new wxComboBox(this->GetStaticBox(), Misc::ID_PropSelect, PR_DEFAULT, wxDefaultPosition, wxDefaultSize, Misc::createEntries({PR_DEFAULT, PR_SA22C, PR_FETT263, PR_SHTOK, PR_BC, PR_CAIWYN}), wxCB_READONLY);
 
   Add(settings.prop, MENUITEMFLAGS);
-  Add(guestures(this), BOXITEMFLAGS);
+  Add(gestures(this), BOXITEMFLAGS);
   Add(controls(this), BOXITEMFLAGS);
   Add(features(this), BOXITEMFLAGS);
   Add(battleMode(this), BOXITEMFLAGS);
@@ -26,7 +26,7 @@ void PropPage::update() {
 
   std::string prop = settings.prop->GetStringSelection().ToStdString();
 
-  settings.disableguestureNoBlade->Show(BC);
+  settings.disableGestureNoBlade->Show(BC);
   settings.noLockupHold->Show(SA22C);
   // Stab On
   settings.stabOn->Show(SA22C || FETT263 || BC);
@@ -35,7 +35,8 @@ void PropPage::update() {
   settings.stabOnNoBattle->Show(FETT263);
   // Swing On
   settings.swingOn->Show(SA22C || FETT263 || BC);
-  settings.swingOnSpeed->box->Show(SA22C || FETT263);
+  settings.swingOnSpeed->box->Show(SA22C || FETT263 || BC);
+  settings.swingOnSpeed->num->Enable(settings.swingOn->GetValue());
   settings.swingOnFast->Show(FETT263);
   settings.swingOnPreon->Show(FETT263);
   settings.swingOnNoBattle->Show(FETT263);
@@ -55,7 +56,7 @@ void PropPage::update() {
   settings.twistOffPostoff->Show(FETT263);
 
   // Battle Mode
-  settings.guestureEnBattle->Show(SA22C || BC);
+  settings.gestureEnBattle->Show(SA22C || BC);
   settings.lockupDelay->box->Show(SA22C || FETT263 || BC);
   settings.battleModeToggle->Show(FETT263);
   settings.battleModeAlways->Show(FETT263);
@@ -70,11 +71,10 @@ void PropPage::update() {
   if (settings.forcePush->GetValue()) {
     settings.forcePushBM->SetValue(true);
     settings.forcePushBM->Disable();
-    settings.forcePushLength->num->Enable();
-  } else {
-    settings.forcePushBM->Enable();
-    settings.forcePushLength->num->Disable();
-  }
+  } else settings.forcePushBM->Enable();
+  if (settings.forcePushBM->GetValue()) settings.forcePushLength->num->Enable();
+  else settings.forcePushLength->num->Disable();
+
 
   // Edit Mode/Settings
 
@@ -114,22 +114,24 @@ void PropPage::update() {
   if (GeneralPage::settings.buttons->num->GetValue() == 2) settings.auxHoldLockup->Enable();
   else settings.auxHoldLockup->Disable();
 
-  settings.meltguestureAlways->Show(FETT263);
+  settings.meltGestureAlways->Show(FETT263);
   settings.volumeCircular->Show(FETT263);
   settings.brightnessCircular->Show(FETT263);
-  settings.pwrWakeguesture->Show(FETT263);
+  settings.pwrWakeGesture->Show(FETT263);
 
   settings.noExtraEffects->Show(FETT263);
   settings.specialAbilities->Show(FETT263);
-  if (settings.multiPhase->GetValue() || settings.saveChoreo->GetValue()) settings.specialAbilities->Disable();
-  else settings.specialAbilities->Enable();
+  if (settings.saveChoreo->GetValue()) {
+    if (!settings.multiPhase->GetValue()) settings.noExtraEffects->SetValue(true);
+    settings.specialAbilities->Disable();
+  } else settings.specialAbilities->Enable();
   settings.multiPhase->Show(FETT263);
 
   settings.spinMode->Show(FETT263);
-  if (settings.pwrLockup->GetValue() || settings.saveChoreo->GetValue()) settings.spinMode->Disable();
+  if (settings.auxHoldLockup->GetValue() || settings.saveChoreo->GetValue()) settings.spinMode->Disable();
   else settings.spinMode->Enable();
 
-  settings.saveGuesture->Show(FETT263);
+  settings.saveGesture->Show(FETT263);
   settings.saveChoreo->Show(FETT263);
   settings.dualModeSound->Show(FETT263);
   settings.clashStrengthSound->Show(FETT263);
@@ -148,7 +150,7 @@ void PropPage::update() {
   settings.fontChangeOTF->Show(FETT263);
   settings.styleChangeOTF->Show(FETT263);
   settings.presetCopyOTF->Show(FETT263);
-  settings.battleToggle->Show(FETT263);
+  settings.battleModeNoToggle->Show(FETT263);
   settings.multiBlast->Show(FETT263);
   settings.multiBlastDisableToggle->Show(FETT263);
   if (settings.multiBlast->GetValue()) settings.multiBlastDisableToggle->Enable();
@@ -171,16 +173,15 @@ void PropPage::update() {
 # undef ALL
 }
 
-PropPage::RStaticBox* PropPage::guestures(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox* guestures = new PropPage::RStaticBox(wxHORIZONTAL, parent->GetStaticBox(), "guesture Control");
+PropPage::RStaticBox* PropPage::gestures(wxStaticBoxSizer* parent) {
+  PropPage::RStaticBox* gestures = new PropPage::RStaticBox(wxHORIZONTAL, parent->GetStaticBox(), "Gesture Control");
+  gestures->Add(stabOn(gestures), BOXITEMFLAGS);
+  gestures->Add(swingOn(gestures), BOXITEMFLAGS);
+  gestures->Add(thrustOn(gestures), BOXITEMFLAGS);
+  gestures->Add(twistOn(gestures), BOXITEMFLAGS);
+  gestures->Add(twistOff(gestures), BOXITEMFLAGS);
 
-  guestures->Add(stabOn(guestures), BOXITEMFLAGS);
-  guestures->Add(swingOn(guestures), BOXITEMFLAGS);
-  guestures->Add(thrustOn(guestures), BOXITEMFLAGS);
-  guestures->Add(twistOn(guestures), BOXITEMFLAGS);
-  guestures->Add(twistOff(guestures), BOXITEMFLAGS);
-
-  return guestures;
+  return gestures;
 }
 PropPage::RStaticBox* PropPage::stabOn(wxStaticBoxSizer* parent) {
   PropPage::RStaticBox *stabOn = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Stab On");
@@ -195,7 +196,6 @@ PropPage::RStaticBox* PropPage::stabOn(wxStaticBoxSizer* parent) {
 
   return stabOn;
 }
-
 PropPage::RStaticBox* PropPage::swingOn(wxStaticBoxSizer* parent) {
   PropPage::RStaticBox* swingOn = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Swing On");
   settings.swingOn = new wxCheckBox(swingOn->GetStaticBox(), Misc::ID_PropOption, "Swing To Turn On");
@@ -242,9 +242,10 @@ PropPage::RStaticBox* PropPage::twistOff(wxStaticBoxSizer* parent) {
   settings.twistOff = new wxCheckBox(twistOff->GetStaticBox(), Misc::ID_PropOption, "Twist To Turn Off");
   settings.twistOffFast = new wxRadioButton(twistOff->GetStaticBox(), Misc::ID_PropOption, "Fast Retraction", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
   settings.twistOffPostoff = new wxRadioButton(twistOff->GetStaticBox(), Misc::ID_PropOption, "Enable Postoff");
+  settings.twistOffPostoff->SetValue(true);
   twistOff->Add(settings.twistOff, FIRSTITEMFLAGS);
-  twistOff->Add(settings.twistOffFast, MENUITEMFLAGS);
   twistOff->Add(settings.twistOffPostoff, MENUITEMFLAGS);
+  twistOff->Add(settings.twistOffFast, MENUITEMFLAGS);
 
   return twistOff;
 }
@@ -267,24 +268,24 @@ PropPage::RStaticBox* PropPage::generalControls(wxStaticBoxSizer* parent) {
   settings.pwrLockup = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Hold PWR to Lockup");
   settings.pwrHoldOff = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Hold PWR to Turn Off");
   settings.auxHoldLockup = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Hold AUX to Lockup");
-  settings.disableguestureNoBlade = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Disable guestures without Blade");
+  settings.disableGestureNoBlade = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Disable Gestures Without Blade");
   settings.noLockupHold = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Revert Lockup and Multi-Blast Trigger");
   generalControls1->Add(settings.noLockupHold, FIRSTITEMFLAGS);
-  generalControls1->Add(settings.disableguestureNoBlade, MENUITEMFLAGS);
+  generalControls1->Add(settings.disableGestureNoBlade, MENUITEMFLAGS);
   generalControls1->Add(settings.pwrClash, MENUITEMFLAGS);
   generalControls1->Add(settings.pwrLockup, MENUITEMFLAGS);
 
   generalControls1->Add(settings.pwrHoldOff, FIRSTITEMFLAGS);
   generalControls1->Add(settings.auxHoldLockup, MENUITEMFLAGS);
 
-  settings.meltguestureAlways = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Always use Melt guesture");
+  settings.meltGestureAlways = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Always use Melt Guesture");
   settings.volumeCircular = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Use Circular Volume Menu");
   settings.brightnessCircular = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Use Circular Brightness Menu");
-  settings.pwrWakeguesture = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "PWR After Timeout Enables guestures");
-  generalControls2->Add(settings.meltguestureAlways, FIRSTITEMFLAGS);
+  settings.pwrWakeGesture = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "PWR After Timeout Enables Gestures");
+  generalControls2->Add(settings.meltGestureAlways, FIRSTITEMFLAGS);
   generalControls2->Add(settings.volumeCircular, MENUITEMFLAGS);
   generalControls2->Add(settings.brightnessCircular, MENUITEMFLAGS);
-  generalControls2->Add(settings.pwrWakeguesture, MENUITEMFLAGS);
+  generalControls2->Add(settings.pwrWakeGesture, MENUITEMFLAGS);
 
   generalControls->Add(generalControls1);
   generalControls->Add(generalControls2);
@@ -310,6 +311,7 @@ PropPage::RStaticBox* PropPage::interfaceOptions(wxStaticBoxSizer* parent) {
 
   settings.beepErrors = new wxCheckBox(interface->GetStaticBox(), Misc::ID_PropOption, "Beep Errors Instead of Spoken");
   settings.trackPlayerPrompts = new wxCheckBox(interface->GetStaticBox(), Misc::ID_PropOption, "Enable Track Player Prompts");
+  settings.trackPlayerPrompts->SetValue(true);
   settings.spokenColors = new wxCheckBox(interface->GetStaticBox(), Misc::ID_PropOption, "Enable Spoken Colors");
   settings.spokenBatteryNone = new wxRadioButton(interface->GetStaticBox(), Misc::ID_PropOption, "Battery Speak None", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
   settings.spokenBatteryVolts = new wxRadioButton(interface->GetStaticBox(), Misc::ID_PropOption, "Battery Speak Voltage");
@@ -349,6 +351,7 @@ PropPage::RStaticBox* PropPage::quotePlayer(wxStaticBoxSizer* parent) {
   PropPage::RStaticBox* quotePlayer = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Quote Player");
 
   settings.enableQuotePlayer = new wxCheckBox(quotePlayer->GetStaticBox(), Misc::ID_PropOption, "Enable Quote Player");
+  settings.enableQuotePlayer->SetValue(true);
   settings.randomizeQuotePlayer = new wxCheckBox(quotePlayer->GetStaticBox(), Misc::ID_PropOption, "Randomize Quotes");
   settings.forcePlayerDefault = new wxRadioButton(quotePlayer->GetStaticBox(), Misc::ID_PropOption, "Make Force FX Default");
   settings.forcePlayerDefault->SetValue(true);
@@ -375,17 +378,21 @@ PropPage::RStaticBox* PropPage::generalFeatures(wxStaticBoxSizer* parent) {
   settings.saveChoreo = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Choreography");
 
   settings.fontChangeOTF = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "OTF Font Change");
+  settings.fontChangeOTF->SetValue(true);
   settings.styleChangeOTF = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "OTF Style Change");
+  settings.styleChangeOTF->SetValue(true);
   settings.presetCopyOTF = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "OTF Preset Copying");
+  settings.presetCopyOTF->SetValue(true);
 
-  settings.saveGuesture = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Save \"Disable guesture\"");
+  settings.saveGesture = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Save \"Disable Gesture\"");
   settings.dualModeSound = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Ignition Sound Angle");
   settings.clashStrengthSound = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Clash Sound Strength");
   settings.clashStrengthSoundMaxClash = Misc::createNumEntry(generalFeatures, "CSS Max Clash", Misc::ID_PropOption, 8, 16, 10);
   settings.quickPresetSelect = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Preset Select on Boot");
 
   settings.multiBlast = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Multi-Blast");
-  settings.multiBlastDisableToggle = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Multi-Blast guesture Only");
+  settings.multiBlast->SetValue(true);
+  settings.multiBlastDisableToggle = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Multi-Blast Guesture Only");
   settings.multiBlastSwing = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Multi-Blast On Swing");
 
   generalFeatures1->Add(settings.noExtraEffects, MENUITEMFLAGS);
@@ -394,7 +401,7 @@ PropPage::RStaticBox* PropPage::generalFeatures(wxStaticBoxSizer* parent) {
   generalFeatures1->Add(settings.spinMode, MENUITEMFLAGS);
   generalFeatures1->Add(settings.saveChoreo, MENUITEMFLAGS);
 
-  generalFeatures2->Add(settings.saveGuesture, MENUITEMFLAGS);
+  generalFeatures2->Add(settings.saveGesture, MENUITEMFLAGS);
   generalFeatures2->Add(settings.dualModeSound, MENUITEMFLAGS);
   generalFeatures2->Add(settings.quickPresetSelect, MENUITEMFLAGS);
   generalFeatures2->Add(settings.multiBlast, MENUITEMFLAGS);
@@ -431,17 +438,17 @@ PropPage::RStaticBox* PropPage::activation(wxStaticBoxSizer* parent) {
   settings.battleModeAlways = new wxRadioButton(activation->GetStaticBox(), Misc::ID_PropOption, "Battle Mode Always On");
   settings.battleModeOnStart = new wxRadioButton(activation->GetStaticBox(), Misc::ID_PropOption, "Battle Mode On Start");
 
-  settings.battleToggle = new wxCheckBox(activation->GetStaticBox(), Misc::ID_PropOption, "Battle Mode Only On guesture");
+  settings.battleModeNoToggle = new wxCheckBox(activation->GetStaticBox(), Misc::ID_PropOption, "Battle Mode Only On Gesture");
 
-  settings.guestureEnBattle = new wxCheckBox(activation->GetStaticBox(), Misc::ID_PropOption, "Gesture Ignition Starts Battle Mode");
+  settings.gestureEnBattle = new wxCheckBox(activation->GetStaticBox(), Misc::ID_PropOption, "Gesture Ignition Starts Battle Mode");
 
   activation->Add(settings.battleModeToggle, FIRSTITEMFLAGS);
   activation->Add(settings.battleModeOnStart, MENUITEMFLAGS);
   activation->Add(settings.battleModeAlways, MENUITEMFLAGS);
 
-  activation->Add(settings.battleToggle, FIRSTITEMFLAGS);
+  activation->Add(settings.battleModeNoToggle, FIRSTITEMFLAGS);
 
-  activation->Add(settings.guestureEnBattle, FIRSTITEMFLAGS);
+  activation->Add(settings.gestureEnBattle, FIRSTITEMFLAGS);
 
   return activation;
 }
