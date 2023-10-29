@@ -216,10 +216,10 @@ void MainWindow::CreateMenuBar() {
   wxMenu *menuFile = new wxMenu;
   menuFile->Append(wxID_EXIT);
   menuFile->Append(wxID_ABOUT);
-  menuFile->Append(Misc::ID_Initialize, "Install Dependencies...\tShift+D", "Install Platform-Specific Proffieboard Dependencies");
+  menuFile->Append(Misc::ID_Initialize, "Install Dependencies...\tCtrl+I", "Install Platform-Specific Proffieboard Dependencies");
 
   wxMenu *menuConfig = new wxMenu;
-  menuConfig->Append(Misc::ID_GenFile, "Generate Config\tShift+C", "Generate Config File");
+  menuConfig->Append(Misc::ID_GenFile, "Generate Config\tCtrl+G", "Generate Config File");
 
 
   wxMenuBar *menuBar = new wxMenuBar;
