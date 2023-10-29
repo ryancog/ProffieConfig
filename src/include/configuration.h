@@ -13,6 +13,9 @@ class Configuration
 {
 public:
   static void outputConfig();
+  static void outputConfig(const std::string&);
+  static void exportConfig();
+  static void importConfig();
   static void updateBladesConfig();
   static void readConfig(wxWindow*);
 

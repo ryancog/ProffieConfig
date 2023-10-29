@@ -10,8 +10,8 @@
 #define ARDUINO_CLI(command) popen("resources/arduino-cli/arduino-cli " command, "r")
 #define DRIVER_INSTALL popen("pkexec cp ~/.arduino15/packages/proffieboard/hardware/stm32l4/3.6/drivers/linux/*rules /etc/udev/rules.d", "r")
 #elif defined(__WXMSW__)
-#define ARDUINO_CLI(command) popen("start /min resources/arduino-cli/arduino-cli.exe " command, "r")
-#define DRIVER_INSTALL popen("start /min resources/proffie-dfu-setup.exe", "r")
+#define ARDUINO_CLI(command) popen("resources\\arduino-cli\\arduino-cli.exe " command " 2>&1", "r")
+#define DRIVER_INSTALL popen("resources\\proffie-dfu-setup.exe 2>&1", "r")
 #elif defined(__WXOSX__)
 #define ARDUINO_CLI(command) popen("../resources/macOS/arduino-cli/arduino-cli " command, "r");
 #define DRIVER_INSTALL popen("", "r");
@@ -79,7 +79,6 @@ std::vector<std::string> Arduino::getBoards() {
   if (!arduinoCli) {
     return boards;
   }
-
 
   while (fgets(buffer, 1024, arduinoCli) != nullptr) {
     if (std::strstr(buffer, "No boards found.") != nullptr) {
@@ -149,7 +148,7 @@ std::string Arduino::compile() {
   while(fgets(buffer, 1024, arduinoCli) != NULL) {
     MainWindow::instance->progDialog->emitEvent(-1, ""); // Pulse
     if (std::strstr(buffer, "error")) {
-      return buffer;
+      return Arduino::parseError(buffer);
     }
   }
   if (ARDUINO_CLOSE(arduinoCli) != 0) {
@@ -157,6 +156,13 @@ std::string Arduino::compile() {
   }
 
   return "OK";
+}
+std::string Arduino::parseError(const std::string& error) {
+#define ERRCONTAINS(token) std::strstr(error.data(), token)
+  if (ERRCONTAINS("select Proffieboard")) return "Please ensure you've selected the correct board in General";
+  if (ERRCONTAINS("expected unqualified-id")) return "Please make sure there are no brackets in your styles!\nSuch as { or }";
+  else return ERRCONTAINS("error:");
+#undef ERRCONTAINS
 }
 std::string Arduino::upload() {
   char buffer[1024];

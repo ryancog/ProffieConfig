@@ -91,6 +91,8 @@ void MainWindow::BindEvents() {
         wxMessageBox("Tool for GUI Configuration and flashing of ProffieBoard (Created by Fredrik Hubbinette)\n\nTool Created by Ryryog25\n\nProffieOS v7.9 | Arduino Plugin v3.6.0 | Arduino CLI v0.34.2", "About ProffieConfig", wxOK | wxICON_INFORMATION);
       }, wxID_ABOUT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::outputConfig(); }, Misc::ID_GenFile);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(); }, Misc::ID_ExportFile);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::importConfig(); }, Misc::ID_ImportFile);
 
   // Prop Page
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { PropPage::update(); UPDATEWINDOW; }, Misc::ID_PropSelect);
@@ -219,7 +221,9 @@ void MainWindow::CreateMenuBar() {
   menuFile->Append(Misc::ID_Initialize, "Install Dependencies...\tCtrl+I", "Install Platform-Specific Proffieboard Dependencies");
 
   wxMenu *menuConfig = new wxMenu;
-  menuConfig->Append(Misc::ID_GenFile, "Generate Config\tCtrl+G", "Generate Config File");
+  menuConfig->Append(Misc::ID_GenFile, "Save Config\tCtrl+S", "Generate Config File");
+  menuConfig->Append(Misc::ID_ExportFile, "Export Config...\t", "Choose a location to save a copy of your config...");
+  menuConfig->Append(Misc::ID_ImportFile, "Import Config...\t", "Choose a file to import...");
 
 
   wxMenuBar *menuBar = new wxMenuBar;
