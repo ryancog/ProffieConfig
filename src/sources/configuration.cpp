@@ -573,6 +573,7 @@ void Configuration::readPresetArray(std::ifstream& file) {
 # define CHKSECT if (file.eof() || element == "#endif" || strstr(element.data(), "};") != NULL) return
 # define RUNTOSECTION element.clear(); while (element != "{") { file >> element; CHKSECT; }
   // In future get array name?
+  char* tempData;
   std::string element;
   std::string style;
   RUNTOSECTION;
@@ -583,10 +584,12 @@ void Configuration::readPresetArray(std::ifstream& file) {
     preset++;
     file >> element;
     CHKSECT;
-    Configuration::presets[preset].dirs.assign(std::strtok(element.data(), ",\""));
+    tempData = std::strtok(element.data(), ",\"");
+    Configuration::presets[preset].dirs.assign(tempData == nullptr ? "" : tempData);
     file >> element;
     CHKSECT;
-    Configuration::presets[preset].track.assign(std::strtok(element.data(), ",\""));
+    tempData = std::strtok(element.data(), ",\"");
+    Configuration::presets[preset].track.assign(tempData == nullptr ? "" : tempData);
     for (uint32_t blade = 0; blade < Configuration::blades.size(); blade++) {
       while (std::strstr(element.data(), "(),") == nullptr) {
         file >> element;
@@ -600,7 +603,8 @@ void Configuration::readPresetArray(std::ifstream& file) {
     }
     file >> element;
     CHKSECT;
-    Configuration::presets[preset].name.assign(std::strtok(element.data(), ",\""));
+    tempData = std::strtok(element.data(), ",\"");
+    Configuration::presets[preset].name.assign(tempData == nullptr ? "" : tempData);
   }
 # undef CHKSECT
 # undef RUNTOSECTION
