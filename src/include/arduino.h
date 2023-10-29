@@ -13,6 +13,7 @@ public:
   static void applyToBoard(MainWindow*);
   static void updateIno();
   static std::string compile();
+  static std::string parseError(const std::string&);
   static std::string upload();
 
   static void init();
