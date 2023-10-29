@@ -20,7 +20,7 @@ public:
   struct bladeConfig {
     std::string type{"NeoPixel (RGB)"};
 
-    std::string dataPin{"Pin 1"};
+    std::string dataPin{"bladePin"};
     std::string colorType{"GRB"};
     int32_t numPixels{0};
     bool useRGBWithWhite{false};
