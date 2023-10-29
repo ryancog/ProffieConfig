@@ -1,23 +1,25 @@
 #include "configuration.h"
 
 #include "defines.h"
+#include "mainwindow.h"
 #include "generalpage.h"
 #include "proppage.h"
 #include "presetspage.h"
 #include "bladespage.h"
 #include "hardwarepage.h"
 #include <cstring>
+#include <wx/filedlg.h>
 
 std::vector<Configuration::presetConfig> Configuration::presets;
 std::vector<Configuration::bladeConfig> Configuration::blades;
 
-void Configuration::outputConfig() {
+void Configuration::outputConfig(const std::string& filePath) {
   PresetsPage::update();
   Configuration::updateBladesConfig();
   BladesPage::update();
   HardwarePage::update();
 
-  std::ofstream configOutput("./resources/ProffieOS/config/ProffieConfig_autogen.h");
+  std::ofstream configOutput(filePath);
 
   outputConfigTop(configOutput);
   outputConfigProp(configOutput);
@@ -25,6 +27,14 @@ void Configuration::outputConfig() {
   outputConfigButtons(configOutput);
 
   configOutput.close();
+}
+void Configuration::outputConfig() { Configuration::outputConfig("./resources/ProffieOS/config/ProffieConfig_autogen.h"); }
+void Configuration::exportConfig() {
+  wxFileDialog configLocation(MainWindow::instance, "Save ProffieOS Config File", "", "ProffieConfig_autogen.h", "C Header Files (*.h)|*.h", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+
+  if (configLocation.ShowModal() == wxID_CANCEL) return; // User Closed
+
+  Configuration::outputConfig(configLocation.GetPath().ToStdString());
 }
 
 void Configuration::outputConfigTop(std::ofstream& configOutput) {
@@ -419,10 +429,17 @@ void Configuration::readConfig(wxWindow*) {
       file >> section;
       if (section == "CONFIG_TOP") Configuration::readConfigTop(file);
       if (section == "CONFIG_PROP") Configuration::readConfigProp(file);
-      if (section == "CONFIG_PRESETS") Configuration::readConfigPresets(file);
+      if (section == "CONFIG_PRESETS") {
+        Configuration::readConfigPresets(file);
+        Configuration::readBladeArray(file);
+      }
     }
   }
 }
+void Configuration::importConfig() {
+
+}
+
 void Configuration::readConfigTop(std::ifstream& file) {
   std::string element;
   while (!file.eof() && element != "#endif") {
