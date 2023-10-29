@@ -68,7 +68,7 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
 
     settings.blade4UseRGB = new wxCheckBox(GetStaticBox(), wxID_ANY, "Use RGB with White");
     settings.bladeDataPinLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Blade Data Pin");
-    settings.bladeDataPin = new wxComboBox(GetStaticBox(), wxID_ANY, "Pin 1", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Pin 1", "Pin 2", "Pin 3", "Pin 4"}));
+    settings.bladeDataPin = new wxComboBox(GetStaticBox(), wxID_ANY, "bladePin", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"bladePin", "blade2Pin", "blade3Pin", "blade4Pin"}));
     settings.bladePixelsLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Number of Pixels");
     settings.bladePixels = new wxSpinCtrl(GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0, 144, 0);
 

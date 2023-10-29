@@ -365,7 +365,7 @@ void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput) {
   }
 }
 void Configuration::genWS281X(std::ofstream& configOutput, const Configuration::bladeConfig& blade) {
-  std::string bladePin = blade.dataPin == "Pin 1" ? "bladePin" : blade.dataPin == "Pin 2" ? "blade2Pin" : blade.dataPin == "Pin 3" ? "blade3Pin" : "blade4Pin";
+  std::string bladePin = blade.dataPin;
   std::string bladeColor = blade.type == "NeoPixel (RGB)" || blade.useRGBWithWhite ? blade.colorType : [=](std::string colorType) -> std::string { colorType.replace(colorType.find("W"), 1, "w"); return colorType; }(blade.colorType);
 
   configOutput << "WS281XBladePtr<" << blade.numPixels << ", " << bladePin << ", Color8::" << bladeColor << ", PowerPINS<";

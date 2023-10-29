@@ -7,8 +7,6 @@
 #include <wx/statbox.h>
 #include <wx/checkbox.h>
 
-int ugly;
-
 HardwarePage::HardwarePage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "")
 {
   Add(bladeDetect(this), MENUITEMFLAGS);
