@@ -48,7 +48,7 @@ wxBoxSizer* GeneralPage::boolOptions(wxStaticBoxSizer* parent) {
   settings.presetSave = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Save Preset");
   settings.colorSave = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Save Color");
   settings.disableColor = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Color Change");
-  settings.disableDev = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Developer Commands");
+  settings.disableDev = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Diagnostic Commands");
   settings.disableDev->SetValue(true);
   settings.maxLEDs = Misc::createNumEntry(parent, "Neopixel Max LEDs", wxID_ANY, 0, 1024, 144);
 
