@@ -14,9 +14,9 @@ public:
   enum {
     ID_WindowSelect,
     ID_Initialize,
-    ID_RefreshDevButton,
-    ID_ApplyButton,
-    ID_DevSelect,
+    ID_RefreshDev,
+    ID_ApplyChanges,
+    ID_DeviceSelect,
     ID_PropSelect,
     ID_PropOption,
     ID_GenFile,
