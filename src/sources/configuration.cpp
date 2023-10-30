@@ -28,7 +28,7 @@ void Configuration::outputConfig(const std::string& filePath) {
 
   configOutput.close();
 }
-void Configuration::outputConfig() { Configuration::outputConfig("./resources/ProffieOS/config/ProffieConfig_autogen.h"); }
+void Configuration::outputConfig() { Configuration::outputConfig("resources/ProffieOS/config/ProffieConfig_autogen.h"); }
 void Configuration::exportConfig() {
   wxFileDialog configLocation(MainWindow::instance, "Save ProffieOS Config File", "", "ProffieConfig_autogen.h", "C Header Files (*.h)|*.h", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
@@ -429,10 +429,7 @@ void Configuration::readConfig(wxWindow*) {
       file >> section;
       if (section == "CONFIG_TOP") Configuration::readConfigTop(file);
       if (section == "CONFIG_PROP") Configuration::readConfigProp(file);
-      if (section == "CONFIG_PRESETS") {
-        Configuration::readConfigPresets(file);
-        Configuration::readBladeArray(file);
-      }
+      if (section == "CONFIG_PRESETS") Configuration::readConfigPresets(file);
     }
   }
 }
@@ -634,11 +631,12 @@ void Configuration::readBladeArray(std::ifstream& file) {
   std::string bladeInfo;
   RUNTOSECTION;
   RUNTOSECTION;
-  file >> element;
+  file >> element; // Clear resistance value... maybe use this in the future?
   CHKSECT;
   uint32_t numBlades = Configuration::blades.size();
   Configuration::blades.clear();
   for (uint32_t blade = 0; blade < numBlades; blade++) {
+    bladeInfo.clear();
     while (std::strstr(bladeInfo.data(), "),") == nullptr) { // Gather entire blade data
       file >> element;
       CHKSECT;
