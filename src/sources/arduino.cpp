@@ -14,14 +14,14 @@
 #define ARDUINO_PATH "resources\\arduino-cli\\arduino-cli.exe"
 #define PROFFIEOS_PATH "resources\\ProffieOS"
 #define DRIVER_INSTALL popen("resources\\proffie-dfu-setup.exe 2>&1", "r")
-#else
+#elif defined(__WXGTK__)
 #define ARDUINO_PATH "resources/arduino-cli/arduino-cli"
 #define PROFFIEOS_PATH "resources/ProffieOS"
-#if defined(__WXGTK__)
 #define DRIVER_INSTALL popen("pkexec cp ~/.arduino15/packages/proffieboard/hardware/stm32l4/3.6/drivers/linux/*rules /etc/udev/rules.d", "r")
 #elif defined(__WXOSX__)
+#define ARDUINO_PATH "ProffieConfig.app/Contents/Resources/arduino-cli/arduino-cli"
+#define PROFFIEOS_PATH "ProffieConfig.app/Contents/Resources/ProffieOS"
 #define DRIVER_INSTALL popen("", "r");
-#endif
 #endif
 
 void Arduino::init() {
@@ -62,9 +62,9 @@ void Arduino::init() {
 
 void Arduino::refreshBoards() {
   MainWindow::instance->progDialog = new Progress(MainWindow::instance);
+  MainWindow::instance->progDialog->SetTitle("Device Update");
 
   MainWindow::instance->thread = new ThreadRunner([&]() {
-    MainWindow::instance->progDialog->SetTitle("Device Update");
     Progress::emitEvent(0, "Initializing...");
     wxString lastSel = MainWindow::instance->devSelect->GetStringSelection();
     MainWindow::instance->devSelect->Clear();
@@ -74,6 +74,7 @@ void Arduino::refreshBoards() {
     }
     MainWindow::instance->devSelect->SetValue(lastSel);
     Progress::emitEvent(100, "Done.");
+    Progress::emitEvent(100, "Done."); // This has to be called twice to update on macOS?
   });
 }
 std::vector<std::string> Arduino::getBoards() {
@@ -105,9 +106,10 @@ std::vector<std::string> Arduino::getBoards() {
 
 void Arduino::applyToBoard() {
   MainWindow::instance->progDialog = new Progress(MainWindow::instance);
+  MainWindow::instance->progDialog->SetTitle("Applying Changes | DO NOT DISCONNECT BOARD");
+
   MainWindow::instance->thread = new ThreadRunner([&]() {
     std::string returnVal;
-    MainWindow::instance->progDialog->SetTitle("Applying Changes | DO NOT DISCONNECT BOARD");
     Progress::emitEvent(0, "Initializing...");
 
     Progress::emitEvent(10, "Checking board presence...");
@@ -140,11 +142,15 @@ void Arduino::applyToBoard() {
     }
 
     Progress::emitEvent(100, "Done.");
+    Progress::emitEvent(100, "Done.");
+
     wxMessageBox("Changes Successfully Applied to ProffieBoard!", "Apply Changes to Board", wxOK | wxICON_INFORMATION);
   });
 }
 void Arduino::verifyConfig() {
   MainWindow::instance->progDialog = new Progress(MainWindow::instance);
+  MainWindow::instance->progDialog->SetTitle("Verify Config");
+
   MainWindow::instance->thread = new ThreadRunner([&]() {
     std::string returnVal;
     Progress::emitEvent(20, "Generating configuration file...");

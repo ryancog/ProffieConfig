@@ -16,7 +16,7 @@
 MainWindow* MainWindow::instance;
 MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize) {
   instance = this;
-  new Configuration();
+  config = new Configuration();
   CreateMenuBar();
   CreatePages();
   BindEvents();
@@ -68,9 +68,9 @@ void MainWindow::BindEvents() {
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
         if (devSelect->GetValue() == "Select Device...") applyButton->Disable();
         else applyButton->Enable();
-      }, Misc::ID_DevSelect);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(); }, Misc::ID_RefreshDevButton);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(); }, Misc::ID_ApplyButton);
+      }, Misc::ID_DeviceSelect);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(); }, Misc::ID_RefreshDev);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(); }, Misc::ID_ApplyChanges);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxMessageBox("Tool for GUI Configuration and flashing of ProffieBoard (Created by Fredrik Hubbinette)\n\nTool Created by Ryryog25\n\nProffieOS v7.9 | Arduino Plugin v3.6.0 | Arduino CLI v0.34.2", "About ProffieConfig", wxOK | wxICON_INFORMATION);
@@ -228,9 +228,9 @@ void MainWindow::CreatePages() {
 
   wxBoxSizer* options = new wxBoxSizer(wxHORIZONTAL);
   windowSelect = new wxComboBox(this, Misc::ID_WindowSelect, "General", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Presets", "Blades" /*, "Hardware"*/}), wxCB_READONLY);
-  refreshButton = new wxButton(this, Misc::ID_RefreshDevButton, "Refresh...", wxDefaultPosition, wxDefaultSize, 0);
-  devSelect = new wxComboBox(this, Misc::ID_DevSelect, "Select Device...", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Arduino::getBoards()), wxCB_READONLY);
-  applyButton = new wxButton(this, Misc::ID_ApplyButton, "Apply to Board...", wxDefaultPosition, wxDefaultSize, 0);
+  refreshButton = new wxButton(this, Misc::ID_RefreshDev, "Refresh...", wxDefaultPosition, wxDefaultSize, 0);
+  devSelect = new wxComboBox(this, Misc::ID_DeviceSelect, "Select Device...", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Arduino::getBoards()), wxCB_READONLY);
+  applyButton = new wxButton(this, Misc::ID_ApplyChanges, "Apply to Board...", wxDefaultPosition, wxDefaultSize, 0);
   applyButton->Disable();
   options->Add(windowSelect, wxSizerFlags(0).Border(wxALL, 10));
   options->AddStretchSpacer(1);

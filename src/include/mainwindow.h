@@ -7,6 +7,7 @@
 #include "hardwarepage.h"
 #include "progress.h"
 #include "threadrunner.h"
+#include "configuration.h"
 
 #pragma once
 
@@ -32,6 +33,7 @@ private:
   PresetsPage* presets;
   BladesPage* blades;
   HardwarePage* hardware;
+  Configuration* config; //Needed purely for memory management
 
   void BindEvents();
   void CreateMenuBar();

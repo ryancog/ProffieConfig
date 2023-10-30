@@ -19,5 +19,5 @@ public:
   static void handleEvent(Progress*, ProgressEvent*);
 
   static wxEventTypeTag<wxCommandEvent> EVT_UPDATE;
-  Progress(wxWindow* parent) : wxProgressDialog("", "", 100, parent, wxPD_APP_MODAL | wxPD_AUTO_HIDE) {}
+  Progress(wxWindow* parent) : wxProgressDialog("", "", 100, parent, wxPD_APP_MODAL) {}
 };
