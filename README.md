@@ -24,6 +24,11 @@ Under "Config" there's the menu option to save your config, import and export it
 
 Once you're done, plug in your Proffieboard, click "Refresh..." and then your board's port should show up in the "Select Device..." dropdown. If it doesn't make sure you've installed dependencies. Now, click "Apply to Board..." Your configuration will be flashed to the proffieboard, and that's it! You're done. You can move put the necessary font/effect sound files onto your SD card, and you're off to the races!
 
+## To-Do (Non-Exhaustive)
+- Implement Blade Detect and Blade ID
+- Implement SSD1306
+- Implement Smart Suggestions on FLASH overflow
+
 ## Gallery
 
 <img src=https://github.com/ryryog25/ProffieConfig/assets/60193408/e8f168d3-ae67-4a2b-bb99-146c4cff4b53 width=500>
