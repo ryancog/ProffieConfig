@@ -28,6 +28,8 @@ Once you're done, plug in your Proffieboard, click "Refresh..." and then your bo
 - Implement Blade Detect and Blade ID
 - Implement SSD1306
 - Implement Smart Suggestions on FLASH overflow
+- Implement tooltips for more detailed setting explanation
+- Implement dialog showing current button configuration (depending on prop and `NUM_BUTTONS`)
 
 ## Gallery
 
