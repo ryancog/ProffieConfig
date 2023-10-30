@@ -8,7 +8,7 @@ Utilzes `arduino-cli` and `proffie-dfu-setup` for driver installation and flashi
 
 ## Installation
 
-The latest release can be found [here](https://github.com/ryryog25/ProffieConfig/releases/tag/latest), and once it's downloaded, just run it!
+The latest release can be found [here](https://github.com/ryryog25/ProffieConfig/releases/tag/latest), and once it's downloaded, just extract and run it!
 
 ## Usage
 
