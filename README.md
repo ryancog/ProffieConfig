@@ -26,6 +26,7 @@ Once you're done, plug in your Proffieboard, click "Refresh..." and then your bo
 
 ## To-Do (Non-Exhaustive)
 - Implement Blade Detect and Blade ID
+- Implement `DISABLE_TALKIE`
 - Implement SSD1306
 - Implement Smart Suggestions on FLASH overflow
 - Implement tooltips for more detailed setting explanation
