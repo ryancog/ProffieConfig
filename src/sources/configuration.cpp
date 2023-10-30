@@ -2,22 +2,19 @@
 
 #include "defines.h"
 #include "mainwindow.h"
-#include "generalpage.h"
-#include "proppage.h"
-#include "presetspage.h"
-#include "bladespage.h"
-#include "hardwarepage.h"
 #include <cstring>
 #include <wx/filedlg.h>
 
-std::vector<Configuration::presetConfig> Configuration::presets;
-std::vector<Configuration::bladeConfig> Configuration::blades;
+Configuration* Configuration::instance;
+Configuration::Configuration() {
+  instance = this;
+}
 
 void Configuration::outputConfig(const std::string& filePath) {
-  PresetsPage::update();
+  PresetsPage::instance->update();
   Configuration::updateBladesConfig();
-  BladesPage::update();
-  HardwarePage::update();
+  BladesPage::instance->update();
+  HardwarePage::instance->update();
 
   std::ofstream configOutput(filePath);
 
@@ -46,9 +43,9 @@ void Configuration::outputConfigTop(std::ofstream& configOutput) {
 
 }
 void Configuration::outputConfigTopDefaults(std::ofstream& configOutput) {
-  if (GeneralPage::settings.massStorage->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_MASS_STORAGE" << std::endl;
-  if (GeneralPage::settings.webUSB->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_WEBUSB" << std::endl;
-  switch (parseBoardType(GeneralPage::settings.board->GetValue().ToStdString())) {
+  if (GeneralPage::instance->settings.massStorage->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_MASS_STORAGE" << std::endl;
+  if (GeneralPage::instance->settings.webUSB->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_WEBUSB" << std::endl;
+  switch (parseBoardType(GeneralPage::instance->settings.board->GetValue().ToStdString())) {
     case Configuration::ProffieBoard::V1:
       configOutput << "#include \"proffieboard_v1_config.h\"" << std::endl;
       break;
@@ -60,13 +57,13 @@ void Configuration::outputConfigTopDefaults(std::ofstream& configOutput) {
   }
   configOutput << "#define NUM_BLADES " << [=]() -> int32_t {
     int32_t numBlades = 0;
-    for (const Configuration::bladeConfig& blade : Configuration::blades) numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
+    for (const Configuration::bladeConfig& blade : Configuration::instance->blades) numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
     return numBlades;
   }() << std::endl;
-  configOutput << "#define NUM_BUTTONS " << GeneralPage::settings.buttons->num->GetValue() << std::endl;
-  configOutput << "#define VOLUME " << GeneralPage::settings.volume->num->GetValue() << std::endl;
-  configOutput << "const unsigned int maxLedsPerStrip = " << GeneralPage::settings.maxLEDs->num->GetValue() << ";" << std::endl;
-  configOutput << "#define CLASH_THRESHOLD_G " << GeneralPage::settings.clash->num->GetValue() << std::endl;
+  configOutput << "#define NUM_BUTTONS " << GeneralPage::instance->settings.buttons->num->GetValue() << std::endl;
+  configOutput << "#define VOLUME " << GeneralPage::instance->settings.volume->num->GetValue() << std::endl;
+  configOutput << "const unsigned int maxLedsPerStrip = " << GeneralPage::instance->settings.maxLEDs->num->GetValue() << ";" << std::endl;
+  configOutput << "#define CLASH_THRESHOLD_G " << GeneralPage::instance->settings.clash->num->GetValue() << std::endl;
   // Implement Blade Detect Config
   configOutput << "#define ENABLE_AUDIO" << std::endl;
   configOutput << "#define ENABLE_WS2811" << std::endl;
@@ -76,19 +73,19 @@ void Configuration::outputConfigTopDefaults(std::ofstream& configOutput) {
   configOutput << "#define DISABLE_BASIC_PARSER_STYLES" << std::endl;
 }
 void Configuration::outputConfigTopGeneral(std::ofstream& configOutput) {
-  if (HardwarePage::settings.OLED->GetValue()) configOutput << "#define ENABLE_SSD1306" << std::endl;
-  if (GeneralPage::settings.colorSave->GetValue()) configOutput << "#define SAVE_COLOR_CHANGE" << std::endl;
-  if (GeneralPage::settings.presetSave->GetValue()) configOutput << "#define SAVE_PRESET" << std::endl;
-  if (GeneralPage::settings.volumeSave->GetValue()) configOutput << "#define SAVE_VOLUME" << std::endl;
-  if (GeneralPage::settings.disableColor->GetValue()) configOutput << "#define DISABLE_COLOR_CHANGE" << std::endl;
-  if (!GeneralPage::settings.disableDev->GetValue()) configOutput << "#define ENABLE_DEVELOPER_COMMANDS" << std::endl;
+  if (HardwarePage::instance->settings.OLED->GetValue()) configOutput << "#define ENABLE_SSD1306" << std::endl;
+  if (GeneralPage::instance->settings.colorSave->GetValue()) configOutput << "#define SAVE_COLOR_CHANGE" << std::endl;
+  if (GeneralPage::instance->settings.presetSave->GetValue()) configOutput << "#define SAVE_PRESET" << std::endl;
+  if (GeneralPage::instance->settings.volumeSave->GetValue()) configOutput << "#define SAVE_VOLUME" << std::endl;
+  if (GeneralPage::instance->settings.disableColor->GetValue()) configOutput << "#define DISABLE_COLOR_CHANGE" << std::endl;
+  if (!GeneralPage::instance->settings.disableDev->GetValue()) configOutput << "#define ENABLE_DEVELOPER_COMMANDS" << std::endl;
   else configOutput << "#define DISABLE_DIAGNOSTIC_COMMANDS" << std::endl;
-  configOutput << "#define PLI_OFF_TIME " << GeneralPage::settings.pliTime->num->GetValue() << " * 60 * 1000" << std::endl;
-  configOutput << "#define IDLE_OFF_TIME " << GeneralPage::settings.idleTime->num->GetValue() << " * 60 * 1000" << std::endl;
-  configOutput << "#define MOTION_TIMEOUT " << GeneralPage::settings.motionTime->num->GetValue() << " * 60 * 1000" << std::endl;
+  configOutput << "#define PLI_OFF_TIME " << GeneralPage::instance->settings.pliTime->num->GetValue() << " * 60 * 1000" << std::endl;
+  configOutput << "#define IDLE_OFF_TIME " << GeneralPage::instance->settings.idleTime->num->GetValue() << " * 60 * 1000" << std::endl;
+  configOutput << "#define MOTION_TIMEOUT " << GeneralPage::instance->settings.motionTime->num->GetValue() << " * 60 * 1000" << std::endl;
 }
 void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput) {
-  switch (parsePropSel(PropPage::settings.prop->GetValue().ToStdString())) {
+  switch (parsePropSel(PropPage::instance->settings.prop->GetValue().ToStdString())) {
     case Configuration::SaberProp::SA22C:
       outputConfigTopSA22C(configOutput);
       break;
@@ -110,139 +107,139 @@ void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput) {
   }
 }
 void Configuration::outputConfigTopSA22C(std::ofstream& configOutput) {
-  if (PropPage::settings.noLockupHold->GetValue()) configOutput << "#define SA22C_NO_LOCKUP_HOLD" << std::endl;
-  if (PropPage::settings.stabOn->GetValue()) configOutput << "#define SA22C_STAB_ON" << std::endl;
-  if (PropPage::settings.swingOn->GetValue()) {
+  if (PropPage::instance->settings.noLockupHold->GetValue()) configOutput << "#define SA22C_NO_LOCKUP_HOLD" << std::endl;
+  if (PropPage::instance->settings.stabOn->GetValue()) configOutput << "#define SA22C_STAB_ON" << std::endl;
+  if (PropPage::instance->settings.swingOn->GetValue()) {
     configOutput << "#define SA22C_SWING_ON" << std::endl;
-    configOutput << "#define SA22C_SWING_ON_SPEED " << PropPage::settings.swingOnSpeed->num->GetValue() << std::endl;
+    configOutput << "#define SA22C_SWING_ON_SPEED " << PropPage::instance->settings.swingOnSpeed->num->GetValue() << std::endl;
   }
-  if (PropPage::settings.twistOn->GetValue()) configOutput << "#define SA22C_TWIST_ON" << std::endl;
-  if (PropPage::settings.thrustOn->GetValue()) configOutput << "#define SA22C_THRUST_ON" << std::endl;
-  if (PropPage::settings.twistOff->GetValue()) configOutput << "#define SA22C_TWIST_OFF" << std::endl;
-  if (PropPage::settings.forcePush->GetValue()) {
+  if (PropPage::instance->settings.twistOn->GetValue()) configOutput << "#define SA22C_TWIST_ON" << std::endl;
+  if (PropPage::instance->settings.thrustOn->GetValue()) configOutput << "#define SA22C_THRUST_ON" << std::endl;
+  if (PropPage::instance->settings.twistOff->GetValue()) configOutput << "#define SA22C_TWIST_OFF" << std::endl;
+  if (PropPage::instance->settings.forcePush->GetValue()) {
     configOutput << "#define SA22C_FORCE_PUSH" << std::endl;
-    configOutput << "#define SA22C_FORCE_PUSH_LENGTH " << PropPage::settings.forcePushLength->num->GetValue() << std::endl;
+    configOutput << "#define SA22C_FORCE_PUSH_LENGTH " << PropPage::instance->settings.forcePushLength->num->GetValue() << std::endl;
   }
-  if (PropPage::settings.gestureEnBattle->GetValue())
+  if (PropPage::instance->settings.gestureEnBattle->GetValue())
     configOutput << "#define GESTURE_AUTO_BATTLE_MODE" << std::endl;
-  configOutput << "#define SA22C_LOCKUP_DELAY " << PropPage::settings.lockupDelay->num->GetValue() << std::endl;
+  configOutput << "#define SA22C_LOCKUP_DELAY " << PropPage::instance->settings.lockupDelay->num->GetValue() << std::endl;
 }
 void Configuration::outputConfigTopFett263(std::ofstream& configOutput) {
-  if (PropPage::settings.stabOn->GetValue()) {
-    if (PropPage::settings.stabOnFast->GetValue()) configOutput << "#define FETT263_STAB_ON" << std::endl;
-    else if (PropPage::settings.stabOnPreon->GetValue()) configOutput << "#define FETT263_STAB_ON_PREON" << std::endl;
-    if (PropPage::settings.stabOnNoBattle) configOutput << "#define FETT263_STAB_ON_NO_BM" << std::endl;
+  if (PropPage::instance->settings.stabOn->GetValue()) {
+    if (PropPage::instance->settings.stabOnFast->GetValue()) configOutput << "#define FETT263_STAB_ON" << std::endl;
+    else if (PropPage::instance->settings.stabOnPreon->GetValue()) configOutput << "#define FETT263_STAB_ON_PREON" << std::endl;
+    if (PropPage::instance->settings.stabOnNoBattle) configOutput << "#define FETT263_STAB_ON_NO_BM" << std::endl;
   }
-  if (PropPage::settings.swingOn->GetValue()) {
-    if (PropPage::settings.swingOnFast->GetValue()) configOutput << "#define FETT263_SWING_ON" << std::endl;
-    else if (PropPage::settings.swingOnPreon->GetValue()) configOutput << "#define FETT263_SWING_ON_PREON" << std::endl;
-    if (PropPage::settings.swingOnNoBattle) configOutput << "#define FETT263_SWING_ON_NO_BM" << std::endl;
-    configOutput << "#define FETT263_SWING_ON_SPEED " << PropPage::settings.swingOnSpeed->num->GetValue() << std::endl;
+  if (PropPage::instance->settings.swingOn->GetValue()) {
+    if (PropPage::instance->settings.swingOnFast->GetValue()) configOutput << "#define FETT263_SWING_ON" << std::endl;
+    else if (PropPage::instance->settings.swingOnPreon->GetValue()) configOutput << "#define FETT263_SWING_ON_PREON" << std::endl;
+    if (PropPage::instance->settings.swingOnNoBattle) configOutput << "#define FETT263_SWING_ON_NO_BM" << std::endl;
+    configOutput << "#define FETT263_SWING_ON_SPEED " << PropPage::instance->settings.swingOnSpeed->num->GetValue() << std::endl;
   }
-  if (PropPage::settings.thrustOn->GetValue()) {
-    if (PropPage::settings.thrustOnFast->GetValue()) configOutput << "#define FETT263_THRUST_ON" << std::endl;
-    else if (PropPage::settings.thrustOnPreon->GetValue()) configOutput << "#define FETT263_THRUST_ON_PREON" << std::endl;
-    if (PropPage::settings.thrustOnNoBattle) configOutput << "#define FETT263_THRUST_ON_NO_BM" << std::endl;
+  if (PropPage::instance->settings.thrustOn->GetValue()) {
+    if (PropPage::instance->settings.thrustOnFast->GetValue()) configOutput << "#define FETT263_THRUST_ON" << std::endl;
+    else if (PropPage::instance->settings.thrustOnPreon->GetValue()) configOutput << "#define FETT263_THRUST_ON_PREON" << std::endl;
+    if (PropPage::instance->settings.thrustOnNoBattle) configOutput << "#define FETT263_THRUST_ON_NO_BM" << std::endl;
   }
-  if (PropPage::settings.twistOn->GetValue()) {
-    if (PropPage::settings.twistOnFast->GetValue()) configOutput << "#define FETT263_TWIST_ON" << std::endl;
-    else if (PropPage::settings.twistOnPreon->GetValue()) configOutput << "#define FETT263_TWIST_ON_PREON" << std::endl;
-    if (PropPage::settings.twistOnNoBattle) configOutput << "#define FETT263_TWIST_ON_NO_BM" << std::endl;
+  if (PropPage::instance->settings.twistOn->GetValue()) {
+    if (PropPage::instance->settings.twistOnFast->GetValue()) configOutput << "#define FETT263_TWIST_ON" << std::endl;
+    else if (PropPage::instance->settings.twistOnPreon->GetValue()) configOutput << "#define FETT263_TWIST_ON_PREON" << std::endl;
+    if (PropPage::instance->settings.twistOnNoBattle) configOutput << "#define FETT263_TWIST_ON_NO_BM" << std::endl;
   }
-  if (PropPage::settings.twistOff->GetValue()) {
-    if (PropPage::settings.twistOffFast->GetValue()) configOutput << "#define FETT263_TWIST_OFF_NO_POSTOFF" << std::endl;
-    else if (PropPage::settings.twistOffPostoff->GetValue()) configOutput << "#define FETT263_TWIST_OFF" << std::endl;
+  if (PropPage::instance->settings.twistOff->GetValue()) {
+    if (PropPage::instance->settings.twistOffFast->GetValue()) configOutput << "#define FETT263_TWIST_OFF_NO_POSTOFF" << std::endl;
+    else if (PropPage::instance->settings.twistOffPostoff->GetValue()) configOutput << "#define FETT263_TWIST_OFF" << std::endl;
   }
 
-  if (PropPage::settings.pwrHoldOff->GetValue()) configOutput << "#define FETT263_HOLD_BUTTON_OFF" << std::endl;
-  if (PropPage::settings.auxHoldLockup->GetValue()) configOutput << "#define FETT263_HOLD_BUTTON_LOCKUP" << std::endl;
-  if (PropPage::settings.meltGestureAlways->GetValue()) configOutput << "#define FETT263_USE_BC_MELT_STAB" << std::endl;
-  if (PropPage::settings.volumeCircular->GetValue()) configOutput << "#define FETT263_CIRCULAR_VOLUME_MENU" << std::endl;
-  if (PropPage::settings.brightnessCircular->GetValue()) configOutput << "#define FETT263_CIRCULAR_DIM_MENU" << std::endl;
-  if (PropPage::settings.pwrWakeGesture->GetValue()) configOutput << "#define FETT263_MOTION_WAKE_POWER_BUTTON" << std::endl;
+  if (PropPage::instance->settings.pwrHoldOff->GetValue()) configOutput << "#define FETT263_HOLD_BUTTON_OFF" << std::endl;
+  if (PropPage::instance->settings.auxHoldLockup->GetValue()) configOutput << "#define FETT263_HOLD_BUTTON_LOCKUP" << std::endl;
+  if (PropPage::instance->settings.meltGestureAlways->GetValue()) configOutput << "#define FETT263_USE_BC_MELT_STAB" << std::endl;
+  if (PropPage::instance->settings.volumeCircular->GetValue()) configOutput << "#define FETT263_CIRCULAR_VOLUME_MENU" << std::endl;
+  if (PropPage::instance->settings.brightnessCircular->GetValue()) configOutput << "#define FETT263_CIRCULAR_DIM_MENU" << std::endl;
+  if (PropPage::instance->settings.pwrWakeGesture->GetValue()) configOutput << "#define FETT263_MOTION_WAKE_POWER_BUTTON" << std::endl;
 
-  if (PropPage::settings.editEnable->GetValue()) {
+  if (PropPage::instance->settings.editEnable->GetValue()) {
     configOutput << "#define ENABLE_ALL_EDIT_OPTIONS" << std::endl;
-    if (PropPage::settings.editMode->GetValue()) configOutput << "#define FETT263_EDIT_MODE_MENU" << std::endl;
-    if (PropPage::settings.editSettings->GetValue()) configOutput << "#define FETT263_EDIT_SETTINGS_MENU" << std::endl;
+    if (PropPage::instance->settings.editMode->GetValue()) configOutput << "#define FETT263_EDIT_MODE_MENU" << std::endl;
+    if (PropPage::instance->settings.editSettings->GetValue()) configOutput << "#define FETT263_EDIT_SETTINGS_MENU" << std::endl;
   }
 
-  if (PropPage::settings.beepErrors->GetValue()) configOutput << "#define DISABLE_TALKIE" << std::endl;
-  if (!PropPage::settings.trackPlayerPrompts->GetValue()) configOutput << "#define FETT263_TRACK_PLAYER_NO_PROMPTS" << std::endl;
-  if (PropPage::settings.spokenColors->GetValue()) {
+  if (PropPage::instance->settings.beepErrors->GetValue()) configOutput << "#define DISABLE_TALKIE" << std::endl;
+  if (!PropPage::instance->settings.trackPlayerPrompts->GetValue()) configOutput << "#define FETT263_TRACK_PLAYER_NO_PROMPTS" << std::endl;
+  if (PropPage::instance->settings.spokenColors->GetValue()) {
     configOutput << "#define FETT263_SAY_COLOR_LIST" << std::endl;
     configOutput << "#define FETT263_SAY_COLOR_LIST_CC" << std::endl;
   }
-  if (PropPage::settings.spokenBatteryPercent->GetValue()) configOutput << "#define FETT263_SAY_BATTERY_PERCENT" << std::endl;
-  if (PropPage::settings.spokenBatteryVolts->GetValue()) configOutput << "#define FETT263_SAY_BATTERY_VOLTS" << std::endl;
+  if (PropPage::instance->settings.spokenBatteryPercent->GetValue()) configOutput << "#define FETT263_SAY_BATTERY_PERCENT" << std::endl;
+  if (PropPage::instance->settings.spokenBatteryVolts->GetValue()) configOutput << "#define FETT263_SAY_BATTERY_VOLTS" << std::endl;
 
-  if (PropPage::settings.forcePush->GetValue()) configOutput << "#define FETT263_FORCE_PUSH_ALWAYS_ON" << std::endl;
-  else if (PropPage::settings.forcePushBM->GetValue()) configOutput << "#define FETT263_FORCE_PUSH" << std::endl;
-  if (PropPage::settings.forcePush->GetValue() || PropPage::settings.forcePushBM->GetValue()) configOutput << "#define FETT263_FORCE_PUSH_LENGTH " << PropPage::settings.forcePushLength->num->GetValue() << std::endl;
+  if (PropPage::instance->settings.forcePush->GetValue()) configOutput << "#define FETT263_FORCE_PUSH_ALWAYS_ON" << std::endl;
+  else if (PropPage::instance->settings.forcePushBM->GetValue()) configOutput << "#define FETT263_FORCE_PUSH" << std::endl;
+  if (PropPage::instance->settings.forcePush->GetValue() || PropPage::instance->settings.forcePushBM->GetValue()) configOutput << "#define FETT263_FORCE_PUSH_LENGTH " << PropPage::instance->settings.forcePushLength->num->GetValue() << std::endl;
 
 
-  if (!PropPage::settings.enableQuotePlayer->GetValue()) configOutput << "#define FETT263_DISABLE_QUOTE_PLAYER" << std::endl;
+  if (!PropPage::instance->settings.enableQuotePlayer->GetValue()) configOutput << "#define FETT263_DISABLE_QUOTE_PLAYER" << std::endl;
   else {
-    if (PropPage::settings.randomizeQuotePlayer->GetValue()) configOutput << "#define FETT263_RANDOMIZE_QUOTE_PLAYER" << std::endl;
-    if (PropPage::settings.quotePlayerDefault->GetValue()) configOutput << "#define FETT263_QUOTE_PLAYER_START_ON" << std::endl;
+    if (PropPage::instance->settings.randomizeQuotePlayer->GetValue()) configOutput << "#define FETT263_RANDOMIZE_QUOTE_PLAYER" << std::endl;
+    if (PropPage::instance->settings.quotePlayerDefault->GetValue()) configOutput << "#define FETT263_QUOTE_PLAYER_START_ON" << std::endl;
     // if forcePlayerDefault is default already, no define needed
   }
 
-  if (!PropPage::settings.noExtraEffects->GetValue()) {
-    if (PropPage::settings.specialAbilities->GetValue()) configOutput << "#define FETT263_SPECIAL_ABILITIES" << std::endl;
-    if (PropPage::settings.multiPhase->GetValue()) configOutput << "#define FETT263_MULTI_PHASE" << std::endl;
+  if (!PropPage::instance->settings.noExtraEffects->GetValue()) {
+    if (PropPage::instance->settings.specialAbilities->GetValue()) configOutput << "#define FETT263_SPECIAL_ABILITIES" << std::endl;
+    if (PropPage::instance->settings.multiPhase->GetValue()) configOutput << "#define FETT263_MULTI_PHASE" << std::endl;
   }
-  if (PropPage::settings.saveChoreo->GetValue()) configOutput << "#define FETT263_SAVE_CHOREOGRAPHY" << std::endl;
-  else if (PropPage::settings.spinMode->GetValue()) configOutput << "#define FETT263_SPIN_MODE" << std::endl;
-  if (PropPage::settings.saveGesture->GetValue()) configOutput << "#define FETT263_SAVE_GESTURE_OFF" << std::endl;
-  if (PropPage::settings.dualModeSound->GetValue()) configOutput << "#define FETT263_DUAL_MODE_SOUND" << std::endl;
-  if (PropPage::settings.quickPresetSelect->GetValue()) configOutput << "#define FETT263_QUICK_SELECT_ON_BOOT" << std::endl;
-  if (!PropPage::settings.multiBlast->GetValue()) configOutput << "#define FETT263_DISABLE_MULTI_BLAST" << std::endl;
-  if (PropPage::settings.multiBlastDisableToggle->GetValue()) configOutput << "#define FETT263_DISABLE_MULTI_BLAST_TOGGLE" << std::endl;
+  if (PropPage::instance->settings.saveChoreo->GetValue()) configOutput << "#define FETT263_SAVE_CHOREOGRAPHY" << std::endl;
+  else if (PropPage::instance->settings.spinMode->GetValue()) configOutput << "#define FETT263_SPIN_MODE" << std::endl;
+  if (PropPage::instance->settings.saveGesture->GetValue()) configOutput << "#define FETT263_SAVE_GESTURE_OFF" << std::endl;
+  if (PropPage::instance->settings.dualModeSound->GetValue()) configOutput << "#define FETT263_DUAL_MODE_SOUND" << std::endl;
+  if (PropPage::instance->settings.quickPresetSelect->GetValue()) configOutput << "#define FETT263_QUICK_SELECT_ON_BOOT" << std::endl;
+  if (!PropPage::instance->settings.multiBlast->GetValue()) configOutput << "#define FETT263_DISABLE_MULTI_BLAST" << std::endl;
+  if (PropPage::instance->settings.multiBlastDisableToggle->GetValue()) configOutput << "#define FETT263_DISABLE_MULTI_BLAST_TOGGLE" << std::endl;
 
-  if (!PropPage::settings.fontChangeOTF->GetValue()) configOutput << "#define FETT263_DISABLE_CHANGE_FONT" << std::endl;
-  if (!PropPage::settings.styleChangeOTF->GetValue()) configOutput << "#define FETT263_DISABLE_CHANGE_STYLE" << std::endl;
-  if (!PropPage::settings.presetCopyOTF->GetValue()) configOutput << "#define FETT263_DISABLE_COPY_PRESET" << std::endl;
-  if (PropPage::settings.clashStrengthSound->GetValue()) {
+  if (!PropPage::instance->settings.fontChangeOTF->GetValue()) configOutput << "#define FETT263_DISABLE_CHANGE_FONT" << std::endl;
+  if (!PropPage::instance->settings.styleChangeOTF->GetValue()) configOutput << "#define FETT263_DISABLE_CHANGE_STYLE" << std::endl;
+  if (!PropPage::instance->settings.presetCopyOTF->GetValue()) configOutput << "#define FETT263_DISABLE_COPY_PRESET" << std::endl;
+  if (PropPage::instance->settings.clashStrengthSound->GetValue()) {
     configOutput << "#define FETT263_CLASH_STRENGTH_SOUND" << std::endl;
-    configOutput << "#define FETT263_MAX_CLASH " << PropPage::settings.clashStrengthSoundMaxClash->num->GetValue() << std::endl;
+    configOutput << "#define FETT263_MAX_CLASH " << PropPage::instance->settings.clashStrengthSoundMaxClash->num->GetValue() << std::endl;
   }
 
   // if battleModeToggle is default
-  if (PropPage::settings.battleModeAlways->GetValue()) configOutput << "#define FETT263_BATTLE_MODE_ALWAYS_ON" << std::endl;
-  if (PropPage::settings.battleModeOnStart->GetValue()) configOutput << "#define FETT263_BATTLE_MODE_START_ON" << std::endl;
-  if (PropPage::settings.battleModeNoToggle->GetValue()) configOutput << "#define FETT263_DISABLE_BM_TOGGLE" << std::endl;
-  configOutput << "#define FETT263_LOCKUP_DELAY " << PropPage::settings.lockupDelay->num->GetValue() << std::endl;
-  configOutput << "#define FETT263_BM_CLASH_DETECT " << PropPage::settings.battleModeClash->num->GetValue() << std::endl;
+  if (PropPage::instance->settings.battleModeAlways->GetValue()) configOutput << "#define FETT263_BATTLE_MODE_ALWAYS_ON" << std::endl;
+  if (PropPage::instance->settings.battleModeOnStart->GetValue()) configOutput << "#define FETT263_BATTLE_MODE_START_ON" << std::endl;
+  if (PropPage::instance->settings.battleModeNoToggle->GetValue()) configOutput << "#define FETT263_DISABLE_BM_TOGGLE" << std::endl;
+  configOutput << "#define FETT263_LOCKUP_DELAY " << PropPage::instance->settings.lockupDelay->num->GetValue() << std::endl;
+  configOutput << "#define FETT263_BM_CLASH_DETECT " << PropPage::instance->settings.battleModeClash->num->GetValue() << std::endl;
 
-  if (PropPage::settings.battleModeDisablePWR->GetValue()) configOutput << "#define FETT263_BM_DISABLE_OFF_BUTTON" << std::endl;
+  if (PropPage::instance->settings.battleModeDisablePWR->GetValue()) configOutput << "#define FETT263_BM_DISABLE_OFF_BUTTON" << std::endl;
 }
 void Configuration::outputConfigTopBC(std::ofstream& configOutput) {
-  if (PropPage::settings.stabOn->GetValue()) configOutput << "#define BC_STAB_ON" << std::endl;
-  if (PropPage::settings.swingOn->GetValue()) {
+  if (PropPage::instance->settings.stabOn->GetValue()) configOutput << "#define BC_STAB_ON" << std::endl;
+  if (PropPage::instance->settings.swingOn->GetValue()) {
     configOutput << "#define BC_SWING_ON" << std::endl;
-    configOutput << "#define BC_SWING_ON_SPEED " << PropPage::settings.swingOnSpeed->num->GetValue() << std::endl;
+    configOutput << "#define BC_SWING_ON_SPEED " << PropPage::instance->settings.swingOnSpeed->num->GetValue() << std::endl;
   }
-  if (PropPage::settings.twistOn->GetValue()) configOutput << "#define BC_TWIST_ON" << std::endl;
-  if (PropPage::settings.thrustOn->GetValue()) configOutput << "#define BC_THRUST_ON" << std::endl;
-  if (PropPage::settings.twistOff->GetValue()) configOutput << "#define BC_TWIST_OFF" << std::endl;
-  if (PropPage::settings.forcePush->GetValue()) {
+  if (PropPage::instance->settings.twistOn->GetValue()) configOutput << "#define BC_TWIST_ON" << std::endl;
+  if (PropPage::instance->settings.thrustOn->GetValue()) configOutput << "#define BC_THRUST_ON" << std::endl;
+  if (PropPage::instance->settings.twistOff->GetValue()) configOutput << "#define BC_TWIST_OFF" << std::endl;
+  if (PropPage::instance->settings.forcePush->GetValue()) {
     configOutput << "#define BC_FORCE_PUSH" << std::endl;
-    configOutput << "#define BC_FORCE_PUSH_LENGTH " << PropPage::settings.forcePushLength->num->GetValue() << std::endl;
+    configOutput << "#define BC_FORCE_PUSH_LENGTH " << PropPage::instance->settings.forcePushLength->num->GetValue() << std::endl;
   }
-  if (PropPage::settings.gestureEnBattle->GetValue()) configOutput << "#define GESTURE_AUTO_BATTLE_MODE" << std::endl;
-  if (PropPage::settings.disableGestureNoBlade->GetValue()) configOutput << "#define NO_BLADE_NO_GEST_ONOFF" << std::endl;
-  if (PropPage::settings.multiBlastSwing->GetValue()) configOutput << "#define ENABLE_AUTO_SWING_BLAST" << std::endl;
+  if (PropPage::instance->settings.gestureEnBattle->GetValue()) configOutput << "#define GESTURE_AUTO_BATTLE_MODE" << std::endl;
+  if (PropPage::instance->settings.disableGestureNoBlade->GetValue()) configOutput << "#define NO_BLADE_NO_GEST_ONOFF" << std::endl;
+  if (PropPage::instance->settings.multiBlastSwing->GetValue()) configOutput << "#define ENABLE_AUTO_SWING_BLAST" << std::endl;
 }
 void Configuration::outputConfigTopCaiwyn(std::ofstream& configOutput) {
-  if (PropPage::settings.pwrClash->GetValue()) configOutput << "#define CAIWYN_BUTTON_CLASH" << std::endl;
-  if (PropPage::settings.pwrLockup->GetValue()) configOutput << "#define CAIWYN_BUTTON_LOCKUP" << std::endl;
+  if (PropPage::instance->settings.pwrClash->GetValue()) configOutput << "#define CAIWYN_BUTTON_CLASH" << std::endl;
+  if (PropPage::instance->settings.pwrLockup->GetValue()) configOutput << "#define CAIWYN_BUTTON_LOCKUP" << std::endl;
 }
 
 void Configuration::outputConfigProp(std::ofstream& configOutput)
 {
   configOutput << "#ifdef CONFIG_PROP" << std::endl;
-  switch (Configuration::parsePropSel(PropPage::settings.prop->GetValue().ToStdString())) {
+  switch (Configuration::parsePropSel(PropPage::instance->settings.prop->GetValue().ToStdString())) {
     case Configuration::SaberProp::SA22C:
       configOutput << "#include \"../props/saber_sa22c_buttons.h\"" << std::endl;
       break;
@@ -273,19 +270,19 @@ void Configuration::outputConfigPresets(std::ofstream& configOutput) {
 }
 void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput) {
   configOutput << "Preset blade_in[] = {" << std::endl;
-  for (const Configuration::presetConfig& preset : Configuration::presets) {
+  for (const Configuration::presetConfig& preset : Configuration::instance->presets) {
     configOutput << "\t{ \"" << preset.dirs << "\", \"" << preset.track << "\"," << std::endl;
     if (preset.styles.size() > 0) for (const std::string& style : preset.styles) configOutput << "\t\t" << style << "," << std::endl;
     else configOutput << "\t\t," << std::endl;
     configOutput << "\t\t\"" << preset.name << "\"}";
     // If not the last one, add comma
-    if (&Configuration::presets[Configuration::presets.size() - 1] != &preset) configOutput << ",";
+    if (&Configuration::instance->presets[Configuration::instance->presets.size() - 1] != &preset) configOutput << ",";
     configOutput << std::endl;
   }
   configOutput << "};" << std::endl;
 }
 void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput) {
-  for (const Configuration::bladeConfig& blade : Configuration::blades) {
+  for (const Configuration::bladeConfig& blade : Configuration::instance->blades) {
     if (blade.type == "NeoPixel (RGB)" || blade.type == "NeoPixel (RGBW)") {
       bool firstSub = true;
       if (blade.isSubBlade) for (Configuration::bladeConfig::subBladeInfo subBlade : blade.subBlades) {
@@ -407,19 +404,19 @@ void Configuration::genWS281X(std::ofstream& configOutput, const Configuration::
 void Configuration::outputConfigButtons(std::ofstream& configOutput) {
   configOutput << "#ifdef CONFIG_BUTTONS" << std::endl;
   configOutput << "Button PowerButton(BUTTON_POWER, powerButtonPin, \"pow\");" << std::endl;
-  if (GeneralPage::settings.buttons->num->GetValue() >= 2) configOutput << "Button AuxButton(BUTTON_AUX, auxPin, \"aux\");" << std::endl;
-  if (GeneralPage::settings.buttons->num->GetValue() == 3) configOutput << "Button Aux2Button(BUTTON_AUX2, aux2Pin, \"aux\");" << std::endl; // figure out aux2 syntax
+  if (GeneralPage::instance->settings.buttons->num->GetValue() >= 2) configOutput << "Button AuxButton(BUTTON_AUX, auxPin, \"aux\");" << std::endl;
+  if (GeneralPage::instance->settings.buttons->num->GetValue() == 3) configOutput << "Button Aux2Button(BUTTON_AUX2, aux2Pin, \"aux\");" << std::endl; // figure out aux2 syntax
   configOutput << "#endif" << std::endl << std::endl; // CONFIG_BUTTONS
 }
 
-void Configuration::readConfig(wxWindow*) {
+void Configuration::readConfig(const std::string& filePath) {
   /*
   wxFileDialog fileDlg(win, "Select Config File", "../", "", "C++ Header File (*.h)|*.h", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
   if (fileDlg.ShowModal() == wxID_CANCEL) return;
 
   std::ifstream file(fileDlg.GetPath().ToStdString());
 */
-  std::ifstream file("resources/ProffieOS/config/ProffieConfig_autogen.h");
+  std::ifstream file(filePath);
   if (!file.is_open()) return;
 
   std::string section;
@@ -433,8 +430,27 @@ void Configuration::readConfig(wxWindow*) {
     }
   }
 }
-void Configuration::importConfig() {
+void Configuration::readConfig() {
+  struct stat buffer;
+  if (stat("resources/ProffieOS/config/ProffieConfig_autogen.h", &buffer) != 0) {
+    if (wxMessageBox("No existing configuration file was detected. Would you like to import one?", "ProffieConfig", wxYES | wxNO) == wxYES) {
+      Configuration::importConfig();
+      return;
+    } else return;
+  }
 
+  Configuration::readConfig("resources/ProffieOS/config/ProffieConfig_autogen.h");
+}
+void Configuration::importConfig() {
+  wxFileDialog configLocation(MainWindow::instance, "Choose ProffieOS Config File", "", "", "C Header Files (*.h)|*.h", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+
+  if (configLocation.ShowModal() == wxID_CANCEL) return; // User Closed
+
+  MainWindow::instance->Destroy();
+  MainWindow *frame = new MainWindow();
+  frame->Show(true);
+
+  Configuration::readConfig(configLocation.GetPath().ToStdString());
 }
 
 void Configuration::readConfigTop(std::ifstream& file) {
@@ -448,20 +464,20 @@ void Configuration::readConfigTop(std::ifstream& file) {
       getline(file, element);
       std::strtok(element.data(), "="); // unsigned int maxLedsPerStrip =
       element = std::strtok(nullptr, " ;");
-      GeneralPage::settings.maxLEDs->num->SetValue(std::stoi(element));
+      GeneralPage::instance->settings.maxLEDs->num->SetValue(std::stoi(element));
     } else if (element == "#include" && !file.eof()) {
       file >> element;
       if (std::strstr(element.c_str(), "v1") != NULL) {
-        GeneralPage::settings.board->SetSelection(0);
+        GeneralPage::instance->settings.board->SetSelection(0);
       } else if (std::strstr(element.c_str(), "v2") != NULL) {
-        GeneralPage::settings.board->SetSelection(1);
+        GeneralPage::instance->settings.board->SetSelection(1);
       } else if (std::strstr(element.c_str(), "v3") != NULL) {
-        GeneralPage::settings.board->SetSelection(2);
+        GeneralPage::instance->settings.board->SetSelection(2);
       }
     } else if (element == "//PROFFIECONFIG") {
       file >> element;
-      if (element == "ENABLE_MASS_STORAGE") GeneralPage::settings.massStorage->SetValue(true);
-      if (element == "ENABLE_WEBUSB") GeneralPage::settings.webUSB->SetValue(true);
+      if (element == "ENABLE_MASS_STORAGE") GeneralPage::instance->settings.massStorage->SetValue(true);
+      if (element == "ENABLE_WEBUSB") GeneralPage::instance->settings.webUSB->SetValue(true);
     }
   }
 }
@@ -469,11 +485,11 @@ void Configuration::readConfigProp(std::ifstream& file) {
   std::string element;
   while (!file.eof() && element != "#endif") {
     file >> element;
-    if (std::strstr(element.data(), "sa22c") != nullptr) PropPage::settings.prop->SetValue("SA22C");
-    if (std::strstr(element.data(), "fett263") != nullptr) PropPage::settings.prop->SetValue("Fett263");
-    if (std::strstr(element.data(), "shtok") != nullptr) PropPage::settings.prop->SetValue("Shtok");
-    if (std::strstr(element.data(), "BC") != nullptr) PropPage::settings.prop->SetValue("BC");
-    if (std::strstr(element.data(), "caiwyn") != nullptr) PropPage::settings.prop->SetValue("Caiwyn");
+    if (std::strstr(element.data(), "sa22c") != nullptr) PropPage::instance->settings.prop->SetValue("SA22C");
+    if (std::strstr(element.data(), "fett263") != nullptr) PropPage::instance->settings.prop->SetValue("Fett263");
+    if (std::strstr(element.data(), "shtok") != nullptr) PropPage::instance->settings.prop->SetValue("Shtok");
+    if (std::strstr(element.data(), "BC") != nullptr) PropPage::instance->settings.prop->SetValue("BC");
+    if (std::strstr(element.data(), "caiwyn") != nullptr) PropPage::instance->settings.prop->SetValue("Caiwyn");
   }
 }
 void Configuration::readConfigPresets(std::ifstream& file) {
@@ -494,89 +510,95 @@ void Configuration::readDefine(std::string& define) {
   // General Defines
   CHKDEF("NUM_BLADES") {
     uint8_t bladeNum = DEFNUM;
-    while (bladeNum != Configuration::blades.size()) Configuration::blades.push_back(Configuration::bladeConfig());
-    PresetsPage::update();
+    Configuration::instance->blades.clear();
+    while (bladeNum != Configuration::instance->blades.size()) Configuration::instance->blades.push_back(Configuration::bladeConfig());
+    PresetsPage::instance->update();
   }
-  CHKDEF("NUM_BUTTONS") GeneralPage::settings.buttons->num->SetValue(DEFNUM);
-  CHKDEF("VOLUME") GeneralPage::settings.volume->num->SetValue(DEFNUM);
-  CHKDEF("CLASH_THRESHOLD_G") GeneralPage::settings.clash->num->SetValue(DEFNUM);
-  CHKDEF("SAVE_COLOR_CHANGE") GeneralPage::settings.colorSave->SetValue(true);
-  CHKDEF("SAVE_PRESET") GeneralPage::settings.presetSave->SetValue(true);
-  CHKDEF("SAVE_VOLUME") GeneralPage::settings.volumeSave->SetValue(true);
-  CHKDEF("DISABLE_COLOR_CHANGE") GeneralPage::settings.disableColor->SetValue(true);
-  CHKDEF("ENABLE_DEVELOPER_COMMANDS") GeneralPage::settings.disableDev->SetValue(false);
-  CHKDEF("PLI_OFF_TIME") GeneralPage::settings.pliTime->num->SetValue(DEFNUM);
-  CHKDEF("IDLE_OFF_TIME") GeneralPage::settings.idleTime->num->SetValue(DEFNUM);
-  CHKDEF("MOTION_TIMEOUT") GeneralPage::settings.motionTime->num->SetValue(DEFNUM);
+  CHKDEF("NUM_BUTTONS") GeneralPage::instance->settings.buttons->num->SetValue(DEFNUM);
+  CHKDEF("VOLUME") GeneralPage::instance->settings.volume->num->SetValue(DEFNUM);
+  CHKDEF("CLASH_THRESHOLD_G") GeneralPage::instance->settings.clash->num->SetValue(DEFNUM);
+  CHKDEF("SAVE_STATE") {
+    GeneralPage::instance->settings.colorSave->SetValue(true);
+    GeneralPage::instance->settings.presetSave->SetValue(true);
+    GeneralPage::instance->settings.volumeSave->SetValue(true);
+  }
+  CHKDEF("SAVE_COLOR_CHANGE") GeneralPage::instance->settings.colorSave->SetValue(true);
+  CHKDEF("SAVE_PRESET") GeneralPage::instance->settings.presetSave->SetValue(true);
+  CHKDEF("SAVE_VOLUME") GeneralPage::instance->settings.volumeSave->SetValue(true);
+  CHKDEF("DISABLE_COLOR_CHANGE") GeneralPage::instance->settings.disableColor->SetValue(true);
+  CHKDEF("ENABLE_DEVELOPER_COMMANDS") GeneralPage::instance->settings.disableDev->SetValue(false);
+  CHKDEF("PLI_OFF_TIME") GeneralPage::instance->settings.pliTime->num->SetValue(DEFNUM);
+  CHKDEF("IDLE_OFF_TIME") GeneralPage::instance->settings.idleTime->num->SetValue(DEFNUM);
+  CHKDEF("MOTION_TIMEOUT") GeneralPage::instance->settings.motionTime->num->SetValue(DEFNUM);
 
   // Prop Specific
-  CHKPRP("STAB_ON") PropPage::settings.stabOn->SetValue(true);
-  CHKPRP("STAB_ON_PREON") PropPage::settings.stabOnPreon->SetValue(true);
-  CHKPRP("STAB_ON_NO_BM") PropPage::settings.stabOnNoBattle->SetValue(true);
-  CHKPRP("SWING_ON") PropPage::settings.swingOn->SetValue(true);
-  CHKPRP("SWING_ON_PREON") PropPage::settings.swingOnPreon->SetValue(true);
-  CHKPRP("SWING_ON_NO_BM") PropPage::settings.swingOnNoBattle->SetValue(true);
-  CHKPRP("SWING_ON_SPEED") PropPage::settings.swingOnSpeed->num->SetValue(DEFNUM);
-  CHKPRP("THRUST_ON") PropPage::settings.thrustOn->SetValue(true);
-  CHKPRP("THRUST_ON_PREON") PropPage::settings.thrustOnPreon->SetValue(true);
-  CHKPRP("THRUST_ON_NO_BM") PropPage::settings.thrustOnNoBattle->SetValue(true);
-  CHKPRP("TWIST_ON") PropPage::settings.twistOn->SetValue(true);
-  CHKPRP("TWIST_ON_PREON") PropPage::settings.twistOnPreon->SetValue(true);
-  CHKPRP("TWIST_ON_NO_BM") PropPage::settings.twistOnNoBattle->SetValue(true);
-  CHKPRP("TWIST_OFF") PropPage::settings.twistOff->SetValue(true);
-  CHKPRP("TWIST_OFF_NO_POSTOFF") PropPage::settings.twistOffFast->SetValue(true);
+  CHKPRP("STAB_ON") PropPage::instance->settings.stabOn->SetValue(true);
+  CHKPRP("STAB_ON_PREON") PropPage::instance->settings.stabOnPreon->SetValue(true);
+  CHKPRP("STAB_ON_NO_BM") PropPage::instance->settings.stabOnNoBattle->SetValue(true);
+  CHKPRP("SWING_ON") PropPage::instance->settings.swingOn->SetValue(true);
+  CHKPRP("SWING_ON_PREON") PropPage::instance->settings.swingOnPreon->SetValue(true);
+  CHKPRP("SWING_ON_NO_BM") PropPage::instance->settings.swingOnNoBattle->SetValue(true);
+  CHKPRP("SWING_ON_SPEED") PropPage::instance->settings.swingOnSpeed->num->SetValue(DEFNUM);
+  CHKPRP("THRUST_ON") PropPage::instance->settings.thrustOn->SetValue(true);
+  CHKPRP("THRUST_ON_PREON") PropPage::instance->settings.thrustOnPreon->SetValue(true);
+  CHKPRP("THRUST_ON_NO_BM") PropPage::instance->settings.thrustOnNoBattle->SetValue(true);
+  CHKPRP("TWIST_ON") PropPage::instance->settings.twistOn->SetValue(true);
+  CHKPRP("TWIST_ON_PREON") PropPage::instance->settings.twistOnPreon->SetValue(true);
+  CHKPRP("TWIST_ON_NO_BM") PropPage::instance->settings.twistOnNoBattle->SetValue(true);
+  CHKPRP("TWIST_OFF") PropPage::instance->settings.twistOff->SetValue(true);
+  CHKPRP("TWIST_OFF_NO_POSTOFF") PropPage::instance->settings.twistOffFast->SetValue(true);
 
-  CHKPRP("NO_LOCKUP_HOLD") PropPage::settings.noLockupHold->SetValue(true);
-  CHKPRP("ENABLE_AUTO_SWING_BLAST") PropPage::settings.multiBlastSwing->SetValue(true);
-  CHKPRP("NO_BLADE_NO_GEST_ONOFF") PropPage::settings.disableGestureNoBlade->SetValue(true);
-  CHKPRP("BUTTON_CLASH") PropPage::settings.pwrClash->SetValue(true);
-  CHKPRP("BUTTON_LOCKUP") PropPage::settings.pwrLockup->SetValue(true);
-  CHKPRP("HOLD_BUTTON_OFF") PropPage::settings.pwrHoldOff->SetValue(true);
-  CHKPRP("HOLD_BUTTON_LOCKUP") PropPage::settings.auxHoldLockup->SetValue(true);
-  CHKPRP("USE_BC_MELT_STAB") PropPage::settings.meltGestureAlways->SetValue(true);
-  CHKPRP("CIRCULAR_VOLUME_MENU") PropPage::settings.volumeCircular->SetValue(true);
-  CHKPRP("CIRCULAR_DIM_MENU") PropPage::settings.brightnessCircular->SetValue(true);
-  CHKPRP("EDIT") PropPage::settings.editEnable->SetValue(true);
-  CHKPRP("EDIT_MODE_MENU") PropPage::settings.editMode->SetValue(true);
-  CHKPRP("EDIT_SETTINGS_MENU") PropPage::settings.editSettings->SetValue(true);
+  CHKPRP("NO_LOCKUP_HOLD") PropPage::instance->settings.noLockupHold->SetValue(true);
+  CHKPRP("ENABLE_AUTO_SWING_BLAST") PropPage::instance->settings.multiBlastSwing->SetValue(true);
+  CHKPRP("NO_BLADE_NO_GEST_ONOFF") PropPage::instance->settings.disableGestureNoBlade->SetValue(true);
+  CHKPRP("BUTTON_CLASH") PropPage::instance->settings.pwrClash->SetValue(true);
+  CHKPRP("BUTTON_LOCKUP") PropPage::instance->settings.pwrLockup->SetValue(true);
+  CHKPRP("HOLD_BUTTON_OFF") PropPage::instance->settings.pwrHoldOff->SetValue(true);
+  CHKPRP("HOLD_BUTTON_LOCKUP") PropPage::instance->settings.auxHoldLockup->SetValue(true);
+  CHKPRP("USE_BC_MELT_STAB") PropPage::instance->settings.meltGestureAlways->SetValue(true);
+  CHKPRP("CIRCULAR_VOLUME_MENU") PropPage::instance->settings.volumeCircular->SetValue(true);
+  CHKPRP("CIRCULAR_DIM_MENU") PropPage::instance->settings.brightnessCircular->SetValue(true);
+  CHKPRP("EDIT") PropPage::instance->settings.editEnable->SetValue(true);
+  CHKPRP("EDIT_MODE_MENU") PropPage::instance->settings.editMode->SetValue(true);
+  CHKPRP("EDIT_SETTINGS_MENU") PropPage::instance->settings.editSettings->SetValue(true);
 
-  CHKPRP("DISABLE_TALKIE") PropPage::settings.beepErrors->SetValue(true);
-  CHKPRP("TRACK_PLAYER_NO_PROMPTS") PropPage::settings.trackPlayerPrompts->SetValue(false);
-  CHKPRP("SAY_COLOR_LIST") PropPage::settings.spokenColors->SetValue(true);
-  CHKPRP("SAY_BATTERY_VOLTS") PropPage::settings.spokenBatteryVolts->SetValue(true);
-  CHKPRP("SAY_BATTERY_PERCENT") PropPage::settings.spokenBatteryPercent->SetValue(true);
+  CHKPRP("DISABLE_TALKIE") PropPage::instance->settings.beepErrors->SetValue(true);
+  CHKPRP("TRACK_PLAYER_NO_PROMPTS") PropPage::instance->settings.trackPlayerPrompts->SetValue(false);
+  CHKPRP("SAY_COLOR_LIST") PropPage::instance->settings.spokenColors->SetValue(true);
+  CHKPRP("SAY_BATTERY_VOLTS") PropPage::instance->settings.spokenBatteryVolts->SetValue(true);
+  CHKPRP("SAY_BATTERY_PERCENT") PropPage::instance->settings.spokenBatteryPercent->SetValue(true);
 
-  CHKPRP("FETT263_FORCE_PUSH") PropPage::settings.forcePushBM->SetValue(true);
-  else CHKPRP("FORCE_PUSH") PropPage::settings.forcePush->SetValue(true);
-  CHKPRP("FORCE_PUSH_ALWAYS") PropPage::settings.forcePush->SetValue(true);
-  CHKPRP("FORCE_PUSH_LENGTH") PropPage::settings.forcePushLength->num->SetValue(DEFNUM);
+  CHKPRP("FETT263_FORCE_PUSH") PropPage::instance->settings.forcePushBM->SetValue(true);
+  else CHKPRP("FORCE_PUSH") PropPage::instance->settings.forcePush->SetValue(true);
+  CHKPRP("FORCE_PUSH_ALWAYS") PropPage::instance->settings.forcePush->SetValue(true);
+  CHKPRP("FORCE_PUSH_LENGTH") PropPage::instance->settings.forcePushLength->num->SetValue(DEFNUM);
 
-  CHKPRP("DISABLE_QUOTE_PLAYER") PropPage::settings.enableQuotePlayer->SetValue(false);
-  CHKPRP("RANDOMIZE_QUOTE_PLAYER") PropPage::settings.randomizeQuotePlayer->SetValue(true);
-  CHKPRP("QUOTE_PLAYER_START_ON") PropPage::settings.quotePlayerDefault->SetValue(true);
+  CHKPRP("DISABLE_QUOTE_PLAYER") PropPage::instance->settings.enableQuotePlayer->SetValue(false);
+  CHKPRP("RANDOMIZE_QUOTE_PLAYER") PropPage::instance->settings.randomizeQuotePlayer->SetValue(true);
+  CHKPRP("QUOTE_PLAYER_START_ON") PropPage::instance->settings.quotePlayerDefault->SetValue(true);
 
-  CHKPRP("SPECIAL_ABILITIES") PropPage::settings.specialAbilities->SetValue(true);
-  CHKPRP("MULTI_PHASE") PropPage::settings.multiPhase->SetValue(true);
-  CHKPRP("SPIN_MODE") PropPage::settings.spinMode->SetValue(true);
-  CHKPRP("SAVE_CHOREOGRAPHY") PropPage::settings.saveChoreo->SetValue(true);
-  CHKPRP("SAVE_GESTURE_OFF") PropPage::settings.saveGesture->SetValue(true);
-  CHKPRP("DUAL_MODE_SOUND") PropPage::settings.dualModeSound->SetValue(true);
-  CHKPRP("QUICK_SELECT_ON_BOOT") PropPage::settings.quickPresetSelect->SetValue(true);
-  CHKPRP("DISABLE_MULTI_BLAST_TOGGLE") PropPage::settings.multiBlastDisableToggle->SetValue(true);
-  else CHKPRP("DISABLE_MULTI_BLAST") PropPage::settings.multiBlast->SetValue(false);
-  CHKPRP("DISABLE_CHANGE_FONT") PropPage::settings.fontChangeOTF->SetValue(false);
-  CHKPRP("DISABLE_CHANGE_STYLE") PropPage::settings.styleChangeOTF->SetValue(false);
-  CHKPRP("DISABLE_COPY_PRESET") PropPage::settings.presetCopyOTF->SetValue(false);
-  CHKPRP("CLASH_STRENGTH_SOUND") PropPage::settings.clashStrengthSound->SetValue(true);
-  CHKPRP("MAX_CLASH") PropPage::settings.clashStrengthSoundMaxClash->num->SetValue(DEFNUM);
+  CHKPRP("SPECIAL_ABILITIES") PropPage::instance->settings.specialAbilities->SetValue(true);
+  CHKPRP("MULTI_PHASE") PropPage::instance->settings.multiPhase->SetValue(true);
+  CHKPRP("SPIN_MODE") PropPage::instance->settings.spinMode->SetValue(true);
+  CHKPRP("SAVE_CHOREOGRAPHY") PropPage::instance->settings.saveChoreo->SetValue(true);
+  CHKPRP("SAVE_GESTURE_OFF") PropPage::instance->settings.saveGesture->SetValue(true);
+  CHKPRP("DUAL_MODE_SOUND") PropPage::instance->settings.dualModeSound->SetValue(true);
+  CHKPRP("QUICK_SELECT_ON_BOOT") PropPage::instance->settings.quickPresetSelect->SetValue(true);
+  CHKPRP("DISABLE_MULTI_BLAST_TOGGLE") PropPage::instance->settings.multiBlastDisableToggle->SetValue(true);
+  else CHKPRP("DISABLE_MULTI_BLAST") PropPage::instance->settings.multiBlast->SetValue(false);
+  CHKPRP("DISABLE_CHANGE_FONT") PropPage::instance->settings.fontChangeOTF->SetValue(false);
+  CHKPRP("DISABLE_CHANGE_STYLE") PropPage::instance->settings.styleChangeOTF->SetValue(false);
+  CHKPRP("DISABLE_COPY_PRESET") PropPage::instance->settings.presetCopyOTF->SetValue(false);
+  CHKPRP("CLASH_STRENGTH_SOUND") PropPage::instance->settings.clashStrengthSound->SetValue(true);
+  CHKPRP("MAX_CLASH") PropPage::instance->settings.clashStrengthSoundMaxClash->num->SetValue(DEFNUM);
 
-  CHKPRP("BATTLE_MODE_START_ON") PropPage::settings.battleModeOnStart->SetValue(true);
-  CHKPRP("BATTLE_MODE_ALWAYS_ON") PropPage::settings.battleModeAlways->SetValue(true);
-  CHKPRP("DISABLE_BM_TOGGLE") PropPage::settings.battleModeNoToggle->SetValue(true);
-  CHKPRP("GESTURE_AUTO_BATTLE_MODE") PropPage::settings.gestureEnBattle->SetValue(true);
-  CHKPRP("LOCKUP_DELAY") PropPage::settings.lockupDelay->num->SetValue(DEFNUM);
-  CHKPRP("BM_CLASH_DETECT") PropPage::settings.battleModeClash->num->SetValue(DEFNUM);
-  CHKPRP("BM_DISABLE_OFF_BUTTON") PropPage::settings.battleModeDisablePWR->SetValue(true);
+  CHKPRP("BATTLE_MODE_START_ON") PropPage::instance->settings.battleModeOnStart->SetValue(true);
+  CHKPRP("BATTLE_MODE_ALWAYS_ON") PropPage::instance->settings.battleModeAlways->SetValue(true);
+  CHKPRP("DISABLE_BM_TOGGLE") PropPage::instance->settings.battleModeNoToggle->SetValue(true);
+  CHKPRP("GESTURE_AUTO_BATTLE_MODE") PropPage::instance->settings.gestureEnBattle->SetValue(true);
+  CHKPRP("LOCKUP_DELAY") PropPage::instance->settings.lockupDelay->num->SetValue(DEFNUM);
+  CHKPRP("BM_CLASH_DETECT") PropPage::instance->settings.battleModeClash->num->SetValue(DEFNUM);
+  CHKPRP("BM_DISABLE_OFF_BUTTON") PropPage::instance->settings.battleModeDisablePWR->SetValue(true);
 
 # undef CHKDEF
 # undef CHKPRP
@@ -592,33 +614,34 @@ void Configuration::readPresetArray(std::ifstream& file) {
   std::string style;
   RUNTOSECTION;
   uint8_t preset = -1;
+  Configuration::instance->presets.clear();
   while (!false) {
     RUNTOSECTION;
-    Configuration::presets.push_back(Configuration::presetConfig());
+    Configuration::instance->presets.push_back(Configuration::presetConfig());
     preset++;
     file >> element;
     CHKSECT;
     tempData = std::strtok(element.data(), ",\"");
-    Configuration::presets[preset].dirs.assign(tempData == nullptr ? "" : tempData);
+    Configuration::instance->presets[preset].dirs.assign(tempData == nullptr ? "" : tempData);
     file >> element;
     CHKSECT;
     tempData = std::strtok(element.data(), ",\"");
-    Configuration::presets[preset].track.assign(tempData == nullptr ? "" : tempData);
-    for (uint32_t blade = 0; blade < Configuration::blades.size(); blade++) {
+    Configuration::instance->presets[preset].track.assign(tempData == nullptr ? "" : tempData);
+    for (uint32_t blade = 0; blade < Configuration::instance->blades.size(); blade++) {
       while (std::strstr(element.data(), "(),") == nullptr) {
         file >> element;
         CHKSECT;
         style.append(element);
       }
       style.replace(style.find("(),"), std::strlen("(),"), "()");
-      Configuration::presets[preset].styles.push_back(style);
+      Configuration::instance->presets[preset].styles.push_back(style);
       style.clear();
       element.clear();
     }
     file >> element;
     CHKSECT;
     tempData = std::strtok(element.data(), ",\"");
-    Configuration::presets[preset].name.assign(tempData == nullptr ? "" : tempData);
+    Configuration::instance->presets[preset].name.assign(tempData == nullptr ? "" : tempData);
   }
 # undef CHKSECT
 # undef RUNTOSECTION
@@ -633,8 +656,8 @@ void Configuration::readBladeArray(std::ifstream& file) {
   RUNTOSECTION;
   file >> element; // Clear resistance value... maybe use this in the future?
   CHKSECT;
-  uint32_t numBlades = Configuration::blades.size();
-  Configuration::blades.clear();
+  uint32_t numBlades = Configuration::instance->blades.size();
+  Configuration::instance->blades.clear();
   for (uint32_t blade = 0; blade < numBlades; blade++) {
     bladeInfo.clear();
     while (std::strstr(bladeInfo.data(), "),") == nullptr) { // Gather entire blade data
@@ -644,42 +667,42 @@ void Configuration::readBladeArray(std::ifstream& file) {
     }
     if (std::strstr(bladeInfo.data(), "SubBlade") != nullptr) {
       if (std::strstr(bladeInfo.data(), "NULL") == nullptr) { // Top Level SubBlade
-        Configuration::blades.push_back(Configuration::bladeConfig());
+        Configuration::instance->blades.push_back(Configuration::bladeConfig());
       } else { // Lesser SubBlade
         blade--;
         numBlades--;
         // Switch to operating on previous blade
       }
 
-      Configuration::blades[blade].isSubBlade = true;
+      Configuration::instance->blades[blade].isSubBlade = true;
       std::strtok(bladeInfo.data(), "("); // SubBlade(
-      Configuration::blades[blade].subBlades.push_back({ std::stoi(std::strtok(nullptr, "(,")), std::stoi(std::strtok(nullptr, " (,")) });
+      Configuration::instance->blades[blade].subBlades.push_back({ std::stoi(std::strtok(nullptr, "(,")), std::stoi(std::strtok(nullptr, " (,")) });
       // Rest will be handled by WS281X "if"
     }
     if (std::strstr(bladeInfo.data(), "WS281XBladePtr") != nullptr) {
-      if (Configuration::blades.size() - 1 != blade) Configuration::blades.push_back(Configuration::bladeConfig());
+      if (Configuration::instance->blades.size() - 1 != blade) Configuration::instance->blades.push_back(Configuration::bladeConfig());
       bladeInfo = std::strstr(bladeInfo.data(), "WS281XBladePtr"); // Shift start to blade data, in case of SubBlade;
 
       // This must be done first since std::strtok is destructive (adds null chars)
-      if (std::strstr(bladeInfo.data(), "bladePowerPin1") != nullptr) Configuration::blades[blade].usePowerPin1 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin2") != nullptr) Configuration::blades[blade].usePowerPin2 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin3") != nullptr) Configuration::blades[blade].usePowerPin3 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin4") != nullptr) Configuration::blades[blade].usePowerPin4 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin5") != nullptr) Configuration::blades[blade].usePowerPin5 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin6") != nullptr) Configuration::blades[blade].usePowerPin6 = true;
+      if (std::strstr(bladeInfo.data(), "bladePowerPin1") != nullptr) Configuration::instance->blades[blade].usePowerPin1 = true;
+      if (std::strstr(bladeInfo.data(), "bladePowerPin2") != nullptr) Configuration::instance->blades[blade].usePowerPin2 = true;
+      if (std::strstr(bladeInfo.data(), "bladePowerPin3") != nullptr) Configuration::instance->blades[blade].usePowerPin3 = true;
+      if (std::strstr(bladeInfo.data(), "bladePowerPin4") != nullptr) Configuration::instance->blades[blade].usePowerPin4 = true;
+      if (std::strstr(bladeInfo.data(), "bladePowerPin5") != nullptr) Configuration::instance->blades[blade].usePowerPin5 = true;
+      if (std::strstr(bladeInfo.data(), "bladePowerPin6") != nullptr) Configuration::instance->blades[blade].usePowerPin6 = true;
 
       std::strtok(bladeInfo.data(), "<,"); // Clear WS281XBladePtr
-      Configuration::blades[blade].numPixels = std::stoi(std::strtok(nullptr, "<,"));
-      Configuration::blades[blade].dataPin = std::strtok(nullptr, ",");
+      Configuration::instance->blades[blade].numPixels = std::stoi(std::strtok(nullptr, "<,"));
+      Configuration::instance->blades[blade].dataPin = std::strtok(nullptr, ",");
       std::strtok(nullptr, ":"); // Clear Color8::
       element = std::strtok(nullptr, ":,"); // Set to color order;
-      Configuration::blades[blade].useRGBWithWhite = strstr(element.data(), "W") != nullptr;
-      Configuration::blades[blade].colorType.assign(element);
+      Configuration::instance->blades[blade].useRGBWithWhite = strstr(element.data(), "W") != nullptr;
+      Configuration::instance->blades[blade].colorType.assign(element);
 
       continue;
     }
     if (std::strstr(bladeInfo.data(), "SimpleBladePtr") != nullptr) {
-      Configuration::blades.push_back(Configuration::bladeConfig());
+      Configuration::instance->blades.push_back(Configuration::bladeConfig());
       uint8_t numLEDs = 0;
       auto getCreeTemplate = [](const std::string& element) -> std::string {
         if (std::strstr(element.data(), "RedOrange") != nullptr) return "RedOrange";
@@ -693,43 +716,43 @@ void Configuration::readBladeArray(std::ifstream& file) {
       };
 
       // These must be read first since std::strtok is destructive (adds null chars)
-      if (std::strstr(bladeInfo.data(), "bladePowerPin1") != nullptr) Configuration::blades[blade].usePowerPin1 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin2") != nullptr) Configuration::blades[blade].usePowerPin2 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin3") != nullptr) Configuration::blades[blade].usePowerPin3 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin4") != nullptr) Configuration::blades[blade].usePowerPin4 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin5") != nullptr) Configuration::blades[blade].usePowerPin5 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin6") != nullptr) Configuration::blades[blade].usePowerPin6 = true;
+      if (std::strstr(bladeInfo.data(), "bladePowerPin1") != nullptr) Configuration::instance->blades[blade].usePowerPin1 = true;
+      if (std::strstr(bladeInfo.data(), "bladePowerPin2") != nullptr) Configuration::instance->blades[blade].usePowerPin2 = true;
+      if (std::strstr(bladeInfo.data(), "bladePowerPin3") != nullptr) Configuration::instance->blades[blade].usePowerPin3 = true;
+      if (std::strstr(bladeInfo.data(), "bladePowerPin4") != nullptr) Configuration::instance->blades[blade].usePowerPin4 = true;
+      if (std::strstr(bladeInfo.data(), "bladePowerPin5") != nullptr) Configuration::instance->blades[blade].usePowerPin5 = true;
+      if (std::strstr(bladeInfo.data(), "bladePowerPin6") != nullptr) Configuration::instance->blades[blade].usePowerPin6 = true;
 
       std::strtok(bladeInfo.data(), "<"); // Clear SimpleBladePtr and setup strtok
 
       element = std::strtok(nullptr, "<,");
-      Configuration::blades[blade].Cree1.assign(getCreeTemplate(element));
-      if (Configuration::blades[blade].Cree1 != "<None>") {
+      Configuration::instance->blades[blade].Cree1.assign(getCreeTemplate(element));
+      if (Configuration::instance->blades[blade].Cree1 != "<None>") {
         numLEDs++;
-        Configuration::blades[blade].Cree1Resistance = std::stoi(std::strtok(nullptr, "<>"));
+        Configuration::instance->blades[blade].Cree1Resistance = std::stoi(std::strtok(nullptr, "<>"));
       }
       element = std::strtok(nullptr, "<,");
-      Configuration::blades[blade].Cree2.assign(getCreeTemplate(element));
-      if (Configuration::blades[blade].Cree2 != "<None>") {
+      Configuration::instance->blades[blade].Cree2.assign(getCreeTemplate(element));
+      if (Configuration::instance->blades[blade].Cree2 != "<None>") {
         numLEDs++;
-        Configuration::blades[blade].Cree2Resistance = std::stoi(std::strtok(nullptr, "<>"));
+        Configuration::instance->blades[blade].Cree2Resistance = std::stoi(std::strtok(nullptr, "<>"));
       }
       element = std::strtok(nullptr, "<, ");
-      Configuration::blades[blade].Cree3.assign(getCreeTemplate(element));
-      if (Configuration::blades[blade].Cree3 != "<None>") {
+      Configuration::instance->blades[blade].Cree3.assign(getCreeTemplate(element));
+      if (Configuration::instance->blades[blade].Cree3 != "<None>") {
         numLEDs++;
-        Configuration::blades[blade].Cree3Resistance = std::stoi(std::strtok(nullptr, "<>"));
+        Configuration::instance->blades[blade].Cree3Resistance = std::stoi(std::strtok(nullptr, "<>"));
       }
       element = std::strtok(nullptr, "<, ");
-      Configuration::blades[blade].Cree4.assign(getCreeTemplate(element));
-      if (Configuration::blades[blade].Cree4 != "<None>") {
+      Configuration::instance->blades[blade].Cree4.assign(getCreeTemplate(element));
+      if (Configuration::instance->blades[blade].Cree4 != "<None>") {
         numLEDs++;
-        Configuration::blades[blade].Cree4Resistance = std::stoi(std::strtok(nullptr, "<>"));
+        Configuration::instance->blades[blade].Cree4Resistance = std::stoi(std::strtok(nullptr, "<>"));
       }
 
-      if (numLEDs <= 2) Configuration::blades[blade].type.assign("Single Color");
-      if (numLEDs == 3) Configuration::blades[blade].type.assign("Tri-Star Cree");
-      if (numLEDs >= 4) Configuration::blades[blade].type.assign("Quad-Star Cree");
+      if (numLEDs <= 2) Configuration::instance->blades[blade].type.assign("Single Color");
+      if (numLEDs == 3) Configuration::instance->blades[blade].type.assign("Tri-Star Cree");
+      if (numLEDs >= 4) Configuration::instance->blades[blade].type.assign("Quad-Star Cree");
     }
   }
 # undef CHKSECT
@@ -751,40 +774,40 @@ Configuration::SaberProp Configuration::parsePropSel(const std::string& value) {
 }
 
 void Configuration::updateBladesConfig() {
-  if (BladesPage::lastBladeSelection >= 0 && BladesPage::lastBladeSelection < (int32_t)Configuration::blades.size()) { // Save Options
-    Configuration::blades[BladesPage::lastBladeSelection].type = BladesPage::settings.bladeType->GetValue();
-    Configuration::blades[BladesPage::lastBladeSelection].usePowerPin1 = BladesPage::settings.usePowerPin1->GetValue();
-    Configuration::blades[BladesPage::lastBladeSelection].usePowerPin2 = BladesPage::settings.usePowerPin2->GetValue();
-    Configuration::blades[BladesPage::lastBladeSelection].usePowerPin3 = BladesPage::settings.usePowerPin3->GetValue();
-    Configuration::blades[BladesPage::lastBladeSelection].usePowerPin4 = BladesPage::settings.usePowerPin4->GetValue();
-    Configuration::blades[BladesPage::lastBladeSelection].usePowerPin5 = BladesPage::settings.usePowerPin5->GetValue();
-    Configuration::blades[BladesPage::lastBladeSelection].usePowerPin6 = BladesPage::settings.usePowerPin6->GetValue();
+  if (BladesPage::instance->lastBladeSelection >= 0 && BladesPage::instance->lastBladeSelection < (int32_t)Configuration::instance->blades.size()) { // Save Options
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].type = BladesPage::instance->settings.bladeType->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].usePowerPin1 = BladesPage::instance->settings.usePowerPin1->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].usePowerPin2 = BladesPage::instance->settings.usePowerPin2->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].usePowerPin3 = BladesPage::instance->settings.usePowerPin3->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].usePowerPin4 = BladesPage::instance->settings.usePowerPin4->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].usePowerPin5 = BladesPage::instance->settings.usePowerPin5->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].usePowerPin6 = BladesPage::instance->settings.usePowerPin6->GetValue();
 
-    Configuration::blades[BladesPage::lastBladeSelection].dataPin = BladesPage::settings.bladeDataPin->GetValue();
-    Configuration::blades[BladesPage::lastBladeSelection].numPixels = BladesPage::settings.bladePixels->GetValue();
-    Configuration::blades[BladesPage::lastBladeSelection].colorType = Configuration::blades[BladesPage::lastBladeSelection].type == "NeoPixel (RGB)" ? BladesPage::settings.blade3ColorOrder->GetValue() : BladesPage::settings.blade4ColorOrder->GetValue();
-    Configuration::blades[BladesPage::lastBladeSelection].useRGBWithWhite = BladesPage::settings.blade4UseRGB->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].dataPin = BladesPage::instance->settings.bladeDataPin->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].numPixels = BladesPage::instance->settings.bladePixels->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].colorType = Configuration::instance->blades[BladesPage::instance->lastBladeSelection].type == "NeoPixel (RGB)" ? BladesPage::instance->settings.blade3ColorOrder->GetValue() : BladesPage::instance->settings.blade4ColorOrder->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].useRGBWithWhite = BladesPage::instance->settings.blade4UseRGB->GetValue();
 
-    Configuration::blades[BladesPage::lastBladeSelection].Cree1 = BladesPage::settings.star1Color->GetValue();
-    Configuration::blades[BladesPage::lastBladeSelection].Cree1Resistance = BladesPage::settings.star1Resistance->num->GetValue();
-    Configuration::blades[BladesPage::lastBladeSelection].Cree2 = BladesPage::settings.star2Color->GetValue();
-    Configuration::blades[BladesPage::lastBladeSelection].Cree2Resistance = BladesPage::settings.star2Resistance->num->GetValue();
-    Configuration::blades[BladesPage::lastBladeSelection].Cree3 = BladesPage::settings.star3Color->GetValue();
-    Configuration::blades[BladesPage::lastBladeSelection].Cree3Resistance = BladesPage::settings.star3Resistance->num->GetValue();
-    Configuration::blades[BladesPage::lastBladeSelection].Cree4 = BladesPage::settings.star4Color->GetValue();
-    Configuration::blades[BladesPage::lastBladeSelection].Cree4Resistance = BladesPage::settings.star4Resistance->num->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Cree1 = BladesPage::instance->settings.star1Color->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Cree1Resistance = BladesPage::instance->settings.star1Resistance->num->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Cree2 = BladesPage::instance->settings.star2Color->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Cree2Resistance = BladesPage::instance->settings.star2Resistance->num->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Cree3 = BladesPage::instance->settings.star3Color->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Cree3Resistance = BladesPage::instance->settings.star3Resistance->num->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Cree4 = BladesPage::instance->settings.star4Color->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Cree4Resistance = BladesPage::instance->settings.star4Resistance->num->GetValue();
 
-    if (BladesPage::lastSubBladeSelection != -1 && BladesPage::lastSubBladeSelection < (int32_t)Configuration::blades[BladesPage::lastBladeSelection].subBlades.size()) {
-      Configuration::blades[BladesPage::lastBladeSelection].subBlades[BladesPage::lastSubBladeSelection].startPixel = BladesPage::settings.subBladeStart->GetValue();
-      Configuration::blades[BladesPage::lastBladeSelection].subBlades[BladesPage::lastSubBladeSelection].endPixel = BladesPage::settings.subBladeEnd->GetValue();
+    if (BladesPage::instance->lastSubBladeSelection != -1 && BladesPage::instance->lastSubBladeSelection < (int32_t)Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.size()) {
+      Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades[BladesPage::instance->lastSubBladeSelection].startPixel = BladesPage::instance->settings.subBladeStart->GetValue();
+      Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades[BladesPage::instance->lastSubBladeSelection].endPixel = BladesPage::instance->settings.subBladeEnd->GetValue();
     }
-    Configuration::blades[BladesPage::lastBladeSelection].subBladeWithStride = BladesPage::settings.subBladeUseStride->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBladeWithStride = BladesPage::instance->settings.subBladeUseStride->GetValue();
   }
 
   // Check if SubBlades need to be removed (changed from Neopixel)
-  if (BD_HASSELECTION && BladesPage::lastBladeSelection == BladesPage::settings.bladeSelect->GetSelection() && !BD_ISNEOPIXEL) {
-    Configuration::blades[BladesPage::lastBladeSelection].isSubBlade = false;
-    Configuration::blades[BladesPage::lastBladeSelection].subBlades.clear();
+  if (BD_HASSELECTION && BladesPage::instance->lastBladeSelection == BladesPage::instance->settings.bladeSelect->GetSelection() && !BD_ISNEOPIXEL) {
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].isSubBlade = false;
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.clear();
   }
 }
 

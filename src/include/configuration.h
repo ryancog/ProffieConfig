@@ -12,13 +12,17 @@
 class Configuration
 {
 public:
-  static void outputConfig();
-  static void outputConfig(const std::string&);
-  static void exportConfig();
-  static void importConfig();
-  static void updateBladesConfig();
-  static void readConfig(wxWindow*);
+  Configuration();
+  static Configuration* instance;
 
+  void outputConfig();
+  void outputConfig(const std::string&);
+  void exportConfig();
+  void readConfig();
+  void readConfig(const std::string&);
+  void importConfig();
+
+  void updateBladesConfig();
 
   struct bladeConfig {
     std::string type{"NeoPixel (RGB)"};
@@ -132,35 +136,32 @@ public:
     NOLED
   };
 
-  static std::vector<Configuration::presetConfig> presets;
-  static std::vector<Configuration::bladeConfig> blades;
+  std::vector<Configuration::presetConfig> presets;
+  std::vector<Configuration::bladeConfig> blades;
 
 private:
-  Configuration();
-  Configuration(const Configuration&) = delete;
+  ProffieBoard parseBoardType(const std::string&);
+  SaberProp parsePropSel(const std::string&);
 
-  static ProffieBoard parseBoardType(const std::string&);
-  static SaberProp parsePropSel(const std::string&);
+  void outputConfigTop(std::ofstream&);
+  void outputConfigTopDefaults(std::ofstream&);
+  void outputConfigTopGeneral(std::ofstream&);
+  void outputConfigTopPropSpecific(std::ofstream&);
+  void outputConfigTopSA22C(std::ofstream&);
+  void outputConfigTopFett263(std::ofstream&);
+  void outputConfigTopBC(std::ofstream&);
+  void outputConfigTopCaiwyn(std::ofstream&);
+  void outputConfigProp(std::ofstream&);
+  void outputConfigPresets(std::ofstream&);
+  void outputConfigPresetsStyles(std::ofstream&);
+  void outputConfigPresetsBlades(std::ofstream&);
+  void genWS281X(std::ofstream&, const Configuration::bladeConfig&);
+  void outputConfigButtons(std::ofstream&);
 
-  static void outputConfigTop(std::ofstream&);
-  static void outputConfigTopDefaults(std::ofstream&);
-  static void outputConfigTopGeneral(std::ofstream&);
-  static void outputConfigTopPropSpecific(std::ofstream&);
-  static void outputConfigTopSA22C(std::ofstream&);
-  static void outputConfigTopFett263(std::ofstream&);
-  static void outputConfigTopBC(std::ofstream&);
-  static void outputConfigTopCaiwyn(std::ofstream&);
-  static void outputConfigProp(std::ofstream&);
-  static void outputConfigPresets(std::ofstream&);
-  static void outputConfigPresetsStyles(std::ofstream&);
-  static void outputConfigPresetsBlades(std::ofstream&);
-  static void genWS281X(std::ofstream&, const Configuration::bladeConfig&);
-  static void outputConfigButtons(std::ofstream&);
-
-  static void readConfigTop(std::ifstream&);
-  static void readDefine(std::string&);
-  static void readConfigProp(std::ifstream&);
-  static void readConfigPresets(std::ifstream&);
-  static void readPresetArray(std::ifstream&);
-  static void readBladeArray(std::ifstream&);
+  void readConfigTop(std::ifstream&);
+  void readDefine(std::string&);
+  void readConfigProp(std::ifstream&);
+  void readConfigPresets(std::ifstream&);
+  void readPresetArray(std::ifstream&);
+  void readBladeArray(std::ifstream&);
 };

@@ -10,8 +10,10 @@
 #include <wx/listbox.h>
 #include <wx/button.h>
 
+GeneralPage* GeneralPage::instance;
 GeneralPage::GeneralPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, "")
 {
+  instance = this;
   Add(boardSettings(this), BOXITEMFLAGS);
   Add(optionSettings(this), BOXITEMFLAGS);
 }
@@ -79,5 +81,3 @@ wxBoxSizer* GeneralPage::numOptions(wxStaticBoxSizer* parent) {
 
   return numOptions;
 }
-
-decltype(GeneralPage::settings) GeneralPage::settings;

@@ -9,10 +9,12 @@
 
 #include "misc.h"
 
+
 class GeneralPage : public wxStaticBoxSizer
 {
 public:
   GeneralPage(wxWindow*);
+  static GeneralPage* instance;
 
   struct {
     wxComboBox* board{nullptr};
@@ -33,7 +35,7 @@ public:
     wxCheckBox* colorSave{nullptr};
     wxCheckBox* disableColor{nullptr};
     wxCheckBox* disableDev{nullptr};
-  } static settings;
+  } settings;
 
 private:
   wxStaticBoxSizer* boardSettings(wxStaticBoxSizer*);
