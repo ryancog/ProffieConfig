@@ -128,23 +128,23 @@ void Configuration::outputConfigTopFett263(std::ofstream& configOutput) {
   if (PropPage::instance->settings.stabOn->GetValue()) {
     if (PropPage::instance->settings.stabOnFast->GetValue()) configOutput << "#define FETT263_STAB_ON" << std::endl;
     else if (PropPage::instance->settings.stabOnPreon->GetValue()) configOutput << "#define FETT263_STAB_ON_PREON" << std::endl;
-    if (PropPage::instance->settings.stabOnNoBattle) configOutput << "#define FETT263_STAB_ON_NO_BM" << std::endl;
+    if (PropPage::instance->settings.stabOnNoBattle->GetValue()) configOutput << "#define FETT263_STAB_ON_NO_BM" << std::endl;
   }
   if (PropPage::instance->settings.swingOn->GetValue()) {
     if (PropPage::instance->settings.swingOnFast->GetValue()) configOutput << "#define FETT263_SWING_ON" << std::endl;
     else if (PropPage::instance->settings.swingOnPreon->GetValue()) configOutput << "#define FETT263_SWING_ON_PREON" << std::endl;
-    if (PropPage::instance->settings.swingOnNoBattle) configOutput << "#define FETT263_SWING_ON_NO_BM" << std::endl;
+    if (PropPage::instance->settings.swingOnNoBattle->GetValue()) configOutput << "#define FETT263_SWING_ON_NO_BM" << std::endl;
     configOutput << "#define FETT263_SWING_ON_SPEED " << PropPage::instance->settings.swingOnSpeed->num->GetValue() << std::endl;
   }
   if (PropPage::instance->settings.thrustOn->GetValue()) {
     if (PropPage::instance->settings.thrustOnFast->GetValue()) configOutput << "#define FETT263_THRUST_ON" << std::endl;
     else if (PropPage::instance->settings.thrustOnPreon->GetValue()) configOutput << "#define FETT263_THRUST_ON_PREON" << std::endl;
-    if (PropPage::instance->settings.thrustOnNoBattle) configOutput << "#define FETT263_THRUST_ON_NO_BM" << std::endl;
+    if (PropPage::instance->settings.thrustOnNoBattle->GetValue()) configOutput << "#define FETT263_THRUST_ON_NO_BM" << std::endl;
   }
   if (PropPage::instance->settings.twistOn->GetValue()) {
     if (PropPage::instance->settings.twistOnFast->GetValue()) configOutput << "#define FETT263_TWIST_ON" << std::endl;
     else if (PropPage::instance->settings.twistOnPreon->GetValue()) configOutput << "#define FETT263_TWIST_ON_PREON" << std::endl;
-    if (PropPage::instance->settings.twistOnNoBattle) configOutput << "#define FETT263_TWIST_ON_NO_BM" << std::endl;
+    if (PropPage::instance->settings.twistOnNoBattle->GetValue()) configOutput << "#define FETT263_TWIST_ON_NO_BM" << std::endl;
   }
   if (PropPage::instance->settings.twistOff->GetValue()) {
     if (PropPage::instance->settings.twistOffFast->GetValue()) configOutput << "#define FETT263_TWIST_OFF_NO_POSTOFF" << std::endl;
