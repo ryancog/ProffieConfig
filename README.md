@@ -10,6 +10,8 @@ Utilzes `arduino-cli` and `proffie-dfu-setup` for driver installation and flashi
 
 The latest release can be found [here](https://github.com/ryryog25/ProffieConfig/releases/latest), and once it's downloaded, just extract and run it!
 
+Do note, on Windows the executable must be kept in it's folder in order to work. On macOS this is a non-issue due to the app bundle.
+
 ## Usage
 
 The first time the program is run, it will prompt you to import a configuration file, you can choose to do so or not, and once you're at the main page, you should head on over to File->Install Dependencies... in order to make sure your computer is ready, especially if you've never programmed a proffieboard on your computer before.
