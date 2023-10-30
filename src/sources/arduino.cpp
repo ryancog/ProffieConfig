@@ -187,6 +187,7 @@ std::string Arduino::parseError(const std::string& error) {
 #define ERRCONTAINS(token) std::strstr(error.data(), token)
   if (ERRCONTAINS("select Proffieboard")) return "Please ensure you've selected the correct board in General";
   if (ERRCONTAINS("expected unqualified-id")) return "Please make sure there are no brackets in your styles!\nSuch as { or }";
+  if (ERRCONTAINS("FLASH")) return "The specified config will not fit on Proffieboard.\n\nTry disabling diagnostic commands, disabling prop features, or removing blade styles to make it fit.";
   else return ERRCONTAINS("error:");
 #undef ERRCONTAINS
 }
