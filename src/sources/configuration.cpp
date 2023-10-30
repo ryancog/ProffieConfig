@@ -78,8 +78,8 @@ void Configuration::outputConfigTopGeneral(std::ofstream& configOutput) {
   if (GeneralPage::instance->settings.presetSave->GetValue()) configOutput << "#define SAVE_PRESET" << std::endl;
   if (GeneralPage::instance->settings.volumeSave->GetValue()) configOutput << "#define SAVE_VOLUME" << std::endl;
   if (GeneralPage::instance->settings.disableColor->GetValue()) configOutput << "#define DISABLE_COLOR_CHANGE" << std::endl;
-  if (!GeneralPage::instance->settings.disableDev->GetValue()) configOutput << "#define ENABLE_DEVELOPER_COMMANDS" << std::endl;
-  else configOutput << "#define DISABLE_DIAGNOSTIC_COMMANDS" << std::endl;
+  if (GeneralPage::instance->settings.disableDiagnosticCommands->GetValue()) configOutput << "#define DISABLE_DIAGNOSTIC_COMMANDS" << std::endl;
+  if (GeneralPage::instance->settings.enableDeveloperCommands->GetValue()) configOutput << "#define ENABLE_DEVELOPER_COMMANDS" << std::endl;
   configOutput << "#define PLI_OFF_TIME " << GeneralPage::instance->settings.pliTime->num->GetValue() << " * 60 * 1000" << std::endl;
   configOutput << "#define IDLE_OFF_TIME " << GeneralPage::instance->settings.idleTime->num->GetValue() << " * 60 * 1000" << std::endl;
   configOutput << "#define MOTION_TIMEOUT " << GeneralPage::instance->settings.motionTime->num->GetValue() << " * 60 * 1000" << std::endl;
@@ -526,7 +526,8 @@ void Configuration::readDefine(std::string& define) {
   CHKDEF("SAVE_PRESET") GeneralPage::instance->settings.presetSave->SetValue(true);
   CHKDEF("SAVE_VOLUME") GeneralPage::instance->settings.volumeSave->SetValue(true);
   CHKDEF("DISABLE_COLOR_CHANGE") GeneralPage::instance->settings.disableColor->SetValue(true);
-  CHKDEF("ENABLE_DEVELOPER_COMMANDS") GeneralPage::instance->settings.disableDev->SetValue(false);
+  CHKDEF("ENABLE_DEVELOPER_COMMANDS") GeneralPage::instance->settings.enableDeveloperCommands->SetValue(true);
+  CHKDEF("DISABLE_DIAGNOSTIC_COMMANDS") GeneralPage::instance->settings.disableDiagnosticCommands->SetValue(true);
   CHKDEF("PLI_OFF_TIME") GeneralPage::instance->settings.pliTime->num->SetValue(DEFNUM);
   CHKDEF("IDLE_OFF_TIME") GeneralPage::instance->settings.idleTime->num->SetValue(DEFNUM);
   CHKDEF("MOTION_TIMEOUT") GeneralPage::instance->settings.motionTime->num->SetValue(DEFNUM);
