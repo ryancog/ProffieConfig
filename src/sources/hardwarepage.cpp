@@ -7,8 +7,10 @@
 #include <wx/statbox.h>
 #include <wx/checkbox.h>
 
+HardwarePage* HardwarePage::instance;
 HardwarePage::HardwarePage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "")
 {
+  instance = this;
   Add(bladeDetect(this), MENUITEMFLAGS);
   Add(OLED(this), MENUITEMFLAGS);
 }
@@ -39,5 +41,3 @@ void HardwarePage::update() {
   settings.bladeDetectPin->Show();
   settings.bladeDetectPinLabel->Show();
 }
-
-decltype(HardwarePage::settings) HardwarePage::settings;

@@ -1,6 +1,5 @@
 #include "misc.h"
 #include "defines.h"
-#include "generalpage.h"
 
 #include <cstring>
 #include <iostream>
@@ -14,17 +13,17 @@
 #include <fstream>
 
 Misc::numEntry* Misc::createNumEntry(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, int32_t minVal, int32_t maxVal, int32_t defaultVal) {
-    wxBoxSizer *numEntryBox = new wxBoxSizer(wxHORIZONTAL);
-    wxStaticText *text = new wxStaticText(parent->GetStaticBox(), wxID_ANY, displayText);
-    wxSpinCtrl *numEntry = new wxSpinCtrl(parent->GetStaticBox(), ID, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, minVal, maxVal, defaultVal);
-    numEntryBox->Add(text, MENUITEMFLAGS.Center());
-    numEntryBox->Add(numEntry, MENUITEMFLAGS.Border(wxRIGHT, 5));
+  wxBoxSizer* numEntryBox = new wxBoxSizer(wxHORIZONTAL);
+  wxStaticText* text = new wxStaticText(parent->GetStaticBox(), wxID_ANY, displayText);
+  wxSpinCtrl* numEntry = new wxSpinCtrl(parent->GetStaticBox(), ID, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, minVal, maxVal, defaultVal);
+  numEntryBox->Add(text, MENUITEMFLAGS.Center());
+  numEntryBox->Add(numEntry, MENUITEMFLAGS.Border(wxRIGHT, 5));
 
-    Misc::numEntry* returnVal = new Misc::numEntry();
-    returnVal->box = numEntryBox;
-    returnVal->num = numEntry;
+  Misc::numEntry* returnVal = new Misc::numEntry();
+  returnVal->box = numEntryBox;
+  returnVal->num = numEntry;
 
-    return returnVal;
+  return returnVal;
 }
 Misc::numEntryDouble* Misc::createNumEntryDouble(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, double minVal, double maxVal, double defaultVal) {
     wxBoxSizer* numEntryBox = new wxBoxSizer(wxHORIZONTAL);
@@ -48,5 +47,5 @@ const wxArrayString Misc::createEntries(std::vector<std::string> list) {
     return entries;
 }
 const wxArrayString Misc::createEntries(std::initializer_list<std::string> list) {
-    return Misc::createEntries(std::vector<std::string>(list));
+    return Misc::createEntries(static_cast<std::vector<std::string>>(list));
 }

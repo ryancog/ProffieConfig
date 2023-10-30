@@ -66,13 +66,13 @@ void Arduino::refreshBoards() {
   MainWindow::instance->thread = new ThreadRunner([&]() {
     MainWindow::instance->progDialog->SetTitle("Device Update");
     Progress::emitEvent(0, "Initializing...");
-    wxString lastSel = MainWindow::devSelect->GetStringSelection();
-    MainWindow::devSelect->Clear();
+    wxString lastSel = MainWindow::instance->devSelect->GetStringSelection();
+    MainWindow::instance->devSelect->Clear();
     Progress::emitEvent(20, "Fetching Devices...");
     for (const std::string& item : Arduino::getBoards()) {
-      MainWindow::devSelect->Append(item);
+      MainWindow::instance->devSelect->Append(item);
     }
-    MainWindow::devSelect->SetValue(lastSel);
+    MainWindow::instance->devSelect->SetValue(lastSel);
     Progress::emitEvent(100, "Done.");
   });
 }
@@ -111,15 +111,15 @@ void Arduino::applyToBoard() {
     Progress::emitEvent(0, "Initializing...");
 
     Progress::emitEvent(10, "Checking board presence...");
-    if (Arduino::getBoards()[MainWindow::devSelect->GetSelection()] != MainWindow::devSelect->GetStringSelection()) {
+    if (Arduino::getBoards()[MainWindow::instance->devSelect->GetSelection()] != MainWindow::instance->devSelect->GetStringSelection()) {
       Progress::emitEvent(100, "Error!");
       wxMessageBox("Please refresh boards and try again!", "Board Selection Error", wxOK | wxICON_ERROR);
       return;
     }
 
     Progress::emitEvent(20, "Generating configuration file...");
-    Configuration::updateBladesConfig();
-    Configuration::outputConfig();
+    Configuration::instance->updateBladesConfig();
+    Configuration::instance->outputConfig();
     Arduino::updateIno();
 
     Progress::emitEvent(40, "Compiling ProffieOS...");
@@ -148,8 +148,8 @@ void Arduino::verifyConfig() {
   MainWindow::instance->thread = new ThreadRunner([&]() {
     std::string returnVal;
     Progress::emitEvent(20, "Generating configuration file...");
-    Configuration::updateBladesConfig();
-    Configuration::outputConfig();
+    Configuration::instance->updateBladesConfig();
+    Configuration::instance->outputConfig();
     Arduino::updateIno();
 
     Progress::emitEvent(40, "Compiling ProffieOS...");
@@ -172,13 +172,13 @@ std::string Arduino::compile() {
 
   std::string compileCommand = "compile ";
   compileCommand += "-b ";
-  compileCommand += GeneralPage::settings.board->GetSelection() == 0 ? ARDUINOCORE_PBV1 : GeneralPage::settings.board->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
+  compileCommand += GeneralPage::instance->settings.board->GetSelection() == 0 ? ARDUINOCORE_PBV1 : GeneralPage::instance->settings.board->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
   compileCommand += " --board-options ";
-  if (GeneralPage::settings.massStorage->GetValue() && GeneralPage::settings.webUSB->GetValue()) compileCommand += "usb=cdc_msc_webusb";
-  else if (GeneralPage::settings.webUSB->GetValue()) compileCommand += "usb=cdc_webusb";
-  else if (GeneralPage::settings.massStorage->GetValue()) compileCommand += "usb=cdc_msc";
+  if (GeneralPage::instance->settings.massStorage->GetValue() && GeneralPage::instance->settings.webUSB->GetValue()) compileCommand += "usb=cdc_msc_webusb";
+  else if (GeneralPage::instance->settings.webUSB->GetValue()) compileCommand += "usb=cdc_webusb";
+  else if (GeneralPage::instance->settings.massStorage->GetValue()) compileCommand += "usb=cdc_msc";
   else compileCommand += "usb=cdc";
-  if (GeneralPage::settings.board->GetStringSelection() == "ProffieBoard V3") compileCommand +=",dosfs=sdmmc1";
+  if (GeneralPage::instance->settings.board->GetStringSelection() == "ProffieBoard V3") compileCommand +=",dosfs=sdmmc1";
   compileCommand += " " PROFFIEOS_PATH;
   FILE *arduinoCli = Arduino::CLI(compileCommand);
 
@@ -207,16 +207,16 @@ std::string Arduino::upload() {
   std::string uploadCommand = "upload ";
   uploadCommand += PROFFIEOS_PATH;
   uploadCommand += " --board-options ";
-  if (GeneralPage::settings.massStorage->GetValue() && GeneralPage::settings.webUSB->GetValue()) uploadCommand += "usb=cdc_msc_webusb";
-  else if (GeneralPage::settings.webUSB->GetValue()) uploadCommand += "usb=cdc_webusb";
-  else if (GeneralPage::settings.massStorage->GetValue()) uploadCommand += "usb=cdc_msc";
+  if (GeneralPage::instance->settings.massStorage->GetValue() && GeneralPage::instance->settings.webUSB->GetValue()) uploadCommand += "usb=cdc_msc_webusb";
+  else if (GeneralPage::instance->settings.webUSB->GetValue()) uploadCommand += "usb=cdc_webusb";
+  else if (GeneralPage::instance->settings.massStorage->GetValue()) uploadCommand += "usb=cdc_msc";
   else uploadCommand += "usb=cdc";
-  if (GeneralPage::settings.board->GetStringSelection() == "ProffieBoard V3") uploadCommand +=",dosfs=sdmmc1";
+  if (GeneralPage::instance->settings.board->GetStringSelection() == "ProffieBoard V3") uploadCommand +=",dosfs=sdmmc1";
 
   uploadCommand += " --fqbn ";
-  uploadCommand += GeneralPage::settings.board->GetSelection() == 0 ? ARDUINOCORE_PBV1 : GeneralPage::settings.board->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
+  uploadCommand += GeneralPage::instance->settings.board->GetSelection() == 0 ? ARDUINOCORE_PBV1 : GeneralPage::instance->settings.board->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
   uploadCommand += " --port ";
-  uploadCommand += MainWindow::devSelect->GetStringSelection();
+  uploadCommand += MainWindow::instance->devSelect->GetStringSelection();
 
   FILE *arduinoCli = Arduino::CLI(uploadCommand);
 

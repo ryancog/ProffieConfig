@@ -9,7 +9,9 @@ class HardwarePage : public wxStaticBoxSizer
 {
 public:
   HardwarePage(wxWindow*);
-  static void update();
+  static HardwarePage* instance;
+
+  void update();
 
   struct {
     wxCheckBox* bladeDetect{nullptr};
@@ -17,7 +19,7 @@ public:
     wxComboBox* bladeDetectPin{nullptr};
 
     wxCheckBox* OLED{nullptr};
-  } static settings;
+  } settings;
 
 private:
   wxStaticBoxSizer* bladeDetect(wxStaticBoxSizer*);

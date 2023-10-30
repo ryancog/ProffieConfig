@@ -6,7 +6,10 @@ class Progress : public wxProgressDialog {
 public:
   class ProgressEvent : public wxCommandEvent {
   public:
-    ProgressEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id);
+    ProgressEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id){
+      this->SetEventType(tag);
+      this->SetId(id);
+    }
 
     int progress;
     wxString message;

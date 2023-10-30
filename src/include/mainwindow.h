@@ -13,27 +13,27 @@
 class MainWindow : public wxFrame {
 public:
   MainWindow();
+  void CreatePages();
 
   static MainWindow* instance;
   ThreadRunner* thread;
   Progress* progDialog;
 
-  static wxComboBox* windowSelect;
-  static wxComboBox* devSelect;
+  wxComboBox* windowSelect;
+  wxComboBox* devSelect;
 
 private:
-  static wxBoxSizer* master;
-  static wxButton* refreshButton;
-  static wxButton* applyButton;
+  wxBoxSizer* master;
+  wxButton* refreshButton;
+  wxButton* applyButton;
 
-  static GeneralPage* general;
-  static PropPage* prop;
-  static PresetsPage* presets;
-  static BladesPage* blades;
-  static HardwarePage* hardware;
+  GeneralPage* general;
+  PropPage* prop;
+  PresetsPage* presets;
+  BladesPage* blades;
+  HardwarePage* hardware;
 
   void BindEvents();
   void CreateMenuBar();
-  void CreatePages();
   void Initialize();
 };
