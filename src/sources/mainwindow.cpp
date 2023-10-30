@@ -84,13 +84,14 @@ void MainWindow::BindEvents() {
         if (devSelect->GetValue() == "Select Device...") applyButton->Disable();
         else applyButton->Enable();
       }, Misc::ID_DevSelect);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(this); }, Misc::ID_RefreshDevButton);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(this); }, Misc::ID_ApplyButton);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(); }, Misc::ID_RefreshDevButton);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(); }, Misc::ID_ApplyButton);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxMessageBox("Tool for GUI Configuration and flashing of ProffieBoard (Created by Fredrik Hubbinette)\n\nTool Created by Ryryog25\n\nProffieOS v7.9 | Arduino Plugin v3.6.0 | Arduino CLI v0.34.2", "About ProffieConfig", wxOK | wxICON_INFORMATION);
       }, wxID_ABOUT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::outputConfig(); }, Misc::ID_GenFile);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(); }, Misc::ID_VerifyConfig);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(); }, Misc::ID_ExportFile);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::importConfig(); }, Misc::ID_ImportFile);
 
@@ -189,7 +190,8 @@ void MainWindow::BindEvents() {
       }, Misc::ID_AddBlade);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         Configuration::blades[BladesPage::lastBladeSelection].isSubBlade = true;
-        Configuration::blades[BladesPage::lastBladeSelection].subBlades.push_back(Configuration::Configuration::bladeConfig::subBladeInfo());
+        Configuration::blades[BladesPage::lastBladeSelection].subBlades.push_back(Configuration::bladeConfig::subBladeInfo());
+        if (Configuration::blades[BladesPage::lastBladeSelection].subBlades.size() <= 1) Configuration::blades[BladesPage::lastBladeSelection].subBlades.push_back(Configuration::bladeConfig::subBladeInfo());
         Configuration::updateBladesConfig();
         BladesPage::update();
         UPDATEWINDOW;
@@ -205,7 +207,10 @@ void MainWindow::BindEvents() {
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         if (BD_SUBHASSELECTION) {
           Configuration::blades[BladesPage::lastBladeSelection].subBlades.erase(Configuration::blades[BladesPage::lastBladeSelection].subBlades.begin() + BladesPage::lastSubBladeSelection);
-          if (Configuration::blades[BladesPage::lastBladeSelection].subBlades.size() < 1) Configuration::blades[BladesPage::lastBladeSelection].isSubBlade = false;
+          if (Configuration::blades[BladesPage::lastBladeSelection].subBlades.size() <= 1) {
+            Configuration::blades[BladesPage::lastBladeSelection].subBlades.clear();
+            Configuration::blades[BladesPage::lastBladeSelection].isSubBlade = false;
+          }
           BladesPage::lastSubBladeSelection = -1;
         }
         Configuration::updateBladesConfig();
@@ -222,6 +227,7 @@ void MainWindow::CreateMenuBar() {
 
   wxMenu *menuConfig = new wxMenu;
   menuConfig->Append(Misc::ID_GenFile, "Save Config\tCtrl+S", "Generate Config File");
+  menuConfig->Append(Misc::ID_VerifyConfig, "Verify Config...\t", "Generate Config and Compile to test...");
   menuConfig->Append(Misc::ID_ExportFile, "Export Config...\t", "Choose a location to save a copy of your config...");
   menuConfig->Append(Misc::ID_ImportFile, "Import Config...\t", "Choose a file to import...");
 

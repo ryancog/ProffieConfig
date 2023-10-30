@@ -20,6 +20,7 @@ public:
     ID_PropSelect,
     ID_PropOption,
     ID_GenFile,
+    ID_VerifyConfig,
     ID_ExportFile,
     ID_ImportFile,
     ID_PresetList,

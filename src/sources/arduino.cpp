@@ -1,4 +1,4 @@
-#include "arduino.h"
+﻿#include "arduino.h"
 #include "mainwindow.h"
 #include "configuration.h"
 
@@ -6,17 +6,23 @@
 #include <vector>
 #include <cstring>
 
-#if defined(__WXGTK__)
-#define ARDUINO_CLI(command) popen("resources/arduino-cli/arduino-cli " command, "r")
-#define DRIVER_INSTALL popen("pkexec cp ~/.arduino15/packages/proffieboard/hardware/stm32l4/3.6/drivers/linux/*rules /etc/udev/rules.d", "r")
-#elif defined(__WXMSW__)
-#define ARDUINO_CLI(command) popen("resources\\arduino-cli\\arduino-cli.exe " command " 2>&1", "r")
+#define ARDUINOCORE_PBV1 "proffieboard:stm32l4:Proffieboard-L433CC"
+#define ARDUINOCORE_PBV2 "proffieboard:stm32l4:ProffieboardV2-L433CC"
+#define ARDUINOCORE_PBV3 "proffieboard:stm32l4:ProffieboardV3-L452RE"
+
+#if defined(__WXMSW__)
+#define ARDUINO_PATH "resources\\arduino-cli\\arduino-cli.exe"
+#define PROFFIEOS_PATH "resources\\ProffieOS"
 #define DRIVER_INSTALL popen("resources\\proffie-dfu-setup.exe 2>&1", "r")
+#else
+#define ARDUINO_PATH "resources/arduino-cli/arduino-cli"
+#define PROFFIEOS_PATH "resources/ProffieOS"
+#if defined(__WXGTK__)
+#define DRIVER_INSTALL popen("pkexec cp ~/.arduino15/packages/proffieboard/hardware/stm32l4/3.6/drivers/linux/*rules /etc/udev/rules.d", "r")
 #elif defined(__WXOSX__)
-#define ARDUINO_CLI(command) popen("../resources/macOS/arduino-cli/arduino-cli " command, "r");
 #define DRIVER_INSTALL popen("", "r");
 #endif
-#define ARDUINO_CLOSE(fd) pclose(fd)
+#endif
 
 void Arduino::init() {
   MainWindow::instance->progDialog = new Progress(MainWindow::instance);
@@ -40,7 +46,7 @@ void Arduino::init() {
 #endif
 
     MainWindow::instance->progDialog->emitEvent(40, "Downloading dependencies...");
-    install = ARDUINO_CLI("core install proffieboard:stm32l4@3.6 --additional-urls https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json");
+    install = Arduino::CLI("core install proffieboard:stm32l4@3.6 --additional-urls https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json");
     while (fgets(buffer, 128, install) != nullptr) { MainWindow::instance->progDialog->emitEvent(-1, ""); }
     if (pclose(install)) {
       MainWindow::instance->progDialog->emitEvent(100, "Error");
@@ -54,11 +60,11 @@ void Arduino::init() {
   });
 }
 
-void Arduino::refreshBoards(MainWindow* win) {
-  win->progDialog = new Progress(win);
+void Arduino::refreshBoards() {
+  MainWindow::instance->progDialog = new Progress(MainWindow::instance);
 
-  win->thread = new ThreadRunner([&]() {
-    win->progDialog->SetTitle("Device Update");
+  MainWindow::instance->thread = new ThreadRunner([&]() {
+    MainWindow::instance->progDialog->SetTitle("Device Update");
     Progress::emitEvent(0, "Initializing...");
     wxString lastSel = MainWindow::devSelect->GetStringSelection();
     MainWindow::devSelect->Clear();
@@ -74,7 +80,7 @@ std::vector<std::string> Arduino::getBoards() {
   std::vector<std::string> boards{"Select Device..."};
   char buffer[1024];
 
-  FILE *arduinoCli = ARDUINO_CLI("board list");
+  FILE *arduinoCli = Arduino::CLI("board list");
 
   if (!arduinoCli) {
     return boards;
@@ -97,12 +103,11 @@ std::vector<std::string> Arduino::getBoards() {
   return boards;
 }
 
-void Arduino::applyToBoard(MainWindow* win) {
-  win->progDialog = new Progress(win);
-
-  win->thread = new ThreadRunner([&]() {
+void Arduino::applyToBoard() {
+  MainWindow::instance->progDialog = new Progress(MainWindow::instance);
+  MainWindow::instance->thread = new ThreadRunner([&]() {
     std::string returnVal;
-    win->progDialog->SetTitle("Applying Changes | DO NOT DISCONNECT BOARD");
+    MainWindow::instance->progDialog->SetTitle("Applying Changes | DO NOT DISCONNECT BOARD");
     Progress::emitEvent(0, "Initializing...");
 
     Progress::emitEvent(10, "Checking board presence...");
@@ -121,9 +126,7 @@ void Arduino::applyToBoard(MainWindow* win) {
     returnVal = Arduino::compile();
     if (returnVal != "OK") {
       Progress::emitEvent(100, "Error");
-      wxMessageBox("There was an error while compiling, "
-                   "if it doesn't make sense to you, please report it, "
-                   "I probably broke something:\n\n"
+      wxMessageBox("There was an error while compiling:\n\n"
                        + returnVal, "Compile Error");
       return;
     }
@@ -132,7 +135,7 @@ void Arduino::applyToBoard(MainWindow* win) {
     returnVal = Arduino::upload();
     if (returnVal != "OK") {
       Progress::emitEvent(100, "Error");
-      wxMessageBox("There was an error while uploading, please report it:\n" + returnVal);
+      wxMessageBox("There was an error while uploading:\n\n" + returnVal);
       return;
     }
 
@@ -140,10 +143,44 @@ void Arduino::applyToBoard(MainWindow* win) {
     wxMessageBox("Changes Successfully Applied to ProffieBoard!", "Apply Changes to Board", wxOK | wxICON_INFORMATION);
   });
 }
+void Arduino::verifyConfig() {
+  MainWindow::instance->progDialog = new Progress(MainWindow::instance);
+  MainWindow::instance->thread = new ThreadRunner([&]() {
+    std::string returnVal;
+    Progress::emitEvent(20, "Generating configuration file...");
+    Configuration::updateBladesConfig();
+    Configuration::outputConfig();
+    Arduino::updateIno();
+
+    Progress::emitEvent(40, "Compiling ProffieOS...");
+    returnVal = Arduino::compile();
+    if (returnVal != "OK") {
+      Progress::emitEvent(100, "Error");
+      wxMessageBox("There was an error while compiling:\n\n"
+                       + returnVal, "Compile Error");
+      return;
+    }
+
+    Progress::emitEvent(100, "Done.");
+    wxMessageBox("Config Verified Successfully!", "Verify Config", wxOK | wxICON_INFORMATION);
+  });
+}
+
 std::string Arduino::compile() {
   std::string output;
   char buffer[1024];
-  FILE* arduinoCli = ARDUINO_CLI("compile -b proffieboard:stm32l4:ProffieboardV2-L433CC resources/ProffieOS --log");
+
+  std::string compileCommand = "compile ";
+  compileCommand += "-b ";
+  compileCommand += GeneralPage::settings.board->GetSelection() == 0 ? ARDUINOCORE_PBV1 : GeneralPage::settings.board->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
+  compileCommand += " --board-options ";
+  if (GeneralPage::settings.massStorage->GetValue() && GeneralPage::settings.webUSB->GetValue()) compileCommand += "usb=cdc_msc_webusb";
+  else if (GeneralPage::settings.webUSB->GetValue()) compileCommand += "usb=cdc_webusb";
+  else if (GeneralPage::settings.massStorage->GetValue()) compileCommand += "usb=cdc_msc";
+  else compileCommand += "usb=cdc";
+  if (GeneralPage::settings.board->GetStringSelection() == "ProffieBoard V3") compileCommand +=",dosfs=sdmmc1";
+  compileCommand += " " PROFFIEOS_PATH;
+  FILE *arduinoCli = Arduino::CLI(compileCommand);
 
   while(fgets(buffer, 1024, arduinoCli) != NULL) {
     MainWindow::instance->progDialog->emitEvent(-1, ""); // Pulse
@@ -151,7 +188,7 @@ std::string Arduino::compile() {
       return Arduino::parseError(buffer);
     }
   }
-  if (ARDUINO_CLOSE(arduinoCli) != 0) {
+  if (pclose(arduinoCli) != 0) {
     return "Unkown Compile Error";
   }
 
@@ -166,7 +203,22 @@ std::string Arduino::parseError(const std::string& error) {
 }
 std::string Arduino::upload() {
   char buffer[1024];
-  FILE* arduinoCli = ARDUINO_CLI("upload resources/ProffieOS -b proffieboard:stm32l4:ProffieboardV2-L433CC --board-options usb=cdc_msc -p /dev/ttyACM0 --log");
+
+  std::string uploadCommand = "upload ";
+  uploadCommand += PROFFIEOS_PATH;
+  uploadCommand += " --board-options ";
+  if (GeneralPage::settings.massStorage->GetValue() && GeneralPage::settings.webUSB->GetValue()) uploadCommand += "usb=cdc_msc_webusb";
+  else if (GeneralPage::settings.webUSB->GetValue()) uploadCommand += "usb=cdc_webusb";
+  else if (GeneralPage::settings.massStorage->GetValue()) uploadCommand += "usb=cdc_msc";
+  else uploadCommand += "usb=cdc";
+  if (GeneralPage::settings.board->GetStringSelection() == "ProffieBoard V3") uploadCommand +=",dosfs=sdmmc1";
+
+  uploadCommand += " --fqbn ";
+  uploadCommand += GeneralPage::settings.board->GetSelection() == 0 ? ARDUINOCORE_PBV1 : GeneralPage::settings.board->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
+  uploadCommand += " --port ";
+  uploadCommand += MainWindow::devSelect->GetStringSelection();
+
+  FILE *arduinoCli = Arduino::CLI(uploadCommand);
 
   while(fgets(buffer, 1024, arduinoCli) != NULL) {
     MainWindow::instance->progDialog->emitEvent(-1, ""); // Pulse
@@ -174,10 +226,9 @@ std::string Arduino::upload() {
       return buffer;
     }
   }
-  if (ARDUINO_CLOSE(arduinoCli) != 0) {
+  if (pclose(arduinoCli) != 0) {
     return "Unknown Upload Error";
   }
-
 
   return "OK";
 }
@@ -195,4 +246,11 @@ void Arduino::updateIno() {
     output << line << std::endl;
   }
   output.close();
+}
+
+FILE* Arduino::CLI(const std::string& command) {
+  std::string fullCommand = ARDUINO_PATH " ";
+  fullCommand += command;
+  fullCommand += " 2>&1";
+  return popen(fullCommand.data(), "r");
 }
