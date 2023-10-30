@@ -34,7 +34,8 @@ public:
     wxCheckBox* presetSave{nullptr};
     wxCheckBox* colorSave{nullptr};
     wxCheckBox* disableColor{nullptr};
-    wxCheckBox* disableDev{nullptr};
+    wxCheckBox* disableDiagnosticCommands{nullptr};
+    wxCheckBox* enableDeveloperCommands{nullptr};
   } settings;
 
 private:
