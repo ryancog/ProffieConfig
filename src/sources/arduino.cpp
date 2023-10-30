@@ -1,28 +1,11 @@
 ﻿#include "arduino.h"
 #include "mainwindow.h"
 #include "configuration.h"
+#include "defines.h"
 
 #include <string>
 #include <vector>
 #include <cstring>
-
-#define ARDUINOCORE_PBV1 "proffieboard:stm32l4:Proffieboard-L433CC"
-#define ARDUINOCORE_PBV2 "proffieboard:stm32l4:ProffieboardV2-L433CC"
-#define ARDUINOCORE_PBV3 "proffieboard:stm32l4:ProffieboardV3-L452RE"
-
-#if defined(__WXMSW__)
-#define ARDUINO_PATH "resources\\arduino-cli\\arduino-cli.exe"
-#define PROFFIEOS_PATH "resources\\ProffieOS"
-#define DRIVER_INSTALL popen("resources\\proffie-dfu-setup.exe 2>&1", "r")
-#elif defined(__WXGTK__)
-#define ARDUINO_PATH "resources/arduino-cli/arduino-cli"
-#define PROFFIEOS_PATH "resources/ProffieOS"
-#define DRIVER_INSTALL popen("pkexec cp ~/.arduino15/packages/proffieboard/hardware/stm32l4/3.6/drivers/linux/*rules /etc/udev/rules.d", "r")
-#elif defined(__WXOSX__)
-#define ARDUINO_PATH "ProffieConfig.app/Contents/Resources/arduino-cli/arduino-cli"
-#define PROFFIEOS_PATH "ProffieConfig.app/Contents/Resources/ProffieOS"
-#define DRIVER_INSTALL popen("", "r");
-#endif
 
 void Arduino::init() {
   MainWindow::instance->progDialog = new Progress(MainWindow::instance);
@@ -106,7 +89,7 @@ std::vector<std::string> Arduino::getBoards() {
 
 void Arduino::applyToBoard() {
   MainWindow::instance->progDialog = new Progress(MainWindow::instance);
-  MainWindow::instance->progDialog->SetTitle("Applying Changes | DO NOT DISCONNECT BOARD");
+  MainWindow::instance->progDialog->SetTitle("Applying Changes");
 
   MainWindow::instance->thread = new ThreadRunner([&]() {
     std::string returnVal;
@@ -239,7 +222,7 @@ std::string Arduino::upload() {
   return "OK";
 }
 void Arduino::updateIno() {
-  std::ifstream input("resources/ProffieOS/ProffieOS.ino");
+  std::ifstream input(PROFFIEOS_PATH "/ProffieOS.ino");
   std::string fileData;
   std::vector<std::string> outputData;
   while(!input.eof()) {
@@ -247,7 +230,7 @@ void Arduino::updateIno() {
     outputData.push_back(fileData == "// #define CONFIG_FILE \"config/YOUR_CONFIG_FILE_NAME_HERE.h\"" ? "#define CONFIG_FILE \"config/ProffieConfig_autogen.h\"" : fileData);
   }
   input.close();
-  std::ofstream output("resources/ProffieOS/ProffieOS.ino");
+  std::ofstream output(PROFFIEOS_PATH "/ProffieOS.ino");
   for (const std::string& line : outputData) {
     output << line << std::endl;
   }

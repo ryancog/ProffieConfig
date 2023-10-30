@@ -25,7 +25,7 @@ void Configuration::outputConfig(const std::string& filePath) {
 
   configOutput.close();
 }
-void Configuration::outputConfig() { Configuration::outputConfig("resources/ProffieOS/config/ProffieConfig_autogen.h"); }
+void Configuration::outputConfig() { Configuration::outputConfig(PROFFIEOS_PATH "/config/ProffieConfig_autogen.h"); }
 void Configuration::exportConfig() {
   wxFileDialog configLocation(MainWindow::instance, "Save ProffieOS Config File", "", "ProffieConfig_autogen.h", "C Header Files (*.h)|*.h", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
@@ -432,14 +432,14 @@ void Configuration::readConfig(const std::string& filePath) {
 }
 void Configuration::readConfig() {
   struct stat buffer;
-  if (stat("resources/ProffieOS/config/ProffieConfig_autogen.h", &buffer) != 0) {
+  if (stat(PROFFIEOS_PATH "/config/ProffieConfig_autogen.h", &buffer) != 0) {
     if (wxMessageBox("No existing configuration file was detected. Would you like to import one?", "ProffieConfig", wxYES | wxNO) == wxYES) {
       Configuration::importConfig();
       return;
     } else return;
   }
 
-  Configuration::readConfig("resources/ProffieOS/config/ProffieConfig_autogen.h");
+  Configuration::readConfig(PROFFIEOS_PATH "/config/ProffieConfig_autogen.h");
 }
 void Configuration::importConfig() {
   wxFileDialog configLocation(MainWindow::instance, "Choose ProffieOS Config File", "", "", "C Header Files (*.h)|*.h", wxFD_OPEN | wxFD_FILE_MUST_EXIST);

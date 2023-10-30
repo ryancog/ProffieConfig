@@ -25,3 +25,22 @@
 #define PR_SHTOK "Shtok"
 #define PR_BC "BC"
 #define PR_CAIWYN "Caiwyn"
+
+
+#define ARDUINOCORE_PBV1 "proffieboard:stm32l4:Proffieboard-L433CC"
+#define ARDUINOCORE_PBV2 "proffieboard:stm32l4:ProffieboardV2-L433CC"
+#define ARDUINOCORE_PBV3 "proffieboard:stm32l4:ProffieboardV3-L452RE"
+
+#if defined(__WXMSW__)
+#define ARDUINO_PATH "resources\\arduino-cli\\arduino-cli.exe"
+#define PROFFIEOS_PATH "resources\\ProffieOS"
+#define DRIVER_INSTALL popen("resources\\proffie-dfu-setup.exe 2>&1", "r")
+#elif defined(__WXGTK__)
+#define ARDUINO_PATH "resources/arduino-cli/arduino-cli"
+#define PROFFIEOS_PATH "resources/ProffieOS"
+#define DRIVER_INSTALL popen("pkexec cp ~/.arduino15/packages/proffieboard/hardware/stm32l4/3.6/drivers/linux/*rules /etc/udev/rules.d", "r")
+#elif defined(__WXOSX__)
+#define ARDUINO_PATH "ProffieConfig.app/Contents/Resources/arduino-cli/arduino-cli"
+#define PROFFIEOS_PATH "ProffieConfig.app/Contents/Resources/ProffieOS"
+#define DRIVER_INSTALL popen("", "r");
+#endif
