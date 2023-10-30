@@ -3,9 +3,7 @@
 #include "wx/event.h"
 #include <memory>
 
-Progress::ProgressEvent::ProgressEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id) : wxCommandEvent(tag, id) {}
 wxEventTypeTag<wxCommandEvent> Progress::EVT_UPDATE(wxNewEventType());
-
 
 void Progress::emitEvent(int progress, wxString message) {
   ProgressEvent* event = new ProgressEvent(EVT_UPDATE, wxID_ANY);

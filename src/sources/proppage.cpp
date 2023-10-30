@@ -5,8 +5,9 @@
 #include "defines.h"
 #include "generalpage.h"
 
-
+PropPage* PropPage::instance;
 PropPage::PropPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, "") {
+  instance = this;
   settings.prop = new wxComboBox(this->GetStaticBox(), Misc::ID_PropSelect, PR_DEFAULT, wxDefaultPosition, wxDefaultSize, Misc::createEntries({PR_DEFAULT, PR_SA22C, PR_FETT263, PR_SHTOK, PR_BC, PR_CAIWYN}), wxCB_READONLY);
 
   Add(settings.prop, MENUITEMFLAGS);
@@ -108,10 +109,10 @@ void PropPage::update() {
   settings.pwrClash->Show(CAIWYN);
   settings.pwrLockup->Show(CAIWYN);
   settings.pwrHoldOff->Show(FETT263);
-  if (GeneralPage::settings.buttons->num->GetValue() == 2) settings.pwrHoldOff->Enable();
+  if (GeneralPage::instance->settings.buttons->num->GetValue() == 2) settings.pwrHoldOff->Enable();
   else settings.pwrHoldOff->Disable();
   settings.auxHoldLockup->Show(FETT263);
-  if (GeneralPage::settings.buttons->num->GetValue() == 2) settings.auxHoldLockup->Enable();
+  if (GeneralPage::instance->settings.buttons->num->GetValue() == 2) settings.auxHoldLockup->Enable();
   else settings.auxHoldLockup->Disable();
 
   settings.meltGestureAlways->Show(FETT263);
@@ -475,8 +476,5 @@ PropPage::RStaticBox* PropPage::bmControls(wxStaticBoxSizer* parent) {
 }
 
 PropPage::RStaticBox::RStaticBox(int orient, wxWindow* win, const wxString& label = wxEmptyString) : wxStaticBoxSizer(orient, win, label) {
-  PropPage::boxes.insert(PropPage::boxes.begin(), this);
+  PropPage::instance->boxes.insert(PropPage::instance->boxes.begin(), this);
 }
-
-decltype(PropPage::settings) PropPage::settings;
-std::vector<PropPage::RStaticBox*> PropPage::boxes;

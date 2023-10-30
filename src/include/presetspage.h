@@ -12,23 +12,24 @@
 class PresetsPage : public wxStaticBoxSizer
 {
 public:
-    PresetsPage(wxWindow*);
+  PresetsPage(wxWindow*);
+  static PresetsPage* instance;
 
-    static void update();
+  void update();
 
-    struct {
-        wxTextCtrl* presetsEditor{nullptr};
-        wxListBox* presetList{nullptr};
-        wxListBox* bladeList{nullptr};
-        wxButton* addPreset{nullptr};
-        wxButton* removePreset{nullptr};
+  struct {
+    wxTextCtrl* presetsEditor{nullptr};
+    wxListBox* presetList{nullptr};
+    wxListBox* bladeList{nullptr};
+    wxButton* addPreset{nullptr};
+    wxButton* removePreset{nullptr};
 
-        wxTextCtrl* nameInput{nullptr};
-        wxTextCtrl* dirInput{nullptr};
-        wxTextCtrl* trackInput{nullptr};
+    wxTextCtrl* nameInput{nullptr};
+    wxTextCtrl* dirInput{nullptr};
+    wxTextCtrl* trackInput{nullptr};
 
-    } static settings;
+  } settings;
 
 private:
-    PresetsPage();
+  PresetsPage();
 };

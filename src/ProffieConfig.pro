@@ -9,7 +9,6 @@ LIBS += $$system(wx-config --libs all)
 SOURCES += \
         main.cpp \
         sources/arduino.cpp \
-        sources/initializer.cpp \
         sources/mainwindow.cpp \
         sources/misc.cpp \
         sources/configuration.cpp \
@@ -26,7 +25,6 @@ HEADERS += \
     include/defines.h \
     include/configuration.h \
     include/appstate.h \
-    include/initializer.h \
     include/mainwindow.h \
     include/generalpage.h \
     include/presetspage.h \

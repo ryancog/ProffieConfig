@@ -9,7 +9,9 @@
 class PropPage : public wxStaticBoxSizer {
 public:
   PropPage(wxWindow*);
-  static void update();
+  static PropPage* instance;
+
+  void update();
 
   struct {
     wxComboBox* prop{nullptr};
@@ -100,7 +102,7 @@ public:
     wxCheckBox* multiBlast{nullptr};
     wxCheckBox* multiBlastDisableToggle{nullptr};
     wxCheckBox* multiBlastSwing{nullptr};
-  } static settings;
+  } settings;
 
 private:
   class RStaticBox : public wxStaticBoxSizer {
@@ -108,7 +110,7 @@ private:
     RStaticBox(int, wxWindow*, const wxString&);
   };
 
-  static std::vector<RStaticBox*> boxes;
+  std::vector<RStaticBox*> boxes;
 
   RStaticBox* gestures(wxStaticBoxSizer*);
   RStaticBox* stabOn(wxStaticBoxSizer*);
