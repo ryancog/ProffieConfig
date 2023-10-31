@@ -65,7 +65,7 @@ void PresetsPage::update() {
   int32_t presetIndex = settings.presetList->GetSelection();
   int32_t bladeIndex = settings.bladeList->GetSelection();
 
-  if (presetIndex == -1 && (!settings.nameInput->IsEmpty() || !settings.dirInput->IsEmpty() || !settings.trackInput->IsEmpty())) {
+  if (presetIndex == -1 && Configuration::instance->blades.size() > 0 && (!settings.nameInput->IsEmpty() || !settings.dirInput->IsEmpty() || !settings.trackInput->IsEmpty())) {
     Configuration::instance->presets.push_back(Configuration::presetConfig());
     presetIndex = Configuration::instance->presets.size() - 1;
 
@@ -148,7 +148,7 @@ void PresetsPage::updatePresetEditor() {
 }
 void PresetsPage::updatePresetName() {
   // Update Name Config
-  if (PresetsPage::instance->settings.presetList->GetSelection() >= 0) {
+  if (PresetsPage::instance->settings.presetList->GetSelection() >= 0 && Configuration::instance->blades.size() > 0) {
     std::string name = PresetsPage::instance->settings.nameInput->GetValue().ToStdString();
     name.erase(std::remove(name.begin(), name.end(), ' '), name.end());
     Configuration::instance->presets[PresetsPage::instance->settings.presetList->GetSelection()].name.assign(name);
@@ -158,7 +158,7 @@ void PresetsPage::updatePresetName() {
 }
 void PresetsPage::updatePresetDir() {
   // Update Dir Config
-  if (PresetsPage::instance->settings.presetList->GetSelection() >= 0) {
+  if (PresetsPage::instance->settings.presetList->GetSelection() >= 0 && Configuration::instance->blades.size() > 0) {
     std::string dir =  PresetsPage::instance->settings.dirInput->GetValue().ToStdString();
     dir.erase(std::remove(dir.begin(), dir.end(), ' '), dir.end());
     Configuration::instance->presets[PresetsPage::instance->settings.presetList->GetSelection()].dirs.assign(dir);
@@ -169,7 +169,7 @@ void PresetsPage::updatePresetDir() {
 }
 void PresetsPage::updatePresetTrack() {
   // Update Track Config
-  if (PresetsPage::instance->settings.presetList->GetSelection() >= 0) {
+  if (PresetsPage::instance->settings.presetList->GetSelection() >= 0 && Configuration::instance->blades.size() > 0) {
     std::string track = PresetsPage::instance->settings.trackInput->GetValue().ToStdString();
     track.erase(std::remove(track.begin(), track.end(), ' '), track.end());
     Configuration::instance->presets[PresetsPage::instance->settings.presetList->GetSelection()].track.assign(track);
