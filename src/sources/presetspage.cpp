@@ -64,6 +64,16 @@ PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, wind
 void PresetsPage::update() {
   int32_t presetIndex = settings.presetList->GetSelection();
   int32_t bladeIndex = settings.bladeList->GetSelection();
+
+  if (presetIndex == -1 && (settings.nameInput->IsModified() || settings.dirInput->IsModified() || settings.trackInput->IsModified())) {
+    Configuration::instance->presets.push_back(Configuration::presetConfig());
+    presetIndex = Configuration::instance->presets.size() - 1;
+
+    Configuration::instance->presets.at(presetIndex).name = settings.nameInput->GetValue();
+    Configuration::instance->presets.at(presetIndex).dirs = settings.dirInput->GetValue();
+    Configuration::instance->presets.at(presetIndex).track = settings.trackInput->GetValue();
+  }
+
   int32_t listSelection = presetIndex;
   settings.presetList->Clear();
   for (const Configuration::presetConfig& preset : Configuration::instance->presets) {
@@ -110,8 +120,11 @@ void PresetsPage::update() {
     if (bladeIndex >= 0) settings.presetsEditor->ChangeValue(wxString::FromUTF8(Configuration::instance->presets[presetIndex].styles[bladeIndex]));
     else settings.presetsEditor->ChangeValue(wxString::FromUTF8("Select Blade to Edit Style..."));
     settings.nameInput->ChangeValue(wxString::FromUTF8(Configuration::instance->presets[presetIndex].name));
+    settings.nameInput->SetInsertionPoint(settings.nameInput->GetValue().ToStdString().size());
     settings.dirInput->ChangeValue(wxString::FromUTF8(Configuration::instance->presets[presetIndex].dirs));
+    settings.dirInput->SetInsertionPoint(settings.dirInput->GetValue().ToStdString().size());
     settings.trackInput->ChangeValue(wxString::FromUTF8(Configuration::instance->presets[presetIndex].track));
+    settings.trackInput->SetInsertionPoint(settings.trackInput->GetValue().ToStdString().size());
   }
   else {
     settings.presetsEditor->ChangeValue(wxString::FromUTF8(""));
@@ -120,4 +133,47 @@ void PresetsPage::update() {
     settings.trackInput->ChangeValue(wxString::FromUTF8(""));
   }
 
+}
+
+void PresetsPage::updatePresetEditor() {
+  // Update Style Config
+  if (PresetsPage::instance->settings.presetList->GetSelection() >= 0 && PresetsPage::instance->settings.bladeList->GetSelection() >= 0) {
+    std::string style = PresetsPage::instance->settings.presetsEditor->GetValue().ToStdString();
+    style.erase(std::remove(style.begin(), style.end(), ' '), style.end());
+    Configuration::instance->presets[PresetsPage::instance->settings.presetList->GetSelection()].styles[PresetsPage::instance->settings.bladeList->GetSelection()].assign(style);
+  }
+
+  Configuration::instance->updateBladesConfig();
+  PresetsPage::instance->update();
+}
+void PresetsPage::updatePresetName() {
+  // Update Name Config
+  if (PresetsPage::instance->settings.presetList->GetSelection() >= 0) {
+    std::string name = PresetsPage::instance->settings.nameInput->GetValue().ToStdString();
+    name.erase(std::remove(name.begin(), name.end(), ' '), name.end());
+    Configuration::instance->presets[PresetsPage::instance->settings.presetList->GetSelection()].name.assign(name);
+  }
+
+  Configuration::instance->updateBladesConfig(); PresetsPage::instance->update();
+}
+void PresetsPage::updatePresetDir() {
+  // Update Dir Config
+  if (PresetsPage::instance->settings.presetList->GetSelection() >= 0) {
+    std::string dir =  PresetsPage::instance->settings.dirInput->GetValue().ToStdString();
+    dir.erase(std::remove(dir.begin(), dir.end(), ' '), dir.end());
+    Configuration::instance->presets[PresetsPage::instance->settings.presetList->GetSelection()].dirs.assign(dir);
+  }
+
+  Configuration::instance->updateBladesConfig(); PresetsPage::instance->update();
+
+}
+void PresetsPage::updatePresetTrack() {
+  // Update Track Config
+  if (PresetsPage::instance->settings.presetList->GetSelection() >= 0) {
+    std::string track = PresetsPage::instance->settings.trackInput->GetValue().ToStdString();
+    track.erase(std::remove(track.begin(), track.end(), ' '), track.end());
+    Configuration::instance->presets[PresetsPage::instance->settings.presetList->GetSelection()].track.assign(track);
+  }
+
+  Configuration::instance->updateBladesConfig(); PresetsPage::instance->update();
 }

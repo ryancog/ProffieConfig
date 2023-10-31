@@ -90,47 +90,10 @@ void MainWindow::BindEvents() {
   Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { Configuration::instance->updateBladesConfig(); PresetsPage::instance->update(); }, Misc::ID_BladeList);
   Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { Configuration::instance->updateBladesConfig(); PresetsPage::instance->update(); }, Misc::ID_PresetList);
 
-  Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
-        // Update Style Config
-        if (PresetsPage::instance->settings.presetList->GetSelection() >= 0 && PresetsPage::instance->settings.bladeList->GetSelection() >= 0) {
-          std::string style = PresetsPage::instance->settings.presetsEditor->GetValue().ToStdString();
-          style.erase(std::remove(style.begin(), style.end(), ' '), style.end());
-          Configuration::instance->presets[PresetsPage::instance->settings.presetList->GetSelection()].styles[PresetsPage::instance->settings.bladeList->GetSelection()].assign(style);
-        } else PresetsPage::instance->settings.presetsEditor->ChangeValue(wxString::FromUTF8(""));
-
-        Configuration::instance->updateBladesConfig();
-        PresetsPage::instance->update();
-      }, Misc::ID_PresetEditor);
-  Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
-        // Update Name Config
-        if (PresetsPage::instance->settings.presetList->GetSelection() >= 0 && PresetsPage::instance->settings.bladeList->GetSelection() >= 0) {
-          std::string name = PresetsPage::instance->settings.nameInput->GetValue().ToStdString();
-          name.erase(std::remove(name.begin(), name.end(), ' '), name.end());
-          Configuration::instance->presets[PresetsPage::instance->settings.presetList->GetSelection()].name.assign(name);
-        } else PresetsPage::instance->settings.nameInput->ChangeValue(wxString::FromUTF8(""));
-
-        Configuration::instance->updateBladesConfig(); PresetsPage::instance->update();
-      }, Misc::ID_PresetName);
-  Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
-        // Update Dir Config
-        if (PresetsPage::instance->settings.presetList->GetSelection() >= 0 && PresetsPage::instance->settings.bladeList->GetSelection() >= 0) {
-          std::string dir =  PresetsPage::instance->settings.dirInput->GetValue().ToStdString();
-          dir.erase(std::remove(dir.begin(), dir.end(), ' '), dir.end());
-          Configuration::instance->presets[PresetsPage::instance->settings.presetList->GetSelection()].dirs.assign(dir);
-        } else PresetsPage::instance->settings.dirInput->ChangeValue(wxString::FromUTF8(""));
-
-        Configuration::instance->updateBladesConfig(); PresetsPage::instance->update();
-      }, Misc::ID_PresetDir);
-  Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
-        // Update Track Config
-        if (PresetsPage::instance->settings.presetList->GetSelection() >= 0 && PresetsPage::instance->settings.bladeList->GetSelection() >= 0) {
-          std::string track = PresetsPage::instance->settings.trackInput->GetValue().ToStdString();
-          track.erase(std::remove(track.begin(), track.end(), ' '), track.end());
-          Configuration::instance->presets[PresetsPage::instance->settings.presetList->GetSelection()].track.assign(track);
-        } else PresetsPage::instance->settings.trackInput->ChangeValue(wxString::FromUTF8(""));
-
-        Configuration::instance->updateBladesConfig(); PresetsPage::instance->update();
-      }, Misc::ID_PresetTrack);
+  Bind(wxEVT_TEXT, [&](wxCommandEvent&) { PresetsPage::instance->updatePresetEditor(); }, Misc::ID_PresetEditor);
+  Bind(wxEVT_TEXT, [&](wxCommandEvent&) { PresetsPage::instance->updatePresetName(); }, Misc::ID_PresetName);
+  Bind(wxEVT_TEXT, [&](wxCommandEvent&) { PresetsPage::instance->updatePresetDir(); }, Misc::ID_PresetDir);
+  Bind(wxEVT_TEXT, [&](wxCommandEvent&) { PresetsPage::instance->updatePresetTrack(); }, Misc::ID_PresetTrack);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         Configuration::instance->presets.push_back(Configuration::presetConfig());
         Configuration::instance->presets[Configuration::instance->presets.size() - 1].name = "NewPreset";
