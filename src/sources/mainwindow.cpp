@@ -228,7 +228,7 @@ void MainWindow::CreatePages() {
   master = new wxBoxSizer(wxVERTICAL);
 
   wxBoxSizer* options = new wxBoxSizer(wxHORIZONTAL);
-  windowSelect = new wxComboBox(this, Misc::ID_WindowSelect, "General", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Presets", "Blades" /*, "Hardware"*/}), wxCB_READONLY);
+  windowSelect = new wxComboBox(this, Misc::ID_WindowSelect, "General", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Blades", "Presets"  /*, "Hardware"*/}), wxCB_READONLY);
   refreshButton = new wxButton(this, Misc::ID_RefreshDev, "Refresh...", wxDefaultPosition, wxDefaultSize, 0);
   devSelect = new wxComboBox(this, Misc::ID_DeviceSelect, "Select Device...", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Arduino::getBoards()), wxCB_READONLY);
   applyButton = new wxButton(this, Misc::ID_ApplyChanges, "Apply to Board...", wxDefaultPosition, wxDefaultSize, 0);
