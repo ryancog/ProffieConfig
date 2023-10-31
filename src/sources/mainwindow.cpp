@@ -102,11 +102,12 @@ void MainWindow::BindEvents() {
         PresetsPage::instance->update();
       }, Misc::ID_AddPreset);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        if (PresetsPage::instance->settings.presetList->GetSelection() >= 0)
+        if (PresetsPage::instance->settings.presetList->GetSelection() >= 0) {
           Configuration::instance->presets.erase(std::next(Configuration::instance->presets.begin(), PresetsPage::instance->settings.presetList->GetSelection()));
 
-        Configuration::instance->updateBladesConfig();
-        PresetsPage::instance->update();
+          Configuration::instance->updateBladesConfig();
+          PresetsPage::instance->update();
+        }
       }, Misc::ID_RemovePreset);
 
   // Blades Page
