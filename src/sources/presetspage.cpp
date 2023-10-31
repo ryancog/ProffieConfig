@@ -65,7 +65,7 @@ void PresetsPage::update() {
   int32_t presetIndex = settings.presetList->GetSelection();
   int32_t bladeIndex = settings.bladeList->GetSelection();
 
-  if (presetIndex == -1 && (settings.nameInput->IsModified() || settings.dirInput->IsModified() || settings.trackInput->IsModified())) {
+  if (presetIndex == -1 && (!settings.nameInput->IsEmpty() || !settings.dirInput->IsEmpty() || !settings.trackInput->IsEmpty())) {
     Configuration::instance->presets.push_back(Configuration::presetConfig());
     presetIndex = Configuration::instance->presets.size() - 1;
 

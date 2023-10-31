@@ -639,6 +639,7 @@ void Configuration::readPresetArray(std::ifstream& file) {
       style.clear();
       element.clear();
     }
+    if (Configuration::instance->blades.size() == 0) file >> element; // Clear "," that was generated anyways if we have no blades
     file >> element;
     CHKSECT;
     tempData = std::strtok(element.data(), ",\"");
