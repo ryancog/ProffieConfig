@@ -16,6 +16,10 @@ public:
   static PresetsPage* instance;
 
   void update();
+  void updatePresetEditor();
+  void updatePresetName();
+  void updatePresetDir();
+  void updatePresetTrack();
 
   struct {
     wxTextCtrl* presetsEditor{nullptr};
