@@ -73,7 +73,7 @@ void MainWindow::BindEvents() {
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(); }, Misc::ID_ApplyChanges);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-        wxMessageBox("Tool for GUI Configuration and flashing of ProffieBoard (Created by Fredrik Hubbinette)\n\nTool Created by Ryryog25\n\nProffieOS v7.9 | Arduino Plugin v3.6.0 | Arduino CLI v0.34.2", "About ProffieConfig", wxOK | wxICON_INFORMATION);
+        wxMessageBox("Tool for GUI Configuration and flashing of ProffieBoard (Created by Fredrik Hubbinette)\n\nTool Created by Ryryog25\nhttps://github.com/ryryog25/ProffieConfig\n\nProffieOS v7.9 | Arduino Plugin v3.6.0 | Arduino CLI v0.34.2", "About ProffieConfig", wxOK | wxICON_INFORMATION);
       }, wxID_ABOUT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->outputConfig(); }, Misc::ID_GenFile);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(); }, Misc::ID_VerifyConfig);
@@ -206,20 +206,21 @@ void MainWindow::BindEvents() {
 
 void MainWindow::CreateMenuBar() {
   wxMenu *menuFile = new wxMenu;
-  menuFile->Append(wxID_EXIT);
-  menuFile->Append(wxID_ABOUT);
-  menuFile->Append(Misc::ID_Initialize, "Install Dependencies...\tCtrl+I", "Install Platform-Specific Proffieboard Dependencies");
 
-  wxMenu *menuConfig = new wxMenu;
-  menuConfig->Append(Misc::ID_GenFile, "Save Config\tCtrl+S", "Generate Config File");
-  menuConfig->Append(Misc::ID_VerifyConfig, "Verify Config...\t", "Generate Config and Compile to test...");
-  menuConfig->Append(Misc::ID_ExportFile, "Export Config...\t", "Choose a location to save a copy of your config...");
-  menuConfig->Append(Misc::ID_ImportFile, "Import Config...\t", "Choose a file to import...");
+  menuFile->Append(Misc::ID_GenFile, "Save Config\tCtrl+S", "Generate Config File");
+  menuFile->Append(Misc::ID_VerifyConfig, "Verify Config...\tCtrl+R", "Generate Config and Compile to test...");
+
+  menuFile->Append(Misc::ID_ExportFile, "Export Config...\t", "Choose a location to save a copy of your config...");
+  menuFile->Append(Misc::ID_ImportFile, "Import Config...\t", "Choose a file to import...");
+
+  menuFile->Append(Misc::ID_Initialize, "Install Dependencies...\t", "Install Platform-Specific Proffieboard Dependencies");
+
+  menuFile->Append(wxID_ABOUT);
+  menuFile->Append(wxID_EXIT);
 
 
   wxMenuBar *menuBar = new wxMenuBar;
   menuBar->Append(menuFile, "&File");
-  menuBar->Append(menuConfig, "&Config");
   SetMenuBar(menuBar);
 }
 
