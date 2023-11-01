@@ -19,6 +19,11 @@ public:
 
   void update();
 
+  void addBlade();
+  void addSubBlade();
+  void removeBlade();
+  void removeSubBlade();
+
   struct {
     wxListBox* bladeSelect{nullptr};
     wxListBox* subBladeSelect{nullptr};

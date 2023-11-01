@@ -55,7 +55,7 @@ void Arduino::refreshBoards() {
     for (const std::string& item : Arduino::getBoards()) {
       MainWindow::instance->devSelect->Append(item);
     }
-    MainWindow::instance->devSelect->SetValue(lastSel);
+    MainWindow::instance->devSelect->ChangeValue(lastSel);
     Progress::emitEvent(100, "Done.");
     Progress::emitEvent(100, "Done."); // This has to be called twice to update on macOS?
   });

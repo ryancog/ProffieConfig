@@ -1,6 +1,7 @@
 #include "presetspage.h"
 #include "misc.h"
 #include "configuration.h"
+#include "wx/msgdlg.h"
 #include <string>
 
 PresetsPage* PresetsPage::instance;
@@ -124,7 +125,10 @@ void PresetsPage::update() {
     settings.dirInput->ChangeValue(wxString::FromUTF8(Configuration::instance->presets[presetIndex].dirs));
     settings.dirInput->SetInsertionPoint(settings.dirInput->GetValue().ToStdString().size());
     settings.trackInput->ChangeValue(wxString::FromUTF8(Configuration::instance->presets[presetIndex].track));
-    settings.trackInput->SetInsertionPoint(settings.trackInput->GetValue().ToStdString().size());
+    if (settings.trackInput->GetValue().size() > 0) {
+      settings.trackInput->ChangeValue(settings.trackInput->GetValue() + ".wav");
+      settings.trackInput->SetInsertionPoint(settings.trackInput->GetValue().ToStdString().size() - 4);
+    }
   }
   else {
     settings.presetsEditor->ChangeValue(wxString::FromUTF8(""));
@@ -172,6 +176,7 @@ void PresetsPage::updatePresetTrack() {
   if (PresetsPage::instance->settings.presetList->GetSelection() >= 0 && Configuration::instance->blades.size() > 0) {
     std::string track = PresetsPage::instance->settings.trackInput->GetValue().ToStdString();
     track.erase(std::remove(track.begin(), track.end(), ' '), track.end());
+    if (track.find(".") != std::string::npos) track.erase(track.find("."));
     Configuration::instance->presets[PresetsPage::instance->settings.presetList->GetSelection()].track.assign(track);
   }
 
