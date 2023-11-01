@@ -70,7 +70,6 @@ void Configuration::outputConfigTopDefaults(std::ofstream& configOutput) {
   configOutput << "#define ENABLE_SD" << std::endl;
   configOutput << "#define ENABLE_MOTION" << std::endl;
   configOutput << "#define SHARED_POWER_PINS" << std::endl;
-  configOutput << "#define DISABLE_BASIC_PARSER_STYLES" << std::endl;
 }
 void Configuration::outputConfigTopGeneral(std::ofstream& configOutput) {
   if (HardwarePage::instance->settings.OLED->GetValue()) configOutput << "#define ENABLE_SSD1306" << std::endl;
@@ -78,6 +77,8 @@ void Configuration::outputConfigTopGeneral(std::ofstream& configOutput) {
   if (GeneralPage::instance->settings.presetSave->GetValue()) configOutput << "#define SAVE_PRESET" << std::endl;
   if (GeneralPage::instance->settings.volumeSave->GetValue()) configOutput << "#define SAVE_VOLUME" << std::endl;
   if (GeneralPage::instance->settings.disableColor->GetValue()) configOutput << "#define DISABLE_COLOR_CHANGE" << std::endl;
+  if (GeneralPage::instance->settings.noTalkie->GetValue()) configOutput << "#define DISABLE_TALKIE" << std::endl;
+  if (GeneralPage::instance->settings.noBasicParsers->GetValue()) configOutput << "#define DISABLE_BASIC_PARSER_STYLES" << std::endl;
   if (GeneralPage::instance->settings.disableDiagnosticCommands->GetValue()) configOutput << "#define DISABLE_DIAGNOSTIC_COMMANDS" << std::endl;
   if (GeneralPage::instance->settings.enableDeveloperCommands->GetValue()) configOutput << "#define ENABLE_DEVELOPER_COMMANDS" << std::endl;
   configOutput << "#define PLI_OFF_TIME " << GeneralPage::instance->settings.pliTime->num->GetValue() << " * 60 * 1000" << std::endl;
@@ -526,6 +527,8 @@ void Configuration::readDefine(std::string& define) {
   CHKDEF("SAVE_PRESET") GeneralPage::instance->settings.presetSave->SetValue(true);
   CHKDEF("SAVE_VOLUME") GeneralPage::instance->settings.volumeSave->SetValue(true);
   CHKDEF("DISABLE_COLOR_CHANGE") GeneralPage::instance->settings.disableColor->SetValue(true);
+  CHKDEF("DISABLE_TALKIE") GeneralPage::instance->settings.noTalkie->SetValue(true);
+  CHKDEF("DISABLE_BASIC_PARSER_STYLES") GeneralPage::instance->settings.noBasicParsers->SetValue(true);
   CHKDEF("ENABLE_DEVELOPER_COMMANDS") GeneralPage::instance->settings.enableDeveloperCommands->SetValue(true);
   CHKDEF("DISABLE_DIAGNOSTIC_COMMANDS") GeneralPage::instance->settings.disableDiagnosticCommands->SetValue(true);
   CHKDEF("PLI_OFF_TIME") GeneralPage::instance->settings.pliTime->num->SetValue(DEFNUM);
