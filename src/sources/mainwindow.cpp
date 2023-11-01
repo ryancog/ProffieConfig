@@ -127,45 +127,10 @@ void MainWindow::BindEvents() {
         UPDATEWINDOW;;
       }, Misc::ID_BladeType);
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { Configuration::instance->updateBladesConfig(); BladesPage::instance->update(); }, Misc::ID_BladeOption);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        if (BD_HASSELECTION) {
-          Configuration::instance->blades.insert(Configuration::instance->blades.begin() + BladesPage::instance->lastBladeSelection + 1, Configuration::Configuration::bladeConfig());
-        } else {
-          Configuration::instance->blades.push_back(Configuration::Configuration::bladeConfig());
-        }
-        Configuration::instance->updateBladesConfig();
-        BladesPage::instance->update();
-        UPDATEWINDOW;
-      }, Misc::ID_AddBlade);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        Configuration::instance->blades[BladesPage::instance->lastBladeSelection].isSubBlade = true;
-        Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.push_back(Configuration::bladeConfig::subBladeInfo());
-        if (Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.size() <= 1) Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.push_back(Configuration::bladeConfig::subBladeInfo());
-        Configuration::instance->updateBladesConfig();
-        BladesPage::instance->update();
-        UPDATEWINDOW;
-      }, Misc::ID_AddSubBlade);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        if (BD_HASSELECTION) {
-          Configuration::instance->blades.erase(Configuration::instance->blades.begin() + BladesPage::instance->lastBladeSelection);
-        }
-        Configuration::instance->updateBladesConfig();
-        BladesPage::instance->update();
-        UPDATEWINDOW;
-      }, Misc::ID_RemoveBlade);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        if (BD_SUBHASSELECTION) {
-          Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.erase(Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.begin() + BladesPage::instance->lastSubBladeSelection);
-          if (Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.size() <= 1) {
-            Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.clear();
-            Configuration::instance->blades[BladesPage::instance->lastBladeSelection].isSubBlade = false;
-          }
-          BladesPage::instance->lastSubBladeSelection = -1;
-        }
-        Configuration::instance->updateBladesConfig();
-        BladesPage::instance->update();
-        UPDATEWINDOW;
-      }, Misc::ID_RemoveSubBlade);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { BladesPage::instance->addBlade(); UPDATEWINDOW; }, Misc::ID_AddBlade);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { BladesPage::instance->addSubBlade(); UPDATEWINDOW; }, Misc::ID_AddSubBlade);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { BladesPage::instance->removeBlade(); UPDATEWINDOW; }, Misc::ID_RemoveBlade);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { BladesPage::instance->removeSubBlade(); UPDATEWINDOW; }, Misc::ID_RemoveSubBlade);
 }
 
 void MainWindow::CreateMenuBar() {
