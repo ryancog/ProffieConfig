@@ -50,10 +50,8 @@ wxBoxSizer* GeneralPage::boolOptions(wxStaticBoxSizer* parent) {
   settings.disableColor = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Color Change");
   settings.noTalkie = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Talkie");
   settings.noBasicParsers = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Basic Parser Styles");
-  settings.noBasicParsers->SetValue(true);
   settings.disableDiagnosticCommands = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Diagnostic Commands");
   settings.enableDeveloperCommands = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Enable Developer Commands");
-  settings.disableDiagnosticCommands->SetValue(true);
   settings.maxLEDs = Misc::createNumEntry(parent, "Neopixel Max LEDs", wxID_ANY, 0, 1024, 144);
 
   boolOptions->Add(settings.volumeSave, FIRSTITEMFLAGS);
