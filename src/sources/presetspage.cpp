@@ -117,8 +117,9 @@ void PresetsPage::update() {
   presetIndex = settings.presetList->GetSelection();
   bladeIndex = settings.bladeList->GetSelection();
   if (presetIndex >= 0) {
-    if (bladeIndex >= 0) settings.presetsEditor->ChangeValue(wxString::FromUTF8(Configuration::instance->presets[presetIndex].styles[bladeIndex]));
-    else settings.presetsEditor->ChangeValue(wxString::FromUTF8("Select Blade to Edit Style..."));
+    if (bladeIndex >= 0) settings.presetsEditor->ChangeValue(Configuration::instance->presets[presetIndex].styles[bladeIndex]);
+    else if (Configuration::instance->blades.size() < 1) settings.presetsEditor->ChangeValue("Add a blade to edit presets...");
+    else settings.presetsEditor->ChangeValue("Select Blade to Edit Style...");
     settings.nameInput->ChangeValue(wxString::FromUTF8(Configuration::instance->presets[presetIndex].name));
     settings.nameInput->SetInsertionPoint(settings.nameInput->GetValue().ToStdString().size());
     settings.dirInput->ChangeValue(wxString::FromUTF8(Configuration::instance->presets[presetIndex].dirs));
