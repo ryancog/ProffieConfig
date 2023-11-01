@@ -485,11 +485,11 @@ void Configuration::readConfigProp(std::ifstream& file) {
   std::string element;
   while (!file.eof() && element != "#endif") {
     file >> element;
-    if (std::strstr(element.data(), "sa22c") != nullptr) PropPage::instance->settings.prop->SetValue("SA22C");
-    if (std::strstr(element.data(), "fett263") != nullptr) PropPage::instance->settings.prop->SetValue("Fett263");
-    if (std::strstr(element.data(), "shtok") != nullptr) PropPage::instance->settings.prop->SetValue("Shtok");
-    if (std::strstr(element.data(), "BC") != nullptr) PropPage::instance->settings.prop->SetValue("BC");
-    if (std::strstr(element.data(), "caiwyn") != nullptr) PropPage::instance->settings.prop->SetValue("Caiwyn");
+    if (std::strstr(element.data(), "sa22c") != nullptr) PropPage::instance->settings.prop->ChangeValue("SA22C");
+    if (std::strstr(element.data(), "fett263") != nullptr) PropPage::instance->settings.prop->ChangeValue("Fett263");
+    if (std::strstr(element.data(), "shtok") != nullptr) PropPage::instance->settings.prop->ChangeValue("Shtok");
+    if (std::strstr(element.data(), "BC") != nullptr) PropPage::instance->settings.prop->ChangeValue("BC");
+    if (std::strstr(element.data(), "caiwyn") != nullptr) PropPage::instance->settings.prop->ChangeValue("Caiwyn");
   }
 }
 void Configuration::readConfigPresets(std::ifstream& file) {
