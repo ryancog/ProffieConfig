@@ -48,6 +48,9 @@ wxBoxSizer* GeneralPage::boolOptions(wxStaticBoxSizer* parent) {
   settings.presetSave = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Save Preset");
   settings.colorSave = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Save Color");
   settings.disableColor = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Color Change");
+  settings.noTalkie = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Talkie");
+  settings.noBasicParsers = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Basic Parser Styles");
+  settings.noBasicParsers->SetValue(true);
   settings.disableDiagnosticCommands = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Diagnostic Commands");
   settings.enableDeveloperCommands = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Enable Developer Commands");
   settings.disableDiagnosticCommands->SetValue(true);
@@ -57,6 +60,8 @@ wxBoxSizer* GeneralPage::boolOptions(wxStaticBoxSizer* parent) {
   boolOptions->Add(settings.presetSave, MENUITEMFLAGS);
   boolOptions->Add(settings.colorSave, MENUITEMFLAGS);
   boolOptions->Add(settings.disableColor, MENUITEMFLAGS);
+  boolOptions->Add(settings.noTalkie, MENUITEMFLAGS);
+  boolOptions->Add(settings.noBasicParsers, MENUITEMFLAGS);
   boolOptions->Add(settings.disableDiagnosticCommands, MENUITEMFLAGS);
   boolOptions->Add(settings.enableDeveloperCommands, MENUITEMFLAGS);
   boolOptions->Add(settings.maxLEDs->box, MENUITEMFLAGS);
