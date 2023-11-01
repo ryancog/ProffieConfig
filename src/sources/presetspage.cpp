@@ -1,7 +1,6 @@
 #include "presetspage.h"
 #include "misc.h"
 #include "configuration.h"
-#include "wx/msgdlg.h"
 #include <string>
 
 PresetsPage* PresetsPage::instance;
