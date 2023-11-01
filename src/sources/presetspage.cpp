@@ -144,6 +144,7 @@ void PresetsPage::updatePresetEditor() {
   if (PresetsPage::instance->settings.presetList->GetSelection() >= 0 && PresetsPage::instance->settings.bladeList->GetSelection() >= 0) {
     std::string style = PresetsPage::instance->settings.presetsEditor->GetValue().ToStdString();
     style.erase(std::remove(style.begin(), style.end(), ' '), style.end());
+    if (style.rfind("(),") != std::string::npos) style.erase(style.rfind("(),") + 2);
     Configuration::instance->presets[PresetsPage::instance->settings.presetList->GetSelection()].styles[PresetsPage::instance->settings.bladeList->GetSelection()].assign(style);
   }
 
