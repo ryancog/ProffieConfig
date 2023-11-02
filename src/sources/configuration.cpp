@@ -417,28 +417,33 @@ void Configuration::readConfig(const std::string& filePath) {
   std::ifstream file(filePath);
   if (!file.is_open()) return;
 
-  std::string section;
-  while (!file.eof()) {
-    file >> section;
-    if (section == "//") {
-      getline(file, section);
-      continue;
-    }
-    if (std::strstr(section.data(), "/*")) {
-      while (!file.eof()) {
-        if (std::strstr(section.data(), "*/")) break;
-        file >> section;
-      }
-      continue;
-    }
-    if (section == "#ifdef") {
+  try {
+    std::string section;
+    while (!file.eof()) {
       file >> section;
-      if (section == "CONFIG_TOP") Configuration::readConfigTop(file);
-      if (section == "CONFIG_PROP") Configuration::readConfigProp(file);
-      if (section == "CONFIG_PRESETS") Configuration::readConfigPresets(file);
+      if (section == "//") {
+        getline(file, section);
+        continue;
+      }
+      if (std::strstr(section.data(), "/*")) {
+        while (!file.eof()) {
+          if (std::strstr(section.data(), "*/")) break;
+          file >> section;
+        }
+        continue;
+      }
+      if (section == "#ifdef") {
+        file >> section;
+        if (section == "CONFIG_TOP") Configuration::readConfigTop(file);
+        if (section == "CONFIG_PROP") Configuration::readConfigProp(file);
+        if (section == "CONFIG_PRESETS") Configuration::readConfigPresets(file);
+      }
     }
+  } catch (std::exception& e) {
+    std::string errorMessage = "There was an error parsing config, please ensure it is valid:\n\n";
+    errorMessage += e.what();
+    wxMessageBox(errorMessage, "Config Read Error", wxOK);
   }
-
   //GeneralPage::update();
   PropPage::instance->update();
   BladesPage::instance->update();
@@ -454,13 +459,7 @@ void Configuration::readConfig() {
     } else return;
   }
 
-  try {
-    Configuration::readConfig(PROFFIEOS_PATH "/config/ProffieConfig_autogen.h");
-  } catch (std::exception e) {
-    std::string errorMessage = "There was an error parsing config:\n\n";
-    errorMessage += e.what();
-    wxMessageBox(errorMessage, "Config Read Error", wxOK);
-  }
+  Configuration::readConfig(PROFFIEOS_PATH "/config/ProffieConfig_autogen.h");
 }
 void Configuration::importConfig() {
   wxFileDialog configLocation(MainWindow::instance, "Choose ProffieOS Config File", "", "", "C Header Files (*.h)|*.h", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
