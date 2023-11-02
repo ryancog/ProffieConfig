@@ -287,7 +287,9 @@ void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput) {
         if (blade.type == "NeoPixel (RGB)" || blade.type == "NeoPixel (RGBW)") {
             bool firstSub = true;
             if (blade.isSubBlade) for (Configuration::bladeConfig::subBladeInfo subBlade : blade.subBlades) {
-                    configOutput << "\t\tSubBlade( " << subBlade.startPixel << ", " << subBlade.endPixel << ", ";
+                    if (blade.subBladeWithStride) configOutput << "\t\tSubBladeWithStride( ";
+                    else /* if not with stride*/ configOutput << "\t\tSubBlade( ";
+                    configOutput << subBlade.startPixel << ", " << subBlade.endPixel << ", ";
                     if (firstSub) {
                         genWS281X(configOutput, blade);
                         configOutput << ")," << std::endl;
@@ -706,6 +708,7 @@ void Configuration::readBladeArray(std::ifstream& file) {
         if (std::strstr(bladeInfo.data(), "SubBlade") != nullptr) {
             if (std::strstr(bladeInfo.data(), "NULL") == nullptr) { // Top Level SubBlade
                 Configuration::instance->blades.push_back(Configuration::bladeConfig());
+                if (std::strstr(bladeInfo.data(), "WithStride")) Configuration::instance->blades[Configuration::instance->blades.size() - 1].subBladeWithStride = true;
             } else { // Lesser SubBlade
                 blade--;
                 numBlades--;
