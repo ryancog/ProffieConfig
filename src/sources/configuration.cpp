@@ -442,6 +442,10 @@ void Configuration::readConfig(const std::string& filePath) {
   } catch (std::exception& e) {
     std::string errorMessage = "There was an error parsing config, please ensure it is valid:\n\n";
     errorMessage += e.what();
+    MainWindow::instance->Destroy();
+    MainWindow *frame = new MainWindow();
+    frame->Show(true);
+
     wxMessageBox(errorMessage, "Config Read Error", wxOK);
   }
   //GeneralPage::update();
@@ -678,8 +682,8 @@ void Configuration::readPresetArray(std::ifstream& file) {
     tempData = std::strtok(element.data(), ",\""); // Detokenize dir section
     Configuration::instance->presets[preset].dirs.assign(tempData == nullptr ? "" : tempData);
 
-    element = presetInfo.substr(0, element.find(","));
-    presetInfo = presetInfo.substr(0, element.find(",") + 1);
+    element = presetInfo.substr(0, presetInfo.find(","));
+    presetInfo = presetInfo.substr(presetInfo.find(",") + 1);
 
     tempData = std::strtok(element.data(), ",\"");
     Configuration::instance->presets[preset].track.assign(tempData == nullptr ? "" : tempData);
@@ -687,13 +691,13 @@ void Configuration::readPresetArray(std::ifstream& file) {
     tempData = std::strtok(nullptr, ""); // Get rest of data out of strtok
     element = tempData != nullptr ? tempData : "";
     for (uint32_t blade = 0; blade < Configuration::instance->blades.size(); blade++) {
-      presetInfo = element.substr(0, element.find("(),") + 2); // Copy in next
+      element = presetInfo.substr(0, presetInfo.find("(),") + 2); // Copy in next
 
-      element = element.substr(element.find("(),") + 3); // Increment
-      Configuration::instance->presets[preset].styles.push_back(presetInfo.substr(presetInfo.find("StylePtr"), presetInfo.find("(),") - 1));
+      presetInfo = presetInfo.substr(presetInfo.find("(),") + 3); // Increment
+      Configuration::instance->presets[preset].styles.push_back(element.substr(element.find("StylePtr"), element.find("(),")));
     }
     //std::strtok(nullptr, "\""); // clear bladestyles
-    tempData = std::strtok(element.data(), ",\"");
+    tempData = std::strtok(presetInfo.data(), ",\"");
     Configuration::instance->presets[preset].name.assign(tempData == nullptr ? "" : tempData);
   }
 # undef CHKSECT
