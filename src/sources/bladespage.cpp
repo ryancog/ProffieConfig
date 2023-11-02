@@ -133,8 +133,6 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
   Add(bladeManager, BOXITEMFLAGS);
   Add(bladeSetup, wxSizerFlags(0));
   Add(bladeSettings, wxSizerFlags(1));
-
-
 }
 
 void BladesPage::update() {
@@ -142,17 +140,19 @@ void BladesPage::update() {
   lastBladeSelection = settings.bladeSelect->GetSelection();
   lastSubBladeSelection = settings.subBladeSelect->GetSelection();
 
+  if (Configuration::instance->blades.size() == 0) Configuration::instance->blades.push_back(Configuration::bladeConfig());
+
   // Rebuild/Populate Blades
   settings.bladeSelect->Clear();
   for (int32_t bladeNum = 0; bladeNum < (int32_t)Configuration::instance->blades.size(); bladeNum++) {
-    settings.bladeSelect->Append(wxString::FromUTF8("Blade " + std::to_string(bladeNum)));
+    settings.bladeSelect->Append("Blade " + std::to_string(bladeNum));
   }
   if ((int32_t)settings.bladeSelect->GetCount() - 1 >= lastBladeSelection) settings.bladeSelect->SetSelection(lastBladeSelection);
 
   // Rebuild/Populate SubBlades
   settings.subBladeSelect->Clear();
   for (int32_t subBladeNum = 0; lastBladeSelection != -1 && subBladeNum < (int32_t)Configuration::instance->blades[lastBladeSelection].subBlades.size(); subBladeNum++) {
-    settings.subBladeSelect->Append(wxString::FromUTF8("SubBlade " + std::to_string(subBladeNum)));
+    settings.subBladeSelect->Append("SubBlade " + std::to_string(subBladeNum));
   }
   if ((int32_t)settings.subBladeSelect->GetCount() - 1 >= lastSubBladeSelection) settings.subBladeSelect->SetSelection(lastSubBladeSelection);
 
@@ -240,7 +240,6 @@ void BladesPage::addBlade() {
 
   BladesPage::instance->update();
 }
-
 void BladesPage::addSubBlade() {
   Configuration::instance->blades[BladesPage::instance->lastBladeSelection].isSubBlade = true;
   Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.push_back(Configuration::bladeConfig::subBladeInfo());
@@ -248,7 +247,6 @@ void BladesPage::addSubBlade() {
   Configuration::instance->updateBladesConfig();
   BladesPage::instance->update();
 }
-
 void BladesPage::removeBlade() {
   if (BD_HASSELECTION && Configuration::instance->blades.size() > 1) {
     Configuration::instance->blades.erase(Configuration::instance->blades.begin() + BladesPage::instance->lastBladeSelection);
@@ -256,7 +254,6 @@ void BladesPage::removeBlade() {
   Configuration::instance->updateBladesConfig();
   BladesPage::instance->update();
 }
-
 void BladesPage::removeSubBlade() {
   if (BD_SUBHASSELECTION) {
     Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.erase(Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.begin() + BladesPage::instance->lastSubBladeSelection);
