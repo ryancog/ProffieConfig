@@ -69,9 +69,9 @@ void PresetsPage::update() {
     Configuration::instance->presets.push_back(Configuration::presetConfig());
     presetIndex = Configuration::instance->presets.size() - 1;
 
-    Configuration::instance->presets.at(presetIndex).name = settings.nameInput->GetValue();
-    Configuration::instance->presets.at(presetIndex).dirs = settings.dirInput->GetValue();
-    Configuration::instance->presets.at(presetIndex).track = settings.trackInput->GetValue();
+    Configuration::instance->presets[presetIndex].name = settings.nameInput->GetValue();
+    Configuration::instance->presets[presetIndex].dirs = settings.dirInput->GetValue();
+    Configuration::instance->presets[presetIndex].track = settings.trackInput->GetValue();
   }
 
   int32_t listSelection = presetIndex;
@@ -118,25 +118,25 @@ void PresetsPage::update() {
   bladeIndex = settings.bladeList->GetSelection();
   if (presetIndex >= 0) {
     if (bladeIndex >= 0) settings.presetsEditor->ChangeValue(Configuration::instance->presets[presetIndex].styles[bladeIndex]);
-    else if (Configuration::instance->blades.size() < 1) settings.presetsEditor->ChangeValue("Add a blade to edit presets...");
     else settings.presetsEditor->ChangeValue("Select Blade to Edit Style...");
-    settings.nameInput->ChangeValue(wxString::FromUTF8(Configuration::instance->presets[presetIndex].name));
-    settings.nameInput->SetInsertionPoint(settings.nameInput->GetValue().ToStdString().size());
-    settings.dirInput->ChangeValue(wxString::FromUTF8(Configuration::instance->presets[presetIndex].dirs));
-    settings.dirInput->SetInsertionPoint(settings.dirInput->GetValue().ToStdString().size());
-    settings.trackInput->ChangeValue(wxString::FromUTF8(Configuration::instance->presets[presetIndex].track));
-    if (settings.trackInput->GetValue().size() > 0) {
-      settings.trackInput->ChangeValue(settings.trackInput->GetValue() + ".wav");
-      settings.trackInput->SetInsertionPoint(settings.trackInput->GetValue().ToStdString().size() - 4);
-    }
+
+    uint8_t insertionPoint;
+    insertionPoint = settings.nameInput->GetInsertionPoint();
+    settings.nameInput->ChangeValue(Configuration::instance->presets[presetIndex].name);
+    settings.nameInput->SetInsertionPoint(insertionPoint <= settings.nameInput->GetValue().size() ? insertionPoint : settings.nameInput->GetValue().size());
+    insertionPoint = settings.dirInput->GetInsertionPoint();
+    settings.dirInput->ChangeValue(Configuration::instance->presets[presetIndex].dirs);
+    settings.dirInput->SetInsertionPoint(insertionPoint <= settings.dirInput->GetValue().size() ? insertionPoint : settings.nameInput->GetValue().size());
+    insertionPoint = settings.trackInput->GetInsertionPoint();
+    settings.trackInput->ChangeValue(Configuration::instance->presets[presetIndex].track);
+    settings.trackInput->SetInsertionPoint(insertionPoint <= settings.trackInput->GetValue().size() - 4 ? insertionPoint : settings.trackInput->GetValue().size() - 4);
   }
   else {
-    settings.presetsEditor->ChangeValue(wxString::FromUTF8(""));
-    settings.nameInput->ChangeValue(wxString::FromUTF8(""));
-    settings.dirInput->ChangeValue(wxString::FromUTF8(""));
-    settings.trackInput->ChangeValue(wxString::FromUTF8(""));
+    settings.presetsEditor->ChangeValue("");
+    settings.nameInput->ChangeValue("");
+    settings.dirInput->ChangeValue("");
+    settings.trackInput->ChangeValue("");
   }
-
 }
 
 void PresetsPage::updatePresetEditor() {
@@ -174,12 +174,16 @@ void PresetsPage::updatePresetDir() {
 }
 void PresetsPage::updatePresetTrack() {
   // Update Track Config
-  if (PresetsPage::instance->settings.presetList->GetSelection() >= 0 && Configuration::instance->blades.size() > 0) {
-    std::string track = PresetsPage::instance->settings.trackInput->GetValue().ToStdString();
-    track.erase(std::remove(track.begin(), track.end(), ' '), track.end());
-    if (track.find(".") != std::string::npos) track.erase(track.find("."));
-    Configuration::instance->presets[PresetsPage::instance->settings.presetList->GetSelection()].track.assign(track);
-  }
+  std::string track = PresetsPage::instance->settings.trackInput->GetValue().ToStdString();
+  track.erase(std::remove(track.begin(), track.end(), ' '), track.end());
+  if (track.find(".") != std::string::npos) track.erase(track.find("."));
+  if (track.length() > 0) track += ".wav";
 
+  if (PresetsPage::instance->settings.presetList->GetSelection() >= 0 && Configuration::instance->blades.size() > 0) {
+    Configuration::instance->presets[PresetsPage::instance->settings.presetList->GetSelection()].track.assign(track);
+  } else {
+    settings.trackInput->ChangeValue(track);
+    settings.trackInput->SetInsertionPoint(1);
+  }
   Configuration::instance->updateBladesConfig(); PresetsPage::instance->update();
 }
