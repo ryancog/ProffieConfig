@@ -649,37 +649,39 @@ void Configuration::readPresetArray(std::ifstream& file) {
 # define RUNTOSECTION element.clear(); while (element != "{") { file >> element; CHKSECT; }
     // In future get array name?
     char* tempData;
+    std::string presetInfo;
     std::string element;
-    std::string style;
     RUNTOSECTION;
     uint8_t preset = -1;
     Configuration::instance->presets.clear();
     while (!false) {
+        presetInfo.clear();
         RUNTOSECTION;
         Configuration::instance->presets.push_back(Configuration::presetConfig());
         preset++;
-        file >> element;
-        CHKSECT;
-        tempData = std::strtok(element.data(), ",\"");
-        Configuration::instance->presets[preset].dirs.assign(tempData == nullptr ? "" : tempData);
-        file >> element;
-        CHKSECT;
-        tempData = std::strtok(element.data(), ",\"");
-        Configuration::instance->presets[preset].track.assign(tempData == nullptr ? "" : tempData);
-        for (uint32_t blade = 0; blade < Configuration::instance->blades.size(); blade++) {
-            while (std::strstr(element.data(), "(),") == nullptr) {
-                file >> element;
-                CHKSECT;
-                style.append(element);
-            }
-            style.replace(style.find("(),"), std::strlen("(),"), "()");
-            Configuration::instance->presets[preset].styles.push_back(style);
-            style.clear();
-            element.clear();
+
+        while (std::strstr(presetInfo.data(), "}") == nullptr) {
+            file >> element;
+            CHKSECT;
+            presetInfo.append(element);
         }
-        if (Configuration::instance->blades.size() == 0) file >> element; // Clear "," that was generated anyways if we have no blades
-        file >> element;
-        CHKSECT;
+
+        tempData = std::strtok(presetInfo.data(), ",\"");
+        Configuration::instance->presets[preset].dirs.assign(tempData == nullptr ? "" : tempData);
+        tempData = std::strtok(nullptr, ",\"");
+        Configuration::instance->presets[preset].track.assign(tempData == nullptr ? "" : tempData);
+
+        tempData = std::strtok(nullptr, ""); // Get rest of data out of strtok
+        element = tempData != nullptr ? tempData : "";
+        for (uint32_t blade = 0; blade < Configuration::instance->blades.size(); blade++) {
+            presetInfo = element; // Assign to presetInfo
+
+            element = presetInfo.substr(presetInfo.find("(),") + 2); // Copy next into element
+
+            presetInfo = presetInfo.substr(presetInfo.find("StylePtr"), presetInfo.find("(),") - 1) + "()"; // Get Style
+            Configuration::instance->presets[preset].styles.push_back(presetInfo);
+        }
+        //std::strtok(nullptr, "\""); // clear bladestyles
         tempData = std::strtok(element.data(), ",\"");
         Configuration::instance->presets[preset].name.assign(tempData == nullptr ? "" : tempData);
     }
