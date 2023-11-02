@@ -137,9 +137,17 @@ void Arduino::verifyConfig() {
   MainWindow::instance->thread = new ThreadRunner([&]() {
     std::string returnVal;
     Progress::emitEvent(20, "Generating configuration file...");
+
     Configuration::instance->updateBladesConfig();
     Configuration::instance->outputConfig();
-    Arduino::updateIno();
+
+    returnVal = Arduino::updateIno();
+    if (returnVal != "OK") {
+        Progress::emitEvent(100, "Error");
+        wxMessageBox("There was an error while updating files:\n\n"
+                         + returnVal, "Files Error");
+        return;
+    }
 
     Progress::emitEvent(40, "Compiling ProffieOS...");
     returnVal = Arduino::compile();
@@ -222,8 +230,10 @@ std::string Arduino::upload() {
 
   return "OK";
 }
-void Arduino::updateIno() {
+std::string Arduino::updateIno() {
   std::ifstream input(PROFFIEOS_PATH "/ProffieOS.ino");
+  if (!input.is_open()) return "ERROR OPENING FOR READ";
+
   std::string fileData;
   std::vector<std::string> outputData;
   while(!input.eof()) {
@@ -231,11 +241,17 @@ void Arduino::updateIno() {
     outputData.push_back(fileData == "// #define CONFIG_FILE \"config/YOUR_CONFIG_FILE_NAME_HERE.h\"" ? "#define CONFIG_FILE \"config/ProffieConfig_autogen.h\"" : fileData);
   }
   input.close();
+
+
   std::ofstream output(PROFFIEOS_PATH "/ProffieOS.ino");
+  if (!output.is_open()) return "ERROR OPENING FOR WRITE";
+
   for (const std::string& line : outputData) {
     output << line << std::endl;
   }
   output.close();
+
+  return "OK";
 }
 
 FILE* Arduino::CLI(const std::string& command) {

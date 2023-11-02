@@ -11,16 +11,15 @@ public:
   static void applyToBoard();
   static void verifyConfig();
 
-  static void updateIno();
-  static std::string compile();
-  static std::string parseError(const std::string&);
-  static std::string upload();
-
-  static FILE* CLI(const std::string& command);
-
   static void init();
   static std::vector<std::string> getBoards();
 
 private:
   Arduino();
+
+    static std::string updateIno();
+    static std::string compile();
+    static std::string parseError(const std::string&);
+    static std::string upload();
+    static FILE* CLI(const std::string& command);
 };
