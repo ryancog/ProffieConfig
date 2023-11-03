@@ -1,6 +1,6 @@
 # ProffieConfig
 
-![image](https://github.com/ryryog25/ProffieConfig/assets/60193408/e8f168d3-ae67-4a2b-bb99-146c4cff4b53)
+![image](/assets/60193408/e8f168d3-ae67-4a2b-bb99-146c4cff4b53)
 
 All-In-One ProffieBoard (Created by Fredrik Hubbinette) configuration, driver installer, and flashing utility.
 
@@ -8,13 +8,13 @@ Utilzes `arduino-cli` and `proffie-dfu-setup` for driver installation and flashi
 
 ## Installation
 
-The latest release can be found [here](https://github.com/ryryog25/ProffieConfig/releases/latest), and once it's downloaded, just extract and run it!
+The latest release can be found [here](/releases/latest), and once it's downloaded, just extract and run it!
 
 Do note, on Windows the executable must be kept in it's folder alongside "resources" in order to work. On macOS this is a non-issue due to the app bundle.
 
 ## Usage
 
-Check out [the docs](https://github.com/ryryog25/ProffieConfig/docs)
+Check out [the docs](/docs/overview.md)
 
 ## To-Do (Non-Exhaustive)
 - Implement Blade Detect and Blade ID
