@@ -117,10 +117,14 @@ void PresetsPage::update() {
   presetIndex = settings.presetList->GetSelection();
   bladeIndex = settings.bladeList->GetSelection();
   if (presetIndex >= 0) {
-    if (bladeIndex >= 0) settings.presetsEditor->ChangeValue(Configuration::instance->presets[presetIndex].styles[bladeIndex]);
-    else settings.presetsEditor->ChangeValue("Select Blade to Edit Style...");
-
     uint8_t insertionPoint;
+
+    insertionPoint = settings.presetsEditor->GetInsertionPoint();
+    if (bladeIndex >= 0) {
+      settings.presetsEditor->ChangeValue(Configuration::instance->presets[presetIndex].styles[bladeIndex]);
+      settings.presetsEditor->SetInsertionPoint(insertionPoint <= settings.presetsEditor->GetValue().size() ? insertionPoint : settings.presetsEditor->GetValue().size());
+    } else settings.presetsEditor->ChangeValue("Select Blade to Edit Style...");
+
     insertionPoint = settings.nameInput->GetInsertionPoint();
     settings.nameInput->ChangeValue(Configuration::instance->presets[presetIndex].name);
     settings.nameInput->SetInsertionPoint(insertionPoint <= settings.nameInput->GetValue().size() ? insertionPoint : settings.nameInput->GetValue().size());

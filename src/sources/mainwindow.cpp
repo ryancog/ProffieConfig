@@ -21,6 +21,7 @@ MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPos
   CreatePages();
   BindEvents();
   SetSizerAndFit(master);
+  Show(true);
 }
 
 void MainWindow::BindEvents() {
