@@ -14,17 +14,7 @@ Do note, on Windows the executable must be kept in it's folder alongside "resour
 
 ## Usage
 
-The first time the program is run, it will prompt you to import a configuration file, you can choose to do so or not, and once you're at the main page, you should head on over to File->Install Dependencies... in order to make sure your computer is ready, especially if you've never programmed a proffieboard on your computer before.
-
-The drop down on the top left allows you to switch between the configuration sections, and from here you'll set up the proffieboard. If you're the kind of person who's paranoid about it like I am, hitting CTRL+S will save the config, so you know it's safe if you close the program, and it'll be there the next time you open it up.
-
-![image](https://github.com/ryryog25/ProffieConfig/assets/60193408/276dcc4f-7344-4854-8aa8-e2246c07e2ca)
-
-Under "Config" there's the menu option to save your config, import and export it, and "verify" which will compile your config as it is, without a board needing to be connected, to check for any errors. (This is similar to what Arduino IDE does if you're familiar)
-
-![image](https://github.com/ryryog25/ProffieConfig/assets/60193408/69dfde51-ec0d-4213-88be-5a2800e30fa7)
-
-Once you're done, plug in your Proffieboard, click "Refresh..." and then your board's port should show up in the "Select Device..." dropdown. If it doesn't make sure you've installed dependencies. Now, click "Apply to Board..." Your configuration will be flashed to the proffieboard, and that's it! You're done. You can move put the necessary font/effect sound files onto your SD card, and you're off to the races!
+Check out [the docs](https://github.com/ryryog25/ProffieConfig/docs)
 
 ## To-Do (Non-Exhaustive)
 - Implement Blade Detect and Blade ID
