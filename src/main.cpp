@@ -5,10 +5,8 @@
 class ProffieConfig : public wxApp {
 public:
   virtual bool OnInit() {
-    MainWindow *frame = new MainWindow();
+    new MainWindow();
     Configuration::instance->readConfig();
-    frame->Show(true);
-
     return true;
   }
 };

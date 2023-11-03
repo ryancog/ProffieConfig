@@ -442,9 +442,10 @@ void Configuration::readConfig(const std::string& filePath) {
   } catch (std::exception& e) {
     std::string errorMessage = "There was an error parsing config, please ensure it is valid:\n\n";
     errorMessage += e.what();
+
+    // Restore App State
     MainWindow::instance->Destroy();
-    MainWindow *frame = new MainWindow();
-    frame->Show(true);
+    new MainWindow();
 
     wxMessageBox(errorMessage, "Config Read Error", wxOK);
   }
@@ -459,6 +460,7 @@ void Configuration::readConfig() {
   if (stat(PROFFIEOS_PATH "/config/ProffieConfig_autogen.h", &buffer) != 0) {
     if (wxMessageBox("No existing configuration file was detected. Would you like to import one?", "ProffieConfig", wxYES | wxNO) == wxYES) {
       Configuration::importConfig();
+      MainWindow::instance->Show(true);
       return;
     } else return;
   }
@@ -471,8 +473,7 @@ void Configuration::importConfig() {
   if (configLocation.ShowModal() == wxID_CANCEL) return; // User Closed
 
   MainWindow::instance->Destroy();
-  MainWindow *frame = new MainWindow();
-  frame->Show(true);
+  new MainWindow();
 
   Configuration::readConfig(configLocation.GetPath().ToStdString());
 }
