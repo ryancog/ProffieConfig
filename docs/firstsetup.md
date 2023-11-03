@@ -23,4 +23,5 @@ Once you're done, you won't have to do this again, and ProffieConfig will be rea
 
 Continue reading to learn about how to use ProffieConfig!
 
-[The Config File](./configfile.md)
+Next Up: [The Config File](/docs/configfile.md)
+Previous: [Overview](/docs/overview.md)
