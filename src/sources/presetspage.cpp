@@ -6,7 +6,6 @@
 PresetsPage* PresetsPage::instance;
 PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "")
 {
-  instance = this;
   wxBoxSizer *presetSelect = new wxBoxSizer(wxVERTICAL);
   settings.presetsEditor = new wxTextCtrl(GetStaticBox(), Misc::ID_PresetEditor, "", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE);
   settings.presetsEditor->SetFont(wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));

@@ -13,10 +13,15 @@
 #include "arduino.h"
 #include "misc.h"
 
+#include <bladespage.h>
+#include <generalpage.h>
+#include <hardwarepage.h>
+#include <presetspage.h>
+#include <proppage.h>
+
 MainWindow* MainWindow::instance;
 MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize) {
-  instance = this;
-  config = new Configuration();
+  Configuration::instance = new Configuration();
   CreateMenuBar();
   CreatePages();
   BindEvents();
@@ -28,40 +33,40 @@ void MainWindow::BindEvents() {
   // Main Window
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent(progDialog, (Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        // TODO general->update();
+        // TODO GeneralPage::instance->update();
         if (windowSelect->GetValue() == "General") {
-          general->Show(true);
-          prop->Show(false);
-          presets->Show(false);
-          blades->Show(false);
-          hardware->Show(false);
+          GeneralPage::instance->Show(true);
+          PropPage::instance->Show(false);
+          PresetsPage::instance->Show(false);
+          BladesPage::instance->Show(false);
+          HardwarePage::instance->Show(false);
         } else if (windowSelect->GetValue() == "Prop File") {
-          general->Show(false);
-          prop->Show(true);
-          presets->Show(false);
-          blades->Show(false);
-          hardware->Show(false);
+          GeneralPage::instance->Show(false);
+          PropPage::instance->Show(true);
+          PresetsPage::instance->Show(false);
+          BladesPage::instance->Show(false);
+          HardwarePage::instance->Show(false);
           PropPage::instance->update();
         } else if (windowSelect->GetValue() == "Presets") {
-          general->Show(false);
-          prop->Show(false);
-          presets->Show(true);
-          blades->Show(false);
-          hardware->Show(false);
+          GeneralPage::instance->Show(false);
+          PropPage::instance->Show(false);
+          PresetsPage::instance->Show(true);
+          BladesPage::instance->Show(false);
+          HardwarePage::instance->Show(false);
           PresetsPage::instance->update();
         } else if (windowSelect->GetValue() == "Blades") {
-          general->Show(false);
-          prop->Show(false);
-          presets->Show(false);
-          blades->Show(true);
-          hardware->Show(false);
+          GeneralPage::instance->Show(false);
+          PropPage::instance->Show(false);
+          PresetsPage::instance->Show(false);
+          BladesPage::instance->Show(true);
+          HardwarePage::instance->Show(false);
           BladesPage::instance->update();
         } else if (windowSelect->GetValue() == "Hardware") {
-          general->Show(false);
-          prop->Show(false);
-          presets->Show(false);
-          blades->Show(false);
-          hardware->Show(true);
+          GeneralPage::instance->Show(false);
+          PropPage::instance->Show(false);
+          PresetsPage::instance->Show(false);
+          BladesPage::instance->Show(false);
+          HardwarePage::instance->Show(true);
         }
         UPDATEWINDOW;
       }, Misc::ID_WindowSelect);
@@ -169,23 +174,23 @@ void MainWindow::CreatePages() {
   options->Add(devSelect, wxSizerFlags(0).Border(wxALL, 10));
   options->Add(applyButton, wxSizerFlags(0).Border(wxALL, 10));
 
-  general = new GeneralPage(this);
-  prop = new PropPage(this);
-  presets = new PresetsPage(this);
-  blades = new BladesPage(this);
-  hardware = new HardwarePage(this);
+  GeneralPage::instance = new GeneralPage(this);
+  PropPage::instance = new PropPage(this);
+  PresetsPage::instance = new PresetsPage(this);
+  BladesPage::instance = new BladesPage(this);
+  HardwarePage::instance = new HardwarePage(this);
 
-  prop->Show(false);
-  presets->Show(false);
-  blades->Show(false);
-  hardware->Show(false);
+  PropPage::instance->Show(false);
+  BladesPage::instance->Show(false);
+  PresetsPage::instance->Show(false);
+  HardwarePage::instance->Show(false);
 
   master->Add(options, wxSizerFlags(0).Expand());
-  master->Add(general, wxSizerFlags(1).Border(wxALL, 10).Expand());
-  master->Add(prop, wxSizerFlags(1).Border(wxALL, 10).Expand());
-  master->Add(presets, wxSizerFlags(1).Border(wxALL, 10).Expand());
-  master->Add(blades, wxSizerFlags(1).Border(wxALL, 10).Expand());
-  master->Add(hardware, wxSizerFlags(1).Border(wxALL, 10).Expand());
+  master->Add(GeneralPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
+  master->Add(PropPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
+  master->Add(PresetsPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
+  master->Add(BladesPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
+  master->Add(HardwarePage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
   SetSizerAndFit(master); // use the sizer for layout and set size and hints
 }

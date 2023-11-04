@@ -2,13 +2,17 @@
 
 #include "defines.h"
 #include "mainwindow.h"
+#include <bladespage.h>
 #include <cstring>
 #include <exception>
+#include <generalpage.h>
+#include <hardwarepage.h>
+#include <presetspage.h>
+#include <proppage.h>
 #include <wx/filedlg.h>
 
 Configuration* Configuration::instance;
 Configuration::Configuration() {
-  instance = this;
 }
 
 void Configuration::outputConfig(const std::string& filePath) {
@@ -452,7 +456,7 @@ void Configuration::readConfig(const std::string& filePath) {
 
     // Restore App State
     MainWindow::instance->Destroy();
-    new MainWindow();
+    MainWindow::instance = new MainWindow();
 
     wxMessageBox(errorMessage, "Config Read Error", wxOK);
   }
@@ -480,7 +484,7 @@ void Configuration::importConfig() {
   if (configLocation.ShowModal() == wxID_CANCEL) return; // User Closed
 
   MainWindow::instance->Destroy();
-  new MainWindow();
+  MainWindow::instance = new MainWindow();
 
   Configuration::readConfig(configLocation.GetPath().ToStdString());
 }
