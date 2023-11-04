@@ -14,7 +14,7 @@ Do note, on Windows the executable must be kept in it's folder alongside "resour
 
 ## Usage
 
-Check out [the docs](/docs/overview.md)
+Check out [the docs](/docs/README.md)
 
 ## To-Do (Non-Exhaustive)
 - Implement Blade Detect and Blade ID
