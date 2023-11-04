@@ -43,7 +43,7 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
 
 
   wxWrapSizer* bladeSetup = new wxWrapSizer( wxVERTICAL);
-  settings.bladeType = new wxComboBox( GetStaticBox(), Misc::ID_BladeType, "NeoPixel (RGB)", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"NeoPixel (RGB)", "NeoPixel (RGBW)", "Tri-Star Cree", "Quad-Star Cree", "Single Color"}), wxCB_READONLY);
+  settings.bladeType = new wxComboBox( GetStaticBox(), Misc::ID_BladeType, "WS281X (RGB)", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"WS281X (RGB)", "WS281X (RGBW)", "Tri-LED Star", "Quad-LED Star", "Single Color"}), wxCB_READONLY);
   settings.usePowerPin1 = new wxCheckBox( GetStaticBox(), Misc::ID_BladePower, "Use Power Pin 1");
   settings.usePowerPin2 = new wxCheckBox( GetStaticBox(), Misc::ID_BladePower, "Use Power Pin 2");
   settings.usePowerPin3 = new wxCheckBox( GetStaticBox(), Misc::ID_BladePower, "Use Power Pin 3");
@@ -75,7 +75,7 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
   settings.bladePixels = new wxSpinCtrl( GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0, 144, 0);
 
   wxBoxSizer* star1 = new wxBoxSizer( wxVERTICAL);
-  settings.star1ColorLabel = new wxStaticText( GetStaticBox(), wxID_ANY, "Star 1 Color");
+  settings.star1ColorLabel = new wxStaticText( GetStaticBox(), wxID_ANY, "LED 1 Color");
   settings.star1Color = new wxComboBox( GetStaticBox(), Misc::ID_BladeOption, "<None>", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", "<None>"}), wxCB_READONLY);
   settings.star1Resistance = Misc::createNumEntry(this, "Resistance", wxID_ANY, 0, 10000, 500);
   star1->Add(settings.star1ColorLabel, MENUITEMFLAGS);
@@ -83,7 +83,7 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
   star1->Add(settings.star1Resistance->box, MENUITEMFLAGS);
 
   wxBoxSizer* star2 = new wxBoxSizer( wxVERTICAL);
-  settings.star2ColorLabel = new wxStaticText( GetStaticBox(), wxID_ANY, "Star 2 Color");
+  settings.star2ColorLabel = new wxStaticText( GetStaticBox(), wxID_ANY, "LED 2 Color");
   settings.star2Color = new wxComboBox( GetStaticBox(), Misc::ID_BladeOption, "<None>", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", "<None>"}), wxCB_READONLY);
   settings.star2Resistance = Misc::createNumEntry(this, "Resistance", wxID_ANY, 0, 10000, 500);
   star2->Add(settings.star2ColorLabel, MENUITEMFLAGS);
@@ -91,7 +91,7 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
   star2->Add(settings.star2Resistance->box, MENUITEMFLAGS);
 
   wxBoxSizer* star3 = new wxBoxSizer( wxVERTICAL);
-  settings.star3ColorLabel = new wxStaticText( GetStaticBox(), wxID_ANY, "Star 3 Color");
+  settings.star3ColorLabel = new wxStaticText( GetStaticBox(), wxID_ANY, "LED 3 Color");
   settings.star3Color = new wxComboBox( GetStaticBox(), Misc::ID_BladeOption, "<None>", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", "<None>"}), wxCB_READONLY);
   settings.star3Resistance = Misc::createNumEntry(this, "Resistance", wxID_ANY, 0, 10000, 500);
   star3->Add(settings.star3ColorLabel, MENUITEMFLAGS);
@@ -99,7 +99,7 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
   star3->Add(settings.star3Resistance->box, MENUITEMFLAGS);
 
   wxBoxSizer* star4 = new wxBoxSizer( wxVERTICAL);
-  settings.star4ColorLabel = new wxStaticText( GetStaticBox(), wxID_ANY, "Star 4 Color");
+  settings.star4ColorLabel = new wxStaticText( GetStaticBox(), wxID_ANY, "LED 4 Color");
   settings.star4Color = new wxComboBox( GetStaticBox(), Misc::ID_BladeOption, "<None>", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", "<None>"}), wxCB_READONLY);
   settings.star4Resistance = Misc::createNumEntry(this, "Resistance", wxID_ANY, 0, 10000, 500);
   star4->Add(settings.star4ColorLabel, MENUITEMFLAGS);
@@ -172,14 +172,14 @@ void BladesPage::update() {
     settings.blade4ColorOrder->ChangeValue(Configuration::instance->blades[lastBladeSelection].colorType);
     settings.blade4UseRGB->SetValue(Configuration::instance->blades[lastBladeSelection].useRGBWithWhite);
 
-    settings.star1Color->ChangeValue(Configuration::instance->blades[lastBladeSelection].Cree1);
-    settings.star1Resistance->num->SetValue(Configuration::instance->blades[lastBladeSelection].Cree1Resistance);
-    settings.star2Color->ChangeValue(Configuration::instance->blades[lastBladeSelection].Cree2);
-    settings.star2Resistance->num->SetValue(Configuration::instance->blades[lastBladeSelection].Cree2Resistance);
-    settings.star3Color->ChangeValue(Configuration::instance->blades[lastBladeSelection].Cree3);
-    settings.star3Resistance->num->SetValue(Configuration::instance->blades[lastBladeSelection].Cree3Resistance);
-    settings.star4Color->ChangeValue(Configuration::instance->blades[lastBladeSelection].Cree4);
-    settings.star4Resistance->num->SetValue(Configuration::instance->blades[lastBladeSelection].Cree4Resistance);
+    settings.star1Color->ChangeValue(Configuration::instance->blades[lastBladeSelection].Star1);
+    settings.star1Resistance->num->SetValue(Configuration::instance->blades[lastBladeSelection].Star1Resistance);
+    settings.star2Color->ChangeValue(Configuration::instance->blades[lastBladeSelection].Star2);
+    settings.star2Resistance->num->SetValue(Configuration::instance->blades[lastBladeSelection].Star2Resistance);
+    settings.star3Color->ChangeValue(Configuration::instance->blades[lastBladeSelection].Star3);
+    settings.star3Resistance->num->SetValue(Configuration::instance->blades[lastBladeSelection].Star3Resistance);
+    settings.star4Color->ChangeValue(Configuration::instance->blades[lastBladeSelection].Star4);
+    settings.star4Resistance->num->SetValue(Configuration::instance->blades[lastBladeSelection].Star4Resistance);
 
     settings.subBladeStart->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)Configuration::instance->blades[lastBladeSelection].subBlades.size() ? Configuration::instance->blades[lastBladeSelection].subBlades[lastSubBladeSelection].startPixel : 0);
     settings.subBladeEnd->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)Configuration::instance->blades[lastBladeSelection].subBlades.size() ? Configuration::instance->blades[lastBladeSelection].subBlades[lastSubBladeSelection].endPixel : 0);
@@ -189,7 +189,7 @@ void BladesPage::update() {
   // Enable/Disable Elements
   settings.removeBlade->Enable(settings.bladeSelect->GetCount() > 0 && BD_HASSELECTION);
   settings.removeSubBlade->Enable(settings.subBladeSelect->GetCount() > 0 && BD_SUBHASSELECTION);
-  settings.addSubBlade->Enable(BD_ISNEOPIXEL && BD_HASSELECTION);
+  settings.addSubBlade->Enable(BD_ISPIXEL && BD_HASSELECTION);
 
   settings.bladeType->Enable(BD_HASSELECTION && BD_ISFIRST);
   settings.usePowerPin1->Enable(BD_HASSELECTION && BD_ISFIRST);
@@ -200,31 +200,31 @@ void BladesPage::update() {
   settings.usePowerPin6->Enable(BD_HASSELECTION && BD_ISFIRST);
 
   // Show/Unshow Elements
-  settings.bladeColorOrderLabel->Show(BD_ISNEOPIXEL && BD_ISFIRST);
-  settings.blade3ColorOrder->Show(BD_ISNEOPIXEL3 && BD_ISFIRST);
-  settings.blade4ColorOrder->Show(BD_ISNEOPIXEL4 && BD_ISFIRST);
-  settings.blade4UseRGB->Show(BD_ISNEOPIXEL4 && BD_ISFIRST);
+  settings.bladeColorOrderLabel->Show(BD_ISPIXEL && BD_ISFIRST);
+  settings.blade3ColorOrder->Show(BD_ISPIXEL3 && BD_ISFIRST);
+  settings.blade4ColorOrder->Show(BD_ISPIXEL4 && BD_ISFIRST);
+  settings.blade4UseRGB->Show(BD_ISPIXEL4 && BD_ISFIRST);
 
-  settings.bladeDataPinLabel->Show(BD_ISNEOPIXEL && BD_ISFIRST);
-  settings.bladeDataPin->Show(BD_ISNEOPIXEL && BD_ISFIRST);
-  settings.bladePixelsLabel->Show(BD_ISNEOPIXEL && BD_ISFIRST);
-  settings.bladePixels->Show(BD_ISNEOPIXEL && BD_ISFIRST);
+  settings.bladeDataPinLabel->Show(BD_ISPIXEL && BD_ISFIRST);
+  settings.bladeDataPin->Show(BD_ISPIXEL && BD_ISFIRST);
+  settings.bladePixelsLabel->Show(BD_ISPIXEL && BD_ISFIRST);
+  settings.bladePixels->Show(BD_ISPIXEL && BD_ISFIRST);
 
-  settings.star1ColorLabel->Show(BD_ISCREE);
-  settings.star1Color->Show(BD_ISCREE);
-  settings.star1Resistance->box->Show(BD_ISCREE);
+  settings.star1ColorLabel->Show(BD_ISSTAR);
+  settings.star1Color->Show(BD_ISSTAR);
+  settings.star1Resistance->box->Show(BD_ISSTAR);
   settings.star1Resistance->num->Enable(settings.star1Color->GetStringSelection() != "<None>");
-  settings.star2ColorLabel->Show(BD_ISCREE);
-  settings.star2Color->Show(BD_ISCREE);
-  settings.star2Resistance->box->Show(BD_ISCREE);
+  settings.star2ColorLabel->Show(BD_ISSTAR);
+  settings.star2Color->Show(BD_ISSTAR);
+  settings.star2Resistance->box->Show(BD_ISSTAR);
   settings.star2Resistance->num->Enable(settings.star2Color->GetStringSelection() != "<None>");
-  settings.star3ColorLabel->Show(BD_ISCREE);
-  settings.star3Color->Show(BD_ISCREE);
-  settings.star3Resistance->box->Show(BD_ISCREE);
+  settings.star3ColorLabel->Show(BD_ISSTAR);
+  settings.star3Color->Show(BD_ISSTAR);
+  settings.star3Resistance->box->Show(BD_ISSTAR);
   settings.star3Resistance->num->Enable(settings.star3Color->GetStringSelection() != "<None>");
-  settings.star4ColorLabel->Show(BD_ISCREE4);
-  settings.star4Color->Show(BD_ISCREE4);
-  settings.star4Resistance->box->Show(BD_ISCREE4);
+  settings.star4ColorLabel->Show(BD_ISSTAR4);
+  settings.star4Color->Show(BD_ISSTAR4);
+  settings.star4Resistance->box->Show(BD_ISSTAR4);
   settings.star4Resistance->num->Enable(settings.star4Color->GetStringSelection() != "<None>");
 
   settings.subBladeUseStride->Show(BD_ISSUB && BD_ISFIRST);

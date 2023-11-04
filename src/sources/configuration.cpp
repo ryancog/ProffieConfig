@@ -285,7 +285,7 @@ void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput) {
 }
 void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput) {
   for (const Configuration::bladeConfig& blade : Configuration::instance->blades) {
-    if (blade.type == "NeoPixel (RGB)" || blade.type == "NeoPixel (RGBW)") {
+    if (blade.type == "WS281X (RGB)" || blade.type == "WS281X (RGBW)") {
       bool firstSub = true;
       if (blade.isSubBlade) for (Configuration::bladeConfig::subBladeInfo subBlade : blade.subBlades) {
           if (blade.subBladeWithStride) configOutput << "\t\tSubBladeWithStride( ";
@@ -303,25 +303,25 @@ void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput) {
         genWS281X(configOutput, blade);
         configOutput << "," << std::endl;
       }
-    } else if (blade.type == "Tri-Star Cree" || blade.type == "Quad-Star Cree") {
+    } else if (blade.type == "Tri-LED Star" || blade.type == "Quad-LED Star") {
       bool powerPins[4]{true, true, true, true};
       configOutput << "\t\tSimpleBladePtr<";
-      if (blade.Cree1 != "<None>") configOutput << "CreeXPE2" << blade.Cree1 << "Template<" << blade.Cree1Resistance << ">, ";
+      if (blade.Star1 != "<None>") configOutput << "CreeXPE2" << blade.Star1 << "Template<" << blade.Star1Resistance << ">, ";
       else {
         configOutput << "NoLED, ";
         powerPins[0] = false;
       }
-      if (blade.Cree2 != "<None>") configOutput << "CreeXPE2" << blade.Cree2 << "Template<" << blade.Cree2Resistance << ">, ";
+      if (blade.Star2 != "<None>") configOutput << "CreeXPE2" << blade.Star2 << "Template<" << blade.Star2Resistance << ">, ";
       else {
         configOutput << "NoLED, ";
         powerPins[1] = false;
       }
-      if (blade.Cree3 != "<None>") configOutput << "CreeXPE2" << blade.Cree3 << "Template<" << blade.Cree3Resistance << ">, ";
+      if (blade.Star3 != "<None>") configOutput << "CreeXPE2" << blade.Star3 << "Template<" << blade.Star3Resistance << ">, ";
       else {
         configOutput << "NoLED, ";
         powerPins[2] = false;
       }
-      if (blade.Cree4 != "<None>" && blade.type != "Tri-Star Cree") configOutput << "CreeXPE2" << blade.Cree4 << "Template<" << blade.Cree4Resistance << ">, ";
+      if (blade.Star4 != "<None>" && blade.type == "Quad-LED Star") configOutput << "CreeXPE2" << blade.Star4 << "Template<" << blade.Star4Resistance << ">, ";
       else {
         configOutput << "NoLED, ";
         powerPins[3] = false;
@@ -377,7 +377,7 @@ void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput) {
 }
 void Configuration::genWS281X(std::ofstream& configOutput, const Configuration::bladeConfig& blade) {
   std::string bladePin = blade.dataPin;
-  std::string bladeColor = blade.type == "NeoPixel (RGB)" || blade.useRGBWithWhite ? blade.colorType : [=](std::string colorType) -> std::string { colorType.replace(colorType.find("W"), 1, "w"); return colorType; }(blade.colorType);
+  std::string bladeColor = blade.type == "WS281X (RGB)" || blade.useRGBWithWhite ? blade.colorType : [=](std::string colorType) -> std::string { colorType.replace(colorType.find("W"), 1, "w"); return colorType; }(blade.colorType);
 
   configOutput << "WS281XBladePtr<" << blade.numPixels << ", " << bladePin << ", Color8::" << bladeColor << ", PowerPINS<";
   if (blade.usePowerPin1) {
@@ -764,7 +764,7 @@ void Configuration::readBladeArray(std::ifstream& file) {
     if (std::strstr(bladeInfo.data(), "SimpleBladePtr") != nullptr) {
       Configuration::instance->blades.push_back(Configuration::bladeConfig());
       uint8_t numLEDs = 0;
-      auto getCreeTemplate = [](const std::string& element) -> std::string {
+      auto getStarTemplate = [](const std::string& element) -> std::string {
         if (std::strstr(element.data(), "RedOrange") != nullptr) return "RedOrange";
         if (std::strstr(element.data(), "Amber") != nullptr) return "Amber";
         if (std::strstr(element.data(), "White") != nullptr) return "White";
@@ -786,33 +786,33 @@ void Configuration::readBladeArray(std::ifstream& file) {
       std::strtok(bladeInfo.data(), "<"); // Clear SimpleBladePtr and setup strtok
 
       element = std::strtok(nullptr, "<,");
-      Configuration::instance->blades[blade].Cree1.assign(getCreeTemplate(element));
-      if (Configuration::instance->blades[blade].Cree1 != "<None>") {
+      Configuration::instance->blades[blade].Star1.assign(getStarTemplate(element));
+      if (Configuration::instance->blades[blade].Star1 != "<None>") {
         numLEDs++;
-        Configuration::instance->blades[blade].Cree1Resistance = std::stoi(std::strtok(nullptr, "<>"));
+        Configuration::instance->blades[blade].Star1Resistance = std::stoi(std::strtok(nullptr, "<>"));
       }
       element = std::strtok(nullptr, "<,");
-      Configuration::instance->blades[blade].Cree2.assign(getCreeTemplate(element));
-      if (Configuration::instance->blades[blade].Cree2 != "<None>") {
+      Configuration::instance->blades[blade].Star2.assign(getStarTemplate(element));
+      if (Configuration::instance->blades[blade].Star2 != "<None>") {
         numLEDs++;
-        Configuration::instance->blades[blade].Cree2Resistance = std::stoi(std::strtok(nullptr, "<>"));
+        Configuration::instance->blades[blade].Star2Resistance = std::stoi(std::strtok(nullptr, "<>"));
       }
       element = std::strtok(nullptr, "<, ");
-      Configuration::instance->blades[blade].Cree3.assign(getCreeTemplate(element));
-      if (Configuration::instance->blades[blade].Cree3 != "<None>") {
+      Configuration::instance->blades[blade].Star3.assign(getStarTemplate(element));
+      if (Configuration::instance->blades[blade].Star3 != "<None>") {
         numLEDs++;
-        Configuration::instance->blades[blade].Cree3Resistance = std::stoi(std::strtok(nullptr, "<>"));
+        Configuration::instance->blades[blade].Star3Resistance = std::stoi(std::strtok(nullptr, "<>"));
       }
       element = std::strtok(nullptr, "<, ");
-      Configuration::instance->blades[blade].Cree4.assign(getCreeTemplate(element));
-      if (Configuration::instance->blades[blade].Cree4 != "<None>") {
+      Configuration::instance->blades[blade].Star4.assign(getStarTemplate(element));
+      if (Configuration::instance->blades[blade].Star4 != "<None>") {
         numLEDs++;
-        Configuration::instance->blades[blade].Cree4Resistance = std::stoi(std::strtok(nullptr, "<>"));
+        Configuration::instance->blades[blade].Star4Resistance = std::stoi(std::strtok(nullptr, "<>"));
       }
 
       if (numLEDs <= 2) Configuration::instance->blades[blade].type.assign("Single Color");
-      if (numLEDs == 3) Configuration::instance->blades[blade].type.assign("Tri-Star Cree");
-      if (numLEDs >= 4) Configuration::instance->blades[blade].type.assign("Quad-Star Cree");
+      if (numLEDs == 3) Configuration::instance->blades[blade].type.assign("Tri-Star Star");
+      if (numLEDs >= 4) Configuration::instance->blades[blade].type.assign("Quad-Star Star");
     }
   }
 # undef CHKSECT
@@ -845,17 +845,17 @@ void Configuration::updateBladesConfig() {
 
     Configuration::instance->blades[BladesPage::instance->lastBladeSelection].dataPin = BladesPage::instance->settings.bladeDataPin->GetValue();
     Configuration::instance->blades[BladesPage::instance->lastBladeSelection].numPixels = BladesPage::instance->settings.bladePixels->GetValue();
-    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].colorType = Configuration::instance->blades[BladesPage::instance->lastBladeSelection].type == "NeoPixel (RGB)" ? BladesPage::instance->settings.blade3ColorOrder->GetValue() : BladesPage::instance->settings.blade4ColorOrder->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].colorType = Configuration::instance->blades[BladesPage::instance->lastBladeSelection].type == "PIXEL (RGB)" ? BladesPage::instance->settings.blade3ColorOrder->GetValue() : BladesPage::instance->settings.blade4ColorOrder->GetValue();
     Configuration::instance->blades[BladesPage::instance->lastBladeSelection].useRGBWithWhite = BladesPage::instance->settings.blade4UseRGB->GetValue();
 
-    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Cree1 = BladesPage::instance->settings.star1Color->GetValue();
-    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Cree1Resistance = BladesPage::instance->settings.star1Resistance->num->GetValue();
-    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Cree2 = BladesPage::instance->settings.star2Color->GetValue();
-    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Cree2Resistance = BladesPage::instance->settings.star2Resistance->num->GetValue();
-    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Cree3 = BladesPage::instance->settings.star3Color->GetValue();
-    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Cree3Resistance = BladesPage::instance->settings.star3Resistance->num->GetValue();
-    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Cree4 = BladesPage::instance->settings.star4Color->GetValue();
-    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Cree4Resistance = BladesPage::instance->settings.star4Resistance->num->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Star1 = BladesPage::instance->settings.star1Color->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Star1Resistance = BladesPage::instance->settings.star1Resistance->num->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Star2 = BladesPage::instance->settings.star2Color->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Star2Resistance = BladesPage::instance->settings.star2Resistance->num->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Star3 = BladesPage::instance->settings.star3Color->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Star3Resistance = BladesPage::instance->settings.star3Resistance->num->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Star4 = BladesPage::instance->settings.star4Color->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Star4Resistance = BladesPage::instance->settings.star4Resistance->num->GetValue();
 
     if (BladesPage::instance->lastSubBladeSelection != -1 && BladesPage::instance->lastSubBladeSelection < (int32_t)Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.size()) {
       Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades[BladesPage::instance->lastSubBladeSelection].startPixel = BladesPage::instance->settings.subBladeStart->GetValue();
@@ -864,8 +864,8 @@ void Configuration::updateBladesConfig() {
     Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBladeWithStride = BladesPage::instance->settings.subBladeUseStride->GetValue();
   }
 
-  // Check if SubBlades need to be removed (changed from Neopixel)
-  if (BD_HASSELECTION && BladesPage::instance->lastBladeSelection == BladesPage::instance->settings.bladeSelect->GetSelection() && !BD_ISNEOPIXEL) {
+  // Check if SubBlades need to be removed (changed from WX281X)
+  if (BD_HASSELECTION && BladesPage::instance->lastBladeSelection == BladesPage::instance->settings.bladeSelect->GetSelection() && !BD_ISPIXEL) {
     Configuration::instance->blades[BladesPage::instance->lastBladeSelection].isSubBlade = false;
     Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.clear();
   }
