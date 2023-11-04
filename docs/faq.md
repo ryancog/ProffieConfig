@@ -13,6 +13,12 @@ The code for your styles, the layout/setup of your blades, the the options you c
 - For some very cool, premade bladestyles, check out [Fett263's Style Library](https://fett263.com/fett263-proffieOS7-style-library.html).
 - For advanced use, the [ProffieOS Style Editor](https://profezzorn.github.io/ProffieOS-StyleEditor/style_editor.html) offers unparalleled customization, but has a very steep learning curve and requires quite a bit of effort to get going.
 
+## What if my board doesn't show up?
+
+If your Proffieboard isn't showing up in the device drop down, please make sure you've run the [first-time setup](/docs/firstsetup.md).
+
+If the Proffieboard is unresponsive or it was accidentally unplugged during configuration application, locate the [boot and reset buttons](https://fredrik.hubbe.net/lightsaber/v6/pinout.svg) on the Proffieboard. Now, with the board plugged into your computer, hold BOOT, push on RESET, release BOOT, and try refreshing again. You should see an entry labeled "BOOTLOADER" and will be able to reapply your config and be back off to the races!
+
 ## Still Need Help?
 
 [Open an issue](https://github.com/ryryog25/ProffieConfig/issues/new) to get support.
