@@ -189,6 +189,7 @@ PropPage::RStaticBox* PropPage::stabOn(wxStaticBoxSizer* parent) {
   PropPage::RStaticBox *stabOn = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Stab On");
   settings.stabOn = new wxCheckBox(stabOn->GetStaticBox(), Misc::ID_PropOption, "Stab To Turn On");
   settings.stabOnFast = new wxRadioButton(stabOn->GetStaticBox(), Misc::ID_PropOption, "Fast Ignition", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  settings.stabOnFast->SetValue(true);
   settings.stabOnPreon = new wxRadioButton(stabOn->GetStaticBox(), Misc::ID_PropOption, "Enable Preon");
   settings.stabOnNoBattle = new wxCheckBox(stabOn->GetStaticBox(), Misc::ID_PropOption, "Do Not Activate BattleMode");
   stabOn->Add(settings.stabOn, FIRSTITEMFLAGS);
@@ -203,6 +204,7 @@ PropPage::RStaticBox* PropPage::swingOn(wxStaticBoxSizer* parent) {
   settings.swingOn = new wxCheckBox(swingOn->GetStaticBox(), Misc::ID_PropOption, "Swing To Turn On");
   settings.swingOnSpeed = Misc::createNumEntry(swingOn, "Swing on Speed", Misc::ID_PropOption, 50, 1000, 250);
   settings.swingOnFast = new wxRadioButton(swingOn->GetStaticBox(), Misc::ID_PropOption, "Fast Ignition", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  settings.swingOnFast->SetValue(true);
   settings.swingOnPreon = new wxRadioButton(swingOn->GetStaticBox(), Misc::ID_PropOption, "Enable Preon");
   settings.swingOnNoBattle = new wxCheckBox(swingOn->GetStaticBox(), Misc::ID_PropOption, "Do Not Activate BattleMode");
   swingOn->Add(settings.swingOn, FIRSTITEMFLAGS);
@@ -217,6 +219,7 @@ PropPage::RStaticBox* PropPage::thrustOn(wxStaticBoxSizer* parent) {
   PropPage::RStaticBox *thrustOn = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Thrust On");
   settings.thrustOn = new wxCheckBox(thrustOn->GetStaticBox(), Misc::ID_PropOption, "Thrust To Turn On");
   settings.thrustOnFast = new wxRadioButton(thrustOn->GetStaticBox(), Misc::ID_PropOption, "Fast Ignition", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  settings.thrustOnFast->SetValue(true);
   settings.thrustOnPreon = new wxRadioButton(thrustOn->GetStaticBox(), Misc::ID_PropOption, "Enable Preon");
   settings.thrustOnNoBattle = new wxCheckBox(thrustOn->GetStaticBox(), Misc::ID_PropOption, "Do Not Activate BattleMode");
   thrustOn->Add(settings.thrustOn, FIRSTITEMFLAGS);
@@ -230,6 +233,7 @@ PropPage::RStaticBox* PropPage::twistOn(wxStaticBoxSizer* parent) {
   PropPage::RStaticBox *twistOn = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Twist On");
   settings.twistOn = new wxCheckBox(twistOn->GetStaticBox(), Misc::ID_PropOption, "Twist To Turn On");
   settings.twistOnFast = new wxRadioButton(twistOn->GetStaticBox(), Misc::ID_PropOption, "Fast Ignition", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  settings.twistOnFast->SetValue(true);
   settings.twistOnPreon = new wxRadioButton(twistOn->GetStaticBox(), Misc::ID_PropOption, "Enable Preon");
   settings.twistOnNoBattle = new wxCheckBox(twistOn->GetStaticBox(), Misc::ID_PropOption, "Do Not Activate BattleMode");
   twistOn->Add(settings.twistOn, FIRSTITEMFLAGS);
@@ -243,6 +247,7 @@ PropPage::RStaticBox* PropPage::twistOff(wxStaticBoxSizer* parent) {
   PropPage::RStaticBox *twistOff = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Twist Off");
   settings.twistOff = new wxCheckBox(twistOff->GetStaticBox(), Misc::ID_PropOption, "Twist To Turn Off");
   settings.twistOffFast = new wxRadioButton(twistOff->GetStaticBox(), Misc::ID_PropOption, "Fast Retraction", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  settings.twistOffFast->SetValue(true);
   settings.twistOffPostoff = new wxRadioButton(twistOff->GetStaticBox(), Misc::ID_PropOption, "Enable Postoff");
   settings.twistOffPostoff->SetValue(true);
   twistOff->Add(settings.twistOff, FIRSTITEMFLAGS);
@@ -300,6 +305,7 @@ PropPage::RStaticBox* PropPage::editMode(wxStaticBoxSizer* parent) {
 
   settings.editEnable = new wxCheckBox(editMode->GetStaticBox(), Misc::ID_PropOption, "Enable On-The-Fly Editing");
   settings.editMode = new wxRadioButton(editMode->GetStaticBox(), Misc::ID_PropOption, "Enable Edit Mode", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  settings.editMode->SetValue(true);
   settings.editSettings = new wxRadioButton(editMode->GetStaticBox(), Misc::ID_PropOption, "Enable Edit Settings");
   editMode->Add(settings.editEnable, FIRSTITEMFLAGS);
   editMode->Add(settings.editMode, MENUITEMFLAGS);
@@ -316,6 +322,7 @@ PropPage::RStaticBox* PropPage::interfaceOptions(wxStaticBoxSizer* parent) {
   settings.trackPlayerPrompts->SetValue(true);
   settings.spokenColors = new wxCheckBox(interface->GetStaticBox(), Misc::ID_PropOption, "Enable Spoken Colors");
   settings.spokenBatteryNone = new wxRadioButton(interface->GetStaticBox(), Misc::ID_PropOption, "Battery Speak None", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  settings.spokenBatteryNone->SetValue(true);
   settings.spokenBatteryVolts = new wxRadioButton(interface->GetStaticBox(), Misc::ID_PropOption, "Battery Speak Voltage");
   settings.spokenBatteryPercent = new wxRadioButton(interface->GetStaticBox(), Misc::ID_PropOption, "Battery Speak Percentage");
   interface1->Add(settings.beepErrors, FIRSTITEMFLAGS);
@@ -373,6 +380,7 @@ PropPage::RStaticBox* PropPage::generalFeatures(wxStaticBoxSizer* parent) {
   wxBoxSizer* generalFeatures3 = new wxBoxSizer(wxVERTICAL);
 
   settings.noExtraEffects = new wxRadioButton(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "No Extra Effects", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  settings.noExtraEffects->SetValue(true);
   settings.specialAbilities = new wxRadioButton(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Special Abilities");
   settings.multiPhase = new wxRadioButton(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Multi-Phase Styles");
 
