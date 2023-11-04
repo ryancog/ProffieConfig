@@ -12,6 +12,8 @@ Clicking "+" will add a new blade, clicking "-" will remove the currently-select
 
 This is a list, in the case of NeoPixel blades, where any created subblades will be displayed for configuration. If there are any, there must be at least two (otherwise there's no point).
 
+SubBlades can only be used with NeoPixel blades due to their nature.
+
 Clicking "+" will add a new subblade, clicking "-" will remove the currently-selected subblade. If there are only two subblades, "-" will remove both, but this will not remove the parent blade or its configuration.
 
 # Blade Type
