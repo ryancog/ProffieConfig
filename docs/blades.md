@@ -44,4 +44,4 @@ For In-Hilt LED blades and Single Color blades, the number of power pins should 
 
 ## That's It!
 
-Still have questions? Check out the [FAQ](/docs/faq.md).
+Next Up: [Preset Page](/docs/presets.md).
