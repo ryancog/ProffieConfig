@@ -1,6 +1,6 @@
 # ProffieConfig
 
-![image](/assets/60193408/e8f168d3-ae67-4a2b-bb99-146c4cff4b53)
+![image](https://github.com/ryryog25/ProffieConfig/assets/60193408/e8f168d3-ae67-4a2b-bb99-146c4cff4b53)
 
 All-In-One ProffieBoard (Created by Fredrik Hubbinette) configuration, driver installer, and flashing utility.
 
