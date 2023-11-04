@@ -29,7 +29,7 @@ There's two other options here: "Enable Mass Storage" and "Enable WebUSB"
 - **"Disable Basic Parser Styles"**: Removes the option to use "Basic Parser Styles" in the ProffieOS Workbench, can be used to save FLASH memory if promted.
 - **"Disable Diagnostic Commands"**: Removes certain commands used with the Arduino Serial Monitor, recommended unless commands are needed, can be used to save FLASH memory if prompted.
 - **"Enable Developer Commands"**: Enables special commands used for Proffieboard development, this probably shouldn't be enabled. Should be disabled to save FLASH memory.
-- **"Neopixel Max LEDs"**: This sets the maximum size of a neopixel blade to be configured in the "Blades" page. Unless you have a blade longer than this, it should not be changed.
+- **"WS281X Max LEDs"**: This sets the maximum size of a WS281X blade to be configured in the "Blades" page. Unless you have a blade longer than this, it should not be changed.
 
 ## That's All!
 
