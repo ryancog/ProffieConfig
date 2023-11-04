@@ -133,6 +133,8 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
   Add(bladeManager, BOXITEMFLAGS);
   Add(bladeSetup, wxSizerFlags(0));
   Add(bladeSettings, wxSizerFlags(1));
+
+  update();
 }
 
 void BladesPage::update() {
