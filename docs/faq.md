@@ -15,4 +15,4 @@ The code for your styles, the layout/setup of your blades, the the options you c
 
 ## Still Need Help?
 
-[Open an issue](issues/new) to get support.
+[Open an issue](/issues/new) to get support.
