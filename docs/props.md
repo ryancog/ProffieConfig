@@ -21,4 +21,4 @@ Prop options are generally straightforward, but they can be complex to understan
 
 ## That's it!
 
-Next Up: [Preset Page](/docs/presets.md)
+Next Up: [Blades Page](/docs/blades.md)
