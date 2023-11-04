@@ -448,6 +448,7 @@ void Configuration::readConfig(const std::string& filePath) {
         if (section == "CONFIG_TOP") Configuration::readConfigTop(file);
         if (section == "CONFIG_PROP") Configuration::readConfigProp(file);
         if (section == "CONFIG_PRESETS") Configuration::readConfigPresets(file);
+        if (section == "CONFIG_STYLES") Configuration::readConfigStyles(file);
       }
     }
   } catch (std::exception& e) {
@@ -556,6 +557,29 @@ void Configuration::readConfigPresets(std::ifstream& file) {
     }
     if (element == "Preset") readPresetArray(file);
     if (element == "BladeConfig") readBladeArray(file);
+  }
+}
+void Configuration::readConfigStyles(std::ifstream& file) {
+  std::string element;
+  std::string styleName;
+  std::string style;
+
+  file >> element;
+  while (!file.eof() && element != "#endif") {
+    if (element == "using") {
+      file >> element;
+      styleName = element;
+
+      file >> element; // Clear "="
+
+      while (style.find(";") == std::string::npos) {
+        file >> style;
+      }
+      style.erase(style.rfind(";")); // remove trailing ";"
+
+      Configuration::replaceStyles(styleName, style);
+    }
+    file >> element;
   }
 }
 void Configuration::readDefine(std::string& define) {
@@ -700,13 +724,19 @@ void Configuration::readPresetArray(std::ifstream& file) {
     tempData = std::strtok(element.data(), ",\"");
     Configuration::instance->presets[preset].track.assign(tempData == nullptr ? "" : tempData);
 
-    tempData = std::strtok(nullptr, ""); // Get rest of data out of strtok
-    element = tempData != nullptr ? tempData : "";
     for (uint32_t blade = 0; blade < Configuration::instance->blades.size(); blade++) {
-      element = presetInfo.substr(0, presetInfo.find("(),") + 2); // Copy in next
+      if (presetInfo.find("&style_charging,") == 0) {
+        presetInfo = presetInfo.substr(16 /* length of "&style_charging,"*/);
+        Configuration::instance->presets[preset].styles.push_back("&style_charging");
+      } else if (presetInfo.find("&style_pov") == 0) {
+        presetInfo = presetInfo.substr(presetInfo.find(11 /* length of "&style_pov,"*/));
+        Configuration::instance->presets[preset].styles.push_back("&style_pov");
+      } else {
+        element = presetInfo.substr(0, presetInfo.find("(),") + 2); // Copy in next
 
-      presetInfo = presetInfo.substr(presetInfo.find("(),") + 3); // Increment
-      Configuration::instance->presets[preset].styles.push_back(element.substr(element.find("StylePtr"), element.find("(),")));
+        presetInfo = presetInfo.substr(presetInfo.find("(),") + 3); // Increment
+        Configuration::instance->presets[preset].styles.push_back(element.substr(element.find("StylePtr"), element.find("(),")));
+      }
     }
     //std::strtok(nullptr, "\""); // clear bladestyles
     tempData = std::strtok(presetInfo.data(), ",\"");
@@ -828,6 +858,13 @@ void Configuration::readBladeArray(std::ifstream& file) {
   }
 # undef CHKSECT
 # undef RUNTOSECTION
+}
+void Configuration::replaceStyles(const std::string& styleName, const std::string& styleFill) {
+  for (Configuration::presetConfig& preset : Configuration::instance->presets) {
+    for (std::string& style : preset.styles) {
+      if (style.find(styleName) != std::string::npos) style.replace(style.find(styleName), std::strlen(styleFill.c_str()), styleFill);
+    }
+  }
 }
 
 Configuration::ProffieBoard Configuration::parseBoardType(const std::string& value) {
