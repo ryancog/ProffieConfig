@@ -572,10 +572,19 @@ void Configuration::readConfigStyles(std::ifstream& file) {
 
       file >> element; // Clear "="
 
+      style = "";
       while (style.find(";") == std::string::npos) {
-        file >> style;
+        file >> element;
+        style += element;
       }
       style.erase(style.rfind(";")); // remove trailing ";"
+      style.erase(std::remove(style.begin(), style.end(), '\n'), style.end()); // remove newlines
+
+      // Remove potential StylePtr<> syntax
+      if (style.find("StylePtr") != std::string::npos) {
+        style.erase(style.find("StylePtr<"), 9);
+        style.erase(style.rfind(">()"), 3);
+      }
 
       Configuration::replaceStyles(styleName, style);
     }
@@ -860,9 +869,19 @@ void Configuration::readBladeArray(std::ifstream& file) {
 # undef RUNTOSECTION
 }
 void Configuration::replaceStyles(const std::string& styleName, const std::string& styleFill) {
+  std::string styleCheck;
   for (Configuration::presetConfig& preset : Configuration::instance->presets) {
     for (std::string& style : preset.styles) {
-      if (style.find(styleName) != std::string::npos) style.replace(style.find(styleName), std::strlen(styleFill.c_str()), styleFill);
+      styleCheck = (style.find(styleName) == std::string::npos) ? style : style.substr(style.find(styleName));
+      while (styleCheck != style) {
+        // If there are no comments in the style, we're fine.
+        // if the start of the next comment comes before the end of a comment, we *should* be outside the comment, and we're good to go.
+        // This potentially could be broken though...
+        if (style.find("/*") == std::string::npos || styleCheck.find("/*") <= styleCheck.find("*/")) {
+          style.replace(style.find(styleCheck), styleName.length(), styleFill);
+        }
+        styleCheck = styleCheck.find(styleName) == std::string::npos ? style : style.substr(styleCheck.find(styleName));
+      }
     }
   }
 }
