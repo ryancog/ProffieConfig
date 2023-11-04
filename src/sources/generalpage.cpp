@@ -52,7 +52,7 @@ wxBoxSizer* GeneralPage::boolOptions(wxStaticBoxSizer* parent) {
   settings.noBasicParsers = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Basic Parser Styles");
   settings.disableDiagnosticCommands = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Diagnostic Commands");
   settings.enableDeveloperCommands = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Enable Developer Commands");
-  settings.maxLEDs = Misc::createNumEntry(parent, "Neopixel Max LEDs", wxID_ANY, 0, 1024, 144);
+  settings.maxLEDs = Misc::createNumEntry(parent, "WS281X Max LEDs", wxID_ANY, 0, 1024, 144);
 
   boolOptions->Add(settings.volumeSave, FIRSTITEMFLAGS);
   boolOptions->Add(settings.presetSave, MENUITEMFLAGS);

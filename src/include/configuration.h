@@ -25,21 +25,21 @@ public:
   void updateBladesConfig();
 
   struct bladeConfig {
-    std::string type{"NeoPixel (RGB)"};
+    std::string type{"WS281X (RGB)"};
 
     std::string dataPin{"bladePin"};
     std::string colorType{"GRB"};
     int32_t numPixels{0};
     bool useRGBWithWhite{false};
 
-    std::string Cree1{"<None>"};
-    std::string Cree2{"<None>"};
-    std::string Cree3{"<None>"};
-    std::string Cree4{"<None>"};
-    int32_t Cree1Resistance{0};
-    int32_t Cree2Resistance{0};
-    int32_t Cree3Resistance{0};
-    int32_t Cree4Resistance{0};
+    std::string Star1{"<None>"};
+    std::string Star2{"<None>"};
+    std::string Star3{"<None>"};
+    std::string Star4{"<None>"};
+    int32_t Star1Resistance{0};
+    int32_t Star2Resistance{0};
+    int32_t Star3Resistance{0};
+    int32_t Star4Resistance{0};
 
     bool usePowerPin1{false};
     bool usePowerPin2{false};
@@ -85,10 +85,10 @@ public:
     CUSTOM
   };
   enum class BLADETYPE {
-    NEOPIXEL_3,
-    NEOPIXEL_4,
-    CREE_3,
-    CREE_4,
+    PIXEL_3,
+    PIXEL_4,
+    STAR_3,
+    STAR_4,
     SINGLECOLOR,
     NONE
   };
@@ -124,7 +124,7 @@ public:
     wRBG,
     wRGB
   };
-  enum class CREETYPE {
+  enum class STARTYPE {
     RED,
     GREEN,
     PCAMBER,

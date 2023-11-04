@@ -10,12 +10,12 @@
 
 #define BD_HASSELECTION (BladesPage::instance->settings.bladeSelect->GetSelection() != -1)
 #define BD_SUBHASSELECTION (BladesPage::instance->settings.subBladeSelect->GetSelection() != -1)
-#define BD_ISNEOPIXEL3 (BD_HASSELECTION && Configuration::instance->blades[BladesPage::instance->settings.bladeSelect->GetSelection()].type == "NeoPixel (RGB)")
-#define BD_ISNEOPIXEL4 (BD_HASSELECTION && Configuration::instance->blades[BladesPage::instance->settings.bladeSelect->GetSelection()].type == "NeoPixel (RGBW)")
-#define BD_ISNEOPIXEL (BD_ISNEOPIXEL3 || BD_ISNEOPIXEL4)
-#define BD_ISCREE3 (BD_HASSELECTION && Configuration::instance->blades[BladesPage::instance->settings.bladeSelect->GetSelection()].type == "Tri-Star Cree")
-#define BD_ISCREE4 (BD_HASSELECTION && Configuration::instance->blades[BladesPage::instance->settings.bladeSelect->GetSelection()].type == "Quad-Star Cree")
-#define BD_ISCREE (BD_ISCREE3 || BD_ISCREE4)
+#define BD_ISPIXEL3 (BD_HASSELECTION && Configuration::instance->blades[BladesPage::instance->settings.bladeSelect->GetSelection()].type == "WS281X (RGB)")
+#define BD_ISPIXEL4 (BD_HASSELECTION && Configuration::instance->blades[BladesPage::instance->settings.bladeSelect->GetSelection()].type == "WS281X (RGBW)")
+#define BD_ISPIXEL (BD_ISPIXEL3 || BD_ISPIXEL4)
+#define BD_ISSTAR3 (BD_HASSELECTION && Configuration::instance->blades[BladesPage::instance->settings.bladeSelect->GetSelection()].type == "Tri-LED Star")
+#define BD_ISSTAR4 (BD_HASSELECTION && Configuration::instance->blades[BladesPage::instance->settings.bladeSelect->GetSelection()].type == "Quad-LED Star")
+#define BD_ISSTAR (BD_ISSTAR3 || BD_ISSTAR4)
 #define BD_ISSUB (BD_HASSELECTION && Configuration::instance->blades[BladesPage::instance->settings.bladeSelect->GetSelection()].isSubBlade)
 #define BD_ISFIRST (!BD_ISSUB || (BladesPage::instance->settings.subBladeSelect->GetSelection() == 0))
 
