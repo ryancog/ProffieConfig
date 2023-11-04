@@ -5,7 +5,7 @@
   - [First-Time Setup](/docs/firstsetup.md)
   - [The Config File](/docs/configfile.md)
   - [General Page](/docs/general.md)
-  - [Prop File Page](/docs/prop.md)
+  - [Prop File Page](/docs/props.md)
   - [Blades Page](/docs/blades.md)
   - [Presets Page](/docs/presets.md)
   - [Applying Config](/docs/applying.md)
