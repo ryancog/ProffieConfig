@@ -6,12 +6,6 @@ All-In-One ProffieBoard (Created by Fredrik Hubbinette) configuration, driver in
 
 Utilzes `arduino-cli` and `proffie-dfu-setup` for driver installation and flashing.
 
-## Installation
-
-The latest release can be found [here](/releases/latest), and once it's downloaded, just extract and run it!
-
-Do note, on Windows the executable must be kept in it's folder alongside "resources" in order to work. On macOS this is a non-issue due to the app bundle.
-
 ## Usage
 
 Check out [the docs](/docs/README.md)
