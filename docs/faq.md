@@ -12,3 +12,7 @@ The code for your styles, the layout/setup of your blades, the the options you c
 - Some sound fonts you buy may have a blade style included with them, see if yours does.
 - For some very cool, premade bladestyles, check out [Fett263's Style Library](https://fett263.com/fett263-proffieOS7-style-library.html).
 - For advanced use, the [ProffieOS Style Editor](https://profezzorn.github.io/ProffieOS-StyleEditor/style_editor.html) offers unparalleled customization, but has a very steep learning curve and requires quite a bit of effort to get going.
+
+## Still Need Help?
+
+[Open an issue](issues/new) to get support.
