@@ -16,3 +16,7 @@ Prop options are generally straightforward, but they can be complex to understan
 - [BC](/resources/ProffieOS/props/saber_BC_buttons.h)
 - [Caiwyn](/resources/ProffieOS/props/saber_caiwyn_buttons.h)
 - [Shtok](/resources/ProffieOS/props/saber_shtok_buttons.h)
+
+## That's it!
+
+Next Up: [Preset Page](/docs/presets.md)
