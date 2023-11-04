@@ -10,12 +10,12 @@ Here you can choose the prop file to use for your saber. Generally, the biggest 
 
 Prop options are generally straightforward, but they can be complex to understand, especially with the wide array of potential choices. For a detailed listing of the capabilites and button mappings for each prop file, check out their respective pages:
 
-- [Default](https://github.com/profezzorn/ProffieOS/blob/props/saber.h)
-- [SA22C](https://github.com/profezzorn/ProffieOS/blob/props/saber_sa22c_buttons.h)
-- [Fett263](https://github.com/profezzorn/ProffieOS/blob/props/saber_fett263_buttons.h)
-- [BC](https://github.com/profezzorn/ProffieOS/blob/props/saber_BC_buttons.h)
-- [Caiwyn](https://github.com/profezzorn/ProffieOS/blob/props/saber_caiwyn_buttons.h)
-- [Shtok](https://github.com/profezzorn/ProffieOS/blob/props/saber_shtok_buttons.h)
+- [Default](https://github.com/profezzorn/ProffieOS/blob/master/props/saber.h)
+- [SA22C](https://github.com/profezzorn/ProffieOS/blob/master/props/saber_sa22c_buttons.h)
+- [Fett263](https://github.com/profezzorn/ProffieOS/blob/master/props/saber_fett263_buttons.h)
+- [BC](https://github.com/profezzorn/ProffieOS/blob/master/props/saber_BC_buttons.h)
+- [Caiwyn](https://github.com/profezzorn/ProffieOS/blob/master/props/saber_caiwyn_buttons.h)
+- [Shtok](https://github.com/profezzorn/ProffieOS/blob/master/props/saber_shtok_buttons.h)
 
 ## That's it!
 
