@@ -30,10 +30,10 @@ The list in the center of the page allows you to navigate between presets, selec
 
 ## Blade Style Editor
 
-The box on the right of the page is where you'll input the bladestyle for the specific blade for the specific preset you have selected. This bladestyle is the code which creates the effect to be displayed on your blade (See ["Where do I get blade styles?"](docs/faq.md#where-do-i-get-blade-styles)) and depending on the style they may be dependent on a particular Prop file or feature.
+The box on the right of the page is where you'll input the bladestyle for the specific blade for the specific preset you have selected. This bladestyle is the code which creates the effect to be displayed on your blade (See ["Where do I get blade styles?"](/docs/faq.md#where-do-i-get-blade-styles)) and depending on the style they may be dependent on a particular Prop file or feature.
 
 This field auto-populates with `StylePtr<Black>()` which is the most basic example of a bladestyle, simply keeping the blade `Black`, essentially doing nothing, and should be replaced with your own.
 
 ## That's It!
 
-Still have questions? Check out the [FAQ](docs/faq.md).
+Still have questions? Check out the [FAQ](/docs/faq.md).
