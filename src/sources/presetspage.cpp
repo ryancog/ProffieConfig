@@ -59,6 +59,7 @@ PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, wind
   Add(presetsConfig, wxSizerFlags(/*proportion*/ 0).Border(wxALL, 10));
   Add(presetSelect, wxSizerFlags(/*proportion*/ 0).Border(wxALL, 10).Expand());
   Add(settings.presetsEditor, wxSizerFlags(/*proportion*/ 1).Border(wxALL, 10).Expand());
+  update();
 }
 
 void PresetsPage::update() {
@@ -128,15 +129,17 @@ void PresetsPage::update() {
     insertionPoint = settings.nameInput->GetInsertionPoint();
     settings.nameInput->ChangeValue(Configuration::instance->presets[presetIndex].name);
     settings.nameInput->SetInsertionPoint(insertionPoint <= settings.nameInput->GetValue().size() ? insertionPoint : settings.nameInput->GetValue().size());
+
     insertionPoint = settings.dirInput->GetInsertionPoint();
     settings.dirInput->ChangeValue(Configuration::instance->presets[presetIndex].dirs);
-    settings.dirInput->SetInsertionPoint(insertionPoint <= settings.dirInput->GetValue().size() ? insertionPoint : settings.nameInput->GetValue().size());
+    settings.dirInput->SetInsertionPoint(insertionPoint <= settings.dirInput->GetValue().size() ? insertionPoint : settings.dirInput->GetValue().size());
+
     insertionPoint = settings.trackInput->GetInsertionPoint();
     settings.trackInput->ChangeValue(Configuration::instance->presets[presetIndex].track);
     settings.trackInput->SetInsertionPoint(insertionPoint <= settings.trackInput->GetValue().size() - 4 ? insertionPoint : settings.trackInput->GetValue().size() - 4);
   }
   else {
-    settings.presetsEditor->ChangeValue("");
+    settings.presetsEditor->ChangeValue("Select/Create Preset and Blade to Edit Style...");
     settings.nameInput->ChangeValue("");
     settings.dirInput->ChangeValue("");
     settings.trackInput->ChangeValue("");

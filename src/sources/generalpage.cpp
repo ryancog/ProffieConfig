@@ -16,6 +16,7 @@ GeneralPage::GeneralPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window
   instance = this;
   Add(boardSettings(this), BOXITEMFLAGS);
   Add(optionSettings(this), BOXITEMFLAGS);
+  //update();
 }
 
 
