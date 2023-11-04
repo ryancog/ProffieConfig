@@ -183,7 +183,14 @@ std::string Arduino::compile() {
   while(fgets(buffer, 1024, arduinoCli) != NULL) {
     MainWindow::instance->progDialog->emitEvent(-1, ""); // Pulse
     if (std::strstr(buffer, "error")) {
-      return Arduino::parseError(buffer);
+      std::string error = buffer;
+      /*
+      while (fgets(buffer, 1024, arduinoCli) != NULL) {
+        error += '\n';
+        error += buffer;
+      }
+      */
+      return Arduino::parseError(error);
     }
   }
   if (pclose(arduinoCli) != 0) {
@@ -191,14 +198,6 @@ std::string Arduino::compile() {
   }
 
   return "OK";
-}
-std::string Arduino::parseError(const std::string& error) {
-#define ERRCONTAINS(token) std::strstr(error.data(), token)
-  if (ERRCONTAINS("select Proffieboard")) return "Please ensure you've selected the correct board in General";
-  if (ERRCONTAINS("expected unqualified-id")) return "Please make sure there are no brackets in your styles!\nSuch as { or }";
-  if (ERRCONTAINS("FLASH")) return "The specified config will not fit on Proffieboard.\n\nTry disabling diagnostic commands, disabling talkie, disabling prop features, or removing blade styles to make it fit.";
-  else return ERRCONTAINS("error:");
-#undef ERRCONTAINS
 }
 std::string Arduino::upload() {
   char buffer[1024];
@@ -222,7 +221,14 @@ std::string Arduino::upload() {
   while(fgets(buffer, 1024, arduinoCli) != NULL) {
     MainWindow::instance->progDialog->emitEvent(-1, ""); // Pulse
     if (std::strstr(buffer, "error")) {
-      return buffer;
+      std::string error = buffer;
+      /*
+      while (fgets(buffer, 1024, arduinoCli) != NULL) {
+        error += '\n';
+        error += buffer;
+      }
+      */
+      return Arduino::parseError(error);
     }
   }
   if (pclose(arduinoCli) != 0) {
@@ -254,6 +260,16 @@ std::string Arduino::updateIno() {
 
   return "OK";
 }
+
+std::string Arduino::parseError(const std::string& error) {
+#define ERRCONTAINS(token) std::strstr(error.data(), token)
+  if (ERRCONTAINS("select Proffieboard")) return "Please ensure you've selected the correct board in General";
+  if (ERRCONTAINS("expected unqualified-id")) return "Please make sure there are no brackets in your styles (such as \"{\" or \"}\")\n and there is nothing missing or extra from your style! (such as parentheses or \"<>\")";
+  if (ERRCONTAINS("FLASH")) return "The specified config will not fit on Proffieboard.\n\nTry disabling diagnostic commands, disabling talkie, disabling prop features, or removing blade styles to make it fit.";
+  else return ERRCONTAINS("error:");
+#undef ERRCONTAINS
+}
+
 
 FILE* Arduino::CLI(const std::string& command) {
   std::string fullCommand = ARDUINO_PATH " ";
