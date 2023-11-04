@@ -11,6 +11,7 @@
 BladesPage* BladesPage::instance;
 BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "")
 {
+  BladesPage::instance = this;
   wxBoxSizer* bladeManager = new wxBoxSizer( wxHORIZONTAL);
 
   wxBoxSizer* bladeSelection = new wxBoxSizer( wxVERTICAL);
