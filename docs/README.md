@@ -10,4 +10,4 @@ Welcome to the ProffieConfig documenation files! Below you'll find several secti
 - [Applying Config](/docs/applying.md)
 
 [FAQ](/docs/faq.md)
-- [What is a Config File?](/docs/faq.md#what-is-a-config)
+- [What is a Config File?](/docs/faq.md#what-is-a-config-file)
