@@ -6,7 +6,7 @@ The ProffieOS config file is what holds all the information about your saber set
 
 The code for your styles, the layout/setup of your blades, the the options you choose for things like volume, the prop options, etc. all get stored in the config file, which is then read when the ProffieOS code is compiled (fancy computer term for "turned into a program," in this case, for the Proffieboard to run).
 
-## Where to I get blade styles?
+## Where do I get blade styles?
 
 - If you have an existing config, try importing it into ProffieConfig! That's the easiest way to import all your settings, including the blade styles.
 - Some sound fonts you buy may have a blade style included with them, see if yours does.
