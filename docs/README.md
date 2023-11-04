@@ -11,3 +11,4 @@ Welcome to the ProffieConfig documenation files! Below you'll find several secti
 
 [FAQ](/docs/faq.md)
 - [What is a Config File?](/docs/faq.md#what-is-a-config-file)
+- [Where do I get blade styles?](/docs/faq.md#where-do-i-get-blade-styles)
