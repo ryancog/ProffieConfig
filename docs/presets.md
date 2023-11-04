@@ -35,4 +35,4 @@ The box on the right of the page is where you'll input the bladestyle for the sp
 This field auto-populates with `StylePtr<Black>()` which is the most basic example of a bladestyle, simply keeping the blade `Black`, essentially doing nothing, and should be replaced with your own.
 
 ## That's It!
-Next Up: [Applying Changes](/docs/applychanges.md).
+Next Up: [Applying Config](/docs/applying.md).
