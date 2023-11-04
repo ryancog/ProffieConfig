@@ -162,6 +162,8 @@ private:
   void readDefine(std::string&);
   void readConfigProp(std::ifstream&);
   void readConfigPresets(std::ifstream&);
+  void readConfigStyles(std::ifstream&);
+  void replaceStyles(const std::string&, const std::string&);
   void readPresetArray(std::ifstream&);
   void readBladeArray(std::ifstream&);
 };
