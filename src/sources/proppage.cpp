@@ -7,7 +7,6 @@
 
 PropPage* PropPage::instance;
 PropPage::PropPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, "") {
-  instance = this;
   settings.prop = new wxComboBox(this->GetStaticBox(), Misc::ID_PropSelect, PR_DEFAULT, wxDefaultPosition, wxDefaultSize, Misc::createEntries({PR_DEFAULT, PR_SA22C, PR_FETT263, PR_BC, PR_CAIWYN, PR_SHTOK}), wxCB_READONLY);
 
   Add(settings.prop, MENUITEMFLAGS);

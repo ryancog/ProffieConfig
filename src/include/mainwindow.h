@@ -1,13 +1,7 @@
 #include <wx/wx.h>
 
-#include "generalpage.h"
-#include "proppage.h"
-#include "presetspage.h"
-#include "bladespage.h"
-#include "hardwarepage.h"
 #include "progress.h"
 #include "threadrunner.h"
-#include "configuration.h"
 
 #pragma once
 
@@ -27,13 +21,6 @@ private:
   wxBoxSizer* master;
   wxButton* refreshButton;
   wxButton* applyButton;
-
-  GeneralPage* general;
-  PropPage* prop;
-  PresetsPage* presets;
-  BladesPage* blades;
-  HardwarePage* hardware;
-  Configuration* config; //Needed purely for memory management
 
   void BindEvents();
   void CreateMenuBar();

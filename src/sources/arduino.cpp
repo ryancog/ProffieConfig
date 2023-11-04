@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <cstring>
+#include <generalpage.h>
 
 void Arduino::init() {
   MainWindow::instance->progDialog = new Progress(MainWindow::instance);
