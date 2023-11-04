@@ -41,3 +41,7 @@ Each blade you setup should have Power Pins selected, though the selection proce
 For WS281X blades, most of the time you should have at least two pads for full-length blades. Small accent strips can use just one. If you have seperate WS281X blades (Subblades by their nature share power pins) they can share pins (assuming they physically use the same pads), but this comes at the cost of having all the LEDs the pins are connected to turned on, even if they're not being used. With WS281X blades, the power draw while off is non-negligible, so while you might want to share power pins for maybe quillions on a crossguard, it is ill-advised to have an accent share power pins with a blade, as that means the blade would be kept on for as long as the accent is, likely greatly increasing power draw.
 
 For In-Hilt LED blades and Single Color blades, the number of power pins should equal the number of LEDs you're configuring. The power pins are configured in LED order, and while you can select more than the number of LEDs you're setting up, only the first will apply. For example, if I'm setting up a Tri-LED Star, and I select pins 2, 3, 4, and 5, LED 1 will use Power Pin 2, LED 2 will use Pin 3, LED 3 will use Pin 4, and 5 will not be used, despite being selected. Similarly, if I have a Single-Color LED, only the first numerical Pin will be used, so if I had 3,4, and 5 selected, only 3 would be used.
+
+## That's It!
+
+Still have questions? Check out the [FAQ](/docs/faq.md).
