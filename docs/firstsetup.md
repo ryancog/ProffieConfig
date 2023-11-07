@@ -1,6 +1,6 @@
 # First-Time Setup
 
-When you [download ProffieConfig](https://github.com/ryryog25/releases/latest), there's a few steps you'll need to complete to get up and running.
+When you [download ProffieConfig](https://github.com/ryryog25/releases/tag/latest), there's a few steps you'll need to complete to get up and running.
 
 If you're on macOS, you'll get an app which you can move to wherever is convenient.
 If you're on Windows, you can move the folder to any location, however the folder must stay together (`ProffieConfig.exe` must stay beside `resources` folder)
