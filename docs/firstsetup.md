@@ -1,6 +1,6 @@
 # First-Time Setup
 
-When you download ProffieConfig, there's a few steps you'll need to complete to get up and running.
+When you [download ProffieConfig](https://github.com/ryryog25/ProffieConfig/releases/latest), there's a few steps you'll need to complete to get up and running.
 
 If you're on macOS, you'll get an app which you can move to wherever is convenient.
 If you're on Windows, you can move the folder to any location, however the folder must stay together (`ProffieConfig.exe` must stay beside `resources` folder)
@@ -12,7 +12,7 @@ If you bought your saber from someone who included a config file on the SD card,
 
 If you don't have a config file, you can decline and an empty configuration will be loaded.
 
-*Please note, at this time ProffieConfig does not support `&style_pov` and `&style_charging`, Blade ID/Blade Detect, or the `using` syntax introduced in the latest version of ProffieOS for presets, and you will encounter an error attempting to load or formatting issues when trying to import a config that includes any of these. Support for these features is planned.*
+*Please note, at this time ProffieConfig does not support Blade ID/Blade Detect and you will encounter an error attempting to load or formatting issues when trying to import a config that includes any of these. Support for these features is planned.*
 
 ## Install Dependencies
 
