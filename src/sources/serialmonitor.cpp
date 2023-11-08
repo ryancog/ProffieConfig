@@ -32,7 +32,9 @@ SerialMonitor::SerialMonitor() : wxFrame(MainWindow::instance, wxID_ANY, "Proffi
   Show(true);
 }
 SerialMonitor::~SerialMonitor() {
+# if defined(__WXOSX__) || defined(__WXGTK__)
   close(fd);
+# endif
   instance = nullptr;
 }
 
@@ -42,9 +44,53 @@ void SerialMonitor::BindEvents() {
   Bind(EVT_INPUT, [&](wxCommandEvent& evt) { output->AppendText(((SerialDataEvent*)&evt)->value); }, wxID_ANY);
 }
 
+#if defined(__WXMSW__)
 void SerialMonitor::OpenDevice() {
-#if !defined(__WXMSW__)
-  struct termios newtsio;
+  auto connectErr = []() {
+    wxMessageBox("Could not connect to proffieboard.\n\nAre you sure you have the correct device selected?", "Serial Error");
+    SerialMonitor::instance->Close(true);
+  };
+
+  serHandle = CreateFileW(MainWindow::instance->devSelect->GetValue(), GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+  if (serHandle == INVALID_HANDLE_VALUE) {
+    connectErr();
+    return;
+  }
+
+  DCB serConfig{};
+
+  serConfig.DCBlength = sizeof(serConfig);
+
+  if (!GetCommState(serHandle, &serConfig)) {
+    connectErr();
+    return;
+  }
+
+  serConfig.BaudRate = CBR_115200;
+  serConfig.ByteSize = 8;
+  serConfig.StopBits = ONESTOPBIT;
+  serConfig.Parity = NOPARITY;
+
+  if (!SetCommState(serHandle, &serConfig)) {
+    connectErr();
+    return;
+  }
+
+  deviceThread = new ThreadRunner([&]() {
+    while (SerialMonitor::instance != nullptr) {
+      if (!GetCommState(serHandle, &serConfig)) {
+        SerialMonitor::instance->listenerThread->GetThread()->Kill();
+        SerialMonitor::instance->writerThread->GetThread()->Kill();
+        SerialMonitor::instance->Close(true);
+        break;
+      }
+    }
+  });
+}
+
+# elif defined(__WXOSX__) || defined(__WXGTK__)
+void SerialMonitor::OpenDevice() {
+  struct termios newtio;
 
   fd = open(MainWindow::instance->devSelect->GetValue().data(), O_RDWR | O_NOCTTY);
   if (fd < 0) { wxMessageBox("Could not connect to proffieboard.", "Serial Error"); SerialMonitor::instance->Close(true); return; }
@@ -73,9 +119,10 @@ void SerialMonitor::OpenDevice() {
       }
     }
   });
-#endif
 }
+#endif
 
+#if defined(__WXOSX__) || defined(__WXGTK__)
 void SerialMonitor::CreateListener() {
   listenerThread = new ThreadRunner([&]() {
     int res = 0;
@@ -90,7 +137,25 @@ void SerialMonitor::CreateListener() {
     }
   });
 }
+#elif defined(__WXMSW__)
+void SerialMonitor::CreateListener() {
+  listenerThread = new ThreadRunner([&]() {
+    DWORD res = 0;
+    char buf[255];
+    while (SerialMonitor::instance != nullptr) {
+      buf[res] = '\0';
+      if (res != 0) {
+        SerialDataEvent* event = new SerialDataEvent(EVT_INPUT, wxID_ANY, buf);
+        wxQueueEvent(SerialMonitor::instance->GetEventHandler(), event);
+      }
 
+      ReadFile(SerialMonitor::instance->serHandle, buf, 255, &res, NULL);
+    }
+  });
+}
+#endif
+
+# if defined(__WXOSX__) || defined(__WXGTK__)
 void SerialMonitor::CreateWriter() {
   writerThread = new ThreadRunner([]() {
     std::string data;
@@ -109,11 +174,28 @@ void SerialMonitor::CreateWriter() {
         SerialMonitor::instance->sendOut = false;
       }
 
-#if defined(__WXMSW__)
-      Sleep(50);
-#else
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
-#endif
+
     }
   });
 }
+#elif defined(__WXMSW__)
+void SerialMonitor::CreateWriter() {
+  writerThread = new ThreadRunner([]() {
+    std::string data;
+    while (SerialMonitor::instance != nullptr) {
+      if (SerialMonitor::instance->sendOut) {
+        data = SerialMonitor::instance->input->GetValue().ToStdString();
+        SerialMonitor::instance->input->Clear();
+
+        data.resize(255);
+        data[253] = '\r';
+        data[254] = '\n';
+        data[255] = '\0';
+
+        WriteFile(SerialMonitor::instance->serHandle, data.data(), 255, NULL, NULL);
+      }
+    }
+  });
+}
+# endif

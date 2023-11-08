@@ -33,8 +33,13 @@ private:
   wxTextCtrl* input;
   wxTextCtrl* output;
 
+#if defined(__WXOSX__) || defined(__WXGTK__)
   int fd = 0;
+#elif defined(__WXMSW__)
+  HANDLE serHandle = nullptr;
+#endif
   bool sendOut = false;
+
 
   void BindEvents();
   void OpenDevice();
