@@ -39,7 +39,9 @@ public:
     ID_RemoveBlade,
     ID_AddSubBlade,
     ID_RemoveSubBlade,
-    ID_BladeType
+    ID_BladeType,
+    ID_SerialCommand,
+    ID_OpenSerial
   };
 
   struct numEntry {
