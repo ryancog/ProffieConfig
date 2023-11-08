@@ -12,6 +12,7 @@
 #include "defines.h"
 #include "arduino.h"
 #include "misc.h"
+#include "serialmonitor.h"
 
 #include <bladespage.h>
 #include <generalpage.h>
@@ -21,6 +22,7 @@
 
 MainWindow* MainWindow::instance;
 MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize) {
+  instance = this;
   Configuration::instance = new Configuration();
   CreateMenuBar();
   CreatePages();
@@ -32,6 +34,7 @@ MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPos
 void MainWindow::BindEvents() {
   // Main Window
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent(progDialog, (Progress::ProgressEvent*)&event); }, wxID_ANY);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { if (SerialMonitor::instance == nullptr) SerialMonitor::instance = new SerialMonitor(); else SerialMonitor::instance->Raise(); }, Misc::ID_OpenSerial);
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
         // TODO GeneralPage::instance->update();
         if (windowSelect->GetValue() == "General") {
@@ -74,6 +77,7 @@ void MainWindow::BindEvents() {
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
         if (devSelect->GetValue() == "Select Device...") applyButton->Disable();
         else applyButton->Enable();
+        if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Close(true);
       }, Misc::ID_DeviceSelect);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(); }, Misc::ID_RefreshDev);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(); }, Misc::ID_ApplyChanges);
@@ -140,22 +144,26 @@ void MainWindow::BindEvents() {
 }
 
 void MainWindow::CreateMenuBar() {
-  wxMenu *menuFile = new wxMenu;
+  wxMenu *file = new wxMenu;
 
-  menuFile->Append(Misc::ID_GenFile, "Save Config\tCtrl+S", "Generate Config File");
-  menuFile->Append(Misc::ID_VerifyConfig, "Verify Config...\tCtrl+R", "Generate Config and Compile to test...");
+  file->Append(Misc::ID_GenFile, "Save Config\tCtrl+S", "Generate Config File");
+  file->Append(Misc::ID_VerifyConfig, "Verify Config...\tCtrl+R", "Generate Config and Compile to test...");
 
-  menuFile->Append(Misc::ID_ExportFile, "Export Config...\t", "Choose a location to save a copy of your config...");
-  menuFile->Append(Misc::ID_ImportFile, "Import Config...\t", "Choose a file to import...");
+  file->Append(Misc::ID_ExportFile, "Export Config...\t", "Choose a location to save a copy of your config...");
+  file->Append(Misc::ID_ImportFile, "Import Config...\t", "Choose a file to import...");
 
-  menuFile->Append(Misc::ID_Initialize, "Install Dependencies...\t", "Install Platform-Specific Proffieboard Dependencies");
+  file->Append(Misc::ID_Initialize, "Install Dependencies...\t", "Install Platform-Specific Proffieboard Dependencies");
 
-  menuFile->Append(wxID_ABOUT);
-  menuFile->Append(wxID_EXIT);
+  file->Append(wxID_ABOUT);
+  file->Append(wxID_EXIT);
 
+  wxMenu* board = new wxMenu;
+
+  board->Append(Misc::ID_OpenSerial, "Serial Monitor...\tCtrl+M", "Open a serial monitor to the proffieboard");
 
   wxMenuBar *menuBar = new wxMenuBar;
-  menuBar->Append(menuFile, "&File");
+  menuBar->Append(file, "&File");
+  menuBar->Append(board, "&Board");
   SetMenuBar(menuBar);
 }
 

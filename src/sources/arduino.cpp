@@ -1,12 +1,14 @@
 ﻿#include "arduino.h"
+#include "generalpage.h"
 #include "mainwindow.h"
 #include "configuration.h"
 #include "defines.h"
 
 #include <string>
+#include <thread>
+#include <chrono>
 #include <vector>
 #include <cstring>
-#include <generalpage.h>
 
 void Arduino::init() {
   MainWindow::instance->progDialog = new Progress(MainWindow::instance);
@@ -56,7 +58,7 @@ void Arduino::refreshBoards() {
     for (const std::string& item : Arduino::getBoards()) {
       MainWindow::instance->devSelect->Append(item);
     }
-    MainWindow::instance->devSelect->ChangeValue(lastSel);
+    MainWindow::instance->devSelect->SetValue(lastSel);
     Progress::emitEvent(100, "Done.");
     Progress::emitEvent(100, "Done."); // This has to be called twice to update on macOS?
   });
@@ -144,10 +146,10 @@ void Arduino::verifyConfig() {
 
     returnVal = Arduino::updateIno();
     if (returnVal != "OK") {
-        Progress::emitEvent(100, "Error");
-        wxMessageBox("There was an error while updating files:\n\n"
-                         + returnVal, "Files Error");
-        return;
+      Progress::emitEvent(100, "Error");
+      wxMessageBox("There was an error while updating files:\n\n"
+                       + returnVal, "Files Error");
+      return;
     }
 
     Progress::emitEvent(40, "Compiling ProffieOS...");
@@ -266,14 +268,22 @@ std::string Arduino::parseError(const std::string& error) {
   if (ERRCONTAINS("select Proffieboard")) return "Please ensure you've selected the correct board in General";
   if (ERRCONTAINS("expected unqualified-id")) return "Please make sure there are no brackets in your styles (such as \"{\" or \"}\")\n and there is nothing missing or extra from your style! (such as parentheses or \"<>\")";
   if (ERRCONTAINS("FLASH")) return "The specified config will not fit on Proffieboard.\n\nTry disabling diagnostic commands, disabling talkie, disabling prop features, or removing blade styles to make it fit.";
-  else return ERRCONTAINS("error:");
+  if (ERRCONTAINS("Serial port busy")) return "The proffieboard appears busy. \nPlease make sure nothing else is using it, then try again.";
+  else if (ERRCONTAINS("error:")) return ERRCONTAINS("error:");
+  else return "Unknown error";
 #undef ERRCONTAINS
 }
 
 
 FILE* Arduino::CLI(const std::string& command) {
-  std::string fullCommand = ARDUINO_PATH " ";
+  std::string fullCommand;
+#if defined(__WXMSW__)
+  fullCommand += "title ProffieConfig Worker && ";
+  fullCommand += "resources\\windowmode -title \"ProffieConfig Worker\" -mode force_minimized && ";
+#endif
+  fullCommand += ARDUINO_PATH " ";
   fullCommand += command;
   fullCommand += " 2>&1";
+
   return popen(fullCommand.data(), "r");
 }

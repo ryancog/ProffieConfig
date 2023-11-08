@@ -1,5 +1,6 @@
 TEMPLATE = app
-CONFIG += console c++17
+CONFIG += c++20
+CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
 
@@ -17,7 +18,8 @@ SOURCES += \
         sources/bladespage.cpp \
         sources/hardwarepage.cpp \
         sources/progress.cpp \
-        sources/proppage.cpp
+        sources/proppage.cpp \
+        sources/serialmonitor.cpp
 
 HEADERS += \
     include/arduino.h \
@@ -32,6 +34,7 @@ HEADERS += \
     include/hardwarepage.h \
     include/progress.h \
     include/proppage.h \
+    include/serialmonitor.h \
     include/threadrunner.h
 
 INCLUDEPATH += ./include
