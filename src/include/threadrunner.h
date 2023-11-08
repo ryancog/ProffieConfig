@@ -12,6 +12,7 @@ public:
     GetThread()->Run();
   }
 
+private:
   wxThread::ExitCode Entry() {
     runFunc();
     return (wxThread::ExitCode)0;
