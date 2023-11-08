@@ -19,6 +19,8 @@ If your Proffieboard isn't showing up in the device drop down, please make sure 
 
 If the Proffieboard is unresponsive or it was accidentally unplugged during configuration application, locate the [boot and reset buttons](https://fredrik.hubbe.net/lightsaber/v6/pinout.svg) on the Proffieboard. Now, with the board plugged into your computer, hold BOOT, push on RESET, release BOOT, and try refreshing again. You should see an entry labeled "BOOTLOADER" and will be able to reapply your config and be back off to the races!
 
+If it's still not showing up, try a different USB cable. Sometimes they *do* go bad, but it's also very common to have a USB cable which only provides power, and is not intended/will not work for connecting devices.
+
 ## Still Need Help?
 
 [Open an issue](https://github.com/ryryog25/ProffieConfig/issues/new) to get support.
