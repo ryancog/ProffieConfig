@@ -33,6 +33,7 @@ The drop-down selects a blade's type, which can be one of the following:
 - **"Quad-LED Star"**: If you have a baselit saber with white (or another color) you probably have a quad-star. The options remain the same, simply with a forth LED to set up.
 - **"Single Color"**: If you have a normal type LED (single diode) or something similar, you can use the MOSFETs to control it with a Single Color option. (PWM direct-driven LED config is planned)
 
+**A note on SubBlades:** The numbering is somewhat unintuitive. Numbering for subblades starts at 0. If I have a strip of 10 leds which I want to split into two subblades of 5, I would set the first subblade to start at 0 and end at 4, then for the second one to start at 5 and end at 9 (Even though the blade is 10 LEDs long, your subblade should stop at a number 1 less). This may be changed in the future...
 
 ## Power Pins
 

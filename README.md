@@ -15,7 +15,6 @@ Check out [the docs](/docs/README.md)
 - Implement SSD1306
 - Implement tooltips for more detailed setting explanation
 - Implement dialog showing current button configuration (depending on prop and `NUM_BUTTONS`)
-- Documentation
 - Update README
 
 ## Gallery
