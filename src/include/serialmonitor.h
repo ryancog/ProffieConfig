@@ -24,7 +24,6 @@ private:
   };
   static wxEventTypeTag<wxCommandEvent> EVT_INPUT;
   static wxEventTypeTag<wxCommandEvent> EVT_DISCON;
-  static wxEventTypeTag<wxCommandEvent> EVT_RECON;
 
   ThreadRunner* deviceThread;
   ThreadRunner* listenerThread;
@@ -38,7 +37,7 @@ private:
 #elif defined(__WXMSW__)
   HANDLE serHandle = nullptr;
 #endif
-  bool sendOut = false;
+  std::string sendOut;
 
 
   void BindEvents();
