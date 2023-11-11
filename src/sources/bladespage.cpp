@@ -160,7 +160,7 @@ void BladesPage::update() {
 
   // Recall Options
   if (Configuration::instance->blades.size() > 0 && lastBladeSelection >= 0 && lastBladeSelection < (int32_t)Configuration::instance->blades.size()) {
-    settings.bladeType->ChangeValue(Configuration::instance->blades[lastBladeSelection].type);
+    settings.bladeType->SetValue(Configuration::instance->blades[lastBladeSelection].type);
     settings.usePowerPin1->SetValue(Configuration::instance->blades[lastBladeSelection].usePowerPin1);
     settings.usePowerPin2->SetValue(Configuration::instance->blades[lastBladeSelection].usePowerPin2);
     settings.usePowerPin3->SetValue(Configuration::instance->blades[lastBladeSelection].usePowerPin3);
@@ -168,19 +168,19 @@ void BladesPage::update() {
     settings.usePowerPin5->SetValue(Configuration::instance->blades[lastBladeSelection].usePowerPin5);
     settings.usePowerPin6->SetValue(Configuration::instance->blades[lastBladeSelection].usePowerPin6);
 
-    settings.bladeDataPin->ChangeValue(Configuration::instance->blades[lastBladeSelection].dataPin);
+    settings.bladeDataPin->SetValue(Configuration::instance->blades[lastBladeSelection].dataPin);
     settings.bladePixels->SetValue(Configuration::instance->blades[lastBladeSelection].numPixels);
-    settings.blade3ColorOrder->ChangeValue(Configuration::instance->blades[lastBladeSelection].colorType);
-    settings.blade4ColorOrder->ChangeValue(Configuration::instance->blades[lastBladeSelection].colorType);
+    settings.blade3ColorOrder->SetValue(Configuration::instance->blades[lastBladeSelection].colorType);
+    settings.blade4ColorOrder->SetValue(Configuration::instance->blades[lastBladeSelection].colorType);
     settings.blade4UseRGB->SetValue(Configuration::instance->blades[lastBladeSelection].useRGBWithWhite);
 
-    settings.star1Color->ChangeValue(Configuration::instance->blades[lastBladeSelection].Star1);
+    settings.star1Color->SetValue(Configuration::instance->blades[lastBladeSelection].Star1);
     settings.star1Resistance->num->SetValue(Configuration::instance->blades[lastBladeSelection].Star1Resistance);
-    settings.star2Color->ChangeValue(Configuration::instance->blades[lastBladeSelection].Star2);
+    settings.star2Color->SetValue(Configuration::instance->blades[lastBladeSelection].Star2);
     settings.star2Resistance->num->SetValue(Configuration::instance->blades[lastBladeSelection].Star2Resistance);
-    settings.star3Color->ChangeValue(Configuration::instance->blades[lastBladeSelection].Star3);
+    settings.star3Color->SetValue(Configuration::instance->blades[lastBladeSelection].Star3);
     settings.star3Resistance->num->SetValue(Configuration::instance->blades[lastBladeSelection].Star3Resistance);
-    settings.star4Color->ChangeValue(Configuration::instance->blades[lastBladeSelection].Star4);
+    settings.star4Color->SetValue(Configuration::instance->blades[lastBladeSelection].Star4);
     settings.star4Resistance->num->SetValue(Configuration::instance->blades[lastBladeSelection].Star4Resistance);
 
     settings.subBladeStart->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)Configuration::instance->blades[lastBladeSelection].subBlades.size() ? Configuration::instance->blades[lastBladeSelection].subBlades[lastSubBladeSelection].startPixel : 0);
@@ -237,26 +237,34 @@ void BladesPage::update() {
 }
 
 void BladesPage::addBlade() {
+  Configuration::instance->updateBladesConfig();
+
   Configuration::instance->blades.push_back(Configuration::Configuration::bladeConfig());
   BladesPage::instance->lastBladeSelection = Configuration::instance->blades.size() - 1;
 
   BladesPage::instance->update();
 }
 void BladesPage::addSubBlade() {
+  Configuration::instance->updateBladesConfig();
+
   Configuration::instance->blades[BladesPage::instance->lastBladeSelection].isSubBlade = true;
   Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.push_back(Configuration::bladeConfig::subBladeInfo());
   if (Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.size() <= 1) Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.push_back(Configuration::bladeConfig::subBladeInfo());
-  Configuration::instance->updateBladesConfig();
+
   BladesPage::instance->update();
 }
 void BladesPage::removeBlade() {
+  Configuration::instance->updateBladesConfig();
+
   if (BD_HASSELECTION && Configuration::instance->blades.size() > 1) {
     Configuration::instance->blades.erase(Configuration::instance->blades.begin() + BladesPage::instance->lastBladeSelection);
   }
-  Configuration::instance->updateBladesConfig();
+
   BladesPage::instance->update();
 }
 void BladesPage::removeSubBlade() {
+  Configuration::instance->updateBladesConfig();
+
   if (BD_SUBHASSELECTION) {
     Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.erase(Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.begin() + BladesPage::instance->lastSubBladeSelection);
     if (Configuration::instance->blades[BladesPage::instance->lastBladeSelection].subBlades.size() <= 1) {
@@ -265,6 +273,6 @@ void BladesPage::removeSubBlade() {
     }
     BladesPage::instance->lastSubBladeSelection = -1;
   }
-  Configuration::instance->updateBladesConfig();
+
   BladesPage::instance->update();
 }
