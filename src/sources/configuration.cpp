@@ -912,7 +912,7 @@ void Configuration::updateBladesConfig() {
 
     Configuration::instance->blades[BladesPage::instance->lastBladeSelection].dataPin = BladesPage::instance->settings.bladeDataPin->GetValue();
     Configuration::instance->blades[BladesPage::instance->lastBladeSelection].numPixels = BladesPage::instance->settings.bladePixels->GetValue();
-    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].colorType = Configuration::instance->blades[BladesPage::instance->lastBladeSelection].type == "PIXEL (RGB)" ? BladesPage::instance->settings.blade3ColorOrder->GetValue() : BladesPage::instance->settings.blade4ColorOrder->GetValue();
+    Configuration::instance->blades[BladesPage::instance->lastBladeSelection].colorType = Configuration::instance->blades[BladesPage::instance->lastBladeSelection].type == "WS281X (RGB)" ? BladesPage::instance->settings.blade3ColorOrder->GetValue() : BladesPage::instance->settings.blade4ColorOrder->GetValue();
     Configuration::instance->blades[BladesPage::instance->lastBladeSelection].useRGBWithWhite = BladesPage::instance->settings.blade4UseRGB->GetValue();
 
     Configuration::instance->blades[BladesPage::instance->lastBladeSelection].Star1 = BladesPage::instance->settings.star1Color->GetValue();
