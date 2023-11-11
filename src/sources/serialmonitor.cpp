@@ -212,12 +212,12 @@ void SerialMonitor::CreateWriter()
       }
 
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
     }
   });
 }
 #elif defined(__WXMSW__)
-void SerialMonitor::CreateWriter()
-{
+void SerialMonitor::CreateWriter() {
   writerThread = new ThreadRunner([]() {
     std::string data;
     while (SerialMonitor::instance != nullptr) {

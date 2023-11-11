@@ -29,6 +29,9 @@ private:
   ThreadRunner* listenerThread;
   ThreadRunner* writerThread;
 
+  bool listenerRunning = false;
+  bool writerRunning = false;
+
   wxTextCtrl* input;
   wxTextCtrl* output;
 
