@@ -19,7 +19,7 @@ SOURCES += \
         sources/hardwarepage.cpp \
         sources/progress.cpp \
         sources/proppage.cpp \
-        sources/serialmonitor.cpp.old
+        sources/serialmonitor.cpp
 
 HEADERS += \
     include/arduino.h \
