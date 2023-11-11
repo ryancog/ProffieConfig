@@ -163,7 +163,7 @@ void MainWindow::CreateMenuBar() {
 
   wxMenuBar *menuBar = new wxMenuBar;
   menuBar->Append(file, "&File");
-  menuBar->Append(board, "&Board");
+  //menuBar->Append(board, "&Board");
   SetMenuBar(menuBar);
 }
 
