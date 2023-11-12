@@ -1,5 +1,7 @@
 #include "progress.h"
+
 #include "mainwindow.h"
+
 #include "wx/event.h"
 #include <memory>
 

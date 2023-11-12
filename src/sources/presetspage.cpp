@@ -1,6 +1,8 @@
 #include "presetspage.h"
+
 #include "misc.h"
-#include "configuration.h"
+#include "bladespage.h"
+
 #include <string>
 
 PresetsPage* PresetsPage::instance;
@@ -9,24 +11,24 @@ PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, wind
   instance = this;
 
   wxBoxSizer *presetSelect = new wxBoxSizer(wxVERTICAL);
-  settings.presetsEditor = new wxTextCtrl(GetStaticBox(), Misc::ID_PresetChange, "", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE);
-  settings.presetsEditor->SetFont(wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+  presetsEditor = new wxTextCtrl(GetStaticBox(), Misc::ID_PresetChange, "", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE);
+  presetsEditor->SetFont(wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
   wxBoxSizer *presetsConfig = new wxBoxSizer(wxVERTICAL);
 
   // Preset Select
   {
     wxBoxSizer *presetLists = new wxBoxSizer(wxHORIZONTAL);
 
-    settings.presetList = new wxListBox(GetStaticBox(), Misc::ID_PresetList);
-    settings.bladeList = new wxListBox(GetStaticBox(), Misc::ID_BladeList);
-    presetLists->Add(settings.presetList, wxSizerFlags(1).Expand());
-    presetLists->Add(settings.bladeList, wxSizerFlags(1).Expand());
+    presetList = new wxListBox(GetStaticBox(), Misc::ID_PresetList);
+    bladeList = new wxListBox(GetStaticBox(), Misc::ID_BladeList);
+    presetLists->Add(presetList, wxSizerFlags(1).Expand());
+    presetLists->Add(bladeList, wxSizerFlags(1).Expand());
 
     wxBoxSizer *presetButtons = new wxBoxSizer(wxHORIZONTAL);
-    settings.addPreset = new wxButton(GetStaticBox(), Misc::ID_AddPreset, "+", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
-    settings.removePreset = new wxButton(GetStaticBox(), Misc::ID_RemovePreset, "-", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
-    presetButtons->Add(settings.addPreset, wxSizerFlags(0).Border(wxRIGHT, 10));
-    presetButtons->Add(settings.removePreset);
+    addPreset = new wxButton(GetStaticBox(), Misc::ID_AddPreset, "+", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
+    removePreset = new wxButton(GetStaticBox(), Misc::ID_RemovePreset, "-", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
+    presetButtons->Add(addPreset, wxSizerFlags(0).Border(wxRIGHT, 10));
+    presetButtons->Add(removePreset);
 
     presetSelect->Add(presetLists, wxSizerFlags(1));
     presetSelect->Add(presetButtons, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 5));
@@ -36,21 +38,21 @@ PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, wind
   {
     wxBoxSizer *name = new wxBoxSizer(wxVERTICAL);
     wxStaticText *nameLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Preset Name", wxDefaultPosition, wxSize(150, 20));
-    settings.nameInput = new wxTextCtrl(GetStaticBox(), Misc::ID_PresetChange);
+    nameInput = new wxTextCtrl(GetStaticBox(), Misc::ID_PresetChange);
     name->Add(nameLabel, wxSizerFlags(0).Border(wxLEFT | wxTOP, 10));
-    name->Add(settings.nameInput, wxSizerFlags(0).Border(wxLEFT, 10).Expand());
+    name->Add(nameInput, wxSizerFlags(0).Border(wxLEFT, 10).Expand());
 
     wxBoxSizer *dir = new wxBoxSizer(wxVERTICAL);
     wxStaticText *dirLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Font Directory", wxDefaultPosition, wxSize(150, 20));
-    settings.dirInput = new wxTextCtrl(GetStaticBox(), Misc::ID_PresetChange);
+    dirInput = new wxTextCtrl(GetStaticBox(), Misc::ID_PresetChange);
     dir->Add(dirLabel, wxSizerFlags(0).Border(wxLEFT | wxTOP, 10));
-    dir->Add(settings.dirInput, wxSizerFlags(0).Border(wxLEFT, 10).Expand());
+    dir->Add(dirInput, wxSizerFlags(0).Border(wxLEFT, 10).Expand());
 
     wxBoxSizer *track = new wxBoxSizer(wxVERTICAL);
     wxStaticText *trackLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Track File", wxDefaultPosition, wxSize(150, 20));
-    settings.trackInput = new wxTextCtrl(GetStaticBox(), Misc::ID_PresetChange);
+    trackInput = new wxTextCtrl(GetStaticBox(), Misc::ID_PresetChange);
     track->Add(trackLabel, wxSizerFlags(0).Border(wxLEFT | wxTOP, 10));
-    track->Add(settings.trackInput, wxSizerFlags(0).Border(wxLEFT | wxBOTTOM, 10).Expand());
+    track->Add(trackInput, wxSizerFlags(0).Border(wxLEFT | wxBOTTOM, 10).Expand());
 
     presetsConfig->Add(name);
     presetsConfig->Add(dir);
@@ -59,130 +61,134 @@ PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, wind
 
   Add(presetsConfig, wxSizerFlags(/*proportion*/ 0).Border(wxALL, 10));
   Add(presetSelect, wxSizerFlags(/*proportion*/ 0).Border(wxALL, 10).Expand());
-  Add(settings.presetsEditor, wxSizerFlags(/*proportion*/ 1).Border(wxALL, 10).Expand());
+  Add(presetsEditor, wxSizerFlags(/*proportion*/ 1).Border(wxALL, 10).Expand());
 }
 
 void PresetsPage::update() {
-  updatePresetName();
-  updatePresetDir();
-  updatePresetTrack();
-  updatePresetEditor();
+  pushIfNewPreset();
+  resizeAndFillPresets();
 
-  int32_t presetIndex = settings.presetList->GetSelection();
-  int32_t bladeIndex = settings.bladeList->GetSelection();
+  if (nameInput->IsModified()) stripAndSaveName();
+  if (dirInput->IsModified()) stripAndSaveDir();
+  if (dirInput->IsModified()) stripAndSaveTrack();
+  if (presetsEditor->IsModified()) stripAndSaveEditor();
 
-  if (presetIndex == -1 && BladesPage::instance->blades.size() > 0 && (!settings.nameInput->IsEmpty() || !settings.dirInput->IsEmpty() || !settings.trackInput->IsEmpty())) {
-    Configuration::instance->presets.push_back(Configuration::presetConfig());
-    presetIndex = Configuration::instance->presets.size() - 1;
+  rebuildPresetList();
+  rebuildBladeList();
 
-    Configuration::instance->presets[presetIndex].name = settings.nameInput->GetValue();
-    Configuration::instance->presets[presetIndex].dirs = settings.dirInput->GetValue();
-    Configuration::instance->presets[presetIndex].track = settings.trackInput->GetValue();
+  updateFields();
+}
+void PresetsPage::pushIfNewPreset() {
+  if (presetList->GetSelection() == -1 && BladesPage::instance->blades.size() > 0 && (!nameInput->IsEmpty() || !dirInput->IsEmpty() || !trackInput->IsEmpty())) {
+    presets.push_back(presetConfig());
+    rebuildPresetList();
+    presetList->SetSelection(presets.size() - 1);
+    bladeList->SetSelection(0);
   }
-
-  int32_t listSelection = presetIndex;
-  settings.presetList->Clear();
-  for (const Configuration::presetConfig& preset : Configuration::instance->presets) {
-    settings.presetList->Append(preset.name);
+}
+void PresetsPage::rebuildPresetList() {
+  int32_t listSelection = presetList->GetSelection();
+  presetList->Clear();
+  for (const presetConfig& preset : presets) {
+    presetList->Append(preset.name);
   }
-  if ((int32_t)settings.presetList->GetCount() - 1 < listSelection) listSelection -= 1;
-  if (listSelection >= 0) settings.presetList->SetSelection(listSelection);
-
-  listSelection = bladeIndex;
-  settings.bladeList->Clear();
+  if ((int32_t)presetList->GetCount() - 1 < listSelection) listSelection -= 1;
+  if (listSelection >= 0) presetList->SetSelection(listSelection);
+}
+void PresetsPage::rebuildBladeList() {
+  int32_t listSelection = bladeList->GetSelection();
+  bladeList->Clear();
   for (uint32_t blade = 0; blade < BladesPage::instance->blades.size(); blade++) {
-    if (BladesPage::instance->blades[blade].subBlades.size() > 0) {
-      for (uint32_t subBlade = 0; subBlade < BladesPage::instance->blades[blade].subBlades.size(); subBlade++) {
-        settings.bladeList->Append("Blade " + std::to_string(blade) + ":" + std::to_string(subBlade));
+    if (BladesPage::instance->blades.at(blade).subBlades.size() > 0) {
+      for (uint32_t subBlade = 0; subBlade < BladesPage::instance->blades.at(blade).subBlades.size(); subBlade++) {
+        bladeList->Append("Blade " + std::to_string(blade) + ":" + std::to_string(subBlade));
       }
     } else {
-      settings.bladeList->Append("Blade " + std::to_string(blade));
+      bladeList->Append("Blade " + std::to_string(blade));
     }
   }
-  if ((int32_t)settings.bladeList->GetCount() - 1 < listSelection) listSelection -= 1;
-  if (listSelection >= 0) settings.bladeList->SetSelection(listSelection);
-
-  for (Configuration::presetConfig& preset : Configuration::instance->presets) {
-    // Calculate # of presets there should be prior.
-    int32_t numBlades = 0;
-    for (const BladesPage::bladeConfig& blade : BladesPage::instance->blades) {
-      numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
-    }
-
-    if (numBlades > (int32_t)preset.styles.size()) {
-      while (numBlades != (int32_t)preset.styles.size()) {
+  if ((int32_t)bladeList->GetCount() - 1 < listSelection) listSelection -= 1;
+  if (listSelection >= 0) bladeList->SetSelection(listSelection);
+}
+int PresetsPage::getNumBlades() {
+  int32_t numBlades = 0;
+  for (const BladesPage::bladeConfig& blade : BladesPage::instance->blades) {
+    numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
+  }
+  return numBlades;
+}
+void PresetsPage::resizeAndFillPresets() {
+  for (presetConfig& preset : presets) {
+    while ((int32_t)preset.styles.size() < getNumBlades()) {
         preset.styles.push_back("StylePtr<Black>()");
-      }
-    } else if (numBlades < (int32_t)preset.styles.size()) {
-      while (numBlades != (int32_t)preset.styles.size()) {
-        preset.styles.pop_back();
-      }
     }
-  }
-
-  presetIndex = settings.presetList->GetSelection();
-  bladeIndex = settings.bladeList->GetSelection();
-  if (presetIndex >= 0) {
-    uint8_t insertionPoint;
-
-    insertionPoint = settings.presetsEditor->GetInsertionPoint();
-    if (bladeIndex >= 0) {
-      settings.presetsEditor->ChangeValue(Configuration::instance->presets[presetIndex].styles[bladeIndex]);
-      settings.presetsEditor->SetInsertionPoint(insertionPoint <= settings.presetsEditor->GetValue().size() ? insertionPoint : settings.presetsEditor->GetValue().size());
-    } else settings.presetsEditor->ChangeValue("Select Blade to Edit Style...");
-
-    insertionPoint = settings.nameInput->GetInsertionPoint();
-    settings.nameInput->ChangeValue(Configuration::instance->presets[presetIndex].name);
-    settings.nameInput->SetInsertionPoint(insertionPoint <= settings.nameInput->GetValue().size() ? insertionPoint : settings.nameInput->GetValue().size());
-
-    insertionPoint = settings.dirInput->GetInsertionPoint();
-    settings.dirInput->ChangeValue(Configuration::instance->presets[presetIndex].dirs);
-    settings.dirInput->SetInsertionPoint(insertionPoint <= settings.dirInput->GetValue().size() ? insertionPoint : settings.dirInput->GetValue().size());
-
-    insertionPoint = settings.trackInput->GetInsertionPoint();
-    settings.trackInput->ChangeValue(Configuration::instance->presets[presetIndex].track);
-    settings.trackInput->SetInsertionPoint(insertionPoint <= settings.trackInput->GetValue().size() - 4 ? insertionPoint : settings.trackInput->GetValue().size() - 4);
-  }
-  else {
-    settings.presetsEditor->ChangeValue("Select/Create Preset and Blade to Edit Style...");
-    settings.nameInput->ChangeValue("");
-    settings.dirInput->ChangeValue("");
-    settings.trackInput->ChangeValue("");
+    while ((int32_t)preset.styles.size() > getNumBlades()) {
+        preset.styles.pop_back();
+    }
   }
 }
+void PresetsPage::updateFields() {
+    if (presetList->GetSelection() >= 0) {
+      uint32_t insertionPoint;
 
-void PresetsPage::updatePresetEditor() {
-  if (settings.presetList->GetSelection() >= 0 && settings.bladeList->GetSelection() >= 0) {
-    std::string style = settings.presetsEditor->GetValue().ToStdString();
+      insertionPoint = presetsEditor->GetInsertionPoint();
+      if (bladeList->GetSelection() >= 0) {
+        presetsEditor->ChangeValue(presets.at(presetList->GetSelection()).styles.at(bladeList->GetSelection()));
+        presetsEditor->SetInsertionPoint(insertionPoint <= presetsEditor->GetValue().size() ? insertionPoint : presetsEditor->GetValue().size());
+      } else presetsEditor->ChangeValue("Select Blade to Edit Style...");
+
+      insertionPoint = nameInput->GetInsertionPoint();
+      nameInput->ChangeValue(presets.at(presetList->GetSelection()).name);
+      nameInput->SetInsertionPoint(insertionPoint <= nameInput->GetValue().size() ? insertionPoint : nameInput->GetValue().size());
+
+      insertionPoint = dirInput->GetInsertionPoint();
+      dirInput->ChangeValue(presets.at(presetList->GetSelection()).dirs);
+      dirInput->SetInsertionPoint(insertionPoint <= dirInput->GetValue().size() ? insertionPoint : dirInput->GetValue().size());
+
+      insertionPoint = trackInput->GetInsertionPoint();
+      trackInput->ChangeValue(presets.at(presetList->GetSelection()).track);
+      trackInput->SetInsertionPoint(insertionPoint <= trackInput->GetValue().size() - 4 ? insertionPoint : trackInput->GetValue().size() - 4);
+    }
+    else {
+      presetsEditor->ChangeValue("Select/Create Preset and Blade to Edit Style...");
+      nameInput->ChangeValue("");
+      dirInput->ChangeValue("");
+      trackInput->ChangeValue("");
+    }
+}
+
+void PresetsPage::stripAndSaveEditor() {
+  if (presetList->GetSelection() >= 0 && bladeList->GetSelection() >= 0) {
+    std::string style = presetsEditor->GetValue().ToStdString();
     style.erase(std::remove(style.begin(), style.end(), ' '), style.end());
     if (style.rfind("(),") != std::string::npos) style.erase(style.rfind("(),") + 2);
-    Configuration::instance->presets.at(settings.presetList->GetSelection()).styles.at(settings.bladeList->GetSelection()).assign(style);
+    presets.at(presetList->GetSelection()).styles.at(bladeList->GetSelection()).assign(style);
   }
 }
-void PresetsPage::updatePresetName() {
-  if (PresetsPage::instance->settings.presetList->GetSelection() >= 0 && BladesPage::instance->blades.size() > 0) {
-    std::string name = PresetsPage::instance->settings.nameInput->GetValue().ToStdString();
+void PresetsPage::stripAndSaveName() {
+  if (PresetsPage::instance->presetList->GetSelection() >= 0 && BladesPage::instance->blades.size() > 0) {
+    std::string name = PresetsPage::instance->nameInput->GetValue().ToStdString();
     name.erase(std::remove(name.begin(), name.end(), ' '), name.end());
-    Configuration::instance->presets.at(settings.presetList->GetSelection()).name.assign(name);
+    presets.at(presetList->GetSelection()).name.assign(name);
   }
 }
-void PresetsPage::updatePresetDir() {
-  if (settings.presetList->GetSelection() >= 0 && BladesPage::instance->blades.size() > 0) {
-    std::string dir = settings.dirInput->GetValue().ToStdString();
+void PresetsPage::stripAndSaveDir() {
+  if (presetList->GetSelection() >= 0 && BladesPage::instance->blades.size() > 0) {
+    std::string dir = dirInput->GetValue().ToStdString();
     dir.erase(std::remove(dir.begin(), dir.end(), ' '), dir.end());
-    Configuration::instance->presets.at(settings.presetList->GetSelection()).dirs.assign(dir);
+    presets.at(presetList->GetSelection()).dirs.assign(dir);
   }
 }
-void PresetsPage::updatePresetTrack() {
-  std::string track = settings.trackInput->GetValue().ToStdString();
+void PresetsPage::stripAndSaveTrack() {
+  std::string track = trackInput->GetValue().ToStdString();
   track.erase(std::remove(track.begin(), track.end(), ' '), track.end());
   if (track.find(".") != std::string::npos) track.erase(track.find("."));
   if (track.length() > 0) track += ".wav";
 
-  if (settings.presetList->GetSelection() >= 0 && BladesPage::instance->blades.size() > 0) {
-    Configuration::instance->presets.at(settings.presetList->GetSelection()).track.assign(track);
+  if (presetList->GetSelection() >= 0 && BladesPage::instance->blades.size() > 0) {
+    presets.at(presetList->GetSelection()).track.assign(track);
   } else {
-    settings.trackInput->ChangeValue(track);
-    settings.trackInput->SetInsertionPoint(1);
+    trackInput->ChangeValue(track);
+    trackInput->SetInsertionPoint(1);
   }
 }
