@@ -12,7 +12,6 @@ HardwarePage::HardwarePage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, wi
 {
   Add(bladeDetect(this), MENUITEMFLAGS);
   Add(OLED(this), MENUITEMFLAGS);
-  update();
 }
 
 wxStaticBoxSizer* HardwarePage::bladeDetect(wxStaticBoxSizer* parent) {

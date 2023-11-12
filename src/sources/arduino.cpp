@@ -106,7 +106,6 @@ void Arduino::applyToBoard() {
     }
 
     Progress::emitEvent(20, "Generating configuration file...");
-    Configuration::instance->updateBladesConfig();
     Configuration::instance->outputConfig();
     Arduino::updateIno();
 
@@ -141,7 +140,6 @@ void Arduino::verifyConfig() {
     std::string returnVal;
     Progress::emitEvent(20, "Generating configuration file...");
 
-    Configuration::instance->updateBladesConfig();
     Configuration::instance->outputConfig();
 
     returnVal = Arduino::updateIno();
