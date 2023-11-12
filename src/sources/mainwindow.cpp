@@ -97,46 +97,43 @@ void MainWindow::BindEvents() {
   Bind(wxEVT_SPINCTRL, [&](wxCommandEvent) { PropPage::instance->update(); UPDATEWINDOW; }, Misc::ID_PropOption);
   Bind(wxEVT_SPINCTRLDOUBLE, [&](wxCommandEvent&) { PropPage::instance->update(); UPDATEWINDOW; }, Misc::ID_PropOption);
 
-  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { Configuration::instance->updateBladesConfig(); PresetsPage::instance->update(); }, Misc::ID_BladeList);
-  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { Configuration::instance->updateBladesConfig(); PresetsPage::instance->update(); }, Misc::ID_PresetList);
+  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { BladesPage::instance->update(); PresetsPage::instance->update(); }, Misc::ID_BladeList);
+  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { BladesPage::instance->update(); PresetsPage::instance->update(); }, Misc::ID_PresetList);
 
-  Bind(wxEVT_TEXT, [&](wxCommandEvent&) { PresetsPage::instance->updatePresetEditor(); }, Misc::ID_PresetEditor);
-  Bind(wxEVT_TEXT, [&](wxCommandEvent&) { PresetsPage::instance->updatePresetName(); }, Misc::ID_PresetName);
-  Bind(wxEVT_TEXT, [&](wxCommandEvent&) { PresetsPage::instance->updatePresetDir(); }, Misc::ID_PresetDir);
-  Bind(wxEVT_TEXT, [&](wxCommandEvent&) { PresetsPage::instance->updatePresetTrack(); }, Misc::ID_PresetTrack);
+  Bind(wxEVT_TEXT, [&](wxCommandEvent&) { PresetsPage::instance->update(); }, Misc::ID_PresetChange);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         Configuration::instance->presets.push_back(Configuration::presetConfig());
         Configuration::instance->presets[Configuration::instance->presets.size() - 1].name = "NewPreset";
 
-        Configuration::instance->updateBladesConfig();
+        BladesPage::instance->update();
         PresetsPage::instance->update();
       }, Misc::ID_AddPreset);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         if (PresetsPage::instance->settings.presetList->GetSelection() >= 0) {
           Configuration::instance->presets.erase(std::next(Configuration::instance->presets.begin(), PresetsPage::instance->settings.presetList->GetSelection()));
 
-          Configuration::instance->updateBladesConfig();
+          BladesPage::instance->update();
           PresetsPage::instance->update();
         }
       }, Misc::ID_RemovePreset);
 
   // Blades Page
   Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
-        Configuration::instance->updateBladesConfig();
+        BladesPage::instance->update();
         BladesPage::instance->update();
         UPDATEWINDOW;
       }, Misc::ID_BladeSelect);
   Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
-        Configuration::instance->updateBladesConfig();
+        BladesPage::instance->update();
         BladesPage::instance->update();
         UPDATEWINDOW;
       }, Misc::ID_SubBladeSelect);
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        Configuration::instance->updateBladesConfig();
+        BladesPage::instance->update();
         BladesPage::instance->update();
         UPDATEWINDOW;;
       }, Misc::ID_BladeType);
-  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { Configuration::instance->updateBladesConfig(); BladesPage::instance->update(); }, Misc::ID_BladeOption);
+  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { BladesPage::instance->update(); BladesPage::instance->update(); }, Misc::ID_BladeOption);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { BladesPage::instance->addBlade(); UPDATEWINDOW; }, Misc::ID_AddBlade);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { BladesPage::instance->addSubBlade(); UPDATEWINDOW; }, Misc::ID_AddSubBlade);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { BladesPage::instance->removeBlade(); UPDATEWINDOW; }, Misc::ID_RemoveBlade);
@@ -188,10 +185,17 @@ void MainWindow::CreatePages() {
   BladesPage::instance = new BladesPage(this);
   HardwarePage::instance = new HardwarePage(this);
 
+  //GeneralPage::instance->update();
+  PropPage::instance->update();
+  PresetsPage::instance->update();
+  BladesPage::instance->update();
+  HardwarePage::instance->update();
+
   PropPage::instance->Show(false);
   BladesPage::instance->Show(false);
   PresetsPage::instance->Show(false);
   HardwarePage::instance->Show(false);
+
 
   master->Add(options, wxSizerFlags(0).Expand());
   master->Add(GeneralPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());

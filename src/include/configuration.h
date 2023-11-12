@@ -1,5 +1,7 @@
 #pragma once
 
+#include "bladespage.h"
+
 #include <vector>
 #include <string>
 #include <fstream>
@@ -22,41 +24,6 @@ public:
   void readConfig(const std::string&);
   void importConfig();
 
-  void updateBladesConfig();
-
-  struct bladeConfig {
-    std::string type{"WS281X (RGB)"};
-
-    std::string dataPin{"bladePin"};
-    std::string colorType{"GRB"};
-    int32_t numPixels{0};
-    bool useRGBWithWhite{false};
-
-    std::string Star1{"<None>"};
-    std::string Star2{"<None>"};
-    std::string Star3{"<None>"};
-    std::string Star4{"<None>"};
-    int32_t Star1Resistance{0};
-    int32_t Star2Resistance{0};
-    int32_t Star3Resistance{0};
-    int32_t Star4Resistance{0};
-
-    bool usePowerPin1{false};
-    bool usePowerPin2{false};
-    bool usePowerPin3{false};
-    bool usePowerPin4{false};
-    bool usePowerPin5{false};
-    bool usePowerPin6{false};
-
-    bool isSubBlade{false};
-    bool subBladeWithStride{false};
-
-    struct subBladeInfo {
-      int32_t startPixel{0};
-      int32_t endPixel{0};
-    };
-    std::vector<subBladeInfo> subBlades{};
-  };
   struct presetConfig {
     std::vector<std::string> styles{};
     std::string name{""};
@@ -84,60 +51,8 @@ public:
     BOTTOM_TOWARDS_BLADE,
     CUSTOM
   };
-  enum class BLADETYPE {
-    PIXEL_3,
-    PIXEL_4,
-    STAR_3,
-    STAR_4,
-    SINGLECOLOR,
-    NONE
-  };
-  enum class C_ORDER {
-    BGR,
-    BRG,
-    GBR,
-    GRB,
-    RBG,
-    RGB,
-    BGRW,
-    BRGW,
-    GBRW,
-    GRBW,
-    RBGW,
-    RGBW,
-    WBGR,
-    WBRG,
-    WGBR,
-    WGRB,
-    WRBG,
-    WRGB,
-    BGRw,
-    BRGw,
-    GBRw,
-    GRBw,
-    RBGw,
-    RGBw,
-    wBGR,
-    wBRG,
-    wGBR,
-    wGRB,
-    wRBG,
-    wRGB
-  };
-  enum class STARTYPE {
-    RED,
-    GREEN,
-    PCAMBER,
-    AMBER,
-    BLUE,
-    REDORANGE,
-    WHITE,
-    XPL,
-    NOLED
-  };
 
   std::vector<Configuration::presetConfig> presets;
-  std::vector<Configuration::bladeConfig> blades;
 
 private:
   ProffieBoard parseBoardType(const std::string&);
@@ -155,7 +70,7 @@ private:
   void outputConfigPresets(std::ofstream&);
   void outputConfigPresetsStyles(std::ofstream&);
   void outputConfigPresetsBlades(std::ofstream&);
-  void genWS281X(std::ofstream&, const Configuration::bladeConfig&);
+  void genWS281X(std::ofstream&, const BladesPage::bladeConfig&);
   void outputConfigButtons(std::ofstream&);
 
   void readConfigTop(std::ifstream&);
