@@ -1,4 +1,5 @@
 ﻿#include "arduino.h"
+
 #include "generalpage.h"
 #include "mainwindow.h"
 #include "configuration.h"
@@ -58,7 +59,9 @@ void Arduino::refreshBoards() {
     for (const std::string& item : Arduino::getBoards()) {
       MainWindow::instance->devSelect->Append(item);
     }
+
     MainWindow::instance->devSelect->SetValue(lastSel);
+    if (MainWindow::instance->devSelect->GetSelection() == -1) MainWindow::instance->devSelect->SetSelection(0);
     Progress::emitEvent(100, "Done.");
     Progress::emitEvent(100, "Done."); // This has to be called twice to update on macOS?
   });
@@ -99,9 +102,16 @@ void Arduino::applyToBoard() {
     Progress::emitEvent(0, "Initializing...");
 
     Progress::emitEvent(10, "Checking board presence...");
-    if (Arduino::getBoards()[MainWindow::instance->devSelect->GetSelection()] != MainWindow::instance->devSelect->GetStringSelection()) {
+    wxString lastSel = MainWindow::instance->devSelect->GetStringSelection();
+    MainWindow::instance->devSelect->Clear();
+    for (const std::string& item : Arduino::getBoards()) {
+      MainWindow::instance->devSelect->Append(item);
+    }
+    MainWindow::instance->devSelect->SetValue(lastSel);
+    if (MainWindow::instance->devSelect->GetSelection() == -1) {
+      MainWindow::instance->devSelect->SetSelection(0);
       Progress::emitEvent(100, "Error!");
-      wxMessageBox("Please refresh boards and try again!", "Board Selection Error", wxOK | wxICON_ERROR);
+      wxMessageBox("Please make sure your board is connected and selected, then try again!", "Board Selection Error", wxOK | wxICON_ERROR);
       return;
     }
 

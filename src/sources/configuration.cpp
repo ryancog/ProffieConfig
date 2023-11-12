@@ -2,13 +2,14 @@
 
 #include "defines.h"
 #include "mainwindow.h"
-#include <bladespage.h>
+#include "generalpage.h"
+#include "hardwarepage.h"
+#include "presetspage.h"
+#include "proppage.h"
+#include "bladespage.h"
+
 #include <cstring>
 #include <exception>
-#include <generalpage.h>
-#include <hardwarepage.h>
-#include <presetspage.h>
-#include <proppage.h>
 #include <wx/filedlg.h>
 
 Configuration* Configuration::instance;
@@ -282,13 +283,13 @@ void Configuration::outputConfigPresets(std::ofstream& configOutput) {
 }
 void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput) {
   configOutput << "Preset blade_in[] = {" << std::endl;
-  for (const Configuration::presetConfig& preset : Configuration::instance->presets) {
+  for (const PresetsPage::presetConfig& preset : PresetsPage::instance->presets) {
     configOutput << "\t{ \"" << preset.dirs << "\", \"" << preset.track << "\"," << std::endl;
     if (preset.styles.size() > 0) for (const std::string& style : preset.styles) configOutput << "\t\t" << style << "," << std::endl;
     else configOutput << "\t\t," << std::endl;
     configOutput << "\t\t\"" << preset.name << "\"}";
     // If not the last one, add comma
-    if (&Configuration::instance->presets[Configuration::instance->presets.size() - 1] != &preset) configOutput << ",";
+    if (&PresetsPage::instance->presets[PresetsPage::instance->presets.size() - 1] != &preset) configOutput << ",";
     configOutput << std::endl;
   }
   configOutput << "};" << std::endl;
@@ -467,7 +468,7 @@ void Configuration::readConfig(const std::string& filePath) {
 }
 void Configuration::readConfig() {
   struct stat buffer;
-  if (stat(PROFFIEOS_PATH "/config/ProffieConfig_autogen.h", &buffer) != 0) {
+  if (stat(CONFIG_PATH, &buffer) != 0) {
     if (wxMessageBox("No existing configuration file was detected. Would you like to import one?", "ProffieConfig", wxYES | wxNO) == wxYES) {
       Configuration::importConfig();
       MainWindow::instance->Show(true);
@@ -475,7 +476,7 @@ void Configuration::readConfig() {
     } else return;
   }
 
-  Configuration::readConfig(PROFFIEOS_PATH "/config/ProffieConfig_autogen.h");
+  Configuration::readConfig(CONFIG_PATH);
 }
 void Configuration::importConfig() {
   wxFileDialog configLocation(MainWindow::instance, "Choose ProffieOS Config File", "", "", "C Header Files (*.h)|*.h", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
@@ -706,11 +707,11 @@ void Configuration::readPresetArray(std::ifstream& file) {
   std::string element;
   RUNTOSECTION;
   uint8_t preset = -1;
-  Configuration::instance->presets.clear();
+  PresetsPage::instance->presets.clear();
   while (!false) {
     presetInfo.clear();
     RUNTOSECTION;
-    Configuration::instance->presets.push_back(Configuration::presetConfig());
+    PresetsPage::instance->presets.push_back(PresetsPage::presetConfig());
     preset++;
 
     while (std::strstr(presetInfo.data(), "}") == nullptr) {
@@ -723,31 +724,31 @@ void Configuration::readPresetArray(std::ifstream& file) {
     presetInfo = presetInfo.substr(presetInfo.find(",") + 1); // increment presetInfo
 
     tempData = std::strtok(element.data(), ",\""); // Detokenize dir section
-    Configuration::instance->presets[preset].dirs.assign(tempData == nullptr ? "" : tempData);
+    PresetsPage::instance->presets[preset].dirs.assign(tempData == nullptr ? "" : tempData);
 
     element = presetInfo.substr(0, presetInfo.find(","));
     presetInfo = presetInfo.substr(presetInfo.find(",") + 1);
 
     tempData = std::strtok(element.data(), ",\"");
-    Configuration::instance->presets[preset].track.assign(tempData == nullptr ? "" : tempData);
+    PresetsPage::instance->presets[preset].track.assign(tempData == nullptr ? "" : tempData);
 
     for (uint32_t blade = 0; blade < BladesPage::instance->blades.size(); blade++) {
       if (presetInfo.find("&style_charging,") == 0) {
         presetInfo = presetInfo.substr(16 /* length of "&style_charging,"*/);
-        Configuration::instance->presets[preset].styles.push_back("&style_charging");
+        PresetsPage::instance->presets[preset].styles.push_back("&style_charging");
       } else if (presetInfo.find("&style_pov") == 0) {
         presetInfo = presetInfo.substr(presetInfo.find(11 /* length of "&style_pov,"*/));
-        Configuration::instance->presets[preset].styles.push_back("&style_pov");
+        PresetsPage::instance->presets[preset].styles.push_back("&style_pov");
       } else {
         element = presetInfo.substr(0, presetInfo.find("(),") + 2); // Copy in next
 
         presetInfo = presetInfo.substr(presetInfo.find("(),") + 3); // Increment
-        Configuration::instance->presets[preset].styles.push_back(element.substr(element.find("StylePtr"), element.find("(),")));
+        PresetsPage::instance->presets[preset].styles.push_back(element.substr(element.find("StylePtr"), element.find("(),")));
       }
     }
-    //std::strtok(nullptr, "\""); // clear bladestyles
+
     tempData = std::strtok(presetInfo.data(), ",\"");
-    Configuration::instance->presets[preset].name.assign(tempData == nullptr ? "" : tempData);
+    PresetsPage::instance->presets[preset].name.assign(tempData == nullptr ? "" : tempData);
   }
 # undef CHKSECT
 # undef RUNTOSECTION
@@ -868,7 +869,7 @@ void Configuration::readBladeArray(std::ifstream& file) {
 }
 void Configuration::replaceStyles(const std::string& styleName, const std::string& styleFill) {
   std::string styleCheck;
-  for (Configuration::presetConfig& preset : Configuration::instance->presets) {
+  for (PresetsPage::presetConfig& preset : PresetsPage::instance->presets) {
     for (std::string& style : preset.styles) {
       styleCheck = (style.find(styleName) == std::string::npos) ? style : style.substr(style.find(styleName));
       while (styleCheck != style) {

@@ -1,5 +1,16 @@
 #include "mainwindow.h"
 
+#include "configuration.h"
+#include "defines.h"
+#include "arduino.h"
+#include "misc.h"
+#include "serialmonitor.h"
+#include "bladespage.h"
+#include "generalpage.h"
+#include "hardwarepage.h"
+#include "presetspage.h"
+#include "proppage.h"
+
 #include <wx/combobox.h>
 #include <wx/arrstr.h>
 #include <wx/wx.h>
@@ -8,17 +19,6 @@
 #include <wx/list.h>
 #include <wx/string.h>
 
-#include "configuration.h"
-#include "defines.h"
-#include "arduino.h"
-#include "misc.h"
-#include "serialmonitor.h"
-
-#include <bladespage.h>
-#include <generalpage.h>
-#include <hardwarepage.h>
-#include <presetspage.h>
-#include <proppage.h>
 
 MainWindow* MainWindow::instance;
 MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize) {
@@ -34,7 +34,11 @@ MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPos
 void MainWindow::BindEvents() {
   // Main Window
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent(progDialog, (Progress::ProgressEvent*)&event); }, wxID_ANY);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { if (SerialMonitor::instance == nullptr) SerialMonitor::instance = new SerialMonitor(); else SerialMonitor::instance->Raise(); }, Misc::ID_OpenSerial);
+# if defined(__WXMSW__)
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { SerialMonitor::instance = new SerialMonitor; SerialMonitor::instance->Close(true); }, Misc::ID_OpenSerial);
+# else
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(); }, Misc::ID_OpenSerial);
+#endif
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
         // TODO GeneralPage::instance->update();
         if (windowSelect->GetValue() == "General") {
@@ -102,15 +106,15 @@ void MainWindow::BindEvents() {
 
   Bind(wxEVT_TEXT, [&](wxCommandEvent&) { PresetsPage::instance->update(); }, Misc::ID_PresetChange);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        Configuration::instance->presets.push_back(Configuration::presetConfig());
-        Configuration::instance->presets[Configuration::instance->presets.size() - 1].name = "NewPreset";
+        PresetsPage::instance->presets.push_back(PresetsPage::presetConfig());
+        PresetsPage::instance->presets[PresetsPage::instance->presets.size() - 1].name = "NewPreset";
 
         BladesPage::instance->update();
         PresetsPage::instance->update();
       }, Misc::ID_AddPreset);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        if (PresetsPage::instance->settings.presetList->GetSelection() >= 0) {
-          Configuration::instance->presets.erase(std::next(Configuration::instance->presets.begin(), PresetsPage::instance->settings.presetList->GetSelection()));
+        if (PresetsPage::instance->presetList->GetSelection() >= 0) {
+          PresetsPage::instance->presets.erase(std::next(PresetsPage::instance->presets.begin(), PresetsPage::instance->presetList->GetSelection()));
 
           BladesPage::instance->update();
           PresetsPage::instance->update();
@@ -160,7 +164,7 @@ void MainWindow::CreateMenuBar() {
 
   wxMenuBar *menuBar = new wxMenuBar;
   menuBar->Append(file, "&File");
-  //menuBar->Append(board, "&Board");
+  menuBar->Append(board, "&Board");
   SetMenuBar(menuBar);
 }
 

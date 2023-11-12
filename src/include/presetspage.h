@@ -9,32 +9,43 @@
 
 #pragma once
 
-class PresetsPage : public wxStaticBoxSizer
-{
+class PresetsPage : public wxStaticBoxSizer {
 public:
   PresetsPage(wxWindow*);
   static PresetsPage* instance;
 
   void update();
 
-  struct {
-    wxTextCtrl* presetsEditor{nullptr};
-    wxListBox* presetList{nullptr};
-    wxListBox* bladeList{nullptr};
-    wxButton* addPreset{nullptr};
-    wxButton* removePreset{nullptr};
+  wxTextCtrl* presetsEditor{nullptr};
+  wxListBox* presetList{nullptr};
+  wxListBox* bladeList{nullptr};
+  wxButton* addPreset{nullptr};
+  wxButton* removePreset{nullptr};
 
-    wxTextCtrl* nameInput{nullptr};
-    wxTextCtrl* dirInput{nullptr};
-    wxTextCtrl* trackInput{nullptr};
+  wxTextCtrl* nameInput{nullptr};
+  wxTextCtrl* dirInput{nullptr};
+  wxTextCtrl* trackInput{nullptr};
 
-  } settings;
+  struct presetConfig {
+    std::vector<std::string> styles{};
+    std::string name{""};
+    std::string dirs{""};
+    std::string track{""};
+  };
+  std::vector<presetConfig> presets;
 
 private:
   PresetsPage();
+  void pushIfNewPreset();
+  void rebuildPresetList();
+  void rebuildBladeList();
+  void resizeAndFillPresets();
+  void updateFields();
 
-  void updatePresetEditor();
-  void updatePresetName();
-  void updatePresetDir();
-  void updatePresetTrack();
+  int getNumBlades();
+
+  void stripAndSaveEditor();
+  void stripAndSaveName();
+  void stripAndSaveDir();
+  void stripAndSaveTrack();
 };

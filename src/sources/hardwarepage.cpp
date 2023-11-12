@@ -1,4 +1,5 @@
 #include "hardwarepage.h"
+
 #include "defines.h"
 #include "misc.h"
 
