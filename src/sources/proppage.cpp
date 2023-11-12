@@ -15,7 +15,6 @@ PropPage::PropPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, "") 
   Add(controls(this), BOXITEMFLAGS);
   Add(features(this), BOXITEMFLAGS);
   Add(battleMode(this), BOXITEMFLAGS);
-  update();
 }
 
 void PropPage::update() {

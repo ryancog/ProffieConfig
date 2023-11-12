@@ -17,25 +17,12 @@
 
 #define UPDATEWINDOW master->Layout(); SetSizerAndFit(master)
 
-
-#define BD_HASSELECTION (BladesPage::instance->settings.bladeSelect->GetSelection() != -1)
-#define BD_SUBHASSELECTION (BladesPage::instance->settings.subBladeSelect->GetSelection() != -1)
-#define BD_ISPIXEL3 (BD_HASSELECTION && Configuration::instance->blades[BladesPage::instance->settings.bladeSelect->GetSelection()].type == "WS281X (RGB)")
-#define BD_ISPIXEL4 (BD_HASSELECTION && Configuration::instance->blades[BladesPage::instance->settings.bladeSelect->GetSelection()].type == "WS281X (RGBW)")
-#define BD_ISPIXEL (BD_ISPIXEL3 || BD_ISPIXEL4)
-#define BD_ISSTAR3 (BD_HASSELECTION && Configuration::instance->blades[BladesPage::instance->settings.bladeSelect->GetSelection()].type == "Tri-LED Star")
-#define BD_ISSTAR4 (BD_HASSELECTION && Configuration::instance->blades[BladesPage::instance->settings.bladeSelect->GetSelection()].type == "Quad-LED Star")
-#define BD_ISSTAR (BD_ISSTAR3 || BD_ISSTAR4)
-#define BD_ISSUB (BD_HASSELECTION && Configuration::instance->blades[BladesPage::instance->settings.bladeSelect->GetSelection()].isSubBlade)
-#define BD_ISFIRST (!BD_ISSUB || (BladesPage::instance->settings.subBladeSelect->GetSelection() == 0))
-
 #define PR_DEFAULT "Default"
 #define PR_SA22C "SA22C"
 #define PR_FETT263 "Fett263"
 #define PR_SHTOK "Shtok"
 #define PR_BC "BC"
 #define PR_CAIWYN "Caiwyn"
-
 
 #define ARDUINOCORE_PBV1 "proffieboard:stm32l4:Proffieboard-L433CC"
 #define ARDUINOCORE_PBV2 "proffieboard:stm32l4:ProffieboardV2-L433CC"

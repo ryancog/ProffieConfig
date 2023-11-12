@@ -11,6 +11,24 @@
 
 #pragma once
 
+#define BD_PIXELRGB "WS281X (RGB)"
+#define BD_PIXELRGBW "WS281X (RGBW)"
+#define BD_TRISTAR "Tri-LED Star"
+#define BD_QUADSTAR "Quad-LED Star"
+#define BD_SINGLELED "Single Color"
+#define BD_NORESISTANCE "<None>"
+
+#define BD_HASSELECTION (settings.bladeSelect->GetSelection() != -1)
+#define BD_SUBHASSELECTION (settings.subBladeSelect->GetSelection() != -1)
+#define BD_ISPIXEL3 (BD_HASSELECTION && blades[settings.bladeSelect->GetSelection()].type == BD_PIXELRGB)
+#define BD_ISPIXEL4 (BD_HASSELECTION && blades[settings.bladeSelect->GetSelection()].type == BD_PIXELRGBW)
+#define BD_ISPIXEL (BD_ISPIXEL3 || BD_ISPIXEL4)
+#define BD_ISSTAR3 (BD_HASSELECTION && blades[settings.bladeSelect->GetSelection()].type == BD_TRISTAR)
+#define BD_ISSTAR4 (BD_HASSELECTION && blades[settings.bladeSelect->GetSelection()].type == BD_QUADSTAR)
+#define BD_ISSTAR (BD_ISSTAR3 || BD_ISSTAR4)
+#define BD_ISSUB (BD_HASSELECTION && blades[settings.bladeSelect->GetSelection()].isSubBlade)
+#define BD_ISFIRST (!BD_ISSUB || (settings.subBladeSelect->GetSelection() == 0))
+
 class BladesPage : public wxStaticBoxSizer
 {
 public:
@@ -23,6 +41,7 @@ public:
   void addSubBlade();
   void removeBlade();
   void removeSubBlade();
+
 
   struct {
     wxListBox* bladeSelect{nullptr};
@@ -69,8 +88,103 @@ public:
     wxSpinCtrl* subBladeEnd{nullptr};
   } settings;
 
-  int lastBladeSelection;
-  int lastSubBladeSelection;
+  struct bladeConfig {
+    std::string type{BD_PIXELRGB};
+
+    std::string dataPin{"bladePin"};
+    std::string colorType{"GRB"};
+    int32_t numPixels{0};
+    bool useRGBWithWhite{false};
+
+    std::string Star1{BD_NORESISTANCE};
+    std::string Star2{BD_NORESISTANCE};
+    std::string Star3{BD_NORESISTANCE};
+    std::string Star4{BD_NORESISTANCE};
+    int32_t Star1Resistance{0};
+    int32_t Star2Resistance{0};
+    int32_t Star3Resistance{0};
+    int32_t Star4Resistance{0};
+
+    bool usePowerPin1{false};
+    bool usePowerPin2{false};
+    bool usePowerPin3{false};
+    bool usePowerPin4{false};
+    bool usePowerPin5{false};
+    bool usePowerPin6{false};
+
+    bool isSubBlade{false};
+    bool subBladeWithStride{false};
+
+    struct subBladeInfo {
+      int32_t startPixel{0};
+      int32_t endPixel{0};
+    };
+    std::vector<subBladeInfo> subBlades{};
+  };
+  std::vector<bladeConfig> blades;
+
+  enum class STARTYPE {
+    RED,
+    GREEN,
+    PCAMBER,
+    AMBER,
+    BLUE,
+    REDORANGE,
+    WHITE,
+    XPL,
+    NOLED
+  };
+  enum class BLADETYPE {
+    PIXEL_3,
+    PIXEL_4,
+    STAR_3,
+    STAR_4,
+    SINGLECOLOR,
+    NONE
+  };
+  enum class C_ORDER {
+    BGR,
+    BRG,
+    GBR,
+    GRB,
+    RBG,
+    RGB,
+    BGRW,
+    BRGW,
+    GBRW,
+    GRBW,
+    RBGW,
+    RGBW,
+    WBGR,
+    WBRG,
+    WGBR,
+    WGRB,
+    WRBG,
+    WRGB,
+    BGRw,
+    BRGw,
+    GBRw,
+    GRBw,
+    RBGw,
+    RGBw,
+    wBGR,
+    wBRG,
+    wGBR,
+    wGRB,
+    wRBG,
+    wRGB
+  };
+
+
 private:
   BladesPage();
+
+  void saveCurrent();
+  void rebuildBladeArray();
+  void loadSettings();
+  void setEnabled();
+  void setVisibility();
+
+  int lastBladeSelection;
+  int lastSubBladeSelection;
 };
