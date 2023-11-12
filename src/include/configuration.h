@@ -24,13 +24,6 @@ public:
   void readConfig(const std::string&);
   void importConfig();
 
-  struct presetConfig {
-    std::vector<std::string> styles{};
-    std::string name{""};
-    std::string dirs{""};
-    std::string track{""};
-  };
-
   enum class SaberProp {
     DEFAULT,
     SA22C,
@@ -51,8 +44,6 @@ public:
     BOTTOM_TOWARDS_BLADE,
     CUSTOM
   };
-
-  std::vector<Configuration::presetConfig> presets;
 
 private:
   ProffieBoard parseBoardType(const std::string&);

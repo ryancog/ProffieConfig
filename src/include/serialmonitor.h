@@ -7,11 +7,12 @@
 class SerialMonitor : public wxFrame {
 public:
   SerialMonitor();
-  ~SerialMonitor();
   static SerialMonitor* instance;
 
-private:
+#if defined(__WXOSX__) || defined(__WXGTK__)
+  ~SerialMonitor();
 
+private:
   class SerialDataEvent : public wxCommandEvent {
   public:
     SerialDataEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id, const std::string& message) {
@@ -25,12 +26,12 @@ private:
   static wxEventTypeTag<wxCommandEvent> EVT_INPUT;
   static wxEventTypeTag<wxCommandEvent> EVT_DISCON;
 
-  ThreadRunner* deviceThread;
-  ThreadRunner* listenerThread;
-  ThreadRunner* writerThread;
+  ThreadRunner* deviceThread{nullptr};
+  ThreadRunner* listenerThread{nullptr};
+  ThreadRunner* writerThread{nullptr};
 
-  bool listenerRunning = false;
-  bool writerRunning = false;
+  bool listenerRunning{false};
+  bool writerRunning{false};
 
   wxTextCtrl* input;
   wxTextCtrl* output;
@@ -38,7 +39,7 @@ private:
 #if defined(__WXOSX__) || defined(__WXGTK__)
   int fd = 0;
 #elif defined(__WXMSW__)
-  HANDLE serHandle = nullptr;
+  HANDLE serHandle{nullptr};
 #endif
   std::string sendOut;
 
@@ -47,4 +48,5 @@ private:
   void OpenDevice();
   void CreateListener();
   void CreateWriter();
+#endif
 };

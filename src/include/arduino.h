@@ -16,10 +16,12 @@ public:
 
 private:
   Arduino();
+  Arduino(const Arduino&) = delete;
 
-    static std::string updateIno();
-    static std::string compile();
-    static std::string parseError(const std::string&);
-    static std::string upload();
-    static FILE* CLI(const std::string& command);
+  static FILE* CLI(const std::string& command);
+
+  static std::string updateIno();
+  static std::string compile();
+  static std::string parseError(const std::string&);
+  static std::string upload();
 };

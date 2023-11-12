@@ -1,11 +1,11 @@
 #include "bladespage.h"
 
+#include "misc.h"
+#include "defines.h"
+
 #include <wx/stattext.h>
 #include <wx/sizer.h>
 #include <wx/statbox.h>
-
-#include "misc.h"
-#include "defines.h"
 
 BladesPage* BladesPage::instance;
 BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "")

@@ -1,9 +1,10 @@
 #include "proppage.h"
-#include <wx/sizer.h>
 
 #include "misc.h"
 #include "defines.h"
 #include "generalpage.h"
+
+#include <wx/sizer.h>
 
 PropPage* PropPage::instance;
 PropPage::PropPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, "") {

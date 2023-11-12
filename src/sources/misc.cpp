@@ -1,12 +1,13 @@
 #include "misc.h"
+
 #include "defines.h"
 
-#include <cstring>
-#include <iostream>
 #include <wx/msgdlg.h>
 #include <wx/arrstr.h>
 #include <wx/filedlg.h>
 #include <wx/wfstream.h>
+#include <cstring>
+#include <iostream>
 #include <initializer_list>
 #include <memory>
 #include <string>
