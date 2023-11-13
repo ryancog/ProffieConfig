@@ -191,9 +191,11 @@ void BladesPage::rebuildBladeArray() {
   if ((int32_t)settings.bladeSelect->GetCount() - 1 >= lastBladeSelection) settings.bladeSelect->SetSelection(lastBladeSelection);
 
   settings.subBladeSelect->Clear();
-  for (int32_t subBladeNum = 0; lastBladeSelection != -1 && subBladeNum < (int32_t)blades.at(lastBladeSelection).subBlades.size(); subBladeNum++)
-    settings.subBladeSelect->Append("SubBlade " + std::to_string(subBladeNum));
-  if ((int32_t)settings.subBladeSelect->GetCount() - 1 >= lastSubBladeSelection) settings.subBladeSelect->SetSelection(lastSubBladeSelection);
+  if (lastBladeSelection >= 0 && lastBladeSelection < (int32_t)blades.size()) {
+    for (int32_t subBladeNum = 0; lastBladeSelection != -1 && subBladeNum < (int32_t)blades.at(lastBladeSelection).subBlades.size(); subBladeNum++)
+      settings.subBladeSelect->Append("SubBlade " + std::to_string(subBladeNum));
+    if ((int32_t)settings.subBladeSelect->GetCount() - 1 >= lastSubBladeSelection) settings.subBladeSelect->SetSelection(lastSubBladeSelection);
+  }
 }
 void BladesPage::loadSettings() {
   if (lastBladeSelection < 0 || lastBladeSelection >= (int32_t)blades.size())

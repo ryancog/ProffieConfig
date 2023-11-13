@@ -11,6 +11,8 @@
 #include <vector>
 #include <cstring>
 
+#include <wx/wfstream.h>
+
 void Arduino::init() {
   MainWindow::instance->progDialog = new Progress(MainWindow::instance);
 
@@ -56,7 +58,7 @@ void Arduino::refreshBoards() {
     wxString lastSel = MainWindow::instance->devSelect->GetStringSelection();
     MainWindow::instance->devSelect->Clear();
     Progress::emitEvent(20, "Fetching Devices...");
-    for (const std::string& item : Arduino::getBoards()) {
+    for (const wxString& item : Arduino::getBoards()) {
       MainWindow::instance->devSelect->Append(item);
     }
 
@@ -66,8 +68,8 @@ void Arduino::refreshBoards() {
     Progress::emitEvent(100, "Done."); // This has to be called twice to update on macOS?
   });
 }
-std::vector<std::string> Arduino::getBoards() {
-  std::vector<std::string> boards{"Select Device..."};
+std::vector<wxString> Arduino::getBoards() {
+  std::vector<wxString> boards{"Select Device..."};
   char buffer[1024];
 
   FILE *arduinoCli = Arduino::CLI("board list");
@@ -86,7 +88,7 @@ std::vector<std::string> Arduino::getBoards() {
       boards.push_back(buffer);
     } else if (std::strstr(buffer, "dfu") != NULL) {
       *std::strpbrk(buffer, " ") = '\0';
-      boards.push_back("BOOTLOADER|" + std::string(buffer));
+      boards.push_back("BOOTLOADER|" + wxString(buffer));
     }
   }
 
@@ -98,13 +100,13 @@ void Arduino::applyToBoard() {
   MainWindow::instance->progDialog->SetTitle("Applying Changes");
 
   MainWindow::instance->thread = new ThreadRunner([&]() {
-    std::string returnVal;
+    wxString returnVal;
     Progress::emitEvent(0, "Initializing...");
 
     Progress::emitEvent(10, "Checking board presence...");
     wxString lastSel = MainWindow::instance->devSelect->GetStringSelection();
     MainWindow::instance->devSelect->Clear();
-    for (const std::string& item : Arduino::getBoards()) {
+    for (const wxString& item : Arduino::getBoards()) {
       MainWindow::instance->devSelect->Append(item);
     }
     MainWindow::instance->devSelect->SetValue(lastSel);
@@ -147,7 +149,7 @@ void Arduino::verifyConfig() {
   MainWindow::instance->progDialog->SetTitle("Verify Config");
 
   MainWindow::instance->thread = new ThreadRunner([&]() {
-    std::string returnVal;
+    wxString returnVal;
     Progress::emitEvent(20, "Generating configuration file...");
 
     Configuration::instance->outputConfig();
@@ -174,11 +176,11 @@ void Arduino::verifyConfig() {
   });
 }
 
-std::string Arduino::compile() {
-  std::string output;
+wxString Arduino::compile() {
+  wxString output;
   char buffer[1024];
 
-  std::string compileCommand = "compile ";
+  wxString compileCommand = "compile ";
   compileCommand += "-b ";
   compileCommand += GeneralPage::instance->settings.board->GetSelection() == 0 ? ARDUINOCORE_PBV1 : GeneralPage::instance->settings.board->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
   compileCommand += " --board-options ";
@@ -193,7 +195,7 @@ std::string Arduino::compile() {
   while(fgets(buffer, 1024, arduinoCli) != NULL) {
     MainWindow::instance->progDialog->emitEvent(-1, ""); // Pulse
     if (std::strstr(buffer, "error")) {
-      std::string error = buffer;
+      wxString error = buffer;
       /*
       while (fgets(buffer, 1024, arduinoCli) != NULL) {
         error += '\n';
@@ -209,10 +211,10 @@ std::string Arduino::compile() {
 
   return "OK";
 }
-std::string Arduino::upload() {
+wxString Arduino::upload() {
   char buffer[1024];
 
-  std::string uploadCommand = "upload ";
+  wxString uploadCommand = "upload ";
   uploadCommand += PROFFIEOS_PATH;
   uploadCommand += " --board-options ";
   if (GeneralPage::instance->settings.massStorage->GetValue() && GeneralPage::instance->settings.webUSB->GetValue()) uploadCommand += "usb=cdc_msc_webusb";
@@ -231,7 +233,7 @@ std::string Arduino::upload() {
   while(fgets(buffer, 1024, arduinoCli) != NULL) {
     MainWindow::instance->progDialog->emitEvent(-1, ""); // Pulse
     if (std::strstr(buffer, "error")) {
-      std::string error = buffer;
+      wxString error = buffer;
       /*
       while (fgets(buffer, 1024, arduinoCli) != NULL) {
         error += '\n';
@@ -247,14 +249,14 @@ std::string Arduino::upload() {
 
   return "OK";
 }
-std::string Arduino::updateIno() {
+wxString Arduino::updateIno() {
   std::ifstream input(PROFFIEOS_PATH "/ProffieOS.ino");
   if (!input.is_open()) return "ERROR OPENING FOR READ";
 
   std::string fileData;
-  std::vector<std::string> outputData;
+  std::vector<wxString> outputData;
   while(!input.eof()) {
-    std::getline(input, fileData);
+    getline(input, fileData);
     outputData.push_back(fileData == "// #define CONFIG_FILE \"config/YOUR_CONFIG_FILE_NAME_HERE.h\"" ? "#define CONFIG_FILE \"config/ProffieConfig_autogen.h\"" : fileData);
   }
   input.close();
@@ -263,7 +265,7 @@ std::string Arduino::updateIno() {
   std::ofstream output(PROFFIEOS_PATH "/ProffieOS.ino");
   if (!output.is_open()) return "ERROR OPENING FOR WRITE";
 
-  for (const std::string& line : outputData) {
+  for (const wxString& line : outputData) {
     output << line << std::endl;
   }
   output.close();
@@ -271,7 +273,7 @@ std::string Arduino::updateIno() {
   return "OK";
 }
 
-std::string Arduino::parseError(const std::string& error) {
+wxString Arduino::parseError(const wxString& error) {
 #define ERRCONTAINS(token) std::strstr(error.data(), token)
   if (ERRCONTAINS("select Proffieboard")) return "Please ensure you've selected the correct board in General";
   if (ERRCONTAINS("expected unqualified-id")) return "Please make sure there are no brackets in your styles (such as \"{\" or \"}\")\n and there is nothing missing or extra from your style! (such as parentheses or \"<>\")";
@@ -283,8 +285,8 @@ std::string Arduino::parseError(const std::string& error) {
 }
 
 
-FILE* Arduino::CLI(const std::string& command) {
-  std::string fullCommand;
+FILE* Arduino::CLI(const wxString& command) {
+  wxString fullCommand;
 #if defined(__WXMSW__)
   fullCommand += "title ProffieConfig Worker && ";
   fullCommand += "resources\\windowmode -title \"ProffieConfig Worker\" -mode force_minimized && ";

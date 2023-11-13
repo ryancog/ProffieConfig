@@ -285,7 +285,7 @@ void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput) {
   configOutput << "Preset blade_in[] = {" << std::endl;
   for (const PresetsPage::presetConfig& preset : PresetsPage::instance->presets) {
     configOutput << "\t{ \"" << preset.dirs << "\", \"" << preset.track << "\"," << std::endl;
-    if (preset.styles.size() > 0) for (const std::string& style : preset.styles) configOutput << "\t\t" << style << "," << std::endl;
+    if (preset.styles.size() > 0) for (const wxString& style : preset.styles) configOutput << "\t\t" << style << "," << std::endl;
     else configOutput << "\t\t," << std::endl;
     configOutput << "\t\t\"" << preset.name << "\"}";
     // If not the last one, add comma
@@ -387,8 +387,8 @@ void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput) {
   }
 }
 void Configuration::genWS281X(std::ofstream& configOutput, const BladesPage::bladeConfig& blade) {
-  std::string bladePin = blade.dataPin;
-  std::string bladeColor = blade.type == BD_PIXELRGB || blade.useRGBWithWhite ? blade.colorType : [=](std::string colorType) -> std::string { colorType.replace(colorType.find("W"), 1, "w"); return colorType; }(blade.colorType);
+  wxString bladePin = blade.dataPin;
+  wxString bladeColor = blade.type == BD_PIXELRGB || blade.useRGBWithWhite ? blade.colorType : [=](wxString colorType) -> wxString { colorType.replace(colorType.find("W"), 1, "w"); return colorType; }(blade.colorType);
 
   configOutput << "WS281XBladePtr<" << blade.numPixels << ", " << bladePin << ", Color8::" << bladeColor << ", PowerPINS<";
   if (blade.usePowerPin1) {
@@ -599,7 +599,7 @@ void Configuration::readDefine(std::string& define) {
 
   // General Defines
   CHKDEF("NUM_BLADES") {
-    uint8_t bladeNum = DEFNUM;
+    uint32_t bladeNum = DEFNUM;
     BladesPage::instance->blades.clear();
     while (bladeNum != BladesPage::instance->blades.size()) { BladesPage::instance->blades.push_back(BladesPage::bladeConfig()); }
     PresetsPage::instance->update();
@@ -706,7 +706,7 @@ void Configuration::readPresetArray(std::ifstream& file) {
   std::string presetInfo;
   std::string element;
   RUNTOSECTION;
-  uint8_t preset = -1;
+  uint32_t preset = -1;
   PresetsPage::instance->presets.clear();
   while (!false) {
     presetInfo.clear();
@@ -812,7 +812,7 @@ void Configuration::readBladeArray(std::ifstream& file) {
     }
     if (std::strstr(bladeInfo.data(), "SimpleBladePtr") != nullptr) {
       BladesPage::instance->blades.push_back(BladesPage::bladeConfig());
-      uint8_t numLEDs = 0;
+      uint32_t numLEDs = 0;
       auto getStarTemplate = [](const std::string& element) -> std::string {
         if (std::strstr(element.data(), "RedOrange") != nullptr) return "RedOrange";
         if (std::strstr(element.data(), "Amber") != nullptr) return "Amber";
@@ -870,7 +870,7 @@ void Configuration::readBladeArray(std::ifstream& file) {
 void Configuration::replaceStyles(const std::string& styleName, const std::string& styleFill) {
   std::string styleCheck;
   for (PresetsPage::presetConfig& preset : PresetsPage::instance->presets) {
-    for (std::string& style : preset.styles) {
+    for (wxString& style : preset.styles) {
       styleCheck = (style.find(styleName) == std::string::npos) ? style : style.substr(style.find(styleName));
       while (styleCheck != style) {
         // If there are no comments in the style, we're fine.

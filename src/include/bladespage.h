@@ -89,17 +89,17 @@ public:
   } settings;
 
   struct bladeConfig {
-    std::string type{BD_PIXELRGB};
+    wxString type{BD_PIXELRGB};
 
-    std::string dataPin{"bladePin"};
-    std::string colorType{"GRB"};
+    wxString dataPin{"bladePin"};
+    wxString colorType{"GRB"};
     int32_t numPixels{0};
     bool useRGBWithWhite{false};
 
-    std::string Star1{BD_NORESISTANCE};
-    std::string Star2{BD_NORESISTANCE};
-    std::string Star3{BD_NORESISTANCE};
-    std::string Star4{BD_NORESISTANCE};
+    wxString Star1{BD_NORESISTANCE};
+    wxString Star2{BD_NORESISTANCE};
+    wxString Star3{BD_NORESISTANCE};
+    wxString Star4{BD_NORESISTANCE};
     int32_t Star1Resistance{0};
     int32_t Star2Resistance{0};
     int32_t Star3Resistance{0};

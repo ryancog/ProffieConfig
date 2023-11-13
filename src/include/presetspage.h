@@ -27,10 +27,10 @@ public:
   wxTextCtrl* trackInput{nullptr};
 
   struct presetConfig {
-    std::vector<std::string> styles{};
-    std::string name{""};
-    std::string dirs{""};
-    std::string track{""};
+    std::vector<wxString> styles{};
+    wxString name{""};
+    wxString dirs{""};
+    wxString track{""};
   };
   std::vector<presetConfig> presets;
 
@@ -48,4 +48,6 @@ private:
   void stripAndSaveName();
   void stripAndSaveDir();
   void stripAndSaveTrack();
+
+  bool selfEdit{false};
 };

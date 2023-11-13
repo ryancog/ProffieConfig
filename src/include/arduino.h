@@ -12,16 +12,16 @@ public:
   static void verifyConfig();
 
   static void init();
-  static std::vector<std::string> getBoards();
+  static std::vector<wxString> getBoards();
 
 private:
   Arduino();
   Arduino(const Arduino&) = delete;
 
-  static FILE* CLI(const std::string& command);
+  static FILE* CLI(const wxString& command);
 
-  static std::string updateIno();
-  static std::string compile();
-  static std::string parseError(const std::string&);
-  static std::string upload();
+  static wxString updateIno();
+  static wxString compile();
+  static wxString parseError(const wxString&);
+  static wxString upload();
 };
