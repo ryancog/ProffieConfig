@@ -54,8 +54,8 @@ public:
   static numEntry* createNumEntry(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, int32_t minVal, int32_t maxVal, int32_t defaultVal);
   static numEntryDouble* createNumEntryDouble(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, double minVal, double maxVal, double defaultVal);
 
-  static const wxArrayString createEntries(std::vector<std::string> list);
-  static const wxArrayString createEntries(std::initializer_list<std::string> list);
+  static const wxArrayString createEntries(std::vector<wxString> list);
+  static const wxArrayString createEntries(std::initializer_list<wxString> list);
 
 private:
   Misc();
