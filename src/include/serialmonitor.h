@@ -15,13 +15,13 @@ public:
 private:
   class SerialDataEvent : public wxCommandEvent {
   public:
-    SerialDataEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id, const std::string& message) {
+    SerialDataEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id, const wxString& message) {
       this->SetEventType(tag);
       this->SetId(id);
       this->value = message;
     }
 
-    std::string value;
+    wxString value;
   };
   static wxEventTypeTag<wxCommandEvent> EVT_INPUT;
   static wxEventTypeTag<wxCommandEvent> EVT_DISCON;
@@ -41,7 +41,7 @@ private:
 #elif defined(__WXMSW__)
   HANDLE serHandle{nullptr};
 #endif
-  std::string sendOut;
+  wxString sendOut;
 
 
   void BindEvents();

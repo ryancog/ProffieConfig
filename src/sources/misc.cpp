@@ -40,13 +40,13 @@ Misc::numEntryDouble* Misc::createNumEntryDouble(wxStaticBoxSizer *parent, wxStr
     return returnVal;
 }
 
-const wxArrayString Misc::createEntries(std::vector<std::string> list) {
+const wxArrayString Misc::createEntries(std::vector<wxString> list) {
     wxArrayString entries;
-    for (const std::string& entry : list)
+    for (const wxString& entry : list)
       entries.Add(entry);
 
     return entries;
 }
-const wxArrayString Misc::createEntries(std::initializer_list<std::string> list) {
-    return Misc::createEntries(static_cast<std::vector<std::string>>(list));
+const wxArrayString Misc::createEntries(std::initializer_list<wxString> list) {
+    return Misc::createEntries(static_cast<std::vector<wxString>>(list));
 }

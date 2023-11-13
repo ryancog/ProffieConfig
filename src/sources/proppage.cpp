@@ -26,7 +26,7 @@ void PropPage::update() {
 # define CAIWYN prop == PR_CAIWYN
 # define ALL SA22C || FETT263 || BC || SHTOK || CAIWYN
 
-  std::string prop = settings.prop->GetStringSelection().ToStdString();
+  wxString prop = settings.prop->GetStringSelection();
 
   settings.disableGestureNoBlade->Show(BC);
   settings.noLockupHold->Show(SA22C);
