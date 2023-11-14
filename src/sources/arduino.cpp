@@ -22,7 +22,8 @@ void Arduino::init() {
 
 #ifndef __WXOSX__
 #ifdef __WXGTK__
-    wxMessageBox("You will be prompted for your password.", "Driver Install", wxOK);
+    Misc::MessageBoxEvent* passwordMessage = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "You will be prompted for your password.", "Driver Install", wxOK);
+    wxQueueEvent(MainWindow::instance->GetEventHandler(), passwordMessage);
 #endif
 
     MainWindow::instance->progDialog->emitEvent(5, "Installing drivers...");
@@ -44,7 +45,8 @@ void Arduino::init() {
     MainWindow::instance->progDialog->emitEvent(100, "Done.");
 
 #ifdef __WXGTK__
-    wxMessageBox("Please restart your computer to apply changes.", "Dependency Installation Success", wxOK | wxICON_INFORMATION);
+    Misc::MessageBoxEvent* restartMessage = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "Please restart your computer to apply changes.", "Dependency Installation Success", wxOK | wxICON_INFORMATION);
+    wxQueueEvent(MainWindow::instance->GetEventHandler(), restartMessage);
 #endif
   });
 }
@@ -113,7 +115,8 @@ void Arduino::applyToBoard() {
     if (MainWindow::instance->devSelect->GetSelection() == -1) {
       MainWindow::instance->devSelect->SetSelection(0);
       Progress::emitEvent(100, "Error!");
-      wxMessageBox("Please make sure your board is connected and selected, then try again!", "Board Selection Error", wxOK | wxICON_ERROR);
+      Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "Please make sure your board is connected and selected, then try again!", "Board Selection Error", wxOK | wxICON_ERROR);
+      wxQueueEvent(MainWindow::instance->GetEventHandler(), msg);
       return;
     }
 
@@ -125,8 +128,8 @@ void Arduino::applyToBoard() {
     returnVal = Arduino::compile();
     if (returnVal != "OK") {
       Progress::emitEvent(100, "Error");
-      wxMessageBox("There was an error while compiling:\n\n"
-                       + returnVal, "Compile Error");
+      Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "There was an error while compiling:\n\n" + returnVal, "Compile Error");
+      wxQueueEvent(MainWindow::instance->GetEventHandler(), msg);
       return;
     }
 
@@ -134,14 +137,16 @@ void Arduino::applyToBoard() {
     returnVal = Arduino::upload();
     if (returnVal != "OK") {
       Progress::emitEvent(100, "Error");
-      wxMessageBox("There was an error while uploading:\n\n" + returnVal);
+      Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "There was an error while uploading:\n\n" + returnVal, "Upload Error");
+      wxQueueEvent(MainWindow::instance->GetEventHandler(), msg);
       return;
     }
 
     Progress::emitEvent(100, "Done.");
     Progress::emitEvent(100, "Done.");
 
-    wxMessageBox("Changes Successfully Applied to ProffieBoard!", "Apply Changes to Board", wxOK | wxICON_INFORMATION);
+    Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "Changes Successfully Applied to ProffieBoard!", "Apply Changes to Board", wxOK | wxICON_INFORMATION);
+    wxQueueEvent(MainWindow::instance->GetEventHandler(), msg);
   });
 }
 void Arduino::verifyConfig() {
@@ -157,8 +162,9 @@ void Arduino::verifyConfig() {
     returnVal = Arduino::updateIno();
     if (returnVal != "OK") {
       Progress::emitEvent(100, "Error");
-      wxMessageBox("There was an error while updating files:\n\n"
+      Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "There was an error while updating files:\n\n"
                        + returnVal, "Files Error");
+      wxQueueEvent(MainWindow::instance->GetEventHandler(), msg);
       return;
     }
 
@@ -166,13 +172,15 @@ void Arduino::verifyConfig() {
     returnVal = Arduino::compile();
     if (returnVal != "OK") {
       Progress::emitEvent(100, "Error");
-      wxMessageBox("There was an error while compiling:\n\n"
+      Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "There was an error while compiling:\n\n"
                        + returnVal, "Compile Error");
+      wxQueueEvent(MainWindow::instance->GetEventHandler(), msg);
       return;
     }
 
     Progress::emitEvent(100, "Done.");
-    wxMessageBox("Config Verified Successfully!", "Verify Config", wxOK | wxICON_INFORMATION);
+    Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "Config Verified Successfully!", "Verify Config", wxOK | wxICON_INFORMATION);
+    wxQueueEvent(MainWindow::instance->GetEventHandler(), msg);
   });
 }
 

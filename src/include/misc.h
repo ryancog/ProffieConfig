@@ -51,6 +51,23 @@ public:
     wxSpinCtrlDouble *num{nullptr};
   };
 
+  class MessageBoxEvent : public wxCommandEvent {
+  public:
+    MessageBoxEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id, wxString _message, wxString _caption, long _style = wxOK | wxCENTER){
+      this->SetEventType(tag);
+      this->SetId(id);
+      caption = _caption;
+      message = _message;
+      style = _style;
+    }
+
+    wxString caption;
+    wxString message;
+    long style;
+  };
+
+  static wxEventTypeTag<wxCommandEvent> EVT_MSGBOX;
+
   static numEntry* createNumEntry(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, int32_t minVal, int32_t maxVal, int32_t defaultVal);
   static numEntryDouble* createNumEntryDouble(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, double minVal, double maxVal, double defaultVal);
 
