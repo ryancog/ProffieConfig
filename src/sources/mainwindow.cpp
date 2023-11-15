@@ -35,11 +35,31 @@ void MainWindow::BindEvents() {
   // Main Window
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent(progDialog, (Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/blob/master/docs"); }, Misc::ID_Docs);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/issues/new"); }, Misc::ID_Issue);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::init(); }, Misc::ID_Initialize);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+        wxMessageBox(ABOUT_MESSAGE, "About ProffieConfig", wxOK | wxICON_INFORMATION);
+      }, wxID_ABOUT);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->outputConfig(); }, Misc::ID_GenFile);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(); }, Misc::ID_VerifyConfig);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->exportConfig(); }, Misc::ID_ExportFile);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->importConfig(); }, Misc::ID_ImportFile);
+
 # if defined(__WXMSW__)
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { SerialMonitor::instance = new SerialMonitor; SerialMonitor::instance->Close(true); }, Misc::ID_OpenSerial);
 # else
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(); }, Misc::ID_OpenSerial);
 #endif
+
+  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
+        if (devSelect->GetValue() == "Select Device...") applyButton->Disable();
+        else applyButton->Enable();
+        if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Close(true);
+      }, Misc::ID_DeviceSelect);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(); }, Misc::ID_RefreshDev);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(); }, Misc::ID_ApplyChanges);
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
         // TODO GeneralPage::instance->update();
         if (windowSelect->GetValue() == "General") {
@@ -78,22 +98,7 @@ void MainWindow::BindEvents() {
         }
         UPDATEWINDOW;
       }, Misc::ID_WindowSelect);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::init(); }, Misc::ID_Initialize);
-  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        if (devSelect->GetValue() == "Select Device...") applyButton->Disable();
-        else applyButton->Enable();
-        if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Close(true);
-      }, Misc::ID_DeviceSelect);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(); }, Misc::ID_RefreshDev);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(); }, Misc::ID_ApplyChanges);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-        wxMessageBox(ABOUT_MESSAGE, "About ProffieConfig", wxOK | wxICON_INFORMATION);
-      }, wxID_ABOUT);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->outputConfig(); }, Misc::ID_GenFile);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(); }, Misc::ID_VerifyConfig);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->exportConfig(); }, Misc::ID_ExportFile);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->importConfig(); }, Misc::ID_ImportFile);
+
 
   // Prop Page
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { PropPage::instance->update(); UPDATEWINDOW; }, Misc::ID_PropSelect);
@@ -147,10 +152,8 @@ void MainWindow::BindEvents() {
 
 void MainWindow::CreateMenuBar() {
   wxMenu *file = new wxMenu;
-
   file->Append(Misc::ID_GenFile, "Save Config\tCtrl+S", "Generate Config File");
   file->Append(Misc::ID_VerifyConfig, "Verify Config...\tCtrl+R", "Generate Config and Compile to test...");
-
   file->Append(Misc::ID_ExportFile, "Export Config...\t", "Choose a location to save a copy of your config...");
   file->Append(Misc::ID_ImportFile, "Import Config...\t", "Choose a file to import...");
 
@@ -160,12 +163,16 @@ void MainWindow::CreateMenuBar() {
   file->Append(wxID_EXIT);
 
   wxMenu* board = new wxMenu;
-
   board->Append(Misc::ID_OpenSerial, "Serial Monitor...\tCtrl+M", "Open a serial monitor to the proffieboard");
+
+  wxMenu* help = new wxMenu;
+  help->Append(Misc::ID_Docs, "Documentation...\tCtrl+H", "Open the ProffieConfig docs in your web browser");
+  help->Append(Misc::ID_Issue, "Help/Bug Report...\t", "Open GitHub to submit issue");
 
   wxMenuBar *menuBar = new wxMenuBar;
   menuBar->Append(file, "&File");
   menuBar->Append(board, "&Board");
+  menuBar->Append(help, "&Help");
   SetMenuBar(menuBar);
 }
 
