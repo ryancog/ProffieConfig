@@ -23,6 +23,7 @@ public:
     ID_VerifyConfig,
     ID_ExportFile,
     ID_ImportFile,
+    ID_StyleEditor,
 
     ID_PropSelect,
     ID_PropOption,
