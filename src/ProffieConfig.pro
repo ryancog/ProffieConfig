@@ -19,7 +19,8 @@ SOURCES += \
         sources/hardwarepage.cpp \
         sources/progress.cpp \
         sources/proppage.cpp \
-        sources/serialmonitor.cpp
+        sources/serialmonitor.cpp \
+        sources/styleeditor.cpp
 
 HEADERS += \
     include/arduino.h \
@@ -35,6 +36,7 @@ HEADERS += \
     include/progress.h \
     include/proppage.h \
     include/serialmonitor.h \
+    include/styleeditor.h \
     include/threadrunner.h
 
 INCLUDEPATH += ./include
