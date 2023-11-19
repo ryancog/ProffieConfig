@@ -3,3 +3,6 @@
 	url = https://github.com/profezzorn/ProffieOS
 [submodule "ProffieOS"]
 	branch = 7.x
+[submodule "resources/StyleEditor"]
+	path = resources/StyleEditor
+	url = https://github.com/profezzorn/ProffieOS-StyleEditor
