@@ -1,5 +1,6 @@
 #include "presetspage.h"
 
+#include "defines.h"
 #include "misc.h"
 #include "bladespage.h"
 
@@ -17,6 +18,8 @@ PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, wind
 
   // Preset Select
   {
+    //bladeArraySelection = new wxComboBox(GetStaticBox(), Misc::ID_PresetChange, "0", wxDefaultPosition, wxDefaultSize, {"0", "100"}, wxCB_READONLY | wxCB_SORT);
+
     wxBoxSizer *presetLists = new wxBoxSizer(wxHORIZONTAL);
 
     presetList = new wxListBox(GetStaticBox(), Misc::ID_PresetList);
@@ -30,6 +33,8 @@ PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, wind
     presetButtons->Add(addPreset, wxSizerFlags(0).Border(wxRIGHT, 10));
     presetButtons->Add(removePreset);
 
+    //presetSelect->Add(new wxStaticText(GetStaticBox(), wxID_ANY, "Blade Array"));
+    //presetSelect->Add(bladeArraySelection, wxSizerFlags(0).Border(wxBOTTOM, 5).Expand());
     presetSelect->Add(presetLists, wxSizerFlags(1));
     presetSelect->Add(presetButtons, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 5));
   }

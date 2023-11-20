@@ -16,6 +16,7 @@ public:
 
   void update();
 
+  wxComboBox* bladeArraySelection{nullptr};
   wxTextCtrl* presetsEditor{nullptr};
   wxListBox* presetList{nullptr};
   wxListBox* bladeList{nullptr};
