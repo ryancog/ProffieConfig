@@ -39,8 +39,6 @@ void MainWindow::BindEvents() {
   // Main Window
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent(progDialog, (Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/blob/master/docs"); }, Misc::ID_Docs);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/issues/new"); }, Misc::ID_Issue);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::init(); }, Misc::ID_Initialize);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(ABOUT_MESSAGE, "About ProffieConfig", wxOK | wxICON_INFORMATION); }, wxID_ABOUT);
@@ -48,7 +46,9 @@ void MainWindow::BindEvents() {
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(); }, Misc::ID_VerifyConfig);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->exportConfig(); }, Misc::ID_ExportFile);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->importConfig(); }, Misc::ID_ImportFile);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) {}, Misc::ID_StyleEditor);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/blob/master/docs"); }, Misc::ID_Docs);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/issues/new"); }, Misc::ID_Issue);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://profezzorn.github.io/ProffieOS-StyleEditor/style_editor.html"); }, Misc::ID_StyleEditor);
 
 # if defined(__WXMSW__)
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { SerialMonitor::instance = new SerialMonitor; SerialMonitor::instance->Close(true); }, Misc::ID_OpenSerial);
@@ -156,17 +156,21 @@ void MainWindow::BindEvents() {
 void MainWindow::CreateMenuBar() {
   wxMenu *file = new wxMenu;
   file->Append(Misc::ID_GenFile, "Save Config\tCtrl+S", "Generate Config File");
-  file->Append(Misc::ID_VerifyConfig, "Verify Config...\tCtrl+R", "Generate Config and Compile to test...");
   file->Append(Misc::ID_ExportFile, "Export Config...\t", "Choose a location to save a copy of your config...");
   file->Append(Misc::ID_ImportFile, "Import Config...\t", "Choose a file to import...");
-
+  file->AppendSeparator();
+  file->Append(Misc::ID_VerifyConfig, "Verify Config...\tCtrl+R", "Generate Config and Compile to test...");
+  file->AppendSeparator();
   file->Append(Misc::ID_Initialize, "Install Dependencies...\t", "Install Platform-Specific Proffieboard Dependencies");
-
+  file->AppendSeparator();
   file->Append(wxID_ABOUT);
   file->Append(wxID_EXIT);
 
   wxMenu* board = new wxMenu;
   board->Append(Misc::ID_OpenSerial, "Serial Monitor...\tCtrl+M", "Open a serial monitor to the proffieboard");
+
+  wxMenu* tools = new wxMenu;
+  tools->Append(Misc::ID_StyleEditor, "Style Editor...\t", "Open the ProffieOS style editor");
 
   wxMenu* help = new wxMenu;
   help->Append(Misc::ID_Docs, "Documentation...\tCtrl+H", "Open the ProffieConfig docs in your web browser");
@@ -175,6 +179,7 @@ void MainWindow::CreateMenuBar() {
   wxMenuBar *menuBar = new wxMenuBar;
   menuBar->Append(file, "&File");
   menuBar->Append(board, "&Board");
+  menuBar->Append(tools, "&Tools");
   menuBar->Append(help, "&Help");
   SetMenuBar(menuBar);
 }
