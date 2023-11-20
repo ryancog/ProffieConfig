@@ -48,7 +48,7 @@ void MainWindow::BindEvents() {
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->importConfig(); }, Misc::ID_ImportFile);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/blob/master/docs"); }, Misc::ID_Docs);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/issues/new"); }, Misc::ID_Issue);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://profezzorn.github.io/ProffieOS-StyleEditor/style_editor.html"); }, Misc::ID_StyleEditor);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser(STYLEEDIT_PATH); }, Misc::ID_StyleEditor);
 
 # if defined(__WXMSW__)
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { SerialMonitor::instance = new SerialMonitor; SerialMonitor::instance->Close(true); }, Misc::ID_OpenSerial);
@@ -133,16 +133,13 @@ void MainWindow::BindEvents() {
   // Blades Page
   Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
         BladesPage::instance->update();
-        BladesPage::instance->update();
         UPDATEWINDOW;
       }, Misc::ID_BladeSelect);
   Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
         BladesPage::instance->update();
-        BladesPage::instance->update();
         UPDATEWINDOW;
       }, Misc::ID_SubBladeSelect);
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        BladesPage::instance->update();
         BladesPage::instance->update();
         UPDATEWINDOW;;
       }, Misc::ID_BladeType);

@@ -184,6 +184,6 @@ private:
   void setEnabled();
   void setVisibility();
 
-  int lastBladeSelection;
-  int lastSubBladeSelection;
+  int lastBladeSelection{-1};
+  int lastSubBladeSelection{-1};
 };

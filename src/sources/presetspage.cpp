@@ -1,6 +1,5 @@
 #include "presetspage.h"
 
-#include "defines.h"
 #include "misc.h"
 #include "bladespage.h"
 
@@ -73,10 +72,9 @@ void PresetsPage::update() {
   pushIfNewPreset();
   resizeAndFillPresets();
 
-
   if (nameInput->IsModified()) stripAndSaveName();
   if (dirInput->IsModified()) stripAndSaveDir();
-  if (dirInput->IsModified()) stripAndSaveTrack();
+  if (trackInput->IsModified()) stripAndSaveTrack();
   if (presetsEditor->IsModified()) stripAndSaveEditor();
 
   rebuildPresetList();
