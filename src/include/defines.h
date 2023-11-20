@@ -1,7 +1,7 @@
 #pragma once
 #include <wx/event.h>
 
-#define VERSION "1.3.1"
+#define VERSION "1.3.2"
 #define ABOUT_MESSAGE \
   "Tool for GUI Configuration and flashing of Proffieboard\n" \
   "\n" \
@@ -33,14 +33,17 @@
 #define PROFFIEOS_PATH "resources\\ProffieOS"
 #define CONFIG_PATH PROFFIEOS_PATH "\\config\\ProffieConfig_autogen.h"
 #define DRIVER_INSTALL popen("resources\\proffie-dfu-setup.exe 2>&1", "r")
+#define STYLEEDIT_PATH "resources\\StyleEditor\\style_editor.html"
 #elif defined(__WXGTK__)
 #define ARDUINO_PATH "resources/arduino-cli/arduino-cli"
 #define PROFFIEOS_PATH "resources/ProffieOS"
 #define CONFIG_PATH PROFFIEOS_PATH "/config/ProffieConfig_autogen.h"
 #define DRIVER_INSTALL popen("pkexec cp ~/.arduino15/packages/proffieboard/hardware/stm32l4/3.6/drivers/linux/*rules /etc/udev/rules.d", "r")
+#define STYLEEDIT_PATH "resources/StyleEditor/style_editor.html"
 #elif defined(__WXOSX__)
 #define ARDUINO_PATH "ProffieConfig.app/Contents/Resources/arduino-cli/arduino-cli"
 #define PROFFIEOS_PATH "ProffieConfig.app/Contents/Resources/ProffieOS"
 #define CONFIG_PATH PROFFIEOS_PATH "/config/ProffieConfig_autogen.h"
 #define DRIVER_INSTALL popen("", "r");
+#define STYLEEDIT_PATH "resources/StyleEditor/style_editor.html"
 #endif
