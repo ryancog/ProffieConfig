@@ -5,6 +5,7 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 QMAKE_CXXFLAGS += $$system(wx-config --cxxflags)
+QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
 LIBS += $$system(wx-config --libs all)
 
 SOURCES += \

@@ -743,7 +743,7 @@ void Configuration::readPresetArray(std::ifstream& file) {
         element = presetInfo.substr(0, presetInfo.find("(),") + 2); // Copy in next
 
         presetInfo = presetInfo.substr(presetInfo.find("(),") + 3); // Increment
-        PresetsPage::instance->presets[preset].styles.push_back(element.substr(element.find("StylePtr"), element.find("(),")));
+        PresetsPage::instance->presets[preset].styles.push_back(element.substr(element.find("Style"), element.find("(),")));
       }
     }
 
