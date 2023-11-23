@@ -2,13 +2,16 @@
 
 ![image](https://github.com/ryryog25/ProffieConfig/assets/60193408/f88be6ab-cd8b-4cd9-9d04-35a0732d2d71)
 
-All-In-One ProffieBoard (Created by Fredrik Hubbinette) configuration, driver installer, and flashing utility.
+All-In-One ProffieBoard (Created by Fredrik Hubbinette) utility for customization. Handles the installation of all tools needed in the background, and presents an easy to use GUI for configuration and applying changes (flashing) to the board.
+
+Using this tool, there is no need for the Arduino IDE, Zadig, etc. in an attempt to make using a Proffieboard as beginner-friendly as possible, while still retaining as much of the powerful customization which makes proffie so popular.
 
 Utilzes `arduino-cli` and `proffie-dfu-setup` for driver installation and flashing.
 
 ## Usage
 
-Check out [the docs](/docs/README.md)
+To get started, head over to [the docs](/docs/README.md) which contain all the information needed to setup and use ProffieConfig.
+The tool is fairly straightforward, however it's recommended to read these over to ensure there is no confusion or unexpected issues when using the tool.
 
 ## To-Do (Non-Exhaustive)
 - Implement Blade Detect and Blade ID
