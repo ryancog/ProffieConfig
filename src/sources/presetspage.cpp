@@ -163,6 +163,9 @@ void PresetsPage::updateFields() {
   }
 
   presetsEditor->SetModified(false); // Value is flagged as dirty from last change unless we manually reset it, causing overwrites where there shouldn't be.
+  nameInput->SetModified(false);
+  dirInput->SetModified(false);
+  trackInput->SetModified(false);
 }
 
 void PresetsPage::stripAndSaveEditor() {
