@@ -139,7 +139,10 @@ void PresetsPage::updateFields() {
     if (bladeList->GetSelection() >= 0) {
       presetsEditor->ChangeValue(presets.at(presetList->GetSelection()).styles.at(bladeList->GetSelection()));
       presetsEditor->SetInsertionPoint(insertionPoint <= presetsEditor->GetValue().size() ? insertionPoint : presetsEditor->GetValue().size());
-    } else presetsEditor->ChangeValue("Select Blade to Edit Style...");
+    } else {
+      presetsEditor->ChangeValue("Select Blade to Edit Style...");
+      presetsEditor->SetModified(false); // ChangeValue flags presetsEditor as dirty on macOS, although it shouldn't, so this call is needed.
+    }
 
     insertionPoint = nameInput->GetInsertionPoint();
     nameInput->ChangeValue(presets.at(presetList->GetSelection()).name);
@@ -155,6 +158,7 @@ void PresetsPage::updateFields() {
   }
   else {
     presetsEditor->ChangeValue("Select/Create Preset and Blade to Edit Style...");
+    presetsEditor->SetModified(false); // ChangeValue flags presetsEditor as dirty on macOS, although it shouldn't, so this call is needed.
     nameInput->ChangeValue("");
     dirInput->ChangeValue("");
     trackInput->ChangeValue("");
