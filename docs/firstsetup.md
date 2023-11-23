@@ -8,7 +8,7 @@ If you're on Windows, you can move the folder to any location, however the folde
 ## Config File
 Open up the application. When you run it for the first time you'll get a pop-up asking if you'd like to import an existing configuration file.
 
-If you bought your saber from someone who included a config file on the SD card, you have a config file from another saber, or if you have one you have created previously, go ahead and import that file (File->Import Config...), and ProffieConfig will automatically update accordingly. From here on out, you won't need that file anymore, the information is handled seperatetly within ProffieConfig, just be sure to hit save. ;)
+If you bought your saber from someone who included a config file on the SD card, you have a config file from another saber, or if you have one you have created previously, go ahead and import that file (`File->Import Config...`), and ProffieConfig will automatically update accordingly. From here on out, you won't need that file anymore, the information is handled seperatetly within ProffieConfig, just be sure to hit save. ;)
 
 If you don't have a config file, you can decline and an empty configuration will be loaded.
 
