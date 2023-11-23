@@ -141,7 +141,6 @@ void PresetsPage::updateFields() {
       presetsEditor->SetInsertionPoint(insertionPoint <= presetsEditor->GetValue().size() ? insertionPoint : presetsEditor->GetValue().size());
     } else {
       presetsEditor->ChangeValue("Select Blade to Edit Style...");
-      presetsEditor->SetModified(false); // ChangeValue flags presetsEditor as dirty on macOS, although it shouldn't, so this call is needed.
     }
 
     insertionPoint = nameInput->GetInsertionPoint();
@@ -158,11 +157,12 @@ void PresetsPage::updateFields() {
   }
   else {
     presetsEditor->ChangeValue("Select/Create Preset and Blade to Edit Style...");
-    presetsEditor->SetModified(false); // ChangeValue flags presetsEditor as dirty on macOS, although it shouldn't, so this call is needed.
     nameInput->ChangeValue("");
     dirInput->ChangeValue("");
     trackInput->ChangeValue("");
   }
+
+  presetsEditor->SetModified(false); // Value is flagged as dirty from last change unless we manually reset it, causing overwrites where there shouldn't be.
 }
 
 void PresetsPage::stripAndSaveEditor() {
