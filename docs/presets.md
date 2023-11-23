@@ -1,6 +1,7 @@
 ## Presets Page
 
 Here you'll setup all the *things* that happen when you turn on your saber: what sounds it plays, what effects occur on your blades, etc.
+Through this section you can add new fonts and bladestyles to your saber. Click the "+" button to add another preset entry, in which you can specify a new font/bladstyle pair.
 
 ## Preset Name
 
