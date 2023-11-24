@@ -3,10 +3,11 @@
 #include <wx/checkbox.h>
 #include <wx/radiobut.h>
 #include <wx/combobox.h>
+#include <wx/scrolwin.h>
 
 #include "misc.h"
 
-class PropPage : public wxStaticBoxSizer {
+class PropPage : public wxScrolledWindow {
 public:
   PropPage(wxWindow*);
   static PropPage* instance;
@@ -111,6 +112,7 @@ private:
   };
 
   std::vector<RStaticBox*> boxes;
+  wxStaticBoxSizer* sizer{nullptr};
 
   RStaticBox* gestures(wxStaticBoxSizer*);
   RStaticBox* stabOn(wxStaticBoxSizer*);

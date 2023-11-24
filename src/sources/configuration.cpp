@@ -705,6 +705,7 @@ void Configuration::readPresetArray(std::ifstream& file) {
   char* tempData;
   std::string presetInfo;
   std::string element;
+  std::string comment;
   RUNTOSECTION;
   uint32_t preset = -1;
   PresetsPage::instance->presets.clear();
@@ -732,6 +733,13 @@ void Configuration::readPresetArray(std::ifstream& file) {
     tempData = std::strtok(element.data(), ",\"");
     PresetsPage::instance->presets[preset].track.assign(tempData == nullptr ? "" : tempData);
 
+    // Deal with Fett's comments
+    comment.clear();
+    if (presetInfo.find("/*") != std::string::npos) {
+      comment = presetInfo.substr(presetInfo.find("/*"), presetInfo.find("*/") + 2);
+      presetInfo = presetInfo.substr(presetInfo.find("*/") + 2);
+    }
+
     for (uint32_t blade = 0; blade < BladesPage::instance->blades.size(); blade++) {
       if (presetInfo.find("&style_charging,") == 0) {
         presetInfo = presetInfo.substr(16 /* length of "&style_charging,"*/);
@@ -743,7 +751,7 @@ void Configuration::readPresetArray(std::ifstream& file) {
         element = presetInfo.substr(0, presetInfo.find("(),") + 2); // Copy in next
 
         presetInfo = presetInfo.substr(presetInfo.find("(),") + 3); // Increment
-        PresetsPage::instance->presets[preset].styles.push_back(element.substr(element.find("Style"), element.find("(),")));
+        PresetsPage::instance->presets[preset].styles.push_back(comment + element.substr(element.find("Style"), element.find("(),")));
       }
     }
 
