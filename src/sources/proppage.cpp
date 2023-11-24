@@ -4,18 +4,23 @@
 #include "defines.h"
 #include "generalpage.h"
 
+#include <wx/scrolwin.h>
 #include <wx/sizer.h>
 
-PropPage* PropPage::instance;
-PropPage::PropPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, "") {
-  PropPage::instance = this;
-  settings.prop = new wxComboBox(this->GetStaticBox(), Misc::ID_PropSelect, PR_DEFAULT, wxDefaultPosition, wxDefaultSize, Misc::createEntries({PR_DEFAULT, PR_SA22C, PR_FETT263, PR_BC, PR_CAIWYN, PR_SHTOK}), wxCB_READONLY);
+#include <mainwindow.h>
 
-  Add(settings.prop, MENUITEMFLAGS);
-  Add(gestures(this), BOXITEMFLAGS);
-  Add(controls(this), BOXITEMFLAGS);
-  Add(features(this), BOXITEMFLAGS);
-  Add(battleMode(this), BOXITEMFLAGS);
+PropPage* PropPage::instance;
+PropPage::PropPage(wxWindow* window) : wxScrolledWindow(window) {
+  PropPage::instance = this;
+
+  sizer = new wxStaticBoxSizer(wxVERTICAL, this, "");
+  settings.prop = new wxComboBox(sizer->GetStaticBox(), Misc::ID_PropSelect, PR_DEFAULT, wxDefaultPosition, wxDefaultSize, Misc::createEntries({PR_DEFAULT, PR_SA22C, PR_FETT263, PR_BC, PR_CAIWYN, PR_SHTOK}), wxCB_READONLY);
+
+  sizer->Add(settings.prop, MENUITEMFLAGS);
+  sizer->Add(gestures(sizer), BOXITEMFLAGS);
+  sizer->Add(controls(sizer), BOXITEMFLAGS);
+  sizer->Add(features(sizer), BOXITEMFLAGS);
+  sizer->Add(battleMode(sizer), BOXITEMFLAGS);
 }
 
 void PropPage::update() {
@@ -166,6 +171,11 @@ void PropPage::update() {
     }
     box->GetStaticBox()->Show(shouldShow);
   }
+
+  SetSizer(sizer);
+  FitInside();
+  SetScrollbars(-1, 10, -1, 1);
+  SetMinClientSize(wxSize(sizer->GetMinSize().GetWidth(), 0));
 
 # undef SA22C
 # undef CAIWYN
