@@ -1,7 +1,7 @@
 #pragma once
 #include <wx/event.h>
 
-#define VERSION "1.4.2"
+#define VERSION "1.4.3"
 #define ABOUT_MESSAGE \
   "Tool for GUI Configuration and flashing of Proffieboard\n" \
   "\n" \
@@ -15,7 +15,7 @@
 #define MENUITEMFLAGS  wxSizerFlags(0).Border(wxLEFT | wxBOTTOM | wxRIGHT, 5)
 #define BOXITEMFLAGS wxSizerFlags(0).Border(wxALL, 10).Expand()
 
-#define UPDATEWINDOW master->Layout(); SetSizerAndFit(master)
+#define UPDATEWINDOW master->Layout(); SetSizerAndFit(master);
 
 #define PR_DEFAULT "Default"
 #define PR_SA22C "SA22C"

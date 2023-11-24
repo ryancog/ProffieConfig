@@ -31,7 +31,7 @@ MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPos
 # ifdef __WXMSW__
   SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
 # endif
-  SetSizerAndFit(master);
+
   Show(true);
 }
 
@@ -71,6 +71,7 @@ void MainWindow::BindEvents() {
           PresetsPage::instance->Show(false);
           BladesPage::instance->Show(false);
           HardwarePage::instance->Show(false);
+          UPDATEWINDOW;
         } else if (windowSelect->GetValue() == "Prop File") {
           GeneralPage::instance->Show(false);
           PropPage::instance->Show(true);
@@ -78,6 +79,8 @@ void MainWindow::BindEvents() {
           BladesPage::instance->Show(false);
           HardwarePage::instance->Show(false);
           PropPage::instance->update();
+          UPDATEWINDOW;
+          SetSize(wxSize(GetSize().GetWidth(), GetMinHeight() + PropPage::instance->GetBestVirtualSize().GetHeight()));
         } else if (windowSelect->GetValue() == "Presets") {
           GeneralPage::instance->Show(false);
           PropPage::instance->Show(false);
@@ -85,6 +88,7 @@ void MainWindow::BindEvents() {
           BladesPage::instance->Show(false);
           HardwarePage::instance->Show(false);
           PresetsPage::instance->update();
+          UPDATEWINDOW;
         } else if (windowSelect->GetValue() == "Blades") {
           GeneralPage::instance->Show(false);
           PropPage::instance->Show(false);
@@ -92,23 +96,29 @@ void MainWindow::BindEvents() {
           BladesPage::instance->Show(true);
           HardwarePage::instance->Show(false);
           BladesPage::instance->update();
+          UPDATEWINDOW;
         } else if (windowSelect->GetValue() == "Hardware") {
           GeneralPage::instance->Show(false);
           PropPage::instance->Show(false);
           PresetsPage::instance->Show(false);
           BladesPage::instance->Show(false);
           HardwarePage::instance->Show(true);
+          UPDATEWINDOW;
         }
-        UPDATEWINDOW;
       }, Misc::ID_WindowSelect);
 
 
   // Prop Page
-  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { PropPage::instance->update(); UPDATEWINDOW; }, Misc::ID_PropSelect);
-  Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) { PropPage::instance->update(); UPDATEWINDOW; }, Misc::ID_PropOption);
-  Bind(wxEVT_RADIOBUTTON, [&](wxCommandEvent&) { PropPage::instance->update(); UPDATEWINDOW; }, Misc::ID_PropOption);
-  Bind(wxEVT_SPINCTRL, [&](wxCommandEvent) { PropPage::instance->update(); UPDATEWINDOW; }, Misc::ID_PropOption);
-  Bind(wxEVT_SPINCTRLDOUBLE, [&](wxCommandEvent&) { PropPage::instance->update(); UPDATEWINDOW; }, Misc::ID_PropOption);
+  auto propSelectUpdate = [&](wxCommandEvent&) {
+    PropPage::instance->update(); UPDATEWINDOW;
+    SetSize(wxSize(GetSize().GetWidth(), GetMinHeight() + PropPage::instance->GetBestVirtualSize().GetHeight()));
+  };
+
+  Bind(wxEVT_COMBOBOX, propSelectUpdate, Misc::ID_PropSelect);
+  Bind(wxEVT_CHECKBOX, propSelectUpdate, Misc::ID_PropOption);
+  Bind(wxEVT_RADIOBUTTON, propSelectUpdate, Misc::ID_PropOption);
+  Bind(wxEVT_SPINCTRL, propSelectUpdate, Misc::ID_PropOption);
+  Bind(wxEVT_SPINCTRLDOUBLE, propSelectUpdate, Misc::ID_PropOption);
 
   Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { BladesPage::instance->update(); PresetsPage::instance->update(); }, Misc::ID_BladeList);
   Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { BladesPage::instance->update(); PresetsPage::instance->update(); }, Misc::ID_PresetList);
