@@ -324,17 +324,17 @@ PropPage::RStaticBox* PropPage::editMode(wxStaticBoxSizer* parent) {
   return editMode;
 }
 PropPage::RStaticBox* PropPage::interfaceOptions(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox* interface = new PropPage::RStaticBox(wxHORIZONTAL, parent->GetStaticBox(), "Interface");
+  PropPage::RStaticBox* interfaceSizer = new PropPage::RStaticBox(wxHORIZONTAL, parent->GetStaticBox(), "Interface");
   wxBoxSizer* interface1 = new wxBoxSizer(wxVERTICAL);
 
-  settings.beepErrors = new wxCheckBox(interface->GetStaticBox(), Misc::ID_PropOption, "Beep Errors Instead of Spoken");
-  settings.trackPlayerPrompts = new wxCheckBox(interface->GetStaticBox(), Misc::ID_PropOption, "Enable Track Player Prompts");
+  settings.beepErrors = new wxCheckBox(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Beep Errors Instead of Spoken");
+  settings.trackPlayerPrompts = new wxCheckBox(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Enable Track Player Prompts");
   settings.trackPlayerPrompts->SetValue(true);
-  settings.spokenColors = new wxCheckBox(interface->GetStaticBox(), Misc::ID_PropOption, "Enable Spoken Colors");
-  settings.spokenBatteryNone = new wxRadioButton(interface->GetStaticBox(), Misc::ID_PropOption, "Battery Speak None", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  settings.spokenColors = new wxCheckBox(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Enable Spoken Colors");
+  settings.spokenBatteryNone = new wxRadioButton(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Battery Speak None", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
   settings.spokenBatteryNone->SetValue(true);
-  settings.spokenBatteryVolts = new wxRadioButton(interface->GetStaticBox(), Misc::ID_PropOption, "Battery Speak Voltage");
-  settings.spokenBatteryPercent = new wxRadioButton(interface->GetStaticBox(), Misc::ID_PropOption, "Battery Speak Percentage");
+  settings.spokenBatteryVolts = new wxRadioButton(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Battery Speak Voltage");
+  settings.spokenBatteryPercent = new wxRadioButton(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Battery Speak Percentage");
   interface1->Add(settings.beepErrors, FIRSTITEMFLAGS);
   interface1->Add(settings.trackPlayerPrompts, MENUITEMFLAGS);
   interface1->Add(settings.spokenColors, MENUITEMFLAGS);
@@ -342,9 +342,9 @@ PropPage::RStaticBox* PropPage::interfaceOptions(wxStaticBoxSizer* parent) {
   interface1->Add(settings.spokenBatteryVolts, MENUITEMFLAGS);
   interface1->Add(settings.spokenBatteryPercent, MENUITEMFLAGS);
 
-  interface->Add(interface1);
+  interfaceSizer->Add(interface1);
 
-  return interface;
+  return interfaceSizer;
 }
 
 PropPage::RStaticBox* PropPage::features(wxStaticBoxSizer* parent) {
