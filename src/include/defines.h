@@ -1,7 +1,7 @@
 #pragma once
 #include <wx/event.h>
 
-#define VERSION "1.4.3"
+//#define VERSION "1.4.3"
 #define ABOUT_MESSAGE \
   "Tool for GUI Configuration and flashing of Proffieboard\n" \
   "\n" \

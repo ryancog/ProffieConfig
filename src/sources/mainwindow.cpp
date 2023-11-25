@@ -29,6 +29,7 @@ MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPos
   BindEvents();
 
 # ifdef __WXMSW__
+  SetIcon( wxICON(IDI_ICON1) );
   SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
 # endif
 
