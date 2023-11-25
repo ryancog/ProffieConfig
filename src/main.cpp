@@ -12,11 +12,10 @@ public:
   virtual bool OnInit() {
 
 #   ifdef __WXOSX__
-    char path[PATH_MAX];
-    uint32_t pathLen = sizeof(path);
-    _NSGetExecutablePath(path, &pathLen);
-    chdir(dirname(path));
-    chdir("../../");
+    uint32_t pathLen = sizeof(Misc::path);
+    _NSGetExecutablePath(Misc::path, &pathLen);
+    strncpy(Misc::path, dirname(Misc::path), PATH_MAX);
+    chdir(Misc::path);
 #   endif
 
     MainWindow::instance = new MainWindow();
