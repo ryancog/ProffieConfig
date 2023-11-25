@@ -1,5 +1,6 @@
 #include "presetspage.h"
 
+#include "defines.h"
 #include "misc.h"
 #include "bladespage.h"
 
@@ -27,8 +28,8 @@ PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, wind
     presetLists->Add(bladeList, wxSizerFlags(1).Expand());
 
     wxBoxSizer *presetButtons = new wxBoxSizer(wxHORIZONTAL);
-    addPreset = new wxButton(GetStaticBox(), Misc::ID_AddPreset, "+", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
-    removePreset = new wxButton(GetStaticBox(), Misc::ID_RemovePreset, "-", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
+    addPreset = new wxButton(GetStaticBox(), Misc::ID_AddPreset, "+", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
+    removePreset = new wxButton(GetStaticBox(), Misc::ID_RemovePreset, "-", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
     presetButtons->Add(addPreset, wxSizerFlags(0).Border(wxRIGHT, 10));
     presetButtons->Add(removePreset);
 
@@ -180,6 +181,8 @@ void PresetsPage::stripAndSaveName() {
   if (PresetsPage::instance->presetList->GetSelection() >= 0 && BladesPage::instance->blades.size() > 0) {
     wxString name = PresetsPage::instance->nameInput->GetValue();
     name.erase(std::remove(name.begin(), name.end(), ' '), name.end());
+    std::transform(name.begin(), name.end(), name.begin(),
+                   [](unsigned char c){ return std::tolower(c); }); // to lowercase
     presets.at(presetList->GetSelection()).name.assign(name);
   }
 }

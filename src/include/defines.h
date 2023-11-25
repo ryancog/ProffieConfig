@@ -27,6 +27,8 @@
 #define ARDUINOCORE_PBV2 "proffieboard:stm32l4:ProffieboardV2-L433CC"
 #define ARDUINOCORE_PBV3 "proffieboard:stm32l4:ProffieboardV3-L452RE"
 
+#define SMALLBUTTONSIZE wxSize(30, 20)
+
 #if defined(__WXMSW__)
 #define ARDUINO_PATH "resources\\arduino-cli\\arduino-cli.exe"
 #define PROFFIEOS_PATH "resources\\ProffieOS"
