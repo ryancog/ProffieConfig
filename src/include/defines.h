@@ -46,5 +46,5 @@
 #define PROFFIEOS_PATH "ProffieConfig.app/Contents/Resources/ProffieOS"
 #define CONFIG_PATH PROFFIEOS_PATH "/config/ProffieConfig_autogen.h"
 #define DRIVER_INSTALL popen("", "r");
-#define STYLEEDIT_PATH "resources/StyleEditor/style_editor.html"
+#define STYLEEDIT_PATH "ProffieConfig.app/Contents/Resources/StyleEditor/style_editor.html"
 #endif
