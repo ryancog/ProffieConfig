@@ -13,6 +13,10 @@
 #include <string>
 #include <fstream>
 
+#ifdef __WXOSX__
+char Misc::path[];
+#endif
+
 wxEventTypeTag<wxCommandEvent> Misc::EVT_MSGBOX(wxNewEventType());
 
 Misc::numEntry* Misc::createNumEntry(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, int32_t minVal, int32_t maxVal, int32_t defaultVal) {

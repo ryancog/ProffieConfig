@@ -42,9 +42,9 @@
 #define DRIVER_INSTALL popen("pkexec cp ~/.arduino15/packages/proffieboard/hardware/stm32l4/3.6/drivers/linux/*rules /etc/udev/rules.d", "r")
 #define STYLEEDIT_PATH "resources/StyleEditor/style_editor.html"
 #elif defined(__WXOSX__)
-#define ARDUINO_PATH "Contents/Resources/arduino-cli/arduino-cli"
-#define PROFFIEOS_PATH "Contents/Resources/ProffieOS"
+#define ARDUINO_PATH "../Resources/arduino-cli/arduino-cli"
+#define PROFFIEOS_PATH "../Resources/ProffieOS"
 #define CONFIG_PATH PROFFIEOS_PATH "/config/ProffieConfig_autogen.h"
 #define DRIVER_INSTALL popen("", "r");
-#define STYLEEDIT_PATH "Contents/Resources/StyleEditor/style_editor.html"
+#define STYLEEDIT_PATH "../Resources/StyleEditor/style_editor.html"
 #endif
