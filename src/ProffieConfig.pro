@@ -5,11 +5,11 @@ CONFIG -= qt
 
 QMAKE_CXXFLAGS += $$system(wx-config --cxxflags)
 QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
+
 VERSION = 1.4.3
 DEFINES += VERSION=\\\"$$VERSION\\\"
 
 RC_ICONS = ../resources/icons/icon.ico
-
 
 LIBS += $$system(wx-config --libs all)
 
