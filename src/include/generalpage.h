@@ -16,29 +16,27 @@ public:
   GeneralPage(wxWindow*);
   static GeneralPage* instance;
 
-  struct {
-    wxComboBox* board{nullptr};
-    wxCheckBox* massStorage{nullptr};
-    wxCheckBox* webUSB{nullptr};
+  wxComboBox* board{nullptr};
+  wxCheckBox* massStorage{nullptr};
+  wxCheckBox* webUSB{nullptr};
 
-    Misc::numEntry* buttons;
-    Misc::numEntry* volume;
-    Misc::numEntryDouble* clash;
-    Misc::numEntry* pliTime;
-    Misc::numEntry* idleTime;
-    Misc::numEntry* motionTime;
+  Misc::numEntry* buttons;
+  Misc::numEntry* volume;
+  Misc::numEntryDouble* clash;
+  Misc::numEntry* pliTime;
+  Misc::numEntry* idleTime;
+  Misc::numEntry* motionTime;
 
-    Misc::numEntry* maxLEDs;
+  Misc::numEntry* maxLEDs;
 
-    wxCheckBox* volumeSave{nullptr};
-    wxCheckBox* presetSave{nullptr};
-    wxCheckBox* colorSave{nullptr};
-    wxCheckBox* disableColor{nullptr};
-    wxCheckBox* noTalkie{nullptr};
-    wxCheckBox* noBasicParsers{nullptr};
-    wxCheckBox* disableDiagnosticCommands{nullptr};
-    wxCheckBox* enableDeveloperCommands{nullptr};
-  } settings;
+  wxCheckBox* volumeSave{nullptr};
+  wxCheckBox* presetSave{nullptr};
+  wxCheckBox* colorSave{nullptr};
+  wxCheckBox* disableColor{nullptr};
+  wxCheckBox* noTalkie{nullptr};
+  wxCheckBox* noBasicParsers{nullptr};
+  wxCheckBox* disableDiagnosticCommands{nullptr};
+  wxCheckBox* enableDeveloperCommands{nullptr};
 
 private:
   wxStaticBoxSizer* boardSettings(wxStaticBoxSizer*);

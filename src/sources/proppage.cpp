@@ -14,157 +14,157 @@ PropPage::PropPage(wxWindow* window) : wxScrolledWindow(window) {
   PropPage::instance = this;
 
   sizer = new wxStaticBoxSizer(wxVERTICAL, this, "");
-  settings.prop = new wxComboBox(sizer->GetStaticBox(), Misc::ID_PropSelect, PR_DEFAULT, wxDefaultPosition, wxDefaultSize, Misc::createEntries({PR_DEFAULT, PR_SA22C, PR_FETT263, PR_BC, PR_CAIWYN, PR_SHTOK}), wxCB_READONLY);
+  prop = new wxComboBox(sizer->GetStaticBox(), Misc::ID_PropSelect, PR_DEFAULT, wxDefaultPosition, wxDefaultSize, Misc::createEntries({PR_DEFAULT, PR_SA22C, PR_FETT263, PR_BC, PR_CAIWYN, PR_SHTOK}), wxCB_READONLY);
 
-  sizer->Add(settings.prop, MENUITEMFLAGS);
-  sizer->Add(gestures(sizer), BOXITEMFLAGS);
-  sizer->Add(controls(sizer), BOXITEMFLAGS);
-  sizer->Add(features(sizer), BOXITEMFLAGS);
-  sizer->Add(battleMode(sizer), BOXITEMFLAGS);
+  sizer->Add(prop, MENUITEMFLAGS);
+  sizer->Add(createGestures(sizer), BOXITEMFLAGS);
+  sizer->Add(createControls(sizer), BOXITEMFLAGS);
+  sizer->Add(createFeatures(sizer), BOXITEMFLAGS);
+  sizer->Add(createBattleMode(sizer), BOXITEMFLAGS);
 }
 
 void PropPage::update() {
-# define SA22C prop == PR_SA22C
-# define FETT263 prop == PR_FETT263
-# define BC prop == PR_BC
-# define SHTOK prop == PR_SHTOK
-# define CAIWYN prop == PR_CAIWYN
+# define SA22C propString == PR_SA22C
+# define FETT263 propString == PR_FETT263
+# define BC propString == PR_BC
+# define SHTOK propString == PR_SHTOK
+# define CAIWYN propString == PR_CAIWYN
 # define ALL SA22C || FETT263 || BC || SHTOK || CAIWYN
 
-  wxString prop = settings.prop->GetStringSelection();
+  wxString propString = prop->GetStringSelection();
 
-  settings.disableGestureNoBlade->Show(BC);
-  settings.noLockupHold->Show(SA22C);
+  disableGestureNoBlade->Show(BC);
+  noLockupHold->Show(SA22C);
   // Stab On
-  settings.stabOn->Show(SA22C || FETT263 || BC);
-  settings.stabOnFast->Show(FETT263);
-  settings.stabOnPreon->Show(FETT263);
-  settings.stabOnNoBattle->Show(FETT263);
+  stabOn->Show(SA22C || FETT263 || BC);
+  stabOnFast->Show(FETT263);
+  stabOnPreon->Show(FETT263);
+  stabOnNoBattle->Show(FETT263);
   // Swing On
-  settings.swingOn->Show(SA22C || FETT263 || BC);
-  settings.swingOnSpeed->box->Show(SA22C || FETT263 || BC);
-  settings.swingOnSpeed->num->Enable(settings.swingOn->GetValue());
-  settings.swingOnFast->Show(FETT263);
-  settings.swingOnPreon->Show(FETT263);
-  settings.swingOnNoBattle->Show(FETT263);
+  swingOn->Show(SA22C || FETT263 || BC);
+  swingOnSpeed->box->Show(SA22C || FETT263 || BC);
+  swingOnSpeed->num->Enable(swingOn->GetValue());
+  swingOnFast->Show(FETT263);
+  swingOnPreon->Show(FETT263);
+  swingOnNoBattle->Show(FETT263);
   // Twist On
-  settings.twistOn->Show(SA22C || FETT263 || BC);
-  settings.twistOnFast->Show(FETT263);
-  settings.twistOnPreon->Show(FETT263);
-  settings.twistOnNoBattle->Show(FETT263);
+  twistOn->Show(SA22C || FETT263 || BC);
+  twistOnFast->Show(FETT263);
+  twistOnPreon->Show(FETT263);
+  twistOnNoBattle->Show(FETT263);
   // Thrust On
-  settings.thrustOn->Show(SA22C || FETT263 || BC);
-  settings.thrustOnFast->Show(FETT263);
-  settings.thrustOnPreon->Show(FETT263);
-  settings.thrustOnNoBattle->Show(FETT263);
+  thrustOn->Show(SA22C || FETT263 || BC);
+  thrustOnFast->Show(FETT263);
+  thrustOnPreon->Show(FETT263);
+  thrustOnNoBattle->Show(FETT263);
   // Twist Off
-  settings.twistOff->Show(SA22C || FETT263 || BC);
-  settings.twistOffFast->Show(FETT263);
-  settings.twistOffPostoff->Show(FETT263);
+  twistOff->Show(SA22C || FETT263 || BC);
+  twistOffFast->Show(FETT263);
+  twistOffPostoff->Show(FETT263);
 
   // Battle Mode
-  settings.gestureEnBattle->Show(SA22C || BC);
-  settings.lockupDelay->box->Show(SA22C || FETT263 || BC);
-  settings.battleModeToggle->Show(FETT263);
-  settings.battleModeAlways->Show(FETT263);
-  settings.battleModeOnStart->Show(FETT263);
-  settings.battleModeDisablePWR->Show(FETT263);
-  settings.battleModeClash->box->Show(FETT263);
+  gestureEnBattle->Show(SA22C || BC);
+  lockupDelay->box->Show(SA22C || FETT263 || BC);
+  battleModeToggle->Show(FETT263);
+  battleModeAlways->Show(FETT263);
+  battleModeOnStart->Show(FETT263);
+  battleModeDisablePWR->Show(FETT263);
+  battleModeClash->box->Show(FETT263);
 
   // Force Push
-  settings.forcePush->Show(SA22C || FETT263 || BC);
-  settings.forcePushBM->Show(FETT263);
-  settings.forcePushLength->box->Show(SA22C || FETT263 || BC);
-  if (settings.forcePush->GetValue()) {
-    settings.forcePushBM->SetValue(true);
-    settings.forcePushBM->Disable();
-  } else settings.forcePushBM->Enable();
-  if (settings.forcePushBM->GetValue()) settings.forcePushLength->num->Enable();
-  else settings.forcePushLength->num->Disable();
+  forcePush->Show(SA22C || FETT263 || BC);
+  forcePushBM->Show(FETT263);
+  forcePushLength->box->Show(SA22C || FETT263 || BC);
+  if (forcePush->GetValue()) {
+    forcePushBM->SetValue(true);
+    forcePushBM->Disable();
+  } else forcePushBM->Enable();
+  if (forcePushBM->GetValue()) forcePushLength->num->Enable();
+  else forcePushLength->num->Disable();
 
 
   // Edit Mode/Settings
 
-  settings.editEnable->Show(FETT263);
-  settings.editMode->Show(FETT263);
-  settings.editSettings->Show(FETT263);
-  if (settings.editEnable->GetValue()) {
-    settings.editMode->Enable();
-    settings.editSettings->Enable();
+  editEnable->Show(FETT263);
+  editMode->Show(FETT263);
+  editSettings->Show(FETT263);
+  if (editEnable->GetValue()) {
+    editMode->Enable();
+    editSettings->Enable();
   } else {
-    settings.editMode->Disable();
-    settings.editSettings->Disable();
+    editMode->Disable();
+    editSettings->Disable();
   }
 
   // Quote Player
-  settings.enableQuotePlayer->Show(FETT263);
-  settings.randomizeQuotePlayer->Show(FETT263);
-  settings.forcePlayerDefault->Show(FETT263);
-  settings.quotePlayerDefault->Show(FETT263);
-  if (settings.enableQuotePlayer->GetValue()) {
-    settings.randomizeQuotePlayer->Enable();
-    settings.forcePlayerDefault->Enable();
-    settings.quotePlayerDefault->Enable();
+  enableQuotePlayer->Show(FETT263);
+  randomizeQuotePlayer->Show(FETT263);
+  forcePlayerDefault->Show(FETT263);
+  quotePlayerDefault->Show(FETT263);
+  if (enableQuotePlayer->GetValue()) {
+    randomizeQuotePlayer->Enable();
+    forcePlayerDefault->Enable();
+    quotePlayerDefault->Enable();
   } else {
-    settings.randomizeQuotePlayer->Disable();
-    settings.forcePlayerDefault->Disable();
-    settings.forcePlayerDefault->SetValue(true);
-    settings.quotePlayerDefault->Disable();
+    randomizeQuotePlayer->Disable();
+    forcePlayerDefault->Disable();
+    forcePlayerDefault->SetValue(true);
+    quotePlayerDefault->Disable();
   }
 
-  settings.pwrClash->Show(CAIWYN);
-  settings.pwrLockup->Show(CAIWYN);
-  settings.pwrHoldOff->Show(FETT263);
-  if (GeneralPage::instance->settings.buttons->num->GetValue() == 2) settings.pwrHoldOff->Enable();
-  else settings.pwrHoldOff->Disable();
-  settings.auxHoldLockup->Show(FETT263);
-  if (GeneralPage::instance->settings.buttons->num->GetValue() == 2) settings.auxHoldLockup->Enable();
-  else settings.auxHoldLockup->Disable();
+  pwrClash->Show(CAIWYN);
+  pwrLockup->Show(CAIWYN);
+  pwrHoldOff->Show(FETT263);
+  if (GeneralPage::instance->buttons->num->GetValue() == 2) pwrHoldOff->Enable();
+  else pwrHoldOff->Disable();
+  auxHoldLockup->Show(FETT263);
+  if (GeneralPage::instance->buttons->num->GetValue() == 2) auxHoldLockup->Enable();
+  else auxHoldLockup->Disable();
 
-  settings.meltGestureAlways->Show(FETT263);
-  settings.volumeCircular->Show(FETT263);
-  settings.brightnessCircular->Show(FETT263);
-  settings.pwrWakeGesture->Show(FETT263);
+  meltGestureAlways->Show(FETT263);
+  volumeCircular->Show(FETT263);
+  brightnessCircular->Show(FETT263);
+  pwrWakeGesture->Show(FETT263);
 
-  settings.noExtraEffects->Show(FETT263);
-  settings.specialAbilities->Show(FETT263);
-  if (settings.saveChoreo->GetValue()) {
-    if (!settings.multiPhase->GetValue()) settings.noExtraEffects->SetValue(true);
-    settings.specialAbilities->Disable();
-  } else settings.specialAbilities->Enable();
-  settings.multiPhase->Show(FETT263);
+  noExtraEffects->Show(FETT263);
+  specialAbilities->Show(FETT263);
+  if (saveChoreo->GetValue()) {
+    if (!multiPhase->GetValue()) noExtraEffects->SetValue(true);
+    specialAbilities->Disable();
+  } else specialAbilities->Enable();
+  multiPhase->Show(FETT263);
 
-  settings.spinMode->Show(FETT263);
-  if (settings.auxHoldLockup->GetValue() || settings.saveChoreo->GetValue()) settings.spinMode->Disable();
-  else settings.spinMode->Enable();
+  spinMode->Show(FETT263);
+  if (auxHoldLockup->GetValue() || saveChoreo->GetValue()) spinMode->Disable();
+  else spinMode->Enable();
 
-  settings.saveGesture->Show(FETT263);
-  settings.saveChoreo->Show(FETT263);
-  settings.dualModeSound->Show(FETT263);
-  settings.clashStrengthSound->Show(FETT263);
-  settings.clashStrengthSoundMaxClash->box->Show(FETT263);
-  if (settings.clashStrengthSound->GetValue()) settings.clashStrengthSoundMaxClash->num->Enable();
-  else settings.clashStrengthSoundMaxClash->num->Disable();
-  settings.quickPresetSelect->Show(FETT263);
-  settings.spokenColors->Show(FETT263);
-  settings.spokenBatteryNone->Show(FETT263);
-  settings.spokenBatteryVolts->Show(FETT263);
-  settings.spokenBatteryPercent->Show(FETT263);
+  saveGesture->Show(FETT263);
+  saveChoreo->Show(FETT263);
+  dualModeSound->Show(FETT263);
+  clashStrengthSound->Show(FETT263);
+  clashStrengthSoundMaxClash->box->Show(FETT263);
+  if (clashStrengthSound->GetValue()) clashStrengthSoundMaxClash->num->Enable();
+  else clashStrengthSoundMaxClash->num->Disable();
+  quickPresetSelect->Show(FETT263);
+  spokenColors->Show(FETT263);
+  spokenBatteryNone->Show(FETT263);
+  spokenBatteryVolts->Show(FETT263);
+  spokenBatteryPercent->Show(FETT263);
 
   // Disables
-  settings.beepErrors->Show(FETT263);
-  settings.trackPlayerPrompts->Show(FETT263);
-  settings.fontChangeOTF->Show(FETT263);
-  settings.styleChangeOTF->Show(FETT263);
-  settings.presetCopyOTF->Show(FETT263);
-  settings.battleModeNoToggle->Show(FETT263);
-  settings.multiBlast->Show(FETT263);
-  settings.multiBlastDisableToggle->Show(FETT263);
-  if (settings.multiBlast->GetValue()) settings.multiBlastDisableToggle->Enable();
-  else settings.multiBlastDisableToggle->Disable();
-  settings.multiBlastSwing->Show(BC);
+  beepErrors->Show(FETT263);
+  trackPlayerPrompts->Show(FETT263);
+  fontChangeOTF->Show(FETT263);
+  styleChangeOTF->Show(FETT263);
+  presetCopyOTF->Show(FETT263);
+  battleModeNoToggle->Show(FETT263);
+  multiBlast->Show(FETT263);
+  multiBlastDisableToggle->Show(FETT263);
+  if (multiBlast->GetValue()) multiBlastDisableToggle->Enable();
+  else multiBlastDisableToggle->Disable();
+  multiBlastSwing->Show(BC);
 
-  for(const RStaticBox* box : boxes) {
+  for(const PropPageBox* box : boxes) {
     bool shouldShow = false;
     for (const wxWindow* item : box->GetStaticBox()->GetChildren()) {
       shouldShow = shouldShow || item->IsShown();
@@ -185,315 +185,315 @@ void PropPage::update() {
 # undef ALL
 }
 
-PropPage::RStaticBox* PropPage::gestures(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox* gestures = new PropPage::RStaticBox(wxHORIZONTAL, parent->GetStaticBox(), "Gesture Control");
-  gestures->Add(stabOn(gestures), BOXITEMFLAGS);
-  gestures->Add(swingOn(gestures), BOXITEMFLAGS);
-  gestures->Add(thrustOn(gestures), BOXITEMFLAGS);
-  gestures->Add(twistOn(gestures), BOXITEMFLAGS);
-  gestures->Add(twistOff(gestures), BOXITEMFLAGS);
+PropPage::PropPageBox* PropPage::createGestures(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox* gesturesSizer = new PropPage::PropPageBox(wxHORIZONTAL, parent->GetStaticBox(), "Gesture Control");
+  gesturesSizer->Add(createStabOn(gesturesSizer), BOXITEMFLAGS);
+  gesturesSizer->Add(createSwingOn(gesturesSizer), BOXITEMFLAGS);
+  gesturesSizer->Add(createThrustOn(gesturesSizer), BOXITEMFLAGS);
+  gesturesSizer->Add(createTwistOn(gesturesSizer), BOXITEMFLAGS);
+  gesturesSizer->Add(createTwistOff(gesturesSizer), BOXITEMFLAGS);
 
-  return gestures;
+  return gesturesSizer;
 }
-PropPage::RStaticBox* PropPage::stabOn(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox *stabOn = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Stab On");
-  settings.stabOn = new wxCheckBox(stabOn->GetStaticBox(), Misc::ID_PropOption, "Stab To Turn On");
-  settings.stabOnFast = new wxRadioButton(stabOn->GetStaticBox(), Misc::ID_PropOption, "Fast Ignition", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
-  settings.stabOnFast->SetValue(true);
-  settings.stabOnPreon = new wxRadioButton(stabOn->GetStaticBox(), Misc::ID_PropOption, "Enable Preon");
-  settings.stabOnNoBattle = new wxCheckBox(stabOn->GetStaticBox(), Misc::ID_PropOption, "Do Not Activate BattleMode");
-  stabOn->Add(settings.stabOn, FIRSTITEMFLAGS);
-  stabOn->Add(settings.stabOnFast, MENUITEMFLAGS);
-  stabOn->Add(settings.stabOnPreon, MENUITEMFLAGS);
-  stabOn->Add(settings.stabOnNoBattle, MENUITEMFLAGS);
+PropPage::PropPageBox* PropPage::createStabOn(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox *stabOnSizer = new PropPage::PropPageBox(wxVERTICAL, parent->GetStaticBox(), "Stab On");
+  stabOn = new wxCheckBox(stabOnSizer->GetStaticBox(), Misc::ID_PropOption, "Stab To Turn On");
+  stabOnFast = new wxRadioButton(stabOnSizer->GetStaticBox(), Misc::ID_PropOption, "Fast Ignition", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  stabOnFast->SetValue(true);
+  stabOnPreon = new wxRadioButton(stabOnSizer->GetStaticBox(), Misc::ID_PropOption, "Enable Preon");
+  stabOnNoBattle = new wxCheckBox(stabOnSizer->GetStaticBox(), Misc::ID_PropOption, "Do Not Activate BattleMode");
+  stabOnSizer->Add(stabOn, FIRSTITEMFLAGS);
+  stabOnSizer->Add(stabOnFast, MENUITEMFLAGS);
+  stabOnSizer->Add(stabOnPreon, MENUITEMFLAGS);
+  stabOnSizer->Add(stabOnNoBattle, MENUITEMFLAGS);
 
-  return stabOn;
+  return stabOnSizer;
 }
-PropPage::RStaticBox* PropPage::swingOn(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox* swingOn = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Swing On");
-  settings.swingOn = new wxCheckBox(swingOn->GetStaticBox(), Misc::ID_PropOption, "Swing To Turn On");
-  settings.swingOnSpeed = Misc::createNumEntry(swingOn, "Swing on Speed", Misc::ID_PropOption, 50, 1000, 250);
-  settings.swingOnFast = new wxRadioButton(swingOn->GetStaticBox(), Misc::ID_PropOption, "Fast Ignition", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
-  settings.swingOnFast->SetValue(true);
-  settings.swingOnPreon = new wxRadioButton(swingOn->GetStaticBox(), Misc::ID_PropOption, "Enable Preon");
-  settings.swingOnNoBattle = new wxCheckBox(swingOn->GetStaticBox(), Misc::ID_PropOption, "Do Not Activate BattleMode");
-  swingOn->Add(settings.swingOn, FIRSTITEMFLAGS);
-  swingOn->Add(settings.swingOnFast, MENUITEMFLAGS);
-  swingOn->Add(settings.swingOnPreon, MENUITEMFLAGS);
-  swingOn->Add(settings.swingOnNoBattle, MENUITEMFLAGS);
-  swingOn->Add(settings.swingOnSpeed->box, MENUITEMFLAGS);
+PropPage::PropPageBox* PropPage::createSwingOn(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox* swingOnSizer = new PropPage::PropPageBox(wxVERTICAL, parent->GetStaticBox(), "Swing On");
+  swingOn = new wxCheckBox(swingOnSizer->GetStaticBox(), Misc::ID_PropOption, "Swing To Turn On");
+  swingOnSpeed = Misc::createNumEntry(swingOnSizer, "Swing on Speed", Misc::ID_PropOption, 50, 1000, 250);
+  swingOnFast = new wxRadioButton(swingOnSizer->GetStaticBox(), Misc::ID_PropOption, "Fast Ignition", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  swingOnFast->SetValue(true);
+  swingOnPreon = new wxRadioButton(swingOnSizer->GetStaticBox(), Misc::ID_PropOption, "Enable Preon");
+  swingOnNoBattle = new wxCheckBox(swingOnSizer->GetStaticBox(), Misc::ID_PropOption, "Do Not Activate BattleMode");
+  swingOnSizer->Add(swingOn, FIRSTITEMFLAGS);
+  swingOnSizer->Add(swingOnFast, MENUITEMFLAGS);
+  swingOnSizer->Add(swingOnPreon, MENUITEMFLAGS);
+  swingOnSizer->Add(swingOnNoBattle, MENUITEMFLAGS);
+  swingOnSizer->Add(swingOnSpeed->box, MENUITEMFLAGS);
 
-  return swingOn;
+  return swingOnSizer;
 }
-PropPage::RStaticBox* PropPage::thrustOn(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox *thrustOn = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Thrust On");
-  settings.thrustOn = new wxCheckBox(thrustOn->GetStaticBox(), Misc::ID_PropOption, "Thrust To Turn On");
-  settings.thrustOnFast = new wxRadioButton(thrustOn->GetStaticBox(), Misc::ID_PropOption, "Fast Ignition", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
-  settings.thrustOnFast->SetValue(true);
-  settings.thrustOnPreon = new wxRadioButton(thrustOn->GetStaticBox(), Misc::ID_PropOption, "Enable Preon");
-  settings.thrustOnNoBattle = new wxCheckBox(thrustOn->GetStaticBox(), Misc::ID_PropOption, "Do Not Activate BattleMode");
-  thrustOn->Add(settings.thrustOn, FIRSTITEMFLAGS);
-  thrustOn->Add(settings.thrustOnFast, MENUITEMFLAGS);
-  thrustOn->Add(settings.thrustOnPreon, MENUITEMFLAGS);
-  thrustOn->Add(settings.thrustOnNoBattle, MENUITEMFLAGS);
+PropPage::PropPageBox* PropPage::createThrustOn(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox *thrustOnSizer = new PropPage::PropPageBox(wxVERTICAL, parent->GetStaticBox(), "Thrust On");
+  thrustOn = new wxCheckBox(thrustOnSizer->GetStaticBox(), Misc::ID_PropOption, "Thrust To Turn On");
+  thrustOnFast = new wxRadioButton(thrustOnSizer->GetStaticBox(), Misc::ID_PropOption, "Fast Ignition", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  thrustOnFast->SetValue(true);
+  thrustOnPreon = new wxRadioButton(thrustOnSizer->GetStaticBox(), Misc::ID_PropOption, "Enable Preon");
+  thrustOnNoBattle = new wxCheckBox(thrustOnSizer->GetStaticBox(), Misc::ID_PropOption, "Do Not Activate BattleMode");
+  thrustOnSizer->Add(thrustOn, FIRSTITEMFLAGS);
+  thrustOnSizer->Add(thrustOnFast, MENUITEMFLAGS);
+  thrustOnSizer->Add(thrustOnPreon, MENUITEMFLAGS);
+  thrustOnSizer->Add(thrustOnNoBattle, MENUITEMFLAGS);
 
-  return thrustOn;
+  return thrustOnSizer;
 }
-PropPage::RStaticBox* PropPage::twistOn(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox *twistOn = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Twist On");
-  settings.twistOn = new wxCheckBox(twistOn->GetStaticBox(), Misc::ID_PropOption, "Twist To Turn On");
-  settings.twistOnFast = new wxRadioButton(twistOn->GetStaticBox(), Misc::ID_PropOption, "Fast Ignition", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
-  settings.twistOnFast->SetValue(true);
-  settings.twistOnPreon = new wxRadioButton(twistOn->GetStaticBox(), Misc::ID_PropOption, "Enable Preon");
-  settings.twistOnNoBattle = new wxCheckBox(twistOn->GetStaticBox(), Misc::ID_PropOption, "Do Not Activate BattleMode");
-  twistOn->Add(settings.twistOn, FIRSTITEMFLAGS);
-  twistOn->Add(settings.twistOnFast, MENUITEMFLAGS);
-  twistOn->Add(settings.twistOnPreon, MENUITEMFLAGS);
-  twistOn->Add(settings.twistOnNoBattle, MENUITEMFLAGS);
+PropPage::PropPageBox* PropPage::createTwistOn(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox *twistOnSizer = new PropPage::PropPageBox(wxVERTICAL, parent->GetStaticBox(), "Twist On");
+  twistOn = new wxCheckBox(twistOnSizer->GetStaticBox(), Misc::ID_PropOption, "Twist To Turn On");
+  twistOnFast = new wxRadioButton(twistOnSizer->GetStaticBox(), Misc::ID_PropOption, "Fast Ignition", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  twistOnFast->SetValue(true);
+  twistOnPreon = new wxRadioButton(twistOnSizer->GetStaticBox(), Misc::ID_PropOption, "Enable Preon");
+  twistOnNoBattle = new wxCheckBox(twistOnSizer->GetStaticBox(), Misc::ID_PropOption, "Do Not Activate BattleMode");
+  twistOnSizer->Add(twistOn, FIRSTITEMFLAGS);
+  twistOnSizer->Add(twistOnFast, MENUITEMFLAGS);
+  twistOnSizer->Add(twistOnPreon, MENUITEMFLAGS);
+  twistOnSizer->Add(twistOnNoBattle, MENUITEMFLAGS);
 
-  return twistOn;
+  return twistOnSizer;
 }
-PropPage::RStaticBox* PropPage::twistOff(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox *twistOff = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Twist Off");
-  settings.twistOff = new wxCheckBox(twistOff->GetStaticBox(), Misc::ID_PropOption, "Twist To Turn Off");
-  settings.twistOffFast = new wxRadioButton(twistOff->GetStaticBox(), Misc::ID_PropOption, "Fast Retraction", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
-  settings.twistOffFast->SetValue(true);
-  settings.twistOffPostoff = new wxRadioButton(twistOff->GetStaticBox(), Misc::ID_PropOption, "Enable Postoff");
-  settings.twistOffPostoff->SetValue(true);
-  twistOff->Add(settings.twistOff, FIRSTITEMFLAGS);
-  twistOff->Add(settings.twistOffPostoff, MENUITEMFLAGS);
-  twistOff->Add(settings.twistOffFast, MENUITEMFLAGS);
+PropPage::PropPageBox* PropPage::createTwistOff(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox *twistOffSizer = new PropPage::PropPageBox(wxVERTICAL, parent->GetStaticBox(), "Twist Off");
+  twistOff = new wxCheckBox(twistOffSizer->GetStaticBox(), Misc::ID_PropOption, "Twist To Turn Off");
+  twistOffFast = new wxRadioButton(twistOffSizer->GetStaticBox(), Misc::ID_PropOption, "Fast Retraction", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  twistOffFast->SetValue(true);
+  twistOffPostoff = new wxRadioButton(twistOffSizer->GetStaticBox(), Misc::ID_PropOption, "Enable Postoff");
+  twistOffPostoff->SetValue(true);
+  twistOffSizer->Add(twistOff, FIRSTITEMFLAGS);
+  twistOffSizer->Add(twistOffPostoff, MENUITEMFLAGS);
+  twistOffSizer->Add(twistOffFast, MENUITEMFLAGS);
 
-  return twistOff;
+  return twistOffSizer;
 }
 
-PropPage::RStaticBox* PropPage::controls(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox* controls = new PropPage::RStaticBox(wxHORIZONTAL, parent->GetStaticBox(), "Controls");
+PropPage::PropPageBox* PropPage::createControls(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox* controlsSizer = new PropPage::PropPageBox(wxHORIZONTAL, parent->GetStaticBox(), "Controls");
 
-  controls->Add(generalControls(controls), BOXITEMFLAGS);
-  controls->Add(editMode(controls), BOXITEMFLAGS);
-  controls->Add(interfaceOptions(controls), BOXITEMFLAGS);
+  controlsSizer->Add(createGeneralControls(controlsSizer), BOXITEMFLAGS);
+  controlsSizer->Add(createEditMode(controlsSizer), BOXITEMFLAGS);
+  controlsSizer->Add(createInterfaceOptions(controlsSizer), BOXITEMFLAGS);
 
-  return controls;
+  return controlsSizer;
 }
-PropPage::RStaticBox* PropPage::generalControls(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox* generalControls = new PropPage::RStaticBox(wxHORIZONTAL, parent->GetStaticBox(), "General");
+PropPage::PropPageBox* PropPage::createGeneralControls(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox* generalControlsSizer = new PropPage::PropPageBox(wxHORIZONTAL, parent->GetStaticBox(), "General");
   wxBoxSizer* generalControls1 = new wxBoxSizer(wxVERTICAL);
   wxBoxSizer* generalControls2 = new wxBoxSizer(wxVERTICAL);
 
-  settings.pwrClash = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Press PWR to Clash");
-  settings.pwrLockup = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Hold PWR to Lockup");
-  settings.pwrHoldOff = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Hold PWR to Turn Off");
-  settings.auxHoldLockup = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Hold AUX to Lockup");
-  settings.disableGestureNoBlade = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Disable Gestures Without Blade");
-  settings.noLockupHold = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Revert Lockup and Multi-Blast Trigger");
-  generalControls1->Add(settings.noLockupHold, FIRSTITEMFLAGS);
-  generalControls1->Add(settings.disableGestureNoBlade, MENUITEMFLAGS);
-  generalControls1->Add(settings.pwrClash, MENUITEMFLAGS);
-  generalControls1->Add(settings.pwrLockup, MENUITEMFLAGS);
+  pwrClash = new wxCheckBox(generalControlsSizer->GetStaticBox(), Misc::ID_PropOption, "Press PWR to Clash");
+  pwrLockup = new wxCheckBox(generalControlsSizer->GetStaticBox(), Misc::ID_PropOption, "Hold PWR to Lockup");
+  pwrHoldOff = new wxCheckBox(generalControlsSizer->GetStaticBox(), Misc::ID_PropOption, "Hold PWR to Turn Off");
+  auxHoldLockup = new wxCheckBox(generalControlsSizer->GetStaticBox(), Misc::ID_PropOption, "Hold AUX to Lockup");
+  disableGestureNoBlade = new wxCheckBox(generalControlsSizer->GetStaticBox(), Misc::ID_PropOption, "Disable Gestures Without Blade");
+  noLockupHold = new wxCheckBox(generalControlsSizer->GetStaticBox(), Misc::ID_PropOption, "Revert Lockup and Multi-Blast Trigger");
+  generalControls1->Add(noLockupHold, FIRSTITEMFLAGS);
+  generalControls1->Add(disableGestureNoBlade, MENUITEMFLAGS);
+  generalControls1->Add(pwrClash, MENUITEMFLAGS);
+  generalControls1->Add(pwrLockup, MENUITEMFLAGS);
 
-  generalControls1->Add(settings.pwrHoldOff, FIRSTITEMFLAGS);
-  generalControls1->Add(settings.auxHoldLockup, MENUITEMFLAGS);
+  generalControls1->Add(pwrHoldOff, FIRSTITEMFLAGS);
+  generalControls1->Add(auxHoldLockup, MENUITEMFLAGS);
 
-  settings.meltGestureAlways = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Always use Melt Guesture");
-  settings.volumeCircular = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Use Circular Volume Menu");
-  settings.brightnessCircular = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "Use Circular Brightness Menu");
-  settings.pwrWakeGesture = new wxCheckBox(generalControls->GetStaticBox(), Misc::ID_PropOption, "PWR After Timeout Enables Gestures");
-  generalControls2->Add(settings.meltGestureAlways, FIRSTITEMFLAGS);
-  generalControls2->Add(settings.volumeCircular, MENUITEMFLAGS);
-  generalControls2->Add(settings.brightnessCircular, MENUITEMFLAGS);
-  generalControls2->Add(settings.pwrWakeGesture, MENUITEMFLAGS);
+  meltGestureAlways = new wxCheckBox(generalControlsSizer->GetStaticBox(), Misc::ID_PropOption, "Always use Melt Guesture");
+  volumeCircular = new wxCheckBox(generalControlsSizer->GetStaticBox(), Misc::ID_PropOption, "Use Circular Volume Menu");
+  brightnessCircular = new wxCheckBox(generalControlsSizer->GetStaticBox(), Misc::ID_PropOption, "Use Circular Brightness Menu");
+  pwrWakeGesture = new wxCheckBox(generalControlsSizer->GetStaticBox(), Misc::ID_PropOption, "PWR After Timeout Enables Gestures");
+  generalControls2->Add(meltGestureAlways, FIRSTITEMFLAGS);
+  generalControls2->Add(volumeCircular, MENUITEMFLAGS);
+  generalControls2->Add(brightnessCircular, MENUITEMFLAGS);
+  generalControls2->Add(pwrWakeGesture, MENUITEMFLAGS);
 
-  generalControls->Add(generalControls1);
-  generalControls->Add(generalControls2);
+  generalControlsSizer->Add(generalControls1);
+  generalControlsSizer->Add(generalControls2);
 
-  return generalControls;
+  return generalControlsSizer;
 }
-PropPage::RStaticBox* PropPage::editMode(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox* editMode = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Edit Mode");
+PropPage::PropPageBox* PropPage::createEditMode(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox* editModeSizer = new PropPage::PropPageBox(wxVERTICAL, parent->GetStaticBox(), "Edit Mode");
 
 
-  settings.editEnable = new wxCheckBox(editMode->GetStaticBox(), Misc::ID_PropOption, "Enable On-The-Fly Editing");
-  settings.editMode = new wxRadioButton(editMode->GetStaticBox(), Misc::ID_PropOption, "Enable Edit Mode", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
-  settings.editMode->SetValue(true);
-  settings.editSettings = new wxRadioButton(editMode->GetStaticBox(), Misc::ID_PropOption, "Enable Edit Settings");
-  editMode->Add(settings.editEnable, FIRSTITEMFLAGS);
-  editMode->Add(settings.editMode, MENUITEMFLAGS);
-  editMode->Add(settings.editSettings, MENUITEMFLAGS);
+  editEnable = new wxCheckBox(editModeSizer->GetStaticBox(), Misc::ID_PropOption, "Enable On-The-Fly Editing");
+  editMode = new wxRadioButton(editModeSizer->GetStaticBox(), Misc::ID_PropOption, "Enable Edit Mode", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  editMode->SetValue(true);
+  editSettings = new wxRadioButton(editModeSizer->GetStaticBox(), Misc::ID_PropOption, "Enable Edit Settings");
+  editModeSizer->Add(editEnable, FIRSTITEMFLAGS);
+  editModeSizer->Add(editMode, MENUITEMFLAGS);
+  editModeSizer->Add(editSettings, MENUITEMFLAGS);
 
-  return editMode;
+  return editModeSizer;
 }
-PropPage::RStaticBox* PropPage::interfaceOptions(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox* interfaceSizer = new PropPage::RStaticBox(wxHORIZONTAL, parent->GetStaticBox(), "Interface");
+PropPage::PropPageBox* PropPage::createInterfaceOptions(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox* interfaceSizer = new PropPage::PropPageBox(wxHORIZONTAL, parent->GetStaticBox(), "Interface");
   wxBoxSizer* interface1 = new wxBoxSizer(wxVERTICAL);
 
-  settings.beepErrors = new wxCheckBox(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Beep Errors Instead of Spoken");
-  settings.trackPlayerPrompts = new wxCheckBox(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Enable Track Player Prompts");
-  settings.trackPlayerPrompts->SetValue(true);
-  settings.spokenColors = new wxCheckBox(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Enable Spoken Colors");
-  settings.spokenBatteryNone = new wxRadioButton(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Battery Speak None", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
-  settings.spokenBatteryNone->SetValue(true);
-  settings.spokenBatteryVolts = new wxRadioButton(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Battery Speak Voltage");
-  settings.spokenBatteryPercent = new wxRadioButton(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Battery Speak Percentage");
-  interface1->Add(settings.beepErrors, FIRSTITEMFLAGS);
-  interface1->Add(settings.trackPlayerPrompts, MENUITEMFLAGS);
-  interface1->Add(settings.spokenColors, MENUITEMFLAGS);
-  interface1->Add(settings.spokenBatteryNone, MENUITEMFLAGS);
-  interface1->Add(settings.spokenBatteryVolts, MENUITEMFLAGS);
-  interface1->Add(settings.spokenBatteryPercent, MENUITEMFLAGS);
+  beepErrors = new wxCheckBox(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Beep Errors Instead of Spoken");
+  trackPlayerPrompts = new wxCheckBox(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Enable Track Player Prompts");
+  trackPlayerPrompts->SetValue(true);
+  spokenColors = new wxCheckBox(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Enable Spoken Colors");
+  spokenBatteryNone = new wxRadioButton(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Battery Speak None", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  spokenBatteryNone->SetValue(true);
+  spokenBatteryVolts = new wxRadioButton(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Battery Speak Voltage");
+  spokenBatteryPercent = new wxRadioButton(interfaceSizer->GetStaticBox(), Misc::ID_PropOption, "Battery Speak Percentage");
+  interface1->Add(beepErrors, FIRSTITEMFLAGS);
+  interface1->Add(trackPlayerPrompts, MENUITEMFLAGS);
+  interface1->Add(spokenColors, MENUITEMFLAGS);
+  interface1->Add(spokenBatteryNone, MENUITEMFLAGS);
+  interface1->Add(spokenBatteryVolts, MENUITEMFLAGS);
+  interface1->Add(spokenBatteryPercent, MENUITEMFLAGS);
 
   interfaceSizer->Add(interface1);
 
   return interfaceSizer;
 }
 
-PropPage::RStaticBox* PropPage::features(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox* features = new PropPage::RStaticBox(wxHORIZONTAL, parent->GetStaticBox(), "Features");
+PropPage::PropPageBox* PropPage::createFeatures(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox* featuresSizer = new PropPage::PropPageBox(wxHORIZONTAL, parent->GetStaticBox(), "Features");
 
-  features->Add(forcePush(features), BOXITEMFLAGS);
-  features->Add(quotePlayer(features), BOXITEMFLAGS);
-  features->Add(generalFeatures(features), BOXITEMFLAGS);
+  featuresSizer->Add(createForcePush(featuresSizer), BOXITEMFLAGS);
+  featuresSizer->Add(createQuotePlayer(featuresSizer), BOXITEMFLAGS);
+  featuresSizer->Add(createGeneralFeatures(featuresSizer), BOXITEMFLAGS);
 
-  return features;
+  return featuresSizer;
 }
-PropPage::RStaticBox* PropPage::forcePush(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox* forcePush = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Force Push");
+PropPage::PropPageBox* PropPage::createForcePush(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox* forcePushSizer = new PropPage::PropPageBox(wxVERTICAL, parent->GetStaticBox(), "Force Push");
 
-  settings.forcePush = new wxCheckBox(forcePush->GetStaticBox(), Misc::ID_PropOption, "Enable Force Push");
-  settings.forcePushLength = Misc::createNumEntry(forcePush, "Force Push Length", Misc::ID_PropOption, 0, 10, 5);
-  forcePush->Add(settings.forcePush, FIRSTITEMFLAGS);
-  forcePush->Add(settings.forcePushLength->box, MENUITEMFLAGS);
+  forcePush = new wxCheckBox(forcePushSizer->GetStaticBox(), Misc::ID_PropOption, "Enable Force Push");
+  forcePushLength = Misc::createNumEntry(forcePushSizer, "Force Push Length", Misc::ID_PropOption, 0, 10, 5);
+  forcePushSizer->Add(forcePush, FIRSTITEMFLAGS);
+  forcePushSizer->Add(forcePushLength->box, MENUITEMFLAGS);
 
-  return forcePush;
+  return forcePushSizer;
 }
-PropPage::RStaticBox* PropPage::quotePlayer(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox* quotePlayer = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Quote Player");
+PropPage::PropPageBox* PropPage::createQuotePlayer(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox* quotePlayerSizer = new PropPage::PropPageBox(wxVERTICAL, parent->GetStaticBox(), "Quote Player");
 
-  settings.enableQuotePlayer = new wxCheckBox(quotePlayer->GetStaticBox(), Misc::ID_PropOption, "Enable Quote Player");
-  settings.enableQuotePlayer->SetValue(true);
-  settings.randomizeQuotePlayer = new wxCheckBox(quotePlayer->GetStaticBox(), Misc::ID_PropOption, "Randomize Quotes");
-  settings.forcePlayerDefault = new wxRadioButton(quotePlayer->GetStaticBox(), Misc::ID_PropOption, "Make Force FX Default");
-  settings.forcePlayerDefault->SetValue(true);
-  settings.quotePlayerDefault = new wxRadioButton(quotePlayer->GetStaticBox(), Misc::ID_PropOption, "Make Quotes Default");
+  enableQuotePlayer = new wxCheckBox(quotePlayerSizer->GetStaticBox(), Misc::ID_PropOption, "Enable Quote Player");
+  enableQuotePlayer->SetValue(true);
+  randomizeQuotePlayer = new wxCheckBox(quotePlayerSizer->GetStaticBox(), Misc::ID_PropOption, "Randomize Quotes");
+  forcePlayerDefault = new wxRadioButton(quotePlayerSizer->GetStaticBox(), Misc::ID_PropOption, "Make Force FX Default");
+  forcePlayerDefault->SetValue(true);
+  quotePlayerDefault = new wxRadioButton(quotePlayerSizer->GetStaticBox(), Misc::ID_PropOption, "Make Quotes Default");
 
-  quotePlayer->Add(settings.enableQuotePlayer, FIRSTITEMFLAGS);
-  quotePlayer->Add(settings.randomizeQuotePlayer, MENUITEMFLAGS);
-  quotePlayer->Add(settings.forcePlayerDefault, MENUITEMFLAGS);
-  quotePlayer->Add(settings.quotePlayerDefault, MENUITEMFLAGS);
+  quotePlayerSizer->Add(enableQuotePlayer, FIRSTITEMFLAGS);
+  quotePlayerSizer->Add(randomizeQuotePlayer, MENUITEMFLAGS);
+  quotePlayerSizer->Add(forcePlayerDefault, MENUITEMFLAGS);
+  quotePlayerSizer->Add(quotePlayerDefault, MENUITEMFLAGS);
 
-  return quotePlayer;
+  return quotePlayerSizer;
 }
-PropPage::RStaticBox* PropPage::generalFeatures(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox* generalFeatures = new PropPage::RStaticBox(wxHORIZONTAL, parent->GetStaticBox(), "Other");
+PropPage::PropPageBox* PropPage::createGeneralFeatures(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox* generalFeaturesSizer = new PropPage::PropPageBox(wxHORIZONTAL, parent->GetStaticBox(), "Other");
   wxBoxSizer* generalFeatures1 = new wxBoxSizer(wxVERTICAL);
   wxBoxSizer* generalFeatures2 = new wxBoxSizer(wxVERTICAL);
   wxBoxSizer* generalFeatures3 = new wxBoxSizer(wxVERTICAL);
 
-  settings.noExtraEffects = new wxRadioButton(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "No Extra Effects", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
-  settings.noExtraEffects->SetValue(true);
-  settings.specialAbilities = new wxRadioButton(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Special Abilities");
-  settings.multiPhase = new wxRadioButton(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Multi-Phase Styles");
+  noExtraEffects = new wxRadioButton(generalFeaturesSizer->GetStaticBox(), Misc::ID_PropOption, "No Extra Effects", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  noExtraEffects->SetValue(true);
+  specialAbilities = new wxRadioButton(generalFeaturesSizer->GetStaticBox(), Misc::ID_PropOption, "Special Abilities");
+  multiPhase = new wxRadioButton(generalFeaturesSizer->GetStaticBox(), Misc::ID_PropOption, "Multi-Phase Styles");
 
-  settings.spinMode = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Toggle for Spin Mode");
-  settings.saveChoreo = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Choreography");
+  spinMode = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), Misc::ID_PropOption, "Toggle for Spin Mode");
+  saveChoreo = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), Misc::ID_PropOption, "Choreography");
 
-  settings.fontChangeOTF = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "OTF Font Change");
-  settings.fontChangeOTF->SetValue(true);
-  settings.styleChangeOTF = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "OTF Style Change");
-  settings.styleChangeOTF->SetValue(true);
-  settings.presetCopyOTF = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "OTF Preset Copying");
-  settings.presetCopyOTF->SetValue(true);
+  fontChangeOTF = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), Misc::ID_PropOption, "OTF Font Change");
+  fontChangeOTF->SetValue(true);
+  styleChangeOTF = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), Misc::ID_PropOption, "OTF Style Change");
+  styleChangeOTF->SetValue(true);
+  presetCopyOTF = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), Misc::ID_PropOption, "OTF Preset Copying");
+  presetCopyOTF->SetValue(true);
 
-  settings.saveGesture = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Save \"Disable Gesture\"");
-  settings.dualModeSound = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Ignition Sound Angle");
-  settings.clashStrengthSound = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Clash Sound Strength");
-  settings.clashStrengthSoundMaxClash = Misc::createNumEntry(generalFeatures, "CSS Max Clash", Misc::ID_PropOption, 8, 16, 10);
-  settings.quickPresetSelect = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Preset Select on Boot");
+  saveGesture = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), Misc::ID_PropOption, "Save \"Disable Gesture\"");
+  dualModeSound = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), Misc::ID_PropOption, "Ignition Sound Angle");
+  clashStrengthSound = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), Misc::ID_PropOption, "Clash Sound Strength");
+  clashStrengthSoundMaxClash = Misc::createNumEntry(generalFeaturesSizer, "CSS Max Clash", Misc::ID_PropOption, 8, 16, 10);
+  quickPresetSelect = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), Misc::ID_PropOption, "Preset Select on Boot");
 
-  settings.multiBlast = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Multi-Blast");
-  settings.multiBlast->SetValue(true);
-  settings.multiBlastDisableToggle = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Multi-Blast Guesture Only");
-  settings.multiBlastSwing = new wxCheckBox(generalFeatures->GetStaticBox(), Misc::ID_PropOption, "Multi-Blast On Swing");
+  multiBlast = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), Misc::ID_PropOption, "Multi-Blast");
+  multiBlast->SetValue(true);
+  multiBlastDisableToggle = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), Misc::ID_PropOption, "Multi-Blast Guesture Only");
+  multiBlastSwing = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), Misc::ID_PropOption, "Multi-Blast On Swing");
 
-  generalFeatures1->Add(settings.noExtraEffects, MENUITEMFLAGS);
-  generalFeatures1->Add(settings.specialAbilities, MENUITEMFLAGS);
-  generalFeatures1->Add(settings.multiPhase, MENUITEMFLAGS);
-  generalFeatures1->Add(settings.spinMode, MENUITEMFLAGS);
-  generalFeatures1->Add(settings.saveChoreo, MENUITEMFLAGS);
+  generalFeatures1->Add(noExtraEffects, MENUITEMFLAGS);
+  generalFeatures1->Add(specialAbilities, MENUITEMFLAGS);
+  generalFeatures1->Add(multiPhase, MENUITEMFLAGS);
+  generalFeatures1->Add(spinMode, MENUITEMFLAGS);
+  generalFeatures1->Add(saveChoreo, MENUITEMFLAGS);
 
-  generalFeatures2->Add(settings.saveGesture, MENUITEMFLAGS);
-  generalFeatures2->Add(settings.dualModeSound, MENUITEMFLAGS);
-  generalFeatures2->Add(settings.quickPresetSelect, MENUITEMFLAGS);
-  generalFeatures2->Add(settings.multiBlast, MENUITEMFLAGS);
-  generalFeatures2->Add(settings.multiBlastDisableToggle, MENUITEMFLAGS);
-  generalFeatures2->Add(settings.multiBlastSwing, MENUITEMFLAGS);
+  generalFeatures2->Add(saveGesture, MENUITEMFLAGS);
+  generalFeatures2->Add(dualModeSound, MENUITEMFLAGS);
+  generalFeatures2->Add(quickPresetSelect, MENUITEMFLAGS);
+  generalFeatures2->Add(multiBlast, MENUITEMFLAGS);
+  generalFeatures2->Add(multiBlastDisableToggle, MENUITEMFLAGS);
+  generalFeatures2->Add(multiBlastSwing, MENUITEMFLAGS);
 
-  generalFeatures3->Add(settings.fontChangeOTF, MENUITEMFLAGS);
-  generalFeatures3->Add(settings.styleChangeOTF, MENUITEMFLAGS);
-  generalFeatures3->Add(settings.presetCopyOTF, MENUITEMFLAGS);
-  generalFeatures3->Add(settings.clashStrengthSound, MENUITEMFLAGS);
-  generalFeatures3->Add(settings.clashStrengthSoundMaxClash->box, MENUITEMFLAGS);
+  generalFeatures3->Add(fontChangeOTF, MENUITEMFLAGS);
+  generalFeatures3->Add(styleChangeOTF, MENUITEMFLAGS);
+  generalFeatures3->Add(presetCopyOTF, MENUITEMFLAGS);
+  generalFeatures3->Add(clashStrengthSound, MENUITEMFLAGS);
+  generalFeatures3->Add(clashStrengthSoundMaxClash->box, MENUITEMFLAGS);
 
-  generalFeatures->Add(generalFeatures1);
-  generalFeatures->Add(generalFeatures2);
-  generalFeatures->Add(generalFeatures3);
+  generalFeaturesSizer->Add(generalFeatures1);
+  generalFeaturesSizer->Add(generalFeatures2);
+  generalFeaturesSizer->Add(generalFeatures3);
 
-  return generalFeatures;
+  return generalFeaturesSizer;
 }
 
-PropPage::RStaticBox* PropPage::battleMode(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox* battleMode = new PropPage::RStaticBox(wxHORIZONTAL, parent->GetStaticBox(), "Battle Mode");
+PropPage::PropPageBox* PropPage::createBattleMode(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox* battleModeSizer = new PropPage::PropPageBox(wxHORIZONTAL, parent->GetStaticBox(), "Battle Mode");
 
-  battleMode->Add(activation(battleMode), BOXITEMFLAGS);
-  battleMode->Add(lockup(battleMode), BOXITEMFLAGS);
-  battleMode->Add(bmControls(battleMode), BOXITEMFLAGS);
+  battleModeSizer->Add(createActivation(battleModeSizer), BOXITEMFLAGS);
+  battleModeSizer->Add(createLockup(battleModeSizer), BOXITEMFLAGS);
+  battleModeSizer->Add(createBMControls(battleModeSizer), BOXITEMFLAGS);
 
-  return battleMode;
+  return battleModeSizer;
 }
-PropPage::RStaticBox* PropPage::activation(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox* activation = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Activation");
+PropPage::PropPageBox* PropPage::createActivation(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox* activationSizer = new PropPage::PropPageBox(wxVERTICAL, parent->GetStaticBox(), "Activation");
 
-  settings.battleModeToggle = new wxRadioButton(activation->GetStaticBox(), Misc::ID_PropOption, "Battle Mode Toggle On", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
-  settings.battleModeToggle->SetValue(true);
-  settings.battleModeAlways = new wxRadioButton(activation->GetStaticBox(), Misc::ID_PropOption, "Battle Mode Always On");
-  settings.battleModeOnStart = new wxRadioButton(activation->GetStaticBox(), Misc::ID_PropOption, "Battle Mode On Start");
+  battleModeToggle = new wxRadioButton(activationSizer->GetStaticBox(), Misc::ID_PropOption, "Battle Mode Toggle On", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  battleModeToggle->SetValue(true);
+  battleModeAlways = new wxRadioButton(activationSizer->GetStaticBox(), Misc::ID_PropOption, "Battle Mode Always On");
+  battleModeOnStart = new wxRadioButton(activationSizer->GetStaticBox(), Misc::ID_PropOption, "Battle Mode On Start");
 
-  settings.battleModeNoToggle = new wxCheckBox(activation->GetStaticBox(), Misc::ID_PropOption, "Battle Mode Only On Gesture");
+  battleModeNoToggle = new wxCheckBox(activationSizer->GetStaticBox(), Misc::ID_PropOption, "Battle Mode Only On Gesture");
 
-  settings.gestureEnBattle = new wxCheckBox(activation->GetStaticBox(), Misc::ID_PropOption, "Gesture Ignition Starts Battle Mode");
+  gestureEnBattle = new wxCheckBox(activationSizer->GetStaticBox(), Misc::ID_PropOption, "Gesture Ignition Starts Battle Mode");
 
-  activation->Add(settings.battleModeToggle, FIRSTITEMFLAGS);
-  activation->Add(settings.battleModeOnStart, MENUITEMFLAGS);
-  activation->Add(settings.battleModeAlways, MENUITEMFLAGS);
+  activationSizer->Add(battleModeToggle, FIRSTITEMFLAGS);
+  activationSizer->Add(battleModeOnStart, MENUITEMFLAGS);
+  activationSizer->Add(battleModeAlways, MENUITEMFLAGS);
 
-  activation->Add(settings.battleModeNoToggle, FIRSTITEMFLAGS);
+  activationSizer->Add(battleModeNoToggle, FIRSTITEMFLAGS);
 
-  activation->Add(settings.gestureEnBattle, FIRSTITEMFLAGS);
+  activationSizer->Add(gestureEnBattle, FIRSTITEMFLAGS);
 
-  return activation;
+  return activationSizer;
 }
-PropPage::RStaticBox* PropPage::lockup(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox* lockup = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Lockup");
+PropPage::PropPageBox* PropPage::createLockup(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox* lockupSizer = new PropPage::PropPageBox(wxVERTICAL, parent->GetStaticBox(), "Lockup");
 
-  settings.lockupDelay = Misc::createNumEntry(lockup, "Lockup Delay (ms)", Misc::ID_PropOption, 0, 3000, 200);
-  settings.battleModeClash = Misc::createNumEntryDouble(lockup, "Battle Mode Clash/Lockup Threshold", Misc::ID_PropOption, 0, 8, 4);
+  lockupDelay = Misc::createNumEntry(lockupSizer, "Lockup Delay (ms)", Misc::ID_PropOption, 0, 3000, 200);
+  battleModeClash = Misc::createNumEntryDouble(lockupSizer, "Battle Mode Clash/Lockup Threshold", Misc::ID_PropOption, 0, 8, 4);
 
-  lockup->Add(settings.lockupDelay->box, FIRSTITEMFLAGS);
-  lockup->Add(settings.battleModeClash->box, MENUITEMFLAGS);
+  lockupSizer->Add(lockupDelay->box, FIRSTITEMFLAGS);
+  lockupSizer->Add(battleModeClash->box, MENUITEMFLAGS);
 
-  return lockup;
+  return lockupSizer;
 }
-PropPage::RStaticBox* PropPage::bmControls(wxStaticBoxSizer* parent) {
-  PropPage::RStaticBox* bmControls = new PropPage::RStaticBox(wxVERTICAL, parent->GetStaticBox(), "Controls");
+PropPage::PropPageBox* PropPage::createBMControls(wxStaticBoxSizer* parent) {
+  PropPage::PropPageBox* bmControlsSizer = new PropPage::PropPageBox(wxVERTICAL, parent->GetStaticBox(), "Controls");
 
-  settings.forcePushBM = new wxCheckBox(bmControls->GetStaticBox(), Misc::ID_PropOption, "Enable Force Push (BM Only)");
-  settings.battleModeDisablePWR = new wxCheckBox(bmControls->GetStaticBox(), Misc::ID_PropOption, "Disable Power Button in Battle Mode");
-  bmControls->Add(settings.battleModeDisablePWR, FIRSTITEMFLAGS);
-  bmControls->Add(settings.forcePushBM, MENUITEMFLAGS);
+  forcePushBM = new wxCheckBox(bmControlsSizer->GetStaticBox(), Misc::ID_PropOption, "Enable Force Push (BM Only)");
+  battleModeDisablePWR = new wxCheckBox(bmControlsSizer->GetStaticBox(), Misc::ID_PropOption, "Disable Power Button in Battle Mode");
+  bmControlsSizer->Add(battleModeDisablePWR, FIRSTITEMFLAGS);
+  bmControlsSizer->Add(forcePushBM, MENUITEMFLAGS);
 
-  return bmControls;
+  return bmControlsSizer;
 }
 
-PropPage::RStaticBox::RStaticBox(int orient, wxWindow* win, const wxString& label = wxEmptyString) : wxStaticBoxSizer(orient, win, label) {
+PropPage::PropPageBox::PropPageBox(int orient, wxWindow* win, const wxString& label = wxEmptyString) : wxStaticBoxSizer(orient, win, label) {
   PropPage::instance->boxes.insert(PropPage::instance->boxes.begin(), this);
 }
