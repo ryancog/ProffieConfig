@@ -24,6 +24,7 @@ LIBS += $$system(wx-config --libs all)
 SOURCES += \
         main.cpp \
         sources/arduino.cpp \
+        sources/bladeidpage.cpp \
         sources/mainwindow.cpp \
         sources/misc.cpp \
         sources/configuration.cpp \
@@ -37,6 +38,7 @@ SOURCES += \
 
 HEADERS += \
     include/arduino.h \
+    include/bladeidpage.h \
     include/misc.h \
     include/defines.h \
     include/configuration.h \
