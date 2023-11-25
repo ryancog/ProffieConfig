@@ -11,6 +11,11 @@
 class Misc
 {
 public:
+
+# ifdef __WXOSX__
+  static char path[PATH_MAX];
+# endif
+
   enum {
     ID_WindowSelect,
     ID_Initialize,
