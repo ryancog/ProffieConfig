@@ -112,8 +112,8 @@ wxBoxSizer* BladesPage::createBladeManager() {
   wxStaticText* bladeText = new wxStaticText( GetStaticBox(), wxID_ANY, "Blades");
   bladeSelect = new wxListBox( GetStaticBox(), Misc::ID_BladeSelect);
   wxBoxSizer* bladeButtons = new wxBoxSizer( wxHORIZONTAL);
-  addBladeButton = new wxButton( GetStaticBox(), Misc::ID_AddBlade, "+", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
-  removeBladeButton = new wxButton( GetStaticBox(), Misc::ID_RemoveBlade, "-", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
+  addBladeButton = new wxButton( GetStaticBox(), Misc::ID_AddBlade, "+", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
+  removeBladeButton = new wxButton( GetStaticBox(), Misc::ID_RemoveBlade, "-", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
   bladeButtons->Add(addBladeButton, wxSizerFlags(0).Border(wxRIGHT | wxTOP, 10));
   bladeButtons->Add(removeBladeButton, wxSizerFlags(0).Border(wxTOP, 10));
   bladeSelection->Add(bladeText, wxSizerFlags(0));
@@ -124,8 +124,8 @@ wxBoxSizer* BladesPage::createBladeManager() {
   wxStaticText* subBladeText = new wxStaticText( GetStaticBox(), wxID_ANY, "SubBlades");
   subBladeSelect = new wxListBox( GetStaticBox(), Misc::ID_SubBladeSelect);
   wxBoxSizer* subBladeButtons = new wxBoxSizer( wxHORIZONTAL);
-  addSubBladeButton = new wxButton( GetStaticBox(), Misc::ID_AddSubBlade, "+", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
-  removeSubBladeButton = new wxButton( GetStaticBox(), Misc::ID_RemoveSubBlade, "-", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
+  addSubBladeButton = new wxButton( GetStaticBox(), Misc::ID_AddSubBlade, "+", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
+  removeSubBladeButton = new wxButton( GetStaticBox(), Misc::ID_RemoveSubBlade, "-", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
   subBladeButtons->Add(addSubBladeButton, wxSizerFlags(0).Border(wxRIGHT | wxTOP, 10));
   subBladeButtons->Add(removeSubBladeButton, wxSizerFlags(0).Border(wxTOP, 10));
   subBladeSelection->Add(subBladeText, wxSizerFlags(0));
