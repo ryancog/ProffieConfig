@@ -190,13 +190,13 @@ wxString Arduino::compile() {
 
   wxString compileCommand = "compile ";
   compileCommand += "-b ";
-  compileCommand += GeneralPage::instance->settings.board->GetSelection() == 0 ? ARDUINOCORE_PBV1 : GeneralPage::instance->settings.board->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
+  compileCommand += GeneralPage::instance->board->GetSelection() == 0 ? ARDUINOCORE_PBV1 : GeneralPage::instance->board->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
   compileCommand += " --board-options ";
-  if (GeneralPage::instance->settings.massStorage->GetValue() && GeneralPage::instance->settings.webUSB->GetValue()) compileCommand += "usb=cdc_msc_webusb";
-  else if (GeneralPage::instance->settings.webUSB->GetValue()) compileCommand += "usb=cdc_webusb";
-  else if (GeneralPage::instance->settings.massStorage->GetValue()) compileCommand += "usb=cdc_msc";
+  if (GeneralPage::instance->massStorage->GetValue() && GeneralPage::instance->webUSB->GetValue()) compileCommand += "usb=cdc_msc_webusb";
+  else if (GeneralPage::instance->webUSB->GetValue()) compileCommand += "usb=cdc_webusb";
+  else if (GeneralPage::instance->massStorage->GetValue()) compileCommand += "usb=cdc_msc";
   else compileCommand += "usb=cdc";
-  if (GeneralPage::instance->settings.board->GetStringSelection() == "ProffieBoard V3") compileCommand +=",dosfs=sdmmc1";
+  if (GeneralPage::instance->board->GetStringSelection() == "ProffieBoard V3") compileCommand +=",dosfs=sdmmc1";
   compileCommand += " " PROFFIEOS_PATH;
   FILE *arduinoCli = Arduino::CLI(compileCommand);
 
@@ -225,14 +225,14 @@ wxString Arduino::upload() {
   wxString uploadCommand = "upload ";
   uploadCommand += PROFFIEOS_PATH;
   uploadCommand += " --board-options ";
-  if (GeneralPage::instance->settings.massStorage->GetValue() && GeneralPage::instance->settings.webUSB->GetValue()) uploadCommand += "usb=cdc_msc_webusb";
-  else if (GeneralPage::instance->settings.webUSB->GetValue()) uploadCommand += "usb=cdc_webusb";
-  else if (GeneralPage::instance->settings.massStorage->GetValue()) uploadCommand += "usb=cdc_msc";
+  if (GeneralPage::instance->massStorage->GetValue() && GeneralPage::instance->webUSB->GetValue()) uploadCommand += "usb=cdc_msc_webusb";
+  else if (GeneralPage::instance->webUSB->GetValue()) uploadCommand += "usb=cdc_webusb";
+  else if (GeneralPage::instance->massStorage->GetValue()) uploadCommand += "usb=cdc_msc";
   else uploadCommand += "usb=cdc";
-  if (GeneralPage::instance->settings.board->GetStringSelection() == "ProffieBoard V3") uploadCommand +=",dosfs=sdmmc1";
+  if (GeneralPage::instance->board->GetStringSelection() == "ProffieBoard V3") uploadCommand +=",dosfs=sdmmc1";
 
   uploadCommand += " --fqbn ";
-  uploadCommand += GeneralPage::instance->settings.board->GetSelection() == 0 ? ARDUINOCORE_PBV1 : GeneralPage::instance->settings.board->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
+  uploadCommand += GeneralPage::instance->board->GetSelection() == 0 ? ARDUINOCORE_PBV1 : GeneralPage::instance->board->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
   uploadCommand += " --port ";
   uploadCommand += MainWindow::instance->devSelect->GetStringSelection();
 

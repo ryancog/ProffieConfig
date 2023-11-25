@@ -11,33 +11,33 @@
 HardwarePage* HardwarePage::instance;
 HardwarePage::HardwarePage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "")
 {
-  Add(bladeDetect(this), MENUITEMFLAGS);
-  Add(OLED(this), MENUITEMFLAGS);
+  Add(createBladeDetect(this), MENUITEMFLAGS);
+  Add(createOLED(this), MENUITEMFLAGS);
 }
 
-wxStaticBoxSizer* HardwarePage::bladeDetect(wxStaticBoxSizer* parent) {
-  wxStaticBoxSizer *bladeDetect = new wxStaticBoxSizer(wxVERTICAL, parent->GetStaticBox(), "Blade Detect");
+wxStaticBoxSizer* HardwarePage::createBladeDetect(wxStaticBoxSizer* parent) {
+  wxStaticBoxSizer *bladeDetectSizer = new wxStaticBoxSizer(wxVERTICAL, parent->GetStaticBox(), "Blade Detect");
 
-  settings.bladeDetect = new wxCheckBox(bladeDetect->GetStaticBox(), wxID_ANY, "Blade Detect");
-  settings.bladeDetectPinLabel = new wxStaticText(bladeDetect->GetStaticBox(), wxID_ANY, "Pin");
-  settings.bladeDetectPin = new wxComboBox(bladeDetect->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"bladePin", "blade2Pin", "blade3Pin", "blade4Pin"}));
-  bladeDetect->Add(settings.bladeDetect, FIRSTITEMFLAGS);
-  bladeDetect->Add(settings.bladeDetectPinLabel, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10));
-  bladeDetect->Add(settings.bladeDetectPin, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
+  bladeDetect = new wxCheckBox(bladeDetectSizer->GetStaticBox(), wxID_ANY, "Blade Detect");
+  bladeDetectPinLabel = new wxStaticText(bladeDetectSizer->GetStaticBox(), wxID_ANY, "Pin");
+  bladeDetectPin = new wxComboBox(bladeDetectSizer->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"bladePin", "blade2Pin", "blade3Pin", "blade4Pin"}));
+  bladeDetectSizer->Add(bladeDetect, FIRSTITEMFLAGS);
+  bladeDetectSizer->Add(bladeDetectPinLabel, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10));
+  bladeDetectSizer->Add(bladeDetectPin, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 
-  return bladeDetect;
+  return bladeDetectSizer;
 }
-wxStaticBoxSizer* HardwarePage::OLED(wxStaticBoxSizer* parent) {
-  wxStaticBoxSizer* OLED = new wxStaticBoxSizer(wxVERTICAL, parent->GetStaticBox(), "OLED");
+wxStaticBoxSizer* HardwarePage::createOLED(wxStaticBoxSizer* parent) {
+  wxStaticBoxSizer* OLEDSizer = new wxStaticBoxSizer(wxVERTICAL, parent->GetStaticBox(), "OLED");
 
-  settings.OLED = new wxCheckBox(OLED->GetStaticBox(), wxID_ANY, "Has OLED");
-  OLED->Add(settings.OLED, FIRSTITEMFLAGS);
+  OLED = new wxCheckBox(OLEDSizer->GetStaticBox(), wxID_ANY, "Has OLED");
+  OLEDSizer->Add(OLED, FIRSTITEMFLAGS);
 
-  return OLED;
+  return OLEDSizer;
 }
 
 void HardwarePage::update() {
-  settings.bladeDetect->Show();
-  settings.bladeDetectPin->Show();
-  settings.bladeDetectPinLabel->Show();
+  bladeDetect->Show();
+  bladeDetectPin->Show();
+  bladeDetectPinLabel->Show();
 }

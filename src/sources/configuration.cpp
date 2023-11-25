@@ -55,9 +55,9 @@ void Configuration::outputConfigTop(std::ofstream& configOutput) {
 
 }
 void Configuration::outputConfigTopDefaults(std::ofstream& configOutput) {
-  if (GeneralPage::instance->settings.massStorage->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_MASS_STORAGE" << std::endl;
-  if (GeneralPage::instance->settings.webUSB->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_WEBUSB" << std::endl;
-  switch (parseBoardType(GeneralPage::instance->settings.board->GetValue().ToStdString())) {
+  if (GeneralPage::instance->massStorage->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_MASS_STORAGE" << std::endl;
+  if (GeneralPage::instance->webUSB->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_WEBUSB" << std::endl;
+  switch (parseBoardType(GeneralPage::instance->board->GetValue().ToStdString())) {
     case Configuration::ProffieBoard::V1:
       configOutput << "#include \"proffieboard_v1_config.h\"" << std::endl;
       break;
@@ -72,10 +72,10 @@ void Configuration::outputConfigTopDefaults(std::ofstream& configOutput) {
     for (const BladesPage::bladeConfig& blade : BladesPage::instance->blades) numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
     return numBlades;
   }() << std::endl;
-  configOutput << "#define NUM_BUTTONS " << GeneralPage::instance->settings.buttons->num->GetValue() << std::endl;
-  configOutput << "#define VOLUME " << GeneralPage::instance->settings.volume->num->GetValue() << std::endl;
-  configOutput << "const unsigned int maxLedsPerStrip = " << GeneralPage::instance->settings.maxLEDs->num->GetValue() << ";" << std::endl;
-  configOutput << "#define CLASH_THRESHOLD_G " << GeneralPage::instance->settings.clash->num->GetValue() << std::endl;
+  configOutput << "#define NUM_BUTTONS " << GeneralPage::instance->buttons->num->GetValue() << std::endl;
+  configOutput << "#define VOLUME " << GeneralPage::instance->volume->num->GetValue() << std::endl;
+  configOutput << "const unsigned int maxLedsPerStrip = " << GeneralPage::instance->maxLEDs->num->GetValue() << ";" << std::endl;
+  configOutput << "#define CLASH_THRESHOLD_G " << GeneralPage::instance->clash->num->GetValue() << std::endl;
   // Implement Blade Detect Config
   configOutput << "#define ENABLE_AUDIO" << std::endl;
   configOutput << "#define ENABLE_WS2811" << std::endl;
@@ -84,21 +84,21 @@ void Configuration::outputConfigTopDefaults(std::ofstream& configOutput) {
   configOutput << "#define SHARED_POWER_PINS" << std::endl;
 }
 void Configuration::outputConfigTopGeneral(std::ofstream& configOutput) {
-  if (HardwarePage::instance->settings.OLED->GetValue()) configOutput << "#define ENABLE_SSD1306" << std::endl;
-  if (GeneralPage::instance->settings.colorSave->GetValue()) configOutput << "#define SAVE_COLOR_CHANGE" << std::endl;
-  if (GeneralPage::instance->settings.presetSave->GetValue()) configOutput << "#define SAVE_PRESET" << std::endl;
-  if (GeneralPage::instance->settings.volumeSave->GetValue()) configOutput << "#define SAVE_VOLUME" << std::endl;
-  if (GeneralPage::instance->settings.disableColor->GetValue()) configOutput << "#define DISABLE_COLOR_CHANGE" << std::endl;
-  if (GeneralPage::instance->settings.noTalkie->GetValue()) configOutput << "#define DISABLE_TALKIE" << std::endl;
-  if (GeneralPage::instance->settings.noBasicParsers->GetValue()) configOutput << "#define DISABLE_BASIC_PARSER_STYLES" << std::endl;
-  if (GeneralPage::instance->settings.disableDiagnosticCommands->GetValue()) configOutput << "#define DISABLE_DIAGNOSTIC_COMMANDS" << std::endl;
-  if (GeneralPage::instance->settings.enableDeveloperCommands->GetValue()) configOutput << "#define ENABLE_DEVELOPER_COMMANDS" << std::endl;
-  configOutput << "#define PLI_OFF_TIME " << GeneralPage::instance->settings.pliTime->num->GetValue() << " * 60 * 1000" << std::endl;
-  configOutput << "#define IDLE_OFF_TIME " << GeneralPage::instance->settings.idleTime->num->GetValue() << " * 60 * 1000" << std::endl;
-  configOutput << "#define MOTION_TIMEOUT " << GeneralPage::instance->settings.motionTime->num->GetValue() << " * 60 * 1000" << std::endl;
+  if (HardwarePage::instance->OLED->GetValue()) configOutput << "#define ENABLE_SSD1306" << std::endl;
+  if (GeneralPage::instance->colorSave->GetValue()) configOutput << "#define SAVE_COLOR_CHANGE" << std::endl;
+  if (GeneralPage::instance->presetSave->GetValue()) configOutput << "#define SAVE_PRESET" << std::endl;
+  if (GeneralPage::instance->volumeSave->GetValue()) configOutput << "#define SAVE_VOLUME" << std::endl;
+  if (GeneralPage::instance->disableColor->GetValue()) configOutput << "#define DISABLE_COLOR_CHANGE" << std::endl;
+  if (GeneralPage::instance->noTalkie->GetValue()) configOutput << "#define DISABLE_TALKIE" << std::endl;
+  if (GeneralPage::instance->noBasicParsers->GetValue()) configOutput << "#define DISABLE_BASIC_PARSER_STYLES" << std::endl;
+  if (GeneralPage::instance->disableDiagnosticCommands->GetValue()) configOutput << "#define DISABLE_DIAGNOSTIC_COMMANDS" << std::endl;
+  if (GeneralPage::instance->enableDeveloperCommands->GetValue()) configOutput << "#define ENABLE_DEVELOPER_COMMANDS" << std::endl;
+  configOutput << "#define PLI_OFF_TIME " << GeneralPage::instance->pliTime->num->GetValue() << " * 60 * 1000" << std::endl;
+  configOutput << "#define IDLE_OFF_TIME " << GeneralPage::instance->idleTime->num->GetValue() << " * 60 * 1000" << std::endl;
+  configOutput << "#define MOTION_TIMEOUT " << GeneralPage::instance->motionTime->num->GetValue() << " * 60 * 1000" << std::endl;
 }
 void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput) {
-  switch (parsePropSel(PropPage::instance->settings.prop->GetValue().ToStdString())) {
+  switch (parsePropSel(PropPage::instance->prop->GetValue().ToStdString())) {
     case Configuration::SaberProp::SA22C:
       outputConfigTopSA22C(configOutput);
       break;
@@ -120,139 +120,139 @@ void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput) {
   }
 }
 void Configuration::outputConfigTopSA22C(std::ofstream& configOutput) {
-  if (PropPage::instance->settings.noLockupHold->GetValue()) configOutput << "#define SA22C_NO_LOCKUP_HOLD" << std::endl;
-  if (PropPage::instance->settings.stabOn->GetValue()) configOutput << "#define SA22C_STAB_ON" << std::endl;
-  if (PropPage::instance->settings.swingOn->GetValue()) {
+  if (PropPage::instance->noLockupHold->GetValue()) configOutput << "#define SA22C_NO_LOCKUP_HOLD" << std::endl;
+  if (PropPage::instance->stabOn->GetValue()) configOutput << "#define SA22C_STAB_ON" << std::endl;
+  if (PropPage::instance->swingOn->GetValue()) {
     configOutput << "#define SA22C_SWING_ON" << std::endl;
-    configOutput << "#define SA22C_SWING_ON_SPEED " << PropPage::instance->settings.swingOnSpeed->num->GetValue() << std::endl;
+    configOutput << "#define SA22C_SWING_ON_SPEED " << PropPage::instance->swingOnSpeed->num->GetValue() << std::endl;
   }
-  if (PropPage::instance->settings.twistOn->GetValue()) configOutput << "#define SA22C_TWIST_ON" << std::endl;
-  if (PropPage::instance->settings.thrustOn->GetValue()) configOutput << "#define SA22C_THRUST_ON" << std::endl;
-  if (PropPage::instance->settings.twistOff->GetValue()) configOutput << "#define SA22C_TWIST_OFF" << std::endl;
-  if (PropPage::instance->settings.forcePush->GetValue()) {
+  if (PropPage::instance->twistOn->GetValue()) configOutput << "#define SA22C_TWIST_ON" << std::endl;
+  if (PropPage::instance->thrustOn->GetValue()) configOutput << "#define SA22C_THRUST_ON" << std::endl;
+  if (PropPage::instance->twistOff->GetValue()) configOutput << "#define SA22C_TWIST_OFF" << std::endl;
+  if (PropPage::instance->forcePush->GetValue()) {
     configOutput << "#define SA22C_FORCE_PUSH" << std::endl;
-    configOutput << "#define SA22C_FORCE_PUSH_LENGTH " << PropPage::instance->settings.forcePushLength->num->GetValue() << std::endl;
+    configOutput << "#define SA22C_FORCE_PUSH_LENGTH " << PropPage::instance->forcePushLength->num->GetValue() << std::endl;
   }
-  if (PropPage::instance->settings.gestureEnBattle->GetValue())
+  if (PropPage::instance->gestureEnBattle->GetValue())
     configOutput << "#define GESTURE_AUTO_BATTLE_MODE" << std::endl;
-  configOutput << "#define SA22C_LOCKUP_DELAY " << PropPage::instance->settings.lockupDelay->num->GetValue() << std::endl;
+  configOutput << "#define SA22C_LOCKUP_DELAY " << PropPage::instance->lockupDelay->num->GetValue() << std::endl;
 }
 void Configuration::outputConfigTopFett263(std::ofstream& configOutput) {
-  if (PropPage::instance->settings.stabOn->GetValue()) {
-    if (PropPage::instance->settings.stabOnFast->GetValue()) configOutput << "#define FETT263_STAB_ON" << std::endl;
-    else if (PropPage::instance->settings.stabOnPreon->GetValue()) configOutput << "#define FETT263_STAB_ON_PREON" << std::endl;
-    if (PropPage::instance->settings.stabOnNoBattle->GetValue()) configOutput << "#define FETT263_STAB_ON_NO_BM" << std::endl;
+  if (PropPage::instance->stabOn->GetValue()) {
+    if (PropPage::instance->stabOnFast->GetValue()) configOutput << "#define FETT263_STAB_ON" << std::endl;
+    else if (PropPage::instance->stabOnPreon->GetValue()) configOutput << "#define FETT263_STAB_ON_PREON" << std::endl;
+    if (PropPage::instance->stabOnNoBattle->GetValue()) configOutput << "#define FETT263_STAB_ON_NO_BM" << std::endl;
   }
-  if (PropPage::instance->settings.swingOn->GetValue()) {
-    if (PropPage::instance->settings.swingOnFast->GetValue()) configOutput << "#define FETT263_SWING_ON" << std::endl;
-    else if (PropPage::instance->settings.swingOnPreon->GetValue()) configOutput << "#define FETT263_SWING_ON_PREON" << std::endl;
-    if (PropPage::instance->settings.swingOnNoBattle->GetValue()) configOutput << "#define FETT263_SWING_ON_NO_BM" << std::endl;
-    configOutput << "#define FETT263_SWING_ON_SPEED " << PropPage::instance->settings.swingOnSpeed->num->GetValue() << std::endl;
+  if (PropPage::instance->swingOn->GetValue()) {
+    if (PropPage::instance->swingOnFast->GetValue()) configOutput << "#define FETT263_SWING_ON" << std::endl;
+    else if (PropPage::instance->swingOnPreon->GetValue()) configOutput << "#define FETT263_SWING_ON_PREON" << std::endl;
+    if (PropPage::instance->swingOnNoBattle->GetValue()) configOutput << "#define FETT263_SWING_ON_NO_BM" << std::endl;
+    configOutput << "#define FETT263_SWING_ON_SPEED " << PropPage::instance->swingOnSpeed->num->GetValue() << std::endl;
   }
-  if (PropPage::instance->settings.thrustOn->GetValue()) {
-    if (PropPage::instance->settings.thrustOnFast->GetValue()) configOutput << "#define FETT263_THRUST_ON" << std::endl;
-    else if (PropPage::instance->settings.thrustOnPreon->GetValue()) configOutput << "#define FETT263_THRUST_ON_PREON" << std::endl;
-    if (PropPage::instance->settings.thrustOnNoBattle->GetValue()) configOutput << "#define FETT263_THRUST_ON_NO_BM" << std::endl;
+  if (PropPage::instance->thrustOn->GetValue()) {
+    if (PropPage::instance->thrustOnFast->GetValue()) configOutput << "#define FETT263_THRUST_ON" << std::endl;
+    else if (PropPage::instance->thrustOnPreon->GetValue()) configOutput << "#define FETT263_THRUST_ON_PREON" << std::endl;
+    if (PropPage::instance->thrustOnNoBattle->GetValue()) configOutput << "#define FETT263_THRUST_ON_NO_BM" << std::endl;
   }
-  if (PropPage::instance->settings.twistOn->GetValue()) {
-    if (PropPage::instance->settings.twistOnFast->GetValue()) configOutput << "#define FETT263_TWIST_ON" << std::endl;
-    else if (PropPage::instance->settings.twistOnPreon->GetValue()) configOutput << "#define FETT263_TWIST_ON_PREON" << std::endl;
-    if (PropPage::instance->settings.twistOnNoBattle->GetValue()) configOutput << "#define FETT263_TWIST_ON_NO_BM" << std::endl;
+  if (PropPage::instance->twistOn->GetValue()) {
+    if (PropPage::instance->twistOnFast->GetValue()) configOutput << "#define FETT263_TWIST_ON" << std::endl;
+    else if (PropPage::instance->twistOnPreon->GetValue()) configOutput << "#define FETT263_TWIST_ON_PREON" << std::endl;
+    if (PropPage::instance->twistOnNoBattle->GetValue()) configOutput << "#define FETT263_TWIST_ON_NO_BM" << std::endl;
   }
-  if (PropPage::instance->settings.twistOff->GetValue()) {
-    if (PropPage::instance->settings.twistOffFast->GetValue()) configOutput << "#define FETT263_TWIST_OFF_NO_POSTOFF" << std::endl;
-    else if (PropPage::instance->settings.twistOffPostoff->GetValue()) configOutput << "#define FETT263_TWIST_OFF" << std::endl;
+  if (PropPage::instance->twistOff->GetValue()) {
+    if (PropPage::instance->twistOffFast->GetValue()) configOutput << "#define FETT263_TWIST_OFF_NO_POSTOFF" << std::endl;
+    else if (PropPage::instance->twistOffPostoff->GetValue()) configOutput << "#define FETT263_TWIST_OFF" << std::endl;
   }
 
-  if (PropPage::instance->settings.pwrHoldOff->GetValue()) configOutput << "#define FETT263_HOLD_BUTTON_OFF" << std::endl;
-  if (PropPage::instance->settings.auxHoldLockup->GetValue()) configOutput << "#define FETT263_HOLD_BUTTON_LOCKUP" << std::endl;
-  if (PropPage::instance->settings.meltGestureAlways->GetValue()) configOutput << "#define FETT263_USE_BC_MELT_STAB" << std::endl;
-  if (PropPage::instance->settings.volumeCircular->GetValue()) configOutput << "#define FETT263_CIRCULAR_VOLUME_MENU" << std::endl;
-  if (PropPage::instance->settings.brightnessCircular->GetValue()) configOutput << "#define FETT263_CIRCULAR_DIM_MENU" << std::endl;
-  if (PropPage::instance->settings.pwrWakeGesture->GetValue()) configOutput << "#define FETT263_MOTION_WAKE_POWER_BUTTON" << std::endl;
+  if (PropPage::instance->pwrHoldOff->GetValue()) configOutput << "#define FETT263_HOLD_BUTTON_OFF" << std::endl;
+  if (PropPage::instance->auxHoldLockup->GetValue()) configOutput << "#define FETT263_HOLD_BUTTON_LOCKUP" << std::endl;
+  if (PropPage::instance->meltGestureAlways->GetValue()) configOutput << "#define FETT263_USE_BC_MELT_STAB" << std::endl;
+  if (PropPage::instance->volumeCircular->GetValue()) configOutput << "#define FETT263_CIRCULAR_VOLUME_MENU" << std::endl;
+  if (PropPage::instance->brightnessCircular->GetValue()) configOutput << "#define FETT263_CIRCULAR_DIM_MENU" << std::endl;
+  if (PropPage::instance->pwrWakeGesture->GetValue()) configOutput << "#define FETT263_MOTION_WAKE_POWER_BUTTON" << std::endl;
 
-  if (PropPage::instance->settings.editEnable->GetValue()) {
+  if (PropPage::instance->editEnable->GetValue()) {
     configOutput << "#define ENABLE_ALL_EDIT_OPTIONS" << std::endl;
-    if (PropPage::instance->settings.editMode->GetValue()) configOutput << "#define FETT263_EDIT_MODE_MENU" << std::endl;
-    if (PropPage::instance->settings.editSettings->GetValue()) configOutput << "#define FETT263_EDIT_SETTINGS_MENU" << std::endl;
+    if (PropPage::instance->editMode->GetValue()) configOutput << "#define FETT263_EDIT_MODE_MENU" << std::endl;
+    if (PropPage::instance->editSettings->GetValue()) configOutput << "#define FETT263_EDIT_SETTINGS_MENU" << std::endl;
   }
 
-  if (PropPage::instance->settings.beepErrors->GetValue()) configOutput << "#define DISABLE_TALKIE" << std::endl;
-  if (!PropPage::instance->settings.trackPlayerPrompts->GetValue()) configOutput << "#define FETT263_TRACK_PLAYER_NO_PROMPTS" << std::endl;
-  if (PropPage::instance->settings.spokenColors->GetValue()) {
+  if (PropPage::instance->beepErrors->GetValue()) configOutput << "#define DISABLE_TALKIE" << std::endl;
+  if (!PropPage::instance->trackPlayerPrompts->GetValue()) configOutput << "#define FETT263_TRACK_PLAYER_NO_PROMPTS" << std::endl;
+  if (PropPage::instance->spokenColors->GetValue()) {
     configOutput << "#define FETT263_SAY_COLOR_LIST" << std::endl;
     configOutput << "#define FETT263_SAY_COLOR_LIST_CC" << std::endl;
   }
-  if (PropPage::instance->settings.spokenBatteryPercent->GetValue()) configOutput << "#define FETT263_SAY_BATTERY_PERCENT" << std::endl;
-  if (PropPage::instance->settings.spokenBatteryVolts->GetValue()) configOutput << "#define FETT263_SAY_BATTERY_VOLTS" << std::endl;
+  if (PropPage::instance->spokenBatteryPercent->GetValue()) configOutput << "#define FETT263_SAY_BATTERY_PERCENT" << std::endl;
+  if (PropPage::instance->spokenBatteryVolts->GetValue()) configOutput << "#define FETT263_SAY_BATTERY_VOLTS" << std::endl;
 
-  if (PropPage::instance->settings.forcePush->GetValue()) configOutput << "#define FETT263_FORCE_PUSH_ALWAYS_ON" << std::endl;
-  else if (PropPage::instance->settings.forcePushBM->GetValue()) configOutput << "#define FETT263_FORCE_PUSH" << std::endl;
-  if (PropPage::instance->settings.forcePush->GetValue() || PropPage::instance->settings.forcePushBM->GetValue()) configOutput << "#define FETT263_FORCE_PUSH_LENGTH " << PropPage::instance->settings.forcePushLength->num->GetValue() << std::endl;
+  if (PropPage::instance->forcePush->GetValue()) configOutput << "#define FETT263_FORCE_PUSH_ALWAYS_ON" << std::endl;
+  else if (PropPage::instance->forcePushBM->GetValue()) configOutput << "#define FETT263_FORCE_PUSH" << std::endl;
+  if (PropPage::instance->forcePush->GetValue() || PropPage::instance->forcePushBM->GetValue()) configOutput << "#define FETT263_FORCE_PUSH_LENGTH " << PropPage::instance->forcePushLength->num->GetValue() << std::endl;
 
 
-  if (!PropPage::instance->settings.enableQuotePlayer->GetValue()) configOutput << "#define FETT263_DISABLE_QUOTE_PLAYER" << std::endl;
+  if (!PropPage::instance->enableQuotePlayer->GetValue()) configOutput << "#define FETT263_DISABLE_QUOTE_PLAYER" << std::endl;
   else {
-    if (PropPage::instance->settings.randomizeQuotePlayer->GetValue()) configOutput << "#define FETT263_RANDOMIZE_QUOTE_PLAYER" << std::endl;
-    if (PropPage::instance->settings.quotePlayerDefault->GetValue()) configOutput << "#define FETT263_QUOTE_PLAYER_START_ON" << std::endl;
+    if (PropPage::instance->randomizeQuotePlayer->GetValue()) configOutput << "#define FETT263_RANDOMIZE_QUOTE_PLAYER" << std::endl;
+    if (PropPage::instance->quotePlayerDefault->GetValue()) configOutput << "#define FETT263_QUOTE_PLAYER_START_ON" << std::endl;
     // if forcePlayerDefault is default already, no define needed
   }
 
-  if (!PropPage::instance->settings.noExtraEffects->GetValue()) {
-    if (PropPage::instance->settings.specialAbilities->GetValue()) configOutput << "#define FETT263_SPECIAL_ABILITIES" << std::endl;
-    if (PropPage::instance->settings.multiPhase->GetValue()) configOutput << "#define FETT263_MULTI_PHASE" << std::endl;
+  if (!PropPage::instance->noExtraEffects->GetValue()) {
+    if (PropPage::instance->specialAbilities->GetValue()) configOutput << "#define FETT263_SPECIAL_ABILITIES" << std::endl;
+    if (PropPage::instance->multiPhase->GetValue()) configOutput << "#define FETT263_MULTI_PHASE" << std::endl;
   }
-  if (PropPage::instance->settings.saveChoreo->GetValue()) configOutput << "#define FETT263_SAVE_CHOREOGRAPHY" << std::endl;
-  else if (PropPage::instance->settings.spinMode->GetValue()) configOutput << "#define FETT263_SPIN_MODE" << std::endl;
-  if (PropPage::instance->settings.saveGesture->GetValue()) configOutput << "#define FETT263_SAVE_GESTURE_OFF" << std::endl;
-  if (PropPage::instance->settings.dualModeSound->GetValue()) configOutput << "#define FETT263_DUAL_MODE_SOUND" << std::endl;
-  if (PropPage::instance->settings.quickPresetSelect->GetValue()) configOutput << "#define FETT263_QUICK_SELECT_ON_BOOT" << std::endl;
-  if (!PropPage::instance->settings.multiBlast->GetValue()) configOutput << "#define FETT263_DISABLE_MULTI_BLAST" << std::endl;
-  if (PropPage::instance->settings.multiBlastDisableToggle->GetValue()) configOutput << "#define FETT263_DISABLE_MULTI_BLAST_TOGGLE" << std::endl;
+  if (PropPage::instance->saveChoreo->GetValue()) configOutput << "#define FETT263_SAVE_CHOREOGRAPHY" << std::endl;
+  else if (PropPage::instance->spinMode->GetValue()) configOutput << "#define FETT263_SPIN_MODE" << std::endl;
+  if (PropPage::instance->saveGesture->GetValue()) configOutput << "#define FETT263_SAVE_GESTURE_OFF" << std::endl;
+  if (PropPage::instance->dualModeSound->GetValue()) configOutput << "#define FETT263_DUAL_MODE_SOUND" << std::endl;
+  if (PropPage::instance->quickPresetSelect->GetValue()) configOutput << "#define FETT263_QUICK_SELECT_ON_BOOT" << std::endl;
+  if (!PropPage::instance->multiBlast->GetValue()) configOutput << "#define FETT263_DISABLE_MULTI_BLAST" << std::endl;
+  if (PropPage::instance->multiBlastDisableToggle->GetValue()) configOutput << "#define FETT263_DISABLE_MULTI_BLAST_TOGGLE" << std::endl;
 
-  if (!PropPage::instance->settings.fontChangeOTF->GetValue()) configOutput << "#define FETT263_DISABLE_CHANGE_FONT" << std::endl;
-  if (!PropPage::instance->settings.styleChangeOTF->GetValue()) configOutput << "#define FETT263_DISABLE_CHANGE_STYLE" << std::endl;
-  if (!PropPage::instance->settings.presetCopyOTF->GetValue()) configOutput << "#define FETT263_DISABLE_COPY_PRESET" << std::endl;
-  if (PropPage::instance->settings.clashStrengthSound->GetValue()) {
+  if (!PropPage::instance->fontChangeOTF->GetValue()) configOutput << "#define FETT263_DISABLE_CHANGE_FONT" << std::endl;
+  if (!PropPage::instance->styleChangeOTF->GetValue()) configOutput << "#define FETT263_DISABLE_CHANGE_STYLE" << std::endl;
+  if (!PropPage::instance->presetCopyOTF->GetValue()) configOutput << "#define FETT263_DISABLE_COPY_PRESET" << std::endl;
+  if (PropPage::instance->clashStrengthSound->GetValue()) {
     configOutput << "#define FETT263_CLASH_STRENGTH_SOUND" << std::endl;
-    configOutput << "#define FETT263_MAX_CLASH " << PropPage::instance->settings.clashStrengthSoundMaxClash->num->GetValue() << std::endl;
+    configOutput << "#define FETT263_MAX_CLASH " << PropPage::instance->clashStrengthSoundMaxClash->num->GetValue() << std::endl;
   }
 
   // if battleModeToggle is default
-  if (PropPage::instance->settings.battleModeAlways->GetValue()) configOutput << "#define FETT263_BATTLE_MODE_ALWAYS_ON" << std::endl;
-  if (PropPage::instance->settings.battleModeOnStart->GetValue()) configOutput << "#define FETT263_BATTLE_MODE_START_ON" << std::endl;
-  if (PropPage::instance->settings.battleModeNoToggle->GetValue()) configOutput << "#define FETT263_DISABLE_BM_TOGGLE" << std::endl;
-  configOutput << "#define FETT263_LOCKUP_DELAY " << PropPage::instance->settings.lockupDelay->num->GetValue() << std::endl;
-  configOutput << "#define FETT263_BM_CLASH_DETECT " << PropPage::instance->settings.battleModeClash->num->GetValue() << std::endl;
+  if (PropPage::instance->battleModeAlways->GetValue()) configOutput << "#define FETT263_BATTLE_MODE_ALWAYS_ON" << std::endl;
+  if (PropPage::instance->battleModeOnStart->GetValue()) configOutput << "#define FETT263_BATTLE_MODE_START_ON" << std::endl;
+  if (PropPage::instance->battleModeNoToggle->GetValue()) configOutput << "#define FETT263_DISABLE_BM_TOGGLE" << std::endl;
+  configOutput << "#define FETT263_LOCKUP_DELAY " << PropPage::instance->lockupDelay->num->GetValue() << std::endl;
+  configOutput << "#define FETT263_BM_CLASH_DETECT " << PropPage::instance->battleModeClash->num->GetValue() << std::endl;
 
-  if (PropPage::instance->settings.battleModeDisablePWR->GetValue()) configOutput << "#define FETT263_BM_DISABLE_OFF_BUTTON" << std::endl;
+  if (PropPage::instance->battleModeDisablePWR->GetValue()) configOutput << "#define FETT263_BM_DISABLE_OFF_BUTTON" << std::endl;
 }
 void Configuration::outputConfigTopBC(std::ofstream& configOutput) {
-  if (PropPage::instance->settings.stabOn->GetValue()) configOutput << "#define BC_STAB_ON" << std::endl;
-  if (PropPage::instance->settings.swingOn->GetValue()) {
+  if (PropPage::instance->stabOn->GetValue()) configOutput << "#define BC_STAB_ON" << std::endl;
+  if (PropPage::instance->swingOn->GetValue()) {
     configOutput << "#define BC_SWING_ON" << std::endl;
-    configOutput << "#define BC_SWING_ON_SPEED " << PropPage::instance->settings.swingOnSpeed->num->GetValue() << std::endl;
+    configOutput << "#define BC_SWING_ON_SPEED " << PropPage::instance->swingOnSpeed->num->GetValue() << std::endl;
   }
-  if (PropPage::instance->settings.twistOn->GetValue()) configOutput << "#define BC_TWIST_ON" << std::endl;
-  if (PropPage::instance->settings.thrustOn->GetValue()) configOutput << "#define BC_THRUST_ON" << std::endl;
-  if (PropPage::instance->settings.twistOff->GetValue()) configOutput << "#define BC_TWIST_OFF" << std::endl;
-  if (PropPage::instance->settings.forcePush->GetValue()) {
+  if (PropPage::instance->twistOn->GetValue()) configOutput << "#define BC_TWIST_ON" << std::endl;
+  if (PropPage::instance->thrustOn->GetValue()) configOutput << "#define BC_THRUST_ON" << std::endl;
+  if (PropPage::instance->twistOff->GetValue()) configOutput << "#define BC_TWIST_OFF" << std::endl;
+  if (PropPage::instance->forcePush->GetValue()) {
     configOutput << "#define BC_FORCE_PUSH" << std::endl;
-    configOutput << "#define BC_FORCE_PUSH_LENGTH " << PropPage::instance->settings.forcePushLength->num->GetValue() << std::endl;
+    configOutput << "#define BC_FORCE_PUSH_LENGTH " << PropPage::instance->forcePushLength->num->GetValue() << std::endl;
   }
-  if (PropPage::instance->settings.gestureEnBattle->GetValue()) configOutput << "#define GESTURE_AUTO_BATTLE_MODE" << std::endl;
-  if (PropPage::instance->settings.disableGestureNoBlade->GetValue()) configOutput << "#define NO_BLADE_NO_GEST_ONOFF" << std::endl;
-  if (PropPage::instance->settings.multiBlastSwing->GetValue()) configOutput << "#define ENABLE_AUTO_SWING_BLAST" << std::endl;
+  if (PropPage::instance->gestureEnBattle->GetValue()) configOutput << "#define GESTURE_AUTO_BATTLE_MODE" << std::endl;
+  if (PropPage::instance->disableGestureNoBlade->GetValue()) configOutput << "#define NO_BLADE_NO_GEST_ONOFF" << std::endl;
+  if (PropPage::instance->multiBlastSwing->GetValue()) configOutput << "#define ENABLE_AUTO_SWING_BLAST" << std::endl;
 }
 void Configuration::outputConfigTopCaiwyn(std::ofstream& configOutput) {
-  if (PropPage::instance->settings.pwrClash->GetValue()) configOutput << "#define CAIWYN_BUTTON_CLASH" << std::endl;
-  if (PropPage::instance->settings.pwrLockup->GetValue()) configOutput << "#define CAIWYN_BUTTON_LOCKUP" << std::endl;
+  if (PropPage::instance->pwrClash->GetValue()) configOutput << "#define CAIWYN_BUTTON_CLASH" << std::endl;
+  if (PropPage::instance->pwrLockup->GetValue()) configOutput << "#define CAIWYN_BUTTON_LOCKUP" << std::endl;
 }
 
 void Configuration::outputConfigProp(std::ofstream& configOutput)
 {
   configOutput << "#ifdef CONFIG_PROP" << std::endl;
-  switch (Configuration::parsePropSel(PropPage::instance->settings.prop->GetValue().ToStdString())) {
+  switch (Configuration::parsePropSel(PropPage::instance->prop->GetValue().ToStdString())) {
     case Configuration::SaberProp::SA22C:
       configOutput << "#include \"../props/saber_sa22c_buttons.h\"" << std::endl;
       break;
@@ -419,8 +419,8 @@ void Configuration::genWS281X(std::ofstream& configOutput, const BladesPage::bla
 void Configuration::outputConfigButtons(std::ofstream& configOutput) {
   configOutput << "#ifdef CONFIG_BUTTONS" << std::endl;
   configOutput << "Button PowerButton(BUTTON_POWER, powerButtonPin, \"pow\");" << std::endl;
-  if (GeneralPage::instance->settings.buttons->num->GetValue() >= 2) configOutput << "Button AuxButton(BUTTON_AUX, auxPin, \"aux\");" << std::endl;
-  if (GeneralPage::instance->settings.buttons->num->GetValue() == 3) configOutput << "Button Aux2Button(BUTTON_AUX2, aux2Pin, \"aux\");" << std::endl; // figure out aux2 syntax
+  if (GeneralPage::instance->buttons->num->GetValue() >= 2) configOutput << "Button AuxButton(BUTTON_AUX, auxPin, \"aux\");" << std::endl;
+  if (GeneralPage::instance->buttons->num->GetValue() == 3) configOutput << "Button Aux2Button(BUTTON_AUX2, aux2Pin, \"aux\");" << std::endl; // figure out aux2 syntax
   configOutput << "#endif" << std::endl << std::endl; // CONFIG_BUTTONS
 }
 
@@ -511,20 +511,20 @@ void Configuration::readConfigTop(std::ifstream& file) {
       getline(file, element);
       std::strtok(element.data(), "="); // unsigned int maxLedsPerStrip =
       element = std::strtok(nullptr, " ;");
-      GeneralPage::instance->settings.maxLEDs->num->SetValue(std::stoi(element));
+      GeneralPage::instance->maxLEDs->num->SetValue(std::stoi(element));
     } else if (element == "#include" && !file.eof()) {
       file >> element;
       if (std::strstr(element.c_str(), "v1") != NULL) {
-        GeneralPage::instance->settings.board->SetSelection(0);
+        GeneralPage::instance->board->SetSelection(0);
       } else if (std::strstr(element.c_str(), "v2") != NULL) {
-        GeneralPage::instance->settings.board->SetSelection(1);
+        GeneralPage::instance->board->SetSelection(1);
       } else if (std::strstr(element.c_str(), "v3") != NULL) {
-        GeneralPage::instance->settings.board->SetSelection(2);
+        GeneralPage::instance->board->SetSelection(2);
       }
     } else if (element == "//PROFFIECONFIG") {
       file >> element;
-      if (element == "ENABLE_MASS_STORAGE") GeneralPage::instance->settings.massStorage->SetValue(true);
-      if (element == "ENABLE_WEBUSB") GeneralPage::instance->settings.webUSB->SetValue(true);
+      if (element == "ENABLE_MASS_STORAGE") GeneralPage::instance->massStorage->SetValue(true);
+      if (element == "ENABLE_WEBUSB") GeneralPage::instance->webUSB->SetValue(true);
     }
   }
 }
@@ -532,11 +532,11 @@ void Configuration::readConfigProp(std::ifstream& file) {
   std::string element;
   while (!file.eof() && element != "#endif") {
     file >> element;
-    if (std::strstr(element.data(), "sa22c") != nullptr) PropPage::instance->settings.prop->SetValue("SA22C");
-    if (std::strstr(element.data(), "fett263") != nullptr) PropPage::instance->settings.prop->SetValue("Fett263");
-    if (std::strstr(element.data(), "shtok") != nullptr) PropPage::instance->settings.prop->SetValue("Shtok");
-    if (std::strstr(element.data(), "BC") != nullptr) PropPage::instance->settings.prop->SetValue("BC");
-    if (std::strstr(element.data(), "caiwyn") != nullptr) PropPage::instance->settings.prop->SetValue("Caiwyn");
+    if (std::strstr(element.data(), "sa22c") != nullptr) PropPage::instance->prop->SetValue("SA22C");
+    if (std::strstr(element.data(), "fett263") != nullptr) PropPage::instance->prop->SetValue("Fett263");
+    if (std::strstr(element.data(), "shtok") != nullptr) PropPage::instance->prop->SetValue("Shtok");
+    if (std::strstr(element.data(), "BC") != nullptr) PropPage::instance->prop->SetValue("BC");
+    if (std::strstr(element.data(), "caiwyn") != nullptr) PropPage::instance->prop->SetValue("Caiwyn");
   }
 }
 void Configuration::readConfigPresets(std::ifstream& file) {
@@ -604,94 +604,94 @@ void Configuration::readDefine(std::string& define) {
     while (bladeNum != BladesPage::instance->blades.size()) { BladesPage::instance->blades.push_back(BladesPage::bladeConfig()); }
     PresetsPage::instance->update();
   }
-  CHKDEF("NUM_BUTTONS") GeneralPage::instance->settings.buttons->num->SetValue(DEFNUM);
-  CHKDEF("VOLUME") GeneralPage::instance->settings.volume->num->SetValue(DEFNUM);
-  CHKDEF("CLASH_THRESHOLD_G") GeneralPage::instance->settings.clash->num->SetValue(DEFNUM);
+  CHKDEF("NUM_BUTTONS") GeneralPage::instance->buttons->num->SetValue(DEFNUM);
+  CHKDEF("VOLUME") GeneralPage::instance->volume->num->SetValue(DEFNUM);
+  CHKDEF("CLASH_THRESHOLD_G") GeneralPage::instance->clash->num->SetValue(DEFNUM);
   CHKDEF("SAVE_STATE") {
-    GeneralPage::instance->settings.colorSave->SetValue(true);
-    GeneralPage::instance->settings.presetSave->SetValue(true);
-    GeneralPage::instance->settings.volumeSave->SetValue(true);
+    GeneralPage::instance->colorSave->SetValue(true);
+    GeneralPage::instance->presetSave->SetValue(true);
+    GeneralPage::instance->volumeSave->SetValue(true);
   }
-  CHKDEF("SAVE_COLOR_CHANGE") GeneralPage::instance->settings.colorSave->SetValue(true);
-  CHKDEF("SAVE_PRESET") GeneralPage::instance->settings.presetSave->SetValue(true);
-  CHKDEF("SAVE_VOLUME") GeneralPage::instance->settings.volumeSave->SetValue(true);
-  CHKDEF("DISABLE_COLOR_CHANGE") GeneralPage::instance->settings.disableColor->SetValue(true);
-  CHKDEF("DISABLE_TALKIE") GeneralPage::instance->settings.noTalkie->SetValue(true);
-  CHKDEF("DISABLE_BASIC_PARSER_STYLES") GeneralPage::instance->settings.noBasicParsers->SetValue(true);
-  CHKDEF("ENABLE_DEVELOPER_COMMANDS") GeneralPage::instance->settings.enableDeveloperCommands->SetValue(true);
-  CHKDEF("DISABLE_DIAGNOSTIC_COMMANDS") GeneralPage::instance->settings.disableDiagnosticCommands->SetValue(true);
-  CHKDEF("PLI_OFF_TIME") GeneralPage::instance->settings.pliTime->num->SetValue(DEFNUM);
-  CHKDEF("IDLE_OFF_TIME") GeneralPage::instance->settings.idleTime->num->SetValue(DEFNUM);
-  CHKDEF("MOTION_TIMEOUT") GeneralPage::instance->settings.motionTime->num->SetValue(DEFNUM);
+  CHKDEF("SAVE_COLOR_CHANGE") GeneralPage::instance->colorSave->SetValue(true);
+  CHKDEF("SAVE_PRESET") GeneralPage::instance->presetSave->SetValue(true);
+  CHKDEF("SAVE_VOLUME") GeneralPage::instance->volumeSave->SetValue(true);
+  CHKDEF("DISABLE_COLOR_CHANGE") GeneralPage::instance->disableColor->SetValue(true);
+  CHKDEF("DISABLE_TALKIE") GeneralPage::instance->noTalkie->SetValue(true);
+  CHKDEF("DISABLE_BASIC_PARSER_STYLES") GeneralPage::instance->noBasicParsers->SetValue(true);
+  CHKDEF("ENABLE_DEVELOPER_COMMANDS") GeneralPage::instance->enableDeveloperCommands->SetValue(true);
+  CHKDEF("DISABLE_DIAGNOSTIC_COMMANDS") GeneralPage::instance->disableDiagnosticCommands->SetValue(true);
+  CHKDEF("PLI_OFF_TIME") GeneralPage::instance->pliTime->num->SetValue(DEFNUM);
+  CHKDEF("IDLE_OFF_TIME") GeneralPage::instance->idleTime->num->SetValue(DEFNUM);
+  CHKDEF("MOTION_TIMEOUT") GeneralPage::instance->motionTime->num->SetValue(DEFNUM);
 
   // Prop Specific
-  CHKPRP("STAB_ON") PropPage::instance->settings.stabOn->SetValue(true);
-  CHKPRP("STAB_ON_PREON") PropPage::instance->settings.stabOnPreon->SetValue(true);
-  CHKPRP("STAB_ON_NO_BM") PropPage::instance->settings.stabOnNoBattle->SetValue(true);
-  CHKPRP("SWING_ON") PropPage::instance->settings.swingOn->SetValue(true);
-  CHKPRP("SWING_ON_PREON") PropPage::instance->settings.swingOnPreon->SetValue(true);
-  CHKPRP("SWING_ON_NO_BM") PropPage::instance->settings.swingOnNoBattle->SetValue(true);
-  CHKPRP("SWING_ON_SPEED") PropPage::instance->settings.swingOnSpeed->num->SetValue(DEFNUM);
-  CHKPRP("THRUST_ON") PropPage::instance->settings.thrustOn->SetValue(true);
-  CHKPRP("THRUST_ON_PREON") PropPage::instance->settings.thrustOnPreon->SetValue(true);
-  CHKPRP("THRUST_ON_NO_BM") PropPage::instance->settings.thrustOnNoBattle->SetValue(true);
-  CHKPRP("TWIST_ON") PropPage::instance->settings.twistOn->SetValue(true);
-  CHKPRP("TWIST_ON_PREON") PropPage::instance->settings.twistOnPreon->SetValue(true);
-  CHKPRP("TWIST_ON_NO_BM") PropPage::instance->settings.twistOnNoBattle->SetValue(true);
-  CHKPRP("TWIST_OFF") PropPage::instance->settings.twistOff->SetValue(true);
-  CHKPRP("TWIST_OFF_NO_POSTOFF") PropPage::instance->settings.twistOffFast->SetValue(true);
+  CHKPRP("STAB_ON") PropPage::instance->stabOn->SetValue(true);
+  CHKPRP("STAB_ON_PREON") PropPage::instance->stabOnPreon->SetValue(true);
+  CHKPRP("STAB_ON_NO_BM") PropPage::instance->stabOnNoBattle->SetValue(true);
+  CHKPRP("SWING_ON") PropPage::instance->swingOn->SetValue(true);
+  CHKPRP("SWING_ON_PREON") PropPage::instance->swingOnPreon->SetValue(true);
+  CHKPRP("SWING_ON_NO_BM") PropPage::instance->swingOnNoBattle->SetValue(true);
+  CHKPRP("SWING_ON_SPEED") PropPage::instance->swingOnSpeed->num->SetValue(DEFNUM);
+  CHKPRP("THRUST_ON") PropPage::instance->thrustOn->SetValue(true);
+  CHKPRP("THRUST_ON_PREON") PropPage::instance->thrustOnPreon->SetValue(true);
+  CHKPRP("THRUST_ON_NO_BM") PropPage::instance->thrustOnNoBattle->SetValue(true);
+  CHKPRP("TWIST_ON") PropPage::instance->twistOn->SetValue(true);
+  CHKPRP("TWIST_ON_PREON") PropPage::instance->twistOnPreon->SetValue(true);
+  CHKPRP("TWIST_ON_NO_BM") PropPage::instance->twistOnNoBattle->SetValue(true);
+  CHKPRP("TWIST_OFF") PropPage::instance->twistOff->SetValue(true);
+  CHKPRP("TWIST_OFF_NO_POSTOFF") PropPage::instance->twistOffFast->SetValue(true);
 
-  CHKPRP("NO_LOCKUP_HOLD") PropPage::instance->settings.noLockupHold->SetValue(true);
-  CHKPRP("ENABLE_AUTO_SWING_BLAST") PropPage::instance->settings.multiBlastSwing->SetValue(true);
-  CHKPRP("NO_BLADE_NO_GEST_ONOFF") PropPage::instance->settings.disableGestureNoBlade->SetValue(true);
-  CHKPRP("BUTTON_CLASH") PropPage::instance->settings.pwrClash->SetValue(true);
-  CHKPRP("BUTTON_LOCKUP") PropPage::instance->settings.pwrLockup->SetValue(true);
-  CHKPRP("HOLD_BUTTON_OFF") PropPage::instance->settings.pwrHoldOff->SetValue(true);
-  CHKPRP("HOLD_BUTTON_LOCKUP") PropPage::instance->settings.auxHoldLockup->SetValue(true);
-  CHKPRP("USE_BC_MELT_STAB") PropPage::instance->settings.meltGestureAlways->SetValue(true);
-  CHKPRP("CIRCULAR_VOLUME_MENU") PropPage::instance->settings.volumeCircular->SetValue(true);
-  CHKPRP("CIRCULAR_DIM_MENU") PropPage::instance->settings.brightnessCircular->SetValue(true);
-  CHKPRP("EDIT") PropPage::instance->settings.editEnable->SetValue(true);
-  CHKPRP("EDIT_MODE_MENU") PropPage::instance->settings.editMode->SetValue(true);
-  CHKPRP("EDIT_SETTINGS_MENU") PropPage::instance->settings.editSettings->SetValue(true);
+  CHKPRP("NO_LOCKUP_HOLD") PropPage::instance->noLockupHold->SetValue(true);
+  CHKPRP("ENABLE_AUTO_SWING_BLAST") PropPage::instance->multiBlastSwing->SetValue(true);
+  CHKPRP("NO_BLADE_NO_GEST_ONOFF") PropPage::instance->disableGestureNoBlade->SetValue(true);
+  CHKPRP("BUTTON_CLASH") PropPage::instance->pwrClash->SetValue(true);
+  CHKPRP("BUTTON_LOCKUP") PropPage::instance->pwrLockup->SetValue(true);
+  CHKPRP("HOLD_BUTTON_OFF") PropPage::instance->pwrHoldOff->SetValue(true);
+  CHKPRP("HOLD_BUTTON_LOCKUP") PropPage::instance->auxHoldLockup->SetValue(true);
+  CHKPRP("USE_BC_MELT_STAB") PropPage::instance->meltGestureAlways->SetValue(true);
+  CHKPRP("CIRCULAR_VOLUME_MENU") PropPage::instance->volumeCircular->SetValue(true);
+  CHKPRP("CIRCULAR_DIM_MENU") PropPage::instance->brightnessCircular->SetValue(true);
+  CHKPRP("EDIT") PropPage::instance->editEnable->SetValue(true);
+  CHKPRP("EDIT_MODE_MENU") PropPage::instance->editMode->SetValue(true);
+  CHKPRP("EDIT_SETTINGS_MENU") PropPage::instance->editSettings->SetValue(true);
 
-  CHKPRP("DISABLE_TALKIE") PropPage::instance->settings.beepErrors->SetValue(true);
-  CHKPRP("TRACK_PLAYER_NO_PROMPTS") PropPage::instance->settings.trackPlayerPrompts->SetValue(false);
-  CHKPRP("SAY_COLOR_LIST") PropPage::instance->settings.spokenColors->SetValue(true);
-  CHKPRP("SAY_BATTERY_VOLTS") PropPage::instance->settings.spokenBatteryVolts->SetValue(true);
-  CHKPRP("SAY_BATTERY_PERCENT") PropPage::instance->settings.spokenBatteryPercent->SetValue(true);
+  CHKPRP("DISABLE_TALKIE") PropPage::instance->beepErrors->SetValue(true);
+  CHKPRP("TRACK_PLAYER_NO_PROMPTS") PropPage::instance->trackPlayerPrompts->SetValue(false);
+  CHKPRP("SAY_COLOR_LIST") PropPage::instance->spokenColors->SetValue(true);
+  CHKPRP("SAY_BATTERY_VOLTS") PropPage::instance->spokenBatteryVolts->SetValue(true);
+  CHKPRP("SAY_BATTERY_PERCENT") PropPage::instance->spokenBatteryPercent->SetValue(true);
 
-  CHKPRP("FETT263_FORCE_PUSH") PropPage::instance->settings.forcePushBM->SetValue(true);
-  else CHKPRP("FORCE_PUSH") PropPage::instance->settings.forcePush->SetValue(true);
-  CHKPRP("FORCE_PUSH_ALWAYS") PropPage::instance->settings.forcePush->SetValue(true);
-  CHKPRP("FORCE_PUSH_LENGTH") PropPage::instance->settings.forcePushLength->num->SetValue(DEFNUM);
+  CHKPRP("FETT263_FORCE_PUSH") PropPage::instance->forcePushBM->SetValue(true);
+  else CHKPRP("FORCE_PUSH") PropPage::instance->forcePush->SetValue(true);
+  CHKPRP("FORCE_PUSH_ALWAYS") PropPage::instance->forcePush->SetValue(true);
+  CHKPRP("FORCE_PUSH_LENGTH") PropPage::instance->forcePushLength->num->SetValue(DEFNUM);
 
-  CHKPRP("DISABLE_QUOTE_PLAYER") PropPage::instance->settings.enableQuotePlayer->SetValue(false);
-  CHKPRP("RANDOMIZE_QUOTE_PLAYER") PropPage::instance->settings.randomizeQuotePlayer->SetValue(true);
-  CHKPRP("QUOTE_PLAYER_START_ON") PropPage::instance->settings.quotePlayerDefault->SetValue(true);
+  CHKPRP("DISABLE_QUOTE_PLAYER") PropPage::instance->enableQuotePlayer->SetValue(false);
+  CHKPRP("RANDOMIZE_QUOTE_PLAYER") PropPage::instance->randomizeQuotePlayer->SetValue(true);
+  CHKPRP("QUOTE_PLAYER_START_ON") PropPage::instance->quotePlayerDefault->SetValue(true);
 
-  CHKPRP("SPECIAL_ABILITIES") PropPage::instance->settings.specialAbilities->SetValue(true);
-  CHKPRP("MULTI_PHASE") PropPage::instance->settings.multiPhase->SetValue(true);
-  CHKPRP("SPIN_MODE") PropPage::instance->settings.spinMode->SetValue(true);
-  CHKPRP("SAVE_CHOREOGRAPHY") PropPage::instance->settings.saveChoreo->SetValue(true);
-  CHKPRP("SAVE_GESTURE_OFF") PropPage::instance->settings.saveGesture->SetValue(true);
-  CHKPRP("DUAL_MODE_SOUND") PropPage::instance->settings.dualModeSound->SetValue(true);
-  CHKPRP("QUICK_SELECT_ON_BOOT") PropPage::instance->settings.quickPresetSelect->SetValue(true);
-  CHKPRP("DISABLE_MULTI_BLAST_TOGGLE") PropPage::instance->settings.multiBlastDisableToggle->SetValue(true);
-  else CHKPRP("DISABLE_MULTI_BLAST") PropPage::instance->settings.multiBlast->SetValue(false);
-  CHKPRP("DISABLE_CHANGE_FONT") PropPage::instance->settings.fontChangeOTF->SetValue(false);
-  CHKPRP("DISABLE_CHANGE_STYLE") PropPage::instance->settings.styleChangeOTF->SetValue(false);
-  CHKPRP("DISABLE_COPY_PRESET") PropPage::instance->settings.presetCopyOTF->SetValue(false);
-  CHKPRP("CLASH_STRENGTH_SOUND") PropPage::instance->settings.clashStrengthSound->SetValue(true);
-  CHKPRP("MAX_CLASH") PropPage::instance->settings.clashStrengthSoundMaxClash->num->SetValue(DEFNUM);
+  CHKPRP("SPECIAL_ABILITIES") PropPage::instance->specialAbilities->SetValue(true);
+  CHKPRP("MULTI_PHASE") PropPage::instance->multiPhase->SetValue(true);
+  CHKPRP("SPIN_MODE") PropPage::instance->spinMode->SetValue(true);
+  CHKPRP("SAVE_CHOREOGRAPHY") PropPage::instance->saveChoreo->SetValue(true);
+  CHKPRP("SAVE_GESTURE_OFF") PropPage::instance->saveGesture->SetValue(true);
+  CHKPRP("DUAL_MODE_SOUND") PropPage::instance->dualModeSound->SetValue(true);
+  CHKPRP("QUICK_SELECT_ON_BOOT") PropPage::instance->quickPresetSelect->SetValue(true);
+  CHKPRP("DISABLE_MULTI_BLAST_TOGGLE") PropPage::instance->multiBlastDisableToggle->SetValue(true);
+  else CHKPRP("DISABLE_MULTI_BLAST") PropPage::instance->multiBlast->SetValue(false);
+  CHKPRP("DISABLE_CHANGE_FONT") PropPage::instance->fontChangeOTF->SetValue(false);
+  CHKPRP("DISABLE_CHANGE_STYLE") PropPage::instance->styleChangeOTF->SetValue(false);
+  CHKPRP("DISABLE_COPY_PRESET") PropPage::instance->presetCopyOTF->SetValue(false);
+  CHKPRP("CLASH_STRENGTH_SOUND") PropPage::instance->clashStrengthSound->SetValue(true);
+  CHKPRP("MAX_CLASH") PropPage::instance->clashStrengthSoundMaxClash->num->SetValue(DEFNUM);
 
-  CHKPRP("BATTLE_MODE_START_ON") PropPage::instance->settings.battleModeOnStart->SetValue(true);
-  CHKPRP("BATTLE_MODE_ALWAYS_ON") PropPage::instance->settings.battleModeAlways->SetValue(true);
-  CHKPRP("DISABLE_BM_TOGGLE") PropPage::instance->settings.battleModeNoToggle->SetValue(true);
-  CHKPRP("GESTURE_AUTO_BATTLE_MODE") PropPage::instance->settings.gestureEnBattle->SetValue(true);
-  CHKPRP("LOCKUP_DELAY") PropPage::instance->settings.lockupDelay->num->SetValue(DEFNUM);
-  CHKPRP("BM_CLASH_DETECT") PropPage::instance->settings.battleModeClash->num->SetValue(DEFNUM);
-  CHKPRP("BM_DISABLE_OFF_BUTTON") PropPage::instance->settings.battleModeDisablePWR->SetValue(true);
+  CHKPRP("BATTLE_MODE_START_ON") PropPage::instance->battleModeOnStart->SetValue(true);
+  CHKPRP("BATTLE_MODE_ALWAYS_ON") PropPage::instance->battleModeAlways->SetValue(true);
+  CHKPRP("DISABLE_BM_TOGGLE") PropPage::instance->battleModeNoToggle->SetValue(true);
+  CHKPRP("GESTURE_AUTO_BATTLE_MODE") PropPage::instance->gestureEnBattle->SetValue(true);
+  CHKPRP("LOCKUP_DELAY") PropPage::instance->lockupDelay->num->SetValue(DEFNUM);
+  CHKPRP("BM_CLASH_DETECT") PropPage::instance->battleModeClash->num->SetValue(DEFNUM);
+  CHKPRP("BM_DISABLE_OFF_BUTTON") PropPage::instance->battleModeDisablePWR->SetValue(true);
 
 # undef CHKDEF
 # undef CHKPRP

@@ -13,17 +13,15 @@ public:
 
   void update();
 
-  struct {
-    wxCheckBox* bladeDetect{nullptr};
-    wxStaticText* bladeDetectPinLabel{nullptr};
-    wxComboBox* bladeDetectPin{nullptr};
+  wxCheckBox* bladeDetect{nullptr};
+  wxStaticText* bladeDetectPinLabel{nullptr};
+  wxComboBox* bladeDetectPin{nullptr};
 
-    wxCheckBox* OLED{nullptr};
-  } settings;
+  wxCheckBox* OLED{nullptr};
 
 private:
-  wxStaticBoxSizer* bladeDetect(wxStaticBoxSizer*);
-  wxStaticBoxSizer* OLED(wxStaticBoxSizer*);
+  wxStaticBoxSizer* createBladeDetect(wxStaticBoxSizer*);
+  wxStaticBoxSizer* createOLED(wxStaticBoxSizer*);
 
   HardwarePage();
 };
