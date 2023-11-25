@@ -10,6 +10,7 @@
 #include "hardwarepage.h"
 #include "presetspage.h"
 #include "proppage.h"
+#include "bladeidpage.h"
 
 #include <wx/combobox.h>
 #include <wx/arrstr.h>
@@ -65,47 +66,22 @@ void MainWindow::BindEvents() {
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(); }, Misc::ID_RefreshDev);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(); }, Misc::ID_ApplyChanges);
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        // TODO GeneralPage::instance->update();
-        if (windowSelect->GetValue() == "General") {
-          GeneralPage::instance->Show(true);
-          PropPage::instance->Show(false);
-          PresetsPage::instance->Show(false);
-          BladesPage::instance->Show(false);
-          HardwarePage::instance->Show(false);
-          UPDATEWINDOW;
-        } else if (windowSelect->GetValue() == "Prop File") {
-          GeneralPage::instance->Show(false);
-          PropPage::instance->Show(true);
-          PresetsPage::instance->Show(false);
-          BladesPage::instance->Show(false);
-          HardwarePage::instance->Show(false);
-          PropPage::instance->update();
-          UPDATEWINDOW;
-          SetSize(wxSize(GetSize().GetWidth(), GetMinHeight() + PropPage::instance->GetBestVirtualSize().GetHeight()));
-        } else if (windowSelect->GetValue() == "Presets") {
-          GeneralPage::instance->Show(false);
-          PropPage::instance->Show(false);
-          PresetsPage::instance->Show(true);
-          BladesPage::instance->Show(false);
-          HardwarePage::instance->Show(false);
-          PresetsPage::instance->update();
-          UPDATEWINDOW;
-        } else if (windowSelect->GetValue() == "Blades") {
-          GeneralPage::instance->Show(false);
-          PropPage::instance->Show(false);
-          PresetsPage::instance->Show(false);
-          BladesPage::instance->Show(true);
-          HardwarePage::instance->Show(false);
-          BladesPage::instance->update();
-          UPDATEWINDOW;
-        } else if (windowSelect->GetValue() == "Hardware") {
-          GeneralPage::instance->Show(false);
-          PropPage::instance->Show(false);
-          PresetsPage::instance->Show(false);
-          BladesPage::instance->Show(false);
-          HardwarePage::instance->Show(true);
-          UPDATEWINDOW;
-        }
+        GeneralPage::instance->Show(windowSelect->GetValue() == "General");
+        PropPage::instance->Show(windowSelect->GetValue() == "Prop File");
+        BladesPage::instance->Show(windowSelect->GetValue() == "Blades");
+        PresetsPage::instance->Show(windowSelect->GetValue() == "Presets");
+        HardwarePage::instance->Show(windowSelect->GetValue() == "Hardware");
+        BladeIDPage::instance->Show(windowSelect->GetValue() == "Blade Detect/ID");
+
+        //GeneralPage::instance->update();
+        PropPage::instance->update();
+        BladesPage::instance->update();
+        PresetsPage::instance->update();
+        HardwarePage::instance->update();
+        BladeIDPage::instance->update();
+
+        UPDATEWINDOW;
+        if (PropPage::instance->IsShown()) SetSize(wxSize(GetSize().GetWidth(), GetMinHeight() + PropPage::instance->GetBestVirtualSize().GetHeight()));
       }, Misc::ID_WindowSelect);
 
 
@@ -196,7 +172,7 @@ void MainWindow::CreatePages() {
   master = new wxBoxSizer(wxVERTICAL);
 
   wxBoxSizer* options = new wxBoxSizer(wxHORIZONTAL);
-  windowSelect = new wxComboBox(this, Misc::ID_WindowSelect, "General", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Blades", "Presets"  /*, "Hardware"*/}), wxCB_READONLY | wxCB_DROPDOWN);
+  windowSelect = new wxComboBox(this, Misc::ID_WindowSelect, "General", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Blades", "Presets", "Blade Detect/ID"  /*, "Hardware"*/}), wxCB_READONLY | wxCB_DROPDOWN);
   refreshButton = new wxButton(this, Misc::ID_RefreshDev, "Refresh...", wxDefaultPosition, wxDefaultSize, 0);
   devSelect = new wxComboBox(this, Misc::ID_DeviceSelect, "Select Device...", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Arduino::getBoards()), wxCB_READONLY);
   applyButton = new wxButton(this, Misc::ID_ApplyChanges, "Apply to Board...", wxDefaultPosition, wxDefaultSize, 0);
@@ -212,18 +188,20 @@ void MainWindow::CreatePages() {
   PresetsPage::instance = new PresetsPage(this);
   BladesPage::instance = new BladesPage(this);
   HardwarePage::instance = new HardwarePage(this);
+  BladeIDPage::instance = new BladeIDPage(this);
 
   //GeneralPage::instance->update();
   PropPage::instance->update();
   PresetsPage::instance->update();
   BladesPage::instance->update();
   HardwarePage::instance->update();
+  BladeIDPage::instance->update();
 
   PropPage::instance->Show(false);
   BladesPage::instance->Show(false);
   PresetsPage::instance->Show(false);
   HardwarePage::instance->Show(false);
-
+  BladeIDPage::instance->Show(false);
 
   master->Add(options, wxSizerFlags(0).Expand());
   master->Add(GeneralPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
@@ -231,6 +209,7 @@ void MainWindow::CreatePages() {
   master->Add(PresetsPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
   master->Add(BladesPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
   master->Add(HardwarePage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
+  master->Add(BladeIDPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
   SetSizerAndFit(master); // use the sizer for layout and set size and hints
 }

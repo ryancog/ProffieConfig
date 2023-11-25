@@ -19,19 +19,24 @@ public:
     ID_DeviceSelect,
     ID_Docs,
     ID_Issue,
+
     ID_GenFile,
     ID_VerifyConfig,
     ID_ExportFile,
     ID_ImportFile,
-    ID_StyleEditor,
 
     ID_PropSelect,
     ID_PropOption,
+
+    ID_PresetArrayList,
     ID_PresetList,
     ID_BladeList,
+    ID_AddPresetArray,
+    ID_RemovePresetArray,
     ID_AddPreset,
     ID_RemovePreset,
     ID_PresetChange,
+
     ID_BladeSelect,
     ID_SubBladeSelect,
     ID_BladePower,
@@ -41,8 +46,21 @@ public:
     ID_AddSubBlade,
     ID_RemoveSubBlade,
     ID_BladeType,
+
+    ID_BladeIDEnable,
+    ID_BladeDetectEnable,
+    ID_BladeIDMode,
+    ID_BladeDetectPin,
+    ID_BladeIDPin,
+    ID_BladeIDPullup,
+    ID_BladeIDEnablePower,
+    ID_BladeIDList,
+    ID_BladeIDAdd,
+    ID_BladeIDRemove,
+
     ID_SerialCommand,
-    ID_OpenSerial
+    ID_OpenSerial,
+    ID_StyleEditor
   };
 
   struct numEntry {
