@@ -1,6 +1,5 @@
 TEMPLATE = app
 CONFIG += c++20
-CONFIG += console
 CONFIG -= qt
 
 QMAKE_CXXFLAGS += $$system(wx-config --cxxflags)
@@ -9,6 +8,15 @@ QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
 VERSION = 1.4.3
 DEFINES += VERSION=\\\"$$VERSION\\\"
 
+# macOS resource handling
+ICON = ../resources/icons/icon.icns
+RESOURCE.files += ../resources/macOS/arduino-cli
+RESOURCE.files += ../resources/ProffieOS
+RESOURCE.files += ../resources/StyleEditor
+RESOURCE.path = Contents/Resources
+QMAKE_BUNDLE_DATA += RESOURCE
+
+# Windows resource handling
 RC_ICONS = ../resources/icons/icon.ico
 
 LIBS += $$system(wx-config --libs all)
