@@ -14,125 +14,123 @@ public:
 
   void update();
 
-  struct {
-    wxComboBox* prop{nullptr};
-    wxCheckBox* noLockupHold{nullptr};
+  wxComboBox* prop{nullptr};
+  wxCheckBox* noLockupHold{nullptr};
 
-    wxCheckBox* disableGestureNoBlade{nullptr};
-    wxCheckBox* gestureBattle{nullptr};
-    // Stab On
-    wxCheckBox* stabOn{nullptr};
-    wxRadioButton* stabOnFast{nullptr};
-    wxRadioButton* stabOnPreon{nullptr};
-    wxCheckBox* stabOnNoBattle{nullptr};
-    // Swing On
-    wxCheckBox* swingOn{nullptr};
-    Misc::numEntry* swingOnSpeed;
-    wxRadioButton* swingOnFast{nullptr};
-    wxRadioButton* swingOnPreon{nullptr};
-    wxCheckBox* swingOnNoBattle{nullptr};
-    // Twist On
-    wxCheckBox* twistOn{nullptr};
-    wxRadioButton* twistOnFast{nullptr};
-    wxRadioButton* twistOnPreon{nullptr};
-    wxCheckBox* twistOnNoBattle{nullptr};
-    // Thrust On
-    wxCheckBox* thrustOn{nullptr};
-    wxRadioButton* thrustOnFast{nullptr};
-    wxRadioButton* thrustOnPreon{nullptr};
-    wxCheckBox* thrustOnNoBattle{nullptr};
-    // Twist Off
-    wxCheckBox* twistOff{nullptr};
-    wxRadioButton* twistOffFast{nullptr};
-    wxRadioButton* twistOffPostoff{nullptr};
+  wxCheckBox* disableGestureNoBlade{nullptr};
+  wxCheckBox* gestureBattle{nullptr};
+  // Stab On
+  wxCheckBox* stabOn{nullptr};
+  wxRadioButton* stabOnFast{nullptr};
+  wxRadioButton* stabOnPreon{nullptr};
+  wxCheckBox* stabOnNoBattle{nullptr};
+  // Swing On
+  wxCheckBox* swingOn{nullptr};
+  Misc::numEntry* swingOnSpeed;
+  wxRadioButton* swingOnFast{nullptr};
+  wxRadioButton* swingOnPreon{nullptr};
+  wxCheckBox* swingOnNoBattle{nullptr};
+  // Twist On
+  wxCheckBox* twistOn{nullptr};
+  wxRadioButton* twistOnFast{nullptr};
+  wxRadioButton* twistOnPreon{nullptr};
+  wxCheckBox* twistOnNoBattle{nullptr};
+  // Thrust On
+  wxCheckBox* thrustOn{nullptr};
+  wxRadioButton* thrustOnFast{nullptr};
+  wxRadioButton* thrustOnPreon{nullptr};
+  wxCheckBox* thrustOnNoBattle{nullptr};
+  // Twist Off
+  wxCheckBox* twistOff{nullptr};
+  wxRadioButton* twistOffFast{nullptr};
+  wxRadioButton* twistOffPostoff{nullptr};
 
-    // Battle Mode
-    wxCheckBox* gestureEnBattle{nullptr};
-    Misc::numEntry* lockupDelay;
-    wxRadioButton* battleModeToggle{nullptr};
-    wxRadioButton* battleModeAlways{nullptr};
-    wxRadioButton* battleModeOnStart{nullptr};
-    wxCheckBox* battleModeDisablePWR{nullptr};
-    Misc::numEntryDouble* battleModeClash;
+  // Battle Mode
+  wxCheckBox* gestureEnBattle{nullptr};
+  Misc::numEntry* lockupDelay;
+  wxRadioButton* battleModeToggle{nullptr};
+  wxRadioButton* battleModeAlways{nullptr};
+  wxRadioButton* battleModeOnStart{nullptr};
+  wxCheckBox* battleModeDisablePWR{nullptr};
+  Misc::numEntryDouble* battleModeClash;
 
-    // Force Push
-    wxCheckBox* forcePush{nullptr};
-    wxCheckBox* forcePushBM{nullptr};
-    Misc::numEntry* forcePushLength;
+  // Force Push
+  wxCheckBox* forcePush{nullptr};
+  wxCheckBox* forcePushBM{nullptr};
+  Misc::numEntry* forcePushLength;
 
-    // Edit Mode/Settings
-    wxCheckBox* editEnable{nullptr};
-    wxRadioButton* editMode{nullptr};
-    wxRadioButton* editSettings{nullptr};
+  // Edit Mode/Settings
+  wxCheckBox* editEnable{nullptr};
+  wxRadioButton* editMode{nullptr};
+  wxRadioButton* editSettings{nullptr};
 
-    // Quote Player
-    wxCheckBox* enableQuotePlayer{nullptr};
-    wxCheckBox* randomizeQuotePlayer{nullptr};
-    wxRadioButton* forcePlayerDefault{nullptr};
-    wxRadioButton* quotePlayerDefault{nullptr};
+  // Quote Player
+  wxCheckBox* enableQuotePlayer{nullptr};
+  wxCheckBox* randomizeQuotePlayer{nullptr};
+  wxRadioButton* forcePlayerDefault{nullptr};
+  wxRadioButton* quotePlayerDefault{nullptr};
 
-    wxCheckBox* pwrClash{nullptr};
-    wxCheckBox* pwrLockup{nullptr};
-    wxCheckBox* pwrHoldOff{nullptr};
-    wxCheckBox* auxHoldLockup{nullptr};
-    wxCheckBox* meltGestureAlways{nullptr};
-    wxCheckBox* volumeCircular{nullptr};
-    wxCheckBox* brightnessCircular{nullptr};
-    wxCheckBox* pwrWakeGesture{nullptr};
-    wxRadioButton* noExtraEffects{nullptr};
-    wxRadioButton* specialAbilities{nullptr};
-    wxRadioButton* multiPhase{nullptr};
-    wxCheckBox* spinMode{nullptr};
-    wxCheckBox* saveGesture{nullptr};
-    wxCheckBox* saveChoreo{nullptr};
-    wxCheckBox* dualModeSound{nullptr};
-    wxCheckBox* clashStrengthSound{nullptr};
-    Misc::numEntry* clashStrengthSoundMaxClash;
-    wxCheckBox* quickPresetSelect{nullptr};
-    wxCheckBox* spokenColors{nullptr};
-    wxRadioButton* spokenBatteryNone{nullptr};
-    wxRadioButton* spokenBatteryVolts{nullptr};
-    wxRadioButton* spokenBatteryPercent{nullptr};
+  wxCheckBox* pwrClash{nullptr};
+  wxCheckBox* pwrLockup{nullptr};
+  wxCheckBox* pwrHoldOff{nullptr};
+  wxCheckBox* auxHoldLockup{nullptr};
+  wxCheckBox* meltGestureAlways{nullptr};
+  wxCheckBox* volumeCircular{nullptr};
+  wxCheckBox* brightnessCircular{nullptr};
+  wxCheckBox* pwrWakeGesture{nullptr};
+  wxRadioButton* noExtraEffects{nullptr};
+  wxRadioButton* specialAbilities{nullptr};
+  wxRadioButton* multiPhase{nullptr};
+  wxCheckBox* spinMode{nullptr};
+  wxCheckBox* saveGesture{nullptr};
+  wxCheckBox* saveChoreo{nullptr};
+  wxCheckBox* dualModeSound{nullptr};
+  wxCheckBox* clashStrengthSound{nullptr};
+  Misc::numEntry* clashStrengthSoundMaxClash;
+  wxCheckBox* quickPresetSelect{nullptr};
+  wxCheckBox* spokenColors{nullptr};
+  wxRadioButton* spokenBatteryNone{nullptr};
+  wxRadioButton* spokenBatteryVolts{nullptr};
+  wxRadioButton* spokenBatteryPercent{nullptr};
 
-    wxCheckBox* beepErrors{nullptr};
-    wxCheckBox* trackPlayerPrompts{nullptr};
-    wxCheckBox* fontChangeOTF{nullptr};
-    wxCheckBox* styleChangeOTF{nullptr};
-    wxCheckBox* presetCopyOTF{nullptr};
-    wxCheckBox* battleModeNoToggle{nullptr};
-    wxCheckBox* multiBlast{nullptr};
-    wxCheckBox* multiBlastDisableToggle{nullptr};
-    wxCheckBox* multiBlastSwing{nullptr};
-  } settings;
+  wxCheckBox* beepErrors{nullptr};
+  wxCheckBox* trackPlayerPrompts{nullptr};
+  wxCheckBox* fontChangeOTF{nullptr};
+  wxCheckBox* styleChangeOTF{nullptr};
+  wxCheckBox* presetCopyOTF{nullptr};
+  wxCheckBox* battleModeNoToggle{nullptr};
+  wxCheckBox* multiBlast{nullptr};
+  wxCheckBox* multiBlastDisableToggle{nullptr};
+  wxCheckBox* multiBlastSwing{nullptr};
 
 private:
-  class RStaticBox : public wxStaticBoxSizer {
+  class PropPageBox : public wxStaticBoxSizer {
   public:
-    RStaticBox(int, wxWindow*, const wxString&);
+    PropPageBox(int, wxWindow*, const wxString&);
   };
 
-  std::vector<RStaticBox*> boxes;
+  std::vector<PropPageBox*> boxes;
   wxStaticBoxSizer* sizer{nullptr};
 
-  RStaticBox* gestures(wxStaticBoxSizer*);
-  RStaticBox* stabOn(wxStaticBoxSizer*);
-  RStaticBox* swingOn(wxStaticBoxSizer*);
-  RStaticBox* thrustOn(wxStaticBoxSizer*);
-  RStaticBox* twistOn(wxStaticBoxSizer*);
-  RStaticBox* twistOff(wxStaticBoxSizer*);
+  PropPageBox* createGestures(wxStaticBoxSizer*);
+  PropPageBox* createStabOn(wxStaticBoxSizer*);
+  PropPageBox* createSwingOn(wxStaticBoxSizer*);
+  PropPageBox* createThrustOn(wxStaticBoxSizer*);
+  PropPageBox* createTwistOn(wxStaticBoxSizer*);
+  PropPageBox* createTwistOff(wxStaticBoxSizer*);
 
-  RStaticBox* controls(wxStaticBoxSizer*);
-  RStaticBox* generalControls(wxStaticBoxSizer*);
-  RStaticBox* editMode(wxStaticBoxSizer*);
-  RStaticBox* interfaceOptions(wxStaticBoxSizer*);
+  PropPageBox* createControls(wxStaticBoxSizer*);
+  PropPageBox* createGeneralControls(wxStaticBoxSizer*);
+  PropPageBox* createEditMode(wxStaticBoxSizer*);
+  PropPageBox* createInterfaceOptions(wxStaticBoxSizer*);
 
-  RStaticBox* features(wxStaticBoxSizer*);
-  RStaticBox* forcePush(wxStaticBoxSizer*);
-  RStaticBox* quotePlayer(wxStaticBoxSizer*);
-  RStaticBox* generalFeatures(wxStaticBoxSizer*);
+  PropPageBox* createFeatures(wxStaticBoxSizer*);
+  PropPageBox* createForcePush(wxStaticBoxSizer*);
+  PropPageBox* createQuotePlayer(wxStaticBoxSizer*);
+  PropPageBox* createGeneralFeatures(wxStaticBoxSizer*);
 
-  RStaticBox* battleMode(wxStaticBoxSizer*);
-  RStaticBox* activation(wxStaticBoxSizer*);
-  RStaticBox* lockup(wxStaticBoxSizer*);
-  RStaticBox* bmControls(wxStaticBoxSizer*);
+  PropPageBox* createBattleMode(wxStaticBoxSizer*);
+  PropPageBox* createActivation(wxStaticBoxSizer*);
+  PropPageBox* createLockup(wxStaticBoxSizer*);
+  PropPageBox* createBMControls(wxStaticBoxSizer*);
 };
