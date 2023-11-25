@@ -1,8 +1,7 @@
 # ProffieConfig 
-<p align="center">
-  <img src=/resources/icons/icon.svg width=200>
-</p>
 
+<img align="left" src=/resources/icons/icon.svg width=200> 
+  
 All-In-One ProffieBoard (Created by Fredrik Hubbinette) utility for customization. Handles the installation of all tools needed in the background, and presents an easy to use GUI for configuration and applying changes (flashing) to the board.
 
 Using this tool, there is no need for the Arduino IDE, Zadig, etc. in an attempt to make using a Proffieboard as beginner-friendly as possible, while still retaining as much of the powerful customization which makes proffie so popular.
