@@ -73,10 +73,10 @@ void MainWindow::BindEvents() {
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
         GeneralPage::instance->Show(windowSelect->GetValue() == "General");
         PropPage::instance->Show(windowSelect->GetValue() == "Prop File");
-        BladesPage::instance->Show(windowSelect->GetValue() == "Blades");
-        PresetsPage::instance->Show(windowSelect->GetValue() == "Presets");
+        BladesPage::instance->Show(windowSelect->GetValue() == "Blade Arrays");
+        PresetsPage::instance->Show(windowSelect->GetValue() == "Presets And Styles");
         HardwarePage::instance->Show(windowSelect->GetValue() == "Hardware");
-        BladeIDPage::instance->Show(windowSelect->GetValue() == "Blade Detect/ID");
+        BladeIDPage::instance->Show(windowSelect->GetValue() == "Blade Awareness");
 
         //GeneralPage::instance->update();
         PropPage::instance->update();
@@ -177,7 +177,7 @@ void MainWindow::CreatePages() {
   master = new wxBoxSizer(wxVERTICAL);
 
   wxBoxSizer* options = new wxBoxSizer(wxHORIZONTAL);
-  windowSelect = new wxComboBox(this, Misc::ID_WindowSelect, "General", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Blades", "Presets", "Blade Detect/ID"  /*, "Hardware"*/}), wxCB_READONLY | wxCB_DROPDOWN);
+  windowSelect = new wxComboBox(this, Misc::ID_WindowSelect, "General", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Blade Arrays", "Presets And Styles", "Blade Awareness"  /*, "Hardware"*/}), wxCB_READONLY | wxCB_DROPDOWN);
   refreshButton = new wxButton(this, Misc::ID_RefreshDev, "Refresh...", wxDefaultPosition, wxDefaultSize, 0);
   devSelect = new wxComboBox(this, Misc::ID_DeviceSelect, "Select Device...", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Arduino::getBoards()), wxCB_READONLY);
   applyButton = new wxButton(this, Misc::ID_ApplyChanges, "Apply to Board...", wxDefaultPosition, wxDefaultSize, 0);

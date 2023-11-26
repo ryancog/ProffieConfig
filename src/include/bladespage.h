@@ -42,6 +42,7 @@ public:
   void removeBlade();
   void removeSubBlade();
 
+  wxComboBox* bladeArray{nullptr};
   wxListBox* bladeSelect{nullptr};
   wxListBox* subBladeSelect{nullptr};
   wxButton* addBladeButton{nullptr};

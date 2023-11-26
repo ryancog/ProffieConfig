@@ -18,9 +18,6 @@ public:
 
   wxComboBox* bladeArraySelection{nullptr};
   wxTextCtrl* presetsEditor{nullptr};
-  wxListBox* arrayList{nullptr};
-  wxButton* addArray{nullptr};
-  wxButton* removeArray{nullptr};
   wxListBox* presetList{nullptr};
   wxListBox* bladeList{nullptr};
   wxButton* addPreset{nullptr};

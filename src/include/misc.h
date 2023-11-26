@@ -42,6 +42,8 @@ public:
     ID_RemovePreset,
     ID_PresetChange,
 
+    ID_BladeArray,
+
     ID_BladeSelect,
     ID_SubBladeSelect,
     ID_BladePower,
@@ -55,9 +57,6 @@ public:
     ID_BladeIDEnable,
     ID_BladeDetectEnable,
     ID_BladeIDMode,
-    ID_BladeDetectPin,
-    ID_BladeIDPin,
-    ID_BladeIDPullup,
     ID_BladeIDEnablePower,
     ID_BladeIDList,
     ID_BladeIDAdd,

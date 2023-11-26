@@ -6,6 +6,7 @@
 #include <wx/stattext.h>
 #include <wx/sizer.h>
 #include <wx/statbox.h>
+#include <wx/combobox.h>
 
 BladesPage* BladesPage::instance;
 BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "")
@@ -100,15 +101,22 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
   bladeSettings->Add(subBladeEndLabel, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10));
   bladeSettings->Add(subBladeEnd, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 
-  Add(createBladeManager(), BOXITEMFLAGS);
+  wxBoxSizer* bladeSelectSizer = new wxBoxSizer(wxVERTICAL);
+  bladeArray = new wxComboBox(GetStaticBox(), Misc::ID_BladeArray, "Default", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ "Default" }), wxCB_READONLY);
+  wxStaticText* bladeArrayText = new wxStaticText(GetStaticBox(), wxID_ANY, "Blade Array", wxDefaultPosition, wxDefaultSize, 0);
+  bladeSelectSizer->Add(bladeArrayText, TEXTITEMFLAGS);
+  bladeSelectSizer->Add(bladeArray, TEXTITEMFLAGS.Expand());
+  bladeSelectSizer->Add(createBladeManager(), wxSizerFlags(1).Border(wxALL, 5).Expand());
+
+  Add(bladeSelectSizer, wxSizerFlags(0).Expand());
   Add(bladeSetup, wxSizerFlags(0));
   Add(bladeSettings, wxSizerFlags(1));
 }
 
 wxBoxSizer* BladesPage::createBladeManager() {
-  wxBoxSizer* bladeManager = new wxBoxSizer( wxHORIZONTAL);
+  wxBoxSizer* bladeManagerSizer = new wxBoxSizer( wxHORIZONTAL);
 
-  wxBoxSizer* bladeSelection = new wxBoxSizer( wxVERTICAL);
+  wxBoxSizer* bladeSelectionSizer = new wxBoxSizer( wxVERTICAL);
   wxStaticText* bladeText = new wxStaticText( GetStaticBox(), wxID_ANY, "Blades");
   bladeSelect = new wxListBox( GetStaticBox(), Misc::ID_BladeSelect);
   wxBoxSizer* bladeButtons = new wxBoxSizer( wxHORIZONTAL);
@@ -116,26 +124,26 @@ wxBoxSizer* BladesPage::createBladeManager() {
   removeBladeButton = new wxButton( GetStaticBox(), Misc::ID_RemoveBlade, "-", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
   bladeButtons->Add(addBladeButton, wxSizerFlags(0).Border(wxRIGHT | wxTOP, 10));
   bladeButtons->Add(removeBladeButton, wxSizerFlags(0).Border(wxTOP, 10));
-  bladeSelection->Add(bladeText, wxSizerFlags(0));
-  bladeSelection->Add(bladeSelect, wxSizerFlags(1).Expand());
-  bladeSelection->Add(bladeButtons, wxSizerFlags(0));
+  bladeSelectionSizer->Add(bladeText, wxSizerFlags(0));
+  bladeSelectionSizer->Add(bladeSelect, wxSizerFlags(1).Expand());
+  bladeSelectionSizer->Add(bladeButtons, wxSizerFlags(0).Center());
 
-  wxBoxSizer* subBladeSelection = new wxBoxSizer( wxVERTICAL);
+  wxBoxSizer* subBladeSelectionSizer = new wxBoxSizer( wxVERTICAL);
   wxStaticText* subBladeText = new wxStaticText( GetStaticBox(), wxID_ANY, "SubBlades");
   subBladeSelect = new wxListBox( GetStaticBox(), Misc::ID_SubBladeSelect);
-  wxBoxSizer* subBladeButtons = new wxBoxSizer( wxHORIZONTAL);
+  wxBoxSizer* subBladeButtonSizer = new wxBoxSizer( wxHORIZONTAL);
   addSubBladeButton = new wxButton( GetStaticBox(), Misc::ID_AddSubBlade, "+", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
   removeSubBladeButton = new wxButton( GetStaticBox(), Misc::ID_RemoveSubBlade, "-", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
-  subBladeButtons->Add(addSubBladeButton, wxSizerFlags(0).Border(wxRIGHT | wxTOP, 10));
-  subBladeButtons->Add(removeSubBladeButton, wxSizerFlags(0).Border(wxTOP, 10));
-  subBladeSelection->Add(subBladeText, wxSizerFlags(0));
-  subBladeSelection->Add(subBladeSelect, wxSizerFlags(1).Expand());
-  subBladeSelection->Add(subBladeButtons, wxSizerFlags(0));
+  subBladeButtonSizer->Add(addSubBladeButton, wxSizerFlags(0).Border(wxRIGHT | wxTOP, 10));
+  subBladeButtonSizer->Add(removeSubBladeButton, wxSizerFlags(0).Border(wxTOP, 10));
+  subBladeSelectionSizer->Add(subBladeText, wxSizerFlags(0));
+  subBladeSelectionSizer->Add(subBladeSelect, wxSizerFlags(1).Expand());
+  subBladeSelectionSizer->Add(subBladeButtonSizer, wxSizerFlags(0).Center());
 
-  bladeManager->Add(bladeSelection, wxSizerFlags(0).Expand());
-  bladeManager->Add(subBladeSelection, wxSizerFlags(0).Expand());
+  bladeManagerSizer->Add(bladeSelectionSizer, wxSizerFlags(1).Expand());
+  bladeManagerSizer->Add(subBladeSelectionSizer, wxSizerFlags(1).Expand());
 
-  return bladeManager;
+  return bladeManagerSizer;
 }
 
 void BladesPage::update() {

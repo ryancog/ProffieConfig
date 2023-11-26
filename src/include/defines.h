@@ -13,6 +13,7 @@
 #define FIRSTITEMFLAGS wxSizerFlags(0).Border(wxALL, 5)
 #define MENUITEMFLAGS  wxSizerFlags(0).Border(wxLEFT | wxBOTTOM | wxRIGHT, 5)
 #define BOXITEMFLAGS wxSizerFlags(0).Border(wxALL, 10).Expand()
+#define TEXTITEMFLAGS wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 5)
 
 #define UPDATEWINDOW master->Layout(); SetSizerAndFit(master);
 

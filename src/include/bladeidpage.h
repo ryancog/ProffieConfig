@@ -22,7 +22,6 @@ public:
   wxCheckBox* enableDetect{nullptr};
 
   wxComboBox* mode{nullptr};
-  wxComboBox* detectPin{nullptr};
   wxTextCtrl* IDPin{nullptr};
   Misc::numEntry* pullupResistance{nullptr};
   wxTextCtrl* pullupPin{nullptr};
@@ -39,13 +38,22 @@ public:
   Misc::numEntry* numIDTimes{nullptr};
   Misc::numEntry* scanIDMillis{nullptr};
 
-  wxListBox* idList{nullptr};
+  wxListBox* arrayList{nullptr};
   wxButton* addID{nullptr};
   wxButton* removeID{nullptr};
 
-  wxTextCtrl* saveFileDir{nullptr};
+  wxTextCtrl* arrayName{nullptr};
+  Misc::numEntry* resistanceID{nullptr};
+
+  wxTextCtrl* detectPin{nullptr};
 
 private:
-  wxStaticBoxSizer* createBladeID(wxWindow*);
+  wxStaticBoxSizer* createBladeArrays(wxWindow*);
+  wxBoxSizer* createBladeArraysLeft(wxWindow*);
+  wxBoxSizer* createBladeArraysRight(wxStaticBoxSizer*);
+
+  wxStaticBoxSizer* createIDSetup(wxWindow*);
+  wxStaticBoxSizer* createIDPowerSettings(wxWindow*);
+  wxStaticBoxSizer* createContinuousScanSettings(wxWindow*);
   wxStaticBoxSizer* createBladeDetect(wxWindow*);
 };
