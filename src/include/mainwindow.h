@@ -8,21 +8,21 @@
 class MainWindow : public wxFrame {
 public:
   MainWindow();
-  void CreatePages();
 
   static MainWindow* instance;
   ThreadRunner* thread;
   Progress* progDialog;
 
+  wxBoxSizer* master;
+
+  wxButton* refreshButton;
+  wxButton* applyButton;
   wxComboBox* windowSelect;
   wxComboBox* devSelect;
 
 private:
-  wxBoxSizer* master;
-  wxButton* refreshButton;
-  wxButton* applyButton;
-
   void BindEvents();
   void CreateMenuBar();
+  void CreatePages();
   void Initialize();
 };

@@ -37,7 +37,7 @@ private:
   wxTextCtrl* output;
 
 #if defined(__WXOSX__) || defined(__WXGTK__)
-  int fd = 0;
+  int32_t fd = 0;
 #elif defined(__WXMSW__)
   HANDLE serHandle{nullptr};
 #endif

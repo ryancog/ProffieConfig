@@ -7,6 +7,7 @@
 #include <wx/stattext.h>
 #include <wx/statbox.h>
 #include <wx/checkbox.h>
+#include <wx/combobox.h>
 
 class Misc
 {
@@ -30,38 +31,6 @@ public:
     ID_ExportFile,
     ID_ImportFile,
 
-    ID_PropSelect,
-    ID_PropOption,
-
-    ID_PresetArrayList,
-    ID_PresetList,
-    ID_BladeList,
-    ID_AddPresetArray,
-    ID_RemovePresetArray,
-    ID_AddPreset,
-    ID_RemovePreset,
-    ID_PresetChange,
-
-    ID_BladeArray,
-
-    ID_BladeSelect,
-    ID_SubBladeSelect,
-    ID_BladePower,
-    ID_BladeOption,
-    ID_AddBlade,
-    ID_RemoveBlade,
-    ID_AddSubBlade,
-    ID_RemoveSubBlade,
-    ID_BladeType,
-
-    ID_BladeIDEnable,
-    ID_BladeDetectEnable,
-    ID_BladeIDMode,
-    ID_BladeIDEnablePower,
-    ID_BladeIDList,
-    ID_BladeIDAdd,
-    ID_BladeIDRemove,
-
     ID_SerialCommand,
     ID_OpenSerial,
     ID_StyleEditor
@@ -70,11 +39,25 @@ public:
   struct numEntry {
     wxBoxSizer *box{nullptr};
     wxSpinCtrl *num{nullptr};
+    wxStaticText* text{nullptr};
   };
 
   struct numEntryDouble {
-    wxBoxSizer *box{nullptr};
-    wxSpinCtrlDouble *num{nullptr};
+    wxBoxSizer* box{nullptr};
+    wxSpinCtrlDouble* num{nullptr};
+    wxStaticText* text{nullptr};
+  };
+
+  struct comboBoxEntry {
+    wxBoxSizer* box{nullptr};
+    wxComboBox* entry{nullptr};
+    wxStaticText* text{nullptr};
+  };
+
+  struct textEntry {
+    wxBoxSizer* box{nullptr};
+    wxTextCtrl* entry{nullptr};
+    wxStaticText* text{nullptr};
   };
 
   class MessageBoxEvent : public wxCommandEvent {
@@ -94,8 +77,10 @@ public:
 
   static wxEventTypeTag<wxCommandEvent> EVT_MSGBOX;
 
-  static numEntry* createNumEntry(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, int32_t minVal, int32_t maxVal, int32_t defaultVal);
-  static numEntryDouble* createNumEntryDouble(wxStaticBoxSizer *parent, wxString displayText, int32_t ID, double minVal, double maxVal, double defaultVal);
+  static numEntry* createNumEntry(wxWindow* parent, wxString displayText, int32_t ID, int32_t minVal, int32_t maxVal, int32_t defaultVal);
+  static numEntryDouble* createNumEntryDouble(wxWindow* parent, wxString displayText, int32_t ID, double minVal, double maxVal, double defaultVal);
+  static comboBoxEntry* createComboBoxEntry(wxWindow* parent, wxString displayText, int32_t ID, wxString defaultOption, wxArrayString options, int32_t flags);
+  static textEntry* createTextEntry(wxWindow* parent, wxString displayText, int32_t ID, wxString defaultOption, int32_t flags);
 
   static const wxArrayString createEntries(std::vector<wxString> list);
   static const wxArrayString createEntries(std::initializer_list<wxString> list);

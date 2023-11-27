@@ -7,7 +7,7 @@
 
 wxEventTypeTag<wxCommandEvent> Progress::EVT_UPDATE(wxNewEventType());
 
-void Progress::emitEvent(int progress, wxString message) {
+void Progress::emitEvent(int8_t progress, wxString message) {
 
   ProgressEvent* event = new ProgressEvent(EVT_UPDATE, wxID_ANY);
   event->progress = progress;

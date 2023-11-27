@@ -1,6 +1,8 @@
 #pragma once
 
 #include "misc.h"
+#include "presetspage.h"
+#include "bladespage.h"
 
 #include <wx/sizer.h>
 #include <wx/checkbox.h>
@@ -22,9 +24,9 @@ public:
   wxCheckBox* enableDetect{nullptr};
 
   wxComboBox* mode{nullptr};
-  wxTextCtrl* IDPin{nullptr};
+  Misc::textEntry* IDPin{nullptr};
   Misc::numEntry* pullupResistance{nullptr};
-  wxTextCtrl* pullupPin{nullptr};
+  Misc::textEntry* pullupPin{nullptr};
 
   wxCheckBox* enablePowerForID{nullptr};
   wxCheckBox* powerPin1{nullptr};
@@ -42,12 +44,35 @@ public:
   wxButton* addID{nullptr};
   wxButton* removeID{nullptr};
 
-  wxTextCtrl* arrayName{nullptr};
+  Misc::textEntry* arrayName{nullptr};
   Misc::numEntry* resistanceID{nullptr};
 
-  wxTextCtrl* detectPin{nullptr};
+  Misc::textEntry* detectPin{nullptr};
+
+  struct BladeArray {
+    wxString name{"blade_in"};
+    int32_t value{0};
+
+    std::vector<PresetsPage::PresetConfig> presets{};
+    std::vector<BladesPage::BladeConfig> blades{};
+  };
+  std::vector<BladeArray> bladeArrays{BladeArray{}};
 
 private:
+  enum {
+    ID_BladeIDEnable,
+    ID_BladeDetectEnable,
+    ID_BladeIDMode,
+    ID_BladeArray,
+    ID_BladeIDPower,
+    ID_ContinuousScan,
+    ID_RemoveArray,
+    ID_AddArray
+  };
+  int32_t lastArraySelection{-1};
+
+  void bindEvents();
+
   wxStaticBoxSizer* createBladeArrays(wxWindow*);
   wxBoxSizer* createBladeArraysLeft(wxWindow*);
   wxBoxSizer* createBladeArraysRight(wxStaticBoxSizer*);

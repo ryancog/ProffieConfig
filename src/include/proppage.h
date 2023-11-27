@@ -104,13 +104,20 @@ public:
   wxCheckBox* multiBlastSwing{nullptr};
 
 private:
+  enum {
+    ID_Select,
+    ID_Option
+  };
+
   class PropPageBox : public wxStaticBoxSizer {
   public:
-    PropPageBox(int, wxWindow*, const wxString&);
+    PropPageBox(int32_t, wxWindow*, const wxString&);
   };
 
   std::vector<PropPageBox*> boxes;
   wxStaticBoxSizer* sizer{nullptr};
+
+  void bindEvents();
 
   PropPageBox* createGestures(wxStaticBoxSizer*);
   PropPageBox* createStabOn(wxStaticBoxSizer*);

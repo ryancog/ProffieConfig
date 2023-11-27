@@ -46,6 +46,8 @@ public:
   };
 
 private:
+  uint32_t numBlades{0};
+
   ProffieBoard parseBoardType(const std::string&);
   SaberProp parsePropSel(const std::string&);
 
@@ -61,7 +63,7 @@ private:
   void outputConfigPresets(std::ofstream&);
   void outputConfigPresetsStyles(std::ofstream&);
   void outputConfigPresetsBlades(std::ofstream&);
-  void genWS281X(std::ofstream&, const BladesPage::bladeConfig&);
+  void genWS281X(std::ofstream&, const BladesPage::BladeConfig&);
   void outputConfigButtons(std::ofstream&);
 
   void readConfigTop(std::ifstream&);

@@ -88,58 +88,6 @@ void MainWindow::BindEvents() {
         UPDATEWINDOW;
         if (PropPage::instance->IsShown()) SetSize(wxSize(GetSize().GetWidth(), GetMinHeight() + PropPage::instance->GetBestVirtualSize().GetHeight()));
       }, Misc::ID_WindowSelect);
-
-
-  // Prop Page
-  auto propSelectUpdate = [&](wxCommandEvent&) {
-    PropPage::instance->update(); UPDATEWINDOW;
-    SetSize(wxSize(GetSize().GetWidth(), GetMinHeight() + PropPage::instance->GetBestVirtualSize().GetHeight()));
-  };
-
-  Bind(wxEVT_COMBOBOX, propSelectUpdate, Misc::ID_PropSelect);
-  Bind(wxEVT_CHECKBOX, propSelectUpdate, Misc::ID_PropOption);
-  Bind(wxEVT_RADIOBUTTON, propSelectUpdate, Misc::ID_PropOption);
-  Bind(wxEVT_SPINCTRL, propSelectUpdate, Misc::ID_PropOption);
-  Bind(wxEVT_SPINCTRLDOUBLE, propSelectUpdate, Misc::ID_PropOption);
-
-  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { BladesPage::instance->update(); PresetsPage::instance->update(); }, Misc::ID_BladeList);
-  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { BladesPage::instance->update(); PresetsPage::instance->update(); }, Misc::ID_PresetList);
-
-  Bind(wxEVT_TEXT, [&](wxCommandEvent&) { PresetsPage::instance->update(); }, Misc::ID_PresetChange);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        PresetsPage::instance->presets.push_back(PresetsPage::presetConfig());
-        PresetsPage::instance->presets[PresetsPage::instance->presets.size() - 1].name = "NewPreset";
-
-        BladesPage::instance->update();
-        PresetsPage::instance->update();
-      }, Misc::ID_AddPreset);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        if (PresetsPage::instance->presetList->GetSelection() >= 0) {
-          PresetsPage::instance->presets.erase(std::next(PresetsPage::instance->presets.begin(), PresetsPage::instance->presetList->GetSelection()));
-
-          BladesPage::instance->update();
-          PresetsPage::instance->update();
-        }
-      }, Misc::ID_RemovePreset);
-
-  // Blades Page
-  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
-        BladesPage::instance->update();
-        UPDATEWINDOW;
-      }, Misc::ID_BladeSelect);
-  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
-        BladesPage::instance->update();
-        UPDATEWINDOW;
-      }, Misc::ID_SubBladeSelect);
-  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        BladesPage::instance->update();
-        UPDATEWINDOW;;
-      }, Misc::ID_BladeType);
-  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { BladesPage::instance->update(); BladesPage::instance->update(); }, Misc::ID_BladeOption);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { BladesPage::instance->addBlade(); UPDATEWINDOW; }, Misc::ID_AddBlade);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { BladesPage::instance->addSubBlade(); UPDATEWINDOW; }, Misc::ID_AddSubBlade);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { BladesPage::instance->removeBlade(); UPDATEWINDOW; }, Misc::ID_RemoveBlade);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { BladesPage::instance->removeSubBlade(); UPDATEWINDOW; }, Misc::ID_RemoveSubBlade);
 }
 
 void MainWindow::CreateMenuBar() {
