@@ -7,6 +7,7 @@
 #include "presetspage.h"
 #include "proppage.h"
 #include "bladespage.h"
+#include "bladeidpage.h"
 
 #include <cstring>
 #include <exception>
@@ -69,7 +70,7 @@ void Configuration::outputConfigTopDefaults(std::ofstream& configOutput) {
   }
   configOutput << "#define NUM_BLADES " << [=]() -> int32_t {
     int32_t numBlades = 0;
-    for (const BladesPage::bladeConfig& blade : BladesPage::instance->blades) numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
+    for (const BladesPage::BladeConfig& blade : BladeIDPage::instance->bladeArrays[BladesPage::instance->bladeArray->GetSelection()].blades) numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
     return numBlades;
   }() << std::endl;
   configOutput << "#define NUM_BUTTONS " << GeneralPage::instance->buttons->num->GetValue() << std::endl;
@@ -275,118 +276,125 @@ void Configuration::outputConfigProp(std::ofstream& configOutput)
 void Configuration::outputConfigPresets(std::ofstream& configOutput) {
   configOutput << "#ifdef CONFIG_PRESETS" << std::endl;
   outputConfigPresetsStyles(configOutput);
-  configOutput << "BladeConfig blades[] = {" << std::endl;
-  configOutput << "\t{ 0," << std::endl;
   outputConfigPresetsBlades(configOutput);
-  configOutput << "\t\tCONFIGARRAY(blade_in)" << std::endl << "\t}" << std::endl << "};" << std::endl;
   configOutput << "#endif" << std::endl << std::endl;
 }
 void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput) {
-  configOutput << "Preset blade_in[] = {" << std::endl;
-  for (const PresetsPage::presetConfig& preset : PresetsPage::instance->presets) {
-    configOutput << "\t{ \"" << preset.dirs << "\", \"" << preset.track << "\"," << std::endl;
-    if (preset.styles.size() > 0) for (const wxString& style : preset.styles) configOutput << "\t\t" << style << "," << std::endl;
-    else configOutput << "\t\t," << std::endl;
-    configOutput << "\t\t\"" << preset.name << "\"}";
-    // If not the last one, add comma
-    if (&PresetsPage::instance->presets[PresetsPage::instance->presets.size() - 1] != &preset) configOutput << ",";
+  for (const BladeIDPage::BladeArray& bladeArray : BladeIDPage::instance->bladeArrays) {
+    configOutput << "Preset " << bladeArray.name << "[] = {" << std::endl;
+    for (const PresetsPage::PresetConfig& preset : bladeArray.presets) {
+      configOutput << "\t{ \"" << preset.dirs << "\", \"" << preset.track << "\"," << std::endl;
+      if (preset.styles.size() > 0) for (const wxString& style : preset.styles) configOutput << "\t\t" << style << "," << std::endl;
+      else configOutput << "\t\t," << std::endl;
+      configOutput << "\t\t\"" << preset.name << "\"}";
+      // If not the last one, add comma
+      if (&bladeArray.presets[bladeArray.presets.size() - 1] != &preset) configOutput << ",";
+      configOutput << std::endl;
+    }
+    configOutput << "};" << std::endl;
+  }
+}
+void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput) {
+  configOutput << "BladeConfig blades[] = {" << std::endl;
+  for (const BladeIDPage::BladeArray& bladeArray : BladeIDPage::instance->bladeArrays) {
+    configOutput << "\t{ " << bladeArray.value << "," << std::endl;
+    for (const BladesPage::BladeConfig& blade : bladeArray.blades) {
+      if (blade.type == BD_PIXELRGB || blade.type == BD_PIXELRGBW) {
+        bool firstSub = true;
+        if (blade.isSubBlade) for (BladesPage::BladeConfig::subBladeInfo subBlade : blade.subBlades) {
+            if (blade.subBladeWithStride) configOutput << "\t\tSubBladeWithStride( ";
+            else /* if not with stride*/ configOutput << "\t\tSubBlade( ";
+            configOutput << subBlade.startPixel << ", " << subBlade.endPixel << ", ";
+            if (firstSub) {
+              genWS281X(configOutput, blade);
+              configOutput << ")," << std::endl;
+            } else {
+              configOutput << "NULL)," << std::endl;
+            }
+            firstSub = false;
+          } else {
+          configOutput << "\t\t";
+          genWS281X(configOutput, blade);
+          configOutput << "," << std::endl;
+        }
+      } else if (blade.type == BD_TRISTAR || blade.type == BD_QUADSTAR) {
+        bool powerPins[4]{true, true, true, true};
+        configOutput << "\t\tSimpleBladePtr<";
+        if (blade.Star1 != BD_NORESISTANCE) configOutput << "CreeXPE2" << blade.Star1 << "Template<" << blade.Star1Resistance << ">, ";
+        else {
+          configOutput << "NoLED, ";
+          powerPins[0] = false;
+        }
+        if (blade.Star2 != BD_NORESISTANCE) configOutput << "CreeXPE2" << blade.Star2 << "Template<" << blade.Star2Resistance << ">, ";
+        else {
+          configOutput << "NoLED, ";
+          powerPins[1] = false;
+        }
+        if (blade.Star3 != BD_NORESISTANCE) configOutput << "CreeXPE2" << blade.Star3 << "Template<" << blade.Star3Resistance << ">, ";
+        else {
+          configOutput << "NoLED, ";
+          powerPins[2] = false;
+        }
+        if (blade.Star4 != BD_NORESISTANCE && blade.type == BD_QUADSTAR) configOutput << "CreeXPE2" << blade.Star4 << "Template<" << blade.Star4Resistance << ">, ";
+        else {
+          configOutput << "NoLED, ";
+          powerPins[3] = false;
+        }
+
+        BladesPage::BladeConfig tempBlade = blade;
+        for (int32_t powerPin = 0; powerPin < 4; powerPin++) {
+          if (powerPins[powerPin]) {
+            if (tempBlade.usePowerPin1) {
+              configOutput << "bladePowerPin1";
+              tempBlade.usePowerPin1 = false;
+            } else if (tempBlade.usePowerPin2) {
+              configOutput << "bladePowerPin2";
+              tempBlade.usePowerPin2 = false;
+            } else if (tempBlade.usePowerPin3) {
+              configOutput << "bladePowerPin3";
+              tempBlade.usePowerPin3 = false;
+            } else if (tempBlade.usePowerPin4) {
+              configOutput << "bladePowerPin4";
+              tempBlade.usePowerPin4 = false;
+            } else if (tempBlade.usePowerPin5) {
+              configOutput << "bladePowerPin5";
+              tempBlade.usePowerPin5 = false;
+            } else if (tempBlade.usePowerPin6) {
+              configOutput << "bladePowerPin6";
+              tempBlade.usePowerPin6 = false;
+            } else configOutput << "-1";
+          } else {
+            configOutput << "-1";
+          }
+
+          if (powerPin != 3) configOutput << ", ";
+        }
+        configOutput << ">()," << std::endl;
+      } else if (blade.type == BD_SINGLELED) {
+        configOutput << "\t\tSimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, ";
+        if (blade.usePowerPin1) {
+          configOutput << "bladePowerPin1, ";
+        } else if (blade.usePowerPin2) {
+          configOutput << "bladePowerPin2, ";
+        } else if (blade.usePowerPin3) {
+          configOutput << "bladePowerPin3, ";
+        } else if (blade.usePowerPin4) {
+          configOutput << "bladePowerPin4, ";
+        } else if (blade.usePowerPin5) {
+          configOutput << "bladePowerPin5, ";
+        } else if (blade.usePowerPin6) {
+          configOutput << "bladePowerPin6, ";
+        } else configOutput << "-1, ";
+        configOutput << "-1, -1, -1>()," << std::endl;
+      }
+    }
+    configOutput << "\t\tCONFIGARRAY(" << bladeArray.name << "), \"" << bladeArray.name << "\"" << std::endl << "\t}";
+    if (&bladeArray != &BladeIDPage::instance->bladeArrays[BladeIDPage::instance->bladeArrays.size() - 1]) configOutput << ",";
     configOutput << std::endl;
   }
   configOutput << "};" << std::endl;
 }
-void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput) {
-  for (const BladesPage::bladeConfig& blade : BladesPage::instance->blades) {
-    if (blade.type == BD_PIXELRGB || blade.type == BD_PIXELRGBW) {
-      bool firstSub = true;
-      if (blade.isSubBlade) for (BladesPage::bladeConfig::subBladeInfo subBlade : blade.subBlades) {
-          if (blade.subBladeWithStride) configOutput << "\t\tSubBladeWithStride( ";
-          else /* if not with stride*/ configOutput << "\t\tSubBlade( ";
-          configOutput << subBlade.startPixel << ", " << subBlade.endPixel << ", ";
-          if (firstSub) {
-            genWS281X(configOutput, blade);
-            configOutput << ")," << std::endl;
-          } else {
-            configOutput << "NULL)," << std::endl;
-          }
-          firstSub = false;
-        } else {
-        configOutput << "\t\t";
-        genWS281X(configOutput, blade);
-        configOutput << "," << std::endl;
-      }
-    } else if (blade.type == BD_TRISTAR || blade.type == BD_QUADSTAR) {
-      bool powerPins[4]{true, true, true, true};
-      configOutput << "\t\tSimpleBladePtr<";
-      if (blade.Star1 != BD_NORESISTANCE) configOutput << "CreeXPE2" << blade.Star1 << "Template<" << blade.Star1Resistance << ">, ";
-      else {
-        configOutput << "NoLED, ";
-        powerPins[0] = false;
-      }
-      if (blade.Star2 != BD_NORESISTANCE) configOutput << "CreeXPE2" << blade.Star2 << "Template<" << blade.Star2Resistance << ">, ";
-      else {
-        configOutput << "NoLED, ";
-        powerPins[1] = false;
-      }
-      if (blade.Star3 != BD_NORESISTANCE) configOutput << "CreeXPE2" << blade.Star3 << "Template<" << blade.Star3Resistance << ">, ";
-      else {
-        configOutput << "NoLED, ";
-        powerPins[2] = false;
-      }
-      if (blade.Star4 != BD_NORESISTANCE && blade.type == BD_QUADSTAR) configOutput << "CreeXPE2" << blade.Star4 << "Template<" << blade.Star4Resistance << ">, ";
-      else {
-        configOutput << "NoLED, ";
-        powerPins[3] = false;
-      }
-
-      BladesPage::bladeConfig tempBlade = blade;
-      for (int32_t powerPin = 0; powerPin < 4; powerPin++) {
-        if (powerPins[powerPin]) {
-          if (tempBlade.usePowerPin1) {
-            configOutput << "bladePowerPin1";
-            tempBlade.usePowerPin1 = false;
-          } else if (tempBlade.usePowerPin2) {
-            configOutput << "bladePowerPin2";
-            tempBlade.usePowerPin2 = false;
-          } else if (tempBlade.usePowerPin3) {
-            configOutput << "bladePowerPin3";
-            tempBlade.usePowerPin3 = false;
-          } else if (tempBlade.usePowerPin4) {
-            configOutput << "bladePowerPin4";
-            tempBlade.usePowerPin4 = false;
-          } else if (tempBlade.usePowerPin5) {
-            configOutput << "bladePowerPin5";
-            tempBlade.usePowerPin5 = false;
-          } else if (tempBlade.usePowerPin6) {
-            configOutput << "bladePowerPin6";
-            tempBlade.usePowerPin6 = false;
-          } else configOutput << "-1";
-        } else {
-          configOutput << "-1";
-        }
-
-        if (powerPin != 3) configOutput << ", ";
-      }
-      configOutput << ">()," << std::endl;
-    } else if (blade.type == BD_SINGLELED) {
-      configOutput << "\t\tSimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, ";
-      if (blade.usePowerPin1) {
-        configOutput << "bladePowerPin1, ";
-      } else if (blade.usePowerPin2) {
-        configOutput << "bladePowerPin2, ";
-      } else if (blade.usePowerPin3) {
-        configOutput << "bladePowerPin3, ";
-      } else if (blade.usePowerPin4) {
-        configOutput << "bladePowerPin4, ";
-      } else if (blade.usePowerPin5) {
-        configOutput << "bladePowerPin5, ";
-      } else if (blade.usePowerPin6) {
-        configOutput << "bladePowerPin6, ";
-      } else configOutput << "-1, ";
-      configOutput << "-1, -1, -1>()," << std::endl;
-    }
-  }
-}
-void Configuration::genWS281X(std::ofstream& configOutput, const BladesPage::bladeConfig& blade) {
+void Configuration::genWS281X(std::ofstream& configOutput, const BladesPage::BladeConfig& blade) {
   wxString bladePin = blade.dataPin;
   wxString bladeColor = blade.type == BD_PIXELRGB || blade.useRGBWithWhite ? blade.colorType : [=](wxString colorType) -> wxString { colorType.replace(colorType.find("W"), 1, "w"); return colorType; }(blade.colorType);
 
@@ -430,6 +438,7 @@ void Configuration::readConfig(const std::string& filePath) {
 
   try {
     std::string section;
+    BladeIDPage::instance->bladeArrays.clear();
     while (!file.eof()) {
       file >> section;
       if (section == "//") {
@@ -599,10 +608,7 @@ void Configuration::readDefine(std::string& define) {
 
   // General Defines
   CHKDEF("NUM_BLADES") {
-    uint32_t bladeNum = DEFNUM;
-    BladesPage::instance->blades.clear();
-    while (bladeNum != BladesPage::instance->blades.size()) { BladesPage::instance->blades.push_back(BladesPage::bladeConfig()); }
-    PresetsPage::instance->update();
+   numBlades = DEFNUM;
   }
   CHKDEF("NUM_BUTTONS") GeneralPage::instance->buttons->num->SetValue(DEFNUM);
   CHKDEF("VOLUME") GeneralPage::instance->volume->num->SetValue(DEFNUM);
@@ -701,18 +707,25 @@ void Configuration::readDefine(std::string& define) {
 void Configuration::readPresetArray(std::ifstream& file) {
 # define CHKSECT if (file.eof() || element == "#endif" || strstr(element.data(), "};") != NULL) return
 # define RUNTOSECTION element.clear(); while (element != "{") { file >> element; CHKSECT; }
-  // In future get array name?
+
+  BladeIDPage::instance->bladeArrays.push_back(BladeIDPage::BladeArray());
+  BladeIDPage::BladeArray& bladeArray = BladeIDPage::instance->bladeArrays.at(BladeIDPage::instance->bladeArrays.size() - 1);
+
   char* tempData;
   std::string presetInfo;
   std::string element;
   std::string comment;
+  element.clear();
+  file >> element;
+  bladeArray.name.assign(std::strtok(element.data(), "[]"));
+
   RUNTOSECTION;
   uint32_t preset = -1;
-  PresetsPage::instance->presets.clear();
+  bladeArray.presets.clear();
   while (!false) {
     presetInfo.clear();
     RUNTOSECTION;
-    PresetsPage::instance->presets.push_back(PresetsPage::presetConfig());
+    bladeArray.presets.push_back(PresetsPage::PresetConfig());
     preset++;
 
     while (std::strstr(presetInfo.data(), "}") == nullptr) {
@@ -721,17 +734,17 @@ void Configuration::readPresetArray(std::ifstream& file) {
       presetInfo.append(element);
     }
 
+    // Directory
     element = presetInfo.substr(0, presetInfo.find(",")); // Get dir section
     presetInfo = presetInfo.substr(presetInfo.find(",") + 1); // increment presetInfo
-
     tempData = std::strtok(element.data(), ",\""); // Detokenize dir section
-    PresetsPage::instance->presets[preset].dirs.assign(tempData == nullptr ? "" : tempData);
+    bladeArray.presets[preset].dirs.assign(tempData == nullptr ? "" : tempData);
 
+    // Same thing but for track
     element = presetInfo.substr(0, presetInfo.find(","));
     presetInfo = presetInfo.substr(presetInfo.find(",") + 1);
-
     tempData = std::strtok(element.data(), ",\"");
-    PresetsPage::instance->presets[preset].track.assign(tempData == nullptr ? "" : tempData);
+    bladeArray.presets[preset].track.assign(tempData == nullptr ? "" : tempData);
 
     // Deal with Fett's comments
     comment.clear();
@@ -740,23 +753,25 @@ void Configuration::readPresetArray(std::ifstream& file) {
       presetInfo = presetInfo.substr(presetInfo.find("*/") + 2);
     }
 
-    for (uint32_t blade = 0; blade < BladesPage::instance->blades.size(); blade++) {
+    // Read actual styles
+    for (uint32_t blade = 0; blade < numBlades; blade++) {
       if (presetInfo.find("&style_charging,") == 0) {
         presetInfo = presetInfo.substr(16 /* length of "&style_charging,"*/);
-        PresetsPage::instance->presets[preset].styles.push_back("&style_charging");
+        bladeArray.presets[preset].styles.push_back("&style_charging");
       } else if (presetInfo.find("&style_pov") == 0) {
         presetInfo = presetInfo.substr(presetInfo.find(11 /* length of "&style_pov,"*/));
-        PresetsPage::instance->presets[preset].styles.push_back("&style_pov");
+        bladeArray.presets[preset].styles.push_back("&style_pov");
       } else {
         element = presetInfo.substr(0, presetInfo.find("(),") + 2); // Copy in next
 
         presetInfo = presetInfo.substr(presetInfo.find("(),") + 3); // Increment
-        PresetsPage::instance->presets[preset].styles.push_back(comment + element.substr(element.find("Style"), element.find("(),")));
+        bladeArray.presets[preset].styles.push_back(comment + element.substr(element.find("Style"), element.find("(),")));
       }
     }
 
+    // Name
     tempData = std::strtok(presetInfo.data(), ",\"");
-    PresetsPage::instance->presets[preset].name.assign(tempData == nullptr ? "" : tempData);
+    bladeArray.presets[preset].name.assign(tempData == nullptr ? "" : tempData);
   }
 # undef CHKSECT
 # undef RUNTOSECTION
@@ -765,119 +780,144 @@ void Configuration::readBladeArray(std::ifstream& file) {
 # define CHKSECT if (file.eof() || element == "#endif" || strstr(element.data(), "};") != NULL) return
 # define RUNTOSECTION element.clear(); while (element != "{") { file >> element; CHKSECT; }
   // In future get detect val and presetarray association
+
+  BladeIDPage::BladeArray bladeArray;
   std::string element;
-  std::string bladeInfo;
+  std::string data;
   RUNTOSECTION;
-  RUNTOSECTION;
-  file >> element; // Clear resistance value... maybe use this in the future?
-  CHKSECT;
-  uint32_t numBlades = BladesPage::instance->blades.size();
-  BladesPage::instance->blades.clear();
-  for (uint32_t blade = 0; blade < numBlades; blade++) {
-    bladeInfo.clear();
-    while (std::strstr(bladeInfo.data(), "),") == nullptr) { // Gather entire blade data
+
+  while (true) {
+    bladeArray = {};
+    RUNTOSECTION;
+    file >> element;
+    bladeArray.value = std::stoi(std::strtok(element.data(), " ,"));
+    CHKSECT;
+    bladeArray.blades.clear();
+    for (uint32_t blade = 0; blade < numBlades; blade++) {
+      data.clear();
+
+      do { // Gather entire blade data
+        file >> element;
+        CHKSECT;
+        data.append(element);
+      } while (std::strstr(data.data(), "),") == nullptr);
+
+      if (std::strstr(data.data(), "SubBlade") != nullptr) {
+        if (std::strstr(data.data(), "NULL") == nullptr) { // Top Level SubBlade
+          bladeArray.blades.push_back(BladesPage::BladeConfig());
+          if (std::strstr(data.data(), "WithStride")) bladeArray.blades[blade].subBladeWithStride = true;
+        } else { // Lesser SubBlade
+          blade--;
+          numBlades--;
+          // Switch to operating on previous blade
+        }
+
+        bladeArray.blades[blade].isSubBlade = true;
+        std::strtok(data.data(), "("); // SubBlade(
+        bladeArray.blades[blade].subBlades.push_back({ (uint32_t)std::stoi(std::strtok(nullptr, "(,")), (uint32_t)std::stoi(std::strtok(nullptr, " (,")) });
+        data = std::strtok(nullptr, ""); // Clear out mangled data from strtok, replace with rest of data ("" runs until end of what's left)
+        // Rest will be handled by WS281X "if"
+      }
+      if (std::strstr(data.data(), "WS281XBladePtr") != nullptr) {
+        if (bladeArray.blades.size() - 1 != blade) bladeArray.blades.push_back(BladesPage::BladeConfig());
+        data = std::strstr(data.data(), "WS281XBladePtr"); // Shift start to blade data, in case of SubBlade;
+
+        // This must be done first since std::strtok is destructive (adds null chars)
+        if (std::strstr(data.data(), "bladePowerPin1") != nullptr) bladeArray.blades[blade].usePowerPin1 = true;
+        if (std::strstr(data.data(), "bladePowerPin2") != nullptr) bladeArray.blades[blade].usePowerPin2 = true;
+        if (std::strstr(data.data(), "bladePowerPin3") != nullptr) bladeArray.blades[blade].usePowerPin3 = true;
+        if (std::strstr(data.data(), "bladePowerPin4") != nullptr) bladeArray.blades[blade].usePowerPin4 = true;
+        if (std::strstr(data.data(), "bladePowerPin5") != nullptr) bladeArray.blades[blade].usePowerPin5 = true;
+        if (std::strstr(data.data(), "bladePowerPin6") != nullptr) bladeArray.blades[blade].usePowerPin6 = true;
+
+        std::strtok(data.data(), "<,"); // Clear WS281XBladePtr
+        bladeArray.blades[blade].numPixels = std::stoi(std::strtok(nullptr, "<,"));
+        bladeArray.blades[blade].dataPin = std::strtok(nullptr, ",");
+        std::strtok(nullptr, ":"); // Clear Color8::
+        element = std::strtok(nullptr, ":,"); // Set to color order;
+        bladeArray.blades[blade].useRGBWithWhite = strstr(element.data(), "W") != nullptr;
+        bladeArray.blades[blade].colorType.assign(element);
+
+        continue;
+      }
+      if (std::strstr(data.data(), "SimpleBladePtr") != nullptr) {
+        bladeArray.blades.push_back(BladesPage::BladeConfig());
+        uint32_t numLEDs = 0;
+        auto getStarTemplate = [](const std::string& element) -> std::string {
+          if (std::strstr(element.data(), "RedOrange") != nullptr) return "RedOrange";
+          if (std::strstr(element.data(), "Amber") != nullptr) return "Amber";
+          if (std::strstr(element.data(), "White") != nullptr) return "White";
+          if (std::strstr(element.data(), "Red") != nullptr) return "Red";
+          if (std::strstr(element.data(), "Green") != nullptr) return "Green";
+          if (std::strstr(element.data(), "Blue") != nullptr) return "Blue";
+          // With this implementation, RedOrange must be before Red
+          return BD_NORESISTANCE;
+        };
+
+        // These must be read first since std::strtok is destructive (adds null chars)
+        if (std::strstr(data.data(), "bladePowerPin1") != nullptr) bladeArray.blades[blade].usePowerPin1 = true;
+        if (std::strstr(data.data(), "bladePowerPin2") != nullptr) bladeArray.blades[blade].usePowerPin2 = true;
+        if (std::strstr(data.data(), "bladePowerPin3") != nullptr) bladeArray.blades[blade].usePowerPin3 = true;
+        if (std::strstr(data.data(), "bladePowerPin4") != nullptr) bladeArray.blades[blade].usePowerPin4 = true;
+        if (std::strstr(data.data(), "bladePowerPin5") != nullptr) bladeArray.blades[blade].usePowerPin5 = true;
+        if (std::strstr(data.data(), "bladePowerPin6") != nullptr) bladeArray.blades[blade].usePowerPin6 = true;
+
+        std::strtok(data.data(), "<"); // Clear SimpleBladePtr and setup strtok
+
+        element = std::strtok(nullptr, "<,");
+        bladeArray.blades[blade].Star1.assign(getStarTemplate(element));
+        if (bladeArray.blades[blade].Star1 != BD_NORESISTANCE) {
+          numLEDs++;
+          bladeArray.blades[blade].Star1Resistance = std::stoi(std::strtok(nullptr, "<>"));
+        }
+        element = std::strtok(nullptr, "<,");
+        bladeArray.blades[blade].Star2.assign(getStarTemplate(element));
+        if (bladeArray.blades[blade].Star2 != BD_NORESISTANCE) {
+          numLEDs++;
+          bladeArray.blades[blade].Star2Resistance = std::stoi(std::strtok(nullptr, "<>"));
+        }
+        element = std::strtok(nullptr, "<, ");
+        bladeArray.blades[blade].Star3.assign(getStarTemplate(element));
+        if (bladeArray.blades[blade].Star3 != BD_NORESISTANCE) {
+          numLEDs++;
+          bladeArray.blades[blade].Star3Resistance = std::stoi(std::strtok(nullptr, "<>"));
+        }
+        element = std::strtok(nullptr, "<, ");
+        bladeArray.blades[blade].Star4.assign(getStarTemplate(element));
+        if (bladeArray.blades[blade].Star4 != BD_NORESISTANCE) {
+          numLEDs++;
+          bladeArray.blades[blade].Star4Resistance = std::stoi(std::strtok(nullptr, "<>"));
+        }
+
+        if (numLEDs <= 2) bladeArray.blades[blade].type.assign(BD_SINGLELED);
+        if (numLEDs == 3) bladeArray.blades[blade].type.assign("Tri-Star Star");
+        if (numLEDs >= 4) bladeArray.blades[blade].type.assign("Quad-Star Star");
+      }
+    }
+
+    data.clear();
+    do {
       file >> element;
       CHKSECT;
-      bladeInfo.append(element);
-    }
-    if (std::strstr(bladeInfo.data(), "SubBlade") != nullptr) {
-      if (std::strstr(bladeInfo.data(), "NULL") == nullptr) { // Top Level SubBlade
-        BladesPage::instance->blades.push_back(BladesPage::bladeConfig());
-        if (std::strstr(bladeInfo.data(), "WithStride")) BladesPage::instance->blades[BladesPage::instance->blades.size() - 1].subBladeWithStride = true;
-      } else { // Lesser SubBlade
-        blade--;
-        numBlades--;
-        // Switch to operating on previous blade
+      data.append(element);
+    } while (std::strstr(data.data(), ")") != nullptr);
+
+    bladeArray.name.assign(data.substr(data.find("CONFIGARRAY(") + 12, data.find(")")));
+
+    for (BladeIDPage::BladeArray& array : BladeIDPage::instance->bladeArrays) {
+      if (array.name == bladeArray.name) {
+        array.value = bladeArray.value;
+        array.blades = bladeArray.blades;
       }
-
-      BladesPage::instance->blades[blade].isSubBlade = true;
-      std::strtok(bladeInfo.data(), "("); // SubBlade(
-      BladesPage::instance->blades[blade].subBlades.push_back({ std::stoi(std::strtok(nullptr, "(,")), std::stoi(std::strtok(nullptr, " (,")) });
-      bladeInfo = std::strtok(nullptr, ""); // Clear out mangled data from strtok, replace with rest of data ("" runs until end of what's left)
-      // Rest will be handled by WS281X "if"
-    }
-    if (std::strstr(bladeInfo.data(), "WS281XBladePtr") != nullptr) {
-      if (BladesPage::instance->blades.size() - 1 != blade) BladesPage::instance->blades.push_back(BladesPage::bladeConfig());
-      bladeInfo = std::strstr(bladeInfo.data(), "WS281XBladePtr"); // Shift start to blade data, in case of SubBlade;
-
-      // This must be done first since std::strtok is destructive (adds null chars)
-      if (std::strstr(bladeInfo.data(), "bladePowerPin1") != nullptr) BladesPage::instance->blades[blade].usePowerPin1 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin2") != nullptr) BladesPage::instance->blades[blade].usePowerPin2 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin3") != nullptr) BladesPage::instance->blades[blade].usePowerPin3 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin4") != nullptr) BladesPage::instance->blades[blade].usePowerPin4 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin5") != nullptr) BladesPage::instance->blades[blade].usePowerPin5 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin6") != nullptr) BladesPage::instance->blades[blade].usePowerPin6 = true;
-
-      std::strtok(bladeInfo.data(), "<,"); // Clear WS281XBladePtr
-      BladesPage::instance->blades[blade].numPixels = std::stoi(std::strtok(nullptr, "<,"));
-      BladesPage::instance->blades[blade].dataPin = std::strtok(nullptr, ",");
-      std::strtok(nullptr, ":"); // Clear Color8::
-      element = std::strtok(nullptr, ":,"); // Set to color order;
-      BladesPage::instance->blades[blade].useRGBWithWhite = strstr(element.data(), "W") != nullptr;
-      BladesPage::instance->blades[blade].colorType.assign(element);
-
-      continue;
-    }
-    if (std::strstr(bladeInfo.data(), "SimpleBladePtr") != nullptr) {
-      BladesPage::instance->blades.push_back(BladesPage::bladeConfig());
-      uint32_t numLEDs = 0;
-      auto getStarTemplate = [](const std::string& element) -> std::string {
-        if (std::strstr(element.data(), "RedOrange") != nullptr) return "RedOrange";
-        if (std::strstr(element.data(), "Amber") != nullptr) return "Amber";
-        if (std::strstr(element.data(), "White") != nullptr) return "White";
-        if (std::strstr(element.data(), "Red") != nullptr) return "Red";
-        if (std::strstr(element.data(), "Green") != nullptr) return "Green";
-        if (std::strstr(element.data(), "Blue") != nullptr) return "Blue";
-        // With this implementation, RedOrange must be before Red
-        return BD_NORESISTANCE;
-      };
-
-      // These must be read first since std::strtok is destructive (adds null chars)
-      if (std::strstr(bladeInfo.data(), "bladePowerPin1") != nullptr) BladesPage::instance->blades[blade].usePowerPin1 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin2") != nullptr) BladesPage::instance->blades[blade].usePowerPin2 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin3") != nullptr) BladesPage::instance->blades[blade].usePowerPin3 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin4") != nullptr) BladesPage::instance->blades[blade].usePowerPin4 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin5") != nullptr) BladesPage::instance->blades[blade].usePowerPin5 = true;
-      if (std::strstr(bladeInfo.data(), "bladePowerPin6") != nullptr) BladesPage::instance->blades[blade].usePowerPin6 = true;
-
-      std::strtok(bladeInfo.data(), "<"); // Clear SimpleBladePtr and setup strtok
-
-      element = std::strtok(nullptr, "<,");
-      BladesPage::instance->blades[blade].Star1.assign(getStarTemplate(element));
-      if (BladesPage::instance->blades[blade].Star1 != BD_NORESISTANCE) {
-        numLEDs++;
-        BladesPage::instance->blades[blade].Star1Resistance = std::stoi(std::strtok(nullptr, "<>"));
-      }
-      element = std::strtok(nullptr, "<,");
-      BladesPage::instance->blades[blade].Star2.assign(getStarTemplate(element));
-      if (BladesPage::instance->blades[blade].Star2 != BD_NORESISTANCE) {
-        numLEDs++;
-        BladesPage::instance->blades[blade].Star2Resistance = std::stoi(std::strtok(nullptr, "<>"));
-      }
-      element = std::strtok(nullptr, "<, ");
-      BladesPage::instance->blades[blade].Star3.assign(getStarTemplate(element));
-      if (BladesPage::instance->blades[blade].Star3 != BD_NORESISTANCE) {
-        numLEDs++;
-        BladesPage::instance->blades[blade].Star3Resistance = std::stoi(std::strtok(nullptr, "<>"));
-      }
-      element = std::strtok(nullptr, "<, ");
-      BladesPage::instance->blades[blade].Star4.assign(getStarTemplate(element));
-      if (BladesPage::instance->blades[blade].Star4 != BD_NORESISTANCE) {
-        numLEDs++;
-        BladesPage::instance->blades[blade].Star4Resistance = std::stoi(std::strtok(nullptr, "<>"));
-      }
-
-      if (numLEDs <= 2) BladesPage::instance->blades[blade].type.assign(BD_SINGLELED);
-      if (numLEDs == 3) BladesPage::instance->blades[blade].type.assign("Tri-Star Star");
-      if (numLEDs >= 4) BladesPage::instance->blades[blade].type.assign("Quad-Star Star");
     }
   }
+
 # undef CHKSECT
 # undef RUNTOSECTION
 }
 void Configuration::replaceStyles(const std::string& styleName, const std::string& styleFill) {
   std::string styleCheck;
-  for (PresetsPage::presetConfig& preset : PresetsPage::instance->presets) {
+  for (PresetsPage::PresetConfig& preset : BladeIDPage::instance->bladeArrays[BladesPage::instance->bladeArray->GetSelection()].presets) {
     for (wxString& style : preset.styles) {
       styleCheck = (style.find(styleName) == std::string::npos) ? style : style.substr(style.find(styleName));
       while (styleCheck != style) {

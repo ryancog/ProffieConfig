@@ -16,7 +16,7 @@ public:
 
   void update();
 
-  wxComboBox* bladeArraySelection{nullptr};
+  wxComboBox* bladeArray{nullptr};
   wxTextCtrl* presetsEditor{nullptr};
   wxListBox* presetList{nullptr};
   wxListBox* bladeList{nullptr};
@@ -27,23 +27,37 @@ public:
   wxTextCtrl* dirInput{nullptr};
   wxTextCtrl* trackInput{nullptr};
 
-  struct presetConfig {
+  struct PresetConfig {
     std::vector<wxString> styles{};
     wxString name{""};
     wxString dirs{""};
     wxString track{""};
   };
-  std::vector<presetConfig> presets;
 
 private:
   PresetsPage();
+
+  enum {
+    ID_BladeArray,
+    ID_BladeList,
+    ID_PresetList,
+    ID_PresetChange,
+    ID_AddPreset,
+    ID_RemovePreset
+  };
+
+  void bindEvents();
+
+  wxBoxSizer* createPresetSelect();
+  wxBoxSizer* createPresetConfig();
+
   void pushIfNewPreset();
   void rebuildPresetList();
   void rebuildBladeList();
   void resizeAndFillPresets();
   void updateFields();
 
-  int getNumBlades();
+  int32_t getNumBlades();
 
   void stripAndSaveEditor();
   void stripAndSaveName();

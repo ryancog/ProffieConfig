@@ -20,13 +20,13 @@
 
 #define BD_HASSELECTION (bladeSelect->GetSelection() != -1)
 #define BD_SUBHASSELECTION (subBladeSelect->GetSelection() != -1)
-#define BD_ISPIXEL3 (BD_HASSELECTION && blades[bladeSelect->GetSelection()].type == BD_PIXELRGB)
-#define BD_ISPIXEL4 (BD_HASSELECTION && blades[bladeSelect->GetSelection()].type == BD_PIXELRGBW)
+#define BD_ISPIXEL3 (BD_HASSELECTION && BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_PIXELRGB)
+#define BD_ISPIXEL4 (BD_HASSELECTION && BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_PIXELRGBW)
 #define BD_ISPIXEL (BD_ISPIXEL3 || BD_ISPIXEL4)
-#define BD_ISSTAR3 (BD_HASSELECTION && blades[bladeSelect->GetSelection()].type == BD_TRISTAR)
-#define BD_ISSTAR4 (BD_HASSELECTION && blades[bladeSelect->GetSelection()].type == BD_QUADSTAR)
+#define BD_ISSTAR3 (BD_HASSELECTION && BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_TRISTAR)
+#define BD_ISSTAR4 (BD_HASSELECTION && BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_QUADSTAR)
 #define BD_ISSTAR (BD_ISSTAR3 || BD_ISSTAR4)
-#define BD_ISSUB (BD_HASSELECTION && blades[bladeSelect->GetSelection()].isSubBlade)
+#define BD_ISSUB (BD_HASSELECTION && BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].isSubBlade)
 #define BD_ISFIRST (!BD_ISSUB || (subBladeSelect->GetSelection() == 0))
 
 class BladesPage : public wxStaticBoxSizer
@@ -86,7 +86,7 @@ public:
   wxStaticText* subBladeEndLabel{nullptr};
   wxSpinCtrl* subBladeEnd{nullptr};
 
-  struct bladeConfig {
+  struct BladeConfig {
     wxString type{BD_PIXELRGB};
 
     wxString dataPin{"bladePin"};
@@ -114,70 +114,32 @@ public:
     bool subBladeWithStride{false};
 
     struct subBladeInfo {
-      int32_t startPixel{0};
-      int32_t endPixel{0};
+      uint32_t startPixel{0};
+      uint32_t endPixel{0};
     };
     std::vector<subBladeInfo> subBlades{};
   };
-  std::vector<bladeConfig> blades;
-
-  enum class STARTYPE {
-    RED,
-    GREEN,
-    PCAMBER,
-    AMBER,
-    BLUE,
-    REDORANGE,
-    WHITE,
-    XPL,
-    NOLED
-  };
-  enum class BLADETYPE {
-    PIXEL_3,
-    PIXEL_4,
-    STAR_3,
-    STAR_4,
-    SINGLECOLOR,
-    NONE
-  };
-  enum class C_ORDER {
-    BGR,
-    BRG,
-    GBR,
-    GRB,
-    RBG,
-    RGB,
-    BGRW,
-    BRGW,
-    GBRW,
-    GRBW,
-    RBGW,
-    RGBW,
-    WBGR,
-    WBRG,
-    WGBR,
-    WGRB,
-    WRBG,
-    WRGB,
-    BGRw,
-    BRGw,
-    GBRw,
-    GRBw,
-    RBGw,
-    RGBw,
-    wBGR,
-    wBRG,
-    wGBR,
-    wGRB,
-    wRBG,
-    wRGB
-  };
-
 
 private:
   BladesPage();
 
+  enum {
+    ID_BladeArray,
+    ID_BladeSelect,
+    ID_SubBladeSelect,
+    ID_BladeType,
+    ID_AddBlade,
+    ID_AddSubBlade,
+    ID_RemoveBlade,
+    ID_RemoveSubBlade
+  };
+
+  void bindEvents();
+
+  wxBoxSizer* createBladeSelect();
   wxBoxSizer* createBladeManager();
+  wxBoxSizer* createBladeSetup();
+  wxBoxSizer* createBladeSettings();
 
   void saveCurrent();
   void rebuildBladeArray();
@@ -185,6 +147,7 @@ private:
   void setEnabled();
   void setVisibility();
 
-  int lastBladeSelection{-1};
-  int lastSubBladeSelection{-1};
+  int32_t lastBladeSelection{-1};
+  int32_t lastSubBladeSelection{-1};
+  int32_t lastBladeArraySelection{0};
 };

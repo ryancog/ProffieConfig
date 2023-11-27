@@ -53,7 +53,7 @@ wxBoxSizer* GeneralPage::boolOptions(wxStaticBoxSizer* parent) {
   noBasicParsers = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Basic Parser Styles");
   disableDiagnosticCommands = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Diagnostic Commands");
   enableDeveloperCommands = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Enable Developer Commands");
-  maxLEDs = Misc::createNumEntry(parent, "WS281X Max LEDs", wxID_ANY, 0, 1024, 144);
+  maxLEDs = Misc::createNumEntry(parent->GetStaticBox(), "WS281X Max LEDs", wxID_ANY, 0, 1024, 144);
 
   boolOptions->Add(volumeSave, FIRSTITEMFLAGS);
   boolOptions->Add(presetSave, MENUITEMFLAGS);
@@ -70,13 +70,13 @@ wxBoxSizer* GeneralPage::boolOptions(wxStaticBoxSizer* parent) {
 wxBoxSizer* GeneralPage::numOptions(wxStaticBoxSizer* parent) {
   wxBoxSizer* numOptions = new wxBoxSizer(wxVERTICAL);
 
-  buttons = Misc::createNumEntry(parent, "Number of Buttons", wxID_ANY, 1, 3, 2);
-  volume = Misc::createNumEntry(parent, "Max Volume", wxID_ANY, 0, 3500, 2000);
+  buttons = Misc::createNumEntry(parent->GetStaticBox(), "Number of Buttons", wxID_ANY, 1, 3, 2);
+  volume = Misc::createNumEntry(parent->GetStaticBox(), "Max Volume", wxID_ANY, 0, 3500, 2000);
   volume->num->SetIncrement(50);
-  clash = Misc::createNumEntryDouble(parent, "Clash Threshold", wxID_ANY, 0.1, 5, 3);
-  pliTime = Misc::createNumEntry(parent, "PLI Timeout", wxID_ANY, 1, 60, 2);
-  idleTime = Misc::createNumEntry(parent, "Idle Timeout", wxID_ANY, 1, 60, 10);
-  motionTime = Misc::createNumEntry(parent, "Motion Timeout", wxID_ANY, 1, 60, 15);
+  clash = Misc::createNumEntryDouble(parent->GetStaticBox(), "Clash Threshold", wxID_ANY, 0.1, 5, 3);
+  pliTime = Misc::createNumEntry(parent->GetStaticBox(), "PLI Timeout", wxID_ANY, 1, 60, 2);
+  idleTime = Misc::createNumEntry(parent->GetStaticBox(), "Idle Timeout", wxID_ANY, 1, 60, 10);
+  motionTime = Misc::createNumEntry(parent->GetStaticBox(), "Motion Timeout", wxID_ANY, 1, 60, 15);
 
   numOptions->Add(buttons->box, FIRSTITEMFLAGS);
   numOptions->Add(volume->box, MENUITEMFLAGS);
