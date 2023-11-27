@@ -111,7 +111,7 @@ void SerialMonitor::CreateListener()
 {
   listenerThread = new ThreadRunner([&]() {
     listenerRunning = true;
-    int res;
+    int32_t res;
     char buf[255];
 
     while (!listenerThread->GetThread()->TestDestroy()) {

@@ -5,7 +5,7 @@ CONFIG -= qt
 QMAKE_CXXFLAGS += $$system(wx-config --cxxflags)
 QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
 
-VERSION = 1.4.3
+VERSION = 1.5.0-dev
 DEFINES += VERSION=\\\"$$VERSION\\\"
 
 # macOS resource handling

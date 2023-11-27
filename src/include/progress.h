@@ -11,11 +11,11 @@ public:
       this->SetId(id);
     }
 
-    int progress;
+    int8_t progress;
     wxString message;
   };
 
-  static void emitEvent(int, wxString);
+  static void emitEvent(int8_t, wxString);
   static void handleEvent(Progress*, ProgressEvent*);
 
   static wxEventTypeTag<wxCommandEvent> EVT_UPDATE;
