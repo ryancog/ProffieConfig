@@ -52,6 +52,7 @@ private:
   wxBoxSizer* createPresetConfig();
 
   void pushIfNewPreset();
+  void rebuildBladeArrayList();
   void rebuildPresetList();
   void rebuildBladeList();
   void resizeAndFillPresets();

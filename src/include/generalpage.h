@@ -31,12 +31,14 @@ public:
 
   wxCheckBox* volumeSave{nullptr};
   wxCheckBox* presetSave{nullptr};
+  wxCheckBox* enableOLED{nullptr};
   wxCheckBox* colorSave{nullptr};
   wxCheckBox* disableColor{nullptr};
   wxCheckBox* noTalkie{nullptr};
   wxCheckBox* noBasicParsers{nullptr};
   wxCheckBox* disableDiagnosticCommands{nullptr};
   wxCheckBox* enableDeveloperCommands{nullptr};
+
 
 private:
   wxStaticBoxSizer* boardSettings(wxStaticBoxSizer*);

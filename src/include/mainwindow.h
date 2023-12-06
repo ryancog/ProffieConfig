@@ -21,6 +21,7 @@ public:
   wxComboBox* devSelect;
 
 private:
+  void OnCloseWindow(wxCloseEvent&);
   void BindEvents();
   void CreateMenuBar();
   void CreatePages();

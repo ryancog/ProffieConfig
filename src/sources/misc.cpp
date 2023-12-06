@@ -1,7 +1,5 @@
 #include "misc.h"
 
-#include "defines.h"
-
 #include <wx/msgdlg.h>
 #include <wx/arrstr.h>
 #include <wx/filedlg.h>

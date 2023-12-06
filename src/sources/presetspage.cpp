@@ -111,6 +111,7 @@ void PresetsPage::update() {
   if (trackInput->IsModified()) stripAndSaveTrack();
   if (presetsEditor->IsModified()) stripAndSaveEditor();
 
+  rebuildBladeArrayList();
   rebuildPresetList();
   rebuildBladeList();
 
@@ -123,6 +124,15 @@ void PresetsPage::pushIfNewPreset() {
     presetList->SetSelection(BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].presets.size() - 1);
     bladeList->SetSelection(0);
   }
+}
+void PresetsPage::rebuildBladeArrayList() {
+  int32_t arraySelection = bladeArray->GetSelection();
+  bladeArray->Clear();
+  for (const BladeIDPage::BladeArray& array : BladeIDPage::instance->bladeArrays) {
+    bladeArray->Append(array.name);
+  }
+  if (arraySelection >= 0 && arraySelection < static_cast<int32_t>(bladeArray->GetCount())) bladeArray->SetSelection(arraySelection);
+  else bladeArray->SetSelection(0);
 }
 void PresetsPage::rebuildPresetList() {
   int32_t listSelection = presetList->GetSelection();
@@ -213,8 +223,8 @@ void PresetsPage::stripAndSaveEditor() {
   }
 }
 void PresetsPage::stripAndSaveName() {
-  if (PresetsPage::instance->presetList->GetSelection() >= 0 && BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].blades.size() > 0) {
-    wxString name = PresetsPage::instance->nameInput->GetValue();
+  if (presetList->GetSelection() >= 0 && BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].blades.size() > 0) {
+    wxString name = nameInput->GetValue();
     name.erase(std::remove(name.begin(), name.end(), ' '), name.end());
     std::transform(name.begin(), name.end(), name.begin(),
                    [](unsigned char c){ return std::tolower(c); }); // to lowercase

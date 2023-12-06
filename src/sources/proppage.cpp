@@ -22,13 +22,16 @@ PropPage::PropPage(wxWindow* window) : wxScrolledWindow(window) {
   sizer->Add(createFeatures(sizer), BOXITEMFLAGS);
   sizer->Add(createBattleMode(sizer), BOXITEMFLAGS);
 
+  SetSizerAndFit(sizer);
   bindEvents();
 }
 
 void PropPage::bindEvents() {
   auto propSelectUpdate = [&](wxCommandEvent&) {
-    PropPage::instance->update(); UPDATEWINDOW;
-    SetSize(wxSize(GetSize().GetWidth(), GetMinHeight() + PropPage::instance->GetBestVirtualSize().GetHeight()));
+    PropPage::instance->update();
+    FULLUPDATEWINDOW;
+    MainWindow::instance->SetSize(wxSize(MainWindow::instance->GetSize().GetWidth(), MainWindow::instance->GetMinHeight() + PropPage::instance->GetBestVirtualSize().GetHeight()));
+    MainWindow::instance->SetMinSize(wxSize(MainWindow::instance->GetSize().GetWidth(), 350));
   };
 
   Bind(wxEVT_COMBOBOX, propSelectUpdate, ID_Select);

@@ -54,6 +54,7 @@ private:
   void outputConfigTop(std::ofstream&);
   void outputConfigTopDefaults(std::ofstream&);
   void outputConfigTopGeneral(std::ofstream&);
+  void outputConfigTopBladeAwareness(std::ofstream& configOutput);
   void outputConfigTopPropSpecific(std::ofstream&);
   void outputConfigTopSA22C(std::ofstream&);
   void outputConfigTopFett263(std::ofstream&);
