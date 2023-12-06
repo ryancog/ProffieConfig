@@ -42,6 +42,8 @@ public:
   void removeBlade();
   void removeSubBlade();
 
+  int32_t lastBladeArraySelection{0};
+
   wxComboBox* bladeArray{nullptr};
   wxListBox* bladeSelect{nullptr};
   wxListBox* subBladeSelect{nullptr};
@@ -149,5 +151,4 @@ private:
 
   int32_t lastBladeSelection{-1};
   int32_t lastSubBladeSelection{-1};
-  int32_t lastBladeArraySelection{0};
 };

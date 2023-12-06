@@ -157,7 +157,10 @@ void Arduino::verifyConfig() {
     wxString returnVal;
     Progress::emitEvent(20, "Generating configuration file...");
 
-    Configuration::instance->outputConfig();
+    if (!Configuration::instance->outputConfig()) {
+      Progress::emitEvent(100, "Error");
+      return;
+    }
 
     returnVal = Arduino::updateIno();
     if (returnVal != "OK") {

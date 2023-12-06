@@ -32,18 +32,27 @@ BladeIDPage::BladeIDPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window
 }
 
 void BladeIDPage::bindEvents() {
+  auto clearBladeArray = [&]() {
+    arrayList->SetSelection(-1);
+    lastArraySelection = -1;
+    BladesPage::instance->bladeArray->SetSelection(0);
+    BladesPage::instance->lastBladeArraySelection = -1;
+    PresetsPage::instance->bladeArray->SetSelection(0);
+  };
+
   GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) {
         update(); // Store last one before we do *damage*
         if (enableDetect->GetValue()) {
           bladeArrays.insert(bladeArrays.begin() + 1, BladeArray{"no_blade", 0, {}, { BladesPage::BladeConfig{} }});
-          arrayList->SetSelection(-1);
-          lastArraySelection = -1;
+          clearBladeArray();
         } else {
+          if (wxMessageBox("Are you sure you want to disable Blade Detect?\n\n\"no_blade\" array will be deleted!", "Disable Blade Detect", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING, MainWindow::instance) == wxNO) {
+            enableDetect->SetValue(true);
+            update();
+            return;
+          }
           bladeArrays.erase(bladeArrays.begin() + 1);
-          arrayList->SetSelection(-1);
-          lastArraySelection = -1;
-          BladesPage::instance->bladeArray->SetSelection(0);
-          PresetsPage::instance->bladeArray->SetSelection(0);
+          clearBladeArray();
         }
         update();
       }, ID_BladeDetectEnable);
@@ -51,12 +60,15 @@ void BladeIDPage::bindEvents() {
         if (enableID->GetValue()) {
 
         } else {
-          if (wxMessageBox("Are you sure you want to disable Blade ID?\n\nAll custom blade arrays will be deleted!", "Disable Blade ID", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING, MainWindow::instance) == wxNO) return;
+          if (wxMessageBox("Are you sure you want to disable Blade ID?\n\nAll custom blade arrays will be deleted!", "Disable Blade ID", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING, MainWindow::instance) == wxNO) {
+            enableID->SetValue(true);
+            update();
+            return;
+          }
           if (enableDetect->GetValue()) bladeArrays.erase(bladeArrays.begin() + 2, bladeArrays.end());
           else bladeArrays.erase(bladeArrays.begin() + 1, bladeArrays.end());
 
-          BladesPage::instance->bladeArray->SetSelection(0);
-          PresetsPage::instance->bladeArray->SetSelection(0);
+          clearBladeArray();
         }
         update();
       }, ID_BladeIDEnable);
