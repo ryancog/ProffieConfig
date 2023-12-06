@@ -17,13 +17,13 @@ Configuration* Configuration::instance;
 Configuration::Configuration() {
 }
 
-void Configuration::outputConfig(const std::string& filePath) {
+bool Configuration::outputConfig(const std::string& filePath) {
   PresetsPage::instance->update();
   BladesPage::instance->update();
   HardwarePage::instance->update();
   BladeIDPage::instance->update();
 
-  if (!runPrechecks()) return;
+  if (!runPrechecks()) return false;
 
   std::ofstream configOutput(filePath);
 
@@ -40,14 +40,15 @@ void Configuration::outputConfig(const std::string& filePath) {
   outputConfigButtons(configOutput);
 
   configOutput.close();
+  return true;
 }
-void Configuration::outputConfig() { Configuration::outputConfig(CONFIG_PATH); }
-void Configuration::exportConfig() {
+bool Configuration::outputConfig() { return Configuration::outputConfig(CONFIG_PATH); }
+bool Configuration::exportConfig() {
   wxFileDialog configLocation(MainWindow::instance, "Save ProffieOS Config File", "", "ProffieConfig_autogen.h", "C Header Files (*.h)|*.h", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
-  if (configLocation.ShowModal() == wxID_CANCEL) return; // User Closed
+  if (configLocation.ShowModal() == wxID_CANCEL) return false; // User Closed
 
-  Configuration::outputConfig(configLocation.GetPath().ToStdString());
+  return Configuration::outputConfig(configLocation.GetPath().ToStdString());
 }
 
 void Configuration::outputConfigTop(std::ofstream& configOutput) {
@@ -1024,11 +1025,22 @@ void Configuration::replaceStyles(const std::string& styleName, const std::strin
 }
 
 bool Configuration::runPrechecks() {
-  wxString test = BladeIDPage::instance->IDPin->entry->GetValue();
-  wxString test2 = BladeIDPage::instance->detectPin->entry->GetValue();
+# define ERR(msg) \
+  Misc::MessageBoxEvent* msgEvent = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, msg, "Configuration Error"); \
+  wxQueueEvent(MainWindow::instance->GetEventHandler(), msgEvent); \
+  return false;
+
+  if (BladeIDPage::instance->enableDetect->GetValue() && BladeIDPage::instance->detectPin->entry->GetValue() == "") {
+    ERR("Blade Detect Pin cannot be empty.");
+  }
+  if (BladeIDPage::instance->enableID->GetValue() && BladeIDPage::instance->IDPin->entry->GetValue() == "") {
+    ERR("Blade ID Pin cannot be empty.");
+  }
+  if ([]() { for (const BladeIDPage::BladeArray& array : BladeIDPage::instance->bladeArrays) if (array.name == "") return true; return false; }()) {
+    ERR("Blade Array Name cannot be empty.");
+  }
   if (BladeIDPage::instance->enableDetect->GetValue() && BladeIDPage::instance->enableID->GetValue() && BladeIDPage::instance->IDPin->entry->GetValue() == BladeIDPage::instance->detectPin->entry->GetValue()) {
-    wxMessageBox("Blade ID Pin and Blade Detect Pin cannot be the same.", "Configuration Error", wxICON_ERROR | wxOK);
-    return false;
+    ERR("Blade ID Pin and Blade Detect Pin cannot be the same.");
   }
   if ([]() -> bool {
         auto getNumBlades = [](const BladeIDPage::BladeArray& array) {
@@ -1046,11 +1058,12 @@ bool Configuration::runPrechecks() {
         }
         return false;
       }()) {
-    wxMessageBox("All Blade Arrays must be the same length.\n\nPlease add/remove blades to make them equal", "Configuration Error", wxICON_ERROR | wxOK);
-    return false;
+    ERR("All Blade Arrays must be the same length.\n\nPlease add/remove blades to make them equal");
   }
 
+
   return true;
+# undef ERR
 }
 
 Configuration::ProffieBoard Configuration::parseBoardType(const std::string& value) {

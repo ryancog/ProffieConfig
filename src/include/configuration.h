@@ -17,9 +17,9 @@ public:
   Configuration();
   static Configuration* instance;
 
-  void outputConfig();
-  void outputConfig(const std::string&);
-  void exportConfig();
+  bool outputConfig();
+  bool outputConfig(const std::string&);
+  bool exportConfig();
   void readConfig();
   void readConfig(const std::string&);
   void importConfig();
