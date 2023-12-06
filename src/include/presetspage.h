@@ -58,8 +58,6 @@ private:
   void resizeAndFillPresets();
   void updateFields();
 
-  int32_t getNumBlades();
-
   void stripAndSaveEditor();
   void stripAndSaveName();
   void stripAndSaveDir();
