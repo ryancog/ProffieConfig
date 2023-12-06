@@ -27,18 +27,18 @@ void BladesPage::bindEvents() {
 
   GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
         update();
-        UPDATEWINDOW;
+        FULLUPDATEWINDOW;
       }, ID_BladeSelect);
   GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
         update();
-        UPDATEWINDOW;
+        FULLUPDATEWINDOW;
       }, ID_SubBladeSelect);
   GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
         update();
-        UPDATEWINDOW;
+        FULLUPDATEWINDOW;
       }, ID_BladeType);
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { addBlade(); UPDATEWINDOW; }, ID_AddBlade);
-  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { addSubBlade(); UPDATEWINDOW; }, ID_AddSubBlade);
+  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { addSubBlade(); FULLUPDATEWINDOW; }, ID_AddSubBlade);
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { removeBlade(); UPDATEWINDOW; }, ID_RemoveBlade);
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { removeSubBlade(); UPDATEWINDOW; }, ID_RemoveSubBlade);
 }

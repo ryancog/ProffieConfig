@@ -23,6 +23,8 @@ void Configuration::outputConfig(const std::string& filePath) {
   HardwarePage::instance->update();
   BladeIDPage::instance->update();
 
+  if (!runPrechecks()) return;
+
   std::ofstream configOutput(filePath);
 
   configOutput <<
@@ -635,7 +637,7 @@ void Configuration::readConfigStyles(std::ifstream& file) {
 void Configuration::readDefine(std::string& define) {
 # define CHKDEF(str) if (std::strncmp(define.c_str(), str, strlen(str)) == 0)
 # define CHKPRP(str) if (std::strstr(define.c_str(), str) != nullptr)
-# define DEFVAL std::strtok(nullptr, " ")
+# define DEFVAL std::strtok(nullptr, " \n\r")
 # define DEFNUM std::stod(DEFVAL)
   define = std::strtok(&define[0], " ");
 
@@ -864,6 +866,7 @@ void Configuration::readBladeArray(std::ifstream& file) {
   BladeIDPage::BladeArray bladeArray;
   std::string element;
   std::string data;
+  uint32_t tempNumBlades;
   RUNTOSECTION;
 
   while (true) {
@@ -874,7 +877,8 @@ void Configuration::readBladeArray(std::ifstream& file) {
     bladeArray.value = std::strstr(element.data(), "NO_BLADE") ? 0 : std::stoi(element);
     CHKSECT;
     bladeArray.blades.clear();
-    for (uint32_t blade = 0; blade < numBlades; blade++) {
+    tempNumBlades = numBlades;
+    for (uint32_t blade = 0; blade < tempNumBlades; blade++) {
       data.clear();
 
       do { // Gather entire blade data
@@ -889,7 +893,7 @@ void Configuration::readBladeArray(std::ifstream& file) {
           if (std::strstr(data.data(), "WithStride")) bladeArray.blades[blade].subBladeWithStride = true;
         } else { // Lesser SubBlade
           blade--;
-          numBlades--;
+          tempNumBlades--;
           // Switch to operating on previous blade
         }
 
@@ -1017,6 +1021,36 @@ void Configuration::replaceStyles(const std::string& styleName, const std::strin
       }
     }
   }
+}
+
+bool Configuration::runPrechecks() {
+  wxString test = BladeIDPage::instance->IDPin->entry->GetValue();
+  wxString test2 = BladeIDPage::instance->detectPin->entry->GetValue();
+  if (BladeIDPage::instance->enableDetect->GetValue() && BladeIDPage::instance->enableID->GetValue() && BladeIDPage::instance->IDPin->entry->GetValue() == BladeIDPage::instance->detectPin->entry->GetValue()) {
+    wxMessageBox("Blade ID Pin and Blade Detect Pin cannot be the same.", "Configuration Error", wxICON_ERROR | wxOK);
+    return false;
+  }
+  if ([]() -> bool {
+        auto getNumBlades = [](const BladeIDPage::BladeArray& array) {
+          int32_t numBlades = 0;
+          for (const BladesPage::BladeConfig& blade : array.blades) {
+            blade.isSubBlade ? numBlades += blade.subBlades.size() : numBlades++;
+          }
+          return numBlades;
+        };
+
+        int32_t lastNumBlades = getNumBlades(BladeIDPage::instance->bladeArrays.at(0));
+        for (const BladeIDPage::BladeArray& array : BladeIDPage::instance->bladeArrays) {
+          if (getNumBlades(array) != lastNumBlades) return true;
+          lastNumBlades = getNumBlades(array);
+        }
+        return false;
+      }()) {
+    wxMessageBox("All Blade Arrays must be the same length.\n\nPlease add/remove blades to make them equal", "Configuration Error", wxICON_ERROR | wxOK);
+    return false;
+  }
+
+  return true;
 }
 
 Configuration::ProffieBoard Configuration::parseBoardType(const std::string& value) {

@@ -42,6 +42,8 @@ void BladeIDPage::bindEvents() {
           bladeArrays.erase(bladeArrays.begin() + 1);
           arrayList->SetSelection(-1);
           lastArraySelection = -1;
+          BladesPage::instance->bladeArray->SetSelection(0);
+          PresetsPage::instance->bladeArray->SetSelection(0);
         }
         update();
       }, ID_BladeDetectEnable);
@@ -52,6 +54,9 @@ void BladeIDPage::bindEvents() {
           if (wxMessageBox("Are you sure you want to disable Blade ID?\n\nAll custom blade arrays will be deleted!", "Disable Blade ID", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING, MainWindow::instance) == wxNO) return;
           if (enableDetect->GetValue()) bladeArrays.erase(bladeArrays.begin() + 2, bladeArrays.end());
           else bladeArrays.erase(bladeArrays.begin() + 1, bladeArrays.end());
+
+          BladesPage::instance->bladeArray->SetSelection(0);
+          PresetsPage::instance->bladeArray->SetSelection(0);
         }
         update();
       }, ID_BladeIDEnable);
@@ -124,7 +129,7 @@ wxBoxSizer* BladeIDPage::createBladeArraysRight(wxStaticBoxSizer* parent) {
 wxStaticBoxSizer* BladeIDPage::createIDSetup(wxWindow* parent) {
   wxStaticBoxSizer* setupSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Blade ID Setup");
   mode = new wxComboBox(setupSizer->GetStaticBox(), ID_BladeIDMode, BLADE_ID_MODE_SNAPSHOT, wxDefaultPosition, wxDefaultSize, Misc::createEntries({ BLADE_ID_MODE_SNAPSHOT, BLADE_ID_MODE_EXTERNAL, BLADE_ID_MODE_BRIDGED }), wxCB_READONLY);
-  IDPin = Misc::createTextEntry(setupSizer->GetStaticBox(), "Blade ID Pin", wxID_ANY, "blade4Pin", 0);
+  IDPin = Misc::createTextEntry(setupSizer->GetStaticBox(), "Blade ID Pin", wxID_ANY, "", 0);
 
   pullupResistance = Misc::createNumEntry(setupSizer->GetStaticBox(), "Pullup Resistance", wxID_ANY, 20000, 50000, 30000);
   pullupResistance->num->SetIncrement(100);
@@ -181,7 +186,7 @@ wxStaticBoxSizer* BladeIDPage::createContinuousScanSettings(wxWindow* parent) {
 wxStaticBoxSizer* BladeIDPage::createBladeDetect(wxWindow* parent) {
   wxStaticBoxSizer* bladeDetectSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Blade Detect");
 
-  detectPin = Misc::createTextEntry(bladeDetectSizer->GetStaticBox(), "Blade Detect Pin", wxID_ANY, "blade4Pin", 0);
+  detectPin = Misc::createTextEntry(bladeDetectSizer->GetStaticBox(), "Blade Detect Pin", wxID_ANY, "", 0);
   bladeDetectSizer->Add(detectPin->box, wxSizerFlags(0).Border(wxALL, 5).Expand());
 
   return bladeDetectSizer;

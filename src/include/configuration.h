@@ -51,6 +51,8 @@ private:
   ProffieBoard parseBoardType(const std::string&);
   SaberProp parsePropSel(const std::string&);
 
+  bool runPrechecks();
+
   void outputConfigTop(std::ofstream&);
   void outputConfigTopDefaults(std::ofstream&);
   void outputConfigTopGeneral(std::ofstream&);
