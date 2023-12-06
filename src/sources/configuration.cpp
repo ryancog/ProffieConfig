@@ -21,6 +21,7 @@ void Configuration::outputConfig(const std::string& filePath) {
   PresetsPage::instance->update();
   BladesPage::instance->update();
   HardwarePage::instance->update();
+  BladeIDPage::instance->update();
 
   std::ofstream configOutput(filePath);
 
@@ -51,6 +52,7 @@ void Configuration::outputConfigTop(std::ofstream& configOutput) {
   configOutput << "#ifdef CONFIG_TOP" << std::endl;
   outputConfigTopDefaults(configOutput);
   outputConfigTopGeneral(configOutput);
+  outputConfigTopBladeAwareness(configOutput);
   outputConfigTopPropSpecific(configOutput);
   configOutput << "#endif" << std::endl << std::endl;
 
@@ -85,10 +87,10 @@ void Configuration::outputConfigTopDefaults(std::ofstream& configOutput) {
   configOutput << "#define SHARED_POWER_PINS" << std::endl;
 }
 void Configuration::outputConfigTopGeneral(std::ofstream& configOutput) {
-  if (HardwarePage::instance->OLED->GetValue()) configOutput << "#define ENABLE_SSD1306" << std::endl;
   if (GeneralPage::instance->colorSave->GetValue()) configOutput << "#define SAVE_COLOR_CHANGE" << std::endl;
   if (GeneralPage::instance->presetSave->GetValue()) configOutput << "#define SAVE_PRESET" << std::endl;
   if (GeneralPage::instance->volumeSave->GetValue()) configOutput << "#define SAVE_VOLUME" << std::endl;
+  if (GeneralPage::instance->enableOLED->GetValue()) configOutput << "#define ENABLE_SSD1306" << std::endl;
   if (GeneralPage::instance->disableColor->GetValue()) configOutput << "#define DISABLE_COLOR_CHANGE" << std::endl;
   if (GeneralPage::instance->noTalkie->GetValue()) configOutput << "#define DISABLE_TALKIE" << std::endl;
   if (GeneralPage::instance->noBasicParsers->GetValue()) configOutput << "#define DISABLE_BASIC_PARSER_STYLES" << std::endl;
@@ -97,6 +99,36 @@ void Configuration::outputConfigTopGeneral(std::ofstream& configOutput) {
   configOutput << "#define PLI_OFF_TIME " << GeneralPage::instance->pliTime->num->GetValue() << " * 60 * 1000" << std::endl;
   configOutput << "#define IDLE_OFF_TIME " << GeneralPage::instance->idleTime->num->GetValue() << " * 60 * 1000" << std::endl;
   configOutput << "#define MOTION_TIMEOUT " << GeneralPage::instance->motionTime->num->GetValue() << " * 60 * 1000" << std::endl;
+}
+void Configuration::outputConfigTopBladeAwareness(std::ofstream& configOutput) {
+  if (BladeIDPage::instance->enableDetect->GetValue()) configOutput << "#define BLADE_DETECT_PIN " << BladeIDPage::instance->detectPin->entry->GetValue() << std::endl;
+  if (BladeIDPage::instance->enableID->GetValue()) {
+    configOutput << "#define BLADE_ID_CLASS ";
+    if (BladeIDPage::instance->mode->GetValue() == BLADE_ID_MODE_SNAPSHOT) configOutput << "SnapshotBladeID<" << BladeIDPage::instance->IDPin->entry->GetValue() << ">" << std::endl;
+    if (BladeIDPage::instance->mode->GetValue() == BLADE_ID_MODE_EXTERNAL) configOutput << "ExternalPullupBladeID<" << BladeIDPage::instance->IDPin->entry->GetValue() << ", " << BladeIDPage::instance->pullupResistance->num->GetValue() << ">" << std::endl;
+    if (BladeIDPage::instance->mode->GetValue() == BLADE_ID_MODE_BRIDGED) configOutput << "BridgedPullupBladeID<" << BladeIDPage::instance->IDPin->entry->GetValue() << ", " << BladeIDPage::instance->pullupPin->entry->GetValue() << ">" << std::endl;
+    if (BladeIDPage::instance->enablePowerForID->GetValue()) {
+      configOutput << "#define ENABLE_POWER_FOR_ID PowerPINS<";
+      std::vector<std::string> powerPins;
+      if (BladeIDPage::instance->powerPin1->GetValue()) powerPins.push_back("bladePowerPin1");
+      if (BladeIDPage::instance->powerPin2->GetValue()) powerPins.push_back("bladePowerPin2");
+      if (BladeIDPage::instance->powerPin3->GetValue()) powerPins.push_back("bladePowerPin3");
+      if (BladeIDPage::instance->powerPin4->GetValue()) powerPins.push_back("bladePowerPin4");
+      if (BladeIDPage::instance->powerPin5->GetValue()) powerPins.push_back("bladePowerPin5");
+      if (BladeIDPage::instance->powerPin6->GetValue()) powerPins.push_back("bladePowerPin6");
+
+      for (int32_t pin = 0; pin < static_cast<int32_t>(powerPins.size()); pin++) {
+        configOutput << powerPins.at(pin);
+        if (pin < static_cast<int32_t>(powerPins.size()) -1) configOutput << ",";
+      }
+
+      configOutput << ">" << std::endl;
+    }
+    if (BladeIDPage::instance->continuousScans->GetValue()) {
+      configOutput << "#define BLADE_ID_SCAN_MILLIS " << BladeIDPage::instance->scanIDMillis->num->GetValue() << std::endl;
+      configOutput << "#define BLADE_ID_TIMES " << BladeIDPage::instance->numIDTimes->num->GetValue() << std::endl;
+    }
+  }
 }
 void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput) {
   switch (parsePropSel(PropPage::instance->prop->GetValue().ToStdString())) {
@@ -297,7 +329,7 @@ void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput) {
 void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput) {
   configOutput << "BladeConfig blades[] = {" << std::endl;
   for (const BladeIDPage::BladeArray& bladeArray : BladeIDPage::instance->bladeArrays) {
-    configOutput << "\t{ " << bladeArray.value << "," << std::endl;
+    configOutput << "\t{ " << (bladeArray.name == "no_blade" ? "NO_BLADE" : std::to_string(bladeArray.value)) << "," << std::endl;
     for (const BladesPage::BladeConfig& blade : bladeArray.blades) {
       if (blade.type == BD_PIXELRGB || blade.type == BD_PIXELRGBW) {
         bool firstSub = true;
@@ -470,6 +502,7 @@ void Configuration::readConfig(const std::string& filePath) {
 
     wxMessageBox(errorMessage, "Config Read Error", wxOK);
   }
+
   //GeneralPage::update();
   PropPage::instance->update();
   BladesPage::instance->update();
@@ -621,6 +654,7 @@ void Configuration::readDefine(std::string& define) {
   CHKDEF("SAVE_COLOR_CHANGE") GeneralPage::instance->colorSave->SetValue(true);
   CHKDEF("SAVE_PRESET") GeneralPage::instance->presetSave->SetValue(true);
   CHKDEF("SAVE_VOLUME") GeneralPage::instance->volumeSave->SetValue(true);
+  CHKDEF("ENABLE_SSD1306") GeneralPage::instance->enableOLED->SetValue(true);
   CHKDEF("DISABLE_COLOR_CHANGE") GeneralPage::instance->disableColor->SetValue(true);
   CHKDEF("DISABLE_TALKIE") GeneralPage::instance->noTalkie->SetValue(true);
   CHKDEF("DISABLE_BASIC_PARSER_STYLES") GeneralPage::instance->noBasicParsers->SetValue(true);
@@ -629,6 +663,52 @@ void Configuration::readDefine(std::string& define) {
   CHKDEF("PLI_OFF_TIME") GeneralPage::instance->pliTime->num->SetValue(DEFNUM);
   CHKDEF("IDLE_OFF_TIME") GeneralPage::instance->idleTime->num->SetValue(DEFNUM);
   CHKDEF("MOTION_TIMEOUT") GeneralPage::instance->motionTime->num->SetValue(DEFNUM);
+
+  // Blade Awareness
+  CHKDEF("BLADE_DETECT_PIN") {
+    BladeIDPage::instance->enableDetect->SetValue(true);
+    BladeIDPage::instance->detectPin->entry->SetValue(DEFVAL);
+  }
+  CHKDEF("BLADE_ID_CLASS") {
+    BladeIDPage::instance->enableID->SetValue(true);
+    define = std::strtok(nullptr, "< ");
+    if (define == "SnapshotBladeID") {
+      BladeIDPage::instance->mode->SetValue(BLADE_ID_MODE_SNAPSHOT);
+      BladeIDPage::instance->IDPin->entry->SetValue(std::strtok(nullptr, "<> "));
+    } else if (define == "ExternalPullupBladeID") {
+      BladeIDPage::instance->mode->SetValue(BLADE_ID_MODE_EXTERNAL);
+      BladeIDPage::instance->IDPin->entry->SetValue(std::strtok(nullptr, "<, "));
+      BladeIDPage::instance->pullupResistance->num->SetValue(std::stod(std::strtok(nullptr, ",> ")));
+    } else if (define == "BridgedPullupBladeID") {
+      BladeIDPage::instance->mode->SetValue(BLADE_ID_MODE_BRIDGED);
+      BladeIDPage::instance->IDPin->entry->SetValue(std::strtok(nullptr, "<, "));
+      BladeIDPage::instance->pullupPin->entry->SetValue(std::strtok(nullptr, ",> "));
+    }
+  }
+  CHKDEF("ENABLE_POWER_FOR_ID") {
+    BladeIDPage::instance->enablePowerForID->SetValue(true);
+    std::strtok(nullptr, "<");
+    char* pwrPinTest = std::strtok(nullptr, "<>, ");
+    while (pwrPinTest != nullptr) {
+      define = pwrPinTest;
+      if (define == "bladePowerPin1") BladeIDPage::instance->powerPin1->SetValue(true);
+      if (define == "bladePowerPin2") BladeIDPage::instance->powerPin2->SetValue(true);
+      if (define == "bladePowerPin3") BladeIDPage::instance->powerPin3->SetValue(true);
+      if (define == "bladePowerPin4") BladeIDPage::instance->powerPin4->SetValue(true);
+      if (define == "bladePowerPin5") BladeIDPage::instance->powerPin5->SetValue(true);
+      if (define == "bladePowerPin6") BladeIDPage::instance->powerPin6->SetValue(true);
+
+      pwrPinTest = std::strtok(nullptr, "<>, ");
+    }
+  }
+  CHKDEF("BLADE_ID_SCAN_MILLIS") {
+    BladeIDPage::instance->continuousScans->SetValue(true);
+    BladeIDPage::instance->scanIDMillis->num->SetValue(DEFNUM);
+  }
+  CHKDEF("BLADE_ID_TIMES") {
+    BladeIDPage::instance->continuousScans->SetValue(true);
+    BladeIDPage::instance->numIDTimes->num->SetValue(DEFNUM);
+  }
 
   // Prop Specific
   CHKPRP("STAB_ON") PropPage::instance->stabOn->SetValue(true);
@@ -790,7 +870,8 @@ void Configuration::readBladeArray(std::ifstream& file) {
     bladeArray = {};
     RUNTOSECTION;
     file >> element;
-    bladeArray.value = std::stoi(std::strtok(element.data(), " ,"));
+    element = std::strtok(element.data(), " ,");
+    bladeArray.value = std::strstr(element.data(), "NO_BLADE") ? 0 : std::stoi(element);
     CHKSECT;
     bladeArray.blades.clear();
     for (uint32_t blade = 0; blade < numBlades; blade++) {
@@ -900,9 +981,14 @@ void Configuration::readBladeArray(std::ifstream& file) {
       file >> element;
       CHKSECT;
       data.append(element);
-    } while (std::strstr(data.data(), ")") != nullptr);
+    } while (std::strstr(data.data(), ")") == nullptr);
 
-    bladeArray.name.assign(data.substr(data.find("CONFIGARRAY(") + 12, data.find(")")));
+    int32_t nameStart = data.find("CONFIGARRAY(") + 12;
+    int32_t nameEnd = data.find(")");
+    bladeArray.name.assign(data.substr(nameStart, nameEnd - nameStart));
+
+    if (bladeArray.blades.empty())
+      bladeArray.blades.push_back(BladesPage::BladeConfig{});
 
     for (BladeIDPage::BladeArray& array : BladeIDPage::instance->bladeArrays) {
       if (array.name == bladeArray.name) {

@@ -39,6 +39,7 @@ MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPos
 
 void MainWindow::BindEvents() {
   // Main Window
+  Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event ) { if (wxMessageBox("Are you sure you want to close ProffieConfig?\n\nAny unsaved changes will be lost!", "Close ProffieConfig", wxICON_WARNING | wxYES_NO | wxNO_DEFAULT) == wxYES) event.Skip(true);}, wxID_ANY);
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent(progDialog, (Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::init(); }, Misc::ID_Initialize);
@@ -79,13 +80,13 @@ void MainWindow::BindEvents() {
         BladeIDPage::instance->Show(windowSelect->GetValue() == "Blade Awareness");
 
         //GeneralPage::instance->update();
+        BladeIDPage::instance->update();
         PropPage::instance->update();
         BladesPage::instance->update();
         PresetsPage::instance->update();
         HardwarePage::instance->update();
-        BladeIDPage::instance->update();
 
-        UPDATEWINDOW;
+        FULLUPDATEWINDOW;
         if (PropPage::instance->IsShown()) SetSize(wxSize(GetSize().GetWidth(), GetMinHeight() + PropPage::instance->GetBestVirtualSize().GetHeight()));
       }, Misc::ID_WindowSelect);
 }

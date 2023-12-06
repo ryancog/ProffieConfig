@@ -48,22 +48,22 @@ wxBoxSizer* GeneralPage::boolOptions(wxStaticBoxSizer* parent) {
   volumeSave = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Save Volume");
   presetSave = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Save Preset");
   colorSave = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Save Color");
+  enableOLED = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Enable OLED");
   disableColor = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Color Change");
   noTalkie = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Talkie");
   noBasicParsers = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Basic Parser Styles");
   disableDiagnosticCommands = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Diagnostic Commands");
   enableDeveloperCommands = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Enable Developer Commands");
-  maxLEDs = Misc::createNumEntry(parent->GetStaticBox(), "WS281X Max LEDs", wxID_ANY, 0, 1024, 144);
 
   boolOptions->Add(volumeSave, FIRSTITEMFLAGS);
   boolOptions->Add(presetSave, MENUITEMFLAGS);
   boolOptions->Add(colorSave, MENUITEMFLAGS);
+  boolOptions->Add(enableOLED, MENUITEMFLAGS);
   boolOptions->Add(disableColor, MENUITEMFLAGS);
   boolOptions->Add(noTalkie, MENUITEMFLAGS);
   boolOptions->Add(noBasicParsers, MENUITEMFLAGS);
   boolOptions->Add(disableDiagnosticCommands, MENUITEMFLAGS);
   boolOptions->Add(enableDeveloperCommands, MENUITEMFLAGS);
-  boolOptions->Add(maxLEDs->box, MENUITEMFLAGS);
 
   return boolOptions;
 }
@@ -77,6 +77,7 @@ wxBoxSizer* GeneralPage::numOptions(wxStaticBoxSizer* parent) {
   pliTime = Misc::createNumEntry(parent->GetStaticBox(), "PLI Timeout", wxID_ANY, 1, 60, 2);
   idleTime = Misc::createNumEntry(parent->GetStaticBox(), "Idle Timeout", wxID_ANY, 1, 60, 10);
   motionTime = Misc::createNumEntry(parent->GetStaticBox(), "Motion Timeout", wxID_ANY, 1, 60, 15);
+  maxLEDs = Misc::createNumEntry(parent->GetStaticBox(), "WS281X Max LEDs", wxID_ANY, 0, 1024, 144);
 
   numOptions->Add(buttons->box, FIRSTITEMFLAGS);
   numOptions->Add(volume->box, MENUITEMFLAGS);
@@ -84,6 +85,7 @@ wxBoxSizer* GeneralPage::numOptions(wxStaticBoxSizer* parent) {
   numOptions->Add(pliTime->box, MENUITEMFLAGS);
   numOptions->Add(idleTime->box, MENUITEMFLAGS);
   numOptions->Add(motionTime->box, MENUITEMFLAGS);
+  numOptions->Add(maxLEDs->box, MENUITEMFLAGS);
 
   return numOptions;
 }
