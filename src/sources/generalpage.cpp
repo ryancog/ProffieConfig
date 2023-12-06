@@ -70,7 +70,7 @@ wxBoxSizer* GeneralPage::boolOptions(wxStaticBoxSizer* parent) {
 wxBoxSizer* GeneralPage::numOptions(wxStaticBoxSizer* parent) {
   wxBoxSizer* numOptions = new wxBoxSizer(wxVERTICAL);
 
-  buttons = Misc::createNumEntry(parent->GetStaticBox(), "Number of Buttons", wxID_ANY, 1, 3, 2);
+  buttons = Misc::createNumEntry(parent->GetStaticBox(), "Number of Buttons", wxID_ANY, 0, 3, 2);
   volume = Misc::createNumEntry(parent->GetStaticBox(), "Max Volume", wxID_ANY, 0, 3500, 2000);
   volume->num->SetIncrement(50);
   clash = Misc::createNumEntryDouble(parent->GetStaticBox(), "Clash Threshold", wxID_ANY, 0.1, 5, 3);
