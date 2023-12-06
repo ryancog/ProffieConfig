@@ -158,14 +158,16 @@ void PresetsPage::rebuildBladeList() {
   if (static_cast<int32_t>(bladeList->GetCount()) - 1 < listSelection) listSelection -= 1;
   if (listSelection >= 0) bladeList->SetSelection(listSelection);
 }
-int32_t PresetsPage::getNumBlades() {
-  int32_t numBlades = 0;
-  for (const BladesPage::BladeConfig& blade : BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].blades) {
-    numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
-  }
-  return numBlades;
-}
+
 void PresetsPage::resizeAndFillPresets() {
+  auto getNumBlades = [&]() {
+    int32_t numBlades = 0;
+    for (const BladesPage::BladeConfig& blade : BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].blades) {
+      numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
+    }
+    return numBlades;
+  };
+
   for (PresetConfig& preset : BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].presets) {
     while (static_cast<int32_t>(preset.styles.size()) < getNumBlades()) {
       preset.styles.push_back("StylePtr<Black>()");
@@ -205,6 +207,8 @@ void PresetsPage::updateFields() {
     dirInput->ChangeValue("");
     trackInput->ChangeValue("");
   }
+
+  removePreset->Enable(presetList->GetSelection() != -1);
 
   presetsEditor->SetModified(false); // Value is flagged as dirty from last change unless we manually reset it, causing overwrites where there shouldn't be.
   nameInput->SetModified(false);
