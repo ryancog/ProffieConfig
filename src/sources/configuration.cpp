@@ -1039,6 +1039,9 @@ bool Configuration::runPrechecks() {
   if ([]() { for (const BladeIDPage::BladeArray& array : BladeIDPage::instance->bladeArrays) if (array.name == "") return true; return false; }()) {
     ERR("Blade Array Name cannot be empty.");
   }
+  if (BladeIDPage::instance->enableID->GetValue() && BladeIDPage::instance->mode->GetStringSelection() == BLADE_ID_MODE_BRIDGED && BladeIDPage::instance->pullupPin->entry->GetValue() == "") {
+    ERR("Pullup Pin cannot be empty.");
+  }
   if (BladeIDPage::instance->enableDetect->GetValue() && BladeIDPage::instance->enableID->GetValue() && BladeIDPage::instance->IDPin->entry->GetValue() == BladeIDPage::instance->detectPin->entry->GetValue()) {
     ERR("Blade ID Pin and Blade Detect Pin cannot be the same.");
   }

@@ -3,11 +3,11 @@
 #include "misc.h"
 #include "defines.h"
 #include "generalpage.h"
+#include "mainwindow.h"
 
 #include <wx/scrolwin.h>
 #include <wx/sizer.h>
-
-#include <mainwindow.h>
+#include <wx/tooltip.h>
 
 PropPage* PropPage::instance;
 PropPage::PropPage(wxWindow* window) : wxScrolledWindow(window) {
@@ -22,8 +22,10 @@ PropPage::PropPage(wxWindow* window) : wxScrolledWindow(window) {
   sizer->Add(createFeatures(sizer), BOXITEMFLAGS);
   sizer->Add(createBattleMode(sizer), BOXITEMFLAGS);
 
-  SetSizerAndFit(sizer);
   bindEvents();
+  createToolTips();
+
+  SetSizerAndFit(sizer);
 }
 
 void PropPage::bindEvents() {
@@ -39,6 +41,43 @@ void PropPage::bindEvents() {
   Bind(wxEVT_RADIOBUTTON, propSelectUpdate, ID_Option);
   Bind(wxEVT_SPINCTRL, propSelectUpdate, ID_Option);
   Bind(wxEVT_SPINCTRLDOUBLE, propSelectUpdate, ID_Option);
+}
+void PropPage::createToolTips() {
+  auto stabOnTip = new wxToolTip("A quick \"stab\" motion will ignite the saber");
+  stabOn->SetToolTip(stabOnTip);
+  auto swingOnTip = new wxToolTip("A swing faster than the threshold will auto-ignite the saber");
+  swingOn->SetToolTip(swingOnTip);
+  auto thrustOnTip = new wxToolTip("A quick \"thrust\" motion will ignite the saber");
+  thrustOn->SetToolTip(thrustOnTip);
+  auto twistOnTip = new wxToolTip("A quick twist will ignite the saber");
+  twistOn->SetToolTip(twistOnTip);
+  auto twistOffTip = new wxToolTip("A quick twist will retract the saber");
+  twistOff->SetToolTip(twistOffTip);
+
+  auto swingSpeedTip = new wxToolTip("Speed required for swing to ignite saber");
+  swingOnSpeed->setToolTip(swingSpeedTip);
+
+  auto fastOnTip = new wxToolTip("Skip pre-on effects for this gesture");
+  stabOnFast->SetToolTip(fastOnTip);
+  swingOnFast->SetToolTip(fastOnTip);
+  thrustOnFast->SetToolTip(fastOnTip);
+  twistOnFast->SetToolTip(fastOnTip);
+  auto preonTip = new wxToolTip("Enable pre-on effects for this gesture");
+  stabOnPreon->SetToolTip(preonTip);
+  swingOnPreon->SetToolTip(preonTip);
+  thrustOnPreon->SetToolTip(preonTip);
+  twistOnPreon->SetToolTip(preonTip);
+  auto fastOffTip = new wxToolTip("Skip post-off effects for this gesture");
+  twistOffFast->SetToolTip(fastOffTip);
+  auto postoffTip = new wxToolTip("Enable post-off effects for this gesture");
+  twistOffPostoff->SetToolTip(postoffTip);
+  auto noBMTip = new wxToolTip("Do not enter Battle Mode when igniting with this gesture\n(default enters Battle Mode)");
+  stabOnNoBattle->SetToolTip(noBMTip);
+  swingOnNoBattle->SetToolTip(noBMTip);
+  thrustOnNoBattle->SetToolTip(noBMTip);
+  twistOnNoBattle->SetToolTip(noBMTip);
+
+
 }
 
 void PropPage::update() {
@@ -61,7 +100,7 @@ void PropPage::update() {
   // Swing On
   swingOn->Show(SA22C || FETT263 || BC);
   swingOnSpeed->box->Show(SA22C || FETT263 || BC);
-  swingOnSpeed->num->Enable(swingOn->GetValue());
+  swingOnSpeed->Enable(swingOn->GetValue());
   swingOnFast->Show(FETT263);
   swingOnPreon->Show(FETT263);
   swingOnNoBattle->Show(FETT263);
@@ -97,7 +136,7 @@ void PropPage::update() {
     forcePushBM->SetValue(true);
     forcePushBM->Disable();
   } else forcePushBM->Enable();
-  if (forcePushBM->GetValue()) forcePushLength->num->Enable();
+  if (forcePushBM->GetValue()) forcePushLength->Enable();
   else forcePushLength->num->Disable();
 
 
@@ -161,7 +200,7 @@ void PropPage::update() {
   dualModeSound->Show(FETT263);
   clashStrengthSound->Show(FETT263);
   clashStrengthSoundMaxClash->box->Show(FETT263);
-  if (clashStrengthSound->GetValue()) clashStrengthSoundMaxClash->num->Enable();
+  if (clashStrengthSound->GetValue()) clashStrengthSoundMaxClash->Enable();
   else clashStrengthSoundMaxClash->num->Disable();
   quickPresetSelect->Show(FETT263);
   spokenColors->Show(FETT263);
@@ -511,6 +550,8 @@ PropPage::PropPageBox* PropPage::createBMControls(wxStaticBoxSizer* parent) {
 
   return bmControlsSizer;
 }
+
+
 
 PropPage::PropPageBox::PropPageBox(int32_t orient, wxWindow* win, const wxString& label = wxEmptyString) : wxStaticBoxSizer(orient, win, label) {
   PropPage::instance->boxes.insert(PropPage::instance->boxes.begin(), this);

@@ -118,6 +118,7 @@ private:
   wxStaticBoxSizer* sizer{nullptr};
 
   void bindEvents();
+  void createToolTips();
 
   PropPageBox* createGestures(wxStaticBoxSizer*);
   PropPageBox* createStabOn(wxStaticBoxSizer*);

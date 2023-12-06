@@ -4,6 +4,7 @@
 #include "mainwindow.h"
 #include "configuration.h"
 #include "defines.h"
+#include "proppage.h"
 
 #include <string>
 #include <thread>
@@ -290,6 +291,7 @@ wxString Arduino::parseError(const wxString& error) {
   if (ERRCONTAINS("expected unqualified-id")) return "Please make sure there are no brackets in your styles (such as \"{\" or \"}\")\n and there is nothing missing or extra from your style! (such as parentheses or \"<>\")";
   if (ERRCONTAINS("FLASH")) return "The specified config will not fit on Proffieboard.\n\nTry disabling diagnostic commands, disabling talkie, disabling prop features, or removing blade styles to make it fit.";
   if (ERRCONTAINS("Serial port busy")) return "The proffieboard appears busy. \nPlease make sure nothing else is using it, then try again.";
+  if (ERRCONTAINS("Buttons for operation")) return PropPage::instance->prop->GetValue() + "'s prop file " + std::strstr(error.data(), "requires");
   else if (ERRCONTAINS("error:")) return ERRCONTAINS("error:");
   else return "Unknown error";
 #undef ERRCONTAINS
