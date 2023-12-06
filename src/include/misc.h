@@ -40,24 +40,80 @@ public:
     wxBoxSizer *box{nullptr};
     wxSpinCtrl *num{nullptr};
     wxStaticText* text{nullptr};
+
+    void setToolTip(wxToolTip* tip) {
+      num->SetToolTip(tip);
+      text->SetToolTip(tip);
+    }
+
+    void Enable(bool en = true) {
+      num->Enable(en);
+      text->Enable(en);
+    }
+
+    void Disable() {
+      Enable(false);
+    }
   };
 
   struct numEntryDouble {
     wxBoxSizer* box{nullptr};
     wxSpinCtrlDouble* num{nullptr};
     wxStaticText* text{nullptr};
+
+    void setToolTip(wxToolTip* tip) {
+      num->SetToolTip(tip);
+      text->SetToolTip(tip);
+    }
+
+    void Enable(bool en = true) {
+      num->Enable(en);
+      text->Enable(en);
+    }
+
+    void Disable() {
+      Enable(false);
+    }
   };
 
   struct comboBoxEntry {
     wxBoxSizer* box{nullptr};
     wxComboBox* entry{nullptr};
     wxStaticText* text{nullptr};
+
+    void setToolTip(wxToolTip* tip) {
+      entry->SetToolTip(tip);
+      text->SetToolTip(tip);
+    }
+
+    void Enable(bool en = true) {
+      entry->Enable(en);
+      text->Enable(en);
+    }
+
+    void Disable() {
+      Enable(false);
+    }
   };
 
   struct textEntry {
     wxBoxSizer* box{nullptr};
     wxTextCtrl* entry{nullptr};
     wxStaticText* text{nullptr};
+
+    void setToolTip(wxToolTip* tip) {
+      entry->SetToolTip(tip);
+      text->SetToolTip(tip);
+    }
+
+    void Enable(bool en = true) {
+      entry->Enable(en);
+      text->Enable(en);
+    }
+
+    void Disable() {
+      Enable(false);
+    }
   };
 
   class MessageBoxEvent : public wxCommandEvent {
