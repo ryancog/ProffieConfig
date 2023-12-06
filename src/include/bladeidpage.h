@@ -50,16 +50,17 @@ public:
   Misc::textEntry* detectPin{nullptr};
 
   struct BladeArray {
-    wxString name{"blade_in"};
+    wxString name{""};
     int32_t value{0};
 
     std::vector<PresetsPage::PresetConfig> presets{};
     std::vector<BladesPage::BladeConfig> blades{};
   };
-  std::vector<BladeArray> bladeArrays{BladeArray{}};
+  std::vector<BladeArray> bladeArrays{BladeArray{"blade_in", 0}};
 
 private:
   enum {
+    ID_NameEntry,
     ID_BladeIDEnable,
     ID_BladeDetectEnable,
     ID_BladeIDMode,
@@ -72,6 +73,8 @@ private:
   int32_t lastArraySelection{-1};
 
   void bindEvents();
+
+  void stripAndSaveName();
 
   wxStaticBoxSizer* createBladeArrays(wxWindow*);
   wxBoxSizer* createBladeArraysLeft(wxWindow*);

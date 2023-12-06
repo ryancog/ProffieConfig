@@ -231,16 +231,23 @@ void BladesPage::rebuildBladeArray() {
   lastSubBladeSelection = subBladeSelect->GetSelection();
   lastBladeArraySelection = bladeArray->GetSelection();
 
+  bladeArray->Clear();
+  for (BladeIDPage::BladeArray& array : BladeIDPage::instance->bladeArrays) {
+    bladeArray->Append(array.name);
+  }
+  if (lastBladeArraySelection >= 0 && lastBladeArraySelection < static_cast<int32_t>(bladeArray->GetCount())) bladeArray->SetSelection(lastBladeArraySelection);
+  else bladeArray->SetSelection(0);
+
   bladeSelect->Clear();
-  for (int32_t bladeNum = 0; bladeNum < (int32_t)BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].blades.size(); bladeNum++)
+  for (int32_t bladeNum = 0; bladeNum < static_cast<int32_t>(BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].blades.size()); bladeNum++)
     bladeSelect->Append("Blade " + std::to_string(bladeNum));
-  if (lastBladeSelection >= 0 && lastBladeSelection < (int32_t)bladeSelect->GetCount()) bladeSelect->SetSelection(lastBladeSelection);
+  if (lastBladeSelection >= 0 && lastBladeSelection < static_cast<int32_t>(bladeSelect->GetCount())) bladeSelect->SetSelection(lastBladeSelection);
 
   subBladeSelect->Clear();
-  if (bladeSelect->GetSelection() >= 0 && bladeSelect->GetSelection() < (int32_t)BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].blades.size()) {
-    for (int32_t subBladeNum = 0; bladeSelect->GetSelection() != -1 && subBladeNum < (int32_t)BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size(); subBladeNum++)
+  if (bladeSelect->GetSelection() >= 0 && bladeSelect->GetSelection() < static_cast<int32_t>(BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].blades.size())) {
+    for (int32_t subBladeNum = 0; bladeSelect->GetSelection() != -1 && subBladeNum < static_cast<int32_t>(BladeIDPage::instance->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size()); subBladeNum++)
       subBladeSelect->Append("SubBlade " + std::to_string(subBladeNum));
-    if (lastSubBladeSelection >= 0 && lastSubBladeSelection < (int32_t)subBladeSelect->GetCount()) subBladeSelect->SetSelection(lastSubBladeSelection);
+    if (lastSubBladeSelection >= 0 && lastSubBladeSelection < static_cast<int32_t>(subBladeSelect->GetCount())) subBladeSelect->SetSelection(lastSubBladeSelection);
   }
 }
 void BladesPage::loadSettings() {
