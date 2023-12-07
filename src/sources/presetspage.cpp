@@ -6,6 +6,8 @@
 
 #include <string>
 
+#include <wx/tooltip.h>
+
 PresetsPage* PresetsPage::instance;
 PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "")
 {
@@ -19,6 +21,7 @@ PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, wind
   Add(presetsEditor, wxSizerFlags(/*proportion*/ 1).Border(wxALL, 10).Expand());
 
   bindEvents();
+  createToolTips();
 }
 
 void PresetsPage::bindEvents() {
@@ -43,7 +46,20 @@ void PresetsPage::bindEvents() {
           update();
         }
       }, ID_RemovePreset);
+}
+void PresetsPage::createToolTips() {
+  TIP(nameInput, "The name for the preset.\nThis value is typically just for reference, and doesn't mean anything, but if using an OLED and without a special bitmap, this name will be displayed.\nUsing \"\\n\" is like hitting \"enter\" when the text is displayed on the OLED.\nFor example, \"my\\npreset\" will be displayed on the OLED as two lines, the first being \"my\" and the second being \"preset\".");
+  TIP(dirInput, "The path of the folder on the SD card where the font is stored.\nIf the font folder is inside another folder, it must be indicated by something like \"folderName/fontFolderName\".\nIn order to specify multiple directories (for example, to inlclude a \"common\" directory), use a semicolon (;) to seperate the folders (e.g. \"fontFolderName;common\").");
+  TIP(trackInput, "The path of the track file on the SD card.\nIf the track is directly inside one of the folders specified in \"Font Directory\" then only the name of the track file is required.");
 
+  TIP(bladeArray, "The currently-selected blade array to be edited.\nEach blade array has unique presets.");
+  TIP(presetList, "All presets in this blade array.\nSelect a preset to edit associated blade styles.");
+  TIP(bladeList, "All blades in this blade array.\nSelect a preset to edit associated blade styles.");
+
+  TIP(addPreset, "Add a preset to the currently-selected blade array.");
+  TIP(removePreset, "Delete the currently-selected preset.");
+
+  TIP(presetsEditor, "Your blade style goes here.\nThis is the code which sets up what animations and effects your blade (or other LED) will do.\nFor getting/creating blade styles, see the Documentation (in \"Help->Documentation...\").");
 }
 
 wxBoxSizer* PresetsPage::createPresetSelect() {

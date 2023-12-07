@@ -4,6 +4,7 @@
 #include "mainwindow.h"
 #include "misc.h"
 
+#include <wx/tooltip.h>
 #include <wx/button.h>
 
 BladeIDPage* BladeIDPage::instance;
@@ -28,6 +29,7 @@ BladeIDPage::BladeIDPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window
   Add(bottomSizer, wxSizerFlags(0).Expand());
 
   bindEvents();
+  createToolTips();
   update();
 }
 
@@ -100,6 +102,27 @@ void BladeIDPage::bindEvents() {
   GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) {
         update();
       }, ID_ContinuousScan);
+}
+void BladeIDPage::createToolTips() {
+  TIP(enableDetect, "Detect when a blade is inserted into the saber or not.");
+  TIP(enableID, "Detect when a specific blade is inserted based on a resistor placed in the blade to give it an identifier.");
+
+  TIP(detectPin, "The pin which will be bridged to BATT- when blade is inserted.\nCannot be the same as ID Pin.");
+  TIP(IDPin, "The pin used to detect blade resistance values.\nCannot be the same as Detect Pin.");
+  TIP(mode, "The mode to be used for Blade ID.\nSee the POD page \"Blade ID\" for more info.");
+  TIP(pullupResistance, "The value of the pullup resistor placed on the Blade ID line.");
+  TIP(pullupPin, "The pin number or name of the pin which ID Pin is bridged to for pullup.\n This pin cannot be used for anything else.");
+
+  TIP(enablePowerForID, "Enable power during Blade ID.\nThis is required for WS281X blades.");
+  TIP(continuousScans, "Continuously monitor the Blade ID to detect changes.");
+  TIP(scanIDMillis, "Scan the Blade ID and update accordingly every input number of millis.");
+  TIP(numIDTimes, "Number of times to read the Blade ID to average out the result and compensate for inaccurate readings.");
+
+  TIP(addID, "Add a blade array which will be enabled when a blade with the specified ID is inserted.");
+  TIP(removeID, "Remove the selected blade array.");
+
+  TIP(arrayName, "The name of the blade array.\nEach name must be unique, but it is for reference only (and thus specific names will not make a difference).");
+  TIP(resistanceID, "The ID of the blade associated with the currently-selected blade array.\nThis value can be measured by typing \"id\" into the Serial Monitor.");
 }
 
 wxStaticBoxSizer* BladeIDPage::createBladeArrays(wxWindow* parent) {

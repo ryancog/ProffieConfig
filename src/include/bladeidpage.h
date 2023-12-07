@@ -73,6 +73,7 @@ private:
   int32_t lastArraySelection{-1};
 
   void bindEvents();
+  void createToolTips();
 
   void stripAndSaveName();
 

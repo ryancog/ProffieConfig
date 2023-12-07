@@ -26,6 +26,10 @@ private:
   static wxEventTypeTag<wxCommandEvent> EVT_INPUT;
   static wxEventTypeTag<wxCommandEvent> EVT_DISCON;
 
+  enum {
+      ID_SerialCommand
+  };
+
   ThreadRunner* deviceThread{nullptr};
   ThreadRunner* listenerThread{nullptr};
   ThreadRunner* writerThread{nullptr};
@@ -40,7 +44,7 @@ private:
   int32_t fd = 0;
 #elif defined(__WXMSW__)
   HANDLE serHandle{nullptr};
-#endif
+#endif // if OSX/GTK elif MSW
   wxString sendOut;
 
 
@@ -48,5 +52,5 @@ private:
   void OpenDevice();
   void CreateListener();
   void CreateWriter();
-#endif
+#endif // OSX or GTK
 };

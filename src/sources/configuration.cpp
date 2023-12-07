@@ -503,7 +503,7 @@ void Configuration::readConfig(const std::string& filePath) {
     MainWindow::instance->Destroy();
     MainWindow::instance = new MainWindow();
 
-    wxMessageBox(errorMessage, "Config Read Error", wxOK);
+    wxMessageBox(errorMessage, "Config Read Error", wxOK, MainWindow::instance);
   }
 
   //GeneralPage::update();
@@ -514,7 +514,7 @@ void Configuration::readConfig(const std::string& filePath) {
 void Configuration::readConfig() {
   struct stat buffer;
   if (stat(CONFIG_PATH, &buffer) != 0) {
-    if (wxMessageBox("No existing configuration file was detected. Would you like to import one?", "ProffieConfig", wxYES | wxNO) == wxYES) {
+    if (wxMessageBox("No existing configuration file was detected. Would you like to import one?", "ProffieConfig", wxICON_INFORMATION | wxYES_NO | wxYES_DEFAULT) == wxYES) {
       Configuration::importConfig();
       MainWindow::instance->Show(true);
       return;

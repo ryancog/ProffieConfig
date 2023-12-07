@@ -1,14 +1,15 @@
 #include "bladespage.h"
 
+#include "mainwindow.h"
 #include "misc.h"
 #include "defines.h"
 #include "bladeidpage.h"
-#include "mainwindow.h"
 
 #include <wx/stattext.h>
 #include <wx/sizer.h>
 #include <wx/statbox.h>
 #include <wx/combobox.h>
+#include <wx/tooltip.h>
 
 BladesPage* BladesPage::instance;
 BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "")
@@ -20,6 +21,7 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
   Add(createBladeSettings(), wxSizerFlags(1));
 
   bindEvents();
+  createToolTips();
 }
 
 void BladesPage::bindEvents() {
@@ -41,6 +43,41 @@ void BladesPage::bindEvents() {
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { addSubBlade(); FULLUPDATEWINDOW; }, ID_AddSubBlade);
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { removeBlade(); UPDATEWINDOW; }, ID_RemoveBlade);
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { removeSubBlade(); UPDATEWINDOW; }, ID_RemoveSubBlade);
+}
+void BladesPage::createToolTips() {
+  TIP(bladeArray, "The currently-selected Blade Array to edit.");
+  TIP(addBladeButton, "Add a blade to the selected blade array.");
+  TIP(removeBladeButton, "Remove the currently-selected blade.");
+  TIP(addSubBladeButton, "Add a Sub-Blade to the currently-selected blade.\nCan only be used with WS281X-type blades.");
+  TIP(removeSubBladeButton, "Remove the currently-selected Sub-Blade.\nIf there are less than 2 Sub-Blades after removal, the remaining Sub-Blade will be deleted.");
+
+  TIP(bladeType, "The type of blade/LED.");
+  TIP(usePowerPin1, "Use Power Pin 1 to power this blade");
+  TIP(usePowerPin2, "Use Power Pin 2 to power this blade");
+  TIP(usePowerPin3, "Use Power Pin 3 to power this blade");
+  TIP(usePowerPin4, "Use Power Pin 4 to power this blade");
+  TIP(usePowerPin5, "Use Power Pin 5 to power this blade");
+  TIP(usePowerPin6, "Use Power Pin 6 to power this blade");
+
+  TIP(blade3ColorOrder, "The order of colors for your blade.\nMost of the time this can be left as \"GRB\".");
+  TIP(blade4ColorOrder, "The order of colors for your blade.\nMost of the time this can be left as \"GRBW\".");
+  TIP(blade4UseRGB, "Use the RGB channels alongside the White channel to produce white light.\nThis can result in a brighter blade, but at the cost of higher battery usage and a less \"pure\" white.");
+  TIP(bladeDataPin, "The pin name or number used for WS281X data.\nSpecify custom pins by typing in this box.");
+  TIP(bladePixels, "The number of pixels in your blade (total).");
+
+  TIP(subBladeUseStride, "See the POD Page \"SubBlade\" for more info.\nMost commonly used with \"KR Pixel Stick\" blades.");
+  TIP(subBladeStart, "The starting pixel number for the current Sub-Blade.\nThis number starts at 0.");
+  TIP(subBladeStart, "The ending pixel number for the current Sub-Blade.\nThis number should not exceed the \"Number of Pixels\" in the blade.");
+
+
+  TIP(star1Color, "The color of the first LED on the star.\nCorresponds to the first-selected power pin.");
+  TIP(star2Color, "The color of the second LED on the star.\nCorresponds to the second-selected power pin.");
+  TIP(star3Color, "The color of the third LED on the star.\nCorresponds to the third-selected power pin.");
+  TIP(star4Color, "The color of the fourth LED on the star.\nCorresponds to the fourth-selected power pin.");
+  TIP(star1Resistance, "The value of the resistor placed in series with this star.");
+  TIP(star2Resistance, "The value of the resistor placed in series with this star.");
+  TIP(star3Resistance, "The value of the resistor placed in series with this star.");
+  TIP(star4Resistance, "The value of the resistor placed in series with this star.");
 }
 
 wxBoxSizer* BladesPage::createBladeSelect() {

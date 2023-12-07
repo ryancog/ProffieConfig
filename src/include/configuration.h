@@ -45,11 +45,11 @@ public:
     CUSTOM
   };
 
-private:
-  uint32_t numBlades{0};
-
   ProffieBoard parseBoardType(const std::string&);
   SaberProp parsePropSel(const std::string&);
+
+private:
+  uint32_t numBlades{0};
 
   bool runPrechecks();
 

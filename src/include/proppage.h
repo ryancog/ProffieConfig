@@ -13,8 +13,11 @@ public:
   static PropPage* instance;
 
   void update();
+  wxStaticBoxSizer* sizer{nullptr};
 
   wxComboBox* prop{nullptr};
+  wxButton* buttonInfo{nullptr};
+
   wxCheckBox* noLockupHold{nullptr};
 
   wxCheckBox* disableGestureNoBlade{nullptr};
@@ -106,7 +109,8 @@ public:
 private:
   enum {
     ID_Select,
-    ID_Option
+    ID_Option,
+    ID_Buttons
   };
 
   class PropPageBox : public wxStaticBoxSizer {
@@ -115,7 +119,6 @@ private:
   };
 
   std::vector<PropPageBox*> boxes;
-  wxStaticBoxSizer* sizer{nullptr};
 
   void bindEvents();
   void createToolTips();

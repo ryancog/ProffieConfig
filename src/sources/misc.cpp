@@ -4,12 +4,7 @@
 #include <wx/arrstr.h>
 #include <wx/filedlg.h>
 #include <wx/wfstream.h>
-#include <cstring>
-#include <iostream>
 #include <initializer_list>
-#include <memory>
-#include <string>
-#include <fstream>
 
 #ifdef __WXOSX__
 char Misc::path[];

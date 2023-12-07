@@ -47,6 +47,7 @@ private:
   };
 
   void bindEvents();
+  void createToolTips();
 
   wxBoxSizer* createPresetSelect();
   wxBoxSizer* createPresetConfig();

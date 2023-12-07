@@ -137,6 +137,7 @@ private:
   };
 
   void bindEvents();
+  void createToolTips();
 
   wxBoxSizer* createBladeSelect();
   wxBoxSizer* createBladeManager();
