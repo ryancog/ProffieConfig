@@ -17,6 +17,8 @@ The tool is fairly straightforward, however it's recommended to read these over 
 - Implement "Advanced Mode" interface for custom config file sections
 - Expand pre-checker capabilities
 - Implement interface for `using` syntax (not just the ability to parse)
+- Fix recognition of board in BOOTLOADER mode on Windows (not an issue on macOS)
+- Take over the world ;)
 
 ## Gallery
 
