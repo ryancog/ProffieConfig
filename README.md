@@ -14,12 +14,6 @@ To get started, head over to [the docs](/docs/README.md) which contain all the i
 The tool is fairly straightforward, however it's recommended to read these over to ensure there is no confusion or unexpected issues when using the tool.
 
 ## To-Do (Non-Exhaustive)
-- Implement Blade Detect and Blade ID
-- Implement SSD1306
-- Implement tooltips for more detailed setting explanation
-- Implement dialog showing current button configuration (depending on prop and `NUM_BUTTONS`)
-- Add a confirmation on close to prevent losing changes
-- Add an option to rearrange preset order
 - Implement interface for `using` syntax (not just the ability to parse)
 
 ## Gallery
