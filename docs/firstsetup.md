@@ -12,8 +12,6 @@ If you bought your saber from someone who included a config file on the SD card,
 
 If you don't have a config file, you can decline and an empty configuration will be loaded.
 
-*Please note, at this time ProffieConfig does not support Blade ID/Blade Detect and you will encounter an error attempting to load or formatting issues when trying to import a config that includes any of these. Support for these features is planned.*
-
 ## Install Dependencies
 
 Once you're at the main ProffieConfig window, select `File->Install Dependencies...` to automatically install any drivers or other software needed for ProffieConfig to function. This step can take a while depending on your internet connection since certain components will need to be downloaded.
