@@ -8,7 +8,7 @@
   "https://github.com/ryryog25/ProffieConfig\n" \
   "\n" \
   "Version " VERSION "\n" \
-  "ProffieOS v7.9 | Arduino CLI v0.34.2"
+  "ProffieOS v7.13 | Arduino CLI v0.34.2"
 
 #define FIRSTITEMFLAGS wxSizerFlags(0).Border(wxALL, 5)
 #define MENUITEMFLAGS  wxSizerFlags(0).Border(wxLEFT | wxBOTTOM | wxRIGHT, 5)
