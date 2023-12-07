@@ -1,8 +1,13 @@
 [submodule "resources/ProffieOS"]
 	path = resources/ProffieOS
-	url = https://github.com/profezzorn/ProffieOS
+	url = https://github.com/ryryog25/ProffieConfig
+	branch = v7.x
 [submodule "ProffieOS"]
 	branch = 7.x
 [submodule "resources/StyleEditor"]
 	path = resources/StyleEditor
 	url = https://github.com/profezzorn/ProffieOS-StyleEditor
+[submodule "https://github.com/profezzorn/ProffieOS/tree/v7.x"]
+	branch = v7.x
+[submodule "https://github.com/profezzorn/ProffieOS"]
+	branch = v7.x
