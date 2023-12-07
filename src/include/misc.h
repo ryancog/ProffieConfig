@@ -17,31 +17,12 @@ public:
   static char path[PATH_MAX];
 # endif
 
-  enum {
-    ID_WindowSelect,
-    ID_Initialize,
-    ID_RefreshDev,
-    ID_ApplyChanges,
-    ID_DeviceSelect,
-    ID_Docs,
-    ID_Issue,
-
-    ID_GenFile,
-    ID_VerifyConfig,
-    ID_ExportFile,
-    ID_ImportFile,
-
-    ID_SerialCommand,
-    ID_OpenSerial,
-    ID_StyleEditor
-  };
-
   struct numEntry {
     wxBoxSizer *box{nullptr};
     wxSpinCtrl *num{nullptr};
     wxStaticText* text{nullptr};
 
-    void setToolTip(wxToolTip* tip) {
+    void SetToolTip(wxToolTip* tip) {
       num->SetToolTip(tip);
       text->SetToolTip(tip);
     }
@@ -61,7 +42,7 @@ public:
     wxSpinCtrlDouble* num{nullptr};
     wxStaticText* text{nullptr};
 
-    void setToolTip(wxToolTip* tip) {
+    void SetToolTip(wxToolTip* tip) {
       num->SetToolTip(tip);
       text->SetToolTip(tip);
     }
@@ -81,7 +62,7 @@ public:
     wxComboBox* entry{nullptr};
     wxStaticText* text{nullptr};
 
-    void setToolTip(wxToolTip* tip) {
+    void SetToolTip(wxToolTip* tip) {
       entry->SetToolTip(tip);
       text->SetToolTip(tip);
     }
@@ -101,7 +82,7 @@ public:
     wxTextCtrl* entry{nullptr};
     wxStaticText* text{nullptr};
 
-    void setToolTip(wxToolTip* tip) {
+    void SetToolTip(wxToolTip* tip) {
       entry->SetToolTip(tip);
       text->SetToolTip(tip);
     }

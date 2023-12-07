@@ -11,14 +11,41 @@
 #include <wx/combobox.h>
 #include <wx/listbox.h>
 #include <wx/button.h>
+#include <wx/tooltip.h>
 
 GeneralPage* GeneralPage::instance;
 GeneralPage::GeneralPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, "")
 {
   Add(boardSettings(this), BOXITEMFLAGS);
   Add(optionSettings(this), BOXITEMFLAGS);
+
+  createToolTips();
 }
 
+void GeneralPage::createToolTips() {
+  TIP(board, "The version of proffieboard.");
+  TIP(massStorage, "Enable to access the contents of your proffieboard's SD card via the USB connection.");
+  TIP(webUSB, "Enable to access the ProffieOS Workbench via USB.\nSee the POD Page \"The ProffieOS Workbench\" for more info.");
+
+  TIP(buttons, "Number of buttons your saber has.\nPlease note not all prop files support all possible numbers of buttons, and controls will changed depending on how many buttons are specified.");
+  TIP(volume, "Maximum volume level.\n2000 is a good starting value for most speakers, and it is not recommended to go up to or past 3000 unless you know what you are doing, as this can damage your speaker.");
+  TIP(clash, "Force required to trigger a clash effect.\nMeasured in Gs.");
+  TIP(pliTime, "Time since last activity before PLI goes to sleep.");
+  TIP(idleTime, "Time since last activity before accent LEDs go to sleep.");
+  TIP(motionTime, "Time since last activity before gesture controls are disabled.");
+  TIP(maxLEDs, "Maximum number of LEDs in a WS281X blade.\nThis value should not be changed unless you know what you are doing.\nConfigure the length of your blade in the \"Blade Arrays\" page.");
+
+  TIP(volumeSave, "Save the volume level between board restarts.");
+  TIP(presetSave, "Save the currently-selected preset between board restarts.");
+  TIP(colorSave, "Save color edits to presets.");
+
+  TIP(enableOLED, "Enable if you have an OLED/SSD1306 display connected.");
+  TIP(disableColor, "Disable color change controls.");
+  TIP(noTalkie, "Disable all built-in spoken prompts.\nThis can be used to save memory.");
+  TIP(noBasicParsers, "Disable basic styles for use in the ProffieOS Workbench.\nThis can be used to save memory.");
+  TIP(disableDiagnosticCommands, "Disable diagnostic commands in the Serial Monitor.\nThis can be used to save memory.");
+  TIP(enableDeveloperCommands, "You should not enable this unless you know what you are doing.\nEnable specialty developer commands in the Serial Monitor.");
+}
 
 wxStaticBoxSizer* GeneralPage::boardSettings(wxStaticBoxSizer* parent) {
   wxStaticBoxSizer* boardSetup = new wxStaticBoxSizer(wxVERTICAL, parent->GetStaticBox(), "Board Setup");
@@ -33,7 +60,6 @@ wxStaticBoxSizer* GeneralPage::boardSettings(wxStaticBoxSizer* parent) {
 
   return boardSetup;
 }
-
 wxStaticBoxSizer* GeneralPage::optionSettings(wxStaticBoxSizer* parent) {
   wxStaticBoxSizer* options = new wxStaticBoxSizer(wxHORIZONTAL, parent->GetStaticBox(), "Options");
 

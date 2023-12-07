@@ -39,12 +39,11 @@ public:
   wxCheckBox* disableDiagnosticCommands{nullptr};
   wxCheckBox* enableDeveloperCommands{nullptr};
 
-
 private:
+  void createToolTips();
+
   wxStaticBoxSizer* boardSettings(wxStaticBoxSizer*);
   wxStaticBoxSizer* optionSettings(wxStaticBoxSizer*);
   wxBoxSizer* boolOptions(wxStaticBoxSizer*);
   wxBoxSizer* numOptions(wxStaticBoxSizer*);
-
-  GeneralPage();
 };
