@@ -1,0 +1,8 @@
+build*/*
+*.o
+
+Makefile*
+ProffieConfig*
+!ProffieConfig.pro
+.*
+!.gitignore
