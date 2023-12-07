@@ -804,7 +804,6 @@ void PropPage::bindEvents() {
         buttonDialog.SetSizer(textSizer);
         buttonDialog.DoLayoutAdaptation();
         buttonDialog.ShowModal();
-        //buttonDialog.Add
       }, ID_Buttons);
 }
 void PropPage::createToolTips() {
