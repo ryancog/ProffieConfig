@@ -8,13 +8,11 @@ SerialMonitor* SerialMonitor::instance;
 SerialMonitor::SerialMonitor() {
   if (MainWindow::instance->devSelect->GetSelection() > 0) {
     ShellExecute(NULL, NULL, TEXT(ARDUINO_PATH), std::wstring("monitor -p " + MainWindow::instance->devSelect->GetStringSelection().ToStdWstring() + " -c baudrate=115200").c_str(), NULL, true);
-  } else wxMessageBox("Select board first.", "No Board Selected", wxICON_ERROR);
+  } else wxMessageBox("Select board first.", "No Board Selected", wxOK | wxICON_ERROR, MainWindow::instance);
 }
 
 #elif defined(__WXOSX__) || defined(__WXGTK__)
-#include "misc.h"
 
-#include <thread>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -28,7 +26,7 @@ SerialMonitor::SerialMonitor()
 
   wxBoxSizer *master = new wxBoxSizer(wxVERTICAL);
 
-  input = new wxTextCtrl(this, Misc::ID_SerialCommand, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
+  input = new wxTextCtrl(this, ID_SerialCommand, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
   output = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(500, 200), wxTE_MULTILINE | wxTE_READONLY);
 
   master->Add(input, BOXITEMFLAGS);
@@ -62,7 +60,7 @@ void SerialMonitor::BindEvents()
   Bind(wxEVT_TEXT_ENTER, [&](wxCommandEvent&) {
         sendOut = SerialMonitor::instance->input->GetValue();
         SerialMonitor::instance->input->Clear();
-      }, Misc::ID_SerialCommand);
+      }, ID_SerialCommand);
   Bind(EVT_INPUT, [&](wxCommandEvent& evt) { output->AppendText(((SerialDataEvent*)&evt)->value); }, wxID_ANY);
   Bind(EVT_DISCON, [&](wxCommandEvent&) {
         SerialMonitor::instance->Close(true);
@@ -75,7 +73,7 @@ void SerialMonitor::OpenDevice()
 
   fd = open(MainWindow::instance->devSelect->GetValue().data(), O_RDWR | O_NOCTTY);
   if (fd < 0) {
-    wxMessageBox("Could not connect to proffieboard.", "Serial Error");
+    wxMessageBox("Could not connect to proffieboard.", "Serial Error", wxICON_ERROR | wxOK, MainWindow::instance);
     SerialMonitor::instance->Close(true);
     return;
   }
