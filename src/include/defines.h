@@ -8,7 +8,7 @@
   "https://github.com/ryryog25/ProffieConfig\n" \
   "\n" \
   "Version " VERSION "\n" \
-  "ProffieOS v7.9 | Arduino Plugin v3.6.0 | Arduino CLI v0.34.2"
+  "ProffieOS v7.9 | Arduino CLI v0.34.2"
 
 #define FIRSTITEMFLAGS wxSizerFlags(0).Border(wxALL, 5)
 #define MENUITEMFLAGS  wxSizerFlags(0).Border(wxLEFT | wxBOTTOM | wxRIGHT, 5)
@@ -25,7 +25,7 @@
 #define PR_BC "BC"
 #define PR_CAIWYN "Caiwyn"
 
-# define TIP(object, msg) object->SetToolTip(new wxToolTip(msg));
+#define TIP(object, msg) object->SetToolTip(new wxToolTip(msg));
 
 #define ARDUINOCORE_PBV1 "proffieboard:stm32l4:Proffieboard-L433CC"
 #define ARDUINOCORE_PBV2 "proffieboard:stm32l4:ProffieboardV2-L433CC"

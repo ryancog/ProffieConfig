@@ -20,8 +20,11 @@ public:
   wxTextCtrl* presetsEditor{nullptr};
   wxListBox* presetList{nullptr};
   wxListBox* bladeList{nullptr};
+
   wxButton* addPreset{nullptr};
   wxButton* removePreset{nullptr};
+  wxButton* movePresetUp{nullptr};
+  wxButton* movePresetDown{nullptr};
 
   wxTextCtrl* nameInput{nullptr};
   wxTextCtrl* dirInput{nullptr};
@@ -43,7 +46,9 @@ private:
     ID_PresetList,
     ID_PresetChange,
     ID_AddPreset,
-    ID_RemovePreset
+    ID_RemovePreset,
+    ID_MovePresetUp,
+    ID_MovePresetDown
   };
 
   void bindEvents();

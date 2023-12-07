@@ -17,7 +17,7 @@ PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, wind
   presetsEditor->SetFont(wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
 
   Add(createPresetConfig(), wxSizerFlags(/*proportion*/ 0).Border(wxALL, 10));
-  Add(createPresetSelect(), wxSizerFlags(/*proportion*/ 0).Border(wxALL, 10).Expand());
+  Add(createPresetSelect(), wxSizerFlags(/*proportion*/ 0).Border(wxTOP | wxRIGHT | wxBOTTOM, 10).Expand());
   Add(presetsEditor, wxSizerFlags(/*proportion*/ 1).Border(wxALL, 10).Expand());
 
   bindEvents();
@@ -46,6 +46,20 @@ void PresetsPage::bindEvents() {
           update();
         }
       }, ID_RemovePreset);
+  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+        auto tempStore = BladeIDPage::instance->bladeArrays.at(bladeArray->GetSelection()).presets.at(presetList->GetSelection());
+        BladeIDPage::instance->bladeArrays.at(bladeArray->GetSelection()).presets.at(presetList->GetSelection()) = BladeIDPage::instance->bladeArrays.at(bladeArray->GetSelection()).presets.at(presetList->GetSelection() - 1);
+        BladeIDPage::instance->bladeArrays.at(bladeArray->GetSelection()).presets.at(presetList->GetSelection() - 1) = tempStore;
+        presetList->SetSelection(presetList->GetSelection() - 1);
+        update();
+      }, ID_MovePresetUp);
+  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+        auto tempStore = BladeIDPage::instance->bladeArrays.at(bladeArray->GetSelection()).presets.at(presetList->GetSelection());
+        BladeIDPage::instance->bladeArrays.at(bladeArray->GetSelection()).presets.at(presetList->GetSelection()) = BladeIDPage::instance->bladeArrays.at(bladeArray->GetSelection()).presets.at(presetList->GetSelection() + 1);
+        BladeIDPage::instance->bladeArrays.at(bladeArray->GetSelection()).presets.at(presetList->GetSelection() + 1) = tempStore;
+        presetList->SetSelection(presetList->GetSelection() + 1);
+        update();
+      }, ID_MovePresetDown);
 }
 void PresetsPage::createToolTips() {
   TIP(nameInput, "The name for the preset.\nThis value is typically just for reference, and doesn't mean anything, but if using an OLED and without a special bitmap, this name will be displayed.\nUsing \"\\n\" is like hitting \"enter\" when the text is displayed on the OLED.\nFor example, \"my\\npreset\" will be displayed on the OLED as two lines, the first being \"my\" and the second being \"preset\".");
@@ -71,21 +85,27 @@ wxBoxSizer* PresetsPage::createPresetSelect() {
   arraySizer->Add(bladeArrayText, TEXTITEMFLAGS);
   arraySizer->Add(bladeArray, wxSizerFlags(0).Border(wxBOTTOM, 5).Expand());
 
+  wxBoxSizer* arrangeButtonSizer = new wxBoxSizer(wxVERTICAL);
+  movePresetUp = new wxButton(GetStaticBox(), ID_MovePresetUp, L"\u2191" /*up arrow*/, wxDefaultPosition, wxSize(15, 25), wxBU_EXACTFIT);
+  movePresetDown = new wxButton(GetStaticBox(), ID_MovePresetDown, L"\u2193" /*down arrow*/, wxDefaultPosition, wxSize(15, 25), wxBU_EXACTFIT);
+  arrangeButtonSizer->Add(movePresetUp, FIRSTITEMFLAGS);
+  arrangeButtonSizer->Add(movePresetDown, MENUITEMFLAGS);
   wxBoxSizer* listSizer = new wxBoxSizer(wxHORIZONTAL);
   presetList = new wxListBox(GetStaticBox(), ID_PresetList);
   bladeList = new wxListBox(GetStaticBox(), ID_BladeList);
+  listSizer->Add(arrangeButtonSizer, wxSizerFlags(0));
   listSizer->Add(presetList, wxSizerFlags(1).Expand());
   listSizer->Add(bladeList, wxSizerFlags(1).Expand());
 
   wxBoxSizer* buttonSizer = new wxBoxSizer(wxHORIZONTAL);
   addPreset = new wxButton(GetStaticBox(), ID_AddPreset, "+", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
   removePreset = new wxButton(GetStaticBox(), ID_RemovePreset, "-", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
-  buttonSizer->Add(addPreset, wxSizerFlags(0).Border(wxRIGHT, 10));
-  buttonSizer->Add(removePreset);
+  buttonSizer->Add(addPreset, wxSizerFlags(0).Border(wxRIGHT | wxTOP, 5));
+  buttonSizer->Add(removePreset, wxSizerFlags(0).Border(wxTOP, 5));
 
-  presetSelect->Add(arraySizer, wxSizerFlags(0).Expand());
+  presetSelect->Add(arraySizer, wxSizerFlags(0).Expand().Border(wxLEFT, 25));
   presetSelect->Add(listSizer, wxSizerFlags(1).Expand());
-  presetSelect->Add(buttonSizer, wxSizerFlags(0).Border(wxTOP, 5));
+  presetSelect->Add(buttonSizer, wxSizerFlags(0).Border(wxLEFT, 30));
 
   return presetSelect;
 }
@@ -225,6 +245,8 @@ void PresetsPage::updateFields() {
   }
 
   removePreset->Enable(presetList->GetSelection() != -1);
+  movePresetDown->Enable(presetList->GetSelection() != -1 && presetList->GetSelection() < static_cast<int32_t>(presetList->GetCount()) - 1);
+  movePresetUp->Enable(presetList->GetSelection() > 0);
 
   presetsEditor->SetModified(false); // Value is flagged as dirty from last change unless we manually reset it, causing overwrites where there shouldn't be.
   nameInput->SetModified(false);
