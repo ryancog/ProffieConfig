@@ -14,6 +14,8 @@ To get started, head over to [the docs](/docs/README.md) which contain all the i
 The tool is fairly straightforward, however it's recommended to read these over to ensure there is no confusion or unexpected issues when using the tool.
 
 ## To-Do (Non-Exhaustive)
+- Implement "Advanced Mode" interface for custom config file sections
+- Expand pre-checker capabilities
 - Implement interface for `using` syntax (not just the ability to parse)
 
 ## Gallery
