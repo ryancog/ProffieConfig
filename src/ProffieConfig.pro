@@ -31,7 +31,6 @@ SOURCES += \
         sources/generalpage.cpp \
         sources/presetspage.cpp \
         sources/bladespage.cpp \
-        sources/hardwarepage.cpp \
         sources/progress.cpp \
         sources/proppage.cpp \
         sources/serialmonitor.cpp
@@ -42,12 +41,10 @@ HEADERS += \
     include/misc.h \
     include/defines.h \
     include/configuration.h \
-    include/appstate.h \
     include/mainwindow.h \
     include/generalpage.h \
     include/presetspage.h \
     include/bladespage.h \
-    include/hardwarepage.h \
     include/progress.h \
     include/proppage.h \
     include/serialmonitor.h \
