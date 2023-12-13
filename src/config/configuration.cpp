@@ -647,8 +647,8 @@ void Configuration::readDefine(std::string& define) {
   CHKDEF("NUM_BLADES") {
    numBlades = DEFNUM;
   }
-  CHKDEF("NUM_BUTTONS") GeneralPage::instance->buttons->num->SetValue(DEFNUM);
-  CHKDEF("VOLUME") GeneralPage::instance->volume->num->SetValue(DEFNUM);
+  CHKDEF("NUM_BUTTONS") GeneralPage::instance->buttons->SetValue(DEFNUM);
+  CHKDEF("VOLUME") GeneralPage::instance->volume->SetValue(DEFNUM);
   CHKDEF("CLASH_THRESHOLD_G") GeneralPage::instance->clash->num->SetValue(DEFNUM);
   CHKDEF("SAVE_STATE") {
     GeneralPage::instance->colorSave->SetValue(true);
