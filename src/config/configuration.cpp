@@ -3,6 +3,7 @@
 
 #include "config/configuration.h"
 
+#include "config/settings.h"
 #include "core/defines.h"
 #include "core/mainwindow.h"
 #include "pages/generalpage.h"
@@ -537,6 +538,7 @@ void Configuration::importConfig() {
 
 void Configuration::readConfigTop(std::ifstream& file) {
   std::string element;
+  std::vector<std::string> defines;
   while (!file.eof() && element != "#endif") {
     file >> element;
     if (element == "//") {
@@ -552,7 +554,7 @@ void Configuration::readConfigTop(std::ifstream& file) {
     }
     if (element == "#define" && !file.eof()) {
       getline(file, element);
-      Configuration::readDefine(element);
+      defines.push_back(element);
     } else if (element == "const" && !file.eof()) {
       getline(file, element);
       std::strtok(element.data(), "="); // unsigned int maxLedsPerStrip =
@@ -573,6 +575,8 @@ void Configuration::readConfigTop(std::ifstream& file) {
       if (element == "ENABLE_WEBUSB") GeneralPage::instance->webUSB->SetValue(true);
     }
   }
+
+  Settings::instance->parseDefines(defines);
 }
 void Configuration::readConfigProp(std::ifstream& file) {
   std::string element;
