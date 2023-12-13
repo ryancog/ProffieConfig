@@ -2,8 +2,8 @@
 // Copyright (C) 2023 Ryan Ogurek
 
 #include <wx/app.h>
-#include "mainwindow.h"
-#include "configuration.h"
+#include "core/mainwindow.h"
+#include "config/configuration.h"
 
 #ifdef __WXOSX__
 #include <mach-o/dyld.h>

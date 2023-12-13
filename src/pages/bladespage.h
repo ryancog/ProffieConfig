@@ -10,7 +10,8 @@
 #include <wx/combobox.h>
 #include <wx/listbox.h>
 #include <wx/button.h>
-#include "misc.h"
+
+#include "elements/misc.h"
 
 #pragma once
 

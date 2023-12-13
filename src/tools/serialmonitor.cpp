@@ -1,10 +1,10 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
-#include "serialmonitor.h"
+#include "tools/serialmonitor.h"
 
-#include "mainwindow.h"
-#include "defines.h"
+#include "core/mainwindow.h"
+#include "core/defines.h"
 
 SerialMonitor* SerialMonitor::instance;
 #if defined(__WXMSW__)

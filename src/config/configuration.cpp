@@ -1,15 +1,15 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
-#include "configuration.h"
+#include "config/configuration.h"
 
-#include "defines.h"
-#include "mainwindow.h"
-#include "generalpage.h"
-#include "presetspage.h"
-#include "proppage.h"
-#include "bladespage.h"
-#include "bladeidpage.h"
+#include "core/defines.h"
+#include "core/mainwindow.h"
+#include "pages/generalpage.h"
+#include "pages/presetspage.h"
+#include "pages/proppage.h"
+#include "pages/bladespage.h"
+#include "pages/bladeidpage.h"
 
 #include <cstring>
 #include <exception>

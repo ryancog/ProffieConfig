@@ -1,13 +1,13 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
-#include "proppage.h"
+#include "pages/proppage.h"
 
-#include "misc.h"
-#include "defines.h"
-#include "generalpage.h"
-#include "mainwindow.h"
-#include "configuration.h"
+#include "elements/misc.h"
+#include "core/defines.h"
+#include "pages/generalpage.h"
+#include "core/mainwindow.h"
+#include "config/configuration.h"
 
 #include <wx/scrolwin.h>
 #include <wx/sizer.h>
