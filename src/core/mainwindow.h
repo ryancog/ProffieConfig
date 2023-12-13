@@ -1,3 +1,6 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
 #include <wx/wx.h>
 
 #include "progress.h"
@@ -24,6 +27,7 @@ private:
   enum {
     ID_WindowSelect,
     ID_DUMMY, // on Win32, for some reason ID #1 is triggerred by hitting enter in wxTextCtrl? This is a workaround.
+    ID_Copyright,
     ID_Initialize,
     ID_RefreshDev,
     ID_ApplyChanges,
