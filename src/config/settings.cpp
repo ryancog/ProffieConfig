@@ -1,8 +1,9 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
 #include "settings.h"
 
 #include <cstring>
-
-
 
 
 Settings::ProffieDefine::ProffieDefine(std::string _name, int32_t _defaultValue, Misc::numEntry* _element, bool loose = false) {

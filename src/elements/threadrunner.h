@@ -8,6 +8,7 @@
 
 class ThreadRunner : public wxThreadHelper {
 public:
+  //ThreadRunner(std::function<void(void)>);
   ThreadRunner(std::function<void(void)> func) {
     runFunc = func;
 
@@ -16,11 +17,11 @@ public:
   }
 
 private:
+//  wxThread::ExitCode Entry();
   wxThread::ExitCode Entry() {
     runFunc();
     return (wxThread::ExitCode)0;
   }
-
-private:
   std::function<void(void)> runFunc;
 };
+

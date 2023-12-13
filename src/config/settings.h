@@ -1,9 +1,12 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
 #pragma once
 
 #include <cstdint>
 #include <wx/wx.h>
 
-#include "misc.h"
+#include "elements/misc.h"
 
 class Settings {
 public:

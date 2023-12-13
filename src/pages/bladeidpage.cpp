@@ -1,11 +1,11 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
-#include "bladeidpage.h"
+#include "pages/bladeidpage.h"
 
-#include "defines.h"
-#include "mainwindow.h"
-#include "misc.h"
+#include "core/defines.h"
+#include "core/mainwindow.h"
+#include "elements/misc.h"
 
 #include <wx/tooltip.h>
 #include <wx/button.h>
