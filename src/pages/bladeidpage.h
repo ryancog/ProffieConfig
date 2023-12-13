@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "misc.h"
-#include "presetspage.h"
-#include "bladespage.h"
+#include "elements/misc.h"
+#include "pages/presetspage.h"
+#include "pages/bladespage.h"
 
 #include <wx/sizer.h>
 #include <wx/checkbox.h>

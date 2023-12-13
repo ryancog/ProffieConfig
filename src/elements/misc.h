@@ -20,95 +20,27 @@ public:
   static char path[PATH_MAX];
 # endif
 
-  struct numEntry {
-    wxBoxSizer *box{nullptr};
-    wxSpinCtrl *num{nullptr};
-    wxStaticText* text{nullptr};
+  struct numEntry;
+  struct numEntryDouble;
+  struct comboBoxEntry;
+  struct textEntry;
+  class MessageBoxEvent;
 
-    void SetToolTip(wxToolTip* tip) {
-      num->SetToolTip(tip);
-      text->SetToolTip(tip);
-    }
+  static wxEventTypeTag<wxCommandEvent> EVT_MSGBOX;
 
-    void Enable(bool en = true) {
-      num->Enable(en);
-      text->Enable(en);
-    }
+  static numEntry* createNumEntry(wxWindow* parent, wxString displayText, int32_t ID, int32_t minVal, int32_t maxVal, int32_t defaultVal);
+  static numEntryDouble* createNumEntryDouble(wxWindow* parent, wxString displayText, int32_t ID, double minVal, double maxVal, double defaultVal);
+  static comboBoxEntry* createComboBoxEntry(wxWindow* parent, wxString displayText, int32_t ID, wxString defaultOption, wxArrayString options, int32_t flags);
+  static textEntry* createTextEntry(wxWindow* parent, wxString displayText, int32_t ID, wxString defaultOption, int32_t flags);
 
-    void Disable() {
-      Enable(false);
-    }
+  static const wxArrayString createEntries(std::vector<wxString> list);
+  static const wxArrayString createEntries(std::initializer_list<wxString> list);
 
-    void SetValue(int32_t val) { num->SetValue(val); }
-  };
+private:
+  Misc();
+};
 
-  struct numEntryDouble {
-    wxBoxSizer* box{nullptr};
-    wxSpinCtrlDouble* num{nullptr};
-    wxStaticText* text{nullptr};
-
-    void SetToolTip(wxToolTip* tip) {
-      num->SetToolTip(tip);
-      text->SetToolTip(tip);
-    }
-
-    void Enable(bool en = true) {
-      num->Enable(en);
-      text->Enable(en);
-    }
-
-    void Disable() {
-      Enable(false);
-    }
-
-    void SetValue(double val) { num->SetValue(val); }
-  };
-
-  struct comboBoxEntry {
-    wxBoxSizer* box{nullptr};
-    wxComboBox* entry{nullptr};
-    wxStaticText* text{nullptr};
-
-    void SetToolTip(wxToolTip* tip) {
-      entry->SetToolTip(tip);
-      text->SetToolTip(tip);
-    }
-
-    void Enable(bool en = true) {
-      entry->Enable(en);
-      text->Enable(en);
-    }
-
-    void Disable() {
-      Enable(false);
-    }
-
-    void SetValue(wxString val) { entry->SetValue(val); }
-  };
-
-  struct textEntry {
-    wxBoxSizer* box{nullptr};
-    wxTextCtrl* entry{nullptr};
-    wxStaticText* text{nullptr};
-
-    void SetToolTip(wxToolTip* tip) {
-      entry->SetToolTip(tip);
-      text->SetToolTip(tip);
-    }
-
-    void Enable(bool en = true) {
-      entry->Enable(en);
-      text->Enable(en);
-    }
-
-    void Disable() {
-      Enable(false);
-    }
-
-    void SetValue(wxString val) { entry->SetValue(val); }
-  };
-
-  class MessageBoxEvent : public wxCommandEvent {
+class Misc::MessageBoxEvent : public wxCommandEvent {
   public:
     MessageBoxEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id, wxString _message, wxString _caption, long _style = wxOK | wxCENTER){
       this->SetEventType(tag);
@@ -123,16 +55,90 @@ public:
     long style;
   };
 
-  static wxEventTypeTag<wxCommandEvent> EVT_MSGBOX;
+struct Misc::numEntry {
+  wxBoxSizer *box{nullptr};
+  wxSpinCtrl *num{nullptr};
+  wxStaticText* text{nullptr};
 
-  static numEntry* createNumEntry(wxWindow* parent, wxString displayText, int32_t ID, int32_t minVal, int32_t maxVal, int32_t defaultVal);
-  static numEntryDouble* createNumEntryDouble(wxWindow* parent, wxString displayText, int32_t ID, double minVal, double maxVal, double defaultVal);
-  static comboBoxEntry* createComboBoxEntry(wxWindow* parent, wxString displayText, int32_t ID, wxString defaultOption, wxArrayString options, int32_t flags);
-  static textEntry* createTextEntry(wxWindow* parent, wxString displayText, int32_t ID, wxString defaultOption, int32_t flags);
+  void SetToolTip(wxToolTip* tip) {
+    num->SetToolTip(tip);
+    text->SetToolTip(tip);
+  }
 
-  static const wxArrayString createEntries(std::vector<wxString> list);
-  static const wxArrayString createEntries(std::initializer_list<wxString> list);
+  void Enable(bool en = true) {
+    num->Enable(en);
+    text->Enable(en);
+  }
 
-private:
-  Misc();
+  void Disable() {
+    Enable(false);
+  }
+
+  void SetValue(int32_t val) { num->SetValue(val); }
+};
+
+struct Misc::numEntryDouble {
+  wxBoxSizer* box{nullptr};
+  wxSpinCtrlDouble* num{nullptr};
+  wxStaticText* text{nullptr};
+
+  void SetToolTip(wxToolTip* tip) {
+    num->SetToolTip(tip);
+    text->SetToolTip(tip);
+  }
+
+  void Enable(bool en = true) {
+    num->Enable(en);
+    text->Enable(en);
+  }
+
+  void Disable() {
+    Enable(false);
+  }
+
+  void SetValue(double val) { num->SetValue(val); }
+};
+
+struct Misc::comboBoxEntry {
+  wxBoxSizer* box{nullptr};
+  wxComboBox* entry{nullptr};
+  wxStaticText* text{nullptr};
+
+  void SetToolTip(wxToolTip* tip) {
+    entry->SetToolTip(tip);
+    text->SetToolTip(tip);
+  }
+
+  void Enable(bool en = true) {
+    entry->Enable(en);
+    text->Enable(en);
+  }
+
+  void Disable() {
+    Enable(false);
+  }
+
+  void SetValue(wxString val) { entry->SetValue(val); }
+};
+
+struct Misc::textEntry {
+  wxBoxSizer* box{nullptr};
+  wxTextCtrl* entry{nullptr};
+  wxStaticText* text{nullptr};
+
+  void SetToolTip(wxToolTip* tip) {
+    entry->SetToolTip(tip);
+    text->SetToolTip(tip);
+  }
+
+  void Enable(bool en = true) {
+    entry->Enable(en);
+    text->Enable(en);
+  }
+
+  void Disable() {
+    Enable(false);
+  }
+
+  void SetValue(wxString val) { entry->SetValue(val); }
 };

@@ -8,7 +8,7 @@
 #include <wx/combobox.h>
 #include <wx/scrolwin.h>
 
-#include "misc.h"
+#include "elements/misc.h"
 
 class PropPage : public wxScrolledWindow {
 public:

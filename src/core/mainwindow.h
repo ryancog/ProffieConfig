@@ -3,8 +3,8 @@
 
 #include <wx/wx.h>
 
-#include "progress.h"
-#include "threadrunner.h"
+#include "elements/progress.h"
+#include "elements/threadrunner.h"
 
 #pragma once
 

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "threadrunner.h"
+#include "elements/threadrunner.h"
 #include <wx/wx.h>
 
 class SerialMonitor : public wxFrame {
@@ -15,16 +15,7 @@ public:
   ~SerialMonitor();
 
 private:
-  class SerialDataEvent : public wxCommandEvent {
-  public:
-    SerialDataEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id, const wxString& message) {
-      this->SetEventType(tag);
-      this->SetId(id);
-      this->value = message;
-    }
-
-    wxString value;
-  };
+  class SerialDataEvent;
   static wxEventTypeTag<wxCommandEvent> EVT_INPUT;
   static wxEventTypeTag<wxCommandEvent> EVT_DISCON;
 
@@ -42,11 +33,7 @@ private:
   wxTextCtrl* input;
   wxTextCtrl* output;
 
-#if defined(__WXOSX__) || defined(__WXGTK__)
   int32_t fd = 0;
-#elif defined(__WXMSW__)
-  HANDLE serHandle{nullptr};
-#endif // if OSX/GTK elif MSW
   wxString sendOut;
 
 
@@ -55,4 +42,15 @@ private:
   void CreateListener();
   void CreateWriter();
 #endif // OSX or GTK
+};
+
+class SerialMonitor::SerialDataEvent : public wxCommandEvent {
+public:
+  SerialDataEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id, const wxString& message) {
+    this->SetEventType(tag);
+    this->SetId(id);
+    this->value = message;
+  }
+
+  wxString value;
 };

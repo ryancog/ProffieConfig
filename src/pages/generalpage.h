@@ -10,7 +10,7 @@
 #include <wx/combobox.h>
 #include <wx/radiobut.h>
 
-#include "misc.h"
+#include "elements/misc.h"
 
 
 class GeneralPage : public wxStaticBoxSizer
