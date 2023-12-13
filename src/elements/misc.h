@@ -1,3 +1,6 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
 #pragma once
 
 #include <initializer_list>
@@ -35,6 +38,8 @@ public:
     void Disable() {
       Enable(false);
     }
+
+    void SetValue(int32_t val) { num->SetValue(val); }
   };
 
   struct numEntryDouble {
@@ -55,6 +60,8 @@ public:
     void Disable() {
       Enable(false);
     }
+
+    void SetValue(double val) { num->SetValue(val); }
   };
 
   struct comboBoxEntry {
@@ -75,6 +82,8 @@ public:
     void Disable() {
       Enable(false);
     }
+
+    void SetValue(wxString val) { entry->SetValue(val); }
   };
 
   struct textEntry {
@@ -95,6 +104,8 @@ public:
     void Disable() {
       Enable(false);
     }
+
+    void SetValue(wxString val) { entry->SetValue(val); }
   };
 
   class MessageBoxEvent : public wxCommandEvent {

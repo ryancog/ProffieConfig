@@ -1,7 +1,9 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
 #pragma once
 
 #include "threadrunner.h"
-
 #include <wx/wx.h>
 
 class SerialMonitor : public wxFrame {

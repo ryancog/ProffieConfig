@@ -1,9 +1,11 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
 #include "configuration.h"
 
 #include "defines.h"
 #include "mainwindow.h"
 #include "generalpage.h"
-#include "hardwarepage.h"
 #include "presetspage.h"
 #include "proppage.h"
 #include "bladespage.h"
@@ -20,7 +22,6 @@ Configuration::Configuration() {
 bool Configuration::outputConfig(const std::string& filePath) {
   PresetsPage::instance->update();
   BladesPage::instance->update();
-  HardwarePage::instance->update();
   BladeIDPage::instance->update();
 
   if (!runPrechecks()) return false;

@@ -1,3 +1,6 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
 #pragma once
 #include <wx/window.h>
 #include <wx/checkbox.h>

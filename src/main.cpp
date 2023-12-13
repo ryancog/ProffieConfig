@@ -1,3 +1,6 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
 #include <wx/app.h>
 #include "mainwindow.h"
 #include "configuration.h"
@@ -17,7 +20,7 @@ public:
     strncpy(Misc::path, dirname(Misc::path), PATH_MAX);
     chdir(Misc::path);
 #   endif
-    wxDialog::EnableLayoutAdaptation(true);
+
     MainWindow::instance = new MainWindow();
     Configuration::instance->readConfig();
     return true;
