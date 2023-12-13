@@ -13,13 +13,15 @@ public:
   Settings();
   static Settings* instance;
 
-  void linkDefines();
-  void setCustomDefineParsers();
+  void loadDefaults();
+  void parseDefines(const std::vector<std::string>&);
 
   class ProffieDefine;
   std::unordered_map<std::string, ProffieDefine*> defines;
 
 private:
+  void linkDefines();
+  void setCustomDefineParsers();
 };
 
 class Settings::ProffieDefine {
@@ -31,6 +33,7 @@ public:
 
   static std::pair<std::string, std::string> parseKey(const std::string&);
 
+  std::function<bool(const std::string&)> parseDefine;
   inline void overrideParser(std::function<bool(const std::string&)> newParser);
   void loadDefault();
 
@@ -55,5 +58,4 @@ private:
   std::string identifier;
   void* element;
 
-  std::function<bool(const std::string&)> parseDefine;
 };
