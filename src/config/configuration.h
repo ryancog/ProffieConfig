@@ -51,9 +51,9 @@ public:
   ProffieBoard parseBoardType(const std::string&);
   SaberProp parsePropSel(const std::string&);
 
-private:
   uint32_t numBlades{0};
 
+private:
   bool runPrechecks();
 
   void outputConfigTop(std::ofstream&);
