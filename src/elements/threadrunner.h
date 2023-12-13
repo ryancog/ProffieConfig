@@ -1,7 +1,10 @@
-#include <functional>
-#include <wx/thread.h>
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
 
 #pragma once
+
+#include <functional>
+#include <wx/thread.h>
 
 class ThreadRunner : public wxThreadHelper {
 public:
