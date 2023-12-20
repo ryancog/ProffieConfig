@@ -1,0 +1,79 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
+#include "appstate.h"
+#include "core/defines.h"
+#include "core/fileparse.h"
+
+#include <fstream>
+#include <iostream>
+
+AppState* AppState::instance;
+AppState::AppState() {}
+void AppState::init() {
+  instance = new AppState();
+  instance->loadStateFromFile();
+
+  for (const std::string& prop : AppState::instance->getProps()) {
+    AppState::instance->addProp(PropFile(PROPCONFIG_DIR + prop + ".pconf"));
+  }
+}
+
+void AppState::saveState() {
+  std::ofstream stateFile(STATEFILE_PATH ".tmp");
+  if (!stateFile.is_open()) {
+    std::cerr << "Error creating temporary save file." << std::endl;
+    return;
+  }
+
+  stateFile << "FIRSTRUN: " << (firstRun ? "TRUE" : "FALSE") << std::endl;
+  stateFile << "PROPS: {" << std::endl;
+  for (const auto& prop : propNames) {
+    stateFile << "\tPROP(\"" << prop << "\")" << std::endl;
+  }
+  stateFile << "}" << std::endl;
+  stateFile.close();
+
+  if (rename(STATEFILE_PATH ".tmp", STATEFILE_PATH) != 0) {
+    std::cerr << "Error saving state file." << std::endl;
+  }
+}
+
+void AppState::loadStateFromFile() {
+  std::ifstream stateFile(STATEFILE_PATH);
+  if (!stateFile.is_open()) {
+    std::cerr << "Could not open state file, attempting recovery from tmp..." << std::endl;
+    stateFile.open(STATEFILE_PATH ".tmp");
+    if (!stateFile.is_open()) {
+      std::cerr << "Could not open temp state file, continuing without..." << std::endl;
+      return;
+    }
+  }
+
+  std::vector<std::string> state;
+  std::string tmp;
+  while (!stateFile.eof()) {
+    getline(stateFile, tmp);
+    state.push_back(tmp);
+  }
+  stateFile.close();
+
+  firstRun = FileParse::parseEntry("FIRSTRUN", state).find("FALSE") == std::string::npos;
+  auto tempProps = FileParse::extractSection("PROPS", state);
+  for (std::string& prop : tempProps) {
+    if (!(tmp = FileParse::parseLabel(prop)).empty()) propNames.push_back(tmp);
+  }
+}
+
+bool AppState::isSaved() {
+  return saved;
+}
+void AppState::setSaved(bool state) {
+  saved = state;
+}
+const std::vector<std::string>& AppState::getProps() {
+  return propNames;
+}
+void AppState::addProp(const PropFile& prop) {
+  props.push_back(prop);
+}
