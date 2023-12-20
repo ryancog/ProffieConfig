@@ -3,7 +3,6 @@
 
 #include "config/configuration.h"
 
-#include "config/settings.h"
 #include "core/defines.h"
 #include "core/mainwindow.h"
 #include "pages/generalpage.h"
@@ -56,7 +55,6 @@ bool Configuration::exportConfig() {
 void Configuration::outputConfigTop(std::ofstream& configOutput) {
   configOutput << "#ifdef CONFIG_TOP" << std::endl;
   outputConfigTopGeneral(configOutput);
-  outputConfigTopBladeAwareness(configOutput);
   outputConfigTopPropSpecific(configOutput);
   configOutput << "#endif" << std::endl << std::endl;
 
@@ -74,15 +72,10 @@ void Configuration::outputConfigTopGeneral(std::ofstream& configOutput) {
     case Configuration::ProffieBoard::V3:
       configOutput << "#include \"proffieboard_v3_config.h\"" << std::endl;
   }
-  for (const auto& [ name, define ] : Settings::instance->generalDefines) {
-    if (define->shouldOutput()) configOutput << "#define " << define->getOutput() << std::endl;
-  }
+
 }
 void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput) {
-  std::string prop = PropPage::instance->prop->GetValue().ToStdString();
-  for (const auto& [name, define ] : Settings::instance->propDefines) {
-    if (define->shouldOutput()) configOutput << "#define " << prop << "_" << define->getOutput();
-  }
+
 }
 
 void Configuration::outputConfigProp(std::ofstream& configOutput)
@@ -373,8 +366,6 @@ void Configuration::readConfigTop(std::ifstream& file) {
       if (element == "ENABLE_WEBUSB") GeneralPage::instance->webUSB->SetValue(true);
     }
   }
-
-  Settings::instance->parseDefines(defines);
 }
 void Configuration::readConfigProp(std::ifstream& file) {
   std::string element;

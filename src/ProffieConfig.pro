@@ -22,6 +22,9 @@ RC_ICONS = ../resources/icons/icon.ico
 LIBS += $$system(wx-config --libs all)
 
 SOURCES += \
+    core/appstate.cpp \
+    core/fileparse.cpp \
+    core/propfile.cpp \
     main.cpp \
     core/mainwindow.cpp \
     pages/generalpage.cpp \
@@ -33,10 +36,12 @@ SOURCES += \
     tools/serialmonitor.cpp \
     elements/misc.cpp \
     elements/progress.cpp \
-    config/configuration.cpp \
-    config/settings.cpp
+    config/configuration.cpp
 
 HEADERS += \
+    core/appstate.h \
+    core/fileparse.h \
+    core/propfile.h \
     pages/generalpage.h \
     pages/presetspage.h \
     pages/bladespage.h \
@@ -48,6 +53,5 @@ HEADERS += \
     core/defines.h \
     core/mainwindow.h \
     config/configuration.h \
-    config/settings.h \
     tools/arduino.h \
     tools/serialmonitor.h
