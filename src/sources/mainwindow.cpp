@@ -7,7 +7,6 @@
 #include "serialmonitor.h"
 #include "bladespage.h"
 #include "generalpage.h"
-#include "hardwarepage.h"
 #include "presetspage.h"
 #include "proppage.h"
 #include "bladeidpage.h"
@@ -77,7 +76,6 @@ void MainWindow::bindEvents() {
         PropPage::instance->Show(windowSelect->GetValue() == "Prop File");
         BladesPage::instance->Show(windowSelect->GetValue() == "Blade Arrays");
         PresetsPage::instance->Show(windowSelect->GetValue() == "Presets And Styles");
-        HardwarePage::instance->Show(windowSelect->GetValue() == "Hardware");
         BladeIDPage::instance->Show(windowSelect->GetValue() == "Blade Awareness");
 
         //GeneralPage::instance->update();
@@ -85,7 +83,6 @@ void MainWindow::bindEvents() {
         PropPage::instance->update();
         BladesPage::instance->update();
         PresetsPage::instance->update();
-        HardwarePage::instance->update();
 
         FULLUPDATEWINDOW;
         if (PropPage::instance->IsShown()) {
@@ -153,20 +150,17 @@ void MainWindow::createPages() {
   PropPage::instance = new PropPage(this);
   PresetsPage::instance = new PresetsPage(this);
   BladesPage::instance = new BladesPage(this);
-  HardwarePage::instance = new HardwarePage(this);
   BladeIDPage::instance = new BladeIDPage(this);
 
   //GeneralPage::instance->update();
   PropPage::instance->update();
   PresetsPage::instance->update();
   BladesPage::instance->update();
-  HardwarePage::instance->update();
   BladeIDPage::instance->update();
 
   PropPage::instance->Show(false);
   BladesPage::instance->Show(false);
   PresetsPage::instance->Show(false);
-  HardwarePage::instance->Show(false);
   BladeIDPage::instance->Show(false);
 
   master->Add(options, wxSizerFlags(0).Expand());
@@ -174,7 +168,6 @@ void MainWindow::createPages() {
   master->Add(PropPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
   master->Add(PresetsPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
   master->Add(BladesPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
-  master->Add(HardwarePage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
   master->Add(BladeIDPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
   SetSizerAndFit(master); // use the sizer for layout and set size and hints
