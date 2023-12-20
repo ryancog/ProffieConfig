@@ -44,7 +44,7 @@ void GeneralPage::createToolTips() {
 
   TIP(enableOLED, "Enable if you have an OLED/SSD1306 display connected.");
   TIP(disableColor, "Disable color change controls.");
-  TIP(noTalkie, "Disable all built-in spoken prompts.\nThis can be used to save memory.");
+  TIP(noTalkie, "Use beeps for errors instead of spoken errors and can be used to save some memory.\nSee the POD page \"What is it beeping?\".");
   TIP(noBasicParsers, "Disable basic styles for use in the ProffieOS Workbench.\nThis can be used to save memory.");
   TIP(disableDiagnosticCommands, "Disable diagnostic commands in the Serial Monitor.\nThis can be used to save memory.");
   TIP(enableDeveloperCommands, "You should not enable this unless you know what you are doing.\nEnable specialty developer commands in the Serial Monitor.");

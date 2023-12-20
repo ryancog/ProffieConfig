@@ -856,7 +856,6 @@ void PropPage::createToolTips() {
   TIP(editMode, "Full in-depth customization of presets and a wide array of saber settings.");
   TIP(editSettings, "Scaled-back edit mode with only the more commonly-used saber settings.");
 
-  TIP(beepErrors, "Use beeps for errors instead of spoken errors and can be used to save some memory.\nSee the POD page \"What is it beeping?\".");
   TIP(trackPlayerPrompts, "Enable spoken voice prompts in track player.");
   TIP(spokenColors, "Speak color names instead of using default sounds during color change.\nREQUIRES MENU SOUNDS.");
   TIP(spokenBatteryNone, "Do not announce battery level.");
@@ -884,9 +883,9 @@ void PropPage::createToolTips() {
   TIP(multiBlast, "Enable automatic blast deflection effects after swinging after blast effect.");
   TIP(multiBlastSwing, "Automatically enable blast deflection effects when performing a \"blocking\" guesture within 1 second of last blast effect.");
   TIP(multiBlastDisableToggle, "Disable normal control to enable multi-blast. Rely on Special Abilities or style to toggle.");
-  TIP(fontChangeOTF, "Enable controls to change font on-the-fly.");
-  TIP(styleChangeOTF, "Enable controls to change styles on-the-fly.");
-  TIP(presetCopyOTF, "Enable controls to copy presets on-the-fly.");
+  TIP(noOTFFontChange, "Disable controls to change font on-the-fly.");
+  TIP(noOTFStyleChange, "Disable controls to change styles on-the-fly.");
+  TIP(noOTFPresetCopy, "Disable controls to copy presets on-the-fly.");
   TIP(clashStrengthSound, "Enable selection of clash, stab, and lockup sounds based on strength.\nLower sound file numbers correspond to lighter clashes, and high numbers correspond to the hardest clashes.");
   TIP(clashStrengthSoundMaxClash, "Clash level which will be enough to select the highest-numbered sound file.");
 
@@ -1034,11 +1033,10 @@ void PropPage::update() {
   spokenBatteryPercent->Show(FETT263);
 
   // Disables
-  beepErrors->Show(FETT263);
   trackPlayerPrompts->Show(FETT263);
-  fontChangeOTF->Show(FETT263);
-  styleChangeOTF->Show(FETT263);
-  presetCopyOTF->Show(FETT263);
+  noOTFFontChange->Show(FETT263);
+  noOTFStyleChange->Show(FETT263);
+  noOTFPresetCopy->Show(FETT263);
   battleModeNoToggle->Show(FETT263);
   multiBlast->Show(FETT263);
   multiBlastDisableToggle->Show(FETT263);
@@ -1204,7 +1202,6 @@ PropPage::PropPageBox* PropPage::createInterfaceOptions(wxStaticBoxSizer* parent
   PropPage::PropPageBox* interfaceSizer = new PropPage::PropPageBox(wxHORIZONTAL, parent->GetStaticBox(), "Interface");
   wxBoxSizer* interface1 = new wxBoxSizer(wxVERTICAL);
 
-  beepErrors = new wxCheckBox(interfaceSizer->GetStaticBox(), ID_Option, "Beep Errors Instead of Spoken");
   trackPlayerPrompts = new wxCheckBox(interfaceSizer->GetStaticBox(), ID_Option, "Enable Track Player Prompts");
   trackPlayerPrompts->SetValue(true);
   spokenColors = new wxCheckBox(interfaceSizer->GetStaticBox(), ID_Option, "Enable Spoken Colors");
@@ -1212,7 +1209,6 @@ PropPage::PropPageBox* PropPage::createInterfaceOptions(wxStaticBoxSizer* parent
   spokenBatteryNone->SetValue(true);
   spokenBatteryVolts = new wxRadioButton(interfaceSizer->GetStaticBox(), ID_Option, "Battery Speak Voltage");
   spokenBatteryPercent = new wxRadioButton(interfaceSizer->GetStaticBox(), ID_Option, "Battery Speak Percentage");
-  interface1->Add(beepErrors, FIRSTITEMFLAGS);
   interface1->Add(trackPlayerPrompts, MENUITEMFLAGS);
   interface1->Add(spokenColors, MENUITEMFLAGS);
   interface1->Add(spokenBatteryNone, MENUITEMFLAGS);
@@ -1274,12 +1270,9 @@ PropPage::PropPageBox* PropPage::createGeneralFeatures(wxStaticBoxSizer* parent)
   spinMode = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), ID_Option, "Toggle for Spin Mode");
   saveChoreo = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), ID_Option, "Choreography");
 
-  fontChangeOTF = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), ID_Option, "OTF Font Change");
-  fontChangeOTF->SetValue(true);
-  styleChangeOTF = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), ID_Option, "OTF Style Change");
-  styleChangeOTF->SetValue(true);
-  presetCopyOTF = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), ID_Option, "OTF Preset Copying");
-  presetCopyOTF->SetValue(true);
+  noOTFFontChange = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), ID_Option, "OTF Font Change");
+  noOTFStyleChange = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), ID_Option, "OTF Style Change");
+  noOTFPresetCopy = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), ID_Option, "OTF Preset Copying");
 
   saveGesture = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), ID_Option, "Save \"Disable Gesture\"");
   dualModeSound = new wxCheckBox(generalFeaturesSizer->GetStaticBox(), ID_Option, "Ignition Sound Angle");
@@ -1305,9 +1298,9 @@ PropPage::PropPageBox* PropPage::createGeneralFeatures(wxStaticBoxSizer* parent)
   generalFeatures2->Add(multiBlastDisableToggle, MENUITEMFLAGS);
   generalFeatures2->Add(multiBlastSwing, MENUITEMFLAGS);
 
-  generalFeatures3->Add(fontChangeOTF, MENUITEMFLAGS);
-  generalFeatures3->Add(styleChangeOTF, MENUITEMFLAGS);
-  generalFeatures3->Add(presetCopyOTF, MENUITEMFLAGS);
+  generalFeatures3->Add(noOTFFontChange, MENUITEMFLAGS);
+  generalFeatures3->Add(noOTFStyleChange, MENUITEMFLAGS);
+  generalFeatures3->Add(noOTFPresetCopy, MENUITEMFLAGS);
   generalFeatures3->Add(clashStrengthSound, MENUITEMFLAGS);
   generalFeatures3->Add(clashStrengthSoundMaxClash->box, MENUITEMFLAGS);
 

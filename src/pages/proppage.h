@@ -99,11 +99,10 @@ public:
   wxRadioButton* spokenBatteryVolts{nullptr};
   wxRadioButton* spokenBatteryPercent{nullptr};
 
-  wxCheckBox* beepErrors{nullptr};
   wxCheckBox* trackPlayerPrompts{nullptr};
-  wxCheckBox* fontChangeOTF{nullptr};
-  wxCheckBox* styleChangeOTF{nullptr};
-  wxCheckBox* presetCopyOTF{nullptr};
+  wxCheckBox* noOTFFontChange{nullptr};
+  wxCheckBox* noOTFStyleChange{nullptr};
+  wxCheckBox* noOTFPresetCopy{nullptr};
   wxCheckBox* battleModeNoToggle{nullptr};
   wxCheckBox* multiBlast{nullptr};
   wxCheckBox* multiBlastDisableToggle{nullptr};
