@@ -4,6 +4,8 @@
 #include <wx/app.h>
 #include "core/mainwindow.h"
 #include "config/configuration.h"
+#include "../resources/icons/icon.xpm"
+#include <wx/splash.h>
 
 #ifdef __WXOSX__
 #include <mach-o/dyld.h>
@@ -21,7 +23,10 @@ public:
     chdir(Misc::path);
 #   endif
 
+    wxIcon icon{wxICON(icon)};
     MainWindow::instance = new MainWindow();
+
+    wxSplashScreen(wxBitmap(icon), wxSPLASH_CENTRE_ON_SCREEN | wxSPLASH_NO_TIMEOUT, 0, MainWindow::instance, wxID_ANY);
     Configuration::instance->readConfig();
     return true;
   }

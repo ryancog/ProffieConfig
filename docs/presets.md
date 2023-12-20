@@ -19,7 +19,7 @@ This is a location of a folder on your saber SD card, and if you have a soundfon
 
 You can specify multiple folders to pull sound files from here. For example, if you had a "common" folder which holds things like menu effect files or similar, you could specify it by doing something like `FontFolderName;common`. The `;` seperates folders, and you can have multiple.
 
-What you enter into this field should exactly match the Font Folder name, and the folder names cannot contain spaces. For example, if you have a font folder named "My Cool Font," you'd need to change the folder name to something like "My-Cool-Font," and then enter in exactly that in ProffieConfig. NOTE: If you had a folder name "My-Cool-Font" and you entered in "my-cool-font" it would not work. This is case-sensitive.
+What you enter into this field should exactly match the Font Folder name, and the folder names cannot contain spaces. For example, if you have a font folder named "My Cool Font," you'd need to change the folder name to something like "My-Cool-Font," and then enter in exactly that in ProffieConfig. If you had such a folder and you entered in "my-cool-font" it would not work. This is case-sensitive.
 
 ## Track File
 
