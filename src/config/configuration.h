@@ -57,7 +57,6 @@ private:
   bool runPrechecks();
 
   void outputConfigTop(std::ofstream&);
-  void outputConfigTopDefaults(std::ofstream&);
   void outputConfigTopGeneral(std::ofstream&);
   void outputConfigTopBladeAwareness(std::ofstream& configOutput);
   void outputConfigTopPropSpecific(std::ofstream&);
@@ -73,7 +72,6 @@ private:
   void outputConfigButtons(std::ofstream&);
 
   void readConfigTop(std::ifstream&);
-  void readDefine(std::string&);
   void readConfigProp(std::ifstream&);
   void readConfigPresets(std::ifstream&);
   void readConfigStyles(std::ifstream&);

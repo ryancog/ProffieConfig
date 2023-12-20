@@ -3,11 +3,11 @@
 
 #include "arduino.h"
 
-#include "generalpage.h"
-#include "mainwindow.h"
-#include "configuration.h"
-#include "defines.h"
-#include "proppage.h"
+#include "pages/generalpage.h"
+#include "core/mainwindow.h"
+#include "config/configuration.h"
+#include "core/defines.h"
+#include "pages/proppage.h"
 
 #include <string>
 #include <thread>
