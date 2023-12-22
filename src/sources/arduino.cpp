@@ -6,13 +6,14 @@
 #include "defines.h"
 #include "proppage.h"
 
-#include <codecvt>
-#include <locale>
 #include <string>
 #include <vector>
 #include <cstring>
 
-#include <wx/wfstream.h>
+#ifdef __WXMSW__
+#include <codecvt>
+#include <locale>
+#endif
 
 void Arduino::init() {
   MainWindow::instance->progDialog = new Progress(MainWindow::instance);
@@ -197,8 +198,7 @@ void Arduino::applyToBoard() {
     }
 
 #   else
-    returnVal = Arduino::upload();
-    if (returnVal != "OK") {
+    if (!Arduino::upload(returnVal)) {
       Progress::emitEvent(100, "Error");
       Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "There was an error while uploading:\n\n" + returnVal, "Upload Error");
       wxQueueEvent(MainWindow::instance->GetEventHandler(), msg);
