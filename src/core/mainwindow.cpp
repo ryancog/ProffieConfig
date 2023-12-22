@@ -1,15 +1,19 @@
-#include "mainwindow.h"
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
 
-#include "configuration.h"
-#include "defines.h"
-#include "arduino.h"
-#include "misc.h"
-#include "serialmonitor.h"
-#include "bladespage.h"
-#include "generalpage.h"
-#include "presetspage.h"
-#include "proppage.h"
-#include "bladeidpage.h"
+#include "core/mainwindow.h"
+
+#include "config/configuration.h"
+#include "core/defines.h"
+#include "tools/arduino.h"
+#include "elements/misc.h"
+#include "tools/serialmonitor.h"
+#include "pages/bladespage.h"
+#include "pages/generalpage.h"
+#include "pages/presetspage.h"
+#include "pages/proppage.h"
+#include "pages/bladeidpage.h"
+#include "core/appstate.h"
 
 #include <wx/combobox.h>
 #include <wx/arrstr.h>
@@ -37,15 +41,18 @@ MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPos
   Show(true);
 }
 
+
 void MainWindow::bindEvents() {
   // Main Window
-  Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event ) { if (wxMessageBox("Are you sure you want to close ProffieConfig?\n\nAny unsaved changes will be lost!", "Close ProffieConfig", wxICON_WARNING | wxYES_NO | wxNO_DEFAULT, MainWindow::instance) == wxYES) event.Skip(true);}, wxID_ANY);
+  // Yeah, this segfaults right now... but we want it to close anyways, right? I need to fix this... I have a few ideas I'll try when I get back to it.
+  Bind(wxEVT_CLOSE_WINDOW, [](wxCloseEvent& event ) { if (wxMessageBox("Are you sure you want to close ProffieConfig?\n\nAny unsaved changes will be lost!", "Close ProffieConfig", wxICON_WARNING | wxYES_NO | wxNO_DEFAULT, MainWindow::instance) == wxNO && event.CanVeto()) event.Veto(); else { AppState::instance->saveState(); MainWindow::instance->Destroy(); }});
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent(progDialog, (Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::init(); }, ID_Initialize);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(ABOUT_MESSAGE, "About ProffieConfig", wxOK | wxICON_INFORMATION, MainWindow::instance); }, wxID_ABOUT);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->outputConfig(); }, ID_GenFile);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION, MainWindow::instance); }, ID_Copyright);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->outputConfig(); AppState::instance->setSaved(); }, ID_GenFile);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(); }, ID_VerifyConfig);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->exportConfig(); }, ID_ExportFile);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->importConfig(); }, ID_ImportFile);
@@ -111,6 +118,7 @@ void MainWindow::createMenuBar() {
   file->Append(ID_Initialize, "Install Dependencies...", "Install Platform-Specific Proffieboard Dependencies");
   file->AppendSeparator();
   file->Append(wxID_ABOUT);
+  file->Append(ID_Copyright, "Copyright Notice...");
   file->Append(wxID_EXIT);
 
   wxMenu* board = new wxMenu;
