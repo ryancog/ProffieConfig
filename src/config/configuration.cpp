@@ -27,6 +27,10 @@ bool Configuration::outputConfig(const std::string& filePath) {
   if (!runPrechecks()) return false;
 
   std::ofstream configOutput(filePath);
+  if (!configOutput.is_open()) {
+    std::cerr << "Could not open config file for output." << std::endl;
+    return false;
+  }
 
   configOutput <<
       "/*" << std::endl <<

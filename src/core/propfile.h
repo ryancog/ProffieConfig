@@ -29,7 +29,7 @@ private:
     std::string define{""};
     std::string description{""};
 
-    std::vector<std::string> requires{};
+    std::vector<std::string> required{};
     std::vector<std::string> disables{};
 
     double min{0};
