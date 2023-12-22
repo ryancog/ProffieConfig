@@ -1,10 +1,13 @@
-﻿#include "arduino.h"
+﻿// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
 
-#include "generalpage.h"
-#include "mainwindow.h"
-#include "configuration.h"
-#include "defines.h"
-#include "proppage.h"
+#include "arduino.h"
+
+#include "pages/generalpage.h"
+#include "core/mainwindow.h"
+#include "config/configuration.h"
+#include "core/defines.h"
+#include "pages/proppage.h"
 
 #include <string>
 #include <vector>

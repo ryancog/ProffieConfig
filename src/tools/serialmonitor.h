@@ -1,7 +1,11 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
 #pragma once
 
-#include "threadrunner.h"
-
+#if defined(__WXOSX__) || defined(__WXGTK__)
+#include "elements/threadrunner.h"
+#endif
 #include <wx/wx.h>
 
 class SerialMonitor : public wxFrame {
@@ -13,16 +17,7 @@ public:
   ~SerialMonitor();
 
 private:
-  class SerialDataEvent : public wxCommandEvent {
-  public:
-    SerialDataEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id, const wxString& message) {
-      this->SetEventType(tag);
-      this->SetId(id);
-      this->value = message;
-    }
-
-    wxString value;
-  };
+  class SerialDataEvent;
   static wxEventTypeTag<wxCommandEvent> EVT_INPUT;
   static wxEventTypeTag<wxCommandEvent> EVT_DISCON;
 
@@ -40,11 +35,7 @@ private:
   wxTextCtrl* input;
   wxTextCtrl* output;
 
-#if defined(__WXOSX__) || defined(__WXGTK__)
   int32_t fd = 0;
-#elif defined(__WXMSW__)
-  HANDLE serHandle{nullptr};
-#endif // if OSX/GTK elif MSW
   wxString sendOut;
 
 
@@ -54,3 +45,16 @@ private:
   void CreateWriter();
 #endif // OSX or GTK
 };
+
+#if defined(__WXOSX__) || defined(__WXGTK__)
+class SerialMonitor::SerialDataEvent : public wxCommandEvent {
+public:
+  SerialDataEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id, const wxString& message) {
+    this->SetEventType(tag);
+    this->SetId(id);
+    this->value = message;
+  }
+
+  wxString value;
+};
+#endif

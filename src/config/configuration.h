@@ -1,6 +1,9 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
 #pragma once
 
-#include "bladespage.h"
+#include "pages/bladespage.h"
 
 #include <vector>
 #include <string>
@@ -48,13 +51,12 @@ public:
   ProffieBoard parseBoardType(const std::string&);
   SaberProp parsePropSel(const std::string&);
 
-private:
   uint32_t numBlades{0};
 
+private:
   bool runPrechecks();
 
   void outputConfigTop(std::ofstream&);
-  void outputConfigTopDefaults(std::ofstream&);
   void outputConfigTopGeneral(std::ofstream&);
   void outputConfigTopBladeAwareness(std::ofstream& configOutput);
   void outputConfigTopPropSpecific(std::ofstream&);
@@ -70,7 +72,6 @@ private:
   void outputConfigButtons(std::ofstream&);
 
   void readConfigTop(std::ifstream&);
-  void readDefine(std::string&);
   void readConfigProp(std::ifstream&);
   void readConfigPresets(std::ifstream&);
   void readConfigStyles(std::ifstream&);

@@ -1,8 +1,11 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
 #pragma once
 
-#include "misc.h"
-#include "presetspage.h"
-#include "bladespage.h"
+#include "elements/misc.h"
+#include "pages/presetspage.h"
+#include "pages/bladespage.h"
 
 #include <wx/sizer.h>
 #include <wx/checkbox.h>

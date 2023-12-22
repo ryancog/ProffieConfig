@@ -1,3 +1,6 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
 #pragma once
 #include <wx/window.h>
 #include <wx/checkbox.h>
@@ -5,7 +8,7 @@
 #include <wx/combobox.h>
 #include <wx/scrolwin.h>
 
-#include "misc.h"
+#include "elements/misc.h"
 
 class PropPage : public wxScrolledWindow {
 public:
@@ -96,11 +99,10 @@ public:
   wxRadioButton* spokenBatteryVolts{nullptr};
   wxRadioButton* spokenBatteryPercent{nullptr};
 
-  wxCheckBox* beepErrors{nullptr};
   wxCheckBox* trackPlayerPrompts{nullptr};
-  wxCheckBox* fontChangeOTF{nullptr};
-  wxCheckBox* styleChangeOTF{nullptr};
-  wxCheckBox* presetCopyOTF{nullptr};
+  wxCheckBox* noOTFFontChange{nullptr};
+  wxCheckBox* noOTFStyleChange{nullptr};
+  wxCheckBox* noOTFPresetCopy{nullptr};
   wxCheckBox* battleModeNoToggle{nullptr};
   wxCheckBox* multiBlast{nullptr};
   wxCheckBox* multiBlastDisableToggle{nullptr};
