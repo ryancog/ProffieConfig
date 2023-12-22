@@ -1,3 +1,6 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
 #include <wx/textctrl.h>
 #include <wx/stattext.h>
 #include <wx/sizer.h>
@@ -7,7 +10,8 @@
 #include <wx/combobox.h>
 #include <wx/listbox.h>
 #include <wx/button.h>
-#include "misc.h"
+
+#include "elements/misc.h"
 
 #pragma once
 

@@ -1,6 +1,9 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
 #include "progress.h"
 
-#include "mainwindow.h"
+#include "core/mainwindow.h"
 
 #include "wx/event.h"
 #include <memory>
