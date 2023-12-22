@@ -3,7 +3,9 @@
 
 #pragma once
 
+#if defined(__WXOSX__) || defined(__WXGTK__)
 #include "elements/threadrunner.h"
+#endif
 #include <wx/wx.h>
 
 class SerialMonitor : public wxFrame {
@@ -44,6 +46,7 @@ private:
 #endif // OSX or GTK
 };
 
+#if defined(__WXOSX__) || defined(__WXGTK__)
 class SerialMonitor::SerialDataEvent : public wxCommandEvent {
 public:
   SerialDataEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id, const wxString& message) {
@@ -54,3 +57,4 @@ public:
 
   wxString value;
 };
+#endif

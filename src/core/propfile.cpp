@@ -83,7 +83,7 @@ bool PropFile::readSettings(std::vector<std::string>& config) {
         try { setting.min = stoi(FileParse::parseEntry("MIN", section)); } catch (const std::invalid_argument&) { setting.min = 0; }
         try { setting.max = stoi(FileParse::parseEntry("MAX", section)); } catch (const std::invalid_argument&) { setting.max = 100; }
         try { setting.increment = stoi(FileParse::parseEntry("INCREMENT", section)); } catch (const std::invalid_argument&) { setting.increment = 1; }
-        try { setting.defaultVal = stoi(FileParse:)
+        //try { setting.defaultVal = stoi(FileParse:)
         tempSettings.push_back({setting.define, setting});
       }
       if (!(section = FileParse::extractSection("DECIMAL", settingsSection)).empty()) {
@@ -124,7 +124,7 @@ bool PropFile::parseSettingCommon(Setting& setting, std::vector<std::string>& se
   if (setting.name.empty()) return false;
   setting.define = FileParse::parseLabel(search.at(0));
   setting.description = FileParse::parseEntry("DESCRIPTION", search);
-  setting.requires = FileParse::parseListEntry("REQUIRES", search);
+  setting.required = FileParse::parseListEntry("REQUIRES", search);
   setting.disables = FileParse::parseListEntry("DISABLE", search);
 
   return true;
@@ -138,7 +138,7 @@ bool PropFile::readLayout(std::vector<std::string>& config) {
 
   }
 
-  PropPage::instance->
+  //PropPage::instance->
   return true;
 }
 wxSizer* PropFile::parseLayoutSection(std::vector<std::string>& section, wxWindow* parent) {
@@ -170,7 +170,7 @@ void PropFile::Setting::generateElement() {
       toggle->SetToolTip(new wxToolTip(description));
       break;
     case SettingType::NUMERIC:
-    numeric = Misc::createNumEntry(nullptr, name, wxID_ANY, min, max, )
+    //numeric = Misc::createNumEntry(nullptr, name, wxID_ANY, min, max, )
     case SettingType::DECIMAL:
     case SettingType::OPTION:
       break;

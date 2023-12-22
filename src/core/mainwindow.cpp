@@ -5,7 +5,6 @@
 
 #include "config/configuration.h"
 #include "core/defines.h"
-#include "core/propfile.h"
 #include "tools/arduino.h"
 #include "elements/misc.h"
 #include "tools/serialmonitor.h"

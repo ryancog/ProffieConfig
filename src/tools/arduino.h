@@ -3,7 +3,6 @@
 
 #pragma once
 #include <vector>
-#include <string>
 #include <wx/combobox.h>
 
 class Arduino {
@@ -23,8 +22,8 @@ private:
 
   static FILE* CLI(const wxString& command);
 
-  static wxString updateIno();
-  static wxString compile();
+  static bool updateIno(wxString&);
+  static bool compile(wxString&);
+  static bool upload(wxString&);
   static wxString parseError(const wxString&);
-  static wxString upload();
 };
