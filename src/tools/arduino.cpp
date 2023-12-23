@@ -272,7 +272,9 @@ wxString Arduino::updateIno() {
   std::vector<wxString> outputData;
   while(!input.eof()) {
     getline(input, fileData);
-    outputData.push_back(fileData == "// #define CONFIG_FILE \"config/YOUR_CONFIG_FILE_NAME_HERE.h\"" ? "#define CONFIG_FILE \"config/ProffieConfig_autogen.h\"" : fileData);
+    if (fileData.find(R"(// #define CONFIG_FILE "config/YOUR_CONFIG_FILE_NAME_HERE.h")") != std::string::npos) outputData.push_back(R"(#define CONFIG_FILE "config/ProffieConfig_autogen.h")");
+    else if (fileData.find(R"(const char version[] = ")" ) != std::string::npos) outputData.push_back(R"(const char version[] = ")" PROFFIEOS_VERSION R"(";)");
+    else outputData.push_back(fileData);
   }
   input.close();
 
