@@ -76,7 +76,9 @@ void Configuration::outputConfigTopGeneral(std::ofstream& configOutput) {
     case Configuration::ProffieBoard::V3:
       configOutput << "#include \"proffieboard_v3_config.h\"" << std::endl;
   }
-
+  for (const auto& [ name, define ] : Settings::instance->generalDefines) {
+    if (define->shouldOutput()) configOutput << "#define " << define->getOutput() << std::endl;
+  }
 }
 void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput) {
 
