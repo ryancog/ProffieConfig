@@ -19,6 +19,13 @@ void Progress::emitEvent(int8_t progress, wxString message) {
 }
 
 void Progress::handleEvent(Progress* progress, ProgressEvent* event) {
-  if (event->progress > progress->GetValue()) progress->Update(event->progress, event->message);
-  else if (event->progress == -1) progress->Pulse();
+  static bool lastWasPulse{false};
+  if (event->progress > progress->GetValue() || (lastWasPulse && event->progress != -1)) {
+    lastWasPulse = false;
+    progress->Update(event->progress, event->message);
+  }
+  else if (event->progress == -1) {
+    lastWasPulse = true;
+    progress->Pulse();
+  }
 }
