@@ -4,6 +4,9 @@
 #pragma once
 #include <wx/event.h>
 
+#define PROFFIEOS_VERSION "7.13"
+#define ARDUINO_CLI_VERSION "0.34.2"
+
 #define ABOUT_MESSAGE \
   "Tool for GUI Configuration and flashing of Proffieboard\n" \
   "\n" \
@@ -11,7 +14,7 @@
   "https://github.com/ryryog25/ProffieConfig\n" \
   "\n" \
   "Version " VERSION "\n" \
-  "ProffieOS v7.13 | Arduino CLI v0.34.2"
+  "ProffieOS v" PROFFIEOS_VERSION " | Arduino CLI v" ARDUINO_CLI_VERSION
 
 #define COPYRIGHT_NOTICE \
   "ProffieConfig Copyright (C) 2023 Ryan Ogurek\n" \
@@ -75,5 +78,5 @@
 #define STYLEEDIT_PATH "../Resources/StyleEditor/style_editor.html"
 #endif
 
-#define STATEFILE_PATH RESOURCES_PATH ".state.pstate"
+#define STATEFILE_PATH RESOURCES_PATH "state.pconf"
 #define PROFFIEOS_PATH RESOURCES_PATH "ProffieOS"

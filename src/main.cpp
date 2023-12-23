@@ -1,6 +1,7 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
+#include "core/defines.h"
 #include "core/mainwindow.h"
 #include "core/appstate.h"
 #include "config/configuration.h"
@@ -31,6 +32,9 @@ public:
     AppState::init();
     MainWindow::instance = new MainWindow();
     Configuration::instance->readConfig();
+    for (const std::string& prop : AppState::instance->getProps()) {
+      AppState::instance->addProp(PropFile(PROPCONFIG_DIR + prop + ".pconf"));
+    }
 
     return true;
   }

@@ -29,13 +29,13 @@ private:
     std::string define{""};
     std::string description{""};
 
-    std::vector<std::string> requires{};
+    std::vector<std::string> required{};
     std::vector<std::string> disables{};
 
     double min{0};
     double max{0};
     double increment{0};
-    double defaultval{0};
+    double defaultVal{0};
 
     std::vector<std::string> others{};
     bool isDefault{false};
@@ -48,8 +48,6 @@ private:
       Misc::numEntry* numeric;
       Misc::numEntryDouble* decimal;
     };
-
-    void generateElement();
   };
 
   std::string name{""};
@@ -61,7 +59,7 @@ private:
   bool readFileName(std::vector<std::string>&);
   bool readSettings(std::vector<std::string>&);
   bool readLayout(std::vector<std::string>&);
-  [[nodiscard]] wxSizer* parseLayoutSection(std::vector<std::string>&, wxWindow*);
+  bool parseLayoutSection(std::vector<std::string>&, wxSizer*, wxWindow*);
   bool readButtons(std::vector<std::string>&);
 
   [[nodiscard]] static bool parseSettingCommon(Setting&, std::vector<std::string>&);
