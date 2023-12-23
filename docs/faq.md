@@ -10,7 +10,7 @@ The code for your styles, the layout/setup of your blades, the the options you c
 
 - If you have an existing config, try importing it into ProffieConfig! That's the easiest way to import all your settings, including the blade styles.
 - Some sound fonts you buy may have a blade style included with them, see if yours does.
-- For some very cool, premade bladestyles, check out [Fett263's Style Library](https://fett263.com/fett263-proffieOS7-style-library.html).
+- For some very cool, premade, but highly customizable bladestyles, check out [Fett263's Style Library](https://fett263.com/fett263-proffieOS7-style-library.html).
 - For advanced use, the [ProffieOS Style Editor](https://profezzorn.github.io/ProffieOS-StyleEditor/style_editor.html) offers unparalleled customization, but has a very steep learning curve and requires quite a bit of effort to get going.
 
 ## What if my board doesn't show up?
