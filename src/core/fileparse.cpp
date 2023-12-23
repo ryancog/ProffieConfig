@@ -15,7 +15,7 @@ std::vector<std::string> FileParse::extractSection(std::string sectionName, std:
       else if ((*line).find("}") != std::string::npos) depth--;
 
       if (depth < 0) {
-        end = line;
+        end = ++line;
         break;
       }
     }

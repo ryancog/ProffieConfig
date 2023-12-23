@@ -13,10 +13,6 @@ AppState::AppState() {}
 void AppState::init() {
   instance = new AppState();
   instance->loadStateFromFile();
-
-  for (const std::string& prop : AppState::instance->getProps()) {
-    AppState::instance->addProp(PropFile(PROPCONFIG_DIR + prop + ".pconf"));
-  }
 }
 
 void AppState::saveState() {

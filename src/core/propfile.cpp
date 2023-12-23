@@ -83,7 +83,7 @@ bool PropFile::readSettings(std::vector<std::string>& config) {
         try { setting.min = stoi(FileParse::parseEntry("MIN", section)); } catch (const std::invalid_argument&) { setting.min = 0; }
         try { setting.max = stoi(FileParse::parseEntry("MAX", section)); } catch (const std::invalid_argument&) { setting.max = 100; }
         try { setting.increment = stoi(FileParse::parseEntry("INCREMENT", section)); } catch (const std::invalid_argument&) { setting.increment = 1; }
-        try { setting.defaultVal = stoi(FileParse:)
+        try { setting.defaultVal = stoi(FileParse::parseEntry("DEFAULT", section)); } catch (const std::invalid_argument&) { setting.defaultVal = 0; }
         tempSettings.push_back({setting.define, setting});
       }
       if (!(section = FileParse::extractSection("DECIMAL", settingsSection)).empty()) {
@@ -124,55 +124,85 @@ bool PropFile::parseSettingCommon(Setting& setting, std::vector<std::string>& se
   if (setting.name.empty()) return false;
   setting.define = FileParse::parseLabel(search.at(0));
   setting.description = FileParse::parseEntry("DESCRIPTION", search);
-  setting.requires = FileParse::parseListEntry("REQUIRES", search);
+  setting.required = FileParse::parseListEntry("REQUIRES", search);
   setting.disables = FileParse::parseListEntry("DISABLE", search);
 
   return true;
 }
 bool PropFile::readLayout(std::vector<std::string>& config) {
-  page = new wxStaticBoxSizer(wxVERTICAL, PropPage::instance, name + " Settings");
-  page->Show(false);
+  page = new wxBoxSizer(wxVERTICAL);
+  PropPage::instance->sizer->Add(page);
 
-  bool read{true};
-  for (const std::string& line : config) {
+  auto layoutSection = FileParse::extractSection("LAYOUT", config);
+  parseLayoutSection(layoutSection, page,  PropPage::instance->sizer->GetStaticBox());
 
-  }
+  //page->Show(false);
 
-  PropPage::instance->
   return true;
 }
-wxSizer* PropFile::parseLayoutSection(std::vector<std::string>& section, wxWindow* parent) {
-  for (const std::string& line : section) {
-    if (line.find("OPTION") != std::string::npos) {
-      auto setting = settings.at(FileParse::parseLabel(line));
-      switch (setting.type) {
-        case SettingType::TOGGLE:
-          auto element = new wxCheckBox(parent, wxID_ANY, setting.name);
-          element->SetToolTip(new wxToolTip(setting.description));
-        case SettingType::NUMERIC:
-        case SettingType::DECIMAL:
-        case SettingType::OPTION:
-          break;
+
+bool PropFile::parseLayoutSection(std::vector<std::string>& section, wxSizer* sizer, wxWindow* parent) {
+  auto createToggle = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
+    setting.toggle = new wxCheckBox(parent, wxID_ANY, setting.name);
+    setting.toggle->SetToolTip(new wxToolTip(setting.description));
+    sizer->Add(setting.toggle);
+  };
+  auto createNumeric = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
+    setting.numeric = Misc::createNumEntry(parent, setting.name, wxID_ANY, setting.min, setting.max, setting.defaultVal);
+    setting.numeric->num->SetIncrement(setting.increment);
+    setting.numeric->SetToolTip(new wxToolTip(setting.description));
+    sizer->Add(setting.numeric->box);
+  };
+  auto createDecimal = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
+    setting.decimal = Misc::createNumEntryDouble(parent, setting.name, wxID_ANY, setting.min, setting.max, setting.defaultVal);
+    setting.decimal->SetToolTip(new wxToolTip(setting.description));
+    sizer->Add(setting.decimal->box);
+  };
+  auto createOption = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
+    setting.option = new wxRadioButton(parent, wxID_ANY, setting.name);
+    setting.option->SetToolTip(new wxToolTip(setting.description));
+    sizer->Add(setting.option);
+  };
+
+  while (!section.empty()) {
+    if (section.begin()->find("HORIZONTAL") != std::string::npos || section.begin()->find("VERTICAL") != std::string::npos) {
+      auto isHorizontal = section.begin()->find("HORIZONTAL") != std::string::npos;
+      auto label = FileParse::parseLabel(*section.begin());
+      auto newSection = FileParse::extractSection(isHorizontal ? "HORIZONTAL" : "VERTICAL", section);
+      newSection.erase(newSection.begin()); // Erase HORIZONTAL or VERTICAL header to prevent infinite recursion.
+      if (label.empty()) { // If no label
+        auto newSizer = new wxBoxSizer(isHorizontal ? wxHORIZONTAL : wxVERTICAL);
+        parseLayoutSection(newSection, newSizer, parent);
+        sizer->Add(newSizer);
+      } else { // Has label
+        auto newSizer = new wxStaticBoxSizer(isHorizontal ? wxHORIZONTAL : wxVERTICAL, parent, label);
+        parseLayoutSection(newSection, newSizer, newSizer->GetStaticBox());
+        sizer->Add(newSizer);
       }
     }
-    if (FileParse::extractSection());
+    else if (section.begin()->find("OPTION") != std::string::npos) {
+      auto key = settings.find(FileParse::parseLabel(*section.begin()));
+      if (key == settings.end()) {
+        std::cerr << R"(OPTION: ")" << FileParse::parseLabel(*section.begin()) << R"(" not found in settings, skipping...)" << std::endl;
+        section.erase(section.begin());
+        continue;
+      }
+      switch (key->second.type) {
+        case SettingType::TOGGLE: createToggle(key->second, parent, sizer); break;
+        case SettingType::NUMERIC: createNumeric(key->second, parent, sizer); break;
+        case SettingType::DECIMAL: createDecimal(key->second, parent, sizer); break;
+        case SettingType::OPTION: createOption(key->second, parent, sizer); break;
+      }
+      section.erase(section.begin());
+    }
+    else {
+      section.erase(section.begin());
+    }
   }
+
+  return true;
 }
 
 
 bool PropFile::readButtons(std::vector<std::string>& config) { return true; }
 
-
-void PropFile::Setting::generateElement() {
-  switch (type) {
-    case SettingType::TOGGLE:
-      toggle = new wxCheckBox(nullptr, wxID_ANY, name);
-      toggle->SetToolTip(new wxToolTip(description));
-      break;
-    case SettingType::NUMERIC:
-    numeric = Misc::createNumEntry(nullptr, name, wxID_ANY, min, max, )
-    case SettingType::DECIMAL:
-    case SettingType::OPTION:
-      break;
-  }
-}
