@@ -2,7 +2,7 @@
 // Copyright (C) 2023 Ryan Ogurek
 
 #pragma once
-#include "core/propfile.h"
+#include "config/propfile.h"
 #include <wx/window.h>
 #include <wx/checkbox.h>
 #include <wx/radiobut.h>

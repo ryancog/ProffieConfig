@@ -20,7 +20,7 @@ std::vector<std::string> FileParse::extractSection(std::string sectionName, std:
         break;
       }
     }
-    if ((*line).find(sectionName) != std::string::npos) {
+    else if ((*line).find(sectionName) != std::string::npos) {
       copy = true;
       section.push_back(*line);
       begin = line;
@@ -32,7 +32,7 @@ std::vector<std::string> FileParse::extractSection(std::string sectionName, std:
 
   return section;
 }
-std::string FileParse::parseEntry(std::string entry, std::vector<std::string>& search) {
+std::string FileParse::parseEntry(std::string entry, std::vector<std::string>& search, std::string& label) {
   for (auto line = search.begin(); line < search.end(); line++) {
     if ((*line).find(entry) == std::string::npos) continue;
 
@@ -70,11 +70,16 @@ std::string FileParse::parseEntry(std::string entry, std::vector<std::string>& s
       }
     }
 
+    label = FileParse::parseLabel(*line);
     search.erase(line);
 
     return output;
   }
   return {};
+}
+std::string FileParse::parseEntry(std::string entry, std::vector<std::string>& search) {
+  std::string label;
+  return parseEntry(entry, search, label);
 }
 double FileParse::parseNumEntry(std::string entry, std::vector<std::string>& search) {
   auto output = FileParse::parseEntry(entry, search);

@@ -9,15 +9,30 @@
 #include <vector>
 #include <unordered_map>
 
+namespace std {
+  template <>
+  struct hash<std::vector<std::string>> {
+    size_t operator()(const std::vector<std::string>& vector) const {
+      size_t hash = 0;
+      for (const auto& string : vector) {
+        hash ^= std::hash<std::string>{}(string) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+      }
+      return hash;
+    }
+  };
+}
+
 class PropFile {
 public:
   struct Setting;
-  PropFile(const std::string&);
+  struct Button;
+  static PropFile* createPropConfig(const std::string& pathname);
 
   void show(bool = true) const;
   std::string getName() const;
   std::string getFileName() const;
   std::unordered_map<std::string, Setting>& getSettings();
+  const std::array<std::vector<PropFile::Button>, 4>& getButtons();
 
   struct Setting {
     std::string getOutput() const;
@@ -41,33 +56,44 @@ public:
 
     enum class SettingType {
       TOGGLE,
+      OPTION,
       NUMERIC,
       DECIMAL,
-      OPTION
-    } type;
+    } type{SettingType::TOGGLE};
 
     union {
-      wxCheckBox* toggle;
+      wxCheckBox* toggle{nullptr};
       wxRadioButton* option;
       Misc::numEntry* numeric;
       Misc::numEntryDouble* decimal;
     };
   };
 
+  struct Button {
+    std::string name{};
+    std::vector<std::string> relevantSettings{};
+    std::unordered_map<std::vector<std::string>, std::string> descriptions{};
+  };
 
 private:
+  PropFile();
+
   std::string name{""};
   std::string fileName{""};
-  std::unordered_map<std::string, Setting> settings;
-  wxBoxSizer* page;
+  std::unordered_map<std::string, Setting> settings{};
+  std::array<std::vector<Button>, 4> buttons{};
+  wxBoxSizer* page{nullptr};
 
-  bool readPropConfig(const std::string& pathname);
   bool readName(std::vector<std::string>&);
   bool readFileName(std::vector<std::string>&);
   bool readSettings(std::vector<std::string>&);
   bool readLayout(std::vector<std::string>&);
   bool parseLayoutSection(std::vector<std::string>&, wxSizer*, wxWindow*);
   bool readButtons(std::vector<std::string>&);
+  void pruneUnused();
+
+  static void warning(const std::string&);
+  static void error(const std::string&);
 
   [[nodiscard]] static bool parseSettingCommon(Setting&, std::vector<std::string>&);
 };

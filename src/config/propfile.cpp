@@ -1,4 +1,4 @@
-#include "propfile.h"
+#include "config/propfile.h"
 #include "core/defines.h"
 #include "core/fileparse.h"
 
@@ -9,12 +9,7 @@
 
 #include <wx/tooltip.h>
 
-PropFile::PropFile(const std::string& name) {
-  std::cout << "Reading prop config: \"" << name << "\"..." << std::endl;
-  readPropConfig(PROPCONFIG_DIR + name + ".pconf");
-  page->Show(false);
-  std::cout << "Finished reading prop config." << std::endl;
-}
+PropFile::PropFile() {}
 
 void PropFile::show(bool shouldShow) const { page->Show(shouldShow); }
 std::string PropFile::getName() const { return name; }
@@ -34,6 +29,7 @@ std::string PropFile::Setting::getOutput() const {
   return {};
 }
 std::unordered_map<std::string, PropFile::Setting>& PropFile::getSettings() { return settings; }
+const std::array<std::vector<PropFile::Button>, 4>& PropFile::getButtons() { return buttons; }
 bool PropFile::Setting::checkRequiredSatisfied(const std::unordered_map<std::string, Setting>& settings) const {
   for (const auto& require : required) {
     auto key = settings.find(require);
@@ -45,40 +41,52 @@ bool PropFile::Setting::checkRequiredSatisfied(const std::unordered_map<std::str
 }
 
 
-bool PropFile::readPropConfig(const std::string& pathname) {
+PropFile* PropFile::createPropConfig(const std::string& name) {
+  std::cout << "Reading prop config: \"" << name << "\"..." << std::endl;
+  std::string pathname = PROPCONFIG_DIR + name + ".pconf";
+
   std::ifstream configFile(pathname);
   if (!configFile.is_open()) {
-    std::cerr << "Could not open prop config file \"" << pathname << "\", skipping..." << std::endl;
-    return false;
+    error("Could not open prop config file \"" + pathname + "\", aborting...");
+    return nullptr;
   }
 
   std::vector<std::string> config;
   std::string temp;
   while (!configFile.eof()) {
     getline(configFile, temp);
-    config.push_back(temp);
+    config.push_back(temp.substr(0, temp.find("//")));
   }
   configFile.close();
 
-  if (!readName(config)) {
-    std::cerr << "Prop config file \"" << pathname << "\" does not have required field \"NAME\", aborting..." << std::endl;
-    return false;
+  auto prop = new PropFile;
+
+  if (!prop->readName(config)) {
+    error("Prop config file \"" + name + "\" does not have section \"NAME\", aborting...");
+    return nullptr;
   }
-  if (!readFileName(config)) {
-    std::cerr << "Prop config file \"" << pathname << "\" does not have required field \"FILENAME\", aborting..." << std::endl;
-    return false;
+  if (!prop->readFileName(config)) {
+    error("Prop config file \"" + name + "\" does not have section \"FILENAME\", aborting...");
+    return nullptr;
   }
-  if (!readSettings(config)) {
-    std::cerr << "Prop config file \"" << pathname << "\" does not have optional field \"SETTINGS\", skipping..." << std::endl;
+  if (!prop->readSettings(config)) {
+    error("Prop config file \"" + name + "\" does not have section \"SETTINGS\", aborting...");
+    return nullptr;
   }
-  if (!readLayout(config)) {
-    std::cerr << "Prop config file \"" << pathname << "\" does not have optional field \"LAYOUT\", skipping..." << std::endl;
+  if (!prop->readLayout(config)) {
+    error("Prop config file \"" + name + "\" does not have section \"LAYOUT\", aborting...");
+    return nullptr;
   }
-  if (!readButtons(config)) {
-    std::cerr << "Prop config file \"" << pathname << "\" does not have optaional field \"BUTTONS\", skipping..." << std::endl;
+  if (!prop->readButtons(config)) {
+    warning("Prop config file \"" + name + "\" does not have optional section \"BUTTONS\", skipping...");
   }
 
-  return true;
+  prop->pruneUnused();
+
+  prop->page->Show(false);
+  std::cout << "Finished reading prop config." << std::endl;
+
+  return prop;
 }
 
 bool PropFile::readName(std::vector<std::string>& config) {
@@ -166,14 +174,14 @@ bool PropFile::readSettings(std::vector<std::string>& config) {
 bool PropFile::parseSettingCommon(Setting& setting, std::vector<std::string>& search) {
   setting.name = FileParse::parseEntry("NAME", search);
   if (setting.name.empty()) {
-    std::cerr << "Skipping entry with no name..." << std::endl;
+    warning("Skipping entry with no name...");
     return false;
   }
   setting.define = FileParse::parseLabel(search.at(0));
   std::string toRemove = " ";
   setting.define.erase(std::remove_if(setting.define.begin(), setting.define.end(), [&toRemove](char c) { return toRemove.find(c) != std::string::npos; }), setting.define.end());
   if (setting.define.empty()) {
-    std::cerr << "Entry \"" << setting.name << "\" has empty define, skipping..." << std::endl;
+    warning("Entry \"" + setting.name + "\" has empty define, skipping...");
     return false;
   }
   setting.description = FileParse::parseEntry("DESCRIPTION", search);
@@ -183,11 +191,120 @@ bool PropFile::parseSettingCommon(Setting& setting, std::vector<std::string>& se
 }
 bool PropFile::readLayout(std::vector<std::string>& config) {
   page = new wxBoxSizer(wxVERTICAL);
-  PropPage::instance->sizer->Add(page);
+  PropPage::instance->sizer->Add(page, wxSizerFlags(0).Expand());
 
   auto layoutSection = FileParse::extractSection("LAYOUT", config);
   parseLayoutSection(layoutSection, page,  PropPage::instance->sizer->GetStaticBox());
   return true;
+}
+bool PropFile::readButtons(std::vector<std::string>& config) {
+  bool hasButtons{false};
+  for (const auto& line : config) {
+    if (line.find("BUTTONS") != std::string::npos) {
+      hasButtons = true;
+      break;
+    }
+  }
+  if (!hasButtons) return false;
+
+  while (!false) {
+    auto buttonSection = FileParse::extractSection("BUTTONS", config);
+    if (buttonSection.empty()) break;
+
+    auto numStart = buttonSection.at(0).find("{");
+    auto numEnd = buttonSection.at(0).find("}");
+
+    if (numStart == std::string::npos || numEnd == std::string::npos) {
+      error("Button section missing number indicator, skipping...");
+      continue;
+    }
+
+    if (!std::isdigit(buttonSection.at(0).at(numStart + 1))) {
+      error("Button section number indicator malformed, skipping...");
+      continue;
+    }
+
+    auto numButtons = std::stoi(buttonSection.at(0).substr(numStart + 1));
+    if (numButtons < 0 || numButtons > 3) {
+      error("Button section number indicator \"" + std::to_string(numButtons) + "\" out of range, skipping...");
+      continue;
+    }
+
+    buttonSection.erase(buttonSection.begin()); // Prevent BUTTONS from being read as a BUTTON entry
+
+    while (!buttonSection.empty()) {
+      if (buttonSection.at(0).find("BUTTON") == std::string::npos) {
+        buttonSection.erase(buttonSection.begin());
+        continue;
+      }
+
+      auto section = FileParse::extractSection("BUTTON", buttonSection);
+      if (section.empty()) continue;
+
+      Button newButton;
+      newButton.name =  FileParse::parseLabel(section.at(0));
+      if (newButton.name.empty()) {
+        error("Button entry has missing name, skipping...");
+        continue;
+      }
+
+      while (!false) {
+        std::string label;
+        auto description = FileParse::parseEntry("DESCRIPTION", section, label);
+        if (description.empty()) break;
+
+        if (label.empty()) {
+          if (newButton.descriptions.find({}) != newButton.descriptions.end()) {
+            warning("Overriding duplicate default description for button \"" + newButton.name + "\", there should be only one default per button...");
+          }
+          newButton.descriptions.insert({{}, description});
+        } else {
+          std::vector<std::string> predicates;
+
+          // Put back parsed-out quotes
+          label.insert(label.begin(), '"');
+          label.insert(label.end(), '"');
+
+          while (label.find("\"") != std::string::npos) {
+            auto predicateBegin = label.find_first_of("\"");
+            auto predicateEnd = label.find_first_of("\"", predicateBegin + 1);
+            predicates.push_back(label.substr(predicateBegin + 1, predicateEnd - predicateBegin - 1));
+            label.erase(predicateBegin, predicateEnd + 1);
+          }
+          newButton.descriptions.insert({predicates, description});
+        }
+      }
+
+      if (newButton.descriptions.find({}) == newButton.descriptions.end()) {
+        error("Button entry \"" + newButton.name + "\" missing default, skipping...");
+        continue;
+      }
+
+      for (const auto& [ predicates, description ] : newButton.descriptions) {
+        for (const auto& predicate : predicates) {
+          if ([&predicate, &newButton]() { for (const auto& setting : newButton.relevantSettings) if (setting == predicate) return false; return true; }()) {
+            newButton.relevantSettings.push_back(predicate);
+          }
+        }
+      }
+
+      buttons.at(numButtons).push_back(newButton);
+    }
+  }
+
+  return true;
+}
+
+void PropFile::pruneUnused() {
+  for (auto setting = settings.begin(); setting != settings.end();) {
+    // It doesn't matter which union member we access, we're effectively reading it as a void*
+    if (setting->second.toggle != nullptr) {
+      setting++;
+      continue;
+    }
+    warning("Removing unused setting \"" + setting->second.name + "\"...");
+    setting = settings.erase(setting);
+  }
 }
 
 bool PropFile::parseLayoutSection(std::vector<std::string>& section, wxSizer* sizer, wxWindow* parent) {
@@ -222,22 +339,20 @@ bool PropFile::parseLayoutSection(std::vector<std::string>& section, wxSizer* si
       auto label = FileParse::parseLabel(*section.begin());
       auto newSection = FileParse::extractSection(isHorizontal ? "HORIZONTAL" : "VERTICAL", section);
       newSection.erase(newSection.begin()); // Erase HORIZONTAL or VERTICAL header to prevent infinite recursion.
-#     define BOXBORDER wxSizerFlags(0).Border(wxALL, 5)
       if (label.empty()) { // If no label
         auto newSizer = new wxBoxSizer(isHorizontal ? wxHORIZONTAL : wxVERTICAL);
         parseLayoutSection(newSection, newSizer, parent);
-        sizer->Add(newSizer, BOXBORDER);
+        sizer->Add(newSizer, wxSizerFlags(0).Expand());
       } else { // Has label
         auto newSizer = new wxStaticBoxSizer(isHorizontal ? wxHORIZONTAL : wxVERTICAL, parent, label);
         parseLayoutSection(newSection, newSizer, newSizer->GetStaticBox());
-        sizer->Add(newSizer, BOXBORDER);
+        sizer->Add(newSizer, wxSizerFlags(0).Border(wxALL, 5).Expand());
       }
-#     undef BOXBORDER
     }
     else if (section.begin()->find("OPTION") != std::string::npos) {
       auto key = settings.find(FileParse::parseLabel(*section.begin()));
       if (key == settings.end()) {
-        std::cerr << R"(OPTION: ")" << FileParse::parseLabel(*section.begin()) << R"(" not found in settings, skipping...)" << std::endl;
+        warning(R"(Option ")" + FileParse::parseLabel(*section.begin()) + R"(" not found in settings, skipping...)");
         section.erase(section.begin());
         continue;
       }
@@ -257,6 +372,11 @@ bool PropFile::parseLayoutSection(std::vector<std::string>& section, wxSizer* si
   return true;
 }
 
+void PropFile::warning(const std::string& warning) {
+  std::cerr << "WARNING: " << warning << std::endl;
+}
 
-bool PropFile::readButtons(std::vector<std::string>& config) { return true; }
+void PropFile::error(const std::string& error) {
+  std::cerr << "ERROR: " << error << std::endl;
+}
 

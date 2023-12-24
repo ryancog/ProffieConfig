@@ -129,7 +129,7 @@ void Arduino::applyToBoard() {
     }
 
     Progress::emitEvent(20, "Generating configuration file...");
-    if (!Configuration::instance->outputConfig()) {
+    if (!Configuration::outputConfig()) {
       Progress::emitEvent(100, "Error");
       Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "There was an error while updating configuration.", "Files Error");
       wxQueueEvent(MainWindow::instance->GetEventHandler(), msg);
@@ -224,7 +224,7 @@ void Arduino::verifyConfig() {
     wxString returnVal;
 
     Progress::emitEvent(20, "Generating configuration file...");
-    if (!Configuration::instance->outputConfig()) {
+    if (!Configuration::outputConfig()) {
       Progress::emitEvent(100, "Error");
       Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "There was an error while updating configuration.", "Files Error");
       wxQueueEvent(MainWindow::instance->GetEventHandler(), msg);

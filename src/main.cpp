@@ -32,7 +32,7 @@ public:
     AppState::init();
     MainWindow::instance = new MainWindow();
 
-    Configuration::instance->readConfig();
+    Configuration::readConfig();
 
 
     return true;
