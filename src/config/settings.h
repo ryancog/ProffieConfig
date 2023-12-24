@@ -20,9 +20,7 @@ public:
   void parseDefines(const std::vector<std::string>&);
 
   class ProffieDefine;
-  std::unordered_map<std::string, ProffieDefine*> allDefines;
   std::unordered_map<std::string, ProffieDefine*> generalDefines;
-  std::unordered_map<std::string, ProffieDefine*> propDefines;
 
 private:
   void linkDefines();
@@ -52,6 +50,17 @@ private:
 
   const std::string identifier;
   const void* element;
+
+public:
+
+  ProffieDefine(std::string name, int32_t defaultValue, Misc::numEntry* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+  ProffieDefine(std::string name, double defaultValue, Misc::numEntryDouble* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+  ProffieDefine(std::string name, bool defaultState, wxCheckBox* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
+  ProffieDefine(std::string name, bool defaultState, wxRadioButton* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
+  ProffieDefine(std::string name, wxString defaultSelection, wxComboBox* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+  ProffieDefine(std::string name, wxString defaultEntry, Misc::textEntry* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+
+  static std::pair<std::string, std::string> parseKey(const std::string&);
 
   std::function<bool(const ProffieDefine*, const std::string&)> parse = [](const ProffieDefine* def, const std::string& input) -> bool {
     auto key = parseKey(input);
@@ -96,17 +105,6 @@ private:
     }
   };
   std::function<bool(const ProffieDefine*)> checkOutput;
-
-public:
-
-  ProffieDefine(std::string name, int32_t defaultValue, Misc::numEntry* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
-  ProffieDefine(std::string name, double defaultValue, Misc::numEntryDouble* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
-  ProffieDefine(std::string name, bool defaultState, wxCheckBox* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
-  ProffieDefine(std::string name, bool defaultState, wxRadioButton* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
-  ProffieDefine(std::string name, wxString defaultSelection, wxComboBox* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
-  ProffieDefine(std::string name, wxString defaultEntry, Misc::textEntry* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
-
-  static std::pair<std::string, std::string> parseKey(const std::string&);
 
   std::string getOutput() const { return output(this); }
   bool parseDefine(const std::string& input) const { return parse(this, input); }

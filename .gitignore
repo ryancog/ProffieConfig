@@ -6,3 +6,5 @@ ProffieConfig*
 !ProffieConfig.pro
 .*
 !.gitignore
+
+.DS_Store
