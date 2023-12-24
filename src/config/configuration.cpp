@@ -89,9 +89,9 @@ void Configuration::outputConfigTopGeneral(std::ofstream& configOutput) {
 }
 void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput) {
   for (auto& prop : AppState::instance->getProps()) {
-    if (PropPage::instance->propSelection->GetStringSelection() == prop.getName()) {
-      for (const auto& [ name, setting ] : prop.getSettings()) {
-        if (!setting.checkRequiredSatisfied(prop.getSettings()) || setting.disabled) continue;
+    if (PropPage::instance->propSelection->GetStringSelection() == prop->getName()) {
+      for (const auto& [ name, setting ] : prop->getSettings()) {
+        if (!setting.checkRequiredSatisfied(prop->getSettings()) || setting.disabled) continue;
         auto output = setting.getOutput();
         if (!output.empty()) configOutput << "#define " << output << std::endl;
       }
@@ -103,8 +103,8 @@ void Configuration::outputConfigProp(std::ofstream& configOutput)
 {
   configOutput << "#ifdef CONFIG_PROP" << std::endl;
   for (const auto& prop : AppState::instance->getProps()) {
-    if (prop.getName() == PropPage::instance->propSelection->GetStringSelection()) {
-      configOutput << "#include \"../props/" << prop.getFileName() << "\"" << std::endl;
+    if (prop->getName() == PropPage::instance->propSelection->GetStringSelection()) {
+      configOutput << "#include \"../props/" << prop->getFileName() << "\"" << std::endl;
     }
   }
   configOutput << "#endif" << std:: endl << std::endl; // CONFIG_PROP
@@ -379,16 +379,16 @@ void Configuration::readConfigProp(std::ifstream& file) {
   while (!file.eof() && element != "#endif") {
     file >> element;
     for (auto& prop : AppState::instance->getProps()) {
-      if (element.find(prop.getFileName()) != std::string::npos) {
-        PropPage::instance->propSelection->SetStringSelection(prop.getName());
+      if (element.find(prop->getFileName()) != std::string::npos) {
+        PropPage::instance->propSelection->SetStringSelection(prop->getName());
         for (const auto& define : Settings::instance->readDefines) {
           std::istringstream defineStream(define);
           std::string defineName{};
           double value{0};
 
           defineStream >> defineName;
-          auto key = prop.getSettings().find(defineName);
-          if (key == prop.getSettings().end()) continue;
+          auto key = prop->getSettings().find(defineName);
+          if (key == prop->getSettings().end()) continue;
 
           switch (key->second.type) {
             case PropFile::Setting::SettingType::TOGGLE:

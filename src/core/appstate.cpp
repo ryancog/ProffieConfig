@@ -70,7 +70,7 @@ void AppState::setSaved(bool state) {
 const std::vector<std::string>& AppState::getPropFileNames() {
   return propFileNames;
 }
-std::vector<PropFile>& AppState::getProps() {
+std::vector<PropFile*>& AppState::getProps() {
   return props;
 }
 
@@ -78,6 +78,6 @@ void AppState::clearProps() {
   props.clear();
 }
 
-void AppState::addProp(const PropFile& prop) {
+void AppState::addProp(PropFile* prop) {
   props.push_back(prop);
 }

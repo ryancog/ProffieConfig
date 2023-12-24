@@ -10,6 +10,10 @@
 #include <wx/tooltip.h>
 
 PropFile::PropFile() {}
+PropFile::~PropFile() {
+  PropPage::instance->sizer->Detach(page);
+  delete page;
+}
 
 void PropFile::show(bool shouldShow) const { page->Show(shouldShow); }
 std::string PropFile::getName() const { return name; }
@@ -29,7 +33,7 @@ std::string PropFile::Setting::getOutput() const {
   return {};
 }
 std::unordered_map<std::string, PropFile::Setting>& PropFile::getSettings() { return settings; }
-const std::array<std::vector<PropFile::Button>, 4>& PropFile::getButtons() { return buttons; }
+const std::array<std::vector<std::pair<std::string, std::vector<PropFile::Button>>>, 4>& PropFile::getButtons() { return buttons; }
 bool PropFile::Setting::checkRequiredSatisfied(const std::unordered_map<std::string, Setting>& settings) const {
   for (const auto& require : required) {
     auto key = settings.find(require);
@@ -207,6 +211,11 @@ bool PropFile::readButtons(std::vector<std::string>& config) {
   }
   if (!hasButtons) return false;
 
+  parseButtons(config);
+
+  return true;
+}
+void PropFile::parseButtons(std::vector<std::string>& config) {
   while (!false) {
     auto buttonSection = FileParse::extractSection("BUTTONS", config);
     if (buttonSection.empty()) break;
@@ -224,7 +233,7 @@ bool PropFile::readButtons(std::vector<std::string>& config) {
       continue;
     }
 
-    auto numButtons = std::stoi(buttonSection.at(0).substr(numStart + 1));
+    int32_t numButtons = std::stoi(buttonSection.at(0).substr(numStart + 1));
     if (numButtons < 0 || numButtons > 3) {
       error("Button section number indicator \"" + std::to_string(numButtons) + "\" out of range, skipping...");
       continue;
@@ -232,67 +241,85 @@ bool PropFile::readButtons(std::vector<std::string>& config) {
 
     buttonSection.erase(buttonSection.begin()); // Prevent BUTTONS from being read as a BUTTON entry
 
-    while (!buttonSection.empty()) {
-      if (buttonSection.at(0).find("BUTTON") == std::string::npos) {
-        buttonSection.erase(buttonSection.begin());
+    while (!false) {
+      auto stateSection = FileParse::extractSection("STATE", buttonSection);
+      if (stateSection.empty()) break;
+      auto label = FileParse::parseLabel(stateSection.at(0));
+      if (label.empty()) {
+        error("Button array #" + std::to_string(numButtons) + " has unnamed/malformed state, skipping...");
         continue;
       }
+      buttons.at(numButtons).push_back({label, {}});
 
-      auto section = FileParse::extractSection("BUTTON", buttonSection);
-      if (section.empty()) continue;
-
-      Button newButton;
-      newButton.name =  FileParse::parseLabel(section.at(0));
-      if (newButton.name.empty()) {
-        error("Button entry has missing name, skipping...");
-        continue;
-      }
-
-      while (!false) {
-        std::string label;
-        auto description = FileParse::parseEntry("DESCRIPTION", section, label);
-        if (description.empty()) break;
-
-        if (label.empty()) {
-          if (newButton.descriptions.find({}) != newButton.descriptions.end()) {
-            warning("Overriding duplicate default description for button \"" + newButton.name + "\", there should be only one default per button...");
-          }
-          newButton.descriptions.insert({{}, description});
-        } else {
-          std::vector<std::string> predicates;
-
-          // Put back parsed-out quotes
-          label.insert(label.begin(), '"');
-          label.insert(label.end(), '"');
-
-          while (label.find("\"") != std::string::npos) {
-            auto predicateBegin = label.find_first_of("\"");
-            auto predicateEnd = label.find_first_of("\"", predicateBegin + 1);
-            predicates.push_back(label.substr(predicateBegin + 1, predicateEnd - predicateBegin - 1));
-            label.erase(predicateBegin, predicateEnd + 1);
-          }
-          newButton.descriptions.insert({predicates, description});
-        }
-      }
-
-      if (newButton.descriptions.find({}) == newButton.descriptions.end()) {
-        error("Button entry \"" + newButton.name + "\" missing default, skipping...");
-        continue;
-      }
-
-      for (const auto& [ predicates, description ] : newButton.descriptions) {
-        for (const auto& predicate : predicates) {
-          if ([&predicate, &newButton]() { for (const auto& setting : newButton.relevantSettings) if (setting == predicate) return false; return true; }()) {
-            newButton.relevantSettings.push_back(predicate);
-          }
-        }
-      }
-
-      buttons.at(numButtons).push_back(newButton);
+      parseButtonSection(stateSection, numButtons, buttons.at(numButtons).size() - 1);
     }
   }
+}
+void PropFile::parseButtonSection(std::vector<std::string>& buttonSection, const int32_t& numButtons, const int32_t& state) {
+  while (!buttonSection.empty()) {
+    if (buttonSection.at(0).find("BUTTON") == std::string::npos) {
+      buttonSection.erase(buttonSection.begin());
+      continue;
+    }
 
-  return true;
+    auto section = FileParse::extractSection("BUTTON", buttonSection);
+    if (section.empty()) continue;
+
+    Button newButton;
+    newButton.name =  FileParse::parseLabel(section.at(0));
+    if (newButton.name.empty()) {
+      error("Button entry has missing name, skipping...");
+      continue;
+    }
+
+    parseButtonDescriptions(newButton, section);
+
+    if (newButton.descriptions.find({}) == newButton.descriptions.end()) {
+      error("Button entry \"" + newButton.name + "\" missing default, skipping...");
+      continue;
+    }
+
+    parseButtonRelevantSettings(newButton);
+
+    buttons.at(numButtons).at(state).second.push_back(newButton);
+  }
+}
+void PropFile::parseButtonDescriptions(PropFile::Button& newButton, std::vector<std::string>& section) {
+  while (!false) {
+    std::string label;
+    auto description = FileParse::parseEntry("DESCRIPTION", section, label);
+    if (description.empty()) break;
+
+    if (label.empty()) {
+      if (newButton.descriptions.find({}) != newButton.descriptions.end()) {
+        warning("Overriding duplicate default description for button \"" + newButton.name + "\", there should be only one default per button...");
+      }
+      newButton.descriptions.insert({{}, description});
+    } else {
+      std::vector<std::string> predicates;
+
+      // Put back parsed-out quotes
+      label.insert(label.begin(), '"');
+      label.insert(label.end(), '"');
+
+      while (label.find("\"") != std::string::npos) {
+        auto predicateBegin = label.find_first_of("\"");
+        auto predicateEnd = label.find_first_of("\"", predicateBegin + 1);
+        predicates.push_back(label.substr(predicateBegin + 1, predicateEnd - predicateBegin - 1));
+        label.erase(predicateBegin, predicateEnd + 1);
+      }
+      newButton.descriptions.insert({predicates, description});
+    }
+  }
+}
+void PropFile::parseButtonRelevantSettings(PropFile::Button& newButton) {
+  for (const auto& [ predicates, description ] : newButton.descriptions) {
+    for (const auto& predicate : predicates) {
+      if ([&predicate, &newButton]() { for (const auto& setting : newButton.relevantSettings) if (setting == predicate) return false; return true; }()) {
+        newButton.relevantSettings.push_back(predicate);
+      }
+    }
+  }
 }
 
 void PropFile::pruneUnused() {
