@@ -36,7 +36,8 @@ SOURCES += \
     tools/serialmonitor.cpp \
     elements/misc.cpp \
     elements/progress.cpp \
-    config/configuration.cpp
+    config/configuration.cpp \
+    config/settings.cpp
 
 HEADERS += \
     core/appstate.h \
@@ -53,5 +54,6 @@ HEADERS += \
     core/defines.h \
     core/mainwindow.h \
     config/configuration.h \
+    config/settings.h \
     tools/arduino.h \
     tools/serialmonitor.h

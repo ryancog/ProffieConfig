@@ -24,7 +24,7 @@ void AppState::saveState() {
 
   stateFile << "FIRSTRUN: " << (firstRun ? "TRUE" : "FALSE") << std::endl;
   stateFile << "PROPS: {" << std::endl;
-  for (const auto& prop : propNames) {
+  for (const auto& prop : propFileNames) {
     stateFile << "\tPROP(\"" << prop << "\")" << std::endl;
   }
   stateFile << "}" << std::endl;
@@ -54,10 +54,10 @@ void AppState::loadStateFromFile() {
   }
   stateFile.close();
 
-  firstRun = FileParse::parseEntry("FIRSTRUN", state).find("FALSE") == std::string::npos;
+  firstRun = FileParse::parseBoolEntry("FIRSTRUN", state);
   auto tempProps = FileParse::extractSection("PROPS", state);
   for (std::string& prop : tempProps) {
-    if (!(tmp = FileParse::parseLabel(prop)).empty()) propNames.push_back(tmp);
+    if (!(tmp = FileParse::parseLabel(prop)).empty()) propFileNames.push_back(tmp);
   }
 }
 
@@ -67,9 +67,17 @@ bool AppState::isSaved() {
 void AppState::setSaved(bool state) {
   saved = state;
 }
-const std::vector<std::string>& AppState::getProps() {
-  return propNames;
+const std::vector<std::string>& AppState::getPropFileNames() {
+  return propFileNames;
 }
+std::vector<PropFile>& AppState::getProps() {
+  return props;
+}
+
+void AppState::clearProps() {
+  props.clear();
+}
+
 void AppState::addProp(const PropFile& prop) {
   props.push_back(prop);
 }

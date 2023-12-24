@@ -17,15 +17,17 @@ public:
   void setSaved(bool = true);
   void loadStateFromFile();
   void saveState();
+  void clearProps();
   void addProp(const PropFile&);
-  const std::vector<std::string>& getProps();
+  const std::vector<std::string>& getPropFileNames();
+  std::vector<PropFile>& getProps();
 
 private:
   AppState();
   AppState(const AppState&) = delete;
 
   bool firstRun{true};
-  std::vector<std::string> propNames;
+  std::vector<std::string> propFileNames;
   std::vector<PropFile> props;
 
   bool saved{true};

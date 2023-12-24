@@ -3,10 +3,12 @@
 
 #include "pages/proppage.h"
 
+#include "core/appstate.h"
 #include "elements/misc.h"
 #include "core/defines.h"
 #include "pages/generalpage.h"
 #include "core/mainwindow.h"
+#include "core/propfile.h"
 #include "config/configuration.h"
 
 #include <wx/scrolwin.h>
@@ -19,20 +21,28 @@ PropPage::PropPage(wxWindow* window) : wxScrolledWindow(window) {
 
   sizer = new wxStaticBoxSizer(wxVERTICAL, this, "");
   auto top = new wxBoxSizer(wxHORIZONTAL);
-  prop = new wxComboBox(sizer->GetStaticBox(), ID_Select, PR_DEFAULT, wxDefaultPosition, wxDefaultSize, Misc::createEntries({PR_DEFAULT, PR_SA22C, PR_FETT263, PR_BC, PR_CAIWYN, PR_SHTOK}), wxCB_READONLY);
+  propSelection = new wxComboBox(sizer->GetStaticBox(), ID_Select, PR_DEFAULT, wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Default"}), wxCB_READONLY);
   buttonInfo = new wxButton(sizer->GetStaticBox(), ID_Buttons, "Buttons...");
-  top->Add(prop, BOXITEMFLAGS);
+  top->Add(propSelection, BOXITEMFLAGS);
   top->Add(buttonInfo, BOXITEMFLAGS);
 
   sizer->Add(top);
+
+  AppState::instance->clearProps();
+  for (const auto& prop : AppState::instance->getPropFileNames()) {
+    AppState::instance->addProp(PropFile(prop));
+  }
+  updateProps();
+
+  bindEvents();
 
   SetSizerAndFit(sizer);
   SetScrollbars(-1, 10, -1, 1);
 }
 
 void PropPage::bindEvents() {
-  auto propSelectUpdate = [](wxCommandEvent&) {
-    PropPage::instance->update();
+  auto propSelectUpdate = [&](wxCommandEvent&) {
+    PropPage::updatePropSelection();
     PropPage::instance->SetMinClientSize(wxSize(PropPage::instance->sizer->GetMinSize().GetWidth(), 0));
     FULLUPDATEWINDOW;
     MainWindow::instance->SetSize(wxSize(MainWindow::instance->GetSize().GetWidth(), MainWindow::instance->GetMinHeight() + PropPage::instance->GetBestVirtualSize().GetHeight()));
@@ -46,14 +56,14 @@ void PropPage::bindEvents() {
   };
 
   Bind(wxEVT_COMBOBOX, propSelectUpdate, ID_Select);
-  Bind(wxEVT_CHECKBOX, optionSelectUpdate, ID_Option);
-  Bind(wxEVT_RADIOBUTTON, optionSelectUpdate, ID_Option);
-  Bind(wxEVT_SPINCTRL, optionSelectUpdate, ID_Option);
-  Bind(wxEVT_SPINCTRLDOUBLE, optionSelectUpdate, ID_Option);
+  Bind(wxEVT_CHECKBOX, optionSelectUpdate, wxID_ANY);
+  Bind(wxEVT_RADIOBUTTON, optionSelectUpdate, wxID_ANY);
+  Bind(wxEVT_SPINCTRL, optionSelectUpdate, wxID_ANY);
+  Bind(wxEVT_SPINCTRLDOUBLE, optionSelectUpdate, wxID_ANY);
 
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         wxString buttons;
-        switch (Configuration::instance->parsePropSel(prop->GetValue().ToStdString())) {
+        switch (Configuration::instance->parsePropSel(propSelection->GetValue().ToStdString())) {
           case Configuration::SaberProp::DEFAULT:
             buttons =
                 (GeneralPage::instance->buttons->num->GetValue() == 0 ? wxString (
@@ -803,4 +813,54 @@ void PropPage::bindEvents() {
       }, ID_Buttons);
 }
 
-void PropPage::update() {}
+void PropPage::updateProps() {
+  auto lastSelect = propSelection->GetStringSelection();
+  propSelection->Clear();
+  propSelection->Append("Default");
+  for (const auto& prop : AppState::instance->getProps()) {
+    propSelection->Append(prop.getName());
+  }
+  if ([&]() { for (const auto& prop : propSelection->GetStrings()) if (prop == lastSelect) return true; return false; }()) {
+    propSelection->SetStringSelection(lastSelect);
+  } else propSelection->SetStringSelection("Default");
+}
+
+void PropPage::updatePropSelection() {
+  for (auto& prop : AppState::instance->getProps()) {
+    prop.show(propSelection->GetStringSelection() == prop.getName());
+  }
+}
+
+void PropPage::update() {
+  for (auto& prop : AppState::instance->getProps()) {
+    if (propSelection->GetStringSelection() != prop.getName()) continue;
+
+    for (auto& [ name, setting ] : prop.getSettings()) {
+      for (const auto& disable : setting.disables) {
+        auto key = prop.getSettings().find(disable);
+        if (key == prop.getSettings().end()) continue;
+
+        key->second.disabled = !setting.getOutput().empty();
+      }
+    }
+
+    for (auto& [ name, setting ] : prop.getSettings()) {
+#     define CHECKENABLED !setting.disabled && setting.checkRequiredSatisfied(prop.getSettings())
+      switch(setting.type) {
+        case PropFile::Setting::SettingType::TOGGLE:
+          setting.toggle->Enable(CHECKENABLED);
+          break;
+        case PropFile::Setting::SettingType::NUMERIC:
+          setting.numeric->Enable(CHECKENABLED);
+          break;
+        case PropFile::Setting::SettingType::DECIMAL:
+          setting.decimal->Enable(CHECKENABLED);
+          break;
+        case PropFile::Setting::SettingType::OPTION:
+          setting.option->Enable(CHECKENABLED);
+          break;
+      }
+#     undef CHECKENABLED
+    }
+  }
+}

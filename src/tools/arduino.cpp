@@ -383,12 +383,15 @@ bool Arduino::updateIno(wxString& _return) {
 }
 
 wxString Arduino::parseError(const wxString& error) {
+  std::cerr << "An arduino task failed with the following error: " << std::endl;
+  std::cerr << error << std::endl;
+
 #define ERRCONTAINS(token) std::strstr(error.data(), token)
   if (ERRCONTAINS("select Proffieboard")) return "Please ensure you've selected the correct board in General";
   if (ERRCONTAINS("expected unqualified-id")) return "Please make sure there are no brackets in your styles (such as \"{\" or \"}\")\n and there is nothing missing or extra from your style! (such as parentheses or \"<>\")";
-  if (ERRCONTAINS("FLASH")) return "The specified config will not fit on Proffieboard.\n\nTry disabling diagnostic commands, disabling talkie, disabling prop features, or removing blade styles to make it fit.";
+  if (ERRCONTAINS(/* region FLASH */"overflowed")) return "The specified config will not fit on Proffieboard.\n\nTry disabling diagnostic commands, disabling talkie, disabling prop features, or removing blade styles to make it fit.";
   if (ERRCONTAINS("Serial port busy")) return "The Proffieboard appears busy. \nPlease make sure nothing else is using it, then try again.";
-  if (ERRCONTAINS("Buttons for operation")) return PropPage::instance->prop->GetValue() + "'s prop file " + std::strstr(error.data(), "requires");
+  if (ERRCONTAINS("Buttons for operation")) return PropPage::instance->propSelection->GetValue() + "'s prop file " + std::strstr(error.data(), "requires");
   if (ERRCONTAINS("1\n2\n3\n4\n5\n6\n7\n8\n9\n10")) return "Could not connect to Proffieboard for upload.";
   if (ERRCONTAINS("No DFU capable USB device available")) return "No Proffieboard in BOOTLOADER mode found.";
   if (ERRCONTAINS("error:")) return ERRCONTAINS("error:");
