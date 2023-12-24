@@ -33,7 +33,7 @@ The list in the center of the page allows you to navigate between presets, selec
 
 The box on the right of the page is where you'll input the bladestyle for the specific blade for the specific preset you have selected. This bladestyle is the code which creates the effect to be displayed on your blade (See ["Where do I get blade styles?"](/docs/faq.md#where-do-i-get-blade-styles)) and depending on the style they may be dependent on a particular Prop file or feature.
 
-This field auto-populates with `StylePtr<Black>()` which is the most basic example of a bladestyle, simply keeping the blade `Black`, essentially doing nothing, and should be replaced with your own.
+This field auto-populates with `StyleNormalPtr<AudioFlicker<Blue, DodgerBlue>, BLUE, 300, 800>()` which is a basic example of a bladestyle, with a simple in, out, and audioflicker, essentially doing the bare minimum, and should be replaced with your own.
 
 ## That's It!
 Next Up: [Applying Config](/docs/applying.md).
