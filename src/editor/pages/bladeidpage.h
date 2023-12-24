@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "elements/misc.h"
-#include "pages/presetspage.h"
-#include "pages/bladespage.h"
+#include "core/utilities/misc.h"
+#include "editor/pages/presetspage.h"
+#include "editor/pages/bladespage.h"
 
 #include <wx/sizer.h>
 #include <wx/checkbox.h>
@@ -19,7 +19,6 @@
 class BladeIDPage : public wxStaticBoxSizer {
 public:
   BladeIDPage(wxWindow*);
-  static BladeIDPage* instance;
 
   void update();
 

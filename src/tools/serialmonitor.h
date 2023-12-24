@@ -4,7 +4,7 @@
 #pragma once
 
 #if defined(__WXOSX__) || defined(__WXGTK__)
-#include "elements/threadrunner.h"
+#include "core/utilities/threadrunner.h"
 #endif
 #include <wx/wx.h>
 

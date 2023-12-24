@@ -1,16 +1,15 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
-#include "pages/bladeidpage.h"
+#include "editor/pages/bladeidpage.h"
 
 #include "core/defines.h"
-#include "core/mainwindow.h"
-#include "elements/misc.h"
+#include "editor/editorwindow.h"
+#include "core/utilities/misc.h"
 
 #include <wx/tooltip.h>
 #include <wx/button.h>
 
-BladeIDPage* BladeIDPage::instance;
 BladeIDPage::BladeIDPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, "") {
   wxBoxSizer* enableSizer = new wxBoxSizer(wxHORIZONTAL);
   enableDetect = new wxCheckBox(GetStaticBox(), ID_BladeDetectEnable, "Enable Blade Detect");
@@ -38,11 +37,11 @@ BladeIDPage::BladeIDPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window
 
 void BladeIDPage::bindEvents() {
   auto clearBladeArray = []() {
-    BladeIDPage::instance->arrayList->SetSelection(-1);
-    BladeIDPage::instance->lastArraySelection = -1;
-    BladesPage::instance->bladeArray->SetSelection(0);
-    BladesPage::instance->lastBladeArraySelection = -1;
-    PresetsPage::instance->bladeArray->SetSelection(0);
+    EditorWindow::instance->idPage->arrayList->SetSelection(-1);
+    EditorWindow::instance->idPage->lastArraySelection = -1;
+    EditorWindow::instance->bladesPage->bladeArray->SetSelection(0);
+    EditorWindow::instance->bladesPage->lastBladeArraySelection = -1;
+    EditorWindow::instance->presetsPage->bladeArray->SetSelection(0);
   };
 
   GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) {
@@ -51,7 +50,7 @@ void BladeIDPage::bindEvents() {
           bladeArrays.insert(bladeArrays.begin() + 1, BladeArray{"no_blade", 0, {}, { BladesPage::BladeConfig{} }});
           clearBladeArray();
         } else {
-          if (wxMessageBox("Are you sure you want to disable Blade Detect?\n\n\"no_blade\" array will be deleted!", "Disable Blade Detect", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING, MainWindow::instance) == wxNO) {
+          if (wxMessageBox("Are you sure you want to disable Blade Detect?\n\n\"no_blade\" array will be deleted!", "Disable Blade Detect", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING, EditorWindow::instance) == wxNO) {
             enableDetect->SetValue(true);
             update();
             return;
@@ -65,7 +64,7 @@ void BladeIDPage::bindEvents() {
         if (enableID->GetValue()) {
 
         } else {
-          if (wxMessageBox("Are you sure you want to disable Blade ID?\n\nAll custom blade arrays will be deleted!", "Disable Blade ID", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING, MainWindow::instance) == wxNO) {
+          if (wxMessageBox("Are you sure you want to disable Blade ID?\n\nAll custom blade arrays will be deleted!", "Disable Blade ID", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING, EditorWindow::instance) == wxNO) {
             enableID->SetValue(true);
             update();
             return;
@@ -285,8 +284,6 @@ void BladeIDPage::update() {
     pullupPin->box->Show(false);
     pullupResistance->box->Show(true);
   }
-
-  UPDATEWINDOW;
 }
 
 void BladeIDPage::stripAndSaveName() {

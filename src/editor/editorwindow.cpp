@@ -1,19 +1,20 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
-#include "core/mainwindow.h"
+#include "editor/editorwindow.h"
 
-#include "config/configuration.h"
-#include "config/settings.h"
+#include "editor/pages/bladespage.h"
+#include "editor/pages/generalpage.h"
+#include "editor/pages/presetspage.h"
+#include "editor/pages/proppage.h"
+#include "editor/pages/bladeidpage.h"
+
+#include "core/config/configuration.h"
+#include "core/config/settings.h"
 #include "core/defines.h"
 #include "tools/arduino.h"
-#include "elements/misc.h"
 #include "tools/serialmonitor.h"
-#include "pages/bladespage.h"
-#include "pages/generalpage.h"
-#include "pages/presetspage.h"
-#include "pages/proppage.h"
-#include "pages/bladeidpage.h"
+#include "core/utilities/misc.h"
 #include "core/appstate.h"
 
 #include <wx/combobox.h>
@@ -25,14 +26,15 @@
 #include <wx/string.h>
 #include <wx/tooltip.h>
 
-MainWindow* MainWindow::instance;
-MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize) {
+EditorWindow* EditorWindow::instance{nullptr};
+EditorWindow::EditorWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize) {
   instance = this;
   createMenuBar();
   createPages();
+  loadProps();
   bindEvents();
   createToolTips();
-  Settings::instance = new Settings();
+  settings = new Settings();
 
 # ifdef __WXMSW__
   SetIcon( wxICON(IDI_ICON1) );
@@ -43,16 +45,16 @@ MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPos
 }
 
 
-void MainWindow::bindEvents() {
+void EditorWindow::bindEvents() {
   // Main Window
   // Yeah, this segfaults right now... but we want it to close anyways, right? I need to fix this... I have a few ideas I'll try when I get back to it.
-  Bind(wxEVT_CLOSE_WINDOW, [](wxCloseEvent& event ) { if (wxMessageBox("Are you sure you want to close ProffieConfig?\n\nAny unsaved changes will be lost!", "Close ProffieConfig", wxICON_WARNING | wxYES_NO | wxNO_DEFAULT, MainWindow::instance) == wxNO && event.CanVeto()) event.Veto(); else { AppState::instance->saveState(); MainWindow::instance->Destroy(); }});
+  Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event ) { if (wxMessageBox("Are you sure you want to close ProffieConfig?\n\nAny unsaved changes will be lost!", "Close ProffieConfig", wxICON_WARNING | wxYES_NO | wxNO_DEFAULT, EditorWindow::instance) == wxNO && event.CanVeto()) event.Veto(); else { AppState::instance->saveState(); Destroy(); }});
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent(progDialog, (Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::init(); }, ID_Initialize);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(ABOUT_MESSAGE, "About ProffieConfig", wxOK | wxICON_INFORMATION, MainWindow::instance); }, wxID_ABOUT);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION, MainWindow::instance); }, ID_Copyright);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(ABOUT_MESSAGE, "About ProffieConfig", wxOK | wxICON_INFORMATION, EditorWindow::instance); }, wxID_ABOUT);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION, EditorWindow::instance); }, ID_Copyright);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::outputConfig(); AppState::instance->setSaved(); }, ID_GenFile);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(); }, ID_VerifyConfig);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(); }, ID_ExportFile);
@@ -80,35 +82,35 @@ void MainWindow::bindEvents() {
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(); }, ID_RefreshDev);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(); }, ID_ApplyChanges);
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        GeneralPage::instance->Show(windowSelect->GetValue() == "General");
-        PropPage::instance->Show(windowSelect->GetValue() == "Prop File");
-        BladesPage::instance->Show(windowSelect->GetValue() == "Blade Arrays");
-        PresetsPage::instance->Show(windowSelect->GetValue() == "Presets And Styles");
-        BladeIDPage::instance->Show(windowSelect->GetValue() == "Blade Awareness");
+        generalPage->Show(windowSelect->GetValue() == "General");
+        propPage->Show(windowSelect->GetValue() == "Prop File");
+        bladesPage->Show(windowSelect->GetValue() == "Blade Arrays");
+        presetsPage->Show(windowSelect->GetValue() == "Presets And Styles");
+        idPage->Show(windowSelect->GetValue() == "Blade Awareness");
 
-        //GeneralPage::instance->update();
-        BladeIDPage::instance->update();
-        PropPage::instance->update();
-        BladesPage::instance->update();
-        PresetsPage::instance->update();
+        //generalPage->update();
+        idPage->update();
+        propPage->update();
+        bladesPage->update();
+        presetsPage->update();
 
         FULLUPDATEWINDOW;
-        if (PropPage::instance->IsShown()) {
-          PropPage::instance->SetMinClientSize(wxSize(PropPage::instance->sizer->GetMinSize().GetWidth(), 0));
+        if (propPage->IsShown()) {
+          propPage->SetMinClientSize(wxSize(propPage->sizer->GetMinSize().GetWidth(), 0));
           master->Layout();
-          SetSizerAndFit(MainWindow::instance->master);
-          SetSize(wxSize(MainWindow::instance->GetSize().GetWidth(), MainWindow::instance->GetMinHeight() + PropPage::instance->GetBestVirtualSize().GetHeight()));
-          SetMinSize(wxSize(MainWindow::instance->GetSize().GetWidth(), 350));
+          SetSizerAndFit(master);
+          SetSize(wxSize(GetSize().GetWidth(), GetMinHeight() + propPage->GetBestVirtualSize().GetHeight()));
+          SetMinSize(wxSize(GetSize().GetWidth(), 350));
         }
       }, ID_WindowSelect);
 }
-void MainWindow::createToolTips() {
+void EditorWindow::createToolTips() {
   TIP(applyButton, "Apply the current configuration to the selected Proffieboard.");
   TIP(devSelect, "Select the Proffieboard to connect to.\nThis will be an unrecognizable device identifier, but chances are there's only one which will show up.");
   TIP(refreshButton, "Refresh the detected boards.");
 }
 
-void MainWindow::createMenuBar() {
+void EditorWindow::createMenuBar() {
   wxMenu *file = new wxMenu;
   file->Append(ID_GenFile, "Save Config\tCtrl+S", "Generate Config File");
   file->Append(ID_ExportFile, "Export Config...", "Choose a location to save a copy of your config...");
@@ -140,7 +142,7 @@ void MainWindow::createMenuBar() {
   SetMenuBar(menuBar);
 }
 
-void MainWindow::createPages() {
+void EditorWindow::createPages() {
   master = new wxBoxSizer(wxVERTICAL);
 
   wxBoxSizer* options = new wxBoxSizer(wxHORIZONTAL);
@@ -155,29 +157,37 @@ void MainWindow::createPages() {
   options->Add(devSelect, wxSizerFlags(0).Border(wxALL, 10));
   options->Add(applyButton, wxSizerFlags(0).Border(wxALL, 10));
 
-  GeneralPage::instance = new GeneralPage(this);
-  PropPage::instance = new PropPage(this);
-  PresetsPage::instance = new PresetsPage(this);
-  BladesPage::instance = new BladesPage(this);
-  BladeIDPage::instance = new BladeIDPage(this);
+  generalPage = new GeneralPage(this);
+  propPage = new PropPage(this);
+  presetsPage = new PresetsPage(this);
+  bladesPage = new BladesPage(this);
+  idPage = new BladeIDPage(this);
 
-  //GeneralPage::instance->update();
-  PropPage::instance->update();
-  PresetsPage::instance->update();
-  BladesPage::instance->update();
-  BladeIDPage::instance->update();
+  //generalPage->update();
+  propPage->update();
+  presetsPage->update();
+  bladesPage->update();
+  idPage->update();
 
-  PropPage::instance->Show(false);
-  BladesPage::instance->Show(false);
-  PresetsPage::instance->Show(false);
-  BladeIDPage::instance->Show(false);
+  propPage->Show(false);
+  bladesPage->Show(false);
+  presetsPage->Show(false);
+  idPage->Show(false);
 
   master->Add(options, wxSizerFlags(0).Expand());
-  master->Add(GeneralPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
-  master->Add(PropPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
-  master->Add(PresetsPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
-  master->Add(BladesPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
-  master->Add(BladeIDPage::instance, wxSizerFlags(1).Border(wxALL, 10).Expand());
+  master->Add(generalPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
+  master->Add(propPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
+  master->Add(presetsPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
+  master->Add(bladesPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
+  master->Add(idPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
   SetSizerAndFit(master); // use the sizer for layout and set size and hints
+}
+void EditorWindow::loadProps() {
+  AppState::instance->clearProps();
+  for (const auto& prop : AppState::instance->getPropFileNames()) {
+    auto propConfig = PropFile::createPropConfig(prop);
+    if (propConfig != nullptr) AppState::instance->addProp(propConfig);
+  }
+  propPage->updateProps();
 }

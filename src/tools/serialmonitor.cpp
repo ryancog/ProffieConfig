@@ -3,15 +3,15 @@
 
 #include "tools/serialmonitor.h"
 
-#include "core/mainwindow.h"
 #include "core/defines.h"
+#include "editor/editorwindow.h"
 
 SerialMonitor* SerialMonitor::instance;
 #if defined(__WXMSW__)
 SerialMonitor::SerialMonitor() {
-  if (MainWindow::instance->devSelect->GetSelection() > 0) {
-    ShellExecute(NULL, NULL, TEXT(ARDUINO_PATH), std::wstring("monitor -p " + MainWindow::instance->devSelect->GetStringSelection().ToStdWstring() + " -c baudrate=115200").c_str(), NULL, true);
-  } else wxMessageBox("Select board first.", "No Board Selected", wxOK | wxICON_ERROR, MainWindow::instance);
+  if (EditorWindow::instance->devSelect->GetSelection() > 0) {
+    ShellExecute(NULL, NULL, TEXT(ARDUINO_PATH), std::wstring("monitor -p " + EditorWindow::instance->devSelect->GetStringSelection().ToStdWstring() + " -c baudrate=115200").c_str(), NULL, true);
+  } else wxMessageBox("Select board first.", "No Board Selected", wxOK | wxICON_ERROR, EditorWindow::instance);
 }
 
 #elif defined(__WXOSX__) || defined(__WXGTK__)
@@ -23,7 +23,7 @@ SerialMonitor::SerialMonitor() {
 #include <termios.h>
 
 SerialMonitor::SerialMonitor()
-    : wxFrame(MainWindow::instance, wxID_ANY, "Proffie Serial")
+    : wxFrame(EditorWindow::instance, wxID_ANY, "Proffie Serial")
 {
   instance = this;
 
@@ -74,9 +74,9 @@ void SerialMonitor::OpenDevice()
 {
   struct termios newtio;
 
-  fd = open(MainWindow::instance->devSelect->GetValue().data(), O_RDWR | O_NOCTTY);
+  fd = open(EditorWindow::instance->devSelect->GetValue().data(), O_RDWR | O_NOCTTY);
   if (fd < 0) {
-    wxMessageBox("Could not connect to proffieboard.", "Serial Error", wxICON_ERROR | wxOK, MainWindow::instance);
+    wxMessageBox("Could not connect to proffieboard.", "Serial Error", wxICON_ERROR | wxOK, EditorWindow::instance);
     SerialMonitor::instance->Close(true);
     return;
   }
@@ -98,7 +98,7 @@ void SerialMonitor::OpenDevice()
   deviceThread = new ThreadRunner([&]() {
     struct stat info;
     while (SerialMonitor::instance != nullptr) {
-      if (stat(MainWindow::instance->devSelect->GetValue().data(), &info)
+      if (stat(EditorWindow::instance->devSelect->GetValue().data(), &info)
           != 0) { // Check if device is still present
         SerialDataEvent* event = new SerialDataEvent(EVT_DISCON, wxID_ANY, "");
         wxQueueEvent(SerialMonitor::instance->GetEventHandler(), event);

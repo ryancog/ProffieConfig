@@ -15,7 +15,6 @@
 class PresetsPage : public wxStaticBoxSizer {
 public:
   PresetsPage(wxWindow*);
-  static PresetsPage* instance;
 
   void update();
 

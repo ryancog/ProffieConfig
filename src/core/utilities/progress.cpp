@@ -3,10 +3,9 @@
 
 #include "progress.h"
 
-#include "core/mainwindow.h"
+#include "editor/editorwindow.h"
 
-#include "wx/event.h"
-#include <memory>
+#include <wx/event.h>
 
 wxEventTypeTag<wxCommandEvent> Progress::EVT_UPDATE(wxNewEventType());
 
@@ -15,7 +14,7 @@ void Progress::emitEvent(int8_t progress, wxString message) {
   ProgressEvent* event = new ProgressEvent(EVT_UPDATE, wxID_ANY);
   event->progress = progress;
   event->message = message;
-  wxQueueEvent(MainWindow::instance->GetEventHandler(), event);
+  wxQueueEvent(EditorWindow::instance->GetEventHandler(), event);
 }
 
 void Progress::handleEvent(Progress* progress, ProgressEvent* event) {
