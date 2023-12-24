@@ -13,6 +13,7 @@ ICON = ../resources/icons/icon.icns
 RESOURCE.files += ../resources/macOS/arduino-cli
 RESOURCE.files += ../resources/ProffieOS
 RESOURCE.files += ../resources/StyleEditor
+RESOURCE.files += ../resources/props
 RESOURCE.path = Contents/Resources
 QMAKE_BUNDLE_DATA += RESOURCE
 
@@ -22,10 +23,9 @@ RC_ICONS = ../resources/icons/icon.ico
 LIBS += $$system(wx-config --libs all)
 
 SOURCES += \
+    main.cpp \
     core/appstate.cpp \
     core/fileparse.cpp \
-    core/propfile.cpp \
-    main.cpp \
     core/mainwindow.cpp \
     pages/generalpage.cpp \
     pages/presetspage.cpp \
@@ -37,12 +37,12 @@ SOURCES += \
     elements/misc.cpp \
     elements/progress.cpp \
     config/configuration.cpp \
-    config/settings.cpp
+    config/settings.cpp \
+    config/propfile.cpp
 
 HEADERS += \
     core/appstate.h \
     core/fileparse.h \
-    core/propfile.h \
     pages/generalpage.h \
     pages/presetspage.h \
     pages/bladespage.h \
@@ -55,5 +55,6 @@ HEADERS += \
     core/mainwindow.h \
     config/configuration.h \
     config/settings.h \
+    config/propfile.h \
     tools/arduino.h \
     tools/serialmonitor.h

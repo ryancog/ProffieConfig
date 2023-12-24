@@ -1,0 +1,98 @@
+NAME: "SA22C"
+FILENAME: "saber_sa22c_buttons.h"
+
+SETTINGS {
+	TOGGLE("SA22C_STAB_ON") {
+		NAME: "Stab to Turn On"
+		DESCRIPTION: "A quick "stab" motion will ignite the saber." 
+	}
+	TOGGLE("SA22C_SWING_ON") {
+		NAME: "Swing to Turn On"
+		DESCRIPTION: "A swing faster than the threshold will ignite the saber."
+	}
+	NUMERIC("SA22C_SWING_ON_SPEED") {
+		NAME: "Swing on Speed"
+		DESCRIPTION: "Speed required for swing to ignite saber."
+		MIN: 0
+		MAX: 1000
+		DEFAULT: 250
+		INCREMENT: 10
+		REQUIRES: "SA22C_SWING_ON"
+	}
+	TOGGLE("SA22C_THRUST_ON") {
+		NAME: "Thrust to Turn On"
+		DESCRIPTION: "A quick "thrust" motion will ignite the saber."
+	}
+	TOGGLE("SA22C_TWIST_ON") {
+		NAME: "Twist to Turn On"
+		DESCRIPTION: "A quick "twist" motion will ignite the saber."
+	}
+	TOGGLE("SA22C_TWIST_OFF") {
+		NAME: "Twist to Turn Off"
+		DESCRIPTION: "A quick "twist" motion will retract the saber."
+	}
+
+	TOGGLE("SA22C_NO_LOCKUP_HOLD") {
+		NAME: "Revert Lockup and Multi-Blast Trigger"
+		DESCRIPTION: "Reverts controls so that lockup is triggered only by clash + aux in 2 button mode, multi-blast is triggered while holding aux and swinging."
+	}
+
+	TOGGLE("SA22C_FORCE_PUSH") {
+		NAME: "Enable Force Push"
+		DESCRIPTION: "Enable force push sound effects when doing a "push" gesture with the saber."
+	}
+	NUMERIC("SA22C_FORCE_PUSH_LENGTH") {
+		NAME: "Force Push Length"
+		DESCRIPTION: "Length of the force push gesture (in millis) needed to trigger.\nRange from 1 (easiest to trigger) to 10 (hardest to trigger)."
+		REQUIRES: "SA22C_FORCE_PUSH"
+		MIN: 1
+		MAX: 10
+		DEFAULT: 5
+	}
+
+	TOGGLE("GESTURE_AUTO_BATTLE_MODE") {
+		NAME: "Gesture Ignition Starts Battle Mode"
+		DESCRIPTION: "Igniting the saber with a gesture control will automatically enter Battle Mode."
+	}
+	NUMERIC("SA22C_LOCKUP_DELAY") {
+		NAME: "Lockup Delay (ms)"
+		DESCRIPTION: "Delay between Battle Mode registering a clash or lockup."
+		MIN: 0
+		MAX: 3000
+		INCREMENT: 10
+		DEFAULT: 200
+	}
+}
+
+LAYOUT {
+	HORIZONTAL("Gesture Control") {
+		OPTION("SA22C_STAB_ON")
+		VERTICAL {
+			OPTION("SA22C_SWING_ON")
+			OPTION("SA22C_SWING_ON_SPEED")
+		}
+		OPTION("SA22C_THRUST_ON")
+		OPTION("SA22C_TWIST_ON")
+		OPTION("SA22C_TWIST_OFF")
+	}
+	HORIZONTAL {
+		HORIZONTAL("Controls") {
+			OPTION("SA22C_NO_LOCKUP_HOLD")
+		}
+		VERTICAL("Features") {
+			OPTION("SA22C_FORCE_PUSH")
+			OPTION("SA22C_FORCE_PUSH_LENGTH")
+		}
+		VERTICAL("Battle Mode") {
+			OPTION("GESTURE_AUTO_BATTLE_MODE")
+			OPTION("SA22C_LOCKUP_DELAY")
+		}
+	}
+}
+
+BUTTONS{2} {
+	BUTTON("Short Click") {
+		DESCRIPTION: "Turn the saber on"
+		DESCRIPTION("SA22C_STAB_ON"): "I dunno, I needs test" 
+	}
+}

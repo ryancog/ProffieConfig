@@ -28,7 +28,6 @@
 MainWindow* MainWindow::instance;
 MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize) {
   instance = this;
-  Configuration::instance = new Configuration();
   createMenuBar();
   createPages();
   bindEvents();
@@ -54,10 +53,10 @@ void MainWindow::bindEvents() {
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(ABOUT_MESSAGE, "About ProffieConfig", wxOK | wxICON_INFORMATION, MainWindow::instance); }, wxID_ABOUT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION, MainWindow::instance); }, ID_Copyright);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->outputConfig(); AppState::instance->setSaved(); }, ID_GenFile);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::outputConfig(); AppState::instance->setSaved(); }, ID_GenFile);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(); }, ID_VerifyConfig);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->exportConfig(); }, ID_ExportFile);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::instance->importConfig(); }, ID_ImportFile);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(); }, ID_ExportFile);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::importConfig(); }, ID_ImportFile);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/blob/master/docs"); }, ID_Docs);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/issues/new"); }, ID_Issue);
 

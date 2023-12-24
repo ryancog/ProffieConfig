@@ -21,6 +21,8 @@ public:
 
   class ProffieDefine;
   std::unordered_map<std::string, ProffieDefine*> generalDefines;
+  std::vector<std::string> readDefines;
+  int32_t numBlades;
 
 private:
   void linkDefines();
@@ -92,9 +94,6 @@ public:
   };
   std::function<std::string(const ProffieDefine*)> output = [](const ProffieDefine* def) -> std::string {
     switch (def->type) {
-      case Type::STATE:
-      case Type::RADIO:
-        return def->identifier;
       case Type::NUMERIC:
         return def->identifier + " " + std::to_string(def->getNum());
       case Type::DECIMAL:
@@ -102,6 +101,10 @@ public:
       case Type::COMBO:
       case Type::TEXT:
         return def->identifier + " " + def->getString();
+      case Type::STATE:
+      case Type::RADIO:
+      default:
+        return def->identifier;
     }
   };
   std::function<bool(const ProffieDefine*)> checkOutput;

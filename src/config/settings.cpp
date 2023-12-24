@@ -3,7 +3,6 @@
 
 #include "config/settings.h"
 
-#include "config/configuration.h"
 #include "pages/generalpage.h"
 #include "pages/bladeidpage.h"
 
@@ -57,11 +56,11 @@ void Settings::linkDefines() {
 }
 
 void Settings::setCustomInputParsers() {
-  generalDefines["NUM_BLADES"]->overrideParser ([](const ProffieDefine* def, const std::string& input) -> bool {
+  generalDefines["NUM_BLADES"]->overrideParser ([&](const ProffieDefine* def, const std::string& input) -> bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
 
-    Configuration::instance->numBlades = std::stoi(key.second);
+    numBlades = std::stoi(key.second);
     return true;
   });
   generalDefines["SAVE_STATE"]->overrideParser([](const ProffieDefine* def, const std::string& input) -> bool {
