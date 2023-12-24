@@ -114,12 +114,12 @@ void MainWindow::createMenuBar() {
   file->Append(ID_ExportFile, "Export Config...", "Choose a location to save a copy of your config...");
   file->Append(ID_ImportFile, "Import Config...", "Choose a file to import...");
   file->AppendSeparator();
-  file->Append(ID_VerifyConfig, "Verify Config...\tCtrl+R", "Generate Config and Compile to test...");
+  file->Append(ID_VerifyConfig, "Verify Config\tCtrl+R", "Generate Config and Compile to test...");
   file->AppendSeparator();
   file->Append(ID_Initialize, "Install Dependencies...", "Install Platform-Specific Proffieboard Dependencies");
   file->AppendSeparator();
   file->Append(wxID_ABOUT);
-  file->Append(ID_Copyright, "Copyright Notice...");
+  file->Append(ID_Copyright, "Copyright Notice");
   file->Append(wxID_EXIT);
 
   wxMenu* board = new wxMenu;
@@ -145,9 +145,9 @@ void MainWindow::createPages() {
 
   wxBoxSizer* options = new wxBoxSizer(wxHORIZONTAL);
   windowSelect = new wxComboBox(this, ID_WindowSelect, "General", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Blade Arrays", "Presets And Styles", "Blade Awareness"  /*, "Hardware"*/}), wxCB_READONLY | wxCB_DROPDOWN);
-  refreshButton = new wxButton(this, ID_RefreshDev, "Refresh...", wxDefaultPosition, wxDefaultSize, 0);
+  refreshButton = new wxButton(this, ID_RefreshDev, "Refresh", wxDefaultPosition, wxDefaultSize, 0);
   devSelect = new wxComboBox(this, ID_DeviceSelect, "Select Device...", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Arduino::getBoards()), wxCB_READONLY);
-  applyButton = new wxButton(this, ID_ApplyChanges, "Apply to Board...", wxDefaultPosition, wxDefaultSize, 0);
+  applyButton = new wxButton(this, ID_ApplyChanges, "Apply to Board", wxDefaultPosition, wxDefaultSize, 0);
   applyButton->Disable();
   options->Add(windowSelect, wxSizerFlags(0).Border(wxALL, 10));
   options->AddStretchSpacer(1);

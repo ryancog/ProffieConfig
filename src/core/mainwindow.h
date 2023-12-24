@@ -5,6 +5,7 @@
 
 #include "elements/progress.h"
 #include "elements/threadrunner.h"
+#include "core/defines.h"
 
 #pragma once
 
@@ -41,7 +42,7 @@ private:
     ID_ImportFile,
 
     ID_OpenSerial,
-    ID_StyleEditor
+    ID_StyleEditor,
   };
 
   void bindEvents();

@@ -1,7 +1,6 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
-#include "core/defines.h"
 #include "core/mainwindow.h"
 #include "core/appstate.h"
 #include "config/configuration.h"

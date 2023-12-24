@@ -24,6 +24,8 @@ namespace std {
 
 class PropFile {
 public:
+  ~PropFile();
+
   struct Setting;
   struct Button;
   static PropFile* createPropConfig(const std::string& pathname);
@@ -32,7 +34,7 @@ public:
   std::string getName() const;
   std::string getFileName() const;
   std::unordered_map<std::string, Setting>& getSettings();
-  const std::array<std::vector<PropFile::Button>, 4>& getButtons();
+  const std::array<std::vector<std::pair<std::string, std::vector<PropFile::Button>>>, 4>& getButtons();
 
   struct Setting {
     std::string getOutput() const;
@@ -81,15 +83,22 @@ private:
   std::string name{""};
   std::string fileName{""};
   std::unordered_map<std::string, Setting> settings{};
-  std::array<std::vector<Button>, 4> buttons{};
+  std::array<std::vector<std::pair<std::string, std::vector<Button>>>, 4> buttons{};
   wxBoxSizer* page{nullptr};
 
   bool readName(std::vector<std::string>&);
   bool readFileName(std::vector<std::string>&);
   bool readSettings(std::vector<std::string>&);
+
   bool readLayout(std::vector<std::string>&);
   bool parseLayoutSection(std::vector<std::string>&, wxSizer*, wxWindow*);
+
   bool readButtons(std::vector<std::string>&);
+  void parseButtons(std::vector<std::string>&);
+  void parseButtonSection(std::vector<std::string>&, const int32_t&, const int32_t&);
+  void parseButtonDescriptions(PropFile::Button&, std::vector<std::string>&);
+  void parseButtonRelevantSettings(PropFile::Button&);
+
   void pruneUnused();
 
   static void warning(const std::string&);
