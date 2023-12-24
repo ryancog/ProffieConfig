@@ -1,17 +1,20 @@
-#include "config/propfile.h"
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
+#include "core/config/propfile.h"
+
 #include "core/defines.h"
-#include "core/fileparse.h"
+#include "core/utilities/fileparse.h"
+#include "editor/editorwindow.h"
+#include "editor/pages/proppage.h"
 
 #include <fstream>
 #include <iostream>
-
-#include "pages/proppage.h"
-
 #include <wx/tooltip.h>
 
 PropFile::PropFile() {}
 PropFile::~PropFile() {
-  PropPage::instance->sizer->Detach(page);
+  EditorWindow::instance->propPage->sizer->Detach(page);
   delete page;
 }
 
@@ -193,10 +196,10 @@ bool PropFile::parseSettingCommon(Setting& setting, std::vector<std::string>& se
 }
 bool PropFile::readLayout(std::vector<std::string>& config) {
   page = new wxBoxSizer(wxVERTICAL);
-  PropPage::instance->sizer->Add(page, wxSizerFlags(0).Expand());
+  EditorWindow::instance->propPage->sizer->Add(page, wxSizerFlags(0).Expand());
 
   auto layoutSection = FileParse::extractSection("LAYOUT", config);
-  parseLayoutSection(layoutSection, page,  PropPage::instance->sizer->GetStaticBox());
+  parseLayoutSection(layoutSection, page,  EditorWindow::instance->propPage->sizer->GetStaticBox());
   return true;
 }
 bool PropFile::readButtons(std::vector<std::string>& config) {

@@ -1,9 +1,12 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
-#include "appstate.h"
+#include "core/appstate.h"
 #include "core/defines.h"
-#include "core/fileparse.h"
+#include "core/utilities/fileparse.h"
+#include "onboard/onboard.h"
+#include "editor/editorwindow.h"
+#include "config/configuration.h"
 
 #include <fstream>
 #include <iostream>
@@ -13,6 +16,14 @@ AppState::AppState() {}
 void AppState::init() {
   instance = new AppState();
   instance->loadStateFromFile();
+
+  instance->firstRun = false;
+  if (instance->firstRun) {
+    instance->onboard = new Onboard();
+  } else {
+    EditorWindow::instance = new EditorWindow();
+    Configuration::readConfig();
+  }
 }
 
 void AppState::saveState() {

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pages/bladespage.h"
+#include "editor/pages/bladespage.h"
 
 #include <string>
 #include <fstream>

@@ -37,8 +37,8 @@
 #define BOXITEMFLAGS wxSizerFlags(0).Border(wxALL, 10).Expand()
 #define TEXTITEMFLAGS wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 5)
 
-#define UPDATEWINDOW MainWindow::instance->master->Layout();
-#define FULLUPDATEWINDOW MainWindow::instance->master->Layout(); MainWindow::instance->SetSizerAndFit(MainWindow::instance->master);
+#define UPDATEWINDOW EditorWindow::instance->master->Layout();
+#define FULLUPDATEWINDOW EditorWindow::instance->master->Layout(); EditorWindow::instance->SetSizerAndFit(EditorWindow::instance->master);
 
 #define PR_DEFAULT "Default"
 #define PR_SA22C "SA22C"

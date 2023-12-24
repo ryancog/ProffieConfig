@@ -1,13 +1,17 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
 #pragma once
 
-#include "wx/sizer.h"
-#include <wx/checkbox.h>
-#include <wx/radiobut.h>
-#include <wx/combobox.h>
-#include "elements/misc.h"
+#include "core/utilities/misc.h"
+
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <wx/sizer.h>
+#include <wx/checkbox.h>
+#include <wx/radiobut.h>
+#include <wx/combobox.h>
 
 namespace std {
   template <>

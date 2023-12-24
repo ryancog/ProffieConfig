@@ -1,4 +1,8 @@
-#include "core/fileparse.h"
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2023 Ryan Ogurek
+
+#include "core/utilities/fileparse.h"
+
 #include <algorithm>
 #include <iostream>
 

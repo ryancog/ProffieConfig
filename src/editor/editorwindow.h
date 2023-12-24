@@ -3,26 +3,38 @@
 
 #include <wx/wx.h>
 
-#include "elements/progress.h"
-#include "elements/threadrunner.h"
-#include "core/defines.h"
+#include "core/config/settings.h"
+#include "core/utilities/progress.h"
+#include "core/utilities/threadrunner.h"
+#include "editor/pages/bladeidpage.h"
+#include "editor/pages/bladespage.h"
+#include "editor/pages/generalpage.h"
+#include "editor/pages/presetspage.h"
+#include "editor/pages/proppage.h"
 
 #pragma once
 
-class MainWindow : public wxFrame {
+class EditorWindow : public wxFrame {
 public:
-  MainWindow();
+  EditorWindow();
+  static EditorWindow* instance;
 
-  static MainWindow* instance;
-  ThreadRunner* thread;
-  Progress* progDialog;
+  GeneralPage* generalPage{nullptr};
+  PropPage* propPage{nullptr};
+  BladesPage* bladesPage{nullptr};
+  PresetsPage* presetsPage{nullptr};
+  BladeIDPage* idPage{nullptr};
+  Settings* settings{nullptr};
 
-  wxBoxSizer* master;
+  ThreadRunner* thread{nullptr};
+  Progress* progDialog{nullptr};
 
-  wxButton* refreshButton;
-  wxButton* applyButton;
-  wxComboBox* windowSelect;
-  wxComboBox* devSelect;
+  wxBoxSizer* master{nullptr};
+
+  wxButton* refreshButton{nullptr};
+  wxButton* applyButton{nullptr};
+  wxComboBox* windowSelect{nullptr};
+  wxComboBox* devSelect{nullptr};
 
 private:
   enum {
@@ -49,5 +61,5 @@ private:
   void createToolTips();
   void createMenuBar();
   void createPages();
-  void initialize();
+  void loadProps();
 };

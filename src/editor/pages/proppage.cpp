@@ -1,24 +1,20 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
-#include "pages/proppage.h"
+#include "editor/pages/proppage.h"
 
 #include "core/appstate.h"
-#include "elements/misc.h"
 #include "core/defines.h"
-#include "core/mainwindow.h"
-#include "config/propfile.h"
-#include "pages/generalpage.h"
+#include "core/utilities/misc.h"
+#include "core/config/propfile.h"
+#include "editor/editorwindow.h"
+#include "editor/pages/generalpage.h"
 
 #include <wx/scrolwin.h>
 #include <wx/sizer.h>
 #include <wx/tooltip.h>
 
-
-PropPage* PropPage::instance;
 PropPage::PropPage(wxWindow* window) : wxScrolledWindow(window) {
-  PropPage::instance = this;
-
   sizer = new wxStaticBoxSizer(wxVERTICAL, this, "");
   auto top = new wxBoxSizer(wxHORIZONTAL);
   propSelection = new wxComboBox(sizer->GetStaticBox(), ID_Select, PR_DEFAULT, wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Default"}), wxCB_READONLY);
@@ -27,13 +23,6 @@ PropPage::PropPage(wxWindow* window) : wxScrolledWindow(window) {
   top->Add(buttonInfo, BOXITEMFLAGS);
 
   sizer->Add(top);
-
-  AppState::instance->clearProps();
-  for (const auto& prop : AppState::instance->getPropFileNames()) {
-    auto propConfig = PropFile::createPropConfig(prop);
-    if (propConfig != nullptr) AppState::instance->addProp(propConfig);
-  }
-  updateProps();
 
   bindEvents();
 
@@ -44,16 +33,16 @@ PropPage::PropPage(wxWindow* window) : wxScrolledWindow(window) {
 void PropPage::bindEvents() {
   auto propSelectUpdate = [&](wxCommandEvent&) {
     PropPage::updatePropSelection();
-    PropPage::instance->SetMinClientSize(wxSize(PropPage::instance->sizer->GetMinSize().GetWidth(), 0));
+    EditorWindow::instance->propPage->SetMinClientSize(wxSize(EditorWindow::instance->propPage->sizer->GetMinSize().GetWidth(), 0));
     FULLUPDATEWINDOW;
-    MainWindow::instance->SetSize(wxSize(MainWindow::instance->GetSize().GetWidth(), MainWindow::instance->GetMinHeight() + PropPage::instance->GetBestVirtualSize().GetHeight()));
-    MainWindow::instance->SetMinSize(wxSize(MainWindow::instance->GetSize().GetWidth(), 350));
+    EditorWindow::instance->SetSize(wxSize(EditorWindow::instance->GetSize().GetWidth(), EditorWindow::instance->GetMinHeight() + EditorWindow::instance->propPage->GetBestVirtualSize().GetHeight()));
+    EditorWindow::instance->SetMinSize(wxSize(EditorWindow::instance->GetSize().GetWidth(), 350));
   };
   auto optionSelectUpdate = [](wxCommandEvent&) {
     int32_t x, y;
-    PropPage::instance->GetViewStart(&x, &y);
-    PropPage::instance->update();
-    PropPage::instance->Scroll(0, y);
+    EditorWindow::instance->propPage->GetViewStart(&x, &y);
+    EditorWindow::instance->propPage->update();
+    EditorWindow::instance->propPage->Scroll(0, y);
   };
 
   Bind(wxEVT_COMBOBOX, propSelectUpdate, ID_Select);
@@ -72,11 +61,11 @@ void PropPage::bindEvents() {
 
         if (activeProp == nullptr) {
           buttons =
-              (GeneralPage::instance->buttons->num->GetValue() == 0 ? wxString (
+              (EditorWindow::instance->generalPage->buttons->num->GetValue() == 0 ? wxString (
                    "On/Off - Twist\n"
                    "Next preset - Point up and shake\n"
                    "Clash - Hit the blade while saber is on."
-                   ) : GeneralPage::instance->buttons->num->GetValue() == 1 ? wxString(
+                   ) : EditorWindow::instance->generalPage->buttons->num->GetValue() == 1 ? wxString(
                      "On/Off - Click to turn the saber on or off.\n"
                      "Turn On muted - Double-click\n"
                      "Next preset - Hold button and hit the blade while saber is off.\n"
@@ -87,7 +76,7 @@ void PropPage::bindEvents() {
                      "Force - Long-click button.\n"
                      "Start Soundtrack - Long-click the button while blade is off.\n"
                      "Enter/Exit Color Change - Hold button and Twist."
-                     ) : GeneralPage::instance->buttons->num->GetValue() == 2 || GeneralPage::instance->buttons->num->GetValue() == 3 ? wxString (
+                     ) : EditorWindow::instance->generalPage->buttons->num->GetValue() == 2 || EditorWindow::instance->generalPage->buttons->num->GetValue() == 3 ? wxString (
                      "On/Off - Click POW\n"
                      "Turn On muted - Double-click POW button\n"
                      "Next preset - Hold POW button and hit the blade while saber is off.\n"
@@ -103,7 +92,7 @@ void PropPage::bindEvents() {
                      "Enter/Exit Color Change - Hold Aux and click POW while on."
                      ) : wxString("Button Configuration Not Supported"));
         } else {
-          auto propButtons = activeProp->getButtons().at(GeneralPage::instance->buttons->num->GetValue());
+          auto propButtons = activeProp->getButtons().at(EditorWindow::instance->generalPage->buttons->num->GetValue());
           if (propButtons.empty()) buttons += "Selected number of buttons not supported by prop file.";
           else for (auto& state : propButtons) {
               buttons += "Button controls while saber is " + state.first + ":\n";
@@ -132,7 +121,7 @@ void PropPage::bindEvents() {
         }
 
         auto buttonDialog = wxDialog(
-            MainWindow::instance,
+            EditorWindow::instance,
             wxID_ANY,
             "Prop File Buttons",
             wxDefaultPosition,

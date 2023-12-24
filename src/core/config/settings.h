@@ -3,18 +3,17 @@
 
 #pragma once
 
+#include "core/utilities/misc.h"
+
 #include <cstdint>
 #include <cstring>
 #include <wx/wx.h>
-
-#include "elements/misc.h"
 
 #define PDEF_DEFAULT_CHECK [](const ProffieDefine* def) -> bool { return def->getState(); }
 
 class Settings {
 public:
   Settings();
-  static Settings* instance;
 
   void loadDefaults();
   void parseDefines(const std::vector<std::string>&);

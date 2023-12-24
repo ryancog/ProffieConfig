@@ -1,7 +1,7 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
-#include "pages/generalpage.h"
+#include "editor/pages/generalpage.h"
 
 #include "core/defines.h"
 
@@ -16,7 +16,6 @@
 #include <wx/button.h>
 #include <wx/tooltip.h>
 
-GeneralPage* GeneralPage::instance;
 GeneralPage::GeneralPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, "")
 {
   Add(boardSettings(this), BOXITEMFLAGS);

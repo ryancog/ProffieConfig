@@ -2,7 +2,7 @@
 // Copyright (C) 2023 Ryan Ogurek
 
 #pragma once
-#include "config/propfile.h"
+#include "core/config/propfile.h"
 #include <wx/window.h>
 #include <wx/checkbox.h>
 #include <wx/radiobut.h>
@@ -13,7 +13,6 @@
 class PropPage : public wxScrolledWindow {
 public:
   PropPage(wxWindow*);
-  static PropPage* instance;
 
   void update();
   void updateProps();
