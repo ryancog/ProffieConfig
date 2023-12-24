@@ -9,7 +9,6 @@
 #include "core/mainwindow.h"
 #include "config/propfile.h"
 #include "pages/generalpage.h"
-#include "config/settings.h"
 
 #include <wx/scrolwin.h>
 #include <wx/sizer.h>
@@ -32,7 +31,7 @@ PropPage::PropPage(wxWindow* window) : wxScrolledWindow(window) {
   AppState::instance->clearProps();
   for (const auto& prop : AppState::instance->getPropFileNames()) {
     auto propConfig = PropFile::createPropConfig(prop);
-    if (propConfig != nullptr) AppState::instance->addProp(*propConfig);
+    if (propConfig != nullptr) AppState::instance->addProp(propConfig);
   }
   updateProps();
 
@@ -64,11 +63,11 @@ void PropPage::bindEvents() {
   Bind(wxEVT_SPINCTRLDOUBLE, optionSelectUpdate, wxID_ANY);
 
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        wxString buttons;
+        std::string buttons;
 
         PropFile* activeProp{nullptr};
         for (auto& prop : AppState::instance->getProps()) {
-          if (propSelection->GetStringSelection() == prop.getName()) activeProp = &prop;
+          if (propSelection->GetStringSelection() == prop->getName()) activeProp = prop;
         }
 
         if (activeProp == nullptr) {
@@ -104,21 +103,31 @@ void PropPage::bindEvents() {
                      "Enter/Exit Color Change - Hold Aux and click POW while on."
                      ) : wxString("Button Configuration Not Supported"));
         } else {
-          for (const auto& button : activeProp->getButtons().at(GeneralPage::instance->buttons->num->GetValue())) {
-            buttons += button.name + " - ";
-            std::vector<std::string> activePredicates{};
-            for (const auto& predicate : button.relevantSettings) {
-              auto key = activeProp->getSettings().find(predicate);
-              if (key == activeProp->getSettings().end()) continue;
+          auto propButtons = activeProp->getButtons().at(GeneralPage::instance->buttons->num->GetValue());
+          if (propButtons.empty()) buttons += "Selected number of buttons not supported by prop file.";
+          else for (auto& state : propButtons) {
+              buttons += "Button controls while saber is " + state.first + ":\n";
+              for (auto& button : state.second) {
+                buttons += "\t" + button.name + " - ";
+                std::vector<std::string> activePredicates{};
+                for (const auto& predicate : button.relevantSettings) {
+                  auto key = activeProp->getSettings().find(predicate);
+                  if (key == activeProp->getSettings().end()) continue;
 
-              if (!key->second.getOutput().empty()) activePredicates.push_back(key->first);
+                  if (!key->second.getOutput().empty()) activePredicates.push_back(key->first);
+                }
+
+                auto key = button.descriptions.find(activePredicates);
+                if (key == button.descriptions.end()) buttons += "UNDEFINED";
+                else buttons += key->second;
+
+                buttons += '\n';
+              }
+              buttons += '\n';
             }
-
-            auto key = button.descriptions.find(activePredicates);
-            if (key == button.descriptions.end()) buttons += "UNDEFINED";
-            else buttons += key->second;
-
-            buttons += '\n';
+          if (buttons.at(buttons.size() - 1) == '\n') {
+            buttons.pop_back();
+            buttons.pop_back();
           }
         }
 
@@ -143,7 +152,7 @@ void PropPage::updateProps() {
   propSelection->Clear();
   propSelection->Append("Default");
   for (const auto& prop : AppState::instance->getProps()) {
-    propSelection->Append(prop.getName());
+    propSelection->Append(prop->getName());
   }
   if ([&]() { for (const auto& prop : propSelection->GetStrings()) if (prop == lastSelect) return true; return false; }()) {
     propSelection->SetStringSelection(lastSelect);
@@ -152,25 +161,25 @@ void PropPage::updateProps() {
 
 void PropPage::updatePropSelection() {
   for (auto& prop : AppState::instance->getProps()) {
-    prop.show(propSelection->GetStringSelection() == prop.getName());
+    prop->show(propSelection->GetStringSelection() == prop->getName());
   }
 }
 
 void PropPage::update() {
   for (auto& prop : AppState::instance->getProps()) {
-    if (propSelection->GetStringSelection() != prop.getName()) continue;
+    if (propSelection->GetStringSelection() != prop->getName()) continue;
 
-    for (auto& [ name, setting ] : prop.getSettings()) {
+    for (auto& [ name, setting ] : prop->getSettings()) {
       for (const auto& disable : setting.disables) {
-        auto key = prop.getSettings().find(disable);
-        if (key == prop.getSettings().end()) continue;
+        auto key = prop->getSettings().find(disable);
+        if (key == prop->getSettings().end()) continue;
 
         key->second.disabled = !setting.getOutput().empty();
       }
     }
 
-    for (auto& [ name, setting ] : prop.getSettings()) {
-#     define CHECKENABLED !setting.disabled && setting.checkRequiredSatisfied(prop.getSettings())
+    for (auto& [ name, setting ] : prop->getSettings()) {
+#     define CHECKENABLED !setting.disabled && setting.checkRequiredSatisfied(prop->getSettings())
       switch(setting.type) {
         case PropFile::Setting::SettingType::TOGGLE:
           setting.toggle->Enable(CHECKENABLED);

@@ -90,9 +90,209 @@ LAYOUT {
 	}
 }
 
+BUTTONS{1} {
+	STATE("OFF") {
+		BUTTON("Short Click") {
+			DESCRIPTION: "Activate the saber"
+		}
+		BUTTON("Double Click and Hold") {
+			DESCRIPTION: "Activate the saber muted"
+		}
+		BUTTON("Double Click") {
+			DESCRIPTION: "Play/Stop Music"
+		}
+		BUTTON("Hold and release") {
+			DESCRIPTION: "Next Preset"
+		}
+		BUTTON("Hold and wait") {
+			DESCRIPTION: "Previous Preset"
+		}
+		BUTTON("Hold and Clash") {
+			DESCRIPTION: "Enter Volume Menu"
+		}
+		BUTTON("Triple Click") {
+			DESCRIPTION: "Battery Level"
+		}
+	}
+	STATE("in Volume Menu") {
+		BUTTON("Hold and release") {
+			DESCRIPTION: "Volume Up"
+		}
+		BUTTON("Short Click") {
+			DESCRIPTION: "Volume Down"
+		}
+		BUTTON("Hold + Clash") {
+			DESCRIPTION: "Exit Volume Menu"
+		}
+	}
+	STATE("ON") {
+		BUTTON("Hold and wait") {
+			DESCRIPTION: "Turn the saber off"
+		}
+		BUTTON("Hold and clash") {
+			DESCRIPTION: "Lockup"
+		}
+		BUTTON("Double Click and Hold") {
+			DESCRIPTION: "Lightning Block"
+		}
+		BUTTON("Hold and stab") {
+			DESCRIPTION: "Melt"
+		}
+		BUTTON("Hold and clash while pointing down") {
+			DESCRIPTION: "Drag"
+		}
+		BUTTON("Short Click") {
+			DESCRIPTION: "Blaster Block"
+		}
+		BUTTON("Hold while swinging and release") {
+			DESCRIPTION: "Multi-Blast"
+		}
+		BUTTON("Triple Click and Hold") {
+			DESCRIPTION: "Battle Mode"
+		}
+		BUTTON("Hold and Twist pointing up") {
+			DESCRIPTION: "Force Effect"
+		}
+		BUTTON("Hold and Twist pointing down") {
+			DESCRIPTION: "Color Change"
+		}
+	}
+}
+
 BUTTONS{2} {
-	BUTTON("Short Click") {
-		DESCRIPTION: "Turn the saber on"
-		DESCRIPTION("SA22C_STAB_ON"): "I dunno, I needs test" 
+	STATE("OFF") {
+		BUTTON("Short Click Power") {
+			DESCRIPTION: "Activate the saber"
+		}
+		BUTTON("Double Click Power and Hold") {
+			DESCRIPTION: "Activate the saber muted"
+		}
+		BUTTON("Hold Power and Release") {
+			DESCRIPTION: "Play/Stop Music"
+		}
+		BUTTON("Short Click Aux") {
+			DESCRIPTION: "Next Preset"
+		}
+		BUTTON("Hold Power and Wait") {
+			DESCRIPTION: "Previous Preset"
+		}
+		BUTTON("Lock Click Aux") {
+			DESCRIPTION: "Enter Volume Menu"
+		}
+		BUTTON("Hold Aux") {
+			DESCRIPTION: "Battery Level"
+		}
+	}
+	STATE("in Volume Menu") {
+		BUTTON("Short Click Power") {
+			DESCRIPTION: "Volume Up"
+		}
+		BUTTON("Short Click Aux") {
+			DESCRIPTION: "Volume Down"
+		}
+		BUTTON("Hold Aux") {
+			DESCRIPTION: "Exit Volume Menu"
+		}
+	}
+	STATE("ON") {
+		BUTTON("Hold Power and Wait") {
+			DESCRIPTION: "Turn the saber off"
+		}
+		BUTTON("Hold Aux") {
+			DESCRIPTION: "Lockup"
+		}
+		BUTTON("Double Click Power and Hold") {
+			DESCRIPTION: "Lightning Block"
+		}
+		BUTTON("Hold Power and Stab") {
+			DESCRIPTION: "Melt"
+		}
+		BUTTON("Hold Aux while pointing down") {
+			DESCRIPTION: "Drag"
+		}
+		BUTTON("Short Click Aux") {
+			DESCRIPTION: "Blaster Block"
+		}
+		BUTTON("Double Click and Short Hold") {
+			DESCRIPTION: "Enter/Exit Multi-Blast"
+		}
+		BUTTON("Triple Click Power and Hold") {
+			DESCRIPTION: "Battle Mode"
+		}
+		BUTTON("Double Click Power") {
+			DESCRIPTION: "Force Effect"
+		}
+		BUTTON("Hold Power and Click Aux") {
+			DESCRIPTION: "Color Change"
+		}
+	}
+}
+
+BUTTONS{3} {
+		STATE("OFF") {
+		BUTTON("Short Click Power") {
+			DESCRIPTION: "Activate the saber"
+		}
+		BUTTON("Double Click Power and Hold") {
+			DESCRIPTION: "Activate the saber muted"
+		}
+		BUTTON("Hold Power and Release") {
+			DESCRIPTION: "Play/Stop Music"
+		}
+		BUTTON("Short Click Aux") {
+			DESCRIPTION: "Next Preset"
+		}
+		BUTTON("Short Click Aux2") {
+			DESCRIPTION: "Previous Preset"
+		}
+		BUTTON("Lock Click Aux") {
+			DESCRIPTION: "Enter Volume Menu"
+		}
+		BUTTON("Hold Aux") {
+			DESCRIPTION: "Battery Level"
+		}
+	}
+	STATE("in Volume Menu") {
+		BUTTON("Short Click Power") {
+			DESCRIPTION: "Volume Up"
+		}
+		BUTTON("Short Click Aux") {
+			DESCRIPTION: "Volume Down"
+		}
+		BUTTON("Hold + Clash") {
+			DESCRIPTION: "Exit Volume Menu"
+		}
+	}
+	STATE("ON") {
+		BUTTON("Hold Power and Wait") {
+			DESCRIPTION: "Turn the saber off"
+		}
+		BUTTON("Hold Aux") {
+			DESCRIPTION: "Lockup"
+		}
+		BUTTON("Hold Aux2") {
+			DESCRIPTION: "Lightning Block"
+		}
+		BUTTON("Hold Power and Stab") {
+			DESCRIPTION: "Melt"
+		}
+		BUTTON("Hold Aux while pointing down") {
+			DESCRIPTION: "Drag"
+		}
+		BUTTON("Short Click Aux") {
+			DESCRIPTION: "Blaster Block"
+		}
+		BUTTON("Double Click and Short Hold") {
+			DESCRIPTION: "Enter/Exit Multi-Blast"
+		}
+		BUTTON("Double Click Aux2 and Hold") {
+			DESCRIPTION: "Battle Mode"
+		}
+		BUTTON("Double Click Power") {
+			DESCRIPTION: "Force Effect"
+		}
+		BUTTON("Hold Power and Click Aux") {
+			DESCRIPTION: "Color Change"
+		}
 	}
 }
