@@ -21,8 +21,8 @@ Misc::numEntry* Misc::createNumEntry(wxWindow* parent, wxString displayText, int
   numEntry->box = new wxBoxSizer(wxHORIZONTAL);
   numEntry->text = new wxStaticText(parent, wxID_ANY, displayText);
   numEntry->num = new wxSpinCtrl(parent, ID, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, minVal, maxVal, defaultVal);
-  numEntry->box->Add(numEntry->text, wxSizerFlags(0).Border(wxRIGHT, 5).Center());
-  numEntry->box->Add(numEntry->num, wxSizerFlags(0).Expand());
+  numEntry->box->Add(numEntry->text, wxSizerFlags(0).Border(wxRIGHT | wxLEFT | wxBOTTOM, 5).Center());
+  numEntry->box->Add(numEntry->num, wxSizerFlags(0).Border(wxRIGHT | wxBOTTOM, 5).Expand());
 
   return numEntry;
 }
@@ -32,8 +32,8 @@ Misc::numEntryDouble* Misc::createNumEntryDouble(wxWindow* parent, wxString disp
   numEntry->box = new wxBoxSizer(wxHORIZONTAL);
   numEntry->text = new wxStaticText(parent, wxID_ANY, displayText);
   numEntry->num = new wxSpinCtrlDouble(parent, ID, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, minVal, maxVal, defaultVal, 0.1);
-  numEntry->box->Add(numEntry->text, wxSizerFlags(0).Border(wxRIGHT, 5).Center());
-  numEntry->box->Add(numEntry->num, wxSizerFlags(0).Expand());
+  numEntry->box->Add(numEntry->text, wxSizerFlags(0).Border(wxRIGHT | wxLEFT | wxBOTTOM, 5).Center());
+  numEntry->box->Add(numEntry->num, wxSizerFlags(0).Border(wxRIGHT | wxBOTTOM, 5).Expand());
 
   return numEntry;
 }

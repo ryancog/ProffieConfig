@@ -14,11 +14,9 @@
 
 #include "core/appstate.h"
 #include <cstring>
+#include <sstream>
 #include <exception>
 #include <wx/filedlg.h>
-
-Configuration* Configuration::instance;
-Configuration::Configuration() {}
 
 bool Configuration::outputConfig(const std::string& filePath) {
   PresetsPage::instance->update();
@@ -67,7 +65,7 @@ void Configuration::outputConfigTop(std::ofstream& configOutput) {
 void Configuration::outputConfigTopGeneral(std::ofstream& configOutput) {
   if (GeneralPage::instance->massStorage->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_MASS_STORAGE" << std::endl;
   if (GeneralPage::instance->webUSB->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_WEBUSB" << std::endl;
-  switch (parseBoardType(GeneralPage::instance->board->GetValue().ToStdString())) {
+  switch (Configuration::parseBoardType(GeneralPage::instance->board->GetValue().ToStdString())) {
     case Configuration::ProffieBoard::V1:
       configOutput << "#include \"proffieboard_v1_config.h\"" << std::endl;
       break;
@@ -338,7 +336,7 @@ void Configuration::importConfig() {
 
 void Configuration::readConfigTop(std::ifstream& file) {
   std::string element;
-  std::vector<std::string> defines;
+  Settings::instance->readDefines.clear();
   while (!file.eof() && element != "#endif") {
     file >> element;
     if (element == "//") {
@@ -354,7 +352,7 @@ void Configuration::readConfigTop(std::ifstream& file) {
     }
     if (element == "#define" && !file.eof()) {
       getline(file, element);
-      defines.push_back(element);
+      Settings::instance->readDefines.push_back(element);
     } else if (element == "const" && !file.eof()) {
       getline(file, element);
       std::strtok(element.data(), "="); // unsigned int maxLedsPerStrip =
@@ -380,10 +378,40 @@ void Configuration::readConfigProp(std::ifstream& file) {
   std::string element;
   while (!file.eof() && element != "#endif") {
     file >> element;
-    for (const auto& prop : AppState::instance->getProps()) {
-      if (element.find(prop.getFileName()) != std::string::npos) PropPage::instance->propSelection->SetStringSelection(prop.getName());
+    for (auto& prop : AppState::instance->getProps()) {
+      if (element.find(prop.getFileName()) != std::string::npos) {
+        PropPage::instance->propSelection->SetStringSelection(prop.getName());
+        for (const auto& define : Settings::instance->readDefines) {
+          std::istringstream defineStream(define);
+          std::string defineName{};
+          double value{0};
+
+          defineStream >> defineName;
+          auto key = prop.getSettings().find(defineName);
+          if (key == prop.getSettings().end()) continue;
+
+          switch (key->second.type) {
+            case PropFile::Setting::SettingType::TOGGLE:
+              key->second.toggle->SetValue(true);
+              break;
+            case PropFile::Setting::SettingType::OPTION:
+              key->second.option->SetValue(true);
+              break;
+            case PropFile::Setting::SettingType::NUMERIC:
+              defineStream >> value;
+              key->second.numeric->SetValue(value);
+              break;
+            case PropFile::Setting::SettingType::DECIMAL:
+              defineStream >> value;
+              key->second.decimal->SetValue(value);
+              break;
+          }
+        }
+        break;
+      }
     }
   }
+
   PropPage::instance->updatePropSelection();
 }
 void Configuration::readConfigPresets(std::ifstream& file) {
@@ -488,7 +516,7 @@ void Configuration::readPresetArray(std::ifstream& file) {
     }
 
     // Read actual styles
-    for (uint32_t blade = 0; blade < numBlades; blade++) {
+    for (int32_t blade = 0; blade < Settings::instance->numBlades; blade++) {
       if (presetInfo.find("&style_charging,") == 0) {
         presetInfo = presetInfo.substr(16 /* length of "&style_charging,"*/);
         bladeArray.presets[preset].styles.push_back("&style_charging");
@@ -518,7 +546,7 @@ void Configuration::readBladeArray(std::ifstream& file) {
   BladeIDPage::BladeArray bladeArray;
   std::string element;
   std::string data;
-  uint32_t tempNumBlades;
+  int32_t tempNumBlades;
   RUNTOSECTION;
 
   while (true) {
@@ -529,8 +557,8 @@ void Configuration::readBladeArray(std::ifstream& file) {
     bladeArray.value = std::strstr(element.data(), "NO_BLADE") ? 0 : std::stoi(element);
     CHKSECT;
     bladeArray.blades.clear();
-    tempNumBlades = numBlades;
-    for (uint32_t blade = 0; blade < tempNumBlades; blade++) {
+    tempNumBlades = Settings::instance->numBlades;
+    for (int32_t blade = 0; blade < tempNumBlades; blade++) {
       data.clear();
 
       do { // Gather entire blade data
@@ -556,7 +584,7 @@ void Configuration::readBladeArray(std::ifstream& file) {
         // Rest will be handled by WS281X "if"
       }
       if (std::strstr(data.data(), "WS281XBladePtr") != nullptr) {
-        if (bladeArray.blades.size() - 1 != blade) bladeArray.blades.push_back(BladesPage::BladeConfig());
+        if (static_cast<int32_t>(bladeArray.blades.size()) - 1 != blade) bladeArray.blades.push_back(BladesPage::BladeConfig());
         data = std::strstr(data.data(), "WS281XBladePtr"); // Shift start to blade data, in case of SubBlade;
 
         // This must be done first since std::strtok is destructive (adds null chars)
@@ -725,12 +753,3 @@ Configuration::ProffieBoard Configuration::parseBoardType(const std::string& val
              value == "ProffieBoard V2" ? Configuration::ProffieBoard::V2 :
              Configuration::ProffieBoard::V3;
 }
-Configuration::SaberProp Configuration::parsePropSel(const std::string& value) {
-  return value == PR_SA22C ? Configuration::SaberProp::SA22C :
-             value == PR_FETT263 ? Configuration::SaberProp::FETT263 :
-             value == PR_BC ? Configuration::SaberProp::BC :
-             value == PR_CAIWYN ? Configuration::SaberProp::CAIWYN :
-             value == PR_SHTOK ? Configuration::SaberProp::SHTOK :
-             Configuration::SaberProp::DEFAULT;
-}
-
