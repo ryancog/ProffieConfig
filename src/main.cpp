@@ -32,11 +32,8 @@ public:
     AppState::init();
     MainWindow::instance = new MainWindow();
 
-    wxSplashScreen(wxBitmap(icon), wxSPLASH_CENTRE_ON_SCREEN | wxSPLASH_NO_TIMEOUT, 0, MainWindow::instance, wxID_ANY);
     Configuration::instance->readConfig();
-    for (const std::string& prop : AppState::instance->getProps()) {
-      AppState::instance->addProp(PropFile(PROPCONFIG_DIR + prop + ".pconf"));
-    }
+
 
     return true;
   }

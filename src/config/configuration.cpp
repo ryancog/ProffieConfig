@@ -5,19 +5,20 @@
 
 #include "core/defines.h"
 #include "core/mainwindow.h"
+#include "config/settings.h"
 #include "pages/generalpage.h"
 #include "pages/presetspage.h"
 #include "pages/proppage.h"
 #include "pages/bladespage.h"
 #include "pages/bladeidpage.h"
 
+#include "core/appstate.h"
 #include <cstring>
 #include <exception>
 #include <wx/filedlg.h>
 
 Configuration* Configuration::instance;
-Configuration::Configuration() {
-}
+Configuration::Configuration() {}
 
 bool Configuration::outputConfig(const std::string& filePath) {
   PresetsPage::instance->update();
@@ -76,34 +77,37 @@ void Configuration::outputConfigTopGeneral(std::ofstream& configOutput) {
     case Configuration::ProffieBoard::V3:
       configOutput << "#include \"proffieboard_v3_config.h\"" << std::endl;
   }
+
+  configOutput << "const unsigned int maxLedsPerStrip = " << GeneralPage::instance->maxLEDs->num->GetValue() << ";" << std::endl;
+  configOutput << "#define ENABLE_AUDIO" << std::endl;
+  configOutput << "#define ENABLE_WS2811" << std::endl;
+  configOutput << "#define ENABLE_SD" << std::endl;
+  configOutput << "#define ENABLE_MOTION" << std::endl;
+  configOutput << "#define SHARED_POWER_PINS" << std::endl;
+
   for (const auto& [ name, define ] : Settings::instance->generalDefines) {
     if (define->shouldOutput()) configOutput << "#define " << define->getOutput() << std::endl;
   }
 }
 void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput) {
-
+  for (auto& prop : AppState::instance->getProps()) {
+    if (PropPage::instance->propSelection->GetStringSelection() == prop.getName()) {
+      for (const auto& [ name, setting ] : prop.getSettings()) {
+        if (!setting.checkRequiredSatisfied(prop.getSettings()) || setting.disabled) continue;
+        auto output = setting.getOutput();
+        if (!output.empty()) configOutput << "#define " << output << std::endl;
+      }
+    }
+  }
 }
 
 void Configuration::outputConfigProp(std::ofstream& configOutput)
 {
   configOutput << "#ifdef CONFIG_PROP" << std::endl;
-  switch (Configuration::parsePropSel(PropPage::instance->prop->GetValue().ToStdString())) {
-    case Configuration::SaberProp::SA22C:
-      configOutput << "#include \"../props/saber_sa22c_buttons.h\"" << std::endl;
-      break;
-    case Configuration::SaberProp::FETT263:
-      configOutput << "#include \"../props/saber_fett263_buttons.h\"" << std::endl;
-      break;
-    case Configuration::SaberProp::BC:
-      configOutput << "#include \"../props/saber_BC_buttons.h\"" << std::endl;
-      break;
-    case Configuration::SaberProp::SHTOK:
-      configOutput << "#include \"../props/saber_shtok_buttons.h\"" << std::endl;
-      break;
-    case Configuration::SaberProp::CAIWYN:
-      configOutput << "#include \"../props/saber_caiwyn_buttons.h\"" << std::endl;
-      break;
-    default: break;
+  for (const auto& prop : AppState::instance->getProps()) {
+    if (prop.getName() == PropPage::instance->propSelection->GetStringSelection()) {
+      configOutput << "#include \"../props/" << prop.getFileName() << "\"" << std::endl;
+    }
   }
   configOutput << "#endif" << std:: endl << std::endl; // CONFIG_PROP
 }
@@ -272,7 +276,6 @@ void Configuration::readConfig(const std::string& filePath) {
 
   try {
     std::string section;
-    BladeIDPage::instance->bladeArrays.clear();
     while (!file.eof()) {
       file >> section;
       if (section == "//") {
@@ -377,14 +380,14 @@ void Configuration::readConfigProp(std::ifstream& file) {
   std::string element;
   while (!file.eof() && element != "#endif") {
     file >> element;
-    if (std::strstr(element.data(), "sa22c") != nullptr) PropPage::instance->prop->SetValue("SA22C");
-    if (std::strstr(element.data(), "fett263") != nullptr) PropPage::instance->prop->SetValue("Fett263");
-    if (std::strstr(element.data(), "shtok") != nullptr) PropPage::instance->prop->SetValue("Shtok");
-    if (std::strstr(element.data(), "BC") != nullptr) PropPage::instance->prop->SetValue("BC");
-    if (std::strstr(element.data(), "caiwyn") != nullptr) PropPage::instance->prop->SetValue("Caiwyn");
+    for (const auto& prop : AppState::instance->getProps()) {
+      if (element.find(prop.getFileName()) != std::string::npos) PropPage::instance->propSelection->SetStringSelection(prop.getName());
+    }
   }
+  PropPage::instance->updatePropSelection();
 }
 void Configuration::readConfigPresets(std::ifstream& file) {
+  BladeIDPage::instance->bladeArrays.clear();
   std::string element;
   while (!file.eof() && element != "#endif") {
     file >> element;

@@ -2,6 +2,7 @@
 // Copyright (C) 2023 Ryan Ogurek
 
 #pragma once
+#include "core/propfile.h"
 #include <wx/window.h>
 #include <wx/checkbox.h>
 #include <wx/radiobut.h>
@@ -15,9 +16,12 @@ public:
   static PropPage* instance;
 
   void update();
+  void updateProps();
+  void updatePropSelection();
+  const PropFile& getSelectedProp();
   wxStaticBoxSizer* sizer{nullptr};
 
-  wxComboBox* prop{nullptr};
+  wxComboBox* propSelection{nullptr};
   wxButton* buttonInfo{nullptr};
 
 private:

@@ -1,5 +1,6 @@
 #include "core/fileparse.h"
 #include <algorithm>
+#include <iostream>
 
 std::vector<std::string> FileParse::extractSection(std::string sectionName, std::vector<std::string>& search) {
   std::vector<std::string> section;
@@ -36,18 +37,53 @@ std::string FileParse::parseEntry(std::string entry, std::vector<std::string>& s
     if ((*line).find(entry) == std::string::npos) continue;
 
     size_t index = (*line).find(":");
-    if (index == std::string::npos) continue;
+    if (index == std::string::npos) {
+      std::cerr << "Malformed entry \"" << *line << "\" found, skipping..." << std::endl;
+      search.erase(line);
+      line = search.begin();
+      continue;
+    }
 
-    std::string output = (*line).substr(index);
-    if (output.find_first_of("\"") == std::string::npos || output.find_last_of("\"") == std::string::npos) output = "";
-    else output = output.substr(output.find_first_of("\"") + 1, output.find_last_of("\"") - output.find_first_of("\"") - 1);
+    std::string output = (*line).substr(index + 1);
+    if (output.empty()) {
+      std::cerr << "Empty entry \"" << *line << "\" found, skipping..." << std::endl;
+      search.erase(line);
+      line = search.begin();
+      continue;
+    }
+
+    if (output.find("\"") != std::string::npos) output = output.substr(output.find_first_of("\"") + 1, output.find_last_of("\"") - output.find_first_of("\"") - 1);
+    else if (output.find("TRUE") != std::string::npos) output = "TRUE";
+    else if (output.find("FALSE") != std::string::npos) output = "FALSE";
+    else {
+      for (auto it = output.begin(); it < output.end(); it++) {
+        if (std::isdigit(*it)) {
+          output = { it, output.end() };
+          break;
+        }
+      }
+      if (!std::isdigit(output.at(0))) {
+        std::cerr << "Malformed entry \"" << *line << "\" found, skipping..." << std::endl;
+        search.erase(line);
+        line = search.begin();
+        continue;
+      }
+    }
 
     search.erase(line);
 
     return output;
   }
-
   return {};
+}
+double FileParse::parseNumEntry(std::string entry, std::vector<std::string>& search) {
+  auto output = FileParse::parseEntry(entry, search);
+  if (!output.empty()) return stod(output);
+
+  return -1;
+}
+bool FileParse::parseBoolEntry(std::string entry, std::vector<std::string>& search ) {
+  return (FileParse::parseEntry(entry, search) == "TRUE");
 }
 std::vector<std::string> FileParse::parseListEntry(std::string entry, std::vector<std::string>& search) {
   std::vector<std::string> parsedList;

@@ -4,6 +4,7 @@
 #include "core/mainwindow.h"
 
 #include "config/configuration.h"
+#include "config/settings.h"
 #include "core/defines.h"
 #include "tools/arduino.h"
 #include "elements/misc.h"
@@ -32,6 +33,7 @@ MainWindow::MainWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPos
   createPages();
   bindEvents();
   createToolTips();
+  Settings::instance = new Settings();
 
 # ifdef __WXMSW__
   SetIcon( wxICON(IDI_ICON1) );
