@@ -23,38 +23,40 @@ RC_ICONS = ../resources/icons/icon.ico
 LIBS += $$system(wx-config --libs all)
 
 SOURCES += \
+    editor/editorwindow.cpp \
     main.cpp \
     core/appstate.cpp \
-    core/fileparse.cpp \
-    core/mainwindow.cpp \
-    pages/generalpage.cpp \
-    pages/presetspage.cpp \
-    pages/bladespage.cpp \
-    pages/bladeidpage.cpp \
-    pages/proppage.cpp \
+    core/utilities/fileparse.cpp \
+    core/utilities/misc.cpp \
+    core/utilities/progress.cpp \
+    core/config/configuration.cpp \
+    core/config/settings.cpp \
+    core/config/propfile.cpp \
+    editor/pages/generalpage.cpp \
+    editor/pages/presetspage.cpp \
+    editor/pages/bladespage.cpp \
+    editor/pages/bladeidpage.cpp \
+    editor/pages/proppage.cpp \
+    onboard/onboard.cpp \
     tools/arduino.cpp \
     tools/serialmonitor.cpp \
-    elements/misc.cpp \
-    elements/progress.cpp \
-    config/configuration.cpp \
-    config/settings.cpp \
-    config/propfile.cpp
 
 HEADERS += \
     core/appstate.h \
-    core/fileparse.h \
-    pages/generalpage.h \
-    pages/presetspage.h \
-    pages/bladespage.h \
-    pages/bladeidpage.h \
-    pages/proppage.h \
-    elements/misc.h \
-    elements/threadrunner.h \
-    elements/progress.h \
     core/defines.h \
-    core/mainwindow.h \
-    config/configuration.h \
-    config/settings.h \
-    config/propfile.h \
+    core/config/configuration.h \
+    core/config/settings.h \
+    core/config/propfile.h \
+    core/utilities/fileparse.h \
+    core/utilities/misc.h \
+    core/utilities/threadrunner.h \
+    core/utilities/progress.h \
+    editor/editorwindow.h \
+    editor/pages/generalpage.h \
+    editor/pages/presetspage.h \
+    editor/pages/bladespage.h \
+    editor/pages/bladeidpage.h \
+    editor/pages/proppage.h \
+    onboard/onboard.h \
     tools/arduino.h \
     tools/serialmonitor.h

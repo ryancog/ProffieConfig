@@ -1,7 +1,8 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
-#include "config/propfile.h"
+#include "core/config/propfile.h"
+#include "onboard/onboard.h"
 #include <string>
 #include <vector>
 
@@ -12,7 +13,7 @@ public:
   static void init();
   static AppState* instance;
 
-
+  Onboard* onboard;
   bool isSaved();
   void setSaved(bool = true);
   void loadStateFromFile();

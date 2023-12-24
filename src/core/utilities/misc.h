@@ -4,7 +4,6 @@
 #pragma once
 
 #include <initializer_list>
-#include <memory>
 #include <wx/sizer.h>
 #include <wx/spinctrl.h>
 #include <wx/stattext.h>

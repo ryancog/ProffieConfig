@@ -1,10 +1,9 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
-#include "core/mainwindow.h"
 #include "core/appstate.h"
-#include "config/configuration.h"
-#include "../resources/icons/icon.xpm"
+#include "core/config/configuration.h"
+#include "editor/editorwindow.h"
 
 #include <wx/splash.h>
 #include <wx/app.h>
@@ -25,14 +24,7 @@ public:
     chdir(Misc::path);
 #   endif
 
-    wxBitmap iconbmp(icon_xpm);
-    new wxSplashScreen(iconbmp, wxSPLASH_CENTRE_ON_SCREEN | wxSPLASH_NO_TIMEOUT, 6000, nullptr, wxID_ANY);
-
     AppState::init();
-    MainWindow::instance = new MainWindow();
-
-    Configuration::readConfig();
-
 
     return true;
   }

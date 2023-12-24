@@ -1,7 +1,7 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
-#include "misc.h"
+#include "core/utilities/misc.h"
 
 #include <wx/msgdlg.h>
 #include <wx/arrstr.h>

@@ -2,7 +2,7 @@
 // Copyright (C) 2023 Ryan Ogurek
 
 #pragma once
-#include "wx/event.h"
+#include <wx/event.h>
 #include <wx/progdlg.h>
 
 class Progress : public wxProgressDialog {
