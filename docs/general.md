@@ -1,6 +1,6 @@
 # General Page
 
-The General Page is the first page you'll be greeted by when you open ProffieConfig, and it's where several important settings live.
+The General Page is the first page you'll be greeted by when you open the ProffieConfig editor, and it's where several important settings live.
 
 ## Board Setup
 
