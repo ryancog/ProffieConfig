@@ -11,7 +11,7 @@
 #include <wx/menu.h>
 
 MainMenu* MainMenu::instance{nullptr};
-MainMenu::MainMenu() {
+MainMenu::MainMenu() : wxFrame(nullptr, wxID_ANY, "ProffieConfig") {
   createUI();
   createMenuBar();
   createTooltips();
@@ -37,7 +37,7 @@ void MainMenu::bindEvents() {
 
 
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        if (devSelect->GetValue() == "Select Device...") applyButton->Disable();
+        if (boardSelect->GetValue() == "Select Device...") applyButton->Disable();
         else applyButton->Enable();
         if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Close(true);
       }, ID_DeviceSelect);
@@ -48,7 +48,7 @@ void MainMenu::bindEvents() {
 
 void MainMenu::createTooltips() {
   TIP(applyButton, "Apply the current configuration to the selected Proffieboard.");
-  TIP(devSelect, "Select the Proffieboard to connect to.\nThis will be an unrecognizable device identifier, but chances are there's only one which will show up.");
+  TIP(boardSelect, "Select the Proffieboard to connect to.\nThis will be an unrecognizable device identifier, but chances are there's only one which will show up.");
   TIP(refreshButton, "Refresh the detected boards.");
 }
 
@@ -83,5 +83,11 @@ void MainMenu::createMenuBar() {
 }
 
 void MainMenu::createUI() {
+  auto sizer = new wxBoxSizer(wxVERTICAL);
 
+  applyButton = new wxButton(this, ID_ApplyChanges, "Apply to Board");
+  boardSelect = new wxComboBox(this, ID_DeviceSelect, "Select Board...", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Arduino::getBoards()), wxCB_READONLY);
+  refreshButton = new wxButton(this, ID_RefreshDev, "Refresh Connected Boards");
+
+  SetSizerAndFit(sizer);
 }

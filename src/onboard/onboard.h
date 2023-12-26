@@ -11,6 +11,7 @@
 class Onboard : public wxWizard {
 public:
   Onboard();
+  bool run();
 
 private:
   static wxStaticText* createHeader(wxWindow*, const wxString&);

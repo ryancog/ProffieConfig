@@ -17,10 +17,14 @@ void AppState::init() {
   instance->loadStateFromFile();
 
   if (instance->firstRun) {
-    instance->onboard = new Onboard();
-  } else {
-    MainMenu::instance = new MainMenu();
+    auto onboard = new Onboard();
+    if (onboard->run()) {
+      instance->firstRun = false;
+      instance->saveState();
+    } else return;
   }
+
+  MainMenu::instance = new MainMenu();
 }
 
 void AppState::saveState() {

@@ -16,7 +16,7 @@ public:
 
   wxButton* refreshButton{nullptr};
   wxButton* applyButton{nullptr};
-  wxComboBox* devSelect{nullptr};
+  wxComboBox* boardSelect{nullptr};
 
 
 private:
