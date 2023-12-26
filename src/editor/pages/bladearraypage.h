@@ -2,7 +2,6 @@
 // Copyright (C) 2023 Ryan Ogurek
 
 #pragma once
-class BladeIDPage;
 
 #include "core/utilities/misc.h"
 #include "editor/pages/presetspage.h"
@@ -17,9 +16,9 @@ class BladeIDPage;
 #define BLADE_ID_MODE_EXTERNAL "External Pullup"
 #define BLADE_ID_MODE_BRIDGED  "Bridged Pullup"
 
-class BladeIDPage : public wxStaticBoxSizer {
+class BladeArrayPage : public wxStaticBoxSizer {
 public:
-  BladeIDPage(wxWindow*);
+  BladeArrayPage(wxWindow*);
 
   void update();
 
@@ -62,6 +61,8 @@ public:
   std::vector<BladeArray> bladeArrays{BladeArray{"blade_in", 0}};
 
 private:
+  EditorWindow* parent{nullptr};
+
   enum {
     ID_NameEntry,
     ID_BladeIDEnable,

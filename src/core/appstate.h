@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "core/config/propfile.h"
 #include "onboard/onboard.h"
 #include "editor/editorwindow.h"
 
@@ -20,10 +19,7 @@ public:
   void setSaved(bool = true);
   void loadStateFromFile();
   void saveState();
-  void clearProps();
-  void addProp(PropFile*);
   const std::vector<std::string>& getPropFileNames();
-  std::vector<PropFile*>& getProps();
 
 private:
   AppState();
@@ -31,7 +27,6 @@ private:
 
   bool firstRun{true};
   std::vector<std::string> propFileNames;
-  std::vector<PropFile*> props;
   std::vector<EditorWindow*> editors;
 
   bool saved{true};

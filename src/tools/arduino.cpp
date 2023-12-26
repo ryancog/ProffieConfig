@@ -9,6 +9,7 @@
 #include "core/utilities/progress.h"
 #include "core/utilities/threadrunner.h"
 #include "editor/editorwindow.h"
+#include "editor/pages/generalpage.h"
 
 #include <cstring>
 

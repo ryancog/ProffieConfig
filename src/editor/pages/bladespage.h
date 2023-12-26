@@ -3,7 +3,6 @@
 
 
 #pragma once
-class BladesPage;
 
 #include "core/utilities/misc.h"
 #include "editor/editorwindow.h"
@@ -27,13 +26,13 @@ class BladesPage;
 
 #define BD_HASSELECTION (bladeSelect->GetSelection() != -1)
 #define BD_SUBHASSELECTION (subBladeSelect->GetSelection() != -1)
-#define BD_ISPIXEL3 (BD_HASSELECTION && EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_PIXELRGB)
-#define BD_ISPIXEL4 (BD_HASSELECTION && EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_PIXELRGBW)
+#define BD_ISPIXEL3 (BD_HASSELECTION && parent->idPage->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_PIXELRGB)
+#define BD_ISPIXEL4 (BD_HASSELECTION && parent->idPage->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_PIXELRGBW)
 #define BD_ISPIXEL (BD_ISPIXEL3 || BD_ISPIXEL4)
-#define BD_ISSTAR3 (BD_HASSELECTION && EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_TRISTAR)
-#define BD_ISSTAR4 (BD_HASSELECTION && EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_QUADSTAR)
+#define BD_ISSTAR3 (BD_HASSELECTION && parent->idPage->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_TRISTAR)
+#define BD_ISSTAR4 (BD_HASSELECTION && parent->idPage->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_QUADSTAR)
 #define BD_ISSTAR (BD_ISSTAR3 || BD_ISSTAR4)
-#define BD_ISSUB (BD_HASSELECTION && EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].isSubBlade)
+#define BD_ISSUB (BD_HASSELECTION && parent->idPage->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].isSubBlade)
 #define BD_ISFIRST (!BD_ISSUB || (subBladeSelect->GetSelection() == 0))
 
 class BladesPage : public wxStaticBoxSizer {
@@ -128,8 +127,7 @@ public:
   };
 
 private:
-  BladesPage();
-  EditorWindow* parent;
+  EditorWindow* parent{nullptr};
 
   enum {
     ID_BladeArray,
