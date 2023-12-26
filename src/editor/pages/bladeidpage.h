@@ -2,6 +2,7 @@
 // Copyright (C) 2023 Ryan Ogurek
 
 #pragma once
+class BladeIDPage;
 
 #include "core/utilities/misc.h"
 #include "editor/pages/presetspage.h"

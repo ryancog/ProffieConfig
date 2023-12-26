@@ -2,6 +2,7 @@
 // Copyright (C) 2023 Ryan Ogurek
 
 #pragma once
+
 #include <wx/event.h>
 
 #define PROFFIEOS_VERSION "7.13"
@@ -37,8 +38,8 @@
 #define BOXITEMFLAGS wxSizerFlags(0).Border(wxALL, 10).Expand()
 #define TEXTITEMFLAGS wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 5)
 
-#define UPDATEWINDOW EditorWindow::instance->master->Layout();
-#define FULLUPDATEWINDOW EditorWindow::instance->master->Layout(); EditorWindow::instance->SetSizerAndFit(EditorWindow::instance->master);
+#define UPDATEWINDOW(window) window->sizer->Layout();
+#define FULLUPDATEWINDOW(window) window->sizer->Layout(); window->SetSizerAndFit(window->sizer);
 
 #define PR_DEFAULT "Default"
 #define PR_SA22C "SA22C"

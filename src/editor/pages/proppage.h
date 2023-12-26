@@ -2,7 +2,11 @@
 // Copyright (C) 2023 Ryan Ogurek
 
 #pragma once
+class PropPage; // Forward declaration to get around circular dependencies
+
 #include "core/config/propfile.h"
+#include "editor/editorwindow.h"
+
 #include <wx/window.h>
 #include <wx/checkbox.h>
 #include <wx/radiobut.h>
@@ -30,5 +34,6 @@ private:
     ID_Buttons
   };
 
+  EditorWindow* parent;
   void bindEvents();
 };
