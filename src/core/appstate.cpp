@@ -17,11 +17,10 @@ void AppState::init() {
   instance = new AppState();
   instance->loadStateFromFile();
 
-  instance->firstRun = false;
   if (instance->firstRun) {
     instance->onboard = new Onboard();
   } else {
-    EditorWindow::instance = new EditorWindow();
+    instance->editors.push_back(new EditorWindow());
     Configuration::readConfig();
   }
 }

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "editor/pages/bladespage.h"
+#include "editor/editorwindow.h"
 
 #include <string>
 #include <fstream>
@@ -14,12 +15,12 @@
 
 class Configuration {
 public:
-  static bool outputConfig();
-  static bool outputConfig(const std::string&);
-  static bool exportConfig();
-  static void readConfig();
-  static void readConfig(const std::string&);
-  static void importConfig();
+  static bool outputConfig(EditorWindow* editorWindow);
+  static bool outputConfig(const std::string&, EditorWindow* editorWindow);
+  static bool exportConfig(EditorWindow* editorWindow);
+  static void readConfig(EditorWindow* editorWindow);
+  static void readConfig(const std::string&, EditorWindow* editorWindow);
+  static void importConfig(EditorWindow* editorWindow);
 
   enum class SaberProp {
     DEFAULT,
@@ -48,28 +49,28 @@ private:
   Configuration();
   Configuration(const Configuration&) = delete;
 
-  static bool runPrechecks();
+  static bool runPreChecks(EditorWindow*);
 
-  static void outputConfigTop(std::ofstream&);
-  static void outputConfigTopGeneral(std::ofstream&);
-  static void outputConfigTopBladeAwareness(std::ofstream& configOutput);
-  static void outputConfigTopPropSpecific(std::ofstream&);
-  static void outputConfigTopSA22C(std::ofstream&);
-  static void outputConfigTopFett263(std::ofstream&);
-  static void outputConfigTopBC(std::ofstream&);
-  static void outputConfigTopCaiwyn(std::ofstream&);
-  static void outputConfigProp(std::ofstream&);
-  static void outputConfigPresets(std::ofstream&);
-  static void outputConfigPresetsStyles(std::ofstream&);
-  static void outputConfigPresetsBlades(std::ofstream&);
+  static void outputConfigTop(std::ofstream&, EditorWindow*);
+  static void outputConfigTopGeneral(std::ofstream&, EditorWindow*);
+  static void outputConfigTopBladeAwareness(std::ofstream&, EditorWindow* configOutput);
+  static void outputConfigTopPropSpecific(std::ofstream&, EditorWindow*);
+  static void outputConfigTopSA22C(std::ofstream&, EditorWindow*);
+  static void outputConfigTopFett263(std::ofstream&, EditorWindow*);
+  static void outputConfigTopBC(std::ofstream&, EditorWindow*);
+  static void outputConfigTopCaiwyn(std::ofstream&, EditorWindow*);
+  static void outputConfigProp(std::ofstream&, EditorWindow*);
+  static void outputConfigPresets(std::ofstream&, EditorWindow*);
+  static void outputConfigPresetsStyles(std::ofstream&, EditorWindow*);
+  static void outputConfigPresetsBlades(std::ofstream&, EditorWindow*);
   static void genWS281X(std::ofstream&, const BladesPage::BladeConfig&);
-  static void outputConfigButtons(std::ofstream&);
+  static void outputConfigButtons(std::ofstream&, EditorWindow*);
 
-  static void readConfigTop(std::ifstream&);
-  static void readConfigProp(std::ifstream&);
-  static void readConfigPresets(std::ifstream&);
-  static void readConfigStyles(std::ifstream&);
+  static void readConfigTop(std::ifstream&, EditorWindow*);
+  static void readConfigProp(std::ifstream&, EditorWindow*);
+  static void readConfigPresets(std::ifstream&, EditorWindow*);
+  static void readConfigStyles(std::ifstream&, EditorWindow*);
   static void replaceStyles(const std::string&, const std::string&);
-  static void readPresetArray(std::ifstream&);
-  static void readBladeArray(std::ifstream&);
+  static void readPresetArray(std::ifstream&, EditorWindow*);
+  static void readBladeArray(std::ifstream&, EditorWindow*);
 };

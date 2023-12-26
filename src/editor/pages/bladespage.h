@@ -1,7 +1,12 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
+
+#pragma once
+class BladesPage;
+
 #include "core/utilities/misc.h"
+#include "editor/editorwindow.h"
 
 #include <wx/textctrl.h>
 #include <wx/stattext.h>
@@ -12,8 +17,6 @@
 #include <wx/combobox.h>
 #include <wx/listbox.h>
 #include <wx/button.h>
-
-#pragma once
 
 #define BD_PIXELRGB "WS281X (RGB)"
 #define BD_PIXELRGBW "WS281X (RGBW)"
@@ -33,8 +36,7 @@
 #define BD_ISSUB (BD_HASSELECTION && EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].isSubBlade)
 #define BD_ISFIRST (!BD_ISSUB || (subBladeSelect->GetSelection() == 0))
 
-class BladesPage : public wxStaticBoxSizer
-{
+class BladesPage : public wxStaticBoxSizer {
 public:
   BladesPage(wxWindow*);
 
@@ -127,6 +129,7 @@ public:
 
 private:
   BladesPage();
+  EditorWindow* parent;
 
   enum {
     ID_BladeArray,

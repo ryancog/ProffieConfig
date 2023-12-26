@@ -4,7 +4,7 @@
 #include "tools/serialmonitor.h"
 
 #include "core/defines.h"
-#include "editor/editorwindow.h"
+#include "mainmenu/mainmenu.h"
 
 SerialMonitor* SerialMonitor::instance;
 #if defined(__WXMSW__)
@@ -22,8 +22,7 @@ SerialMonitor::SerialMonitor() {
 #include <sys/types.h>
 #include <termios.h>
 
-SerialMonitor::SerialMonitor()
-    : wxFrame(EditorWindow::instance, wxID_ANY, "Proffie Serial")
+SerialMonitor::SerialMonitor(MainMenu* parent) : wxFrame(parent, wxID_ANY, "Proffie Serial")
 {
   instance = this;
 
@@ -74,9 +73,9 @@ void SerialMonitor::OpenDevice()
 {
   struct termios newtio;
 
-  fd = open(EditorWindow::instance->devSelect->GetValue().data(), O_RDWR | O_NOCTTY);
+  fd = open(static_cast<MainMenu*>(GetParent())->devSelect->GetValue().data(), O_RDWR | O_NOCTTY);
   if (fd < 0) {
-    wxMessageBox("Could not connect to proffieboard.", "Serial Error", wxICON_ERROR | wxOK, EditorWindow::instance);
+    wxMessageBox("Could not connect to proffieboard.", "Serial Error", wxICON_ERROR | wxOK, GetParent());
     SerialMonitor::instance->Close(true);
     return;
   }
@@ -98,7 +97,7 @@ void SerialMonitor::OpenDevice()
   deviceThread = new ThreadRunner([&]() {
     struct stat info;
     while (SerialMonitor::instance != nullptr) {
-      if (stat(EditorWindow::instance->devSelect->GetValue().data(), &info)
+      if (stat(static_cast<MainMenu*>(GetParent())->devSelect->GetValue().data(), &info)
           != 0) { // Check if device is still present
         SerialDataEvent* event = new SerialDataEvent(EVT_DISCON, wxID_ANY, "");
         wxQueueEvent(SerialMonitor::instance->GetEventHandler(), event);

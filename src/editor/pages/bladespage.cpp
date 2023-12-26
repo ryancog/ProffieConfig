@@ -14,8 +14,7 @@
 #include <wx/combobox.h>
 #include <wx/tooltip.h>
 
-BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, "")
-{
+BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, ""), parent{static_cast<EditorWindow*>(window)} {
   Add(createBladeSelect(), wxSizerFlags(0).Expand());
   Add(createBladeSetup(), wxSizerFlags(0));
   Add(createBladeSettings(), wxSizerFlags(1));
@@ -29,20 +28,20 @@ void BladesPage::bindEvents() {
   GetStaticBox()->Bind(wxEVT_SPINCTRL, [&](wxCommandEvent&) { update(); });
   GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
         update();
-        FULLUPDATEWINDOW;
+        FULLUPDATEWINDOW(parent);
       }, ID_BladeSelect);
   GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
         update();
-        FULLUPDATEWINDOW;
+        FULLUPDATEWINDOW(parent);
       }, ID_SubBladeSelect);
   GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
         update();
-        FULLUPDATEWINDOW;
+        FULLUPDATEWINDOW(parent);
       }, ID_BladeType);
-  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { addBlade(); UPDATEWINDOW; }, ID_AddBlade);
-  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { addSubBlade(); FULLUPDATEWINDOW; }, ID_AddSubBlade);
-  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { removeBlade(); UPDATEWINDOW; }, ID_RemoveBlade);
-  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { removeSubBlade(); UPDATEWINDOW; }, ID_RemoveSubBlade);
+  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { addBlade(); UPDATEWINDOW(parent); }, ID_AddBlade);
+  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { addSubBlade(); FULLUPDATEWINDOW(parent); }, ID_AddSubBlade);
+  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { removeBlade(); UPDATEWINDOW(parent); }, ID_RemoveBlade);
+  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { removeSubBlade(); UPDATEWINDOW(parent); }, ID_RemoveSubBlade);
 }
 void BladesPage::createToolTips() {
   TIP(bladeArray, "The currently-selected Blade Array to edit.");

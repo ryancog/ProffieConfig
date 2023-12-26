@@ -14,7 +14,7 @@
 #include <wx/sizer.h>
 #include <wx/tooltip.h>
 
-PropPage::PropPage(wxWindow* window) : wxScrolledWindow(window) {
+PropPage::PropPage(wxWindow* window) : wxScrolledWindow(window), parent{static_cast<EditorWindow*>(window)} {
   sizer = new wxStaticBoxSizer(wxVERTICAL, this, "");
   auto top = new wxBoxSizer(wxHORIZONTAL);
   propSelection = new wxComboBox(sizer->GetStaticBox(), ID_Select, PR_DEFAULT, wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Default"}), wxCB_READONLY);
@@ -33,16 +33,16 @@ PropPage::PropPage(wxWindow* window) : wxScrolledWindow(window) {
 void PropPage::bindEvents() {
   auto propSelectUpdate = [&](wxCommandEvent&) {
     PropPage::updatePropSelection();
-    EditorWindow::instance->propPage->SetMinClientSize(wxSize(EditorWindow::instance->propPage->sizer->GetMinSize().GetWidth(), 0));
+    parent->propPage->SetMinClientSize(wxSize(parent->propPage->sizer->GetMinSize().GetWidth(), 0));
     FULLUPDATEWINDOW;
-    EditorWindow::instance->SetSize(wxSize(EditorWindow::instance->GetSize().GetWidth(), EditorWindow::instance->GetMinHeight() + EditorWindow::instance->propPage->GetBestVirtualSize().GetHeight()));
-    EditorWindow::instance->SetMinSize(wxSize(EditorWindow::instance->GetSize().GetWidth(), 350));
+    parent->SetSize(wxSize(parent->GetSize().GetWidth(), parent->GetMinHeight() + parent->propPage->GetBestVirtualSize().GetHeight()));
+    parent->SetMinSize(wxSize(parent->GetSize().GetWidth(), 350));
   };
-  auto optionSelectUpdate = [](wxCommandEvent&) {
+  auto optionSelectUpdate = [&](wxCommandEvent&) {
     int32_t x, y;
-    EditorWindow::instance->propPage->GetViewStart(&x, &y);
-    EditorWindow::instance->propPage->update();
-    EditorWindow::instance->propPage->Scroll(0, y);
+    parent->propPage->GetViewStart(&x, &y);
+    parent->propPage->update();
+    parent->propPage->Scroll(0, y);
   };
 
   Bind(wxEVT_COMBOBOX, propSelectUpdate, ID_Select);
@@ -61,11 +61,11 @@ void PropPage::bindEvents() {
 
         if (activeProp == nullptr) {
           buttons =
-              (EditorWindow::instance->generalPage->buttons->num->GetValue() == 0 ? wxString (
+              (parent->generalPage->buttons->num->GetValue() == 0 ? wxString (
                    "On/Off - Twist\n"
                    "Next preset - Point up and shake\n"
                    "Clash - Hit the blade while saber is on."
-                   ) : EditorWindow::instance->generalPage->buttons->num->GetValue() == 1 ? wxString(
+                   ) : parent->generalPage->buttons->num->GetValue() == 1 ? wxString(
                      "On/Off - Click to turn the saber on or off.\n"
                      "Turn On muted - Double-click\n"
                      "Next preset - Hold button and hit the blade while saber is off.\n"
@@ -76,7 +76,7 @@ void PropPage::bindEvents() {
                      "Force - Long-click button.\n"
                      "Start Soundtrack - Long-click the button while blade is off.\n"
                      "Enter/Exit Color Change - Hold button and Twist."
-                     ) : EditorWindow::instance->generalPage->buttons->num->GetValue() == 2 || EditorWindow::instance->generalPage->buttons->num->GetValue() == 3 ? wxString (
+                     ) : parent->generalPage->buttons->num->GetValue() == 2 || parent->generalPage->buttons->num->GetValue() == 3 ? wxString (
                      "On/Off - Click POW\n"
                      "Turn On muted - Double-click POW button\n"
                      "Next preset - Hold POW button and hit the blade while saber is off.\n"
@@ -92,7 +92,7 @@ void PropPage::bindEvents() {
                      "Enter/Exit Color Change - Hold Aux and click POW while on."
                      ) : wxString("Button Configuration Not Supported"));
         } else {
-          auto propButtons = activeProp->getButtons().at(EditorWindow::instance->generalPage->buttons->num->GetValue());
+          auto propButtons = activeProp->getButtons().at(parent->generalPage->buttons->num->GetValue());
           if (propButtons.empty()) buttons += "Selected number of buttons not supported by prop file.";
           else for (auto& state : propButtons) {
               buttons += "Button controls while saber is " + state.first + ":\n";
@@ -121,7 +121,7 @@ void PropPage::bindEvents() {
         }
 
         auto buttonDialog = wxDialog(
-            EditorWindow::instance,
+            parent,
             wxID_ANY,
             "Prop File Buttons",
             wxDefaultPosition,

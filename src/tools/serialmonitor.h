@@ -8,9 +8,11 @@
 #endif
 #include <wx/wx.h>
 
+#include "mainmenu/mainmenu.h"
+
 class SerialMonitor : public wxFrame {
 public:
-  SerialMonitor();
+  SerialMonitor(MainMenu*);
   static SerialMonitor* instance;
 
 #if defined(__WXOSX__) || defined(__WXGTK__)

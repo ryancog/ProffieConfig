@@ -2,8 +2,6 @@
 // Copyright (C) 2023 Ryan Ogurek
 
 #include "core/appstate.h"
-#include "core/config/configuration.h"
-#include "editor/editorwindow.h"
 
 #include <wx/splash.h>
 #include <wx/app.h>

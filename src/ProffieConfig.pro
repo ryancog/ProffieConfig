@@ -37,6 +37,7 @@ SOURCES += \
     editor/pages/bladespage.cpp \
     editor/pages/bladeidpage.cpp \
     editor/pages/proppage.cpp \
+    mainmenu/mainmenu.cpp \
     onboard/onboard.cpp \
     tools/arduino.cpp \
     tools/serialmonitor.cpp \
@@ -57,6 +58,7 @@ HEADERS += \
     editor/pages/bladespage.h \
     editor/pages/bladeidpage.h \
     editor/pages/proppage.h \
+    mainmenu/mainmenu.h \
     onboard/onboard.h \
     tools/arduino.h \
     tools/serialmonitor.h
