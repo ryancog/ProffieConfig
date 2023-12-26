@@ -55,15 +55,15 @@ void Arduino::refreshBoards(MainMenu* window, std::function<void(bool)> callback
   
   new ThreadRunner([=]() {
     progDialog->emitEvent(0, "Initializing...");
-    wxString lastSel = window->devSelect->GetStringSelection();
-    window->devSelect->Clear();
+    wxString lastSel = window->boardSelect->GetStringSelection();
+    window->boardSelect->Clear();
     progDialog->emitEvent(20, "Fetching Devices...");
     for (const wxString& item : Arduino::getBoards()) {
-      window->devSelect->Append(item);
+      window->boardSelect->Append(item);
     }
     
-    window->devSelect->SetValue(lastSel);
-    if (window->devSelect->GetSelection() == -1) window->devSelect->SetSelection(0);
+    window->boardSelect->SetValue(lastSel);
+    if (window->boardSelect->GetSelection() == -1) window->boardSelect->SetSelection(0);
     progDialog->emitEvent(100, "Done.");
 
     return callback(true);
@@ -108,14 +108,14 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor, std::function
     progDialog->emitEvent(0, "Initializing...");
 
     progDialog->emitEvent(10, "Checking board presence...");
-    wxString lastSel = window->devSelect->GetStringSelection();
-    window->devSelect->Clear();
+    wxString lastSel = window->boardSelect->GetStringSelection();
+    window->boardSelect->Clear();
     for (const wxString& item : Arduino::getBoards()) {
-      window->devSelect->Append(item);
+      window->boardSelect->Append(item);
     }
-    window->devSelect->SetValue(lastSel);
-    if (window->devSelect->GetSelection() == -1) {
-      window->devSelect->SetSelection(0);
+    window->boardSelect->SetValue(lastSel);
+    if (window->boardSelect->GetSelection() == -1) {
+      window->boardSelect->SetSelection(0);
       progDialog->emitEvent(100, "Error!");
       Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "Please make sure your board is connected and selected, then try again!", "Board Selection Error", wxOK | wxICON_ERROR);
       wxQueueEvent(window->GetEventHandler(), msg);
@@ -324,7 +324,7 @@ bool Arduino::upload(wxString& _return, MainMenu* window, EditorWindow* editor, 
   uploadCommand += " --fqbn ";
   uploadCommand += editor->generalPage->board->GetSelection() == 0 ? ARDUINOCORE_PBV1 : editor->generalPage->board->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
   uploadCommand += " --port ";
-  uploadCommand += window->devSelect->GetStringSelection();
+  uploadCommand += window->boardSelect->GetStringSelection();
   uploadCommand += " -v";
 
   FILE *arduinoCli = Arduino::CLI(uploadCommand);

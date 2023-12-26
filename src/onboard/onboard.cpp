@@ -15,15 +15,16 @@
 Onboard::Onboard() : wxWizard(nullptr, wxID_ANY, "ProffieConfig First-Time Setup", wxBitmap(icon_xpm), wxDefaultPosition, wxDEFAULT_DIALOG_STYLE) {
   SetPageSize(wxSize(600, -1));
 
+  bindEvents();
+}
+
+bool Onboard::run() {
   auto firstPage = new Welcome(this);
   (*firstPage)
       .Chain(new DependencyInstall(this))
       .Chain(new Overview(this));
 
-
-  bindEvents();
-
-  RunWizard(firstPage);
+  return RunWizard(firstPage);
 }
 
 void Onboard::bindEvents() {

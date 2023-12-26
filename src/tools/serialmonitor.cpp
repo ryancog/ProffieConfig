@@ -73,7 +73,7 @@ void SerialMonitor::OpenDevice()
 {
   struct termios newtio;
 
-  fd = open(static_cast<MainMenu*>(GetParent())->devSelect->GetValue().data(), O_RDWR | O_NOCTTY);
+  fd = open(static_cast<MainMenu*>(GetParent())->boardSelect->GetValue().data(), O_RDWR | O_NOCTTY);
   if (fd < 0) {
     wxMessageBox("Could not connect to proffieboard.", "Serial Error", wxICON_ERROR | wxOK, GetParent());
     SerialMonitor::instance->Close(true);
@@ -97,7 +97,7 @@ void SerialMonitor::OpenDevice()
   deviceThread = new ThreadRunner([&]() {
     struct stat info;
     while (SerialMonitor::instance != nullptr) {
-      if (stat(static_cast<MainMenu*>(GetParent())->devSelect->GetValue().data(), &info)
+      if (stat(static_cast<MainMenu*>(GetParent())->boardSelect->GetValue().data(), &info)
           != 0) { // Check if device is still present
         SerialDataEvent* event = new SerialDataEvent(EVT_DISCON, wxID_ANY, "");
         wxQueueEvent(SerialMonitor::instance->GetEventHandler(), event);

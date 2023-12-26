@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "onboard/onboard.h"
 #include "editor/editorwindow.h"
 
 #include <string>
@@ -14,7 +13,6 @@ public:
   static void init();
   static AppState* instance;
 
-  Onboard* onboard;
   bool isSaved();
   void setSaved(bool = true);
   void loadStateFromFile();
