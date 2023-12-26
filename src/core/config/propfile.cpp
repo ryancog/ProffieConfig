@@ -5,18 +5,12 @@
 
 #include "core/defines.h"
 #include "core/utilities/fileparse.h"
-#include "editor/editorwindow.h"
-#include "editor/pages/proppage.h"
 
 #include <fstream>
 #include <iostream>
 #include <wx/tooltip.h>
 
 PropFile::PropFile() {}
-PropFile::~PropFile() {
-  EditorWindow::instance->propPage->sizer->Detach(page);
-  delete page;
-}
 
 void PropFile::show(bool shouldShow) const { page->Show(shouldShow); }
 std::string PropFile::getName() const { return name; }
@@ -48,7 +42,7 @@ bool PropFile::Setting::checkRequiredSatisfied(const std::unordered_map<std::str
 }
 
 
-PropFile* PropFile::createPropConfig(const std::string& name) {
+PropFile* PropFile::createPropConfig(const std::string& name, PropsPage* _parent) {
   std::cout << "Reading prop config: \"" << name << "\"..." << std::endl;
   std::string pathname = PROPCONFIG_DIR + name + ".pconf";
 
@@ -67,6 +61,7 @@ PropFile* PropFile::createPropConfig(const std::string& name) {
   configFile.close();
 
   auto prop = new PropFile;
+  prop->parent = _parent;
 
   if (!prop->readName(config)) {
     error("Prop config file \"" + name + "\" does not have section \"NAME\", aborting...");
@@ -196,10 +191,10 @@ bool PropFile::parseSettingCommon(Setting& setting, std::vector<std::string>& se
 }
 bool PropFile::readLayout(std::vector<std::string>& config) {
   page = new wxBoxSizer(wxVERTICAL);
-  EditorWindow::instance->propPage->sizer->Add(page, wxSizerFlags(0).Expand());
+  parent->sizer->Add(page, wxSizerFlags(0).Expand());
 
   auto layoutSection = FileParse::extractSection("LAYOUT", config);
-  parseLayoutSection(layoutSection, page,  EditorWindow::instance->propPage->sizer->GetStaticBox());
+  parseLayoutSection(layoutSection, page,  parent->sizer->GetStaticBox());
   return true;
 }
 bool PropFile::readButtons(std::vector<std::string>& config) {

@@ -6,14 +6,14 @@
 #include "editor/pages/bladespage.h"
 #include "editor/pages/generalpage.h"
 #include "editor/pages/presetspage.h"
-#include "editor/pages/proppage.h"
-#include "editor/pages/bladeidpage.h"
+#include "editor/pages/propspage.h"
+#include "editor/pages/bladearraypage.h"
 
 #include "core/config/settings.h"
+#include "core/config/configuration.h"
 #include "core/defines.h"
-#include "tools/arduino.h"
-#include "tools/serialmonitor.h"
 #include "core/utilities/misc.h"
+#include "core/utilities/progress.h"
 #include "core/appstate.h"
 
 #include <wx/combobox.h>
@@ -25,14 +25,17 @@
 #include <wx/string.h>
 #include <wx/tooltip.h>
 
-EditorWindow::EditorWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize) {
+EditorWindow::EditorWindow(const std::string& config) : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize) {
   createMenuBar();
   createPages();
-  loadProps();
   bindEvents();
   createToolTips();
-  settings = new Settings();
+  settings = new Settings(this);
 
+  if (!Configuration::readConfig(config, this)) {
+    Destroy();
+    return;
+  }
 # ifdef __WXMSW__
   SetIcon( wxICON(IDI_ICON1) );
   SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
@@ -100,21 +103,13 @@ void EditorWindow::createPages() {
 
   wxBoxSizer* options = new wxBoxSizer(wxHORIZONTAL);
   windowSelect = new wxComboBox(this, ID_WindowSelect, "General", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Blade Arrays", "Presets And Styles", "Blade Awareness"  /*, "Hardware"*/}), wxCB_READONLY | wxCB_DROPDOWN);
-  refreshButton = new wxButton(this, ID_RefreshDev, "Refresh", wxDefaultPosition, wxDefaultSize, 0);
-  devSelect = new wxComboBox(this, ID_DeviceSelect, "Select Device...", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Arduino::getBoards()), wxCB_READONLY);
-  applyButton = new wxButton(this, ID_ApplyChanges, "Apply to Board", wxDefaultPosition, wxDefaultSize, 0);
-  applyButton->Disable();
   options->Add(windowSelect, wxSizerFlags(0).Border(wxALL, 10));
-  options->AddStretchSpacer(1);
-  options->Add(refreshButton, wxSizerFlags(0).Border(wxALL, 10));
-  options->Add(devSelect, wxSizerFlags(0).Border(wxALL, 10));
-  options->Add(applyButton, wxSizerFlags(0).Border(wxALL, 10));
 
   generalPage = new GeneralPage(this);
-  propPage = new PropPage(this);
+  propPage = new PropsPage(this);
   presetsPage = new PresetsPage(this);
   bladesPage = new BladesPage(this);
-  idPage = new BladeIDPage(this);
+  idPage = new BladeArrayPage(this);
 
   //generalPage->update();
   propPage->update();
@@ -135,12 +130,4 @@ void EditorWindow::createPages() {
   sizer->Add(idPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
   SetSizerAndFit(sizer); // use the sizer for layout and set size and hints
-}
-void EditorWindow::loadProps() {
-  AppState::instance->clearProps();
-  for (const auto& prop : AppState::instance->getPropFileNames()) {
-    auto propConfig = PropFile::createPropConfig(prop);
-    if (propConfig != nullptr) AppState::instance->addProp(propConfig);
-  }
-  propPage->updateProps();
 }

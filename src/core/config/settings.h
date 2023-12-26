@@ -4,6 +4,7 @@
 #pragma once
 
 #include "core/utilities/misc.h"
+#include "editor/editorwindow.h"
 
 #include <cstdint>
 #include <cstring>
@@ -13,7 +14,7 @@
 
 class Settings {
 public:
-  Settings();
+  Settings(EditorWindow*);
 
   void loadDefaults();
   void parseDefines(const std::vector<std::string>&);
@@ -24,6 +25,8 @@ public:
   int32_t numBlades;
 
 private:
+  EditorWindow* parent{nullptr};
+
   void linkDefines();
   void setCustomInputParsers();
   void setCustomOutputParsers();

@@ -10,6 +10,7 @@
 #include "../resources/icons/icon.xpm"
 
 #include "tools/arduino.h"
+#include "core/utilities/misc.h"
 
 Onboard::Onboard() : wxWizard(nullptr, wxID_ANY, "ProffieConfig First-Time Setup", wxBitmap(icon_xpm), wxDefaultPosition, wxDEFAULT_DIALOG_STYLE) {
   SetPageSize(wxSize(600, -1));
