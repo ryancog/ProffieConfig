@@ -10,6 +10,7 @@
 
 #include <wx/menu.h>
 
+MainMenu* MainMenu::instance{nullptr};
 MainMenu::MainMenu() {
   createUI();
   createMenuBar();
@@ -24,14 +25,14 @@ void MainMenu::bindEvents() {
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(ABOUT_MESSAGE, "About ProffieConfig", wxOK | wxICON_INFORMATION, this); }, wxID_ABOUT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION, this); }, ID_Copyright);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(); }, ID_ExportFile);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::importConfig(); }, ID_ImportFile);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(activeEditor); }, ID_ExportFile);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::importConfig(activeEditor); }, ID_ImportFile);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/blob/master/docs"); }, ID_Docs);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/issues/new"); }, ID_Issue);
 # if defined(__WXMSW__)
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { SerialMonitor::instance = new SerialMonitor; SerialMonitor::instance->Close(true); }, ID_OpenSerial);
 # else
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(); }, ID_OpenSerial);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(this); }, ID_OpenSerial);
 #endif
 
 
@@ -41,7 +42,7 @@ void MainMenu::bindEvents() {
         if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Close(true);
       }, ID_DeviceSelect);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(this); }, ID_RefreshDev);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(this); }, ID_ApplyChanges);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(this, activeEditor); }, ID_ApplyChanges);
 
 }
 

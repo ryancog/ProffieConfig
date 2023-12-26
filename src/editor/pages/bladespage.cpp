@@ -4,7 +4,8 @@
 #include "editor/pages/bladespage.h"
 
 #include "editor/editorwindow.h"
-#include "editor/pages/bladeidpage.h"
+#include "editor/pages/generalpage.h"
+#include "editor/pages/bladearraypage.h"
 #include "core/utilities/misc.h"
 #include "core/defines.h"
 
@@ -24,7 +25,7 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
 }
 
 void BladesPage::bindEvents() {
-  GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { EditorWindow::instance->presetsPage->bladeArray->SetSelection(bladeArray->GetSelection()); update(); }, ID_BladeArray);
+  GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { parent->presetsPage->bladeArray->SetSelection(bladeArray->GetSelection()); update(); }, ID_BladeArray);
   GetStaticBox()->Bind(wxEVT_SPINCTRL, [&](wxCommandEvent&) { update(); });
   GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
         update();
@@ -225,98 +226,98 @@ void BladesPage::update() {
 }
 
 void BladesPage::saveCurrent() {
-  if (lastBladeSelection < 0 || lastBladeSelection >= (int32_t)EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.size()) return;
+  if (lastBladeSelection < 0 || lastBladeSelection >= (int32_t)parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.size()) return;
 
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).type = bladeType->GetValue();
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin1 = usePowerPin1->GetValue();
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin2 = usePowerPin2->GetValue();
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin3 = usePowerPin3->GetValue();
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin4 = usePowerPin4->GetValue();
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin5 = usePowerPin5->GetValue();
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin6 = usePowerPin6->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).type = bladeType->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin1 = usePowerPin1->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin2 = usePowerPin2->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin3 = usePowerPin3->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin4 = usePowerPin4->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin5 = usePowerPin5->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin6 = usePowerPin6->GetValue();
 
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).dataPin = bladeDataPin->GetValue();
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).numPixels = bladePixels->GetValue();
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).colorType = EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).type == BD_PIXELRGB ? blade3ColorOrder->GetValue() : blade4ColorOrder->GetValue();
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).useRGBWithWhite = blade4UseRGB->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).dataPin = bladeDataPin->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).numPixels = bladePixels->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).colorType = parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).type == BD_PIXELRGB ? blade3ColorOrder->GetValue() : blade4ColorOrder->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).useRGBWithWhite = blade4UseRGB->GetValue();
 
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star1 = star1Color->GetValue();
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star1Resistance = star1Resistance->num->GetValue();
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star2 = star2Color->GetValue();
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star2Resistance = star2Resistance->num->GetValue();
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star3 = star3Color->GetValue();
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star3Resistance = star3Resistance->num->GetValue();
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star4 = star4Color->GetValue();
-  EditorWindow::instance->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star4Resistance = star4Resistance->num->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star1 = star1Color->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star1Resistance = star1Resistance->num->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star2 = star2Color->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star2Resistance = star2Resistance->num->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star3 = star3Color->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star3Resistance = star3Resistance->num->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star4 = star4Color->GetValue();
+  parent->idPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star4Resistance = star4Resistance->num->GetValue();
 
-  if (lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.size()) {
-    EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.at(lastSubBladeSelection).startPixel = subBladeStart->GetValue();
-    EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.at(lastSubBladeSelection).endPixel = subBladeEnd->GetValue();
+  if (lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.size()) {
+    parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.at(lastSubBladeSelection).startPixel = subBladeStart->GetValue();
+    parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.at(lastSubBladeSelection).endPixel = subBladeEnd->GetValue();
   }
-  EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBladeWithStride = subBladeUseStride->GetValue();
+  parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBladeWithStride = subBladeUseStride->GetValue();
 
   // Check if SubBlades need to be removed (changed from WX281X)
   if (BD_HASSELECTION && lastBladeSelection == bladeSelect->GetSelection() && !BD_ISPIXEL) {
-    EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).isSubBlade = false;
-    EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.clear();
+    parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).isSubBlade = false;
+    parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.clear();
   }
 }
 void BladesPage::rebuildBladeArray() {
-  if (EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.size() == 0) EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.push_back(BladeConfig({ .numPixels = 144, .usePowerPin2 = true, .usePowerPin3 = true }));
+  if (parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.size() == 0) parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.push_back(BladeConfig({ .numPixels = 144, .usePowerPin2 = true, .usePowerPin3 = true }));
 
   lastBladeSelection = bladeSelect->GetSelection();
   lastSubBladeSelection = subBladeSelect->GetSelection();
   lastBladeArraySelection = bladeArray->GetSelection();
 
   bladeArray->Clear();
-  for (BladeIDPage::BladeArray& array : EditorWindow::instance->idPage->bladeArrays) {
+  for (BladeArrayPage::BladeArray& array : parent->idPage->bladeArrays) {
     bladeArray->Append(array.name);
   }
   if (lastBladeArraySelection >= 0 && lastBladeArraySelection < static_cast<int32_t>(bladeArray->GetCount())) bladeArray->SetSelection(lastBladeArraySelection);
   else bladeArray->SetSelection(0);
 
   bladeSelect->Clear();
-  for (int32_t bladeNum = 0; bladeNum < static_cast<int32_t>(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.size()); bladeNum++)
+  for (int32_t bladeNum = 0; bladeNum < static_cast<int32_t>(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.size()); bladeNum++)
     bladeSelect->Append("Blade " + std::to_string(bladeNum));
   if (lastBladeSelection >= 0 && lastBladeSelection < static_cast<int32_t>(bladeSelect->GetCount())) bladeSelect->SetSelection(lastBladeSelection);
 
   subBladeSelect->Clear();
-  if (bladeSelect->GetSelection() >= 0 && bladeSelect->GetSelection() < static_cast<int32_t>(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.size())) {
-    for (int32_t subBladeNum = 0; bladeSelect->GetSelection() != -1 && subBladeNum < static_cast<int32_t>(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size()); subBladeNum++)
+  if (bladeSelect->GetSelection() >= 0 && bladeSelect->GetSelection() < static_cast<int32_t>(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.size())) {
+    for (int32_t subBladeNum = 0; bladeSelect->GetSelection() != -1 && subBladeNum < static_cast<int32_t>(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size()); subBladeNum++)
       subBladeSelect->Append("SubBlade " + std::to_string(subBladeNum));
     if (lastSubBladeSelection >= 0 && lastSubBladeSelection < static_cast<int32_t>(subBladeSelect->GetCount())) subBladeSelect->SetSelection(lastSubBladeSelection);
   }
 }
 void BladesPage::loadSettings() {
-  if (bladeSelect->GetSelection() < 0 || bladeSelect->GetSelection() >= (int32_t)EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.size())
+  if (bladeSelect->GetSelection() < 0 || bladeSelect->GetSelection() >= (int32_t)parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.size())
     return;
 
-  bladeType->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).type);
-  usePowerPin1->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin1);
-  usePowerPin2->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin2);
-  usePowerPin3->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin3);
-  usePowerPin4->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin4);
-  usePowerPin5->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin5);
-  usePowerPin6->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin6);
+  bladeType->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).type);
+  usePowerPin1->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin1);
+  usePowerPin2->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin2);
+  usePowerPin3->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin3);
+  usePowerPin4->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin4);
+  usePowerPin5->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin5);
+  usePowerPin6->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin6);
 
-  bladeDataPin->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).dataPin);
-  bladePixels->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).numPixels);
-  blade3ColorOrder->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).colorType);
-  blade4ColorOrder->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).colorType);
-  blade4UseRGB->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).useRGBWithWhite);
+  bladeDataPin->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).dataPin);
+  bladePixels->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).numPixels);
+  blade3ColorOrder->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).colorType);
+  blade4ColorOrder->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).colorType);
+  blade4UseRGB->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).useRGBWithWhite);
 
-  star1Color->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).Star1);
-  star1Resistance->num->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).Star1Resistance);
-  star2Color->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).Star2);
-  star2Resistance->num->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).Star2Resistance);
-  star3Color->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).Star3);
-  star3Resistance->num->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).Star3Resistance);
-  star4Color->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).Star4);
-  star4Resistance->num->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).Star4Resistance);
+  star1Color->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).Star1);
+  star1Resistance->num->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).Star1Resistance);
+  star2Color->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).Star2);
+  star2Resistance->num->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).Star2Resistance);
+  star3Color->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).Star3);
+  star3Resistance->num->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).Star3Resistance);
+  star4Color->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).Star4);
+  star4Resistance->num->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).Star4Resistance);
 
-  subBladeStart->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size() ? EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.at(lastSubBladeSelection).startPixel : 0);
-  subBladeEnd->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size() ? EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.at(lastSubBladeSelection).endPixel : 0);
-  subBladeUseStride->SetValue(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).subBladeWithStride);
+  subBladeStart->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size() ? parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.at(lastSubBladeSelection).startPixel : 0);
+  subBladeEnd->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size() ? parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.at(lastSubBladeSelection).endPixel : 0);
+  subBladeUseStride->SetValue(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).subBladeWithStride);
 }
 void BladesPage::setEnabled() {
   removeBladeButton->Enable(bladeSelect->GetCount() > 0 && BD_HASSELECTION);
@@ -366,8 +367,8 @@ void BladesPage::setVisibility(){
   subBladeEnd->Show(BD_SUBHASSELECTION);
 }
 void BladesPage::updateRanges() {
-  bladePixels->SetRange(0, EditorWindow::instance->generalPage->maxLEDs->num->GetValue());
-  const auto& blades = EditorWindow::instance->idPage->bladeArrays.at(bladeArray->GetSelection()).blades;
+  bladePixels->SetRange(0, parent->generalPage->maxLEDs->num->GetValue());
+  const auto& blades = parent->idPage->bladeArrays.at(bladeArray->GetSelection()).blades;
   if (subBladeSelect ->GetSelection() >= 0 && blades.at(bladeSelect->GetSelection()).isSubBlade) {
     subBladeStart->SetRange(0, blades.at(bladeSelect->GetSelection()).numPixels - 1);
     subBladeEnd->SetRange(blades.at(bladeSelect->GetSelection()).subBlades.at(subBladeSelect->GetSelection()).startPixel, blades.at(bladeSelect->GetSelection()).numPixels - 1);
@@ -375,20 +376,20 @@ void BladesPage::updateRanges() {
 }
 
 void BladesPage::addBlade() {
-  EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.push_back(BladeConfig());
+  parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.push_back(BladeConfig());
   update();
 }
 void BladesPage::addSubBlade() {
-  EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).isSubBlade = true;
-  EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.push_back(BladeConfig::subBladeInfo());
-  if (EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.size() <= 1) EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.push_back(BladeConfig::subBladeInfo());
+  parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).isSubBlade = true;
+  parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.push_back(BladeConfig::subBladeInfo());
+  if (parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.size() <= 1) parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.push_back(BladeConfig::subBladeInfo());
   update();
 }
 void BladesPage::removeBlade() {
   saveCurrent();
 
-  if (BD_HASSELECTION && EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.size() > 1) {
-    EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.erase(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.begin() + lastBladeSelection);
+  if (BD_HASSELECTION && parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.size() > 1) {
+    parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.erase(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.begin() + lastBladeSelection);
   }
 
   update();
@@ -397,10 +398,10 @@ void BladesPage::removeSubBlade() {
   saveCurrent();
 
   if (BD_SUBHASSELECTION) {
-    EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.erase(EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.begin() + lastSubBladeSelection);
-    if (EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.size() <= 1) {
-      EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.clear();
-      EditorWindow::instance->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).isSubBlade = false;
+    parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.erase(parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.begin() + lastSubBladeSelection);
+    if (parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.size() <= 1) {
+      parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).subBlades.clear();
+      parent->idPage->bladeArrays[bladeArray->GetSelection()].blades.at(lastBladeSelection).isSubBlade = false;
     }
     lastSubBladeSelection = -1;
   }

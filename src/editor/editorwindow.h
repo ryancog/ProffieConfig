@@ -2,27 +2,26 @@
 // Copyright (C) 2023 Ryan Ogurek
 
 #pragma once
-class EditorWindow; // Forward declaration to get around circular dependencies
 
 #include <wx/wx.h>
 
-#include "core/config/settings.h"
-#include "editor/pages/bladeidpage.h"
-#include "editor/pages/bladespage.h"
-#include "editor/pages/generalpage.h"
-#include "editor/pages/presetspage.h"
-#include "editor/pages/proppage.h"
-
+// Forward declarations to get around circular dependencies
+class GeneralPage;
+class PropsPage;
+class BladesPage;
+class PresetsPage;
+class BladeArrayPage;
+class Settings;
 
 class EditorWindow : public wxFrame {
 public:
-  EditorWindow();
+  EditorWindow(const std::string&);
 
   GeneralPage* generalPage{nullptr};
-  PropPage* propPage{nullptr};
+  PropsPage* propPage{nullptr};
   BladesPage* bladesPage{nullptr};
   PresetsPage* presetsPage{nullptr};
-  BladeIDPage* idPage{nullptr};
+  BladeArrayPage* idPage{nullptr};
   Settings* settings{nullptr};
 
   wxBoxSizer* sizer{nullptr};
@@ -30,6 +29,8 @@ public:
   wxComboBox* windowSelect{nullptr};
 
 private:
+  std::string openConfig{};
+
   enum {
     ID_WindowSelect,
     ID_DUMMY, // on Win32, for some reason ID #1 is triggerred by hitting enter in wxTextCtrl? This is a workaround.
@@ -44,5 +45,4 @@ private:
   void createToolTips();
   void createMenuBar();
   void createPages();
-  void loadProps();
 };

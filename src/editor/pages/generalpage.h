@@ -4,6 +4,7 @@
 #pragma once
 
 #include "core/utilities/misc.h"
+#include "editor/editorwindow.h"
 
 #include <wx/textctrl.h>
 #include <wx/sizer.h>
@@ -42,6 +43,7 @@ public:
   wxCheckBox* enableDeveloperCommands{nullptr};
 
 private:
+  EditorWindow* parent{nullptr};
   void createToolTips();
 
   wxStaticBoxSizer* boardSettings(wxStaticBoxSizer*);

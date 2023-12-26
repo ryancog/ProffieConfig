@@ -5,11 +5,11 @@
 
 #include "editor/editorwindow.h"
 #include "editor/pages/generalpage.h"
-#include "editor/pages/bladeidpage.h"
+#include "editor/pages/bladearraypage.h"
 
 #include <cstring>
 
-Settings::Settings() {
+Settings::Settings(EditorWindow* _parent) : parent(_parent) {
   linkDefines();
   setCustomInputParsers();
   setCustomOutputParsers();
@@ -17,37 +17,37 @@ Settings::Settings() {
 
 void Settings::linkDefines() {
 # define ENTRY(name, ...) { name, new ProffieDefine(name, __VA_ARGS__) }
-# define CHECKER(name) [](const ProffieDefine* name) -> bool
-# define IDSETTING(setting) EditorWindow::instance->idPage->setting->GetValue()
+# define CHECKER(name) [&](const ProffieDefine* name) -> bool
+# define IDSETTING(setting) parent->idPage->setting->GetValue()
 
   generalDefines = {
       // General
       ENTRY("NUM_BLADES", -1, (Misc::numEntry*)nullptr, CHECKER(){ return true; }),
-      ENTRY("NUM_BUTTONS", 2, EditorWindow::instance->generalPage->buttons, CHECKER(){ return true; }),
-      ENTRY("VOLUME", 2000, EditorWindow::instance->generalPage->volume, CHECKER(){ return true; }),
-      ENTRY("CLASH_THRESHOLD_G", 3.0, EditorWindow::instance->generalPage->clash, CHECKER(){ return true; }),
-      ENTRY("SAVE_COLOR_CHANGE", true, EditorWindow::instance->generalPage->colorSave),
-      ENTRY("SAVE_PRESET", true, EditorWindow::instance->generalPage->presetSave),
-      ENTRY("SAVE_VOLUME", true, EditorWindow::instance->generalPage->volumeSave),
+      ENTRY("NUM_BUTTONS", 2, parent->generalPage->buttons, CHECKER(){ return true; }),
+      ENTRY("VOLUME", 2000, parent->generalPage->volume, CHECKER(){ return true; }),
+      ENTRY("CLASH_THRESHOLD_G", 3.0, parent->generalPage->clash, CHECKER(){ return true; }),
+      ENTRY("SAVE_COLOR_CHANGE", true, parent->generalPage->colorSave),
+      ENTRY("SAVE_PRESET", true, parent->generalPage->presetSave),
+      ENTRY("SAVE_VOLUME", true, parent->generalPage->volumeSave),
       ENTRY("SAVE_STATE", false, (wxCheckBox*)nullptr),
 
-      ENTRY("ENABLE_SSD1306", false, EditorWindow::instance->generalPage->enableOLED),
+      ENTRY("ENABLE_SSD1306", false, parent->generalPage->enableOLED),
 
-      ENTRY("DISABLE_COLOR_CHANGE", false, EditorWindow::instance->generalPage->disableColor),
-      ENTRY("DISABLE_TALKIE", false, EditorWindow::instance->generalPage->noTalkie),
-      ENTRY("DISABLE_BASIC_PARSER_STYLES", true, EditorWindow::instance->generalPage->noBasicParsers),
-      ENTRY("DISABLE_DIAGNOSTIC_COMMANDS", true, EditorWindow::instance->generalPage->disableDiagnosticCommands),
-      ENTRY("ENABLE_DEVELOPER_COMMANDS", false, EditorWindow::instance->generalPage->enableDeveloperCommands),
+      ENTRY("DISABLE_COLOR_CHANGE", false, parent->generalPage->disableColor),
+      ENTRY("DISABLE_TALKIE", false, parent->generalPage->noTalkie),
+      ENTRY("DISABLE_BASIC_PARSER_STYLES", true, parent->generalPage->noBasicParsers),
+      ENTRY("DISABLE_DIAGNOSTIC_COMMANDS", true, parent->generalPage->disableDiagnosticCommands),
+      ENTRY("ENABLE_DEVELOPER_COMMANDS", false, parent->generalPage->enableDeveloperCommands),
 
-      ENTRY("PLI_OFF_TIME", 2, EditorWindow::instance->generalPage->pliTime, CHECKER(){ return true; }),
-      ENTRY("IDLE_OFF_TIME", 15, EditorWindow::instance->generalPage->idleTime, CHECKER(){ return true; }),
-      ENTRY("MOTION_TIMEOUT", 10, EditorWindow::instance->generalPage->motionTime, CHECKER(){ return true; }),
+      ENTRY("PLI_OFF_TIME", 2, parent->generalPage->pliTime, CHECKER(){ return true; }),
+      ENTRY("IDLE_OFF_TIME", 15, parent->generalPage->idleTime, CHECKER(){ return true; }),
+      ENTRY("MOTION_TIMEOUT", 10, parent->generalPage->motionTime, CHECKER(){ return true; }),
 
-      ENTRY("BLADE_DETECT_PIN", "", EditorWindow::instance->idPage->detectPin, CHECKER(){ return IDSETTING(enableDetect); }),
-      ENTRY("BLADE_ID_CLASS", "", EditorWindow::instance->idPage->mode, CHECKER(){ return IDSETTING(enableID); }),
-      ENTRY("ENABLE_POWER_FOR_ID", false, EditorWindow::instance->idPage->enablePowerForID, CHECKER(def){ return IDSETTING(enableID) && def->getState(); }),
-      ENTRY("BLADE_ID_SCAN_MILLIS", 1000, EditorWindow::instance->idPage->scanIDMillis, CHECKER(){ return IDSETTING(enableID) && IDSETTING(continuousScans); }),
-      ENTRY("BLADE_ID_TIMES", 10, EditorWindow::instance->idPage->numIDTimes, CHECKER(){ return IDSETTING(enableID) && IDSETTING(continuousScans); }),
+      ENTRY("BLADE_DETECT_PIN", "", parent->idPage->detectPin, CHECKER(){ return IDSETTING(enableDetect); }),
+      ENTRY("BLADE_ID_CLASS", "", parent->idPage->mode, CHECKER(){ return IDSETTING(enableID); }),
+      ENTRY("ENABLE_POWER_FOR_ID", false, parent->idPage->enablePowerForID, CHECKER(def){ return IDSETTING(enableID) && def->getState(); }),
+      ENTRY("BLADE_ID_SCAN_MILLIS", 1000, parent->idPage->scanIDMillis, CHECKER(){ return IDSETTING(enableID) && IDSETTING(continuousScans); }),
+      ENTRY("BLADE_ID_TIMES", 10, parent->idPage->numIDTimes, CHECKER(){ return IDSETTING(enableID) && IDSETTING(continuousScans); }),
   };
 
 # undef ENTRY
@@ -63,74 +63,74 @@ void Settings::setCustomInputParsers() {
     numBlades = std::stoi(key.second);
     return true;
   });
-  generalDefines["SAVE_STATE"]->overrideParser([](const ProffieDefine* def, const std::string& input) -> bool {
+  generalDefines["SAVE_STATE"]->overrideParser([&](const ProffieDefine* def, const std::string& input) -> bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
 
-    EditorWindow::instance->generalPage->colorSave->SetValue(true);
-    EditorWindow::instance->generalPage->presetSave->SetValue(true);
-    EditorWindow::instance->generalPage->volumeSave->SetValue(true);
+    parent->generalPage->colorSave->SetValue(true);
+    parent->generalPage->presetSave->SetValue(true);
+    parent->generalPage->volumeSave->SetValue(true);
     return true;
   });
-  generalDefines["BLADE_DETECT_PIN"]->overrideParser([](const ProffieDefine* def, const std::string& input) -> bool {
+  generalDefines["BLADE_DETECT_PIN"]->overrideParser([&](const ProffieDefine* def, const std::string& input) -> bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
 
-    EditorWindow::instance->idPage->enableDetect->SetValue(true);
-    EditorWindow::instance->idPage->detectPin->SetValue(key.second);
+    parent->idPage->enableDetect->SetValue(true);
+    parent->idPage->detectPin->SetValue(key.second);
     return false;
   });
-  generalDefines["BLADE_ID_CLASS"]->overrideParser([](const ProffieDefine* def, const std::string& input) -> bool {
+  generalDefines["BLADE_ID_CLASS"]->overrideParser([&](const ProffieDefine* def, const std::string& input) -> bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
 
-    EditorWindow::instance->idPage->enableID->SetValue(true);
+    parent->idPage->enableID->SetValue(true);
     key.second = std::strtok(key.second.data(), "< ");
     if (key.second == "SnapshotBladeID") {
-      EditorWindow::instance->idPage->mode->SetValue(BLADE_ID_MODE_SNAPSHOT);
-      EditorWindow::instance->idPage->IDPin->entry->SetValue(std::strtok(nullptr, "<> "));
+      parent->idPage->mode->SetValue(BLADE_ID_MODE_SNAPSHOT);
+      parent->idPage->IDPin->entry->SetValue(std::strtok(nullptr, "<> "));
     } else if (key.second == "ExternalPullupBladeID") {
-      EditorWindow::instance->idPage->mode->SetValue(BLADE_ID_MODE_EXTERNAL);
-      EditorWindow::instance->idPage->IDPin->entry->SetValue(std::strtok(nullptr, "<, "));
-      EditorWindow::instance->idPage->pullupResistance->num->SetValue(std::stod(std::strtok(nullptr, ",> ")));
+      parent->idPage->mode->SetValue(BLADE_ID_MODE_EXTERNAL);
+      parent->idPage->IDPin->entry->SetValue(std::strtok(nullptr, "<, "));
+      parent->idPage->pullupResistance->num->SetValue(std::stod(std::strtok(nullptr, ",> ")));
     } else if (key.second == "BridgedPullupBladeID") {
-      EditorWindow::instance->idPage->mode->SetValue(BLADE_ID_MODE_BRIDGED);
-      EditorWindow::instance->idPage->IDPin->entry->SetValue(std::strtok(nullptr, "<, "));
-      EditorWindow::instance->idPage->pullupPin->entry->SetValue(std::strtok(nullptr, ",> "));
+      parent->idPage->mode->SetValue(BLADE_ID_MODE_BRIDGED);
+      parent->idPage->IDPin->entry->SetValue(std::strtok(nullptr, "<, "));
+      parent->idPage->pullupPin->entry->SetValue(std::strtok(nullptr, ",> "));
     }
     return true;
   });
-  generalDefines["BLADE_ID_SCAN_MILLIS"]->overrideParser([](const ProffieDefine* def, const std::string& input) ->bool {
+  generalDefines["BLADE_ID_SCAN_MILLIS"]->overrideParser([&](const ProffieDefine* def, const std::string& input) ->bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
 
-    EditorWindow::instance->idPage->scanIDMillis->SetValue(std::stoi(key.second));
-    EditorWindow::instance->idPage->continuousScans->SetValue(true);
+    parent->idPage->scanIDMillis->SetValue(std::stoi(key.second));
+    parent->idPage->continuousScans->SetValue(true);
     return true;
   });
-  generalDefines["BLADE_ID_TIMES"]->overrideParser([](const ProffieDefine* def, const std::string& input) ->bool {
+  generalDefines["BLADE_ID_TIMES"]->overrideParser([&](const ProffieDefine* def, const std::string& input) ->bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
 
-    EditorWindow::instance->idPage->numIDTimes->SetValue(std::stoi(key.second));
-    EditorWindow::instance->idPage->continuousScans->SetValue(true);
+    parent->idPage->numIDTimes->SetValue(std::stoi(key.second));
+    parent->idPage->continuousScans->SetValue(true);
     return true;
   });
-  generalDefines["ENABLE_POWER_FOR_ID"]->overrideParser([](const ProffieDefine* def, const std::string& input) -> bool {
+  generalDefines["ENABLE_POWER_FOR_ID"]->overrideParser([&](const ProffieDefine* def, const std::string& input) -> bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
 
-    EditorWindow::instance->idPage->enablePowerForID->SetValue(true);
+    parent->idPage->enablePowerForID->SetValue(true);
     std::strtok(key.second.data(), "<");
     char* pwrPinTest = std::strtok(nullptr, "<>, ");
     while (pwrPinTest != nullptr) {
       key.second = pwrPinTest;
-      if (key.second == "bladePowerPin1") EditorWindow::instance->idPage->powerPin1->SetValue(true);
-      if (key.second == "bladePowerPin2") EditorWindow::instance->idPage->powerPin2->SetValue(true);
-      if (key.second == "bladePowerPin3") EditorWindow::instance->idPage->powerPin3->SetValue(true);
-      if (key.second == "bladePowerPin4") EditorWindow::instance->idPage->powerPin4->SetValue(true);
-      if (key.second == "bladePowerPin5") EditorWindow::instance->idPage->powerPin5->SetValue(true);
-      if (key.second == "bladePowerPin6") EditorWindow::instance->idPage->powerPin6->SetValue(true);
+      if (key.second == "bladePowerPin1") parent->idPage->powerPin1->SetValue(true);
+      if (key.second == "bladePowerPin2") parent->idPage->powerPin2->SetValue(true);
+      if (key.second == "bladePowerPin3") parent->idPage->powerPin3->SetValue(true);
+      if (key.second == "bladePowerPin4") parent->idPage->powerPin4->SetValue(true);
+      if (key.second == "bladePowerPin5") parent->idPage->powerPin5->SetValue(true);
+      if (key.second == "bladePowerPin6") parent->idPage->powerPin6->SetValue(true);
 
       pwrPinTest = std::strtok(nullptr, "<>, ");
     }
@@ -138,9 +138,9 @@ void Settings::setCustomInputParsers() {
   });
 }
 void Settings::setCustomOutputParsers() {
-  generalDefines["NUM_BLADES"]->overrideOutput([](const ProffieDefine* def) -> std::string {
+  generalDefines["NUM_BLADES"]->overrideOutput([&](const ProffieDefine* def) -> std::string {
     int32_t numBlades = 0;
-    for (const BladesPage::BladeConfig& blade : EditorWindow::instance->idPage->bladeArrays[EditorWindow::instance->bladesPage->bladeArray->GetSelection()].blades) numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
+    for (const BladesPage::BladeConfig& blade : parent->idPage->bladeArrays[parent->bladesPage->bladeArray->GetSelection()].blades) numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
     return def->getName() + " " + std::to_string(numBlades);
   });
   generalDefines["PLI_OFF_TIME"]->overrideOutput([](const ProffieDefine* def) -> std::string {
@@ -152,24 +152,24 @@ void Settings::setCustomOutputParsers() {
   generalDefines["MOTION_TIMEOUT"]->overrideOutput([](const ProffieDefine* def) -> std::string {
     return def->getName() + " " + std::to_string(def->getNum()) + " * 60 * 1000";
   });
-  generalDefines["BLADE_ID_CLASS"]->overrideOutput([](const ProffieDefine* def) -> std::string {
-    auto mode = EditorWindow::instance->idPage->mode->GetValue();
+  generalDefines["BLADE_ID_CLASS"]->overrideOutput([&](const ProffieDefine* def) -> std::string {
+    auto mode = parent->idPage->mode->GetValue();
     std::string returnVal = def->getName() + " ";
-    if (mode == BLADE_ID_MODE_SNAPSHOT) returnVal + "SnapshotBladeID<" + EditorWindow::instance->idPage->IDPin->entry->GetValue() + ">";
-    else if (mode == BLADE_ID_MODE_BRIDGED) returnVal + "ExternalPullupBladeID<" + EditorWindow::instance->idPage->IDPin->entry->GetValue() + ", " + EditorWindow::instance->idPage->pullupResistance->num->GetTextValue() + ">";
-    else if (mode == BLADE_ID_MODE_EXTERNAL) returnVal + "BridgedPullupBladeID<" + EditorWindow::instance->idPage->IDPin->entry->GetValue() + ", " + EditorWindow::instance->idPage->pullupPin->entry->GetValue();
+    if (mode == BLADE_ID_MODE_SNAPSHOT) returnVal + "SnapshotBladeID<" + parent->idPage->IDPin->entry->GetValue() + ">";
+    else if (mode == BLADE_ID_MODE_BRIDGED) returnVal + "ExternalPullupBladeID<" + parent->idPage->IDPin->entry->GetValue() + ", " + parent->idPage->pullupResistance->num->GetTextValue() + ">";
+    else if (mode == BLADE_ID_MODE_EXTERNAL) returnVal + "BridgedPullupBladeID<" + parent->idPage->IDPin->entry->GetValue() + ", " + parent->idPage->pullupPin->entry->GetValue();
 
     return returnVal;
   });
-  generalDefines["ENABLE_POWER_FOR_ID"]->overrideOutput([](const ProffieDefine* def) -> std::string {
+  generalDefines["ENABLE_POWER_FOR_ID"]->overrideOutput([&](const ProffieDefine* def) -> std::string {
     std::string returnVal = def->getName() + " PowerPINS<";
     std::vector<std::string> powerPins;
-    if (EditorWindow::instance->idPage->powerPin1->GetValue()) powerPins.push_back("bladePowerPin1");
-    if (EditorWindow::instance->idPage->powerPin2->GetValue()) powerPins.push_back("bladePowerPin2");
-    if (EditorWindow::instance->idPage->powerPin3->GetValue()) powerPins.push_back("bladePowerPin3");
-    if (EditorWindow::instance->idPage->powerPin4->GetValue()) powerPins.push_back("bladePowerPin4");
-    if (EditorWindow::instance->idPage->powerPin5->GetValue()) powerPins.push_back("bladePowerPin5");
-    if (EditorWindow::instance->idPage->powerPin6->GetValue()) powerPins.push_back("bladePowerPin6");
+    if (parent->idPage->powerPin1->GetValue()) powerPins.push_back("bladePowerPin1");
+    if (parent->idPage->powerPin2->GetValue()) powerPins.push_back("bladePowerPin2");
+    if (parent->idPage->powerPin3->GetValue()) powerPins.push_back("bladePowerPin3");
+    if (parent->idPage->powerPin4->GetValue()) powerPins.push_back("bladePowerPin4");
+    if (parent->idPage->powerPin5->GetValue()) powerPins.push_back("bladePowerPin5");
+    if (parent->idPage->powerPin6->GetValue()) powerPins.push_back("bladePowerPin6");
 
     for (int32_t pin = 0; pin < static_cast<int32_t>(powerPins.size()); pin++) {
       returnVal += powerPins.at(pin);

@@ -2,9 +2,7 @@
 // Copyright (C) 2023 Ryan Ogurek
 
 #pragma once
-class PropPage; // Forward declaration to get around circular dependencies
 
-#include "core/config/propfile.h"
 #include "editor/editorwindow.h"
 
 #include <wx/window.h>
@@ -14,26 +12,35 @@ class PropPage; // Forward declaration to get around circular dependencies
 #include <wx/scrolwin.h>
 #include <wx/sizer.h>
 
-class PropPage : public wxScrolledWindow {
+// Forward declaration to get around circular dependency
+class PropFile;
+
+class PropsPage : public wxScrolledWindow {
 public:
-  PropPage(wxWindow*);
+  PropsPage(wxWindow*);
+  ~PropsPage();
 
   void update();
   void updateProps();
-  void updatePropSelection();
-  const PropFile& getSelectedProp();
+  void updateSelectedProp(const wxString& = "");
+  PropFile* getSelectedProp();
+  const std::vector<PropFile*>& getLoadedProps();
   wxStaticBoxSizer* sizer{nullptr};
 
   wxComboBox* propSelection{nullptr};
   wxButton* buttonInfo{nullptr};
 
 private:
+  EditorWindow* parent{nullptr};
+
+  std::vector<PropFile*> props;
+
   enum {
     ID_Select,
     ID_Option,
     ID_Buttons
   };
 
-  EditorWindow* parent;
+  void loadProps();
   void bindEvents();
 };

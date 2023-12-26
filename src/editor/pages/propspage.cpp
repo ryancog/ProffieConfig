@@ -1,7 +1,7 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
-#include "editor/pages/proppage.h"
+#include "editor/pages/propspage.h"
 
 #include "core/appstate.h"
 #include "core/defines.h"
@@ -14,7 +14,7 @@
 #include <wx/sizer.h>
 #include <wx/tooltip.h>
 
-PropPage::PropPage(wxWindow* window) : wxScrolledWindow(window), parent{static_cast<EditorWindow*>(window)} {
+PropsPage::PropsPage(wxWindow* window) : wxScrolledWindow(window), parent{static_cast<EditorWindow*>(window)} {
   sizer = new wxStaticBoxSizer(wxVERTICAL, this, "");
   auto top = new wxBoxSizer(wxHORIZONTAL);
   propSelection = new wxComboBox(sizer->GetStaticBox(), ID_Select, PR_DEFAULT, wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Default"}), wxCB_READONLY);
@@ -24,17 +24,22 @@ PropPage::PropPage(wxWindow* window) : wxScrolledWindow(window), parent{static_c
 
   sizer->Add(top);
 
+  loadProps();
+
   bindEvents();
 
   SetSizerAndFit(sizer);
   SetScrollbars(-1, 10, -1, 1);
 }
+PropsPage::~PropsPage() {
+  for (const auto& prop : props) delete prop;
+}
 
-void PropPage::bindEvents() {
+void PropsPage::bindEvents() {
   auto propSelectUpdate = [&](wxCommandEvent&) {
-    PropPage::updatePropSelection();
+    updateSelectedProp();
     parent->propPage->SetMinClientSize(wxSize(parent->propPage->sizer->GetMinSize().GetWidth(), 0));
-    FULLUPDATEWINDOW;
+    FULLUPDATEWINDOW(parent);
     parent->SetSize(wxSize(parent->GetSize().GetWidth(), parent->GetMinHeight() + parent->propPage->GetBestVirtualSize().GetHeight()));
     parent->SetMinSize(wxSize(parent->GetSize().GetWidth(), 350));
   };
@@ -55,7 +60,7 @@ void PropPage::bindEvents() {
         std::string buttons;
 
         PropFile* activeProp{nullptr};
-        for (auto& prop : AppState::instance->getProps()) {
+        for (auto& prop : props) {
           if (propSelection->GetStringSelection() == prop->getName()) activeProp = prop;
         }
 
@@ -136,11 +141,11 @@ void PropPage::bindEvents() {
       }, ID_Buttons);
 }
 
-void PropPage::updateProps() {
+void PropsPage::updateProps() {
   auto lastSelect = propSelection->GetStringSelection();
   propSelection->Clear();
   propSelection->Append("Default");
-  for (const auto& prop : AppState::instance->getProps()) {
+  for (const auto& prop : props) {
     propSelection->Append(prop->getName());
   }
   if ([&]() { for (const auto& prop : propSelection->GetStrings()) if (prop == lastSelect) return true; return false; }()) {
@@ -148,14 +153,8 @@ void PropPage::updateProps() {
   } else propSelection->SetStringSelection("Default");
 }
 
-void PropPage::updatePropSelection() {
-  for (auto& prop : AppState::instance->getProps()) {
-    prop->show(propSelection->GetStringSelection() == prop->getName());
-  }
-}
-
-void PropPage::update() {
-  for (auto& prop : AppState::instance->getProps()) {
+void PropsPage::update() {
+  for (auto& prop : props) {
     if (propSelection->GetStringSelection() != prop->getName()) continue;
 
     for (auto& [ name, setting ] : prop->getSettings()) {
@@ -186,4 +185,20 @@ void PropPage::update() {
 #     undef CHECKENABLED
     }
   }
+}
+
+const std::vector<PropFile*>& PropsPage::getLoadedProps() { return props; }
+PropFile* PropsPage::getSelectedProp() { for (const auto& prop : props) if (prop->getName() == propSelection->GetStringSelection()) return prop; return nullptr; }
+
+void PropsPage::updateSelectedProp(const wxString& newProp) {
+  if (!newProp.empty()) propSelection->SetStringSelection(newProp);
+  for (auto& prop : props) prop->show(propSelection->GetStringSelection() == prop->getName());
+}
+void PropsPage::loadProps() {
+  props.clear();
+  for (const auto& prop : AppState::instance->getPropFileNames()) {
+    auto propConfig = PropFile::createPropConfig(prop, this);
+    if (propConfig != nullptr) props.push_back(propConfig);
+  }
+  updateProps();
 }

@@ -48,6 +48,7 @@
 #define PR_BC "BC"
 #define PR_CAIWYN "Caiwyn"
 
+#include <wx/tooltip.h>
 #define TIP(object, msg) object->SetToolTip(new wxToolTip(msg));
 
 #define ARDUINOCORE_PBV1 "proffieboard:stm32l4:Proffieboard-L433CC"

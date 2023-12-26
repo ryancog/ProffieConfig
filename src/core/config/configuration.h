@@ -18,9 +18,8 @@ public:
   static bool outputConfig(EditorWindow* editorWindow);
   static bool outputConfig(const std::string&, EditorWindow* editorWindow);
   static bool exportConfig(EditorWindow* editorWindow);
-  static void readConfig(EditorWindow* editorWindow);
-  static void readConfig(const std::string&, EditorWindow* editorWindow);
-  static void importConfig(EditorWindow* editorWindow);
+  static bool readConfig(const std::string&, EditorWindow* editorWindow);
+  static bool importConfig(EditorWindow* editorWindow);
 
   enum class SaberProp {
     DEFAULT,
@@ -70,7 +69,7 @@ private:
   static void readConfigProp(std::ifstream&, EditorWindow*);
   static void readConfigPresets(std::ifstream&, EditorWindow*);
   static void readConfigStyles(std::ifstream&, EditorWindow*);
-  static void replaceStyles(const std::string&, const std::string&);
+  static void replaceStyles(const std::string&, const std::string&, EditorWindow*);
   static void readPresetArray(std::ifstream&, EditorWindow*);
   static void readBladeArray(std::ifstream&, EditorWindow*);
 };

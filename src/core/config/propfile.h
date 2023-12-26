@@ -4,6 +4,7 @@
 #pragma once
 
 #include "core/utilities/misc.h"
+#include "editor/pages/propspage.h"
 
 #include <string>
 #include <vector>
@@ -28,11 +29,9 @@ namespace std {
 
 class PropFile {
 public:
-  ~PropFile();
-
   struct Setting;
   struct Button;
-  static PropFile* createPropConfig(const std::string& pathname);
+  static PropFile* createPropConfig(const std::string&, PropsPage*);
 
   void show(bool = true) const;
   std::string getName() const;
@@ -83,6 +82,7 @@ public:
 
 private:
   PropFile();
+  PropsPage* parent{nullptr};
 
   std::string name{""};
   std::string fileName{""};

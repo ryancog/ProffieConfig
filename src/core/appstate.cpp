@@ -5,8 +5,7 @@
 #include "core/defines.h"
 #include "core/utilities/fileparse.h"
 #include "onboard/onboard.h"
-#include "editor/editorwindow.h"
-#include "config/configuration.h"
+#include "mainmenu/mainmenu.h"
 
 #include <fstream>
 #include <iostream>
@@ -20,8 +19,7 @@ void AppState::init() {
   if (instance->firstRun) {
     instance->onboard = new Onboard();
   } else {
-    instance->editors.push_back(new EditorWindow());
-    Configuration::readConfig();
+    MainMenu::instance = new MainMenu();
   }
 }
 
@@ -79,15 +77,4 @@ void AppState::setSaved(bool state) {
 }
 const std::vector<std::string>& AppState::getPropFileNames() {
   return propFileNames;
-}
-std::vector<PropFile*>& AppState::getProps() {
-  return props;
-}
-
-void AppState::clearProps() {
-  props.clear();
-}
-
-void AppState::addProp(PropFile* prop) {
-  props.push_back(prop);
 }

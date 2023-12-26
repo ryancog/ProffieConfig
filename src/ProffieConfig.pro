@@ -24,6 +24,8 @@ LIBS += $$system(wx-config --libs all)
 
 SOURCES += \
     editor/editorwindow.cpp \
+    editor/pages/bladearraypage.cpp \
+    editor/pages/propspage.cpp \
     main.cpp \
     core/appstate.cpp \
     core/utilities/fileparse.cpp \
@@ -35,8 +37,6 @@ SOURCES += \
     editor/pages/generalpage.cpp \
     editor/pages/presetspage.cpp \
     editor/pages/bladespage.cpp \
-    editor/pages/bladeidpage.cpp \
-    editor/pages/proppage.cpp \
     mainmenu/mainmenu.cpp \
     onboard/onboard.cpp \
     tools/arduino.cpp \
@@ -53,11 +53,11 @@ HEADERS += \
     core/utilities/threadrunner.h \
     core/utilities/progress.h \
     editor/editorwindow.h \
+    editor/pages/bladearraypage.h \
     editor/pages/generalpage.h \
     editor/pages/presetspage.h \
     editor/pages/bladespage.h \
-    editor/pages/bladeidpage.h \
-    editor/pages/proppage.h \
+    editor/pages/propspage.h \
     mainmenu/mainmenu.h \
     onboard/onboard.h \
     tools/arduino.h \
