@@ -72,6 +72,4 @@ private:
   void stripAndSaveName();
   void stripAndSaveDir();
   void stripAndSaveTrack();
-
-  bool selfEdit{false};
 };

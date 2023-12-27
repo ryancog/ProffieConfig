@@ -8,6 +8,7 @@
 
 #include <string>
 #include <vector>
+#include <array>
 #include <unordered_map>
 #include <wx/sizer.h>
 #include <wx/checkbox.h>
