@@ -491,7 +491,7 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
     // Deal with Fett's comments
     comment.clear();
     if (presetInfo.find("/*") != std::string::npos) {
-      comment = presetInfo.substr(presetInfo.find("/*"), presetInfo.find("*/") + 2);
+      comment = presetInfo.substr(presetInfo.find("/*"), presetInfo.find("*/") - presetInfo.find("/*") + 2);
       presetInfo = presetInfo.substr(presetInfo.find("*/") + 2);
     }
 
@@ -504,10 +504,10 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
         presetInfo = presetInfo.substr(presetInfo.find(11 /* length of "&style_pov,"*/));
         bladeArray.presets[preset].styles.push_back("&style_pov");
       } else {
-        element = presetInfo.substr(0, presetInfo.find("(),") + 2); // Copy in next
+        element = presetInfo.substr(presetInfo.find("Style"), presetInfo.find("()") - presetInfo.find("Style") + 2); // Copy in next
 
-        presetInfo = presetInfo.substr(presetInfo.find("(),") + 3); // Increment
-        bladeArray.presets[preset].styles.push_back(comment + element.substr(element.find("Style"), element.find("(),")));
+        presetInfo = presetInfo.substr(presetInfo.find("()") + 2); // Increment
+        bladeArray.presets[preset].styles.push_back(comment + element);
       }
     }
 
