@@ -10,6 +10,7 @@
 #include "../resources/icons/icon.xpm"
 
 #include "tools/arduino.h"
+#include "core/appstate.h"
 #include "core/utilities/misc.h"
 
 Onboard::Onboard() : wxWizard(nullptr, wxID_ANY, "ProffieConfig First-Time Setup", wxBitmap(icon_xpm), wxDefaultPosition, wxDEFAULT_DIALOG_STYLE) {
@@ -24,7 +25,9 @@ bool Onboard::run() {
       .Chain(new DependencyInstall(this))
       .Chain(new Overview(this));
 
-  return RunWizard(firstPage);
+  auto wizardReturn = RunWizard(firstPage);
+  Destroy();
+  return wizardReturn;
 }
 
 void Onboard::bindEvents() {
@@ -56,6 +59,7 @@ void Onboard::bindEvents() {
           page->Layout();
 
           page->completedInstall = true;
+          AppState::instance->saveState();
         } else {
           page->pressNext->Show();
           page->Layout();

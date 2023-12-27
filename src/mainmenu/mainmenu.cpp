@@ -4,9 +4,10 @@
 #include "mainmenu.h"
 
 #include "core/defines.h"
-#include "core/config/configuration.h"
+#include "core/utilities/misc.h"
 #include "tools/arduino.h"
 #include "tools/serialmonitor.h"
+#include "../resources/icons/icon-small.xpm"
 
 #include <wx/menu.h>
 
@@ -17,33 +18,34 @@ MainMenu::MainMenu() : wxFrame(nullptr, wxID_ANY, "ProffieConfig") {
   createTooltips();
   bindEvents();
 
+# ifdef __WXMSW__
+  SetIcon( wxICON(IDI_ICON1) );
+  SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
+# endif
+
   Show(true);
 }
 
 void MainMenu::bindEvents() {
+  Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
+  Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::init(this); }, ID_ReRunSetup);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(ABOUT_MESSAGE, "About ProffieConfig", wxOK | wxICON_INFORMATION, this); }, wxID_ABOUT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION, this); }, ID_Copyright);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(activeEditor); }, ID_ExportFile);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::importConfig(activeEditor); }, ID_ImportFile);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/blob/master/docs"); }, ID_Docs);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/issues/new"); }, ID_Issue);
 # if defined(__WXMSW__)
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { SerialMonitor::instance = new SerialMonitor; SerialMonitor::instance->Close(true); }, ID_OpenSerial);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { SerialMonitor::instance = new SerialMonitor(this); SerialMonitor::instance->Close(true); }, ID_OpenSerial);
 # else
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(this); }, ID_OpenSerial);
 #endif
 
 
-  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        if (boardSelect->GetValue() == "Select Device...") applyButton->Disable();
-        else applyButton->Enable();
-        if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Close(true);
-      }, ID_DeviceSelect);
+  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { update(); });
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(this); }, ID_RefreshDev);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(this, activeEditor); }, ID_ApplyChanges);
-
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { }, ID_EditConfig);
 }
 
 void MainMenu::createTooltips() {
@@ -54,21 +56,11 @@ void MainMenu::createTooltips() {
 
 void MainMenu::createMenuBar() {
   wxMenu *file = new wxMenu;
-  file->Append(ID_ExportFile, "Export Config...", "Choose a location to save a copy of your config...");
-  file->Append(ID_ImportFile, "Import Config...", "Choose a file to import...");
-  file->AppendSeparator();
-  file->AppendSeparator();
   file->Append(ID_ReRunSetup, "Re-Run First-Time Setup...", "Install Proffieboard Dependencies and View Tutorial");
   file->AppendSeparator();
   file->Append(wxID_ABOUT);
   file->Append(ID_Copyright, "Copyright Notice");
   file->Append(wxID_EXIT);
-
-  wxMenu* board = new wxMenu;
-  board->Append(ID_OpenSerial, "Serial Monitor...\tCtrl+M", "Open a serial monitor to the proffieboard");
-
-  wxMenu* tools = new wxMenu;
-  tools->Append(ID_StyleEditor, "Style Editor...", "Open the ProffieOS style editor");
 
   wxMenu* help = new wxMenu;
   help->Append(ID_Docs, "Documentation...\tCtrl+H", "Open the ProffieConfig docs in your web browser");
@@ -76,8 +68,6 @@ void MainMenu::createMenuBar() {
 
   wxMenuBar *menuBar = new wxMenuBar;
   menuBar->Append(file, "&File");
-  menuBar->Append(board, "&Board");
-  menuBar->Append(tools, "&Tools");
   menuBar->Append(help, "&Help");
   SetMenuBar(menuBar);
 }
@@ -85,9 +75,70 @@ void MainMenu::createMenuBar() {
 void MainMenu::createUI() {
   auto sizer = new wxBoxSizer(wxVERTICAL);
 
-  applyButton = new wxButton(this, ID_ApplyChanges, "Apply to Board");
-  boardSelect = new wxComboBox(this, ID_DeviceSelect, "Select Board...", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Arduino::getBoards()), wxCB_READONLY);
-  refreshButton = new wxButton(this, ID_RefreshDev, "Refresh Connected Boards");
+  auto headerSection = new wxBoxSizer(wxHORIZONTAL);
+  auto titleSection = new wxBoxSizer(wxVERTICAL);
+  auto title = new wxStaticText(this, wxID_ANY, "ProffieConfig");
+  auto titleFont = title->GetFont();
+  titleFont.MakeBold();
+  titleFont.SetPointSize(30);
+  title->SetFont(titleFont);
+  auto subTitle = new wxStaticText(this, wxID_ANY, "Created by Ryryog25");
+  titleSection->Add(title, wxSizerFlags(0).Border(wxLEFT | wxRIGHT | wxTOP, 10));
+  titleSection->Add(subTitle, wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 10));
+  headerSection->Add(titleSection, wxSizerFlags(0));
+  headerSection->AddStretchSpacer(1);
+  headerSection->Add(new wxStaticBitmap(this, wxID_ANY, icon_small_xpm), wxSizerFlags(0).Border(wxALL, 10));
 
+  auto configSelectSection = new wxBoxSizer(wxHORIZONTAL);
+  configSelect = new wxComboBox(this, ID_ConfigSelect, "Select Config...", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Select Config..."}), wxCB_READONLY);
+  addConfig = new wxButton(this, ID_AddConfig, "Add", wxDefaultPosition, wxSize(50, -1), wxBU_EXACTFIT);
+  removeConfig = new wxButton(this, ID_RemoveConfig, "Remove", wxDefaultPosition, wxSize(75, -1), wxBU_EXACTFIT);
+  configSelectSection->Add(configSelect, wxSizerFlags(1).Border(wxALL, 5).Expand());
+  configSelectSection->Add(addConfig, wxSizerFlags(0).Border(wxALL, 5).Expand());
+  configSelectSection->Add(removeConfig, wxSizerFlags(0).Border(wxALL, 5).Expand());
+
+  auto boardControls = new wxBoxSizer(wxHORIZONTAL);
+  boardSelect = new wxComboBox(this, ID_DeviceSelect, "Select Board...", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Arduino::getBoards()), wxCB_READONLY);
+  refreshButton = new wxButton(this, ID_RefreshDev, "Refresh Boards");
+  boardControls->Add(refreshButton, wxSizerFlags(0).Border(wxALL, 5));
+  boardControls->Add(boardSelect, wxSizerFlags(1).Border(wxALL, 5));
+
+  auto options = new wxBoxSizer(wxVERTICAL);
+  applyButton = new wxButton(this, ID_ApplyChanges, "Apply Selected Configuration to Board");
+  applyButton->Disable();
+  editConfig = new wxButton(this, ID_EditConfig, "Edit Selected Configuration");
+  editConfig->Disable();
+  openSerial = new wxButton(this, ID_OpenSerial, "Open Serial Monitor");
+  openSerial->Disable();
+  options->Add(applyButton, wxSizerFlags(0).Border(wxALL, 5).Expand());
+  options->Add(editConfig, wxSizerFlags(0).Border(wxALL, 5).Expand());
+  options->Add(openSerial, wxSizerFlags(0).Border(wxALL, 5).Expand());
+
+  sizer->Add(headerSection, wxSizerFlags(0).Expand());
+  sizer->AddSpacer(20);
+  sizer->Add(configSelectSection, wxSizerFlags(0).Border(wxALL, 5).Expand());
+  sizer->Add(boardControls, wxSizerFlags(0).Border(wxALL, 5).Expand());
+  sizer->Add(options, wxSizerFlags(0).Border(wxALL, 5).Expand());
   SetSizerAndFit(sizer);
+}
+
+void MainMenu::update() {
+  auto configSelected = configSelect->GetValue() != "Select Config...";
+  auto boardSelected = boardSelect->GetValue() != "Select Board...";
+
+  applyButton->Enable(configSelected && boardSelected);
+  editConfig->Enable(configSelected);
+  removeConfig->Enable(configSelected);
+  applyButton->Enable(configSelected && boardSelected);
+  openSerial->Enable(boardSelected);
+
+  for (auto editor = editors.begin(); editor < editors.end();) {
+    if (!(*editor)->IsShown()) {
+      if (&**editor == &*activeEditor) activeEditor = nullptr;
+      (*editor)->Destroy();
+      editor = editors.erase(editor);
+      continue;
+    }
+    editor++;
+  }
 }
