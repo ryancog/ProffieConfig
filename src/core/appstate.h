@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include "editor/editorwindow.h"
-
 #include <string>
 #include <vector>
 
@@ -19,11 +17,12 @@ public:
   void saveState();
   const std::vector<std::string>& getPropFileNames();
 
+  bool firstRun{true};
+
 private:
   AppState();
   AppState(const AppState&) = delete;
 
-  bool firstRun{true};
   std::vector<std::string> propFileNames;
 
   bool saved{true};

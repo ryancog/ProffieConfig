@@ -10,11 +10,9 @@
 #include "editor/pages/bladearraypage.h"
 
 #include "core/config/settings.h"
-#include "core/config/configuration.h"
 #include "core/defines.h"
 #include "core/utilities/misc.h"
 #include "core/utilities/progress.h"
-#include "core/appstate.h"
 
 #include <wx/combobox.h>
 #include <wx/arrstr.h>
@@ -25,30 +23,27 @@
 #include <wx/string.h>
 #include <wx/tooltip.h>
 
-EditorWindow::EditorWindow(const std::string& config) : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize) {
+EditorWindow::EditorWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize) {
   createMenuBar();
   createPages();
   bindEvents();
   createToolTips();
   settings = new Settings(this);
 
-  if (!Configuration::readConfig(config, this)) {
-    Destroy();
-    return;
-  }
 # ifdef __WXMSW__
   SetIcon( wxICON(IDI_ICON1) );
   SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
 # endif
-
-  Show(true);
 }
 
 
 void EditorWindow::bindEvents() {
-  // Main Window
-  // Yeah, this segfaults right now... but we want it to close anyways, right? I need to fix this... I have a few ideas I'll try when I get back to it.
-  Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event ) { if (wxMessageBox("Are you sure you want to close ProffieConfig?\n\nAny unsaved changes will be lost!", "Close ProffieConfig", wxICON_WARNING | wxYES_NO | wxNO_DEFAULT, this) == wxNO && event.CanVeto()) event.Veto(); else { AppState::instance->saveState(); Destroy(); }});
+  Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event ) {
+    if (wxMessageBox("Are you sure you want to close the editor?\n\nAny unsaved changes will be lost!", "Close ProffieConfig Editor", wxICON_WARNING | wxYES_NO | wxNO_DEFAULT, this) == wxYES) {
+      Hide();
+    }
+    event.Veto();
+    });
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
 

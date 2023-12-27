@@ -17,20 +17,17 @@ void AppState::init() {
   instance->loadStateFromFile();
 
   if (instance->firstRun) {
-    auto onboard = new Onboard();
-    if (onboard->run()) {
-      instance->firstRun = false;
-      instance->saveState();
-    } else return;
+    Onboard().run();
+  } else {
+    MainMenu::instance = new MainMenu();
   }
-
-  MainMenu::instance = new MainMenu();
 }
 
 void AppState::saveState() {
   std::ofstream stateFile(STATEFILE_PATH ".tmp");
   if (!stateFile.is_open()) {
     std::cerr << "Error creating temporary save file." << std::endl;
+    stateFile.close();
     return;
   }
 
@@ -42,8 +39,10 @@ void AppState::saveState() {
   stateFile << "}" << std::endl;
   stateFile.close();
 
+  remove(STATEFILE_PATH); // we don't care if it fails bc there's nothing there
   if (rename(STATEFILE_PATH ".tmp", STATEFILE_PATH) != 0) {
     std::cerr << "Error saving state file." << std::endl;
+    return;
   }
 }
 
