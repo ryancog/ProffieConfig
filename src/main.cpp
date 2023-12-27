@@ -9,6 +9,7 @@
 #ifdef __WXOSX__
 #include <mach-o/dyld.h>
 #include <libgen.h>
+#include "core/utilities/misc.h"
 #endif
 
 class ProffieConfig : public wxApp {
