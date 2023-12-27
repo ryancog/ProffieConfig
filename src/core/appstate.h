@@ -25,7 +25,6 @@ private:
 
   bool firstRun{true};
   std::vector<std::string> propFileNames;
-  std::vector<EditorWindow*> editors;
 
   bool saved{true};
 

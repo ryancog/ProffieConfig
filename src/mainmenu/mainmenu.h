@@ -18,9 +18,17 @@ public:
   wxButton* applyButton{nullptr};
   wxComboBox* boardSelect{nullptr};
 
+  wxButton* openSerial{nullptr};
+
+  wxComboBox* configSelect{nullptr};
+  wxButton* addConfig{nullptr};
+  wxButton* removeConfig{nullptr};
+  wxButton* editConfig{nullptr};
+
 
 private:
   EditorWindow* activeEditor{nullptr};
+  std::vector<EditorWindow*> editors{};
 
   enum {
     ID_DUMMY1, // on macOS menu items cannot have ID 0
@@ -33,12 +41,16 @@ private:
     ID_Docs,
     ID_Issue,
 
-    ID_ExportFile,
-    ID_ImportFile,
-
     ID_OpenSerial,
-    ID_StyleEditor,
+
+    ID_ConfigSelect,
+    ID_AddConfig,
+    ID_RemoveConfig,
+    ID_EditConfig,
   };
+
+  void update();
+  void createNewConfig();
 
   void createUI();
   void createMenuBar();

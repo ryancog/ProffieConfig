@@ -8,10 +8,10 @@
 
 SerialMonitor* SerialMonitor::instance;
 #if defined(__WXMSW__)
-SerialMonitor::SerialMonitor() {
-  if (EditorWindow::instance->devSelect->GetSelection() > 0) {
-    ShellExecute(NULL, NULL, TEXT(ARDUINO_PATH), std::wstring("monitor -p " + EditorWindow::instance->devSelect->GetStringSelection().ToStdWstring() + " -c baudrate=115200").c_str(), NULL, true);
-  } else wxMessageBox("Select board first.", "No Board Selected", wxOK | wxICON_ERROR, EditorWindow::instance);
+SerialMonitor::SerialMonitor(MainMenu* parent) {
+  if (parent->boardSelect->GetSelection() > 0) {
+    ShellExecute(NULL, NULL, TEXT(ARDUINO_PATH), std::wstring("monitor -p " + parent->boardSelect->GetStringSelection().ToStdWstring() + " -c baudrate=115200").c_str(), NULL, true);
+  } else wxMessageBox("Select board first.", "No Board Selected", wxOK | wxICON_ERROR, parent);
 }
 
 #elif defined(__WXOSX__) || defined(__WXGTK__)

@@ -64,13 +64,13 @@ void Arduino::refreshBoards(MainMenu* window, std::function<void(bool)> callback
     
     window->boardSelect->SetValue(lastSel);
     if (window->boardSelect->GetSelection() == -1) window->boardSelect->SetSelection(0);
-    progDialog->emitEvent(100, "Done.");
 
+    progDialog->emitEvent(100, "Done.");
     return callback(true);
   });
 }
 std::vector<wxString> Arduino::getBoards() {
-  std::vector<wxString> boards{"Select Device..."};
+  std::vector<wxString> boards{"Select Board..."};
   char buffer[1024];
 
   FILE *arduinoCli = Arduino::CLI("board list");
@@ -147,10 +147,10 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor, std::function
     }
 
 #   ifdef __WXMSW__
-    if (devSelect->GetStringSelection() != "BOOTLOADER RECOVERY") {
+    if (window->boardSelect->GetStringSelection() != "BOOTLOADER RECOVERY") {
       progDialog->emitEvent(50, "Rebooting Proffieboard...");
       
-      auto serialHandle = CreateFileW(devSelect->GetStringSelection().ToStdWstring().c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+      auto serialHandle = CreateFileW(window->boardSelect->GetStringSelection().ToStdWstring().c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
       if (serialHandle != INVALID_HANDLE_VALUE) {
         DCB dcbSerialParameters = {};
         dcbSerialParameters.DCBlength = sizeof(dcbSerialParameters);
@@ -190,7 +190,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor, std::function
     if (error.find("File downloaded successfully") == std::string::npos) {
       progDialog->emitEvent(100, "Error");
       Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "There was an error while uploading:\n\n" + Arduino::parseError(error), "Upload Error");
-      wxQueueEvent(GetEventHandler(), msg);
+      wxQueueEvent(window->GetEventHandler(), msg);
       return callback(false);
     }
 
