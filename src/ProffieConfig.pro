@@ -1,5 +1,5 @@
 TEMPLATE = app
-CONFIG += c++20
+CONFIG += c++17
 CONFIG -= qt
 
 QMAKE_CXXFLAGS += $$system(wx-config --cxxflags)
