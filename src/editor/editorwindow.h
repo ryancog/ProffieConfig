@@ -15,7 +15,7 @@ class Settings;
 
 class EditorWindow : public wxFrame {
 public:
-  EditorWindow(const std::string&);
+  EditorWindow();
 
   GeneralPage* generalPage{nullptr};
   PropsPage* propPage{nullptr};

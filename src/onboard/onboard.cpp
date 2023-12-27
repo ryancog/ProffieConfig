@@ -10,8 +10,8 @@
 #include "../resources/icons/icon.xpm"
 
 #include "tools/arduino.h"
-#include "core/appstate.h"
 #include "core/utilities/misc.h"
+#include "core/appstate.h"
 
 Onboard::Onboard() : wxWizard(nullptr, wxID_ANY, "ProffieConfig First-Time Setup", wxBitmap(icon_xpm), wxDefaultPosition, wxDEFAULT_DIALOG_STYLE) {
   SetPageSize(wxSize(600, -1));
@@ -27,11 +27,22 @@ bool Onboard::run() {
 
   auto wizardReturn = RunWizard(firstPage);
   Destroy();
+  if (wizardReturn) {
+    AppState::instance->firstRun = false;
+    AppState::instance->saveState();
+    MainMenu::instance = new MainMenu();
+  }
   return wizardReturn;
 }
 
 void Onboard::bindEvents() {
-  Bind(wxEVT_WIZARD_CANCEL, [&](wxWizardEvent& event) { if (wxMessageBox("Are you sure you want to cancel setup?", "Exit ProffieConfig", wxYES_NO | wxNO_DEFAULT | wxCENTER, this) == wxNO) event.Veto(); });
+  Bind(wxEVT_WIZARD_CANCEL, [&](wxWizardEvent& event) {
+    if (wxMessageBox("Are you sure you want to cancel setup?", "Exit ProffieConfig", wxYES_NO | wxNO_DEFAULT | wxCENTER, this) == wxNO) {
+      event.Veto();
+      return;
+    }
+    if (!AppState::instance->firstRun) MainMenu::instance = new MainMenu();
+  });
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
   Bind(wxEVT_WIZARD_BEFORE_PAGE_CHANGED, [&](wxWizardEvent& event) {
@@ -59,7 +70,6 @@ void Onboard::bindEvents() {
           page->Layout();
 
           page->completedInstall = true;
-          AppState::instance->saveState();
         } else {
           page->pressNext->Show();
           page->Layout();
