@@ -5,9 +5,13 @@
 
 #include "core/defines.h"
 #include "core/utilities/misc.h"
+#include "core/config/configuration.h"
+#include "editor/editorwindow.h"
+#include "onboard/onboard.h"
 #include "tools/arduino.h"
 #include "tools/serialmonitor.h"
 #include "../resources/icons/icon-small.xpm"
+#include "wx/event.h"
 
 #include <wx/menu.h>
 
@@ -29,7 +33,7 @@ MainMenu::MainMenu() : wxFrame(nullptr, wxID_ANY, "ProffieConfig") {
 void MainMenu::bindEvents() {
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::init(this); }, ID_ReRunSetup);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Destroy(); Onboard().run(); }, ID_ReRunSetup);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(ABOUT_MESSAGE, "About ProffieConfig", wxOK | wxICON_INFORMATION, this); }, wxID_ABOUT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION, this); }, ID_Copyright);
@@ -42,10 +46,22 @@ void MainMenu::bindEvents() {
 #endif
 
 
-  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { update(); });
+  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) { update(); event.Skip(); });
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(this); }, ID_RefreshDev);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(this, activeEditor); }, ID_ApplyChanges);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { }, ID_EditConfig);
+
+  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
+        auto newEditor = new EditorWindow();
+        if (!Configuration::readConfig("", newEditor)) {
+          wxMessageBox("Error selecting configuration file!", "Config Error", wxOK | wxCENTER, this);
+          delete newEditor;
+          return;
+        }
+        activeEditor = newEditor;
+        editors.push_back(newEditor);
+      }, ID_ConfigSelect);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { activeEditor->Show(); }, ID_EditConfig);
+
 }
 
 void MainMenu::createTooltips() {
@@ -80,7 +96,11 @@ void MainMenu::createUI() {
   auto title = new wxStaticText(this, wxID_ANY, "ProffieConfig");
   auto titleFont = title->GetFont();
   titleFont.MakeBold();
+# if defined(__WXGTK__) || defined(__WXMSW__)
+  titleFont.SetPointSize(20);
+# elif defined (__WXOSX__)
   titleFont.SetPointSize(30);
+#endif
   title->SetFont(titleFont);
   auto subTitle = new wxStaticText(this, wxID_ANY, "Created by Ryryog25");
   titleSection->Add(title, wxSizerFlags(0).Border(wxLEFT | wxRIGHT | wxTOP, 10));
@@ -93,6 +113,7 @@ void MainMenu::createUI() {
   configSelect = new wxComboBox(this, ID_ConfigSelect, "Select Config...", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Select Config..."}), wxCB_READONLY);
   addConfig = new wxButton(this, ID_AddConfig, "Add", wxDefaultPosition, wxSize(50, -1), wxBU_EXACTFIT);
   removeConfig = new wxButton(this, ID_RemoveConfig, "Remove", wxDefaultPosition, wxSize(75, -1), wxBU_EXACTFIT);
+  removeConfig->Disable();
   configSelectSection->Add(configSelect, wxSizerFlags(1).Border(wxALL, 5).Expand());
   configSelectSection->Add(addConfig, wxSizerFlags(0).Border(wxALL, 5).Expand());
   configSelectSection->Add(removeConfig, wxSizerFlags(0).Border(wxALL, 5).Expand());
@@ -125,12 +146,12 @@ void MainMenu::createUI() {
 void MainMenu::update() {
   auto configSelected = configSelect->GetValue() != "Select Config...";
   auto boardSelected = boardSelect->GetValue() != "Select Board...";
+  auto recoverySelected = boardSelect->GetValue() == "BOOTLOADER RECOVERY";
 
   applyButton->Enable(configSelected && boardSelected);
   editConfig->Enable(configSelected);
   removeConfig->Enable(configSelected);
-  applyButton->Enable(configSelected && boardSelected);
-  openSerial->Enable(boardSelected);
+  openSerial->Enable(boardSelected && !recoverySelected);
 
   for (auto editor = editors.begin(); editor < editors.end();) {
     if (!(*editor)->IsShown()) {
