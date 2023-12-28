@@ -28,11 +28,11 @@ namespace std {
   };
 }
 
-class PropFile {
+class PropFile : public wxWindow {
 public:
   struct Setting;
   struct Button;
-  static PropFile* createPropConfig(const std::string&, PropsPage*);
+  static PropFile* createPropConfig(const std::string&, wxWindow*);
 
   void show(bool = true) const;
   std::string getName() const;
@@ -82,14 +82,15 @@ public:
   };
 
 private:
-  PropFile();
-  PropsPage* parent{nullptr};
+  PropFile() = delete;
+  PropFile(wxWindow*);
 
   std::string name{""};
   std::string fileName{""};
   std::unordered_map<std::string, Setting> settings{};
   std::array<std::vector<std::pair<std::string, std::vector<Button>>>, 4> buttons{};
-  wxBoxSizer* page{nullptr};
+
+  wxBoxSizer* sizer{nullptr};
 
   bool readName(std::vector<std::string>&);
   bool readFileName(std::vector<std::string>&);
