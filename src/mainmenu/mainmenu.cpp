@@ -39,17 +39,15 @@ void MainMenu::bindEvents() {
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION, this); }, ID_Copyright);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/blob/master/docs"); }, ID_Docs);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/issues/new"); }, ID_Issue);
-# if defined(__WXMSW__)
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { SerialMonitor::instance = new SerialMonitor(this); SerialMonitor::instance->Close(true); }, ID_OpenSerial);
-# else
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(this); }, ID_OpenSerial);
-#endif
-
 
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) { update(); event.Skip(); });
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(this); }, ID_RefreshDev);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(this, activeEditor); }, ID_ApplyChanges);
-
+# if defined(__WXMSW__)
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { SerialMonitor::instance = new SerialMonitor(this); SerialMonitor::instance->Close(true); }, ID_OpenSerial);
+# else
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(this); }, ID_OpenSerial);
+#endif
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
         auto newEditor = new EditorWindow();
         if (!Configuration::readConfig("", newEditor)) {
@@ -102,7 +100,7 @@ void MainMenu::createUI() {
   titleFont.SetPointSize(30);
 #endif
   title->SetFont(titleFont);
-  auto subTitle = new wxStaticText(this, wxID_ANY, "Created by Ryryog25");
+  auto subTitle = new wxStaticText(this, wxID_ANY, "Created by Ryryog25\n\n");
   titleSection->Add(title, wxSizerFlags(0).Border(wxLEFT | wxRIGHT | wxTOP, 10));
   titleSection->Add(subTitle, wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 10));
   headerSection->Add(titleSection, wxSizerFlags(0));
@@ -136,10 +134,10 @@ void MainMenu::createUI() {
   options->Add(openSerial, wxSizerFlags(0).Border(wxALL, 5).Expand());
 
   sizer->Add(headerSection, wxSizerFlags(0).Expand());
-  sizer->AddSpacer(20);
   sizer->Add(configSelectSection, wxSizerFlags(0).Border(wxALL, 5).Expand());
   sizer->Add(boardControls, wxSizerFlags(0).Border(wxALL, 5).Expand());
   sizer->Add(options, wxSizerFlags(0).Border(wxALL, 5).Expand());
+  sizer->AddSpacer(20); // There's a sizing issue I need to figure out... for now we give it a chin
   SetSizerAndFit(sizer);
 }
 
