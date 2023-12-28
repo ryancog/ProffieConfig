@@ -50,7 +50,6 @@ private:
   };
 
   void update();
-  void createNewConfig();
 
   void createUI();
   void createMenuBar();

@@ -37,6 +37,7 @@ SOURCES += \
     editor/pages/generalpage.cpp \
     editor/pages/presetspage.cpp \
     editor/pages/bladespage.cpp \
+    mainmenu/dialogs/addconfig.cpp \
     mainmenu/mainmenu.cpp \
     onboard/onboard.cpp \
     tools/arduino.cpp \
@@ -58,6 +59,7 @@ HEADERS += \
     editor/pages/presetspage.h \
     editor/pages/bladespage.h \
     editor/pages/propspage.h \
+    mainmenu/dialogs/addconfig.h \
     mainmenu/mainmenu.h \
     onboard/onboard.h \
     tools/arduino.h \

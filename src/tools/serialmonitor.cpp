@@ -103,6 +103,7 @@ void SerialMonitor::OpenDevice()
         wxQueueEvent(SerialMonitor::instance->GetEventHandler(), event);
         break;
       }
+      deviceThread->GetThread()->Sleep(50);
     }
   });
 }
