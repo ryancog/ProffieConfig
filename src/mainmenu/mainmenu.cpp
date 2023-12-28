@@ -117,7 +117,7 @@ void MainMenu::createUI() {
   configSelectSection->Add(removeConfig, wxSizerFlags(0).Border(wxALL, 5).Expand());
 
   auto boardControls = new wxBoxSizer(wxHORIZONTAL);
-  boardSelect = new wxComboBox(this, ID_DeviceSelect, "Select Board...", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Arduino::getBoards()), wxCB_READONLY);
+  boardSelect = new wxComboBox(this, ID_DeviceSelect, "Select Board...", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Select Board..."}), wxCB_READONLY);
   refreshButton = new wxButton(this, ID_RefreshDev, "Refresh Boards");
   boardControls->Add(refreshButton, wxSizerFlags(0).Border(wxALL, 5));
   boardControls->Add(boardSelect, wxSizerFlags(1).Border(wxALL, 5));
