@@ -10,9 +10,9 @@
 #include <iostream>
 #include <wx/tooltip.h>
 
-PropFile::PropFile() {}
+PropFile::PropFile(wxWindow* parent) : wxWindow(parent, wxID_ANY) {}
 
-void PropFile::show(bool shouldShow) const { page->Show(shouldShow); }
+void PropFile::show(bool shouldShow) const { sizer->Show(shouldShow); }
 std::string PropFile::getName() const { return name; }
 std::string PropFile::getFileName() const { return fileName; }
 std::string PropFile::Setting::getOutput() const {
@@ -42,7 +42,7 @@ bool PropFile::Setting::checkRequiredSatisfied(const std::unordered_map<std::str
 }
 
 
-PropFile* PropFile::createPropConfig(const std::string& name, PropsPage* _parent) {
+PropFile* PropFile::createPropConfig(const std::string& name, wxWindow* _parent) {
   std::cout << "Reading prop config: \"" << name << "\"..." << std::endl;
   std::string pathname = PROPCONFIG_DIR + name + ".pconf";
 
@@ -60,8 +60,7 @@ PropFile* PropFile::createPropConfig(const std::string& name, PropsPage* _parent
   }
   configFile.close();
 
-  auto prop = new PropFile;
-  prop->parent = _parent;
+  auto prop = new PropFile(_parent);
 
   if (!prop->readName(config)) {
     error("Prop config file \"" + name + "\" does not have section \"NAME\", aborting...");
@@ -83,7 +82,7 @@ PropFile* PropFile::createPropConfig(const std::string& name, PropsPage* _parent
 
   prop->pruneUnused();
 
-  prop->page->Show(false);
+  prop->Show(false);
   std::cout << "Finished reading prop config." << std::endl;
 
   return prop;
@@ -190,11 +189,12 @@ bool PropFile::parseSettingCommon(Setting& setting, std::vector<std::string>& se
   return true;
 }
 bool PropFile::readLayout(std::vector<std::string>& config) {
-  page = new wxBoxSizer(wxVERTICAL);
-  parent->sizer->Add(page, wxSizerFlags(0).Expand());
+  sizer = new wxBoxSizer(wxVERTICAL);
 
   auto layoutSection = FileParse::extractSection("LAYOUT", config);
-  parseLayoutSection(layoutSection, page,  parent->sizer->GetStaticBox());
+  parseLayoutSection(layoutSection, sizer, this);
+
+  SetSizerAndFit(sizer);
   return true;
 }
 bool PropFile::readButtons(std::vector<std::string>& config) {

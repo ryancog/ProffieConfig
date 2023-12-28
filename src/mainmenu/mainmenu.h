@@ -14,6 +14,8 @@ public:
   static MainMenu* instance;
   MainMenu();
 
+  void update();
+
   wxButton* refreshButton{nullptr};
   wxButton* applyButton{nullptr};
   wxComboBox* boardSelect{nullptr};
@@ -24,11 +26,6 @@ public:
   wxButton* addConfig{nullptr};
   wxButton* removeConfig{nullptr};
   wxButton* editConfig{nullptr};
-
-
-private:
-  EditorWindow* activeEditor{nullptr};
-  std::vector<EditorWindow*> editors{};
 
   enum {
     ID_DUMMY1, // on macOS menu items cannot have ID 0
@@ -49,7 +46,9 @@ private:
     ID_EditConfig,
   };
 
-  void update();
+private:
+  EditorWindow* activeEditor{nullptr};
+  std::vector<EditorWindow*> editors{};
 
   void createUI();
   void createMenuBar();

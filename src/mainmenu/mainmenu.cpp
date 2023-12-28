@@ -4,10 +4,12 @@
 #include "mainmenu.h"
 
 #include "core/defines.h"
+#include "core/appstate.h"
 #include "core/utilities/misc.h"
 #include "core/config/configuration.h"
 #include "editor/editorwindow.h"
 #include "onboard/onboard.h"
+#include "mainmenu/dialogs/addconfig.h"
 #include "tools/arduino.h"
 #include "tools/serialmonitor.h"
 #include "../resources/icons/icon-small.xpm"
@@ -49,17 +51,21 @@ void MainMenu::bindEvents() {
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(this); }, ID_OpenSerial);
 #endif
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
+        if (configSelect->GetValue() == "Select Config...") return;
         auto newEditor = new EditorWindow();
-        if (!Configuration::readConfig("", newEditor)) {
-          wxMessageBox("Error selecting configuration file!", "Config Error", wxOK | wxCENTER, this);
-          delete newEditor;
+        if (!Configuration::readConfig(CONFIG_DIR + configSelect->GetValue().ToStdString() + ".h", newEditor)) {
+          wxMessageBox("Error reading configuration file!", "Config Error", wxOK | wxCENTER, this);
+          newEditor->Destroy();
+          AppState::instance->removeConfig(configSelect->GetValue().ToStdString());
+          update();
           return;
         }
         activeEditor = newEditor;
         editors.push_back(newEditor);
+        update();
       }, ID_ConfigSelect);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { activeEditor->Show(); }, ID_EditConfig);
-
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { AddConfig(this).ShowModal(); }, ID_AddConfig);
 }
 
 void MainMenu::createTooltips() {
@@ -142,14 +148,14 @@ void MainMenu::createUI() {
 }
 
 void MainMenu::update() {
-  auto configSelected = configSelect->GetValue() != "Select Config...";
-  auto boardSelected = boardSelect->GetValue() != "Select Board...";
-  auto recoverySelected = boardSelect->GetValue() == "BOOTLOADER RECOVERY";
-
-  applyButton->Enable(configSelected && boardSelected);
-  editConfig->Enable(configSelected);
-  removeConfig->Enable(configSelected);
-  openSerial->Enable(boardSelected && !recoverySelected);
+  auto lastConfig = configSelect->GetValue();
+  configSelect->Clear();
+  configSelect->Append("Select Config...");
+  for (const auto& config : AppState::instance->getConfigFileNames()) {
+    configSelect->Append(config);
+  }
+  configSelect->SetValue(lastConfig);
+  if (configSelect->GetSelection() == -1) configSelect->SetSelection(0);
 
   for (auto editor = editors.begin(); editor < editors.end();) {
     if (!(*editor)->IsShown()) {
@@ -160,4 +166,13 @@ void MainMenu::update() {
     }
     editor++;
   }
+
+  auto configSelected = configSelect->GetValue() != "Select Config...";
+  auto boardSelected = boardSelect->GetValue() != "Select Board...";
+  auto recoverySelected = boardSelect->GetValue() == "BOOTLOADER RECOVERY";
+
+  applyButton->Enable(configSelected && boardSelected);
+  editConfig->Enable(configSelected);
+  removeConfig->Enable(configSelected);
+  openSerial->Enable(boardSelected && !recoverySelected);
 }

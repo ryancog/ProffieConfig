@@ -36,7 +36,6 @@ EditorWindow::EditorWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaul
 # endif
 }
 
-
 void EditorWindow::bindEvents() {
   Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event ) {
     if (wxMessageBox("Are you sure you want to close the editor?\n\nAny unsaved changes will be lost!", "Close ProffieConfig Editor", wxICON_WARNING | wxYES_NO | wxNO_DEFAULT, this) == wxYES) {
@@ -55,23 +54,23 @@ void EditorWindow::bindEvents() {
 
    Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
         generalPage->Show(windowSelect->GetValue() == "General");
-        propPage->Show(windowSelect->GetValue() == "Prop File");
+        propsPage->Show(windowSelect->GetValue() == "Prop File");
         bladesPage->Show(windowSelect->GetValue() == "Blade Arrays");
         presetsPage->Show(windowSelect->GetValue() == "Presets And Styles");
-        idPage->Show(windowSelect->GetValue() == "Blade Awareness");
+        bladeArrayPage->Show(windowSelect->GetValue() == "Blade Awareness");
 
         //generalPage->update();
-        idPage->update();
-        propPage->update();
+        bladeArrayPage->update();
+        propsPage->update();
         bladesPage->update();
         presetsPage->update();
 
         FULLUPDATEWINDOW(this);
-        if (propPage->IsShown()) {
-          propPage->SetMinClientSize(wxSize(propPage->sizer->GetMinSize().GetWidth(), 0));
+        if (propsPage->IsShown()) {
+          propsPage->SetMinClientSize(wxSize(propsPage->sizer->GetMinSize().GetWidth(), 0));
           sizer->Layout();
           SetSizerAndFit(sizer);
-          SetSize(wxSize(GetSize().GetWidth(), GetMinHeight() + propPage->GetBestVirtualSize().GetHeight()));
+          SetSize(wxSize(GetSize().GetWidth(), GetMinHeight() + propsPage->GetBestVirtualSize().GetHeight()));
           SetMinSize(wxSize(GetSize().GetWidth(), 350));
         }
       }, ID_WindowSelect);
@@ -101,28 +100,31 @@ void EditorWindow::createPages() {
   options->Add(windowSelect, wxSizerFlags(0).Border(wxALL, 10));
 
   generalPage = new GeneralPage(this);
-  propPage = new PropsPage(this);
+  propsPage = new PropsPage(this);
   presetsPage = new PresetsPage(this);
   bladesPage = new BladesPage(this);
-  idPage = new BladeArrayPage(this);
+  bladeArrayPage = new BladeArrayPage(this);
 
   //generalPage->update();
-  propPage->update();
+  propsPage->update();
   presetsPage->update();
   bladesPage->update();
-  idPage->update();
+  bladeArrayPage->update();
 
-  propPage->Show(false);
+  propsPage->Show(false);
   bladesPage->Show(false);
   presetsPage->Show(false);
-  idPage->Show(false);
+  bladeArrayPage->Show(false);
 
   sizer->Add(options, wxSizerFlags(0).Expand());
   sizer->Add(generalPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
-  sizer->Add(propPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
+  sizer->Add(propsPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
   sizer->Add(presetsPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
   sizer->Add(bladesPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
-  sizer->Add(idPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
+  sizer->Add(bladeArrayPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
   SetSizerAndFit(sizer); // use the sizer for layout and set size and hints
 }
+
+
+const std::string& EditorWindow::getOpenConfig() { return openConfig; }

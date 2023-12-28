@@ -18,7 +18,6 @@ class PropFile;
 class PropsPage : public wxScrolledWindow {
 public:
   PropsPage(wxWindow*);
-  ~PropsPage();
 
   void update();
   void updateProps();

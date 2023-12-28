@@ -3,6 +3,8 @@
 
 #include "core/appstate.h"
 
+#include "editor/editorwindow.h"
+
 #include <wx/splash.h>
 #include <wx/app.h>
 

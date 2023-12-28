@@ -131,7 +131,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor, std::function
     }
 
     progDialog->emitEvent(30, "Updating ProffieOS file...");
-    if (!Arduino::updateIno(returnVal)) {
+    if (!Arduino::updateIno(returnVal, editor)) {
       progDialog->emitEvent(100, "Error");
       Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "There was an error while updating ProffieOS file:\n\n" + returnVal, "Files Error");
       wxQueueEvent(window->GetEventHandler(), msg);
@@ -227,7 +227,7 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor, std::function
     }
 
     progDialog->emitEvent(30, "Updating ProffieOS file...");
-    if (!Arduino::updateIno(returnVal)) {
+    if (!Arduino::updateIno(returnVal, editor)) {
       progDialog->emitEvent(100, "Error");
       Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "There was an error while updating ProffieOS file:\n\n"
                        + returnVal, "Files Error");
@@ -346,7 +346,7 @@ bool Arduino::upload(wxString& _return, MainMenu* window, EditorWindow* editor, 
   _return.clear();
   return true;
 }
-bool Arduino::updateIno(wxString& _return) {
+bool Arduino::updateIno(wxString& _return, EditorWindow* _editor) {
   std::ifstream input(PROFFIEOS_INO);
   if (!input.is_open()) {
     _return = "ERROR OPENING FOR READ";
@@ -357,7 +357,7 @@ bool Arduino::updateIno(wxString& _return) {
   std::vector<wxString> outputData;
   while(!input.eof()) {
     getline(input, fileData);
-    if (fileData.find(R"(// #define CONFIG_FILE "config/YOUR_CONFIG_FILE_NAME_HERE.h")") != std::string::npos) outputData.push_back(R"(#define CONFIG_FILE "config/ProffieConfig_autogen.h")");
+    if (fileData.find(R"(// #define CONFIG_FILE "config/YOUR_CONFIG_FILE_NAME_HERE.h")") != std::string::npos) outputData.push_back("#define CONFIG_FILE \"config/" + _editor->getOpenConfig() + ".h\"");
     else if (fileData.find(R"(const char version[] = ")" ) != std::string::npos) outputData.push_back(R"(const char version[] = ")" PROFFIEOS_VERSION R"(";)");
     else outputData.push_back(fileData);
   }
