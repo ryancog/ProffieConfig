@@ -31,23 +31,20 @@ PropsPage::PropsPage(wxWindow* window) : wxScrolledWindow(window), parent{static
   SetSizerAndFit(sizer);
   SetScrollbars(-1, 10, -1, 1);
 }
-PropsPage::~PropsPage() {
-  for (const auto& prop : props) delete prop;
-}
 
 void PropsPage::bindEvents() {
   auto propSelectUpdate = [&](wxCommandEvent&) {
     updateSelectedProp();
-    parent->propPage->SetMinClientSize(wxSize(parent->propPage->sizer->GetMinSize().GetWidth(), 0));
+    parent->propsPage->SetMinClientSize(wxSize(parent->propsPage->sizer->GetMinSize().GetWidth(), 0));
     FULLUPDATEWINDOW(parent);
-    parent->SetSize(wxSize(parent->GetSize().GetWidth(), parent->GetMinHeight() + parent->propPage->GetBestVirtualSize().GetHeight()));
+    parent->SetSize(wxSize(parent->GetSize().GetWidth(), parent->GetMinHeight() + parent->propsPage->GetBestVirtualSize().GetHeight()));
     parent->SetMinSize(wxSize(parent->GetSize().GetWidth(), 350));
   };
   auto optionSelectUpdate = [&](wxCommandEvent&) {
     int32_t x, y;
-    parent->propPage->GetViewStart(&x, &y);
-    parent->propPage->update();
-    parent->propPage->Scroll(0, y);
+    parent->propsPage->GetViewStart(&x, &y);
+    parent->propsPage->update();
+    parent->propsPage->Scroll(0, y);
   };
 
   Bind(wxEVT_COMBOBOX, propSelectUpdate, ID_Select);
@@ -197,8 +194,11 @@ void PropsPage::updateSelectedProp(const wxString& newProp) {
 void PropsPage::loadProps() {
   props.clear();
   for (const auto& prop : AppState::instance->getPropFileNames()) {
-    auto propConfig = PropFile::createPropConfig(prop, this);
-    if (propConfig != nullptr) props.push_back(propConfig);
+    auto propConfig = PropFile::createPropConfig(prop, sizer->GetStaticBox());
+    if (propConfig != nullptr) {
+      sizer->Add(propConfig);
+      props.push_back(propConfig);
+    }
   }
   updateProps();
 }

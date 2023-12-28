@@ -37,8 +37,8 @@ BladeArrayPage::BladeArrayPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, 
 
 void BladeArrayPage::bindEvents() {
   auto clearBladeArray = [&]() {
-    parent->idPage->arrayList->SetSelection(-1);
-    parent->idPage->lastArraySelection = -1;
+    parent->bladeArrayPage->arrayList->SetSelection(-1);
+    parent->bladeArrayPage->lastArraySelection = -1;
     parent->bladesPage->bladeArray->SetSelection(0);
     parent->bladesPage->lastBladeArraySelection = -1;
     parent->presetsPage->bladeArray->SetSelection(0);

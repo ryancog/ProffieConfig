@@ -29,7 +29,7 @@ private:
 
   static FILE* CLI(const wxString& command);
 
-  static bool updateIno(wxString&);
+  static bool updateIno(wxString&, EditorWindow*);
   static bool compile(wxString&, EditorWindow*, Progress* = nullptr);
   static bool upload(wxString&, MainMenu*, EditorWindow*, Progress* = nullptr);
   static wxString parseError(const wxString&);

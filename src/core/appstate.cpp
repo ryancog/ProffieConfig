@@ -16,11 +16,14 @@ void AppState::init() {
   instance = new AppState();
   instance->loadStateFromFile();
 
-  if (instance->firstRun) {
-    Onboard().run();
-  } else {
-    MainMenu::instance = new MainMenu();
-  }
+  auto newEditor = new EditorWindow();
+  newEditor->Destroy();
+
+  //if (instance->firstRun) {
+  //  Onboard().run();
+  //} else {
+  //  MainMenu::instance = new MainMenu();
+  //}
 }
 
 void AppState::saveState() {
@@ -80,4 +83,18 @@ void AppState::setSaved(bool state) {
 }
 const std::vector<std::string>& AppState::getPropFileNames() {
   return propFileNames;
+}
+const std::vector<std::string>& AppState::getConfigFileNames() {
+  return configFileNames;
+}
+
+void AppState::removeConfig(const std::string& configName) {
+  for (auto config = configFileNames.begin(); config < configFileNames.end();) {
+    if (*config == configName) config = configFileNames.erase(config);
+  }
+}
+
+void AppState::addConfig(const std::string& configName) {
+  for (const auto& config : configFileNames) if (config == configName) return;
+  configFileNames.push_back(configName);
 }
