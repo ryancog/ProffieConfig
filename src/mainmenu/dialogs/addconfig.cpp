@@ -18,7 +18,6 @@ AddConfig::AddConfig(MainMenu* parent) : wxDialog(nullptr, wxID_ANY, "Add New Co
   bindEvents();
 
   FindWindowById(wxID_OK)->Disable();
-  Fit();
 }
 
 void AddConfig::bindEvents() {
@@ -118,5 +117,6 @@ void AddConfig::update() {
   chooseConfigText->Show(importingConfig);
   chooseConfig->Show(importingConfig);
 
+  Layout(); // Although linux and windows seem to work without this, macOS requires it.
   Fit();
 }
