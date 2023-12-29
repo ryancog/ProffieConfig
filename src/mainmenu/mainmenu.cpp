@@ -23,6 +23,7 @@ MainMenu::MainMenu() : wxFrame(nullptr, wxID_ANY, "ProffieConfig") {
   createMenuBar();
   createTooltips();
   bindEvents();
+  update();
 
 # ifdef __WXMSW__
   SetIcon( wxICON(IDI_ICON1) );
@@ -33,6 +34,19 @@ MainMenu::MainMenu() : wxFrame(nullptr, wxID_ANY, "ProffieConfig") {
 }
 
 void MainMenu::bindEvents() {
+  Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
+    for (auto editor = editors.begin(); editor < editors.end();) {
+      if ((*editor)->IsShown() && event.CanVeto()) {
+        wxMessageBox("Please close editor before exiting ProffieConfig", "Open Editor(s)", wxOK | wxCENTER, this);
+        event.Veto();
+        return;
+      } else {
+        (*editor)->Close(true);
+        editor = editors.erase(editor);
+      }
+    }
+    event.Skip();
+  });
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Destroy(); Onboard().run(); }, ID_ReRunSetup);
@@ -61,11 +75,19 @@ void MainMenu::bindEvents() {
           return;
         }
         activeEditor = newEditor;
+        activeEditor->setOpenConfigName(configSelect->GetValue().ToStdString());
         editors.push_back(newEditor);
         update();
       }, ID_ConfigSelect);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { activeEditor->Show(); }, ID_EditConfig);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { AddConfig(this).ShowModal(); }, ID_AddConfig);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+        if (wxMessageBox("Are you sure you want to deleted the selected configuration?\n\nThis action cannot be undone!", "Delete Config", wxYES_NO | wxNO_DEFAULT | wxCENTER, this) == wxYES) {
+          activeEditor->Close(true);
+          AppState::instance->removeConfig(configSelect->GetValue().ToStdString());
+          update();
+        }
+      }, ID_RemoveConfig);
 }
 
 void MainMenu::createTooltips() {
@@ -159,7 +181,10 @@ void MainMenu::update() {
 
   for (auto editor = editors.begin(); editor < editors.end();) {
     if (!(*editor)->IsShown()) {
-      if (&**editor == &*activeEditor) activeEditor = nullptr;
+      if (&**editor == &*activeEditor) {
+        editor++;
+        continue;
+      }
       (*editor)->Destroy();
       editor = editors.erase(editor);
       continue;

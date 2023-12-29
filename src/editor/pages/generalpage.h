@@ -23,14 +23,14 @@ public:
   wxCheckBox* massStorage{nullptr};
   wxCheckBox* webUSB{nullptr};
 
-  Misc::numEntry* buttons;
-  Misc::numEntry* volume;
-  Misc::numEntryDouble* clash;
-  Misc::numEntry* pliTime;
-  Misc::numEntry* idleTime;
-  Misc::numEntry* motionTime;
+  Misc::numEntry buttons;
+  Misc::numEntry volume;
+  Misc::numEntryDouble clash;
+  Misc::numEntry pliTime;
+  Misc::numEntry idleTime;
+  Misc::numEntry motionTime;
 
-  Misc::numEntry* maxLEDs;
+  Misc::numEntry maxLEDs;
 
   wxCheckBox* volumeSave{nullptr};
   wxCheckBox* presetSave{nullptr};

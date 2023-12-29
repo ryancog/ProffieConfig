@@ -11,23 +11,56 @@
 #include <wx/tooltip.h>
 
 PropFile::PropFile(wxWindow* parent) : wxWindow(parent, wxID_ANY) {}
+PropFile::~PropFile() {}
 
-void PropFile::show(bool shouldShow) const { sizer->Show(shouldShow); }
 std::string PropFile::getName() const { return name; }
 std::string PropFile::getFileName() const { return fileName; }
 std::string PropFile::Setting::getOutput() const {
   switch (type) {
     case SettingType::TOGGLE:
-      return (toggle->GetValue()) ? define : "";
+      return static_cast<wxCheckBox*>(control)->GetValue() ? define : "";
     case SettingType::OPTION:
-      return (option->GetValue()) ? define : "";
+      return static_cast<wxRadioButton*>(control)->GetValue() ? define : "";
     case SettingType::NUMERIC:
-      return define + " " + std::to_string(numeric->num->GetValue());
+      return define + " " + std::to_string(static_cast<wxSpinCtrl*>(control)->GetValue());
     case SettingType::DECIMAL:
-      return define + " " + std::to_string(decimal->num->GetValue());
+      return define + " " + std::to_string(static_cast<wxSpinCtrl*>(control)->GetValue());
   }
 
   return {};
+}
+void PropFile::Setting::enable(bool enable) const {
+  switch(type) {
+    case PropFile::Setting::SettingType::TOGGLE:
+      static_cast<wxCheckBox*>(control)->Enable(enable);
+      break;
+    case PropFile::Setting::SettingType::OPTION:
+      static_cast<wxRadioButton*>(control)->Enable(enable);
+      break;
+    case PropFile::Setting::SettingType::NUMERIC:
+      static_cast<wxSpinCtrl*>(control)->Enable(enable);
+      break;
+    case PropFile::Setting::SettingType::DECIMAL:
+      static_cast<wxSpinCtrl*>(control)->Enable(enable);
+      break;
+
+  }
+}
+void PropFile::Setting::setValue(double value) const {
+  switch (type) {
+    case SettingType::TOGGLE:
+      static_cast<wxCheckBox*>(control)->SetValue(value);
+      break;
+    case SettingType::OPTION:
+      static_cast<wxRadioButton*>(control)->SetValue(value);
+      break;
+    case SettingType::NUMERIC:
+      static_cast<wxSpinCtrl*>(control)->SetValue(value);
+      break;
+    case SettingType::DECIMAL:
+      static_cast<wxSpinCtrl*>(control)->SetValue(value);
+      break;
+  }
 }
 std::unordered_map<std::string, PropFile::Setting>& PropFile::getSettings() { return settings; }
 const std::array<std::vector<std::pair<std::string, std::vector<PropFile::Button>>>, 4>& PropFile::getButtons() { return buttons; }
@@ -320,8 +353,7 @@ void PropFile::parseButtonRelevantSettings(PropFile::Button& newButton) {
 
 void PropFile::pruneUnused() {
   for (auto setting = settings.begin(); setting != settings.end();) {
-    // It doesn't matter which union member we access, we're effectively reading it as a void*
-    if (setting->second.toggle != nullptr) {
+    if (setting->second.control != nullptr) {
       setting++;
       continue;
     }
@@ -333,26 +365,28 @@ void PropFile::pruneUnused() {
 bool PropFile::parseLayoutSection(std::vector<std::string>& section, wxSizer* sizer, wxWindow* parent) {
 # define ITEMBORDER wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 5)
   auto createToggle = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
-    setting.toggle = new wxCheckBox(parent, wxID_ANY, setting.name);
-    setting.toggle->SetToolTip(new wxToolTip(setting.description));
-    sizer->Add(setting.toggle, ITEMBORDER);
+    setting.control = new wxCheckBox(parent, wxID_ANY, setting.name);
+    static_cast<wxCheckBox*>(setting.control)->SetToolTip(new wxToolTip(setting.description));
+    sizer->Add(static_cast<wxCheckBox*>(setting.control), ITEMBORDER);
   };
   auto createNumeric = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
-    setting.numeric = Misc::createNumEntry(parent, setting.name, wxID_ANY, setting.min, setting.max, setting.defaultVal);
-    setting.numeric->num->SetIncrement(setting.increment);
-    setting.numeric->SetToolTip(new wxToolTip(setting.description));
-    sizer->Add(setting.numeric->box, ITEMBORDER);
+    auto entry = Misc::createNumEntry(parent, setting.name, wxID_ANY, setting.min, setting.max, setting.defaultVal);
+    setting.control = entry.num;
+    static_cast<wxSpinCtrl*>(setting.control)->SetIncrement(setting.increment);
+    static_cast<wxSpinCtrl*>(setting.control)->SetToolTip(new wxToolTip(setting.description));
+    sizer->Add(entry.box, ITEMBORDER);
   };
   auto createDecimal = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
-    setting.decimal = Misc::createNumEntryDouble(parent, setting.name, wxID_ANY, setting.min, setting.max, setting.defaultVal);
-    setting.decimal->num->SetIncrement(setting.increment);
-    setting.decimal->SetToolTip(new wxToolTip(setting.description));
-    sizer->Add(setting.decimal->box, ITEMBORDER);
+    auto entry = Misc::createNumEntryDouble(parent, setting.name, wxID_ANY, setting.min, setting.max, setting.defaultVal);
+    setting.control = entry.num;
+    static_cast<wxSpinCtrlDouble*>(setting.control)->SetIncrement(setting.increment);
+    static_cast<wxSpinCtrlDouble*>(setting.control)->SetToolTip(new wxToolTip(setting.description));
+    sizer->Add(entry.box, ITEMBORDER);
   };
   auto createOption = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
-    setting.option = new wxRadioButton(parent, wxID_ANY, setting.name);
-    setting.option->SetToolTip(new wxToolTip(setting.description));
-    sizer->Add(setting.option, ITEMBORDER);
+    setting.control = new wxRadioButton(parent, wxID_ANY, setting.name);
+    static_cast<wxRadioButton*>(setting.control)->SetToolTip(new wxToolTip(setting.description));
+    sizer->Add(static_cast<wxRadioButton*>(setting.control), ITEMBORDER);
   };
 # undef ITEMBORDER
 

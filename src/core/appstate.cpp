@@ -16,14 +16,8 @@ void AppState::init() {
   instance = new AppState();
   instance->loadStateFromFile();
 
-  auto newEditor = new EditorWindow();
-  newEditor->Destroy();
-
-  //if (instance->firstRun) {
-  //  Onboard().run();
-  //} else {
-  //  MainMenu::instance = new MainMenu();
-  //}
+  if (instance->firstRun) Onboard().run();
+  else MainMenu::instance = new MainMenu();
 }
 
 void AppState::saveState() {
@@ -35,11 +29,19 @@ void AppState::saveState() {
   }
 
   stateFile << "FIRSTRUN: " << (firstRun ? "TRUE" : "FALSE") << std::endl;
-  stateFile << "PROPS: {" << std::endl;
+  stateFile << std::endl;
+  stateFile << "PROPS {" << std::endl;
   for (const auto& prop : propFileNames) {
     stateFile << "\tPROP(\"" << prop << "\")" << std::endl;
   }
   stateFile << "}" << std::endl;
+  stateFile << std::endl;
+  stateFile << "CONFIGS {" << std::endl;
+  for (const auto& config : configFileNames) {
+    stateFile << "\tCONFIG(\"" << config << "\")" << std::endl;
+  }
+  stateFile << "}" << std::endl;
+
   stateFile.close();
 
   remove(STATEFILE_PATH); // we don't care if it fails bc there's nothing there
@@ -72,6 +74,10 @@ void AppState::loadStateFromFile() {
   auto tempProps = FileParse::extractSection("PROPS", state);
   for (std::string& prop : tempProps) {
     if (!(tmp = FileParse::parseLabel(prop)).empty()) propFileNames.push_back(tmp);
+  }
+  auto tempConfigs = FileParse::extractSection("CONFIGS", state);
+  for (std::string& config : tempConfigs) {
+    if (!(tmp = FileParse::parseLabel(config)).empty()) configFileNames.push_back(tmp);
   }
 }
 

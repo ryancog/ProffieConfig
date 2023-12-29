@@ -18,7 +18,7 @@
 
 class BladeArrayPage : public wxStaticBoxSizer {
 public:
-  BladeArrayPage(wxWindow*);
+  BladeArrayPage(EditorWindow*);
 
   void update();
 
@@ -26,9 +26,9 @@ public:
   wxCheckBox* enableDetect{nullptr};
 
   wxComboBox* mode{nullptr};
-  Misc::textEntry* IDPin{nullptr};
-  Misc::numEntry* pullupResistance{nullptr};
-  Misc::textEntry* pullupPin{nullptr};
+  Misc::textEntry IDPin{nullptr};
+  Misc::numEntry pullupResistance{nullptr};
+  Misc::textEntry pullupPin{nullptr};
 
   wxCheckBox* enablePowerForID{nullptr};
   wxCheckBox* powerPin1{nullptr};
@@ -39,17 +39,17 @@ public:
   wxCheckBox* powerPin6{nullptr};
 
   wxCheckBox* continuousScans{nullptr};
-  Misc::numEntry* numIDTimes{nullptr};
-  Misc::numEntry* scanIDMillis{nullptr};
+  Misc::numEntry numIDTimes{nullptr};
+  Misc::numEntry scanIDMillis{nullptr};
 
   wxListBox* arrayList{nullptr};
   wxButton* addID{nullptr};
   wxButton* removeID{nullptr};
 
-  Misc::textEntry* arrayName{nullptr};
-  Misc::numEntry* resistanceID{nullptr};
+  Misc::textEntry arrayName{nullptr};
+  Misc::numEntry resistanceID{nullptr};
 
-  Misc::textEntry* detectPin{nullptr};
+  Misc::textEntry detectPin{nullptr};
 
   struct BladeArray {
     wxString name{""};

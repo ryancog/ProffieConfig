@@ -18,6 +18,7 @@ public:
   EditorWindow();
 
   const std::string& getOpenConfig();
+  void setOpenConfigName(const std::string&);
 
   GeneralPage* generalPage{nullptr};
   PropsPage* propsPage{nullptr};
@@ -35,7 +36,8 @@ private:
     ID_WindowSelect,
     ID_DUMMY, // on Win32, for some reason ID #1 is triggerred by hitting enter in wxTextCtrl? This is a workaround.
 
-    ID_GenFile,
+    ID_SaveConfig,
+    ID_ExportConfig,
     ID_VerifyConfig,
 
     ID_StyleEditor,

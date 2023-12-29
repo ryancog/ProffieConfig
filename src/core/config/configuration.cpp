@@ -48,7 +48,7 @@ bool Configuration::outputConfig(const std::string& filePath, EditorWindow* edit
 }
 bool Configuration::outputConfig(EditorWindow* editor) { return Configuration::outputConfig(CONFIG_DIR + editor->getOpenConfig() + ".h", editor); }
 bool Configuration::exportConfig(EditorWindow* editor) {
-  wxFileDialog configLocation(editor, "Save ProffieOS Config File", "", editor->getOpenConfig(), "C Header Files (*.h)|*.h", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+  wxFileDialog configLocation(editor, "Save ProffieOS Config File", "", editor->getOpenConfig(), "ProffieOS Configuration (*.h)|*.h", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
   if (configLocation.ShowModal() == wxID_CANCEL) return false; // User Closed
 
@@ -76,7 +76,7 @@ void Configuration::outputConfigTopGeneral(std::ofstream& configOutput, EditorWi
       configOutput << "#include \"proffieboard_v3_config.h\"" << std::endl;
   }
 
-  configOutput << "const unsigned int maxLedsPerStrip = " << editor->generalPage->maxLEDs->num->GetValue() << ";" << std::endl;
+  configOutput << "const unsigned int maxLedsPerStrip = " << editor->generalPage->maxLEDs.num->GetValue() << ";" << std::endl;
   configOutput << "#define ENABLE_AUDIO" << std::endl;
   configOutput << "#define ENABLE_WS2811" << std::endl;
   configOutput << "#define ENABLE_SD" << std::endl;
@@ -260,8 +260,8 @@ void Configuration::genWS281X(std::ofstream& configOutput, const BladesPage::Bla
 void Configuration::outputConfigButtons(std::ofstream& configOutput, EditorWindow* editor) {
   configOutput << "#ifdef CONFIG_BUTTONS" << std::endl;
   configOutput << "Button PowerButton(BUTTON_POWER, powerButtonPin, \"pow\");" << std::endl;
-  if (editor->generalPage->buttons->num->GetValue() >= 2) configOutput << "Button AuxButton(BUTTON_AUX, auxPin, \"aux\");" << std::endl;
-  if (editor->generalPage->buttons->num->GetValue() == 3) configOutput << "Button Aux2Button(BUTTON_AUX2, aux2Pin, \"aux\");" << std::endl; // figure out aux2 syntax
+  if (editor->generalPage->buttons.num->GetValue() >= 2) configOutput << "Button AuxButton(BUTTON_AUX, auxPin, \"aux\");" << std::endl;
+  if (editor->generalPage->buttons.num->GetValue() == 3) configOutput << "Button Aux2Button(BUTTON_AUX2, aux2Pin, \"aux\");" << std::endl; // figure out aux2 syntax
   configOutput << "#endif" << std::endl << std::endl; // CONFIG_BUTTONS
 }
 
@@ -338,7 +338,7 @@ void Configuration::readConfigTop(std::ifstream& file, EditorWindow* editor) {
       getline(file, element);
       std::strtok(element.data(), "="); // unsigned int maxLedsPerStrip =
       element = std::strtok(nullptr, " ;");
-      editor->generalPage->maxLEDs->num->SetValue(std::stoi(element));
+      editor->generalPage->maxLEDs.num->SetValue(std::stoi(element));
     } else if (element == "#include" && !file.eof()) {
       file >> element;
       if (std::strstr(element.c_str(), "v1") != NULL) {
@@ -354,6 +354,8 @@ void Configuration::readConfigTop(std::ifstream& file, EditorWindow* editor) {
       if (element == "ENABLE_WEBUSB") editor->generalPage->webUSB->SetValue(true);
     }
   }
+
+  editor->settings->parseDefines(editor->settings->readDefines);
 }
 void Configuration::readConfigProp(std::ifstream& file, EditorWindow* editor) {
   std::string element;
@@ -362,31 +364,21 @@ void Configuration::readConfigProp(std::ifstream& file, EditorWindow* editor) {
     for (auto& prop : editor->propsPage->getLoadedProps()) {
       if (element.find(prop->getFileName()) != std::string::npos) {
         editor->propsPage->updateSelectedProp(prop->getName());
-        for (const auto& define : editor->settings->readDefines) {
-          std::istringstream defineStream(define);
+        for (auto define = editor->settings->readDefines.begin(); define < editor->settings->readDefines.end();) {
+          std::istringstream defineStream(*define);
           std::string defineName{};
           double value{0};
 
           defineStream >> defineName;
           auto key = prop->getSettings().find(defineName);
-          if (key == prop->getSettings().end()) continue;
-
-          switch (key->second.type) {
-            case PropFile::Setting::SettingType::TOGGLE:
-              key->second.toggle->SetValue(true);
-              break;
-            case PropFile::Setting::SettingType::OPTION:
-              key->second.option->SetValue(true);
-              break;
-            case PropFile::Setting::SettingType::NUMERIC:
-              defineStream >> value;
-              key->second.numeric->SetValue(value);
-              break;
-            case PropFile::Setting::SettingType::DECIMAL:
-              defineStream >> value;
-              key->second.decimal->SetValue(value);
-              break;
+          if (key == prop->getSettings().end()) {
+            define++;
+            continue;
           }
+
+          defineStream >> value;
+          key->second.setValue(value);
+          define = editor->settings->readDefines.erase(define);
         }
         break;
       }
@@ -436,8 +428,8 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
 
       // Remove potential StylePtr<> syntax
       if (style.find("StylePtr") != std::string::npos) {
-        style.erase(style.find("StylePtr<"), 9);
-        style.erase(style.rfind(">()"), 3);
+        style.erase(style.rfind("StylePtr<"), 9);
+        style.erase(style.find(">()"), 3);
       }
 
       Configuration::replaceStyles(styleName, style, editor);
@@ -496,11 +488,11 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
 
     // Read actual styles
     for (int32_t blade = 0; blade < editor->settings->numBlades; blade++) {
-      if (presetInfo.find("&style_charging,") == 0) {
-        presetInfo = presetInfo.substr(16 /* length of "&style_charging,"*/);
+      if (presetInfo.find("&style_charging,") < presetInfo.find("Style")) {
+        presetInfo = presetInfo.substr(presetInfo.find("&style_charging,") + 16 /* length of "&style_charging,"*/);
         bladeArray.presets[preset].styles.push_back("&style_charging");
-      } else if (presetInfo.find("&style_pov") == 0) {
-        presetInfo = presetInfo.substr(presetInfo.find(11 /* length of "&style_pov,"*/));
+      } else if (presetInfo.find("&style_pov") < presetInfo.find("Style")) {
+        presetInfo = presetInfo.substr(presetInfo.find("&style_pov,") + 11 /* length of "&style_pov,"*/);
         bladeArray.presets[preset].styles.push_back("&style_pov");
       } else {
         element = presetInfo.substr(presetInfo.find("Style"), presetInfo.find("()") - presetInfo.find("Style") + 2); // Copy in next
@@ -688,19 +680,19 @@ bool Configuration::runPreChecks(EditorWindow* editor) {
   wxQueueEvent(editor->GetEventHandler(), msgEvent); \
   return false;
 
-  if (editor->bladeArrayPage->enableDetect->GetValue() && editor->bladeArrayPage->detectPin->entry->GetValue() == "") {
+  if (editor->bladeArrayPage->enableDetect->GetValue() && editor->bladeArrayPage->detectPin.entry->GetValue() == "") {
     ERR("Blade Detect Pin cannot be empty.");
   }
-  if (editor->bladeArrayPage->enableID->GetValue() && editor->bladeArrayPage->IDPin->entry->GetValue() == "") {
+  if (editor->bladeArrayPage->enableID->GetValue() && editor->bladeArrayPage->IDPin.entry->GetValue() == "") {
     ERR("Blade ID Pin cannot be empty.");
   }
   if ([&]() { for (const BladeArrayPage::BladeArray& array : editor->bladeArrayPage->bladeArrays) if (array.name == "") return true; return false; }()) {
     ERR("Blade Array Name cannot be empty.");
   }
-  if (editor->bladeArrayPage->enableID->GetValue() && editor->bladeArrayPage->mode->GetStringSelection() == BLADE_ID_MODE_BRIDGED && editor->bladeArrayPage->pullupPin->entry->GetValue() == "") {
+  if (editor->bladeArrayPage->enableID->GetValue() && editor->bladeArrayPage->mode->GetStringSelection() == BLADE_ID_MODE_BRIDGED && editor->bladeArrayPage->pullupPin.entry->GetValue() == "") {
     ERR("Pullup Pin cannot be empty.");
   }
-  if (editor->bladeArrayPage->enableDetect->GetValue() && editor->bladeArrayPage->enableID->GetValue() && editor->bladeArrayPage->IDPin->entry->GetValue() == editor->bladeArrayPage->detectPin->entry->GetValue()) {
+  if (editor->bladeArrayPage->enableDetect->GetValue() && editor->bladeArrayPage->enableID->GetValue() && editor->bladeArrayPage->IDPin.entry->GetValue() == editor->bladeArrayPage->detectPin.entry->GetValue()) {
     ERR("Blade ID Pin and Blade Detect Pin cannot be the same.");
   }
   if ([&]() -> bool {
