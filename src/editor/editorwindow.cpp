@@ -25,7 +25,7 @@
 #include <wx/string.h>
 #include <wx/tooltip.h>
 
-EditorWindow::EditorWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize) {
+EditorWindow::EditorWindow(const std::string& _configName) : wxFrame(NULL, wxID_ANY, "ProffieConfig Editor - " + _configName, wxDefaultPosition, wxDefaultSize), openConfig(_configName) {
   createMenuBar();
   createPages();
   bindEvents();
@@ -137,4 +137,3 @@ void EditorWindow::createPages() {
 
 
 const std::string& EditorWindow::getOpenConfig() { return openConfig; }
-void EditorWindow::setOpenConfigName(const std::string& _configName) { openConfig = _configName; }

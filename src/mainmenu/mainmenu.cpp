@@ -66,7 +66,16 @@ void MainMenu::bindEvents() {
 #endif
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
         if (configSelect->GetValue() == "Select Config...") return;
-        auto newEditor = new EditorWindow();
+
+        for (auto editor : editors) {
+          if (configSelect->GetValue() == editor->getOpenConfig()) {
+            activeEditor = editor;
+            update();
+            return;
+          }
+        }
+
+        auto newEditor = new EditorWindow(configSelect->GetValue().ToStdString());
         if (!Configuration::readConfig(CONFIG_DIR + configSelect->GetValue().ToStdString() + ".h", newEditor)) {
           wxMessageBox("Error reading configuration file!", "Config Error", wxOK | wxCENTER, this);
           newEditor->Destroy();
@@ -75,8 +84,8 @@ void MainMenu::bindEvents() {
           return;
         }
         activeEditor = newEditor;
-        activeEditor->setOpenConfigName(configSelect->GetValue().ToStdString());
         editors.push_back(newEditor);
+
         update();
       }, ID_ConfigSelect);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { activeEditor->Show(); }, ID_EditConfig);
