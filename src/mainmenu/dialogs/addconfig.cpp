@@ -18,7 +18,6 @@ AddConfig::AddConfig(MainMenu* parent) : wxDialog(nullptr, wxID_ANY, "Add New Co
   bindEvents();
 
   FindWindowById(wxID_OK)->Disable();
-  SetMinSize(wxSize(600, 10));
   Fit();
 }
 
@@ -55,8 +54,9 @@ void AddConfig::bindEvents() {
 
         event.Skip();
       }, wxID_OK);
-  Bind(wxEVT_TOGGLEBUTTON, [&](wxCommandEvent&) { createNew->SetValue(false); update(); }, ID_ImportExisting);
-  Bind(wxEVT_TOGGLEBUTTON, [&](wxCommandEvent&) { importExisting->SetValue(false); update(); }, ID_CreateNew);
+  // We make sure to set itself to true that way it can't be deselected
+  Bind(wxEVT_TOGGLEBUTTON, [&](wxCommandEvent&) { importExisting->SetValue(true); createNew->SetValue(false); update(); }, ID_ImportExisting);
+  Bind(wxEVT_TOGGLEBUTTON, [&](wxCommandEvent&) { createNew->SetValue(true); importExisting->SetValue(false); update(); }, ID_CreateNew);
   Bind(wxEVT_TEXT, [&](wxCommandEvent&) { update(); });
   Bind(wxEVT_FILEPICKER_CHANGED, [&](wxCommandEvent&) {
     if (chooseConfig->GetFileName().FileExists()) {
@@ -68,6 +68,7 @@ void AddConfig::bindEvents() {
 
 void AddConfig::createUI() {
   auto sizer = new wxBoxSizer(wxVERTICAL);
+  sizer->SetMinSize(wxSize(400, -1));
 
   auto modeSelection = new wxBoxSizer(wxHORIZONTAL);
   createNew = new wxToggleButton(this, ID_CreateNew, "Create New Config");
