@@ -15,10 +15,9 @@ class Settings;
 
 class EditorWindow : public wxFrame {
 public:
-  EditorWindow();
+  EditorWindow(const std::string&);
 
   const std::string& getOpenConfig();
-  void setOpenConfigName(const std::string&);
 
   GeneralPage* generalPage{nullptr};
   PropsPage* propsPage{nullptr};
@@ -48,5 +47,5 @@ private:
   void createMenuBar();
   void createPages();
 
-  std::string openConfig{};
+  const std::string openConfig{};
 };
