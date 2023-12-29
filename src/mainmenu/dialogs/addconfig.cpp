@@ -4,8 +4,6 @@
 #include "core/defines.h"
 
 #include "wx/filepicker.h"
-#include "wx/gdicmn.h"
-#include "wx/gtk/stattext.h"
 #include "wx/string.h"
 #include <wx/event.h>
 #include <wx/msgdlg.h>
@@ -21,6 +19,7 @@ AddConfig::AddConfig(MainMenu* parent) : wxDialog(nullptr, wxID_ANY, "Add New Co
 
   FindWindowById(wxID_OK)->Disable();
   SetMinSize(wxSize(600, 10));
+  Fit();
 }
 
 void AddConfig::bindEvents() {
@@ -39,9 +38,7 @@ void AddConfig::bindEvents() {
             return;
           }
 
-          while (!importConfig.eof()) {
-            saveConfig << importConfig.rdbuf();
-          }
+          saveConfig << importConfig.rdbuf();
 
           importConfig.close();
           saveConfig.close();
@@ -50,6 +47,7 @@ void AddConfig::bindEvents() {
         }
 
         AppState::instance->addConfig(configName->GetValue().ToStdString());
+        AppState::instance->saveState();
         parent->update();
         parent->configSelect->SetStringSelection(configName->GetValue());
         auto parentEvent = new wxCommandEvent(wxEVT_COMBOBOX, MainMenu::ID_ConfigSelect);
@@ -60,7 +58,12 @@ void AddConfig::bindEvents() {
   Bind(wxEVT_TOGGLEBUTTON, [&](wxCommandEvent&) { createNew->SetValue(false); update(); }, ID_ImportExisting);
   Bind(wxEVT_TOGGLEBUTTON, [&](wxCommandEvent&) { importExisting->SetValue(false); update(); }, ID_CreateNew);
   Bind(wxEVT_TEXT, [&](wxCommandEvent&) { update(); });
-  Bind(wxEVT_FILEPICKER_CHANGED, [&](wxCommandEvent&) { update(); });
+  Bind(wxEVT_FILEPICKER_CHANGED, [&](wxCommandEvent&) {
+    if (chooseConfig->GetFileName().FileExists()) {
+      configName->SetValue(chooseConfig->GetFileName().GetName());
+    }
+    update();
+  });
 }
 
 void AddConfig::createUI() {

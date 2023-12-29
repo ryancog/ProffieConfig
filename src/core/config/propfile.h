@@ -30,17 +30,19 @@ namespace std {
 
 class PropFile : public wxWindow {
 public:
+  ~PropFile();
   struct Setting;
   struct Button;
   static PropFile* createPropConfig(const std::string&, wxWindow*);
 
-  void show(bool = true) const;
   std::string getName() const;
   std::string getFileName() const;
   std::unordered_map<std::string, Setting>& getSettings();
   const std::array<std::vector<std::pair<std::string, std::vector<PropFile::Button>>>, 4>& getButtons();
 
   struct Setting {
+    void setValue(double) const;
+    void enable(bool = true) const;
     std::string getOutput() const;
     bool checkRequiredSatisfied(const std::unordered_map<std::string, Setting>&) const;
 
@@ -67,12 +69,8 @@ public:
       DECIMAL,
     } type{SettingType::TOGGLE};
 
-    union {
-      wxCheckBox* toggle{nullptr};
-      wxRadioButton* option;
-      Misc::numEntry* numeric;
-      Misc::numEntryDouble* decimal;
-    };
+    // Tried using a union... it broke wx
+    void* control{nullptr};
   };
 
   struct Button {

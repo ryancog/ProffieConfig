@@ -10,9 +10,11 @@
 #include "editor/pages/bladearraypage.h"
 
 #include "core/config/settings.h"
+#include "core/config/configuration.h"
 #include "core/defines.h"
 #include "core/utilities/misc.h"
 #include "core/utilities/progress.h"
+#include "wx/event.h"
 
 #include <wx/combobox.h>
 #include <wx/arrstr.h>
@@ -34,25 +36,32 @@ EditorWindow::EditorWindow() : wxFrame(NULL, wxID_ANY, "ProffieConfig", wxDefaul
   SetIcon( wxICON(IDI_ICON1) );
   SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
 # endif
+  sizer->SetMinSize(550, -1);
 }
 
 void EditorWindow::bindEvents() {
   Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event ) {
+    if (!event.CanVeto()) {
+      event.Skip();
+      return;
+    }
     if (wxMessageBox("Are you sure you want to close the editor?\n\nAny unsaved changes will be lost!", "Close ProffieConfig Editor", wxICON_WARNING | wxYES_NO | wxNO_DEFAULT, this) == wxYES) {
       Hide();
     }
     event.Veto();
-    });
+  });
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::outputConfig(CONFIG_DIR + openConfig + ".h", this); }, ID_SaveConfig);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(this); }, ID_ExportConfig);
 
 # if defined(__WXOSX__)
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser(Misc::path + std::string("/" STYLEEDIT_PATH)); }, ID_StyleEditor);
+      Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser(Misc::path + std::string("/" STYLEEDIT_PATH)); }, ID_StyleEditor);
 # else
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser(STYLEEDIT_PATH); }, ID_StyleEditor);
+      Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser(STYLEEDIT_PATH); }, ID_StyleEditor);
 #endif
 
-   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
+  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
         generalPage->Show(windowSelect->GetValue() == "General");
         propsPage->Show(windowSelect->GetValue() == "Prop File");
         bladesPage->Show(windowSelect->GetValue() == "Blade Arrays");
@@ -80,8 +89,8 @@ void EditorWindow::createToolTips() {
 
 void EditorWindow::createMenuBar() {
   wxMenu *file = new wxMenu;
-   file->Append(wxID_ABOUT);
-   file->Append(wxID_EXIT);
+  file->Append(ID_SaveConfig, "Save Config\tCtrl+S");
+  file->Append(ID_ExportConfig, "Export Config...\t");
 
   wxMenu* tools = new wxMenu;
   tools->Append(ID_StyleEditor, "Style Editor...", "Open the ProffieOS style editor");
@@ -128,3 +137,4 @@ void EditorWindow::createPages() {
 
 
 const std::string& EditorWindow::getOpenConfig() { return openConfig; }
+void EditorWindow::setOpenConfigName(const std::string& _configName) { openConfig = _configName; }

@@ -65,7 +65,7 @@ SETTINGS {
 }
 
 LAYOUT {
-	HORIZONTAL("Gesture Control") {
+	HORIZONTAL ("Gesture Control") {
 		OPTION("SA22C_STAB_ON")
 		VERTICAL {
 			OPTION("SA22C_SWING_ON")
