@@ -194,7 +194,7 @@ void MainMenu::update() {
 
   auto configSelected = configSelect->GetValue() != "Select Config...";
   auto boardSelected = boardSelect->GetValue() != "Select Board...";
-  auto recoverySelected = boardSelect->GetValue() == "BOOTLOADER RECOVERY";
+  auto recoverySelected = boardSelect->GetValue().find("BOOTLOADER") != std::string::npos;
 
   applyButton->Enable(configSelected && boardSelected);
   editConfig->Enable(configSelected);

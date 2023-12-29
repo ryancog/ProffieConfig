@@ -323,8 +323,10 @@ bool Arduino::upload(wxString& _return, MainMenu* window, EditorWindow* editor, 
 
   uploadCommand += " --fqbn ";
   uploadCommand += editor->generalPage->board->GetSelection() == 0 ? ARDUINOCORE_PBV1 : editor->generalPage->board->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
-  uploadCommand += " --port ";
-  uploadCommand += window->boardSelect->GetStringSelection();
+
+  // Because it uses DFU-util in backend, this isn't actually necessary.
+  //uploadCommand += " --port ";
+  //uploadCommand += window->boardSelect->GetStringSelection();
   uploadCommand += " -v";
 
   FILE *arduinoCli = Arduino::CLI(uploadCommand);
