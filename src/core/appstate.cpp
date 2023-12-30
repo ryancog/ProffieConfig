@@ -100,6 +100,7 @@ const std::vector<std::string>& AppState::getConfigFileNames() {
 void AppState::removeConfig(const std::string& configName) {
   for (auto config = configFileNames.begin(); config < configFileNames.end();) {
     if (*config == configName) config = configFileNames.erase(config);
+    else config++;
   }
 }
 
