@@ -347,19 +347,19 @@ void BladesPage::setVisibility(){
   star1ColorLabel->Show(BD_ISSTAR);
   star1Color->Show(BD_ISSTAR);
   star1Resistance.box->Show(BD_ISSTAR);
-  star1Resistance.enable(star1Color->GetStringSelection() != BD_NORESISTANCE);
+  star1Resistance.num->Enable(star1Color->GetStringSelection() != BD_NORESISTANCE);
   star2ColorLabel->Show(BD_ISSTAR);
   star2Color->Show(BD_ISSTAR);
   star2Resistance.box->Show(BD_ISSTAR);
-  star2Resistance.enable(star2Color->GetStringSelection() != BD_NORESISTANCE);
+  star2Resistance.num->Enable(star2Color->GetStringSelection() != BD_NORESISTANCE);
   star3ColorLabel->Show(BD_ISSTAR);
   star3Color->Show(BD_ISSTAR);
   star3Resistance.box->Show(BD_ISSTAR);
-  star3Resistance.enable(star3Color->GetStringSelection() != BD_NORESISTANCE);
+  star3Resistance.num->Enable(star3Color->GetStringSelection() != BD_NORESISTANCE);
   star4ColorLabel->Show(BD_ISSTAR4);
   star4Color->Show(BD_ISSTAR4);
   star4Resistance.box->Show(BD_ISSTAR4);
-  star4Resistance.enable(star4Color->GetStringSelection() != BD_NORESISTANCE);
+  star4Resistance.num->Enable(star4Color->GetStringSelection() != BD_NORESISTANCE);
 
   subBladeUseStride->Show(BD_ISSUB && BD_ISFIRST);
   subBladeStartLabel->Show(BD_SUBHASSELECTION);

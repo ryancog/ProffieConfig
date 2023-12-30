@@ -11,11 +11,12 @@
 class Onboard : public wxWizard {
 public:
   Onboard();
-  bool run();
 
 private:
   static wxStaticText* createHeader(wxWindow*, const wxString&);
   void bindEvents();
+
+  void dependencyInstall(wxWizardEvent&);
 
   class Welcome;
   class DependencyInstall;

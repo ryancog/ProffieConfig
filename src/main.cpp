@@ -3,8 +3,6 @@
 
 #include "core/appstate.h"
 
-#include "editor/editorwindow.h"
-
 #include <wx/splash.h>
 #include <wx/app.h>
 
@@ -23,6 +21,9 @@ public:
     _NSGetExecutablePath(Misc::path, &pathLen);
     strncpy(Misc::path, dirname(Misc::path), PATH_MAX);
     chdir(Misc::path);
+#   endif
+#   ifdef __WXMSW__
+    MSWEnableDarkMode();
 #   endif
 
     AppState::init();

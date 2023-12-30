@@ -35,16 +35,17 @@ PropsPage::PropsPage(wxWindow* window) : wxScrolledWindow(window), parent{static
 void PropsPage::bindEvents() {
   auto propSelectUpdate = [&](wxCommandEvent&) {
     updateSelectedProp();
-    parent->propsPage->SetMinClientSize(wxSize(parent->propsPage->sizer->GetMinSize().GetWidth(), 0));
+    update();
+    SetMinClientSize(wxSize(sizer->GetMinSize().GetWidth(), 0));
     FULLUPDATEWINDOW(parent);
-    parent->SetSize(wxSize(parent->GetSize().GetWidth(), parent->GetMinHeight() + parent->propsPage->GetBestVirtualSize().GetHeight()));
+    parent->SetSize(wxSize(parent->GetSize().GetWidth(), parent->GetMinHeight() + GetBestVirtualSize().GetHeight()));
     parent->SetMinSize(wxSize(parent->GetSize().GetWidth(), 350));
   };
   auto optionSelectUpdate = [&](wxCommandEvent&) {
     int32_t x, y;
-    parent->propsPage->GetViewStart(&x, &y);
-    parent->propsPage->update();
-    parent->propsPage->Scroll(0, y);
+    GetViewStart(&x, &y);
+    update();
+    Scroll(0, y);
   };
 
   Bind(wxEVT_COMBOBOX, propSelectUpdate, ID_Select);

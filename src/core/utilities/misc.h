@@ -58,86 +58,22 @@ struct Misc::numEntry {
   wxBoxSizer* box{nullptr};
   wxSpinCtrl* num{nullptr};
   wxStaticText* text{nullptr};
-
-  void setToolTip(wxToolTip* tip) {
-    num->SetToolTip(tip);
-    text->SetToolTip(tip);
-  }
-
-  void enable(bool en = true) {
-    num->Enable(en);
-    text->Enable(en);
-  }
-
-  void disable() {
-    enable(false);
-  }
-
-  void setValue(int32_t val) { num->SetValue(val); }
 };
 
 struct Misc::numEntryDouble {
   wxBoxSizer* box{nullptr};
   wxSpinCtrlDouble* num{nullptr};
   wxStaticText* text{nullptr};
-
-  void setToolTip(wxToolTip* tip) {
-    num->SetToolTip(tip);
-    text->SetToolTip(tip);
-  }
-
-  void enable(bool en = true) {
-    num->Enable(en);
-    text->Enable(en);
-  }
-
-  void disable() {
-    enable(false);
-  }
-
-  void setValue(double val) { num->SetValue(val); }
 };
 
 struct Misc::comboBoxEntry {
   wxBoxSizer* box{nullptr};
   wxComboBox* entry{nullptr};
   wxStaticText* text{nullptr};
-
-  void setToolTip(wxToolTip* tip) {
-    entry->SetToolTip(tip);
-    text->SetToolTip(tip);
-  }
-
-  void enable(bool en = true) {
-    entry->Enable(en);
-    text->Enable(en);
-  }
-
-  void disable() {
-    enable(false);
-  }
-
-  void setValue(wxString val) { entry->SetValue(val); }
 };
 
 struct Misc::textEntry {
   wxBoxSizer* box{nullptr};
   wxTextCtrl* entry{nullptr};
   wxStaticText* text{nullptr};
-
-  void setToolTip(wxToolTip* tip) {
-    entry->SetToolTip(tip);
-    text->SetToolTip(tip);
-  }
-
-  void enable(bool en = true) {
-    entry->Enable(en);
-    text->Enable(en);
-  }
-
-  void disable() {
-    enable(false);
-  }
-
-  void setValue(wxString val) { entry->SetValue(val); }
 };
