@@ -94,6 +94,7 @@ void MainMenu::bindEvents() {
         if (wxMessageBox("Are you sure you want to deleted the selected configuration?\n\nThis action cannot be undone!", "Delete Config", wxYES_NO | wxNO_DEFAULT | wxCENTER, this) == wxYES) {
           activeEditor->Close(true);
           AppState::instance->removeConfig(configSelect->GetValue().ToStdString());
+          activeEditor = nullptr;
           update();
         }
       }, ID_RemoveConfig);
@@ -190,7 +191,7 @@ void MainMenu::update() {
 
   for (auto editor = editors.begin(); editor < editors.end();) {
     if (!(*editor)->IsShown()) {
-      if (&**editor == &*activeEditor) {
+      if (activeEditor != nullptr && &**editor == &*activeEditor) {
         editor++;
         continue;
       }
