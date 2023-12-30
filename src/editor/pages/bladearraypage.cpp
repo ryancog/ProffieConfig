@@ -246,13 +246,13 @@ void BladeArrayPage::update() {
   if (lastArraySelection < 0 || lastArraySelection >= static_cast<int32_t>(arrayList->GetCount())) lastArraySelection = 0;
   arrayList->SetSelection(lastArraySelection);
 
-  detectPin.enable(enableDetect->GetValue());
+  detectPin.entry->Enable(enableDetect->GetValue());
 
   arrayList->Enable(enableID->GetValue());
   mode->Enable(enableID->GetValue());
-  IDPin.enable(enableID->GetValue());
-  pullupPin.enable(enableID->GetValue());
-  pullupResistance.enable(enableID->GetValue());
+  IDPin.entry->Enable(enableID->GetValue());
+  pullupPin.entry->Enable(enableID->GetValue());
+  pullupResistance.num->Enable(enableID->GetValue());
   enablePowerForID->Enable(enableID->GetValue());
   powerPin1->Enable(enableID->GetValue() && enablePowerForID->GetValue());
   powerPin2->Enable(enableID->GetValue() && enablePowerForID->GetValue());
@@ -261,15 +261,15 @@ void BladeArrayPage::update() {
   powerPin5->Enable(enableID->GetValue() && enablePowerForID->GetValue());
   powerPin6->Enable(enableID->GetValue() && enablePowerForID->GetValue());
   continuousScans->Enable(enableID->GetValue());
-  numIDTimes.enable(enableID->GetValue() && continuousScans->GetValue());
-  scanIDMillis.enable(enableID->GetValue() && continuousScans->GetValue());
+  numIDTimes.num->Enable(enableID->GetValue() && continuousScans->GetValue());
+  scanIDMillis.num->Enable(enableID->GetValue() && continuousScans->GetValue());
   addID->Enable(enableID->GetValue());
   removeID->Enable(enableID->GetValue() && lastArraySelection && !(arrayList->GetStringSelection() == "blade_in" || arrayList->GetStringSelection() == "no_blade"));
 
-  bool enable = bladeArrays[lastArraySelection].name != "no_blade" && bladeArrays[lastArraySelection].name != "blade_in";
-  arrayName.enable(enable);
-  resistanceID.enable(enable);
-  if (enable) resistanceID.num->SetRange(2000, 100000);
+  bool customBladeArraySelected = bladeArrays[lastArraySelection].name != "no_blade" && bladeArrays[lastArraySelection].name != "blade_in";
+  arrayName.entry->Enable(customBladeArraySelected);
+  resistanceID.num->Enable(customBladeArraySelected);
+  if (customBladeArraySelected) resistanceID.num->SetRange(2000, 100000);
   else resistanceID.num->SetRange(0, 0);
   arrayName.entry->ChangeValue(bladeArrays.at(lastArraySelection).name);
   resistanceID.num->SetValue(bladeArrays.at(lastArraySelection).value);

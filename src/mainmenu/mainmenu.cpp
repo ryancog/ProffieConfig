@@ -49,7 +49,7 @@ void MainMenu::bindEvents() {
   });
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Destroy(); Onboard().run(); }, ID_ReRunSetup);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); auto onboard = new Onboard(); onboard->Destroy(); }, ID_ReRunSetup);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(ABOUT_MESSAGE, "About ProffieConfig", wxOK | wxICON_INFORMATION, this); }, wxID_ABOUT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxMessageBox(COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION, this); }, ID_Copyright);
@@ -142,7 +142,7 @@ void MainMenu::createUI() {
   titleSection->Add(subTitle, wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 10));
   headerSection->Add(titleSection, wxSizerFlags(0));
   headerSection->AddStretchSpacer(1);
-  headerSection->Add(new wxStaticBitmap(this, wxID_ANY, icon_small_xpm), wxSizerFlags(0).Border(wxALL, 10));
+  headerSection->Add(new wxStaticBitmap(this, wxID_ANY, wxIcon(icon_small_xpm)), wxSizerFlags(0).Border(wxALL, 10));
 
   auto configSelectSection = new wxBoxSizer(wxHORIZONTAL);
   configSelect = new wxComboBox(this, ID_ConfigSelect, "Select Config...", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Select Config..."}), wxCB_READONLY);
