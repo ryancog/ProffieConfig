@@ -1,77 +1,131 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023 Ryan Ogurek
 
-#include "onboard.h"
+#include "onboard/onboard.h"
 
 #include <wx/bitmap.h>
 #include <wx/sizer.h>
 #include <wx/msgdlg.h>
 #include <wx/timer.h>
+#include <wx/statline.h>
+#include <wx/event.h>
 #include "../resources/icons/icon.xpm"
 
 #include "tools/arduino.h"
 #include "core/utilities/misc.h"
 #include "core/appstate.h"
-#include "wx/wizard.h"
 
-Onboard::Onboard() : wxWizard(nullptr, wxID_ANY, "ProffieConfig First-Time Setup", wxBitmap(icon_xpm), wxDefaultPosition, wxDEFAULT_DIALOG_STYLE) {
-  SetPageSize(wxSize(600, -1));
-  bindEvents();
+Onboard* Onboard::instance{nullptr};
+Onboard::Onboard() : wxFrame(nullptr, wxID_ANY, "ProffieConfig First-Time Setup", wxDefaultPosition, wxDefaultSize, wxSYSTEM_MENU | wxCAPTION | wxCLOSE_BOX) {
+  auto sizer = new wxBoxSizer(wxVERTICAL);
 
-  auto firstPage = new Welcome(this);
-  (*firstPage)
-      .Chain(new DependencyInstall(this))
-      .Chain(new Overview(this));
+  auto contentSizer = new wxBoxSizer(wxHORIZONTAL);
+  auto icon = new wxStaticBitmap(this, wxID_ANY, wxBitmap(icon_xpm));
+  contentSizer->Add(icon, wxSizerFlags(0).Border(wxRIGHT, 10));
+  welcomePage = new Welcome(this);
+  dependencyPage = new DependencyInstall(this);
+  dependencyPage->Hide();
+  overviewPage = new Overview(this);
+  overviewPage->Hide();
+  contentSizer->Add(welcomePage, wxSizerFlags(1).Expand());
+  contentSizer->Add(dependencyPage, wxSizerFlags(1).Expand());
+  contentSizer->Add(overviewPage, wxSizerFlags(1).Expand());
 
-  if (RunWizard(firstPage)) {
-    AppState::instance->firstRun = false;
-    AppState::instance->saveState();
-    MainMenu::instance = new MainMenu();
-  }
+  auto buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+  next = new wxButton(this, ID_Next, "Next >");
+  cancel = new wxButton(this, ID_Cancel, "Cancel");
+  buttonSizer->AddStretchSpacer();
+  buttonSizer->Add(next, wxSizerFlags(0).Border(wxRIGHT | wxTOP | wxBOTTOM, 10));
+  buttonSizer->Add(cancel, wxSizerFlags(0).Border(wxRIGHT | wxTOP | wxBOTTOM, 10));
+
+  sizer->Add(contentSizer, wxSizerFlags(1).Expand().Border(wxALL, 10));
+  sizer->Add(new wxStaticLine(this, wxID_ANY), wxSizerFlags(0).Expand().Border(wxLEFT | wxRIGHT, 10));
+  sizer->Add(buttonSizer, wxSizerFlags(0).Expand());
+
+  sizer->SetMinSize(wxSize(900, 400));
+  SetSizerAndFit(sizer);
+
+  bindEvents(); // Do this first so children can bind their events to parent state.
+
+# ifdef __WXMSW__
+  SetIcon( wxICON(IDI_ICON1) );
+  SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
+# endif
+
+  CentreOnScreen();
+  Show(true);
 }
 
-
 void Onboard::bindEvents() {
-  Bind(wxEVT_WIZARD_CANCEL, [&](wxWizardEvent& event) {
+  Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
     if (wxMessageBox("Are you sure you want to cancel setup?", "Exit ProffieConfig", wxYES_NO | wxNO_DEFAULT | wxCENTER, this) == wxNO) {
       event.Veto();
       return;
     }
+    event.Skip();
     if (!AppState::instance->firstRun) MainMenu::instance = new MainMenu();
   });
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Close(); }, ID_Cancel);
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
-  Bind(wxEVT_WIZARD_BEFORE_PAGE_CHANGED, [&](wxWizardEvent& event) { if (event.GetPage()->GetId() == ID_DependencyInstall && event.GetDirection()) dependencyInstall(event); });
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
+        if (welcomePage->IsShown()) {
+          welcomePage->Hide();
+          dependencyPage->Show();
+        } else if (dependencyPage->IsShown()) {
+          if (!dependencyPage->completedInstall) dependencyInstall(event);
+          else {
+            dependencyPage->Hide();
+            overviewPage->Show();
+            overviewPage->prepare();
+          }
+        } else if (overviewPage->IsShown()) {
+          Close(true);
+          AppState::instance->firstRun = false;
+          AppState::instance->saveState();
+          MainMenu::instance = new MainMenu();
+        }
+        update();
+      }, ID_Next);
   //Bind(wxEVT_WIZARD_PAGE_CHANGED, )
 }
 
-void Onboard::dependencyInstall(wxWizardEvent& event) {
-  auto page = static_cast<DependencyInstall*>(event.GetPage());
+void Onboard::update() {
+  if (overviewPage->IsShown()) {
+    next->Enable(overviewPage->isDone);
+    next->SetLabel("Finish");
+  }
+  else {
+    next->Enable();
+    next->SetLabel("Next >");
+  }
 
-  if (!page->completedInstall) event.Veto();
-  else return;
+  Layout();
+  Fit();
+}
 
+void Onboard::dependencyInstall(wxCommandEvent&) {
   Disable();
-  page->pressNext->Hide();
-  page->loadingBar->Show();
-  page->Layout();
+  dependencyPage->pressNext->Hide();
+  dependencyPage->loadingBar->Show();
+  dependencyPage->Layout();
 
-  page->barPulser->Start(50);
+  dependencyPage->barPulser->Start(50);
 
   Arduino::init(this, [=](bool succeeded) {
     Enable();
-    page->loadingBar->Hide();
-    page->barPulser->Stop();
+    dependencyPage->loadingBar->Hide();
+    dependencyPage->barPulser->Stop();
 
     if (succeeded) {
-      page->description->Hide();
-      page->doneMessage->Show();
-      page->Layout();
+      dependencyPage->description->Hide();
+      dependencyPage->doneMessage->Show();
+      dependencyPage->Layout();
 
-      page->completedInstall = true;
+      dependencyPage->completedInstall = true;
     } else {
-      page->pressNext->Show();
-      page->Layout();
+      dependencyPage->pressNext->Show();
+      dependencyPage->Layout();
 
       wxMessageBox("Dependency installation failed, please try again.", "Installation Failure", wxOK | wxCENTER, this);
     }

@@ -30,5 +30,4 @@ private:
   std::vector<std::string> configFileNames;
 
   bool saved{true};
-
 };

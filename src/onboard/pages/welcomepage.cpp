@@ -2,7 +2,7 @@
 
 #include <wx/sizer.h>
 
-Onboard::Welcome::Welcome(wxWizard* parent) : wxWizardPageSimple(parent) {
+Onboard::Welcome::Welcome(wxWindow* parent) : wxWindow(parent, ID_Welcome) {
   auto sizer = new wxBoxSizer(wxVERTICAL);
 
   auto welcomeText = createHeader(this, "Welcome to ProffieConfig " VERSION "!");
@@ -22,5 +22,4 @@ Onboard::Welcome::Welcome(wxWizard* parent) : wxWizardPageSimple(parent) {
   sizer->AddSpacer(40);
   sizer->Add(infoText, wxSizerFlags(0).Center());
   SetSizerAndFit(sizer);
-  SetId(ID_Welcome);
 }

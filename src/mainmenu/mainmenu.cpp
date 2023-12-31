@@ -18,7 +18,7 @@
 #include <wx/menu.h>
 
 MainMenu* MainMenu::instance{nullptr};
-MainMenu::MainMenu() : wxFrame(nullptr, wxID_ANY, "ProffieConfig") {
+MainMenu::MainMenu(wxWindow* parent) : wxFrame(parent, wxID_ANY, "ProffieConfig") {
   createUI();
   createMenuBar();
   createTooltips();
@@ -30,6 +30,7 @@ MainMenu::MainMenu() : wxFrame(nullptr, wxID_ANY, "ProffieConfig") {
   SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
 # endif
 
+  CenterOnScreen();
   Show(true);
 }
 
@@ -75,7 +76,7 @@ void MainMenu::bindEvents() {
           }
         }
 
-        auto newEditor = new EditorWindow(configSelect->GetValue().ToStdString());
+        auto newEditor = new EditorWindow(configSelect->GetValue().ToStdString(), this);
         if (!Configuration::readConfig(CONFIG_DIR + configSelect->GetValue().ToStdString() + ".h", newEditor)) {
           wxMessageBox("Error reading configuration file!", "Config Error", wxOK | wxCENTER, this);
           newEditor->Destroy();
@@ -155,7 +156,12 @@ void MainMenu::createUI() {
   configSelectSection->Add(removeConfig, wxSizerFlags(0).Border(wxALL, 5).Expand());
 
   auto boardControls = new wxBoxSizer(wxHORIZONTAL);
-  boardSelect = new wxComboBox(this, ID_DeviceSelect, "Select Board...", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Select Board..."}), wxCB_READONLY);
+# ifdef __WXMSW__
+  auto boardEntries = Misc::createEntries({"Select Board...", "BOOTLOADER RECOVERY"});
+# else
+  auto boardEntries = Misc::createEntries({"Select Board..."});
+# endif
+  boardSelect = new wxComboBox(this, ID_DeviceSelect, "Select Board...", wxDefaultPosition, wxDefaultSize, boardEntries, wxCB_READONLY);
   refreshButton = new wxButton(this, ID_RefreshDev, "Refresh Boards");
   boardControls->Add(refreshButton, wxSizerFlags(0).Border(wxALL, 5));
   boardControls->Add(boardSelect, wxSizerFlags(1).Border(wxALL, 5));

@@ -12,7 +12,7 @@
 class MainMenu : public wxFrame {
 public:
   static MainMenu* instance;
-  MainMenu();
+  MainMenu(wxWindow* = nullptr);
 
   void update();
 
@@ -26,6 +26,9 @@ public:
   wxButton* addConfig{nullptr};
   wxButton* removeConfig{nullptr};
   wxButton* editConfig{nullptr};
+
+  EditorWindow* activeEditor{nullptr};
+  std::vector<EditorWindow*> editors{};
 
   enum {
     ID_DUMMY1, // on macOS menu items cannot have ID 0
@@ -47,9 +50,6 @@ public:
   };
 
 private:
-  EditorWindow* activeEditor{nullptr};
-  std::vector<EditorWindow*> editors{};
-
   void createUI();
   void createMenuBar();
   void createTooltips();

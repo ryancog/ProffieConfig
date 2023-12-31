@@ -14,8 +14,10 @@
 #include "core/defines.h"
 #include "core/utilities/misc.h"
 #include "core/utilities/progress.h"
-#include "wx/event.h"
 
+#include "tools/arduino.h"
+
+#include <wx/event.h>
 #include <wx/combobox.h>
 #include <wx/arrstr.h>
 #include <wx/wx.h>
@@ -25,7 +27,7 @@
 #include <wx/string.h>
 #include <wx/tooltip.h>
 
-EditorWindow::EditorWindow(const std::string& _configName) : wxFrame(NULL, wxID_ANY, "ProffieConfig Editor - " + _configName, wxDefaultPosition, wxDefaultSize), openConfig(_configName) {
+EditorWindow::EditorWindow(const std::string& _configName, wxWindow* parent) : wxFrame(parent, wxID_ANY, "ProffieConfig Editor - " + _configName, wxDefaultPosition, wxDefaultSize), openConfig(_configName) {
   createMenuBar();
   createPages();
   bindEvents();
@@ -54,6 +56,7 @@ void EditorWindow::bindEvents() {
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::outputConfig(CONFIG_DIR + openConfig + ".h", this); }, ID_SaveConfig);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(this); }, ID_ExportConfig);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(this, this); }, ID_VerifyConfig);
 
 # if defined(__WXOSX__)
       Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser(Misc::path + std::string("/" STYLEEDIT_PATH)); }, ID_StyleEditor);
@@ -89,6 +92,8 @@ void EditorWindow::createToolTips() {
 
 void EditorWindow::createMenuBar() {
   wxMenu *file = new wxMenu;
+  file->Append(ID_VerifyConfig, "Verify Config\tCtrl+R");
+  file->AppendSeparator();
   file->Append(ID_SaveConfig, "Save Config\tCtrl+S");
   file->Append(ID_ExportConfig, "Export Config...\t");
 

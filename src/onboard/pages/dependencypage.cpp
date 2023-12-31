@@ -2,7 +2,7 @@
 
 #include <wx/sizer.h>
 
-Onboard::DependencyInstall::DependencyInstall(wxWizard* parent) : wxWizardPageSimple(parent) {
+Onboard::DependencyInstall::DependencyInstall(wxWindow* parent) : wxWindow(parent, ID_DependencyInstall) {
   auto sizer = new wxBoxSizer(wxVERTICAL);
   barPulser = new wxTimer(this);
   Bind(wxEVT_TIMER, [&](wxTimerEvent&) { loadingBar->Pulse(); });
@@ -36,5 +36,4 @@ Onboard::DependencyInstall::DependencyInstall(wxWizard* parent) : wxWizardPageSi
   sizer->Add(loadingBar);
   sizer->Add(doneMessage);
   SetSizerAndFit(sizer);
-  SetId(ID_DependencyInstall);
 }

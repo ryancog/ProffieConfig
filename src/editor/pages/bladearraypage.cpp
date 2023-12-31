@@ -284,6 +284,10 @@ void BladeArrayPage::update() {
     pullupPin.box->Show(false);
     pullupResistance.box->Show(true);
   }
+
+#ifdef __WXMSW__
+  GetStaticBox()->Refresh();
+#endif
 }
 
 void BladeArrayPage::stripAndSaveName() {

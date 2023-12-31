@@ -30,7 +30,7 @@ void GeneralPage::createToolTips() {
   TIP(webUSB, "Enable to access the ProffieOS Workbench via USB.\nSee the POD Page \"The ProffieOS Workbench\" for more info.");
 
   TIP(buttons.num, "Number of buttons your saber has.\nPlease note not all prop files support all possible numbers of buttons, and controls will changed depending on how many buttons are specified.");
-  TIP(volume.num, "Maximum volume level.\n2000 is a good starting value for most speakers, and it is not recommended to go up to or past 3000 unless you know what you are doing, as this can damage your speaker.");
+  TIP(volume.num, "Maximum volume level.\n1500 is a good starting value for most speakers, and it is not recommended to go past 2000 unless you know what you are doing, as this can damage your speaker.");
   TIP(clash.num, "Force required to trigger a clash effect.\nMeasured in Gs.");
   TIP(pliTime.num, "Time since last activity before PLI goes to sleep.");
   TIP(idleTime.num, "Time since last activity before accent LEDs go to sleep.");
@@ -99,7 +99,7 @@ wxBoxSizer* GeneralPage::numOptions(wxStaticBoxSizer* parent) {
   wxBoxSizer* numOptions = new wxBoxSizer(wxVERTICAL);
 
   buttons = Misc::createNumEntry(parent->GetStaticBox(), "Number of Buttons", wxID_ANY, 0, 3, 2);
-  volume = Misc::createNumEntry(parent->GetStaticBox(), "Max Volume", wxID_ANY, 0, 3500, 2000);
+  volume = Misc::createNumEntry(parent->GetStaticBox(), "Max Volume", wxID_ANY, 0, 5000, 1500);
   volume.num->SetIncrement(50);
   clash = Misc::createNumEntryDouble(parent->GetStaticBox(), "Clash Threshold", wxID_ANY, 0.1, 5, 3);
   pliTime = Misc::createNumEntry(parent->GetStaticBox(), "PLI Timeout", wxID_ANY, 1, 60, 2);
