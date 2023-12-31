@@ -13,7 +13,7 @@
 
 #include <fstream>
 
-AddConfig::AddConfig(MainMenu* parent) : wxDialog(nullptr, wxID_ANY, "Add New Config", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE), parent(parent) {
+AddConfig::AddConfig(MainMenu* parent) : wxDialog(parent, wxID_ANY, "Add New Config", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE), parent(parent) {
   createUI();
   bindEvents();
 
@@ -104,12 +104,13 @@ void AddConfig::createUI() {
 void AddConfig::update() {
   auto duplicateConfigName = [&]() { for (const auto& config : AppState::instance->getConfigFileNames()) if (configName->GetValue() == config) return true; return false; }();
   auto configNameEmpty = configName->GetValue().empty();
-  auto validConfigName = !configNameEmpty && !duplicateConfigName;
+  auto configNameInvalidCharacters = configName->GetValue().find_first_of(".\\,/!#$%^&*|?<>\"'") != std::string::npos;
+  auto validConfigName = !configNameEmpty && !duplicateConfigName && !configNameInvalidCharacters;
   auto importingConfig = importExisting->GetValue();
   auto originFileSelected = chooseConfig->GetFileName().FileExists();
 
   duplicateWarning->Show(duplicateConfigName);
-  invalidNameWarning->Show(configNameEmpty);
+  invalidNameWarning->Show(!validConfigName);
   fileSelectionWarning->Show(importingConfig && !originFileSelected);
 
   FindWindowById(wxID_OK)->Enable(validConfigName && (importingConfig ? originFileSelected : true));

@@ -9,7 +9,7 @@
 #define ARDUINO_CLI_VERSION "0.34.2"
 
 #define ABOUT_MESSAGE \
-  "Tool for GUI Configuration and flashing of Proffieboard\n" \
+  "All-in-one Proffieboard Management Utility\n" \
   "\n" \
   "Created by Ryryog25\n" \
   "https://github.com/ryryog25/ProffieConfig\n" \
@@ -39,7 +39,7 @@
 #define TEXTITEMFLAGS wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 5)
 
 #define UPDATEWINDOW(window) window->sizer->Layout();
-#define FULLUPDATEWINDOW(window) window->sizer->Layout(); window->SetSizerAndFit(window->sizer);
+#define FULLUPDATEWINDOW(window) window->sizer->Layout(); window->SetSizerAndFit(window->sizer); window->Refresh();
 
 #define PR_DEFAULT "Default"
 #define PR_SA22C "SA22C"
