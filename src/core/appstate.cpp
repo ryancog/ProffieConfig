@@ -16,10 +16,7 @@ void AppState::init() {
   instance = new AppState();
   instance->loadStateFromFile();
 
-  if (instance->firstRun) {
-    auto onboard = new Onboard();
-    onboard->Destroy();
-  }
+  if (instance->firstRun) Onboard::instance = new Onboard();
   else MainMenu::instance = new MainMenu();
 }
 

@@ -24,7 +24,7 @@ void Settings::linkDefines() {
       // General
       ENTRY("NUM_BLADES", -1,( wxSpinCtrl*)nullptr, CHECKER(){ return true; }),
       ENTRY("NUM_BUTTONS", 2, parent->generalPage->buttons.num, CHECKER(){ return true; }),
-      ENTRY("VOLUME", 2000, parent->generalPage->volume.num, CHECKER(){ return true; }),
+      ENTRY("VOLUME", 1500, parent->generalPage->volume.num, CHECKER(){ return true; }),
       ENTRY("CLASH_THRESHOLD_G", 3.0, parent->generalPage->clash.num, CHECKER(){ return true; }),
       ENTRY("SAVE_COLOR_CHANGE", true, parent->generalPage->colorSave),
       ENTRY("SAVE_PRESET", true, parent->generalPage->presetSave),

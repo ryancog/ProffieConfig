@@ -15,7 +15,7 @@ class Settings;
 
 class EditorWindow : public wxFrame {
 public:
-  EditorWindow(const std::string&);
+  EditorWindow(const std::string&, wxWindow*);
 
   const std::string& getOpenConfig();
 
@@ -30,7 +30,6 @@ public:
 
   wxComboBox* windowSelect{nullptr};
 
-private:
   enum {
     ID_WindowSelect,
     ID_DUMMY, // on Win32, for some reason ID #1 is triggerred by hitting enter in wxTextCtrl? This is a workaround.
@@ -41,7 +40,7 @@ private:
 
     ID_StyleEditor,
   };
-
+private:
   void bindEvents();
   void createToolTips();
   void createMenuBar();
