@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2023 Ryan Ogurek
+// Copyright (C) 2024 Ryan Ogurek
 
 #pragma once
 
@@ -21,7 +21,7 @@ public:
   void update();
 
   wxComboBox* bladeArray{nullptr};
-  wxTextCtrl* presetsEditor{nullptr};
+  wxTextCtrl* styleInput{nullptr};
   wxListBox* presetList{nullptr};
   wxListBox* bladeList{nullptr};
 
@@ -41,9 +41,6 @@ public:
     wxString track{""};
   };
 
-private:
-  EditorWindow* parent{nullptr};
-
   enum {
     ID_BladeArray,
     ID_BladeList,
@@ -54,6 +51,9 @@ private:
     ID_MovePresetUp,
     ID_MovePresetDown
   };
+
+private:
+  EditorWindow* parent{nullptr};
 
   void bindEvents();
   void createToolTips();
