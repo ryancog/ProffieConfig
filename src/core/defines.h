@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2023 Ryan Ogurek
+// Copyright (C) 2024 Ryan Ogurek
 
 #pragma once
 
@@ -8,17 +8,8 @@
 #define PROFFIEOS_VERSION "7.13"
 #define ARDUINO_CLI_VERSION "0.34.2"
 
-#define ABOUT_MESSAGE \
-  "All-in-one Proffieboard Management Utility\n" \
-  "\n" \
-  "Created by Ryryog25\n" \
-  "https://github.com/ryryog25/ProffieConfig\n" \
-  "\n" \
-  "Version " VERSION "\n" \
-  "ProffieOS v" PROFFIEOS_VERSION " | Arduino CLI v" ARDUINO_CLI_VERSION
-
 #define COPYRIGHT_NOTICE \
-  "ProffieConfig Copyright (C) 2023 Ryan Ogurek\n" \
+  "ProffieConfig Copyright (C) 2024 Ryan Ogurek\n" \
   "\n" \
   "This program is free software: you can redistribute it and/or modify\n" \
   "it under the terms of the GNU General Public License as published by\n" \

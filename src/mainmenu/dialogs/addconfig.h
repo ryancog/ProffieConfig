@@ -10,8 +10,6 @@
 class AddConfig : public wxDialog {
 public:
   AddConfig(MainMenu*);
-
-private:
   enum {
     ID_CreateNew,
     ID_ImportExisting,
@@ -19,6 +17,7 @@ private:
     ID_ChooseConfig,
     ID_ConfigName,
   };
+private:
 
   MainMenu* parent{nullptr};
 

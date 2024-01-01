@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2023 Ryan Ogurek
+// Copyright (C) 2024 Ryan Ogurek
 
 
 #pragma once
@@ -92,6 +92,17 @@ public:
   wxStaticText* subBladeEndLabel{nullptr};
   wxSpinCtrl* subBladeEnd{nullptr};
 
+  enum {
+    ID_BladeArray,
+    ID_BladeSelect,
+    ID_SubBladeSelect,
+    ID_BladeType,
+    ID_AddBlade,
+    ID_AddSubBlade,
+    ID_RemoveBlade,
+    ID_RemoveSubBlade
+  };
+
   struct BladeConfig {
     wxString type{BD_PIXELRGB};
 
@@ -128,17 +139,6 @@ public:
 
 private:
   EditorWindow* parent{nullptr};
-
-  enum {
-    ID_BladeArray,
-    ID_BladeSelect,
-    ID_SubBladeSelect,
-    ID_BladeType,
-    ID_AddBlade,
-    ID_AddSubBlade,
-    ID_RemoveBlade,
-    ID_RemoveSubBlade
-  };
 
   void bindEvents();
   void createToolTips();

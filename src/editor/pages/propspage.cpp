@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2023 Ryan Ogurek
+// Copyright (C) 2024 Ryan Ogurek
 
 #include "editor/pages/propspage.h"
 
@@ -146,7 +146,7 @@ void PropsPage::updateProps() {
   for (const auto& prop : props) {
     propSelection.entry->Append(prop->getName());
   }
-  if ([&]() { for (const auto& prop : propSelection.entry->GetStrings()) if (prop == lastSelect) return true; return false; }()) {
+  if ([=]() { for (const auto& prop : propSelection.entry->GetStrings()) if (prop == lastSelect) return true; return false; }()) {
     propSelection.entry->SetStringSelection(lastSelect);
   } else propSelection.entry->SetStringSelection("Default");
 }

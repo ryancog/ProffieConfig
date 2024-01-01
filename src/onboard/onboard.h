@@ -1,9 +1,10 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2023 Ryan Ogurek
+// Copyright (C) 2024 Ryan Ogurek
 
 #pragma once
 
 #include "mainmenu/mainmenu.h"
+#include "editor/pages/bladespage.h"
 
 #include <unordered_map>
 #include <wx/wizard.h>
@@ -29,6 +30,7 @@ private:
 
   wxButton* next{nullptr};
   wxButton* cancel{nullptr};
+  wxButton* skip{nullptr};
 
   Welcome* welcomePage{nullptr};
   DependencyInstall* dependencyPage{nullptr};
@@ -42,6 +44,9 @@ private:
     ID_Back,
     ID_Next,
     ID_Cancel,
+    ID_Skip,
+
+    ID_PageButton,
   };
 };
 
@@ -75,6 +80,7 @@ public:
 
   bool isDone{false};
 
+  // Used for things that like to re-enable themselves
   std::unordered_map<int32_t, bool> mainMenuDisables{
       { MainMenu::ID_ConfigSelect, true },
       { MainMenu::ID_AddConfig, true },
@@ -85,8 +91,8 @@ public:
       { MainMenu::ID_EditConfig, true },
       { MainMenu::ID_OpenSerial, true }
   };
-  std::unordered_map<int32_t, bool> editorDisables{
-
+  std::unordered_map<int32_t, bool> bladeDisables{
+      { BladesPage::ID_BladeType, true }
   };
 
 private:
@@ -95,6 +101,7 @@ private:
   wxBoxSizer* sizer{nullptr};
 
   void generateNewPage(const std::string&, const std::string&);
+  void useButtonOnPage(const std::string&, std::function<void(wxCommandEvent&)>);
   void prepareMainMenu();
   void prepareEditor();
   void linkMainMenuEvents();
