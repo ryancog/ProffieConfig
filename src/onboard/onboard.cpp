@@ -45,7 +45,7 @@ Onboard::Onboard() : wxFrame(nullptr, wxID_ANY, "ProffieConfig First-Time Setup"
   sizer->Add(new wxStaticLine(this, wxID_ANY), wxSizerFlags(0).Expand().Border(wxLEFT | wxRIGHT, 10));
   sizer->Add(buttonSizer, wxSizerFlags(0).Expand());
 
-  sizer->SetMinSize(wxSize(900, 400));
+  sizer->SetMinSize(wxSize(900, 430));
   SetSizerAndFit(sizer);
 
   bindEvents(); // Do this first so children can bind their events to parent state.

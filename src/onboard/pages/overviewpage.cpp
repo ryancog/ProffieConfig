@@ -12,9 +12,11 @@
 #include <wx/gdicmn.h>
 #include <wx/sizer.h>
 
+std::vector<bool*> Onboard::Overview::eventRunTrackers{};
 #define EVENT_PAGE_SETUP \
 event.Skip(); \
     static bool hasRun{false}; \
+    if (std::find(eventRunTrackers.begin(), eventRunTrackers.end(), &hasRun) == eventRunTrackers.end()) eventRunTrackers.push_back(&hasRun); \
     if (hasRun) return; \
     hasRun = true;
 
@@ -43,6 +45,7 @@ Onboard::Overview::~Overview() {
 
 void Onboard::Overview::prepare() {
   guideMenu = new MainMenu(this);
+  for (auto hasRun : eventRunTrackers) *hasRun = false;
   prepareMainMenu();
   linkMainMenuEvents();
 }
@@ -65,6 +68,16 @@ void Onboard::Overview::prepareEditor() {
   guideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_ExportConfig, false);
   guideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_StyleEditor, false);
   guideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_VerifyConfig, false);
+  guideMenu->activeEditor->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
+    if (doneWithEditor) {
+      event.Skip();
+      return;
+    }
+    if (event.CanVeto()) {
+      event.Veto();
+      wxMessageBox("You cannot close this during First-Time Setup.", "Close ProffieConfig Editor", wxOK | wxCENTER, guideMenu->activeEditor);
+    }
+  });
 }
 
 void Onboard::Overview::linkMainMenuEvents() {
@@ -95,14 +108,15 @@ void Onboard::Overview::linkMainMenuEvents() {
         EVENT_PAGE_SETUP;
         generateNewPage("Edit Configuration",
 
-                        "Now that you've imported your config, ProffieConfig will manage it, and you no longer need\n"
-                        "the file, though it's never a bad idea to keep backups.\n"
+                        "If you import a config later, ProffieConfig will manage it, and you won't need\n"
+                        "the file after you do so, though it's never a bad idea to keep backups.\n"
                         "\n"
                         "We'll go over how to export your configuration later, which could also be useful if\n"
                         "you ever need help troubleshooting.\n"
                         "\n\n"
-                        "Click on \"Edit Selected Configuration\" in order to open your config\n"
-                        "in the ProffieConfig editor\n"
+                        "Click on \"Edit Selected Configuration\" in order to open your new config\n"
+                        "in the ProffieConfig editor.\n"
+                        "(Notice it's been selected in the drop-down)\n"
                         );
         mainMenuDisables.at(MainMenu::ID_AddConfig) = true;
         mainMenuDisables.at(MainMenu::ID_EditConfig) = false;
@@ -145,6 +159,13 @@ void Onboard::Overview::linkEditorEvents() {
       guideMenu->activeEditor->bladesPage->GetStaticBox()->FindWindow(id)->Enable(!disabled);
     }
   });
+  guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_UPDATE_UI, [&](wxUpdateUIEvent& event) {
+    event.Skip();
+    for (const auto& [ id, disabled ] : awarenessDisables) {
+      guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->FindWindow(id)->Enable(!disabled);
+    }
+  });
+
   guideMenu->activeEditor->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
         if (guideMenu->activeEditor->windowSelect->GetSelection() != 1) {
@@ -243,7 +264,7 @@ void Onboard::Overview::linkEditorEvents() {
                         "of pixels in the blade.\n"
                         "\n"
                         "Chances are you won't need to change the Color Order, almost every single WS281X blade\n"
-                        "uses the \"GRB\". If you're unsure, simply leave the color order as it is.\n"
+                        "uses \"GRB\". If you're unsure, simply leave the color order as it is.\n"
                         "\n"
                         "The data pin is the physical pin your blade is connected to on the Proffieboard for\n"
                         "sending the, well, data. You can select an option from the drop-down, or type directly\n"
@@ -252,6 +273,7 @@ void Onboard::Overview::linkEditorEvents() {
                         "Once you're familiar with these settings, click the \"+\" icon under the \"SubBlades\"\n"
                         "list and select the created SubBlade (\"SubBlade 0\").\n"
                         );
+        bladeDisables.at(BladesPage::ID_AddSubBlade) = false;
 
       }, BladesPage::ID_BladeSelect);
   guideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent& event) {
@@ -259,16 +281,16 @@ void Onboard::Overview::linkEditorEvents() {
 
         generateNewPage("Configuration - Blade Arrays",
 
-                        "Now, you'll notice mostly the same controls, but with a few extra specific\n"
+                        "SubBlades are specific to WS281X blades, allowing you to seperate one blade into multiple\n"
+                        "effective blades, and you'll notice mostly the same controls, but with a few extra specific\n"
                         "to WS281X blades in SubBlade mode.\n"
                         "\n"
                         "The most important bit here is the \"SubBlade Start\" and \"SubBlade End\",\n"
                         "which specifies the subsection of WS281X blade to be considered a different blade.\n"
                         "\n"
-                        "The range for these numbers start at 0 and end at \"Number of Pixels\", and\n"
-                        "the end of one SubBlade should not overlap with the start of another."
-                        "\n"
-                        "These SubBlades don't have to be in order (e.g. the physical end of a WS281X\n"
+                        "The range for these numbers start at 0 and end at one less than \"Number of Pixels\", and\n"
+                        "the end of one SubBlade should not overlap with the start of another.\n"
+                        "These SubBlades don't have to be in order though. (e.g. the physical end of a WS281X\n"
                         "blade could be the first SubBlade)\n"
                         "\n"
                         "When SubBlade mode is active, only SubBlade 0 will show blade controls, the\n"
@@ -276,6 +298,7 @@ void Onboard::Overview::linkEditorEvents() {
                         "\n"
                         "Now, try changing the type of Blade to a \"Tri-LED Star\"\n"
                         );
+        bladeDisables.at(BladesPage::ID_AddSubBlade) = true;
         bladeDisables.at(BladesPage::ID_BladeType) = false;
         guideMenu->activeEditor->bladesPage->bladeType->Clear();
         guideMenu->activeEditor->bladesPage->bladeType->Append("WS281X (RGB)");
@@ -349,8 +372,8 @@ void Onboard::Overview::linkEditorEvents() {
 
                         "Presets are arguably the most important part of the configuration.\n"
                         "\n"
-                        "Presets contain all the information about what to actually do whenever\n"
-                        "with all your LEDs and what kind of effects should happen.\n"
+                        "Presets contain all the information about what to actually do with all your LEDs\n"
+                        "and what kind of effects should happen on your saber.\n"
                         "\n"
                         "First things first, create a new preset by clicking the \"+\".\n"""
                         );
@@ -377,10 +400,9 @@ void Onboard::Overview::linkEditorEvents() {
                         "on a new line on the OLED, you can use \"\\n\" to mean \"Enter\""
                         );
         guideMenu->activeEditor->presetsPage->nameInput->Enable();
-        guideMenu->activeEditor->presetsPage->addPreset->Disable();
 
         useButtonOnPage("Done", [&](wxCommandEvent&) {
-          EVENT_PAGE_SETUP; // This is kind of an ugly way to do this, but I can't capture this function for unbind.
+          EVENT_PAGE_SETUP;
 
           generateNewPage("Configuration - Presets and Styles",
 
@@ -396,7 +418,7 @@ void Onboard::Overview::linkEditorEvents() {
           guideMenu->activeEditor->presetsPage->dirInput->Enable();
 
           useButtonOnPage("Done", [&](wxCommandEvent&) {
-            EVENT_PAGE_SETUP; // This is kind of an ugly way to do this, but I can't capture this function for unbind.
+            EVENT_PAGE_SETUP;
 
             generateNewPage("Configuration - Presets and Styles",
 
@@ -414,19 +436,301 @@ void Onboard::Overview::linkEditorEvents() {
             guideMenu->activeEditor->presetsPage->trackInput->Enable();
 
             useButtonOnPage("Done", [&](wxCommandEvent&) {
-              EVENT_PAGE_SETUP; // This is kind of an ugly way to do this, but I can't capture this function for unbind.
+              EVENT_PAGE_SETUP;
 
               generateNewPage("Configuration - Presets and Styles",
 
+                              "While you're in the tutorial you won't be able to, but notice the up and down\n"
+                              "arrows beside the preset list. When you have a preset selected, and multiple presets\n"
+                              "in the list, those allow you to move presets up and down through the list.\n"
+                              "\n"
+                              "The order in which you cycle through presets on the saber is determined by the order\n"
+                              "of them here, so you may want to rearrange them at some point.\n"
+                              "\n"
                               "Choose one of your blades from the list to edit the bladestyle for that blade.\n"
+                              "\n"
+                              "It's worth noting that if you have a blade with SubBlades, then that blade will\n"
+                              "show up in the list as [Blade Number]:[SubBlade Number] (e.g. 0:0), as each SubBlade\n"
+                              "gets its own style too.\n"
                               );
-
               guideMenu->activeEditor->presetsPage->bladeList->Enable();
+
             });
           });
         });
 
       }, PresetsPage::ID_AddPreset);
+  guideMenu->activeEditor->presetsPage->GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent& event) {
+        EVENT_PAGE_SETUP;
+
+        generateNewPage("Configuration - Presets and Styles",
+
+                        "Great! Now you'll see what is known as a \"Blade Style\" show up in the box on the right.\n"
+                        "\n"
+                        "Every blade for every preset has a unique blade style to set up, and these blade styles\n"
+                        "are the code that tells your blade what to do. These bladestyles can get really complex,\n"
+                        "having all kinds of different effects, reacting to effects on the saber, etc.\n"
+                        "\n"
+                        "The style this field auto-populates with is pretty simple. It extends and retracts the saber\n"
+                        "when you press the button, and it has an \"AudioFlicker\" between a couple of hues of blue\n"
+                        "while it's on.\n"
+                        "\n"
+                        "Fett263's Style Library can be a good place to find bladestyles you can customize, and if\n"
+                        "you're feeling adventurous, check out the ProffieOS Style Editor to make your own custom\n"
+                        "styles! It's linked in \"Tools\"->\"Style Editor...\"\n"
+                        "\n"
+                        "When you're done, switch the page to \"Blade Awareness\" to continue."
+                        );
+        guideMenu->activeEditor->presetsPage->styleInput->Enable();
+        guideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_StyleEditor, true);
+        guideMenu->activeEditor->windowSelect->Append("Blade Awareness");
+
+      }, PresetsPage::ID_BladeList);
+  guideMenu->activeEditor->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
+        EVENT_PAGE_SETUP;
+        if (guideMenu->activeEditor->windowSelect->GetSelection() != 4) {
+          hasRun = false;
+          return;
+        }
+
+        generateNewPage("Configuration - Blade Awareness",
+
+                        "Did you notice those drop-downs on the past couple of pages for a \"Blade Array\"?\n"
+                        "Did you wonder what those are for? It's Blade Awareness.\n"
+                        "\n"
+                        "Blade Awareness is a neat little feature of ProffieOS that, if your saber is installed\n"
+                        "in such a way that supports it, allows the saber to respond to what blade is inserted,\n"
+                        "or none at all!\n"
+                        "\n"
+                        "There two main \"elements\" to Blade Awareness, if you will: \"Blade Detect\" and \"Blade ID\"\n"
+                        "\n"
+                        "Blade Detect is a lot simpler, so we'll start there, enable it to continue.\n"
+                        );
+        awarenessDisables.at(BladeArrayPage::ID_BladeDetectEnable) = false;
+
+      }, EditorWindow::ID_WindowSelect);
+  guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent& event) {
+        EVENT_PAGE_SETUP;
+
+        generateNewPage("Configuration - Blade Detect",
+
+                        "Blade Detect has only one option: The pin it uses.\n"
+                        "\n"
+                        "Blade Detect allows your saber to detect if there's a blade inserted or not,\n"
+                        "and it does this by checking whether a particular pin is shorted to GND/BATT-.\n"
+                        "\n"
+                        "Certain WS281X connector PCBs have a solderpoint for this feature, and if you connect\n"
+                        "everything appropriately, and note down the name of the pin you connect (or ask if someone\n"
+                        "else installed your saber), you can enter it in here. (e.g. blade4Pin)\n"
+                        "\n"
+                        "Now, a new Blade Array will be created: \"no_blade\", and you can configure a whole new\n"
+                        "set of presets specifically for when there is no blade in the saber, just switch the drop\n"
+                        "down on the \"Presets and Styles\" or \"Blade Arrays\" page.\n"
+                        "\n"
+                        "Enable Blade ID to continue.\n"
+                        );
+        awarenessDisables.at(BladeArrayPage::ID_BladeDetectEnable) = true;
+        awarenessDisables.at(BladeArrayPage::ID_BladeIDEnable) = false;
+
+      }, BladeArrayPage::ID_BladeDetectEnable);
+  guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent& event) {
+        EVENT_PAGE_SETUP;
+
+        generateNewPage("Configuration - Blade ID",
+
+                        "Blade ID works by measuring resistance from a blade's data line to GND, and switching\n"
+                        "preset based on the measured value.\n"
+                        "\n"
+                        "In any case, the data line must go directly to the hilt-side connector, and an extra\n"
+                        "ID resistor must be installed inside the blade.\n"
+                        "\n"
+                        "There's a few different modes to go over. \"Snapshot\" is the default,\n"
+                        "and without going into detail is the simplest to setup. All it requires is specifying\n"
+                        "the data line to measure resistance for. (e.g. bladePin)\n"
+                        "\n"
+                        "Switch the mode from \"Snapshot\" to \"External Pullup\" to continue."
+                        );
+        awarenessDisables.at(BladeArrayPage::ID_BladeIDEnable) = true;
+        guideMenu->activeEditor->bladeArrayPage->mode->Clear();
+        guideMenu->activeEditor->bladeArrayPage->mode->Append("Snapshot");
+        guideMenu->activeEditor->bladeArrayPage->mode->Append("External Pullup");
+        guideMenu->activeEditor->bladeArrayPage->mode->SetSelection(0);
+
+      }, BladeArrayPage::ID_BladeIDEnable);
+  guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
+        EVENT_PAGE_SETUP;
+        if (guideMenu->activeEditor->bladeArrayPage->mode->GetSelection() != 1) {
+          hasRun = false;
+          return;
+        }
+
+        generateNewPage("Configuration - Blade ID",
+
+                        "In External Pullup mode, a pullup resistor is placed between your Blade ID pin and\n"
+                        "3.3V. The primary advantage of this is that Blade ID values should be closer\n"
+                        "to the actual resistance values used inside blades when compared to the values\n"
+                        "captured when in Snapshot mode.\n"
+                        "\n"
+                        "Doing this can make the configuration easier, but is otherwise optional.\n"
+                        "\n"
+                        "Select \"Bridged Pullup\" mode to continue."
+                        );
+        guideMenu->activeEditor->bladeArrayPage->mode->Append("Bridged Pullup");
+
+
+      }, BladeArrayPage::ID_BladeIDMode);
+  guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
+        EVENT_PAGE_SETUP;
+        if (guideMenu->activeEditor->bladeArrayPage->mode->GetSelection() != 2) {
+          hasRun = false;
+          return;
+        }
+
+        generateNewPage("Configuration - Blade ID",
+
+                        "In Bridged Pullup mode, another pin can be bridged with the Blade ID pin in order to\n"
+                        "utilize the pullup functionality from that pin while ID is being done.\n"
+                        "\n"
+                        "This other pin will be unusable for anything else, which may make this mode undesirable,\n"
+                        "but useful if you have pads to spare.\n"
+                        "\n"
+                        "Next is \"Enable Power on ID\", enable it to continue."
+                        );
+        awarenessDisables.at(BladeArrayPage::ID_BladeIDPower) = false;
+
+      }, BladeArrayPage::ID_BladeIDMode);
+  guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent& event) {
+        EVENT_PAGE_SETUP;
+
+        generateNewPage("Configuration - Power on ID",
+
+                        "Chances are Blade ID will be used on a WS281X blade, and in that case Blade ID\n"
+                        "values will be interfered with when the blade is off. To circumvent this, the\n"
+                        "WS281X blade can be powered on shortly while ID is occuring.\n"
+                        "\n"
+                        "The Power Pins connected to the blade to be ID'd should be selected if this is\n"
+                        "the case.\n"
+                        "\n"
+                        "Enable \"Continuous Scanning\" to continue."
+                        );
+        awarenessDisables.at(BladeArrayPage::ID_ContinuousScan) = false;
+
+      }, BladeArrayPage::ID_BladeIDPower);
+  guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent& event) {
+        EVENT_PAGE_SETUP;
+
+        generateNewPage("Configuration - Continuous Scanning",
+
+                        "If you already have Blade ID set up, continuous scanning acts as a pseudo Blade Detect,\n"
+                        "continuously monitoring for changes in blade ID, not just at power on or triggered\n"
+                        "by Blade Detect.\n"
+                        "\n"
+                        "At the specified interval, Blade ID will take the specified number of reads, average them\n"
+                        "together, then switch the Blade Array accordingly if the newly-read value is closer\n"
+                        "to a different ID than the one previously selected.\n"
+                        "\n"
+                        "Now, add a blade array with the \"+\" button.\n"
+                        );
+        awarenessDisables.at(BladeArrayPage::ID_AddArray) = false;
+
+      }, BladeArrayPage::ID_ContinuousScan);
+  guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
+        EVENT_PAGE_SETUP;
+
+        generateNewPage("Configuration - Blade Arrays",
+
+                        "Select your new blade array.\n"
+                        "\n"
+                        "Here you need to specify a name for the array, which must be unique for each array\n"
+                        "and CANNOT be \"blade_in\" or \"no_blade\", as well as the ID value for the array.\n"
+                        "\n"
+                        "In order to test for this ID value, you can use the \"scanid\" command in the\n"
+                        "Serial Monitor, which we'll cover in a bit.\n"
+                        "\n"
+                        "Once a blade array is set up, it can be, similar to the Blade Detect \"no_blade\"\n"
+                        "array, selected in the \"Presets and Styles\" or \"Blade Arrays\" pages.\n"
+                        "\n"
+                        "For now though, disable both Blade Detect and Blade ID to continue.\n"
+                        );
+        awarenessDisables.at(BladeArrayPage::ID_AddArray) = false;
+        awarenessDisables.at(BladeArrayPage::ID_BladeArray) = false;
+        awarenessDisables.at(BladeArrayPage::ID_BladeDetectEnable) = false;
+        awarenessDisables.at(BladeArrayPage::ID_BladeIDEnable) = false;
+
+        guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent& event) {
+          EVENT_PAGE_SETUP;
+          if (guideMenu->activeEditor->bladeArrayPage->enableDetect->GetValue() || guideMenu->activeEditor->bladeArrayPage->enableID->GetValue()) {
+            hasRun = false;
+            return;
+          }
+
+          generateNewPage("Configuration - Saving",
+
+                          "When you save your configuration, the ProffieConfig pre-checker will run to ensure there\n"
+                          "are no fatal errors in your current configuration.\n"
+                          "\n"
+                          "If there are such errors, you will be notified, and you will need to fix them before\n"
+                          "you can save your config.\n"
+                          "\n"
+                          "Press CTRL+S or go to \"File\"->\"Save Config\" to save.\n"
+                          );
+          awarenessDisables.at(BladeArrayPage::ID_AddArray) = true;
+          awarenessDisables.at(BladeArrayPage::ID_BladeArray) = true;
+          awarenessDisables.at(BladeArrayPage::ID_BladeDetectEnable) = true;
+          awarenessDisables.at(BladeArrayPage::ID_BladeIDEnable) = true;
+          awarenessDisables.at(BladeArrayPage::ID_ContinuousScan) = true;
+          awarenessDisables.at(BladeArrayPage::ID_BladeIDPower) = true;
+          guideMenu->activeEditor->bladeArrayPage->enableDetect->Disable();
+          guideMenu->activeEditor->bladeArrayPage->enableID->Disable();
+
+          guideMenu->activeEditor->Bind(wxEVT_MENU, [&](wxCommandEvent& event) {
+                EVENT_PAGE_SETUP;
+
+                generateNewPage("Configuration - Verification",
+
+                                "Now, although your config may have saved successfully and passed the pre-checks,\n"
+                                "it doesn't necessarily mean it's valid and will actually work.\n"
+                                "\n"
+                                "In order to properly confirm your config is valid, you'll want to verify it.\n"
+                                "\n"
+                                "Select \"Verify Config\" from the \"File\" menu to continue.\n"
+                                );
+                guideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_VerifyConfig, true);
+
+              }, EditorWindow::ID_SaveConfig);
+        });
+      }, BladeArrayPage::ID_AddArray);
+  guideMenu->activeEditor->Bind(wxEVT_MENU, [&](wxCommandEvent& event) {
+        EVENT_PAGE_SETUP;
+
+        generateNewPage("Configuration - Export Config",
+
+                        "At some point it may be necessary to export your configuration file from ProffieConfig.\n"
+                        "\n"
+                        "Whether you need to share it with me if you encounter an issue, share it with someone\n"
+                        "else for general help or troubleshooting, or just want to make a backup, the ability\n"
+                        "to export your config will come in handy.\n"
+                        "\n"
+                        "When you export your config, it will still be in ProffieConfig, and editing it won't\n"
+                        "affect the version in ProffieConfig, but it allows you to share it (or just look at\n"
+                        "it yourself if you're curious)\n"
+                        "\n"
+                        "In order to export your config, select \"Export Config...\" from the \"File\" menu."
+                        );
+        guideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_ExportConfig, true);
+
+      }, EditorWindow::ID_VerifyConfig);
+  guideMenu->activeEditor->Bind(wxEVT_MENU, [&](wxCommandEvent& event) {
+        EVENT_PAGE_SETUP;
+
+        generateNewPage("Configuration - Finishing Up",
+
+                        "We've ran through all the basics of the ProffieConfig editor, and you can now close\n"
+                        "it to continue with the rest of the introduction.\n"
+                        );
+        doneWithEditor = true;
+
+      }, EditorWindow::ID_ExportConfig);
 }
 
 void Onboard::Overview::generateNewPage(const std::string& headerText, const std::string& bodyText) {

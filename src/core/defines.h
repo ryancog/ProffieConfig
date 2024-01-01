@@ -76,5 +76,5 @@
 #define STYLEEDIT_PATH RESOURCES_PATH "StyleEditor/style_editor.html"
 #endif
 
-#define STATEFILE_PATH RESOURCES_PATH "state.pconf"
+#define STATEFILE_PATH RESOURCES_PATH ".state.pconf"
 #define PROFFIEOS_PATH RESOURCES_PATH "ProffieOS"

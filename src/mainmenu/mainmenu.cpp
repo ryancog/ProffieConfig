@@ -38,6 +38,7 @@ MainMenu::MainMenu(wxWindow* parent) : wxFrame(parent, wxID_ANY, "ProffieConfig"
 
 void MainMenu::bindEvents() {
   Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
+    AppState::instance->saveState();
     for (const auto& editor : editors) {
       if (editor->IsShown() && event.CanVeto()) {
         if (wxMessageBox("There are editors open, are you sure you want to exit?\n\nAny unsaved changes will be lost!", "Open Editor(s)", wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION, this) == wxNO) {
@@ -50,7 +51,7 @@ void MainMenu::bindEvents() {
   });
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); Onboard::instance = new Onboard(); }, ID_ReRunSetup);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(); Onboard::instance = new Onboard(); }, ID_ReRunSetup);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxAboutDialogInfo aboutInfo;
@@ -106,7 +107,9 @@ void MainMenu::bindEvents() {
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         if (wxMessageBox("Are you sure you want to deleted the selected configuration?\n\nThis action cannot be undone!", "Delete Config", wxYES_NO | wxNO_DEFAULT | wxCENTER, this) == wxYES) {
           activeEditor->Close(true);
+          remove((CONFIG_DIR + configSelect->GetValue().ToStdString() + ".h").c_str());
           AppState::instance->removeConfig(configSelect->GetValue().ToStdString());
+          AppState::instance->saveState();
           activeEditor = nullptr;
           update();
         }
