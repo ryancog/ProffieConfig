@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2023 Ryan Ogurek
+// Copyright (C) 2024 Ryan Ogurek
 
 #include "editor/pages/presetspage.h"
 
@@ -13,12 +13,12 @@
 #include <wx/tooltip.h>
 
 PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, ""), parent(static_cast<EditorWindow*>(window)) {
-  presetsEditor = new wxTextCtrl(GetStaticBox(), ID_PresetChange, "", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE);
-  presetsEditor->SetFont(wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+  styleInput = new wxTextCtrl(GetStaticBox(), ID_PresetChange, "", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE);
+  styleInput->SetFont(wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
 
   Add(createPresetConfig(), wxSizerFlags(/*proportion*/ 0).Border(wxALL, 10));
   Add(createPresetSelect(), wxSizerFlags(/*proportion*/ 0).Border(wxTOP | wxRIGHT | wxBOTTOM, 10).Expand());
-  Add(presetsEditor, wxSizerFlags(/*proportion*/ 1).Border(wxALL, 10).Expand());
+  Add(styleInput, wxSizerFlags(/*proportion*/ 1).Border(wxALL, 10).Expand());
 
   bindEvents();
   createToolTips();
@@ -72,8 +72,8 @@ void PresetsPage::createToolTips() {
 
   TIP(addPreset, "Add a preset to the currently-selected blade array.");
   TIP(removePreset, "Delete the currently-selected preset.");
-
-  TIP(presetsEditor, "Your blade style goes here.\nThis is the code which sets up what animations and effects your blade (or other LED) will do.\nFor getting/creating blade styles, see the Documentation (in \"Help->Documentation...\").");
+  
+  TIP(styleInput, "Your blade style goes here.\nThis is the code which sets up what animations and effects your blade (or other LED) will do.\nFor getting/creating blade styles, see the Documentation (in \"Help->Documentation...\").");
 }
 
 wxBoxSizer* PresetsPage::createPresetSelect() {
@@ -145,7 +145,7 @@ void PresetsPage::update() {
   if (nameInput->IsModified()) stripAndSaveName();
   if (dirInput->IsModified()) stripAndSaveDir();
   if (trackInput->IsModified()) stripAndSaveTrack();
-  if (presetsEditor->IsModified()) stripAndSaveEditor();
+  if (styleInput->IsModified()) stripAndSaveEditor();
 
   rebuildBladeArrayList();
   rebuildPresetList();
@@ -216,13 +216,13 @@ void PresetsPage::resizeAndFillPresets() {
 void PresetsPage::updateFields() {
   if (presetList->GetSelection() >= 0) {
     uint32_t insertionPoint;
-
-    insertionPoint = presetsEditor->GetInsertionPoint();
+    
+    insertionPoint = styleInput->GetInsertionPoint();
     if (bladeList->GetSelection() >= 0) {
-      presetsEditor->ChangeValue(parent->bladeArrayPage->bladeArrays[bladeArray->GetSelection()].presets.at(presetList->GetSelection()).styles.at(bladeList->GetSelection()));
-      presetsEditor->SetInsertionPoint(insertionPoint <= presetsEditor->GetValue().size() ? insertionPoint : presetsEditor->GetValue().size());
+      styleInput->ChangeValue(parent->bladeArrayPage->bladeArrays[bladeArray->GetSelection()].presets.at(presetList->GetSelection()).styles.at(bladeList->GetSelection()));
+      styleInput->SetInsertionPoint(insertionPoint <= styleInput->GetValue().size() ? insertionPoint : styleInput->GetValue().size());
     } else {
-      presetsEditor->ChangeValue("Select Blade to Edit Style...");
+      styleInput->ChangeValue("Select Blade to Edit Style...");
     }
 
     insertionPoint = nameInput->GetInsertionPoint();
@@ -238,7 +238,7 @@ void PresetsPage::updateFields() {
     trackInput->SetInsertionPoint(insertionPoint <= trackInput->GetValue().size() - 4 ? insertionPoint : trackInput->GetValue().size() - 4);
   }
   else {
-    presetsEditor->ChangeValue("Select/Create Preset and Blade to Edit Style...");
+    styleInput->ChangeValue("Select/Create Preset and Blade to Edit Style...");
     nameInput->ChangeValue("");
     dirInput->ChangeValue("");
     trackInput->ChangeValue("");
@@ -247,8 +247,8 @@ void PresetsPage::updateFields() {
   removePreset->Enable(presetList->GetSelection() != -1);
   movePresetDown->Enable(presetList->GetSelection() != -1 && presetList->GetSelection() < static_cast<int32_t>(presetList->GetCount()) - 1);
   movePresetUp->Enable(presetList->GetSelection() > 0);
-
-  presetsEditor->SetModified(false); // Value is flagged as dirty from last change unless we manually reset it, causing overwrites where there shouldn't be.
+  
+  styleInput->SetModified(false); // Value is flagged as dirty from last change unless we manually reset it, causing overwrites where there shouldn't be.
   nameInput->SetModified(false);
   dirInput->SetModified(false);
   trackInput->SetModified(false);
@@ -256,7 +256,7 @@ void PresetsPage::updateFields() {
 
 void PresetsPage::stripAndSaveEditor() {
   if (presetList->GetSelection() >= 0 && bladeList->GetSelection() >= 0) {
-    wxString style = presetsEditor->GetValue();
+    wxString style = styleInput->GetValue();
     style.erase(std::remove(style.begin(), style.end(), ' '), style.end());
     if (style.find("{") != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '{'));
     if (style.rfind("}") != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '}'));

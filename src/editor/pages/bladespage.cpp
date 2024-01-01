@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2023 Ryan Ogurek
+// Copyright (C) 2024 Ryan Ogurek
 
 #include "editor/pages/bladespage.h"
 
@@ -321,7 +321,7 @@ void BladesPage::loadSettings() {
   subBladeUseStride->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->GetSelection()].blades.at(bladeSelect->GetSelection()).subBladeWithStride);
 }
 void BladesPage::setEnabled() {
-  removeBladeButton->Enable(bladeSelect->GetCount() > 0 && BD_HASSELECTION);
+  removeBladeButton->Enable(bladeSelect->GetCount() > 1 && BD_HASSELECTION);
   removeSubBladeButton->Enable(subBladeSelect->GetCount() > 0 && BD_SUBHASSELECTION);
   addSubBladeButton->Enable(BD_ISPIXEL && BD_HASSELECTION);
 

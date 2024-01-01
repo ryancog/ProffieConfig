@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2023 Ryan Ogurek
+// Copyright (C) 2024 Ryan Ogurek
 
 #include "core/appstate.h"
 #include "core/defines.h"
@@ -100,7 +100,6 @@ void AppState::removeConfig(const std::string& configName) {
     else config++;
   }
 }
-
 void AppState::addConfig(const std::string& configName) {
   for (const auto& config : configFileNames) if (config == configName) return;
   configFileNames.push_back(configName);
