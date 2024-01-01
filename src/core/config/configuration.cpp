@@ -12,6 +12,7 @@
 #include "editor/pages/propspage.h"
 #include "editor/pages/bladespage.h"
 #include "editor/pages/bladearraypage.h"
+#include "wx/event.h"
 
 #include <cstring>
 #include <sstream>
@@ -503,7 +504,7 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
     }
 
     // Name
-    tempData = std::strtok(presetInfo.data(), ",\"");
+    tempData = std::strtok(presetInfo.data(), ",\"}");
     bladeArray.presets[preset].name.assign(tempData == nullptr ? "" : tempData);
   }
 # undef CHKSECT
@@ -676,7 +677,7 @@ void Configuration::replaceStyles(const std::string& styleName, const std::strin
 
 bool Configuration::runPreChecks(EditorWindow* editor) {
 # define ERR(msg) \
-  Misc::MessageBoxEvent* msgEvent = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, msg, "Configuration Error"); \
+  Misc::MessageBoxEvent* msgEvent = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, std::string(msg) + "\n\nConfiguration not saved.", "Configuration Error", wxOK | wxCENTER | wxICON_ERROR); \
   wxQueueEvent(editor->GetEventHandler(), msgEvent); \
   return false;
 
@@ -714,6 +715,17 @@ bool Configuration::runPreChecks(EditorWindow* editor) {
     ERR("All Blade Arrays must be the same length.\n\nPlease add/remove blades to make them equal");
   }
 
+  for (auto& bladeArray : editor->bladeArrayPage->bladeArrays) {
+    for (auto& preset : bladeArray.presets) {
+      for (auto& style : preset.styles) {
+        auto styleBegin = style.find("Style");
+        auto styleEnd = style.find("()");
+        if (styleBegin == std::string::npos || styleEnd == std::string::npos || styleBegin > styleEnd) {
+          ERR("Malformed bladestyle in preset \"" + preset.name + "\" in blade array \"" + bladeArray.name + "\"");
+        }
+      }
+    }
+  }
 
   return true;
 # undef ERR

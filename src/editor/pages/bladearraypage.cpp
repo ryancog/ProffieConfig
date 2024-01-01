@@ -92,6 +92,7 @@ void BladeArrayPage::bindEvents() {
         update();
         arrayList->SetSelection(bladeArrays.size() - 1);
         arrayList->SendSelectionChangedEvent(wxEVT_LISTBOX);
+        FULLUPDATEWINDOW(parent);
       }, ID_AddArray);
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
 

@@ -60,9 +60,6 @@ public:
   };
   std::vector<BladeArray> bladeArrays{BladeArray{"blade_in", 0}};
 
-private:
-  EditorWindow* parent{nullptr};
-
   enum {
     ID_NameEntry,
     ID_BladeIDEnable,
@@ -74,6 +71,10 @@ private:
     ID_RemoveArray,
     ID_AddArray
   };
+
+private:
+  EditorWindow* parent{nullptr};
+
   int32_t lastArraySelection{-1};
 
   void bindEvents();

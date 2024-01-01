@@ -206,7 +206,7 @@ void PresetsPage::resizeAndFillPresets() {
 
   for (PresetConfig& preset : parent->bladeArrayPage->bladeArrays[bladeArray->GetSelection()].presets) {
     while (static_cast<int32_t>(preset.styles.size()) < getNumBlades()) {
-      preset.styles.push_back("StyleNormalPtr<AudioFlicker<Blue, DodgerBlue>, BLUE, 300, 800>()");
+      preset.styles.push_back("StyleNormalPtr<AudioFlicker<Blue,DodgerBlue>,BLUE,300,800>()");
     }
     while (static_cast<int32_t>(preset.styles.size()) > getNumBlades()) {
       preset.styles.pop_back();
