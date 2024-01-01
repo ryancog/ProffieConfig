@@ -195,7 +195,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor, std::function
     }
 
 #   else
-    if (!Arduino::upload(returnVal, window, editor)) {
+    if (!Arduino::upload(returnVal, editor)) {
       progDialog->emitEvent(100, "Error");
       Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, "There was an error while uploading:\n\n" + returnVal, "Upload Error");
       wxQueueEvent(window->GetEventHandler(), msg);
@@ -215,7 +215,7 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor, std::function
   auto progDialog = new Progress(parent);
   progDialog->SetTitle("Verify Config");
   
-  new ThreadRunner([&]() {
+  new ThreadRunner([=]() {
     wxString returnVal;
 
     progDialog->emitEvent(20, "Generating configuration file...");
@@ -309,7 +309,7 @@ bool Arduino::compile(wxString& _return, EditorWindow* editor, Progress* progDia
   return true;
 #endif
 }
-bool Arduino::upload(wxString& _return, MainMenu* window, EditorWindow* editor, Progress* progDialog) {
+bool Arduino::upload(wxString& _return, EditorWindow* editor, Progress* progDialog) {
   char buffer[1024];
 
   wxString uploadCommand = "upload ";
@@ -323,10 +323,6 @@ bool Arduino::upload(wxString& _return, MainMenu* window, EditorWindow* editor, 
 
   uploadCommand += " --fqbn ";
   uploadCommand += editor->generalPage->board->GetSelection() == 0 ? ARDUINOCORE_PBV1 : editor->generalPage->board->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
-
-  // Because it uses DFU-util in backend, this isn't actually necessary.
-  //uploadCommand += " --port ";
-  //uploadCommand += window->boardSelect->GetStringSelection();
   uploadCommand += " -v";
 
   FILE *arduinoCli = Arduino::CLI(uploadCommand);

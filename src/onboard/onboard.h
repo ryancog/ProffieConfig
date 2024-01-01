@@ -3,8 +3,10 @@
 
 #pragma once
 
+#include "editor/editorwindow.h"
 #include "mainmenu/mainmenu.h"
 #include "editor/pages/bladespage.h"
+#include "editor/pages/bladearraypage.h"
 
 #include <unordered_map>
 #include <wx/wizard.h>
@@ -92,10 +94,23 @@ public:
       { MainMenu::ID_OpenSerial, true }
   };
   std::unordered_map<int32_t, bool> bladeDisables{
-      { BladesPage::ID_BladeType, true }
+      { BladesPage::ID_BladeType, true },
+      { BladesPage::ID_RemoveSubBlade, true },
+      { BladesPage::ID_AddSubBlade, true }
+  };
+  std::unordered_map<int32_t, bool> awarenessDisables {
+      { BladeArrayPage::ID_BladeIDEnable, true },
+      { BladeArrayPage::ID_BladeDetectEnable, true},
+      { BladeArrayPage::ID_BladeArray, true },
+      { BladeArrayPage::ID_AddArray, true },
+      { BladeArrayPage::ID_RemoveArray, true },
+      { BladeArrayPage::ID_BladeIDPower, true },
+      { BladeArrayPage::ID_ContinuousScan, true }
   };
 
 private:
+  bool doneWithEditor{false};
+  static std::vector<bool*> eventRunTrackers;
   MainMenu* guideMenu{nullptr};
 
   wxBoxSizer* sizer{nullptr};

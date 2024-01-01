@@ -227,7 +227,13 @@ void BladesPage::update() {
 }
 
 void BladesPage::saveCurrent() {
-  if (lastBladeSelection < 0 || lastBladeSelection >= (int32_t)parent->bladeArrayPage->bladeArrays[bladeArray->GetSelection()].blades.size()) return;
+  if (lastBladeArraySelection < 0 ||
+      lastBladeArraySelection > (int32_t)parent->bladeArrayPage->bladeArrays.size() ||
+      lastBladeSelection < 0 ||
+      lastBladeSelection >= (int32_t)parent->bladeArrayPage->bladeArrays[bladeArray->GetSelection()].blades.size()
+      ) {
+    return;
+  }
   
   parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).type = bladeType->GetValue();
   parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin1 = usePowerPin1->GetValue();
