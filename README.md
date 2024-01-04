@@ -17,6 +17,7 @@ The tool is fairly straightforward, however it's recommended to read these over 
 - Implement "Advanced Mode" interface for custom config file sections
 - Expand pre-checker capabilities
 - Implement interface for `using` syntax (not just the ability to parse)
+- Come up with a better method for dealing with Power Pins to allow custom pins
 - Take over the world ;)
 
 ## Gallery
