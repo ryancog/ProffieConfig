@@ -18,6 +18,7 @@ The tool is fairly straightforward, however it's recommended to read these over 
 - Expand pre-checker capabilities
 - Implement interface for `using` syntax (not just the ability to parse)
 - Come up with a better method for dealing with Power Pins to allow custom pins
+- Add new clash settings per [Clash Settings and Questions](https://crucible.hubbe.net/t/clash-settings-and-questions)
 - Take over the world ;)
 
 ## Gallery
