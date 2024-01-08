@@ -39,9 +39,9 @@ void BladeArrayPage::bindEvents() {
   auto clearBladeArray = [](BladeArrayPage* page) {
     page->arrayList->SetSelection(-1);
     page->lastArraySelection = -1;
-    page->parent->bladesPage->bladeArray->SetSelection(0);
+    page->parent->bladesPage->bladeArray->entry()->SetSelection(0);
     page->parent->bladesPage->lastBladeArraySelection = -1;
-    page->parent->presetsPage->bladeArray->SetSelection(0);
+    page->parent->presetsPage->bladeArray->entry()->SetSelection(0);
   };
 
   GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) {
@@ -167,7 +167,7 @@ wxBoxSizer* BladeArrayPage::createBladeArraysRight(wxStaticBoxSizer* parent) {
 
 wxStaticBoxSizer* BladeArrayPage::createIDSetup(wxWindow* parent) {
   wxStaticBoxSizer* setupSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Blade ID Setup");
-  mode = new wxComboBox(setupSizer->GetStaticBox(), ID_BladeIDMode, BLADE_ID_MODE_SNAPSHOT, wxDefaultPosition, wxDefaultSize, Misc::createEntries({ BLADE_ID_MODE_SNAPSHOT, BLADE_ID_MODE_EXTERNAL, BLADE_ID_MODE_BRIDGED }), wxCB_READONLY);
+  mode = new pcComboBox(setupSizer->GetStaticBox(), ID_BladeIDMode, "Blade ID Mode", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ BLADE_ID_MODE_SNAPSHOT, BLADE_ID_MODE_EXTERNAL, BLADE_ID_MODE_BRIDGED }), wxCB_READONLY);
   IDPin = Misc::createTextEntry(setupSizer->GetStaticBox(), "Blade ID Pin", wxID_ANY, "", 0);
 
   pullupResistance = Misc::createNumEntry(setupSizer->GetStaticBox(), "Pullup Resistance", wxID_ANY, 20000, 50000, 30000);
@@ -275,13 +275,13 @@ void BladeArrayPage::update() {
   arrayName.entry->ChangeValue(bladeArrays.at(lastArraySelection).name);
   resistanceID.num->SetValue(bladeArrays.at(lastArraySelection).value);
 
-  if (mode->GetValue() == BLADE_ID_MODE_SNAPSHOT) {
+  if (mode->entry()->GetValue() == BLADE_ID_MODE_SNAPSHOT) {
     pullupResistance.box->Show(false);
     pullupPin.box->Show(false);
-  } else if (mode->GetValue() == BLADE_ID_MODE_BRIDGED) {
+  } else if (mode->entry()->GetValue() == BLADE_ID_MODE_BRIDGED) {
     pullupResistance.box->Show(false);
     pullupPin.box->Show(true);
-  } else if (mode->GetValue() == BLADE_ID_MODE_EXTERNAL) {
+  } else if (mode->entry()->GetValue() == BLADE_ID_MODE_EXTERNAL) {
     pullupPin.box->Show(false);
     pullupResistance.box->Show(true);
   }

@@ -25,7 +25,7 @@ public:
   wxCheckBox* enableID{nullptr};
   wxCheckBox* enableDetect{nullptr};
 
-  wxComboBox* mode{nullptr};
+  pcComboBox* mode{nullptr};
   Misc::textEntry IDPin{nullptr};
   Misc::numEntry pullupResistance{nullptr};
   Misc::textEntry pullupPin{nullptr};

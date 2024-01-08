@@ -9,6 +9,7 @@
 #include "core/config/propfile.h"
 #include "editor/editorwindow.h"
 #include "editor/pages/generalpage.h"
+#include "ui/pccombobox.h"
 
 #include <wx/scrolwin.h>
 #include <wx/sizer.h>
@@ -17,9 +18,9 @@
 PropsPage::PropsPage(wxWindow* window) : wxScrolledWindow(window), parent{static_cast<EditorWindow*>(window)} {
   sizer = new wxStaticBoxSizer(wxVERTICAL, this, "");
   auto top = new wxBoxSizer(wxHORIZONTAL);
-  propSelection = Misc::createComboBoxEntry(sizer->GetStaticBox(), "Prop File", ID_PropSelect, PR_DEFAULT, Misc::createEntries({"Default"}), wxCB_READONLY);
+  propSelection = new pcComboBox(sizer->GetStaticBox(), ID_PropSelect, "Prop File", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Default"}), wxCB_READONLY);
   buttonInfo = new wxButton(sizer->GetStaticBox(), ID_Buttons, "Buttons...");
-  top->Add(propSelection.box, wxSizerFlags(0).Border(wxALL, 10));
+  top->Add(propSelection, wxSizerFlags(0).Border(wxALL, 10));
   top->Add(buttonInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
 
   sizer->Add(top);
@@ -59,7 +60,7 @@ void PropsPage::bindEvents() {
 
         PropFile* activeProp{nullptr};
         for (auto& prop : props) {
-          if (propSelection.entry->GetStringSelection() == prop->getName()) activeProp = prop;
+          if (propSelection->entry()->GetStringSelection() == prop->getName()) activeProp = prop;
         }
 
         if (activeProp == nullptr) {
@@ -140,20 +141,20 @@ void PropsPage::bindEvents() {
 }
 
 void PropsPage::updateProps() {
-  auto lastSelect = propSelection.entry->GetStringSelection();
-  propSelection.entry->Clear();
-  propSelection.entry->Append("Default");
+  auto lastSelect = propSelection->entry()->GetStringSelection();
+  propSelection->entry()->Clear();
+  propSelection->entry()->Append("Default");
   for (const auto& prop : props) {
-    propSelection.entry->Append(prop->getName());
+    propSelection->entry()->Append(prop->getName());
   }
-  if ([=]() { for (const auto& prop : propSelection.entry->GetStrings()) if (prop == lastSelect) return true; return false; }()) {
-    propSelection.entry->SetStringSelection(lastSelect);
-  } else propSelection.entry->SetStringSelection("Default");
+  if ([=]() { for (const auto& prop : propSelection->entry()->GetStrings()) if (prop == lastSelect) return true; return false; }()) {
+    propSelection->entry()->SetStringSelection(lastSelect);
+  } else propSelection->entry()->SetStringSelection("Default");
 }
 
 void PropsPage::update() {
   for (auto& prop : props) {
-    if (propSelection.entry->GetStringSelection() != prop->getName()) continue;
+    if (propSelection->entry()->GetStringSelection() != prop->getName()) continue;
 
     for (auto& [ name, setting ] : prop->getSettings()) {
       for (const auto& disable : setting.disables) {
@@ -173,15 +174,15 @@ void PropsPage::update() {
 const std::vector<PropFile*>& PropsPage::getLoadedProps() { return props; }
 PropFile* PropsPage::getSelectedProp() {
   for (const auto& prop : props) {
-    if (prop->getName() == propSelection.entry->GetStringSelection()) return prop;
+    if (prop->getName() == propSelection->entry()->GetStringSelection()) return prop;
   }
   return nullptr;
 }
 
 void PropsPage::updateSelectedProp(const wxString& newProp) {
-  if (!newProp.empty()) propSelection.entry->SetStringSelection(newProp);
+  if (!newProp.empty()) propSelection->entry()->SetStringSelection(newProp);
   for (auto& prop : props) {
-    prop->Show(propSelection.entry->GetStringSelection() == prop->getName());
+    prop->Show(propSelection->entry()->GetStringSelection() == prop->getName());
   }
 }
 void PropsPage::loadProps() {

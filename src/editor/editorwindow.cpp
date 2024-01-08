@@ -59,17 +59,17 @@ void EditorWindow::bindEvents() {
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(this, this); }, ID_VerifyConfig);
 
 # if defined(__WXOSX__)
-      Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser(Misc::path + std::string("/" STYLEEDIT_PATH)); }, ID_StyleEditor);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser(Misc::path + std::string("/" STYLEEDIT_PATH)); }, ID_StyleEditor);
 # else
-      Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser(STYLEEDIT_PATH); }, ID_StyleEditor);
+  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser(STYLEEDIT_PATH); }, ID_StyleEditor);
 #endif
 
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        generalPage->Show(windowSelect->GetValue() == "General");
-        propsPage->Show(windowSelect->GetValue() == "Prop File");
-        bladesPage->Show(windowSelect->GetValue() == "Blade Arrays");
-        presetsPage->Show(windowSelect->GetValue() == "Presets And Styles");
-        bladeArrayPage->Show(windowSelect->GetValue() == "Blade Awareness");
+        generalPage->Show(windowSelect->entry()->GetValue() == "General");
+        propsPage->Show(windowSelect->entry()->GetValue() == "Prop File");
+        bladesPage->Show(windowSelect->entry()->GetValue() == "Blade Arrays");
+        presetsPage->Show(windowSelect->entry()->GetValue() == "Presets And Styles");
+        bladeArrayPage->Show(windowSelect->entry()->GetValue() == "Blade Awareness");
 
         //generalPage->update();
         bladeArrayPage->update();
@@ -110,7 +110,7 @@ void EditorWindow::createPages() {
   sizer = new wxBoxSizer(wxVERTICAL);
 
   wxBoxSizer* options = new wxBoxSizer(wxHORIZONTAL);
-  windowSelect = new wxComboBox(this, ID_WindowSelect, "General", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Blade Arrays", "Presets And Styles", "Blade Awareness"  /*, "Hardware"*/}), wxCB_READONLY | wxCB_DROPDOWN);
+  windowSelect = new pcComboBox(this, ID_WindowSelect, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Blade Arrays", "Presets And Styles", "Blade Awareness"  /*, "Hardware"*/}), wxCB_READONLY | wxCB_DROPDOWN);
   options->Add(windowSelect, wxSizerFlags(0).Border(wxALL, 10));
 
   generalPage = new GeneralPage(this);

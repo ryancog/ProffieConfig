@@ -26,13 +26,13 @@
 
 #define BD_HASSELECTION (bladeSelect->GetSelection() != -1)
 #define BD_SUBHASSELECTION (subBladeSelect->GetSelection() != -1)
-#define BD_ISPIXEL3 (BD_HASSELECTION && parent->bladeArrayPage->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_PIXELRGB)
-#define BD_ISPIXEL4 (BD_HASSELECTION && parent->bladeArrayPage->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_PIXELRGBW)
+#define BD_ISPIXEL3 (BD_HASSELECTION && parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_PIXELRGB)
+#define BD_ISPIXEL4 (BD_HASSELECTION && parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_PIXELRGBW)
 #define BD_ISPIXEL (BD_ISPIXEL3 || BD_ISPIXEL4)
-#define BD_ISSTAR3 (BD_HASSELECTION && parent->bladeArrayPage->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_TRISTAR)
-#define BD_ISSTAR4 (BD_HASSELECTION && parent->bladeArrayPage->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_QUADSTAR)
+#define BD_ISSTAR3 (BD_HASSELECTION && parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_TRISTAR)
+#define BD_ISSTAR4 (BD_HASSELECTION && parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_QUADSTAR)
 #define BD_ISSTAR (BD_ISSTAR3 || BD_ISSTAR4)
-#define BD_ISSUB (BD_HASSELECTION && parent->bladeArrayPage->bladeArrays[bladeArray->GetSelection()].blades[bladeSelect->GetSelection()].isSubBlade)
+#define BD_ISSUB (BD_HASSELECTION && parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].isSubBlade)
 #define BD_ISFIRST (!BD_ISSUB || (subBladeSelect->GetSelection() == 0))
 
 class BladesPage : public wxStaticBoxSizer {
@@ -48,7 +48,7 @@ public:
 
   int32_t lastBladeArraySelection{0};
 
-  wxComboBox* bladeArray{nullptr};
+  pcComboBox* bladeArray{nullptr};
   wxListBox* bladeSelect{nullptr};
   wxListBox* subBladeSelect{nullptr};
   wxButton* addBladeButton{nullptr};
@@ -56,9 +56,8 @@ public:
   wxButton* addSubBladeButton{nullptr};
   wxButton* removeSubBladeButton{nullptr};
 
-  wxComboBox* bladeType{nullptr};
-  wxStaticText* bladeDataPinLabel{nullptr};
-  wxComboBox* bladeDataPin{nullptr};
+  pcComboBox* bladeType{nullptr};
+  pcComboBox* bladeDataPin{nullptr};
   wxStaticText* bladePixelsLabel{nullptr};
   wxSpinCtrl* bladePixels{nullptr};
 
@@ -69,21 +68,16 @@ public:
   wxCheckBox* usePowerPin5{nullptr};
   wxCheckBox* usePowerPin6{nullptr};
 
-  wxStaticText* bladeColorOrderLabel{nullptr};
-  wxComboBox* blade3ColorOrder{nullptr};
-  wxComboBox* blade4ColorOrder{nullptr};
+  pcComboBox* blade3ColorOrder{nullptr};
+  pcComboBox* blade4ColorOrder{nullptr};
   wxCheckBox* blade4UseRGB{nullptr};
-  wxStaticText* star1ColorLabel{nullptr};
-  wxComboBox* star1Color{nullptr};
+  pcComboBox* star1Color{nullptr};
   Misc::numEntry star1Resistance{nullptr};
-  wxStaticText* star2ColorLabel{nullptr};
-  wxComboBox* star2Color{nullptr};
+  pcComboBox* star2Color{nullptr};
   Misc::numEntry star2Resistance{nullptr};
-  wxStaticText* star3ColorLabel{nullptr};
-  wxComboBox* star3Color{nullptr};
+  pcComboBox* star3Color{nullptr};
   Misc::numEntry star3Resistance{nullptr};
-  wxStaticText* star4ColorLabel{nullptr};
-  wxComboBox* star4Color{nullptr};
+  pcComboBox* star4Color{nullptr};
   Misc::numEntry star4Resistance{nullptr};
 
   wxCheckBox* subBladeUseStride{nullptr};
