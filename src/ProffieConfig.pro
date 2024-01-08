@@ -48,6 +48,7 @@ SOURCES += \
     onboard/pages/welcomepage.cpp \
     tools/arduino.cpp \
     tools/serialmonitor.cpp \
+    ui/pccombobox.cpp
 
 HEADERS += \
     core/appstate.h \
@@ -69,4 +70,5 @@ HEADERS += \
     mainmenu/mainmenu.h \
     onboard/onboard.h \
     tools/arduino.h \
-    tools/serialmonitor.h
+    tools/serialmonitor.h \
+    ui/pccombobox.h

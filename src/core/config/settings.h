@@ -16,7 +16,6 @@ class Settings {
 public:
   Settings(EditorWindow*);
 
-  void loadDefaults();
   void parseDefines(std::vector<std::string>&);
 
   class ProffieDefine;
@@ -60,7 +59,7 @@ public:
   ProffieDefine(std::string name, double defaultValue, wxSpinCtrlDouble* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
   ProffieDefine(std::string name, bool defaultState, wxCheckBox* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
   ProffieDefine(std::string name, bool defaultState, wxRadioButton* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
-  ProffieDefine(std::string name, wxString defaultSelection, wxComboBox* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+  ProffieDefine(std::string name, wxString defaultSelection, pcComboBox* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
   ProffieDefine(std::string name, wxString defaultEntry, wxTextCtrl* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
 
   static std::pair<std::string, std::string> parseKey(const std::string&);
@@ -84,7 +83,7 @@ public:
         const_cast<wxSpinCtrlDouble*>(static_cast<const wxSpinCtrlDouble*>(def->element))->SetValue(stod(key.second));
         break;
       case Type::COMBO:
-        const_cast<wxComboBox*>(static_cast<const wxComboBox*>(def->element))->SetValue(key.second);
+        const_cast<pcComboBox*>(static_cast<const pcComboBox*>(def->element))->entry()->SetValue(key.second);
         break;
       case Type::TEXT:
         const_cast<wxTextCtrl*>(static_cast<const wxTextCtrl*>(def->element))->SetValue(key.second);
@@ -122,6 +121,4 @@ public:
 
   inline void overrideParser(std::function<bool(const ProffieDefine*, const std::string&)> _newParser) { parse = _newParser; }
   inline void overrideOutput(std::function<std::string(const ProffieDefine*)> _newOutput) { output = _newOutput; }
-
-  void loadDefault();
 };

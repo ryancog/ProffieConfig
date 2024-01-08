@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "ui/pccombobox.h"
+
 #include <wx/wx.h>
 
 // Forward declarations to get around circular dependencies
@@ -28,7 +30,7 @@ public:
 
   wxBoxSizer* sizer{nullptr};
 
-  wxComboBox* windowSelect{nullptr};
+  pcComboBox* windowSelect{nullptr};
 
   enum {
     ID_WindowSelect,

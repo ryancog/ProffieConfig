@@ -26,7 +26,7 @@ private:
   AppState();
   AppState(const AppState&) = delete;
 
-  std::vector<std::string> propFileNames;
+  std::vector<std::string> propFileNames{};
   std::vector<std::string> configFileNames;
 
   bool saved{true};

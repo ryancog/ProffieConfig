@@ -66,7 +66,7 @@ void Configuration::outputConfigTop(std::ofstream& configOutput, EditorWindow* e
 void Configuration::outputConfigTopGeneral(std::ofstream& configOutput, EditorWindow* editor) {
   if (editor->generalPage->massStorage->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_MASS_STORAGE" << std::endl;
   if (editor->generalPage->webUSB->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_WEBUSB" << std::endl;
-  switch (Configuration::parseBoardType(editor->generalPage->board->GetValue().ToStdString())) {
+  switch (Configuration::parseBoardType(editor->generalPage->board->entry()->GetValue().ToStdString())) {
     case Configuration::ProffieBoard::V1:
       configOutput << "#include \"proffieboard_v1_config.h\"" << std::endl;
       break;
@@ -343,11 +343,11 @@ void Configuration::readConfigTop(std::ifstream& file, EditorWindow* editor) {
     } else if (element == "#include" && !file.eof()) {
       file >> element;
       if (std::strstr(element.c_str(), "v1") != NULL) {
-        editor->generalPage->board->SetSelection(0);
+        editor->generalPage->board->entry()->SetSelection(0);
       } else if (std::strstr(element.c_str(), "v2") != NULL) {
-        editor->generalPage->board->SetSelection(1);
+        editor->generalPage->board->entry()->SetSelection(1);
       } else if (std::strstr(element.c_str(), "v3") != NULL) {
-        editor->generalPage->board->SetSelection(2);
+        editor->generalPage->board->entry()->SetSelection(2);
       }
     } else if (element == "//PROFFIECONFIG") {
       file >> element;
@@ -659,7 +659,7 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
 }
 void Configuration::replaceStyles(const std::string& styleName, const std::string& styleFill, EditorWindow* editor) {
   std::string styleCheck;
-  for (PresetsPage::PresetConfig& preset : editor->bladeArrayPage->bladeArrays[editor->bladesPage->bladeArray->GetSelection()].presets) {
+  for (PresetsPage::PresetConfig& preset : editor->bladeArrayPage->bladeArrays[editor->bladesPage->bladeArray->entry()->GetSelection()].presets) {
     for (wxString& style : preset.styles) {
       styleCheck = (style.find(styleName) == std::string::npos) ? style : style.substr(style.find(styleName));
       while (styleCheck != style) {
@@ -677,7 +677,7 @@ void Configuration::replaceStyles(const std::string& styleName, const std::strin
 
 bool Configuration::runPreChecks(EditorWindow* editor) {
 # define ERR(msg) \
-  Misc::MessageBoxEvent* msgEvent = new Misc::MessageBoxEvent(Misc::EVT_MSGBOX, wxID_ANY, std::string(msg) + "\n\nConfiguration not saved.", "Configuration Error", wxOK | wxCENTER | wxICON_ERROR); \
+  Misc::MessageBoxEvent* msgEvent = new Misc::MessageBoxEvent(wxID_ANY, std::string(msg) + "\n\nConfiguration not saved.", "Configuration Error", wxOK | wxCENTER | wxICON_ERROR); \
   wxQueueEvent(editor->GetEventHandler(), msgEvent); \
   return false;
 
@@ -690,7 +690,7 @@ bool Configuration::runPreChecks(EditorWindow* editor) {
   if ([&]() { for (const BladeArrayPage::BladeArray& array : editor->bladeArrayPage->bladeArrays) if (array.name == "") return true; return false; }()) {
     ERR("Blade Array Name cannot be empty.");
   }
-  if (editor->bladeArrayPage->enableID->GetValue() && editor->bladeArrayPage->mode->GetStringSelection() == BLADE_ID_MODE_BRIDGED && editor->bladeArrayPage->pullupPin.entry->GetValue() == "") {
+  if (editor->bladeArrayPage->enableID->GetValue() && editor->bladeArrayPage->mode->entry()->GetStringSelection() == BLADE_ID_MODE_BRIDGED && editor->bladeArrayPage->pullupPin.entry->GetValue() == "") {
     ERR("Pullup Pin cannot be empty.");
   }
   if (editor->bladeArrayPage->enableDetect->GetValue() && editor->bladeArrayPage->enableID->GetValue() && editor->bladeArrayPage->IDPin.entry->GetValue() == editor->bladeArrayPage->detectPin.entry->GetValue()) {

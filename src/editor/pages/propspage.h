@@ -4,7 +4,6 @@
 #pragma once
 
 #include "editor/editorwindow.h"
-#include "core/utilities/misc.h"
 
 #include <wx/window.h>
 #include <wx/checkbox.h>
@@ -27,7 +26,7 @@ public:
   const std::vector<PropFile*>& getLoadedProps();
   wxStaticBoxSizer* sizer{nullptr};
 
-  Misc::comboBoxEntry propSelection{};
+  pcComboBox* propSelection{nullptr};
   wxButton* buttonInfo{nullptr};
 
   enum {

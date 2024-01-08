@@ -14,6 +14,8 @@
 #include "tools/serialmonitor.h"
 #include "../resources/icons/icon-small.xpm"
 
+#include "ui/pccombobox.h"
+
 #include <wx/event.h>
 #include <wx/menu.h>
 #include <wx/aboutdlg.h>
@@ -79,21 +81,21 @@ void MainMenu::bindEvents() {
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(this); }, ID_OpenSerial);
 #endif
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        if (configSelect->GetValue() == "Select Config...") return;
+        if (configSelect->entry()->GetValue() == "Select Config...") return;
 
         for (auto editor : editors) {
-          if (configSelect->GetValue() == editor->getOpenConfig()) {
+          if (configSelect->entry()->GetValue() == editor->getOpenConfig()) {
             activeEditor = editor;
             update();
             return;
           }
         }
 
-        auto newEditor = new EditorWindow(configSelect->GetValue().ToStdString(), this);
-        if (!Configuration::readConfig(CONFIG_DIR + configSelect->GetValue().ToStdString() + ".h", newEditor)) {
+        auto newEditor = new EditorWindow(configSelect->entry()->GetValue().ToStdString(), this);
+        if (!Configuration::readConfig(CONFIG_DIR + configSelect->entry()->GetValue().ToStdString() + ".h", newEditor)) {
           wxMessageBox("Error reading configuration file!", "Config Error", wxOK | wxCENTER, this);
           newEditor->Destroy();
-          AppState::instance->removeConfig(configSelect->GetValue().ToStdString());
+          AppState::instance->removeConfig(configSelect->entry()->GetValue().ToStdString());
           update();
           return;
         }
@@ -107,8 +109,8 @@ void MainMenu::bindEvents() {
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         if (wxMessageBox("Are you sure you want to deleted the selected configuration?\n\nThis action cannot be undone!", "Delete Config", wxYES_NO | wxNO_DEFAULT | wxCENTER, this) == wxYES) {
           activeEditor->Close(true);
-          remove((CONFIG_DIR + configSelect->GetValue().ToStdString() + ".h").c_str());
-          AppState::instance->removeConfig(configSelect->GetValue().ToStdString());
+          remove((CONFIG_DIR + configSelect->entry()->GetValue().ToStdString() + ".h").c_str());
+          AppState::instance->removeConfig(configSelect->entry()->GetValue().ToStdString());
           AppState::instance->saveState();
           activeEditor = nullptr;
           update();
@@ -162,7 +164,7 @@ void MainMenu::createUI() {
   headerSection->Add(new wxStaticBitmap(this, wxID_ANY, wxIcon(icon_small_xpm)), wxSizerFlags(0).Border(wxALL, 10));
 
   auto configSelectSection = new wxBoxSizer(wxHORIZONTAL);
-  configSelect = new wxComboBox(this, ID_ConfigSelect, "Select Config...", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Select Config..."}), wxCB_READONLY);
+  configSelect = new pcComboBox(this, ID_ConfigSelect, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Select Config..."}), wxCB_READONLY);
   addConfig = new wxButton(this, ID_AddConfig, "Add", wxDefaultPosition, wxSize(50, -1), wxBU_EXACTFIT);
   removeConfig = new wxButton(this, ID_RemoveConfig, "Remove", wxDefaultPosition, wxSize(75, -1), wxBU_EXACTFIT);
   removeConfig->Disable();
@@ -176,7 +178,7 @@ void MainMenu::createUI() {
 # else
   auto boardEntries = Misc::createEntries({"Select Board..."});
 # endif
-  boardSelect = new wxComboBox(this, ID_DeviceSelect, "Select Board...", wxDefaultPosition, wxDefaultSize, boardEntries, wxCB_READONLY);
+  boardSelect = new pcComboBox(this, ID_DeviceSelect, "", wxDefaultPosition, wxDefaultSize, boardEntries, wxCB_READONLY);
   refreshButton = new wxButton(this, ID_RefreshDev, "Refresh Boards");
   boardControls->Add(refreshButton, wxSizerFlags(0).Border(wxALL, 5));
   boardControls->Add(boardSelect, wxSizerFlags(1).Border(wxALL, 5));
@@ -197,18 +199,19 @@ void MainMenu::createUI() {
   sizer->Add(boardControls, wxSizerFlags(0).Border(wxALL, 5).Expand());
   sizer->Add(options, wxSizerFlags(0).Border(wxALL, 5).Expand());
   sizer->AddSpacer(20); // There's a sizing issue I need to figure out... for now we give it a chin
+
   SetSizerAndFit(sizer);
 }
 
 void MainMenu::update() {
-  auto lastConfig = configSelect->GetValue();
-  configSelect->Clear();
-  configSelect->Append("Select Config...");
+  auto lastConfig = configSelect->entry()->GetValue();
+  configSelect->entry()->Clear();
+  configSelect->entry()->Append("Select Config...");
   for (const auto& config : AppState::instance->getConfigFileNames()) {
-    configSelect->Append(config);
+    configSelect->entry()->Append(config);
   }
-  configSelect->SetValue(lastConfig);
-  if (configSelect->GetSelection() == -1) configSelect->SetSelection(0);
+  configSelect->entry()->SetValue(lastConfig);
+  if (configSelect->entry()->GetSelection() == -1) configSelect->entry()->SetSelection(0);
 
   for (auto editor = editors.begin(); editor < editors.end();) {
     if (!(*editor)->IsShown()) {
@@ -223,9 +226,9 @@ void MainMenu::update() {
     editor++;
   }
 
-  auto configSelected = configSelect->GetValue() != "Select Config...";
-  auto boardSelected = boardSelect->GetValue() != "Select Board...";
-  auto recoverySelected = boardSelect->GetValue().find("BOOTLOADER") != std::string::npos;
+  auto configSelected = configSelect->entry()->GetValue() != "Select Config...";
+  auto boardSelected = boardSelect->entry()->GetValue() != "Select Board...";
+  auto recoverySelected = boardSelect->entry()->GetValue().find("BOOTLOADER") != std::string::npos;
 
   applyButton->Enable(configSelected && boardSelected);
   editConfig->Enable(configSelected);

@@ -141,10 +141,10 @@ void Onboard::Overview::linkMainMenuEvents() {
                             );
         mainMenuDisables[MainMenu::ID_EditConfig] = true;
 
-        guideMenu->activeEditor->windowSelect->Clear();
-        guideMenu->activeEditor->windowSelect->Append("General");
-        guideMenu->activeEditor->windowSelect->Append("Prop File");
-        guideMenu->activeEditor->windowSelect->SetSelection(0);
+        guideMenu->activeEditor->windowSelect->entry()->Clear();
+        guideMenu->activeEditor->windowSelect->entry()->Append("General");
+        guideMenu->activeEditor->windowSelect->entry()->Append("Prop File");
+        guideMenu->activeEditor->windowSelect->entry()->SetSelection(0);
 
         linkEditorEvents();
         prepareEditor();
@@ -168,7 +168,7 @@ void Onboard::Overview::linkEditorEvents() {
 
   guideMenu->activeEditor->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
-        if (guideMenu->activeEditor->windowSelect->GetSelection() != 1) {
+        if (guideMenu->activeEditor->windowSelect->entry()->GetSelection() != 1) {
           hasRun = false;
           return;
         }
@@ -221,12 +221,12 @@ void Onboard::Overview::linkEditorEvents() {
                         "test out some props/settings, switch the page to \"Blade Arrays\"\n"
                         "to continue configuring.\n"
                         );
-        guideMenu->activeEditor->windowSelect->Append("Blade Arrays");
+        guideMenu->activeEditor->windowSelect->entry()->Append("Blade Arrays");
 
       }, PropsPage::ID_Buttons);
   guideMenu->activeEditor->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
-        if (guideMenu->activeEditor->windowSelect->GetSelection() != 2) {
+        if (guideMenu->activeEditor->windowSelect->entry()->GetSelection() != 2) {
           hasRun = false;
           return;
         }
@@ -300,17 +300,17 @@ void Onboard::Overview::linkEditorEvents() {
                         );
         bladeDisables.at(BladesPage::ID_AddSubBlade) = true;
         bladeDisables.at(BladesPage::ID_BladeType) = false;
-        guideMenu->activeEditor->bladesPage->bladeType->Clear();
-        guideMenu->activeEditor->bladesPage->bladeType->Append("WS281X (RGB)");
-        guideMenu->activeEditor->bladesPage->bladeType->Append("WS281X (RGBW)");
-        guideMenu->activeEditor->bladesPage->bladeType->Append("Tri-LED Star");
-        guideMenu->activeEditor->bladesPage->bladeType->Append("Quad-LED Star");
-        guideMenu->activeEditor->bladesPage->bladeType->SetSelection(0);
+        guideMenu->activeEditor->bladesPage->bladeType->entry()->Clear();
+        guideMenu->activeEditor->bladesPage->bladeType->entry()->Append("WS281X (RGB)");
+        guideMenu->activeEditor->bladesPage->bladeType->entry()->Append("WS281X (RGBW)");
+        guideMenu->activeEditor->bladesPage->bladeType->entry()->Append("Tri-LED Star");
+        guideMenu->activeEditor->bladesPage->bladeType->entry()->Append("Quad-LED Star");
+        guideMenu->activeEditor->bladesPage->bladeType->entry()->SetSelection(0);
 
       }, BladesPage::ID_SubBladeSelect);
   guideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
-        if (guideMenu->activeEditor->bladesPage->bladeType->GetSelection() != 2) {
+        if (guideMenu->activeEditor->bladesPage->bladeType->entry()->GetSelection() != 2) {
           hasRun = false;
           return;
         }
@@ -330,12 +330,12 @@ void Onboard::Overview::linkEditorEvents() {
                         "\n"
                         "Finally, check out the \"Single Color\" blade type.\n"
                         );
-        guideMenu->activeEditor->bladesPage->bladeType->Append("Single Color");
+        guideMenu->activeEditor->bladesPage->bladeType->entry()->Append("Single Color");
 
       }, BladesPage::ID_BladeType);
   guideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
-        if (guideMenu->activeEditor->bladesPage->bladeType->GetSelection() != 4) {
+        if (guideMenu->activeEditor->bladesPage->bladeType->entry()->GetSelection() != 4) {
           hasRun = false;
           return;
         }
@@ -358,12 +358,12 @@ void Onboard::Overview::linkEditorEvents() {
                         "\n"
                         "Switch the page to \"Presets And Styles\" to continue.\n"
                         );
-        guideMenu->activeEditor->windowSelect->Append("Presets And Styles");
+        guideMenu->activeEditor->windowSelect->entry()->Append("Presets And Styles");
 
       }, BladesPage::ID_BladeType);
   guideMenu->activeEditor->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
-        if (guideMenu->activeEditor->windowSelect->GetSelection() != 3) {
+        if (guideMenu->activeEditor->windowSelect->entry()->GetSelection() != 3) {
           hasRun = false;
           return;
         }
@@ -483,12 +483,12 @@ void Onboard::Overview::linkEditorEvents() {
                         );
         guideMenu->activeEditor->presetsPage->styleInput->Enable();
         guideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_StyleEditor, true);
-        guideMenu->activeEditor->windowSelect->Append("Blade Awareness");
+        guideMenu->activeEditor->windowSelect->entry()->Append("Blade Awareness");
 
       }, PresetsPage::ID_BladeList);
   guideMenu->activeEditor->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
-        if (guideMenu->activeEditor->windowSelect->GetSelection() != 4) {
+        if (guideMenu->activeEditor->windowSelect->entry()->GetSelection() != 4) {
           hasRun = false;
           return;
         }
@@ -551,15 +551,15 @@ void Onboard::Overview::linkEditorEvents() {
                         "Switch the mode from \"Snapshot\" to \"External Pullup\" to continue."
                         );
         awarenessDisables.at(BladeArrayPage::ID_BladeIDEnable) = true;
-        guideMenu->activeEditor->bladeArrayPage->mode->Clear();
-        guideMenu->activeEditor->bladeArrayPage->mode->Append("Snapshot");
-        guideMenu->activeEditor->bladeArrayPage->mode->Append("External Pullup");
-        guideMenu->activeEditor->bladeArrayPage->mode->SetSelection(0);
+        guideMenu->activeEditor->bladeArrayPage->mode->entry()->Clear();
+        guideMenu->activeEditor->bladeArrayPage->mode->entry()->Append("Snapshot");
+        guideMenu->activeEditor->bladeArrayPage->mode->entry()->Append("External Pullup");
+        guideMenu->activeEditor->bladeArrayPage->mode->entry()->SetSelection(0);
 
       }, BladeArrayPage::ID_BladeIDEnable);
   guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
-        if (guideMenu->activeEditor->bladeArrayPage->mode->GetSelection() != 1) {
+        if (guideMenu->activeEditor->bladeArrayPage->mode->entry()->GetSelection() != 1) {
           hasRun = false;
           return;
         }
@@ -575,13 +575,13 @@ void Onboard::Overview::linkEditorEvents() {
                         "\n"
                         "Select \"Bridged Pullup\" mode to continue."
                         );
-        guideMenu->activeEditor->bladeArrayPage->mode->Append("Bridged Pullup");
+        guideMenu->activeEditor->bladeArrayPage->mode->entry()->Append("Bridged Pullup");
 
 
       }, BladeArrayPage::ID_BladeIDMode);
   guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
-        if (guideMenu->activeEditor->bladeArrayPage->mode->GetSelection() != 2) {
+        if (guideMenu->activeEditor->bladeArrayPage->mode->entry()->GetSelection() != 2) {
           hasRun = false;
           return;
         }
@@ -731,6 +731,17 @@ void Onboard::Overview::linkEditorEvents() {
         doneWithEditor = true;
 
       }, EditorWindow::ID_ExportConfig);
+  guideMenu->activeEditor->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
+    EVENT_PAGE_SETUP;
+
+    generateNewPage("Finishing Up",
+
+                    "Once you've created/edited your configuration, the last thing to do is apply\n"
+                    "it to your Proffieboard. You can do that by pressing \"Refresh Boards\", selecting\n"
+                    "your board from the list (this will "
+                    );
+    guideMenu->refreshButton->Enable();
+  });
 }
 
 void Onboard::Overview::generateNewPage(const std::string& headerText, const std::string& bodyText) {

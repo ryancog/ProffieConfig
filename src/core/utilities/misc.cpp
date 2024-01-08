@@ -43,19 +43,7 @@ Misc::numEntryDouble Misc::createNumEntryDouble(wxWindow* parent, wxString displ
 
   return numEntry;
 }
-Misc::comboBoxEntry Misc::createComboBoxEntry(wxWindow* parent, wxString displayText, int32_t ID, wxString defaultOption, wxArrayString options, int32_t flags) {
-  Misc::comboBoxEntry comboBoxEntry{};
 
-  comboBoxEntry.box = new wxBoxSizer(wxVERTICAL);
-  comboBoxEntry.text = new wxStaticText(parent, wxID_ANY, displayText);
-  comboBoxEntry.entry = new wxComboBox(parent, ID, defaultOption, wxDefaultPosition, wxDefaultSize, options, flags);
-  comboBoxEntry.box->Add(comboBoxEntry.text);
-  comboBoxEntry.box->Add(comboBoxEntry.entry, wxSizerFlags(0).Expand());
-
-  comboBoxEntry.entry->Bind(wxEVT_UPDATE_UI, [=](wxUpdateUIEvent&) { comboBoxEntry.text->Enable(comboBoxEntry.entry->IsEnabled()); });
-
-  return comboBoxEntry;
-}
 Misc::textEntry Misc::createTextEntry(wxWindow* parent, wxString displayText, int32_t ID, wxString defaultOption, int32_t flags) {
   Misc::textEntry textEntry{};
 

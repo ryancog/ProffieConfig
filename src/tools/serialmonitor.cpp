@@ -9,8 +9,8 @@
 SerialMonitor* SerialMonitor::instance;
 #if defined(__WXMSW__)
 SerialMonitor::SerialMonitor(MainMenu* parent) {
-  if (parent->boardSelect->GetSelection() > 0) {
-    ShellExecute(NULL, NULL, TEXT(ARDUINO_PATH), std::wstring("monitor -p " + parent->boardSelect->GetStringSelection().ToStdWstring() + " -c baudrate=115200").c_str(), NULL, true);
+  if (parent->boardSelect->entry()->GetSelection() > 0) {
+    ShellExecute(NULL, NULL, TEXT(ARDUINO_PATH), std::wstring("monitor -p " + parent->boardSelect->entry()->GetStringSelection().ToStdWstring() + " -c baudrate=115200").c_str(), NULL, true);
   } else wxMessageBox("Select board first.", "No Board Selected", wxOK | wxICON_ERROR, parent);
 }
 
@@ -73,7 +73,7 @@ void SerialMonitor::OpenDevice()
 {
   struct termios newtio;
 
-  fd = open(static_cast<MainMenu*>(GetParent())->boardSelect->GetValue().data(), O_RDWR | O_NOCTTY);
+  fd = open(static_cast<MainMenu*>(GetParent())->boardSelect->entry()->GetValue().data(), O_RDWR | O_NOCTTY);
   if (fd < 0) {
     wxMessageBox("Could not connect to proffieboard.", "Serial Error", wxICON_ERROR | wxOK, GetParent());
     SerialMonitor::instance->Close(true);
@@ -97,7 +97,7 @@ void SerialMonitor::OpenDevice()
   deviceThread = new ThreadRunner([&]() {
     struct stat info;
     while (SerialMonitor::instance != nullptr) {
-      if (stat(static_cast<MainMenu*>(GetParent())->boardSelect->GetValue().data(), &info)
+      if (stat(static_cast<MainMenu*>(GetParent())->boardSelect->entry()->GetValue().data(), &info)
           != 0) { // Check if device is still present
         SerialDataEvent* event = new SerialDataEvent(EVT_DISCON, wxID_ANY, "");
         wxQueueEvent(SerialMonitor::instance->GetEventHandler(), event);

@@ -58,6 +58,13 @@ void AppState::loadStateFromFile() {
     stateFile.open(STATEFILE_PATH ".tmp");
     if (!stateFile.is_open()) {
       std::cerr << "Could not open temp state file, continuing without..." << std::endl;
+      propFileNames = {
+        "BC",
+        "caiwyn",
+        "fett263",
+        "sa22c",
+        "shtok"
+      };
       return;
     }
   }
