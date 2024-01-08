@@ -47,7 +47,7 @@ void AddConfig::bindEvents() {
         AppState::instance->addConfig(configName->GetValue().ToStdString());
         AppState::instance->saveState();
         parent->update();
-        parent->configSelect->SetStringSelection(configName->GetValue());
+        parent->configSelect->entry()->SetStringSelection(configName->GetValue());
         auto parentEvent = new wxCommandEvent(wxEVT_COMBOBOX, MainMenu::ID_ConfigSelect);
         wxQueueEvent(parent, parentEvent);
 

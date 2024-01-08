@@ -19,7 +19,7 @@ class GeneralPage : public wxStaticBoxSizer
 public:
   GeneralPage(wxWindow*);
 
-  wxComboBox* board{nullptr};
+  pcComboBox* board{nullptr};
   wxCheckBox* massStorage{nullptr};
   wxCheckBox* webUSB{nullptr};
 

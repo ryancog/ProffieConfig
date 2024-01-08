@@ -18,11 +18,11 @@ public:
 
   wxButton* refreshButton{nullptr};
   wxButton* applyButton{nullptr};
-  wxComboBox* boardSelect{nullptr};
+  pcComboBox* boardSelect{nullptr};
 
   wxButton* openSerial{nullptr};
 
-  wxComboBox* configSelect{nullptr};
+  pcComboBox* configSelect{nullptr};
   wxButton* addConfig{nullptr};
   wxButton* removeConfig{nullptr};
   wxButton* editConfig{nullptr};
