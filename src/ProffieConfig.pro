@@ -48,7 +48,10 @@ SOURCES += \
     onboard/pages/welcomepage.cpp \
     tools/arduino.cpp \
     tools/serialmonitor.cpp \
-    ui/pccombobox.cpp
+    ui/pccombobox.cpp \
+    ui/pcspinctrl.cpp \
+    ui/pcspinctrldouble.cpp \
+    ui/pctextctrl.cpp
 
 HEADERS += \
     core/appstate.h \
@@ -71,4 +74,7 @@ HEADERS += \
     onboard/onboard.h \
     tools/arduino.h \
     tools/serialmonitor.h \
-    ui/pccombobox.h
+    ui/pccombobox.h \
+    ui/pcspinctrl.h \
+    ui/pcspinctrldouble.h \
+    ui/pctextctrl.h

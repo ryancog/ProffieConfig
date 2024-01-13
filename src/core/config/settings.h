@@ -4,11 +4,13 @@
 #pragma once
 
 #include "editor/editorwindow.h"
+#include "ui/pcspinctrl.h"
+#include "ui/pcspinctrldouble.h"
+#include "ui/pctextctrl.h"
 
 #include <cstdint>
 #include <cstring>
 #include <wx/wx.h>
-#include <wx/spinctrl.h>
 
 #define PDEF_DEFAULT_CHECK [](const ProffieDefine* def) -> bool { return def->getState(); }
 
@@ -55,12 +57,12 @@ private:
 
 public:
 
-  ProffieDefine(std::string name, int32_t defaultValue, wxSpinCtrl* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
-  ProffieDefine(std::string name, double defaultValue, wxSpinCtrlDouble* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+  ProffieDefine(std::string name, int32_t defaultValue, pcSpinCtrl* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+  ProffieDefine(std::string name, double defaultValue, pcSpinCtrlDouble* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
   ProffieDefine(std::string name, bool defaultState, wxCheckBox* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
   ProffieDefine(std::string name, bool defaultState, wxRadioButton* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
   ProffieDefine(std::string name, wxString defaultSelection, pcComboBox* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
-  ProffieDefine(std::string name, wxString defaultEntry, wxTextCtrl* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+  ProffieDefine(std::string name, wxString defaultEntry, pcTextCtrl* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
 
   static std::pair<std::string, std::string> parseKey(const std::string&);
 
@@ -77,10 +79,10 @@ public:
         const_cast<wxRadioButton*>(static_cast<const wxRadioButton*>(def->element))->SetValue(true);
         break;
       case Type::NUMERIC:
-        const_cast<wxSpinCtrl*>(static_cast<const wxSpinCtrl*>(def->element))->SetValue(stoi(key.second));
+        const_cast<pcSpinCtrl*>(static_cast<const pcSpinCtrl*>(def->element))->entry()->SetValue(stoi(key.second));
         break;
       case Type::DECIMAL:
-        const_cast<wxSpinCtrlDouble*>(static_cast<const wxSpinCtrlDouble*>(def->element))->SetValue(stod(key.second));
+        const_cast<pcSpinCtrlDouble*>(static_cast<const pcSpinCtrlDouble*>(def->element))->entry()->SetValue(stod(key.second));
         break;
       case Type::COMBO:
         const_cast<pcComboBox*>(static_cast<const pcComboBox*>(def->element))->entry()->SetValue(key.second);

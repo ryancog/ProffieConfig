@@ -1,6 +1,6 @@
 # ProffieConfig 
 
-<img align="left" src=/resources/icons/icon.svg width=200> 
+<img align="left" src=resources/icons/icon.svg width=200> 
   
 All-In-One ProffieBoard (Created by Fredrik Hubbinette) utility for customization. Handles the installation of all tools needed in the background, and presents an easy to use GUI for configuration and applying changes (flashing) to the board.
 
@@ -18,7 +18,6 @@ The tool is fairly straightforward, however it's recommended to read these over 
 - Expand pre-checker capabilities
 - Implement interface for `using` syntax (not just the ability to parse)
 - Come up with a better method for dealing with Power Pins to allow custom pins
-- Fix SubBladeWithStride generation
 - Add new clash settings per [Clash Settings and Questions](https://crucible.hubbe.net/t/clash-settings-and-questions)
 - Take over the world ;)
 

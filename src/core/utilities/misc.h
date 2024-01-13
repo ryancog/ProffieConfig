@@ -18,17 +18,9 @@ public:
 # ifdef __WXOSX__
   static char path[PATH_MAX];
 # endif
-
-  struct numEntry;
-  struct numEntryDouble;
-  struct textEntry;
   class MessageBoxEvent;
 
   static wxEventTypeTag<wxCommandEvent> EVT_MSGBOX;
-
-  static numEntry createNumEntry(wxWindow* parent, wxString displayText, int32_t ID, int32_t minVal, int32_t maxVal, int32_t defaultVal);
-  static numEntryDouble createNumEntryDouble(wxWindow* parent, wxString displayText, int32_t ID, double minVal, double maxVal, double defaultVal);
-  static textEntry createTextEntry(wxWindow* parent, wxString displayText, int32_t ID, wxString defaultOption, int32_t flags);
 
   static const wxArrayString createEntries(std::vector<wxString> list);
   static const wxArrayString createEntries(std::initializer_list<wxString> list);
@@ -51,21 +43,3 @@ class Misc::MessageBoxEvent : public wxCommandEvent {
     wxString message;
     long style;
   };
-
-struct Misc::numEntry {
-  wxBoxSizer* box{nullptr};
-  wxSpinCtrl* num{nullptr};
-  wxStaticText* text{nullptr};
-};
-
-struct Misc::numEntryDouble {
-  wxBoxSizer* box{nullptr};
-  wxSpinCtrlDouble* num{nullptr};
-  wxStaticText* text{nullptr};
-};
-
-struct Misc::textEntry {
-  wxBoxSizer* box{nullptr};
-  wxTextCtrl* entry{nullptr};
-  wxStaticText* text{nullptr};
-};
