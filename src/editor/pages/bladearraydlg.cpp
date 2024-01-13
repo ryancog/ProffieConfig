@@ -1,41 +1,53 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2024 Ryan Ogurek
 
-#include "editor/pages/bladearraypage.h"
+#include "editor/pages/bladearraydlg.h"
 
 #include "core/defines.h"
 #include "editor/editorwindow.h"
 #include "core/utilities/misc.h"
+#include "onboard/onboard.h"
 
 #include <wx/tooltip.h>
 #include <wx/button.h>
 
-BladeArrayPage::BladeArrayPage(EditorWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""), parent(window) {
+BladeArrayPage::BladeArrayPage(EditorWindow* window) : wxDialog(window, wxID_ANY, "Blade Arrays"), parent(window) {
+  auto sizer = new wxBoxSizer(wxVERTICAL);
+
   wxBoxSizer* enableSizer = new wxBoxSizer(wxHORIZONTAL);
-  enableDetect = new wxCheckBox(GetStaticBox(), ID_BladeDetectEnable, "Enable Blade Detect");
-  enableID = new wxCheckBox(GetStaticBox(), ID_BladeIDEnable, "Enable Blade ID");
+  enableDetect = new wxCheckBox(this, ID_BladeDetectEnable, "Enable Blade Detect");
+  enableID = new wxCheckBox(this, ID_BladeIDEnable, "Enable Blade ID");
   enableSizer->Add(enableDetect, FIRSTITEMFLAGS);
   enableSizer->Add(enableID, FIRSTITEMFLAGS);
 
   wxBoxSizer* topSizer = new wxBoxSizer(wxHORIZONTAL);
-  topSizer->Add(createBladeDetect(GetStaticBox()), wxSizerFlags(2).Border(wxALL, 10).Expand());
-  topSizer->Add(createIDSetup(GetStaticBox()), wxSizerFlags(3).Border(wxALL, 10).Expand());
-  topSizer->Add(createBladeArrays(GetStaticBox()), wxSizerFlags(4).Border(wxALL, 10).Expand());
+  topSizer->Add(createBladeDetect(this), wxSizerFlags(2).Border(wxALL, 10).Expand());
+  topSizer->Add(createIDSetup(this), wxSizerFlags(3).Border(wxALL, 10).Expand());
+  topSizer->Add(createBladeArrays(this), wxSizerFlags(4).Border(wxALL, 10).Expand());
 
   wxBoxSizer* bottomSizer = new wxBoxSizer(wxHORIZONTAL);
-  bottomSizer->Add(createIDPowerSettings(GetStaticBox()), wxSizerFlags(1).Border(wxALL, 10).Expand());
-  bottomSizer->Add(createContinuousScanSettings(GetStaticBox()), wxSizerFlags(1).Border(wxALL, 10).Expand());
+  bottomSizer->Add(createIDPowerSettings(this), wxSizerFlags(1).Border(wxALL, 10).Expand());
+  bottomSizer->Add(createContinuousScanSettings(this), wxSizerFlags(1).Border(wxALL, 10).Expand());
 
-  Add(enableSizer);
-  Add(topSizer, wxSizerFlags(1).Expand());
-  Add(bottomSizer, wxSizerFlags(0).Expand());
+  sizer->Add(enableSizer);
+  sizer->Add(topSizer, wxSizerFlags(1).Expand());
+  sizer->Add(bottomSizer, wxSizerFlags(0).Expand());
 
+  SetSizerAndFit(sizer);
   bindEvents();
   createToolTips();
   update();
 }
 
 void BladeArrayPage::bindEvents() {
+  Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
+    if (event.CanVeto()) {
+      parent->bladesPage->update();
+      Hide();
+      event.Veto();
+    } else event.Skip();
+  });
+
   auto clearBladeArray = [](BladeArrayPage* page) {
     page->arrayList->SetSelection(-1);
     page->lastArraySelection = -1;
@@ -44,67 +56,66 @@ void BladeArrayPage::bindEvents() {
     page->parent->presetsPage->bladeArray->entry()->SetSelection(0);
   };
 
-  GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) {
-        update(); // Store last one before we do *damage*
-        if (enableDetect->GetValue()) {
-          bladeArrays.insert(bladeArrays.begin() + 1, BladeArray{"no_blade", 0, {}, { BladesPage::BladeConfig{} }});
-          clearBladeArray(this);
-        } else {
-          if (wxMessageBox("Are you sure you want to disable Blade Detect?\n\n\"no_blade\" array will be deleted!", "Disable Blade Detect", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING, parent) == wxNO) {
-            enableDetect->SetValue(true);
-            update();
-            return;
-          }
-          bladeArrays.erase(bladeArrays.begin() + 1);
-          clearBladeArray(this);
+  Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) {
+      update(); // Store last one before we do *damage*
+      if (enableDetect->GetValue()) {
+        bladeArrays.insert(bladeArrays.begin() + 1, BladeArray{"no_blade", 0, {}, { BladesPage::BladeConfig{} }});
+        clearBladeArray(this);
+      } else {
+        if (Onboard::instance == nullptr && wxMessageBox("Are you sure you want to disable Blade Detect?\n\n\"no_blade\" array will be deleted!", "Disable Blade Detect", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING, parent) == wxNO) {
+          enableDetect->SetValue(true);
+          update();
+          return;
         }
-        update();
-      }, ID_BladeDetectEnable);
-  GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) {
-        if (enableID->GetValue()) {
+        bladeArrays.erase(bladeArrays.begin() + 1);
+        clearBladeArray(this);
+      }
+      update();
+    }, ID_BladeDetectEnable);
+  Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) {
+      if (enableID->GetValue()) {
 
-        } else {
-          if (wxMessageBox("Are you sure you want to disable Blade ID?\n\nAll custom blade arrays will be deleted!", "Disable Blade ID", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING, parent) == wxNO) {
-            enableID->SetValue(true);
-            update();
-            return;
-          }
-          if (enableDetect->GetValue()) bladeArrays.erase(bladeArrays.begin() + 2, bladeArrays.end());
-          else bladeArrays.erase(bladeArrays.begin() + 1, bladeArrays.end());
-
-          clearBladeArray(this);
+      } else {
+        if (Onboard::instance == nullptr && wxMessageBox("Are you sure you want to disable Blade ID?\n\nAll custom blade arrays will be deleted!", "Disable Blade ID", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING, parent) == wxNO) {
+          enableID->SetValue(true);
+          update();
+          return;
         }
-        update();
-      }, ID_BladeIDEnable);
-  GetStaticBox()->Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
-        stripAndSaveName();
-        update();
-      }, ID_NameEntry);
-  GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        update();
-        FULLUPDATEWINDOW(parent);
-      }, ID_BladeIDMode);
-  GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
-        update();
-      }, ID_BladeArray);
-  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        bladeArrays.push_back(BladeArray{"newarray", 40000, {}, { BladesPage::BladeConfig{} }});
-        update();
-        arrayList->SetSelection(bladeArrays.size() - 1);
-        arrayList->SendSelectionChangedEvent(wxEVT_LISTBOX);
-        FULLUPDATEWINDOW(parent);
-      }, ID_AddArray);
-  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+        if (enableDetect->GetValue()) bladeArrays.erase(bladeArrays.begin() + 2, bladeArrays.end());
+        else bladeArrays.erase(bladeArrays.begin() + 1, bladeArrays.end());
 
-        bladeArrays.erase(bladeArrays.begin() + arrayList->GetSelection());
-        update();
-      }, ID_RemoveArray);
-  GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) {
-        update();
-      }, ID_BladeIDPower);
-  GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) {
-        update();
-      }, ID_ContinuousScan);
+        clearBladeArray(this);
+      }
+      update();
+    }, ID_BladeIDEnable);
+  Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
+      stripAndSaveName();
+      update();
+    }, ID_NameEntry);
+  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
+      update();
+      FULLUPDATEWINDOW(parent);
+    }, ID_BladeIDMode);
+  Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
+      update();
+    }, ID_BladeArray);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+      bladeArrays.push_back(BladeArray{"newarray", 40000, {}, { BladesPage::BladeConfig{} }});
+      update();
+      arrayList->SetSelection(bladeArrays.size() - 1);
+      arrayList->SendSelectionChangedEvent(wxEVT_LISTBOX);
+      FULLUPDATEWINDOW(parent);
+    }, ID_AddArray);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+      bladeArrays.erase(bladeArrays.begin() + arrayList->GetSelection());
+      update();
+    }, ID_RemoveArray);
+  Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) {
+      update();
+    }, ID_BladeIDPower);
+  Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) {
+      update();
+    }, ID_ContinuousScan);
 }
 void BladeArrayPage::createToolTips() {
   TIP(enableDetect, "Detect when a blade is inserted into the saber or not.");

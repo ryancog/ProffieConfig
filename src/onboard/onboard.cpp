@@ -58,6 +58,9 @@ Onboard::Onboard() : wxFrame(nullptr, wxID_ANY, "ProffieConfig First-Time Setup"
   CentreOnScreen();
   Show(true);
 }
+Onboard::~Onboard() {
+  instance = nullptr;
+}
 
 void Onboard::bindEvents() {
   Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
@@ -93,10 +96,9 @@ void Onboard::bindEvents() {
             overviewPage->prepare();
           }
         } else if (overviewPage->IsShown()) {
-          Close(true);
           AppState::instance->firstRun = false;
           AppState::instance->saveState();
-          MainMenu::instance = new MainMenu();
+          Close(true);
         }
         update();
       }, ID_Next);

@@ -5,7 +5,7 @@
 
 #include "editor/editorwindow.h"
 #include "editor/pages/generalpage.h"
-#include "editor/pages/bladearraypage.h"
+#include "editor/pages/bladearraydlg.h"
 
 #include <cstring>
 
@@ -18,7 +18,7 @@ Settings::Settings(EditorWindow* _parent) : parent(_parent) {
 void Settings::linkDefines() {
 # define ENTRY(name, ...) { name, new ProffieDefine(name, __VA_ARGS__) }
 # define CHECKER(name) [&](const ProffieDefine* name) -> bool
-# define IDSETTING(setting) parent->bladeArrayPage->setting->GetValue()
+# define IDSETTING(setting) parent->bladesPage->bladeArrayDlg->setting->GetValue()
 
   generalDefines = {
       // General
@@ -43,11 +43,11 @@ void Settings::linkDefines() {
       ENTRY("IDLE_OFF_TIME", 15, parent->generalPage->idleTime.num, CHECKER(){ return true; }),
       ENTRY("MOTION_TIMEOUT", 10, parent->generalPage->motionTime.num, CHECKER(){ return true; }),
       
-      ENTRY("BLADE_DETECT_PIN", "", parent->bladeArrayPage->detectPin.entry, CHECKER(){ return IDSETTING(enableDetect); }),
-      ENTRY("BLADE_ID_CLASS", "", parent->bladeArrayPage->mode, CHECKER(){ return IDSETTING(enableID); }),
-      ENTRY("ENABLE_POWER_FOR_ID", false, parent->bladeArrayPage->enablePowerForID, CHECKER(def){ return IDSETTING(enableID) && def->getState(); }),
-      ENTRY("BLADE_ID_SCAN_MILLIS", 1000, parent->bladeArrayPage->scanIDMillis.num, CHECKER(){ return IDSETTING(enableID) && IDSETTING(continuousScans); }),
-      ENTRY("BLADE_ID_TIMES", 10, parent->bladeArrayPage->numIDTimes.num, CHECKER(){ return IDSETTING(enableID) && IDSETTING(continuousScans); }),
+      ENTRY("BLADE_DETECT_PIN", "", parent->bladesPage->bladeArrayDlg->detectPin.entry, CHECKER(){ return IDSETTING(enableDetect); }),
+      ENTRY("BLADE_ID_CLASS", "", parent->bladesPage->bladeArrayDlg->mode, CHECKER(){ return IDSETTING(enableID); }),
+      ENTRY("ENABLE_POWER_FOR_ID", false, parent->bladesPage->bladeArrayDlg->enablePowerForID, CHECKER(def){ return IDSETTING(enableID) && def->getState(); }),
+      ENTRY("BLADE_ID_SCAN_MILLIS", 1000, parent->bladesPage->bladeArrayDlg->scanIDMillis.num, CHECKER(){ return IDSETTING(enableID) && IDSETTING(continuousScans); }),
+      ENTRY("BLADE_ID_TIMES", 10, parent->bladesPage->bladeArrayDlg->numIDTimes.num, CHECKER(){ return IDSETTING(enableID) && IDSETTING(continuousScans); }),
   };
 
 # undef ENTRY
@@ -76,27 +76,27 @@ void Settings::setCustomInputParsers() {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
     
-    parent->bladeArrayPage->enableDetect->SetValue(true);
-    parent->bladeArrayPage->detectPin.entry->SetValue(key.second);
+    parent->bladesPage->bladeArrayDlg->enableDetect->SetValue(true);
+    parent->bladesPage->bladeArrayDlg->detectPin.entry->SetValue(key.second);
     return false;
   });
   generalDefines["BLADE_ID_CLASS"]->overrideParser([&](const ProffieDefine* def, const std::string& input) -> bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
     
-    parent->bladeArrayPage->enableID->SetValue(true);
+    parent->bladesPage->bladeArrayDlg->enableID->SetValue(true);
     key.second = std::strtok(key.second.data(), "< ");
     if (key.second == "SnapshotBladeID") {
-      parent->bladeArrayPage->mode->entry()->SetValue(BLADE_ID_MODE_SNAPSHOT);
-      parent->bladeArrayPage->IDPin.entry->SetValue(std::strtok(nullptr, "<> "));
+      parent->bladesPage->bladeArrayDlg->mode->entry()->SetValue(BLADE_ID_MODE_SNAPSHOT);
+      parent->bladesPage->bladeArrayDlg->IDPin.entry->SetValue(std::strtok(nullptr, "<> "));
     } else if (key.second == "ExternalPullupBladeID") {
-      parent->bladeArrayPage->mode->entry()->SetValue(BLADE_ID_MODE_EXTERNAL);
-      parent->bladeArrayPage->IDPin.entry->SetValue(std::strtok(nullptr, "<, "));
-      parent->bladeArrayPage->pullupResistance.num->SetValue(std::stod(std::strtok(nullptr, ",> ")));
+      parent->bladesPage->bladeArrayDlg->mode->entry()->SetValue(BLADE_ID_MODE_EXTERNAL);
+      parent->bladesPage->bladeArrayDlg->IDPin.entry->SetValue(std::strtok(nullptr, "<, "));
+      parent->bladesPage->bladeArrayDlg->pullupResistance.num->SetValue(std::stod(std::strtok(nullptr, ",> ")));
     } else if (key.second == "BridgedPullupBladeID") {
-      parent->bladeArrayPage->mode->entry()->SetValue(BLADE_ID_MODE_BRIDGED);
-      parent->bladeArrayPage->IDPin.entry->SetValue(std::strtok(nullptr, "<, "));
-      parent->bladeArrayPage->pullupPin.entry->SetValue(std::strtok(nullptr, ",> "));
+      parent->bladesPage->bladeArrayDlg->mode->entry()->SetValue(BLADE_ID_MODE_BRIDGED);
+      parent->bladesPage->bladeArrayDlg->IDPin.entry->SetValue(std::strtok(nullptr, "<, "));
+      parent->bladesPage->bladeArrayDlg->pullupPin.entry->SetValue(std::strtok(nullptr, ",> "));
     }
     return true;
   });
@@ -104,33 +104,33 @@ void Settings::setCustomInputParsers() {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
     
-    parent->bladeArrayPage->scanIDMillis.num->SetValue(std::stoi(key.second));
-    parent->bladeArrayPage->continuousScans->SetValue(true);
+    parent->bladesPage->bladeArrayDlg->scanIDMillis.num->SetValue(std::stoi(key.second));
+    parent->bladesPage->bladeArrayDlg->continuousScans->SetValue(true);
     return true;
   });
   generalDefines["BLADE_ID_TIMES"]->overrideParser([&](const ProffieDefine* def, const std::string& input) ->bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
     
-    parent->bladeArrayPage->numIDTimes.num->SetValue(std::stoi(key.second));
-    parent->bladeArrayPage->continuousScans->SetValue(true);
+    parent->bladesPage->bladeArrayDlg->numIDTimes.num->SetValue(std::stoi(key.second));
+    parent->bladesPage->bladeArrayDlg->continuousScans->SetValue(true);
     return true;
   });
   generalDefines["ENABLE_POWER_FOR_ID"]->overrideParser([&](const ProffieDefine* def, const std::string& input) -> bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
     
-    parent->bladeArrayPage->enablePowerForID->SetValue(true);
+    parent->bladesPage->bladeArrayDlg->enablePowerForID->SetValue(true);
     std::strtok(key.second.data(), "<");
     char* pwrPinTest = std::strtok(nullptr, "<>, ");
     while (pwrPinTest != nullptr) {
       key.second = pwrPinTest;
-      if (key.second == "bladePowerPin1") parent->bladeArrayPage->powerPin1->SetValue(true);
-      if (key.second == "bladePowerPin2") parent->bladeArrayPage->powerPin2->SetValue(true);
-      if (key.second == "bladePowerPin3") parent->bladeArrayPage->powerPin3->SetValue(true);
-      if (key.second == "bladePowerPin4") parent->bladeArrayPage->powerPin4->SetValue(true);
-      if (key.second == "bladePowerPin5") parent->bladeArrayPage->powerPin5->SetValue(true);
-      if (key.second == "bladePowerPin6") parent->bladeArrayPage->powerPin6->SetValue(true);
+      if (key.second == "bladePowerPin1") parent->bladesPage->bladeArrayDlg->powerPin1->SetValue(true);
+      if (key.second == "bladePowerPin2") parent->bladesPage->bladeArrayDlg->powerPin2->SetValue(true);
+      if (key.second == "bladePowerPin3") parent->bladesPage->bladeArrayDlg->powerPin3->SetValue(true);
+      if (key.second == "bladePowerPin4") parent->bladesPage->bladeArrayDlg->powerPin4->SetValue(true);
+      if (key.second == "bladePowerPin5") parent->bladesPage->bladeArrayDlg->powerPin5->SetValue(true);
+      if (key.second == "bladePowerPin6") parent->bladesPage->bladeArrayDlg->powerPin6->SetValue(true);
 
       pwrPinTest = std::strtok(nullptr, "<>, ");
     }
@@ -140,7 +140,7 @@ void Settings::setCustomInputParsers() {
 void Settings::setCustomOutputParsers() {
   generalDefines["NUM_BLADES"]->overrideOutput([&](const ProffieDefine* def) -> std::string {
     int32_t numBlades = 0;
-    for (const BladesPage::BladeConfig& blade : parent->bladeArrayPage->bladeArrays[parent->bladesPage->bladeArray->entry()->GetSelection()].blades) numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
+    for (const BladesPage::BladeConfig& blade : parent->bladesPage->bladeArrayDlg->bladeArrays[parent->bladesPage->bladeArray->entry()->GetSelection()].blades) numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
     return def->getName() + " " + std::to_string(numBlades);
   });
   generalDefines["PLI_OFF_TIME"]->overrideOutput([](const ProffieDefine* def) -> std::string {
@@ -153,23 +153,23 @@ void Settings::setCustomOutputParsers() {
     return def->getName() + " " + std::to_string(def->getNum()) + " * 60 * 1000";
   });
   generalDefines["BLADE_ID_CLASS"]->overrideOutput([&](const ProffieDefine* def) -> std::string {
-    auto mode = parent->bladeArrayPage->mode->entry()->GetValue();
+    auto mode = parent->bladesPage->bladeArrayDlg->mode->entry()->GetValue();
     std::string returnVal = def->getName() + " ";
-    if (mode == BLADE_ID_MODE_SNAPSHOT) returnVal + "SnapshotBladeID<" + parent->bladeArrayPage->IDPin.entry->GetValue() + ">";
-    else if (mode == BLADE_ID_MODE_BRIDGED) returnVal + "ExternalPullupBladeID<" + parent->bladeArrayPage->IDPin.entry->GetValue() + ", " + parent->bladeArrayPage->pullupResistance.num->GetTextValue() + ">";
-    else if (mode == BLADE_ID_MODE_EXTERNAL) returnVal + "BridgedPullupBladeID<" + parent->bladeArrayPage->IDPin.entry->GetValue() + ", " + parent->bladeArrayPage->pullupPin.entry->GetValue();
+    if (mode == BLADE_ID_MODE_SNAPSHOT) returnVal + "SnapshotBladeID<" + parent->bladesPage->bladeArrayDlg->IDPin.entry->GetValue() + ">";
+    else if (mode == BLADE_ID_MODE_BRIDGED) returnVal + "ExternalPullupBladeID<" + parent->bladesPage->bladeArrayDlg->IDPin.entry->GetValue() + ", " + parent->bladesPage->bladeArrayDlg->pullupResistance.num->GetTextValue() + ">";
+    else if (mode == BLADE_ID_MODE_EXTERNAL) returnVal + "BridgedPullupBladeID<" + parent->bladesPage->bladeArrayDlg->IDPin.entry->GetValue() + ", " + parent->bladesPage->bladeArrayDlg->pullupPin.entry->GetValue();
 
     return returnVal;
   });
   generalDefines["ENABLE_POWER_FOR_ID"]->overrideOutput([&](const ProffieDefine* def) -> std::string {
     std::string returnVal = def->getName() + " PowerPINS<";
     std::vector<std::string> powerPins;
-    if (parent->bladeArrayPage->powerPin1->GetValue()) powerPins.push_back("bladePowerPin1");
-    if (parent->bladeArrayPage->powerPin2->GetValue()) powerPins.push_back("bladePowerPin2");
-    if (parent->bladeArrayPage->powerPin3->GetValue()) powerPins.push_back("bladePowerPin3");
-    if (parent->bladeArrayPage->powerPin4->GetValue()) powerPins.push_back("bladePowerPin4");
-    if (parent->bladeArrayPage->powerPin5->GetValue()) powerPins.push_back("bladePowerPin5");
-    if (parent->bladeArrayPage->powerPin6->GetValue()) powerPins.push_back("bladePowerPin6");
+    if (parent->bladesPage->bladeArrayDlg->powerPin1->GetValue()) powerPins.push_back("bladePowerPin1");
+    if (parent->bladesPage->bladeArrayDlg->powerPin2->GetValue()) powerPins.push_back("bladePowerPin2");
+    if (parent->bladesPage->bladeArrayDlg->powerPin3->GetValue()) powerPins.push_back("bladePowerPin3");
+    if (parent->bladesPage->bladeArrayDlg->powerPin4->GetValue()) powerPins.push_back("bladePowerPin4");
+    if (parent->bladesPage->bladeArrayDlg->powerPin5->GetValue()) powerPins.push_back("bladePowerPin5");
+    if (parent->bladesPage->bladeArrayDlg->powerPin6->GetValue()) powerPins.push_back("bladePowerPin6");
 
     for (int32_t pin = 0; pin < static_cast<int32_t>(powerPins.size()); pin++) {
       returnVal += powerPins.at(pin);
