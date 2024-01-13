@@ -175,7 +175,8 @@ void PresetsPage::rebuildPresetList() {
     presetList->Append(preset.name);
   }
   if (static_cast<int32_t>(presetList->GetCount()) - 1 < listSelection) listSelection -= 1;
-  if (listSelection >= 0) presetList->SetSelection(listSelection);
+  if (listSelection >= 0 && listSelection < static_cast<int32_t>(presetList->GetCount())) presetList->SetSelection(listSelection);
+  else if (presetList->GetCount()) presetList->SetSelection(0);
 }
 void PresetsPage::rebuildBladeList() {
   int32_t listSelection = bladeList->GetSelection();
@@ -258,7 +259,7 @@ void PresetsPage::stripAndSaveEditor() {
     style.erase(std::remove(style.begin(), style.end(), ' '), style.end());
     if (style.find("{") != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '{'));
     if (style.rfind("}") != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '}'));
-    if (style.rfind("(),") != wxString::npos) style.erase(style.rfind("(),") + 2);
+    if (style.rfind("()") != wxString::npos) style.erase(style.rfind("()") + 2);
     parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).styles.at(bladeList->GetSelection()).assign(style);
   }
 }
