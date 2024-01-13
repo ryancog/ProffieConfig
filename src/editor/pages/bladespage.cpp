@@ -28,7 +28,7 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
 }
 
 void BladesPage::bindEvents() {
-  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { bladeArrayDlg->ShowModal(); }, ID_OpenBladeArrays);
+  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { if (bladeArrayDlg->IsShown()) bladeArrayDlg->Raise(); else bladeArrayDlg->Show(); }, ID_OpenBladeArrays);
 
   GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { parent->presetsPage->bladeArray->entry()->SetSelection(bladeArray->entry()->GetSelection()); update(); }, ID_BladeArray);
   GetStaticBox()->Bind(wxEVT_SPINCTRL, [&](wxCommandEvent& event) { update(); event.Skip(); });
@@ -212,8 +212,6 @@ wxBoxSizer* BladesPage::createBladeSettings() {
 }
 
 void BladesPage::update() {
-  bladeArrayDlg->update();
-
   saveCurrent();
   rebuildBladeArray();
   updateRanges();

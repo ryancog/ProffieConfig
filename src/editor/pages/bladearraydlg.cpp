@@ -71,6 +71,7 @@ void BladeArrayPage::bindEvents() {
         clearBladeArray(this);
       }
       update();
+
     }, ID_BladeDetectEnable);
   Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) {
       if (enableID->GetValue()) {
@@ -297,6 +298,10 @@ void BladeArrayPage::update() {
     pullupResistance->Show(true);
   }
 
+  if (parent->bladesPage && parent->presetsPage) {
+    parent->bladesPage->update();
+    parent->presetsPage->update();
+  }
 #ifdef __WXMSW__
   GetStaticBox()->Refresh();
 #endif
