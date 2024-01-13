@@ -118,8 +118,11 @@ void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput, Edito
     configOutput << "Preset " << bladeArray.name << "[] = {" << std::endl;
     for (const PresetsPage::PresetConfig& preset : bladeArray.presets) {
       configOutput << "\t{ \"" << preset.dirs << "\", \"" << preset.track << "\"," << std::endl;
-      if (preset.styles.size() > 0) for (const wxString& style : preset.styles) configOutput << "\t\t" << style << "," << std::endl;
-      else configOutput << "\t\t," << std::endl;
+      if (preset.styles.size() > 0) {
+        for (const wxString& style : preset.styles) {
+          configOutput << "\t\t" << style << "," << std::endl;
+        }
+      } else configOutput << "\t\t," << std::endl;
       configOutput << "\t\t\"" << preset.name << "\"}";
       // If not the last one, add comma
       if (&bladeArray.presets[bladeArray.presets.size() - 1] != &preset) configOutput << ",";
@@ -500,9 +503,11 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
 
     // Deal with Fett's comments
     comment.clear();
-    if (presetInfo.find("/*") != std::string::npos) {
-      comment = presetInfo.substr(presetInfo.find("/*"), presetInfo.find("*/") - presetInfo.find("/*") + 2);
-      presetInfo = presetInfo.substr(presetInfo.find("*/") + 2);
+    while (presetInfo.find("/*") != std::string::npos) {
+      auto commentBegin = presetInfo.find("/*");
+      auto commentLength = presetInfo.find("*/") - commentBegin + 2;
+      comment += presetInfo.substr(commentBegin, commentLength);
+      presetInfo.erase(commentBegin, commentLength);
     }
 
     // Read actual styles
@@ -669,6 +674,10 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
       if (array.name == bladeArray.name) {
         array.value = bladeArray.value;
         array.blades = bladeArray.blades;
+
+        if (array.value == 0 && array.name != "no_blade") {
+          array.name = "blade_in";
+        }
       }
     }
   }
