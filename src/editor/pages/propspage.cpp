@@ -65,11 +65,11 @@ void PropsPage::bindEvents() {
 
         if (activeProp == nullptr) {
           buttons =
-              (parent->generalPage->buttons.num->GetValue() == 0 ? wxString (
+              (parent->generalPage->buttons->entry()->GetValue() == 0 ? wxString (
                    "On/Off - Twist\n"
                    "Next preset - Point up and shake\n"
                    "Clash - Hit the blade while saber is on."
-                   ) : parent->generalPage->buttons.num->GetValue() == 1 ? wxString(
+                   ) : parent->generalPage->buttons->entry()->GetValue() == 1 ? wxString(
                      "On/Off - Click to turn the saber on or off.\n"
                      "Turn On muted - Double-click\n"
                      "Next preset - Hold button and hit the blade while saber is off.\n"
@@ -80,7 +80,7 @@ void PropsPage::bindEvents() {
                      "Force - Long-click button.\n"
                      "Start Soundtrack - Long-click the button while blade is off.\n"
                      "Enter/Exit Color Change - Hold button and Twist."
-                     ) : parent->generalPage->buttons.num->GetValue() == 2 || parent->generalPage->buttons.num->GetValue() == 3 ? wxString (
+                     ) : parent->generalPage->buttons->entry()->GetValue() == 2 || parent->generalPage->buttons->entry()->GetValue() == 3 ? wxString (
                      "On/Off - Click POW\n"
                      "Turn On muted - Double-click POW button\n"
                      "Next preset - Hold POW button and hit the blade while saber is off.\n"
@@ -96,7 +96,7 @@ void PropsPage::bindEvents() {
                      "Enter/Exit Color Change - Hold Aux and click POW while on."
                      ) : wxString("Button Configuration Not Supported"));
         } else {
-          auto propButtons = activeProp->getButtons().at(parent->generalPage->buttons.num->GetValue());
+          auto propButtons = activeProp->getButtons().at(parent->generalPage->buttons->entry()->GetValue());
           if (propButtons.empty()) buttons += "Selected number of buttons not supported by prop file.";
           else for (auto& state : propButtons) {
               buttons += "Button controls while saber is " + state.first + ":\n";

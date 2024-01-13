@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "core/utilities/misc.h"
 #include "editor/pages/presetspage.h"
 #include "editor/pages/bladespage.h"
+#include "ui/pctextctrl.h"
 
 #include <wx/sizer.h>
 #include <wx/checkbox.h>
@@ -26,9 +26,9 @@ public:
   wxCheckBox* enableDetect{nullptr};
 
   pcComboBox* mode{nullptr};
-  Misc::textEntry IDPin{nullptr};
-  Misc::numEntry pullupResistance{nullptr};
-  Misc::textEntry pullupPin{nullptr};
+  pcTextCtrl* IDPin{nullptr};
+  pcSpinCtrl* pullupResistance{nullptr};
+  pcTextCtrl* pullupPin{nullptr};
 
   wxCheckBox* enablePowerForID{nullptr};
   wxCheckBox* powerPin1{nullptr};
@@ -39,17 +39,17 @@ public:
   wxCheckBox* powerPin6{nullptr};
 
   wxCheckBox* continuousScans{nullptr};
-  Misc::numEntry numIDTimes{nullptr};
-  Misc::numEntry scanIDMillis{nullptr};
+  pcSpinCtrl* numIDTimes{nullptr};
+  pcSpinCtrl* scanIDMillis{nullptr};
 
   wxListBox* arrayList{nullptr};
   wxButton* addID{nullptr};
   wxButton* removeID{nullptr};
 
-  Misc::textEntry arrayName{nullptr};
-  Misc::numEntry resistanceID{nullptr};
+  pcTextCtrl* arrayName{nullptr};
+  pcSpinCtrl* resistanceID{nullptr};
 
-  Misc::textEntry detectPin{nullptr};
+  pcTextCtrl* detectPin{nullptr};
 
   struct BladeArray {
     wxString name{""};

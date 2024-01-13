@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "core/utilities/misc.h"
+#include "ui/pcspinctrl.h"
 #include "editor/editorwindow.h"
 
 #include <wx/textctrl.h>
@@ -34,6 +34,9 @@
 #define BD_ISSTAR (BD_ISSTAR3 || BD_ISSTAR4)
 #define BD_ISSUB (BD_HASSELECTION && bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].isSubBlade)
 #define BD_ISFIRST (!BD_ISSUB || (subBladeSelect->GetSelection() == 0))
+#define BD_ISSTNDRD (BD_ISSUB && useStandard->GetValue())
+#define BD_ISSTRIDE (BD_ISSUB && useStride->GetValue())
+#define BD_ISZIGZAG (BD_ISSUB && useZigZag->GetValue())
 
 class BladesPage : public wxStaticBoxSizer {
 public:
@@ -62,7 +65,7 @@ public:
   pcComboBox* bladeType{nullptr};
   pcComboBox* bladeDataPin{nullptr};
   wxStaticText* bladePixelsLabel{nullptr};
-  wxSpinCtrl* bladePixels{nullptr};
+  pcSpinCtrl* bladePixels{nullptr};
 
   wxCheckBox* usePowerPin1{nullptr};
   wxCheckBox* usePowerPin2{nullptr};
@@ -75,19 +78,19 @@ public:
   pcComboBox* blade4ColorOrder{nullptr};
   wxCheckBox* blade4UseRGB{nullptr};
   pcComboBox* star1Color{nullptr};
-  Misc::numEntry star1Resistance{nullptr};
+  pcSpinCtrl* star1Resistance{nullptr};
   pcComboBox* star2Color{nullptr};
-  Misc::numEntry star2Resistance{nullptr};
+  pcSpinCtrl* star2Resistance{nullptr};
   pcComboBox* star3Color{nullptr};
-  Misc::numEntry star3Resistance{nullptr};
+  pcSpinCtrl* star3Resistance{nullptr};
   pcComboBox* star4Color{nullptr};
-  Misc::numEntry star4Resistance{nullptr};
+  pcSpinCtrl* star4Resistance{nullptr};
 
-  wxCheckBox* subBladeUseStride{nullptr};
-  wxStaticText* subBladeStartLabel{nullptr};
-  wxSpinCtrl* subBladeStart{nullptr};
-  wxStaticText* subBladeEndLabel{nullptr};
-  wxSpinCtrl* subBladeEnd{nullptr};
+  wxRadioButton* useStandard{nullptr};
+  wxRadioButton* useStride{nullptr};
+  wxRadioButton* useZigZag{nullptr};
+  pcSpinCtrl* subBladeStart{nullptr};
+  pcSpinCtrl* subBladeEnd{nullptr};
 
   enum {
     ID_BladeArray,
@@ -126,7 +129,8 @@ public:
     bool usePowerPin6{false};
 
     bool isSubBlade{false};
-    bool subBladeWithStride{false};
+    bool useStride{false};
+    bool useZigZag{false};
 
     struct subBladeInfo {
       uint32_t startPixel{0};

@@ -1,5 +1,4 @@
 #include "pccombobox.h"
-#include "wx/gtk/stattext.h"
 
 #include <wx/stattext.h>
 #include <wx/sizer.h>
@@ -11,8 +10,9 @@ pcComboBox::pcComboBox(wxWindow* _parent, int32_t _id, const wxString& _label, c
   auto sizer = new wxBoxSizer(_orientation);
   if (!_label.empty()) {
     mText = new wxStaticText(this, wxID_ANY, _label);
-    sizer->Add(text(), wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 5));
-  } else mText = nullptr;
+    auto sizerFlags = wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 5);
+    if (_orientation == wxHORIZONTAL) sizerFlags = sizerFlags.Center();
+    sizer->Add(text(), sizerFlags);  } else mText = nullptr;
   sizer->Add(entry(), wxSizerFlags(0).Expand());
 
   SetSizerAndFit(sizer);
