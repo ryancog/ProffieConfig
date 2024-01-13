@@ -6,7 +6,7 @@
 #include "editor/editorwindow.h"
 #include "mainmenu/mainmenu.h"
 #include "editor/pages/bladespage.h"
-#include "editor/pages/bladearraypage.h"
+#include "editor/pages/bladearraydlg.h"
 
 #include <unordered_map>
 #include <wx/wizard.h>
@@ -18,6 +18,7 @@ class Onboard : public wxFrame {
 public:
   static Onboard* instance;
   Onboard();
+  ~Onboard();
 
 private:
   static wxStaticText* createHeader(wxWindow*, const wxString&);

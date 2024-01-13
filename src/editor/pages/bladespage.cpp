@@ -5,7 +5,7 @@
 
 #include "editor/editorwindow.h"
 #include "editor/pages/generalpage.h"
-#include "editor/pages/bladearraypage.h"
+#include "editor/pages/bladearraydlg.h"
 #include "core/utilities/misc.h"
 #include "core/defines.h"
 #include "wx/gdicmn.h"
@@ -17,6 +17,8 @@
 #include <wx/tooltip.h>
 
 BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, ""), parent{static_cast<EditorWindow*>(window)} {
+  bladeArrayDlg = new BladeArrayPage(parent);
+
   Add(createBladeSelect(), wxSizerFlags(0).Expand());
   Add(createBladeSetup(), wxSizerFlags(0));
   Add(createBladeSettings(), wxSizerFlags(1));
@@ -26,6 +28,8 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
 }
 
 void BladesPage::bindEvents() {
+  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { bladeArrayDlg->ShowModal(); }, ID_OpenBladeArrays);
+
   GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { parent->presetsPage->bladeArray->entry()->SetSelection(bladeArray->entry()->GetSelection()); update(); }, ID_BladeArray);
   GetStaticBox()->Bind(wxEVT_SPINCTRL, [&](wxCommandEvent&) { update(); });
   GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
@@ -84,7 +88,9 @@ void BladesPage::createToolTips() {
 wxBoxSizer* BladesPage::createBladeSelect() {
   wxBoxSizer* bladeSelectSizer = new wxBoxSizer(wxVERTICAL);
   bladeArray = new pcComboBox(GetStaticBox(), ID_BladeArray, "Blade Array", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ "blade_in" }), wxCB_READONLY);
+  bladeArrayButton = new wxButton(GetStaticBox(), ID_OpenBladeArrays, "Blade Awareness...");
   bladeSelectSizer->Add(bladeArray, TEXTITEMFLAGS.Expand());
+  bladeSelectSizer->Add(bladeArrayButton, wxSizerFlags(0).Border(wxLEFT | wxRIGHT | wxTOP, 5).Expand());
   bladeSelectSizer->Add(createBladeManager(), wxSizerFlags(1).Border(wxALL, 5).Expand());
 
   return bladeSelectSizer;
@@ -204,6 +210,8 @@ wxBoxSizer* BladesPage::createBladeSettings() {
 }
 
 void BladesPage::update() {
+  bladeArrayDlg->update();
+
   saveCurrent();
   rebuildBladeArray();
   updateRanges();
@@ -214,103 +222,103 @@ void BladesPage::update() {
 
 void BladesPage::saveCurrent() {
   if (lastBladeArraySelection < 0 ||
-      lastBladeArraySelection > (int32_t)parent->bladeArrayPage->bladeArrays.size() ||
+      lastBladeArraySelection > (int32_t)bladeArrayDlg->bladeArrays.size() ||
       lastBladeSelection < 0 ||
-      lastBladeSelection >= (int32_t)parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.size()
+      lastBladeSelection >= (int32_t)bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size()
       ) {
     return;
   }
   
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).type = bladeType->entry()->GetValue();
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin1 = usePowerPin1->GetValue();
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin2 = usePowerPin2->GetValue();
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin3 = usePowerPin3->GetValue();
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin4 = usePowerPin4->GetValue();
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin5 = usePowerPin5->GetValue();
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin6 = usePowerPin6->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).type = bladeType->entry()->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin1 = usePowerPin1->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin2 = usePowerPin2->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin3 = usePowerPin3->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin4 = usePowerPin4->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin5 = usePowerPin5->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin6 = usePowerPin6->GetValue();
   
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).dataPin = bladeDataPin->entry()->GetValue();
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).numPixels = bladePixels->GetValue();
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).colorType = parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).type == BD_PIXELRGB ? blade3ColorOrder->entry()->GetValue() : blade4ColorOrder->entry()->GetValue();
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).useRGBWithWhite = blade4UseRGB->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).dataPin = bladeDataPin->entry()->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).numPixels = bladePixels->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).colorType = bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).type == BD_PIXELRGB ? blade3ColorOrder->entry()->GetValue() : blade4ColorOrder->entry()->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).useRGBWithWhite = blade4UseRGB->GetValue();
   
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star1 = star1Color->entry()->GetValue();
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star1Resistance = star1Resistance.num->GetValue();
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star2 = star2Color->entry()->GetValue();
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star2Resistance = star2Resistance.num->GetValue();
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star3 = star3Color->entry()->GetValue();
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star3Resistance = star3Resistance.num->GetValue();
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star4 = star4Color->entry()->GetValue();
-  parent->bladeArrayPage->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star4Resistance = star4Resistance.num->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star1 = star1Color->entry()->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star1Resistance = star1Resistance.num->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star2 = star2Color->entry()->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star2Resistance = star2Resistance.num->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star3 = star3Color->entry()->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star3Resistance = star3Resistance.num->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star4 = star4Color->entry()->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star4Resistance = star4Resistance.num->GetValue();
   
-  if (lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.size()) {
-    parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.at(lastSubBladeSelection).startPixel = subBladeStart->GetValue();
-    parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.at(lastSubBladeSelection).endPixel = subBladeEnd->GetValue();
+  if (lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.size()) {
+    bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.at(lastSubBladeSelection).startPixel = subBladeStart->GetValue();
+    bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.at(lastSubBladeSelection).endPixel = subBladeEnd->GetValue();
   }
-  parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBladeWithStride = subBladeUseStride->GetValue();
+  bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBladeWithStride = subBladeUseStride->GetValue();
 
   // Check if SubBlades need to be removed (changed from WX281X)
   if (BD_HASSELECTION && lastBladeSelection == bladeSelect->GetSelection() && !BD_ISPIXEL) {
-    parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).isSubBlade = false;
-    parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.clear();
+    bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).isSubBlade = false;
+    bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.clear();
   }
 }
 void BladesPage::rebuildBladeArray() {
-  if (parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() == 0) parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.push_back(BladeConfig({ .numPixels = 144, .usePowerPin2 = true, .usePowerPin3 = true }));
+  if (bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() == 0) bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.push_back(BladeConfig({ .numPixels = 144, .usePowerPin2 = true, .usePowerPin3 = true }));
 
   lastBladeSelection = bladeSelect->GetSelection();
   lastSubBladeSelection = subBladeSelect->GetSelection();
   lastBladeArraySelection = bladeArray->entry()->GetSelection();
 
   bladeArray->entry()->Clear();
-  for (BladeArrayPage::BladeArray& array : parent->bladeArrayPage->bladeArrays) {
+  for (BladeArrayPage::BladeArray& array : bladeArrayDlg->bladeArrays) {
     bladeArray->entry()->Append(array.name);
   }
   if (lastBladeArraySelection >= 0 && lastBladeArraySelection < static_cast<int32_t>(bladeArray->entry()->GetCount())) bladeArray->entry()->SetSelection(lastBladeArraySelection);
   else bladeArray->entry()->SetSelection(0);
 
   bladeSelect->Clear();
-  for (int32_t bladeNum = 0; bladeNum < static_cast<int32_t>(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.size()); bladeNum++)
+  for (int32_t bladeNum = 0; bladeNum < static_cast<int32_t>(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size()); bladeNum++)
     bladeSelect->Append("Blade " + std::to_string(bladeNum));
   if (lastBladeSelection >= 0 && lastBladeSelection < static_cast<int32_t>(bladeSelect->GetCount())) bladeSelect->SetSelection(lastBladeSelection);
 
   subBladeSelect->Clear();
-  if (bladeSelect->GetSelection() >= 0 && bladeSelect->GetSelection() < static_cast<int32_t>(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.size())) {
-    for (int32_t subBladeNum = 0; bladeSelect->GetSelection() != -1 && subBladeNum < static_cast<int32_t>(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size()); subBladeNum++)
+  if (bladeSelect->GetSelection() >= 0 && bladeSelect->GetSelection() < static_cast<int32_t>(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size())) {
+    for (int32_t subBladeNum = 0; bladeSelect->GetSelection() != -1 && subBladeNum < static_cast<int32_t>(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size()); subBladeNum++)
       subBladeSelect->Append("SubBlade " + std::to_string(subBladeNum));
     if (lastSubBladeSelection >= 0 && lastSubBladeSelection < static_cast<int32_t>(subBladeSelect->GetCount())) subBladeSelect->SetSelection(lastSubBladeSelection);
   }
 }
 void BladesPage::loadSettings() {
-  if (bladeSelect->GetSelection() < 0 || bladeSelect->GetSelection() >= (int32_t)parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.size())
+  if (bladeSelect->GetSelection() < 0 || bladeSelect->GetSelection() >= (int32_t)bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size())
     return;
   
-  bladeType->entry()->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).type);
-  usePowerPin1->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin1);
-  usePowerPin2->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin2);
-  usePowerPin3->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin3);
-  usePowerPin4->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin4);
-  usePowerPin5->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin5);
-  usePowerPin6->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin6);
+  bladeType->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).type);
+  usePowerPin1->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin1);
+  usePowerPin2->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin2);
+  usePowerPin3->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin3);
+  usePowerPin4->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin4);
+  usePowerPin5->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin5);
+  usePowerPin6->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin6);
   
-  bladeDataPin->entry()->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).dataPin);
-  bladePixels->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).numPixels);
-  blade3ColorOrder->entry()->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).colorType);
-  blade4ColorOrder->entry()->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).colorType);
-  blade4UseRGB->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).useRGBWithWhite);
+  bladeDataPin->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).dataPin);
+  bladePixels->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).numPixels);
+  blade3ColorOrder->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).colorType);
+  blade4ColorOrder->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).colorType);
+  blade4UseRGB->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).useRGBWithWhite);
   
-  star1Color->entry()->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star1);
-  star1Resistance.num->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star1Resistance);
-  star2Color->entry()->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star2);
-  star2Resistance.num->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star2Resistance);
-  star3Color->entry()->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star3);
-  star3Resistance.num->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star3Resistance);
-  star4Color->entry()->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star4);
-  star4Resistance.num->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star4Resistance);
+  star1Color->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star1);
+  star1Resistance.num->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star1Resistance);
+  star2Color->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star2);
+  star2Resistance.num->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star2Resistance);
+  star3Color->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star3);
+  star3Resistance.num->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star3Resistance);
+  star4Color->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star4);
+  star4Resistance.num->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star4Resistance);
   
-  subBladeStart->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size() ? parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.at(lastSubBladeSelection).startPixel : 0);
-  subBladeEnd->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size() ? parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.at(lastSubBladeSelection).endPixel : 0);
-  subBladeUseStride->SetValue(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBladeWithStride);
+  subBladeStart->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size() ? bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.at(lastSubBladeSelection).startPixel : 0);
+  subBladeEnd->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size() ? bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.at(lastSubBladeSelection).endPixel : 0);
+  subBladeUseStride->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBladeWithStride);
 }
 void BladesPage::setEnabled() {
   removeBladeButton->Enable(bladeSelect->GetCount() > 1 && BD_HASSELECTION);
@@ -355,7 +363,7 @@ void BladesPage::setVisibility(){
 }
 void BladesPage::updateRanges() {
   bladePixels->SetRange(0, parent->generalPage->maxLEDs.num->GetValue());
-  const auto& blades = parent->bladeArrayPage->bladeArrays.at(bladeArray->entry()->GetSelection()).blades;
+  const auto& blades = bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).blades;
   if (subBladeSelect ->GetSelection() >= 0 && blades.at(bladeSelect->GetSelection()).isSubBlade) {
     subBladeStart->SetRange(0, blades.at(bladeSelect->GetSelection()).numPixels - 1);
     subBladeEnd->SetRange(blades.at(bladeSelect->GetSelection()).subBlades.at(subBladeSelect->GetSelection()).startPixel, blades.at(bladeSelect->GetSelection()).numPixels - 1);
@@ -363,20 +371,20 @@ void BladesPage::updateRanges() {
 }
 
 void BladesPage::addBlade() {
-  parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.push_back(BladeConfig());
+  bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.push_back(BladeConfig());
   update();
 }
 void BladesPage::addSubBlade() {
-  parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).isSubBlade = true;
-  parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.push_back(BladeConfig::subBladeInfo());
-  if (parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.size() <= 1) parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.push_back(BladeConfig::subBladeInfo());
+  bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).isSubBlade = true;
+  bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.push_back(BladeConfig::subBladeInfo());
+  if (bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.size() <= 1) bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.push_back(BladeConfig::subBladeInfo());
   update();
 }
 void BladesPage::removeBlade() {
   saveCurrent();
   
-  if (BD_HASSELECTION && parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 1) {
-    parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.erase(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.begin() + lastBladeSelection);
+  if (BD_HASSELECTION && bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 1) {
+    bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.erase(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.begin() + lastBladeSelection);
   }
 
   update();
@@ -385,10 +393,10 @@ void BladesPage::removeSubBlade() {
   saveCurrent();
 
   if (BD_SUBHASSELECTION) {
-    parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.erase(parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.begin() + lastSubBladeSelection);
-    if (parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.size() <= 1) {
-      parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.clear();
-      parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).isSubBlade = false;
+    bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.erase(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.begin() + lastSubBladeSelection);
+    if (bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.size() <= 1) {
+      bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.clear();
+      bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).isSubBlade = false;
     }
     lastSubBladeSelection = -1;
   }

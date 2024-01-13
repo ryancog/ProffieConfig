@@ -6,7 +6,7 @@
 #include "editor/pages/propspage.h"
 #include "editor/pages/bladespage.h"
 #include "editor/pages/presetspage.h"
-#include "editor/pages/bladearraypage.h"
+#include "editor/pages/bladearraydlg.h"
 
 #include <wx/event.h>
 #include <wx/gdicmn.h>
@@ -159,10 +159,10 @@ void Onboard::Overview::linkEditorEvents() {
       guideMenu->activeEditor->bladesPage->GetStaticBox()->FindWindow(id)->Enable(!disabled);
     }
   });
-  guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_UPDATE_UI, [&](wxUpdateUIEvent& event) {
+  guideMenu->activeEditor->bladesPage->bladeArrayDlg->Bind(wxEVT_UPDATE_UI, [&](wxUpdateUIEvent& event) {
     event.Skip();
     for (const auto& [ id, disabled ] : awarenessDisables) {
-      guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->FindWindow(id)->Enable(!disabled);
+      guideMenu->activeEditor->bladesPage->bladeArrayDlg->FindWindow(id)->Enable(!disabled);
     }
   });
 
@@ -509,7 +509,7 @@ void Onboard::Overview::linkEditorEvents() {
         awarenessDisables.at(BladeArrayPage::ID_BladeDetectEnable) = false;
 
       }, EditorWindow::ID_WindowSelect);
-  guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent& event) {
+  guideMenu->activeEditor->bladesPage->bladeArrayDlg->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
 
         generateNewPage("Configuration - Blade Detect",
@@ -533,7 +533,7 @@ void Onboard::Overview::linkEditorEvents() {
         awarenessDisables.at(BladeArrayPage::ID_BladeIDEnable) = false;
 
       }, BladeArrayPage::ID_BladeDetectEnable);
-  guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent& event) {
+  guideMenu->activeEditor->bladesPage->bladeArrayDlg->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
 
         generateNewPage("Configuration - Blade ID",
@@ -551,15 +551,15 @@ void Onboard::Overview::linkEditorEvents() {
                         "Switch the mode from \"Snapshot\" to \"External Pullup\" to continue."
                         );
         awarenessDisables.at(BladeArrayPage::ID_BladeIDEnable) = true;
-        guideMenu->activeEditor->bladeArrayPage->mode->entry()->Clear();
-        guideMenu->activeEditor->bladeArrayPage->mode->entry()->Append("Snapshot");
-        guideMenu->activeEditor->bladeArrayPage->mode->entry()->Append("External Pullup");
-        guideMenu->activeEditor->bladeArrayPage->mode->entry()->SetSelection(0);
+        guideMenu->activeEditor->bladesPage->bladeArrayDlg->mode->entry()->Clear();
+        guideMenu->activeEditor->bladesPage->bladeArrayDlg->mode->entry()->Append("Snapshot");
+        guideMenu->activeEditor->bladesPage->bladeArrayDlg->mode->entry()->Append("External Pullup");
+        guideMenu->activeEditor->bladesPage->bladeArrayDlg->mode->entry()->SetSelection(0);
 
       }, BladeArrayPage::ID_BladeIDEnable);
-  guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
+  guideMenu->activeEditor->bladesPage->bladeArrayDlg->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
-        if (guideMenu->activeEditor->bladeArrayPage->mode->entry()->GetSelection() != 1) {
+        if (guideMenu->activeEditor->bladesPage->bladeArrayDlg->mode->entry()->GetSelection() != 1) {
           hasRun = false;
           return;
         }
@@ -575,13 +575,13 @@ void Onboard::Overview::linkEditorEvents() {
                         "\n"
                         "Select \"Bridged Pullup\" mode to continue."
                         );
-        guideMenu->activeEditor->bladeArrayPage->mode->entry()->Append("Bridged Pullup");
+        guideMenu->activeEditor->bladesPage->bladeArrayDlg->mode->entry()->Append("Bridged Pullup");
 
 
       }, BladeArrayPage::ID_BladeIDMode);
-  guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
+  guideMenu->activeEditor->bladesPage->bladeArrayDlg->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
-        if (guideMenu->activeEditor->bladeArrayPage->mode->entry()->GetSelection() != 2) {
+        if (guideMenu->activeEditor->bladesPage->bladeArrayDlg->mode->entry()->GetSelection() != 2) {
           hasRun = false;
           return;
         }
@@ -599,7 +599,7 @@ void Onboard::Overview::linkEditorEvents() {
         awarenessDisables.at(BladeArrayPage::ID_BladeIDPower) = false;
 
       }, BladeArrayPage::ID_BladeIDMode);
-  guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent& event) {
+  guideMenu->activeEditor->bladesPage->bladeArrayDlg->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
 
         generateNewPage("Configuration - Power on ID",
@@ -616,7 +616,7 @@ void Onboard::Overview::linkEditorEvents() {
         awarenessDisables.at(BladeArrayPage::ID_ContinuousScan) = false;
 
       }, BladeArrayPage::ID_BladeIDPower);
-  guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent& event) {
+  guideMenu->activeEditor->bladesPage->bladeArrayDlg->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
 
         generateNewPage("Configuration - Continuous Scanning",
@@ -634,7 +634,7 @@ void Onboard::Overview::linkEditorEvents() {
         awarenessDisables.at(BladeArrayPage::ID_AddArray) = false;
 
       }, BladeArrayPage::ID_ContinuousScan);
-  guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
+  guideMenu->activeEditor->bladesPage->bladeArrayDlg->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
 
         generateNewPage("Configuration - Blade Arrays",
@@ -657,9 +657,9 @@ void Onboard::Overview::linkEditorEvents() {
         awarenessDisables.at(BladeArrayPage::ID_BladeDetectEnable) = false;
         awarenessDisables.at(BladeArrayPage::ID_BladeIDEnable) = false;
 
-        guideMenu->activeEditor->bladeArrayPage->GetStaticBox()->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent& event) {
+        guideMenu->activeEditor->bladesPage->bladeArrayDlg->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent& event) {
           EVENT_PAGE_SETUP;
-          if (guideMenu->activeEditor->bladeArrayPage->enableDetect->GetValue() || guideMenu->activeEditor->bladeArrayPage->enableID->GetValue()) {
+          if (guideMenu->activeEditor->bladesPage->bladeArrayDlg->enableDetect->GetValue() || guideMenu->activeEditor->bladesPage->bladeArrayDlg->enableID->GetValue()) {
             hasRun = false;
             return;
           }
@@ -680,8 +680,8 @@ void Onboard::Overview::linkEditorEvents() {
           awarenessDisables.at(BladeArrayPage::ID_BladeIDEnable) = true;
           awarenessDisables.at(BladeArrayPage::ID_ContinuousScan) = true;
           awarenessDisables.at(BladeArrayPage::ID_BladeIDPower) = true;
-          guideMenu->activeEditor->bladeArrayPage->enableDetect->Disable();
-          guideMenu->activeEditor->bladeArrayPage->enableID->Disable();
+          guideMenu->activeEditor->bladesPage->bladeArrayDlg->enableDetect->Disable();
+          guideMenu->activeEditor->bladesPage->bladeArrayDlg->enableID->Disable();
 
           guideMenu->activeEditor->Bind(wxEVT_MENU, [&](wxCommandEvent& event) {
                 EVENT_PAGE_SETUP;
@@ -730,18 +730,20 @@ void Onboard::Overview::linkEditorEvents() {
                         );
         doneWithEditor = true;
 
+        guideMenu->activeEditor->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
+          EVENT_PAGE_SETUP;
+
+          generateNewPage("Finishing Up",
+
+                          "Once you've created/edited your configuration, the last thing to do is apply\n"
+                          "it to your Proffieboard. You can do that by pressing \"Refresh Boards\", selecting\n"
+                          "your board from the list (this will "
+                          );
+          guideMenu->refreshButton->Enable();
+
+        });
+
       }, EditorWindow::ID_ExportConfig);
-  guideMenu->activeEditor->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
-    EVENT_PAGE_SETUP;
-
-    generateNewPage("Finishing Up",
-
-                    "Once you've created/edited your configuration, the last thing to do is apply\n"
-                    "it to your Proffieboard. You can do that by pressing \"Refresh Boards\", selecting\n"
-                    "your board from the list (this will "
-                    );
-    guideMenu->refreshButton->Enable();
-  });
 }
 
 void Onboard::Overview::generateNewPage(const std::string& headerText, const std::string& bodyText) {

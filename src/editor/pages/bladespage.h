@@ -26,13 +26,13 @@
 
 #define BD_HASSELECTION (bladeSelect->GetSelection() != -1)
 #define BD_SUBHASSELECTION (subBladeSelect->GetSelection() != -1)
-#define BD_ISPIXEL3 (BD_HASSELECTION && parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_PIXELRGB)
-#define BD_ISPIXEL4 (BD_HASSELECTION && parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_PIXELRGBW)
+#define BD_ISPIXEL3 (BD_HASSELECTION && bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_PIXELRGB)
+#define BD_ISPIXEL4 (BD_HASSELECTION && bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_PIXELRGBW)
 #define BD_ISPIXEL (BD_ISPIXEL3 || BD_ISPIXEL4)
-#define BD_ISSTAR3 (BD_HASSELECTION && parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_TRISTAR)
-#define BD_ISSTAR4 (BD_HASSELECTION && parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_QUADSTAR)
+#define BD_ISSTAR3 (BD_HASSELECTION && bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_TRISTAR)
+#define BD_ISSTAR4 (BD_HASSELECTION && bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_QUADSTAR)
 #define BD_ISSTAR (BD_ISSTAR3 || BD_ISSTAR4)
-#define BD_ISSUB (BD_HASSELECTION && parent->bladeArrayPage->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].isSubBlade)
+#define BD_ISSUB (BD_HASSELECTION && bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].isSubBlade)
 #define BD_ISFIRST (!BD_ISSUB || (subBladeSelect->GetSelection() == 0))
 
 class BladesPage : public wxStaticBoxSizer {
@@ -48,6 +48,9 @@ public:
 
   int32_t lastBladeArraySelection{0};
 
+  BladeArrayPage* bladeArrayDlg{nullptr};
+
+  wxButton* bladeArrayButton{nullptr};
   pcComboBox* bladeArray{nullptr};
   wxListBox* bladeSelect{nullptr};
   wxListBox* subBladeSelect{nullptr};
@@ -88,6 +91,7 @@ public:
 
   enum {
     ID_BladeArray,
+    ID_OpenBladeArrays,
     ID_BladeSelect,
     ID_SubBladeSelect,
     ID_BladeType,

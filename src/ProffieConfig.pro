@@ -27,7 +27,7 @@ LIBS += $$system(wx-config --libs all)
 
 SOURCES += \
     editor/editorwindow.cpp \
-    editor/pages/bladearraypage.cpp \
+    editor/pages/bladearraydlg.cpp \
     editor/pages/propspage.cpp \
     main.cpp \
     core/appstate.cpp \
@@ -61,7 +61,7 @@ HEADERS += \
     core/utilities/threadrunner.h \
     core/utilities/progress.h \
     editor/editorwindow.h \
-    editor/pages/bladearraypage.h \
+    editor/pages/bladearraydlg.h \
     editor/pages/generalpage.h \
     editor/pages/presetspage.h \
     editor/pages/bladespage.h \

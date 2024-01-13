@@ -16,7 +16,7 @@
 #define BLADE_ID_MODE_EXTERNAL "External Pullup"
 #define BLADE_ID_MODE_BRIDGED  "Bridged Pullup"
 
-class BladeArrayPage : public wxStaticBoxSizer {
+class BladeArrayPage : public wxDialog {
 public:
   BladeArrayPage(EditorWindow*);
 
