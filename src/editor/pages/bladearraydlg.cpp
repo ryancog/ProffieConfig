@@ -303,7 +303,7 @@ void BladeArrayPage::update() {
     parent->presetsPage->update();
   }
 #ifdef __WXMSW__
-  GetStaticBox()->Refresh();
+  Refresh();
 #endif
 }
 
