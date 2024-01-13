@@ -7,7 +7,7 @@
 #include "editor/pages/generalpage.h"
 #include "editor/pages/presetspage.h"
 #include "editor/pages/propspage.h"
-#include "editor/pages/bladearraypage.h"
+#include "editor/pages/bladearraydlg.h"
 
 #include "core/config/settings.h"
 #include "core/config/configuration.h"
@@ -69,12 +69,10 @@ void EditorWindow::bindEvents() {
         propsPage->Show(windowSelect->entry()->GetValue() == "Prop File");
         bladesPage->Show(windowSelect->entry()->GetValue() == "Blade Arrays");
         presetsPage->Show(windowSelect->entry()->GetValue() == "Presets And Styles");
-        bladeArrayPage->Show(windowSelect->entry()->GetValue() == "Blade Awareness");
 
         //generalPage->update();
-        bladeArrayPage->update();
-        propsPage->update();
         bladesPage->update();
+        propsPage->update();
         presetsPage->update();
 
         FULLUPDATEWINDOW(this);
@@ -110,34 +108,30 @@ void EditorWindow::createPages() {
   sizer = new wxBoxSizer(wxVERTICAL);
 
   wxBoxSizer* options = new wxBoxSizer(wxHORIZONTAL);
-  windowSelect = new pcComboBox(this, ID_WindowSelect, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Blade Arrays", "Presets And Styles", "Blade Awareness"  /*, "Hardware"*/}), wxCB_READONLY | wxCB_DROPDOWN);
+  windowSelect = new pcComboBox(this, ID_WindowSelect, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Blade Arrays", "Presets And Styles"}), wxCB_READONLY | wxCB_DROPDOWN);
   options->Add(windowSelect, wxSizerFlags(0).Border(wxALL, 10));
 
   generalPage = new GeneralPage(this);
   propsPage = new PropsPage(this);
   presetsPage = new PresetsPage(this);
   bladesPage = new BladesPage(this);
-  bladeArrayPage = new BladeArrayPage(this);
 
   //generalPage->update();
   propsPage->update();
   presetsPage->update();
   bladesPage->update();
-  bladeArrayPage->update();
 
   propsPage->Show(false);
   bladesPage->Show(false);
   presetsPage->Show(false);
-  bladeArrayPage->Show(false);
 
   sizer->Add(options, wxSizerFlags(0).Expand());
   sizer->Add(generalPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
   sizer->Add(propsPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
   sizer->Add(presetsPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
   sizer->Add(bladesPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
-  sizer->Add(bladeArrayPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
-  SetSizerAndFit(sizer); // use the sizer for layout and set size and hints
+  SetSizerAndFit(sizer);
 }
 
 

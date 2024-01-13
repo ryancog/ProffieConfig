@@ -11,7 +11,7 @@
 #include "editor/pages/presetspage.h"
 #include "editor/pages/propspage.h"
 #include "editor/pages/bladespage.h"
-#include "editor/pages/bladearraypage.h"
+#include "editor/pages/bladearraydlg.h"
 #include "wx/event.h"
 
 #include <cstring>
@@ -22,7 +22,7 @@
 bool Configuration::outputConfig(const std::string& filePath, EditorWindow* editor) {
   editor->presetsPage->update();
   editor->bladesPage->update();
-  editor->bladeArrayPage->update();
+  editor->bladesPage->bladeArrayDlg->update();
 
   if (!runPreChecks(editor)) return false;
 
@@ -114,7 +114,7 @@ void Configuration::outputConfigPresets(std::ofstream& configOutput, EditorWindo
   configOutput << "#endif" << std::endl << std::endl;
 }
 void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput, EditorWindow* editor) {
-  for (const BladeArrayPage::BladeArray& bladeArray : editor->bladeArrayPage->bladeArrays) {
+  for (const BladeArrayPage::BladeArray& bladeArray : editor->bladesPage->bladeArrayDlg->bladeArrays) {
     configOutput << "Preset " << bladeArray.name << "[] = {" << std::endl;
     for (const PresetsPage::PresetConfig& preset : bladeArray.presets) {
       configOutput << "\t{ \"" << preset.dirs << "\", \"" << preset.track << "\"," << std::endl;
@@ -130,7 +130,7 @@ void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput, Edito
 }
 void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput, EditorWindow* editor) {
   configOutput << "BladeConfig blades[] = {" << std::endl;
-  for (const BladeArrayPage::BladeArray& bladeArray : editor->bladeArrayPage->bladeArrays) {
+  for (const BladeArrayPage::BladeArray& bladeArray : editor->bladesPage->bladeArrayDlg->bladeArrays) {
     configOutput << "\t{ " << (bladeArray.name == "no_blade" ? "NO_BLADE" : std::to_string(bladeArray.value)) << "," << std::endl;
     for (const BladesPage::BladeConfig& blade : bladeArray.blades) {
       if (blade.type == BD_PIXELRGB || blade.type == BD_PIXELRGBW) {
@@ -223,7 +223,7 @@ void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput, Edito
       }
     }
     configOutput << "\t\tCONFIGARRAY(" << bladeArray.name << "), \"" << bladeArray.name << "\"" << std::endl << "\t}";
-    if (&bladeArray != &editor->bladeArrayPage->bladeArrays[editor->bladeArrayPage->bladeArrays.size() - 1]) configOutput << ",";
+    if (&bladeArray != &editor->bladesPage->bladeArrayDlg->bladeArrays[editor->bladesPage->bladeArrayDlg->bladeArrays.size() - 1]) configOutput << ",";
     configOutput << std::endl;
   }
   configOutput << "};" << std::endl;
@@ -387,7 +387,7 @@ void Configuration::readConfigProp(std::ifstream& file, EditorWindow* editor) {
   }
 }
 void Configuration::readConfigPresets(std::ifstream& file, EditorWindow* editor) {
-  editor->bladeArrayPage->bladeArrays.clear();
+  editor->bladesPage->bladeArrayDlg->bladeArrays.clear();
   std::string element;
   while (!file.eof() && element != "#endif") {
     file >> element;
@@ -442,8 +442,8 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
 # define CHKSECT if (file.eof() || element == "#endif" || strstr(element.data(), "};") != NULL) return
 # define RUNTOSECTION element.clear(); while (element != "{") { file >> element; CHKSECT; }
 
-  editor->bladeArrayPage->bladeArrays.push_back(BladeArrayPage::BladeArray());
-  BladeArrayPage::BladeArray& bladeArray = editor->bladeArrayPage->bladeArrays.at(editor->bladeArrayPage->bladeArrays.size() - 1);
+  editor->bladesPage->bladeArrayDlg->bladeArrays.push_back(BladeArrayPage::BladeArray());
+  BladeArrayPage::BladeArray& bladeArray = editor->bladesPage->bladeArrayDlg->bladeArrays.at(editor->bladesPage->bladeArrayDlg->bladeArrays.size() - 1);
 
   char* tempData;
   std::string presetInfo;
@@ -646,7 +646,7 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
     if (bladeArray.blades.empty())
       bladeArray.blades.push_back(BladesPage::BladeConfig{});
 
-    for (BladeArrayPage::BladeArray& array : editor->bladeArrayPage->bladeArrays) {
+    for (BladeArrayPage::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) {
       if (array.name == bladeArray.name) {
         array.value = bladeArray.value;
         array.blades = bladeArray.blades;
@@ -659,7 +659,7 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
 }
 void Configuration::replaceStyles(const std::string& styleName, const std::string& styleFill, EditorWindow* editor) {
   std::string styleCheck;
-  for (PresetsPage::PresetConfig& preset : editor->bladeArrayPage->bladeArrays[editor->bladesPage->bladeArray->entry()->GetSelection()].presets) {
+  for (PresetsPage::PresetConfig& preset : editor->bladesPage->bladeArrayDlg->bladeArrays[editor->bladesPage->bladeArray->entry()->GetSelection()].presets) {
     for (wxString& style : preset.styles) {
       styleCheck = (style.find(styleName) == std::string::npos) ? style : style.substr(style.find(styleName));
       while (styleCheck != style) {
@@ -681,19 +681,19 @@ bool Configuration::runPreChecks(EditorWindow* editor) {
   wxQueueEvent(editor->GetEventHandler(), msgEvent); \
   return false;
 
-  if (editor->bladeArrayPage->enableDetect->GetValue() && editor->bladeArrayPage->detectPin.entry->GetValue() == "") {
+  if (editor->bladesPage->bladeArrayDlg->enableDetect->GetValue() && editor->bladesPage->bladeArrayDlg->detectPin.entry->GetValue() == "") {
     ERR("Blade Detect Pin cannot be empty.");
   }
-  if (editor->bladeArrayPage->enableID->GetValue() && editor->bladeArrayPage->IDPin.entry->GetValue() == "") {
+  if (editor->bladesPage->bladeArrayDlg->enableID->GetValue() && editor->bladesPage->bladeArrayDlg->IDPin.entry->GetValue() == "") {
     ERR("Blade ID Pin cannot be empty.");
   }
-  if ([&]() { for (const BladeArrayPage::BladeArray& array : editor->bladeArrayPage->bladeArrays) if (array.name == "") return true; return false; }()) {
+  if ([&]() { for (const BladeArrayPage::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) if (array.name == "") return true; return false; }()) {
     ERR("Blade Array Name cannot be empty.");
   }
-  if (editor->bladeArrayPage->enableID->GetValue() && editor->bladeArrayPage->mode->entry()->GetStringSelection() == BLADE_ID_MODE_BRIDGED && editor->bladeArrayPage->pullupPin.entry->GetValue() == "") {
+  if (editor->bladesPage->bladeArrayDlg->enableID->GetValue() && editor->bladesPage->bladeArrayDlg->mode->entry()->GetStringSelection() == BLADE_ID_MODE_BRIDGED && editor->bladesPage->bladeArrayDlg->pullupPin.entry->GetValue() == "") {
     ERR("Pullup Pin cannot be empty.");
   }
-  if (editor->bladeArrayPage->enableDetect->GetValue() && editor->bladeArrayPage->enableID->GetValue() && editor->bladeArrayPage->IDPin.entry->GetValue() == editor->bladeArrayPage->detectPin.entry->GetValue()) {
+  if (editor->bladesPage->bladeArrayDlg->enableDetect->GetValue() && editor->bladesPage->bladeArrayDlg->enableID->GetValue() && editor->bladesPage->bladeArrayDlg->IDPin.entry->GetValue() == editor->bladesPage->bladeArrayDlg->detectPin.entry->GetValue()) {
     ERR("Blade ID Pin and Blade Detect Pin cannot be the same.");
   }
   if ([&]() -> bool {
@@ -705,8 +705,8 @@ bool Configuration::runPreChecks(EditorWindow* editor) {
           return numBlades;
         };
 
-        int32_t lastNumBlades = getNumBlades(editor->bladeArrayPage->bladeArrays.at(0));
-        for (const BladeArrayPage::BladeArray& array : editor->bladeArrayPage->bladeArrays) {
+        int32_t lastNumBlades = getNumBlades(editor->bladesPage->bladeArrayDlg->bladeArrays.at(0));
+        for (const BladeArrayPage::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) {
           if (getNumBlades(array) != lastNumBlades) return true;
           lastNumBlades = getNumBlades(array);
         }
@@ -715,12 +715,13 @@ bool Configuration::runPreChecks(EditorWindow* editor) {
     ERR("All Blade Arrays must be the same length.\n\nPlease add/remove blades to make them equal");
   }
 
-  for (auto& bladeArray : editor->bladeArrayPage->bladeArrays) {
+  for (auto& bladeArray : editor->bladesPage->bladeArrayDlg->bladeArrays) {
     for (auto& preset : bladeArray.presets) {
       for (auto& style : preset.styles) {
         auto styleBegin = style.find("Style");
         auto styleEnd = style.find("()");
         if (styleBegin == std::string::npos || styleEnd == std::string::npos || styleBegin > styleEnd) {
+          if (style == "&style_pov" || style == "&style_charging") continue;
           ERR("Malformed bladestyle in preset \"" + preset.name + "\" in blade array \"" + bladeArray.name + "\"");
         }
       }

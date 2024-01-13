@@ -25,7 +25,6 @@ public:
   PropsPage* propsPage{nullptr};
   BladesPage* bladesPage{nullptr};
   PresetsPage* presetsPage{nullptr};
-  BladeArrayPage* bladeArrayPage{nullptr};
   Settings* settings{nullptr};
 
   wxBoxSizer* sizer{nullptr};
