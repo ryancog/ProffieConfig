@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include "core/utilities/misc.h"
 #include "editor/editorwindow.h"
+#include "ui/pcspinctrl.h"
+#include "ui/pcspinctrldouble.h"
 
 #include <wx/textctrl.h>
 #include <wx/sizer.h>
@@ -23,14 +24,14 @@ public:
   wxCheckBox* massStorage{nullptr};
   wxCheckBox* webUSB{nullptr};
 
-  Misc::numEntry buttons;
-  Misc::numEntry volume;
-  Misc::numEntryDouble clash;
-  Misc::numEntry pliTime;
-  Misc::numEntry idleTime;
-  Misc::numEntry motionTime;
+  pcSpinCtrl* buttons;
+  pcSpinCtrl* volume;
+  pcSpinCtrlDouble* clash;
+  pcSpinCtrl* pliTime;
+  pcSpinCtrl* idleTime;
+  pcSpinCtrl* motionTime;
 
-  Misc::numEntry maxLEDs;
+  pcSpinCtrl* maxLEDs;
 
   wxCheckBox* volumeSave{nullptr};
   wxCheckBox* presetSave{nullptr};

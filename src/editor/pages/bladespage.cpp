@@ -31,7 +31,8 @@ void BladesPage::bindEvents() {
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { bladeArrayDlg->ShowModal(); }, ID_OpenBladeArrays);
 
   GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { parent->presetsPage->bladeArray->entry()->SetSelection(bladeArray->entry()->GetSelection()); update(); }, ID_BladeArray);
-  GetStaticBox()->Bind(wxEVT_SPINCTRL, [&](wxCommandEvent&) { update(); });
+  GetStaticBox()->Bind(wxEVT_SPINCTRL, [&](wxCommandEvent& event) { update(); event.Skip(); });
+  GetStaticBox()->Bind(wxEVT_RADIOBUTTON, [&](wxCommandEvent& event) { update(); event.Skip(); });
   GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
         update();
         FULLUPDATEWINDOW(parent);
@@ -70,7 +71,9 @@ void BladesPage::createToolTips() {
   TIP(bladeDataPin, "The pin name or number used for WS281X data.\nSpecify custom pins by typing in this box.");
   TIP(bladePixels, "The number of pixels in your blade (total).");
 
-  TIP(subBladeUseStride, "See the POD Page \"SubBlade\" for more info.\nMost commonly used with \"KR Pixel Stick\" blades.");
+  TIP(useStandard, "Split apart data into continuous given sections.");
+  TIP(useStride, "Useful to KR style blades and other similar types where the data signal \"strides\" back and forth across sides.");
+  TIP(useZigZag, "Similar to using stride, but for blades in which the data is continuous, \"zig-zagging\" up and down the blade.");
   TIP(subBladeStart, "The starting pixel number for the current Sub-Blade.\nThis number starts at 0.");
   TIP(subBladeStart, "The ending pixel number for the current Sub-Blade.\nThis number should not exceed the \"Number of Pixels\" in the blade.");
 
@@ -79,10 +82,10 @@ void BladesPage::createToolTips() {
   TIP(star2Color, "The color of the second LED on the star.\nCorresponds to the second-selected power pin.");
   TIP(star3Color, "The color of the third LED on the star.\nCorresponds to the third-selected power pin.");
   TIP(star4Color, "The color of the fourth LED on the star.\nCorresponds to the fourth-selected power pin.");
-  TIP(star1Resistance.num, "The value of the resistor placed in series with this star.");
-  TIP(star2Resistance.num, "The value of the resistor placed in series with this star.");
-  TIP(star3Resistance.num, "The value of the resistor placed in series with this star.");
-  TIP(star4Resistance.num, "The value of the resistor placed in series with this star.");
+  TIP(star1Resistance, "The value of the resistor placed in series with this star.");
+  TIP(star2Resistance, "The value of the resistor placed in series with this star.");
+  TIP(star3Resistance, "The value of the resistor placed in series with this star.");
+  TIP(star4Resistance, "The value of the resistor placed in series with this star.");
 }
 
 wxBoxSizer* BladesPage::createBladeSelect() {
@@ -96,26 +99,26 @@ wxBoxSizer* BladesPage::createBladeSelect() {
   return bladeSelectSizer;
 }
 wxBoxSizer* BladesPage::createBladeManager() {
-  wxBoxSizer* bladeManagerSizer = new wxBoxSizer( wxHORIZONTAL);
+  wxBoxSizer* bladeManagerSizer = new wxBoxSizer(wxHORIZONTAL);
 
-  wxBoxSizer* bladeSelectionSizer = new wxBoxSizer( wxVERTICAL);
-  wxStaticText* bladeText = new wxStaticText( GetStaticBox(), wxID_ANY, "Blades");
-  bladeSelect = new wxListBox( GetStaticBox(), ID_BladeSelect);
-  wxBoxSizer* bladeButtons = new wxBoxSizer( wxHORIZONTAL);
-  addBladeButton = new wxButton( GetStaticBox(), ID_AddBlade, "+", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
-  removeBladeButton = new wxButton( GetStaticBox(), ID_RemoveBlade, "-", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
+  wxBoxSizer* bladeSelectionSizer = new wxBoxSizer(wxVERTICAL);
+  wxStaticText* bladeText = new wxStaticText(GetStaticBox(), wxID_ANY, "Blades");
+  bladeSelect = new wxListBox(GetStaticBox(), ID_BladeSelect);
+  wxBoxSizer* bladeButtons = new wxBoxSizer(wxHORIZONTAL);
+  addBladeButton = new wxButton(GetStaticBox(), ID_AddBlade, "+", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
+  removeBladeButton = new wxButton(GetStaticBox(), ID_RemoveBlade, "-", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
   bladeButtons->Add(addBladeButton, wxSizerFlags(0).Border(wxRIGHT | wxTOP, 10));
   bladeButtons->Add(removeBladeButton, wxSizerFlags(0).Border(wxTOP, 10));
   bladeSelectionSizer->Add(bladeText, wxSizerFlags(0));
   bladeSelectionSizer->Add(bladeSelect, wxSizerFlags(1).Expand());
   bladeSelectionSizer->Add(bladeButtons, wxSizerFlags(0).Center());
 
-  wxBoxSizer* subBladeSelectionSizer = new wxBoxSizer( wxVERTICAL);
-  wxStaticText* subBladeText = new wxStaticText( GetStaticBox(), wxID_ANY, "SubBlades");
-  subBladeSelect = new wxListBox( GetStaticBox(), ID_SubBladeSelect, wxDefaultPosition, wxSize(100, -1));
-  wxBoxSizer* subBladeButtonSizer = new wxBoxSizer( wxHORIZONTAL);
-  addSubBladeButton = new wxButton( GetStaticBox(), ID_AddSubBlade, "+", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
-  removeSubBladeButton = new wxButton( GetStaticBox(), ID_RemoveSubBlade, "-", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
+  wxBoxSizer* subBladeSelectionSizer = new wxBoxSizer(wxVERTICAL);
+  wxStaticText* subBladeText = new wxStaticText(GetStaticBox(), wxID_ANY, "SubBlades");
+  subBladeSelect = new wxListBox(GetStaticBox(), ID_SubBladeSelect, wxDefaultPosition, wxSize(100, -1));
+  wxBoxSizer* subBladeButtonSizer = new wxBoxSizer(wxHORIZONTAL);
+  addSubBladeButton = new wxButton(GetStaticBox(), ID_AddSubBlade, "+", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
+  removeSubBladeButton = new wxButton(GetStaticBox(), ID_RemoveSubBlade, "-", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
   subBladeButtonSizer->Add(addSubBladeButton, wxSizerFlags(0).Border(wxRIGHT | wxTOP, 10));
   subBladeButtonSizer->Add(removeSubBladeButton, wxSizerFlags(0).Border(wxTOP, 10));
   subBladeSelectionSizer->Add(subBladeText, wxSizerFlags(0));
@@ -129,13 +132,13 @@ wxBoxSizer* BladesPage::createBladeManager() {
 }
 wxBoxSizer* BladesPage::createBladeSetup() {
   wxBoxSizer* bladeSetup = new wxBoxSizer(wxVERTICAL);
-  bladeType = new pcComboBox( GetStaticBox(), ID_BladeType, "Blade Type", wxDefaultPosition, wxDefaultSize, Misc::createEntries({BD_PIXELRGB, BD_PIXELRGBW, BD_TRISTAR, BD_QUADSTAR, BD_SINGLELED}), wxCB_READONLY);
-  usePowerPin1 = new wxCheckBox( GetStaticBox(), wxID_ANY, "Use Power Pin 1");
-  usePowerPin2 = new wxCheckBox( GetStaticBox(), wxID_ANY, "Use Power Pin 2");
-  usePowerPin3 = new wxCheckBox( GetStaticBox(), wxID_ANY, "Use Power Pin 3");
-  usePowerPin4 = new wxCheckBox( GetStaticBox(), wxID_ANY, "Use Power Pin 4");
-  usePowerPin5 = new wxCheckBox( GetStaticBox(), wxID_ANY, "Use Power Pin 5");
-  usePowerPin6 = new wxCheckBox( GetStaticBox(), wxID_ANY, "Use Power Pin 6");
+  bladeType = new pcComboBox(GetStaticBox(), ID_BladeType, "Blade Type", wxDefaultPosition, wxDefaultSize, Misc::createEntries({BD_PIXELRGB, BD_PIXELRGBW, BD_TRISTAR, BD_QUADSTAR, BD_SINGLELED}), wxCB_READONLY);
+  usePowerPin1 = new wxCheckBox(GetStaticBox(), wxID_ANY, "Use Power Pin 1");
+  usePowerPin2 = new wxCheckBox(GetStaticBox(), wxID_ANY, "Use Power Pin 2");
+  usePowerPin3 = new wxCheckBox(GetStaticBox(), wxID_ANY, "Use Power Pin 3");
+  usePowerPin4 = new wxCheckBox(GetStaticBox(), wxID_ANY, "Use Power Pin 4");
+  usePowerPin5 = new wxCheckBox(GetStaticBox(), wxID_ANY, "Use Power Pin 5");
+  usePowerPin6 = new wxCheckBox(GetStaticBox(), wxID_ANY, "Use Power Pin 6");
   bladeSetup->Add(bladeType, MENUITEMFLAGS);
   bladeSetup->Add(usePowerPin1, MENUITEMFLAGS);
   bladeSetup->Add(usePowerPin2, MENUITEMFLAGS);
@@ -147,48 +150,47 @@ wxBoxSizer* BladesPage::createBladeSetup() {
   return bladeSetup;
 }
 wxBoxSizer* BladesPage::createBladeSettings() {
-  wxWrapSizer* bladeSettings = new wxWrapSizer( wxVERTICAL);
-  wxBoxSizer* bladeColor = new wxBoxSizer( wxVERTICAL);
-  blade3ColorOrder = new pcComboBox( GetStaticBox(), wxID_ANY, "Color Order", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"BGR", "BRG", "GBR", "GRB", "RBG", "RGB"}), wxCB_READONLY);
-  blade4ColorOrder = new pcComboBox( GetStaticBox(), wxID_ANY, "Color Order", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"BGRW", "BRGW", "GBRW", "GRBW", "RBGW", "RGBW", "WBGR", "WBRG", "WGBR", "WGRB", "WRBG", "WRGB"}), wxCB_READONLY);
+  wxWrapSizer* bladeSettings = new wxWrapSizer(wxVERTICAL);
+  wxBoxSizer* bladeColor = new wxBoxSizer(wxVERTICAL);
+  blade3ColorOrder = new pcComboBox(GetStaticBox(), wxID_ANY, "Color Order", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"BGR", "BRG", "GBR", "GRB", "RBG", "RGB"}), wxCB_READONLY);
+  blade4ColorOrder = new pcComboBox(GetStaticBox(), wxID_ANY, "Color Order", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"BGRW", "BRGW", "GBRW", "GRBW", "RBGW", "RGBW", "WBGR", "WBRG", "WGBR", "WGRB", "WRBG", "WRGB"}), wxCB_READONLY);
   bladeColor->Add(blade3ColorOrder, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
   bladeColor->Add(blade4ColorOrder, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 
-  blade4UseRGB = new wxCheckBox( GetStaticBox(), wxID_ANY, "Use RGB with White");
-  bladeDataPin = new pcComboBox( GetStaticBox(), wxID_ANY, "Blade Data Pin", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"bladePin", "blade2Pin", "blade3Pin", "blade4Pin"}));
-  bladePixelsLabel = new wxStaticText( GetStaticBox(), wxID_ANY, "Number of Pixels");
-  bladePixels = new wxSpinCtrl( GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0, 144, 0);
+  blade4UseRGB = new wxCheckBox(GetStaticBox(), wxID_ANY, "Use RGB with White");
+  bladeDataPin = new pcComboBox(GetStaticBox(), wxID_ANY, "Blade Data Pin", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"bladePin", "blade2Pin", "blade3Pin", "blade4Pin"}));
+  bladePixelsLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Number of Pixels");
+  bladePixels = new pcSpinCtrl(GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0, 144, 0);
 
-  wxBoxSizer* star1 = new wxBoxSizer( wxVERTICAL);
-  star1Color = new pcComboBox( GetStaticBox(), wxID_ANY, "LED 1 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), wxCB_READONLY);
-  star1Resistance = Misc::createNumEntry(this->GetStaticBox(), "Resistance", wxID_ANY, 0, 10000, 500);
+  wxBoxSizer* star1 = new wxBoxSizer(wxVERTICAL);
+  star1Color = new pcComboBox(GetStaticBox(), wxID_ANY, "LED 1 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), wxCB_READONLY);
+  star1Resistance = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "Resistance", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
   star1->Add(star1Color, MENUITEMFLAGS);
-  star1->Add(star1Resistance.box, MENUITEMFLAGS);
+  star1->Add(star1Resistance, MENUITEMFLAGS);
 
-  wxBoxSizer* star2 = new wxBoxSizer( wxVERTICAL);
-  star2Color = new pcComboBox( GetStaticBox(), wxID_ANY, "LED 2 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), wxCB_READONLY);
-  star2Resistance = Misc::createNumEntry(this->GetStaticBox(), "Resistance", wxID_ANY, 0, 10000, 500);
+  wxBoxSizer* star2 = new wxBoxSizer(wxVERTICAL);
+  star2Color = new pcComboBox(GetStaticBox(), wxID_ANY, "LED 2 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), wxCB_READONLY);
+  star2Resistance = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "Resistance", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
   star2->Add(star2Color, MENUITEMFLAGS);
-  star2->Add(star2Resistance.box, MENUITEMFLAGS);
+  star2->Add(star2Resistance, MENUITEMFLAGS);
 
-  wxBoxSizer* star3 = new wxBoxSizer( wxVERTICAL);
-  star3Color = new pcComboBox( GetStaticBox(), wxID_ANY, "LED 3 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), wxCB_READONLY);
-  star3Resistance = Misc::createNumEntry(this->GetStaticBox(), "Resistance", wxID_ANY, 0, 10000, 500);
+  wxBoxSizer* star3 = new wxBoxSizer(wxVERTICAL);
+  star3Color = new pcComboBox(GetStaticBox(), wxID_ANY, "LED 3 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), wxCB_READONLY);
+  star3Resistance = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "Resistance", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
   star3->Add(star3Color, MENUITEMFLAGS);
-  star3->Add(star3Resistance.box, MENUITEMFLAGS);
+  star3->Add(star3Resistance, MENUITEMFLAGS);
 
-  wxBoxSizer* star4 = new wxBoxSizer( wxVERTICAL);
-  star4Color = new pcComboBox( GetStaticBox(), wxID_ANY, "LED 4 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), wxCB_READONLY);
-  star4Resistance = Misc::createNumEntry(this->GetStaticBox(), "Resistance", wxID_ANY, 0, 10000, 500);
+  wxBoxSizer* star4 = new wxBoxSizer(wxVERTICAL);
+  star4Color = new pcComboBox(GetStaticBox(), wxID_ANY, "LED 4 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), wxCB_READONLY);
+  star4Resistance = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "Resistance", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
   star4->Add(star4Color, MENUITEMFLAGS);
-  star4->Add(star4Resistance.box, MENUITEMFLAGS);
+  star4->Add(star4Resistance, MENUITEMFLAGS);
 
-  subBladeUseStride = new wxCheckBox( GetStaticBox(), wxID_ANY, "Use Stride for SubBlade");
-  subBladeStartLabel = new wxStaticText( GetStaticBox(), wxID_ANY, "SubBlade Start");
-  subBladeStart = new wxSpinCtrl( GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0, 144, 0);
-  subBladeEndLabel = new wxStaticText( GetStaticBox(), wxID_ANY, "SubBlade End");
-  subBladeEnd = new wxSpinCtrl( GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0, 144, 0);
-  //bladeID
+  useStandard = new wxRadioButton(GetStaticBox(), wxID_ANY, "Standard SubBlade", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+  useStride   = new wxRadioButton(GetStaticBox(), wxID_ANY, "Stride SubBlade");
+  useZigZag   = new wxRadioButton(GetStaticBox(), wxID_ANY, "ZigZag SubBlade");
+  subBladeStart = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "SubBlade Start", wxDefaultPosition, wxDefaultSize, 0, 0, 144, 0);
+  subBladeEnd   = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "SubBlade End", wxDefaultPosition, wxDefaultSize, 0, 0, 144, 0);
 
   bladeSettings->Add(bladeColor);
   bladeSettings->Add(blade4UseRGB, MENUITEMFLAGS);
@@ -200,10 +202,10 @@ wxBoxSizer* BladesPage::createBladeSettings() {
   bladeSettings->Add(bladePixelsLabel, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10));
   bladeSettings->Add(bladePixels, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 
-  bladeSettings->Add(subBladeUseStride, MENUITEMFLAGS);
-  bladeSettings->Add(subBladeStartLabel, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10));
+  bladeSettings->Add(useStandard, MENUITEMFLAGS);
+  bladeSettings->Add(useStride, MENUITEMFLAGS);
+  bladeSettings->Add(useZigZag, MENUITEMFLAGS);
   bladeSettings->Add(subBladeStart, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
-  bladeSettings->Add(subBladeEndLabel, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10));
   bladeSettings->Add(subBladeEnd, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 
   return bladeSettings;
@@ -238,24 +240,25 @@ void BladesPage::saveCurrent() {
   bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).usePowerPin6 = usePowerPin6->GetValue();
   
   bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).dataPin = bladeDataPin->entry()->GetValue();
-  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).numPixels = bladePixels->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).numPixels = bladePixels->entry()->GetValue();
   bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).colorType = bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).type == BD_PIXELRGB ? blade3ColorOrder->entry()->GetValue() : blade4ColorOrder->entry()->GetValue();
   bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).useRGBWithWhite = blade4UseRGB->GetValue();
   
   bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star1 = star1Color->entry()->GetValue();
-  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star1Resistance = star1Resistance.num->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star1Resistance = star1Resistance->entry()->GetValue();
   bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star2 = star2Color->entry()->GetValue();
-  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star2Resistance = star2Resistance.num->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star2Resistance = star2Resistance->entry()->GetValue();
   bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star3 = star3Color->entry()->GetValue();
-  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star3Resistance = star3Resistance.num->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star3Resistance = star3Resistance->entry()->GetValue();
   bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star4 = star4Color->entry()->GetValue();
-  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star4Resistance = star4Resistance.num->GetValue();
+  bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection).Star4Resistance = star4Resistance->entry()->GetValue();
   
   if (lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.size()) {
-    bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.at(lastSubBladeSelection).startPixel = subBladeStart->GetValue();
-    bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.at(lastSubBladeSelection).endPixel = subBladeEnd->GetValue();
+    bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.at(lastSubBladeSelection).startPixel = subBladeStart->entry()->GetValue();
+    bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.at(lastSubBladeSelection).endPixel = subBladeEnd->entry()->GetValue();
   }
-  bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBladeWithStride = subBladeUseStride->GetValue();
+  bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).useStride = useStride->GetValue();
+  bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).useZigZag = useZigZag->GetValue();
 
   // Check if SubBlades need to be removed (changed from WX281X)
   if (BD_HASSELECTION && lastBladeSelection == bladeSelect->GetSelection() && !BD_ISPIXEL) {
@@ -302,23 +305,24 @@ void BladesPage::loadSettings() {
   usePowerPin6->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).usePowerPin6);
   
   bladeDataPin->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).dataPin);
-  bladePixels->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).numPixels);
+  bladePixels->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).numPixels);
   blade3ColorOrder->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).colorType);
   blade4ColorOrder->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).colorType);
   blade4UseRGB->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).useRGBWithWhite);
   
   star1Color->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star1);
-  star1Resistance.num->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star1Resistance);
+  star1Resistance->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star1Resistance);
   star2Color->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star2);
-  star2Resistance.num->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star2Resistance);
+  star2Resistance->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star2Resistance);
   star3Color->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star3);
-  star3Resistance.num->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star3Resistance);
+  star3Resistance->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star3Resistance);
   star4Color->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star4);
-  star4Resistance.num->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star4Resistance);
+  star4Resistance->entry()->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).Star4Resistance);
   
-  subBladeStart->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size() ? bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.at(lastSubBladeSelection).startPixel : 0);
-  subBladeEnd->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size() ? bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.at(lastSubBladeSelection).endPixel : 0);
-  subBladeUseStride->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBladeWithStride);
+  subBladeStart->entry()->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size() ? bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.at(lastSubBladeSelection).startPixel : 0);
+  subBladeEnd->entry()->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size() ? bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.at(lastSubBladeSelection).endPixel : 0);
+  useStride->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).useStride);
+  useZigZag->SetValue(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).useZigZag);
 }
 void BladesPage::setEnabled() {
   removeBladeButton->Enable(bladeSelect->GetCount() > 1 && BD_HASSELECTION);
@@ -343,30 +347,31 @@ void BladesPage::setVisibility(){
   bladePixels->Show(BD_ISPIXEL && BD_ISFIRST);
 
   star1Color->Show(BD_ISSTAR);
-  star1Resistance.box->Show(BD_ISSTAR);
-  star1Resistance.num->Enable(star1Color->entry()->GetStringSelection() != BD_NORESISTANCE);
+  star1Resistance->Show(BD_ISSTAR);
+  star1Resistance->entry()->Enable(star1Color->entry()->GetStringSelection() != BD_NORESISTANCE);
   star2Color->Show(BD_ISSTAR);
-  star2Resistance.box->Show(BD_ISSTAR);
-  star2Resistance.num->Enable(star2Color->entry()->GetStringSelection() != BD_NORESISTANCE);
+  star2Resistance->Show(BD_ISSTAR);
+  star2Resistance->entry()->Enable(star2Color->entry()->GetStringSelection() != BD_NORESISTANCE);
   star3Color->Show(BD_ISSTAR);
-  star3Resistance.box->Show(BD_ISSTAR);
-  star3Resistance.num->Enable(star3Color->entry()->GetStringSelection() != BD_NORESISTANCE);
+  star3Resistance->Show(BD_ISSTAR);
+  star3Resistance->entry()->Enable(star3Color->entry()->GetStringSelection() != BD_NORESISTANCE);
   star4Color->Show(BD_ISSTAR4);
-  star4Resistance.box->Show(BD_ISSTAR4);
-  star4Resistance.num->Enable(star4Color->entry()->GetStringSelection() != BD_NORESISTANCE);
+  star4Resistance->Show(BD_ISSTAR4);
+  star4Resistance->entry()->Enable(star4Color->entry()->GetStringSelection() != BD_NORESISTANCE);
 
-  subBladeUseStride->Show(BD_ISSUB && BD_ISFIRST);
-  subBladeStartLabel->Show(BD_SUBHASSELECTION);
-  subBladeStart->Show(BD_SUBHASSELECTION);
-  subBladeEndLabel->Show(BD_SUBHASSELECTION);
-  subBladeEnd->Show(BD_SUBHASSELECTION);
+  useStandard->Show(BD_ISSUB && BD_ISFIRST);
+  useStride->Show(BD_ISSUB && BD_ISFIRST);
+  useZigZag->Show(BD_ISSUB && BD_ISFIRST);
+  subBladeStart->Show(BD_SUBHASSELECTION && BD_ISSTNDRD);
+  subBladeEnd->Show(BD_SUBHASSELECTION && BD_ISSTNDRD);
 }
 void BladesPage::updateRanges() {
-  bladePixels->SetRange(0, parent->generalPage->maxLEDs.num->GetValue());
   const auto& blades = bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).blades;
+  bladePixels->entry()->SetRange(bladeSelect->GetSelection() >= 0 ? blades.at(bladeSelect->GetSelection()).subBlades.size() : 1, parent->generalPage->maxLEDs->entry()->GetValue());
+
   if (subBladeSelect ->GetSelection() >= 0 && blades.at(bladeSelect->GetSelection()).isSubBlade) {
-    subBladeStart->SetRange(0, blades.at(bladeSelect->GetSelection()).numPixels - 1);
-    subBladeEnd->SetRange(blades.at(bladeSelect->GetSelection()).subBlades.at(subBladeSelect->GetSelection()).startPixel, blades.at(bladeSelect->GetSelection()).numPixels - 1);
+    subBladeStart->entry()->SetRange(0, blades.at(bladeSelect->GetSelection()).numPixels - 1);
+    subBladeEnd->entry()->SetRange(blades.at(bladeSelect->GetSelection()).subBlades.at(subBladeSelect->GetSelection()).startPixel, blades.at(bladeSelect->GetSelection()).numPixels - 1);
   }
 }
 

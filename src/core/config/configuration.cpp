@@ -77,7 +77,7 @@ void Configuration::outputConfigTopGeneral(std::ofstream& configOutput, EditorWi
       configOutput << "#include \"proffieboard_v3_config.h\"" << std::endl;
   }
 
-  configOutput << "const unsigned int maxLedsPerStrip = " << editor->generalPage->maxLEDs.num->GetValue() << ";" << std::endl;
+  configOutput << "const unsigned int maxLedsPerStrip = " << editor->generalPage->maxLEDs->entry()->GetValue() << ";" << std::endl;
   configOutput << "#define ENABLE_AUDIO" << std::endl;
   configOutput << "#define ENABLE_WS2811" << std::endl;
   configOutput << "#define ENABLE_SD" << std::endl;
@@ -134,19 +134,8 @@ void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput, Edito
     configOutput << "\t{ " << (bladeArray.name == "no_blade" ? "NO_BLADE" : std::to_string(bladeArray.value)) << "," << std::endl;
     for (const BladesPage::BladeConfig& blade : bladeArray.blades) {
       if (blade.type == BD_PIXELRGB || blade.type == BD_PIXELRGBW) {
-        bool firstSub = true;
-        if (blade.isSubBlade) for (BladesPage::BladeConfig::subBladeInfo subBlade : blade.subBlades) {
-            if (blade.subBladeWithStride) configOutput << "\t\tSubBladeWithStride( ";
-            else /* if not with stride*/ configOutput << "\t\tSubBlade( ";
-            configOutput << subBlade.startPixel << ", " << subBlade.endPixel << ", ";
-            if (firstSub) {
-              genWS281X(configOutput, blade);
-              configOutput << ")," << std::endl;
-            } else {
-              configOutput << "NULL)," << std::endl;
-            }
-            firstSub = false;
-          } else {
+        if (blade.isSubBlade) genSubBlades(configOutput, blade);
+        else {
           configOutput << "\t\t";
           genWS281X(configOutput, blade);
           configOutput << "," << std::endl;
@@ -258,11 +247,40 @@ void Configuration::genWS281X(std::ofstream& configOutput, const BladesPage::Bla
   }
   configOutput << ">>()";
 };
+void Configuration::genSubBlades(std::ofstream& configOutput, const BladesPage::BladeConfig& blade) {
+  int32_t subNum{0};
+  for (const auto& subBlade : blade.subBlades) {
+    if (blade.useStride) {
+      configOutput << "\t\tSubBladeWithStride( ";
+      configOutput << subNum << ", ";
+      configOutput << blade.numPixels - blade.subBlades.size() + subNum << ", ";
+      configOutput << blade.subBlades.size() << ", ";
+    } else if (blade.useZigZag) {
+      configOutput << "\t\tSubBladeZZ( ";
+      configOutput << "0, ";
+      configOutput << blade.numPixels - 1 << ", ";
+      configOutput << blade.subBlades.size() << ", ";
+      configOutput << subNum << ", ";
+    } else {
+      configOutput << "\t\tSubBlade( ";
+      configOutput << subBlade.startPixel << ", " << subBlade.endPixel << ", ";
+    }
+
+    if (subNum == 0) {
+      genWS281X(configOutput, blade);
+      configOutput << ")," << std::endl;
+    } else {
+      configOutput << "NULL)," << std::endl;
+    }
+
+    subNum++;
+  }
+}
 void Configuration::outputConfigButtons(std::ofstream& configOutput, EditorWindow* editor) {
   configOutput << "#ifdef CONFIG_BUTTONS" << std::endl;
   configOutput << "Button PowerButton(BUTTON_POWER, powerButtonPin, \"pow\");" << std::endl;
-  if (editor->generalPage->buttons.num->GetValue() >= 2) configOutput << "Button AuxButton(BUTTON_AUX, auxPin, \"aux\");" << std::endl;
-  if (editor->generalPage->buttons.num->GetValue() == 3) configOutput << "Button Aux2Button(BUTTON_AUX2, aux2Pin, \"aux\");" << std::endl; // figure out aux2 syntax
+  if (editor->generalPage->buttons->entry()->GetValue() >= 2) configOutput << "Button AuxButton(BUTTON_AUX, auxPin, \"aux\");" << std::endl;
+  if (editor->generalPage->buttons->entry()->GetValue() == 3) configOutput << "Button Aux2Button(BUTTON_AUX2, aux2Pin, \"aux\");" << std::endl; // figure out aux2 syntax
   configOutput << "#endif" << std::endl << std::endl; // CONFIG_BUTTONS
 }
 
@@ -339,7 +357,7 @@ void Configuration::readConfigTop(std::ifstream& file, EditorWindow* editor) {
       getline(file, element);
       std::strtok(element.data(), "="); // unsigned int maxLedsPerStrip =
       element = std::strtok(nullptr, " ;");
-      editor->generalPage->maxLEDs.num->SetValue(std::stoi(element));
+      editor->generalPage->maxLEDs->entry()->SetValue(std::stoi(element));
     } else if (element == "#include" && !file.eof()) {
       file >> element;
       if (std::strstr(element.c_str(), "v1") != NULL) {
@@ -542,7 +560,8 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
       if (std::strstr(data.data(), "SubBlade") != nullptr) {
         if (std::strstr(data.data(), "NULL") == nullptr) { // Top Level SubBlade
           bladeArray.blades.push_back(BladesPage::BladeConfig());
-          if (std::strstr(data.data(), "WithStride")) bladeArray.blades[blade].subBladeWithStride = true;
+          if (std::strstr(data.data(), "WithStride")) bladeArray.blades.at(blade).useStride = true;
+          if (std::strstr(data.data(), "ZZ")) bladeArray.blades.at(blade).useZigZag = true;
         } else { // Lesser SubBlade
           blade--;
           tempNumBlades--;
@@ -681,19 +700,19 @@ bool Configuration::runPreChecks(EditorWindow* editor) {
   wxQueueEvent(editor->GetEventHandler(), msgEvent); \
   return false;
 
-  if (editor->bladesPage->bladeArrayDlg->enableDetect->GetValue() && editor->bladesPage->bladeArrayDlg->detectPin.entry->GetValue() == "") {
+  if (editor->bladesPage->bladeArrayDlg->enableDetect->GetValue() && editor->bladesPage->bladeArrayDlg->detectPin->entry()->GetValue() == "") {
     ERR("Blade Detect Pin cannot be empty.");
   }
-  if (editor->bladesPage->bladeArrayDlg->enableID->GetValue() && editor->bladesPage->bladeArrayDlg->IDPin.entry->GetValue() == "") {
+  if (editor->bladesPage->bladeArrayDlg->enableID->GetValue() && editor->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue() == "") {
     ERR("Blade ID Pin cannot be empty.");
   }
   if ([&]() { for (const BladeArrayPage::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) if (array.name == "") return true; return false; }()) {
     ERR("Blade Array Name cannot be empty.");
   }
-  if (editor->bladesPage->bladeArrayDlg->enableID->GetValue() && editor->bladesPage->bladeArrayDlg->mode->entry()->GetStringSelection() == BLADE_ID_MODE_BRIDGED && editor->bladesPage->bladeArrayDlg->pullupPin.entry->GetValue() == "") {
+  if (editor->bladesPage->bladeArrayDlg->enableID->GetValue() && editor->bladesPage->bladeArrayDlg->mode->entry()->GetStringSelection() == BLADE_ID_MODE_BRIDGED && editor->bladesPage->bladeArrayDlg->pullupPin->entry()->GetValue() == "") {
     ERR("Pullup Pin cannot be empty.");
   }
-  if (editor->bladesPage->bladeArrayDlg->enableDetect->GetValue() && editor->bladesPage->bladeArrayDlg->enableID->GetValue() && editor->bladesPage->bladeArrayDlg->IDPin.entry->GetValue() == editor->bladesPage->bladeArrayDlg->detectPin.entry->GetValue()) {
+  if (editor->bladesPage->bladeArrayDlg->enableDetect->GetValue() && editor->bladesPage->bladeArrayDlg->enableID->GetValue() && editor->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue() == editor->bladesPage->bladeArrayDlg->detectPin->entry()->GetValue()) {
     ERR("Blade ID Pin and Blade Detect Pin cannot be the same.");
   }
   if ([&]() -> bool {

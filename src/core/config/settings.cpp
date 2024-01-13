@@ -22,10 +22,10 @@ void Settings::linkDefines() {
 
   generalDefines = {
       // General
-      ENTRY("NUM_BLADES", -1,( wxSpinCtrl*)nullptr, CHECKER(){ return true; }),
-      ENTRY("NUM_BUTTONS", 2, parent->generalPage->buttons.num, CHECKER(){ return true; }),
-      ENTRY("VOLUME", 1500, parent->generalPage->volume.num, CHECKER(){ return true; }),
-      ENTRY("CLASH_THRESHOLD_G", 3.0, parent->generalPage->clash.num, CHECKER(){ return true; }),
+      ENTRY("NUM_BLADES", -1,( pcSpinCtrl*)nullptr, CHECKER(){ return true; }),
+      ENTRY("NUM_BUTTONS", 2, parent->generalPage->buttons, CHECKER(){ return true; }),
+      ENTRY("VOLUME", 1500, parent->generalPage->volume, CHECKER(){ return true; }),
+      ENTRY("CLASH_THRESHOLD_G", 3.0, parent->generalPage->clash, CHECKER(){ return true; }),
       ENTRY("SAVE_COLOR_CHANGE", true, parent->generalPage->colorSave),
       ENTRY("SAVE_PRESET", true, parent->generalPage->presetSave),
       ENTRY("SAVE_VOLUME", true, parent->generalPage->volumeSave),
@@ -39,15 +39,15 @@ void Settings::linkDefines() {
       ENTRY("DISABLE_DIAGNOSTIC_COMMANDS", true, parent->generalPage->disableDiagnosticCommands),
       ENTRY("ENABLE_DEVELOPER_COMMANDS", false, parent->generalPage->enableDeveloperCommands),
 
-      ENTRY("PLI_OFF_TIME", 2, parent->generalPage->pliTime.num, CHECKER(){ return true; }),
-      ENTRY("IDLE_OFF_TIME", 15, parent->generalPage->idleTime.num, CHECKER(){ return true; }),
-      ENTRY("MOTION_TIMEOUT", 10, parent->generalPage->motionTime.num, CHECKER(){ return true; }),
+      ENTRY("PLI_OFF_TIME", 2, parent->generalPage->pliTime, CHECKER(){ return true; }),
+      ENTRY("IDLE_OFF_TIME", 15, parent->generalPage->idleTime, CHECKER(){ return true; }),
+      ENTRY("MOTION_TIMEOUT", 10, parent->generalPage->motionTime, CHECKER(){ return true; }),
       
-      ENTRY("BLADE_DETECT_PIN", "", parent->bladesPage->bladeArrayDlg->detectPin.entry, CHECKER(){ return IDSETTING(enableDetect); }),
+      ENTRY("BLADE_DETECT_PIN", "", parent->bladesPage->bladeArrayDlg->detectPin, CHECKER(){ return IDSETTING(enableDetect); }),
       ENTRY("BLADE_ID_CLASS", "", parent->bladesPage->bladeArrayDlg->mode, CHECKER(){ return IDSETTING(enableID); }),
       ENTRY("ENABLE_POWER_FOR_ID", false, parent->bladesPage->bladeArrayDlg->enablePowerForID, CHECKER(def){ return IDSETTING(enableID) && def->getState(); }),
-      ENTRY("BLADE_ID_SCAN_MILLIS", 1000, parent->bladesPage->bladeArrayDlg->scanIDMillis.num, CHECKER(){ return IDSETTING(enableID) && IDSETTING(continuousScans); }),
-      ENTRY("BLADE_ID_TIMES", 10, parent->bladesPage->bladeArrayDlg->numIDTimes.num, CHECKER(){ return IDSETTING(enableID) && IDSETTING(continuousScans); }),
+      ENTRY("BLADE_ID_SCAN_MILLIS", 1000, parent->bladesPage->bladeArrayDlg->scanIDMillis, CHECKER(){ return IDSETTING(enableID) && IDSETTING(continuousScans); }),
+      ENTRY("BLADE_ID_TIMES", 10, parent->bladesPage->bladeArrayDlg->numIDTimes, CHECKER(){ return IDSETTING(enableID) && IDSETTING(continuousScans); }),
   };
 
 # undef ENTRY
@@ -77,7 +77,7 @@ void Settings::setCustomInputParsers() {
     if (key.first != def->getName()) return false;
     
     parent->bladesPage->bladeArrayDlg->enableDetect->SetValue(true);
-    parent->bladesPage->bladeArrayDlg->detectPin.entry->SetValue(key.second);
+    parent->bladesPage->bladeArrayDlg->detectPin->entry()->SetValue(key.second);
     return false;
   });
   generalDefines["BLADE_ID_CLASS"]->overrideParser([&](const ProffieDefine* def, const std::string& input) -> bool {
@@ -88,15 +88,15 @@ void Settings::setCustomInputParsers() {
     key.second = std::strtok(key.second.data(), "< ");
     if (key.second == "SnapshotBladeID") {
       parent->bladesPage->bladeArrayDlg->mode->entry()->SetValue(BLADE_ID_MODE_SNAPSHOT);
-      parent->bladesPage->bladeArrayDlg->IDPin.entry->SetValue(std::strtok(nullptr, "<> "));
+      parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(std::strtok(nullptr, "<> "));
     } else if (key.second == "ExternalPullupBladeID") {
       parent->bladesPage->bladeArrayDlg->mode->entry()->SetValue(BLADE_ID_MODE_EXTERNAL);
-      parent->bladesPage->bladeArrayDlg->IDPin.entry->SetValue(std::strtok(nullptr, "<, "));
-      parent->bladesPage->bladeArrayDlg->pullupResistance.num->SetValue(std::stod(std::strtok(nullptr, ",> ")));
+      parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(std::strtok(nullptr, "<, "));
+      parent->bladesPage->bladeArrayDlg->pullupResistance->entry()->SetValue(std::stod(std::strtok(nullptr, ",> ")));
     } else if (key.second == "BridgedPullupBladeID") {
       parent->bladesPage->bladeArrayDlg->mode->entry()->SetValue(BLADE_ID_MODE_BRIDGED);
-      parent->bladesPage->bladeArrayDlg->IDPin.entry->SetValue(std::strtok(nullptr, "<, "));
-      parent->bladesPage->bladeArrayDlg->pullupPin.entry->SetValue(std::strtok(nullptr, ",> "));
+      parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(std::strtok(nullptr, "<, "));
+      parent->bladesPage->bladeArrayDlg->pullupPin->entry()->SetValue(std::strtok(nullptr, ",> "));
     }
     return true;
   });
@@ -104,7 +104,7 @@ void Settings::setCustomInputParsers() {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
     
-    parent->bladesPage->bladeArrayDlg->scanIDMillis.num->SetValue(std::stoi(key.second));
+    parent->bladesPage->bladeArrayDlg->scanIDMillis->entry()->SetValue(std::stoi(key.second));
     parent->bladesPage->bladeArrayDlg->continuousScans->SetValue(true);
     return true;
   });
@@ -112,7 +112,7 @@ void Settings::setCustomInputParsers() {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
     
-    parent->bladesPage->bladeArrayDlg->numIDTimes.num->SetValue(std::stoi(key.second));
+    parent->bladesPage->bladeArrayDlg->numIDTimes->entry()->SetValue(std::stoi(key.second));
     parent->bladesPage->bladeArrayDlg->continuousScans->SetValue(true);
     return true;
   });
@@ -155,9 +155,9 @@ void Settings::setCustomOutputParsers() {
   generalDefines["BLADE_ID_CLASS"]->overrideOutput([&](const ProffieDefine* def) -> std::string {
     auto mode = parent->bladesPage->bladeArrayDlg->mode->entry()->GetValue();
     std::string returnVal = def->getName() + " ";
-    if (mode == BLADE_ID_MODE_SNAPSHOT) returnVal + "SnapshotBladeID<" + parent->bladesPage->bladeArrayDlg->IDPin.entry->GetValue() + ">";
-    else if (mode == BLADE_ID_MODE_BRIDGED) returnVal + "ExternalPullupBladeID<" + parent->bladesPage->bladeArrayDlg->IDPin.entry->GetValue() + ", " + parent->bladesPage->bladeArrayDlg->pullupResistance.num->GetTextValue() + ">";
-    else if (mode == BLADE_ID_MODE_EXTERNAL) returnVal + "BridgedPullupBladeID<" + parent->bladesPage->bladeArrayDlg->IDPin.entry->GetValue() + ", " + parent->bladesPage->bladeArrayDlg->pullupPin.entry->GetValue();
+    if (mode == BLADE_ID_MODE_SNAPSHOT) returnVal + "SnapshotBladeID<" + parent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue() + ">";
+    else if (mode == BLADE_ID_MODE_BRIDGED) returnVal + "ExternalPullupBladeID<" + parent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue() + ", " + parent->bladesPage->bladeArrayDlg->pullupResistance->entry()->GetTextValue() + ">";
+    else if (mode == BLADE_ID_MODE_EXTERNAL) returnVal + "BridgedPullupBladeID<" + parent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue() + ", " + parent->bladesPage->bladeArrayDlg->pullupPin->entry()->GetValue();
 
     return returnVal;
   });
@@ -195,11 +195,11 @@ void Settings::parseDefines(std::vector<std::string>& _defList) {
 
 int32_t Settings::ProffieDefine::getNum() const {
   if (type != Type::NUMERIC) return 0;
-  return const_cast<wxSpinCtrl*>(static_cast<const wxSpinCtrl*>(element))->GetValue();
+  return const_cast<pcSpinCtrl*>(static_cast<const pcSpinCtrl*>(element))->entry()->GetValue();
 }
 double Settings::ProffieDefine::getDec() const {
   if (type != Type::DECIMAL) return 0;
-  return const_cast<wxSpinCtrlDouble*>(static_cast<const wxSpinCtrlDouble*>(element))->GetValue();
+  return const_cast<pcSpinCtrlDouble*>(static_cast<const pcSpinCtrlDouble*>(element))->entry()->GetValue();
 }
 bool Settings::ProffieDefine::getState() const {
   if (type == Type::STATE) return const_cast<wxCheckBox*>(static_cast<const wxCheckBox*>(element))->GetValue();
@@ -214,9 +214,9 @@ std::string Settings::ProffieDefine::getString() const {
   return "";
 }
 
-Settings::ProffieDefine::ProffieDefine(std::string _name, int32_t _defaultValue, wxSpinCtrl* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
+Settings::ProffieDefine::ProffieDefine(std::string _name, int32_t _defaultValue, pcSpinCtrl* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
     type(Type::NUMERIC), looseChecking(_loose), defaultValue({ .num = _defaultValue }), identifier(_name), element(_element), checkOutput(_check) {}
-Settings::ProffieDefine::ProffieDefine(std::string _name, double _defaultValue, wxSpinCtrlDouble* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
+Settings::ProffieDefine::ProffieDefine(std::string _name, double _defaultValue, pcSpinCtrlDouble* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
     type(Type::DECIMAL), looseChecking(_loose), defaultValue({ .dec = _defaultValue }), identifier(_name), element(_element), checkOutput(_check) {}
 Settings::ProffieDefine::ProffieDefine(std::string _name, bool _defaultState, wxCheckBox* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
     type(Type::STATE), looseChecking(_loose), defaultValue({ .state = _defaultState }), identifier(_name), element(_element), checkOutput(_check) {}
@@ -224,7 +224,7 @@ Settings::ProffieDefine::ProffieDefine(std::string _name, bool _defaultState, wx
     type(Type::RADIO), looseChecking(_loose), defaultValue({ .state = _defaultState }), identifier(_name), element(_element), checkOutput(_check) {}
 Settings::ProffieDefine::ProffieDefine(std::string _name, wxString _defaultSelection, pcComboBox* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
     type(Type::COMBO), looseChecking(_loose), defaultValue({ .str = _defaultSelection.ToStdString().data() }), identifier(_name), element(_element), checkOutput(_check) {}
-Settings::ProffieDefine::ProffieDefine(std::string _name, wxString _defaultEntry, wxTextCtrl* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
+Settings::ProffieDefine::ProffieDefine(std::string _name, wxString _defaultEntry, pcTextCtrl* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
     type(Type::TEXT), looseChecking(_loose), defaultValue({ .str = _defaultEntry.ToStdString().data() }), identifier(_name), element(_element), checkOutput(_check) {}
 
 

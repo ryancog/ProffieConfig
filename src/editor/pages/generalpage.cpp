@@ -4,6 +4,7 @@
 #include "editor/pages/generalpage.h"
 
 #include "core/defines.h"
+#include "core/utilities/misc.h"
 
 #include <wx/textctrl.h>
 #include <wx/stattext.h>
@@ -29,13 +30,13 @@ void GeneralPage::createToolTips() {
   TIP(massStorage, "Enable to access the contents of your proffieboard's SD card via the USB connection.");
   TIP(webUSB, "Enable to access the ProffieOS Workbench via USB.\nSee the POD Page \"The ProffieOS Workbench\" for more info.");
 
-  TIP(buttons.num, "Number of buttons your saber has.\nPlease note not all prop files support all possible numbers of buttons, and controls will changed depending on how many buttons are specified.");
-  TIP(volume.num, "Maximum volume level.\n1500 is a good starting value for most speakers, and it is not recommended to go past 2000 unless you know what you are doing, as this can damage your speaker.");
-  TIP(clash.num, "Force required to trigger a clash effect.\nMeasured in Gs.");
-  TIP(pliTime.num, "Time since last activity before PLI goes to sleep.");
-  TIP(idleTime.num, "Time since last activity before accent LEDs go to sleep.");
-  TIP(motionTime.num, "Time since last activity before gesture controls are disabled.");
-  TIP(maxLEDs.num, "Maximum number of LEDs in a WS281X blade.\nThis value should not be changed unless you know what you are doing.\nConfigure the length of your blade in the \"Blade Arrays\" page.");
+  TIP(buttons->entry(), "Number of buttons your saber has.\nPlease note not all prop files support all possible numbers of buttons, and controls will changed depending on how many buttons are specified.");
+  TIP(volume->entry(), "Maximum volume level.\n1500 is a good starting value for most speakers, and it is not recommended to go past 2000 unless you know what you are doing, as this can damage your speaker.");
+  TIP(clash->entry(), "Force required to trigger a clash effect.\nMeasured in Gs.");
+  TIP(pliTime->entry(), "Time since last activity before PLI goes to sleep.");
+  TIP(idleTime->entry(), "Time since last activity before accent LEDs go to sleep.");
+  TIP(motionTime->entry(), "Time since last activity before gesture controls are disabled.");
+  TIP(maxLEDs->entry(), "Maximum number of LEDs in a WS281X blade.\nThis value should not be changed unless you know what you are doing.\nConfigure the length of your blade in the \"Blade Arrays\" page.");
 
   TIP(volumeSave, "Save the volume level between board restarts.");
   TIP(presetSave, "Save the currently-selected preset between board restarts.");
@@ -98,22 +99,22 @@ wxBoxSizer* GeneralPage::boolOptions(wxStaticBoxSizer* parent) {
 wxBoxSizer* GeneralPage::numOptions(wxStaticBoxSizer* parent) {
   wxBoxSizer* numOptions = new wxBoxSizer(wxVERTICAL);
 
-  buttons = Misc::createNumEntry(parent->GetStaticBox(), "Number of Buttons", wxID_ANY, 0, 3, 2);
-  volume = Misc::createNumEntry(parent->GetStaticBox(), "Max Volume", wxID_ANY, 0, 5000, 1500);
-  volume.num->SetIncrement(50);
-  clash = Misc::createNumEntryDouble(parent->GetStaticBox(), "Clash Threshold", wxID_ANY, 0.1, 5, 3);
-  pliTime = Misc::createNumEntry(parent->GetStaticBox(), "PLI Timeout", wxID_ANY, 1, 60, 2);
-  idleTime = Misc::createNumEntry(parent->GetStaticBox(), "Idle Timeout", wxID_ANY, 1, 60, 10);
-  motionTime = Misc::createNumEntry(parent->GetStaticBox(), "Motion Timeout", wxID_ANY, 1, 60, 15);
-  maxLEDs = Misc::createNumEntry(parent->GetStaticBox(), "WS281X Max LEDs", wxID_ANY, 0, 1024, 144);
+  buttons = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "Number of Buttons", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 3, 2, wxHORIZONTAL);
+  volume = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "Max Volume", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 5000, 1500, wxHORIZONTAL);
+  volume->entry()->SetIncrement(50);
+  clash = new pcSpinCtrlDouble(parent->GetStaticBox(), wxID_ANY, "Clash Threshold", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0.1, 5, 3, wxHORIZONTAL);
+  pliTime = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "PLI Timeout", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 60, 2, wxHORIZONTAL);
+  idleTime = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "Idle Timeout", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 60, 10, wxHORIZONTAL);
+  motionTime = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "Motion Timeout", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 60, 15, wxHORIZONTAL);
+  maxLEDs = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "WS281X Max LEDs", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 1024, 144, wxHORIZONTAL);
 
-  numOptions->Add(buttons.box, FIRSTITEMFLAGS);
-  numOptions->Add(volume.box, MENUITEMFLAGS);
-  numOptions->Add(clash.box, MENUITEMFLAGS);
-  numOptions->Add(pliTime.box, MENUITEMFLAGS);
-  numOptions->Add(idleTime.box, MENUITEMFLAGS);
-  numOptions->Add(motionTime.box, MENUITEMFLAGS);
-  numOptions->Add(maxLEDs.box, MENUITEMFLAGS);
+  numOptions->Add(buttons, FIRSTITEMFLAGS);
+  numOptions->Add(volume, MENUITEMFLAGS);
+  numOptions->Add(clash, MENUITEMFLAGS);
+  numOptions->Add(pliTime, MENUITEMFLAGS);
+  numOptions->Add(idleTime, MENUITEMFLAGS);
+  numOptions->Add(motionTime, MENUITEMFLAGS);
+  numOptions->Add(maxLEDs, MENUITEMFLAGS);
 
   return numOptions;
 }

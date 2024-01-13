@@ -63,6 +63,7 @@ private:
   static void outputConfigPresetsStyles(std::ofstream&, EditorWindow*);
   static void outputConfigPresetsBlades(std::ofstream&, EditorWindow*);
   static void genWS281X(std::ofstream&, const BladesPage::BladeConfig&);
+  static void genSubBlades(std::ofstream&, const BladesPage::BladeConfig&);
   static void outputConfigButtons(std::ofstream&, EditorWindow*);
 
   static void readConfigTop(std::ifstream&, EditorWindow*);

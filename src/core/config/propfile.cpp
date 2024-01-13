@@ -5,6 +5,8 @@
 
 #include "core/defines.h"
 #include "core/utilities/fileparse.h"
+#include "ui/pcspinctrl.h"
+#include "ui/pcspinctrldouble.h"
 
 #include <fstream>
 #include <iostream>
@@ -22,9 +24,9 @@ std::string PropFile::Setting::getOutput() const {
     case SettingType::OPTION:
       return static_cast<wxRadioButton*>(control)->GetValue() ? define : "";
     case SettingType::NUMERIC:
-      return define + " " + std::to_string(static_cast<wxSpinCtrl*>(control)->GetValue());
+      return define + " " + std::to_string(static_cast<pcSpinCtrl*>(control)->entry()->GetValue());
     case SettingType::DECIMAL:
-      return define + " " + std::to_string(static_cast<wxSpinCtrl*>(control)->GetValue());
+      return define + " " + std::to_string(static_cast<pcSpinCtrl*>(control)->entry()->GetValue());
   }
 
   return {};
@@ -38,10 +40,10 @@ void PropFile::Setting::enable(bool enable) const {
       static_cast<wxRadioButton*>(control)->Enable(enable);
       break;
     case PropFile::Setting::SettingType::NUMERIC:
-      static_cast<wxSpinCtrl*>(control)->Enable(enable);
+      static_cast<pcSpinCtrl*>(control)->Enable(enable);
       break;
     case PropFile::Setting::SettingType::DECIMAL:
-      static_cast<wxSpinCtrl*>(control)->Enable(enable);
+      static_cast<pcSpinCtrl*>(control)->Enable(enable);
       break;
 
   }
@@ -55,10 +57,10 @@ void PropFile::Setting::setValue(double value) const {
       static_cast<wxRadioButton*>(control)->SetValue(value);
       break;
     case SettingType::NUMERIC:
-      static_cast<wxSpinCtrl*>(control)->SetValue(value);
+      static_cast<pcSpinCtrl*>(control)->entry()->SetValue(value);
       break;
     case SettingType::DECIMAL:
-      static_cast<wxSpinCtrl*>(control)->SetValue(value);
+      static_cast<pcSpinCtrl*>(control)->entry()->SetValue(value);
       break;
   }
 }
@@ -370,18 +372,18 @@ bool PropFile::parseLayoutSection(std::vector<std::string>& section, wxSizer* si
     sizer->Add(static_cast<wxCheckBox*>(setting.control), ITEMBORDER);
   };
   auto createNumeric = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
-    auto entry = Misc::createNumEntry(parent, setting.name, wxID_ANY, setting.min, setting.max, setting.defaultVal);
-    setting.control = entry.num;
-    static_cast<wxSpinCtrl*>(setting.control)->SetIncrement(setting.increment);
-    static_cast<wxSpinCtrl*>(setting.control)->SetToolTip(new wxToolTip(setting.description));
-    sizer->Add(entry.box, ITEMBORDER);
+    auto entry = new pcSpinCtrl(parent, wxID_ANY, setting.name, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, setting.min, setting.max, setting.defaultVal);
+    setting.control = entry;
+    static_cast<pcSpinCtrl*>(setting.control)->entry()->SetIncrement(setting.increment);
+    static_cast<pcSpinCtrl*>(setting.control)->SetToolTip(new wxToolTip(setting.description));
+    sizer->Add(entry, ITEMBORDER);
   };
   auto createDecimal = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
-    auto entry = Misc::createNumEntryDouble(parent, setting.name, wxID_ANY, setting.min, setting.max, setting.defaultVal);
-    setting.control = entry.num;
-    static_cast<wxSpinCtrlDouble*>(setting.control)->SetIncrement(setting.increment);
-    static_cast<wxSpinCtrlDouble*>(setting.control)->SetToolTip(new wxToolTip(setting.description));
-    sizer->Add(entry.box, ITEMBORDER);
+    auto entry = new pcSpinCtrlDouble(parent, wxID_ANY, setting.name, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, setting.min, setting.max, setting.defaultVal);
+    setting.control = entry;
+    static_cast<pcSpinCtrlDouble*>(setting.control)->entry()->SetIncrement(setting.increment);
+    static_cast<pcSpinCtrlDouble*>(setting.control)->SetToolTip(new wxToolTip(setting.description));
+    sizer->Add(entry, ITEMBORDER);
   };
   auto createOption = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
     setting.control = new wxRadioButton(parent, wxID_ANY, setting.name);
