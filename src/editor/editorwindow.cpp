@@ -7,7 +7,7 @@
 #include "editor/pages/generalpage.h"
 #include "editor/pages/presetspage.h"
 #include "editor/pages/propspage.h"
-#include "editor/pages/bladearraydlg.h"
+#include "editor/dialogs/bladearraydlg.h"
 
 #include "core/config/settings.h"
 #include "core/config/configuration.h"

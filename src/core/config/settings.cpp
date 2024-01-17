@@ -3,9 +3,10 @@
 
 #include "core/config/settings.h"
 
+#include "core/config/configuration.h"
 #include "editor/editorwindow.h"
 #include "editor/pages/generalpage.h"
-#include "editor/pages/bladearraydlg.h"
+#include "editor/dialogs/bladearraydlg.h"
 
 #include <cstring>
 
@@ -21,34 +22,34 @@ void Settings::linkDefines() {
 # define IDSETTING(setting) parent->bladesPage->bladeArrayDlg->setting->GetValue()
 
   generalDefines = {
-      // General
-      ENTRY("NUM_BLADES", -1,( pcSpinCtrl*)nullptr, CHECKER(){ return true; }),
-      ENTRY("NUM_BUTTONS", 2, parent->generalPage->buttons, CHECKER(){ return true; }),
-      ENTRY("VOLUME", 1500, parent->generalPage->volume, CHECKER(){ return true; }),
-      ENTRY("CLASH_THRESHOLD_G", 3.0, parent->generalPage->clash, CHECKER(){ return true; }),
-      ENTRY("SAVE_COLOR_CHANGE", true, parent->generalPage->colorSave),
-      ENTRY("SAVE_PRESET", true, parent->generalPage->presetSave),
-      ENTRY("SAVE_VOLUME", true, parent->generalPage->volumeSave),
-      ENTRY("SAVE_STATE", false, (wxCheckBox*)nullptr, CHECKER() { return false; }),
+                    // General
+                    ENTRY("NUM_BLADES", -1,( pcSpinCtrl*)nullptr, CHECKER(){ return true; }),
+                    ENTRY("NUM_BUTTONS", 2, parent->generalPage->buttons, CHECKER(){ return true; }),
+                    ENTRY("VOLUME", 1500, parent->generalPage->volume, CHECKER(){ return true; }),
+                    ENTRY("CLASH_THRESHOLD_G", 3.0, parent->generalPage->clash, CHECKER(){ return true; }),
+                    ENTRY("SAVE_COLOR_CHANGE", true, parent->generalPage->colorSave),
+                    ENTRY("SAVE_PRESET", true, parent->generalPage->presetSave),
+                    ENTRY("SAVE_VOLUME", true, parent->generalPage->volumeSave),
+                    ENTRY("SAVE_STATE", false, (wxCheckBox*)nullptr, CHECKER(){ return false; }),
 
-      ENTRY("ENABLE_SSD1306", false, parent->generalPage->enableOLED),
+                    ENTRY("ENABLE_SSD1306", false, parent->generalPage->enableOLED),
 
-      ENTRY("DISABLE_COLOR_CHANGE", false, parent->generalPage->disableColor),
-      ENTRY("DISABLE_TALKIE", false, parent->generalPage->noTalkie),
-      ENTRY("DISABLE_BASIC_PARSER_STYLES", true, parent->generalPage->noBasicParsers),
-      ENTRY("DISABLE_DIAGNOSTIC_COMMANDS", true, parent->generalPage->disableDiagnosticCommands),
-      ENTRY("ENABLE_DEVELOPER_COMMANDS", false, parent->generalPage->enableDeveloperCommands),
+                    ENTRY("DISABLE_COLOR_CHANGE", false, parent->generalPage->disableColor),
+                    ENTRY("DISABLE_TALKIE", false, parent->generalPage->noTalkie),
+                    ENTRY("DISABLE_BASIC_PARSER_STYLES", true, parent->generalPage->noBasicParsers),
+                    ENTRY("DISABLE_DIAGNOSTIC_COMMANDS", true, parent->generalPage->disableDiagnosticCommands),
 
-      ENTRY("PLI_OFF_TIME", 2, parent->generalPage->pliTime, CHECKER(){ return true; }),
-      ENTRY("IDLE_OFF_TIME", 15, parent->generalPage->idleTime, CHECKER(){ return true; }),
-      ENTRY("MOTION_TIMEOUT", 10, parent->generalPage->motionTime, CHECKER(){ return true; }),
-      
-      ENTRY("BLADE_DETECT_PIN", "", parent->bladesPage->bladeArrayDlg->detectPin, CHECKER(){ return IDSETTING(enableDetect); }),
-      ENTRY("BLADE_ID_CLASS", "", parent->bladesPage->bladeArrayDlg->mode, CHECKER(){ return IDSETTING(enableID); }),
-      ENTRY("ENABLE_POWER_FOR_ID", false, parent->bladesPage->bladeArrayDlg->enablePowerForID, CHECKER(def){ return IDSETTING(enableID) && def->getState(); }),
-      ENTRY("BLADE_ID_SCAN_MILLIS", 1000, parent->bladesPage->bladeArrayDlg->scanIDMillis, CHECKER(){ return IDSETTING(enableID) && IDSETTING(continuousScans); }),
-      ENTRY("BLADE_ID_TIMES", 10, parent->bladesPage->bladeArrayDlg->numIDTimes, CHECKER(){ return IDSETTING(enableID) && IDSETTING(continuousScans); }),
-  };
+                    ENTRY("ORIENTATION", Configuration::Orientation.begin()->first, parent->generalPage->orientation, CHECKER(){ return true; }),
+                    ENTRY("PLI_OFF_TIME", 2, parent->generalPage->pliTime, CHECKER(){ return true; }),
+                    ENTRY("IDLE_OFF_TIME", 15, parent->generalPage->idleTime, CHECKER(){ return true; }),
+                    ENTRY("MOTION_TIMEOUT", 10, parent->generalPage->motionTime, CHECKER(){ return true; }),
+
+                    ENTRY("BLADE_DETECT_PIN", "", parent->bladesPage->bladeArrayDlg->detectPin, CHECKER(){ return IDSETTING(enableDetect); }),
+                    ENTRY("BLADE_ID_CLASS", "", parent->bladesPage->bladeArrayDlg->mode, CHECKER(){ return IDSETTING(enableID); }),
+                    ENTRY("ENABLE_POWER_FOR_ID", false, parent->bladesPage->bladeArrayDlg->enablePowerForID, CHECKER(def){ return IDSETTING(enableID) && def->getState(); }),
+                    ENTRY("BLADE_ID_SCAN_MILLIS", 1000, parent->bladesPage->bladeArrayDlg->scanIDMillis, CHECKER(){ return IDSETTING(enableID) && IDSETTING(continuousScans); }),
+                    ENTRY("BLADE_ID_TIMES", 10, parent->bladesPage->bladeArrayDlg->numIDTimes, CHECKER(){ return IDSETTING(enableID) && IDSETTING(continuousScans); }),
+                    };
 
 # undef ENTRY
 # undef CHECKER
@@ -72,13 +73,23 @@ void Settings::setCustomInputParsers() {
     parent->generalPage->volumeSave->SetValue(true);
     return true;
   });
+  generalDefines["ORIENTATION"]->overrideParser([&](const ProffieDefine* def, const std::string& input) -> bool {
+    auto key = ProffieDefine::parseKey(input);
+    if (key.first != def->getName()) return false;
+
+    parent->generalPage->orientation->entry()->SetValue(Configuration::findInVMap(Configuration::Orientation, key.second).first);
+    return true;
+  });
+  generalDefines["ORIENTATION"]->overrideOutput([&](const ProffieDefine* def) -> std::string {
+    return {def->getName() + " " + Configuration::findInVMap(Configuration::Orientation, def->getString()).second};
+  });
   generalDefines["BLADE_DETECT_PIN"]->overrideParser([&](const ProffieDefine* def, const std::string& input) -> bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
     
     parent->bladesPage->bladeArrayDlg->enableDetect->SetValue(true);
     parent->bladesPage->bladeArrayDlg->detectPin->entry()->SetValue(key.second);
-    return false;
+    return true;
   });
   generalDefines["BLADE_ID_CLASS"]->overrideParser([&](const ProffieDefine* def, const std::string& input) -> bool {
     auto key = ProffieDefine::parseKey(input);
@@ -188,6 +199,17 @@ void Settings::parseDefines(std::vector<std::string>& _defList) {
         _defList.erase(entry);
         break;
       }
+      auto key = ProffieDefine::parseKey(*entry);
+      if (
+        key.first == "ENABLE_AUDIO" ||
+        key.first == "ENABLE_WS2811" ||
+        key.first == "ENABLE_SD" ||
+        key.first == "ENABLE_MOTION" ||
+        key.first == "SHARED_POWER_PINS"
+        ) {
+        entry = _defList.erase(entry);
+        continue;
+      }
       entry++;
     }
   }
@@ -209,23 +231,23 @@ bool Settings::ProffieDefine::getState() const {
 }
 std::string Settings::ProffieDefine::getString() const {
   if (type == Type::TEXT) return const_cast<wxTextCtrl*>(static_cast<const wxTextCtrl*>(element))->GetValue().ToStdString();
-  if (type == Type::COMBO) return const_cast<wxTextCtrl*>(static_cast<const wxTextCtrl*>(element))->GetValue().ToStdString();
+  if (type == Type::COMBO) return const_cast<pcComboBox*>(static_cast<const pcComboBox*>(element))->entry()->GetValue().ToStdString();
 
   return "";
 }
 
 Settings::ProffieDefine::ProffieDefine(std::string _name, int32_t _defaultValue, pcSpinCtrl* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
-    type(Type::NUMERIC), looseChecking(_loose), defaultValue({ .num = _defaultValue }), identifier(_name), element(_element), checkOutput(_check) {}
+                                                                                                                                                                        type(Type::NUMERIC), looseChecking(_loose), defaultValue({ .num = _defaultValue }), identifier(_name), element(_element), checkOutput(_check) {}
 Settings::ProffieDefine::ProffieDefine(std::string _name, double _defaultValue, pcSpinCtrlDouble* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
-    type(Type::DECIMAL), looseChecking(_loose), defaultValue({ .dec = _defaultValue }), identifier(_name), element(_element), checkOutput(_check) {}
+                                                                                                                                                                             type(Type::DECIMAL), looseChecking(_loose), defaultValue({ .dec = _defaultValue }), identifier(_name), element(_element), checkOutput(_check) {}
 Settings::ProffieDefine::ProffieDefine(std::string _name, bool _defaultState, wxCheckBox* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
-    type(Type::STATE), looseChecking(_loose), defaultValue({ .state = _defaultState }), identifier(_name), element(_element), checkOutput(_check) {}
+                                                                                                                                                                     type(Type::STATE), looseChecking(_loose), defaultValue({ .state = _defaultState }), identifier(_name), element(_element), checkOutput(_check) {}
 Settings::ProffieDefine::ProffieDefine(std::string _name, bool _defaultState, wxRadioButton* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
-    type(Type::RADIO), looseChecking(_loose), defaultValue({ .state = _defaultState }), identifier(_name), element(_element), checkOutput(_check) {}
+                                                                                                                                                                        type(Type::RADIO), looseChecking(_loose), defaultValue({ .state = _defaultState }), identifier(_name), element(_element), checkOutput(_check) {}
 Settings::ProffieDefine::ProffieDefine(std::string _name, wxString _defaultSelection, pcComboBox* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
-    type(Type::COMBO), looseChecking(_loose), defaultValue({ .str = _defaultSelection.ToStdString().data() }), identifier(_name), element(_element), checkOutput(_check) {}
+                                                                                                                                                                             type(Type::COMBO), looseChecking(_loose), defaultValue({ .str = _defaultSelection.ToStdString().data() }), identifier(_name), element(_element), checkOutput(_check) {}
 Settings::ProffieDefine::ProffieDefine(std::string _name, wxString _defaultEntry, pcTextCtrl* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
-    type(Type::TEXT), looseChecking(_loose), defaultValue({ .str = _defaultEntry.ToStdString().data() }), identifier(_name), element(_element), checkOutput(_check) {}
+                                                                                                                                                                         type(Type::TEXT), looseChecking(_loose), defaultValue({ .str = _defaultEntry.ToStdString().data() }), identifier(_name), element(_element), checkOutput(_check) {}
 
 
 std::pair<std::string, std::string> Settings::ProffieDefine::parseKey(const std::string& _input) {

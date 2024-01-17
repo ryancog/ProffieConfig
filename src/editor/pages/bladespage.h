@@ -50,8 +50,8 @@ public:
   void removeSubBlade();
 
   int32_t lastBladeArraySelection{0};
-
-  BladeArrayPage* bladeArrayDlg{nullptr};
+  
+  BladeArrayDlg* bladeArrayDlg{nullptr};
 
   wxButton* bladeArrayButton{nullptr};
   pcComboBox* bladeArray{nullptr};
