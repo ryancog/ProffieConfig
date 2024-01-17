@@ -12,7 +12,7 @@ class GeneralPage;
 class PropsPage;
 class BladesPage;
 class PresetsPage;
-class BladeArrayPage;
+class BladeArrayDlg;
 class Settings;
 
 class EditorWindow : public wxFrame {

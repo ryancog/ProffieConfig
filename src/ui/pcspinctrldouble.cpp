@@ -13,7 +13,7 @@ pcSpinCtrlDouble::pcSpinCtrlDouble(wxWindow* _parent, int32_t _id, const wxStrin
     if (_orientation == wxHORIZONTAL) sizerFlags = sizerFlags.Center();
     sizer->Add(text(), sizerFlags);
   } else mText = nullptr;
-  sizer->Add(entry(), wxSizerFlags(0).Expand());
+  sizer->Add(entry(), wxSizerFlags(1).Expand());
 
   SetSizerAndFit(sizer);
 }

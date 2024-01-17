@@ -5,7 +5,7 @@
 
 #include "editor/editorwindow.h"
 #include "editor/pages/generalpage.h"
-#include "editor/pages/bladearraydlg.h"
+#include "editor/dialogs/bladearraydlg.h"
 #include "core/utilities/misc.h"
 #include "core/defines.h"
 #include "wx/gdicmn.h"
@@ -17,7 +17,7 @@
 #include <wx/tooltip.h>
 
 BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, ""), parent{static_cast<EditorWindow*>(window)} {
-  bladeArrayDlg = new BladeArrayPage(parent);
+  bladeArrayDlg = new BladeArrayDlg(parent);
 
   Add(createBladeSelect(), wxSizerFlags(0).Expand());
   Add(createBladeSetup(), wxSizerFlags(0));
@@ -272,7 +272,7 @@ void BladesPage::rebuildBladeArray() {
   lastBladeArraySelection = bladeArray->entry()->GetSelection();
 
   bladeArray->entry()->Clear();
-  for (BladeArrayPage::BladeArray& array : bladeArrayDlg->bladeArrays) {
+  for (BladeArrayDlg::BladeArray& array : bladeArrayDlg->bladeArrays) {
     bladeArray->entry()->Append(array.name);
   }
   if (lastBladeArraySelection >= 0 && lastBladeArraySelection < static_cast<int32_t>(bladeArray->entry()->GetCount())) bladeArray->entry()->SetSelection(lastBladeArraySelection);

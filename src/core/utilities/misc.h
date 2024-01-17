@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "core/config/configuration.h"
+
 #include <initializer_list>
 #include <wx/sizer.h>
 #include <wx/spinctrl.h>
@@ -22,8 +24,9 @@ public:
 
   static wxEventTypeTag<wxCommandEvent> EVT_MSGBOX;
 
-  static const wxArrayString createEntries(std::vector<wxString> list);
-  static const wxArrayString createEntries(std::initializer_list<wxString> list);
+  static const wxArrayString createEntries(const std::vector<wxString>& list);
+  static const wxArrayString createEntries(const std::initializer_list<wxString>& list);
+  static const wxArrayString createEntries(const Configuration::VMap& map);
 
 private:
   Misc();
