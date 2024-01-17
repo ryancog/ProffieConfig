@@ -18,7 +18,6 @@
 Onboard* Onboard::instance{nullptr};
 Onboard::Onboard() : wxFrame(nullptr, wxID_ANY, "ProffieConfig First-Time Setup", wxDefaultPosition, wxDefaultSize, wxSYSTEM_MENU | wxCAPTION | wxCLOSE_BOX) {
   auto sizer = new wxBoxSizer(wxVERTICAL);
-
   auto contentSizer = new wxBoxSizer(wxHORIZONTAL);
   auto icon = new wxStaticBitmap(this, wxID_ANY, wxBitmap(icon_xpm));
   contentSizer->Add(icon, wxSizerFlags(0).Border(wxRIGHT, 10));
@@ -32,11 +31,14 @@ Onboard::Onboard() : wxFrame(nullptr, wxID_ANY, "ProffieConfig First-Time Setup"
   contentSizer->Add(overviewPage, wxSizerFlags(1).Expand());
 
   auto buttonSizer = new wxBoxSizer(wxHORIZONTAL);
-  skip = new wxButton(this, ID_Skip, "Skip Introduction");
-  skip->Hide();
+  skipIntro = new wxButton(this, ID_SkipIntro, "Skip Introduction");
+  skipIntro->Hide();
+  skipInstall = new wxButton(this, ID_SkipInstall, "Skip Dependency Installation");
+  skipInstall->Hide();
   next = new wxButton(this, ID_Next, "Next >");
   cancel = new wxButton(this, ID_Cancel, "Cancel");
-  buttonSizer->Add(skip, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 10));
+  buttonSizer->Add(skipIntro, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 10));
+  buttonSizer->Add(skipInstall, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 10));
   buttonSizer->AddStretchSpacer();
   buttonSizer->Add(next, wxSizerFlags(0).Border(wxRIGHT | wxTOP | wxBOTTOM, 10));
   buttonSizer->Add(cancel, wxSizerFlags(0).Border(wxRIGHT | wxTOP | wxBOTTOM, 10));
@@ -73,45 +75,51 @@ void Onboard::bindEvents() {
   });
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Close(); }, ID_Cancel);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        if (wxMessageBox("Are you sure you want to skip the Introduction?\n"
-                         "\n"
-                         "The introduction covers all the basics and usage of ProffieConfig.\n"
-                         "You can return to it any time via \"File\"->\"Re-Run First-Time Setup\".",
+      if (wxMessageBox("Are you sure you want to skip the Introduction?\n"
+                       "\n"
+                       "The introduction covers all the basics and usage of ProffieConfig.\n"
+                       "You can return to it any time via \"File\"->\"Re-Run First-Time Setup\".",
 
-                         "Skip Introduction", wxYES_NO | wxNO_DEFAULT | wxICON_EXCLAMATION) == wxYES) {
-          wxPostEvent(GetEventHandler(), wxCommandEvent(wxEVT_BUTTON, ID_Next));
-        }
-      }, ID_Skip);
+                       "Skip Introduction", wxYES_NO | wxNO_DEFAULT | wxICON_EXCLAMATION) == wxYES) {
+        wxPostEvent(GetEventHandler(), wxCommandEvent(wxEVT_BUTTON, ID_Next));
+      }
+    }, ID_SkipIntro);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+      dependencyPage->completedInstall = true;
+      wxPostEvent(GetEventHandler(), wxCommandEvent(wxEVT_BUTTON, ID_Next));
+    }, ID_SkipInstall);
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
-        if (welcomePage->IsShown()) {
-          welcomePage->Hide();
-          dependencyPage->Show();
-        } else if (dependencyPage->IsShown()) {
-          if (!dependencyPage->completedInstall) dependencyInstall(event);
-          else {
-            dependencyPage->Hide();
-            overviewPage->Show();
-            overviewPage->prepare();
-          }
-        } else if (overviewPage->IsShown()) {
-          AppState::instance->firstRun = false;
-          AppState::instance->saveState();
-          Close(true);
+      if (welcomePage->IsShown()) {
+        welcomePage->Hide();
+        dependencyPage->Show();
+      } else if (dependencyPage->IsShown()) {
+        if (!dependencyPage->completedInstall) dependencyInstall(event);
+        else {
+          dependencyPage->Hide();
+          overviewPage->Show();
+          overviewPage->prepare();
         }
-        update();
-      }, ID_Next);
+      } else if (overviewPage->IsShown()) {
+        AppState::instance->firstRun = false;
+        AppState::instance->saveState();
+        Close(true);
+      }
+      update();
+    }, ID_Next);
 }
 
 void Onboard::update() {
   if (overviewPage->IsShown()) {
-    skip->Show();
+    skipIntro->Show();
     next->Enable(overviewPage->isDone);
     next->SetLabel("Finish");
-  }
-  else {
-    skip->Hide();
+  } else if (dependencyPage->IsShown() && !AppState::instance->firstRun) {
+    skipInstall->Show();
+  } else {
+    skipIntro->Hide();
+    skipInstall->Hide();
     next->Enable();
     next->SetLabel("Next >");
   }

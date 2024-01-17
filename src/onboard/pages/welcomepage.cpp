@@ -6,7 +6,6 @@ Onboard::Welcome::Welcome(wxWindow* parent) : wxWindow(parent, ID_Welcome) {
   auto sizer = new wxBoxSizer(wxVERTICAL);
 
   auto welcomeText = createHeader(this, "Welcome to ProffieConfig " VERSION "!");
-  auto createByText = new wxStaticText(this, wxID_ANY, "Created by Ryryog25");
 
   auto infoText = new wxStaticText(this, wxID_ANY,
                                    "ProffieConfig is an All-in-One utility for managing your Proffieboard.\n"
@@ -18,7 +17,6 @@ Onboard::Welcome::Welcome(wxWindow* parent) : wxWindow(parent, ID_Welcome) {
                                    , wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
 
   sizer->Add(welcomeText, wxSizerFlags(0).Center());
-  sizer->Add(createByText, wxSizerFlags(0).Center());
   sizer->AddSpacer(40);
   sizer->Add(infoText, wxSizerFlags(0).Center());
   SetSizerAndFit(sizer);

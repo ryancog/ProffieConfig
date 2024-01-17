@@ -6,7 +6,7 @@
 #include "editor/editorwindow.h"
 #include "mainmenu/mainmenu.h"
 #include "editor/pages/bladespage.h"
-#include "editor/pages/bladearraydlg.h"
+#include "editor/dialogs/bladearraydlg.h"
 
 #include <unordered_map>
 #include <wx/wizard.h>
@@ -33,7 +33,8 @@ private:
 
   wxButton* next{nullptr};
   wxButton* cancel{nullptr};
-  wxButton* skip{nullptr};
+  wxButton* skipIntro{nullptr};
+  wxButton* skipInstall{nullptr};
 
   Welcome* welcomePage{nullptr};
   DependencyInstall* dependencyPage{nullptr};
@@ -47,7 +48,8 @@ private:
     ID_Back,
     ID_Next,
     ID_Cancel,
-    ID_Skip,
+    ID_SkipIntro,
+    ID_SkipInstall,
 
     ID_PageButton,
   };
@@ -98,15 +100,6 @@ public:
       { BladesPage::ID_BladeType, true },
       { BladesPage::ID_RemoveSubBlade, true },
       { BladesPage::ID_AddSubBlade, true }
-  };
-  std::unordered_map<int32_t, bool> awarenessDisables {
-      { BladeArrayPage::ID_BladeIDEnable, true },
-      { BladeArrayPage::ID_BladeDetectEnable, true},
-      { BladeArrayPage::ID_BladeArray, true },
-      { BladeArrayPage::ID_AddArray, true },
-      { BladeArrayPage::ID_RemoveArray, true },
-      { BladeArrayPage::ID_BladeIDPower, true },
-      { BladeArrayPage::ID_ContinuousScan, true }
   };
 
 private:

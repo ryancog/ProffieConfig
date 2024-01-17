@@ -11,7 +11,7 @@
 #include "editor/pages/presetspage.h"
 #include "editor/pages/propspage.h"
 #include "editor/pages/bladespage.h"
-#include "editor/pages/bladearraydlg.h"
+#include "editor/dialogs/bladearraydlg.h"
 #include "wx/event.h"
 
 #include <cstring>
@@ -60,22 +60,15 @@ void Configuration::outputConfigTop(std::ofstream& configOutput, EditorWindow* e
   configOutput << "#ifdef CONFIG_TOP" << std::endl;
   outputConfigTopGeneral(configOutput, editor);
   outputConfigTopPropSpecific(configOutput, editor);
+  outputConfigTopCustom(configOutput, editor);
   configOutput << "#endif" << std::endl << std::endl;
 
 }
 void Configuration::outputConfigTopGeneral(std::ofstream& configOutput, EditorWindow* editor) {
   if (editor->generalPage->massStorage->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_MASS_STORAGE" << std::endl;
   if (editor->generalPage->webUSB->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_WEBUSB" << std::endl;
-  switch (Configuration::parseBoardType(editor->generalPage->board->entry()->GetValue().ToStdString())) {
-    case Configuration::ProffieBoard::V1:
-      configOutput << "#include \"proffieboard_v1_config.h\"" << std::endl;
-      break;
-    case Configuration::ProffieBoard::V2:
-      configOutput << "#include \"proffieboard_v2_config.h\"" << std::endl;
-      break;
-    case Configuration::ProffieBoard::V3:
-      configOutput << "#include \"proffieboard_v3_config.h\"" << std::endl;
-  }
+
+  configOutput << findInVMap(Proffieboard, editor->generalPage->board->entry()->GetValue().ToStdString()).second << std::endl;
 
   configOutput << "const unsigned int maxLedsPerStrip = " << editor->generalPage->maxLEDs->entry()->GetValue() << ";" << std::endl;
   configOutput << "#define ENABLE_AUDIO" << std::endl;
@@ -98,6 +91,11 @@ void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput, Edi
     if (!output.empty()) configOutput << "#define " << output << std::endl;
   }
 }
+void Configuration::outputConfigTopCustom(std::ofstream& configOutput, EditorWindow* editor) {
+  for (const auto& [ name, value ] : editor->generalPage->customOptDlg->getCustomDefines()) {
+    configOutput << "#define " << name << " " << value << std::endl;
+  }
+}
 
 void Configuration::outputConfigProp(std::ofstream& configOutput, EditorWindow* editor) {
   auto selectedProp = editor->propsPage->getSelectedProp();
@@ -114,7 +112,7 @@ void Configuration::outputConfigPresets(std::ofstream& configOutput, EditorWindo
   configOutput << "#endif" << std::endl << std::endl;
 }
 void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput, EditorWindow* editor) {
-  for (const BladeArrayPage::BladeArray& bladeArray : editor->bladesPage->bladeArrayDlg->bladeArrays) {
+  for (const BladeArrayDlg::BladeArray& bladeArray : editor->bladesPage->bladeArrayDlg->bladeArrays) {
     configOutput << "Preset " << bladeArray.name << "[] = {" << std::endl;
     for (const PresetsPage::PresetConfig& preset : bladeArray.presets) {
       configOutput << "\t{ \"" << preset.dirs << "\", \"" << preset.track << "\"," << std::endl;
@@ -133,7 +131,7 @@ void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput, Edito
 }
 void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput, EditorWindow* editor) {
   configOutput << "BladeConfig blades[] = {" << std::endl;
-  for (const BladeArrayPage::BladeArray& bladeArray : editor->bladesPage->bladeArrayDlg->bladeArrays) {
+  for (const BladeArrayDlg::BladeArray& bladeArray : editor->bladesPage->bladeArrayDlg->bladeArrays) {
     configOutput << "\t{ " << (bladeArray.name == "no_blade" ? "NO_BLADE" : std::to_string(bladeArray.value)) << "," << std::endl;
     for (const BladesPage::BladeConfig& blade : bladeArray.blades) {
       if (blade.type == BD_PIXELRGB || blade.type == BD_PIXELRGBW) {
@@ -378,6 +376,10 @@ void Configuration::readConfigTop(std::ifstream& file, EditorWindow* editor) {
   }
 
   editor->settings->parseDefines(editor->settings->readDefines);
+  for (const auto& define : editor->settings->readDefines) {
+    auto key = Settings::ProffieDefine::parseKey(define);
+    editor->generalPage->customOptDlg->addDefine(key.first, key.second);
+  }
 }
 void Configuration::readConfigProp(std::ifstream& file, EditorWindow* editor) {
   std::string element;
@@ -463,8 +465,8 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
 # define CHKSECT if (file.eof() || element == "#endif" || strstr(element.data(), "};") != NULL) return
 # define RUNTOSECTION element.clear(); while (element != "{") { file >> element; CHKSECT; }
 
-  editor->bladesPage->bladeArrayDlg->bladeArrays.push_back(BladeArrayPage::BladeArray());
-  BladeArrayPage::BladeArray& bladeArray = editor->bladesPage->bladeArrayDlg->bladeArrays.at(editor->bladesPage->bladeArrayDlg->bladeArrays.size() - 1);
+  editor->bladesPage->bladeArrayDlg->bladeArrays.push_back(BladeArrayDlg::BladeArray());
+  BladeArrayDlg::BladeArray& bladeArray = editor->bladesPage->bladeArrayDlg->bladeArrays.at(editor->bladesPage->bladeArrayDlg->bladeArrays.size() - 1);
 
   char* tempData;
   std::string presetInfo;
@@ -538,7 +540,7 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
 # define RUNTOSECTION element.clear(); while (element != "{") { file >> element; CHKSECT; }
   // In future get detect val and presetarray association
 
-  BladeArrayPage::BladeArray bladeArray;
+  BladeArrayDlg::BladeArray bladeArray;
   std::string element;
   std::string data;
   int32_t tempNumBlades;
@@ -670,7 +672,7 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
     if (bladeArray.blades.empty())
       bladeArray.blades.push_back(BladesPage::BladeConfig{});
 
-    for (BladeArrayPage::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) {
+    for (BladeArrayDlg::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) {
       if (array.name == bladeArray.name) {
         array.value = bladeArray.value;
         array.blades = bladeArray.blades;
@@ -715,7 +717,7 @@ bool Configuration::runPreChecks(EditorWindow* editor) {
   if (editor->bladesPage->bladeArrayDlg->enableID->GetValue() && editor->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue() == "") {
     ERR("Blade ID Pin cannot be empty.");
   }
-  if ([&]() { for (const BladeArrayPage::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) if (array.name == "") return true; return false; }()) {
+  if ([&]() { for (const BladeArrayDlg::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) if (array.name == "") return true; return false; }()) {
     ERR("Blade Array Name cannot be empty.");
   }
   if (editor->bladesPage->bladeArrayDlg->enableID->GetValue() && editor->bladesPage->bladeArrayDlg->mode->entry()->GetStringSelection() == BLADE_ID_MODE_BRIDGED && editor->bladesPage->bladeArrayDlg->pullupPin->entry()->GetValue() == "") {
@@ -725,7 +727,7 @@ bool Configuration::runPreChecks(EditorWindow* editor) {
     ERR("Blade ID Pin and Blade Detect Pin cannot be the same.");
   }
   if ([&]() -> bool {
-        auto getNumBlades = [](const BladeArrayPage::BladeArray& array) {
+        auto getNumBlades = [](const BladeArrayDlg::BladeArray& array) {
           int32_t numBlades = 0;
           for (const BladesPage::BladeConfig& blade : array.blades) {
             blade.isSubBlade ? numBlades += blade.subBlades.size() : numBlades++;
@@ -734,7 +736,7 @@ bool Configuration::runPreChecks(EditorWindow* editor) {
         };
 
         int32_t lastNumBlades = getNumBlades(editor->bladesPage->bladeArrayDlg->bladeArrays.at(0));
-        for (const BladeArrayPage::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) {
+        for (const BladeArrayDlg::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) {
           if (getNumBlades(array) != lastNumBlades) return true;
           lastNumBlades = getNumBlades(array);
         }
@@ -760,8 +762,6 @@ bool Configuration::runPreChecks(EditorWindow* editor) {
 # undef ERR
 }
 
-Configuration::ProffieBoard Configuration::parseBoardType(const std::string& value) {
-  return value == "ProffieBoard V1" ? Configuration::ProffieBoard::V1 :
-             value == "ProffieBoard V2" ? Configuration::ProffieBoard::V2 :
-             Configuration::ProffieBoard::V3;
+const Configuration::MapPair& Configuration::findInVMap(const Configuration::VMap& map, const std::string& search) {
+  return *std::find_if(map.begin(), map.end(), [&](const MapPair& pair) { return (pair.second == search || pair.first == search); });
 }

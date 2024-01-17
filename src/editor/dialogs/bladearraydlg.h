@@ -16,9 +16,9 @@
 #define BLADE_ID_MODE_EXTERNAL "External Pullup"
 #define BLADE_ID_MODE_BRIDGED  "Bridged Pullup"
 
-class BladeArrayPage : public wxDialog {
+class BladeArrayDlg : public wxDialog {
 public:
-  BladeArrayPage(EditorWindow*);
+  BladeArrayDlg(EditorWindow*);
 
   void update();
 

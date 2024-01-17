@@ -4,6 +4,7 @@
 #pragma once
 
 #include "editor/editorwindow.h"
+#include "editor/dialogs/customoptionsdlg.h"
 #include "ui/pcspinctrl.h"
 #include "ui/pcspinctrldouble.h"
 
@@ -15,23 +16,25 @@
 #include <wx/combobox.h>
 #include <wx/radiobut.h>
 
-class GeneralPage : public wxStaticBoxSizer
-{
+class GeneralPage : public wxStaticBoxSizer {
 public:
-  GeneralPage(wxWindow*);
+  GeneralPage(EditorWindow*);
 
   pcComboBox* board{nullptr};
   wxCheckBox* massStorage{nullptr};
   wxCheckBox* webUSB{nullptr};
 
-  pcSpinCtrl* buttons;
-  pcSpinCtrl* volume;
-  pcSpinCtrlDouble* clash;
-  pcSpinCtrl* pliTime;
-  pcSpinCtrl* idleTime;
-  pcSpinCtrl* motionTime;
+  CustomOptionsDlg* customOptDlg{nullptr};
+  wxButton* customOptButton{nullptr};
 
-  pcSpinCtrl* maxLEDs;
+  pcComboBox* orientation{nullptr};
+  pcSpinCtrl* buttons{nullptr};
+  pcSpinCtrl* volume{nullptr};
+  pcSpinCtrlDouble* clash{nullptr};
+  pcSpinCtrl* pliTime{nullptr};
+  pcSpinCtrl* idleTime{nullptr};
+  pcSpinCtrl* motionTime{nullptr};
+  pcSpinCtrl* maxLEDs{nullptr};
 
   wxCheckBox* volumeSave{nullptr};
   wxCheckBox* presetSave{nullptr};
@@ -41,14 +44,19 @@ public:
   wxCheckBox* noTalkie{nullptr};
   wxCheckBox* noBasicParsers{nullptr};
   wxCheckBox* disableDiagnosticCommands{nullptr};
-  wxCheckBox* enableDeveloperCommands{nullptr};
+
+  enum {
+    ID_CustomOptions,
+  };
 
 private:
   EditorWindow* parent{nullptr};
+
+  void bindEvents();
   void createToolTips();
 
-  wxStaticBoxSizer* boardSettings(wxStaticBoxSizer*);
-  wxStaticBoxSizer* optionSettings(wxStaticBoxSizer*);
-  wxBoxSizer* boolOptions(wxStaticBoxSizer*);
-  wxBoxSizer* numOptions(wxStaticBoxSizer*);
+  wxStaticBoxSizer* boardSection(wxStaticBoxSizer*);
+  wxStaticBoxSizer* optionSection(wxStaticBoxSizer*);
+  wxBoxSizer* rightOptions(wxStaticBoxSizer*);
+  wxBoxSizer* leftOptions(wxStaticBoxSizer*);
 };

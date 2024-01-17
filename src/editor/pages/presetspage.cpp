@@ -6,7 +6,7 @@
 #include "core/defines.h"
 #include "core/utilities/misc.h"
 #include "editor/editorwindow.h"
-#include "editor/pages/bladearraydlg.h"
+#include "editor/dialogs/bladearraydlg.h"
 
 
 #include <string>
@@ -162,7 +162,7 @@ void PresetsPage::pushIfNewPreset() {
 void PresetsPage::rebuildBladeArrayList() {
   int32_t arraySelection = bladeArray->entry()->GetSelection();
   bladeArray->entry()->Clear();
-  for (const BladeArrayPage::BladeArray& array : parent->bladesPage->bladeArrayDlg->bladeArrays) {
+  for (const BladeArrayDlg::BladeArray& array : parent->bladesPage->bladeArrayDlg->bladeArrays) {
     bladeArray->entry()->Append(array.name);
   }
   if (arraySelection >= 0 && arraySelection < static_cast<int32_t>(bladeArray->entry()->GetCount())) bladeArray->entry()->SetSelection(arraySelection);

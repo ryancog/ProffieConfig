@@ -15,34 +15,30 @@
 
 class Configuration {
 public:
-  static bool outputConfig(EditorWindow* editorWindow);
+  Configuration(Configuration &&) = delete;
+  static bool outputConfig(EditorWindow *editorWindow);
   static bool outputConfig(const std::string&, EditorWindow* editorWindow);
   static bool exportConfig(EditorWindow* editorWindow);
   static bool readConfig(const std::string&, EditorWindow* editorWindow);
   static bool importConfig(EditorWindow* editorWindow);
 
-  enum class SaberProp {
-    DEFAULT,
-    SA22C,
-    FETT263,
-    SHTOK,
-    BC,
-    CAIWYN
-  };
-  enum class ProffieBoard {
-    V1,
-    V2,
-    V3
-  };
-  enum class ORIENTATION {
-    FETS_TOWARDS_BLADE,
-    USB_TOWARDS_BLADE,
-    TOP_TOWARDS_BLADE,
-    BOTTOM_TOWARDS_BLADE,
-    CUSTOM
-  };
+  typedef std::pair<const std::string, const std::string> MapPair;
+  typedef std::vector<MapPair> VMap;
+  static const MapPair& findInVMap(const VMap&, const std::string& search);
 
-  static ProffieBoard parseBoardType(const std::string&);
+  static inline const VMap Orientation = {
+    { "FETs Towards Blade", "ORIENTATION_FETS_TOWARDS_BLADE" },
+    { "USB Towards Blade", "ORIENTATION_USB_TOWARDS_BLADE" },
+    { "USB CCW From Blade", "ORIENTATION_USB_CCW_FROM_BLADE" },
+    { "USB CW From Blade", "ORIENTATION_USB_CW_FROM_BLADE" },
+    { "Top Towards Blade", "ORIENTATION_TOP_TOWARDS_BLADE" },
+    { "Bottom Towards Blade", "ORIENTATION_BOTTOM_TOWARDS_BLADE" },
+    };
+  static inline const VMap Proffieboard = {
+    { "ProffieBoard V1", "#include \"proffieboard_v1_config.h\"" },
+    { "ProffieBoard V2", "#include \"proffieboard_v2_config.h\"" },
+    { "ProffieBoard V3", "#include \"proffieboard_v3_config.h\"" },
+    };
 
 private:
   Configuration();
@@ -52,7 +48,8 @@ private:
 
   static void outputConfigTop(std::ofstream&, EditorWindow*);
   static void outputConfigTopGeneral(std::ofstream&, EditorWindow*);
-  static void outputConfigTopBladeAwareness(std::ofstream&, EditorWindow* configOutput);
+  static void outputConfigTopCustom(std::ofstream&, EditorWindow*);
+  static void outputConfigTopBladeAwareness(std::ofstream&, EditorWindow*);
   static void outputConfigTopPropSpecific(std::ofstream&, EditorWindow*);
   static void outputConfigTopSA22C(std::ofstream&, EditorWindow*);
   static void outputConfigTopFett263(std::ofstream&, EditorWindow*);

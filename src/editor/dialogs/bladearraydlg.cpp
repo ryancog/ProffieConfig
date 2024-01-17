@@ -1,7 +1,7 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2024 Ryan Ogurek
 
-#include "editor/pages/bladearraydlg.h"
+#include "editor/dialogs/bladearraydlg.h"
 
 #include "core/defines.h"
 #include "editor/editorwindow.h"
@@ -11,7 +11,7 @@
 #include <wx/tooltip.h>
 #include <wx/button.h>
 
-BladeArrayPage::BladeArrayPage(EditorWindow* window) : wxDialog(window, wxID_ANY, "Blade Arrays"), parent(window) {
+BladeArrayDlg::BladeArrayDlg(EditorWindow* _parent) : wxDialog(_parent, wxID_ANY, "Blade Awareness - " + _parent->getOpenConfig()), parent(_parent) {
   auto sizer = new wxBoxSizer(wxVERTICAL);
 
   wxBoxSizer* enableSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -39,7 +39,7 @@ BladeArrayPage::BladeArrayPage(EditorWindow* window) : wxDialog(window, wxID_ANY
   update();
 }
 
-void BladeArrayPage::bindEvents() {
+void BladeArrayDlg::bindEvents() {
   Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
     if (event.CanVeto()) {
       parent->bladesPage->update();
@@ -47,8 +47,8 @@ void BladeArrayPage::bindEvents() {
       event.Veto();
     } else event.Skip();
   });
-
-  auto clearBladeArray = [](BladeArrayPage* page) {
+  
+  auto clearBladeArray = [](BladeArrayDlg* page) {
     page->arrayList->SetSelection(-1);
     page->lastArraySelection = -1;
     page->parent->bladesPage->bladeArray->entry()->SetSelection(0);
@@ -118,7 +118,7 @@ void BladeArrayPage::bindEvents() {
       update();
     }, ID_ContinuousScan);
 }
-void BladeArrayPage::createToolTips() {
+void BladeArrayDlg::createToolTips() {
   TIP(enableDetect, "Detect when a blade is inserted into the saber or not.");
   TIP(enableID, "Detect when a specific blade is inserted based on a resistor placed in the blade to give it an identifier.");
 
@@ -140,7 +140,7 @@ void BladeArrayPage::createToolTips() {
   TIP(resistanceID, "The ID of the blade associated with the currently-selected blade array.\nThis value can be measured by typing \"id\" into the Serial Monitor.");
 }
 
-wxStaticBoxSizer* BladeArrayPage::createBladeArrays(wxWindow* parent) {
+wxStaticBoxSizer* BladeArrayDlg::createBladeArrays(wxWindow* parent) {
   wxStaticBoxSizer* bladeIDSizer = new wxStaticBoxSizer(wxHORIZONTAL, parent, "Blade Arrays");
 
   bladeIDSizer->Add(createBladeArraysLeft(bladeIDSizer->GetStaticBox()), wxSizerFlags(1).Expand());
@@ -148,7 +148,7 @@ wxStaticBoxSizer* BladeArrayPage::createBladeArrays(wxWindow* parent) {
 
   return bladeIDSizer;
 }
-wxBoxSizer* BladeArrayPage::createBladeArraysLeft(wxWindow* parent) {
+wxBoxSizer* BladeArrayDlg::createBladeArraysLeft(wxWindow* parent) {
   wxBoxSizer* leftSizer = new wxBoxSizer(wxVERTICAL);
 
   arrayList = new wxListBox(parent, ID_BladeArray, wxDefaultPosition, wxSize(100, 0), {}, 0);
@@ -164,7 +164,7 @@ wxBoxSizer* BladeArrayPage::createBladeArraysLeft(wxWindow* parent) {
 
   return leftSizer;
 }
-wxBoxSizer* BladeArrayPage::createBladeArraysRight(wxStaticBoxSizer* parent) {
+wxBoxSizer* BladeArrayDlg::createBladeArraysRight(wxStaticBoxSizer* parent) {
   wxBoxSizer* rightSizer = new wxBoxSizer(wxVERTICAL);
 
   arrayName = new pcTextCtrl(parent->GetStaticBox(), ID_NameEntry, "Blade Array Name");
@@ -177,7 +177,7 @@ wxBoxSizer* BladeArrayPage::createBladeArraysRight(wxStaticBoxSizer* parent) {
   return rightSizer;
 }
 
-wxStaticBoxSizer* BladeArrayPage::createIDSetup(wxWindow* parent) {
+wxStaticBoxSizer* BladeArrayDlg::createIDSetup(wxWindow* parent) {
   wxStaticBoxSizer* setupSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Blade ID Setup");
   mode = new pcComboBox(setupSizer->GetStaticBox(), ID_BladeIDMode, "Blade ID Mode", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ BLADE_ID_MODE_SNAPSHOT, BLADE_ID_MODE_EXTERNAL, BLADE_ID_MODE_BRIDGED }), wxCB_READONLY);
   IDPin = new pcTextCtrl(setupSizer->GetStaticBox(), wxID_ANY, "Blade ID Pin");
@@ -193,7 +193,7 @@ wxStaticBoxSizer* BladeArrayPage::createIDSetup(wxWindow* parent) {
 
   return setupSizer;
 }
-wxStaticBoxSizer* BladeArrayPage::createIDPowerSettings(wxWindow* parent) {
+wxStaticBoxSizer* BladeArrayDlg::createIDPowerSettings(wxWindow* parent) {
   wxStaticBoxSizer* powerForIDSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Power for Blade ID");
   enablePowerForID = new wxCheckBox(powerForIDSizer->GetStaticBox(), ID_BladeIDPower, "Enable Power on ID", wxDefaultPosition, wxDefaultSize, 0);
 
@@ -221,7 +221,7 @@ wxStaticBoxSizer* BladeArrayPage::createIDPowerSettings(wxWindow* parent) {
 
   return powerForIDSizer;
 }
-wxStaticBoxSizer* BladeArrayPage::createContinuousScanSettings(wxWindow* parent) {
+wxStaticBoxSizer* BladeArrayDlg::createContinuousScanSettings(wxWindow* parent) {
   wxStaticBoxSizer* continuousScansSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Continuous Scanning");
   continuousScans = new wxCheckBox(continuousScansSizer->GetStaticBox(), ID_ContinuousScan, "Enable Continuous Scanning", wxDefaultPosition, wxDefaultSize, 0);
   numIDTimes = new pcSpinCtrl(continuousScansSizer->GetStaticBox(), wxID_ANY, "Number of Reads to Average", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 50, 10);
@@ -234,7 +234,7 @@ wxStaticBoxSizer* BladeArrayPage::createContinuousScanSettings(wxWindow* parent)
 }
 
 
-wxStaticBoxSizer* BladeArrayPage::createBladeDetect(wxWindow* parent) {
+wxStaticBoxSizer* BladeArrayDlg::createBladeDetect(wxWindow* parent) {
   wxStaticBoxSizer* bladeDetectSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Blade Detect");
 
   detectPin = new pcTextCtrl(bladeDetectSizer->GetStaticBox(), wxID_ANY, "Blade Detect Pin");
@@ -243,7 +243,7 @@ wxStaticBoxSizer* BladeArrayPage::createBladeDetect(wxWindow* parent) {
   return bladeDetectSizer;
 }
 
-void BladeArrayPage::update() {
+void BladeArrayDlg::update() {
   if (lastArraySelection >= 0 && lastArraySelection < static_cast<int32_t>(bladeArrays.size())) {
     bladeArrays.at(lastArraySelection).name = arrayName->entry()->GetValue();
     bladeArrays.at(lastArraySelection).value = resistanceID->entry()->GetValue();
@@ -307,7 +307,7 @@ void BladeArrayPage::update() {
 #endif
 }
 
-void BladeArrayPage::stripAndSaveName() {
+void BladeArrayDlg::stripAndSaveName() {
   if (lastArraySelection > 0 && lastArraySelection < static_cast<int32_t>(bladeArrays.size())) {
     wxString name = arrayName->entry()->GetValue();
     name.erase(std::remove(name.begin(), name.end(), ' '), name.end());
