@@ -4,6 +4,7 @@
 #pragma once
 
 #include "editor/editorwindow.h"
+#include "ui/pctextctrl.h"
 
 #include <wx/textctrl.h>
 #include <wx/sizer.h>
@@ -21,7 +22,7 @@ public:
   void update();
 
   pcComboBox* bladeArray{nullptr};
-  wxTextCtrl* styleInput{nullptr};
+  pcTextCtrl* styleInput{nullptr};
   wxListBox* presetList{nullptr};
   wxListBox* bladeList{nullptr};
 
@@ -30,9 +31,9 @@ public:
   wxButton* movePresetUp{nullptr};
   wxButton* movePresetDown{nullptr};
 
-  wxTextCtrl* nameInput{nullptr};
-  wxTextCtrl* dirInput{nullptr};
-  wxTextCtrl* trackInput{nullptr};
+  pcTextCtrl* nameInput{nullptr};
+  pcTextCtrl* dirInput{nullptr};
+  pcTextCtrl* trackInput{nullptr};
 
   struct PresetConfig {
     std::vector<wxString> styles{};

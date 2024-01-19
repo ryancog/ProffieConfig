@@ -4,6 +4,7 @@
 #include "tools/serialmonitor.h"
 
 #include "core/defines.h"
+#include "ui/pctextctrl.h"
 #include "mainmenu/mainmenu.h"
 
 SerialMonitor* SerialMonitor::instance;
@@ -28,8 +29,8 @@ SerialMonitor::SerialMonitor(MainMenu* parent) : wxFrame(parent, wxID_ANY, "Prof
 
   wxBoxSizer *master = new wxBoxSizer(wxVERTICAL);
 
-  input = new wxTextCtrl(this, ID_SerialCommand, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
-  output = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(500, 200), wxTE_MULTILINE | wxTE_READONLY);
+  input = new pcTextCtrl(this, ID_SerialCommand, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
+  output = new pcTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(500, 200), wxTE_MULTILINE | wxTE_READONLY);
 
   master->Add(input, BOXITEMFLAGS);
   master->Add(output, wxSizerFlags(1).Border(wxALL, 10).Expand());
@@ -60,10 +61,10 @@ wxEventTypeTag<wxCommandEvent> SerialMonitor::EVT_DISCON(wxNewEventType());
 void SerialMonitor::BindEvents()
 {
   Bind(wxEVT_TEXT_ENTER, [&](wxCommandEvent&) {
-        sendOut = SerialMonitor::instance->input->GetValue();
-        SerialMonitor::instance->input->Clear();
+        sendOut = SerialMonitor::instance->input->entry()->GetValue();
+        SerialMonitor::instance->input->entry()->Clear();
       }, ID_SerialCommand);
-  Bind(EVT_INPUT, [&](wxCommandEvent& evt) { output->AppendText(((SerialDataEvent*)&evt)->value); }, wxID_ANY);
+  Bind(EVT_INPUT, [&](wxCommandEvent& evt) { output->entry()->AppendText(((SerialDataEvent*)&evt)->value); }, wxID_ANY);
   Bind(EVT_DISCON, [&](wxCommandEvent&) {
         SerialMonitor::instance->Close(true);
       }, wxID_ANY);

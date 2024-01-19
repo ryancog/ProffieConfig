@@ -20,8 +20,8 @@ BladesPage::BladesPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window
   bladeArrayDlg = new BladeArrayDlg(parent);
 
   Add(createBladeSelect(), wxSizerFlags(0).Expand());
-  Add(createBladeSetup(), wxSizerFlags(0).Expand());
-  Add(createBladeSettings(), wxSizerFlags(1));
+  Add(createBladeSetup(), wxSizerFlags(1).Expand());
+  Add(createBladeSettings(), wxSizerFlags(0).ReserveSpaceEvenIfHidden());
 
   bindEvents();
   createToolTips();
@@ -33,18 +33,9 @@ void BladesPage::bindEvents() {
   GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { parent->presetsPage->bladeArray->entry()->SetSelection(bladeArray->entry()->GetSelection()); update(); }, ID_BladeArray);
   GetStaticBox()->Bind(wxEVT_SPINCTRL, [&](wxCommandEvent& event) { update(); event.Skip(); });
   GetStaticBox()->Bind(wxEVT_RADIOBUTTON, [&](wxCommandEvent& event) { update(); event.Skip(); });
-  GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
-      update();
-      FULLUPDATEWINDOW(parent);
-    }, ID_BladeSelect);
-  GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
-      update();
-      FULLUPDATEWINDOW(parent);
-    }, ID_SubBladeSelect);
-  GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-      update();
-      FULLUPDATEWINDOW(parent);
-    }, ID_BladeType);
+  GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { update(); FULLUPDATEWINDOW(parent); }, ID_BladeSelect);
+  GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { update(); FULLUPDATEWINDOW(parent); }, ID_SubBladeSelect);
+  GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { update(); FULLUPDATEWINDOW(parent); }, ID_BladeType);
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { addBlade(); UPDATEWINDOW(parent); }, ID_AddBlade);
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { addSubBlade(); FULLUPDATEWINDOW(parent); }, ID_AddSubBlade);
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { removeBlade(); UPDATEWINDOW(parent); }, ID_RemoveBlade);
@@ -173,15 +164,15 @@ wxBoxSizer* BladesPage::createBladeManager() {
 wxBoxSizer* BladesPage::createBladeSetup() {
   wxBoxSizer* bladeSetup = new wxBoxSizer(wxVERTICAL);
   bladeType = new pcComboBox(GetStaticBox(), ID_BladeType, "Blade Type", wxDefaultPosition, wxDefaultSize, Misc::createEntries({BD_PIXELRGB, BD_PIXELRGBW, BD_TRISTAR, BD_QUADSTAR, BD_SINGLELED}), wxCB_READONLY);
-  powerPins = new wxCheckListBox(GetStaticBox(), ID_PowerPins, wxDefaultPosition, wxDefaultSize, Misc::createEntries({"bladePowerPin1", "bladePowerPin2", "bladePowerPin3", "bladePowerPin4", "bladePowerPin5", "bladePowerPin6"}));
+  powerPins = new wxCheckListBox(GetStaticBox(), ID_PowerPins, wxDefaultPosition, wxSize(200, -1), Misc::createEntries({"bladePowerPin1", "bladePowerPin2", "bladePowerPin3", "bladePowerPin4", "bladePowerPin5", "bladePowerPin6"}));
   auto pinNameSizer = new wxBoxSizer(wxHORIZONTAL);
   addPowerPin = new wxButton(GetStaticBox(), ID_AddPowerPin, "+", wxDefaultPosition, wxSize(30, 30), wxBU_EXACTFIT);
   powerPinName = new pcTextCtrl(GetStaticBox(), ID_PowerPinName, "Pin Name");
   pinNameSizer->Add(powerPinName, wxSizerFlags(1).Border(wxRIGHT, 5));
   pinNameSizer->Add(addPowerPin, wxSizerFlags(0).Bottom());
 
-  bladeSetup->Add(bladeType, wxSizerFlags(0).Border(wxLEFT | wxBOTTOM | wxRIGHT, 5));
-  bladeSetup->Add(powerPins, wxSizerFlags(1).Border(wxLEFT | wxBOTTOM | wxRIGHT, 5));
+  bladeSetup->Add(bladeType, wxSizerFlags(0).Border(wxLEFT | wxBOTTOM | wxRIGHT, 5).Expand());
+  bladeSetup->Add(powerPins, wxSizerFlags(1).Border(wxLEFT | wxBOTTOM | wxRIGHT, 5).Expand());
   bladeSetup->Add(pinNameSizer, wxSizerFlags(0).Border(wxLEFT | wxBOTTOM | wxRIGHT, 5).Expand());
 
   return bladeSetup;
@@ -245,6 +236,7 @@ wxBoxSizer* BladesPage::createBladeSettings() {
   bladeSettings->Add(subBladeStart, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
   bladeSettings->Add(subBladeEnd, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 
+  bladeSettings->SetMinSize(150, -1);
   return bladeSettings;
 }
 
@@ -370,6 +362,11 @@ void BladesPage::setEnabled() {
   powerPins->Enable(BD_HASSELECTION && BD_ISFIRST);
   addPowerPin->Enable(BD_HASSELECTION && BD_ISFIRST && !powerPinName->entry()->IsEmpty());
   powerPinName->Enable(BD_HASSELECTION && BD_ISFIRST);
+
+  star1Resistance->Enable(star1Color->entry()->GetStringSelection() != BD_NORESISTANCE);
+  star2Resistance->Enable(star2Color->entry()->GetStringSelection() != BD_NORESISTANCE);
+  star3Resistance->Enable(star3Color->entry()->GetStringSelection() != BD_NORESISTANCE);
+  star4Resistance->Enable(star4Color->entry()->GetStringSelection() != BD_NORESISTANCE);
 }
 void BladesPage::setVisibility(){
   blade3ColorOrder->Show(BD_ISPIXEL3 && BD_ISFIRST);
@@ -382,16 +379,12 @@ void BladesPage::setVisibility(){
 
   star1Color->Show(BD_ISSTAR);
   star1Resistance->Show(BD_ISSTAR);
-  star1Resistance->entry()->Enable(star1Color->entry()->GetStringSelection() != BD_NORESISTANCE);
   star2Color->Show(BD_ISSTAR);
   star2Resistance->Show(BD_ISSTAR);
-  star2Resistance->entry()->Enable(star2Color->entry()->GetStringSelection() != BD_NORESISTANCE);
   star3Color->Show(BD_ISSTAR);
   star3Resistance->Show(BD_ISSTAR);
-  star3Resistance->entry()->Enable(star3Color->entry()->GetStringSelection() != BD_NORESISTANCE);
   star4Color->Show(BD_ISSTAR4);
   star4Resistance->Show(BD_ISSTAR4);
-  star4Resistance->entry()->Enable(star4Color->entry()->GetStringSelection() != BD_NORESISTANCE);
 
   useStandard->Show(BD_ISSUB && BD_ISFIRST);
   useStride->Show(BD_ISSUB && BD_ISFIRST);

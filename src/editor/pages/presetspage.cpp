@@ -13,7 +13,7 @@
 #include <wx/tooltip.h>
 
 PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, ""), parent(static_cast<EditorWindow*>(window)) {
-  styleInput = new wxTextCtrl(GetStaticBox(), ID_PresetChange, "", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE);
+  styleInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE);
   styleInput->SetFont(wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
 
   Add(createPresetConfig(), wxSizerFlags(/*proportion*/ 0).Border(wxALL, 10));
@@ -112,19 +112,19 @@ wxBoxSizer* PresetsPage::createPresetConfig() {
 
   wxBoxSizer *name = new wxBoxSizer(wxVERTICAL);
   wxStaticText *nameLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Preset Name", wxDefaultPosition, wxSize(150, 20));
-  nameInput = new wxTextCtrl(GetStaticBox(), ID_PresetChange);
+  nameInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange);
   name->Add(nameLabel, wxSizerFlags(0).Border(wxLEFT | wxTOP, 10));
   name->Add(nameInput, wxSizerFlags(0).Border(wxLEFT, 10).Expand());
 
   wxBoxSizer *dir = new wxBoxSizer(wxVERTICAL);
   wxStaticText *dirLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Font Directory", wxDefaultPosition, wxSize(150, 20));
-  dirInput = new wxTextCtrl(GetStaticBox(), ID_PresetChange);
+  dirInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange);
   dir->Add(dirLabel, wxSizerFlags(0).Border(wxLEFT | wxTOP, 10));
   dir->Add(dirInput, wxSizerFlags(0).Border(wxLEFT, 10).Expand());
 
   wxBoxSizer *track = new wxBoxSizer(wxVERTICAL);
   wxStaticText *trackLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Track File", wxDefaultPosition, wxSize(150, 20));
-  trackInput = new wxTextCtrl(GetStaticBox(), ID_PresetChange);
+  trackInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange);
   track->Add(trackLabel, wxSizerFlags(0).Border(wxLEFT | wxTOP, 10));
   track->Add(trackInput, wxSizerFlags(0).Border(wxLEFT | wxBOTTOM, 10).Expand());
 
@@ -140,10 +140,10 @@ void PresetsPage::update() {
   pushIfNewPreset();
   resizeAndFillPresets();
 
-  if (nameInput->IsModified()) stripAndSaveName();
-  if (dirInput->IsModified()) stripAndSaveDir();
-  if (trackInput->IsModified()) stripAndSaveTrack();
-  if (styleInput->IsModified()) stripAndSaveEditor();
+  if (nameInput->entry()->IsModified()) stripAndSaveName();
+  if (dirInput->entry()->IsModified()) stripAndSaveDir();
+  if (trackInput->entry()->IsModified()) stripAndSaveTrack();
+  if (styleInput->entry()->IsModified()) stripAndSaveEditor();
 
   rebuildBladeArrayList();
   rebuildPresetList();
@@ -152,7 +152,7 @@ void PresetsPage::update() {
   updateFields();
 }
 void PresetsPage::pushIfNewPreset() {
-  if (presetList->GetSelection() == -1 && parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0 && (!nameInput->IsEmpty() || !dirInput->IsEmpty() || !trackInput->IsEmpty())) {
+  if (presetList->GetSelection() == -1 && parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0 && (!nameInput->entry()->IsEmpty() || !dirInput->entry()->IsEmpty() || !trackInput->entry()->IsEmpty())) {
     parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.push_back(PresetConfig());
     rebuildPresetList();
     presetList->SetSelection(parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.size() - 1);
@@ -216,46 +216,46 @@ void PresetsPage::updateFields() {
   if (presetList->GetSelection() >= 0) {
     uint32_t insertionPoint;
     
-    insertionPoint = styleInput->GetInsertionPoint();
+    insertionPoint = styleInput->entry()->GetInsertionPoint();
     if (bladeList->GetSelection() >= 0) {
-      styleInput->ChangeValue(parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).styles.at(bladeList->GetSelection()));
-      styleInput->SetInsertionPoint(insertionPoint <= styleInput->GetValue().size() ? insertionPoint : styleInput->GetValue().size());
+      styleInput->entry()->ChangeValue(parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).styles.at(bladeList->GetSelection()));
+      styleInput->entry()->SetInsertionPoint(insertionPoint <= styleInput->entry()->GetValue().size() ? insertionPoint : styleInput->entry()->GetValue().size());
     } else {
-      styleInput->ChangeValue("Select Blade to Edit Style...");
+      styleInput->entry()->ChangeValue("Select Blade to Edit Style...");
     }
 
-    insertionPoint = nameInput->GetInsertionPoint();
-    nameInput->ChangeValue(parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).name);
-    nameInput->SetInsertionPoint(insertionPoint <= nameInput->GetValue().size() ? insertionPoint : nameInput->GetValue().size());
+    insertionPoint = nameInput->entry()->GetInsertionPoint();
+    nameInput->entry()->ChangeValue(parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).name);
+    nameInput->entry()->SetInsertionPoint(insertionPoint <= nameInput->entry()->GetValue().size() ? insertionPoint : nameInput->entry()->GetValue().size());
 
-    insertionPoint = dirInput->GetInsertionPoint();
-    dirInput->ChangeValue(parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).dirs);
-    dirInput->SetInsertionPoint(insertionPoint <= dirInput->GetValue().size() ? insertionPoint : dirInput->GetValue().size());
+    insertionPoint = dirInput->entry()->GetInsertionPoint();
+    dirInput->entry()->ChangeValue(parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).dirs);
+    dirInput->entry()->SetInsertionPoint(insertionPoint <= dirInput->entry()->GetValue().size() ? insertionPoint : dirInput->entry()->GetValue().size());
 
-    insertionPoint = trackInput->GetInsertionPoint();
-    trackInput->ChangeValue(parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).track);
-    trackInput->SetInsertionPoint(insertionPoint <= trackInput->GetValue().size() - 4 ? insertionPoint : trackInput->GetValue().size() - 4);
+    insertionPoint = trackInput->entry()->GetInsertionPoint();
+    trackInput->entry()->ChangeValue(parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).track);
+    trackInput->entry()->SetInsertionPoint(insertionPoint <= trackInput->entry()->GetValue().size() - 4 ? insertionPoint : trackInput->entry()->GetValue().size() - 4);
   }
   else {
-    styleInput->ChangeValue("Select/Create Preset and Blade to Edit Style...");
-    nameInput->ChangeValue("");
-    dirInput->ChangeValue("");
-    trackInput->ChangeValue("");
+    styleInput->entry()->ChangeValue("Select/Create Preset and Blade to Edit Style...");
+    nameInput->entry()->ChangeValue("");
+    dirInput->entry()->ChangeValue("");
+    trackInput->entry()->ChangeValue("");
   }
 
   removePreset->Enable(presetList->GetSelection() != -1);
   movePresetDown->Enable(presetList->GetSelection() != -1 && presetList->GetSelection() < static_cast<int32_t>(presetList->GetCount()) - 1);
   movePresetUp->Enable(presetList->GetSelection() > 0);
   
-  styleInput->SetModified(false); // Value is flagged as dirty from last change unless we manually reset it, causing overwrites where there shouldn't be.
-  nameInput->SetModified(false);
-  dirInput->SetModified(false);
-  trackInput->SetModified(false);
+  styleInput->entry()->SetModified(false); // Value is flagged as dirty from last change unless we manually reset it, causing overwrites where there shouldn't be.
+  nameInput->entry()->SetModified(false);
+  dirInput->entry()->SetModified(false);
+  trackInput->entry()->SetModified(false);
 }
 
 void PresetsPage::stripAndSaveEditor() {
   if (presetList->GetSelection() >= 0 && bladeList->GetSelection() >= 0) {
-    wxString style = styleInput->GetValue();
+    wxString style = styleInput->entry()->GetValue();
     style.erase(std::remove(style.begin(), style.end(), ' '), style.end());
     if (style.find("{") != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '{'));
     if (style.rfind("}") != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '}'));
@@ -265,7 +265,7 @@ void PresetsPage::stripAndSaveEditor() {
 }
 void PresetsPage::stripAndSaveName() {
   if (presetList->GetSelection() >= 0 && parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0) {
-    wxString name = nameInput->GetValue();
+    wxString name = nameInput->entry()->GetValue();
     name.erase(std::remove(name.begin(), name.end(), ' '), name.end());
     std::transform(name.begin(), name.end(), name.begin(),
                    [](unsigned char c){ return std::tolower(c); }); // to lowercase
@@ -274,13 +274,13 @@ void PresetsPage::stripAndSaveName() {
 }
 void PresetsPage::stripAndSaveDir() {
   if (presetList->GetSelection() >= 0 && parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0) {
-    wxString dir = dirInput->GetValue();
+    wxString dir = dirInput->entry()->GetValue();
     dir.erase(std::remove(dir.begin(), dir.end(), ' '), dir.end());
     parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).dirs.assign(dir);
   }
 }
 void PresetsPage::stripAndSaveTrack() {
-  wxString track = trackInput->GetValue();
+  wxString track = trackInput->entry()->GetValue();
   track.erase(std::remove(track.begin(), track.end(), ' '), track.end());
   if (track.find(".") != wxString::npos) track.erase(track.find("."));
   if (track.length() > 0) track += ".wav";
@@ -288,7 +288,7 @@ void PresetsPage::stripAndSaveTrack() {
   if (presetList->GetSelection() >= 0 && parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0) {
     parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).track.assign(track);
   } else {
-    trackInput->ChangeValue(track);
-    trackInput->SetInsertionPoint(1);
+    trackInput->entry()->ChangeValue(track);
+    trackInput->entry()->SetInsertionPoint(1);
   }
 }

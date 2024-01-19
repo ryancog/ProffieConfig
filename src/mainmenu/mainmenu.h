@@ -32,7 +32,7 @@ public:
 
   enum {
     ID_DUMMY1, // on macOS menu items cannot have ID 0
-    ID_DUMMY2, // on Win32, for some reason ID #1 is triggerred by hitting enter in wxTextCtrl? This is a workaround.
+    ID_DUMMY2, // on Win32, for some reason ID #1 is triggerred by hitting enter in pcTextCtrl? This is a workaround.
     ID_Copyright,
     ID_ReRunSetup,
     ID_RefreshDev,

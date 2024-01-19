@@ -88,7 +88,7 @@ public:
         const_cast<pcComboBox*>(static_cast<const pcComboBox*>(def->element))->entry()->SetValue(key.second);
         break;
       case Type::TEXT:
-        const_cast<wxTextCtrl*>(static_cast<const wxTextCtrl*>(def->element))->SetValue(key.second);
+        const_cast<pcTextCtrl*>(static_cast<const pcTextCtrl*>(def->element))->entry()->SetValue(key.second);
         break;
     }
 
