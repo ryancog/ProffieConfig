@@ -17,6 +17,8 @@
 #include <wx/combobox.h>
 #include <wx/listbox.h>
 #include <wx/button.h>
+#include <wx/checklst.h>
+#include <wx/radiobut.h>
 
 #define BD_PIXELRGB "WS281X (RGB)"
 #define BD_PIXELRGBW "WS281X (RGBW)"

@@ -1,6 +1,11 @@
 #include "customoptionsdlg.h"
 
 #include <wx/hyperlink.h>
+#include <wx/scrolwin.h>
+#include <wx/button.h>
+#include <wx/stattext.h>
+#include <wx/hyperlink.h>
+#include <wx/statbox.h>
 
 CustomOptionsDlg::CustomOptionsDlg(EditorWindow* _parent) : wxDialog(_parent, wxID_ANY, "Custom Options - " + _parent->getOpenConfig(), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER), parent(_parent) {
   createUI();
