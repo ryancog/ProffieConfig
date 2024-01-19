@@ -20,6 +20,8 @@
 #include <wx/menu.h>
 #include <wx/aboutdlg.h>
 #include <wx/generic/aboutdlgg.h>
+#include <wx/msgdlg.h>
+#include <wx/statbmp.h>
 
 MainMenu* MainMenu::instance{nullptr};
 MainMenu::MainMenu(wxWindow* parent) : wxFrame(parent, wxID_ANY, "ProffieConfig") {

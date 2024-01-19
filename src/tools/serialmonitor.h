@@ -9,6 +9,7 @@
 #include <wx/wx.h>
 
 #include "mainmenu/mainmenu.h"
+#include "ui/pctextctrl.h"
 
 class SerialMonitor : public wxFrame {
 public:
@@ -34,8 +35,8 @@ private:
   bool listenerRunning{false};
   bool writerRunning{false};
 
-  wxTextCtrl* input;
-  wxTextCtrl* output;
+  pcTextCtrl* input;
+  pcTextCtrl* output;
 
   int32_t fd = 0;
   wxString sendOut;
