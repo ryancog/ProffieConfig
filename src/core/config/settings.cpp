@@ -230,7 +230,7 @@ bool Settings::ProffieDefine::getState() const {
   return false;
 }
 std::string Settings::ProffieDefine::getString() const {
-  if (type == Type::TEXT) return const_cast<wxTextCtrl*>(static_cast<const wxTextCtrl*>(element))->GetValue().ToStdString();
+  if (type == Type::TEXT) return const_cast<pcTextCtrl*>(static_cast<const pcTextCtrl*>(element))->entry()->GetValue().ToStdString();
   if (type == Type::COMBO) return const_cast<pcComboBox*>(static_cast<const pcComboBox*>(element))->entry()->GetValue().ToStdString();
 
   return "";

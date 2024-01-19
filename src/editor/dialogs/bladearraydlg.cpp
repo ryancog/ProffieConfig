@@ -261,13 +261,13 @@ void BladeArrayDlg::update() {
   if (lastArraySelection < 0 || lastArraySelection >= static_cast<int32_t>(arrayList->GetCount())) lastArraySelection = 0;
   arrayList->SetSelection(lastArraySelection);
 
-  detectPin->entry()->Enable(enableDetect->GetValue());
+  detectPin->Enable(enableDetect->GetValue());
 
   arrayList->Enable(enableID->GetValue());
   mode->Enable(enableID->GetValue());
-  IDPin->entry()->Enable(enableID->GetValue());
-  pullupPin->entry()->Enable(enableID->GetValue());
-  pullupResistance->entry()->Enable(enableID->GetValue());
+  IDPin->Enable(enableID->GetValue());
+  pullupPin->Enable(enableID->GetValue());
+  pullupResistance->Enable(enableID->GetValue());
   enablePowerForID->Enable(enableID->GetValue());
   powerPin1->Enable(enableID->GetValue() && enablePowerForID->GetValue());
   powerPin2->Enable(enableID->GetValue() && enablePowerForID->GetValue());
@@ -276,14 +276,14 @@ void BladeArrayDlg::update() {
   powerPin5->Enable(enableID->GetValue() && enablePowerForID->GetValue());
   powerPin6->Enable(enableID->GetValue() && enablePowerForID->GetValue());
   continuousScans->Enable(enableID->GetValue());
-  numIDTimes->entry()->Enable(enableID->GetValue() && continuousScans->GetValue());
-  scanIDMillis->entry()->Enable(enableID->GetValue() && continuousScans->GetValue());
+  numIDTimes->Enable(enableID->GetValue() && continuousScans->GetValue());
+  scanIDMillis->Enable(enableID->GetValue() && continuousScans->GetValue());
   addID->Enable(enableID->GetValue());
   removeID->Enable(enableID->GetValue() && lastArraySelection && !(arrayList->GetStringSelection() == "blade_in" || arrayList->GetStringSelection() == "no_blade"));
 
   bool customBladeArraySelected = bladeArrays[lastArraySelection].name != "no_blade" && bladeArrays[lastArraySelection].name != "blade_in";
-  arrayName->entry()->Enable(customBladeArraySelected);
-  resistanceID->entry()->Enable(customBladeArraySelected);
+  arrayName->Enable(customBladeArraySelected);
+  resistanceID->Enable(customBladeArraySelected);
   if (customBladeArraySelected) resistanceID->entry()->SetRange(2000, 100000);
   else resistanceID->entry()->SetRange(0, 0);
   arrayName->entry()->ChangeValue(bladeArrays.at(lastArraySelection).name);

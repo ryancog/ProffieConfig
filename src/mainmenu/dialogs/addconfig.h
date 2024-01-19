@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mainmenu/mainmenu.h"
+#include "ui/pctextctrl.h"
 
 #include <wx/dialog.h>
 #include <wx/textctrl.h>
@@ -27,7 +28,7 @@ private:
   wxStaticText* chooseConfigText{nullptr};
   wxFilePickerCtrl* chooseConfig{nullptr};
   wxStaticText* configNameText{nullptr};
-  wxTextCtrl* configName{nullptr};
+  pcTextCtrl* configName{nullptr};
 
   wxStaticText* invalidNameWarning{nullptr};
   wxStaticText* duplicateWarning{nullptr};
