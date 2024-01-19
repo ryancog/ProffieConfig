@@ -11,6 +11,8 @@
 #undef wxMessageDialog
 #include <wx/msgdlg.h>
 #define wxMessageDialog wxGenericMessageDialog
+#else
+#include <wx/msgdlg.h>
 #endif
 
 SerialMonitor* SerialMonitor::instance;
