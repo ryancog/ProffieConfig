@@ -19,6 +19,12 @@
 #include <exception>
 #include <wx/filedlg.h>
 
+# define ERR(msg) \
+  Misc::MessageBoxEvent* msgEvent = new Misc::MessageBoxEvent(wxID_ANY, std::string(msg) + "\n\nConfiguration not saved.", "Configuration Error", wxOK | wxCENTER | wxICON_ERROR); \
+  wxQueueEvent(editor->GetEventHandler(), msgEvent); \
+  return false;
+
+
 bool Configuration::outputConfig(const std::string& filePath, EditorWindow* editor) {
   editor->presetsPage->update();
   editor->bladesPage->update();
@@ -28,8 +34,7 @@ bool Configuration::outputConfig(const std::string& filePath, EditorWindow* edit
 
   std::ofstream configOutput(filePath);
   if (!configOutput.is_open()) {
-    std::cerr << "Could not open config file for output." << std::endl;
-    return false;
+    ERR("Could not open config file for output.");
   }
 
   configOutput <<
@@ -659,11 +664,6 @@ void Configuration::replaceStyles(const std::string& styleName, const std::strin
 }
 
 bool Configuration::runPreChecks(EditorWindow* editor) {
-# define ERR(msg) \
-  Misc::MessageBoxEvent* msgEvent = new Misc::MessageBoxEvent(wxID_ANY, std::string(msg) + "\n\nConfiguration not saved.", "Configuration Error", wxOK | wxCENTER | wxICON_ERROR); \
-  wxQueueEvent(editor->GetEventHandler(), msgEvent); \
-  return false;
-
   if (editor->bladesPage->bladeArrayDlg->enableDetect->GetValue() && editor->bladesPage->bladeArrayDlg->detectPin->entry()->GetValue() == "") {
     ERR("Blade Detect Pin cannot be empty.");
   }
@@ -723,7 +723,6 @@ bool Configuration::runPreChecks(EditorWindow* editor) {
   }
 
   return true;
-# undef ERR
 }
 
 const Configuration::MapPair& Configuration::findInVMap(const Configuration::VMap& map, const std::string& search) {

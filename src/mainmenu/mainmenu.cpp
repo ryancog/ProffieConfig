@@ -45,7 +45,7 @@ void MainMenu::bindEvents() {
     AppState::instance->saveState();
     for (const auto& editor : editors) {
       if (editor->IsShown() && event.CanVeto()) {
-        if (wxGenericMessageDialog(this, "There are editors open, are you sure you want to exit?\n\nAny unsaved changes will be lost!", "Open Editor(s)", wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION).ShowModal() == wxID_NO) {
+        if (wxMessageDialog(this, "There are editors open, are you sure you want to exit?\n\nAny unsaved changes will be lost!", "Open Editor(s)", wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION).ShowModal() == wxID_NO) {
           event.Veto();
           return;
         } else
@@ -56,7 +56,7 @@ void MainMenu::bindEvents() {
   });
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
-      wxGenericMessageDialog(this, ((Misc ::MessageBoxEvent *)&event)->message, ((Misc ::MessageBoxEvent *)&event)->caption, ((Misc ::MessageBoxEvent *)&event)->style).ShowModal();
+      wxMessageDialog(this, ((Misc ::MessageBoxEvent *)&event)->message, ((Misc ::MessageBoxEvent *)&event)->caption, ((Misc ::MessageBoxEvent *)&event)->style).ShowModal();
     }, wxID_ANY);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(); Onboard::instance = new Onboard(); }, ID_ReRunSetup);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
@@ -71,13 +71,13 @@ void MainMenu::bindEvents() {
         aboutInfo.SetWebSite("https://github.com/Ryryog25/ProffieConfig");
         aboutInfo.SetCopyright("Copyright (C) 2024 Ryan Ogurek");
         aboutInfo.SetName("ProffieConfig");
-        wxGenericAboutBox(aboutInfo, this);
+        wxAboutBox(aboutInfo, this);
       }, wxID_ABOUT);
 
   Bind(
     wxEVT_MENU,
     [&](wxCommandEvent &) {
-      wxGenericMessageDialog(this, COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION).ShowModal();
+      wxMessageDialog(this, COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION).ShowModal();
     },
     ID_Copyright);
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/blob/master/docs"); }, ID_Docs);
@@ -104,7 +104,7 @@ void MainMenu::bindEvents() {
 
         auto newEditor = new EditorWindow(configSelect->entry()->GetValue().ToStdString(), this);
         if (!Configuration::readConfig(CONFIG_DIR + configSelect->entry()->GetValue().ToStdString() + ".h", newEditor)) {
-          wxGenericMessageDialog(this, "Error reading configuration file!", "Config Error", wxOK | wxCENTER).ShowModal();
+          wxMessageDialog(this, "Error reading configuration file!", "Config Error", wxOK | wxCENTER).ShowModal();
           newEditor->Destroy();
           AppState::instance->removeConfig(configSelect->entry()->GetValue().ToStdString());
           update();
@@ -118,7 +118,7 @@ void MainMenu::bindEvents() {
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { activeEditor->Show(); activeEditor->Raise(); }, ID_EditConfig);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { AddConfig(this).ShowModal(); }, ID_AddConfig);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
-      if (wxGenericMessageDialog(this, "Are you sure you want to deleted the selected configuration?\n\nThis action cannot be undone!", "Delete Config", wxYES_NO | wxNO_DEFAULT | wxCENTER).ShowModal() == wxID_YES) {
+      if (wxMessageDialog(this, "Are you sure you want to deleted the selected configuration?\n\nThis action cannot be undone!", "Delete Config", wxYES_NO | wxNO_DEFAULT | wxCENTER).ShowModal() == wxID_YES) {
           activeEditor->Close(true);
           remove((CONFIG_DIR + configSelect->entry()->GetValue().ToStdString() + ".h").c_str());
           AppState::instance->removeConfig(configSelect->entry()->GetValue().ToStdString());

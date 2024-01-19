@@ -58,7 +58,7 @@ void Onboard::Overview::prepareMainMenu() {
   guideMenu->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
     if (event.CanVeto()) {
       event.Veto();
-      wxGenericMessageDialog(guideMenu, "You cannot close this during First-Time Setup.", "Close ProffieConfig", wxOK | wxCENTER).ShowModal();
+      wxMessageDialog(guideMenu, "You cannot close this during First-Time Setup.", "Close ProffieConfig", wxOK | wxCENTER).ShowModal();
     }
   });
   guideMenu->Bind(wxEVT_UPDATE_UI, [&](wxUpdateUIEvent& event) {
@@ -79,7 +79,7 @@ void Onboard::Overview::prepareEditor() {
     }
     if (event.CanVeto()) {
       event.Veto();
-      wxGenericMessageDialog(guideMenu->activeEditor, "You cannot close this during First-Time Setup.", "Close ProffieConfig Editor", wxOK | wxCENTER).ShowModal();
+      wxMessageDialog(guideMenu->activeEditor, "You cannot close this during First-Time Setup.", "Close ProffieConfig Editor", wxOK | wxCENTER).ShowModal();
     }
   });
 }
