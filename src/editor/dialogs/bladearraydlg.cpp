@@ -11,8 +11,8 @@
 #include <wx/tooltip.h>
 #include <wx/button.h>
 
-BladeArrayDlg::BladeArrayDlg(EditorWindow* _parent) : wxDialog(_parent, wxID_ANY, "Blade Awareness - " + _parent->getOpenConfig()), parent(_parent) {
-  auto sizer = new wxBoxSizer(wxVERTICAL);
+BladeArrayDlg::BladeArrayDlg(EditorWindow* _parent) : wxDialog(_parent, wxID_ANY, "Blade Awareness - " + _parent->getOpenConfig(), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER), parent(_parent) {
+  sizer = new wxBoxSizer(wxVERTICAL);
 
   wxBoxSizer* enableSizer = new wxBoxSizer(wxHORIZONTAL);
   enableDetect = new wxCheckBox(this, ID_BladeDetectEnable, "Enable Blade Detect");
@@ -37,6 +37,7 @@ BladeArrayDlg::BladeArrayDlg(EditorWindow* _parent) : wxDialog(_parent, wxID_ANY
   bindEvents();
   createToolTips();
   update();
+  FULLUPDATEWINDOW(this);
 }
 
 void BladeArrayDlg::bindEvents() {
@@ -95,7 +96,7 @@ void BladeArrayDlg::bindEvents() {
     }, ID_NameEntry);
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
       update();
-      FULLUPDATEWINDOW(parent);
+      FULLUPDATEWINDOW(this);
     }, ID_BladeIDMode);
   Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) {
       update();
@@ -105,7 +106,7 @@ void BladeArrayDlg::bindEvents() {
       update();
       arrayList->SetSelection(bladeArrays.size() - 1);
       arrayList->SendSelectionChangedEvent(wxEVT_LISTBOX);
-      FULLUPDATEWINDOW(parent);
+      FULLUPDATEWINDOW(this);
     }, ID_AddArray);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
       bladeArrays.erase(bladeArrays.begin() + arrayList->GetSelection());
@@ -151,7 +152,7 @@ wxStaticBoxSizer* BladeArrayDlg::createBladeArrays(wxWindow* parent) {
 wxBoxSizer* BladeArrayDlg::createBladeArraysLeft(wxWindow* parent) {
   wxBoxSizer* leftSizer = new wxBoxSizer(wxVERTICAL);
 
-  arrayList = new wxListBox(parent, ID_BladeArray, wxDefaultPosition, wxSize(100, 0), {}, 0);
+  arrayList = new wxListBox(parent, ID_BladeArray, wxDefaultPosition, wxSize(100, -1), {}, 0);
 
   wxBoxSizer* buttonSizer = new wxBoxSizer(wxHORIZONTAL);
   addID = new wxButton(parent, ID_AddArray, "+", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);

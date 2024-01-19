@@ -38,7 +38,7 @@ EditorWindow::EditorWindow(const std::string& _configName, wxWindow* parent) : w
   SetIcon( wxICON(IDI_ICON1) );
   SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
 # endif
-  sizer->SetMinSize(550, -1);
+  sizer->SetMinSize(450, -1);
 }
 
 void EditorWindow::bindEvents() {

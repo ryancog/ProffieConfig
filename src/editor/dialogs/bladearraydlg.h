@@ -74,7 +74,7 @@ public:
 
 private:
   EditorWindow* parent{nullptr};
-
+  wxBoxSizer* sizer{nullptr};
   int32_t lastArraySelection{-1};
 
   void bindEvents();

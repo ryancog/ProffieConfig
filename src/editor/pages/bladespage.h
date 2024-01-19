@@ -5,6 +5,7 @@
 #pragma once
 
 #include "ui/pcspinctrl.h"
+#include "ui/pctextctrl.h"
 #include "editor/editorwindow.h"
 
 #include <wx/textctrl.h>
@@ -67,12 +68,9 @@ public:
   wxStaticText* bladePixelsLabel{nullptr};
   pcSpinCtrl* bladePixels{nullptr};
 
-  wxCheckBox* usePowerPin1{nullptr};
-  wxCheckBox* usePowerPin2{nullptr};
-  wxCheckBox* usePowerPin3{nullptr};
-  wxCheckBox* usePowerPin4{nullptr};
-  wxCheckBox* usePowerPin5{nullptr};
-  wxCheckBox* usePowerPin6{nullptr};
+  wxCheckListBox* powerPins{nullptr};
+  wxButton* addPowerPin{nullptr};
+  pcTextCtrl* powerPinName{nullptr};
 
   pcComboBox* blade3ColorOrder{nullptr};
   pcComboBox* blade4ColorOrder{nullptr};
@@ -101,7 +99,11 @@ public:
     ID_AddBlade,
     ID_AddSubBlade,
     ID_RemoveBlade,
-    ID_RemoveSubBlade
+    ID_RemoveSubBlade,
+
+    ID_PowerPins,
+    ID_AddPowerPin,
+    ID_PowerPinName,
   };
 
   struct BladeConfig {
@@ -121,12 +123,7 @@ public:
     int32_t Star3Resistance{0};
     int32_t Star4Resistance{0};
 
-    bool usePowerPin1{false};
-    bool usePowerPin2{false};
-    bool usePowerPin3{false};
-    bool usePowerPin4{false};
-    bool usePowerPin5{false};
-    bool usePowerPin6{false};
+    std::vector<std::string> powerPins;
 
     bool isSubBlade{false};
     bool useStride{false};
