@@ -17,7 +17,7 @@ public:
 
 private:
   EditorWindow* parent{nullptr};
-  wxScrolledCanvas* optionArea{nullptr};
+  wxScrolledWindow* optionArea{nullptr};
   wxButton* addDefineButton{nullptr};
   wxStaticText* cricketsText{nullptr};
 
@@ -30,12 +30,12 @@ private:
   void updateOptions();
 
   wxBoxSizer* header();
-  wxBoxSizer* info();
+  wxStaticBoxSizer* info(wxWindow*);
 };
 
-class CustomOptionsDlg::CDefine : public wxWindow {
+class CustomOptionsDlg::CDefine : public wxPanel {
   public:
-    CDefine(wxScrolledCanvas*);
+    CDefine(wxScrolledWindow*);
 
     wxStaticText* defText{nullptr};
     pcTextCtrl* name{nullptr};

@@ -14,6 +14,13 @@ void CustomOptionsDlg::addDefine(const std::string& name, const std::string& val
   newDefine->name->entry()->SetValue(name);
   newDefine->value->entry()->SetValue(value);
   customDefines.push_back(newDefine);
+
+  newDefine->Bind(wxEVT_BUTTON, [newDefine, this](wxCommandEvent) {
+      optionArea->GetSizer()->Detach(newDefine);
+      customDefines.erase(std::find(customDefines.begin(), customDefines.end(), newDefine));
+      newDefine->Destroy();
+      updateOptions();
+    }, CDefine::ID_Remove);
   updateOptions();
 }
 
@@ -33,15 +40,7 @@ void CustomOptionsDlg::bindEvents() {
     } else event.Skip();
   });
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-      auto newDefine = new CDefine(optionArea);
-      customDefines.push_back(newDefine);
-      newDefine->Bind(wxEVT_BUTTON, [newDefine, this](wxCommandEvent) {
-          optionArea->GetSizer()->Detach(newDefine);
-          customDefines.erase(std::find(customDefines.begin(), customDefines.end(), newDefine));
-          newDefine->Destroy();
-          updateOptions();
-        }, CDefine::ID_Remove);
-      updateOptions();
+      addDefine("");
     }, ID_AddDefine);
 }
 
@@ -53,7 +52,7 @@ void CustomOptionsDlg::createUI() {
   sizer->SetMinSize(450, 500);
   sizer->Add(header(), wxSizerFlags(0).Expand().Border(wxALL, 10));
   sizer->Add(optionArea, wxSizerFlags(1).Expand().Border(wxALL, 10));
-  sizer->Add(info(), wxSizerFlags(0).Expand().Border(wxALL, 5));
+  sizer->Add(info(this), wxSizerFlags(0).Expand().Border(wxALL, 10));
 
   SetSizerAndFit(sizer);
 }
@@ -70,23 +69,24 @@ wxBoxSizer* CustomOptionsDlg::header() {
   return sizer;
 }
 
-wxBoxSizer* CustomOptionsDlg::info() {
-  auto infoSizer = new wxBoxSizer(wxHORIZONTAL);
+wxStaticBoxSizer* CustomOptionsDlg::info(wxWindow* parent) {
+  auto infoSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Links For Additional ProffieOS Defines");
 
-  auto text = new wxStaticText(this, wxID_ANY, "A full list of ProffieOS defines can be found ");
-  auto link = new wxHyperlinkCtrl(this, wxID_ANY, "here.", "https://pod.hubbe.net/config/the-config_top-section.html");
-  infoSizer->Add(text, wxSizerFlags(0).Center());
-  infoSizer->Add(link);
+  auto text = new wxStaticText(infoSizer->GetStaticBox(), wxID_ANY, "(ProffieConfig already handles some of these)\n");
+  auto optDefines = new wxHyperlinkCtrl(infoSizer->GetStaticBox(), wxID_ANY, "Optional Defines", "https://pod.hubbe.net/config/the-config_top-section.html#optional-defines");
+  auto clashSuppress = new wxHyperlinkCtrl(infoSizer->GetStaticBox(), wxID_ANY, "History of Clash Detection", "https://pod.hubbe.net/explainers/history-of-clash.html");
+  infoSizer->Add(text, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxRIGHT, 10));
+  infoSizer->Add(optDefines, wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 10));
+  infoSizer->Add(clashSuppress, wxSizerFlags(0).Border(wxLEFT | wxBOTTOM | wxRIGHT, 10));
 
   return infoSizer;
 }
 
 void CustomOptionsDlg::createOptionArea() {
-  optionArea = new wxScrolledCanvas(this, wxID_ANY);
+  optionArea = new wxScrolledWindow(this, wxID_ANY);
   auto sizer = new wxBoxSizer(wxVERTICAL);
 
-  cricketsText = new wxStaticText(optionArea, wxID_ANY, "Once you add custom options they'll show up here.");
-  sizer->Add(cricketsText, wxSizerFlags(1).Center());
+  cricketsText = new wxStaticText(optionArea, wxID_ANY, "Once you add custom options they'll show up here.", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER_HORIZONTAL);
 
   optionArea->SetScrollRate(0, 10);
   optionArea->SetSizerAndFit(sizer);
@@ -95,16 +95,22 @@ void CustomOptionsDlg::createOptionArea() {
 void CustomOptionsDlg::updateOptions() {
   optionArea->GetSizer()->Clear();
 
-  cricketsText->Show(customDefines.empty());
-  for (auto it = customDefines.begin(); it != customDefines.end();) {
-    optionArea->GetSizer()->Add(*(it++), wxSizerFlags(0).Expand().Border(wxBOTTOM, 5));
+  if (customDefines.empty()) {
+    cricketsText->Show();
+    optionArea->GetSizer()->AddStretchSpacer();
+    optionArea->GetSizer()->Add(cricketsText, wxSizerFlags(0).Expand());
+    optionArea->GetSizer()->AddStretchSpacer();
+  } else {
+    cricketsText->Hide();
+    for (auto it = customDefines.begin(); it != customDefines.end();) {
+      optionArea->GetSizer()->Add(*(it++), wxSizerFlags(0).Expand().Border(wxBOTTOM, 5));
+    }
   }
-  optionArea->FitInside();
 
   Layout();
 }
 
-CustomOptionsDlg::CDefine::CDefine(wxScrolledCanvas* _parent) : wxWindow(_parent, wxID_ANY) {
+CustomOptionsDlg::CDefine::CDefine(wxScrolledWindow* _parent) : wxPanel(_parent, wxID_ANY) {
   auto sizer = new wxBoxSizer(wxHORIZONTAL);
 
   defText = new wxStaticText(this, wxID_ANY, "#define");

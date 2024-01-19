@@ -165,51 +165,21 @@ void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput, Edito
           powerPins[3] = false;
         }
 
-        BladesPage::BladeConfig tempBlade = blade;
-        for (int32_t powerPin = 0; powerPin < 4; powerPin++) {
-          if (powerPins[powerPin]) {
-            if (tempBlade.usePowerPin1) {
-              configOutput << "bladePowerPin1";
-              tempBlade.usePowerPin1 = false;
-            } else if (tempBlade.usePowerPin2) {
-              configOutput << "bladePowerPin2";
-              tempBlade.usePowerPin2 = false;
-            } else if (tempBlade.usePowerPin3) {
-              configOutput << "bladePowerPin3";
-              tempBlade.usePowerPin3 = false;
-            } else if (tempBlade.usePowerPin4) {
-              configOutput << "bladePowerPin4";
-              tempBlade.usePowerPin4 = false;
-            } else if (tempBlade.usePowerPin5) {
-              configOutput << "bladePowerPin5";
-              tempBlade.usePowerPin5 = false;
-            } else if (tempBlade.usePowerPin6) {
-              configOutput << "bladePowerPin6";
-              tempBlade.usePowerPin6 = false;
-            } else configOutput << "-1";
+        int8_t usageIndex = 0;
+        for (auto& usePowerPin : powerPins) {
+          if (usePowerPin && usageIndex < static_cast<int8_t>(blade.powerPins.size())) {
+            configOutput << blade.powerPins.at(usageIndex++);
           } else {
             configOutput << "-1";
           }
 
-          if (powerPin != 3) configOutput << ", ";
+          if (&usePowerPin != &powerPins[3]) configOutput << ", ";
         }
         configOutput << ">()," << std::endl;
       } else if (blade.type == BD_SINGLELED) {
         configOutput << "\t\tSimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, ";
-        if (blade.usePowerPin1) {
-          configOutput << "bladePowerPin1, ";
-        } else if (blade.usePowerPin2) {
-          configOutput << "bladePowerPin2, ";
-        } else if (blade.usePowerPin3) {
-          configOutput << "bladePowerPin3, ";
-        } else if (blade.usePowerPin4) {
-          configOutput << "bladePowerPin4, ";
-        } else if (blade.usePowerPin5) {
-          configOutput << "bladePowerPin5, ";
-        } else if (blade.usePowerPin6) {
-          configOutput << "bladePowerPin6, ";
-        } else configOutput << "-1, ";
-        configOutput << "-1, -1, -1>()," << std::endl;
+        configOutput << (blade.powerPins.size() > 0 ? blade.powerPins.at(0) : "-1");
+        configOutput << ", -1, -1, -1>()," << std::endl;
       }
     }
     configOutput << "\t\tCONFIGARRAY(" << bladeArray.name << "), \"" << bladeArray.name << "\"" << std::endl << "\t}";
@@ -223,28 +193,8 @@ void Configuration::genWS281X(std::ofstream& configOutput, const BladesPage::Bla
   wxString bladeColor = blade.type == BD_PIXELRGB || blade.useRGBWithWhite ? blade.colorType : [=](wxString colorType) -> wxString { colorType.replace(colorType.find("W"), 1, "w"); return colorType; }(blade.colorType);
 
   configOutput << "WS281XBladePtr<" << blade.numPixels << ", " << bladePin << ", Color8::" << bladeColor << ", PowerPINS<";
-  if (blade.usePowerPin1) {
-    configOutput << "bladePowerPin1";
-    if (blade.usePowerPin2 || blade.usePowerPin3 || blade.usePowerPin4 || blade.usePowerPin5 || blade.usePowerPin6) configOutput << ", ";
-  }
-  if (blade.usePowerPin2) {
-    configOutput << "bladePowerPin2";
-    if (blade.usePowerPin3 || blade.usePowerPin4 || blade.usePowerPin5 || blade.usePowerPin6) configOutput << ", ";
-  }
-  if (blade.usePowerPin3) {
-    configOutput << "bladePowerPin3";
-    if (blade.usePowerPin4 || blade.usePowerPin5 || blade.usePowerPin6) configOutput << ", ";
-  }
-  if (blade.usePowerPin4) {
-    configOutput << "bladePowerPin4";
-    if (blade.usePowerPin5 || blade.usePowerPin6) configOutput << ", ";
-  }
-  if (blade.usePowerPin5) {
-    configOutput << "bladePowerPin5";
-    if (blade.usePowerPin6) configOutput << ", ";
-  }
-  if (blade.usePowerPin6) {
-    configOutput << "bladePowerPin6";
+  for (const auto& powerPin : blade.powerPins) {
+    configOutput << powerPin << (&powerPin != &blade.powerPins.back() ? ", " : "");
   }
   configOutput << ">>()";
 };
@@ -585,14 +535,6 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
         if (static_cast<int32_t>(bladeArray.blades.size()) - 1 != blade) bladeArray.blades.push_back(BladesPage::BladeConfig());
         data = std::strstr(data.data(), "WS281XBladePtr"); // Shift start to blade data, in case of SubBlade;
 
-        // This must be done first since std::strtok is destructive (adds null chars)
-        if (std::strstr(data.data(), "bladePowerPin1") != nullptr) bladeArray.blades[blade].usePowerPin1 = true;
-        if (std::strstr(data.data(), "bladePowerPin2") != nullptr) bladeArray.blades[blade].usePowerPin2 = true;
-        if (std::strstr(data.data(), "bladePowerPin3") != nullptr) bladeArray.blades[blade].usePowerPin3 = true;
-        if (std::strstr(data.data(), "bladePowerPin4") != nullptr) bladeArray.blades[blade].usePowerPin4 = true;
-        if (std::strstr(data.data(), "bladePowerPin5") != nullptr) bladeArray.blades[blade].usePowerPin5 = true;
-        if (std::strstr(data.data(), "bladePowerPin6") != nullptr) bladeArray.blades[blade].usePowerPin6 = true;
-
         std::strtok(data.data(), "<,"); // Clear WS281XBladePtr
         bladeArray.blades[blade].numPixels = std::stoi(std::strtok(nullptr, "<,"));
         bladeArray.blades[blade].dataPin = std::strtok(nullptr, ",");
@@ -601,6 +543,12 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
         bladeArray.blades[blade].useRGBWithWhite = strstr(element.data(), "W") != nullptr;
         bladeArray.blades[blade].colorType.assign(element);
 
+        std::strtok(nullptr, "<"); // Clear PowerPINS
+        while (!false) {
+          char* tempStore = std::strtok(nullptr, " ()<>,");
+          if (tempStore == nullptr) break;
+          bladeArray.blades[blade].powerPins.push_back(tempStore);
+        }
         continue;
       }
       if (std::strstr(data.data(), "SimpleBladePtr") != nullptr) {
@@ -616,14 +564,6 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
           // With this implementation, RedOrange must be before Red
           return BD_NORESISTANCE;
         };
-
-        // These must be read first since std::strtok is destructive (adds null chars)
-        if (std::strstr(data.data(), "bladePowerPin1") != nullptr) bladeArray.blades[blade].usePowerPin1 = true;
-        if (std::strstr(data.data(), "bladePowerPin2") != nullptr) bladeArray.blades[blade].usePowerPin2 = true;
-        if (std::strstr(data.data(), "bladePowerPin3") != nullptr) bladeArray.blades[blade].usePowerPin3 = true;
-        if (std::strstr(data.data(), "bladePowerPin4") != nullptr) bladeArray.blades[blade].usePowerPin4 = true;
-        if (std::strstr(data.data(), "bladePowerPin5") != nullptr) bladeArray.blades[blade].usePowerPin5 = true;
-        if (std::strstr(data.data(), "bladePowerPin6") != nullptr) bladeArray.blades[blade].usePowerPin6 = true;
 
         std::strtok(data.data(), "<"); // Clear SimpleBladePtr and setup strtok
 
@@ -653,8 +593,15 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
         }
 
         if (numLEDs <= 2) bladeArray.blades[blade].type.assign(BD_SINGLELED);
-        if (numLEDs == 3) bladeArray.blades[blade].type.assign("Tri-Star Star");
-        if (numLEDs >= 4) bladeArray.blades[blade].type.assign("Quad-Star Star");
+        if (numLEDs == 3) bladeArray.blades[blade].type.assign(BD_TRISTAR);
+        if (numLEDs >= 4) bladeArray.blades[blade].type.assign(BD_QUADSTAR);
+
+        while (!false) {
+          char* tempStore = std::strtok(nullptr, " ()<>,");
+          if (tempStore == nullptr) break;
+          if (strstr(tempStore, "-1")) break;
+          bladeArray.blades[blade].powerPins.push_back(tempStore);
+        }
       }
     }
 
@@ -669,8 +616,7 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
     int32_t nameEnd = data.find(")");
     bladeArray.name.assign(data.substr(nameStart, nameEnd - nameStart));
 
-    if (bladeArray.blades.empty())
-      bladeArray.blades.push_back(BladesPage::BladeConfig{});
+    if (bladeArray.blades.empty()) bladeArray.blades.push_back(BladesPage::BladeConfig{});
 
     for (BladeArrayDlg::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) {
       if (array.name == bladeArray.name) {
@@ -682,7 +628,14 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
         }
       }
     }
+
+    for (const auto& blade : bladeArray.blades) {
+      for (const auto& powerPin : blade.powerPins) {
+        if (editor->bladesPage->powerPins->FindString(powerPin) == wxNOT_FOUND) editor->bladesPage->powerPins->Append(powerPin);
+      }
+    }
   }
+
 
 # undef CHKSECT
 # undef RUNTOSECTION
@@ -746,6 +699,17 @@ bool Configuration::runPreChecks(EditorWindow* editor) {
   }
 
   for (auto& bladeArray : editor->bladesPage->bladeArrayDlg->bladeArrays) {
+    for (uint32_t idx = 0; idx < bladeArray.blades.size(); idx++) {
+      if (bladeArray.blades.at(idx).type == BD_QUADSTAR && bladeArray.blades.at(idx).powerPins.size() != 4) {
+        ERR(BD_QUADSTAR " blade " + std::to_string(idx) + " in array \"" + bladeArray.name + "\" should have 4 power pins selected.");
+      }
+      if (bladeArray.blades.at(idx).type == BD_TRISTAR && bladeArray.blades.at(idx).powerPins.size() != 3) {
+        ERR(BD_TRISTAR " blade " + std::to_string(idx) + " in array \"" + bladeArray.name + "\" should have 3 power pins selected.");
+      }
+      if (bladeArray.blades.at(idx).type == BD_SINGLELED && bladeArray.blades.at(idx).powerPins.size() != 1) {
+        ERR(BD_SINGLELED " blade " + std::to_string(idx) + " in array \"" + bladeArray.name + "\" should have 1 power pin selected.");
+      }
+    }
     for (auto& preset : bladeArray.presets) {
       for (auto& style : preset.styles) {
         auto styleBegin = style.find("Style");
