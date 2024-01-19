@@ -25,14 +25,14 @@ void AddConfig::bindEvents() {
         if (importExisting->GetValue()) {
           std::ifstream importConfig(chooseConfig->GetFileName().GetAbsolutePath().ToStdString());
           if (!importConfig.is_open()) {
-            wxMessageBox("Failed to open config for import.", "Config Import Failure");
+            wxGenericMessageDialog(nullptr, "Failed to open config for import.", "Config Import Failure", wxCENTER | wxOK).ShowModal();
             return;
           }
 
           remove((CONFIG_DIR + configName->GetValue().ToStdString() + ".h").c_str());
           std::ofstream saveConfig(CONFIG_DIR + configName->GetValue().ToStdString() + ".h");
           if (!saveConfig.is_open()) {
-            wxMessageBox("Failed to import config.", "Config Import Error");
+            wxGenericMessageDialog(nullptr, "Failed to import config.", "Config Import Error", wxCENTER | 0x00000004).ShowModal();
             return;
           }
 

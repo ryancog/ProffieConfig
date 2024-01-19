@@ -14,6 +14,7 @@
 #include <cstring>
 
 #ifdef __WXMSW__
+#include <windows.h>
 #include <codecvt>
 #include <locale>
 #endif

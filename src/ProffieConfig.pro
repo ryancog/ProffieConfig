@@ -8,6 +8,7 @@ QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
 VERSION = 1.6.0
 DEFINES += VERSION=\\\"$$VERSION\\\"
 
+
 # macOS resource handling
 ICON = ../resources/icons/icon.icns
 RESOURCE.files += ../resources/macOS/arduino-cli

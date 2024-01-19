@@ -3,16 +3,15 @@
 
 #pragma once
 
-#include "editor/editorwindow.h"
-#include "mainmenu/mainmenu.h"
-#include "editor/pages/bladespage.h"
-#include "editor/dialogs/bladearraydlg.h"
-
 #include <unordered_map>
 #include <wx/wizard.h>
 #include <wx/stattext.h>
 #include <wx/gauge.h>
 #include <wx/timer.h>
+
+#include "editor/editorwindow.h"
+#include "mainmenu/mainmenu.h"
+#include "editor/pages/bladespage.h"
 
 class Onboard : public wxFrame {
 public:

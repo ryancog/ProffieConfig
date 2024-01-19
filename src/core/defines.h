@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <wx/event.h>
-
 #define PROFFIEOS_VERSION "7.13"
 #define ARDUINO_CLI_VERSION "0.34.2"
 
