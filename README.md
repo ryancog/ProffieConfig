@@ -14,11 +14,8 @@ To get started, head over to [the docs](/docs/README.md) which contain all the i
 The tool is fairly straightforward, however it's recommended to read these over to ensure there is no confusion or unexpected issues when using the tool.
 
 ## To-Do (Non-Exhaustive)
-- Implement "Advanced Mode" interface for custom config file sections
-- Expand pre-checker capabilities
+- Expand pre-checker capabilities (ongoing)
 - Implement interface for `using` syntax (not just the ability to parse)
-- Come up with a better method for dealing with Power Pins to allow custom pins
-- Add new clash settings per [Clash Settings and Questions](https://crucible.hubbe.net/t/clash-settings-and-questions)
 - Take over the world ;)
 
 ## Gallery
