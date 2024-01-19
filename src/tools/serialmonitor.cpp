@@ -12,7 +12,7 @@ SerialMonitor* SerialMonitor::instance;
 SerialMonitor::SerialMonitor(MainMenu* parent) {
   if (parent->boardSelect->entry()->GetSelection() > 0) {
     ShellExecute(NULL, NULL, TEXT(ARDUINO_PATH), std::wstring("monitor -p " + parent->boardSelect->entry()->GetStringSelection().ToStdWstring() + " -c baudrate=115200").c_str(), NULL, true);
-  } else wxGenericMessageDialog(parent, "Select board first.", "No Board Selected", wxOK | wxICON_ERROR).ShowModal();
+  } else wxMessageDialog(parent, "Select board first.", "No Board Selected", wxOK | wxICON_ERROR).ShowModal();
 }
 
 #elif defined(__WXOSX__) || defined(__WXGTK__)
@@ -76,7 +76,7 @@ void SerialMonitor::OpenDevice()
 
   fd = open(static_cast<MainMenu*>(GetParent())->boardSelect->entry()->GetValue().data(), O_RDWR | O_NOCTTY);
   if (fd < 0) {
-    wxGenericMessageDialog(GetParent(), "Could not connect to proffieboard.", "Serial Error", wxICON_ERROR | wxOK).ShowModal();
+    wxMessageDialog(GetParent(), "Could not connect to proffieboard.", "Serial Error", wxICON_ERROR | wxOK).ShowModal();
     SerialMonitor::instance->Close(true);
     return;
   }

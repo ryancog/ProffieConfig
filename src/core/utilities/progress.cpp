@@ -26,7 +26,6 @@ void Progress::handleEvent(ProgressEvent* event) {
   }
 
   if (event->progress == 100) {
-    event->progDialog->Close();
-    delete event->progDialog;
+    event->progDialog->Destroy();
   }
 }
