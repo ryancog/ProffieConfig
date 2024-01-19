@@ -7,6 +7,7 @@
 #include "editor/pages/bladespage.h"
 #include "ui/pctextctrl.h"
 
+#include <wx/dialog.h>
 #include <wx/sizer.h>
 #include <wx/checkbox.h>
 #include <wx/combobox.h>

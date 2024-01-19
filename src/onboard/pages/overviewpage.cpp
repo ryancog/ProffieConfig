@@ -8,9 +8,13 @@
 #include "editor/pages/presetspage.h"
 #include "editor/dialogs/bladearraydlg.h"
 
+#include <wx/menu.h>
 #include <wx/event.h>
 #include <wx/gdicmn.h>
 #include <wx/sizer.h>
+#include <wx/msgdlg.h>
+#include <wx/sizer.h>
+#include <wx/statbox.h>
 
 std::vector<bool*> Onboard::Overview::eventRunTrackers{};
 #define EVENT_PAGE_SETUP \
@@ -54,7 +58,7 @@ void Onboard::Overview::prepareMainMenu() {
   guideMenu->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
     if (event.CanVeto()) {
       event.Veto();
-      wxMessageBox("You cannot close this during First-Time Setup.", "Close ProffieConfig", wxOK | wxCENTER, guideMenu);
+      wxGenericMessageDialog(guideMenu, "You cannot close this during First-Time Setup.", "Close ProffieConfig", wxOK | wxCENTER).ShowModal();
     }
   });
   guideMenu->Bind(wxEVT_UPDATE_UI, [&](wxUpdateUIEvent& event) {
@@ -75,7 +79,7 @@ void Onboard::Overview::prepareEditor() {
     }
     if (event.CanVeto()) {
       event.Veto();
-      wxMessageBox("You cannot close this during First-Time Setup.", "Close ProffieConfig Editor", wxOK | wxCENTER, guideMenu->activeEditor);
+      wxGenericMessageDialog(guideMenu->activeEditor, "You cannot close this during First-Time Setup.", "Close ProffieConfig Editor", wxOK | wxCENTER).ShowModal();
     }
   });
 }

@@ -10,6 +10,7 @@
 
 #include <wx/tooltip.h>
 #include <wx/button.h>
+#include <wx/msgdlg.h>
 
 BladeArrayDlg::BladeArrayDlg(EditorWindow* _parent) : wxDialog(_parent, wxID_ANY, "Blade Awareness - " + _parent->getOpenConfig(), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER), parent(_parent) {
   sizer = new wxBoxSizer(wxVERTICAL);
@@ -63,7 +64,7 @@ void BladeArrayDlg::bindEvents() {
         bladeArrays.insert(bladeArrays.begin() + 1, BladeArray{"no_blade", 0, {}, { BladesPage::BladeConfig{} }});
         clearBladeArray(this);
       } else {
-        if (Onboard::instance == nullptr && wxMessageBox("Are you sure you want to disable Blade Detect?\n\n\"no_blade\" array will be deleted!", "Disable Blade Detect", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING, parent) == wxNO) {
+        if (Onboard::instance == nullptr && wxGenericMessageDialog(parent, "Are you sure you want to disable Blade Detect?\n\n\"no_blade\" array will be deleted!", "Disable Blade Detect", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING).ShowModal() == wxID_NO) {
           enableDetect->SetValue(true);
           update();
           return;
@@ -78,7 +79,7 @@ void BladeArrayDlg::bindEvents() {
       if (enableID->GetValue()) {
 
       } else {
-        if (Onboard::instance == nullptr && wxMessageBox("Are you sure you want to disable Blade ID?\n\nAll custom blade arrays will be deleted!", "Disable Blade ID", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING, parent) == wxNO) {
+        if (Onboard::instance == nullptr && wxGenericMessageDialog(parent, "Are you sure you want to disable Blade ID?\n\nAll custom blade arrays will be deleted!", "Disable Blade ID", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING).ShowModal() == wxID_NO) {
           enableID->SetValue(true);
           update();
           return;

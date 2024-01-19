@@ -9,6 +9,7 @@
 #include <wx/timer.h>
 #include <wx/statline.h>
 #include <wx/event.h>
+#include <wx/statbmp.h>
 #include "../resources/icons/icon.xpm"
 
 #include "tools/arduino.h"
@@ -65,31 +66,43 @@ Onboard::~Onboard() {
 }
 
 void Onboard::bindEvents() {
-  Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
-    if (event.CanVeto() && wxMessageBox("Are you sure you want to cancel setup?", "Exit ProffieConfig", wxYES_NO | wxNO_DEFAULT | wxCENTER, this) == wxNO) {
+  Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent &event) {
+    if (event.CanVeto() && wxGenericMessageDialog(this, "Are you sure you want to cancel setup?", "Exit ProffieConfig", wxYES_NO | wxNO_DEFAULT | wxCENTER).ShowModal() == wxID_NO) {
       event.Veto();
       return;
     }
     event.Skip();
-    if (!AppState::instance->firstRun) MainMenu::instance = new MainMenu();
+    if (!AppState::instance->firstRun)
+      MainMenu::instance = new MainMenu();
   });
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Close(); }, ID_Cancel);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-      if (wxMessageBox("Are you sure you want to skip the Introduction?\n"
-                       "\n"
-                       "The introduction covers all the basics and usage of ProffieConfig.\n"
-                       "You can return to it any time via \"File\"->\"Re-Run First-Time Setup\".",
-
-                       "Skip Introduction", wxYES_NO | wxNO_DEFAULT | wxICON_EXCLAMATION) == wxYES) {
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
+      if (wxGenericMessageDialog(this,
+            "Are you sure you want to skip the Introduction?\n"
+            "\n"
+            "The introduction covers all the basics and usage of "
+            "ProffieConfig.\n"
+            "You can return to it any time via \"File\"->\"Re-Run "
+            "First-Time Setup\".",
+            "Skip Introduction", wxYES_NO | wxNO_DEFAULT | wxICON_EXCLAMATION)
+            .ShowModal() == wxID_YES) {
         wxPostEvent(GetEventHandler(), wxCommandEvent(wxEVT_BUTTON, ID_Next));
       }
-    }, ID_SkipIntro);
+    },
+    ID_SkipIntro);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
       dependencyPage->completedInstall = true;
       wxPostEvent(GetEventHandler(), wxCommandEvent(wxEVT_BUTTON, ID_Next));
     }, ID_SkipInstall);
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
-  Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) { wxMessageBox(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this); }, wxID_ANY);
+  Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
+      wxGenericMessageDialog(this,
+        ((Misc ::MessageBoxEvent *)&event)->message,
+        ((Misc ::MessageBoxEvent *)&event)->caption,
+        ((Misc ::MessageBoxEvent *)&event)->style)
+        .ShowModal();
+    },
+    wxID_ANY);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
       if (welcomePage->IsShown()) {
         welcomePage->Hide();
@@ -151,7 +164,7 @@ void Onboard::dependencyInstall(wxCommandEvent&) {
       dependencyPage->pressNext->Show();
       dependencyPage->Layout();
 
-      wxMessageBox("Dependency installation failed, please try again.", "Installation Failure", wxOK | wxCENTER, this);
+      wxGenericMessageDialog(this, "Dependency installation failed, please try again.", "Installation Failure", wxOK | wxCENTER).ShowModal();
     }
   });
 }

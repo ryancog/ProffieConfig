@@ -5,7 +5,8 @@
 
 #include "ui/pccombobox.h"
 
-#include <wx/wx.h>
+#include <wx/frame.h>
+#include <wx/sizer.h>
 
 // Forward declarations to get around circular dependencies
 class GeneralPage;
