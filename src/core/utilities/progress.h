@@ -3,8 +3,15 @@
 
 #pragma once
 #include <wx/event.h>
+
+#ifdef __WXMSW__
+#undef wxProgressDialog
 #include <wx/progdlg.h>
+#define wxProgressDialog wxGenericProgressDialog
 #include <wx/generic/progdlgg.h>
+#else
+#include <wx/progdlg.h>
+#endif
 
 class Progress : public wxProgressDialog {
 public:

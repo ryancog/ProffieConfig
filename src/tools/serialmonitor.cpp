@@ -4,8 +4,14 @@
 #include "tools/serialmonitor.h"
 
 #include "core/defines.h"
-#include "ui/pctextctrl.h"
 #include "mainmenu/mainmenu.h"
+
+#ifdef __WXMSW__
+#include <windows.h>
+#undef wxMessageDialog
+#include <wx/msgdlg.h>
+#define wxMessageDialog wxGenericMessageDialog
+#endif
 
 SerialMonitor* SerialMonitor::instance;
 #if defined(__WXMSW__)
