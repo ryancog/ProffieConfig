@@ -19,8 +19,15 @@
 #include <wx/event.h>
 #include <wx/menu.h>
 #include <wx/aboutdlg.h>
-#include <wx/generic/aboutdlgg.h>
+
+#ifdef __WXMSW__
+#undef wxMessageDialog
 #include <wx/msgdlg.h>
+#define wxMessageDialog wxGenericMessageDialog
+#else
+#include <wx/msgdlg.h>
+#endif
+
 #include <wx/statbmp.h>
 
 MainMenu* MainMenu::instance{nullptr};
@@ -71,7 +78,7 @@ void MainMenu::bindEvents() {
         aboutInfo.SetWebSite("https://github.com/Ryryog25/ProffieConfig");
         aboutInfo.SetCopyright("Copyright (C) 2024 Ryan Ogurek");
         aboutInfo.SetName("ProffieConfig");
-        wxAboutBox(aboutInfo, this);
+        wxAboutBox(aboutInfo);
       }, wxID_ABOUT);
 
   Bind(
