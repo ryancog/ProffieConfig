@@ -7,7 +7,9 @@ QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
 
 VERSION = 1.6.0
 DEFINES += VERSION=\\\"$$VERSION\\\"
-
+win32: DEFINES += wxMessageDialog=wxMessageDialog
+win32: DEFINES += wxProgressDialog=wxGenericProgressDialog
+win32: DEFINES += wxAboutBox=wxGenericAboutBox
 
 # macOS resource handling
 ICON = ../resources/icons/icon.icns

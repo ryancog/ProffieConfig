@@ -126,8 +126,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor, std::function
     progDialog->emitEvent(20, "Generating configuration file...");
     if (!Configuration::outputConfig(editor)) {
       progDialog->emitEvent(100, "Error");
-      Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while updating configuration.", "Files Error");
-      wxQueueEvent(window->GetEventHandler(), msg);
+      // NO message here because outputConfig will handle it.
       return callback(false);
     }
 
@@ -222,8 +221,7 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor, std::function
     progDialog->emitEvent(20, "Generating configuration file...");
     if (!Configuration::outputConfig(editor)) {
       progDialog->emitEvent(100, "Error");
-      Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while updating configuration.", "Files Error");
-      wxQueueEvent(parent->GetEventHandler(), msg);
+      // Outputconfig will handle error message
       return callback(false);
     }
 

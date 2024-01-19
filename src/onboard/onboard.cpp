@@ -67,7 +67,7 @@ Onboard::~Onboard() {
 
 void Onboard::bindEvents() {
   Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent &event) {
-    if (event.CanVeto() && wxGenericMessageDialog(this, "Are you sure you want to cancel setup?", "Exit ProffieConfig", wxYES_NO | wxNO_DEFAULT | wxCENTER).ShowModal() == wxID_NO) {
+    if (event.CanVeto() && wxMessageDialog(this, "Are you sure you want to cancel setup?", "Exit ProffieConfig", wxYES_NO | wxNO_DEFAULT | wxCENTER).ShowModal() == wxID_NO) {
       event.Veto();
       return;
     }
@@ -77,7 +77,7 @@ void Onboard::bindEvents() {
   });
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Close(); }, ID_Cancel);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
-      if (wxGenericMessageDialog(this,
+      if (wxMessageDialog(this,
             "Are you sure you want to skip the Introduction?\n"
             "\n"
             "The introduction covers all the basics and usage of "
@@ -96,7 +96,7 @@ void Onboard::bindEvents() {
     }, ID_SkipInstall);
   Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
   Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
-      wxGenericMessageDialog(this,
+      wxMessageDialog(this,
         ((Misc ::MessageBoxEvent *)&event)->message,
         ((Misc ::MessageBoxEvent *)&event)->caption,
         ((Misc ::MessageBoxEvent *)&event)->style)
@@ -164,7 +164,7 @@ void Onboard::dependencyInstall(wxCommandEvent&) {
       dependencyPage->pressNext->Show();
       dependencyPage->Layout();
 
-      wxGenericMessageDialog(this, "Dependency installation failed, please try again.", "Installation Failure", wxOK | wxCENTER).ShowModal();
+      wxMessageDialog(this, "Dependency installation failed, please try again.", "Installation Failure", wxOK | wxCENTER).ShowModal();
     }
   });
 }
