@@ -7,7 +7,6 @@
 #include "editor/pages/generalpage.h"
 #include "editor/pages/presetspage.h"
 #include "editor/pages/propspage.h"
-#include "editor/dialogs/bladearraydlg.h"
 
 #include "core/config/settings.h"
 #include "core/config/configuration.h"
@@ -20,12 +19,19 @@
 #include <wx/event.h>
 #include <wx/combobox.h>
 #include <wx/arrstr.h>
-#include <wx/wx.h>
+#ifdef __WXMSW__
+#undef wxMessageDialog
+#include <wx/msgdlg.h>
+#define wxMessageDialog wxGenericMessageDialog
+#else
+#include <wx/msgdlg.h>
+#endif
 #include <wx/statbox.h>
 #include <wx/sizer.h>
 #include <wx/list.h>
 #include <wx/string.h>
 #include <wx/tooltip.h>
+#include <wx/menu.h>
 
 EditorWindow::EditorWindow(const std::string& _configName, wxWindow* parent) : wxFrame(parent, wxID_ANY, "ProffieConfig Editor - " + _configName, wxDefaultPosition, wxDefaultSize), openConfig(_configName) {
   createMenuBar();

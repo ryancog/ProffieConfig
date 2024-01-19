@@ -5,11 +5,10 @@
 
 #if defined(__WXOSX__) || defined(__WXGTK__)
 #include "core/utilities/threadrunner.h"
+#include "ui/pctextctrl.h"
 #endif
-#include <wx/wx.h>
 
 #include "mainmenu/mainmenu.h"
-#include "ui/pctextctrl.h"
 
 class SerialMonitor : public wxFrame {
 public:

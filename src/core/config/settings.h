@@ -10,11 +10,12 @@
 
 #include <cstdint>
 #include <cstring>
-#include <wx/wx.h>
+#include <wx/checkbox.h>
+#include <wx/radiobut.h>
 
 #define PDEF_DEFAULT_CHECK [](const ProffieDefine* def) -> bool { return def->getState(); }
 
-class Settings {
+  class Settings {
 public:
   Settings(EditorWindow*);
 
@@ -72,41 +73,41 @@ public:
     if (def->looseChecking ? std::strstr(key.first.c_str(), def->identifier.c_str()) == nullptr : key.first != def->identifier) return false;
 
     switch (def->type) {
-      case Type::STATE:
-        const_cast<wxCheckBox*>(static_cast<const wxCheckBox*>(def->element))->SetValue(true);
-        break;
-      case Type::RADIO:
-        const_cast<wxRadioButton*>(static_cast<const wxRadioButton*>(def->element))->SetValue(true);
-        break;
-      case Type::NUMERIC:
-        const_cast<pcSpinCtrl*>(static_cast<const pcSpinCtrl*>(def->element))->entry()->SetValue(stoi(key.second));
-        break;
-      case Type::DECIMAL:
-        const_cast<pcSpinCtrlDouble*>(static_cast<const pcSpinCtrlDouble*>(def->element))->entry()->SetValue(stod(key.second));
-        break;
-      case Type::COMBO:
-        const_cast<pcComboBox*>(static_cast<const pcComboBox*>(def->element))->entry()->SetValue(key.second);
-        break;
-      case Type::TEXT:
-        const_cast<pcTextCtrl*>(static_cast<const pcTextCtrl*>(def->element))->entry()->SetValue(key.second);
-        break;
+    case Type::STATE:
+      const_cast<wxCheckBox*>(static_cast<const wxCheckBox*>(def->element))->SetValue(true);
+      break;
+    case Type::RADIO:
+      const_cast<wxRadioButton*>(static_cast<const wxRadioButton*>(def->element))->SetValue(true);
+      break;
+    case Type::NUMERIC:
+      const_cast<pcSpinCtrl*>(static_cast<const pcSpinCtrl*>(def->element))->entry()->SetValue(stoi(key.second));
+      break;
+    case Type::DECIMAL:
+      const_cast<pcSpinCtrlDouble*>(static_cast<const pcSpinCtrlDouble*>(def->element))->entry()->SetValue(stod(key.second));
+      break;
+    case Type::COMBO:
+      const_cast<pcComboBox*>(static_cast<const pcComboBox*>(def->element))->entry()->SetValue(key.second);
+      break;
+    case Type::TEXT:
+      const_cast<pcTextCtrl*>(static_cast<const pcTextCtrl*>(def->element))->entry()->SetValue(key.second);
+      break;
     }
 
     return true;
   };
   std::function<std::string(const ProffieDefine*)> output = [](const ProffieDefine* def) -> std::string {
     switch (def->type) {
-      case Type::NUMERIC:
-        return def->identifier + " " + std::to_string(def->getNum());
-      case Type::DECIMAL:
-        return def->identifier + " " + std::to_string(def->getDec());
-      case Type::COMBO:
-      case Type::TEXT:
-        return def->identifier + " " + def->getString();
-      case Type::STATE:
-      case Type::RADIO:
-      default:
-        return def->identifier;
+    case Type::NUMERIC:
+      return def->identifier + " " + std::to_string(def->getNum());
+    case Type::DECIMAL:
+      return def->identifier + " " + std::to_string(def->getDec());
+    case Type::COMBO:
+    case Type::TEXT:
+      return def->identifier + " " + def->getString();
+    case Type::STATE:
+    case Type::RADIO:
+    default:
+      return def->identifier;
     }
   };
   std::function<bool(const ProffieDefine*)> checkOutput;
