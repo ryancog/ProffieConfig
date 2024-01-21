@@ -112,6 +112,7 @@ void CustomOptionsDlg::updateOptions() {
     }
   }
 
+  GetSizer()->SetMinSize(optionArea->GetBestSize().GetWidth() + (10 * 2), -1);
   Layout();
 }
 
@@ -120,12 +121,12 @@ CustomOptionsDlg::CDefine::CDefine(wxScrolledWindow* _parent) : wxPanel(_parent,
 
   defText = new wxStaticText(this, wxID_ANY, "#define");
   name = new pcTextCtrl(this, ID_Name);
-  value = new pcTextCtrl(this, ID_Value);
+  value = new pcTextCtrl(this, ID_Value, wxEmptyString, wxDefaultPosition, wxSize(50, -1));
   remove = new wxButton(this, ID_Remove, "Remove");
 
   sizer->Add(defText, wxSizerFlags(0).Center().Border(wxRIGHT, 5));
-  sizer->Add(name, wxSizerFlags(2).Border(wxRIGHT, 5));
-  sizer->Add(value, wxSizerFlags(3).Border(wxRIGHT, 5));
+  sizer->Add(name, wxSizerFlags(3).Border(wxRIGHT, 5));
+  sizer->Add(value, wxSizerFlags(1).Border(wxRIGHT, 5));
   sizer->Add(remove, wxSizerFlags(0).Border(wxRIGHT, 10));
 
   SetSizerAndFit(sizer);

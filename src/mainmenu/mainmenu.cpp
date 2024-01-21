@@ -43,7 +43,6 @@ MainMenu::MainMenu(wxWindow* parent) : wxFrame(parent, wxID_ANY, "ProffieConfig"
   SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
 # endif
 
-  CenterOnScreen();
   Show(true);
 }
 

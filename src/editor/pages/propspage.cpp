@@ -37,10 +37,6 @@ void PropsPage::bindEvents() {
   auto propSelectUpdate = [&](wxCommandEvent&) {
     updateSelectedProp();
     update();
-    SetMinClientSize(wxSize(sizer->GetMinSize().GetWidth(), 0));
-    FULLUPDATEWINDOW(parent);
-    parent->SetSize(wxSize(parent->GetSize().GetWidth(), parent->GetMinHeight() + GetBestVirtualSize().GetHeight()));
-    parent->SetMinSize(wxSize(parent->GetSize().GetWidth(), 350));
   };
   auto optionSelectUpdate = [&](wxCommandEvent&) {
     int32_t x, y;
@@ -169,6 +165,11 @@ void PropsPage::update() {
       setting.enable(!setting.disabled && setting.checkRequiredSatisfied(prop->getSettings()));
     }
   }
+
+  Layout();
+  SetMinSize(GetBestVirtualSize());
+  FULLUPDATEWINDOW(parent);
+  parent->SetMinSize(wxSize(-1, 350));
 }
 
 const std::vector<PropFile*>& PropsPage::getLoadedProps() { return props; }

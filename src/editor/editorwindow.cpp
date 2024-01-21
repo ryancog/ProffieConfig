@@ -85,14 +85,8 @@ void EditorWindow::bindEvents() {
         presetsPage->update();
 
         FULLUPDATEWINDOW(this);
-        if (propsPage->IsShown()) {
-          propsPage->SetMinClientSize(wxSize(propsPage->sizer->GetMinSize().GetWidth(), 0));
-          sizer->Layout();
-          SetSizerAndFit(sizer);
-          SetSize(wxSize(GetSize().GetWidth(), GetMinHeight() + propsPage->GetBestVirtualSize().GetHeight()));
-          SetMinSize(wxSize(GetSize().GetWidth(), 350));
-        }
-      }, ID_WindowSelect);
+
+  }, ID_WindowSelect);
 }
 void EditorWindow::createToolTips() {
 }
