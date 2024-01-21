@@ -4,12 +4,10 @@
 #pragma once
 
 #include <unordered_map>
-#include <wx/wizard.h>
 #include <wx/stattext.h>
 #include <wx/gauge.h>
 #include <wx/timer.h>
 
-#include "editor/editorwindow.h"
 #include "mainmenu/mainmenu.h"
 #include "editor/pages/bladespage.h"
 
@@ -53,9 +51,6 @@ private:
     ID_PageButton,
   };
 };
-
-
-
 
 
 class Onboard::Welcome : public wxWindow {

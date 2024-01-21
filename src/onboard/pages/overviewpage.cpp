@@ -55,6 +55,8 @@ Onboard::Overview::~Overview() {
 
 void Onboard::Overview::prepare() {
   guideMenu = new MainMenu(this);
+  auto parentRect = GetParent()->GetScreenRect();
+  guideMenu->SetPosition(wxPoint(parentRect.x + parentRect.width + 20, parentRect.y + ((parentRect.height - guideMenu->GetSize().y) / 2)));
   for (auto hasRun : eventRunTrackers) *hasRun = false;
   prepareMainMenu();
   linkMainMenuEvents();
