@@ -80,10 +80,7 @@ void Onboard::bindEvents() {
       if (wxMessageDialog(this,
             "Are you sure you want to skip the Introduction?\n"
             "\n"
-            "The introduction covers all the basics and usage of "
-            "ProffieConfig.\n"
-            "You can return to it any time via \"File\"->\"Re-Run "
-            "First-Time Setup\".",
+            "The introduction covers all the basics and usage of ProffieConfig.\n",
             "Skip Introduction", wxYES_NO | wxNO_DEFAULT | wxICON_EXCLAMATION)
             .ShowModal() == wxID_YES) {
         wxPostEvent(GetEventHandler(), wxCommandEvent(wxEVT_BUTTON, ID_Next));

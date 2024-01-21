@@ -267,6 +267,9 @@ bool Configuration::readConfig(const std::string& filePath, EditorWindow* editor
         if (section == "CONFIG_STYLES") Configuration::readConfigStyles(file, editor);
       }
     }
+    // Wait to call remaining defines "custom" until prop file stuffage has been read
+    setCustomDefines(editor);
+
   } catch (std::exception& e) {
     std::string errorMessage = "There was an error parsing config, please ensure it is valid:\n\n";
     errorMessage += e.what();
@@ -329,8 +332,9 @@ void Configuration::readConfigTop(std::ifstream& file, EditorWindow* editor) {
       if (element == "ENABLE_WEBUSB") editor->generalPage->webUSB->SetValue(true);
     }
   }
-
   editor->settings->parseDefines(editor->settings->readDefines);
+}
+void Configuration::setCustomDefines(EditorWindow* editor) {
   for (const auto& define : editor->settings->readDefines) {
     auto key = Settings::ProffieDefine::parseKey(define);
     editor->generalPage->customOptDlg->addDefine(key.first, key.second);
