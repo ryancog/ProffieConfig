@@ -99,6 +99,7 @@ struct PropFile::Setting {
 
   std::vector<std::string> others{};
   bool isDefault{false};
+  bool shouldOutput{true};
 
   enum class SettingType {
     TOGGLE,
