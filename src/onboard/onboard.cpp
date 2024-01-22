@@ -129,6 +129,7 @@ void Onboard::bindEvents() {
 void Onboard::update() {
   if (overviewPage->IsShown()) {
     skipIntro->Show();
+    skipInstall->Hide();
     next->Enable(overviewPage->isDone);
     next->SetLabel("Finish");
   } else if (dependencyPage->IsShown() && !AppState::instance->firstRun) {

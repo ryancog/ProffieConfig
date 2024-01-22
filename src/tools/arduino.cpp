@@ -25,22 +25,25 @@ void Arduino::init(wxWindow* parent, std::function<void(bool)> callback) {
 
   new ThreadRunner([=]() {
     FILE* install;
+    std::string fulloutput;
     char buffer[128];
     
     progDialog->emitEvent(5, "Downloading dependencies...");
     install = Arduino::CLI("core install proffieboard:stm32l4@" ARDUINO_PBPLUGIN_VERSION " --additional-urls https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json");
-    while (fgets(buffer, 128, install) != nullptr) { progDialog->emitEvent(-1, ""); }
+    while (fgets(buffer, 128, install) != nullptr) { progDialog->emitEvent(-1, ""); fulloutput += buffer; }
     if (pclose(install)) {
       progDialog->emitEvent(100, "Error");
+      std::cerr << fulloutput << std::endl;
       return callback(false);
     }
 
 #   ifndef __WXOSX__
     progDialog->emitEvent(60, "Installing drivers...");
     install = DRIVER_INSTALL;
-    while (fgets(buffer, 128, install) != nullptr) { progDialog->emitEvent(-1, ""); }
+    while (fgets(buffer, 128, install) != nullptr) { progDialog->emitEvent(-1, ""); fulloutput += buffer; }
     if (pclose(install)) {
       progDialog->emitEvent(100, "Error");
+      std::cerr << fulloutput << std::endl;
       return callback(false);
     }
 #   endif
@@ -106,6 +109,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor, std::function
   
   new ThreadRunner([=]() {
     wxString returnVal;
+
     progDialog->emitEvent(0, "Initializing...");
 
     progDialog->emitEvent(10, "Checking board presence...");
@@ -176,7 +180,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor, std::function
 
     progDialog->emitEvent(65, "Uploading to ProffieBoard...");
 #   ifdef __WXMSW__
-    std::string commandString = R"(title ProffieConfig Worker && resources\windowmode -title "ProffieConfig Worker" -mode force_minimized && )";
+    std::string commandString = R"(title ProffieConfig Worker & resources\windowmode -title "ProffieConfig Worker" -mode force_minimized & )";
     commandString += returnVal.substr(returnVal.find("|") + 1) + R"( 0x1209 0x6668 )" + returnVal.substr(0, returnVal.find("|")) + R"( 2>&1)";
 
     auto upload = popen(commandString.c_str(), "r");
@@ -397,8 +401,8 @@ wxString Arduino::parseError(const wxString& error) {
 FILE* Arduino::CLI(const wxString& command) {
   wxString fullCommand;
 # if defined(__WXMSW__)
-  fullCommand += "title ProffieConfig Worker && ";
-  fullCommand += R"(resources\windowmode -title "ProffieConfig Worker" -mode force_minimized && )";
+  fullCommand += "title ProffieConfig Worker & ";
+  fullCommand += R"(resources\windowmode -title "ProffieConfig Worker" -mode force_minimized & )";
 # endif
   fullCommand += ARDUINO_PATH " ";
   fullCommand += command;
