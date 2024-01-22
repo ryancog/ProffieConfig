@@ -10,7 +10,14 @@
 
 #include <wx/tooltip.h>
 #include <wx/button.h>
+
+#ifdef __WXMSW__
+#undef wxMessageDialog
 #include <wx/msgdlg.h>
+#define wxMessageDialog wxGenericMessageDialog
+#else
+#include <wx/msgdlg.h>
+#endif
 
 BladeArrayDlg::BladeArrayDlg(EditorWindow* _parent) : wxDialog(_parent, wxID_ANY, "Blade Awareness - " + _parent->getOpenConfig(), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER), parent(_parent) {
   sizer = new wxBoxSizer(wxVERTICAL);

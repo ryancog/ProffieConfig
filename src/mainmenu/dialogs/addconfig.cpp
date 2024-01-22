@@ -6,7 +6,13 @@
 #include "wx/filepicker.h"
 #include "wx/string.h"
 #include <wx/event.h>
+#ifdef __WXMSW__
+#undef wxMessageDialog
 #include <wx/msgdlg.h>
+#define wxMessageDialog wxGenericMessageDialog
+#else
+#include <wx/msgdlg.h>
+#endif
 #include <wx/sizer.h>
 #include <wx/tglbtn.h>
 #include <wx/button.h>
