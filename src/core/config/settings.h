@@ -15,7 +15,7 @@
 
 #define PDEF_DEFAULT_CHECK [](const ProffieDefine* def) -> bool { return def->getState(); }
 
-  class Settings {
+class Settings {
 public:
   Settings(EditorWindow*);
 

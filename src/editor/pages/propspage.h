@@ -21,6 +21,8 @@ public:
   PropsPage(wxWindow*);
 
   void update();
+  void updateSizeAndLayout();
+  void updateDisables(PropFile*);
   void updateProps();
   void updateSelectedProp(const wxString& = "");
   PropFile* getSelectedProp();
