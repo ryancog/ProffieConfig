@@ -28,7 +28,7 @@
 #define TEXTITEMFLAGS wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 5)
 
 #define UPDATEWINDOW(window) window->sizer->Layout(); window->Refresh();
-#define FULLUPDATEWINDOW(window) window->sizer->Layout(); window->Fit(); window->Refresh();
+#define FULLUPDATEWINDOW(window) window->sizer->Layout(); window->SetSizerAndFit(window->sizer); window->Refresh();
 
 #define PR_DEFAULT "Default"
 #define PR_SA22C "SA22C"

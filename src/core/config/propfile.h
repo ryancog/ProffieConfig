@@ -11,6 +11,7 @@
 #include <wx/checkbox.h>
 #include <wx/radiobut.h>
 #include <wx/combobox.h>
+#include <wx/panel.h>
 
 namespace std {
   template <>
@@ -25,7 +26,7 @@ namespace std {
   };
 }
 
-class PropFile : public wxWindow {
+class PropFile : public wxPanel {
 public:
   ~PropFile();
   struct Setting;
@@ -86,6 +87,7 @@ struct PropFile::Setting {
   std::string description{};
 
   std::vector<std::string> required{};
+  std::vector<std::string> requiredAny{};
   std::vector<std::string> disables{};
   bool disabled{false};
 

@@ -11,11 +11,12 @@
 #include <wx/combobox.h>
 #include <wx/scrolwin.h>
 #include <wx/sizer.h>
+#include <wx/statbox.h>
 
 // Forward declaration to get around circular dependency
 class PropFile;
 
-class PropsPage : public wxScrolledWindow {
+class PropsPage : public wxStaticBoxSizer {
 public:
   PropsPage(wxWindow*);
 
@@ -24,7 +25,7 @@ public:
   void updateSelectedProp(const wxString& = "");
   PropFile* getSelectedProp();
   const std::vector<PropFile*>& getLoadedProps();
-  wxStaticBoxSizer* sizer{nullptr};
+  wxScrolledWindow* propsWindow{nullptr};
 
   pcComboBox* propSelection{nullptr};
   wxButton* buttonInfo{nullptr};

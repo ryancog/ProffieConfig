@@ -196,7 +196,7 @@ void Onboard::Overview::linkEditorEvents() {
       guideMenu->activeEditor->propsPage->buttonInfo->Disable();
 
     }, EditorWindow::ID_WindowSelect);
-  guideMenu->activeEditor->propsPage->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
+  guideMenu->activeEditor->propsPage->GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
       EVENT_PAGE_SETUP;
 
       generateNewPage("Configuration - Prop File",
@@ -211,7 +211,7 @@ void Onboard::Overview::linkEditorEvents() {
       guideMenu->activeEditor->propsPage->buttonInfo->Enable();
 
     }, PropsPage::ID_PropSelect);
-  guideMenu->activeEditor->propsPage->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
+  guideMenu->activeEditor->propsPage->GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
       EVENT_PAGE_SETUP;
 
       generateNewPage("Configuration - Prop File",
