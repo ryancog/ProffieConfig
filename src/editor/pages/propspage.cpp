@@ -20,8 +20,10 @@ PropsPage::PropsPage(wxWindow* window) : wxScrolledWindow(window), parent{static
   auto top = new wxBoxSizer(wxHORIZONTAL);
   propSelection = new pcComboBox(sizer->GetStaticBox(), ID_PropSelect, "Prop File", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Default"}), wxCB_READONLY);
   buttonInfo = new wxButton(sizer->GetStaticBox(), ID_Buttons, "Buttons...");
+  propInfo = new wxButton(sizer->GetStaticBox(), ID_PropInfo, "Info...");
   top->Add(propSelection, wxSizerFlags(0).Border(wxALL, 10));
   top->Add(buttonInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
+  top->Add(propInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
 
   sizer->Add(top);
 
@@ -136,6 +138,34 @@ void PropsPage::bindEvents() {
         buttonDialog.DoLayoutAdaptation();
         buttonDialog.ShowModal();
       }, ID_Buttons);
+  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+    std::string info;
+
+    PropFile* activeProp{nullptr};
+    for (auto& prop : props) {
+      if (propSelection->entry()->GetStringSelection() == prop->getName()) activeProp = prop;
+    }
+
+    if (activeProp == nullptr) {
+      info = "The default ProffieOS prop file.";
+    } else {
+      info = activeProp->getInfo();
+    }
+
+    auto infoDialog = wxDialog(
+                        parent,
+                        wxID_ANY,
+                        propSelection->entry()->GetValue() + " Prop Info",
+                        wxDefaultPosition,
+                        wxDefaultSize,
+                        wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP
+                        );
+    auto textSizer = new wxBoxSizer(wxVERTICAL);
+    textSizer->Add(infoDialog.CreateTextSizer(info), wxSizerFlags(0).Border(wxALL, 10));
+    infoDialog.SetSizer(textSizer);
+    infoDialog.DoLayoutAdaptation();
+    infoDialog.ShowModal();
+  }, ID_PropInfo);
 }
 
 void PropsPage::updateProps() {

@@ -1,5 +1,10 @@
 NAME: "SA22C"
 FILENAME: "saber_sa22c_buttons.h"
+INFO {
+	"sa22c props file, includes 1,2 and 3 button modes.  Incorporates multi-blast,"
+	"battle mode and gesture ignitions from fett263 plus  on-the-fly volume"
+	"controls and full access to all features with 1,2 or 3 button sabers"
+}
 
 SETTINGS {
 	TOGGLE("SA22C_STAB_ON") {

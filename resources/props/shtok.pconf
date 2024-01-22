@@ -1,5 +1,19 @@
 NAME: "Shtok"
 FILENAME: "saber_shtok_buttons.h"
+INFO {
+	"CUSTOM SOUNDS SUPPORTED (add to font to enable):"
+	""
+	"On Demand Power Save - dim.wav"
+	"On Demand Battery Level - battery.wav"
+	"Battle Mode On (on toggle) - bmbegin.wav"
+	"Battle Mode Off (on toggle) - bmend.wav"
+	"Enter Volume Menu - vmbegin.wav"
+	"Exit Volume Menu - vmend.wav"
+	"Force Push - push.wav"
+	"Fast On (optional) - faston.wav"
+	"Multi-Blast Mode On - blstbgn.wav"
+	"Multi-Blast Mode Off - blstend.wav"
+}
 
 BUTTONS{0} {
 	STATE("OFF") {

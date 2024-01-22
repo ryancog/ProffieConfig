@@ -18,6 +18,7 @@ PropFile::~PropFile() {}
 
 std::string PropFile::getName() const { return name; }
 std::string PropFile::getFileName() const { return fileName; }
+std::string PropFile::getInfo() const { return info; }
 std::string PropFile::Setting::getOutput() const {
   switch (type) {
     case SettingType::TOGGLE:
@@ -106,6 +107,10 @@ PropFile* PropFile::createPropConfig(const std::string& name, wxWindow* _parent)
     error("Prop config file \"" + name + "\" does not have section \"FILENAME\", aborting...");
     return nullptr;
   }
+  if (!prop->readInfo(config)) {
+    prop->info = "Prop has no additional info.";
+    warning("Prop config file \"" + name + "\" does not have optional section \"INFO\", skipping...");
+  }
   if (!prop->readSettings(config)) {
     warning("Prop config file \"" + name + "\" does not have optional section \"SETTINGS\", skipping...");
   }
@@ -132,6 +137,24 @@ bool PropFile::readName(std::vector<std::string>& config) {
 bool PropFile::readFileName(std::vector<std::string>& config) {
   fileName = FileParse::parseEntry("FILENAME", config);
   if (fileName.empty()) return false;
+  return true;
+}
+bool PropFile::readInfo(std::vector<std::string>& config) {
+  auto section = FileParse::extractSection("INFO", config);
+  if (section.empty()) return false;
+
+  size_t lineBegin;
+  size_t lineEnd;
+  for (const auto& line : section) {
+    lineBegin = line.find("\"");
+    lineEnd = line.rfind("\"");
+    if (lineBegin == std::string::npos || lineBegin == lineEnd) continue;
+    info += line.substr(lineBegin + 1, lineEnd - lineBegin - 1);
+    info += '\n';
+  }
+
+  if (info.empty()) info = "No additional information.";
+
   return true;
 }
 bool PropFile::readSettings(std::vector<std::string>& config) {
