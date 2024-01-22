@@ -15,45 +15,50 @@
 #include <wx/sizer.h>
 #include <wx/tooltip.h>
 
-PropsPage::PropsPage(wxWindow* window) : wxScrolledWindow(window), parent{static_cast<EditorWindow*>(window)} {
-  sizer = new wxStaticBoxSizer(wxVERTICAL, this, "");
+PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""), parent{static_cast<EditorWindow*>(window)} {
   auto top = new wxBoxSizer(wxHORIZONTAL);
-  propSelection = new pcComboBox(sizer->GetStaticBox(), ID_PropSelect, "Prop File", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Default"}), wxCB_READONLY);
-  buttonInfo = new wxButton(sizer->GetStaticBox(), ID_Buttons, "Buttons...");
-  propInfo = new wxButton(sizer->GetStaticBox(), ID_PropInfo, "Info...");
+  propSelection = new pcComboBox(GetStaticBox(), ID_PropSelect, "Prop File", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Default"}), wxCB_READONLY);
+  buttonInfo = new wxButton(GetStaticBox(), ID_Buttons, "Buttons...");
+  propInfo = new wxButton(GetStaticBox(), ID_PropInfo, "Info...");
   top->Add(propSelection, wxSizerFlags(0).Border(wxALL, 10));
   top->Add(buttonInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
   top->Add(propInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
 
-  sizer->Add(top);
+  propsWindow = new wxScrolledWindow(GetStaticBox(), wxID_ANY);
+  auto propsSizer = new wxBoxSizer(wxVERTICAL);
+  propsWindow->SetSizerAndFit(propsSizer);
+  propsWindow->SetScrollbars(10, 10, -1, 1);
 
+  Add(top);
+  Add(propsWindow);
   loadProps();
-
   bindEvents();
 
-  SetSizerAndFit(sizer);
-  SetScrollbars(-1, 10, -1, 1);
 }
 
 void PropsPage::bindEvents() {
   auto propSelectUpdate = [&](wxCommandEvent&) {
     updateSelectedProp();
     update();
+    propsWindow->SetSizerAndFit(propsWindow->GetSizer());
+    //parent->SetSizerAndFit(parent->sizer);
+    parent->Refresh();
+    ;
   };
   auto optionSelectUpdate = [&](wxCommandEvent&) {
     int32_t x, y;
-    GetViewStart(&x, &y);
+    propsWindow->GetViewStart(&x, &y);
     update();
-    Scroll(0, y);
+    propsWindow->Scroll(x, y);
   };
 
-  Bind(wxEVT_COMBOBOX, propSelectUpdate, ID_PropSelect);
-  Bind(wxEVT_CHECKBOX, optionSelectUpdate, wxID_ANY);
-  Bind(wxEVT_RADIOBUTTON, optionSelectUpdate, wxID_ANY);
-  Bind(wxEVT_SPINCTRL, optionSelectUpdate, wxID_ANY);
-  Bind(wxEVT_SPINCTRLDOUBLE, optionSelectUpdate, wxID_ANY);
+  GetStaticBox()->Bind(wxEVT_COMBOBOX, propSelectUpdate, ID_PropSelect);
+  propsWindow->Bind(wxEVT_CHECKBOX, optionSelectUpdate, wxID_ANY);
+  propsWindow->Bind(wxEVT_RADIOBUTTON, optionSelectUpdate, wxID_ANY);
+  propsWindow->Bind(wxEVT_SPINCTRL, optionSelectUpdate, wxID_ANY);
+  propsWindow->Bind(wxEVT_SPINCTRLDOUBLE, optionSelectUpdate, wxID_ANY);
 
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         std::string buttons;
 
         PropFile* activeProp{nullptr};
@@ -138,7 +143,7 @@ void PropsPage::bindEvents() {
         buttonDialog.DoLayoutAdaptation();
         buttonDialog.ShowModal();
       }, ID_Buttons);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
     std::string info;
 
     PropFile* activeProp{nullptr};
@@ -182,6 +187,7 @@ void PropsPage::updateProps() {
 
 void PropsPage::update() {
   for (auto& prop : props) {
+    prop->SetSize(0, 0);
     if (propSelection->entry()->GetStringSelection() != prop->getName()) continue;
 
     for (auto& [ name, setting ] : prop->getSettings()) {
@@ -197,11 +203,6 @@ void PropsPage::update() {
       setting.enable(!setting.disabled && setting.checkRequiredSatisfied(prop->getSettings()));
     }
   }
-
-  Layout();
-  SetMinSize(GetBestVirtualSize());
-  FULLUPDATEWINDOW(parent);
-  parent->SetMinSize(wxSize(parent->sizer->CalcMin().x, 350));
 }
 
 const std::vector<PropFile*>& PropsPage::getLoadedProps() { return props; }
@@ -221,9 +222,9 @@ void PropsPage::updateSelectedProp(const wxString& newProp) {
 void PropsPage::loadProps() {
   props.clear();
   for (const auto& prop : AppState::instance->getPropFileNames()) {
-    auto propConfig = PropFile::createPropConfig(prop, sizer->GetStaticBox());
+    auto propConfig = PropFile::createPropConfig(prop, propsWindow);
     if (propConfig != nullptr) {
-      sizer->Add(propConfig);
+      propsWindow->GetSizer()->Add(propConfig);
       props.push_back(propConfig);
     }
   }

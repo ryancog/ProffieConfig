@@ -13,7 +13,7 @@
 #include <wx/tooltip.h>
 #include <wx/statbox.h>
 
-PropFile::PropFile(wxWindow* parent) : wxWindow(parent, wxID_ANY) {}
+PropFile::PropFile(wxWindow* parent) : wxPanel(parent, wxID_ANY) {}
 PropFile::~PropFile() {}
 
 std::string PropFile::getName() const { return name; }
@@ -69,6 +69,12 @@ void PropFile::Setting::setValue(double value) const {
 std::unordered_map<std::string, PropFile::Setting>& PropFile::getSettings() { return settings; }
 const std::array<std::vector<std::pair<std::string, std::vector<PropFile::Button>>>, 4>& PropFile::getButtons() { return buttons; }
 bool PropFile::Setting::checkRequiredSatisfied(const std::unordered_map<std::string, Setting>& settings) const {
+  for (const auto& require : requiredAny) {
+    auto key = settings.find(require);
+    if (key == settings.end()) continue;
+    if (!key->second.getOutput().empty()) return true;
+  }
+
   for (const auto& require : required) {
     auto key = settings.find(require);
     if (key == settings.end()) return false;
@@ -122,7 +128,6 @@ PropFile* PropFile::createPropConfig(const std::string& name, wxWindow* _parent)
   }
 
   prop->pruneUnused();
-
   prop->Show(false);
   std::cout << "Finished reading prop config." << std::endl;
 
@@ -244,6 +249,7 @@ bool PropFile::parseSettingCommon(Setting& setting, std::vector<std::string>& se
   }
   setting.description = FileParse::parseEntry("DESCRIPTION", search);
   setting.required = FileParse::parseListEntry("REQUIRE", search);
+  setting.requiredAny = FileParse::parseListEntry("REQUIREANY", search);
 
   return true;
 }

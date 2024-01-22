@@ -166,7 +166,7 @@ wxBoxSizer* BladesPage::createBladeSetup() {
   bladeType = new pcComboBox(GetStaticBox(), ID_BladeType, "Blade Type", wxDefaultPosition, wxDefaultSize, Misc::createEntries({BD_PIXELRGB, BD_PIXELRGBW, BD_TRISTAR, BD_QUADSTAR, BD_SINGLELED}), wxCB_READONLY);
   powerPins = new wxCheckListBox(GetStaticBox(), ID_PowerPins, wxDefaultPosition, wxSize(200, -1), Misc::createEntries({"bladePowerPin1", "bladePowerPin2", "bladePowerPin3", "bladePowerPin4", "bladePowerPin5", "bladePowerPin6"}));
   auto pinNameSizer = new wxBoxSizer(wxHORIZONTAL);
-  addPowerPin = new wxButton(GetStaticBox(), ID_AddPowerPin, "+", wxDefaultPosition, wxSize(30, 30), wxBU_EXACTFIT);
+  addPowerPin = new wxButton(GetStaticBox(), ID_AddPowerPin, "+", wxDefaultPosition, wxSize(30, 20), wxBU_EXACTFIT);
   powerPinName = new pcTextCtrl(GetStaticBox(), ID_PowerPinName, "Pin Name");
   pinNameSizer->Add(powerPinName, wxSizerFlags(1).Border(wxRIGHT, 5));
   pinNameSizer->Add(addPowerPin, wxSizerFlags(0).Bottom());
