@@ -17,7 +17,7 @@ SETTINGS {
 		MAX: 1000
 		DEFAULT: 250
 		INCREMENT: 10
-		REQUIRES: "SA22C_SWING_ON"
+		REQUIRE: "SA22C_SWING_ON"
 	}
 	TOGGLE("SA22C_THRUST_ON") {
 		NAME: "Thrust to Turn On"
@@ -44,7 +44,7 @@ SETTINGS {
 	NUMERIC("SA22C_FORCE_PUSH_LENGTH") {
 		NAME: "Force Push Length"
 		DESCRIPTION: "Length of the force push gesture (in millis) needed to trigger.\nRange from 1 (easiest to trigger) to 10 (hardest to trigger)."
-		REQUIRES: "SA22C_FORCE_PUSH"
+		REQUIRE: "SA22C_FORCE_PUSH"
 		MIN: 1
 		MAX: 10
 		DEFAULT: 5
