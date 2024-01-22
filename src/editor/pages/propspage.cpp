@@ -41,7 +41,7 @@ void PropsPage::bindEvents() {
     updateSelectedProp();
     update();
     propsWindow->SetSizerAndFit(propsWindow->GetSizer());
-    //parent->SetSizerAndFit(parent->sizer);
+    parent->SetSizerAndFit(parent->sizer);
     parent->Refresh();
     ;
   };
@@ -99,7 +99,7 @@ void PropsPage::bindEvents() {
                      "Enter/Exit Color Change - Hold Aux and click POW while on."
                      ) : wxString("Button Configuration Not Supported"));
         } else {
-          auto propButtons = activeProp->getButtons().at(parent->generalPage->buttons->entry()->GetValue());
+          auto propButtons = activeProp->getButtons()->at(parent->generalPage->buttons->entry()->GetValue());
 
           if (propButtons.empty()) {
             buttons += "Selected number of buttons not supported by prop file.";
@@ -108,8 +108,8 @@ void PropsPage::bindEvents() {
               for (auto& button : stateButtons) {
                 std::vector<std::string> activePredicates{};
                 for (const auto& predicate : button.relevantSettings) {
-                  auto setting = activeProp->getSettings().find(predicate);
-                  if (setting == activeProp->getSettings().end()) continue;
+                  auto setting = activeProp->getSettings()->find(predicate);
+                  if (setting == activeProp->getSettings()->end()) continue;
 
                   if (!setting->second.getOutput().empty()) activePredicates.push_back(setting->first);
                 }
@@ -190,17 +190,17 @@ void PropsPage::update() {
     prop->SetSize(0, 0);
     if (propSelection->entry()->GetStringSelection() != prop->getName()) continue;
 
-    for (auto& [ name, setting ] : prop->getSettings()) {
+    for (auto& [ name, setting ] : *prop->getSettings()) {
       for (const auto& disable : setting.disables) {
-        auto key = prop->getSettings().find(disable);
-        if (key == prop->getSettings().end()) continue;
+        auto key = prop->getSettings()->find(disable);
+        if (key == prop->getSettings()->end()) continue;
 
         key->second.disabled = !setting.getOutput().empty();
       }
     }
 
-    for (auto& [ name, setting ] : prop->getSettings()) {
-      setting.enable(!setting.disabled && setting.checkRequiredSatisfied(prop->getSettings()));
+    for (auto& [ name, setting ] : *prop->getSettings()) {
+      setting.enable(!setting.disabled && setting.checkRequiredSatisfied(*prop->getSettings()));
     }
   }
 }

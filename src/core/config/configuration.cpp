@@ -91,8 +91,8 @@ void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput, Edi
   auto selectedProp = editor->propsPage->getSelectedProp();
   if (selectedProp == nullptr) return;
 
-  for (const auto& [ name, setting ] : selectedProp->getSettings()) {
-    if (!setting.checkRequiredSatisfied(selectedProp->getSettings()) || setting.disabled) continue;
+  for (const auto& [ name, setting ] : *selectedProp->getSettings()) {
+    if (!setting.checkRequiredSatisfied(*selectedProp->getSettings()) || setting.disabled) continue;
     auto output = setting.getOutput();
     if (!output.empty()) configOutput << "#define " << output << std::endl;
   }
@@ -346,7 +346,7 @@ void Configuration::readConfigProp(std::ifstream& file, EditorWindow* editor) {
   while (!file.eof() && element != "#endif") {
     file >> element;
     for (auto& prop : editor->propsPage->getLoadedProps()) {
-      auto& propSettings = prop->getSettings();
+      auto propSettings = prop->getSettings();
       if (element.find(prop->getFileName()) != std::string::npos) {
         editor->propsPage->updateSelectedProp(prop->getName());
         for (auto define = editor->settings->readDefines.begin(); define < editor->settings->readDefines.end();) {
@@ -355,8 +355,8 @@ void Configuration::readConfigProp(std::ifstream& file, EditorWindow* editor) {
           double value{0};
 
           defineStream >> defineName;
-          auto key = propSettings.find(defineName);
-          if (key == propSettings.end()) {
+          auto key = propSettings->find(defineName);
+          if (key == propSettings->end()) {
             define++;
             continue;
           }
