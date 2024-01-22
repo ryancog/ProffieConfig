@@ -13,8 +13,14 @@
 #include <wx/tooltip.h>
 #include <wx/statbox.h>
 
-PropFile::PropFile(wxWindow* parent) : wxPanel(parent, wxID_ANY) {}
-PropFile::~PropFile() {}
+PropFile::PropFile(wxWindow* parent) : wxPanel(parent, wxID_ANY) {
+  settings = new SettingMap;
+  buttons = new std::array<ButtonArray, 4>;
+}
+PropFile::~PropFile() {
+  delete[] settings;
+  delete[] buttons;
+}
 
 std::string PropFile::getName() const { return name; }
 std::string PropFile::getFileName() const { return fileName; }
@@ -66,8 +72,8 @@ void PropFile::Setting::setValue(double value) const {
       break;
   }
 }
-std::unordered_map<std::string, PropFile::Setting>& PropFile::getSettings() { return settings; }
-const std::array<std::vector<std::pair<std::string, std::vector<PropFile::Button>>>, 4>& PropFile::getButtons() { return buttons; }
+PropFile::SettingMap* PropFile::getSettings() { return settings; }
+const std::array<PropFile::ButtonArray, 4>* PropFile::getButtons() { return buttons; }
 bool PropFile::Setting::checkRequiredSatisfied(const std::unordered_map<std::string, Setting>& settings) const {
   for (const auto& require : requiredAny) {
     auto key = settings.find(require);
@@ -229,8 +235,8 @@ bool PropFile::readSettings(std::vector<std::string>& config) {
     }
   }
 
-  settings.clear();
-  settings.insert(tempSettings.begin(), tempSettings.end());
+  settings->clear();
+  settings->insert(tempSettings.begin(), tempSettings.end());
 
   return true;
 }
@@ -310,9 +316,9 @@ void PropFile::parseButtons(std::vector<std::string>& config) {
         error("Button array #" + std::to_string(numButtons) + " has unnamed/malformed state, skipping...");
         continue;
       }
-      buttons.at(numButtons).push_back({label, {}});
+      buttons->at(numButtons).push_back({label, {}});
 
-      parseButtonSection(stateSection, numButtons, buttons.at(numButtons).size() - 1);
+      parseButtonSection(stateSection, numButtons, buttons->at(numButtons).size() - 1);
     }
   }
 }
@@ -336,7 +342,7 @@ void PropFile::parseButtonSection(std::vector<std::string>& buttonSection, const
     parseButtonDescriptions(newButton, section);
     parseButtonRelevantSettings(newButton);
 
-    buttons.at(numButtons).at(state).second.push_back(newButton);
+    buttons->at(numButtons).at(state).second.push_back(newButton);
   }
 }
 void PropFile::parseButtonDescriptions(PropFile::Button& newButton, std::vector<std::string>& section) {
@@ -378,13 +384,13 @@ void PropFile::parseButtonRelevantSettings(PropFile::Button& newButton) {
 }
 
 void PropFile::pruneUnused() {
-  for (auto setting = settings.begin(); setting != settings.end();) {
+  for (auto setting = settings->begin(); setting != settings->end();) {
     if (setting->second.control != nullptr) {
       setting++;
       continue;
     }
     warning("Removing unused setting \"" + setting->second.name + "\"...");
-    setting = settings.erase(setting);
+    setting = settings->erase(setting);
   }
 }
 
@@ -433,8 +439,8 @@ bool PropFile::parseLayoutSection(std::vector<std::string>& section, wxSizer* si
       }
     }
     else if (section.begin()->find("OPTION") != std::string::npos) {
-      auto key = settings.find(FileParse::parseLabel(*section.begin()));
-      if (key == settings.end()) {
+      auto key = settings->find(FileParse::parseLabel(*section.begin()));
+      if (key == settings->end()) {
         warning(R"(Option ")" + FileParse::parseLabel(*section.begin()) + R"(" not found in settings, skipping...)");
         section.erase(section.begin());
         continue;

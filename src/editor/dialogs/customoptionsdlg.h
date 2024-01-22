@@ -4,6 +4,7 @@
 #include "ui/pctextctrl.h"
 
 #include <wx/dialog.h>
+#include <wx/panel.h>
 
 class CustomOptionsDlg : public wxDialog {
 public:

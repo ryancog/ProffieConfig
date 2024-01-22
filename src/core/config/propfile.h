@@ -30,14 +30,17 @@ class PropFile : public wxPanel {
 public:
   ~PropFile();
   struct Setting;
+  typedef std::unordered_map<std::string, Setting> SettingMap;
   struct Button;
+  typedef std::vector<std::pair<std::string, std::vector<Button>>> ButtonArray;
+
   static PropFile* createPropConfig(const std::string&, wxWindow*);
 
   std::string getName() const;
   std::string getFileName() const;
   std::string getInfo() const;
-  std::unordered_map<std::string, Setting>& getSettings();
-  const std::array<std::vector<std::pair<std::string, std::vector<PropFile::Button>>>, 4>& getButtons();
+  SettingMap* getSettings();
+  const std::array<ButtonArray, 4>* getButtons();
 
 private:
   PropFile() = delete;
@@ -46,10 +49,8 @@ private:
   std::string name{};
   std::string fileName{};
   std::string info{};
-  std::unordered_map<std::string, Setting> settings{};
-
-  typedef std::vector<std::pair<std::string, std::vector<Button>>> ButtonArray;
-  std::array<ButtonArray, 4> buttons{};
+  SettingMap* settings{nullptr};
+  std::array<ButtonArray, 4>* buttons{nullptr};
 
   wxBoxSizer* sizer{nullptr};
 
