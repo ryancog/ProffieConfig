@@ -82,6 +82,7 @@ void EditorWindow::bindEvents() {
         //generalPage->update();
         bladesPage->update();
         propsPage->update();
+        propsPage->updateSizeAndLayout();
         presetsPage->update();
 
         FULLUPDATEWINDOW(this);
