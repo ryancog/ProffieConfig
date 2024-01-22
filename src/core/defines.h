@@ -54,7 +54,7 @@
 #define PROFFIEOS_INO PROFFIEOS_PATH "\\ProffieOS.ino"
 #define CONFIG_DIR PROFFIEOS_PATH "\\config\\"
 #define PROPCONFIG_DIR RESOURCES_PATH "props\\"
-#define DRIVER_INSTALL popen("title ProffieConfig Worker && resources\\windowmode -title \"ProffieConfig Worker\" -mode force_minimized && resources\\proffie-dfu-setup.exe 2>&1", "r")
+#define DRIVER_INSTALL popen("title ProffieConfig Worker & resources\\windowmode -title \"ProffieConfig Worker\" -mode force_minimized & resources\\proffie-dfu-setup.exe 2>&1", "r")
 #define STYLEEDIT_PATH RESOURCES_PATH "StyleEditor\\style_editor.html"
 #elif defined(__WXGTK__)
 #define RESOURCES_PATH "resources/"
