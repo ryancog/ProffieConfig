@@ -22,6 +22,8 @@
 #include "core/utilities/misc.h"
 #include "core/appstate.h"
 
+wxEventTypeTag<Onboard::UpdateEvent> Onboard::EVT_UPDATE(wxNewEventType());
+
 Onboard* Onboard::instance{nullptr};
 Onboard::Onboard() : wxFrame(nullptr, wxID_ANY, "ProffieConfig First-Time Setup", wxDefaultPosition, wxDefaultSize, wxSYSTEM_MENU | wxCAPTION | wxCLOSE_BOX) {
   auto sizer = new wxBoxSizer(wxVERTICAL);
@@ -124,6 +126,25 @@ void Onboard::bindEvents() {
       }
       update();
     }, ID_Next);
+
+  Bind(EVT_UPDATE, [&](UpdateEvent& event) {
+      Enable();
+      dependencyPage->loadingBar->Hide();
+      dependencyPage->barPulser->Stop();
+
+      if (event.succeeded) {
+        dependencyPage->description->Hide();
+        dependencyPage->doneMessage->Show();
+        dependencyPage->Layout();
+
+        dependencyPage->completedInstall = true;
+      } else {
+        dependencyPage->pressNext->Show();
+        dependencyPage->Layout();
+
+        wxMessageDialog(this, "Dependency installation failed, please try again.", "Installation Failure", wxOK | wxCENTER).ShowModal();
+      }
+    }, ID_DependencyInstall);
 }
 
 void Onboard::update() {
@@ -153,23 +174,12 @@ void Onboard::dependencyInstall(wxCommandEvent&) {
 
   dependencyPage->barPulser->Start(50);
 
-  Arduino::init(this, [=](bool succeeded) {
-    Enable();
-    dependencyPage->loadingBar->Hide();
-    dependencyPage->barPulser->Stop();
-
-    if (succeeded) {
-      dependencyPage->description->Hide();
-      dependencyPage->doneMessage->Show();
-      dependencyPage->Layout();
-
-      dependencyPage->completedInstall = true;
-    } else {
-      dependencyPage->pressNext->Show();
-      dependencyPage->Layout();
-
-      wxMessageDialog(this, "Dependency installation failed, please try again.", "Installation Failure", wxOK | wxCENTER).ShowModal();
-    }
+  Arduino::init(this, [&](bool succeeded) {
+    UpdateEvent* event = new UpdateEvent(EVT_UPDATE, ID_DependencyInstall);
+    event->succeeded = succeeded;
+    event->message = "";
+    event->parent = this;
+    wxQueueEvent(GetEventHandler(), event);
   });
 }
 
