@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <wx/tooltip.h>
+#include <wx/statbox.h>
 
 PropFile::PropFile(wxWindow* parent) : wxWindow(parent, wxID_ANY) {}
 PropFile::~PropFile() {}

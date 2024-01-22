@@ -3,9 +3,6 @@
 
 #pragma once
 
-#include "core/utilities/misc.h"
-#include "editor/pages/propspage.h"
-
 #include <string>
 #include <vector>
 #include <array>
