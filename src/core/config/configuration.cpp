@@ -92,7 +92,12 @@ void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput, Edi
   if (selectedProp == nullptr) return;
 
   for (const auto& [ name, setting ] : *selectedProp->getSettings()) {
-    if (!setting.checkRequiredSatisfied(*selectedProp->getSettings()) || setting.disabled) continue;
+    if (
+        !setting.checkRequiredSatisfied(*selectedProp->getSettings()) ||
+        setting.disabled ||
+        !setting.shouldOutput
+        ) continue;
+
     auto output = setting.getOutput();
     if (!output.empty()) configOutput << "#define " << output << std::endl;
   }
