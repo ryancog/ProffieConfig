@@ -6,6 +6,7 @@
 #include "core/defines.h"
 #include "core/config/settings.h"
 #include "core/config/propfile.h"
+#include "core/utilities/misc.h"
 #include "editor/editorwindow.h"
 #include "editor/pages/generalpage.h"
 #include "editor/pages/presetspage.h"
@@ -345,6 +346,7 @@ void Configuration::readConfigProp(std::ifstream& file, EditorWindow* editor) {
   while (!file.eof() && element != "#endif") {
     file >> element;
     for (auto& prop : editor->propsPage->getLoadedProps()) {
+      auto& propSettings = prop->getSettings();
       if (element.find(prop->getFileName()) != std::string::npos) {
         editor->propsPage->updateSelectedProp(prop->getName());
         for (auto define = editor->settings->readDefines.begin(); define < editor->settings->readDefines.end();) {
@@ -353,14 +355,21 @@ void Configuration::readConfigProp(std::ifstream& file, EditorWindow* editor) {
           double value{0};
 
           defineStream >> defineName;
-          auto key = prop->getSettings().find(defineName);
-          if (key == prop->getSettings().end()) {
+          auto key = propSettings.find(defineName);
+          if (key == propSettings.end()) {
             define++;
             continue;
           }
 
-          defineStream >> value;
-          key->second.setValue(value);
+          if(
+             key->second.type == PropFile::Setting::SettingType::TOGGLE ||
+             key->second.type == PropFile::Setting::SettingType::OPTION)
+          {
+            key->second.setValue(true);
+          } else {
+            defineStream >> value;
+            key->second.setValue(value);
+          }
           define = editor->settings->readDefines.erase(define);
         }
         break;
