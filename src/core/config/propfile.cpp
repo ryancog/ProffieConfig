@@ -18,8 +18,8 @@ PropFile::PropFile(wxWindow* parent) : wxPanel(parent, wxID_ANY) {
   buttons = new std::array<ButtonArray, 4>;
 }
 PropFile::~PropFile() {
-  delete[] settings;
-  delete[] buttons;
+  delete settings;
+  delete buttons;
 }
 
 std::string PropFile::getName() const { return name; }

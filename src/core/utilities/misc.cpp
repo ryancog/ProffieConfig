@@ -6,7 +6,13 @@
 
 #include <wx/event.h>
 #include <wx/string.h>
+#ifdef __WXMSW__
+#undef wxMessageDialog
 #include <wx/msgdlg.h>
+#define wxMessageDialog wxGenericMessageDialog
+#else
+#include <wx/msgdlg.h>
+#endif
 #include <wx/arrstr.h>
 #include <wx/filedlg.h>
 #include <wx/wfstream.h>
