@@ -182,6 +182,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor, std::function
 #   ifdef __WXMSW__
     std::string commandString = R"(title ProffieConfig Worker & resources\windowmode -title "ProffieConfig Worker" -mode force_minimized & )";
     commandString += returnVal.substr(returnVal.find("|") + 1) + R"( 0x1209 0x6668 )" + returnVal.substr(0, returnVal.find("|")) + R"( 2>&1)";
+    std::cerr << "UploadCommandString: " << commandString << std::endl;
 
     auto upload = popen(commandString.c_str(), "r");
     char buffer[128];
@@ -282,16 +283,19 @@ bool Arduino::compile(wxString& _return, EditorWindow* editor, Progress* progDia
     }
 #   ifdef __WXMSW__
     if (std::strstr(buffer, "ProffieOS.ino.dfu") && std::strstr(buffer, "stm32l4") && std::strstr(buffer, "C:\\")) {
+      std::cerr << "ErrBufferFull: " << error << std::endl;
       error = buffer;
+      std::cerr << "PathBuffer: " << error << std::endl;
 
       // Ugly code because Windows wants wchar_t*, which requires (ish) std::wstring's
       wchar_t shortPath[MAX_PATH];
       GetShortPathName(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().from_bytes(error.substr(error.rfind("C:\\"), error.rfind("ProffieOS.ino.dfu") - error.rfind("C:\\") + 17)).c_str(), shortPath, MAX_PATH);
       paths = shortPath;
       paths += L"|";
-      GetShortPathName(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().from_bytes(error.substr(1, error.find("stm32l4") + 7 - 1)).c_str(), shortPath, MAX_PATH);
+      GetShortPathName(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().from_bytes(error.substr(1, error.find("windows") + 7 - 1)).c_str(), shortPath, MAX_PATH);
       paths += shortPath;
-      paths += LR"(\)" ARDUINO_PBPLUGIN_VERSION R"(\tools\windows\stm32l4-upload.bat)";
+      paths += LR"(\\stm32l4-upload.bat)";
+      std::cerr << "ParsedPaths: " << paths << std::endl;
 
       pclose(arduinoCli);
       _return = paths;

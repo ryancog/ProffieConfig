@@ -20,6 +20,9 @@ public:
 private:
   static wxStaticText* createHeader(wxWindow*, const wxString&);
 
+  class UpdateEvent;
+  static wxEventTypeTag<UpdateEvent> EVT_UPDATE;
+
   void update();
   void bindEvents();
   void dependencyInstall(wxCommandEvent&);
@@ -50,6 +53,18 @@ private:
 
     ID_PageButton,
   };
+};
+
+class Onboard::UpdateEvent : public wxCommandEvent {
+public:
+  UpdateEvent(wxEventTypeTag<UpdateEvent> tag, int32_t id){
+    this->SetEventType(tag);
+    this->SetId(id);
+  }
+
+  bool succeeded;
+  wxString message;
+  Onboard* parent;
 };
 
 

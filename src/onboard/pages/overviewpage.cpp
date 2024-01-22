@@ -194,6 +194,7 @@ void Onboard::Overview::linkEditorEvents() {
                       "different one from the drop-down.\n"
                       );
       guideMenu->activeEditor->propsPage->buttonInfo->Disable();
+      guideMenu->activeEditor->propsPage->propInfo->Disable();
 
     }, EditorWindow::ID_WindowSelect);
   guideMenu->activeEditor->propsPage->GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
@@ -209,6 +210,7 @@ void Onboard::Overview::linkEditorEvents() {
                       "Once you've configured some settings (if any), go ahead and press \"Buttons...\"\n"
                       );
       guideMenu->activeEditor->propsPage->buttonInfo->Enable();
+      guideMenu->activeEditor->propsPage->propInfo->Enable();
 
     }, PropsPage::ID_PropSelect);
   guideMenu->activeEditor->propsPage->GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
@@ -634,6 +636,8 @@ void Onboard::Overview::generateNewPage(const std::string& headerText, const std
 void Onboard::Overview::useButtonOnPage(const std::string& buttonText, std::function<void(wxCommandEvent&)> eventFunction) {
   auto button = new wxButton(this, ID_PageButton, buttonText);
   sizer->Add(button);
+  Layout();
+  Fit();
 
   Bind(wxEVT_BUTTON, eventFunction, ID_PageButton);
 }
