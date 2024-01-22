@@ -93,24 +93,26 @@ void PropsPage::bindEvents() {
                      ) : wxString("Button Configuration Not Supported"));
         } else {
           auto propButtons = activeProp->getButtons().at(parent->generalPage->buttons->entry()->GetValue());
-          if (propButtons.empty()) buttons += "Selected number of buttons not supported by prop file.";
-          else for (auto& state : propButtons) {
-              buttons += "Button controls while saber is " + state.first + ":\n";
-              for (auto& button : state.second) {
-                buttons += "\t" + button.name + " - ";
+
+          if (propButtons.empty()) {
+            buttons += "Selected number of buttons not supported by prop file.";
+          } else for (auto& [ stateName, stateButtons ] : propButtons) {
+              buttons += "Button controls while saber is " + stateName + ":\n";
+              for (auto& button : stateButtons) {
                 std::vector<std::string> activePredicates{};
                 for (const auto& predicate : button.relevantSettings) {
-                  auto key = activeProp->getSettings().find(predicate);
-                  if (key == activeProp->getSettings().end()) continue;
+                  auto setting = activeProp->getSettings().find(predicate);
+                  if (setting == activeProp->getSettings().end()) continue;
 
-                  if (!key->second.getOutput().empty()) activePredicates.push_back(key->first);
+                  if (!setting->second.getOutput().empty()) activePredicates.push_back(setting->first);
                 }
 
                 auto key = button.descriptions.find(activePredicates);
-                if (key == button.descriptions.end()) buttons += "UNDEFINED";
-                else buttons += key->second;
-
-                buttons += '\n';
+                if (key != button.descriptions.end()) {
+                  buttons += "\t" + button.name + " - ";
+                  buttons += key->second;
+                  buttons += '\n';
+                }
               }
               buttons += '\n';
             }
@@ -169,7 +171,7 @@ void PropsPage::update() {
   Layout();
   SetMinSize(GetBestVirtualSize());
   FULLUPDATEWINDOW(parent);
-  parent->SetMinSize(wxSize(-1, 350));
+  parent->SetMinSize(wxSize(parent->sizer->CalcMin().x, 350));
 }
 
 const std::vector<PropFile*>& PropsPage::getLoadedProps() { return props; }

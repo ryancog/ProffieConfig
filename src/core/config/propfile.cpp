@@ -220,7 +220,7 @@ bool PropFile::parseSettingCommon(Setting& setting, std::vector<std::string>& se
     return false;
   }
   setting.description = FileParse::parseEntry("DESCRIPTION", search);
-  setting.required = FileParse::parseListEntry("REQUIRES", search);
+  setting.required = FileParse::parseListEntry("REQUIRE", search);
 
   return true;
 }
@@ -305,12 +305,6 @@ void PropFile::parseButtonSection(std::vector<std::string>& buttonSection, const
     }
 
     parseButtonDescriptions(newButton, section);
-
-    if (newButton.descriptions.find({}) == newButton.descriptions.end()) {
-      error("Button entry \"" + newButton.name + "\" missing default, skipping...");
-      continue;
-    }
-
     parseButtonRelevantSettings(newButton);
 
     buttons.at(numButtons).at(state).second.push_back(newButton);

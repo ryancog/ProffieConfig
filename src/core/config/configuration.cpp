@@ -361,10 +361,10 @@ void Configuration::readConfigProp(std::ifstream& file, EditorWindow* editor) {
             continue;
           }
 
-          if(
+          if (
              key->second.type == PropFile::Setting::SettingType::TOGGLE ||
-             key->second.type == PropFile::Setting::SettingType::OPTION)
-          {
+             key->second.type == PropFile::Setting::SettingType::OPTION
+              ) {
             key->second.setValue(true);
           } else {
             defineStream >> value;
