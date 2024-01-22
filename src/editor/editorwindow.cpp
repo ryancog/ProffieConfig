@@ -85,7 +85,6 @@ void EditorWindow::bindEvents() {
         presetsPage->update();
 
         FULLUPDATEWINDOW(this);
-
   }, ID_WindowSelect);
 }
 void EditorWindow::createToolTips() {
