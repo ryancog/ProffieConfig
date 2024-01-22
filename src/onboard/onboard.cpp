@@ -5,7 +5,13 @@
 
 #include <wx/bitmap.h>
 #include <wx/sizer.h>
+#ifdef __WXMSW__
+#undef wxMessageDialog
 #include <wx/msgdlg.h>
+#define wxMessageDialog wxGenericMessageDialog
+#else
+#include <wx/msgdlg.h>
+#endif
 #include <wx/timer.h>
 #include <wx/statline.h>
 #include <wx/event.h>
