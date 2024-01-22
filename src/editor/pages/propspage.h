@@ -28,11 +28,13 @@ public:
 
   pcComboBox* propSelection{nullptr};
   wxButton* buttonInfo{nullptr};
+  wxButton* propInfo{nullptr};
 
   enum {
     ID_PropSelect,
     ID_Option,
-    ID_Buttons
+    ID_Buttons,
+    ID_PropInfo,
   };
 private:
   EditorWindow* parent{nullptr};
