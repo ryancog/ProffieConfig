@@ -75,19 +75,23 @@ void PropFile::Setting::setValue(double value) const {
 PropFile::SettingMap* PropFile::getSettings() { return settings; }
 const std::array<PropFile::ButtonArray, 4>* PropFile::getButtons() { return buttons; }
 bool PropFile::Setting::checkRequiredSatisfied(const std::unordered_map<std::string, Setting>& settings) const {
-  for (const auto& require : requiredAny) {
-    auto key = settings.find(require);
-    if (key == settings.end()) continue;
-    if (!key->second.getOutput().empty()) return true;
-  }
+  if (!requiredAny.empty()) {
+    for (const auto& require : requiredAny) {
+      auto key = settings.find(require);
+      if (key == settings.end()) continue;
+      if (!key->second.getOutput().empty()) return true;
+    }
 
-  for (const auto& require : required) {
-    auto key = settings.find(require);
-    if (key == settings.end()) return false;
-    if (key->second.getOutput().empty()) return false;
-  }
+    return false;
+  } else {
+    for (const auto& require : required) {
+      auto key = settings.find(require);
+      if (key == settings.end()) return false;
+      if (key->second.getOutput().empty()) return false;
+    }
 
-  return true;
+    return true;
+  }
 }
 
 
@@ -190,6 +194,7 @@ bool PropFile::readSettings(std::vector<std::string>& config) {
         read = true;
         std::vector<std::string> selection;
         bool isFirst{true};
+
         while (!(selection = FileParse::extractSection("SELECTION", section)).empty()) {
           Setting setting;
           if (!parseSettingCommon(setting, selection)) continue;
@@ -200,6 +205,8 @@ bool PropFile::readSettings(std::vector<std::string>& config) {
           }
 
           setting.disables = FileParse::parseListEntry("DISABLE", selection);
+          auto outputEntry = FileParse::parseEntry("OUTPUT", selection);
+          setting.shouldOutput = !(outputEntry.empty() || outputEntry == "FALSE");
 
           tempSettings.push_back({setting.define, setting});
         }
@@ -241,11 +248,6 @@ bool PropFile::readSettings(std::vector<std::string>& config) {
   return true;
 }
 bool PropFile::parseSettingCommon(Setting& setting, std::vector<std::string>& search) {
-  setting.name = FileParse::parseEntry("NAME", search);
-  if (setting.name.empty()) {
-    warning("Skipping entry with no name...");
-    return false;
-  }
   setting.define = FileParse::parseLabel(search.at(0));
   std::string toRemove = " ";
   setting.define.erase(std::remove_if(setting.define.begin(), setting.define.end(), [&toRemove](char c) { return toRemove.find(c) != std::string::npos; }), setting.define.end());
@@ -253,9 +255,16 @@ bool PropFile::parseSettingCommon(Setting& setting, std::vector<std::string>& se
     warning("Entry \"" + setting.name + "\" has empty define, skipping...");
     return false;
   }
+  search.erase(search.begin()); // Erase label so we don't accidentally read it as the wrong thing later
+
+  setting.name = FileParse::parseEntry("NAME", search);
+  if (setting.name.empty()) {
+    warning("Skipping entry with no name...");
+    return false;
+  }
   setting.description = FileParse::parseEntry("DESCRIPTION", search);
-  setting.required = FileParse::parseListEntry("REQUIRE", search);
   setting.requiredAny = FileParse::parseListEntry("REQUIREANY", search);
+  setting.required = FileParse::parseListEntry("REQUIRE", search);
 
   return true;
 }
@@ -451,6 +460,7 @@ bool PropFile::parseLayoutSection(std::vector<std::string>& section, wxSizer* si
         case Setting::SettingType::DECIMAL: createDecimal(key->second, parent, sizer); break;
         case Setting::SettingType::OPTION: createOption(key->second, parent, sizer); break;
       }
+      if (key->second.isDefault) key->second.setValue(true);
       section.erase(section.begin());
     }
     else {

@@ -30,7 +30,7 @@ PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""
   propsWindow->SetScrollbars(10, 10, -1, 1);
 
   Add(top);
-  Add(propsWindow);
+  Add(propsWindow, wxSizerFlags(1).Expand());
   loadProps();
   bindEvents();
 
@@ -40,16 +40,14 @@ void PropsPage::bindEvents() {
   auto propSelectUpdate = [&](wxCommandEvent&) {
     updateSelectedProp();
     update();
-    propsWindow->SetSizerAndFit(propsWindow->GetSizer());
-    parent->SetSizerAndFit(parent->sizer);
-    parent->Refresh();
-    ;
+    updateSizeAndLayout();
   };
   auto optionSelectUpdate = [&](wxCommandEvent&) {
     int32_t x, y;
     propsWindow->GetViewStart(&x, &y);
     update();
     propsWindow->Scroll(x, y);
+    parent->Layout();
   };
 
   GetStaticBox()->Bind(wxEVT_COMBOBOX, propSelectUpdate, ID_PropSelect);
@@ -190,17 +188,30 @@ void PropsPage::update() {
     prop->SetSize(0, 0);
     if (propSelection->entry()->GetStringSelection() != prop->getName()) continue;
 
-    for (auto& [ name, setting ] : *prop->getSettings()) {
-      for (const auto& disable : setting.disables) {
-        auto key = prop->getSettings()->find(disable);
-        if (key == prop->getSettings()->end()) continue;
-
-        key->second.disabled = !setting.getOutput().empty();
-      }
-    }
+    updateDisables(prop);
 
     for (auto& [ name, setting ] : *prop->getSettings()) {
       setting.enable(!setting.disabled && setting.checkRequiredSatisfied(*prop->getSettings()));
+    }
+  }
+}
+void PropsPage::updateSizeAndLayout() {
+  propsWindow->SetSizerAndFit(propsWindow->GetSizer());
+  parent->SetSizerAndFit(parent->sizer);
+  parent->SetMinSize(wxSize(parent->GetSize().x, 350));
+  parent->Refresh();
+}
+
+void PropsPage::updateDisables(PropFile* prop) {
+  for (auto& [ name, setting ] : *prop->getSettings()) {
+    setting.disabled = false;
+  }
+  for (auto& [ name, setting ] : *prop->getSettings()) {
+    for (const auto& disable : setting.disables) {
+      auto key = prop->getSettings()->find(disable);
+      if (key == prop->getSettings()->end()) continue;
+
+      key->second.disabled |= !setting.getOutput().empty();
     }
   }
 }
