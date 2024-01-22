@@ -1,0 +1,363 @@
+NAME: "BC"
+FILENAME: "saber_BC_buttons.h"
+
+SETTINGS {
+	TOGGLE("BC_SWING_ON") {
+		NAME: "Swing to Turn On"
+		DESCRIPTION: "A swing faster than the threshold will ignite the saber."
+	}
+	NUMERIC("BC_SWING_ON_SPEED") {
+		NAME: "Swing on Speed"
+		DESCRIPTION: "Speed required for swing to ignite saber."
+		MIN: 0
+		MAX: 1000
+		DEFAULT: 250
+		INCREMENT: 10
+		REQUIRE: "BC_SWING_ON"
+	}
+	TOGGLE("BC_STAB_ON") {
+		NAME: "Stab to Turn On"
+		DESCRIPTION: "A quick "stab" motion will ignite the saber." 
+	}
+	TOGGLE("BC_THRUST_ON") {
+		NAME: "Thrust to Turn On"
+		DESCRIPTION: "A quick "thrust" motion will ignite the saber."
+	}
+	TOGGLE("BC_TWIST_ON") {
+		NAME: "Twist to Turn On"
+		DESCRIPTION: "A quick "twist" motion will ignite the saber."
+	}
+	TOGGLE("BC_TWIST_OFF") {
+		NAME: "Twist to Turn Off"
+		DESCRIPTION: "A quick "twist" motion will retract the saber."
+	}
+
+
+	TOGGLE("BC_FORCE_PUSH") {
+		NAME: "Enable Force Push"
+		DESCRIPTION: "Enable force push sound effects when doing a "push" gesture with the saber."
+	}
+	NUMERIC("BC_FORCE_PUSH_LENGTH") {
+		NAME: "Force Push Length"
+		DESCRIPTION: "Length of the force push gesture (in millis) needed to trigger.\nRange from 1 (easiest to trigger) to 10 (hardest to trigger)."
+		REQUIRE: "BC_FORCE_PUSH"
+		MIN: 1
+		MAX: 10
+		DEFAULT: 5
+	}
+
+	TOGGLE("NO_BLADE_NO_GEST_ONOFF") {
+		NAME: "No Gesture Ignition without Blade"
+		DESCRIPTION: "Disables Gesture ignitions or retractions when no blade is detected.\nRequires Blade Detect to be enabled."
+	}
+
+	TOGGLE("BC_NO_BM") {
+		NAME: "No Battle Mode"
+		DESCRIPTION: "Disable battle mode features."
+		DISABLE: "BC_GESTURE_AUTO_BATTLE_MODE", "BC_LOCKUP_DELAY"
+	}
+
+	TOGGLE("BC_GESTURE_AUTO_BATTLE_MODE") {
+		NAME: "Battle Mode on Gesture"
+		DESCRIPTION: "Automatically enters Battle Mode when igniting the saber with Gesture ignition."
+	}
+
+	NUMERIC("BC_LOCKUP_DELAY") {
+		NAME: "Lockup Delay (ms)"
+		DESCRIPTION: "Delay between Battle Mode registering a clash or lockup."
+		MIN: 0
+		MAX: 3000
+		INCREMENT: 10
+		DEFAULT: 200
+	}
+
+	TOGGLE("ENABLE_AUTO_SWING_BLAST") {
+		NAME: "Auto Blast on Swing"
+		DESCRIPTION: "Multi-Blast by swinging within 1 second of last blast."
+	}
+	TOGGLE("NO_VOLUME_MENU") {
+		NAME: "No Volume Menu"
+		DESCRIPTION: "Remove On-the-fly Volume menu control with buttons."
+	}
+}
+
+LAYOUT {
+	HORIZONTAL ("Gesture Control") {
+		OPTION("BC_STAB_ON")
+		VERTICAL {
+			OPTION("BC_SWING_ON")
+			OPTION("BC_SWING_ON_SPEED")
+		}
+		OPTION("BC_THRUST_ON")
+		OPTION("BC_TWIST_ON")
+		OPTION("BC_TWIST_OFF")
+	}
+	HORIZONTAL {
+		VERTICAL("Controls") {
+			OPTION("NO_BLADE_NO_GEST_ONOFF")
+			OPTION("ENABLE_AUTO_SWING_BLAST")
+			OPTION("NO_VOLUME_MENU")
+		}
+		VERTICAL("Features") {
+			OPTION("BC_FORCE_PUSH")
+			OPTION("BC_FORCE_PUSH_LENGTH")
+		}
+		VERTICAL("Battle Mode") {
+			OPTION("BC_NO_BM")
+			OPTION("BC_GESTURE_AUTO_BATTLE_MODE")
+			OPTION("BC_LOCKUP_DELAY")
+		}
+	}
+}
+
+BUTTONS{1} {
+	STATE("OFF") {
+		BUTTON("Short Click") {
+			DESCRIPTION: "Turn blade ON"
+		}
+		BUTTON("Short Click while pointing up") {
+			DESCRIPTION: "Turn ON without preon"
+		}
+		BUTTON("Click 4 Times and Hold") {
+			DESCRIPTION: "Turn blade ON Muted"
+		}
+		BUTTON("Long Click and Release") {
+			DESCRIPTION: "Next Preset"
+		}
+		BUTTON("Double Click and Hold") {
+			DESCRIPTION: "Prev Preset"
+		}
+		BUTTON("Click 4 Times") {
+			DESCRIPTION: "Play/Stop Track"
+		}
+		BUTTON("Hold and Clash") {
+			DESCRIPTION: "Enter/Exit Volume Menu"
+		}
+		BUTTON("Triple Click") {
+			DESCRIPTION: "Speak Battery Level in Volts"
+		}
+		BUTTON("Triple Click and Hold") {
+			DESCRIPTION: "Speak Battery Level in Percentage"
+		}
+		BUTTON("Double Click") {
+			DESCRIPTION: "On-Demand Battery Level (Requires EFFECT_BATTERY_LEVEL in blade style, uses battery.wav sound effect)"
+		}
+	}
+
+	STATE("ON") {
+		BUTTON("Hold and Wait") {
+			DESCRIPTION: "Turn Off Blade"
+		}
+		BUTTON("Hold and Wait while Pointing Up") {
+			DESCRIPTION: "Turn Off Blade without post-off"
+		}
+		BUTTON("Click 4 Times") {
+			DESCRIPTION: "Play/Stop Track"
+		}
+		BUTTON("Long Click and Release while Holding Up") {
+			DESCRIPTION: "Next Preset Fast"
+		}
+		BUTTON("Double Click and Hold while Pointing Up") {
+			DESCRIPTION: "Prev Preset Fast"
+		}
+		BUTTON("Click or Double Click") {
+			DESCRIPTION: "Blaster Blocks"
+		}
+		BUTTON("Triple Click and Hold while Pointing Up") {
+			DESCRIPTION: "Toggle Spam Blaster Blocks (Makes button super sensitive for multiple blaster blocks, gets in the way of normal features)"
+		}
+		BUTTON("Swing within 1 second of Blaster Block") {
+			DESCRIPTION("ENABLE_AUTO_SWING_BLAST"): "Auto Swing Blast"
+		}
+		BUTTON("Hold and Clash") {
+			DESCRIPTION("BC_NO_BM"): "Lockup"
+			DESCRIPTION: "Lockup (in Battle Mode, clash and stay there; pull away to end)")
+		}
+		BUTTON("Hold and Clash while Pointing Down") {
+			DESCRIPTION: "Drag"
+		}
+		BUTTON("Double Click and Hold") {
+			DESCRIPTION: "Lightning Block"
+		}
+		BUTTON("Triple Click and Hold") {
+			DESCRIPTION: "Enter/Exit Battle Mode (Disables Power Off)"
+		}
+		BUTTON("Hold and Twist") {
+			DESCRIPTION: "Force Effect"
+		}
+		BUTTON("Hold and Twist while Pointing Up") {
+			DESCRIPTION: "Monophonic Force"
+		}
+		BUTTON("Hold and Twist while Pointing Down") {
+			DESCRIPTION: "Enter Color Change Mode"
+		}
+		BUTTON("Triple Click") {
+			DESCRIPTION: "Quote Player"
+		}
+		BUTTON("Click 4 Times and Hold while Pointing Down") {
+			DESCRIPTION: "Toggle Sequential or Random Quote Playing"
+		}
+		BUTTON("Click 4 Times and Hold") {
+			DESCRIPTION: "Swap (EffectSequence, Requres EFFECT_USER1 in blade style)"
+		}
+		BUTTON("Click 4 Times and Hold while Pointing Up") {
+			DESCRIPTION: "Power Save (Dim Blade)"
+		}
+	}
+
+	STATE("in Volume Menu") {
+		BUTTON("Rotate Right or Long Click and Release") {
+			DESCRIPTION: "Volume UP"
+		}
+		BUTTON("Rotate Left or Double Click and Hold") {
+			DESCRIPTION: "Volume DOWN"
+		}
+		BUTTON("Short Click") {
+			DESCRIPTION: "Quick MAX Volume"
+		}
+		BUTTON("Double Click") {
+			DESCRIPTION: "Quick MIN Volume"
+		}
+	}
+
+	STATE("in Color Change") {
+		BUTTON("Click and Hold") {
+			DESCRIPTION: "Save Selection and Exit"
+		}
+		BUTTON("Triple Click") {
+			DESCRIPTION: "Cancel and Restore Original Color"
+		}
+		BUTTON("Rotate Hilt") {
+			DESCRIPTION: "Cycle Through All Available Colors"
+		}
+		BUTTON("Click") {
+			DESCRIPTION: "Change if ColorChange<> is used in blade style"
+		}
+	}
+}
+
+BUTTONS{2} {
+	STATE("OFF") {
+		BUTTON("Short Click Power") {
+			DESCRIPTION: "Turn blade ON"
+		}
+		BUTTON("Short Click Power while pointing up") {
+			DESCRIPTION: "Turn ON without preon"
+		}
+		BUTTON("Click Power 4 Times and Hold") {
+			DESCRIPTION: "Turn blade ON Muted"
+		}
+		BUTTON("Long Click and Release Power") {
+			DESCRIPTION: "Next Preset"
+		}
+		BUTTON("Double Click and Hold Power") {
+			DESCRIPTION: "Prev Preset"
+		}
+		BUTTON("Hold Aux and Double Click Power") {
+			DESCRIPTION: "Play/Stop Track"
+		}
+		BUTTON("Long Click Aux") {
+			DESCRIPTION: "Enter/Exit Volume Menu"
+		}
+		BUTTON("Triple Click Power") {
+			DESCRIPTION: "Speak Battery Level in Volts"
+		}
+		BUTTON("Triple Click and Hold Power") {
+			DESCRIPTION: "Speak Battery Level in Percentage"
+		}
+		BUTTON("Double Click Power") {
+			DESCRIPTION: "On-Demand Battery Level (Requires EFFECT_BATTERY_LEVEL in blade style, uses battery.wav sound effect)"
+		}
+	}
+
+	STATE("ON") {
+		BUTTON("Hold Power and Wait") {
+			DESCRIPTION: "Turn Off Blade"
+		}
+		BUTTON("Hold Power and Wait while Pointing Up") {
+			DESCRIPTION: "Turn Off Blade without post-off"
+		}
+		BUTTON("Hold Aux and Double Click Power") {
+			DESCRIPTION: "Play/Stop Track"
+		}
+		BUTTON("Hold Aux and Long Click and Release Power while Holding Up") {
+			DESCRIPTION: "Next Preset Fast"
+		}
+		BUTTON("Hold Aux and Double Click and Hold Power while Pointing Up") {
+			DESCRIPTION: "Prev Preset Fast"
+		}
+		BUTTON("Click or Double Click Power") {
+			DESCRIPTION: "Blaster Blocks"
+		}
+		BUTTON("Triple Click and Hold Power while Pointing Up") {
+			DESCRIPTION: "Toggle Spam Blaster Blocks (Makes button super sensitive for multiple blaster blocks, gets in the way of normal features)"
+		}
+		BUTTON("Swing within 1 second of Blaster Block") {
+			DESCRIPTION("ENABLE_AUTO_SWING_BLAST"): "Auto Swing Blast"
+		}
+		BUTTON("Hold Aux and Clash") {
+			DESCRIPTION("BC_NO_BM"): "Lockup"
+			DESCRIPTION: "Lockup (in Battle Mode, clash and stay there; pull away to end)")
+		}
+		BUTTON("Hold Aux and Clash while Pointing Down") {
+			DESCRIPTION: "Drag"
+		}
+		BUTTON("Double Click and Hold Power") {
+			DESCRIPTION: "Lightning Block"
+		}
+		BUTTON("Hold Power and Click Aux") {
+			DESCRIPTION: "Enter/Exit Battle Mode (Disables Power Off)"
+		}
+		BUTTON("Hold Power and Twist") {
+			DESCRIPTION: "Force Effect"
+		}
+		BUTTON("Hold Power and Twist while Pointing Up") {
+			DESCRIPTION: "Monophonic Force"
+		}
+		BUTTON("Hold Power and Twist while Pointing Down") {
+			DESCRIPTION: "Enter Color Change Mode"
+		}
+		BUTTON("Triple Click Power") {
+			DESCRIPTION: "Quote Player"
+		}
+		BUTTON("Hold Aux and Twist while Pointing Down") {
+			DESCRIPTION: "Toggle Sequential or Random Quote Playing"
+		}
+		BUTTON("Hold Aux and Twist") {
+			DESCRIPTION: "Swap (EffectSequence, Requres EFFECT_USER1 in blade style)"
+		}
+		BUTTON("Hold Aux and Twist while Pointing Up") {
+			DESCRIPTION: "Power Save (Dim Blade, requires AlphaL based EffectSequence in blade style)"
+		}
+	}
+
+	STATE("in Volume Menu") {
+		BUTTON("Rotate Right or Long Click and Release Power") {
+			DESCRIPTION: "Volume UP"
+		}
+		BUTTON("Rotate Left or Double Click and Hold Power") {
+			DESCRIPTION: "Volume DOWN"
+		}
+		BUTTON("Short Click Power") {
+			DESCRIPTION: "Quick MAX Volume"
+		}
+		BUTTON("Double Click Power") {
+			DESCRIPTION: "Quick MIN Volume"
+		}
+	}
+
+	STATE("in Color Change") {
+		BUTTON("Click and Hold Power") {
+			DESCRIPTION: "Save Selection and Exit"
+		}
+		BUTTON("Triple Click Power") {
+			DESCRIPTION: "Cancel and Restore Original Color"
+		}
+		BUTTON("Rotate Hilt") {
+			DESCRIPTION: "Cycle Through All Available Colors"
+		}
+		BUTTON("Click Aux") {
+			DESCRIPTION: "Change if ColorChange<> is used in blade style"
+		}
+	}
+}
