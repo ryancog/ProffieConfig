@@ -1,5 +1,5 @@
 NAME: "Fett263"
-FILENAME: "saber_fet263_buttons.h"
+FILENAME: "saber_fett263_buttons.h"
 INFO: {
 	"Fett263 Buttons for use with 1, 2 or 3 Button Sabers*"
 	"*1 Button Controls based on SA22C prop"
@@ -145,6 +145,7 @@ SETTINGS {
 	OPTION {
 		SELECTION("NO_EDIT_MODE") {
 			NAME: "No Edit Mode"
+			OUTPUT: FALSE
 		}
 		SELECTION("FETT263_EDIT_MODE_MENU") {
 			NAME: "Edit Mode"
@@ -316,9 +317,13 @@ SETTINGS {
 		DESCRIPTION: "Battle Mode is active with each ignition by default but can be toggled using Aux + Swing control"
 		DISABLE: "FETT263_BATTLE_MODE_ALWAYS_ON", "FETT263_SWING_ON_NO_BM", "FETT263_TWIST_ON_NO_BM", "FETT263_STAB_ON_NO_BM", "FETT263_THRUST_ON_NO_BM"
 	}
-	TOGGLE("FETT263_LOCKUP_DELAY") {
+	NUMERIC("FETT263_LOCKUP_DELAY") {
 		NAME: "Lockup Delay (ms)"
 		DESCRIPTION: "This is the "delay" in millis to determine Clash vs Lockup in Battle Mode"
+		MIN: 0
+		MAX: 3000
+		DEFAULT: 200
+		INCREMENT: 10
 	}
 	TOGGLE("FETT263_BM_CLASH_DETECT") {
 		NAME: "Clash Detect Threshold"
@@ -451,6 +456,629 @@ LAYOUT {
 					OPTION("FETT263_DISABLE_COPY_PRESET")
 				}
 			}
+		}
+	}
+}
+
+BUTTONS{1} {
+	STATE("OFF") {
+		BUTTON("Click") {
+			DESCRIPTION: "Turn On / Ignite Saber"
+			DESCRIPTION("FETT263_MOTION_WAKE_POWER_BUTTON"): "Turn On / Ignite Saber (First click will wake up motion detection and boot sound will play)"
+		}
+		BUTTON("Click and Long Click") {
+			DESCRIPTION: "Turn On / Ignite Saber (Muted)"
+		}
+		BUTTON("Double Click while Pointing Up") {
+			DESCRIPTION: "Start / Stop Tracks"
+		}
+		BUTTON("Double Click while Parallel or Down") {
+			DESCRIPTION: "Enter Track Player (Will loop if only default track exists)"
+		}
+		BUTTON("Triple Click") {
+			DESCRIPTION: "Force/Quote Player (If quotes exist in current font pointing straight down will toggle between Force/Quote)"
+		}
+		BUTTON("Hold and Turn Right while Pointing Parallel or Up") {
+			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 5 (USER5)"
+		}
+		BUTTON("Hold and Turn Left while Pointing Parallel or Up") {
+			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 6 (USER6)"
+		}
+		BUTTON("Hold and Turn Right while Pointing Down") {
+			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 7 (USER7)"
+		}
+		BUTTON("Hold and Turn Right while Pointing Down") {
+			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 8 (USER8)"
+		}
+
+		BUTTON("Hold and Swing") {
+			DESCRIPTION("FETT263_SPIN_MODE"): "Toggle Spin Mode (Disables Clash, Stab and Lockup effects to allow for spinning and flourishes)"
+		}
+		BUTTON("Hold and Clash while Pointing Down") {
+			DESCRIPTION: "Toggle Gesture Sleep"
+		}
+		BUTTON("Long Click while Parallel or Pointing Up") {
+			DESCRIPTION: "Next Preset"
+		}
+		BUTTON("Long Click while Pointing Down") {
+			DESCRIPTION: "Previous Preset"
+		}
+		BUTTON("Hold") {
+			DESCRIPTION: "Scroll Presets (using twist menu)"
+		}
+		BUTTON("Hold and Clash while Parallel or Pointing UP") {
+			DESCRIPTION: "Enter Volume Menu"
+		}
+		BUTTON("Double Click and Long Click") {
+			DESCRIPTION: "Battery Level (On Blade, Requires EFFECT_BATTERY_LEVEL)"
+			DESCRIPTION("FETT263_SAY_BATTERY_VOLTS"): "Battery Level (Spoken Volts and On Blade, Requires EFFECT_BATTERY_LEVEL)"
+			DESCRIPTION("FETT263_SAY_BATTERY_PERCENT"): "Battery Level (Spoken Percent and On Blade, Requires EFFECT_BATTERY_LEVEL)"
+			DESCRIPTION("FETT263_BC_SAY_BATTERY_VOLTS_PERCENT"): "Battery Level (Point down for volts, parallel or up for percent, on blade requires EFFECT_BATTERY_LEVEL)"
+
+		}
+		BUTTON("Triple Click and Long Click (Parallel or Pointing Up)") {
+			DESCRIPTION: "Next Font"
+		}
+		BUTTON("Triple Click and Long Click (Pointing Down)") {
+			DESCRIPTION: "Previous Font"
+		}
+		BUTTON("Quadruple (Four) Click and Hold") {
+			DESCRIPTION: "Copy Preset"
+		}
+
+		BUTTON("Double Click and Hold") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Enter Edit Mode"
+			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Enter Settings Menu"
+		}
+	}
+
+	STATE("ON") {
+		BUTTON("Hold") {
+			DESCRIPTION: "Turn Off / Retract Blade"
+		}
+		BUTTON("Hold and Clash") {
+			DESCRIPTION: "Lockup"
+		}
+		BUTTON("Hold and Stab (Pointing Down)" {
+			DESCRIPTION: "Drag"
+		}
+		BUTTON("Hold and Stab (Parallel or Pointing Up)") {
+			DESCRIPTION: "Melt"
+		}
+		BUTTON("Double Click and Hold") {
+			DESCRIPTION: "Lightning Block"
+		}
+		BUTTON("Click") {
+			DESCRIPTION: "Blast Effect"
+		}
+		BUTTON("Hold and Swing") {
+			DESCRIPTION: "Multi-Blast Mode (Each Swing will trigger Blast effect. To exit, click PWR or do Clash)"
+		}
+		BUTTON("Long Click") {
+			DESCRIPTION: "Force/Quote (If pointing down will toggle Force/Quote mode and do Force Effect or play Quote accordingly (If parallel will do Force/Quote)"
+		}
+		BUTTON("Double Click") {
+			DESCRIPTION: "Stop Track (If Playing)"
+		}
+		BUTTON("Quadruple (Four) Click (Parallel or Pointing Down") {
+			DESCRIPTION: "Enter Color Change"
+		}
+		BUTTON("Quadruple (Four) Click (Pointing Up)") {
+			DESCRIPTION: "Power Save (Requires EFFECT_POWERSAVE)"
+		}
+		BUTTON("Hold and Twist (Parallel or Pointing Up)") {
+			DESCRIPTION("FETT263_MULTI_PHASE"): "Next Preset (Multi-Phase)"
+		}
+		BUTTON("Hold and Twist (Pointing Down)") {
+			DESCRIPTION("FETT263_MULTI_PHASE"): "Previous Preset (Multi-Phase)"
+		}
+		BUTTON("Hold and Turn Right while Pointing Parallel or Up") {
+			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 1 (USER1)"
+		}
+		BUTTON("Hold and Turn Left while Pointing Parallel or Up") {
+			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 2 (USER2)"
+		}
+		BUTTON("Hold and Turn Right while Pointing Down") {
+			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 3 (USER3)"
+		}
+		BUTTON("Hold and Turn Right while Pointing Down") {
+			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 4 (USER4)"
+		}
+
+		BUTTON("Triple Click and Long Click (Parallel or Pointing Up)") {
+			DESCRIPTION: "Next Style"
+		}
+		BUTTON("Triple Click and Long Click (Pointing Down)") {
+			DESCRIPTION: "Previous Style"
+		}
+
+		BUTTON("Triple Click and Hold") {
+			DESCRIPTION: "Enter Battle Mode"
+			DESCRIPTION("FETT263_DISABLE_BM_TOGGLE"): "DISABLED"
+		}
+		BUTTON("Triple Click and Hold") {
+			DESCRIPTION("FETT263_SAVE_CHOREOGRAPHY"): "Enter Choreography Mode"
+		}
+	}
+
+	STATE("in Track Player") {
+		BUTTON("Turn Right") {
+			DESCRIPTION: "Next Track"
+		}
+		BUTTON("Turn Left") {
+			DESCRIPTION: "Previous Track"
+		}
+		BUTTON("Click") {
+			DESCRIPTION: "Play Current Track Once"
+		}
+		BUTTON("Hold") {
+			DESCRIPTION: "Random (will play current track and then randomly select next tracks)"
+		}
+		BUTTON("Hold and Turn Right") {
+			DESCRIPTION: "Rotate (will play current track and then next sequential tracks)"
+		}
+		BUTTON("Hold and Turn Left") {
+			DESCRIPTION: "Loop Current Track"
+		}
+	}
+
+	STATE("in Preset Scroller") {
+		BUTTON("Turn Right") {
+			DESCRIPTION: "Next Preset"
+		}
+		BUTTON("Hold and Turn Right") {
+			DESCRIPTION: "Next 5 Presets"
+		}
+		BUTTON("Turn Left") {
+			DESCRIPTION: "Previous Preset"
+		}
+		BUTTON("Hold and Turn Left") {
+			DESCRIPTION: "Previous 5 Presets"
+		}
+		BUTTON("Click") {
+			DESCRIPTION: "Select Preset"
+		}
+		BUTTON("Hold") {
+			DESCRIPTION: "Select and Ignite Preset"
+		}
+		BUTTON("Long Click") {
+			DESCRIPTION: "First Preset"
+		}
+	}
+
+	STATE("in Volume Menu") {
+		BUTTON("Turn Right") {
+			DESCRIPTION: "Increase Volume"
+		}
+		BUTTON("Turn Left") {
+			DESCRIPTION: "Decrease Volume"
+		}
+		BUTTON("Click") {
+			DESCRIPTION: "Exit"
+		}
+	}
+
+	STATE("in Color Change") {
+		BUTTON("Rotate Hilt") {
+			DESCRIPTION: "Select Color"
+		}
+		BUTTON("Click") {
+			DESCRIPTION: "Save"
+		}
+		BUTTON("Double Click and Hold") {
+			DESCRIPTION: "Color Zoom"
+		}
+		BUTTON("Release") {
+			DESCRIPTION: "Exit Color Zoom and Save"
+		}
+	}
+
+	STATE("in Battle Mode") {
+		BUTTON("Click") {
+			DESCRIPTION: "Blast Effect (Swing within 2 seconds to enter Multi-Blast)"
+		}
+		BUTTON("Double Click and Hold") {
+			DESCRIPTION: "Lightning Block"
+		}
+	}
+
+	STATE("in Choreography Mode") {
+		BUTTON("Turn Right and Click") {
+			DESCRIPTION("FETT263_SAVE_CHOREOGRAPHY"): "Accept New Rehearsal"
+		}
+		BUTTON("Triple Click and Hold") {
+			DESCRIPTION("FETT263_SAVE_CHOREOGRAPHY"): "Cancel Rehearsal"
+		}
+
+		BUTTON("Hold and Clash") {
+			DESCRIPTION("FETT263_SAVE_CHOREOGRAPHY"): "Lockup (will also record sound files to repeat)"
+		}
+		BUTTON("Hold") {
+			DESCRIPTION("FETT263_SAVE_CHOREOGRAPHY"): "Save Rehearsal"
+		}
+		BUTTON("Hold and Swing (While Off)") {
+			DESCRIPTION("FETT263_SAVE_CHOREOGRAPHY"): "Begin Choreography (Enters Battle Mode on Completion)"
+		}
+		BUTTON("Hold") {
+			DESCRIPTION("FETT263_SAVE_CHOREOGRAPHY"): "End Choreography"
+		}
+	}
+
+	STATE("in Edit Mode") {
+		BUTTON("Turn Right") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Rotate Forward, Increase Value, Confirm "Yes""
+		}
+		BUTTON("Hold and Turn Right") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Increment by 5 (Fonts, Tracks, Blade Length), Increment by 500 (Ignition Time, Ignition Delay, Retraction Time, Retraction Delay), Increment by 5000 (Ignition Option2, Retraction Option2)"
+		}
+		BUTTON("Turn Left") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Rotate Back, Decrease Value, Confirm "No""
+		}
+		BUTTON("Hold and Turn Left") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Increment by 5 (Fonts, Tracks, Blade Length), Increment by 500 (Ignition Time, Ignition Delay, Retraction Time, Retraction Delay), Icrement by 5000 (Ignition Option2, Retraction Option2)" 
+		}
+		BUTTON("Click") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Select, Save, Enter"
+		}
+		BUTTON("Long Click") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Cancel, Revert, Go Back"
+		}
+		BUTTON("Hold") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Go To Main Menu (From Sub-Menu), Exit Edit Mode (From Main Menu)"
+		}
+		BUTTON("Double Click and Hold") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): ""Color List" and "Adjust Color Hue" Zoom Mode (release to save)"
+		}
+	}
+
+	STATE("in Edit Settings") {
+		BUTTON("Turn Right") {
+			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Rotate Forward, Increase Value, Confirm "Yes""
+		}
+		BUTTON("Hold and Turn Right") {
+			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Increment by 5 (Blade Length)"
+		}
+		BUTTON("Turn Left") {
+			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Rotate Back, Decrease Value, Confirm "No""
+		}
+		BUTTON("Hold and Turn Left") {
+			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Increment by 5 (Blade Length)"
+		}
+		BUTTON("Click") {
+			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Select, Save, Enter"
+		}
+		BUTTON("Long Click") {
+			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Cancel, Revert, Go Back"
+		}
+		BUTTON("Hold Click") {
+			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Exit"
+		}
+	}
+}
+
+BUTTONS{2} {
+	STATE("OFF") {
+		BUTTON("Click Power") {
+			DESCRIPTION: "Turn On / Ignite Saber"
+			DESCRIPTION("FETT263_MOTION_WAKE_POWER_BUTTON"): "Turn On / Ignite Saber (First click will wake up motion detection and boot sound will play)"
+		}
+		BUTTON("Double Click Power") {
+			DESCRIPTION: "Turn On / Ignite Saber (Muted)"
+		}
+		BUTTON("Click Aux (Parallel or Pointing Up)") {
+			DESCRIPTION: "Next Preset"
+		}
+		BUTTON("Click Aux (Pointing Down)") {
+			DESCRIPTION: "Previous Preset"
+		}
+		BUTTON("Long Click Aux") {
+			DESCRIPTION: "Scroll Presets (using twist menu)"
+		}
+		BUTTON("Long Click Power (Pointing Up)") {
+			DESCRIPTION: "Play Track"
+		}
+		BUTTON("Long Click Power (Parallel)") {
+			DESCRIPTION: "Enter Track Player (Will loop if only default track exists)"
+		}
+		BUTTON("Hold Power") {
+			DESCRIPTION: "Force/Quote Player (If quotes exist in current font pointing straight down will toggle between Force/Quote)"
+		}
+		BUTTON("Hold Power and Clash") {
+			DESCRIPTION: "Toggle Gesture Sleep"
+		}
+		BUTTON("Hold Power and Swing") {
+			DESCRIPTION("FETT263_SPIN_MODE"): "Toggle Spin Mode (Disables Clash, Stab and Lockup effects to allow for spinning and flourishes)"
+		}
+		BUTTON("Hold Power and Turn Right") {
+			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 5 (USER5)"
+		}
+		BUTTON("Hold Power and Turn Left") {
+			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 6 (USER6)"
+		}
+		BUTTON("Hold Aux and Turn Right") {
+			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 7 (USER7)"
+		}
+		BUTTON("Hold Aux and Turn Right") {
+			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 8 (USER8)"
+		}
+		BUTTON("Hold Power, Click Aux") {
+			DESCRIPTION: "Enter Volume Menu"
+		}
+		BUTTON("Hold Aux, Click Power") {
+			DESCRIPTION: "Battery Level (On Blade, Requires EFFECT_BATTERY_LEVEL)"
+			DESCRIPTION("FETT263_SAY_BATTERY_VOLTS"): "Battery Level (Spoken Volts and On Blade, Requires EFFECT_BATTERY_LEVEL)"
+			DESCRIPTION("FETT263_SAY_BATTERY_PERCENT"): "Battery Level (Spoken Percent and On Blade, Requires EFFECT_BATTERY_LEVEL)"
+			DESCRIPTION("FETT263_BC_SAY_BATTERY_VOLTS_PERCENT"): "Battery Level (Point down for volts, parallel or up for percent, on blade requires EFFECT_BATTERY_LEVEL)"
+		}
+		BUTTON("Hold Aux and Long Click Power (Parallel or Pointing Up)") {
+			DESCRIPTION: "Next Font"
+		}
+		BUTTON("Hold Aux and Long Click Power (Pointing Down)") {
+			DESCRIPTION: "Previous Font"
+		}
+		BUTTON("Hold Power and Long Click Aux") {
+			DESCRIPTION: "Copy Preset"
+		}
+		BUTTON("Hold Aux and Hold Power") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Enter Edit Mode"
+			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Enter Settings Menu"
+		}
+	}
+
+	STATE("ON") {
+		BUTTON("Click Power") {
+			DESCRIPTION: "Turn Off / Retract Blade"
+			DESCRIPTION("FETT263_HOLD_BUTTON_OFF"): "DISABLED"
+		}
+		BUTTON("Hold Power") {
+			DESCRIPTION("FETT263_HOLD_BUTTON_OFF"): "Turn Off / Retract Blade"
+		}
+		BUTTON("Hold Power and Hold Aux") {
+			DESCRIPTION: "Turn Off / Retract Blade (PowerLock Mode)"
+		}
+		BUTTON("Click Aux") {
+			DESCRIPTION: "Blast Effect"
+		}
+		BUTTON("Long Click Aux") {
+			DESCRIPTION: "Multi-Blast Mode (Exit with Aux or Clash)"
+		}
+		BUTTON("Hold Power and Clash") {
+			DESCRIPTION: "Lockup"
+			DESCRIPTION("FETT263_HOLD_BUTTON_LOCKUP"): "DISABLED"
+		}
+		BUTTON("Hold Aux") {
+			DESCRIPTION("FETT263_HOLD_BUTTON_LOCKUP"): "Lockup"
+		}
+		BUTTON("Hold Aux and Stab (Pointing Down)" {
+			DESCRIPTION: "Drag"
+		}
+		BUTTON("Hold Aux and Stab (Parallel or Pointing Up)") {
+			DESCRIPTION: "Melt"
+		}
+		BUTTON("Hold Power and Click Aux") {
+			DESCRIPTION: "Lightning Block"
+		}
+		BUTTON("Long Click Power (Parallel or Pointing Down)") {
+			DESCRIPTION: "Force/Quote (If pointing down will toggle Force/Quote mode and do Force Effect or play Quote accordingly (If parallel will do Force/Quote)"
+		}
+		BUTTON("Long Click Power (Pointing Up)") {
+			DESCRIPTION: "Start/Stop Track"
+		}
+		BUTTON("Hold Aux and Click Power (Parallel or Pointing Down)") {
+			DESCRIPTION: "Enter Color Change"
+		}
+		BUTTON("Hold Aux and Click Power (Pointing Up)") {
+			DESCRIPTION: "Power Save (Requires EFFECT_POWERSAVE)"
+		}
+		BUTTON("Hold Aux and Twist") {
+			DESCRIPTION("FETT263_MULTI_PHASE"): "Next Preset (Multi-Phase)"
+		}
+		BUTTON("Hold Power and Twist") {
+			DESCRIPTION("FETT263_MULTI_PHASE"): "Previous Preset (Multi-Phase)"
+		}
+		BUTTON("Hold Power and Turn Right") {
+			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 1 (USER1)"
+		}
+		BUTTON("Hold Power and Turn Left") {
+			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 2 (USER2)"
+		}
+		BUTTON("Hold Power and Turn Right") {
+			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 3 (USER3)"
+		}
+		BUTTON("Hold Power and Turn Right") {
+			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 4 (USER4)"
+		}
+
+		BUTTON("Hold Aux and Long Click Power (Parallel or Pointing Up)") {
+			DESCRIPTION: "Next Style"
+		}
+		BUTTON("Hold Aux and Long Click Power (Pointing Down)") {
+			DESCRIPTION: "Previous Style"
+		}
+
+		BUTTON("Hold Aux") {
+			DESCRIPTION: "Enter Battle Mode"
+			DESCRIPTION("FETT263_HOLD_BUTTON_LOCKUP"): "DISABLED"
+			DESCRIPTION("FETT263_DISABLE_BM_TOGGLE"): "DISABLED"
+		}
+		BUTTON("Hold Aux and Swing") {
+			DESCRIPTION("FETT263_HOLD_BUTTON_LOCKUP"): "Enter Battle Mode"
+		}
+
+		BUTTON("Hold Aux and Twist") {
+			DESCRIPTION("FETT263_SAVE_CHOREOGRAPHY"): "Enter Choreography Mode"
+		}
+	}
+
+	STATE("in Track Player") {
+		BUTTON("Turn Right") {
+			DESCRIPTION: "Next Track"
+		}
+		BUTTON("Turn Left") {
+			DESCRIPTION: "Previous Track"
+		}
+		BUTTON("Click Power") {
+			DESCRIPTION: "Play Current Track Once"
+		}
+		BUTTON("Click Aux") {
+			DESCRIPTION: "Random (will play current track and then randomly select next tracks)"
+		}
+		BUTTON("Hold Power and Turn Right") {
+			DESCRIPTION: "Rotate (will play current track and then next sequential tracks)"
+		}
+		BUTTON("Hold Power and Turn Left") {
+			DESCRIPTION: "Loop Current Track"
+		}
+		BUTTON("Long Click Power") {
+			DESCRIPTION: "Stop Track Player"
+		}
+	}
+
+	STATE("in Preset Scroller") {
+		BUTTON("Turn Right") {
+			DESCRIPTION: "Next Preset"
+		}
+		BUTTON("Hold Power and Turn Right") {
+			DESCRIPTION: "Next 5 Presets"
+		}
+		BUTTON("Turn Left") {
+			DESCRIPTION: "Previous Preset"
+		}
+		BUTTON("Hold Power and Turn Left") {
+			DESCRIPTION: "Previous 5 Presets"
+		}
+		BUTTON("Click Power") {
+			DESCRIPTION: "Select Preset"
+		}
+		BUTTON("Hold Power") {
+			DESCRIPTION: "Select and Ignite Preset"
+		}
+		BUTTON("Click Aux") {
+			DESCRIPTION: "Go To First Preset"
+		}
+	}
+
+	STATE("in Volume Menu") {
+		BUTTON("Turn Right") {
+			DESCRIPTION: "Increase Volume"
+		}
+		BUTTON("Turn Left") {
+			DESCRIPTION: "Decrease Volume"
+		}
+		BUTTON("Click Power or Aux") {
+			DESCRIPTION: "Exit"
+		}
+	}
+
+	STATE("in Color Change") {
+		BUTTON("Rotate Hilt") {
+			DESCRIPTION: "Select Color"
+		}
+		BUTTON("Click Power") {
+			DESCRIPTION: "Save"
+		}
+		BUTTON("Click Aux") {
+			DESCRIPTION: "Revert"
+		}
+		BUTTON("Hold Power") {
+			DESCRIPTION: "Color Zoom"
+		}
+		BUTTON("Release Power") {
+			DESCRIPTION: "Exit Color Zoom and Save"
+		}
+	}
+
+	STATE("in Battle Mode") {
+		BUTTON("Click Aux") {
+			DESCRIPTION: "Blast Effect (Swing within 2 seconds to enter Multi-Blast)"
+		}
+		BUTTON("Long Click Aux") {
+			DESCRIPTION: "Multi-Blast Mode"
+		}
+		BUTTON("Click Aux or Clash") {
+			DESCRIPTION: "Exit Multi-Blast"
+		}
+		BUTTON("Hold Power, Click Aux") {
+			DESCRIPTION: "Lightning Block"
+		}
+		BUTTON("Long Click Power (Parallel or Pointing Down)") {
+			DESCRIPTION: "Force/Quote"
+		}
+		BUTTON("Long Click Power (Pointing Up)") {
+			DESCRIPTION: "Start/Stop Track"
+		}
+	}
+
+	STATE("in Choreography Mode") {
+		BUTTON("Turn Right and Click Power") {
+			DESCRIPTION("FETT263_SAVE_CHOREOGRAPHY"): "Accept New Rehearsal"
+		}
+		BUTTON("Click/Hold Aux") {
+			DESCRIPTION("FETT263_SAVE_CHOREOGRAPHY"): "Cancel Rehearsal"
+		}
+
+		BUTTON("Hold Power and Clash") {
+			DESCRIPTION("FETT263_SAVE_CHOREOGRAPHY"): "Lockup (will also record sound files to repeat)"
+		}
+		BUTTON("Hold Power") {
+			DESCRIPTION("FETT263_SAVE_CHOREOGRAPHY"): "Save Rehearsal"
+		}
+		BUTTON("Hold Aux (While Off) or Hold Aux and Swing") {
+			DESCRIPTION("FETT263_SAVE_CHOREOGRAPHY"): "Begin Choreography (Enters Battle Mode on Completion)"
+		}
+		BUTTON("Hold Aux and Hold Power") {
+			DESCRIPTION("FETT263_SAVE_CHOREOGRAPHY"): "End Choreography"
+		}
+	}
+
+	STATE("in Edit Mode") {
+		BUTTON("Turn Right") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Rotate Forward, Increase Value, Confirm "Yes""
+		}
+		BUTTON("Hold Power and Turn Right") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Increment by 5 (Fonts, Tracks, Blade Length), Increment by 500 (Ignition Time, Ignition Delay, Retraction Time, Retraction Delay), Increment by 5000 (Ignition Option2, Retraction Option2)"
+		}
+		BUTTON("Turn Left") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Rotate Back, Decrease Value, Confirm "No""
+		}
+		BUTTON("Hold Power and Turn Left") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Increment by 5 (Fonts, Tracks, Blade Length), Increment by 500 (Ignition Time, Ignition Delay, Retraction Time, Retraction Delay), Icrement by 5000 (Ignition Option2, Retraction Option2)" 
+		}
+		BUTTON("Click Power") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Select, Save, Enter"
+		}
+		BUTTON("Click Aux") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Cancel, Revert, Go Back"
+		}
+		BUTTON("Hold Aux") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Go To Main Menu (From Sub-Menu), Exit Edit Mode (From Main Menu)"
+		}
+		BUTTON("Hold Power while turning") {
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): ""Color List" and "Adjust Color Hue" Zoom Mode (release to save)"
+		}
+	}
+
+	STATE("in Edit Settings") {
+		BUTTON("Turn Right") {
+			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Rotate Forward, Increase Value, Confirm "Yes""
+		}
+		BUTTON("Hold Power and Turn Right") {
+			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Increment by 5 (Blade Length)"
+		}
+		BUTTON("Turn Left") {
+			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Rotate Back, Decrease Value, Confirm "No""
+		}
+		BUTTON("Hold Power and Turn Left") {
+			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Increment by 5 (Blade Length)"
+		}
+		BUTTON("Click Power") {
+			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Select, Save, Enter"
+		}
+		BUTTON("Click Aux") {
+			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Cancel, Revert, Go Back"
+		}
+		BUTTON("Hold Aux") {
+			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Exit"
 		}
 	}
 }
