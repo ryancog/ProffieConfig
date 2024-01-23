@@ -600,7 +600,7 @@ void Onboard::Overview::linkEditorEvents() {
 #                       elif defined(__WXOSX__)
                           "The board name will be something like \"/dev/cu.\" and then a whole bunch of\n"
                           "letters and numbers, but chances are there'll only be the one you want.\n"
-#                       else
+#                       elif defined(__WXGTK__)
                           "The board will be named something like \"/dev/tty\" and some more letters and\n"
                           "numbers, but chances are there'll only be the one you want.\n"
 #                       endif

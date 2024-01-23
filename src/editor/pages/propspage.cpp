@@ -4,7 +4,6 @@
 #include "editor/pages/propspage.h"
 
 #include "core/appstate.h"
-#include "core/defines.h"
 #include "core/utilities/misc.h"
 #include "core/config/propfile.h"
 #include "editor/editorwindow.h"
@@ -57,118 +56,127 @@ void PropsPage::bindEvents() {
   propsWindow->Bind(wxEVT_SPINCTRLDOUBLE, optionSelectUpdate, wxID_ANY);
 
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        std::string buttons;
+      PropFile* activeProp{nullptr};
+      for (auto& prop : props) {
+        if (propSelection->entry()->GetStringSelection() == prop->getName()) activeProp = prop;
+      }
+      auto textSizer = new wxBoxSizer(wxVERTICAL);
+      auto buttonDialog = wxDialog(
+        parent,
+        wxID_ANY,
+        (activeProp ? activeProp->getName() : "Default") + " Buttons",
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP | wxRESIZE_BORDER
+        );
 
-        PropFile* activeProp{nullptr};
-        for (auto& prop : props) {
-          if (propSelection->entry()->GetStringSelection() == prop->getName()) activeProp = prop;
-        }
+      if (activeProp == nullptr) {
+        auto buttons =
+          (parent->generalPage->buttons->entry()->GetValue() == 0 ? wxString (
+             "On/Off - Twist\n"
+             "Next preset - Point up and shake\n"
+             "Clash - Hit the blade while saber is on."
+             ) : parent->generalPage->buttons->entry()->GetValue() == 1 ? wxString(
+                  "On/Off - Click to turn the saber on or off.\n"
+                  "Turn On muted - Double-click\n"
+                  "Next preset - Hold button and hit the blade while saber is off.\n"
+                  "Clash - Hit the blade while saber is on.\n"
+                  "Lockup - Hold button, then trigger a clash. Release button to end.\n"
+                  "Drag - Hold button, then trigger a clash while pointing down. Release button to end.\n"
+                  "Melt - Hold button and stab something.\n"
+                  "Force - Long-click button.\n"
+                  "Start Soundtrack - Long-click the button while blade is off.\n"
+                  "Enter/Exit Color Change - Hold button and Twist."
+                  ) : parent->generalPage->buttons->entry()->GetValue() == 2 || parent->generalPage->buttons->entry()->GetValue() == 3 ? wxString (
+                  "On/Off - Click POW\n"
+                  "Turn On muted - Double-click POW button\n"
+                  "Next preset - Hold POW button and hit the blade while saber is off.\n"
+                  "Previous Preset - Hold AUX button and click the POW button while saber is off.\n"
+                  "Clash - Hit the blade while saber is on.\n"
+                  "Lockup -  Hold either POW or AUX, then trigger a clash. Release button to end.\n"
+                  "Drag - Hold either POW or AUX, then trigger a clash while pointing down. Release button to end.\n"
+                  "Melt - Hold either POW or AUX and stab something.\n"
+                  "Force Lightning Block - Click AUX while holding POW.\n"
+                  "Force - Long-click POW button.\n"
+                  "Start Soundtrack - Long-click the POW button while blade is off.\n"
+                  "Blaster block - Short-click AUX button.\n"
+                  "Enter/Exit Color Change - Hold Aux and click POW while on."
+                  ) : wxString("Button Configuration Not Supported"));
+        textSizer->Add(new wxStaticText(&buttonDialog, wxID_ANY, buttons));
+      } else {
+        auto propButtons = activeProp->getButtons()->at(parent->generalPage->buttons->entry()->GetValue());
 
-        if (activeProp == nullptr) {
-          buttons =
-              (parent->generalPage->buttons->entry()->GetValue() == 0 ? wxString (
-                   "On/Off - Twist\n"
-                   "Next preset - Point up and shake\n"
-                   "Clash - Hit the blade while saber is on."
-                   ) : parent->generalPage->buttons->entry()->GetValue() == 1 ? wxString(
-                     "On/Off - Click to turn the saber on or off.\n"
-                     "Turn On muted - Double-click\n"
-                     "Next preset - Hold button and hit the blade while saber is off.\n"
-                     "Clash - Hit the blade while saber is on.\n"
-                     "Lockup - Hold button, then trigger a clash. Release button to end.\n"
-                     "Drag - Hold button, then trigger a clash while pointing down. Release button to end.\n"
-                     "Melt - Hold button and stab something.\n"
-                     "Force - Long-click button.\n"
-                     "Start Soundtrack - Long-click the button while blade is off.\n"
-                     "Enter/Exit Color Change - Hold button and Twist."
-                     ) : parent->generalPage->buttons->entry()->GetValue() == 2 || parent->generalPage->buttons->entry()->GetValue() == 3 ? wxString (
-                     "On/Off - Click POW\n"
-                     "Turn On muted - Double-click POW button\n"
-                     "Next preset - Hold POW button and hit the blade while saber is off.\n"
-                     "Previous Preset - Hold AUX button and click the POW button while saber is off.\n"
-                     "Clash - Hit the blade while saber is on.\n"
-                     "Lockup -  Hold either POW or AUX, then trigger a clash. Release button to end.\n"
-                     "Drag - Hold either POW or AUX, then trigger a clash while pointing down. Release button to end.\n"
-                     "Melt - Hold either POW or AUX and stab something.\n"
-                     "Force Lightning Block - Click AUX while holding POW.\n"
-                     "Force - Long-click POW button.\n"
-                     "Start Soundtrack - Long-click the POW button while blade is off.\n"
-                     "Blaster block - Short-click AUX button.\n"
-                     "Enter/Exit Color Change - Hold Aux and click POW while on."
-                     ) : wxString("Button Configuration Not Supported"));
-        } else {
-          auto propButtons = activeProp->getButtons()->at(parent->generalPage->buttons->entry()->GetValue());
+        if (propButtons.empty()) {
+          textSizer->Add(new wxStaticText(&buttonDialog, wxID_ANY, "Selected number of buttons not supported by prop file."));
+        } else for (auto& [ stateName, stateButtons ] : propButtons) {
+            auto stateSizer = new wxStaticBoxSizer(wxVERTICAL, &buttonDialog, "Button controls while saber is " + stateName + ":");
+            auto controlSizer = new wxBoxSizer(wxHORIZONTAL);
+            auto buttonSizer = new wxBoxSizer(wxVERTICAL);
+            auto actionSizer = new wxBoxSizer(wxVERTICAL);
+            // Must use Spacer, not \t, which caused rendering issues for Windows
+            controlSizer->AddSpacer(50);
+            controlSizer->Add(buttonSizer);
+            controlSizer->Add(actionSizer);
+            stateSizer->Add(controlSizer);
 
-          if (propButtons.empty()) {
-            buttons += "Selected number of buttons not supported by prop file.";
-          } else for (auto& [ stateName, stateButtons ] : propButtons) {
-              buttons += "Button controls while saber is " + stateName + ":\n";
-              for (auto& button : stateButtons) {
-                std::vector<std::string> activePredicates{};
-                for (const auto& predicate : button.relevantSettings) {
-                  auto setting = activeProp->getSettings()->find(predicate);
-                  if (setting == activeProp->getSettings()->end()) continue;
+            for (auto& button : stateButtons) {
+              std::vector<std::string> activePredicates{};
+              for (const auto& predicate : button.relevantSettings) {
+                auto setting = activeProp->getSettings()->find(predicate);
+                if (setting == activeProp->getSettings()->end()) continue;
 
-                  if (!setting->second.getOutput().empty()) activePredicates.push_back(setting->first);
-                }
-
-                auto key = button.descriptions.find(activePredicates);
-                if (key != button.descriptions.end()) {
-                  buttons += "\t" + button.name + " - ";
-                  buttons += key->second;
-                  buttons += '\n';
-                }
+                if (!setting->second.getOutput().empty()) activePredicates.push_back(setting->first);
               }
-              buttons += '\n';
+
+              auto key = button.descriptions.find(activePredicates);
+              if (key != button.descriptions.end() && key->second != "DISABLED") {
+                buttonSizer->Add(new wxStaticText(stateSizer->GetStaticBox(), wxID_ANY, button.name));
+                actionSizer->Add(new wxStaticText(stateSizer->GetStaticBox(), wxID_ANY, " - " + key->second));
+              }
             }
-          if (buttons.at(buttons.size() - 1) == '\n') {
-            buttons.pop_back();
-            buttons.pop_back();
+
+            if (actionSizer->IsEmpty()) {
+              stateSizer->GetStaticBox()->Destroy();
+              delete stateSizer;
+              continue;
+            }
+            textSizer->Add(stateSizer, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10).Expand());
           }
-        }
+        textSizer->AddSpacer(10);
+      }
 
-        auto buttonDialog = wxDialog(
-            parent,
-            wxID_ANY,
-            "Prop File Buttons",
-            wxDefaultPosition,
-            wxDefaultSize,
-            wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP
-            );
-        auto textSizer = new wxBoxSizer(wxVERTICAL);
-        textSizer->Add(buttonDialog.CreateTextSizer(buttons), wxSizerFlags(0).Border(wxALL, 10));
-        buttonDialog.SetSizer(textSizer);
-        buttonDialog.DoLayoutAdaptation();
-        buttonDialog.ShowModal();
-      }, ID_Buttons);
+      buttonDialog.SetSizerAndFit(textSizer);
+      buttonDialog.DoLayoutAdaptation();
+      buttonDialog.ShowModal();
+    }, ID_Buttons);
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-    std::string info;
+      std::string info;
 
-    PropFile* activeProp{nullptr};
-    for (auto& prop : props) {
-      if (propSelection->entry()->GetStringSelection() == prop->getName()) activeProp = prop;
-    }
+      PropFile* activeProp{nullptr};
+      for (auto& prop : props) {
+        if (propSelection->entry()->GetStringSelection() == prop->getName()) activeProp = prop;
+      }
 
-    if (activeProp == nullptr) {
-      info = "The default ProffieOS prop file.";
-    } else {
-      info = activeProp->getInfo();
-    }
+      if (activeProp == nullptr) {
+        info = "The default ProffieOS prop file.";
+      } else {
+        info = activeProp->getInfo();
+      }
 
-    auto infoDialog = wxDialog(
-                        parent,
-                        wxID_ANY,
-                        propSelection->entry()->GetValue() + " Prop Info",
-                        wxDefaultPosition,
-                        wxDefaultSize,
-                        wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP
-                        );
-    auto textSizer = new wxBoxSizer(wxVERTICAL);
-    textSizer->Add(infoDialog.CreateTextSizer(info), wxSizerFlags(0).Border(wxALL, 10));
-    infoDialog.SetSizer(textSizer);
-    infoDialog.DoLayoutAdaptation();
-    infoDialog.ShowModal();
-  }, ID_PropInfo);
+      auto infoDialog = wxDialog(
+        parent,
+        wxID_ANY,
+        propSelection->entry()->GetValue() + " Prop Info",
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP
+        );
+      auto textSizer = new wxBoxSizer(wxVERTICAL);
+      textSizer->Add(infoDialog.CreateTextSizer(info), wxSizerFlags(0).Border(wxALL, 10));
+      infoDialog.SetSizer(textSizer);
+      infoDialog.DoLayoutAdaptation();
+      infoDialog.ShowModal();
+    }, ID_PropInfo);
 }
 
 void PropsPage::updateProps() {

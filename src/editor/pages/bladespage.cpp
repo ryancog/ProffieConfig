@@ -178,7 +178,7 @@ wxBoxSizer* BladesPage::createBladeSetup() {
   return bladeSetup;
 }
 wxBoxSizer* BladesPage::createBladeSettings() {
-  wxWrapSizer* bladeSettings = new wxWrapSizer(wxVERTICAL);
+  wxBoxSizer* bladeSettings = new wxBoxSizer(wxVERTICAL);
   wxBoxSizer* bladeColor = new wxBoxSizer(wxVERTICAL);
   blade3ColorOrder = new pcComboBox(GetStaticBox(), wxID_ANY, "Color Order", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"BGR", "BRG", "GBR", "GRB", "RBG", "RGB"}), wxCB_READONLY);
   blade4ColorOrder = new pcComboBox(GetStaticBox(), wxID_ANY, "Color Order", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"BGRW", "BRGW", "GBRW", "GRBW", "RBGW", "RGBW", "WBGR", "WBRG", "WGBR", "WGRB", "WRBG", "WRGB"}), wxCB_READONLY);
