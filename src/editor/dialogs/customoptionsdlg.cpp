@@ -54,10 +54,10 @@ void CustomOptionsDlg::createUI() {
 
   createOptionArea();
 
-  sizer->SetMinSize(450, 500);
   sizer->Add(header(), wxSizerFlags(0).Expand().Border(wxALL, 10));
   sizer->Add(optionArea, wxSizerFlags(1).Expand().Border(wxALL, 10));
   sizer->Add(info(this), wxSizerFlags(0).Expand().Border(wxALL, 10));
+  sizer->SetMinSize(450, 500);
 
   SetSizerAndFit(sizer);
 }
@@ -112,7 +112,6 @@ void CustomOptionsDlg::updateOptions() {
     }
   }
 
-  GetSizer()->SetMinSize(optionArea->GetBestSize().GetWidth() + (10 * 2), -1);
   Layout();
 }
 

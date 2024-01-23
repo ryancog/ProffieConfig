@@ -206,7 +206,7 @@ bool PropFile::readSettings(std::vector<std::string>& config) {
 
           setting.disables = FileParse::parseListEntry("DISABLE", selection);
           auto outputEntry = FileParse::parseEntry("OUTPUT", selection);
-          setting.shouldOutput = !(outputEntry.empty() || outputEntry == "FALSE");
+          setting.shouldOutput = (outputEntry.empty() || outputEntry == "TRUE");
 
           tempSettings.push_back({setting.define, setting});
         }

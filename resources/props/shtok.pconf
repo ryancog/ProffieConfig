@@ -77,7 +77,7 @@ BUTTONS{1} {
 		BUTTON("Hold and Clash") {
 			DESCRIPTION: "Lockup"
 		}
-		BUTTON("Hold and Clash while pointind down") {
+		BUTTON("Hold and Clash while pointing down") {
 			DESCRIPTION: "Drag"
 		}
 		BUTTON("Short Click") {
