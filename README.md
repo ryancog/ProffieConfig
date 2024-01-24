@@ -19,3 +19,12 @@ ProffieConfig will guide you through the setup and all of it's features, so whet
 - Expand pre-checker capabilities (ongoing)
 - Implement interface for `using` syntax (not just the ability to parse)
 - Take over the world ;)
+
+## Gallery
+
+<img src=screenshots/mainmenu.png width=200> 
+<img src=screenshots/editor-general.png width=300>
+<img src=screenshots/editor-propfile-fett263.png width=500>
+<img src=screenshots/editor-bladearrays.png width=400>
+<img src=screenshots/editor-bladeawareness.png width=400>
+<img src=screenshots/editor-presetsstyles.png width=500>a
