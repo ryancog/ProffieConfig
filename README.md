@@ -27,4 +27,4 @@ ProffieConfig will guide you through the setup and all of it's features, so whet
 <img src=screenshots/editor-propfile-fett263.png width=500>
 <img src=screenshots/editor-bladearrays.png width=400>
 <img src=screenshots/editor-bladeawareness.png width=400>
-<img src=screenshots/editor-presetsstyles.png width=500>a
+<img src=screenshots/editor-presetsstyles.png width=500>
