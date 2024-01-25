@@ -263,6 +263,10 @@ bool PropFile::parseSettingCommon(Setting& setting, std::vector<std::string>& se
     return false;
   }
   setting.description = FileParse::parseEntry("DESCRIPTION", search);
+  size_t nlPos;
+  while ((nlPos = setting.description.find("\\n")) != std::string::npos) {
+    setting.description.replace(nlPos, 2, "\n");
+  }
   setting.requiredAny = FileParse::parseListEntry("REQUIREANY", search);
   setting.required = FileParse::parseListEntry("REQUIRE", search);
 
