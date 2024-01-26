@@ -75,7 +75,7 @@ SETTINGS {
 	}
 	NUMERIC("FETT263_SWING_ON_SPEED") {
 		NAME: "Swing on Speed"
-		DESCRIPTION: "SAdjust Swing Speed required for Ignition\n250 ~ 500 recommended"
+		DESCRIPTION: "Adjust Swing Speed required for Ignition\n250 ~ 500 recommended"
 		MIN: 0
 		MAX: 1000
 		DEFAULT: 250
