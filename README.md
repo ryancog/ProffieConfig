@@ -14,6 +14,9 @@ Head over to the [latest ProffieConfig release](https://github.com/ryryog25/Prof
 
 ProffieConfig will guide you through the setup and all of it's features, so whether you're a first-time proffieboard user or have been around the block a few times, you'll be ready in no time!
 
+## Additional Info
+
+- [Creating/Editing ProffieConfig's `pconf` files](docs/pconfs.md)
 
 ## To-Do (Non-Exhaustive)
 - Expand pre-checker capabilities (ongoing)
