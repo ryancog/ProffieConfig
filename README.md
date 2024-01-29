@@ -18,6 +18,7 @@ ProffieConfig will guide you through the setup and all of it's features, so whet
 - Expand pre-checker capabilities (ongoing)
 - Implement interface for `using` syntax (not just the ability to parse)
 - Add blade nicknames
+- Update power pin selection to new list style for blade awareness
 - Take over the world ;)
 
 ## Additional Info
