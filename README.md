@@ -17,6 +17,7 @@ ProffieConfig will guide you through the setup and all of it's features, so whet
 ## To-Do (Non-Exhaustive)
 - Expand pre-checker capabilities (ongoing)
 - Implement interface for `using` syntax (not just the ability to parse)
+- Add blade nicknames
 - Take over the world ;)
 
 ## Additional Info
