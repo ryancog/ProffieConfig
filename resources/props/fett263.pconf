@@ -543,7 +543,7 @@ BUTTONS{1} {
 		BUTTON("Hold and Clash") {
 			DESCRIPTION: "Lockup"
 		}
-		BUTTON("Hold and Stab (Pointing Down)" {
+		BUTTON("Hold and Stab (Pointing Down)") {
 			DESCRIPTION: "Drag"
 		}
 		BUTTON("Hold and Stab (Parallel or Pointing Up)") {
@@ -853,7 +853,7 @@ BUTTONS{2} {
 		BUTTON("Hold Aux") {
 			DESCRIPTION("FETT263_HOLD_BUTTON_LOCKUP"): "Lockup"
 		}
-		BUTTON("Hold Aux and Stab (Pointing Down)" {
+		BUTTON("Hold Aux and Stab (Pointing Down)") {
 			DESCRIPTION: "Drag"
 		}
 		BUTTON("Hold Aux and Stab (Parallel or Pointing Up)") {
@@ -1180,7 +1180,7 @@ BUTTONS{3} {
 		BUTTON("Hold Aux") {
 			DESCRIPTION("FETT263_HOLD_BUTTON_LOCKUP"): "Lockup"
 		}
-		BUTTON("Hold Aux and Stab (Pointing Down)" {
+		BUTTON("Hold Aux and Stab (Pointing Down)") {
 			DESCRIPTION: "Drag"
 		}
 		BUTTON("Hold Aux and Stab (Parallel or Pointing Up)") {
