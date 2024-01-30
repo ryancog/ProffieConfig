@@ -34,7 +34,7 @@ std::string PropFile::Setting::getOutput() const {
     case SettingType::NUMERIC:
       return define + " " + std::to_string(static_cast<pcSpinCtrl*>(control)->entry()->GetValue());
     case SettingType::DECIMAL:
-      return define + " " + std::to_string(static_cast<pcSpinCtrl*>(control)->entry()->GetValue());
+      return define + " " + std::to_string(static_cast<pcSpinCtrlDouble*>(control)->entry()->GetValue());
   }
 
   return {};
@@ -51,7 +51,7 @@ void PropFile::Setting::enable(bool enable) const {
       static_cast<pcSpinCtrl*>(control)->Enable(enable);
       break;
     case PropFile::Setting::SettingType::DECIMAL:
-      static_cast<pcSpinCtrl*>(control)->Enable(enable);
+      static_cast<pcSpinCtrlDouble*>(control)->Enable(enable);
       break;
 
   }
@@ -68,7 +68,7 @@ void PropFile::Setting::setValue(double value) const {
       static_cast<pcSpinCtrl*>(control)->entry()->SetValue(value);
       break;
     case SettingType::DECIMAL:
-      static_cast<pcSpinCtrl*>(control)->entry()->SetValue(value);
+      static_cast<pcSpinCtrlDouble*>(control)->entry()->SetValue(value);
       break;
   }
 }
