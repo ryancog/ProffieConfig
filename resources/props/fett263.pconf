@@ -325,9 +325,13 @@ SETTINGS {
 		DEFAULT: 200
 		INCREMENT: 10
 	}
-	TOGGLE("FETT263_BM_CLASH_DETECT") {
+	DECIMAL("FETT263_BM_CLASH_DETECT") {
 		NAME: "Clash Detect Threshold"
 		DESCRIPTION: "The max value to use clashes in Battle Mode 2.0, clashes used on clash strength below this value\nThis allows light clashes to produce clash effects instead of using Begin/End Lockup\n(above this value Clash is performed by quick pull away using Begin/End Lockup sounds and effect)\nRange 0 ~ 8 (note 0 will use Battle Mode 1.0 with all clashes being Begin/End Lockup)"
+		MIN: 0
+		MAX: 8
+		DEFAULT: 4
+		INCREMENT: 0.1
 	}
 	TOGGLE("FETT263_BM_DISABLE_OFF_BUTTON") {
 		NAME: "Disable Off Button"
