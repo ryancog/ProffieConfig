@@ -80,9 +80,7 @@ void MainMenu::bindEvents() {
         wxAboutBox(aboutInfo);
       }, wxID_ABOUT);
 
-  Bind(
-    wxEVT_MENU,
-    [&](wxCommandEvent &) {
+  Bind(wxEVT_MENU, [&](wxCommandEvent &) {
       wxMessageDialog(this, COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION).ShowModal();
     },
     ID_Copyright);
@@ -98,7 +96,10 @@ void MainMenu::bindEvents() {
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(this); }, ID_OpenSerial);
 #endif
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        if (configSelect->entry()->GetValue() == "Select Config...") return;
+        if (configSelect->entry()->GetValue() == "Select Config...") {
+          update();
+          return;
+        }
 
         for (auto editor : editors) {
           if (configSelect->entry()->GetValue() == editor->getOpenConfig()) {
