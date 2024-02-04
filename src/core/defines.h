@@ -3,7 +3,7 @@
 
 #pragma once
 
-#define PROFFIEOS_VERSION "7.13"
+#define PROFFIEOS_VERSION "7.14"
 #define ARDUINO_CLI_VERSION "0.34.2"
 
 #define COPYRIGHT_NOTICE \
