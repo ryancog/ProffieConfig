@@ -32,7 +32,7 @@ void BladesPage::bindEvents() {
 
   GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { parent->presetsPage->bladeArray->entry()->SetSelection(bladeArray->entry()->GetSelection()); update(); }, ID_BladeArray);
   GetStaticBox()->Bind(wxEVT_SPINCTRL, [&](wxCommandEvent& event) { update(); event.Skip(); });
-  GetStaticBox()->Bind(wxEVT_RADIOBUTTON, [&](wxCommandEvent& event) { update(); event.Skip(); });
+  GetStaticBox()->Bind(wxEVT_RADIOBUTTON, [&](wxCommandEvent& event) { update(); FULLUPDATEWINDOW(parent); event.Skip(); });
   GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { update(); FULLUPDATEWINDOW(parent); }, ID_BladeSelect);
   GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { update(); FULLUPDATEWINDOW(parent); }, ID_SubBladeSelect);
   GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { update(); FULLUPDATEWINDOW(parent); }, ID_BladeType);
