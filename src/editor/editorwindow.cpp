@@ -85,6 +85,12 @@ void EditorWindow::bindEvents() {
         propsPage->updateSizeAndLayout();
         presetsPage->update();
 
+        if (bladesPage->AreAnyItemsShown()) {
+          bladesPage->Fit(bladesPage->GetContainingWindow());
+          bladesPage->Layout();
+        }
+        if (propsPage->AreAnyItemsShown()) propsPage->Layout();
+        if (presetsPage->AreAnyItemsShown()) presetsPage->Layout();
         FULLUPDATEWINDOW(this);
   }, ID_WindowSelect);
 }
