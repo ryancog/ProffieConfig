@@ -24,11 +24,11 @@ public:
 #   endif
 #   ifdef __WXMSW__
     MSWEnableDarkMode();
-    // if (AttachConsole(ATTACH_PARENT_PROCESS) || AllocConsole()){
-    //   freopen("CONOUT$", "w", stdout);
-    //   freopen("CONOUT$", "w", stderr);
-    //   freopen("CONIN$", "r", stdin);
-    // }
+    if (AttachConsole(ATTACH_PARENT_PROCESS)){
+       freopen("CONOUT$", "w", stdout);
+       freopen("CONOUT$", "w", stderr);
+       freopen("CONIN$", "r", stdin);
+    }
 #   endif
 
     AppState::init();

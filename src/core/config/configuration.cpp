@@ -503,7 +503,7 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
 
     // Name
     tempData = std::strtok(presetInfo.data(), ",\"}");
-    bladeArray.presets[preset].name.assign(tempData == nullptr ? "" : tempData);
+    bladeArray.presets[preset].name.assign(tempData == nullptr ? "noname" : tempData);
   }
 # undef CHKSECT
 # undef RUNTOSECTION
