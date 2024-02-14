@@ -6,6 +6,8 @@ pcSpinCtrlDouble::pcSpinCtrlDouble(wxWindow* _parent, int32_t _id, const wxStrin
     : wxWindow(_parent, wxID_ANY),
       mEntry{new wxSpinCtrlDouble(this, _id, wxEmptyString, _pos, _size, _style, _min, _max, _initial)} {
   auto sizer = new wxBoxSizer(_orientation);
+  entry()->SetIncrement(0.1);
+  entry()->SetDigits(1);
 
   if (!_label.empty()) {
     mText = new wxStaticText(this, wxID_ANY, _label);
