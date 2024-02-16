@@ -256,7 +256,7 @@ std::pair<std::string, std::string> Settings::ProffieDefine::parseKey(const std:
 
   key.first = std::strtok(&parseVal[0], " \n\r");
   // Handle trying to construct from nullptr
-  char* val = std::strtok(nullptr, " \n\r");
+  char* val = std::strtok(nullptr, "\n\r");
   if (val != nullptr) key.second = val;
 
   return key;
