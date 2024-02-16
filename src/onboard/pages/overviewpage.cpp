@@ -24,7 +24,7 @@
 
 std::vector<bool*> Onboard::Overview::eventRunTrackers{};
 #define EVENT_PAGE_SETUP \
-event.Skip(); \
+  event.Skip(); \
   static bool hasRun{false}; \
   if (std::find(eventRunTrackers.begin(), eventRunTrackers.end(), &hasRun) == eventRunTrackers.end()) eventRunTrackers.push_back(&hasRun); \
   if (hasRun) return; \
@@ -421,80 +421,106 @@ void Onboard::Overview::linkEditorEvents() {
 
     }, EditorWindow::ID_WindowSelect);
   guideMenu->activeEditor->presetsPage->GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
-      EVENT_PAGE_SETUP;
+        event.Skip();
+        static bool hasRun{false};
+        if (std ::find(eventRunTrackers.begin(), eventRunTrackers.end(),
+                       &hasRun) == eventRunTrackers.end())
+          eventRunTrackers.push_back(&hasRun);
+        if (hasRun)
+          return;
+        hasRun = true;
+        ;
 
-      generateNewPage("Configuration - Presets and Styles",
+        generateNewPage(
+            "Configuration - Presets and Styles",
 
-                      "Select your newly-created preset from the list, then choose a name for your preset.\n"
-                      "\n"
-                      "This name is mostly just for reference, and can be whatever you want,\n"
-                      "but if you're using an OLED and don't have special bitmaps for the font,\n"
-                      "this text will be displayed upon selecting the preset.\n"
-                      "\n"
-                      "This name should ideally be kept short, and if you want to put some of the name\n"
-                      "on a new line on the OLED, you can use \"\\n\" to mean \"Enter\""
-                      );
-      guideMenu->activeEditor->presetsPage->nameInput->Enable();
+            "Select your newly-created preset from the list, then choose a "
+            "name for your preset.\n"
+            "\n"
+            "This name is mostly just for reference, and can be whatever you "
+            "want,\n"
+            "but if you're using an OLED and don't have special bitmaps for "
+            "the font,\n"
+            "this text will be displayed upon selecting the preset.\n"
+            "\n"
+            "This name should ideally be kept short, and if you want to put "
+            "some of the name\n"
+            "on a new line on the OLED, you can use \"\\n\" to mean \"Enter\"");
+        guideMenu->activeEditor->presetsPage->nameInput->Enable();
 
-      useButtonOnPage("Done", [&](wxCommandEvent&) {
-        EVENT_PAGE_SETUP;
-
-        generateNewPage("Configuration - Presets and Styles",
-
-                        "In \"Font Directory\", enter the name of the folder on your SD Card\n"
-                        "that contains the sound font associated with this preset.\n"
-                        "\n"
-                        "This folder doesn't need to be added to ProffieConfig in any way, it stays\n"
-                        "on the SD card that is in your Proffieboard.\n"
-                        "\n"
-                        "If you want to specify multiple folders if you, for example, have a \"common\"\n"
-                        "folder, you can seperate folder names with a \";\" (e.g. folderName;common)"
-                        );
-        guideMenu->activeEditor->presetsPage->dirInput->Enable();
-
-        useButtonOnPage("Done", [&](wxCommandEvent&) {
+        useButtonOnPage("Done", [&](wxCommandEvent& event) {
           EVENT_PAGE_SETUP;
 
-          generateNewPage("Configuration - Presets and Styles",
+          generateNewPage(
+              "Configuration - Presets and Styles",
 
-                          "Now enter the name of the track you want to be associated with this preset.\n"
-                          "\n"
-                          "This track file can be in any of the directories you just specified, but if\n"
-                          "it's in a folder inside of one of those folders, for example a \"tracks\" folder\n"
-                          "you need to indicate that with a \"/\". (e.g. tracks/myTrack.wav)\n"
-                          "\n"
-                          "\".wav\" will automatically be appended to the track name, as even if you can't\n"
-                          "see this on your computer, all track files end with .wav.\n"
-                          "\n"
-                          "You can leave this empty if you'd like to use no track.\n"
-                          );
-          guideMenu->activeEditor->presetsPage->trackInput->Enable();
+              "In \"Font Directory\", enter the name of the folder on your SD "
+              "Card\n"
+              "that contains the sound font associated with this preset.\n"
+              "\n"
+              "This folder doesn't need to be added to ProffieConfig in any "
+              "way, it stays\n"
+              "on the SD card that is in your Proffieboard.\n"
+              "\n"
+              "If you want to specify multiple folders if you, for example, "
+              "have a \"common\"\n"
+              "folder, you can seperate folder names with a \";\" (e.g. "
+              "folderName;common)");
+          guideMenu->activeEditor->presetsPage->dirInput->Enable();
 
-          useButtonOnPage("Done", [&](wxCommandEvent&) {
+          useButtonOnPage("Done", [&](wxCommandEvent& event) {
             EVENT_PAGE_SETUP;
 
-            generateNewPage("Configuration - Presets and Styles",
+            generateNewPage(
+                "Configuration - Presets and Styles",
 
-                            "Notice the up and down arrows beside the preset list. When you have a preset\n"
-                            "selected, and multiple presets in the list, those allow you to move presets\n"
-                            "up and down through the list.\n"
-                            "\n"
-                            "The order in which you cycle through presets on the saber is determined by the order\n"
-                            "of them here, so you may want to rearrange them at some point.\n"
-                            "\n"
-                            "Choose one of your blades from the list to edit the bladestyle for that blade.\n"
-                            "\n"
-                            "It's worth noting that if you have a blade with SubBlades, then that blade will\n"
-                            "show up in the list as [Blade Number]:[SubBlade Number] (e.g. 0:0), as each SubBlade\n"
-                            "gets its own style too.\n"
-                            );
-            guideMenu->activeEditor->presetsPage->bladeList->Enable();
+                "Now enter the name of the track you want to be associated "
+                "with this preset.\n"
+                "\n"
+                "This track file can be in any of the directories you just "
+                "specified, but if\n"
+                "it's in a folder inside of one of those folders, for example "
+                "a \"tracks\" folder\n"
+                "you need to indicate that with a \"/\". (e.g. "
+                "tracks/myTrack.wav)\n"
+                "\n"
+                "\".wav\" will automatically be appended to the track name, as "
+                "even if you can't\n"
+                "see this on your computer, all track files end with .wav.\n"
+                "\n"
+                "You can leave this empty if you'd like to use no track.\n");
+            guideMenu->activeEditor->presetsPage->trackInput->Enable();
 
+            useButtonOnPage("Done", [&](wxCommandEvent& event) {
+              EVENT_PAGE_SETUP;
+
+              generateNewPage("Configuration - Presets and Styles",
+
+                              "Notice the up and down arrows beside the preset "
+                              "list. When you have a preset\n"
+                              "selected, and multiple presets in the list, "
+                              "those allow you to move presets\n"
+                              "up and down through the list.\n"
+                              "\n"
+                              "The order in which you cycle through presets on "
+                              "the saber is determined by the order\n"
+                              "of them here, so you may want to rearrange them "
+                              "at some point.\n"
+                              "\n"
+                              "Choose one of your blades from the list to edit "
+                              "the bladestyle for that blade.\n"
+                              "\n"
+                              "It's worth noting that if you have a blade with "
+                              "SubBlades, then that blade will\n"
+                              "show up in the list as [Blade Number]:[SubBlade "
+                              "Number] (e.g. 0:0), as each SubBlade\n"
+                              "gets its own style too.\n");
+              guideMenu->activeEditor->presetsPage->bladeList->Enable();
+            });
           });
         });
-      });
-
-    }, PresetsPage::ID_AddPreset);
+      },
+      PresetsPage::ID_AddPreset);
   guideMenu->activeEditor->presetsPage->GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent& event) {
       EVENT_PAGE_SETUP;
 
@@ -519,7 +545,7 @@ void Onboard::Overview::linkEditorEvents() {
       guideMenu->activeEditor->presetsPage->styleInput->Enable();
       guideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_StyleEditor, true);
 
-      useButtonOnPage("Continue", [&](wxCommandEvent&) {
+      useButtonOnPage("Continue", [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
 
         generateNewPage("Configuration - Saving",
@@ -634,10 +660,14 @@ void Onboard::Overview::generateNewPage(const std::string& headerText, const std
 }
 
 void Onboard::Overview::useButtonOnPage(const std::string& buttonText, std::function<void(wxCommandEvent&)> eventFunction) {
-  auto button = new wxButton(this, ID_PageButton, buttonText);
+  static decltype(eventFunction) evtFunc = nullptr;
+  auto* button = new wxButton(this, ID_PageButton, buttonText);
   sizer->Add(button);
   Layout();
   Fit();
 
-  Bind(wxEVT_BUTTON, eventFunction, ID_PageButton);
+
+  if (evtFunc) Unbind(wxEVT_BUTTON, evtFunc, ID_PageButton);
+  evtFunc = eventFunction;
+  Bind(wxEVT_BUTTON, evtFunc, ID_PageButton);
 }
