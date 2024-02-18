@@ -20,6 +20,6 @@ public:
   wxStaticText* text() const;
 
 private:
-  const wxTextCtrl* mEntry;
-  const wxStaticText* mText;
+  wxTextCtrl* mEntry{nullptr};
+  wxStaticText* mText{nullptr};
 };

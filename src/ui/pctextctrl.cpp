@@ -12,16 +12,16 @@ pcTextCtrl::pcTextCtrl(wxWindow* _parent, int32_t _id, const wxString& _label, c
     auto sizerFlags = wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 5);
     if (_orientation == wxHORIZONTAL) sizerFlags = sizerFlags.Center();
     sizer->Add(text(), sizerFlags);
-  } else mText = nullptr;
+  }
   sizer->Add(entry(), wxSizerFlags(1).Expand());
 
   SetSizerAndFit(sizer);
 }
 
 wxStaticText* pcTextCtrl::text() const {
-  return const_cast<wxStaticText*>(mText);
+  return mText;
 }
 
 wxTextCtrl* pcTextCtrl::entry() const {
-  return const_cast<wxTextCtrl*>(mEntry);
+  return mEntry;
 }

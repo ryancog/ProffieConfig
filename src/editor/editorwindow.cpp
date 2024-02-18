@@ -46,6 +46,9 @@ EditorWindow::EditorWindow(const std::string& _configName, wxWindow* parent) : w
 # endif
   sizer->SetMinSize(450, -1);
 }
+EditorWindow::~EditorWindow() {
+  delete settings;
+}
 
 void EditorWindow::bindEvents() {
   Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event ) {
