@@ -97,6 +97,7 @@ void MainMenu::bindEvents() {
 #endif
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
         if (configSelect->entry()->GetValue() == "Select Config...") {
+          activeEditor = nullptr;
           update();
           return;
         }
@@ -232,17 +233,12 @@ void MainMenu::update() {
   configSelect->entry()->SetValue(lastConfig);
   if (configSelect->entry()->GetSelection() == -1) configSelect->entry()->SetSelection(0);
 
-  for (auto editor = editors.begin(); editor < editors.end();) {
-    if (!(*editor)->IsShown()) {
-      if (activeEditor != nullptr && &**editor == &*activeEditor) {
-        editor++;
-        continue;
-      }
-      (*editor)->Destroy();
-      editor = editors.erase(editor);
-      continue;
-    }
-    editor++;
+  for (auto editor = editors.begin(); editor < editors.end(); editor++) {
+    if ((*editor)->IsShown()) continue;
+    if (activeEditor != nullptr && &**editor == &*activeEditor) continue;
+
+    (*editor)->Destroy();
+    editor = --editors.erase(editor);
   }
 
   auto configSelected = configSelect->entry()->GetValue() != "Select Config...";

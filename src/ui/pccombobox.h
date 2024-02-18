@@ -22,6 +22,6 @@ public:
   wxStaticText* text() const;
 
 private:
-  const wxComboBox* mEntry;
-  const wxStaticText* mText;
+  wxComboBox* mEntry{nullptr};
+  wxStaticText* mText{nullptr};
 };

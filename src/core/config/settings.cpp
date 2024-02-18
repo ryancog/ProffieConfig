@@ -15,6 +15,9 @@ Settings::Settings(EditorWindow* _parent) : parent(_parent) {
   setCustomInputParsers();
   setCustomOutputParsers();
 }
+Settings::~Settings() {
+  for (const auto& define : generalDefines) delete define.second;
+}
 
 void Settings::linkDefines() {
 # define ENTRY(name, ...) { name, new ProffieDefine(name, __VA_ARGS__) }

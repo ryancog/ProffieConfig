@@ -19,6 +19,7 @@ class Settings;
 class EditorWindow : public wxFrame {
 public:
   EditorWindow(const std::string&, wxWindow*);
+  ~EditorWindow();
 
   const std::string& getOpenConfig();
 

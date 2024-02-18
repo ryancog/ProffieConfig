@@ -22,6 +22,6 @@ public:
   wxStaticText* text() const;
 
 private:
-  const wxSpinCtrlDouble* mEntry;
-  const wxStaticText* mText;
+  wxSpinCtrlDouble* mEntry{nullptr};
+  wxStaticText* mText{nullptr};
 };

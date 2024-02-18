@@ -11,15 +11,16 @@ pcSpinCtrl::pcSpinCtrl(wxWindow* _parent, int32_t _id, const wxString& _label, c
     mText = new wxStaticText(this, wxID_ANY, _label);
     auto sizerFlags = wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 5);
     if (_orientation == wxHORIZONTAL) sizerFlags = sizerFlags.Center();
-    sizer->Add(text(), sizerFlags);  } else mText = nullptr;
+    sizer->Add(text(), sizerFlags);
+  }
   sizer->Add(entry(), wxSizerFlags(1).Expand());
 
   SetSizerAndFit(sizer);
 }
 
 wxStaticText* pcSpinCtrl::text() const {
-  return const_cast<wxStaticText*>(mText);
+  return mText;
 }
 wxSpinCtrl* pcSpinCtrl::entry() const {
-  return const_cast<wxSpinCtrl*>(mEntry);
+  return mEntry;
 }
