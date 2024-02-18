@@ -14,15 +14,15 @@ pcSpinCtrlDouble::pcSpinCtrlDouble(wxWindow* _parent, int32_t _id, const wxStrin
     auto sizerFlags = wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 5);
     if (_orientation == wxHORIZONTAL) sizerFlags = sizerFlags.Center();
     sizer->Add(text(), sizerFlags);
-  } else mText = nullptr;
+  }
   sizer->Add(entry(), wxSizerFlags(1).Expand());
 
   SetSizerAndFit(sizer);
 }
 
 wxStaticText* pcSpinCtrlDouble::text() const {
-  return const_cast<wxStaticText*>(mText);
+  return mText;
 }
 wxSpinCtrlDouble* pcSpinCtrlDouble::entry() const {
-  return const_cast<wxSpinCtrlDouble*>(mEntry);
+  return mEntry;
 }

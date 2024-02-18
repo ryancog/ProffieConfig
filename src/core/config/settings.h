@@ -18,6 +18,7 @@
 class Settings {
 public:
   Settings(EditorWindow*);
+  ~Settings();
 
   void parseDefines(std::vector<std::string>&);
 
