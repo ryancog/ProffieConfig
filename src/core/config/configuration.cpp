@@ -129,7 +129,16 @@ void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput, Edito
       configOutput << "\t{ \"" << preset.dirs << "\", \"" << preset.track << "\"," << std::endl;
       if (preset.styles.size() > 0) {
         for (const wxString& style : preset.styles) {
-          configOutput << "\t\t" << style << "," << std::endl;
+          std::istringstream styleStream(style.ToStdString());
+          std::string styleLine;
+          while (!false) {
+            std::getline(styleStream, styleLine);
+            configOutput << "\t\t" << styleLine;
+            if (styleStream.eof()) {
+              configOutput << ",";
+              break;
+            } else configOutput << std::endl;
+          }
         }
       } else configOutput << "\t\t," << std::endl;
       configOutput << "\t\t\"" << preset.name << "\"}";
@@ -387,7 +396,7 @@ void Configuration::readConfigPresets(std::ifstream& file, EditorWindow* editor)
   std::string element;
   while (!file.eof() && element != "#endif") {
     file >> element;
-    if (element == "//") {
+    if (element.find("//") == 0) {
       getline(file, element);
       continue;
     }
@@ -436,7 +445,7 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
 }
 void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
 # define CHKSECT if (file.eof() || element == "#endif" || strstr(element.data(), "};") != NULL) return
-# define RUNTOSECTION element.clear(); while (element != "{") { file >> element; CHKSECT; }
+# define RUNTOSECTION element.clear(); while (element.find("{") == std::string::npos) { file >> element; CHKSECT; }
 
   editor->bladesPage->bladeArrayDlg->bladeArrays.push_back(BladeArrayDlg::BladeArray());
   BladeArrayDlg::BladeArray& bladeArray = editor->bladesPage->bladeArrayDlg->bladeArrays.at(editor->bladesPage->bladeArrayDlg->bladeArrays.size() - 1);
@@ -458,22 +467,25 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
     bladeArray.presets.push_back(PresetsPage::PresetConfig());
     preset++;
 
-    while (std::strstr(presetInfo.data(), "}") == nullptr) {
-      file >> element;
+    while (presetInfo.find("}") == std::string::npos) {
+      element.clear();
+      while (element.find(' ') == std::string::npos && element.find('\n') == std::string::npos) { element += file.get(); }
       CHKSECT;
       presetInfo.append(element);
     }
 
+    constexpr auto detokenizeStr = "\t ,\n\"}";
+
     // Directory
     element = presetInfo.substr(0, presetInfo.find(",")); // Get dir section
     presetInfo = presetInfo.substr(presetInfo.find(",") + 1); // increment presetInfo
-    tempData = std::strtok(element.data(), ",\""); // Detokenize dir section
+    tempData = std::strtok(element.data(), detokenizeStr); // Detokenize dir section
     bladeArray.presets[preset].dirs.assign(tempData == nullptr ? "" : tempData);
 
     // Same thing but for track
     element = presetInfo.substr(0, presetInfo.find(","));
     presetInfo = presetInfo.substr(presetInfo.find(",") + 1);
-    tempData = std::strtok(element.data(), ",\"");
+    tempData = std::strtok(element.data(), detokenizeStr);
     bladeArray.presets[preset].track.assign(tempData == nullptr ? "" : tempData);
 
     // Deal with Fett's comments
@@ -502,7 +514,7 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
     }
 
     // Name
-    tempData = std::strtok(presetInfo.data(), ",\"}");
+    tempData = std::strtok(presetInfo.data(), detokenizeStr);
     bladeArray.presets[preset].name.assign(tempData == nullptr ? "noname" : tempData);
   }
 # undef CHKSECT
