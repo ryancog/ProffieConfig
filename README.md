@@ -1,6 +1,6 @@
 # ProffieConfig 
 
-<img align="left" src=https://github.com/ryryog25/ProffieConfig/resources/icons/icon.svg width=200> 
+<img align="left" src=https://github.com/ryryog25/ProffieConfig/blob/master/resources/icons/icon.svg width=200> 
   
 All-In-One ProffieBoard Management Utility. 
 
@@ -27,9 +27,9 @@ ProffieConfig will guide you through the setup and all of it's features, so whet
 
 ## Gallery
 
-<img src=https://github.com/ryryog25/ProffieConfig/screenshots/mainmenu.png width=200> 
-<img src=https://github.com/ryryog25/ProffieConfig/screenshots/editor-general.png width=300>
-<img src=https://github.com/ryryog25/ProffieConfig/screenshots/editor-propfile-fett263.png width=500>
-<img src=https://github.com/ryryog25/ProffieConfig/screenshots/editor-bladearrays.png width=400>
-<img src=https://github.com/ryryog25/ProffieConfig/screenshots/editor-bladeawareness.png width=400>
-<img src=https://github.com/ryryog25/ProffieConfig/screenshots/editor-presetsstyles.png width=500>
+<img src=https://github.com/ryryog25/ProffieConfig/blob/master/screenshots/mainmenu.png width=200> 
+<img src=https://github.com/ryryog25/ProffieConfig/blob/master/screenshots/editor-general.png width=300>
+<img src=https://github.com/ryryog25/ProffieConfig/blob/master/screenshots/editor-propfile-fett263.png width=500>
+<img src=https://github.com/ryryog25/ProffieConfig/blob/master/screenshots/editor-bladearrays.png width=400>
+<img src=https://github.com/ryryog25/ProffieConfig/blob/master/screenshots/editor-bladeawareness.png width=400>
+<img src=https://github.com/ryryog25/ProffieConfig/blob/master/screenshots/editor-presetsstyles.png width=500>
