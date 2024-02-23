@@ -280,11 +280,8 @@ void PresetsPage::updateFields() {
 void PresetsPage::stripAndSaveEditor() {
   if (presetList->GetSelection() >= 0 && bladeList->GetSelection() >= 0) {
     wxString style = styleInput->entry()->GetValue();
-    style.erase(std::remove(style.begin(), style.end(), ' '), style.end());
     if (style.find('{') != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '{'));
     if (style.rfind('}') != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '}'));
-    if (style.find('\r') != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '\r'));
-    if (style.find('\n') != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '\n'));
     if (style.rfind("()") != wxString::npos) style.erase(style.find("()") + 2);
     parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).styles.at(bladeList->GetSelection()) = style;
   }
