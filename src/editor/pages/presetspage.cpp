@@ -8,9 +8,11 @@
 #include "editor/editorwindow.h"
 #include "editor/dialogs/bladearraydlg.h"
 
-
 #include <string>
 #include <wx/tooltip.h>
+#ifdef __WXGTK__
+#include <wx/clipbrd.h>
+#endif
 
 PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, ""), parent(static_cast<EditorWindow*>(window)) {
   styleInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE);
@@ -31,6 +33,26 @@ void PresetsPage::bindEvents() {
   GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { parent->bladesPage->update(); update(); }, ID_PresetList);
 
   GetStaticBox()->Bind(wxEVT_TEXT, [&](wxCommandEvent&) { update(); }, ID_PresetChange);
+# ifdef __WXGTK__ // GTK processes double events, leading to crash it seems... this is a workaround.
+  GetStaticBox()->Bind(wxEVT_TEXT_PASTE, [&](wxClipboardTextEvent&) {
+        if (!wxClipboard::Get()->Open()) return;
+
+        wxTextDataObject data;
+        wxClipboard::Get()->GetData(data);
+        wxClipboard::Get()->Close();
+
+        auto styleText = styleInput->entry()->GetValue();
+        long selectionStart, selectionEnd;
+        styleInput->entry()->GetSelection(&selectionStart, &selectionEnd);
+
+        if (selectionStart != selectionEnd) styleText.erase(selectionStart, selectionEnd);
+        styleText.insert(selectionStart, data.GetText());
+
+        styleInput->entry()->SetModified(true);
+        styleInput->entry()->SetValue(styleText);
+        styleInput->entry()->SetInsertionPoint(selectionStart + data.GetText().size());
+  }, ID_PresetChange);
+# endif
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.push_back(PresetConfig());
         parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets[parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.size() - 1].name = "newpreset";
@@ -143,7 +165,8 @@ void PresetsPage::update() {
   if (nameInput->entry()->IsModified()) stripAndSaveName();
   if (dirInput->entry()->IsModified()) stripAndSaveDir();
   if (trackInput->entry()->IsModified()) stripAndSaveTrack();
-  if (styleInput->entry()->IsModified()) stripAndSaveEditor();
+  if (styleInput->entry()->IsModified())
+    stripAndSaveEditor();
 
   rebuildBladeArrayList();
   rebuildPresetList();
@@ -214,26 +237,27 @@ void PresetsPage::resizeAndFillPresets() {
 }
 void PresetsPage::updateFields() {
   if (presetList->GetSelection() >= 0) {
+    const auto& currentPreset = parent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection());
     uint32_t insertionPoint;
     
     insertionPoint = styleInput->entry()->GetInsertionPoint();
     if (bladeList->GetSelection() >= 0) {
-      styleInput->entry()->ChangeValue(parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).styles.at(bladeList->GetSelection()));
+      styleInput->entry()->ChangeValue(currentPreset.styles.at(bladeList->GetSelection()));
       styleInput->entry()->SetInsertionPoint(insertionPoint <= styleInput->entry()->GetValue().size() ? insertionPoint : styleInput->entry()->GetValue().size());
     } else {
       styleInput->entry()->ChangeValue("Select Blade to Edit Style...");
     }
 
     insertionPoint = nameInput->entry()->GetInsertionPoint();
-    nameInput->entry()->ChangeValue(parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).name);
+    nameInput->entry()->ChangeValue(currentPreset.name);
     nameInput->entry()->SetInsertionPoint(insertionPoint <= nameInput->entry()->GetValue().size() ? insertionPoint : nameInput->entry()->GetValue().size());
 
     insertionPoint = dirInput->entry()->GetInsertionPoint();
-    dirInput->entry()->ChangeValue(parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).dirs);
+    dirInput->entry()->ChangeValue(currentPreset.dirs);
     dirInput->entry()->SetInsertionPoint(insertionPoint <= dirInput->entry()->GetValue().size() ? insertionPoint : dirInput->entry()->GetValue().size());
 
     insertionPoint = trackInput->entry()->GetInsertionPoint();
-    trackInput->entry()->ChangeValue(parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).track);
+    trackInput->entry()->ChangeValue(currentPreset.track);
     trackInput->entry()->SetInsertionPoint(insertionPoint <= trackInput->entry()->GetValue().size() - 4 ? insertionPoint : trackInput->entry()->GetValue().size() - 4);
   }
   else {
@@ -257,10 +281,12 @@ void PresetsPage::stripAndSaveEditor() {
   if (presetList->GetSelection() >= 0 && bladeList->GetSelection() >= 0) {
     wxString style = styleInput->entry()->GetValue();
     style.erase(std::remove(style.begin(), style.end(), ' '), style.end());
-    if (style.find("{") != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '{'));
-    if (style.rfind("}") != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '}'));
-    if (style.rfind("()") != wxString::npos) style.erase(style.rfind("()") + 2);
-    parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).styles.at(bladeList->GetSelection()).assign(style);
+    if (style.find('{') != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '{'));
+    if (style.rfind('}') != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '}'));
+    if (style.find('\r') != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '\r'));
+    if (style.find('\n') != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '\n'));
+    if (style.rfind("()") != wxString::npos) style.erase(style.find("()") + 2);
+    parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).styles.at(bladeList->GetSelection()) = style;
   }
 }
 void PresetsPage::stripAndSaveName() {
