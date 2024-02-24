@@ -5,7 +5,7 @@ CONFIG -= qt
 QMAKE_CXXFLAGS += $$system(wx-config --cxxflags)
 QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
 
-VERSION = 1.6.4
+VERSION = 1.6.5
 DEFINES += VERSION=\\\"$$VERSION\\\"
 win32: DEFINES += wxMessageDialog=wxGenericMessageDialog
 win32: DEFINES += wxProgressDialog=wxGenericProgressDialog
