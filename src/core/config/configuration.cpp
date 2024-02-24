@@ -416,41 +416,39 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
   std::string styleName;
   std::string style;
 
-  file >> element;
   while (!file.eof() && element != "#endif") {
-    if (element == "using") {
-      file >> element;
-      styleName = element;
-
-      file >> element; // Clear "="
-
-      style = "";
-      while (style.find(";") == std::string::npos) {
-        file >> element;
-        style += element;
-      }
-      style.erase(style.rfind(";")); // remove trailing ";"
-      style.erase(std::remove(style.begin(), style.end(), '\n'), style.end()); // remove newlines
-
-      // Remove potential StylePtr<> syntax
-      if (style.find("StylePtr") != std::string::npos) {
-        style.erase(style.rfind("StylePtr<"), 9);
-        style.erase(style.find(">()"), 3);
-      }
-
-      Configuration::replaceStyles(styleName, style, editor);
-    }
     file >> element;
+    if (element != "using") continue;
+
+    file >> styleName;
+    file >> element; // Clear "="
+
+    style.clear();
+    while (style.find(";") == std::string::npos) {
+      style += file.get();
+    }
+    style.erase(style.rfind(";")); // remove trailing ";"
+    // style.erase(std::remove(style.begin(), style.end(), '\n'), style.end()); // remove newlines
+
+    // Remove potential StylePtr<> syntax
+    if (style.find("StylePtr") != std::string::npos) {
+      style.erase(style.rfind("StylePtr<"), 9);
+      style.erase(style.find(">()"), 3);
+    }
+
+    Configuration::replaceStyles(styleName, style, editor);
   }
+  file >> element;
 }
 void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
 # define CHKSECT if (file.eof() || element == "#endif" || strstr(element.data(), "};") != NULL) return
-# define RUNTOSECTION element.clear(); while (element.find("{") == std::string::npos) { file >> element; CHKSECT; }
+# define RUNTOSECTION element.clear(); while (element.find('{') == std::string::npos) { element += file.get(); CHKSECT; }
 
   editor->bladesPage->bladeArrayDlg->bladeArrays.push_back(BladeArrayDlg::BladeArray());
   BladeArrayDlg::BladeArray& bladeArray = editor->bladesPage->bladeArrayDlg->bladeArrays.at(editor->bladesPage->bladeArrayDlg->bladeArrays.size() - 1);
 
   char* tempData;
+  static constexpr const char* detokenizeStr = "\t ,\r\n\"}";
   std::string presetInfo;
   std::string element;
   std::string comment;
@@ -474,19 +472,18 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
       presetInfo.append(element);
     }
 
-    constexpr auto detokenizeStr = "\t ,\n\"}";
 
     // Directory
-    element = presetInfo.substr(0, presetInfo.find(",")); // Get dir section
-    presetInfo = presetInfo.substr(presetInfo.find(",") + 1); // increment presetInfo
-    tempData = std::strtok(element.data(), detokenizeStr); // Detokenize dir section
-    bladeArray.presets[preset].dirs.assign(tempData == nullptr ? "" : tempData);
+    auto dirBegin = presetInfo.find('"') + 1;
+    auto dirEnd   = presetInfo.find('"', dirBegin);
+    bladeArray.presets[preset].dirs.assign(presetInfo.substr(dirBegin, dirEnd - dirBegin));
 
     // Same thing but for track
-    element = presetInfo.substr(0, presetInfo.find(","));
-    presetInfo = presetInfo.substr(presetInfo.find(",") + 1);
-    tempData = std::strtok(element.data(), detokenizeStr);
-    bladeArray.presets[preset].track.assign(tempData == nullptr ? "" : tempData);
+    auto trackBegin = presetInfo.find('"', dirEnd + 2) + 1;
+    auto trackEnd   = presetInfo.find('"', trackBegin);
+    bladeArray.presets[preset].track.assign(presetInfo.substr(trackBegin, trackEnd - trackBegin));
+
+    presetInfo = presetInfo.substr(trackEnd + 2); // Clear
 
     // Deal with Fett's comments
     comment.clear();
@@ -506,9 +503,11 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
         presetInfo = presetInfo.substr(presetInfo.find("&style_pov,") + 11 /* length of "&style_pov,"*/);
         bladeArray.presets[preset].styles.push_back("&style_pov");
       } else {
-        element = presetInfo.substr(presetInfo.find("Style"), presetInfo.find("()") - presetInfo.find("Style") + 2); // Copy in next
+        auto presetBegin = presetInfo.find("Style");
+        auto presetEnd = presetInfo.find("()") + 2;
+        element = presetInfo.substr(presetBegin, presetEnd - presetBegin); // Copy in next
 
-        presetInfo = presetInfo.substr(presetInfo.find("()") + 2); // Increment
+        presetInfo = presetInfo.substr(presetEnd); // Increment
         bladeArray.presets[preset].styles.push_back(comment + element);
       }
     }
