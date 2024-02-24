@@ -74,7 +74,7 @@ void MainMenu::bindEvents() {
             "ProffieOS v" PROFFIEOS_VERSION " | Arduino CLI v" ARDUINO_CLI_VERSION
             );
         aboutInfo.SetVersion(VERSION);
-        aboutInfo.SetWebSite("https://github.com/Ryryog25/ProffieConfig");
+        aboutInfo.SetWebSite("https://github.com/Ryryog25/ProffieConfig/wiki/ProffieConfig");
         aboutInfo.SetCopyright("Copyright (C) 2024 Ryan Ogurek");
         aboutInfo.SetName("ProffieConfig");
         wxAboutBox(aboutInfo);
