@@ -19,6 +19,7 @@ ProffieConfig will guide you through the setup and all of it's features, so whet
 - Implement interface for `using` syntax (not just the ability to parse)
 - Add blade nicknames
 - Update power pin selection to new list style for blade awareness
+- Add support for `DimBlade()`
 - Take over the world ;)
 
 ## Additional Info
