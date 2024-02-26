@@ -13,12 +13,12 @@
 #include "editor/pages/propspage.h"
 #include "editor/pages/bladespage.h"
 #include "editor/dialogs/bladearraydlg.h"
-#include "wx/event.h"
 
 #include <cstring>
 #include <sstream>
-#include <exception>
+
 #include <wx/filedlg.h>
+#include <wx/event.h>
 
 # define ERR(msg) \
   Misc::MessageBoxEvent* msgEvent = new Misc::MessageBoxEvent(wxID_ANY, std::string(msg) + "\n\nConfiguration not saved.", "Configuration Error", wxOK | wxCENTER | wxICON_ERROR); \

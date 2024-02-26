@@ -165,8 +165,7 @@ void PresetsPage::update() {
   if (nameInput->entry()->IsModified()) stripAndSaveName();
   if (dirInput->entry()->IsModified()) stripAndSaveDir();
   if (trackInput->entry()->IsModified()) stripAndSaveTrack();
-  if (styleInput->entry()->IsModified())
-    stripAndSaveEditor();
+  if (styleInput->entry()->IsModified()) stripAndSaveEditor();
 
   rebuildBladeArrayList();
   rebuildPresetList();
