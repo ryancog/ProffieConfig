@@ -106,7 +106,7 @@ SETTINGS {
 	}
 	TOGGLE("FETT263_THRUST_ON_PREON") {
 		NAME: "Thrust to Turn On (With Preon)"
-		DESCRIPTION: "Disables Fast On ignition for Thrust On so Preon is used (cannot be used with FETT263_THRUST_ON)"
+		DESCRIPTION: "Disables Fast On ignition for Thrust On so Preon is used"
 		DISABLE: "FETT263_THRUST_ON"
 	}
 	TOGGLE("FETT263_THRUST_ON_NO_BM") {
@@ -149,11 +149,11 @@ SETTINGS {
 		}
 		SELECTION("FETT263_EDIT_MODE_MENU") {
 			NAME: "Edit Mode"
-			DESCRIPTION: "Enable Edit Mode Menu System\nRequires ENABLE_ALL_EDIT_OPTIONS"
+			DESCRIPTION: "Enable Edit Mode Menu System (Advanced on-the-fly saber controls, includes everything from Edit Settings)\nRequires ENABLE_ALL_EDIT_OPTIONS in Custom Options (General Page)"
 		}
 		SELECTION("FETT263_EDIT_SETTINGS_MENU") {
 			NAME: "Edit Settings"
-			DESCRIPTION: "Enable Edit Settings Menu (Volume, Clash Threshold, Blade Length, Gestures/Controls, Brightness)\nRequires ENABLE_ALL_EDIT_OPTIONS" 
+			DESCRIPTION: "Enable Edit Settings Menu (Volume, Clash Threshold, Blade Length, Gestures/Controls, Brightness)\nRequires ENABLE_ALL_EDIT_OPTIONS in Custom Options (General Page)" 
 		}
 	}
 
@@ -398,7 +398,7 @@ LAYOUT {
 				VERTICAL("Edit Mode") {
 					OPTION("NO_EDIT_MODE")
 					OPTION("FETT263_EDIT_MODE_MENU")
-					OPTION("FETT263_EDIT_SETINGS_MENU")
+					OPTION("FETT263_EDIT_SETTINGS_MENU")
 				}
 				VERTICAL("Interface") {
 					OPTION("FETT263_SAY_COLOR_LIST")
@@ -532,7 +532,7 @@ BUTTONS{1} {
 
 		BUTTON("Double Click and Hold") {
 			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Enter Edit Mode"
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Enter Settings Menu"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Enter Settings Menu"
 		}
 	}
 
@@ -737,25 +737,25 @@ BUTTONS{1} {
 
 	STATE("in Edit Settings") {
 		BUTTON("Turn Right") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Rotate Forward, Increase Value, Confirm "Yes""
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Rotate Forward, Increase Value, Confirm "Yes""
 		}
 		BUTTON("Hold and Turn Right") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Increment by 5 (Blade Length)"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Increment by 5 (Blade Length)"
 		}
 		BUTTON("Turn Left") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Rotate Back, Decrease Value, Confirm "No""
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Rotate Back, Decrease Value, Confirm "No""
 		}
 		BUTTON("Hold and Turn Left") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Increment by 5 (Blade Length)"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Increment by 5 (Blade Length)"
 		}
 		BUTTON("Click") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Select, Save, Enter"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Select, Save, Enter"
 		}
 		BUTTON("Long Click") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Cancel, Revert, Go Back"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Cancel, Revert, Go Back"
 		}
 		BUTTON("Hold Click") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Exit"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Exit"
 		}
 	}
 }
@@ -825,7 +825,7 @@ BUTTONS{2} {
 		}
 		BUTTON("Hold Aux and Hold Power") {
 			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Enter Edit Mode"
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Enter Settings Menu"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Enter Settings Menu"
 		}
 	}
 
@@ -1064,25 +1064,25 @@ BUTTONS{2} {
 
 	STATE("in Edit Settings") {
 		BUTTON("Turn Right") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Rotate Forward, Increase Value, Confirm "Yes""
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Rotate Forward, Increase Value, Confirm "Yes""
 		}
 		BUTTON("Hold Power and Turn Right") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Increment by 5 (Blade Length)"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Increment by 5 (Blade Length)"
 		}
 		BUTTON("Turn Left") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Rotate Back, Decrease Value, Confirm "No""
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Rotate Back, Decrease Value, Confirm "No""
 		}
 		BUTTON("Hold Power and Turn Left") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Increment by 5 (Blade Length)"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Increment by 5 (Blade Length)"
 		}
 		BUTTON("Click Power") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Select, Save, Enter"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Select, Save, Enter"
 		}
 		BUTTON("Click Aux") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Cancel, Revert, Go Back"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Cancel, Revert, Go Back"
 		}
 		BUTTON("Hold Aux") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Exit"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Exit"
 		}
 	}
 }
@@ -1152,7 +1152,7 @@ BUTTONS{3} {
 		}
 		BUTTON("Hold Aux and Hold Power") {
 			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Enter Edit Mode"
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Enter Settings Menu"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Enter Settings Menu"
 		}
 	}
 
@@ -1391,25 +1391,25 @@ BUTTONS{3} {
 
 	STATE("in Edit Settings") {
 		BUTTON("Turn Right") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Rotate Forward, Increase Value, Confirm "Yes""
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Rotate Forward, Increase Value, Confirm "Yes""
 		}
 		BUTTON("Hold Power and Turn Right") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Increment by 5 (Blade Length)"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Increment by 5 (Blade Length)"
 		}
 		BUTTON("Turn Left") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Rotate Back, Decrease Value, Confirm "No""
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Rotate Back, Decrease Value, Confirm "No""
 		}
 		BUTTON("Hold Power and Turn Left") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Increment by 5 (Blade Length)"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Increment by 5 (Blade Length)"
 		}
 		BUTTON("Click Power") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Select, Save, Enter"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Select, Save, Enter"
 		}
 		BUTTON("Click Aux") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Cancel, Revert, Go Back"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Cancel, Revert, Go Back"
 		}
 		BUTTON("Hold Aux") {
-			DESCRIPTION("FETT263_EDIT_SETINGS_MENU"): "Exit"
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Exit"
 		}
 	}
 }
