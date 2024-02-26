@@ -151,7 +151,7 @@ SETTINGS {
 			NAME: "Edit Mode"
 			DESCRIPTION: "Enable Edit Mode Menu System\nRequires ENABLE_ALL_EDIT_OPTIONS"
 		}
-		SELECTION("FETT263_EDIT_SETINGS_MENU") {
+		SELECTION("FETT263_EDIT_SETTINGS_MENU") {
 			NAME: "Edit Settings"
 			DESCRIPTION: "Enable Edit Settings Menu (Volume, Clash Threshold, Blade Length, Gestures/Controls, Brightness)\nRequires ENABLE_ALL_EDIT_OPTIONS" 
 		}
