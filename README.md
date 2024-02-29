@@ -18,7 +18,7 @@ ProffieConfig will guide you through the setup and all of its features, so wheth
 
 ***NOTE for Windows:** If Windows warns about the program being dangerous (Windows Security is just based on # of downloads or paying for license, so there's not much I can do about this), simply click "More Info..." and then you should be able to Run Anyways.*
 
-***NOTE for Chrome Browser Users:** If chrome doesn't allow you to keep the file due to it being "Dangerous" (for essentially the same reasons as above), click the button to "Show all downloads" and then you can opt to keep the file from there.*
+***NOTE for Chrome Browser Users:** If Chrome doesn't allow you to keep the file due to it being "Dangerous" (for essentially the same reasons as above), click the button to "Show all downloads" and then you can opt to keep the file from there.*
 
 
 
