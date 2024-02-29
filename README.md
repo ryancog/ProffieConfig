@@ -14,6 +14,12 @@ Head over to the [latest ProffieConfig release](https://github.com/ryryog25/Prof
 
 ProffieConfig will guide you through the setup and all of its features, so whether you're a first-time proffieboard user or have been around the block a few times, you'll be ready in no time!
 
+NOTE for macOS: You'll have to right click on ProffieConfig in Finder after downloading and select "Open" due to macOS' strict security. (This is simply because I don't pay for an Apple license)
+NOTE for Windows: If Windows warns about the file being dangerous (Windows Security is just based on # of downloads or paying for license, so there's not much I can do about this), simply click "More Info..." and then you should be able to Run Anyways.
+NOTE for Chrome Browser Users: If chrome doesn't allow you to keep the file due to it being "Dangerous" (for essentially the same reasons as above), click the button to "Show all downloads" and then you can opt to keep the file from there.
+
+
+
 ## To-Do (Non-Exhaustive)
 - Expand pre-checker capabilities (ongoing)
 - Implement interface for `using` syntax (not just the ability to parse)
