@@ -12,7 +12,7 @@ Using this tool, there is no need for dealing with the Arduino IDE, Zadig, etc. 
 
 Head over to the [latest ProffieConfig release](https://github.com/ryryog25/ProffieConfig/releases/latest), grab either the macOS or Windows (Win32) version depending on which you use, unzip the folder, and run it! 
 
-ProffieConfig will guide you through the setup and all of it's features, so whether you're a first-time proffieboard user or have been around the block a few times, you'll be ready in no time!
+ProffieConfig will guide you through the setup and all of its features, so whether you're a first-time proffieboard user or have been around the block a few times, you'll be ready in no time!
 
 ## To-Do (Non-Exhaustive)
 - Expand pre-checker capabilities (ongoing)
