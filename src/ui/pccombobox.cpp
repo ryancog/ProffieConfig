@@ -2,6 +2,7 @@
 
 #include <wx/stattext.h>
 #include <wx/sizer.h>
+#include <wx/tooltip.h>
 
 pcComboBox::pcComboBox(wxWindow* _parent, int32_t _id, const wxString& _label, const wxPoint& _pos, const wxSize& _size, const wxArrayString& _choices, int32_t _style, const wxOrientation& _orientation) :
     wxWindow(_parent, wxID_ANY),
@@ -17,6 +18,11 @@ pcComboBox::pcComboBox(wxWindow* _parent, int32_t _id, const wxString& _label, c
   sizer->Add(entry(), wxSizerFlags(1).Expand());
 
   SetSizerAndFit(sizer);
+}
+
+void pcComboBox::SetToolTip(wxToolTip* tip) {
+  if (mText) mText->SetToolTip(new wxToolTip(tip->GetTip()));
+  mEntry->SetToolTip(tip);
 }
 
 wxStaticText* pcComboBox::text() const {

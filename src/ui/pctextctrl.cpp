@@ -1,6 +1,7 @@
 #include "pctextctrl.h"
 
 #include <wx/sizer.h>
+#include <wx/tooltip.h>
 
 pcTextCtrl::pcTextCtrl(wxWindow* _parent, int32_t _id, const wxString& _label, const wxPoint& _pos, const wxSize& _size, int32_t _style, const wxString& _defaultVal, const wxOrientation& _orientation)
     : wxWindow(_parent, wxID_ANY),
@@ -17,6 +18,12 @@ pcTextCtrl::pcTextCtrl(wxWindow* _parent, int32_t _id, const wxString& _label, c
 
   SetSizerAndFit(sizer);
 }
+
+void pcTextCtrl::SetToolTip(wxToolTip* tip) {
+  if (mText) mText->SetToolTip(new wxToolTip(tip->GetTip()));
+  mEntry->SetToolTip(tip);
+}
+
 
 wxStaticText* pcTextCtrl::text() const {
   return mText;
