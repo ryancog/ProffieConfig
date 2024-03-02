@@ -18,10 +18,6 @@
 #include <wx/wfstream.h>
 #include <initializer_list>
 
-#ifdef __WXOSX__
-char Misc::path[];
-#endif
-
 wxEventTypeTag<wxCommandEvent> Misc::EVT_MSGBOX(wxNewEventType());
 
 const wxArrayString Misc::createEntries(const std::vector<wxString>& list) {
