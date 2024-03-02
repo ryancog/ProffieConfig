@@ -1,6 +1,7 @@
 #include "pcspinctrldouble.h"
 
 #include <wx/sizer.h>
+#include <wx/tooltip.h>
 
 pcSpinCtrlDouble::pcSpinCtrlDouble(wxWindow* _parent, int32_t _id, const wxString& _label, const wxPoint& _pos, const wxSize& _size, int32_t _style, double _min, double _max, double _initial, const wxOrientation& _orientation)
     : wxWindow(_parent, wxID_ANY),
@@ -18,6 +19,11 @@ pcSpinCtrlDouble::pcSpinCtrlDouble(wxWindow* _parent, int32_t _id, const wxStrin
   sizer->Add(entry(), wxSizerFlags(1).Expand());
 
   SetSizerAndFit(sizer);
+}
+
+void pcSpinCtrlDouble::SetToolTip(wxToolTip* tip) {
+  if (mText) mText->SetToolTip(new wxToolTip(tip->GetTip()));
+  mEntry->SetToolTip(tip);
 }
 
 wxStaticText* pcSpinCtrlDouble::text() const {

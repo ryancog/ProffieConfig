@@ -16,6 +16,8 @@ public:
     const wxOrientation& orientation = wxVERTICAL
     );
 
+  void SetToolTip(wxToolTip*);
+
   wxTextCtrl* entry() const;
   wxStaticText* text() const;
 
