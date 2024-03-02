@@ -1,3 +1,6 @@
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2024 Ryan Ogurek
+
 #include "mainmenu/dialogs/addconfig.h"
 
 #include "core/appstate.h"
