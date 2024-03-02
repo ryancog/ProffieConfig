@@ -106,7 +106,7 @@ void BladesPage::createToolTips() {
   TIP(useStride, "Useful to KR style blades and other similar types where the data signal \"strides\" back and forth across sides.");
   TIP(useZigZag, "Similar to using stride, but for blades in which the data is continuous, \"zig-zagging\" up and down the blade.");
   TIP(subBladeStart, "The starting pixel number for the current Sub-Blade.\nThis number starts at 0.");
-  TIP(subBladeStart, "The ending pixel number for the current Sub-Blade.\nThis number should not exceed the \"Number of Pixels\" in the blade.");
+  TIP(subBladeEnd, "The ending pixel number for the current Sub-Blade.\nThis number should not exceed the \"Number of Pixels\" in the blade.");
 
 
   TIP(star1Color, "The color of the first LED on the star.\nCorresponds to the first-selected power pin.");

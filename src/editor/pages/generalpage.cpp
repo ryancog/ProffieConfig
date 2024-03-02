@@ -41,7 +41,7 @@ void GeneralPage::createToolTips() {
   TIP(webUSB, "Enable to access the ProffieOS Workbench via USB.\nSee the POD Page \"The ProffieOS Workbench\" for more info.");
 
   TIP(orientation, "The orientation of the Proffieboard in the saber.");
-  TIP(buttons, "Number of buttons your saber has.\nPlease note not all prop files support all possible numbers of buttons, and controls will changed depending on how many buttons are specified.");
+  TIP(buttons, "Number of buttons your saber has.\nPlease note not all prop files support all possible numbers of buttons, and controls may change depending on how many buttons are specified.");
   TIP(volume, "Maximum volume level.\n1500 is a good starting value for most speakers, and it is not recommended to go past 2000 unless you know what you are doing, as this can damage your speaker.");
   TIP(clash, "Force required to trigger a clash effect.\nMeasured in Gs.");
   TIP(pliTime, "Time since last activity before PLI goes to sleep.");
