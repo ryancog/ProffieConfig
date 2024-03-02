@@ -16,10 +16,6 @@
 class Misc
 {
 public:
-
-# ifdef __WXOSX__
-  static char path[PATH_MAX];
-# endif
   class MessageBoxEvent;
 
   static wxEventTypeTag<wxCommandEvent> EVT_MSGBOX;
