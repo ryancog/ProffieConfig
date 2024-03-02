@@ -14,14 +14,10 @@
 
 class ProffieConfig : public wxApp {
 public:
-  virtual bool OnInit() {
+  virtual bool OnInit() override {
 
-#   ifdef __WXOSX__
-    uint32_t pathLen = sizeof(Misc::path);
-    _NSGetExecutablePath(Misc::path, &pathLen);
-    strncpy(Misc::path, dirname(Misc::path), PATH_MAX);
-    chdir(Misc::path);
-#   endif
+    chdir(argv[0].BeforeLast('/'));
+
 #   ifdef __WXMSW__
     MSWEnableDarkMode();
     if (AttachConsole(ATTACH_PARENT_PROCESS)){
