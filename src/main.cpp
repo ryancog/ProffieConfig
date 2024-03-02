@@ -3,14 +3,7 @@
 
 #include "core/appstate.h"
 
-#include <wx/splash.h>
 #include <wx/app.h>
-
-#ifdef __WXOSX__
-#include <mach-o/dyld.h>
-#include <libgen.h>
-#include "core/utilities/misc.h"
-#endif
 
 class ProffieConfig : public wxApp {
 public:
