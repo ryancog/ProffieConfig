@@ -30,6 +30,7 @@ ProffieConfig will guide you through the setup and all of its features, so wheth
 - Add support for `DimBlade()`
 - Add progress percentage while applying
 - Add config percentage of usage
+- Add warnings for soft config fails.
 - Take over the world ;)
 
 ## Additional Info
