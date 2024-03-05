@@ -28,6 +28,8 @@ ProffieConfig will guide you through the setup and all of its features, so wheth
 - Add blade nicknames
 - Update power pin selection to new list style for blade awareness
 - Add support for `DimBlade()`
+- Add progress percentage while applying
+- Add config percentage of usage
 - Take over the world ;)
 
 ## Additional Info
