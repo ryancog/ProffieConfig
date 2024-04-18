@@ -192,25 +192,25 @@ wxBoxSizer* BladesPage::createBladeSettings() {
 
   wxBoxSizer* star1 = new wxBoxSizer(wxVERTICAL);
   star1Color = new pcComboBox(GetStaticBox(), wxID_ANY, "LED 1 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), wxCB_READONLY);
-  star1Resistance = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "Resistance", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
+  star1Resistance = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "Resistance (mOhms)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
   star1->Add(star1Color, MENUITEMFLAGS);
   star1->Add(star1Resistance, MENUITEMFLAGS.TripleBorder(wxLEFT).Expand());
 
   wxBoxSizer* star2 = new wxBoxSizer(wxVERTICAL);
   star2Color = new pcComboBox(GetStaticBox(), wxID_ANY, "LED 2 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), wxCB_READONLY);
-  star2Resistance = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "Resistance", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
+  star2Resistance = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "Resistance (mOhms)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
   star2->Add(star2Color, MENUITEMFLAGS);
   star2->Add(star2Resistance, MENUITEMFLAGS.TripleBorder(wxLEFT).Expand());
 
   wxBoxSizer* star3 = new wxBoxSizer(wxVERTICAL);
   star3Color = new pcComboBox(GetStaticBox(), wxID_ANY, "LED 3 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), wxCB_READONLY);
-  star3Resistance = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "Resistance", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
+  star3Resistance = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "Resistance (mOhms)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
   star3->Add(star3Color, MENUITEMFLAGS);
   star3->Add(star3Resistance, MENUITEMFLAGS.TripleBorder(wxLEFT).Expand());
 
   wxBoxSizer* star4 = new wxBoxSizer(wxVERTICAL);
   star4Color = new pcComboBox(GetStaticBox(), wxID_ANY, "LED 4 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), wxCB_READONLY);
-  star4Resistance = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "Resistance", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
+  star4Resistance = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "Resistance (mOhms)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
   star4->Add(star4Color, MENUITEMFLAGS);
   star4->Add(star4Resistance, MENUITEMFLAGS.TripleBorder(wxLEFT).Expand());
 
