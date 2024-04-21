@@ -17,6 +17,8 @@
 #include <windows.h>
 #include <codecvt>
 #include <locale>
+#else
+#include <termios.h>
 #endif
 
 void Arduino::init(wxWindow* parent, std::function<void(bool)> callback) {
@@ -317,39 +319,66 @@ bool Arduino::compile(wxString& _return, EditorWindow* editor, Progress* progDia
 #endif
 }
 bool Arduino::upload(wxString& _return, EditorWindow* editor, Progress* progDialog) {
-  char buffer[1024];
+    char buffer[1024];
 
-  wxString uploadCommand = "upload ";
-  uploadCommand += PROFFIEOS_PATH;
-  uploadCommand += " --board-options ";
-  if (editor->generalPage->massStorage->GetValue() && editor->generalPage->webUSB->GetValue()) uploadCommand += "usb=cdc_msc_webusb";
-  else if (editor->generalPage->webUSB->GetValue()) uploadCommand += "usb=cdc_webusb";
-  else if (editor->generalPage->massStorage->GetValue()) uploadCommand += "usb=cdc_msc";
-  else uploadCommand += "usb=cdc";
-  if (editor->generalPage->board->entry()->GetStringSelection() == "ProffieBoard V3") uploadCommand +=",dosfs=sdmmc1";
+    wxString uploadCommand = "upload ";
+    uploadCommand += PROFFIEOS_PATH;
+    uploadCommand += " --board-options ";
+    if (editor->generalPage->massStorage->GetValue() && editor->generalPage->webUSB->GetValue()) uploadCommand += "usb=cdc_msc_webusb";
+    else if (editor->generalPage->webUSB->GetValue()) uploadCommand += "usb=cdc_webusb";
+    else if (editor->generalPage->massStorage->GetValue()) uploadCommand += "usb=cdc_msc";
+    else uploadCommand += "usb=cdc";
+    if (editor->generalPage->board->entry()->GetStringSelection() == "ProffieBoard V3") uploadCommand +=",dosfs=sdmmc1";
 
-  uploadCommand += " --fqbn ";
-  uploadCommand += editor->generalPage->board->entry()->GetSelection() == 0 ? ARDUINOCORE_PBV1 : editor->generalPage->board->entry()->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
-  uploadCommand += " -v";
+    uploadCommand += " --fqbn ";
+    uploadCommand += editor->generalPage->board->entry()->GetSelection() == 0 ? ARDUINOCORE_PBV1 : editor->generalPage->board->entry()->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
+    uploadCommand += " -v";
 
-  FILE *arduinoCli = Arduino::CLI(uploadCommand);
-
-  wxString error{};
-  while(fgets(buffer, sizeof(buffer), arduinoCli) != NULL) {
-    if (progDialog != nullptr) progDialog->emitEvent(-1, ""); // Pulse
-    error += buffer;
-    if (std::strstr(buffer, "error") || std::strstr(buffer, "FAIL")) {
-      _return = Arduino::parseError(error);
-      return false;
+    struct termios newtio;
+    auto fd = open(static_cast<MainMenu*>(editor->GetParent())->boardSelect->entry()->GetValue().data(), O_RDWR | O_NOCTTY);
+    if (fd < 0) {
+        std::cout << "err" << std::endl;
     }
-  }
-  if (pclose(arduinoCli) != 0) {
-    _return = "Unknown Upload Error";
-    return false;
-  }
 
-  _return.clear();
-  return true;
+    memset(&newtio, 0, sizeof(newtio));
+
+    newtio.c_cflag = B115200 | CRTSCTS | CS8 | CLOCAL | CREAD;
+    newtio.c_iflag = IGNPAR;
+    newtio.c_oflag = (tcflag_t) NULL;
+    newtio.c_lflag &= ~ICANON; /* unset canonical */
+    newtio.c_cc[VTIME] = 1; /* 100 millis */
+
+    tcflush(fd, TCIFLUSH);
+    tcsetattr(fd, TCSANOW, &newtio);
+
+    char buf[255];
+    while(read(fd, buf, 255));
+
+    fsync(fd);
+    write(fd, "\r\n", 2);
+    write(fd, "\r\n", 2);
+    write(fd, "RebootDFU\r\n", 12);
+
+    close(fd);
+
+    FILE *arduinoCli = Arduino::CLI(uploadCommand);
+
+    wxString error{};
+    while(fgets(buffer, sizeof(buffer), arduinoCli) != NULL) {
+        if (progDialog != nullptr) progDialog->emitEvent(-1, ""); // Pulse
+        error += buffer;
+        if (std::strstr(buffer, "error") || std::strstr(buffer, "FAIL")) {
+            _return = Arduino::parseError(error);
+            return false;
+        }
+    }
+    if (pclose(arduinoCli) != 0) {
+        _return = "Unknown Upload Error";
+        return false;
+    }
+
+    _return.clear();
+    return true;
 }
 bool Arduino::updateIno(wxString& _return, EditorWindow* _editor) {
   std::ifstream input(PROFFIEOS_INO);
