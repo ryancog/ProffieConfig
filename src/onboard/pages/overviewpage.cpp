@@ -58,8 +58,15 @@ Onboard::Overview::~Overview() {
 
 void Onboard::Overview::prepare() {
   guideMenu = new MainMenu(this);
-  auto parentRect = GetParent()->GetScreenRect();
-  guideMenu->SetPosition(wxPoint(parentRect.x + parentRect.width + 20, parentRect.y + ((parentRect.height - guideMenu->GetSize().y) / 2)));
+
+  auto updateGuideMenuLocation{[=](){
+          auto parentRect = GetParent()->GetScreenRect();
+          guideMenu->SetPosition(wxPoint(parentRect.x + parentRect.width + 20, parentRect.y + ((parentRect.height - guideMenu->GetSize().y) / 2)));
+                           }};
+  Bind(wxEVT_SIZE, [=](wxSizeEvent&) { updateGuideMenuLocation(); });
+  GetParent()->Bind(wxEVT_MOVE, [=](wxMoveEvent&) { updateGuideMenuLocation(); });
+  guideMenu->Bind(wxEVT_MOVE, [=](wxMoveEvent&) { updateGuideMenuLocation(); });
+
   for (auto hasRun : eventRunTrackers) *hasRun = false;
   prepareMainMenu();
   linkMainMenuEvents();
@@ -406,6 +413,7 @@ void Onboard::Overview::linkEditorEvents() {
         return;
       }
 
+      guideMenu->activeEditor->bladesPage->bladeType->entry()->SetSelection(0);
       generateNewPage("Configuration - Presets and Styles",
 
                       "Presets are arguably the most important part of the configuration.\n"
@@ -658,17 +666,21 @@ void Onboard::Overview::generateNewPage(const std::string& headerText, const std
   sizer->AddSpacer(20);
   sizer->Add(body, wxSizerFlags(1));
 
+  SetSizerAndFit(sizer);
   Layout();
-  Fit();
+  static_cast<Onboard*>(GetParent())->Fit();
+  static_cast<Onboard*>(GetParent())->Layout();
 }
 
 void Onboard::Overview::useButtonOnPage(const std::string& buttonText, std::function<void(wxCommandEvent&)> eventFunction) {
   static decltype(eventFunction) evtFunc = nullptr;
   auto* button = new wxButton(this, ID_PageButton, buttonText);
   sizer->Add(button);
-  Layout();
-  Fit();
 
+  SetSizerAndFit(sizer);
+  Layout();
+  static_cast<Onboard*>(GetParent())->Fit();
+  static_cast<Onboard*>(GetParent())->Layout();
 
   if (evtFunc) Unbind(wxEVT_BUTTON, evtFunc, ID_PageButton);
   evtFunc = eventFunction;
