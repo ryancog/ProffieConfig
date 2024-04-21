@@ -338,7 +338,7 @@ bool Arduino::upload(wxString& _return, EditorWindow* editor, Progress* progDial
   while(fgets(buffer, sizeof(buffer), arduinoCli) != NULL) {
     if (progDialog != nullptr) progDialog->emitEvent(-1, ""); // Pulse
     error += buffer;
-    if (std::strstr(buffer, "error")) {
+    if (std::strstr(buffer, "error") || std::strstr(buffer, "FAIL")) {
       _return = Arduino::parseError(error);
       return false;
     }
@@ -396,6 +396,7 @@ wxString Arduino::parseError(const wxString& error) {
   if (ERRCONTAINS("Serial port busy")) return "The Proffieboard appears busy. \nPlease make sure nothing else is using it, then try again.";
   if (ERRCONTAINS("Buttons for operation")) return std::string("Selected prop file ") + std::strstr(error.data(), "requires");
   if (ERRCONTAINS("1\n2\n3\n4\n5\n6\n7\n8\n9\n10")) return "Could not connect to Proffieboard for upload.";
+  if (ERRCONTAINS("10\n9\n8\n7\n6\n5\n4\n3\n2\n1")) return "Could not connect to Proffieboard for upload.";
   if (ERRCONTAINS("No DFU capable USB device available")) return "No Proffieboard in BOOTLOADER mode found.";
   if (ERRCONTAINS("error:")) return ERRCONTAINS("error:");
 
