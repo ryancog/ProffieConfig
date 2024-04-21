@@ -146,7 +146,6 @@ void SerialMonitor::CreateWriter()
     writerRunning = true;
 
     while (!writerThread->GetThread()->TestDestroy()) {
-
       if (!sendOut.empty()) {
 
         sendOut.resize(255);
