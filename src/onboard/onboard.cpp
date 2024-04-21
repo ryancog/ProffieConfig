@@ -66,7 +66,7 @@ Onboard::Onboard() : wxFrame(nullptr, wxID_ANY, "ProffieConfig First-Time Setup"
   SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
 # endif
 
-  CentreOnScreen();
+  // CentreOnScreen();
   Show(true);
 }
 Onboard::~Onboard() {
