@@ -133,9 +133,9 @@ void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput, Edito
           std::string styleLine;
           while (!false) {
             std::getline(styleStream, styleLine);
-            configOutput << "\t\t" << styleLine;
+              configOutput << "\t\t" << styleLine;
             if (styleStream.eof()) {
-              configOutput << ",";
+                  configOutput << "," << std::endl;
               break;
             } else configOutput << std::endl;
           }
