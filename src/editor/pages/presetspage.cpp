@@ -297,7 +297,7 @@ void PresetsPage::stripAndSaveName() {
 void PresetsPage::stripAndSaveDir() {
   if (presetList->GetSelection() >= 0 && parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0) {
     wxString dir = dirInput->entry()->GetValue();
-    dir.erase(std::remove(dir.begin(), dir.end(), ' '), dir.end());
+    // dir.erase(std::remove(dir.begin(), dir.end(), ' '), dir.end());
     parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).dirs.assign(dir);
   }
 }

@@ -334,6 +334,7 @@ bool Arduino::upload(wxString& _return, EditorWindow* editor, Progress* progDial
     uploadCommand += editor->generalPage->board->entry()->GetSelection() == 0 ? ARDUINOCORE_PBV1 : editor->generalPage->board->entry()->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
     uploadCommand += " -v";
 
+#ifndef __WXMSW__
     struct termios newtio;
     auto fd = open(static_cast<MainMenu*>(editor->GetParent())->boardSelect->entry()->GetValue().data(), O_RDWR | O_NOCTTY);
     if (fd < 0) {
@@ -360,6 +361,7 @@ bool Arduino::upload(wxString& _return, EditorWindow* editor, Progress* progDial
     write(fd, "RebootDFU\r\n", 12);
 
     close(fd);
+#endif
 
     FILE *arduinoCli = Arduino::CLI(uploadCommand);
 
