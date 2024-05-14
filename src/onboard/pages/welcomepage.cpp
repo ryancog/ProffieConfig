@@ -16,8 +16,7 @@ Onboard::Welcome::Welcome(wxWindow* parent) : wxWindow(parent, ID_Welcome) {
                                    "\n"
                                    "This wizard will guide you through first-time setup and usage of ProffieConfig.\n"
                                    "\n\n"
-                                   "Press \"Next\" when you're ready to continue, and we'll get started!"
-                                   , wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
+                                   "Press \"Next\" when you're ready to continue, and we'll get started!");
 
   sizer->Add(welcomeText, wxSizerFlags(0).Center());
   sizer->AddSpacer(40);
