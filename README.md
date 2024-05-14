@@ -36,6 +36,7 @@ ProffieConfig will guide you through the setup and all of its features, so wheth
 ## Additional Info
 
 - [Creating/Editing ProffieConfig's `pconf` files](docs/pconfs.md)
+- [Building ProffieConfig for Linux](docs/linux-build.md)
 
 ## Gallery
 
