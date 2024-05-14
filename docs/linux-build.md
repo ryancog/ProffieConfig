@@ -41,7 +41,7 @@ Luckily this process is pretty straightforward:
 
 (NOTE: `--disable-shared` is recommended as per [ryrog25](https://github.com/ryryog25/ProffieConfig/issues/10#issuecomment-2064536605) for distribution, so it is included here. If `--disable-shared` is not used, the command `sudo ldconfig` must be run after `sudo make install` to update the dynamic linker, and your ProffieConfig build will only work on your machine.)
 
-# Building ProffieConfig:
+## Building ProffieConfig:
 
 1. Clone/Download ProffieConfig source code:
 	```
