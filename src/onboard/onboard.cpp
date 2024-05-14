@@ -25,7 +25,7 @@
 wxEventTypeTag<Onboard::UpdateEvent> Onboard::EVT_UPDATE(wxNewEventType());
 
 Onboard* Onboard::instance{nullptr};
-Onboard::Onboard() : wxFrame(nullptr, wxID_ANY, "ProffieConfig First-Time Setup") {
+Onboard::Onboard() : wxFrame(nullptr, wxID_ANY, "ProffieConfig First-Time Setup", wxDefaultPosition, wxDefaultSize, wxSYSTEM_MENU | wxCLOSE_BOX | wxMINIMIZE_BOX | wxCAPTION | wxCLIP_CHILDREN) {
   auto sizer = new wxBoxSizer(wxVERTICAL);
   auto contentSizer = new wxBoxSizer(wxHORIZONTAL);
   auto icon = new wxStaticBitmap(this, wxID_ANY, wxBitmap(icon_xpm));
