@@ -3,6 +3,7 @@
 
 #include "editor/pages/propspage.h"
 
+#include "core/defines.h"
 #include "core/appstate.h"
 #include "core/utilities/misc.h"
 #include "core/config/propfile.h"
@@ -17,11 +18,14 @@
 PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""), parent{static_cast<EditorWindow*>(window)} {
   auto top = new wxBoxSizer(wxHORIZONTAL);
   propSelection = new pcComboBox(GetStaticBox(), ID_PropSelect, "Prop File", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Default"}), wxCB_READONLY);
-  buttonInfo = new wxButton(GetStaticBox(), ID_Buttons, "Buttons...");
-  propInfo = new wxButton(GetStaticBox(), ID_PropInfo, "Info...");
+  // Two ampersands bc wxWidgets formatting
+  propInfo = new wxButton(GetStaticBox(), ID_PropInfo, "Prop Description && Usage Info...");
+  buttonInfo = new wxButton(GetStaticBox(), ID_Buttons, "Button Controls...");
+  TIP(propInfo, "View prop creator-provided information about this prop and its intended usage.");
+  TIP(buttonInfo, "View button controls based on specific option settings and number of buttons.");
   top->Add(propSelection, wxSizerFlags(0).Border(wxALL, 10));
-  top->Add(buttonInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
   top->Add(propInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
+  top->Add(buttonInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
 
   propsWindow = new wxScrolledWindow(GetStaticBox(), wxID_ANY);
   auto propsSizer = new wxBoxSizer(wxVERTICAL);
