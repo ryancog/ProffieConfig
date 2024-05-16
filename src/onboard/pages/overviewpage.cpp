@@ -38,7 +38,9 @@ Onboard::Overview::Overview(wxWindow* parent) : wxWindow(parent, ID_Overview) {
 
   generateNewPage("Introduction to ProffieConfig",
 
-                  "This is ProffieConfig's main menu.\n"
+                  "ProffieConfig's main menu has just opened up to the right. This page will serve as"
+                  "the instructions for the introduction, but all the instructions will be referencing"
+                  "actions to be completed on the main menu and any windows you open along the way.\n"
                   "\n"
                   "Here you can add and manage configurations, apply a configuration to a Proffieboard,\n"
                   "and open the Serial Monitor to connect to the Proffieboard if needed.\n"
