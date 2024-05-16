@@ -44,9 +44,9 @@ void GeneralPage::createToolTips() {
   TIP(buttons, "Number of buttons your saber has.\nPlease note not all prop files support all possible numbers of buttons, and controls may change depending on how many buttons are specified.");
   TIP(volume, "Maximum volume level.\n1500 is a good starting value for most speakers, and it is not recommended to go past 2000 unless you know what you are doing, as this can damage your speaker.");
   TIP(clash, "Force required to trigger a clash effect.\nMeasured in Gs.");
-  TIP(pliTime, "Time since last activity before PLI goes to sleep.");
-  TIP(idleTime, "Time since last activity before accent LEDs go to sleep.");
-  TIP(motionTime, "Time since last activity before gesture controls are disabled.");
+  TIP(pliTime, "Time (in minutes) since last activity before PLI goes to sleep.");
+  TIP(idleTime, "Time (in minutes) since last activity before accent LEDs go to sleep.");
+  TIP(motionTime, "Time (in minutes) since last activity before gesture controls are disabled.");
   TIP(maxLEDs, "Maximum number of LEDs in a WS281X blade.\nThis value should not be changed unless you know what you are doing.\nConfigure the length of your blade in the \"Blade Arrays\" page.");
 
   TIP(volumeSave, "Save the volume level between board restarts.");
@@ -115,10 +115,10 @@ wxBoxSizer* GeneralPage::leftOptions(wxStaticBoxSizer* parent) {
   buttons = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "Number of Buttons", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 3, 2, wxHORIZONTAL);
   volume = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "Max Volume", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 5000, 1500, wxHORIZONTAL);
   volume->entry()->SetIncrement(50);
-  clash = new pcSpinCtrlDouble(parent->GetStaticBox(), wxID_ANY, "Clash Threshold", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0.1, 5, 3, wxHORIZONTAL);
-  pliTime = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "PLI Timeout", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 60, 2, wxHORIZONTAL);
-  idleTime = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "Idle Timeout", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 60, 10, wxHORIZONTAL);
-  motionTime = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "Motion Timeout", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 60, 15, wxHORIZONTAL);
+  clash = new pcSpinCtrlDouble(parent->GetStaticBox(), wxID_ANY, "Clash Threshold (Gs)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0.1, 5, 3, wxHORIZONTAL);
+  pliTime = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "PLI Timeout (minutes)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 60, 2, wxHORIZONTAL);
+  idleTime = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "Idle Timeout (minutes)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 60, 10, wxHORIZONTAL);
+  motionTime = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "Motion Timeout (minutes)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 60, 15, wxHORIZONTAL);
   maxLEDs = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "WS281X Max LEDs", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 1024, 144, wxHORIZONTAL);
 
   leftOptions->Add(orientation, FIRSTITEMFLAGS);
