@@ -18,18 +18,19 @@ CustomOptionsDlg::CustomOptionsDlg(EditorWindow* _parent) : wxDialog(_parent, wx
 }
 
 void CustomOptionsDlg::addDefine(const std::string& name, const std::string& value) {
-  auto newDefine = new CDefine(optionArea);
-  newDefine->name->entry()->SetValue(name);
-  newDefine->value->entry()->SetValue(value);
-  customDefines.push_back(newDefine);
+    auto newDefine = new CDefine(optionArea);
+    newDefine->name->entry()->SetValue(name);
+    newDefine->value->entry()->SetValue(value);
+    customDefines.push_back(newDefine);
 
-  newDefine->Bind(wxEVT_BUTTON, [newDefine, this](wxCommandEvent) {
-      optionArea->GetSizer()->Detach(newDefine);
-      customDefines.erase(std::find(customDefines.begin(), customDefines.end(), newDefine));
-      newDefine->Destroy();
-      updateOptions();
+    newDefine->Bind(wxEVT_BUTTON, [newDefine, this](wxCommandEvent) {
+        optionArea->GetSizer()->Detach(newDefine);
+        customDefines.erase(std::find(customDefines.begin(), customDefines.end(), newDefine));
+        newDefine->Destroy();
+        updateOptions();
     }, CDefine::ID_Remove);
-  updateOptions();
+
+    updateOptions();
 }
 
 std::vector<std::pair<std::string, std::string>> CustomOptionsDlg::getCustomDefines() {
@@ -41,15 +42,16 @@ std::vector<std::pair<std::string, std::string>> CustomOptionsDlg::getCustomDefi
 }
 
 void CustomOptionsDlg::bindEvents() {
-  Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
-    if (event.CanVeto()) {
-      Hide();
-      event.Veto();
-    } else event.Skip();
-  });
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-      addDefine("");
-    }, ID_AddDefine);
+    Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
+        updateOptions(true);
+        if (event.CanVeto()) {
+            Hide();
+            event.Veto();
+        } else event.Skip();
+    });
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+            addDefine("");
+        }, ID_AddDefine);
 }
 
 void CustomOptionsDlg::createUI() {
@@ -100,22 +102,30 @@ void CustomOptionsDlg::createOptionArea() {
   optionArea->SetSizerAndFit(sizer);
 }
 
-void CustomOptionsDlg::updateOptions() {
-  optionArea->GetSizer()->Clear();
+void CustomOptionsDlg::updateOptions(bool purge) {
+    optionArea->GetSizer()->Clear();
 
-  if (customDefines.empty()) {
-    cricketsText->Show();
-    optionArea->GetSizer()->AddStretchSpacer();
-    optionArea->GetSizer()->Add(cricketsText, wxSizerFlags(0).Expand());
-    optionArea->GetSizer()->AddStretchSpacer();
-  } else {
-    cricketsText->Hide();
-    for (auto it = customDefines.begin(); it != customDefines.end();) {
-      optionArea->GetSizer()->Add(*(it++), wxSizerFlags(0).Expand().Border(wxBOTTOM, 5));
+    if (customDefines.empty()) {
+        cricketsText->Show();
+        optionArea->GetSizer()->AddStretchSpacer();
+        optionArea->GetSizer()->Add(cricketsText, wxSizerFlags(0).Expand());
+        optionArea->GetSizer()->AddStretchSpacer();
+    } else {
+        cricketsText->Hide();
+        for (auto it = customDefines.begin(); it != customDefines.end();) {
+            if (purge && (*it)->name->entry()->GetValue().empty()) {
+                optionArea->GetSizer()->Detach(*it);
+                (*it)->Destroy();
+
+                it = customDefines.erase(it);
+                continue;
+            }
+
+            optionArea->GetSizer()->Add(*(it++), wxSizerFlags(0).Expand().Border(wxBOTTOM, 5));
+        }
     }
-  }
 
-  Layout();
+    Layout();
 }
 
 CustomOptionsDlg::CDefine::CDefine(wxScrolledWindow* _parent) : wxPanel(_parent, wxID_ANY) {
