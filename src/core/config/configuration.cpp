@@ -103,9 +103,9 @@ void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput, Edi
   }
 }
 void Configuration::outputConfigTopCustom(std::ofstream& configOutput, EditorWindow* editor) {
-  for (const auto& [ name, value ] : editor->generalPage->customOptDlg->getCustomDefines()) {
-    configOutput << "#define " << name << " " << value << std::endl;
-  }
+    for (const auto& [ name, value ] : editor->generalPage->customOptDlg->getCustomDefines()) {
+        if (!name.empty()) configOutput << "#define " << name << " " << value << std::endl;
+    }
 }
 
 void Configuration::outputConfigProp(std::ofstream& configOutput, EditorWindow* editor) {
