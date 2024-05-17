@@ -254,13 +254,15 @@ Settings::ProffieDefine::ProffieDefine(std::string _name, wxString _defaultEntry
 
 
 std::pair<std::string, std::string> Settings::ProffieDefine::parseKey(const std::string& _input) {
-  std::pair<std::string, std::string> key;
-  std::string parseVal = _input;
+    std::pair<std::string, std::string> key;
+    auto parseVal{_input};
 
-  key.first = std::strtok(&parseVal[0], " \n\r");
-  // Handle trying to construct from nullptr
-  char* val = std::strtok(nullptr, "\n\r");
-  if (val != nullptr) key.second = val;
+    // Handle trying to construct from nullptr
+    char* val;
+    val = std::strtok(parseVal.data(), " \n\r");
+    if (val != nullptr) key.first = val;
+    val = std::strtok(nullptr, "\n\r");
+    if (val != nullptr) key.second = val;
 
-  return key;
+    return key;
 }
