@@ -31,7 +31,7 @@ private:
   void bindEvents();
   void createUI();
   void createOptionArea();
-  void updateOptions();
+  void updateOptions(bool purge = false);
 
   wxBoxSizer* header();
   wxStaticBoxSizer* info(wxWindow*);

@@ -350,10 +350,10 @@ void Configuration::readConfigTop(std::ifstream& file, EditorWindow* editor) {
   editor->settings->parseDefines(editor->settings->readDefines);
 }
 void Configuration::setCustomDefines(EditorWindow* editor) {
-  for (const auto& define : editor->settings->readDefines) {
-    auto key = Settings::ProffieDefine::parseKey(define);
-    editor->generalPage->customOptDlg->addDefine(key.first, key.second);
-  }
+    for (const auto& define : editor->settings->readDefines) {
+        auto key = Settings::ProffieDefine::parseKey(define);
+        if (!key.first.empty()) editor->generalPage->customOptDlg->addDefine(key.first, key.second);
+    }
 }
 void Configuration::readConfigProp(std::ifstream& file, EditorWindow* editor) {
   std::string element;
