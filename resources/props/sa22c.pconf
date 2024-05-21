@@ -1,0 +1,303 @@
+NAME: "SA22C"
+FILENAME: "saber_sa22c_buttons.h"
+INFO: {
+	"sa22c props file, includes 1,2 and 3 button modes.  Incorporates multi-blast,"
+	"battle mode and gesture ignitions from fett263 plus  on-the-fly volume"
+	"controls and full access to all features with 1,2 or 3 button sabers"
+}
+
+SETTINGS {
+	TOGGLE("SA22C_STAB_ON") {
+		NAME: "Stab to Turn On"
+		DESCRIPTION: "A quick "stab" motion will ignite the saber." 
+	}
+	TOGGLE("SA22C_SWING_ON") {
+		NAME: "Swing to Turn On"
+		DESCRIPTION: "A swing faster than the threshold will ignite the saber."
+	}
+	NUMERIC("SA22C_SWING_ON_SPEED") {
+		NAME: "Swing on Speed"
+		DESCRIPTION: "Speed required for swing to ignite saber."
+		MIN: 0
+		MAX: 1000
+		DEFAULT: 250
+		INCREMENT: 10
+		REQUIRE: "SA22C_SWING_ON"
+	}
+	TOGGLE("SA22C_THRUST_ON") {
+		NAME: "Thrust to Turn On"
+		DESCRIPTION: "A quick "thrust" motion will ignite the saber."
+	}
+	TOGGLE("SA22C_TWIST_ON") {
+		NAME: "Twist to Turn On"
+		DESCRIPTION: "A quick "twist" motion will ignite the saber."
+	}
+	TOGGLE("SA22C_TWIST_OFF") {
+		NAME: "Twist to Turn Off"
+		DESCRIPTION: "A quick "twist" motion will retract the saber."
+	}
+
+	TOGGLE("SA22C_NO_LOCKUP_HOLD") {
+		NAME: "Revert Lockup and Multi-Blast Trigger"
+		DESCRIPTION: "Reverts controls so that lockup is triggered only by clash + aux in 2 button mode, multi-blast is triggered while holding aux and swinging."
+	}
+
+	TOGGLE("SA22C_FORCE_PUSH") {
+		NAME: "Enable Force Push"
+		DESCRIPTION: "Enable force push sound effects when doing a "push" gesture with the saber."
+	}
+	NUMERIC("SA22C_FORCE_PUSH_LENGTH") {
+		NAME: "Force Push Length"
+		DESCRIPTION: "Length of the force push gesture (in millis) needed to trigger.\nRange from 1 (easiest to trigger) to 10 (hardest to trigger)."
+		REQUIRE: "SA22C_FORCE_PUSH"
+		MIN: 1
+		MAX: 10
+		DEFAULT: 5
+	}
+
+	TOGGLE("GESTURE_AUTO_BATTLE_MODE") {
+		NAME: "Gesture Ignition Starts Battle Mode"
+		DESCRIPTION: "Igniting the saber with a gesture control will automatically enter Battle Mode."
+	}
+	NUMERIC("SA22C_LOCKUP_DELAY") {
+		NAME: "Lockup Delay (ms)"
+		DESCRIPTION: "Delay between Battle Mode registering a clash or lockup."
+		MIN: 0
+		MAX: 3000
+		INCREMENT: 10
+		DEFAULT: 200
+	}
+}
+
+LAYOUT {
+	HORIZONTAL ("Gesture Control") {
+                SETTING("SA22C_STAB_ON")
+		VERTICAL {
+                        SETTING("SA22C_SWING_ON")
+                        SETTING("SA22C_SWING_ON_SPEED")
+		}
+                SETTING("SA22C_THRUST_ON")
+                SETTING("SA22C_TWIST_ON")
+                SETTING("SA22C_TWIST_OFF")
+	}
+	HORIZONTAL {
+		HORIZONTAL("Controls") {
+                        SETTING("SA22C_NO_LOCKUP_HOLD")
+		}
+		VERTICAL("Features") {
+                        SETTING("SA22C_FORCE_PUSH")
+                        SETTING("SA22C_FORCE_PUSH_LENGTH")
+		}
+		VERTICAL("Battle Mode") {
+                        SETTING("GESTURE_AUTO_BATTLE_MODE")
+                        SETTING("SA22C_LOCKUP_DELAY")
+		}
+	}
+}
+
+BUTTONS{1} {
+	STATE("OFF") {
+		BUTTON("Short Click") {
+			DESCRIPTION: "Activate the saber"
+		}
+		BUTTON("Double Click and Hold") {
+			DESCRIPTION: "Activate the saber muted"
+		}
+		BUTTON("Double Click") {
+			DESCRIPTION: "Play/Stop Music"
+		}
+		BUTTON("Hold and release") {
+			DESCRIPTION: "Next Preset"
+		}
+		BUTTON("Hold and wait") {
+			DESCRIPTION: "Previous Preset"
+		}
+		BUTTON("Hold and Clash") {
+			DESCRIPTION: "Enter Volume Menu"
+		}
+		BUTTON("Triple Click") {
+			DESCRIPTION: "Battery Level"
+		}
+	}
+	STATE("in Volume Menu") {
+		BUTTON("Hold and release") {
+			DESCRIPTION: "Volume Up"
+		}
+		BUTTON("Short Click") {
+			DESCRIPTION: "Volume Down"
+		}
+		BUTTON("Hold + Clash") {
+			DESCRIPTION: "Exit Volume Menu"
+		}
+	}
+	STATE("ON") {
+		BUTTON("Hold and wait") {
+			DESCRIPTION: "Turn the saber off"
+		}
+		BUTTON("Hold and clash") {
+			DESCRIPTION: "Lockup"
+		}
+		BUTTON("Double Click and Hold") {
+			DESCRIPTION: "Lightning Block"
+		}
+		BUTTON("Hold and stab") {
+			DESCRIPTION: "Melt"
+		}
+		BUTTON("Hold and clash while pointing down") {
+			DESCRIPTION: "Drag"
+		}
+		BUTTON("Short Click") {
+			DESCRIPTION: "Blaster Block"
+		}
+		BUTTON("Hold while swinging and release") {
+			DESCRIPTION: "Multi-Blast"
+		}
+		BUTTON("Triple Click and Hold") {
+			DESCRIPTION: "Battle Mode"
+		}
+		BUTTON("Hold and Twist pointing up") {
+			DESCRIPTION: "Force Effect"
+		}
+		BUTTON("Hold and Twist pointing down") {
+			DESCRIPTION: "Color Change"
+		}
+	}
+}
+
+BUTTONS{2} {
+	STATE("OFF") {
+		BUTTON("Short Click Power") {
+			DESCRIPTION: "Activate the saber"
+		}
+		BUTTON("Double Click Power and Hold") {
+			DESCRIPTION: "Activate the saber muted"
+		}
+		BUTTON("Hold Power and Release") {
+			DESCRIPTION: "Play/Stop Music"
+		}
+		BUTTON("Short Click Aux") {
+			DESCRIPTION: "Next Preset"
+		}
+		BUTTON("Hold Power and Wait") {
+			DESCRIPTION: "Previous Preset"
+		}
+		BUTTON("Lock Click Aux") {
+			DESCRIPTION: "Enter Volume Menu"
+		}
+		BUTTON("Hold Aux") {
+			DESCRIPTION: "Battery Level"
+		}
+	}
+	STATE("in Volume Menu") {
+		BUTTON("Short Click Power") {
+			DESCRIPTION: "Volume Up"
+		}
+		BUTTON("Short Click Aux") {
+			DESCRIPTION: "Volume Down"
+		}
+		BUTTON("Hold Aux") {
+			DESCRIPTION: "Exit Volume Menu"
+		}
+	}
+	STATE("ON") {
+		BUTTON("Hold Power and Wait") {
+			DESCRIPTION: "Turn the saber off"
+		}
+		BUTTON("Hold Aux") {
+			DESCRIPTION: "Lockup"
+		}
+		BUTTON("Double Click Power and Hold") {
+			DESCRIPTION: "Lightning Block"
+		}
+		BUTTON("Hold Power and Stab") {
+			DESCRIPTION: "Melt"
+		}
+		BUTTON("Hold Aux while pointing down") {
+			DESCRIPTION: "Drag"
+		}
+		BUTTON("Short Click Aux") {
+			DESCRIPTION: "Blaster Block"
+		}
+		BUTTON("Double Click and Short Hold") {
+			DESCRIPTION: "Enter/Exit Multi-Blast"
+		}
+		BUTTON("Triple Click Power and Hold") {
+			DESCRIPTION: "Battle Mode"
+		}
+		BUTTON("Double Click Power") {
+			DESCRIPTION: "Force Effect"
+		}
+		BUTTON("Hold Power and Click Aux") {
+			DESCRIPTION: "Color Change"
+		}
+	}
+}
+
+BUTTONS{3} {
+		STATE("OFF") {
+		BUTTON("Short Click Power") {
+			DESCRIPTION: "Activate the saber"
+		}
+		BUTTON("Double Click Power and Hold") {
+			DESCRIPTION: "Activate the saber muted"
+		}
+		BUTTON("Hold Power and Release") {
+			DESCRIPTION: "Play/Stop Music"
+		}
+		BUTTON("Short Click Aux") {
+			DESCRIPTION: "Next Preset"
+		}
+		BUTTON("Short Click Aux2") {
+			DESCRIPTION: "Previous Preset"
+		}
+		BUTTON("Lock Click Aux") {
+			DESCRIPTION: "Enter Volume Menu"
+		}
+		BUTTON("Hold Aux") {
+			DESCRIPTION: "Battery Level"
+		}
+	}
+	STATE("in Volume Menu") {
+		BUTTON("Short Click Power") {
+			DESCRIPTION: "Volume Up"
+		}
+		BUTTON("Short Click Aux") {
+			DESCRIPTION: "Volume Down"
+		}
+		BUTTON("Hold + Clash") {
+			DESCRIPTION: "Exit Volume Menu"
+		}
+	}
+	STATE("ON") {
+		BUTTON("Hold Power and Wait") {
+			DESCRIPTION: "Turn the saber off"
+		}
+		BUTTON("Hold Aux") {
+			DESCRIPTION: "Lockup"
+		}
+		BUTTON("Hold Aux2") {
+			DESCRIPTION: "Lightning Block"
+		}
+		BUTTON("Hold Power and Stab") {
+			DESCRIPTION: "Melt"
+		}
+		BUTTON("Hold Aux while pointing down") {
+			DESCRIPTION: "Drag"
+		}
+		BUTTON("Short Click Aux") {
+			DESCRIPTION: "Blaster Block"
+		}
+		BUTTON("Double Click and Short Hold") {
+			DESCRIPTION: "Enter/Exit Multi-Blast"
+		}
+		BUTTON("Double Click Aux2 and Hold") {
+			DESCRIPTION: "Battle Mode"
+		}
+		BUTTON("Double Click Power") {
+			DESCRIPTION: "Force Effect"
+		}
+		BUTTON("Hold Power and Click Aux") {
+			DESCRIPTION: "Color Change"
+		}
+	}
+}

@@ -1,0 +1,13 @@
+build*/*
+*.o
+
+Makefile*
+ProffieConfig*
+!ProffieConfig.pro
+.*
+!.gitignore
+
+.DS_Store
+
+StylePlayground/*
+*.backup
