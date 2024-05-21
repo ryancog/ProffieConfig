@@ -1,6 +1,6 @@
 # Building ProffieConfig on Linux (for Linux)
 
-This process was written and tested on Debian 12, but the same process is used for development on openSUSE Tumbleweed, and should be directly transferrable to other linux distributions, or transferrable with minimal tweaking.
+This process was written and tested on Debian 12 (Thanks chemicalivory!), but the same process is used for development on openSUSE Tumbleweed, and should be directly transferrable to other linux distributions, or transferrable with minimal tweaking.
 
 ## Building wxWidgets
 
