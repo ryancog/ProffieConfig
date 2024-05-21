@@ -1,6 +1,6 @@
 # ProffieConfig 
 
-<img align="left" src=https://github.com/ryryog25/ProffieConfig/blob/master/resources/icons/icon.svg width=200> 
+<img align="left" src=https://github.com/ryancog/ProffieConfig/blob/master/resources/icons/icon.svg width=200> 
   
 All-In-One ProffieBoard Management Utility. 
 
@@ -10,7 +10,7 @@ Using this tool, there is no need for dealing with the Arduino IDE, Zadig, etc. 
 
 ## Getting Started
 
-Head over to the [latest ProffieConfig release](https://github.com/ryryog25/ProffieConfig/releases/latest), grab either the macOS or Windows (Win32) version depending on which you use, unzip the folder, and run it! 
+Head over to the [latest ProffieConfig release](https://github.com/ryancog/ProffieConfig/releases/latest), grab either the macOS or Windows (Win32) version depending on which you use, unzip the folder, and run it! 
 
 ProffieConfig will guide you through the setup and all of its features, so whether you're a first-time proffieboard user or have been around the block a few times, you'll be ready in no time!
 
@@ -40,9 +40,9 @@ ProffieConfig will guide you through the setup and all of its features, so wheth
 
 ## Gallery
 
-<img src=https://github.com/ryryog25/ProffieConfig/blob/master/screenshots/mainmenu.png width=200> 
-<img src=https://github.com/ryryog25/ProffieConfig/blob/master/screenshots/editor-general.png width=300>
-<img src=https://github.com/ryryog25/ProffieConfig/blob/master/screenshots/editor-propfile-fett263.png width=500>
-<img src=https://github.com/ryryog25/ProffieConfig/blob/master/screenshots/editor-bladearrays.png width=400>
-<img src=https://github.com/ryryog25/ProffieConfig/blob/master/screenshots/editor-bladeawareness.png width=400>
-<img src=https://github.com/ryryog25/ProffieConfig/blob/master/screenshots/editor-presetsstyles.png width=500>
+<img src=https://github.com/ryancog/ProffieConfig/blob/master/screenshots/mainmenu.png width=200> 
+<img src=https://github.com/ryancog/ProffieConfig/blob/master/screenshots/editor-general.png width=300>
+<img src=https://github.com/ryancog/ProffieConfig/blob/master/screenshots/editor-propfile-fett263.png width=500>
+<img src=https://github.com/ryancog/ProffieConfig/blob/master/screenshots/editor-bladearrays.png width=400>
+<img src=https://github.com/ryancog/ProffieConfig/blob/master/screenshots/editor-bladeawareness.png width=400>
+<img src=https://github.com/ryancog/ProffieConfig/blob/master/screenshots/editor-presetsstyles.png width=500>
