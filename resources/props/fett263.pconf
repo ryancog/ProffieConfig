@@ -491,7 +491,7 @@ BUTTONS{1} {
 		BUTTON("Hold and Turn Right while Pointing Down") {
 			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 7 (USER7)"
 		}
-		BUTTON("Hold and Turn Right while Pointing Down") {
+		BUTTON("Hold and Turn Left while Pointing Down") {
 			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 8 (USER8)"
 		}
 
@@ -585,7 +585,7 @@ BUTTONS{1} {
 		BUTTON("Hold and Turn Right while Pointing Down") {
 			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 3 (USER3)"
 		}
-		BUTTON("Hold and Turn Right while Pointing Down") {
+		BUTTON("Hold and Turn Left while Pointing Down") {
 			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 4 (USER4)"
 		}
 
@@ -793,6 +793,7 @@ BUTTONS{2} {
 		BUTTON("Hold Power and Swing") {
 			DESCRIPTION("FETT263_SPIN_MODE"): "Toggle Spin Mode (Disables Clash, Stab and Lockup effects to allow for spinning and flourishes)"
 		}
+
 		BUTTON("Hold Power and Turn Right") {
 			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 5 (USER5)"
 		}
@@ -802,9 +803,10 @@ BUTTONS{2} {
 		BUTTON("Hold Aux and Turn Right") {
 			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 7 (USER7)"
 		}
-		BUTTON("Hold Aux and Turn Right") {
+		BUTTON("Hold Aux and Turn Left") {
 			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 8 (USER8)"
 		}
+
 		BUTTON("Hold Power, Click Aux") {
 			DESCRIPTION: "Enter Volume Menu"
 		}
@@ -880,16 +882,17 @@ BUTTONS{2} {
 		BUTTON("Hold Power and Twist") {
 			DESCRIPTION("FETT263_MULTI_PHASE"): "Previous Preset (Multi-Phase)"
 		}
+		
 		BUTTON("Hold Power and Turn Right") {
 			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 1 (USER1)"
 		}
 		BUTTON("Hold Power and Turn Left") {
 			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 2 (USER2)"
 		}
-		BUTTON("Hold Power and Turn Right") {
+		BUTTON("Hold Aux and Turn Right") {
 			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 3 (USER3)"
 		}
-		BUTTON("Hold Power and Turn Right") {
+		BUTTON("Hold Aux and Turn Left") {
 			DESCRIPTION("FETT263_SPECIAL_ABILITIES"): "Special Ability 4 (USER4)"
 		}
 
