@@ -35,7 +35,7 @@ ProffieConfig will guide you through the setup and all of its features, so wheth
 
 ## Additional Info
 
-- [COM ports > 10 causing issues?](docs/com-ports.md)
+- [COM ports >= 10 causing issues?](docs/com-ports.md)
 - [Creating/Editing ProffieConfig's `pconf` files](docs/pconfs.md)
 - [Building ProffieConfig for Linux](docs/linux-build.md)
 
