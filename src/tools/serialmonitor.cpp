@@ -1,12 +1,13 @@
+#include "tools/serialmonitor.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2024 Ryan Ogurek
 
-#include "tools/serialmonitor.h"
+#include <string>
 
 #include "core/defines.h"
 #include "mainmenu/mainmenu.h"
 
-#ifdef __WXMSW__
+#ifdef __WINDOWS__
 #include <windows.h>
 #undef wxMessageDialog
 #include <wx/msgdlg.h>
@@ -16,10 +17,10 @@
 #endif
 
 SerialMonitor* SerialMonitor::instance;
-#if defined(__WXMSW__)
+#if defined(__WINDOWS__)
 SerialMonitor::SerialMonitor(MainMenu* parent) {
   if (parent->boardSelect->entry()->GetSelection() > 0) {
-    ShellExecute(NULL, NULL, TEXT(ARDUINO_PATH), std::wstring("monitor -p " + parent->boardSelect->entry()->GetStringSelection().ToStdWstring() + " -c baudrate=115200").c_str(), NULL, true);
+        ShellExecute(NULL, NULL, TEXT(ARDUINO_PATH), std::wstring(L"monitor -p " + parent->boardSelect->entry()->GetStringSelection().ToStdWstring() + L" -c baudrate=115200").c_str(), NULL, true);
   } else wxMessageDialog(parent, "Select board first.", "No Board Selected", wxOK | wxICON_ERROR).ShowModal();
 }
 
@@ -54,7 +55,7 @@ SerialMonitor::SerialMonitor(MainMenu* parent) : wxFrame(parent, wxID_ANY, "Prof
 SerialMonitor::~SerialMonitor() {
 #if defined(__WXOSX__) || defined(__WXGTK__)
   close(fd);
-#elif defined(__WXMSW__)
+#elif defined(__WINDOWS__)
   CloseHandle(serHandle);
 #endif
   if (listenerRunning) listenerThread->GetThread()->Delete();

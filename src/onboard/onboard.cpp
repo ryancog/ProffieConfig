@@ -4,8 +4,9 @@
 #include "onboard/onboard.h"
 
 #include <wx/bitmap.h>
+#include <wx/settings.h>
 #include <wx/sizer.h>
-#ifdef __WXMSW__
+#ifdef __WINDOWS__
 #undef wxMessageDialog
 #include <wx/msgdlg.h>
 #define wxMessageDialog wxGenericMessageDialog
@@ -61,7 +62,7 @@ Onboard::Onboard() : wxFrame(nullptr, wxID_ANY, "ProffieConfig First-Time Setup"
 
   bindEvents(); // Do this first so children can bind their events to parent state.
 
-# ifdef __WXMSW__
+# ifdef __WINDOWS__
   SetIcon( wxICON(IDI_ICON1) );
   SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
 # endif

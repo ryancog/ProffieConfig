@@ -679,7 +679,7 @@ void Configuration::replaceStyles(const std::string& styleName, const std::strin
   std::string styleCheck;
   for (PresetsPage::PresetConfig& preset : editor->bladesPage->bladeArrayDlg->bladeArrays[editor->bladesPage->bladeArray->entry()->GetSelection()].presets) {
     for (wxString& style : preset.styles) {
-      styleCheck = (style.find(styleName) == std::string::npos) ? style : style.substr(style.find(styleName));
+          styleCheck = (style.find(styleName) == std::string::npos) ? style.ToStdString() : style.substr(style.find(styleName)).ToStdString();
       while (styleCheck != style) {
         // If there are no comments in the style, we're fine.
         // if the start of the next comment comes before the end of a comment, we *should* be outside the comment, and we're good to go.
@@ -687,7 +687,7 @@ void Configuration::replaceStyles(const std::string& styleName, const std::strin
         if (style.find("/*") == std::string::npos || styleCheck.find("/*") <= styleCheck.find("*/")) {
           style.replace(style.find(styleCheck), styleName.length(), styleFill);
         }
-        styleCheck = styleCheck.find(styleName) == std::string::npos ? style : style.substr(styleCheck.find(styleName));
+        styleCheck = styleCheck.find(styleName) == std::string::npos ? style.ToStdString() : style.substr(styleCheck.find(styleName)).ToStdString();
       }
     }
   }
@@ -729,27 +729,27 @@ bool Configuration::runPreChecks(EditorWindow* editor) {
   }
 
   for (auto& bladeArray : editor->bladesPage->bladeArrayDlg->bladeArrays) {
-    for (uint32_t idx = 0; idx < bladeArray.blades.size(); idx++) {
-      if (bladeArray.blades.at(idx).type == BD_QUADSTAR && bladeArray.blades.at(idx).powerPins.size() != 4) {
-        ERR(BD_QUADSTAR " blade " + std::to_string(idx) + " in array \"" + bladeArray.name + "\" should have 4 power pins selected.");
+      for (uint32_t idx = 0; idx < bladeArray.blades.size(); idx++) {
+          if (bladeArray.blades.at(idx).type == BD_QUADSTAR && bladeArray.blades.at(idx).powerPins.size() != 4) {
+              ERR(BD_QUADSTAR " blade " + std::to_string(idx) + " in array \"" + bladeArray.name.ToStdString() + "\" should have 4 power pins selected.");
+          }
+          if (bladeArray.blades.at(idx).type == BD_TRISTAR && bladeArray.blades.at(idx).powerPins.size() != 3) {
+              ERR(BD_TRISTAR " blade " + std::to_string(idx) + " in array \"" + bladeArray.name.ToStdString() + "\" should have 3 power pins selected.");
+          }
+          if (bladeArray.blades.at(idx).type == BD_SINGLELED && bladeArray.blades.at(idx).powerPins.size() != 1) {
+              ERR(BD_SINGLELED " blade " + std::to_string(idx) + " in array \"" + bladeArray.name.ToStdString() + "\" should have 1 power pin selected.");
+          }
       }
-      if (bladeArray.blades.at(idx).type == BD_TRISTAR && bladeArray.blades.at(idx).powerPins.size() != 3) {
-        ERR(BD_TRISTAR " blade " + std::to_string(idx) + " in array \"" + bladeArray.name + "\" should have 3 power pins selected.");
+      for (auto& preset : bladeArray.presets) {
+          for (auto& style : preset.styles) {
+              auto styleBegin = style.find("Style");
+              auto styleEnd = style.find("()");
+              if (styleBegin == std::string::npos || styleEnd == std::string::npos || styleBegin > styleEnd) {
+                  if (style == "&style_pov" || style == "&style_charging") continue;
+                  ERR("Malformed bladestyle in preset \"" + preset.name.ToStdString() + "\" in blade array \"" + bladeArray.name.ToStdString() + "\"");
+              }
+          }
       }
-      if (bladeArray.blades.at(idx).type == BD_SINGLELED && bladeArray.blades.at(idx).powerPins.size() != 1) {
-        ERR(BD_SINGLELED " blade " + std::to_string(idx) + " in array \"" + bladeArray.name + "\" should have 1 power pin selected.");
-      }
-    }
-    for (auto& preset : bladeArray.presets) {
-      for (auto& style : preset.styles) {
-        auto styleBegin = style.find("Style");
-        auto styleEnd = style.find("()");
-        if (styleBegin == std::string::npos || styleEnd == std::string::npos || styleBegin > styleEnd) {
-          if (style == "&style_pov" || style == "&style_charging") continue;
-          ERR("Malformed bladestyle in preset \"" + preset.name + "\" in blade array \"" + bladeArray.name + "\"");
-        }
-      }
-    }
   }
 
   return true;

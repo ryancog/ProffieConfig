@@ -19,7 +19,7 @@
 #include <wx/event.h>
 #include <wx/combobox.h>
 #include <wx/arrstr.h>
-#ifdef __WXMSW__
+#ifdef __WINDOWS__
 #undef wxMessageDialog
 #include <wx/msgdlg.h>
 #define wxMessageDialog wxGenericMessageDialog
@@ -27,6 +27,7 @@
 #include <wx/msgdlg.h>
 #endif
 #include <wx/statbox.h>
+#include <wx/settings.h>
 #include <wx/sizer.h>
 #include <wx/list.h>
 #include <wx/string.h>
@@ -40,7 +41,7 @@ EditorWindow::EditorWindow(const std::string& _configName, wxWindow* parent) : w
   createToolTips();
   settings = new Settings(this);
 
-# ifdef __WXMSW__
+# ifdef __WINDOWS__
   SetIcon( wxICON(IDI_ICON1) );
   SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
 # endif

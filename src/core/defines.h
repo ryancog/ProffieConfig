@@ -48,7 +48,7 @@
 
 #define SMALLBUTTONSIZE wxSize(30, 20)
 
-#if defined(__WXMSW__)
+#if defined(__WINDOWS__)
 #define RESOURCES_PATH "resources\\"
 #define ARDUINO_PATH RESOURCES_PATH "arduino-cli\\arduino-cli.exe"
 #define PROFFIEOS_INO PROFFIEOS_PATH "\\ProffieOS.ino"

@@ -19,8 +19,9 @@
 #include <wx/event.h>
 #include <wx/menu.h>
 #include <wx/aboutdlg.h>
+#include <wx/settings.h>
 
-#ifdef __WXMSW__
+#ifdef __WINDOWS__
 #undef wxMessageDialog
 #include <wx/msgdlg.h>
 #define wxMessageDialog wxGenericMessageDialog
@@ -38,7 +39,7 @@ MainMenu::MainMenu(wxWindow* parent) : wxFrame(parent, wxID_ANY, "ProffieConfig"
   bindEvents();
   update();
 
-# ifdef __WXMSW__
+# ifdef __WINDOWS__
   SetIcon( wxICON(IDI_ICON1) );
   SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
 # endif
@@ -90,7 +91,7 @@ void MainMenu::bindEvents() {
   Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) { update(); event.Skip(); });
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(this); }, ID_RefreshDev);
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(this, activeEditor); }, ID_ApplyChanges);
-# if defined(__WXMSW__)
+# if defined(__WINDOWS__)
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { SerialMonitor::instance = new SerialMonitor(this); SerialMonitor::instance->Close(true); }, ID_OpenSerial);
 # else
   Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(this); }, ID_OpenSerial);
@@ -170,7 +171,7 @@ void MainMenu::createUI() {
   auto title = new wxStaticText(this, wxID_ANY, "ProffieConfig");
   auto titleFont = title->GetFont();
   titleFont.MakeBold();
-# if defined(__WXGTK__) || defined(__WXMSW__)
+# if defined(__WXGTK__) || defined(__WINDOWS__)
   titleFont.SetPointSize(20);
 # elif defined (__WXOSX__)
   titleFont.SetPointSize(30);
@@ -193,7 +194,7 @@ void MainMenu::createUI() {
   configSelectSection->Add(removeConfig, wxSizerFlags(0).Border(wxALL, 5).Expand());
 
   auto boardControls = new wxBoxSizer(wxHORIZONTAL);
-# ifdef __WXMSW__
+# ifdef __WINDOWS__
   auto boardEntries = Misc::createEntries({"Select Board...", "BOOTLOADER RECOVERY"});
 # else
   auto boardEntries = Misc::createEntries({"Select Board..."});

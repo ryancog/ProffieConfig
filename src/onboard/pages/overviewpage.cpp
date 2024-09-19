@@ -15,7 +15,7 @@
 #include <wx/event.h>
 #include <wx/gdicmn.h>
 #include <wx/sizer.h>
-#ifdef __WXMSW__
+#ifdef __WINDOWS__
 #undef wxMessageDialog
 #include <wx/msgdlg.h>
 #define wxMessageDialog wxGenericMessageDialog
@@ -632,7 +632,7 @@ void Onboard::Overview::linkEditorEvents() {
                         "You can do that by pressing \"Refresh Boards\", selecting your board from the list,\n"
                         "and then clicking \"Apply Selected Configuration to Board\".\n"
                         "\n"
-#                       ifdef __WXMSW__
+#                       ifdef __WINDOWS__
                         "The board name will be something like \"COM\" and then a number, but chances are\n"
                         "there'll only be the one you want, and in the event something goes wrong while\n"
                         "applying changes, you can select \"BOOTLOADER RECOVERY\" and go from there.\n"
