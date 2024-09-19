@@ -4,6 +4,7 @@
 #include "core/utilities/fileparse.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <iostream>
 
 std::vector<std::string> FileParse::extractSection(std::string sectionName, std::vector<std::string>& search) {

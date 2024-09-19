@@ -3,7 +3,7 @@
 
 #pragma once
 
-#if defined(__WXOSX__) || defined(__WXGTK__)
+#if !defined(__WINDOWS__)
 #include "core/utilities/threadrunner.h"
 #include "ui/pctextctrl.h"
 #endif
@@ -15,7 +15,7 @@ public:
   SerialMonitor(MainMenu*);
   static SerialMonitor* instance;
 
-#if defined(__WXOSX__) || defined(__WXGTK__)
+#if !defined(__WINDOWS__)
   ~SerialMonitor();
 
 private:
@@ -48,7 +48,7 @@ private:
 #endif // OSX or GTK
 };
 
-#if defined(__WXOSX__) || defined(__WXGTK__)
+#if !defined(__WINDOWS__)
 class SerialMonitor::SerialDataEvent : public wxCommandEvent {
 public:
   SerialDataEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id, const wxString& message) {

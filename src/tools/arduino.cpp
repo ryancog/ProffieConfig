@@ -13,7 +13,7 @@
 
 #include <cstring>
 
-#ifdef __WXMSW__
+#ifdef __WINDOWS__
 #include <windows.h>
 #include <codecvt>
 #include <locale>
@@ -99,7 +99,7 @@ std::vector<wxString> Arduino::getBoards() {
     }
   }
 
-# ifdef __WXMSW__
+# ifdef __WINDOWS__
   boards.push_back("BOOTLOADER RECOVERY");
 # endif
   return boards;
@@ -152,7 +152,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor, std::function
       return callback(false);
     }
 
-#   ifdef __WXMSW__
+#   ifdef __WINDOWS__
     if (window->boardSelect->entry()->GetStringSelection() != "BOOTLOADER RECOVERY") {
       progDialog->emitEvent(50, "Rebooting Proffieboard...");
       
@@ -181,7 +181,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor, std::function
 #   endif
 
     progDialog->emitEvent(65, "Uploading to ProffieBoard...");
-#   ifdef __WXMSW__
+#   ifdef __WINDOWS__
     std::string commandString = R"(title ProffieConfig Worker & resources\windowmode -title "ProffieConfig Worker" -mode force_minimized & )";
     commandString += returnVal.substr(returnVal.find("|") + 1) + R"( 0x1209 0x6668 )" + returnVal.substr(0, returnVal.find("|")) + R"( 2>&1)";
     std::cerr << "UploadCommandString: " << commandString << std::endl;
@@ -283,7 +283,7 @@ bool Arduino::compile(wxString& _return, EditorWindow* editor, Progress* progDia
       _return = Arduino::parseError(error);
       return false;
     }
-#   ifdef __WXMSW__
+#   ifdef __WINDOWS__
     if (std::strstr(buffer, "ProffieOS.ino.dfu") && std::strstr(buffer, "stm32l4") && std::strstr(buffer, "C:\\")) {
       std::cerr << "ErrBufferFull: " << error << std::endl;
       error = buffer;
@@ -297,7 +297,7 @@ bool Arduino::compile(wxString& _return, EditorWindow* editor, Progress* progDia
       GetShortPathName(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().from_bytes(error.substr(1, error.find("windows") + 7 - 1)).c_str(), shortPath, MAX_PATH);
       paths += shortPath;
       paths += LR"(\\stm32l4-upload.bat)";
-      std::cerr << "ParsedPaths: " << paths << std::endl;
+      std::wcerr << "ParsedPaths: " << paths << std::endl;
 
       pclose(arduinoCli);
       _return = paths;
@@ -312,7 +312,7 @@ bool Arduino::compile(wxString& _return, EditorWindow* editor, Progress* progDia
 
 
   _return = error;
-# ifdef __WXMSW__
+# ifdef __WINDOWS__
   return false;
 # else
   return true;
@@ -334,7 +334,7 @@ bool Arduino::upload(wxString& _return, EditorWindow* editor, Progress* progDial
     uploadCommand += editor->generalPage->board->entry()->GetSelection() == 0 ? ARDUINOCORE_PBV1 : editor->generalPage->board->entry()->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
     uploadCommand += " -v";
 
-#ifndef __WXMSW__
+#ifndef __WINDOWS__
     struct termios newtio;
     auto fd = open(static_cast<MainMenu*>(editor->GetParent())->boardSelect->entry()->GetValue().data(), O_RDWR | O_NOCTTY);
     if (fd < 0) {
@@ -437,7 +437,7 @@ wxString Arduino::parseError(const wxString& error) {
 
 FILE* Arduino::CLI(const wxString& command) {
   wxString fullCommand;
-# if defined(__WXMSW__)
+# if defined(__WINDOWS__)
   fullCommand += "title ProffieConfig Worker & ";
   fullCommand += R"(resources\windowmode -title "ProffieConfig Worker" -mode force_minimized & )";
 # endif

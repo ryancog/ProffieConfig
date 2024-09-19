@@ -4,7 +4,7 @@
 #pragma once
 #include <wx/event.h>
 
-#ifdef __WXMSW__
+#ifdef __WINDOWS__
 #undef wxProgressDialog
 #include <wx/progdlg.h>
 #define wxProgressDialog wxGenericProgressDialog
