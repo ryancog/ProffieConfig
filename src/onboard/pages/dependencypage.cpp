@@ -16,12 +16,12 @@ Onboard::DependencyInstall::DependencyInstall(wxWindow* parent) : wxWindow(paren
                                  "This will involve the following:\n"
                                  "\n"
                                  "\t-Proffieboard Arduino Core Installation\n"
-#                                     ifdef __WXMSW__
+#                                     ifdef __WINDOWS__
                                  "\t-Proffieboard Driver Installation\n"
 #                                     endif
                                  "\n\n"
                                  "An internet connection is required, and installation may take several minutes.\n"
-#                                     ifdef __WXMSW__
+#                                     ifdef __WINDOWS__
                                  "When the driver installation starts, you will be prompted, please follow the instructions in the new window.\n"
 #                                     endif
                                  );

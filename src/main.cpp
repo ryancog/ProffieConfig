@@ -7,23 +7,23 @@
 
 class ProffieConfig : public wxApp {
 public:
-  virtual bool OnInit() override {
+    virtual bool OnInit() override {
 
-    chdir(argv[0].BeforeLast('/'));
+        chdir(argv[0].BeforeLast('/').ToStdString().c_str());
 
-#   ifdef __WXMSW__
-    MSWEnableDarkMode();
-    if (AttachConsole(ATTACH_PARENT_PROCESS)){
-       freopen("CONOUT$", "w", stdout);
-       freopen("CONOUT$", "w", stderr);
-       freopen("CONIN$", "r", stdin);
+#   	ifdef __WXMSW__
+        MSWEnableDarkMode();
+        if (AttachConsole(ATTACH_PARENT_PROCESS)){
+            freopen("CONOUT$", "w", stdout);
+            freopen("CONOUT$", "w", stderr);
+            freopen("CONIN$", "r", stdin);
+        }
+#   	endif
+
+        AppState::init();
+
+        return true;
     }
-#   endif
-
-    AppState::init();
-
-    return true;
-  }
 };
 
 wxIMPLEMENT_APP(ProffieConfig);

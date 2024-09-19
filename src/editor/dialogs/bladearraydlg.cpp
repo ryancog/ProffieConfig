@@ -11,7 +11,7 @@
 #include <wx/tooltip.h>
 #include <wx/button.h>
 
-#ifdef __WXMSW__
+#ifdef __WINDOWS__
 #undef wxMessageDialog
 #include <wx/msgdlg.h>
 #define wxMessageDialog wxGenericMessageDialog
@@ -311,7 +311,7 @@ void BladeArrayDlg::update() {
     parent->bladesPage->update();
     parent->presetsPage->update();
   }
-#ifdef __WXMSW__
+#ifdef __WINDOWS__
   Refresh();
 #endif
 }
