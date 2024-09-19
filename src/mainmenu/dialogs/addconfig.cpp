@@ -9,7 +9,7 @@
 #include "wx/filepicker.h"
 #include "wx/string.h"
 #include <wx/event.h>
-#ifdef __WXMSW__
+#ifdef __WINDOWS__
 #undef wxMessageDialog
 #include <wx/msgdlg.h>
 #define wxMessageDialog wxGenericMessageDialog

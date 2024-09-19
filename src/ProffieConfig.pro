@@ -23,10 +23,10 @@ QMAKE_BUNDLE_DATA += RESOURCE
 # Windows resource handling
 RC_ICONS = ../resources/icons/icon.ico
 RC_DEFINES += VERSION=\\\"$$VERSION\\0\\\" WIN_VERSION=$$replace(VERSION, "\.", ","),0
-RC_INCLUDEPATH = /usr/x86_64-w64-mingw32/include/wx-3.3/
+RC_INCLUDEPATH = /opt/mxe/usr/x86_64-w64-mingw32.static/include/wx-3.3/
 RC_FILE += ./ProffieConfig_resource.rc
 
-LIBS += $$system(wx-config --libs all)
+LIBS += $$system(wx-config --libs)
 
 SOURCES += \
     editor/dialogs/bladearraydlg.cpp \
