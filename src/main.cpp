@@ -8,9 +8,6 @@
 class ProffieConfig : public wxApp {
 public:
     virtual bool OnInit() override {
-
-        chdir(argv[0].BeforeLast('/').ToStdString().c_str());
-
 #   	ifdef __WXMSW__
         MSWEnableDarkMode();
         if (AttachConsole(ATTACH_PARENT_PROCESS)){
@@ -19,6 +16,9 @@ public:
             freopen("CONIN$", "r", stdin);
         }
 #   	endif
+
+        argv[0].find_last_of("/\\");
+        chdir(argv[0].substr(0, argv[0].find_last_of("/\\")).c_str());
 
         AppState::init();
 
