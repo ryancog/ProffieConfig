@@ -57,7 +57,7 @@ public:
   BladeArrayDlg* bladeArrayDlg{nullptr};
 
   wxButton* bladeArrayButton{nullptr};
-  pcComboBox* bladeArray{nullptr};
+  pcChoice* bladeArray{nullptr};
   wxListBox* bladeSelect{nullptr};
   wxListBox* subBladeSelect{nullptr};
   wxButton* addBladeButton{nullptr};
@@ -65,8 +65,8 @@ public:
   wxButton* addSubBladeButton{nullptr};
   wxButton* removeSubBladeButton{nullptr};
 
-  pcComboBox* bladeType{nullptr};
-  pcComboBox* bladeDataPin{nullptr};
+  pcChoice* bladeType{nullptr};
+  pcChoice* bladeDataPin{nullptr};
   wxStaticText* bladePixelsLabel{nullptr};
   pcSpinCtrl* bladePixels{nullptr};
 
@@ -74,16 +74,16 @@ public:
   wxButton* addPowerPin{nullptr};
   pcTextCtrl* powerPinName{nullptr};
 
-  pcComboBox* blade3ColorOrder{nullptr};
-  pcComboBox* blade4ColorOrder{nullptr};
+  pcChoice* blade3ColorOrder{nullptr};
+  pcChoice* blade4ColorOrder{nullptr};
   wxCheckBox* blade4UseRGB{nullptr};
-  pcComboBox* star1Color{nullptr};
+  pcChoice* star1Color{nullptr};
   pcSpinCtrl* star1Resistance{nullptr};
-  pcComboBox* star2Color{nullptr};
+  pcChoice* star2Color{nullptr};
   pcSpinCtrl* star2Resistance{nullptr};
-  pcComboBox* star3Color{nullptr};
+  pcChoice* star3Color{nullptr};
   pcSpinCtrl* star3Resistance{nullptr};
-  pcComboBox* star4Color{nullptr};
+  pcChoice* star4Color{nullptr};
   pcSpinCtrl* star4Resistance{nullptr};
 
   wxRadioButton* useStandard{nullptr};

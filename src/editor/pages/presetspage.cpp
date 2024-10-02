@@ -27,7 +27,7 @@ PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, wind
 }
 
 void PresetsPage::bindEvents() {
-  GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) { parent->bladesPage->bladeArray->entry()->SetSelection(bladeArray->entry()->GetSelection()); update(); }, ID_BladeArray);
+  GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent&) { parent->bladesPage->bladeArray->entry()->SetSelection(bladeArray->entry()->GetSelection()); update(); }, ID_BladeArray);
 
   GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { parent->bladesPage->update(); update(); }, ID_BladeList);
   GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { parent->bladesPage->update(); update(); }, ID_PresetList);
@@ -102,7 +102,7 @@ wxBoxSizer* PresetsPage::createPresetSelect() {
   wxBoxSizer *presetSelect = new wxBoxSizer(wxVERTICAL);
 
   wxBoxSizer* arraySizer = new wxBoxSizer(wxVERTICAL);
-  bladeArray = new pcComboBox(GetStaticBox(), ID_BladeArray, "Blade Array", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ "blade_in" }), wxCB_READONLY);
+  bladeArray = new pcChoice(GetStaticBox(), ID_BladeArray, "Blade Array", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ "blade_in" }), wxCB_READONLY);
   arraySizer->Add(bladeArray, wxSizerFlags(0).Border(wxBOTTOM, 5).Expand());
 
   wxBoxSizer* arrangeButtonSizer = new wxBoxSizer(wxVERTICAL);

@@ -21,7 +21,7 @@ public:
 
   void update();
 
-  pcComboBox* bladeArray{nullptr};
+  pcChoice* bladeArray{nullptr};
   pcTextCtrl* styleInput{nullptr};
   wxListBox* presetList{nullptr};
   wxListBox* bladeList{nullptr};

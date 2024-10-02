@@ -127,7 +127,7 @@ void Onboard::Overview::linkMainMenuEvents() {
       configDialog.ShowModal();
 
     }, MainMenu::ID_AddConfig);
-  guideMenu->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
+  guideMenu->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
       EVENT_PAGE_SETUP;
       generateNewPage("Edit Configuration",
 
@@ -183,7 +183,7 @@ void Onboard::Overview::linkEditorEvents() {
     }
   });
 
-  guideMenu->activeEditor->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
+  guideMenu->activeEditor->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
       EVENT_PAGE_SETUP;
       if (guideMenu->activeEditor->windowSelect->entry()->GetSelection() != 1) {
         hasRun = false;
@@ -209,7 +209,7 @@ void Onboard::Overview::linkEditorEvents() {
       guideMenu->activeEditor->propsPage->propInfo->Disable();
 
     }, EditorWindow::ID_WindowSelect);
-  guideMenu->activeEditor->propsPage->GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
+  guideMenu->activeEditor->propsPage->GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
       EVENT_PAGE_SETUP;
 
       generateNewPage("Configuration - Prop File",
@@ -243,7 +243,7 @@ void Onboard::Overview::linkEditorEvents() {
       guideMenu->activeEditor->windowSelect->entry()->Append("Blade Arrays");
 
     }, PropsPage::ID_Buttons);
-  guideMenu->activeEditor->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
+  guideMenu->activeEditor->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
       EVENT_PAGE_SETUP;
       if (guideMenu->activeEditor->windowSelect->entry()->GetSelection() != 2) {
         hasRun = false;
@@ -329,7 +329,7 @@ void Onboard::Overview::linkEditorEvents() {
       guideMenu->activeEditor->bladesPage->bladeType->entry()->SetSelection(0);
 
     }, BladesPage::ID_SubBladeSelect);
-  guideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
+  guideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
       EVENT_PAGE_SETUP;
       if (guideMenu->activeEditor->bladesPage->bladeType->entry()->GetSelection() != 2) {
         hasRun = false;
@@ -356,7 +356,7 @@ void Onboard::Overview::linkEditorEvents() {
       guideMenu->activeEditor->bladesPage->bladeType->entry()->Append("Single Color");
 
     }, BladesPage::ID_BladeType);
-  guideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
+  guideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
       EVENT_PAGE_SETUP;
       if (guideMenu->activeEditor->bladesPage->bladeType->entry()->GetSelection() != 4) {
         hasRun = false;
@@ -408,7 +408,7 @@ void Onboard::Overview::linkEditorEvents() {
     EVENT_PAGE_SETUP;
     guideMenu->activeEditor->windowSelect->entry()->Append("Presets And Styles");
   });
-  guideMenu->activeEditor->Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) {
+  guideMenu->activeEditor->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
       EVENT_PAGE_SETUP;
       if (guideMenu->activeEditor->windowSelect->entry()->GetSelection() != 3) {
         hasRun = false;

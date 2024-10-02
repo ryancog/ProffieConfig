@@ -63,7 +63,7 @@ void GeneralPage::createToolTips() {
 wxStaticBoxSizer* GeneralPage::boardSection(wxStaticBoxSizer* parent) {
   wxStaticBoxSizer* boardSetup = new wxStaticBoxSizer(wxHORIZONTAL, parent->GetStaticBox(), "Board Setup");
 
-  board = new pcComboBox(boardSetup->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Configuration::Proffieboard), wxCB_READONLY);
+  board = new pcChoice(boardSetup->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Configuration::Proffieboard), wxCB_READONLY);
   massStorage = new wxCheckBox(boardSetup->GetStaticBox(), wxID_ANY, "Enable Mass Storage");
   webUSB = new wxCheckBox(boardSetup->GetStaticBox(), wxID_ANY, "Enable WebUSB");
 
@@ -111,7 +111,7 @@ wxBoxSizer* GeneralPage::rightOptions(wxStaticBoxSizer* parent) {
 wxBoxSizer* GeneralPage::leftOptions(wxStaticBoxSizer* parent) {
   wxBoxSizer* leftOptions = new wxBoxSizer(wxVERTICAL);
 
-  orientation = new pcComboBox(parent->GetStaticBox(), wxID_ANY, "Orientation", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Configuration::Orientation), 0, wxHORIZONTAL);
+  orientation = new pcChoice(parent->GetStaticBox(), wxID_ANY, "Orientation", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Configuration::Orientation), 0, wxHORIZONTAL);
   buttons = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "Number of Buttons", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 3, 2, wxHORIZONTAL);
   volume = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "Max Volume", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 5000, 1500, wxHORIZONTAL);
   volume->entry()->SetIncrement(50);

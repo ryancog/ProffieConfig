@@ -10,7 +10,7 @@
 #include <wx/hyperlink.h>
 #include <wx/statbox.h>
 
-CustomOptionsDlg::CustomOptionsDlg(EditorWindow* _parent) : wxDialog(_parent, wxID_ANY, "Custom Options - " + _parent->getOpenConfig(), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER), parent(_parent) {
+CustomOptionsDlg::CustomOptionsDlg(EditorWindow* _parent) : wxDialog(_parent, wxID_ANY, "Custom Options - " + _parent->getOpenConfig(), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) {
   createUI();
 
   updateOptions();

@@ -5,12 +5,12 @@
 
 #include <wx/gdicmn.h>
 #include <wx/string.h>
-#include <wx/combobox.h>
+#include <wx/choice.h>
 #include <wx/stattext.h>
 
-class pcComboBox : public wxWindow {
+class pcChoice : public wxWindow {
 public:
-  pcComboBox(
+    pcChoice(
       wxWindow* parent,
       int32_t id = wxID_ANY,
       const wxString& label = wxEmptyString,
@@ -23,10 +23,13 @@ public:
 
   void SetToolTip(wxToolTip*);
 
-  wxComboBox* entry() const;
-  wxStaticText* text() const;
+  wxChoice *entry() const;
+  wxStaticText *text() const;
+
+  void SetValue(const wxString&);
+  wxString GetValue() const;
 
 private:
-  wxComboBox* mEntry{nullptr};
-  wxStaticText* mText{nullptr};
+  wxChoice *mEntry{nullptr};
+  wxStaticText *mText{nullptr};
 };
