@@ -7,30 +7,34 @@
 
 #include "editor/editorwindow.h"
 #include "mainmenu/mainmenu.h"
-#include "core/utilities/progress.h"
 
-class Arduino {
-public:
-  static void refreshBoards(MainMenu*, std::function<void(bool)> = [](bool){});
-  static void applyToBoard(MainMenu*, EditorWindow*, std::function<void(bool)> = [](bool){});
-  static void verifyConfig(wxWindow*, EditorWindow*, std::function<void(bool)> = [](bool){});
+namespace Arduino {
+    void refreshBoards(MainMenu*);
+    void applyToBoard(MainMenu*, EditorWindow*);
+    void verifyConfig(wxWindow*, EditorWindow*);
 
-  static void init(wxWindow*, std::function<void(bool)> = [](bool){});
-  static std::vector<wxString> getBoards();
+    void init(wxWindow*);
+    std::vector<wxString> getBoards();
 
-  enum {
-    PROFFIEBOARDV1 = 0,
-    PROFFIEBOARDV2 = 1,
-    PROFFIEBOARDV3 = 2
-  };
-private:
-  Arduino();
-  Arduino(const Arduino&) = delete;
+    enum {
+        PROFFIEBOARDV1 = 0,
+        PROFFIEBOARDV2 = 1,
+        PROFFIEBOARDV3 = 2
+    };
 
-  static FILE* CLI(const wxString& command);
+    struct Event : wxEvent {
+        Event(wxEventType type) : wxEvent(wxID_ANY, type) {}
 
-  static bool updateIno(wxString&, EditorWindow*);
-  static bool compile(wxString&, EditorWindow*, Progress* = nullptr);
-  static bool upload(wxString&, EditorWindow*, Progress* = nullptr);
-  static wxString parseError(const wxString&);
-};
+        [[nodiscard]] wxEvent *Clone() const { return new Event(*this); }
+
+        bool succeeded{false};
+        std::string str;
+    };
+
+    wxDECLARE_EVENT(EVT_INIT_DONE, Event);
+    wxDECLARE_EVENT(EVT_APPLY_DONE, Event);
+    wxDECLARE_EVENT(EVT_VERIFY_DONE, Event);
+    wxDECLARE_EVENT(EVT_REFRESH_DONE, Event);
+    wxDECLARE_EVENT(EVT_CLEAR_BLIST, Event);
+    wxDECLARE_EVENT(EVT_APPEND_BLIST, Event);
+} // namespace Arduino
