@@ -78,10 +78,10 @@ void EditorWindow::bindEvents() {
 #endif
 
   Bind(wxEVT_CHOICE, [&](wxCommandEvent&) {
-        generalPage->Show(windowSelect->GetValue() == "General");
-        propsPage->Show(windowSelect->GetValue() == "Prop File");
-        bladesPage->Show(windowSelect->GetValue() == "Blade Arrays");
-        presetsPage->Show(windowSelect->GetValue() == "Presets And Styles");
+        generalPage->Show(windowSelect->entry()->GetStringSelection() == "General");
+        propsPage->Show(windowSelect->entry()->GetStringSelection() == "Prop File");
+        bladesPage->Show(windowSelect->entry()->GetStringSelection() == "Blade Arrays");
+        presetsPage->Show(windowSelect->entry()->GetStringSelection() == "Presets And Styles");
 
         //generalPage->update();
         bladesPage->update();

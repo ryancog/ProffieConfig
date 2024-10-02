@@ -296,13 +296,13 @@ void BladeArrayDlg::update() {
   arrayName->entry()->ChangeValue(bladeArrays.at(lastArraySelection).name);
   resistanceID->entry()->SetValue(bladeArrays.at(lastArraySelection).value);
 
-  if (mode->GetValue() == BLADE_ID_MODE_SNAPSHOT) {
+  if (mode->entry()->GetStringSelection() == BLADE_ID_MODE_SNAPSHOT) {
     pullupResistance->Show(false);
     pullupPin->Show(false);
-  } else if (mode->GetValue() == BLADE_ID_MODE_BRIDGED) {
+  } else if (mode->entry()->GetStringSelection() == BLADE_ID_MODE_BRIDGED) {
     pullupResistance->Show(false);
     pullupPin->Show(true);
-  } else if (mode->GetValue() == BLADE_ID_MODE_EXTERNAL) {
+  } else if (mode->entry()->GetStringSelection() == BLADE_ID_MODE_EXTERNAL) {
     pullupPin->Show(false);
     pullupResistance->Show(true);
   }

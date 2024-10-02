@@ -15,7 +15,7 @@
 #endif
 
 PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, ""), parent(static_cast<EditorWindow*>(window)) {
-  styleInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE);
+  styleInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "BladeStyle", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE | wxBORDER_NONE);
   styleInput->entry()->SetFont(wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
 
   Add(createPresetConfig(), wxSizerFlags(/*proportion*/ 0).Border(wxALL, 10));
@@ -105,17 +105,23 @@ wxBoxSizer* PresetsPage::createPresetSelect() {
   bladeArray = new pcChoice(GetStaticBox(), ID_BladeArray, "Blade Array", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ "blade_in" }), wxCB_READONLY);
   arraySizer->Add(bladeArray, wxSizerFlags(0).Border(wxBOTTOM, 5).Expand());
 
-  wxBoxSizer* arrangeButtonSizer = new wxBoxSizer(wxVERTICAL);
+  auto *listSizer{new wxBoxSizer(wxHORIZONTAL)};
+  auto *arrangeButtonSizer{new wxBoxSizer(wxVERTICAL)};
   movePresetUp = new wxButton(GetStaticBox(), ID_MovePresetUp, L"\u2191" /*up arrow*/, wxDefaultPosition, wxSize(15, 25), wxBU_EXACTFIT);
   movePresetDown = new wxButton(GetStaticBox(), ID_MovePresetDown, L"\u2193" /*down arrow*/, wxDefaultPosition, wxSize(15, 25), wxBU_EXACTFIT);
   arrangeButtonSizer->Add(movePresetUp, FIRSTITEMFLAGS);
   arrangeButtonSizer->Add(movePresetDown, MENUITEMFLAGS);
-  wxBoxSizer* listSizer = new wxBoxSizer(wxHORIZONTAL);
-  presetList = new wxListBox(GetStaticBox(), ID_PresetList);
-  bladeList = new wxListBox(GetStaticBox(), ID_BladeList);
   listSizer->Add(arrangeButtonSizer, wxSizerFlags(0));
-  listSizer->Add(presetList, wxSizerFlags(1).Expand());
-  listSizer->Add(bladeList, wxSizerFlags(1).Expand());
+  auto *presetSizer{new wxBoxSizer(wxVERTICAL)};
+  presetList = new wxListBox(GetStaticBox(), ID_PresetList, wxDefaultPosition, wxDefaultSize, wxArrayString{}, wxBORDER_NONE);
+  presetSizer->Add(new wxStaticText(GetStaticBox(), wxID_ANY, "Presets"), wxSizerFlags());
+  presetSizer->Add(presetList, wxSizerFlags(1).Expand());
+  auto *bladeSizer{new wxBoxSizer(wxVERTICAL)};
+  bladeList = new wxListBox(GetStaticBox(), ID_BladeList, wxDefaultPosition, wxDefaultSize, wxArrayString{}, wxBORDER_NONE);
+  bladeSizer->Add(new wxStaticText(GetStaticBox(), wxID_ANY, "Blades"), wxSizerFlags());
+  bladeSizer->Add(bladeList, wxSizerFlags(1).Expand());
+  listSizer->Add(presetSizer, wxSizerFlags(1).Expand().Border(wxALL, 4));
+  listSizer->Add(bladeSizer, wxSizerFlags(1).Expand().Border(wxALL, 4));
 
   wxBoxSizer* buttonSizer = new wxBoxSizer(wxHORIZONTAL);
   addPreset = new wxButton(GetStaticBox(), ID_AddPreset, "+", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);

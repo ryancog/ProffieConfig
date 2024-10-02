@@ -87,7 +87,7 @@ public:
                 const_cast<pcSpinCtrlDouble*>(static_cast<const pcSpinCtrlDouble*>(def->element))->entry()->SetValue(stod(key.second));
                 break;
             case Type::COMBO:
-                const_cast<pcChoice*>(static_cast<const pcChoice*>(def->element))->SetValue(key.second);
+                const_cast<pcChoice*>(static_cast<const pcChoice*>(def->element))->entry()->SetStringSelection(key.second);
                 break;
             case Type::TEXT:
                 const_cast<pcTextCtrl*>(static_cast<const pcTextCtrl*>(def->element))->entry()->SetValue(key.second);

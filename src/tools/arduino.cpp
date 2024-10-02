@@ -148,7 +148,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
         for (const wxString& item : Arduino::getBoards()) {
             window->boardSelect->entry()->Append(item);
         }
-        window->boardSelect->SetValue(lastSel);
+        window->boardSelect->entry()->SetStringSelection(lastSel);
         if (window->boardSelect->entry()->GetSelection() == -1) {
             window->boardSelect->entry()->SetSelection(0);
             progDialog->emitEvent(100, "Error!");
@@ -376,7 +376,7 @@ bool Arduino::upload(wxString& _return, EditorWindow* editor, Progress* progDial
 
 #ifndef __WINDOWS__
     struct termios newtio;
-    auto fd = open(static_cast<MainMenu*>(editor->GetParent())->boardSelect->GetValue().data(), O_RDWR | O_NOCTTY);
+    auto fd = open(static_cast<MainMenu*>(editor->GetParent())->boardSelect->entry()->GetStringSelection().data(), O_RDWR | O_NOCTTY);
     if (fd < 0) {
         std::cout << "err" << std::endl;
     }

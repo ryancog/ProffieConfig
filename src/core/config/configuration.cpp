@@ -74,7 +74,7 @@ void Configuration::outputConfigTopGeneral(std::ofstream& configOutput, EditorWi
   if (editor->generalPage->massStorage->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_MASS_STORAGE" << std::endl;
   if (editor->generalPage->webUSB->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_WEBUSB" << std::endl;
 
-  configOutput << findInVMap(Proffieboard, editor->generalPage->board->GetValue().ToStdString()).second << std::endl;
+  configOutput << findInVMap(Proffieboard, editor->generalPage->board->entry()->GetStringSelection().ToStdString()).second << std::endl;
 
   configOutput << "const unsigned int maxLedsPerStrip = " << editor->generalPage->maxLEDs->entry()->GetValue() << ";" << std::endl;
   configOutput << "#define ENABLE_AUDIO" << std::endl;

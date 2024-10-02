@@ -26,9 +26,6 @@ public:
   wxChoice *entry() const;
   wxStaticText *text() const;
 
-  void SetValue(const wxString&);
-  wxString GetValue() const;
-
 private:
   wxChoice *mEntry{nullptr};
   wxStaticText *mText{nullptr};
