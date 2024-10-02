@@ -170,7 +170,7 @@ void PropsPage::bindEvents() {
       auto infoDialog = wxDialog(
         parent,
         wxID_ANY,
-        propSelection->GetValue() + " Prop Info",
+        propSelection->entry()->GetStringSelection() + " Prop Info",
         wxDefaultPosition,
         wxDefaultSize,
         wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP

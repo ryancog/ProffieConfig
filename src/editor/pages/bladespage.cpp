@@ -134,7 +134,7 @@ wxBoxSizer* BladesPage::createBladeManager() {
 
   wxBoxSizer* bladeSelectionSizer = new wxBoxSizer(wxVERTICAL);
   wxStaticText* bladeText = new wxStaticText(GetStaticBox(), wxID_ANY, "Blades");
-  bladeSelect = new wxListBox(GetStaticBox(), ID_BladeSelect, wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
+  bladeSelect = new wxListBox(GetStaticBox(), ID_BladeSelect, wxDefaultPosition, wxDefaultSize, wxArrayString{}, wxNO_BORDER);
   wxBoxSizer* bladeButtons = new wxBoxSizer(wxHORIZONTAL);
   addBladeButton = new wxButton(GetStaticBox(), ID_AddBlade, "+", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
   removeBladeButton = new wxButton(GetStaticBox(), ID_RemoveBlade, "-", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
@@ -146,7 +146,7 @@ wxBoxSizer* BladesPage::createBladeManager() {
 
   wxBoxSizer* subBladeSelectionSizer = new wxBoxSizer(wxVERTICAL);
   wxStaticText* subBladeText = new wxStaticText(GetStaticBox(), wxID_ANY, "SubBlades");
-  subBladeSelect = new wxListBox(GetStaticBox(), ID_SubBladeSelect, wxDefaultPosition, wxSize(100, -1), wxNO_BORDER);
+  subBladeSelect = new wxListBox(GetStaticBox(), ID_SubBladeSelect, wxDefaultPosition, wxSize(100, -1), wxArrayString{}, wxNO_BORDER);
   wxBoxSizer* subBladeButtonSizer = new wxBoxSizer(wxHORIZONTAL);
   addSubBladeButton = new wxButton(GetStaticBox(), ID_AddSubBlade, "+", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
   removeSubBladeButton = new wxButton(GetStaticBox(), ID_RemoveSubBlade, "-", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
@@ -164,7 +164,7 @@ wxBoxSizer* BladesPage::createBladeManager() {
 wxBoxSizer* BladesPage::createBladeSetup() {
   wxBoxSizer* bladeSetup = new wxBoxSizer(wxVERTICAL);
   bladeType = new pcChoice(GetStaticBox(), ID_BladeType, "Blade Type", wxDefaultPosition, wxDefaultSize, Misc::createEntries({BD_PIXELRGB, BD_PIXELRGBW, BD_TRISTAR, BD_QUADSTAR, BD_SINGLELED}), wxCB_READONLY);
-  powerPins = new wxCheckListBox(GetStaticBox(), ID_PowerPins, wxDefaultPosition, wxSize(200, -1), Misc::createEntries({"bladePowerPin1", "bladePowerPin2", "bladePowerPin3", "bladePowerPin4", "bladePowerPin5", "bladePowerPin6"}));
+  powerPins = new wxCheckListBox(GetStaticBox(), ID_PowerPins, wxDefaultPosition, wxSize(200, -1), Misc::createEntries({"bladePowerPin1", "bladePowerPin2", "bladePowerPin3", "bladePowerPin4", "bladePowerPin5", "bladePowerPin6"}), wxBORDER_NONE);
   auto pinNameSizer = new wxBoxSizer(wxHORIZONTAL);
   addPowerPin = new wxButton(GetStaticBox(), ID_AddPowerPin, "+", wxDefaultPosition, wxSize(30, 20), wxBU_EXACTFIT);
   powerPinName = new pcTextCtrl(GetStaticBox(), ID_PowerPinName, "Pin Name");
@@ -259,24 +259,24 @@ void BladesPage::saveCurrent() {
   }
 
   auto& lastBlade = bladeArrayDlg->bladeArrays[lastBladeArraySelection].blades.at(lastBladeSelection);
-  lastBlade.type = bladeType->GetValue();
+  lastBlade.type = bladeType->entry()->GetStringSelection();
   lastBlade.powerPins.clear();
   for (uint32_t idx = 0; idx < powerPins->GetCount(); idx++) {
     if (powerPins->IsChecked(idx)) lastBlade.powerPins.push_back(powerPins->GetString(idx).ToStdString());
   }
   
-  lastBlade.dataPin = bladeDataPin->GetValue();
+  lastBlade.dataPin = bladeDataPin->entry()->GetStringSelection();
   lastBlade.numPixels = bladePixels->entry()->GetValue();
-  lastBlade.colorType = lastBlade.type == BD_PIXELRGB ? blade3ColorOrder->GetValue() : blade4ColorOrder->GetValue();
+  lastBlade.colorType = lastBlade.type == BD_PIXELRGB ? blade3ColorOrder->entry()->GetStringSelection() : blade4ColorOrder->entry()->GetStringSelection();
   lastBlade.useRGBWithWhite = blade4UseRGB->GetValue();
   
-  lastBlade.Star1 = star1Color->GetValue();
+  lastBlade.Star1 = star1Color->entry()->GetStringSelection();
   lastBlade.Star1Resistance = star1Resistance->entry()->GetValue();
-  lastBlade.Star2 = star2Color->GetValue();
+  lastBlade.Star2 = star2Color->entry()->GetStringSelection();
   lastBlade.Star2Resistance = star2Resistance->entry()->GetValue();
-  lastBlade.Star3 = star3Color->GetValue();
+  lastBlade.Star3 = star3Color->entry()->GetStringSelection();
   lastBlade.Star3Resistance = star3Resistance->entry()->GetValue();
-  lastBlade.Star4 = star4Color->GetValue();
+  lastBlade.Star4 = star4Color->entry()->GetStringSelection();
   lastBlade.Star4Resistance = star4Resistance->entry()->GetValue();
   
   if (lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.size()) {
@@ -292,6 +292,7 @@ void BladesPage::saveCurrent() {
     bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.clear();
   }
 }
+
 void BladesPage::rebuildBladeArray() {
   if (bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() == 0) bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.push_back(BladeConfig({ .numPixels = 144, .powerPins{ "bladePowerPin2", "bladePowerPin3"} }));
 
@@ -318,6 +319,7 @@ void BladesPage::rebuildBladeArray() {
     if (lastSubBladeSelection >= 0 && lastSubBladeSelection < static_cast<int32_t>(subBladeSelect->GetCount())) subBladeSelect->SetSelection(lastSubBladeSelection);
   }
 }
+
 void BladesPage::loadSettings() {
   const auto& blades = bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades;
 
@@ -325,7 +327,7 @@ void BladesPage::loadSettings() {
 
   const auto& selectedBlade = blades.at(bladeSelect->GetSelection());
 
-  bladeType->SetValue(selectedBlade.type);
+  bladeType->entry()->SetStringSelection(selectedBlade.type);
   for (uint32_t idx = 0; idx < powerPins->GetCount(); idx++) {
     powerPins->Check(idx, false);
   }
@@ -333,19 +335,19 @@ void BladesPage::loadSettings() {
     powerPins->Check(powerPins->FindString(selectedBlade.powerPins.at(idx)));
   }
 
-  bladeDataPin->SetValue(selectedBlade.dataPin);
+  bladeDataPin->entry()->SetStringSelection(selectedBlade.dataPin);
   bladePixels->entry()->SetValue(selectedBlade.numPixels);
-  blade3ColorOrder->SetValue(selectedBlade.colorType);
-  blade4ColorOrder->SetValue(selectedBlade.colorType);
+  blade3ColorOrder->entry()->SetStringSelection(selectedBlade.colorType);
+  blade4ColorOrder->entry()->SetStringSelection(selectedBlade.colorType);
   blade4UseRGB->SetValue(selectedBlade.useRGBWithWhite);
   
-  star1Color->SetValue(selectedBlade.Star1);
+  star1Color->entry()->SetStringSelection(selectedBlade.Star1);
   star1Resistance->entry()->SetValue(selectedBlade.Star1Resistance);
-  star2Color->SetValue(selectedBlade.Star2);
+  star2Color->entry()->SetStringSelection(selectedBlade.Star2);
   star2Resistance->entry()->SetValue(selectedBlade.Star2Resistance);
-  star3Color->SetValue(selectedBlade.Star3);
+  star3Color->entry()->SetStringSelection(selectedBlade.Star3);
   star3Resistance->entry()->SetValue(selectedBlade.Star3Resistance);
-  star4Color->SetValue(selectedBlade.Star4);
+  star4Color->entry()->SetStringSelection(selectedBlade.Star4);
   star4Resistance->entry()->SetValue(selectedBlade.Star4Resistance);
   
   subBladeStart->entry()->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)selectedBlade.subBlades.size() ? selectedBlade.subBlades.at(lastSubBladeSelection).startPixel : 0);

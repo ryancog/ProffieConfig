@@ -11,16 +11,16 @@ pcChoice::pcChoice(wxWindow* _parent, int32_t _id, const wxString& _label, const
     wxWindow(_parent, wxID_ANY),
     mEntry{new wxChoice(this, _id, _pos, _size, _choices, _style)} {
 
-  auto sizer = new wxBoxSizer(_orientation);
-  if (!_label.empty()) {
-    mText = new wxStaticText(this, wxID_ANY, _label);
-    auto sizerFlags = wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 5);
-    if (_orientation == wxHORIZONTAL) sizerFlags = sizerFlags.Center();
-    sizer->Add(text(), sizerFlags);
-  }
-  sizer->Add(entry(), wxSizerFlags(1).Expand());
+    auto sizer = new wxBoxSizer(_orientation);
+    if (!_label.empty()) {
+        mText = new wxStaticText(this, wxID_ANY, _label);
+        auto sizerFlags = wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 5);
+        if (_orientation == wxHORIZONTAL) sizerFlags = sizerFlags.Center();
+        sizer->Add(text(), sizerFlags);
+    }
+    sizer->Add(entry(), wxSizerFlags(1).Expand());
 
-  SetSizerAndFit(sizer);
+    SetSizerAndFit(sizer);
 }
 
 void pcChoice::SetToolTip(wxToolTip* tip) {
@@ -30,6 +30,3 @@ void pcChoice::SetToolTip(wxToolTip* tip) {
 
 wxStaticText *pcChoice::text() const { return mText; }
 wxChoice *pcChoice::entry() const { return mEntry; }
-
-void pcChoice::SetValue(const wxString& str) { mEntry->SetSelection(mEntry->FindString(str, true)); }
-wxString pcChoice::GetValue() const { return mEntry->GetString(mEntry->GetSelection()); }

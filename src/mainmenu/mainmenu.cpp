@@ -97,25 +97,25 @@ void MainMenu::bindEvents() {
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(this); }, ID_OpenSerial);
 #	endif
     Bind(wxEVT_CHOICE, [this](wxCommandEvent&) {
-        if (configSelect->GetValue() == "Select Config...") {
+        if (configSelect->entry()->GetStringSelection() == "Select Config...") {
             activeEditor = nullptr;
             update();
             return;
         }
 
         for (auto editor : editors) {
-            if (configSelect->GetValue() == editor->getOpenConfig()) {
+            if (configSelect->entry()->GetStringSelection() == editor->getOpenConfig()) {
                 activeEditor = editor;
                 update();
                 return;
             }
         }
 
-        auto newEditor = new EditorWindow(configSelect->GetValue().ToStdString(), this);
-        if (!Configuration::readConfig(CONFIG_DIR + configSelect->GetValue().ToStdString() + ".h", newEditor)) {
+        auto newEditor = new EditorWindow(configSelect->entry()->GetStringSelection().ToStdString(), this);
+        if (!Configuration::readConfig(CONFIG_DIR + configSelect->entry()->GetStringSelection().ToStdString() + ".h", newEditor)) {
             wxMessageDialog(this, "Error reading configuration file!", "Config Error", wxOK | wxCENTER).ShowModal();
             newEditor->Destroy();
-            AppState::instance->removeConfig(configSelect->GetValue().ToStdString());
+            AppState::instance->removeConfig(configSelect->entry()->GetStringSelection().ToStdString());
             update();
             return;
         }
@@ -130,8 +130,8 @@ void MainMenu::bindEvents() {
     Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
         if (wxMessageDialog(this, "Are you sure you want to deleted the selected configuration?\n\nThis action cannot be undone!", "Delete Config", wxYES_NO | wxNO_DEFAULT | wxCENTER).ShowModal() == wxID_YES) {
             activeEditor->Close(true);
-            remove((CONFIG_DIR + configSelect->GetValue().ToStdString() + ".h").c_str());
-            AppState::instance->removeConfig(configSelect->GetValue().ToStdString());
+            remove((CONFIG_DIR + configSelect->entry()->GetStringSelection().ToStdString() + ".h").c_str());
+            AppState::instance->removeConfig(configSelect->entry()->GetStringSelection().ToStdString());
             AppState::instance->saveState();
             activeEditor = nullptr;
             update();
@@ -144,7 +144,7 @@ void MainMenu::bindEvents() {
         boardSelect->entry()->Append(evt.str);
     });
     Bind(Arduino::EVT_REFRESH_DONE, [this](Arduino::Event& evt) {
-        boardSelect->SetValue(evt.str);
+        boardSelect->entry()->SetStringSelection(evt.str);
         if (boardSelect->entry()->GetSelection() == -1) boardSelect->entry()->SetSelection(0);
         update();
     });
@@ -236,13 +236,13 @@ void MainMenu::createUI() {
 }
 
 void MainMenu::update() {
-  auto lastConfig = configSelect->GetValue();
+  auto lastConfig = configSelect->entry()->GetStringSelection();
   configSelect->entry()->Clear();
   configSelect->entry()->Append("Select Config...");
   for (const auto& config : AppState::instance->getConfigFileNames()) {
     configSelect->entry()->Append(config);
   }
-  configSelect->SetValue(lastConfig);
+  configSelect->entry()->SetStringSelection(lastConfig);
   if (configSelect->entry()->GetSelection() == -1) configSelect->entry()->SetSelection(0);
 
   for (auto editor = editors.begin(); editor < editors.end(); editor++) {
@@ -253,9 +253,9 @@ void MainMenu::update() {
     editor = --editors.erase(editor);
   }
 
-  auto configSelected = configSelect->GetValue() != "Select Config...";
-  auto boardSelected = boardSelect->GetValue() != "Select Board...";
-  auto recoverySelected = boardSelect->GetValue().find("BOOTLOADER") != std::string::npos;
+  auto configSelected = configSelect->entry()->GetStringSelection() != "Select Config...";
+  auto boardSelected = boardSelect->entry()->GetStringSelection() != "Select Board...";
+  auto recoverySelected = boardSelect->entry()->GetStringSelection().find("BOOTLOADER") != std::string::npos;
 
   applyButton->Enable(configSelected && boardSelected);
   editConfig->Enable(configSelected);
