@@ -41,7 +41,7 @@ SerialMonitor::SerialMonitor(MainMenu* parent) : wxFrame(parent, wxID_ANY, "Prof
   wxBoxSizer *master = new wxBoxSizer(wxVERTICAL);
 
   input = new pcTextCtrl(this, ID_SerialCommand, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
-  output = new pcTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(500, 200), wxTE_MULTILINE | wxTE_READONLY);
+  output = new pcTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(500, 200), wxTE_MULTILINE | wxTE_READONLY | wxNO_BORDER);
 
   master->Add(input, BOXITEMFLAGS);
   master->Add(output, wxSizerFlags(1).Border(wxALL, 10).Expand());
@@ -85,7 +85,7 @@ void SerialMonitor::BindEvents()
 void SerialMonitor::OpenDevice() {
     struct termios newtio;
 
-    fd = open(static_cast<MainMenu*>(GetParent())->boardSelect->entry()->GetValue().data(), O_RDWR | O_NOCTTY);
+    fd = open(static_cast<MainMenu*>(GetParent())->boardSelect->GetValue().data(), O_RDWR | O_NOCTTY);
     if (fd < 0) {
         wxMessageDialog(GetParent(), "Could not connect to proffieboard.", "Serial Error", wxICON_ERROR | wxOK).ShowModal();
         SerialMonitor::instance->Close(true);
@@ -109,7 +109,7 @@ void SerialMonitor::OpenDevice() {
     devThread = std::thread{[this]() {
         struct stat info;
         while (SerialMonitor::instance != nullptr) {
-            if (stat(static_cast<MainMenu*>(GetParent())->boardSelect->entry()->GetValue().data(), &info) != 0) { // Check if device is still present
+            if (stat(static_cast<MainMenu*>(GetParent())->boardSelect->GetValue().data(), &info) != 0) { // Check if device is still present
                 SerialDataEvent* event = new SerialDataEvent(EVT_DISCON, wxID_ANY, "");
                 wxQueueEvent(SerialMonitor::instance, event);
                 break;

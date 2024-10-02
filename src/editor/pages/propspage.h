@@ -29,7 +29,7 @@ public:
   const std::vector<PropFile*>& getLoadedProps();
   wxScrolledWindow* propsWindow{nullptr};
 
-  pcComboBox* propSelection{nullptr};
+  pcChoice* propSelection{nullptr};
   wxButton* buttonInfo{nullptr};
   wxButton* propInfo{nullptr};
 

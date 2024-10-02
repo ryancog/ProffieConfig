@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "ui/pccombobox.h"
+#include "ui/pcchoice.h"
 
 #include <wx/frame.h>
 #include <wx/sizer.h>
@@ -31,7 +31,7 @@ public:
 
   wxBoxSizer* sizer{nullptr};
 
-  pcComboBox* windowSelect{nullptr};
+  pcChoice* windowSelect{nullptr};
 
   enum {
     ID_WindowSelect,

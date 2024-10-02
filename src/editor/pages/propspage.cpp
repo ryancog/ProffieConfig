@@ -9,7 +9,7 @@
 #include "core/config/propfile.h"
 #include "editor/editorwindow.h"
 #include "editor/pages/generalpage.h"
-#include "ui/pccombobox.h"
+#include "ui/pcchoice.h"
 
 #include <wx/scrolwin.h>
 #include <wx/sizer.h>
@@ -17,7 +17,7 @@
 
 PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""), parent{static_cast<EditorWindow*>(window)} {
   auto top = new wxBoxSizer(wxHORIZONTAL);
-  propSelection = new pcComboBox(GetStaticBox(), ID_PropSelect, "Prop File", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Default"}), wxCB_READONLY);
+  propSelection = new pcChoice(GetStaticBox(), ID_PropSelect, "Prop File", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Default"}), wxCB_READONLY);
   // Two ampersands bc wxWidgets formatting
   propInfo = new wxButton(GetStaticBox(), ID_PropInfo, "Prop Description && Usage Info...");
   buttonInfo = new wxButton(GetStaticBox(), ID_Buttons, "Button Controls...");
@@ -53,7 +53,7 @@ void PropsPage::bindEvents() {
     parent->Layout();
   };
 
-  GetStaticBox()->Bind(wxEVT_COMBOBOX, propSelectUpdate, ID_PropSelect);
+  GetStaticBox()->Bind(wxEVT_CHOICE, propSelectUpdate, ID_PropSelect);
   propsWindow->Bind(wxEVT_CHECKBOX, optionSelectUpdate, wxID_ANY);
   propsWindow->Bind(wxEVT_RADIOBUTTON, optionSelectUpdate, wxID_ANY);
   propsWindow->Bind(wxEVT_SPINCTRL, optionSelectUpdate, wxID_ANY);
@@ -170,7 +170,7 @@ void PropsPage::bindEvents() {
       auto infoDialog = wxDialog(
         parent,
         wxID_ANY,
-        propSelection->entry()->GetValue() + " Prop Info",
+        propSelection->GetValue() + " Prop Info",
         wxDefaultPosition,
         wxDefaultSize,
         wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP

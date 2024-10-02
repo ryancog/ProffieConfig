@@ -13,9 +13,9 @@
 #include <wx/combobox.h>
 #include <wx/listbox.h>
 
-#define BLADE_ID_MODE_SNAPSHOT "Snapshot"
-#define BLADE_ID_MODE_EXTERNAL "External Pullup"
-#define BLADE_ID_MODE_BRIDGED  "Bridged Pullup"
+constexpr auto BLADE_ID_MODE_SNAPSHOT{"Snapshot"};
+constexpr auto BLADE_ID_MODE_EXTERNAL{"External Pullup"};
+constexpr auto BLADE_ID_MODE_BRIDGED {"Bridged Pullup"};
 
 class BladeArrayDlg : public wxDialog {
 public:
@@ -26,7 +26,7 @@ public:
   wxCheckBox* enableID{nullptr};
   wxCheckBox* enableDetect{nullptr};
 
-  pcComboBox* mode{nullptr};
+  pcChoice* mode{nullptr};
   pcTextCtrl* IDPin{nullptr};
   pcSpinCtrl* pullupResistance{nullptr};
   pcTextCtrl* pullupPin{nullptr};
