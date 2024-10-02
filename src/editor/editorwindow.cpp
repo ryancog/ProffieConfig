@@ -77,11 +77,11 @@ void EditorWindow::bindEvents() {
   Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser(STYLEEDIT_PATH); }, ID_StyleEditor);
 #endif
 
-  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        generalPage->Show(windowSelect->entry()->GetValue() == "General");
-        propsPage->Show(windowSelect->entry()->GetValue() == "Prop File");
-        bladesPage->Show(windowSelect->entry()->GetValue() == "Blade Arrays");
-        presetsPage->Show(windowSelect->entry()->GetValue() == "Presets And Styles");
+  Bind(wxEVT_CHOICE, [&](wxCommandEvent&) {
+        generalPage->Show(windowSelect->GetValue() == "General");
+        propsPage->Show(windowSelect->GetValue() == "Prop File");
+        bladesPage->Show(windowSelect->GetValue() == "Blade Arrays");
+        presetsPage->Show(windowSelect->GetValue() == "Presets And Styles");
 
         //generalPage->update();
         bladesPage->update();
@@ -121,7 +121,7 @@ void EditorWindow::createPages() {
   sizer = new wxBoxSizer(wxVERTICAL);
 
   wxBoxSizer* options = new wxBoxSizer(wxHORIZONTAL);
-  windowSelect = new pcComboBox(this, ID_WindowSelect, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Blade Arrays", "Presets And Styles"}), wxCB_READONLY | wxCB_DROPDOWN);
+  windowSelect = new pcChoice(this, ID_WindowSelect, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Blade Arrays", "Presets And Styles"}), wxCB_READONLY | wxCB_DROPDOWN);
   options->Add(windowSelect, wxSizerFlags(0).Border(wxALL, 10));
 
   generalPage = new GeneralPage(this);

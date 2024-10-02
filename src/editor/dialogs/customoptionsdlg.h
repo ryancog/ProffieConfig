@@ -20,7 +20,6 @@ public:
   };
 
 private:
-  EditorWindow* parent{nullptr};
   wxScrolledWindow* optionArea{nullptr};
   wxButton* addDefineButton{nullptr};
   wxStaticText* cricketsText{nullptr};

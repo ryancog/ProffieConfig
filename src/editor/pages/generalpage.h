@@ -20,14 +20,14 @@ class GeneralPage : public wxStaticBoxSizer {
 public:
   GeneralPage(EditorWindow*);
 
-  pcComboBox* board{nullptr};
+  pcChoice* board{nullptr};
   wxCheckBox* massStorage{nullptr};
   wxCheckBox* webUSB{nullptr};
 
   CustomOptionsDlg* customOptDlg{nullptr};
   wxButton* customOptButton{nullptr};
 
-  pcComboBox* orientation{nullptr};
+  pcChoice* orientation{nullptr};
   pcSpinCtrl* buttons{nullptr};
   pcSpinCtrl* volume{nullptr};
   pcSpinCtrlDouble* clash{nullptr};

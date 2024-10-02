@@ -15,7 +15,7 @@
 #include "tools/serialmonitor.h"
 #include "../resources/icons/icon-small.xpm"
 
-#include "ui/pccombobox.h"
+#include "ui/pcchoice.h"
 
 #include <wx/event.h>
 #include <wx/menu.h>
@@ -96,26 +96,26 @@ void MainMenu::bindEvents() {
 #	else
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(this); }, ID_OpenSerial);
 #	endif
-    Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
-        if (configSelect->entry()->GetValue() == "Select Config...") {
+    Bind(wxEVT_CHOICE, [this](wxCommandEvent&) {
+        if (configSelect->GetValue() == "Select Config...") {
             activeEditor = nullptr;
             update();
             return;
         }
 
         for (auto editor : editors) {
-            if (configSelect->entry()->GetValue() == editor->getOpenConfig()) {
+            if (configSelect->GetValue() == editor->getOpenConfig()) {
                 activeEditor = editor;
                 update();
                 return;
             }
         }
 
-        auto newEditor = new EditorWindow(configSelect->entry()->GetValue().ToStdString(), this);
-        if (!Configuration::readConfig(CONFIG_DIR + configSelect->entry()->GetValue().ToStdString() + ".h", newEditor)) {
+        auto newEditor = new EditorWindow(configSelect->GetValue().ToStdString(), this);
+        if (!Configuration::readConfig(CONFIG_DIR + configSelect->GetValue().ToStdString() + ".h", newEditor)) {
             wxMessageDialog(this, "Error reading configuration file!", "Config Error", wxOK | wxCENTER).ShowModal();
             newEditor->Destroy();
-            AppState::instance->removeConfig(configSelect->entry()->GetValue().ToStdString());
+            AppState::instance->removeConfig(configSelect->GetValue().ToStdString());
             update();
             return;
         }
@@ -124,13 +124,14 @@ void MainMenu::bindEvents() {
 
         update();
     }, ID_ConfigSelect);
+    Bind(wxEVT_CHOICE, [this](wxCommandEvent&) { update(); }, ID_DeviceSelect);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { activeEditor->Show(); activeEditor->Raise(); }, ID_EditConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { AddConfig(this).ShowModal(); }, ID_AddConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
         if (wxMessageDialog(this, "Are you sure you want to deleted the selected configuration?\n\nThis action cannot be undone!", "Delete Config", wxYES_NO | wxNO_DEFAULT | wxCENTER).ShowModal() == wxID_YES) {
             activeEditor->Close(true);
-            remove((CONFIG_DIR + configSelect->entry()->GetValue().ToStdString() + ".h").c_str());
-            AppState::instance->removeConfig(configSelect->entry()->GetValue().ToStdString());
+            remove((CONFIG_DIR + configSelect->GetValue().ToStdString() + ".h").c_str());
+            AppState::instance->removeConfig(configSelect->GetValue().ToStdString());
             AppState::instance->saveState();
             activeEditor = nullptr;
             update();
@@ -143,8 +144,9 @@ void MainMenu::bindEvents() {
         boardSelect->entry()->Append(evt.str);
     });
     Bind(Arduino::EVT_REFRESH_DONE, [this](Arduino::Event& evt) {
-        boardSelect->entry()->SetValue(evt.str);
+        boardSelect->SetValue(evt.str);
         if (boardSelect->entry()->GetSelection() == -1) boardSelect->entry()->SetSelection(0);
+        update();
     });
 }
 
@@ -194,7 +196,7 @@ void MainMenu::createUI() {
   headerSection->Add(new wxStaticBitmap(this, wxID_ANY, wxIcon(icon_small_xpm)), wxSizerFlags(0).Border(wxALL, 10));
 
   auto configSelectSection = new wxBoxSizer(wxHORIZONTAL);
-  configSelect = new pcComboBox(this, ID_ConfigSelect, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Select Config..."}), wxCB_READONLY);
+  configSelect = new pcChoice(this, ID_ConfigSelect, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Select Config..."}), wxCB_READONLY);
   addConfig = new wxButton(this, ID_AddConfig, "Add", wxDefaultPosition, wxSize(50, -1), wxBU_EXACTFIT);
   removeConfig = new wxButton(this, ID_RemoveConfig, "Remove", wxDefaultPosition, wxSize(75, -1), wxBU_EXACTFIT);
   removeConfig->Disable();
@@ -208,7 +210,7 @@ void MainMenu::createUI() {
 # else
   auto boardEntries = Misc::createEntries({"Select Board..."});
 # endif
-  boardSelect = new pcComboBox(this, ID_DeviceSelect, "", wxDefaultPosition, wxDefaultSize, boardEntries, wxCB_READONLY);
+  boardSelect = new pcChoice(this, ID_DeviceSelect, "", wxDefaultPosition, wxDefaultSize, boardEntries, wxCB_READONLY);
   refreshButton = new wxButton(this, ID_RefreshDev, "Refresh Boards");
   boardControls->Add(refreshButton, wxSizerFlags(0).Border(wxALL, 5));
   boardControls->Add(boardSelect, wxSizerFlags(1).Border(wxALL, 5));
@@ -234,13 +236,13 @@ void MainMenu::createUI() {
 }
 
 void MainMenu::update() {
-  auto lastConfig = configSelect->entry()->GetValue();
+  auto lastConfig = configSelect->GetValue();
   configSelect->entry()->Clear();
   configSelect->entry()->Append("Select Config...");
   for (const auto& config : AppState::instance->getConfigFileNames()) {
     configSelect->entry()->Append(config);
   }
-  configSelect->entry()->SetValue(lastConfig);
+  configSelect->SetValue(lastConfig);
   if (configSelect->entry()->GetSelection() == -1) configSelect->entry()->SetSelection(0);
 
   for (auto editor = editors.begin(); editor < editors.end(); editor++) {
@@ -251,9 +253,9 @@ void MainMenu::update() {
     editor = --editors.erase(editor);
   }
 
-  auto configSelected = configSelect->entry()->GetValue() != "Select Config...";
-  auto boardSelected = boardSelect->entry()->GetValue() != "Select Board...";
-  auto recoverySelected = boardSelect->entry()->GetValue().find("BOOTLOADER") != std::string::npos;
+  auto configSelected = configSelect->GetValue() != "Select Config...";
+  auto boardSelected = boardSelect->GetValue() != "Select Board...";
+  auto recoverySelected = boardSelect->GetValue().find("BOOTLOADER") != std::string::npos;
 
   applyButton->Enable(configSelected && boardSelected);
   editConfig->Enable(configSelected);

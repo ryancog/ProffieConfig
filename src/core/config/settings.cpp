@@ -80,7 +80,7 @@ void Settings::setCustomInputParsers() {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
 
-    parent->generalPage->orientation->entry()->SetValue(Configuration::findInVMap(Configuration::Orientation, key.second).first);
+    parent->generalPage->orientation->SetValue(Configuration::findInVMap(Configuration::Orientation, key.second).first);
     return true;
   });
   generalDefines["ORIENTATION"]->overrideOutput([&](const ProffieDefine* def) -> std::string {
@@ -101,14 +101,14 @@ void Settings::setCustomInputParsers() {
     parent->bladesPage->bladeArrayDlg->enableID->SetValue(true);
     key.second = std::strtok(key.second.data(), "< ");
     if (key.second == "SnapshotBladeID") {
-      parent->bladesPage->bladeArrayDlg->mode->entry()->SetValue(BLADE_ID_MODE_SNAPSHOT);
+      parent->bladesPage->bladeArrayDlg->mode->SetValue(BLADE_ID_MODE_SNAPSHOT);
       parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(std::strtok(nullptr, "<> "));
     } else if (key.second == "ExternalPullupBladeID") {
-      parent->bladesPage->bladeArrayDlg->mode->entry()->SetValue(BLADE_ID_MODE_EXTERNAL);
+      parent->bladesPage->bladeArrayDlg->mode->SetValue(BLADE_ID_MODE_EXTERNAL);
       parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(std::strtok(nullptr, "<, "));
       parent->bladesPage->bladeArrayDlg->pullupResistance->entry()->SetValue(std::stod(std::strtok(nullptr, ",> ")));
     } else if (key.second == "BridgedPullupBladeID") {
-      parent->bladesPage->bladeArrayDlg->mode->entry()->SetValue(BLADE_ID_MODE_BRIDGED);
+      parent->bladesPage->bladeArrayDlg->mode->SetValue(BLADE_ID_MODE_BRIDGED);
       parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(std::strtok(nullptr, "<, "));
       parent->bladesPage->bladeArrayDlg->pullupPin->entry()->SetValue(std::strtok(nullptr, ",> "));
     }
@@ -167,7 +167,7 @@ void Settings::setCustomOutputParsers() {
     return def->getName() + " " + std::to_string(def->getNum()) + " * 60 * 1000";
   });
   generalDefines["BLADE_ID_CLASS"]->overrideOutput([&](const ProffieDefine* def) -> std::string {
-    auto mode = parent->bladesPage->bladeArrayDlg->mode->entry()->GetValue();
+    auto mode = parent->bladesPage->bladeArrayDlg->mode->GetValue();
     std::string returnVal = def->getName() + " ";
     if (mode == BLADE_ID_MODE_SNAPSHOT) returnVal + "SnapshotBladeID<" + parent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue() + ">";
     else if (mode == BLADE_ID_MODE_BRIDGED) returnVal + "ExternalPullupBladeID<" + parent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue() + ", " + parent->bladesPage->bladeArrayDlg->pullupResistance->entry()->GetTextValue() + ">";
@@ -234,7 +234,7 @@ bool Settings::ProffieDefine::getState() const {
 }
 std::string Settings::ProffieDefine::getString() const {
   if (type == Type::TEXT) return const_cast<pcTextCtrl*>(static_cast<const pcTextCtrl*>(element))->entry()->GetValue().ToStdString();
-  if (type == Type::COMBO) return const_cast<pcComboBox*>(static_cast<const pcComboBox*>(element))->entry()->GetValue().ToStdString();
+  if (type == Type::COMBO) return const_cast<pcChoice*>(static_cast<const pcChoice*>(element))->GetValue().ToStdString();
 
   return "";
 }
@@ -247,7 +247,7 @@ Settings::ProffieDefine::ProffieDefine(std::string _name, bool _defaultState, wx
                                                                                                                                                                      type(Type::STATE), looseChecking(_loose), defaultValue({ .state = _defaultState }), identifier(_name), element(_element), checkOutput(_check) {}
 Settings::ProffieDefine::ProffieDefine(std::string _name, bool _defaultState, wxRadioButton* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
                                                                                                                                                                         type(Type::RADIO), looseChecking(_loose), defaultValue({ .state = _defaultState }), identifier(_name), element(_element), checkOutput(_check) {}
-Settings::ProffieDefine::ProffieDefine(std::string _name, wxString _defaultSelection, pcComboBox* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
+Settings::ProffieDefine::ProffieDefine(std::string _name, wxString _defaultSelection, pcChoice* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
                                                                                                                                                                              type(Type::COMBO), looseChecking(_loose), defaultValue({ .str = _defaultSelection.ToStdString().data() }), identifier(_name), element(_element), checkOutput(_check) {}
 Settings::ProffieDefine::ProffieDefine(std::string _name, wxString _defaultEntry, pcTextCtrl* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
                                                                                                                                                                          type(Type::TEXT), looseChecking(_loose), defaultValue({ .str = _defaultEntry.ToStdString().data() }), identifier(_name), element(_element), checkOutput(_check) {}

@@ -102,7 +102,7 @@ void BladeArrayDlg::bindEvents() {
       stripAndSaveName();
       update();
     }, ID_NameEntry);
-  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
+  Bind(wxEVT_CHOICE, [&](wxCommandEvent&) {
       update();
       FULLUPDATEWINDOW(this);
     }, ID_BladeIDMode);
@@ -160,7 +160,7 @@ wxStaticBoxSizer* BladeArrayDlg::createBladeArrays(wxWindow* parent) {
 wxBoxSizer* BladeArrayDlg::createBladeArraysLeft(wxWindow* parent) {
   wxBoxSizer* leftSizer = new wxBoxSizer(wxVERTICAL);
 
-  arrayList = new wxListBox(parent, ID_BladeArray, wxDefaultPosition, wxSize(100, -1), {}, 0);
+  arrayList = new wxListBox(parent, ID_BladeArray, wxDefaultPosition, wxSize(100, -1), wxArrayString{}, wxNO_BORDER);
 
   wxBoxSizer* buttonSizer = new wxBoxSizer(wxHORIZONTAL);
   addID = new wxButton(parent, ID_AddArray, "+", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
@@ -188,7 +188,7 @@ wxBoxSizer* BladeArrayDlg::createBladeArraysRight(wxStaticBoxSizer* parent) {
 
 wxStaticBoxSizer* BladeArrayDlg::createIDSetup(wxWindow* parent) {
   wxStaticBoxSizer* setupSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Blade ID Setup");
-  mode = new pcComboBox(setupSizer->GetStaticBox(), ID_BladeIDMode, "Blade ID Mode", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ BLADE_ID_MODE_SNAPSHOT, BLADE_ID_MODE_EXTERNAL, BLADE_ID_MODE_BRIDGED }), wxCB_READONLY);
+  mode = new pcChoice(setupSizer->GetStaticBox(), ID_BladeIDMode, "Blade ID Mode", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ BLADE_ID_MODE_SNAPSHOT, BLADE_ID_MODE_EXTERNAL, BLADE_ID_MODE_BRIDGED }), wxCB_READONLY);
   IDPin = new pcTextCtrl(setupSizer->GetStaticBox(), wxID_ANY, "Blade ID Pin");
 
   pullupResistance = new pcSpinCtrl(setupSizer->GetStaticBox(), wxID_ANY, "Pullup Resistance", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 20000, 50000, 30000);
@@ -296,13 +296,13 @@ void BladeArrayDlg::update() {
   arrayName->entry()->ChangeValue(bladeArrays.at(lastArraySelection).name);
   resistanceID->entry()->SetValue(bladeArrays.at(lastArraySelection).value);
 
-  if (mode->entry()->GetValue() == BLADE_ID_MODE_SNAPSHOT) {
+  if (mode->GetValue() == BLADE_ID_MODE_SNAPSHOT) {
     pullupResistance->Show(false);
     pullupPin->Show(false);
-  } else if (mode->entry()->GetValue() == BLADE_ID_MODE_BRIDGED) {
+  } else if (mode->GetValue() == BLADE_ID_MODE_BRIDGED) {
     pullupResistance->Show(false);
     pullupPin->Show(true);
-  } else if (mode->entry()->GetValue() == BLADE_ID_MODE_EXTERNAL) {
+  } else if (mode->GetValue() == BLADE_ID_MODE_EXTERNAL) {
     pullupPin->Show(false);
     pullupResistance->Show(true);
   }

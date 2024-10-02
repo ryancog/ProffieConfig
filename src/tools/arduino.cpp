@@ -21,6 +21,8 @@
 #include <termios.h>
 #endif
 
+using namespace std::chrono_literals;
+
 namespace Arduino {
     FILE *CLI(const wxString& command);
 
@@ -146,7 +148,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
         for (const wxString& item : Arduino::getBoards()) {
             window->boardSelect->entry()->Append(item);
         }
-        window->boardSelect->entry()->SetValue(lastSel);
+        window->boardSelect->SetValue(lastSel);
         if (window->boardSelect->entry()->GetSelection() == -1) {
             window->boardSelect->entry()->SetSelection(0);
             progDialog->emitEvent(100, "Error!");
@@ -374,7 +376,7 @@ bool Arduino::upload(wxString& _return, EditorWindow* editor, Progress* progDial
 
 #ifndef __WINDOWS__
     struct termios newtio;
-    auto fd = open(static_cast<MainMenu*>(editor->GetParent())->boardSelect->entry()->GetValue().data(), O_RDWR | O_NOCTTY);
+    auto fd = open(static_cast<MainMenu*>(editor->GetParent())->boardSelect->GetValue().data(), O_RDWR | O_NOCTTY);
     if (fd < 0) {
         std::cout << "err" << std::endl;
     }
@@ -396,9 +398,12 @@ bool Arduino::upload(wxString& _return, EditorWindow* editor, Progress* progDial
     fsync(fd);
     write(fd, "\r\n", 2);
     write(fd, "\r\n", 2);
-    write(fd, "RebootDFU\r\n", 12);
+    write(fd, "RebootDFU\r\n", 11);
 
+    // Ensure everything is flushed
+    std::this_thread::sleep_for(50ms);
     close(fd);
+    std::this_thread::sleep_for(5s);
 #endif
 
     FILE *arduinoCli = Arduino::CLI(uploadCommand);
