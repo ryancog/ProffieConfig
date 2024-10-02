@@ -3,8 +3,10 @@
 
 #pragma once
 
+#include <thread>
+#include <semaphore>
+
 #if !defined(__WINDOWS__)
-#include "core/utilities/threadrunner.h"
 #include "ui/pctextctrl.h"
 #endif
 
@@ -27,12 +29,9 @@ private:
       ID_SerialCommand
   };
 
-  ThreadRunner* deviceThread{nullptr};
-  ThreadRunner* listenerThread{nullptr};
-  ThreadRunner* writerThread{nullptr};
-
-  bool listenerRunning{false};
-  bool writerRunning{false};
+  std::thread devThread;
+  std::thread listenThread;
+  std::thread writerThread;
 
   pcTextCtrl* input;
   pcTextCtrl* output;

@@ -7,11 +7,11 @@
 #include "core/config/configuration.h"
 #include "core/utilities/misc.h"
 #include "core/utilities/progress.h"
-#include "core/utilities/threadrunner.h"
 #include "editor/editorwindow.h"
 #include "editor/pages/generalpage.h"
 
 #include <cstring>
+#include <thread>
 
 #ifdef __WINDOWS__
 #include <windows.h>
@@ -21,60 +21,85 @@
 #include <termios.h>
 #endif
 
-void Arduino::init(wxWindow* parent, std::function<void(bool)> callback) {
-  auto progDialog = new Progress(parent);
-  progDialog->SetTitle("Dependency Installation");
+namespace Arduino {
+    FILE *CLI(const wxString& command);
 
-  new ThreadRunner([=]() {
-    FILE* install;
-    std::string fulloutput;
-    char buffer[128];
-    
-    progDialog->emitEvent(5, "Downloading dependencies...");
-    install = Arduino::CLI("core install proffieboard:stm32l4@" ARDUINO_PBPLUGIN_VERSION " --additional-urls https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json");
-    while (fgets(buffer, 128, install) != nullptr) { progDialog->emitEvent(-1, ""); fulloutput += buffer; }
-    if (pclose(install)) {
-      progDialog->emitEvent(100, "Error");
-      std::cerr << fulloutput << std::endl;
-      return callback(false);
-    }
+    bool updateIno(wxString&, EditorWindow*);
+    bool compile(wxString&, EditorWindow*, Progress* = nullptr);
+    bool upload(wxString&, EditorWindow*, Progress* = nullptr);
+    wxString parseError(const wxString&);
+
+    wxDEFINE_EVENT(EVT_INIT_DONE, Event);
+    wxDEFINE_EVENT(EVT_APPLY_DONE, Event);
+    wxDEFINE_EVENT(EVT_VERIFY_DONE, Event);
+    wxDEFINE_EVENT(EVT_REFRESH_DONE, Event);
+    wxDEFINE_EVENT(EVT_CLEAR_BLIST, Event);
+    wxDEFINE_EVENT(EVT_APPEND_BLIST, Event);
+};
+
+void Arduino::init(wxWindow* parent) {
+    auto progDialog = new Progress(parent);
+    progDialog->SetTitle("Dependency Installation");
+
+    std::thread thread{[progDialog, parent]() {
+        auto evt{new Arduino::Event(Arduino::EVT_INIT_DONE)};
+        FILE* install;
+        std::string fulloutput;
+        char buffer[128];
+
+        progDialog->emitEvent(5, "Downloading dependencies...");
+        install = Arduino::CLI("core install proffieboard:stm32l4@" ARDUINO_PBPLUGIN_VERSION " --additional-urls https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json");
+        while (fgets(buffer, 128, install) != nullptr) { progDialog->emitEvent(-1, ""); fulloutput += buffer; }
+        if (pclose(install)) {
+            progDialog->emitEvent(100, "Error");
+            std::cerr << fulloutput << std::endl;
+            evt->succeeded = false;
+            wxQueueEvent(parent, evt);
+            return;
+        }
 
 #   ifndef __WXOSX__
-    progDialog->emitEvent(60, "Installing drivers...");
-    install = DRIVER_INSTALL;
-    while (fgets(buffer, 128, install) != nullptr) { progDialog->emitEvent(-1, ""); fulloutput += buffer; }
-    if (pclose(install)) {
-      progDialog->emitEvent(100, "Error");
-      std::cerr << fulloutput << std::endl;
-      return callback(false);
-    }
+        progDialog->emitEvent(60, "Installing drivers...");
+        install = DRIVER_INSTALL;
+        while (fgets(buffer, 128, install) != nullptr) { progDialog->emitEvent(-1, ""); fulloutput += buffer; }
+        if (pclose(install)) {
+            progDialog->emitEvent(100, "Error");
+            std::cerr << fulloutput << std::endl;
+            wxQueueEvent(parent, evt);
+            return;
+        }
 #   endif
 
-    progDialog->emitEvent(100, "Done.");
-    return callback(true);
-  });
+        progDialog->emitEvent(100, "Done.");
+        evt->succeeded = true;
+        wxQueueEvent(parent, evt);
+    }}; // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
+    thread.detach();
 }
 
-void Arduino::refreshBoards(MainMenu* window, std::function<void(bool)> callback) {
-  auto progDialog = new Progress(window);
-  progDialog->SetTitle("Device Update");
-  
-  new ThreadRunner([=]() {
-    progDialog->emitEvent(0, "Initializing...");
-    wxString lastSel = window->boardSelect->entry()->GetStringSelection();
-    window->boardSelect->entry()->Clear();
-    progDialog->emitEvent(20, "Fetching Devices...");
-    for (const wxString& item : Arduino::getBoards()) {
-      window->boardSelect->entry()->Append(item);
-    }
-    
-    window->boardSelect->entry()->SetValue(lastSel);
-    if (window->boardSelect->entry()->GetSelection() == -1) window->boardSelect->entry()->SetSelection(0);
+void Arduino::refreshBoards(MainMenu* window) {
+    auto progDialog = new Progress(window);
+    progDialog->SetTitle("Device Update");
 
-    progDialog->emitEvent(100, "Done.");
-    return callback(true);
-  });
+    auto lastSelection{window->boardSelect->entry()->GetStringSelection()};
+    std::thread thread([=]() {
+        progDialog->emitEvent(0, "Initializing...");
+        wxQueueEvent(window, new Event(EVT_CLEAR_BLIST)); // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
+        progDialog->emitEvent(20, "Fetching Devices...");
+        for (const wxString& item : Arduino::getBoards()) {
+            auto evt{new Event(EVT_APPEND_BLIST)};
+            evt->str = item.ToStdString();
+            wxQueueEvent(window, evt);
+        }
+
+        auto evt{new Event(EVT_REFRESH_DONE)};
+        evt->str = lastSelection.ToStdString();
+        wxQueueEvent(window, evt);
+        progDialog->emitEvent(100, "Done.");
+    });
+    thread.detach();
 }
+
 std::vector<wxString> Arduino::getBoards() {
   std::vector<wxString> boards{"Select Board..."};
   char buffer[1024];
@@ -105,157 +130,170 @@ std::vector<wxString> Arduino::getBoards() {
   return boards;
 }
 
-void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor, std::function<void(bool)> callback) {
-  auto progDialog = new Progress(window);
-  progDialog->SetTitle("Applying Changes");
-  
-  new ThreadRunner([=]() {
-    wxString returnVal;
+void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
+    auto progDialog = new Progress(window);
+    progDialog->SetTitle("Applying Changes");
 
-    progDialog->emitEvent(0, "Initializing...");
+    std::thread thread{[=]() {
+        auto *evt{new Event(EVT_APPLY_DONE)};
+        wxString returnVal;
 
-    progDialog->emitEvent(10, "Checking board presence...");
-    wxString lastSel = window->boardSelect->entry()->GetStringSelection();
-    window->boardSelect->entry()->Clear();
-    for (const wxString& item : Arduino::getBoards()) {
-      window->boardSelect->entry()->Append(item);
-    }
-    window->boardSelect->entry()->SetValue(lastSel);
-    if (window->boardSelect->entry()->GetSelection() == -1) {
-      window->boardSelect->entry()->SetSelection(0);
-      progDialog->emitEvent(100, "Error!");
-      Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "Please make sure your board is connected and selected, then try again!", "Board Selection Error", wxOK | wxICON_ERROR);
-      wxQueueEvent(window->GetEventHandler(), msg);
-      return callback(false);
-    }
+        progDialog->emitEvent(0, "Initializing...");
 
-    progDialog->emitEvent(20, "Generating configuration file...");
-    if (!Configuration::outputConfig(editor)) {
-      progDialog->emitEvent(100, "Error");
-      // NO message here because outputConfig will handle it.
-      return callback(false);
-    }
+        progDialog->emitEvent(10, "Checking board presence...");
+        wxString lastSel = window->boardSelect->entry()->GetStringSelection();
+        window->boardSelect->entry()->Clear();
+        for (const wxString& item : Arduino::getBoards()) {
+            window->boardSelect->entry()->Append(item);
+        }
+        window->boardSelect->entry()->SetValue(lastSel);
+        if (window->boardSelect->entry()->GetSelection() == -1) {
+            window->boardSelect->entry()->SetSelection(0);
+            progDialog->emitEvent(100, "Error!");
+            Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "Please make sure your board is connected and selected, then try again!", "Board Selection Error", wxOK | wxICON_ERROR);
+            wxQueueEvent(window, msg);
+            wxQueueEvent(window, evt);
+            return;
+        }
 
-    progDialog->emitEvent(30, "Updating ProffieOS file...");
-    if (!Arduino::updateIno(returnVal, editor)) {
-      progDialog->emitEvent(100, "Error");
-      Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while updating ProffieOS file:\n\n" + returnVal, "Files Error");
-      wxQueueEvent(window->GetEventHandler(), msg);
-      return callback(false);
-    }
+        progDialog->emitEvent(20, "Generating configuration file...");
+        if (!Configuration::outputConfig(editor)) {
+            progDialog->emitEvent(100, "Error");
+            // NO message here because outputConfig will handle it.
+            wxQueueEvent(window, evt);
+            return;
+        }
 
-    progDialog->emitEvent(40, "Compiling ProffieOS...");
-    if (!Arduino::compile(returnVal, editor)) {
-      progDialog->emitEvent(100, "Error");
-      Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while compiling:\n\n" + returnVal, "Compile Error");
-      wxQueueEvent(window->GetEventHandler(), msg);
-      return callback(false);
-    }
+        progDialog->emitEvent(30, "Updating ProffieOS file...");
+        if (!Arduino::updateIno(returnVal, editor)) {
+            progDialog->emitEvent(100, "Error");
+            Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while updating ProffieOS file:\n\n" + returnVal, "Files Error");
+            wxQueueEvent(window, msg);
+            wxQueueEvent(window, evt);
+            return;
+        }
+
+        progDialog->emitEvent(40, "Compiling ProffieOS...");
+        if (!Arduino::compile(returnVal, editor)) {
+            progDialog->emitEvent(100, "Error");
+            Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while compiling:\n\n" + returnVal, "Compile Error");
+            wxQueueEvent(window, msg);
+            wxQueueEvent(window, evt);
+            return;
+        }
 
 #   ifdef __WINDOWS__
-    if (window->boardSelect->entry()->GetStringSelection() != "BOOTLOADER RECOVERY") {
-      progDialog->emitEvent(50, "Rebooting Proffieboard...");
-      
-      auto serialHandle = CreateFileW(window->boardSelect->entry()->GetStringSelection().ToStdWstring().c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-      if (serialHandle != INVALID_HANDLE_VALUE) {
-        DCB dcbSerialParameters = {};
-        dcbSerialParameters.DCBlength = sizeof(dcbSerialParameters);
+        if (window->boardSelect->entry()->GetStringSelection() != "BOOTLOADER RECOVERY") {
+            progDialog->emitEvent(50, "Rebooting Proffieboard...");
 
-        dcbSerialParameters.BaudRate = CBR_115200;
-        dcbSerialParameters.ByteSize = 8;
-        dcbSerialParameters.StopBits = ONESTOPBIT;
-        dcbSerialParameters.Parity = NOPARITY;
-        dcbSerialParameters.fRtsControl = RTS_CONTROL_ENABLE;
-        dcbSerialParameters.fDtrControl = DTR_CONTROL_ENABLE;
+            auto serialHandle = CreateFileW(window->boardSelect->entry()->GetStringSelection().ToStdWstring().c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+            if (serialHandle != INVALID_HANDLE_VALUE) {
+                DCB dcbSerialParameters = {};
+                dcbSerialParameters.DCBlength = sizeof(dcbSerialParameters);
 
-        SetCommState(serialHandle, &dcbSerialParameters);
+                dcbSerialParameters.BaudRate = CBR_115200;
+                dcbSerialParameters.ByteSize = 8;
+                dcbSerialParameters.StopBits = ONESTOPBIT;
+                dcbSerialParameters.Parity = NOPARITY;
+                dcbSerialParameters.fRtsControl = RTS_CONTROL_ENABLE;
+                dcbSerialParameters.fDtrControl = DTR_CONTROL_ENABLE;
 
-        DWORD bytesHandled;
-        const char* rebootCommand = "RebootDFU\r\n";
-        WriteFile(serialHandle, rebootCommand, strlen(rebootCommand),  &bytesHandled, nullptr);
+                SetCommState(serialHandle, &dcbSerialParameters);
 
-        CloseHandle(serialHandle);
-        Sleep(5000);
-      }
-    }
+                DWORD bytesHandled;
+                const char* rebootCommand = "RebootDFU\r\n";
+                WriteFile(serialHandle, rebootCommand, strlen(rebootCommand),  &bytesHandled, nullptr);
+
+                CloseHandle(serialHandle);
+                Sleep(5000);
+            }
+        }
 #   endif
 
-    progDialog->emitEvent(65, "Uploading to ProffieBoard...");
+        progDialog->emitEvent(65, "Uploading to ProffieBoard...");
 #   ifdef __WINDOWS__
-    std::string commandString = R"(title ProffieConfig Worker & resources\windowmode -title "ProffieConfig Worker" -mode force_minimized & )";
-    commandString += (returnVal.substr(returnVal.find("|") + 1) + R"( 0x1209 0x6668 )" + returnVal.substr(0, returnVal.find("|")) + R"( 2>&1)").ToStdString();
-    std::cerr << "UploadCommandString: " << commandString << std::endl;
+        std::string commandString = R"(title ProffieConfig Worker & resources\windowmode -title "ProffieConfig Worker" -mode force_minimized & )";
+        commandString += (returnVal.substr(returnVal.find("|") + 1) + R"( 0x1209 0x6668 )" + returnVal.substr(0, returnVal.find("|")) + R"( 2>&1)").ToStdString();
+        std::cerr << "UploadCommandString: " << commandString << std::endl;
 
-    auto upload = popen(commandString.c_str(), "r");
-    char buffer[128];
-    std::string error{};
-    while (fgets(buffer, sizeof(buffer), upload) != nullptr) {
-      progDialog->emitEvent(-1, "");
-      error += buffer;
-    }
+        auto upload = popen(commandString.c_str(), "r");
+        char buffer[128];
+        std::string error{};
+        while (fgets(buffer, sizeof(buffer), upload) != nullptr) {
+            progDialog->emitEvent(-1, "");
+            error += buffer;
+        }
 
-    if (error.find("File downloaded successfully") == std::string::npos) {
-      progDialog->emitEvent(100, "Error");
-      Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while uploading:\n\n" + Arduino::parseError(error), "Upload Error");
-      wxQueueEvent(window->GetEventHandler(), msg);
-      return callback(false);
-    }
+        if (error.find("File downloaded successfully") == std::string::npos) {
+            progDialog->emitEvent(100, "Error");
+            Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while uploading:\n\n" + Arduino::parseError(error), "Upload Error");
+            wxQueueEvent(window, msg);
+            wxQueueEvent(window, evt);
+            return;
+        }
 
 #   else
-    if (!Arduino::upload(returnVal, editor)) {
-      progDialog->emitEvent(100, "Error");
-      Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while uploading:\n\n" + returnVal, "Upload Error");
-      wxQueueEvent(window->GetEventHandler(), msg);
-      return callback(false);
-    }
+        if (!Arduino::upload(returnVal, editor)) {
+            progDialog->emitEvent(100, "Error");
+            Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while uploading:\n\n" + returnVal, "Upload Error");
+            wxQueueEvent(window, msg);
+            wxQueueEvent(window, evt);
+            return;
+        }
 #   endif
 
-    progDialog->emitEvent(100, "Done.");
+        progDialog->emitEvent(100, "Done.");
 
-    Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "Changes Successfully Applied to ProffieBoard!", "Apply Changes to Board", wxOK | wxICON_INFORMATION);
-    wxQueueEvent(window->GetEventHandler(), msg);
-
-    return callback(true);
-  });
+        Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "Changes Successfully Applied to ProffieBoard!", "Apply Changes to Board", wxOK | wxICON_INFORMATION);
+        wxQueueEvent(window, msg);
+        evt->succeeded = true;
+        wxQueueEvent(window, evt);
+    }};
+    thread.detach();
 }
-void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor, std::function<void(bool)> callback) {
-  auto progDialog = new Progress(parent);
-  progDialog->SetTitle("Verify Config");
-  
-  new ThreadRunner([=]() {
-    wxString returnVal;
+void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
+    auto progDialog = new Progress(parent);
+    progDialog->SetTitle("Verify Config");
 
-    progDialog->emitEvent(20, "Generating configuration file...");
-    if (!Configuration::outputConfig(editor)) {
-      progDialog->emitEvent(100, "Error");
-      // Outputconfig will handle error message
-      return callback(false);
-    }
+    std::thread thread{[=]() {
+        auto *evt{new Event(EVT_VERIFY_DONE)};
+        wxString returnVal;
 
-    progDialog->emitEvent(30, "Updating ProffieOS file...");
-    if (!Arduino::updateIno(returnVal, editor)) {
-      progDialog->emitEvent(100, "Error");
-      Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while updating ProffieOS file:\n\n"
-                       + returnVal, "Files Error");
-      wxQueueEvent(parent->GetEventHandler(), msg);
-      return callback(false);
-    }
+        progDialog->emitEvent(20, "Generating configuration file...");
+        if (!Configuration::outputConfig(editor)) {
+            progDialog->emitEvent(100, "Error");
+            // Outputconfig will handle error message
+            wxQueueEvent(parent, evt);
+            return; // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
+        }
 
-    progDialog->emitEvent(40, "Compiling ProffieOS...");
-    if (!Arduino::compile(returnVal, editor)) {
-      progDialog->emitEvent(100, "Error");
-      Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while compiling:\n\n"
-                       + returnVal, "Compile Error");
-      wxQueueEvent(parent->GetEventHandler(), msg);
-      return callback(false);
-    }
+        progDialog->emitEvent(30, "Updating ProffieOS file...");
+        if (!Arduino::updateIno(returnVal, editor)) {
+            progDialog->emitEvent(100, "Error");
+            Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while updating ProffieOS file:\n\n"
+                               + returnVal, "Files Error");
+            wxQueueEvent(parent, msg);
+            wxQueueEvent(parent, evt);
+            return;
+        }
 
-    progDialog->emitEvent(100, "Done.");
-    Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "Config Verified Successfully!", "Verify Config", wxOK | wxICON_INFORMATION);
-    wxQueueEvent(parent->GetEventHandler(), msg);
+        progDialog->emitEvent(40, "Compiling ProffieOS...");
+        if (!Arduino::compile(returnVal, editor)) {
+            progDialog->emitEvent(100, "Error");
+            Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while compiling:\n\n"
+                               + returnVal, "Compile Error");
+            wxQueueEvent(parent, msg);
+            wxQueueEvent(parent, evt);
+            return;
+        }
 
-    return callback(true);
-  });
+        progDialog->emitEvent(100, "Done.");
+        Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "Config Verified Successfully!", "Verify Config", wxOK | wxICON_INFORMATION);
+        wxQueueEvent(parent, msg);
+        evt->succeeded = true;
+        wxQueueEvent(parent, evt);
+    }};
+    thread.detach();
 }
 
 bool Arduino::compile(wxString& _return, EditorWindow* editor, Progress* progDialog) {
