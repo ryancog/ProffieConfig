@@ -6,6 +6,7 @@
 #include "core/defines.h"
 #include "core/appstate.h"
 #include "core/utilities/misc.h"
+#include "core/utilities/progress.h"
 #include "core/config/configuration.h"
 #include "editor/editorwindow.h"
 #include "onboard/onboard.h"
@@ -48,95 +49,103 @@ MainMenu::MainMenu(wxWindow* parent) : wxFrame(parent, wxID_ANY, "ProffieConfig"
 }
 
 void MainMenu::bindEvents() {
-  Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
-    AppState::instance->saveState();
-    for (const auto& editor : editors) {
-      if (editor->IsShown() && event.CanVeto()) {
-        if (wxMessageDialog(this, "There are editors open, are you sure you want to exit?\n\nAny unsaved changes will be lost!", "Open Editor(s)", wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION).ShowModal() == wxID_NO) {
-          event.Veto();
-          return;
-        } else
-          break;
-      }
-    }
-    event.Skip();
-  });
-  Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
-  Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
-      wxMessageDialog(this, ((Misc ::MessageBoxEvent *)&event)->message, ((Misc ::MessageBoxEvent *)&event)->caption, ((Misc ::MessageBoxEvent *)&event)->style).ShowModal();
+    Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
+        AppState::instance->saveState();
+        for (const auto& editor : editors) {
+            if (editor->IsShown() && event.CanVeto()) {
+                if (wxMessageDialog(this, "There are editors open, are you sure you want to exit?\n\nAny unsaved changes will be lost!", "Open Editor(s)", wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION).ShowModal() == wxID_NO) {
+                    event.Veto();
+                    return;
+                } else
+                    break;
+            }
+        }
+        event.Skip();
+    });
+    Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
+    Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
+        wxMessageDialog(this, ((Misc ::MessageBoxEvent *)&event)->message, ((Misc ::MessageBoxEvent *)&event)->caption, ((Misc ::MessageBoxEvent *)&event)->style).ShowModal();
     }, wxID_ANY);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(); Onboard::instance = new Onboard(); }, ID_ReRunSetup);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(); Onboard::instance = new Onboard(); }, ID_ReRunSetup);
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxAboutDialogInfo aboutInfo;
         aboutInfo.SetDescription(
-            "All-in-one Proffieboard Management Utility\n"
-            "\n"
-            "ProffieOS v" PROFFIEOS_VERSION " | Arduino CLI v" ARDUINO_CLI_VERSION
-            );
+                                "All-in-one Proffieboard Management Utility\n"
+                                "\n"
+                                "ProffieOS v" PROFFIEOS_VERSION " | Arduino CLI v" ARDUINO_CLI_VERSION
+                                );
         aboutInfo.SetVersion(VERSION);
         aboutInfo.SetWebSite("https://github.com/Ryryog25/ProffieConfig/wiki/ProffieConfig");
         aboutInfo.SetCopyright("Copyright (C) 2024 Ryan Ogurek");
         aboutInfo.SetName("ProffieConfig");
         wxAboutBox(aboutInfo);
-      }, wxID_ABOUT);
+    }, wxID_ABOUT);
 
-  Bind(wxEVT_MENU, [&](wxCommandEvent &) {
-      wxMessageDialog(this, COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION).ShowModal();
+    Bind(wxEVT_MENU, [&](wxCommandEvent &) {
+        wxMessageDialog(this, COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION).ShowModal();
     },
     ID_Copyright);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/blob/master/docs"); }, ID_Docs);
-  Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/issues/new"); }, ID_Issue);
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/blob/master/docs"); }, ID_Docs);
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/issues/new"); }, ID_Issue);
 
-  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent& event) { update(); event.Skip(); });
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(this); }, ID_RefreshDev);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(this, activeEditor); }, ID_ApplyChanges);
-# if defined(__WINDOWS__)
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { SerialMonitor::instance = new SerialMonitor(this); SerialMonitor::instance->Close(true); }, ID_OpenSerial);
-# else
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(this); }, ID_OpenSerial);
-#endif
-  Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(this); }, ID_RefreshDev);
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(this, activeEditor); }, ID_ApplyChanges);
+# 	if defined(__WINDOWS__)
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { SerialMonitor::instance = new SerialMonitor(this); SerialMonitor::instance->Close(true); }, ID_OpenSerial);
+#	else
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(this); }, ID_OpenSerial);
+#	endif
+    Bind(wxEVT_COMBOBOX, [&](wxCommandEvent&) {
         if (configSelect->entry()->GetValue() == "Select Config...") {
-          activeEditor = nullptr;
-          update();
-          return;
+            activeEditor = nullptr;
+            update();
+            return;
         }
 
         for (auto editor : editors) {
-          if (configSelect->entry()->GetValue() == editor->getOpenConfig()) {
-            activeEditor = editor;
-            update();
-            return;
-          }
+            if (configSelect->entry()->GetValue() == editor->getOpenConfig()) {
+                activeEditor = editor;
+                update();
+                return;
+            }
         }
 
         auto newEditor = new EditorWindow(configSelect->entry()->GetValue().ToStdString(), this);
         if (!Configuration::readConfig(CONFIG_DIR + configSelect->entry()->GetValue().ToStdString() + ".h", newEditor)) {
-          wxMessageDialog(this, "Error reading configuration file!", "Config Error", wxOK | wxCENTER).ShowModal();
-          newEditor->Destroy();
-          AppState::instance->removeConfig(configSelect->entry()->GetValue().ToStdString());
-          update();
-          return;
+            wxMessageDialog(this, "Error reading configuration file!", "Config Error", wxOK | wxCENTER).ShowModal();
+            newEditor->Destroy();
+            AppState::instance->removeConfig(configSelect->entry()->GetValue().ToStdString());
+            update();
+            return;
         }
         activeEditor = newEditor;
         editors.push_back(newEditor);
 
         update();
-      }, ID_ConfigSelect);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { activeEditor->Show(); activeEditor->Raise(); }, ID_EditConfig);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { AddConfig(this).ShowModal(); }, ID_AddConfig);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
-      if (wxMessageDialog(this, "Are you sure you want to deleted the selected configuration?\n\nThis action cannot be undone!", "Delete Config", wxYES_NO | wxNO_DEFAULT | wxCENTER).ShowModal() == wxID_YES) {
-          activeEditor->Close(true);
-          remove((CONFIG_DIR + configSelect->entry()->GetValue().ToStdString() + ".h").c_str());
-          AppState::instance->removeConfig(configSelect->entry()->GetValue().ToStdString());
-          AppState::instance->saveState();
-          activeEditor = nullptr;
-          update();
+    }, ID_ConfigSelect);
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { activeEditor->Show(); activeEditor->Raise(); }, ID_EditConfig);
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { AddConfig(this).ShowModal(); }, ID_AddConfig);
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
+        if (wxMessageDialog(this, "Are you sure you want to deleted the selected configuration?\n\nThis action cannot be undone!", "Delete Config", wxYES_NO | wxNO_DEFAULT | wxCENTER).ShowModal() == wxID_YES) {
+            activeEditor->Close(true);
+            remove((CONFIG_DIR + configSelect->entry()->GetValue().ToStdString() + ".h").c_str());
+            AppState::instance->removeConfig(configSelect->entry()->GetValue().ToStdString());
+            AppState::instance->saveState();
+            activeEditor = nullptr;
+            update();
         }
-    },
-    ID_RemoveConfig);
+    }, ID_RemoveConfig);
+    Bind(Arduino::EVT_CLEAR_BLIST, [this](Arduino::Event&) {
+        boardSelect->entry()->Clear();
+    });
+    Bind(Arduino::EVT_APPEND_BLIST, [this](Arduino::Event& evt) {
+        boardSelect->entry()->Append(evt.str);
+    });
+    Bind(Arduino::EVT_REFRESH_DONE, [this](Arduino::Event& evt) {
+        boardSelect->entry()->SetValue(evt.str);
+        if (boardSelect->entry()->GetSelection() == -1) boardSelect->entry()->SetSelection(0);
+    });
 }
 
 void MainMenu::createTooltips() {

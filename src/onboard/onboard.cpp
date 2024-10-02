@@ -20,6 +20,7 @@
 #include "../resources/icons/icon.xpm"
 
 #include "tools/arduino.h"
+#include "core/utilities/progress.h"
 #include "core/utilities/misc.h"
 #include "core/appstate.h"
 
@@ -75,77 +76,84 @@ Onboard::~Onboard() {
 }
 
 void Onboard::bindEvents() {
-  Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent &event) {
-    if (event.CanVeto() && wxMessageDialog(this, "Are you sure you want to cancel setup?", "Exit ProffieConfig", wxYES_NO | wxNO_DEFAULT | wxCENTER).ShowModal() == wxID_NO) {
-      event.Veto();
-      return;
-    }
-    event.Skip();
-    if (!AppState::instance->firstRun)
-      MainMenu::instance = new MainMenu();
-  });
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Close(); }, ID_Cancel);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
-      if (wxMessageDialog(this,
-            "Are you sure you want to skip the Introduction?\n"
-            "\n"
-            "The introduction covers all the basics and usage of ProffieConfig.\n",
-            "Skip Introduction", wxYES_NO | wxNO_DEFAULT | wxICON_EXCLAMATION)
-            .ShowModal() == wxID_YES) {
-        wxPostEvent(GetEventHandler(), wxCommandEvent(wxEVT_BUTTON, ID_Next));
-      }
+    Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent &event) {
+        if (event.CanVeto() && wxMessageDialog(this, "Are you sure you want to cancel setup?", "Exit ProffieConfig", wxYES_NO | wxNO_DEFAULT | wxCENTER).ShowModal() == wxID_NO) {
+            event.Veto();
+            return;
+        }
+        event.Skip();
+        if (!AppState::instance->firstRun)
+            MainMenu::instance = new MainMenu();
+    });
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Close(); }, ID_Cancel);
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
+        if (wxMessageDialog(this,
+                            "Are you sure you want to skip the Introduction?\n"
+                            "\n"
+                            "The introduction covers all the basics and usage of ProffieConfig.\n",
+                            "Skip Introduction", wxYES_NO | wxNO_DEFAULT | wxICON_EXCLAMATION)
+                        .ShowModal() == wxID_YES) {
+            wxPostEvent(GetEventHandler(), wxCommandEvent(wxEVT_BUTTON, ID_Next));
+        }
     },
     ID_SkipIntro);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-      dependencyPage->completedInstall = true;
-      wxPostEvent(GetEventHandler(), wxCommandEvent(wxEVT_BUTTON, ID_Next));
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+        dependencyPage->completedInstall = true;
+        wxPostEvent(GetEventHandler(), wxCommandEvent(wxEVT_BUTTON, ID_Next));
     }, ID_SkipInstall);
-  Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
-  Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
-      wxMessageDialog(this,
-        ((Misc ::MessageBoxEvent *)&event)->message,
-        ((Misc ::MessageBoxEvent *)&event)->caption,
-        ((Misc ::MessageBoxEvent *)&event)->style)
-        .ShowModal();
+    Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
+    Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
+        wxMessageDialog(this,
+                        ((Misc ::MessageBoxEvent *)&event)->message,
+                        ((Misc ::MessageBoxEvent *)&event)->caption,
+                        ((Misc ::MessageBoxEvent *)&event)->style)
+                        .ShowModal();
     },
     wxID_ANY);
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
-      if (welcomePage->IsShown()) {
-        welcomePage->Hide();
-        dependencyPage->Show();
-      } else if (dependencyPage->IsShown()) {
-        if (!dependencyPage->completedInstall) dependencyInstall(event);
-        else {
-          dependencyPage->Hide();
-          overviewPage->Show();
-          overviewPage->prepare();
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
+        if (welcomePage->IsShown()) {
+            welcomePage->Hide();
+            dependencyPage->Show();
+        } else if (dependencyPage->IsShown()) {
+            if (!dependencyPage->completedInstall) dependencyInstall(event);
+            else {
+                dependencyPage->Hide();
+                overviewPage->Show();
+                overviewPage->prepare();
+            }
+        } else if (overviewPage->IsShown()) {
+            AppState::instance->firstRun = false;
+            AppState::instance->saveState();
+            Close(true);
         }
-      } else if (overviewPage->IsShown()) {
-        AppState::instance->firstRun = false;
-        AppState::instance->saveState();
-        Close(true);
-      }
-      update();
+        update();
     }, ID_Next);
 
-  Bind(EVT_UPDATE, [&](UpdateEvent& event) {
-      Enable();
-      dependencyPage->loadingBar->Hide();
-      dependencyPage->barPulser->Stop();
+    Bind(EVT_UPDATE, [&](UpdateEvent& event) {
+        Enable();
+        dependencyPage->loadingBar->Hide();
+        dependencyPage->barPulser->Stop();
 
-      if (event.succeeded) {
-        dependencyPage->description->Hide();
-        dependencyPage->doneMessage->Show();
-        dependencyPage->Layout();
+        if (event.succeeded) {
+            dependencyPage->description->Hide();
+            dependencyPage->doneMessage->Show();
+            dependencyPage->Layout();
 
-        dependencyPage->completedInstall = true;
-      } else {
-        dependencyPage->pressNext->Show();
-        dependencyPage->Layout();
+            dependencyPage->completedInstall = true;
+        } else {
+            dependencyPage->pressNext->Show();
+            dependencyPage->Layout();
 
-        wxMessageDialog(this, "Dependency installation failed, please try again.", "Installation Failure", wxOK | wxCENTER).ShowModal();
-      }
+            wxMessageDialog(this, "Dependency installation failed, please try again.", "Installation Failure", wxOK | wxCENTER).ShowModal();
+        }
     }, ID_DependencyInstall);
+    Bind(Arduino::EVT_INIT_DONE, [this](Arduino::Event& evt) {
+        UpdateEvent* event = new UpdateEvent(EVT_UPDATE, ID_DependencyInstall);
+        event->succeeded = evt.succeeded;
+        event->message = "";
+        event->parent = this;
+        wxQueueEvent(GetEventHandler(), event);
+    });
 }
 
 void Onboard::update() {
@@ -175,13 +183,7 @@ void Onboard::dependencyInstall(wxCommandEvent&) {
 
   dependencyPage->barPulser->Start(50);
 
-  Arduino::init(this, [&](bool succeeded) {
-    UpdateEvent* event = new UpdateEvent(EVT_UPDATE, ID_DependencyInstall);
-    event->succeeded = succeeded;
-    event->message = "";
-    event->parent = this;
-    wxQueueEvent(GetEventHandler(), event);
-  });
+  Arduino::init(this);
 }
 
 wxStaticText* Onboard::createHeader(wxWindow* parent, const wxString& text) {

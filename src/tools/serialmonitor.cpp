@@ -32,6 +32,8 @@ SerialMonitor::SerialMonitor(MainMenu* parent) {
 #include <sys/types.h>
 #include <termios.h>
 
+using namespace std::chrono_literals;
+
 SerialMonitor::SerialMonitor(MainMenu* parent) : wxFrame(parent, wxID_ANY, "Proffie Serial")
 {
   instance = this;
@@ -58,11 +60,12 @@ SerialMonitor::~SerialMonitor() {
 #elif defined(__WINDOWS__)
   CloseHandle(serHandle);
 #endif
-  if (listenerRunning) listenerThread->GetThread()->Delete();
-  if (writerRunning) writerThread->GetThread()->Delete();
-  while(listenerRunning || writerRunning) {}
 
   instance = nullptr;
+
+  if (devThread.joinable()) devThread.join();
+  if (listenThread.joinable()) listenThread.join();
+  if (writerThread.joinable()) writerThread.join();
 }
 
 wxEventTypeTag<wxCommandEvent> SerialMonitor::EVT_INPUT(wxNewEventType());
@@ -79,88 +82,78 @@ void SerialMonitor::BindEvents()
       }, wxID_ANY);
 }
 
-void SerialMonitor::OpenDevice()
-{
-  struct termios newtio;
+void SerialMonitor::OpenDevice() {
+    struct termios newtio;
 
-  fd = open(static_cast<MainMenu*>(GetParent())->boardSelect->entry()->GetValue().data(), O_RDWR | O_NOCTTY);
-  if (fd < 0) {
-    wxMessageDialog(GetParent(), "Could not connect to proffieboard.", "Serial Error", wxICON_ERROR | wxOK).ShowModal();
-    SerialMonitor::instance->Close(true);
-    return;
-  }
-
-  memset(&newtio, 0, sizeof(newtio));
-
-  newtio.c_cflag = B115200 | CRTSCTS | CS8 | CLOCAL | CREAD;
-  newtio.c_iflag = IGNPAR;
-  newtio.c_oflag = (tcflag_t) NULL;
-  newtio.c_lflag &= ~ICANON; /* unset canonical */
-  newtio.c_cc[VTIME] = 1; /* 100 millis */
-
-  tcflush(fd, TCIFLUSH);
-  tcsetattr(fd, TCSANOW, &newtio);
-
-  CreateListener();
-  CreateWriter();
-
-  deviceThread = new ThreadRunner([&]() {
-    struct stat info;
-    while (SerialMonitor::instance != nullptr) {
-      if (stat(static_cast<MainMenu*>(GetParent())->boardSelect->entry()->GetValue().data(), &info)
-          != 0) { // Check if device is still present
-        SerialDataEvent* event = new SerialDataEvent(EVT_DISCON, wxID_ANY, "");
-        wxQueueEvent(SerialMonitor::instance->GetEventHandler(), event);
-        break;
-      }
-      deviceThread->GetThread()->Sleep(50);
+    fd = open(static_cast<MainMenu*>(GetParent())->boardSelect->entry()->GetValue().data(), O_RDWR | O_NOCTTY);
+    if (fd < 0) {
+        wxMessageDialog(GetParent(), "Could not connect to proffieboard.", "Serial Error", wxICON_ERROR | wxOK).ShowModal();
+        SerialMonitor::instance->Close(true);
+        return;
     }
-  });
+
+    memset(&newtio, 0, sizeof(newtio));
+
+    newtio.c_cflag = B115200 | CRTSCTS | CS8 | CLOCAL | CREAD;
+    newtio.c_iflag = IGNPAR;
+    newtio.c_oflag = (tcflag_t) NULL;
+    newtio.c_lflag &= ~ICANON; /* unset canonical */
+    newtio.c_cc[VTIME] = 1; /* 100 millis */
+
+    tcflush(fd, TCIFLUSH);
+    tcsetattr(fd, TCSANOW, &newtio);
+
+    CreateListener();
+    CreateWriter();
+
+    devThread = std::thread{[this]() {
+        struct stat info;
+        while (SerialMonitor::instance != nullptr) {
+            if (stat(static_cast<MainMenu*>(GetParent())->boardSelect->entry()->GetValue().data(), &info) != 0) { // Check if device is still present
+                SerialDataEvent* event = new SerialDataEvent(EVT_DISCON, wxID_ANY, "");
+                wxQueueEvent(SerialMonitor::instance, event);
+                break;
+            }
+
+            std::this_thread::sleep_for(50ms);
+        }
+    }};
 }
 
-void SerialMonitor::CreateListener()
-{
-  listenerThread = new ThreadRunner([&]() {
-    listenerRunning = true;
-    int32_t res;
-    char buf[255];
+void SerialMonitor::CreateListener() {
+    listenThread = std::thread{[this]() {
+        int32_t res;
+        char buf[255];
 
-    while (!listenerThread->GetThread()->TestDestroy()) {
-      res = read(fd, buf, 255);
+        while (instance != nullptr) {
+            res = read(fd, buf, 255);
 
-      buf[res] = '\0';
-      if (res != 0) {
-        SerialDataEvent *event = new SerialDataEvent(EVT_INPUT, wxID_ANY, buf);
-        wxQueueEvent(GetEventHandler(), event);
-      }
+            buf[res] = '\0';
+            if (res != 0) {
+                SerialDataEvent *event = new SerialDataEvent(EVT_INPUT, wxID_ANY, buf);
+                wxQueueEvent(GetEventHandler(), event);
+            }
 
-      listenerThread->GetThread()->Sleep(50);
-    }
-
-    listenerRunning = false;
-  });
+            std::this_thread::sleep_for(50ms);
+        }
+    }};
 }
 
-void SerialMonitor::CreateWriter()
-{
-  writerThread = new ThreadRunner([&]() {
-    writerRunning = true;
+void SerialMonitor::CreateWriter() {
+    writerThread = std::thread{[&]() {
+        while (instance != nullptr) {
+            if (!sendOut.empty()) {
 
-    while (!writerThread->GetThread()->TestDestroy()) {
-      if (!sendOut.empty()) {
+                sendOut.resize(255);
+                sendOut.at(253) = '\r';
+                sendOut.at(254) = '\n';
 
-        sendOut.resize(255);
-        sendOut.at(253) = '\r';
-        sendOut.at(254) = '\n';
-
-        write(fd, "\r\n", 2);
-        write(fd, sendOut.data(), 255);
-      }
-      sendOut.clear();
-      writerThread->GetThread()->Sleep(50);
-    }
-
-    writerRunning = false;
-  });
+                write(fd, "\r\n", 2);
+                write(fd, sendOut.data(), 255);
+            }
+            sendOut.clear();
+            std::this_thread::sleep_for(50ms);
+        }
+    }};
 }
 #endif
