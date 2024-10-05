@@ -188,7 +188,7 @@ wxBoxSizer* BladeArrayDlg::createBladeArraysRight(wxStaticBoxSizer* parent) {
 
 wxStaticBoxSizer* BladeArrayDlg::createIDSetup(wxWindow* parent) {
   wxStaticBoxSizer* setupSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Blade ID Setup");
-  mode = new pcChoice(setupSizer->GetStaticBox(), ID_BladeIDMode, "Blade ID Mode", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ BLADE_ID_MODE_SNAPSHOT, BLADE_ID_MODE_EXTERNAL, BLADE_ID_MODE_BRIDGED }), wxCB_READONLY);
+  mode = new pcChoice(setupSizer->GetStaticBox(), ID_BladeIDMode, "Blade ID Mode", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ BLADE_ID_MODE_SNAPSHOT, BLADE_ID_MODE_EXTERNAL, BLADE_ID_MODE_BRIDGED }), 0);
   IDPin = new pcTextCtrl(setupSizer->GetStaticBox(), wxID_ANY, "Blade ID Pin");
 
   pullupResistance = new pcSpinCtrl(setupSizer->GetStaticBox(), wxID_ANY, "Pullup Resistance", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 20000, 50000, 30000);

@@ -121,7 +121,7 @@ void EditorWindow::createPages() {
   sizer = new wxBoxSizer(wxVERTICAL);
 
   wxBoxSizer* options = new wxBoxSizer(wxHORIZONTAL);
-  windowSelect = new pcChoice(this, ID_WindowSelect, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Blade Arrays", "Presets And Styles"}), wxCB_READONLY | wxCB_DROPDOWN);
+  windowSelect = new pcChoice(this, ID_WindowSelect, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Blade Arrays", "Presets And Styles"}));
   options->Add(windowSelect, wxSizerFlags(0).Border(wxALL, 10));
 
   generalPage = new GeneralPage(this);

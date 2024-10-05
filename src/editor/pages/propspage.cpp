@@ -17,7 +17,7 @@
 
 PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""), parent{static_cast<EditorWindow*>(window)} {
   auto top = new wxBoxSizer(wxHORIZONTAL);
-  propSelection = new pcChoice(GetStaticBox(), ID_PropSelect, "Prop File", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Default"}), wxCB_READONLY);
+  propSelection = new pcChoice(GetStaticBox(), ID_PropSelect, "Prop File", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Default"}), 0);
   // Two ampersands bc wxWidgets formatting
   propInfo = new wxButton(GetStaticBox(), ID_PropInfo, "Prop Description && Usage Info...");
   buttonInfo = new wxButton(GetStaticBox(), ID_Buttons, "Button Controls...");
