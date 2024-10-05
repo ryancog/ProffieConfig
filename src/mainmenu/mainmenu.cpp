@@ -76,7 +76,7 @@ void MainMenu::bindEvents() {
                                 "ProffieOS v" PROFFIEOS_VERSION " | Arduino CLI v" ARDUINO_CLI_VERSION
                                 );
         aboutInfo.SetVersion(VERSION);
-        aboutInfo.SetWebSite("https://github.com/Ryryog25/ProffieConfig/wiki/ProffieConfig");
+        aboutInfo.SetWebSite("https://proffieconfig.kafrenetrading.com");
         aboutInfo.SetCopyright("Copyright (C) 2024 Ryan Ogurek");
         aboutInfo.SetName("ProffieConfig");
         wxAboutBox(aboutInfo);
@@ -86,8 +86,8 @@ void MainMenu::bindEvents() {
         wxMessageDialog(this, COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION).ShowModal();
     },
     ID_Copyright);
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/blob/master/docs"); }, ID_Docs);
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/Ryryog25/ProffieConfig/issues/new"); }, ID_Issue);
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/ryancog/ProffieConfig/blob/master/docs"); }, ID_Docs);
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/ryancog/ProffieConfig/issues/new"); }, ID_Issue);
 
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(this); }, ID_RefreshDev);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(this, activeEditor); }, ID_ApplyChanges);
