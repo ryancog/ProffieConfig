@@ -6,6 +6,7 @@
 
 #include "ui/pcspinctrl.h"
 #include "ui/pctextctrl.h"
+#include "ui/pccombobox.h"
 #include "editor/editorwindow.h"
 
 #include <wx/textctrl.h>
@@ -66,7 +67,7 @@ public:
   wxButton* removeSubBladeButton{nullptr};
 
   pcChoice* bladeType{nullptr};
-  pcChoice* bladeDataPin{nullptr};
+  pcComboBox* bladeDataPin{nullptr};
   wxStaticText* bladePixelsLabel{nullptr};
   pcSpinCtrl* bladePixels{nullptr};
 

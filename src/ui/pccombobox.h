@@ -3,29 +3,29 @@
 
 #pragma once
 
-#include <wx/spinctrl.h>
+#include <wx/gdicmn.h>
+#include <wx/string.h>
+#include <wx/combobox.h>
 #include <wx/stattext.h>
 
-class pcSpinCtrl : public wxWindow {
+class pcComboBox : public wxWindow {
 public:
-    pcSpinCtrl(
+    pcComboBox(
         wxWindow* parent,
         int32_t id = wxID_ANY,
         const wxString& label = wxEmptyString,
-        const wxPoint& pos = wxDefaultPosition,
+        const wxPoint& position = wxDefaultPosition,
         const wxSize& size = wxDefaultSize,
-        int32_t style = wxSP_ARROW_KEYS,
-        int32_t min = 0,
-        int32_t max = 100,
-        int32_t initial = 0,
+        const wxArrayString& choices = {},
+        int32_t style = 0,
         const wxOrientation& orientation = wxVERTICAL);
 
     void SetToolTip(wxToolTip*);
 
-    wxSpinCtrl* entry() const;
-    wxStaticText* text() const;
+    wxComboBox *entry() const;
+    wxStaticText *text() const;
 
 private:
-    wxSpinCtrl* mEntry{nullptr};
-    wxStaticText* mText{nullptr};
+    wxComboBox *mEntry{nullptr};
+    wxStaticText *mText{nullptr};
 };

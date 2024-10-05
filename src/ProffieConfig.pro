@@ -53,6 +53,7 @@ SOURCES += \
     tools/arduino.cpp \
     tools/serialmonitor.cpp \
     ui/pcchoice.cpp \
+    ui/pccombobox.cpp \
     ui/pcspinctrl.cpp \
     ui/pcspinctrldouble.cpp \
     ui/pctextctrl.cpp
@@ -79,6 +80,7 @@ HEADERS += \
     tools/arduino.h \
     tools/serialmonitor.h \
     ui/pcchoice.h \
+    ui/pccombobox.h \
     ui/pcspinctrl.h \
     ui/pcspinctrldouble.h \
     ui/pctextctrl.h
