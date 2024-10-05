@@ -102,7 +102,7 @@ wxBoxSizer* PresetsPage::createPresetSelect() {
   wxBoxSizer *presetSelect = new wxBoxSizer(wxVERTICAL);
 
   wxBoxSizer* arraySizer = new wxBoxSizer(wxVERTICAL);
-  bladeArray = new pcChoice(GetStaticBox(), ID_BladeArray, "Blade Array", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ "blade_in" }), wxCB_READONLY);
+  bladeArray = new pcChoice(GetStaticBox(), ID_BladeArray, "Blade Array", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ "blade_in" }), 0);
   arraySizer->Add(bladeArray, wxSizerFlags(0).Border(wxBOTTOM, 5).Expand());
 
   auto *listSizer{new wxBoxSizer(wxHORIZONTAL)};
