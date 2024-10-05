@@ -63,7 +63,7 @@ void GeneralPage::createToolTips() {
 wxStaticBoxSizer* GeneralPage::boardSection(wxStaticBoxSizer* parent) {
   wxStaticBoxSizer* boardSetup = new wxStaticBoxSizer(wxHORIZONTAL, parent->GetStaticBox(), "Board Setup");
 
-  board = new pcChoice(boardSetup->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Configuration::Proffieboard), wxCB_READONLY);
+  board = new pcChoice(boardSetup->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Configuration::Proffieboard), 0);
   massStorage = new wxCheckBox(boardSetup->GetStaticBox(), wxID_ANY, "Enable Mass Storage");
   webUSB = new wxCheckBox(boardSetup->GetStaticBox(), wxID_ANY, "Enable WebUSB");
 

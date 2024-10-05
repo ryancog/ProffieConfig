@@ -196,7 +196,7 @@ void MainMenu::createUI() {
   headerSection->Add(new wxStaticBitmap(this, wxID_ANY, wxIcon(icon_small_xpm)), wxSizerFlags(0).Border(wxALL, 10));
 
   auto configSelectSection = new wxBoxSizer(wxHORIZONTAL);
-  configSelect = new pcChoice(this, ID_ConfigSelect, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Select Config..."}), wxCB_READONLY);
+  configSelect = new pcChoice(this, ID_ConfigSelect, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Select Config..."}), 0);
   addConfig = new wxButton(this, ID_AddConfig, "Add", wxDefaultPosition, wxSize(50, -1), wxBU_EXACTFIT);
   removeConfig = new wxButton(this, ID_RemoveConfig, "Remove", wxDefaultPosition, wxSize(75, -1), wxBU_EXACTFIT);
   removeConfig->Disable();
@@ -210,7 +210,7 @@ void MainMenu::createUI() {
 # else
   auto boardEntries = Misc::createEntries({"Select Board..."});
 # endif
-  boardSelect = new pcChoice(this, ID_DeviceSelect, "", wxDefaultPosition, wxDefaultSize, boardEntries, wxCB_READONLY);
+  boardSelect = new pcChoice(this, ID_DeviceSelect, "", wxDefaultPosition, wxDefaultSize, boardEntries, 0);
   refreshButton = new wxButton(this, ID_RefreshDev, "Refresh Boards");
   boardControls->Add(refreshButton, wxSizerFlags(0).Border(wxALL, 5));
   boardControls->Add(boardSelect, wxSizerFlags(1).Border(wxALL, 5));

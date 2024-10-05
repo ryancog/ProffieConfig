@@ -121,7 +121,7 @@ void BladesPage::createToolTips() {
 
 wxBoxSizer* BladesPage::createBladeSelect() {
   wxBoxSizer* bladeSelectSizer = new wxBoxSizer(wxVERTICAL);
-  bladeArray = new pcChoice(GetStaticBox(), ID_BladeArray, "Blade Array", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ "blade_in" }), wxCB_READONLY);
+  bladeArray = new pcChoice(GetStaticBox(), ID_BladeArray, "Blade Array", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ "blade_in" }), 0);
   bladeArrayButton = new wxButton(GetStaticBox(), ID_OpenBladeArrays, "Blade Awareness...");
   bladeSelectSizer->Add(bladeArray, TEXTITEMFLAGS.Expand());
   bladeSelectSizer->Add(bladeArrayButton, wxSizerFlags(0).Border(wxLEFT | wxRIGHT | wxTOP, 5).Expand());
@@ -163,7 +163,7 @@ wxBoxSizer* BladesPage::createBladeManager() {
 }
 wxBoxSizer* BladesPage::createBladeSetup() {
   wxBoxSizer* bladeSetup = new wxBoxSizer(wxVERTICAL);
-  bladeType = new pcChoice(GetStaticBox(), ID_BladeType, "Blade Type", wxDefaultPosition, wxDefaultSize, Misc::createEntries({BD_PIXELRGB, BD_PIXELRGBW, BD_TRISTAR, BD_QUADSTAR, BD_SINGLELED}), wxCB_READONLY);
+  bladeType = new pcChoice(GetStaticBox(), ID_BladeType, "Blade Type", wxDefaultPosition, wxDefaultSize, Misc::createEntries({BD_PIXELRGB, BD_PIXELRGBW, BD_TRISTAR, BD_QUADSTAR, BD_SINGLELED}), 0);
   powerPins = new wxCheckListBox(GetStaticBox(), ID_PowerPins, wxDefaultPosition, wxSize(200, -1), Misc::createEntries({"bladePowerPin1", "bladePowerPin2", "bladePowerPin3", "bladePowerPin4", "bladePowerPin5", "bladePowerPin6"}), wxBORDER_NONE);
   auto pinNameSizer = new wxBoxSizer(wxHORIZONTAL);
   addPowerPin = new wxButton(GetStaticBox(), ID_AddPowerPin, "+", wxDefaultPosition, wxSize(30, 20), wxBU_EXACTFIT);
@@ -180,8 +180,8 @@ wxBoxSizer* BladesPage::createBladeSetup() {
 wxBoxSizer* BladesPage::createBladeSettings() {
   wxBoxSizer* bladeSettings = new wxBoxSizer(wxVERTICAL);
   wxBoxSizer* bladeColor = new wxBoxSizer(wxVERTICAL);
-  blade3ColorOrder = new pcChoice(GetStaticBox(), wxID_ANY, "Color Order", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"BGR", "BRG", "GBR", "GRB", "RBG", "RGB"}), wxCB_READONLY);
-  blade4ColorOrder = new pcChoice(GetStaticBox(), wxID_ANY, "Color Order", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"BGRW", "BRGW", "GBRW", "GRBW", "RBGW", "RGBW", "WBGR", "WBRG", "WGBR", "WGRB", "WRBG", "WRGB"}), wxCB_READONLY);
+  blade3ColorOrder = new pcChoice(GetStaticBox(), wxID_ANY, "Color Order", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"BGR", "BRG", "GBR", "GRB", "RBG", "RGB"}), 0);
+  blade4ColorOrder = new pcChoice(GetStaticBox(), wxID_ANY, "Color Order", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"BGRW", "BRGW", "GBRW", "GRBW", "RBGW", "RGBW", "WBGR", "WBRG", "WGBR", "WGRB", "WRBG", "WRGB"}), 0);
   bladeColor->Add(blade3ColorOrder, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
   bladeColor->Add(blade4ColorOrder, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 
@@ -191,25 +191,25 @@ wxBoxSizer* BladesPage::createBladeSettings() {
   bladePixels = new pcSpinCtrl(GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0, 144, 0);
 
   wxBoxSizer* star1 = new wxBoxSizer(wxVERTICAL);
-  star1Color = new pcChoice(GetStaticBox(), wxID_ANY, "LED 1 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), wxCB_READONLY);
+  star1Color = new pcChoice(GetStaticBox(), wxID_ANY, "LED 1 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), 0);
   star1Resistance = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "Resistance (mOhms)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
   star1->Add(star1Color, MENUITEMFLAGS);
   star1->Add(star1Resistance, MENUITEMFLAGS.TripleBorder(wxLEFT).Expand());
 
   wxBoxSizer* star2 = new wxBoxSizer(wxVERTICAL);
-  star2Color = new pcChoice(GetStaticBox(), wxID_ANY, "LED 2 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), wxCB_READONLY);
+  star2Color = new pcChoice(GetStaticBox(), wxID_ANY, "LED 2 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), 0);
   star2Resistance = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "Resistance (mOhms)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
   star2->Add(star2Color, MENUITEMFLAGS);
   star2->Add(star2Resistance, MENUITEMFLAGS.TripleBorder(wxLEFT).Expand());
 
   wxBoxSizer* star3 = new wxBoxSizer(wxVERTICAL);
-  star3Color = new pcChoice(GetStaticBox(), wxID_ANY, "LED 3 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), wxCB_READONLY);
+  star3Color = new pcChoice(GetStaticBox(), wxID_ANY, "LED 3 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), 0);
   star3Resistance = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "Resistance (mOhms)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
   star3->Add(star3Color, MENUITEMFLAGS);
   star3->Add(star3Resistance, MENUITEMFLAGS.TripleBorder(wxLEFT).Expand());
 
   wxBoxSizer* star4 = new wxBoxSizer(wxVERTICAL);
-  star4Color = new pcChoice(GetStaticBox(), wxID_ANY, "LED 4 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), wxCB_READONLY);
+  star4Color = new pcChoice(GetStaticBox(), wxID_ANY, "LED 4 Color", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Red", "Green", "Blue", "Amber", "RedOrange", "White", BD_NORESISTANCE}), 0);
   star4Resistance = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "Resistance (mOhms)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
   star4->Add(star4Color, MENUITEMFLAGS);
   star4->Add(star4Resistance, MENUITEMFLAGS.TripleBorder(wxLEFT).Expand());
