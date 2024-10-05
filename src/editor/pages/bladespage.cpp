@@ -8,8 +8,8 @@
 #include "editor/dialogs/bladearraydlg.h"
 #include "core/utilities/misc.h"
 #include "core/defines.h"
-#include "wx/gdicmn.h"
 
+#include <wx/gdicmn.h>
 #include <wx/stattext.h>
 #include <wx/sizer.h>
 #include <wx/statbox.h>
@@ -186,7 +186,7 @@ wxBoxSizer* BladesPage::createBladeSettings() {
   bladeColor->Add(blade4ColorOrder, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 
   blade4UseRGB = new wxCheckBox(GetStaticBox(), wxID_ANY, "Use RGB with White");
-  bladeDataPin = new pcChoice(GetStaticBox(), wxID_ANY, "Blade Data Pin", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"bladePin", "blade2Pin", "blade3Pin", "blade4Pin"}));
+  bladeDataPin = new pcComboBox(GetStaticBox(), wxID_ANY, "Blade Data Pin", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"bladePin", "blade2Pin", "blade3Pin", "blade4Pin"}));
   bladePixelsLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Number of Pixels");
   bladePixels = new pcSpinCtrl(GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0, 144, 0);
 
