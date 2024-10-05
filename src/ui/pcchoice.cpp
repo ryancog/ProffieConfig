@@ -11,6 +11,7 @@ pcChoice::pcChoice(wxWindow* _parent, int32_t _id, const wxString& _label, const
     wxWindow(_parent, wxID_ANY),
     mEntry{new wxChoice(this, _id, _pos, _size, _choices, _style)} {
 
+    if (!_choices.empty()) mEntry->SetSelection(0);
     auto sizer = new wxBoxSizer(_orientation);
     if (!_label.empty()) {
         mText = new wxStaticText(this, wxID_ANY, _label);
