@@ -27,6 +27,7 @@ const wxArrayString Misc::createEntries(const std::vector<wxString>& list) {
   }
   return entries;
 }
+
 const wxArrayString Misc::createEntries(const std::initializer_list<wxString>& list) {
   return Misc::createEntries(static_cast<std::vector<wxString>>(list));
 }
