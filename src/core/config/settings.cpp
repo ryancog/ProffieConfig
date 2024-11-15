@@ -20,10 +20,14 @@ Settings::~Settings() {
 }
 
 void Settings::linkDefines() {
+#   define TOGGLE(tag, ...) \
+    generalDefines.emplace(parent->generalPage->OPTION_CONFIGSTRS[tag], \
+    new ProffieDefine(parent->generalPage->OPTION_CONFIGSTRS[tag], parent->generalPage->options[tag], __VA_ARGS__))
 # define ENTRY(name, ...) { name, new ProffieDefine(name, __VA_ARGS__) }
 # define CHECKER(name) [&](const ProffieDefine* name) -> bool
 # define IDSETTING(setting) parent->bladesPage->bladeArrayDlg->setting->GetValue()
 
+    TOGGLE(GeneralPage::SAVE_VOLUME, false, CHECKER(){ return true; });
   generalDefines = {
                     // General
                     ENTRY("NUM_BLADES", -1,( pcSpinCtrl*)nullptr, CHECKER(){ return true; }),

@@ -59,12 +59,12 @@ private:
 
 public:
 
-    ProffieDefine(std::string name, int32_t defaultValue, pcSpinCtrl* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
-    ProffieDefine(std::string name, double defaultValue, pcSpinCtrlDouble* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
-    ProffieDefine(std::string name, bool defaultState, wxCheckBox* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
-    ProffieDefine(std::string name, bool defaultState, wxRadioButton* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
-    ProffieDefine(std::string name, wxString defaultSelection, pcChoice* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
-    ProffieDefine(std::string name, wxString defaultEntry, pcTextCtrl* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+    ProffieDefine(std::string name, pcSpinCtrl* element, int32_t defaultValue, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+    ProffieDefine(std::string name, pcSpinCtrlDouble* element, double defaultValue, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+    ProffieDefine(std::string name, wxCheckBox* element, bool defaultState, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
+    ProffieDefine(std::string name, wxRadioButton* element, bool defaultState, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
+    ProffieDefine(std::string name, pcChoice* element, wxString defaultSelection, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+    ProffieDefine(std::string name, pcTextCtrl* element, wxString defaultEntry, std::function<bool(const ProffieDefine*)> check, bool loose = false);
 
     static std::pair<std::string, std::string> parseKey(const std::string&);
 
