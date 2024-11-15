@@ -1,0 +1,422 @@
+NAME: "Sabertrio"
+FILENAME: "saber_sabertrio_buttons.h"
+INFO: {
+	"Sabertrio Prop File (Modified Fett263)"
+	""
+	"INCOMPLETE TEST VERSION - ProffieConfig Dev"
+}
+
+SETTINGS {
+	TOGGLE("FETT263_SWING_ON") {
+		NAME: "Swing to Turn On"
+		DESCRIPTION: "To enable Swing On Ignition control (automatically enters Battle Mode, uses Fast On)"
+		DISABLE: "FETT263_SWING_ON_PREON"
+	}
+	TOGGLE("FETT263_SWING_ON_PREON") {
+		NAME: "Swing to Turn On (With Preon)"
+		DESCRIPTION: "Disables Fast On ignition for Swing On so Preon is used"
+		DISABLE: "FETT263_SWING_ON"
+	}
+	TOGGLE("FETT263_SWING_ON_NO_BM") {
+		NAME: "Swing On No Battle Mode"
+		DESCRIPTION: "To enable Swing On Ignition control but not activate Battle Mode"
+		REQUIREANY: "FETT263_SWING_ON", "FETT263_SWING_ON_PREON"
+	}
+	NUMERIC("FETT263_SWING_ON_SPEED") {
+		NAME: "Swing on Speed"
+		DESCRIPTION: "Adjust Swing Speed required for Ignition\n250 ~ 500 recommended"
+		MIN: 0
+		MAX: 1000
+		DEFAULT: 250
+		INCREMENT: 10
+		REQUIREANY: "FETT263_SWING_ON", "FETT263_SWING_ON_PREON"
+	}
+
+	TOGGLE("FETT263_STAB_ON") {
+		NAME: "Stab to Turn On"
+		DESCRIPTION: "To enable Stab On Ignition control (automatically enters Battle Mode, uses Fast On)"
+		DISABLE: "FETT263_STAB_ON_PREON"
+	}
+	TOGGLE("FETT263_STAB_ON_PREON") {
+		NAME: "Stab to Turn On (With Preon)" 
+		DESCRIPTION: "Disables Fast On ignition for Stab On so Preon is used"
+		DISABLE: "FETT263_STAB_ON"
+	}
+	TOGGLE("FETT263_STAB_ON_NO_BM") {
+		NAME: "Stab On No Battle Mode"
+		DESCRIPTION: "To enable Stab On Ignition control but not activate Battle Mode"
+		REQUIREANY: "FETT263_STAB_ON", "FETT263_STAB_ON_PREON"
+	}
+
+	TOGGLE("FETT263_THRUST_ON") {
+		NAME: "Thrust to Turn On"
+		DESCRIPTION: "To enable Thrust On Ignition control (automatically enters Battle Mode, uses Fast On)"
+		DISABLE: "FETT263_THRUST_ON_PREON"
+	}
+	TOGGLE("FETT263_THRUST_ON_PREON") {
+		NAME: "Thrust to Turn On (With Preon)"
+		DESCRIPTION: "Disables Fast On ignition for Thrust On so Preon is used"
+		DISABLE: "FETT263_THRUST_ON"
+	}
+	TOGGLE("FETT263_THRUST_ON_NO_BM") {
+		NAME: "Thrust On No Battle Mode"
+		DESCRIPTION: "To enable Thrust On Ignition control but not activate Battle Mode"
+		REQUIREANY: "FETT263_THRUST_ON", "FETT263_THRUST_ON_PREON"
+	}
+	
+	TOGGLE("FETT263_TWIST_ON") {
+		NAME: "Twist to Turn On"
+		DESCRIPTION: "To enable Twist On Ignition control (automatically enters Battle Mode, uses Fast On)"
+		DISABLE: "FETT263_TWIST_ON_PREON"
+	}
+	TOGGLE("FETT263_TWIST_ON_PREON") {
+		NAME: "Twist To Turn On (With Preon)"
+		DESCRIPTION: "Disables Fast On ignition for Twist On so Preon is used"
+		DISABLE: "FETT263_TWIST_ON"
+	}
+	TOGGLE("FETT263_TWIST_ON_NO_BM") {
+		NAME: "Twist On No Battle Mode"
+		DESCRIPTION: "To enable Twist On Ignition control but not activate Battle Mode"
+		REQUIREANY: "FETT263_TWIST_ON", "FETT263_TWIST_ON_PREON"
+	}
+
+	TOGGLE("FETT263_TWIST_OFF") {
+		NAME: "Twist to Turn Off"
+		DESCRIPTION: "To enable Twist Off Retraction control"
+		DISABLE: "FETT263_TWIST_OFF_NO_POSTOFF"
+	}
+	TOGGLE("FETT263_TWIST_OFF_NO_POSTOFF") {
+		NAME: "Twist to Turn Off (Without Post-Off)"
+		DESCRIPTION: "To enable Twist Off Retraction control, skips Postoff"
+		DISABLE: "FETT263_TWIST_OFF"
+	}
+
+	OPTION {
+		SELECTION("NO_EDIT_MODE") {
+			NAME: "No Edit Mode"
+			OUTPUT: FALSE
+		}
+		SELECTION("FETT263_EDIT_MODE_MENU") {
+			NAME: "Edit Mode"
+			DESCRIPTION: "Enable Edit Mode Menu System (Advanced on-the-fly saber controls, includes everything from Edit Settings)\nRequires ENABLE_ALL_EDIT_OPTIONS in Custom Options (General Page)"
+		}
+		SELECTION("FETT263_EDIT_SETTINGS_MENU") {
+			NAME: "Edit Settings"
+			DESCRIPTION: "Enable Edit Settings Menu (Volume, Clash Threshold, Blade Length, Gestures/Controls, Brightness)\nRequires ENABLE_ALL_EDIT_OPTIONS in Custom Options (General Page)" 
+		}
+	}
+
+
+	TOGGLE("FETT263_SAVE_CHOREOGRAPHY") {
+		NAME: "Enable Choreography"
+		DESCRIPTION: "Enables Enhanced Battle Mode with Saved Choreography"
+		DISABLE: "FETT263_SPECIAL_ABILITIES", "FETT263_SPIN_MODE"
+	}
+	
+	TOGGLE("FETT263_DUAL_MODE_SOUND") {
+		NAME: "Dual Mode Sound"
+		DESCRIPTION: "Enables odd/even out.wav ignition sound selection based on blade angle\nUp = odd number sounds, Down = even numbered sounds"
+	}
+
+	TOGGLE("FETT263_CLASH_STRENGTH_SOUND") {
+		NAME: "Clash Strength Sound"
+		DESCRIPTION: "Enables selection of clash, stab and lockup sounds based on clash strength\nLight clash = 01.wav, Hard clash = highest number.wav"
+	}
+	NUMERIC("FETT263_MAX_CLASH") {
+		NAME: "CSS Max Clash"
+		DESCRIPTION: "The value for hardest clash level to select clash sound\nRange 8 ~ 16"
+		MIN: 8
+		MAX: 16
+		DEFAULT: 16
+		REQUIRE: "FETT263_CLASH_STRENGTH_SOUND"
+	}
+
+
+	TOGGLE("FETT263_SAVE_GESTURE_OFF") {
+		NAME: "Save Gesture Off"
+		DESCRIPTION: "Save "Gesture Sleep" setting to turn gesture ignitions and retractions off on boot"
+	}
+
+	TOGGLE("FETT263_FORCE_PUSH") {
+		NAME: "Force Push"
+		DESCRIPTION: "To enable gesture controlled Force Push during Battle Mode\n(will use push.wav or force.wav if not present)"
+		DISABLE: "FETT263_FORCE_PUSH_ALWAYS_ON"
+	}
+	TOGGLE("FETT263_FORCE_PUSH_ALWAYS_ON") {
+		NAME: "Force Push Always On"
+		DESCRIPTION: "To enable gesture controlled Force Push full time\n(will use push.wav or force.wav if not present)"
+		DISABLE: "FETT263_FORCE_PUSH"
+	}
+	NUMERIC("FETT263_FORCE_PUSH_LENGTH") {
+		NAME: "Force Push Length"
+		DESCRIPTION: "Allows for adjustment to Push gesture length in millis needed to trigger Force Push\nRecommended range 1 ~ 10, 1 = shortest, easiest to trigger, 10 = longest"
+		MIN: 1
+		MAX: 10
+		DEFAULT: 5
+		REQUIREANY: "FETT263_FORCE_PUSH", "FETT263_FORCE_PUSH_ALWAYS_ON"
+	}
+
+	TOGGLE("FETT263_SPIN_MODE") {
+		NAME: "Spin Mode"
+		DESCRIPTION: "Enables toggle for "Spin" Mode which disables all clash/stab/lockup effects to allow for spinning and flourishes."
+		DISABLE: "FETT263_SAVE_CHOREOGRAPHY", "FETT263_HOLD_BUTTON_LOCKUP"
+	}
+	TOGGLE("FETT263_MOTION_WAKE_POWER_BUTTON") {
+		NAME: "Wake Motion with Power Button"
+		DESCRIPTION: "Enables a click on POWER Button to Wake Up Gestures after Motion Timeout without igniting blade.\nSaber will play boot sound and gestures will be active."
+	}
+
+	TOGGLE("FETT263_QUOTE_PLAYER_START_ON") {
+		NAME: "Quote Player Start On"
+		DESCRIPTION: "This will set Force / Quote Player to play Quote by default (if in font)"
+	}
+	TOGGLE("FETT263_RANDOMIZE_QUOTE_PLAYER") {
+		NAME: "Randomize Quote Player"
+		DESCRIPTION: "This will set Quote Player to randomly select quote.wav instead of playing sequentially"
+	}
+	TOGGLE("FETT263_CIRCULAR_VOLUME_MENU") {
+		NAME: "Circular Volume Menu"
+		DESCRIPTION: "Changes Volume Menu to Circular Control"
+	}
+	TOGGLE("FETT263_CIRCULAR_DIM_MENU") {
+		NAME: "Circular Dim Menu"
+		DESCRIPTION: "Changes Brightness Menu to Circular Control"
+	}
+
+	TOGGLE("FETT263_DISABLE_CHANGE_FONT") {
+		NAME: "Disable Change Font"
+		DESCRIPTION: "Disables the "on-the-fly" Change Font option"
+	}
+	TOGGLE("FETT263_DISABLE_CHANGE_STYLE") {
+		NAME: "Disable Change Style"
+		DESCRIPTION: "Disables the "on-the-fly" Change Style option"
+	}
+	TOGGLE("FETT263_DISABLE_COPY_PRESET") {
+		NAME: "Disable Copy Preset"
+		DESCRIPTION: "Disables the "on-the-fly" Copy Preset option"
+	}
+	TOGGLE("FETT263_DISABLE_BM_TOGGLE") {
+		NAME: "Disable Battle Mode Toggle"
+		DESCRIPTION: "Disable button control for Battle Mode, use gesture ignition or Special Abilities and/or style to toggle."
+	}
+	TOGGLE("FETT263_DISABLE_MULTI_BLAST_TOGGLE") {
+		NAME: "Disable Multi-Blast Toggle" 
+		DESCRIPTION: "Disable button control for Multi-Blast Mode, use Special Abilities and/or style to toggle."
+	}
+	TOGGLE("FETT263_DISABLE_MULTI_BLAST") {
+		NAME: "Disable Multi-Blast"
+		DESCRIPTION: "Disables "Multi-Blast" Mode"
+		DISABLE: "FETT263_DISABLE_MULTI_BLAST_TOGGLE"
+	}
+	TOGGLE("FETT263_TRACK_PLAYER_NO_PROMPTS") {
+		NAME: "Disable Track Player Prompts"
+		DESCRIPTION: "Disables spoken voice prompts in Track Player"
+	}
+	TOGGLE("FETT263_DISABLE_QUOTE_PLAYER") {
+		NAME: "Disable Quote Player"
+		DESCRIPTION: "Disables Force/Quote player, only uses Force. This will allow Quotes to be controlled by style.\nUse Special Abilities to set EFFECT_QUOTE or EFFECT_NEXT_QUOTE in style"
+		DISABLE: "FETT263_RANDOMIZE_QUOTE_PLAYER", "FETT263_QUOTE_PLAYER_START_ON"
+	}
+	TOGGLE("FETT263_HOLD_BUTTON_OFF") {
+		NAME: "Hold Button Off"
+		DESCRIPTION: "Changes to Hold PWR to turn Off / Retract"
+	}
+	TOGGLE("FETT263_HOLD_BUTTON_LOCKUP") {
+		NAME: "Hold Button Lockup"
+		DESCRIPTION: "Enables Hold AUX for Lockup\nClash Strength / Clash Impact effects and sounds for Lockup negated"
+		DISABLE: "FETT263_SAVE_CHOREOGRAPHY"
+	}
+	TOGGLE("FETT263_USE_BC_MELT_STAB") {
+		NAME: "Use BC Melt/Stab"
+		DESCRIPTION: "Allows MELT to be gesture controlled full-time, uses Thrust for Stab effect"
+	}
+	TOGGLE("FETT263_BC_SAY_BATTERY_VOLTS_PERCENT") {
+		NAME: "BC Say Battery Volts/Percent"
+		DESCRIPTION: "Spoken Battery Level in volts and percent (point down for volts, parallel or up for percent)"
+	}
+
+	TOGGLE("FETT263_QUICK_SELECT_ON_BOOT") {
+		NAME: "Preset Selection On Boot"
+		DESCRIPTION: "Enables Preset Selection Menu on Boot (when power is first applied)\nUse Dial Menu to turn to desired preset, click PWR to select or hold PWR to select and ignite"
+	}
+	TOGGLE("FETT263_SAY_COLOR_LIST") {
+		NAME: "Say Color List"
+		DESCRIPTION: "Spoken Color Names replace default sounds during Color List Mode (requires .wav files)"
+	}
+	TOGGLE("FETT263_SAY_COLOR_LIST_CC") {
+		NAME: "Say Color List CC"
+		DESCRIPTION: "Spoken Color Names replace default sounds during Color Change "CC" Color List Mode (requires .wav files)"
+	}
+	TOGGLE("FETT263_SAY_BATTERY_VOLTS") {
+		NAME: "Say Battery Volts"
+		DESCRIPTION: "Spoken Battery Level as volts during On Demand Battery Level effect (requires .wav files)"
+	}
+	TOGGLE("FETT263_SAY_BATTERY_PERCENT") {
+		NAME: "Say Battery Percent"
+		DESCRIPTION: "Spoken Battery Level as percent during On Demand Battery Level effect (requires .wav files)"
+	}
+
+	TOGGLE("FETT263_BATTLE_MODE_ALWAYS_ON") {
+		NAME: "Battle Mode Always On"
+		DESCRIPTION: "Battle Mode is always on, toggle controls deactivated\nThis will disable traditional Clash and Stab effects"
+		DISABLE: "FETT263_BATTLE_MODE_START_ON", "FETT263_SWING_ON_NO_BM", "FETT263_TWIST_ON_NO_BM", "FETT263_STAB_ON_NO_BM", "FETT263_THRUST_ON_NO_BM"
+	}
+	TOGGLE("FETT263_BATTLE_MODE_START_ON") {
+		NAME: "Battle Mode Start On"
+		DESCRIPTION: "Battle Mode is active with each ignition by default but can be toggled using Aux + Swing control"
+		DISABLE: "FETT263_BATTLE_MODE_ALWAYS_ON", "FETT263_SWING_ON_NO_BM", "FETT263_TWIST_ON_NO_BM", "FETT263_STAB_ON_NO_BM", "FETT263_THRUST_ON_NO_BM"
+	}
+	NUMERIC("FETT263_LOCKUP_DELAY") {
+		NAME: "Lockup Delay (ms)"
+		DESCRIPTION: "This is the "delay" in millis to determine Clash vs Lockup in Battle Mode"
+		MIN: 0
+		MAX: 3000
+		DEFAULT: 200
+		INCREMENT: 10
+	}
+	DECIMAL("FETT263_BM_CLASH_DETECT") {
+		NAME: "Clash Detect Threshold"
+		DESCRIPTION: "The max value to use clashes in Battle Mode 2.0, clashes used on clash strength below this value\nThis allows light clashes to produce clash effects instead of using Begin/End Lockup\n(above this value Clash is performed by quick pull away using Begin/End Lockup sounds and effect)\nRange 0 ~ 8 (note 0 will use Battle Mode 1.0 with all clashes being Begin/End Lockup)"
+		MIN: 0
+		MAX: 8
+		DEFAULT: 4
+		INCREMENT: 0.1
+	}
+	TOGGLE("FETT263_BM_DISABLE_OFF_BUTTON") {
+		NAME: "Disable Off Button"
+		DESCRIPTION: "During Battle Mode Power Button Retraction is disabled for normal 2 button control"
+	}
+
+
+	TOGGLE("FETT263_SPECIAL_ABILITIES") {
+		NAME: "Special Abilities"
+		DESCRIPTION: "This enables 8 "Special Ability" controls (style controlled), 4 while ON, 4 while OFF.\nSpecial Abilities are controlled by the style and can vary in every preset, they are "user" defined effects/capabilities."
+		DISABLE: "FETT263_SAVE_CHOREOGRAPHY", "FETT263_MULTI_PHASE"
+	}
+	TOGGLE("FETT263_MULTI_PHASE") {
+		NAME: "Multi-Phase"
+		DESCRIPTION: "This will enable a preset change while ON to create a "Multi-Phase" saber effect"
+		DISABLE: "FETT263_SPECIAL_ABILITIES"
+	}
+}
+
+LAYOUT {
+	HORIZONTAL {
+		VERTICAL("Gesture Control") {
+			VERTICAL("Swing On") {
+				OPTION("FETT263_SWING_ON")
+				OPTION("FETT263_SWING_ON_PREON")
+				OPTION("FETT263_SWING_ON_NO_BM")
+				OPTION("FETT263_SWING_ON_SPEED")
+			}
+			VERTICAL("Stab On") {
+				OPTION("FETT263_STAB_ON")
+				OPTION("FETT263_STAB_ON_PREON")
+				OPTION("FETT263_STAB_ON_NO_BM")
+			}
+			VERTICAL("Thrust On") {
+				OPTION("FETT263_THRUST_ON")
+				OPTION("FETT263_THRUST_ON_PREON")
+				OPTION("FETT263_THRUST_ON_NO_BM")
+			}
+			VERTICAL("Twist On") {
+				OPTION("FETT263_TWIST_ON")
+				OPTION("FETT263_TWIST_ON_PREON")
+				OPTION("FETT263_TWIST_ON_NO_BM")
+			}
+			VERTICAL("Twist Off") {
+				OPTION("FETT263_TWIST_OFF") 
+				OPTION("FETT263_TWIST_OFF_NO_POSTOFF")
+			}
+		}
+
+		VERTICAL {
+			HORIZONTAL("Controls") {
+				HORIZONTAL("General") {
+					VERTICAL {
+						OPTION("FETT263_USE_BC_MELT_STAB")
+						OPTION("FETT263_CIRCULAR_VOLUME_MENU")
+						OPTION("FETT263_CIRCULAR_DIM_MENU")
+						OPTION("FETT263_MOTION_WAKE_POWER_BUTTON")
+					}
+					VERTICAL {
+						OPTION("FETT263_HOLD_BUTTON_OFF")
+						OPTION("FETT263_HOLD_BUTTON_LOCKUP")
+					}
+				}
+				VERTICAL("Edit Mode") {
+					OPTION("NO_EDIT_MODE")
+					OPTION("FETT263_EDIT_MODE_MENU")
+					OPTION("FETT263_EDIT_SETTINGS_MENU")
+				}
+				VERTICAL("Interface") {
+					OPTION("FETT263_SAY_COLOR_LIST")
+					OPTION("FETT263_SAY_COLOR_LIST_CC")
+					OPTION("FETT263_SAY_BATTERY_VOLTS")
+					OPTION("FETT263_SAY_BATTERY_PERCENT")
+					OPTION("FETT263_BC_SAY_BATTERY_VOLTS_PERCENT")
+				}
+			}
+
+			HORIZONTAL("Features") {
+				VERTICAL("Force Push") {
+					OPTION("FETT263_FORCE_PUSH")
+					OPTION("FETT263_FORCE_PUSH_ALWAYS_ON")
+					OPTION("FETT263_FORCE_PUSH_LENGTH")
+				}
+				VERTICAL("Quote Player") {
+					OPTION("FETT263_DISABLE_QUOTE_PLAYER")
+					OPTION("FETT263_QUOTE_PLAYER_START_ON")
+					OPTION("FETT263_RANDOMIZE_QUOTE_PLAYER")
+				}
+				HORIZONTAL("Other") {
+					VERTICAL {
+						OPTION("FETT263_SPECIAL_ABILITIES")
+						OPTION("FETT263_MULTI_PHASE")
+						OPTION("FETT263_SPIN_MODE")
+						OPTION("FETT263_SAVE_CHOREOGRAPHY")
+					}
+					VERTICAL {
+						OPTION("FETT263_SAVE_GESTURE_OFF")
+						OPTION("FETT263_DUAL_MODE_SOUND")
+						OPTION("FETT263_QUICK_SELECT_ON_BOOT")
+						OPTION("FETT263_CLASH_STRENGTH_SOUND")
+						OPTION("FETT263_MAX_CLASH")
+					}
+				}
+			}
+
+			HORIZONTAL {
+				HORIZONTAL("Battle Mode") {
+					VERTICAL("Activation") {
+						OPTION("FETT263_BATTLE_MODE_START_ON")
+						OPTION("FETT263_BATTLE_MODE_ALWAYS_ON")
+						OPTION("FETT263_DISABLE_BM_TOGGLE")
+						OPTION("FETT263_BM_DISABLE_OFF_BUTTON")
+					}
+					VERTICAL("Lockup") {
+						OPTION("FETT263_LOCKUP_DELAY")
+						OPTION("FETT263_BM_CLASH_DETECT")
+						OPTION("FETT263_HOLD_BUTTON_LOCKUP")
+					}
+				}
+				VERTICAL("Disables") {
+					OPTION("FETT263_TRACK_PLAYER_NO_PROMPTS")
+					OPTION("FETT263_DISABLE_MULTI_BLAST")
+					OPTION("FETT263_DISABLE_MULTI_BLAST_TOGGLE")
+					OPTION("FETT263_DISABLE_CHANGE_STYLE")
+					OPTION("FETT263_DISABLE_CHANGE_FONT")
+					OPTION("FETT263_DISABLE_COPY_PRESET")
+				}
+			}
+		}
+	}
+}
+
+BUTTONS{2} {
+	STATE("Settings") {
+		BUTTON("") {
+			DESCRIPTION: "Ignite Blade                 - Press & release ACTIVATION SWITCH while blade is OFF.\n                               NOTE: If no blade or blade plug is detected, the 'no blade' sound effect will play.\nMute Mode                    - Press & hold AUXILIARY SWITCH + press & release ACTIVATION SWITCH while blade is OFF.\nRetract Blade                - Press & hold the ACTIVATION SWITCH for while blade is ON.\nBlaster Block Effect         - Press & release AUXILIARY SWITCH while blade is ON.\nBlade Lockup Effect          - Press & hold AUXILIARY SWITCH and strike blade while blade is ON.\nBlade Tip Drag Effect        - Press & hold AUXILIARY SWITCH and strike blade downwards while blade is ON.\nWall Melt Effect             - Press & hold AUXILIARY SWITCH and strike blade forward while blade is ON.\nForce Effect                 - Press & hold AUXILIARY SWITCH while blade is ON.\nForce Lightning Parry Effect - Double press & hold ACTIVATION SWITCH when blade is on.\nKyber Dial                   - Press & hold AUXILIARY SWITCH + press & release ACTIVATION SWITCH while blade is ON.\n                               THEN: Twist rotate saber to change blade color.\n                               NOTE: Press & release AUXILIARY SWITCH to select color and exit Kyber Dial.\n                               NOTE: Press & release ACTIVATION SWITCH to revert to default color and exit Kyber Dial.\nSound Bank Selection         - Press & hold AUXILIARY SWITCH while blade is OFF.\n                               NOTE: Press & release AUXILIARY SWITCH while in Sound Bank Selection to cycle to next sound font.\n                               NOTE: Press & release ACTIVATION SWITCH while in Sound Bank Selection to cycle to previous sound font.\n                               NOTE: Press & Hold ACTIVATION or AUXILIARY SWITCH while in Sound Bank Selection to select sound font.\nSettings Menu                - Press & Hold AUXILIARY SWITCH & ACTIVATION SWITCH while blade is OFF.\n                               NOTE: Press & release AUXILIARY SWITCH while in Settings Menu to cycle forward to next menu option.\n                               NOTE: Press & release ACTIVATION SWITCH while in Settings Menu to cycle backwards to previous menu option.\n                               NOTE: Press & hold ACTIVATION SWITCH while in Settings Menu to exit.\nInside Menu Option           - Press & hold AUXILARY SWITCH while in Settings Menu to enter a menu option.						\n                               NOTE: Press & release AUXILIARY SWITCH while in a menu option to increase value or enable the option.\n                               NOTE: Press & release ACTIVATION while in a menu option to decrease value or disable the option.\n                               NOTE: Press & hold AUXILIARY SWITCH while in a menu option to save setting and exit menu option.\n                               NOTE: Press & hold ACTIVATION SWITCH while in a menu option to revert setting / cancel and exit menu option.\nBattery Level Meter           - Press & release AUXILIARY SWITCH while blade is OFF.\nQuick  Gesture Toggle         - Press & hold ACTIVATION SWITCH + Twist Rotate the saber while blade is OFF.\nTrack Player                  - Press & hold ACTIVATION SWITCH + press & release AUXILIARY SWITCH."
+		}
+	}
+}
