@@ -583,13 +583,11 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
             blade.useRGBWithWhite = strstr(element.data(), "W") != nullptr;
             blade.colorType.assign(element);
 
-            uint32_t powerPinIdx{0};
             std::strtok(nullptr, "<"); // Clear PowerPINS
             while (!false) {
                 char* tempStore = std::strtok(nullptr, " ()<>,");
                 if (tempStore == nullptr) break;
-                if (powerPinIdx >= blade.powerPins.size()) break;
-                blade.powerPins[powerPinIdx++] = tempStore;
+                blade.powerPins.emplace_back(tempStore);
             }
             continue;
         }
