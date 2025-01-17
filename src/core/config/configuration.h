@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
 #pragma once
 
@@ -16,11 +16,11 @@
 class Configuration {
 public:
   Configuration(Configuration &&) = delete;
-  static bool outputConfig(EditorWindow *editorWindow);
-  static bool outputConfig(const std::string&, EditorWindow* editorWindow);
-  static bool exportConfig(EditorWindow* editorWindow);
-  static bool readConfig(const std::string&, EditorWindow* editorWindow);
-  static bool importConfig(EditorWindow* editorWindow);
+  static bool outputConfig(const EditorWindow *editorWindow);
+  static bool outputConfig(const std::string&, const EditorWindow *editorWindow);
+  static bool exportConfig(EditorWindow *editorWindow);
+  static bool readConfig(const std::string&, EditorWindow *editorWindow);
+  static bool importConfig(EditorWindow *editorWindow);
 
   typedef std::pair<const std::string, const std::string> MapPair;
   typedef std::vector<MapPair> VMap;
@@ -44,24 +44,24 @@ private:
   Configuration();
   Configuration(const Configuration&) = delete;
 
-  static bool runPreChecks(EditorWindow*);
+  static bool runPreChecks(const EditorWindow *);
 
-  static void outputConfigTop(std::ofstream&, EditorWindow*);
-  static void outputConfigTopGeneral(std::ofstream&, EditorWindow*);
-  static void outputConfigTopCustom(std::ofstream&, EditorWindow*);
-  static void outputConfigTopBladeAwareness(std::ofstream&, EditorWindow*);
-  static void outputConfigTopPropSpecific(std::ofstream&, EditorWindow*);
-  static void outputConfigTopSA22C(std::ofstream&, EditorWindow*);
-  static void outputConfigTopFett263(std::ofstream&, EditorWindow*);
-  static void outputConfigTopBC(std::ofstream&, EditorWindow*);
-  static void outputConfigTopCaiwyn(std::ofstream&, EditorWindow*);
-  static void outputConfigProp(std::ofstream&, EditorWindow*);
-  static void outputConfigPresets(std::ofstream&, EditorWindow*);
-  static void outputConfigPresetsStyles(std::ofstream&, EditorWindow*);
-  static void outputConfigPresetsBlades(std::ofstream&, EditorWindow*);
+  static void outputConfigTop(std::ofstream&, const EditorWindow *);
+  static void outputConfigTopGeneral(std::ofstream&, const EditorWindow *);
+  static void outputConfigTopCustom(std::ofstream&, const EditorWindow *);
+  static void outputConfigTopBladeAwareness(std::ofstream&, const EditorWindow *);
+  static void outputConfigTopPropSpecific(std::ofstream&, const EditorWindow *);
+  static void outputConfigTopSA22C(std::ofstream&, const EditorWindow *);
+  static void outputConfigTopFett263(std::ofstream&, const EditorWindow *);
+  static void outputConfigTopBC(std::ofstream&, const EditorWindow *);
+  static void outputConfigTopCaiwyn(std::ofstream&, const EditorWindow *);
+  static void outputConfigProp(std::ofstream&, const EditorWindow *);
+  static void outputConfigPresets(std::ofstream&, const EditorWindow *);
+  static void outputConfigPresetsStyles(std::ofstream&, const EditorWindow *);
+  static void outputConfigPresetsBlades(std::ofstream&, const EditorWindow *);
   static void genWS281X(std::ofstream&, const BladesPage::BladeConfig&);
   static void genSubBlades(std::ofstream&, const BladesPage::BladeConfig&);
-  static void outputConfigButtons(std::ofstream&, EditorWindow*);
+  static void outputConfigButtons(std::ofstream&, const EditorWindow *);
 
   static void readConfigTop(std::ifstream&, EditorWindow*);
   static void readConfigProp(std::ifstream&, EditorWindow*);

@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
 #pragma once
 
@@ -7,8 +7,9 @@
 #include <wx/string.h>
 #include <wx/combobox.h>
 #include <wx/stattext.h>
+#include <wx/sizer.h>
 
-class pcComboBox : public wxWindow {
+class pcComboBox : public wxBoxSizer {
 public:
     pcComboBox(
         wxWindow* parent,

@@ -51,13 +51,20 @@ MainMenu::MainMenu(wxWindow* parent) : wxFrame(parent, wxID_ANY, "ProffieConfig"
 void MainMenu::bindEvents() {
     Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
         AppState::instance->saveState();
-        for (const auto& editor : editors) {
-            if (editor->IsShown() && event.CanVeto()) {
-                if (wxMessageDialog(this, "There are editors open, are you sure you want to exit?\n\nAny unsaved changes will be lost!", "Open Editor(s)", wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION).ShowModal() == wxID_NO) {
+        for (const auto *editor : editors) {
+            if (not editor->isSaved() && event.CanVeto()) {
+                if (wxMessageDialog(
+                            this,
+                            "There is at least one editor open, are you sure you want to exit?\n\n"
+                            "Any unsaved changes will be lost!",
+                            "Open Editor(s)",
+                            wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION)
+                        .ShowModal() == wxID_NO) {
                     event.Veto();
                     return;
-                } else
+                } else {
                     break;
+                }
             }
         }
         event.Skip();
@@ -90,46 +97,52 @@ void MainMenu::bindEvents() {
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/ryancog/ProffieConfig/issues/new"); }, ID_Issue);
 
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(this); }, ID_RefreshDev);
-    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::applyToBoard(this, activeEditor); }, ID_ApplyChanges);
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+        auto *editor = activeEditor;
+        if (editor == nullptr) {
+            editor = generateEditor(configSelect->entry()->GetStringSelection().ToStdString());
+            if (editor == nullptr) return;
+        }
+        Arduino::applyToBoard(this, editor);
+        if (activeEditor == nullptr) editor->Destroy();
+    }, ID_ApplyChanges);
 # 	if defined(__WINDOWS__)
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { SerialMonitor::instance = new SerialMonitor(this); SerialMonitor::instance->Close(true); }, ID_OpenSerial);
 #	else
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(this); }, ID_OpenSerial);
 #	endif
     Bind(wxEVT_CHOICE, [this](wxCommandEvent&) {
+        activeEditor = nullptr;
         if (configSelect->entry()->GetStringSelection() == "Select Config...") {
-            activeEditor = nullptr;
             update();
             return;
         }
 
-        for (auto editor : editors) {
-            if (configSelect->entry()->GetStringSelection() == editor->getOpenConfig()) {
+        for (auto *editor : editors) {
+            if (configSelect->entry()->GetStringSelection() == wxString{editor->getOpenConfig()}) {
                 activeEditor = editor;
-                update();
-                return;
+                break;
             }
         }
-
-        auto newEditor = new EditorWindow(configSelect->entry()->GetStringSelection().ToStdString(), this);
-        if (!Configuration::readConfig(CONFIG_DIR + configSelect->entry()->GetStringSelection().ToStdString() + ".h", newEditor)) {
-            wxMessageDialog(this, "Error reading configuration file!", "Config Error", wxOK | wxCENTER).ShowModal();
-            newEditor->Destroy();
-            AppState::instance->removeConfig(configSelect->entry()->GetStringSelection().ToStdString());
-            update();
-            return;
-        }
-        activeEditor = newEditor;
-        editors.push_back(newEditor);
 
         update();
     }, ID_ConfigSelect);
     Bind(wxEVT_CHOICE, [this](wxCommandEvent&) { update(); }, ID_DeviceSelect);
-    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { activeEditor->Show(); activeEditor->Raise(); }, ID_EditConfig);
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+        auto *editor = activeEditor;
+        if (editor == nullptr) {
+            editor = generateEditor(configSelect->entry()->GetStringSelection().ToStdString());
+            if (editor == nullptr) return;
+            editors.emplace_back(editor);
+            activeEditor = editor;
+        }
+        editor->Show();
+        editor->Raise();
+    }, ID_EditConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { AddConfig(this).ShowModal(); }, ID_AddConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
         if (wxMessageDialog(this, "Are you sure you want to deleted the selected configuration?\n\nThis action cannot be undone!", "Delete Config", wxYES_NO | wxNO_DEFAULT | wxCENTER).ShowModal() == wxID_YES) {
-            activeEditor->Close(true);
+            if (activeEditor) activeEditor->Close(true);
             remove((CONFIG_DIR + configSelect->entry()->GetStringSelection().ToStdString() + ".h").c_str());
             AppState::instance->removeConfig(configSelect->entry()->GetStringSelection().ToStdString());
             AppState::instance->saveState();
@@ -245,14 +258,6 @@ void MainMenu::update() {
   configSelect->entry()->SetStringSelection(lastConfig);
   if (configSelect->entry()->GetSelection() == -1) configSelect->entry()->SetSelection(0);
 
-  for (auto editor = editors.begin(); editor < editors.end(); editor++) {
-    if ((*editor)->IsShown()) continue;
-    if (activeEditor != nullptr && &**editor == &*activeEditor) continue;
-
-    (*editor)->Destroy();
-    editor = --editors.erase(editor);
-  }
-
   auto configSelected = configSelect->entry()->GetStringSelection() != "Select Config...";
   auto boardSelected = boardSelect->entry()->GetStringSelection() != "Select Board...";
   auto recoverySelected = boardSelect->entry()->GetStringSelection().find("BOOTLOADER") != std::string::npos;
@@ -261,4 +266,25 @@ void MainMenu::update() {
   editConfig->Enable(configSelected);
   removeConfig->Enable(configSelected);
   openSerial->Enable(boardSelected && !recoverySelected);
+}
+
+void MainMenu::removeEditor(EditorWindow *editor) {
+    for (auto it{editors.begin()}; it != editors.end(); ++it) {
+        if (*it == editor) {
+            editors.erase(it);
+            if (activeEditor == editor) activeEditor = nullptr;
+            break;
+        }
+    }
+}
+
+EditorWindow *MainMenu::generateEditor(const std::string& configName) {
+    auto newEditor = new EditorWindow(configName, this);
+    if (not Configuration::readConfig(CONFIG_DIR + configName + ".h", newEditor)) {
+        wxMessageDialog(this, "Error reading configuration file!", "Config Error", wxOK | wxCENTER).ShowModal();
+        newEditor->Destroy();
+        AppState::instance->removeConfig(configName);
+        return nullptr;
+    }
+    return newEditor;
 }
