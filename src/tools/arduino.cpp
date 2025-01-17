@@ -436,8 +436,8 @@ bool Arduino::updateIno(wxString& _return, EditorWindow* _editor) {
   std::vector<wxString> outputData;
   while(!input.eof()) {
     getline(input, fileData);
-    if (fileData.find(R"(// #define CONFIG_FILE "config/YOUR_CONFIG_FILE_NAME_HERE.h")") != std::string::npos) outputData.push_back("#define CONFIG_FILE \"config/" + _editor->getOpenConfig() + ".h\"");
-    if (fileData.find(R"(#define CONFIG_FILE)") == 0) outputData.push_back("#define CONFIG_FILE \"config/" + _editor->getOpenConfig() + ".h\"");
+    if (fileData.find(R"(// #define CONFIG_FILE "config/YOUR_CONFIG_FILE_NAME_HERE.h")") != std::string::npos) outputData.push_back("#define CONFIG_FILE \"config/" + std::string{_editor->getOpenConfig()} + ".h\"");
+    if (fileData.find(R"(#define CONFIG_FILE)") == 0) outputData.push_back("#define CONFIG_FILE \"config/" + std::string{_editor->getOpenConfig()} + ".h\"");
     else if (fileData.find(R"(const char version[] = ")" ) != std::string::npos) outputData.push_back(R"(const char version[] = ")" PROFFIEOS_VERSION R"(";)");
     else outputData.push_back(fileData);
   }

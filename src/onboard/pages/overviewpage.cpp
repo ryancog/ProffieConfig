@@ -267,7 +267,7 @@ void Onboard::Overview::linkEditorEvents() {
                       "(Blades begin counting from 0, not 1)\n"
                       );
 
-      guideMenu->activeEditor->bladesPage->bladeArray->Disable();
+      guideMenu->activeEditor->bladesPage->bladeArray->entry()->Disable();
       guideMenu->activeEditor->bladesPage->addBladeButton->Disable();
       guideMenu->activeEditor->bladesPage->bladeArrayButton->Disable();
 
@@ -425,13 +425,12 @@ void Onboard::Overview::linkEditorEvents() {
                       "\n"
                       "First things first, create a new preset by clicking the \"+\".\n"""
                       );
-      guideMenu->activeEditor->presetsPage->bladeArray->Disable();
+      guideMenu->activeEditor->presetsPage->bladeArray->entry()->Disable();
       guideMenu->activeEditor->presetsPage->bladeList->Disable();
-      guideMenu->activeEditor->presetsPage->nameInput->Disable();
-      guideMenu->activeEditor->presetsPage->dirInput->Disable();
-      guideMenu->activeEditor->presetsPage->trackInput->Disable();
-      guideMenu->activeEditor->presetsPage->styleInput->Disable();
-
+      guideMenu->activeEditor->presetsPage->nameInput->entry()->Disable();
+      guideMenu->activeEditor->presetsPage->dirInput->entry()->Disable();
+      guideMenu->activeEditor->presetsPage->trackInput->entry()->Disable();
+      guideMenu->activeEditor->presetsPage->styleInput->entry()->Disable();
     }, EditorWindow::ID_WindowSelect);
   guideMenu->activeEditor->presetsPage->GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
         event.Skip();
@@ -459,7 +458,7 @@ void Onboard::Overview::linkEditorEvents() {
             "This name should ideally be kept short, and if you want to put "
             "some of the name\n"
             "on a new line on the OLED, you can use \"\\n\" to mean \"Enter\"");
-        guideMenu->activeEditor->presetsPage->nameInput->Enable();
+        guideMenu->activeEditor->presetsPage->nameInput->entry()->Enable();
 
         useButtonOnPage("Done", [&](wxCommandEvent& event) {
           EVENT_PAGE_SETUP;
@@ -479,7 +478,7 @@ void Onboard::Overview::linkEditorEvents() {
               "have a \"common\"\n"
               "folder, you can seperate folder names with a \";\" (e.g. "
               "folderName;common)");
-          guideMenu->activeEditor->presetsPage->dirInput->Enable();
+          guideMenu->activeEditor->presetsPage->dirInput->entry()->Enable();
 
           useButtonOnPage("Done", [&](wxCommandEvent& event) {
             EVENT_PAGE_SETUP;
@@ -502,7 +501,7 @@ void Onboard::Overview::linkEditorEvents() {
                 "see this on your computer, all track files end with .wav.\n"
                 "\n"
                 "You can leave this empty if you'd like to use no track.\n");
-            guideMenu->activeEditor->presetsPage->trackInput->Enable();
+            guideMenu->activeEditor->presetsPage->trackInput->entry()->Enable();
 
             useButtonOnPage("Done", [&](wxCommandEvent& event) {
               EVENT_PAGE_SETUP;
@@ -555,7 +554,7 @@ void Onboard::Overview::linkEditorEvents() {
                       "\n"
                       );
 
-      guideMenu->activeEditor->presetsPage->styleInput->Enable();
+      guideMenu->activeEditor->presetsPage->styleInput->entry()->Enable();
       guideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_StyleEditor, true);
 
       useButtonOnPage("Continue", [&](wxCommandEvent& event) {

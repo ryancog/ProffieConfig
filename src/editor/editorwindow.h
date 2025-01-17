@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
 #pragma once
 
@@ -18,36 +18,37 @@ class Settings;
 
 class EditorWindow : public wxFrame {
 public:
-  EditorWindow(const std::string&, wxWindow*);
-  ~EditorWindow();
+    EditorWindow(const std::string&, wxWindow*);
+    ~EditorWindow();
 
-  const std::string& getOpenConfig();
+    bool isSaved() const;
+    std::string_view getOpenConfig() const;
 
-  GeneralPage* generalPage{nullptr};
-  PropsPage* propsPage{nullptr};
-  BladesPage* bladesPage{nullptr};
-  PresetsPage* presetsPage{nullptr};
-  Settings* settings{nullptr};
+    GeneralPage* generalPage{nullptr};
+    PropsPage* propsPage{nullptr};
+    BladesPage* bladesPage{nullptr};
+    PresetsPage* presetsPage{nullptr};
+    Settings* settings{nullptr};
 
-  wxBoxSizer* sizer{nullptr};
+    wxBoxSizer* sizer{nullptr};
 
-  pcChoice* windowSelect{nullptr};
+    pcChoice* windowSelect{nullptr};
 
-  enum {
-    ID_WindowSelect,
-    ID_DUMMY, // on Win32, for some reason ID #1 is triggerred by hitting enter in pcTextCtrl? This is a workaround.
+    enum {
+        ID_WindowSelect,
+        ID_DUMMY, // on Win32, for some reason ID #1 is triggerred by hitting enter in pcTextCtrl? This is a workaround.
 
-    ID_SaveConfig,
-    ID_ExportConfig,
-    ID_VerifyConfig,
+        ID_SaveConfig,
+        ID_ExportConfig,
+        ID_VerifyConfig,
 
-    ID_StyleEditor,
-  };
+        ID_StyleEditor,
+    };
 private:
-  void bindEvents();
-  void createToolTips();
-  void createMenuBar();
-  void createPages();
+    void bindEvents();
+    void createToolTips();
+    void createMenuBar();
+    void createPages();
 
-  const std::string openConfig{};
+    const std::string openConfig{};
 };

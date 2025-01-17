@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
 #include "core/config/configuration.h"
 
@@ -26,7 +26,7 @@
   return false;
 
 
-bool Configuration::outputConfig(const std::string& filePath, EditorWindow* editor) {
+bool Configuration::outputConfig(const std::string& filePath, const EditorWindow *editor) {
   editor->presetsPage->update();
   editor->bladesPage->update();
   editor->bladesPage->bladeArrayDlg->update();
@@ -53,16 +53,19 @@ bool Configuration::outputConfig(const std::string& filePath, EditorWindow* edit
   configOutput.close();
   return true;
 }
-bool Configuration::outputConfig(EditorWindow* editor) { return Configuration::outputConfig(CONFIG_DIR + editor->getOpenConfig() + ".h", editor); }
-bool Configuration::exportConfig(EditorWindow* editor) {
-  wxFileDialog configLocation(editor, "Save ProffieOS Config File", "", editor->getOpenConfig(), "ProffieOS Configuration (*.h)|*.h", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+bool Configuration::outputConfig(const EditorWindow *editor) {
+    return Configuration::outputConfig(CONFIG_DIR + std::string(editor->getOpenConfig()) + ".h", editor);
+}
+
+bool Configuration::exportConfig(EditorWindow *editor) {
+  wxFileDialog configLocation(editor, "Save ProffieOS Config File", "", wxString{editor->getOpenConfig()}, "ProffieOS Configuration (*.h)|*.h", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
   if (configLocation.ShowModal() == wxID_CANCEL) return false; // User Closed
 
   return Configuration::outputConfig(configLocation.GetPath().ToStdString(), editor);
 }
 
-void Configuration::outputConfigTop(std::ofstream& configOutput, EditorWindow* editor) {
+void Configuration::outputConfigTop(std::ofstream& configOutput, const EditorWindow *editor) {
   configOutput << "#ifdef CONFIG_TOP" << std::endl;
   outputConfigTopGeneral(configOutput, editor);
   outputConfigTopPropSpecific(configOutput, editor);
@@ -70,7 +73,7 @@ void Configuration::outputConfigTop(std::ofstream& configOutput, EditorWindow* e
   configOutput << "#endif" << std::endl << std::endl;
 
 }
-void Configuration::outputConfigTopGeneral(std::ofstream& configOutput, EditorWindow* editor) {
+void Configuration::outputConfigTopGeneral(std::ofstream& configOutput, const EditorWindow *editor) {
   if (editor->generalPage->massStorage->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_MASS_STORAGE" << std::endl;
   if (editor->generalPage->webUSB->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_WEBUSB" << std::endl;
 
@@ -87,7 +90,7 @@ void Configuration::outputConfigTopGeneral(std::ofstream& configOutput, EditorWi
     if (define->shouldOutput()) configOutput << "#define " << define->getOutput() << std::endl;
   }
 }
-void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput, EditorWindow* editor) {
+void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput, const EditorWindow *editor) {
   auto selectedProp = editor->propsPage->getSelectedProp();
   if (selectedProp == nullptr) return;
 
@@ -102,13 +105,13 @@ void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput, Edi
     if (!output.empty()) configOutput << "#define " << output << std::endl;
   }
 }
-void Configuration::outputConfigTopCustom(std::ofstream& configOutput, EditorWindow* editor) {
+void Configuration::outputConfigTopCustom(std::ofstream& configOutput, const EditorWindow *editor) {
     for (const auto& [ name, value ] : editor->generalPage->customOptDlg->getCustomDefines()) {
         if (!name.empty()) configOutput << "#define " << name << " " << value << std::endl;
     }
 }
 
-void Configuration::outputConfigProp(std::ofstream& configOutput, EditorWindow* editor) {
+void Configuration::outputConfigProp(std::ofstream& configOutput, const EditorWindow *editor) {
   auto selectedProp = editor->propsPage->getSelectedProp();
   if (selectedProp == nullptr) return;
 
@@ -116,13 +119,13 @@ void Configuration::outputConfigProp(std::ofstream& configOutput, EditorWindow* 
   configOutput << "#include \"../props/" << selectedProp->getFileName() << "\"" << std::endl;
   configOutput << "#endif" << std:: endl << std::endl; // CONFIG_PROP
 }
-void Configuration::outputConfigPresets(std::ofstream& configOutput, EditorWindow* editor) {
+void Configuration::outputConfigPresets(std::ofstream& configOutput, const EditorWindow *editor) {
   configOutput << "#ifdef CONFIG_PRESETS" << std::endl;
   outputConfigPresetsStyles(configOutput, editor);
   outputConfigPresetsBlades(configOutput, editor);
   configOutput << "#endif" << std::endl << std::endl;
 }
-void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput, EditorWindow* editor) {
+void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput, const EditorWindow *editor) {
   for (const BladeArrayDlg::BladeArray& bladeArray : editor->bladesPage->bladeArrayDlg->bladeArrays) {
     configOutput << "Preset " << bladeArray.name << "[] = {" << std::endl;
     for (const PresetsPage::PresetConfig& preset : bladeArray.presets) {
@@ -150,7 +153,7 @@ void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput, Edito
   }
 }
 
-void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput, EditorWindow* editor) {
+void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput, const EditorWindow *editor) {
     configOutput << "BladeConfig blades[] = {" << std::endl;
     for (const BladeArrayDlg::BladeArray& bladeArray : editor->bladesPage->bladeArrayDlg->bladeArrays) {
         configOutput << "\t{ " << (bladeArray.name == "no_blade" ? "NO_BLADE" : std::to_string(bladeArray.value)) << "," << std::endl;
@@ -250,7 +253,7 @@ void Configuration::genSubBlades(std::ofstream& configOutput, const BladesPage::
     subNum++;
   }
 }
-void Configuration::outputConfigButtons(std::ofstream& configOutput, EditorWindow* editor) {
+void Configuration::outputConfigButtons(std::ofstream& configOutput, const EditorWindow *editor) {
   configOutput << "#ifdef CONFIG_BUTTONS" << std::endl;
   configOutput << "Button PowerButton(BUTTON_POWER, powerButtonPin, \"pow\");" << std::endl;
   if (editor->generalPage->buttons->entry()->GetValue() >= 2) configOutput << "Button AuxButton(BUTTON_AUX, auxPin, \"aux\");" << std::endl;
@@ -677,7 +680,7 @@ void Configuration::replaceStyles(const std::string& styleName, const std::strin
   }
 }
 
-bool Configuration::runPreChecks(EditorWindow* editor) {
+bool Configuration::runPreChecks(const EditorWindow *editor) {
     if (editor->bladesPage->bladeArrayDlg->enableDetect->GetValue() && editor->bladesPage->bladeArrayDlg->detectPin->entry()->GetValue() == "") {
         ERR("Blade Detect Pin cannot be empty.");
     }

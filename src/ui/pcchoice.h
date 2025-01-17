@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
 #pragma once
 
@@ -7,8 +7,9 @@
 #include <wx/string.h>
 #include <wx/choice.h>
 #include <wx/stattext.h>
+#include <wx/sizer.h>
 
-class pcChoice : public wxWindow {
+class pcChoice : public wxBoxSizer {
 public:
     pcChoice(
       wxWindow* parent,

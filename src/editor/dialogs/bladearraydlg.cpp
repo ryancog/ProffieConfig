@@ -19,7 +19,7 @@
 #include <wx/msgdlg.h>
 #endif
 
-BladeArrayDlg::BladeArrayDlg(EditorWindow* _parent) : wxDialog(_parent, wxID_ANY, "Blade Awareness - " + _parent->getOpenConfig(), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER), parent(_parent) {
+BladeArrayDlg::BladeArrayDlg(EditorWindow* _parent) : wxDialog(_parent, wxID_ANY, "Blade Awareness - " + wxString{_parent->getOpenConfig()}, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER), parent(_parent) {
   sizer = new wxBoxSizer(wxVERTICAL);
 
   wxBoxSizer* enableSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -268,13 +268,13 @@ void BladeArrayDlg::update() {
   if (lastArraySelection < 0 || lastArraySelection >= static_cast<int32_t>(arrayList->GetCount())) lastArraySelection = 0;
   arrayList->SetSelection(lastArraySelection);
 
-  detectPin->Enable(enableDetect->GetValue());
+  detectPin->entry()->Enable(enableDetect->GetValue());
 
   arrayList->Enable(enableID->GetValue());
-  mode->Enable(enableID->GetValue());
-  IDPin->Enable(enableID->GetValue());
-  pullupPin->Enable(enableID->GetValue());
-  pullupResistance->Enable(enableID->GetValue());
+  mode->entry()->Enable(enableID->GetValue());
+  IDPin->entry()->Enable(enableID->GetValue());
+  pullupPin->entry()->Enable(enableID->GetValue());
+  pullupResistance->entry()->Enable(enableID->GetValue());
   enablePowerForID->Enable(enableID->GetValue());
   powerPin1->Enable(enableID->GetValue() && enablePowerForID->GetValue());
   powerPin2->Enable(enableID->GetValue() && enablePowerForID->GetValue());
@@ -283,14 +283,14 @@ void BladeArrayDlg::update() {
   powerPin5->Enable(enableID->GetValue() && enablePowerForID->GetValue());
   powerPin6->Enable(enableID->GetValue() && enablePowerForID->GetValue());
   continuousScans->Enable(enableID->GetValue());
-  numIDTimes->Enable(enableID->GetValue() && continuousScans->GetValue());
-  scanIDMillis->Enable(enableID->GetValue() && continuousScans->GetValue());
+  numIDTimes->entry()->Enable(enableID->GetValue() && continuousScans->GetValue());
+  scanIDMillis->entry()->Enable(enableID->GetValue() && continuousScans->GetValue());
   addID->Enable(enableID->GetValue());
   removeID->Enable(enableID->GetValue() && lastArraySelection && !(arrayList->GetStringSelection() == "blade_in" || arrayList->GetStringSelection() == "no_blade"));
 
   bool customBladeArraySelected = bladeArrays[lastArraySelection].name != "no_blade" && bladeArrays[lastArraySelection].name != "blade_in";
-  arrayName->Enable(customBladeArraySelected);
-  resistanceID->Enable(customBladeArraySelected);
+  arrayName->entry()->Enable(customBladeArraySelected);
+  resistanceID->entry()->Enable(customBladeArraySelected);
   if (customBladeArraySelected) resistanceID->entry()->SetRange(2000, 100000);
   else resistanceID->entry()->SetRange(0, 0);
   arrayName->entry()->ChangeValue(bladeArrays.at(lastArraySelection).name);
