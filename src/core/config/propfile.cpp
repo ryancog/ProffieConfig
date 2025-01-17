@@ -48,10 +48,10 @@ void PropFile::Setting::enable(bool enable) const {
       static_cast<wxRadioButton*>(control)->Enable(enable);
       break;
     case PropFile::Setting::SettingType::NUMERIC:
-      static_cast<pcSpinCtrl*>(control)->Enable(enable);
+      static_cast<pcSpinCtrl*>(control)->entry()->Enable(enable);
       break;
     case PropFile::Setting::SettingType::DECIMAL:
-      static_cast<pcSpinCtrlDouble*>(control)->Enable(enable);
+      static_cast<pcSpinCtrlDouble*>(control)->entry()->Enable(enable);
       break;
 
   }

@@ -1,12 +1,13 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
 #pragma once
 
 #include <wx/textctrl.h>
 #include <wx/stattext.h>
+#include <wx/sizer.h>
 
-class pcTextCtrl : public wxWindow {
+class pcTextCtrl : public wxBoxSizer {
 public:
   pcTextCtrl(
     wxWindow* parent,

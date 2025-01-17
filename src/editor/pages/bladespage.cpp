@@ -382,10 +382,10 @@ void BladesPage::setEnabled() {
     removeSubBladeButton->Enable(subBladeSelect->GetCount() > 0 && BD_SUBHASSELECTION);
     addSubBladeButton->Enable(BD_ISPIXEL && BD_HASSELECTION);
 
-    bladeType->Enable(BD_HASSELECTION && BD_ISFIRST);
+    bladeType->entry()->Enable(BD_HASSELECTION && BD_ISFIRST);
     powerPins->Enable(BD_HASSELECTION && BD_ISFIRST);
     addPowerPin->Enable(BD_HASSELECTION && BD_ISFIRST && !powerPinName->entry()->IsEmpty());
-    powerPinName->Enable(BD_HASSELECTION && BD_ISFIRST);
+    powerPinName->entry()->Enable(BD_HASSELECTION && BD_ISFIRST);
 
     auto usesResistance{[](const wxString& str) -> bool {
         LED ledSel{};
@@ -399,10 +399,10 @@ void BladesPage::setEnabled() {
         return ledSel & CREE_LED;
     }};
 
-    star1Resistance->Enable(usesResistance(star1Color->entry()->GetStringSelection()));
-    star2Resistance->Enable(usesResistance(star2Color->entry()->GetStringSelection()));
-    star3Resistance->Enable(usesResistance(star3Color->entry()->GetStringSelection()));
-    star4Resistance->Enable(usesResistance(star4Color->entry()->GetStringSelection()));
+    star1Resistance->entry()->Enable(usesResistance(star1Color->entry()->GetStringSelection()));
+    star2Resistance->entry()->Enable(usesResistance(star2Color->entry()->GetStringSelection()));
+    star3Resistance->entry()->Enable(usesResistance(star3Color->entry()->GetStringSelection()));
+    star4Resistance->entry()->Enable(usesResistance(star4Color->entry()->GetStringSelection()));
 }
 void BladesPage::setVisibility(){
     blade3ColorOrder->Show(BD_ISPIXEL3 && BD_ISFIRST);
