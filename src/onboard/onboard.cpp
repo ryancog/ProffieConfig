@@ -24,18 +24,18 @@
 #include "core/utilities/misc.h"
 #include "core/appstate.h"
 
-wxEventTypeTag<Onboard::UpdateEvent> Onboard::EVT_UPDATE(wxNewEventType());
+wxEventTypeTag<Onboard::UpdateEvent> OnboardFrame::EVT_UPDATE(wxNewEventType());
 
-Onboard* Onboard::instance{nullptr};
-Onboard::Onboard() : wxFrame(nullptr, wxID_ANY, "ProffieConfig First-Time Setup", wxDefaultPosition, wxDefaultSize, wxSYSTEM_MENU | wxCLOSE_BOX | wxMINIMIZE_BOX | wxCAPTION | wxCLIP_CHILDREN) {
+OnboardFrame* OnboardFrame::instance{nullptr};
+OnboardFrame::OnboardFrame() : wxFrame(nullptr, wxID_ANY, "ProffieConfig First-Time Setup", wxDefaultPosition, wxDefaultSize, wxSYSTEM_MENU | wxCLOSE_BOX | wxMINIMIZE_BOX | wxCAPTION | wxCLIP_CHILDREN) {
   auto sizer = new wxBoxSizer(wxVERTICAL);
   auto contentSizer = new wxBoxSizer(wxHORIZONTAL);
   auto icon = new wxStaticBitmap(this, wxID_ANY, wxBitmap(icon_xpm));
   contentSizer->Add(icon, wxSizerFlags(0).Border(wxRIGHT, 10));
-  welcomePage = new Welcome(this);
-  dependencyPage = new DependencyInstall(this);
+  welcomePage = new Onboard::Welcome(this);
+  dependencyPage = new Onboard::DependencyInstall(this);
   dependencyPage->Hide();
-  overviewPage = new Overview(this);
+  overviewPage = new Onboard::Overview(this);
   overviewPage->Hide();
   contentSizer->Add(welcomePage, wxSizerFlags(1).Expand());
   contentSizer->Add(dependencyPage, wxSizerFlags(1).Expand());
@@ -71,11 +71,11 @@ Onboard::Onboard() : wxFrame(nullptr, wxID_ANY, "ProffieConfig First-Time Setup"
   CentreOnScreen();
   Show(true);
 }
-Onboard::~Onboard() {
+OnboardFrame::~OnboardFrame() {
   instance = nullptr;
 }
 
-void Onboard::bindEvents() {
+void OnboardFrame::bindEvents() {
     Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent &event) {
         if (event.CanVeto() && wxMessageDialog(this, "Are you sure you want to cancel setup?", "Exit ProffieConfig", wxYES_NO | wxNO_DEFAULT | wxCENTER).ShowModal() == wxID_NO) {
             event.Veto();
@@ -129,7 +129,7 @@ void Onboard::bindEvents() {
         update();
     }, ID_Next);
 
-    Bind(EVT_UPDATE, [&](UpdateEvent& event) {
+    Bind(EVT_UPDATE, [&](Onboard::UpdateEvent& event) {
         Enable();
         dependencyPage->loadingBar->Hide();
         dependencyPage->barPulser->Stop();
@@ -148,7 +148,7 @@ void Onboard::bindEvents() {
         }
     }, ID_DependencyInstall);
     Bind(Arduino::EVT_INIT_DONE, [this](Arduino::Event& evt) {
-        UpdateEvent* event = new UpdateEvent(EVT_UPDATE, ID_DependencyInstall);
+        auto *const event = new Onboard::UpdateEvent(EVT_UPDATE, ID_DependencyInstall);
         event->succeeded = evt.succeeded;
         event->message = "";
         event->parent = this;
@@ -156,7 +156,7 @@ void Onboard::bindEvents() {
     });
 }
 
-void Onboard::update() {
+void OnboardFrame::update() {
   if (overviewPage->IsShown()) {
     skipIntro->Show();
     skipInstall->Hide();
@@ -175,7 +175,7 @@ void Onboard::update() {
   Fit();
 }
 
-void Onboard::dependencyInstall(wxCommandEvent&) {
+void OnboardFrame::dependencyInstall(wxCommandEvent&) {
   Disable();
   dependencyPage->pressNext->Hide();
   dependencyPage->loadingBar->Show();
@@ -186,7 +186,7 @@ void Onboard::dependencyInstall(wxCommandEvent&) {
   Arduino::init(this);
 }
 
-wxStaticText* Onboard::createHeader(wxWindow* parent, const wxString& text) {
+wxStaticText* OnboardFrame::createHeader(wxWindow* parent, const wxString& text) {
   auto header = new wxStaticText(parent, wxID_ANY, text);
   auto font = header->GetFont();
   font.MakeBold();
