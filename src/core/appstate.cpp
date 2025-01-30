@@ -16,7 +16,7 @@ void AppState::init() {
   instance = new AppState();
   instance->loadStateFromFile();
 
-  if (instance->firstRun) Onboard::instance = new Onboard();
+  if (instance->firstRun) OnboardFrame::instance = new OnboardFrame();
   else MainMenu::instance = new MainMenu();
 }
 
