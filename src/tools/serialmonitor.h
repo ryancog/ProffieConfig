@@ -1,10 +1,9 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
 #pragma once
 
 #include <thread>
-#include <semaphore>
 
 #if !defined(__WINDOWS__)
 #include "ui/pctextctrl.h"
@@ -14,48 +13,51 @@
 
 class SerialMonitor : public wxFrame {
 public:
-  SerialMonitor(MainMenu*);
-  static SerialMonitor* instance;
+    SerialMonitor(MainMenu*);
+    static SerialMonitor* instance;
 
 #if !defined(__WINDOWS__)
-  ~SerialMonitor();
+    ~SerialMonitor();
 
 private:
-  class SerialDataEvent;
-  static wxEventTypeTag<wxCommandEvent> EVT_INPUT;
-  static wxEventTypeTag<wxCommandEvent> EVT_DISCON;
+    class SerialDataEvent;
+    static wxEventTypeTag<SerialDataEvent> EVT_INPUT;
+    static wxEventTypeTag<SerialDataEvent> EVT_DISCON;
 
-  enum {
-      ID_SerialCommand
-  };
+    enum {
+        ID_SerialCommand
+    };
 
-  std::thread devThread;
-  std::thread listenThread;
-  std::thread writerThread;
+    std::thread devThread;
+    std::thread listenThread;
+    std::thread writerThread;
 
-  pcTextCtrl* input;
-  pcTextCtrl* output;
+    pcTextCtrl* input;
+    pcTextCtrl* output;
 
-  int32_t fd = 0;
-  wxString sendOut;
+    int32_t fd = 0;
+    wxString sendOut;
+    std::vector<wxString> history;
+    ssize_t historyIdx{0};
+    bool autoScroll{true};
 
 
-  void BindEvents();
-  void OpenDevice();
-  void CreateListener();
-  void CreateWriter();
+    void BindEvents();
+    void OpenDevice();
+    void CreateListener();
+    void CreateWriter();
 #endif // OSX or GTK
 };
 
 #if !defined(__WINDOWS__)
 class SerialMonitor::SerialDataEvent : public wxCommandEvent {
 public:
-  SerialDataEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id, const wxString& message) {
-    this->SetEventType(tag);
-    this->SetId(id);
-    this->value = message;
-  }
+    SerialDataEvent(wxEventTypeTag<SerialDataEvent> tag, int32_t id, char chr) {
+        this->SetEventType(tag);
+        this->SetId(id);
+        this->value = chr;
+    }
 
-  wxString value;
+    char value;
 };
 #endif
