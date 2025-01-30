@@ -98,13 +98,12 @@ void MainMenu::bindEvents() {
 
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(this); }, ID_RefreshDev);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        auto *editor = activeEditor;
-        if (editor == nullptr) {
-            editor = generateEditor(configSelect->entry()->GetStringSelection().ToStdString());
-            if (editor == nullptr) return;
+        if (activeEditor == nullptr) {
+            activeEditor = generateEditor(configSelect->entry()->GetStringSelection().ToStdString());
+            if (activeEditor == nullptr) return;
+            editors.emplace_back(activeEditor);
         }
-        Arduino::applyToBoard(this, editor);
-        if (activeEditor == nullptr) editor->Destroy();
+        Arduino::applyToBoard(this, activeEditor);
     }, ID_ApplyChanges);
 # 	if defined(__WINDOWS__)
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { SerialMonitor::instance = new SerialMonitor(this); SerialMonitor::instance->Close(true); }, ID_OpenSerial);
@@ -129,15 +128,13 @@ void MainMenu::bindEvents() {
     }, ID_ConfigSelect);
     Bind(wxEVT_CHOICE, [this](wxCommandEvent&) { update(); }, ID_DeviceSelect);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        auto *editor = activeEditor;
-        if (editor == nullptr) {
-            editor = generateEditor(configSelect->entry()->GetStringSelection().ToStdString());
-            if (editor == nullptr) return;
-            editors.emplace_back(editor);
-            activeEditor = editor;
+        if (activeEditor == nullptr) {
+            activeEditor = generateEditor(configSelect->entry()->GetStringSelection().ToStdString());
+            if (activeEditor == nullptr) return;
+            editors.emplace_back(activeEditor);
         }
-        editor->Show();
-        editor->Raise();
+        activeEditor->Show();
+        activeEditor->Raise();
     }, ID_EditConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { AddConfig(this).ShowModal(); }, ID_AddConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
