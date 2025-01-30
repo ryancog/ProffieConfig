@@ -71,7 +71,7 @@ void BladeArrayDlg::bindEvents() {
         bladeArrays.insert(bladeArrays.begin() + 1, BladeArray{"no_blade", 0, {}, { BladesPage::BladeConfig{} }});
         clearBladeArray(this);
       } else {
-        if (Onboard::instance == nullptr && wxMessageDialog(parent, "Are you sure you want to disable Blade Detect?\n\n\"no_blade\" array will be deleted!", "Disable Blade Detect", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING).ShowModal() == wxID_NO) {
+          if (OnboardFrame::instance == nullptr && wxMessageDialog(parent, "Are you sure you want to disable Blade Detect?\n\n\"no_blade\" array will be deleted!", "Disable Blade Detect", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING).ShowModal() == wxID_NO) {
           enableDetect->SetValue(true);
           update();
           return;
@@ -86,7 +86,7 @@ void BladeArrayDlg::bindEvents() {
       if (enableID->GetValue()) {
 
       } else {
-        if (Onboard::instance == nullptr && wxMessageDialog(parent, "Are you sure you want to disable Blade ID?\n\nAll custom blade arrays will be deleted!", "Disable Blade ID", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING).ShowModal() == wxID_NO) {
+          if (OnboardFrame::instance == nullptr && wxMessageDialog(parent, "Are you sure you want to disable Blade ID?\n\nAll custom blade arrays will be deleted!", "Disable Blade ID", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING).ShowModal() == wxID_NO) {
           enableID->SetValue(true);
           update();
           return;

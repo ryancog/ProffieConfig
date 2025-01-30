@@ -9,6 +9,10 @@
 #include <wx/button.h>
 #include <wx/combobox.h>
 
+namespace Onboard {
+class Overview;
+}
+
 class MainMenu : public wxFrame {
 public:
     static MainMenu* instance;
@@ -51,6 +55,7 @@ public:
     };
 
 private:
+    friend Onboard::Overview;
     void createUI();
     void createMenuBar();
     void createTooltips();

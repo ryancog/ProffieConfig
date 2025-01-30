@@ -5,10 +5,10 @@
 
 #include <wx/sizer.h>
 
-Onboard::Welcome::Welcome(wxWindow* parent) : wxWindow(parent, ID_Welcome) {
+Onboard::Welcome::Welcome(wxWindow* parent) : wxWindow(parent, OnboardFrame::ID_Welcome) {
   auto sizer = new wxBoxSizer(wxVERTICAL);
 
-  auto welcomeText = createHeader(this, "Welcome to ProffieConfig " VERSION "!");
+  auto welcomeText = OnboardFrame::createHeader(this, "Welcome to ProffieConfig " VERSION "!");
 
   auto infoText = new wxStaticText(this, wxID_ANY,
                                    "ProffieConfig is an All-in-One utility for managing your Proffieboard.\n"

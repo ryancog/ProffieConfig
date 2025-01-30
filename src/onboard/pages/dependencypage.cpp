@@ -5,12 +5,12 @@
 
 #include <wx/sizer.h>
 
-Onboard::DependencyInstall::DependencyInstall(wxWindow* parent) : wxWindow(parent, ID_DependencyInstall) {
+Onboard::DependencyInstall::DependencyInstall(wxWindow* parent) : wxWindow(parent, OnboardFrame::ID_DependencyInstall) {
   auto sizer = new wxBoxSizer(wxVERTICAL);
   barPulser = new wxTimer(this);
   Bind(wxEVT_TIMER, [&](wxTimerEvent&) { loadingBar->Pulse(); });
 
-  auto title = createHeader(this, "Dependency Installation");
+  auto title = OnboardFrame::createHeader(this, "Dependency Installation");
   description = new wxStaticText(this, wxID_ANY,
                                  "In order to continue, ProffieConfig needs to do some setup.\n"
                                  "This will involve the following:\n"

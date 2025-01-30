@@ -73,7 +73,7 @@ void MainMenu::bindEvents() {
     Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
         wxMessageDialog(this, ((Misc ::MessageBoxEvent *)&event)->message, ((Misc ::MessageBoxEvent *)&event)->caption, ((Misc ::MessageBoxEvent *)&event)->style).ShowModal();
     }, wxID_ANY);
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(); Onboard::instance = new Onboard(); }, ID_ReRunSetup);
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(); OnboardFrame::instance = new OnboardFrame(); }, ID_ReRunSetup);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxAboutDialogInfo aboutInfo;

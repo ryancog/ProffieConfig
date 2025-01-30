@@ -33,7 +33,7 @@ std::vector<bool*> Onboard::Overview::eventRunTrackers{};
   if (hasRun) return; \
   hasRun = true;
 
-Onboard::Overview::Overview(wxWindow* parent) : wxWindow(parent, ID_Overview) {
+Onboard::Overview::Overview(wxWindow* parent) : wxWindow(parent, OnboardFrame::ID_Overview) {
   sizer = new wxBoxSizer(wxVERTICAL);
 
   generateNewPage("Introduction to ProffieConfig",
@@ -162,8 +162,7 @@ void Onboard::Overview::linkMainMenuEvents() {
                         "When you're done exploring, switch the page to \"Prop File\" with\n"
                         "the drop down at the top.\n"
                         );
-      mainMenuDisables[MainMenu::ID_EditConfig] = true;
-
+      guideMenu->activeEditor = guideMenu->generateEditor(guideMenu->configSelect->entry()->GetStringSelection().ToStdString());
       guideMenu->activeEditor->windowSelect->entry()->Clear();
       guideMenu->activeEditor->windowSelect->entry()->Append("General");
       guideMenu->activeEditor->windowSelect->entry()->Append("Prop File");
@@ -651,7 +650,7 @@ void Onboard::Overview::linkEditorEvents() {
                         "here any time from the menu bar under File->Re-Run First-Time Setup.\n"
                         );
         isDone = true;
-        Onboard::instance->update();
+        OnboardFrame::instance->update();
       });
 
     }, EditorWindow::ID_ExportConfig);
@@ -660,7 +659,7 @@ void Onboard::Overview::linkEditorEvents() {
 void Onboard::Overview::generateNewPage(const std::string& headerText, const std::string& bodyText) {
   sizer->Clear(true);
 
-  auto header = createHeader(this, headerText);
+  auto header = OnboardFrame::createHeader(this, headerText);
   auto body = new wxStaticText(this, wxID_ANY, bodyText, wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT);
 
   sizer->Add(header);
@@ -669,21 +668,21 @@ void Onboard::Overview::generateNewPage(const std::string& headerText, const std
 
   SetSizerAndFit(sizer);
   Layout();
-  static_cast<Onboard*>(GetParent())->Fit();
-  static_cast<Onboard*>(GetParent())->Layout();
+  static_cast<OnboardFrame*>(GetParent())->Fit();
+  static_cast<OnboardFrame*>(GetParent())->Layout();
 }
 
 void Onboard::Overview::useButtonOnPage(const std::string& buttonText, std::function<void(wxCommandEvent&)> eventFunction) {
   static decltype(eventFunction) evtFunc = nullptr;
-  auto* button = new wxButton(this, ID_PageButton, buttonText);
+  auto* button = new wxButton(this, OnboardFrame::ID_PageButton, buttonText);
   sizer->Add(button);
 
   SetSizerAndFit(sizer);
   Layout();
-  static_cast<Onboard*>(GetParent())->Fit();
-  static_cast<Onboard*>(GetParent())->Layout();
+  static_cast<OnboardFrame*>(GetParent())->Fit();
+  static_cast<OnboardFrame*>(GetParent())->Layout();
 
-  if (evtFunc) Unbind(wxEVT_BUTTON, evtFunc, ID_PageButton);
+  if (evtFunc) Unbind(wxEVT_BUTTON, evtFunc, OnboardFrame::ID_PageButton);
   evtFunc = eventFunction;
-  Bind(wxEVT_BUTTON, evtFunc, ID_PageButton);
+  Bind(wxEVT_BUTTON, evtFunc, OnboardFrame::ID_PageButton);
 }

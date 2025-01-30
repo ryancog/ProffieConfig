@@ -5,7 +5,7 @@ CONFIG -= qt
 QMAKE_CXXFLAGS += $$system(wx-config --cxxflags)
 QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
 
-VERSION = 1.6.14
+VERSION = 1.6.15
 DEFINES += VERSION=\\\"$$VERSION\\\"
 win32: DEFINES += wxMessageDialog=wxGenericMessageDialog
 win32: DEFINES += wxProgressDialog=wxGenericProgressDialog
@@ -19,6 +19,8 @@ RESOURCE.files += ../resources/StyleEditor
 RESOURCE.files += ../resources/props
 RESOURCE.path = Contents/Resources
 QMAKE_BUNDLE_DATA += RESOURCE
+QMAKE_INFO_PLIST = Info.plist.in
+QMAKE_SUBSTITUTES += Info.plist.in
 
 # Windows resource handling
 RC_ICONS = ../resources/icons/icon.ico
