@@ -444,7 +444,7 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
         STYLE_NAME,
         LINE_COMMENT,
         LONG_COMMENT,
-    } reading, prevReading;
+    } reading{NONE}, prevReading{NONE};
 
     std::string readHistory;
     std::string commentString;
