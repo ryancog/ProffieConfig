@@ -569,7 +569,11 @@ void Onboard::Overview::linkEditorEvents() {
                         "If there are such errors, you will be notified, and you will need to fix them before\n"
                         "you can save your config.\n"
                         "\n"
+                #		ifdef __WXMAC__
+                        "Press CMD+S or go to \"File\"->\"Save Config\" to save.\n"
+                #		else
                         "Press CTRL+S or go to \"File\"->\"Save Config\" to save.\n"
+                #		endif
                         );
 
         guideMenu->activeEditor->Bind(wxEVT_MENU, [&](wxCommandEvent& event) {
