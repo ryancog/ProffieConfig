@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
 #include "editor/pages/presetspage.h"
 
@@ -15,12 +15,19 @@
 #endif
 
 PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, ""), parent(static_cast<EditorWindow*>(window)) {
-  styleInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "BladeStyle", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE | wxBORDER_NONE);
+  commentInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "Comments", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE | wxNO_BORDER);
+  styleInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "BladeStyle", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE | wxNO_BORDER);
   styleInput->entry()->SetFont(wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+
 
   Add(createPresetConfig(), wxSizerFlags(/*proportion*/ 0).Border(wxALL, 10));
   Add(createPresetSelect(), wxSizerFlags(/*proportion*/ 0).Border(wxTOP | wxRIGHT | wxBOTTOM, 10).Expand());
-  Add(styleInput, wxSizerFlags(/*proportion*/ 1).Border(wxALL, 10).Expand());
+
+  auto *styleSizer{new wxBoxSizer(wxVERTICAL)};
+  styleSizer->Add(commentInput, wxSizerFlags(/*proportion*/ 1).Expand());
+  styleSizer->AddSpacer(10);
+  styleSizer->Add(styleInput, wxSizerFlags(/*proportion*/ 2).Expand());
+  Add(styleSizer, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
   bindEvents();
   createToolTips();
@@ -95,6 +102,7 @@ void PresetsPage::createToolTips() {
   TIP(addPreset, "Add a preset to the currently-selected blade array.");
   TIP(removePreset, "Delete the currently-selected preset.");
   
+  TIP(styleInput, "Any comments about the blade style goes here.\nThis doesn't affect the blade style at all, but can be a place for helpful notes!");
   TIP(styleInput, "Your blade style goes here.\nThis is the code which sets up what animations and effects your blade (or other LED) will do.\nFor getting/creating blade styles, see the Documentation (in \"Help->Documentation...\").");
 }
 
@@ -172,6 +180,7 @@ void PresetsPage::update() {
   if (dirInput->entry()->IsModified()) stripAndSaveDir();
   if (trackInput->entry()->IsModified()) stripAndSaveTrack();
   if (styleInput->entry()->IsModified()) stripAndSaveEditor();
+  if (commentInput->entry()->IsModified()) stripAndSaveComments();
 
   rebuildBladeArrayList();
   rebuildPresetList();
@@ -233,7 +242,7 @@ void PresetsPage::resizeAndFillPresets() {
 
   for (PresetConfig& preset : parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets) {
     while (static_cast<int32_t>(preset.styles.size()) < getNumBlades()) {
-      preset.styles.push_back("StyleNormalPtr<AudioFlicker<Blue,DodgerBlue>,BLUE,300,800>()");
+        preset.styles.push_back({ {}, "StyleNormalPtr<AudioFlicker<Blue,DodgerBlue>,BLUE,300,800>()" });
     }
     while (static_cast<int32_t>(preset.styles.size()) > getNumBlades()) {
       preset.styles.pop_back();
@@ -241,45 +250,73 @@ void PresetsPage::resizeAndFillPresets() {
   }
 }
 void PresetsPage::updateFields() {
-  if (presetList->GetSelection() >= 0) {
-    const auto& currentPreset = parent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection());
-    uint32_t insertionPoint;
-    
-    insertionPoint = styleInput->entry()->GetInsertionPoint();
-    if (bladeList->GetSelection() >= 0) {
-      styleInput->entry()->ChangeValue(currentPreset.styles.at(bladeList->GetSelection()));
-      styleInput->entry()->SetInsertionPoint(insertionPoint <= styleInput->entry()->GetValue().size() ? insertionPoint : styleInput->entry()->GetValue().size());
-    } else {
-      styleInput->entry()->ChangeValue("Select Blade to Edit Style...");
+    if (presetList->GetSelection() >= 0) {
+        const auto& currentPreset = parent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection());
+        uint32_t insertionPoint;
+
+        if (bladeList->GetSelection() >= 0) {
+            const auto& style{currentPreset.styles.at(bladeList->GetSelection())};
+
+            insertionPoint = styleInput->entry()->GetInsertionPoint();
+            styleInput->entry()->ChangeValue(style.style);
+            styleInput->entry()->SetInsertionPoint(std::min<uint32_t>(insertionPoint, styleInput->entry()->GetLastPosition()));
+
+            insertionPoint = commentInput->entry()->GetInsertionPoint();
+            commentInput->entry()->ChangeValue(style.comment);
+            commentInput->entry()->SetInsertionPoint(std::min<uint32_t>(insertionPoint, commentInput->entry()->GetLastPosition()));
+        } else {
+            commentInput->entry()->ChangeValue("Select Blade to Edit Style Comments...");
+            styleInput->entry()->ChangeValue("Select Blade to Edit Style...");
+        }
+
+        insertionPoint = nameInput->entry()->GetInsertionPoint();
+        nameInput->entry()->ChangeValue(currentPreset.name);
+        nameInput->entry()->SetInsertionPoint(insertionPoint <= nameInput->entry()->GetValue().size() ? insertionPoint : nameInput->entry()->GetValue().size());
+
+        insertionPoint = dirInput->entry()->GetInsertionPoint();
+        dirInput->entry()->ChangeValue(currentPreset.dirs);
+        dirInput->entry()->SetInsertionPoint(insertionPoint <= dirInput->entry()->GetValue().size() ? insertionPoint : dirInput->entry()->GetValue().size());
+
+        insertionPoint = trackInput->entry()->GetInsertionPoint();
+        trackInput->entry()->ChangeValue(currentPreset.track);
+        trackInput->entry()->SetInsertionPoint(insertionPoint <= trackInput->entry()->GetValue().size() - 4 ? insertionPoint : trackInput->entry()->GetValue().size() - 4);
+    }
+    else {
+        commentInput->entry()->ChangeValue("Select/Create Preset and Blade to Edit Style Comments...");
+        styleInput->entry()->ChangeValue("Select/Create Preset and Blade to Edit Style...");
+        nameInput->entry()->ChangeValue("");
+        dirInput->entry()->ChangeValue("");
+        trackInput->entry()->ChangeValue("");
     }
 
-    insertionPoint = nameInput->entry()->GetInsertionPoint();
-    nameInput->entry()->ChangeValue(currentPreset.name);
-    nameInput->entry()->SetInsertionPoint(insertionPoint <= nameInput->entry()->GetValue().size() ? insertionPoint : nameInput->entry()->GetValue().size());
+    commentInput->entry()->Enable(presetList->GetSelection() != -1 and bladeList->GetSelection() != -1);
+    styleInput->entry()->Enable(presetList->GetSelection() != -1 and bladeList->GetSelection() != -1);
+    removePreset->Enable(presetList->GetSelection() != -1);
+    movePresetDown->Enable(presetList->GetSelection() != -1 && presetList->GetSelection() < static_cast<int32_t>(presetList->GetCount()) - 1);
+    movePresetUp->Enable(presetList->GetSelection() > 0);
 
-    insertionPoint = dirInput->entry()->GetInsertionPoint();
-    dirInput->entry()->ChangeValue(currentPreset.dirs);
-    dirInput->entry()->SetInsertionPoint(insertionPoint <= dirInput->entry()->GetValue().size() ? insertionPoint : dirInput->entry()->GetValue().size());
+    // Value is flagged as dirty from last change unless we manually reset it, causing overwrites where there shouldn't be.
+    styleInput->entry()->SetModified(false);
+    commentInput->entry()->SetModified(false);
+    nameInput->entry()->SetModified(false);
+    dirInput->entry()->SetModified(false);
+    trackInput->entry()->SetModified(false);
+}
 
-    insertionPoint = trackInput->entry()->GetInsertionPoint();
-    trackInput->entry()->ChangeValue(currentPreset.track);
-    trackInput->entry()->SetInsertionPoint(insertionPoint <= trackInput->entry()->GetValue().size() - 4 ? insertionPoint : trackInput->entry()->GetValue().size() - 4);
-  }
-  else {
-    styleInput->entry()->ChangeValue("Select/Create Preset and Blade to Edit Style...");
-    nameInput->entry()->ChangeValue("");
-    dirInput->entry()->ChangeValue("");
-    trackInput->entry()->ChangeValue("");
-  }
+void PresetsPage::stripAndSaveComments() {
+    if (presetList->GetSelection() >= 0 && bladeList->GetSelection() >= 0) {
+        auto comments{commentInput->entry()->GetValue()};
 
-  removePreset->Enable(presetList->GetSelection() != -1);
-  movePresetDown->Enable(presetList->GetSelection() != -1 && presetList->GetSelection() < static_cast<int32_t>(presetList->GetCount()) - 1);
-  movePresetUp->Enable(presetList->GetSelection() > 0);
-  
-  styleInput->entry()->SetModified(false); // Value is flagged as dirty from last change unless we manually reset it, causing overwrites where there shouldn't be.
-  nameInput->entry()->SetModified(false);
-  dirInput->entry()->SetModified(false);
-  trackInput->entry()->SetModified(false);
+        size_t illegalStrPos{0};
+        while ((illegalStrPos = comments.find("/*")) != std::string::npos) comments.erase(illegalStrPos, 2);
+        while ((illegalStrPos = comments.find("*/")) != std::string::npos) comments.erase(illegalStrPos, 2);
+        while ((illegalStrPos = comments.find("//")) != std::string::npos) comments.erase(illegalStrPos, 2);
+
+        auto& selectedBladeArray{parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()]};
+        auto& selectedPreset{selectedBladeArray.presets[presetList->GetSelection()]};
+
+        selectedPreset.styles[bladeList->GetSelection()].comment = comments;
+    }
 }
 
 void PresetsPage::stripAndSaveEditor() {
@@ -287,8 +324,12 @@ void PresetsPage::stripAndSaveEditor() {
     wxString style = styleInput->entry()->GetValue();
     if (style.find('{') != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '{'));
     if (style.rfind('}') != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '}'));
-    if (style.rfind("()") != wxString::npos) style.erase(style.find("()") + 2);
-    parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).styles.at(bladeList->GetSelection()) = style;
+    if (style.rfind(")") != wxString::npos) style.erase(style.rfind(")") + 1);
+
+    auto& selectedBladeArray{parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()]};
+    auto& selectedPreset{selectedBladeArray.presets[presetList->GetSelection()]};
+
+    selectedPreset.styles[bladeList->GetSelection()].style = style;
   }
 }
 void PresetsPage::stripAndSaveName() {

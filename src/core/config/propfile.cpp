@@ -96,7 +96,6 @@ bool PropFile::Setting::checkRequiredSatisfied(const std::unordered_map<std::str
 
 
 PropFile* PropFile::createPropConfig(const std::string& name, wxWindow* _parent) {
-  std::cout << "Reading prop config: \"" << name << "\"..." << std::endl;
   std::string pathname = PROPCONFIG_DIR + name + ".pconf";
 
   std::ifstream configFile(pathname);
@@ -139,7 +138,6 @@ PropFile* PropFile::createPropConfig(const std::string& name, wxWindow* _parent)
 
   prop->pruneUnused();
   prop->Show(false);
-  std::cout << "Finished reading prop config." << std::endl;
 
   return prop;
 }
