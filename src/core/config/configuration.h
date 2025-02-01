@@ -67,7 +67,6 @@ private:
   static void readConfigProp(std::ifstream&, EditorWindow*);
   static void readConfigPresets(std::ifstream&, EditorWindow*);
   static void readConfigStyles(std::ifstream&, EditorWindow*);
-  static void replaceStyles(const std::string&, const std::string&, EditorWindow*);
   static void readPresetArray(std::ifstream&, EditorWindow*);
   static void readBladeArray(std::ifstream&, EditorWindow*);
   static void setCustomDefines(EditorWindow* editor);
