@@ -469,6 +469,7 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
                 reading = LINE_COMMENT;
                 file.get();
             }
+            continue;
         }
 
         if (reading != LINE_COMMENT and reading != LONG_COMMENT) {
@@ -539,6 +540,7 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
                 styleString.clear();
                 commentString.clear();
                 reading = NONE;
+                continue;
             }
 
             styleString += chr;
@@ -619,6 +621,7 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                     reading = LINE_COMMENT;
                     file.get();
                 }
+                continue;
             }
 
             if (reading == NONE or reading == POST_DIR) {
