@@ -141,8 +141,8 @@ void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput, const
                     }
                     while (!false) {
                         std::getline(commentStream, line);
-                        configOutput << "\t\t * " << line << '\n';
                         if (commentStream.eof()) break;
+                        configOutput << "\t\t * " << line << '\n';
                     }
                     if (not style.comment.empty()) {
                         configOutput << "\t\t */\n";
