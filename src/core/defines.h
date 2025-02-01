@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
 #pragma once
 
@@ -54,7 +54,6 @@
 #define PROFFIEOS_INO PROFFIEOS_PATH "\\ProffieOS.ino"
 #define CONFIG_DIR PROFFIEOS_PATH "\\config\\"
 #define PROPCONFIG_DIR RESOURCES_PATH "props\\"
-#define DRIVER_INSTALL popen("title ProffieConfig Worker & resources\\windowmode -title \"ProffieConfig Worker\" -mode force_minimized & resources\\proffie-dfu-setup.exe 2>&1", "r")
 #define STYLEEDIT_PATH RESOURCES_PATH "StyleEditor\\style_editor.html"
 #elif defined(__WXGTK__)
 #define RESOURCES_PATH "resources/"
@@ -63,7 +62,6 @@
 #define CONFIG_DIR PROFFIEOS_PATH "/config/"
 #define PROPCONFIG_DIR RESOURCES_PATH "props/"
 #define STYLEEDIT_PATH RESOURCES_PATH "StyleEditor/style_editor.html"
-#define DRIVER_INSTALL popen("pkexec cp ~/.arduino15/packages/proffieboard/hardware/stm32l4/3.6/drivers/linux/*rules /etc/udev/rules.d", "r")
 #elif defined(__WXOSX__)
 #define RESOURCES_PATH "../Resources/"
 #define ARDUINO_PATH RESOURCES_PATH "arduino-cli/arduino-cli"
