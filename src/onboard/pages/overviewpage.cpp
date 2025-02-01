@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
 #include "mainmenu/dialogs/addconfig.h"
 #include "onboard/onboard.h"
@@ -33,7 +33,7 @@ std::vector<bool*> Onboard::Overview::eventRunTrackers{};
   if (hasRun) return; \
   hasRun = true;
 
-Onboard::Overview::Overview(wxWindow* parent) : wxWindow(parent, OnboardFrame::ID_Overview) {
+Onboard::Overview::Overview(wxWindow* parent) : wxPanel(parent, OnboardFrame::ID_Overview) {
   sizer = new wxBoxSizer(wxVERTICAL);
 
   generateNewPage("Introduction to ProffieConfig",

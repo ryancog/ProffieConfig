@@ -1,11 +1,11 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
 #include "onboard/onboard.h"
 
 #include <wx/sizer.h>
 
-Onboard::DependencyInstall::DependencyInstall(wxWindow* parent) : wxWindow(parent, OnboardFrame::ID_DependencyInstall) {
+Onboard::DependencyInstall::DependencyInstall(wxWindow* parent) : wxPanel(parent, OnboardFrame::ID_DependencyInstall) {
   auto sizer = new wxBoxSizer(wxVERTICAL);
   barPulser = new wxTimer(this);
   Bind(wxEVT_TIMER, [&](wxTimerEvent&) { loadingBar->Pulse(); });
