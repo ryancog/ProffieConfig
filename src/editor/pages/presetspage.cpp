@@ -102,7 +102,7 @@ void PresetsPage::createToolTips() {
   TIP(addPreset, "Add a preset to the currently-selected blade array.");
   TIP(removePreset, "Delete the currently-selected preset.");
   
-  TIP(styleInput, "Any comments about the blade style goes here.\nThis doesn't affect the blade style at all, but can be a place for helpful notes!");
+  TIP(commentInput, "Any comments about the blade style goes here.\nThis doesn't affect the blade style at all, but can be a place for helpful notes!");
   TIP(styleInput, "Your blade style goes here.\nThis is the code which sets up what animations and effects your blade (or other LED) will do.\nFor getting/creating blade styles, see the Documentation (in \"Help->Documentation...\").");
 }
 
