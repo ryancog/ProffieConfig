@@ -1,5 +1,5 @@
 ﻿// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
 #include "arduino.h"
 
@@ -47,11 +47,11 @@ void Arduino::init(wxWindow* parent) {
         auto evt{new Arduino::Event(Arduino::EVT_INIT_DONE)};
         FILE* install;
         std::string fulloutput;
-        char buffer[128];
+        std::array<char, 128> buffer;
 
         progDialog->emitEvent(5, "Downloading dependencies...");
         install = Arduino::CLI("core install proffieboard:stm32l4@" ARDUINO_PBPLUGIN_VERSION " --additional-urls https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json");
-        while (fgets(buffer, 128, install) != nullptr) { progDialog->emitEvent(-1, ""); fulloutput += buffer; }
+        while (fgets(buffer.data(), buffer.size(), install) != nullptr) { progDialog->emitEvent(-1, ""); fulloutput += buffer.data(); }
         if (pclose(install)) {
             progDialog->emitEvent(100, "Error");
             std::cerr << fulloutput << std::endl;
@@ -60,17 +60,49 @@ void Arduino::init(wxWindow* parent) {
             return;
         }
 
-#   ifndef __WXOSX__
+#       ifndef __WXOSX__
         progDialog->emitEvent(60, "Installing drivers...");
-        install = DRIVER_INSTALL;
-        while (fgets(buffer, 128, install) != nullptr) { progDialog->emitEvent(-1, ""); fulloutput += buffer; }
+
+#       if defined(__linux__)
+        install = popen("pkexec cp ~/.arduino15/packages/proffieboard/hardware/stm32l4/3.6/drivers/linux/*rules /etc/udev/rules.d", "r");
+#       elif defined(__WINDOWS__)
+        install = popen(R"(title ProffieConfig Worker & resources\proffie-dfu-setup.exe 2>&1)", "r");
+        // Really I should have a proper wait but I tried with an echo and that didn't work.
+        // Could maybe revisit this in the future.
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+        STARTUPINFOA si;
+        PROCESS_INFORMATION pi;
+        memset(&si, 0, sizeof si);
+        si.cb = sizeof si;
+        memset(&pi, 0, sizeof pi);
+
+        constexpr const char MINIMIZE_COMMAND[]{R"(resources\windowmode -title "ProffieConfig Worker" -mode force_minimized)"};
+        std::array<char, sizeof MINIMIZE_COMMAND + 1> minCmdInput;
+        strncpy(minCmdInput.data(), MINIMIZE_COMMAND, minCmdInput.size());
+
+        CreateProcessA(
+            nullptr,
+            minCmdInput.data(),
+            nullptr,
+            nullptr,
+            false,
+            0,
+            nullptr,
+            nullptr,
+            &si,
+            &pi
+        );
+#       endif
+
+        while (fgets(buffer.data(), buffer.size(), install) != nullptr) { progDialog->emitEvent(-1, ""); fulloutput += buffer.data(); }
         if (pclose(install)) {
             progDialog->emitEvent(100, "Error");
             std::cerr << fulloutput << std::endl;
             wxQueueEvent(parent, evt);
             return;
         }
-#   endif
+#       endif
 
         progDialog->emitEvent(100, "Done.");
         evt->succeeded = true;
@@ -487,14 +519,13 @@ wxString Arduino::parseError(const wxString& error) {
 }
 
 FILE* Arduino::CLI(const wxString& command) {
-  wxString fullCommand;
-# if defined(__WINDOWS__)
-  fullCommand += "title ProffieConfig Worker & ";
-  fullCommand += R"(resources\windowmode -title "ProffieConfig Worker" -mode force_minimized & )";
-# endif
-  fullCommand += ARDUINO_PATH " ";
-  fullCommand += command;
-  fullCommand += " 2>&1";
-
-  return popen(fullCommand.data(), "r");
+    wxString fullCommand;
+#   if defined(__WINDOWS__)
+    fullCommand += "title ProffieConfig Worker & ";
+    fullCommand += R"(resources\windowmode -title "ProffieConfig Worker" -mode force_minimized & )";
+#   endif
+    fullCommand += ARDUINO_PATH " ";
+    fullCommand += command;
+    fullCommand += " 2>&1";
+    return popen(fullCommand.data(), "r");
 }

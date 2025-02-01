@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
 #pragma once
 
@@ -7,6 +7,7 @@
 #include <wx/stattext.h>
 #include <wx/gauge.h>
 #include <wx/timer.h>
+#include <wx/panel.h>
 
 #include "mainmenu/mainmenu.h"
 #include "editor/pages/bladespage.h"
@@ -76,12 +77,12 @@ public:
 };
 
 
-class Onboard::Welcome : public wxWindow {
+class Onboard::Welcome : public wxPanel {
 public:
     Welcome(wxWindow*);
 };
 
-class Onboard::DependencyInstall : public wxWindow {
+class Onboard::DependencyInstall : public wxPanel {
 public:
     DependencyInstall(wxWindow*);
 
@@ -93,7 +94,7 @@ public:
     bool completedInstall{false};
 };
 
-class Onboard::Overview : public wxWindow {
+class Onboard::Overview : public wxPanel {
 public:
     Overview(wxWindow*);
     ~Overview();
