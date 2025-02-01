@@ -1,5 +1,5 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
 #pragma once
 
@@ -12,6 +12,16 @@
 #include <wx/statbox.h>
 #include <wx/checkbox.h>
 #include <wx/combobox.h>
+
+template <typename STRING>
+constexpr void trimWhiteSpace(STRING& str) {
+    str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](char ch) {
+        return not std::isspace(ch);
+    }));
+    str.erase(std::find_if(str.rbegin(), str.rend(), [](char ch) {
+        return not std::isspace(ch);
+    }).base(), str.end());
+};
 
 class Misc {
 public:
