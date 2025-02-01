@@ -137,28 +137,30 @@ void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput, const
                     std::istringstream commentStream(style.comment.ToStdString());
 
                     if (not style.comment.empty()) {
-                        configOutput << "\t\t/*";
+                        configOutput << "\t\t/*\n";
                     }
                     while (!false) {
                         std::getline(commentStream, line);
                         configOutput << "\t\t * " << line << '\n';
-                        if (commentStream.eof())  break;
+                        if (commentStream.eof()) break;
                     }
                     if (not style.comment.empty()) {
-                        configOutput << "\t\t */";
+                        configOutput << "\t\t */\n";
                     }
 
                     std::istringstream styleStream(style.style.ToStdString());
                     while (!false) {
                         std::getline(styleStream, line);
                         configOutput << "\t\t" << line;
-                        if (styleStream.eof()) configOutput << ",\n";
-                        else configOutput << '\n';
+                        if (styleStream.eof()) {
+                            configOutput << ",\n";
+                            break;
+                        } else configOutput << '\n';
                     }
                 }
             } else configOutput << "\t\t,\n";
 
-            configOutput << "\t\t\"" << preset.name << "\"}";
+            configOutput << "\t\t\"" << preset.name << "\"\n\t}";
             // If not the last one, add comma
             if (&bladeArray.presets[bladeArray.presets.size() - 1] != &preset) configOutput << ",";
             configOutput << '\n';
@@ -452,7 +454,12 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
     while (chr != '}' and not file.eof() and not file.bad()) {
         chr = file.get();
 
-        if (chr == '/') {
+        if (chr == '\r') continue;
+        if (
+            chr == '/' and
+            reading != LONG_COMMENT and
+            reading != LINE_COMMENT
+        ) {
             if (file.peek() == '*') {
                 prevReading = reading;
                 reading = LONG_COMMENT;
@@ -506,6 +513,10 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
             commentString += chr;
         } else if (reading == STYLE) {
             if (chr == ';') {
+                trimWhiteSpace(styleName);
+                trimWhiteSpace(styleString);
+                trimWhiteSpace(commentString);
+
                 // How many nested for loops would you like? Cause here are all of 'em
                 for (auto& bladeArray : editor->bladesPage->bladeArrayDlg->bladeArrays) {
                     for (auto& preset : bladeArray.presets) {
@@ -517,6 +528,7 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
                                 style.erase(usingStylePos, styleName.length());
                                 style.insert(usingStylePos, styleString);
                                 if (comment.find(commentString) == std::string::npos) {
+                                    comment += '\n';
                                     comment += commentString;
                                 }
                             }
@@ -570,7 +582,7 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
     bladeArray.name.assign(element.substr(0, element.find_first_of("[]")));
 
     if (not runToSection()) return;
-    uint32_t presetIdx = -1;
+    auto presetIdx{static_cast<uint32_t>(-1)};
     bladeArray.presets.clear();
     while (!false) {
         if (not runToSection()) return;
@@ -582,14 +594,22 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
             NONE,
             LINE_COMMENT,
             LONG_COMMENT,
+            LONG_COMMENT_NEW_LINE,
             DIR,
             POST_DIR,
             TRACK,
 
-        } reading, prevReading;
+        } reading{NONE}, prevReading{NONE};
         do {
             chr = file.get();
-            if (chr == '/') {
+
+            if (chr == '\r') continue;
+            if (
+                chr == '/' and
+                reading != LONG_COMMENT and
+                reading != LONG_COMMENT_NEW_LINE and
+                reading != LINE_COMMENT
+            ) {
                 if (file.peek() == '*') {
                     prevReading = reading;
                     reading = LONG_COMMENT;
@@ -629,12 +649,14 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                 }
             } else if (reading == DIR) {
                 if (chr == '"') {
+                    trimWhiteSpace(bladeArray.presets[presetIdx].dirs);
                     reading = POST_DIR;
                     continue;
                 }
                 bladeArray.presets[presetIdx].dirs += chr;
             } else if (reading == TRACK) {
                 if (chr == '"') {
+                    trimWhiteSpace(bladeArray.presets[presetIdx].track);
                     break;
                 }
                 bladeArray.presets[presetIdx].track += chr;
@@ -647,12 +669,17 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
             size_t styleDepth{0};
             std::string styleString;
             std::string commentString;
-            reading = NONE;
 
             while (chr != '}' and not file.eof() and not file.bad()) {
                 chr = file.get();
 
-                if (chr == '/') {
+                if (chr == '\r') continue;
+                if (
+                    chr == '/' and
+                    reading != LONG_COMMENT and
+                    reading != LONG_COMMENT_NEW_LINE and
+                    reading != LINE_COMMENT
+                ) {
                     if (file.peek() == '*') {
                         prevReading = reading;
                         reading = LONG_COMMENT;
@@ -662,9 +689,10 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                         reading = LINE_COMMENT;
                         file.get();
                     }
+                    continue;
                 }
 
-                if (reading == NONE or reading == POST_DIR) {
+                if (reading == NONE) {
                     if (chr == '#') {
                         const auto initPos{file.tellg()};
                         std::array<char, 5> checkArray;
@@ -676,7 +704,7 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                     } else if (chr == '<') ++styleDepth;
                     else if (chr == '>') --styleDepth;
                     else if (chr == ',' and styleDepth == 0) {
-                        // Reached end of style, break;
+                        // Reached end of style
                         break;
                     }
 
@@ -693,20 +721,33 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                         commentString += '\n';
                         reading = prevReading;
                         continue;
+                    } else if (chr == '\n') {
+                        reading = LONG_COMMENT_NEW_LINE;
                     }
                     commentString += chr;
+                } else if (reading == LONG_COMMENT_NEW_LINE) {
+                   if (chr == '*' and file.peek() == '/') {
+                        commentString += '\n';
+                        reading = prevReading;
+                        continue;
+                    }
+
+                   if (std::isspace(chr) or chr == '*') continue;
+                   commentString += chr;
+                   reading = LONG_COMMENT;
+                } else if (reading == TRACK) {
+                    // Purge comma after track
+                    if (chr == ',') {
+                        reading = NONE;
+                    }
                 }
             }
 
             // Trim whitespace
-            styleString.erase(styleString.begin(), std::find_if(styleString.begin(), styleString.end(), [](char ch) {
-                return not std::isspace(ch);
-            }));
-            styleString.erase(std::find_if(styleString.rbegin(), styleString.rend(), [](char ch) {
-                return not std::isspace(ch);
-            }).base(), styleString.end());
+            trimWhiteSpace(styleString);
+            trimWhiteSpace(commentString);
 
-            bladeArray.presets[presetIdx].styles.push_back({styleString, commentString});
+            bladeArray.presets[presetIdx].styles.push_back({commentString, styleString});
         }
 
         // Name
@@ -719,6 +760,7 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                 bladeArray.presets[presetIdx].name += chr;
             }
         }
+        trimWhiteSpace(bladeArray.presets[presetIdx].name);
         if (bladeArray.presets[presetIdx].name.empty()) {
             bladeArray.presets[presetIdx].name = "noname";
         }
@@ -918,7 +960,7 @@ bool Configuration::runPreChecks(const EditorWindow *editor) {
         for (auto& preset : bladeArray.presets) {
             for (auto& [ comment, style ] : preset.styles) {
                 if (style.empty()) continue;
-                const auto errorString{"Malformed bladestyle in preset \"" + preset.name.ToStdString() + "\" in blade array \"" + bladeArray.name.ToStdString() + "\"\n\n"};
+                const auto errorString{"Malformed bladestyle in " + (preset.name.empty() ? "unnamed preset" : std::string("preset \"") + preset.name.ToStdString() + '"') + " in blade array \"" + bladeArray.name.ToStdString() + "\"\n\n"};
 
                 const auto styleBegin{style.find("Style")};
                 if (styleBegin == std::string::npos) {

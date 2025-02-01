@@ -22,6 +22,7 @@ public:
     void update();
 
     pcChoice* bladeArray{nullptr};
+    pcTextCtrl* commentInput{nullptr};
     pcTextCtrl* styleInput{nullptr};
     wxListBox* presetList{nullptr};
     wxListBox* bladeList{nullptr};
@@ -74,6 +75,7 @@ private:
     void updateFields();
 
     void stripAndSaveEditor();
+    void stripAndSaveComments();
     void stripAndSaveName();
     void stripAndSaveDir();
     void stripAndSaveTrack();
