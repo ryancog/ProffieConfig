@@ -16,8 +16,8 @@
 class Configuration {
 public:
   Configuration(Configuration &&) = delete;
-  static bool outputConfig(const EditorWindow *editorWindow);
-  static bool outputConfig(const std::string&, const EditorWindow *editorWindow);
+  static bool outputConfig(EditorWindow *editorWindow);
+  static bool outputConfig(const std::string&, EditorWindow *editorWindow);
   static bool exportConfig(EditorWindow *editorWindow);
   static bool readConfig(const std::string&, EditorWindow *editorWindow);
   static bool importConfig(EditorWindow *editorWindow);
@@ -44,7 +44,7 @@ private:
   Configuration();
   Configuration(const Configuration&) = delete;
 
-  static bool runPreChecks(const EditorWindow *);
+  static bool runPreChecks(EditorWindow *);
 
   static void outputConfigTop(std::ofstream&, const EditorWindow *);
   static void outputConfigTopGeneral(std::ofstream&, const EditorWindow *);
