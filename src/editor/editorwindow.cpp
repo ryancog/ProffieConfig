@@ -59,6 +59,7 @@ void EditorWindow::bindEvents() {
             return;
         }
 
+
         auto saved{isSaved()};
         if (saved or wxMessageDialog(
                     this,
@@ -71,6 +72,7 @@ void EditorWindow::bindEvents() {
             event.Skip();
             return;
         }
+
         event.Veto();
     });
     Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
@@ -160,10 +162,21 @@ void EditorWindow::createPages() {
 
 std::string_view EditorWindow::getOpenConfig() const { return openConfig; }
 
-bool EditorWindow::isSaved() const {
+bool EditorWindow::isSaved() {
     const auto currentPath{CONFIG_DIR + openConfig + ".h"};
     const auto validatePath{CONFIG_DIR + openConfig + "-validate"};
-    Configuration::outputConfig(validatePath, this);
+    if (not Configuration::outputConfig(validatePath, this)) {
+        return false;
+    }
+
+    struct stat currentData;
+    struct stat validateData;
+    wxStat(currentPath, &currentData);
+    wxStat(validatePath, &validateData);
+    if (currentData.st_size != validateData.st_size) {
+        return false;
+    }
+
     std::ifstream current{currentPath};
     std::ifstream validate{validatePath};
 

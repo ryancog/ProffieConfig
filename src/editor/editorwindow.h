@@ -21,7 +21,7 @@ public:
     EditorWindow(const std::string&, wxWindow*);
     ~EditorWindow();
 
-    bool isSaved() const;
+    bool isSaved();
     std::string_view getOpenConfig() const;
 
     GeneralPage* generalPage{nullptr};

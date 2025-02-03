@@ -99,18 +99,29 @@ void Settings::setCustomInputParsers() {
     if (key.first != def->getName()) return false;
     
     parent->bladesPage->bladeArrayDlg->enableID->SetValue(true);
-    key.second = std::strtok(key.second.data(), "< ");
-    if (key.second == "SnapshotBladeID") {
+    const auto typeEnd{key.second.find('<')};
+    const auto type{key.second.substr(0, typeEnd)};
+    if (type == "SnapshotBladeID") {
       parent->bladesPage->bladeArrayDlg->mode->entry()->SetStringSelection(BLADE_ID_MODE_SNAPSHOT);
-      parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(std::strtok(nullptr, "<> "));
-    } else if (key.second == "ExternalPullupBladeID") {
+      const auto pinBegin{key.second.find_first_not_of("< ", typeEnd)};
+      const auto pinEnd{key.second.find_first_of(" >", pinBegin)};
+      parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd));
+    } else if (type == "ExternalPullupBladeID") {
       parent->bladesPage->bladeArrayDlg->mode->entry()->SetStringSelection(BLADE_ID_MODE_EXTERNAL);
-      parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(std::strtok(nullptr, "<, "));
-      parent->bladesPage->bladeArrayDlg->pullupResistance->entry()->SetValue(std::stod(std::strtok(nullptr, ",> ")));
-    } else if (key.second == "BridgedPullupBladeID") {
+      const auto pinBegin{key.second.find_first_not_of("< ", typeEnd)};
+      const auto pinEnd{key.second.find_first_of(" >", pinBegin)};
+      parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd));
+      const auto resBegin{key.second.find_first_not_of(", ", pinEnd)};
+      const auto resEnd{key.second.find_first_of(" >", resBegin)};
+      parent->bladesPage->bladeArrayDlg->pullupResistance->entry()->SetValue(std::stod(key.second.substr(resBegin, resEnd)));
+    } else if (type == "BridgedPullupBladeID") {
       parent->bladesPage->bladeArrayDlg->mode->entry()->SetStringSelection(BLADE_ID_MODE_BRIDGED);
-      parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(std::strtok(nullptr, "<, "));
-      parent->bladesPage->bladeArrayDlg->pullupPin->entry()->SetValue(std::strtok(nullptr, ",> "));
+      const auto pinBegin{key.second.find_first_not_of("< ", typeEnd)};
+      const auto pinEnd{key.second.find_first_of(" >", pinBegin)};
+      parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd));
+      const auto pullupPinBegin{key.second.find_first_not_of(", ", pinEnd)};
+      const auto pullupPinEnd{key.second.find_first_of(" >", pullupPinBegin)};
+      parent->bladesPage->bladeArrayDlg->pullupPin->entry()->SetValue(key.second.substr(pullupPinBegin, pullupPinEnd));
     }
     return true;
   });
