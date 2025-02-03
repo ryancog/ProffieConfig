@@ -51,7 +51,7 @@ MainMenu::MainMenu(wxWindow* parent) : wxFrame(parent, wxID_ANY, "ProffieConfig"
 void MainMenu::bindEvents() {
     Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
         AppState::instance->saveState();
-        for (const auto *editor : editors) {
+        for (auto *editor : editors) {
             if (not editor->isSaved() && event.CanVeto()) {
                 if (wxMessageDialog(
                             this,
