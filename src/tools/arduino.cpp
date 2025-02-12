@@ -135,33 +135,56 @@ void Arduino::refreshBoards(MainMenu* window) {
 }
 
 std::vector<wxString> Arduino::getBoards() {
-  std::vector<wxString> boards{"Select Board..."};
-  char buffer[1024];
+    std::vector<wxString> boards{"Select Board..."};
+    char buffer[1024];
 
-  FILE *arduinoCli = Arduino::CLI("board list");
+    FILE *arduinoCli = Arduino::CLI("board list");
 
-  if (!arduinoCli) {
+    if (!arduinoCli) {
+        return boards;
+    }
+
+    struct Result {
+        std::string port;
+        bool isProffie{false};
+    };
+
+    std::vector<Result> results;
+
+    while (fgets(buffer, 1024, arduinoCli) != nullptr) {
+        if (std::strstr(buffer, "No boards found.") != nullptr) {
+            break;
+        }
+
+        if (buffer[0] == ' ' or buffer[0] == '\t') {
+            if (results.empty()) continue;
+
+            if (std::strstr(buffer, "proffieboard") != nullptr) {
+                results.back().isProffie = true;
+            }
+
+            continue;
+        }
+
+        if (std::strstr(buffer, "serial") != nullptr) {
+            *std::strpbrk(buffer, " ") = '\0'; // End string at break to get dev path
+            const auto isProffie{std::strstr(buffer, "proffieboard") != nullptr};
+            results.emplace_back(Result{buffer, isProffie});
+        } else if (std::strstr(buffer, "dfu") != nullptr) {
+            *std::strpbrk(buffer, " ") = '\0';
+            boards.emplace_back("BOOTLOADER|" + wxString(buffer));
+        }
+    }
+
+    for (const auto& result : results) {
+        if (!result.isProffie) continue;
+        boards.emplace_back(result.port);
+    }
+
+#   ifdef __WINDOWS__
+    boards.emplace_back("BOOTLOADER RECOVERY");
+#   endif
     return boards;
-  }
-
-  while (fgets(buffer, 1024, arduinoCli) != nullptr) {
-    if (std::strstr(buffer, "No boards found.") != nullptr) {
-      break;
-    }
-
-    if ((std::strstr(buffer, "serial") != NULL && std::strstr(buffer, "proffieboard") != NULL)) {
-      *std::strpbrk(buffer, " ") = '\0'; // End string at break to get dev path
-      boards.push_back(buffer);
-    } else if (std::strstr(buffer, "dfu") != NULL) {
-      *std::strpbrk(buffer, " ") = '\0';
-      boards.push_back("BOOTLOADER|" + wxString(buffer));
-    }
-  }
-
-# ifdef __WINDOWS__
-  boards.push_back("BOOTLOADER RECOVERY");
-# endif
-  return boards;
 }
 
 void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
