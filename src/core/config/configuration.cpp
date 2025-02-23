@@ -510,6 +510,7 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
             if (chr == '*' and file.peek() == '/') {
                 commentString += '\n';
                 reading = prevReading;
+                file.get();
                 continue;
             }
             commentString += chr;
@@ -655,6 +656,7 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                 }
             } else if (reading == LONG_COMMENT) {
                 if (chr == '*' and file.peek() == '/') {
+                    file.get();
                     reading = prevReading;
                 }
             } else if (reading == DIR) {
@@ -749,6 +751,7 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                    if (chr == '*' and file.peek() == '/') {
                         commentString += '\n';
                         reading = prevReading;
+                        file.get();
                         continue;
                     }
 
@@ -822,6 +825,7 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
             } else if (reading == LONG_COMMENT) {
                 if (chr == '*' and file.peek() == '/') {
                     reading = prevReading;
+                    file.get();
                 }
             } else if (reading == NAME) {
                 if (chr == '"') {

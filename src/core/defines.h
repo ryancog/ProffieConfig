@@ -7,7 +7,7 @@
 #define ARDUINO_CLI_VERSION "0.34.2"
 
 #define COPYRIGHT_NOTICE \
-  "ProffieConfig Copyright (C) 2024 Ryan Ogurek\n" \
+  "ProffieConfig Copyright (C) 2023-2025 Ryan Ogurek\n" \
   "\n" \
   "This program is free software: you can redistribute it and/or modify " \
   "it under the terms of the GNU General Public License as published by " \
