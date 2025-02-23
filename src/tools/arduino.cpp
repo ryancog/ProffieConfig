@@ -535,7 +535,11 @@ wxString Arduino::parseError(const wxString& error) {
   if (ERRCONTAINS("1\n2\n3\n4\n5\n6\n7\n8\n9\n10")) return "Could not connect to Proffieboard for upload.";
   if (ERRCONTAINS("10\n9\n8\n7\n6\n5\n4\n3\n2\n1")) return "Could not connect to Proffieboard for upload.";
   if (ERRCONTAINS("No DFU capable USB device available")) return "No Proffieboard in BOOTLOADER mode found.";
-  if (ERRCONTAINS("error:")) return ERRCONTAINS("error:");
+  if (ERRCONTAINS("error:")) {
+      const auto errPos{error.find("error:")};
+      const auto fileData{error.rfind('/', errPos)};
+      return error.substr(fileData + 1);
+  }
 
   return "Unknown error: " + error;
 #undef ERRCONTAINS

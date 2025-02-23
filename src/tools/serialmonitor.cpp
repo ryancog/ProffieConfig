@@ -82,17 +82,24 @@ void SerialMonitor::BindEvents() {
     const auto timeStrLen{2 + 1 + 2 + 1 + 2 + 1 + 3 + 3};
 
     Bind(wxEVT_TEXT_ENTER, [&](wxCommandEvent&) {
-        sendOut = input->entry()->GetValue();
-        if (history.empty() or history.back() != sendOut) {
-            history.emplace_back(sendOut);
-        }
-        historyIdx = history.size();
+        const auto command = input->entry()->GetValue();
         input->entry()->Clear();
 
-        if (not needsTime) {
-            output->entry()->AppendText('\n');
+        if (history.empty() or history.back() != command) {
+            history.emplace_back(command);
         }
-        output->entry()->AppendText("-------------> " + history.back() + '\n');
+        historyIdx = history.size();
+
+        if (command == "clear") {
+            output->entry()->Clear();
+        } else {
+            sendOut = command;
+
+            if (not needsTime) {
+                output->entry()->AppendText('\n');
+            }
+            output->entry()->AppendText("-------------> " + history.back() + '\n');
+        }
     }, ID_SerialCommand);
     input->entry()->Bind(wxEVT_KEY_DOWN, [&](wxKeyEvent& evt) {
         switch (evt.GetKeyCode()) {

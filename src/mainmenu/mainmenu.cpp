@@ -84,7 +84,7 @@ void MainMenu::bindEvents() {
                                 );
         aboutInfo.SetVersion(VERSION);
         aboutInfo.SetWebSite("https://proffieconfig.kafrenetrading.com");
-        aboutInfo.SetCopyright("Copyright (C) 2024 Ryan Ogurek");
+        aboutInfo.SetCopyright("Copyright (C) 2023-2025 Ryan Ogurek");
         aboutInfo.SetName("ProffieConfig");
         wxAboutBox(aboutInfo);
     }, wxID_ABOUT);
