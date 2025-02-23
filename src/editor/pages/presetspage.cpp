@@ -16,7 +16,7 @@
 
 PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, ""), parent(static_cast<EditorWindow*>(window)) {
   commentInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "Comments", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE | wxNO_BORDER);
-  styleInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "BladeStyle", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE | wxNO_BORDER);
+  styleInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "BladeStyle", wxDefaultPosition, wxSize(400, 20), wxTE_DONTWRAP | wxTE_MULTILINE | wxNO_BORDER);
   styleInput->entry()->SetFont(wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
 
 
@@ -25,7 +25,7 @@ PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, wind
 
   auto *styleSizer{new wxBoxSizer(wxVERTICAL)};
   styleSizer->Add(commentInput, wxSizerFlags(/*proportion*/ 1).Expand());
-  styleSizer->AddSpacer(10);
+
   styleSizer->Add(styleInput, wxSizerFlags(/*proportion*/ 2).Expand());
   Add(styleSizer, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
