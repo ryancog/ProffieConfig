@@ -7,6 +7,7 @@
 #include "core/utilities/misc.h"
 #include "editor/editorwindow.h"
 #include "editor/dialogs/bladearraydlg.h"
+#include "wx/msgdlg.h"
 
 #include <string>
 #include <wx/tooltip.h>
@@ -143,33 +144,61 @@ wxBoxSizer* PresetsPage::createPresetSelect() {
 
   return presetSelect;
 }
+
 wxBoxSizer* PresetsPage::createPresetConfig() {
-  wxBoxSizer *presetConfig = new wxBoxSizer(wxVERTICAL);
+    wxBoxSizer *presetConfig = new wxBoxSizer(wxVERTICAL);
 
-  wxBoxSizer *name = new wxBoxSizer(wxVERTICAL);
-  wxStaticText *nameLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Preset Name", wxDefaultPosition, wxSize(150, 20));
-  nameInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange);
-  name->Add(nameLabel, wxSizerFlags(0).Border(wxLEFT | wxTOP, 10));
-  name->Add(nameInput, wxSizerFlags(0).Border(wxLEFT, 10).Expand());
+    nameInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "Preset Name", wxDefaultPosition, wxSize(200, -1));
+    dirInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "Font Directory", wxDefaultPosition, wxSize(200, -1));
+    trackInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "Track File", wxDefaultPosition, wxSize(200, -1));
+    injectionsSizer = new wxBoxSizer(wxVERTICAL);
 
-  wxBoxSizer *dir = new wxBoxSizer(wxVERTICAL);
-  wxStaticText *dirLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Font Directory", wxDefaultPosition, wxSize(150, 20));
-  dirInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange);
-  dir->Add(dirLabel, wxSizerFlags(0).Border(wxLEFT | wxTOP, 10));
-  dir->Add(dirInput, wxSizerFlags(0).Border(wxLEFT, 10).Expand());
+    presetConfig->Add(nameInput, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 10).Expand());
+    presetConfig->Add(dirInput, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 10).Expand());
+    presetConfig->Add(trackInput, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 10).Expand());
+    presetConfig->Add(injectionsSizer, wxSizerFlags(1).Border(wxLEFT | wxTOP | wxBOTTOM, 10).Expand());
 
-  wxBoxSizer *track = new wxBoxSizer(wxVERTICAL);
-  wxStaticText *trackLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Track File", wxDefaultPosition, wxSize(150, 20));
-  trackInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange);
-  track->Add(trackLabel, wxSizerFlags(0).Border(wxLEFT | wxTOP, 10));
-  track->Add(trackInput, wxSizerFlags(0).Border(wxLEFT | wxBOTTOM, 10).Expand());
+    rebuildInjections();
 
-  presetConfig->Add(name);
-  presetConfig->Add(dir);
-  presetConfig->Add(track);
+    return presetConfig;
+}
 
+void PresetsPage::rebuildInjections() {
+    injectionsSizer->Clear(true);
 
-  return presetConfig;
+    if (injections.empty()) return;
+
+    auto *injectionsText{new wxStaticText(GetStaticBox(), wxID_ANY, "Injections")};
+    injectionsSizer->Add(injectionsText, wxSizerFlags().Border(wxLEFT | wxTOP, 10));
+
+    for (const auto& injection : injections) {
+        auto *injectionSizer{new wxBoxSizer(wxHORIZONTAL)};
+        auto *injectionText{new wxStaticText(GetStaticBox(), wxID_ANY, injection)};
+        auto *editButton{new wxButton(GetStaticBox(), wxID_ANY, "Edit", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT)};
+        auto *deleteButton{new wxButton(GetStaticBox(), wxID_ANY, "Delete", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT)};
+
+        editButton->Bind(wxEVT_BUTTON, [=](wxCommandEvent&) {
+            wxLaunchDefaultApplication(std::string(CONFIG_DIR) + "injection/" + injection);
+        });
+
+        deleteButton->Bind(wxEVT_BUTTON, [=](wxCommandEvent&) {
+            if (wxNO == wxMessageBox("This action cannot be undone!", "Delete Injection", wxYES_NO | wxNO_DEFAULT)) return;
+
+            injections.erase(std::find(injections.begin(), injections.end(), injection));
+            update();
+        });
+
+        injectionSizer->Add(injectionText, wxSizerFlags(1).Center());
+        injectionSizer->AddSpacer(20);
+        injectionSizer->Add(editButton);
+        injectionSizer->AddSpacer(10);
+        injectionSizer->Add(deleteButton);
+
+        injectionsSizer->Add(injectionSizer, wxSizerFlags().Border(wxTOP | wxLEFT, 10));
+    }
+
+    injectionsSizer->Layout();
+    Layout();
 }
 
 void PresetsPage::update() {
@@ -181,6 +210,7 @@ void PresetsPage::update() {
   if (trackInput->entry()->IsModified()) stripAndSaveTrack();
   if (styleInput->entry()->IsModified()) stripAndSaveEditor();
   if (commentInput->entry()->IsModified()) stripAndSaveComments();
+  rebuildInjections();
 
   rebuildBladeArrayList();
   rebuildPresetList();

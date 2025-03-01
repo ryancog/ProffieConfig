@@ -41,6 +41,7 @@ public:
         ID_SaveConfig,
         ID_ExportConfig,
         ID_VerifyConfig,
+        ID_AddInjection,
 
         ID_StyleEditor,
     };

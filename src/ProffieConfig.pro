@@ -3,9 +3,9 @@ CONFIG += c++17
 CONFIG -= qt
 
 QMAKE_CXXFLAGS += $$system(wx-config --cxxflags)
-QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
+QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.15
 
-VERSION = 1.6.16
+VERSION = 1.6.17
 DEFINES += VERSION=\\\"$$VERSION\\\"
 win32: DEFINES += wxMessageDialog=wxGenericMessageDialog
 win32: DEFINES += wxProgressDialog=wxGenericProgressDialog
@@ -47,6 +47,7 @@ SOURCES += \
     editor/pages/presetspage.cpp \
     editor/pages/bladespage.cpp \
     mainmenu/dialogs/addconfig.cpp \
+    mainmenu/dialogs/props.cpp \
     mainmenu/mainmenu.cpp \
     onboard/onboard.cpp \
     onboard/pages/dependencypage.cpp \
@@ -77,6 +78,7 @@ HEADERS += \
     editor/pages/bladespage.h \
     editor/pages/propspage.h \
     mainmenu/dialogs/addconfig.h \
+    mainmenu/dialogs/props.h \
     mainmenu/mainmenu.h \
     onboard/onboard.h \
     tools/arduino.h \

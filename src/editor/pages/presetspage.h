@@ -21,6 +21,8 @@ public:
 
     void update();
 
+    wxBoxSizer *injectionsSizer{nullptr};
+
     pcChoice* bladeArray{nullptr};
     pcTextCtrl* commentInput{nullptr};
     pcTextCtrl* styleInput{nullptr};
@@ -35,6 +37,8 @@ public:
     pcTextCtrl* nameInput{nullptr};
     pcTextCtrl* dirInput{nullptr};
     pcTextCtrl* trackInput{nullptr};
+
+    std::vector<wxString> injections;
 
     struct PresetConfig {
         struct Style {
@@ -79,4 +83,6 @@ private:
     void stripAndSaveName();
     void stripAndSaveDir();
     void stripAndSaveTrack();
+
+    void rebuildInjections();
 };

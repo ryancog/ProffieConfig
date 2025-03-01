@@ -71,7 +71,7 @@ SETTINGS {
 	TOGGLE("FETT263_SWING_ON_NO_BM") {
 		NAME: "Swing On No Battle Mode"
 		DESCRIPTION: "To enable Swing On Ignition control but not activate Battle Mode"
-		REQUIREANY: "FETT263_SWING_ON", "FETT263_SWING_ON_PREON"
+		REQUIREANY: "FETT263_SWING_ON",	"FETT263_SWING_ON_PREON"
 	}
 	NUMERIC("FETT263_SWING_ON_SPEED") {
 		NAME: "Swing on Speed"
