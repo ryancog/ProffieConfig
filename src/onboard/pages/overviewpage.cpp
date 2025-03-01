@@ -92,6 +92,7 @@ void Onboard::Overview::prepareEditor() {
   guideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_ExportConfig, false);
   guideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_StyleEditor, false);
   guideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_VerifyConfig, false);
+  guideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_AddInjection, false);
   guideMenu->activeEditor->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
     if (doneWithEditor) {
       event.Skip();

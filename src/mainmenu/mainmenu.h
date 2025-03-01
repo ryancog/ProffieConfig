@@ -52,6 +52,8 @@ public:
         ID_AddConfig,
         ID_RemoveConfig,
         ID_EditConfig,
+
+        ID_AddProp,
     };
 
 private:

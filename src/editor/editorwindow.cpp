@@ -15,6 +15,7 @@
 #include "core/utilities/progress.h"
 
 #include "tools/arduino.h"
+#include "wx/filedlg.h"
 
 #include <wx/event.h>
 #include <wx/combobox.h>
@@ -83,6 +84,26 @@ void EditorWindow::bindEvents() {
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(this); }, ID_ExportConfig);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(this, this); }, ID_VerifyConfig);
 
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+        wxFileDialog fileDialog{this, "Select Injection File", wxEmptyString, wxEmptyString, "C Header (*.h)|*.h", wxFD_FILE_MUST_EXIST | wxFD_OPEN};
+        if (fileDialog.ShowModal() == wxCANCEL) return;
+
+        std::string copyPath{std::string(CONFIG_DIR)};
+        copyPath += "injection/";
+        std::error_code err;
+        std::filesystem::create_directories(copyPath, err);
+        copyPath += fileDialog.GetFilename().ToStdString();
+
+        const auto copyOptions{std::filesystem::copy_options::overwrite_existing};
+        if (not std::filesystem::copy_file(fileDialog.GetPath().ToStdString(), copyPath, copyOptions, err)) {
+        wxMessageBox(err.message(), "Injection file could not be added.");
+        return;
+        }
+
+        presetsPage->injections.push_back(fileDialog.GetFilename());
+        presetsPage->update();
+    }, ID_AddInjection);
+
 # if defined(__WXOSX__)
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser(wxGetCwd() + std::string("/" STYLEEDIT_PATH)); }, ID_StyleEditor);
 # else
@@ -119,6 +140,8 @@ void EditorWindow::createMenuBar() {
     file->AppendSeparator();
     file->Append(ID_SaveConfig, "Save Config\tCtrl+S");
     file->Append(ID_ExportConfig, "Export Config...\t");
+    file->AppendSeparator();
+    file->Append(ID_AddInjection, "Add Injection...\t", "Add a header file to be injected into CONFIG_PRESETS during compilation.");
 
     wxMenu* tools = new wxMenu;
     tools->Append(ID_StyleEditor, "Style Editor...", "Open the ProffieOS style editor");

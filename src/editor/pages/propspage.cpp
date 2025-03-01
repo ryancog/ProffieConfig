@@ -244,7 +244,7 @@ void PropsPage::updateSelectedProp(const wxString& newProp) {
 }
 void PropsPage::loadProps() {
   props.clear();
-  for (const auto& prop : AppState::instance->getPropFileNames()) {
+  for (const auto& prop : AppState::instance->propFileNames) {
     auto propConfig = PropFile::createPropConfig(prop, propsWindow);
     if (propConfig != nullptr) {
       propsWindow->GetSizer()->Add(propConfig);

@@ -32,6 +32,8 @@
 
 #include <wx/statbmp.h>
 
+#include <mainmenu/dialogs/props.h>
+
 MainMenu* MainMenu::instance{nullptr};
 MainMenu::MainMenu(wxWindow* parent) : wxFrame(parent, wxID_ANY, "ProffieConfig") {
   createUI();
@@ -91,8 +93,17 @@ void MainMenu::bindEvents() {
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
         wxMessageDialog(this, COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION).ShowModal();
-    },
-    ID_Copyright);
+    }, ID_Copyright);
+
+    Bind(wxEVT_MENU, [&](wxCommandEvent &) {
+        if (not editors.empty()) {
+            wxMessageBox("All Editors must be closed to continue.", "Editors Open");
+            return;
+        }
+
+        Props(this).ShowModal();
+    }, ID_AddProp);
+
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/ryancog/ProffieConfig/blob/master/docs"); }, ID_Docs);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/ryancog/ProffieConfig/issues/new"); }, ID_Issue);
 
@@ -169,6 +180,7 @@ void MainMenu::createTooltips() {
 void MainMenu::createMenuBar() {
   wxMenu *file = new wxMenu;
   file->Append(ID_ReRunSetup, "Re-Run First-Time Setup...", "Install Proffieboard Dependencies and View Tutorial");
+  file->Append(ID_AddProp, "Add Prop...");
   file->AppendSeparator();
   file->Append(wxID_ABOUT);
   file->Append(ID_Copyright, "Copyright Notice");

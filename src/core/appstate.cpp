@@ -89,16 +89,14 @@ void AppState::loadStateFromFile() {
 }
 
 bool AppState::isSaved() {
-  return saved;
+    return saved;
 }
 void AppState::setSaved(bool state) {
-  saved = state;
+    saved = state;
 }
-const std::vector<std::string>& AppState::getPropFileNames() {
-  return propFileNames;
-}
+
 const std::vector<std::string>& AppState::getConfigFileNames() {
-  return configFileNames;
+    return configFileNames;
 }
 
 void AppState::removeConfig(const std::string& configName) {
