@@ -1,6 +1,6 @@
 NAME: "BC"
 FILENAME: "saber_BC_buttons.h"
-INFO {
+INFO: {
 	"  fredrik.hubbe.net/lightsaber/proffieos.html"
 	"  Copyright (c) 2016-2019 Fredrik Hubinette"
 	"  Copyright (c) 2023 Brian Conner with contributions by:"
@@ -133,29 +133,29 @@ SETTINGS {
 
 LAYOUT {
 	HORIZONTAL ("Gesture Control") {
-		OPTION("BC_STAB_ON")
+                SETTING("BC_STAB_ON")
 		VERTICAL {
-			OPTION("BC_SWING_ON")
-			OPTION("BC_SWING_ON_SPEED")
+                        SETTING("BC_SWING_ON")
+                        SETTING("BC_SWING_ON_SPEED")
 		}
-		OPTION("BC_THRUST_ON")
-		OPTION("BC_TWIST_ON")
-		OPTION("BC_TWIST_OFF")
+                SETTING("BC_THRUST_ON")
+                SETTING("BC_TWIST_ON")
+                SETTING("BC_TWIST_OFF")
 	}
 	HORIZONTAL {
 		VERTICAL("Controls") {
-			OPTION("NO_BLADE_NO_GEST_ONOFF")
-			OPTION("ENABLE_AUTO_SWING_BLAST")
-			OPTION("NO_VOLUME_MENU")
+                        SETTING("NO_BLADE_NO_GEST_ONOFF")
+                        SETTING("ENABLE_AUTO_SWING_BLAST")
+                        SETTING("NO_VOLUME_MENU")
 		}
 		VERTICAL("Features") {
-			OPTION("BC_FORCE_PUSH")
-			OPTION("BC_FORCE_PUSH_LENGTH")
+                        SETTING("BC_FORCE_PUSH")
+                        SETTING("BC_FORCE_PUSH_LENGTH")
 		}
 		VERTICAL("Battle Mode") {
-			OPTION("BC_NO_BM")
-			OPTION("BC_GESTURE_AUTO_BATTLE_MODE")
-			OPTION("BC_LOCKUP_DELAY")
+                        SETTING("BC_NO_BM")
+                        SETTING("BC_GESTURE_AUTO_BATTLE_MODE")
+                        SETTING("BC_LOCKUP_DELAY")
 		}
 	}
 }

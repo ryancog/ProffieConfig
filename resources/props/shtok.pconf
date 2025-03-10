@@ -1,6 +1,6 @@
 NAME: "Shtok"
 FILENAME: "saber_shtok_buttons.h"
-INFO {
+INFO: {
 	"CUSTOM SOUNDS SUPPORTED (add to font to enable):"
 	""
 	"On Demand Power Save - dim.wav"

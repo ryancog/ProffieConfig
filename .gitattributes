@@ -48,3 +48,9 @@
 /resources/icons/icon.xpm filter=lfs diff=lfs merge=lfs -text
 /src/resources/win32/arduino-cli/arduino-cli.exe filter=lfs diff=lfs merge=lfs -text
 /src/resources/win32/proffie-dfu-setup.exe filter=lfs diff=lfs merge=lfs -text
+/resources/bin/Linux/arduino-cli filter=lfs diff=lfs merge=lfs -text
+/resources/bin/Win32/arduino-cli.exe filter=lfs diff=lfs merge=lfs -text
+/resources/bin/Win32/proffie-dfu-setup.exe filter=lfs diff=lfs merge=lfs -text
+/resources/bin/macOS/arduino-cli filter=lfs diff=lfs merge=lfs -text
+/resources/component-icons/led.svg filter=lfs diff=lfs merge=lfs -text
+/resources/icons/old/icon.icns filter=lfs diff=lfs merge=lfs -text

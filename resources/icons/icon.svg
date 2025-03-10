@@ -6,447 +6,1615 @@
    height="512"
    viewBox="0 0 512 512"
    version="1.1"
-   id="svg5"
-   sodipodi:docname="drawing.svg"
-   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   id="svg1"
+   xml:space="preserve"
+   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
+   sodipodi:docname="icon.svg"
+   inkscape:export-filename="icon.png"
+   inkscape:export-xdpi="192"
+   inkscape:export-ydpi="192"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg">
-  <sodipodi:namedview
-     id="namedview7"
-     pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1.0"
-     inkscape:pageshadow="2"
-     inkscape:pageopacity="0.0"
+   xmlns:svg="http://www.w3.org/2000/svg"><sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
      inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
      inkscape:document-units="px"
-     showgrid="false"
-     inkscape:zoom="1.4023438"
-     inkscape:cx="260.6351"
-     inkscape:cy="223.19777"
-     inkscape:window-width="2560"
-     inkscape:window-height="1294"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
-     inkscape:window-maximized="1"
+     inkscape:zoom="0.0625"
+     inkscape:cx="-704"
+     inkscape:cy="1072"
+     inkscape:window-width="1102"
+     inkscape:window-height="1264"
+     inkscape:window-x="85"
+     inkscape:window-y="70"
+     inkscape:window-maximized="0"
      inkscape:current-layer="layer1"
-     inkscape:snap-global="true"
-     inkscape:snap-nodes="false"
-     inkscape:snap-object-midpoints="true"
-     inkscape:snap-others="false"
-     inkscape:snap-center="true"
-     inkscape:snap-text-baseline="true" />
-  <defs
-     id="defs2">
-    <clipPath
+     showgrid="false" /><defs
+     id="defs1"><linearGradient
+       id="linearGradient63"
+       inkscape:swatch="gradient"><stop
+         style="stop-color:#000000;stop-opacity:0.69616777;"
+         offset="0.68347901"
+         id="stop65" /><stop
+         style="stop-color:#000000;stop-opacity:0;"
+         offset="1"
+         id="stop66" /></linearGradient><linearGradient
+       id="linearGradient63-1"><stop
+         style="stop-color:#000000;stop-opacity:0.69616777;"
+         offset="0.68347901"
+         id="stop63" /><stop
+         style="stop-color:#000000;stop-opacity:0;"
+         offset="1"
+         id="stop64" /></linearGradient><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect50"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect46"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><linearGradient
+       id="linearGradient37"
+       inkscape:collect="always"><stop
+         style="stop-color:#2e2e2e;stop-opacity:1;"
+         offset="0"
+         id="stop37" /><stop
+         style="stop-color:#393939;stop-opacity:1;"
+         offset="1"
+         id="stop38" /></linearGradient><linearGradient
+       id="linearGradient34"
+       inkscape:collect="always"><stop
+         style="stop-color:#1d1d1d;stop-opacity:1;"
+         offset="0"
+         id="stop33" /><stop
+         style="stop-color:#313131;stop-opacity:1;"
+         offset="1"
+         id="stop34" /></linearGradient><linearGradient
+       id="linearGradient31"
+       inkscape:collect="always"><stop
+         style="stop-color:#2c2c2c;stop-opacity:1;"
+         offset="0"
+         id="stop31" /><stop
+         style="stop-color:#3a3a3a;stop-opacity:1;"
+         offset="1"
+         id="stop32" /></linearGradient><linearGradient
+       id="linearGradient29"
+       inkscape:collect="always"><stop
+         style="stop-color:#505050;stop-opacity:1;"
+         offset="0"
+         id="stop29" /><stop
+         style="stop-color:#626262;stop-opacity:1;"
+         offset="1"
+         id="stop30" /></linearGradient><linearGradient
+       id="linearGradient27"
+       inkscape:collect="always"><stop
+         style="stop-color:#555555;stop-opacity:1;"
+         offset="0"
+         id="stop27" /><stop
+         style="stop-color:#4b4b4b;stop-opacity:1;"
+         offset="1"
+         id="stop28" /></linearGradient><linearGradient
+       id="linearGradient25"
+       inkscape:collect="always"><stop
+         style="stop-color:#373737;stop-opacity:1;"
+         offset="0"
+         id="stop25" /><stop
+         style="stop-color:#2c2c2c;stop-opacity:1;"
+         offset="1"
+         id="stop26" /></linearGradient><linearGradient
+       id="linearGradient21"
+       inkscape:collect="always"><stop
+         style="stop-color:#424242;stop-opacity:1;"
+         offset="0"
+         id="stop21" /><stop
+         style="stop-color:#4b4b4b;stop-opacity:1;"
+         offset="1"
+         id="stop22" /></linearGradient><linearGradient
+       id="linearGradient15"
+       inkscape:collect="always"><stop
+         style="stop-color:#4b4b4b;stop-opacity:1;"
+         offset="0"
+         id="stop15" /><stop
+         style="stop-color:#313131;stop-opacity:1;"
+         offset="1"
+         id="stop18" /></linearGradient><linearGradient
+       id="linearGradient13"
+       inkscape:collect="always"><stop
+         style="stop-color:#2c2c2c;stop-opacity:1;"
+         offset="0"
+         id="stop13" /><stop
+         style="stop-color:#1b1b1b;stop-opacity:1;"
+         offset="1"
+         id="stop14" /></linearGradient><linearGradient
+       id="linearGradient47"
+       inkscape:collect="always"><stop
+         style="stop-color:#939393;stop-opacity:1;"
+         offset="0"
+         id="stop47" /><stop
+         style="stop-color:#c3c3c3;stop-opacity:1;"
+         offset="0.06519339"
+         id="stop49" /><stop
+         style="stop-color:#cdcdcd;stop-opacity:1;"
+         offset="0.93000001"
+         id="stop50" /><stop
+         style="stop-color:#939393;stop-opacity:1;"
+         offset="1"
+         id="stop48" /></linearGradient><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><linearGradient
+       id="linearGradient16"
+       inkscape:collect="always"><stop
+         style="stop-color:#0b0b0b;stop-opacity:0.26072565;"
+         offset="0"
+         id="stop16" /><stop
+         style="stop-color:#000000;stop-opacity:0.46400952;"
+         offset="0.67745578"
+         id="stop17" /></linearGradient><linearGradient
+       id="linearGradient10"
+       inkscape:collect="always"><stop
+         style="stop-color:#0b0b0b;stop-opacity:1;"
+         offset="0.14029042"
+         id="stop10" /><stop
+         style="stop-color:#181818;stop-opacity:0.49803922;"
+         offset="0.21534593"
+         id="stop1" /><stop
+         style="stop-color:#252525;stop-opacity:0;"
+         offset="0.37675717"
+         id="stop11" /></linearGradient><linearGradient
+       id="linearGradient6"
+       inkscape:collect="always"><stop
+         style="stop-color:#2d5377;stop-opacity:1;"
+         offset="0"
+         id="stop7" /><stop
+         style="stop-color:#283656;stop-opacity:1;"
+         offset="1"
+         id="stop8" /></linearGradient><linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient6"
+       id="linearGradient8"
+       x1="243.47928"
+       y1="3.9419589"
+       x2="243.47928"
+       y2="555.33301"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1.0196665,0,0,1.0196665,-5.0346339,-5.0346339)" /><linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient10"
+       id="linearGradient11"
+       x1="-5.0345001"
+       y1="256"
+       x2="517.03448"
+       y2="256"
+       gradientUnits="userSpaceOnUse"
+       spreadMethod="repeat"
+       gradientTransform="matrix(0.98048857,0,0,1.0039263,-507.00514,-1.0050802)" /><clipPath
        clipPathUnits="userSpaceOnUse"
-       id="clipPath2704">
-      <rect
-         style="fill:none;stroke:#000000;stroke-width:20;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
-         id="rect2706"
-         width="492"
-         height="492"
-         x="10"
-         y="10"
-         ry="120.12317" />
-    </clipPath>
-  </defs>
-  <g
-     inkscape:groupmode="layer"
-     id="layer2"
-     inkscape:label="Image">
-    <image
-       width="524.5191"
-       height="489.27805"
-       preserveAspectRatio="none"
-       style="image-rendering:optimizeQuality"
-       xlink:href="data:image/png;base64,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
-nHEN5qmf/8bRMlwD/Thrnc3wuTVPZdZ2/mUJOAE410frAQBwjr/NRO8NRKsGzjzt+++aJ2q5XG/d
-f56myd9eKfNUpsY8WecAWOMIMEBQZz9cHbLpPRAYlfULljn6C8BejgADAEPSMPfH7wSWuWkBwDvs
-AAQIzC5AAMhPvQfgXQJAgOC2dgRoDAAgJjUegFocAQZIzpEhAIhH/QagJgEgQHCPd/+XdgJ8f31q
-JAAggNKabfcfAK9wBBggidKAT8MAAP155UadWg7AqwSAAMns3emnmQCAc6jVAJxNAAiQkOO+AJCL
-8A+Ad3y0HgAA9d2bBEEgAMQm+AOgBl8CApCYpgEAYrpcb+o4ANXYAQiQ3N/mwa5AAOiTwA+AowgA
-AQYz11wIBQHgXMI+AM4kAARAEwIAAJCYZwACAAAAQGICQAAAAABITAAIAAAAAIkJAAEAAAAgMQEg
-AAAAACQmAAQAAACAxASAAAAAAJCYABAAAAAAEhMAAgAAAEBiAkAAAAAASEwACAAAAACJCQABAAAA
-IDEBIAAAAAAkJgAEAAAAgMQEgAAAAACQmAAQAAAAABITAAIAAABAYgJAAAAAAEhMAAgAAAAAiQkA
-AQAAACAxASAAAAAAJCYABAAAAIDEBIAAAAAAkJgAEAAAAAASEwACAAAAQGICQAAAAABITAAIAAAA
-AIkJAAEAAAAgMQEgAAAAACQmAAQAAACAxASAAAAAAJCYABAAAAAAEhMAAgAAAEBiAkAAAAAASEwA
-CAAAAACJCQABAAAAIDEBIAAAAAAkJgAEAAAAgMQEgAAAAACQmAAQAAAAABITAAIAAABAYgJAAAAA
-AEhMAAgAAAAAiQkAAQAAACAxASAAAAAAJCYABAAAAIDEBIAAAAAAkJgAEAAAAAASEwACAAAAQGIC
-QAAAAABITAAIAAAAAIkJAAEAAAAgMQEgAAAAACQmAAQAAACAxASAAAAAAJCYABAAAAAAEhMAAgAA
-AEBi/wdE+30dS5MyzQAAAABJRU5ErkJggg==
-"
-       id="image1448"
-       x="-1"
-       y="10"
-       clip-path="url(#clipPath2704)" />
-  </g>
-  <g
+       id="clipPath13"><rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:10.069;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="rect13"
+         width="512"
+         height="512"
+         x="0"
+         y="0"
+         ry="108.01817"
+         rx="108.01817"
+         transform="rotate(90)" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath14"><rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:10.069;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="rect14"
+         width="512"
+         height="512"
+         x="0"
+         y="0"
+         ry="108.01817"
+         rx="108.01817" /></clipPath><linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient16"
+       id="linearGradient17"
+       x1="259.90363"
+       y1="-5.2085261"
+       x2="259.90363"
+       y2="490.95483"
+       gradientUnits="userSpaceOnUse" /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath18"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle18"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath18-0"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle18-6"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-1"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle19"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-9"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle19-3"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-7"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle20"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-4"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle20-3"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-4-0"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-7"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle21"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-1"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle21-4"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-4-7-9"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-7-2"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-2"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle22"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath18-6"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle18-4"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-9"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-50"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-50"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle23"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-22"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle21-6"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-4-7-1"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-7-0"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-6"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle20-1"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-4-5"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-9"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-49"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle19-0"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-9"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-1"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath18-7"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle18-7"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-11"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-59"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-9"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle25"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-1"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle26"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-59"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle27"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-1-1"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle26-0"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-1-3"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-1-0"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-59-4"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle27-4"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-59-4"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-1-0"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle29"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-1-0-1"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle29-7"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-1-0-8"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-1-0-5"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-59-4-7"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle27-4-4"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-59-4-1"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-59-4-8"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-1-0-5"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle30"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-59-4-8"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle31"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-3"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle24-3"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-4-7-0-3"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-7-0-8"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle32"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-9"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle32-7"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-4-7-0-8-7"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-7-0-8-6"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle33"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6-2"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle33-5"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-4-7-0-8-6-4"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-7-0-8-6-0"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6-0"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle34"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6-0-2"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle34-4"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-7-0-8-6-0-7"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6-0-2-9"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle34-4-3"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-4-7-0-8-6-0-7-6"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-7-0-8-6-0-7-8"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6-0-7-8"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle35"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6-0-7-8-1"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle35-0"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-4-7-0-8-6-0-7-8-8"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-7-0-8-6-0-7-8-5"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-86"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle24-2"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-4-7-0-84"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-7-0-7"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-2"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle32-4"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-4-7-0-8-0"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-7-0-8-62"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6-9"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle33-9"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-4-7-0-8-6-08"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-7-0-8-6-1"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6-0-3"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle34-1"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-4-7-0-8-6-0-1"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-7-0-8-6-0-0"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6-0-2-3"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle34-4-4"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-4-7-0-8-6-0-7-0"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-7-0-8-6-0-7-3"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-7"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle37"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-62"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle38"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6-1"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle39"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6-0-0"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle40"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6-0-7-3"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle41"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6-0-7-8-5-6"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle36-9"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-4-7-0-8-6-0-7-8-5-8"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-7-0-8-6-0-7-8-5-7"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6-0-7-8-2"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle35-8"
+         cx="34"
+         cy="-116"
+         r="18.945253"
+         d="M 52.945253,-116 A 18.945253,18.945253 0 0 1 34,-97.054747 18.945253,18.945253 0 0 1 15.054747,-116 18.945253,18.945253 0 0 1 34,-134.94525 18.945253,18.945253 0 0 1 52.945253,-116 Z" /><path
+         id="lpe_path-effect18-5-4-7-0-8-6-0-7-8-2"
+         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         class="powerclip"
+         d="m -5,-155.01994 h 78 v 77.999997 H -5 Z M 52.945253,-116 A 18.945253,18.945253 0 0 0 34,-134.94525 18.945253,18.945253 0 0 0 15.054747,-116 18.945253,18.945253 0 0 0 34,-97.054747 18.945253,18.945253 0 0 0 52.945253,-116 Z" /></clipPath><inkscape:path-effect
+       effect="powerclip"
+       id="path-effect18-5-4-7-0-8-6-0-7-8-9"
+       is_visible="true"
+       lpeversion="1"
+       inverse="true"
+       flatten="false"
+       hide_clip="false"
+       message="Use fill-rule evenodd on &lt;b&gt;fill and stroke&lt;/b&gt; dialog if no flatten result after convert clip to paths." /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6-0-7-8-5-7"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle42"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipath_lpe_path-effect18-5-4-7-0-8-6-0-7-8-9"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle43"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient47"
+       id="linearGradient48"
+       x1="148"
+       y1="68.851561"
+       x2="364"
+       y2="68.851561"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.98851295,0,0,0.9966012,2.9406877,1.3824483)" /><linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient13"
+       id="linearGradient14"
+       x1="402"
+       y1="-255.99997"
+       x2="492"
+       y2="-255.99997"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-2)" /><linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient15"
+       id="linearGradient18"
+       x1="402"
+       y1="-255.99997"
+       x2="492"
+       y2="-255.99997"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-2)" /><linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient34"
+       id="linearGradient20"
+       x1="138.51044"
+       y1="433.35629"
+       x2="138.51044"
+       y2="354.112"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(0,-2)" /><linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient21"
+       id="linearGradient22"
+       x1="134.45004"
+       y1="435.32709"
+       x2="134.45004"
+       y2="353.96423"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(0,-2)" /><linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient25"
+       id="linearGradient26"
+       x1="267.16066"
+       y1="-159.29972"
+       x2="322.97067"
+       y2="-159.29972"
+       gradientUnits="userSpaceOnUse" /><linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient27"
+       id="linearGradient28"
+       x1="267.16066"
+       y1="-159.29972"
+       x2="322.97067"
+       y2="-159.29972"
+       gradientUnits="userSpaceOnUse" /><linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient29"
+       id="linearGradient30"
+       x1="315.84708"
+       y1="296.96371"
+       x2="315.84708"
+       y2="167.50862"
+       gradientUnits="userSpaceOnUse" /><linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient31"
+       id="linearGradient32"
+       x1="315.84708"
+       y1="296.96371"
+       x2="315.84708"
+       y2="167.50862"
+       gradientUnits="userSpaceOnUse" /><linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient34"
+       id="linearGradient35"
+       gradientUnits="userSpaceOnUse"
+       x1="138.51044"
+       y1="433.35629"
+       x2="138.51044"
+       y2="354.112"
+       gradientTransform="translate(234,-2)" /><linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient21"
+       id="linearGradient36"
+       gradientUnits="userSpaceOnUse"
+       x1="134.45004"
+       y1="435.32709"
+       x2="134.45004"
+       y2="353.96423"
+       gradientTransform="translate(234,-2)" /><linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient37"
+       id="linearGradient38"
+       x1="142.46086"
+       y1="198.44234"
+       x2="142.46086"
+       y2="150.99312"
+       gradientUnits="userSpaceOnUse" /><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath46"><circle
+         style="display:none;opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#cecece;stroke-width:4.10949;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="circle46"
+         cx="34"
+         cy="-116"
+         r="18.945253" /></clipPath><filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Blur"
+       id="filter66"
+       x="-0.046819719"
+       y="-4.1607425"
+       width="1.0936394"
+       height="9.3214849"><feGaussianBlur
+         stdDeviation="2.54414 32.6819"
+         result="blur"
+         id="feGaussianBlur66" /></filter><filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Blur"
+       id="filter67"
+       x="-0.18087414"
+       y="-0.22142357"
+       width="1.3617483"
+       height="1.4428471"><feGaussianBlur
+         stdDeviation="10.0639 11.0491"
+         result="blur"
+         id="feGaussianBlur67" /></filter><filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Blur"
+       id="filter68"
+       x="-0.11035769"
+       y="-0.11533927"
+       width="1.2207154"
+       height="1.2306785"><feGaussianBlur
+         stdDeviation="4.97297 5.22626"
+         result="blur"
+         id="feGaussianBlur68" /></filter><filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Blur"
+       id="filter68-4"
+       x="-0.11035769"
+       y="-0.11533927"
+       width="1.2207154"
+       height="1.2306785"><feGaussianBlur
+         stdDeviation="4.97297 5.22626"
+         result="blur"
+         id="feGaussianBlur68-5" /></filter><filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Blur"
+       id="filter68-4-7"
+       x="-0.11035769"
+       y="-0.11533927"
+       width="1.2207154"
+       height="1.2306785"><feGaussianBlur
+         stdDeviation="4.97297 5.22626"
+         result="blur"
+         id="feGaussianBlur68-5-5" /></filter><filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Blur"
+       id="filter68-4-7-7"
+       x="-0.11035769"
+       y="-0.11533927"
+       width="1.2207154"
+       height="1.2306785"><feGaussianBlur
+         stdDeviation="4.97297 5.22626"
+         result="blur"
+         id="feGaussianBlur68-5-5-9" /></filter><filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Blur"
+       id="filter68-4-7-5"
+       x="-0.11035769"
+       y="-0.11533927"
+       width="1.2207154"
+       height="1.2306785"><feGaussianBlur
+         stdDeviation="4.97297 5.22626"
+         result="blur"
+         id="feGaussianBlur68-5-5-92" /></filter><filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Blur"
+       id="filter68-4-7-5-4"
+       x="-0.11035769"
+       y="-0.11533927"
+       width="1.2207154"
+       height="1.2306785"><feGaussianBlur
+         stdDeviation="4.97297 5.22626"
+         result="blur"
+         id="feGaussianBlur68-5-5-92-7" /></filter></defs><g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="layer1"
-     style="display:inline">
-    <rect
-       style="fill:none;stroke:#000000;stroke-width:20;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
-       id="rect858-3-6"
-       width="492"
-       height="492"
-       x="10"
-       y="10"
-       ry="102.00617" />
-  </g>
-</svg>
+     id="layer1"><g
+       id="g18"
+       inkscape:label="Background"
+       transform="matrix(0.9375,0,0,0.9375,16,32)"><rect
+         style="fill:url(#linearGradient8);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:10.069;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="rect1"
+         width="512"
+         height="512"
+         x="0"
+         y="0"
+         ry="108.01817"
+         rx="108.01817"
+         inkscape:label="Base" /><rect
+         style="opacity:1;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:url(#linearGradient17);stroke-width:19.85493333;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;paint-order:markers fill stroke"
+         id="rect1-29"
+         width="504.94498"
+         height="508.20728"
+         x="3.5275049"
+         y="3.5275049"
+         ry="101.96255"
+         rx="101.96255"
+         clip-path="url(#clipPath14)"
+         inkscape:label="Edge" /><rect
+         style="display:inline;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:url(#linearGradient11);stroke-width:26.30933333;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;paint-order:markers fill stroke"
+         id="rect1-2"
+         width="502.01016"
+         height="510.03058"
+         x="-507.00507"
+         y="0.93467867"
+         ry="104.21855"
+         rx="101.78547"
+         transform="rotate(-90)"
+         clip-path="url(#clipPath13)"
+         inkscape:label="Bottom Lip" /></g><g
+       id="g5"
+       inkscape:label="Li-Ion Charger"><rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:3.0633;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke;filter:url(#filter68-4-7-5)"
+         id="rect68-5-6-9"
+         width="122.02845"
+         height="122.02847"
+         x="210.29491"
+         y="370.73874"
+         rx="4.8879266"
+         ry="5.8871779"
+         inkscape:label="Shadow"
+         transform="matrix(0,0.40167873,-0.46789875,0,345.0896,70.249511)" /><rect
+         style="fill:url(#linearGradient38);fill-opacity:1;fill-rule:evenodd;stroke:#6e6e6e;stroke-width:1.28848;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="rect27-1"
+         width="54.52153"
+         height="48.320419"
+         x="115.77697"
+         y="151.50087"
+         rx="2.1838942"
+         ry="2.3311849"
+         inkscape:label="Li-Ion Charger" /></g><g
+       id="g6"
+       inkscape:label="Audio"><rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:3.0633;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke;filter:url(#filter68-4-7-5)"
+         id="rect4"
+         width="122.02845"
+         height="122.02847"
+         x="210.29491"
+         y="370.73874"
+         rx="4.8879266"
+         ry="5.8871779"
+         inkscape:label="Shadow"
+         transform="matrix(0,0.44181497,-0.41072194,0,336.58877,178.83646)" /><rect
+         style="fill:url(#linearGradient26);fill-opacity:1;fill-rule:evenodd;stroke:url(#linearGradient28);stroke-width:1.28848;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="rect27-1-80"
+         width="54.52153"
+         height="48.320419"
+         x="267.8049"
+         y="-183.45993"
+         rx="2.1838942"
+         ry="2.3311849"
+         transform="rotate(90)"
+         inkscape:label="Audio" /></g><g
+       id="g1"
+       inkscape:label="MCU"><rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:3.0633;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke;filter:url(#filter68)"
+         id="rect68"
+         width="122.02845"
+         height="122.02847"
+         x="254.54865"
+         y="180.71118"
+         rx="4.8879266"
+         ry="5.8871779"
+         inkscape:label="Shadow" /><rect
+         style="fill:url(#linearGradient32);fill-opacity:1;fill-rule:evenodd;stroke:url(#linearGradient30);stroke-width:3.0633;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="rect27-1-8"
+         width="122.02845"
+         height="122.02847"
+         x="254.54865"
+         y="172.71118"
+         rx="4.8879266"
+         ry="5.8871779"
+         inkscape:label="STM32L4" /></g><g
+       id="g63"
+       inkscape:label="Pads"><g
+         id="g19-4-2-6-8-0-3-9-4-2-6"
+         inkscape:label="Pad"
+         transform="matrix(0.86153846,0,0,0.86153846,160.70769,561.95564)"
+         style="stroke:#454545;stroke-opacity:1"><path
+           style="opacity:1;fill:#c2ab63;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect17-7-5-8-1-4-0-4-8-1-4"
+           width="65"
+           height="65"
+           x="1.5"
+           y="-148.51994"
+           rx="17.598452"
+           ry="19.101524"
+           clip-path="none"
+           sodipodi:type="rect" /><circle
+           style="display:inline;opacity:1;fill:#171717;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:4.0284;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="circle50"
+           cx="34.000004"
+           cy="-116.01994"
+           r="18.571428" /></g><g
+         id="g19-4-2-6-8-0-3-9-4-2-6-6"
+         inkscape:label="Pad"
+         transform="matrix(0.86153846,0,0,0.86153846,292.70769,561.95564)"
+         style="stroke:#454545;stroke-opacity:1"><rect
+           style="opacity:1;fill:#c2ab63;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect17-7-5-8-1-4-0-4-8-1-4-1"
+           width="65"
+           height="65"
+           x="1.5"
+           y="-148.51994"
+           rx="17.598452"
+           ry="19.101524"
+           clip-path="none"
+           sodipodi:type="rect" /><circle
+           style="display:inline;opacity:1;fill:#171717;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:4.0284;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="circle50-0"
+           cx="34.000004"
+           cy="-116.01994"
+           r="18.571428" /></g><g
+         id="g19-4-2-6-8-0-3-9-4-2-6-2"
+         inkscape:label="Pad"
+         transform="matrix(0.86153846,0,0,0.86153846,96.707692,561.95564)"
+         style="stroke:#454545;stroke-opacity:1"><rect
+           style="opacity:1;fill:#c2ab63;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect17-7-5-8-1-4-0-4-8-1-4-9"
+           width="65"
+           height="65"
+           x="1.5"
+           y="-148.51994"
+           rx="17.598452"
+           ry="19.101524"
+           clip-path="none"
+           sodipodi:type="rect" /><circle
+           style="display:inline;opacity:1;fill:#171717;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:4.0284;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="circle50-3"
+           cx="34.000004"
+           cy="-116.01994"
+           r="18.571428" /></g><g
+         id="g19-4-2-6-8-0-3-9-4-2-6-2-7"
+         inkscape:label="Pad"
+         transform="matrix(0.86153846,0,0,0.86153846,32.707692,497.95564)"
+         style="stroke:#454545;stroke-opacity:1"><rect
+           style="opacity:1;fill:#c2ab63;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect17-7-5-8-1-4-0-4-8-1-4-9-8"
+           width="65"
+           height="65"
+           x="1.5"
+           y="-148.51994"
+           rx="17.598452"
+           ry="19.101524"
+           clip-path="none"
+           sodipodi:type="rect" /><circle
+           style="display:inline;opacity:1;fill:#171717;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:4.0284;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="circle50-3-4"
+           cx="34.000004"
+           cy="-116.01994"
+           r="18.571428" /></g><g
+         id="g53"
+         inkscape:label="Pad"
+         transform="matrix(0.86153846,0,0,0.86153846,32.707692,433.95564)"
+         style="stroke:#454545;stroke-opacity:1"><rect
+           style="opacity:1;fill:#c2ab63;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect53"
+           width="65"
+           height="65"
+           x="1.5"
+           y="-148.51994"
+           rx="17.598452"
+           ry="19.101524"
+           clip-path="none"
+           sodipodi:type="rect" /><circle
+           style="display:inline;opacity:1;fill:#171717;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:4.0284;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="circle53"
+           cx="34.000004"
+           cy="-116.01994"
+           r="18.571428" /></g><g
+         id="g54"
+         inkscape:label="Pad"
+         transform="matrix(0.86153846,0,0,0.86153846,32.707692,369.95564)"
+         style="stroke:#454545;stroke-opacity:1"><rect
+           style="opacity:1;fill:#c2ab63;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect54"
+           width="65"
+           height="65"
+           x="1.5"
+           y="-148.51994"
+           rx="17.598452"
+           ry="19.101524"
+           clip-path="none"
+           sodipodi:type="rect" /><circle
+           style="display:inline;opacity:1;fill:#171717;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:4.0284;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="circle54"
+           cx="34.000004"
+           cy="-116.01994"
+           r="18.571428" /></g><g
+         id="g55"
+         inkscape:label="Pad"
+         transform="matrix(0.86153846,0,0,0.86153846,32.707692,305.95564)"
+         style="stroke:#454545;stroke-opacity:1"><rect
+           style="opacity:1;fill:#c2ab63;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect55"
+           width="65"
+           height="65"
+           x="1.5"
+           y="-148.51994"
+           rx="17.598452"
+           ry="19.101524"
+           clip-path="none"
+           sodipodi:type="rect" /><circle
+           style="display:inline;opacity:1;fill:#171717;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:4.0284;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="circle55"
+           cx="34.000004"
+           cy="-116.01994"
+           r="18.571428" /></g><g
+         id="g56"
+         inkscape:label="Pad"
+         transform="matrix(0.86153846,0,0,0.86153846,32.707692,241.95564)"
+         style="stroke:#454545;stroke-opacity:1"><rect
+           style="opacity:1;fill:#c2ab63;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect56"
+           width="65"
+           height="65"
+           x="1.5"
+           y="-148.51994"
+           rx="17.598452"
+           ry="19.101524"
+           clip-path="none"
+           sodipodi:type="rect" /><circle
+           style="display:inline;opacity:1;fill:#171717;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:4.0284;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="circle56"
+           cx="34.000004"
+           cy="-116.01994"
+           r="18.571428" /></g><g
+         id="g57"
+         inkscape:label="Pad"
+         transform="matrix(0.86153846,0,0,0.86153846,356.70769,561.95564)"
+         style="stroke:#454545;stroke-opacity:1"><rect
+           style="opacity:1;fill:#c2ab63;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect57"
+           width="65"
+           height="65"
+           x="1.5"
+           y="-148.51994"
+           rx="17.598452"
+           ry="19.101524"
+           clip-path="none"
+           sodipodi:type="rect" /><circle
+           style="display:inline;opacity:1;fill:#171717;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:4.0284;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="circle57"
+           cx="34.000004"
+           cy="-116.01994"
+           r="18.571428" /></g><g
+         id="g58"
+         inkscape:label="Pad"
+         transform="matrix(0.86153846,0,0,0.86153846,420.70769,497.95564)"
+         style="stroke:#454545;stroke-opacity:1"><rect
+           style="opacity:1;fill:#c2ab63;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect58"
+           width="65"
+           height="65"
+           x="1.5"
+           y="-148.51994"
+           rx="17.598452"
+           ry="19.101524"
+           clip-path="none"
+           sodipodi:type="rect" /><circle
+           style="display:inline;opacity:1;fill:#171717;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:4.0284;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="circle58"
+           cx="34.000004"
+           cy="-116.01994"
+           r="18.571428" /></g><g
+         id="g59"
+         inkscape:label="Pad"
+         transform="matrix(0.86153846,0,0,0.86153846,420.70769,433.95564)"
+         style="stroke:#454545;stroke-opacity:1"><rect
+           style="opacity:1;fill:#c2ab63;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect59"
+           width="65"
+           height="65"
+           x="1.5"
+           y="-148.51994"
+           rx="17.598452"
+           ry="19.101524"
+           clip-path="none"
+           sodipodi:type="rect" /><circle
+           style="display:inline;opacity:1;fill:#171717;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:4.0284;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="circle59"
+           cx="34.000004"
+           cy="-116.01994"
+           r="18.571428" /></g><g
+         id="g60"
+         inkscape:label="Pad"
+         transform="matrix(0.86153846,0,0,0.86153846,420.70769,369.95564)"
+         style="stroke:#454545;stroke-opacity:1"><rect
+           style="opacity:1;fill:#c2ab63;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect60"
+           width="65"
+           height="65"
+           x="1.5"
+           y="-148.51994"
+           rx="17.598452"
+           ry="19.101524"
+           clip-path="none"
+           sodipodi:type="rect" /><circle
+           style="display:inline;opacity:1;fill:#171717;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:4.0284;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="circle60"
+           cx="34.000004"
+           cy="-116.01994"
+           r="18.571428" /></g><g
+         id="g61"
+         inkscape:label="Pad"
+         transform="matrix(0.86153846,0,0,0.86153846,420.70769,305.95564)"
+         style="stroke:#454545;stroke-opacity:1"><rect
+           style="opacity:1;fill:#c2ab63;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect61"
+           width="65"
+           height="65"
+           x="1.5"
+           y="-148.51994"
+           rx="17.598452"
+           ry="19.101524"
+           clip-path="none"
+           sodipodi:type="rect" /><circle
+           style="display:inline;opacity:1;fill:#171717;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:4.0284;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="circle61"
+           cx="34.000004"
+           cy="-116.01994"
+           r="18.571428" /></g><g
+         id="g62"
+         inkscape:label="Pad"
+         transform="matrix(0.86153846,0,0,0.86153846,420.70769,241.95564)"
+         style="stroke:#454545;stroke-opacity:1"><rect
+           style="opacity:1;fill:#c2ab63;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect62"
+           width="65"
+           height="65"
+           x="1.5"
+           y="-148.51994"
+           rx="17.598452"
+           ry="19.101524"
+           clip-path="none"
+           sodipodi:type="rect" /><circle
+           style="display:inline;opacity:1;fill:#171717;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:4.0284;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="circle62"
+           cx="34.000004"
+           cy="-116.01994"
+           r="18.571428" /></g></g><g
+       id="g2"
+       inkscape:label="LED2"><rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:3.0633;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke;filter:url(#filter68-4)"
+         id="rect68-5"
+         width="122.02845"
+         height="122.02847"
+         x="210.29491"
+         y="370.73874"
+         rx="4.8879266"
+         ry="5.8871779"
+         inkscape:label="Shadow"
+         transform="matrix(0.64609536,0,0,0.68932135,80.888653,155.48604)" /><rect
+         style="fill:url(#linearGradient14);fill-opacity:1;fill-rule:evenodd;stroke:url(#linearGradient18);stroke-width:2.07782;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;paint-order:markers fill stroke"
+         id="rect27-9"
+         width="87.92218"
+         height="77.922173"
+         x="401.03891"
+         y="-294.96106"
+         rx="3.5217781"
+         ry="3.7593007"
+         transform="rotate(90)"
+         inkscape:label="LED2" /></g><g
+       id="g3"
+       inkscape:label="LED1"><rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:3.0633;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke;filter:url(#filter68-4-7)"
+         id="rect68-5-6"
+         width="122.02845"
+         height="122.02847"
+         x="210.29491"
+         y="370.73874"
+         rx="4.8879266"
+         ry="5.8871779"
+         inkscape:label="Shadow"
+         transform="matrix(0,0.64580495,-0.71373952,0,447.40306,224.65015)" /><rect
+         style="opacity:1;fill:url(#linearGradient20);fill-opacity:1;fill-rule:evenodd;stroke:url(#linearGradient22);stroke-width:2.07782;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;paint-order:markers fill stroke"
+         id="rect27"
+         width="87.92218"
+         height="77.92218"
+         x="95.03891"
+         y="353.03891"
+         rx="3.5217781"
+         ry="3.7593012"
+         inkscape:label="LED1" /></g><g
+       id="g4"
+       inkscape:label="LED3"><rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:3.0633;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke;filter:url(#filter68-4-7-7)"
+         id="rect68-5-6-2"
+         width="122.02845"
+         height="122.02847"
+         x="210.29491"
+         y="370.73874"
+         rx="4.8879266"
+         ry="5.8871779"
+         inkscape:label="Shadow"
+         transform="matrix(0,0.64580495,-0.71373952,0,681.13981,224.49679)" /><rect
+         style="fill:url(#linearGradient35);fill-opacity:1;fill-rule:evenodd;stroke:url(#linearGradient36);stroke-width:2.07782;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="rect27-7"
+         width="87.92218"
+         height="77.92218"
+         x="329.03891"
+         y="353.03891"
+         rx="3.5217781"
+         ry="3.7593012"
+         inkscape:label="LED3" /></g><g
+       id="g45"
+       inkscape:label="Button"
+       transform="matrix(0.5403548,0,0,0.54359052,30.127514,409.95397)"
+       style="display:none;stroke-width:1;stroke-dasharray:none"><rect
+         style="fill:#404040;fill-opacity:1;fill-rule:evenodd;stroke:#6e6e6e;stroke-width:3.66084;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="rect43-6"
+         width="174"
+         height="92"
+         x="175.55421"
+         y="-204.12234"
+         rx="4.7394676"
+         ry="4.6131124" /><rect
+         style="fill:#b0b0b0;fill-opacity:1;fill-rule:evenodd;stroke:#6e6e6e;stroke-width:2.74563;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="rect43-2-5"
+         width="145.93512"
+         height="78"
+         x="188.64783"
+         y="-197.39481"
+         rx="3.9750278"
+         ry="3.9111173" /><circle
+         style="opacity:1;fill:#1a1a1a;fill-opacity:1;fill-rule:evenodd;stroke:#505050;stroke-width:5.49126;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="path44"
+         cx="263.44391"
+         cy="-158.12234"
+         r="28" /></g><g
+       id="g45-5"
+       inkscape:label="Button"
+       transform="matrix(0.5403548,0,0,0.54359052,194.12751,409.95397)"
+       style="display:none;stroke-width:1;stroke-dasharray:none"><rect
+         style="fill:#404040;fill-opacity:1;fill-rule:evenodd;stroke:#6e6e6e;stroke-width:3.66084;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="rect43-6-0"
+         width="174"
+         height="92"
+         x="175.55421"
+         y="-204.12234"
+         rx="4.7394676"
+         ry="4.6131124" /><rect
+         style="fill:#b0b0b0;fill-opacity:1;fill-rule:evenodd;stroke:#6e6e6e;stroke-width:2.74563;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="rect43-2-5-2"
+         width="145.93512"
+         height="78"
+         x="188.64783"
+         y="-197.39481"
+         rx="3.9750278"
+         ry="3.9111173" /><circle
+         style="opacity:1;fill:#1a1a1a;fill-opacity:1;fill-rule:evenodd;stroke:#505050;stroke-width:5.49126;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="path44-9"
+         cx="263.44391"
+         cy="-158.12234"
+         r="28" /></g><g
+       id="g8"
+       inkscape:label="MicroB"><rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:3.0633;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke;filter:url(#filter68-4-7-5-4)"
+         id="rect4-5"
+         width="122.02845"
+         height="122.02847"
+         x="210.29491"
+         y="370.73874"
+         rx="4.8879266"
+         ry="5.8871779"
+         inkscape:label="Shadow"
+         transform="matrix(0,1.0241281,-1.8778159,0,1066.1006,-185.78613)" /><g
+         id="g7"
+         inkscape:label="MicroB"><rect
+           style="opacity:1;fill:url(#linearGradient48);fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:3.9702;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect45"
+           width="212.02982"
+           height="136.0298"
+           x="149.98511"
+           y="1.9850976"
+           rx="6.531117"
+           ry="6.5845561" /><rect
+           style="opacity:1;fill:#767676;fill-opacity:1;fill-rule:evenodd;stroke:#6e6e6e;stroke-width:1.21361;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect46"
+           width="16.786383"
+           height="36.786388"
+           x="188.60681"
+           y="32.606808"
+           rx="3.9766388"
+           ry="4.7369504" /><rect
+           style="fill:#767676;fill-opacity:1;fill-rule:evenodd;stroke:#6e6e6e;stroke-width:1.21361;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+           id="rect46-1"
+           width="16.786383"
+           height="36.786388"
+           x="306.60681"
+           y="32.606804"
+           rx="3.9766388"
+           ry="4.7369504" /></g></g></g></svg>

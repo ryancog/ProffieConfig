@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="32.000008"
+   height="32.000004"
+   viewBox="0 0 32.000008 32.000004"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
+   sodipodi:docname="import.svg"
+   inkscape:export-filename="import.png"
+   inkscape:export-xdpi="191.99995"
+   inkscape:export-ydpi="191.99995"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="px"
+     inkscape:zoom="6.2866212"
+     inkscape:cx="11.930097"
+     inkscape:cy="12.725437"
+     inkscape:window-width="1594"
+     inkscape:window-height="1244"
+     inkscape:window-x="85"
+     inkscape:window-y="70"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1"
+     showgrid="false" />
+  <defs
+     id="defs1">
+    <marker
+       style="overflow:visible"
+       id="RoundedArrow"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Rounded arrow"
+       markerWidth="0.4"
+       markerHeight="0.5"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="none">
+      <path
+         transform="scale(0.7)"
+         d="m -0.21114562,-4.1055728 6.42229122,3.21114561 a 1,1 90 0 1 0,1.78885438 L -0.21114562,4.1055728 A 1.236068,1.236068 31.717474 0 1 -2,3 v -6 a 1.236068,1.236068 148.28253 0 1 1.78885438,-1.1055728 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:none"
+         id="path8" />
+    </marker>
+    <inkscape:path-effect
+       effect="powermask"
+       id="path-effect3"
+       is_visible="true"
+       lpeversion="1"
+       uri="#mask-powermask-path-effect3"
+       invert="false"
+       hide_mask="false"
+       background="true"
+       background_color="#ffffffff" />
+    <inkscape:path-effect
+       effect="powermask"
+       id="path-effect7"
+       is_visible="true"
+       lpeversion="1"
+       uri="#mask-powermask-path-effect7"
+       invert="false"
+       hide_mask="false"
+       background="true"
+       background_color="#ffffffff" />
+    <inkscape:path-effect
+       effect="mirror_symmetry"
+       start_point="0,16.000002"
+       end_point="32.000008,16.000002"
+       center_point="16.000004,16.000002"
+       id="path-effect6"
+       is_visible="true"
+       lpeversion="1.2"
+       lpesatellites=""
+       mode="horizontal"
+       discard_orig_path="false"
+       fuse_paths="false"
+       oposite_fuse="false"
+       split_items="false"
+       split_open="false"
+       link_styles="false" />
+    <inkscape:path-effect
+       effect="mirror_symmetry"
+       start_point="32.00519,16.000004"
+       end_point="0.0051861853,16.000004"
+       center_point="16.005188,16.000004"
+       id="path-effect6-6"
+       is_visible="true"
+       lpeversion="1.2"
+       lpesatellites=""
+       mode="vertical"
+       discard_orig_path="false"
+       fuse_paths="false"
+       oposite_fuse="false"
+       split_items="false"
+       split_open="false"
+       link_styles="false" />
+    <filter
+       id="mask-powermask-path-effect3_inverse"
+       inkscape:label="filtermask-powermask-path-effect3"
+       style="color-interpolation-filters:sRGB"
+       height="100"
+       width="100"
+       x="-50"
+       y="-50">
+      <feColorMatrix
+         id="mask-powermask-path-effect3_primitive1"
+         values="1"
+         type="saturate"
+         result="fbSourceGraphic" />
+      <feColorMatrix
+         id="mask-powermask-path-effect3_primitive2"
+         values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0 "
+         in="fbSourceGraphic" />
+    </filter>
+    <mask
+       maskUnits="userSpaceOnUse"
+       id="mask-powermask-path-effect3">
+      <path
+         id="mask-powermask-path-effect3_box"
+         style="fill:#ffffff;fill-opacity:1"
+         d="M 6.6601055,6.6601055 H 25.339899 V 25.3399 H 6.6601055 Z" />
+      <rect
+         style="opacity:1;fill:#000000;stroke:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.6;paint-order:fill markers stroke"
+         id="rect3"
+         width="27.916426"
+         height="13.759378"
+         x="-38.573978"
+         y="7.3966599"
+         rx="0"
+         ry="0"
+         transform="matrix(0.52124341,0,0,0.2651795,20.469129,12.214208)"
+         d="m -38.573978,7.3966599 h 27.916425 V 21.156038 h -27.916425 z" />
+    </mask>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#274a72;stroke-width:2.10047;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;paint-order:markers fill stroke;stroke-opacity:1"
+       id="rect5"
+       width="14.579324"
+       height="14.579325"
+       x="8.7103405"
+       y="8.7103405"
+       rx="3.2168059"
+       ry="3.3738339"
+       transform="matrix(1.7985834,0,0,1.7985833,-11.777339,-12.777338)"
+       mask="url(#mask-powermask-path-effect3)"
+       inkscape:path-effect="#path-effect3"
+       d="m 11.927146,8.7103405 h 8.145712 c 1.782111,0 3.216806,1.5047295 3.216806,3.3738335 v 7.831657 c 0,1.869104 -1.434695,3.373834 -3.216806,3.373834 h -8.145712 c -1.78211,0 -3.2168055,-1.50473 -3.2168055,-3.373834 v -7.831657 c 0,-1.869104 1.4346955,-3.3738335 3.2168055,-3.3738335 z"
+       sodipodi:type="rect" />
+    <path
+       style="fill:none;stroke:#274a72;stroke-width:4.00031635;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#RoundedArrow);fill-rule:nonzero;fill-opacity:1"
+       d="M 7.3171261,15.19099 H 24.456699"
+       id="path2"
+       transform="matrix(0.94609291,0,0,1,-5.0304953,0.80901)" />
+  </g>
+</svg>

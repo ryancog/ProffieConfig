@@ -1,0 +1,27 @@
+#include <wx/msw/wx.rc>
+
+ApplicationIcon ICON "${CMAKE_SOURCE_DIR}/resources/icons/icon.ico"
+
+1 VERSIONINFO
+FILEVERSION 1,0,0,0
+PRODUCTVERSION ${PROJECT_VERSION_MAJOR},${PROJECT_VERSION_MINOR},${PROJECT_VERSION_PATCH},0
+FILEOS VOS_NT
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4" // US English, UTF-8.
+        BEGIN
+            VALUE "ProductName", "ProffieConfig"
+            VALUE "ProductVersion", "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.0"
+            VALUE "CompanyName", "Kafrene Trading"
+            VALUE "FileDescription", "${DESCRIPTION}"
+            VALUE "InternalName", "$<TARGET_FILE_BASE_NAME:${TARGET}>"
+            VALUE "LegalCopyright", "(C) 2024 Ryan Ogurek"
+            VALUE "OriginalFilename", "$<TARGET_FILE_NAME:${TARGET}>"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1252 // US English, UTF-8
+    END
+END

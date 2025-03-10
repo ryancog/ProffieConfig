@@ -1,6 +1,6 @@
 NAME: "SA22C"
 FILENAME: "saber_sa22c_buttons.h"
-INFO {
+INFO: {
 	"sa22c props file, includes 1,2 and 3 button modes.  Incorporates multi-blast,"
 	"battle mode and gesture ignitions from fett263 plus  on-the-fly volume"
 	"controls and full access to all features with 1,2 or 3 button sabers"
@@ -71,26 +71,26 @@ SETTINGS {
 
 LAYOUT {
 	HORIZONTAL ("Gesture Control") {
-		OPTION("SA22C_STAB_ON")
+                SETTING("SA22C_STAB_ON")
 		VERTICAL {
-			OPTION("SA22C_SWING_ON")
-			OPTION("SA22C_SWING_ON_SPEED")
+                        SETTING("SA22C_SWING_ON")
+                        SETTING("SA22C_SWING_ON_SPEED")
 		}
-		OPTION("SA22C_THRUST_ON")
-		OPTION("SA22C_TWIST_ON")
-		OPTION("SA22C_TWIST_OFF")
+                SETTING("SA22C_THRUST_ON")
+                SETTING("SA22C_TWIST_ON")
+                SETTING("SA22C_TWIST_OFF")
 	}
 	HORIZONTAL {
 		HORIZONTAL("Controls") {
-			OPTION("SA22C_NO_LOCKUP_HOLD")
+                        SETTING("SA22C_NO_LOCKUP_HOLD")
 		}
 		VERTICAL("Features") {
-			OPTION("SA22C_FORCE_PUSH")
-			OPTION("SA22C_FORCE_PUSH_LENGTH")
+                        SETTING("SA22C_FORCE_PUSH")
+                        SETTING("SA22C_FORCE_PUSH_LENGTH")
 		}
 		VERTICAL("Battle Mode") {
-			OPTION("GESTURE_AUTO_BATTLE_MODE")
-			OPTION("SA22C_LOCKUP_DELAY")
+                        SETTING("GESTURE_AUTO_BATTLE_MODE")
+                        SETTING("SA22C_LOCKUP_DELAY")
 		}
 	}
 }
