@@ -7,3 +7,9 @@
 	url = https://github.com/profezzorn/ProffieOS
 	branch = v7.x
 	
+[submodule "3rdparty/wxWidgets"]
+	path = 3rdparty/wxWidgets
+	url = https://github.com/wxWidgets/wxWidgets
+[submodule "3rdparty/tomcrypt"]
+	path = 3rdparty/tomcrypt
+	url = https://github.com/ryancog/libtomcrypt

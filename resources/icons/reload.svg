@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="32.000008"
+   height="32.000004"
+   viewBox="0 0 32.000008 32.000004"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
+   sodipodi:docname="reload.svg"
+   inkscape:export-filename="reload.png"
+   inkscape:export-xdpi="95.999977"
+   inkscape:export-ydpi="95.999977"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="px"
+     inkscape:zoom="11.313709"
+     inkscape:cx="-13.700193"
+     inkscape:cy="0.88388343"
+     inkscape:window-width="2532"
+     inkscape:window-height="1264"
+     inkscape:window-x="85"
+     inkscape:window-y="70"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1"
+     showgrid="false" />
+  <defs
+     id="defs1">
+    <marker
+       style="overflow:visible"
+       id="RoundedArrow"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Rounded arrow"
+       markerWidth="0.4"
+       markerHeight="0.4"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="none"
+       markerUnits="strokeWidth">
+      <path
+         d="m -0.14780188,-2.873901 4.49560378,2.24780197 a 0.7,0.7 0 0 1 0,1.25219806 L -0.14780188,2.873901 A 0.8652476,0.8652476 0 0 1 -1.4,2.1 v -4.2 a 0.8652476,0.8652476 0 0 1 1.25219812,-0.773901 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:none;stroke-width:0.7"
+         id="path8" />
+    </marker>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       sodipodi:type="spiral"
+       style="fill:none;fill-rule:evenodd;stroke:#274a72;stroke-width:17.7822;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#RoundedArrow)"
+       id="path1"
+       sodipodi:cx="-4.0186405"
+       sodipodi:cy="-7.9850874"
+       sodipodi:expansion="0"
+       sodipodi:revolution="0.79829371"
+       sodipodi:radius="46.150948"
+       sodipodi:argument="-3.665695"
+       sodipodi:t0="0"
+       d="m -43.974909,15.110508 c -12.580921,-21.7654765 -4.904804,-50.470944 16.860673,-63.051864 21.7654766,-12.580921 50.470944,-4.904804 63.051864,16.860673 12.580921,21.7654768 4.904804,50.470944 -16.860673,63.051865 -4.042344,2.336563 -8.438348,4.053674 -12.9941895,5.075626"
+       transform="matrix(0,-0.26698556,0.26699027,0,16.796629,14.927011)" />
+  </g>
+</svg>

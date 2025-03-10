@@ -1,27 +1,27 @@
 NAME: "Caiwyn"
 FILENAME: "saber_caiwyn_buttons.h"
-INFO {
-	"Caiwyn's Lightsaber Controls"
-    "This config is designed to provide fast, low-latency response to button"
-    "presses for the most basic functions (blaster blocks, lockups, and clashes)"
-    "by omitting, or limiting non-critical features."
-    ""
-    "You will need the following sound files in order for menus to work properly:"
-	"vmbegin.wav              - Enter Volume Change Menu"
-	"vmend.wav                - Save Volume Change"
-	"volmax.wav               - Reset to Maximum Volume"
-	"monce.wav                - Set Track Player to play a single track one time"
-	"mloop.wav                - Set Track Player to repeat a single track"
-	"mrotate.wav              - Set Track Player to repeat all tracks"
-	"ccbegin.wav              - Enter Color Change Mode"
-	"ccend01.wav              - Save Color and Exit Color Change Mode"
-	"ccend02.wav              - Reset Color and Exit Color Change Mode"
-	"battlevl.wav             - Announce Current Battery Level"
-	"mnum1.wav to mnum20.wav  - Individually Spoken Numbers"
-	"thirty.wav to ninety.wav"
-	"hundred.wav              - "Hundred""
-	"mpercent.wav             - "Percent""
-	"mselect.wav              - Beep to confirm menu selections (can be omitted)"
+INFO: {
+        "Caiwyn's Lightsaber Controls"
+        "This config is designed to provide fast, low-latency response to button"
+        "presses for the most basic functions (blaster blocks, lockups, and clashes)"
+        "by omitting, or limiting non-critical features."
+        ""
+        "You will need the following sound files in order for menus to work properly:"
+        "vmbegin.wav              - Enter Volume Change Menu"
+        "vmend.wav                - Save Volume Change"
+        "volmax.wav               - Reset to Maximum Volume"
+        "monce.wav                - Set Track Player to play a single track one time"
+        "mloop.wav                - Set Track Player to repeat a single track"
+        "mrotate.wav              - Set Track Player to repeat all tracks"
+        "ccbegin.wav              - Enter Color Change Mode"
+        "ccend01.wav              - Save Color and Exit Color Change Mode"
+        "ccend02.wav              - Reset Color and Exit Color Change Mode"
+        "battlevl.wav             - Announce Current Battery Level"
+        "mnum1.wav to mnum20.wav  - Individually Spoken Numbers"
+        "thirty.wav to ninety.wav"
+        "hundred.wav              - "Hundred""
+        "mpercent.wav             - "Percent""
+        "mselect.wav              - Beep to confirm menu selections (can be omitted)"
 }
 
 SETTINGS {
@@ -46,12 +46,12 @@ SETTINGS {
 LAYOUT {
 	HORIZONTAL {
 		VERTICAL("Controls") {
-			OPTION("CAIWYN_BUTTON_LOCKUP")
-			OPTION("CAIWYN_BUTTON_CLASH")
+                        SETTING("CAIWYN_BUTTON_LOCKUP")
+                        SETTING("CAIWYN_BUTTON_CLASH")
 		}
 		VERTICAL("Settings") {
-			OPTION("CAIWYN_SAVE_TRACKS")
-			OPTION("CAIWYN_SAVE_TRACK_MODE")
+                        SETTING("CAIWYN_SAVE_TRACKS")
+                        SETTING("CAIWYN_SAVE_TRACK_MODE")
 		}
 	}
 }
