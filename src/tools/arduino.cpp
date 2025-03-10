@@ -11,6 +11,7 @@
 #include "editor/pages/generalpage.h"
 
 #include <cstring>
+#include <sstream>
 #include <thread>
 
 #ifdef __WINDOWS__
@@ -26,10 +27,10 @@ using namespace std::chrono_literals;
 namespace Arduino {
     FILE *CLI(const wxString& command);
 
-    bool updateIno(wxString&, EditorWindow*);
-    bool compile(wxString&, EditorWindow*, Progress* = nullptr);
-    bool upload(wxString&, EditorWindow*, Progress* = nullptr);
-    wxString parseError(const wxString&);
+    bool updateIno(std::string&, EditorWindow*);
+    bool compile(std::string&, EditorWindow*, Progress* = nullptr);
+    bool upload(std::string&, EditorWindow*, Progress* = nullptr);
+    std::string parseError(const std::string&);
 
     wxDEFINE_EVENT(EVT_INIT_DONE, Event);
     wxDEFINE_EVENT(EVT_APPLY_DONE, Event);
@@ -193,7 +194,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
 
     std::thread thread{[=]() {
         auto *evt{new Event(EVT_APPLY_DONE)};
-        wxString returnVal;
+        std::string returnVal;
 
         progDialog->emitEvent(0, "Initializing...");
 
@@ -290,7 +291,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
         }
 
 #   else
-        if (!Arduino::upload(returnVal, editor)) {
+        if (not Arduino::upload(returnVal, editor)) {
             progDialog->emitEvent(100, "Error");
             Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while uploading:\n\n" + returnVal, "Upload Error");
             wxQueueEvent(window, msg);
@@ -314,7 +315,7 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
 
     std::thread thread{[=]() {
         auto *evt{new Event(EVT_VERIFY_DONE)};
-        wxString returnVal;
+        std::string returnVal;
 
         progDialog->emitEvent(20, "Generating configuration file...");
         if (!Configuration::outputConfig(editor)) {
@@ -344,8 +345,24 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
             return;
         }
 
+        constexpr std::string_view USED_PREFIX{"Sketch uses "};
+        constexpr std::string_view MAX_PREFIX{"Maximum is "};
+        const auto usedPos{returnVal.find(USED_PREFIX)};
+        const auto maxPos{returnVal.find(MAX_PREFIX)};
+
+        std::string successMessage{"Config Verified Successfully!"};
+        if (usedPos != std::string::npos and maxPos != std::string::npos) {
+            auto usedBytes{std::stoi(returnVal.substr(usedPos + USED_PREFIX.length()))};
+            auto maxBytes{std::stoi(returnVal.substr(maxPos + MAX_PREFIX.length()))};
+            auto percent{std::round(usedBytes * 10000.0 / maxBytes) / 100.0};
+
+            std::stringstream successStream;
+            successStream << "\n\nThe configuration uses " << percent << "% of board space. (" << usedBytes << '/' << maxBytes << ')';
+            successMessage += successStream.str();
+        }
+
         progDialog->emitEvent(100, "Done.");
-        Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "Config Verified Successfully!", "Verify Config", wxOK | wxICON_INFORMATION);
+        Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, successMessage, "Verify Config", wxOK | wxICON_INFORMATION);
         wxQueueEvent(parent, msg);
         evt->succeeded = true;
         wxQueueEvent(parent, evt);
@@ -353,67 +370,72 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
     thread.detach();
 }
 
-bool Arduino::compile(wxString& _return, EditorWindow* editor, Progress* progDialog) {
-  wxString output;
-  char buffer[1024];
-
-  wxString compileCommand = "compile ";
-  compileCommand += "-b ";
-  compileCommand += editor->generalPage->board->entry()->GetSelection() == PROFFIEBOARDV1 ? ARDUINOCORE_PBV1 : editor->generalPage->board->entry()->GetSelection() == PROFFIEBOARDV2 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
-  compileCommand += " --board-options ";
-  if (editor->generalPage->massStorage->GetValue() && editor->generalPage->webUSB->GetValue()) compileCommand += "usb=cdc_msc_webusb";
-  else if (editor->generalPage->webUSB->GetValue()) compileCommand += "usb=cdc_webusb";
-  else if (editor->generalPage->massStorage->GetValue()) compileCommand += "usb=cdc_msc";
-  else compileCommand += "usb=cdc";
-  if (editor->generalPage->board->entry()->GetSelection() == PROFFIEBOARDV3) compileCommand +=",dosfs=sdmmc1";
-  compileCommand += " " PROFFIEOS_PATH " -v";
-  FILE *arduinoCli = Arduino::CLI(compileCommand);
-
-  std::string error{};
-  std::wstring paths{};
-  while(fgets(buffer, sizeof(buffer), arduinoCli) != NULL) {
-    if (progDialog != nullptr) progDialog->emitEvent(-1, ""); // Pulse
-    error += buffer;
-    if (std::strstr(buffer, "error")) {
-      _return = Arduino::parseError(error);
-      return false;
-    }
-#   ifdef __WINDOWS__
-    if (std::strstr(buffer, "ProffieOS.ino.dfu") && std::strstr(buffer, "stm32l4") && std::strstr(buffer, "C:\\")) {
-      std::cerr << "ErrBufferFull: " << error << std::endl;
-      error = buffer;
-      std::cerr << "PathBuffer: " << error << std::endl;
-
-      // Ugly code because Windows wants wchar_t*, which requires (ish) std::wstring's
-      wchar_t shortPath[MAX_PATH];
-      GetShortPathName(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().from_bytes(error.substr(error.rfind("C:\\"), error.rfind("ProffieOS.ino.dfu") - error.rfind("C:\\") + 17)).c_str(), shortPath, MAX_PATH);
-      paths = shortPath;
-      paths += L"|";
-      GetShortPathName(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().from_bytes(error.substr(1, error.find("windows") + 7 - 1)).c_str(), shortPath, MAX_PATH);
-      paths += shortPath;
-      paths += LR"(\\stm32l4-upload.bat)";
-      std::wcerr << "ParsedPaths: " << paths << std::endl;
-
-      pclose(arduinoCli);
-      _return = paths;
-      return true;
-    }
-#   endif
-  }
-  if (pclose(arduinoCli) != 0) {
-    _return = "Unknown Compile Error";
-    return false;
-  }
-
-
-  _return = error;
-# ifdef __WINDOWS__
-  return false;
-# else
-  return true;
+#ifdef __WINDOWS__
+optional<std::array<std::string, 2>> Arduino::compile(std::string& _return, EditorWindow* editor, Progress* progDialog) {
+#else
+bool Arduino::compile(std::string& _return, EditorWindow* editor, Progress* progDialog) {
 #endif
+    wxString output;
+    char buffer[1024];
+
+    wxString compileCommand = "compile ";
+    compileCommand += "-b ";
+    compileCommand += editor->generalPage->board->entry()->GetSelection() == PROFFIEBOARDV1 ? ARDUINOCORE_PBV1 : editor->generalPage->board->entry()->GetSelection() == PROFFIEBOARDV2 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
+    compileCommand += " --board-options ";
+    if (editor->generalPage->massStorage->GetValue() && editor->generalPage->webUSB->GetValue()) compileCommand += "usb=cdc_msc_webusb";
+    else if (editor->generalPage->webUSB->GetValue()) compileCommand += "usb=cdc_webusb";
+    else if (editor->generalPage->massStorage->GetValue()) compileCommand += "usb=cdc_msc";
+    else compileCommand += "usb=cdc";
+    if (editor->generalPage->board->entry()->GetSelection() == PROFFIEBOARDV3) compileCommand +=",dosfs=sdmmc1";
+    compileCommand += " " PROFFIEOS_PATH " -v";
+    FILE *arduinoCli = Arduino::CLI(compileCommand);
+
+    std::string error{};
+    while(fgets(buffer, sizeof(buffer), arduinoCli) != NULL) {
+        if (progDialog != nullptr) progDialog->emitEvent(-1, ""); // Pulse
+        error += buffer;
+        if (std::strstr(buffer, "error")) {
+            _return = Arduino::parseError(error);
+            return false;
+        }
+
+#   	ifdef __WINDOWS__
+        if (std::strstr(buffer, "ProffieOS.ino.dfu") && std::strstr(buffer, "stm32l4") && std::strstr(buffer, "C:\\")) {
+            std::cerr << "ErrBufferFull: " << error << std::endl;
+            error = buffer;
+            std::cerr << "PathBuffer: " << error << std::endl;
+
+            // Ugly code because Windows wants wchar_t*, which requires (ish) std::wstring's
+            std::array<std::string, 2> paths;
+            wchar_t shortPath[MAX_PATH];
+            GetShortPathName(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().from_bytes(error.substr(error.rfind("C:\\"), error.rfind("ProffieOS.ino.dfu") - error.rfind("C:\\") + 17)).c_str(), shortPath, MAX_PATH);
+            paths[0] = shortPath;
+            GetShortPathName(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().from_bytes(error.substr(1, error.find("windows") + 7 - 1)).c_str(), shortPath, MAX_PATH);
+            paths[1] = shortPath + LR"(\\stm32l4-upload.bat)";
+            std::wcerr << "ParsedPaths: \n\t - " << paths[0] << '\n\t - '<< paths[1] << std::endl;
+
+            pclose(arduinoCli);
+
+            _return = error;
+            return paths;
+        }
+#   	endif
+    }
+    if (pclose(arduinoCli) != 0) {
+        _return = "Unknown Compile Error";
+        return false;
+    }
+
+
+    _return = error;
+# 	ifdef __WINDOWS__
+    return std::nullopt;
+# 	else
+    return true;
+#	endif
 }
-bool Arduino::upload(wxString& _return, EditorWindow* editor, Progress* progDialog) {
+
+bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progDialog) {
     char buffer[1024];
 
     wxString uploadCommand = "upload ";
@@ -463,7 +485,7 @@ bool Arduino::upload(wxString& _return, EditorWindow* editor, Progress* progDial
 
     FILE *arduinoCli = Arduino::CLI(uploadCommand);
 
-    wxString error{};
+    std::string error;
     while(fgets(buffer, sizeof(buffer), arduinoCli) != NULL) {
         if (progDialog != nullptr) progDialog->emitEvent(-1, ""); // Pulse
         error += buffer;
@@ -480,7 +502,8 @@ bool Arduino::upload(wxString& _return, EditorWindow* editor, Progress* progDial
     _return.clear();
     return true;
 }
-bool Arduino::updateIno(wxString& _return, EditorWindow* _editor) {
+
+bool Arduino::updateIno(std::string& _return, EditorWindow* _editor) {
   std::ifstream input(PROFFIEOS_INO);
   if (!input.is_open()) {
     _return = "ERROR OPENING FOR READ";
@@ -522,7 +545,7 @@ bool Arduino::updateIno(wxString& _return, EditorWindow* _editor) {
   return true;
 }
 
-wxString Arduino::parseError(const wxString& error) {
+std::string Arduino::parseError(const std::string& error) {
   std::cerr << "An arduino task failed with the following error: " << std::endl;
   std::cerr << error << std::endl;
 
