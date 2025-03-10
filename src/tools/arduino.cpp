@@ -546,26 +546,43 @@ bool Arduino::updateIno(std::string& _return, EditorWindow* _editor) {
 }
 
 std::string Arduino::parseError(const std::string& error) {
-  std::cerr << "An arduino task failed with the following error: " << std::endl;
-  std::cerr << error << std::endl;
+    std::cerr << "An arduino task failed with the following error: " << std::endl;
+    std::cerr << error << std::endl;
 
-#define ERRCONTAINS(token) std::strstr(error.data(), token)
-  if (ERRCONTAINS("select Proffieboard")) return "Please ensure you've selected the correct board in General";
-  if (ERRCONTAINS("expected unqualified-id")) return "Please make sure there are no brackets in your styles (such as \"{\" or \"}\")\n and there is nothing missing or extra from your style! (such as parentheses or \"<>\")";
-  if (ERRCONTAINS(/* region FLASH */"overflowed")) return "The specified config will not fit on Proffieboard.\n\nTry disabling diagnostic commands, disabling talkie, disabling prop features, or removing blade styles to make it fit.";
-  if (ERRCONTAINS("Serial port busy")) return "The Proffieboard appears busy. \nPlease make sure nothing else is using it, then try again.";
-  if (ERRCONTAINS("Buttons for operation")) return std::string("Selected prop file ") + std::strstr(error.data(), "requires");
-  if (ERRCONTAINS("1\n2\n3\n4\n5\n6\n7\n8\n9\n10")) return "Could not connect to Proffieboard for upload.";
-  if (ERRCONTAINS("10\n9\n8\n7\n6\n5\n4\n3\n2\n1")) return "Could not connect to Proffieboard for upload.";
-  if (ERRCONTAINS("No DFU capable USB device available")) return "No Proffieboard in BOOTLOADER mode found.";
-  if (ERRCONTAINS("error:")) {
-      const auto errPos{error.find("error:")};
-      const auto fileData{error.rfind('/', errPos)};
-      return error.substr(fileData + 1);
-  }
+#	define ERRCONTAINS(token) std::strstr(error.data(), token)
+    if (ERRCONTAINS("select Proffieboard")) return "Please ensure you've selected the correct board in General";
+    if (ERRCONTAINS("expected unqualified-id")) return "Please make sure there are no brackets in your styles (such as \"{\" or \"}\")\n and there is nothing missing or extra from your style! (such as parentheses or \"<>\")";
+    if (ERRCONTAINS(/* region FLASH */"overflowed")) {
+        const auto maxBytes = error.find("ProffieboardV3") != std::string::npos ? 507904 : 262144;
+        const std::string_view OVERFLOW_PREFIX{"region `FLASH' overflowed by "};
 
-  return "Unknown error: " + error;
-#undef ERRCONTAINS
+        const auto overflowPos{error.rfind(OVERFLOW_PREFIX)};
+        std::stringstream errMessage;
+        if (overflowPos != std::string::npos) {
+            const auto overflowBytes{std::stoi(error.substr(overflowPos + OVERFLOW_PREFIX.length()))};
+            const auto percent{(overflowBytes * 100.0 / maxBytes) + 100.0};
+
+            errMessage << "The specified config uses " << percent << "% of board space, and will not fit on the Proffieboard. (" << overflowBytes << " overflow)";
+        } else {
+            errMessage << "The specified config will not fit on the Proffieboard.";
+        }
+
+        errMessage << "\n\nTry disabling diagnostic commands, disabling talkie, disabling prop features, or removing blade styles to make it fit.";
+        return errMessage.str();
+    }
+    if (ERRCONTAINS("Serial port busy")) return "The Proffieboard appears busy. \nPlease make sure nothing else is using it, then try again.";
+    if (ERRCONTAINS("Buttons for operation")) return std::string("Selected prop file ") + std::strstr(error.data(), "requires");
+    if (ERRCONTAINS("1\n2\n3\n4\n5\n6\n7\n8\n9\n10")) return "Could not connect to Proffieboard for upload.";
+    if (ERRCONTAINS("10\n9\n8\n7\n6\n5\n4\n3\n2\n1")) return "Could not connect to Proffieboard for upload.";
+    if (ERRCONTAINS("No DFU capable USB device available")) return "No Proffieboard in BOOTLOADER mode found.";
+    if (ERRCONTAINS("error:")) {
+        const auto errPos{error.find("error:")};
+        const auto fileData{error.rfind('/', errPos)};
+        return error.substr(fileData + 1);
+    }
+
+    return "Unknown error: " + error;
+#	undef ERRCONTAINS
 }
 
 FILE* Arduino::CLI(const wxString& command) {
