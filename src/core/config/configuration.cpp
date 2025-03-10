@@ -1165,7 +1165,7 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
 
                         auto pinStr{buffer.substr(0, paramEnd)};
                         trimWhiteSpace(pinStr);
-                        if (not pinStr.empty()) blade.powerPins.emplace_back(pinStr);
+                        if (not pinStr.empty() and pinStr != "-1") blade.powerPins.emplace_back(pinStr);
 
                         if (done) break;
 
