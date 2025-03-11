@@ -1,16 +1,18 @@
-﻿// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+#include "arduino.h"
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include "arduino.h"
-
-#include "core/defines.h"
-#include "core/config/configuration.h"
-#include "core/utilities/misc.h"
-#include "core/utilities/progress.h"
-#include "editor/editorwindow.h"
-#include "editor/pages/generalpage.h"
+#include "../core/defines.h"
+#include "../core/config/configuration.h"
+#include "../core/utilities/misc.h"
+#include "../core/utilities/progress.h"
+#include "../editor/editorwindow.h"
+#include "../editor/pages/generalpage.h"
+#include "utils/paths.h"
 
 #include <cstring>
+#include <filesystem>
+#include <limits>
 #include <sstream>
 #include <thread>
 
@@ -21,6 +23,12 @@
 #else
 #include <termios.h>
 #endif
+
+#include <wx/uri.h>
+#include <wx/webrequest.h>
+#include <wx/wfstream.h>
+#include <wx/zipstrm.h>
+#include <wx/zstream.h>
 
 using namespace std::chrono_literals;
 
@@ -40,24 +48,89 @@ namespace Arduino {
     wxDEFINE_EVENT(EVT_APPEND_BLIST, Event);
 };
 
-void Arduino::init(wxWindow* parent) {
-    auto progDialog = new Progress(parent);
+void Arduino::init(wxWindow *parent) {
+    auto *progDialog{new Progress(parent)};
     progDialog->SetTitle("Dependency Installation");
 
-    std::thread thread{[progDialog, parent]() {
-        auto evt{new Arduino::Event(Arduino::EVT_INIT_DONE)};
-        FILE* install;
+    std::thread{[=]() {
+        auto *const evt{new Arduino::Event(Arduino::EVT_INIT_DONE)};
+        FILE *install;
         std::string fulloutput;
         std::array<char, 128> buffer;
 
-        progDialog->emitEvent(5, "Downloading dependencies...");
+        progDialog->emitEvent(5, "Downloading ProffieOS...");
+        const auto uri{wxURI{Paths::remoteAssets() + "/ProffieOS/" wxSTRINGIZE(PROFFIEOS_VERSION) ".zip"}.BuildURI()};
+        auto session{wxWebSessionSync::New(wxWebSessionBackendCURL)};
+        auto proffieOSRequest{session.CreateRequest(uri)};
+        auto requestResult{proffieOSRequest.Execute()};
+
+        if (not requestResult) {
+            progDialog->emitEvent(100, "Error");
+            evt->str = "ProffieOS Download Failed\n" + requestResult.error.ToStdString();
+            wxQueueEvent(parent->GetEventHandler(), evt);
+            return;
+        }
+
+        fs::remove_all(Paths::proffieos());
+
+        wxZipInputStream zipStream{*proffieOSRequest.GetResponse().GetStream()};
+        if (not zipStream.IsOk()) {
+            progDialog->emitEvent(100, "Error");
+            evt->str = "Failed Opening ProffieOS ZIP";
+            wxQueueEvent(parent->GetEventHandler(), evt);
+            return;
+        }
+
+        std::unique_ptr<wxZipEntry> entry;
+        while (entry.reset(zipStream.GetNextEntry()), entry) {
+            auto fileNameStr{(Paths::proffieos() / entry->GetName().ToStdString()).string()};
+            if (fileNameStr.find("__MACOSX") != std::string::npos) continue;
+
+            auto permissionBits{entry->GetMode()};
+            wxFileName fileName;
+            
+            if (entry->IsDir()) fileName.AssignDir(fileNameStr);
+            else fileName.Assign(fileNameStr);
+            
+            if (!wxDirExists(fileName.GetPath())) {
+                wxFileName::Mkdir(fileName.GetPath(), permissionBits, wxPATH_MKDIR_FULL);
+            }
+            
+            if (entry->IsDir()) continue;
+            
+            if (not zipStream.CanRead()) {
+                progDialog->emitEvent(100, "Error");
+                evt->str = "ProffieOS Read Failed";
+                wxQueueEvent(parent->GetEventHandler(), evt);
+                return;
+            }
+            
+            wxFileOutputStream outStream{fileNameStr};
+            if (not outStream.IsOk()) {
+                progDialog->emitEvent(100, "Error");
+                evt->str = "ProffieOS Write Failed";
+                wxQueueEvent(parent->GetEventHandler(), evt);
+                return;
+            }
+            
+            zipStream.Read(outStream);
+        }
+
+        if (zipStream.GetLastError() != wxSTREAM_EOF) {
+            progDialog->emitEvent(100, "Error");
+            evt->str = "Failed Parsing ProffieOS ZIP";
+            wxQueueEvent(parent->GetEventHandler(), evt);
+            return;
+        }
+        
+        progDialog->emitEvent(30, "Downloading dependencies...");
         install = Arduino::CLI("core install proffieboard:stm32l4@" ARDUINO_PBPLUGIN_VERSION " --additional-urls https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json");
         while (fgets(buffer.data(), buffer.size(), install) != nullptr) { progDialog->emitEvent(-1, ""); fulloutput += buffer.data(); }
         if (pclose(install)) {
             progDialog->emitEvent(100, "Error");
             std::cerr << fulloutput << std::endl;
-            evt->succeeded = false;
-            wxQueueEvent(parent, evt);
+            evt->str = "Core install failed:\n" + fulloutput;
+            wxQueueEvent(parent->GetEventHandler(), evt);
             return;
         }
 
@@ -100,6 +173,7 @@ void Arduino::init(wxWindow* parent) {
         if (pclose(install)) {
             progDialog->emitEvent(100, "Error");
             std::cerr << fulloutput << std::endl;
+            evt->str = "Driver install failed.\n" + fulloutput;
             wxQueueEvent(parent, evt);
             return;
         }
@@ -107,9 +181,8 @@ void Arduino::init(wxWindow* parent) {
 
         progDialog->emitEvent(100, "Done.");
         evt->succeeded = true;
-        wxQueueEvent(parent, evt);
-    }}; // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
-    thread.detach();
+        wxQueueEvent(parent->GetEventHandler(), evt);
+    }}.detach(); // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
 }
 
 void Arduino::refreshBoards(MainMenu* window) {
@@ -387,7 +460,7 @@ bool Arduino::compile(std::string& _return, EditorWindow* editor, Progress* prog
     else if (editor->generalPage->massStorage->GetValue()) compileCommand += "usb=cdc_msc";
     else compileCommand += "usb=cdc";
     if (editor->generalPage->board->entry()->GetSelection() == PROFFIEBOARDV3) compileCommand +=",dosfs=sdmmc1";
-    compileCommand += " " PROFFIEOS_PATH " -v";
+    compileCommand += " " + Paths::proffieos().string() + " -v";
     FILE *arduinoCli = Arduino::CLI(compileCommand);
 
     std::string error{};
@@ -439,7 +512,7 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
     char buffer[1024];
 
     wxString uploadCommand = "upload ";
-    uploadCommand += PROFFIEOS_PATH;
+    uploadCommand += Paths::proffieos().string();
     uploadCommand += " --board-options ";
     if (editor->generalPage->massStorage->GetValue() && editor->generalPage->webUSB->GetValue()) uploadCommand += "usb=cdc_msc_webusb";
     else if (editor->generalPage->webUSB->GetValue()) uploadCommand += "usb=cdc_webusb";
@@ -504,45 +577,48 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
 }
 
 bool Arduino::updateIno(std::string& _return, EditorWindow* _editor) {
-  std::ifstream input(PROFFIEOS_INO);
-  if (!input.is_open()) {
-    _return = "ERROR OPENING FOR READ";
-    return false;
-  }
-
-  std::string fileData;
-  std::vector<wxString> outputData;
-  while(!input.eof()) {
-    getline(input, fileData);
-
-    if (
-        fileData.find(R"(// #define CONFIG_FILE "config/YOUR_CONFIG_FILE_NAME_HERE.h")") != std::string::npos or
-        fileData.find(R"(#define CONFIG_FILE)") == 0
-    ) {
-        outputData.push_back("#define CONFIG_FILE \"config/" + std::string{_editor->getOpenConfig()} + ".h\"");
-    if (fileData.find(R"(#define CONFIG_FILE)") == 0) continue;
-    } else if (fileData.find(R"(const char version[] = ")" ) != std::string::npos) {
-        outputData.push_back(R"(const char version[] = ")" PROFFIEOS_VERSION R"(";)");
-    } else {
-        outputData.push_back(fileData);
+    const auto inoPath{Paths::proffieos() / "ProffieOS.ino"};
+    std::ifstream input(inoPath);
+    if (!input.is_open()) {
+        _return = "ERROR OPENING FOR READ";
+        return false;
     }
-  }
-  input.close();
+
+    std::string fileData;
+    std::vector<wxString> outputData;
+    while(!input.eof()) {
+        getline(input, fileData);
+
+        if (
+                fileData.find(R"(// #define CONFIG_FILE "config/YOUR_CONFIG_FILE_NAME_HERE.h")") != std::string::npos or
+                fileData.find(R"(#define CONFIG_FILE)") == 0
+           ) {
+            outputData.push_back("#define CONFIG_FILE \"config/" + std::string{_editor->getOpenConfig()} + ".h\"");
+            if (fileData.find(R"(#define CONFIG_FILE)") == 0) continue;
+        } 
+        /* else if (fileData.find(R"(const char version[] = ")" ) != std::string::npos) {
+            outputData.push_back(R"(const char version[] = ")" wxSTRINGIZE(PROFFIEOS_VERSION) R"(";)");
+        } */ 
+        else {
+            outputData.push_back(fileData);
+        }
+    }
+    input.close();
 
 
-  std::ofstream output(PROFFIEOS_INO);
-  if (!output.is_open()) {
-    _return = "ERROR OPENING FOR WRITE";
-    return false;
-  }
+    std::ofstream output(inoPath);
+    if (!output.is_open()) {
+        _return = "ERROR OPENING FOR WRITE";
+        return false;
+    }
 
-  for (const wxString& line : outputData) {
-    output << line << std::endl;
-  }
-  output.close();
+    for (const wxString& line : outputData) {
+        output << line << std::endl;
+    }
+    output.close();
 
-  _return.clear();
-  return true;
+    _return.clear();
+    return true;
 }
 
 std::string Arduino::parseError(const std::string& error) {
@@ -589,10 +665,10 @@ FILE* Arduino::CLI(const wxString& command) {
     wxString fullCommand;
 #   if defined(__WINDOWS__)
     fullCommand += "title ProffieConfig Worker & ";
-    fullCommand += R"(resources\windowmode -title "ProffieConfig Worker" -mode force_minimized & )";
+    fullCommand += (Paths::binaries() / "windowMode").string() + R"( -title "ProffieConfig Worker" -mode force_minimized & )";
 #   endif
-    fullCommand += ARDUINO_PATH " ";
-    fullCommand += command;
+    fullCommand += (Paths::binaries() / "arduino-cli").string();
+    fullCommand += " " + command;
     fullCommand += " 2>&1";
     return popen(fullCommand.data(), "r");
 }

@@ -1,25 +1,25 @@
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
-
 #pragma once
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2025 Ryan Ogurek
+
 #include <vector>
 #include <wx/combobox.h>
 
-#include "editor/editorwindow.h"
-#include "mainmenu/mainmenu.h"
+#include "../editor/editorwindow.h"
+#include "../mainmenu/mainmenu.h"
 
 namespace Arduino {
     void refreshBoards(MainMenu*);
     void applyToBoard(MainMenu*, EditorWindow*);
     void verifyConfig(wxWindow*, EditorWindow*);
 
-    void init(wxWindow*);
+    void init(wxWindow *);
     std::vector<wxString> getBoards();
 
     enum {
-        PROFFIEBOARDV1 = 0,
-        PROFFIEBOARDV2 = 1,
-        PROFFIEBOARDV3 = 2
+        PROFFIEBOARDV3 = 0,
+        PROFFIEBOARDV2,
+        PROFFIEBOARDV1,
     };
 
     struct Event : wxEvent {
