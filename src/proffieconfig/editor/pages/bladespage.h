@@ -1,14 +1,11 @@
 #pragma once
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
-
+// Copyright (C) 2025 Ryan Ogurek
 
 #include <array>
 
-#include "ui/pcspinctrl.h"
-#include "ui/pctextctrl.h"
-#include "ui/pccombobox.h"
-#include "editor/editorwindow.h"
+#include "ui/controls.h"
+#include "../editorwindow.h"
 
 #include <wx/textctrl.h>
 #include <wx/stattext.h>
@@ -65,7 +62,7 @@ public:
     BladeArrayDlg* bladeArrayDlg{nullptr};
 
     wxButton* bladeArrayButton{nullptr};
-    pcChoice* bladeArray{nullptr};
+    PCUI::Choice* bladeArray{nullptr};
     wxListBox* bladeSelect{nullptr};
     wxListBox* subBladeSelect{nullptr};
     wxButton* addBladeButton{nullptr};
@@ -73,37 +70,36 @@ public:
     wxButton* addSubBladeButton{nullptr};
     wxButton* removeSubBladeButton{nullptr};
 
-    pcChoice* bladeType{nullptr};
-    pcComboBox* bladeDataPin{nullptr};
-    wxStaticText* bladePixelsLabel{nullptr};
-    pcSpinCtrl* bladePixels{nullptr};
+    PCUI::Choice* bladeType{nullptr};
+    PCUI::ComboBox* bladeDataPin{nullptr};
+    PCUI::Numeric* bladePixels{nullptr};
 
     wxCheckListBox* powerPins{nullptr};
     wxButton* addPowerPin{nullptr};
-    pcTextCtrl* powerPinName{nullptr};
+    PCUI::Text* powerPinName{nullptr};
 
-    pcChoice* blade3ColorOrder{nullptr};
-    pcChoice* blade4ColorOrder{nullptr};
+    PCUI::Choice* blade3ColorOrder{nullptr};
+    PCUI::Choice* blade4ColorOrder{nullptr};
     wxCheckBox* blade4UseRGB{nullptr};
 
     wxStaticBoxSizer *star1Sizer{nullptr};
-    pcChoice* star1Color{nullptr};
-    pcSpinCtrl* star1Resistance{nullptr};
+    PCUI::Choice* star1Color{nullptr};
+    PCUI::Numeric* star1Resistance{nullptr};
     wxStaticBoxSizer *star2Sizer{nullptr};
-    pcChoice* star2Color{nullptr};
-    pcSpinCtrl* star2Resistance{nullptr};
+    PCUI::Choice* star2Color{nullptr};
+    PCUI::Numeric* star2Resistance{nullptr};
     wxStaticBoxSizer *star3Sizer{nullptr};
-    pcChoice* star3Color{nullptr};
-    pcSpinCtrl* star3Resistance{nullptr};
+    PCUI::Choice* star3Color{nullptr};
+    PCUI::Numeric* star3Resistance{nullptr};
     wxStaticBoxSizer *star4Sizer{nullptr};
-    pcChoice* star4Color{nullptr};
-    pcSpinCtrl* star4Resistance{nullptr};
+    PCUI::Choice* star4Color{nullptr};
+    PCUI::Numeric* star4Resistance{nullptr};
 
     wxRadioButton* useStandard{nullptr};
     wxRadioButton* useStride{nullptr};
     wxRadioButton* useZigZag{nullptr};
-    pcSpinCtrl* subBladeStart{nullptr};
-    pcSpinCtrl* subBladeEnd{nullptr};
+    PCUI::Numeric* subBladeStart{nullptr};
+    PCUI::Numeric* subBladeEnd{nullptr};
 
     enum {
         ID_BladeArray,

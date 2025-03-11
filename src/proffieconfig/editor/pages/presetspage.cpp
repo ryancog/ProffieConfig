@@ -1,13 +1,14 @@
+#include "presetspage.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include "editor/pages/presetspage.h"
+#include "utils/paths.h"
+#include "../../core/defines.h"
+#include "../../core/utilities/misc.h"
+#include "../editorwindow.h"
+#include "../dialogs/bladearraydlg.h"
 
-#include "core/defines.h"
-#include "core/utilities/misc.h"
-#include "editor/editorwindow.h"
-#include "editor/dialogs/bladearraydlg.h"
-#include "wx/msgdlg.h"
+#include <wx/msgdlg.h>
 
 #include <string>
 #include <wx/tooltip.h>
@@ -15,9 +16,12 @@
 #include <wx/clipbrd.h>
 #endif
 
-PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, ""), parent(static_cast<EditorWindow*>(window)) {
-  commentInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "Comments", wxDefaultPosition, wxSize(400, 20), wxTE_MULTILINE | wxNO_BORDER);
-  styleInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "BladeStyle", wxDefaultPosition, wxSize(400, 20), wxTE_DONTWRAP | wxTE_MULTILINE | wxNO_BORDER);
+PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, ""), parent(static_cast<EditorWindow *>(window)) {
+  commentInput = new PCUI::Text(GetStaticBox(), ID_PresetChange, {},  wxTE_MULTILINE | wxNO_BORDER, "Comments");
+  commentInput->SetMinSize(wxSize{500, -1});
+
+  styleInput = new PCUI::Text(GetStaticBox(), ID_PresetChange, {}, wxTE_DONTWRAP | wxTE_MULTILINE | wxNO_BORDER, "BladeStyle");
+  styleInput->SetMinSize(wxSize{500, 200});
   styleInput->entry()->SetFont(wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
 
 
@@ -26,7 +30,6 @@ PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, wind
 
   auto *styleSizer{new wxBoxSizer(wxVERTICAL)};
   styleSizer->Add(commentInput, wxSizerFlags(/*proportion*/ 1).Expand());
-
   styleSizer->Add(styleInput, wxSizerFlags(/*proportion*/ 2).Expand());
   Add(styleSizer, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
@@ -111,7 +114,7 @@ wxBoxSizer* PresetsPage::createPresetSelect() {
   wxBoxSizer *presetSelect = new wxBoxSizer(wxVERTICAL);
 
   wxBoxSizer* arraySizer = new wxBoxSizer(wxVERTICAL);
-  bladeArray = new pcChoice(GetStaticBox(), ID_BladeArray, "Blade Array", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ "blade_in" }), 0);
+  bladeArray = new PCUI::Choice(GetStaticBox(), ID_BladeArray, Misc::createEntries({ "blade_in" }), "Blade Array");
   arraySizer->Add(bladeArray, wxSizerFlags(0).Border(wxBOTTOM, 5).Expand());
 
   auto *listSizer{new wxBoxSizer(wxHORIZONTAL)};
@@ -148,9 +151,12 @@ wxBoxSizer* PresetsPage::createPresetSelect() {
 wxBoxSizer* PresetsPage::createPresetConfig() {
     wxBoxSizer *presetConfig = new wxBoxSizer(wxVERTICAL);
 
-    nameInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "Preset Name", wxDefaultPosition, wxSize(200, -1));
-    dirInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "Font Directory", wxDefaultPosition, wxSize(200, -1));
-    trackInput = new pcTextCtrl(GetStaticBox(), ID_PresetChange, "Track File", wxDefaultPosition, wxSize(200, -1));
+    nameInput = new PCUI::Text(GetStaticBox(), ID_PresetChange, {}, 0, "Preset Name");
+    nameInput->SetMinSize(wxSize(200, -1));
+    dirInput = new PCUI::Text(GetStaticBox(), ID_PresetChange,   {}, 0, "Font Directory");
+    dirInput->SetMinSize(wxSize(200, -1));
+    trackInput = new PCUI::Text(GetStaticBox(), ID_PresetChange, {}, 0, "Track File");
+    trackInput->SetMinSize(wxSize(200, -1));
     injectionsSizer = new wxBoxSizer(wxVERTICAL);
 
     presetConfig->Add(nameInput, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 10).Expand());
@@ -178,7 +184,7 @@ void PresetsPage::rebuildInjections() {
         auto *deleteButton{new wxButton(GetStaticBox(), wxID_ANY, "Delete", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT)};
 
         editButton->Bind(wxEVT_BUTTON, [=](wxCommandEvent&) {
-            wxLaunchDefaultApplication(std::string(CONFIG_DIR) + "injection/" + injection);
+            wxLaunchDefaultApplication((Paths::injections() / injection.ToStdString()).string());
         });
 
         deleteButton->Bind(wxEVT_BUTTON, [=](wxCommandEvent&) {

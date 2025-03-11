@@ -1,9 +1,8 @@
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
-
 #pragma once
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2025 Ryan Ogurek
 
-#include "editor/editorwindow.h"
+#include "../editorwindow.h"
 
 #include <wx/window.h>
 #include <wx/checkbox.h>
@@ -29,7 +28,7 @@ public:
   const std::vector<PropFile*>& getLoadedProps();
   wxScrolledWindow* propsWindow{nullptr};
 
-  pcChoice* propSelection{nullptr};
+  PCUI::Choice* propSelection{nullptr};
   wxButton* buttonInfo{nullptr};
   wxButton* propInfo{nullptr};
 

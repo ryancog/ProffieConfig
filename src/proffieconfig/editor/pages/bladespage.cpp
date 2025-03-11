@@ -1,14 +1,15 @@
+#include "bladespage.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
-#include "editor/pages/bladespage.h"
+#include "../editorwindow.h"
+#include "../pages/generalpage.h"
+#include "../dialogs/bladearraydlg.h"
+#include "ui/controls.h"
+#include "../../core/utilities/misc.h"
+#include "../../core/defines.h"
 
-#include "editor/editorwindow.h"
-#include "editor/pages/generalpage.h"
-#include "editor/dialogs/bladearraydlg.h"
-#include "core/utilities/misc.h"
-#include "core/defines.h"
-
+#include <limits>
 #include <wx/gdicmn.h>
 #include <wx/stattext.h>
 #include <wx/sizer.h>
@@ -123,7 +124,7 @@ void BladesPage::createToolTips() {
 
 wxBoxSizer* BladesPage::createBladeSelect() {
     wxBoxSizer* bladeSelectSizer = new wxBoxSizer(wxVERTICAL);
-    bladeArray = new pcChoice(GetStaticBox(), ID_BladeArray, "Blade Array", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ "blade_in" }), 0);
+    bladeArray = new PCUI::Choice(GetStaticBox(), ID_BladeArray,  Misc::createEntries({ "blade_in" }), "Blade Array");
     bladeArrayButton = new wxButton(GetStaticBox(), ID_OpenBladeArrays, "Blade Awareness...");
     bladeSelectSizer->Add(bladeArray, TEXTITEMFLAGS.Expand());
     bladeSelectSizer->Add(bladeArrayButton, wxSizerFlags(0).Border(wxLEFT | wxRIGHT | wxTOP, 5).Expand());
@@ -165,11 +166,11 @@ wxBoxSizer* BladesPage::createBladeManager() {
 }
 wxBoxSizer* BladesPage::createBladeSetup() {
     wxBoxSizer* bladeSetup = new wxBoxSizer(wxVERTICAL);
-    bladeType = new pcChoice(GetStaticBox(), ID_BladeType, "Blade Type", wxDefaultPosition, wxDefaultSize, Misc::createEntries({BD_PIXELRGB, BD_PIXELRGBW, BD_SIMPLE}), 0);
+    bladeType = new PCUI::Choice(GetStaticBox(), ID_BladeType,  Misc::createEntries({BD_PIXELRGB, BD_PIXELRGBW, BD_SIMPLE}), "Blade Type");
     powerPins = new wxCheckListBox(GetStaticBox(), ID_PowerPins, wxDefaultPosition, wxSize(200, -1), Misc::createEntries({"bladePowerPin1", "bladePowerPin2", "bladePowerPin3", "bladePowerPin4", "bladePowerPin5", "bladePowerPin6"}), wxBORDER_NONE);
     auto pinNameSizer = new wxBoxSizer(wxHORIZONTAL);
     addPowerPin = new wxButton(GetStaticBox(), ID_AddPowerPin, "+", wxDefaultPosition, wxSize(30, 20), wxBU_EXACTFIT);
-    powerPinName = new pcTextCtrl(GetStaticBox(), ID_PowerPinName, "Pin Name");
+    powerPinName = new PCUI::Text(GetStaticBox(), ID_PowerPinName, {}, 0, "Pin Name");
     pinNameSizer->Add(powerPinName, wxSizerFlags(1).Border(wxRIGHT, 5));
     pinNameSizer->Add(addPowerPin, wxSizerFlags(0).Bottom());
 
@@ -182,15 +183,14 @@ wxBoxSizer* BladesPage::createBladeSetup() {
 wxBoxSizer* BladesPage::createBladeSettings() {
     wxBoxSizer* bladeSettings = new wxBoxSizer(wxVERTICAL);
     wxBoxSizer* bladeColor = new wxBoxSizer(wxVERTICAL);
-    blade3ColorOrder = new pcChoice(GetStaticBox(), wxID_ANY, "Color Order", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"BGR", "BRG", "GBR", "GRB", "RBG", "RGB"}), 0);
-    blade4ColorOrder = new pcChoice(GetStaticBox(), wxID_ANY, "Color Order", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"BGRW", "BRGW", "GBRW", "GRBW", "RBGW", "RGBW", "WBGR", "WBRG", "WGBR", "WGRB", "WRBG", "WRGB"}), 0);
+    blade3ColorOrder = new PCUI::Choice(GetStaticBox(), wxID_ANY, Misc::createEntries({"BGR", "BRG", "GBR", "GRB", "RBG", "RGB"}), "Color Order");
+    blade4ColorOrder = new PCUI::Choice(GetStaticBox(), wxID_ANY, Misc::createEntries({"BGRW", "BRGW", "GBRW", "GRBW", "RBGW", "RGBW", "WBGR", "WBRG", "WGBR", "WGRB", "WRBG", "WRGB"}), "Color Order");
     bladeColor->Add(blade3ColorOrder, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
     bladeColor->Add(blade4ColorOrder, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 
     blade4UseRGB = new wxCheckBox(GetStaticBox(), wxID_ANY, "Use RGB with White");
-    bladeDataPin = new pcComboBox(GetStaticBox(), wxID_ANY, "Blade Data Pin", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"bladePin", "blade2Pin", "blade3Pin", "blade4Pin"}));
-    bladePixelsLabel = new wxStaticText(GetStaticBox(), wxID_ANY, "Number of Pixels");
-    bladePixels = new pcSpinCtrl(GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0, 144, 0);
+    bladeDataPin = new PCUI::ComboBox(GetStaticBox(), wxID_ANY, Misc::createEntries({"bladePin", "blade2Pin", "blade3Pin", "blade4Pin"}), {}, "Blade Data Pin");
+    bladePixels = new PCUI::Numeric(GetStaticBox(), wxID_ANY, 0, std::numeric_limits<int32>::max(), 144, 1, wxSP_ARROW_KEYS, "Number of Pixels");
 
     wxArrayString ledEntries{};
     ledEntries.reserve(LED_STRINGS.size());
@@ -199,34 +199,34 @@ wxBoxSizer* BladesPage::createBladeSettings() {
     }
 
     star1Sizer = new wxStaticBoxSizer(wxVERTICAL, GetStaticBox(), "LED 1");
-    star1Color = new pcChoice(star1Sizer->GetStaticBox(), ID_LEDColor, {}, wxDefaultPosition, wxDefaultSize, ledEntries, 0);
-    star1Resistance = new pcSpinCtrl(star1Sizer->GetStaticBox(), wxID_ANY, "Resistance (mOhms)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
+    star1Color = new PCUI::Choice(star1Sizer->GetStaticBox(), ID_LEDColor, ledEntries);
+    star1Resistance = new PCUI::Numeric(star1Sizer->GetStaticBox(), wxID_ANY, 0, 10000, 500, 1, wxSP_ARROW_KEYS, "Resistance (mOhms)");
     star1Sizer->Add(star1Color, MENUITEMFLAGS);
     star1Sizer->Add(star1Resistance, MENUITEMFLAGS.TripleBorder(wxLEFT).DoubleBorder(wxBOTTOM).Expand());
 
     star2Sizer = new wxStaticBoxSizer(wxVERTICAL, GetStaticBox(), "LED 2");
-    star2Color = new pcChoice(star2Sizer->GetStaticBox(), ID_LEDColor, {}, wxDefaultPosition, wxDefaultSize, ledEntries, 0);
-    star2Resistance = new pcSpinCtrl(star2Sizer->GetStaticBox(), wxID_ANY, "Resistance (mOhms)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
+    star2Color = new PCUI::Choice(star2Sizer->GetStaticBox(), ID_LEDColor, ledEntries);
+    star2Resistance = new PCUI::Numeric(star2Sizer->GetStaticBox(), wxID_ANY, 0, 10000, 500, 1, wxSP_ARROW_KEYS, "Resistance (mOhms)");
     star2Sizer->Add(star2Color, MENUITEMFLAGS);
     star2Sizer->Add(star2Resistance, MENUITEMFLAGS.TripleBorder(wxLEFT).DoubleBorder(wxBOTTOM).Expand());
 
     star3Sizer = new wxStaticBoxSizer(wxVERTICAL, GetStaticBox(), "LED 3");
-    star3Color = new pcChoice(star3Sizer->GetStaticBox(), ID_LEDColor, {}, wxDefaultPosition, wxDefaultSize, ledEntries, 0);
-    star3Resistance = new pcSpinCtrl(star3Sizer->GetStaticBox(), wxID_ANY, "Resistance (mOhms)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
+    star3Color = new PCUI::Choice(star3Sizer->GetStaticBox(), ID_LEDColor, ledEntries);
+    star3Resistance = new PCUI::Numeric(star3Sizer->GetStaticBox(), wxID_ANY, 0, 10000, 500, 1, wxSP_ARROW_KEYS, "Resistance (mOhms)");
     star3Sizer->Add(star3Color, MENUITEMFLAGS);
     star3Sizer->Add(star3Resistance, MENUITEMFLAGS.TripleBorder(wxLEFT).DoubleBorder(wxBOTTOM).Expand());
 
     star4Sizer = new wxStaticBoxSizer(wxVERTICAL, GetStaticBox(), "LED 4");
-    star4Color = new pcChoice(star4Sizer->GetStaticBox(), ID_LEDColor, {}, wxDefaultPosition, wxDefaultSize, ledEntries, 0);
-    star4Resistance = new pcSpinCtrl(star4Sizer->GetStaticBox(), wxID_ANY, "Resistance (mOhms)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 10000, 500);
+    star4Color = new PCUI::Choice(star4Sizer->GetStaticBox(), ID_LEDColor, ledEntries);
+    star4Resistance = new PCUI::Numeric(star4Sizer->GetStaticBox(), wxID_ANY, 0, 10000, 500, 1, wxSP_ARROW_KEYS, "Resistance (mOhms)");
     star4Sizer->Add(star4Color, MENUITEMFLAGS);
     star4Sizer->Add(star4Resistance, MENUITEMFLAGS.TripleBorder(wxLEFT).DoubleBorder(wxBOTTOM).Expand());
 
     useStandard = new wxRadioButton(GetStaticBox(), wxID_ANY, "Standard SubBlade", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
     useStride   = new wxRadioButton(GetStaticBox(), wxID_ANY, "Stride SubBlade");
     useZigZag   = new wxRadioButton(GetStaticBox(), wxID_ANY, "ZigZag SubBlade");
-    subBladeStart = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "SubBlade Start", wxDefaultPosition, wxDefaultSize, 0, 0, 144, 0);
-    subBladeEnd   = new pcSpinCtrl(GetStaticBox(), wxID_ANY, "SubBlade End", wxDefaultPosition, wxDefaultSize, 0, 0, 144, 0);
+    subBladeStart = new PCUI::Numeric(GetStaticBox(), wxID_ANY, 0, std::numeric_limits<int32>::max(), 0, 1, wxSP_ARROW_KEYS, "SubBlade Start");
+    subBladeEnd = new PCUI::Numeric(GetStaticBox(), wxID_ANY, 0, std::numeric_limits<int32>::max(), 0, 1, wxSP_ARROW_KEYS, "SubBlade End");
 
     bladeSettings->Add(bladeColor);
     bladeSettings->Add(blade4UseRGB, MENUITEMFLAGS);
@@ -235,7 +235,6 @@ wxBoxSizer* BladesPage::createBladeSettings() {
     bladeSettings->Add(star3Sizer, MENUITEMFLAGS);
     bladeSettings->Add(star4Sizer, MENUITEMFLAGS);
     bladeSettings->Add(bladeDataPin, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
-    bladeSettings->Add(bladePixelsLabel, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10));
     bladeSettings->Add(bladePixels, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
 
     bladeSettings->Add(useStandard, MENUITEMFLAGS);
@@ -410,7 +409,6 @@ void BladesPage::setVisibility(){
     blade4UseRGB->Show(BD_ISPIXEL4 && BD_ISFIRST);
 
     bladeDataPin->Show(BD_ISPIXEL && BD_ISFIRST);
-    bladePixelsLabel->Show(BD_ISPIXEL && BD_ISFIRST);
     bladePixels->Show(BD_ISPIXEL && BD_ISFIRST);
 
     star1Sizer->Show(BD_ISSIMPLE);

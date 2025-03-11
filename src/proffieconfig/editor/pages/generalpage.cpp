@@ -1,11 +1,11 @@
+#include "generalpage.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
-#include "editor/pages/generalpage.h"
-
-#include "core/defines.h"
-#include "core/utilities/misc.h"
-#include "core/config/configuration.h"
+#include "../../core/defines.h"
+#include "../../core/utilities/misc.h"
+#include "../../core/config/configuration.h"
+#include "ui/controls.h"
 
 #include <wx/textctrl.h>
 #include <wx/stattext.h>
@@ -63,7 +63,7 @@ void GeneralPage::createToolTips() {
 wxStaticBoxSizer* GeneralPage::boardSection(wxStaticBoxSizer* parent) {
   wxStaticBoxSizer* boardSetup = new wxStaticBoxSizer(wxHORIZONTAL, parent->GetStaticBox(), "Board Setup");
 
-  board = new pcChoice(boardSetup->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Configuration::Proffieboard), 0);
+  board = new PCUI::Choice(boardSetup->GetStaticBox(), wxID_ANY, Misc::createEntries(Configuration::Proffieboard));
   massStorage = new wxCheckBox(boardSetup->GetStaticBox(), wxID_ANY, "Enable Mass Storage");
   webUSB = new wxCheckBox(boardSetup->GetStaticBox(), wxID_ANY, "Enable WebUSB");
 
@@ -81,54 +81,55 @@ wxStaticBoxSizer* GeneralPage::optionSection(wxStaticBoxSizer* parent) {
 
   return options;
 }
+
 wxBoxSizer* GeneralPage::rightOptions(wxStaticBoxSizer* parent) {
-  wxBoxSizer* rightOptions = new wxBoxSizer(wxVERTICAL);
+    wxBoxSizer* rightOptions = new wxBoxSizer(wxVERTICAL);
 
-  volumeSave = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Save Volume");
-  presetSave = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Save Preset");
-  colorSave = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Save Color");
-  enableOLED = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Enable OLED");
-  disableColor = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Color Change");
-  noTalkie = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Talkie");
-  noBasicParsers = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Basic Parser Styles");
-  disableDiagnosticCommands = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Diagnostic Commands");
+    volumeSave = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Save Volume");
+    presetSave = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Save Preset");
+    colorSave = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Save Color");
+    enableOLED = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Enable OLED");
+    disableColor = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Color Change");
+    noTalkie = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Talkie");
+    noBasicParsers = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Basic Parser Styles");
+    disableDiagnosticCommands = new wxCheckBox(parent->GetStaticBox(), wxID_ANY, "Disable Diagnostic Commands");
 
-  customOptButton = new wxButton(parent->GetStaticBox(), ID_CustomOptions, "Custom Options...");
+    customOptButton = new wxButton(parent->GetStaticBox(), ID_CustomOptions, "Custom Options...");
 
-  rightOptions->Add(volumeSave, FIRSTITEMFLAGS);
-  rightOptions->Add(presetSave, MENUITEMFLAGS);
-  rightOptions->Add(colorSave, MENUITEMFLAGS);
-  rightOptions->Add(enableOLED, MENUITEMFLAGS);
-  rightOptions->Add(disableColor, MENUITEMFLAGS);
-  rightOptions->Add(noTalkie, MENUITEMFLAGS);
-  rightOptions->Add(noBasicParsers, MENUITEMFLAGS);
-  rightOptions->Add(disableDiagnosticCommands, MENUITEMFLAGS);
+    rightOptions->Add(volumeSave, FIRSTITEMFLAGS);
+    rightOptions->Add(presetSave, MENUITEMFLAGS);
+    rightOptions->Add(colorSave, MENUITEMFLAGS);
+    rightOptions->Add(enableOLED, MENUITEMFLAGS);
+    rightOptions->Add(disableColor, MENUITEMFLAGS);
+    rightOptions->Add(noTalkie, MENUITEMFLAGS);
+    rightOptions->Add(noBasicParsers, MENUITEMFLAGS);
+    rightOptions->Add(disableDiagnosticCommands, MENUITEMFLAGS);
 
-  rightOptions->Add(customOptButton, wxSizerFlags(1).Border(wxALL, 10).Expand());
+    rightOptions->Add(customOptButton, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
-  return rightOptions;
+    return rightOptions;
 }
+
 wxBoxSizer* GeneralPage::leftOptions(wxStaticBoxSizer* parent) {
-  wxBoxSizer* leftOptions = new wxBoxSizer(wxVERTICAL);
+    wxBoxSizer* leftOptions = new wxBoxSizer(wxVERTICAL);
 
-  orientation = new pcChoice(parent->GetStaticBox(), wxID_ANY, "Orientation", wxDefaultPosition, wxDefaultSize, Misc::createEntries(Configuration::Orientation), 0, wxHORIZONTAL);
-  buttons = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "Number of Buttons", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 3, 2, wxHORIZONTAL);
-  volume = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "Max Volume", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 5000, 1500, wxHORIZONTAL);
-  volume->entry()->SetIncrement(50);
-  clash = new pcSpinCtrlDouble(parent->GetStaticBox(), wxID_ANY, "Clash Threshold (Gs)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0.1, 5, 3, wxHORIZONTAL);
-  pliTime = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "PLI Timeout (minutes)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 60, 2, wxHORIZONTAL);
-  idleTime = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "Idle Timeout (minutes)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 60, 10, wxHORIZONTAL);
-  motionTime = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "Motion Timeout (minutes)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 60, 15, wxHORIZONTAL);
-  maxLEDs = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "WS281X Max LEDs", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 1024, 144, wxHORIZONTAL);
+    orientation = new PCUI::Choice(parent->GetStaticBox(), wxID_ANY,  Misc::createEntries(Configuration::Orientation), "Orientation", wxHORIZONTAL);
+    buttons = new PCUI::Numeric(parent->GetStaticBox(), wxID_ANY, 0, 3, 2, 1, wxSP_ARROW_KEYS, "Number of Buttons", wxHORIZONTAL);
+    volume = new PCUI::Numeric(parent->GetStaticBox(), wxID_ANY, 0, 5000, 1500, 50, wxSP_ARROW_KEYS, "Max Volume", wxHORIZONTAL);
+    clash = new PCUI::NumericDec(parent->GetStaticBox(), wxID_ANY, 0.1, 5, 3, 0.1, wxSP_ARROW_KEYS, "Clash Threshold (Gs)", wxHORIZONTAL);
+    pliTime = new PCUI::Numeric(parent->GetStaticBox(), wxID_ANY, 1, 60, 2, 1, wxSP_ARROW_KEYS, "PLI Timeout (minutes)", wxHORIZONTAL);
+    idleTime = new PCUI::Numeric(parent->GetStaticBox(), wxID_ANY, 1, 60, 10, 1, wxSP_ARROW_KEYS, "Idle Timeout (minutes)", wxHORIZONTAL);
+    motionTime = new PCUI::Numeric(parent->GetStaticBox(), wxID_ANY, 1, 60, 15, 1, wxSP_ARROW_KEYS, "Motion Timeout (minutes)", wxHORIZONTAL);
+    maxLEDs = new PCUI::Numeric(parent->GetStaticBox(), wxID_ANY, 0, 1024, 144, 1, wxSP_ARROW_KEYS, "WS281X Max LEDs", wxHORIZONTAL);
 
-  leftOptions->Add(orientation, FIRSTITEMFLAGS);
-  leftOptions->Add(buttons, MENUITEMFLAGS);
-  leftOptions->Add(volume, MENUITEMFLAGS);
-  leftOptions->Add(clash, MENUITEMFLAGS);
-  leftOptions->Add(pliTime, MENUITEMFLAGS);
-  leftOptions->Add(idleTime, MENUITEMFLAGS);
-  leftOptions->Add(motionTime, MENUITEMFLAGS);
-  leftOptions->Add(maxLEDs, MENUITEMFLAGS);
+    leftOptions->Add(orientation, FIRSTITEMFLAGS);
+    leftOptions->Add(buttons, MENUITEMFLAGS);
+    leftOptions->Add(volume, MENUITEMFLAGS);
+    leftOptions->Add(clash, MENUITEMFLAGS);
+    leftOptions->Add(pliTime, MENUITEMFLAGS);
+    leftOptions->Add(idleTime, MENUITEMFLAGS);
+    leftOptions->Add(motionTime, MENUITEMFLAGS);
+    leftOptions->Add(maxLEDs, MENUITEMFLAGS);
 
-  return leftOptions;
+    return leftOptions;
 }

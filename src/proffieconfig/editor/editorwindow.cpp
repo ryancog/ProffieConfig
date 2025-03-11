@@ -1,22 +1,23 @@
+#include "editorwindow.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include "editor/editorwindow.h"
+#include "pages/bladespage.h"
+#include "pages/generalpage.h"
+#include "pages/presetspage.h"
+#include "pages/propspage.h"
 
-#include "editor/pages/bladespage.h"
-#include "editor/pages/generalpage.h"
-#include "editor/pages/presetspage.h"
-#include "editor/pages/propspage.h"
+#include "utils/paths.h"
+#include "../core/config/settings.h"
+#include "../core/config/configuration.h"
+#include "../core/defines.h"
+#include "../core/utilities/misc.h"
+#include "../core/utilities/progress.h"
 
-#include "core/config/settings.h"
-#include "core/config/configuration.h"
-#include "core/defines.h"
-#include "core/utilities/misc.h"
-#include "core/utilities/progress.h"
+#include "../tools/arduino.h"
 
-#include "tools/arduino.h"
-#include "wx/filedlg.h"
-
+#include <filesystem>
+#include <wx/filedlg.h>
 #include <wx/event.h>
 #include <wx/combobox.h>
 #include <wx/arrstr.h>
@@ -80,7 +81,7 @@ void EditorWindow::bindEvents() {
     Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
         wxMessageDialog(this, ((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style).ShowModal();
     }, wxID_ANY);
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::outputConfig(CONFIG_DIR + openConfig + ".h", this); }, ID_SaveConfig);
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::outputConfig(Paths::configs() / (openConfig + ".h"), this); }, ID_SaveConfig);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(this); }, ID_ExportConfig);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(this, this); }, ID_VerifyConfig);
 
@@ -88,14 +89,10 @@ void EditorWindow::bindEvents() {
         wxFileDialog fileDialog{this, "Select Injection File", wxEmptyString, wxEmptyString, "C Header (*.h)|*.h", wxFD_FILE_MUST_EXIST | wxFD_OPEN};
         if (fileDialog.ShowModal() == wxCANCEL) return;
 
-        std::string copyPath{std::string(CONFIG_DIR)};
-        copyPath += "injection/";
+        auto copyPath{Paths::injections() / fileDialog.GetFilename().ToStdString()};
+        const auto copyOptions{fs::copy_options::overwrite_existing};
         std::error_code err;
-        std::filesystem::create_directories(copyPath, err);
-        copyPath += fileDialog.GetFilename().ToStdString();
-
-        const auto copyOptions{std::filesystem::copy_options::overwrite_existing};
-        if (not std::filesystem::copy_file(fileDialog.GetPath().ToStdString(), copyPath, copyOptions, err)) {
+        if (not fs::copy_file(fileDialog.GetPath().ToStdString(), copyPath, copyOptions, err)) {
         wxMessageBox(err.message(), "Injection file could not be added.");
         return;
         }
@@ -105,7 +102,7 @@ void EditorWindow::bindEvents() {
     }, ID_AddInjection);
 
 # if defined(__WXOSX__)
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser(wxGetCwd() + std::string("/" STYLEEDIT_PATH)); }, ID_StyleEditor);
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("http://profezzorn.github.io/ProffieOS-StyleEditor/style_editor.html"); }, ID_StyleEditor);
 # else
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser(STYLEEDIT_PATH); }, ID_StyleEditor);
 #endif
@@ -156,7 +153,7 @@ void EditorWindow::createPages() {
     sizer = new wxBoxSizer(wxVERTICAL);
 
     wxBoxSizer* options = new wxBoxSizer(wxHORIZONTAL);
-    windowSelect = new pcChoice(this, ID_WindowSelect, "", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"General", "Prop File", "Blade Arrays", "Presets And Styles"}));
+    windowSelect = new PCUI::Choice(this, ID_WindowSelect, Misc::createEntries({"General", "Prop File", "Blade Arrays", "Presets And Styles"}));
     options->Add(windowSelect, wxSizerFlags(0).Border(wxALL, 10));
 
     generalPage = new GeneralPage(this);
@@ -185,18 +182,21 @@ void EditorWindow::createPages() {
 
 std::string_view EditorWindow::getOpenConfig() const { return openConfig; }
 
+void EditorWindow::renameConfig(const string& name) {
+    fs::rename(Paths::configs() / (openConfig + ".h"), Paths::configs() / (name + ".h"));
+    openConfig = name;
+    // TODO: 
+}
+
 bool EditorWindow::isSaved() {
-    const auto currentPath{CONFIG_DIR + openConfig + ".h"};
-    const auto validatePath{CONFIG_DIR + openConfig + "-validate"};
+    const auto currentPath{Paths::configs() / (openConfig + ".h")};
+    const auto validatePath{fs::temp_directory_path() / (openConfig + "-validate")};
     if (not Configuration::outputConfig(validatePath, this)) {
         return false;
     }
 
-    struct stat currentData;
-    struct stat validateData;
-    wxStat(currentPath, &currentData);
-    wxStat(validatePath, &validateData);
-    if (currentData.st_size != validateData.st_size) {
+    std::error_code err;
+    if (fs::file_size(currentPath, err) != fs::file_size(validatePath, err)) {
         return false;
     }
 
@@ -221,7 +221,7 @@ bool EditorWindow::isSaved() {
 
     current.close();
     validate.close();
-    wxRemove(validatePath);
+    fs::remove(validatePath);
     return saved;
 }
 
