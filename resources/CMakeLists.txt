@@ -22,13 +22,17 @@ install(FILES
 )
 
 if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
-    install(FILES bin/macOS/arduino-cli DESTINATION ${INSTALL_BIN_DIR})
+    install(PROGRAMS bin/macOS/arduino-cli DESTINATION ${INSTALL_BIN_DIR})
 elseif (CMAKE_SYSTEM_NAME STREQUAL Linux)
-    install(FILES bin/Linux/arduino-cli DESTINATION ${INSTALL_BIN_DIR})
+    install(PROGRAMS bin/Linux/arduino-cli DESTINATION ${INSTALL_BIN_DIR})
 elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
-    install(FILES bin/Win32/arduino-cli.exe DESTINATION ${INSTALL_BIN_DIR})
-    install(FILES bin/Win32/proffie-dfu-setup.exe DESTINATION ${INSTALL_BIN_DIR})
-    install(FILES bin/Win32/windowMode.exe DESTINATION ${INSTALL_BIN_DIR})
+    install(PROGRAMS 
+        bin/Win32/arduino-cli.exe 
+        bin/Win32/proffie-dfu-setup.exe
+        bin/Win32/windowMode.exe
+
+        DESTINATION ${INSTALL_BIN_DIR}
+    )
 endif()
 
 # install(FILES
