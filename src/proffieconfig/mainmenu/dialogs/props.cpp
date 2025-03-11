@@ -2,8 +2,8 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include "core/appstate.h"
-#include "core/defines.h"
+#include "../../core/appstate.h"
+#include "../../core/defines.h"
 
 #include "wx/filepicker.h"
 #include "wx/string.h"
@@ -30,9 +30,10 @@ Props::Props(MainMenu* parent) : wxDialog(parent, wxID_ANY, "Add Prop File", wxD
 
 void Props::bindEvents() {
     Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
-        std::filesystem::copy_file(choosePropConfig->GetFileName().GetAbsolutePath().ToStdString(), PROPCONFIG_DIR + choosePropConfig->GetFileName().GetFullName().ToStdString());
-        std::filesystem::copy_file(chooseProp->GetFileName().GetAbsolutePath().ToStdString(), PROFFIEOS_PATH "/props/" + chooseProp->GetFileName().GetFullName().ToStdString());
-        AppState::instance->propFileNames.push_back(choosePropConfig->GetFileName().GetName().ToStdString());
+        const auto propConfigPath{choosePropConfig->GetFileName().GetAbsolutePath().ToStdString()};
+        const auto propPath{chooseProp->GetFileName().GetAbsolutePath().ToStdString()};
+        const auto propName{choosePropConfig->GetFileName().GetName().ToStdString()};
+        AppState::instance->addProp(propName, propPath, propConfigPath);
         AppState::instance->saveState();
         event.Skip();
     }, wxID_OK);
@@ -68,7 +69,7 @@ void Props::createUI() {
 
 void Props::update() {
     auto duplicatePropFile = [&]() {
-        for (const auto& propName : AppState::instance->propFileNames) {
+        for (const auto& propName : AppState::instance->getPropFileNames()) {
             if (choosePropConfig->GetFileName().GetName() == (propName + ".pconf")) return true;
         }
         return false;
