@@ -38,7 +38,7 @@ PCUI::Bool::Bool(
     mOffText(std::move(offText)),
     mOnText(std::move(onText)) {
 
-    auto *control{new wxToggleButton(this, wxID_ANY, initialValue ? mOnText : mOffText, wxDefaultPosition, wxDefaultSize, style)};
+    auto *control{new wxToggleButton(this, winID, initialValue ? mOnText : mOffText, wxDefaultPosition, wxDefaultSize, style)};
     if (initialValue) control->SetValue(true);
 
     init(control, label, orient);
@@ -56,7 +56,7 @@ PCUI::Choice::Choice(
             wxOrientation orient) :
     ControlBase(parent, winID) {
 
-    auto *control{new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, choices)};
+    auto *control{new wxChoice(this, winID, wxDefaultPosition, wxDefaultSize, choices)};
     if (choices.size()) control->SetSelection(0);
 
 #   ifdef __WXGTK__
@@ -75,7 +75,7 @@ PCUI::ComboBox::ComboBox(
             wxOrientation orient) :
     ControlBase(parent, winID) {
 
-    auto *control{new wxComboBox(this, wxID_ANY, defaultValue, wxDefaultPosition, wxDefaultSize, choices)};
+    auto *control{new wxComboBox(this, winID, defaultValue, wxDefaultPosition, wxDefaultSize, choices)};
     if (choices.size() and defaultValue.empty()) control->SetSelection(0);
 
 #   ifdef __WXGTK__
@@ -97,7 +97,7 @@ PCUI::Numeric::Numeric(
         const wxOrientation& orient) :
     ControlBase(parent, winID) {
 
-    auto *control{new wxSpinCtrl(this, wxID_ANY, {}, wxDefaultPosition, wxDefaultSize, style, min, max, initial)};
+    auto *control{new wxSpinCtrl(this, winID, {}, wxDefaultPosition, wxDefaultSize, style, min, max, initial)};
     control->SetIncrement(increment);
 
     init(control, label, orient);
@@ -115,7 +115,7 @@ PCUI::NumericDec::NumericDec(
         const wxOrientation& orient) :
     ControlBase(parent, winID) {
 
-    auto *control{new wxSpinCtrlDouble(this, wxID_ANY, {}, wxDefaultPosition, wxDefaultSize, style, min, max, initial)};
+    auto *control{new wxSpinCtrlDouble(this, winID, {}, wxDefaultPosition, wxDefaultSize, style, min, max, initial)};
     control->SetIncrement(increment);
 
     init(control, label, orient);
@@ -130,7 +130,7 @@ PCUI::Text::Text(
         wxOrientation orient) :
     ControlBase(parent, winID) {
 
-    auto *control{new wxTextCtrl(this, wxID_ANY, initial, wxDefaultPosition, wxDefaultSize, style)};
+    auto *control{new wxTextCtrl(this, winID, initial, wxDefaultPosition, wxDefaultSize, style)};
 
     init(control, label, orient);
 }

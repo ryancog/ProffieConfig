@@ -37,7 +37,6 @@
 
 namespace PCUI {
 
-
 /*
  * Arg Order for derived:
  * parent
@@ -123,48 +122,48 @@ public:
             wxString defaultValue = wxEmptyString,
             const string& label = {},
             wxOrientation orient = wxVERTICAL
-          );
+            );
 };
 
 class UI_EXPORT Numeric : public ControlBase<wxSpinCtrl> {
 public:
     Numeric(
-        wxWindow* parent,
-        wxWindowID winID = wxID_ANY,
-        int32 min       = 0,
-        int32 max       = 100,
-        int32 initial   = 0,
-        int32 increment = 1,
-        int64 style = wxSP_ARROW_KEYS,
-        const string& label = {},
-        const wxOrientation& orient = wxVERTICAL
-        );
+            wxWindow* parent,
+            wxWindowID winID = wxID_ANY,
+            int32 min       = 0,
+            int32 max       = 100,
+            int32 initial   = 0,
+            int32 increment = 1,
+            int64 style = wxSP_ARROW_KEYS,
+            const string& label = {},
+            const wxOrientation& orient = wxVERTICAL
+           );
 };
 
 class UI_EXPORT NumericDec : public ControlBase<wxSpinCtrlDouble> {
 public:
     NumericDec(
-        wxWindow* parent,
-        wxWindowID winID = wxID_ANY,
-        float64 min       = 0,
-        float64 max       = 100,
-        float64 initial   = 0,
-        float64 increment = 1,
-        int64 style = wxSP_ARROW_KEYS,
-        const string& label = {},
-        const wxOrientation& orient = wxVERTICAL
-        );
+            wxWindow* parent,
+            wxWindowID winID = wxID_ANY,
+            float64 min       = 0,
+            float64 max       = 100,
+            float64 initial   = 0,
+            float64 increment = 1,
+            int64 style = wxSP_ARROW_KEYS,
+            const string& label = {},
+            const wxOrientation& orient = wxVERTICAL
+            );
 };
 
 class UI_EXPORT Text : public ControlBase<wxTextCtrl> {
 public:
     Text(
-        wxWindow *parent,
-        wxWindowID winID = wxID_ANY,
-        const string &initial = {},
-        int64 style = 0,
-        const string &label = {},
-        wxOrientation orient = wxVERTICAL
+            wxWindow *parent,
+            wxWindowID winID = wxID_ANY,
+            const string &initial = {},
+            int64 style = 0,
+            const string &label = {},
+            wxOrientation orient = wxVERTICAL
         );
 
     // TODO: Set up use of validators to forbid certain entry.
