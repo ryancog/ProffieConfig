@@ -172,7 +172,7 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
         auto path{baseTypePath(file.type)};
         path /= item.path;
 
-        std::filesystem::remove(path);
+        fs::remove(path);
     }
 
     for (const auto& file : changelog.changedFiles) {
@@ -181,12 +181,12 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
         auto path{baseTypePath(file.id.type)};
         path /= item.path;
 
-        std::filesystem::remove(path);
-        std::filesystem::create_directories(path.parent_path());
-        std::filesystem::copy_file(stagingFolder() / typeFolder(file.id.type) / item.path, path);
+        fs::remove(path);
+        fs::create_directories(path.parent_path());
+        fs::copy_file(stagingFolder() / typeFolder(file.id.type) / item.path, path);
     }
 
-    std::filesystem::remove_all(stagingFolder());
+    fs::remove_all(stagingFolder());
 }
 
 string Update::convertSize(uint64 size) {              

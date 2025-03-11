@@ -54,7 +54,7 @@ public:
         auto currentExec{Paths::executable()};
         auto installedExec{Paths::executable(Paths::Executable::LAUNCHER)};
         std::error_code err;
-        if (not std::filesystem::equivalent(currentExec, installedExec, err)) {
+        if (not fs::equivalent(currentExec, installedExec, err)) {
             Routine::platformInstall(*logger.binfo("Launcher not installed, running install sequence..."));
             return false;
         }
@@ -72,7 +72,7 @@ public:
                 return false;
             }
         } else {
-            if (not std::filesystem::exists(Paths::executable(Paths::Executable::MAIN))) {
+            if (not fs::exists(Paths::executable(Paths::Executable::MAIN))) {
                 action = FIRST_INSTALL;
                 logger.info("Main ProffieConfig binary missing, update/install routine required.");
                 if (wxNO == PCUI::showMessage("ProffieConfig installation needs to run, continue?", App::getAppName(), wxYES_NO | wxYES_DEFAULT)) {
