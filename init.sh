@@ -182,7 +182,13 @@ do_with_log \
     repoinit
 
 WX_INSTALL_PREFIX=`pwd`/install-$TARGET_PLATFORM
+
+# export CXXFLAGS="-fsanitize=address"
+# export CFLAGS="-fsanitize=address"
+# export LDFLAGS="-fsanitize=address"
+# WX_FLAGS='--enable-debug --without-opengl --disable-unsafe-conv-in-wxstring --disable-sys-libs'
 WX_FLAGS='--without-opengl --disable-unsafe-conv-in-wxstring --disable-sys-libs'
+
 if [ "$TARGET_PLATFORM" == "linux" ]; then
     WX_HOST='x86_64-linux'
     WX_PLATFORM_FLAGS='--with-gtk=3'
