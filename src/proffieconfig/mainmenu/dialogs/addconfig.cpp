@@ -1,13 +1,9 @@
+#include "addconfig.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
-#include "mainmenu/dialogs/addconfig.h"
-
-#include "core/appstate.h"
-#include "core/defines.h"
-
-#include "wx/filepicker.h"
-#include "wx/string.h"
+#include <wx/filepicker.h>
+#include <wx/string.h>
 #include <wx/event.h>
 #ifdef __WINDOWS__
 #undef wxMessageDialog
@@ -19,59 +15,41 @@
 #include <wx/sizer.h>
 #include <wx/tglbtn.h>
 #include <wx/button.h>
+#include <wx/sysopt.h>
 
 #include <fstream>
 
-AddConfig::AddConfig(MainMenu* parent) : wxDialog(parent, wxID_ANY, "Add New Config", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE), parent(parent) {
-  createUI();
-  bindEvents();
+AddConfig::AddConfig(MainMenu *parent) : 
+    wxDialog(parent, wxID_ANY, "Add New Config", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE) {
+#   ifdef __WXOSX__
+    wxSystemOptions::SetOption(wxOSX_FILEDIALOG_ALWAYS_SHOW_TYPES, true);
+#   endif
 
-  FindWindowById(wxID_OK)->Disable();
+    createUI();
+    bindEvents();
+
+    FindWindowById(wxID_OK)->Disable();
 }
 
 void AddConfig::bindEvents() {
-  Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
         if (importExisting->GetValue()) {
-          std::ifstream importConfig(chooseConfig->GetFileName().GetAbsolutePath().ToStdString());
-          if (!importConfig.is_open()) {
-            wxMessageDialog(nullptr, "Failed to open config for import.", "Config Import Failure", wxCENTER | wxOK).ShowModal();
-            return;
-          }
+            existingPath = chooseConfig->GetFileName().GetAbsolutePath().ToStdString();
+        } 
 
-          remove((CONFIG_DIR + configName->entry()->GetValue().ToStdString() + ".h").c_str());
-          std::ofstream saveConfig(CONFIG_DIR + configName->entry()->GetValue().ToStdString() + ".h");
-          if (!saveConfig.is_open()) {
-            wxMessageDialog(nullptr, "Failed to import config.", "Config Import Error", wxCENTER | 0x00000004).ShowModal();
-            return;
-          }
-
-          saveConfig << importConfig.rdbuf();
-
-          importConfig.close();
-          saveConfig.close();
-        } else {
-          std::ofstream(CONFIG_DIR + configName->entry()->GetValue().ToStdString() + ".h").flush();
+        configName = configNameEntry->entry()->GetValue().ToStdString();
+        EndModal(wxID_OK);
+    }, wxID_OK);
+    // We make sure to set itself to true that way it can't be deselected
+    Bind(wxEVT_TOGGLEBUTTON, [&](wxCommandEvent&) { importExisting->SetValue(true); createNew->SetValue(false); update(); }, ID_ImportExisting);
+    Bind(wxEVT_TOGGLEBUTTON, [&](wxCommandEvent&) { createNew->SetValue(true); importExisting->SetValue(false); update(); }, ID_CreateNew);
+    Bind(wxEVT_TEXT, [&](wxCommandEvent&) { update(); });
+    Bind(wxEVT_FILEPICKER_CHANGED, [&](wxCommandEvent&) {
+        if (chooseConfig->GetFileName().FileExists()) {
+            configNameEntry->entry()->SetValue(chooseConfig->GetFileName().GetName());
         }
-
-        AppState::instance->addConfig(configName->entry()->GetValue().ToStdString());
-        AppState::instance->saveState();
-        parent->update();
-        parent->configSelect->entry()->SetStringSelection(configName->entry()->GetValue());
-        auto parentEvent = new wxCommandEvent(wxEVT_CHOICE, MainMenu::ID_ConfigSelect);
-        wxQueueEvent(parent, parentEvent);
-
-        event.Skip();
-      }, wxID_OK);
-  // We make sure to set itself to true that way it can't be deselected
-  Bind(wxEVT_TOGGLEBUTTON, [&](wxCommandEvent&) { importExisting->SetValue(true); createNew->SetValue(false); update(); }, ID_ImportExisting);
-  Bind(wxEVT_TOGGLEBUTTON, [&](wxCommandEvent&) { createNew->SetValue(true); importExisting->SetValue(false); update(); }, ID_CreateNew);
-  Bind(wxEVT_TEXT, [&](wxCommandEvent&) { update(); });
-  Bind(wxEVT_FILEPICKER_CHANGED, [&](wxCommandEvent&) {
-    if (chooseConfig->GetFileName().FileExists()) {
-      configName->entry()->SetValue(chooseConfig->GetFileName().GetName());
-    }
-    update();
-  });
+        update();
+    });
 }
 
 void AddConfig::createUI() {
@@ -88,8 +66,7 @@ void AddConfig::createUI() {
   chooseConfigText = new wxStaticText(this, wxID_ANY, "Configuration to Import");
   chooseConfig = new wxFilePickerCtrl(this, ID_ChooseConfig, wxEmptyString, "Choose Configuration File to Import", "ProffieOS Configuration (*.h)|*.h");
 
-  configNameText = new wxStaticText(this, wxID_ANY, "Configuration Name");
-  configName = new pcTextCtrl(this, ID_ConfigName);
+  configNameEntry = new PCUI::Text(this, ID_ConfigName, {}, 0, "Configuration Name");
 
   invalidNameWarning = new wxStaticText(this, wxID_ANY, "Please enter a valid name");
   duplicateWarning = new wxStaticText(this, wxID_ANY, "Configuration with same name already exists");
@@ -98,8 +75,7 @@ void AddConfig::createUI() {
   sizer->Add(modeSelection, wxSizerFlags(0).Center());
   sizer->Add(chooseConfigText, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10).DoubleBorder(wxLEFT));
   sizer->Add(chooseConfig, wxSizerFlags(0).Expand().Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
-  sizer->Add(configNameText, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10).DoubleBorder(wxLEFT));
-  sizer->Add(configName, wxSizerFlags(0).Expand().Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
+  sizer->Add(configNameEntry, wxSizerFlags(0).Expand().Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
   sizer->Add(invalidNameWarning, wxSizerFlags(0).Right().Border(wxRIGHT, 10));
   sizer->Add(duplicateWarning, wxSizerFlags(0).Right().Border(wxRIGHT, 10));
   sizer->Add(fileSelectionWarning, wxSizerFlags(0).Right().Border(wxRIGHT, 10));
@@ -111,9 +87,15 @@ void AddConfig::createUI() {
 }
 
 void AddConfig::update() {
-  auto duplicateConfigName = [&]() { for (const auto& config : AppState::instance->getConfigFileNames()) if (configName->entry()->GetValue() == config) return true; return false; }();
-  auto configNameEmpty = configName->entry()->GetValue().empty();
-  auto configNameInvalidCharacters = configName->entry()->GetValue().find_first_of(".\\,/!#$%^&*|?<>\"'") != std::string::npos;
+  auto duplicateConfigName = [&]() { 
+      // for (const auto& config : AppState::instance->getConfigFileNames()) {
+      //     if (configName->entry()->GetValue() == config) return true;
+      // }
+      return false;
+  }();
+
+  auto configNameEmpty = configNameEntry->entry()->GetValue().empty();
+  auto configNameInvalidCharacters = configNameEntry->entry()->GetValue().find_first_of(".\\,/!#$%^&*|?<>\"'") != std::string::npos;
   auto validConfigName = !configNameEmpty && !duplicateConfigName && !configNameInvalidCharacters;
   auto importingConfig = importExisting->GetValue();
   auto originFileSelected = chooseConfig->GetFileName().FileExists();
