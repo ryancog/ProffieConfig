@@ -1,7 +1,6 @@
+#include "../onboard.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
-
-#include "onboard/onboard.h"
 
 #include <wx/sizer.h>
 
@@ -15,9 +14,10 @@ Onboard::DependencyInstall::DependencyInstall(wxWindow* parent) : wxPanel(parent
                                  "In order to continue, ProffieConfig needs to do some setup.\n"
                                  "This will involve the following:\n"
                                  "\n"
-                                 "\t-Proffieboard Arduino Core Installation\n"
+                                 "\t• ProffieOS\n"
+                                 "\t• Proffieboard Arduino Core Installation\n"
 #                                     ifdef __WINDOWS__
-                                 "\t-Proffieboard Driver Installation\n"
+                                 "\t• Proffieboard Driver Installation\n"
 #                                     endif
                                  "\n\n"
                                  "An internet connection is required, and installation may take several minutes.\n"
