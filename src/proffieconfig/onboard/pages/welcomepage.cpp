@@ -1,14 +1,13 @@
+#include "../onboard.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
-
-#include "onboard/onboard.h"
 
 #include <wx/sizer.h>
 
 Onboard::Welcome::Welcome(wxWindow* parent) : wxPanel(parent, OnboardFrame::ID_Welcome) {
   auto sizer = new wxBoxSizer(wxVERTICAL);
 
-  auto welcomeText = OnboardFrame::createHeader(this, "Welcome to ProffieConfig " VERSION "!");
+  auto welcomeText = OnboardFrame::createHeader(this, "Welcome to ProffieConfig " wxSTRINGIZE(EXEC_VERSION) "!");
 
   auto infoText = new wxStaticText(this, wxID_ANY,
                                    "ProffieConfig is an All-in-One utility for managing your Proffieboard.\n"
