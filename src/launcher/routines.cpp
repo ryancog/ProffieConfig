@@ -92,17 +92,17 @@ void Routine::platformInstall(Log::Branch& lBranch) {
     std::error_code err;
     auto currentExec{Paths::executable()};
     auto installedExec{Paths::executable(Paths::Executable::LAUNCHER)};
-    if (std::filesystem::exists(installedExec, err)) {
+    if (fs::exists(installedExec, err)) {
         logger.info("Launcher seems to already be installed, removing...");
 #       ifdef __APPLE__
-        std::filesystem::remove_all(installedExec.parent_path().parent_path().parent_path());
+        fs::remove_all(installedExec.parent_path().parent_path().parent_path());
 #       else
-        std::filesystem::remove(installedExec);
+        fs::remove(installedExec);
 #       endif
     }
 
 #   ifndef __APPLE__
-    std::filesystem::create_directories(installedExec.parent_path());
+    fs::create_directories(installedExec.parent_path());
 #   endif
 
 #   ifdef __WIN32__
@@ -162,8 +162,8 @@ void Routine::platformInstall(Log::Branch& lBranch) {
 #   elif defined(__APPLE__)
     const auto currentBundle{currentExec.parent_path().parent_path().parent_path()};
     const auto applicationPath{installedExec.parent_path().parent_path().parent_path()};
-    std::filesystem::copy(currentBundle, applicationPath, std::filesystem::copy_options::recursive);
-    std::filesystem::remove_all(currentBundle);
+    fs::copy(currentBundle, applicationPath, fs::copy_options::recursive);
+    fs::remove_all(currentBundle);
 #   endif
 
     PCUI::showMessage("Launcher has been installed.", App::getAppName());

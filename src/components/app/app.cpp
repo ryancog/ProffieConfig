@@ -165,11 +165,11 @@ void App::init(string_view appName) {
 
     wxApp::GetInstance()->SetAppName(wxString(appName));
     wxApp::GetInstance()->SetAppDisplayName(wxString(appName));
-    std::filesystem::create_directories(Paths::approot());
-    std::filesystem::create_directories(Paths::data());
-    std::filesystem::create_directories(Paths::logs());
-    std::filesystem::create_directories(Paths::configs());
-    std::filesystem::create_directories(Paths::injections());
+    fs::create_directories(Paths::approot());
+    fs::create_directories(Paths::data());
+    fs::create_directories(Paths::logs());
+    fs::create_directories(Paths::configs());
+    fs::create_directories(Paths::injections());
 }
 
 App::Menus App::createDefaultMenuBar() {
