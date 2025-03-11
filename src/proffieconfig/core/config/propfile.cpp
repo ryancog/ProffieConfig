@@ -1,15 +1,18 @@
+#include "propfile.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
-#include "core/config/propfile.h"
+#include "log/context.h"
+#include "log/logger.h"
+#include "pconf/pconf.h"
+#include "utils/paths.h"
+#include "ui/controls.h"
+#include "../../core/utilities/misc.h"
 
-#include "core/defines.h"
-#include "core/utilities/fileparse.h"
-#include "ui/pcspinctrl.h"
-#include "ui/pcspinctrldouble.h"
-
+#include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <wx/tooltip.h>
 #include <wx/statbox.h>
 
@@ -25,6 +28,7 @@ PropFile::~PropFile() {
 std::string PropFile::getName() const { return name; }
 std::string PropFile::getFileName() const { return fileName; }
 std::string PropFile::getInfo() const { return info; }
+
 std::string PropFile::Setting::getOutput() const {
   switch (type) {
     case SettingType::TOGGLE:
@@ -32,13 +36,14 @@ std::string PropFile::Setting::getOutput() const {
     case SettingType::OPTION:
       return static_cast<wxRadioButton*>(control)->GetValue() ? define : "";
     case SettingType::NUMERIC:
-      return define + " " + std::to_string(static_cast<pcSpinCtrl*>(control)->entry()->GetValue());
+      return define + " " + std::to_string(static_cast<PCUI::Numeric*>(control)->entry()->GetValue());
     case SettingType::DECIMAL:
-      return define + " " + std::to_string(static_cast<pcSpinCtrlDouble*>(control)->entry()->GetValue());
+      return define + " " + std::to_string(static_cast<PCUI::NumericDec*>(control)->entry()->GetValue());
   }
 
   return {};
 }
+
 void PropFile::Setting::enable(bool enable) const {
   switch(type) {
     case PropFile::Setting::SettingType::TOGGLE:
@@ -48,14 +53,15 @@ void PropFile::Setting::enable(bool enable) const {
       static_cast<wxRadioButton*>(control)->Enable(enable);
       break;
     case PropFile::Setting::SettingType::NUMERIC:
-      static_cast<pcSpinCtrl*>(control)->entry()->Enable(enable);
+      static_cast<PCUI::Numeric*>(control)->entry()->Enable(enable);
       break;
     case PropFile::Setting::SettingType::DECIMAL:
-      static_cast<pcSpinCtrlDouble*>(control)->entry()->Enable(enable);
+      static_cast<PCUI::NumericDec*>(control)->entry()->Enable(enable);
       break;
 
   }
 }
+
 void PropFile::Setting::setValue(double value) const {
   switch (type) {
     case SettingType::TOGGLE:
@@ -65,15 +71,18 @@ void PropFile::Setting::setValue(double value) const {
       static_cast<wxRadioButton*>(control)->SetValue(value);
       break;
     case SettingType::NUMERIC:
-      static_cast<pcSpinCtrl*>(control)->entry()->SetValue(value);
+      static_cast<PCUI::Numeric*>(control)->entry()->SetValue(value);
       break;
     case SettingType::DECIMAL:
-      static_cast<pcSpinCtrlDouble*>(control)->entry()->SetValue(value);
+      static_cast<PCUI::NumericDec*>(control)->entry()->SetValue(value);
       break;
   }
 }
+
 PropFile::SettingMap* PropFile::getSettings() { return settings; }
+
 const std::array<PropFile::ButtonArray, 4>* PropFile::getButtons() { return buttons; }
+
 bool PropFile::Setting::checkRequiredSatisfied(const std::unordered_map<std::string, Setting>& settings) const {
   if (!requiredAny.empty()) {
     for (const auto& require : requiredAny) {
@@ -94,390 +103,364 @@ bool PropFile::Setting::checkRequiredSatisfied(const std::unordered_map<std::str
   }
 }
 
+PropFile* PropFile::createPropConfig(const std::string& propName, wxWindow* _parent) {
+    auto& logger{Log::Context::getGlobal().createLogger("PropFile::createPropConfig()")};
+    std::string pathname = Paths::props() / (propName + ".pconf");
 
-PropFile* PropFile::createPropConfig(const std::string& name, wxWindow* _parent) {
-  std::string pathname = PROPCONFIG_DIR + name + ".pconf";
-
-  std::ifstream configFile(pathname);
-  if (!configFile.is_open()) {
-    error("Could not open prop config file \"" + pathname + "\", aborting...");
-    return nullptr;
-  }
-
-  std::vector<std::string> config;
-  std::string temp;
-  while (!configFile.eof()) {
-    getline(configFile, temp);
-    config.push_back(temp.substr(0, temp.find("//")));
-  }
-  configFile.close();
-
-  auto prop = new PropFile(_parent);
-
-  if (!prop->readName(config)) {
-    error("Prop config file \"" + name + "\" does not have section \"NAME\", aborting...");
-    return nullptr;
-  }
-  if (!prop->readFileName(config)) {
-    error("Prop config file \"" + name + "\" does not have section \"FILENAME\", aborting...");
-    return nullptr;
-  }
-  if (!prop->readInfo(config)) {
-    prop->info = "Prop has no additional info.";
-    warning("Prop config file \"" + name + "\" does not have optional section \"INFO\", skipping...");
-  }
-  if (!prop->readSettings(config)) {
-    warning("Prop config file \"" + name + "\" does not have optional section \"SETTINGS\", skipping...");
-  }
-  if (!prop->readLayout(config)) {
-    warning("Prop config file \"" + name + "\" does not have optional section \"LAYOUT\", skipping...");
-  }
-  if (!prop->readButtons(config)) {
-    warning("Prop config file \"" + name + "\" does not have optional section \"BUTTONS\", skipping...");
-  }
-
-  prop->pruneUnused();
-  prop->Show(false);
-
-  return prop;
-}
-
-bool PropFile::readName(std::vector<std::string>& config) {
-  name = FileParse::parseEntry("NAME", config);
-  if (name.empty()) return false;
-  return true;
-}
-bool PropFile::readFileName(std::vector<std::string>& config) {
-  fileName = FileParse::parseEntry("FILENAME", config);
-  if (fileName.empty()) return false;
-  return true;
-}
-bool PropFile::readInfo(std::vector<std::string>& config) {
-  auto section = FileParse::extractSection("INFO", config);
-  if (section.empty()) return false;
-
-  size_t lineBegin;
-  size_t lineEnd;
-  for (const auto& line : section) {
-    lineBegin = line.find("\"");
-    lineEnd = line.rfind("\"");
-    if (lineBegin == std::string::npos || lineBegin == lineEnd) continue;
-    info += line.substr(lineBegin + 1, lineEnd - lineBegin - 1);
-    info += '\n';
-  }
-
-  if (info.empty()) info = "No additional information.";
-
-  return true;
-}
-bool PropFile::readSettings(std::vector<std::string>& config) {
-  std::vector<std::string> settingsSection = FileParse::extractSection("SETTINGS", config);
-  std::vector<std::string> section;
-  std::vector<std::pair<std::string, Setting>> tempSettings;
-
-  bool read{true};
-  while (read) {
-    read = false;
-    for (auto it = settingsSection.begin(); it < settingsSection.end(); it++) {
-      if (!(section = FileParse::extractSection("TOGGLE", settingsSection)).empty()) {
-        read = true;
-        Setting setting;
-        if (!parseSettingCommon(setting, section)) continue;
-        setting.type = Setting::SettingType::TOGGLE;
-        setting.disables = FileParse::parseListEntry("DISABLE", section);
-
-        tempSettings.push_back({ setting.define, setting });
-      }
-      if (!(section = FileParse::extractSection("OPTION", settingsSection)).empty()) {
-        read = true;
-        std::vector<std::string> selection;
-        bool isFirst{true};
-
-        while (!(selection = FileParse::extractSection("SELECTION", section)).empty()) {
-          Setting setting;
-          if (!parseSettingCommon(setting, selection)) continue;
-          setting.type = Setting::SettingType::OPTION;
-          if (isFirst) {
-            isFirst = false;
-            setting.isDefault = true;
-          }
-
-          setting.disables = FileParse::parseListEntry("DISABLE", selection);
-          auto outputEntry = FileParse::parseEntry("OUTPUT", selection);
-          setting.shouldOutput = (outputEntry.empty() || outputEntry == "TRUE");
-
-          tempSettings.push_back({setting.define, setting});
-        }
-      }
-      if (!(section = FileParse::extractSection("NUMERIC", settingsSection)).empty()) {
-        read = true;
-        Setting setting;
-        if (!parseSettingCommon(setting, section)) continue;
-        setting.type = Setting::SettingType::NUMERIC;
-
-        double entry;
-        if ((entry = FileParse::parseNumEntry("MIN", section)) > 0) setting.min = entry;
-        if ((entry = FileParse::parseNumEntry("MAX", section)) > 0) setting.max = entry;
-        if ((entry = FileParse::parseNumEntry("INCREMENT", section)) > 0) setting.increment = entry;
-        if ((entry = FileParse::parseNumEntry("DEFAULT", section)) > 0) setting.defaultVal = entry;
-
-        tempSettings.push_back({setting.define, setting});
-      }
-      if (!(section = FileParse::extractSection("DECIMAL", settingsSection)).empty()) {
-        read = true;
-        Setting setting;
-        if (!parseSettingCommon(setting, section)) continue;
-        setting.type = Setting::SettingType::DECIMAL;
-
-        double entry;
-        if ((entry = FileParse::parseNumEntry("MIN", section)) > 0) setting.min = entry;
-        if ((entry = FileParse::parseNumEntry("MAX", section)) > 0) setting.max = entry;
-        if ((entry = FileParse::parseNumEntry("INCREMENT", section)) > 0) setting.increment = entry;
-        if ((entry = FileParse::parseNumEntry("DEFAULT", section)) > 0) setting.defaultVal = entry;
-
-        tempSettings.push_back({setting.define, setting});
-      }
-    }
-  }
-
-  settings->clear();
-  settings->insert(tempSettings.begin(), tempSettings.end());
-
-  return true;
-}
-bool PropFile::parseSettingCommon(Setting& setting, std::vector<std::string>& search) {
-  setting.define = FileParse::parseLabel(search.at(0));
-  std::string toRemove = " ";
-  setting.define.erase(std::remove_if(setting.define.begin(), setting.define.end(), [&toRemove](char c) { return toRemove.find(c) != std::string::npos; }), setting.define.end());
-  if (setting.define.empty()) {
-    warning("Entry \"" + setting.name + "\" has empty define, skipping...");
-    return false;
-  }
-  search.erase(search.begin()); // Erase label so we don't accidentally read it as the wrong thing later
-
-  setting.name = FileParse::parseEntry("NAME", search);
-  if (setting.name.empty()) {
-    warning("Skipping entry with no name...");
-    return false;
-  }
-  setting.description = FileParse::parseEntry("DESCRIPTION", search);
-  size_t nlPos;
-  while ((nlPos = setting.description.find("\\n")) != std::string::npos) {
-    setting.description.replace(nlPos, 2, "\n");
-  }
-  setting.requiredAny = FileParse::parseListEntry("REQUIREANY", search);
-  setting.required = FileParse::parseListEntry("REQUIRE", search);
-
-  return true;
-}
-bool PropFile::readLayout(std::vector<std::string>& config) {
-  sizer = new wxBoxSizer(wxVERTICAL);
-
-  auto layoutSection = FileParse::extractSection("LAYOUT", config);
-  parseLayoutSection(layoutSection, sizer, this);
-
-  SetSizerAndFit(sizer);
-  return true;
-}
-bool PropFile::readButtons(std::vector<std::string>& config) {
-  bool hasButtons{false};
-  for (const auto& line : config) {
-    if (line.find("BUTTONS") != std::string::npos) {
-      hasButtons = true;
-      break;
-    }
-  }
-  if (!hasButtons) return false;
-
-  parseButtons(config);
-
-  return true;
-}
-void PropFile::parseButtons(std::vector<std::string>& config) {
-  while (!false) {
-    auto buttonSection = FileParse::extractSection("BUTTONS", config);
-    if (buttonSection.empty()) break;
-
-    auto numStart = buttonSection.at(0).find("{");
-    auto numEnd = buttonSection.at(0).find("}");
-
-    if (numStart == std::string::npos || numEnd == std::string::npos) {
-      error("Button section missing number indicator, skipping...");
-      continue;
+    std::ifstream configFile(pathname);
+    if (!configFile.is_open()) {
+        logger.error("Could not open prop config file \"" + pathname + "\", aborting...");
+        return nullptr;
     }
 
-    if (!std::isdigit(buttonSection.at(0).at(numStart + 1))) {
-      error("Button section number indicator malformed, skipping...");
-      continue;
+    PConf::Data data;
+    PConf::read(configFile, data, logger.binfo("Reading pconf..."));
+    configFile.close();
+
+    auto prop = new PropFile(_parent);
+    const auto hashedData{PConf::hash(data)};
+
+    const auto name{hashedData.find("NAME")};
+    if (name == hashedData.end() or not name->second->value) {
+        logger.error("Prop config file \"" + propName + "\" does not have section \"NAME\", aborting...");
+        return nullptr;
     }
+    prop->name = *name->second->value;
 
-    int32_t numButtons = std::stoi(buttonSection.at(0).substr(numStart + 1));
-    if (numButtons < 0 || numButtons > 3) {
-      error("Button section number indicator \"" + std::to_string(numButtons) + "\" out of range, skipping...");
-      continue;
+    const auto fileName{hashedData.find("FILENAME")};
+    if (fileName == hashedData.end() or not fileName->second->value) {
+        logger.error("Prop config file \"" + propName + "\" does not have section \"FILENAME\", aborting...");
+        return nullptr;
     }
+    prop->fileName = *fileName->second->value;
 
-    buttonSection.erase(buttonSection.begin()); // Prevent BUTTONS from being read as a BUTTON entry
-
-    while (!false) {
-      auto stateSection = FileParse::extractSection("STATE", buttonSection);
-      if (stateSection.empty()) break;
-      auto label = FileParse::parseLabel(stateSection.at(0));
-      if (label.empty()) {
-        error("Button array #" + std::to_string(numButtons) + " has unnamed/malformed state, skipping...");
-        continue;
-      }
-      buttons->at(numButtons).push_back({label, {}});
-
-      parseButtonSection(stateSection, numButtons, buttons->at(numButtons).size() - 1);
-    }
-  }
-}
-void PropFile::parseButtonSection(std::vector<std::string>& buttonSection, const int32_t& numButtons, const int32_t& state) {
-  while (!buttonSection.empty()) {
-    if (buttonSection.at(0).find("BUTTON") == std::string::npos) {
-      buttonSection.erase(buttonSection.begin());
-      continue;
-    }
-
-    auto section = FileParse::extractSection("BUTTON", buttonSection);
-    if (section.empty()) continue;
-
-    Button newButton;
-    newButton.name =  FileParse::parseLabel(section.at(0));
-    if (newButton.name.empty()) {
-      error("Button entry has missing name, skipping...");
-      continue;
-    }
-
-    parseButtonDescriptions(newButton, section);
-    parseButtonRelevantSettings(newButton);
-
-    buttons->at(numButtons).at(state).second.push_back(newButton);
-  }
-}
-void PropFile::parseButtonDescriptions(PropFile::Button& newButton, std::vector<std::string>& section) {
-  while (!false) {
-    std::string label;
-    auto description = FileParse::parseEntry("DESCRIPTION", section, label);
-    if (description.empty()) break;
-
-    if (label.empty()) {
-      if (newButton.descriptions.find({}) != newButton.descriptions.end()) {
-        warning("Overriding duplicate default description for button \"" + newButton.name + "\", there should be only one default per button...");
-      }
-      newButton.descriptions.insert({{}, description});
+    const auto info{hashedData.find("INFO")};
+    if (info == hashedData.end() or not info->second->value) {
+        prop->info = "Prop has no additional info.";
+        logger.info("Prop config file \"" + propName + "\" does not have optional section \"INFO\", skipping...");
     } else {
-      std::vector<std::string> predicates;
-
-      // Put back parsed-out quotes
-      label.insert(label.begin(), '"');
-      label.insert(label.end(), '"');
-
-      while (label.find("\"") != std::string::npos) {
-        auto predicateBegin = label.find_first_of("\"");
-        auto predicateEnd = label.find_first_of("\"", predicateBegin + 1);
-        predicates.push_back(label.substr(predicateBegin + 1, predicateEnd - predicateBegin - 1));
-        label.erase(predicateBegin, predicateEnd + 1);
-      }
-      newButton.descriptions.insert({predicates, description});
+        prop->info = *info->second->value;
     }
-  }
-}
-void PropFile::parseButtonRelevantSettings(PropFile::Button& newButton) {
-  for (const auto& [ predicates, description ] : newButton.descriptions) {
-    for (const auto& predicate : predicates) {
-      if ([&predicate, &newButton]() { for (const auto& setting : newButton.relevantSettings) if (setting == predicate) return false; return true; }()) {
-        newButton.relevantSettings.push_back(predicate);
-      }
-    }
-  }
-}
 
-void PropFile::pruneUnused() {
-  for (auto setting = settings->begin(); setting != settings->end();) {
-    if (setting->second.control != nullptr) {
-      setting++;
-      continue;
+    const auto settings {hashedData.find("SETTINGS")};
+    if (settings == hashedData.end() or settings->second->getType() != PConf::Type::SECTION) {
+        logger.info("Prop config file \"" + propName + "\" does not have optional section \"SETTINGS\", skipping...");
+    } else {
+        prop->readSettings(PConf::hash(std::static_pointer_cast<PConf::Section>(settings->second)->entries), *logger.binfo("Reading settings..."));
     }
-    warning("Removing unused setting \"" + setting->second.name + "\"...");
-    setting = settings->erase(setting);
-  }
-}
 
-bool PropFile::parseLayoutSection(std::vector<std::string>& section, wxSizer* sizer, wxWindow* parent) {
-# define ITEMBORDER wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 5)
-  auto createToggle = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
-    setting.control = new wxCheckBox(parent, wxID_ANY, setting.name);
-    static_cast<wxCheckBox*>(setting.control)->SetToolTip(new wxToolTip(setting.description));
-    sizer->Add(static_cast<wxCheckBox*>(setting.control), ITEMBORDER);
-  };
-  auto createNumeric = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
-    auto entry = new pcSpinCtrl(parent, wxID_ANY, setting.name, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, setting.min, setting.max, setting.defaultVal);
-    setting.control = entry;
-    static_cast<pcSpinCtrl*>(setting.control)->entry()->SetIncrement(setting.increment);
-    static_cast<pcSpinCtrl*>(setting.control)->SetToolTip(new wxToolTip(setting.description));
-    sizer->Add(entry, ITEMBORDER);
-  };
-  auto createDecimal = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
-    auto entry = new pcSpinCtrlDouble(parent, wxID_ANY, setting.name, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, setting.min, setting.max, setting.defaultVal);
-    setting.control = entry;
-    static_cast<pcSpinCtrlDouble*>(setting.control)->entry()->SetIncrement(setting.increment);
-    static_cast<pcSpinCtrlDouble*>(setting.control)->SetToolTip(new wxToolTip(setting.description));
-    sizer->Add(entry, ITEMBORDER);
-  };
-  auto createOption = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
-    setting.control = new wxRadioButton(parent, wxID_ANY, setting.name);
-    static_cast<wxRadioButton*>(setting.control)->SetToolTip(new wxToolTip(setting.description));
-    sizer->Add(static_cast<wxRadioButton*>(setting.control), ITEMBORDER);
-  };
-# undef ITEMBORDER
+    const auto layout{hashedData.find("LAYOUT")};
+    if (layout == hashedData.end() or settings->second->getType() != PConf::Type::SECTION) {
+        logger.info("Prop config file \"" + propName + "\" does not have optional section \"LAYOUT\", skipping...");
+    } else {
+        prop->readLayout(std::static_pointer_cast<PConf::Section>(settings->second)->entries, *logger.binfo("Reading layout..."));
+    }
 
-  while (!section.empty()) {
-    if (section.begin()->find("HORIZONTAL") != std::string::npos || section.begin()->find("VERTICAL") != std::string::npos) {
-      auto isHorizontal = section.begin()->find("HORIZONTAL") != std::string::npos;
-      auto label = FileParse::parseLabel(*section.begin());
-      auto newSection = FileParse::extractSection(isHorizontal ? "HORIZONTAL" : "VERTICAL", section);
-      newSection.erase(newSection.begin()); // Erase HORIZONTAL or VERTICAL header to prevent infinite recursion.
-      if (label.empty()) { // If no label
-        auto newSizer = new wxBoxSizer(isHorizontal ? wxHORIZONTAL : wxVERTICAL);
-        parseLayoutSection(newSection, newSizer, parent);
-        sizer->Add(newSizer, wxSizerFlags(0).Expand());
-      } else { // Has label
-        auto newSizer = new wxStaticBoxSizer(isHorizontal ? wxHORIZONTAL : wxVERTICAL, parent, label);
-        parseLayoutSection(newSection, newSizer, newSizer->GetStaticBox());
-        sizer->Add(newSizer, wxSizerFlags(0).Border(wxALL, 5).Expand());
-      }
+    const auto buttonsRange{hashedData.equal_range("BUTTONS")};
+    if (buttonsRange.first == buttonsRange.second) {
+        logger.info("Prop config file \"" + propName + "\" does not have optional section \"BUTTONS\", skipping...");
+    } else {
+        for (auto it{buttonsRange.first}; it != buttonsRange.second; ++it) {
+            if (it->second->getType() == PConf::Type::SECTION) {
+                prop->readButtons(std::static_pointer_cast<PConf::Section>(it->second), *logger.binfo("Reading buttons..."));
+            }
+        }
     }
-    else if (section.begin()->find("OPTION") != std::string::npos) {
-      auto key = settings->find(FileParse::parseLabel(*section.begin()));
-      if (key == settings->end()) {
-        warning(R"(Option ")" + FileParse::parseLabel(*section.begin()) + R"(" not found in settings, skipping...)");
-        section.erase(section.begin());
-        continue;
-      }
-      switch (key->second.type) {
-        case Setting::SettingType::TOGGLE: createToggle(key->second, parent, sizer); break;
-        case Setting::SettingType::NUMERIC: createNumeric(key->second, parent, sizer); break;
-        case Setting::SettingType::DECIMAL: createDecimal(key->second, parent, sizer); break;
-        case Setting::SettingType::OPTION: createOption(key->second, parent, sizer); break;
-      }
-      if (key->second.isDefault) key->second.setValue(true);
-      section.erase(section.begin());
-    }
-    else {
-      section.erase(section.begin());
-    }
-  }
 
-  return true;
+    for (auto setting = prop->settings->begin(); setting != prop->settings->end();) {
+        if (setting->second.control != nullptr) {
+            ++setting;
+            continue;
+        }
+        logger.warn("Removing unused setting \"" + setting->second.name + "\"...");
+        setting = prop->settings->erase(setting);
+    }
+
+    prop->Show(false);
+
+    return prop;
 }
 
-void PropFile::warning(const std::string& warning) {
-  std::cerr << "WARNING: " << warning << std::endl;
+void PropFile::readSettings(const PConf::HashedData& data, Log::Branch& lBranch) {
+    auto& logger{lBranch.createLogger("PropFile::readSettings()")};
+    vector<std::pair<string, Setting>> tempSettings;
+
+    const auto parseDisables([](const PConf::HashedData& data) -> vector<string> {
+        vector<string> ret;
+
+        const auto disables{data.find("DISABLE")};
+        if (disables != data.end() and disables->second->value) {
+            auto disableValue{*disables->second->value};
+            while (true) {
+                const auto disableEnd{disableValue.find('\n')};
+                ret.push_back(disableValue.substr(0, disableEnd));
+
+                if (disableEnd == std::string::npos) break;
+                disableValue = disableValue.substr(disableEnd + 1);
+            }
+        }
+
+        return ret;
+    });
+
+    const auto toggleRange{data.equal_range("TOGGLE")};
+    for (auto it{toggleRange.first}; it != toggleRange.second; ++it) {
+        Setting setting;
+        const auto toggleData{parseSettingCommon(setting, it->second, logger)};
+        if (not toggleData) continue;
+
+        setting.type = Setting::SettingType::TOGGLE;
+        setting.disables = parseDisables(*toggleData);
+
+        tempSettings.push_back({setting.define, setting});
+    }
+
+    const auto optionRange{data.equal_range("OPTION")};
+    for (auto it{optionRange.first}; it != optionRange.second; ++it) {
+        if (it->second->getType() != PConf::Type::SECTION) continue;
+
+        const auto optionData{PConf::hash(std::static_pointer_cast<PConf::Section>(it->second)->entries)};
+        const auto selectionRange{optionData.equal_range("SELECTION")};
+        for (auto selectionIt{selectionRange.first}; selectionIt != selectionRange.second; ++selectionIt) {
+            Setting setting;
+            const auto selectionData{parseSettingCommon(setting, it->second, logger)};
+            if (not selectionData)  continue;
+
+            setting.type = Setting::SettingType::OPTION;
+            setting.isDefault = selectionIt == selectionRange.first;
+            setting.disables = parseDisables(*selectionData);
+            setting.shouldOutput = selectionData->find("NO_OUTPUT") != selectionData->end();
+
+            tempSettings.push_back({setting.define, setting});
+        }
+    }
+
+    const auto numericRange{data.equal_range("NUMERIC")};
+    for (auto it{numericRange.first}; it != numericRange.second; ++it) {
+        Setting setting;
+        const auto numericData{parseSettingCommon(setting, it->second, logger)};
+        if (not numericData) continue;
+
+        setting.type = Setting::SettingType::NUMERIC;
+        const auto minEntry{numericData->find("MIN")};
+        if (minEntry->second->value) setting.min = strtol(minEntry->second->value->c_str(), nullptr, 10);
+        const auto maxEntry{numericData->find("MAX")};
+        if (maxEntry->second->value) setting.max = strtol(maxEntry->second->value->c_str(), nullptr, 10);
+        const auto defaultEntry{numericData->find("DEFAULT")};
+        if (defaultEntry->second->value) setting.defaultVal = strtol(defaultEntry->second->value->c_str(), nullptr, 10);
+        const auto incrementEntry{numericData->find("INCREMENT")};
+        if (incrementEntry->second->value) setting.increment = strtol(incrementEntry->second->value->c_str(), nullptr, 10);
+
+        tempSettings.push_back({setting.define, setting});
+    }
+
+    const auto decimalRange{data.equal_range("DECIMAL")};
+    for (auto it{decimalRange.first}; it != decimalRange.second; ++it) {
+        Setting setting;
+        const auto decimalData{parseSettingCommon(setting, it->second, logger)};
+        if (not decimalData) continue;
+
+        setting.type = Setting::SettingType::DECIMAL;
+        const auto minEntry{decimalData->find("MIN")};
+        if (minEntry->second->value) setting.min = strtod(minEntry->second->value->c_str(), nullptr);
+        const auto maxEntry{decimalData->find("MAX")};
+        if (maxEntry->second->value) setting.max = strtod(maxEntry->second->value->c_str(), nullptr);
+        const auto defaultEntry{decimalData->find("DEFAULT")};
+        if (defaultEntry->second->value) setting.defaultVal = strtod(defaultEntry->second->value->c_str(), nullptr);
+        const auto incrementEntry{decimalData->find("INCREMENT")};
+        if (incrementEntry->second->value) setting.increment = strtod(incrementEntry->second->value->c_str(), nullptr);
+
+        tempSettings.push_back({setting.define, setting});
+    }
+
+    settings->clear();
+    settings->insert(tempSettings.begin(), tempSettings.end());
 }
 
-void PropFile::error(const std::string& error) {
-  std::cerr << "ERROR: " << error << std::endl;
+optional<PConf::HashedData> PropFile::parseSettingCommon(Setting& setting, const std::shared_ptr<PConf::Entry>& entry, Log::Logger& logger) {
+    if (not entry->label) {
+        logger.warn(entry->name + " section has no label, ignoring!");
+        return nullopt;
+    }
+
+    setting.define = *entry->label;
+    trimWhiteSpace(setting.define);
+    if (setting.define.empty()) {
+        logger.warn(entry->name + " section has empty define/label, ignoring!");
+        return nullopt;
+    }
+
+    if (entry->getType() != PConf::Type::SECTION) {
+        logger.warn(entry->name + " entry is not section, ignoring!");
+        return nullopt;
+    }
+    const auto data{PConf::hash(std::static_pointer_cast<PConf::Section>(entry)->entries)};
+
+    const auto name{data.find("NAME")};
+    if (name == data.end() or not name->second->value) {
+        logger.warn(entry->name + " section does not have the required \"NAME\" entry, ignoring!");
+        return nullopt;
+    }
+    setting.name = *name->second->value;
+
+    const auto description{data.find("DESCRIPTION")};
+    if (description != data.end() and description->second->value) setting.description = *description->second->value;
+
+    const auto requireAny{data.find("REQUIREANY")};
+    if (requireAny != data.end() and requireAny->second->value) {
+        auto requireAnyValue{*requireAny->second->value};
+        while (true) {
+            const auto requireAnyEnd{requireAnyValue.find('\n')};
+            setting.requiredAny.push_back(requireAnyValue.substr(0, requireAnyEnd));
+
+            if (requireAnyEnd == std::string::npos) break;
+            requireAnyValue = requireAnyValue.substr(requireAnyEnd + 1);
+        }
+    }
+
+    const auto required{data.find("REQUIRE")};
+    if (required != data.end() and required->second->value) {
+        auto requiredValue{*required->second->value};
+        while (true) {
+            const auto requiredEnd{requiredValue.find('\n')};
+            setting.required.push_back(requiredValue.substr(0, requiredEnd));
+
+            if (requiredEnd == std::string::npos) break;
+            requiredValue = requiredValue.substr(requiredEnd + 1);
+        }
+    }
+
+    return data;
+}
+
+void PropFile::readLayout(const PConf::Data& data, Log::Branch& lBranch) {
+#   define ITEMBORDER wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 5)
+    auto& logger{lBranch.createLogger("PropFile::readLayout()")};
+    auto createToggle = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
+        setting.control = new wxCheckBox(parent, wxID_ANY, setting.name);
+        static_cast<wxCheckBox*>(setting.control)->SetToolTip(new wxToolTip(setting.description));
+        sizer->Add(static_cast<wxCheckBox*>(setting.control), ITEMBORDER);
+    };
+    auto createNumeric = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
+        auto entry = new PCUI::Numeric(parent, wxID_ANY, setting.min, setting.max, setting.defaultVal, setting.increment, wxSP_ARROW_KEYS, setting.name);
+        setting.control = entry;
+        static_cast<PCUI::Numeric*>(setting.control)->SetToolTip(new wxToolTip(setting.description));
+        sizer->Add(entry, ITEMBORDER);
+    };
+    auto createDecimal = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
+        auto entry = new PCUI::NumericDec(parent, wxID_ANY, setting.min, setting.max, setting.defaultVal, setting.increment, wxSP_ARROW_KEYS, setting.name);
+        setting.control = entry;
+        static_cast<PCUI::NumericDec*>(setting.control)->SetToolTip(new wxToolTip(setting.description));
+        sizer->Add(entry, ITEMBORDER);
+    };
+    auto createOption = [](Setting& setting, wxWindow* parent, wxSizer* sizer) {
+        setting.control = new wxRadioButton(parent, wxID_ANY, setting.name);
+        static_cast<wxRadioButton*>(setting.control)->SetToolTip(new wxToolTip(setting.description));
+        sizer->Add(static_cast<wxRadioButton*>(setting.control), ITEMBORDER);
+    };
+
+    vector<wxWindow *> parentStack;
+    vector<wxSizer*> sizerStack;
+    sizer = new wxBoxSizer(wxVERTICAL);
+
+    vector<std::pair<decltype(data.begin()), decltype(data.end())>> entryStack;
+    if (not data.empty()) entryStack.emplace_back(data.begin(), data.end());
+
+    while (true) {
+        if (entryStack.empty()) break;
+        const auto& entry{*entryStack.back().first};
+
+        if (entry->name == "HORIZONTAL" or entry->name == "VERTICAL") {
+            if (entry->getType() == PConf::Type::SECTION) {
+                if (entry->label) {
+                    auto *sectionSizer {new wxStaticBoxSizer(entry->name == "HORIZONTAL" ? wxHORIZONTAL : wxVERTICAL, parentStack.empty() ? this : parentStack.back(), *entry->label)};
+                    parentStack.push_back(sectionSizer->GetStaticBox());
+                    if (sizerStack.empty()) sizer->Add(sectionSizer);
+                    else sizerStack.back()->Add(sectionSizer);
+                } else {
+                    auto *sectionSizer{new wxBoxSizer(entry->name == "HORIZONTAL" ? wxHORIZONTAL : wxVERTICAL)};
+                    if (sizerStack.empty()) sizer->Add(sectionSizer);
+                    else sizerStack.back()->Add(sectionSizer);
+                }
+
+                const auto& entries{std::static_pointer_cast<PConf::Section>(entry)->entries};
+                if (not entries.empty()) entryStack.emplace_back(entries.begin(), entries.end());
+            }
+        } else if (entry->name == "OPTION") {
+            if (entry->getType() == PConf::Type::ENTRY and entry->label) {
+                auto define{settings->find(entry->label.value_or(""))};
+                if (define == settings->end()) {
+                    logger.warn("Option \"" + *entry->label + "\" not found in settings, skipping...");
+                } else {
+                    auto *parent{parentStack.empty() ? this : parentStack.back()};
+                    auto *sectionSizer{sizerStack.empty() ? sizer : sizerStack.back()};
+                    switch (define->second.type) {
+                        case Setting::SettingType::TOGGLE: createToggle(define->second, parent, sectionSizer); break;
+                        case Setting::SettingType::NUMERIC: createNumeric(define->second, parent, sectionSizer); break;
+                        case Setting::SettingType::DECIMAL: createDecimal(define->second, parent, sectionSizer); break;
+                        case Setting::SettingType::OPTION: createOption(define->second, parent, sectionSizer); break;
+                    }
+                    if (define->second.isDefault) define->second.setValue(true);
+                }
+            }
+        }
+
+        ++entryStack.back().first;
+        if (entryStack.back().first == entryStack.back().second) entryStack.pop_back();
+    }
+
+    SetSizerAndFit(sizer);
+#   undef ITEMBORDER
+}
+
+void PropFile::readButtons(const std::shared_ptr<PConf::Section>& data, Log::Branch& lBranch) {
+    auto& logger{lBranch.createLogger("PropFile::readButtons()")};
+
+    if (not data->labelNum) {
+      logger.warn("Button section missing number indicator, skipping...");
+      return;
+    }
+
+    if (*data->labelNum < 0 || *data->labelNum > 3) {
+      logger.warn("Button section number indicator \"" + std::to_string(*data->labelNum) + "\" out of range, skipping...");
+      return;
+    }
+
+    for (const auto& entry : data->entries) {
+        if (entry->getType() != PConf::Type::SECTION) continue;
+        if (entry->name != "STATE") continue;
+        if (not entry->label) {
+            logger.warn("Button array #" + std::to_string(*data->labelNum) + " has unnamed state, skipping...");
+            continue;
+        }
+
+        for (const auto& buttonEntry : std::static_pointer_cast<PConf::Section>(entry)->entries) {
+            if (buttonEntry->getType() != PConf::Type::SECTION) continue;
+            if (buttonEntry->name != "BUTTON") continue;
+            if (not buttonEntry->label) {
+                logger.warn("Button entry has missing name, skipping...");
+                continue;
+            }
+
+            Button newButton;
+            newButton.name = *buttonEntry->label;
+
+            for (const auto descEntry : std::static_pointer_cast<PConf::Section>(buttonEntry)->entries) {
+                if (descEntry->getType() != PConf::Type::ENTRY) continue;
+                if (descEntry->name != "DESCRIPTION") continue;
+                if (not descEntry->value) {
+                    logger.warn("Description empty for button \"" + newButton.name + "\", ignoring");
+                }
+
+                if (not descEntry->label) {
+                    if (newButton.descriptions.find({}) != newButton.descriptions.end()) {
+                        logger.warn("Overriding duplicate default description for button \"" + newButton.name + "\", there should be only one default per button...");
+                    }
+                }
+
+                newButton.descriptions.emplace(descEntry->label.value_or(""), descEntry->value.value_or("EMPTY"));
+            }
+        }
+    }
 }
 
