@@ -1,7 +1,6 @@
+#include "onboard.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
-
-#include "onboard/onboard.h"
+// Copyright (C) 2025 Ryan Ogurek
 
 #include <wx/bitmap.h>
 #include <wx/settings.h>
@@ -17,12 +16,13 @@
 #include <wx/statline.h>
 #include <wx/event.h>
 #include <wx/statbmp.h>
-#include "../resources/icons/icon.xpm"
 
-#include "tools/arduino.h"
-#include "core/utilities/progress.h"
-#include "core/utilities/misc.h"
-#include "core/appstate.h"
+#include "../tools/arduino.h"
+#include "../core/utilities/progress.h"
+#include "../core/utilities/misc.h"
+#include "../core/appstate.h"
+
+#include "utils/image.h"
 
 wxEventTypeTag<Onboard::UpdateEvent> OnboardFrame::EVT_UPDATE(wxNewEventType());
 
@@ -30,8 +30,10 @@ OnboardFrame* OnboardFrame::instance{nullptr};
 OnboardFrame::OnboardFrame() : wxFrame(nullptr, wxID_ANY, "ProffieConfig First-Time Setup", wxDefaultPosition, wxDefaultSize, wxSYSTEM_MENU | wxCLOSE_BOX | wxMINIMIZE_BOX | wxCAPTION | wxCLIP_CHILDREN) {
   auto sizer = new wxBoxSizer(wxVERTICAL);
   auto contentSizer = new wxBoxSizer(wxHORIZONTAL);
-  auto icon = new wxStaticBitmap(this, wxID_ANY, wxBitmap(icon_xpm));
-  contentSizer->Add(icon, wxSizerFlags(0).Border(wxRIGHT, 10));
+  auto icon = new wxStaticBitmap(this, wxID_ANY, Image::loadPNG("icon"));
+  icon->SetMaxSize(wxSize{256, 256});
+
+  contentSizer->Add(icon, wxSizerFlags(0).Border(wxALL, 10));
   welcomePage = new Onboard::Welcome(this);
   dependencyPage = new Onboard::DependencyInstall(this);
   dependencyPage->Hide();
@@ -82,8 +84,7 @@ void OnboardFrame::bindEvents() {
             return;
         }
         event.Skip();
-        if (!AppState::instance->firstRun)
-            MainMenu::instance = new MainMenu();
+        if (AppState::instance->doneWithFirstRun) MainMenu::instance = new MainMenu();
     });
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Close(); }, ID_Cancel);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
@@ -122,7 +123,7 @@ void OnboardFrame::bindEvents() {
                 overviewPage->prepare();
             }
         } else if (overviewPage->IsShown()) {
-            AppState::instance->firstRun = false;
+            AppState::instance->doneWithFirstRun = true;
             AppState::instance->saveState();
             Close(true);
         }
@@ -144,13 +145,13 @@ void OnboardFrame::bindEvents() {
             dependencyPage->pressNext->Show();
             dependencyPage->Layout();
 
-            wxMessageDialog(this, "Dependency installation failed, please try again.", "Installation Failure", wxOK | wxCENTER).ShowModal();
+            wxMessageDialog(this, "Dependency installation failed, please try again.\n\n" + event.message, "Installation Failure", wxOK | wxCENTER).ShowModal();
         }
     }, ID_DependencyInstall);
     Bind(Arduino::EVT_INIT_DONE, [this](Arduino::Event& evt) {
-        auto *const event = new Onboard::UpdateEvent(EVT_UPDATE, ID_DependencyInstall);
+        auto *event{new Onboard::UpdateEvent{EVT_UPDATE, ID_DependencyInstall}};
         event->succeeded = evt.succeeded;
-        event->message = "";
+        event->message = evt.str;
         event->parent = this;
         wxQueueEvent(GetEventHandler(), event);
     });
@@ -162,7 +163,7 @@ void OnboardFrame::update() {
     skipInstall->Hide();
     next->Enable(overviewPage->isDone);
     next->SetLabel("Finish");
-  } else if (dependencyPage->IsShown() && !AppState::instance->firstRun) {
+  } else if (dependencyPage->IsShown() && AppState::instance->doneWithFirstRun) {
     skipInstall->Show();
   } else {
     skipIntro->Hide();
