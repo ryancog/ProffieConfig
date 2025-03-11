@@ -61,6 +61,8 @@ if (CMAKE_BUILD_TYPE STREQUAL Debug)
     message("Binary Dir: ${CMAKE_BINARY_DIR}")
     install(FILES ${CMAKE_BINARY_DIR}/compile_commands.json DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
     add_compile_definitions(APP_DEPLOY_PATH="${INSTALL_ITEM_DIR}")
+    add_compile_options(-fsanitize=address)
+    add_link_options(-fsanitize=address)
 endif()
 
 add_subdirectory(3rdparty)
