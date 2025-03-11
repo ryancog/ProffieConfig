@@ -2,30 +2,38 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include "core/types.h"
+#include "utils/types.h"
+
+#include <wx/window.h>
 
 class AppState {
 public:
   static void init();
   static AppState* instance;
 
-  void addConfig(const string&);
-  void removeConfig(const string&);
   bool isSaved();
   void setSaved(bool = true);
-  void loadStateFromFile();
+  void loadState();
   void saveState();
 
-  vector<string> propFileNames{};
-  const vector<string>& getConfigFileNames();
+  void addProp(const string& propName, const string& propPath, const string& propConfigPath);
 
-  bool firstRun{true};
+  const vector<string>& getPropFileNames();
+  static constexpr array<string_view, 5> BUILTIN_PROPS{
+      "BC",
+      "caiwyn",
+      "fett263",
+      "sa22c",
+      "shtok",
+  };
+
+  bool doneWithFirstRun{false};
 
 private:
-  AppState();
+  AppState() = default;
   AppState(const AppState&) = delete;
 
-  vector<string> configFileNames;
+  vector<string> propFileNames{};
 
   bool saved{true};
 };
