@@ -1,9 +1,8 @@
+#pragma once
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#pragma once
-
-#include "core/config/configuration.h"
+#include "../../core/config/configuration.h"
 
 #include <initializer_list>
 #include <wx/sizer.h>

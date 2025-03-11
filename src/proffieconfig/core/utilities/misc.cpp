@@ -1,8 +1,8 @@
+#include "misc.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
-#include "core/utilities/misc.h"
-#include "core/config/configuration.h"
+#include "../../core/config/configuration.h"
 
 #include <wx/event.h>
 #include <wx/string.h>
