@@ -4,13 +4,14 @@
 #pragma once
 
 #include <unordered_map>
+
 #include <wx/stattext.h>
 #include <wx/gauge.h>
 #include <wx/timer.h>
 #include <wx/panel.h>
 
-#include "mainmenu/mainmenu.h"
-#include "editor/pages/bladespage.h"
+#include "../mainmenu/mainmenu.h"
+#include "../editor/pages/bladespage.h"
 
 namespace Onboard {
 
