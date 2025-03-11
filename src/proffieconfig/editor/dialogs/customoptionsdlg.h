@@ -1,10 +1,9 @@
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
-
 #pragma once
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2025 Ryan Ogurek
 
-#include "editor/editorwindow.h"
-#include "ui/pctextctrl.h"
+#include "../editorwindow.h"
+#include "ui/controls.h"
 
 #include <wx/dialog.h>
 #include <wx/panel.h>
@@ -41,8 +40,8 @@ class CustomOptionsDlg::CDefine : public wxPanel {
     CDefine(wxScrolledWindow*);
 
     wxStaticText* defText{nullptr};
-    pcTextCtrl* name{nullptr};
-    pcTextCtrl* value{nullptr};
+    PCUI::Text* name{nullptr};
+    PCUI::Text* value{nullptr};
     wxButton* remove{nullptr};
 
     enum {
