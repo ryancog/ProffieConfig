@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "ui/pcchoice.h"
+#include "ui/controls.h"
 
 #include <wx/frame.h>
 #include <wx/sizer.h>
@@ -22,7 +22,10 @@ public:
     ~EditorWindow();
 
     bool isSaved();
-    std::string_view getOpenConfig() const;
+
+    string_view getOpenConfig() const;
+    void renameConfig(const string&);
+
 
     GeneralPage* generalPage{nullptr};
     PropsPage* propsPage{nullptr};
@@ -32,7 +35,7 @@ public:
 
     wxBoxSizer* sizer{nullptr};
 
-    pcChoice* windowSelect{nullptr};
+    PCUI::Choice* windowSelect{nullptr};
 
     enum {
         ID_WindowSelect,
@@ -51,5 +54,5 @@ private:
     void createMenuBar();
     void createPages();
 
-    const std::string openConfig{};
+    string openConfig{};
 };

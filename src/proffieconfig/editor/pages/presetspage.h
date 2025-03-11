@@ -1,10 +1,9 @@
+#pragma once
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#pragma once
-
-#include "editor/editorwindow.h"
-#include "ui/pctextctrl.h"
+#include "../editorwindow.h"
+#include "ui/controls.h"
 
 #include <wx/textctrl.h>
 #include <wx/sizer.h>
@@ -23,9 +22,9 @@ public:
 
     wxBoxSizer *injectionsSizer{nullptr};
 
-    pcChoice* bladeArray{nullptr};
-    pcTextCtrl* commentInput{nullptr};
-    pcTextCtrl* styleInput{nullptr};
+    PCUI::Choice* bladeArray{nullptr};
+    PCUI::Text* commentInput{nullptr};
+    PCUI::Text* styleInput{nullptr};
     wxListBox* presetList{nullptr};
     wxListBox* bladeList{nullptr};
 
@@ -34,9 +33,9 @@ public:
     wxButton* movePresetUp{nullptr};
     wxButton* movePresetDown{nullptr};
 
-    pcTextCtrl* nameInput{nullptr};
-    pcTextCtrl* dirInput{nullptr};
-    pcTextCtrl* trackInput{nullptr};
+    PCUI::Text* nameInput{nullptr};
+    PCUI::Text* dirInput{nullptr};
+    PCUI::Text* trackInput{nullptr};
 
     std::vector<wxString> injections;
 

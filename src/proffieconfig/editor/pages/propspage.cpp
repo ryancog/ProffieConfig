@@ -1,42 +1,41 @@
+#include "propspage.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
-#include "editor/pages/propspage.h"
+#include "../../core/defines.h"
+#include "../../core/appstate.h"
+#include "../../core/utilities/misc.h"
+#include "../../core/config/propfile.h"
+#include "../editorwindow.h"
+#include "generalpage.h"
+#include "ui/controls.h"
 
-#include "core/defines.h"
-#include "core/appstate.h"
-#include "core/utilities/misc.h"
-#include "core/config/propfile.h"
-#include "editor/editorwindow.h"
-#include "editor/pages/generalpage.h"
-#include "ui/pcchoice.h"
-
+#include <wx/button.h>
 #include <wx/scrolwin.h>
 #include <wx/sizer.h>
 #include <wx/tooltip.h>
 
 PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""), parent{static_cast<EditorWindow*>(window)} {
-  auto top = new wxBoxSizer(wxHORIZONTAL);
-  propSelection = new pcChoice(GetStaticBox(), ID_PropSelect, "Prop File", wxDefaultPosition, wxDefaultSize, Misc::createEntries({"Default"}), 0);
-  // Two ampersands bc wxWidgets formatting
-  propInfo = new wxButton(GetStaticBox(), ID_PropInfo, "Prop Description && Usage Info...");
-  buttonInfo = new wxButton(GetStaticBox(), ID_Buttons, "Button Controls...");
-  TIP(propInfo, "View prop creator-provided information about this prop and its intended usage.");
-  TIP(buttonInfo, "View button controls based on specific option settings and number of buttons.");
-  top->Add(propSelection, wxSizerFlags(0).Border(wxALL, 10));
-  top->Add(propInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
-  top->Add(buttonInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
+    auto top = new wxBoxSizer(wxHORIZONTAL);
+    propSelection = new PCUI::Choice(GetStaticBox(), ID_PropSelect, Misc::createEntries({"Default"}), "Prop File");
+    // Two ampersands bc wxWidgets formatting
+    propInfo = new wxButton(GetStaticBox(), ID_PropInfo, "Prop Description && Usage Info...");
+    buttonInfo = new wxButton(GetStaticBox(), ID_Buttons, "Button Controls...");
+    TIP(propInfo, "View prop creator-provided information about this prop and its intended usage.");
+    TIP(buttonInfo, "View button controls based on specific option settings and number of buttons.");
+    top->Add(propSelection, wxSizerFlags(0).Border(wxALL, 10));
+    top->Add(propInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
+    top->Add(buttonInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
 
-  propsWindow = new wxScrolledWindow(GetStaticBox(), wxID_ANY);
-  auto propsSizer = new wxBoxSizer(wxVERTICAL);
-  propsWindow->SetSizerAndFit(propsSizer);
-  propsWindow->SetScrollbars(10, 10, -1, 1);
+    propsWindow = new wxScrolledWindow(GetStaticBox(), wxID_ANY);
+    auto propsSizer = new wxBoxSizer(wxVERTICAL);
+    propsWindow->SetSizerAndFit(propsSizer);
+    propsWindow->SetScrollbars(10, 10, -1, 1);
 
-  Add(top);
-  Add(propsWindow, wxSizerFlags(1).Expand());
-  loadProps();
-  bindEvents();
-
+    Add(top);
+    Add(propsWindow, wxSizerFlags(1).Expand());
+    loadProps();
+    bindEvents();
 }
 
 void PropsPage::bindEvents() {
@@ -124,15 +123,18 @@ void PropsPage::bindEvents() {
             stateSizer->Add(controlSizer);
 
             for (auto& button : stateButtons) {
-              std::vector<std::string> activePredicates{};
-              for (const auto& predicate : button.relevantSettings) {
+              string activePredicate;
+              for (const auto& [ predicate, description ]: button.descriptions) {
                 auto setting = activeProp->getSettings()->find(predicate);
                 if (setting == activeProp->getSettings()->end()) continue;
 
-                if (!setting->second.getOutput().empty()) activePredicates.push_back(setting->first);
+                if (not setting->second.getOutput().empty()) {
+                    activePredicate = setting->first;
+                    break;
+                }
               }
 
-              auto key = button.descriptions.find(activePredicates);
+              auto key = button.descriptions.find(activePredicate);
               if (key != button.descriptions.end() && key->second != "DISABLED") {
                 buttonSizer->Add(new wxStaticText(stateSizer->GetStaticBox(), wxID_ANY, button.name));
                 actionSizer->Add(new wxStaticText(stateSizer->GetStaticBox(), wxID_ANY, " - " + key->second));
@@ -244,7 +246,7 @@ void PropsPage::updateSelectedProp(const wxString& newProp) {
 }
 void PropsPage::loadProps() {
   props.clear();
-  for (const auto& prop : AppState::instance->propFileNames) {
+  for (const auto& prop : AppState::instance->getPropFileNames()) {
     auto propConfig = PropFile::createPropConfig(prop, propsWindow);
     if (propConfig != nullptr) {
       propsWindow->GetSizer()->Add(propConfig);
