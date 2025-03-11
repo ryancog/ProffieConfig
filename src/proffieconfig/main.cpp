@@ -1,6 +1,7 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
+#include "app/app.h"
 #include "core/appstate.h"
 
 #include <wx/app.h>
@@ -8,18 +9,8 @@
 class ProffieConfig : public wxApp {
 public:
     virtual bool OnInit() override {
-#   	ifdef __WXMSW__
-        MSWEnableDarkMode();
-        if (AttachConsole(ATTACH_PARENT_PROCESS)){
-            freopen("CONOUT$", "w", stdout);
-            freopen("CONOUT$", "w", stderr);
-            freopen("CONIN$", "r", stdin);
-        }
-#   	endif
-
-        argv[0].find_last_of("/\\");
-        chdir(argv[0].substr(0, argv[0].find_last_of("/\\")).c_str());
-
+        App::init("ProffieConfig");
+        wxImage::AddHandler(new wxPNGHandler());
         AppState::init();
 
         return true;
