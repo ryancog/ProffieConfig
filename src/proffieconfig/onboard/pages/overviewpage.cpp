@@ -1,15 +1,14 @@
+#include "../onboard.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include "mainmenu/dialogs/addconfig.h"
-#include "onboard/onboard.h"
-
-#include "mainmenu/mainmenu.h"
-#include "editor/editorwindow.h"
-#include "editor/pages/propspage.h"
-#include "editor/pages/bladespage.h"
-#include "editor/pages/presetspage.h"
-#include "editor/dialogs/bladearraydlg.h"
+#include "../../mainmenu/dialogs/addconfig.h"
+#include "../../mainmenu/mainmenu.h"
+#include "../../editor/editorwindow.h"
+#include "../../editor/pages/propspage.h"
+#include "../../editor/pages/bladespage.h"
+#include "../../editor/pages/presetspage.h"
+#include "../../editor/dialogs/bladearraydlg.h"
 
 #include <wx/menu.h>
 #include <wx/event.h>
@@ -106,72 +105,67 @@ void Onboard::Overview::prepareEditor() {
 }
 
 void Onboard::Overview::linkMainMenuEvents() {
-  guideMenu->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
-      EVENT_PAGE_SETUP;
-      event.Skip(false);
+    guideMenu->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
+        EVENT_PAGE_SETUP;
+        event.Skip(true);
 
-      generateNewPage("Adding a Configuration",
+        generateNewPage("Adding a Configuration",
 
-                      "Now, from this new window, you can either create a new config, or import one you already have!\n"
-                      "For now, just create a new one, you can import your own later.\n"
-                      "\n"
-                      "Your configurations must have unique names, but later you can import as many as you'd like.\n"
-                      "\n"
-                      "If you bought your saber from someone else, they should have provided you a configuration.\n"
-                      "\n"
-                      "These files end with \".h\" (this may not show up depending on your computer settings) if you're\n"
-                      "looking for them on your computer to import, and contain all the information needed to make your\n"
-                      "Proffieboard work!\n"
-                      );
-      auto configDialog = AddConfig(guideMenu);
-      static_cast<wxToggleButton*>(configDialog.FindWindow(AddConfig::ID_ImportExisting))->Disable();
-      configDialog.ShowModal();
-
+                "Now, from this new window, you can either create a new config, or import one you already have!\n"
+                "For now, just create a new one, you can import your own later.\n"
+                "\n"
+                "Your configurations must have unique names, but later you can import as many as you'd like.\n"
+                "\n"
+                "If you bought your saber from someone else, they should have provided you a configuration.\n"
+                "\n"
+                "These files end with \".h\" (this may not show up depending on your computer settings) if you're\n"
+                "looking for them on your computer to import, and contain all the information needed to make your\n"
+                "Proffieboard work!\n"
+                );
     }, MainMenu::ID_AddConfig);
-  guideMenu->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
-      EVENT_PAGE_SETUP;
-      generateNewPage("Edit Configuration",
+    guideMenu->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
+        EVENT_PAGE_SETUP;
+        generateNewPage("Edit Configuration",
 
-                      "If you import a config later, ProffieConfig will manage it, and you won't need\n"
-                      "the file after you do so, though it's never a bad idea to keep backups.\n"
-                      "\n"
-                      "We'll go over how to export your configuration later, which could also be useful if\n"
-                      "you ever need help troubleshooting.\n"
-                      "\n\n"
-                      "Click on \"Edit Selected Configuration\" in order to open your new config\n"
-                      "in the ProffieConfig editor.\n"
-                      "(Notice it's been selected in the drop-down)\n"
-                      );
-      mainMenuDisables.at(MainMenu::ID_AddConfig) = true;
-      mainMenuDisables.at(MainMenu::ID_EditConfig) = false;
-
+                "If you import a config later, ProffieConfig will manage it, and you won't need\n"
+                "the file after you do so, though it's never a bad idea to keep backups.\n"
+                "\n"
+                "We'll go over how to export your configuration later, which could also be useful if\n"
+                "you ever need help troubleshooting.\n"
+                "\n\n"
+                "Click on \"Edit Selected Configuration\" in order to open your new config\n"
+                "in the ProffieConfig editor.\n"
+                "(Notice it's been selected in the drop-down)\n"
+                );
+        mainMenuDisables.at(MainMenu::ID_AddConfig) = true;
+        mainMenuDisables.at(MainMenu::ID_EditConfig) = false;
+        guideMenu->Update();
     }, MainMenu::ID_ConfigSelect);
-  guideMenu->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
-      EVENT_PAGE_SETUP
+    guideMenu->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
+        EVENT_PAGE_SETUP
         generateNewPage("Configuration - General Settings",
 
-                        "This is the ProffieConfig editor, where you can tweak virtually every aspect of how\n"
-                        "your Proffieboard operates, and set up everything to your liking.\n"
-                        "\n"
-                        "This first page is the \"General\" page, where there's some more basic\n"
-                        "options for you to configure.\n"
-                        "\n"
-                        "If you're unsure what an option does, hover over it with your mouse, and\n"
-                        "a little tooltip will appear to explain the setting in more detail.\n"
-                        "(This goes for almost every setting in ProffieConfig)\n"
-                        "\n\n"
-                        "When you're done exploring, switch the page to \"Prop File\" with\n"
-                        "the drop down at the top.\n"
-                        );
-      guideMenu->activeEditor = guideMenu->generateEditor(guideMenu->configSelect->entry()->GetStringSelection().ToStdString());
-      guideMenu->activeEditor->windowSelect->entry()->Clear();
-      guideMenu->activeEditor->windowSelect->entry()->Append("General");
-      guideMenu->activeEditor->windowSelect->entry()->Append("Prop File");
-      guideMenu->activeEditor->windowSelect->entry()->SetSelection(0);
+                "This is the ProffieConfig editor, where you can tweak virtually every aspect of how\n"
+                "your Proffieboard operates, and set up everything to your liking.\n"
+                "\n"
+                "This first page is the \"General\" page, where there's some more basic\n"
+                "options for you to configure.\n"
+                "\n"
+                "If you're unsure what an option does, hover over it with your mouse, and\n"
+                "a little tooltip will appear to explain the setting in more detail.\n"
+                "(This goes for almost every setting in ProffieConfig)\n"
+                "\n\n"
+                "When you're done exploring, switch the page to \"Prop File\" with\n"
+                "the drop down at the top.\n"
+                );
+        guideMenu->activeEditor = guideMenu->generateEditor(guideMenu->configSelect->entry()->GetStringSelection().ToStdString());
+        guideMenu->activeEditor->windowSelect->entry()->Clear();
+        guideMenu->activeEditor->windowSelect->entry()->Append("General");
+        guideMenu->activeEditor->windowSelect->entry()->Append("Prop File");
+        guideMenu->activeEditor->windowSelect->entry()->SetSelection(0);
 
-      linkEditorEvents();
-      prepareEditor();
-
+        linkEditorEvents();
+        prepareEditor();
     }, MainMenu::ID_EditConfig);
 }
 
