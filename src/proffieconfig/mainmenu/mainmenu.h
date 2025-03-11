@@ -1,33 +1,35 @@
+#pragma once
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
-
-#pragma once
-
-#include "editor/editorwindow.h"
 
 #include <wx/frame.h>
 #include <wx/button.h>
 #include <wx/combobox.h>
 
+#include "../editor/editorwindow.h"
+#include "ui/controls.h"
+
 namespace Onboard {
+
 class Overview;
+
 }
 
 class MainMenu : public wxFrame {
 public:
     static MainMenu* instance;
-    MainMenu(wxWindow* = nullptr);
+    MainMenu(wxWindow * = nullptr);
 
     void removeEditor(EditorWindow *);
     void update();
 
     wxButton* refreshButton{nullptr};
     wxButton* applyButton{nullptr};
-    pcChoice* boardSelect{nullptr};
+    PCUI::Choice* boardSelect{nullptr};
 
     wxButton* openSerial{nullptr};
 
-    pcChoice* configSelect{nullptr};
+    PCUI::Choice* configSelect{nullptr};
     wxButton* addConfig{nullptr};
     wxButton* removeConfig{nullptr};
     wxButton* editConfig{nullptr};
