@@ -1,15 +1,14 @@
+#pragma once
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
-
-#pragma once
 
 #include <thread>
 
 #if !defined(__WINDOWS__)
-#include "ui/pctextctrl.h"
+#include "ui/controls.h"
 #endif
 
-#include "mainmenu/mainmenu.h"
+#include "../mainmenu/mainmenu.h"
 
 class SerialMonitor : public wxFrame {
 public:
@@ -32,8 +31,8 @@ private:
     std::thread listenThread;
     std::thread writerThread;
 
-    pcTextCtrl* input;
-    pcTextCtrl* output;
+    PCUI::Text *input;
+    PCUI::Text *output;
 
     int32_t fd = 0;
     wxString sendOut;

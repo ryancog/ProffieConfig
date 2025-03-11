@@ -1,4 +1,4 @@
-#include "tools/serialmonitor.h"
+#include "serialmonitor.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
@@ -6,8 +6,8 @@
 #include <chrono>
 #include <format>
 
-#include "core/defines.h"
-#include "mainmenu/mainmenu.h"
+#include "../core/defines.h"
+#include "../mainmenu/mainmenu.h"
 
 #ifdef __WINDOWS__
 #include <windows.h>
@@ -41,8 +41,9 @@ SerialMonitor::SerialMonitor(MainMenu* parent) : wxFrame(parent, wxID_ANY, "Prof
 
     wxBoxSizer *master = new wxBoxSizer(wxVERTICAL);
 
-    input = new pcTextCtrl(this, ID_SerialCommand, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
-    output = new pcTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(500, 200), wxTE_MULTILINE | wxTE_READONLY | wxTE_DONTWRAP | wxNO_BORDER);
+    input = new PCUI::Text(this, ID_SerialCommand, {}, wxTE_PROCESS_ENTER);
+    output = new PCUI::Text(this, wxID_ANY, {}, wxTE_MULTILINE | wxTE_READONLY | wxTE_DONTWRAP | wxNO_BORDER);
+    output->SetSize(wxSize{500, 200});
     auto font{output->entry()->GetFont()};
     font.SetFamily(wxFONTFAMILY_TELETYPE);
     output->entry()->SetFont(font);
