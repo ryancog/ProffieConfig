@@ -10,7 +10,6 @@ add_executable(proffieconfig WIN32
     editor/editorwindow.cpp
     editor/pages/propspage.cpp
     core/appstate.cpp
-    core/utilities/fileparse.cpp
     core/utilities/misc.cpp
     core/utilities/progress.cpp
     core/config/configuration.cpp
@@ -32,6 +31,7 @@ add_executable(proffieconfig WIN32
 
 set_target_properties(proffieconfig PROPERTIES
     DESCRIPTION "ProffieConfig" # Windows is stupid so this isn't actually a description
+    EXEC_VERSION "1.7.0"
 )
 
 target_link_libraries(proffieconfig 
@@ -41,6 +41,7 @@ target_link_libraries(proffieconfig
     log
     ui
     utils
+    pconf
 )
 
 include (../Common.cmake)
