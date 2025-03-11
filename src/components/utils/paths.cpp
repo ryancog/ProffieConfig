@@ -40,7 +40,7 @@ filepath Paths::approot() {
     return APP_DEPLOY_PATH;
 #   else
     std::error_code err;
-    if (std::filesystem::equivalent(executable(),
+    if (fs::equivalent(executable(),
                 executable(Executable::LAUNCHER), err)) {
 #       ifdef __WIN32__
         PWSTR rawStr{};
@@ -141,15 +141,12 @@ filepath Paths::data() {
 filepath Paths::configs() { return Paths::data() / "configs"; }
 filepath Paths::injections() { return Paths::data() / "injections"; }
 filepath Paths::props() { return Paths::data() / "props"; }
+filepath Paths::proffieos() { return Paths::data() / "ProffieOS"; }
 
 string Paths::website() { return "https://proffieconfig.kafrenetrading.com"; }
 
 string Paths::remoteAssets() {
-#   ifdef NDEBUG
-    return website() + "/appsupport";
-#   else
-    return website() + "/appsupport-dev";
-#   endif
+    return website() + "/assets/appsupport";
 }
 
 string Paths::remoteUpdateAssets() { 

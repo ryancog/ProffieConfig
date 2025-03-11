@@ -37,7 +37,7 @@ wxBitmap Image::loadPNG(const string& name, bool dpiScaled) {
     if (bmpIt != bmps.end()) return bmpIt->second;
 
     auto pngPath{Paths::resources() / (name + ".png")};
-    std::cout << "Loading PNG \"" << name << "\" from \"" << pngPath.string() << std::endl;
+    // std::cout << "Loading PNG \"" << name << "\" from \"" << pngPath.string() << '"' << std::endl;
     auto bitmap{wxBitmap(pngPath.string(), wxBITMAP_TYPE_PNG)};
     if (dpiScaled) bitmap.SetScaleFactor(getDPIScaleFactor());
 

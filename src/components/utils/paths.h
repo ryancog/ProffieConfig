@@ -59,6 +59,7 @@ enum class Executable {
 [[nodiscard]] UTILS_EXPORT filepath configs();
 [[nodiscard]] UTILS_EXPORT filepath injections();
 [[nodiscard]] UTILS_EXPORT filepath props();
+[[nodiscard]] UTILS_EXPORT filepath proffieos();
 
 [[nodiscard]] UTILS_EXPORT filepath logs();
 
