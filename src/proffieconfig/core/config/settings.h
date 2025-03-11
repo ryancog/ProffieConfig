@@ -1,12 +1,9 @@
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
-
 #pragma once
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2025 Ryan Ogurek
 
-#include "editor/editorwindow.h"
-#include "ui/pcspinctrl.h"
-#include "ui/pcspinctrldouble.h"
-#include "ui/pctextctrl.h"
+#include "../../editor/editorwindow.h"
+#include "ui/controls.h"
 
 #include <cstdint>
 #include <cstring>
@@ -59,12 +56,12 @@ private:
 
 public:
 
-    ProffieDefine(std::string name, int32_t defaultValue, pcSpinCtrl* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
-    ProffieDefine(std::string name, double defaultValue, pcSpinCtrlDouble* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+    ProffieDefine(std::string name, int32_t defaultValue, PCUI::Numeric* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+    ProffieDefine(std::string name, double defaultValue, PCUI::NumericDec* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
     ProffieDefine(std::string name, bool defaultState, wxCheckBox* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
     ProffieDefine(std::string name, bool defaultState, wxRadioButton* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
-    ProffieDefine(std::string name, wxString defaultSelection, pcChoice* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
-    ProffieDefine(std::string name, wxString defaultEntry, pcTextCtrl* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+    ProffieDefine(std::string name, wxString defaultSelection, PCUI::Choice* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+    ProffieDefine(std::string name, wxString defaultEntry, PCUI::Text* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
 
     static std::pair<std::string, std::string> parseKey(const std::string&);
 
@@ -81,16 +78,16 @@ public:
                 const_cast<wxRadioButton*>(static_cast<const wxRadioButton*>(def->element))->SetValue(true);
                 break;
             case Type::NUMERIC:
-                const_cast<pcSpinCtrl*>(static_cast<const pcSpinCtrl*>(def->element))->entry()->SetValue(stoi(key.second));
+                const_cast<PCUI::Numeric*>(static_cast<const PCUI::Numeric*>(def->element))->entry()->SetValue(stoi(key.second));
                 break;
             case Type::DECIMAL:
-                const_cast<pcSpinCtrlDouble*>(static_cast<const pcSpinCtrlDouble*>(def->element))->entry()->SetValue(stod(key.second));
+                const_cast<PCUI::NumericDec*>(static_cast<const PCUI::NumericDec*>(def->element))->entry()->SetValue(stod(key.second));
                 break;
             case Type::COMBO:
-                const_cast<pcChoice*>(static_cast<const pcChoice*>(def->element))->entry()->SetStringSelection(key.second);
+                const_cast<PCUI::Choice*>(static_cast<const PCUI::Choice*>(def->element))->entry()->SetStringSelection(key.second);
                 break;
             case Type::TEXT:
-                const_cast<pcTextCtrl*>(static_cast<const pcTextCtrl*>(def->element))->entry()->SetValue(key.second);
+                const_cast<PCUI::Text*>(static_cast<const PCUI::Text*>(def->element))->entry()->SetValue(key.second);
                 break;
         }
 
