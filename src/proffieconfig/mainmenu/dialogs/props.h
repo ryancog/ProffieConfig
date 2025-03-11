@@ -1,9 +1,8 @@
+#pragma once
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#pragma once
-
-#include "mainmenu/mainmenu.h"
+#include "../../mainmenu/mainmenu.h"
 
 #include <wx/dialog.h>
 #include <wx/textctrl.h>
