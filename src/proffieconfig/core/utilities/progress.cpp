@@ -1,7 +1,6 @@
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
-
 #include "progress.h"
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2025 Ryan Ogurek
 
 #include <wx/event.h>
 
@@ -26,6 +25,6 @@ void Progress::handleEvent(ProgressEvent* event) {
   }
 
   if (event->progress == 100) {
-    event->progDialog->Destroy();
+    event->progDialog->Close(true);
   }
 }

@@ -1,7 +1,7 @@
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
-
 #pragma once
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2025 Ryan Ogurek
+
 #include <wx/event.h>
 
 #ifdef __WINDOWS__
