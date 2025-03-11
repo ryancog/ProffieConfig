@@ -1,111 +1,107 @@
+#include "appstate.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
-#include "core/appstate.h"
-#include "core/defines.h"
-#include "core/utilities/fileparse.h"
-#include "onboard/onboard.h"
-#include "mainmenu/mainmenu.h"
+#include "log/context.h"
+#include "log/logger.h"
+#include "pconf/pconf.h"
+#include "utils/paths.h"
+#include "../onboard/onboard.h"
+#include "../core/defines.h"
 
 #include <fstream>
 #include <iostream>
+#include <memory>
 
 AppState* AppState::instance;
-AppState::AppState() {}
+
+static inline filepath stateFile() { return Paths::data() / ".state.pconf"; }
+
 void AppState::init() {
   instance = new AppState();
-  instance->loadStateFromFile();
+  instance->loadState();
 
-  if (instance->firstRun) OnboardFrame::instance = new OnboardFrame();
+  if (not instance->doneWithFirstRun) OnboardFrame::instance = new OnboardFrame();
   else MainMenu::instance = new MainMenu();
 }
 
 void AppState::saveState() {
-  std::ofstream stateFile(STATEFILE_PATH ".tmp");
-  if (!stateFile.is_open()) {
-    std::cerr << "Error creating temporary save file." << std::endl;
-    stateFile.close();
-    return;
-  }
+    auto& logger{Log::Context::getGlobal().createLogger("AppState::saveState()")};
 
-  stateFile << "FIRSTRUN: " << (firstRun ? "TRUE" : "FALSE") << std::endl;
-  stateFile << std::endl;
-  stateFile << "PROPS {" << std::endl;
-  for (const auto& prop : propFileNames) {
-    stateFile << "\tPROP(\"" << prop << "\")" << std::endl;
-  }
-  stateFile << "}" << std::endl;
-  stateFile << std::endl;
-  stateFile << "CONFIGS {" << std::endl;
-  for (const auto& config : configFileNames) {
-    stateFile << "\tCONFIG(\"" << config << "\")" << std::endl;
-  }
-  stateFile << "}" << std::endl;
+    std::ofstream stateStream(stateFile() += ".tmp");
+    if (!stateStream.is_open()) {
+        logger.error("Failed creating temporary save file.");
+        stateStream.close();
+        return;
+    }
 
-  stateFile.close();
+    PConf::Data data;
 
-  remove(STATEFILE_PATH); // we don't care if it fails bc there's nothing there
-  if (rename(STATEFILE_PATH ".tmp", STATEFILE_PATH) != 0) {
-    std::cerr << "Error saving state file." << std::endl;
-    return;
-  }
+    if (doneWithFirstRun) data.push_back(std::make_shared<PConf::Entry>("FIRSTRUN_COMPLETE"));
+
+    auto propSection{std::make_shared<PConf::Section>("PROPS")};
+    for (const auto& prop : propFileNames) {
+        propSection->entries.push_back(std::make_shared<PConf::Entry>("PROP", nullopt, prop));
+    }
+    data.push_back(propSection);
+
+    PConf::write(stateStream, data, logger.bdebug("Writing save file..."));
+    stateStream.close();
+
+    std::error_code err;
+    fs::remove(stateFile(), err); // we don't care if it fails bc there's nothing there
+    err.clear();
+    fs::rename(stateFile() += ".tmp", stateFile(), err);
+    if (err.value() != 0) {
+        logger.error("Failed saving state file.");
+        return;
+    }
 }
 
-void AppState::loadStateFromFile() {
-  std::ifstream stateFile(STATEFILE_PATH);
-  if (!stateFile.is_open()) {
-    std::cerr << "Could not open state file, attempting recovery from tmp..." << std::endl;
-    stateFile.open(STATEFILE_PATH ".tmp");
-    if (!stateFile.is_open()) {
-      std::cerr << "Could not open temp state file, continuing without..." << std::endl;
-      propFileNames = {
-        "BC",
-        "caiwyn",
-        "fett263",
-        "sa22c",
-        "shtok"
-      };
-      return;
+void AppState::loadState() {
+    auto& logger{Log::Context::getGlobal().createLogger("AppState::loadState()")};
+    std::ifstream stateStream(stateFile());
+    if (!stateStream.is_open()) {
+        logger.warn("Could not open state file, attempting recovery from tmp...");
+        stateStream.open(stateFile() += ".tmp");
+        if (!stateStream.is_open()) {
+            logger.warn("Could not open temp state file, continuing without...");
+            return;
+        }
     }
-  }
 
-  std::vector<std::string> state;
-  std::string tmp;
-  while (!stateFile.eof()) {
-    getline(stateFile, tmp);
-    state.push_back(tmp);
-  }
-  stateFile.close();
+    PConf::Data data;
+    PConf::read(stateStream, data, nullptr);
+    stateStream.close();
 
-  firstRun = FileParse::parseBoolEntry("FIRSTRUN", state);
-  auto tempProps = FileParse::extractSection("PROPS", state);
-  for (std::string& prop : tempProps) {
-    if (!(tmp = FileParse::parseLabel(prop)).empty()) propFileNames.push_back(tmp);
-  }
-  auto tempConfigs = FileParse::extractSection("CONFIGS", state);
-  for (std::string& config : tempConfigs) {
-    if (!(tmp = FileParse::parseLabel(config)).empty()) configFileNames.push_back(tmp);
-  }
+    auto hashedData{PConf::hash(data)};
+    doneWithFirstRun = hashedData.find("FIRSTRUN_COMPLETE") != hashedData.end();
+
+    auto props= hashedData.find("PROPS");
+    if (props->second->getType() == PConf::Type::SECTION) {
+        for (const auto prop : std::static_pointer_cast<PConf::Section>(props->second)->entries) {
+            if (prop->name != "PROP") continue;
+            if (not prop->label) continue;
+
+            propFileNames.push_back(*prop->label);
+        }
+    }
 }
 
 bool AppState::isSaved() {
-    return saved;
+  return saved;
 }
+
 void AppState::setSaved(bool state) {
-    saved = state;
+  saved = state;
 }
 
-const std::vector<std::string>& AppState::getConfigFileNames() {
-    return configFileNames;
+void AppState::addProp(const string& propName, const string& propPath, const string& propConfigPath) {
+    fs::copy_file(propConfigPath, Paths::props() / propConfigPath.substr(propConfigPath.rfind('/') + 1));
+    fs::copy_file(propPath, Paths::data() / "ProffieOS" / "props" / propPath.substr(propPath.rfind('/') + 1));
+    propFileNames.push_back(propName);
 }
 
-void AppState::removeConfig(const std::string& configName) {
-  for (auto config = configFileNames.begin(); config < configFileNames.end();) {
-    if (*config == configName) config = configFileNames.erase(config);
-    else config++;
-  }
-}
-void AppState::addConfig(const std::string& configName) {
-  for (const auto& config : configFileNames) if (config == configName) return;
-  configFileNames.push_back(configName);
+const vector<string>& AppState::getPropFileNames() {
+    return propFileNames;
 }
