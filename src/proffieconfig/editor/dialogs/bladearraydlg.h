@@ -1,11 +1,10 @@
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
-
 #pragma once
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2025 Ryan Ogurek
 
-#include "editor/pages/presetspage.h"
-#include "editor/pages/bladespage.h"
-#include "ui/pctextctrl.h"
+#include "../pages/presetspage.h"
+#include "../pages/bladespage.h"
+#include "ui/controls.h"
 
 #include <wx/dialog.h>
 #include <wx/sizer.h>
@@ -26,10 +25,10 @@ public:
   wxCheckBox* enableID{nullptr};
   wxCheckBox* enableDetect{nullptr};
 
-  pcChoice* mode{nullptr};
-  pcTextCtrl* IDPin{nullptr};
-  pcSpinCtrl* pullupResistance{nullptr};
-  pcTextCtrl* pullupPin{nullptr};
+  PCUI::Choice* mode{nullptr};
+  PCUI::Text* IDPin{nullptr};
+  PCUI::Numeric* pullupResistance{nullptr};
+  PCUI::Text* pullupPin{nullptr};
 
   wxCheckBox* enablePowerForID{nullptr};
   wxCheckBox* powerPin1{nullptr};
@@ -40,17 +39,17 @@ public:
   wxCheckBox* powerPin6{nullptr};
 
   wxCheckBox* continuousScans{nullptr};
-  pcSpinCtrl* numIDTimes{nullptr};
-  pcSpinCtrl* scanIDMillis{nullptr};
+  PCUI::Numeric* numIDTimes{nullptr};
+  PCUI::Numeric* scanIDMillis{nullptr};
 
   wxListBox* arrayList{nullptr};
   wxButton* addID{nullptr};
   wxButton* removeID{nullptr};
 
-  pcTextCtrl* arrayName{nullptr};
-  pcSpinCtrl* resistanceID{nullptr};
+  PCUI::Text* arrayName{nullptr};
+  PCUI::Numeric* resistanceID{nullptr};
 
-  pcTextCtrl* detectPin{nullptr};
+  PCUI::Text* detectPin{nullptr};
 
   struct BladeArray {
     wxString name{""};

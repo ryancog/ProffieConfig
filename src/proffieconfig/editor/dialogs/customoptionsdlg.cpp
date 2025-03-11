@@ -1,7 +1,6 @@
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
-
 #include "customoptionsdlg.h"
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2025 Ryan Ogurek
 
 #include <wx/hyperlink.h>
 #include <wx/scrolwin.h>
@@ -132,8 +131,9 @@ CustomOptionsDlg::CDefine::CDefine(wxScrolledWindow* _parent) : wxPanel(_parent,
   auto sizer = new wxBoxSizer(wxHORIZONTAL);
 
   defText = new wxStaticText(this, wxID_ANY, "#define");
-  name = new pcTextCtrl(this, ID_Name);
-  value = new pcTextCtrl(this, ID_Value, wxEmptyString, wxDefaultPosition, wxSize(50, -1));
+  name = new PCUI::Text(this, ID_Name);
+  value = new PCUI::Text(this, ID_Value);
+  value->SetMinSize(wxSize{50, -1});
   remove = new wxButton(this, ID_Remove, "Remove");
 
   sizer->Add(defText, wxSizerFlags(0).Center().Border(wxRIGHT, 5));

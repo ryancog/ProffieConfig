@@ -1,12 +1,10 @@
+#include "bladearraydlg.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2024 Ryan Ogurek
+// Copyright (C) 2025 Ryan Ogurek
 
-#include "editor/dialogs/bladearraydlg.h"
-
-#include "core/defines.h"
-#include "editor/editorwindow.h"
-#include "core/utilities/misc.h"
-#include "onboard/onboard.h"
+#include "../../core/defines.h"
+#include "../../core/utilities/misc.h"
+#include "../../editor/editorwindow.h"
 
 #include <wx/tooltip.h>
 #include <wx/button.h>
@@ -71,7 +69,7 @@ void BladeArrayDlg::bindEvents() {
         bladeArrays.insert(bladeArrays.begin() + 1, BladeArray{"no_blade", 0, {}, { BladesPage::BladeConfig{} }});
         clearBladeArray(this);
       } else {
-          if (OnboardFrame::instance == nullptr && wxMessageDialog(parent, "Are you sure you want to disable Blade Detect?\n\n\"no_blade\" array will be deleted!", "Disable Blade Detect", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING).ShowModal() == wxID_NO) {
+          if (wxMessageDialog(parent, "Are you sure you want to disable Blade Detect?\n\n\"no_blade\" array will be deleted!", "Disable Blade Detect", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING).ShowModal() == wxID_NO) {
           enableDetect->SetValue(true);
           update();
           return;
@@ -86,7 +84,7 @@ void BladeArrayDlg::bindEvents() {
       if (enableID->GetValue()) {
 
       } else {
-          if (OnboardFrame::instance == nullptr && wxMessageDialog(parent, "Are you sure you want to disable Blade ID?\n\nAll custom blade arrays will be deleted!", "Disable Blade ID", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING).ShowModal() == wxID_NO) {
+          if (wxMessageDialog(parent, "Are you sure you want to disable Blade ID?\n\nAll custom blade arrays will be deleted!", "Disable Blade ID", wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING).ShowModal() == wxID_NO) {
           enableID->SetValue(true);
           update();
           return;
@@ -176,8 +174,8 @@ wxBoxSizer* BladeArrayDlg::createBladeArraysLeft(wxWindow* parent) {
 wxBoxSizer* BladeArrayDlg::createBladeArraysRight(wxStaticBoxSizer* parent) {
   wxBoxSizer* rightSizer = new wxBoxSizer(wxVERTICAL);
 
-  arrayName = new pcTextCtrl(parent->GetStaticBox(), ID_NameEntry, "Blade Array Name");
-  resistanceID = new pcSpinCtrl(parent->GetStaticBox(), wxID_ANY, "ID Value", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 2000, 100000, 0);
+  arrayName = new PCUI::Text(parent->GetStaticBox(), ID_NameEntry, {}, 0, "Blade Array Name");
+  resistanceID = new PCUI::Numeric(parent->GetStaticBox(), wxID_ANY, 2000, 100000, 0, 1, wxSP_ARROW_KEYS, "ID Value");
   resistanceID->entry()->SetIncrement(100);
 
   rightSizer->Add(arrayName, MENUITEMFLAGS.Expand());
@@ -188,12 +186,12 @@ wxBoxSizer* BladeArrayDlg::createBladeArraysRight(wxStaticBoxSizer* parent) {
 
 wxStaticBoxSizer* BladeArrayDlg::createIDSetup(wxWindow* parent) {
   wxStaticBoxSizer* setupSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Blade ID Setup");
-  mode = new pcChoice(setupSizer->GetStaticBox(), ID_BladeIDMode, "Blade ID Mode", wxDefaultPosition, wxDefaultSize, Misc::createEntries({ BLADE_ID_MODE_SNAPSHOT, BLADE_ID_MODE_EXTERNAL, BLADE_ID_MODE_BRIDGED }), 0);
-  IDPin = new pcTextCtrl(setupSizer->GetStaticBox(), wxID_ANY, "Blade ID Pin");
+  mode = new PCUI::Choice(setupSizer->GetStaticBox(), ID_BladeIDMode, Misc::createEntries({ BLADE_ID_MODE_SNAPSHOT, BLADE_ID_MODE_EXTERNAL, BLADE_ID_MODE_BRIDGED }), "Blade ID Mode");
+  IDPin = new PCUI::Text(setupSizer->GetStaticBox(), wxID_ANY, {}, 0, "Blade ID Pin");
 
-  pullupResistance = new pcSpinCtrl(setupSizer->GetStaticBox(), wxID_ANY, "Pullup Resistance", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 20000, 50000, 30000);
+  pullupResistance = new PCUI::Numeric(setupSizer->GetStaticBox(), wxID_ANY, 20000, 50000, 30000, 100, wxSP_ARROW_KEYS, "Pullup Resistance");
   pullupResistance->entry()->SetIncrement(100);
-  pullupPin = new pcTextCtrl(setupSizer->GetStaticBox(), wxID_ANY, "Pullup Pin");
+  pullupPin = new PCUI::Text(setupSizer->GetStaticBox(), wxID_ANY, {}, 0, "Pullup Pin");
 
   setupSizer->Add(mode, BOXITEMFLAGS);
   setupSizer->Add(IDPin, BOXITEMFLAGS);
@@ -233,8 +231,8 @@ wxStaticBoxSizer* BladeArrayDlg::createIDPowerSettings(wxWindow* parent) {
 wxStaticBoxSizer* BladeArrayDlg::createContinuousScanSettings(wxWindow* parent) {
   wxStaticBoxSizer* continuousScansSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Continuous Scanning");
   continuousScans = new wxCheckBox(continuousScansSizer->GetStaticBox(), ID_ContinuousScan, "Enable Continuous Scanning", wxDefaultPosition, wxDefaultSize, 0);
-  numIDTimes = new pcSpinCtrl(continuousScansSizer->GetStaticBox(), wxID_ANY, "Number of Reads to Average", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 50, 10);
-  scanIDMillis = new pcSpinCtrl(continuousScansSizer->GetStaticBox(), wxID_ANY, "Scan Interval (ms)", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS,  10, 50000, 1000);
+  numIDTimes = new PCUI::Numeric(continuousScansSizer->GetStaticBox(), wxID_ANY, 1, 15, 10, 1, wxSP_ARROW_KEYS, "Number of Reads to Average");
+  scanIDMillis = new PCUI::Numeric(continuousScansSizer->GetStaticBox(), wxID_ANY, 10, 50000, 1000, 10, wxSP_ARROW_KEYS, "Scan Interval (ms)");
   continuousScansSizer->Add(continuousScans, MENUITEMFLAGS);
   continuousScansSizer->Add(numIDTimes, MENUITEMFLAGS);
   continuousScansSizer->Add(scanIDMillis, MENUITEMFLAGS);
@@ -246,7 +244,7 @@ wxStaticBoxSizer* BladeArrayDlg::createContinuousScanSettings(wxWindow* parent) 
 wxStaticBoxSizer* BladeArrayDlg::createBladeDetect(wxWindow* parent) {
   wxStaticBoxSizer* bladeDetectSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Blade Detect");
 
-  detectPin = new pcTextCtrl(bladeDetectSizer->GetStaticBox(), wxID_ANY, "Blade Detect Pin");
+  detectPin = new PCUI::Text(bladeDetectSizer->GetStaticBox(), wxID_ANY, {}, 0, "Blade Detect Pin");
   bladeDetectSizer->Add(detectPin, wxSizerFlags(0).Border(wxALL, 5).Expand());
 
   return bladeDetectSizer;
