@@ -10,7 +10,7 @@ Makefile*
 
 deploy/
 staging/
-upgen
+/upgen
 
 # For CMake-generated shared lib export headers
 export.h
