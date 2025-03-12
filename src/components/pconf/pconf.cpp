@@ -322,7 +322,7 @@ bool PConf::parseMultilineValue(std::istream& inStream, std::optional<std::strin
     return false;
 }
 
-bool PConf::parseLabel(const std::string& line, std::optional<std::string>& out, Log::Branch& lBranch) {
+bool PConf::parseLabel(const string& line, optional<string>& out, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::parseLabel()")};
 
     out = "";
@@ -331,11 +331,11 @@ bool PConf::parseLabel(const std::string& line, std::optional<std::string>& out,
 
     for (char character : line) {
         if (character == ':') {
-            out = std::nullopt;
+            out = nullopt;
             return true;
         }
         if (character == '"' and not inParens) {
-            out = std::nullopt;
+            out = nullopt;
             return true;
         }
 
@@ -357,6 +357,7 @@ bool PConf::parseLabel(const std::string& line, std::optional<std::string>& out,
         return false;
     } 
 
+    if (out->empty()) out = nullopt;
     return true;
 }
 
