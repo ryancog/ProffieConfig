@@ -22,6 +22,7 @@
 #include <chrono>
 #include <filesystem>
 #include <thread>
+#include <fstream>
 
 #include <wx/webrequest.h>
 #include <wx/filefn.h>
@@ -179,11 +180,58 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
         const auto& item{data.items.at(file.id)};
 
         auto path{baseTypePath(file.id.type)};
-        path /= item.path;
+#       ifdef __APPLE__
+        if (file.id.type == ItemType::EXEC and item.path == "proffieconfig") {
+            fs::create_directories(Paths::executable(Paths::Executable::MAIN).parent_path());
+            fs::copy_file(
+                stagingFolder() / typeFolder(file.id.type) / item.path,
+                Paths::executable(Paths::Executable::MAIN),
+                fs::copy_options::overwrite_existing
+            );
 
+            const auto resourcesPath{Paths::executable(Paths::Executable::MAIN).parent_path().parent_path() / "Resources"};
+            fs::create_directories(resourcesPath);
+            fs::copy_file(
+                Paths::executable(Paths::Executable::LAUNCHER).parent_path().parent_path() / "Resources" / "icon.icns", 
+                resourcesPath / "icon.icns",
+                fs::copy_options::overwrite_existing
+            );
+
+            std::ofstream infoStream{Paths::executable(Paths::Executable::MAIN).parent_path().parent_path() / "Info.plist"};
+            infoStream << 
+                R"(<?xml version="1.0" encoding="UTF-8"?>)" "\n"
+                R"(<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">)" "\n"
+                R"(<plist version="1.0">)" "\n"
+                "<dict>\n"
+                "	<key>CFBundleDevelopmentRegion</key>\n"
+                "	<string>English</string>\n"
+                "	<key>CFBundleExecutable</key>\n"
+                "	<string>proffieconfig</string>\n"
+                "	<key>CFBundleIconFile</key>\n"
+                "	<string>icon.icns</string>\n"
+                "	<key>CFBundleIdentifier</key>\n"
+                "	<string>com.kafrenetrading.proffieconfig</string>\n"
+                "	<key>CFBundlePackageType</key>\n"
+                "	<string>APPL</string>\n"
+                "	<key>CSResourcesFileMapped</key>\n"
+                "	<true/>\n"
+                "	<key>NSHumanReadableCopyright</key>\n"
+                "	<string>Copyright (C) 2024 Ryan Ogurek</string>\n"
+                "</dict>\n"
+                "</plist>\n";
+            infoStream.close();
+        } else {
+            path /= filepath{item.path};
+            fs::remove(path);
+            fs::create_directories(path.parent_path());
+            fs::copy_file(stagingFolder() / typeFolder(file.id.type) / item.path, path, fs::copy_options::overwrite_existing);
+        }
+#       else
+        path /= filepath{item.path};
         fs::remove(path);
         fs::create_directories(path.parent_path());
-        fs::copy_file(stagingFolder() / typeFolder(file.id.type) / item.path, path);
+        fs::copy_file(stagingFolder() / typeFolder(file.id.type) / item.path, path, fs::copy_options::overwrite_existing);
+#       endif
     }
 
     fs::remove_all(stagingFolder());
