@@ -73,7 +73,7 @@ private:
     std::mutex mListLock;
 
     bool mErrFatal{false};
-    Severity mCurrentSev{Severity::INFO};
+    Severity mCurrentSev{Severity::VERB};
 
     // Reserved object, should not be used except to maintain lifetime!
     std::ofstream mRESOutFile;
