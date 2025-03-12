@@ -8,6 +8,9 @@
 #include "../core/utilities/progress.h"
 #include "../editor/editorwindow.h"
 #include "../editor/pages/generalpage.h"
+#include "../editor/pages/bladespage.h"
+#include "../editor/pages/presetspage.h"
+#include "../editor/dialogs/bladearraydlg.h"
 #include "utils/paths.h"
 
 #include <cstring>
@@ -60,8 +63,7 @@ void Arduino::init(wxWindow *parent) {
 
         progDialog->emitEvent(5, "Downloading ProffieOS...");
         const auto uri{wxURI{Paths::remoteAssets() + "/ProffieOS/" wxSTRINGIZE(PROFFIEOS_VERSION) ".zip"}.BuildURI()};
-        auto session{wxWebSessionSync::New(wxWebSessionBackendCURL)};
-        auto proffieOSRequest{session.CreateRequest(uri)};
+        auto proffieOSRequest{wxWebSessionSync::GetDefault().CreateRequest(uri)};
         auto requestResult{proffieOSRequest.Execute()};
 
         if (not requestResult) {
@@ -265,6 +267,10 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
     auto progDialog = new Progress(window);
     progDialog->SetTitle("Applying Changes");
 
+    editor->presetsPage->update();
+    editor->bladesPage->update();
+    editor->bladesPage->bladeArrayDlg->update();
+
     std::thread thread{[=]() {
         auto *evt{new Event(EVT_APPLY_DONE)};
         std::string returnVal;
@@ -288,7 +294,8 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
         }
 
         progDialog->emitEvent(20, "Generating configuration file...");
-        if (!Configuration::outputConfig(editor)) {
+        const auto configPath{Paths::proffieos() / "config" / (string{editor->getOpenConfig()} + ".h")};
+        if (not Configuration::outputConfig(configPath, editor, true)) {
             progDialog->emitEvent(100, "Error");
             // NO message here because outputConfig will handle it.
             wxQueueEvent(window, evt);
@@ -386,20 +393,25 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
     auto progDialog = new Progress(parent);
     progDialog->SetTitle("Verify Config");
 
+    editor->presetsPage->update();
+    editor->bladesPage->update();
+    editor->bladesPage->bladeArrayDlg->update();
+
     std::thread thread{[=]() {
         auto *evt{new Event(EVT_VERIFY_DONE)};
-        std::string returnVal;
+        string returnVal;
 
         progDialog->emitEvent(20, "Generating configuration file...");
-        if (!Configuration::outputConfig(editor)) {
+        const auto configPath{Paths::proffieos() / "config" / (string{editor->getOpenConfig()} + ".h")};
+        if (not Configuration::outputConfig(configPath, editor, true)) {
             progDialog->emitEvent(100, "Error");
             // Outputconfig will handle error message
             wxQueueEvent(parent, evt);
-            return; // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
+            return;
         }
 
         progDialog->emitEvent(30, "Updating ProffieOS file...");
-        if (!Arduino::updateIno(returnVal, editor)) {
+        if (not Arduino::updateIno(returnVal, editor)) {
             progDialog->emitEvent(100, "Error");
             Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while updating ProffieOS file:\n\n"
                                + returnVal, "Files Error");
@@ -409,7 +421,7 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
         }
 
         progDialog->emitEvent(40, "Compiling ProffieOS...");
-        if (!Arduino::compile(returnVal, editor)) {
+        if (not Arduino::compile(returnVal, editor)) {
             progDialog->emitEvent(100, "Error");
             Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while compiling:\n\n"
                                + returnVal, "Compile Error");
@@ -418,13 +430,13 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
             return;
         }
 
-        constexpr std::string_view USED_PREFIX{"Sketch uses "};
-        constexpr std::string_view MAX_PREFIX{"Maximum is "};
+        constexpr string_view USED_PREFIX{"Sketch uses "};
+        constexpr string_view MAX_PREFIX{"Maximum is "};
         const auto usedPos{returnVal.find(USED_PREFIX)};
         const auto maxPos{returnVal.find(MAX_PREFIX)};
 
-        std::string successMessage{"Config Verified Successfully!"};
-        if (usedPos != std::string::npos and maxPos != std::string::npos) {
+        string successMessage{"Config Verified Successfully!"};
+        if (usedPos != string::npos and maxPos != string::npos) {
             auto usedBytes{std::stoi(returnVal.substr(usedPos + USED_PREFIX.length()))};
             auto maxBytes{std::stoi(returnVal.substr(maxPos + MAX_PREFIX.length()))};
             auto percent{std::round(usedBytes * 10000.0 / maxBytes) / 100.0};
