@@ -10,14 +10,14 @@
 
 namespace Configuration {
     bool outputConfig(EditorWindow *editorWindow);
-    bool outputConfig(const string&, EditorWindow *editorWindow);
+    bool outputConfig(const filepath&, EditorWindow *editorWindow, bool copyInjections = false);
     bool exportConfig(EditorWindow *editorWindow);
-    bool readConfig(const string&, EditorWindow *editorWindow);
+    bool readConfig(const filepath&, EditorWindow *editorWindow);
     bool importConfig(EditorWindow *editorWindow);
 
-    using MapPair = std::pair<const std::string, const std::string>;
-    using VMap = std::vector<MapPair>;
-    const MapPair& findInVMap(const VMap&, const std::string& search);
+    using MapPair = std::pair<const string, const string>;
+    using VMap = vector<MapPair>;
+    const MapPair& findInVMap(const VMap&, const string& search);
 
     inline const VMap Orientation = {
         { "FETs Towards Blade", "ORIENTATION_FETS_TOWARDS_BLADE" },
@@ -28,8 +28,8 @@ namespace Configuration {
         { "Bottom Towards Blade", "ORIENTATION_BOTTOM_TOWARDS_BLADE" },
     };
     inline const VMap Proffieboard = {
-        { "Proffieboard V3", "#include \"proffieboard_v3_config.h\"" },
-        { "Proffieboard V2", "#include \"proffieboard_v2_config.h\"" },
         { "Proffieboard V1", "#include \"proffieboard_v1_config.h\"" },
+        { "Proffieboard V2", "#include \"proffieboard_v2_config.h\"" },
+        { "Proffieboard V3", "#include \"proffieboard_v3_config.h\"" },
     };
 };
