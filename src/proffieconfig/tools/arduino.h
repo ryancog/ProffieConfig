@@ -14,7 +14,7 @@ namespace Arduino {
     void verifyConfig(wxWindow*, EditorWindow*);
 
     void init(wxWindow *);
-    std::vector<wxString> getBoards();
+    vector<wxString> getBoards();
 
     enum {
         PROFFIEBOARDV3 = 0,
@@ -28,7 +28,7 @@ namespace Arduino {
         [[nodiscard]] wxEvent *Clone() const { return new Event(*this); }
 
         bool succeeded{false};
-        std::string str;
+        string str;
     };
 
     wxDECLARE_EVENT(EVT_INIT_DONE, Event);
