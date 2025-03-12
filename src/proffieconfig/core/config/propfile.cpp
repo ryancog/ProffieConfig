@@ -231,7 +231,7 @@ void PropFile::readSettings(const PConf::HashedData& data, Log::Branch& lBranch)
         const auto selectionRange{optionData.equal_range("SELECTION")};
         for (auto selectionIt{selectionRange.first}; selectionIt != selectionRange.second; ++selectionIt) {
             Setting setting;
-            const auto selectionData{parseSettingCommon(setting, it->second, logger)};
+            const auto selectionData{parseSettingCommon(setting, selectionIt->second, logger)};
             if (not selectionData)  continue;
 
             setting.type = Setting::SettingType::OPTION;
@@ -382,17 +382,16 @@ void PropFile::readLayout(const PConf::Data& data, Log::Branch& lBranch) {
         if (entry->name == "HORIZONTAL" or entry->name == "VERTICAL") {
             if (entry->getType() == PConf::Type::SECTION) {
                 wxSizer *nextSizer{nullptr};
+                auto *previousSizer{sizerStack.empty() ? sizer : sizerStack.back()};
                 if (entry->label) {
                     auto *sectionSizer{new wxStaticBoxSizer(entry->name == "HORIZONTAL" ? wxHORIZONTAL : wxVERTICAL, parentStack.empty() ? this : parentStack.back(), *entry->label)};
                     nextSizer = sectionSizer;
                     parentStack.push_back(sectionSizer->GetStaticBox());
-                    if (sizerStack.empty()) sizer->Add(sectionSizer);
-                    else sizerStack.back()->Add(sectionSizer);
+                    previousSizer->Add(nextSizer, ITEMBORDER.Expand());
                 } else {
                     auto *sectionSizer{new wxBoxSizer(entry->name == "HORIZONTAL" ? wxHORIZONTAL : wxVERTICAL)};
                     nextSizer = sectionSizer;
-                    if (sizerStack.empty()) sizer->Add(sectionSizer);
-                    else sizerStack.back()->Add(sectionSizer);
+                    previousSizer->Add(nextSizer, wxSizerFlags{}.Expand());
                 }
 
                 const auto& entries{std::static_pointer_cast<PConf::Section>(entry)->entries};
@@ -427,11 +426,12 @@ void PropFile::readLayout(const PConf::Data& data, Log::Branch& lBranch) {
             if (entryStack.back().first == entryStack.back().second) {
                 entryStack.pop_back();
                 if (not sizerStack.empty()) {
-                    if (auto staticBoxSizer = dynamic_cast<wxStaticBoxSizer *>(sizerStack.back())) {
+                    if (auto *staticBoxSizer = dynamic_cast<wxStaticBoxSizer *>(sizerStack.back())) {
                         if (not parentStack.empty() and staticBoxSizer->GetStaticBox() == parentStack.back()) parentStack.pop_back();
                     }
                     sizerStack.pop_back();
                 }
+                if (entryStack.empty()) break;
                 continue;
             }
             break;
