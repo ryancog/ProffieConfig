@@ -199,7 +199,7 @@ void MainMenu::createTooltips() {
 void MainMenu::createMenuBar() {
   wxMenu *file = new wxMenu;
   file->Append(ID_ReRunSetup, "Re-Run First-Time Setup...", "Install Proffieboard Dependencies and View Tutorial");
-  file->Append(ID_AddProp, "Add Prop...");
+  file->Append(ID_AddProp, "Props...");
   file->AppendSeparator();
   file->Append(ID_Logs, "Show Logs...");
   file->Append(wxID_ABOUT);

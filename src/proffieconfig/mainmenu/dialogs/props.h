@@ -14,6 +14,7 @@ public:
     Props(MainMenu*);
 
     enum {
+        ID_ViewExisting,
         ID_AddProp,
 
         ID_Prop,
@@ -30,6 +31,12 @@ private:
 
     wxStaticText* duplicateWarning{nullptr};
     wxStaticText* fileSelectionWarning{nullptr};
+
+    wxToggleButton *viewExisting{nullptr};
+    wxToggleButton *addProp{nullptr};
+
+    wxPanel *existingPanel;
+    wxPanel *addPanel;
 
     void update();
     void createUI();
