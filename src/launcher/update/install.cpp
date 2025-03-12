@@ -181,7 +181,7 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
 
         auto path{baseTypePath(file.id.type)};
 #       ifdef __APPLE__
-        if (file.id.type == ItemType::EXEC and item.path == "proffieconfig") {
+        if (file.id.type == ItemType::EXEC and item.path == "ProffieConfig") {
             fs::create_directories(Paths::executable(Paths::Executable::MAIN).parent_path());
             fs::copy_file(
                 stagingFolder() / typeFolder(file.id.type) / item.path,

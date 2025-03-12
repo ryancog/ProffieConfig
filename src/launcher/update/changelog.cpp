@@ -1,5 +1,6 @@
 #include "changelog.h"
 #include "wx/event.h"
+#include "wx/gdicmn.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024 Ryan Ogurek
@@ -98,7 +99,7 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
 
     auto *iconSizer{new wxBoxSizer(wxVERTICAL)};
 #   ifdef __WXOSX__
-    auto *iconElem{new wxStaticBitmap(&dlg, wxID_ANY, wxBitmap("icon", wxBITMAP_TYPE_PNG_RESOURCE))};
+    auto *iconElem{new wxStaticBitmap(&dlg, wxID_ANY, wxBitmap("icon", wxBITMAP_TYPE_ICON_RESOURCE))};
 #   elif defined(__WIN32__)
     auto *iconElem{new wxStaticBitmap(&dlg, wxID_ANY, wxICON(ApplicationIcon))};
 #   elif defined(__linux__)
@@ -264,8 +265,9 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
 #   else
     wxSize size{600, 400};
 #   endif
-    dlg.SetMinSize(size);
-    dlg.SetSize(size);
+    sizer->SetMinSize(size);
+    dlg.SetMinSize(wxSize{dlg.GetBestSize().x, size.y});
+    dlg.SetSize(wxSize{-1, size.y});
 
     return dlg.ShowModal();
 }
@@ -279,7 +281,7 @@ Update::Version Update::determineCurrentVersion(const Data& data, PCUI::Progress
     for (const auto& [ version, bundle ] : data.bundles) {
         auto status{"Trying version " + string(version)};
         prog->Pulse(status);
-        logger.debug(status);
+        logger.info(status);
 
         bool filesMatch{true};
         for (const auto& [ id, fileVer ] : bundle.reqs) {
@@ -301,7 +303,16 @@ Update::Version Update::determineCurrentVersion(const Data& data, PCUI::Progress
                 case ItemType::TYPE_MAX:
                     break;
             }
+
+#           ifdef __APPLE__
+            if (fileItem.path == "ProffieConfig") {
+                itemPath /= filepath{"ProffieConfig.app"} / "Contents" / "MacOS" / "ProffieConfig";
+            } else {
+                itemPath /= fileItem.path;
+            }
+#           else
             itemPath /= fileItem.path;
+#           endif
             status = "Testing file " + id.name + ", " + string(fileVer);
             logger.verbose(status + " at path: " + itemPath.string());
             prog->Pulse(status);
