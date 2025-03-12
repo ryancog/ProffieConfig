@@ -2,19 +2,21 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <memory>
+
+#include <wx/tooltip.h>
+#include <wx/statbox.h>
+
 #include "log/context.h"
 #include "log/logger.h"
 #include "pconf/pconf.h"
 #include "utils/paths.h"
 #include "ui/controls.h"
-#include "../../core/utilities/misc.h"
 
-#include <algorithm>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <wx/tooltip.h>
-#include <wx/statbox.h>
+#include "../../core/utilities/misc.h"
 
 PropFile::PropFile(wxWindow* parent) : wxPanel(parent, wxID_ANY) {
   settings = new SettingMap;
@@ -103,13 +105,19 @@ bool PropFile::Setting::checkRequiredSatisfied(const std::unordered_map<std::str
   }
 }
 
-PropFile* PropFile::createPropConfig(const std::string& propName, wxWindow* _parent) {
+PropFile* PropFile::createPropConfig(const string& propName, wxWindow* _parent, bool builtin) {
     auto& logger{Log::Context::getGlobal().createLogger("PropFile::createPropConfig()")};
-    std::string pathname = Paths::props() / (propName + ".pconf");
+    logger.info("Loading prop " + propName);
+    filepath propPath;
+    if (builtin) {
+        propPath = Paths::resources() / "props" / (propName + ".pconf");
+    } else {
+        propPath = Paths::props() / (propName + ".pconf");
+    }
 
-    std::ifstream configFile(pathname);
+    std::ifstream configFile(propPath);
     if (!configFile.is_open()) {
-        logger.error("Could not open prop config file \"" + pathname + "\", aborting...");
+        logger.error("Could not open prop config file \"" + propPath.string() + "\", aborting...");
         return nullptr;
     }
 
@@ -150,10 +158,10 @@ PropFile* PropFile::createPropConfig(const std::string& propName, wxWindow* _par
     }
 
     const auto layout{hashedData.find("LAYOUT")};
-    if (layout == hashedData.end() or settings->second->getType() != PConf::Type::SECTION) {
+    if (layout == hashedData.end() or layout->second->getType() != PConf::Type::SECTION) {
         logger.info("Prop config file \"" + propName + "\" does not have optional section \"LAYOUT\", skipping...");
     } else {
-        prop->readLayout(std::static_pointer_cast<PConf::Section>(settings->second)->entries, *logger.binfo("Reading layout..."));
+        prop->readLayout(std::static_pointer_cast<PConf::Section>(layout->second)->entries, *logger.binfo("Reading layout..."));
     }
 
     const auto buttonsRange{hashedData.equal_range("BUTTONS")};
@@ -243,13 +251,13 @@ void PropFile::readSettings(const PConf::HashedData& data, Log::Branch& lBranch)
 
         setting.type = Setting::SettingType::NUMERIC;
         const auto minEntry{numericData->find("MIN")};
-        if (minEntry->second->value) setting.min = strtol(minEntry->second->value->c_str(), nullptr, 10);
+        if (minEntry != numericData->end() and minEntry->second->value) setting.min = strtol(minEntry->second->value->c_str(), nullptr, 10);
         const auto maxEntry{numericData->find("MAX")};
-        if (maxEntry->second->value) setting.max = strtol(maxEntry->second->value->c_str(), nullptr, 10);
+        if (maxEntry != numericData->end() and maxEntry->second->value) setting.max = strtol(maxEntry->second->value->c_str(), nullptr, 10);
         const auto defaultEntry{numericData->find("DEFAULT")};
-        if (defaultEntry->second->value) setting.defaultVal = strtol(defaultEntry->second->value->c_str(), nullptr, 10);
+        if (defaultEntry != numericData->end() and defaultEntry->second->value) setting.defaultVal = strtol(defaultEntry->second->value->c_str(), nullptr, 10);
         const auto incrementEntry{numericData->find("INCREMENT")};
-        if (incrementEntry->second->value) setting.increment = strtol(incrementEntry->second->value->c_str(), nullptr, 10);
+        if (incrementEntry != numericData->end() and incrementEntry->second->value) setting.increment = strtol(incrementEntry->second->value->c_str(), nullptr, 10);
 
         tempSettings.push_back({setting.define, setting});
     }
@@ -262,13 +270,13 @@ void PropFile::readSettings(const PConf::HashedData& data, Log::Branch& lBranch)
 
         setting.type = Setting::SettingType::DECIMAL;
         const auto minEntry{decimalData->find("MIN")};
-        if (minEntry->second->value) setting.min = strtod(minEntry->second->value->c_str(), nullptr);
+        if (minEntry != decimalData->end() and minEntry->second->value) setting.min = strtod(minEntry->second->value->c_str(), nullptr);
         const auto maxEntry{decimalData->find("MAX")};
-        if (maxEntry->second->value) setting.max = strtod(maxEntry->second->value->c_str(), nullptr);
+        if (maxEntry != decimalData->end() and maxEntry->second->value) setting.max = strtod(maxEntry->second->value->c_str(), nullptr);
         const auto defaultEntry{decimalData->find("DEFAULT")};
-        if (defaultEntry->second->value) setting.defaultVal = strtod(defaultEntry->second->value->c_str(), nullptr);
+        if (defaultEntry != decimalData->end() and defaultEntry->second->value) setting.defaultVal = strtod(defaultEntry->second->value->c_str(), nullptr);
         const auto incrementEntry{decimalData->find("INCREMENT")};
-        if (incrementEntry->second->value) setting.increment = strtod(incrementEntry->second->value->c_str(), nullptr);
+        if (incrementEntry != decimalData->end() and incrementEntry->second->value) setting.increment = strtod(incrementEntry->second->value->c_str(), nullptr);
 
         tempSettings.push_back({setting.define, setting});
     }
@@ -363,6 +371,7 @@ void PropFile::readLayout(const PConf::Data& data, Log::Branch& lBranch) {
     vector<wxSizer*> sizerStack;
     sizer = new wxBoxSizer(wxVERTICAL);
 
+    // <Current Iterator, End Iterator>
     vector<std::pair<decltype(data.begin()), decltype(data.end())>> entryStack;
     if (not data.empty()) entryStack.emplace_back(data.begin(), data.end());
 
@@ -372,25 +381,33 @@ void PropFile::readLayout(const PConf::Data& data, Log::Branch& lBranch) {
 
         if (entry->name == "HORIZONTAL" or entry->name == "VERTICAL") {
             if (entry->getType() == PConf::Type::SECTION) {
+                wxSizer *nextSizer{nullptr};
                 if (entry->label) {
-                    auto *sectionSizer {new wxStaticBoxSizer(entry->name == "HORIZONTAL" ? wxHORIZONTAL : wxVERTICAL, parentStack.empty() ? this : parentStack.back(), *entry->label)};
+                    auto *sectionSizer{new wxStaticBoxSizer(entry->name == "HORIZONTAL" ? wxHORIZONTAL : wxVERTICAL, parentStack.empty() ? this : parentStack.back(), *entry->label)};
+                    nextSizer = sectionSizer;
                     parentStack.push_back(sectionSizer->GetStaticBox());
                     if (sizerStack.empty()) sizer->Add(sectionSizer);
                     else sizerStack.back()->Add(sectionSizer);
                 } else {
                     auto *sectionSizer{new wxBoxSizer(entry->name == "HORIZONTAL" ? wxHORIZONTAL : wxVERTICAL)};
+                    nextSizer = sectionSizer;
                     if (sizerStack.empty()) sizer->Add(sectionSizer);
                     else sizerStack.back()->Add(sectionSizer);
                 }
 
                 const auto& entries{std::static_pointer_cast<PConf::Section>(entry)->entries};
-                if (not entries.empty()) entryStack.emplace_back(entries.begin(), entries.end());
+                if (not entries.empty()) {
+                    // Decrement to past-begin since this will be prematurely incremented
+                    // (instead of the "intended" current stack, due to the new addition)
+                    entryStack.emplace_back(--entries.begin(), entries.end());
+                    sizerStack.push_back(nextSizer);
+                }
             }
-        } else if (entry->name == "OPTION") {
+        } else if (entry->name == "SETTING") {
             if (entry->getType() == PConf::Type::ENTRY and entry->label) {
                 auto define{settings->find(entry->label.value_or(""))};
                 if (define == settings->end()) {
-                    logger.warn("Option \"" + *entry->label + "\" not found in settings, skipping...");
+                    logger.warn("Setting \"" + *entry->label + "\" not found in settings, skipping...");
                 } else {
                     auto *parent{parentStack.empty() ? this : parentStack.back()};
                     auto *sectionSizer{sizerStack.empty() ? sizer : sizerStack.back()};
@@ -405,9 +422,22 @@ void PropFile::readLayout(const PConf::Data& data, Log::Branch& lBranch) {
             }
         }
 
-        ++entryStack.back().first;
-        if (entryStack.back().first == entryStack.back().second) entryStack.pop_back();
+        while (true) {
+            ++entryStack.back().first;
+            if (entryStack.back().first == entryStack.back().second) {
+                entryStack.pop_back();
+                if (not sizerStack.empty()) {
+                    if (auto staticBoxSizer = dynamic_cast<wxStaticBoxSizer *>(sizerStack.back())) {
+                        if (not parentStack.empty() and staticBoxSizer->GetStaticBox() == parentStack.back()) parentStack.pop_back();
+                    }
+                    sizerStack.pop_back();
+                }
+                continue;
+            }
+            break;
+        }
     }
+    
 
     SetSizerAndFit(sizer);
 #   undef ITEMBORDER
