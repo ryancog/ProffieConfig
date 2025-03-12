@@ -1,4 +1,5 @@
 #include "changelog.h"
+#include "wx/event.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024 Ryan Ogurek
@@ -92,16 +93,16 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
         BUTTON_INSTALL,
     };
 
-    auto *dlg{new wxDialog(nullptr, wxID_ANY, "Update Available", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)};
+    auto dlg{wxDialog(nullptr, wxID_ANY, "Update Available", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)};
     auto *sizer{new wxBoxSizer(wxHORIZONTAL)};
 
     auto *iconSizer{new wxBoxSizer(wxVERTICAL)};
 #   ifdef __WXOSX__
-    auto *iconElem{new wxStaticBitmap(dlg, wxID_ANY, wxBitmap("icon", wxBITMAP_TYPE_PNG_RESOURCE))};
+    auto *iconElem{new wxStaticBitmap(&dlg, wxID_ANY, wxBitmap("icon", wxBITMAP_TYPE_PNG_RESOURCE))};
 #   elif defined(__WIN32__)
-    auto *iconElem{new wxStaticBitmap(dlg, wxID_ANY, wxICON(ApplicationIcon))};
+    auto *iconElem{new wxStaticBitmap(&dlg, wxID_ANY, wxICON(ApplicationIcon))};
 #   elif defined(__linux__)
-    auto *iconElem{new wxStaticBitmap(dlg, wxID_ANY, wxBitmap())};
+    auto *iconElem{new wxStaticBitmap(&dlg, wxID_ANY, wxBitmap())};
 #   endif
     iconElem->SetMaxSize({96, 96});
     iconSizer->Add(iconElem, wxSizerFlags().Border(wxLEFT | wxTOP | wxBOTTOM, 20));
@@ -109,8 +110,8 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
     auto *mainSizer{new wxBoxSizer(wxVERTICAL)};
 
     auto *updateSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *updateText{new wxStaticText(dlg, wxID_ANY, "ProffieConfig is ready for an update!")};
-    auto *updateDeltaText{new wxStaticText(dlg, wxID_ANY, 
+    auto *updateText{new wxStaticText(&dlg, wxID_ANY, "ProffieConfig is ready for an update!")};
+    auto *updateDeltaText{new wxStaticText(&dlg, wxID_ANY, 
             '(' + static_cast<string>(changelog.currentBundleVersion) + 
             " -> " + static_cast<string>(changelog.latestBundleVersion) + ')')};
     {
@@ -126,7 +127,7 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
     mainSizer->Add(updateSizer, wxSizerFlags().Border(wxBOTTOM, 10));
 
 
-    auto *whatNewText{new wxStaticText(dlg, wxID_ANY, "What's New?")};
+    auto *whatNewText{new wxStaticText(&dlg, wxID_ANY, "What's New?")};
     {
         auto font{whatNewText->GetFont()};
         font.SetPointSize(static_cast<int32_t>(font.GetPointSize() * 1.2));
@@ -134,7 +135,7 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
     }
     mainSizer->Add(whatNewText, wxSizerFlags());
 
-    auto *whatNewBorder{new wxStaticBoxSizer(wxVERTICAL, dlg)};
+    auto *whatNewBorder{new wxStaticBoxSizer(wxVERTICAL, &dlg)};
     auto *whatNewPanel{new wxScrolledWindow(whatNewBorder->GetStaticBox())};
     auto *whatNewSizer{new wxBoxSizer(wxVERTICAL)};
     auto objFont{whatNewPanel->GetFont()};
@@ -233,12 +234,12 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
 
     auto *buttonSizer{new wxBoxSizer(wxHORIZONTAL)};
 
-    auto *remindButton{new wxButton(dlg, BUTTON_REMIND, "Remind Me Later")};
+    auto *remindButton{new wxButton(&dlg, BUTTON_REMIND, "Remind Me Later")};
     buttonSizer->Add(remindButton, wxSizerFlags());
 
     buttonSizer->AddStretchSpacer();
 
-    auto *installButton{new wxButton(dlg, BUTTON_INSTALL, "Update Now")};
+    auto *installButton{new wxButton(&dlg, BUTTON_INSTALL, "Update Now")};
     installButton->SetDefault();
     buttonSizer->Add(installButton, wxSizerFlags());
 
@@ -247,26 +248,26 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
     sizer->Add(iconSizer);
     sizer->Add(mainSizer, wxSizerFlags(1).Expand().Border(wxALL, 20));
 
-    dlg->Bind(wxEVT_CLOSE_WINDOW, [dlg](wxCloseEvent& evt){
-        evt.Skip();
-        dlg->Destroy();
+    dlg.Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent&) {
+        dlg.EndModal(false);
     });
-    dlg->Bind(wxEVT_BUTTON, [dlg](wxCommandEvent&) {
-        dlg->EndModal(false);
+    dlg.Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+        dlg.EndModal(false);
     }, BUTTON_REMIND);
-    dlg->Bind(wxEVT_BUTTON, [dlg](wxCommandEvent&) {
-        dlg->EndModal(true);
+    dlg.Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+        dlg.EndModal(true);
     }, BUTTON_INSTALL);
 
-    dlg->SetSizerAndFit(sizer);
+    dlg.SetSizerAndFit(sizer);
 #   ifdef __linux__
     wxSize size{800, 600};
 #   else
     wxSize size{600, 400};
 #   endif
-    dlg->SetMinSize(size);
-    dlg->SetSize(size);
-    return dlg->ShowModal();
+    dlg.SetMinSize(size);
+    dlg.SetSize(size);
+
+    return dlg.ShowModal();
 }
 
 Update::Version Update::determineCurrentVersion(const Data& data, PCUI::ProgressDialog *prog, Log::Branch& lBranch) {
