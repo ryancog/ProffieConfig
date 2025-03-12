@@ -132,30 +132,30 @@ SETTINGS {
 }
 
 LAYOUT {
-	HORIZONTAL ("Gesture Control") {
-                SETTING("BC_STAB_ON")
-		VERTICAL {
-                        SETTING("BC_SWING_ON")
-                        SETTING("BC_SWING_ON_SPEED")
-		}
-                SETTING("BC_THRUST_ON")
-                SETTING("BC_TWIST_ON")
-                SETTING("BC_TWIST_OFF")
-	}
-	HORIZONTAL {
+    HORIZONTAL ("Gesture Control") {
+        SETTING("BC_STAB_ON")
+        VERTICAL {
+            SETTING("BC_SWING_ON")
+            SETTING("BC_SWING_ON_SPEED")
+        }
+        SETTING("BC_THRUST_ON")
+        SETTING("BC_TWIST_ON")
+        SETTING("BC_TWIST_OFF")
+    }
+    HORIZONTAL {
 		VERTICAL("Controls") {
-                        SETTING("NO_BLADE_NO_GEST_ONOFF")
-                        SETTING("ENABLE_AUTO_SWING_BLAST")
-                        SETTING("NO_VOLUME_MENU")
+            SETTING("NO_BLADE_NO_GEST_ONOFF")
+            SETTING("ENABLE_AUTO_SWING_BLAST")
+            SETTING("NO_VOLUME_MENU")
 		}
 		VERTICAL("Features") {
-                        SETTING("BC_FORCE_PUSH")
-                        SETTING("BC_FORCE_PUSH_LENGTH")
+            SETTING("BC_FORCE_PUSH")
+            SETTING("BC_FORCE_PUSH_LENGTH")
 		}
 		VERTICAL("Battle Mode") {
-                        SETTING("BC_NO_BM")
-                        SETTING("BC_GESTURE_AUTO_BATTLE_MODE")
-                        SETTING("BC_LOCKUP_DELAY")
+            SETTING("BC_NO_BM")
+            SETTING("BC_GESTURE_AUTO_BATTLE_MODE")
+            SETTING("BC_LOCKUP_DELAY")
 		}
 	}
 }
