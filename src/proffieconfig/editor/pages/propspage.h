@@ -17,32 +17,32 @@ class PropFile;
 
 class PropsPage : public wxStaticBoxSizer {
 public:
-  PropsPage(wxWindow*);
+    PropsPage(wxWindow*);
 
-  void update();
-  void updateSizeAndLayout();
-  void updateDisables(PropFile*);
-  void updateProps();
-  void updateSelectedProp(const wxString& = "");
-  PropFile* getSelectedProp();
-  const std::vector<PropFile*>& getLoadedProps();
-  wxScrolledWindow* propsWindow{nullptr};
+    void update();
+    void updateSizeAndLayout();
+    void updateDisables(PropFile*);
+    void updateProps();
+    void updateSelectedProp(const wxString& = "");
+    PropFile* getSelectedProp();
+    const std::vector<PropFile*>& getLoadedProps();
+    wxScrolledWindow* propsWindow{nullptr};
 
-  PCUI::Choice* propSelection{nullptr};
-  wxButton* buttonInfo{nullptr};
-  wxButton* propInfo{nullptr};
+    PCUI::Choice* propSelection{nullptr};
+    wxButton* buttonInfo{nullptr};
+    wxButton* propInfo{nullptr};
 
-  enum {
-    ID_PropSelect,
-    ID_Option,
-    ID_Buttons,
-    ID_PropInfo,
-  };
+    enum {
+        ID_PropSelect,
+        ID_Option,
+        ID_Buttons,
+        ID_PropInfo,
+    };
 private:
-  EditorWindow* parent{nullptr};
+    EditorWindow* parent{nullptr};
 
-  std::vector<PropFile*> props;
+    std::vector<PropFile*> props;
 
-  void loadProps();
-  void bindEvents();
+    void loadProps();
+    void bindEvents();
 };
