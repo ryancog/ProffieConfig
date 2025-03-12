@@ -10,17 +10,14 @@ Using this tool, there is no need for dealing with the Arduino IDE, Zadig, etc. 
 
 ## Getting Started
 
-Head over to the [latest ProffieConfig release](https://github.com/ryancog/ProffieConfig/releases/latest), grab either the macOS or Windows (Win32) version depending on which you use, unzip the folder, and run it! 
+Head over to the [latest ProffieConfig release](https://github.com/ryancog/ProffieConfig/releases/latest), grab either the macOS or Windows (Win32) version, and run it! 
 
-ProffieConfig will guide you through the setup and all of its features, so whether you're a first-time proffieboard user or have been around the block a few times, you'll be ready in no time!
+ProffieConfig will complete its installation and guide you through the setup and all of its features, so whether you're a first-time proffieboard user or have been around the block a few times, you'll be ready before you know it!
 
-***NOTE for macOS:** You'll have to right click on ProffieConfig in Finder after downloading and select "Open" due to macOS' strict security. (This is simply because I don't pay for an Apple license)*
-
-***NOTE for Windows:** If Windows warns about the program being dangerous (Windows Security is just based on # of downloads or paying for license, so there's not much I can do about this), simply click "More Info..." and then you should be able to Run Anyways.*
-
-***NOTE for Chrome Browser Users:** If Chrome doesn't allow you to keep the file due to it being "Dangerous" (for essentially the same reasons as above), click the button to "Show all downloads" and then you can opt to keep the file from there.*
-
-
+***NOTE:** ProffieConfig is relatively new software, and because I do not pay for an Apple Developer License or Microsoft Developer account I cannot "sign" the application, chances are something will tell you the program is unknown or "dangerous." See the info below about how you can address this if it comes up:*
+- ***macOS:** With the new versions of macOS, the "GateKeeper" feature has changed, you can read about macOS' security and how to launch unsigned apps [here](https://support.apple.com/en-us/102445)*
+- ***Windows:** A SmartScreen dialog may pop up warning about the program origins, clicking "More Info..." and then "Run Anyways" should allow you to open the app.
+*The Chrome browser (and Chromium-based browsers) may block the program, which requires you to visit the "Show All Downloads" page to "keep" the file.*
 
 ## To-Do (Non-Exhaustive)
 - Expand pre-checker capabilities (ongoing)
