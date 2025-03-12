@@ -314,7 +314,7 @@ Update::Version Update::determineCurrentVersion(const Data& data, PCUI::Progress
             itemPath /= fileItem.path;
 #           endif
             status = "Testing file " + id.name + ", " + string(fileVer);
-            logger.verbose(status + " at path: " + itemPath.string());
+            logger.debug(status + " at path: " + itemPath.string());
             prog->Pulse(status);
             if (Crypto::computeHash(itemPath) != fileItem.versions.at(fileVer).hash) {
                 status = "Hash check failed";
