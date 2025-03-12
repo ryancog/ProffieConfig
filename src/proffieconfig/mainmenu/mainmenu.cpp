@@ -88,7 +88,7 @@ void MainMenu::bindEvents() {
         aboutInfo.SetWebSite("https://proffieconfig.kafrenetrading.com");
         aboutInfo.SetCopyright("Copyright (C) 2023-2025 Ryan Ogurek");
         aboutInfo.SetName("ProffieConfig");
-        wxAboutBox(aboutInfo);
+        wxAboutBox(aboutInfo, this);
     }, wxID_ABOUT);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
