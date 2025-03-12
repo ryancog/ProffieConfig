@@ -206,7 +206,7 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
                 "	<key>CFBundleDevelopmentRegion</key>\n"
                 "	<string>English</string>\n"
                 "	<key>CFBundleExecutable</key>\n"
-                "	<string>proffieconfig</string>\n"
+                "	<string>ProffieConfig</string>\n"
                 "	<key>CFBundleIconFile</key>\n"
                 "	<string>icon.icns</string>\n"
                 "	<key>CFBundleIdentifier</key>\n"

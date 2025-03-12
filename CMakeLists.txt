@@ -2,6 +2,7 @@
 
 cmake_minimum_required(VERSION 3.20)
 project(ProffieConfig VERSION 2.0.0)
+add_compile_definitions(BUILD_SYSTEM_VERSION=${VERSION})
 
 if (NOT (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux OR CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin))
     # Rip Windows

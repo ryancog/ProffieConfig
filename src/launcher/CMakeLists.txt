@@ -26,7 +26,7 @@ set_target_properties(launcher PROPERTIES
     MACOSX_BUNDLE_BUNDLE_VERSION ${CMAKE_PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING "${CMAKE_PROJECT_VERSION}"
     MACOSX_BUNDLE_COPYRIGHT "Copyright (C) 2024 Ryan Ogurek"
-    MACOSX_BUNDLE_GUI_IDENTIFIER "com.kafrenetrading.proffieconfig"
+    MACOSX_BUNDLE_GUI_IDENTIFIER "com.kafrenetrading.proffieconfiglauncher"
     MACOSX_BUNDLE_ICON_FILE "icon.icns"
 )
 
