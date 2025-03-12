@@ -169,6 +169,7 @@ void App::init(string_view appName) {
     fs::create_directories(Paths::logs());
     fs::create_directories(Paths::configs());
     fs::create_directories(Paths::injections());
+    fs::create_directories(Paths::props());
 }
 
 App::Menus App::createDefaultMenuBar() {
