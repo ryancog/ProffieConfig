@@ -47,6 +47,7 @@ public:
         ID_DeviceSelect,
         ID_Docs,
         ID_Issue,
+        ID_Logs,
 
         ID_OpenSerial,
 
