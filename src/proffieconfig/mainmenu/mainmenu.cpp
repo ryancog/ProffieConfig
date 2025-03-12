@@ -17,6 +17,7 @@
 #include "ui/controls.h"
 #include "utils/paths.h"
 #include "utils/image.h"
+#include "wx/utils.h"
 
 #include <wx/event.h>
 #include <wx/menu.h>
@@ -89,6 +90,10 @@ void MainMenu::bindEvents() {
         aboutInfo.SetName("ProffieConfig");
         wxAboutBox(aboutInfo);
     }, wxID_ABOUT);
+
+    Bind(wxEVT_MENU, [&](wxCommandEvent &) {
+        wxLaunchDefaultApplication(Paths::logs().string());
+    }, ID_Logs);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
         wxMessageDialog(this, COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION).ShowModal();
@@ -196,6 +201,7 @@ void MainMenu::createMenuBar() {
   file->Append(ID_ReRunSetup, "Re-Run First-Time Setup...", "Install Proffieboard Dependencies and View Tutorial");
   file->Append(ID_AddProp, "Add Prop...");
   file->AppendSeparator();
+  file->Append(ID_Logs, "Show Logs...");
   file->Append(wxID_ABOUT);
   file->Append(ID_Copyright, "Copyright Notice");
   file->Append(wxID_EXIT);
