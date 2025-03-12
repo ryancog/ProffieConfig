@@ -58,7 +58,9 @@ filepath Paths::approot() {
     } else {
 #       ifdef __WIN32__
         return ".";
-#       else
+#       elif defined(__APPLE__)
+        return filepath{".."} / ".." / ".." / "..";
+#       elif defined(__linux__)
         return "..";
 #       endif
     }
@@ -76,19 +78,20 @@ filepath Paths::executable(Executable exec) {
                 SHGetKnownFolderPath(FOLDERID_UserProgramFiles, 0, nullptr, &rawStr);
                 filepath userPrograms{rawStr};
                 CoTaskMemFree(rawStr);
-                return userPrograms / "ProffieConfig Launcher.exe";
+                return userPrograms / "ProffieConfig.exe";
             }
 #           elif defined(__linux__)
-            return filepath(getpwuid(getuid())->pw_dir) / ".proffieconfig" /
-                "ProffieConfig Launcher";
+            return filepath(getpwuid(getuid())->pw_dir) / ".proffieconfig" / "ProffieConfig";
 #           elif defined(__APPLE__)
-            return filepath(getpwuid(getuid())->pw_dir) / "Applications" / "ProffieConfig.app" / "Contents" / "MacOS" / "ProffieConfig Launcher";
+            return filepath(getpwuid(getuid())->pw_dir) / "Applications" / "ProffieConfig.app" / "Contents" / "MacOS" / "ProffieConfig";
 #           endif
         case Executable::MAIN:
 #           ifdef __WIN32__
-            return binaries() / "proffieconfig.exe";
+            return binaries() / "ProffieConfig.exe";
+#           elif defined(__linux__)
+            return binaries() / "ProffieConfig";
 #           else
-            return binaries() / "proffieconfig";
+            return binaries() / "ProffieConfig.app" / "Contents" / "MacOS" / "ProffieConfig";
 #           endif
     }
     return {};

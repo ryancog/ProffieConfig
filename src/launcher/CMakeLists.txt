@@ -20,7 +20,7 @@ add_executable(launcher WIN32 MACOSX_BUNDLE
 
 
 set_target_properties(launcher PROPERTIES
-    OUTPUT_NAME "ProffieConfig Launcher"
+    OUTPUT_NAME "ProffieConfig"
     DESCRIPTION "ProffieConfig Launcher" # Windows is stupid so this isn't actually a description
     EXEC_VERSION "2.0.0"
     MACOSX_BUNDLE_BUNDLE_VERSION ${CMAKE_PROJECT_VERSION}
