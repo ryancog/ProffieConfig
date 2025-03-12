@@ -1,10 +1,7 @@
 #include "app.h"
-#include "wx/thread.h"
-#include <filesystem>
-#include <thread>
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2025 Ryan Ogurek
  *
  * components/app/app.cpp
  *
@@ -25,8 +22,10 @@
 #if defined(__linux__) or defined(__APPLE__)
 #include <array>
 #endif
+#include <thread>
 #include <csignal>
 #include <cstdio>
+#include <filesystem>
 
 #include <wx/app.h>
 #include <wx/button.h>
