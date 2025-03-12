@@ -14,8 +14,10 @@
 #include "../../editor/dialogs/bladearraydlg.h"
 
 #include <cstring>
+#include <filesystem>
 #include <sstream>
 
+#include <system_error>
 #include <wx/filedlg.h>
 #include <wx/event.h>
 #include <wx/msgdlg.h>
@@ -26,7 +28,7 @@
     return false;
 
 namespace Configuration {
-    constexpr std::string_view INJECTION_STR{"injection/"};
+    constexpr string_view INJECTION_STR{"injection"};
 
     bool runPreChecks(EditorWindow *);
 
@@ -59,12 +61,24 @@ namespace Configuration {
 }
 
 
-bool Configuration::outputConfig(const std::string& filePath, EditorWindow *editor) {
-    editor->presetsPage->update();
-    editor->bladesPage->update();
-    editor->bladesPage->bladeArrayDlg->update();
-
+bool Configuration::outputConfig(const filepath& filePath, EditorWindow *editor, bool copyInjections) {
     if (not runPreChecks(editor)) return false;
+
+    if (copyInjections) {
+        std::error_code err;
+        const auto injectionDir{Paths::proffieos() / "config" / INJECTION_STR};
+        fs::create_directory(injectionDir);
+        for (const auto& injection : editor->presetsPage->injections) {
+            if (not fs::copy_file(
+                Paths::injections() / injection.ToStdString(), 
+                injectionDir / injection.ToStdString(),
+                fs::copy_options::overwrite_existing,
+                err
+            )) {
+                ERR("Failed setting up injection \"" + injection.ToStdString() + '"');
+            }
+        }
+    }
 
     std::ofstream configOutput(filePath);
     if (!configOutput.is_open()) {
@@ -87,7 +101,7 @@ bool Configuration::outputConfig(const std::string& filePath, EditorWindow *edit
     return true;
 }
 bool Configuration::outputConfig(EditorWindow *editor) {
-    return Configuration::outputConfig(Paths::configs() / (std::string(editor->getOpenConfig()) + ".h"), editor);
+    return Configuration::outputConfig(Paths::configs() / (string{editor->getOpenConfig()} + ".h"), editor);
 }
 
 bool Configuration::exportConfig(EditorWindow *editor) {
@@ -155,7 +169,7 @@ void Configuration::outputConfigProp(std::ofstream& configOutput, const EditorWi
 void Configuration::outputConfigPresets(std::ofstream& configOutput, const EditorWindow *editor) {
     configOutput << "#ifdef CONFIG_PRESETS\n" << std::flush;
     for (const auto& injection : editor->presetsPage->injections) {
-        configOutput << "#include \"" << INJECTION_STR << injection << '"' << std::endl;
+        configOutput << "#include \"" << INJECTION_STR << '/' << injection << '"' << std::endl;
     }
     if (not editor->presetsPage->injections.empty()) configOutput << std::endl;
     outputConfigPresetsStyles(configOutput, editor);
@@ -314,7 +328,7 @@ void Configuration::outputConfigButtons(std::ofstream& configOutput, const Edito
     configOutput << "#endif" << std::endl << std::endl; // CONFIG_BUTTONS
 }
 
-bool Configuration::readConfig(const std::string& filePath, EditorWindow* editor) {
+bool Configuration::readConfig(const filepath& filePath, EditorWindow* editor) {
     std::ifstream file(filePath);
     if (!file.is_open()) return false;
 
@@ -373,7 +387,7 @@ void Configuration::tryAddInjection(const std::string& buffer, EditorWindow *edi
     auto injectionPos{buffer.find(INJECTION_STR, strStart + 1)};
     std::string injectionFile;
     if (injectionPos != std::string::npos) {
-        injectionFile = buffer.substr(injectionPos + INJECTION_STR.length(), strEnd - injectionPos - INJECTION_STR.length());
+        injectionFile = buffer.substr(injectionPos + INJECTION_STR.length() + 1, strEnd - injectionPos - INJECTION_STR.length() - 1);
     } else {
         injectionFile = buffer.substr(strStart + 1, strEnd - strStart - 1);
     }
@@ -449,11 +463,11 @@ void Configuration::readConfigTop(std::ifstream& file, EditorWindow* editor) {
         } else if (element == "#include" && !file.eof()) {
             file >> element;
             if (element.find("v1") != std::string::npos) {
-                editor->generalPage->board->entry()->SetSelection(0);
+                editor->generalPage->board->entry()->SetStringSelection(Proffieboard[0].first);
             } else if (element.find("v2") != std::string::npos) {
-                editor->generalPage->board->entry()->SetSelection(1);
+                editor->generalPage->board->entry()->SetStringSelection(Proffieboard[1].first);
             } else if (element.find("v3") != std::string::npos) {
-                editor->generalPage->board->entry()->SetSelection(2);
+                editor->generalPage->board->entry()->SetStringSelection(Proffieboard[2].first);
             }
         } else if (element == "//PROFFIECONFIG") {
             file >> element;
