@@ -2,16 +2,17 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
+#include <fstream>
+#include <iostream>
+#include <memory>
+
+#include <wx/msgdlg.h>
+
 #include "log/context.h"
 #include "log/logger.h"
 #include "pconf/pconf.h"
 #include "utils/paths.h"
 #include "../onboard/onboard.h"
-#include "../core/defines.h"
-
-#include <fstream>
-#include <iostream>
-#include <memory>
 
 AppState* AppState::instance;
 
@@ -97,9 +98,51 @@ void AppState::setSaved(bool state) {
 }
 
 void AppState::addProp(const string& propName, const string& propPath, const string& propConfigPath) {
+    std::ifstream configStream{propConfigPath};
+    PConf::Data data;
+    PConf::read(configStream, data, nullptr);
+    auto hashedData{PConf::hash(data)};
+
+    auto filenameEntry{hashedData.find("FILENAME")};
+    if (filenameEntry == hashedData.end() or not filenameEntry->second->value) {
+        wxMessageBox("Prop config file is invalid.", "Error Adding Prop");
+        return;
+    }
+
+    auto propFileName{propPath.substr(propPath.rfind('/') + 1)};
+    if (*filenameEntry->second->value != propFileName) {
+        wxMessageBox("Prop config filename does not match provided prop filename", "Error Adding Prop");
+        return;
+    }
+
     fs::copy_file(propConfigPath, Paths::props() / propConfigPath.substr(propConfigPath.rfind('/') + 1));
-    fs::copy_file(propPath, Paths::data() / "ProffieOS" / "props" / propPath.substr(propPath.rfind('/') + 1));
+    fs::copy_file(propPath, Paths::proffieos() / "props" / propFileName);
+
     propFileNames.push_back(propName);
+}
+
+void AppState::removeProp(const string& propName) {
+    auto propConfigPath{Paths::props() / (propName + ".pconf")};
+    if (not fs::exists(propConfigPath)) return;
+
+    std::ifstream configStream{propName};
+    PConf::Data data;
+    PConf::read(configStream, data, nullptr);
+    auto hashedData{PConf::hash(data)};
+
+    auto filenameEntry{hashedData.find("FILENAME")};
+    if (filenameEntry != hashedData.end() and filenameEntry->second->value) {
+        fs::remove(Paths::proffieos() / "props" / *filenameEntry->second->value);
+    }
+
+    fs::remove(propConfigPath);
+
+    for (auto propIt{propFileNames.begin()}; propIt != propFileNames.end(); ++propIt) {
+        if (*propIt == propName) {
+            propFileNames.erase(propIt);
+            break;
+        }
+    }
 }
 
 const vector<string>& AppState::getPropFileNames() {

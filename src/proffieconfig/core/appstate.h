@@ -17,6 +17,7 @@ public:
   void saveState();
 
   void addProp(const string& propName, const string& propPath, const string& propConfigPath);
+  void removeProp(const string& propName);
 
   const vector<string>& getPropFileNames();
   static constexpr array<string_view, 5> BUILTIN_PROPS{
