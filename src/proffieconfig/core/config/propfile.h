@@ -2,24 +2,24 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include "log/logger.h"
-#include "pconf/pconf.h"
 #include <memory>
-#include <string>
-#include <vector>
-#include <array>
 #include <unordered_map>
+
 #include <wx/sizer.h>
 #include <wx/checkbox.h>
 #include <wx/radiobut.h>
 #include <wx/combobox.h>
 #include <wx/panel.h>
 
+#include "log/logger.h"
+#include "pconf/pconf.h"
+#include "utils/types.h"
+
 namespace std {
 
 template <>
-struct hash<std::vector<std::string>> {
-    size_t operator()(const std::vector<std::string>& vector) const {
+struct hash<vector<string>> {
+    size_t operator()(const vector<string>& vector) const {
         size_t hash = 0;
         for (const auto& string : vector) {
             hash ^= std::hash<std::string>{}(string) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
@@ -34,27 +34,27 @@ class PropFile : public wxPanel {
 public:
     ~PropFile();
     struct Setting;
-    typedef std::unordered_map<std::string, Setting> SettingMap;
+    typedef std::unordered_map<string, Setting> SettingMap;
     struct Button;
-    typedef std::vector<std::pair<std::string, std::vector<Button>>> ButtonArray;
+    typedef vector<std::pair<string, vector<Button>>> ButtonArray;
 
-    static PropFile* createPropConfig(const std::string&, wxWindow*);
+    static PropFile* createPropConfig(const string&, wxWindow*, bool builtin = false);
 
-    std::string getName() const;
-    std::string getFileName() const;
-    std::string getInfo() const;
+    string getName() const;
+    string getFileName() const;
+    string getInfo() const;
     SettingMap* getSettings();
-    const std::array<ButtonArray, 4>* getButtons();
+    const array<ButtonArray, 4>* getButtons();
 
 private:
     PropFile() = delete;
     PropFile(wxWindow*);
 
-    std::string name{};
-    std::string fileName{};
-    std::string info{};
+    string name{};
+    string fileName{};
+    string info{};
     SettingMap* settings{nullptr};
-    std::array<ButtonArray, 4>* buttons{nullptr};
+    array<ButtonArray, 4>* buttons{nullptr};
 
     wxBoxSizer* sizer{nullptr};
 
@@ -69,16 +69,16 @@ private:
 struct PropFile::Setting {
     void setValue(double) const;
     void enable(bool = true) const;
-    std::string getOutput() const;
-    bool checkRequiredSatisfied(const std::unordered_map<std::string, Setting>&) const;
+    string getOutput() const;
+    bool checkRequiredSatisfied(const std::unordered_map<string, Setting>&) const;
 
-    std::string name{};
-    std::string define{};
-    std::string description{};
+    string name{};
+    string define{};
+    string description{};
 
-    std::vector<std::string> required{};
-    std::vector<std::string> requiredAny{};
-    std::vector<std::string> disables{};
+    vector<string> required{};
+    vector<string> requiredAny{};
+    vector<string> disables{};
     bool disabled{false};
 
     double min{0};
@@ -86,7 +86,7 @@ struct PropFile::Setting {
     double increment{1};
     double defaultVal{0};
 
-    std::vector<std::string> others{};
+    vector<string> others{};
     bool isDefault{false};
     bool shouldOutput{true};
 
@@ -102,8 +102,8 @@ struct PropFile::Setting {
 };
 
 struct PropFile::Button {
-    std::string name{};
+    string name{};
 
     // <Predicate, Description>
-    std::unordered_map<std::string, std::string> descriptions{};
+    std::unordered_map<string, string> descriptions{};
 };
