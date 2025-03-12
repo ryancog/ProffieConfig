@@ -15,8 +15,8 @@ Head over to the [latest ProffieConfig release](https://github.com/ryancog/Proff
 ProffieConfig will complete its installation and guide you through the setup and all of its features, so whether you're a first-time proffieboard user or have been around the block a few times, you'll be ready before you know it!
 
 ***NOTE:** ProffieConfig is relatively new software, and because I do not pay for an Apple Developer License or Microsoft Developer account I cannot "sign" the application, chances are something will tell you the program is unknown or "dangerous." See the info below about how you can address this if it comes up:*
-- ***macOS:** With the new versions of macOS, the "GateKeeper" feature has changed, you can read about macOS' security and how to launch unsigned apps [here](https://support.apple.com/en-us/102445)*
-- ***Windows:** A SmartScreen dialog may pop up warning about the program origins, clicking "More Info..." and then "Run Anyways" should allow you to open the app.
+- ***macOS:** Please visit this Apple Support page to read about macOS' security and how to launch unsigned apps [here](https://support.apple.com/en-us/102445)*
+- ***Windows:** A SmartScreen dialog may pop up warning about the program origins, clicking "More Info..." and then "Run Anyways" should allow you to open the app.*
 *The Chrome browser (and Chromium-based browsers) may block the program, which requires you to visit the "Show All Downloads" page to "keep" the file.*
 
 ## To-Do (Non-Exhaustive)
