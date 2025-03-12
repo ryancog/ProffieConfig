@@ -15,6 +15,10 @@ public:
 
         return true;
     }
+
+    virtual void OnUnhandledException() override {
+        App::exceptionHandler();
+    }
 };
 
 wxIMPLEMENT_APP(ProffieConfig);
