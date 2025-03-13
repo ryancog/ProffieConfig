@@ -19,6 +19,7 @@
 #include "ui/frame.h"
 #include "utils/paths.h"
 #include "utils/image.h"
+#include "wx/toplevel.h"
 
 #include <wx/utils.h>
 #include <wx/event.h>
@@ -37,7 +38,7 @@
 #include <wx/generic/statbmpg.h>
 
 MainMenu* MainMenu::instance{nullptr};
-MainMenu::MainMenu(wxWindow* parent) : PCUI::Frame(parent, wxID_ANY, "ProffieConfig") {
+MainMenu::MainMenu(wxWindow* parent) : PCUI::Frame(parent, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER) {
     createUI();
     createMenuBar();
     createTooltips();
