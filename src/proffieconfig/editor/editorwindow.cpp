@@ -2,21 +2,9 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include "pages/bladespage.h"
-#include "pages/generalpage.h"
-#include "pages/presetspage.h"
-#include "pages/propspage.h"
-
-#include "utils/paths.h"
-#include "../core/config/settings.h"
-#include "../core/config/configuration.h"
-#include "../core/defines.h"
-#include "../core/utilities/misc.h"
-#include "../core/utilities/progress.h"
-
-#include "../tools/arduino.h"
-
 #include <filesystem>
+#include <fstream>
+
 #include <wx/filedlg.h>
 #include <wx/event.h>
 #include <wx/combobox.h>
@@ -35,6 +23,20 @@
 #include <wx/string.h>
 #include <wx/tooltip.h>
 #include <wx/menu.h>
+
+#include "pages/bladespage.h"
+#include "pages/generalpage.h"
+#include "pages/presetspage.h"
+#include "pages/propspage.h"
+
+#include "utils/paths.h"
+#include "../core/config/settings.h"
+#include "../core/config/configuration.h"
+#include "../core/defines.h"
+#include "../core/utilities/misc.h"
+#include "../core/utilities/progress.h"
+
+#include "../tools/arduino.h"
 
 EditorWindow::EditorWindow(const std::string& _configName, wxWindow* parent) : PCUI::Frame(parent, wxID_ANY, "ProffieConfig Editor - " + _configName, wxDefaultPosition, wxDefaultSize), mOpenConfig(_configName) {
     createMenuBar();
