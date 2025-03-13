@@ -9,6 +9,8 @@
 #include "../core/defines.h"
 #include "../mainmenu/mainmenu.h"
 
+#include "utils/paths.h"
+
 #ifdef __WINDOWS__
 #include <windows.h>
 #undef wxMessageDialog
@@ -22,7 +24,7 @@ SerialMonitor* SerialMonitor::instance;
 #if defined(__WINDOWS__)
 SerialMonitor::SerialMonitor(MainMenu* parent) {
   if (parent->boardSelect->entry()->GetSelection() > 0) {
-        ShellExecute(NULL, NULL, TEXT(ARDUINO_PATH), std::wstring(L"monitor -p " + parent->boardSelect->entry()->GetStringSelection().ToStdWstring() + L" -c baudrate=115200").c_str(), NULL, true);
+        ShellExecuteA(nullptr, nullptr, (Paths::binaries() / "arduino-cli.exe").string().c_str(), (string{"monitor -p "} + parent->boardSelect->entry()->GetStringSelection().ToStdString() + " -c baudrate=115200").c_str(), NULL, true);
   } else wxMessageDialog(parent, "Select board first.", "No Board Selected", wxOK | wxICON_ERROR).ShowModal();
 }
 

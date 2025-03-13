@@ -84,11 +84,11 @@ bool Update::pullNewFiles(const Changelog& changelog, const Data& data, PCUI::Pr
 
         string itemURLString{Paths::remoteUpdateAssets()};
 #       ifdef __WIN32__
-        itemURL += "/win32/";
+        itemURLString += "/win32/";
 #       elif defined(__APPLE__)
         itemURLString += "/macOS/";
 #       elif defined(__linux__)
-        itemURL += "/linux/";
+        itemURLString += "/linux/";
 #       endif
         type = file.id.type;
         itemURLString += typeFolder(type).string() + '/';

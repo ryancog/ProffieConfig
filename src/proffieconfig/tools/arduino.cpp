@@ -2,17 +2,6 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include "../core/defines.h"
-#include "../core/config/configuration.h"
-#include "../core/utilities/misc.h"
-#include "../core/utilities/progress.h"
-#include "../editor/editorwindow.h"
-#include "../editor/pages/generalpage.h"
-#include "../editor/pages/bladespage.h"
-#include "../editor/pages/presetspage.h"
-#include "../editor/dialogs/bladearraydlg.h"
-#include "utils/paths.h"
-
 #include <cstring>
 #include <filesystem>
 #include <limits>
@@ -33,13 +22,30 @@
 #include <wx/zipstrm.h>
 #include <wx/zstream.h>
 
+#include "utils/paths.h"
+#include "utils/types.h"
+
+#include "../core/defines.h"
+#include "../core/config/configuration.h"
+#include "../core/utilities/misc.h"
+#include "../core/utilities/progress.h"
+#include "../editor/editorwindow.h"
+#include "../editor/pages/generalpage.h"
+#include "../editor/pages/bladespage.h"
+#include "../editor/pages/presetspage.h"
+#include "../editor/dialogs/bladearraydlg.h"
+
 using namespace std::chrono_literals;
 
 namespace Arduino {
     FILE *CLI(const wxString& command);
 
     bool updateIno(std::string&, EditorWindow*);
-    bool compile(std::string&, EditorWindow*, Progress* = nullptr);
+#   ifdef __WINDOWS__
+    optional<array<string, 2>> compile(string&, EditorWindow *, Progress * = nullptr);
+#   else
+    bool compile(string&, EditorWindow *, Progress * = nullptr);
+#   endif
     bool upload(std::string&, EditorWindow*, Progress* = nullptr);
     std::string parseError(const std::string&);
 
@@ -351,7 +357,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
         progDialog->emitEvent(65, "Uploading to ProffieBoard...");
 #   ifdef __WINDOWS__
         std::string commandString = R"(title ProffieConfig Worker & resources\windowmode -title "ProffieConfig Worker" -mode force_minimized & )";
-        commandString += (returnVal.substr(returnVal.find("|") + 1) + R"( 0x1209 0x6668 )" + returnVal.substr(0, returnVal.find("|")) + R"( 2>&1)").ToStdString();
+        commandString += returnVal.substr(returnVal.find("|") + 1) + R"( 0x1209 0x6668 )" + returnVal.substr(0, returnVal.find("|")) + R"( 2>&1)";
         std::cerr << "UploadCommandString: " << commandString << std::endl;
 
         auto upload = popen(commandString.c_str(), "r");
@@ -481,7 +487,11 @@ bool Arduino::compile(std::string& _return, EditorWindow* editor, Progress* prog
         error += buffer;
         if (std::strstr(buffer, "error")) {
             _return = Arduino::parseError(error);
+# 	        ifdef __WINDOWS__
+            return nullopt;
+# 	        else
             return false;
+#           endif
         }
 
 #   	ifdef __WINDOWS__
@@ -490,14 +500,13 @@ bool Arduino::compile(std::string& _return, EditorWindow* editor, Progress* prog
             error = buffer;
             std::cerr << "PathBuffer: " << error << std::endl;
 
-            // Ugly code because Windows wants wchar_t*, which requires (ish) std::wstring's
-            std::array<std::string, 2> paths;
-            wchar_t shortPath[MAX_PATH];
-            GetShortPathName(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().from_bytes(error.substr(error.rfind("C:\\"), error.rfind("ProffieOS.ino.dfu") - error.rfind("C:\\") + 17)).c_str(), shortPath, MAX_PATH);
-            paths[0] = shortPath;
-            GetShortPathName(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().from_bytes(error.substr(1, error.find("windows") + 7 - 1)).c_str(), shortPath, MAX_PATH);
-            paths[1] = shortPath + LR"(\\stm32l4-upload.bat)";
-            std::wcerr << "ParsedPaths: \n\t - " << paths[0] << '\n\t - '<< paths[1] << std::endl;
+            array<string, 2> paths;
+            array<char, MAX_PATH> shortPath;
+            GetShortPathNameA(error.substr(error.rfind("C:\\"), error.rfind("ProffieOS.ino.dfu") - error.rfind("C:\\") + 17).c_str(), shortPath.data(), shortPath.size());
+            paths[0] = shortPath.data();
+            GetShortPathNameA(error.substr(1, error.find("windows") + 7 - 1).c_str(), shortPath.data(), shortPath.size());
+            paths[1] = string{shortPath.data()} + R"(\\stm32l4-upload.bat)";
+            std::cerr << "ParsedPaths: \n\t - " << paths[0] << "\n\t - " << paths[1] << std::endl;
 
             pclose(arduinoCli);
 
@@ -508,13 +517,17 @@ bool Arduino::compile(std::string& _return, EditorWindow* editor, Progress* prog
     }
     if (pclose(arduinoCli) != 0) {
         _return = "Unknown Compile Error";
+# 	    ifdef __WINDOWS__
+        return nullopt;
+# 	    else
         return false;
+#       endif
     }
 
 
     _return = error;
 # 	ifdef __WINDOWS__
-    return std::nullopt;
+    return nullopt;
 # 	else
     return true;
 #	endif
