@@ -12,9 +12,11 @@
 #include "../../editor/pages/propspage.h"
 #include "../../editor/pages/bladespage.h"
 #include "../../editor/dialogs/bladearraydlg.h"
+#include "../../tools/arduino.h"
 
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <sstream>
 
 #include <system_error>
@@ -120,11 +122,12 @@ void Configuration::outputConfigTop(std::ofstream& configOutput, const EditorWin
     configOutput << "#endif" << std::endl << std::endl;
 
 }
+
 void Configuration::outputConfigTopGeneral(std::ofstream& configOutput, const EditorWindow *editor) {
     if (editor->generalPage->massStorage->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_MASS_STORAGE" << std::endl;
     if (editor->generalPage->webUSB->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_WEBUSB" << std::endl;
 
-    configOutput << findInVMap(Proffieboard, editor->generalPage->board->entry()->GetStringSelection().ToStdString()).second << std::endl;
+    configOutput << findInVMap(PROFFIEBOARD, editor->generalPage->board->entry()->GetStringSelection().ToStdString()).second << std::endl;
 
     configOutput << "const unsigned int maxLedsPerStrip = " << editor->generalPage->maxLEDs->entry()->GetValue() << ";" << std::endl;
     configOutput << "#define ENABLE_AUDIO" << std::endl;
@@ -137,6 +140,7 @@ void Configuration::outputConfigTopGeneral(std::ofstream& configOutput, const Ed
         if (define->shouldOutput()) configOutput << "#define " << define->getOutput() << std::endl;
     }
 }
+
 void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput, const EditorWindow *editor) {
     auto selectedProp = editor->propsPage->getSelectedProp();
     if (selectedProp == nullptr) return;
@@ -152,6 +156,7 @@ void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput, con
         if (!output.empty()) configOutput << "#define " << output << std::endl;
     }
 }
+
 void Configuration::outputConfigTopCustom(std::ofstream& configOutput, const EditorWindow *editor) {
     for (const auto& [ name, value ] : editor->generalPage->customOptDlg->getCustomDefines()) {
         if (!name.empty()) configOutput << "#define " << name << " " << value << std::endl;
@@ -166,6 +171,7 @@ void Configuration::outputConfigProp(std::ofstream& configOutput, const EditorWi
     configOutput << "#include \"../props/" << selectedProp->getFileName() << "\"" << std::endl;
     configOutput << "#endif" << std:: endl << std::endl; // CONFIG_PROP
 }
+
 void Configuration::outputConfigPresets(std::ofstream& configOutput, const EditorWindow *editor) {
     configOutput << "#ifdef CONFIG_PRESETS\n" << std::flush;
     for (const auto& injection : editor->presetsPage->injections) {
@@ -291,6 +297,7 @@ void Configuration::genWS281X(std::ofstream& configOutput, const BladesPage::Bla
     }
     configOutput << ">>()";
 };
+
 void Configuration::genSubBlades(std::ofstream& configOutput, const BladesPage::BladeConfig& blade) {
     int32_t subNum{0};
     for (const auto& subBlade : blade.subBlades) {
@@ -320,6 +327,7 @@ void Configuration::genSubBlades(std::ofstream& configOutput, const BladesPage::
         subNum++;
     }
 }
+
 void Configuration::outputConfigButtons(std::ofstream& configOutput, const EditorWindow *editor) {
     configOutput << "#ifdef CONFIG_BUTTONS" << std::endl;
     configOutput << "Button PowerButton(BUTTON_POWER, powerButtonPin, \"pow\");" << std::endl;
@@ -427,7 +435,6 @@ void Configuration::tryAddInjection(const std::string& buffer, EditorWindow *edi
     editor->presetsPage->injections.emplace_back(injectionFile);
 }
 
-
 bool Configuration::importConfig(EditorWindow* editor) {
     wxFileDialog configLocation(editor, "Choose ProffieOS Config File", "", "", "C Header Files (*.h)|*.h", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
@@ -457,17 +464,17 @@ void Configuration::readConfigTop(std::ifstream& file, EditorWindow* editor) {
             editor->settings->readDefines.push_back(element);
         } else if (element == "const" && !file.eof()) {
             getline(file, element);
-            std::strtok(element.data(), "="); // unsigned int maxLedsPerStrip =
+            (void)std::strtok(element.data(), "="); // unsigned int maxLedsPerStrip =
             element = std::strtok(nullptr, " ;");
             editor->generalPage->maxLEDs->entry()->SetValue(std::stoi(element));
         } else if (element == "#include" && !file.eof()) {
             file >> element;
             if (element.find("v1") != std::string::npos) {
-                editor->generalPage->board->entry()->SetStringSelection(Proffieboard[0].first);
+                editor->generalPage->board->entry()->SetStringSelection(PROFFIEBOARD[Arduino::PROFFIEBOARDV1].first);
             } else if (element.find("v2") != std::string::npos) {
-                editor->generalPage->board->entry()->SetStringSelection(Proffieboard[1].first);
+                editor->generalPage->board->entry()->SetStringSelection(PROFFIEBOARD[Arduino::PROFFIEBOARDV2].first);
             } else if (element.find("v3") != std::string::npos) {
-                editor->generalPage->board->entry()->SetStringSelection(Proffieboard[2].first);
+                editor->generalPage->board->entry()->SetStringSelection(PROFFIEBOARD[Arduino::PROFFIEBOARDV3].first);
             }
         } else if (element == "//PROFFIECONFIG") {
             file >> element;
@@ -489,8 +496,8 @@ void Configuration::readConfigProp(std::ifstream& file, EditorWindow* editor) {
     std::string element;
     while (!file.eof() && element != "#endif") {
         file >> element;
-        for (auto& prop : editor->propsPage->getLoadedProps()) {
-            auto propSettings = prop->getSettings();
+        for (const auto& prop : editor->propsPage->getLoadedProps()) {
+            auto *propSettings = prop->getSettings();
             if (element.find(prop->getFileName()) != std::string::npos) {
                 editor->propsPage->updateSelectedProp(prop->getName());
                 for (auto define = editor->settings->readDefines.begin(); define < editor->settings->readDefines.end();) {
@@ -670,7 +677,7 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
 }
 
 void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
-    editor->bladesPage->bladeArrayDlg->bladeArrays.push_back(BladeArrayDlg::BladeArray());
+    editor->bladesPage->bladeArrayDlg->bladeArrays.emplace_back();
     BladeArrayDlg::BladeArray& bladeArray = editor->bladesPage->bladeArrayDlg->bladeArrays.at(editor->bladesPage->bladeArrayDlg->bladeArrays.size() - 1);
 
     std::string element{};
@@ -853,7 +860,9 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                         commentString += '\n';
                         reading = prevReading;
                         continue;
-                    } else if (chr == '\n') {
+                    } 
+
+                    if (chr == '\n') {
                         reading = LONG_COMMENT_NEW_LINE;
                     }
                     commentString += chr;
@@ -900,7 +909,9 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                         reading = LONG_COMMENT;
                         file.get();
                         continue;
-                    } else if (file.peek() == '/') {
+                    } 
+
+                    if (file.peek() == '/') {
                         prevReading = reading;
                         reading = LINE_COMMENT;
                         file.get();
@@ -920,9 +931,9 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                     if (file.peek() == ';') {
                         bladeArray.presets.pop_back();
                         return;
-                    } else {
-                        break;
-                    }
+                    }                          
+
+                    break;
                 }
 
                 if (reading == NONE) {
@@ -988,7 +999,9 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
                     reading = LONG_COMMENT;
                     file.get();
                     continue;
-                } else if (file.peek() == '/') {
+                } 
+
+                if (file.peek() == '/') {
                     prevReading = reading;
                     reading = LINE_COMMENT;
                     file.get();
@@ -1007,11 +1020,11 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
             if (chr == '}') {
                 if (file.peek() == ';') {
                     return;
-                } else {
-                    reading = NONE;
-                    bladeArray = {};
-                    continue;
-                }
+                } 
+
+                reading = NONE;
+                bladeArray = {};
+                continue;
             }
         }
 
@@ -1079,13 +1092,13 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
                     subBlade = true;
                 }
 
-                constexpr std::string_view ws281xStr{"WS281XBladePtr"};
-                constexpr std::string_view simpleStr{"SimpleBladePtr"};
-                if (buffer.find(ws281xStr) != std::string::npos) {
+                constexpr std::string_view WS281X_STR{"WS281XBladePtr"};
+                constexpr std::string_view SIMPLE_STR{"SimpleBladePtr"};
+                if (buffer.find(WS281X_STR) != std::string::npos) {
                     if (not subBlade) bladeArray.blades.emplace_back();
                     auto& blade{bladeArray.blades.back()};
 
-                    buffer = buffer.substr(buffer.find(ws281xStr) + ws281xStr.length());
+                    buffer = buffer.substr(buffer.find(WS281X_STR) + WS281X_STR.length());
                     buffer = buffer.substr(buffer.find('<') + 1);
 
                     auto paramEnd{buffer.find(',')};
@@ -1098,10 +1111,10 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
                     blade.dataPin = dataPinStr;
                     buffer = buffer.substr(paramEnd + 1);
 
-                    constexpr std::string_view color8{"Color8"};
-                    constexpr std::string_view namespaceSeparator{"::"};
-                    buffer = buffer.substr(buffer.find(color8) + color8.length());
-                    buffer = buffer.substr(buffer.find(namespaceSeparator) + namespaceSeparator.length());
+                    constexpr std::string_view COLOR8{"Color8"};
+                    constexpr std::string_view NAMESPACE_SEPARATOR{"::"};
+                    buffer = buffer.substr(buffer.find(COLOR8) + COLOR8.length());
+                    buffer = buffer.substr(buffer.find(NAMESPACE_SEPARATOR) + NAMESPACE_SEPARATOR.length());
 
                     paramEnd = buffer.find(',');
                     auto colorStr{buffer.substr(0, paramEnd)};
@@ -1111,8 +1124,8 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
                     blade.type = (blade.useRGBWithWhite or colorStr.find('w') != std::string::npos) ? BD_PIXELRGBW : BD_PIXELRGB;
                     blade.colorType.assign(colorStr);
 
-                    constexpr std::string_view powerPins{"PowerPINS"};
-                    buffer = buffer.substr(buffer.find(powerPins) + powerPins.length());
+                    constexpr std::string_view POWER_PINS{"PowerPINS"};
+                    buffer = buffer.substr(buffer.find(POWER_PINS) + POWER_PINS.length());
                     buffer = buffer.substr(buffer.find('<') + 1);
 
                     while (!false) {
@@ -1128,7 +1141,7 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
 
                         buffer = buffer.substr(paramEnd + 1);
                     }
-                } else if (buffer.find(simpleStr) != std::string::npos) {
+                } else if (buffer.find(SIMPLE_STR) != std::string::npos) {
                     bladeArray.blades.emplace_back();
 
                     auto& blade{bladeArray.blades.back()};
@@ -1156,7 +1169,7 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
                         buffer = buffer.substr(paramEnd + 1);
                     }};
 
-                    buffer = buffer.substr(buffer.find(simpleStr) + simpleStr.length());
+                    buffer = buffer.substr(buffer.find(SIMPLE_STR) + SIMPLE_STR.length());
                     buffer = buffer.substr(buffer.find('<') + 1);
 
                     setupStar(blade.Star1, blade.Star1Resistance);

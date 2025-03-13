@@ -42,7 +42,7 @@ void Settings::linkDefines() {
         ENTRY("DISABLE_BASIC_PARSER_STYLES", true, parent->generalPage->noBasicParsers),
         ENTRY("DISABLE_DIAGNOSTIC_COMMANDS", true, parent->generalPage->disableDiagnosticCommands),
 
-        ENTRY("ORIENTATION", Configuration::Orientation.begin()->first, parent->generalPage->orientation, CHECKER(){ return true; }),
+        ENTRY("ORIENTATION", Configuration::ORIENTATION.begin()->first, parent->generalPage->orientation, CHECKER(){ return true; }),
         ENTRY("PLI_OFF_TIME", 2, parent->generalPage->pliTime, CHECKER(){ return true; }),
         ENTRY("IDLE_OFF_TIME", 15, parent->generalPage->idleTime, CHECKER(){ return true; }),
         ENTRY("MOTION_TIMEOUT", 10, parent->generalPage->motionTime, CHECKER(){ return true; }),
@@ -80,11 +80,11 @@ void Settings::setCustomInputParsers() {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
 
-    parent->generalPage->orientation->entry()->SetStringSelection(Configuration::findInVMap(Configuration::Orientation, key.second).first);
+    parent->generalPage->orientation->entry()->SetStringSelection(Configuration::findInVMap(Configuration::ORIENTATION, key.second).first);
     return true;
   });
   generalDefines["ORIENTATION"]->overrideOutput([&](const ProffieDefine* def) -> std::string {
-    return {def->getName() + " " + Configuration::findInVMap(Configuration::Orientation, def->getString()).second};
+    return {def->getName() + " " + Configuration::findInVMap(Configuration::ORIENTATION, def->getString()).second};
   });
   generalDefines["BLADE_DETECT_PIN"]->overrideParser([&](const ProffieDefine* def, const std::string& input) -> bool {
     auto key = ProffieDefine::parseKey(input);
