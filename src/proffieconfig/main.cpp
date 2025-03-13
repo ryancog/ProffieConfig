@@ -1,15 +1,20 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
+#include <wx/app.h>
+
 #include "app/app.h"
 #include "core/appstate.h"
-
-#include <wx/app.h>
+#include "ui/message.h"
 
 class ProffieConfig : public wxApp {
 public:
     bool OnInit() override {
-        App::init("ProffieConfig");
+        if (not App::init("ProffieConfig")) {
+            PCUI::showMessage("ProffieConfig is Already Running", App::getAppName());
+            return false;
+        }
+
         wxImage::AddHandler(new wxPNGHandler());
         AppState::init();
 

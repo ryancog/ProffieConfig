@@ -22,11 +22,12 @@
 #if defined(__linux__) or defined(__APPLE__)
 #include <array>
 #endif
-#include <thread>
 #include <csignal>
 #include <cstdio>
 #include <filesystem>
 
+#include <wx/snglinst.h>
+#include <wx/utils.h>
 #include <wx/app.h>
 #include <wx/button.h>
 #include <wx/dialog.h>
@@ -43,11 +44,14 @@
 #include <winreg.h>
 #endif
 
-#include <log/context.h>
-#include <log/logger.h>
-#include <utils/paths.h>
+#include "log/context.h"
+#include "log/logger.h"
+#include "utils/paths.h"
+#include "ui/message.h"
 
 namespace App {
+
+static wxSingleInstanceChecker singleInstance;
 
 class CrashDialog : public wxDialog {
 public:
@@ -126,7 +130,7 @@ void sigHandler(int sig) {
     crashHandler(errStr);
 }
 
-void App::init(string_view appName) {
+bool App::init(string_view appName, string_view lockName) {
 #   if defined(__linux__) or defined(__APPLE__)
     struct sigaction act{};
     act.sa_flags = SA_SIGINFO;
@@ -162,14 +166,19 @@ void App::init(string_view appName) {
     static_cast<wxApp *>(wxApp::GetGUIInstance())->MSWEnableDarkMode();
 #   endif
 
-    wxApp::GetInstance()->SetAppName(wxString(appName));
-    wxApp::GetInstance()->SetAppDisplayName(wxString(appName));
+    wxApp::GetInstance()->SetAppName(wxString{appName});
+    wxApp::GetInstance()->SetAppDisplayName(wxString{appName});
+    singleInstance.Create(wxString{lockName.empty() ? appName : lockName} + '-' + wxGetUserId());
+    if (singleInstance.IsAnotherRunning()) return false;
+
     fs::create_directories(Paths::approot());
     fs::create_directories(Paths::data());
     fs::create_directories(Paths::logs());
     fs::create_directories(Paths::configs());
     fs::create_directories(Paths::injections());
     fs::create_directories(Paths::props());
+
+    return true;
 }
 
 App::Menus App::createDefaultMenuBar() {
