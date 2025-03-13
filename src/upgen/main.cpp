@@ -156,7 +156,6 @@ private:
 
 public:
     bool OnInit() override {
-        App::init("UpGen");
         Log::Context::setGlobalOuput({&std::clog}, false);
         auto& globalContext{Log::Context::getGlobal()};
         globalContext.setSeverity(Log::Severity::ERR);
@@ -919,9 +918,9 @@ void UpGen::generateNewManifest(const vector<Message>& messages, const Data& dat
             if (item.macOSPath) versionSect->entries.emplace_back(std::make_shared<PConf::Entry>(HASH_KEY_MACOS, verData.macOSHash));
             if (item.win32Path) versionSect->entries.emplace_back(std::make_shared<PConf::Entry>(HASH_KEY_WIN32, verData.win32Hash));
 
-            for (const auto& fix : verData.fixes) itemSect->entries.emplace_back(std::make_shared<PConf::Entry>("FIX", fix));
-            for (const auto& change : verData.fixes) itemSect->entries.emplace_back(std::make_shared<PConf::Entry>("CHANGE", change));
-            for (const auto& feature : verData.fixes) itemSect->entries.emplace_back(std::make_shared<PConf::Entry>("FEAT", feature));
+            for (const auto& fix : verData.fixes) versionSect->entries.emplace_back(std::make_shared<PConf::Entry>("FIX", fix));
+            for (const auto& change : verData.changes) versionSect->entries.emplace_back(std::make_shared<PConf::Entry>("CHANGE", change));
+            for (const auto& feature : verData.features) versionSect->entries.emplace_back(std::make_shared<PConf::Entry>("FEAT", feature));
 
             itemSect->entries.emplace_back(std::move(versionSect));
         }
@@ -1584,7 +1583,7 @@ void UpGen::genBundleChangelog(Data& data) {
             std::cout << "### Changes:\n";
             for (const auto& change : itemVersion.changes) std::cout << " - " << change << '\n';
         }
-        if (not itemVersion.features.empty()) {
+        if (not itemVersion.fixes.empty()) {
             std::cout << "### Bugfixes:\n";
             for (const auto& fix : itemVersion.fixes) std::cout << " - " << fix << '\n';
         }
