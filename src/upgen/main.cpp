@@ -1566,7 +1566,7 @@ void UpGen::genBundleChangelog(Data& data) {
     clearScreen();
     std::cout << HEADER << "\n\n";
 
-    std::cout << "Version " << static_cast<string>(bundleVersion) << " of [application] includes the following updates:\n\n";
+    std::cout << "Version " << static_cast<string>(bundleVersion) << " of ProffieConfig includes the following updates:\n\n";
     if (not bundle->note.empty()) std::cout << '*' << bundle->note << "*\n\n";
 
     for (const auto& [ reqID, reqVer ] : bundle->reqs) {
@@ -1574,17 +1574,17 @@ void UpGen::genBundleChangelog(Data& data) {
         if (item.hidden) continue;
         auto itemVersion{item.versions.find(reqVer)->second};
 
-        std::cout << "## " << reqID.name << " " << static_cast<string>(reqVer) << '\n';
+        std::cout << "### " << reqID.name << " " << static_cast<string>(reqVer) << "\n\n";
         if (not itemVersion.features.empty()) {
-            std::cout << "### New Features:\n";
+            std::cout << "**New Features:**\n";
             for (const auto& feat : itemVersion.features) std::cout << " - " << feat << '\n';
         }
         if (not itemVersion.changes.empty()) {
-            std::cout << "### Changes:\n";
+            std::cout << "**Changes:**\n";
             for (const auto& change : itemVersion.changes) std::cout << " - " << change << '\n';
         }
         if (not itemVersion.fixes.empty()) {
-            std::cout << "### Bugfixes:\n";
+            std::cout << "**Bugfixes:**\n";
             for (const auto& fix : itemVersion.fixes) std::cout << " - " << fix << '\n';
         }
 
