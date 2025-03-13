@@ -15,7 +15,7 @@ namespace Arduino {
     void init(wxWindow *);
     vector<wxString> getBoards();
 
-    enum {
+    enum Proffieboard {
         PROFFIEBOARDV3 = 0,
         PROFFIEBOARDV2,
         PROFFIEBOARDV1,

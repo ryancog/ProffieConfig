@@ -472,7 +472,19 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
 
     string compileCommand = "compile ";
     compileCommand += "-b ";
-    compileCommand += editor->generalPage->board->entry()->GetSelection() == PROFFIEBOARDV1 ? ARDUINOCORE_PBV1 : editor->generalPage->board->entry()->GetSelection() == PROFFIEBOARDV2 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
+    switch (static_cast<Proffieboard>(editor->generalPage->board->entry()->GetSelection())) {
+        case PROFFIEBOARDV3:
+            compileCommand += ARDUINOCORE_PBV3;
+            break;
+        case PROFFIEBOARDV2:
+            compileCommand += ARDUINOCORE_PBV2;
+            break;
+        case PROFFIEBOARDV1:
+            compileCommand += ARDUINOCORE_PBV1;
+            break;
+        default: 
+            abort();
+    }
     compileCommand += " --board-options ";
     if (editor->generalPage->massStorage->GetValue() && editor->generalPage->webUSB->GetValue()) compileCommand += "usb=cdc_msc_webusb";
     else if (editor->generalPage->webUSB->GetValue()) compileCommand += "usb=cdc_webusb";
@@ -547,12 +559,18 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
     if (editor->generalPage->board->entry()->GetStringSelection() == "ProffieBoard V3") uploadCommand +=",dosfs=sdmmc1";
 
     uploadCommand += " --fqbn ";
-    if (editor->generalPage->board->entry()->GetStringSelection() == Configuration::Proffieboard[0].first) {
-        uploadCommand += ARDUINOCORE_PBV1;
-    } else if (editor->generalPage->board->entry()->GetStringSelection() == Configuration::Proffieboard[1].first) {
-        uploadCommand += ARDUINOCORE_PBV2;
-    } else {
-        uploadCommand += ARDUINOCORE_PBV3;
+    switch (static_cast<Proffieboard>(editor->generalPage->board->entry()->GetSelection())) {
+        case PROFFIEBOARDV3:
+            uploadCommand += ARDUINOCORE_PBV3;
+            break;
+        case PROFFIEBOARDV2:
+            uploadCommand += ARDUINOCORE_PBV2;
+            break;
+        case PROFFIEBOARDV1:
+            uploadCommand += ARDUINOCORE_PBV1;
+            break;
+        default: 
+            abort();
     }
     uploadCommand += " -v";
 

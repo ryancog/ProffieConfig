@@ -29,7 +29,7 @@ GeneralPage::GeneralPage(EditorWindow* _parent) : wxStaticBoxSizer(wxVERTICAL, _
 }
 
 void GeneralPage::bindEvents() {
-  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent){
+  GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&){
       if (customOptDlg->IsShown()) customOptDlg->Raise();
       else customOptDlg->Show();
     }, ID_CustomOptions);
@@ -63,7 +63,7 @@ void GeneralPage::createToolTips() {
 wxStaticBoxSizer* GeneralPage::boardSection(wxStaticBoxSizer* parent) {
   wxStaticBoxSizer* boardSetup = new wxStaticBoxSizer(wxHORIZONTAL, parent->GetStaticBox(), "Board Setup");
 
-  board = new PCUI::Choice(boardSetup->GetStaticBox(), wxID_ANY, Misc::createEntries(Configuration::Proffieboard));
+  board = new PCUI::Choice(boardSetup->GetStaticBox(), wxID_ANY, Misc::createEntries(Configuration::PROFFIEBOARD));
   massStorage = new wxCheckBox(boardSetup->GetStaticBox(), wxID_ANY, "Enable Mass Storage");
   webUSB = new wxCheckBox(boardSetup->GetStaticBox(), wxID_ANY, "Enable WebUSB");
 
@@ -113,7 +113,7 @@ wxBoxSizer* GeneralPage::rightOptions(wxStaticBoxSizer* parent) {
 wxBoxSizer* GeneralPage::leftOptions(wxStaticBoxSizer* parent) {
     wxBoxSizer* leftOptions = new wxBoxSizer(wxVERTICAL);
 
-    orientation = new PCUI::Choice(parent->GetStaticBox(), wxID_ANY,  Misc::createEntries(Configuration::Orientation), "Orientation", wxHORIZONTAL);
+    orientation = new PCUI::Choice(parent->GetStaticBox(), wxID_ANY,  Misc::createEntries(Configuration::ORIENTATION), "Orientation", wxHORIZONTAL);
     buttons = new PCUI::Numeric(parent->GetStaticBox(), wxID_ANY, 0, 3, 2, 1, wxSP_ARROW_KEYS, "Number of Buttons", wxHORIZONTAL);
     volume = new PCUI::Numeric(parent->GetStaticBox(), wxID_ANY, 0, 5000, 1500, 50, wxSP_ARROW_KEYS, "Max Volume", wxHORIZONTAL);
     clash = new PCUI::NumericDec(parent->GetStaticBox(), wxID_ANY, 0.1, 5, 3, 0.1, wxSP_ARROW_KEYS, "Clash Threshold (Gs)", wxHORIZONTAL);
