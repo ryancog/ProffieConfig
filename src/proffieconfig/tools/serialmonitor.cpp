@@ -9,10 +9,10 @@
 #include "../core/defines.h"
 #include "../mainmenu/mainmenu.h"
 
-#include "utils/paths.h"
 
 #ifdef __WINDOWS__
 #include <windows.h>
+#include "utils/paths.h"
 #undef wxMessageDialog
 #include <wx/msgdlg.h>
 #define wxMessageDialog wxGenericMessageDialog
@@ -21,12 +21,6 @@
 #endif
 
 SerialMonitor* SerialMonitor::instance;
-#if defined(__WINDOWS__)
-SerialMonitor::SerialMonitor(MainMenu* parent) {
-    if (parent->boardSelect->entry()->GetSelection() > 0) {
-        ShellExecuteA(nullptr, nullptr, (Paths::binaries() / "arduino-cli.exe").string().c_str(), (string{"monitor -p "} + parent->boardSelect->entry()->GetStringSelection().ToStdString() + " -c baudrate=115200").c_str(), nullptr, true);
-    } else wxMessageDialog(parent, "Select board first.", "No Board Selected", wxOK | wxICON_ERROR).ShowModal();
-}
 
 SerialMonitor::~SerialMonitor() {
 #	if defined(__WXOSX__) || defined(__WXGTK__)
@@ -38,6 +32,13 @@ SerialMonitor::~SerialMonitor() {
 #	endif
 
     instance = nullptr;
+}
+
+#if defined(__WINDOWS__)
+SerialMonitor::SerialMonitor(MainMenu* parent) {
+    if (parent->boardSelect->entry()->GetSelection() > 0) {
+        ShellExecuteA(nullptr, nullptr, (Paths::binaries() / "arduino-cli.exe").string().c_str(), (string{"monitor -p "} + parent->boardSelect->entry()->GetStringSelection().ToStdString() + " -c baudrate=115200").c_str(), nullptr, true);
+    } else wxMessageDialog(parent, "Select board first.", "No Board Selected", wxOK | wxICON_ERROR).ShowModal();
 }
 
 #elif defined(__WXOSX__) || defined(__WXGTK__)
