@@ -15,8 +15,8 @@
 #include <wx/sizer.h>
 #include <wx/tooltip.h>
 
-PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""), parent{static_cast<EditorWindow*>(window)} {
-    auto top = new wxBoxSizer(wxHORIZONTAL);
+PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""), mParent{static_cast<EditorWindow*>(window)} {
+    auto *top{new wxBoxSizer(wxHORIZONTAL)};
     propSelection = new PCUI::Choice(GetStaticBox(), ID_PropSelect, Misc::createEntries({"Default"}), "Prop File");
     // Two ampersands bc wxWidgets formatting
     propInfo = new wxButton(GetStaticBox(), ID_PropInfo, "Prop Description && Usage Info...");
@@ -28,7 +28,7 @@ PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""
     top->Add(buttonInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
 
     propsWindow = new wxScrolledWindow(GetStaticBox(), wxID_ANY);
-    auto propsSizer = new wxBoxSizer(wxVERTICAL);
+    auto *propsSizer{new wxBoxSizer(wxVERTICAL)};
     propsWindow->SetSizerAndFit(propsSizer);
     propsWindow->SetScrollbars(10, 10, -1, 1);
 
@@ -45,11 +45,12 @@ void PropsPage::bindEvents() {
         updateSizeAndLayout();
     };
     auto optionSelectUpdate = [&](wxCommandEvent&) {
-        int32_t x, y;
+        int32 x{0};
+        int32 y{0};
         propsWindow->GetViewStart(&x, &y);
         update();
         propsWindow->Scroll(x, y);
-        parent->Layout();
+        mParent->Layout();
     };
 
     GetStaticBox()->Bind(wxEVT_CHOICE, propSelectUpdate, ID_PropSelect);
@@ -60,13 +61,13 @@ void PropsPage::bindEvents() {
 
     GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         PropFile* activeProp{nullptr};
-        for (auto& prop : props) {
+        for (auto& prop : mProps) {
             if (propSelection->entry()->GetStringSelection() == prop->getName()) activeProp = prop;
         }
 
-        auto textSizer = new wxBoxSizer(wxVERTICAL);
+        auto *textSizer{new wxBoxSizer(wxVERTICAL)};
         auto buttonDialog = wxDialog(
-            parent,
+            mParent,
             wxID_ANY,
             (activeProp ? activeProp->getName() : "Default") + " Buttons",
             wxDefaultPosition,
@@ -76,12 +77,12 @@ void PropsPage::bindEvents() {
 
         if (activeProp == nullptr) {
             auto defaultButtons{[](int32 num) -> wxString {
-                constexpr cstring zeroButtons{
+                constexpr cstring ZERO_BUTTONS{
                     "On/Off - Twist\n"
                     "Next preset - Point up and shake\n"
                     "Clash - Hit the blade while saber is on."
                 };
-                constexpr cstring oneButton{
+                constexpr cstring ONE_BUTTON{
                     "On/Off - Click to turn the saber on or off.\n"
                     "Turn On muted - Double-click\n"
                     "Next preset - Hold button and hit the blade while saber is off.\n"
@@ -93,7 +94,7 @@ void PropsPage::bindEvents() {
                     "Start Soundtrack - Long-click the button while blade is off.\n"
                     "Enter/Exit Color Change - Hold button and Twist."
                 };
-                constexpr cstring twoButton{
+                constexpr cstring TWO_BUTTON{
                     "On/Off - Click POW\n"
                     "Turn On muted - Double-click POW button\n"
                     "Next preset - Hold POW button and hit the blade while saber is off.\n"
@@ -111,19 +112,19 @@ void PropsPage::bindEvents() {
 
                 switch (num) {
                     case 0: 
-                        return zeroButtons;
+                        return ZERO_BUTTONS;
                     case 1: 
-                        return oneButton;
+                        return ONE_BUTTON;
                     case 2: 
                     case 3: 
-                        return twoButton;
+                        return TWO_BUTTON;
                     default:
                         return "Button Configuration Not Supported";
                 }
             }};
-            textSizer->Add(new wxStaticText(&buttonDialog, wxID_ANY, defaultButtons(parent->generalPage->buttons->entry()->GetValue())));
+            textSizer->Add(new wxStaticText(&buttonDialog, wxID_ANY, defaultButtons(mParent->generalPage->buttons->entry()->GetValue())));
         } else {
-            auto propButtons = activeProp->getButtons()->at(parent->generalPage->buttons->entry()->GetValue());
+            auto propButtons = activeProp->getButtons()->at(mParent->generalPage->buttons->entry()->GetValue());
 
             if (propButtons.empty()) {
                 textSizer->Add(new wxStaticText(&buttonDialog, wxID_ANY, "Selected number of buttons not supported by prop file."));
@@ -176,7 +177,7 @@ void PropsPage::bindEvents() {
         std::string info;
 
         PropFile* activeProp{nullptr};
-        for (auto& prop : props) {
+        for (auto& prop : mProps) {
             if (propSelection->entry()->GetStringSelection() == prop->getName()) activeProp = prop;
         }
 
@@ -187,7 +188,7 @@ void PropsPage::bindEvents() {
         }
 
         wxDialog infoDialog{
-            parent,
+            mParent,
             wxID_ANY,
             propSelection->entry()->GetStringSelection() + " Prop Info",
             wxDefaultPosition,
@@ -203,21 +204,21 @@ void PropsPage::bindEvents() {
 }
 
 void PropsPage::updateProps() {
-    auto lastSelect = propSelection->entry()->GetStringSelection();
+    auto lastSelect{propSelection->entry()->GetStringSelection()};
     propSelection->entry()->Clear();
     propSelection->entry()->Append("Default");
 
-    for (const auto& prop : props) {
+    for (const auto& prop : mProps) {
         propSelection->entry()->Append(prop->getName());
     }
 
-    if ([=]() { for (const auto& prop : propSelection->entry()->GetStrings()) if (prop == lastSelect) return true; return false; }()) {
+    if ([this, lastSelect]() { for (const auto& prop : propSelection->entry()->GetStrings()) if (prop == lastSelect) return true; return false; }()) {
         propSelection->entry()->SetStringSelection(lastSelect);
     } else propSelection->entry()->SetStringSelection("Default");
 }
 
 void PropsPage::update() {
-    for (auto& prop : props) {
+    for (auto& prop : mProps) {
         prop->SetSize(0, 0);
         if (propSelection->entry()->GetStringSelection() != prop->getName()) continue;
 
@@ -231,9 +232,9 @@ void PropsPage::update() {
 
 void PropsPage::updateSizeAndLayout() {
     propsWindow->SetSizerAndFit(propsWindow->GetSizer());
-    parent->SetSizerAndFit(parent->sizer);
-    parent->SetMinSize(wxSize(parent->GetSize().x, 350));
-    parent->Refresh();
+    mParent->SetSizerAndFit(mParent->sizer);
+    mParent->SetMinSize(wxSize(mParent->GetSize().x, 350));
+    mParent->Refresh();
 }
 
 void PropsPage::updateDisables(PropFile* prop) {
@@ -250,10 +251,10 @@ void PropsPage::updateDisables(PropFile* prop) {
     }
 }
 
-const std::vector<PropFile*>& PropsPage::getLoadedProps() { return props; }
+const std::vector<PropFile*>& PropsPage::getLoadedProps() { return mProps; }
 
 PropFile* PropsPage::getSelectedProp() {
-    for (const auto& prop : props) {
+    for (const auto& prop : mProps) {
         if (prop->getName() == propSelection->entry()->GetStringSelection()) return prop;
     }
     return nullptr;
@@ -261,26 +262,26 @@ PropFile* PropsPage::getSelectedProp() {
 
 void PropsPage::updateSelectedProp(const wxString& newProp) {
     if (!newProp.empty()) propSelection->entry()->SetStringSelection(newProp);
-    for (auto& prop : props) {
+    for (auto& prop : mProps) {
         prop->Show(propSelection->entry()->GetStringSelection() == prop->getName());
     }
 }
 
 void PropsPage::loadProps() {
-    props.clear();
+    mProps.clear();
 
     auto addProp{[&](const string_view& propName, bool builtin = false) {
-        auto *propConfig{PropFile::createPropConfig(string{propName}, propsWindow, true)};
+        auto *propConfig{PropFile::createPropConfig(string{propName}, propsWindow, builtin)};
         if (propConfig != nullptr) {
             propsWindow->GetSizer()->Add(propConfig);
-            props.push_back(propConfig);
+            mProps.push_back(propConfig);
         }
     }};
 
     for (const auto& prop : AppState::BUILTIN_PROPS) {
         addProp(prop, true);
     }
-    for (const auto& prop : AppState::instance->getPropFileNames()) {
+    for (const auto& prop : AppState::getPropFileNames()) {
         addProp(prop);
     }
     updateProps();

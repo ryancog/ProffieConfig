@@ -36,7 +36,7 @@
 #include <wx/tooltip.h>
 #include <wx/menu.h>
 
-EditorWindow::EditorWindow(const std::string& _configName, wxWindow* parent) : wxFrame(parent, wxID_ANY, "ProffieConfig Editor - " + _configName, wxDefaultPosition, wxDefaultSize), openConfig(_configName) {
+EditorWindow::EditorWindow(const std::string& _configName, wxWindow* parent) : PCUI::Frame(parent, wxID_ANY, "ProffieConfig Editor - " + _configName, wxDefaultPosition, wxDefaultSize), mOpenConfig(_configName) {
     createMenuBar();
     createPages();
     bindEvents();
@@ -81,7 +81,7 @@ void EditorWindow::bindEvents() {
     Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
         wxMessageDialog(this, ((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style).ShowModal();
     }, wxID_ANY);
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::outputConfig(Paths::configs() / (openConfig + ".h"), this); }, ID_SaveConfig);
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h"), this); }, ID_SaveConfig);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(this); }, ID_ExportConfig);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(this, this); }, ID_VerifyConfig);
 
@@ -128,7 +128,7 @@ void EditorWindow::createToolTips() {
 }
 
 void EditorWindow::createMenuBar() {
-    wxMenu *file = new wxMenu;
+    auto *file{new wxMenu};
     file->Append(ID_VerifyConfig, "Verify Config\tCtrl+R");
     file->AppendSeparator();
     file->Append(ID_SaveConfig, "Save Config\tCtrl+S");
@@ -136,10 +136,10 @@ void EditorWindow::createMenuBar() {
     file->AppendSeparator();
     file->Append(ID_AddInjection, "Add Injection...\t", "Add a header file to be injected into CONFIG_PRESETS during compilation.");
 
-    wxMenu* tools = new wxMenu;
+    auto *tools{new wxMenu};
     tools->Append(ID_StyleEditor, "Style Editor...", "Open the ProffieOS style editor");
 
-    wxMenuBar *menuBar = new wxMenuBar;
+    auto *menuBar{new wxMenuBar};
     menuBar->Append(file, "&File");
     menuBar->Append(tools, "&Tools");
     SetMenuBar(menuBar);
@@ -148,9 +148,9 @@ void EditorWindow::createMenuBar() {
 void EditorWindow::createPages() {
     sizer = new wxBoxSizer(wxVERTICAL);
 
-    wxBoxSizer* options = new wxBoxSizer(wxHORIZONTAL);
+    auto* optionsSizer{new wxBoxSizer(wxHORIZONTAL)};
     windowSelect = new PCUI::Choice(this, ID_WindowSelect, Misc::createEntries({"General", "Prop File", "Blade Arrays", "Presets And Styles"}));
-    options->Add(windowSelect, wxSizerFlags(0).Border(wxALL, 10));
+    optionsSizer->Add(windowSelect, wxSizerFlags(0).Border(wxALL, 10));
 
     generalPage = new GeneralPage(this);
     propsPage = new PropsPage(this);
@@ -166,7 +166,7 @@ void EditorWindow::createPages() {
     bladesPage->Show(false);
     presetsPage->Show(false);
 
-    sizer->Add(options, wxSizerFlags(0).Expand());
+    sizer->Add(optionsSizer, wxSizerFlags(0).Expand());
     sizer->Add(generalPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
     sizer->Add(propsPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
     sizer->Add(presetsPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
@@ -176,17 +176,17 @@ void EditorWindow::createPages() {
 }
 
 
-std::string_view EditorWindow::getOpenConfig() const { return openConfig; }
+std::string_view EditorWindow::getOpenConfig() const { return mOpenConfig; }
 
 void EditorWindow::renameConfig(const string& name) {
-    fs::rename(Paths::configs() / (openConfig + ".h"), Paths::configs() / (name + ".h"));
-    openConfig = name;
+    fs::rename(Paths::configs() / (mOpenConfig + ".h"), Paths::configs() / (name + ".h"));
+    mOpenConfig = name;
     // TODO: 
 }
 
 bool EditorWindow::isSaved() {
-    const auto currentPath{Paths::configs() / (openConfig + ".h")};
-    const auto validatePath{fs::temp_directory_path() / (openConfig + "-validate")};
+    const auto currentPath{Paths::configs() / (mOpenConfig + ".h")};
+    const auto validatePath{fs::temp_directory_path() / (mOpenConfig + "-validate")};
     if (not Configuration::outputConfig(validatePath, this)) {
         return false;
     }

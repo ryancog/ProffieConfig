@@ -88,7 +88,7 @@ void AddConfig::createUI() {
 
 void AddConfig::update() {
   auto duplicateConfigName = [&]() { 
-      // for (const auto& config : AppState::instance->getConfigFileNames()) {
+      // for (const auto& config : getConfigFileNames()) {
       //     if (configName->entry()->GetValue() == config) return true;
       // }
       return false;

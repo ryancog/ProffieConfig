@@ -22,11 +22,11 @@ class UpdateEvent;
 
 } // namespace Onboard
 
-class OnboardFrame : public wxFrame {
+class OnboardFrame : public PCUI::Frame {
 public:
     static OnboardFrame* instance;
     OnboardFrame();
-    ~OnboardFrame();
+    ~OnboardFrame() override;
 
     static wxStaticText* createHeader(wxWindow*, const wxString&);
 
@@ -35,20 +35,20 @@ private:
     friend Onboard::DependencyInstall;
     friend Onboard::Overview;
 
-    static wxEventTypeTag<Onboard::UpdateEvent> EVT_UPDATE;
+    const static wxEventTypeTag<Onboard::UpdateEvent> EVT_UPDATE;
 
     void update();
     void bindEvents();
     void dependencyInstall(wxCommandEvent&);
 
-    wxButton* next{nullptr};
-    wxButton* cancel{nullptr};
-    wxButton* skipIntro{nullptr};
-    wxButton* skipInstall{nullptr};
+    wxButton *mNext{nullptr};
+    wxButton *mCancel{nullptr};
+    wxButton *mSkipIntro{nullptr};
+    wxButton *mSkipInstall{nullptr};
 
-    Onboard::Welcome* welcomePage{nullptr};
-    Onboard::DependencyInstall* dependencyPage{nullptr};
-    Onboard::Overview* overviewPage{nullptr};
+    Onboard::Welcome* mWelcomePage{nullptr};
+    Onboard::DependencyInstall* mDependencyPage{nullptr};
+    Onboard::Overview* mOverviewPage{nullptr};
 
     enum {
         ID_Welcome,
@@ -98,7 +98,7 @@ public:
 class Onboard::Overview : public wxPanel {
 public:
     Overview(wxWindow*);
-    ~Overview();
+    ~Overview() override;
 
     void prepare();
 
@@ -122,14 +122,14 @@ public:
     };
 
 private:
-    bool doneWithEditor{false};
-    static std::vector<bool*> eventRunTrackers;
-    MainMenu* guideMenu{nullptr};
+    bool mDoneWithEditor{false};
+    static vector<bool*> eventRunTrackers;
+    MainMenu *mGuideMenu{nullptr};
 
-    wxBoxSizer* sizer{nullptr};
+    wxBoxSizer *mSizer{nullptr};
 
-    void generateNewPage(const std::string&, const std::string&);
-    void useButtonOnPage(const std::string&, std::function<void(wxCommandEvent&)>);
+    void generateNewPage(const string&, const string&);
+    void useButtonOnPage(const string&, const function<void(wxCommandEvent&)>&);
     void prepareMainMenu();
     void prepareEditor();
     void linkMainMenuEvents();

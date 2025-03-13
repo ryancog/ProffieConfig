@@ -8,7 +8,7 @@
 
 class ProffieConfig : public wxApp {
 public:
-    virtual bool OnInit() override {
+    bool OnInit() override {
         App::init("ProffieConfig");
         wxImage::AddHandler(new wxPNGHandler());
         AppState::init();
@@ -16,7 +16,7 @@ public:
         return true;
     }
 
-    virtual void OnUnhandledException() override {
+    void OnUnhandledException() override {
         App::exceptionHandler();
     }
 };

@@ -6,35 +6,27 @@
 
 #include <wx/window.h>
 
-class AppState {
-public:
-  static void init();
-  static AppState* instance;
+namespace AppState {
 
-  bool isSaved();
-  void setSaved(bool = true);
-  void loadState();
-  void saveState();
+void init();
 
-  void addProp(const string& propName, const string& propPath, const string& propConfigPath);
-  void removeProp(const string& propName);
+[[nodiscard]] bool isSaved();
+extern bool doneWithFirstRun;
 
-  const vector<string>& getPropFileNames();
-  static constexpr array<string_view, 5> BUILTIN_PROPS{
-      "BC",
-      "caiwyn",
-      "fett263",
-      "sa22c",
-      "shtok",
-  };
+void setSaved(bool = true);
+void loadState();
+void saveState();
 
-  bool doneWithFirstRun{false};
+void addProp(const string& propName, const string& propPath, const string& propConfigPath);
+void removeProp(const string& propName);
 
-private:
-  AppState() = default;
-  AppState(const AppState&) = delete;
-
-  vector<string> propFileNames{};
-
-  bool saved{true};
+const vector<string>& getPropFileNames();
+static constexpr array<string_view, 5> BUILTIN_PROPS{
+    "BC",
+    "caiwyn",
+    "fett263",
+    "sa22c",
+    "shtok",
 };
+
+} // namespace AppState

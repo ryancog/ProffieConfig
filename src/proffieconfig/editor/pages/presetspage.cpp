@@ -16,7 +16,7 @@
 #include <wx/clipbrd.h>
 #endif
 
-PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, ""), parent(static_cast<EditorWindow *>(window)) {
+PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, ""), mParent(static_cast<EditorWindow *>(window)) {
   commentInput = new PCUI::Text(GetStaticBox(), ID_PresetChange, {},  wxTE_MULTILINE | wxNO_BORDER, "Comments");
   commentInput->SetMinSize(wxSize{500, -1});
 
@@ -38,10 +38,10 @@ PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, wind
 }
 
 void PresetsPage::bindEvents() {
-  GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent&) { parent->bladesPage->bladeArray->entry()->SetSelection(bladeArray->entry()->GetSelection()); update(); }, ID_BladeArray);
+  GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent&) { mParent->bladesPage->bladeArray->entry()->SetSelection(bladeArray->entry()->GetSelection()); update(); }, ID_BladeArray);
 
-  GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { parent->bladesPage->update(); update(); }, ID_BladeList);
-  GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { parent->bladesPage->update(); update(); }, ID_PresetList);
+  GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { mParent->bladesPage->update(); update(); }, ID_BladeList);
+  GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { mParent->bladesPage->update(); update(); }, ID_PresetList);
 
   GetStaticBox()->Bind(wxEVT_TEXT, [&](wxCommandEvent&) { update(); }, ID_PresetChange);
 # ifdef __WXGTK__ // GTK processes double events, leading to crash it seems... this is a workaround.
@@ -65,36 +65,37 @@ void PresetsPage::bindEvents() {
   }, ID_PresetChange);
 # endif
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.push_back(PresetConfig());
-        parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets[parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.size() - 1].name = "newpreset";
+        mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.emplace_back();
+        mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets[mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.size() - 1].name = "newpreset";
 
-        parent->bladesPage->update();
+        mParent->bladesPage->update();
         update();
       }, ID_AddPreset);
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         if (presetList->GetSelection() >= 0) {
-          parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.erase(std::next(parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.begin(), parent->presetsPage->presetList->GetSelection()));
+          mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.erase(std::next(mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.begin(), mParent->presetsPage->presetList->GetSelection()));
 
-          parent->bladesPage->update();
+          mParent->bladesPage->update();
           update();
         }
       }, ID_RemovePreset);
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        auto tempStore = parent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection());
-        parent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection()) = parent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection() - 1);
-        parent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection() - 1) = tempStore;
+        auto tempStore = mParent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection());
+        mParent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection()) = mParent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection() - 1);
+        mParent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection() - 1) = tempStore;
         presetList->SetSelection(presetList->GetSelection() - 1);
         update();
       }, ID_MovePresetUp);
   GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        auto tempStore = parent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection());
-        parent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection()) = parent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection() + 1);
-        parent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection() + 1) = tempStore;
+        auto tempStore = mParent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection());
+        mParent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection()) = mParent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection() + 1);
+        mParent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection() + 1) = tempStore;
         presetList->SetSelection(presetList->GetSelection() + 1);
         update();
       }, ID_MovePresetDown);
 }
-void PresetsPage::createToolTips() {
+
+void PresetsPage::createToolTips() const {
   TIP(nameInput, "The name for the preset.\nThis value is typically just for reference, and doesn't mean anything, but if using an OLED and without a special bitmap, this name will be displayed.\nUsing \"\\n\" is like hitting \"enter\" when the text is displayed on the OLED.\nFor example, \"my\\npreset\" will be displayed on the OLED as two lines, the first being \"my\" and the second being \"preset\".");
   TIP(dirInput, "The path of the folder on the SD card where the font is stored.\nIf the font folder is inside another folder, it must be indicated by something like \"folderName/fontFolderName\".\nIn order to specify multiple directories (for example, to inlclude a \"common\" directory), use a semicolon (;) to seperate the folders (e.g. \"fontFolderName;common\").");
   TIP(trackInput, "The path of the track file on the SD card.\nIf the track is directly inside one of the folders specified in \"Font Directory\" then only the name of the track file is required.");
@@ -111,9 +112,9 @@ void PresetsPage::createToolTips() {
 }
 
 wxBoxSizer* PresetsPage::createPresetSelect() {
-  wxBoxSizer *presetSelect = new wxBoxSizer(wxVERTICAL);
+  auto *presetSelect{new wxBoxSizer(wxVERTICAL)};
 
-  wxBoxSizer* arraySizer = new wxBoxSizer(wxVERTICAL);
+  auto * arraySizer{new wxBoxSizer(wxVERTICAL)};
   bladeArray = new PCUI::Choice(GetStaticBox(), ID_BladeArray, Misc::createEntries({ "blade_in" }), "Blade Array");
   arraySizer->Add(bladeArray, wxSizerFlags(0).Border(wxBOTTOM, 5).Expand());
 
@@ -135,7 +136,7 @@ wxBoxSizer* PresetsPage::createPresetSelect() {
   listSizer->Add(presetSizer, wxSizerFlags(1).Expand().Border(wxALL, 4));
   listSizer->Add(bladeSizer, wxSizerFlags(1).Expand().Border(wxALL, 4));
 
-  wxBoxSizer* buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+  auto* buttonSizer{new wxBoxSizer(wxHORIZONTAL)};
   addPreset = new wxButton(GetStaticBox(), ID_AddPreset, "+", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
   removePreset = new wxButton(GetStaticBox(), ID_RemovePreset, "-", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
   buttonSizer->Add(addPreset, wxSizerFlags(0).Border(wxRIGHT | wxTOP, 5));
@@ -149,7 +150,7 @@ wxBoxSizer* PresetsPage::createPresetSelect() {
 }
 
 wxBoxSizer* PresetsPage::createPresetConfig() {
-    wxBoxSizer *presetConfig = new wxBoxSizer(wxVERTICAL);
+    auto *presetConfig{new wxBoxSizer(wxVERTICAL)};
 
     nameInput = new PCUI::Text(GetStaticBox(), ID_PresetChange, {}, 0, "Preset Name");
     nameInput->SetMinSize(wxSize(200, -1));
@@ -187,7 +188,7 @@ void PresetsPage::rebuildInjections() {
             wxLaunchDefaultApplication((Paths::injections() / injection.ToStdString()).string());
         });
 
-        deleteButton->Bind(wxEVT_BUTTON, [=](wxCommandEvent&) {
+        deleteButton->Bind(wxEVT_BUTTON, [this, injection](wxCommandEvent&) {
             if (wxNO == wxMessageBox("This action cannot be undone!", "Delete Injection", wxYES_NO | wxNO_DEFAULT)) return;
 
             injections.erase(std::find(injections.begin(), injections.end(), injection));
@@ -225,17 +226,17 @@ void PresetsPage::update() {
   updateFields();
 }
 void PresetsPage::pushIfNewPreset() {
-  if (presetList->GetSelection() == -1 && parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0 && (!nameInput->entry()->IsEmpty() || !dirInput->entry()->IsEmpty() || !trackInput->entry()->IsEmpty())) {
-    parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.push_back(PresetConfig());
+  if (presetList->GetSelection() == -1 && mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0 && (!nameInput->entry()->IsEmpty() || !dirInput->entry()->IsEmpty() || !trackInput->entry()->IsEmpty())) {
+    mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.emplace_back();
     rebuildPresetList();
-    presetList->SetSelection(parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.size() - 1);
+    presetList->SetSelection(static_cast<int32>(mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.size()) - 1);
     bladeList->SetSelection(0);
   }
 }
 void PresetsPage::rebuildBladeArrayList() {
   int32_t arraySelection = bladeArray->entry()->GetSelection();
   bladeArray->entry()->Clear();
-  for (const BladeArrayDlg::BladeArray& array : parent->bladesPage->bladeArrayDlg->bladeArrays) {
+  for (const BladeArrayDlg::BladeArray& array : mParent->bladesPage->bladeArrayDlg->bladeArrays) {
     bladeArray->entry()->Append(array.name);
   }
   if (arraySelection >= 0 && arraySelection < static_cast<int32_t>(bladeArray->entry()->GetCount())) bladeArray->entry()->SetSelection(arraySelection);
@@ -244,7 +245,7 @@ void PresetsPage::rebuildBladeArrayList() {
 void PresetsPage::rebuildPresetList() {
   int32_t listSelection = presetList->GetSelection();
   presetList->Clear();
-  for (const PresetConfig& preset : parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets) {
+  for (const PresetConfig& preset : mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets) {
     presetList->Append(preset.name);
   }
   if (static_cast<int32_t>(presetList->GetCount()) - 1 < listSelection) listSelection -= 1;
@@ -254,9 +255,9 @@ void PresetsPage::rebuildPresetList() {
 void PresetsPage::rebuildBladeList() {
   int32_t listSelection = bladeList->GetSelection();
   bladeList->Clear();
-  for (uint32_t blade = 0; blade < parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size(); blade++) {
-    if (parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(blade).subBlades.size() > 0) {
-      for (uint32_t subBlade = 0; subBlade < parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(blade).subBlades.size(); subBlade++) {
+  for (uint32_t blade = 0; blade < mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size(); blade++) {
+    if (mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(blade).subBlades.size() > 0) {
+      for (uint32_t subBlade = 0; subBlade < mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(blade).subBlades.size(); subBlade++) {
         bladeList->Append("Blade " + std::to_string(blade) + ":" + std::to_string(subBlade));
       }
     } else {
@@ -269,14 +270,14 @@ void PresetsPage::rebuildBladeList() {
 
 void PresetsPage::resizeAndFillPresets() {
   auto getNumBlades = [&]() {
-    int32_t numBlades = 0;
-    for (const BladesPage::BladeConfig& blade : parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades) {
-      numBlades += blade.subBlades.size() > 0 ? blade.subBlades.size() : 1;
+    int32 numBlades{0};
+    for (const BladesPage::BladeConfig& blade : mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades) {
+      numBlades += blade.subBlades.size() > 0 ? static_cast<int32>(blade.subBlades.size()) : 1;
     }
     return numBlades;
   };
 
-  for (PresetConfig& preset : parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets) {
+  for (PresetConfig& preset : mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets) {
     while (static_cast<int32_t>(preset.styles.size()) < getNumBlades()) {
         preset.styles.push_back({ {}, "StyleNormalPtr<AudioFlicker<Blue,DodgerBlue>,BLUE,300,800>()" });
     }
@@ -287,19 +288,19 @@ void PresetsPage::resizeAndFillPresets() {
 }
 void PresetsPage::updateFields() {
     if (presetList->GetSelection() >= 0) {
-        const auto& currentPreset = parent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection());
-        uint32_t insertionPoint;
+        const auto& currentPreset = mParent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArray->entry()->GetSelection()).presets.at(presetList->GetSelection());
+        int32 insertionPoint{};
 
         if (bladeList->GetSelection() >= 0) {
             const auto& style{currentPreset.styles.at(bladeList->GetSelection())};
 
             insertionPoint = styleInput->entry()->GetInsertionPoint();
             styleInput->entry()->ChangeValue(style.style);
-            styleInput->entry()->SetInsertionPoint(std::min<uint32_t>(insertionPoint, styleInput->entry()->GetLastPosition()));
+            styleInput->entry()->SetInsertionPoint(std::min<int32>(insertionPoint, styleInput->entry()->GetLastPosition()));
 
             insertionPoint = commentInput->entry()->GetInsertionPoint();
             commentInput->entry()->ChangeValue(style.comment);
-            commentInput->entry()->SetInsertionPoint(std::min<uint32_t>(insertionPoint, commentInput->entry()->GetLastPosition()));
+            commentInput->entry()->SetInsertionPoint(std::min<int32>(insertionPoint, commentInput->entry()->GetLastPosition()));
         } else {
             commentInput->entry()->ChangeValue("Select Blade to Edit Style Comments...");
             styleInput->entry()->ChangeValue("Select Blade to Edit Style...");
@@ -307,15 +308,16 @@ void PresetsPage::updateFields() {
 
         insertionPoint = nameInput->entry()->GetInsertionPoint();
         nameInput->entry()->ChangeValue(currentPreset.name);
-        nameInput->entry()->SetInsertionPoint(insertionPoint <= nameInput->entry()->GetValue().size() ? insertionPoint : nameInput->entry()->GetValue().size());
+        nameInput->entry()->SetInsertionPoint(std::min<int32>(insertionPoint, static_cast<int32>(nameInput->entry()->GetValue().size())));
 
         insertionPoint = dirInput->entry()->GetInsertionPoint();
         dirInput->entry()->ChangeValue(currentPreset.dirs);
-        dirInput->entry()->SetInsertionPoint(insertionPoint <= dirInput->entry()->GetValue().size() ? insertionPoint : dirInput->entry()->GetValue().size());
+        dirInput->entry()->SetInsertionPoint(std::min<int32>(insertionPoint, static_cast<int32>(dirInput->entry()->GetValue().size())));
 
         insertionPoint = trackInput->entry()->GetInsertionPoint();
         trackInput->entry()->ChangeValue(currentPreset.track);
-        trackInput->entry()->SetInsertionPoint(insertionPoint <= trackInput->entry()->GetValue().size() - 4 ? insertionPoint : trackInput->entry()->GetValue().size() - 4);
+        auto trackInputLength{static_cast<int32>(trackInput->entry()->GetValue().size() - 4 /* .wav */)};
+        trackInput->entry()->SetInsertionPoint(std::min(insertionPoint, trackInputLength));
     }
     else {
         commentInput->entry()->ChangeValue("Select/Create Preset and Blade to Edit Style Comments...");
@@ -348,7 +350,7 @@ void PresetsPage::stripAndSaveComments() {
         while ((illegalStrPos = comments.find("*/")) != std::string::npos) comments.erase(illegalStrPos, 2);
         while ((illegalStrPos = comments.find("//")) != std::string::npos) comments.erase(illegalStrPos, 2);
 
-        auto& selectedBladeArray{parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()]};
+        auto& selectedBladeArray{mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()]};
         auto& selectedPreset{selectedBladeArray.presets[presetList->GetSelection()]};
 
         selectedPreset.styles[bladeList->GetSelection()].comment = comments;
@@ -362,26 +364,25 @@ void PresetsPage::stripAndSaveEditor() {
     if (style.rfind('}') != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '}'));
     if (style.rfind(")") != wxString::npos) style.erase(style.rfind(")") + 1);
 
-    auto& selectedBladeArray{parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()]};
+    auto& selectedBladeArray{mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()]};
     auto& selectedPreset{selectedBladeArray.presets[presetList->GetSelection()]};
 
     selectedPreset.styles[bladeList->GetSelection()].style = style;
   }
 }
 void PresetsPage::stripAndSaveName() {
-  if (presetList->GetSelection() >= 0 && parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0) {
+  if (presetList->GetSelection() >= 0 && mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0) {
     wxString name = nameInput->entry()->GetValue();
     name.erase(std::remove(name.begin(), name.end(), ' '), name.end());
-    std::transform(name.begin(), name.end(), name.begin(),
-                   [](unsigned char c){ return std::tolower(c); }); // to lowercase
-    parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).name.assign(name);
+    std::transform(name.begin(), name.end(), name.begin(), [](unsigned char chr){ return std::tolower(chr); }); // to lowercase
+    mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).name.assign(name);
   }
 }
 void PresetsPage::stripAndSaveDir() {
-  if (presetList->GetSelection() >= 0 && parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0) {
+  if (presetList->GetSelection() >= 0 && mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0) {
     wxString dir = dirInput->entry()->GetValue();
     // dir.erase(std::remove(dir.begin(), dir.end(), ' '), dir.end());
-    parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).dirs.assign(dir);
+    mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).dirs.assign(dir);
   }
 }
 void PresetsPage::stripAndSaveTrack() {
@@ -390,8 +391,8 @@ void PresetsPage::stripAndSaveTrack() {
   if (track.find(".") != wxString::npos) track.erase(track.find("."));
   if (track.length() > 0) track += ".wav";
 
-  if (presetList->GetSelection() >= 0 && parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0) {
-    parent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).track.assign(track);
+  if (presetList->GetSelection() >= 0 && mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0) {
+    mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).track.assign(track);
   } else {
     trackInput->entry()->ChangeValue(track);
     trackInput->entry()->SetInsertionPoint(1);
