@@ -36,9 +36,6 @@
 namespace Paths {} // namespace Paths
 
 filepath Paths::approot() {
-// #   ifdef APP_DEPLOY_PATH
-//     return APP_DEPLOY_PATH;
-// #   else
     std::error_code err;
     if (fs::equivalent(executable(), executable(Executable::LAUNCHER), err)) {
 #       ifdef __WIN32__
@@ -55,13 +52,16 @@ filepath Paths::approot() {
         return filepath(getpwuid(getuid())->pw_dir) / ".proffieconfig";
 #       endif
     } else {
+#       if (defined( __APPLE__) or defined(__linux__)) and defined(APP_DEPLOY_PATH)
+        return APP_DEPLOY_PATH;
+#       else // Win32 or not deploy-in-place
 #       ifdef __APPLE__
         return filepath{".."} / ".." / ".." / "..";
 #       else
         return "..";
-#       endif
+#       endif // __APPLE__
+#       endif // deploy-in-place
     }
-// #   endif
 }
 
 filepath Paths::executable(Executable exec) {
