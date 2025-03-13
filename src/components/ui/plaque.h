@@ -21,6 +21,7 @@
 
 #include <wx/event.h>
 #include <wx/panel.h>
+#include <wx/statbmp.h>
 
 #include "private/export.h"
 
@@ -29,6 +30,8 @@ namespace PCUI {
 // Platform-dependent way of creating a raised "plaque" area for
 // visual distinction.
 [[nodiscard]] UI_EXPORT wxWindow *createPlaque(wxWindow *parent, wxWindowID winID);
+
+[[nodiscard]] UI_EXPORT wxStaticBitmapBase *createStaticImage(wxWindow *parent, wxWindowID winID, const wxBitmap&);
 
 } // namespace PCUI
 

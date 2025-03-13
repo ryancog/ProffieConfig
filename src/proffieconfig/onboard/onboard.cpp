@@ -23,14 +23,15 @@
 #include "../core/appstate.h"
 
 #include "utils/image.h"
+#include "ui/plaque.h"
 
 wxEventTypeTag<Onboard::UpdateEvent> OnboardFrame::EVT_UPDATE(wxNewEventType());
 
 OnboardFrame* OnboardFrame::instance{nullptr};
 OnboardFrame::OnboardFrame() : wxFrame(nullptr, wxID_ANY, "ProffieConfig First-Time Setup", wxDefaultPosition, wxDefaultSize, wxSYSTEM_MENU | wxCLOSE_BOX | wxMINIMIZE_BOX | wxCAPTION | wxCLIP_CHILDREN) {
-  auto sizer = new wxBoxSizer(wxVERTICAL);
-  auto contentSizer = new wxBoxSizer(wxHORIZONTAL);
-  auto icon = new wxStaticBitmap(this, wxID_ANY, Image::loadPNG("icon"));
+  auto *sizer{new wxBoxSizer(wxVERTICAL)};
+  auto *contentSizer{new wxBoxSizer(wxHORIZONTAL)};
+  auto *icon{PCUI::createStaticImage(this, wxID_ANY, Image::loadPNG("icon"))};
   icon->SetMaxSize(wxSize{256, 256});
 
   contentSizer->Add(icon, wxSizerFlags(0).Border(wxALL, 10));
@@ -43,7 +44,7 @@ OnboardFrame::OnboardFrame() : wxFrame(nullptr, wxID_ANY, "ProffieConfig First-T
   contentSizer->Add(dependencyPage, wxSizerFlags(1).Expand());
   contentSizer->Add(overviewPage, wxSizerFlags(1).Expand());
 
-  auto buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+  auto *buttonSizer{new wxBoxSizer(wxHORIZONTAL)};
   skipIntro = new wxButton(this, ID_SkipIntro, "Skip Introduction");
   skipIntro->Hide();
   skipInstall = new wxButton(this, ID_SkipInstall, "Skip Dependency Installation");
@@ -188,7 +189,7 @@ void OnboardFrame::dependencyInstall(wxCommandEvent&) {
 }
 
 wxStaticText* OnboardFrame::createHeader(wxWindow* parent, const wxString& text) {
-  auto header = new wxStaticText(parent, wxID_ANY, text);
+  auto *header{new wxStaticText(parent, wxID_ANY, text)};
   auto font = header->GetFont();
   font.MakeBold();
   font.SetPointSize(20);
