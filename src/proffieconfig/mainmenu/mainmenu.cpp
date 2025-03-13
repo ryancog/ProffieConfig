@@ -2,6 +2,23 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
+#include <fstream>
+
+#include <wx/toplevel.h>
+#include <wx/utils.h>
+#include <wx/event.h>
+#include <wx/menu.h>
+#include <wx/aboutdlg.h>
+#include <wx/settings.h>
+
+#include "ui/controls.h"
+#include "ui/message.h"
+#include "ui/plaque.h"
+#include "ui/frame.h"
+#include "utils/paths.h"
+#include "utils/image.h"
+#include "dialogs/addconfig.h"
+
 #include "../core/defines.h"
 #include "../core/appstate.h"
 #include "../core/utilities/misc.h"
@@ -9,33 +26,10 @@
 #include "../core/config/configuration.h"
 #include "../editor/editorwindow.h"
 #include "../onboard/onboard.h"
-#include "dialogs/addconfig.h"
 #include "../tools/arduino.h"
 #include "../tools/serialmonitor.h"
 #include "../mainmenu/dialogs/props.h"
 
-#include "ui/controls.h"
-#include "ui/plaque.h"
-#include "ui/frame.h"
-#include "utils/paths.h"
-#include "utils/image.h"
-#include "wx/toplevel.h"
-
-#include <wx/utils.h>
-#include <wx/event.h>
-#include <wx/menu.h>
-#include <wx/aboutdlg.h>
-#include <wx/settings.h>
-
-#ifdef __WINDOWS__
-#undef wxMessageDialog
-#include <wx/msgdlg.h>
-#define wxMessageDialog wxGenericMessageDialog
-#else
-#include <wx/msgdlg.h>
-#endif
-
-#include <wx/generic/statbmpg.h>
 
 MainMenu* MainMenu::instance{nullptr};
 MainMenu::MainMenu(wxWindow* parent) : PCUI::Frame(parent, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)) {
@@ -53,13 +47,11 @@ void MainMenu::bindEvents() {
         AppState::saveState();
         for (auto *editor : editors) {
             if (not editor->isSaved() && event.CanVeto()) {
-                if (wxMessageDialog(
-                            this,
+                if (PCUI::showMessage(
                             "There is at least one editor open, are you sure you want to exit?\n\n"
                             "Any unsaved changes will be lost!",
                             "Open Editor(s)",
-                            wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION)
-                        .ShowModal() == wxID_NO) {
+                            wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION) == wxNO) {
                     event.Veto();
                     return;
                 }
