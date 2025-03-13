@@ -172,7 +172,7 @@ void MainMenu::bindEvents() {
     Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
         if (wxMessageDialog(this, "Are you sure you want to deleted the selected configuration?\n\nThis action cannot be undone!", "Delete Config", wxYES_NO | wxNO_DEFAULT | wxCENTER).ShowModal() == wxID_YES) {
             if (activeEditor) activeEditor->Close(true);
-            remove((Paths::configs() / (configSelect->entry()->GetStringSelection().ToStdString() + ".h")).c_str());
+            fs::remove(Paths::configs() / (configSelect->entry()->GetStringSelection().ToStdString() + ".h"));
             activeEditor = nullptr;
             update();
         }

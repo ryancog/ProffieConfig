@@ -216,6 +216,13 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
     set_target_properties(wxWidgetsQA-static PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_qa-3.3-x86_64-w64-mingw32.static.a
         IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_qa-3.3-x86_64-w64-mingw32.static.a)
+    set_target_properties(wxWidgetsPNG-static PROPERTIES
+		IMPORTED_LOCATION ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.static.a
+        IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.static.a)
+    set_target_properties(wxWidgetsZLib-static PROPERTIES
+		IMPORTED_LOCATION ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.static.a
+        IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.static.a)
+
 endif()
 
 # Use wx-config to get the proper compile and link flags

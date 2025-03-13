@@ -392,7 +392,7 @@ void Configuration::tryAddInjection(const std::string& buffer, EditorWindow *edi
         injectionFile = buffer.substr(strStart + 1, strEnd - strStart - 1);
     }
 
-    std::string filePath{Paths::injections() / injectionFile};
+    auto filePath{Paths::injections() / injectionFile};
     std::error_code err;
     if (not fs::exists(filePath, err)) {
         if (wxYES != wxMessageBox("Injection file \"" + injectionFile + "\" has not been registered.\nWould you like to add the injection file now?", "Unknown Injection Encountered", wxYES_NO | wxYES_DEFAULT)) {
@@ -410,7 +410,7 @@ void Configuration::tryAddInjection(const std::string& buffer, EditorWindow *edi
             };
             if (fileDialog.ShowModal() == wxID_CANCEL) return;
 
-            std::string copyPath{Paths::injections() / fileDialog.GetFilename().ToStdString()};
+            auto copyPath{Paths::injections() / fileDialog.GetFilename().ToStdString()};
             const auto copyOptions{fs::copy_options::overwrite_existing};
             if (not fs::copy_file(fileDialog.GetPath().ToStdString(), copyPath, copyOptions, err)) {
                 std::cout << fileDialog.GetPath().ToStdString() << std::endl;

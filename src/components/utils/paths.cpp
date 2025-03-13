@@ -36,12 +36,11 @@
 namespace Paths {} // namespace Paths
 
 filepath Paths::approot() {
-#   ifdef APP_DEPLOY_PATH
-    return APP_DEPLOY_PATH;
-#   else
+// #   ifdef APP_DEPLOY_PATH
+//     return APP_DEPLOY_PATH;
+// #   else
     std::error_code err;
-    if (fs::equivalent(executable(),
-                executable(Executable::LAUNCHER), err)) {
+    if (fs::equivalent(executable(), executable(Executable::LAUNCHER), err)) {
 #       ifdef __WIN32__
         PWSTR rawStr{};
         SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &rawStr);
@@ -49,11 +48,19 @@ filepath Paths::approot() {
         WideCharToMultiByte(CP_UTF8, 0, rawStr, -1, rawCStr.data(), MAX_PATH,
                 nullptr, nullptr);
         CoTaskMemFree(rawStr);
-        return rawCStr.data() + string("/ProffieConfig");
+        return filepath{rawCStr.data()} /  "ProffieConfig";
 #       elif defined(__APPLE__)
         return filepath(getpwuid(getuid())->pw_dir) / "Library" / "Application Support" / "ProffieConfig";
 #       elif defined(__linux__)
         return filepath(getpwuid(getuid())->pw_dir) / ".proffieconfig";
+#       endif
+    } else if (fs::equivalent(executable(), executable(Executable::MAIN), err)) {
+#       ifdef __WIN32__
+        return ".";
+#       elif defined(__APPLE__)
+        return filepath{".."} / ".." / ".." / "..";
+#       elif defined(__linux__)
+        return "..";
 #       endif
     } else {
 #       ifdef __WIN32__
@@ -64,7 +71,7 @@ filepath Paths::approot() {
         return "..";
 #       endif
     }
-#   endif
+// #   endif
 }
 
 filepath Paths::executable(Executable exec) {

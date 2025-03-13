@@ -101,11 +101,7 @@ void EditorWindow::bindEvents() {
         presetsPage->update();
     }, ID_AddInjection);
 
-# if defined(__WXOSX__)
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("http://profezzorn.github.io/ProffieOS-StyleEditor/style_editor.html"); }, ID_StyleEditor);
-# else
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser(STYLEEDIT_PATH); }, ID_StyleEditor);
-#endif
 
     Bind(wxEVT_CHOICE, [&](wxCommandEvent&) {
         generalPage->Show(windowSelect->entry()->GetStringSelection() == "General");
