@@ -42,6 +42,8 @@ Frame::Frame(wxWindow *parent,
 
 #	ifdef __WIN32__
     SetIcon(wxICON(ApplicationIcon));
+    SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
+
     Bind(wxEVT_CREATE, [this](wxWindowCreateEvent&) {
         DWORD useDarkMode{App::darkMode()};
         DwmSetWindowAttribute(

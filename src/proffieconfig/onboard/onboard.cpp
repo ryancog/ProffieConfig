@@ -66,11 +66,6 @@ OnboardFrame::OnboardFrame() : PCUI::Frame(nullptr, wxID_ANY, "ProffieConfig Fir
 
   bindEvents(); // Do this first so children can bind their events to parent state.
 
-# ifdef __WINDOWS__
-  SetIcon( wxICON(IDI_ICON1) );
-  SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
-# endif
-
   CentreOnScreen();
   Show(true);
 }
