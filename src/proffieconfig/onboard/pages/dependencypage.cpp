@@ -5,19 +5,19 @@
 #include <wx/sizer.h>
 
 Onboard::DependencyInstall::DependencyInstall(wxWindow* parent) : wxPanel(parent, OnboardFrame::ID_DependencyInstall) {
-  auto sizer = new wxBoxSizer(wxVERTICAL);
+  auto *sizer{new wxBoxSizer(wxVERTICAL)};
   barPulser = new wxTimer(this);
   Bind(wxEVT_TIMER, [&](wxTimerEvent&) { loadingBar->Pulse(); });
 
-  auto title = OnboardFrame::createHeader(this, "Dependency Installation");
+  auto *title{OnboardFrame::createHeader(this, "Dependency Installation")};
   description = new wxStaticText(this, wxID_ANY,
                                  "In order to continue, ProffieConfig needs to do some setup.\n"
                                  "This will involve the following:\n"
                                  "\n"
-                                 "\t• ProffieOS\n"
-                                 "\t• Proffieboard Arduino Core Installation\n"
+                                 "\t\x25\xB0 ProffieOS\n"
+                                 "\t\x25\xb0 Proffieboard Arduino Core Installation\n"
 #                                     ifdef __WINDOWS__
-                                 "\t• Proffieboard Driver Installation\n"
+                                 "\t\x25\xB0 Proffieboard Driver Installation\n"
 #                                     endif
                                  "\n\n"
                                  "An internet connection is required, and installation may take several minutes.\n"

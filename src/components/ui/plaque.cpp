@@ -1,4 +1,5 @@
 #include "plaque.h"
+#include "wx/generic/statbmpg.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024 Ryan Ogurek
@@ -37,5 +38,15 @@ UI_EXPORT wxWindow *PCUI::createPlaque(wxWindow *parent, wxWindowID winID) {
 #   endif
 
     return plaque;
+}
+
+UI_EXPORT wxStaticBitmapBase *PCUI::createStaticImage(wxWindow *parent, wxWindowID winID, const wxBitmap& bitmap) {
+#   ifdef __WINDOWS__
+    auto *image{new wxGenericStaticBitmap(parent, winID, bitmap)};
+#   else
+    auto *image{new wxStaticBitmap(parent, winID, bitmap)};
+#   endif
+    image->SetScaleMode(wxStaticBitmapBase::Scale_AspectFill);
+    return image;
 }
 

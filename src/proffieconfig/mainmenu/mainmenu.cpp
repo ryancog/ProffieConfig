@@ -15,10 +15,11 @@
 #include "../mainmenu/dialogs/props.h"
 
 #include "ui/controls.h"
+#include "ui/plaque.h"
 #include "utils/paths.h"
 #include "utils/image.h"
-#include "wx/utils.h"
 
+#include <wx/utils.h>
 #include <wx/event.h>
 #include <wx/menu.h>
 #include <wx/aboutdlg.h>
@@ -32,7 +33,7 @@
 #include <wx/msgdlg.h>
 #endif
 
-#include <wx/statbmp.h>
+#include <wx/generic/statbmpg.h>
 
 MainMenu* MainMenu::instance{nullptr};
 MainMenu::MainMenu(wxWindow* parent) : wxFrame(parent, wxID_ANY, "ProffieConfig") {
@@ -64,9 +65,9 @@ void MainMenu::bindEvents() {
                         .ShowModal() == wxID_NO) {
                     event.Veto();
                     return;
-                } else {
-                    break;
                 }
+
+                break;
             }
         }
         event.Skip();
@@ -197,7 +198,7 @@ void MainMenu::createTooltips() {
 }
 
 void MainMenu::createMenuBar() {
-  wxMenu *file = new wxMenu;
+  auto *file{new wxMenu};
   file->Append(ID_ReRunSetup, "Re-Run First-Time Setup...", "Install Proffieboard Dependencies and View Tutorial");
   file->Append(ID_AddProp, "Props...");
   file->AppendSeparator();
@@ -206,23 +207,23 @@ void MainMenu::createMenuBar() {
   file->Append(ID_Copyright, "Copyright Notice");
   file->Append(wxID_EXIT);
 
-  wxMenu* help = new wxMenu;
+  auto* help{new wxMenu};
   help->Append(ID_Docs, "Documentation...\tCtrl+H", "Open the ProffieConfig docs in your web browser");
   help->Append(ID_Issue, "Help/Bug Report...", "Open GitHub to submit issue");
 
-  wxMenuBar *menuBar = new wxMenuBar;
+  auto* menuBar{new wxMenuBar};
   menuBar->Append(file, "&File");
   menuBar->Append(help, "&Help");
   SetMenuBar(menuBar);
 }
 
 void MainMenu::createUI() {
-  auto sizer = new wxBoxSizer(wxVERTICAL);
+  auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
-  auto headerSection = new wxBoxSizer(wxHORIZONTAL);
-  auto titleSection = new wxBoxSizer(wxVERTICAL);
-  auto title = new wxStaticText(this, wxID_ANY, "ProffieConfig");
-  auto titleFont = title->GetFont();
+  auto *headerSection{new wxBoxSizer(wxHORIZONTAL)};
+  auto *titleSection{new wxBoxSizer(wxVERTICAL)};
+  auto *title{new wxStaticText(this, wxID_ANY, "ProffieConfig")};
+  auto titleFont{title->GetFont()};
   titleFont.MakeBold();
 # if defined(__WXGTK__) || defined(__WINDOWS__)
   titleFont.SetPointSize(20);
@@ -230,16 +231,16 @@ void MainMenu::createUI() {
   titleFont.SetPointSize(30);
 #endif
   title->SetFont(titleFont);
-  auto subTitle = new wxStaticText(this, wxID_ANY, "Created by Ryryog25\n\n");
+  auto *subTitle{new wxStaticText(this, wxID_ANY, "Created by Ryryog25\n\n")};
   titleSection->Add(title, wxSizerFlags(0).Border(wxLEFT | wxRIGHT | wxTOP, 10));
   titleSection->Add(subTitle, wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 10));
   headerSection->Add(titleSection, wxSizerFlags(0));
   headerSection->AddStretchSpacer(1);
-  auto *appIcon{new wxStaticBitmap(this, wxID_ANY, Image::loadPNG("icon"))};
+  auto *appIcon{PCUI::createStaticImage(this, wxID_ANY, Image::loadPNG("icon"))};
   appIcon->SetMaxSize(wxSize{64, 64});
   headerSection->Add(appIcon, wxSizerFlags(0).Border(wxALL, 10));
 
-  auto configSelectSection = new wxBoxSizer(wxHORIZONTAL);
+  auto *configSelectSection{new wxBoxSizer(wxHORIZONTAL)};
   configSelect = new PCUI::Choice(this, ID_ConfigSelect, Misc::createEntries({"Select Config..."}));
   addConfig = new wxButton(this, ID_AddConfig, "Add", wxDefaultPosition, wxSize(50, -1), wxBU_EXACTFIT);
   removeConfig = new wxButton(this, ID_RemoveConfig, "Remove", wxDefaultPosition, wxSize(75, -1), wxBU_EXACTFIT);
@@ -248,7 +249,7 @@ void MainMenu::createUI() {
   configSelectSection->Add(addConfig, wxSizerFlags(0).Border(wxALL, 5).Expand());
   configSelectSection->Add(removeConfig, wxSizerFlags(0).Border(wxALL, 5).Expand());
 
-  auto boardControls = new wxBoxSizer(wxHORIZONTAL);
+  auto *boardControls{new wxBoxSizer(wxHORIZONTAL)};
 # ifdef __WINDOWS__
   auto boardEntries = Misc::createEntries({"Select Board...", "BOOTLOADER RECOVERY"});
 # else
@@ -259,7 +260,7 @@ void MainMenu::createUI() {
   boardControls->Add(refreshButton, wxSizerFlags(0).Border(wxALL, 5));
   boardControls->Add(boardSelect, wxSizerFlags(1).Border(wxALL, 5));
 
-  auto options = new wxBoxSizer(wxVERTICAL);
+  auto *options{new wxBoxSizer(wxVERTICAL)};
   applyButton = new wxButton(this, ID_ApplyChanges, "Apply Selected Configuration to Board");
   applyButton->Disable();
   editConfig = new wxButton(this, ID_EditConfig, "Edit Selected Configuration");
@@ -285,7 +286,7 @@ void MainMenu::update() {
     configSelect->entry()->Append("Select Config...");
 
     fs::directory_iterator configsIterator{Paths::configs()};
-    for (const auto configFile : configsIterator) {
+    for (const auto& configFile : configsIterator) {
         if (not configFile.is_regular_file()) continue;
         if (configFile.path().extension() != ".h") continue;
 
@@ -316,7 +317,7 @@ void MainMenu::removeEditor(EditorWindow *editor) {
 }
 
 EditorWindow *MainMenu::generateEditor(const std::string& configName) {
-    auto newEditor = new EditorWindow(configName, this);
+    auto *newEditor{new EditorWindow(configName, this)};
     if (not Configuration::readConfig(Paths::configs() / (configName + ".h"), newEditor)) {
         wxMessageDialog(this, "Error reading configuration file!", "Config Error", wxOK | wxCENTER).ShowModal();
         newEditor->Destroy();

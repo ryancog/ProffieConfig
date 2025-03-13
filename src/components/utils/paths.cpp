@@ -54,20 +54,10 @@ filepath Paths::approot() {
 #       elif defined(__linux__)
         return filepath(getpwuid(getuid())->pw_dir) / ".proffieconfig";
 #       endif
-    } else if (fs::equivalent(executable(), executable(Executable::MAIN), err)) {
-#       ifdef __WIN32__
-        return ".";
-#       elif defined(__APPLE__)
-        return filepath{".."} / ".." / ".." / "..";
-#       elif defined(__linux__)
-        return "..";
-#       endif
     } else {
-#       ifdef __WIN32__
-        return ".";
-#       elif defined(__APPLE__)
+#       ifdef __APPLE__
         return filepath{".."} / ".." / ".." / "..";
-#       elif defined(__linux__)
+#       else
         return "..";
 #       endif
     }
