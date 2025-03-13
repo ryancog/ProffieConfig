@@ -443,6 +443,7 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
         const auto maxPos{returnVal.find(MAX_PREFIX)};
 
         string successMessage{"Config Verified Successfully!"};
+        std::cout << "RetVal: " << returnVal << std::endl;
         if (usedPos != string::npos and maxPos != string::npos) {
             auto usedBytes{std::stoi(returnVal.substr(usedPos + USED_PREFIX.length()))};
             auto maxBytes{std::stoi(returnVal.substr(maxPos + MAX_PREFIX.length()))};
@@ -509,17 +510,13 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
 
 #   	ifdef __WINDOWS__
         if (std::strstr(buffer, "ProffieOS.ino.dfu") && std::strstr(buffer, "stm32l4") && std::strstr(buffer, "C:\\")) {
-            std::cerr << "ErrBufferFull: " << error << std::endl;
-            error = buffer;
-            std::cerr << "PathBuffer: " << error << std::endl;
-
             array<string, 2> paths;
             array<char, MAX_PATH> shortPath;
-            GetShortPathNameA(error.substr(error.rfind("C:\\"), error.rfind("ProffieOS.ino.dfu") - error.rfind("C:\\") + 17).c_str(), shortPath.data(), shortPath.size());
+            string pathsString{buffer};
+            GetShortPathNameA(pathsString.substr(pathsString.rfind("C:\\"), pathsString.rfind("ProffieOS.ino.dfu") - pathsString.rfind("C:\\") + 17).c_str(), shortPath.data(), shortPath.size());
             paths[0] = shortPath.data();
-            GetShortPathNameA(error.substr(1, error.find("windows") + 7 - 1).c_str(), shortPath.data(), shortPath.size());
+            GetShortPathNameA(pathsString.substr(1, pathsString.find("windows") + 7 - 1).c_str(), shortPath.data(), shortPath.size());
             paths[1] = string{shortPath.data()} + R"(\\stm32l4-upload.bat)";
-            std::cerr << "ParsedPaths: \n\t - " << paths[0] << "\n\t - " << paths[1] << std::endl;
 
             pclose(arduinoCli);
 
