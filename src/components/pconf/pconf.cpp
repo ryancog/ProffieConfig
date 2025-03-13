@@ -192,7 +192,7 @@ bool PConf::readSection(std::istream& inStream, std::shared_ptr<Section>& out, L
     if (not parseLabelNum(line, out->labelNum, *logger.bdebug("Parsing section \"" + name.value() + "\" number label..."))) return false;
 
     bool foundSect{false};
-    while (not inStream.eof()) {
+    while (inStream.good() and not inStream.eof()) {
         auto startPos{inStream.tellg()};
         std::shared_ptr<Entry> entry;
         if (not readEntry(inStream, entry, foundSect, *logger.bverbose("Reading line (for entry)..."))) return false;
