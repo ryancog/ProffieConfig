@@ -547,7 +547,13 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
     if (editor->generalPage->board->entry()->GetStringSelection() == "ProffieBoard V3") uploadCommand +=",dosfs=sdmmc1";
 
     uploadCommand += " --fqbn ";
-    uploadCommand += editor->generalPage->board->entry()->GetSelection() == 0 ? ARDUINOCORE_PBV1 : editor->generalPage->board->entry()->GetSelection() == 1 ? ARDUINOCORE_PBV2 : ARDUINOCORE_PBV3;
+    if (editor->generalPage->board->entry()->GetStringSelection() == Configuration::Proffieboard[0].first) {
+        uploadCommand += ARDUINOCORE_PBV1;
+    } else if (editor->generalPage->board->entry()->GetStringSelection() == Configuration::Proffieboard[1].first) {
+        uploadCommand += ARDUINOCORE_PBV2;
+    } else {
+        uploadCommand += ARDUINOCORE_PBV3;
+    }
     uploadCommand += " -v";
 
 #ifndef __WINDOWS__
