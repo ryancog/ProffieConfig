@@ -28,7 +28,15 @@
 
 namespace App {
 
-APP_EXPORT void init(string_view appName);
+/**
+ * Initialize an application
+ *
+ * @param appName the name to use in the Application
+ * @param lockName the name to use to lock concurrent runs, defaults to appName
+ *
+ * @return if the app should continue running or not.
+ */
+APP_EXPORT bool init(string_view appName, string_view lockName = {});
 
 APP_EXPORT void exceptionHandler();
 

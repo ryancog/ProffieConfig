@@ -41,14 +41,12 @@
 class Launcher : public wxApp {
 public:
     bool OnInit() override {
-        App::init("ProffieConfig Launcher");
-        auto& logger{Log::Context::getGlobal().createLogger("Launcher")};
-
-        wxSingleInstanceChecker checker;
-        if (checker.IsAnotherRunning()) {
+        if (not App::init("ProffieConfig Launcher", "ProffieConfig")) {
             PCUI::showMessage("A Launcher is Already Running", App::getAppName());
             return false;
         }
+
+        auto& logger{Log::Context::getGlobal().createLogger("Launcher")};
 
         logger.info("Checking installation status...");
         auto currentExec{Paths::executable()};
