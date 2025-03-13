@@ -2,7 +2,6 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include <vector>
 #include <wx/combobox.h>
 
 #include "../editor/editorwindow.h"
@@ -25,7 +24,7 @@ namespace Arduino {
     struct Event : wxEvent {
         Event(wxEventType type) : wxEvent(wxID_ANY, type) {}
 
-        [[nodiscard]] wxEvent *Clone() const { return new Event(*this); }
+        [[nodiscard]] wxEvent *Clone() const override { return new Event(*this); }
 
         bool succeeded{false};
         string str;
