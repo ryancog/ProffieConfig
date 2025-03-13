@@ -21,11 +21,11 @@ public:
 
     void update();
     void updateSizeAndLayout();
-    void updateDisables(PropFile*);
+    static void updateDisables(PropFile*);
     void updateProps();
     void updateSelectedProp(const wxString& = "");
     PropFile* getSelectedProp();
-    const std::vector<PropFile*>& getLoadedProps();
+    const vector<PropFile*>& getLoadedProps();
     wxScrolledWindow* propsWindow{nullptr};
 
     PCUI::Choice* propSelection{nullptr};
@@ -39,9 +39,9 @@ public:
         ID_PropInfo,
     };
 private:
-    EditorWindow* parent{nullptr};
+    EditorWindow* mParent{nullptr};
 
-    std::vector<PropFile*> props;
+    vector<PropFile*> mProps;
 
     void loadProps();
     void bindEvents();

@@ -23,13 +23,24 @@
 SerialMonitor* SerialMonitor::instance;
 #if defined(__WINDOWS__)
 SerialMonitor::SerialMonitor(MainMenu* parent) {
-  if (parent->boardSelect->entry()->GetSelection() > 0) {
-        ShellExecuteA(nullptr, nullptr, (Paths::binaries() / "arduino-cli.exe").string().c_str(), (string{"monitor -p "} + parent->boardSelect->entry()->GetStringSelection().ToStdString() + " -c baudrate=115200").c_str(), NULL, true);
-  } else wxMessageDialog(parent, "Select board first.", "No Board Selected", wxOK | wxICON_ERROR).ShowModal();
+    if (parent->boardSelect->entry()->GetSelection() > 0) {
+        ShellExecuteA(nullptr, nullptr, (Paths::binaries() / "arduino-cli.exe").string().c_str(), (string{"monitor -p "} + parent->boardSelect->entry()->GetStringSelection().ToStdString() + " -c baudrate=115200").c_str(), nullptr, true);
+    } else wxMessageDialog(parent, "Select board first.", "No Board Selected", wxOK | wxICON_ERROR).ShowModal();
+}
+
+SerialMonitor::~SerialMonitor() {
+#	if defined(__WXOSX__) || defined(__WXGTK__)
+    close(fd);
+
+    if (devThread.joinable()) devThread.join();
+    if (listenThread.joinable()) listenThread.join();
+    if (writerThread.joinable()) writerThread.join();
+#	endif
+
+    instance = nullptr;
 }
 
 #elif defined(__WXOSX__) || defined(__WXGTK__)
-
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -38,7 +49,7 @@ SerialMonitor::SerialMonitor(MainMenu* parent) {
 
 using namespace std::chrono_literals;
 
-SerialMonitor::SerialMonitor(MainMenu* parent) : wxFrame(parent, wxID_ANY, "Proffie Serial") {
+SerialMonitor::SerialMonitor(MainMenu* parent) : PCUI::Frame(parent, wxID_ANY, "Proffie Serial") {
     instance = this;
 
     wxBoxSizer *master = new wxBoxSizer(wxVERTICAL);
@@ -59,21 +70,6 @@ SerialMonitor::SerialMonitor(MainMenu* parent) : wxFrame(parent, wxID_ANY, "Prof
 
     SetSizerAndFit(master);
     Show(true);
-}
-
-
-SerialMonitor::~SerialMonitor() {
-#	if defined(__WXOSX__) || defined(__WXGTK__)
-    close(fd);
-#	elif defined(__WINDOWS__)
-    CloseHandle(serHandle);
-#	endif
-
-    instance = nullptr;
-
-    if (devThread.joinable()) devThread.join();
-    if (listenThread.joinable()) listenThread.join();
-    if (writerThread.joinable()) writerThread.join();
 }
 
 wxEventTypeTag<SerialMonitor::SerialDataEvent> SerialMonitor::EVT_INPUT(wxNewEventType());

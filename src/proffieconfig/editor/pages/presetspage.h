@@ -44,7 +44,7 @@ public:
             wxString comment;
             wxString style;
         };
-        std::vector<Style> styles{};
+        std::vector<Style> styles;
         wxString name{""};
         wxString dirs{""};
         wxString track{""};
@@ -62,10 +62,10 @@ public:
     };
 
 private:
-    EditorWindow* parent{nullptr};
+    EditorWindow* mParent{nullptr};
 
     void bindEvents();
-    void createToolTips();
+    void createToolTips() const;
 
     wxBoxSizer* createPresetSelect();
     wxBoxSizer* createPresetConfig();

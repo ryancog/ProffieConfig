@@ -2,22 +2,24 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
+#if not defined(__WINDOWS__)
 #include <thread>
-
-#if !defined(__WINDOWS__)
 #include "ui/controls.h"
 #endif
 
 #include "../mainmenu/mainmenu.h"
 
-class SerialMonitor : public wxFrame {
+#if not defined (__WINDOWS__)
+class SerialMonitor : public PCUI::Frame {
+#else
+class SerialMonitor {
+#endif
 public:
     SerialMonitor(MainMenu*);
+    ~SerialMonitor();
     static SerialMonitor* instance;
 
-#if !defined(__WINDOWS__)
-    ~SerialMonitor();
-
+#if not defined(__WINDOWS__)
 private:
     class SerialDataEvent;
     static wxEventTypeTag<SerialDataEvent> EVT_INPUT;
@@ -48,7 +50,7 @@ private:
 #endif // OSX or GTK
 };
 
-#if !defined(__WINDOWS__)
+#if not defined(__WINDOWS__)
 class SerialMonitor::SerialDataEvent : public wxCommandEvent {
 public:
     SerialDataEvent(wxEventTypeTag<SerialDataEvent> tag, int32_t id, char chr) {

@@ -59,8 +59,10 @@ Frame::Frame(wxWindow *parent,
 
     SetDoubleBuffered(true);
 
+#   ifdef __APPLE__
     mMenus = App::createDefaultMenuBar();
     SetMenuBar(mMenus.menuBar);
+#   endif
 }
 
 Frame::~Frame() {

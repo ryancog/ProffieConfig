@@ -1,12 +1,12 @@
+#pragma once
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#pragma once
-
-#include "ui/controls.h"
-
 #include <wx/frame.h>
 #include <wx/sizer.h>
+
+#include "ui/controls.h"
+#include "ui/frame.h"
 
 // Forward declarations to get around circular dependencies
 class GeneralPage;
@@ -16,14 +16,14 @@ class PresetsPage;
 class BladeArrayDlg;
 class Settings;
 
-class EditorWindow : public wxFrame {
+class EditorWindow : public PCUI::Frame {
 public:
     EditorWindow(const std::string&, wxWindow*);
-    ~EditorWindow();
+    ~EditorWindow() override;
 
     bool isSaved();
 
-    string_view getOpenConfig() const;
+    [[nodiscard]] string_view getOpenConfig() const;
     void renameConfig(const string&);
 
 
@@ -54,5 +54,5 @@ private:
     void createMenuBar();
     void createPages();
 
-    string openConfig{};
+    string mOpenConfig;
 };

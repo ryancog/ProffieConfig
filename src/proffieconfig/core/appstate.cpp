@@ -14,15 +14,22 @@
 #include "utils/paths.h"
 #include "../onboard/onboard.h"
 
-AppState* AppState::instance;
+namespace AppState {
 
-static inline filepath stateFile() { return Paths::data() / ".state.pconf"; }
+vector<string> propFileNames{};
+
+bool doneWithFirstRun{false};
+bool saved{true};
+
+inline filepath stateFile() { return Paths::data() / ".state.pconf"; }
+
+} // namespace AppState
+
 
 void AppState::init() {
-  instance = new AppState();
-  instance->loadState();
+  loadState();
 
-  if (not instance->doneWithFirstRun) OnboardFrame::instance = new OnboardFrame();
+  if (not doneWithFirstRun) OnboardFrame::instance = new OnboardFrame();
   else MainMenu::instance = new MainMenu();
 }
 
@@ -78,9 +85,9 @@ void AppState::loadState() {
     auto hashedData{PConf::hash(data)};
     doneWithFirstRun = hashedData.find("FIRSTRUN_COMPLETE") != hashedData.end();
 
-    auto props= hashedData.find("PROPS");
-    if (props->second->getType() == PConf::Type::SECTION) {
-        for (const auto prop : std::static_pointer_cast<PConf::Section>(props->second)->entries) {
+    auto props = hashedData.find("PROPS");
+    if (props != hashedData.end() and props->second->getType() == PConf::Type::SECTION) {
+        for (const auto& prop : std::static_pointer_cast<PConf::Section>(props->second)->entries) {
             if (prop->name != "PROP") continue;
             if (not prop->label) continue;
 
@@ -89,9 +96,7 @@ void AppState::loadState() {
     }
 }
 
-bool AppState::isSaved() {
-  return saved;
-}
+bool AppState::isSaved() { return saved; }
 
 void AppState::setSaved(bool state) {
   saved = state;

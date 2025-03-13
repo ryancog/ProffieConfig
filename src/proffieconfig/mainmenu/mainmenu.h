@@ -2,20 +2,20 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include <wx/frame.h>
 #include <wx/button.h>
 #include <wx/combobox.h>
 
 #include "../editor/editorwindow.h"
 #include "ui/controls.h"
+#include "ui/frame.h"
 
 namespace Onboard {
 
 class Overview;
 
-}
+} // namespace Onboard
 
-class MainMenu : public wxFrame {
+class MainMenu : public PCUI::Frame {
 public:
     static MainMenu* instance;
     MainMenu(wxWindow * = nullptr);
@@ -35,7 +35,7 @@ public:
     wxButton* editConfig{nullptr};
 
     EditorWindow* activeEditor{nullptr};
-    std::vector<EditorWindow*> editors{};
+    std::vector<EditorWindow*> editors;
 
     enum {
         ID_DUMMY1, // on macOS menu items cannot have ID 0

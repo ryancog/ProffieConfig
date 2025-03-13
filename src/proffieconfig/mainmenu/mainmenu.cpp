@@ -16,6 +16,7 @@
 
 #include "ui/controls.h"
 #include "ui/plaque.h"
+#include "ui/frame.h"
 #include "utils/paths.h"
 #include "utils/image.h"
 
@@ -36,24 +37,19 @@
 #include <wx/generic/statbmpg.h>
 
 MainMenu* MainMenu::instance{nullptr};
-MainMenu::MainMenu(wxWindow* parent) : wxFrame(parent, wxID_ANY, "ProffieConfig") {
-  createUI();
-  createMenuBar();
-  createTooltips();
-  bindEvents();
-  update();
+MainMenu::MainMenu(wxWindow* parent) : PCUI::Frame(parent, wxID_ANY, "ProffieConfig") {
+    createUI();
+    createMenuBar();
+    createTooltips();
+    bindEvents();
+    update();
 
-# ifdef __WINDOWS__
-  SetIcon( wxICON(IDI_ICON1) );
-  SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
-# endif
-
-  Show(true);
+    Show(true);
 }
 
 void MainMenu::bindEvents() {
     Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
-        AppState::instance->saveState();
+        AppState::saveState();
         for (auto *editor : editors) {
             if (not editor->isSaved() && event.CanVeto()) {
                 if (wxMessageDialog(
@@ -122,9 +118,14 @@ void MainMenu::bindEvents() {
         Arduino::applyToBoard(this, activeEditor);
     }, ID_ApplyChanges);
 # 	if defined(__WINDOWS__)
-    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { SerialMonitor::instance = new SerialMonitor(this); SerialMonitor::instance->Close(true); }, ID_OpenSerial);
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
+        if (not SerialMonitor::instance) SerialMonitor::instance = new SerialMonitor(this);
+    }, ID_OpenSerial);
 #	else
-    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise(); else SerialMonitor::instance = new SerialMonitor(this); }, ID_OpenSerial);
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
+        if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise();
+        else SerialMonitor::instance = new SerialMonitor(this);
+    }, ID_OpenSerial);
 #	endif
     Bind(wxEVT_CHOICE, [this](wxCommandEvent&) {
         activeEditor = nullptr;

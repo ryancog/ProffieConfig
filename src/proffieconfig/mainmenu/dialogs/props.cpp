@@ -19,8 +19,6 @@
 #include <wx/tglbtn.h>
 #include <wx/button.h>
 
-#include <fstream>
-
 Props::Props(MainMenu* parent) : wxDialog(parent, wxID_ANY, "Prop Files", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE), parent(parent) {
   createUI();
   bindEvents();
@@ -34,8 +32,8 @@ void Props::bindEvents() {
         const auto propConfigPath{choosePropConfig->GetFileName().GetAbsolutePath().ToStdString()};
         const auto propPath{chooseProp->GetFileName().GetAbsolutePath().ToStdString()};
         const auto propName{choosePropConfig->GetFileName().GetName().ToStdString()};
-        AppState::instance->addProp(propName, propPath, propConfigPath);
-        AppState::instance->saveState();
+        AppState::addProp(propName, propPath, propConfigPath);
+        AppState::saveState();
         event.Skip();
     }, wxID_OK);
     Bind(wxEVT_TEXT, [&](wxCommandEvent&) { update(); });
@@ -45,7 +43,7 @@ void Props::bindEvents() {
 }
 
 void Props::createUI() {
-    auto sizer = new wxBoxSizer(wxVERTICAL);
+    auto *sizer{new wxBoxSizer(wxVERTICAL)};
     sizer->SetMinSize(wxSize(400, -1));
 
     auto *tabSizer{new wxBoxSizer{wxHORIZONTAL}};
@@ -90,19 +88,19 @@ void Props::update() {
 
     auto *existingPanelSizer{existingPanel->GetSizer()};
     existingPanelSizer->Clear(true);
-    if (AppState::instance->getPropFileNames().empty()) {
+    if (AppState::getPropFileNames().empty()) {
         existingPanelSizer->AddStretchSpacer();
         existingPanelSizer->Add(new wxStaticText(existingPanel, wxID_ANY, "No Custom Props"), wxSizerFlags{}.Center());
         existingPanelSizer->AddStretchSpacer();
     } else {
-        for (const auto& propFile : AppState::instance->getPropFileNames()) {
+        for (const auto& propFile : AppState::getPropFileNames()) {
             auto *propSizer{new wxStaticBoxSizer(wxHORIZONTAL, existingPanel)};
             propSizer->Add(new wxStaticText(propSizer->GetStaticBox(), wxID_ANY, propFile), wxSizerFlags{}.Center());
             propSizer->AddStretchSpacer();
             auto *deleteButton{new wxButton(propSizer->GetStaticBox(), wxID_ANY, "Remove")};
             propSizer->Add(deleteButton);
             deleteButton->Bind(wxEVT_BUTTON, [=](wxCommandEvent&) {
-                    AppState::instance->removeProp(propFile);
+                    AppState::removeProp(propFile);
             });
 
             existingPanelSizer->Add(propSizer, wxSizerFlags{}.Expand().Border(wxALL, 10));
@@ -112,7 +110,7 @@ void Props::update() {
     existingPanelSizer->Fit(existingPanel);
 
     auto duplicatePropFile = [&]() {
-        for (const auto& propName : AppState::instance->getPropFileNames()) {
+        for (const auto& propName : AppState::getPropFileNames()) {
             if (choosePropConfig->GetFileName().GetName() == (propName + ".pconf")) return true;
         }
         return false;
