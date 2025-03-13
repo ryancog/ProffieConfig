@@ -495,10 +495,14 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
     compileCommand += " " + Paths::proffieos().string() + " -v";
     FILE *arduinoCli = Arduino::cli(compileCommand);
 
-    std::string error{};
+    string error{};
+#   ifdef __WINDOWS__
+    array<string, 2> paths;
+#   endif
     while(fgets(buffer, sizeof(buffer), arduinoCli) != nullptr) {
         if (progDialog != nullptr) progDialog->emitEvent(-1, ""); // Pulse
         error += buffer;
+
         if (std::strstr(buffer, "error")) {
             _return = Arduino::parseError(error);
 # 	        ifdef __WINDOWS__
@@ -517,11 +521,6 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
             paths[0] = shortPath.data();
             GetShortPathNameA(pathsString.substr(1, pathsString.find("windows") + 7 - 1).c_str(), shortPath.data(), shortPath.size());
             paths[1] = string{shortPath.data()} + R"(\\stm32l4-upload.bat)";
-
-            pclose(arduinoCli);
-
-            _return = error;
-            return paths;
         }
 #   	endif
     }
@@ -534,10 +533,9 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
 #       endif
     }
 
-
     _return = error;
 # 	ifdef __WINDOWS__
-    return nullopt;
+    return paths;
 # 	else
     return true;
 #	endif
