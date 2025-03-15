@@ -402,7 +402,8 @@ bool PConf::writeEntry(std::ostream& outStream, const std::shared_ptr<Entry>& en
 
     size_t lineBegin{0};
     size_t lineEnd{valueStr.find('\n')};
-    if (lineEnd != std::string::npos) {
+    bool containsQuotes{valueStr.find('"') != std::string::npos};
+    if (lineEnd != std::string::npos or containsQuotes) {
         outStream << "{\n";
         writeWithDepth(outStream, depth + 1);
     }
@@ -415,7 +416,7 @@ bool PConf::writeEntry(std::ostream& outStream, const std::shared_ptr<Entry>& en
     }
 
     outStream << '"' << valueStr.substr(lineBegin, lineEnd - lineBegin) << "\"\n";
-    if (lineBegin != 0) writeWithDepth(outStream, depth) << "}\n";
+    if (lineBegin != 0 or containsQuotes) writeWithDepth(outStream, depth) << "}\n";
 
     return true;
 }
