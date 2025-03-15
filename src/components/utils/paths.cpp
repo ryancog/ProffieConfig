@@ -21,7 +21,6 @@
 
 #include <filesystem>
 
-#include <iostream>
 #include <wx/stdpaths.h>
 
 #if defined(__WIN32__)
@@ -31,7 +30,7 @@
 #include <unistd.h>
 #endif
 
-#include <utils/types.h>
+#include "utils/types.h"
 
 namespace Paths {} // namespace Paths
 
@@ -115,7 +114,14 @@ filepath Paths::components() {
 filepath Paths::resources() { return approot() / "resources"; }
 
 filepath Paths::logs() {
-#if defined(__WIN32__) or defined(__linux__)
+#if defined(__WIN32__)
+    PWSTR rawStr{};
+    SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &rawStr);
+    array<char, MAX_PATH> rawCStr;
+    WideCharToMultiByte(CP_UTF8, 0, rawStr, -1, rawCStr.data(), rawCStr.size(), nullptr, nullptr);
+    CoTaskMemFree(rawStr);
+    return filepath{rawCStr.data()} / "ProffieConfig";
+#elif defined(__linux__)
     return data() / "logs";
 #elif defined(__APPLE__)
     return string(getpwuid(getuid())->pw_dir) + "/Library/Logs/ProffieConfig";
