@@ -83,16 +83,9 @@ bool Update::pullNewFiles(const Changelog& changelog, const Data& data, PCUI::Pr
         const auto& item{data.items.at(file.id)};
 
         string itemURLString{Paths::remoteUpdateAssets()};
-#       ifdef __WIN32__
-        itemURLString += "/win32/";
-#       elif defined(__APPLE__)
-        itemURLString += "/macOS/";
-#       elif defined(__linux__)
-        itemURLString += "/linux/";
-#       endif
         type = file.id.type;
         itemURLString += typeFolder(type).string() + '/';
-        itemURLString += file.id.name + '/' + string(file.latestVersion);
+        itemURLString += file.hash;
         wxURI url{itemURLString};
         auto request{wxWebSession::GetDefault().CreateRequest(getEventHandler(), url.BuildURI())};
         request.SetStorage(wxWebRequestBase::Storage_File);
