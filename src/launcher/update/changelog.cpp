@@ -44,7 +44,7 @@ namespace Update {
         auto bundleIt{data.bundles.find(currentVersion)};
         if (bundleIt == data.bundles.end()) return Version::invalidObject();
 
-        for (const auto& [ id, fileVer ] : bundleIt->second.reqs) {
+        for (const auto& [ id, fileVer, hash] : bundleIt->second.reqs) {
             if (id == file) return fileVer;
         }
 
@@ -57,7 +57,7 @@ namespace Update {
     ret.latestBundleVersion = latestBundleIt->first;
     ret.currentBundleVersion = currentVersion;
 
-    for (const auto& [ id, version ] : latestBundleIt->second.reqs) {
+    for (const auto& [ id, version, hash] : latestBundleIt->second.reqs) {
         auto currentVersion{getVersionInCurrent(id)};
         if (currentVersion == version) continue;
 
@@ -65,14 +65,14 @@ namespace Update {
 
         changedFile.currentVersion = currentVersion;
         changedFile.latestVersion = version;
+        changedFile.hash = hash;
         changedFile.id = id;
-
     }
 
     if (currentVersion) {
-        for (const auto& [ id, version ] : data.bundles.at(currentVersion).reqs) {
+        for (const auto& [ id, version, hash] : data.bundles.at(currentVersion).reqs) {
             bool newVersionHasFile{false};
-            for (const auto& [itemID, version] : data.bundles.find(currentVersion)->second.reqs) {
+            for (const auto& [itemID, version, hash] : data.bundles.find(currentVersion)->second.reqs) {
                 if (itemID == id)  {
                     newVersionHasFile = true;
                     break;
@@ -284,7 +284,7 @@ Update::Version Update::determineCurrentVersion(const Data& data, PCUI::Progress
         logger.info(status);
 
         bool filesMatch{true};
-        for (const auto& [ id, fileVer ] : bundle.reqs) {
+        for (const auto& [ id, fileVer, hash] : bundle.reqs) {
             auto fileItem{data.items.at(id)};
             filepath itemPath;
             switch (id.type) {

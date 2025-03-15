@@ -568,7 +568,7 @@ Update::Bundles UpGen::resolveBundles(const PConf::HashedData& hashedRawData, Lo
 void UpGen::verifyBundles(const Items& items, const Update::Bundles& bundles, Log::Logger& logger) {
     for (const auto& [ version, bundle ] : bundles) {
         bool eraseBundle{false};
-        for (const auto& [ fileID, fileVer ] : bundle.reqs) {
+        for (const auto& [ fileID, fileVer, hash] : bundle.reqs) {
             auto itemIt{items.find(fileID)};
             if (itemIt == items.end()) {
                 logger.error("Bundle " + string(version) + " invalid (req file \"" + fileID.name + "\" unregistered)");
@@ -624,28 +624,35 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
 
                 if (input.empty()) version = suggestedVer;
                 else {
-                    version = Update::Version{input};
-                    if (not version) {
-                        std::cout << "Invalid version entered, try again. " << std::flush;
-                        std::getline(std::cin, input);
-                        resetToPrevLine();
-                        continue;
-                    }
+                    // Update as if new build is functionally equivalent to last
+                    if (input == "s") {
+                        version = Update::Version::invalidObject();
+                    } else {
+                        version = Update::Version{input};
+                        if (not version) {
+                            std::cout << "Invalid version entered, try again. " << std::flush;
+                            std::getline(std::cin, input);
+                            resetToPrevLine();
+                            continue;
+                        }
 
-                    if (item.versions.find(version) != item.versions.end()) {
-                        std::cout << "Version exists, try again. " << std::flush;
-                        std::getline(std::cin, input);
-                        resetToPrevLine();
-                        continue;
+                        if (item.versions.find(version) != item.versions.end()) {
+                            std::cout << "Version exists, try again. " << std::flush;
+                            std::getline(std::cin, input);
+                            resetToPrevLine();
+                            continue;
+                        }
                     }
                 }
 
-                ItemVersionData versionData;
-                versionData.linuxHash = linuxFileHash.value_or("");
-                versionData.macOSHash = macOSFileHash.value_or("");
-                versionData.win32Hash = win32FileHash.value_or("");
-                addNotesToItemVersion(itemID.name, item, versionData);
-                item.versions.emplace(version, versionData);
+                if (version != Update::Version::invalidObject()) {
+                    ItemVersionData versionData;
+                    versionData.linuxHash = linuxFileHash.value_or("");
+                    versionData.macOSHash = macOSFileHash.value_or("");
+                    versionData.win32Hash = win32FileHash.value_or("");
+                    addNotesToItemVersion(itemID.name, item, versionData);
+                    item.versions.emplace(version, versionData);
+                }
                 break;
             }
 
@@ -933,7 +940,7 @@ void UpGen::generateNewManifest(const vector<Message>& messages, const Data& dat
 
         if (not bundle.note.empty()) bundleSect->entries.emplace_back(std::make_shared<PConf::Entry>("NOTE", bundle.note));
 
-        for (const auto& [ reqID, reqVer ] : bundle.reqs) {
+        for (const auto& [ reqID, reqVer, hash] : bundle.reqs) {
             bundleSect->entries.emplace_back(std::make_shared<PConf::Entry>(itemTypeToStr(reqID.type), static_cast<string>(reqVer), reqID.name));
         }
 
@@ -992,19 +999,17 @@ void UpGen::organizeAssets(const FileMaps& fileMaps, const Data& data) {
         exit(1);
     }};
 
-    for (auto platformIdx{0}; platformIdx < PLATFORM_MAX; ++platformIdx) {
-        for (auto typeIdx{0}; typeIdx < Update::TYPE_MAX; ++typeIdx) {
-            auto typeFolder{Update::typeFolder(static_cast<Update::ItemType>(typeIdx))};
+    for (auto typeIdx{0}; typeIdx < Update::TYPE_MAX; ++typeIdx) {
+        auto typeFolder{Update::typeFolder(static_cast<Update::ItemType>(typeIdx))};
+        auto destDir{filepath{STAGING_DIR} / "organized" / typeFolder};
+        for (auto platformIdx{0}; platformIdx < PLATFORM_MAX; ++platformIdx) {
             for (const auto& [ path, hash ] : fileMaps[platformIdx][typeIdx]) {
 
-                auto [ itemName, version ]{lookupItem(static_cast<Platform>(platformIdx), static_cast<Update::ItemType>(typeIdx), path, hash)};
-                auto destDir{filepath{STAGING_DIR} / "organized" / PLATFORM_DIRS[platformIdx] / typeFolder / itemName};
                 fs::create_directories(destDir);
-                fs::copy_file(filepath{STAGING_DIR} / PLATFORM_DIRS[platformIdx] / typeFolder / path, destDir / static_cast<string>(version), fs::copy_options::overwrite_existing);
+                fs::copy_file(filepath{STAGING_DIR} / PLATFORM_DIRS[platformIdx] / typeFolder / path, destDir / hash, fs::copy_options::overwrite_existing);
             }
         }
     }
-
 }
 
 cstring UpGen::itemTypeToStr(Update::ItemType type) {
@@ -1321,7 +1326,7 @@ void UpGen::listBundles(const Update::Bundles& bundles, bool hold) {
         std::cout << "  " << idx << ") ";
         std::cout << "--- " << static_cast<string>(version) << "\n";
 
-        for (const auto& [ reqID, reqVer ] : bundle.reqs) {
+        for (const auto& [ reqID, reqVer, hash] : bundle.reqs) {
             std::cout << "        [" << itemTypeToStr(reqID.type) << "] \"" << reqID.name << "\": " << static_cast<string>(reqVer) << '\n';
         }
         std::cout << '\n';
@@ -1569,7 +1574,7 @@ void UpGen::genBundleChangelog(Data& data) {
     std::cout << "Version " << static_cast<string>(bundleVersion) << " of ProffieConfig includes the following updates:\n\n";
     if (not bundle->note.empty()) std::cout << '*' << bundle->note << "*\n\n";
 
-    for (const auto& [ reqID, reqVer ] : bundle->reqs) {
+    for (const auto& [ reqID, reqVer, hash] : bundle->reqs) {
         auto item{data.items.find(reqID)->second};
         if (item.hidden) continue;
         auto itemVersion{item.versions.find(reqVer)->second};

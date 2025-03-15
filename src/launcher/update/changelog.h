@@ -31,6 +31,7 @@ struct Changelog {
 
     struct ChangedFile {
         ItemID id;
+        string hash;
         Version currentVersion;
         Version latestVersion;
     };

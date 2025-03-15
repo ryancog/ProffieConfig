@@ -111,7 +111,15 @@ struct Item {
 
 struct Bundle {
     string note;
-    vector<std::pair<ItemID, Version>> reqs;
+
+    struct RequiredItem {
+        RequiredItem(ItemID id, Version version, string hash = {}) : id{std::move(id)}, version{std::move(version)}, hash{std::move(hash)} {}
+
+        ItemID id;
+        Version version;
+        string hash;
+    };
+    vector<RequiredItem> reqs;
 };
 
 using Items = std::map<ItemID, Item>;

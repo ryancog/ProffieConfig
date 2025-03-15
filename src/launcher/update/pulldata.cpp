@@ -39,7 +39,7 @@ namespace Update {
  */
 [[nodiscard]] bool checkMessages(const PConf::HashedData&, Log::Branch&);
 
-[[nodiscard]] std::map<ItemID, Item> enumerateItems(const PConf::HashedData&, Log::Branch&);
+[[nodiscard]] std::map<ItemID, Item> findItems(const PConf::HashedData&, Log::Branch&);
 
 [[nodiscard]] optional<std::pair<string, Item>> parseItem(const std::shared_ptr<PConf::Entry>&, Log::Logger&);
 
@@ -125,11 +125,11 @@ optional<Update::Data> Update::parseData(PCUI::ProgressDialog *prog, Log::Branch
         }
     }
 
-    if (not prog->Update(50, "Enumerating items...")) {
+    if (not prog->Update(50, "Finding items...")) {
         logger.info("Canceled.");
         return nullopt;
     }
-    auto items{enumerateItems(hashedRawData, *logger.binfo("Enumerating items..."))};
+    auto items{findItems(hashedRawData, *logger.binfo("Finding items..."))};
 
     if (not prog->Update(60, "Resolving bundles...")) {
         logger.info("Canceled");
@@ -220,25 +220,25 @@ bool Update::checkMessages(const PConf::HashedData& hashedRawData, Log::Branch& 
     return hadFatal;
 }
 
-std::map<Update::ItemID, Update::Item> Update::enumerateItems(const PConf::HashedData& rawHashedData, Log::Branch& lBranch) {
+std::map<Update::ItemID, Update::Item> Update::findItems(const PConf::HashedData& rawHashedData, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Update::enumerateItems()")};
 
     std::map<ItemID, Item> ret;
 
-    auto enumerateType{[&logger, &ret](auto range, ItemType type, const string& typeStr) {
+    auto findType{[&logger, &ret](std::pair<PConf::HashedData::const_iterator, PConf::HashedData::const_iterator> range, ItemType type, const string& typeStr) {
         for (auto itemIt{range.first}; itemIt != range.second; ++itemIt) {
             auto parsed{parseItem(itemIt->second, logger)};
             if (parsed) {
                 logger.info("Sucessfully parsed " + typeStr + ' ' + parsed->first);
-                ret.emplace(ItemID{ type, parsed->first }, parsed->second);
+                ret.emplace(ItemID{ type, parsed->first}, parsed->second);
             }
         }
     }};
 
-    enumerateType(rawHashedData.equal_range("EXEC"), ItemType::EXEC, "executable");
-    enumerateType(rawHashedData.equal_range("LIB"), ItemType::LIB, "library");
-    enumerateType(rawHashedData.equal_range("COMP"), ItemType::COMP, "component");
-    enumerateType(rawHashedData.equal_range("RSRC"), ItemType::RSRC, "resource");
+    findType(rawHashedData.equal_range("EXEC"), ItemType::EXEC, "executable");
+    findType(rawHashedData.equal_range("LIB"), ItemType::LIB, "library");
+    findType(rawHashedData.equal_range("COMP"), ItemType::COMP, "component");
+    findType(rawHashedData.equal_range("RSRC"), ItemType::RSRC, "resource");
 
     return ret;
 }
@@ -312,9 +312,9 @@ optional<std::pair<string, Update::Item>> Update::parseItem(const std::shared_pt
             string errMsg{"Item \""}; 
             errMsg += name;
             errMsg += "\" version "; 
-            errMsg += string(version);
-            errMsg += " missing hash.";
-            logger.warn(errMsg);
+            errMsg += string{version};
+            errMsg += " does not have hash for this OS, skipping.";
+            logger.info(errMsg);
             continue;
         }
         if (not versionHash->second->value) {
@@ -429,18 +429,18 @@ std::map<Update::Version, Update::Bundle> Update::resolveBundles(const PConf::Ha
             }
             Version version{item->value.value()};
             if (not version) {
-                logger.warn("Item \"" + item->label.value() + "\" version \"" + item->value.value() + "\" is invalid: " + string(version));
+                logger.warn("Item \"" + item->label.value() + "\" version \"" + item->value.value() + "\" is invalid: " + static_cast<string>(version));
                 return nullopt;
             }
 
             return std::pair{ item->label.value(), version };
         }};
 
-        auto fillReqFiles{[&](auto range, ItemType type) {
+        auto fillReqFiles{[&](std::pair<PConf::HashedData::const_iterator, PConf::HashedData::const_iterator> range, ItemType type) {
             for (auto itemIt{range.first}; itemIt != range.second; ++itemIt) {
                 auto parsed{parseReqItem(itemIt->second)};
                 if (parsed) {
-                    logger.debug("Added to Bundle " + string(version) + ": " + parsed->first + ", " + string(parsed->second));
+                    logger.debug("Added to Bundle " + static_cast<string>(version) + ": " + parsed->first + ", " + static_cast<string>(parsed->second));
                     bundle.reqs.emplace_back(ItemID{ type, parsed->first }, parsed->second);
                 }
             }
@@ -451,7 +451,7 @@ std::map<Update::Version, Update::Bundle> Update::resolveBundles(const PConf::Ha
         fillReqFiles(hashedEntries.equal_range("COMP"), ItemType::COMP);
         fillReqFiles(hashedEntries.equal_range("RSRC"), ItemType::RSRC);
 
-        logger.info("Parsed bundle " + string(version));
+        logger.info("Parsed bundle " + static_cast<string>(version));
         ret.emplace(version, bundle);
     }
 
@@ -462,21 +462,30 @@ void Update::verifyBundles(const std::map<ItemID, Item>& items, std::map<Version
     auto& logger{lBranch.createLogger("Update::verifyBundles()")};
 
     for (auto bundleIt{bundles.begin()}; bundleIt != bundles.end();) {
-        const auto& [ version, bundle ]{*bundleIt};
+        auto& [ version, bundle ]{*bundleIt};
         bool eraseBundle{false};
-        for (const auto& [ fileID, fileVer ] : bundle.reqs) {
+        for (auto& [ fileID, fileVer, hash] : bundle.reqs) {
             auto itemIt{items.find(fileID)};
             if (itemIt == items.end()) {
-                logger.warn("Bundle " + string(version) + " invalid (req file \"" + fileID.name + "\" unregistered)");
+                logger.warn("Bundle " + static_cast<string>(version) + " invalid (req file \"" + fileID.name + "\" unregistered)");
                 eraseBundle = true;
                 break;
             }
+
             auto itemVerIt{itemIt->second.versions.find(fileVer)};
             if (itemVerIt == itemIt->second.versions.end()) {
-                logger.warn("Bundle " + string(version) + " invalid (req file \"" + fileID.name + "\" invalid version \"" + string(fileVer)  + "\")");
+                string message{"Bundle "};
+                message += static_cast<string>(version);
+                message += " contains a version of an item (";
+                message += fileID.name + ':' + static_cast<string>(fileVer);
+                message += ") which is not registered for this OS, ignoring the bundle.";
+                logger.debug(message);
                 eraseBundle = true;
                 break;
             }
+
+            // Assign hash after verification
+            hash = itemVerIt->second.hash;
         }
         if (eraseBundle) bundleIt = bundles.erase(bundleIt);
         else ++bundleIt;
