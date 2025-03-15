@@ -26,8 +26,11 @@ namespace Log {
 
 } // namespace Log
 
+Log::Message::Message(std::string message, Severity severity, Logger *parent) :
+        message(std::move(message)), severity(severity), logTag(parent->name) {}
+
 std::string Log::Message::formatted() const {
-    std::string messagePrefix{"[" + parent->name + "] "};
+    std::string messagePrefix{"[" + logTag + "] "};
     switch (severity) {
         case Severity::VERB:
             messagePrefix += "(VERB) ";

@@ -421,7 +421,6 @@ void Configuration::tryAddInjection(const std::string& buffer, EditorWindow *edi
             auto copyPath{Paths::injections() / fileDialog.GetFilename().ToStdString()};
             const auto copyOptions{fs::copy_options::overwrite_existing};
             if (not fs::copy_file(fileDialog.GetPath().ToStdString(), copyPath, copyOptions, err)) {
-                std::cout << fileDialog.GetPath().ToStdString() << std::endl;
                 auto res{wxMessageBox(err.message(), "Injection file could not be added.", wxOK | wxCANCEL | wxOK_DEFAULT)};
                 if (res == wxCANCEL) return;
                 else continue;

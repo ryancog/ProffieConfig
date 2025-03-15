@@ -42,8 +42,7 @@ Log::Context::Context(string name, vector<std::ostream *> outStreams,
     if (pName == GLOBAL_TAG) {
       mRESOutFile.open(Paths::logs() / (App::getAppName() + ".log"));
     } else {
-      mRESOutFile.open(Paths::logs() /
-                       (App::getAppName() + "-" + pName + ".log"));
+      mRESOutFile.open(Paths::logs() / (App::getAppName() + "-" + pName + ".log"));
     }
     mOutputs.insert(mOutputs.begin(), &mRESOutFile);
 
@@ -91,27 +90,28 @@ void Log::Context::setSeverity(Severity sev) { mCurrentSev = sev; }
 
 void Log::Context::setErrorFatal(bool isFatal) { mErrFatal = isFatal; }
 
+void Log::Context::quickLog(Severity sev, string tag, string message) {
+    sendOut(sev, Message(message, sev, tag).formatted());
+}
+
 void Log::Context::sendOut(Severity sev, const string &str) {
-  if (sev < mCurrentSev)
-    return;
+    if (sev < mCurrentSev) return;
 
-  mSendLock.lock();
-  for (auto *out : mOutputs)
-    *out << '\n' << str << std::flush;
-  mSendLock.unlock();
+    mSendLock.lock();
+    for (auto *out : mOutputs) *out << '\n' << str << std::flush;
+    mSendLock.unlock();
 
-  if (sev == Severity::ERR and mErrFatal) {
-    for (auto *out : mOutputs)
-      *out << std::endl;
-    exit(1);
-  }
+    if (sev == Severity::ERR and mErrFatal) {
+        for (auto *out : mOutputs) *out << std::endl;
+        exit(1);
+    }
 }
 
 Log::Logger &Log::Context::createLogger(string name) {
-  mListLock.lock();
-  mLoggers.push_back(new Logger{std::move(name), this});
-  mListLock.unlock();
-  return *mLoggers.back();
+    mListLock.lock();
+    mLoggers.push_back(new Logger{std::move(name), this});
+    mListLock.unlock();
+    return *mLoggers.back();
 }
 
 std::list<Log::Logger *> Log::Context::getLoggers() const { return mLoggers; }
