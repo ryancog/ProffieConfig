@@ -456,6 +456,7 @@ void PropFile::readButtons(const std::shared_ptr<PConf::Section>& data, Log::Bra
       return;
     }
 
+    auto& buttonArray{(*buttons)[*data->labelNum]};
     for (const auto& entry : data->entries) {
         if (entry->getType() != PConf::Type::SECTION) continue;
         if (entry->name != "STATE") continue;
@@ -463,6 +464,8 @@ void PropFile::readButtons(const std::shared_ptr<PConf::Section>& data, Log::Bra
             logger.warn("Button array #" + std::to_string(*data->labelNum) + " has unnamed state, skipping...");
             continue;
         }
+
+        auto& stateData{buttonArray.emplace_back(*entry->label, vector<Button>{})};
 
         for (const auto& buttonEntry : std::static_pointer_cast<PConf::Section>(entry)->entries) {
             if (buttonEntry->getType() != PConf::Type::SECTION) continue;
@@ -490,6 +493,8 @@ void PropFile::readButtons(const std::shared_ptr<PConf::Section>& data, Log::Bra
 
                 newButton.descriptions.emplace(descEntry->label.value_or(""), descEntry->value.value_or("EMPTY"));
             }
+
+            stateData.second.emplace_back(newButton);
         }
     }
 }

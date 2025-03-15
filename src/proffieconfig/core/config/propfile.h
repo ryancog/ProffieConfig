@@ -54,7 +54,7 @@ private:
     string fileName{};
     string info{};
     SettingMap* settings{nullptr};
-    array<ButtonArray, 4>* buttons{nullptr};
+    array<ButtonArray, 4> *buttons{nullptr};
 
     wxBoxSizer* sizer{nullptr};
 

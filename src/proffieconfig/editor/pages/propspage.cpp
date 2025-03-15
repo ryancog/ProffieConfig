@@ -122,12 +122,18 @@ void PropsPage::bindEvents() {
                         return "Button Configuration Not Supported";
                 }
             }};
-            textSizer->Add(new wxStaticText(&buttonDialog, wxID_ANY, defaultButtons(mParent->generalPage->buttons->entry()->GetValue())));
+            textSizer->Add(
+                new wxStaticText(&buttonDialog, wxID_ANY, defaultButtons(mParent->generalPage->buttons->entry()->GetValue())),
+                wxSizerFlags{}.Border(wxALL, 10)
+            );
         } else {
             auto propButtons = activeProp->getButtons()->at(mParent->generalPage->buttons->entry()->GetValue());
 
             if (propButtons.empty()) {
-                textSizer->Add(new wxStaticText(&buttonDialog, wxID_ANY, "Selected number of buttons not supported by prop file."));
+                textSizer->Add(
+                    new wxStaticText(&buttonDialog, wxID_ANY, "Selected number of buttons not supported by prop file."), 
+                    wxSizerFlags{}.Border(wxALL, 10)
+                );
             } else for (auto& [ stateName, stateButtons ] : propButtons) {
                 auto *stateSizer{new wxStaticBoxSizer(wxVERTICAL, &buttonDialog, "Button controls while saber is " + stateName + ":")};
                 auto *controlSizer{new wxBoxSizer(wxHORIZONTAL)};
