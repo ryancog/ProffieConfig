@@ -27,7 +27,7 @@ namespace Log {
 } // namespace Log
 
 Log::Branch::Branch (const std::string& message, Severity sev, Logger *logger) :
-    Message(message, sev, logger) {}
+    Message(message, sev, logger), mParent(logger) {}
 
 Log::Branch::~Branch() {
     for (const auto *logger : mLoggers) {
@@ -37,7 +37,7 @@ Log::Branch::~Branch() {
 
 Log::Logger& Log::Branch::createLogger(std::string name) {
     mListLock.lock();
-    mLoggers.push_back(new Logger{std::move(name), parent->pContext});
+    mLoggers.push_back(new Logger{std::move(name), mParent->pContext});
     mListLock.unlock();
     return *mLoggers.back();
 }

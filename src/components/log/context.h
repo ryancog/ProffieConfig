@@ -48,6 +48,8 @@ public:
     void setSeverity(Severity);
     void setErrorFatal(bool = true);
 
+    void quickLog(Severity, string tag, string message);
+
     /**
      * Attempts to set the outputs for the global loggger.
      *

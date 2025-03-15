@@ -1,4 +1,5 @@
 #include "arduino.h"
+#include "log/severity.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
@@ -443,7 +444,7 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
         const auto maxPos{returnVal.find(MAX_PREFIX)};
 
         string successMessage{"Config Verified Successfully!"};
-        std::cout << "RetVal: " << returnVal << std::endl;
+        Log::Context::getGlobal().quickLog(Log::Severity::VERB, "Arduino::verifyConfig()", "RetVal: " + returnVal);
         if (usedPos != string::npos and maxPos != string::npos) {
             auto usedBytes{std::stoi(returnVal.substr(usedPos + USED_PREFIX.length()))};
             auto maxBytes{std::stoi(returnVal.substr(maxPos + MAX_PREFIX.length()))};
@@ -573,7 +574,8 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
     struct termios newtio;
     auto fd = open(static_cast<MainMenu*>(editor->GetParent())->boardSelect->entry()->GetStringSelection().data(), O_RDWR | O_NOCTTY);
     if (fd < 0) {
-        std::cout << "err" << std::endl;
+        _return = "Failed to connect to board for reboot.";
+        return false;
     }
 
     memset(&newtio, 0, sizeof(newtio));

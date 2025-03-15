@@ -57,6 +57,7 @@ private:
 
     std::list<Logger *> mLoggers;
     std::mutex mListLock;
+    const Logger *mParent;
 };
 
 } // namespace Log

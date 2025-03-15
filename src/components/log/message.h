@@ -42,12 +42,14 @@ public:
     [[nodiscard]] std::string formatted() const;
     const std::string message;
     const Severity severity;
-    const Logger *const parent;
+    const std::string logTag;
 
 protected:
     friend class Logger;
-    Message(std::string message, Severity severity, Logger *parent) :
-        message(std::move(message)), severity(severity), parent(parent) {}
+    friend class Context;
+    Message(std::string message, Severity severity, Logger *parent);
+    Message(std::string message, Severity severity, std::string logTag) :
+        message(std::move(message)), severity(severity), logTag(logTag) {}
 };
 
 } // namespace Log
