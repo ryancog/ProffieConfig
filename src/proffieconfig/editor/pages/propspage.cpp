@@ -17,6 +17,7 @@
 #include "../../core/config/propfile.h"
 #include "../editorwindow.h"
 #include "generalpage.h"
+#include "wx/gdicmn.h"
 
 PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""), mParent{static_cast<EditorWindow*>(window)} {
     auto *top{new wxBoxSizer(wxHORIZONTAL)};
@@ -48,9 +49,13 @@ void PropsPage::bindEvents() {
             return;
         }
 
+        wxSetCursor(wxCURSOR_WAIT);
+
         updateSelectedProp();
         update();
         updateSizeAndLayout();
+
+        wxSetCursor(wxNullCursor);
     };
     auto optionSelectUpdate = [&](wxCommandEvent&) {
         int32 x{0};
