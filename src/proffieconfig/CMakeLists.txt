@@ -32,7 +32,7 @@ add_executable(proffieconfig WIN32
 set_target_properties(proffieconfig PROPERTIES
     OUTPUT_NAME "ProffieConfig"
     DESCRIPTION "ProffieConfig" # Windows is stupid so this isn't actually a description
-    EXEC_VERSION "1.7.0"
+    EXEC_VERSION "${CMAKE_PRODUCT_VERSION}"
 )
 
 target_link_libraries(proffieconfig 
