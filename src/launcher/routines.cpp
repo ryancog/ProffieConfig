@@ -83,6 +83,7 @@ void Routine::launch(Log::Branch& lBranch) {
     std::array<char *, 2> argv{ str.data(), nullptr };
     execvp(argv[0], argv.data());
     logger.error("ProffieConfig main binary missing/failed to start.");
+    exit(1);
 #   endif
 }
 
