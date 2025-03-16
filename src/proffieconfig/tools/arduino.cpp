@@ -730,7 +730,7 @@ FILE* Arduino::cli(const string& command) {
     fullCommand += "title ProffieConfig Worker & ";
     fullCommand += (Paths::binaries() / "windowMode").string() + R"( -title "ProffieConfig Worker" -mode force_minimized & )";
 #   endif
-    fullCommand += (Paths::binaries() / "arduino-cli").string();
+    fullCommand += '"' + (Paths::binaries() / "arduino-cli").string() + '"';
     fullCommand += " " + command;
     fullCommand += " 2>&1";
 
