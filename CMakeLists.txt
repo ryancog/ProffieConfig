@@ -1,6 +1,9 @@
 # ProffieConfig, The All-In-One Proffieboard Management Utility!
 
 cmake_minimum_required(VERSION 3.20)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0")
+# set(CMAKE_OSX_ARCHITECTURES arm64;x86_64 CACHE)
+
 project(ProffieConfig VERSION 1.7.4)
 add_compile_definitions(BUILD_SYSTEM_VERSION=${VERSION})
 
