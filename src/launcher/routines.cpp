@@ -164,7 +164,8 @@ void Routine::platformInstall(Log::Branch& lBranch) {
     const auto currentBundle{currentExec.parent_path().parent_path().parent_path()};
     const auto applicationPath{installedExec.parent_path().parent_path().parent_path()};
     fs::copy(currentBundle, applicationPath, fs::copy_options::recursive);
-    fs::remove_all(currentBundle);
+    // Cannot remove from DMG
+    // fs::remove_all(currentBundle);
 #   endif
 
     PCUI::showMessage("Launcher has been installed.", App::getAppName());
