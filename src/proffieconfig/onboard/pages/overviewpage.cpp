@@ -294,15 +294,14 @@ void Onboard::Overview::linkEditorEvents() {
                 "When SubBlade mode is active, only SubBlade 0 will show blade controls, the\n"
                 "rest will just be the settings for the specific SubBlade (if there are any).\n"
                 "\n"
-                "Now, try changing the type of Blade to a \"Tri-LED Star\"\n");
+                "Now, try changing the type of Blade to \"Simple LED\"\n");
 
         bladeDisables.at(BladesPage::ID_AddSubBlade) = true;
         bladeDisables.at(BladesPage::ID_BladeType) = false;
         mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Clear();
-        mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Append("WS281X (RGB)");
-        mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Append("WS281X (RGBW)");
-        mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Append("Tri-LED Star");
-        mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Append("Quad-LED Star");
+        mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Append(BD_PIXELRGB);
+        mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Append(BD_PIXELRGBW);
+        mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Append(BD_SIMPLE);
         mGuideMenu->activeEditor->bladesPage->bladeType->entry()->SetSelection(0);
     }, BladesPage::ID_SubBladeSelect);
     mGuideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
@@ -313,11 +312,11 @@ void Onboard::Overview::linkEditorEvents() {
         }
 
         generateNewPage("Configuration - Blade Arrays",
-                "Another common type of blade is a Tri-LED (or even Quad-LED, for which there's another\n"
-                "option in the drop-down) Star, commonly referred to as an \"In-Hilt\" configuration.\n"
+                "Another common type of blade is a Simple LED blade, which is commonly used"
+                "for \"In-Hilt\" configurations.\n"
                 "\n"
                 "For this setup, you specify the color of the each LED and the size of resistor\n"
-                "(in Ohms) you placed on the power line going to each LED.\n"
+                "(in mOhms) you placed on the power line going to each LED.\n"
                 "\n"
                 "The LEDs correspond sequentially to the selected Power Pins, and you should select\n"
                 "a number of Power Pins equal to the number of LEDs you're setting up.\n"
@@ -325,33 +324,12 @@ void Onboard::Overview::linkEditorEvents() {
                 "Pin 3 would go to LED 2 and Pin 4 would go to LED 3)\n"
                 "\n"
                 "You can also add custom power pins by typing them into the text box, then clicking the \"+\".\n"
-                "\n"
-                "Finally, check out the \"Single Color\" blade type.\n");
-
-        mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Append("Single Color");
-    }, BladesPage::ID_BladeType);
-    mGuideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
-        EVENT_PAGE_SETUP;
-        if (mGuideMenu->activeEditor->bladesPage->bladeType->entry()->GetSelection() != 4) {
-            hasRun = false;
-            return;
-        }
-
-        generateNewPage("Configuration - Blade Arrays",
-                "The final blade type is a Single Color blade. This is useful is you have\n"
-                "a \"dumb\" LED accent on your saber, a single-color illuminated switch, or similar\n"
-                "\n"
-                "When creating bladestyles for a Single Color blade, the color should be set to\n"
-                "WHITE (or equivalent dimmed value), we'll go over bladestyles in a bit.\n"
+                "For WS281X blades, Power Pins can be shared, which can be useful if you're running low.\n"
                 "\n"
                 "Now that we've covered the basics of blades, you should know you can add as many\n"
                 "blades as you'd like, provided you have the pins on the Proffieboard, of course!\n"
                 "\n"
-                "For WS281X blades, Power Pins can be shared, which can be useful if you're running low.\n"
-                "\n"
                 "Click \"Blade Awareness...\" to continue.\n");
-
-        mGuideMenu->activeEditor->bladesPage->bladeArrayButton->Enable();
     }, BladesPage::ID_BladeType);
     mGuideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
