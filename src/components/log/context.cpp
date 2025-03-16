@@ -88,8 +88,6 @@ bool Log::Context::setGlobalOuput(vector<std::ostream *> outStreams,
 
 void Log::Context::setSeverity(Severity sev) { mCurrentSev = sev; }
 
-void Log::Context::setErrorFatal(bool isFatal) { mErrFatal = isFatal; }
-
 void Log::Context::quickLog(Severity sev, string tag, string message) {
     sendOut(sev, Message(message, sev, tag).formatted());
 }
@@ -100,11 +98,6 @@ void Log::Context::sendOut(Severity sev, const string &str) {
     mSendLock.lock();
     for (auto *out : mOutputs) *out << '\n' << str << std::flush;
     mSendLock.unlock();
-
-    if (sev == Severity::ERR and mErrFatal) {
-        for (auto *out : mOutputs) *out << std::endl;
-        exit(1);
-    }
 }
 
 Log::Logger &Log::Context::createLogger(string name) {
