@@ -467,9 +467,14 @@ void Update::verifyBundles(const std::map<ItemID, Item>& items, std::map<Version
         for (auto& [ fileID, fileVer, hash] : bundle.reqs) {
             auto itemIt{items.find(fileID)};
             if (itemIt == items.end()) {
-                logger.warn("Bundle " + static_cast<string>(version) + " invalid (req file \"" + fileID.name + "\" unregistered)");
-                eraseBundle = true;
-                break;
+                string message{"Bundle "};
+                message += static_cast<string>(version);
+                message += " contains an item (";
+                message += fileID.name + ':' + static_cast<string>(fileVer);
+                message += ") which is not registered for this OS, ignoring the item.";
+                logger.debug(message);
+                fileID.ignored = true;
+                continue;
             }
 
             auto itemVerIt{itemIt->second.versions.find(fileVer)};

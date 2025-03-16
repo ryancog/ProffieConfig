@@ -90,6 +90,7 @@ enum class Comparator {
 struct ItemID {
     ItemType type;
     string name;
+    bool ignored{false};
 
     auto operator<=>(const ItemID&) const = default;
 };
