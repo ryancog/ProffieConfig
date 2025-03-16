@@ -131,6 +131,9 @@ PCUI::Text::Text(
     ControlBase(parent, winID) {
 
     auto *control{new wxTextCtrl(this, winID, initial, wxDefaultPosition, wxDefaultSize, style)};
+#   ifdef __WXMAC__
+    control->OSXDisableAllSmartSubstitutions();
+#   endif
 
     init(control, label, orient);
 }
