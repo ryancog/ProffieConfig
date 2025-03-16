@@ -16,6 +16,7 @@
 #include "ui/message.h"
 #include "ui/plaque.h"
 #include "ui/frame.h"
+#include "utils/defer.h"
 #include "utils/paths.h"
 #include "utils/image.h"
 #include "dialogs/addconfig.h"
@@ -104,14 +105,12 @@ void MainMenu::bindEvents() {
 
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(this); }, ID_RefreshDev);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        SetCursor(wxCURSOR_WAIT);
         if (activeEditor == nullptr) {
             activeEditor = generateEditor(configSelect->entry()->GetStringSelection().ToStdString());
             if (activeEditor == nullptr) return;
             editors.emplace_back(activeEditor);
         }
         Arduino::applyToBoard(this, activeEditor);
-        SetCursor(wxCURSOR_DEFAULT);
     }, ID_ApplyChanges);
 # 	if defined(__WINDOWS__)
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
@@ -124,7 +123,9 @@ void MainMenu::bindEvents() {
     }, ID_OpenSerial);
 #	endif
     Bind(wxEVT_CHOICE, [this](wxCommandEvent&) {
-        SetCursor(wxCURSOR_WAIT);
+        wxSetCursor(wxCURSOR_WAIT);
+        Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
+
         activeEditor = nullptr;
         if (configSelect->entry()->GetStringSelection() == "Select Config...") {
             update();
@@ -139,11 +140,12 @@ void MainMenu::bindEvents() {
         }
 
         update();
-        SetCursor(wxCURSOR_DEFAULT);
     }, ID_ConfigSelect);
     Bind(wxEVT_CHOICE, [this](wxCommandEvent&) { update(); }, ID_DeviceSelect);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        SetCursor(wxCURSOR_DEFAULT);
+        wxSetCursor(wxCURSOR_WAIT);
+        Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
+
         if (activeEditor == nullptr) {
             activeEditor = generateEditor(configSelect->entry()->GetStringSelection().ToStdString());
             if (activeEditor == nullptr) return;
@@ -151,15 +153,16 @@ void MainMenu::bindEvents() {
         }
         activeEditor->Show();
         activeEditor->Raise();
-        SetCursor(wxCURSOR_DEFAULT);
     }, ID_EditConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
-        SetCursor(wxCURSOR_WAIT);
         auto addDialog{AddConfig{this}};
         if (OnboardFrame::instance != nullptr) {
             static_cast<wxToggleButton*>(addDialog.FindWindow(AddConfig::ID_ImportExisting))->Disable();
         }
         if (addDialog.ShowModal() != wxID_OK) return;
+
+        wxSetCursor(wxCURSOR_WAIT);
+        Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
         auto configPath{Paths::configs() / (addDialog.configName + ".h")};
         if (not addDialog.existingPath.empty()) {
@@ -171,7 +174,6 @@ void MainMenu::bindEvents() {
         update();
         configSelect->entry()->SetStringSelection(addDialog.configName);
         wxPostEvent(this, wxCommandEvent{wxEVT_CHOICE, ID_ConfigSelect});
-        SetCursor(wxCURSOR_DEFAULT);
     }, ID_AddConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
         if (wxMessageDialog(this, "Are you sure you want to deleted the selected configuration?\n\nThis action cannot be undone!", "Delete Config", wxYES_NO | wxNO_DEFAULT | wxCENTER).ShowModal() == wxID_YES) {
