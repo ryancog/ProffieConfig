@@ -19,7 +19,7 @@
 #include "wx/gdicmn.h"
 
 PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""), mParent{static_cast<EditorWindow*>(window)} {
-    auto *top{new wxBoxSizer(wxHORIZONTAL)};
+    mTopSizer = new wxBoxSizer(wxHORIZONTAL);
     propSelection = new PCUI::Choice(GetStaticBox(), ID_PropSelect, Misc::createEntries({"Default"}), "Prop File");
     propSelection->SetMinSize(wxSize{120, -1});
     // Two ampersands bc wxWidgets formatting
@@ -27,16 +27,16 @@ PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""
     buttonInfo = new wxButton(GetStaticBox(), ID_Buttons, "Button Controls...");
     TIP(propInfo, "View prop creator-provided information about this prop and its intended usage.");
     TIP(buttonInfo, "View button controls based on specific option settings and number of buttons.");
-    top->Add(propSelection, wxSizerFlags(0).Border(wxALL, 10));
-    top->Add(propInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
-    top->Add(buttonInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
+    mTopSizer->Add(propSelection, wxSizerFlags(0).Border(wxALL, 10));
+    mTopSizer->Add(propInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
+    mTopSizer->Add(buttonInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
 
     propsWindow = new wxScrolledWindow(GetStaticBox(), wxID_ANY);
     auto *propsSizer{new wxBoxSizer(wxVERTICAL)};
     propsWindow->SetSizerAndFit(propsSizer);
     propsWindow->SetScrollbars(10, 10, -1, 1);
 
-    Add(top);
+    Add(mTopSizer);
     Add(propsWindow, wxSizerFlags(1).Expand());
     loadProps();
     bindEvents();
@@ -48,19 +48,6 @@ void PropsPage::bindEvents() {
 
         updateSelectedProp();
         update();
-
-        propsWindow->FitInside();
-        propsWindow->GetSizer()->Layout();
-        propsWindow->GetSizer()->Fit(propsWindow);
-
-        propsWindow->InvalidateBestSize();
-        propsWindow->SetMinSize(propsWindow->GetBestVirtualSize());
-
-        GetStaticBox()->Layout();
-        Fit(GetStaticBox());
-
-        mParent->Layout();
-        mParent->Fit();
 
         wxSetCursor(wxNullCursor);
     };
@@ -259,6 +246,28 @@ void PropsPage::update() {
         for (auto& [ name, setting ] : *prop->getSettings()) {
             setting.enable(!setting.disabled && setting.checkRequiredSatisfied(*prop->getSettings()));
         }
+    }
+
+    if (propsWindow->IsShown()) {
+        propsWindow->FitInside();
+        propsWindow->GetSizer()->Layout();
+        propsWindow->GetSizer()->Fit(propsWindow);
+
+        propsWindow->InvalidateBestSize();
+        auto propsWindowBestSize{propsWindow->GetBestVirtualSize()};
+        propsWindow->SetSizeHints(propsWindowBestSize);
+
+        GetStaticBox()->Layout();
+        Fit(GetStaticBox());
+
+        auto windowSelectSize{mParent->windowSelect->GetSize()};
+        auto topSize{mTopSizer->GetSize()};
+        mParent->SetMinSize(wxSize{
+            mTopSizer->GetSize().x + 60,
+            windowSelectSize.y + topSize.y + 200,
+        });
+        mParent->Layout();
+        mParent->Fit();
     }
 }
 

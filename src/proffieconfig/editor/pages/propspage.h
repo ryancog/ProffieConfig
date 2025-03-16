@@ -39,6 +39,7 @@ public:
     };
 private:
     EditorWindow* mParent{nullptr};
+    wxBoxSizer *mTopSizer{nullptr};
 
     vector<PropFile*> mProps;
 
