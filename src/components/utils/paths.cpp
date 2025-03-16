@@ -36,31 +36,18 @@ namespace Paths {} // namespace Paths
 
 filepath Paths::approot() {
     std::error_code err;
-    if (fs::equivalent(executable(), executable(Executable::LAUNCHER), err)) {
-#       ifdef __WIN32__
-        PWSTR rawStr{};
-        SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &rawStr);
-        array<char, MAX_PATH> rawCStr;
-        WideCharToMultiByte(CP_UTF8, 0, rawStr, -1, rawCStr.data(), MAX_PATH,
-                nullptr, nullptr);
-        CoTaskMemFree(rawStr);
-        return filepath{rawCStr.data()} /  "ProffieConfig";
-#       elif defined(__APPLE__)
-        return filepath(getpwuid(getuid())->pw_dir) / "Library" / "Application Support" / "ProffieConfig";
-#       elif defined(__linux__)
-        return filepath(getpwuid(getuid())->pw_dir) / ".proffieconfig";
-#       endif
-    } else {
-#       if (defined( __APPLE__) or defined(__linux__)) and defined(APP_DEPLOY_PATH)
-        return APP_DEPLOY_PATH;
-#       else // Win32 or not deploy-in-place
-#       ifdef __APPLE__
-        return filepath{".."} / ".." / ".." / "..";
-#       else
-        return "..";
-#       endif // __APPLE__
-#       endif // deploy-in-place
-    }
+#   ifdef __WIN32__
+    PWSTR rawStr{};
+    SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &rawStr);
+    array<char, MAX_PATH> rawCStr;
+    WideCharToMultiByte(CP_UTF8, 0, rawStr, -1, rawCStr.data(), MAX_PATH, nullptr, nullptr);
+    CoTaskMemFree(rawStr);
+    return filepath{rawCStr.data()} /  "ProffieConfig";
+#   elif defined(__APPLE__)
+    return filepath(getpwuid(getuid())->pw_dir) / "Library" / "Application Support" / "ProffieConfig";
+#   elif defined(__linux__)
+    return filepath(getpwuid(getuid())->pw_dir) / ".proffieconfig";
+#   endif
 }
 
 filepath Paths::executable(Executable exec) {
@@ -96,40 +83,40 @@ filepath Paths::executable(Executable exec) {
 filepath Paths::binaries() { return approot() / "bin"; }
 
 filepath Paths::libraries() {
-#ifdef __WIN32__
+#   ifdef __WIN32__
     return binaries();
-#elif defined(__linux__) or defined(__APPLE__)
+#   elif defined(__linux__) or defined(__APPLE__)
     return approot() / "lib";
-#endif
+#   endif
 }
 
 filepath Paths::components() {
-#ifdef __WIN32__
+#   ifdef __WIN32__
     return binaries();
-#elif defined(__linux__) or defined(__APPLE__)
+#   elif defined(__linux__) or defined(__APPLE__)
     return approot() / "components";
-#endif
+#   endif
 }
 
 filepath Paths::resources() { return approot() / "resources"; }
 
 filepath Paths::logs() {
-#if defined(__WIN32__)
+#   if defined(__WIN32__)
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &rawStr);
     array<char, MAX_PATH> rawCStr;
     WideCharToMultiByte(CP_UTF8, 0, rawStr, -1, rawCStr.data(), rawCStr.size(), nullptr, nullptr);
     CoTaskMemFree(rawStr);
     return filepath{rawCStr.data()} / "ProffieConfig";
-#elif defined(__linux__)
+#   elif defined(__linux__)
     return data() / "logs";
-#elif defined(__APPLE__)
+#   elif defined(__APPLE__)
     return string(getpwuid(getuid())->pw_dir) + "/Library/Logs/ProffieConfig";
-#endif
+#   endif
 }
 
 filepath Paths::data() {
-#ifdef __WIN32__
+#   ifdef __WIN32__
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &rawStr);
     array<char, MAX_PATH> rawCStr;
@@ -138,11 +125,11 @@ filepath Paths::data() {
     array<char, MAX_PATH> shortPath;
     GetShortPathNameA(rawCStr.data(), shortPath.data(), shortPath.size());
     return filepath{shortPath.data()} / "ProffieConfig";
-#elif defined(__APPLE__)
+#   elif defined(__APPLE__)
     return approot();
-#elif defined(__linux__)
+#   elif defined(__linux__)
     return filepath(getpwuid(getuid())->pw_dir) / ".local" / "share" / "ProffieConfig";
-#endif
+#   endif
 }
 
 filepath Paths::configs() { return Paths::data() / "configs"; }
