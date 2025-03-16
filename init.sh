@@ -23,6 +23,12 @@ else
 fi
 if [ "${TARGET_PLATFORM}" != "${BUILD_PLATFORM}" ]; then echo "Target Platform: ${TARGET_PLATFORM}"; fi
 
+if [ "${TARGET_PLATFORM}" == "macOS" ]; then
+    export CXXFLAGS="-mmacosx-version-min=11.0"
+    export CFLAGS="-mmacosx-version-min=11.0"
+    export LDFLAGS="-mmacosx-version-min=11.0"
+fi
+
 check_exec() {
     if [ ! -z "$2" ] && [ "$BUILD_PLATFORM" != "$2" ]; then
         return
@@ -116,17 +122,49 @@ else
     fi
 
     make clean &> /dev/null
-    export LDFLAGS="-s"
+
+    # OLD_CFLAGS=$CFLAGS
+    # OLD_CXXFLAGS=$CXXFLAGS
+    # if [ "${TARGET_PLATFORM}" == "macOS" ]; then
+    #     export CFLAGS="${OLD_CFLAGS} -arch x86_64"
+    #     export CXXFLAGS="${OLD_CXXFLAGS} -arch x86_64"
+    # fi
+
+    OLD_LDFLAGS=$LDFLAGS
+    export LDFLAGS="${OLD_LDFLAGS} -s"
     do_with_log \
         "Building shared" \
         "make -f makefile.shared -j`nproc --all`" \
         build
-    unset LDFLAGS
+    export LDFLAGS=$OLD_LDFLAGS
 
     do_with_log \
         "Building static" \
         "make -j`nproc --all`" \
         build
+
+    # if [ "${TARGET_PLATFORM}" == "macOS" ]; then
+    #     export CFLAGS="${OLD_CFLAGS} -arch arm64"
+    #     export CXXFLAGS="${OLD_CXXFLAGS} -arch arm64"
+
+    #     mv libtomcrypt.dylib libtomcrypt_x86_64.dylib
+    #     mv libtomcrypt.a libtomcrypt_x86_64.a
+
+    #     export LDFLAGS="-s"
+    #     do_with_log \
+    #         "Building shared for arm" \
+    #         "make -f makefile.shared -j`nproc --all`" \
+    #         build
+    #     unset LDFLAGS
+
+    #     do_with_log \
+    #         "Building static for arm" \
+    #         "make -j`nproc --all`" \
+    #         build
+
+    #     export CFLAGS=$OLD_CFLAGS
+    #     export CXXFLAGS=$OLD_CXXFLAGS
+    # fi
 
     mkdir -p $SWITCH_VAL
     if [ "$TARGET_PLATFORM" == "win32" ]; then
@@ -139,6 +177,8 @@ else
     elif [ "$TARGET_PLATFORM" == "macOS" ]; then
         mv libtomcrypt.dylib build-macOS/libtomcrypt.dylib
         mv libtomcrypt.a build-macOS/libtomcrypt.a
+        # lipo -create -output build-macOS/libtomcrypt.dylib libtomcrypt.dylib libtomcrypt_x86_64.dylib
+        # lipo -create -output build-macOS/libtomcrypt.a libtomcrypt.a libtomcrypt_x86_64.a
         echo "    Patching tomcrypt lib with @rpath..."
         install_name_tool -id "@rpath/libtomcrypt.dylib" build-macOS/libtomcrypt.dylib
     fi
@@ -183,11 +223,8 @@ do_with_log \
 
 WX_INSTALL_PREFIX=`pwd`/install-$TARGET_PLATFORM
 
-# export CXXFLAGS="-fsanitize=address"
-# export CFLAGS="-fsanitize=address"
-# export LDFLAGS="-fsanitize=address"
-# WX_FLAGS='--enable-debug --without-opengl --disable-unsafe-conv-in-wxstring --disable-sys-libs'
-WX_FLAGS='--without-opengl --disable-unsafe-conv-in-wxstring --disable-sys-libs'
+# Use --enable-debug if needed
+WX_FLAGS='--without-opengl --disable-unsafe-conv-in-wxstring --disable-sys-libs --with-macosx-version-min=11.0'
 
 if [ "$TARGET_PLATFORM" == "linux" ]; then
     WX_HOST='x86_64-linux'

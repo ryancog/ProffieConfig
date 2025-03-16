@@ -218,6 +218,8 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
                 "	<string>APPL</string>\n"
                 "	<key>CSResourcesFileMapped</key>\n"
                 "	<true/>\n"
+                "   <key>LSMinimumSystemVersion</key>\n"
+                "   <string>11.0</string>\n"
                 "	<key>NSHumanReadableCopyright</key>\n"
                 "	<string>Copyright (C) 2024 Ryan Ogurek</string>\n"
                 "</dict>\n"

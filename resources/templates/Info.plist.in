@@ -15,7 +15,7 @@
    <key>CFBundleShortVersionString</key>
    <string>${CMAKE_PROJECT_VERSION}</string>
    <key>LSMinimumSystemVersion</key>
-   <string>10.15</string>
+   <string>11.0</string>
    <key>NSPrincipleClass</key>
    <string>NSApplication</string>
 </dict>
