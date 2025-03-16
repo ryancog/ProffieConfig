@@ -45,7 +45,8 @@ PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""
 void PropsPage::bindEvents() {
     static auto lastPropSelection{propSelection->entry()->GetSelection()};
     auto propSelectUpdate = [&](wxCommandEvent&) {
-        if (lastPropSelection == propSelection->entry()->GetSelection()) {
+        auto currentPropSelection{propSelection->entry()->GetSelection()};
+        if (lastPropSelection == currentPropSelection) {
             return;
         }
 
@@ -54,6 +55,7 @@ void PropsPage::bindEvents() {
         updateSelectedProp();
         update();
         updateSizeAndLayout();
+        lastPropSelection = currentPropSelection;
 
         wxSetCursor(wxNullCursor);
     };
