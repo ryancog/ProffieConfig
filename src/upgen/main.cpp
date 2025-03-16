@@ -159,7 +159,6 @@ public:
         Log::Context::setGlobalOuput({&std::clog}, false);
         auto& globalContext{Log::Context::getGlobal()};
         globalContext.setSeverity(Log::Severity::ERR);
-        globalContext.setErrorFatal();
         auto& logger{globalContext.createLogger("main()")};
 
         clearScreen();
@@ -326,20 +325,25 @@ vector<UpGen::Message> UpGen::parseMessages(const PConf::HashedData& hashedRawDa
     for (auto messageIt{messageRange.first}; messageIt != messageRange.second; ++messageIt) {
         if (messageIt->second->getType() != PConf::Type::SECTION) {
             logger.error("Message entry found in pconf! (Not a section)");
+            exit(1);
         }
 
         auto msgSect{std::static_pointer_cast<PConf::Section>(messageIt->second)};
         if (not msgSect->label) {
-            logger.error("Message without version specified is unacceptable, ignoring...");
+            logger.error("Message without version specified is unacceptable.");
+            exit(1);
         }
 
         auto hashedEntries{PConf::hash(msgSect->entries)};
         auto content{hashedEntries.find("CONTENT")};
         if (content == hashedEntries.end()) {
-            logger.error("Message missing content, ignoring...");
+            logger.error("Message missing content.");
+            exit(1);
         }
+
         if (not content->second->value) {
-            logger.error("Message content entry missing value, ignoring...");
+            logger.error("Message content entry missing value.");
+            exit(1);
         }
 
         auto label{msgSect->label.value()};
@@ -350,12 +354,14 @@ vector<UpGen::Message> UpGen::parseMessages(const PConf::HashedData& hashedRawDa
             else if (label[0] == '=' or std::isdigit(label[0])) comp = Update::Comparator::EQUAL;
             else {
                 logger.error("Message version invalid (comparator).");
+                exit(1);
             }
         }
         if (not std::isdigit(label[0])) label = label.substr(1);
         Update::Version version{label};
         if (not version) {
             logger.error("Failed to parse message version: " + string(version));
+            exit(1);
         }
 
         auto& message{ret.emplace_back()};
@@ -370,11 +376,13 @@ vector<UpGen::Message> UpGen::parseMessages(const PConf::HashedData& hashedRawDa
 std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Entry>& entry, Log::Logger& logger) {
     if (not entry->label) {
         logger.error("Item missing name!");
+        exit(1);
     }
     auto name{entry->label.value()};
 
     if (entry->getType() != PConf::Type::SECTION) {
         logger.error("Item \"" + name + "\" not a section!");
+        exit(1);
     }
     auto sect{std::static_pointer_cast<PConf::Section>(entry)};
 
@@ -387,9 +395,11 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
 
         if (not path->second->value) {
             logger.error("Item \"" + name + "\" " + spec + " path missing value!");
+            exit(1);
         }
         if (path->second->value->empty()) {
             logger.error("Item \"" + name + "\" has empty " + spec + " path!");
+            exit(1);
         }
         return path->second->value.value();
     }};
@@ -405,9 +415,11 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
     for (auto versionIt{versionRange.first}; versionIt != versionRange.second; ++versionIt) {
         if (not versionIt->second->label) {
             logger.error("Item \"" + name + "\" version unlabeled.");
+            exit(1);
         }
         if (versionIt->second->getType() != PConf::Type::SECTION) {
             logger.error("Item \"" + name + "\" version not a section.");
+            exit(1);
         }
 
         Update::Version version{versionIt->second->label.value()};
@@ -418,6 +430,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
             errMsg += versionIt->second->label.value(); 
             errMsg += "\" invalid version str: " + string(version);
             logger.error(errMsg);
+            exit(1);
         }
 
         auto versionSect{std::static_pointer_cast<PConf::Section>(versionIt->second)};
@@ -432,6 +445,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
                 errMsg += string(version);
                 errMsg += string(" missing ") + spec + " hash.";
                 logger.error(errMsg);
+                exit(1);
             }
             if (not versionHash->second->value) {
                 string errMsg{"Item \""}; 
@@ -440,6 +454,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
                 errMsg += string(version);
                 errMsg += string(" ") + spec + " hash missing value.";
                 logger.error(errMsg);
+                exit(1);
             }
             if (versionHash->second->value->length() != 64) {
                 string errMsg{"Item \""}; 
@@ -448,6 +463,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
                 errMsg += string(version);
                 errMsg += string(" has invalid ") + spec + " hash.";
                 logger.error(errMsg);
+                exit(1);
             }
             return versionHash->second->value.value();
         }};
@@ -466,6 +482,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
                 errMsg += string(version);
                 errMsg += " fix missing value.";
                 logger.error(errMsg);
+                exit(1);
             }
             versionData.fixes.push_back(fixIt->second->value.value());
         }
@@ -479,6 +496,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
                 errMsg += string(version);
                 errMsg += " change missing value.";
                 logger.error(errMsg);
+                exit(1);
             }
             versionData.changes.push_back(changeIt->second->value.value());
         }
@@ -492,6 +510,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
                 errMsg += string(version);
                 errMsg += " feature missing value.";
                 logger.error(errMsg);
+                exit(1);
             }
             versionData.features.push_back(featIt->second->value.value());
         }
@@ -500,6 +519,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
     }
     if (versionRange.first == versionRange.second) {
         logger.error("Item \"" + name + "\" has no versions!");
+        exit(1);
     }
      
     return { name, item };
@@ -512,14 +532,17 @@ Update::Bundles UpGen::resolveBundles(const PConf::HashedData& hashedRawData, Lo
     for (auto bundleIt{bundleRange.first}; bundleIt != bundleRange.second; ++bundleIt) {
         if (not bundleIt->second->label) {
             logger.error("Bundle unlabeled.");
+            exit(1);
         }
         if (bundleIt->second->getType() != PConf::Type::SECTION) {
             logger.error("Bundle \"" + bundleIt->second->label.value() + "\" not a section.");
+            exit(1);
         }
 
         Update::Version version{bundleIt->second->label.value()};
         if (not version) {
             logger.error("Bundle \"" + bundleIt->second->label.value() + "\" version invalid: " + string(version));
+            exit(1);
         }
 
         auto hashedEntries{PConf::hash(std::static_pointer_cast<PConf::Section>(bundleIt->second)->entries)};
@@ -527,20 +550,27 @@ Update::Bundles UpGen::resolveBundles(const PConf::HashedData& hashedRawData, Lo
 
         auto noteIt{hashedEntries.find("NOTE")};
         if (noteIt != hashedEntries.end()) {
-            if (not noteIt->second->value) logger.error("Bundle \"" + string(version) + "\" note missing value");
+            if (not noteIt->second->value) {
+                logger.error("Bundle \"" + string(version) + "\" note missing value");
+                exit(1);
+            }
+
             else bundle.note = noteIt->second->value.value();
         }
 
         auto parseReqItem{[&logger, version](const std::shared_ptr<PConf::Entry>& item) -> optional<std::pair<string, Update::Version>> {
             if (not item->label) {
                 logger.error("Item is unlabeled");
+                exit(1);
             }
             if (not item->value) {
                 logger.error("Item \"" + item->label.value() + "\" is unversioned.");
+                exit(1);
             }
             Update::Version version{item->value.value()};
             if (not version) {
                 logger.error("Item \"" + item->label.value() + "\" version \"" + item->value.value() + "\" is invalid: " + string(version));
+                exit(1);
             }
 
             return std::pair{ item->label.value(), version };
@@ -572,10 +602,12 @@ void UpGen::verifyBundles(const Items& items, const Update::Bundles& bundles, Lo
             auto itemIt{items.find(fileID)};
             if (itemIt == items.end()) {
                 logger.error("Bundle " + string(version) + " invalid (req file \"" + fileID.name + "\" unregistered)");
+                exit(1);
             }
             auto itemVerIt{itemIt->second.versions.find(fileVer)};
             if (itemVerIt == itemIt->second.versions.end()) {
                 logger.error("Bundle " + string(version) + " invalid (req file \"" + fileID.name + "\" invalid version \"" + string(fileVer)  + "\")");
+                exit(1);
             }
         }
     }
