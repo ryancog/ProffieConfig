@@ -181,6 +181,16 @@ public:
             prog.Update(95, "Purging logs...");
             fs::remove_all(Paths::logs(), err);
 
+            prog.Update(95, "Finalizing...");
+#           ifdef __APPLE__
+            const auto currentBundle{currentExec.parent_path().parent_path().parent_path()};
+            fs::remove_all(currentBundle);
+#           elif defined (__WINDOWS__)
+            MoveFileW(currentExec.c_str(), nullptr, MOVEFILE_DELAY_UNTIL_REBOOT);
+#           elif defined (__linux__)
+            (void)remove(currentExec.c_str());
+#           endif
+
             prog.Update(101, "Uninstalled.");
             return false;
         }
