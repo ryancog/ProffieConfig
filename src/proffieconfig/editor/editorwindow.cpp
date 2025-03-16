@@ -126,7 +126,8 @@ void EditorWindow::bindEvents() {
         }
         if (propsPage->AreAnyItemsShown()) propsPage->Layout();
         if (presetsPage->AreAnyItemsShown()) presetsPage->Layout();
-        FULLUPDATEWINDOW(this);
+
+        sizer->Fit(this);
     }, ID_WindowSelect);
 }
 void EditorWindow::createToolTips() {
