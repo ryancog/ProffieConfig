@@ -96,8 +96,8 @@ void EditorWindow::bindEvents() {
         const auto copyOptions{fs::copy_options::overwrite_existing};
         std::error_code err;
         if (not fs::copy_file(fileDialog.GetPath().ToStdString(), copyPath, copyOptions, err)) {
-        wxMessageBox(err.message(), "Injection file could not be added.");
-        return;
+            wxMessageBox(err.message(), "Injection file could not be added.");
+            return;
         }
 
         presetsPage->injections.push_back(fileDialog.GetFilename());
@@ -118,7 +118,6 @@ void EditorWindow::bindEvents() {
         //generalPage->update();
         bladesPage->update();
         propsPage->update();
-        propsPage->updateSizeAndLayout();
         presetsPage->update();
 
         if (bladesPage->AreAnyItemsShown()) {

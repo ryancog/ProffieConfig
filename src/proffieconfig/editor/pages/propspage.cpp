@@ -9,7 +9,6 @@
 #include <wx/tooltip.h>
 
 #include "ui/controls.h"
-#include "utils/defer.h"
 
 #include "../../core/defines.h"
 #include "../../core/appstate.h"
@@ -22,6 +21,7 @@
 PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""), mParent{static_cast<EditorWindow*>(window)} {
     auto *top{new wxBoxSizer(wxHORIZONTAL)};
     propSelection = new PCUI::Choice(GetStaticBox(), ID_PropSelect, Misc::createEntries({"Default"}), "Prop File");
+    propSelection->SetMinSize(wxSize{120, -1});
     // Two ampersands bc wxWidgets formatting
     propInfo = new wxButton(GetStaticBox(), ID_PropInfo, "Prop Description && Usage Info...");
     buttonInfo = new wxButton(GetStaticBox(), ID_Buttons, "Button Controls...");
@@ -43,19 +43,24 @@ PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""
 }
 
 void PropsPage::bindEvents() {
-    static auto lastPropSelection{propSelection->entry()->GetSelection()};
     auto propSelectUpdate = [&](wxCommandEvent&) {
-        auto currentPropSelection{propSelection->entry()->GetSelection()};
-        if (lastPropSelection == currentPropSelection) {
-            return;
-        }
-
         wxSetCursor(wxCURSOR_WAIT);
 
         updateSelectedProp();
         update();
-        updateSizeAndLayout();
-        lastPropSelection = currentPropSelection;
+
+        propsWindow->FitInside();
+        propsWindow->GetSizer()->Layout();
+        propsWindow->GetSizer()->Fit(propsWindow);
+
+        propsWindow->InvalidateBestSize();
+        propsWindow->SetMinSize(propsWindow->GetBestVirtualSize());
+
+        GetStaticBox()->Layout();
+        Fit(GetStaticBox());
+
+        mParent->Layout();
+        mParent->Fit();
 
         wxSetCursor(wxNullCursor);
     };
@@ -257,13 +262,6 @@ void PropsPage::update() {
     }
 }
 
-void PropsPage::updateSizeAndLayout() {
-    propsWindow->SetSizerAndFit(propsWindow->GetSizer());
-    mParent->SetSizerAndFit(mParent->sizer);
-    mParent->SetMinSize(wxSize(mParent->GetSize().x, 350));
-    mParent->Refresh();
-}
-
 void PropsPage::updateDisables(PropFile* prop) {
     for (auto& [ name, setting ] : *prop->getSettings()) {
         setting.disabled = false;
@@ -312,4 +310,6 @@ void PropsPage::loadProps() {
         addProp(prop);
     }
     updateProps();
+
+    Layout();
 }
