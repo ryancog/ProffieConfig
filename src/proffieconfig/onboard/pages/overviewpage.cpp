@@ -330,6 +330,8 @@ void Onboard::Overview::linkEditorEvents() {
                 "blades as you'd like, provided you have the pins on the Proffieboard, of course!\n"
                 "\n"
                 "Click \"Blade Awareness...\" to continue.\n");
+
+        mGuideMenu->activeEditor->bladesPage->bladeArrayButton->Enable();
     }, BladesPage::ID_BladeType);
     mGuideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
@@ -398,7 +400,7 @@ void Onboard::Overview::linkEditorEvents() {
 
         mGuideMenu->activeEditor->presetsPage->nameInput->entry()->Enable();
 
-        auto onTrackDone{[&](wxCommandEvent& event) {
+        auto onTrackDone{[this](wxCommandEvent& event) {
             EVENT_PAGE_SETUP;
 
             generateNewPage("Configuration - Presets and Styles",
@@ -424,7 +426,7 @@ void Onboard::Overview::linkEditorEvents() {
 
             mGuideMenu->activeEditor->presetsPage->bladeList->Enable();
         }};
-        auto onDirectoryDone{[&](wxCommandEvent& event) {
+        auto onDirectoryDone{[this, onTrackDone](wxCommandEvent& event) {
             EVENT_PAGE_SETUP;
 
             generateNewPage(
@@ -449,7 +451,7 @@ void Onboard::Overview::linkEditorEvents() {
 
             useButtonOnPage("Done", onTrackDone);
         }};
-        auto onNameDone{[&](wxCommandEvent& event) {
+        auto onNameDone{[this, onDirectoryDone](wxCommandEvent& event) {
             EVENT_PAGE_SETUP;
 
             generateNewPage(
@@ -467,6 +469,7 @@ void Onboard::Overview::linkEditorEvents() {
                     "have a \"common\"\n"
                     "folder, you can seperate folder names with a \";\" (e.g. "
                     "folderName;common)");
+
             mGuideMenu->activeEditor->presetsPage->dirInput->entry()->Enable();
 
             useButtonOnPage("Done", onDirectoryDone);
