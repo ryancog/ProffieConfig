@@ -355,29 +355,29 @@ LAYOUT {
 	HORIZONTAL {
 		VERTICAL("Gesture Control") {
 			VERTICAL("Swing On") {
-                                SETTING("FETT263_SWING_ON")
-                                SETTING("FETT263_SWING_ON_PREON")
-                                SETTING("FETT263_SWING_ON_NO_BM")
-                                SETTING("FETT263_SWING_ON_SPEED")
+				SETTING("FETT263_SWING_ON")
+				SETTING("FETT263_SWING_ON_PREON")
+				SETTING("FETT263_SWING_ON_NO_BM")
+				SETTING("FETT263_SWING_ON_SPEED")
 			}
 			VERTICAL("Stab On") {
-                                SETTING("FETT263_STAB_ON")
-                                SETTING("FETT263_STAB_ON_PREON")
-                                SETTING("FETT263_STAB_ON_NO_BM")
+				SETTING("FETT263_STAB_ON")
+				SETTING("FETT263_STAB_ON_PREON")
+				SETTING("FETT263_STAB_ON_NO_BM")
 			}
 			VERTICAL("Thrust On") {
-                                SETTING("FETT263_THRUST_ON")
-                                SETTING("FETT263_THRUST_ON_PREON")
-                                SETTING("FETT263_THRUST_ON_NO_BM")
+				SETTING("FETT263_THRUST_ON")
+				SETTING("FETT263_THRUST_ON_PREON")
+				SETTING("FETT263_THRUST_ON_NO_BM")
 			}
 			VERTICAL("Twist On") {
-                                SETTING("FETT263_TWIST_ON")
-                                SETTING("FETT263_TWIST_ON_PREON")
-                                SETTING("FETT263_TWIST_ON_NO_BM")
+				SETTING("FETT263_TWIST_ON")
+				SETTING("FETT263_TWIST_ON_PREON")
+				SETTING("FETT263_TWIST_ON_NO_BM")
 			}
 			VERTICAL("Twist Off") {
-                                SETTING("FETT263_TWIST_OFF")
-                                SETTING("FETT263_TWIST_OFF_NO_POSTOFF")
+				SETTING("FETT263_TWIST_OFF")
+				SETTING("FETT263_TWIST_OFF_NO_POSTOFF")
 			}
 		}
 
@@ -385,54 +385,54 @@ LAYOUT {
 			HORIZONTAL("Controls") {
 				HORIZONTAL("General") {
 					VERTICAL {
-                                                SETTING("FETT263_USE_BC_MELT_STAB")
-                                                SETTING("FETT263_CIRCULAR_VOLUME_MENU")
-                                                SETTING("FETT263_CIRCULAR_DIM_MENU")
-                                                SETTING("FETT263_MOTION_WAKE_POWER_BUTTON")
+						SETTING("FETT263_USE_BC_MELT_STAB")
+						SETTING("FETT263_CIRCULAR_VOLUME_MENU")
+						SETTING("FETT263_CIRCULAR_DIM_MENU")
+						SETTING("FETT263_MOTION_WAKE_POWER_BUTTON")
 					}
 					VERTICAL {
-                                                SETTING("FETT263_HOLD_BUTTON_OFF")
-                                                SETTING("FETT263_HOLD_BUTTON_LOCKUP")
+						SETTING("FETT263_HOLD_BUTTON_OFF")
+						SETTING("FETT263_HOLD_BUTTON_LOCKUP")
 					}
 				}
 				VERTICAL("Edit Mode") {
-                                        SETTING("NO_EDIT_MODE")
-                                        SETTING("FETT263_EDIT_MODE_MENU")
-                                        SETTING("FETT263_EDIT_SETTINGS_MENU")
+					SETTING("NO_EDIT_MODE")
+					SETTING("FETT263_EDIT_MODE_MENU")
+					SETTING("FETT263_EDIT_SETTINGS_MENU")
 				}
 				VERTICAL("Interface") {
-                                        SETTING("FETT263_SAY_COLOR_LIST")
-                                        SETTING("FETT263_SAY_COLOR_LIST_CC")
-                                        SETTING("FETT263_SAY_BATTERY_VOLTS")
-                                        SETTING("FETT263_SAY_BATTERY_PERCENT")
-                                        SETTING("FETT263_BC_SAY_BATTERY_VOLTS_PERCENT")
+					SETTING("FETT263_SAY_COLOR_LIST")
+					SETTING("FETT263_SAY_COLOR_LIST_CC")
+					SETTING("FETT263_SAY_BATTERY_VOLTS")
+					SETTING("FETT263_SAY_BATTERY_PERCENT")
+					SETTING("FETT263_BC_SAY_BATTERY_VOLTS_PERCENT")
 				}
 			}
 
 			HORIZONTAL("Features") {
 				VERTICAL("Force Push") {
-                                        SETTING("FETT263_FORCE_PUSH")
-                                        SETTING("FETT263_FORCE_PUSH_ALWAYS_ON")
-                                        SETTING("FETT263_FORCE_PUSH_LENGTH")
+					SETTING("FETT263_FORCE_PUSH")
+					SETTING("FETT263_FORCE_PUSH_ALWAYS_ON")
+					SETTING("FETT263_FORCE_PUSH_LENGTH")
 				}
 				VERTICAL("Quote Player") {
-                                        SETTING("FETT263_DISABLE_QUOTE_PLAYER")
-                                        SETTING("FETT263_QUOTE_PLAYER_START_ON")
-                                        SETTING("FETT263_RANDOMIZE_QUOTE_PLAYER")
+					SETTING("FETT263_DISABLE_QUOTE_PLAYER")
+					SETTING("FETT263_QUOTE_PLAYER_START_ON")
+					SETTING("FETT263_RANDOMIZE_QUOTE_PLAYER")
 				}
 				HORIZONTAL("Other") {
 					VERTICAL {
-                                                SETTING("FETT263_SPECIAL_ABILITIES")
-                                                SETTING("FETT263_MULTI_PHASE")
-                                                SETTING("FETT263_SPIN_MODE")
-                                                SETTING("FETT263_SAVE_CHOREOGRAPHY")
+						SETTING("FETT263_SPECIAL_ABILITIES")
+						SETTING("FETT263_MULTI_PHASE")
+						SETTING("FETT263_SPIN_MODE")
+						SETTING("FETT263_SAVE_CHOREOGRAPHY")
 					}
 					VERTICAL {
-                                                SETTING("FETT263_SAVE_GESTURE_OFF")
-                                                SETTING("FETT263_DUAL_MODE_SOUND")
-                                                SETTING("FETT263_QUICK_SELECT_ON_BOOT")
-                                                SETTING("FETT263_CLASH_STRENGTH_SOUND")
-                                                SETTING("FETT263_MAX_CLASH")
+						SETTING("FETT263_SAVE_GESTURE_OFF")
+						SETTING("FETT263_DUAL_MODE_SOUND")
+						SETTING("FETT263_QUICK_SELECT_ON_BOOT")
+						SETTING("FETT263_CLASH_STRENGTH_SOUND")
+						SETTING("FETT263_MAX_CLASH")
 					}
 				}
 			}
@@ -440,24 +440,24 @@ LAYOUT {
 			HORIZONTAL {
 				HORIZONTAL("Battle Mode") {
 					VERTICAL("Activation") {
-                                                SETTING("FETT263_BATTLE_MODE_START_ON")
-                                                SETTING("FETT263_BATTLE_MODE_ALWAYS_ON")
-                                                SETTING("FETT263_DISABLE_BM_TOGGLE")
-                                                SETTING("FETT263_BM_DISABLE_OFF_BUTTON")
+						SETTING("FETT263_BATTLE_MODE_START_ON")
+						SETTING("FETT263_BATTLE_MODE_ALWAYS_ON")
+						SETTING("FETT263_DISABLE_BM_TOGGLE")
+						SETTING("FETT263_BM_DISABLE_OFF_BUTTON")
 					}
 					VERTICAL("Lockup") {
-                                                SETTING("FETT263_LOCKUP_DELAY")
-                                                SETTING("FETT263_BM_CLASH_DETECT")
-                                                SETTING("FETT263_HOLD_BUTTON_LOCKUP")
+						SETTING("FETT263_LOCKUP_DELAY")
+						SETTING("FETT263_BM_CLASH_DETECT")
+						SETTING("FETT263_HOLD_BUTTON_LOCKUP")
 					}
 				}
 				VERTICAL("Disables") {
-                                        SETTING("FETT263_TRACK_PLAYER_NO_PROMPTS")
-                                        SETTING("FETT263_DISABLE_MULTI_BLAST")
-                                        SETTING("FETT263_DISABLE_MULTI_BLAST_TOGGLE")
-                                        SETTING("FETT263_DISABLE_CHANGE_STYLE")
-                                        SETTING("FETT263_DISABLE_CHANGE_FONT")
-                                        SETTING("FETT263_DISABLE_COPY_PRESET")
+					SETTING("FETT263_TRACK_PLAYER_NO_PROMPTS")
+					SETTING("FETT263_DISABLE_MULTI_BLAST")
+					SETTING("FETT263_DISABLE_MULTI_BLAST_TOGGLE")
+					SETTING("FETT263_DISABLE_CHANGE_STYLE")
+					SETTING("FETT263_DISABLE_CHANGE_FONT")
+					SETTING("FETT263_DISABLE_COPY_PRESET")
 				}
 			}
 		}
