@@ -1,4 +1,5 @@
 #include "editorwindow.h"
+#include "utils/defer.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
@@ -106,6 +107,9 @@ void EditorWindow::bindEvents() {
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("http://profezzorn.github.io/ProffieOS-StyleEditor/style_editor.html"); }, ID_StyleEditor);
 
     Bind(wxEVT_CHOICE, [&](wxCommandEvent&) {
+        wxSetCursor(wxCURSOR_WAIT);
+        Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
+
         generalPage->Show(windowSelect->entry()->GetStringSelection() == "General");
         propsPage->Show(windowSelect->entry()->GetStringSelection() == "Prop File");
         bladesPage->Show(windowSelect->entry()->GetStringSelection() == "Blade Arrays");

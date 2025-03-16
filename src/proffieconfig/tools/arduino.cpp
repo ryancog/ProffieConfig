@@ -1,5 +1,7 @@
 #include "arduino.h"
 #include "log/severity.h"
+#include "utils/defer.h"
+#include "wx/gdicmn.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
@@ -204,6 +206,10 @@ void Arduino::refreshBoards(MainMenu* window) {
     auto lastSelection{window->boardSelect->entry()->GetStringSelection()};
     std::thread thread([=]() {
         progDialog->emitEvent(0, "Initializing...");
+
+        wxSetCursor(wxCURSOR_WAIT);
+        Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
+
         wxQueueEvent(window, new Event(EVT_CLEAR_BLIST)); // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
         progDialog->emitEvent(20, "Fetching Devices...");
         for (const wxString& item : Arduino::getBoards()) {
@@ -282,10 +288,13 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
     editor->bladesPage->bladeArrayDlg->update();
 
     std::thread thread{[=]() {
+        progDialog->emitEvent(0, "Initializing...");
+
+        wxSetCursor(wxCURSOR_WAIT);
+        Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
+
         auto *evt{new Event(EVT_APPLY_DONE)};
         std::string returnVal;
-
-        progDialog->emitEvent(0, "Initializing...");
 
         progDialog->emitEvent(10, "Checking board presence...");
         wxString lastSel = window->boardSelect->entry()->GetStringSelection();
@@ -399,6 +408,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
     }};
     thread.detach();
 }
+
 void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
     auto *progDialog{new Progress(parent)};
     progDialog->SetTitle("Verify Config");
@@ -408,6 +418,11 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
     editor->bladesPage->bladeArrayDlg->update();
 
     std::thread thread{[=]() {
+        progDialog->emitEvent(0, "Initializing...");
+
+        wxSetCursor(wxCURSOR_WAIT);
+        Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
+
         auto *evt{new Event(EVT_VERIFY_DONE)};
         string returnVal;
 
