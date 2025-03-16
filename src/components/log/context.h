@@ -46,8 +46,6 @@ public:
     [[nodiscard]] list<Logger *> getLoggers() const;
 
     void setSeverity(Severity);
-    void setErrorFatal(bool = true);
-
     void quickLog(Severity, string tag, string message);
 
     /**
@@ -74,7 +72,6 @@ private:
     std::mutex mSendLock;
     std::mutex mListLock;
 
-    bool mErrFatal{false};
     Severity mCurrentSev{Severity::DBUG};
 
     // Reserved object, should not be used except to maintain lifetime!
