@@ -396,7 +396,7 @@ void Onboard::Overview::linkEditorEvents() {
                 "\n"
                 "This name should ideally be kept short, and if you want to put "
                 "some of the name\n"
-                "on a new line on the OLED, you can use \"\\n\" to mean \"Enter\"");
+                "on a new line on the OLED, you can use \"\\n\" to mean \"Enter\"\n");
 
         mGuideMenu->activeEditor->presetsPage->nameInput->entry()->Enable();
 
@@ -468,7 +468,7 @@ void Onboard::Overview::linkEditorEvents() {
                     "If you want to specify multiple folders if you, for example, "
                     "have a \"common\"\n"
                     "folder, you can seperate folder names with a \";\" (e.g. "
-                    "folderName;common)");
+                    "folderName;common)\n");
 
             mGuideMenu->activeEditor->presetsPage->dirInput->entry()->Enable();
 
