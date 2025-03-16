@@ -73,14 +73,7 @@ void PropsPage::bindEvents() {
     propsWindow->Bind(wxEVT_SPINCTRLDOUBLE, optionSelectUpdate, wxID_ANY);
 
     GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        static wxDialog *buttonDialog{nullptr};
-        if (buttonDialog) {
-            buttonDialog->Raise();
-            return;
-        }
-
         wxSetCursor(wxCURSOR_WAIT);
-        Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
         PropFile* activeProp{nullptr};
         for (auto& prop : mProps) {
@@ -88,14 +81,14 @@ void PropsPage::bindEvents() {
         }
 
         auto *textSizer{new wxBoxSizer(wxVERTICAL)};
-        buttonDialog = new wxDialog(
+        wxDialog buttonDialog{
             mParent,
             wxID_ANY,
             (activeProp ? activeProp->getName() : "Default") + " Buttons",
             wxDefaultPosition,
             wxDefaultSize,
             wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP | wxRESIZE_BORDER
-        );
+        };
 
         if (activeProp == nullptr) {
             auto defaultButtons{[](int32 num) -> wxString {
@@ -145,7 +138,7 @@ void PropsPage::bindEvents() {
                 }
             }};
             textSizer->Add(
-                new wxStaticText(buttonDialog, wxID_ANY, defaultButtons(mParent->generalPage->buttons->entry()->GetValue())),
+                new wxStaticText(&buttonDialog, wxID_ANY, defaultButtons(mParent->generalPage->buttons->entry()->GetValue())),
                 wxSizerFlags{}.Border(wxALL, 10)
             );
         } else {
@@ -153,11 +146,11 @@ void PropsPage::bindEvents() {
 
             if (propButtons.empty()) {
                 textSizer->Add(
-                    new wxStaticText(buttonDialog, wxID_ANY, "Selected number of buttons not supported by prop file."), 
+                    new wxStaticText(&buttonDialog, wxID_ANY, "Selected number of buttons not supported by prop file."), 
                     wxSizerFlags{}.Border(wxALL, 10)
                 );
             } else for (auto& [ stateName, stateButtons ] : propButtons) {
-                auto *stateSizer{new wxStaticBoxSizer(wxVERTICAL, buttonDialog, "Button controls while saber is " + stateName + ":")};
+                auto *stateSizer{new wxStaticBoxSizer(wxVERTICAL, &buttonDialog, "Button controls while saber is " + stateName + ":")};
                 auto *controlSizer{new wxBoxSizer(wxHORIZONTAL)};
                 auto *buttonSizer{new wxBoxSizer(wxVERTICAL)};
                 auto *actionSizer{new wxBoxSizer(wxVERTICAL)};
@@ -197,20 +190,13 @@ void PropsPage::bindEvents() {
             textSizer->AddSpacer(10);
         }
 
-        buttonDialog->SetSizerAndFit(textSizer);
-        buttonDialog->DoLayoutAdaptation();
-        buttonDialog->Bind(wxEVT_CLOSE_WINDOW, [](wxCloseEvent&) { buttonDialog = nullptr; });
-        buttonDialog->Show();
+        buttonDialog.SetSizerAndFit(textSizer);
+        buttonDialog.DoLayoutAdaptation();
+        wxSetCursor(wxNullCursor);
+        buttonDialog.ShowModal();
     }, ID_Buttons);
     GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        static wxDialog *infoDialog{nullptr};
-        if (infoDialog) {
-            infoDialog->Raise();
-            return;
-        }
-
         wxSetCursor(wxCURSOR_WAIT);
-        Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
         string info;
 
@@ -225,7 +211,7 @@ void PropsPage::bindEvents() {
             info = activeProp->getInfo();
         }
 
-        infoDialog = new wxDialog{
+        wxDialog infoDialog{
             mParent,
             wxID_ANY,
             propSelection->entry()->GetStringSelection() + " Prop Info",
@@ -234,11 +220,11 @@ void PropsPage::bindEvents() {
             wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP
         };
         auto *textSizer{new wxBoxSizer(wxVERTICAL)};
-        textSizer->Add(infoDialog->CreateTextSizer(info), wxSizerFlags(0).Border(wxALL, 10));
-        infoDialog->SetSizer(textSizer);
-        infoDialog->DoLayoutAdaptation();
-        infoDialog->Bind(wxEVT_CLOSE_WINDOW, [](wxCloseEvent&) { infoDialog = nullptr; });
-        infoDialog->Show();
+        textSizer->Add(infoDialog.CreateTextSizer(info), wxSizerFlags(0).Border(wxALL, 10));
+        infoDialog.SetSizer(textSizer);
+        infoDialog.DoLayoutAdaptation();
+        wxSetCursor(wxNullCursor);
+        infoDialog.ShowModal();
     }, ID_PropInfo);
 }
 
