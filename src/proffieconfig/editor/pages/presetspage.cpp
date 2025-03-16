@@ -7,8 +7,10 @@
 #include "../../core/utilities/misc.h"
 #include "../editorwindow.h"
 #include "../dialogs/bladearraydlg.h"
+#include "wx/gdicmn.h"
 
 #include <wx/msgdlg.h>
+#include <wx/splitter.h>
 
 #include <string>
 #include <wx/tooltip.h>
@@ -17,21 +19,19 @@
 #endif
 
 PresetsPage::PresetsPage(wxWindow* window) : wxStaticBoxSizer(wxHORIZONTAL, window, ""), mParent(static_cast<EditorWindow *>(window)) {
-  commentInput = new PCUI::Text(GetStaticBox(), ID_PresetChange, {},  wxTE_MULTILINE | wxNO_BORDER, "Comments");
-  commentInput->SetMinSize(wxSize{500, -1});
-
-  styleInput = new PCUI::Text(GetStaticBox(), ID_PresetChange, {}, wxTE_DONTWRAP | wxTE_MULTILINE | wxNO_BORDER, "BladeStyle");
-  styleInput->SetMinSize(wxSize{500, 200});
-  styleInput->entry()->SetFont(wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
-
-
   Add(createPresetConfig(), wxSizerFlags(/*proportion*/ 0).Border(wxALL, 10));
   Add(createPresetSelect(), wxSizerFlags(/*proportion*/ 0).Border(wxTOP | wxRIGHT | wxBOTTOM, 10).Expand());
 
-  auto *styleSizer{new wxBoxSizer(wxVERTICAL)};
-  styleSizer->Add(commentInput, wxSizerFlags(/*proportion*/ 1).Expand());
-  styleSizer->Add(styleInput, wxSizerFlags(/*proportion*/ 2).Expand());
-  Add(styleSizer, wxSizerFlags(1).Border(wxALL, 10).Expand());
+  auto *styleCommentSplit{new wxSplitterWindow(GetStaticBox(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3DSASH | wxSP_LIVE_UPDATE)};
+  commentInput = new PCUI::Text(styleCommentSplit, ID_PresetChange, {},  wxTE_MULTILINE | wxNO_BORDER, "Comments");
+
+  styleInput = new PCUI::Text(styleCommentSplit, ID_PresetChange, {}, wxTE_DONTWRAP | wxTE_MULTILINE | wxNO_BORDER, "BladeStyle");
+  styleInput->entry()->SetFont(wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+
+  styleCommentSplit->SetMinSize(wxSize{500, -1});
+  styleCommentSplit->SetMinimumPaneSize(60);
+  styleCommentSplit->SplitHorizontally(commentInput, styleInput);
+  Add(styleCommentSplit, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
   bindEvents();
   createToolTips();
