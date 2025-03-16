@@ -80,11 +80,12 @@ bool Update::pullNewFiles(const Changelog& changelog, const Data& data, PCUI::Pr
 
     for (uint64 idx{0}; idx < changelog.changedFiles.size(); ++idx) {
         const auto& file{changelog.changedFiles[idx]};
+        if (file.id.ignored) continue;
         const auto& item{data.items.at(file.id)};
 
         string itemURLString{Paths::remoteUpdateAssets()};
         type = file.id.type;
-        itemURLString += typeFolder(type).string() + '/';
+        itemURLString += '/' + typeFolder(type).string() + '/';
         itemURLString += file.hash;
         wxURI url{itemURLString};
         auto request{wxWebSession::GetDefault().CreateRequest(getEventHandler(), url.BuildURI())};
@@ -101,7 +102,14 @@ bool Update::pullNewFiles(const Changelog& changelog, const Data& data, PCUI::Pr
             auto dataTotal{request.GetBytesExpectedToReceive()};
             auto progress{dataReceived == 0 ? 0 : dataReceived * 100 / dataTotal};
 
-            auto statusMessage{"Downloading " + file.id.name + "... "};
+            string statusMessage;
+            if (file.id.type == ItemType::LIB) {
+                statusMessage = "Downloading libraries... ";
+            } else if (file.id.type == ItemType::RSRC) {
+                statusMessage = "Downloading resources... ";
+            } else {
+                statusMessage = "Downloading " + file.id.name + "... ";
+            }
             if (dataTotal != -1) {
                 statusMessage += convertSize(dataReceived);
                 statusMessage += " / ";
@@ -161,6 +169,7 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
     }};
 
     for (const auto& file : changelog.removedFiles) {
+        if (file.ignored) continue;
         const auto& item{data.items.at(file)};
 
         auto path{baseTypePath(file.type)};
@@ -170,6 +179,7 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
     }
 
     for (const auto& file : changelog.changedFiles) {
+        if (file.id.ignored) continue;
         const auto& item{data.items.at(file.id)};
 
         auto path{baseTypePath(file.id.type)};

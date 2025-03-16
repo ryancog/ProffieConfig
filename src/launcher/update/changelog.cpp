@@ -166,6 +166,7 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
     if (noteStartIt != noteEndIt) whatNewSizer->Add(new wxStaticLine(whatNewPanel), wxSizerFlags().Expand().Border(wxBOTTOM, 5));
 
     for (const auto& file : changelog.changedFiles) {
+        if (file.id.ignored) continue;
         auto fileItem{data.items.at(file.id)};
         if (fileItem.hidden) continue;
 
@@ -285,6 +286,7 @@ Update::Version Update::determineCurrentVersion(const Data& data, PCUI::Progress
 
         bool filesMatch{true};
         for (const auto& [ id, fileVer, hash] : bundle.reqs) {
+            if (id.ignored) continue;
             auto fileItem{data.items.at(id)};
             filepath itemPath;
             switch (id.type) {
