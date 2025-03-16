@@ -186,7 +186,7 @@ public:
             const auto currentBundle{currentExec.parent_path().parent_path().parent_path()};
             fs::remove_all(currentBundle);
 #           elif defined (__WINDOWS__)
-            MoveFileW(currentExec.c_str(), nullptr, MOVEFILE_DELAY_UNTIL_REBOOT);
+            MoveFileExW(currentExec.c_str(), nullptr, MOVEFILE_DELAY_UNTIL_REBOOT);
 #           elif defined (__linux__)
             (void)remove(currentExec.c_str());
 #           endif
