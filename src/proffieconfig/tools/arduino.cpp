@@ -60,6 +60,8 @@ namespace Arduino {
     wxDEFINE_EVENT(EVT_REFRESH_DONE, Event);
     wxDEFINE_EVENT(EVT_CLEAR_BLIST, Event);
     wxDEFINE_EVENT(EVT_APPEND_BLIST, Event);
+
+    constexpr auto MAX_ERRMESSAGE_LENGTH{1024};
 } // namespace Arduino
 
 void Arduino::init(wxWindow *parent) {
@@ -324,7 +326,11 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
         progDialog->emitEvent(30, "Updating ProffieOS file...");
         if (!Arduino::updateIno(returnVal, editor)) {
             progDialog->emitEvent(100, "Error");
-            auto* msg{new Misc::MessageBoxEvent(wxID_ANY, "There was an error while updating ProffieOS file:\n\n" + returnVal, "Files Error")};
+            auto* msg{new Misc::MessageBoxEvent{
+                wxID_ANY, 
+                "There was an error while updating ProffieOS file:\n\n" + returnVal.substr(0, MAX_ERRMESSAGE_LENGTH), 
+                "Files Error"
+            }};
             wxQueueEvent(window, msg);
             wxQueueEvent(window, evt);
             return;
@@ -333,7 +339,11 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
         progDialog->emitEvent(40, "Compiling ProffieOS...");
         if (!Arduino::compile(returnVal, editor)) {
             progDialog->emitEvent(100, "Error");
-            auto* msg{new Misc::MessageBoxEvent(wxID_ANY, "There was an error while compiling:\n\n" + returnVal, "Compile Error")};
+            auto* msg{new Misc::MessageBoxEvent{
+                wxID_ANY,
+                "There was an error while compiling:\n\n" + returnVal.substr(0, MAX_ERRMESSAGE_LENGTH), 
+                "Compile Error"
+            }};
             wxQueueEvent(window, msg);
             wxQueueEvent(window, evt);
             return;
@@ -383,7 +393,11 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
 
         if (error.find("File downloaded successfully") == std::string::npos) {
             progDialog->emitEvent(100, "Error");
-            auto* msg{new Misc::MessageBoxEvent(wxID_ANY, "There was an error while uploading:\n\n" + Arduino::parseError(error), "Upload Error")};
+            auto* msg{new Misc::MessageBoxEvent{
+                wxID_ANY, 
+                "There was an error while uploading:\n\n" + Arduino::parseError(error),
+                "Upload Error"
+            }};
             wxQueueEvent(window, msg);
             wxQueueEvent(window, evt);
             return;
@@ -392,7 +406,11 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
 #   else
         if (not Arduino::upload(returnVal, editor)) {
             progDialog->emitEvent(100, "Error");
-            Misc::MessageBoxEvent* msg = new Misc::MessageBoxEvent(wxID_ANY, "There was an error while uploading:\n\n" + returnVal, "Upload Error");
+            auto* msg{new Misc::MessageBoxEvent{
+                wxID_ANY, 
+                "There was an error while uploading:\n\n" + returnVal.substr(0, MAX_ERRMESSAGE_LENGTH),
+                "Upload Error"
+            }};
             wxQueueEvent(window, msg);
             wxQueueEvent(window, evt);
             return;
@@ -401,7 +419,12 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
 
         progDialog->emitEvent(100, "Done.");
 
-        auto* msg{new Misc::MessageBoxEvent(wxID_ANY, "Changes Successfully Applied to ProffieBoard!", "Apply Changes to Board", wxOK | wxICON_INFORMATION)};
+        auto* msg{new Misc::MessageBoxEvent{
+            wxID_ANY,
+            "Changes Successfully Applied to ProffieBoard!", 
+            "Apply Changes to Board",
+            wxOK | wxICON_INFORMATION
+        }};
         wxQueueEvent(window, msg);
         evt->succeeded = true;
         wxQueueEvent(window, evt);
@@ -438,7 +461,11 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
         progDialog->emitEvent(30, "Updating ProffieOS file...");
         if (not Arduino::updateIno(returnVal, editor)) {
             progDialog->emitEvent(100, "Error");
-            auto* msg{new Misc::MessageBoxEvent(wxID_ANY, "There was an error while updating ProffieOS file:\n\n" + returnVal, "Files Error")};
+            auto* msg{new Misc::MessageBoxEvent{
+                wxID_ANY, 
+                "There was an error while updating ProffieOS file:\n\n" + returnVal.substr(0, MAX_ERRMESSAGE_LENGTH), 
+                "Files Error"
+            }};
             wxQueueEvent(parent, msg);
             wxQueueEvent(parent, evt);
             return;
@@ -447,7 +474,11 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
         progDialog->emitEvent(40, "Compiling ProffieOS...");
         if (not Arduino::compile(returnVal, editor)) {
             progDialog->emitEvent(100, "Error");
-            auto* msg{new Misc::MessageBoxEvent(wxID_ANY, "There was an error while compiling:\n\n" + returnVal, "Compile Error")};
+            auto* msg{new Misc::MessageBoxEvent{
+                wxID_ANY,
+                "There was an error while compiling:\n\n" + returnVal.substr(0, MAX_ERRMESSAGE_LENGTH),
+                "Compile Error"
+            }};
             wxQueueEvent(parent, msg);
             wxQueueEvent(parent, evt);
             return;
@@ -508,7 +539,7 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
     else if (editor->generalPage->massStorage->GetValue()) compileCommand += "usb=cdc_msc";
     else compileCommand += "usb=cdc";
     if (editor->generalPage->board->entry()->GetSelection() == PROFFIEBOARDV3) compileCommand +=",dosfs=sdmmc1";
-    compileCommand += " " + Paths::proffieos().string() + " -v";
+    compileCommand += " \"" + Paths::proffieos().string() + "\" -v";
     FILE *arduinoCli = Arduino::cli(compileCommand);
 
     string error{};
@@ -719,7 +750,7 @@ string Arduino::parseError(const string& error) {
         return error.substr(fileData + 1);
     }
 
-    return "Unknown error: " + error;
+    return "Unknown error: " + error.substr(0, MAX_ERRMESSAGE_LENGTH);
 #	undef ERRCONTAINS
 }
 
