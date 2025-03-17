@@ -18,13 +18,17 @@
 
 #include "../../core/utilities/misc.h"
 
+PropFile::ButtonState::ButtonState(string stateName, vector<Button> buttons) : 
+    stateName{std::move(stateName)}, buttons{std::move(buttons)} {}
+
+PropFile::MappedError::MappedError(string arduinoError, string displayError) :
+    arduinoError{std::move(arduinoError)}, displayError{std::move(displayError)} {}
+
 PropFile::PropFile(wxWindow* parent) : wxPanel(parent, wxID_ANY) {
   settings = new SettingMap;
-  buttons = new std::array<ButtonArray, 4>;
 }
 PropFile::~PropFile() {
   delete settings;
-  delete buttons;
 }
 
 std::string PropFile::getName() const { return name; }
@@ -83,7 +87,8 @@ void PropFile::Setting::setValue(double value) const {
 
 PropFile::SettingMap* PropFile::getSettings() { return settings; }
 
-const std::array<PropFile::ButtonArray, 4>* PropFile::getButtons() { return buttons; }
+const array<PropFile::ButtonControls, 4>& PropFile::getButtons() { return buttons; }
+const vector<PropFile::MappedError>& PropFile::getMappedErrors() { return mappedErrors; }
 
 bool PropFile::Setting::checkRequiredSatisfied(const std::unordered_map<std::string, Setting>& settings) const {
   if (!requiredAny.empty()) {
@@ -182,6 +187,13 @@ PropFile* PropFile::createPropConfig(const string& propName, wxWindow* _parent, 
         }
         logger.warn("Removing unused setting \"" + setting->second.name + "\"...");
         setting = prop->settings->erase(setting);
+    }
+
+    const auto errors{hashedData.find("ERRORS")};
+    if (errors == hashedData.end() or errors->second->getType() != PConf::Type::SECTION) {
+        logger.info("Prop config file \"" + propName + "\" does not have optional section \"ERRORS\", skipping...");
+    } else {
+        prop->readErrors(PConf::hash(std::static_pointer_cast<PConf::Section>(errors->second)->entries), *logger.binfo("Reading errors..."));
     }
 
     prop->Show(false);
@@ -456,7 +468,7 @@ void PropFile::readButtons(const std::shared_ptr<PConf::Section>& data, Log::Bra
       return;
     }
 
-    auto& buttonArray{(*buttons)[*data->labelNum]};
+    auto& buttonArray{buttons[*data->labelNum]};
     for (const auto& entry : data->entries) {
         if (entry->getType() != PConf::Type::SECTION) continue;
         if (entry->name != "STATE") continue;
@@ -494,8 +506,44 @@ void PropFile::readButtons(const std::shared_ptr<PConf::Section>& data, Log::Bra
                 newButton.descriptions.emplace(descEntry->label.value_or(""), descEntry->value.value_or("EMPTY"));
             }
 
-            stateData.second.emplace_back(newButton);
+            stateData.buttons.emplace_back(newButton);
         }
+    }
+}
+
+void PropFile::readErrors(const PConf::HashedData& data, Log::Branch& lBranch) {
+    auto& logger{lBranch.createLogger("PropFile::readErrors()")};
+
+    auto mapRange{data.equal_range("MAP")};
+    for (auto it{mapRange.first}; it != mapRange.second; ++it) {
+        if (it->second->getType() != PConf::Type::SECTION) {
+            logger.warn("MAP in prop config errors is not a section, skipping!");
+            continue;
+        }
+
+        auto mapEntries{PConf::hash(std::static_pointer_cast<PConf::Section>(it->second)->entries)};
+        
+        auto arduinoError{mapEntries.find("ARDUINO")};
+        if (arduinoError == mapEntries.end() or arduinoError->second->getType() != PConf::Type::ENTRY) {
+            logger.warn("MAP in prop config does not have ARDUINO entry, skipping!");
+            continue;
+        }
+        if (not arduinoError->second->value) {
+            logger.warn("ARDUINO entry in prop config error map does not have value, skipping!");
+            continue;
+        }
+
+        auto displayError{mapEntries.find("DISPLAY")};
+        if (displayError == mapEntries.end() or displayError->second->getType() != PConf::Type::ENTRY) {
+            logger.warn("MAP in prop config does not have DISPLAY entry, skipping!");
+            continue;
+        }
+        if (not displayError->second->value) {
+            logger.warn("DISPLAY entry in prop config error map does not have value, skipping!");
+            continue;
+        }
+
+        mappedErrors.emplace_back(*arduinoError->second->value, *displayError->second->value);
     }
 }
 
