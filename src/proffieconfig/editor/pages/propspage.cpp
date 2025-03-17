@@ -136,7 +136,7 @@ void PropsPage::bindEvents() {
                 wxSizerFlags{}.Border(wxALL, 10)
             );
         } else {
-            auto propButtons = activeProp->getButtons()->at(mParent->generalPage->buttons->entry()->GetValue());
+            auto propButtons = activeProp->getButtons()[mParent->generalPage->buttons->entry()->GetValue()];
 
             if (propButtons.empty()) {
                 textSizer->Add(

@@ -36,7 +36,17 @@ public:
     struct Setting;
     typedef std::unordered_map<string, Setting> SettingMap;
     struct Button;
-    typedef vector<std::pair<string, vector<Button>>> ButtonArray;
+    struct ButtonState {
+        ButtonState(string stateName, vector<Button> buttons);
+        string stateName;
+        vector<Button> buttons;
+    };
+    typedef vector<ButtonState> ButtonControls;
+    struct MappedError {
+        MappedError(string arduinoError, string displayError);
+        string arduinoError;
+        string displayError;
+    };
 
     static PropFile* createPropConfig(const string&, wxWindow*, bool builtin = false);
 
@@ -44,7 +54,8 @@ public:
     string getFileName() const;
     string getInfo() const;
     SettingMap* getSettings();
-    const array<ButtonArray, 4>* getButtons();
+    const array<ButtonControls, 4>& getButtons();
+    const vector<MappedError>& getMappedErrors();
 
 private:
     PropFile() = delete;
@@ -54,13 +65,16 @@ private:
     string fileName{};
     string info{};
     SettingMap* settings{nullptr};
-    array<ButtonArray, 4> *buttons{nullptr};
+    array<ButtonControls, 4> buttons;
+
+    vector<MappedError> mappedErrors;
 
     wxBoxSizer* sizer{nullptr};
 
     void readSettings(const PConf::HashedData&, Log::Branch&);
     void readLayout(const PConf::Data&, Log::Branch&);
     void readButtons(const std::shared_ptr<PConf::Section>&, Log::Branch&);
+    void readErrors(const PConf::HashedData&, Log::Branch&);
 
     [[nodiscard]] static optional<PConf::HashedData> parseSettingCommon(Setting&, const std::shared_ptr<PConf::Entry>&, Log::Logger&);
 };
