@@ -189,6 +189,10 @@ public:
                         std::cout << "Not a regular file, skipping.\n";
                         continue;
                     }
+                    if (entry.path().filename() == ".DS_Store") {
+                        std::cout << "Ignoring metadata file.\n";
+                        continue;
+                    }
 
                     const auto& file{entry.path()};
                     auto canonFile{fs::canonical(file)};
