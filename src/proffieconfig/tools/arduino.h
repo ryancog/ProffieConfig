@@ -6,6 +6,7 @@
 
 #include "../editor/editorwindow.h"
 #include "../mainmenu/mainmenu.h"
+#include "log/branch.h"
 
 namespace Arduino {
     void refreshBoards(MainMenu*);
@@ -13,7 +14,7 @@ namespace Arduino {
     void verifyConfig(wxWindow*, EditorWindow*);
 
     void init(wxWindow *);
-    vector<wxString> getBoards();
+    vector<wxString> getBoards(Log::Branch&);
 
     enum Proffieboard {
         PROFFIEBOARDV3 = 0,
