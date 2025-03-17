@@ -100,7 +100,8 @@ void Props::update() {
             auto *deleteButton{new wxButton(propSizer->GetStaticBox(), wxID_ANY, "Remove")};
             propSizer->Add(deleteButton);
             deleteButton->Bind(wxEVT_BUTTON, [=](wxCommandEvent&) {
-                    AppState::removeProp(propFile);
+                AppState::removeProp(propFile);
+                update();
             });
 
             existingPanelSizer->Add(propSizer, wxSizerFlags{}.Expand().Border(wxALL, 10));

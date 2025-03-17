@@ -3,6 +3,7 @@
 // Copyright (C) 2025 Ryan Ogurek
 
 #include "utils/paths.h"
+#include "../../core/appstate.h"
 #include "../../core/config/settings.h"
 #include "../../core/config/propfile.h"
 #include "../../core/utilities/misc.h"
@@ -63,10 +64,10 @@ namespace Configuration {
 }
 
 
-bool Configuration::outputConfig(const filepath& filePath, EditorWindow *editor, bool copyInjections) {
+bool Configuration::outputConfig(const filepath& filePath, EditorWindow *editor, bool fullOutput) {
     if (not runPreChecks(editor)) return false;
 
-    if (copyInjections) {
+    if (fullOutput) {
         std::error_code err;
         const auto injectionDir{Paths::proffieos() / "config" / INJECTION_STR};
         fs::create_directory(injectionDir);

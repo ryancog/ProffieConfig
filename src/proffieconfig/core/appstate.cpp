@@ -2,6 +2,7 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -120,8 +121,8 @@ void AppState::addProp(const string& propName, const string& propPath, const str
         return;
     }
 
-    fs::copy_file(propConfigPath, Paths::props() / propConfigPath.substr(propConfigPath.rfind('/') + 1));
-    fs::copy_file(propPath, Paths::proffieos() / "props" / propFileName);
+    fs::copy_file(propConfigPath, Paths::props() / propConfigPath.substr(propConfigPath.rfind('/') + 1), fs::copy_options::overwrite_existing);
+    fs::copy_file(propPath, Paths::proffieos() / "props" / propFileName, fs::copy_options::overwrite_existing);
 
     propFileNames.push_back(propName);
 }

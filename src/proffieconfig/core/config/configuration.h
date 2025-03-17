@@ -7,7 +7,11 @@
 
 namespace Configuration {
     bool outputConfig(EditorWindow *editorWindow);
-    bool outputConfig(const filepath&, EditorWindow *editorWindow, bool copyInjections = false);
+
+    /**
+     * @param fullOutput output injection files
+     */
+    bool outputConfig(const filepath&, EditorWindow *editorWindow, bool fullOutput = false);
     bool exportConfig(EditorWindow *editorWindow);
     bool readConfig(const filepath&, EditorWindow *editorWindow);
     bool importConfig(EditorWindow *editorWindow);
