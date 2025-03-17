@@ -32,10 +32,12 @@
 
 #include "../core/defines.h"
 #include "../core/config/configuration.h"
+#include "../core/config/propfile.h"
 #include "../core/utilities/misc.h"
 #include "../core/utilities/progress.h"
 #include "../editor/editorwindow.h"
 #include "../editor/pages/generalpage.h"
+#include "../editor/pages/propspage.h"
 #include "../editor/pages/bladespage.h"
 #include "../editor/pages/presetspage.h"
 #include "../editor/dialogs/bladearraydlg.h"
@@ -816,6 +818,14 @@ string Arduino::parseError(const string& error, EditorWindow *editor) {
     if (ERRCONTAINS("1\n2\n3\n4\n5\n6\n7\n8\n9\n10")) return "Could not connect to Proffieboard for upload.";
     if (ERRCONTAINS("10\n9\n8\n7\n6\n5\n4\n3\n2\n1")) return "Could not connect to Proffieboard for upload.";
     if (ERRCONTAINS("No DFU capable USB device available")) return "No Proffieboard in BOOTLOADER mode found.";
+
+    auto *selectedProp{editor->propsPage->getSelectedProp()};
+    if (selectedProp != nullptr) {
+        for (const auto& [ arduino, display ] : selectedProp->getMappedErrors()) {
+            if (error.find(arduino) != std::string::npos) return selectedProp->getName() + " prop error:\n" + display;
+        }
+    }
+
     if (ERRCONTAINS("error:")) {
         const auto errPos{error.find("error:")};
         const auto fileData{error.rfind('/', errPos)};
