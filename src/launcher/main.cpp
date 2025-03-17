@@ -96,6 +96,11 @@ public:
                 "Initializing...", 100, nullptr, wxPD_APP_MODAL | (action != UNINSTALL ? wxPD_CAN_ABORT : 0));
         // To avoid lockup when full
         prog.SetRange(101);
+        Defer progDefer{[&prog](){ 
+            prog.Pulse();
+            wxYield();
+            prog.Close(true);
+        }};
 
         Update::init();
 
@@ -154,7 +159,9 @@ public:
 
             Update::installFiles(changelog, data.value(), &prog, *logger.binfo("Installing files..."));
 
-            prog.Hide();
+            prog.Pulse();
+            wxYield();
+            prog.Close(true);
 
             if (action == FIRST_INSTALL) PCUI::showMessage("Installed", App::getAppName());
         } else if (action == UNINSTALL) {
