@@ -99,7 +99,7 @@ void Props::update() {
             propSizer->AddStretchSpacer();
             auto *deleteButton{new wxButton(propSizer->GetStaticBox(), wxID_ANY, "Remove")};
             propSizer->Add(deleteButton);
-            deleteButton->Bind(wxEVT_BUTTON, [=](wxCommandEvent&) {
+            deleteButton->Bind(wxEVT_BUTTON, [this, propFile](wxCommandEvent&) {
                 AppState::removeProp(propFile);
                 update();
             });
