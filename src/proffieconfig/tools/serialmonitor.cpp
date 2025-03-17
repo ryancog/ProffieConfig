@@ -23,15 +23,15 @@
 SerialMonitor* SerialMonitor::instance;
 
 SerialMonitor::~SerialMonitor() {
-#	if defined(__WXOSX__) || defined(__WXGTK__)
-    close(fd);
+    instance = nullptr;
 
+#	if defined(__WXOSX__) || defined(__WXGTK__)
     if (devThread.joinable()) devThread.join();
     if (listenThread.joinable()) listenThread.join();
     if (writerThread.joinable()) writerThread.join();
-#	endif
 
-    instance = nullptr;
+    close(fd);
+#	endif
 }
 
 #if defined(__WINDOWS__)
@@ -66,9 +66,10 @@ SerialMonitor::SerialMonitor(MainMenu* parent) : PCUI::Frame(parent, wxID_ANY, "
     master->Add(input, BOXITEMFLAGS);
     master->Add(output, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
-    BindEvents();
-    OpenDevice();
+    bindEvents();
+    openDevice();
 
+    master->SetMinSize(wxSize{450, 300});
     SetSizerAndFit(master);
     Show(true);
 }
@@ -76,7 +77,7 @@ SerialMonitor::SerialMonitor(MainMenu* parent) : PCUI::Frame(parent, wxID_ANY, "
 wxEventTypeTag<SerialMonitor::SerialDataEvent> SerialMonitor::EVT_INPUT(wxNewEventType());
 wxEventTypeTag<SerialMonitor::SerialDataEvent> SerialMonitor::EVT_DISCON(wxNewEventType());
 
-void SerialMonitor::BindEvents() {
+void SerialMonitor::bindEvents() {
     static bool needsTime{true};
     constexpr auto timeFormatStr{"%02u:%02u:%02u.%03u | "};
     const auto timeStrLen{2 + 1 + 2 + 1 + 2 + 1 + 3 + 3};
@@ -101,6 +102,7 @@ void SerialMonitor::BindEvents() {
             output->entry()->AppendText("-------------> " + history.back() + '\n');
         }
     }, ID_SerialCommand);
+
     input->entry()->Bind(wxEVT_KEY_DOWN, [&](wxKeyEvent& evt) {
         switch (evt.GetKeyCode()) {
             case WXK_DOWN:
@@ -131,6 +133,7 @@ void SerialMonitor::BindEvents() {
                 evt.Skip();
         }
     });
+
     Bind(EVT_INPUT, [&](SerialDataEvent& evt) {
         if (evt.value == '\r') {
             const auto text{output->entry()->GetValue()};
@@ -193,17 +196,19 @@ void SerialMonitor::BindEvents() {
         if (autoScroll) output->entry()->ShowPosition(output->entry()->GetLastPosition());
         output->entry()->Refresh();
     }, wxID_ANY);
+
     Bind(EVT_DISCON, [&](SerialDataEvent&) {
-        SerialMonitor::instance->Close(true);
+        Close(true);
     }, wxID_ANY);
 }
 
-void SerialMonitor::OpenDevice() {
+void SerialMonitor::openDevice() {
     struct termios newtio;
 
-    fd = open(static_cast<MainMenu*>(GetParent())->boardSelect->entry()->GetStringSelection().data(), O_RDWR | O_NOCTTY);
+    const auto boardPath{static_cast<MainMenu*>(GetParent())->boardSelect->entry()->GetStringSelection().ToStdString()};
+    fd = open(boardPath.c_str(), O_RDWR | O_NOCTTY);
     if (fd < 0) {
-        wxMessageDialog(GetParent(), "Could not connect to proffieboard.", "Serial Error", wxICON_ERROR | wxOK).ShowModal();
+        wxMessageDialog(GetParent(), "Could not connect to Proffieboard.", "Serial Error", wxICON_ERROR | wxOK).ShowModal();
         SerialMonitor::instance->Close(true);
         return;
     }
@@ -219,15 +224,17 @@ void SerialMonitor::OpenDevice() {
     tcflush(fd, TCIFLUSH);
     tcsetattr(fd, TCSANOW, &newtio);
 
-    CreateListener();
-    CreateWriter();
+    createListener();
+    createWriter();
 
-    devThread = std::thread{[this]() {
+    devThread = std::thread{[this, boardPath]() {
         struct stat info;
         while (SerialMonitor::instance != nullptr) {
-            if (stat(static_cast<MainMenu*>(GetParent())->boardSelect->entry()->GetStringSelection().data(), &info) != 0) { // Check if device is still present
-                auto *event = new SerialDataEvent(EVT_DISCON, wxID_ANY, ' ');
-                wxQueueEvent(SerialMonitor::instance, event);
+            if (stat(boardPath.c_str(), &info) != 0) { // Check if device is still present
+                if (SerialMonitor::instance != nullptr) {
+                    auto *event = new SerialDataEvent(EVT_DISCON, wxID_ANY, ' ');
+                    wxQueueEvent(SerialMonitor::instance, event);
+                }
                 break;
             }
 
@@ -236,13 +243,20 @@ void SerialMonitor::OpenDevice() {
     }};
 }
 
-void SerialMonitor::CreateListener() {
+void SerialMonitor::createListener() {
     listenThread = std::thread{[this]() {
         int32_t res;
         std::array<char, 255> buf;
 
         while (instance != nullptr) {
             res = read(fd, buf.data(), buf.size());
+            if (res == -1) {
+                if (SerialMonitor::instance != nullptr) {
+                    auto *event = new SerialDataEvent(EVT_DISCON, wxID_ANY, ' ');
+                    wxQueueEvent(SerialMonitor::instance, event);
+                }
+                break;
+            }
             buf[res] = '\0';
 
 
@@ -257,7 +271,7 @@ void SerialMonitor::CreateListener() {
     }};
 }
 
-void SerialMonitor::CreateWriter() {
+void SerialMonitor::createWriter() {
     writerThread = std::thread{[&]() {
         while (instance != nullptr) {
             if (!sendOut.empty()) {

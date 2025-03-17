@@ -38,15 +38,15 @@ private:
 
     int32_t fd = 0;
     wxString sendOut;
-    std::vector<wxString> history;
+    vector<wxString> history;
     ssize_t historyIdx{0};
     bool autoScroll{true};
 
 
-    void BindEvents();
-    void OpenDevice();
-    void CreateListener();
-    void CreateWriter();
+    void bindEvents();
+    void openDevice();
+    void createListener();
+    void createWriter();
 #endif // OSX or GTK
 };
 
