@@ -1,7 +1,4 @@
 #include "arduino.h"
-#include "log/severity.h"
-#include "utils/defer.h"
-#include "wx/gdicmn.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
@@ -19,16 +16,19 @@
 #include <termios.h>
 #endif
 
+#include <wx/gdicmn.h>
 #include <wx/uri.h>
 #include <wx/webrequest.h>
 #include <wx/wfstream.h>
 #include <wx/zipstrm.h>
 #include <wx/zstream.h>
 
-#include "utils/paths.h"
-#include "utils/types.h"
 #include "log/context.h"
 #include "log/logger.h"
+#include "log/severity.h"
+#include "utils/paths.h"
+#include "utils/types.h"
+#include "utils/defer.h"
 
 #include "../core/defines.h"
 #include "../core/config/configuration.h"
@@ -47,11 +47,11 @@ namespace Arduino {
 
     bool updateIno(string&, EditorWindow*);
 #   ifdef __WINDOWS__
-    optional<array<string, 2>> compile(string&, EditorWindow *, Progress * = nullptr);
+    optional<array<string, 2>> compile(string&, EditorWindow *, Progress *);
 #   else
-    bool compile(string&, EditorWindow *, Progress * = nullptr);
+    bool compile(string&, EditorWindow *, Progress *);
 #   endif
-    bool upload(string&, EditorWindow*, Progress* = nullptr);
+    bool upload(string&, EditorWindow *, Progress *);
     string parseError(const string&);
 
     wxDEFINE_EVENT(EVT_INIT_DONE, Event);
@@ -212,7 +212,7 @@ void Arduino::refreshBoards(MainMenu* window) {
         wxSetCursor(wxCURSOR_WAIT);
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
-        wxQueueEvent(window, new Event(EVT_CLEAR_BLIST)); // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
+        wxQueueEvent(window, new Event(EVT_CLEAR_BLIST));
         progDialog->emitEvent(20, "Fetching Devices...");
         for (const wxString& item : Arduino::getBoards()) {
             auto *evt{new Event(EVT_APPEND_BLIST)};
@@ -304,6 +304,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
         for (const wxString& item : Arduino::getBoards()) {
             window->boardSelect->entry()->Append(item);
         }
+
         window->boardSelect->entry()->SetStringSelection(lastSel);
         if (window->boardSelect->entry()->GetSelection() == -1) {
             window->boardSelect->entry()->SetSelection(0);
@@ -337,7 +338,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
         }
 
         progDialog->emitEvent(40, "Compiling ProffieOS...");
-        if (!Arduino::compile(returnVal, editor)) {
+        if (not Arduino::compile(returnVal, editor, progDialog)) {
             progDialog->emitEvent(100, "Error");
             auto* msg{new Misc::MessageBoxEvent{
                 wxID_ANY,
@@ -381,7 +382,6 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
 #   ifdef __WINDOWS__
         std::string commandString = R"(title ProffieConfig Worker & resources\windowmode -title "ProffieConfig Worker" -mode force_minimized & )";
         commandString += returnVal.substr(returnVal.find('|') + 1) + R"( 0x1209 0x6668 )" + returnVal.substr(0, returnVal.find('|')) + R"( 2>&1)";
-        std::cerr << "UploadCommandString: " << commandString << std::endl;
 
         auto *upload{popen(commandString.c_str(), "r")};
         char buffer[128];
@@ -404,7 +404,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
         }
 
 #   else
-        if (not Arduino::upload(returnVal, editor)) {
+        if (not Arduino::upload(returnVal, editor, progDialog)) {
             progDialog->emitEvent(100, "Error");
             auto* msg{new Misc::MessageBoxEvent{
                 wxID_ANY, 
@@ -472,7 +472,7 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
         }
 
         progDialog->emitEvent(40, "Compiling ProffieOS...");
-        if (not Arduino::compile(returnVal, editor)) {
+        if (not Arduino::compile(returnVal, editor, progDialog)) {
             progDialog->emitEvent(100, "Error");
             auto* msg{new Misc::MessageBoxEvent{
                 wxID_ANY,
@@ -589,17 +589,10 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
 }
 
 bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progDialog) {
-    char buffer[1024];
+    array<char, 32> buffer;
 
     string uploadCommand = "upload ";
-    uploadCommand += Paths::proffieos().string();
-    uploadCommand += " --board-options ";
-    if (editor->generalPage->massStorage->GetValue() && editor->generalPage->webUSB->GetValue()) uploadCommand += "usb=cdc_msc_webusb";
-    else if (editor->generalPage->webUSB->GetValue()) uploadCommand += "usb=cdc_webusb";
-    else if (editor->generalPage->massStorage->GetValue()) uploadCommand += "usb=cdc_msc";
-    else uploadCommand += "usb=cdc";
-    if (editor->generalPage->board->entry()->GetStringSelection() == "ProffieBoard V3") uploadCommand +=",dosfs=sdmmc1";
-
+    uploadCommand += '"' + Paths::proffieos().string() + '"';
     uploadCommand += " --fqbn ";
     switch (static_cast<Proffieboard>(editor->generalPage->board->entry()->GetSelection())) {
         case PROFFIEBOARDV3:
@@ -617,45 +610,54 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
     uploadCommand += " -v";
 
 #ifndef __WINDOWS__
-    struct termios newtio;
-    auto fd = open(static_cast<MainMenu*>(editor->GetParent())->boardSelect->entry()->GetStringSelection().data(), O_RDWR | O_NOCTTY);
-    if (fd < 0) {
-        _return = "Failed to connect to board for reboot.";
-        return false;
+    const auto boardPath{static_cast<MainMenu*>(editor->GetParent())->boardSelect->entry()->GetStringSelection().ToStdString()};
+    if (boardPath.find("BOOTLOADER|") == std::string::npos) {
+        progDialog->emitEvent(-1, "Rebooting Proffieboard...");
+        struct termios newtio;
+        auto fd = open(boardPath.c_str(), O_RDWR | O_NOCTTY);
+        if (fd < 0) {
+            _return = "Failed to connect to board for reboot.";
+            return false;
+        }
+
+        memset(&newtio, 0, sizeof(newtio));
+
+        newtio.c_cflag = B115200 | CRTSCTS | CS8 | CLOCAL | CREAD;
+        newtio.c_iflag = IGNPAR;
+        newtio.c_oflag = (tcflag_t) NULL;
+        newtio.c_lflag &= ~ICANON; /* unset canonical */
+        newtio.c_cc[VTIME] = 1; /* 100 millis */
+
+        tcflush(fd, TCIFLUSH);
+        tcsetattr(fd, TCSANOW, &newtio);
+
+        char buf[255];
+        while(read(fd, buf, 255));
+
+        fsync(fd);
+        write(fd, "\r\n", 2);
+        write(fd, "\r\n", 2);
+        write(fd, "RebootDFU\r\n", 11);
+
+        // Ensure everything is flushed
+        std::this_thread::sleep_for(50ms);
+        close(fd);
+        std::this_thread::sleep_for(5s);
     }
-
-    memset(&newtio, 0, sizeof(newtio));
-
-    newtio.c_cflag = B115200 | CRTSCTS | CS8 | CLOCAL | CREAD;
-    newtio.c_iflag = IGNPAR;
-    newtio.c_oflag = (tcflag_t) NULL;
-    newtio.c_lflag &= ~ICANON; /* unset canonical */
-    newtio.c_cc[VTIME] = 1; /* 100 millis */
-
-    tcflush(fd, TCIFLUSH);
-    tcsetattr(fd, TCSANOW, &newtio);
-
-    char buf[255];
-    while(read(fd, buf, 255));
-
-    fsync(fd);
-    write(fd, "\r\n", 2);
-    write(fd, "\r\n", 2);
-    write(fd, "RebootDFU\r\n", 11);
-
-    // Ensure everything is flushed
-    std::this_thread::sleep_for(50ms);
-    close(fd);
-    std::this_thread::sleep_for(5s);
 #endif
 
     FILE *arduinoCli = Arduino::cli(uploadCommand);
 
     std::string error;
-    while(fgets(buffer, sizeof(buffer), arduinoCli) != nullptr) {
-        if (progDialog != nullptr) progDialog->emitEvent(-1, ""); // Pulse
-        error += buffer;
-        if (std::strstr(buffer, "error") || std::strstr(buffer, "FAIL")) {
+    progDialog->emitEvent(-1, "Uploading to Proffieboard...");
+    while(fgets(buffer.data(), buffer.size(), arduinoCli) != nullptr) {
+        auto *const percentPtr{std::strstr(buffer.data(), "%")};
+        if (percentPtr != nullptr and progDialog != nullptr and percentPtr - buffer.data() >= 3) {
+            auto percent{strtol(percentPtr - 3, nullptr, 10)};
+            progDialog->emitEvent(percent, "");
+        }
+        error += buffer.data();
+        if (std::strstr(buffer.data(), "error") || std::strstr(buffer.data(), "FAIL")) {
             _return = Arduino::parseError(error);
             return false;
         }
