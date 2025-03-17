@@ -3,6 +3,8 @@
 // Copyright (C) 2025 Ryan Ogurek
 
 #include "../../editor/editorwindow.h"
+
+#include "log/branch.h"
 #include "utils/types.h"
 
 namespace Configuration {
@@ -11,7 +13,7 @@ namespace Configuration {
     /**
      * @param fullOutput output injection files
      */
-    bool outputConfig(const filepath&, EditorWindow *editorWindow, bool fullOutput = false);
+    bool outputConfig(const filepath&, EditorWindow *editorWindow, Log::Branch * = nullptr, bool fullOutput = false);
     bool exportConfig(EditorWindow *editorWindow);
     bool readConfig(const filepath&, EditorWindow *editorWindow);
     bool importConfig(EditorWindow *editorWindow);

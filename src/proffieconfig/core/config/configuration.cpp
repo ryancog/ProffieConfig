@@ -2,8 +2,19 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
+#include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <sstream>
+#include <system_error>
+
+#include <wx/filedlg.h>
+#include <wx/event.h>
+#include <wx/msgdlg.h>
+
+#include "log/branch.h"
 #include "utils/paths.h"
-#include "../../core/appstate.h"
+
 #include "../../core/config/settings.h"
 #include "../../core/config/propfile.h"
 #include "../../core/utilities/misc.h"
@@ -15,17 +26,8 @@
 #include "../../editor/dialogs/bladearraydlg.h"
 #include "../../tools/arduino.h"
 
-#include <cstring>
-#include <filesystem>
-#include <fstream>
-#include <sstream>
-
-#include <system_error>
-#include <wx/filedlg.h>
-#include <wx/event.h>
-#include <wx/msgdlg.h>
-
 # define ERR(msg) \
+    logger.error(msg); \
     Misc::MessageBoxEvent* msgEvent = new Misc::MessageBoxEvent(wxID_ANY, std::string(msg) + "\n\nConfiguration not saved.", "Configuration Error", wxOK | wxCENTER | wxICON_ERROR); \
     wxQueueEvent(editor, msgEvent); \
     return false;
@@ -33,7 +35,7 @@
 namespace Configuration {
     constexpr string_view INJECTION_STR{"injection"};
 
-    bool runPreChecks(EditorWindow *);
+    bool runPreChecks(EditorWindow *, Log::Branch&);
 
     void tryAddInjection(const std::string& buffer, EditorWindow *);
 
@@ -64,8 +66,10 @@ namespace Configuration {
 }
 
 
-bool Configuration::outputConfig(const filepath& filePath, EditorWindow *editor, bool fullOutput) {
-    if (not runPreChecks(editor)) return false;
+bool Configuration::outputConfig(const filepath& filePath, EditorWindow *editor, Log::Branch *lBranch, bool fullOutput) {
+    auto& logger{Log::Branch::optCreateLogger("Configuration::outputConfig()", lBranch)};
+
+    if (not runPreChecks(editor, *logger.binfo("Running prechecks..."))) return false;
 
     if (fullOutput) {
         std::error_code err;
@@ -84,7 +88,7 @@ bool Configuration::outputConfig(const filepath& filePath, EditorWindow *editor,
     }
 
     std::ofstream configOutput(filePath);
-    if (!configOutput.is_open()) {
+    if (not configOutput.is_open()) {
         ERR("Could not open config file for output.");
     }
 
@@ -101,6 +105,7 @@ bool Configuration::outputConfig(const filepath& filePath, EditorWindow *editor,
     outputConfigButtons(configOutput, editor);
 
     configOutput.close();
+    logger.info("Done");
     return true;
 }
 bool Configuration::outputConfig(EditorWindow *editor) {
@@ -1239,7 +1244,9 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
     }
 }
 
-bool Configuration::runPreChecks(EditorWindow *editor) {
+bool Configuration::runPreChecks(EditorWindow *editor, Log::Branch& lBranch) {
+    auto& logger{lBranch.createLogger("Configuration::runPreChecks()")};
+
     if (editor->bladesPage->bladeArrayDlg->enableDetect->GetValue() && editor->bladesPage->bladeArrayDlg->detectPin->entry()->GetValue() == "") {
         ERR("Blade Detect Pin cannot be empty.");
     }
