@@ -42,7 +42,9 @@ filepath Paths::approot() {
     array<char, MAX_PATH> rawCStr;
     WideCharToMultiByte(CP_UTF8, 0, rawStr, -1, rawCStr.data(), MAX_PATH, nullptr, nullptr);
     CoTaskMemFree(rawStr);
-    return filepath{rawCStr.data()} /  "ProffieConfig";
+    array<char, MAX_PATH> shortPath;
+    GetShortPathNameA(rawCStr.data(), shortPath.data(), shortPath.size());
+    return filepath{shortPath.data()} /  "ProffieConfig";
 #   elif defined(__APPLE__)
     return filepath(getpwuid(getuid())->pw_dir) / "Library" / "Application Support" / "ProffieConfig";
 #   elif defined(__linux__)
@@ -61,7 +63,9 @@ filepath Paths::executable(Executable exec) {
                 SHGetKnownFolderPath(FOLDERID_UserProgramFiles, 0, nullptr, &rawStr);
                 filepath userPrograms{rawStr};
                 CoTaskMemFree(rawStr);
-                return userPrograms / "ProffieConfig.exe";
+                array<char, MAX_PATH> shortPath;
+                GetShortPathNameA(userPrograms.string().c_str(), shortPath.data(), shortPath.size());
+                return filepath{shortPath.data()} / "ProffieConfig.exe";
             }
 #           elif defined(__linux__)
             return filepath(getpwuid(getuid())->pw_dir) / ".proffieconfig" / "ProffieConfig";
@@ -107,7 +111,9 @@ filepath Paths::logs() {
     array<char, MAX_PATH> rawCStr;
     WideCharToMultiByte(CP_UTF8, 0, rawStr, -1, rawCStr.data(), rawCStr.size(), nullptr, nullptr);
     CoTaskMemFree(rawStr);
-    return filepath{rawCStr.data()} / "ProffieConfig";
+    array<char, MAX_PATH> shortPath;
+    GetShortPathNameA(rawCStr.data(), shortPath.data(), shortPath.size());
+    return filepath{shortPath.data()} / "ProffieConfig";
 #   elif defined(__linux__)
     return data() / "logs";
 #   elif defined(__APPLE__)
