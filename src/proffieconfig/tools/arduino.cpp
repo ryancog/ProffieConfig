@@ -529,7 +529,7 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
     auto& logger{lBranch.createLogger("Arduino::compile()")};
 
     string output;
-    char buffer[1024];
+    array<char, 32> buffer;
 
     string compileCommand = "compile ";
     compileCommand += "-b ";
@@ -559,11 +559,11 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
 #   ifdef __WINDOWS__
     array<string, 2> paths;
 #   endif
-    while(fgets(buffer, sizeof(buffer), arduinoCli) != nullptr) {
+    while(fgets(buffer.data(), buffer.size(), arduinoCli) != nullptr) {
         if (progDialog != nullptr) progDialog->emitEvent(-1, ""); // Pulse
-        error += buffer;
+        error += buffer.data();
 
-        if (std::strstr(buffer, "error")) {
+        if (std::strstr(buffer.data(), "error")) {
             _return = Arduino::parseError(error, editor);
             logger.error(_return);
 # 	        ifdef __WINDOWS__
@@ -573,20 +573,9 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
 #           endif
         }
 
-#   	ifdef __WINDOWS__
-        if (std::strstr(buffer, "ProffieOS.ino.dfu") && std::strstr(buffer, "stm32l4") && std::strstr(buffer, "C:\\")) {
-            array<string, 2> paths;
-            array<char, MAX_PATH> shortPath;
-            string pathsString{buffer};
-            GetShortPathNameA(pathsString.substr(pathsString.rfind("C:\\"), pathsString.rfind("ProffieOS.ino.dfu") - pathsString.rfind("C:\\") + 17).c_str(), shortPath.data(), shortPath.size());
-            paths[0] = shortPath.data();
-            GetShortPathNameA(pathsString.substr(1, pathsString.find("windows") + 7 - 1).c_str(), shortPath.data(), shortPath.size());
-            paths[1] = string{shortPath.data()} + "\\stm32l4-upload.bat";
-        }
-#   	endif
     }
     if (pclose(arduinoCli) != 0) {
-        _return = "Unknown Compile Error";
+        _return = parseError(error, editor);
         logger.error("Error during pclose()");
 # 	    ifdef __WINDOWS__
         return nullopt;
@@ -594,6 +583,28 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
         return false;
 #       endif
     }
+
+#   ifdef __WINDOWS__
+    if (
+            error.find("ProffieOS.ino.dfu") != std::string::npos and
+            error.find("stm32l4") != std::string::npos and
+            error.find("C:\\") != std::string::npos
+       ) {
+        logger.debug("Parsing utility paths...");
+        array<char, MAX_PATH> shortPath;
+        constexpr string_view DFU_STRING{"ProffieOS.ino.dfu"};
+        const auto dfuPos{error.rfind(DFU_STRING)};
+        const auto dfuCPos{error.rfind("C:\\", dfuPos)};
+        GetShortPathNameA(error.substr(dfuCPos, dfuPos - dfuCPos + DFU_STRING.length()).c_str(), shortPath.data(), shortPath.size());
+        paths[0] = shortPath.data();
+        logger.debug("Parsed dfu file: " + paths[0]);
+        const auto dfuSuffixPos{error.rfind("//dfu-suffix.exe")};
+        const auto dfuSuffixCPos{error.rfind("C:\\", dfuSuffixPos)};
+        GetShortPathNameA(error.substr(dfuSuffixCPos, dfuSuffixPos - dfuSuffixCPos).c_str(), shortPath.data(), shortPath.size());
+        paths[1] = string{shortPath.data()} + "\\stm32l4-upload.bat";
+        logger.debug("Parsed upload file: " + paths[1]);
+    }
+#   endif
 
     _return = error;
     logger.info("Successful compile.");
@@ -732,13 +743,24 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
 
     auto *upload{popen(commandString.c_str(), "r")};
     std::string error{};
+    progDialog->emitEvent(-1, "");
     while (fgets(buffer.data(), buffer.size(), upload) != nullptr) {
-        progDialog->emitEvent(-1, "");
+        auto *const percentPtr{std::strstr(buffer.data(), "%")};
+        if (percentPtr != nullptr and progDialog != nullptr and percentPtr - buffer.data() >= 3) {
+            auto percent{strtol(percentPtr - 3, nullptr, 10)};
+            progDialog->emitEvent(static_cast<int8>(percent), "");
+        }
+
         error += buffer.data();
+        if (std::strstr(buffer.data(), "error") || std::strstr(buffer.data(), "FAIL")) {
+            _return = Arduino::parseError(error, editor);
+            logger.error(_return);
+            return false;
+        }
     }
 
     if (pclose(upload) != 0) {
-        _return = "Unknown Upload Error";
+        _return = Arduino::parseError(error, editor);
         logger.error("Error during pclose()");
         return false;
     }
