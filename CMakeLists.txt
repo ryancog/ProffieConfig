@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.20)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum OS X deployment version" FORCE)
 # set(CMAKE_OSX_ARCHITECTURES arm64;x86_64 CACHE)
 
-project(ProffieConfig VERSION 1.7.8)
+project(ProffieConfig VERSION 1.7.10)
 add_compile_definitions(BUILD_SYSTEM_VERSION=${VERSION})
 
 if (NOT (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux OR CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin))
