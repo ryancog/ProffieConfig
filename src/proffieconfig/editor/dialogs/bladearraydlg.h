@@ -12,9 +12,16 @@
 #include <wx/combobox.h>
 #include <wx/listbox.h>
 
-constexpr auto BLADE_ID_MODE_SNAPSHOT{"Snapshot"};
-constexpr auto BLADE_ID_MODE_EXTERNAL{"External Pullup"};
-constexpr auto BLADE_ID_MODE_BRIDGED {"Bridged Pullup"};
+enum {
+    BLADE_ID_MODE_SNAPSHOT = 0,
+    BLADE_ID_MODE_EXTERNAL,
+    BLADE_ID_MODE_BRIDGED,
+};
+constexpr array<string_view, 3> BLADE_ID_MODES{
+    "Snapshot",
+    "External Pullup",
+    "Bridged Pullup",
+};
 
 class BladeArrayDlg : public wxDialog {
 public:

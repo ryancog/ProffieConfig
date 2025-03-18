@@ -387,6 +387,7 @@ bool Configuration::readConfig(const filepath& filePath, EditorWindow* editor) {
     //GeneralPage::update();
     editor->propsPage->update();
     editor->bladesPage->update();
+    editor->bladesPage->bladeArrayDlg->update();
     editor->presetsPage->update();
 
     return true;

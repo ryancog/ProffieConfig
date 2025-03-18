@@ -35,14 +35,14 @@ void BladesPage::bindEvents() {
     GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent&) { parent->presetsPage->bladeArray->entry()->SetSelection(bladeArray->entry()->GetSelection()); update(); }, ID_BladeArray);
     GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent&) { setEnabled(); }, ID_LEDColor);
     GetStaticBox()->Bind(wxEVT_SPINCTRL, [&](wxCommandEvent& event) { update(); event.Skip(); });
-    GetStaticBox()->Bind(wxEVT_RADIOBUTTON, [&](wxCommandEvent& event) { update(); FULLUPDATEWINDOW(parent); event.Skip(); });
-    GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { update(); FULLUPDATEWINDOW(parent); }, ID_BladeSelect);
-    GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { update(); FULLUPDATEWINDOW(parent); }, ID_SubBladeSelect);
-    GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent&) { update(); FULLUPDATEWINDOW(parent); }, ID_BladeType);
-    GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { addBlade(); UPDATEWINDOW(parent); }, ID_AddBlade);
-    GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { addSubBlade(); FULLUPDATEWINDOW(parent); }, ID_AddSubBlade);
-    GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { removeBlade(); UPDATEWINDOW(parent); }, ID_RemoveBlade);
-    GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { removeSubBlade(); UPDATEWINDOW(parent); }, ID_RemoveSubBlade);
+    GetStaticBox()->Bind(wxEVT_RADIOBUTTON, [&](wxCommandEvent& event) { update(); event.Skip(); });
+    GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { update(); }, ID_BladeSelect);
+    GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent&) { update(); }, ID_SubBladeSelect);
+    GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent&) { update(); }, ID_BladeType);
+    GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { addBlade(); }, ID_AddBlade);
+    GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { addSubBlade(); }, ID_AddSubBlade);
+    GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { removeBlade(); }, ID_RemoveBlade);
+    GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { removeSubBlade(); }, ID_RemoveSubBlade);
     GetStaticBox()->Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
         size_t insertionPoint = powerPinName->entry()->GetInsertionPoint();
         std::string newString{};
@@ -254,14 +254,18 @@ void BladesPage::update() {
     loadSettings();
     setEnabled();
     setVisibility();
+
+    parent->Layout();
+    parent->GetSizer()->Fit(parent);
 }
 
 void BladesPage::saveCurrent() {
-    if (lastBladeArraySelection < 0 ||
-                    lastBladeArraySelection > (int32_t)bladeArrayDlg->bladeArrays.size() ||
-                    lastBladeSelection < 0 ||
-                    lastBladeSelection >= (int32_t)bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size()
-                    ) {
+    if (
+            lastBladeArraySelection < 0 ||
+            lastBladeArraySelection > (int32_t)bladeArrayDlg->bladeArrays.size() ||
+            lastBladeSelection < 0 ||
+            lastBladeSelection >= (int32_t)bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size()
+       ) {
         return;
     }
 
@@ -373,6 +377,7 @@ void BladesPage::loadSettings() {
 
     subBladeStart->entry()->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)selectedBlade.subBlades.size() ? selectedBlade.subBlades.at(lastSubBladeSelection).startPixel : 0);
     subBladeEnd->entry()->SetValue(lastSubBladeSelection != -1 && lastSubBladeSelection < (int32_t)selectedBlade.subBlades.size() ? selectedBlade.subBlades.at(lastSubBladeSelection).endPixel : 0);
+    useStandard->SetValue(not selectedBlade.useStride and not selectedBlade.useZigZag);
     useStride->SetValue(selectedBlade.useStride);
     useZigZag->SetValue(selectedBlade.useZigZag);
 }
@@ -438,8 +443,8 @@ void BladesPage::addBlade() {
 }
 void BladesPage::addSubBlade() {
     bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).isSubBlade = true;
-    bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.push_back(BladeConfig::subBladeInfo());
-    if (bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.size() <= 1) bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.push_back(BladeConfig::subBladeInfo());
+    bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.push_back(BladeConfig::SubBladeInfo());
+    if (bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.size() <= 1) bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(lastBladeSelection).subBlades.push_back(BladeConfig::SubBladeInfo());
     update();
 }
 void BladesPage::removeBlade() {
