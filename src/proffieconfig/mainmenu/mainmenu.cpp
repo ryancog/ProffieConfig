@@ -72,7 +72,7 @@ void MainMenu::bindEvents() {
     });
     Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
     Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
-        wxMessageDialog(this, ((Misc ::MessageBoxEvent *)&event)->message, ((Misc ::MessageBoxEvent *)&event)->caption, ((Misc ::MessageBoxEvent *)&event)->style).ShowModal();
+        PCUI::showMessage(((Misc ::MessageBoxEvent *)&event)->message.ToStdString(), ((Misc ::MessageBoxEvent *)&event)->caption.ToStdString(), ((Misc ::MessageBoxEvent *)&event)->style, this);
     }, wxID_ANY);
     Bind(wxEVT_MENU, [this, promptClose](wxCommandEvent&) { 
         if (not promptClose()) return;
@@ -99,12 +99,12 @@ void MainMenu::bindEvents() {
     }, ID_Logs);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
-        wxMessageDialog(this, COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION).ShowModal();
+        PCUI::showMessage(COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION);
     }, ID_Copyright);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
         if (not editors.empty()) {
-            wxMessageBox("All Editors must be closed to continue.", "Editors Open");
+            PCUI::showMessage("All Editors must be closed to continue.", "Editors Open");
             return;
         }
 
@@ -187,7 +187,12 @@ void MainMenu::bindEvents() {
         wxPostEvent(this, wxCommandEvent{wxEVT_CHOICE, ID_ConfigSelect});
     }, ID_AddConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
-        if (wxMessageDialog(this, "Are you sure you want to deleted the selected configuration?\n\nThis action cannot be undone!", "Delete Config", wxYES_NO | wxNO_DEFAULT | wxCENTER).ShowModal() == wxID_YES) {
+        if (PCUI::showMessage(
+                "Are you sure you want to deleted the selected configuration?\n\nThis action cannot be undone!",
+                "Delete Config",
+                wxYES_NO | wxNO_DEFAULT | wxCENTER,
+                this) == wxYES
+           ) {
             if (activeEditor) activeEditor->Close(true);
             fs::remove(Paths::configs() / (configSelect->entry()->GetStringSelection().ToStdString() + ".h"));
             activeEditor = nullptr;
@@ -207,7 +212,7 @@ void MainMenu::bindEvents() {
     });
 }
 
-void MainMenu::createTooltips() {
+void MainMenu::createTooltips() const {
   TIP(applyButton, "Apply the current configuration to the selected Proffieboard.");
   TIP(boardSelect, "Select the Proffieboard to connect to.\nThis will be an unrecognizable device identifier, but chances are there's only one which will show up.");
   TIP(refreshButton, "Refresh the detected boards.");
@@ -296,7 +301,7 @@ void MainMenu::createUI() {
   SetSizerAndFit(sizer);
 }
 
-void MainMenu::update() {
+void MainMenu::update() const {
     auto lastConfig = configSelect->entry()->GetStringSelection();
     configSelect->entry()->Clear();
     configSelect->entry()->Append("Select Config...");
@@ -335,7 +340,7 @@ void MainMenu::removeEditor(EditorWindow *editor) {
 EditorWindow *MainMenu::generateEditor(const std::string& configName) {
     auto *newEditor{new EditorWindow(configName, this)};
     if (not Configuration::readConfig(Paths::configs() / (configName + ".h"), newEditor)) {
-        wxMessageDialog(this, "Error reading configuration file!", "Config Error", wxOK | wxCENTER).ShowModal();
+        PCUI::showMessage("Error reading configuration file!", "Config Error", wxOK | wxCENTER, this);
         newEditor->Destroy();
         return nullptr;
     }

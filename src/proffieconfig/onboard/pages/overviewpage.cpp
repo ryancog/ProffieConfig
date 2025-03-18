@@ -2,26 +2,20 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
+#include <wx/menu.h>
+#include <wx/event.h>
+#include <wx/gdicmn.h>
+#include <wx/sizer.h>
+#include <wx/statbox.h>
+
+#include "ui/message.h"
+
 #include "../../mainmenu/mainmenu.h"
 #include "../../editor/editorwindow.h"
 #include "../../editor/pages/propspage.h"
 #include "../../editor/pages/bladespage.h"
 #include "../../editor/pages/presetspage.h"
 #include "../../editor/dialogs/bladearraydlg.h"
-
-#include <type_traits>
-#include <wx/menu.h>
-#include <wx/event.h>
-#include <wx/gdicmn.h>
-#include <wx/sizer.h>
-#ifdef __WINDOWS__
-#undef wxMessageDialog
-#include <wx/msgdlg.h>
-#define wxMessageDialog wxGenericMessageDialog
-#else
-#include <wx/msgdlg.h>
-#endif
-#include <wx/statbox.h>
 
 std::vector<bool*> Onboard::Overview::eventRunTrackers{};
 #define EVENT_PAGE_SETUP \
@@ -76,7 +70,7 @@ void Onboard::Overview::prepareMainMenu() {
   mGuideMenu->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
     if (event.CanVeto()) {
       event.Veto();
-      wxMessageDialog(mGuideMenu, "You cannot close this during First-Time Setup.", "Close ProffieConfig", wxOK | wxCENTER).ShowModal();
+      PCUI::showMessage("You cannot close this during First-Time Setup.", "Close ProffieConfig", wxOK | wxCENTER, mGuideMenu);
     }
   });
   mGuideMenu->Bind(wxEVT_UPDATE_UI, [&](wxUpdateUIEvent& event) {
@@ -98,7 +92,7 @@ void Onboard::Overview::prepareEditor() {
     }
     if (event.CanVeto()) {
       event.Veto();
-      wxMessageDialog(mGuideMenu->activeEditor, "You cannot close this during First-Time Setup.", "Close ProffieConfig Editor", wxOK | wxCENTER).ShowModal();
+      PCUI::showMessage("You cannot close this during First-Time Setup.", "Close ProffieConfig Editor", wxOK | wxCENTER, mGuideMenu->activeEditor);
     }
   });
 }

@@ -62,8 +62,8 @@ public:
     wxString name{""};
     int32_t value{0};
 
-    std::vector<PresetsPage::PresetConfig> presets{};
-    std::vector<BladesPage::BladeConfig> blades{};
+    std::vector<PresetsPage::PresetConfig> presets;
+    std::vector<BladesPage::BladeConfig> blades;
   };
   std::vector<BladeArray> bladeArrays{BladeArray{"blade_in", 0}};
 
@@ -80,12 +80,12 @@ public:
   };
 
 private:
-  EditorWindow* parent{nullptr};
-  wxBoxSizer* sizer{nullptr};
-  int32_t lastArraySelection{-1};
+  EditorWindow* mParent{nullptr};
+  wxBoxSizer* mSizer{nullptr};
+  int32_t mLastArraySelection{-1};
 
   void bindEvents();
-  void createToolTips();
+  void createToolTips() const;
 
   void stripAndSaveName();
 

@@ -4,13 +4,6 @@
 
 #include "../../core/appstate.h"
 
-#ifdef __WINDOWS__
-#undef wxMessageDialog
-#include <wx/msgdlg.h>
-#define wxMessageDialog wxGenericMessageDialog
-#else
-#include <wx/msgdlg.h>
-#endif
 #include <wx/event.h>
 #include <wx/filepicker.h>
 #include <wx/string.h>

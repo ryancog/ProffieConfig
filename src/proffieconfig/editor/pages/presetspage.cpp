@@ -2,6 +2,7 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
+#include "ui/message.h"
 #include "utils/paths.h"
 #include "../../core/defines.h"
 #include "../../core/utilities/misc.h"
@@ -189,7 +190,7 @@ void PresetsPage::rebuildInjections() {
         });
 
         deleteButton->Bind(wxEVT_BUTTON, [this, injection](wxCommandEvent&) {
-            if (wxNO == wxMessageBox("This action cannot be undone!", "Delete Injection", wxYES_NO | wxNO_DEFAULT)) return;
+            if (wxNO == PCUI::showMessage("This action cannot be undone!", "Delete Injection", wxYES_NO | wxNO_DEFAULT)) return;
 
             injections.erase(std::find(injections.begin(), injections.end(), injection));
             update();

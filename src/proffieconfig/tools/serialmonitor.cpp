@@ -3,21 +3,19 @@
 // Copyright (C) 2025 Ryan Ogurek
 
 #include <string>
-#include <chrono>
-#include <format>
 
-#include "../core/defines.h"
+#include "ui/message.h"
+
 #include "../mainmenu/mainmenu.h"
-
 
 #ifdef __WINDOWS__
 #include <windows.h>
 #include "utils/paths.h"
-#undef wxMessageDialog
-#include <wx/msgdlg.h>
-#define wxMessageDialog wxGenericMessageDialog
 #else
-#include <wx/msgdlg.h>
+#include <chrono>
+#include <format>
+
+#include "../core/defines.h"
 #endif
 
 SerialMonitor* SerialMonitor::instance;
@@ -38,7 +36,7 @@ SerialMonitor::~SerialMonitor() {
 SerialMonitor::SerialMonitor(MainMenu* parent) {
     if (parent->boardSelect->entry()->GetSelection() > 0) {
         ShellExecuteA(nullptr, nullptr, (Paths::binaries() / "arduino-cli.exe").string().c_str(), (string{"monitor -p "} + parent->boardSelect->entry()->GetStringSelection().ToStdString() + " -c baudrate=115200").c_str(), nullptr, true);
-    } else wxMessageDialog(parent, "Select board first.", "No Board Selected", wxOK | wxICON_ERROR).ShowModal();
+    } else PCUI::showMessage("Select board first.", "No Board Selected", wxOK | wxICON_ERROR, parent);
 }
 
 #elif defined(__WXOSX__) || defined(__WXGTK__)
@@ -208,7 +206,7 @@ void SerialMonitor::openDevice() {
     const auto boardPath{static_cast<MainMenu*>(GetParent())->boardSelect->entry()->GetStringSelection().ToStdString()};
     fd = open(boardPath.c_str(), O_RDWR | O_NOCTTY);
     if (fd < 0) {
-        wxMessageDialog(GetParent(), "Could not connect to Proffieboard.", "Serial Error", wxICON_ERROR | wxOK).ShowModal();
+        PCUI::showMessage("Could not connect to Proffieboard.", "Serial Error", wxICON_ERROR | wxOK, GetParent());
         SerialMonitor::instance->Close(true);
         return;
     }

@@ -2,44 +2,38 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
+#include <wx/tooltip.h>
+#include <wx/button.h>
+
+#include "ui/message.h"
+
 #include "../../core/defines.h"
 #include "../../core/utilities/misc.h"
 #include "../../editor/editorwindow.h"
 
-#include <wx/tooltip.h>
-#include <wx/button.h>
+BladeArrayDlg::BladeArrayDlg(EditorWindow* _parent) : wxDialog(_parent, wxID_ANY, "Blade Awareness - " + wxString{_parent->getOpenConfig()}, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER), mParent(_parent) {
+    mSizer = new wxBoxSizer(wxVERTICAL);
 
-#ifdef __WINDOWS__
-#undef wxMessageDialog
-#include <wx/msgdlg.h>
-#define wxMessageDialog wxGenericMessageDialog
-#else
-#include <wx/msgdlg.h>
-#endif
-
-BladeArrayDlg::BladeArrayDlg(EditorWindow* _parent) : wxDialog(_parent, wxID_ANY, "Blade Awareness - " + wxString{_parent->getOpenConfig()}, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER), parent(_parent) {
-    sizer = new wxBoxSizer(wxVERTICAL);
-
-    wxBoxSizer* enableSizer = new wxBoxSizer(wxHORIZONTAL);
+    auto *enableSizer{new wxBoxSizer(wxHORIZONTAL)};
     enableDetect = new wxCheckBox(this, ID_BladeDetectEnable, "Enable Blade Detect");
     enableID = new wxCheckBox(this, ID_BladeIDEnable, "Enable Blade ID");
     enableSizer->Add(enableDetect, FIRSTITEMFLAGS);
     enableSizer->Add(enableID, FIRSTITEMFLAGS);
 
-    wxBoxSizer* topSizer = new wxBoxSizer(wxHORIZONTAL);
+    auto *topSizer{new wxBoxSizer(wxHORIZONTAL)};
     topSizer->Add(createBladeDetect(this), wxSizerFlags(2).Border(wxALL, 10).Expand());
     topSizer->Add(createIDSetup(this), wxSizerFlags(3).Border(wxALL, 10).Expand());
     topSizer->Add(createBladeArrays(this), wxSizerFlags(4).Border(wxALL, 10).Expand());
 
-    wxBoxSizer* bottomSizer = new wxBoxSizer(wxHORIZONTAL);
+    auto *bottomSizer{new wxBoxSizer(wxHORIZONTAL)};
     bottomSizer->Add(createIDPowerSettings(this), wxSizerFlags(1).Border(wxALL, 10).Expand());
     bottomSizer->Add(createContinuousScanSettings(this), wxSizerFlags(1).Border(wxALL, 10).Expand());
 
-    sizer->Add(enableSizer);
-    sizer->Add(topSizer, wxSizerFlags(1).Expand());
-    sizer->Add(bottomSizer, wxSizerFlags(0).Expand());
+    mSizer->Add(enableSizer);
+    mSizer->Add(topSizer, wxSizerFlags(1).Expand());
+    mSizer->Add(bottomSizer, wxSizerFlags(0).Expand());
 
-    SetSizerAndFit(sizer);
+    SetSizerAndFit(mSizer);
     bindEvents();
     createToolTips();
     update();
@@ -48,7 +42,7 @@ BladeArrayDlg::BladeArrayDlg(EditorWindow* _parent) : wxDialog(_parent, wxID_ANY
 void BladeArrayDlg::bindEvents() {
     Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
         if (event.CanVeto()) {
-            parent->bladesPage->update();
+            mParent->bladesPage->update();
             Hide();
             event.Veto();
         } else event.Skip();
@@ -56,10 +50,10 @@ void BladeArrayDlg::bindEvents() {
 
     auto clearBladeArray = [](BladeArrayDlg* page) {
         page->arrayList->SetSelection(-1);
-        page->lastArraySelection = -1;
-        page->parent->bladesPage->bladeArray->entry()->SetSelection(0);
-        page->parent->bladesPage->lastBladeArraySelection = -1;
-        page->parent->presetsPage->bladeArray->entry()->SetSelection(0);
+        page->mLastArraySelection = -1;
+        page->mParent->bladesPage->bladeArray->entry()->SetSelection(0);
+        page->mParent->bladesPage->lastBladeArraySelection = -1;
+        page->mParent->presetsPage->bladeArray->entry()->SetSelection(0);
     };
 
     Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) {
@@ -68,13 +62,13 @@ void BladeArrayDlg::bindEvents() {
             bladeArrays.insert(bladeArrays.begin() + 1, BladeArray{"no_blade", 0, {}, { BladesPage::BladeConfig{} }});
             clearBladeArray(this);
         } else {
-            wxMessageDialog disableDetectDialog{
-                parent,
+            auto choice{PCUI::showMessage(
                 "Are you sure you want to disable Blade Detect?\n\n\"no_blade\" array will be deleted!",
                 "Disable Blade Detect",
-                wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING
-            };
-            if (disableDetectDialog.ShowModal() == wxID_NO) {
+                wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING,
+                mParent
+            )};
+            if (choice == wxNO) {
                 enableDetect->SetValue(true);
             } else {
                 bladeArrays.erase(bladeArrays.begin() + 1);
@@ -85,13 +79,13 @@ void BladeArrayDlg::bindEvents() {
     }, ID_BladeDetectEnable);
     Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) {
         if (not enableID->GetValue()) {
-            wxMessageDialog disableIDDialog{
-                parent,
+            auto choice{PCUI::showMessage(
                 "Are you sure you want to disable Blade ID?\n\nAll custom blade arrays will be deleted!",
                 "Disable Blade ID",
-                wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING
-            };
-            if (disableIDDialog.ShowModal() == wxID_NO) {
+                wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_WARNING,
+                mParent
+            )};
+            if (choice == wxNO) {
                 enableID->SetValue(true);
             } else {
                 if (enableDetect->GetValue()) bladeArrays.erase(bladeArrays.begin() + 2, bladeArrays.end());
@@ -115,7 +109,7 @@ void BladeArrayDlg::bindEvents() {
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         bladeArrays.push_back(BladeArray{"newarray", 40000, {}, { BladesPage::BladeConfig{} }});
         update();
-        arrayList->SetSelection(bladeArrays.size() - 1);
+        arrayList->SetSelection(static_cast<int32>(bladeArrays.size() - 1));
         arrayList->SendSelectionChangedEvent(wxEVT_LISTBOX);
     }, ID_AddArray);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
@@ -130,7 +124,7 @@ void BladeArrayDlg::bindEvents() {
     }, ID_ContinuousScan);
 }
 
-void BladeArrayDlg::createToolTips() {
+void BladeArrayDlg::createToolTips() const {
     TIP(enableDetect, "Detect when a blade is inserted into the saber or not.");
     TIP(enableID, "Detect when a specific blade is inserted based on a resistor placed in the blade to give it an identifier.");
 
@@ -153,7 +147,7 @@ void BladeArrayDlg::createToolTips() {
 }
 
 wxStaticBoxSizer* BladeArrayDlg::createBladeArrays(wxWindow* parent) {
-    wxStaticBoxSizer* bladeIDSizer = new wxStaticBoxSizer(wxHORIZONTAL, parent, "Blade Arrays");
+    auto *bladeIDSizer{new wxStaticBoxSizer(wxHORIZONTAL, parent, "Blade Arrays")};
 
     bladeIDSizer->Add(createBladeArraysLeft(bladeIDSizer->GetStaticBox()), wxSizerFlags(1).Expand());
     bladeIDSizer->Add(createBladeArraysRight(bladeIDSizer), wxSizerFlags(0).Expand());
@@ -162,11 +156,11 @@ wxStaticBoxSizer* BladeArrayDlg::createBladeArrays(wxWindow* parent) {
 }
 
 wxBoxSizer* BladeArrayDlg::createBladeArraysLeft(wxWindow* parent) {
-    wxBoxSizer* leftSizer = new wxBoxSizer(wxVERTICAL);
+    auto *leftSizer{new wxBoxSizer(wxVERTICAL)};
 
     arrayList = new wxListBox(parent, ID_BladeArray, wxDefaultPosition, wxSize(100, -1), wxArrayString{}, wxNO_BORDER);
 
-    wxBoxSizer* buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+    auto *buttonSizer{new wxBoxSizer(wxHORIZONTAL)};
     addID = new wxButton(parent, ID_AddArray, "+", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
     removeID = new wxButton(parent, ID_RemoveArray, "-", wxDefaultPosition, SMALLBUTTONSIZE, wxBU_EXACTFIT);
     buttonSizer->Add(addID, MENUITEMFLAGS);
@@ -179,7 +173,7 @@ wxBoxSizer* BladeArrayDlg::createBladeArraysLeft(wxWindow* parent) {
 }
 
 wxBoxSizer* BladeArrayDlg::createBladeArraysRight(wxStaticBoxSizer* parent) {
-    wxBoxSizer* rightSizer = new wxBoxSizer(wxVERTICAL);
+    auto* rightSizer{new wxBoxSizer(wxVERTICAL)};
 
     arrayName = new PCUI::Text(parent->GetStaticBox(), ID_NameEntry, {}, 0, "Blade Array Name");
     resistanceID = new PCUI::Numeric(parent->GetStaticBox(), wxID_ANY, 2000, 100000, 0, 1, wxSP_ARROW_KEYS, "ID Value");
@@ -192,7 +186,7 @@ wxBoxSizer* BladeArrayDlg::createBladeArraysRight(wxStaticBoxSizer* parent) {
 }
 
 wxStaticBoxSizer* BladeArrayDlg::createIDSetup(wxWindow* parent) {
-    wxStaticBoxSizer* setupSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Blade ID Setup");
+    auto *setupSizer{new wxStaticBoxSizer(wxVERTICAL, parent, "Blade ID Setup")};
     mode = new PCUI::Choice(setupSizer->GetStaticBox(), ID_BladeIDMode, Misc::createEntries(BLADE_ID_MODES), "Blade ID Mode");
     IDPin = new PCUI::Text(setupSizer->GetStaticBox(), wxID_ANY, {}, 0, "Blade ID Pin");
 
@@ -209,18 +203,18 @@ wxStaticBoxSizer* BladeArrayDlg::createIDSetup(wxWindow* parent) {
 }
 
 wxStaticBoxSizer* BladeArrayDlg::createIDPowerSettings(wxWindow* parent) {
-    wxStaticBoxSizer* powerForIDSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Power for Blade ID");
+    auto *powerForIDSizer{new wxStaticBoxSizer(wxVERTICAL, parent, "Power for Blade ID")};
     enablePowerForID = new wxCheckBox(powerForIDSizer->GetStaticBox(), ID_BladeIDPower, "Enable Power on ID", wxDefaultPosition, wxDefaultSize, 0);
 
-    wxBoxSizer* powerPinSizer = new wxBoxSizer(wxHORIZONTAL);
-    wxBoxSizer* powerPinLeftSizer = new wxBoxSizer(wxVERTICAL);
+    auto *powerPinSizer{new wxBoxSizer(wxHORIZONTAL)};
+    auto *powerPinLeftSizer{new wxBoxSizer(wxVERTICAL)};
     powerPin1 = new wxCheckBox(powerForIDSizer->GetStaticBox(), wxID_ANY, "Enable Power Pin 1", wxDefaultPosition, wxDefaultSize, 0);
     powerPin2 = new wxCheckBox(powerForIDSizer->GetStaticBox(), wxID_ANY, "Enable Power Pin 2", wxDefaultPosition, wxDefaultSize, 0);
     powerPin3 = new wxCheckBox(powerForIDSizer->GetStaticBox(), wxID_ANY, "Enable Power Pin 3", wxDefaultPosition, wxDefaultSize, 0);
     powerPinLeftSizer->Add(powerPin1, MENUITEMFLAGS);
     powerPinLeftSizer->Add(powerPin2, MENUITEMFLAGS);
     powerPinLeftSizer->Add(powerPin3, MENUITEMFLAGS);
-    wxBoxSizer* powerPinRightSizer = new wxBoxSizer(wxVERTICAL);
+    auto *powerPinRightSizer{new wxBoxSizer(wxVERTICAL)};
     powerPin4 = new wxCheckBox(powerForIDSizer->GetStaticBox(), wxID_ANY, "Enable Power Pin 4", wxDefaultPosition, wxDefaultSize, 0);
     powerPin5 = new wxCheckBox(powerForIDSizer->GetStaticBox(), wxID_ANY, "Enable Power Pin 5", wxDefaultPosition, wxDefaultSize, 0);
     powerPin6 = new wxCheckBox(powerForIDSizer->GetStaticBox(), wxID_ANY, "Enable Power Pin 6", wxDefaultPosition, wxDefaultSize, 0);
@@ -238,7 +232,7 @@ wxStaticBoxSizer* BladeArrayDlg::createIDPowerSettings(wxWindow* parent) {
 }
 
 wxStaticBoxSizer* BladeArrayDlg::createContinuousScanSettings(wxWindow* parent) {
-    wxStaticBoxSizer* continuousScansSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Continuous Scanning");
+    auto *continuousScansSizer{new wxStaticBoxSizer(wxVERTICAL, parent, "Continuous Scanning")};
     continuousScans = new wxCheckBox(continuousScansSizer->GetStaticBox(), ID_ContinuousScan, "Enable Continuous Scanning", wxDefaultPosition, wxDefaultSize, 0);
     numIDTimes = new PCUI::Numeric(continuousScansSizer->GetStaticBox(), wxID_ANY, 1, 15, 10, 1, wxSP_ARROW_KEYS, "Number of Reads to Average");
     scanIDMillis = new PCUI::Numeric(continuousScansSizer->GetStaticBox(), wxID_ANY, 10, 50000, 1000, 10, wxSP_ARROW_KEYS, "Scan Interval (ms)");
@@ -250,7 +244,7 @@ wxStaticBoxSizer* BladeArrayDlg::createContinuousScanSettings(wxWindow* parent) 
 }
 
 wxStaticBoxSizer* BladeArrayDlg::createBladeDetect(wxWindow* parent) {
-  wxStaticBoxSizer* bladeDetectSizer = new wxStaticBoxSizer(wxVERTICAL, parent, "Blade Detect");
+  auto *bladeDetectSizer{new wxStaticBoxSizer(wxVERTICAL, parent, "Blade Detect")};
 
   detectPin = new PCUI::Text(bladeDetectSizer->GetStaticBox(), wxID_ANY, {}, 0, "Blade Detect Pin");
   bladeDetectSizer->Add(detectPin, wxSizerFlags(0).Border(wxALL, 5).Expand());
@@ -259,20 +253,20 @@ wxStaticBoxSizer* BladeArrayDlg::createBladeDetect(wxWindow* parent) {
 }
 
 void BladeArrayDlg::update() {
-    if (lastArraySelection >= 0 && lastArraySelection < static_cast<int32_t>(bladeArrays.size())) {
-        bladeArrays.at(lastArraySelection).name = arrayName->entry()->GetValue();
-        bladeArrays.at(lastArraySelection).value = resistanceID->entry()->GetValue();
+    if (mLastArraySelection >= 0 && mLastArraySelection < static_cast<int32_t>(bladeArrays.size())) {
+        bladeArrays.at(mLastArraySelection).name = arrayName->entry()->GetValue();
+        bladeArrays.at(mLastArraySelection).value = resistanceID->entry()->GetValue();
     }
 
-    lastArraySelection = arrayList->GetSelection();
+    mLastArraySelection = arrayList->GetSelection();
     arrayList->Clear();
 
     for (int32_t array = 0; array < static_cast<int32_t>(bladeArrays.size()); array++) {
         if (arrayList->FindString(bladeArrays.at(array).name) == wxNOT_FOUND) arrayList->Append(bladeArrays.at(array).name);
         else bladeArrays.erase(bladeArrays.begin() + array);
     }
-    if (lastArraySelection < 0 || lastArraySelection >= static_cast<int32_t>(arrayList->GetCount())) lastArraySelection = 0;
-    arrayList->SetSelection(lastArraySelection);
+    if (mLastArraySelection < 0 || mLastArraySelection >= static_cast<int32_t>(arrayList->GetCount())) mLastArraySelection = 0;
+    arrayList->SetSelection(mLastArraySelection);
 
     detectPin->entry()->Enable(enableDetect->GetValue());
 
@@ -292,15 +286,15 @@ void BladeArrayDlg::update() {
     numIDTimes->entry()->Enable(enableID->GetValue() && continuousScans->GetValue());
     scanIDMillis->entry()->Enable(enableID->GetValue() && continuousScans->GetValue());
     addID->Enable(enableID->GetValue());
-    removeID->Enable(enableID->GetValue() && lastArraySelection && !(arrayList->GetStringSelection() == "blade_in" || arrayList->GetStringSelection() == "no_blade"));
+    removeID->Enable(enableID->GetValue() && mLastArraySelection && !(arrayList->GetStringSelection() == "blade_in" || arrayList->GetStringSelection() == "no_blade"));
 
-    bool customBladeArraySelected = bladeArrays[lastArraySelection].name != "no_blade" && bladeArrays[lastArraySelection].name != "blade_in";
+    bool customBladeArraySelected = bladeArrays[mLastArraySelection].name != "no_blade" && bladeArrays[mLastArraySelection].name != "blade_in";
     arrayName->entry()->Enable(customBladeArraySelected);
     resistanceID->entry()->Enable(customBladeArraySelected);
     if (customBladeArraySelected) resistanceID->entry()->SetRange(2000, 100000);
     else resistanceID->entry()->SetRange(0, 0);
-    arrayName->entry()->ChangeValue(bladeArrays.at(lastArraySelection).name);
-    resistanceID->entry()->SetValue(bladeArrays.at(lastArraySelection).value);
+    arrayName->entry()->ChangeValue(bladeArrays.at(mLastArraySelection).name);
+    resistanceID->entry()->SetValue(bladeArrays.at(mLastArraySelection).value);
 
     if (mode->entry()->GetSelection() == BLADE_ID_MODE_SNAPSHOT) {
         pullupResistance->Show(false);
@@ -313,9 +307,9 @@ void BladeArrayDlg::update() {
         pullupResistance->Show(true);
     }
 
-    if (parent->bladesPage && parent->presetsPage) {
-        parent->bladesPage->update();
-        parent->presetsPage->update();
+    if (mParent->bladesPage && mParent->presetsPage) {
+        mParent->bladesPage->update();
+        mParent->presetsPage->update();
     }
 
     Layout();
@@ -326,18 +320,17 @@ void BladeArrayDlg::update() {
 }
 
 void BladeArrayDlg::stripAndSaveName() {
-  if (lastArraySelection > 0 && lastArraySelection < static_cast<int32_t>(bladeArrays.size())) {
+  if (mLastArraySelection > 0 && mLastArraySelection < static_cast<int32_t>(bladeArrays.size())) {
     wxString name = arrayName->entry()->GetValue();
     name.erase(std::remove(name.begin(), name.end(), ' '), name.end());
-    std::transform(name.begin(), name.end(), name.begin(),
-                   [](unsigned char c){ return std::tolower(c); }); // to lowercase
+    std::transform(name.begin(), name.end(), name.begin(), [](unsigned char chr){ return std::tolower(chr); }); // to lowercase
     int32_t insertPoint = arrayName->entry()->GetInsertionPoint();
     arrayName->entry()->ChangeValue(name);
     arrayName->entry()->SetInsertionPoint(insertPoint);
 
-    if (name == "blade_in") { bladeArrays.erase(bladeArrays.begin() + lastArraySelection); lastArraySelection = 0; }
+    if (name == "blade_in") { bladeArrays.erase(bladeArrays.begin() + mLastArraySelection); mLastArraySelection = 0; }
     if (name == "no_blade") {
-      bladeArrays.erase(bladeArrays.begin() + lastArraySelection);
+      bladeArrays.erase(bladeArrays.begin() + mLastArraySelection);
     }
   }
 }

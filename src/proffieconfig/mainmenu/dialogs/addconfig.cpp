@@ -5,19 +5,10 @@
 #include <wx/filepicker.h>
 #include <wx/string.h>
 #include <wx/event.h>
-#ifdef __WINDOWS__
-#undef wxMessageDialog
-#include <wx/msgdlg.h>
-#define wxMessageDialog wxGenericMessageDialog
-#else
-#include <wx/msgdlg.h>
-#endif
 #include <wx/sizer.h>
 #include <wx/tglbtn.h>
 #include <wx/button.h>
 #include <wx/sysopt.h>
-
-#include <fstream>
 
 AddConfig::AddConfig(MainMenu *parent) : 
     wxDialog(parent, wxID_ANY, "Add New Config", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE) {
@@ -32,7 +23,7 @@ AddConfig::AddConfig(MainMenu *parent) :
 }
 
 void AddConfig::bindEvents() {
-    Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         if (importExisting->GetValue()) {
             existingPath = chooseConfig->GetFileName().GetAbsolutePath().ToStdString();
         } 
@@ -53,10 +44,10 @@ void AddConfig::bindEvents() {
 }
 
 void AddConfig::createUI() {
-  auto sizer = new wxBoxSizer(wxVERTICAL);
+  auto *sizer{new wxBoxSizer(wxVERTICAL)};
   sizer->SetMinSize(wxSize(400, -1));
 
-  auto modeSelection = new wxBoxSizer(wxHORIZONTAL);
+  auto *modeSelection{new wxBoxSizer(wxHORIZONTAL)};
   createNew = new wxToggleButton(this, ID_CreateNew, "Create New Config");
   createNew->SetValue(true);
   importExisting = new wxToggleButton(this, ID_ImportExisting, "Import Existing Config");
