@@ -85,8 +85,8 @@ void Arduino::init(wxWindow *parent) {
     std::thread{[progDialog, parent, &logger]() {
         auto *const evt{new Arduino::Event(Arduino::EVT_INIT_DONE)};
         FILE *install{nullptr};
-        std::string fulloutput;
-        std::array<char, 128> buffer;
+        string fulloutput;
+        array<char, 32> buffer;
 
         constexpr cstring DOWNLOAD_MESSAGE{"Downloading ProffieOS..."};
         progDialog->emitEvent(5, DOWNLOAD_MESSAGE);
@@ -166,7 +166,10 @@ void Arduino::init(wxWindow *parent) {
         
         progDialog->emitEvent(30, "Downloading dependencies...");
         install = Arduino::cli("core install proffieboard:stm32l4@" ARDUINO_PBPLUGIN_VERSION " --additional-urls https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json");
-        while (fgets(buffer.data(), buffer.size(), install) != nullptr) { progDialog->emitEvent(-1, ""); fulloutput += buffer.data(); }
+        while (fgets(buffer.data(), buffer.size(), install) != nullptr) { 
+            progDialog->emitEvent(-1, ""); 
+            fulloutput += buffer.data(); 
+        }
         if (pclose(install)) {
             progDialog->emitEvent(100, "Error");
             const auto coreInstallErrorMessage{"Core install failed:\n\n" + fulloutput};
@@ -212,7 +215,10 @@ void Arduino::init(wxWindow *parent) {
 #       endif
 
         fulloutput.clear();
-        while (fgets(buffer.data(), buffer.size(), install) != nullptr) { progDialog->emitEvent(-1, ""); fulloutput += buffer.data(); }
+        while (fgets(buffer.data(), buffer.size(), install) != nullptr) { 
+            progDialog->emitEvent(-1, ""); 
+            fulloutput += buffer.data(); 
+        }
         if (pclose(install)) {
             progDialog->emitEvent(100, "Error");
             const auto driverInstallErrorMessage{"Driver install failed:\n\n" + fulloutput};
@@ -263,11 +269,11 @@ void Arduino::refreshBoards(MainMenu* window) {
     thread.detach();
 }
 
-std::vector<wxString> Arduino::getBoards(Log::Branch& lBranch) {
+vector<wxString> Arduino::getBoards(Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Arduino::getBoards()")};
 
-    std::vector<wxString> boards{"Select Board..."};
-    char buffer[1024];
+    vector<wxString> boards{"Select Board..."};
+    array<char, 32> buffer;
 
     FILE *arduinoCli = Arduino::cli("board list");
 
@@ -276,42 +282,56 @@ std::vector<wxString> Arduino::getBoards(Log::Branch& lBranch) {
     }
 
     struct Result {
-        std::string port;
+        Result(string port, bool isProffie) :
+            port{std::move(port)}, isProffie{isProffie} {}
+        string port;
         bool isProffie{false};
     };
 
     std::vector<Result> results;
 
-    while (fgets(buffer, 1024, arduinoCli) != nullptr) {
-        if (std::strstr(buffer, "No boards found.") != nullptr) {
+    string output;
+    while (fgets(buffer.data(), buffer.size(), arduinoCli) != nullptr) {
+        output += buffer.data();
+    }
+
+    auto lineEndPos{output.find('\n')};
+    while (not false) {
+        const auto line{output.substr(0, lineEndPos)};
+
+        if (line.find("No boards found.") != std::string::npos) {
             logger.info("No boards found.");
             break;
         }
 
-        if (buffer[0] == ' ' or buffer[0] == '\t') {
+        if (line[0] == ' ' or line[0] == '\t') {
             if (results.empty()) continue;
 
-            if (std::strstr(buffer, "proffieboard") != nullptr) {
+            if (line.find("proffieboard") != std::string::npos) {
                 results.back().isProffie = true;
             }
 
             continue;
         }
 
-        if (std::strstr(buffer, "serial") != nullptr) {
-            *std::strpbrk(buffer, " ") = '\0'; // End string at break to get dev path
-            const auto isProffie{std::strstr(buffer, "proffieboard") != nullptr};
-            results.emplace_back(Result{buffer, isProffie});
-            logger.debug(string{"Found board: "} + buffer);
-        } else if (std::strstr(buffer, "dfu") != nullptr) {
-            *std::strpbrk(buffer, " ") = '\0';
-            boards.emplace_back("BOOTLOADER|" + wxString(buffer));
-            logger.debug(string{"Found board in bootloader mode: "} + buffer);
+        if (line.find("serial") != std::string::npos) {
+            const auto port{line.substr(0, line.find_first_of(" \t"))};
+            const auto isProffie{line.find("proffieboard") != std::string::npos};
+            results.emplace_back(port, isProffie);
+            logger.debug(string{"Found board: "} + port);
+        } else if (line.find("dfu") != std::string::npos) {
+            const auto port{line.substr(0, line.find_first_of(" \t"))};
+            boards.emplace_back("BOOTLOADER|" + port);
+            logger.debug(string{"Found board in bootloader mode: "} + port);
         }
+
+        if (lineEndPos == std::string::npos) break;
+        output = output.substr(lineEndPos + 1);
+        lineEndPos = output.find('\n');
     }
 
     for (const auto& result : results) {
-        if (!result.isProffie) continue;
+        if (not result.isProffie) continue;
 
         logger.info(string{"Reporting board: "} + result.port);
         boards.emplace_back(result.port);
@@ -563,7 +583,7 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
         if (progDialog != nullptr) progDialog->emitEvent(-1, ""); // Pulse
         error += buffer.data();
 
-        if (std::strstr(buffer.data(), "error")) {
+        if (error.find("error") != std::string::npos) {
             _return = Arduino::parseError(error, editor);
             logger.error(_return);
 # 	        ifdef __WINDOWS__
@@ -724,8 +744,9 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
             auto percent{strtol(percentPtr - 3, nullptr, 10)};
             progDialog->emitEvent(static_cast<int8>(percent), "");
         }
+
         error += buffer.data();
-        if (std::strstr(buffer.data(), "error") || std::strstr(buffer.data(), "FAIL")) {
+        if (error.rfind("error") != std::string::npos || error.rfind("FAIL") != std::string::npos) {
             _return = Arduino::parseError(error, editor);
             logger.error(_return);
             return false;
@@ -752,7 +773,7 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
         }
 
         error += buffer.data();
-        if (std::strstr(buffer.data(), "error") || std::strstr(buffer.data(), "FAIL")) {
+        if (error.rfind("error") != std::string::npos || error.rfind("FAIL") != std::string::npos) {
             _return = Arduino::parseError(error, editor);
             logger.error(_return);
             return false;
