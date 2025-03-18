@@ -102,12 +102,12 @@ void Settings::setCustomInputParsers() {
     const auto typeEnd{key.second.find('<')};
     const auto type{key.second.substr(0, typeEnd)};
     if (type == "SnapshotBladeID") {
-      parent->bladesPage->bladeArrayDlg->mode->entry()->SetStringSelection(BLADE_ID_MODE_SNAPSHOT);
+      parent->bladesPage->bladeArrayDlg->mode->entry()->SetSelection(BLADE_ID_MODE_SNAPSHOT);
       const auto pinBegin{key.second.find_first_not_of("< ", typeEnd)};
       const auto pinEnd{key.second.find_first_of(" >", pinBegin)};
       parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd));
     } else if (type == "ExternalPullupBladeID") {
-      parent->bladesPage->bladeArrayDlg->mode->entry()->SetStringSelection(BLADE_ID_MODE_EXTERNAL);
+      parent->bladesPage->bladeArrayDlg->mode->entry()->SetSelection(BLADE_ID_MODE_EXTERNAL);
       const auto pinBegin{key.second.find_first_not_of("< ", typeEnd)};
       const auto pinEnd{key.second.find_first_of(" >", pinBegin)};
       parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd));
@@ -115,7 +115,7 @@ void Settings::setCustomInputParsers() {
       const auto resEnd{key.second.find_first_of(" >", resBegin)};
       parent->bladesPage->bladeArrayDlg->pullupResistance->entry()->SetValue(std::stod(key.second.substr(resBegin, resEnd)));
     } else if (type == "BridgedPullupBladeID") {
-      parent->bladesPage->bladeArrayDlg->mode->entry()->SetStringSelection(BLADE_ID_MODE_BRIDGED);
+      parent->bladesPage->bladeArrayDlg->mode->entry()->SetSelection(BLADE_ID_MODE_BRIDGED);
       const auto pinBegin{key.second.find_first_not_of("< ", typeEnd)};
       const auto pinEnd{key.second.find_first_of(" >", pinBegin)};
       parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd));
@@ -178,11 +178,24 @@ void Settings::setCustomOutputParsers() {
     return def->getName() + " " + std::to_string(def->getNum()) + " * 60 * 1000";
   });
   generalDefines["BLADE_ID_CLASS"]->overrideOutput([&](const ProffieDefine* def) -> std::string {
-    auto mode = parent->bladesPage->bladeArrayDlg->mode->entry()->GetStringSelection();
+    const auto mode = parent->bladesPage->bladeArrayDlg->mode->entry()->GetSelection();
     std::string returnVal = def->getName() + " ";
-    if (mode == BLADE_ID_MODE_SNAPSHOT) returnVal + "SnapshotBladeID<" + parent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue() + ">";
-    else if (mode == BLADE_ID_MODE_BRIDGED) returnVal + "ExternalPullupBladeID<" + parent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue() + ", " + parent->bladesPage->bladeArrayDlg->pullupResistance->entry()->GetTextValue() + ">";
-    else if (mode == BLADE_ID_MODE_EXTERNAL) returnVal + "BridgedPullupBladeID<" + parent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue() + ", " + parent->bladesPage->bladeArrayDlg->pullupPin->entry()->GetValue();
+    if (mode == BLADE_ID_MODE_SNAPSHOT) {
+        returnVal += "SnapshotBladeID<" + parent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue().ToStdString() + ">";
+    } else if (mode == BLADE_ID_MODE_BRIDGED) {
+        returnVal +=
+            "ExternalPullupBladeID<" + 
+            parent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue().ToStdString() + 
+            ", " + 
+            parent->bladesPage->bladeArrayDlg->pullupResistance->entry()->GetTextValue().ToStdString() + 
+            ">";
+    } else if (mode == BLADE_ID_MODE_EXTERNAL) {
+        returnVal += 
+            "BridgedPullupBladeID<" + 
+            parent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue().ToStdString() + 
+            ", " + 
+            parent->bladesPage->bladeArrayDlg->pullupPin->entry()->GetValue().ToStdString();
+    }
 
     return returnVal;
   });

@@ -187,11 +187,11 @@ public:
         bool useStride{false};
         bool useZigZag{false};
 
-        struct subBladeInfo {
+        struct SubBladeInfo {
             uint32_t startPixel{0};
             uint32_t endPixel{0};
         };
-        std::vector<subBladeInfo> subBlades{};
+        std::vector<SubBladeInfo> subBlades{};
     };
 
 private:

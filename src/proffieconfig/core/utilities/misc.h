@@ -33,10 +33,10 @@ public:
     static const wxArrayString createEntries(const Configuration::VMap& map);
 
     template<typename T, size_t size>
-    static const wxArrayString createEntries(const std::array<T, size>& list) {
+    static const wxArrayString createEntries(const array<T, size>& list) {
         wxArrayString entries;
-        for (const wxString& entry : list) {
-            entries.Add(entry);
+        for (const auto& entry : list) {
+            entries.Add(wxString{entry});
         }
         return entries;
     }

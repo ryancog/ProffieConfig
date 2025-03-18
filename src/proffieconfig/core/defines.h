@@ -32,9 +32,6 @@ static constexpr auto COPYRIGHT_NOTICE{
 #define BOXITEMFLAGS wxSizerFlags(0).Border(wxALL, 10).Expand()
 #define TEXTITEMFLAGS wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 5)
 
-#define UPDATEWINDOW(window) window->sizer->Layout(); window->Refresh();
-#define FULLUPDATEWINDOW(window) window->sizer->Layout(); window->SetSizerAndFit(window->sizer); window->Refresh();
-
 #include <wx/tooltip.h>
 #define TIP(object, msg) object->SetToolTip(new wxToolTip(msg));
 
