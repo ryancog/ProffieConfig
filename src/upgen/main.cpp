@@ -24,6 +24,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <set>
 #include <map>
 #include <memory>
 
@@ -1565,14 +1566,15 @@ void UpGen::removeBundle(Update::Bundles& bundles) {
 }
 
 void UpGen::genBundleChangelog(Data& data) {
-    listBundles(data.bundles, data.bundles.empty());
     if (data.bundles.empty()) return;
 
     Update::Version bundleVersion;
-    Update::Bundle *bundle{nullptr};
+    decltype(data.bundles.begin()) bundleEndIt;
+    decltype(data.bundles.begin()) bundleBeginIt;
 
     string input;
     while (not false) {
+        listBundles(data.bundles, data.bundles.empty());
         std::cout << "Bundle to generate for ('-' to cancel): " << std::flush;
         std::getline(std::cin, input);
 
@@ -1598,35 +1600,88 @@ void UpGen::genBundleChangelog(Data& data) {
             continue;
         }
 
-        auto bundleIt{std::next(data.bundles.begin(), bundleIdx)};
-        bundle = &bundleIt->second;
-        bundleVersion = bundleIt->first;
+        bundleEndIt = std::next(data.bundles.begin(), bundleIdx);
+        bundleVersion = bundleEndIt->first;
+        ++bundleEndIt;
+        break;
+    }
+
+    while (not false) {
+        listBundles(data.bundles, data.bundles.empty());
+        std::cout << "Bundle to generate from ('-' to list from previous): " << std::flush;
+        std::getline(std::cin, input);
+
+        if (input.empty()) {
+            resetToPrevLine();
+            continue;
+        }
+
+        if (not std::isdigit(input[0])) {
+            resetToPrevLine() << "Invalid bundle number, try again. " << std::flush;
+            std::getline(std::cin, input);
+            resetToPrevLine();
+            continue;
+        }
+
+        auto bundleIdx{std::stoi(input)};
+        if (bundleIdx > data.bundles.size()) {
+            resetToPrevLine() << "Entry out of range, try again. " << std::flush;
+            std::getline(std::cin, input);
+            resetToPrevLine();
+            continue;
+        }
+
+        bundleBeginIt = std::next(data.bundles.begin(), bundleIdx);
         break;
     }
 
     clearScreen();
     std::cout << HEADER << "\n\n";
 
+    string notes;
+    std::map<Update::ItemID, std::set<Update::Version>> itemVersions;
+    std::map<Update::ItemID, std::tuple<string, string, string>> itemInfos;
+
+    for (auto bundleIt{bundleBeginIt}; bundleIt != bundleEndIt; ++bundleIt) {
+        if (not bundleIt->second.note.empty()) {
+            notes += '*' + bundleIt->second.note + "*\n\n";
+        }
+
+        for (const auto& [ reqID, reqVer, hash] : bundleIt->second.reqs) {
+            auto item{data.items.find(reqID)->second};
+            if (item.hidden) continue;
+
+            if (itemVersions[reqID].contains(reqVer)) {
+                continue;
+            }
+
+            auto itemVersion{item.versions.find(reqVer)->second};
+            auto& [ features, changes, fixes ]{itemInfos[reqID]};
+            for (const auto& feat : itemVersion.features) features += " - " + feat + '\n';
+            for (const auto& change: itemVersion.changes) changes += " - " + change + '\n';
+            for (const auto& fix: itemVersion.fixes) fixes += " - " + fix + '\n';
+
+            itemVersions[reqID].emplace(reqVer);
+        }
+    }
+
     std::cout << "Version " << static_cast<string>(bundleVersion) << " of ProffieConfig includes the following updates:\n\n";
-    if (not bundle->note.empty()) std::cout << '*' << bundle->note << "*\n\n";
+    std::cout << notes;
 
-    for (const auto& [ reqID, reqVer, hash] : bundle->reqs) {
-        auto item{data.items.find(reqID)->second};
-        if (item.hidden) continue;
-        auto itemVersion{item.versions.find(reqVer)->second};
-
-        std::cout << "### " << reqID.name << " " << static_cast<string>(reqVer) << "\n\n";
-        if (not itemVersion.features.empty()) {
+    for (const auto& [ id, info ] : itemInfos) {
+        std::cout << "### " << id.name << "\n\n";
+        const auto& [ features, changes, fixes ]{info};
+        if (not features.empty()) {
             std::cout << "**New Features:**\n";
-            for (const auto& feat : itemVersion.features) std::cout << " - " << feat << '\n';
+            std::cout << features << '\n';
         }
-        if (not itemVersion.changes.empty()) {
+        if (not changes.empty()) {
             std::cout << "**Changes:**\n";
-            for (const auto& change : itemVersion.changes) std::cout << " - " << change << '\n';
+            std::cout << changes << '\n';
         }
-        if (not itemVersion.fixes.empty()) {
+        if (not fixes.empty()) {
             std::cout << "**Bugfixes:**\n";
-            for (const auto& fix : itemVersion.fixes) std::cout << " - " << fix << '\n';
+            std::cout << fixes << '\n';
         }
 
         std::cout << '\n';
