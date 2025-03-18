@@ -45,21 +45,28 @@ MainMenu::MainMenu(wxWindow* parent) : PCUI::Frame(parent, wxID_ANY, "ProffieCon
 }
 
 void MainMenu::bindEvents() {
-    Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
-        AppState::saveState();
+    auto promptClose{[this]() -> bool {
         for (auto *editor : editors) {
-            if (not editor->isSaved() && event.CanVeto()) {
+            if (not editor->isSaved()) {
                 if (PCUI::showMessage(
-                            "There is at least one editor open, are you sure you want to exit?\n\n"
+                            "There is at least one editor open with unsaved changes, are you sure you want to exit?\n\n"
                             "Any unsaved changes will be lost!",
                             "Open Editor(s)",
                             wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION) == wxNO) {
-                    event.Veto();
-                    return;
+                    return false;
                 }
 
                 break;
             }
+        }
+
+        return true;
+    }};
+
+    Bind(wxEVT_CLOSE_WINDOW, [promptClose](wxCloseEvent& event) {
+        AppState::saveState();
+        if (event.CanVeto() and not promptClose()) {
+            event.Veto();
         }
         event.Skip();
     });
@@ -67,7 +74,11 @@ void MainMenu::bindEvents() {
     Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
         wxMessageDialog(this, ((Misc ::MessageBoxEvent *)&event)->message, ((Misc ::MessageBoxEvent *)&event)->caption, ((Misc ::MessageBoxEvent *)&event)->style).ShowModal();
     }, wxID_ANY);
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(); OnboardFrame::instance = new OnboardFrame(); }, ID_ReRunSetup);
+    Bind(wxEVT_MENU, [this, promptClose](wxCommandEvent&) { 
+        if (not promptClose()) return;
+        Close(true); 
+        OnboardFrame::instance = new OnboardFrame(); 
+    }, ID_ReRunSetup);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxAboutDialogInfo aboutInfo;
