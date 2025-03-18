@@ -105,23 +105,23 @@ void Settings::setCustomInputParsers() {
       parent->bladesPage->bladeArrayDlg->mode->entry()->SetSelection(BLADE_ID_MODE_SNAPSHOT);
       const auto pinBegin{key.second.find_first_not_of("< ", typeEnd)};
       const auto pinEnd{key.second.find_first_of(" >", pinBegin)};
-      parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd));
+      parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd - pinBegin));
     } else if (type == "ExternalPullupBladeID") {
       parent->bladesPage->bladeArrayDlg->mode->entry()->SetSelection(BLADE_ID_MODE_EXTERNAL);
       const auto pinBegin{key.second.find_first_not_of("< ", typeEnd)};
-      const auto pinEnd{key.second.find_first_of(" >", pinBegin)};
-      parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd));
+      const auto pinEnd{key.second.find_first_of(", >", pinBegin)};
+      parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd - pinBegin));
       const auto resBegin{key.second.find_first_not_of(", ", pinEnd)};
       const auto resEnd{key.second.find_first_of(" >", resBegin)};
-      parent->bladesPage->bladeArrayDlg->pullupResistance->entry()->SetValue(std::stod(key.second.substr(resBegin, resEnd)));
+      parent->bladesPage->bladeArrayDlg->pullupResistance->entry()->SetValue(std::stod(key.second.substr(resBegin, resEnd - resBegin)));
     } else if (type == "BridgedPullupBladeID") {
       parent->bladesPage->bladeArrayDlg->mode->entry()->SetSelection(BLADE_ID_MODE_BRIDGED);
       const auto pinBegin{key.second.find_first_not_of("< ", typeEnd)};
-      const auto pinEnd{key.second.find_first_of(" >", pinBegin)};
-      parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd));
+      const auto pinEnd{key.second.find_first_of(", >", pinBegin)};
+      parent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd - pinBegin));
       const auto pullupPinBegin{key.second.find_first_not_of(", ", pinEnd)};
       const auto pullupPinEnd{key.second.find_first_of(" >", pullupPinBegin)};
-      parent->bladesPage->bladeArrayDlg->pullupPin->entry()->SetValue(key.second.substr(pullupPinBegin, pullupPinEnd));
+      parent->bladesPage->bladeArrayDlg->pullupPin->entry()->SetValue(key.second.substr(pullupPinBegin, pullupPinEnd - pullupPinBegin));
     }
     return true;
   });
@@ -183,18 +183,19 @@ void Settings::setCustomOutputParsers() {
     if (mode == BLADE_ID_MODE_SNAPSHOT) {
         returnVal += "SnapshotBladeID<" + parent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue().ToStdString() + ">";
     } else if (mode == BLADE_ID_MODE_BRIDGED) {
-        returnVal +=
-            "ExternalPullupBladeID<" + 
-            parent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue().ToStdString() + 
-            ", " + 
-            parent->bladesPage->bladeArrayDlg->pullupResistance->entry()->GetTextValue().ToStdString() + 
-            ">";
-    } else if (mode == BLADE_ID_MODE_EXTERNAL) {
         returnVal += 
             "BridgedPullupBladeID<" + 
             parent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue().ToStdString() + 
             ", " + 
-            parent->bladesPage->bladeArrayDlg->pullupPin->entry()->GetValue().ToStdString();
+            parent->bladesPage->bladeArrayDlg->pullupPin->entry()->GetValue().ToStdString() +
+            ">";
+    } else if (mode == BLADE_ID_MODE_EXTERNAL) {
+        returnVal +=
+            "ExternalPullupBladeID<" + 
+            parent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue().ToStdString() + 
+            ", " + 
+            std::to_string(parent->bladesPage->bladeArrayDlg->pullupResistance->entry()->GetValue()) + 
+            ">";
     }
 
     return returnVal;
