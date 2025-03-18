@@ -21,6 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <unordered_map>
 #include <wx/button.h>
 #include <wx/sizer.h>
 #include <wx/statbox.h>
@@ -278,6 +279,8 @@ Update::Version Update::determineCurrentVersion(const Data& data, PCUI::Progress
 
     // Ensure invalid
     Update::Version ret{Version::invalidObject()};
+    std::map<filepath, string> hashCache;
+
     prog->Pulse("Determining current version...");
     for (const auto& [ version, bundle ] : data.bundles) {
         auto status{"Trying version " + string(version)};
@@ -318,7 +321,16 @@ Update::Version Update::determineCurrentVersion(const Data& data, PCUI::Progress
             status = "Testing file " + id.name + ", " + string(fileVer);
             logger.debug(status + " at path: " + itemPath.string());
             prog->Pulse(status);
-            if (Crypto::computeHash(itemPath) != fileItem.versions.at(fileVer).hash) {
+
+            auto cachedHash{hashCache.find(itemPath)};
+            string itemHash;
+            if (cachedHash == hashCache.end()) {
+                itemHash = hashCache[itemPath] = Crypto::computeHash(itemPath);
+            } else {
+                itemHash = cachedHash->second;
+            }
+
+            if (itemHash != fileItem.versions.at(fileVer).hash) {
                 status = "Hash check failed";
                 logger.info(status);
                 prog->Pulse(status);
