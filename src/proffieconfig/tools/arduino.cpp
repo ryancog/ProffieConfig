@@ -50,10 +50,11 @@ namespace Arduino {
     bool updateIno(string&, EditorWindow*, Log::Branch&);
 #   ifdef __WINDOWS__
     optional<array<string, 2>> compile(string&, EditorWindow *, Progress *, Log::Branch&);
+    bool upload(string&, EditorWindow *, Progress *, const array<string, 2>&, Log::Branch&);
 #   else
     bool compile(string&, EditorWindow *, Progress *, Log::Branch&);
-#   endif
     bool upload(string&, EditorWindow *, Progress *, Log::Branch&);
+#   endif
     string parseError(const string&, EditorWindow *);
 
     wxDEFINE_EVENT(EVT_INIT_DONE, Event);
@@ -64,6 +65,16 @@ namespace Arduino {
     wxDEFINE_EVENT(EVT_APPEND_BLIST, Event);
 
     constexpr auto MAX_ERRMESSAGE_LENGTH{1024};
+
+#   ifdef __WINDOWS__
+    inline string windowModePrefix() { 
+        return 
+            "title ProffieConfig Worker & " + 
+            (Paths::binaries() / "windowMode").string() + 
+            R"( -title "ProffieConfig Worker" -mode force_minimized & )";
+    }
+#   endif
+
 } // namespace Arduino
 
 void Arduino::init(wxWindow *parent) {
@@ -184,13 +195,11 @@ void Arduino::init(wxWindow *parent) {
         startupInfo.cb = sizeof startupInfo;
         memset(&procInfo, 0, sizeof procInfo);
 
-        constexpr const char MINIMIZE_COMMAND[]{R"(resources\windowmode -title "ProffieConfig Worker" -mode force_minimized)"};
-        std::array<char, sizeof MINIMIZE_COMMAND + 1> minCmdInput;
-        strncpy(minCmdInput.data(), MINIMIZE_COMMAND, minCmdInput.size());
+        const auto minimizeCommand{(Paths::binaries() / "windowMode").string() + R"( -title "ProffieConfig Worker" -mode force_minimized)"};
 
         CreateProcessA(
+            minimizeCommand.c_str(),
             nullptr,
-            minCmdInput.data(),
             nullptr,
             nullptr,
             false,
@@ -395,65 +404,13 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
             return;
         }
 
-#       ifdef __WINDOWS__
-        if (window->boardSelect->entry()->GetStringSelection() != "BOOTLOADER RECOVERY") {
-            progDialog->emitEvent(50, "Rebooting Proffieboard...");
-
-            auto *serialHandle{CreateFileW(window->boardSelect->entry()->GetStringSelection().ToStdWstring().c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr)};
-            if (serialHandle != INVALID_HANDLE_VALUE) {
-                DCB dcbSerialParameters = {};
-                dcbSerialParameters.DCBlength = sizeof(dcbSerialParameters);
-
-                dcbSerialParameters.BaudRate = CBR_115200;
-                dcbSerialParameters.ByteSize = 8;
-                dcbSerialParameters.StopBits = ONESTOPBIT;
-                dcbSerialParameters.Parity = NOPARITY;
-                dcbSerialParameters.fRtsControl = RTS_CONTROL_ENABLE;
-                dcbSerialParameters.fDtrControl = DTR_CONTROL_ENABLE;
-
-                SetCommState(serialHandle, &dcbSerialParameters);
-
-                DWORD bytesHandled{};
-                const char* rebootCommand = "RebootDFU\r\n";
-                WriteFile(serialHandle, rebootCommand, strlen(rebootCommand),  &bytesHandled, nullptr);
-
-                CloseHandle(serialHandle);
-                Sleep(5000);
-            }
-        }
-#       endif
-
         constexpr cstring UPLOAD_MESSAGE{"Uploading to Proffieboard..."};
         progDialog->emitEvent(65, UPLOAD_MESSAGE);
 #       ifdef __WINDOWS__
-        logger.info(UPLOAD_MESSAGE);
-        string commandString{R"(title ProffieConfig Worker & resources\windowmode -title "ProffieConfig Worker" -mode force_minimized & )"};
-        commandString += (*paths)[1] + R"( 0x1209 0x6668 )" + (*paths)[0] + R"( 2>&1)";
-
-        auto *upload{popen(commandString.c_str(), "r")};
-        char buffer[128];
-        std::string error{};
-        while (fgets(buffer, sizeof(buffer), upload) != nullptr) {
-            progDialog->emitEvent(-1, "");
-            error += buffer;
-        }
-
-        if (error.find("File downloaded successfully") == std::string::npos) {
-            progDialog->emitEvent(100, "Error");
-            const auto parsedError{Arduino::parseError(error, editor)};
-            logger.error(parsedError);
-            auto* msg{new Misc::MessageBoxEvent{
-                wxID_ANY, 
-                "There was an error while uploading:\n\n" + parsedError,
-                "Upload Error"
-            }};
-            wxQueueEvent(window, msg);
-            wxQueueEvent(window, evt);
-            return;
-        }
-
+        if (not Arduino::upload(returnVal, editor, progDialog, *paths, *logger.binfo(UPLOAD_MESSAGE))) {
 #       else
         if (not Arduino::upload(returnVal, editor, progDialog, *logger.binfo(UPLOAD_MESSAGE))) {
+#       endif
             progDialog->emitEvent(100, "Error");
             auto* msg{new Misc::MessageBoxEvent{
                 wxID_ANY, 
@@ -464,7 +421,6 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
             wxQueueEvent(window, evt);
             return;
         }
-#       endif
 
         progDialog->emitEvent(100, "Done.");
         logger.info("Applied Successfully");
@@ -648,11 +604,16 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
 #	endif
 }
 
+#ifdef __WINDOWS__
+bool Arduino::upload(string& _return, EditorWindow *editor, Progress *progDialog, const array<string, 2>& paths, Log::Branch& lBranch) {
+#else
 bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progDialog, Log::Branch& lBranch) {
+#endif
     auto& logger{lBranch.createLogger("Arduino::upload()")};
 
     array<char, 32> buffer;
 
+#   ifndef __WINDOWS__
     string uploadCommand = "upload ";
     uploadCommand += '"' + Paths::proffieos().string() + '"';
     uploadCommand += " --fqbn ";
@@ -670,8 +631,35 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
             abort();
     }
     uploadCommand += " -v";
+#   endif
 
-#ifndef __WINDOWS__
+#   ifdef __WINDOWS__
+    if (static_cast<MainMenu *>(editor->GetParent())->boardSelect->entry()->GetStringSelection() != "BOOTLOADER RECOVERY") {
+        progDialog->emitEvent(50, "Rebooting Proffieboard...");
+
+        auto *serialHandle{CreateFileW(static_cast<MainMenu *>(editor->GetParent())->boardSelect->entry()->GetStringSelection().ToStdWstring().c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr)};
+        if (serialHandle != INVALID_HANDLE_VALUE) {
+            DCB dcbSerialParameters = {};
+            dcbSerialParameters.DCBlength = sizeof(dcbSerialParameters);
+
+            dcbSerialParameters.BaudRate = CBR_115200;
+            dcbSerialParameters.ByteSize = 8;
+            dcbSerialParameters.StopBits = ONESTOPBIT;
+            dcbSerialParameters.Parity = NOPARITY;
+            dcbSerialParameters.fRtsControl = RTS_CONTROL_ENABLE;
+            dcbSerialParameters.fDtrControl = DTR_CONTROL_ENABLE;
+
+            SetCommState(serialHandle, &dcbSerialParameters);
+
+            DWORD bytesHandled{};
+            const char* rebootCommand = "RebootDFU\r\n";
+            WriteFile(serialHandle, rebootCommand, strlen(rebootCommand),  &bytesHandled, nullptr);
+
+            CloseHandle(serialHandle);
+            Sleep(5000);
+        }
+    }
+#   else 
     const auto boardPath{static_cast<MainMenu*>(editor->GetParent())->boardSelect->entry()->GetStringSelection().ToStdString()};
     if (boardPath.find("BOOTLOADER|") == std::string::npos) {
         progDialog->emitEvent(-1, "Rebooting Proffieboard...");
@@ -709,6 +697,7 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
     }
 #endif
 
+#   ifndef __WINDOWS__
     FILE *arduinoCli = Arduino::cli(uploadCommand);
 
     std::string error;
@@ -717,7 +706,7 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
         auto *const percentPtr{std::strstr(buffer.data(), "%")};
         if (percentPtr != nullptr and progDialog != nullptr and percentPtr - buffer.data() >= 3) {
             auto percent{strtol(percentPtr - 3, nullptr, 10)};
-            progDialog->emitEvent(percent, "");
+            progDialog->emitEvent(static_cast<int8>(percent), "");
         }
         error += buffer.data();
         if (std::strstr(buffer.data(), "error") || std::strstr(buffer.data(), "FAIL")) {
@@ -731,6 +720,30 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
         logger.error("Error during pclose()");
         return false;
     }
+#   else
+    string commandString{windowModePrefix()};
+    commandString += paths[1] + R"( 0x1209 0x6668 )" + paths[0] + R"( 2>&1)";
+
+    auto *upload{popen(commandString.c_str(), "r")};
+    std::string error{};
+    while (fgets(buffer.data(), buffer.size(), upload) != nullptr) {
+        progDialog->emitEvent(-1, "");
+        error += buffer.data();
+    }
+
+    if (pclose(upload) != 0) {
+        _return = "Unknown Upload Error";
+        logger.error("Error during pclose()");
+        return false;
+    }
+
+    if (error.find("File downloaded successfully") == std::string::npos) {
+        progDialog->emitEvent(100, "Error");
+        _return = Arduino::parseError(error, editor);
+        logger.error(_return);
+        return false;
+    }
+#   endif
 
     _return.clear();
     logger.info("Success");
@@ -840,8 +853,7 @@ FILE* Arduino::cli(const string& command) {
     auto& logger{Log::Context::getGlobal().createLogger("Arduino::cli()")};
     string fullCommand;
 #   if defined(__WINDOWS__)
-    fullCommand += "title ProffieConfig Worker & ";
-    fullCommand += (Paths::binaries() / "windowMode").string() + R"( -title "ProffieConfig Worker" -mode force_minimized & )";
+    fullCommand += windowModePrefix();
 #   endif
     fullCommand += '"' + (Paths::binaries() / "arduino-cli").string() + '"';
     fullCommand += " " + command;
