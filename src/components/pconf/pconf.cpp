@@ -339,10 +339,11 @@ bool PConf::parseLabel(const string& line, optional<string>& out, Log::Branch& l
             return true;
         }
 
-        if (character == '(') {
+        if (not inParens and character == '(') {
             inParens = true;
             continue;
         }
+
         if (character == '"' and inParens) {
             if (inQuotes) return true;
             inQuotes = true;
