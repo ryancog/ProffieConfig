@@ -21,7 +21,7 @@ public:
     MainMenu(wxWindow * = nullptr);
 
     void removeEditor(EditorWindow *);
-    void update();
+    void update() const;
 
     wxButton* refreshButton{nullptr};
     wxButton* applyButton{nullptr};
@@ -63,7 +63,7 @@ private:
     friend Onboard::Overview;
     void createUI();
     void createMenuBar();
-    void createTooltips();
+    void createTooltips() const;
     void bindEvents();
 
     EditorWindow *generateEditor(const std::string& configName);

@@ -12,6 +12,7 @@
 #include "log/context.h"
 #include "log/logger.h"
 #include "pconf/pconf.h"
+#include "ui/message.h"
 #include "utils/paths.h"
 #include "../onboard/onboard.h"
 
@@ -111,13 +112,13 @@ void AppState::addProp(const string& propName, const string& propPath, const str
 
     auto filenameEntry{hashedData.find("FILENAME")};
     if (filenameEntry == hashedData.end() or not filenameEntry->second->value) {
-        wxMessageBox("Prop config file is invalid.", "Error Adding Prop");
+        PCUI::showMessage("Prop config file is invalid.", "Error Adding Prop");
         return;
     }
 
     auto propFileName{propPath.substr(propPath.rfind('/') + 1)};
     if (*filenameEntry->second->value != propFileName) {
-        wxMessageBox("Prop config filename does not match provided prop filename", "Error Adding Prop");
+        PCUI::showMessage("Prop config filename does not match provided prop filename", "Error Adding Prop");
         return;
     }
 

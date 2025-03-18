@@ -1,4 +1,5 @@
 #include "editorwindow.h"
+#include "ui/message.h"
 #include "utils/defer.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
@@ -10,13 +11,6 @@
 #include <wx/event.h>
 #include <wx/combobox.h>
 #include <wx/arrstr.h>
-#ifdef __WINDOWS__
-#undef wxMessageDialog
-#include <wx/msgdlg.h>
-#define wxMessageDialog wxGenericMessageDialog
-#else
-#include <wx/msgdlg.h>
-#endif
 #include <wx/statbox.h>
 #include <wx/settings.h>
 #include <wx/sizer.h>
@@ -33,7 +27,6 @@
 #include "utils/paths.h"
 #include "../core/config/settings.h"
 #include "../core/config/configuration.h"
-#include "../core/defines.h"
 #include "../core/utilities/misc.h"
 #include "../core/utilities/progress.h"
 
@@ -66,13 +59,14 @@ void EditorWindow::bindEvents() {
 
 
         auto saved{isSaved()};
-        if (saved or wxMessageDialog(
-                    this,
+        if (
+                saved or 
+                PCUI::showMessage(
                     "Are you sure you want to close the editor?\n\n"
                     "You currently have unsaved changes which will be lost!",
                     "Close ProffieConfig Editor",
-                    wxICON_WARNING | wxYES_NO | wxNO_DEFAULT)
-                .ShowModal() == wxID_YES) {
+                    wxICON_WARNING | wxYES_NO | wxNO_DEFAULT, this) == wxYES
+           ) {
             reinterpret_cast<MainMenu *>(GetParent())->removeEditor(this);
             event.Skip();
             return;
@@ -82,7 +76,7 @@ void EditorWindow::bindEvents() {
     });
     Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
     Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
-        wxMessageDialog(this, ((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style).ShowModal();
+            PCUI::showMessage(((Misc::MessageBoxEvent*)&event)->message.ToStdString(), ((Misc::MessageBoxEvent*)&event)->caption.ToStdString(), ((Misc::MessageBoxEvent*)&event)->style, this);
     }, wxID_ANY);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h"), this); }, ID_SaveConfig);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(this); }, ID_ExportConfig);
@@ -96,7 +90,7 @@ void EditorWindow::bindEvents() {
         const auto copyOptions{fs::copy_options::overwrite_existing};
         std::error_code err;
         if (not fs::copy_file(fileDialog.GetPath().ToStdString(), copyPath, copyOptions, err)) {
-            wxMessageBox(err.message(), "Injection file could not be added.");
+            PCUI::showMessage(err.message(), "Injection file could not be added.");
             return;
         }
 

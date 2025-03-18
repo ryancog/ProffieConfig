@@ -13,6 +13,7 @@
 #include <wx/msgdlg.h>
 
 #include "log/branch.h"
+#include "ui/message.h"
 #include "utils/paths.h"
 
 #include "../../core/config/settings.h"
@@ -410,7 +411,7 @@ void Configuration::tryAddInjection(const std::string& buffer, EditorWindow *edi
     auto filePath{Paths::injections() / injectionFile};
     std::error_code err;
     if (not fs::exists(filePath, err)) {
-        if (wxYES != wxMessageBox("Injection file \"" + injectionFile + "\" has not been registered.\nWould you like to add the injection file now?", "Unknown Injection Encountered", wxYES_NO | wxYES_DEFAULT)) {
+        if (wxYES != PCUI::showMessage("Injection file \"" + injectionFile + "\" has not been registered.\nWould you like to add the injection file now?", "Unknown Injection Encountered", wxYES_NO | wxYES_DEFAULT)) {
             return;
         }
 
@@ -428,9 +429,10 @@ void Configuration::tryAddInjection(const std::string& buffer, EditorWindow *edi
             auto copyPath{Paths::injections() / fileDialog.GetFilename().ToStdString()};
             const auto copyOptions{fs::copy_options::overwrite_existing};
             if (not fs::copy_file(fileDialog.GetPath().ToStdString(), copyPath, copyOptions, err)) {
-                auto res{wxMessageBox(err.message(), "Injection file could not be added.", wxOK | wxCANCEL | wxOK_DEFAULT)};
+                auto res{PCUI::showMessage(err.message(), "Injection file could not be added.", wxOK | wxCANCEL | wxOK_DEFAULT)};
                 if (res == wxCANCEL) return;
-                else continue;
+
+                continue;
             }
 
             injectionFile = fileDialog.GetFilename().ToStdString();

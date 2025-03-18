@@ -6,34 +6,28 @@
 
 #include <wx/event.h>
 #include <wx/string.h>
-#ifdef __WINDOWS__
-#undef wxMessageDialog
-#include <wx/msgdlg.h>
-#define wxMessageDialog wxGenericMessageDialog
-#else
-#include <wx/msgdlg.h>
-#endif
 #include <wx/arrstr.h>
 #include <wx/filedlg.h>
 #include <wx/wfstream.h>
 #include <initializer_list>
 
-wxEventTypeTag<wxCommandEvent> Misc::EVT_MSGBOX(wxNewEventType());
+const wxEventTypeTag<wxCommandEvent> Misc::EVT_MSGBOX(wxNewEventType());
 
-const wxArrayString Misc::createEntries(const std::vector<wxString>& list) {
+wxArrayString Misc::createEntries(const std::vector<wxString>& vec) {
   wxArrayString entries;
-  for (const wxString& entry : list) {
+  for (const wxString& entry : vec) {
     entries.Add(entry);
   }
   return entries;
 }
 
-const wxArrayString Misc::createEntries(const std::initializer_list<wxString>& list) {
+wxArrayString Misc::createEntries(const std::initializer_list<wxString>& list) {
   return Misc::createEntries(static_cast<std::vector<wxString>>(list));
 }
-const wxArrayString Misc::createEntries(const Configuration::VMap& list) {
+
+wxArrayString Misc::createEntries(const Configuration::VMap& map) {
   wxArrayString entries;
-  for (const auto& pair : list) {
+  for (const auto& pair : map) {
     entries.Add(pair.first);
   }
   return entries;
