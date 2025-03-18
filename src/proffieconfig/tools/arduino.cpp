@@ -581,7 +581,7 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
             GetShortPathNameA(pathsString.substr(pathsString.rfind("C:\\"), pathsString.rfind("ProffieOS.ino.dfu") - pathsString.rfind("C:\\") + 17).c_str(), shortPath.data(), shortPath.size());
             paths[0] = shortPath.data();
             GetShortPathNameA(pathsString.substr(1, pathsString.find("windows") + 7 - 1).c_str(), shortPath.data(), shortPath.size());
-            paths[1] = string{shortPath.data()} + R"(\\stm32l4-upload.bat)";
+            paths[1] = string{shortPath.data()} + "\\stm32l4-upload.bat";
         }
 #   	endif
     }
@@ -598,6 +598,11 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
     _return = error;
     logger.info("Successful compile.");
 # 	ifdef __WINDOWS__
+    if (paths[0].empty() or paths[1].empty()) {
+        logger.error("Failed to find utilities in output: " + error);
+        _return = "Failed to find required utilities";
+        return nullopt;
+    }
     return paths;
 # 	else
     return true;
@@ -723,6 +728,7 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
 #   else
     string commandString{windowModePrefix()};
     commandString += paths[1] + R"( 0x1209 0x6668 )" + paths[0] + R"( 2>&1)";
+    logger.info("Uploading via: " + commandString);
 
     auto *upload{popen(commandString.c_str(), "r")};
     std::string error{};
