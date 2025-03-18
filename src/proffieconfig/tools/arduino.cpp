@@ -310,11 +310,7 @@ vector<wxString> Arduino::getBoards(Log::Branch& lBranch) {
             if (line.find("proffieboard") != std::string::npos) {
                 results.back().isProffie = true;
             }
-
-            continue;
-        }
-
-        if (line.find("serial") != std::string::npos) {
+        } else if (line.find("serial") != std::string::npos) {
             const auto port{line.substr(0, line.find_first_of(" \t"))};
             const auto isProffie{line.find("proffieboard") != std::string::npos};
             results.emplace_back(port, isProffie);
@@ -583,17 +579,18 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
         if (progDialog != nullptr) progDialog->emitEvent(-1, ""); // Pulse
         error += buffer.data();
 
-        if (error.find("error") != std::string::npos) {
-            _return = Arduino::parseError(error, editor);
-            logger.error(_return);
-# 	        ifdef __WINDOWS__
-            return nullopt;
-# 	        else
-            return false;
-#           endif
-        }
-
     }
+
+    if (error.find("error") != std::string::npos) {
+        _return = Arduino::parseError(error, editor);
+        logger.error(_return);
+# 	    ifdef __WINDOWS__
+        return nullopt;
+# 	    else
+        return false;
+#       endif
+    }
+
     if (pclose(arduinoCli) != 0) {
         _return = parseError(error, editor);
         logger.error("Error during pclose()");
@@ -612,12 +609,14 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
        ) {
         logger.debug("Parsing utility paths...");
         array<char, MAX_PATH> shortPath;
+
         constexpr string_view DFU_STRING{"ProffieOS.ino.dfu"};
         const auto dfuPos{error.rfind(DFU_STRING)};
         const auto dfuCPos{error.rfind("C:\\", dfuPos)};
         GetShortPathNameA(error.substr(dfuCPos, dfuPos - dfuCPos + DFU_STRING.length()).c_str(), shortPath.data(), shortPath.size());
         paths[0] = shortPath.data();
         logger.debug("Parsed dfu file: " + paths[0]);
+
         const auto dfuSuffixPos{error.rfind("//dfu-suffix.exe")};
         const auto dfuSuffixCPos{error.rfind("C:\\", dfuSuffixPos)};
         GetShortPathNameA(error.substr(dfuSuffixCPos, dfuSuffixPos - dfuSuffixCPos).c_str(), shortPath.data(), shortPath.size());
@@ -746,12 +745,14 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
         }
 
         error += buffer.data();
-        if (error.rfind("error") != std::string::npos || error.rfind("FAIL") != std::string::npos) {
-            _return = Arduino::parseError(error, editor);
-            logger.error(_return);
-            return false;
-        }
     }
+
+    if (error.rfind("error") != std::string::npos || error.rfind("FAIL") != std::string::npos) {
+        _return = Arduino::parseError(error, editor);
+        logger.error(_return);
+        return false;
+    }
+
     if (pclose(arduinoCli) != 0) {
         _return = "Unknown Upload Error";
         logger.error("Error during pclose()");
@@ -773,11 +774,12 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
         }
 
         error += buffer.data();
-        if (error.rfind("error") != std::string::npos || error.rfind("FAIL") != std::string::npos) {
-            _return = Arduino::parseError(error, editor);
-            logger.error(_return);
-            return false;
-        }
+    }
+
+    if (error.rfind("error") != std::string::npos || error.rfind("FAIL") != std::string::npos) {
+        _return = Arduino::parseError(error, editor);
+        logger.error(_return);
+        return false;
     }
 
     if (pclose(upload) != 0) {
