@@ -1,4 +1,6 @@
 //  Version 8-02.
+// Alternate/Additional controls for volume (and color change?) menu need to be reviewed post OS8.
+// OS7 Legacy define potentially needs review in future (also post OS8 most likely)
 NAME: "Sabersense"
 FILENAME: "saber_sabersense_buttons.h"
 INFO: {
