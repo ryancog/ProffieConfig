@@ -1,4 +1,4 @@
-//  Version 8-02.
+//  Version 8-03.
 // Alternate/Additional controls for volume (and color change?) menu need to be reviewed post OS8.
 // OS7 Legacy define potentially needs review in future (also post OS8 most likely)
 NAME: "Sabersense"
@@ -195,8 +195,7 @@ BUTTONS{2} {
             DESCRIPTION: "Blaster Block"
         }
         BUTTON("Click Power") {
-            DESCRIPTION: "Blaster Block"
-            DESCRIPTION("SABERSENSE_BLAST_PWR_AND_AUX"): ENABLED
+            DESCRIPTION("SABERSENSE_BLAST_PWR_AND_AUX"): "Blaster Block"
         }
         BUTTON("Hold Aux while Pointing Up") {
             DESCRIPTION: "Lockup"
@@ -353,17 +352,32 @@ BUTTONS{1} {
     }
 }
 
+
+DISPLAY: {
+    ""Run Blade ID on Demand" requires..."
+}
+
+
 ERRORS {
     MAP {
         ARDUINO: "SABERSENSE_BLADE_ID requires ENABLE_POWER_FOR_ID to be defined."
-        DISPLAY: ""Run Blade ID on Demand" requires "Enable Power on ID" to be enabled in the Blade Awareness settings."
+        DISPLAY: {
+            ""Run Blade ID on Demand" requires "Enable Power on ID""
+            "to be enabled in the Blade Awareness settings."
+        }
     }
     MAP {
         ARDUINO: "DISABLE_COLOR_CHANGE is not supported. Use SABERSENSE_NO_COLOR_CHANGE instead."
-        DISPLAY: "General "Disable Color Change" is not supported. Use "Sabersense Disable Colour Change" instead."
+        DISPLAY: {
+            "General "Disable Color Change" is not supported."
+            "Use "Sabersense Disable Colour Change" instead."
+        }
     }
     MAP {
         ARDUINO: "SABERSENSE_ARRAY_SELECTOR and BLADE_DETECT_PIN cannot be defined at the same time."
-        DISPLAY: ""Array Selector" and "Blade Detect" cannot be defined at the same time. Uncheck "Enable Blade Detect" in the Blade Awareness settings"
+        DISPLAY: {
+            ""Array Selector" and "Blade Detect" cannot be defined at the same time."
+            "Uncheck "Enable Blade Detect" in the Blade Awareness settings"
+        }
     }
 }
