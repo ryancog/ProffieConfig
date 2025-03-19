@@ -1,4 +1,4 @@
-//  Version 8-01.
+//  Version 8-02.
 NAME: "Sabersense"
 FILENAME: "saber_sabersense_buttons.h"
 INFO: {
@@ -44,10 +44,6 @@ SETTINGS {
         DESCRIPTION: "Triggers BladeID scan on demand with button press. Note that you must select ENABLE_BLADE_ID and ENABLE_POWER_ON_ID in the Blade Array (Awareness) section for this to work"
         DISABLE: "SABERSENSE_ARRAY_SELECTOR"
     }
-    TOGGLE("ENABLE_POWER_FOR_ID PowerPINS<bladePowerPin2, bladePowerPin3>") {
-        NAME: "Required for BladeID"
-        DESCRIPTION: "Required for SABERSENSE_BLADE_ID. Specify LED power pads used (usually 2 and 3)"
-    }
     TOGGLE("SABERSENSE_ARRAY_SELECTOR") {
         NAME: "Manual Array Selector"
         DESCRIPTION: "Manually cycle to next blade array"
@@ -64,8 +60,7 @@ SETTINGS {
     TOGGLE("SABERSENSE_FLIP_AUDIO_PLAYERS") {
         NAME: "Invert Audio Player Orientation" 
         DESCRIPTION: "Inverts audio player hilt orientations for Force, Quote and Track players"
-    }
-    
+    }    
     TOGGLE("SABERSENSE_BLAST_PWR_AND_AUX") {
         NAME: "Add Blast to Power (2-Button)" 
         DESCRIPTION: "Adds Blast to Power button on two-button sabers"
@@ -122,7 +117,6 @@ LAYOUT {
             SETTING("SABERSENSE_NO_COLOR_CHANGE")
             SETTING("SABERSENSE_DISABLE_SAVE_ARRAY")
             SETTING("SABERSENSE_DISABLE_RESET")
-            SETTING("SABERSENSE_OS7_LEGACY_SUPPORT")
         }
         VERTICAL("Blade Array Management") {
             SETTING("SABERSENSE_BLADE_ID")
@@ -175,13 +169,14 @@ BUTTONS{2} {
             DESCRIPTION: "Check Battery"
         }
         BUTTON("Double Click Power while Pointing Up") {
-            DESCRIPTION: "Play Character Quote, files play sequentially"
+            DESCRIPTION: "Play Character Quote (files play sequentially)"
         }
         BUTTON("Double Click Power while Pointing Down") {
             DESCRIPTION: "Start/Stop Music Track"
         }
         BUTTON("Triple Click Power") {
-            DESCRIPTION: "Run BladeID or Cycle to Next Blade Array"
+            DESCRIPTION("SABERSENSE_ARRAY SELECTOR"): "Cycle to Next Blade Array"
+            DESCRIPTION("SABERSENSE_BLADE_ID"): "Run Blade ID"
         }
         BUTTON("Four Clicks and Hold Power") {
             DESCRIPTION: "Reset Installer Defaults"
@@ -189,10 +184,6 @@ BUTTONS{2} {
         BUTTON("Hold Power and Click Aux") {
             DESCRIPTION: "Enter Volume Menu"
         }
-        BUTTON("Hold Power and Click Aux") {
-            DESCRIPTION: "Enter Volume Menu"
-        }
-    }    
 
     STATE("ON") {
         BUTTON("Hold Power") {
@@ -200,6 +191,10 @@ BUTTONS{2} {
         }
         BUTTON("Click Aux") {
             DESCRIPTION: "Blaster Block"
+        }
+        BUTTON("Click Power") {
+            DESCRIPTION: "Blaster Block"
+            DESCRIPTION("SABERSENSE_BLAST_PWR_AND_AUX"): ENABLED
         }
         BUTTON("Hold Aux while Pointing Up") {
             DESCRIPTION: "Lockup"
@@ -210,14 +205,22 @@ BUTTONS{2} {
         BUTTON("Hold Power and Stab") {
             DESCRIPTION: "Melt"
         }
+        BUTTON("Double Click Power while Pointing Up") {
+            DESCRIPTION: "Play Character Quote (files play sequentially)"
+        }
+        BUTTON("Double Click Power while Pointing Down") {
+            DESCRIPTION: "Play Force effect (files play randomly)"
+        }
         BUTTON("Double Click and Hold Power") {
             DESCRIPTION: "Lightning Block"
         }
         BUTTON("Triple Click Power") {
             DESCRIPTION: "Enter Colour Change Menu"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOUR_CHANGE"): DISABLED
         }
         BUTTON("Hold Power and Click Aux") {
             DESCRIPTION: "Enter Colour Change Menu"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOUR_CHANGE"): DISABLED
         }
     }
 
@@ -232,14 +235,19 @@ BUTTONS{2} {
         BUTTON("Long Click Power") {
             DESCRIPTION: "Save and Exit"
         }
+        BUTTON("Hold Power and Click Aux") {
+            DESCRIPTION: "Exit Volume Menu"
+        }
     }
 
     STATE("in Color Change") {
         BUTTON("Rotate Hilt") {
             DESCRIPTION: "Change Color"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOUR_CHANGE"): DISABLED
         }
         BUTTON("Click Power") {
             DESCRIPTION: "Save and Exit"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOUR_CHANGE"): DISABLED
         }
     }
 }
@@ -271,19 +279,17 @@ BUTTONS{1} {
             DESCRIPTION: "Check Battery"
         }
         BUTTON("Double Click Power while Pointing Up") {
-            DESCRIPTION: "Play Character Quote, files play sequentially"
+            DESCRIPTION: "Play Character Quote (Files play sequentially)"
         }
         BUTTON("Double Click Power while Pointing Down") {
             DESCRIPTION: "Start/Stop Music Track"
         }
         BUTTON("Triple Click Power") {
-            DESCRIPTION: "Run BladeID or Cycle to Next Blade Array"
+            DESCRIPTION("SABERSENSE_ARRAY SELECTOR"): "Cycle to Next Blade Array"
+            DESCRIPTION("SABERSENSE_BLADE_ID"): "Run Blade ID"
         }
         BUTTON("Four Clicks and Hold Power") {
             DESCRIPTION: "Reset Installer Defaults"
-        }
-        BUTTON("Triple Click Power") {
-            DESCRIPTION: "Enter Colour Change Menu"
         }
         BUTTON("Hold Power and Clash") {
             DESCRIPTION: "Enter Volume Menu"
@@ -306,11 +312,18 @@ BUTTONS{1} {
         BUTTON("Hold Power and Stab") {
             DESCRIPTION: "Melt"
         }
+        BUTTON("Double Click Power while Pointing Up") {
+            DESCRIPTION: "Play Character Quote (files play sequentially)"
+        }
+        BUTTON("Double Click Power while Pointing Down") {
+            DESCRIPTION: "Play Force effect (files play randomly)"
+        }
         BUTTON("Double Click and Hold Power") {
             DESCRIPTION: "Lightning Block"
         }
         BUTTON("Triple Click Power") {
             DESCRIPTION: "Enter Colour Change Menu"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOUR_CHANGE"): DISABLED
         }
     }
 
@@ -329,9 +342,11 @@ BUTTONS{1} {
     STATE("in Color Change") {
         BUTTON("Rotate Hilt") {
             DESCRIPTION: "Change Color"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOUR_CHANGE"): DISABLED
         }
         BUTTON("Click Power") {
             DESCRIPTION: "Save and Exit"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOUR_CHANGE"): DISABLED
         }
     }
 }
@@ -339,14 +354,14 @@ BUTTONS{1} {
 ERRORS {
     MAP {
         ARDUINO: "SABERSENSE_BLADE_ID requires ENABLE_POWER_FOR_ID to be defined."
-        DISPLAY: "RUN BLADE ID ON DEMAND requires ENABLE POWER ON ID to be enabled in the Blade Awareness settings."
+        DISPLAY: ""Run Blade ID on Demand" requires "Enable Power on ID" to be enabled in the Blade Awareness settings."
     }
     MAP {
         ARDUINO: "DISABLE_COLOR_CHANGE is not supported. Use SABERSENSE_NO_COLOR_CHANGE instead."
-        DISPLAY: "General DISABLE_COLOR_CHANGE is not supported. Use SABERSENSE_DISABLE_COLOUR_CHANGE instead."
+        DISPLAY: "General "Disable Color Change" is not supported. Use "Sabersense Disable Colour Change" instead."
     }
     MAP {
         ARDUINO: "SABERSENSE_ARRAY_SELECTOR and BLADE_DETECT_PIN cannot be defined at the same time."
-        DISPLAY: "SABERSENSE ARRAY SELECTOR and BLADE DETECT cannot be defined at the same time. Uncheck ENABLE BLADE DETECT in the Blade Awareness settings"
+        DISPLAY: ""Array Selector" and "Blade Detect" cannot be defined at the same time. Uncheck "Enable Blade Detect" in the Blade Awareness settings"
     }
 }
