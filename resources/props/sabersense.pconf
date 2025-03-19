@@ -356,22 +356,21 @@ ERRORS {
     MAP {
         ARDUINO: "SABERSENSE_BLADE_ID requires ENABLE_POWER_FOR_ID to be defined."
         DISPLAY: {
-            ""Run Blade ID on Demand" requires "Enable Power on ID""
-            "to be enabled in the Blade Awareness settings."
+            ""Run Blade ID on Demand" requires "Enable Power on ID" to be enabled in the Blade Awareness settings."
         }
     }
     MAP {
         ARDUINO: "DISABLE_COLOR_CHANGE is not supported. Use SABERSENSE_NO_COLOR_CHANGE instead."
         DISPLAY: {
             "General "Disable Color Change" is not supported."
-            "Use "Sabersense Disable Colour Change" instead."
+            "Use Sabersense "Disable Colour Change" instead."
         }
     }
     MAP {
         ARDUINO: "SABERSENSE_ARRAY_SELECTOR and BLADE_DETECT_PIN cannot be defined at the same time."
         DISPLAY: {
             ""Array Selector" and "Blade Detect" cannot be defined at the same time."
-            "Uncheck "Enable Blade Detect" in the Blade Awareness settings"
+            "Uncheck "Enable Blade Detect" in the Blade Awareness settings."
         }
     }
 }
