@@ -352,12 +352,6 @@ BUTTONS{1} {
     }
 }
 
-
-DISPLAY: {
-    ""Run Blade ID on Demand" requires..."
-}
-
-
 ERRORS {
     MAP {
         ARDUINO: "SABERSENSE_BLADE_ID requires ENABLE_POWER_FOR_ID to be defined."
