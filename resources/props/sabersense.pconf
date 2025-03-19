@@ -1,0 +1,376 @@
+//  Version 8-03.
+// Alternate/Additional controls for volume (and color change?) menu need to be reviewed post OS8.
+// OS7 Legacy define potentially needs review in future (also post OS8 most likely)
+NAME: "Sabersense"
+FILENAME: "saber_sabersense_buttons.h"
+INFO: {
+    "Sabersense Lightsaber Controls"
+    ""
+    "The Sabersense button control system has been engineered for simplicity"
+    "and usability. Complex gesture controls and features like Battle Mode are"
+    "NOT included."
+    "The system features harmonized controls between one-button and two-button"
+    "operation without compromising the greater usability of two-button systems."
+    "This makes it useful for users with large collections of one- and two-button"
+    "sabers."
+    "The idea is that by default, users need only remember a minimum set of control"
+    "principles in order to access all functions. As such, the logic is that the"
+    "same button presses do the same thing within the various states, subject to"
+    "inevitable and obvious variants."
+    ""
+    "The following sound files will help with system navigation and are available"
+    "as a free download from the sabersense website."
+    "www.sabersense.co.uk:"
+    ""
+    "vmbegin.wav		- Enter Volume Menu"
+    "vmend.wav		- Exit Volume Menu"
+    "volup.wav		- increase volume"
+    "voldown.waV		- decrease volume"
+    "volmin.wav		- minimum volume reached"
+    "volmax.wav		- maximum volume reached"
+    "ccbegin.wav		- Enter Color Change Mode"
+    "ccchange.wav	- Change colour"
+    "ccend.wav		- Exit Color Change Mode"
+    "press.wav		- Exit Color Change Mode"
+    "release.wav		- Plays button click press"
+    "blstbgn.wav		- Plays button click release"
+    "blstend.wav		- Exit Multi-Blast"
+    "array.wav		- Array Selector ident"
+    "bladeid.wav		- BladeID Array ident"
+    "reset.wav		- Factory default reset completed"
+}
+
+SETTINGS {
+    TOGGLE("SABERSENSE_BLADE_ID") {
+        NAME: "Run BladeID on Demand"
+        DESCRIPTION: "Triggers BladeID scan on demand with button press. Note that you must select ENABLE_BLADE_ID and ENABLE_POWER_ON_ID in the Blade Array (Awareness) section for this to work"
+        DISABLE: "SABERSENSE_ARRAY_SELECTOR"
+    }
+    TOGGLE("SABERSENSE_ARRAY_SELECTOR") {
+        NAME: "Manual Array Selector"
+        DESCRIPTION: "Manually cycle to next blade array"
+        DISABLE: "SABERSENSE_BLADE_ID"
+    }
+    TOGGLE("SABERSENSE_DISABLE_SAVE_ARRAY") {
+        NAME: "Disable Array Saving"
+        DESCRIPTION: "Disables array saving so that system will always boot into the first array instead of last array used."
+    }
+    TOGGLE("SABERSENSE_ENABLE_ARRAY_FONT_IDENT") {
+        NAME: "Play Font Ident with Array Switch"
+        DESCRIPTION: "Plays font ident after array ident when switching to new array"
+    }
+    TOGGLE("SABERSENSE_FLIP_AUDIO_PLAYERS") {
+        NAME: "Invert Audio Player Orientation" 
+        DESCRIPTION: "Inverts audio player hilt orientations for Force, Quote and Track players"
+    }    
+    TOGGLE("SABERSENSE_BLAST_PWR_AND_AUX") {
+        NAME: "Add Blast to Power (2-Button)" 
+        DESCRIPTION: "Adds Blast to Power button on two-button sabers"
+    }
+    TOGGLE("SABERSENSE_BUTTON_CLICKER") {
+        NAME: "Play Button Clicks" 
+        DESCRIPTION: "Plays Press.wav and Release.wav sound files with button clicks (for KR Scavenger)"
+    }
+    TOGGLE("SABERSENSE_DISABLE_RESET") {
+        NAME: "Disable Reset Function" 
+        DESCRIPTION: "Disables Reset Factory Defaults functionality"
+    }
+    TOGGLE("SABERSENSE_NO_COLOR_CHANGE") {
+        NAME: "Sabersense Disable Colour Change" 
+        DESCRIPTION: "Removes Colour Change functionality. Use instead of General 'Disable Color Change'"
+    }
+    TOGGLE("SABERSENSE_NO_LOCKUP_HOLD") {
+        NAME: "Aux Plus Clash for Lockup (2-Button)" 
+        DESCRIPTION: "Reverts to lockup by clash while holding aux."
+    }
+    TOGGLE("SABERSENSE_TWIST_ON") {
+        NAME: "Twist to Ignite" 
+        DESCRIPTION: "Sharp twist (like motorcycle throttle) ignites saber."
+    }
+    TOGGLE("SABERSENSE_TWIST_OFF") {
+        NAME: "Twist to Switch Off" 
+        DESCRIPTION: "Sharp twist (like motorcycle throttle) shuts off saber."
+    }
+    TOGGLE("SABERSENSE_STAB_ON") {
+        NAME: "Stab to ignite" 
+        DESCRIPTION: "Sharp stab ignites saber."
+    }
+    TOGGLE("SABERSENSE_SWING_ON") {
+        NAME: "Swing to ignite" 
+        DESCRIPTION: "Brisk swing ignites saber."
+    }
+}
+
+LAYOUT {
+    HORIZONTAL {
+        VERTICAL("Gesture Controls") {
+            SETTING("SABERSENSE_TWIST_ON")
+            SETTING("SABERSENSE_TWIST_OFF")
+            SETTING("SABERSENSE_STAB_ON")
+            SETTING("SABERSENSE_SWING_ON")
+        }
+        VERTICAL("Control Options") {
+            SETTING("SABERSENSE_FLIP_AUDIO_PLAYERS")
+            SETTING("SABERSENSE_BLAST_PWR_AND_AUX")
+            SETTING("SABERSENSE_NO_LOCKUP_HOLD")
+        }
+        VERTICAL("Feature Options") {
+            SETTING("SABERSENSE_BUTTON_CLICKER")
+            SETTING("SABERSENSE_NO_COLOR_CHANGE")
+            SETTING("SABERSENSE_DISABLE_SAVE_ARRAY")
+            SETTING("SABERSENSE_DISABLE_RESET")
+        }
+        VERTICAL("Blade Array Management") {
+            SETTING("SABERSENSE_BLADE_ID")
+            SETTING("ENABLE_POWER_FOR_ID PowerPINS<bladePowerPin2, bladePowerPin3")
+            SETTING("SABERSENSE_ARRAY_SELECTOR")
+            SETTING("SABERSENSE_ENABLE_ARRAY_FONT_IDENT")
+        }
+    }
+}
+
+BUTTONS{2} {
+    STATE("OFF") {
+        BUTTON("Click Power") {
+            DESCRIPTION: "Turn Saber On"
+        }
+        BUTTON("Long Click Power") {
+            DESCRIPTION: "Turn Saber On Mute"
+        }
+        BUTTON("Click Aux while Pointing Up") {
+            DESCRIPTION: "Next Preset"
+        }
+        BUTTON("Click Aux while Pointing Down") {
+            DESCRIPTION: "Previous Preset"
+        }
+        BUTTON("Hold Aux and Click Power") {
+            DESCRIPTION: "Previous Preset"
+        }
+        BUTTON("Double Click Aux while Pointing Up") {
+            DESCRIPTION: "Skip Forward Five Presets"
+        }
+        BUTTON("Double Click Aux while Pointing Down") {
+            DESCRIPTION: "Skip Back Five Presets"
+        }
+        BUTTON("Triple Click Aux while Pointing Up") {
+            DESCRIPTION: "Skip Forward Ten Presets"
+        }
+        BUTTON("Triple Click Aux while Pointing Down") {
+            DESCRIPTION: "Skip Back Ten Presets"
+        }
+        BUTTON("Hold Any Button and wait while Pointing Up") {
+            DESCRIPTION: "Skip to First Preset"
+        }
+        BUTTON("Hold Any Button and wait while Pointing Level") {
+            DESCRIPTION: "Skip to Middle Preset"
+        }
+        BUTTON("Hold Any Button and wait while Pointing Down") {
+            DESCRIPTION: "Skip to Last Preset"
+        }
+        BUTTON("Double Click and Hold Power") {
+            DESCRIPTION: "Check Battery"
+        }
+        BUTTON("Double Click Power while Pointing Up") {
+            DESCRIPTION: "Play Character Quote (files play sequentially)"
+        }
+        BUTTON("Double Click Power while Pointing Down") {
+            DESCRIPTION: "Start/Stop Music Track"
+        }
+        BUTTON("Triple Click Power") {
+            DESCRIPTION("SABERSENSE_ARRAY SELECTOR"): "Cycle to Next Blade Array"
+            DESCRIPTION("SABERSENSE_BLADE_ID"): "Run Blade ID"
+        }
+        BUTTON("Four Clicks and Hold Power") {
+            DESCRIPTION: "Reset Installer Defaults"
+        }
+        BUTTON("Hold Power and Click Aux") {
+            DESCRIPTION: "Enter Volume Menu"
+        }
+
+    STATE("ON") {
+        BUTTON("Hold Power") {
+            DESCRIPTION: "Turn Saber Off"
+        }
+        BUTTON("Click Aux") {
+            DESCRIPTION: "Blaster Block"
+        }
+        BUTTON("Click Power") {
+            DESCRIPTION("SABERSENSE_BLAST_PWR_AND_AUX"): "Blaster Block"
+        }
+        BUTTON("Hold Aux while Pointing Up") {
+            DESCRIPTION: "Lockup"
+        }
+        BUTTON("Hold Aux while Pointing Down") {
+            DESCRIPTION: "Drag"
+        }
+        BUTTON("Hold Power and Stab") {
+            DESCRIPTION: "Melt"
+        }
+        BUTTON("Double Click Power while Pointing Up") {
+            DESCRIPTION: "Play Character Quote (files play sequentially)"
+        }
+        BUTTON("Double Click Power while Pointing Down") {
+            DESCRIPTION: "Play Force effect (files play randomly)"
+        }
+        BUTTON("Double Click and Hold Power") {
+            DESCRIPTION: "Lightning Block"
+        }
+        BUTTON("Triple Click Power") {
+            DESCRIPTION: "Enter Colour Change Menu"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOUR_CHANGE"): DISABLED
+        }
+        BUTTON("Hold Power and Click Aux") {
+            DESCRIPTION: "Enter Colour Change Menu"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOUR_CHANGE"): DISABLED
+        }
+    }
+
+
+    STATE("in Volume Menu") {
+        BUTTON("Click Power") {
+            DESCRIPTION: "Increase Volume"
+        }
+        BUTTON("Click Aux") {
+            DESCRIPTION: "Decrease Volume"
+        }
+        BUTTON("Long Click Power") {
+            DESCRIPTION: "Save and Exit"
+        }
+        BUTTON("Hold Power and Click Aux") {
+            DESCRIPTION: "Exit Volume Menu"
+        }
+    }
+
+    STATE("in Color Change") {
+        BUTTON("Rotate Hilt") {
+            DESCRIPTION: "Change Color"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOUR_CHANGE"): DISABLED
+        }
+        BUTTON("Click Power") {
+            DESCRIPTION: "Save and Exit"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOUR_CHANGE"): DISABLED
+        }
+    }
+}
+
+BUTTONS{1} {
+    STATE("OFF") {
+        BUTTON("Click Power") {
+            DESCRIPTION: "Turn Saber On"
+        }
+        BUTTON("Long Click Power while Horizontal") {
+            DESCRIPTION: "Turn Saber On Mute"
+        }
+        BUTTON("Long Click Power while Pointing Up") {
+            DESCRIPTION: "Next Preset"
+        }
+        BUTTON("Long Click Power while Pointing Down") {
+            DESCRIPTION: "Previous Preset"
+        }
+        BUTTON("Hold Power and wait while Pointing Up") {
+            DESCRIPTION: "Skip to First Preset"
+        }
+        BUTTON("Hold Power and wait while Pointing Level") {
+            DESCRIPTION: "Skip to Middle Preset"
+        }
+        BUTTON("Hold Power and wait while Pointing Down") {
+            DESCRIPTION: "Skip to Last Preset"
+        }
+        BUTTON("Double Click and Hold Power") {
+            DESCRIPTION: "Check Battery"
+        }
+        BUTTON("Double Click Power while Pointing Up") {
+            DESCRIPTION: "Play Character Quote (Files play sequentially)"
+        }
+        BUTTON("Double Click Power while Pointing Down") {
+            DESCRIPTION: "Start/Stop Music Track"
+        }
+        BUTTON("Triple Click Power") {
+            DESCRIPTION("SABERSENSE_ARRAY SELECTOR"): "Cycle to Next Blade Array"
+            DESCRIPTION("SABERSENSE_BLADE_ID"): "Run Blade ID"
+        }
+        BUTTON("Four Clicks and Hold Power") {
+            DESCRIPTION: "Reset Installer Defaults"
+        }
+        BUTTON("Hold Power and Clash") {
+            DESCRIPTION: "Enter Volume Menu"
+        }
+    }    
+
+    STATE("ON") {
+        BUTTON("Hold Power") {
+            DESCRIPTION: "Turn Saber Off"
+        }
+        BUTTON("Click Power") {
+            DESCRIPTION: "Blaster Block"
+        }
+        BUTTON("Hold Power and Clash while Pointing Up") {
+            DESCRIPTION: "Lockup"
+        }
+        BUTTON("Hold Power and Clash while Pointing Down") {
+            DESCRIPTION: "Drag"
+        }
+        BUTTON("Hold Power and Stab") {
+            DESCRIPTION: "Melt"
+        }
+        BUTTON("Double Click Power while Pointing Up") {
+            DESCRIPTION: "Play Character Quote (files play sequentially)"
+        }
+        BUTTON("Double Click Power while Pointing Down") {
+            DESCRIPTION: "Play Force effect (files play randomly)"
+        }
+        BUTTON("Double Click and Hold Power") {
+            DESCRIPTION: "Lightning Block"
+        }
+        BUTTON("Triple Click Power") {
+            DESCRIPTION: "Enter Colour Change Menu"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOUR_CHANGE"): DISABLED
+        }
+    }
+
+    STATE("in Volume Menu") {
+        BUTTON("Click Power while Pointing Up") {
+            DESCRIPTION: "Increase Volume"
+        }
+        BUTTON("Click Power while Pointing Up") {
+            DESCRIPTION: "Decrease Volume"
+        }
+        BUTTON("Long Click Power") {
+            DESCRIPTION: "Save and Exit"
+        }
+    }
+
+    STATE("in Color Change") {
+        BUTTON("Rotate Hilt") {
+            DESCRIPTION: "Change Color"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOUR_CHANGE"): DISABLED
+        }
+        BUTTON("Click Power") {
+            DESCRIPTION: "Save and Exit"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOUR_CHANGE"): DISABLED
+        }
+    }
+}
+
+ERRORS {
+    MAP {
+        ARDUINO: "SABERSENSE_BLADE_ID requires ENABLE_POWER_FOR_ID to be defined."
+        DISPLAY: {
+            ""Run Blade ID on Demand" requires "Enable Power on ID" to be enabled in the Blade Awareness settings."
+        }
+    }
+    MAP {
+        ARDUINO: "DISABLE_COLOR_CHANGE is not supported. Use SABERSENSE_NO_COLOR_CHANGE instead."
+        DISPLAY: {
+            "General "Disable Color Change" is not supported."
+            "Use Sabersense "Disable Colour Change" instead."
+        }
+    }
+    MAP {
+        ARDUINO: "SABERSENSE_ARRAY_SELECTOR and BLADE_DETECT_PIN cannot be defined at the same time."
+        DISPLAY: {
+            ""Array Selector" and "Blade Detect" cannot be defined at the same time."
+            "Uncheck "Enable Blade Detect" in the Blade Awareness settings."
+        }
+    }
+}
