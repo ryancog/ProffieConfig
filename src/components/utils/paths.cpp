@@ -39,11 +39,9 @@ filepath Paths::approot() {
 #   ifdef __WIN32__
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &rawStr);
-    array<char, MAX_PATH> rawCStr;
-    WideCharToMultiByte(CP_UTF8, 0, rawStr, -1, rawCStr.data(), MAX_PATH, nullptr, nullptr);
+    array<TCHAR, MAX_PATH> shortPath;
+    GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
     CoTaskMemFree(rawStr);
-    array<char, MAX_PATH> shortPath;
-    GetShortPathNameA(rawCStr.data(), shortPath.data(), shortPath.size());
     return filepath{shortPath.data()} /  "ProffieConfig";
 #   elif defined(__APPLE__)
     return filepath(getpwuid(getuid())->pw_dir) / "Library" / "Application Support" / "ProffieConfig";
@@ -61,10 +59,9 @@ filepath Paths::executable(Executable exec) {
             {
                 PWSTR rawStr{};
                 SHGetKnownFolderPath(FOLDERID_UserProgramFiles, 0, nullptr, &rawStr);
-                filepath userPrograms{rawStr};
+                array<TCHAR, MAX_PATH> shortPath;
+                GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
                 CoTaskMemFree(rawStr);
-                array<char, MAX_PATH> shortPath;
-                GetShortPathNameA(userPrograms.string().c_str(), shortPath.data(), shortPath.size());
                 return filepath{shortPath.data()} / "ProffieConfig.exe";
             }
 #           elif defined(__linux__)
@@ -108,11 +105,9 @@ filepath Paths::logs() {
 #   if defined(__WIN32__)
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &rawStr);
-    array<char, MAX_PATH> rawCStr;
-    WideCharToMultiByte(CP_UTF8, 0, rawStr, -1, rawCStr.data(), rawCStr.size(), nullptr, nullptr);
+    array<TCHAR, MAX_PATH> shortPath;
+    GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
     CoTaskMemFree(rawStr);
-    array<char, MAX_PATH> shortPath;
-    GetShortPathNameA(rawCStr.data(), shortPath.data(), shortPath.size());
     return filepath{shortPath.data()} / "ProffieConfig";
 #   elif defined(__linux__)
     return data() / "logs";
@@ -125,11 +120,9 @@ filepath Paths::data() {
 #   ifdef __WIN32__
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &rawStr);
-    array<char, MAX_PATH> rawCStr;
-    WideCharToMultiByte(CP_UTF8, 0, rawStr, -1, rawCStr.data(), rawCStr.size(), nullptr, nullptr);
+    array<TCHAR, MAX_PATH> shortPath;
+    GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
     CoTaskMemFree(rawStr);
-    array<char, MAX_PATH> shortPath;
-    GetShortPathNameA(rawCStr.data(), shortPath.data(), shortPath.size());
     return filepath{shortPath.data()} / "ProffieConfig";
 #   elif defined(__APPLE__)
     return approot();
