@@ -669,10 +669,13 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
 #   endif
 
 #   ifdef __WINDOWS__
-    if (static_cast<MainMenu *>(editor->GetParent())->boardSelect->entry()->GetStringSelection() != "BOOTLOADER RECOVERY") {
+    auto boardPath{static_cast<MainMenu *>(editor->GetParent())->boardSelect->entry()->GetStringSelection()};
+    if (boardPath != "BOOTLOADER RECOVERY") {
+        // See https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#win32-device-namespaces
+        boardPath = R"(\\.\)" + boardPath;
         progDialog->emitEvent(50, "Rebooting Proffieboard...");
 
-        auto *serialHandle{CreateFileW(static_cast<MainMenu *>(editor->GetParent())->boardSelect->entry()->GetStringSelection().ToStdWstring().c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr)};
+        auto *serialHandle{CreateFileW(boardPath, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr)};
         if (serialHandle != INVALID_HANDLE_VALUE) {
             DCB dcbSerialParameters = {};
             dcbSerialParameters.DCBlength = sizeof(dcbSerialParameters);
