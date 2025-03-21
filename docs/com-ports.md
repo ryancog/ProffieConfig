@@ -1,6 +1,9 @@
 # Com Ports >= 10 Fail to Upload normally (Require Bootloader Mode)
 
-@TheTomas from the r/lightsabers Discord has discovered a wonderfully annoying little issue. I've not yet fully investigated, but it seems to be either a glaring oversight somewhere in my code (possible, but I don't think so), or something really stupid in the Windows API. You're not here to hear me rant though, so I digress.
+This issue should be fixed as of v1.7.11. If you encounter it, **please let me know!**
+---
+
+@TheTomas from the r/lightsabers Discord has discovered a wonderfully annoying little issue. I've not yet fully investigated, but it seems to be either a glaring oversight somewhere in my code (EDIT: it was an oversight in my knowledge of Win32) ~~(possible, but I don't think so)~~, or something really stupid in the Windows API (EDIT: Arguably, this is also true). You're not here to hear me rant though, so I digress.
 
 If your proffieboard ends up using a `COM` port >= 10 (e.g. `COM10`, `COM11`, etc.), then it seems (on some computers at least), a normal upload will not work, and you'll get the error "Could not connect to proffieboard for upload."
 
