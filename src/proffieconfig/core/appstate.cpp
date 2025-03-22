@@ -80,12 +80,14 @@ void AppState::loadState() {
         }
     }
 
+    logger.info("Loading state...");
     PConf::Data data;
     PConf::read(stateStream, data, nullptr);
     stateStream.close();
 
     auto hashedData{PConf::hash(data)};
     doneWithFirstRun = hashedData.find("FIRSTRUN_COMPLETE") != hashedData.end();
+    logger.info(string{"Done with first run: "} + (doneWithFirstRun ? "true" : "false"));
 
     auto props = hashedData.find("PROPS");
     if (props != hashedData.end() and props->second->getType() == PConf::Type::SECTION) {
@@ -93,9 +95,11 @@ void AppState::loadState() {
             if (prop->name != "PROP") continue;
             if (not prop->label) continue;
 
+            logger.info("Read prop: " + *prop->label);
             propFileNames.push_back(*prop->label);
         }
     }
+    logger.info("Done");
 }
 
 bool AppState::isSaved() { return saved; }
@@ -129,19 +133,24 @@ void AppState::addProp(const string& propName, const string& propPath, const str
 }
 
 void AppState::removeProp(const string& propName) {
+    auto& logger{Log::Context::getGlobal().createLogger("AppState::removeProp()")};
     auto propConfigPath{Paths::props() / (propName + ".pconf")};
-    if (not fs::exists(propConfigPath)) return;
 
-    std::ifstream configStream{propName};
+    logger.info("Removing prop \"" + propName + '"');
+
+    std::ifstream configStream{propConfigPath};
     PConf::Data data;
+    logger.debug("Reading prop pconf \"" + propConfigPath.string() + '"');
     PConf::read(configStream, data, nullptr);
     auto hashedData{PConf::hash(data)};
 
     auto filenameEntry{hashedData.find("FILENAME")};
     if (filenameEntry != hashedData.end() and filenameEntry->second->value) {
+        logger.debug("Removing prop file \"" + *filenameEntry->second->value + '"');
         fs::remove(Paths::proffieos() / "props" / *filenameEntry->second->value);
     }
 
+    logger.debug("Removing prop pconf");
     fs::remove(propConfigPath);
 
     for (auto propIt{propFileNames.begin()}; propIt != propFileNames.end(); ++propIt) {
@@ -150,6 +159,8 @@ void AppState::removeProp(const string& propName) {
             break;
         }
     }
+
+    logger.debug("Done");
 }
 
 const vector<string>& AppState::getPropFileNames() {
