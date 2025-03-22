@@ -503,7 +503,7 @@ void PropFile::readButtons(const std::shared_ptr<PConf::Section>& data, Log::Bra
                     }
                 }
 
-                newButton.descriptions.emplace(descEntry->label.value_or(""), descEntry->value.value_or("EMPTY"));
+                newButton.descriptions.emplace(descEntry->label.value_or(""), *descEntry->value);
             }
 
             stateData.buttons.emplace_back(newButton);
