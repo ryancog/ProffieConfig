@@ -282,7 +282,8 @@ Update::Version Update::determineCurrentVersion(const Data& data, PCUI::Progress
     std::map<filepath, string> hashCache;
 
     prog->Pulse("Determining current version...");
-    for (const auto& [ version, bundle ] : data.bundles) {
+    for (auto bundleIt{data.bundles.rbegin()}; bundleIt != data.bundles.rend(); ++bundleIt) {
+        const auto& [ version, bundle ]{*bundleIt};
         auto status{"Trying version " + string(version)};
         prog->Pulse(status);
         logger.info(status);
