@@ -593,7 +593,7 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
 
     if (pclose(arduinoCli) != 0) {
         _return = parseError(error, editor);
-        logger.error("Error during pclose()");
+        logger.error("Error during pclose(): \n" + error);
 # 	    ifdef __WINDOWS__
         return nullopt;
 # 	    else
@@ -758,7 +758,7 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
 
     if (pclose(arduinoCli) != 0) {
         _return = "Unknown Upload Error";
-        logger.error("Error during pclose()");
+        logger.error("Error during pclose(): \n" + error);
         return false;
     }
 #   else
@@ -787,7 +787,7 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
 
     if (pclose(upload) != 0) {
         _return = Arduino::parseError(error, editor);
-        logger.error("Error during pclose()");
+        logger.error("Error during pclose(): \n" + error);
         return false;
     }
 
