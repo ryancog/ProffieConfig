@@ -13,6 +13,7 @@
 #include <wx/msgdlg.h>
 
 #include "log/branch.h"
+#include "log/context.h"
 #include "ui/message.h"
 #include "utils/paths.h"
 
@@ -75,11 +76,12 @@ bool Configuration::outputConfig(const filepath& filePath, EditorWindow *editor,
     if (fullOutput) {
         std::error_code err;
         const auto injectionDir{Paths::proffieos() / "config" / INJECTION_STR};
-        fs::create_directory(injectionDir);
         for (const auto& injection : editor->presetsPage->injections) {
+            auto injectionPath{injectionDir / filepath{injection.ToStdString()}};
+            fs::create_directories(injectionPath.parent_path());
             if (not fs::copy_file(
-                Paths::injections() / injection.ToStdString(), 
-                injectionDir / injection.ToStdString(),
+                Paths::injections() / filepath{injection.ToStdString()},
+                injectionPath,
                 fs::copy_options::overwrite_existing,
                 err
             )) {
@@ -395,6 +397,8 @@ bool Configuration::readConfig(const filepath& filePath, EditorWindow* editor) {
 }
 
 void Configuration::tryAddInjection(const std::string& buffer, EditorWindow *editor) {
+    auto& logger{Log::Context::getGlobal().createLogger("Configuration::tryAddInjection()")};
+
     auto strStart{buffer.find('"')};
     if (strStart == std::string::npos) return;
     auto strEnd{buffer.find('"', strStart + 1)};
@@ -403,11 +407,22 @@ void Configuration::tryAddInjection(const std::string& buffer, EditorWindow *edi
     auto injectionPos{buffer.find(INJECTION_STR, strStart + 1)};
     std::string injectionFile;
     if (injectionPos != std::string::npos) {
+        logger.verbose("Injection string found...");
         injectionFile = buffer.substr(injectionPos + INJECTION_STR.length() + 1, strEnd - injectionPos - INJECTION_STR.length() - 1);
     } else {
+        logger.verbose("Injection string missing...");
         injectionFile = buffer.substr(strStart + 1, strEnd - strStart - 1);
     }
 
+    logger.debug("Injection file: " + injectionFile); 
+    if (injectionFile.find("../") != std::string::npos or injectionFile.find("/..") != std::string::npos) {
+        PCUI::showMessage(
+            "Injection file \"" + injectionFile + "\" has an invalid name and cannot be registered."
+            "\n You may add a substitute after import.", 
+            "Unknown Injection Encountered"
+        );
+        return;
+    }
     auto filePath{Paths::injections() / injectionFile};
     std::error_code err;
     if (not fs::exists(filePath, err)) {
@@ -426,7 +441,8 @@ void Configuration::tryAddInjection(const std::string& buffer, EditorWindow *edi
             };
             if (fileDialog.ShowModal() == wxID_CANCEL) return;
 
-            auto copyPath{Paths::injections() / fileDialog.GetFilename().ToStdString()};
+            auto copyPath{Paths::injections() / filePath};
+            fs::create_directories(copyPath.parent_path());
             const auto copyOptions{fs::copy_options::overwrite_existing};
             if (not fs::copy_file(fileDialog.GetPath().ToStdString(), copyPath, copyOptions, err)) {
                 auto res{PCUI::showMessage(err.message(), "Injection file could not be added.", wxOK | wxCANCEL | wxOK_DEFAULT)};
@@ -441,6 +457,7 @@ void Configuration::tryAddInjection(const std::string& buffer, EditorWindow *edi
     }
 
     editor->presetsPage->injections.emplace_back(injectionFile);
+    logger.debug("Done");
 }
 
 bool Configuration::importConfig(EditorWindow* editor) {
