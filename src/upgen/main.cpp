@@ -972,7 +972,8 @@ void UpGen::generateNewManifest(const vector<Message>& messages, const Data& dat
         manifest.emplace_back(std::move(itemSect));
     }
 
-    for (const auto& [ version, bundle ] : data.bundles) {
+    for (auto bundleIt{data.bundles.rbegin()}; bundleIt != data.bundles.rend(); ++bundleIt) {
+        const auto& [ version, bundle ]{*bundleIt};
         auto bundleSect{std::make_shared<PConf::Section>("BUNDLE", static_cast<string>(version))};
 
         if (not bundle.note.empty()) bundleSect->entries.emplace_back(std::make_shared<PConf::Entry>("NOTE", bundle.note));
