@@ -140,7 +140,7 @@ void AppState::removeProp(const string& propName) {
 
     std::ifstream configStream{propConfigPath};
     PConf::Data data;
-    logger.debug("Reading prop pconf \"" + propConfigPath.string() + '"');
+    logger.debug("Reading prop pconf \"" + propConfigPath.native() + '"');
     PConf::read(configStream, data, nullptr);
     auto hashedData{PConf::hash(data)};
 

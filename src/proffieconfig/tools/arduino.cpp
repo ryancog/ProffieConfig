@@ -70,7 +70,7 @@ namespace Arduino {
     inline string windowModePrefix() { 
         return 
             "title ProffieConfig Worker & " + 
-            (Paths::binaries() / "windowMode").string() + 
+            (Paths::binaries() / "windowMode").native() + 
             R"( -title "ProffieConfig Worker" -mode force_minimized & )";
     }
 #   endif
@@ -118,7 +118,7 @@ void Arduino::init(wxWindow *parent) {
 
         std::unique_ptr<wxZipEntry> entry;
         while (entry.reset(zipStream.GetNextEntry()), entry) {
-            auto fileNameStr{(Paths::proffieos() / entry->GetName().ToStdString()).string()};
+            auto fileNameStr{(Paths::proffieos() / entry->GetName().ToStdString()).native()};
             if (fileNameStr.find("__MACOSX") != std::string::npos) continue;
 
             auto permissionBits{entry->GetMode()};
@@ -187,7 +187,7 @@ void Arduino::init(wxWindow *parent) {
 #       if defined(__linux__)
         install = popen("pkexec cp ~/.arduino15/packages/proffieboard/hardware/stm32l4/3.6/drivers/linux/*rules /etc/udev/rules.d", "r");
 #       elif defined(__WINDOWS__)
-        install = popen(("title ProffieConfig Worker & " + (Paths::binaries() / "proffie-dfu-setup.exe").string() + " 2>&1").c_str(), "r");
+        install = popen(("title ProffieConfig Worker & " + (Paths::binaries() / "proffie-dfu-setup.exe").native() + " 2>&1").c_str(), "r");
         // Really I should have a proper wait but I tried with an echo and that didn't work.
         // Could maybe revisit this in the future.
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -198,7 +198,7 @@ void Arduino::init(wxWindow *parent) {
         startupInfo.cb = sizeof startupInfo;
         memset(&procInfo, 0, sizeof procInfo);
 
-        const auto minimizeCommand{(Paths::binaries() / "windowMode").string() + R"( -title "ProffieConfig Worker" -mode force_minimized)"};
+        const auto minimizeCommand{(Paths::binaries() / "windowMode").native() + R"( -title "ProffieConfig Worker" -mode force_minimized)"};
 
         CreateProcessA(
             minimizeCommand.c_str(),
@@ -568,7 +568,7 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
     else if (editor->generalPage->massStorage->GetValue()) compileCommand += "usb=cdc_msc";
     else compileCommand += "usb=cdc";
     if (editor->generalPage->board->entry()->GetSelection() == PROFFIEBOARDV3) compileCommand +=",dosfs=sdmmc1";
-    compileCommand += " \"" + Paths::proffieos().string() + "\" -v";
+    compileCommand += " \"" + Paths::proffieos().native() + "\" -v";
     FILE *arduinoCli = Arduino::cli(compileCommand);
 
     string error{};
@@ -650,7 +650,7 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
 
 #   ifndef __WINDOWS__
     string uploadCommand = "upload ";
-    uploadCommand += '"' + Paths::proffieos().string() + '"';
+    uploadCommand += '"' + Paths::proffieos().native() + '"';
     uploadCommand += " --fqbn ";
     switch (static_cast<Proffieboard>(editor->generalPage->board->entry()->GetSelection())) {
         case PROFFIEBOARDV3:
@@ -909,7 +909,7 @@ FILE* Arduino::cli(const string& command) {
 #   if defined(__WINDOWS__)
     fullCommand += windowModePrefix();
 #   endif
-    fullCommand += '"' + (Paths::binaries() / "arduino-cli").string() + '"';
+    fullCommand += '"' + (Paths::binaries() / "arduino-cli").native() + '"';
     fullCommand += " " + command;
     fullCommand += " 2>&1";
 

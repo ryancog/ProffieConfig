@@ -35,7 +35,7 @@ SerialMonitor::~SerialMonitor() {
 #if defined(__WINDOWS__)
 SerialMonitor::SerialMonitor(MainMenu* parent) {
     if (parent->boardSelect->entry()->GetSelection() > 0) {
-        ShellExecuteA(nullptr, nullptr, (Paths::binaries() / "arduino-cli.exe").string().c_str(), (string{"monitor -p "} + parent->boardSelect->entry()->GetStringSelection().ToStdString() + " -c baudrate=115200").c_str(), nullptr, true);
+        ShellExecuteA(nullptr, nullptr, (Paths::binaries() / "arduino-cli.exe").c_str(), (string{"monitor -p "} + parent->boardSelect->entry()->GetStringSelection().ToStdString() + " -c baudrate=115200").c_str(), nullptr, true);
     } else PCUI::showMessage("Select board first.", "No Board Selected", wxOK | wxICON_ERROR, parent);
 }
 

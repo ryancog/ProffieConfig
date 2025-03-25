@@ -123,7 +123,7 @@ private:
     static void checkDir(const filepath& folder) {
         std::error_code err;
         if (not fs::is_directory(folder, err)) {
-            std::cout << "Warn: creating `" + fs::relative(folder, STAGING_DIR).string() + "`\n";
+            std::cout << "Warn: creating `" << fs::relative(folder, STAGING_DIR).native() << "`\n";
             fs::create_directories(folder);
         }
     }

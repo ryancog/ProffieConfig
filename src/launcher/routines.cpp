@@ -51,7 +51,7 @@ void Routine::selfDeleteAndExit(Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Routine::selfDeleteAndExit()")};
     logger.info("Deleting current and launching installed...");
 
-    auto self{Paths::executable().string()};
+    auto self{Paths::executable().native()};
 #   ifdef __WIN32__
     constexpr cstring SELFDELETE_BATCH{"C:\\TEMP\\PCFLDel.bat"};
     std::ofstream batch{SELFDELETE_BATCH};
@@ -75,11 +75,11 @@ void Routine::launch(Log::Branch& lBranch) {
     logger.info("Launching ProffieConfig...");
     auto exec{Paths::executable(Paths::Executable::MAIN)};
 #   ifdef __WIN32__
-    if (0 == wxExecute(exec.string())) {
+    if (0 == wxExecute(exec.native())) {
         logger.warn("ProffieConfig main binary missing/failed to start.");
     }
 #   elif defined(__APPLE__) or defined(__linux__)
-    auto str{exec.string()};
+    auto str{exec.native()};
     std::array<char *, 2> argv{ str.data(), nullptr };
     execvp(argv[0], argv.data());
     logger.error("ProffieConfig main binary missing/failed to start.");
@@ -170,11 +170,15 @@ void Routine::platformInstall(Log::Branch& lBranch) {
 
     PCUI::showMessage("Launcher has been installed.", App::getAppName());
 #   ifdef __WIN32__
-    wxExecute(installedExec.native().c_str());
+    wxExecute(installedExec.c_str());
+    selfDeleteAndExit();
 #   else
-    auto str{installedExec.string()};
-    std::array<char *, 2> argv{ str.data(), nullptr };
-    execvp(argv[0], argv.data());
+    auto str{installedExec.native()};
+    const decltype(str.data()) argv[2]{
+        str.data(),
+        nullptr,
+    };
+    execvp(argv[0], argv);
     logger.warn("Failed to start launcher.");
 #   endif
 }
