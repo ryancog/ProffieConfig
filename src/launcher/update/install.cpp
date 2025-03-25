@@ -85,7 +85,7 @@ bool Update::pullNewFiles(const Changelog& changelog, const Data& data, PCUI::Pr
 
         string itemURLString{Paths::remoteUpdateAssets()};
         type = file.id.type;
-        itemURLString += '/' + typeFolder(type).string() + '/';
+        itemURLString += '/' + typeFolder(type).native() + '/';
         itemURLString += file.hash;
         wxURI url{itemURLString};
         auto request{wxWebSession::GetDefault().CreateRequest(getEventHandler(), url.BuildURI())};

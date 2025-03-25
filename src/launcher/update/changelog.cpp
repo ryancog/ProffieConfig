@@ -320,7 +320,7 @@ Update::Version Update::determineCurrentVersion(const Data& data, PCUI::Progress
             itemPath /= fileItem.path;
 #           endif
             status = "Testing file " + id.name + ", " + string(fileVer);
-            logger.debug(status + " at path: " + itemPath.string());
+            logger.debug(status + " at path: " + itemPath.native());
             prog->Pulse(status);
 
             auto cachedHash{hashCache.find(itemPath)};

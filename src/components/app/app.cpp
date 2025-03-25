@@ -87,7 +87,7 @@ App::CrashDialog::CrashDialog(const string& error) :
             Close();
             }, ID_OK);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-            wxLaunchDefaultApplication(Paths::logs().string());
+            wxLaunchDefaultApplication(Paths::logs().wstring());
             }, ID_LOGS);
 }
 

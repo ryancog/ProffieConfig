@@ -526,7 +526,7 @@ void Onboard::Overview::linkEditorEvents() {
 
                 mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_VerifyConfig, true);
             }};
-            mGuideMenu->activeEditor->Bind(wxEVT_MENU, onConfigSave, EditorWindow::ID_SaveConfig);
+            mGuideMenu->activeEditor->Bind(wxEVT_MENU, onConfigSave, wxID_SAVE);
         }};
         useButtonOnPage("Continue", onContinue);
     }, PresetsPage::ID_BladeList);

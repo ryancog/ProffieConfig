@@ -122,7 +122,7 @@ PropFile* PropFile::createPropConfig(const string& propName, wxWindow* _parent, 
 
     std::ifstream configFile(propPath);
     if (!configFile.is_open()) {
-        logger.error("Could not open prop config file \"" + propPath.string() + "\", aborting...");
+        logger.error("Could not open prop config file \"" + propPath.native() + "\", aborting...");
         return nullptr;
     }
 

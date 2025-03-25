@@ -186,7 +186,7 @@ void PresetsPage::rebuildInjections() {
         auto *deleteButton{new wxButton(GetStaticBox(), wxID_ANY, "Delete", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT)};
 
         editButton->Bind(wxEVT_BUTTON, [=](wxCommandEvent&) {
-            wxLaunchDefaultApplication((Paths::injections() / injection.ToStdString()).string());
+            wxLaunchDefaultApplication((Paths::injections() / injection.ToStdWstring()).native());
         });
 
         deleteButton->Bind(wxEVT_BUTTON, [this, injection](wxCommandEvent&) {

@@ -95,7 +95,7 @@ void MainMenu::bindEvents() {
     }, wxID_ABOUT);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
-        wxLaunchDefaultApplication(Paths::logs().string());
+        wxLaunchDefaultApplication(Paths::logs().native());
     }, ID_Logs);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
@@ -311,7 +311,7 @@ void MainMenu::update() const {
         if (not configFile.is_regular_file()) continue;
         if (configFile.path().extension() != ".h") continue;
 
-        configSelect->entry()->Append(configFile.path().stem().string());
+        configSelect->entry()->Append(configFile.path().stem().native());
     }
 
     configSelect->entry()->SetStringSelection(lastConfig);

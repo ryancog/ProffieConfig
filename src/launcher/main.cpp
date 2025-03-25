@@ -120,14 +120,14 @@ public:
             auto data{Update::parseData(&prog, *logger.binfo("Parsing version data..."))};
             if (not data) {
                 PCUI::showMessage("Failed to parse data!\nPlease report this error.", App::getAppName());
-                wxLaunchDefaultApplication(Paths::logs().string());
+                wxLaunchDefaultApplication(Paths::logs().native());
                 return false;
             }
 
             if (data->bundles.empty()) {
                 logger.error("No valid bundles found!");
                 PCUI::showMessage("No valid version bundles found!\nPlease report this error.", App::getAppName());
-                wxLaunchDefaultApplication(Paths::logs().string());
+                wxLaunchDefaultApplication(Paths::logs().native());
                 if (action == LAUNCH) Routine::launch(*logger.binfo("Launching in lieu of valid update data."));
                 return false;
             }
