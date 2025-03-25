@@ -41,7 +41,6 @@ public:
         ID_WindowSelect,
         ID_DUMMY, // on Win32, for some reason ID #1 is triggerred by hitting enter in pcTextCtrl? This is a workaround.
 
-        ID_SaveConfig,
         ID_ExportConfig,
         ID_VerifyConfig,
         ID_AddInjection,

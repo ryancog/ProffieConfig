@@ -57,28 +57,41 @@ void EditorWindow::bindEvents() {
             return;
         }
 
+        if (not isSaved()) {
+#           ifdef __WINDOWS__
+            wxGenericMessageDialog saveDialog{
+#           else
+            wxMessageDialog saveDialog{
+#           endif
+                this,
+                "You currently have unsaved changes which will be lost otherwise.",
+                "Save Changes to \"" + mOpenConfig + "\"?",
+                wxICON_WARNING | wxYES_NO | wxCANCEL | wxCANCEL_DEFAULT
+            };
+            saveDialog.SetYesNoCancelLabels("Save Changes", "Discard Changes", "Cancel");
+            auto saveChoice{saveDialog.ShowModal()};
 
-        auto saved{isSaved()};
-        if (
-                saved or 
-                PCUI::showMessage(
-                    "Are you sure you want to close the editor?\n\n"
-                    "You currently have unsaved changes which will be lost!",
-                    "Close ProffieConfig Editor",
-                    wxICON_WARNING | wxYES_NO | wxNO_DEFAULT, this) == wxYES
-           ) {
-            reinterpret_cast<MainMenu *>(GetParent())->removeEditor(this);
-            event.Skip();
-            return;
+            if (saveChoice == wxID_YES) {
+                if (not Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h"), this)) {
+                    event.Veto();
+                    return;
+                }
+            } else if (saveChoice == wxID_CANCEL) {
+                event.Veto();
+                return;
+            }
         }
 
-        event.Veto();
+        reinterpret_cast<MainMenu *>(GetParent())->removeEditor(this);
+        event.Skip();
     });
     Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
     Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
             PCUI::showMessage(((Misc::MessageBoxEvent*)&event)->message.ToStdString(), ((Misc::MessageBoxEvent*)&event)->caption.ToStdString(), ((Misc::MessageBoxEvent*)&event)->style, this);
     }, wxID_ANY);
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h"), this); }, ID_SaveConfig);
+
+    Bind(wxEVT_MENU, [this](wxCommandEvent&) { Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h"), this); }, wxID_SAVE); 
+
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(this); }, ID_ExportConfig);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(this, this); }, ID_VerifyConfig);
 
@@ -131,7 +144,7 @@ void EditorWindow::createMenuBar() {
     auto *file{new wxMenu};
     file->Append(ID_VerifyConfig, "Verify Config\tCtrl+R");
     file->AppendSeparator();
-    file->Append(ID_SaveConfig, "Save Config\tCtrl+S");
+    file->Append(wxID_SAVE, "Save Config\tCtrl+S");
     file->Append(ID_ExportConfig, "Export Config...\t");
     file->AppendSeparator();
     file->Append(ID_AddInjection, "Add Injection...\t", "Add a header file to be injected into CONFIG_PRESETS during compilation.");
