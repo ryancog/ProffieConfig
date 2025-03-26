@@ -37,17 +37,17 @@ public:
     PCUI::Text* dirInput{nullptr};
     PCUI::Text* trackInput{nullptr};
 
-    std::vector<wxString> injections;
+    std::vector<string> injections;
 
     struct PresetConfig {
         struct Style {
-            wxString comment;
-            wxString style;
+            string comment;
+            string style;
         };
         std::vector<Style> styles;
-        wxString name{""};
-        wxString dirs{""};
-        wxString track{""};
+        string name;
+        string dirs;
+        string track;
     };
 
     enum {

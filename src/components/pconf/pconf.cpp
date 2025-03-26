@@ -23,7 +23,6 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <string>
 
 #include <log/branch.h>
 #include <log/logger.h>
@@ -34,17 +33,17 @@ namespace PConf {
 bool parseName              (const string& line, std::optional<string>& out, Log::Branch&);
 bool parseLabel             (const string& line, std::optional<string>& out, Log::Branch&);
 bool parseLabelNum          (const string& line, std::optional<int32_t>& out, Log::Branch&);
-bool parseValue             (const string& line, std::wistream&, std::optional<string>& out, Log::Branch&);
+bool parseValue             (const string& line, std::istream&, std::optional<string>& out, Log::Branch&);
 bool parseSinglelineValue   (const string& line, std::optional<string>& out, Log::Branch&);
-bool parseMultilineValue    (std::wistream&, std::optional<string>& out, Log::Branch&);
+bool parseMultilineValue    (std::istream&, std::optional<string>& out, Log::Branch&);
 
-bool readEntry(std::wistream&, std::shared_ptr<Entry>& out, bool& isSect, Log::Branch&);
-bool readSection(std::wistream&, std::shared_ptr<Section>& out, Log::Branch&);
+bool readEntry(std::istream&, std::shared_ptr<Entry>& out, bool& isSect, Log::Branch&);
+bool readSection(std::istream&, std::shared_ptr<Section>& out, Log::Branch&);
 
-bool writeEntry(std::wostream&, const std::shared_ptr<Entry>& entry, int32_t depth, Log::Branch&);
-bool writeSection(std::wostream&, const std::shared_ptr<Section>& section, int32_t depth, Log::Branch&);
+bool writeEntry(std::ostream&, const std::shared_ptr<Entry>& entry, int32_t depth, Log::Branch&);
+bool writeSection(std::ostream&, const std::shared_ptr<Section>& section, int32_t depth, Log::Branch&);
 
-bool readline(std::wistream&, string&);
+bool readline(std::istream&, string&);
 
 } // namespace PConf
 
@@ -62,7 +61,7 @@ PConf::Section::Section(
         Data entries
         ) : Entry(std::move(name), std::nullopt, std::move(label), labelNum), entries(std::move(entries)) {}
 
-bool PConf::read(std::wistream& inStream, Data& out, Log::Branch *lBranch) {
+bool PConf::read(std::istream& inStream, Data& out, Log::Branch *lBranch) {
     auto& logger{Log::Branch::optCreateLogger("PConf::read()", lBranch)};
 
     out.clear();
@@ -91,7 +90,7 @@ bool PConf::read(std::wistream& inStream, Data& out, Log::Branch *lBranch) {
     return true;
 }
 
-void PConf::write(std::wostream& outStream, const Data& pconfData, Log::Branch *lBranch) {
+void PConf::write(std::ostream& outStream, const Data& pconfData, Log::Branch *lBranch) {
     auto& logger{Log::Branch::optCreateLogger("PConf::write()", lBranch)};
 
     for (const auto& entry : pconfData) {
@@ -115,7 +114,7 @@ PConf::HashedData PConf::hash(const Data& data) {
     return ret;
 }
 
-bool PConf::readEntry(std::wistream& inStream, std::shared_ptr<Entry>& out, bool& isSect, Log::Branch& lBranch) {
+bool PConf::readEntry(std::istream& inStream, std::shared_ptr<Entry>& out, bool& isSect, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::readEntry()")};
 
     out.reset();
@@ -172,7 +171,7 @@ bool PConf::readEntry(std::wistream& inStream, std::shared_ptr<Entry>& out, bool
     return true;
 }
 
-bool PConf::readSection(std::wistream& inStream, std::shared_ptr<Section>& out, Log::Branch& lBranch) {
+bool PConf::readSection(std::istream& inStream, std::shared_ptr<Section>& out, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::readSection()")};
 
     out.reset();
@@ -238,7 +237,7 @@ bool PConf::parseName(const string& line, std::optional<string>& out, Log::Branc
     return true;
 }
 
-bool PConf::parseValue(const string& line, std::wistream& inStream, std::optional<string>& out, Log::Branch& lBranch) {
+bool PConf::parseValue(const string& line, std::istream& inStream, std::optional<string>& out, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::parseValue()")};
 
     out = std::nullopt;
@@ -298,7 +297,7 @@ bool PConf::parseSinglelineValue(const string& line, std::optional<string>& out,
     return true;
 }
 
-bool PConf::parseMultilineValue(std::wistream& inStream, std::optional<string>& out, Log::Branch& lBranch) {
+bool PConf::parseMultilineValue(std::istream& inStream, std::optional<string>& out, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::parseMultilineValue()")};
 
     out = "";
@@ -309,7 +308,7 @@ bool PConf::parseMultilineValue(std::wistream& inStream, std::optional<string>& 
         if (quoteBegin == string::npos or quoteBegin == quoteEnd) {
             if (buf.find('}') != string::npos) {
                 // Pop off trailing newline
-                out->RemoveLast();
+                out->pop_back();
                 return true;
             }
             continue;
@@ -381,12 +380,12 @@ bool PConf::parseLabelNum(const string& line, std::optional<int32_t>& out, Log::
     return true;
 }
 
-static std::wostream& writeWithDepth(std::wostream& outStream, int32_t depth) {
+static std::ostream& writeWithDepth(std::ostream& outStream, int32_t depth) {
     for (int32_t i{0}; i < depth; i++) outStream << '\t';
     return outStream;
 }
 
-bool PConf::writeEntry(std::wostream& outStream, const std::shared_ptr<Entry>& entry, int32_t depth, Log::Branch&) {
+bool PConf::writeEntry(std::ostream& outStream, const std::shared_ptr<Entry>& entry, int32_t depth, Log::Branch&) {
     // auto& logger{lBranch.createLogger("PConf::writeEntry()")};
     
     writeWithDepth(outStream, depth) << entry->name;
@@ -422,7 +421,7 @@ bool PConf::writeEntry(std::wostream& outStream, const std::shared_ptr<Entry>& e
     return true;
 }
 
-bool PConf::writeSection(std::wostream& outStream, const std::shared_ptr<Section>& section, int32_t depth, Log::Branch& lBranch) {
+bool PConf::writeSection(std::ostream& outStream, const std::shared_ptr<Section>& section, int32_t depth, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::writeSection()")};
 
     writeWithDepth(outStream, depth) << section->name;
@@ -446,11 +445,10 @@ bool PConf::writeSection(std::wostream& outStream, const std::shared_ptr<Section
     return true;
 }
 
-bool PConf::readline(std::wistream& stream, string& out) {
-    std::wstring buffer;
-    if (not std::getline(stream, buffer)) return false;
+bool PConf::readline(std::istream& stream, string& out) {
+    if (not std::getline(stream, out)) return false;
 
-    out = buffer.substr(0, out.find("//"));
+    out = out.substr(0, out.find("//"));
     return true;
 }
 

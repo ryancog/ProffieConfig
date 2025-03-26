@@ -16,7 +16,7 @@ CustomOptionsDlg::CustomOptionsDlg(EditorWindow* _parent) : wxDialog(_parent, wx
   bindEvents();
 }
 
-void CustomOptionsDlg::addDefine(const string& name, const string& value) {
+void CustomOptionsDlg::addDefine(const wxString& name, const wxString& value) {
     auto newDefine = new CDefine(optionArea);
     newDefine->name->entry()->SetValue(name);
     newDefine->value->entry()->SetValue(value);
@@ -32,8 +32,8 @@ void CustomOptionsDlg::addDefine(const string& name, const string& value) {
     updateOptions();
 }
 
-std::vector<std::pair<string, string>> CustomOptionsDlg::getCustomDefines() {
-  std::vector<std::pair<string, string>> outputDefines;
+std::vector<std::pair<wxString, wxString>> CustomOptionsDlg::getCustomDefines() {
+  std::vector<std::pair<wxString, wxString>> outputDefines;
   for (const auto& define : customDefines) {
     outputDefines.push_back({ define->name->entry()->GetValue().ToStdString(), define->value->entry()->GetValue().ToStdString() });
   }

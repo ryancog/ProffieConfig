@@ -45,8 +45,8 @@ public:
 
     // Create a logger with the provided branch, if valid, otherwise log
     // with the global context.
-    [[nodiscard]] static Logger& optCreateLogger(wxString name, Branch *);
-    [[nodiscard]] Logger& createLogger(wxString name);
+    [[nodiscard]] static Logger& optCreateLogger(string name, Branch *);
+    [[nodiscard]] Logger& createLogger(string name);
 
     [[nodiscard]] std::list<Logger *> getLoggers() const;
 
@@ -54,7 +54,7 @@ public:
     
 private:
     friend class Logger;
-    Branch(const wxString& message, Severity, Logger *);
+    Branch(const string& message, Severity, Logger *);
 
     std::list<Logger *> mLoggers;
     std::mutex mListLock;

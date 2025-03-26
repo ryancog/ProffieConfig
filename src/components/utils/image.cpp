@@ -35,7 +35,7 @@ wxBitmap Image::loadPNG(const string& name, bool dpiScaled) {
     auto bmpIt{bmps.find(name)};
     if (bmpIt != bmps.end()) return bmpIt->second;
 
-    auto pngPath{Paths::resources() / "icons" / (name + ".png").ToStdWstring()};
+    auto pngPath{Paths::resources() / "icons" / (name + ".png")};
     // std::cout << "Loading PNG \"" << name << "\" from \"" << pngPath.native() << '"' << std::endl;
     auto bitmap{wxBitmap{pngPath.native(), wxBITMAP_TYPE_PNG}};
     if (dpiScaled) bitmap.SetScaleFactor(getDPIScaleFactor());

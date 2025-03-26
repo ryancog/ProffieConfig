@@ -142,7 +142,7 @@ MovePanel::MovePanel(
         const wxPoint& pos,
         const wxSize& size,
         int64_t style,
-        const string& objName) {
+        const wxString& objName) {
     create(parent, moveArea, winID, pos, size, style, objName);
 }
 
@@ -153,7 +153,7 @@ void MovePanel::create(
         const wxPoint& pos,
         const wxSize& size,
         int64_t style,
-        const string& objName) {
+        const wxString& objName) {
     Create(parent, winID, pos, size, style, objName);
     this->pMoveArea = moveArea;
     moveArea->addAdoptRoutine(this, [this](Movable* toAdopt, wxPoint mousePos) -> bool {
@@ -185,7 +185,7 @@ ScrolledMovePanel::ScrolledMovePanel(
         const wxSize& size,
         int64_t style,
         int64_t scrollStyle,
-        const string& objName) {
+        const wxString& objName) {
     pCanvas = new wxScrolledCanvas(parent, winID, pos, size, scrollStyle, "Scrolled Canvas (Move Panel)");
     pCanvas->SetScrollRate(1, 1);
     auto *sizer{new wxBoxSizer(wxVERTICAL)};

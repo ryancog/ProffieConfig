@@ -35,15 +35,15 @@ std::unique_ptr<Log::Context> globalContext;
 
 } // namespace Log
 
-Log::Context::Context(wxString name, vector<std::wostream *> outStreams,
+Log::Context::Context(string name, vector<std::ostream *> outStreams,
                       bool outputToFile)
     : pName(std::move(name)), mOutputs(std::move(outStreams)) {
 
   if (outputToFile) {
     if (pName == GLOBAL_TAG) {
-      mRESOutFile.open(Paths::logs() / (App::getAppName() + ".log").ToStdWstring());
+      mRESOutFile.open(Paths::logs() / (App::getAppName() + ".log"));
     } else {
-      mRESOutFile.open(Paths::logs() / (App::getAppName() + "-" + pName + ".log").ToStdWstring());
+      mRESOutFile.open(Paths::logs() / (App::getAppName() + "-" + pName + ".log"));
     }
     mOutputs.insert(mOutputs.begin(), &mRESOutFile);
 
@@ -54,7 +54,7 @@ Log::Context::Context(wxString name, vector<std::wostream *> outStreams,
     auto now{std::chrono::system_clock::now()};
     auto timeNow{std::chrono::system_clock::to_time_t(now)};
 
-    mRESOutFile << App::getAppName() << " Log (" << wxSTRINGIZE(EXEC_VERSION)
+    mRESOutFile << App::getAppName().c_str() << " Log (" << wxSTRINGIZE(EXEC_VERSION)
                 << ") [Context: " << pName << "]\n";
     mRESOutFile << "Started at " << std::ctime(&timeNow) << "\n\n"
                 << std::flush;
@@ -77,7 +77,7 @@ Log::Context &Log::Context::getGlobal() {
 
 void Log::Context::destroyGlobal() { globalContext.reset(); }
 
-bool Log::Context::setGlobalOuput(vector<std::wostream *> outStreams,
+bool Log::Context::setGlobalOuput(vector<std::ostream *> outStreams,
                                   bool fileOutput) {
   if (globalContext)
     return false;
@@ -89,11 +89,11 @@ bool Log::Context::setGlobalOuput(vector<std::wostream *> outStreams,
 
 void Log::Context::setSeverity(Severity sev) { mCurrentSev = sev; }
 
-void Log::Context::quickLog(Severity sev, wxString tag, wxString message) {
+void Log::Context::quickLog(Severity sev, string tag, string message) {
     sendOut(sev, Message{std::move(message), sev, std::move(tag)}.formatted());
 }
 
-void Log::Context::sendOut(Severity sev, const wxString &str) {
+void Log::Context::sendOut(Severity sev, const string &str) {
     if (sev < mCurrentSev) return;
 
     mSendLock.lock();
@@ -101,7 +101,7 @@ void Log::Context::sendOut(Severity sev, const wxString &str) {
     mSendLock.unlock();
 }
 
-Log::Logger &Log::Context::createLogger(wxString name) {
+Log::Logger &Log::Context::createLogger(string name) {
     mListLock.lock();
     mLoggers.push_back(new Logger{std::move(name), this});
     mListLock.unlock();

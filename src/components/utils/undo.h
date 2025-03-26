@@ -58,17 +58,17 @@ UTILS_EXPORT wxDECLARE_EVENT(EVT_AT_SAVED, Event);
 UTILS_EXPORT wxDECLARE_EVENT(EVT_LEAVE_SAVED, Event);
 
 struct UTILS_EXPORT Action {
-    Action(string name, ActionFunc perform, ActionFunc revert, any data = {});
+    Action(wxString name, ActionFunc perform, ActionFunc revert, any data = {});
 
     void perform();
     void revert();
-    [[nodiscard]] const string& name() const;
+    [[nodiscard]] const wxString& name() const;
 
 private:
     ActionFunc mDoPerform;
     ActionFunc mDoRevert;
 
-    string mName;
+    wxString mName;
     any mData;
 };
 
@@ -76,8 +76,8 @@ struct UTILS_EXPORT Handler {
     Handler(wxEvtHandler *, int32 maxDepth = 1024);
 
     // Return name of action that can be undone/redone if it exists.
-    [[nodiscard]] optional<string> canUndo() const;
-    [[nodiscard]] optional<string> canRedo() const;
+    [[nodiscard]] optional<wxString> canUndo() const;
+    [[nodiscard]] optional<wxString> canRedo() const;
     [[nodiscard]] bool isSaved() const;
 
     void undo();

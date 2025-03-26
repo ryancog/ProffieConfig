@@ -23,7 +23,7 @@
 
 #include <tomcrypt.h>
 
-std::string Crypto::computeHash(const filepath& path) {
+string Crypto::computeHash(const filepath& path) {
     auto inputStream{std::ifstream(path, std::ios::binary)};
     array<uint8, 32768> buffer;
 
@@ -39,7 +39,7 @@ std::string Crypto::computeHash(const filepath& path) {
     }
     inputStream.close();
 
-    std::string hashStr;
+    string hashStr;
     hashStr.resize(64);
     array<uint8_t, 32> hash;
     sha256_done(&hashState, hash.data());

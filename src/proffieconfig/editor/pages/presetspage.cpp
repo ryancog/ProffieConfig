@@ -13,7 +13,6 @@
 #include <wx/msgdlg.h>
 #include <wx/splitter.h>
 
-#include <string>
 #include <wx/tooltip.h>
 #ifdef __WXGTK__
 #include <wx/clipbrd.h>
@@ -186,7 +185,7 @@ void PresetsPage::rebuildInjections() {
         auto *deleteButton{new wxButton(GetStaticBox(), wxID_ANY, "Delete", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT)};
 
         editButton->Bind(wxEVT_BUTTON, [=](wxCommandEvent&) {
-            wxLaunchDefaultApplication((Paths::injections() / injection.ToStdWstring()).native());
+            wxLaunchDefaultApplication((Paths::injections() / injection).native());
         });
 
         deleteButton->Bind(wxEVT_BUTTON, [this, injection](wxCommandEvent&) {
@@ -344,7 +343,7 @@ void PresetsPage::updateFields() {
 
 void PresetsPage::stripAndSaveComments() {
     if (presetList->GetSelection() >= 0 && bladeList->GetSelection() >= 0) {
-        auto comments{commentInput->entry()->GetValue()};
+        auto comments{commentInput->entry()->GetValue().ToStdString()};
 
         size_t illegalStrPos{0};
         while ((illegalStrPos = comments.find("/*")) != string::npos) comments.erase(illegalStrPos, 2);
@@ -360,10 +359,10 @@ void PresetsPage::stripAndSaveComments() {
 
 void PresetsPage::stripAndSaveEditor() {
   if (presetList->GetSelection() >= 0 && bladeList->GetSelection() >= 0) {
-    wxString style = styleInput->entry()->GetValue();
-    if (style.find('{') != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '{'));
-    if (style.rfind('}') != wxString::npos) style.erase(std::remove(style.begin(), style.end(), '}'));
-    if (style.rfind(")") != wxString::npos) style.erase(style.rfind(")") + 1);
+    auto style{styleInput->entry()->GetValue().ToStdString()};
+    if (style.find('{') != string::npos) style.erase(std::remove(style.begin(), style.end(), '{'), style.end());
+    if (style.rfind('}') != string::npos) style.erase(std::remove(style.begin(), style.end(), '}'), style.end());
+    if (style.rfind(')') != string::npos) style.erase(style.rfind(')') + 1);
 
     auto& selectedBladeArray{mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()]};
     auto& selectedPreset{selectedBladeArray.presets[presetList->GetSelection()]};
@@ -373,7 +372,7 @@ void PresetsPage::stripAndSaveEditor() {
 }
 void PresetsPage::stripAndSaveName() {
   if (presetList->GetSelection() >= 0 && mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0) {
-    wxString name = nameInput->entry()->GetValue();
+    auto name{nameInput->entry()->GetValue().ToStdString()};
     name.erase(std::remove(name.begin(), name.end(), ' '), name.end());
     std::transform(name.begin(), name.end(), name.begin(), [](unsigned char chr){ return std::tolower(chr); }); // to lowercase
     mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).name.assign(name);
@@ -381,15 +380,15 @@ void PresetsPage::stripAndSaveName() {
 }
 void PresetsPage::stripAndSaveDir() {
   if (presetList->GetSelection() >= 0 && mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0) {
-    wxString dir = dirInput->entry()->GetValue();
+    auto dir{dirInput->entry()->GetValue().ToStdString()};
     // dir.erase(std::remove(dir.begin(), dir.end(), ' '), dir.end());
     mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].presets.at(presetList->GetSelection()).dirs.assign(dir);
   }
 }
 void PresetsPage::stripAndSaveTrack() {
-  wxString track = trackInput->entry()->GetValue();
+  auto track{trackInput->entry()->GetValue().ToStdString()};
   track.erase(std::remove(track.begin(), track.end(), ' '), track.end());
-  if (track.find(".") != wxString::npos) track.erase(track.find("."));
+  if (track.find('.') != string::npos) track.erase(track.find('.'));
   if (track.length() > 0) track += ".wav";
 
   if (presetList->GetSelection() >= 0 && mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size() > 0) {

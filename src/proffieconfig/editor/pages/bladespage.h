@@ -181,7 +181,7 @@ public:
         int32_t Star3Resistance{0};
         int32_t Star4Resistance{0};
 
-        std::vector<string> powerPins;
+        std::vector<wxString> powerPins;
 
         bool isSubBlade{false};
         bool useStride{false};

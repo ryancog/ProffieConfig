@@ -22,7 +22,7 @@ public:
     void update();
     static void updateDisables(PropFile*);
     void updateProps();
-    void updateSelectedProp(const wxString& = "");
+    void updateSelectedProp(const string& = "");
     PropFile* getSelectedProp();
     const vector<PropFile*>& getLoadedProps();
     wxScrolledWindow* propsWindow{nullptr};

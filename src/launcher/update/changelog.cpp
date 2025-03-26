@@ -67,7 +67,7 @@ namespace Update {
         changedFile.id = id;
     }
 
-    if (currentVersion) {
+    if (currentVersion and data.bundles.find(currentVersion) != data.bundles.end()) {
         for (const auto& [ id, version, hash] : data.bundles.at(currentVersion).reqs) {
             bool newVersionHasFile{false};
             for (const auto& [itemID, version, hash] : data.bundles.find(currentVersion)->second.reqs) {
@@ -176,9 +176,9 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
                 whatNewPanel, 
                 wxID_ANY, 
                 (file.currentVersion ? 
-                 string(file.currentVersion) : 
+                 static_cast<string>(file.currentVersion) : 
                  "[NONE]") 
-                + " -> " + string(file.latestVersion))};
+                + " -> " + static_cast<string>(file.latestVersion))};
         versText->SetFont(versionFont);
         whatNewSizer->Add(versText, wxSizerFlags().Border(wxBOTTOM, 5));
 
@@ -281,7 +281,7 @@ Update::Version Update::determineCurrentVersion(const Data& data, PCUI::Progress
     prog->Pulse("Determining current version...");
     for (auto bundleIt{data.bundles.rbegin()}; bundleIt != data.bundles.rend(); ++bundleIt) {
         const auto& [ version, bundle ]{*bundleIt};
-        auto status{"Trying version " + string(version)};
+        auto status{"Trying version " + static_cast<string>(version)};
         prog->Pulse(status);
         logger.info(status);
 
@@ -314,10 +314,10 @@ Update::Version Update::determineCurrentVersion(const Data& data, PCUI::Progress
                 itemPath /= fileItem.path;
             }
 #           else
-            itemPath /= fileItem.path.ToStdWstring();
+            itemPath /= filepath{fileItem.path};
 #           endif
-            status = "Testing file " + id.name + ", " + string(fileVer);
-            logger.debug(status + " at path: " + itemPath.native());
+            status = "Testing file " + id.name + ", " + static_cast<string>(fileVer);
+            logger.debug(status + " at path: " + itemPath.string());
             prog->Pulse(status);
 
             auto cachedHash{hashCache.find(itemPath)};
@@ -338,7 +338,7 @@ Update::Version Update::determineCurrentVersion(const Data& data, PCUI::Progress
         }
 
         if (filesMatch) {
-            status = "Bundle version " + string(version) + " matches installed files.";
+            status = "Bundle version " + static_cast<string>(version) + " matches installed files.";
             logger.info(status);
             prog->Update(90, status);
             ret = version;

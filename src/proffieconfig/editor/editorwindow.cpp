@@ -74,7 +74,7 @@ void EditorWindow::bindEvents() {
             auto saveChoice{saveDialog.ShowModal()};
 
             if (saveChoice == wxID_YES) {
-                if (not Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h").ToStdWstring(), this)) {
+                if (not Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h"), this)) {
                     event.Veto();
                     return;
                 }
@@ -92,7 +92,7 @@ void EditorWindow::bindEvents() {
             PCUI::showMessage(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this);
     }, wxID_ANY);
 
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h").ToStdWstring(), this); }, wxID_SAVE); 
+    Bind(wxEVT_MENU, [this](wxCommandEvent&) { Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h"), this); }, wxID_SAVE); 
 
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(this); }, ID_ExportConfig);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(this, this); }, ID_VerifyConfig);
@@ -109,7 +109,7 @@ void EditorWindow::bindEvents() {
             return;
         }
 
-        presetsPage->injections.push_back(fileDialog.GetFilename());
+        presetsPage->injections.push_back(fileDialog.GetFilename().ToStdString());
         presetsPage->update();
     }, ID_AddInjection);
 
@@ -191,17 +191,17 @@ void EditorWindow::createPages() {
 }
 
 
-string EditorWindow::getOpenConfig() const { return mOpenConfig; }
+string_view EditorWindow::getOpenConfig() const { return mOpenConfig; }
 
 void EditorWindow::renameConfig(const string& name) {
-    fs::rename(Paths::configs() / (mOpenConfig + ".h").ToStdWstring(), Paths::configs() / (name + ".h").ToStdWstring());
+    fs::rename(Paths::configs() / (mOpenConfig + ".h"), Paths::configs() / (name + ".h"));
     mOpenConfig = name;
     // TODO: 
 }
 
 bool EditorWindow::isSaved() {
-    const auto currentPath{Paths::configs() / (mOpenConfig + ".h").ToStdWstring()};
-    const auto validatePath{fs::temp_directory_path() / (mOpenConfig + "-validate").ToStdWstring()};
+    const auto currentPath{Paths::configs() / (mOpenConfig + ".h")};
+    const auto validatePath{fs::temp_directory_path() / (mOpenConfig + "-validate")};
     if (not Configuration::outputConfig(validatePath, this)) {
         return false;
     }
@@ -211,13 +211,13 @@ bool EditorWindow::isSaved() {
         return false;
     }
 
-    std::wifstream current{currentPath};
-    std::wifstream validate{validatePath};
+    std::ifstream current{currentPath};
+    std::ifstream validate{validatePath};
 
     bool saved{true};
     while (current.good() && !current.eof() && validate.good() && !validate.eof()) {
-        std::array<wchar_t, 4096> currentBuffer;
-        std::array<wchar_t, currentBuffer.size()> validateBuffer;
+        std::array<char, 4096> currentBuffer;
+        std::array<char, currentBuffer.size()> validateBuffer;
         currentBuffer.fill(0);
         validateBuffer.fill(0);
 

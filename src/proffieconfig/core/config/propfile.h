@@ -22,7 +22,7 @@ struct hash<vector<string>> {
     size_t operator()(const vector<string>& vector) const {
         size_t hash = 0;
         for (const auto& string : vector) {
-            hash ^= std::hash<wxString>{}(string) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+            hash ^= std::hash<std::string>{}(string) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
         }
         return hash;
     }

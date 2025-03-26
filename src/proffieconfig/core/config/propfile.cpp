@@ -113,14 +113,14 @@ PropFile* PropFile::createPropConfig(const string& propName, wxWindow* _parent, 
     logger.info("Loading prop " + propName);
     filepath propPath;
     if (builtin) {
-        propPath = Paths::resources() / "props" / (propName + ".pconf").ToStdWstring();
+        propPath = Paths::resources() / "props" / (propName + ".pconf");
     } else {
-        propPath = Paths::props() / (propName + ".pconf").ToStdWstring();
+        propPath = Paths::props() / (propName + ".pconf");
     }
 
-    std::wifstream configFile(propPath);
+    std::ifstream configFile(propPath);
     if (!configFile.is_open()) {
-        logger.error(L"Could not open prop config file \"" + propPath.native() + L"\", aborting...");
+        logger.error("Could not open prop config file \"" + propPath.string() + "\", aborting...");
         return nullptr;
     }
 

@@ -22,8 +22,8 @@ public:
     };
 
     MainMenu* parent{nullptr};
-    string existingPath;
-    string configName;
+    wxString existingPath;
+    wxString configName;
 
     wxToggleButton* createNew{nullptr};
     wxToggleButton* importExisting{nullptr};
@@ -32,11 +32,11 @@ public:
     void update();
 
 private:
-    wxStaticText* chooseConfigText{nullptr};
+    wxStaticText* mChooseConfigText{nullptr};
 
-    wxStaticText* invalidNameWarning{nullptr};
-    wxStaticText* duplicateWarning{nullptr};
-    wxStaticText* fileSelectionWarning{nullptr};
+    wxStaticText* mInvalidNameWarning{nullptr};
+    wxStaticText* mDuplicateWarning{nullptr};
+    wxStaticText* mFileSelectionWarning{nullptr};
 
     void createUI();
     void bindEvents();

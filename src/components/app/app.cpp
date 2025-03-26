@@ -54,7 +54,7 @@ static wxSingleInstanceChecker singleInstance;
 
 class CrashDialog : public wxDialog {
 public:
-    CrashDialog(const string& error);
+    CrashDialog(const wxString& error);
 
 private:
     enum {
@@ -65,7 +65,7 @@ private:
 
 } // namespace App
 
-App::CrashDialog::CrashDialog(const string& error) : 
+App::CrashDialog::CrashDialog(const wxString& error) : 
     wxDialog(nullptr, wxID_ANY, getAppName() + " Has Crashed", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxCENTER) {
 
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
@@ -86,14 +86,14 @@ App::CrashDialog::CrashDialog(const string& error) :
             Close();
             }, ID_OK);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-            wxLaunchDefaultApplication(Paths::logs().wstring());
+            wxLaunchDefaultApplication(Paths::logs().native());
             }, ID_LOGS);
 }
 
 
-void crashHandler(const string& error) { 
+void crashHandler(const wxString& error) { 
     auto& logger{Log::Context::getGlobal().createLogger("Crash Handler")};
-    logger.error(error);
+    logger.error(error.ToStdString());
 
     if (wxIsMainThread()) {
         auto errDialog{App::CrashDialog(error)};
@@ -112,9 +112,9 @@ void sigHandler(int sig) {
 #if defined(__linux__) or defined(__APPLE__)
     std::array<char, 19> errAddr;
     (void)std::snprintf(errAddr.data(), errAddr.size(), "%p", info->si_addr);
-    auto errStr{string(strsignal(sig)) + " at address: " + string{errAddr.data()}};
+    auto errStr{wxString(strsignal(sig)) + " at address: " + wxString{errAddr.data()}};
 #elif defined(__WIN32__)
-    string signame;
+    wxString signame;
     switch (sig) {
         case SIGSEGV:
             signame = "Segmentation fault";
@@ -198,7 +198,7 @@ App::Menus App::createDefaultMenuBar() {
 }
 
 void App::exceptionHandler() {
-    string exceptStr;
+    wxString exceptStr;
     try {
         throw;
     } catch (const std::exception& e) {

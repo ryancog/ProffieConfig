@@ -79,7 +79,7 @@ public:
             }
         }
 
-        string statusStr{};
+        wxString statusStr{};
         switch (action) {
             case LAUNCH:
                 statusStr = "Update Check";
@@ -203,6 +203,11 @@ public:
         }
 
         Routine::launch(*logger.binfo("Launcher routines done."));
+        return false;
+    }
+
+    bool OnExceptionInMainLoop() override {
+        App::exceptionHandler();
         return false;
     }
 

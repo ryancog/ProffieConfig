@@ -29,10 +29,10 @@ PCUI::Bool::Bool(
         ::wxWindow *parent,
         wxWindowID winID,
         bool initialValue,
-        string onText,
-        string offText,
+        wxString onText,
+        wxString offText,
         int64 style,
-        const string& label,
+        const wxString& label,
         wxOrientation orient) :
     ControlBase(parent, winID),
     mOffText(std::move(offText)),
@@ -52,7 +52,7 @@ PCUI::Choice::Choice(
             wxWindow *parent,
             wxWindowID winID,
             const wxArrayString& choices,
-            const string& label,
+            const wxString& label,
             wxOrientation orient) :
     ControlBase(parent, winID) {
 
@@ -71,7 +71,7 @@ PCUI::ComboBox::ComboBox(
             wxWindowID winID,
             const wxArrayString& choices,
             wxString defaultValue,
-            const string& label,
+            const wxString& label,
             wxOrientation orient) :
     ControlBase(parent, winID) {
 
@@ -93,7 +93,7 @@ PCUI::Numeric::Numeric(
         int32_t initial,
         int32_t increment,
         int64_t style,
-        const string& label,
+        const wxString& label,
         const wxOrientation& orient) :
     ControlBase(parent, winID) {
 
@@ -111,7 +111,7 @@ PCUI::NumericDec::NumericDec(
         float64 initial,
         float64 increment,
         int64 style,
-        const string& label,
+        const wxString& label,
         const wxOrientation& orient) :
     ControlBase(parent, winID) {
 
@@ -124,9 +124,9 @@ PCUI::NumericDec::NumericDec(
 PCUI::Text::Text(
         wxWindow *parent,
         wxWindowID winID,
-        const string &initial,
+        const wxString &initial,
         int64 style,
-        const string &label,
+        const wxString &label,
         wxOrientation orient) :
     ControlBase(parent, winID) {
 

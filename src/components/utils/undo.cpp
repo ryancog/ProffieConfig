@@ -44,7 +44,7 @@ wxDEFINE_EVENT(Undo::EVT_ACTION, Undo::Event);
 wxDEFINE_EVENT(Undo::EVT_AT_SAVED, Undo::Event);
 wxDEFINE_EVENT(Undo::EVT_LEAVE_SAVED, Undo::Event);
 
-Undo::Action::Action(string name, ActionFunc perform, ActionFunc revert, any data) :
+Undo::Action::Action(wxString name, ActionFunc perform, ActionFunc revert, any data) :
     mDoPerform(std::move(perform)), mDoRevert(std::move(revert)), mName(std::move(name)), mData(std::move(data)) {}
 
 void Undo::Action::perform() {
@@ -57,12 +57,12 @@ void Undo::Action::revert() {
     mDoRevert(mData);
 }
 
-const string& Undo::Action::name() const { return mName; }
+const wxString& Undo::Action::name() const { return mName; }
 
 Undo::Handler::Handler(wxEvtHandler *evtHandler, int32 maxDepth) : mMaxDepth(maxDepth), mEvtHandler(evtHandler) {}
 
-optional<string> Undo::Handler::canUndo() const { return mIdx >= 0 ? optional<string>{mActions[mIdx].name()} : nullopt; }
-optional<string> Undo::Handler::canRedo() const { return mIdx + 1 < mActions.size() ? optional<string>{mActions[mIdx + 1].name()} : nullopt; };
+optional<wxString> Undo::Handler::canUndo() const { return mIdx >= 0 ? optional<wxString>{mActions[mIdx].name()} : nullopt; }
+optional<wxString> Undo::Handler::canRedo() const { return mIdx + 1 < mActions.size() ? optional<wxString>{mActions[mIdx + 1].name()} : nullopt; };
 bool Undo::Handler::isSaved() const { return mSavedIdx == mIdx; }
 
 void Undo::Handler::undo() {
