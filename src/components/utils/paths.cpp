@@ -53,7 +53,7 @@ filepath Paths::approot() {
 filepath Paths::executable(Executable exec) {
     switch (exec) {
         case Executable::CURRENT:
-            return wxStandardPaths::Get().GetExecutablePath().ToStdString();
+            return wxStandardPaths::Get().GetExecutablePath().ToStdWstring();
         case Executable::LAUNCHER:
 #           ifdef __WIN32__
             {

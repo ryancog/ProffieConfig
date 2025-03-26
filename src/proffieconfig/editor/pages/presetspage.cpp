@@ -347,9 +347,9 @@ void PresetsPage::stripAndSaveComments() {
         auto comments{commentInput->entry()->GetValue()};
 
         size_t illegalStrPos{0};
-        while ((illegalStrPos = comments.find("/*")) != std::string::npos) comments.erase(illegalStrPos, 2);
-        while ((illegalStrPos = comments.find("*/")) != std::string::npos) comments.erase(illegalStrPos, 2);
-        while ((illegalStrPos = comments.find("//")) != std::string::npos) comments.erase(illegalStrPos, 2);
+        while ((illegalStrPos = comments.find("/*")) != string::npos) comments.erase(illegalStrPos, 2);
+        while ((illegalStrPos = comments.find("*/")) != string::npos) comments.erase(illegalStrPos, 2);
+        while ((illegalStrPos = comments.find("//")) != string::npos) comments.erase(illegalStrPos, 2);
 
         auto& selectedBladeArray{mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()]};
         auto& selectedPreset{selectedBladeArray.presets[presetList->GetSelection()]};

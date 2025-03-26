@@ -175,11 +175,11 @@ void MainMenu::bindEvents() {
         wxSetCursor(wxCURSOR_WAIT);
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
-        auto configPath{Paths::configs() / (addDialog.configName + ".h")};
+        auto configPath{Paths::configs() / (addDialog.configName + ".h").ToStdWstring()};
         if (not addDialog.existingPath.empty()) {
-            fs::copy(addDialog.existingPath, configPath);
+            fs::copy(addDialog.existingPath.ToStdWstring(), configPath);
         } else {
-            std::ofstream{configPath}.flush();
+            std::wofstream{configPath}.flush();
         }
 
         update();
@@ -319,7 +319,7 @@ void MainMenu::update() const {
 
     auto configSelected = configSelect->entry()->GetStringSelection() != "Select Config...";
     auto boardSelected = boardSelect->entry()->GetStringSelection() != "Select Board...";
-    auto recoverySelected = boardSelect->entry()->GetStringSelection().find("BOOTLOADER") != std::string::npos;
+    auto recoverySelected = boardSelect->entry()->GetStringSelection().find("BOOTLOADER") != string::npos;
 
     applyButton->Enable(configSelected && boardSelected);
     editConfig->Enable(configSelected);
@@ -337,9 +337,9 @@ void MainMenu::removeEditor(EditorWindow *editor) {
     }
 }
 
-EditorWindow *MainMenu::generateEditor(const std::string& configName) {
+EditorWindow *MainMenu::generateEditor(const string& configName) {
     auto *newEditor{new EditorWindow(configName, this)};
-    if (not Configuration::readConfig(Paths::configs() / (configName + ".h"), newEditor)) {
+    if (not Configuration::readConfig(Paths::configs() / (configName + ".h").ToStdWstring(), newEditor)) {
         PCUI::showMessage("Error reading configuration file!", "Config Error", wxOK | wxCENTER, this);
         newEditor->Destroy();
         return nullptr;

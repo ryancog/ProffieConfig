@@ -22,26 +22,27 @@ struct hash<vector<string>> {
     size_t operator()(const vector<string>& vector) const {
         size_t hash = 0;
         for (const auto& string : vector) {
-            hash ^= std::hash<std::string>{}(string) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+            hash ^= std::hash<wxString>{}(string) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
         }
         return hash;
     }
 };
 
-}
+} // namespace std
 
 class PropFile : public wxPanel {
 public:
-    ~PropFile();
+    PropFile() = delete;
+    ~PropFile() override;
     struct Setting;
-    typedef std::unordered_map<string, Setting> SettingMap;
+    using SettingMap = std::unordered_map<string, Setting>;
     struct Button;
     struct ButtonState {
         ButtonState(string stateName, vector<Button> buttons);
         string stateName;
         vector<Button> buttons;
     };
-    typedef vector<ButtonState> ButtonControls;
+    using ButtonControls = vector<ButtonState>;
     struct MappedError {
         MappedError(string arduinoError, string displayError);
         string arduinoError;
@@ -50,26 +51,25 @@ public:
 
     static PropFile* createPropConfig(const string&, wxWindow*, bool builtin = false);
 
-    string getName() const;
-    string getFileName() const;
-    string getInfo() const;
+    [[nodiscard]] string getName() const;
+    [[nodiscard]] string getFileName() const;
+    [[nodiscard]] string getInfo() const;
     SettingMap* getSettings();
     const array<ButtonControls, 4>& getButtons();
     const vector<MappedError>& getMappedErrors();
 
 private:
-    PropFile() = delete;
     PropFile(wxWindow*);
 
-    string name{};
-    string fileName{};
-    string info{};
-    SettingMap* settings{nullptr};
-    array<ButtonControls, 4> buttons;
+    string mName;
+    string mFileName;
+    string mInfo;
+    SettingMap* mSettings{nullptr};
+    array<ButtonControls, 4> mButtons;
 
-    vector<MappedError> mappedErrors;
+    vector<MappedError> mMappedErrors;
 
-    wxBoxSizer* sizer{nullptr};
+    wxBoxSizer* mSizer{nullptr};
 
     void readSettings(const PConf::HashedData&, Log::Branch&);
     void readLayout(const PConf::Data&, Log::Branch&);
@@ -83,16 +83,16 @@ private:
 struct PropFile::Setting {
     void setValue(double) const;
     void enable(bool = true) const;
-    string getOutput() const;
-    bool checkRequiredSatisfied(const std::unordered_map<string, Setting>&) const;
+    [[nodiscard]] string getOutput() const;
+    [[nodiscard]] bool checkRequiredSatisfied(const std::unordered_map<string, Setting>&) const;
 
-    string name{};
-    string define{};
-    string description{};
+    string name;
+    string define;
+    string description;
 
-    vector<string> required{};
-    vector<string> requiredAny{};
-    vector<string> disables{};
+    vector<string> required;
+    vector<string> requiredAny;
+    vector<string> disables;
     bool disabled{false};
 
     double min{0};
@@ -100,7 +100,7 @@ struct PropFile::Setting {
     double increment{1};
     double defaultVal{0};
 
-    vector<string> others{};
+    vector<string> others;
     bool isDefault{false};
     bool shouldOutput{true};
 
@@ -116,8 +116,8 @@ struct PropFile::Setting {
 };
 
 struct PropFile::Button {
-    string name{};
+    string name;
 
     // <Predicate, Description>
-    std::unordered_map<string, string> descriptions{};
+    std::unordered_map<string, string> descriptions;
 };

@@ -27,8 +27,9 @@
 #include <functional>
 #include <list>
 #include <optional>
-#include <string>
 #include <vector>
+
+#include <wx/string.h>
 
 // "Standard" types for ProffieConfig
 
@@ -58,8 +59,7 @@ using std::function;
 using std::list;
 using std::nullopt;
 using std::optional;
-using std::string;
-using std::string_view;
+using string = wxString;
 using std::vector;
 namespace fs = std::filesystem;
 using filepath = fs::path;

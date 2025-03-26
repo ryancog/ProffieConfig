@@ -19,7 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string>
+#include <utility>
+
+#include <wx/string.h>
 
 #include "private/export.h"
 #include "severity.h"
@@ -39,17 +41,17 @@ public:
 
     [[nodiscard]] virtual Type getType() const { return Type::MESSAGE; }
 
-    [[nodiscard]] std::string formatted() const;
-    const std::string message;
+    [[nodiscard]] wxString formatted() const;
+    const wxString message;
     const Severity severity;
-    const std::string logTag;
+    const wxString logTag;
 
 protected:
     friend class Logger;
     friend class Context;
-    Message(std::string message, Severity severity, Logger *parent);
-    Message(std::string message, Severity severity, std::string logTag) :
-        message(std::move(message)), severity(severity), logTag(logTag) {}
+    Message(wxString message, Severity severity, Logger *parent);
+    Message(wxString message, Severity severity, wxString logTag) :
+        message(std::move(message)), severity(severity), logTag(std::move(logTag)) {}
 };
 
 } // namespace Log

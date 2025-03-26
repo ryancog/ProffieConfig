@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <string>
 #include <system_error>
 
 #include <wx/filedlg.h>
@@ -30,42 +31,42 @@
 
 # define ERR(msg) \
     logger.error(msg); \
-    Misc::MessageBoxEvent* msgEvent = new Misc::MessageBoxEvent(wxID_ANY, std::string(msg) + "\n\nConfiguration not saved.", "Configuration Error", wxOK | wxCENTER | wxICON_ERROR); \
+    Misc::MessageBoxEvent* msgEvent = new Misc::MessageBoxEvent(wxID_ANY, string(msg) + "\n\nConfiguration not saved.", "Configuration Error", wxOK | wxCENTER | wxICON_ERROR); \
     wxQueueEvent(editor, msgEvent); \
     return false;
 
 namespace Configuration {
-    constexpr string_view INJECTION_STR{"injection"};
+    constexpr std::string_view INJECTION_STR{"injection"};
 
     bool runPreChecks(EditorWindow *, Log::Branch&);
 
-    void tryAddInjection(const std::string& buffer, EditorWindow *);
+    void tryAddInjection(const string& buffer, EditorWindow *);
 
-    void outputConfigTop(std::ofstream&, const EditorWindow *);
-    void outputConfigTopGeneral(std::ofstream&, const EditorWindow *);
-    void outputConfigTopCustom(std::ofstream&, const EditorWindow *);
-    void outputConfigTopBladeAwareness(std::ofstream&, const EditorWindow *);
-    void outputConfigTopPropSpecific(std::ofstream&, const EditorWindow *);
-    void outputConfigTopSA22C(std::ofstream&, const EditorWindow *);
-    void outputConfigTopFett263(std::ofstream&, const EditorWindow *);
-    void outputConfigTopBC(std::ofstream&, const EditorWindow *);
-    void outputConfigTopCaiwyn(std::ofstream&, const EditorWindow *);
-    void outputConfigProp(std::ofstream&, const EditorWindow *);
-    void outputConfigPresets(std::ofstream&, const EditorWindow *);
-    void outputConfigPresetsStyles(std::ofstream&, const EditorWindow *);
-    void outputConfigPresetsBlades(std::ofstream&, const EditorWindow *);
-    void genWS281X(std::ofstream&, const BladesPage::BladeConfig&);
-    void genSubBlades(std::ofstream&, const BladesPage::BladeConfig&);
-    void outputConfigButtons(std::ofstream&, const EditorWindow *);
+    void outputConfigTop(std::wofstream&, const EditorWindow *);
+    void outputConfigTopGeneral(std::wofstream&, const EditorWindow *);
+    void outputConfigTopCustom(std::wofstream&, const EditorWindow *);
+    void outputConfigTopBladeAwareness(std::wofstream&, const EditorWindow *);
+    void outputConfigTopPropSpecific(std::wofstream&, const EditorWindow *);
+    void outputConfigTopSA22C(std::wofstream&, const EditorWindow *);
+    void outputConfigTopFett263(std::wofstream&, const EditorWindow *);
+    void outputConfigTopBC(std::wofstream&, const EditorWindow *);
+    void outputConfigTopCaiwyn(std::wofstream&, const EditorWindow *);
+    void outputConfigProp(std::wofstream&, const EditorWindow *);
+    void outputConfigPresets(std::wofstream&, const EditorWindow *);
+    void outputConfigPresetsStyles(std::wofstream&, const EditorWindow *);
+    void outputConfigPresetsBlades(std::wofstream&, const EditorWindow *);
+    void genWS281X(std::wofstream&, const BladesPage::BladeConfig&);
+    void genSubBlades(std::wofstream&, const BladesPage::BladeConfig&);
+    void outputConfigButtons(std::wofstream&, const EditorWindow *);
 
-    void readConfigTop(std::ifstream&, EditorWindow*);
-    void readConfigProp(std::ifstream&, EditorWindow*);
-    void readConfigPresets(std::ifstream&, EditorWindow*);
-    void readConfigStyles(std::ifstream&, EditorWindow*);
-    void readPresetArray(std::ifstream&, EditorWindow*);
-    void readBladeArray(std::ifstream&, EditorWindow*);
+    void readConfigTop(std::wifstream&, EditorWindow*);
+    void readConfigProp(std::wifstream&, EditorWindow*);
+    void readConfigPresets(std::wifstream&, EditorWindow*);
+    void readConfigStyles(std::wifstream&, EditorWindow*);
+    void readPresetArray(std::wifstream&, EditorWindow*);
+    void readBladeArray(std::wifstream&, EditorWindow*);
     void setCustomDefines(EditorWindow* editor);
-}
+} // namespace Configuration
 
 
 bool Configuration::outputConfig(const filepath& filePath, EditorWindow *editor, Log::Branch *lBranch, bool fullOutput) {
@@ -90,7 +91,7 @@ bool Configuration::outputConfig(const filepath& filePath, EditorWindow *editor,
         }
     }
 
-    std::ofstream configOutput(filePath);
+    std::wofstream configOutput(filePath);
     if (not configOutput.is_open()) {
         ERR("Could not open config file for output.");
     }
@@ -112,7 +113,7 @@ bool Configuration::outputConfig(const filepath& filePath, EditorWindow *editor,
     return true;
 }
 bool Configuration::outputConfig(EditorWindow *editor) {
-    return Configuration::outputConfig(Paths::configs() / (string{editor->getOpenConfig()} + ".h"), editor);
+    return Configuration::outputConfig(Paths::configs() / (string{editor->getOpenConfig()} + ".h").ToStdWstring(), editor);
 }
 
 bool Configuration::exportConfig(EditorWindow *editor) {
@@ -120,10 +121,10 @@ bool Configuration::exportConfig(EditorWindow *editor) {
 
     if (configLocation.ShowModal() == wxID_CANCEL) return false; // User Closed
 
-    return Configuration::outputConfig(configLocation.GetPath().ToStdString(), editor);
+    return Configuration::outputConfig(configLocation.GetPath().ToStdWstring(), editor);
 }
 
-void Configuration::outputConfigTop(std::ofstream& configOutput, const EditorWindow *editor) {
+void Configuration::outputConfigTop(std::wofstream& configOutput, const EditorWindow *editor) {
     configOutput << "#ifdef CONFIG_TOP" << std::endl;
     outputConfigTopGeneral(configOutput, editor);
     outputConfigTopPropSpecific(configOutput, editor);
@@ -132,7 +133,7 @@ void Configuration::outputConfigTop(std::ofstream& configOutput, const EditorWin
 
 }
 
-void Configuration::outputConfigTopGeneral(std::ofstream& configOutput, const EditorWindow *editor) {
+void Configuration::outputConfigTopGeneral(std::wofstream& configOutput, const EditorWindow *editor) {
     if (editor->generalPage->massStorage->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_MASS_STORAGE" << std::endl;
     if (editor->generalPage->webUSB->GetValue()) configOutput << "//PROFFIECONFIG ENABLE_WEBUSB" << std::endl;
 
@@ -150,8 +151,8 @@ void Configuration::outputConfigTopGeneral(std::ofstream& configOutput, const Ed
     }
 }
 
-void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput, const EditorWindow *editor) {
-    auto selectedProp = editor->propsPage->getSelectedProp();
+void Configuration::outputConfigTopPropSpecific(std::wofstream& configOutput, const EditorWindow *editor) {
+    auto *selectedProp{editor->propsPage->getSelectedProp()};
     if (selectedProp == nullptr) return;
 
     for (const auto& [ name, setting ] : *selectedProp->getSettings()) {
@@ -166,14 +167,14 @@ void Configuration::outputConfigTopPropSpecific(std::ofstream& configOutput, con
     }
 }
 
-void Configuration::outputConfigTopCustom(std::ofstream& configOutput, const EditorWindow *editor) {
+void Configuration::outputConfigTopCustom(std::wofstream& configOutput, const EditorWindow *editor) {
     for (const auto& [ name, value ] : editor->generalPage->customOptDlg->getCustomDefines()) {
         if (!name.empty()) configOutput << "#define " << name << " " << value << std::endl;
     }
 }
 
-void Configuration::outputConfigProp(std::ofstream& configOutput, const EditorWindow *editor) {
-    auto selectedProp = editor->propsPage->getSelectedProp();
+void Configuration::outputConfigProp(std::wofstream& configOutput, const EditorWindow *editor) {
+    auto *selectedProp{editor->propsPage->getSelectedProp()};
     if (selectedProp == nullptr) return;
 
     configOutput << "#ifdef CONFIG_PROP" << std::endl;
@@ -181,10 +182,10 @@ void Configuration::outputConfigProp(std::ofstream& configOutput, const EditorWi
     configOutput << "#endif" << std:: endl << std::endl; // CONFIG_PROP
 }
 
-void Configuration::outputConfigPresets(std::ofstream& configOutput, const EditorWindow *editor) {
+void Configuration::outputConfigPresets(std::wofstream& configOutput, const EditorWindow *editor) {
     configOutput << "#ifdef CONFIG_PRESETS\n" << std::flush;
     for (const auto& injection : editor->presetsPage->injections) {
-        configOutput << "#include \"" << INJECTION_STR << '/' << injection << '"' << std::endl;
+        configOutput << "#include \"" << INJECTION_STR.data() << '/' << injection << '"' << std::endl;
     }
     if (not editor->presetsPage->injections.empty()) configOutput << std::endl;
     outputConfigPresetsStyles(configOutput, editor);
@@ -192,15 +193,15 @@ void Configuration::outputConfigPresets(std::ofstream& configOutput, const Edito
     configOutput << "#endif\n\n" << std::flush;
 }
 
-void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput, const EditorWindow *editor) {
+void Configuration::outputConfigPresetsStyles(std::wofstream& configOutput, const EditorWindow *editor) {
     for (const BladeArrayDlg::BladeArray& bladeArray : editor->bladesPage->bladeArrayDlg->bladeArrays) {
         configOutput << "Preset " << bladeArray.name << "[] = {\n";
         for (const PresetsPage::PresetConfig& preset : bladeArray.presets) {
             configOutput << "\t{ \"" << preset.dirs << "\", \"" << preset.track << "\",\n";
             if (preset.styles.size() > 0) {
                 for (const auto& style : preset.styles) {
-                    std::string line;
-                    std::istringstream commentStream(style.comment.ToStdString());
+                    std::wstring line;
+                    std::wistringstream commentStream(style.comment.ToStdWstring());
 
                     if (not style.comment.empty()) {
                         configOutput << "\t\t/*\n";
@@ -214,14 +215,15 @@ void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput, const
                         configOutput << "\t\t */\n";
                     }
 
-                    std::istringstream styleStream(style.style.ToStdString());
+                    std::wistringstream styleStream(style.style.ToStdWstring());
                     while (!false) {
                         std::getline(styleStream, line);
                         configOutput << "\t\t" << line;
                         if (styleStream.eof()) {
                             configOutput << ",\n";
                             break;
-                        } else configOutput << '\n';
+                        } 
+                        configOutput << '\n';
                     }
                 }
             } else configOutput << "\t\t,\n";
@@ -235,10 +237,10 @@ void Configuration::outputConfigPresetsStyles(std::ofstream& configOutput, const
     }
 }
 
-void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput, const EditorWindow *editor) {
+void Configuration::outputConfigPresetsBlades(std::wofstream& configOutput, const EditorWindow *editor) {
     configOutput << "BladeConfig blades[] = {" << std::endl;
     for (const BladeArrayDlg::BladeArray& bladeArray : editor->bladesPage->bladeArrayDlg->bladeArrays) {
-        configOutput << "\t{ " << (bladeArray.name == "no_blade" ? "NO_BLADE" : std::to_string(bladeArray.value)) << "," << std::endl;
+        configOutput << "\t{ " << (bladeArray.name == "no_blade" ? L"NO_BLADE" : std::to_wstring(bladeArray.value)) << "," << std::endl;
         for (const BladesPage::BladeConfig& blade : bladeArray.blades) {
             if (blade.type == BD_PIXELRGB || blade.type == BD_PIXELRGBW) {
                 if (blade.isSubBlade) genSubBlades(configOutput, blade);
@@ -296,7 +298,7 @@ void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput, const
     configOutput << "};" << std::endl;
 }
 
-void Configuration::genWS281X(std::ofstream& configOutput, const BladesPage::BladeConfig& blade) {
+void Configuration::genWS281X(std::wofstream& configOutput, const BladesPage::BladeConfig& blade) {
     wxString bladePin = blade.dataPin;
     wxString bladeColor = blade.type == BD_PIXELRGB || blade.useRGBWithWhite ? blade.colorType : [=](wxString colorType) -> wxString { colorType.replace(colorType.find("W"), 1, "w"); return colorType; }(blade.colorType);
 
@@ -307,7 +309,7 @@ void Configuration::genWS281X(std::ofstream& configOutput, const BladesPage::Bla
     configOutput << ">>()";
 };
 
-void Configuration::genSubBlades(std::ofstream& configOutput, const BladesPage::BladeConfig& blade) {
+void Configuration::genSubBlades(std::wofstream& configOutput, const BladesPage::BladeConfig& blade) {
     int32_t subNum{0};
     for (const auto& subBlade : blade.subBlades) {
         if (blade.useStride) {
@@ -337,7 +339,7 @@ void Configuration::genSubBlades(std::ofstream& configOutput, const BladesPage::
     }
 }
 
-void Configuration::outputConfigButtons(std::ofstream& configOutput, const EditorWindow *editor) {
+void Configuration::outputConfigButtons(std::wofstream& configOutput, const EditorWindow *editor) {
     configOutput << "#ifdef CONFIG_BUTTONS" << std::endl;
     configOutput << "Button PowerButton(BUTTON_POWER, powerButtonPin, \"pow\");" << std::endl;
     if (editor->generalPage->buttons->entry()->GetValue() >= 2) configOutput << "Button AuxButton(BUTTON_AUX, auxPin, \"aux\");" << std::endl;
@@ -346,32 +348,32 @@ void Configuration::outputConfigButtons(std::ofstream& configOutput, const Edito
 }
 
 bool Configuration::readConfig(const filepath& filePath, EditorWindow* editor) {
-    std::ifstream file(filePath);
+    std::wifstream file(filePath);
     if (!file.is_open()) return false;
 
     try {
-        std::string buffer;
+        std::wstring buffer;
         while (!file.eof()) {
             file >> buffer;
-            if (buffer == "//") {
+            if (buffer == L"//") {
                 getline(file, buffer);
                 continue;
             }
-            if (std::strstr(buffer.data(), "/*")) {
+            if (wxStrstr(buffer, "/*")) {
                 while (!file.eof()) {
-                    if (std::strstr(buffer.data(), "*/")) break;
+                    if (wxStrstr(buffer, "*/")) break;
                     file >> buffer;
                 }
                 continue;
             }
-            if (buffer == "#ifdef") {
+            if (buffer == L"#ifdef") {
                 file >> buffer;
-                if (buffer == "CONFIG_TOP") Configuration::readConfigTop(file, editor);
-                if (buffer == "CONFIG_PROP") Configuration::readConfigProp(file, editor);
-                if (buffer == "CONFIG_PRESETS") Configuration::readConfigPresets(file, editor);
-                if (buffer == "CONFIG_STYLES") Configuration::readConfigStyles(file, editor);
+                if (buffer == L"CONFIG_TOP") Configuration::readConfigTop(file, editor);
+                if (buffer == L"CONFIG_PROP") Configuration::readConfigProp(file, editor);
+                if (buffer == L"CONFIG_PRESETS") Configuration::readConfigPresets(file, editor);
+                if (buffer == L"CONFIG_STYLES") Configuration::readConfigStyles(file, editor);
             }
-            if (buffer == "#include") {
+            if (buffer == L"#include") {
                 getline(file, buffer);
                 tryAddInjection(buffer, editor);
             }
@@ -380,7 +382,7 @@ bool Configuration::readConfig(const filepath& filePath, EditorWindow* editor) {
         setCustomDefines(editor);
 
     } catch (std::exception& e) {
-        std::string errorMessage = "There was an error parsing config, please ensure it is valid:\n\n";
+        string errorMessage = "There was an error parsing config, please ensure it is valid:\n\n";
         errorMessage += e.what();
 
         std::cerr << errorMessage << std::endl;
@@ -396,17 +398,17 @@ bool Configuration::readConfig(const filepath& filePath, EditorWindow* editor) {
     return true;
 }
 
-void Configuration::tryAddInjection(const std::string& buffer, EditorWindow *editor) {
+void Configuration::tryAddInjection(const string& buffer, EditorWindow *editor) {
     auto& logger{Log::Context::getGlobal().createLogger("Configuration::tryAddInjection()")};
 
     auto strStart{buffer.find('"')};
-    if (strStart == std::string::npos) return;
+    if (strStart == string::npos) return;
     auto strEnd{buffer.find('"', strStart + 1)};
-    if (strEnd == std::string::npos) return;
+    if (strEnd == string::npos) return;
 
-    auto injectionPos{buffer.find(INJECTION_STR, strStart + 1)};
-    std::string injectionFile;
-    if (injectionPos != std::string::npos) {
+    auto injectionPos{buffer.find(INJECTION_STR.data(), strStart + 1)};
+    string injectionFile;
+    if (injectionPos != string::npos) {
         logger.verbose("Injection string found...");
         injectionFile = buffer.substr(injectionPos + INJECTION_STR.length() + 1, strEnd - injectionPos - INJECTION_STR.length() - 1);
     } else {
@@ -415,7 +417,7 @@ void Configuration::tryAddInjection(const std::string& buffer, EditorWindow *edi
     }
 
     logger.debug("Injection file: " + injectionFile); 
-    if (injectionFile.find("../") != std::string::npos or injectionFile.find("/..") != std::string::npos) {
+    if (injectionFile.find("../") != string::npos or injectionFile.find("/..") != string::npos) {
         PCUI::showMessage(
             "Injection file \"" + injectionFile + "\" has an invalid name and cannot be registered."
             "\n You may add a substitute after import.", 
@@ -423,7 +425,7 @@ void Configuration::tryAddInjection(const std::string& buffer, EditorWindow *edi
         );
         return;
     }
-    auto filePath{Paths::injections() / injectionFile};
+    auto filePath{Paths::injections() / injectionFile.ToStdWstring()};
     std::error_code err;
     if (not fs::exists(filePath, err)) {
         if (wxYES != PCUI::showMessage("Injection file \"" + injectionFile + "\" has not been registered.\nWould you like to add the injection file now?", "Unknown Injection Encountered", wxYES_NO | wxYES_DEFAULT)) {
@@ -468,43 +470,44 @@ bool Configuration::importConfig(EditorWindow* editor) {
     return Configuration::readConfig(configLocation.GetPath().ToStdString(), editor);
 }
 
-void Configuration::readConfigTop(std::ifstream& file, EditorWindow* editor) {
-    std::string element;
+void Configuration::readConfigTop(std::wifstream& file, EditorWindow* editor) {
+    std::wstring element;
     editor->settings->readDefines.clear();
-    while (!file.eof() && element != "#endif") {
+    while (!file.eof() && element != L"#endif") {
         file >> element;
-        if (element == "//") {
+        if (element == L"//") {
             getline(file, element);
             continue;
         }
-        if (std::strstr(element.data(), "/*")) {
+        if (wxStrstr(element, "/*")) {
             while (!file.eof()) {
-                if (std::strstr(element.data(), "*/")) break;
+                if (wxStrstr(element, "*/")) break;
                 file >> element;
             }
             continue;
         }
-        if (element == "#define" && !file.eof()) {
+        if (element == L"#define" && !file.eof()) {
             getline(file, element);
-            editor->settings->readDefines.push_back(element);
-        } else if (element == "const" && !file.eof()) {
+            editor->settings->readDefines.emplace_back(element);
+        } else if (element == L"const" && !file.eof()) {
             getline(file, element);
-            (void)std::strtok(element.data(), "="); // unsigned int maxLedsPerStrip =
-            element = std::strtok(nullptr, " ;");
-            editor->generalPage->maxLEDs->entry()->SetValue(std::stoi(element));
-        } else if (element == "#include" && !file.eof()) {
+
+            auto equalPos{element.find('=')};
+            if (equalPos == string::npos) continue;
+            editor->generalPage->maxLEDs->entry()->SetValue(std::stoi(element.substr(equalPos + 1)));
+        } else if (element == L"#include" && !file.eof()) {
             file >> element;
-            if (element.find("v1") != std::string::npos) {
+            if (element.find(L"v1") != string::npos) {
                 editor->generalPage->board->entry()->SetStringSelection(PROFFIEBOARD[Arduino::PROFFIEBOARDV1].first);
-            } else if (element.find("v2") != std::string::npos) {
+            } else if (element.find(L"v2") != string::npos) {
                 editor->generalPage->board->entry()->SetStringSelection(PROFFIEBOARD[Arduino::PROFFIEBOARDV2].first);
-            } else if (element.find("v3") != std::string::npos) {
+            } else if (element.find(L"v3") != string::npos) {
                 editor->generalPage->board->entry()->SetStringSelection(PROFFIEBOARD[Arduino::PROFFIEBOARDV3].first);
             }
-        } else if (element == "//PROFFIECONFIG") {
+        } else if (element == L"//PROFFIECONFIG") {
             file >> element;
-            if (element == "ENABLE_MASS_STORAGE") editor->generalPage->massStorage->SetValue(true);
-            if (element == "ENABLE_WEBUSB") editor->generalPage->webUSB->SetValue(true);
+            if (element == L"ENABLE_MASS_STORAGE") editor->generalPage->massStorage->SetValue(true);
+            if (element == L"ENABLE_WEBUSB") editor->generalPage->webUSB->SetValue(true);
         }
     }
     editor->settings->parseDefines(editor->settings->readDefines);
@@ -517,17 +520,17 @@ void Configuration::setCustomDefines(EditorWindow* editor) {
     }
 }
 
-void Configuration::readConfigProp(std::ifstream& file, EditorWindow* editor) {
-    std::string element;
-    while (!file.eof() && element != "#endif") {
+void Configuration::readConfigProp(std::wifstream& file, EditorWindow* editor) {
+    std::wstring element;
+    while (!file.eof() && element != L"#endif") {
         file >> element;
         for (const auto& prop : editor->propsPage->getLoadedProps()) {
             auto *propSettings = prop->getSettings();
-            if (element.find(prop->getFileName()) != std::string::npos) {
+            if (element.find(prop->getFileName()) != string::npos) {
                 editor->propsPage->updateSelectedProp(prop->getName());
                 for (auto define = editor->settings->readDefines.begin(); define < editor->settings->readDefines.end();) {
-                    std::istringstream defineStream(*define);
-                    std::string defineName{};
+                    std::wistringstream defineStream(define->ToStdWstring());
+                    std::wstring defineName{};
                     double value{0};
 
                     defineStream >> defineName;
@@ -538,9 +541,9 @@ void Configuration::readConfigProp(std::ifstream& file, EditorWindow* editor) {
                     }
 
                     if (
-                                    key->second.type == PropFile::Setting::SettingType::TOGGLE ||
-                                    key->second.type == PropFile::Setting::SettingType::OPTION
-                                    ) {
+                            key->second.type == PropFile::Setting::SettingType::TOGGLE ||
+                            key->second.type == PropFile::Setting::SettingType::OPTION
+                       ) {
                         key->second.setValue(true);
                     } else {
                         defineStream >> value;
@@ -553,33 +556,33 @@ void Configuration::readConfigProp(std::ifstream& file, EditorWindow* editor) {
         }
     }
 }
-void Configuration::readConfigPresets(std::ifstream& file, EditorWindow* editor) {
+void Configuration::readConfigPresets(std::wifstream& file, EditorWindow* editor) {
     editor->bladesPage->bladeArrayDlg->bladeArrays.clear();
-    std::string element;
-    while (!file.eof() && element != "#endif") {
+    std::wstring element;
+    while (!file.eof() && element != L"#endif") {
         file >> element;
-        if (element.find("//") == 0) {
+        if (element.find(L"//") == 0) {
             getline(file, element);
             continue;
         }
-        if (std::strstr(element.data(), "/*")) {
+        if (wxStrstr(element, "/*")) {
             while (!file.eof()) {
-                if (std::strstr(element.data(), "*/")) break;
+                if (wxStrstr(element, "*/")) break;
                 file >> element;
             }
             continue;
         }
-        if (element == "Preset") readPresetArray(file, editor);
-        if (element == "BladeConfig") readBladeArray(file, editor);
-        if (element == "#include") {
+        if (element == L"Preset") readPresetArray(file, editor);
+        if (element == L"BladeConfig") readBladeArray(file, editor);
+        if (element == L"#include") {
             getline(file, element);
             tryAddInjection(element, editor);
         }
     }
 }
 
-void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) {
-    char chr{0};
+void Configuration::readConfigStyles(std::wifstream& file, EditorWindow* editor) {
+    int32 chr{0};
     enum {
         NONE,
         STYLE,
@@ -588,10 +591,10 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
         LONG_COMMENT,
     } reading{NONE}, prevReading{NONE};
 
-    std::string readHistory;
-    std::string commentString;
-    std::string styleString;
-    std::string styleName;
+    string readHistory;
+    string commentString;
+    string styleString;
+    string styleName;
 
     while (chr != '}' and not file.eof() and not file.bad()) {
         chr = file.get();
@@ -607,7 +610,8 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
                 reading = LONG_COMMENT;
                 file.get();
                 continue;
-            } else if (file.peek() == '/') {
+            } 
+            if (file.peek() == '/') {
                 prevReading = reading;
                 reading = LINE_COMMENT;
                 file.get();
@@ -618,9 +622,10 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
         if (reading != LINE_COMMENT and reading != LONG_COMMENT) {
             if (chr == '#') {
                 const auto initPos{file.tellg()};
-                std::array<char, 5> checkArray;
-                file.read(checkArray.data(), checkArray.size());
-                if (0 == strncmp(checkArray.data(), "endif", checkArray.size())) {
+                std::array<wchar_t, 6> checkArray;
+                file.read(checkArray.data(), checkArray.size() - 1);
+                checkArray.back() = 0;
+                if (string{checkArray.data()} == L"endif") {
                     return;
                 }
                 file.seekg(initPos);
@@ -633,13 +638,13 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
             const auto equalPos{readHistory.rfind('=')};
 
             if (
-                            equalPos != std::string::npos and
-                            usingPos != std::string::npos and
+                            equalPos != string::npos and
+                            usingPos != string::npos and
                             usingPos < equalPos
                             ) {
                 reading = STYLE;
                 readHistory.clear();
-            } else if (usingPos != std::string::npos) {
+            } else if (usingPos != string::npos) {
                 reading = STYLE_NAME;
             }
         } else if (reading == LINE_COMMENT) {
@@ -668,11 +673,11 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
                         for (auto& [ comment, style ] : preset.styles) {
                             for (;;) { // Just because I can lol, another for loop
                                 const auto usingStylePos{style.find(styleName)};
-                                if (usingStylePos == std::string::npos) break;
+                                if (usingStylePos == string::npos) break;
 
                                 style.erase(usingStylePos, styleName.length());
                                 style.insert(usingStylePos, styleString);
-                                if (comment.find(commentString) == std::string::npos) {
+                                if (comment.find(commentString) == string::npos) {
                                     comment += '\n';
                                     comment += commentString;
                                 }
@@ -701,25 +706,25 @@ void Configuration::readConfigStyles(std::ifstream& file, EditorWindow* editor) 
     }
 }
 
-void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
+void Configuration::readPresetArray(std::wifstream& file, EditorWindow* editor) {
     editor->bladesPage->bladeArrayDlg->bladeArrays.emplace_back();
     BladeArrayDlg::BladeArray& bladeArray = editor->bladesPage->bladeArrayDlg->bladeArrays.at(editor->bladesPage->bladeArrayDlg->bladeArrays.size() - 1);
 
-    std::string element{};
+    std::wstring element{};
     file >> element;
-    bladeArray.name.assign(element.substr(0, element.find_first_of("[]")));
+    bladeArray.name.assign(element.substr(0, element.find_first_of(L"[]")));
 
-    char chr;
+    int32 chr{};
     element.clear();
     do {
         chr = file.get();
-        element += chr;
+        element += static_cast<wchar_t>(chr);
         if (
-                        file.eof() or
-                        file.bad() or
-                        element.rfind("#endif") != std::string::npos or
-                        element.rfind("};") != std::string::npos
-                        ) {
+                file.eof() or
+                file.bad() or
+                element.rfind(L"#endif") != string::npos or
+                element.rfind(L"};") != string::npos
+           ) {
             return;
         }
     } while (chr != '{');
@@ -754,7 +759,8 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                         reading = LONG_COMMENT;
                         file.get();
                         continue;
-                    } else if (file.peek() == '/') {
+                    } 
+                    if (file.peek() == '/') {
                         prevReading = reading;
                         reading = LINE_COMMENT;
                         file.get();
@@ -763,9 +769,10 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                 }
                 if (chr == '#') {
                     const auto initPos{file.tellg()};
-                    std::array<char, 5> checkArray;
-                    file.read(checkArray.data(), checkArray.size());
-                    if (0 == strncmp(checkArray.data(), "endif", checkArray.size())) {
+                    std::array<wchar_t, 6> checkArray;
+                    file.read(checkArray.data(), checkArray.size() - 1);
+                    checkArray.back() = 0;
+                    if (string{checkArray.data()} == "endif") {
                         return;
                     }
                     file.seekg(initPos);
@@ -774,9 +781,8 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                     if (file.peek() == ';') {
                         bladeArray.presets.pop_back();
                         return;
-                    } else {
-                        break;
-                    }
+                    } 
+                    break;
                 }
             }
 
@@ -821,8 +827,8 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
         // Read actual styles
         for (int32_t blade = 0; blade < editor->settings->numBlades; ++blade) {
             size_t styleDepth{0};
-            std::string styleString;
-            std::string commentString;
+            string styleString;
+            string commentString;
 
             while (not file.eof() and not file.bad()) {
                 chr = file.get();
@@ -839,7 +845,8 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                         reading = LONG_COMMENT;
                         file.get();
                         continue;
-                    } else if (file.peek() == '/') {
+                    } 
+                    if (file.peek() == '/') {
                         prevReading = reading;
                         reading = LINE_COMMENT;
                         file.get();
@@ -848,9 +855,10 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                 }
                 if (chr == '#') {
                     const auto initPos{file.tellg()};
-                    std::array<char, 5> checkArray;
-                    file.read(checkArray.data(), checkArray.size());
-                    if (0 == strncmp(checkArray.data(), "endif", checkArray.size())) {
+                    std::array<wchar_t, 6> checkArray;
+                    file.read(checkArray.data(), checkArray.size() - 1);
+                    checkArray.back() = 0;
+                    if (string{checkArray.data()} == "endif") {
                         return;
                     }
                     file.seekg(initPos);
@@ -859,9 +867,8 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                     if (file.peek() == ';') {
                         bladeArray.presets.pop_back();
                         return;
-                    } else {
-                        break;
                     }
+                    break;
                 }
 
                 if (reading == NONE) {
@@ -945,9 +952,9 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                 }
                 if (chr == '#') {
                     const auto initPos{file.tellg()};
-                    std::array<char, 5> checkArray;
-                    file.read(checkArray.data(), checkArray.size());
-                    if (0 == strncmp(checkArray.data(), "endif", checkArray.size())) {
+                    std::array<wchar_t, 6> checkArray;
+                    file.read(checkArray.data(), checkArray.size() - 1);
+                    if (string{checkArray.data()} == "endif") {
                         return;
                     }
                     file.seekg(initPos);
@@ -992,7 +999,7 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
     }
 }
 
-void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
+void Configuration::readBladeArray(std::wifstream& file, EditorWindow* editor) {
     enum {
         NONE,
         LINE_COMMENT,
@@ -1004,14 +1011,15 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
         BLADE_ENTRY,
         CONFIG_ARRAY,
     } reading{NONE}, prevReading{NONE};
-    char chr{};
+
+    int32 chr{};
 
     BladeArrayDlg::BladeArray bladeArray;
 
-    std::string buffer;
-    int32_t bladesRead{0};
+    string buffer;
+    int32 bladesRead{0};
 
-    std::vector<char> bladeSects{};
+    std::vector<wchar_t> bladeSects{};
 
     while (not file.eof() and not file.bad()) {
         chr = file.get();
@@ -1035,9 +1043,9 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
             }
             if (chr == '#') {
                 const auto initPos{file.tellg()};
-                std::array<char, 5> checkArray;
-                file.read(checkArray.data(), checkArray.size());
-                if (0 == strncmp(checkArray.data(), "endif", checkArray.size())) {
+                std::array<wchar_t, 6> checkArray;
+                file.read(checkArray.data(), checkArray.size() - 1);
+                if (string{checkArray.data()} == "endif") {
                     return;
                 }
                 file.seekg(initPos);
@@ -1074,7 +1082,8 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
         } else if (reading == ID_NUM) {
             if (chr == ',') {
                 trimWhiteSpace(buffer);
-                bladeArray.value = buffer == "NO_BLADE" ? 0 : std::stoi(buffer);
+                if (buffer == "NO_BLADE") bladeArray.value = 0;
+                else buffer.ToInt(&bladeArray.value);
                 buffer.clear();
                 reading = BLADE_ENTRY;
                 continue;
@@ -1095,22 +1104,24 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
 
                 bool subBlade{false};
                 if (buffer.find("SubBlade") == 0) {
-                    if (buffer.find("NULL") != std::string::npos or buffer.find("nullptr") != std::string::npos) { // Top Level SubBlade
+                    if (buffer.find("NULL") != string::npos or buffer.find("nullptr") != string::npos) { // Top Level SubBlade
                         bladeArray.blades.emplace_back();
                         bladeArray.blades.back().isSubBlade = true;
-                        if (buffer.find("WithStride") != std::string::npos) bladeArray.blades.back().useStride = true;
-                        if (buffer.find("ZZ") != std::string::npos) bladeArray.blades.back().useZigZag = true;
+                        if (buffer.find("WithStride") != string::npos) bladeArray.blades.back().useStride = true;
+                        if (buffer.find("ZZ") != string::npos) bladeArray.blades.back().useZigZag = true;
                     }
 
                     auto& blade{bladeArray.blades.back()};
                     buffer = buffer.substr(buffer.find('(') + 1);
 
                     auto paramEnd{buffer.find(',')};
-                    const auto num1{std::stoi(buffer.substr(0, paramEnd))};
+                    int32 num1{};
+                    buffer.substr(0, paramEnd).ToInt(&num1);
                     buffer = buffer.substr(paramEnd + 1);
 
                     paramEnd = buffer.find(',');
-                    const auto num2{std::stoi(buffer.substr(0, paramEnd))};
+                    int32 num2{};
+                    buffer.substr(0, paramEnd).ToInt(&num2);
                     buffer = buffer.substr(paramEnd + 1);
 
                     blade.subBlades.push_back({ static_cast<uint32_t>(num1), static_cast<uint32_t>(num2) });
@@ -1119,15 +1130,15 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
 
                 constexpr std::string_view WS281X_STR{"WS281XBladePtr"};
                 constexpr std::string_view SIMPLE_STR{"SimpleBladePtr"};
-                if (buffer.find(WS281X_STR) != std::string::npos) {
+                if (buffer.find(WS281X_STR.data()) != string::npos) {
                     if (not subBlade) bladeArray.blades.emplace_back();
                     auto& blade{bladeArray.blades.back()};
 
-                    buffer = buffer.substr(buffer.find(WS281X_STR) + WS281X_STR.length());
+                    buffer = buffer.substr(buffer.find(WS281X_STR.data()) + WS281X_STR.length());
                     buffer = buffer.substr(buffer.find('<') + 1);
 
                     auto paramEnd{buffer.find(',')};
-                    blade.numPixels = std::stoi(buffer.substr(0, paramEnd));
+                    buffer.substr(0, paramEnd).ToInt(&blade.numPixels);
                     buffer = buffer.substr(paramEnd + 1);
 
                     paramEnd = buffer.find(',');
@@ -1138,25 +1149,25 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
 
                     constexpr std::string_view COLOR8{"Color8"};
                     constexpr std::string_view NAMESPACE_SEPARATOR{"::"};
-                    buffer = buffer.substr(buffer.find(COLOR8) + COLOR8.length());
-                    buffer = buffer.substr(buffer.find(NAMESPACE_SEPARATOR) + NAMESPACE_SEPARATOR.length());
+                    buffer = buffer.substr(buffer.find(COLOR8.data()) + COLOR8.length());
+                    buffer = buffer.substr(buffer.find(NAMESPACE_SEPARATOR.data()) + NAMESPACE_SEPARATOR.length());
 
                     paramEnd = buffer.find(',');
                     auto colorStr{buffer.substr(0, paramEnd)};
                     trimWhiteSpace(colorStr);
 
-                    blade.useRGBWithWhite = colorStr.find('W') != std::string::npos;
-                    blade.type = (blade.useRGBWithWhite or colorStr.find('w') != std::string::npos) ? BD_PIXELRGBW : BD_PIXELRGB;
+                    blade.useRGBWithWhite = colorStr.find('W') != string::npos;
+                    blade.type = (blade.useRGBWithWhite or colorStr.find('w') != string::npos) ? BD_PIXELRGBW : BD_PIXELRGB;
                     blade.colorType.assign(colorStr);
 
                     constexpr std::string_view POWER_PINS{"PowerPINS"};
-                    buffer = buffer.substr(buffer.find(POWER_PINS) + POWER_PINS.length());
+                    buffer = buffer.substr(buffer.find(POWER_PINS.data()) + POWER_PINS.length());
                     buffer = buffer.substr(buffer.find('<') + 1);
 
                     while (!false) {
                         paramEnd = buffer.find(',');
-                        bool done{paramEnd == std::string::npos};
-                        if (paramEnd == std::string::npos) paramEnd = buffer.find('>');
+                        bool done{paramEnd == string::npos};
+                        if (paramEnd == string::npos) paramEnd = buffer.find('>');
 
                         auto pinStr{buffer.substr(0, paramEnd)};
                         trimWhiteSpace(pinStr);
@@ -1166,7 +1177,7 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
 
                         buffer = buffer.substr(paramEnd + 1);
                     }
-                } else if (buffer.find(SIMPLE_STR) != std::string::npos) {
+                } else if (buffer.find(SIMPLE_STR.data()) != string::npos) {
                     bladeArray.blades.emplace_back();
 
                     auto& blade{bladeArray.blades.back()};
@@ -1189,12 +1200,12 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
                         }
 
                         star = ledSel;
-                        if (ledSel & BladesPage::USES_RESISTANCE) resistance = std::stoi(paramStr.substr(ledEnd + 1));
+                        if (ledSel & BladesPage::USES_RESISTANCE) paramStr.substr(ledEnd + 1).ToInt(&resistance);
 
                         buffer = buffer.substr(paramEnd + 1);
                     }};
 
-                    buffer = buffer.substr(buffer.find(SIMPLE_STR) + SIMPLE_STR.length());
+                    buffer = buffer.substr(buffer.find(SIMPLE_STR.data()) + SIMPLE_STR.length());
                     buffer = buffer.substr(buffer.find('<') + 1);
 
                     setupStar(blade.Star1, blade.Star1Resistance);
@@ -1204,8 +1215,8 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
 
                     while (!false) {
                         auto paramEnd{buffer.find(',')};
-                        bool done{paramEnd == std::string::npos};
-                        if (paramEnd == std::string::npos) paramEnd = buffer.find('>');
+                        bool done{paramEnd == string::npos};
+                        if (paramEnd == string::npos) paramEnd = buffer.find('>');
 
                         auto pinStr{buffer.substr(0, paramEnd)};
                         trimWhiteSpace(pinStr);
@@ -1284,14 +1295,14 @@ bool Configuration::runPreChecks(EditorWindow *editor, Log::Branch& lBranch) {
     }
 
     auto getNumBlades{[](const BladeArrayDlg::BladeArray& array) {
-            int32_t numBlades = 0;
+            int32 numBlades{0};
             for (const BladesPage::BladeConfig& blade : array.blades) {
-                blade.isSubBlade ? numBlades += blade.subBlades.size() : numBlades++;
+                blade.isSubBlade ? numBlades += static_cast<int32>(blade.subBlades.size()) : numBlades++;
             }
             return numBlades;
         }};
     auto bladeArrayLengthsEqual{[&]() -> bool {
-            int32_t lastNumBlades = getNumBlades(editor->bladesPage->bladeArrayDlg->bladeArrays.at(0));
+            int32 lastNumBlades{getNumBlades(editor->bladesPage->bladeArrayDlg->bladeArrays.at(0))};
             for (const BladeArrayDlg::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) {
                 if (getNumBlades(array) != lastNumBlades) return false;
                 lastNumBlades = getNumBlades(array);
@@ -1316,13 +1327,14 @@ bool Configuration::runPreChecks(EditorWindow *editor, Log::Branch& lBranch) {
             if (blade.powerPins.size() != numBlades) {
                 auto bladeName{"Simple blade " + std::to_string(idx) + " in array \"" + bladeArray.name.ToStdString() + '"'};
                 auto numActiveLEDs{std::to_string(numBlades)};
-                ERR(bladeName + " with " + numActiveLEDs + " active LEDs should have " + numActiveLEDs + " power pins selected. (Has " + std::to_string(blade.powerPins.size()) + ')');
+                bladeName += " with " + numActiveLEDs + " active LEDs should have " += numActiveLEDs + " power pins selected. (Has " + std::to_string(blade.powerPins.size()) + ')';
+                ERR(bladeName);
             }
         }
         for (auto& preset : bladeArray.presets) {
             for (auto& [ comment, style ] : preset.styles) {
                 if (style.empty()) continue;
-                const auto errorString{"Malformed bladestyle in " + (preset.name.empty() ? "unnamed preset" : std::string("preset \"") + preset.name.ToStdString() + '"') + " in blade array \"" + bladeArray.name.ToStdString() + "\"\n\n"};
+                const auto errorString{"Malformed bladestyle in " + (preset.name.empty() ? "unnamed preset" : string("preset \"") + preset.name.ToStdString() + '"') + " in blade array \"" + bladeArray.name.ToStdString() + "\"\n\n"};
 
                 size_t depth{0};
                 for (const char chr : style) {
@@ -1348,6 +1360,6 @@ bool Configuration::runPreChecks(EditorWindow *editor, Log::Branch& lBranch) {
     return true;
 }
 
-const Configuration::MapPair& Configuration::findInVMap(const Configuration::VMap& map, const std::string& search) {
+const Configuration::MapPair& Configuration::findInVMap(const Configuration::VMap& map, const string& search) {
     return *std::find_if(map.begin(), map.end(), [&](const MapPair& pair) { return (pair.second == search || pair.first == search); });
 }

@@ -20,6 +20,7 @@
  */
 
 #include <map>
+#include <type_traits>
 
 #include <utils/types.h>
 #include <ui/message.h>
@@ -38,6 +39,9 @@ enum ItemType {
 struct Version {
     Version() = default;
 
+    Version(const std::string& str) : Version(std::string_view{str}) {}
+    Version(const std::wstring& str) : Version(std::wstring_view{str}) {}
+
     /**
      * Construct a Version from a string.
      *
@@ -46,7 +50,79 @@ struct Version {
      * - tag is a string unbroken by space
      * - major, minor, and bugfix are positive ints [0-255]
      */
-    Version(string_view);
+    template<typename CHAR_TYPE>
+    Version(std::basic_string_view<CHAR_TYPE> str) {
+        std::basic_string_view<CHAR_TYPE> convStr{str};
+        const CHAR_TYPE *const end{str.end()};
+
+        auto parseNum{[this, &convStr, &end]() -> uint8 {
+            if (convStr.data() >= end) {
+                err = Err::STR_EMPTY;
+                return 0;
+            }
+
+            CHAR_TYPE *parseEnd{};
+            int32 ret{};
+            if constexpr (std::is_same_v<CHAR_TYPE, char>) {
+                ret = strtol(convStr.data(), &parseEnd, 10);
+            } else if constexpr (std::is_same_v<CHAR_TYPE, wchar_t>) {
+                ret = wcstol(convStr.data(), &parseEnd, 10);
+            } else {
+                static_assert(false);
+            }
+
+            if (convStr == parseEnd) {
+                err = Err::STR_INVALID;
+                return 0;
+            }
+            convStr = parseEnd;
+
+            if (ret > std::numeric_limits<uint8>::max() or ret < 0) {
+                err = Err::NUM_RANGE;
+                return 0;
+            }
+
+            return static_cast<uint8>(ret);
+        }};
+
+
+        major = parseNum();
+        if (err != Err::NONE) return;
+
+        // Jump over '.'
+        convStr.remove_prefix(1);
+        minor = parseNum();
+        if (err != Err::NONE) {
+            minor = 0;
+            if (err == Err::STR_EMPTY) err = Err::NONE;
+            return;
+        }
+
+        // Jump over '.'
+        convStr.remove_prefix(1);
+        bugfix = parseNum();
+        if (err != Err::NONE) {
+            bugfix = 0;
+            if (err == Err::STR_EMPTY) err = Err::NONE;
+            return;
+        }
+
+        if (convStr == end) return;
+        if (convStr[0] != '-') {
+            err = Err::STR_INVALID;
+            return;
+        }
+
+        // Jump over '-'
+        convStr.remove_prefix(1);
+        // If has whitespace
+        if (convStr.end() != std::find_if(convStr.begin(), convStr.end(), [](char chr){ return std::isspace(chr); })) {
+            err = Err::STR_INVALID;
+            return;
+        }
+
+        tag = convStr;
+    }
 
     static Version invalidObject();
 

@@ -22,6 +22,7 @@
 #include <app/app.h>
 #include <ctime>
 #include <memory>
+#include <utility>
 #include <utils/paths.h>
 #include <utils/types.h>
 
@@ -34,15 +35,15 @@ std::unique_ptr<Log::Context> globalContext;
 
 } // namespace Log
 
-Log::Context::Context(string name, vector<std::ostream *> outStreams,
+Log::Context::Context(wxString name, vector<std::wostream *> outStreams,
                       bool outputToFile)
     : pName(std::move(name)), mOutputs(std::move(outStreams)) {
 
   if (outputToFile) {
     if (pName == GLOBAL_TAG) {
-      mRESOutFile.open(Paths::logs() / (App::getAppName() + ".log"));
+      mRESOutFile.open(Paths::logs() / (App::getAppName() + ".log").ToStdWstring());
     } else {
-      mRESOutFile.open(Paths::logs() / (App::getAppName() + "-" + pName + ".log"));
+      mRESOutFile.open(Paths::logs() / (App::getAppName() + "-" + pName + ".log").ToStdWstring());
     }
     mOutputs.insert(mOutputs.begin(), &mRESOutFile);
 
@@ -76,7 +77,7 @@ Log::Context &Log::Context::getGlobal() {
 
 void Log::Context::destroyGlobal() { globalContext.reset(); }
 
-bool Log::Context::setGlobalOuput(vector<std::ostream *> outStreams,
+bool Log::Context::setGlobalOuput(vector<std::wostream *> outStreams,
                                   bool fileOutput) {
   if (globalContext)
     return false;
@@ -88,11 +89,11 @@ bool Log::Context::setGlobalOuput(vector<std::ostream *> outStreams,
 
 void Log::Context::setSeverity(Severity sev) { mCurrentSev = sev; }
 
-void Log::Context::quickLog(Severity sev, string tag, string message) {
-    sendOut(sev, Message(message, sev, tag).formatted());
+void Log::Context::quickLog(Severity sev, wxString tag, wxString message) {
+    sendOut(sev, Message{std::move(message), sev, std::move(tag)}.formatted());
 }
 
-void Log::Context::sendOut(Severity sev, const string &str) {
+void Log::Context::sendOut(Severity sev, const wxString &str) {
     if (sev < mCurrentSev) return;
 
     mSendLock.lock();
@@ -100,7 +101,7 @@ void Log::Context::sendOut(Severity sev, const string &str) {
     mSendLock.unlock();
 }
 
-Log::Logger &Log::Context::createLogger(string name) {
+Log::Logger &Log::Context::createLogger(wxString name) {
     mListLock.lock();
     mLoggers.push_back(new Logger{std::move(name), this});
     mListLock.unlock();

@@ -45,7 +45,7 @@ void BladesPage::bindEvents() {
     GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { removeSubBlade(); }, ID_RemoveSubBlade);
     GetStaticBox()->Bind(wxEVT_TEXT, [&](wxCommandEvent&) {
         size_t insertionPoint = powerPinName->entry()->GetInsertionPoint();
-        std::string newString{};
+        string newString{};
         for (char c : powerPinName->entry()->GetValue().ToStdString()) if (isalnum(c)) newString += c;
 
         powerPinName->entry()->ChangeValue(newString);

@@ -2,8 +2,6 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include <string>
-
 #include "ui/message.h"
 
 #include "../mainmenu/mainmenu.h"
@@ -35,7 +33,14 @@ SerialMonitor::~SerialMonitor() {
 #if defined(__WINDOWS__)
 SerialMonitor::SerialMonitor(MainMenu* parent) {
     if (parent->boardSelect->entry()->GetSelection() > 0) {
-        ShellExecuteA(nullptr, nullptr, (Paths::binaries() / "arduino-cli.exe").c_str(), (string{"monitor -p "} + parent->boardSelect->entry()->GetStringSelection().ToStdString() + " -c baudrate=115200").c_str(), nullptr, true);
+        ShellExecuteW(
+            nullptr,
+            nullptr,
+            (Paths::binaries() / "arduino-cli.exe").c_str(),
+            ("monitor -p " + parent->boardSelect->entry()->GetStringSelection() + " -c baudrate=115200").c_str(),
+            nullptr,
+            SW_SHOWNORMAL
+        );
     } else PCUI::showMessage("Select board first.", "No Board Selected", wxOK | wxICON_ERROR, parent);
 }
 
@@ -137,7 +142,7 @@ void SerialMonitor::bindEvents() {
             const auto text{output->entry()->GetValue()};
             const auto endPos{text.rfind('\n')};
 
-            if (endPos != std::string::npos) {
+            if (endPos != string::npos) {
                 if (needsTime) {
                     output->entry()->SetInsertionPoint(endPos + 1);
                 } else {

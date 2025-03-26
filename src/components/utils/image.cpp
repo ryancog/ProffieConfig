@@ -19,7 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
 #include <unordered_map>
 
 #include <wx/bitmap.h>
@@ -36,9 +35,9 @@ wxBitmap Image::loadPNG(const string& name, bool dpiScaled) {
     auto bmpIt{bmps.find(name)};
     if (bmpIt != bmps.end()) return bmpIt->second;
 
-    auto pngPath{Paths::resources() / "icons" / (name + ".png")};
-    // std::cout << "Loading PNG \"" << name << "\" from \"" << pngPath.wstring() << '"' << std::endl;
-    auto bitmap{wxBitmap{pngPath.wstring(), wxBITMAP_TYPE_PNG}};
+    auto pngPath{Paths::resources() / "icons" / (name + ".png").ToStdWstring()};
+    // std::cout << "Loading PNG \"" << name << "\" from \"" << pngPath.native() << '"' << std::endl;
+    auto bitmap{wxBitmap{pngPath.native(), wxBITMAP_TYPE_PNG}};
     if (dpiScaled) bitmap.SetScaleFactor(getDPIScaleFactor());
 
     bmps.emplace(name, bitmap);

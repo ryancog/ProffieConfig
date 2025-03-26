@@ -26,7 +26,7 @@ namespace Log {
 
 } // namespace Log
 
-Log::Branch::Branch (const std::string& message, Severity sev, Logger *logger) :
+Log::Branch::Branch (const wxString& message, Severity sev, Logger *logger) :
     Message(message, sev, logger), mParent(logger) {}
 
 Log::Branch::~Branch() {
@@ -35,14 +35,14 @@ Log::Branch::~Branch() {
     }
 }
 
-Log::Logger& Log::Branch::createLogger(std::string name) {
+Log::Logger& Log::Branch::createLogger(wxString name) {
     mListLock.lock();
     mLoggers.push_back(new Logger{std::move(name), mParent->pContext});
     mListLock.unlock();
     return *mLoggers.back();
 }
 
-Log::Logger& Log::Branch::optCreateLogger(std::string name, Log::Branch *branch) {
+Log::Logger& Log::Branch::optCreateLogger(wxString name, Log::Branch *branch) {
     return branch ? branch->createLogger(std::move(name)) : Context::getGlobal().createLogger(std::move(name));
 }
 

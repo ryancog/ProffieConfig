@@ -28,6 +28,8 @@
 #include <wx/scrolwin.h>
 #include <wx/timer.h>
 
+#include <utils/types.h>
+
 namespace PCUI {
 
 wxDECLARE_EVENT(MV_START, wxMouseEvent);
@@ -87,7 +89,7 @@ public:
             const wxPoint& pos = wxDefaultPosition,
             const wxSize& size = wxDefaultSize,
             int64_t style = wxTAB_TRAVERSAL,
-            const std::string& objName = "MovePanel");
+            const string& objName = "MovePanel");
     ~MovePanel() override;
 
     void create(
@@ -97,7 +99,7 @@ public:
             const wxPoint& pos,
             const wxSize& size,
             int64_t style = wxTAB_TRAVERSAL,
-            const std::string& objName = "MovePanel");
+            const string& objName = "MovePanel");
 
     [[nodiscard]] virtual bool hitTest(wxPoint) const;
 
@@ -124,7 +126,7 @@ public:
             const wxSize& size = wxDefaultSize,
             int64_t style = wxTAB_TRAVERSAL,
             int64_t scrollStyle = wxScrolledWindowStyle,
-            const std::string& objName = "Scrollable Move Panel");
+            const string& objName = "Scrollable Move Panel");
     ~ScrolledMovePanel() override;
 
     wxScrolledCanvas* getCanvas();
