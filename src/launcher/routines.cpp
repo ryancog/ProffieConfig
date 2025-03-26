@@ -54,13 +54,8 @@ void Routine::selfDeleteAndExit(Log::Branch& lBranch) {
     auto self{Paths::executable().native()};
 #   ifdef __WIN32__
     constexpr cstring SELFDELETE_BATCH{"C:\\TEMP\\PCFLDel.bat"};
-    std::ofstream batch{SELFDELETE_BATCH};
-    batch << 
-        "@echo off\n"
-        ":Repeat\n"
-        "del \"" + self + "\"\n"
-        "if exist \"" + self + "\" goto Repeat\n"
-        "del \"%~f0\"\n";
+    std::wofstream batch{SELFDELETE_BATCH};
+    batch << "@echo off\n:Repeat\ndel \"" << self << "\"\nif exist \"" << self << "\" goto Repeat\ndel \"%~f0\"\n";
     batch.close();
     ShellExecuteA(nullptr, "open", SELFDELETE_BATCH, nullptr, nullptr, SW_HIDE);
 #   else
@@ -152,7 +147,7 @@ void Routine::platformInstall(Log::Branch& lBranch) {
     setValue(L"Publisher", L"Kafrene Trading");
     setValue(L"DisplayVersion", wxSTRINGIZE_T(EXEC_VERSION));
     setValue(L"DisplayIcon", installedExec.wstring());
-    setValue(L"URLInfoAbout", std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().from_bytes(Paths::website()));
+    setValue(L"URLInfoAbout", Paths::website().ToStdWstring());
     setValue(L"UninstallString", L'"' + installedExec.wstring() + L"\" uninstall");
 
     RegCloseKey(hKey);
@@ -171,7 +166,7 @@ void Routine::platformInstall(Log::Branch& lBranch) {
     PCUI::showMessage("Launcher has been installed.", App::getAppName());
 #   ifdef __WIN32__
     wxExecute(installedExec.c_str());
-    selfDeleteAndExit();
+    selfDeleteAndExit(*logger.binfo("Purging original exe and exiting..."));
 #   else
     auto str{installedExec.native()};
     const decltype(str.data()) argv[2]{

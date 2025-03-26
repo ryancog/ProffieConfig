@@ -47,7 +47,6 @@
 #include "log/context.h"
 #include "log/logger.h"
 #include "utils/paths.h"
-#include "ui/message.h"
 
 namespace App {
 
@@ -113,7 +112,7 @@ void sigHandler(int sig) {
 #if defined(__linux__) or defined(__APPLE__)
     std::array<char, 19> errAddr;
     (void)std::snprintf(errAddr.data(), errAddr.size(), "%p", info->si_addr);
-    auto errStr{string(strsignal(sig)) + " at address: " + std::string(errAddr.data())};
+    auto errStr{string(strsignal(sig)) + " at address: " + string{errAddr.data()}};
 #elif defined(__WIN32__)
     string signame;
     switch (sig) {
@@ -130,7 +129,7 @@ void sigHandler(int sig) {
     crashHandler(errStr);
 }
 
-bool App::init(string_view appName, string_view lockName) {
+bool App::init(const string& appName, const string& lockName) {
 #   if defined(__linux__) or defined(__APPLE__)
     struct sigaction act{};
     act.sa_flags = SA_SIGINFO;

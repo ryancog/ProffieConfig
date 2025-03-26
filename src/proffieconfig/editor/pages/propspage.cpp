@@ -304,7 +304,7 @@ void PropsPage::updateSelectedProp(const wxString& newProp) {
 void PropsPage::loadProps() {
     mProps.clear();
 
-    auto addProp{[&](const string_view& propName, bool builtin = false) {
+    auto addProp{[&](const std::string_view& propName, bool builtin = false) {
         auto *propConfig{PropFile::createPropConfig(string{propName}, propsWindow, builtin)};
         if (propConfig != nullptr) {
             propsWindow->GetSizer()->Add(propConfig);
@@ -316,7 +316,7 @@ void PropsPage::loadProps() {
         addProp(prop, true);
     }
     for (const auto& prop : AppState::getPropFileNames()) {
-        addProp(prop);
+        addProp(prop.ToStdString());
     }
     updateProps();
 

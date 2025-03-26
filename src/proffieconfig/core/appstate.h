@@ -21,7 +21,7 @@ void addProp(const string& propName, const string& propPath, const string& propC
 void removeProp(const string& propName);
 
 const vector<string>& getPropFileNames();
-static constexpr array<string_view, 5> BUILTIN_PROPS{
+static constexpr array<cstring, 5> BUILTIN_PROPS{
     "BC",
     "caiwyn",
     "fett263",

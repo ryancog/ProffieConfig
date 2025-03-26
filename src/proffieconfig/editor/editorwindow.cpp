@@ -1,6 +1,4 @@
 #include "editorwindow.h"
-#include "ui/message.h"
-#include "utils/defer.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
@@ -25,6 +23,8 @@
 #include "pages/propspage.h"
 
 #include "utils/paths.h"
+#include "ui/message.h"
+#include "utils/defer.h"
 #include "../core/config/settings.h"
 #include "../core/config/configuration.h"
 #include "../core/utilities/misc.h"
@@ -32,7 +32,7 @@
 
 #include "../tools/arduino.h"
 
-EditorWindow::EditorWindow(const std::string& _configName, wxWindow* parent) : PCUI::Frame(parent, wxID_ANY, "ProffieConfig Editor - " + _configName, wxDefaultPosition, wxDefaultSize), mOpenConfig(_configName) {
+EditorWindow::EditorWindow(const string& _configName, wxWindow* parent) : PCUI::Frame(parent, wxID_ANY, "ProffieConfig Editor - " + _configName, wxDefaultPosition, wxDefaultSize), mOpenConfig(_configName) {
     createMenuBar();
     createPages();
     bindEvents();
@@ -59,20 +59,22 @@ void EditorWindow::bindEvents() {
 
         if (not isSaved()) {
 #           ifdef __WINDOWS__
+            const auto flags{static_cast<long>(wxICON_WARNING | wxYES_NO | wxCANCEL | wxCANCEL_DEFAULT)};
             wxGenericMessageDialog saveDialog{
 #           else
+            const auto flags{wxICON_WARNING | wxYES_NO | wxCANCEL | wxCANCEL_DEFAULT};
             wxMessageDialog saveDialog{
 #           endif
                 this,
                 "You currently have unsaved changes which will be lost otherwise.",
                 "Save Changes to \"" + mOpenConfig + "\"?",
-                wxICON_WARNING | wxYES_NO | wxCANCEL | wxCANCEL_DEFAULT
+                flags
             };
             saveDialog.SetYesNoCancelLabels("Save Changes", "Discard Changes", "Cancel");
             auto saveChoice{saveDialog.ShowModal()};
 
             if (saveChoice == wxID_YES) {
-                if (not Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h"), this)) {
+                if (not Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h").ToStdWstring(), this)) {
                     event.Veto();
                     return;
                 }
@@ -87,10 +89,10 @@ void EditorWindow::bindEvents() {
     });
     Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
     Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
-            PCUI::showMessage(((Misc::MessageBoxEvent*)&event)->message.ToStdString(), ((Misc::MessageBoxEvent*)&event)->caption.ToStdString(), ((Misc::MessageBoxEvent*)&event)->style, this);
+            PCUI::showMessage(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this);
     }, wxID_ANY);
 
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h"), this); }, wxID_SAVE); 
+    Bind(wxEVT_MENU, [this](wxCommandEvent&) { Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h").ToStdWstring(), this); }, wxID_SAVE); 
 
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(this); }, ID_ExportConfig);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(this, this); }, ID_VerifyConfig);
@@ -99,10 +101,10 @@ void EditorWindow::bindEvents() {
         wxFileDialog fileDialog{this, "Select Injection File", wxEmptyString, wxEmptyString, "C Header (*.h)|*.h", wxFD_FILE_MUST_EXIST | wxFD_OPEN};
         if (fileDialog.ShowModal() == wxCANCEL) return;
 
-        auto copyPath{Paths::injections() / fileDialog.GetFilename().ToStdString()};
+        auto copyPath{Paths::injections() / fileDialog.GetFilename().ToStdWstring()};
         const auto copyOptions{fs::copy_options::overwrite_existing};
         std::error_code err;
-        if (not fs::copy_file(fileDialog.GetPath().ToStdString(), copyPath, copyOptions, err)) {
+        if (not fs::copy_file(fileDialog.GetPath().ToStdWstring(), copyPath, copyOptions, err)) {
             PCUI::showMessage(err.message(), "Injection file could not be added.");
             return;
         }
@@ -189,17 +191,17 @@ void EditorWindow::createPages() {
 }
 
 
-std::string_view EditorWindow::getOpenConfig() const { return mOpenConfig; }
+string EditorWindow::getOpenConfig() const { return mOpenConfig; }
 
 void EditorWindow::renameConfig(const string& name) {
-    fs::rename(Paths::configs() / (mOpenConfig + ".h"), Paths::configs() / (name + ".h"));
+    fs::rename(Paths::configs() / (mOpenConfig + ".h").ToStdWstring(), Paths::configs() / (name + ".h").ToStdWstring());
     mOpenConfig = name;
     // TODO: 
 }
 
 bool EditorWindow::isSaved() {
-    const auto currentPath{Paths::configs() / (mOpenConfig + ".h")};
-    const auto validatePath{fs::temp_directory_path() / (mOpenConfig + "-validate")};
+    const auto currentPath{Paths::configs() / (mOpenConfig + ".h").ToStdWstring()};
+    const auto validatePath{fs::temp_directory_path() / (mOpenConfig + "-validate").ToStdWstring()};
     if (not Configuration::outputConfig(validatePath, this)) {
         return false;
     }
@@ -209,13 +211,13 @@ bool EditorWindow::isSaved() {
         return false;
     }
 
-    std::ifstream current{currentPath};
-    std::ifstream validate{validatePath};
+    std::wifstream current{currentPath};
+    std::wifstream validate{validatePath};
 
     bool saved{true};
     while (current.good() && !current.eof() && validate.good() && !validate.eof()) {
-        std::array<char, 4096> currentBuffer;
-        std::array<char, currentBuffer.size()> validateBuffer;
+        std::array<wchar_t, 4096> currentBuffer;
+        std::array<wchar_t, currentBuffer.size()> validateBuffer;
         currentBuffer.fill(0);
         validateBuffer.fill(0);
 

@@ -1,6 +1,4 @@
 #include "changelog.h"
-#include "wx/event.h"
-#include "wx/gdicmn.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024 Ryan Ogurek
@@ -21,7 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <unordered_map>
 #include <wx/button.h>
 #include <wx/sizer.h>
 #include <wx/statbox.h>
@@ -317,7 +314,7 @@ Update::Version Update::determineCurrentVersion(const Data& data, PCUI::Progress
                 itemPath /= fileItem.path;
             }
 #           else
-            itemPath /= fileItem.path;
+            itemPath /= fileItem.path.ToStdWstring();
 #           endif
             status = "Testing file " + id.name + ", " + string(fileVer);
             logger.debug(status + " at path: " + itemPath.native());

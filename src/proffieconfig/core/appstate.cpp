@@ -4,7 +4,6 @@
 
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <memory>
 
 #include <wx/msgdlg.h>
@@ -38,7 +37,7 @@ void AppState::init() {
 void AppState::saveState() {
     auto& logger{Log::Context::getGlobal().createLogger("AppState::saveState()")};
 
-    std::ofstream stateStream(stateFile() += ".tmp");
+    std::wofstream stateStream(stateFile() += ".tmp");
     if (!stateStream.is_open()) {
         logger.error("Failed creating temporary save file.");
         stateStream.close();
@@ -70,7 +69,7 @@ void AppState::saveState() {
 
 void AppState::loadState() {
     auto& logger{Log::Context::getGlobal().createLogger("AppState::loadState()")};
-    std::ifstream stateStream(stateFile());
+    std::wifstream stateStream(stateFile());
     if (!stateStream.is_open()) {
         logger.warn("Could not open state file, attempting recovery from tmp...");
         stateStream.open(stateFile() += ".tmp");
@@ -109,7 +108,7 @@ void AppState::setSaved(bool state) {
 }
 
 void AppState::addProp(const string& propName, const string& propPath, const string& propConfigPath) {
-    std::ifstream configStream{propConfigPath};
+    std::wifstream configStream{propConfigPath};
     PConf::Data data;
     PConf::read(configStream, data, nullptr);
     auto hashedData{PConf::hash(data)};
@@ -126,28 +125,28 @@ void AppState::addProp(const string& propName, const string& propPath, const str
         return;
     }
 
-    fs::copy_file(propConfigPath, Paths::props() / propConfigPath.substr(propConfigPath.rfind('/') + 1), fs::copy_options::overwrite_existing);
-    fs::copy_file(propPath, Paths::proffieos() / "props" / propFileName, fs::copy_options::overwrite_existing);
+    fs::copy_file(propConfigPath.ToStdWstring(), Paths::props() / propConfigPath.substr(propConfigPath.rfind('/') + 1).ToStdWstring(), fs::copy_options::overwrite_existing);
+    fs::copy_file(propPath.ToStdWstring(), Paths::proffieos() / "props" / propFileName.ToStdWstring(), fs::copy_options::overwrite_existing);
 
     propFileNames.push_back(propName);
 }
 
 void AppState::removeProp(const string& propName) {
     auto& logger{Log::Context::getGlobal().createLogger("AppState::removeProp()")};
-    auto propConfigPath{Paths::props() / (propName + ".pconf")};
+    auto propConfigPath{Paths::props() / (propName + ".pconf").ToStdWstring()};
 
     logger.info("Removing prop \"" + propName + '"');
 
-    std::ifstream configStream{propConfigPath};
+    std::wifstream configStream{propConfigPath};
     PConf::Data data;
-    logger.debug("Reading prop pconf \"" + propConfigPath.native() + '"');
+    logger.debug("Reading prop pconf \"" + wxString{propConfigPath.native()} + '"');
     PConf::read(configStream, data, nullptr);
     auto hashedData{PConf::hash(data)};
 
     auto filenameEntry{hashedData.find("FILENAME")};
     if (filenameEntry != hashedData.end() and filenameEntry->second->value) {
         logger.debug("Removing prop file \"" + *filenameEntry->second->value + '"');
-        fs::remove(Paths::proffieos() / "props" / *filenameEntry->second->value);
+        fs::remove(Paths::proffieos() / "props" / filenameEntry->second->value->ToStdWstring());
     }
 
     logger.debug("Removing prop pconf");

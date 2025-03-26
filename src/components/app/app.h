@@ -36,7 +36,7 @@ namespace App {
  *
  * @return if the app should continue running or not.
  */
-APP_EXPORT bool init(string_view appName, string_view lockName = {});
+APP_EXPORT bool init(const string& appName, const string& lockName = {});
 
 APP_EXPORT void exceptionHandler();
 
@@ -55,7 +55,7 @@ APP_EXPORT Menus createDefaultMenuBar();
 APP_EXPORT [[nodiscard]] bool darkMode();
 #endif
 
-inline string getAppName() { return wxApp::GetGUIInstance()->GetAppName().ToStdString(); }
+inline string getAppName() { return wxApp::GetGUIInstance()->GetAppName(); }
 
 } // namespace App
 

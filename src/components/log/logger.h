@@ -23,6 +23,8 @@
 #include <mutex>
 #include <string>
 
+#include <wx/string.h>
+
 #include "private/export.h"
 #include "message.h"
 #include "severity.h"
@@ -38,21 +40,21 @@ public:
     Logger(const Logger&) = delete;
     ~Logger();
 
-    const std::string name;
+    const wxString name;
 
-    [[nodiscard]] Branch *branch(Severity, const std::string& message);
-    [[nodiscard]] Branch *berror(const std::string& message);
-    [[nodiscard]] Branch *bwarn(const std::string& message);
-    [[nodiscard]] Branch *binfo(const std::string& message);
-    [[nodiscard]] Branch *bdebug(const std::string& message);
-    [[nodiscard]] Branch *bverbose(const std::string& message);
+    [[nodiscard]] Branch *branch(Severity, const wxString& message);
+    [[nodiscard]] Branch *berror(const wxString& message);
+    [[nodiscard]] Branch *bwarn(const wxString& message);
+    [[nodiscard]] Branch *binfo(const wxString& message);
+    [[nodiscard]] Branch *bdebug(const wxString& message);
+    [[nodiscard]] Branch *bverbose(const wxString& message);
 
-    void log(Severity, const std::string&);
-    void error(const std::string&);
-    void warn(const std::string&);
-    void info(const std::string&);
-    void debug(const std::string&);
-    void verbose(const std::string&);
+    void log(Severity, const wxString&);
+    void error(const wxString&);
+    void warn(const wxString&);
+    void info(const wxString&);
+    void debug(const wxString&);
+    void verbose(const wxString&);
 
     // Copy to avoid concurrent read/mod errors
     [[nodiscard]] std::list<Message *> getMessages() const;
@@ -61,7 +63,7 @@ protected:
     friend class Branch;
     friend class Context;
 
-    Logger(std::string name, Context *context);
+    Logger(wxString name, Context *context);
     Context *const pContext;
 
 private:

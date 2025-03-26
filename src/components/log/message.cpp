@@ -26,11 +26,11 @@ namespace Log {
 
 } // namespace Log
 
-Log::Message::Message(std::string message, Severity severity, Logger *parent) :
+Log::Message::Message(wxString message, Severity severity, Logger *parent) :
         message(std::move(message)), severity(severity), logTag(parent->name) {}
 
-std::string Log::Message::formatted() const {
-    std::string messagePrefix{"[" + logTag + "] "};
+wxString Log::Message::formatted() const {
+    wxString messagePrefix{"[" + logTag + "] "};
     switch (severity) {
         case Severity::VERB:
             messagePrefix += "(VERB) ";
@@ -52,7 +52,7 @@ std::string Log::Message::formatted() const {
     }
     auto tmpMessage{message};
     auto newlinePos{tmpMessage.find('\n')};
-    while (newlinePos != std::string::npos) {
+    while (newlinePos != wxString::npos) {
         tmpMessage.insert(newlinePos + 1, messagePrefix.size(), ' ');
         newlinePos = tmpMessage.find('\n', newlinePos + 1);
     }

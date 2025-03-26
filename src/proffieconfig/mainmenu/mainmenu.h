@@ -66,5 +66,5 @@ private:
     void createTooltips() const;
     void bindEvents();
 
-    EditorWindow *generateEditor(const std::string& configName);
+    EditorWindow *generateEditor(const string& configName);
 };

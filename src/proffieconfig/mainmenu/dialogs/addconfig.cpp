@@ -86,7 +86,7 @@ void AddConfig::update() {
   }();
 
   auto configNameEmpty = configNameEntry->entry()->GetValue().empty();
-  auto configNameInvalidCharacters = configNameEntry->entry()->GetValue().find_first_of(".\\,/!#$%^&*|?<>\"'") != std::string::npos;
+  auto configNameInvalidCharacters = configNameEntry->entry()->GetValue().find_first_of(".\\,/!#$%^&*|?<>\"'") != string::npos;
   auto validConfigName = !configNameEmpty && !duplicateConfigName && !configNameInvalidCharacters;
   auto importingConfig = importExisting->GetValue();
   auto originFileSelected = chooseConfig->GetFileName().FileExists();

@@ -32,11 +32,11 @@ class UI_EXPORT Frame : public wxFrame {
 public:
     Frame(wxWindow* parent,
           int32_t winID,
-          const std::string& title,
+          const string& title,
           const wxPoint& pos = wxDefaultPosition,
           const wxSize& size = wxDefaultSize,
           int32_t style = wxDEFAULT_FRAME_STYLE,
-          const std::string& name = "Frame");
+          const string& name = "Frame");
     ~Frame() override;
 
     [[nodiscard]] App::Menus getMenus();

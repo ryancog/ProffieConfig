@@ -18,12 +18,12 @@ class Settings;
 
 class EditorWindow : public PCUI::Frame {
 public:
-    EditorWindow(const std::string&, wxWindow*);
+    EditorWindow(const string&, wxWindow*);
     ~EditorWindow() override;
 
     bool isSaved();
 
-    [[nodiscard]] string_view getOpenConfig() const;
+    [[nodiscard]] string getOpenConfig() const;
     void renameConfig(const string&);
 
 

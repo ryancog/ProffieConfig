@@ -108,12 +108,12 @@ private:
     };
 
 
-    static inline std::ostream& resetLine() { std::cout << "\33[2K\r"; return std::cout; }
-    static inline std::ostream& resetToPrevLine() { 
+    static inline std::wostream& resetLine() { std::cout << "\33[2K\r"; return std::wcout; }
+    static inline std::wostream& resetToPrevLine() { 
         std::cout << "\033[A";
         return resetLine();
     }
-    static inline void updatePrevLine(string_view str) { 
+    static inline void updatePrevLine(const string& str) { 
         resetToPrevLine() << str << '\n' << std::flush;
     }
     static inline void clearScreen() {
@@ -123,7 +123,7 @@ private:
     static void checkDir(const filepath& folder) {
         std::error_code err;
         if (not fs::is_directory(folder, err)) {
-            std::cout << "Warn: creating `" << fs::relative(folder, STAGING_DIR).native() << "`\n";
+            std::wcout << "Warn: creating `" << fs::relative(folder, STAGING_DIR).native() << "`\n";
             fs::create_directories(folder);
         }
     }
@@ -137,7 +137,7 @@ private:
     static void verifyBundles(const Items&, const Update::Bundles&, Log::Logger&);
 
     static void handleNewItems(Data&, FileMaps);
-    static void addNotesToItemVersion(string_view itemName, const Item&, ItemVersionData&);
+    static void addNotesToItemVersion(string itemName, const Item&, ItemVersionData&);
 
     static void generateNewManifest(const vector<Message>&, const Data&);
     static void organizeAssets(const FileMaps&, const Data&);
@@ -157,7 +157,7 @@ private:
 
 public:
     bool OnInit() override {
-        Log::Context::setGlobalOuput({&std::clog}, false);
+        Log::Context::setGlobalOuput({&std::wclog}, false);
         auto& globalContext{Log::Context::getGlobal()};
         globalContext.setSeverity(Log::Severity::ERR);
         auto& logger{globalContext.createLogger("main()")};
@@ -207,7 +207,7 @@ public:
         resetLine().flush();
         constexpr cstring MANIFEST_PROMPT{"Manifest file"};
         std::cout << MANIFEST_PROMPT << " [" << MANIFEST_DEFAULT << "]: " << std::flush;
-        string manifestStr;
+        std::string manifestStr;
         std::getline(std::cin, manifestStr);
         if (manifestStr.empty()) {
             updatePrevLine(string(MANIFEST_PROMPT) + " [" + MANIFEST_DEFAULT + "]: " + MANIFEST_DEFAULT);
@@ -232,7 +232,7 @@ public:
         std::cout << "Running through files..." << std::endl;
         handleNewItems(data, fileMaps);
 
-        string input;
+        std::string input;
         std::cout << "Files updated. [ENTER] " << std::flush;
         std::getline(std::cin, input);
 
@@ -277,7 +277,7 @@ public:
         }           
 
         std::cout << "Generating new manifest... " << std::flush;
-        auto oldLocation{filepath{STAGING_DIR} / (string{MANIFEST_DEFAULT} + ".old")};
+        auto oldLocation{filepath{STAGING_DIR} / (string{MANIFEST_DEFAULT} + ".old").ToStdWstring()};
         std::filesystem::remove(oldLocation);
         std::filesystem::copy_file(manifestFile, oldLocation);
         generateNewManifest(messages, data);
@@ -295,7 +295,7 @@ wxIMPLEMENT_APP_CONSOLE(UpGen);
 std::pair<UpGen::Data, vector<UpGen::Message>> UpGen::loadCurrentManifest(const filepath& manifest) {
     auto& logger{Log::Context::getGlobal().createLogger("loadCurrentManifest()")};
 
-    std::ifstream manifestStream{manifest};
+    std::wifstream manifestStream{manifest};
     PConf::Data rawData;
     if (not PConf::read(manifestStream, rawData, logger.binfo("Reading manifest..."))) {
         exit(1);
@@ -363,7 +363,7 @@ vector<UpGen::Message> UpGen::parseMessages(const PConf::HashedData& hashedRawDa
             }
         }
         if (not std::isdigit(label[0])) label = label.substr(1);
-        Update::Version version{label};
+        Update::Version version{label.ToStdString()};
         if (not version) {
             logger.error("Failed to parse message version: " + string(version));
             exit(1);
@@ -406,7 +406,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
             logger.error("Item \"" + name + "\" has empty " + spec + " path!");
             exit(1);
         }
-        return path->second->value.value();
+        return path->second->value->ToStdWstring();
     }};
 
     Item item;
@@ -427,7 +427,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
             exit(1);
         }
 
-        Update::Version version{versionIt->second->label.value()};
+        Update::Version version{versionIt->second->label->ToStdString()};
         if (not version) {
             string errMsg{"Item \""};
             errMsg += name;
@@ -544,7 +544,7 @@ Update::Bundles UpGen::resolveBundles(const PConf::HashedData& hashedRawData, Lo
             exit(1);
         }
 
-        Update::Version version{bundleIt->second->label.value()};
+        Update::Version version{bundleIt->second->label->ToStdString()};
         if (not version) {
             logger.error("Bundle \"" + bundleIt->second->label.value() + "\" version invalid: " + string(version));
             exit(1);
@@ -572,7 +572,7 @@ Update::Bundles UpGen::resolveBundles(const PConf::HashedData& hashedRawData, Lo
                 logger.error("Item \"" + item->label.value() + "\" is unversioned.");
                 exit(1);
             }
-            Update::Version version{item->value.value()};
+            Update::Version version{item->value->ToStdString()};
             if (not version) {
                 logger.error("Item \"" + item->label.value() + "\" version \"" + item->value.value() + "\" is invalid: " + string(version));
                 exit(1);
@@ -650,11 +650,11 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
             auto suggestedVer{currentVer};
             ++suggestedVer.bugfix;
             while (not false) {
-                string input;
+                std::wstring input;
                 resetLine() << 
                     "New version for " << itemTypeToStr(itemID.type) << ' ' << itemID.name << 
                     " (current: " << static_cast<string>(currentVer) << ") [" << static_cast<string>(suggestedVer) << "]: " << std::flush;
-                std::getline(std::cin, input);
+                std::getline(std::wcin, input);
                 resetToPrevLine();
 
                 Update::Version version;
@@ -662,20 +662,20 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
                 if (input.empty()) version = suggestedVer;
                 else {
                     // Update as if new build is functionally equivalent to last
-                    if (input == "s") {
+                    if (input == L"s") {
                         version = Update::Version::invalidObject();
                     } else {
                         version = Update::Version{input};
                         if (not version) {
                             std::cout << "Invalid version entered, try again. " << std::flush;
-                            std::getline(std::cin, input);
+                            std::getline(std::wcin, input);
                             resetToPrevLine();
                             continue;
                         }
 
                         if (item.versions.find(version) != item.versions.end()) {
                             std::cout << "Version exists, try again. " << std::flush;
-                            std::getline(std::cin, input);
+                            std::getline(std::wcin, input);
                             resetToPrevLine();
                             continue;
                         }
@@ -707,7 +707,7 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
             cstring typeStr{itemTypeToStr(static_cast<Update::ItemType>(typeIdx))};
             auto itemType{static_cast<Update::ItemType>(typeIdx)};
             for (const auto& [ path, hash ] : fileMaps[platformIdx][typeIdx]) {
-                string input;
+                std::wstring input;
                 Item *item{nullptr};
                 string itemName;
                 bool newVersion{false};
@@ -718,12 +718,12 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
                         itemName = path;
                     } else {
                         std::cout << "Item to add " << platformStr << ' ' << typeStr << ' ' << path << " to: " << std::flush;
-                        std::getline(std::cin, input);
+                        std::getline(std::wcin, input);
                         resetToPrevLine();
 
                         if (input.empty()) {
                             std::cout << "Invalid item name, try again. " << std::flush;
-                            std::getline(std::cin, input);
+                            std::getline(std::wcin, input);
                             resetToPrevLine();
                             continue;
                         }
@@ -740,22 +740,22 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
                         } else {
                             while (not false) {
                                 std::cout << "Item does not exist, create it? [y/N]: " << std::flush;
-                                std::getline(std::cin, input);
+                                std::getline(std::wcin, input);
                                 resetToPrevLine();
 
-                                if (input == "y" or input == "Y") {
+                                if (input == L"y" or input == L"Y") {
                                     item = &data.items.emplace(Update::ItemID{ itemType, itemName }, Item{}).first->second;
                                     newItem = true;
-                                } else if (input.empty() or input == "n" or input == "N") break;
+                                } else if (input.empty() or input == L"n" or input == L"N") break;
                                 else continue;
 
                                 while (not false) {
                                     std::cout << "Make item hidden? [y/N]: " << std::flush;
-                                    std::getline(std::cin, input);
+                                    std::getline(std::wcin, input);
                                     resetToPrevLine();
 
-                                    if (input.empty() or input == "n" or input == "N") item->hidden = false;
-                                    else if (input == "y" or input == "Y") item->hidden = true;
+                                    if (input.empty() or input == L"n" or input == L"N") item->hidden = false;
+                                    else if (input == L"y" or input == L"Y") item->hidden = true;
                                     else continue;
 
                                     break;
@@ -782,7 +782,7 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
                         }
                         if (currentPath and currentPath.value() != path) {
                             std::cout << "This item already has a file for " << PLATFORM_DIRS[platformIdx] << ", choose/create another item. " << std::flush;
-                            std::getline(std::cin, input);
+                            std::getline(std::wcin, input);
                             resetToPrevLine();
                             continue;
                         }
@@ -810,13 +810,13 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
 
                 while (not false) {
                     std::cout << "Version to add \"" << path << "\" to [" << defaultVersionEntry << "]: " << std::flush;
-                    std::getline(std::cin, input);
+                    std::getline(std::wcin, input);
                     resetToPrevLine();
 
-                    Update::Version version{input.empty() ? defaultVersionEntry : input};
+                    Update::Version version{input.empty() ? defaultVersionEntry.ToStdWstring() : input};
                     if (not version) {
                         std::cout << "Invalid version, try again. " << std::flush;
-                        std::getline(std::cin, input);
+                        std::getline(std::wcin, input);
                         resetToPrevLine();
                         continue;
                     }
@@ -825,13 +825,13 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
                     if (versionIt == item->versions.end()) {
                         while (not false) {
                             std::cout << "Version does not exist, create it? [Y/n]: " << std::flush;
-                            std::getline(std::cin, input);
+                            std::getline(std::wcin, input);
                             resetToPrevLine();
 
-                            if (input.empty() or input == "y" or input == "Y") {
+                            if (input.empty() or input == L"y" or input == L"Y") {
                                 versionData = &item->versions.emplace(version, ItemVersionData{}).first->second;
                                 newVersion = true;
-                            } else if (input == "n" or input == "N") break;
+                            } else if (input == L"n" or input == L"N") break;
                             else continue;
 
                             addNotesToItemVersion(itemName, *item, *versionData);
@@ -856,7 +856,7 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
                         }
                         if (exists) {
                             std::cout << "This version is already registered for " << PLATFORM_DIRS[platformIdx] << ", choose/create another version. " << std::flush;
-                            std::getline(std::cin, input);
+                            std::getline(std::wcin, input);
                             resetToPrevLine();
                             continue;
                         }
@@ -886,17 +886,17 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
     }
 }
 
-void UpGen::addNotesToItemVersion(string_view itemName, const Item& item, ItemVersionData& versionData) {
-    string input;
+void UpGen::addNotesToItemVersion(string itemName, const Item& item, ItemVersionData& versionData) {
+    std::wstring input;
     if (item.hidden) {
         std::cout << "Item is hidden, skipping notes." << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
         resetToPrevLine();
     } else {
         auto num{0};
         while (not false) {
             std::cout << "Enter bugfix " << num << " for " << itemName << " (empty to stop): " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             if (input.empty()) break;
             versionData.fixes.emplace_back(input);
@@ -905,7 +905,7 @@ void UpGen::addNotesToItemVersion(string_view itemName, const Item& item, ItemVe
         num = 0;
         while (not false) {
             std::cout << "Enter change " << num << " for " << itemName << " (empty to stop): " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             if (input.empty()) break;
             versionData.changes.emplace_back(input);
@@ -914,7 +914,7 @@ void UpGen::addNotesToItemVersion(string_view itemName, const Item& item, ItemVe
         num = 0;
         while (not false) {
             std::cout << "Enter feature " << num << " for " << itemName << " (empty to stop): " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             if (input.empty()) break;
             versionData.features.emplace_back(input);
@@ -985,12 +985,12 @@ void UpGen::generateNewManifest(const vector<Message>& messages, const Data& dat
         manifest.emplace_back(std::move(bundleSect));
     }
 
-    std::ofstream outStream{filepath{STAGING_DIR} / MANIFEST_DEFAULT};
+    std::wofstream outStream{filepath{STAGING_DIR} / MANIFEST_DEFAULT};
     PConf::write(outStream, manifest, nullptr);
 }
 
 void UpGen::organizeAssets(const FileMaps& fileMaps, const Data& data) {
-    auto lookupItem{[&](Platform platform, Update::ItemType type, const filepath& path, string_view hash)
+    auto lookupItem{[&](Platform platform, Update::ItemType type, const filepath& path, string hash)
         -> std::pair<string, Update::Version> {
         for (const auto& [ itemID, item ] : data.items) {
             if (type != itemID.type) continue;
@@ -1044,7 +1044,7 @@ void UpGen::organizeAssets(const FileMaps& fileMaps, const Data& data) {
             for (const auto& [ path, hash ] : fileMaps[platformIdx][typeIdx]) {
 
                 fs::create_directories(destDir);
-                fs::copy_file(filepath{STAGING_DIR} / PLATFORM_DIRS[platformIdx] / typeFolder / path, destDir / hash, fs::copy_options::overwrite_existing);
+                fs::copy_file(filepath{STAGING_DIR} / PLATFORM_DIRS[platformIdx] / typeFolder / path, destDir / hash.ToStdWstring(), fs::copy_options::overwrite_existing);
             }
         }
     }
@@ -1072,11 +1072,11 @@ void UpGen::listMessages(const vector<Message>& messages, bool hold) {
             (message.versionComp == Update::Comparator::LESS_THAN ? "<" : 
              message.versionComp == Update::Comparator::GREATER_THAN ? ">" : 
              "") << static_cast<string>(message.version) << '\n';
-        std::istringstream msgStream{message.message};
-        string buffer;
+        std::wistringstream msgStream{message.message.ToStdWstring()};
+        std::wstring buffer;
         while (msgStream.good() and not msgStream.eof()) {
             std::getline(msgStream, buffer);
-            std::cout << "        \"" << buffer << "\"\n";
+            std::wcout << "        \"" << buffer << "\"\n";
         }
         std::cout << '\n';
         ++idx;
@@ -1087,8 +1087,8 @@ void UpGen::listMessages(const vector<Message>& messages, bool hold) {
 
     if (hold) {
         std::cout << "Press enter to return... " << std::flush;
-        string input;
-        std::getline(std::cin, input);
+        std::wstring input;
+        std::getline(std::wcin, input);
     }
 }
 
@@ -1096,7 +1096,7 @@ void UpGen::addMessage(vector<Message>& messages) {
     clearScreen();
     std::cout << HEADER << "\n";
 
-    string input;
+    std::wstring input;
 
     Update::Version version;
     Update::Comparator comp{};
@@ -1105,7 +1105,7 @@ void UpGen::addMessage(vector<Message>& messages) {
 
     while (not false) {
         std::cout << "Target launcher version(s): " << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
 
         if (input.empty()) {
             resetToPrevLine();
@@ -1121,7 +1121,7 @@ void UpGen::addMessage(vector<Message>& messages) {
 
         if (not version) {
             resetToPrevLine() << "Invalid version entered, try again. " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             continue;
         }
@@ -1131,10 +1131,10 @@ void UpGen::addMessage(vector<Message>& messages) {
 
     while (not false) {
         std::cout << "Is this message fatal? [y/N]: " << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
         
-        if (input.empty() or input == "n" or input == "N") fatal = false;
-        else if (input == "y" or input == "Y") fatal = true;
+        if (input.empty() or input == L"n" or input == L"N") fatal = false;
+        else if (input == L"y" or input == L"Y") fatal = true;
         else {
             resetToPrevLine();
             continue;
@@ -1149,12 +1149,12 @@ void UpGen::addMessage(vector<Message>& messages) {
         uint32 linesTyped{0};
         while (not false) {
             std::cout << "> " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             ++linesTyped;
-            if (input == "###") {
+            if (input == L"###") {
                 if (message.empty()) {
                     std::cout << "Message must not be empty, try again. " << std::flush;
-                    std::getline(std::cin, input);
+                    std::getline(std::wcin, input);
                     for (auto idx{0}; idx <= linesTyped; ++idx) resetToPrevLine();
                     continue;
                 } 
@@ -1167,10 +1167,10 @@ void UpGen::addMessage(vector<Message>& messages) {
         bool accepted{};
         while (not false) {
             std::cout << "Accept message? [Y/n]: " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
 
-            if (input.empty() or input == "y" or input == "Y") accepted = true;
-            else if (input == "n" or input == "N") accepted = false;
+            if (input.empty() or input == L"y" or input == L"Y") accepted = true;
+            else if (input == L"n" or input == L"N") accepted = false;
             else {
                 resetToPrevLine();
                 continue;
@@ -1187,15 +1187,15 @@ void UpGen::addMessage(vector<Message>& messages) {
 
     while (not false) {
         std::cout << "Confirm message add? [Y/n]: " << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
 
-        if (input.empty() or input == "y" or input == "Y") {
+        if (input.empty() or input == L"y" or input == L"Y") {
             resetToPrevLine();
             break;
         }
-        if (input == "n" or input == "N") {
+        if (input == L"n" or input == L"N") {
             resetToPrevLine() << "Message not added. [ENTER] " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             return;
         }
 
@@ -1210,28 +1210,28 @@ void UpGen::addMessage(vector<Message>& messages) {
     messages.emplace_back(std::move(msg));
 
     std::cout << "Message added. [ENTER] " << std::flush;
-    std::getline(std::cin, input);
+    std::getline(std::wcin, input);
 }
 
 void UpGen::removeMessage(vector<Message>& messages) {
     listMessages(messages, messages.empty());
     if (messages.empty()) return;
 
-    string input;
+    std::wstring input;
     while (not false) {
         std::cout << "Message to remove ('-' to cancel): " << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
 
         if (input.empty()) {
             resetToPrevLine();
             continue;
         }
         
-        if (input == "-") return;
+        if (input == L"-") return;
 
         if (not std::isdigit(input[0])) {
             resetToPrevLine() << "Invalid message number, try again. " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             continue;
         }
@@ -1239,14 +1239,14 @@ void UpGen::removeMessage(vector<Message>& messages) {
         auto msgIdx{std::stoi(input)};
         if (msgIdx > messages.size()) {
             resetToPrevLine() << "Entry out of range, try again. " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             continue;
         }
 
         messages.erase(std::next(messages.begin(), msgIdx));
         std::cout << "Message deleted. [ENTER] " << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
         break;
     }
 }
@@ -1269,9 +1269,9 @@ void UpGen::listItems(const Items& items, bool hold) {
     if (items.empty()) std::cout << "[NO ITEMS]" << "\n\n";
 
     if (hold) {
-        string input;
+        std::wstring input;
         std::cout << "Press enter to continue... " << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
     }
 }
 
@@ -1279,21 +1279,21 @@ void UpGen::toggleItemVisibility(Items& items) {
     listItems(items, items.empty());
     if (items.empty()) return;
 
-    string input;
+    std::wstring input;
     while (not false) {
         std::cout << "Item to toggle ('-' to cancel): " << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
 
         if (input.empty()) {
             resetToPrevLine();
             continue;
         }
         
-        if (input == "-") return;
+        if (input == L"-") return;
 
         if (not std::isdigit(input[0])) {
             resetToPrevLine() << "Invalid item number, try again. " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             continue;
         }
@@ -1301,7 +1301,7 @@ void UpGen::toggleItemVisibility(Items& items) {
         auto itemIdx{std::stoi(input)};
         if (itemIdx > items.size()) {
             resetToPrevLine() << "Entry out of range, try again. " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             continue;
         }
@@ -1310,7 +1310,7 @@ void UpGen::toggleItemVisibility(Items& items) {
         item.hidden = not item.hidden;
 
         std::cout << "Item toggled. " << (item.hidden ? "(Now Hidden)" : "(Now Shown)") << " [ENTER] " << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
         break;
     }
 }
@@ -1319,21 +1319,21 @@ void UpGen::toggleItemDeprecation(Items& items) {
     listItems(items, items.empty());
     if (items.empty()) return;
 
-    string input;
+    std::wstring input;
     while (not false) {
         std::cout << "Item to toggle ('-' to cancel): " << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
 
         if (input.empty()) {
             resetToPrevLine();
             continue;
         }
         
-        if (input == "-") return;
+        if (input == L"-") return;
 
         if (not std::isdigit(input[0])) {
             resetToPrevLine() << "Invalid item number, try again. " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             continue;
         }
@@ -1341,7 +1341,7 @@ void UpGen::toggleItemDeprecation(Items& items) {
         auto itemIdx{std::stoi(input)};
         if (itemIdx > items.size()) {
             resetToPrevLine() << "Entry out of range, try again. " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             continue;
         }
@@ -1350,7 +1350,7 @@ void UpGen::toggleItemDeprecation(Items& items) {
         item.deprecated = not item.deprecated;
 
         std::cout << "Item toggled. " << (item.deprecated ? "(Now Deprecated)" : "(Now Active)") << " [ENTER] " << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
         break;
     }
 }
@@ -1373,9 +1373,9 @@ void UpGen::listBundles(const Update::Bundles& bundles, bool hold) {
     if (bundles.empty()) std::cout << "[NO BUNDLES]" << "\n\n";
 
     if (hold) {
-        string input;
+        std::wstring input;
         std::cout << "Press enter to continue... " << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
     }
 }
 
@@ -1385,25 +1385,25 @@ void UpGen::addBundle(Data& data, bool fromCurrent) {
 
     Update::Version version;
     Update::Bundle bundle;
-    string input;
+    std::wstring input;
 
     while (not false) {
         std::cout << "Enter bundle version ('-' to cancel): " << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
 
-        if (input == "-") return;
+        if (input == L"-") return;
 
         version = Update::Version{input};
         if (not version) {
             resetToPrevLine() << "Version invalid, try again. " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             continue;
         }
 
         if (data.bundles.find(version) != data.bundles.end()) {
             resetToPrevLine() << "Bundle exists, choose another version. " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             continue;
         }
@@ -1425,7 +1425,7 @@ void UpGen::addBundle(Data& data, bool fromCurrent) {
                 Item *item{nullptr};
                 while (not false) {
                     std::cout << "Name of " << itemTypeToStr(type) << " to add (Empty to finish): " << std::flush;
-                    std::getline(std::cin, input);
+                    std::getline(std::wcin, input);
 
                     if (input.empty()) {
                         resetToPrevLine();
@@ -1434,7 +1434,7 @@ void UpGen::addBundle(Data& data, bool fromCurrent) {
                     auto itemIt{data.items.find({ type, input })};
                     if (itemIt == data.items.end()) {
                         resetToPrevLine() << "Item doesn't exist, try again. " << std::flush;
-                        std::getline(std::cin, input);
+                        std::getline(std::wcin, input);
                         resetToPrevLine();
                         continue;
                     }
@@ -1445,14 +1445,14 @@ void UpGen::addBundle(Data& data, bool fromCurrent) {
                 }
                 if (input.empty()) break;
 
-                auto itemName{input};
+                string itemName{input};
                 auto latestVersion{item->versions.rbegin()->first};
 
                 Update::Version version;
                 while (not false) {
                     auto prompt{itemName + " version [" + static_cast<string>(latestVersion) + "]: "};
                     std::cout << prompt << std::flush;
-                    std::getline(std::cin, input);
+                    std::getline(std::wcin, input);
 
                     if (input.empty()) {
                         version = latestVersion;
@@ -1460,14 +1460,14 @@ void UpGen::addBundle(Data& data, bool fromCurrent) {
                         version = Update::Version{input};
                         if (not version) {
                             resetToPrevLine() << "Invalid version entered, try again. " << std::flush;
-                            std::getline(std::cin, input);
+                            std::getline(std::wcin, input);
                             resetToPrevLine();
                             continue;
                         }
 
                         if (item->versions.find(version) == item->versions.end()) {
                             resetToPrevLine() << "Item doesn't have version, try again. " << std::flush;
-                            std::getline(std::cin, input);
+                            std::getline(std::wcin, input);
                             resetToPrevLine();
                             continue;
                         }
@@ -1495,9 +1495,9 @@ void UpGen::addBundle(Data& data, bool fromCurrent) {
         uint32 linesTyped{0};
         while (not false) {
             std::cout << "> " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             ++linesTyped;
-            if (input == "###") break;
+            if (input == L"###") break;
             if (not bundle.note.empty()) bundle.note += '\n';
             bundle.note += input;
         }
@@ -1505,10 +1505,10 @@ void UpGen::addBundle(Data& data, bool fromCurrent) {
         bool accepted{};
         while (not false) {
             std::cout << "Accept note? [Y/n]: " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
 
-            if (input.empty() or input == "y" or input == "Y") accepted = true;
-            else if (input == "n" or input == "N") accepted = false;
+            if (input.empty() or input == L"y" or input == L"Y") accepted = true;
+            else if (input == L"n" or input == L"N") accepted = false;
             else {
                 resetToPrevLine();
                 continue;
@@ -1525,28 +1525,28 @@ void UpGen::addBundle(Data& data, bool fromCurrent) {
 
     data.bundles.emplace(version, std::move(bundle));
     std::cout << "Added bundle " << static_cast<string>(version) << " [ENTER] " << std::flush;
-    std::getline(std::cin, input);
+    std::getline(std::wcin, input);
 }
 
 void UpGen::removeBundle(Update::Bundles& bundles) {
     listBundles(bundles, bundles.empty());
     if (bundles.empty()) return;
 
-    string input;
+    std::wstring input;
     while (not false) {
         std::cout << "Bundle to remove ('-' to cancel): " << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
 
         if (input.empty()) {
             resetToPrevLine();
             continue;
         }
 
-        if (input == "-") return;
+        if (input == L"-") return;
 
         if (not std::isdigit(input[0])) {
             resetToPrevLine() << "Invalid bundle number, try again. " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             continue;
         }
@@ -1554,14 +1554,14 @@ void UpGen::removeBundle(Update::Bundles& bundles) {
         auto bundleIdx{std::stoi(input)};
         if (bundleIdx > bundles.size()) {
             resetToPrevLine() << "Entry out of range, try again. " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             continue;
         }
 
         bundles.erase(std::next(bundles.begin(), bundleIdx));
         std::cout << "Bundle deleted. [ENTER] " << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
         break;
     }
 }
@@ -1573,22 +1573,22 @@ void UpGen::genBundleChangelog(Data& data) {
     decltype(data.bundles.begin()) bundleEndIt;
     decltype(data.bundles.begin()) bundleBeginIt;
 
-    string input;
+    std::wstring input;
     while (not false) {
         listBundles(data.bundles, data.bundles.empty());
         std::cout << "Bundle to generate for ('-' to cancel): " << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
 
         if (input.empty()) {
             resetToPrevLine();
             continue;
         }
 
-        if (input == "-") return;
+        if (input == L"-") return;
 
         if (not std::isdigit(input[0])) {
             resetToPrevLine() << "Invalid bundle number, try again. " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             continue;
         }
@@ -1596,7 +1596,7 @@ void UpGen::genBundleChangelog(Data& data) {
         auto bundleIdx{std::stoi(input)};
         if (bundleIdx > data.bundles.size()) {
             resetToPrevLine() << "Entry out of range, try again. " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             continue;
         }
@@ -1610,7 +1610,7 @@ void UpGen::genBundleChangelog(Data& data) {
     while (not false) {
         listBundles(data.bundles, data.bundles.empty());
         std::cout << "Bundle to generate from ('-' to list from previous): " << std::flush;
-        std::getline(std::cin, input);
+        std::getline(std::wcin, input);
 
         if (input.empty()) {
             resetToPrevLine();
@@ -1619,7 +1619,7 @@ void UpGen::genBundleChangelog(Data& data) {
 
         if (not std::isdigit(input[0])) {
             resetToPrevLine() << "Invalid bundle number, try again. " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             continue;
         }
@@ -1627,7 +1627,7 @@ void UpGen::genBundleChangelog(Data& data) {
         auto bundleIdx{std::stoi(input)};
         if (bundleIdx > data.bundles.size()) {
             resetToPrevLine() << "Entry out of range, try again. " << std::flush;
-            std::getline(std::cin, input);
+            std::getline(std::wcin, input);
             resetToPrevLine();
             continue;
         }
@@ -1689,7 +1689,7 @@ void UpGen::genBundleChangelog(Data& data) {
     }
 
     std::cout << "\n\nPress ENTER to continue... " << std::flush;
-    std::getline(std::cin, input);
+    std::getline(std::wcin, input);
 }
 
 

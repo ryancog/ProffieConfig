@@ -17,7 +17,8 @@ enum {
     BLADE_ID_MODE_EXTERNAL,
     BLADE_ID_MODE_BRIDGED,
 };
-constexpr array<string_view, 3> BLADE_ID_MODES{
+
+constexpr array<cstring, 3> BLADE_ID_MODES{
     "Snapshot",
     "External Pullup",
     "Bridged Pullup",

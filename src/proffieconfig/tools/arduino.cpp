@@ -4,15 +4,12 @@
 
 #include <cstring>
 #include <filesystem>
-#include <limits>
 #include <sstream>
 #include <thread>
 #include <unistd.h>
 
 #ifdef __WINDOWS__
 #include <windows.h>
-#include <codecvt>
-#include <locale>
 #else
 #include <termios.h>
 #endif
@@ -45,7 +42,7 @@
 using namespace std::chrono_literals;
 
 namespace Arduino {
-    FILE *cli(const string& command);
+    FILE *cli(const wxString& command);
 
     bool updateIno(string&, EditorWindow*, Log::Branch&);
 #   ifdef __WINDOWS__
@@ -67,10 +64,10 @@ namespace Arduino {
     constexpr auto MAX_ERRMESSAGE_LENGTH{1024};
 
 #   ifdef __WINDOWS__
-    inline string windowModePrefix() { 
+    inline wxString windowModePrefix() { 
         return 
             "title ProffieConfig Worker & " + 
-            (Paths::binaries() / "windowMode").native() + 
+            wxString{(Paths::binaries() / "windowMode").native()} + 
             R"( -title "ProffieConfig Worker" -mode force_minimized & )";
     }
 #   endif
@@ -118,8 +115,8 @@ void Arduino::init(wxWindow *parent) {
 
         std::unique_ptr<wxZipEntry> entry;
         while (entry.reset(zipStream.GetNextEntry()), entry) {
-            auto fileNameStr{(Paths::proffieos() / entry->GetName().ToStdString()).native()};
-            if (fileNameStr.find("__MACOSX") != std::string::npos) continue;
+            auto fileNameStr{wxString{(Paths::proffieos() / entry->GetName().ToStdWstring()).native()}};
+            if (fileNameStr.find("__MACOSX") != wxString::npos) continue;
 
             auto permissionBits{entry->GetMode()};
             wxFileName fileName;
@@ -187,20 +184,20 @@ void Arduino::init(wxWindow *parent) {
 #       if defined(__linux__)
         install = popen("pkexec cp ~/.arduino15/packages/proffieboard/hardware/stm32l4/3.6/drivers/linux/*rules /etc/udev/rules.d", "r");
 #       elif defined(__WINDOWS__)
-        install = popen(("title ProffieConfig Worker & " + (Paths::binaries() / "proffie-dfu-setup.exe").native() + " 2>&1").c_str(), "r");
+        install = _wpopen((L"title ProffieConfig Worker & " + (Paths::binaries() / "proffie-dfu-setup.exe").native() + L" 2>&1").c_str(), L"r");
         // Really I should have a proper wait but I tried with an echo and that didn't work.
         // Could maybe revisit this in the future.
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-        STARTUPINFOA startupInfo;
+        STARTUPINFOW startupInfo;
         PROCESS_INFORMATION procInfo;
         memset(&startupInfo, 0, sizeof startupInfo);
         startupInfo.cb = sizeof startupInfo;
         memset(&procInfo, 0, sizeof procInfo);
 
-        const auto minimizeCommand{(Paths::binaries() / "windowMode").native() + R"( -title "ProffieConfig Worker" -mode force_minimized)"};
+        const auto minimizeCommand{(Paths::binaries() / "windowMode").native() + LR"( -title "ProffieConfig Worker" -mode force_minimized)"};
 
-        CreateProcessA(
+        CreateProcessW(
             minimizeCommand.c_str(),
             nullptr,
             nullptr,
@@ -299,7 +296,7 @@ vector<wxString> Arduino::getBoards(Log::Branch& lBranch) {
     while (not false) {
         const auto line{output.substr(0, lineEndPos)};
 
-        if (line.find("No boards found.") != std::string::npos) {
+        if (line.find("No boards found.") != string::npos) {
             logger.info("No boards found.");
             break;
         }
@@ -307,21 +304,21 @@ vector<wxString> Arduino::getBoards(Log::Branch& lBranch) {
         if (line[0] == ' ' or line[0] == '\t') {
             if (results.empty()) continue;
 
-            if (line.find("proffieboard") != std::string::npos) {
+            if (line.find("proffieboard") != string::npos) {
                 results.back().isProffie = true;
             }
-        } else if (line.find("serial") != std::string::npos) {
+        } else if (line.find("serial") != string::npos) {
             const auto port{line.substr(0, line.find_first_of(" \t"))};
-            const auto isProffie{line.find("proffieboard") != std::string::npos};
+            const auto isProffie{line.find("proffieboard") != string::npos};
             results.emplace_back(port, isProffie);
             logger.debug(string{"Found board: "} + port);
-        } else if (line.find("dfu") != std::string::npos) {
+        } else if (line.find("dfu") != string::npos) {
             const auto port{line.substr(0, line.find_first_of(" \t"))};
             boards.emplace_back("BOOTLOADER|" + port);
             logger.debug(string{"Found board in bootloader mode: "} + port);
         }
 
-        if (lineEndPos == std::string::npos) break;
+        if (lineEndPos == string::npos) break;
         output = output.substr(lineEndPos + 1);
         lineEndPos = output.find('\n');
     }
@@ -356,7 +353,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
         auto *evt{new Event(EVT_APPLY_DONE)};
-        std::string returnVal;
+        string returnVal;
 
         constexpr cstring CHECK_PRESENCE_MESSAGE{"Checking board presence..."};
         progDialog->emitEvent(10, CHECK_PRESENCE_MESSAGE);
@@ -379,7 +376,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
 
         constexpr cstring GENERATE_MESSAGE{"Generating configuration file..."};
         progDialog->emitEvent(20, GENERATE_MESSAGE);
-        const auto configPath{Paths::proffieos() / "config" / (string{editor->getOpenConfig()} + ".h")};
+        const auto configPath{Paths::proffieos() / "config" / (string{editor->getOpenConfig()} + ".h").ToStdWstring()};
         if (not Configuration::outputConfig(configPath, editor, logger.binfo(GENERATE_MESSAGE), true)) {
             progDialog->emitEvent(100, "Error");
             // NO message here because outputConfig will handle it.
@@ -475,7 +472,7 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
 
         constexpr cstring GENERATE_MESSAGE{"Generating configuration file..."};
         progDialog->emitEvent(20, GENERATE_MESSAGE);
-        const auto configPath{Paths::proffieos() / "config" / (string{editor->getOpenConfig()} + ".h")};
+        const auto configPath{Paths::proffieos() / "config" / (string{editor->getOpenConfig()} + ".h").ToStdWstring()};
         if (not Configuration::outputConfig(configPath, editor, logger.binfo(GENERATE_MESSAGE), true)) {
             progDialog->emitEvent(100, "Error");
             // Outputconfig will handle error message
@@ -511,15 +508,18 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
             return;
         }
 
-        constexpr string_view USED_PREFIX{"Sketch uses "};
-        constexpr string_view MAX_PREFIX{"Maximum is "};
-        const auto usedPos{returnVal.find(USED_PREFIX)};
-        const auto maxPos{returnVal.find(MAX_PREFIX)};
+        constexpr std::string_view USED_PREFIX{"Sketch uses "};
+        constexpr std::string_view MAX_PREFIX{"Maximum is "};
+        const auto usedPos{returnVal.find(USED_PREFIX.data())};
+        const auto maxPos{returnVal.find(MAX_PREFIX.data())};
 
         string successMessage{"Config Verified Successfully!"};
         if (usedPos != string::npos and maxPos != string::npos) {
-            auto usedBytes{std::stoi(returnVal.substr(usedPos + USED_PREFIX.length()))};
-            auto maxBytes{std::stoi(returnVal.substr(maxPos + MAX_PREFIX.length()))};
+            long usedBytes{};
+            returnVal.substr(usedPos + USED_PREFIX.length()).ToCLong(&usedBytes);
+            long maxBytes{};
+            returnVal.substr(maxPos + MAX_PREFIX.length()).ToCLong(&maxBytes);
+
             auto percent{std::round(usedBytes * 10000.0 / maxBytes) / 100.0};
 
             std::stringstream successStream;
@@ -544,10 +544,10 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
 #endif
     auto& logger{lBranch.createLogger("Arduino::compile()")};
 
-    string output;
+    wxString output;
     array<char, 32> buffer;
 
-    string compileCommand = "compile ";
+    wxString compileCommand = "compile ";
     compileCommand += "-b ";
     switch (static_cast<Proffieboard>(editor->generalPage->board->entry()->GetSelection())) {
         case PROFFIEBOARDV3:
@@ -568,7 +568,7 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
     else if (editor->generalPage->massStorage->GetValue()) compileCommand += "usb=cdc_msc";
     else compileCommand += "usb=cdc";
     if (editor->generalPage->board->entry()->GetSelection() == PROFFIEBOARDV3) compileCommand +=",dosfs=sdmmc1";
-    compileCommand += " \"" + Paths::proffieos().native() + "\" -v";
+    compileCommand += " \"" + wxString{Paths::proffieos().native()} + "\" -v";
     FILE *arduinoCli = Arduino::cli(compileCommand);
 
     string error{};
@@ -581,7 +581,7 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
 
     }
 
-    if (error.find("error") != std::string::npos) {
+    if (error.find("error") != string::npos) {
         _return = Arduino::parseError(error, editor);
         logger.error(_return);
 # 	    ifdef __WINDOWS__
@@ -603,15 +603,15 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
 
 #   ifdef __WINDOWS__
     if (
-            error.find("ProffieOS.ino.dfu") != std::string::npos and
-            error.find("stm32l4") != std::string::npos and
-            error.find("C:\\") != std::string::npos
+            error.find("ProffieOS.ino.dfu") != string::npos and
+            error.find("stm32l4") != string::npos and
+            error.find("C:\\") != string::npos
        ) {
         logger.debug("Parsing utility paths...");
         array<char, MAX_PATH> shortPath;
 
-        constexpr string_view DFU_STRING{"ProffieOS.ino.dfu"};
-        const auto dfuPos{error.rfind(DFU_STRING)};
+        constexpr std::string_view DFU_STRING{"ProffieOS.ino.dfu"};
+        const auto dfuPos{error.rfind(DFU_STRING.data())};
         const auto dfuCPos{error.rfind("C:\\", dfuPos)};
         GetShortPathNameA(error.substr(dfuCPos, dfuPos - dfuCPos + DFU_STRING.length()).c_str(), shortPath.data(), shortPath.size());
         paths[0] = shortPath.data();
@@ -642,7 +642,7 @@ bool Arduino::compile(string& _return, EditorWindow* editor, Progress* progDialo
 #ifdef __WINDOWS__
 bool Arduino::upload(string& _return, EditorWindow *editor, Progress *progDialog, const array<string, 2>& paths, Log::Branch& lBranch) {
 #else
-bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progDialog, Log::Branch& lBranch) {
+bool Arduino::upload(string& _return, EditorWindow* editor, Progress* progDialog, Log::Branch& lBranch) {
 #endif
     auto& logger{lBranch.createLogger("Arduino::upload()")};
 
@@ -699,7 +699,7 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
     }
 #   else 
     const auto boardPath{static_cast<MainMenu*>(editor->GetParent())->boardSelect->entry()->GetStringSelection().ToStdString()};
-    if (boardPath.find("BOOTLOADER|") == std::string::npos) {
+    if (boardPath.find("BOOTLOADER|") == string::npos) {
         progDialog->emitEvent(-1, "Rebooting Proffieboard...");
         struct termios newtio;
         auto fd = open(boardPath.c_str(), O_RDWR | O_NOCTTY);
@@ -738,7 +738,7 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
 #   ifndef __WINDOWS__
     FILE *arduinoCli = Arduino::cli(uploadCommand);
 
-    std::string error;
+    string error;
     progDialog->emitEvent(-1, "Uploading to Proffieboard...");
     while(fgets(buffer.data(), buffer.size(), arduinoCli) != nullptr) {
         auto *const percentPtr{std::strstr(buffer.data(), "%")};
@@ -750,7 +750,7 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
         error += buffer.data();
     }
 
-    if (error.rfind("error") != std::string::npos || error.rfind("FAIL") != std::string::npos) {
+    if (error.rfind("error") != string::npos || error.rfind("FAIL") != string::npos) {
         _return = Arduino::parseError(error, editor);
         logger.error(_return);
         return false;
@@ -767,7 +767,7 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
     logger.info("Uploading via: " + commandString);
 
     auto *upload{popen(commandString.c_str(), "r")};
-    std::string error{};
+    string error{};
     progDialog->emitEvent(-1, "");
     while (fgets(buffer.data(), buffer.size(), upload) != nullptr) {
         auto *const percentPtr{std::strstr(buffer.data(), "%")};
@@ -779,7 +779,7 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
         error += buffer.data();
     }
 
-    if (error.rfind("error") != std::string::npos || error.rfind("FAIL") != std::string::npos) {
+    if (error.rfind("error") != string::npos || error.rfind("FAIL") != string::npos) {
         _return = Arduino::parseError(error, editor);
         logger.error(_return);
         return false;
@@ -791,7 +791,7 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
         return false;
     }
 
-    if (error.find("File downloaded successfully") == std::string::npos) {
+    if (error.find("File downloaded successfully") == string::npos) {
         progDialog->emitEvent(100, "Error");
         _return = Arduino::parseError(error, editor);
         logger.error(_return);
@@ -804,11 +804,11 @@ bool Arduino::upload(std::string& _return, EditorWindow* editor, Progress* progD
     return true;
 }
 
-bool Arduino::updateIno(std::string& _return, EditorWindow* _editor, Log::Branch& lBranch) {
+bool Arduino::updateIno(string& _return, EditorWindow* _editor, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Arduino::updateIno()")};
 
     const auto inoPath{Paths::proffieos() / "ProffieOS.ino"};
-    std::ifstream input(inoPath);
+    std::wifstream input(inoPath);
     if (!input.is_open()) {
         constexpr cstring OPEN_READ_ERROR{"ERROR OPENING FOR READ"};
         logger.error(OPEN_READ_ERROR);
@@ -816,19 +816,19 @@ bool Arduino::updateIno(std::string& _return, EditorWindow* _editor, Log::Branch
         return false;
     }
 
-    string fileData;
+    std::wstring fileData;
     vector<string> outputData;
     while(!input.eof()) {
         getline(input, fileData);
 
         if (
-                fileData.find(R"(// #define CONFIG_FILE "config/YOUR_CONFIG_FILE_NAME_HERE.h")") != std::string::npos or
-                fileData.find(R"(#define CONFIG_FILE)") == 0
+                fileData.find(LR"(// #define CONFIG_FILE "config/YOUR_CONFIG_FILE_NAME_HERE.h")") != string::npos or
+                fileData.find(LR"(#define CONFIG_FILE)") == 0
            ) {
-            outputData.emplace_back("#define CONFIG_FILE \"config/" + std::string{_editor->getOpenConfig()} + ".h\"");
-            if (fileData.find(R"(#define CONFIG_FILE)") == 0) continue;
+            outputData.emplace_back("#define CONFIG_FILE \"config/" + string{_editor->getOpenConfig()} + ".h\"");
+            if (fileData.find(LR"(#define CONFIG_FILE)") == 0) continue;
         } 
-        /* else if (fileData.find(R"(const char version[] = ")" ) != std::string::npos) {
+        /* else if (fileData.find(R"(const char version[] = ")" ) != string::npos) {
             outputData.push_back(R"(const char version[] = ")" wxSTRINGIZE(PROFFIEOS_VERSION) R"(";)");
         } */ 
         else {
@@ -838,7 +838,7 @@ bool Arduino::updateIno(std::string& _return, EditorWindow* _editor, Log::Branch
     input.close();
 
 
-    std::ofstream output(inoPath);
+    std::wofstream output(inoPath);
     if (!output.is_open()) {
         constexpr cstring OPEN_WRITE_ERROR{"ERROR OPENING FOR WRITE"};
         logger.error(OPEN_WRITE_ERROR);
@@ -863,13 +863,14 @@ string Arduino::parseError(const string& error, EditorWindow *editor) {
     if (ERRCONTAINS("select Proffieboard")) return "Please ensure you've selected the correct board in General";
     if (ERRCONTAINS("expected unqualified-id")) return "Please make sure there are no brackets in your styles (such as \"{\" or \"}\")\n and there is nothing missing or extra from your style! (such as parentheses or \"<>\")";
     if (ERRCONTAINS(/* region FLASH */"overflowed")) {
-        const auto maxBytes = error.find("ProffieboardV3") != std::string::npos ? 507904 : 262144;
-        constexpr string_view OVERFLOW_PREFIX{"region `FLASH' overflowed by "};
+        const auto maxBytes = error.find("ProffieboardV3") != string::npos ? 507904 : 262144;
+        constexpr std::string_view OVERFLOW_PREFIX{"region `FLASH' overflowed by "};
 
-        const auto overflowPos{error.rfind(OVERFLOW_PREFIX)};
+        const auto overflowPos{error.rfind(OVERFLOW_PREFIX.data())};
         std::stringstream errMessage;
-        if (overflowPos != std::string::npos) {
-            const auto overflowBytes{std::stoi(error.substr(overflowPos + OVERFLOW_PREFIX.length()))};
+        if (overflowPos != string::npos) {
+            long overflowBytes{};
+            error.substr(overflowPos + OVERFLOW_PREFIX.length()).ToCLong(&overflowBytes);
             const auto percent{(overflowBytes * 100.0 / maxBytes) + 100.0};
 
             errMessage << "The specified config uses " << percent << "% of board space, and will not fit on the Proffieboard. (" << overflowBytes << " overflow)";
@@ -889,7 +890,7 @@ string Arduino::parseError(const string& error, EditorWindow *editor) {
     auto *selectedProp{editor->propsPage->getSelectedProp()};
     if (selectedProp != nullptr) {
         for (const auto& [ arduino, display ] : selectedProp->getMappedErrors()) {
-            if (error.find(arduino) != std::string::npos) return selectedProp->getName() + " prop error:\n" + display;
+            if (error.find(arduino) != string::npos) return selectedProp->getName() + " prop error:\n" + display;
         }
     }
 
@@ -909,7 +910,7 @@ FILE* Arduino::cli(const string& command) {
 #   if defined(__WINDOWS__)
     fullCommand += windowModePrefix();
 #   endif
-    fullCommand += '"' + (Paths::binaries() / "arduino-cli").native() + '"';
+    fullCommand += '"' + string{(Paths::binaries() / "arduino-cli").native()} + '"';
     fullCommand += " " + command;
     fullCommand += " 2>&1";
 

@@ -22,7 +22,6 @@
 #include <chrono>
 #include <filesystem>
 #include <thread>
-#include <fstream>
 
 #include <wx/webrequest.h>
 #include <wx/filefn.h>
@@ -50,7 +49,7 @@ bool Update::pullNewFiles(const Changelog& changelog, const Data& data, PCUI::Pr
     prog->Update(0, "Preparing to download new files...");
     bool requestDone{};
     filepath downloadedFilename;
-    Update::ItemType type;
+    Update::ItemType type{};
 
     fs::remove_all(stagingFolder());
 
@@ -58,7 +57,7 @@ bool Update::pullNewFiles(const Changelog& changelog, const Data& data, PCUI::Pr
         if (evt.GetState() == wxWebRequest::State_Completed) {
             auto filePath{stagingFolder() / downloadedFilename};
             fs::create_directories(filePath.parent_path());
-            fs::copy_file(evt.GetDataFile().ToStdString(), filePath);
+            fs::copy_file(evt.GetDataFile().ToStdWstring(), filePath);
             if (type == Update::EXEC) {
                 fs::permissions(filePath, fs::perms::owner_exec | fs::perms::others_exec, fs::perm_options::add);
             }
@@ -85,17 +84,17 @@ bool Update::pullNewFiles(const Changelog& changelog, const Data& data, PCUI::Pr
 
         string itemURLString{Paths::remoteUpdateAssets()};
         type = file.id.type;
-        itemURLString += '/' + typeFolder(type).native() + '/';
+        itemURLString += '/' + string{typeFolder(type).native()} + '/';
         itemURLString += file.hash;
         wxURI url{itemURLString};
         auto request{wxWebSession::GetDefault().CreateRequest(getEventHandler(), url.BuildURI())};
         request.SetStorage(wxWebRequestBase::Storage_File);
 
         requestDone = false;
-        downloadedFilename = typeFolder(file.id.type) / item.path;
+        downloadedFilename = typeFolder(file.id.type) / item.path.ToStdWstring();
         request.Start();
 
-        logger.info("Downloading " + file.id.name + " from \"" + url.BuildURI().ToStdString() + "\"...");
+        logger.info("Downloading " + file.id.name + " from \"" + url.BuildURI() + "\"...");
 
         while (not requestDone) {
             auto dataReceived{request.GetBytesReceived()};
@@ -136,7 +135,7 @@ bool Update::pullNewFiles(const Changelog& changelog, const Data& data, PCUI::Pr
         if (request.GetState() != wxWebRequestBase::State_Completed) {
             logger.error("Download failed!");
             auto response{request.GetResponse()};
-            auto statusText{response.GetStatusText().ToStdString()};
+            auto statusText{response.GetStatusText()};
             PCUI::showMessage(
                     "Failed to download file.\n" +
                     (statusText.empty() ? "Error" : statusText) + " (" + std::to_string(response.GetStatus()) + ')',
@@ -173,7 +172,7 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
         const auto& item{data.items.at(file)};
 
         auto path{baseTypePath(file.type)};
-        path /= item.path;
+        path /= item.path.ToStdWstring();
 
         fs::remove(path);
     }
@@ -200,7 +199,7 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
                 fs::copy_options::overwrite_existing
             );
 
-            std::ofstream infoStream{Paths::executable(Paths::Executable::MAIN).parent_path().parent_path() / "Info.plist"};
+            std::wofstream infoStream{Paths::executable(Paths::Executable::MAIN).parent_path().parent_path() / "Info.plist"};
             infoStream << 
                 R"(<?xml version="1.0" encoding="UTF-8"?>)" "\n"
                 R"(<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">)" "\n"
@@ -232,10 +231,10 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
             fs::copy_file(stagingFolder() / typeFolder(file.id.type) / item.path, path, fs::copy_options::overwrite_existing);
         }
 #       else
-        path /= filepath{item.path};
+        path /= filepath{item.path.ToStdWstring()};
         fs::remove(path);
         fs::create_directories(path.parent_path());
-        fs::copy_file(stagingFolder() / typeFolder(file.id.type) / item.path, path, fs::copy_options::overwrite_existing);
+        fs::copy_file(stagingFolder() / typeFolder(file.id.type) / item.path.ToStdWstring(), path, fs::copy_options::overwrite_existing);
 #       endif
     }
 

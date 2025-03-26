@@ -108,7 +108,7 @@ optional<Update::Data> Update::parseData(PCUI::ProgressDialog *prog, Log::Branch
         return nullopt;
     }
 
-    std::ifstream stream{manifestFile()};
+    std::wifstream stream{manifestFile()};
     PConf::Data rawData;
     PConf::read(stream, rawData, logger.binfo("Parsing manifest..."));
     stream.close();
@@ -193,7 +193,7 @@ bool Update::checkMessages(const PConf::HashedData& hashedRawData, Log::Branch& 
             }
         }
         if (not std::isdigit(label[0])) label = label.substr(1);
-        Version version{label};
+        Version version{label.ToStdWstring()};
         if (not version) {
             logger.warn("Failed to parse message version: " + string(version));
             continue;
@@ -293,7 +293,7 @@ optional<std::pair<string, Update::Item>> Update::parseItem(const std::shared_pt
             continue;
         }
 
-        Version version{versionIt->second->label.value()};
+        Version version{versionIt->second->label->ToStdWstring()};
         if (not version) {
             string errMsg{"Item \""};
             errMsg += name;
@@ -403,7 +403,7 @@ std::map<Update::Version, Update::Bundle> Update::resolveBundles(const PConf::Ha
             continue;
         }
 
-        Version version{bundleIt->second->label.value()};
+        Version version{bundleIt->second->label->ToStdWstring()};
         if (not version) {
             logger.warn("Bundle \"" + bundleIt->second->label.value() + "\" version invalid: " + string(version));
             continue;
@@ -427,7 +427,7 @@ std::map<Update::Version, Update::Bundle> Update::resolveBundles(const PConf::Ha
                 logger.warn("Item \"" + item->label.value() + "\" is unversioned.");
                 return nullopt;
             }
-            Version version{item->value.value()};
+            Version version{item->value->ToStdWstring()};
             if (not version) {
                 logger.warn("Item \"" + item->label.value() + "\" version \"" + item->value.value() + "\" is invalid: " + static_cast<string>(version));
                 return nullopt;
