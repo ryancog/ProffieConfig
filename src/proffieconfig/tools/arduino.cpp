@@ -647,7 +647,7 @@ bool Arduino::upload(string& _return, EditorWindow* editor, Progress* progDialog
     array<char, 32> buffer;
 
 #   ifndef __WINDOWS__
-    wxString uploadCommand = "upload ";
+    string uploadCommand = "upload ";
     uploadCommand += '"' + Paths::proffieos().native() + '"';
     uploadCommand += " --fqbn ";
     switch (static_cast<Proffieboard>(editor->generalPage->board->entry()->GetSelection())) {
@@ -736,7 +736,7 @@ bool Arduino::upload(string& _return, EditorWindow* editor, Progress* progDialog
 #   ifndef __WINDOWS__
     FILE *arduinoCli = Arduino::cli(uploadCommand);
 
-    wxString error;
+    string error;
     progDialog->emitEvent(-1, "Uploading to Proffieboard...");
     while(fgets(buffer.data(), buffer.size(), arduinoCli) != nullptr) {
         auto *const percentPtr{std::strstr(buffer.data(), "%")};
