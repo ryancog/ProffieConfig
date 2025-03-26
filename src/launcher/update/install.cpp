@@ -22,6 +22,7 @@
 #include <chrono>
 #include <filesystem>
 #include <thread>
+#include <fstream>
 
 #include <wx/webrequest.h>
 #include <wx/filefn.h>

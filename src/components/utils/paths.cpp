@@ -119,7 +119,7 @@ filepath Paths::logs() {
 #   elif defined(__linux__)
     return data() / "logs";
 #   elif defined(__APPLE__)
-    return std::string{getpwuid(getuid())->pw_dir} + L"/Library/Logs/ProffieConfig";
+    return string{getpwuid(getuid())->pw_dir} + "/Library/Logs/ProffieConfig";
 #   endif
 }
 
