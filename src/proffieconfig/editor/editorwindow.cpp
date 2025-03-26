@@ -88,8 +88,9 @@ void EditorWindow::bindEvents() {
         event.Skip();
     });
     Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
-    Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
-            PCUI::showMessage(((Misc::MessageBoxEvent*)&event)->message, ((Misc::MessageBoxEvent*)&event)->caption, ((Misc::MessageBoxEvent*)&event)->style, this);
+    Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) {
+        auto& msgEvent{static_cast<Misc::MessageBoxEvent&>(event)};
+        PCUI::showMessage(msgEvent.message, msgEvent.caption, msgEvent.style, this);
     }, wxID_ANY);
 
     Bind(wxEVT_MENU, [this](wxCommandEvent&) { Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h"), this); }, wxID_SAVE); 
@@ -202,7 +203,13 @@ void EditorWindow::renameConfig(const string& name) {
 bool EditorWindow::isSaved() {
     const auto currentPath{Paths::configs() / (mOpenConfig + ".h")};
     const auto validatePath{fs::temp_directory_path() / (mOpenConfig + "-validate")};
-    if (not Configuration::outputConfig(validatePath, this)) {
+
+    auto dummyMessageHandler{[](wxCommandEvent& evt) {}};
+    Bind(Misc::EVT_MSGBOX, dummyMessageHandler);
+    auto res{not Configuration::outputConfig(validatePath, this)};
+    wxYield();
+    Unbind(Misc::EVT_MSGBOX, dummyMessageHandler);
+    if (not res) {
         return false;
     }
 
