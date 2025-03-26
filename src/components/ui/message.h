@@ -40,7 +40,7 @@ namespace PCUI {
  *
  * @return user selection
  */
-UI_EXPORT int32 showMessage(const string& msg, const string& caption = {}, int32 style = wxOK | wxCENTER, wxWindow *parent = nullptr);
+UI_EXPORT int32 showMessage(const wxString& msg, const wxString& caption = {}, int32 style = wxOK | wxCENTER, wxWindow *parent = nullptr);
 
 #ifdef __WXMSW__
 using ProgressDialog = wxGenericProgressDialog;

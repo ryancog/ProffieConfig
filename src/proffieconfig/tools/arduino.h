@@ -28,7 +28,7 @@ namespace Arduino {
         [[nodiscard]] wxEvent *Clone() const override { return new Event(*this); }
 
         bool succeeded{false};
-        string str;
+        wxString str;
     };
 
     wxDECLARE_EVENT(EVT_INIT_DONE, Event);

@@ -23,7 +23,6 @@
 
 namespace Routine {
 
-void selfDeleteAndExit(Log::Branch&);
 void launch(Log::Branch&);
 
 void platformInstall(Log::Branch&);

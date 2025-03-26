@@ -21,8 +21,7 @@
 
 #include <utility>
 
-#include <wx/string.h>
-
+#include "utils/types.h"
 #include "private/export.h"
 #include "severity.h"
 
@@ -41,16 +40,16 @@ public:
 
     [[nodiscard]] virtual Type getType() const { return Type::MESSAGE; }
 
-    [[nodiscard]] wxString formatted() const;
-    const wxString message;
+    [[nodiscard]] string formatted() const;
+    const string message;
     const Severity severity;
-    const wxString logTag;
+    const string logTag;
 
 protected:
     friend class Logger;
     friend class Context;
-    Message(wxString message, Severity severity, Logger *parent);
-    Message(wxString message, Severity severity, wxString logTag) :
+    Message(string message, Severity severity, Logger *parent);
+    Message(string message, Severity severity, string logTag) :
         message(std::move(message)), severity(severity), logTag(std::move(logTag)) {}
 };
 

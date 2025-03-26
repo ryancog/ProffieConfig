@@ -23,7 +23,7 @@ public:
 
     bool isSaved();
 
-    [[nodiscard]] string getOpenConfig() const;
+    [[nodiscard]] string_view getOpenConfig() const;
     void renameConfig(const string&);
 
 

@@ -29,8 +29,6 @@
 #include <optional>
 #include <vector>
 
-#include <wx/string.h>
-
 // "Standard" types for ProffieConfig
 
 using int64 = int64_t;
@@ -59,7 +57,9 @@ using std::function;
 using std::list;
 using std::nullopt;
 using std::optional;
-using string = wxString;
+using std::string;
+using std::wstring;
+using std::string_view;
 using std::vector;
 namespace fs = std::filesystem;
 using filepath = fs::path;

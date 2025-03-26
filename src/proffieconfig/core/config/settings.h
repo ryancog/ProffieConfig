@@ -19,11 +19,11 @@ public:
     Settings(EditorWindow*);
     ~Settings();
 
-    void parseDefines(std::vector<string>&);
+    void parseDefines(std::vector<wxString>&);
 
     class ProffieDefine;
-    std::unordered_map<string, ProffieDefine*> generalDefines;
-    std::vector<string> readDefines;
+    std::unordered_map<wxString, ProffieDefine*> generalDefines;
+    std::vector<wxString> readDefines;
     int32_t numBlades{0};
 
 private:
@@ -46,21 +46,21 @@ private:
     } const mType{Type::STATE};
     const bool mLooseChecking{false};
 
-    const string mIdentifier;
+    const wxString mIdentifier;
     const void *mElement{nullptr};
 
 public:
 
-    ProffieDefine(string name, PCUI::Numeric* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
-    ProffieDefine(string name, PCUI::NumericDec* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
-    ProffieDefine(string name, wxCheckBox* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
-    ProffieDefine(string name, wxRadioButton* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
-    ProffieDefine(string name, PCUI::Choice* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
-    ProffieDefine(string name, PCUI::Text* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+    ProffieDefine(wxString name, PCUI::Numeric* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+    ProffieDefine(wxString name, PCUI::NumericDec* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+    ProffieDefine(wxString name, wxCheckBox* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
+    ProffieDefine(wxString name, wxRadioButton* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
+    ProffieDefine(wxString name, PCUI::Choice* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+    ProffieDefine(wxString name, PCUI::Text* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
 
-    static std::pair<string, string> parseKey(const string&);
+    static std::pair<wxString, wxString> parseKey(const wxString&);
 
-    std::function<bool(const ProffieDefine*, const string&)> parse = [](const ProffieDefine* def, const string& input) -> bool {
+    std::function<bool(const ProffieDefine*, const wxString&)> parse = [](const ProffieDefine* def, const wxString& input) -> bool {
         auto key = parseKey(input);
 
         if (def->mLooseChecking ? std::strstr(key.first.c_str(), def->mIdentifier.c_str()) == nullptr : key.first != def->mIdentifier) return false;
@@ -90,7 +90,7 @@ public:
 
         return true;
     };
-    std::function<string(const ProffieDefine*)> output = [](const ProffieDefine* def) -> string {
+    std::function<wxString(const ProffieDefine*)> output = [](const ProffieDefine* def) -> wxString {
         switch (def->mType) {
             case Type::NUMERIC:
             return def->mIdentifier + " " + std::to_string(def->getNum());
@@ -107,16 +107,16 @@ public:
     };
     std::function<bool(const ProffieDefine*)> checkOutput;
 
-    [[nodiscard]] string getOutput() const { return output(this); }
-    [[nodiscard]] bool parseDefine(const string& input) const { return parse(this, input); }
+    [[nodiscard]] wxString getOutput() const { return output(this); }
+    [[nodiscard]] bool parseDefine(const wxString& input) const { return parse(this, input); }
 
-    [[nodiscard]] string getName() const { return mIdentifier; }
+    [[nodiscard]] wxString getName() const { return mIdentifier; }
     [[nodiscard]] bool shouldOutput() const { return checkOutput(this); }
     [[nodiscard]] int32_t getNum() const;
     [[nodiscard]] double getDec() const;
     [[nodiscard]] bool getState() const;
-    [[nodiscard]] string getString() const;
+    [[nodiscard]] wxString getString() const;
 
-    inline void overrideParser(std::function<bool(const ProffieDefine*, const string&)> _newParser) { parse = std::move(_newParser); }
-    inline void overrideOutput(std::function<string(const ProffieDefine*)> _newOutput) { output = std::move(_newOutput); }
+    inline void overrideParser(std::function<bool(const ProffieDefine*, const wxString&)> _newParser) { parse = std::move(_newParser); }
+    inline void overrideOutput(std::function<wxString(const ProffieDefine*)> _newOutput) { output = std::move(_newOutput); }
 };

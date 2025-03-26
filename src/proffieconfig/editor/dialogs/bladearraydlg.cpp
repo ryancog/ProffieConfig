@@ -254,7 +254,7 @@ wxStaticBoxSizer* BladeArrayDlg::createBladeDetect(wxWindow* parent) {
 
 void BladeArrayDlg::update() {
     if (mLastArraySelection >= 0 && mLastArraySelection < static_cast<int32_t>(bladeArrays.size())) {
-        bladeArrays.at(mLastArraySelection).name = arrayName->entry()->GetValue();
+        bladeArrays.at(mLastArraySelection).name = arrayName->entry()->GetValue().ToStdString();
         bladeArrays.at(mLastArraySelection).value = resistanceID->entry()->GetValue();
     }
 

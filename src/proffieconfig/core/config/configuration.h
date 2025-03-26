@@ -18,9 +18,9 @@ namespace Configuration {
     bool readConfig(const filepath&, EditorWindow *editorWindow);
     bool importConfig(EditorWindow *editorWindow);
 
-    using MapPair = std::pair<const string, const string>;
+    using MapPair = std::pair<const wxString, const wxString>;
     using VMap = vector<MapPair>;
-    const MapPair& findInVMap(const VMap&, const string& search);
+    const MapPair& findInVMap(const VMap&, const wxString& search);
 
     inline const VMap ORIENTATION = {
         { "FETs Towards Blade", "ORIENTATION_FETS_TOWARDS_BLADE" },

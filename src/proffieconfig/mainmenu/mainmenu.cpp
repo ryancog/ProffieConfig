@@ -83,10 +83,10 @@ void MainMenu::bindEvents() {
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxAboutDialogInfo aboutInfo;
         aboutInfo.SetDescription(
-                                "All-in-one Proffieboard Management Utility\n"
-                                "\n"
-                                "ProffieOS v" wxSTRINGIZE(PROFFIEOS_VERSION) " | Arduino CLI v" wxSTRINGIZE(ARDUINO_CLI_VERSION)
-                                );
+                "All-in-one Proffieboard Management Utility\n"
+                "\n"
+                "ProffieOS v" wxSTRINGIZE(PROFFIEOS_VERSION) " | Arduino CLI v" wxSTRINGIZE(ARDUINO_CLI_VERSION)
+                );
         aboutInfo.SetVersion(wxSTRINGIZE(EXEC_VERSION));
         aboutInfo.SetWebSite("https://proffieconfig.kafrenetrading.com");
         aboutInfo.SetCopyright("Copyright (C) 2023-2025 Ryan Ogurek");
@@ -179,7 +179,7 @@ void MainMenu::bindEvents() {
         if (not addDialog.existingPath.empty()) {
             fs::copy(addDialog.existingPath.ToStdWstring(), configPath);
         } else {
-            std::wofstream{configPath}.flush();
+            std::ofstream{configPath}.flush();
         }
 
         update();
@@ -339,7 +339,7 @@ void MainMenu::removeEditor(EditorWindow *editor) {
 
 EditorWindow *MainMenu::generateEditor(const string& configName) {
     auto *newEditor{new EditorWindow(configName, this)};
-    if (not Configuration::readConfig(Paths::configs() / (configName + ".h").ToStdWstring(), newEditor)) {
+    if (not Configuration::readConfig(Paths::configs() / (configName + ".h"), newEditor)) {
         PCUI::showMessage("Error reading configuration file!", "Config Error", wxOK | wxCENTER, this);
         newEditor->Destroy();
         return nullptr;

@@ -55,7 +55,7 @@ APP_EXPORT Menus createDefaultMenuBar();
 APP_EXPORT [[nodiscard]] bool darkMode();
 #endif
 
-inline string getAppName() { return wxApp::GetGUIInstance()->GetAppName(); }
+inline string getAppName() { return wxApp::GetGUIInstance()->GetAppName().ToStdString(); }
 
 } // namespace App
 

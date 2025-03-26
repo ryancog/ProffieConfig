@@ -84,24 +84,24 @@ bool Update::pullNewFiles(const Changelog& changelog, const Data& data, PCUI::Pr
 
         string itemURLString{Paths::remoteUpdateAssets()};
         type = file.id.type;
-        itemURLString += '/' + string{typeFolder(type).native()} + '/';
+        itemURLString += '/' + typeFolder(type).string() + '/';
         itemURLString += file.hash;
         wxURI url{itemURLString};
         auto request{wxWebSession::GetDefault().CreateRequest(getEventHandler(), url.BuildURI())};
         request.SetStorage(wxWebRequestBase::Storage_File);
 
         requestDone = false;
-        downloadedFilename = typeFolder(file.id.type) / item.path.ToStdWstring();
+        downloadedFilename = typeFolder(file.id.type) / item.path;
         request.Start();
 
-        logger.info("Downloading " + file.id.name + " from \"" + url.BuildURI() + "\"...");
+        logger.info("Downloading " + file.id.name + " from \"" + url.BuildURI().ToStdString() + "\"...");
 
         while (not requestDone) {
             auto dataReceived{request.GetBytesReceived()};
             auto dataTotal{request.GetBytesExpectedToReceive()};
             auto progress{dataReceived == 0 ? 0 : dataReceived * 100 / dataTotal};
 
-            string statusMessage;
+            wxString statusMessage;
             if (file.id.type == ItemType::LIB) {
                 statusMessage = "Downloading libraries... ";
             } else if (file.id.type == ItemType::RSRC) {
@@ -172,7 +172,7 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
         const auto& item{data.items.at(file)};
 
         auto path{baseTypePath(file.type)};
-        path /= item.path.ToStdWstring();
+        path /= item.path;
 
         fs::remove(path);
     }
@@ -199,28 +199,28 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
                 fs::copy_options::overwrite_existing
             );
 
-            std::wofstream infoStream{Paths::executable(Paths::Executable::MAIN).parent_path().parent_path() / "Info.plist"};
+            std::ofstream infoStream{Paths::executable(Paths::Executable::MAIN).parent_path().parent_path() / "Info.plist"};
             infoStream << 
                 R"(<?xml version="1.0" encoding="UTF-8"?>)" "\n"
                 R"(<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">)" "\n"
                 R"(<plist version="1.0">)" "\n"
                 "<dict>\n"
                 "	<key>CFBundleDevelopmentRegion</key>\n"
-                "	<string>English</string>\n"
+                "	<wxString>English</wxString>\n"
                 "	<key>CFBundleExecutable</key>\n"
-                "	<string>ProffieConfig</string>\n"
+                "	<wxString>ProffieConfig</wxString>\n"
                 "	<key>CFBundleIconFile</key>\n"
-                "	<string>icon.icns</string>\n"
+                "	<wxString>icon.icns</wxString>\n"
                 "	<key>CFBundleIdentifier</key>\n"
-                "	<string>com.kafrenetrading.proffieconfig</string>\n"
+                "	<wxString>com.kafrenetrading.proffieconfig</wxString>\n"
                 "	<key>CFBundlePackageType</key>\n"
-                "	<string>APPL</string>\n"
+                "	<wxString>APPL</wxString>\n"
                 "	<key>CSResourcesFileMapped</key>\n"
                 "	<true/>\n"
                 "   <key>LSMinimumSystemVersion</key>\n"
-                "   <string>11.0</string>\n"
+                "   <wxString>11.0</wxString>\n"
                 "	<key>NSHumanReadableCopyright</key>\n"
-                "	<string>Copyright (C) 2024 Ryan Ogurek</string>\n"
+                "	<wxString>Copyright (C) 2024 Ryan Ogurek</wxString>\n"
                 "</dict>\n"
                 "</plist>\n";
             infoStream.close();
@@ -231,10 +231,10 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
             fs::copy_file(stagingFolder() / typeFolder(file.id.type) / item.path, path, fs::copy_options::overwrite_existing);
         }
 #       else
-        path /= filepath{item.path.ToStdWstring()};
+        path /= filepath{item.path};
         fs::remove(path);
         fs::create_directories(path.parent_path());
-        fs::copy_file(stagingFolder() / typeFolder(file.id.type) / item.path.ToStdWstring(), path, fs::copy_options::overwrite_existing);
+        fs::copy_file(stagingFolder() / typeFolder(file.id.type) / filepath{item.path}, path, fs::copy_options::overwrite_existing);
 #       endif
     }
 

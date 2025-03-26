@@ -128,8 +128,8 @@ private:
 
     wxBoxSizer *mSizer{nullptr};
 
-    void generateNewPage(const string&, const string&);
-    void useButtonOnPage(const string&, const function<void(wxCommandEvent&)>&);
+    void generateNewPage(const wxString&, const wxString&);
+    void useButtonOnPage(const wxString&, const function<void(wxCommandEvent&)>&);
     void prepareMainMenu();
     void prepareEditor();
     void linkMainMenuEvents();

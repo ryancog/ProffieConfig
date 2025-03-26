@@ -20,6 +20,7 @@
  */
 
 #include <filesystem>
+#include <iostream>
 
 #include <wx/stdpaths.h>
 
@@ -38,7 +39,7 @@ filepath Paths::approot() {
     std::error_code err;
 #   ifdef __WIN32__
     PWSTR rawStr{};
-    SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &rawStr);
+    SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &rawStr);
     array<TCHAR, MAX_PATH> shortPath;
     GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
     CoTaskMemFree(rawStr);
@@ -57,11 +58,17 @@ filepath Paths::executable(Executable exec) {
         case Executable::LAUNCHER:
 #           ifdef __WIN32__
             {
-                PWSTR rawStr{};
-                SHGetKnownFolderPath(FOLDERID_UserProgramFiles, 0, nullptr, &rawStr);
+                LPWSTR rawStr{};
+                auto res{SHGetKnownFolderPath(FOLDERID_UserProgramFiles, KF_FLAG_CREATE, nullptr, &rawStr)};
+                if (res != S_OK) {
+                    throw std::runtime_error{"Failed getting program files: " + std::to_string(res)};
+                }
                 array<TCHAR, MAX_PATH> shortPath;
-                GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
+                if (0 == GetShortPathNameW(rawStr, shortPath.data(), shortPath.size())) {
+                    throw std::runtime_error{"Failed getting shortname: " + std::to_string(GetLastError())};
+                }
                 CoTaskMemFree(rawStr);
+                std::wcout << shortPath.data() << std::endl;
                 return filepath{shortPath.data()} / "ProffieConfig.exe";
             }
 #           elif defined(__linux__)
@@ -104,7 +111,7 @@ filepath Paths::resources() { return approot() / "resources"; }
 filepath Paths::logs() {
 #   if defined(__WIN32__)
     PWSTR rawStr{};
-    SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &rawStr);
+    SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &rawStr);
     array<TCHAR, MAX_PATH> shortPath;
     GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
     CoTaskMemFree(rawStr);
@@ -112,14 +119,14 @@ filepath Paths::logs() {
 #   elif defined(__linux__)
     return data() / "logs";
 #   elif defined(__APPLE__)
-    return string(getpwuid(getuid())->pw_dir) + "/Library/Logs/ProffieConfig";
+    return std::string{getpwuid(getuid())->pw_dir} + L"/Library/Logs/ProffieConfig";
 #   endif
 }
 
 filepath Paths::data() {
 #   ifdef __WIN32__
     PWSTR rawStr{};
-    SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &rawStr);
+    SHGetKnownFolderPath(FOLDERID_RoamingAppData, KF_FLAG_CREATE, nullptr, &rawStr);
     array<TCHAR, MAX_PATH> shortPath;
     GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
     CoTaskMemFree(rawStr);

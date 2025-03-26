@@ -24,8 +24,6 @@
 #include <vector>
 #include <fstream>
 
-#include <wx/string.h>
-
 #include "utils/types.h"
 
 #include "severity.h"
@@ -37,17 +35,17 @@ class Logger;
 class LOG_EXPORT Context {
 public:
     Context() = delete;
-    Context(wxString name, vector<std::wostream *> = {}, bool outputToFile = true);
+    Context(string name, vector<std::ostream *> = {}, bool outputToFile = true);
     ~Context();
 
     static Context& getGlobal();
     static void destroyGlobal();
 
-    [[nodiscard]] Logger& createLogger(wxString name);
+    [[nodiscard]] Logger& createLogger(string name);
     [[nodiscard]] list<Logger *> getLoggers() const;
 
     void setSeverity(Severity);
-    void quickLog(Severity, wxString tag, wxString message);
+    void quickLog(Severity, string tag, string message);
 
     /**
      * Attempts to set the outputs for the global loggger.
@@ -57,18 +55,18 @@ public:
      *
      * @return true if succeeded, false otherwise
      */
-    static bool setGlobalOuput(vector<std::wostream *> outStreams, bool fileOutput = true);
+    static bool setGlobalOuput(vector<std::ostream *> outStreams, bool fileOutput = true);
 
 protected:
     friend class Logger;
     friend class Branch;
 
-    void sendOut(Severity, const wxString&);
-    const wxString pName;
+    void sendOut(Severity, const string&);
+    const string pName;
 
 private:
     std::list<Logger *> mLoggers;
-    std::vector<std::wostream *> mOutputs;
+    std::vector<std::ostream *> mOutputs;
 
     std::mutex mSendLock;
     std::mutex mListLock;
@@ -76,7 +74,7 @@ private:
     Severity mCurrentSev{Severity::DBUG};
 
     // Reserved object, should not be used except to maintain lifetime!
-    std::wofstream mRESOutFile;
+    std::ofstream mRESOutFile;
 };
 
 } // namespace Log

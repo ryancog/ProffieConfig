@@ -11,8 +11,8 @@
 class CustomOptionsDlg : public wxDialog {
 public:
   CustomOptionsDlg(EditorWindow*);
-  void addDefine(const string&, const string& = "");
-  std::vector<std::pair<string, string>> getCustomDefines();
+  void addDefine(const wxString&, const wxString& = "");
+  std::vector<std::pair<wxString, wxString>> getCustomDefines();
 
   enum {
     ID_AddDefine,

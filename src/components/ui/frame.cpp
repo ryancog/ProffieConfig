@@ -33,11 +33,11 @@ namespace PCUI {
 
 Frame::Frame(wxWindow *parent,
              wxWindowID winID,
-             const string& title,
+             const wxString& title,
              const wxPoint& pos,
              const wxSize& size,
              int32_t style,
-             const string& name) {
+             const wxString& name) {
     Create(parent, winID, title, pos, size, style, name);
 
 #	ifdef __WIN32__

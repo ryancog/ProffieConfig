@@ -26,7 +26,7 @@ namespace Log {
 
 } // namespace Log
 
-Log::Logger::Logger(wxString name, Context *context) :
+Log::Logger::Logger(string name, Context *context) :
     name(std::move(name)), pContext(context) {}
 
 Log::Logger::~Logger() {
@@ -39,7 +39,7 @@ Log::Logger::~Logger() {
     return mMessages;
 }
 
-Log::Branch* Log::Logger::branch(Severity sev, const wxString& message) {
+Log::Branch* Log::Logger::branch(Severity sev, const string& message) {
     auto *branch{new Log::Branch(message, sev, this)};
     auto formattedMessage{branch->formatted()};
 
@@ -52,27 +52,27 @@ Log::Branch* Log::Logger::branch(Severity sev, const wxString& message) {
     return branch;
 }
 
-Log::Branch* Log::Logger::berror(const wxString& message) {
+Log::Branch* Log::Logger::berror(const string& message) {
     return branch(Severity::ERR, message);
 }
 
-Log::Branch* Log::Logger::bwarn(const wxString& message) {
+Log::Branch* Log::Logger::bwarn(const string& message) {
     return branch(Severity::WARN, message);
 }
 
-Log::Branch* Log::Logger::binfo(const wxString& message) {
+Log::Branch* Log::Logger::binfo(const string& message) {
     return branch(Severity::INFO, message);
 }
 
-Log::Branch* Log::Logger::bdebug(const wxString& message) {
+Log::Branch* Log::Logger::bdebug(const string& message) {
     return branch(Severity::DBUG, message);
 }
 
-Log::Branch* Log::Logger::bverbose(const wxString& message) {
+Log::Branch* Log::Logger::bverbose(const string& message) {
     return branch(Severity::VERB, message);
 }
 
-void Log::Logger::log(Severity sev, const wxString& message) {
+void Log::Logger::log(Severity sev, const string& message) {
     auto *messageObj{new Message(message, sev, this)};
     auto formattedMessage{messageObj->formatted()};
 
@@ -83,19 +83,19 @@ void Log::Logger::log(Severity sev, const wxString& message) {
     mMessageLock.unlock();
 }
 
-void Log::Logger::error(const wxString& message) {
+void Log::Logger::error(const string& message) {
     return log(Severity::ERR, message);
 }
-void Log::Logger::warn(const wxString& message) {
+void Log::Logger::warn(const string& message) {
     return log(Severity::WARN, message);
 }
-void Log::Logger::info(const wxString& message) {
+void Log::Logger::info(const string& message) {
     return log(Severity::INFO, message);
 }
-void Log::Logger::debug(const wxString& message) {
+void Log::Logger::debug(const string& message) {
     return log(Severity::DBUG, message);
 }
-void Log::Logger::verbose(const wxString& message) {
+void Log::Logger::verbose(const string& message) {
     return log(Severity::VERB, message);
 }
 

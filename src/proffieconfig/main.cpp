@@ -21,6 +21,11 @@ public:
         return true;
     }
 
+    bool OnExceptionInMainLoop() override {
+        App::exceptionHandler();
+        return false;
+    }
+
     void OnUnhandledException() override {
         App::exceptionHandler();
     }

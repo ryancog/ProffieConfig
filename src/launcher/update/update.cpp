@@ -36,6 +36,73 @@ void Update::init() {
 
 wxEvtHandler *Update::getEventHandler() { return handler; }
 
+Update::Version::Version(string_view str) {
+    string_view convStr{str};
+    const cstring end{str.end()};
+
+    auto parseNum{[this, &convStr, &end]() -> uint8 {
+        if (convStr.data() >= end) {
+            err = Err::STR_EMPTY;
+            return 0;
+        }
+
+        char *parseEnd{};
+        int32 ret{};
+        ret = strtol(convStr.data(), &parseEnd, 10);
+
+        if (convStr == parseEnd) {
+            err = Err::STR_INVALID;
+            return 0;
+        }
+        convStr = parseEnd;
+
+        if (ret > std::numeric_limits<uint8>::max() or ret < 0) {
+            err = Err::NUM_RANGE;
+            return 0;
+        }
+
+        return static_cast<uint8>(ret);
+    }};
+
+
+    major = parseNum();
+    if (err != Err::NONE) return;
+
+    // Jump over '.'
+    convStr.remove_prefix(1);
+    minor = parseNum();
+    if (err != Err::NONE) {
+        minor = 0;
+        if (err == Err::STR_EMPTY) err = Err::NONE;
+        return;
+    }
+
+    // Jump over '.'
+    convStr.remove_prefix(1);
+    bugfix = parseNum();
+    if (err != Err::NONE) {
+        bugfix = 0;
+        if (err == Err::STR_EMPTY) err = Err::NONE;
+        return;
+    }
+
+    if (convStr == end) return;
+    if (convStr[0] != '-') {
+        err = Err::STR_INVALID;
+        return;
+    }
+
+    // Jump over '-'
+    convStr.remove_prefix(1);
+    // If has whitespace
+    if (convStr.end() != std::find_if(convStr.begin(), convStr.end(), [](char chr){ return std::isspace(chr); })) {
+        err = Err::STR_INVALID;
+        return;
+    }
+
+    tag = convStr;
+}
+
 Update::Version::operator string() const {
     switch (err) {
         case Err::INVALID:
@@ -49,7 +116,7 @@ Update::Version::operator string() const {
         case Err::NONE: break;
     }
 
-    auto ret{wxString{std::to_string(major)}};
+    auto ret{std::to_string(major)};
     ret += '.' + std::to_string(minor);
     ret += '.' + std::to_string(bugfix);
     if (not tag.empty()) ret += '-' + tag;

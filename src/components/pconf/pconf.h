@@ -38,8 +38,8 @@ struct Section;
 using Data = vector<std::shared_ptr<Entry>>;
 using HashedData = std::unordered_multimap<string, std::shared_ptr<Entry>>;
 
-PCONF_EXPORT bool read(std::wistream&, Data& out, Log::Branch *);
-PCONF_EXPORT void write(std::wostream&, const Data&, Log::Branch *); 
+PCONF_EXPORT bool read(std::istream&, Data& out, Log::Branch *);
+PCONF_EXPORT void write(std::ostream&, const Data&, Log::Branch *); 
 
 [[nodiscard]] PCONF_EXPORT HashedData hash(const Data&);
 

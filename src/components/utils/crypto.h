@@ -47,7 +47,7 @@ inline uint64 genUID(const MAP& collisionMap) {
  *
  * @return The hash as a str
  */
-UTILS_EXPORT std::string computeHash(const filepath& path);
+UTILS_EXPORT string computeHash(const filepath& path);
 
 
 } // namespace Crypto

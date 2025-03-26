@@ -89,7 +89,7 @@ public:
             const wxPoint& pos = wxDefaultPosition,
             const wxSize& size = wxDefaultSize,
             int64_t style = wxTAB_TRAVERSAL,
-            const string& objName = "MovePanel");
+            const wxString& objName = "MovePanel");
     ~MovePanel() override;
 
     void create(
@@ -99,7 +99,7 @@ public:
             const wxPoint& pos,
             const wxSize& size,
             int64_t style = wxTAB_TRAVERSAL,
-            const string& objName = "MovePanel");
+            const wxString& objName = "MovePanel");
 
     [[nodiscard]] virtual bool hitTest(wxPoint) const;
 
@@ -126,7 +126,7 @@ public:
             const wxSize& size = wxDefaultSize,
             int64_t style = wxTAB_TRAVERSAL,
             int64_t scrollStyle = wxScrolledWindowStyle,
-            const string& objName = "Scrollable Move Panel");
+            const wxString& objName = "Scrollable Move Panel");
     ~ScrolledMovePanel() override;
 
     wxScrolledCanvas* getCanvas();

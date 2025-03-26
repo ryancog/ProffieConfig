@@ -591,7 +591,7 @@ void Onboard::Overview::linkEditorEvents() {
     }, EditorWindow::ID_ExportConfig);
 }
 
-void Onboard::Overview::generateNewPage(const string& headerText, const string& bodyText) {
+void Onboard::Overview::generateNewPage(const wxString& headerText, const wxString& bodyText) {
     mSizer->Clear(true);
 
     auto *header{OnboardFrame::createHeader(this, headerText)};
@@ -607,7 +607,7 @@ void Onboard::Overview::generateNewPage(const string& headerText, const string& 
     static_cast<OnboardFrame*>(GetParent())->Layout();
 }
 
-void Onboard::Overview::useButtonOnPage(const string& buttonText, const std::function<void(wxCommandEvent&)>& eventFunction) {
+void Onboard::Overview::useButtonOnPage(const wxString& buttonText, const std::function<void(wxCommandEvent&)>& eventFunction) {
     static std::remove_const_t<std::remove_reference_t<decltype(eventFunction)>> evtFunc{nullptr};
     auto* button = new wxButton(this, OnboardFrame::ID_PageButton, buttonText);
     mSizer->Add(button);

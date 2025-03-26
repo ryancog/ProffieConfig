@@ -60,7 +60,7 @@ public:
   PCUI::Text* detectPin{nullptr};
 
   struct BladeArray {
-    wxString name{""};
+    string name;
     int32_t value{0};
 
     std::vector<PresetsPage::PresetConfig> presets;
@@ -83,7 +83,7 @@ public:
 private:
   EditorWindow* mParent{nullptr};
   wxBoxSizer* mSizer{nullptr};
-  int32_t mLastArraySelection{-1};
+  int32 mLastArraySelection{-1};
 
   void bindEvents();
   void createToolTips() const;

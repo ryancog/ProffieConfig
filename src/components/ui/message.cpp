@@ -21,7 +21,7 @@
 
 #include <wx/msgdlg.h>
 
-int32 PCUI::showMessage(const string& msg, const string& caption, int32 style, wxWindow *parent) {
+int32 PCUI::showMessage(const wxString& msg, const wxString& caption, int32 style, wxWindow *parent) {
 #   ifdef __WXMSW__
     // for dark mode
     wxGenericMessageDialog dlg(parent, msg, caption.empty() ? wxMessageBoxCaptionStr : caption, style);

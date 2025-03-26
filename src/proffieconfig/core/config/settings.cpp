@@ -61,7 +61,7 @@ void Settings::linkDefines() {
 }
 
 void Settings::setCustomInputParsers() {
-    auto numBladesParser{[this](const ProffieDefine* def, const string& input) -> bool {
+    auto numBladesParser{[this](const ProffieDefine* def, const wxString& input) -> bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
 
@@ -72,7 +72,7 @@ void Settings::setCustomInputParsers() {
   }};
   generalDefines["NUM_BLADES"]->overrideParser(numBladesParser);
 
-  auto saveStateParser{[this](const ProffieDefine* def, const string& input) -> bool {
+  auto saveStateParser{[this](const ProffieDefine* def, const wxString& input) -> bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
 
@@ -83,7 +83,7 @@ void Settings::setCustomInputParsers() {
   }};
   generalDefines["SAVE_STATE"]->overrideParser(saveStateParser);
 
-  auto orientParser{[&](const ProffieDefine* def, const string& input) -> bool {
+  auto orientParser{[&](const ProffieDefine* def, const wxString& input) -> bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
 
@@ -92,7 +92,7 @@ void Settings::setCustomInputParsers() {
   }};
   generalDefines["ORIENTATION"]->overrideParser(orientParser);
 
-  auto bladeDetectPinParser{[&](const ProffieDefine* def, const string& input) -> bool {
+  auto bladeDetectPinParser{[&](const ProffieDefine* def, const wxString& input) -> bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
     
@@ -102,7 +102,7 @@ void Settings::setCustomInputParsers() {
   }};
   generalDefines["BLADE_DETECT_PIN"]->overrideParser(bladeDetectPinParser);
 
-  auto bladeIDClassParser{[&](const ProffieDefine* def, const string& input) -> bool {
+  auto bladeIDClassParser{[&](const ProffieDefine* def, const wxString& input) -> bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
     
@@ -135,7 +135,7 @@ void Settings::setCustomInputParsers() {
   }};
   generalDefines["BLADE_ID_CLASS"]->overrideParser(bladeIDClassParser);
 
-  auto bladeIDScanMillisParser{[&](const ProffieDefine* def, const string& input) ->bool {
+  auto bladeIDScanMillisParser{[&](const ProffieDefine* def, const wxString& input) ->bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
     
@@ -145,7 +145,7 @@ void Settings::setCustomInputParsers() {
   }};
   generalDefines["BLADE_ID_SCAN_MILLIS"]->overrideParser(bladeIDScanMillisParser);
 
-  auto bladeIDTimesParser{[&](const ProffieDefine* def, const string& input) ->bool {
+  auto bladeIDTimesParser{[&](const ProffieDefine* def, const wxString& input) ->bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
     
@@ -155,23 +155,23 @@ void Settings::setCustomInputParsers() {
   }};
   generalDefines["BLADE_ID_TIMES"]->overrideParser(bladeIDTimesParser);
 
-  auto enablePowerForIDParser{[&](const ProffieDefine* def, const string& input) -> bool {
+  auto enablePowerForIDParser{[&](const ProffieDefine* def, const wxString& input) -> bool {
     auto key = ProffieDefine::parseKey(input);
     if (key.first != def->getName()) return false;
     
     mParent->bladesPage->bladeArrayDlg->enablePowerForID->SetValue(true);
-    if (key.second.find("bladePowerPin1") != wxString::npos) mParent->bladesPage->bladeArrayDlg->powerPin1->SetValue(true);
-    if (key.second.find("bladePowerPin2") != wxString::npos) mParent->bladesPage->bladeArrayDlg->powerPin2->SetValue(true);
-    if (key.second.find("bladePowerPin3") != wxString::npos) mParent->bladesPage->bladeArrayDlg->powerPin3->SetValue(true);
-    if (key.second.find("bladePowerPin4") != wxString::npos) mParent->bladesPage->bladeArrayDlg->powerPin4->SetValue(true);
-    if (key.second.find("bladePowerPin5") != wxString::npos) mParent->bladesPage->bladeArrayDlg->powerPin5->SetValue(true);
-    if (key.second.find("bladePowerPin6") != wxString::npos) mParent->bladesPage->bladeArrayDlg->powerPin6->SetValue(true);
+    if (key.second.find("bladePowerPin1") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin1->SetValue(true);
+    if (key.second.find("bladePowerPin2") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin2->SetValue(true);
+    if (key.second.find("bladePowerPin3") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin3->SetValue(true);
+    if (key.second.find("bladePowerPin4") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin4->SetValue(true);
+    if (key.second.find("bladePowerPin5") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin5->SetValue(true);
+    if (key.second.find("bladePowerPin6") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin6->SetValue(true);
 
     return true;
   }};
   generalDefines["ENABLE_POWER_FOR_ID"]->overrideParser(enablePowerForIDParser);
 
-  auto timeoutParser{[&](const ProffieDefine* def, const string& input) -> bool {
+  auto timeoutParser{[&](const ProffieDefine* def, const wxString& input) -> bool {
       auto key = ProffieDefine::parseKey(input);
       if (key.first != def->getName()) return false;
 
@@ -206,31 +206,31 @@ void Settings::setCustomInputParsers() {
   generalDefines["MOTION_TIMEOUT"]->overrideParser(timeoutParser);
 }
 void Settings::setCustomOutputParsers() {
-  generalDefines["NUM_BLADES"]->overrideOutput([&](const ProffieDefine* def) -> string {
+  generalDefines["NUM_BLADES"]->overrideOutput([&](const ProffieDefine* def) -> wxString {
     int32 numBlades{0};
     for (const BladesPage::BladeConfig& blade : mParent->bladesPage->bladeArrayDlg->bladeArrays[mParent->bladesPage->bladeArray->entry()->GetSelection()].blades) {
         numBlades += blade.subBlades.size() > 0 ? static_cast<int32>(blade.subBlades.size()) : 1;
     }
     return def->getName() + " " + std::to_string(numBlades);
   });
-  generalDefines["PLI_OFF_TIME"]->overrideOutput([](const ProffieDefine* def) -> string {
+  generalDefines["PLI_OFF_TIME"]->overrideOutput([](const ProffieDefine* def) -> wxString {
     return def->getName() + " " + std::to_string(def->getNum()) + " * 60 * 1000";
   });
-  generalDefines["IDLE_OFF_TIME"]->overrideOutput([](const ProffieDefine* def) -> string {
+  generalDefines["IDLE_OFF_TIME"]->overrideOutput([](const ProffieDefine* def) -> wxString {
     return def->getName() + " " + std::to_string(def->getNum()) + " * 60 * 1000";
   });
-  generalDefines["MOTION_TIMEOUT"]->overrideOutput([](const ProffieDefine* def) -> string {
+  generalDefines["MOTION_TIMEOUT"]->overrideOutput([](const ProffieDefine* def) -> wxString {
     return def->getName() + " " + std::to_string(def->getNum()) + " * 60 * 1000";
   });
 
-  auto orientOutput{[&](const ProffieDefine* def) -> string {
+  auto orientOutput{[&](const ProffieDefine* def) -> wxString {
       return {def->getName() + " " + Configuration::findInVMap(Configuration::ORIENTATION, def->getString()).second};
   }};
   generalDefines["ORIENTATION"]->overrideOutput(orientOutput);
 
-  generalDefines["BLADE_ID_CLASS"]->overrideOutput([&](const ProffieDefine* def) -> string {
+  generalDefines["BLADE_ID_CLASS"]->overrideOutput([&](const ProffieDefine* def) -> wxString {
     const auto mode = mParent->bladesPage->bladeArrayDlg->mode->entry()->GetSelection();
-    string returnVal = def->getName() + " ";
+    wxString returnVal = def->getName() + " ";
     if (mode == BLADE_ID_MODE_SNAPSHOT) {
         returnVal += "SnapshotBladeID<" + mParent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue().ToStdString() + ">";
     } else if (mode == BLADE_ID_MODE_BRIDGED) {
@@ -251,9 +251,9 @@ void Settings::setCustomOutputParsers() {
 
     return returnVal;
   });
-  generalDefines["ENABLE_POWER_FOR_ID"]->overrideOutput([&](const ProffieDefine* def) -> string {
-    string returnVal = def->getName() + " PowerPINS<";
-    std::vector<string> powerPins;
+  generalDefines["ENABLE_POWER_FOR_ID"]->overrideOutput([&](const ProffieDefine* def) -> wxString {
+    wxString returnVal = def->getName() + " PowerPINS<";
+    std::vector<wxString> powerPins;
     if (mParent->bladesPage->bladeArrayDlg->powerPin1->GetValue()) powerPins.emplace_back("bladePowerPin1");
     if (mParent->bladesPage->bladeArrayDlg->powerPin2->GetValue()) powerPins.emplace_back("bladePowerPin2");
     if (mParent->bladesPage->bladeArrayDlg->powerPin3->GetValue()) powerPins.emplace_back("bladePowerPin3");
@@ -271,7 +271,7 @@ void Settings::setCustomOutputParsers() {
   });
 }
 
-void Settings::parseDefines(std::vector<string>& _defList) {
+void Settings::parseDefines(std::vector<wxString>& _defList) {
   for (const auto& [key, defObj] : generalDefines) {
     for (auto entry = _defList.begin(); entry < _defList.end();) {
       if (defObj->parseDefine(*entry)) {
@@ -308,43 +308,43 @@ bool Settings::ProffieDefine::getState() const {
 
   return false;
 }
-string Settings::ProffieDefine::getString() const {
+wxString Settings::ProffieDefine::getString() const {
   if (mType == Type::TEXT) return const_cast<PCUI::Text *>(static_cast<const PCUI::Text *>(mElement))->entry()->GetValue().ToStdString();
   if (mType == Type::COMBO) return const_cast<PCUI::Choice *>(static_cast<const PCUI::Choice *>(mElement))->entry()->GetStringSelection().ToStdString();
 
   return "";
 }
 
-Settings::ProffieDefine::ProffieDefine(string _name, PCUI::Numeric* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
+Settings::ProffieDefine::ProffieDefine(wxString _name, PCUI::Numeric* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
     mType(Type::NUMERIC), mLooseChecking(_loose), mIdentifier(std::move(_name)), mElement(_element), checkOutput(std::move(_check)) {}
 
-Settings::ProffieDefine::ProffieDefine(string _name, PCUI::NumericDec* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) : 
+Settings::ProffieDefine::ProffieDefine(wxString _name, PCUI::NumericDec* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) : 
     mType(Type::DECIMAL), mLooseChecking(_loose), mIdentifier(std::move(_name)), mElement(_element), checkOutput(std::move(_check)) {}
 
-Settings::ProffieDefine::ProffieDefine(string _name, wxCheckBox* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) : 
+Settings::ProffieDefine::ProffieDefine(wxString _name, wxCheckBox* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) : 
     mLooseChecking(_loose), mIdentifier(std::move(_name)), mElement(_element), checkOutput(std::move(_check)) {}
 
-Settings::ProffieDefine::ProffieDefine(string _name, wxRadioButton* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) : 
+Settings::ProffieDefine::ProffieDefine(wxString _name, wxRadioButton* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) : 
     mType(Type::RADIO), mLooseChecking(_loose), mIdentifier(std::move(_name)), mElement(_element), checkOutput(std::move(_check)) {}
 
-Settings::ProffieDefine::ProffieDefine(string _name, PCUI::Choice* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) : 
+Settings::ProffieDefine::ProffieDefine(wxString _name, PCUI::Choice* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) : 
     mType(Type::COMBO), mLooseChecking(_loose), mIdentifier(std::move(_name)), mElement(_element), checkOutput(std::move(_check)) {}
 
-Settings::ProffieDefine::ProffieDefine(string _name, PCUI::Text* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) : 
+Settings::ProffieDefine::ProffieDefine(wxString _name, PCUI::Text* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) : 
     mType(Type::TEXT), mLooseChecking(_loose), mIdentifier(std::move(_name)), mElement(_element), checkOutput(std::move(_check)) {}
 
-std::pair<string, string> Settings::ProffieDefine::parseKey(const string& _input) {
-    std::pair<string, string> key;
+std::pair<wxString, wxString> Settings::ProffieDefine::parseKey(const wxString& _input) {
+    std::pair<wxString, wxString> key;
 
     constexpr cstring DELIMITER{" \n\r"};
     auto keyPos{_input.find_first_not_of(DELIMITER)};
-    if (keyPos == wxString::npos) return key;
+    if (keyPos == string::npos) return key;
     auto keyEnd{_input.find_first_of(DELIMITER, keyPos)};
     key.first = _input.substr(keyPos, keyEnd - keyPos);
-    if (keyEnd == wxString::npos) return key;
+    if (keyEnd == string::npos) return key;
 
     auto valuePos{_input.find_first_not_of(DELIMITER, keyEnd)};
-    if (valuePos == wxString::npos) return key;
+    if (valuePos == string::npos) return key;
     auto valueEnd{_input.find_last_not_of(DELIMITER)};
     key.second = _input.substr(valuePos, valueEnd - valuePos + 1);
     

@@ -108,7 +108,7 @@ optional<Update::Data> Update::parseData(PCUI::ProgressDialog *prog, Log::Branch
         return nullopt;
     }
 
-    std::wifstream stream{manifestFile()};
+    std::ifstream stream{manifestFile()};
     PConf::Data rawData;
     PConf::read(stream, rawData, logger.binfo("Parsing manifest..."));
     stream.close();
@@ -151,7 +151,7 @@ bool Update::checkMessages(const PConf::HashedData& hashedRawData, Log::Branch& 
 
     Version launcherVersion{wxSTRINGIZE(EXEC_VERSION)};
     if (not launcherVersion) {
-        logger.error("This launcher's version is invalid (" + string(launcherVersion) + "), messages will not be available!!");
+        logger.error("This launcher's version is invalid (" + static_cast<string>(launcherVersion) + "), messages will not be available!!");
         return false;
     }
 
@@ -193,9 +193,9 @@ bool Update::checkMessages(const PConf::HashedData& hashedRawData, Log::Branch& 
             }
         }
         if (not std::isdigit(label[0])) label = label.substr(1);
-        Version version{label.ToStdWstring()};
+        Version version{label};
         if (not version) {
-            logger.warn("Failed to parse message version: " + string(version));
+            logger.warn("Failed to parse message version: " + static_cast<string>(version));
             continue;
         }
 
@@ -248,7 +248,8 @@ optional<std::pair<string, Update::Item>> Update::parseItem(const std::shared_pt
         logger.warn("Item missing name!");
         return nullopt; 
     }
-    auto name{entry->label.value()};
+
+    auto name{*entry->label};
 
     if (entry->getType() != PConf::Type::SECTION) {
         logger.warn("Item \"" + name + "\" not a section!");
@@ -293,13 +294,13 @@ optional<std::pair<string, Update::Item>> Update::parseItem(const std::shared_pt
             continue;
         }
 
-        Version version{versionIt->second->label->ToStdWstring()};
+        Version version{*versionIt->second->label};
         if (not version) {
             string errMsg{"Item \""};
             errMsg += name;
             errMsg += "\" version \"";
             errMsg += versionIt->second->label.value(); 
-            errMsg += "\" invalid version str: " + string(version);
+            errMsg += "\" invalid version str: " + static_cast<string>(version);
             logger.warn(errMsg);
             continue;
         }
@@ -312,7 +313,7 @@ optional<std::pair<string, Update::Item>> Update::parseItem(const std::shared_pt
             string errMsg{"Item \""}; 
             errMsg += name;
             errMsg += "\" version "; 
-            errMsg += string{version};
+            errMsg += static_cast<string>(version);
             errMsg += " does not have hash for this OS, skipping.";
             logger.info(errMsg);
             continue;
@@ -321,7 +322,7 @@ optional<std::pair<string, Update::Item>> Update::parseItem(const std::shared_pt
             string errMsg{"Item \""}; 
             errMsg += name;
             errMsg += "\" version ";
-            errMsg += string(version);
+            errMsg += static_cast<string>(version);
             errMsg += " hash missing value.";
             logger.warn(errMsg);
             continue;
@@ -330,14 +331,14 @@ optional<std::pair<string, Update::Item>> Update::parseItem(const std::shared_pt
             string errMsg{"Item \""}; 
             errMsg += name;
             errMsg += "\" version ";
-            errMsg += string(version);
+            errMsg += static_cast<string>(version);
             errMsg += " has invalid hash.";
             logger.warn(errMsg);
             continue;
         }
 
         ItemVersionData versionData;
-        versionData.hash = versionHash->second->value.value();
+        versionData.hash = *versionHash->second->value;
 
         auto fixes{hashedVersionEntries.equal_range("FIX")};
         for (auto fixIt{fixes.first}; fixIt != fixes.second; ++fixIt) {
@@ -345,7 +346,7 @@ optional<std::pair<string, Update::Item>> Update::parseItem(const std::shared_pt
                 string errMsg{"Item \""}; 
                 errMsg += name;
                 errMsg += "\" version "; 
-                errMsg += string(version);
+                errMsg += static_cast<string>(version);
                 errMsg += " fix missing value.";
                 logger.warn(errMsg);
                 continue;
@@ -359,7 +360,7 @@ optional<std::pair<string, Update::Item>> Update::parseItem(const std::shared_pt
                 string errMsg{"Item \""}; 
                 errMsg += name;
                 errMsg += "\" version ";
-                errMsg += string(version);
+                errMsg += static_cast<string>(version);
                 errMsg += " change missing value.";
                 logger.warn(errMsg);
                 continue;
@@ -373,7 +374,7 @@ optional<std::pair<string, Update::Item>> Update::parseItem(const std::shared_pt
                 string errMsg{"Item \""}; 
                 errMsg += name;
                 errMsg += "\" version ";
-                errMsg += string(version);
+                errMsg += static_cast<string>(version);
                 errMsg += " feature missing value.";
                 logger.warn(errMsg);
                 continue;
@@ -403,9 +404,9 @@ std::map<Update::Version, Update::Bundle> Update::resolveBundles(const PConf::Ha
             continue;
         }
 
-        Version version{bundleIt->second->label->ToStdWstring()};
+        Version version{*bundleIt->second->label};
         if (not version) {
-            logger.warn("Bundle \"" + bundleIt->second->label.value() + "\" version invalid: " + string(version));
+            logger.warn("Bundle \"" + *bundleIt->second->label + "\" version invalid: " + static_cast<string>(version));
             continue;
         }
 
@@ -414,7 +415,7 @@ std::map<Update::Version, Update::Bundle> Update::resolveBundles(const PConf::Ha
 
         auto noteIt{hashedEntries.find("NOTE")};
         if (noteIt != hashedEntries.end()) {
-            if (not noteIt->second->value) logger.warn("Bundle \"" + string(version) + "\" note missing value");
+            if (not noteIt->second->value) logger.warn("Bundle \"" + static_cast<string>(version) + "\" note missing value");
             else bundle.note = noteIt->second->value.value();
         }
 
@@ -427,13 +428,13 @@ std::map<Update::Version, Update::Bundle> Update::resolveBundles(const PConf::Ha
                 logger.warn("Item \"" + item->label.value() + "\" is unversioned.");
                 return nullopt;
             }
-            Version version{item->value->ToStdWstring()};
+            Version version{*item->value};
             if (not version) {
                 logger.warn("Item \"" + item->label.value() + "\" version \"" + item->value.value() + "\" is invalid: " + static_cast<string>(version));
                 return nullopt;
             }
 
-            return std::pair{ item->label.value(), version };
+            return std::pair{ *item->label, version };
         }};
 
         auto fillReqFiles{[&](std::pair<PConf::HashedData::const_iterator, PConf::HashedData::const_iterator> range, ItemType type) {

@@ -89,16 +89,16 @@ public:
             wxWindow *parent,
             wxWindowID winID,
             bool initialValue = false,
-            string onText = "True",
-            string offText = "False",
+            wxString onText = "True",
+            wxString offText = "False",
             int64 style = 0,
-            const string& label = {},
+            const wxString& label = {},
             wxOrientation orient = wxVERTICAL
         );
 
 private:
-    string mOnText;
-    string mOffText;
+    wxString mOnText;
+    wxString mOffText;
     int64 mStyle;
 };
 
@@ -108,7 +108,7 @@ public:
             wxWindow *parent,
             wxWindowID winID,
             const wxArrayString& choices,
-            const string& label = {},
+            const wxString& label = {},
             wxOrientation orient = wxVERTICAL
           );
 };
@@ -120,7 +120,7 @@ public:
             wxWindowID winID,
             const wxArrayString& choices,
             wxString defaultValue = wxEmptyString,
-            const string& label = {},
+            const wxString& label = {},
             wxOrientation orient = wxVERTICAL
             );
 };
@@ -135,7 +135,7 @@ public:
             int32 initial   = 0,
             int32 increment = 1,
             int64 style = wxSP_ARROW_KEYS,
-            const string& label = {},
+            const wxString& label = {},
             const wxOrientation& orient = wxVERTICAL
            );
 };
@@ -150,7 +150,7 @@ public:
             float64 initial   = 0,
             float64 increment = 1,
             int64 style = wxSP_ARROW_KEYS,
-            const string& label = {},
+            const wxString& label = {},
             const wxOrientation& orient = wxVERTICAL
             );
 };
@@ -160,23 +160,23 @@ public:
     Text(
             wxWindow *parent,
             wxWindowID winID = wxID_ANY,
-            const string &initial = {},
+            const wxString &initial = {},
             int64 style = 0,
-            const string &label = {},
+            const wxString &label = {},
             wxOrientation orient = wxVERTICAL
         );
 
     // TODO: Set up use of validators to forbid certain entry.
     //
-    // Prevent any chars in the given string from being entered.
-    // void setInvalidChars(const string&);
+    // Prevent any chars in the given wxString from being entered.
+    // void setInvalidChars(const wxString&);
 
-    // [[nodiscard]] string getInvalidChars() const;
+    // [[nodiscard]] wxString getInvalidChars() const;
 
 private:
     // void pruneText();
 
-    // string mInvalidChars;
+    // wxString mInvalidChars;
 };
 
 } // namespace PCUI

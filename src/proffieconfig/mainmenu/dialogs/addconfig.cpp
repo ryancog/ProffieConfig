@@ -54,22 +54,22 @@ void AddConfig::createUI() {
   modeSelection->Add(createNew, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 10));
   modeSelection->Add(importExisting, wxSizerFlags(0).Border(wxRIGHT | wxTOP | wxBOTTOM, 10));
 
-  chooseConfigText = new wxStaticText(this, wxID_ANY, "Configuration to Import");
+  mChooseConfigText = new wxStaticText(this, wxID_ANY, "Configuration to Import");
   chooseConfig = new wxFilePickerCtrl(this, ID_ChooseConfig, wxEmptyString, "Choose Configuration File to Import", "ProffieOS Configuration (*.h)|*.h");
 
   configNameEntry = new PCUI::Text(this, ID_ConfigName, {}, 0, "Configuration Name");
 
-  invalidNameWarning = new wxStaticText(this, wxID_ANY, "Please enter a valid name");
-  duplicateWarning = new wxStaticText(this, wxID_ANY, "Configuration with same name already exists");
-  fileSelectionWarning = new wxStaticText(this, wxID_ANY, "Please choose a configuration file to import");
+  mInvalidNameWarning = new wxStaticText(this, wxID_ANY, "Please enter a valid name");
+  mDuplicateWarning = new wxStaticText(this, wxID_ANY, "Configuration with same name already exists");
+  mFileSelectionWarning = new wxStaticText(this, wxID_ANY, "Please choose a configuration file to import");
 
   sizer->Add(modeSelection, wxSizerFlags(0).Center());
-  sizer->Add(chooseConfigText, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10).DoubleBorder(wxLEFT));
+  sizer->Add(mChooseConfigText, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10).DoubleBorder(wxLEFT));
   sizer->Add(chooseConfig, wxSizerFlags(0).Expand().Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
   sizer->Add(configNameEntry, wxSizerFlags(0).Expand().Border(wxBOTTOM | wxLEFT | wxRIGHT, 10));
-  sizer->Add(invalidNameWarning, wxSizerFlags(0).Right().Border(wxRIGHT, 10));
-  sizer->Add(duplicateWarning, wxSizerFlags(0).Right().Border(wxRIGHT, 10));
-  sizer->Add(fileSelectionWarning, wxSizerFlags(0).Right().Border(wxRIGHT, 10));
+  sizer->Add(mInvalidNameWarning, wxSizerFlags(0).Right().Border(wxRIGHT, 10));
+  sizer->Add(mDuplicateWarning, wxSizerFlags(0).Right().Border(wxRIGHT, 10));
+  sizer->Add(mFileSelectionWarning, wxSizerFlags(0).Right().Border(wxRIGHT, 10));
   sizer->AddStretchSpacer(1);
   sizer->Add(CreateStdDialogButtonSizer(wxOK | wxCANCEL), wxSizerFlags(0).Border(wxALL, 10).Expand());
 
@@ -91,13 +91,13 @@ void AddConfig::update() {
   auto importingConfig = importExisting->GetValue();
   auto originFileSelected = chooseConfig->GetFileName().FileExists();
 
-  duplicateWarning->Show(duplicateConfigName);
-  invalidNameWarning->Show(!validConfigName);
-  fileSelectionWarning->Show(importingConfig && !originFileSelected);
+  mDuplicateWarning->Show(duplicateConfigName);
+  mInvalidNameWarning->Show(!validConfigName);
+  mFileSelectionWarning->Show(importingConfig && !originFileSelected);
 
   FindWindowById(wxID_OK)->Enable(validConfigName && (importingConfig ? originFileSelected : true));
 
-  chooseConfigText->Show(importingConfig);
+  mChooseConfigText->Show(importingConfig);
   chooseConfig->Show(importingConfig);
 
   Layout(); // Although linux and windows seem to work without this, macOS requires it.
