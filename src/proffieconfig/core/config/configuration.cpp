@@ -825,7 +825,8 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
 
         // Read actual styles
         for (int32_t blade = 0; blade < editor->settings->numBlades; ++blade) {
-            size_t styleDepth{0};
+            int32 styleDepth{0};
+            int32 parenDepth{0};
             string styleString;
             string commentString;
 
@@ -834,11 +835,11 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
 
                 if (chr == '\r') continue;
                 if (
-                                chr == '/' and
-                                reading != LONG_COMMENT and
-                                reading != LONG_COMMENT_NEW_LINE and
-                                reading != LINE_COMMENT
-                                ) {
+                        chr == '/' and
+                        reading != LONG_COMMENT and
+                        reading != LONG_COMMENT_NEW_LINE and
+                        reading != LINE_COMMENT
+                   ) {
                     if (file.peek() == '*') {
                         prevReading = reading;
                         reading = LONG_COMMENT;
@@ -873,7 +874,9 @@ void Configuration::readPresetArray(std::ifstream& file, EditorWindow* editor) {
                 if (reading == NONE) {
                     if (chr == '<') ++styleDepth;
                     else if (chr == '>') --styleDepth;
-                    else if (chr == ',' and styleDepth == 0) {
+                    else if (chr == '(') ++parenDepth;
+                    else if (chr == ')') --parenDepth;
+                    else if (chr == ',' and styleDepth == 0 and parenDepth == 0) {
                         // Reached end of style
                         break;
                     }
