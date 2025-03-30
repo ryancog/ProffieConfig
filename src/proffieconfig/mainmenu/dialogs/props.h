@@ -22,21 +22,21 @@ public:
     };
 
 private:
-    MainMenu* parent{nullptr};
+    MainMenu* mParent{nullptr};
 
-    wxStaticText* choosePropText{nullptr};
-    wxFilePickerCtrl* chooseProp{nullptr};
-    wxStaticText* choosePropConfigText{nullptr};
-    wxFilePickerCtrl* choosePropConfig{nullptr};
+    wxStaticText* mChoosePropText{nullptr};
+    wxFilePickerCtrl* mChooseProp{nullptr};
+    wxStaticText* mChoosePropConfigText{nullptr};
+    wxFilePickerCtrl* mChoosePropConfig{nullptr};
 
-    wxStaticText* duplicateWarning{nullptr};
-    wxStaticText* fileSelectionWarning{nullptr};
+    wxStaticText* mDuplicateWarning{nullptr};
+    wxStaticText* mFileSelectionWarning{nullptr};
 
-    wxToggleButton *viewExisting{nullptr};
-    wxToggleButton *addProp{nullptr};
+    wxToggleButton *mViewExisting{nullptr};
+    wxToggleButton *mAddProp{nullptr};
 
-    wxPanel *existingPanel;
-    wxPanel *addPanel;
+    wxPanel *mExistingPanel{nullptr};
+    wxPanel *mAddPanel{nullptr};
 
     void update();
     void createUI();

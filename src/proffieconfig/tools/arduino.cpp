@@ -1,4 +1,5 @@
 #include "arduino.h"
+#include "wx/translation.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
@@ -314,7 +315,7 @@ vector<wxString> Arduino::getBoards(Log::Branch& lBranch) {
             logger.debug("Found board: " + port);
         } else if (line.find("dfu") != string::npos) {
             const auto port{line.substr(0, line.find_first_of(" \t"))};
-            boards.emplace_back("BOOTLOADER|" + port);
+            boards.emplace_back(_("BOOTLOADER") + '|' + port);
             logger.debug("Found board in bootloader mode: " + port);
         }
 
@@ -331,7 +332,7 @@ vector<wxString> Arduino::getBoards(Log::Branch& lBranch) {
     }
 
 #   ifdef __WINDOWS__
-    boards.emplace_back("BOOTLOADER RECOVERY");
+    boards.emplace_back(_("BOOTLOADER RECOVERY"));
 #   endif
     return boards;
 }
@@ -367,7 +368,7 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
         if (window->boardSelect->entry()->GetSelection() == -1) {
             window->boardSelect->entry()->SetSelection(0);
             progDialog->emitEvent(100, "Error!");
-            auto* msg{new Misc::MessageBoxEvent(wxID_ANY, "Please make sure your board is connected and selected, then try again!", "Board Selection Error", wxOK | wxICON_ERROR)};
+            auto* msg{new Misc::MessageBoxEvent(wxID_ANY, _("Please make sure your board is connected and selected, then try again!"), _("Board Selection Error"), wxOK | wxICON_ERROR)};
             logger.warn("Board was not found.");
             wxQueueEvent(window, msg);
             wxQueueEvent(window, evt);
@@ -390,8 +391,8 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
             progDialog->emitEvent(100, "Error");
             auto* msg{new Misc::MessageBoxEvent{
                 wxID_ANY, 
-                "There was an error while updating ProffieOS file:\n\n" + returnVal.substr(0, MAX_ERRMESSAGE_LENGTH), 
-                "Files Error"
+                wxString::Format(_("There was an error while updating ProffieOS file:\n\n%s"), returnVal.substr(0, MAX_ERRMESSAGE_LENGTH)),
+                _("Files Error")
             }};
             wxQueueEvent(window, msg);
             wxQueueEvent(window, evt);
@@ -409,8 +410,8 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
             progDialog->emitEvent(100, "Error");
             auto* msg{new Misc::MessageBoxEvent{
                 wxID_ANY,
-                "There was an error while compiling:\n\n" + returnVal.substr(0, MAX_ERRMESSAGE_LENGTH), 
-                "Compile Error"
+                wxString::Format(_("There was an error while compiling:\n\n%s"), returnVal.substr(0, MAX_ERRMESSAGE_LENGTH)),
+                _("Compile Error")
             }};
             wxQueueEvent(window, msg);
             wxQueueEvent(window, evt);
@@ -427,8 +428,8 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
             progDialog->emitEvent(100, "Error");
             auto* msg{new Misc::MessageBoxEvent{
                 wxID_ANY, 
-                "There was an error while uploading:\n\n" + returnVal.substr(0, MAX_ERRMESSAGE_LENGTH),
-                "Upload Error"
+                wxString::Format(_("There was an error while uploading:\n\n%s"), returnVal.substr(0, MAX_ERRMESSAGE_LENGTH)),
+                _("Upload Error"),
             }};
             wxQueueEvent(window, msg);
             wxQueueEvent(window, evt);
@@ -440,8 +441,8 @@ void Arduino::applyToBoard(MainMenu* window, EditorWindow* editor) {
 
         auto* msg{new Misc::MessageBoxEvent{
             wxID_ANY,
-            "Changes Successfully Applied to ProffieBoard!", 
-            "Apply Changes to Board",
+            _("Changes Successfully Applied to ProffieBoard!"),
+            _("Apply Changes to Board"),
             wxOK | wxICON_INFORMATION
         }};
         wxQueueEvent(window, msg);
@@ -486,8 +487,8 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
             progDialog->emitEvent(100, "Error");
             auto* msg{new Misc::MessageBoxEvent{
                 wxID_ANY, 
-                "There was an error while updating ProffieOS file:\n\n" + returnVal.substr(0, MAX_ERRMESSAGE_LENGTH), 
-                "Files Error"
+                wxString::Format(_("There was an error while updating ProffieOS file:\n\n%s"), returnVal.substr(0, MAX_ERRMESSAGE_LENGTH)),
+                _("Files Error")
             }};
             wxQueueEvent(parent, msg);
             wxQueueEvent(parent, evt);
@@ -500,8 +501,8 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
             progDialog->emitEvent(100, "Error");
             auto* msg{new Misc::MessageBoxEvent{
                 wxID_ANY,
-                "There was an error while compiling:\n\n" + returnVal.substr(0, MAX_ERRMESSAGE_LENGTH),
-                "Compile Error"
+                wxString::Format(_("There was an error while compiling:\n\n%s"), returnVal.substr(0, MAX_ERRMESSAGE_LENGTH)),
+                _("Compile Error")
             }};
             wxQueueEvent(parent, msg);
             wxQueueEvent(parent, evt);
@@ -513,21 +514,43 @@ void Arduino::verifyConfig(wxWindow* parent, EditorWindow* editor) {
         const auto usedPos{returnVal.find(USED_PREFIX.data())};
         const auto maxPos{returnVal.find(MAX_PREFIX.data())};
 
-        string successMessage{"Config Verified Successfully!"};
+        constexpr cstring SUCCESS_MESSAGE{wxTRANSLATE("Config Verified Successfully!")};
+        wxString message;
         if (usedPos != string::npos and maxPos != string::npos) {
             const auto usedBytes{std::stoi(returnVal.substr(usedPos + USED_PREFIX.length()))};
             const auto maxBytes{std::stoi(returnVal.substr(maxPos + MAX_PREFIX.length()))};
 
             auto percent{std::round(usedBytes * 10000.0 / maxBytes) / 100.0};
 
-            std::ostringstream successStream;
-            successStream << "\n\nThe configuration uses " << percent << "% of board space. (" << usedBytes << '/' << maxBytes << ')';
-            successMessage += successStream.str();
+            constexpr cstring USAGE_MESSAGE{wxTRANSLATE("The configuration uses %d%% of board space. (%d/%d)")};
+            logger.info(wxString::Format(
+                "%s %s",
+                SUCCESS_MESSAGE,
+                wxString::Format(
+                    USAGE_MESSAGE,
+                    percent,
+                    usedBytes,
+                    maxBytes
+                )
+            ).ToStdString());
+
+            message = wxString::Format(
+                "%s\n\n%s",
+                wxGetTranslation(SUCCESS_MESSAGE),
+                wxString::Format(
+                    wxGetTranslation(USAGE_MESSAGE),
+                    percent,
+                    usedBytes,
+                    maxBytes
+                )
+            );
+        } else {
+            message = wxGetTranslation(SUCCESS_MESSAGE);
+            logger.info(SUCCESS_MESSAGE);
         }
-        logger.info(successMessage);
 
         progDialog->emitEvent(100, "Done.");
-        auto* msg{new Misc::MessageBoxEvent(wxID_ANY, successMessage, "Verify Config", wxOK | wxICON_INFORMATION)};
+        auto* msg{new Misc::MessageBoxEvent(wxID_ANY, message, _("Verify Config"), wxOK | wxICON_INFORMATION)};
         wxQueueEvent(parent, msg);
         evt->succeeded = true;
         wxQueueEvent(parent, evt);
@@ -668,7 +691,7 @@ bool Arduino::upload(string& _return, EditorWindow* editor, Progress* progDialog
 
 #   ifdef __WINDOWS__
     auto boardPath{static_cast<MainMenu *>(editor->GetParent())->boardSelect->entry()->GetStringSelection()};
-    if (boardPath != "BOOTLOADER RECOVERY") {
+    if (boardPath != _("BOOTLOADER RECOVERY")) {
         // See https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#win32-device-namespaces
         boardPath = R"(\\.\)" + boardPath;
         progDialog->emitEvent(50, "Rebooting Proffieboard...");
@@ -697,7 +720,7 @@ bool Arduino::upload(string& _return, EditorWindow* editor, Progress* progDialog
     }
 #   else 
     const auto boardPath{static_cast<MainMenu*>(editor->GetParent())->boardSelect->entry()->GetStringSelection().ToStdString()};
-    if (boardPath.find("BOOTLOADER|") == string::npos) {
+    if (boardPath.find(_("BOOTLOADER")) == string::npos) {
         progDialog->emitEvent(-1, "Rebooting Proffieboard...");
         struct termios newtio;
         auto fd = open(boardPath.c_str(), O_RDWR | O_NOCTTY);

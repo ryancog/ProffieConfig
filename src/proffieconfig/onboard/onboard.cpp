@@ -22,54 +22,56 @@
 const wxEventTypeTag<Onboard::UpdateEvent> OnboardFrame::EVT_UPDATE(wxNewEventType());
 
 OnboardFrame* OnboardFrame::instance{nullptr};
-OnboardFrame::OnboardFrame() : PCUI::Frame(nullptr, wxID_ANY, "ProffieConfig First-Time Setup", wxDefaultPosition, wxDefaultSize, wxSYSTEM_MENU | wxCLOSE_BOX | wxMINIMIZE_BOX | wxCAPTION | wxCLIP_CHILDREN) {
-  auto *sizer{new wxBoxSizer(wxVERTICAL)};
-  auto *contentSizer{new wxBoxSizer(wxHORIZONTAL)};
-  auto *icon{PCUI::createStaticImage(this, wxID_ANY, Image::loadPNG("icon"))};
-  icon->SetMaxSize(wxSize{256, 256});
+OnboardFrame::OnboardFrame() : 
+    PCUI::Frame(nullptr, wxID_ANY, _("ProffieConfig First-Time Setup"), wxDefaultPosition, wxDefaultSize, wxSYSTEM_MENU | wxCLOSE_BOX | wxMINIMIZE_BOX | wxCAPTION | wxCLIP_CHILDREN) {
+    auto *sizer{new wxBoxSizer(wxVERTICAL)};
+    auto *contentSizer{new wxBoxSizer(wxHORIZONTAL)};
+    auto *icon{PCUI::createStaticImage(this, wxID_ANY, Image::loadPNG("icon"))};
+    icon->SetMaxSize(wxSize{256, 256});
 
-  contentSizer->Add(icon, wxSizerFlags(0).Border(wxALL, 10));
-  mWelcomePage = new Onboard::Welcome(this);
-  mDependencyPage = new Onboard::DependencyInstall(this);
-  mDependencyPage->Hide();
-  mOverviewPage = new Onboard::Overview(this);
-  mOverviewPage->Hide();
-  contentSizer->Add(mWelcomePage, wxSizerFlags(1).Expand());
-  contentSizer->Add(mDependencyPage, wxSizerFlags(1).Expand());
-  contentSizer->Add(mOverviewPage, wxSizerFlags(1).Expand());
+    contentSizer->Add(icon, wxSizerFlags(0).Border(wxALL, 10));
+    mWelcomePage = new Onboard::Welcome(this);
+    mDependencyPage = new Onboard::DependencyInstall(this);
+    mDependencyPage->Hide();
+    mOverviewPage = new Onboard::Overview(this);
+    mOverviewPage->Hide();
+    contentSizer->Add(mWelcomePage, wxSizerFlags(1).Expand());
+    contentSizer->Add(mDependencyPage, wxSizerFlags(1).Expand());
+    contentSizer->Add(mOverviewPage, wxSizerFlags(1).Expand());
 
-  auto *buttonSizer{new wxBoxSizer(wxHORIZONTAL)};
-  mSkipIntro = new wxButton(this, ID_SkipIntro, "Skip Introduction");
-  mSkipIntro->Hide();
-  mSkipInstall = new wxButton(this, ID_SkipInstall, "Skip Dependency Installation");
-  mSkipInstall->Hide();
-  mNext = new wxButton(this, ID_Next, "Next >");
-  mCancel = new wxButton(this, ID_Cancel, "Cancel");
-  buttonSizer->Add(mSkipIntro, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 10));
-  buttonSizer->Add(mSkipInstall, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 10));
-  buttonSizer->AddStretchSpacer();
-  buttonSizer->Add(mNext, wxSizerFlags(0).Border(wxRIGHT | wxTOP | wxBOTTOM, 10));
-  buttonSizer->Add(mCancel, wxSizerFlags(0).Border(wxRIGHT | wxTOP | wxBOTTOM, 10));
+    auto *buttonSizer{new wxBoxSizer(wxHORIZONTAL)};
+    mSkipIntro = new wxButton(this, ID_SkipIntro, _("Skip Introduction"));
+    mSkipIntro->Hide();
+    mSkipInstall = new wxButton(this, ID_SkipInstall, _("Skip Dependency Installation"));
+    mSkipInstall->Hide();
+    mNext = new wxButton(this, ID_Next, _("Next >"));
+    mCancel = new wxButton(this, ID_Cancel, _("Cancel"));
+    buttonSizer->Add(mSkipIntro, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 10));
+    buttonSizer->Add(mSkipInstall, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 10));
+    buttonSizer->AddStretchSpacer();
+    buttonSizer->Add(mNext, wxSizerFlags(0).Border(wxRIGHT | wxTOP | wxBOTTOM, 10));
+    buttonSizer->Add(mCancel, wxSizerFlags(0).Border(wxRIGHT | wxTOP | wxBOTTOM, 10));
 
-  sizer->Add(contentSizer, wxSizerFlags(1).Expand().Border(wxALL, 10));
-  sizer->Add(new wxStaticLine(this, wxID_ANY), wxSizerFlags(0).Expand().Border(wxLEFT | wxRIGHT, 10));
-  sizer->Add(buttonSizer, wxSizerFlags(0).Expand());
+    sizer->Add(contentSizer, wxSizerFlags(1).Expand().Border(wxALL, 10));
+    sizer->Add(new wxStaticLine(this, wxID_ANY), wxSizerFlags(0).Expand().Border(wxLEFT | wxRIGHT, 10));
+    sizer->Add(buttonSizer, wxSizerFlags(0).Expand());
 
-  sizer->SetMinSize(wxSize(900, 430));
-  SetSizerAndFit(sizer);
+    sizer->SetMinSize(wxSize(900, 430));
+    SetSizerAndFit(sizer);
 
-  bindEvents(); // Do this first so children can bind their events to parent state.
+    bindEvents(); // Do this first so children can bind their events to parent state.
 
-  CentreOnScreen();
-  Show(true);
+    CentreOnScreen();
+    Show(true);
 }
+
 OnboardFrame::~OnboardFrame() {
-  instance = nullptr;
+    instance = nullptr;
 }
 
 void OnboardFrame::bindEvents() {
     Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent &event) {
-        if (event.CanVeto() && PCUI::showMessage("Are you sure you want to cancel setup?", "Exit ProffieConfig", wxYES_NO | wxNO_DEFAULT | wxCENTER, this) == wxNO) {
+        if (event.CanVeto() && PCUI::showMessage(_("Are you sure you want to cancel setup?"), _("Exit ProffieConfig"), wxYES_NO | wxNO_DEFAULT | wxCENTER, this) == wxNO) {
             event.Veto();
             return;
         }
@@ -79,9 +81,10 @@ void OnboardFrame::bindEvents() {
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Close(); }, ID_Cancel);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
         if (PCUI::showMessage(
-                "Are you sure you want to skip the Introduction?\n" "\n"
-                "The introduction covers all the basics and usage of ProffieConfig.\n",
-                "Skip Introduction", wxYES_NO | wxNO_DEFAULT | wxICON_EXCLAMATION,
+                _("Are you sure you want to skip the Introduction?") + 
+                "\n\n" +
+                _("The introduction covers all the basics and usage of ProffieConfig."),
+                _("Skip Introduction"), wxYES_NO | wxNO_DEFAULT | wxICON_EXCLAMATION,
                 this) == wxYES
             ) {
             wxPostEvent(GetEventHandler(), wxCommandEvent(wxEVT_BUTTON, ID_Next));
@@ -94,12 +97,8 @@ void OnboardFrame::bindEvents() {
     }, ID_SkipInstall);
     Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
     Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
-        PCUI::showMessage(
-            ((Misc ::MessageBoxEvent *)&event)->message.ToStdString(),
-            ((Misc ::MessageBoxEvent *)&event)->caption.ToStdString(),
-            ((Misc ::MessageBoxEvent *)&event)->style, 
-            this
-        );
+        const auto& msgEvent{static_cast<Misc::MessageBoxEvent&>(event)};
+        PCUI::showMessage(msgEvent.message, msgEvent.caption, msgEvent.style, this);
     },
     wxID_ANY);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
@@ -136,7 +135,7 @@ void OnboardFrame::bindEvents() {
             mDependencyPage->pressNext->Show();
             mDependencyPage->Layout();
 
-            PCUI::showMessage("Dependency installation failed, please try again.\n\n" + event.message.ToStdString(), "Installation Failure", wxOK | wxCENTER, this);
+            PCUI::showMessage(_("Dependency installation failed, please try again.") + "\n\n" + event.message.ToStdString(), _("Installation Failure"), wxOK | wxCENTER, this);
         }
     }, ID_DependencyInstall);
     Bind(Arduino::EVT_INIT_DONE, [this](Arduino::Event& evt) {
@@ -149,41 +148,41 @@ void OnboardFrame::bindEvents() {
 }
 
 void OnboardFrame::update() {
-  if (mOverviewPage->IsShown()) {
-    mSkipIntro->Show();
-    mSkipInstall->Hide();
-    mNext->Enable(mOverviewPage->isDone);
-    mNext->SetLabel("Finish");
-  } else if (mDependencyPage->IsShown() && AppState::doneWithFirstRun) {
-    mSkipInstall->Show();
-  } else {
-    mSkipIntro->Hide();
-    mSkipInstall->Hide();
-    mNext->Enable();
-    mNext->SetLabel("Next >");
-  }
+    if (mOverviewPage->IsShown()) {
+        mSkipIntro->Show();
+        mSkipInstall->Hide();
+        mNext->Enable(mOverviewPage->isDone);
+        mNext->SetLabel(_("Finish"));
+    } else if (mDependencyPage->IsShown() && AppState::doneWithFirstRun) {
+        mSkipInstall->Show();
+    } else {
+        mSkipIntro->Hide();
+        mSkipInstall->Hide();
+        mNext->Enable();
+        mNext->SetLabel(_("Next >"));
+    }
 
-  Layout();
-  Fit();
+    Layout();
+    Fit();
 }
 
 void OnboardFrame::dependencyInstall(wxCommandEvent&) {
-  Disable();
-  mDependencyPage->pressNext->Hide();
-  mDependencyPage->loadingBar->Show();
-  mDependencyPage->Layout();
+    Disable();
+    mDependencyPage->pressNext->Hide();
+    mDependencyPage->loadingBar->Show();
+    mDependencyPage->Layout();
 
-  mDependencyPage->barPulser->Start(50);
+    mDependencyPage->barPulser->Start(50);
 
-  Arduino::init(this);
+    Arduino::init(this);
 }
 
 wxStaticText* OnboardFrame::createHeader(wxWindow* parent, const wxString& text) {
-  auto *header{new wxStaticText(parent, wxID_ANY, text)};
-  auto font = header->GetFont();
-  font.MakeBold();
-  font.SetPointSize(20);
-  header->SetFont(font);
+    auto *header{new wxStaticText(parent, wxID_ANY, text)};
+    auto font = header->GetFont();
+    font.MakeBold();
+    font.SetPointSize(20);
+    header->SetFont(font);
 
-  return header;
+    return header;
 }

@@ -32,7 +32,9 @@
 
 #include "../tools/arduino.h"
 
-EditorWindow::EditorWindow(const string& _configName, wxWindow* parent) : PCUI::Frame(parent, wxID_ANY, "ProffieConfig Editor - " + _configName, wxDefaultPosition, wxDefaultSize), mOpenConfig(_configName) {
+EditorWindow::EditorWindow(const string& _configName, wxWindow* parent) : 
+    PCUI::Frame(parent, wxID_ANY, "ProffieConfig " + _("Editor") + " - " + _configName, wxDefaultPosition, wxDefaultSize),
+    mOpenConfig(_configName) {
     createMenuBar();
     createPages();
     bindEvents();
@@ -66,11 +68,11 @@ void EditorWindow::bindEvents() {
             wxMessageDialog saveDialog{
 #           endif
                 this,
-                "You currently have unsaved changes which will be lost otherwise.",
-                "Save Changes to \"" + mOpenConfig + "\"?",
+                _("You currently have unsaved changes which will be lost otherwise."),
+                wxString::Format(_("Save Changes to \"%s\"?"), mOpenConfig),
                 flags
             };
-            saveDialog.SetYesNoCancelLabels("Save Changes", "Discard Changes", "Cancel");
+            saveDialog.SetYesNoCancelLabels(_("Save Changes"), _("Discard Changes"), _("Cancel"));
             auto saveChoice{saveDialog.ShowModal()};
 
             if (saveChoice == wxID_YES) {
@@ -99,14 +101,14 @@ void EditorWindow::bindEvents() {
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(this, this); }, ID_VerifyConfig);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-        wxFileDialog fileDialog{this, "Select Injection File", wxEmptyString, wxEmptyString, "C Header (*.h)|*.h", wxFD_FILE_MUST_EXIST | wxFD_OPEN};
+        wxFileDialog fileDialog{this, _("Select Injection File"), wxEmptyString, wxEmptyString, "C Header (*.h)|*.h", wxFD_FILE_MUST_EXIST | wxFD_OPEN};
         if (fileDialog.ShowModal() == wxCANCEL) return;
 
         auto copyPath{Paths::injections() / fileDialog.GetFilename().ToStdWstring()};
         const auto copyOptions{fs::copy_options::overwrite_existing};
         std::error_code err;
         if (not fs::copy_file(fileDialog.GetPath().ToStdWstring(), copyPath, copyOptions, err)) {
-            PCUI::showMessage(err.message(), "Injection file could not be added.");
+            PCUI::showMessage(err.message(), _("Injection file could not be added."));
             return;
         }
 
@@ -120,10 +122,10 @@ void EditorWindow::bindEvents() {
         wxSetCursor(wxCURSOR_WAIT);
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
-        generalPage->Show(windowSelect->entry()->GetStringSelection() == "General");
-        propsPage->Show(windowSelect->entry()->GetStringSelection() == "Prop File");
-        bladesPage->Show(windowSelect->entry()->GetStringSelection() == "Blade Arrays");
-        presetsPage->Show(windowSelect->entry()->GetStringSelection() == "Presets And Styles");
+        generalPage->Show(windowSelect->entry()->GetSelection() == 0);
+        propsPage->Show(windowSelect->entry()->GetSelection() == 1);
+        bladesPage->Show(windowSelect->entry()->GetSelection() == 2);
+        presetsPage->Show(windowSelect->entry()->GetSelection() == 3);
 
         //generalPage->update();
         bladesPage->update();
@@ -145,19 +147,19 @@ void EditorWindow::createToolTips() {
 
 void EditorWindow::createMenuBar() {
     auto *file{new wxMenu};
-    file->Append(ID_VerifyConfig, "Verify Config\tCtrl+R");
+    file->Append(ID_VerifyConfig, _("Verify Config\tCtrl+R"));
     file->AppendSeparator();
-    file->Append(wxID_SAVE, "Save Config\tCtrl+S");
-    file->Append(ID_ExportConfig, "Export Config...\t");
+    file->Append(wxID_SAVE, _("Save Config\tCtrl+S"));
+    file->Append(ID_ExportConfig, _("Export Config..."));
     file->AppendSeparator();
-    file->Append(ID_AddInjection, "Add Injection...\t", "Add a header file to be injected into CONFIG_PRESETS during compilation.");
+    file->Append(ID_AddInjection, _("Add Injection..."), _("Add a header file to be injected into CONFIG_PRESETS during compilation."));
 
     auto *tools{new wxMenu};
-    tools->Append(ID_StyleEditor, "Style Editor...", "Open the ProffieOS style editor");
+    tools->Append(ID_StyleEditor, _("Style Editor..."), _("Open the ProffieOS style editor"));
 
     auto *menuBar{new wxMenuBar};
-    menuBar->Append(file, "&File");
-    menuBar->Append(tools, "&Tools");
+    menuBar->Append(file, _("&File"));
+    menuBar->Append(tools, _("&Tools"));
     SetMenuBar(menuBar);
 }
 
@@ -165,7 +167,7 @@ void EditorWindow::createPages() {
     sizer = new wxBoxSizer(wxVERTICAL);
 
     auto* optionsSizer{new wxBoxSizer(wxHORIZONTAL)};
-    windowSelect = new PCUI::Choice(this, ID_WindowSelect, Misc::createEntries({"General", "Prop File", "Blade Arrays", "Presets And Styles"}));
+    windowSelect = new PCUI::Choice(this, ID_WindowSelect, Misc::createEntries({_("General"), _("Prop File"), _("Blade Arrays"), _("Presets And Styles")}));
     optionsSizer->Add(windowSelect, wxSizerFlags(0).Border(wxALL, 10));
 
     generalPage = new GeneralPage(this);

@@ -27,14 +27,20 @@
 #include "../../editor/dialogs/bladearraydlg.h"
 #include "../../tools/arduino.h"
 
-# define ERR(msg) \
-    logger.error(msg); \
-    Misc::MessageBoxEvent* msgEvent = new Misc::MessageBoxEvent(wxID_ANY, wxString(msg) + "\n\nConfiguration not saved.", "Configuration Error", wxOK | wxCENTER | wxICON_ERROR); \
-    wxQueueEvent(editor, msgEvent); \
-    return false;
-
 namespace Configuration {
     constexpr string_view INJECTION_STR{"injection"};
+
+    template<typename ...ARGS>
+    void errorMessage(Log::Logger& logger, EditorWindow *editor, const wxString& msg, ARGS... args) {
+        logger.error(wxString::Format(msg, args...).ToStdString());
+        auto* msgEvent{new Misc::MessageBoxEvent(
+            wxID_ANY,
+            wxString::Format(wxGetTranslation(msg), args...) + "\n\n" + _("Configuration not saved."),
+            _("Configuration Error"),
+            wxOK | wxCENTER | wxICON_ERROR)
+        };
+        wxQueueEvent(editor, msgEvent);
+    }
 
     bool runPreChecks(EditorWindow *, Log::Branch&);
 
@@ -84,14 +90,16 @@ bool Configuration::outputConfig(const filepath& filePath, EditorWindow *editor,
                 fs::copy_options::overwrite_existing,
                 err
             )) {
-                ERR("Failed setting up injection \"" + injection + '"');
+                errorMessage(logger, editor, wxTRANSLATE("Failed setting up injection \"%s\""), injection);
+                return false;
             }
         }
     }
 
     std::ofstream configOutput(filePath);
     if (not configOutput.is_open()) {
-        ERR("Could not open config file for output.");
+        errorMessage(logger, editor, wxTRANSLATE("Could not open config file for output."));
+        return false;
     }
 
     configOutput << "/*\n";
@@ -252,29 +260,21 @@ void Configuration::outputConfigPresetsBlades(std::ofstream& configOutput, const
                 configOutput << "\t\tSimpleBladePtr<";
 
                 auto outputLED{[&configOutput](BladesPage::LED ledSel, int32_t resistance) {
-                        wxString str{"PROFFIECONFIG_GEN_ERROR"};
-                        for (const auto& [ led, ledStr ] : BladesPage::LED_CONFIGSTRS) {
-                            if (ledSel == led) {
-                                str = ledStr;
-                                break;
-                            }
-                        }
-
-                        configOutput << str;
+                        configOutput << BladesPage::ledToStr(ledSel);;
                         auto usesResistance{ledSel & BladesPage::USES_RESISTANCE};
                         if (usesResistance) {
                             configOutput << '<' << resistance << ">, ";
                         } else configOutput << ", ";
                     }};
 
-                outputLED(blade.Star1, blade.Star1Resistance);
-                powerPinUsed[0] = blade.Star1 != BladesPage::NONE;
-                outputLED(blade.Star2, blade.Star2Resistance);
-                powerPinUsed[1] = blade.Star2 != BladesPage::NONE;
-                outputLED(blade.Star3, blade.Star3Resistance);
-                powerPinUsed[2] = blade.Star3 != BladesPage::NONE;
-                outputLED(blade.Star4, blade.Star4Resistance);
-                powerPinUsed[3] = blade.Star4 != BladesPage::NONE;
+                outputLED(blade.star1, blade.star1Resistance);
+                powerPinUsed[0] = blade.star1 != BladesPage::NONE;
+                outputLED(blade.star2, blade.star2Resistance);
+                powerPinUsed[1] = blade.star2 != BladesPage::NONE;
+                outputLED(blade.star3, blade.star3Resistance);
+                powerPinUsed[2] = blade.star3 != BladesPage::NONE;
+                outputLED(blade.star4, blade.star4Resistance);
+                powerPinUsed[3] = blade.star4 != BladesPage::NONE;
 
                 int8_t usageIndex = 0;
                 for (auto& usePowerPin : powerPinUsed) {
@@ -417,16 +417,15 @@ void Configuration::tryAddInjection(const string& buffer, EditorWindow *editor) 
     logger.debug("Injection file: " + injectionFile); 
     if (injectionFile.find("../") != string::npos or injectionFile.find("/..") != string::npos) {
         PCUI::showMessage(
-            "Injection file \"" + injectionFile + "\" has an invalid name and cannot be registered."
-            "\n You may add a substitute after import.", 
-            "Unknown Injection Encountered"
+            wxString::Format(_("Injection file \"%s\" has an invalid name and cannot be registered.\nYou may add a substitute after import."), injectionFile),
+            _("Unknown Injection Encountered")
         );
         return;
     }
     auto filePath{Paths::injections() / injectionFile};
     std::error_code err;
     if (not fs::exists(filePath, err)) {
-        if (wxYES != PCUI::showMessage("Injection file \"" + injectionFile + "\" has not been registered.\nWould you like to add the injection file now?", "Unknown Injection Encountered", wxYES_NO | wxYES_DEFAULT)) {
+        if (wxYES != PCUI::showMessage(wxString::Format(_("Injection file \"%s\" has not been registered.\nWould you like to add the injection file now?"), injectionFile), _("Unknown Injection Encountered"), wxYES_NO | wxYES_DEFAULT)) {
             return;
         }
 
@@ -445,7 +444,7 @@ void Configuration::tryAddInjection(const string& buffer, EditorWindow *editor) 
             fs::create_directories(copyPath.parent_path());
             const auto copyOptions{fs::copy_options::overwrite_existing};
             if (not fs::copy_file(fileDialog.GetPath().ToStdString(), copyPath, copyOptions, err)) {
-                auto res{PCUI::showMessage(err.message(), "Injection file could not be added.", wxOK | wxCANCEL | wxOK_DEFAULT)};
+                auto res{PCUI::showMessage(err.message(), _("Injection file could not be added."), wxOK | wxCANCEL | wxOK_DEFAULT)};
                 if (res == wxCANCEL) return;
 
                 continue;
@@ -1123,7 +1122,7 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
                     const auto num2{std::stoi(buffer.substr(0, paramEnd))};
                     buffer = buffer.substr(paramEnd + 1);
 
-                    blade.subBlades.push_back({ static_cast<uint32>(num1), static_cast<uint32>(num2) });
+                    blade.subBlades.emplace_back(num1, num2);
                     subBlade = true;
                 }
 
@@ -1207,10 +1206,10 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
                     buffer = buffer.substr(buffer.find(SIMPLE_STR.data()) + SIMPLE_STR.length());
                     buffer = buffer.substr(buffer.find('<') + 1);
 
-                    setupStar(blade.Star1, blade.Star1Resistance);
-                    setupStar(blade.Star2, blade.Star2Resistance);
-                    setupStar(blade.Star3, blade.Star3Resistance);
-                    setupStar(blade.Star4, blade.Star4Resistance);
+                    setupStar(blade.star1, blade.star1Resistance);
+                    setupStar(blade.star2, blade.star2Resistance);
+                    setupStar(blade.star3, blade.star3Resistance);
+                    setupStar(blade.star4, blade.star4Resistance);
 
                     while (!false) {
                         auto paramEnd{buffer.find(',')};
@@ -1278,19 +1277,24 @@ bool Configuration::runPreChecks(EditorWindow *editor, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Configuration::runPreChecks()")};
 
     if (editor->bladesPage->bladeArrayDlg->enableDetect->GetValue() && editor->bladesPage->bladeArrayDlg->detectPin->entry()->GetValue() == "") {
-        ERR("Blade Detect Pin cannot be empty.");
+        errorMessage(logger, editor, wxTRANSLATE("Blade Detect Pin cannot be empty."));
+        return false;
     }
     if (editor->bladesPage->bladeArrayDlg->enableID->GetValue() && editor->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue() == "") {
-        ERR("Blade ID Pin cannot be empty.");
+        errorMessage(logger, editor, wxTRANSLATE("Blade ID Pin cannot be empty."));
+        return false;
     }
     if ([&]() { for (const BladeArrayDlg::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) if (array.name == "") return true; return false; }()) {
-        ERR("Blade Array Name cannot be empty.");
+        errorMessage(logger, editor, wxTRANSLATE("Blade Array Name cannot be empty."));
+        return false;
     }
     if (editor->bladesPage->bladeArrayDlg->enableID->GetValue() && editor->bladesPage->bladeArrayDlg->mode->entry()->GetStringSelection() == BLADE_ID_MODE_BRIDGED && editor->bladesPage->bladeArrayDlg->pullupPin->entry()->GetValue() == "") {
-        ERR("Pullup Pin cannot be empty.");
+        errorMessage(logger, editor, wxTRANSLATE("Pullup Pin cannot be empty."));
+        return false;
     }
     if (editor->bladesPage->bladeArrayDlg->enableDetect->GetValue() && editor->bladesPage->bladeArrayDlg->enableID->GetValue() && editor->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue() == editor->bladesPage->bladeArrayDlg->detectPin->entry()->GetValue()) {
-        ERR("Blade ID Pin and Blade Detect Pin cannot be the same.");
+        errorMessage(logger, editor, wxTRANSLATE("Blade ID Pin and Blade Detect Pin cannot be the same."));
+        return false;
     }
 
     auto getNumBlades{[](const BladeArrayDlg::BladeArray& array) {
@@ -1309,31 +1313,39 @@ bool Configuration::runPreChecks(EditorWindow *editor, Log::Branch& lBranch) {
             return true;
         }};
     if (not bladeArrayLengthsEqual()) {
-        ERR("All Blade Arrays must be the same length.\n\nPlease add/remove blades to make them equal");
+        errorMessage(logger, editor, wxTRANSLATE("All Blade Arrays must be the same length.\n\nPlease add/remove blades to make them equal"));
+        return false;
     }
 
     for (auto& bladeArray : editor->bladesPage->bladeArrayDlg->bladeArrays) {
-        for (uint32_t idx = 0; idx < bladeArray.blades.size(); idx++) {
-            auto& blade{bladeArray.blades.at(idx)};
+        for (auto idx{0}; idx < bladeArray.blades.size(); ++idx) {
+            auto& blade{bladeArray.blades[idx]};
             if (blade.type != BD_SIMPLE) continue;
 
-            uint32_t numBlades{0};
-            if (blade.Star1 != BladesPage::NONE) numBlades++;
-            if (blade.Star2 != BladesPage::NONE) numBlades++;
-            if (blade.Star3 != BladesPage::NONE) numBlades++;
-            if (blade.Star4 != BladesPage::NONE) numBlades++;
+            uint32 numActiveLEDs{0};
+            if (blade.star1 != BladesPage::NONE) ++numActiveLEDs;
+            if (blade.star2 != BladesPage::NONE) ++numActiveLEDs;
+            if (blade.star3 != BladesPage::NONE) ++numActiveLEDs;
+            if (blade.star4 != BladesPage::NONE) ++numActiveLEDs;
 
-            if (blade.powerPins.size() != numBlades) {
-                auto bladeName{"Simple blade " + std::to_string(idx) + " in array \"" + bladeArray.name + '"'};
-                auto numActiveLEDs{std::to_string(numBlades)};
-                bladeName += " with " + numActiveLEDs + " active LEDs should have " += numActiveLEDs + " power pins selected. (Has " + std::to_string(blade.powerPins.size()) + ')';
-                ERR(bladeName);
+            if (blade.powerPins.size() != numActiveLEDs) {
+                errorMessage(
+                    logger,
+                    editor,
+                    wxTRANSLATE("Simple blade %d in array \"%s\" with %d active LEDs should have %d power pins selected. (Has %d)"),
+                    idx,
+                    bladeArray.name,
+                    numActiveLEDs,
+                    numActiveLEDs,
+                    blade.powerPins.size()
+                );
+                return false;
             }
         }
         for (auto& preset : bladeArray.presets) {
             for (auto& [ comment, style ] : preset.styles) {
                 if (style.empty()) continue;
-                const auto errorString{"Malformed bladestyle in " + (preset.name.empty() ? "unnamed preset" : "preset \"" + preset.name + '"') + " in blade array \"" + bladeArray.name + "\"\n\n"};
+                constexpr cstring ERROR_STRING{wxTRANSLATE("Malformed bladestyle in preset %s in blade array %s:\n\n%s")};
 
                 size_t depth{0};
                 for (const char chr : style) {
@@ -1341,7 +1353,8 @@ bool Configuration::runPreChecks(EditorWindow *editor, Log::Branch& lBranch) {
                     else if (chr == '>') --depth;
                 }
                 if (depth != 0) {
-                    ERR(errorString + "Mismatched \"<>\"");
+                    errorMessage(logger, editor, ERROR_STRING, preset.name.empty() ? "[unnamed]" : preset.name, bladeArray.name, "Mismatched \"<>\"");
+                    return false;
                 }
 
                 depth = 0;
@@ -1350,7 +1363,8 @@ bool Configuration::runPreChecks(EditorWindow *editor, Log::Branch& lBranch) {
                     else if (chr == ')') --depth;
                 }
                 if (depth != 0) {
-                    ERR(errorString + "Mismatched \"()\"");
+                    errorMessage(logger, editor, ERROR_STRING, preset.name.empty() ? "[unnamed]" : preset.name, bladeArray.name, "Mismatched \"()\"");
+                    return false;
                 }
             }
         }

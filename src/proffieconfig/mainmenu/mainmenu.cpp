@@ -49,9 +49,10 @@ void MainMenu::bindEvents() {
         for (auto *editor : editors) {
             if (not editor->isSaved()) {
                 if (PCUI::showMessage(
-                            "There is at least one editor open with unsaved changes, are you sure you want to exit?\n\n"
-                            "Any unsaved changes will be lost!",
-                            "Open Editor(s)",
+                            _("There is at least one editor open with unsaved changes, are you sure you want to exit?") +
+                            "\n\n" +
+                            _("All unsaved changes will be lost!"),
+                            _("Open Editor(s)"),
                             wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION) == wxNO) {
                     return false;
                 }
@@ -72,7 +73,8 @@ void MainMenu::bindEvents() {
     });
     Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
     Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
-        PCUI::showMessage(((Misc ::MessageBoxEvent *)&event)->message.ToStdString(), ((Misc ::MessageBoxEvent *)&event)->caption.ToStdString(), ((Misc ::MessageBoxEvent *)&event)->style, this);
+        const auto& msgEvent{static_cast<Misc::MessageBoxEvent&>(event)};
+        PCUI::showMessage(msgEvent.message, msgEvent.caption, msgEvent.style, this);
     }, wxID_ANY);
     Bind(wxEVT_MENU, [this, promptClose](wxCommandEvent&) { 
         if (not promptClose()) return;
@@ -83,8 +85,8 @@ void MainMenu::bindEvents() {
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxAboutDialogInfo aboutInfo;
         aboutInfo.SetDescription(
-                "All-in-one Proffieboard Management Utility\n"
-                "\n"
+                _("All-in-one Proffieboard Management Utility") +
+                "\n\n"
                 "ProffieOS v" wxSTRINGIZE(PROFFIEOS_VERSION) " | Arduino CLI v" wxSTRINGIZE(ARDUINO_CLI_VERSION)
                 );
         aboutInfo.SetVersion(wxSTRINGIZE(EXEC_VERSION));
@@ -104,7 +106,7 @@ void MainMenu::bindEvents() {
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
         if (not editors.empty()) {
-            PCUI::showMessage("All Editors must be closed to continue.", "Editors Open");
+            PCUI::showMessage(_("All Editors must be closed to continue."), _("Open Editors"));
             return;
         }
 
@@ -138,7 +140,7 @@ void MainMenu::bindEvents() {
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
         activeEditor = nullptr;
-        if (configSelect->entry()->GetStringSelection() == "Select Config...") {
+        if (configSelect->entry()->GetSelection() == 0) {
             update();
             return;
         }
@@ -188,8 +190,10 @@ void MainMenu::bindEvents() {
     }, ID_AddConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
         if (PCUI::showMessage(
-                "Are you sure you want to deleted the selected configuration?\n\nThis action cannot be undone!",
-                "Delete Config",
+                _("Are you sure you want to deleted the selected configuration?") + 
+                "\n\n" +
+                _("This action cannot be undone!"),
+                _("Delete Config"),
                 wxYES_NO | wxNO_DEFAULT | wxCENTER,
                 this) == wxYES
            ) {
@@ -213,24 +217,24 @@ void MainMenu::bindEvents() {
 }
 
 void MainMenu::createTooltips() const {
-  TIP(applyButton, "Apply the current configuration to the selected Proffieboard.");
-  TIP(boardSelect, "Select the Proffieboard to connect to.\nThis will be an unrecognizable device identifier, but chances are there's only one which will show up.");
-  TIP(refreshButton, "Refresh the detected boards.");
+  TIP(applyButton, _("Apply the current configuration to the selected Proffieboard."));
+  TIP(boardSelect, _("Select the Proffieboard to connect to.\nThese IDs are assigned by the OS, and can vary."));
+  TIP(refreshButton, _("Generate an up-to-date list of connected boards."));
 }
 
 void MainMenu::createMenuBar() {
   auto *file{new wxMenu};
-  file->Append(ID_ReRunSetup, "Re-Run First-Time Setup...", "Install Proffieboard Dependencies and View Tutorial");
+  file->Append(ID_ReRunSetup, _("Re-Run First-Time Setup..."), _("Install Proffieboard Dependencies and View Tutorial"));
   file->Append(ID_AddProp, "Props...");
   file->AppendSeparator();
-  file->Append(ID_Logs, "Show Logs...");
+  file->Append(ID_Logs, _("Show Logs..."));
   file->Append(wxID_ABOUT);
   file->Append(ID_Copyright, "Copyright Notice");
   file->Append(wxID_EXIT);
 
   auto* help{new wxMenu};
-  help->Append(ID_Docs, "Documentation...\tCtrl+H", "Open the ProffieConfig docs in your web browser");
-  help->Append(ID_Issue, "Help/Bug Report...", "Open GitHub to submit issue");
+  help->Append(ID_Docs, _("Documentation...\tCtrl+H"), _("Open the ProffieConfig docs in your web browser"));
+  help->Append(ID_Issue, _("Help/Bug Report..."), _("Open GitHub to submit issue"));
 
   auto* menuBar{new wxMenuBar};
   menuBar->Append(file, "&File");
@@ -252,50 +256,58 @@ void MainMenu::createUI() {
   titleFont.SetPointSize(30);
 #endif
   title->SetFont(titleFont);
-  auto *subTitle{new wxStaticText(this, wxID_ANY, "Created by Ryryog25\n\n")};
-  titleSection->Add(title, wxSizerFlags(0).Border(wxLEFT | wxRIGHT | wxTOP, 10));
-  titleSection->Add(subTitle, wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 10));
-  headerSection->Add(titleSection, wxSizerFlags(0));
+  auto *subTitle{new wxStaticText(this, wxID_ANY, _("Created by Ryryog25"))};
+  titleSection->Add(title);
+  titleSection->Add(subTitle);
+  headerSection->Add(titleSection);
+  headerSection->AddSpacer(20);
   headerSection->AddStretchSpacer(1);
   auto *appIcon{PCUI::createStaticImage(this, wxID_ANY, Image::loadPNG("icon"))};
   appIcon->SetMaxSize(wxSize{64, 64});
-  headerSection->Add(appIcon, wxSizerFlags(0).Border(wxALL, 10));
+  headerSection->Add(appIcon);
 
   auto *configSelectSection{new wxBoxSizer(wxHORIZONTAL)};
-  configSelect = new PCUI::Choice(this, ID_ConfigSelect, Misc::createEntries({"Select Config..."}));
-  addConfig = new wxButton(this, ID_AddConfig, "Add", wxDefaultPosition, wxSize(50, -1), wxBU_EXACTFIT);
-  removeConfig = new wxButton(this, ID_RemoveConfig, "Remove", wxDefaultPosition, wxSize(75, -1), wxBU_EXACTFIT);
+  configSelect = new PCUI::Choice(this, ID_ConfigSelect, { /* Will be created on update() */ });
+  addConfig = new wxButton(this, ID_AddConfig, _("Add"), wxDefaultPosition, wxSize(50, -1), wxBU_EXACTFIT);
+  removeConfig = new wxButton(this, ID_RemoveConfig, _("Remove"), wxDefaultPosition, wxSize(75, -1), wxBU_EXACTFIT);
   removeConfig->Disable();
-  configSelectSection->Add(configSelect, wxSizerFlags(1).Border(wxALL, 5).Expand());
-  configSelectSection->Add(addConfig, wxSizerFlags(0).Border(wxALL, 5).Expand());
-  configSelectSection->Add(removeConfig, wxSizerFlags(0).Border(wxALL, 5).Expand());
+  configSelectSection->Add(configSelect, wxSizerFlags{1}.Expand());
+  configSelectSection->AddSpacer(10);
+  configSelectSection->Add(addConfig, wxSizerFlags{}.Expand());
+  configSelectSection->AddSpacer(10);
+  configSelectSection->Add(removeConfig, wxSizerFlags{}.Expand());
+
+  editConfig = new wxButton(this, ID_EditConfig, _("Edit Selected Configuration"));
+  editConfig->Disable();
 
   auto *boardControls{new wxBoxSizer(wxHORIZONTAL)};
+  auto boardEntries{Misc::createEntries({_("Select Board...")})};
 # ifdef __WINDOWS__
-  auto boardEntries = Misc::createEntries({"Select Board...", "BOOTLOADER RECOVERY"});
-# else
-  auto boardEntries = Misc::createEntries({"Select Board..."});
+  boardEntries.emplace_back(_("BOOTLOADER RECOVERY"));
 # endif
   boardSelect = new PCUI::Choice(this, ID_DeviceSelect, boardEntries);
-  refreshButton = new wxButton(this, ID_RefreshDev, "Refresh Boards");
-  boardControls->Add(refreshButton, wxSizerFlags(0).Border(wxALL, 5));
-  boardControls->Add(boardSelect, wxSizerFlags(1).Border(wxALL, 5));
+  refreshButton = new wxButton(this, ID_RefreshDev, _("Refresh Boards"));
+  boardControls->Add(refreshButton);
+  boardControls->AddSpacer(10);
+  boardControls->Add(boardSelect, wxSizerFlags{1});
 
-  auto *options{new wxBoxSizer(wxVERTICAL)};
-  applyButton = new wxButton(this, ID_ApplyChanges, "Apply Selected Configuration to Board");
+  applyButton = new wxButton(this, ID_ApplyChanges, _("Apply Selected Configuration to Board"));
   applyButton->Disable();
-  editConfig = new wxButton(this, ID_EditConfig, "Edit Selected Configuration");
-  editConfig->Disable();
-  openSerial = new wxButton(this, ID_OpenSerial, "Open Serial Monitor");
+  openSerial = new wxButton(this, ID_OpenSerial, _("Open Serial Monitor"));
   openSerial->Disable();
-  options->Add(applyButton, wxSizerFlags(0).Border(wxALL, 5).Expand());
-  options->Add(editConfig, wxSizerFlags(0).Border(wxALL, 5).Expand());
-  options->Add(openSerial, wxSizerFlags(0).Border(wxALL, 5).Expand());
 
-  sizer->Add(headerSection, wxSizerFlags(0).Expand());
-  sizer->Add(configSelectSection, wxSizerFlags(0).Border(wxALL, 5).Expand());
-  sizer->Add(boardControls, wxSizerFlags(0).Border(wxALL, 5).Expand());
-  sizer->Add(options, wxSizerFlags(0).Border(wxALL, 5).Expand());
+  sizer->AddSpacer(20);
+  sizer->Add(headerSection, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+  sizer->AddSpacer(20);
+  sizer->Add(configSelectSection, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+  sizer->AddSpacer(10);
+  sizer->Add(editConfig, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+  sizer->AddSpacer(15);
+  sizer->Add(boardControls, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+  sizer->AddSpacer(10);
+  sizer->Add(applyButton, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+  sizer->AddSpacer(10);
+  sizer->Add(openSerial, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
   sizer->AddSpacer(20); // There's a sizing issue I need to figure out... for now we give it a chin
 
   SetSizerAndFit(sizer);
@@ -304,7 +316,7 @@ void MainMenu::createUI() {
 void MainMenu::update() const {
     auto lastConfig = configSelect->entry()->GetStringSelection();
     configSelect->entry()->Clear();
-    configSelect->entry()->Append("Select Config...");
+    configSelect->entry()->Append(_("Select Config..."));
 
     fs::directory_iterator configsIterator{Paths::configs()};
     for (const auto& configFile : configsIterator) {
@@ -317,9 +329,9 @@ void MainMenu::update() const {
     configSelect->entry()->SetStringSelection(lastConfig);
     if (configSelect->entry()->GetSelection() == -1) configSelect->entry()->SetSelection(0);
 
-    auto configSelected = configSelect->entry()->GetStringSelection() != "Select Config...";
-    auto boardSelected = boardSelect->entry()->GetStringSelection() != "Select Board...";
-    auto recoverySelected = boardSelect->entry()->GetStringSelection().find("BOOTLOADER") != string::npos;
+    auto configSelected = configSelect->entry()->GetSelection() != 0;
+    auto boardSelected = boardSelect->entry()->GetSelection() != 0;
+    auto recoverySelected = boardSelect->entry()->GetStringSelection().find(_("BOOTLOADER")) != string::npos;
 
     applyButton->Enable(configSelected && boardSelected);
     editConfig->Enable(configSelected);
@@ -340,7 +352,7 @@ void MainMenu::removeEditor(EditorWindow *editor) {
 EditorWindow *MainMenu::generateEditor(const string& configName) {
     auto *newEditor{new EditorWindow(configName, this)};
     if (not Configuration::readConfig(Paths::configs() / (configName + ".h"), newEditor)) {
-        PCUI::showMessage("Error reading configuration file!", "Config Error", wxOK | wxCENTER, this);
+        PCUI::showMessage(_("Error while reading configuration file!"), _("Config Read Error"), wxOK | wxCENTER, this);
         newEditor->Destroy();
         return nullptr;
     }

@@ -14,21 +14,21 @@
 const wxEventTypeTag<wxCommandEvent> Misc::EVT_MSGBOX(wxNewEventType());
 
 wxArrayString Misc::createEntries(const std::vector<wxString>& vec) {
-  wxArrayString entries;
-  for (const wxString& entry : vec) {
-    entries.Add(entry);
-  }
-  return entries;
+    wxArrayString entries;
+    for (const wxString& entry : vec) {
+        entries.Add(entry);
+    }
+    return entries;
 }
 
 wxArrayString Misc::createEntries(const std::initializer_list<wxString>& list) {
-  return Misc::createEntries(static_cast<std::vector<wxString>>(list));
+    return Misc::createEntries(static_cast<std::vector<wxString>>(list));
 }
 
 wxArrayString Misc::createEntries(const Configuration::VMap& map) {
-  wxArrayString entries;
-  for (const auto& pair : map) {
-    entries.Add(pair.first);
-  }
-  return entries;
+    wxArrayString entries;
+    for (const auto& pair : map) {
+        entries.Add(pair.first);
+    }
+    return entries;
 }

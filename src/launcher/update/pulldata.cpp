@@ -212,7 +212,7 @@ bool Update::checkMessages(const PConf::HashedData& hashedRawData, Log::Branch& 
                 break;
         }
         if (messageApplicable) {
-            PCUI::showMessage(content->second->value.value(), isFatal ? "ProffieConfig Launcher Critical Notice" : "ProffieConfig Launcher Alert");
+            PCUI::showMessage(content->second->value.value(), isFatal ? _("ProffieConfig Launcher Critical Notice") : _("ProffieConfig Launcher Alert"));
             if (isFatal) hadFatal = true;
         }
     }

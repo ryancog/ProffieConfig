@@ -48,10 +48,10 @@ public:
   };
 
 private:
-  EditorWindow* parent{nullptr};
+  EditorWindow* mParent{nullptr};
 
   void bindEvents();
-  void createToolTips();
+  void createToolTips() const;
 
   wxStaticBoxSizer* boardSection(wxStaticBoxSizer*);
   wxStaticBoxSizer* optionSection(wxStaticBoxSizer*);

@@ -2,8 +2,6 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include <array>
-
 #include "ui/controls.h"
 #include "../editorwindow.h"
 
@@ -21,30 +19,7 @@
 
 #define BD_PIXELRGB "WS281X (RGB)"
 #define BD_PIXELRGBW "WS281X (RGBW)"
-#define BD_SIMPLE "Simple LED"
-
-#define BD_HASSELECTION (bladeSelect->GetSelection() != -1)
-#define BD_SUBHASSELECTION (subBladeSelect->GetSelection() != -1)
-#define BD_ISPIXEL3 (BD_HASSELECTION && bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_PIXELRGB)
-#define BD_ISPIXEL4 (BD_HASSELECTION && bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_PIXELRGBW)
-#define BD_ISPIXEL (BD_ISPIXEL3 || BD_ISPIXEL4)
-#define BD_ISSIMPLE (BD_HASSELECTION && bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].type == BD_SIMPLE)
-#define BD_ISSUB (BD_HASSELECTION && bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades[bladeSelect->GetSelection()].isSubBlade)
-#define BD_ISFIRST (!BD_ISSUB || (subBladeSelect->GetSelection() == 0))
-#define BD_ISSTNDRD (BD_ISSUB && useStandard->GetValue())
-#define BD_ISSTRIDE (BD_ISSUB && useStride->GetValue())
-#define BD_ISZIGZAG (BD_ISSUB && useZigZag->GetValue())
-
-template<typename T, std::size_t... I1, std::size_t... I2>
-constexpr auto concat_impl(const std::array<T, sizeof...(I1)>& a1, const std::array<T, sizeof...(I2)>& a2,
-                           std::index_sequence<I1...>, std::index_sequence<I2...>) {
-    return std::array<T, sizeof...(I1) + sizeof...(I2)>{ a1[I1]..., a2[I2]... };
-}
-
-template<typename T, std::size_t N1, std::size_t N2>
-constexpr auto concat(const std::array<T, N1>& a1, const std::array<T, N2>& a2) {
-    return concat_impl(a1, a2, std::make_index_sequence<N1>{}, std::make_index_sequence<N2>{});
-}
+#define BD_SIMPLE _("Simple LED")
 
 class BladesPage : public wxStaticBoxSizer {
 public:
@@ -57,49 +32,49 @@ public:
     void removeBlade();
     void removeSubBlade();
 
-    int32_t lastBladeArraySelection{0};
+    int32 lastBladeArraySelection{0};
 
-    BladeArrayDlg* bladeArrayDlg{nullptr};
+    BladeArrayDlg *bladeArrayDlg{nullptr};
 
-    wxButton* bladeArrayButton{nullptr};
-    PCUI::Choice* bladeArray{nullptr};
-    wxListBox* bladeSelect{nullptr};
-    wxListBox* subBladeSelect{nullptr};
-    wxButton* addBladeButton{nullptr};
-    wxButton* removeBladeButton{nullptr};
-    wxButton* addSubBladeButton{nullptr};
-    wxButton* removeSubBladeButton{nullptr};
+    wxButton *bladeArrayButton{nullptr};
+    PCUI::Choice *bladeArray{nullptr};
+    wxListBox *bladeSelect{nullptr};
+    wxListBox *subBladeSelect{nullptr};
+    wxButton *addBladeButton{nullptr};
+    wxButton *removeBladeButton{nullptr};
+    wxButton *addSubBladeButton{nullptr};
+    wxButton *removeSubBladeButton{nullptr};
 
-    PCUI::Choice* bladeType{nullptr};
-    PCUI::ComboBox* bladeDataPin{nullptr};
-    PCUI::Numeric* bladePixels{nullptr};
+    PCUI::Choice *bladeType{nullptr};
+    PCUI::ComboBox *bladeDataPin{nullptr};
+    PCUI::Numeric *bladePixels{nullptr};
 
-    wxCheckListBox* powerPins{nullptr};
-    wxButton* addPowerPin{nullptr};
-    PCUI::Text* powerPinName{nullptr};
+    wxCheckListBox *powerPins{nullptr};
+    wxButton *addPowerPin{nullptr};
+    PCUI::Text *powerPinName{nullptr};
 
-    PCUI::Choice* blade3ColorOrder{nullptr};
-    PCUI::Choice* blade4ColorOrder{nullptr};
-    wxCheckBox* blade4UseRGB{nullptr};
+    PCUI::Choice *blade3ColorOrder{nullptr};
+    PCUI::Choice *blade4ColorOrder{nullptr};
+    wxCheckBox *blade4UseRGB{nullptr};
 
     wxStaticBoxSizer *star1Sizer{nullptr};
-    PCUI::Choice* star1Color{nullptr};
-    PCUI::Numeric* star1Resistance{nullptr};
+    PCUI::Choice *star1Color{nullptr};
+    PCUI::Numeric *star1Resistance{nullptr};
     wxStaticBoxSizer *star2Sizer{nullptr};
-    PCUI::Choice* star2Color{nullptr};
-    PCUI::Numeric* star2Resistance{nullptr};
+    PCUI::Choice *star2Color{nullptr};
+    PCUI::Numeric *star2Resistance{nullptr};
     wxStaticBoxSizer *star3Sizer{nullptr};
-    PCUI::Choice* star3Color{nullptr};
-    PCUI::Numeric* star3Resistance{nullptr};
+    PCUI::Choice *star3Color{nullptr};
+    PCUI::Numeric *star3Resistance{nullptr};
     wxStaticBoxSizer *star4Sizer{nullptr};
-    PCUI::Choice* star4Color{nullptr};
-    PCUI::Numeric* star4Resistance{nullptr};
+    PCUI::Choice *star4Color{nullptr};
+    PCUI::Numeric *star4Resistance{nullptr};
 
-    wxRadioButton* useStandard{nullptr};
-    wxRadioButton* useStride{nullptr};
-    wxRadioButton* useZigZag{nullptr};
-    PCUI::Numeric* subBladeStart{nullptr};
-    PCUI::Numeric* subBladeEnd{nullptr};
+    wxRadioButton *useStandard{nullptr};
+    wxRadioButton *useStride{nullptr};
+    wxRadioButton *useZigZag{nullptr};
+    PCUI::Numeric *subBladeStart{nullptr};
+    PCUI::Numeric *subBladeEnd{nullptr};
 
     enum {
         ID_BladeArray,
@@ -119,7 +94,7 @@ public:
         ID_LEDColor
     };
 
-    enum LED : int32_t {
+    enum LED : int32 {
         NONE = 0,
 
         CREE_RED          = 1 << 1,
@@ -138,80 +113,72 @@ public:
         USES_RESISTANCE = CREE_LED,
     };
 
-    static constexpr std::array<std::pair<LED, const char *>, 10> LED_STRINGS {{
-        { NONE, "<None>" },
-        { CREE_RED, "Cree Red" },
-        { CREE_GREEN, "Cree Green" },
-        { CREE_BLUE, "Cree Blue" },
-        { CREE_AMBER, "Cree Amber" },
-        { CREE_RED_ORANGE, "Cree Red-Orange" },
-        { CREE_WHITE, "Cree White" },
-        { RED, "Red" },
-        { GREEN, "Green" },
-        { BLUE, "Blue" },
-    }};
-
-    static constexpr std::array<std::pair<LED, const char *>, 10> LED_CONFIGSTRS {{
-        { NONE, "NoLED" },
-        { CREE_RED, "CreeXPE2RedTemplate" },
-        { CREE_GREEN, "CreeXPE2GreenTemplate" },
-        { CREE_BLUE, "CreeXPE2BlueTemplate" },
-        { CREE_AMBER, "CreeXPE2AmberTemplate" },
-        { CREE_RED_ORANGE, "CreeXPE2RedOrangeTemplate" },
-        { CREE_WHITE, "CreeXPE2WhiteTemplate" },
-        { RED, "CH1LED" },
-        { GREEN, "CH2LED" },
-        { BLUE, "CH3LED" },
-    }};
+    static wxArrayString ledStrings();
+    static wxString ledToConfigStr(LED);
+    static LED strToLed(const wxString&);
+    static wxString ledToStr(LED);
 
     struct BladeConfig {
         wxString type{BD_PIXELRGB};
 
         wxString dataPin{"bladePin"};
         wxString colorType{"GRB"};
-        int32_t numPixels{0};
+        int32 numPixels{0};
         bool useRGBWithWhite{false};
 
-        LED Star1{NONE};
-        LED Star2{NONE};
-        LED Star3{NONE};
-        LED Star4{NONE};
-        int32_t Star1Resistance{0};
-        int32_t Star2Resistance{0};
-        int32_t Star3Resistance{0};
-        int32_t Star4Resistance{0};
+        LED star1{NONE};
+        LED star2{NONE};
+        LED star3{NONE};
+        LED star4{NONE};
+        int32 star1Resistance{0};
+        int32 star2Resistance{0};
+        int32 star3Resistance{0};
+        int32 star4Resistance{0};
 
-        std::vector<wxString> powerPins;
+        vector<wxString> powerPins;
 
         bool isSubBlade{false};
         bool useStride{false};
         bool useZigZag{false};
 
         struct SubBladeInfo {
-            uint32_t startPixel{0};
-            uint32_t endPixel{0};
+            SubBladeInfo(int32 startPixel, int32 endPixel) : startPixel{startPixel}, endPixel{endPixel} {}
+            int32 startPixel{0};
+            int32 endPixel{0};
         };
-        std::vector<SubBladeInfo> subBlades{};
+        vector<SubBladeInfo> subBlades;
     };
 
 private:
-    EditorWindow* parent{nullptr};
+    EditorWindow *mParent{nullptr};
 
     void bindEvents();
-    void createToolTips();
+    void createToolTips() const;
 
-    wxBoxSizer* createBladeSelect();
-    wxBoxSizer* createBladeManager();
-    wxBoxSizer* createBladeSetup();
-    wxBoxSizer* createBladeSettings();
+    wxBoxSizer *createBladeSelect();
+    wxBoxSizer *createBladeManager();
+    wxBoxSizer *createBladeSetup();
+    wxBoxSizer *createBladeSettings();
 
-    void saveCurrent();
+    void saveCurrent() const;
     void rebuildBladeArray();
-    void loadSettings();
+    void loadSettings() const;
     void setEnabled();
     void setVisibility();
     void updateRanges();
 
-    int32_t lastBladeSelection{-1};
-    int32_t lastSubBladeSelection{-1};
+    [[nodiscard]] bool hasBladeSelection() const;
+    [[nodiscard]] bool hasSubBladeSelection() const;
+    [[nodiscard]] bool isRGBPixelBlade() const;
+    [[nodiscard]] bool isRGBWPixelBlade() const;
+    [[nodiscard]] bool isPixelBlade() const;
+    [[nodiscard]] bool isSimpleBlade() const;
+    [[nodiscard]] bool isSubBlade() const;
+    [[nodiscard]] bool isFirstBlade() const;
+    [[nodiscard]] bool isStandardSubBlade() const;
+    [[nodiscard]] bool isStrideSubBlade() const;
+    [[nodiscard]] bool isZigZagSubBlade() const;
+
+    int32 mLastBladeSelection{-1};
+    int32 mLastSubBladeSelection{-1};
 };
