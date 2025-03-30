@@ -41,7 +41,7 @@ SerialMonitor::SerialMonitor(MainMenu* parent) {
             nullptr,
             SW_SHOWNORMAL
         );
-    } else PCUI::showMessage("Select board first.", "No Board Selected", wxOK | wxICON_ERROR, parent);
+    } else PCUI::showMessage(_("Select board first."), _("No Board Selected"), wxOK | wxICON_ERROR, parent);
 }
 
 #elif defined(__WXOSX__) || defined(__WXGTK__)
@@ -211,7 +211,7 @@ void SerialMonitor::openDevice() {
     const auto boardPath{static_cast<MainMenu*>(GetParent())->boardSelect->entry()->GetStringSelection().ToStdString()};
     fd = open(boardPath.c_str(), O_RDWR | O_NOCTTY);
     if (fd < 0) {
-        PCUI::showMessage("Could not connect to Proffieboard.", "Serial Error", wxICON_ERROR | wxOK, GetParent());
+        PCUI::showMessage(_("Could not connect to Proffieboard."), _("Serial Connection Error"), wxICON_ERROR | wxOK, GetParent());
         SerialMonitor::instance->Close(true);
         return;
     }

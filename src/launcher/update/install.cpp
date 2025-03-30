@@ -134,13 +134,10 @@ bool Update::pullNewFiles(const Changelog& changelog, const Data& data, PCUI::Pr
         }
 
         if (request.GetState() != wxWebRequestBase::State_Completed) {
-            logger.error("Download failed!");
             auto response{request.GetResponse()};
             auto statusText{response.GetStatusText()};
-            PCUI::showMessage(
-                    "Failed to download file.\n" +
-                    (statusText.empty() ? "Error" : statusText) + " (" + std::to_string(response.GetStatus()) + ')',
-                    App::getAppName());
+            logger.error("Download failed! " + (statusText.empty() ? "UError" : statusText.ToStdString()) + " (" + std::to_string(response.GetStatus()) + ')');
+            PCUI::showMessage(_("Failed to download file.)"), App::getAppName());
             fs::remove_all(stagingFolder());
             return false;
         }

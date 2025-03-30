@@ -19,30 +19,30 @@ public:
   };
 
 private:
-  wxScrolledWindow* optionArea{nullptr};
-  wxButton* addDefineButton{nullptr};
-  wxStaticText* cricketsText{nullptr};
+  wxScrolledWindow *mOptionArea{nullptr};
+  wxButton *mAddDefineButton{nullptr};
+  wxStaticText *mCricketsText{nullptr};
 
   class CDefine;
-  std::vector<CDefine*> customDefines{};
+  vector<CDefine*> mCustomDefines;
 
   void bindEvents();
   void createUI();
   void createOptionArea();
   void updateOptions(bool purge = false);
 
-  wxBoxSizer* header();
-  wxStaticBoxSizer* info(wxWindow*);
+  wxBoxSizer *header();
+  static wxStaticBoxSizer *info(wxWindow*);
 };
 
 class CustomOptionsDlg::CDefine : public wxPanel {
   public:
     CDefine(wxScrolledWindow*);
 
-    wxStaticText* defText{nullptr};
-    PCUI::Text* name{nullptr};
-    PCUI::Text* value{nullptr};
-    wxButton* remove{nullptr};
+    wxStaticText *defText{nullptr};
+    PCUI::Text *name{nullptr};
+    PCUI::Text *value{nullptr};
+    wxButton *remove{nullptr};
 
     enum {
       ID_Name,

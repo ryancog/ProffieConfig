@@ -114,13 +114,13 @@ void AppState::addProp(const string& propName, const string& propPath, const str
 
     auto filenameEntry{hashedData.find("FILENAME")};
     if (filenameEntry == hashedData.end() or not filenameEntry->second->value) {
-        PCUI::showMessage("Prop config file is invalid.", "Error Adding Prop");
+        PCUI::showMessage(_("Prop config file is invalid."), _("Error Adding Prop"));
         return;
     }
 
     auto propFileName{propPath.substr(propPath.rfind('/') + 1)};
     if (*filenameEntry->second->value != propFileName) {
-        PCUI::showMessage("Prop config filename does not match provided prop filename", "Error Adding Prop");
+        PCUI::showMessage(_("Prop config filename does not match provided prop filename"), _("Error Adding Prop"));
         return;
     }
 

@@ -11,7 +11,7 @@
 #include <wx/sysopt.h>
 
 AddConfig::AddConfig(MainMenu *parent) : 
-    wxDialog(parent, wxID_ANY, "Add New Config", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE) {
+    wxDialog(parent, wxID_ANY, _("Add New Config"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE) {
 #   ifdef __WXOSX__
     wxSystemOptions::SetOption(wxOSX_FILEDIALOG_ALWAYS_SHOW_TYPES, true);
 #   endif
@@ -48,20 +48,20 @@ void AddConfig::createUI() {
   sizer->SetMinSize(wxSize(400, -1));
 
   auto *modeSelection{new wxBoxSizer(wxHORIZONTAL)};
-  createNew = new wxToggleButton(this, ID_CreateNew, "Create New Config");
+  createNew = new wxToggleButton(this, ID_CreateNew, _("Create New Config"));
   createNew->SetValue(true);
-  importExisting = new wxToggleButton(this, ID_ImportExisting, "Import Existing Config");
+  importExisting = new wxToggleButton(this, ID_ImportExisting, _("Import Existing Config"));
   modeSelection->Add(createNew, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 10));
   modeSelection->Add(importExisting, wxSizerFlags(0).Border(wxRIGHT | wxTOP | wxBOTTOM, 10));
 
-  mChooseConfigText = new wxStaticText(this, wxID_ANY, "Configuration to Import");
-  chooseConfig = new wxFilePickerCtrl(this, ID_ChooseConfig, wxEmptyString, "Choose Configuration File to Import", "ProffieOS Configuration (*.h)|*.h");
+  mChooseConfigText = new wxStaticText(this, wxID_ANY, _("Configuration to Import"));
+  chooseConfig = new wxFilePickerCtrl(this, ID_ChooseConfig, wxEmptyString, _("Choose Configuration File to Import"), "ProffieOS Configuration (*.h)|*.h");
 
-  configNameEntry = new PCUI::Text(this, ID_ConfigName, {}, 0, "Configuration Name");
+  configNameEntry = new PCUI::Text(this, ID_ConfigName, {}, 0, _("Configuration Name"));
 
-  mInvalidNameWarning = new wxStaticText(this, wxID_ANY, "Please enter a valid name");
-  mDuplicateWarning = new wxStaticText(this, wxID_ANY, "Configuration with same name already exists");
-  mFileSelectionWarning = new wxStaticText(this, wxID_ANY, "Please choose a configuration file to import");
+  mInvalidNameWarning = new wxStaticText(this, wxID_ANY, _("Please enter a valid name"));
+  mDuplicateWarning = new wxStaticText(this, wxID_ANY, _("Configuration with same name already exists"));
+  mFileSelectionWarning = new wxStaticText(this, wxID_ANY, _("Please choose a configuration file to import"));
 
   sizer->Add(modeSelection, wxSizerFlags(0).Center());
   sizer->Add(mChooseConfigText, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 10).DoubleBorder(wxLEFT));

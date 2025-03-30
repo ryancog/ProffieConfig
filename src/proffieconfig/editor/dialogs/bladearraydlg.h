@@ -18,12 +18,6 @@ enum {
     BLADE_ID_MODE_BRIDGED,
 };
 
-constexpr array<cstring, 3> BLADE_ID_MODES{
-    "Snapshot",
-    "External Pullup",
-    "Bridged Pullup",
-};
-
 class BladeArrayDlg : public wxDialog {
 public:
   BladeArrayDlg(EditorWindow*);

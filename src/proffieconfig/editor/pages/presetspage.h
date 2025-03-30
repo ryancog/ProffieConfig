@@ -22,29 +22,29 @@ public:
 
     wxBoxSizer *injectionsSizer{nullptr};
 
-    PCUI::Choice* bladeArray{nullptr};
-    PCUI::Text* commentInput{nullptr};
-    PCUI::Text* styleInput{nullptr};
-    wxListBox* presetList{nullptr};
-    wxListBox* bladeList{nullptr};
+    PCUI::Choice *bladeArray{nullptr};
+    PCUI::Text *commentInput{nullptr};
+    PCUI::Text *styleInput{nullptr};
+    wxListBox *presetList{nullptr};
+    wxListBox *bladeList{nullptr};
 
-    wxButton* addPreset{nullptr};
-    wxButton* removePreset{nullptr};
-    wxButton* movePresetUp{nullptr};
-    wxButton* movePresetDown{nullptr};
+    wxButton *addPreset{nullptr};
+    wxButton *removePreset{nullptr};
+    wxButton *movePresetUp{nullptr};
+    wxButton *movePresetDown{nullptr};
 
-    PCUI::Text* nameInput{nullptr};
-    PCUI::Text* dirInput{nullptr};
-    PCUI::Text* trackInput{nullptr};
+    PCUI::Text *nameInput{nullptr};
+    PCUI::Text *dirInput{nullptr};
+    PCUI::Text *trackInput{nullptr};
 
-    std::vector<string> injections;
+    vector<string> injections;
 
     struct PresetConfig {
         struct Style {
             string comment;
             string style;
         };
-        std::vector<Style> styles;
+        vector<Style> styles;
         string name;
         string dirs;
         string track;
@@ -62,13 +62,13 @@ public:
     };
 
 private:
-    EditorWindow* mParent{nullptr};
+    EditorWindow *mParent{nullptr};
 
     void bindEvents();
     void createToolTips() const;
 
-    wxBoxSizer* createPresetSelect();
-    wxBoxSizer* createPresetConfig();
+    wxBoxSizer *createPresetSelect();
+    wxBoxSizer *createPresetConfig();
 
     void pushIfNewPreset();
     void rebuildBladeArrayList();

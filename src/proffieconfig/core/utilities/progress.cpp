@@ -1,16 +1,18 @@
 #include "progress.h"
-#include "wx/utils.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include <wx/event.h>
+#include <utility>
 
-wxEventTypeTag<wxCommandEvent> Progress::EVT_UPDATE(wxNewEventType());
+#include <wx/event.h>
+#include <wx/utils.h>
+
+const wxEventTypeTag<wxCommandEvent> Progress::EVT_UPDATE(wxNewEventType());
 
 void Progress::emitEvent(int8_t progress, wxString message) {
-    ProgressEvent* event = new ProgressEvent(EVT_UPDATE, wxID_ANY);
+    auto *event{new ProgressEvent(EVT_UPDATE, wxID_ANY)};
     event->progress = progress;
-    event->message = message;
+    event->message = std::move(message);
     event->progDialog = this;
     wxQueueEvent(GetParent()->GetEventHandler(), event);
 }

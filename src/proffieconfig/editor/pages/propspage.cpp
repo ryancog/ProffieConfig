@@ -4,6 +4,7 @@
 
 #include <wx/button.h>
 #include <wx/event.h>
+#include <wx/gdicmn.h>
 #include <wx/scrolwin.h>
 #include <wx/sizer.h>
 #include <wx/tooltip.h>
@@ -16,17 +17,16 @@
 #include "../../core/config/propfile.h"
 #include "../editorwindow.h"
 #include "generalpage.h"
-#include "wx/gdicmn.h"
 
-PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window, ""), mParent{static_cast<EditorWindow*>(window)} {
+PropsPage::PropsPage(wxWindow* window) : wxStaticBoxSizer(wxVERTICAL, window), mParent{static_cast<EditorWindow*>(window)} {
     mTopSizer = new wxBoxSizer(wxHORIZONTAL);
-    propSelection = new PCUI::Choice(GetStaticBox(), ID_PropSelect, Misc::createEntries({"Default"}), "Prop File");
+    propSelection = new PCUI::Choice(GetStaticBox(), ID_PropSelect, Misc::createEntries({_("Default")}), _("Prop File"));
     propSelection->SetMinSize(wxSize{120, -1});
     // Two ampersands bc wxWidgets formatting
-    propInfo = new wxButton(GetStaticBox(), ID_PropInfo, "Prop Description && Usage Info...");
-    buttonInfo = new wxButton(GetStaticBox(), ID_Buttons, "Button Controls...");
-    TIP(propInfo, "View prop creator-provided information about this prop and its intended usage.");
-    TIP(buttonInfo, "View button controls based on specific option settings and number of buttons.");
+    propInfo = new wxButton(GetStaticBox(), ID_PropInfo, _("Prop Description and Usage Info..."));
+    buttonInfo = new wxButton(GetStaticBox(), ID_Buttons, _("Button Controls..."));
+    TIP(propInfo, _("View prop creator-provided information about this prop and its intended usage."));
+    TIP(buttonInfo, _("View button controls based on specific option settings and number of buttons."));
     mTopSizer->Add(propSelection, wxSizerFlags(0).Border(wxALL, 10));
     mTopSizer->Add(propInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
     mTopSizer->Add(buttonInfo, wxSizerFlags(0).Border(wxALL, 10).Bottom());
@@ -78,7 +78,7 @@ void PropsPage::bindEvents() {
         wxDialog buttonDialog{
             mParent,
             wxID_ANY,
-            (activeProp ? activeProp->getName() : "Default") + " Buttons",
+            (activeProp ? activeProp->getName() : _("Default")) + _(" Buttons"),
             wxDefaultPosition,
             wxDefaultSize,
             wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP | wxRESIZE_BORDER
@@ -86,49 +86,52 @@ void PropsPage::bindEvents() {
 
         if (activeProp == nullptr) {
             auto defaultButtons{[](int32 num) -> wxString {
-                constexpr cstring ZERO_BUTTONS{
-                    "On/Off - Twist\n"
-                    "Next preset - Point up and shake\n"
-                    "Clash - Hit the blade while saber is on."
-                };
-                constexpr cstring ONE_BUTTON{
-                    "On/Off - Click to turn the saber on or off.\n"
-                    "Turn On muted - Double-click\n"
-                    "Next preset - Hold button and hit the blade while saber is off.\n"
-                    "Clash - Hit the blade while saber is on.\n"
-                    "Lockup - Hold button, then trigger a clash. Release button to end.\n"
-                    "Drag - Hold button, then trigger a clash while pointing down. Release button to end.\n"
-                    "Melt - Hold button and stab something.\n"
-                    "Force - Long-click button.\n"
-                    "Start Soundtrack - Long-click the button while blade is off.\n"
-                    "Enter/Exit Color Change - Hold button and Twist."
-                };
-                constexpr cstring TWO_BUTTON{
-                    "On/Off - Click POW\n"
-                    "Turn On muted - Double-click POW button\n"
-                    "Next preset - Hold POW button and hit the blade while saber is off.\n"
-                    "Previous Preset - Hold AUX button and click the POW button while saber is off.\n"
-                    "Clash - Hit the blade while saber is on.\n"
-                    "Lockup -  Hold either POW or AUX, then trigger a clash. Release button to end.\n"
-                    "Drag - Hold either POW or AUX, then trigger a clash while pointing down. Release button to end.\n"
-                    "Melt - Hold either POW or AUX and stab something.\n"
-                    "Force Lightning Block - Click AUX while holding POW.\n"
-                    "Force - Long-click POW button.\n"
-                    "Start Soundtrack - Long-click the POW button while blade is off.\n"
-                    "Blaster block - Short-click AUX button.\n"
-                    "Enter/Exit Color Change - Hold Aux and click POW while on."
-                };
+                auto zeroButtons{[]() {
+                    return _(
+                            "On/Off - Twist\n"
+                            "Next preset - Point up and shake\n"
+                            "Clash - Hit the blade while saber is on.");
+                }};
+                auto oneButton{[]() {
+                    return _(
+                            "On/Off - Click to turn the saber on or off.\n"
+                            "Turn On muted - Double-click\n"
+                            "Next preset - Hold button and hit the blade while saber is off.\n"
+                            "Clash - Hit the blade while saber is on.\n"
+                            "Lockup - Hold button, then trigger a clash. Release button to end.\n"
+                            "Drag - Hold button, then trigger a clash while pointing down. Release button to end.\n"
+                            "Melt - Hold button and stab something.\n"
+                            "Force - Long-click button.\n"
+                            "Start Soundtrack - Long-click the button while blade is off.\n"
+                            "Enter/Exit Color Change - Hold button and Twist.");
+                }};
+                auto twoButton{[]() {
+                    return _(
+                            "On/Off - Click POW\n"
+                            "Turn On muted - Double-click POW button\n"
+                            "Next preset - Hold POW button and hit the blade while saber is off.\n"
+                            "Previous Preset - Hold AUX button and click the POW button while saber is off.\n"
+                            "Clash - Hit the blade while saber is on.\n"
+                            "Lockup -  Hold either POW or AUX, then trigger a clash. Release button to end.\n"
+                            "Drag - Hold either POW or AUX, then trigger a clash while pointing down. Release button to end.\n"
+                            "Melt - Hold either POW or AUX and stab something.\n"
+                            "Force Lightning Block - Click AUX while holding POW.\n"
+                            "Force - Long-click POW button.\n"
+                            "Start Soundtrack - Long-click the POW button while blade is off.\n"
+                            "Blaster block - Short-click AUX button.\n"
+                            "Enter/Exit Color Change - Hold Aux and click POW while on.");
+                }};
 
                 switch (num) {
                     case 0: 
-                        return ZERO_BUTTONS;
+                        return zeroButtons();
                     case 1: 
-                        return ONE_BUTTON;
+                        return oneButton();
                     case 2: 
                     case 3: 
-                        return TWO_BUTTON;
+                        return twoButton();
                     default:
-                        return "Button Configuration Not Supported";
+                        return _("Button Configuration Not Supported");
                 }
             }};
             textSizer->Add(
@@ -140,11 +143,11 @@ void PropsPage::bindEvents() {
 
             if (propButtons.empty()) {
                 textSizer->Add(
-                    new wxStaticText(&buttonDialog, wxID_ANY, "Selected number of buttons not supported by prop file."), 
+                    new wxStaticText(&buttonDialog, wxID_ANY, _("Selected number of buttons not supported by prop file.")),
                     wxSizerFlags{}.Border(wxALL, 10)
                 );
             } else for (auto& [ stateName, stateButtons ] : propButtons) {
-                auto *stateSizer{new wxStaticBoxSizer(wxVERTICAL, &buttonDialog, "Button controls while saber is " + stateName + ":")};
+                auto *stateSizer{new wxStaticBoxSizer(wxVERTICAL, &buttonDialog, wxString::Format(_("Button controls while saber is %s:"), stateName))};
                 auto *controlSizer{new wxBoxSizer(wxHORIZONTAL)};
                 auto *buttonSizer{new wxBoxSizer(wxVERTICAL)};
                 auto *actionSizer{new wxBoxSizer(wxVERTICAL)};
@@ -200,7 +203,7 @@ void PropsPage::bindEvents() {
         }
 
         if (activeProp == nullptr) {
-            info = "The default ProffieOS prop file.";
+            info = _("The default ProffieOS prop file.");
         } else {
             info = activeProp->getInfo();
         }
@@ -208,7 +211,7 @@ void PropsPage::bindEvents() {
         wxDialog infoDialog{
             mParent,
             wxID_ANY,
-            propSelection->entry()->GetStringSelection() + " Prop Info",
+            wxString::Format(_("%s Prop Info"), propSelection->entry()->GetStringSelection()),
             wxDefaultPosition,
             wxDefaultSize,
             wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP
@@ -225,7 +228,7 @@ void PropsPage::bindEvents() {
 void PropsPage::updateProps() {
     auto lastSelect{propSelection->entry()->GetStringSelection()};
     propSelection->entry()->Clear();
-    propSelection->entry()->Append("Default");
+    propSelection->entry()->Append(_("Default"));
 
     for (const auto& prop : mProps) {
         propSelection->entry()->Append(prop->getName());
@@ -233,7 +236,7 @@ void PropsPage::updateProps() {
 
     if ([this, lastSelect]() { for (const auto& prop : propSelection->entry()->GetStrings()) if (prop == lastSelect) return true; return false; }()) {
         propSelection->entry()->SetStringSelection(lastSelect);
-    } else propSelection->entry()->SetStringSelection("Default");
+    } else propSelection->entry()->SetSelection(0);
 }
 
 void PropsPage::update() {

@@ -17,7 +17,8 @@
 #include "../../editor/pages/presetspage.h"
 #include "../../editor/dialogs/bladearraydlg.h"
 
-std::vector<bool*> Onboard::Overview::eventRunTrackers{};
+vector<bool*> Onboard::Overview::eventRunTrackers;
+
 #define EVENT_PAGE_SETUP \
   event.Skip(); \
   static bool hasRun{false}; \
@@ -26,75 +27,78 @@ std::vector<bool*> Onboard::Overview::eventRunTrackers{};
   hasRun = true;
 
 Onboard::Overview::Overview(wxWindow* parent) : wxPanel(parent, OnboardFrame::ID_Overview) {
-  mSizer = new wxBoxSizer(wxVERTICAL);
+    mSizer = new wxBoxSizer(wxVERTICAL);
 
-  generateNewPage("Introduction to ProffieConfig",
+    generateNewPage(_("Introduction to ProffieConfig"),
+            "ProffieConfig's main menu has just opened up to the right. This page will serve as\n"
+            "the instructions for the introduction, but all the instructions will be referencing\n"
+            "actions to be completed on the main menu and any windows you open along the way.\n"
+            "\n"
+            "Here you can add and manage configurations, apply a configuration to a Proffieboard,\n"
+            "and open the Serial Monitor to connect to the Proffieboard if needed.\n"
+            "\n"
+            "Located up top under \"File\" (currently disabled) you can re-run this setup later at any time.\n"
+            "Under \"Help\" you can also find a link to report any issues you have with the app to me.\n"
+            "\n\n"
+            "Go ahead and click on \"Add\" to add your first configuration.\n"
+            );
+    mainMenuDisables[MainMenu::ID_AddConfig] = false;
 
-                  "ProffieConfig's main menu has just opened up to the right. This page will serve as\n"
-                  "the instructions for the introduction, but all the instructions will be referencing\n"
-                  "actions to be completed on the main menu and any windows you open along the way.\n"
-                  "\n"
-                  "Here you can add and manage configurations, apply a configuration to a Proffieboard,\n"
-                  "and open the Serial Monitor to connect to the Proffieboard if needed.\n"
-                  "\n"
-                  "Located up top under \"File\" (currently disabled) you can re-run this setup later at any time.\n"
-                  "Under \"Help\" you can also find a link to report any issues you have with the app to me.\n"
-                  "\n\n"
-                  "Go ahead and click on \"Add\" to add your first configuration.\n"
-                  );
-  mainMenuDisables[MainMenu::ID_AddConfig] = false;
-
-  SetSizerAndFit(mSizer);
+    SetSizerAndFit(mSizer);
 }
+
 Onboard::Overview::~Overview() {
-  if (mGuideMenu != nullptr) mGuideMenu->Close(true);
+    if (mGuideMenu != nullptr) mGuideMenu->Close(true);
 }
 
 void Onboard::Overview::prepare() {
-  mGuideMenu = new MainMenu(this);
+    mGuideMenu = new MainMenu(this);
 
-  auto updateGuideMenuLocation{[this](){
-      auto parentRect = GetParent()->GetScreenRect();
-      mGuideMenu->SetPosition(wxPoint(parentRect.x + parentRect.width + 20, parentRect.y + ((parentRect.height - mGuideMenu->GetSize().y) / 2)));
-  }};
-  Bind(wxEVT_SIZE, [=](wxSizeEvent&) { updateGuideMenuLocation(); });
-  GetParent()->Bind(wxEVT_MOVE, [=](wxMoveEvent&) { updateGuideMenuLocation(); });
-  mGuideMenu->Bind(wxEVT_MOVE, [=](wxMoveEvent&) { updateGuideMenuLocation(); });
+    auto updateGuideMenuLocation{[this](){
+        auto parentRect = GetParent()->GetScreenRect();
+        mGuideMenu->SetPosition(wxPoint(parentRect.x + parentRect.width + 20, parentRect.y + ((parentRect.height - mGuideMenu->GetSize().y) / 2)));
+    }};
+    Bind(wxEVT_SIZE, [=](wxSizeEvent&) { updateGuideMenuLocation(); });
+    GetParent()->Bind(wxEVT_MOVE, [=](wxMoveEvent&) { updateGuideMenuLocation(); });
+    mGuideMenu->Bind(wxEVT_MOVE, [=](wxMoveEvent&) { updateGuideMenuLocation(); });
 
-  for (auto *hasRun : eventRunTrackers) *hasRun = false;
-  prepareMainMenu();
-  linkMainMenuEvents();
+    for (auto *hasRun : eventRunTrackers) *hasRun = false;
+    prepareMainMenu();
+    linkMainMenuEvents();
 }
+
 void Onboard::Overview::prepareMainMenu() {
-  mGuideMenu->GetMenuBar()->Disable();
-  mGuideMenu->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
-    if (event.CanVeto()) {
-      event.Veto();
-      PCUI::showMessage("You cannot close this during First-Time Setup.", "Close ProffieConfig", wxOK | wxCENTER, mGuideMenu);
-    }
-  });
-  mGuideMenu->Bind(wxEVT_UPDATE_UI, [&](wxUpdateUIEvent& event) {
-    event.Skip();
-    for (const auto& [ id, disabled ] : mainMenuDisables) {
-      MainMenu::FindWindowById(id)->Enable(!disabled);
-    }
-  });
+    mGuideMenu->GetMenuBar()->Disable();
+    mGuideMenu->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
+        if (event.CanVeto()) {
+            event.Veto();
+            PCUI::showMessage(_("You cannot close this during First-Time Setup."), _("Close ProffieConfig"), wxOK | wxCENTER, mGuideMenu);
+        }
+    });
+    mGuideMenu->Bind(wxEVT_UPDATE_UI, [&](wxUpdateUIEvent& event) {
+        event.Skip();
+        for (const auto& [ id, disabled ] : mainMenuDisables) {
+            MainMenu::FindWindowById(id)->Enable(!disabled);
+        }
+    });
 }
+
 void Onboard::Overview::prepareEditor() {
-  mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_ExportConfig, false);
-  mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_StyleEditor, false);
-  mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_VerifyConfig, false);
-  mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_AddInjection, false);
-  mGuideMenu->activeEditor->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
-    if (mDoneWithEditor) {
-      event.Skip();
-      return;
-    }
-    if (event.CanVeto()) {
-      event.Veto();
-      PCUI::showMessage("You cannot close this during First-Time Setup.", "Close ProffieConfig Editor", wxOK | wxCENTER, mGuideMenu->activeEditor);
-    }
-  });
+    mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_ExportConfig, false);
+    mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_StyleEditor, false);
+    mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_VerifyConfig, false);
+    mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_AddInjection, false);
+    mGuideMenu->activeEditor->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
+        if (mDoneWithEditor) {
+            event.Skip();
+            return;
+        }
+
+        if (event.CanVeto()) {
+            event.Veto();
+            PCUI::showMessage(_("You cannot close this during First-Time Setup."), _("Close ProffieConfig Editor"), wxOK | wxCENTER, mGuideMenu->activeEditor);
+        }
+    });
 }
 
 void Onboard::Overview::linkMainMenuEvents() {

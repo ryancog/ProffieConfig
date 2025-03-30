@@ -42,7 +42,7 @@ class Launcher : public wxApp {
 public:
     bool OnInit() override {
         if (not App::init("ProffieConfig Launcher", "ProffieConfig")) {
-            PCUI::showMessage("A Launcher is Already Running", App::getAppName());
+            PCUI::showMessage(_("A Launcher is Already Running"), App::getAppName());
             return false;
         }
 
@@ -66,14 +66,14 @@ public:
         
         if (argc == 2 and argv[1] == "uninstall") {
             action = UNINSTALL;
-            if (wxNO == PCUI::showMessage("Are you sure you want to uninstall ProffieConfig?", App::getAppName(), wxYES_NO | wxNO_DEFAULT)) {
+            if (wxNO == PCUI::showMessage(_("Are you sure you want to uninstall ProffieConfig?"), App::getAppName(), wxYES_NO | wxNO_DEFAULT)) {
                 return false;
             }
         } else {
             if (not fs::exists(Paths::executable(Paths::Executable::MAIN))) {
                 action = FIRST_INSTALL;
                 logger.info("Main ProffieConfig binary missing, update/install routine required.");
-                if (wxNO == PCUI::showMessage("ProffieConfig installation needs to run, continue?", App::getAppName(), wxYES_NO | wxYES_DEFAULT)) {
+                if (wxNO == PCUI::showMessage(_("ProffieConfig installation needs to run, continue?"), App::getAppName(), wxYES_NO | wxYES_DEFAULT)) {
                     return false;
                 }
             }
@@ -109,7 +109,7 @@ public:
             if (not pullSuccess) {
                 logger.info("Aborting update after failed version data collection...");
                 if (action == FIRST_INSTALL) {
-                    PCUI::showMessage("Failed pulling update data, please try again!", App::getAppName());
+                    PCUI::showMessage(_("Failed pulling update data, please try again!"), App::getAppName());
                     return false;
                 }
 
@@ -119,14 +119,14 @@ public:
 
             auto data{Update::parseData(&prog, *logger.binfo("Parsing version data..."))};
             if (not data) {
-                PCUI::showMessage("Failed to parse data!\nPlease report this error.", App::getAppName());
+                PCUI::showMessage(_("Failed to parse data!\nPlease report this error."), App::getAppName());
                 wxLaunchDefaultApplication(Paths::logs().native());
                 return false;
             }
 
             if (data->bundles.empty()) {
                 logger.error("No valid bundles found!");
-                PCUI::showMessage("No valid version bundles found!\nPlease report this error.", App::getAppName());
+                PCUI::showMessage(_("No valid version bundles found!\nPlease report this error."), App::getAppName());
                 wxLaunchDefaultApplication(Paths::logs().native());
                 if (action == LAUNCH) Routine::launch(*logger.binfo("Launching in lieu of valid update data."));
                 return false;
@@ -163,7 +163,7 @@ public:
             wxYield();
             prog.Close(true);
 
-            if (action == FIRST_INSTALL) PCUI::showMessage("Installed", App::getAppName());
+            if (action == FIRST_INSTALL) PCUI::showMessage(_("Installed"), App::getAppName());
         } else if (action == UNINSTALL) {
             Log::Context::destroyGlobal();
 
@@ -177,7 +177,7 @@ public:
             prog.Update(60, "Removing resources...");
             fs::remove_all(Paths::resources(), err);
 
-            if (wxYES == PCUI::showMessage("Purge user data? (configurations, saves, etc.)\nIf files are kept, they will be available if reinstalled.", App::getAppName(), wxYES_NO | wxNO_DEFAULT)) {
+            if (wxYES == PCUI::showMessage(_("Purge user data? (configurations, saves, etc.)\nIf files are kept, they will be available if reinstalled."), App::getAppName(), wxYES_NO | wxNO_DEFAULT)) {
                 prog.Update(70, "Purging user data...");
                 fs::remove_all(Paths::data());
             }
