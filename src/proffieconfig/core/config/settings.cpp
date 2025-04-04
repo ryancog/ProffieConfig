@@ -12,12 +12,13 @@
 #include <utility>
 
 Settings::Settings(EditorWindow* _parent) : mParent(_parent) {
-  linkDefines();
-  setCustomInputParsers();
-  setCustomOutputParsers();
+    linkDefines();
+    setCustomInputParsers();
+    setCustomOutputParsers();
 }
+
 Settings::~Settings() {
-  for (const auto& define : generalDefines) delete define.second;
+    for (const auto& define : generalDefines) delete define.second;
 }
 
 void Settings::linkDefines() {
@@ -62,257 +63,244 @@ void Settings::linkDefines() {
 
 void Settings::setCustomInputParsers() {
     auto numBladesParser{[this](const ProffieDefine* def, const wxString& input) -> bool {
-    auto key = ProffieDefine::parseKey(input);
-    if (key.first != def->getName()) return false;
+        auto key = ProffieDefine::parseKey(input);
+        if (key.first != def->getName()) return false;
 
-    long tmpVal{};
-    key.second.ToCLong(&tmpVal);
-    numBlades = tmpVal;
-    return true;
-  }};
-  generalDefines["NUM_BLADES"]->overrideParser(numBladesParser);
+        long tmpVal{};
+        key.second.ToCLong(&tmpVal);
+        numBlades = tmpVal;
+        return true;
+    }};
+    generalDefines["NUM_BLADES"]->overrideParser(numBladesParser);
 
-  auto saveStateParser{[this](const ProffieDefine* def, const wxString& input) -> bool {
-    auto key = ProffieDefine::parseKey(input);
-    if (key.first != def->getName()) return false;
+    auto saveStateParser{[this](const ProffieDefine* def, const wxString& input) -> bool {
+        auto key = ProffieDefine::parseKey(input);
+        if (key.first != def->getName()) return false;
 
-    mParent->generalPage->colorSave->SetValue(true);
-    mParent->generalPage->presetSave->SetValue(true);
-    mParent->generalPage->volumeSave->SetValue(true);
-    return true;
-  }};
-  generalDefines["SAVE_STATE"]->overrideParser(saveStateParser);
+        mParent->generalPage->colorSave->SetValue(true);
+        mParent->generalPage->presetSave->SetValue(true);
+        mParent->generalPage->volumeSave->SetValue(true);
+        return true;
+    }};
+    generalDefines["SAVE_STATE"]->overrideParser(saveStateParser);
 
-  auto orientParser{[&](const ProffieDefine* def, const wxString& input) -> bool {
-    auto key = ProffieDefine::parseKey(input);
-    if (key.first != def->getName()) return false;
+    auto orientParser{[&](const ProffieDefine* def, const wxString& input) -> bool {
+        auto key = ProffieDefine::parseKey(input);
+        if (key.first != def->getName()) return false;
 
-    mParent->generalPage->orientation->entry()->SetStringSelection(Configuration::findInVMap(Configuration::ORIENTATION, key.second).first);
-    return true;
-  }};
-  generalDefines["ORIENTATION"]->overrideParser(orientParser);
+        for (auto idx{0}; idx < Configuration::ORIENT_CONFIG_STRINGS.size(); ++idx) {
+            if (Configuration::ORIENT_CONFIG_STRINGS[idx] == key.second) {
+                mParent->generalPage->orientation->entry()->SetSelection(idx);
+                break;
+            }
+        }
+        return true;
+    }};
+    generalDefines["ORIENTATION"]->overrideParser(orientParser);
 
-  auto bladeDetectPinParser{[&](const ProffieDefine* def, const wxString& input) -> bool {
-    auto key = ProffieDefine::parseKey(input);
-    if (key.first != def->getName()) return false;
-    
-    mParent->bladesPage->bladeArrayDlg->enableDetect->SetValue(true);
-    mParent->bladesPage->bladeArrayDlg->detectPin->entry()->SetValue(key.second);
-    return true;
-  }};
-  generalDefines["BLADE_DETECT_PIN"]->overrideParser(bladeDetectPinParser);
+    auto bladeDetectPinParser{[&](const ProffieDefine* def, const wxString& input) -> bool {
+        auto key = ProffieDefine::parseKey(input);
+        if (key.first != def->getName()) return false;
 
-  auto bladeIDClassParser{[&](const ProffieDefine* def, const wxString& input) -> bool {
-    auto key = ProffieDefine::parseKey(input);
-    if (key.first != def->getName()) return false;
-    
-    mParent->bladesPage->bladeArrayDlg->enableID->SetValue(true);
-    const auto typeEnd{key.second.find('<')};
-    const auto type{key.second.substr(0, typeEnd)};
-    if (type == "SnapshotBladeID") {
-      mParent->bladesPage->bladeArrayDlg->mode->entry()->SetSelection(BLADE_ID_MODE_SNAPSHOT);
-      const auto pinBegin{key.second.find_first_not_of("< ", typeEnd)};
-      const auto pinEnd{key.second.find_first_of(" >", pinBegin)};
-      mParent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd - pinBegin));
-    } else if (type == "ExternalPullupBladeID") {
-      mParent->bladesPage->bladeArrayDlg->mode->entry()->SetSelection(BLADE_ID_MODE_EXTERNAL);
-      const auto pinBegin{key.second.find_first_not_of("< ", typeEnd)};
-      const auto pinEnd{key.second.find_first_of(", >", pinBegin)};
-      mParent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd - pinBegin));
-      const auto resBegin{key.second.find_first_not_of(", ", pinEnd)};
-      const auto resEnd{key.second.find_first_of(" >", resBegin)};
-      mParent->bladesPage->bladeArrayDlg->pullupResistance->entry()->SetValue(key.second.substr(resBegin, resEnd - resBegin));
-    } else if (type == "BridgedPullupBladeID") {
-      mParent->bladesPage->bladeArrayDlg->mode->entry()->SetSelection(BLADE_ID_MODE_BRIDGED);
-      const auto pinBegin{key.second.find_first_not_of("< ", typeEnd)};
-      const auto pinEnd{key.second.find_first_of(", >", pinBegin)};
-      mParent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd - pinBegin));
-      const auto pullupPinBegin{key.second.find_first_not_of(", ", pinEnd)};
-      const auto pullupPinEnd{key.second.find_first_of(" >", pullupPinBegin)};
-      mParent->bladesPage->bladeArrayDlg->pullupPin->entry()->SetValue(key.second.substr(pullupPinBegin, pullupPinEnd - pullupPinBegin));
-    }
-    return true;
-  }};
-  generalDefines["BLADE_ID_CLASS"]->overrideParser(bladeIDClassParser);
+        mParent->bladesPage->bladeArrayDlg->enableDetect->SetValue(true);
+        mParent->bladesPage->bladeArrayDlg->detectPin->entry()->SetValue(key.second);
+        return true;
+    }};
+    generalDefines["BLADE_DETECT_PIN"]->overrideParser(bladeDetectPinParser);
 
-  auto bladeIDScanMillisParser{[&](const ProffieDefine* def, const wxString& input) ->bool {
-    auto key = ProffieDefine::parseKey(input);
-    if (key.first != def->getName()) return false;
-    
-    mParent->bladesPage->bladeArrayDlg->scanIDMillis->entry()->SetValue(key.second);
-    mParent->bladesPage->bladeArrayDlg->continuousScans->SetValue(true);
-    return true;
-  }};
-  generalDefines["BLADE_ID_SCAN_MILLIS"]->overrideParser(bladeIDScanMillisParser);
+    auto bladeIDClassParser{[&](const ProffieDefine* def, const wxString& input) -> bool {
+        auto key = ProffieDefine::parseKey(input);
+        if (key.first != def->getName()) return false;
 
-  auto bladeIDTimesParser{[&](const ProffieDefine* def, const wxString& input) ->bool {
-    auto key = ProffieDefine::parseKey(input);
-    if (key.first != def->getName()) return false;
-    
-    mParent->bladesPage->bladeArrayDlg->numIDTimes->entry()->SetValue(key.second);
-    mParent->bladesPage->bladeArrayDlg->continuousScans->SetValue(true);
-    return true;
-  }};
-  generalDefines["BLADE_ID_TIMES"]->overrideParser(bladeIDTimesParser);
+        mParent->bladesPage->bladeArrayDlg->enableID->SetValue(true);
+        const auto typeEnd{key.second.find('<')};
+        const auto type{key.second.substr(0, typeEnd)};
+        if (type == "SnapshotBladeID") {
+            mParent->bladesPage->bladeArrayDlg->mode->entry()->SetSelection(BLADE_ID_MODE_SNAPSHOT);
+            const auto pinBegin{key.second.find_first_not_of("< ", typeEnd)};
+            const auto pinEnd{key.second.find_first_of(" >", pinBegin)};
+            mParent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd - pinBegin));
+        } else if (type == "ExternalPullupBladeID") {
+            mParent->bladesPage->bladeArrayDlg->mode->entry()->SetSelection(BLADE_ID_MODE_EXTERNAL);
+            const auto pinBegin{key.second.find_first_not_of("< ", typeEnd)};
+            const auto pinEnd{key.second.find_first_of(", >", pinBegin)};
+            mParent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd - pinBegin));
+            const auto resBegin{key.second.find_first_not_of(", ", pinEnd)};
+            const auto resEnd{key.second.find_first_of(" >", resBegin)};
+            mParent->bladesPage->bladeArrayDlg->pullupResistance->entry()->SetValue(key.second.substr(resBegin, resEnd - resBegin));
+        } else if (type == "BridgedPullupBladeID") {
+            mParent->bladesPage->bladeArrayDlg->mode->entry()->SetSelection(BLADE_ID_MODE_BRIDGED);
+            const auto pinBegin{key.second.find_first_not_of("< ", typeEnd)};
+            const auto pinEnd{key.second.find_first_of(", >", pinBegin)};
+            mParent->bladesPage->bladeArrayDlg->IDPin->entry()->SetValue(key.second.substr(pinBegin, pinEnd - pinBegin));
+            const auto pullupPinBegin{key.second.find_first_not_of(", ", pinEnd)};
+            const auto pullupPinEnd{key.second.find_first_of(" >", pullupPinBegin)};
+            mParent->bladesPage->bladeArrayDlg->pullupPin->entry()->SetValue(key.second.substr(pullupPinBegin, pullupPinEnd - pullupPinBegin));
+        }
+        return true;
+    }};
+    generalDefines["BLADE_ID_CLASS"]->overrideParser(bladeIDClassParser);
 
-  auto enablePowerForIDParser{[&](const ProffieDefine* def, const wxString& input) -> bool {
-    auto key = ProffieDefine::parseKey(input);
-    if (key.first != def->getName()) return false;
-    
-    mParent->bladesPage->bladeArrayDlg->enablePowerForID->SetValue(true);
-    if (key.second.find("bladePowerPin1") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin1->SetValue(true);
-    if (key.second.find("bladePowerPin2") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin2->SetValue(true);
-    if (key.second.find("bladePowerPin3") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin3->SetValue(true);
-    if (key.second.find("bladePowerPin4") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin4->SetValue(true);
-    if (key.second.find("bladePowerPin5") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin5->SetValue(true);
-    if (key.second.find("bladePowerPin6") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin6->SetValue(true);
+    auto bladeIDScanMillisParser{[&](const ProffieDefine* def, const wxString& input) ->bool {
+        auto key = ProffieDefine::parseKey(input);
+        if (key.first != def->getName()) return false;
 
-    return true;
-  }};
-  generalDefines["ENABLE_POWER_FOR_ID"]->overrideParser(enablePowerForIDParser);
+        mParent->bladesPage->bladeArrayDlg->scanIDMillis->entry()->SetValue(key.second);
+        mParent->bladesPage->bladeArrayDlg->continuousScans->SetValue(true);
+        return true;
+    }};
+    generalDefines["BLADE_ID_SCAN_MILLIS"]->overrideParser(bladeIDScanMillisParser);
 
-  auto timeoutParser{[&](const ProffieDefine* def, const wxString& input) -> bool {
-      auto key = ProffieDefine::parseKey(input);
-      if (key.first != def->getName()) return false;
+    auto bladeIDTimesParser{[&](const ProffieDefine* def, const wxString& input) ->bool {
+        auto key = ProffieDefine::parseKey(input);
+        if (key.first != def->getName()) return false;
 
-      uint64 searchPos{0};
-      int32 timeout{0};
-      while (not false) {
-          auto valPos{key.second.find_first_not_of("\t *()", searchPos)};
-          if (valPos == string::npos) break;
+        mParent->bladesPage->bladeArrayDlg->numIDTimes->entry()->SetValue(key.second);
+        mParent->bladesPage->bladeArrayDlg->continuousScans->SetValue(true);
+        return true;
+    }};
+    generalDefines["BLADE_ID_TIMES"]->overrideParser(bladeIDTimesParser);
 
-          long tmpVal{};
-          searchPos = key.second.find_first_of("\t *()", valPos);
-          if (key.second.substr(valPos, searchPos - valPos).ToCLong(&tmpVal)) {
-              if (timeout == 0) timeout = 1;
-              timeout *= tmpVal;
-          }
-      }
-      timeout /= 60 * 1000;
+    auto enablePowerForIDParser{[&](const ProffieDefine* def, const wxString& input) -> bool {
+        auto key = ProffieDefine::parseKey(input);
+        if (key.first != def->getName()) return false;
 
-      if (def->getName() == "IDLE_OFF_TIME") {
-          mParent->generalPage->idleTime->entry()->SetValue(timeout);
-      } else if (def->getName() == "PLI_OFF_TIME") {
-          mParent->generalPage->pliTime->entry()->SetValue(timeout);
-      } else if (def->getName() == "MOTION_TIMEOUT") {
-          mParent->generalPage->motionTime->entry()->SetValue(timeout);
-      }
+        mParent->bladesPage->bladeArrayDlg->enablePowerForID->SetValue(true);
+        if (key.second.find("bladePowerPin1") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin1->SetValue(true);
+        if (key.second.find("bladePowerPin2") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin2->SetValue(true);
+        if (key.second.find("bladePowerPin3") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin3->SetValue(true);
+        if (key.second.find("bladePowerPin4") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin4->SetValue(true);
+        if (key.second.find("bladePowerPin5") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin5->SetValue(true);
+        if (key.second.find("bladePowerPin6") != string::npos) mParent->bladesPage->bladeArrayDlg->powerPin6->SetValue(true);
 
-      return true;
-  }};
+        return true;
+    }};
+    generalDefines["ENABLE_POWER_FOR_ID"]->overrideParser(enablePowerForIDParser);
 
-  generalDefines["IDLE_OFF_TIME"]->overrideParser(timeoutParser);
-  generalDefines["PLI_OFF_TIME"]->overrideParser(timeoutParser);
-  generalDefines["MOTION_TIMEOUT"]->overrideParser(timeoutParser);
+    auto timeoutParser{[&](const ProffieDefine* def, const wxString& input) -> bool {
+        auto key = ProffieDefine::parseKey(input);
+        if (key.first != def->getName()) return false;
+
+        uint64 searchPos{0};
+        int32 timeout{0};
+        while (not false) {
+            auto valPos{key.second.find_first_not_of("\t *()", searchPos)};
+            if (valPos == string::npos) break;
+
+            long tmpVal{};
+            searchPos = key.second.find_first_of("\t *()", valPos);
+            if (key.second.substr(valPos, searchPos - valPos).ToCLong(&tmpVal)) {
+                if (timeout == 0) timeout = 1;
+                timeout *= tmpVal;
+            }
+        }
+        timeout /= 60 * 1000;
+
+        if (def->getName() == "IDLE_OFF_TIME") {
+            mParent->generalPage->idleTime->entry()->SetValue(timeout);
+        } else if (def->getName() == "PLI_OFF_TIME") {
+            mParent->generalPage->pliTime->entry()->SetValue(timeout);
+        } else if (def->getName() == "MOTION_TIMEOUT") {
+            mParent->generalPage->motionTime->entry()->SetValue(timeout);
+        }
+
+        return true;
+    }};
+
+    generalDefines["IDLE_OFF_TIME"]->overrideParser(timeoutParser);
+    generalDefines["PLI_OFF_TIME"]->overrideParser(timeoutParser);
+    generalDefines["MOTION_TIMEOUT"]->overrideParser(timeoutParser);
 }
+
 void Settings::setCustomOutputParsers() {
-  generalDefines["NUM_BLADES"]->overrideOutput([&](const ProffieDefine* def) -> wxString {
-    int32 numBlades{0};
-    for (const BladesPage::BladeConfig& blade : mParent->bladesPage->bladeArrayDlg->bladeArrays[mParent->bladesPage->bladeArray->entry()->GetSelection()].blades) {
-        numBlades += blade.subBlades.size() > 0 ? static_cast<int32>(blade.subBlades.size()) : 1;
-    }
-    return def->getName() + " " + std::to_string(numBlades);
-  });
-  generalDefines["PLI_OFF_TIME"]->overrideOutput([](const ProffieDefine* def) -> wxString {
-    return def->getName() + " " + std::to_string(def->getNum()) + " * 60 * 1000";
-  });
-  generalDefines["IDLE_OFF_TIME"]->overrideOutput([](const ProffieDefine* def) -> wxString {
-    return def->getName() + " " + std::to_string(def->getNum()) + " * 60 * 1000";
-  });
-  generalDefines["MOTION_TIMEOUT"]->overrideOutput([](const ProffieDefine* def) -> wxString {
-    return def->getName() + " " + std::to_string(def->getNum()) + " * 60 * 1000";
-  });
+    auto numBladesOutput{[this](const ProffieDefine* def) -> wxString {
+        int32 numBlades{0};
+        for (const BladesPage::BladeConfig& blade : mParent->bladesPage->bladeArrayDlg->bladeArrays[mParent->bladesPage->bladeArray->entry()->GetSelection()].blades) {
+            numBlades += blade.subBlades.size() > 0 ? static_cast<int32>(blade.subBlades.size()) : 1;
+        }
+        return def->getName() + " " + std::to_string(numBlades);
+    }};
+    generalDefines["NUM_BLADES"]->overrideOutput(numBladesOutput);
 
-  auto orientOutput{[&](const ProffieDefine* def) -> wxString {
-      return {def->getName() + " " + Configuration::findInVMap(Configuration::ORIENTATION, def->getString()).second};
-  }};
-  generalDefines["ORIENTATION"]->overrideOutput(orientOutput);
+    auto offTimeOutput{[](const ProffieDefine* def) -> wxString {
+        return def->getName() + " " + std::to_string(def->getNum()) + " * 60 * 1000";
+    }};
+    generalDefines["PLI_OFF_TIME"]->overrideOutput(offTimeOutput);
+    generalDefines["IDLE_OFF_TIME"]->overrideOutput(offTimeOutput);
+    generalDefines["MOTION_TIMEOUT"]->overrideOutput(offTimeOutput);
 
-  generalDefines["BLADE_ID_CLASS"]->overrideOutput([&](const ProffieDefine* def) -> wxString {
-    const auto mode = mParent->bladesPage->bladeArrayDlg->mode->entry()->GetSelection();
-    wxString returnVal = def->getName() + " ";
-    if (mode == BLADE_ID_MODE_SNAPSHOT) {
-        returnVal += "SnapshotBladeID<" + mParent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue().ToStdString() + ">";
-    } else if (mode == BLADE_ID_MODE_BRIDGED) {
-        returnVal += 
-            "BridgedPullupBladeID<" + 
-            mParent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue().ToStdString() + 
-            ", " + 
-            mParent->bladesPage->bladeArrayDlg->pullupPin->entry()->GetValue().ToStdString() +
-            ">";
-    } else if (mode == BLADE_ID_MODE_EXTERNAL) {
-        returnVal +=
-            "ExternalPullupBladeID<" + 
-            mParent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue().ToStdString() + 
-            ", " + 
-            std::to_string(mParent->bladesPage->bladeArrayDlg->pullupResistance->entry()->GetValue()) + 
-            ">";
-    }
+    auto orientOutput{[](const ProffieDefine* def) -> wxString {
+        return def->getName() + ' ' + Configuration::ORIENT_CONFIG_STRINGS[def->getNum()];
+    }};
+    generalDefines["ORIENTATION"]->overrideOutput(orientOutput);
 
-    return returnVal;
-  });
-  generalDefines["ENABLE_POWER_FOR_ID"]->overrideOutput([&](const ProffieDefine* def) -> wxString {
-    wxString returnVal = def->getName() + " PowerPINS<";
-    std::vector<wxString> powerPins;
-    if (mParent->bladesPage->bladeArrayDlg->powerPin1->GetValue()) powerPins.emplace_back("bladePowerPin1");
-    if (mParent->bladesPage->bladeArrayDlg->powerPin2->GetValue()) powerPins.emplace_back("bladePowerPin2");
-    if (mParent->bladesPage->bladeArrayDlg->powerPin3->GetValue()) powerPins.emplace_back("bladePowerPin3");
-    if (mParent->bladesPage->bladeArrayDlg->powerPin4->GetValue()) powerPins.emplace_back("bladePowerPin4");
-    if (mParent->bladesPage->bladeArrayDlg->powerPin5->GetValue()) powerPins.emplace_back("bladePowerPin5");
-    if (mParent->bladesPage->bladeArrayDlg->powerPin6->GetValue()) powerPins.emplace_back("bladePowerPin6");
+    auto bladeIDClassOutput{[this](const ProffieDefine* def) -> wxString {
+        const auto mode = mParent->bladesPage->bladeArrayDlg->mode->entry()->GetSelection();
+        wxString returnVal = def->getName() + " ";
+        if (mode == BLADE_ID_MODE_SNAPSHOT) {
+            returnVal += "SnapshotBladeID<" + mParent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue().ToStdString() + ">";
+        } else if (mode == BLADE_ID_MODE_BRIDGED) {
+            returnVal += 
+                "BridgedPullupBladeID<" + 
+                mParent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue().ToStdString() + 
+                ", " + 
+                mParent->bladesPage->bladeArrayDlg->pullupPin->entry()->GetValue().ToStdString() +
+                ">";
+        } else if (mode == BLADE_ID_MODE_EXTERNAL) {
+            returnVal +=
+                "ExternalPullupBladeID<" + 
+                mParent->bladesPage->bladeArrayDlg->IDPin->entry()->GetValue().ToStdString() + 
+                ", " + 
+                std::to_string(mParent->bladesPage->bladeArrayDlg->pullupResistance->entry()->GetValue()) + 
+                ">";
+        }
 
-    for (int32_t pin = 0; pin < static_cast<int32_t>(powerPins.size()); pin++) {
-      returnVal += powerPins.at(pin);
-      if (pin < static_cast<int32_t>(powerPins.size()) -1) returnVal += ",";
-    }
+        return returnVal;
+    }};
+    generalDefines["BLADE_ID_CLASS"]->overrideOutput(bladeIDClassOutput);
 
-    returnVal += ">";
-    return returnVal;
-  });
+    auto enablePowerForIDOutput{[&](const ProffieDefine* def) -> wxString {
+        wxString returnVal = def->getName() + " PowerPINS<";
+        std::vector<wxString> powerPins;
+        if (mParent->bladesPage->bladeArrayDlg->powerPin1->GetValue()) powerPins.emplace_back("bladePowerPin1");
+        if (mParent->bladesPage->bladeArrayDlg->powerPin2->GetValue()) powerPins.emplace_back("bladePowerPin2");
+        if (mParent->bladesPage->bladeArrayDlg->powerPin3->GetValue()) powerPins.emplace_back("bladePowerPin3");
+        if (mParent->bladesPage->bladeArrayDlg->powerPin4->GetValue()) powerPins.emplace_back("bladePowerPin4");
+        if (mParent->bladesPage->bladeArrayDlg->powerPin5->GetValue()) powerPins.emplace_back("bladePowerPin5");
+        if (mParent->bladesPage->bladeArrayDlg->powerPin6->GetValue()) powerPins.emplace_back("bladePowerPin6");
+
+        for (int32_t pin = 0; pin < static_cast<int32_t>(powerPins.size()); pin++) {
+            returnVal += powerPins.at(pin);
+            if (pin < static_cast<int32_t>(powerPins.size()) -1) returnVal += ",";
+        }
+
+        returnVal += ">";
+        return returnVal;
+    }};
+    generalDefines["ENABLE_POWER_FOR_ID"]->overrideOutput(enablePowerForIDOutput);
 }
 
 void Settings::parseDefines(std::vector<wxString>& _defList) {
-  for (const auto& [key, defObj] : generalDefines) {
-    for (auto entry = _defList.begin(); entry < _defList.end();) {
-      if (defObj->parseDefine(*entry)) {
-        _defList.erase(entry);
-        break;
-      }
-      auto key = ProffieDefine::parseKey(*entry);
-      if (
-        key.first == "ENABLE_AUDIO" ||
-        key.first == "ENABLE_WS2811" ||
-        key.first == "ENABLE_SD" ||
-        key.first == "ENABLE_MOTION" ||
-        key.first == "SHARED_POWER_PINS"
-        ) {
-        entry = _defList.erase(entry);
-        continue;
-      }
-      entry++;
+    for (const auto& [key, defObj] : generalDefines) {
+        for (auto entry = _defList.begin(); entry < _defList.end();) {
+            if (defObj->parseDefine(*entry)) {
+                _defList.erase(entry);
+                break;
+            }
+            auto key = ProffieDefine::parseKey(*entry);
+            if (
+                    key.first == "ENABLE_AUDIO" ||
+                    key.first == "ENABLE_WS2811" ||
+                    key.first == "ENABLE_SD" ||
+                    key.first == "ENABLE_MOTION" ||
+                    key.first == "SHARED_POWER_PINS"
+               ) {
+                entry = _defList.erase(entry);
+                continue;
+            }
+            entry++;
+        }
     }
-  }
-}
-
-int32_t Settings::ProffieDefine::getNum() const {
-  if (mType != Type::NUMERIC) return 0;
-  return const_cast<PCUI::Numeric *>(static_cast<const PCUI::Numeric*>(mElement))->entry()->GetValue();
-}
-double Settings::ProffieDefine::getDec() const {
-  if (mType != Type::DECIMAL) return 0;
-  return const_cast<PCUI::NumericDec*>(static_cast<const PCUI::NumericDec*>(mElement))->entry()->GetValue();
-}
-bool Settings::ProffieDefine::getState() const {
-  if (mType == Type::STATE) return const_cast<wxCheckBox*>(static_cast<const wxCheckBox*>(mElement))->GetValue();
-  if (mType == Type::RADIO) return const_cast<wxRadioButton*>(static_cast<const wxRadioButton*>(mElement))->GetValue();
-
-  return false;
-}
-wxString Settings::ProffieDefine::getString() const {
-  if (mType == Type::TEXT) return const_cast<PCUI::Text *>(static_cast<const PCUI::Text *>(mElement))->entry()->GetValue().ToStdString();
-  if (mType == Type::COMBO) return const_cast<PCUI::Choice *>(static_cast<const PCUI::Choice *>(mElement))->entry()->GetStringSelection().ToStdString();
-
-  return "";
 }
 
 Settings::ProffieDefine::ProffieDefine(wxString _name, PCUI::Numeric* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :

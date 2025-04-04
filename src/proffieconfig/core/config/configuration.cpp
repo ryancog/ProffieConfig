@@ -1374,3 +1374,31 @@ bool Configuration::runPreChecks(EditorWindow *editor, Log::Branch& lBranch) {
 const Configuration::MapPair& Configuration::findInVMap(const Configuration::VMap& map, const wxString& search) {
     return *std::find_if(map.begin(), map.end(), [&](const MapPair& pair) { return (pair.second == search || pair.first == search); });
 }
+
+wxArrayString Configuration::orientationStrings() {
+    wxArrayString ret;
+    for (auto idx{0}; idx < ORIENTATION_MAX; ++idx) {
+        ret.emplace_back(orientToStr(static_cast<Orientation>(idx)));
+    }
+    return ret;
+}
+
+wxString Configuration::orientToStr(Orientation orient) {
+    switch (orient) {
+        case ORIENTATION_FETS_TOWARDS_BLADE:
+            return _("FETs Towards Blade");
+        case ORIENTATION_USB_TOWARDS_BLADE:
+            return _("USB Towards Blade");
+        case ORIENTATION_USB_CCW_FROM_BLADE:
+            return _("USB CCW From Blade");
+        case ORIENTATION_USB_CW_FROM_BLADE:
+            return _("USB CW From Blade");
+        case ORIENTATION_TOP_TOWARDS_BLADE:
+            return _("Top Towards Blade");
+        case ORIENTATION_BOTTOM_TOWARDS_BLADE:
+            return _("Bottom Towards Blade");
+        default: 
+            return {};
+    }
+}
+
