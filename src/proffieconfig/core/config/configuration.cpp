@@ -1181,24 +1181,16 @@ void Configuration::readBladeArray(std::ifstream& file, EditorWindow* editor) {
                     auto& blade{bladeArray.blades.back()};
                     blade.type = BD_SIMPLE;
 
-                    auto setupStar{[&](BladesPage::LED& star, int32_t& resistance) {
+                    auto setupStar{[&](BladesPage::LED& led, int32_t& resistance) {
                         const auto paramEnd{buffer.find(',')};
-                        BladesPage::LED ledSel{BladesPage::NONE};
                         auto paramStr{buffer.substr(0, paramEnd)};
 
                         const auto ledEnd{buffer.find('<')};
                         auto ledStr{paramStr.substr(0, ledEnd)};
                         trimWhiteSpace(ledStr);
 
-                        for (auto [ led, configStr ] : BladesPage::LED_CONFIGSTRS) {
-                            if (configStr == ledStr) {
-                                ledSel = led;
-                                break;
-                            }
-                        }
-
-                        star = ledSel;
-                        if (ledSel & BladesPage::USES_RESISTANCE) resistance = std::stoi(paramStr.substr(ledEnd + 1));
+                        led = BladesPage::strToLed(ledStr);;
+                        if (led & BladesPage::USES_RESISTANCE) resistance = std::stoi(paramStr.substr(ledEnd + 1));
 
                         buffer = buffer.substr(paramEnd + 1);
                     }};
@@ -1284,7 +1276,13 @@ bool Configuration::runPreChecks(EditorWindow *editor, Log::Branch& lBranch) {
         errorMessage(logger, editor, wxTRANSLATE("Blade ID Pin cannot be empty."));
         return false;
     }
-    if ([&]() { for (const BladeArrayDlg::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) if (array.name == "") return true; return false; }()) {
+    auto arrayNameIsEmpty{[&]() { 
+        for (const BladeArrayDlg::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) {
+            if (array.name == "") return true;
+        }
+        return false; 
+    }};
+    if (arrayNameIsEmpty()) {
         errorMessage(logger, editor, wxTRANSLATE("Blade Array Name cannot be empty."));
         return false;
     }
@@ -1303,15 +1301,15 @@ bool Configuration::runPreChecks(EditorWindow *editor, Log::Branch& lBranch) {
                 blade.isSubBlade ? numBlades += static_cast<int32>(blade.subBlades.size()) : numBlades++;
             }
             return numBlades;
-        }};
+    }};
     auto bladeArrayLengthsEqual{[&]() -> bool {
-            int32 lastNumBlades{getNumBlades(editor->bladesPage->bladeArrayDlg->bladeArrays.at(0))};
-            for (const BladeArrayDlg::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) {
-                if (getNumBlades(array) != lastNumBlades) return false;
-                lastNumBlades = getNumBlades(array);
-            }
-            return true;
-        }};
+        int32 lastNumBlades{getNumBlades(editor->bladesPage->bladeArrayDlg->bladeArrays.at(0))};
+        for (const BladeArrayDlg::BladeArray& array : editor->bladesPage->bladeArrayDlg->bladeArrays) {
+            if (getNumBlades(array) != lastNumBlades) return false;
+            lastNumBlades = getNumBlades(array);
+        }
+        return true;
+    }};
     if (not bladeArrayLengthsEqual()) {
         errorMessage(logger, editor, wxTRANSLATE("All Blade Arrays must be the same length.\n\nPlease add/remove blades to make them equal"));
         return false;

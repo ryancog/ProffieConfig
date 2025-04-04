@@ -142,6 +142,7 @@ public:
         bool useZigZag{false};
 
         struct SubBladeInfo {
+            SubBladeInfo() = default;
             SubBladeInfo(int32 startPixel, int32 endPixel) : startPixel{startPixel}, endPixel{endPixel} {}
             int32 startPixel{0};
             int32 endPixel{0};

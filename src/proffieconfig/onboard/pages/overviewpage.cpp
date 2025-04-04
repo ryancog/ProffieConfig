@@ -372,7 +372,7 @@ void Onboard::Overview::linkEditorEvents() {
                 "\n"
                 "First things first, create a new preset by clicking the \"+\".\n""");
 
-        mGuideMenu->activeEditor->presetsPage->bladeArray->entry()->Disable();
+        mGuideMenu->activeEditor->presetsPage->bladeArrayChoice->entry()->Disable();
         mGuideMenu->activeEditor->presetsPage->bladeList->Disable();
         mGuideMenu->activeEditor->presetsPage->nameInput->entry()->Disable();
         mGuideMenu->activeEditor->presetsPage->dirInput->entry()->Disable();

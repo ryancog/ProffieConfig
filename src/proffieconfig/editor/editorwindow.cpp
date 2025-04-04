@@ -17,6 +17,9 @@
 #include <wx/tooltip.h>
 #include <wx/menu.h>
 
+#include "log/context.h"
+#include "log/logger.h"
+#include "log/severity.h"
 #include "pages/bladespage.h"
 #include "pages/generalpage.h"
 #include "pages/presetspage.h"
@@ -75,12 +78,10 @@ void EditorWindow::bindEvents() {
             saveDialog.SetYesNoCancelLabels(_("Save Changes"), _("Discard Changes"), _("Cancel"));
             auto saveChoice{saveDialog.ShowModal()};
 
-            if (saveChoice == wxID_YES) {
-                if (not Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h"), this)) {
-                    event.Veto();
-                    return;
-                }
-            } else if (saveChoice == wxID_CANCEL) {
+            if (
+                    saveChoice == wxID_CANCEL or 
+                    not Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h"), this)
+                ) {
                 event.Veto();
                 return;
             }
@@ -203,20 +204,24 @@ void EditorWindow::renameConfig(const string& name) {
 }
 
 bool EditorWindow::isSaved() {
+    auto& logger{Log::Context::getGlobal().createLogger("EditorWindow::isSaved()")};
+
     const auto currentPath{Paths::configs() / (mOpenConfig + ".h")};
     const auto validatePath{fs::temp_directory_path() / (mOpenConfig + "-validate")};
 
-    auto dummyMessageHandler{[](wxCommandEvent& evt) {}};
+    auto dummyMessageHandler{[](wxCommandEvent&) {}};
     Bind(Misc::EVT_MSGBOX, dummyMessageHandler);
-    auto res{not Configuration::outputConfig(validatePath, this)};
+    auto res{Configuration::outputConfig(validatePath, this)};
     wxYield();
     Unbind(Misc::EVT_MSGBOX, dummyMessageHandler);
     if (not res) {
+        logger.warn("Config output failed");
         return false;
     }
 
     std::error_code err;
     if (fs::file_size(currentPath, err) != fs::file_size(validatePath, err)) {
+        logger.warn("File sizes do not match");
         return false;
     }
 
@@ -241,7 +246,10 @@ bool EditorWindow::isSaved() {
 
     current.close();
     validate.close();
-    fs::remove(validatePath);
+    // fs::remove(validatePath);
+    if (not saved) {
+        logger.warn("File contents do not match");
+    }
     return saved;
 }
 

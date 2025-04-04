@@ -450,6 +450,11 @@ void PropFile::readLayout(const PConf::Data& data, Log::Branch& lBranch) {
         }
     }
     
+    if (mSizer->IsEmpty()) {
+        mSizer->AddStretchSpacer();
+        mSizer->Add(new wxStaticText(this, wxID_ANY, _("This prop file has no options")), wxSizerFlags{}.Expand());
+        mSizer->AddStretchSpacer();
+    }
 
     SetSizerAndFit(mSizer);
 #   undef ITEMBORDER
