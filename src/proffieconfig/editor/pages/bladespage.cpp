@@ -127,7 +127,7 @@ BladesPage::BladesPage(wxWindow *window) : wxStaticBoxSizer(wxHORIZONTAL, window
 void BladesPage::bindEvents() {
     GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { if (bladeArrayDlg->IsShown()) bladeArrayDlg->Raise(); else bladeArrayDlg->Show(); }, ID_OpenBladeArrays);
 
-    GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent&) { mParent->presetsPage->bladeArray->entry()->SetSelection(bladeArray->entry()->GetSelection()); update(); }, ID_BladeArray);
+    GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent&) { mParent->presetsPage->bladeArrayChoice->entry()->SetSelection(bladeArray->entry()->GetSelection()); update(); }, ID_BladeArray);
     GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent&) { setEnabled(); }, ID_LEDColor);
     GetStaticBox()->Bind(wxEVT_SPINCTRL, [&](wxCommandEvent& event) { update(); event.Skip(); });
     GetStaticBox()->Bind(wxEVT_RADIOBUTTON, [&](wxCommandEvent& event) { update(); event.Skip(); });
@@ -420,7 +420,7 @@ void BladesPage::rebuildBladeArray() {
 
     bladeSelect->Clear();
     for (auto bladeNum{0}; bladeNum < static_cast<int32_t>(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size()); ++bladeNum) {
-        bladeSelect->Append(wxString::Format(_("Blade %d"), std::to_string(bladeNum)));
+        bladeSelect->Append(wxString::Format(_("Blade %d"), bladeNum));
     }
 
     if (mLastBladeSelection >= 0 && mLastBladeSelection < static_cast<int32_t>(bladeSelect->GetCount())) {
@@ -433,7 +433,7 @@ void BladesPage::rebuildBladeArray() {
             bladeSelect->GetSelection() < static_cast<int32_t>(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.size())
        ) {
         for (auto subBladeNum{0}; bladeSelect->GetSelection() != -1 and subBladeNum < static_cast<int32_t>(bladeArrayDlg->bladeArrays[bladeArray->entry()->GetSelection()].blades.at(bladeSelect->GetSelection()).subBlades.size()); ++subBladeNum) {
-            subBladeSelect->Append(wxString::Format(_("SubBlade %d"), std::to_string(subBladeNum)));
+            subBladeSelect->Append(wxString::Format(_("SubBlade %d"), subBladeNum));
         }
 
         if (mLastSubBladeSelection >= 0 && mLastSubBladeSelection < static_cast<int32_t>(subBladeSelect->GetCount())) subBladeSelect->SetSelection(mLastSubBladeSelection);

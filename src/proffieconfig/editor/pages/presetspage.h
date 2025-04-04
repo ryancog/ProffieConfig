@@ -22,7 +22,7 @@ public:
 
     wxBoxSizer *injectionsSizer{nullptr};
 
-    PCUI::Choice *bladeArray{nullptr};
+    PCUI::Choice *bladeArrayChoice{nullptr};
     PCUI::Text *commentInput{nullptr};
     PCUI::Text *styleInput{nullptr};
     wxListBox *presetList{nullptr};

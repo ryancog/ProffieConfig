@@ -204,7 +204,7 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
                 R"(<plist version="1.0">)" "\n"
                 "<dict>\n"
                 "   <key>CFBundleDevelopmentRegion</key>\n"
-                "   <string>English</string>\n"
+                "   <string>en-US</string>\n"
                 "   <key>CFBundleExecutable</key>\n"
                 "   <string>ProffieConfig</string>\n"
                 "   <key>CFBundleIconFile</key>\n"

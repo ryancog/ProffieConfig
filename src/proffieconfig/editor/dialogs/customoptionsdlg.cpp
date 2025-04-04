@@ -73,6 +73,7 @@ wxBoxSizer *CustomOptionsDlg::header() {
   auto *text{new wxStaticText(this, wxID_ANY, _("Defines are in the format:\n#define [NAME] [VALUE]"))};
   mAddDefineButton = new wxButton(this, ID_AddDefine, _("Add Custom Define"));
   sizer->Add(text, wxSizerFlags(0).Center());
+  sizer->AddSpacer(50);
   sizer->AddStretchSpacer();
   sizer->Add(mAddDefineButton);
 

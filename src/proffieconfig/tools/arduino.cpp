@@ -251,10 +251,11 @@ void Arduino::refreshBoards(MainMenu* window) {
         wxQueueEvent(window, new Event(EVT_CLEAR_BLIST));
         constexpr auto FETCH_MESSAGE{"Fetching Devices..."};
         progDialog->emitEvent(20, "Fetching devices...");
-        for (const wxString& item : Arduino::getBoards(*logger.binfo(FETCH_MESSAGE))) {
+        auto boards{Arduino::getBoards(*logger.binfo(FETCH_MESSAGE))};
+        for (const wxString& item : boards) {
             auto *evt{new Event(EVT_APPEND_BLIST)};
             evt->str = item.ToStdString();
-            logger.debug("Discovered board: " + item.ToStdString());
+            if (&item != &*boards.begin())logger.debug("Discovered board: " + item.ToStdString());
             wxQueueEvent(window, evt);
         }
 
@@ -720,7 +721,7 @@ bool Arduino::upload(string& _return, EditorWindow* editor, Progress* progDialog
     }
 #   else 
     const auto boardPath{static_cast<MainMenu*>(editor->GetParent())->boardSelect->entry()->GetStringSelection().ToStdString()};
-    if (boardPath.find(_("BOOTLOADER")) == string::npos) {
+    if (boardPath.find(_("BOOTLOADER").c_str()) == string::npos) {
         progDialog->emitEvent(-1, "Rebooting Proffieboard...");
         struct termios newtio;
         auto fd = open(boardPath.c_str(), O_RDWR | O_NOCTTY);

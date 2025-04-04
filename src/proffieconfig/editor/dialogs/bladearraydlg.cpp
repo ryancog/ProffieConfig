@@ -55,7 +55,7 @@ void BladeArrayDlg::bindEvents() {
         page->mLastArraySelection = -1;
         page->mParent->bladesPage->bladeArray->entry()->SetSelection(0);
         page->mParent->bladesPage->lastBladeArraySelection = -1;
-        page->mParent->presetsPage->bladeArray->entry()->SetSelection(0);
+        page->mParent->presetsPage->bladeArrayChoice->entry()->SetSelection(0);
     };
 
     Bind(wxEVT_CHECKBOX, [&](wxCommandEvent&) {

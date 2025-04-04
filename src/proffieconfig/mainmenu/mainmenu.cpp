@@ -34,7 +34,8 @@
 
 
 MainMenu* MainMenu::instance{nullptr};
-MainMenu::MainMenu(wxWindow* parent) : PCUI::Frame(parent, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)) {
+MainMenu::MainMenu(wxWindow* parent) : 
+    PCUI::Frame(parent, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)) {
     createUI();
     createMenuBar();
     createTooltips();
@@ -225,11 +226,11 @@ void MainMenu::createTooltips() const {
 void MainMenu::createMenuBar() {
   auto *file{new wxMenu};
   file->Append(ID_ReRunSetup, _("Re-Run First-Time Setup..."), _("Install Proffieboard Dependencies and View Tutorial"));
-  file->Append(ID_AddProp, "Props...");
+  file->Append(ID_AddProp, _("Prop Files..."));
   file->AppendSeparator();
   file->Append(ID_Logs, _("Show Logs..."));
   file->Append(wxID_ABOUT);
-  file->Append(ID_Copyright, "Copyright Notice");
+  file->Append(ID_Copyright, _("Licensing Information"));
   file->Append(wxID_EXIT);
 
   auto* help{new wxMenu};
@@ -237,8 +238,8 @@ void MainMenu::createMenuBar() {
   help->Append(ID_Issue, _("Help/Bug Report..."), _("Open GitHub to submit issue"));
 
   auto* menuBar{new wxMenuBar};
-  menuBar->Append(file, "&File");
-  menuBar->Append(help, "&Help");
+  menuBar->Append(file, _("&File"));
+  menuBar->Append(help, _("&Help"));
   SetMenuBar(menuBar);
 }
 
@@ -267,9 +268,9 @@ void MainMenu::createUI() {
   headerSection->Add(appIcon);
 
   auto *configSelectSection{new wxBoxSizer(wxHORIZONTAL)};
-  configSelect = new PCUI::Choice(this, ID_ConfigSelect, { /* Will be created on update() */ });
-  addConfig = new wxButton(this, ID_AddConfig, _("Add"), wxDefaultPosition, wxSize(50, -1), wxBU_EXACTFIT);
-  removeConfig = new wxButton(this, ID_RemoveConfig, _("Remove"), wxDefaultPosition, wxSize(75, -1), wxBU_EXACTFIT);
+  configSelect = new PCUI::Choice(this, ID_ConfigSelect, { _("Select Config...") });
+  addConfig = new wxButton(this, ID_AddConfig, _("Add"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
+  removeConfig = new wxButton(this, ID_RemoveConfig, _("Remove"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
   removeConfig->Disable();
   configSelectSection->Add(configSelect, wxSizerFlags{1}.Expand());
   configSelectSection->AddSpacer(10);
@@ -302,7 +303,7 @@ void MainMenu::createUI() {
   sizer->Add(configSelectSection, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
   sizer->AddSpacer(10);
   sizer->Add(editConfig, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
-  sizer->AddSpacer(15);
+  sizer->AddSpacer(20);
   sizer->Add(boardControls, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
   sizer->AddSpacer(10);
   sizer->Add(applyButton, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
@@ -315,8 +316,9 @@ void MainMenu::createUI() {
 
 void MainMenu::update() const {
     auto lastConfig = configSelect->entry()->GetStringSelection();
+    auto selectEntry{configSelect->entry()->GetString(0)};
     configSelect->entry()->Clear();
-    configSelect->entry()->Append(_("Select Config..."));
+    configSelect->entry()->Append(selectEntry);
 
     fs::directory_iterator configsIterator{Paths::configs()};
     for (const auto& configFile : configsIterator) {

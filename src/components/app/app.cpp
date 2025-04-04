@@ -1,4 +1,5 @@
 #include "app.h"
+#include "wx/language.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -35,6 +36,9 @@
 #include <wx/settings.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
+#include <wx/uilocale.h>
+#include <wx/log.h>
+#include <wx/stdpaths.h>
 
 #if defined(__WIN32__) and defined(__WXGTK__)
 #include <dwmapi.h>
@@ -152,24 +156,6 @@ bool App::init(const string& appName, const string& lockName) {
     auto runDir{execStr.substr(0, execStr.find_last_of("/\\"))};
     chdir(runDir.c_str());
 
-#   if defined(__WIN32__) and defined(__WXGTK__)
-    SetEnvironmentVariableA("GTK_CSD", "0");
-    constexpr cstring DARK_THEME{"Adwaita:dark"};
-    constexpr cstring LIGHT_THEME{"Adwaita"};
-    SetEnvironmentVariableA("GTK_THEME", darkMode() ? DARK_THEME : LIGHT_THEME);
-#   endif
-#   ifdef __WXGTK__
-    wxApp::GTKSuppressDiagnostics();
-#   endif
-#   ifdef __WXMSW__
-    static_cast<wxApp *>(wxApp::GetGUIInstance())->MSWEnableDarkMode();
-#   endif
-
-    wxApp::GetInstance()->SetAppName(wxString{appName});
-    wxApp::GetInstance()->SetAppDisplayName(wxString{appName});
-    singleInstance.Create(wxString{lockName.empty() ? appName : lockName} + '-' + wxGetUserId());
-    if (singleInstance.IsAnotherRunning()) return false;
-
     fs::create_directories(Paths::approot());
     fs::create_directories(Paths::data());
     fs::create_directories(Paths::logs());
@@ -177,6 +163,56 @@ bool App::init(const string& appName, const string& lockName) {
     fs::create_directories(Paths::injections());
     fs::create_directories(Paths::props());
 
+    auto& logger {Log::Context::getGlobal().createLogger("App::init()")};
+    logger.info("First-stage app initialization complete.");
+
+#   if defined(__WIN32__) and defined(__WXGTK__)
+    SetEnvironmentVariableA("GTK_CSD", "0");
+    constexpr cstring DARK_THEME{"Adwaita:dark"};
+    constexpr cstring LIGHT_THEME{"Adwaita"};
+    SetEnvironmentVariableA("GTK_THEME", darkMode() ? DARK_THEME : LIGHT_THEME);
+    logger.info("WinGTK Theme Loaded");
+#   endif
+#   ifdef __WXGTK__
+    wxApp::GTKSuppressDiagnostics();
+    logger.info("GTK? Shh");
+#   endif
+#   ifdef __WXMSW__
+    static_cast<wxApp *>(wxApp::GetGUIInstance())->MSWEnableDarkMode();
+    logger.info("MSW Dark Mode Enabled");
+#   endif
+
+    if (not wxUILocale::UseDefault()) {
+        logger.warn("Failed to use system default locale.");
+    }
+
+    auto *translations{new wxTranslations};
+    wxTranslations::Set(translations);
+    for (const auto& lang : translations->GetAvailableTranslations("proffieconfig")) {
+        logger.info("Found language: " + lang.ToStdString());
+    }
+    logger.info("System language: " + std::to_string(wxUILocale::GetSystemLanguage()));
+
+
+    if (not translations->AddStdCatalog()) {
+        logger.info("Standard catalog not loaded.");
+    }
+
+    if (not translations->AddCatalog("proffieconfig")) {
+        logger.warn("Translation catalog not loaded.");
+    }
+    logger.info("Translation loading complete.");
+
+    wxApp::GetInstance()->SetAppName(wxString{appName});
+    wxApp::GetInstance()->SetAppDisplayName(wxString{appName});
+
+    singleInstance.Create(wxString{lockName.empty() ? appName : lockName} + '-' + wxGetUserId());
+    if (singleInstance.IsAnotherRunning()) {
+        logger.info("We already exist, cancelling initialization.");
+        return false;
+    }
+
+    logger.info("Initialized.");
     return true;
 }
 
@@ -187,13 +223,13 @@ App::Menus App::createDefaultMenuBar() {
     ret.edit = new wxMenu();
     ret.view = new wxMenu();
     ret.help = new wxMenu();
-    ret.menuBar->Append(ret.file, "&File");
-    ret.menuBar->Append(ret.edit, "&Edit");
-    ret.menuBar->Append(ret.view, "&View");
+    ret.menuBar->Append(ret.file, _("&File"));
+    ret.menuBar->Append(ret.edit, _("&Edit"));
+    ret.menuBar->Append(ret.view, _("&View"));
 #   ifdef __WXMAC__
-    ret.menuBar->Append(new wxMenu(), "&Window");
+    ret.menuBar->Append(new wxMenu(), _("&Window"));
 #   endif
-    ret.menuBar->Append(ret.help, "&Help");
+    ret.menuBar->Append(ret.help, _("&Help"));
     return ret;
 }
 

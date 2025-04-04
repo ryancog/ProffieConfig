@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
    <key>CFBundleDevelopmentRegion</key>
-   <string>en</string>
+   <string>en-US</string>
    <key>CFBundleExecutable</key>
    <string>${CMAKE_PROJECT_NAME}</string>
    <key>CFBundleIconFile</key>
@@ -18,6 +18,13 @@
    <string>11.0</string>
    <key>NSPrincipleClass</key>
    <string>NSApplication</string>
+   <key>NSHumanReadableCopyright</key>
+   <string>Copyright (C) 2025 Ryan Ogurek</string>
+   <key>CFBundleLocalizations</key>
+   <array>
+       <string>en</string>
+       <string>es</string>
+   </array>
 </dict>
 </plist>
 

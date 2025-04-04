@@ -182,11 +182,11 @@ void Settings::setCustomInputParsers() {
           if (valPos == string::npos) break;
 
           long tmpVal{};
-          if (key.second.substr(valPos).ToCLong(&tmpVal)) {
+          searchPos = key.second.find_first_of("\t *()", valPos);
+          if (key.second.substr(valPos, searchPos - valPos).ToCLong(&tmpVal)) {
               if (timeout == 0) timeout = 1;
               timeout *= tmpVal;
           }
-          searchPos = key.second.find_first_of("\t *()", valPos);
       }
       timeout /= 60 * 1000;
 
