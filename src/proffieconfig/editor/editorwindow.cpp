@@ -36,7 +36,7 @@
 #include "../tools/arduino.h"
 
 EditorWindow::EditorWindow(const string& _configName, wxWindow* parent) : 
-    PCUI::Frame(parent, wxID_ANY, "ProffieConfig " + _("Editor") + " - " + _configName, wxDefaultPosition, wxDefaultSize),
+    PCUI::Frame(parent, wxID_ANY, _("ProffieConfig Editor") + " - " + _configName, wxDefaultPosition, wxDefaultSize),
     mOpenConfig(_configName) {
     createMenuBar();
     createPages();
