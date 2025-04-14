@@ -3,7 +3,10 @@
 # updater/CMakeLists.txt
 
 set(ICON_PATH ${CMAKE_SOURCE_DIR}/resources/icons/icon.icns)
-set_source_files_properties(${ICON_PATH} PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
+set_source_files_properties(${ICON_PATH} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+
+# set(TRANSLATION_ES ${CMAKE_CURRENT_LIST_DIR}/i18n/es/proffieconfig.mo)
+# set_source_files_properties(${TRANSLATION_ES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/es.lproj)
 
 add_executable(launcher WIN32 MACOSX_BUNDLE
     main.cpp
@@ -24,8 +27,6 @@ set_target_properties(launcher PROPERTIES
     DESCRIPTION "ProffieConfig Launcher" # Windows is stupid so this isn't actually a description
     EXEC_VERSION 1.0.5
     TRANSLATIONS es
-    MACOSX_BUNDLE_BUNDLE_VERSION ${CMAKE_PROJECT_VERSION}
-    MACOSX_BUNDLE_SHORT_VERSION_STRING "${CMAKE_PROJECT_VERSION}"
     MACOSX_BUNDLE_COPYRIGHT "Copyright (C) 2025 Ryan Ogurek"
     MACOSX_BUNDLE_GUI_IDENTIFIER "com.kafrenetrading.proffieconfiglauncher"
     MACOSX_BUNDLE_ICON_FILE "icon.icns"
