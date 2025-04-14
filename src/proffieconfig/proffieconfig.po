@@ -1,0 +1,1527 @@
+# ProffieConfig, the All-In-One Proffieboard Management Utility
+# Copyright (C) 2025 Ryan Ogurek
+
+# This file is distributed along with and under the same licensing as ProffieConfig.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-03-30 21:14-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: core/appstate.cpp:117
+msgid "Prop config file is invalid."
+msgstr ""
+
+#: core/appstate.cpp:117 core/appstate.cpp:123
+msgid "Error Adding Prop"
+msgstr ""
+
+#: core/appstate.cpp:123
+msgid "Prop config filename does not match provided prop filename"
+msgstr ""
+
+#: core/config/configuration.cpp:38
+msgid "Configuration not saved."
+msgstr ""
+
+#: core/config/configuration.cpp:39
+msgid "Configuration Error"
+msgstr ""
+
+#: core/config/configuration.cpp:93
+#, c-format
+msgid "Failed setting up injection \"%s\""
+msgstr ""
+
+#: core/config/configuration.cpp:101
+msgid "Could not open config file for output."
+msgstr ""
+
+#: core/config/configuration.cpp:420
+#, c-format
+msgid ""
+"Injection file \"%s\" has an invalid name and cannot be registered.\n"
+"You may add a substitute after import."
+msgstr ""
+
+#: core/config/configuration.cpp:421 core/config/configuration.cpp:428
+msgid "Unknown Injection Encountered"
+msgstr ""
+
+#: core/config/configuration.cpp:428
+#, c-format
+msgid ""
+"Injection file \"%s\" has not been registered.\n"
+"Would you like to add the injection file now?"
+msgstr ""
+
+#: core/config/configuration.cpp:447 editor/editorwindow.cpp:111
+msgid "Injection file could not be added."
+msgstr ""
+
+#: core/config/configuration.cpp:1280
+msgid "Blade Detect Pin cannot be empty."
+msgstr ""
+
+#: core/config/configuration.cpp:1284
+msgid "Blade ID Pin cannot be empty."
+msgstr ""
+
+#: core/config/configuration.cpp:1288
+msgid "Blade Array Name cannot be empty."
+msgstr ""
+
+#: core/config/configuration.cpp:1292
+msgid "Pullup Pin cannot be empty."
+msgstr ""
+
+#: core/config/configuration.cpp:1296
+msgid "Blade ID Pin and Blade Detect Pin cannot be the same."
+msgstr ""
+
+#: core/config/configuration.cpp:1316
+msgid ""
+"All Blade Arrays must be the same length.\n"
+"\n"
+"Please add/remove blades to make them equal"
+msgstr ""
+
+#: core/config/configuration.cpp:1335
+#, c-format
+msgid ""
+"Simple blade %d in array \"%s\" with %d active LEDs should have %d power "
+"pins selected. (Has %d)"
+msgstr ""
+
+#: core/config/configuration.cpp:1348
+#, c-format
+msgid ""
+"Malformed bladestyle in preset %s in blade array %s:\n"
+"\n"
+"%s"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:15
+msgid "Blade Awareness"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:20
+msgid "Enable Blade Detect"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:21
+msgid "Enable Blade ID"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:68
+msgid "Are you sure you want to disable Blade Detect?"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:69
+msgid "blade array will be deleted!"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:70
+msgid "Disable Blade Detect"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:86
+msgid ""
+"Are you sure you want to disable Blade ID?\n"
+"\n"
+"All custom blade arrays will be deleted!"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:87
+msgid "Disable Blade ID"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:131
+msgid "Detect when a blade is inserted into the saber or not."
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:132
+msgid ""
+"Detect when a specific blade is inserted based on a resistor placed in the "
+"blade to give it an identifier."
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:134
+msgid ""
+"The pin which will be bridged to BATT- when blade is inserted.\n"
+"Cannot be the same as ID Pin."
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:135
+msgid ""
+"The pin used to detect blade resistance values.\n"
+"Cannot be the same as Detect Pin."
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:136
+msgid ""
+"The mode to be used for Blade ID.\n"
+"See the POD page \"Blade ID\" for more info."
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:137
+msgid "The value of the pullup resistor placed on the Blade ID line."
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:138
+msgid ""
+"The pin number or name of the pin which ID Pin is bridged to for pullup.\n"
+" This pin cannot be used for anything else."
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:140
+msgid ""
+"Enable power during Blade ID.\n"
+"This is required for WS281X blades."
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:141
+msgid "Continuously monitor the Blade ID to detect changes."
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:142
+msgid "Scan the Blade ID and update accordingly every input number of millis."
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:143
+msgid ""
+"Number of times to read the Blade ID to average out the result and "
+"compensate for inaccurate readings."
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:145
+msgid ""
+"Add a blade array which will be enabled when a blade with the specified ID "
+"is inserted."
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:146
+msgid "Remove the selected blade array."
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:148
+msgid ""
+"The name of the blade array.\n"
+"Each name must be unique, but it is for reference only (and thus specific "
+"names will not make a difference)."
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:149
+msgid ""
+"The ID of the blade associated with the currently-selected blade array.\n"
+"This value can be measured by typing \"id\" into the Serial Monitor."
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:153 editor/editorwindow.cpp:170
+msgid "Blade Arrays"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:181
+msgid "Blade Array Name"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:182
+msgid "ID Value"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:192
+msgid "Blade ID Setup"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:193
+msgid "Snapshot"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:193
+msgid "External Pullup"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:193
+msgid "Bridged Pullup"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:193
+msgid "Blade ID Mode"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:194
+msgid "Blade ID Pin"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:196
+msgid "Pullup Resistance"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:198
+msgid "Pullup Pin"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:209
+msgid "Power for Blade ID"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:210
+msgid "Enable Power on ID"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:214
+msgid "Enable Power Pin 1"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:215
+msgid "Enable Power Pin 2"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:216
+msgid "Enable Power Pin 3"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:221
+msgid "Enable Power Pin 4"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:222
+msgid "Enable Power Pin 5"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:223
+msgid "Enable Power Pin 6"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:238
+msgid "Continuous Scanning"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:239
+msgid "Enable Continuous Scanning"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:240
+msgid "Number of Reads to Average"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:241
+msgid "Scan Interval (ms)"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:250
+msgid "Blade Detect"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:252
+msgid "Blade Detect Pin"
+msgstr ""
+
+#: editor/dialogs/customoptionsdlg.cpp:12
+msgid "Custom Options"
+msgstr ""
+
+#: editor/dialogs/customoptionsdlg.cpp:73
+msgid ""
+"Defines are in the format:\n"
+"#define [NAME] [VALUE]"
+msgstr ""
+
+#: editor/dialogs/customoptionsdlg.cpp:74
+msgid "Add Custom Define"
+msgstr ""
+
+#: editor/dialogs/customoptionsdlg.cpp:83
+msgid "Links For Additional ProffieOS Defines"
+msgstr ""
+
+#: editor/dialogs/customoptionsdlg.cpp:85
+msgid "(ProffieConfig already handles some of these)\n"
+msgstr ""
+
+#: editor/dialogs/customoptionsdlg.cpp:86
+msgid "Optional Defines"
+msgstr ""
+
+#: editor/dialogs/customoptionsdlg.cpp:87
+msgid "History of Clash Detection"
+msgstr ""
+
+#: editor/dialogs/customoptionsdlg.cpp:99
+msgid "Once you add custom options they'll show up here."
+msgstr ""
+
+#: editor/dialogs/customoptionsdlg.cpp:138 mainmenu/dialogs/props.cpp:93
+#: mainmenu/mainmenu.cpp:272
+msgid "Remove"
+msgstr ""
+
+#: editor/editorwindow.cpp:36
+msgid "Editor"
+msgstr ""
+
+#: editor/editorwindow.cpp:71
+msgid "You currently have unsaved changes which will be lost otherwise."
+msgstr ""
+
+#: editor/editorwindow.cpp:72
+#, c-format
+msgid "Save Changes to \"%s\"?"
+msgstr ""
+
+#: editor/editorwindow.cpp:75
+msgid "Save Changes"
+msgstr ""
+
+#: editor/editorwindow.cpp:75
+msgid "Discard Changes"
+msgstr ""
+
+#: editor/editorwindow.cpp:75 onboard/onboard.cpp:48
+msgid "Cancel"
+msgstr ""
+
+#: editor/editorwindow.cpp:104
+msgid "Select Injection File"
+msgstr ""
+
+#: editor/editorwindow.cpp:150
+msgid "Verify Config\tCtrl+R"
+msgstr ""
+
+#: editor/editorwindow.cpp:152
+msgid "Save Config\tCtrl+S"
+msgstr ""
+
+#: editor/editorwindow.cpp:153
+msgid "Export Config..."
+msgstr ""
+
+#: editor/editorwindow.cpp:155
+msgid "Add Injection..."
+msgstr ""
+
+#: editor/editorwindow.cpp:155
+msgid ""
+"Add a header file to be injected into CONFIG_PRESETS during compilation."
+msgstr ""
+
+#: editor/editorwindow.cpp:158
+msgid "Style Editor..."
+msgstr ""
+
+#: editor/editorwindow.cpp:158
+msgid "Open the ProffieOS style editor"
+msgstr ""
+
+#: editor/editorwindow.cpp:161
+msgid "&File"
+msgstr ""
+
+#: editor/editorwindow.cpp:162
+msgid "&Tools"
+msgstr ""
+
+#: editor/editorwindow.cpp:170
+msgid "General"
+msgstr ""
+
+#: editor/editorwindow.cpp:170 editor/pages/propspage.cpp:23
+msgid "Prop File"
+msgstr ""
+
+#: editor/editorwindow.cpp:170
+msgid "Presets And Styles"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:36 editor/pages/bladespage.cpp:71
+msgid "<None>"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:37 editor/pages/bladespage.cpp:52
+#: editor/pages/bladespage.cpp:76
+msgid "Cree Red"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:38 editor/pages/bladespage.cpp:54
+#: editor/pages/bladespage.cpp:77
+msgid "Cree Green"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:39 editor/pages/bladespage.cpp:56
+#: editor/pages/bladespage.cpp:78
+msgid "Cree Blue"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:40 editor/pages/bladespage.cpp:58
+#: editor/pages/bladespage.cpp:79
+msgid "Cree Amber"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:41 editor/pages/bladespage.cpp:60
+#: editor/pages/bladespage.cpp:80
+msgid "Cree Red-Orange"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:42 editor/pages/bladespage.cpp:62
+#: editor/pages/bladespage.cpp:81
+msgid "Cree White"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:43 editor/pages/bladespage.cpp:64
+#: editor/pages/bladespage.cpp:82
+msgid "Red"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:44 editor/pages/bladespage.cpp:66
+#: editor/pages/bladespage.cpp:83
+msgid "Green"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:45 editor/pages/bladespage.cpp:68
+#: editor/pages/bladespage.cpp:84
+msgid "Blue"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:190
+msgid "The currently-selected Blade Array to edit."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:191
+msgid "Add a blade to the selected blade array."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:192
+msgid "Remove the currently-selected blade."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:193
+msgid ""
+"Add a Sub-Blade to the currently-selected blade.\n"
+"Can only be used with WS281X-type blades."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:194
+msgid ""
+"Remove the currently-selected Sub-Blade.\n"
+"If there are less than 2 Sub-Blades after removal, the remaining Sub-Blade "
+"will be deleted."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:196
+msgid "The type of blade/LED."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:197
+msgid ""
+"The power pins to use for this blade.\n"
+"WS281X blades can have as many as are desired (though 2 is generally enough "
+"for most blades)"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:198
+msgid ""
+"The order of colors for your blade.\n"
+"Most of the time this can be left as \"GRB\"."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:199
+msgid ""
+"The order of colors for your blade.\n"
+"Most of the time this can be left as \"GRBW\"."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:200
+msgid ""
+"Use the RGB channels alongside the White channel to produce white light.\n"
+"This can result in a brighter blade, but at the cost of higher battery usage "
+"and a less \"pure\" white."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:201
+msgid ""
+"The pin name or number used for WS281X data.\n"
+"Specify custom pins by typing in this box."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:202
+msgid "The number of pixels in your blade (total)."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:204
+msgid "Split apart data into continuous given sections."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:205
+msgid ""
+"Useful to KR style blades and other similar types where the data signal "
+"\"strides\" back and forth across sides."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:206
+msgid ""
+"Similar to using stride, but for blades in which the data is continuous, "
+"\"zig-zagging\" up and down the blade."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:207
+msgid ""
+"The starting pixel number for the current Sub-Blade.\n"
+"This number starts at 0."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:208
+msgid ""
+"The ending pixel number for the current Sub-Blade.\n"
+"This number should not exceed the \"Number of Pixels\" in the blade."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:211
+msgid ""
+"The profile/type of the first LED.\n"
+"Corresponds to the first-selected power pin."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:212
+msgid ""
+"The profile/type of the second LED.\n"
+"Corresponds to the second-selected power pin."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:213
+msgid ""
+"The profile/type of the third LED.\n"
+"Corresponds to the third-selected power pin."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:214
+msgid ""
+"The profile/type of the fourth LED.\n"
+"Corresponds to the fourth-selected power pin."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:215 editor/pages/bladespage.cpp:216
+#: editor/pages/bladespage.cpp:217 editor/pages/bladespage.cpp:218
+msgid "The value of the resistor placed in series with this led."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:223 editor/pages/presetspage.cpp:139
+msgid "Blade Array"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:224
+msgid "Blade Awareness..."
+msgstr ""
+
+#: editor/pages/bladespage.cpp:236 editor/pages/presetspage.cpp:155
+msgid "Blades"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:248
+msgid "SubBlades"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:267
+msgid "Blade Type"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:271
+msgid "Pin Name"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:285 editor/pages/bladespage.cpp:286
+msgid "Color Order"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:290
+msgid "Use RGB with White"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:291
+msgid "Blade Data Pin"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:292
+msgid "Number of Pixels"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:294
+msgid "LED 1"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:296 editor/pages/bladespage.cpp:302
+#: editor/pages/bladespage.cpp:308 editor/pages/bladespage.cpp:314
+msgid "Resistance (mOhms)"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:300
+msgid "LED 2"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:306
+msgid "LED 3"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:312
+msgid "LED 4"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:318
+msgid "Standard SubBlade"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:319
+msgid "Stride SubBlade"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:320
+msgid "ZigZag SubBlade"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:321
+msgid "SubBlade Start"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:322
+msgid "SubBlade End"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:423 editor/pages/presetspage.cpp:289
+#, c-format
+msgid "Blade %d"
+msgstr ""
+
+#: editor/pages/bladespage.cpp:436
+#, c-format
+msgid "SubBlade %d"
+msgstr ""
+
+#: editor/pages/bladespage.h:22
+msgid "Simple LED"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:39
+msgid "The hardware revision of the physical proffieboard."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:40
+msgid ""
+"Enable to access the contents of your proffieboard's SD card via the USB "
+"connection."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:41
+msgid ""
+"Enable to access the ProffieOS Workbench via USB.\n"
+"See the POD Page \"The ProffieOS Workbench\" for more info."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:43
+msgid "The orientation of the Proffieboard in the saber."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:44
+msgid ""
+"Physical buttons on the saber.\n"
+"Not all prop files support all possible numbers of buttons, and controls may "
+"change depending on how many buttons are specified."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:45
+msgid ""
+"Maximum volume level.\n"
+"Do not increase unless you know what you are doing, as this can damage your "
+"speaker."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:46
+msgid ""
+"Impact required to trigger a clash effect.\n"
+"Measured in Gs."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:47
+msgid "Time (in minutes) since last activity before PLI goes to sleep."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:48
+msgid "Time (in minutes) since last activity before accent LEDs go to sleep."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:49
+msgid ""
+"Time (in minutes) since last activity before gesture controls are disabled."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:50
+msgid ""
+"Maximum number of LEDs in a WS281X blade.\n"
+"This value should not be changed unless you know what you are doing.\n"
+"Configure the length of your blade in the \"Blade Arrays\" page."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:52
+msgid "Save the volume level between board restarts."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:53
+msgid "Save the currently-selected preset between board restarts."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:54
+msgid "Save color edits to presets."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:56
+msgid "Enable if you have an OLED/SSD1306 display connected."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:57
+msgid "Disable color change controls."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:58
+msgid ""
+"Use beeps instead of spoken messages for errors, which saves some memory.\n"
+"See the POD page \"What is it beeping?\"."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:59
+msgid "Disable basic styles in the ProffieOS Workbench to save memory."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:60
+msgid "Disable diagnostic commands in the Serial Monitor to save memory."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:64
+msgid "Board Setup"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:67
+msgid "Enable Mass Storage"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:68
+msgid "Enable WebUSB"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:77
+msgid "Options"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:88
+msgid "Save Volume"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:89
+msgid "Save Preset"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:90
+msgid "Save Color"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:91
+msgid "Enable OLED"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:92
+msgid "Disable Color Change"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:93
+msgid "Disable Talkie"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:94
+msgid "Disable Basic Parser Styles"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:95
+msgid "Disable Diagnostic Commands"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:97
+msgid "Custom Options..."
+msgstr ""
+
+#: editor/pages/generalpage.cpp:116
+msgid "Orientation"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:117
+msgid "Number of Buttons"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:118
+msgid "Max Volume"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:119
+msgid "Clash Threshold (Gs)"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:120
+msgid "PLI Timeout (minutes)"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:121
+msgid "Idle Timeout (minutes)"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:122
+msgid "Motion Timeout (minutes)"
+msgstr ""
+
+#: editor/pages/generalpage.cpp:123
+msgid "WS281X Max LEDs"
+msgstr ""
+
+#: editor/pages/presetspage.cpp:26
+msgid "Comments"
+msgstr ""
+
+#: editor/pages/presetspage.cpp:28
+msgid "Blade Style"
+msgstr ""
+
+#: editor/pages/presetspage.cpp:103
+msgid ""
+"The name for the preset.\n"
+"This appears on the OLED screen if no bitmap is supplied, otherwise it's "
+"just for reference.\n"
+"Using \"\\n\" is like hitting \"enter\" when the text is displayed on the "
+"OLED.\n"
+"For example, \"my\\npreset\" will be displayed on the OLED as two lines, the "
+"first being \"my\" and the second being \"preset\"."
+msgstr ""
+
+#: editor/pages/presetspage.cpp:109
+msgid ""
+"The path of the folder on the SD card where the font is stored.\n"
+"If the font folder is inside another folder, it must be indicated by "
+"something like \"folderName/fontFolderName\".\n"
+"In order to specify multiple directories (for example, to inlclude a "
+"\"common\" directory), use a semicolon (;) to seperate the folders (e.g. "
+"\"fontFolderName;common\")."
+msgstr ""
+
+#: editor/pages/presetspage.cpp:114
+msgid ""
+"The path of the track file on the SD card.\n"
+"If the track is directly inside one of the folders specified in \"Font "
+"Directory\" then only the name of the track file is required."
+msgstr ""
+
+#: editor/pages/presetspage.cpp:117
+msgid ""
+"The currently-selected blade array to be edited.\n"
+"Each blade array has unique presets."
+msgstr ""
+
+#: editor/pages/presetspage.cpp:118
+msgid ""
+"All presets in this blade array.\n"
+"Select a preset and blade to edit associated blade styles."
+msgstr ""
+
+#: editor/pages/presetspage.cpp:119
+msgid ""
+"All blades in this blade array.\n"
+"Select a preset and blade to edit associated blade styles."
+msgstr ""
+
+#: editor/pages/presetspage.cpp:121
+msgid "Add a preset to the currently-selected blade array."
+msgstr ""
+
+#: editor/pages/presetspage.cpp:122
+msgid "Delete the currently-selected preset."
+msgstr ""
+
+#: editor/pages/presetspage.cpp:125
+msgid ""
+"Any comments about the blade style goes here.\n"
+"This doesn't affect the blade style at all, but can be a place for helpful "
+"notes!"
+msgstr ""
+
+#: editor/pages/presetspage.cpp:129
+msgid ""
+"Your blade style goes here.\n"
+"This is the code which sets up what animations and effects your blade (or "
+"other LED) will do.\n"
+"For getting/creating blade styles, see the Documentation (in \"Help-"
+">Documentation...\")."
+msgstr ""
+
+#: editor/pages/presetspage.cpp:151
+msgid "Presets"
+msgstr ""
+
+#: editor/pages/presetspage.cpp:176
+msgid "Preset Name"
+msgstr ""
+
+#: editor/pages/presetspage.cpp:178
+msgid "Font Directory"
+msgstr ""
+
+#: editor/pages/presetspage.cpp:180
+msgid "Track File"
+msgstr ""
+
+#: editor/pages/presetspage.cpp:199
+msgid "Injections"
+msgstr ""
+
+#: editor/pages/presetspage.cpp:205
+msgid "Edit"
+msgstr ""
+
+#: editor/pages/presetspage.cpp:206
+msgid "Delete"
+msgstr ""
+
+#: editor/pages/presetspage.cpp:213 mainmenu/mainmenu.cpp:195
+msgid "This action cannot be undone!"
+msgstr ""
+
+#: editor/pages/presetspage.cpp:213
+msgid "Delete Injection"
+msgstr ""
+
+#: editor/pages/presetspage.cpp:286
+#, c-format
+msgid "Blade %d:%d"
+msgstr ""
+
+#: editor/pages/presetspage.cpp:331
+msgid "Select blade to edit style comments..."
+msgstr ""
+
+#: editor/pages/presetspage.cpp:332
+msgid "Select blade to edit style..."
+msgstr ""
+
+#: editor/pages/presetspage.cpp:349
+msgid "Select or create preset and blade to edit style comments..."
+msgstr ""
+
+#: editor/pages/presetspage.cpp:350
+msgid "Select or create preset and blade to edit style..."
+msgstr ""
+
+#: editor/pages/propspage.cpp:23 editor/pages/propspage.cpp:81
+#: editor/pages/propspage.cpp:231
+msgid "Default"
+msgstr ""
+
+#: editor/pages/propspage.cpp:26
+msgid "Prop Description and Usage Info..."
+msgstr ""
+
+#: editor/pages/propspage.cpp:27
+msgid "Button Controls..."
+msgstr ""
+
+#: editor/pages/propspage.cpp:28
+msgid ""
+"View prop creator-provided information about this prop and its intended "
+"usage."
+msgstr ""
+
+#: editor/pages/propspage.cpp:29
+msgid ""
+"View button controls based on specific option settings and number of buttons."
+msgstr ""
+
+#: editor/pages/propspage.cpp:81
+msgid " Buttons"
+msgstr ""
+
+#: editor/pages/propspage.cpp:91
+msgid ""
+"On/Off - Twist\n"
+"Next preset - Point up and shake\n"
+"Clash - Hit the blade while saber is on."
+msgstr ""
+
+#: editor/pages/propspage.cpp:97
+msgid ""
+"On/Off - Click to turn the saber on or off.\n"
+"Turn On muted - Double-click\n"
+"Next preset - Hold button and hit the blade while saber is off.\n"
+"Clash - Hit the blade while saber is on.\n"
+"Lockup - Hold button, then trigger a clash. Release button to end.\n"
+"Drag - Hold button, then trigger a clash while pointing down. Release button "
+"to end.\n"
+"Melt - Hold button and stab something.\n"
+"Force - Long-click button.\n"
+"Start Soundtrack - Long-click the button while blade is off.\n"
+"Enter/Exit Color Change - Hold button and Twist."
+msgstr ""
+
+#: editor/pages/propspage.cpp:110
+msgid ""
+"On/Off - Click POW\n"
+"Turn On muted - Double-click POW button\n"
+"Next preset - Hold POW button and hit the blade while saber is off.\n"
+"Previous Preset - Hold AUX button and click the POW button while saber is "
+"off.\n"
+"Clash - Hit the blade while saber is on.\n"
+"Lockup -  Hold either POW or AUX, then trigger a clash. Release button to "
+"end.\n"
+"Drag - Hold either POW or AUX, then trigger a clash while pointing down. "
+"Release button to end.\n"
+"Melt - Hold either POW or AUX and stab something.\n"
+"Force Lightning Block - Click AUX while holding POW.\n"
+"Force - Long-click POW button.\n"
+"Start Soundtrack - Long-click the POW button while blade is off.\n"
+"Blaster block - Short-click AUX button.\n"
+"Enter/Exit Color Change - Hold Aux and click POW while on."
+msgstr ""
+
+#: editor/pages/propspage.cpp:134
+msgid "Button Configuration Not Supported"
+msgstr ""
+
+#: editor/pages/propspage.cpp:146
+msgid "Selected number of buttons not supported by prop file."
+msgstr ""
+
+#: editor/pages/propspage.cpp:150
+#, c-format
+msgid "Button controls while saber is %s:"
+msgstr ""
+
+#: editor/pages/propspage.cpp:206
+msgid "The default ProffieOS prop file."
+msgstr ""
+
+#: editor/pages/propspage.cpp:214
+#, c-format
+msgid "%s Prop Info"
+msgstr ""
+
+#: main.cpp:14
+msgid "ProffieConfig is Already Running"
+msgstr ""
+
+#: mainmenu/dialogs/addconfig.cpp:14
+msgid "Add New Config"
+msgstr ""
+
+#: mainmenu/dialogs/addconfig.cpp:51
+msgid "Create New Config"
+msgstr ""
+
+#: mainmenu/dialogs/addconfig.cpp:53
+msgid "Import Existing Config"
+msgstr ""
+
+#: mainmenu/dialogs/addconfig.cpp:57
+msgid "Configuration to Import"
+msgstr ""
+
+#: mainmenu/dialogs/addconfig.cpp:58
+msgid "Choose Configuration File to Import"
+msgstr ""
+
+#: mainmenu/dialogs/addconfig.cpp:60
+msgid "Configuration Name"
+msgstr ""
+
+#: mainmenu/dialogs/addconfig.cpp:62
+msgid "Please enter a valid name"
+msgstr ""
+
+#: mainmenu/dialogs/addconfig.cpp:63
+msgid "Configuration with same name already exists"
+msgstr ""
+
+#: mainmenu/dialogs/addconfig.cpp:64
+msgid "Please choose a configuration file to import"
+msgstr ""
+
+#: mainmenu/dialogs/props.cpp:15
+msgid "Prop Files"
+msgstr ""
+
+#: mainmenu/dialogs/props.cpp:43
+msgid "View Existing Props"
+msgstr ""
+
+#: mainmenu/dialogs/props.cpp:45
+msgid "Add Prop"
+msgstr ""
+
+#: mainmenu/dialogs/props.cpp:58
+msgid "ProffieOS Prop File"
+msgstr ""
+
+#: mainmenu/dialogs/props.cpp:59
+msgid "Choose Prop File to Import"
+msgstr ""
+
+#: mainmenu/dialogs/props.cpp:60
+msgid "ProffieConfig Prop Config File"
+msgstr ""
+
+#: mainmenu/dialogs/props.cpp:61
+msgid "Choose Prop Config File"
+msgstr ""
+
+#: mainmenu/dialogs/props.cpp:62
+msgid "Prop with same name already exists"
+msgstr ""
+
+#: mainmenu/dialogs/props.cpp:63
+msgid "Please choose prop files to import"
+msgstr ""
+
+#: mainmenu/dialogs/props.cpp:71
+msgid "Ok"
+msgstr ""
+
+#: mainmenu/dialogs/props.cpp:86
+msgid "No Custom Props"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:52
+msgid ""
+"There is at least one editor open with unsaved changes, are you sure you "
+"want to exit?"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:54
+msgid "All unsaved changes will be lost!"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:55
+msgid "Open Editor(s)"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:88
+msgid "All-in-one Proffieboard Management Utility"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:109
+msgid "All Editors must be closed to continue."
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:109
+msgid "Open Editors"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:193
+msgid "Are you sure you want to deleted the selected configuration?"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:196
+msgid "Delete Config"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:220
+msgid "Apply the current configuration to the selected Proffieboard."
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:221
+msgid ""
+"Select the Proffieboard to connect to.\n"
+"These IDs are assigned by the OS, and can vary."
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:222
+msgid "Generate an up-to-date list of connected boards."
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:227
+msgid "Re-Run First-Time Setup..."
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:227
+msgid "Install Proffieboard Dependencies and View Tutorial"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:230
+msgid "Show Logs..."
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:236
+msgid "Documentation...\tCtrl+H"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:236
+msgid "Open the ProffieConfig docs in your web browser"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:237
+msgid "Help/Bug Report..."
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:237
+msgid "Open GitHub to submit issue"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:259
+msgid "Created by Ryryog25"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:271
+msgid "Add"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:280
+msgid "Edit Selected Configuration"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:284
+msgid "Select Board..."
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:286 tools/arduino.cpp:335 tools/arduino.cpp:694
+msgid "BOOTLOADER RECOVERY"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:289
+msgid "Refresh Boards"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:294
+msgid "Apply Selected Configuration to Board"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:296
+msgid "Open Serial Monitor"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:319
+msgid "Select Config..."
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:334 tools/arduino.cpp:318 tools/arduino.cpp:723
+msgid "BOOTLOADER"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:355
+msgid "Error while reading configuration file!"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:355
+msgid "Config Read Error"
+msgstr ""
+
+#: onboard/onboard.cpp:26
+msgid "ProffieConfig First-Time Setup"
+msgstr ""
+
+#: onboard/onboard.cpp:43 onboard/onboard.cpp:87
+msgid "Skip Introduction"
+msgstr ""
+
+#: onboard/onboard.cpp:45
+msgid "Skip Dependency Installation"
+msgstr ""
+
+#: onboard/onboard.cpp:47 onboard/onboard.cpp:162
+msgid "Next >"
+msgstr ""
+
+#: onboard/onboard.cpp:74
+msgid "Are you sure you want to cancel setup?"
+msgstr ""
+
+#: onboard/onboard.cpp:74
+msgid "Exit ProffieConfig"
+msgstr ""
+
+#: onboard/onboard.cpp:84
+msgid "Are you sure you want to skip the Introduction?"
+msgstr ""
+
+#: onboard/onboard.cpp:86
+msgid "The introduction covers all the basics and usage of ProffieConfig."
+msgstr ""
+
+#: onboard/onboard.cpp:138
+msgid "Dependency installation failed, please try again."
+msgstr ""
+
+#: onboard/onboard.cpp:138
+msgid "Installation Failure"
+msgstr ""
+
+#: onboard/onboard.cpp:155
+msgid "Finish"
+msgstr ""
+
+#: onboard/pages/dependencypage.cpp:12
+msgid "Dependency Installation"
+msgstr ""
+
+#: onboard/pages/dependencypage.cpp:16
+msgid "In order to continue, ProffieConfig needs to do some setup."
+msgstr ""
+
+#: onboard/pages/dependencypage.cpp:17
+msgid "This will involve the following:"
+msgstr ""
+
+#: onboard/pages/dependencypage.cpp:19
+msgid "ProffieOS Download"
+msgstr ""
+
+#: onboard/pages/dependencypage.cpp:20
+msgid "Proffieboard Arduino Core Installation"
+msgstr ""
+
+#: onboard/pages/dependencypage.cpp:22
+msgid "Proffieboard Driver Installation"
+msgstr ""
+
+#: onboard/pages/dependencypage.cpp:25
+msgid ""
+"An internet connection is required, and installation may take several "
+"minutes."
+msgstr ""
+
+#: onboard/pages/dependencypage.cpp:27
+msgid ""
+"When the driver installation starts, you will be prompted, please follow the "
+"instructions in the new window."
+msgstr ""
+
+#: onboard/pages/dependencypage.cpp:30
+msgid "Press \"Next\" to begin installation.\n"
+msgstr ""
+
+#: onboard/pages/dependencypage.cpp:31
+msgid "The installation completed successfully. Press \"Next\" to continue..."
+msgstr ""
+
+#: onboard/pages/overviewpage.cpp:32
+msgid "Introduction to ProffieConfig"
+msgstr ""
+
+#: onboard/pages/overviewpage.cpp:75 onboard/pages/overviewpage.cpp:99
+msgid "You cannot close this during First-Time Setup."
+msgstr ""
+
+#: onboard/pages/overviewpage.cpp:75
+msgid "Close ProffieConfig"
+msgstr ""
+
+#: onboard/pages/overviewpage.cpp:99
+msgid "Close ProffieConfig Editor"
+msgstr ""
+
+#: onboard/pages/welcomepage.cpp:10
+#, c-format
+msgid "Welcome to ProffieConfig %s!"
+msgstr ""
+
+#: onboard/pages/welcomepage.cpp:13
+msgid ""
+"ProffieConfig is an All-in-One utility for managing your Proffieboard.\n"
+"Links to documentation can be found in the application under Help-"
+">Documentation...\n"
+"\n"
+"This wizard will guide you through first-time setup and usage of "
+"ProffieConfig.\n"
+"\n"
+"\n"
+"Press \"Next\" when you're ready to continue, and we'll get started!"
+msgstr ""
+
+#: tools/arduino.cpp:371
+msgid "Please make sure your board is connected and selected, then try again!"
+msgstr ""
+
+#: tools/arduino.cpp:371
+msgid "Board Selection Error"
+msgstr ""
+
+#: tools/arduino.cpp:394 tools/arduino.cpp:490
+#, c-format
+msgid ""
+"There was an error while updating ProffieOS file:\n"
+"\n"
+"%s"
+msgstr ""
+
+#: tools/arduino.cpp:395 tools/arduino.cpp:491
+msgid "Files Error"
+msgstr ""
+
+#: tools/arduino.cpp:413 tools/arduino.cpp:504
+#, c-format
+msgid ""
+"There was an error while compiling:\n"
+"\n"
+"%s"
+msgstr ""
+
+#: tools/arduino.cpp:414 tools/arduino.cpp:505
+msgid "Compile Error"
+msgstr ""
+
+#: tools/arduino.cpp:431
+#, c-format
+msgid ""
+"There was an error while uploading:\n"
+"\n"
+"%s"
+msgstr ""
+
+#: tools/arduino.cpp:432
+msgid "Upload Error"
+msgstr ""
+
+#: tools/arduino.cpp:444
+msgid "Changes Successfully Applied to ProffieBoard!"
+msgstr ""
+
+#: tools/arduino.cpp:445
+msgid "Apply Changes to Board"
+msgstr ""
+
+#: tools/arduino.cpp:517
+msgid "Config Verified Successfully!"
+msgstr ""
+
+#: tools/arduino.cpp:525
+#, c-format
+msgid "The configuration uses %d%% of board space. (%d/%d)"
+msgstr ""
+
+#: tools/arduino.cpp:553
+msgid "Verify Config"
+msgstr ""
+
+#: tools/serialmonitor.cpp:44
+msgid "Select board first."
+msgstr ""
+
+#: tools/serialmonitor.cpp:44
+msgid "No Board Selected"
+msgstr ""
+
+#: tools/serialmonitor.cpp:214
+msgid "Could not connect to Proffieboard."
+msgstr ""
+
+#: tools/serialmonitor.cpp:214
+msgid "Serial Connection Error"
+msgstr ""
