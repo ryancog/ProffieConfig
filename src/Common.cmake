@@ -11,11 +11,11 @@ function(setup_target TARGET)
         elseif (CMAKE_BUILD_TYPE STREQUAL Release)
             set(RPATH "@executable_path/../../../../lib\;@executable_path/../../../../components")
         endif()
-        get_target_property(TRANSLATIONS ${TARGET} TRANSLATION_LIST)
-        foreach(TRANSLATION TRANSLATION_LIST)
-            string(APPEND TRANSLATIONS "DUMMY")
-        endforeach()
-        set_target_properties(${TARGET} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/resources/templates/Info.plist.in")
+
+        get_target_property(EXEC_VERSION ${TARGET} VERSION)
+        set_target_properties(${TARGET} PROPERTIES 
+            MACOSX_BUNDLE_SHORT_VERSION_STRING "${VERSION}"
+        )
     elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
         set(RPATH "ThisMeansNothing")
         get_target_property(DESCRIPTION ${TARGET} DESCRIPTION)
