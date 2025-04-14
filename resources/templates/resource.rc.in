@@ -1,6 +1,7 @@
 #include <wx/msw/wx.rc>
 
 ApplicationIcon ICON "${CMAKE_SOURCE_DIR}/resources/icons/icon.ico"
+${TRANSLATIONS}
 
 1 VERSIONINFO
 FILEVERSION 1,0,0,0
@@ -16,7 +17,7 @@ BEGIN
             VALUE "CompanyName", "Kafrene Trading"
             VALUE "FileDescription", "${DESCRIPTION}"
             VALUE "InternalName", "$<TARGET_FILE_BASE_NAME:${TARGET}>"
-            VALUE "LegalCopyright", "(C) 2024 Ryan Ogurek"
+            VALUE "LegalCopyright", "(C) 2025 Ryan Ogurek"
             VALUE "OriginalFilename", "$<TARGET_FILE_NAME:${TARGET}>"
         END
     END
