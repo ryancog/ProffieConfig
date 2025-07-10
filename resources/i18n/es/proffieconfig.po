@@ -7,9 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: ProffieConfig\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-30 21:14-0500\n"
-"PO-Revision-Date: 2025-04-03 16:39-0300\n"
+"POT-Creation-Date: 2025-04-03 16:16-0500\n"
+"PO-Revision-Date: 2025-04-14 16:35-0500\n"
 "Last-Translator: Tomás Guerrero <tomasgw@hotmail.com>\n"
 "Language-Team: \n"
 "Language: es\n"
@@ -25,7 +24,7 @@ msgstr "El archivo de configuración de su Prop no es válido."
 
 #: core/appstate.cpp:117 core/appstate.cpp:123
 msgid "Error Adding Prop"
-msgstr "Error al agregar el Prop."
+msgstr "Error al agregar el Prop"
 
 #: core/appstate.cpp:123
 msgid "Prop config filename does not match provided prop filename"
@@ -74,31 +73,32 @@ msgstr ""
 "¿Desea agregar un archivo de inyección ahora?"
 
 #: core/config/configuration.cpp:447 editor/editorwindow.cpp:111
+#: editor/editorwindow.cpp:112
 msgid "Injection file could not be added."
 msgstr "No se pudo agregar el archivo de inyección."
 
-#: core/config/configuration.cpp:1280
+#: core/config/configuration.cpp:1280 core/config/configuration.cpp:1272
 msgid "Blade Detect Pin cannot be empty."
 msgstr "El pin de detección de hoja no puede estar vacío."
 
-#: core/config/configuration.cpp:1284
+#: core/config/configuration.cpp:1284 core/config/configuration.cpp:1276
 msgid "Blade ID Pin cannot be empty."
 msgstr "El pin identificador de hoja no puede estar vacío."
 
-#: core/config/configuration.cpp:1288
+#: core/config/configuration.cpp:1288 core/config/configuration.cpp:1286
 msgid "Blade Array Name cannot be empty."
 msgstr "El nombre de la matriz de hojas no puede estar vacío."
 
-#: core/config/configuration.cpp:1292
+#: core/config/configuration.cpp:1292 core/config/configuration.cpp:1290
 msgid "Pullup Pin cannot be empty."
 msgstr "El pin pullup no puede estar vacío."
 
-#: core/config/configuration.cpp:1296
+#: core/config/configuration.cpp:1296 core/config/configuration.cpp:1294
 msgid "Blade ID Pin and Blade Detect Pin cannot be the same."
 msgstr ""
 "El pin identificador de hoja debe ser distinto al pin de detección de hoja."
 
-#: core/config/configuration.cpp:1316
+#: core/config/configuration.cpp:1316 core/config/configuration.cpp:1314
 msgid ""
 "All Blade Arrays must be the same length.\n"
 "\n"
@@ -106,9 +106,9 @@ msgid ""
 msgstr ""
 "Todas las matrices de hojas deben tener el mismo tamaño.\n"
 "\n"
-"Por favor, agregue o quite hojas para que estas sean iguales."
+"Por favor, agregue o quite hojas para que estas sean iguales"
 
-#: core/config/configuration.cpp:1335
+#: core/config/configuration.cpp:1335 core/config/configuration.cpp:1333
 #, c-format
 msgid ""
 "Simple blade %d in array \"%s\" with %d active LEDs should have %d power "
@@ -117,7 +117,7 @@ msgstr ""
 "La hoja simple %d en la matriz \\\"%s\\\" con %d LED activos deben tener %d "
 "pines de alimentación seleccionados. (Tiene %d)"
 
-#: core/config/configuration.cpp:1348
+#: core/config/configuration.cpp:1348 core/config/configuration.cpp:1346
 #, c-format
 msgid ""
 "Malformed bladestyle in preset %s in blade array %s:\n"
@@ -274,6 +274,7 @@ msgstr ""
 "Este valor puede ser medido escribiendo \"id\" en el Monitor Serial."
 
 #: editor/dialogs/bladearraydlg.cpp:153 editor/editorwindow.cpp:170
+#: editor/editorwindow.cpp:171
 msgid "Blade Arrays"
 msgstr "Arrays de Hojas"
 
@@ -390,27 +391,33 @@ msgid "Add Custom Define"
 msgstr "Agregar Definición Personalizada"
 
 #: editor/dialogs/customoptionsdlg.cpp:83
+#: editor/dialogs/customoptionsdlg.cpp:84
 msgid "Links For Additional ProffieOS Defines"
 msgstr "Links a Definiciones de ProffieOS Adicionales"
 
 #: editor/dialogs/customoptionsdlg.cpp:85
+#: editor/dialogs/customoptionsdlg.cpp:86
 msgid "(ProffieConfig already handles some of these)\n"
 msgstr "(ProffieConfig ya se encarga de algunos de estos)\n"
 
 #: editor/dialogs/customoptionsdlg.cpp:86
+#: editor/dialogs/customoptionsdlg.cpp:87
 msgid "Optional Defines"
 msgstr "Definiciones Opcionales"
 
 #: editor/dialogs/customoptionsdlg.cpp:87
+#: editor/dialogs/customoptionsdlg.cpp:88
 msgid "History of Clash Detection"
 msgstr "Historial de Detección de Choques"
 
 #: editor/dialogs/customoptionsdlg.cpp:99
+#: editor/dialogs/customoptionsdlg.cpp:100
 msgid "Once you add custom options they'll show up here."
 msgstr "Una vez que haya agregado opciones personalizadas, se mostrarán aquí."
 
 #: editor/dialogs/customoptionsdlg.cpp:138 mainmenu/dialogs/props.cpp:93
-#: mainmenu/mainmenu.cpp:272
+#: mainmenu/mainmenu.cpp:272 editor/dialogs/customoptionsdlg.cpp:139
+#: mainmenu/mainmenu.cpp:273
 msgid "Remove"
 msgstr "Eliminar"
 
@@ -418,80 +425,82 @@ msgstr "Eliminar"
 msgid "Editor"
 msgstr "Editor"
 
-#: editor/editorwindow.cpp:71
+#: editor/editorwindow.cpp:71 editor/editorwindow.cpp:74
 msgid "You currently have unsaved changes which will be lost otherwise."
 msgstr ""
 "En este momento tiene cambios sin guardar que, de lo contrario, se perderán."
 
-#: editor/editorwindow.cpp:72
+#: editor/editorwindow.cpp:72 editor/editorwindow.cpp:75
 #, c-format
 msgid "Save Changes to \"%s\"?"
 msgstr "¿Guardar los cambios hechos a \"%s\"?"
 
-#: editor/editorwindow.cpp:75
+#: editor/editorwindow.cpp:75 editor/editorwindow.cpp:78
 msgid "Save Changes"
 msgstr "Guardar Cambios"
 
-#: editor/editorwindow.cpp:75
+#: editor/editorwindow.cpp:75 editor/editorwindow.cpp:78
 msgid "Discard Changes"
 msgstr "Descartar Cambios"
 
-#: editor/editorwindow.cpp:75 onboard/onboard.cpp:48
+#: editor/editorwindow.cpp:75 onboard/onboard.cpp:48 editor/editorwindow.cpp:78
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: editor/editorwindow.cpp:104
+#: editor/editorwindow.cpp:104 editor/editorwindow.cpp:105
 msgid "Select Injection File"
 msgstr "Elegir Archivo de Inyección"
 
-#: editor/editorwindow.cpp:150
+#: editor/editorwindow.cpp:150 editor/editorwindow.cpp:151
 msgid "Verify Config\tCtrl+R"
 msgstr "Verificar Configuración\tCtrl+R"
 
-#: editor/editorwindow.cpp:152
+#: editor/editorwindow.cpp:152 editor/editorwindow.cpp:153
 msgid "Save Config\tCtrl+S"
 msgstr "Guardar Configuración\tCtrl+S"
 
-#: editor/editorwindow.cpp:153
+#: editor/editorwindow.cpp:153 editor/editorwindow.cpp:154
 msgid "Export Config..."
 msgstr "Exportar Configuración..."
 
-#: editor/editorwindow.cpp:155
+#: editor/editorwindow.cpp:155 editor/editorwindow.cpp:156
 msgid "Add Injection..."
 msgstr "Agregar Inyección..."
 
-#: editor/editorwindow.cpp:155
+#: editor/editorwindow.cpp:155 editor/editorwindow.cpp:156
 msgid ""
 "Add a header file to be injected into CONFIG_PRESETS during compilation."
 msgstr ""
 "Agregar un archivo de encabezado para inyectarlo en CONFIG_PRESETS durante "
 "la compilación."
 
-#: editor/editorwindow.cpp:158
+#: editor/editorwindow.cpp:158 editor/editorwindow.cpp:159
 msgid "Style Editor..."
 msgstr "Editor de Estilos..."
 
-#: editor/editorwindow.cpp:158
+#: editor/editorwindow.cpp:158 editor/editorwindow.cpp:159
 msgid "Open the ProffieOS style editor"
 msgstr "Abrir el editor de estilos de ProffieOS"
 
-#: editor/editorwindow.cpp:161
+#: editor/editorwindow.cpp:161 editor/editorwindow.cpp:162
+#: mainmenu/mainmenu.cpp:241
 msgid "&File"
 msgstr "&Archivo"
 
-#: editor/editorwindow.cpp:162
+#: editor/editorwindow.cpp:162 editor/editorwindow.cpp:163
 msgid "&Tools"
 msgstr "&Herramientas"
 
-#: editor/editorwindow.cpp:170
+#: editor/editorwindow.cpp:170 editor/editorwindow.cpp:171
 msgid "General"
 msgstr "General"
 
 #: editor/editorwindow.cpp:170 editor/pages/propspage.cpp:23
+#: editor/editorwindow.cpp:171
 msgid "Prop File"
 msgstr "Archivo Prop"
 
-#: editor/editorwindow.cpp:170
+#: editor/editorwindow.cpp:170 editor/editorwindow.cpp:171
 msgid "Presets And Styles"
 msgstr "Presets y Estilos"
 
@@ -786,6 +795,7 @@ msgid "SubBlade End"
 msgstr "Fin de la Subhoja"
 
 #: editor/pages/bladespage.cpp:423 editor/pages/presetspage.cpp:289
+#: editor/pages/presetspage.cpp:293
 #, c-format
 msgid "Blade %d"
 msgstr "Hoja %d"
@@ -1143,6 +1153,7 @@ msgid "Delete"
 msgstr "Eliminar"
 
 #: editor/pages/presetspage.cpp:213 mainmenu/mainmenu.cpp:195
+#: mainmenu/mainmenu.cpp:196
 msgid "This action cannot be undone!"
 msgstr "¡Esta acción no puede deshacerse!"
 
@@ -1150,26 +1161,26 @@ msgstr "¡Esta acción no puede deshacerse!"
 msgid "Delete Injection"
 msgstr "Borrar Inyección"
 
-#: editor/pages/presetspage.cpp:286
+#: editor/pages/presetspage.cpp:286 editor/pages/presetspage.cpp:290
 #, c-format
 msgid "Blade %d:%d"
 msgstr "Hoja %d:%d"
 
-#: editor/pages/presetspage.cpp:331
+#: editor/pages/presetspage.cpp:331 editor/pages/presetspage.cpp:335
 msgid "Select blade to edit style comments..."
 msgstr "Seleccionar una hoja para editar los comentarios de estilo..."
 
-#: editor/pages/presetspage.cpp:332
+#: editor/pages/presetspage.cpp:332 editor/pages/presetspage.cpp:336
 msgid "Select blade to edit style..."
 msgstr "Seleccionar una hoja para editar el estilo..."
 
-#: editor/pages/presetspage.cpp:349
+#: editor/pages/presetspage.cpp:349 editor/pages/presetspage.cpp:353
 msgid "Select or create preset and blade to edit style comments..."
 msgstr ""
 "Seleccionar o crear un preset y una hoja para editar los comentarios de "
 "estilo..."
 
-#: editor/pages/presetspage.cpp:350
+#: editor/pages/presetspage.cpp:350 editor/pages/presetspage.cpp:354
 msgid "Select or create preset and blade to edit style..."
 msgstr "Seleccionar o crear un preset y una hoja para editar el estilo..."
 
@@ -1202,7 +1213,7 @@ msgstr ""
 
 #: editor/pages/propspage.cpp:81
 msgid " Buttons"
-msgstr "Botones"
+msgstr " Botones"
 
 #: editor/pages/propspage.cpp:91
 msgid ""
@@ -1386,7 +1397,7 @@ msgstr "Ok"
 msgid "No Custom Props"
 msgstr "Sin Props Personalizados"
 
-#: mainmenu/mainmenu.cpp:52
+#: mainmenu/mainmenu.cpp:52 mainmenu/mainmenu.cpp:53
 msgid ""
 "There is at least one editor open with unsaved changes, are you sure you "
 "want to exit?"
@@ -1394,39 +1405,39 @@ msgstr ""
 "Hay, al menos, un editor abierto con cambios sin guardar. ¿Está seguro de "
 "que desea salir?"
 
-#: mainmenu/mainmenu.cpp:54
+#: mainmenu/mainmenu.cpp:54 mainmenu/mainmenu.cpp:55
 msgid "All unsaved changes will be lost!"
 msgstr "¡Todos los cambios que no se hayan guardado se perderán!"
 
-#: mainmenu/mainmenu.cpp:55
+#: mainmenu/mainmenu.cpp:55 mainmenu/mainmenu.cpp:56
 msgid "Open Editor(s)"
 msgstr "Abrir Editor(es)"
 
-#: mainmenu/mainmenu.cpp:88
+#: mainmenu/mainmenu.cpp:88 mainmenu/mainmenu.cpp:89
 msgid "All-in-one Proffieboard Management Utility"
 msgstr "Herramienta de operación Todo-en-Uno"
 
-#: mainmenu/mainmenu.cpp:109
+#: mainmenu/mainmenu.cpp:109 mainmenu/mainmenu.cpp:110
 msgid "All Editors must be closed to continue."
 msgstr "Todos los editores deben cerrarse para poder continuar."
 
-#: mainmenu/mainmenu.cpp:109
+#: mainmenu/mainmenu.cpp:109 mainmenu/mainmenu.cpp:110
 msgid "Open Editors"
 msgstr "Abrir editores"
 
-#: mainmenu/mainmenu.cpp:193
+#: mainmenu/mainmenu.cpp:193 mainmenu/mainmenu.cpp:194
 msgid "Are you sure you want to deleted the selected configuration?"
 msgstr "¿Está seguro de querer eliminar la configuración seleccionada?"
 
-#: mainmenu/mainmenu.cpp:196
+#: mainmenu/mainmenu.cpp:196 mainmenu/mainmenu.cpp:197
 msgid "Delete Config"
 msgstr "Eliminar Configuración"
 
-#: mainmenu/mainmenu.cpp:220
+#: mainmenu/mainmenu.cpp:220 mainmenu/mainmenu.cpp:221
 msgid "Apply the current configuration to the selected Proffieboard."
 msgstr "Aplicar la configuración actual al Proffieboard seleccionado."
 
-#: mainmenu/mainmenu.cpp:221
+#: mainmenu/mainmenu.cpp:221 mainmenu/mainmenu.cpp:222
 msgid ""
 "Select the Proffieboard to connect to.\n"
 "These IDs are assigned by the OS, and can vary."
@@ -1434,83 +1445,85 @@ msgstr ""
 "Seleccione el Proffieboard al que desea conectarse.\n"
 "Estos identificadores son asignados por el SO, y pueden variar."
 
-#: mainmenu/mainmenu.cpp:222
+#: mainmenu/mainmenu.cpp:222 mainmenu/mainmenu.cpp:223
 msgid "Generate an up-to-date list of connected boards."
 msgstr "Generar una lista actualizada de las placas conectadas."
 
-#: mainmenu/mainmenu.cpp:227
+#: mainmenu/mainmenu.cpp:227 mainmenu/mainmenu.cpp:228
 msgid "Re-Run First-Time Setup..."
 msgstr "Volver a ejecutar la configuración de primer uso..."
 
-#: mainmenu/mainmenu.cpp:227
+#: mainmenu/mainmenu.cpp:227 mainmenu/mainmenu.cpp:228
 msgid "Install Proffieboard Dependencies and View Tutorial"
 msgstr "Instalar las dependencias de Proffieboard y ver el tutorial"
 
-#: mainmenu/mainmenu.cpp:230
+#: mainmenu/mainmenu.cpp:230 mainmenu/mainmenu.cpp:231
 msgid "Show Logs..."
 msgstr "Mostrar registros..."
 
-#: mainmenu/mainmenu.cpp:236
+#: mainmenu/mainmenu.cpp:236 mainmenu/mainmenu.cpp:237
 msgid "Documentation...\tCtrl+H"
 msgstr "Documentación...\tCtrl+H"
 
-#: mainmenu/mainmenu.cpp:236
+#: mainmenu/mainmenu.cpp:236 mainmenu/mainmenu.cpp:237
 msgid "Open the ProffieConfig docs in your web browser"
 msgstr "Abrir los documentos de ProffieConfig en su explorador"
 
-#: mainmenu/mainmenu.cpp:237
+#: mainmenu/mainmenu.cpp:237 mainmenu/mainmenu.cpp:238
 msgid "Help/Bug Report..."
 msgstr "Ayuda/Reporte de errores..."
 
-#: mainmenu/mainmenu.cpp:237
+#: mainmenu/mainmenu.cpp:237 mainmenu/mainmenu.cpp:238
 msgid "Open GitHub to submit issue"
 msgstr "Abrir GitHub para reportar un problema"
 
-#: mainmenu/mainmenu.cpp:259
+#: mainmenu/mainmenu.cpp:259 mainmenu/mainmenu.cpp:260
 msgid "Created by Ryryog25"
 msgstr "Creado por Ryryog25"
 
-#: mainmenu/mainmenu.cpp:271
+#: mainmenu/mainmenu.cpp:271 mainmenu/mainmenu.cpp:272
 msgid "Add"
 msgstr "Agregar"
 
-#: mainmenu/mainmenu.cpp:280
+#: mainmenu/mainmenu.cpp:280 mainmenu/mainmenu.cpp:281
 msgid "Edit Selected Configuration"
 msgstr "Editar la configuración seleccionada"
 
-#: mainmenu/mainmenu.cpp:284
+#: mainmenu/mainmenu.cpp:284 mainmenu/mainmenu.cpp:285
 msgid "Select Board..."
 msgstr "Seleccionar placa..."
 
 #: mainmenu/mainmenu.cpp:286 tools/arduino.cpp:335 tools/arduino.cpp:694
+#: mainmenu/mainmenu.cpp:287 tools/arduino.cpp:336 tools/arduino.cpp:695
 msgid "BOOTLOADER RECOVERY"
 msgstr "RECUPERACIÓN DE BOOTLOADER"
 
-#: mainmenu/mainmenu.cpp:289
+#: mainmenu/mainmenu.cpp:289 mainmenu/mainmenu.cpp:290
 msgid "Refresh Boards"
 msgstr "Actualizar tablas"
 
-#: mainmenu/mainmenu.cpp:294
+#: mainmenu/mainmenu.cpp:294 mainmenu/mainmenu.cpp:295
 msgid "Apply Selected Configuration to Board"
 msgstr "Aplicar configuración seleccionada a la placa"
 
-#: mainmenu/mainmenu.cpp:296
+#: mainmenu/mainmenu.cpp:296 mainmenu/mainmenu.cpp:297
 msgid "Open Serial Monitor"
 msgstr "Abrir Monitor Serial"
 
-#: mainmenu/mainmenu.cpp:319
+#: mainmenu/mainmenu.cpp:319 mainmenu/mainmenu.cpp:271
 msgid "Select Config..."
 msgstr "Seleccionar Configuración..."
 
 #: mainmenu/mainmenu.cpp:334 tools/arduino.cpp:318 tools/arduino.cpp:723
+#: mainmenu/mainmenu.cpp:336 tools/arduino.cpp:319 tools/arduino.cpp:724
 msgid "BOOTLOADER"
 msgstr "BOOTLOADER"
 
-#: mainmenu/mainmenu.cpp:355
+#: mainmenu/mainmenu.cpp:355 mainmenu/mainmenu.cpp:357
 msgid "Error while reading configuration file!"
 msgstr "¡Error durante la lectura del archivo de configuración!"
 
-#: mainmenu/mainmenu.cpp:355
+#: mainmenu/mainmenu.cpp:355 mainmenu/mainmenu.cpp:357
 msgid "Config Read Error"
 msgstr "Error de lectura de la configuración"
 
@@ -1653,17 +1666,18 @@ msgstr ""
 "\n"
 "Presione \"Siguiente\" cuando esté listo para continuar, ¡y comenzaremos!"
 
-#: tools/arduino.cpp:371
+#: tools/arduino.cpp:371 tools/arduino.cpp:372
 msgid "Please make sure your board is connected and selected, then try again!"
 msgstr ""
 "¡Por favor, asegúrese de que su placa está conectada y seleccionada, y "
 "vuelva a intentarlo!"
 
-#: tools/arduino.cpp:371
+#: tools/arduino.cpp:371 tools/arduino.cpp:372
 msgid "Board Selection Error"
 msgstr "Error de selección de placa"
 
-#: tools/arduino.cpp:394 tools/arduino.cpp:490
+#: tools/arduino.cpp:394 tools/arduino.cpp:490 tools/arduino.cpp:395
+#: tools/arduino.cpp:491
 #, c-format
 msgid ""
 "There was an error while updating ProffieOS file:\n"
@@ -1674,11 +1688,13 @@ msgstr ""
 "\n"
 "%s"
 
-#: tools/arduino.cpp:395 tools/arduino.cpp:491
+#: tools/arduino.cpp:395 tools/arduino.cpp:491 tools/arduino.cpp:396
+#: tools/arduino.cpp:492
 msgid "Files Error"
 msgstr "Error de archivos"
 
-#: tools/arduino.cpp:413 tools/arduino.cpp:504
+#: tools/arduino.cpp:413 tools/arduino.cpp:504 tools/arduino.cpp:414
+#: tools/arduino.cpp:505
 #, c-format
 msgid ""
 "There was an error while compiling:\n"
@@ -1689,11 +1705,12 @@ msgstr ""
 "\n"
 "%s"
 
-#: tools/arduino.cpp:414 tools/arduino.cpp:505
+#: tools/arduino.cpp:414 tools/arduino.cpp:505 tools/arduino.cpp:415
+#: tools/arduino.cpp:506
 msgid "Compile Error"
 msgstr "Error de compilación"
 
-#: tools/arduino.cpp:431
+#: tools/arduino.cpp:431 tools/arduino.cpp:432
 #, c-format
 msgid ""
 "There was an error while uploading:\n"
@@ -1704,28 +1721,28 @@ msgstr ""
 "\n"
 "%s"
 
-#: tools/arduino.cpp:432
+#: tools/arduino.cpp:432 tools/arduino.cpp:433
 msgid "Upload Error"
 msgstr "Error en la carga de datos"
 
-#: tools/arduino.cpp:444
+#: tools/arduino.cpp:444 tools/arduino.cpp:445
 msgid "Changes Successfully Applied to ProffieBoard!"
 msgstr "¡Cambios aplicados en el Proffieboard exitosamente!"
 
-#: tools/arduino.cpp:445
+#: tools/arduino.cpp:445 tools/arduino.cpp:446
 msgid "Apply Changes to Board"
 msgstr "Aplicar los cambios en la placa"
 
-#: tools/arduino.cpp:517
+#: tools/arduino.cpp:517 tools/arduino.cpp:518
 msgid "Config Verified Successfully!"
 msgstr "¡La configuración se verificó exitosamente!"
 
-#: tools/arduino.cpp:525
+#: tools/arduino.cpp:525 tools/arduino.cpp:526
 #, c-format
 msgid "The configuration uses %d%% of board space. (%d/%d)"
 msgstr "La configuración usa %d%% del espacio disponible en la placa. (%d/%d)"
 
-#: tools/arduino.cpp:553
+#: tools/arduino.cpp:553 tools/arduino.cpp:554
 msgid "Verify Config"
 msgstr "Verificar Configuración"
 
@@ -1743,4 +1760,62 @@ msgstr "No se puede conectar al Proffieboard."
 
 #: tools/serialmonitor.cpp:214
 msgid "Serial Connection Error"
-msgstr "Error en la conexión serial."
+msgstr "Error en la conexión serial"
+
+#: core/config/configuration.cpp:1389
+msgid "FETs Towards Blade"
+msgstr ""
+
+#: core/config/configuration.cpp:1391
+msgid "USB Towards Blade"
+msgstr ""
+
+#: core/config/configuration.cpp:1393
+msgid "USB CCW From Blade"
+msgstr ""
+
+#: core/config/configuration.cpp:1395
+msgid "USB CW From Blade"
+msgstr ""
+
+#: core/config/configuration.cpp:1397
+msgid "Top Towards Blade"
+msgstr ""
+
+#: core/config/configuration.cpp:1399
+msgid "Bottom Towards Blade"
+msgstr ""
+
+#: core/config/propfile.cpp:455
+msgid "This prop file has no options"
+msgstr ""
+
+#: core/config/settings.h:167 core/config/settings.h:169
+msgid "Enabled"
+msgstr ""
+
+#: core/config/settings.h:167 core/config/settings.h:169
+msgid "Disabled"
+msgstr ""
+
+#: editor/dialogs/bladearraydlg.cpp:138
+msgid ""
+"The pin number or name of the pin which ID Pin is bridged to for pullup.\n"
+" This pin cannot be used for anything else."
+msgstr ""
+
+#: editor/editorwindow.cpp:39
+msgid "ProffieConfig Editor"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:229
+msgid "Prop Files..."
+msgstr "Archivos de Prop…"
+
+#: mainmenu/mainmenu.cpp:233
+msgid "Licensing Information"
+msgstr ""
+
+#: mainmenu/mainmenu.cpp:242
+msgid "&Help"
+msgstr ""

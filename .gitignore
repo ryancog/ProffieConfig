@@ -34,3 +34,5 @@ CMakeUserPresets.json
 *.log
 
 playground/
+
+*.mo
