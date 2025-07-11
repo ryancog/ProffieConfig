@@ -1,3 +1,4 @@
+resources/bin/* filter=lfs diff=lfs merge=lfs -text
 /resources/icons/icon.icns filter=lfs diff=lfs merge=lfs -text
 /resources/linux/arduino/arduino-cli filter=lfs diff=lfs merge=lfs -text
 /resources/macOS/arduino/arduino-cli filter=lfs diff=lfs merge=lfs -text
