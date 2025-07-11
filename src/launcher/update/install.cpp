@@ -30,7 +30,7 @@
 
 #include <app/app.h>
 #include <log/logger.h>
-#include <utils/paths.h>
+#include <paths/paths.h>
 #include <utils/defer.h>
 
 #include "update.h"

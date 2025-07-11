@@ -1,5 +1,4 @@
 #include "app.h"
-#include "wx/language.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -50,7 +49,7 @@
 
 #include "log/context.h"
 #include "log/logger.h"
-#include "utils/paths.h"
+#include "paths/paths.h"
 
 namespace App {
 

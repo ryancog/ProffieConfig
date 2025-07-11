@@ -7,6 +7,7 @@ set(SHARED_COMPONENTS
     log
     ui
     pconf
+    paths
 )
 
 set(STATIC_COMPONENTS

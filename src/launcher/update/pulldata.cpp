@@ -25,7 +25,7 @@
 
 #include <wx/webrequest.h>
 
-#include <utils/paths.h>
+#include <paths/paths.h>
 #include <pconf/pconf.h>
 #include <log/logger.h>
 
@@ -43,9 +43,9 @@ namespace Update {
 
 [[nodiscard]] optional<std::pair<string, Item>> parseItem(const std::shared_ptr<PConf::Entry>&, Log::Logger&);
 
-[[nodiscard]] std::map<Version, Bundle> resolveBundles(const PConf::HashedData&, Log::Branch&);
+[[nodiscard]] std::map<Utils::Version, Bundle> resolveBundles(const PConf::HashedData&, Log::Branch&);
 
-void verifyBundles(const std::map<ItemID, Item>& items, std::map<Version, Bundle>& bundles, Log::Branch&);
+void verifyBundles(const std::map<ItemID, Item>& items, std::map<Utils::Version, Bundle>& bundles, Log::Branch&);
 
 } // namespace Update
 
@@ -149,7 +149,7 @@ optional<Update::Data> Update::parseData(PCUI::ProgressDialog *prog, Log::Branch
 bool Update::checkMessages(const PConf::HashedData& hashedRawData, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Update::checkMessages()")};
 
-    Version launcherVersion{wxSTRINGIZE(EXEC_VERSION)};
+    Utils::Version launcherVersion{wxSTRINGIZE(BIN_VERSION)};
     if (not launcherVersion) {
         logger.error("This launcher's version is invalid (" + static_cast<string>(launcherVersion) + "), messages will not be available!!");
         return false;
@@ -193,7 +193,7 @@ bool Update::checkMessages(const PConf::HashedData& hashedRawData, Log::Branch& 
             }
         }
         if (not std::isdigit(label[0])) label = label.substr(1);
-        Version version{label};
+        Utils::Version version{label};
         if (not version) {
             logger.warn("Failed to parse message version: " + static_cast<string>(version));
             continue;
@@ -294,7 +294,7 @@ optional<std::pair<string, Update::Item>> Update::parseItem(const std::shared_pt
             continue;
         }
 
-        Version version{*versionIt->second->label};
+        Utils::Version version{*versionIt->second->label};
         if (not version) {
             string errMsg{"Item \""};
             errMsg += name;
@@ -388,10 +388,10 @@ optional<std::pair<string, Update::Item>> Update::parseItem(const std::shared_pt
     return std::pair{ name, item };
 }
 
-std::map<Update::Version, Update::Bundle> Update::resolveBundles(const PConf::HashedData& hashedRawData, Log::Branch& lBranch) {
+std::map<Utils::Version, Update::Bundle> Update::resolveBundles(const PConf::HashedData& hashedRawData, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Update::resolveBundles()")};
 
-    std::map<Version, Bundle> ret;
+    std::map<Utils::Version, Bundle> ret;
 
     auto bundleRange{hashedRawData.equal_range("BUNDLE")};
     for (auto bundleIt{bundleRange.first}; bundleIt != bundleRange.second; ++bundleIt) {
@@ -404,7 +404,7 @@ std::map<Update::Version, Update::Bundle> Update::resolveBundles(const PConf::Ha
             continue;
         }
 
-        Version version{*bundleIt->second->label};
+        Utils::Version version{*bundleIt->second->label};
         if (not version) {
             logger.warn("Bundle \"" + *bundleIt->second->label + "\" version invalid: " + static_cast<string>(version));
             continue;
@@ -419,7 +419,7 @@ std::map<Update::Version, Update::Bundle> Update::resolveBundles(const PConf::Ha
             else bundle.note = noteIt->second->value.value();
         }
 
-        auto parseReqItem{[&logger](const std::shared_ptr<PConf::Entry>& item) -> optional<std::pair<string, Version>> {
+        auto parseReqItem{[&logger](const std::shared_ptr<PConf::Entry>& item) -> optional<std::pair<string, Utils::Version>> {
             if (not item->label) {
                 logger.warn("Item is unlabeled");
                 return nullopt;
@@ -428,7 +428,7 @@ std::map<Update::Version, Update::Bundle> Update::resolveBundles(const PConf::Ha
                 logger.warn("Item \"" + item->label.value() + "\" is unversioned.");
                 return nullopt;
             }
-            Version version{*item->value};
+            Utils::Version version{*item->value};
             if (not version) {
                 logger.warn("Item \"" + item->label.value() + "\" version \"" + item->value.value() + "\" is invalid: " + static_cast<string>(version));
                 return nullopt;
@@ -459,7 +459,7 @@ std::map<Update::Version, Update::Bundle> Update::resolveBundles(const PConf::Ha
     return ret;
 }
 
-void Update::verifyBundles(const std::map<ItemID, Item>& items, std::map<Version, Bundle>& bundles, Log::Branch& lBranch) {
+void Update::verifyBundles(const std::map<ItemID, Item>& items, std::map<Utils::Version, Bundle>& bundles, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Update::verifyBundles()")};
 
     for (auto bundleIt{bundles.begin()}; bundleIt != bundles.end();) {

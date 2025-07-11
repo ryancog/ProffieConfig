@@ -8,7 +8,7 @@
 
 #ifdef __WINDOWS__
 #include <windows.h>
-#include "utils/paths.h"
+#include "paths/paths.h"
 #else
 #include <chrono>
 #include <format>

@@ -23,7 +23,7 @@
 
 #include <app/app.h>
 #include <utils/types.h>
-#include <utils/paths.h>
+#include <paths/paths.h>
 #include <ui/message.h>
 #include <log/logger.h>
 
@@ -131,7 +131,7 @@ void Routine::platformInstall(Log::Branch& lBranch) {
 
     setValue("DisplayName", "ProffieConfig");
     setValue("Publisher", "Kafrene Trading");
-    setValue("DisplayVersion", wxSTRINGIZE(EXEC_VERSION));
+    setValue("DisplayVersion", wxSTRINGIZE(BIN_VERSION));
     setValue("DisplayIcon", installedExec.string());
     setValue("URLInfoAbout", Paths::website());
     setValue("UninstallString", '"' + installedExec.string() + "\" uninstall");

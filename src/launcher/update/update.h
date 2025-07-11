@@ -20,11 +20,11 @@
  */
 
 #include <map>
-#include <type_traits>
 
 #include <utils/types.h>
 #include <ui/message.h>
 #include <log/branch.h>
+#include <utils/version.h>
 
 namespace Update {
 
@@ -34,52 +34,6 @@ enum ItemType {
     COMP,
     RSRC,
     TYPE_MAX
-};
-
-struct Version {
-    Version() = default;
-
-    /**
-     * Construct a Version from a string.
-     *
-     * Uses the form: "[major](.[minor])(.[bugfix])(-[tag])".
-     * - "-[tag]", minor, and bugfix are optional
-     * - tag is a string unbroken by space
-     * - major, minor, and bugfix are positive ints [0-255]
-     */
-    Version(string_view str);
-
-    static Version invalidObject();
-
-    uint8 major{0};
-    uint8 minor{0};
-    uint8 bugfix{0};
-
-    // Version is valid if `err == NONE`
-    enum Err : uint8 {
-        NONE,
-        INVALID,
-        NUM_RANGE,
-        STR_INVALID,
-        STR_EMPTY,
-    } err{Err::NONE};
-
-    /**
-     * Used for (optional) tagging of specialized versions. e.g 1.0.0-dev.
-     * "dev" would be the tag.
-     */
-    string tag;
-
-    auto operator<=>(const Version&) const = default;
-
-    /**
-     * Convert a Version into string representation.
-     *
-     * If valid, it returns [major](.[minor])(.[bugfix])(-[tag]).
-     * If invalid, it returns a string form of the `Err`
-     */
-    operator string() const;
-    operator bool() const;
 };
 
 enum class Comparator {
@@ -107,7 +61,7 @@ struct ItemVersionData {
 struct Item {
     string path;
 
-    std::map<Version, ItemVersionData> versions;
+    std::map<Utils::Version, ItemVersionData> versions;
     bool hidden;
 };
 
@@ -115,17 +69,17 @@ struct Bundle {
     string note;
 
     struct RequiredItem {
-        RequiredItem(ItemID id, Version version, string hash = {}) : id{std::move(id)}, version{std::move(version)}, hash{std::move(hash)} {}
+        RequiredItem(ItemID id, Utils::Version version, string hash = {}) : id{std::move(id)}, version{std::move(version)}, hash{std::move(hash)} {}
 
         ItemID id;
-        Version version;
+        Utils::Version version;
         string hash;
     };
     vector<RequiredItem> reqs;
 };
 
 using Items = std::map<ItemID, Item>;
-using Bundles = std::map<Version, Bundle>;
+using Bundles = std::map<Utils::Version, Bundle>;
 
 struct Data {
     Items items;

@@ -12,13 +12,16 @@
 #include "log/logger.h"
 #include "pconf/pconf.h"
 #include "ui/message.h"
-#include "utils/paths.h"
+#include "paths/paths.h"
+#include "utils/version.h"
+
 #include "../onboard/onboard.h"
 
 namespace AppState {
 
 vector<string> propFileNames{};
 
+Utils::Version lastVersion{};
 bool doneWithFirstRun{false};
 bool saved{true};
 
@@ -27,10 +30,17 @@ inline filepath stateFile() { return Paths::data() / ".state.pconf"; }
 } // namespace AppState
 
 void AppState::init() {
-  loadState();
+    loadState();
 
-  if (not doneWithFirstRun) OnboardFrame::instance = new OnboardFrame();
-  else MainMenu::instance = new MainMenu();
+    // TODO: Migrate based on lastVersion
+    if (lastVersion < Utils::Version{"1.8.0"}) {
+        std::error_code err;
+        fs::remove_all(Paths::resources() / "props", err);
+        fs::remove_all(Paths::proffieos(), err);
+    }
+
+    if (not doneWithFirstRun) OnboardFrame::instance = new OnboardFrame();
+    else MainMenu::instance = new MainMenu();
 }
 
 void AppState::saveState() {
@@ -44,6 +54,8 @@ void AppState::saveState() {
     }
 
     PConf::Data data;
+    
+    data.push_back(std::make_shared<PConf::Entry>("LAST_VERSION", wxSTRINGIZE(BIN_VERSION)));
 
     if (doneWithFirstRun) data.push_back(std::make_shared<PConf::Entry>("FIRSTRUN_COMPLETE"));
 
@@ -86,6 +98,9 @@ void AppState::loadState() {
     auto hashedData{PConf::hash(data)};
     doneWithFirstRun = hashedData.find("FIRSTRUN_COMPLETE") != hashedData.end();
     logger.info(string{"Done with first run: "} + (doneWithFirstRun ? "true" : "false"));
+
+    auto lastVersionIter{hashedData.find("LAST_VERSION")};
+    if (lastVersionIter != hashedData.end() and lastVersionIter->second->value) lastVersion = Utils::Version{lastVersionIter->second->value.value()};
 
     auto props = hashedData.find("PROPS");
     if (props != hashedData.end() and props->second->getType() == PConf::Type::SECTION) {

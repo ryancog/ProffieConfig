@@ -23,7 +23,7 @@
 
 #include <wx/bitmap.h>
 
-#include <utils/paths.h>
+#include "paths/paths.h"
 
 namespace Image {
 

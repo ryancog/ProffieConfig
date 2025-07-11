@@ -25,9 +25,8 @@ add_executable(launcher WIN32 MACOSX_BUNDLE
 set_target_properties(launcher PROPERTIES
     OUTPUT_NAME "ProffieConfig"
     DESCRIPTION "ProffieConfig Launcher" # Windows is stupid so this isn't actually a description
-    EXEC_VERSION 1.0.5
+    BIN_VERSION 1.0.6
     TRANSLATIONS es
-    MACOSX_BUNDLE_COPYRIGHT "Copyright (C) 2025 Ryan Ogurek"
     MACOSX_BUNDLE_GUI_IDENTIFIER "com.kafrenetrading.proffieconfiglauncher"
     MACOSX_BUNDLE_ICON_FILE "icon.icns"
 )
@@ -40,6 +39,7 @@ target_link_libraries(launcher
     utils-static
     ui-static
     pconf-static
+    paths-static
 )
 
 include(../Common.cmake)

@@ -66,7 +66,7 @@ do_with_log() {
     # 2: Command
     # 3: log
     echo "    ${1}..."
-    if ! ${2} &> ${3}.log; then
+    if ! eval ${2} &> ${3}.log; then
         echo "Error! Check ${3}.log."
         exit 1
     fi
@@ -123,48 +123,58 @@ else
 
     make clean &> /dev/null
 
-    # OLD_CFLAGS=$CFLAGS
-    # OLD_CXXFLAGS=$CXXFLAGS
-    # if [ "${TARGET_PLATFORM}" == "macOS" ]; then
-    #     export CFLAGS="${OLD_CFLAGS} -arch x86_64"
-    #     export CXXFLAGS="${OLD_CXXFLAGS} -arch x86_64"
-    # fi
-
     OLD_LDFLAGS=$LDFLAGS
     export LDFLAGS="${OLD_LDFLAGS} -s"
-    do_with_log \
-        "Building shared" \
-        "make -f makefile.shared -j`nproc --all`" \
-        build
+    if [ "$TARGET_PLATFORM" == "macOS" ]; then
+        do_with_log \
+            "Building shared (x86)" \
+            "make -f makefile.shared -j`nproc --all` CC=\"clang -arch x86_64\"" \
+            build_x86
+        make clean &> /dev/null
+        mv libtomcrypt.dylib libtomcrypt-x86_64.dylib
+        do_with_log \
+            "Building shared (arm64)" \
+            "make -f makefile.shared -j`nproc --all` CC=\"clang -arch arm64\"" \
+            build_arm64
+        make clean &> /dev/null
+        mv libtomcrypt.dylib libtomcrypt-arm64.dylib
+        do_with_log \
+            "Melding" \
+            "lipo -create -output libtomcrypt.dylib libtomcrypt-x86_64.dylib libtomcrypt-arm64.dylib" \
+            meld
+        rm -f libtomcrypt-x86_64.dylib libtomcrypt-arm64.dylib
+    else
+        do_with_log \
+            "Building shared" \
+            "make -f makefile.shared -j`nproc --all`" \
+            build
+    fi
     export LDFLAGS=$OLD_LDFLAGS
 
-    do_with_log \
-        "Building static" \
-        "make -j`nproc --all`" \
-        build
-
-    # if [ "${TARGET_PLATFORM}" == "macOS" ]; then
-    #     export CFLAGS="${OLD_CFLAGS} -arch arm64"
-    #     export CXXFLAGS="${OLD_CXXFLAGS} -arch arm64"
-
-    #     mv libtomcrypt.dylib libtomcrypt_x86_64.dylib
-    #     mv libtomcrypt.a libtomcrypt_x86_64.a
-
-    #     export LDFLAGS="-s"
-    #     do_with_log \
-    #         "Building shared for arm" \
-    #         "make -f makefile.shared -j`nproc --all`" \
-    #         build
-    #     unset LDFLAGS
-
-    #     do_with_log \
-    #         "Building static for arm" \
-    #         "make -j`nproc --all`" \
-    #         build
-
-    #     export CFLAGS=$OLD_CFLAGS
-    #     export CXXFLAGS=$OLD_CXXFLAGS
-    # fi
+    if [ "$TARGET_PLATFORM" == "macOS" ]; then
+        do_with_log \
+            "Building static (x86)" \
+            "make -j`nproc --all` CC=\"clang -maes -arch x86_64\"" \
+            build_x86
+        make clean &> /dev/null
+        mv libtomcrypt.a libtomcrypt-x86_64.a
+        do_with_log \
+            "Building static (arm64)" \
+            "make -j`nproc --all` CC=\"clang -arch arm64\"" \
+            build_arm64
+        make clean &> /dev/null
+        mv libtomcrypt.a libtomcrypt-arm64.a
+        do_with_log \
+            "Melding" \
+            "lipo -create -output libtomcrypt.a libtomcrypt-x86_64.a libtomcrypt-arm64.a" \
+            meld
+        rm -f libtomcrypt-x86_64.a libtomcrypt-arm64.a
+    else
+        do_with_log \
+            "Building static" \
+            "make -j`nproc --all`" \
+            build
+    fi
 
     mkdir -p $SWITCH_VAL
     if [ "$TARGET_PLATFORM" == "win32" ]; then
@@ -177,12 +187,9 @@ else
     elif [ "$TARGET_PLATFORM" == "macOS" ]; then
         mv libtomcrypt.dylib build-macOS/libtomcrypt.dylib
         mv libtomcrypt.a build-macOS/libtomcrypt.a
-        # lipo -create -output build-macOS/libtomcrypt.dylib libtomcrypt.dylib libtomcrypt_x86_64.dylib
-        # lipo -create -output build-macOS/libtomcrypt.a libtomcrypt.a libtomcrypt_x86_64.a
         echo "    Patching tomcrypt lib with @rpath..."
         install_name_tool -id "@rpath/libtomcrypt.dylib" build-macOS/libtomcrypt.dylib
     fi
-
 fi
 cd $ROOT_DIR
 
@@ -230,7 +237,7 @@ if [ "$TARGET_PLATFORM" == "linux" ]; then
     WX_HOST='x86_64-linux'
     WX_PLATFORM_FLAGS='--with-gtk=3'
 elif [ "$TARGET_PLATFORM" == "macOS" ]; then
-    WX_HOST='x86_64-apple-darwin'
+    WX_HOST='x86_64-apple-darwin --enable-universal_binary=x86_64,arm64'
     WX_PLATFORM_FLAGS='--with-osx'
 elif [ "$TARGET_PLATFORM" == "win32" ]; then
     WX_HOST='x86_64-w64-mingw32.static'
