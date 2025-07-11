@@ -3,7 +3,7 @@
 // Copyright (C) 2025 Ryan Ogurek
 
 #include "ui/message.h"
-#include "utils/paths.h"
+#include "paths/paths.h"
 #include "../../core/defines.h"
 #include "../../core/utilities/misc.h"
 #include "../editorwindow.h"

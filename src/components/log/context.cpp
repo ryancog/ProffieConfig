@@ -19,12 +19,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <app/app.h>
 #include <ctime>
 #include <memory>
 #include <utility>
-#include <utils/paths.h>
-#include <utils/types.h>
+
+#include "app/app.h"
+#include "paths/paths.h"
+#include "utils/types.h"
 
 #include "logger.h"
 
@@ -54,7 +55,7 @@ Log::Context::Context(string name, vector<std::ostream *> outStreams,
     auto now{std::chrono::system_clock::now()};
     auto timeNow{std::chrono::system_clock::to_time_t(now)};
 
-    mRESOutFile << App::getAppName().c_str() << " Log (" << wxSTRINGIZE(EXEC_VERSION)
+    mRESOutFile << App::getAppName().c_str() << " Log (" << wxSTRINGIZE(BIN_VERSION)
                 << ") [Context: " << pName << "]\n";
     mRESOutFile << "Started at " << std::ctime(&timeNow) << "\n\n"
                 << std::flush;

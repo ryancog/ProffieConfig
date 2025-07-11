@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024 Ryan Ogurek
  *
- * components/utils/paths.h
+ * components/paths/paths.h
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ enum class Executable {
  *
  * @return The full executable path (including file)
  */
-[[nodiscard]] UTILS_EXPORT filepath executable(Executable exec = Executable::CURRENT);
+[[nodiscard]] PATHS_EXPORT filepath executable(Executable exec = Executable::CURRENT);
 
 /**
  * Retrieve the app root path
@@ -48,24 +48,24 @@ enum class Executable {
  *
  * @return root path
  */
-[[nodiscard]] UTILS_EXPORT filepath approot();
+[[nodiscard]] PATHS_EXPORT filepath approot();
 
-[[nodiscard]] UTILS_EXPORT filepath binaries();
-[[nodiscard]] UTILS_EXPORT filepath libraries();
-[[nodiscard]] UTILS_EXPORT filepath components();
-[[nodiscard]] UTILS_EXPORT filepath resources();
+[[nodiscard]] PATHS_EXPORT filepath binaries();
+[[nodiscard]] PATHS_EXPORT filepath libraries();
+[[nodiscard]] PATHS_EXPORT filepath components();
+[[nodiscard]] PATHS_EXPORT filepath resources();
 
-[[nodiscard]] UTILS_EXPORT filepath data();
-[[nodiscard]] UTILS_EXPORT filepath configs();
-[[nodiscard]] UTILS_EXPORT filepath injections();
-[[nodiscard]] UTILS_EXPORT filepath props();
-[[nodiscard]] UTILS_EXPORT filepath proffieos();
+[[nodiscard]] PATHS_EXPORT filepath data();
+[[nodiscard]] PATHS_EXPORT filepath configs();
+[[nodiscard]] PATHS_EXPORT filepath injections();
+[[nodiscard]] PATHS_EXPORT filepath props();
+[[nodiscard]] PATHS_EXPORT filepath proffieos();
 
-[[nodiscard]] UTILS_EXPORT filepath logs();
+[[nodiscard]] PATHS_EXPORT filepath logs();
 
-[[nodiscard]] UTILS_EXPORT string website();
-[[nodiscard]] UTILS_EXPORT string remoteAssets();
-[[nodiscard]] UTILS_EXPORT string remoteUpdateAssets();
+[[nodiscard]] PATHS_EXPORT string website();
+[[nodiscard]] PATHS_EXPORT string remoteAssets();
+[[nodiscard]] PATHS_EXPORT string remoteUpdateAssets();
 
 } // namespace Paths
 

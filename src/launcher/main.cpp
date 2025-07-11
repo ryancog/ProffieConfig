@@ -24,13 +24,13 @@
 #include <wx/snglinst.h>
 #include <wx/msgdlg.h>
 
-#include <app/app.h>
-#include <log/context.h>
-#include <log/logger.h>
-#include <pconf/pconf.h>
-#include <utils/paths.h>
-#include <utils/defer.h>
-#include <ui/message.h>
+#include "app/app.h"
+#include "log/context.h"
+#include "log/logger.h"
+#include "pconf/pconf.h"
+#include "paths/paths.h"
+#include "utils/defer.h"
+#include "ui/message.h"
 
 #include "routines.h"
 #include "update/update.h"
@@ -132,7 +132,7 @@ public:
                 return false;
             }
 
-            Update::Version currentVersion;
+            Utils::Version currentVersion;
             currentVersion = Update::determineCurrentVersion(data.value(), &prog, *logger.binfo("Determining current version."));
             auto changelog{Update::generateChangelog(data.value(), currentVersion, *logger.binfo("Generating changelog..."))};
             prog.Hide();

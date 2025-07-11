@@ -17,7 +17,7 @@
 #include "ui/plaque.h"
 #include "ui/frame.h"
 #include "utils/defer.h"
-#include "utils/paths.h"
+#include "paths/paths.h"
 #include "utils/image.h"
 #include "dialogs/addconfig.h"
 
@@ -90,7 +90,7 @@ void MainMenu::bindEvents() {
                 "\n\n"
                 "ProffieOS v" wxSTRINGIZE(PROFFIEOS_VERSION) " | Arduino CLI v" wxSTRINGIZE(ARDUINO_CLI_VERSION)
                 );
-        aboutInfo.SetVersion(wxSTRINGIZE(EXEC_VERSION));
+        aboutInfo.SetVersion(wxSTRINGIZE(BIN_VERSION));
         aboutInfo.SetWebSite("https://proffieconfig.kafrenetrading.com");
         aboutInfo.SetCopyright("Copyright (C) 2023-2025 Ryan Ogurek");
         aboutInfo.SetName("ProffieConfig");

@@ -3,6 +3,11 @@
 # src/Common.cmake
 
 function(setup_target TARGET)
+    get_target_property(BIN_VERSION ${TARGET} BIN_VERSION)
+    if (BIN_VERSION STREQUAL "BIN_VERSION-NOTFOUND")
+        set(BIN_VERSION ${PROJECT_VERSION})
+    endif()
+
     if (CMAKE_SYSTEM_NAME STREQUAL Linux)
         set(RPATH "$ORIGIN/../lib:$ORIGIN/../components")
     elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
@@ -12,10 +17,14 @@ function(setup_target TARGET)
             set(RPATH "@executable_path/../../../../lib\;@executable_path/../../../../components")
         endif()
 
-        get_target_property(EXEC_VERSION ${TARGET} VERSION)
-        set_target_properties(${TARGET} PROPERTIES 
-            MACOSX_BUNDLE_SHORT_VERSION_STRING "${VERSION}"
-        )
+        get_target_property(IS_BUNDLE ${TARGET} MACOSX_BUNDLE)
+        if (IS_BUNDLE)
+            string(TIMESTAMP CURRENT_YEAR "%Y")
+            get_target_property(EXECUTABLE_NAME ${TARGET} OUTPUT_NAME)
+            get_target_property(BUNDLE_IDENTIFIER ${TARGET} MACOSX_BUNDLE_GUI_IDENTIFIER)
+            configure_file(${CMAKE_SOURCE_DIR}/resources/templates/Info.plist.in ${CMAKE_CURRENT_BINARY_DIR}/Info.plist)
+            set_target_properties(${TARGET} PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_BINARY_DIR}/Info.plist)
+        endif()
     elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
         set(RPATH "ThisMeansNothing")
         get_target_property(DESCRIPTION ${TARGET} DESCRIPTION)
@@ -39,6 +48,5 @@ function(setup_target TARGET)
         BUILD_WITH_INSTALL_RPATH true
     )
 
-    get_target_property(VERSION ${TARGET} EXEC_VERSION)
-    target_compile_definitions(${TARGET} PRIVATE EXEC_VERSION=${VERSION})
+    target_compile_definitions(${TARGET} PRIVATE BIN_VERSION=${BIN_VERSION})
 endfunction()

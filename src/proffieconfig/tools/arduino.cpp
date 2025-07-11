@@ -24,7 +24,7 @@
 
 #include "log/context.h"
 #include "log/logger.h"
-#include "utils/paths.h"
+#include "paths/paths.h"
 #include "utils/types.h"
 #include "utils/defer.h"
 

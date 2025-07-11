@@ -2,27 +2,22 @@
 # 
 # components/utils/CMakeLists.txt
 
-set(files
+add_library(utils SHARED 
     trace.cpp
-    paths.cpp
     image.cpp
     undo.cpp
     theme.cpp
     crypto.cpp
+    version.cpp
 )
-
-add_library(utils SHARED ${files})
-add_library(utils-static STATIC ${files})
 
 target_link_libraries(utils
     wxWidgets
     tomcrypt-static
-)
-target_link_libraries(utils-static
-    wxWidgets-static
-    tomcrypt-static
+
+    paths
 )
 
 include(../Component.cmake)
-setup_component_and_static(utils)
+setup_component_and_static(utils 1.0.7)
 

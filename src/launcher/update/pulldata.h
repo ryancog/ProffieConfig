@@ -22,7 +22,7 @@
 #include <ui/message.h>
 
 #include "update.h"
-#include "utils/paths.h"
+#include "paths/paths.h"
 
 namespace Update {
 

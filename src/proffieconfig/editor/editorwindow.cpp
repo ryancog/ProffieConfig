@@ -25,7 +25,7 @@
 #include "pages/presetspage.h"
 #include "pages/propspage.h"
 
-#include "utils/paths.h"
+#include "paths/paths.h"
 #include "ui/message.h"
 #include "utils/defer.h"
 #include "../core/config/settings.h"
@@ -214,14 +214,17 @@ bool EditorWindow::isSaved() {
     auto res{Configuration::outputConfig(validatePath, this)};
     wxYield();
     Unbind(Misc::EVT_MSGBOX, dummyMessageHandler);
+
     if (not res) {
         logger.warn("Config output failed");
         return false;
     }
 
     std::error_code err;
-    if (fs::file_size(currentPath, err) != fs::file_size(validatePath, err)) {
-        logger.warn("File sizes do not match");
+    const auto currentSize{fs::file_size(currentPath, err)};
+    const auto validateSize{fs::file_size(validatePath, err)};
+    if (currentSize != validateSize) {
+        logger.warn("File sizes do not match (" + std::to_string(currentSize) + '/' + std::to_string(validateSize) + ')');
         return false;
     }
 

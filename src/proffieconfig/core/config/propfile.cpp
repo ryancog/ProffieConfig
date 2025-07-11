@@ -11,7 +11,7 @@
 #include "log/context.h"
 #include "log/logger.h"
 #include "pconf/pconf.h"
-#include "utils/paths.h"
+#include "paths/paths.h"
 #include "ui/controls.h"
 
 #include "../../core/utilities/misc.h"

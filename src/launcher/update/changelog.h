@@ -26,25 +26,25 @@
 namespace Update {
 
 struct Changelog {
-    Version currentBundleVersion;
-    Version latestBundleVersion;
+    Utils::Version currentBundleVersion;
+    Utils::Version latestBundleVersion;
 
     struct ChangedFile {
         ItemID id;
         string hash;
-        Version currentVersion;
-        Version latestVersion;
+        Utils::Version currentVersion;
+        Utils::Version latestVersion;
     };
 
     vector<ChangedFile> changedFiles;
     vector<ItemID> removedFiles;
 };
 
-[[nodiscard]] Changelog generateChangelog(const Data&, const Version& currentVersion, Log::Branch&);
+[[nodiscard]] Changelog generateChangelog(const Data&, const Utils::Version& currentVersion, Log::Branch&);
 
 [[nodiscard]] bool promptWithChangelog(const Data&, const Changelog&, Log::Branch&);
 
-[[nodiscard]] Version determineCurrentVersion(const Data&, PCUI::ProgressDialog *, Log::Branch&);
+[[nodiscard]] Utils::Version determineCurrentVersion(const Data&, PCUI::ProgressDialog *, Log::Branch&);
 
 } // namespace Update
 

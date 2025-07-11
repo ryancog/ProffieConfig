@@ -28,25 +28,25 @@
 #include <wx/scrolwin.h>
 
 #include <log/logger.h>
-#include <utils/paths.h>
+#include <paths/paths.h>
 #include <utils/crypto.h>
 
 namespace Update {
 
 } // namespace Update
 
-[[nodiscard]] Update::Changelog Update::generateChangelog(const Data& data, const Version& currentVersion, Log::Branch& lBranch) {
+[[nodiscard]] Update::Changelog Update::generateChangelog(const Data& data, const Utils::Version& currentVersion, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Update::generateChangelog()")};
 
-    auto getVersionInCurrent{[&data, currentVersion](const ItemID& file) -> Version {
+    auto getVersionInCurrent{[&data, currentVersion](const ItemID& file) -> Utils::Version {
         auto bundleIt{data.bundles.find(currentVersion)};
-        if (bundleIt == data.bundles.end()) return Version::invalidObject();
+        if (bundleIt == data.bundles.end()) return Utils::Version::invalidObject();
 
         for (const auto& [ id, fileVer, hash] : bundleIt->second.reqs) {
             if (id == file) return fileVer;
         }
 
-        return Version::invalidObject();
+        return Utils::Version::invalidObject();
     }};
 
     auto latestBundleIt{data.bundles.rbegin()};
@@ -271,11 +271,11 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
     return dlg.ShowModal();
 }
 
-Update::Version Update::determineCurrentVersion(const Data& data, PCUI::ProgressDialog *prog, Log::Branch& lBranch) {
+Utils::Version Update::determineCurrentVersion(const Data& data, PCUI::ProgressDialog *prog, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Update::determineCurrentVersion()")};
 
     // Ensure invalid
-    Update::Version ret{Version::invalidObject()};
+    auto ret{Utils::Version::invalidObject()};
     std::map<filepath, string> hashCache;
 
     prog->Pulse("Determining current version...");
