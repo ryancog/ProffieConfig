@@ -22,9 +22,11 @@
 #include <cstdlib>
 #include <thread>
 #include <fstream>
+#include <unordered_set>
 
 #include <wx/webrequest.h>
 #include <wx/utils.h>
+#include <wx/richmsgdlg.h>
 
 #include "log/logger.h"
 #include "paths/paths.h"
@@ -32,6 +34,7 @@
 #include "pconf/read.h"
 #include "pconf/utils.h"
 
+#include "pconf/write.h"
 #include "update.h"
 
 namespace Update {
@@ -174,6 +177,24 @@ bool Update::checkMessages(const PConf::HashedData& hashedRawData, Log::Branch& 
         return false;
     }
 
+    constexpr cstring IGNORED_MESSAGES_STR{"IGNORED_MESSAGES"};
+    PConf::Data stateData;
+    std::shared_ptr<PConf::Entry> ignoreMessageEntry;
+    vector<string> ignoreMessageList;
+    std::unordered_set<string> ignoredMessages;
+
+    std::ifstream stateFile{Paths::stateFile()};
+    PConf::read(stateFile, stateData, logger.bdebug("Parsing state file..."));
+    stateFile.close();
+    for (const auto& entry : stateData) {
+        if (entry->name != IGNORED_MESSAGES_STR or not entry->value) continue;
+
+        ignoreMessageList = PConf::valueAsList(*entry->value);
+        ignoredMessages = {ignoreMessageList.begin(), ignoreMessageList.end()};
+        ignoreMessageEntry = entry;
+        break;
+    }
+
     bool hadFatal{false};
     auto messageRange{hashedRawData.equal_range("MESSAGE")};
     for (auto messageIt{messageRange.first}; messageIt != messageRange.second; ++messageIt) {
@@ -230,16 +251,46 @@ bool Update::checkMessages(const PConf::HashedData& hashedRawData, Log::Branch& 
                 messageApplicable = launcherVersion > version;
                 break;
         }
-        if (messageApplicable) {
-            PCUI::showMessage(content->second->value.value(), isFatal ? _("ProffieConfig Launcher Critical Notice") : _("ProffieConfig Launcher Alert"));
-            if (isFatal) hadFatal = true;
+        if (not messageApplicable) continue;
+
+        const auto id{hashedEntries.find("ID")};
+        if (id != hashedEntries.end() and id->second->value) {
+            if (ignoredMessages.find(*id->second->value) != ignoredMessages.end()) {
+                logger.verbose("User ignored message " + *id->second->value + "...");
+                continue;
+            }
         }
+
+        wxRichMessageDialog dialog{
+            nullptr,
+            *content->second->value,
+            isFatal ? _("ProffieConfig Launcher Critical Notice") : _("ProffieConfig Launcher Alert")
+        };
+
+        dialog.ShowCheckBox("Do Not Show Again");
+        if (dialog.IsCheckBoxChecked()) {
+            ignoreMessageList.push_back(*content->second->value);
+        }
+
+        if (isFatal) hadFatal = true;
     }
+
+    if (not ignoreMessageEntry) ignoreMessageEntry = std::make_shared<PConf::Section>(IGNORED_MESSAGES_STR);
+    ignoreMessageEntry->value = PConf::listAsValue(ignoreMessageList);
+    const auto tmpPath{Paths::stateFile().append(".tmp")};
+    std::ofstream tmpFile{tmpPath};
+    PConf::write(tmpFile, stateData, logger.bdebug("Writing statefile..."));
+    tmpFile.close();
+    std::error_code err;
+    fs::rename(tmpPath, Paths::stateFile(), err);
 
     return hadFatal;
 }
 
-std::map<Update::ItemID, Update::Item> Update::findItems(const PConf::HashedData& rawHashedData, Log::Branch& lBranch) {
+std::map<Update::ItemID, Update::Item> Update::findItems(
+    const PConf::HashedData& rawHashedData,
+    Log::Branch& lBranch
+) {
     auto& logger{lBranch.createLogger("Update::enumerateItems()")};
 
     std::map<ItemID, Item> ret;
@@ -262,7 +313,10 @@ std::map<Update::ItemID, Update::Item> Update::findItems(const PConf::HashedData
     return ret;
 }
 
-optional<std::pair<string, Update::Item>> Update::parseItem(const std::shared_ptr<PConf::Entry>& entry, Log::Logger& logger) {
+optional<std::pair<string, Update::Item>> Update::parseItem(
+    const std::shared_ptr<PConf::Entry>& entry,
+    Log::Logger& logger
+) {
     if (not entry->label) {
         logger.warn("Item missing name!");
         return nullopt; 
