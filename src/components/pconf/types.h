@@ -1,9 +1,9 @@
-#include "pconf.h"
+#pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
  *
- * components/pconf/private/pconf.cpp
+ * components/pconf/types.h
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,28 +19,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
-#include <iostream>
-#include <memory>
-#include <optional>
-
-#include <log/branch.h>
-#include <log/logger.h>
+#include "utils/types.h"
 
 namespace PConf {
 
+struct Entry;
+struct Section;
+
+using Data = vector<std::shared_ptr<Entry>>;
+using HashedData = std::unordered_multimap<string, std::shared_ptr<Entry>>;
+
+enum class Type {
+    ENTRY,
+    SECTION
+};
+
 } // namespace PConf
-
-PConf::Entry::Entry(
-        string name, 
-        std::optional<string> value,
-        std::optional<string> label,
-        std::optional<int32_t> labelNum
-        ) : name(std::move(name)), value(std::move(value)), label(std::move(label)), labelNum(labelNum) {}
-
-PConf::Section::Section(
-        string name, 
-        std::optional<string> label, 
-        std::optional<int32_t> labelNum,
-        Data entries
-        ) : Entry(std::move(name), std::nullopt, std::move(label), labelNum), entries(std::move(entries)) {}

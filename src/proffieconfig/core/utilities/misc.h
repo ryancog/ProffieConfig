@@ -14,16 +14,6 @@
 
 #include "../../core/config/configuration.h"
 
-template <typename STRING>
-constexpr void trimWhiteSpace(STRING& str) {
-    str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](char chr) {
-        return not std::isspace(chr);
-    }));
-    str.erase(std::find_if(str.rbegin(), str.rend(), [](char chr) {
-        return not std::isspace(chr);
-    }).base(), str.end());
-};
-
 class Misc {
 public:
     class MessageBoxEvent;

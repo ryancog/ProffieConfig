@@ -49,6 +49,8 @@ public:
         ID_Issue,
         ID_Logs,
 
+        ID_UpdateManifest,
+
         ID_OpenSerial,
 
         ID_ConfigSelect,

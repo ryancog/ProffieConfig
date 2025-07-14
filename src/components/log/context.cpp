@@ -36,8 +36,7 @@ std::unique_ptr<Log::Context> globalContext;
 
 } // namespace Log
 
-Log::Context::Context(string name, vector<std::ostream *> outStreams,
-                      bool outputToFile)
+Log::Context::Context(string name, vector<std::ostream *> outStreams, bool outputToFile)
     : pName(std::move(name)), mOutputs(std::move(outStreams)) {
 
   if (outputToFile) {

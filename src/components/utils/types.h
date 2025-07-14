@@ -27,6 +27,7 @@
 #include <functional>
 #include <list>
 #include <optional>
+#include <span>
 #include <vector>
 
 // "Standard" types for ProffieConfig
@@ -61,5 +62,6 @@ using std::string;
 using std::wstring;
 using std::string_view;
 using std::vector;
+using std::span;
 namespace fs = std::filesystem;
 using filepath = fs::path;

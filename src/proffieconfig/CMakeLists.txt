@@ -20,6 +20,7 @@ add_executable(proffieconfig WIN32
     editor/pages/bladespage.cpp
     mainmenu/dialogs/addconfig.cpp
     mainmenu/dialogs/props.cpp
+    mainmenu/dialogs/manifest.cpp
     mainmenu/mainmenu.cpp
     onboard/onboard.cpp
     onboard/pages/dependencypage.cpp

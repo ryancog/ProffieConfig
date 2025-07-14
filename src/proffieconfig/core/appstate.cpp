@@ -11,6 +11,9 @@
 #include "log/context.h"
 #include "log/logger.h"
 #include "pconf/pconf.h"
+#include "pconf/read.h"
+#include "pconf/utils.h"
+#include "pconf/write.h"
 #include "ui/message.h"
 #include "paths/paths.h"
 #include "utils/version.h"
@@ -22,22 +25,24 @@ namespace AppState {
 vector<string> propFileNames{};
 
 Utils::Version lastVersion{};
-bool doneWithFirstRun{false};
-bool saved{true};
-
-inline filepath stateFile() { return Paths::data() / ".state.pconf"; }
 
 } // namespace AppState
+
+bool AppState::doneWithFirstRun{false};
+string AppState::manifestChannel;
 
 void AppState::init() {
     loadState();
 
-    // TODO: Migrate based on lastVersion
     if (lastVersion < Utils::Version{"1.8.0"}) {
         std::error_code err;
         fs::remove_all(Paths::resources() / "props", err);
         fs::remove_all(Paths::proffieos(), err);
+
+        // TODO: Try to download new stuffage
     }
+
+    saveState();
 
     if (not doneWithFirstRun) OnboardFrame::instance = new OnboardFrame();
     else MainMenu::instance = new MainMenu();
@@ -46,7 +51,7 @@ void AppState::init() {
 void AppState::saveState() {
     auto& logger{Log::Context::getGlobal().createLogger("AppState::saveState()")};
 
-    std::ofstream stateStream(stateFile() += ".tmp");
+    std::ofstream stateStream(Paths::stateFile() += ".tmp");
     if (!stateStream.is_open()) {
         logger.error("Failed creating temporary save file.");
         stateStream.close();
@@ -56,7 +61,7 @@ void AppState::saveState() {
     PConf::Data data;
     
     data.push_back(std::make_shared<PConf::Entry>("LAST_VERSION", wxSTRINGIZE(BIN_VERSION)));
-
+    if (not manifestChannel.empty()) data.push_back(std::make_shared<PConf::Entry>("UPDATE_MANIFEST", manifestChannel));
     if (doneWithFirstRun) data.push_back(std::make_shared<PConf::Entry>("FIRSTRUN_COMPLETE"));
 
     auto propSection{std::make_shared<PConf::Section>("PROPS")};
@@ -69,9 +74,9 @@ void AppState::saveState() {
     stateStream.close();
 
     std::error_code err;
-    fs::remove(stateFile(), err); // we don't care if it fails bc there's nothing there
+    fs::remove(Paths::stateFile(), err); // we don't care if it fails bc there's nothing there
     err.clear();
-    fs::rename(stateFile() += ".tmp", stateFile(), err);
+    fs::rename(Paths::stateFile() += ".tmp", Paths::stateFile(), err);
     if (err.value() != 0) {
         logger.error("Failed saving state file.");
         return;
@@ -80,10 +85,10 @@ void AppState::saveState() {
 
 void AppState::loadState() {
     auto& logger{Log::Context::getGlobal().createLogger("AppState::loadState()")};
-    std::ifstream stateStream(stateFile());
+    std::ifstream stateStream(Paths::stateFile());
     if (!stateStream.is_open()) {
         logger.warn("Could not open state file, attempting recovery from tmp...");
-        stateStream.open(stateFile() += ".tmp");
+        stateStream.open(Paths::stateFile() += ".tmp");
         if (!stateStream.is_open()) {
             logger.warn("Could not open temp state file, continuing without...");
             return;
@@ -113,12 +118,6 @@ void AppState::loadState() {
         }
     }
     logger.info("Done");
-}
-
-bool AppState::isSaved() { return saved; }
-
-void AppState::setSaved(bool state) {
-  saved = state;
 }
 
 void AppState::addProp(const string& propName, const string& propPath, const string& propConfigPath) {

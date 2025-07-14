@@ -2,18 +2,17 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include "utils/types.h"
-
 #include <wx/window.h>
+
+#include "utils/types.h"
 
 namespace AppState {
 
 void init();
 
-[[nodiscard]] bool isSaved();
 extern bool doneWithFirstRun;
+extern string manifestChannel;
 
-void setSaved(bool = true);
 void loadState();
 void saveState();
 

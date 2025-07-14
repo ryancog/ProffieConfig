@@ -1,9 +1,9 @@
-#include "pconf.h"
+#pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
  *
- * components/pconf/private/pconf.cpp
+ * components/pconf/read.h
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,28 +19,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
-#include <iostream>
-#include <memory>
-#include <optional>
+#include "log/branch.h"
 
-#include <log/branch.h>
-#include <log/logger.h>
+#include "private/export.h"
+#include "types.h"
 
 namespace PConf {
 
+PCONF_EXPORT bool read(std::istream&, Data& out, Log::Branch *);
+
 } // namespace PConf
-
-PConf::Entry::Entry(
-        string name, 
-        std::optional<string> value,
-        std::optional<string> label,
-        std::optional<int32_t> labelNum
-        ) : name(std::move(name)), value(std::move(value)), label(std::move(label)), labelNum(labelNum) {}
-
-PConf::Section::Section(
-        string name, 
-        std::optional<string> label, 
-        std::optional<int32_t> labelNum,
-        Data entries
-        ) : Entry(std::move(name), std::nullopt, std::move(label), labelNum), entries(std::move(entries)) {}

@@ -143,6 +143,9 @@ filepath Paths::injections() { return Paths::data() / "injections"; }
 filepath Paths::props() { return Paths::data() / "props"; }
 filepath Paths::proffieos() { return Paths::data() / "ProffieOS"; }
 
+filepath Paths::stateFile() { return Paths::data() / ".state.pconf"; }
+
+
 string Paths::website() { return "https://proffieconfig.kafrenetrading.com"; }
 
 string Paths::remoteAssets() {

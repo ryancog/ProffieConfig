@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2025 Ryan Ogurek
  *
  * components/pconf/pconf.h
  *
@@ -19,49 +19,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// TODO: Break this up into separate files
-
-#include <memory>
-#include <optional>
-#include <unordered_map>
-
-#include <log/branch.h>
-#include <utils/types.h>
+#include "utils/types.h"
 
 #include "private/export.h"
+#include "types.h"
 
 namespace PConf {
-
-struct Entry;
-struct Section;
-
-using Data = vector<std::shared_ptr<Entry>>;
-using HashedData = std::unordered_multimap<string, std::shared_ptr<Entry>>;
-
-PCONF_EXPORT bool read(std::istream&, Data& out, Log::Branch *);
-PCONF_EXPORT void write(std::ostream&, const Data&, Log::Branch *); 
-
-[[nodiscard]] PCONF_EXPORT HashedData hash(const Data&);
-
-enum class Type {
-    ENTRY,
-    SECTION
-};
 
 struct PCONF_EXPORT Entry {
     Entry() = default;
     Entry(
             string name, 
-            std::optional<string> value = std::nullopt, 
-            std::optional<string> label = std::nullopt, 
-            std::optional<int32> labelNum = std::nullopt
+            optional<string> value = nullopt, 
+            optional<string> label = nullopt, 
+            optional<int32> labelNum = nullopt
          );
     virtual ~Entry() = default;
 
     string name;
-    std::optional<string> value{std::nullopt};
-    std::optional<string> label{std::nullopt};
-    std::optional<int32> labelNum{std::nullopt};
+    optional<string> value{nullopt};
+    optional<string> label{nullopt};
+    optional<int32> labelNum{nullopt};
 
     [[nodiscard]] virtual Type getType() const { return Type::ENTRY; }
 };
@@ -70,8 +48,8 @@ struct PCONF_EXPORT Section : public Entry {
     Section() = default;
     Section(
             string name, 
-            std::optional<string> label = std::nullopt, 
-            std::optional<int32> labelNum = std::nullopt,
+            optional<string> label = nullopt, 
+            optional<int32> labelNum = nullopt,
             Data entries = {}
            );
     Data entries;

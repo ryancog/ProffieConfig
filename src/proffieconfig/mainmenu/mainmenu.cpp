@@ -20,6 +20,7 @@
 #include "paths/paths.h"
 #include "utils/image.h"
 #include "dialogs/addconfig.h"
+#include "dialogs/manifest.h"
 
 #include "../core/defines.h"
 #include "../core/appstate.h"
@@ -113,6 +114,10 @@ void MainMenu::bindEvents() {
 
         Props(this).ShowModal();
     }, ID_AddProp);
+
+    Bind(wxEVT_MENU, [&](wxCommandEvent &) {
+        ManifestDialog(this).ShowModal();
+    }, ID_UpdateManifest);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/ryancog/ProffieConfig/blob/master/docs"); }, ID_Docs);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/ryancog/ProffieConfig/issues/new"); }, ID_Issue);
@@ -227,6 +232,7 @@ void MainMenu::createMenuBar() {
   auto *file{new wxMenu};
   file->Append(ID_ReRunSetup, _("Re-Run First-Time Setup..."), _("Install Proffieboard Dependencies and View Tutorial"));
   file->Append(ID_AddProp, _("Prop Files..."));
+  file->Append(ID_UpdateManifest, _("Update Channel..."));
   file->AppendSeparator();
   file->Append(ID_Logs, _("Show Logs..."));
   file->Append(wxID_ABOUT);

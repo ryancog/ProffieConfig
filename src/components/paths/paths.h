@@ -63,6 +63,8 @@ enum class Executable {
 
 [[nodiscard]] PATHS_EXPORT filepath logs();
 
+[[nodiscard]] PATHS_EXPORT filepath stateFile();
+
 [[nodiscard]] PATHS_EXPORT string website();
 [[nodiscard]] PATHS_EXPORT string remoteAssets();
 [[nodiscard]] PATHS_EXPORT string remoteUpdateAssets();
