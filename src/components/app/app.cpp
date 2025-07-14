@@ -155,6 +155,9 @@ bool App::init(const string& appName, const string& lockName) {
     auto runDir{execStr.substr(0, execStr.find_last_of("/\\"))};
     chdir(runDir.c_str());
 
+    wxApp::GetInstance()->SetAppName(wxString{appName});
+    wxApp::GetInstance()->SetAppDisplayName(wxString{appName});
+
     fs::create_directories(Paths::approot());
     fs::create_directories(Paths::data());
     fs::create_directories(Paths::logs());
@@ -201,9 +204,6 @@ bool App::init(const string& appName, const string& lockName) {
         logger.warn("Translation catalog not loaded.");
     }
     logger.info("Translation loading complete.");
-
-    wxApp::GetInstance()->SetAppName(wxString{appName});
-    wxApp::GetInstance()->SetAppDisplayName(wxString{appName});
 
     singleInstance.Create(wxString{lockName.empty() ? appName : lockName} + '-' + wxGetUserId());
     if (singleInstance.IsAnotherRunning()) {

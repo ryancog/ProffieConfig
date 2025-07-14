@@ -24,13 +24,15 @@
 #include <fstream>
 
 #include <wx/webrequest.h>
+#include <wx/utils.h>
 
-#include <paths/paths.h>
-#include <pconf/pconf.h>
-#include <log/logger.h>
+#include "log/logger.h"
+#include "paths/paths.h"
+#include "pconf/pconf.h"
+#include "pconf/read.h"
+#include "pconf/utils.h"
 
 #include "update.h"
-#include "wx/utils.h"
 
 namespace Update {
 
@@ -68,7 +70,18 @@ bool Update::pullData(PCUI::ProgressDialog *prog, Log::Branch& lBranch) {
         }
     }};
 
-    const auto pullFrom{Paths::remoteUpdateAssets() + "/manifest.pconf"};
+    std::ifstream stateFile{Paths::stateFile()};
+    PConf::Data stateFileData;
+    PConf::read(stateFile, stateFileData, logger.binfo("Reading manifest to fetch..."));
+    const auto hashedStateFileData{PConf::hash(stateFileData)};
+    const auto updateManifestIter{hashedStateFileData.find("UPDATE_MANIFEST")};
+    auto pullFrom{Paths::remoteUpdateAssets()};
+    if (updateManifestIter != hashedStateFileData.end() and updateManifestIter->second->value) {
+        pullFrom += "/manifest-" + updateManifestIter->second->value.value() + ".pconf";
+    } else {
+        pullFrom += "/manifest.pconf";
+    }
+
     auto webSession{wxWebSession::New()};
     auto request{webSession.CreateRequest(getEventHandler(), pullFrom)};
     request.SetStorage(wxWebRequest::Storage_File);
@@ -92,8 +105,14 @@ bool Update::pullData(PCUI::ProgressDialog *prog, Log::Branch& lBranch) {
     getEventHandler()->Unbind(wxEVT_WEBREQUEST_STATE, handleRequestEvent);
 
     if (request.GetState() != wxWebRequestSync::State_Completed) {
-        logger.warn("Data pull failed.");
+        const auto statusCode{request.GetResponse().GetStatus()};
+        logger.warn("Data pull failed: " + std::to_string(statusCode));
+        if (statusCode == 404) {
+            PCUI::showMessage("Check if a custom update channel is being used.\n\nIf not, this is a bug, please contact me.", "Manifest File Invalid");
+        }
         return false;
+    } else {
+        logger.info("Data pull completed with status " + std::to_string(request.GetResponse().GetStatus()));
     }
 
     return true;

@@ -40,10 +40,6 @@ struct UTILS_EXPORT Version {
 
     static Version invalidObject();
 
-    uint8 major{0};
-    uint8 minor{0};
-    uint8 bugfix{0};
-
     // Version is valid if `err == NONE`
     enum Err : uint8 {
         NONE,
@@ -52,6 +48,19 @@ struct UTILS_EXPORT Version {
         STR_INVALID,
         STR_EMPTY,
     } err{Err::NONE};
+
+    uint8 major{0};
+    uint8 minor{0};
+    uint8 bugfix{0};
+
+    /**
+     * When comparing against another version,
+     * whether same version w/ tag is considered "before" (true) or "after" (false)
+     * this version.
+     *
+     * The tagged version must have this flag cleared.
+     */
+    // bool includeTags{false};
 
     /**
      * Used for (optional) tagging of specialized versions. e.g 1.0.0-dev.

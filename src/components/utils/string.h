@@ -1,9 +1,9 @@
-#include "pconf.h"
+#pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
  *
- * components/pconf/private/pconf.cpp
+ * components/utils/string.h
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,27 +20,18 @@
  */
 
 #include <algorithm>
-#include <iostream>
-#include <memory>
-#include <optional>
+#include <cctype>
 
-#include <log/branch.h>
-#include <log/logger.h>
+namespace Utils {
 
-namespace PConf {
+template<typename STRING>
+constexpr void trimWhiteSpace(STRING& str) {
+    str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](char chr) {
+        return not std::isspace(chr);
+    }));
+    str.erase(std::find_if(str.rbegin(), str.rend(), [](char chr) {
+        return not std::isspace(chr);
+    }).base(), str.end());
+};
 
-} // namespace PConf
-
-PConf::Entry::Entry(
-        string name, 
-        std::optional<string> value,
-        std::optional<string> label,
-        std::optional<int32_t> labelNum
-        ) : name(std::move(name)), value(std::move(value)), label(std::move(label)), labelNum(labelNum) {}
-
-PConf::Section::Section(
-        string name, 
-        std::optional<string> label, 
-        std::optional<int32_t> labelNum,
-        Data entries
-        ) : Entry(std::move(name), std::nullopt, std::move(label), labelNum), entries(std::move(entries)) {}
+} // namespace Utils

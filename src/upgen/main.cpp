@@ -75,7 +75,7 @@ private:
     using FileMaps = std::array<std::array<ItemMap, Update::TYPE_MAX>, PLATFORM_MAX>;
 
     struct Message {
-        Update::Version version;
+        Utils::Version version;
         Update::Comparator versionComp;
         string message;
         bool fatal;
@@ -95,7 +95,7 @@ private:
         optional<filepath> win32Path;
         optional<filepath> linuxPath;
 
-        std::map<Update::Version, ItemVersionData> versions;
+        std::map<Utils::Version, ItemVersionData> versions;
         bool hidden;
         bool deprecated;
     };
@@ -123,7 +123,7 @@ private:
     static void checkDir(const filepath& folder) {
         std::error_code err;
         if (not fs::is_directory(folder, err)) {
-            std::wcout << "Warn: creating `" << fs::relative(folder, STAGING_DIR).native() << "`\n";
+            std::wcout << "Warn: creating `" << fs::relative(folder, STAGING_DIR).wstring() << "`\n";
             fs::create_directories(folder);
         }
     }
@@ -363,7 +363,7 @@ vector<UpGen::Message> UpGen::parseMessages(const PConf::HashedData& hashedRawDa
             }
         }
         if (not std::isdigit(label[0])) label = label.substr(1);
-        Update::Version version{label};
+        Utils::Version version{label};
         if (not version) {
             logger.error("Failed to parse message version: " + string(version));
             exit(1);
@@ -427,7 +427,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
             exit(1);
         }
 
-        Update::Version version{*versionIt->second->label};
+        Utils::Version version{*versionIt->second->label};
         if (not version) {
             string errMsg{"Item \""};
             errMsg += name;
@@ -544,7 +544,7 @@ Update::Bundles UpGen::resolveBundles(const PConf::HashedData& hashedRawData, Lo
             exit(1);
         }
 
-        Update::Version version{*bundleIt->second->label};
+        Utils::Version version{*bundleIt->second->label};
         if (not version) {
             logger.error("Bundle \"" + bundleIt->second->label.value() + "\" version invalid: " + string(version));
             exit(1);
@@ -563,7 +563,7 @@ Update::Bundles UpGen::resolveBundles(const PConf::HashedData& hashedRawData, Lo
             else bundle.note = noteIt->second->value.value();
         }
 
-        auto parseReqItem{[&logger, version](const std::shared_ptr<PConf::Entry>& item) -> optional<std::pair<string, Update::Version>> {
+        auto parseReqItem{[&logger, version](const std::shared_ptr<PConf::Entry>& item) -> optional<std::pair<string, Utils::Version>> {
             if (not item->label) {
                 logger.error("Item is unlabeled");
                 exit(1);
@@ -572,7 +572,7 @@ Update::Bundles UpGen::resolveBundles(const PConf::HashedData& hashedRawData, Lo
                 logger.error("Item \"" + item->label.value() + "\" is unversioned.");
                 exit(1);
             }
-            Update::Version version{*item->value};
+            Utils::Version version{*item->value};
             if (not version) {
                 logger.error("Item \"" + item->label.value() + "\" version \"" + item->value.value() + "\" is invalid: " + string(version));
                 exit(1);
@@ -657,15 +657,15 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
                 std::getline(std::cin, input);
                 resetToPrevLine();
 
-                Update::Version version;
+                Utils::Version version;
 
                 if (input.empty()) version = suggestedVer;
                 else {
                     // Update as if new build is functionally equivalent to last
                     if (input == "s") {
-                        version = Update::Version::invalidObject();
+                        version = Utils::Version::invalidObject();
                     } else {
-                        version = Update::Version{input};
+                        version = Utils::Version{input};
                         if (not version) {
                             std::cout << "Invalid version entered, try again. " << std::flush;
                             std::getline(std::cin, input);
@@ -682,7 +682,7 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
                     }
                 }
 
-                if (version != Update::Version::invalidObject()) {
+                if (version != Utils::Version::invalidObject()) {
                     ItemVersionData versionData;
                     versionData.linuxHash = linuxFileHash.value_or("");
                     versionData.macOSHash = macOSFileHash.value_or("");
@@ -813,7 +813,7 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
                     std::getline(std::cin, input);
                     resetToPrevLine();
 
-                    Update::Version version{input.empty() ? defaultVersionEntry : input};
+                    Utils::Version version{input.empty() ? defaultVersionEntry : input};
                     if (not version) {
                         std::cout << "Invalid version, try again. " << std::flush;
                         std::getline(std::cin, input);
@@ -991,7 +991,7 @@ void UpGen::generateNewManifest(const vector<Message>& messages, const Data& dat
 
 void UpGen::organizeAssets(const FileMaps& fileMaps, const Data& data) {
     auto lookupItem{[&](Platform platform, Update::ItemType type, const filepath& path, string hash)
-        -> std::pair<string, Update::Version> {
+        -> std::pair<string, Utils::Version> {
         for (const auto& [ itemID, item ] : data.items) {
             if (type != itemID.type) continue;
 
@@ -1098,7 +1098,7 @@ void UpGen::addMessage(vector<Message>& messages) {
 
     string input;
 
-    Update::Version version;
+    Utils::Version version;
     Update::Comparator comp{};
     string message;
     bool fatal{};
@@ -1116,8 +1116,8 @@ void UpGen::addMessage(vector<Message>& messages) {
         if (input[0] == '<') comp = Update::Comparator::LESS_THAN;
         else if (input[0] == '>') comp = Update::Comparator::GREATER_THAN;
 
-        if (comp == Update::Comparator::EQUAL) version = Update::Version{input};
-        else version = Update::Version{input.substr(1)};
+        if (comp == Update::Comparator::EQUAL) version = Utils::Version{input};
+        else version = Utils::Version{input.substr(1)};
 
         if (not version) {
             resetToPrevLine() << "Invalid version entered, try again. " << std::flush;
@@ -1383,7 +1383,7 @@ void UpGen::addBundle(Data& data, bool fromCurrent) {
     clearScreen();
     std::cout << HEADER << "\n\n";
 
-    Update::Version version;
+    Utils::Version version;
     Update::Bundle bundle;
     string input;
 
@@ -1393,7 +1393,7 @@ void UpGen::addBundle(Data& data, bool fromCurrent) {
 
         if (input == "-") return;
 
-        version = Update::Version{input};
+        version = Utils::Version{input};
         if (not version) {
             resetToPrevLine() << "Version invalid, try again. " << std::flush;
             std::getline(std::cin, input);
@@ -1448,7 +1448,7 @@ void UpGen::addBundle(Data& data, bool fromCurrent) {
                 string itemName{input};
                 auto latestVersion{item->versions.rbegin()->first};
 
-                Update::Version version;
+                Utils::Version version;
                 while (not false) {
                     auto prompt{itemName + " version [" + static_cast<string>(latestVersion) + "]: "};
                     std::cout << prompt << std::flush;
@@ -1457,7 +1457,7 @@ void UpGen::addBundle(Data& data, bool fromCurrent) {
                     if (input.empty()) {
                         version = latestVersion;
                     } else {
-                        version = Update::Version{input};
+                        version = Utils::Version{input};
                         if (not version) {
                             resetToPrevLine() << "Invalid version entered, try again. " << std::flush;
                             std::getline(std::cin, input);
@@ -1569,7 +1569,7 @@ void UpGen::removeBundle(Update::Bundles& bundles) {
 void UpGen::genBundleChangelog(Data& data) {
     if (data.bundles.empty()) return;
 
-    Update::Version bundleVersion;
+    Utils::Version bundleVersion;
     decltype(data.bundles.begin()) bundleEndIt;
     decltype(data.bundles.begin()) bundleBeginIt;
 
@@ -1640,7 +1640,7 @@ void UpGen::genBundleChangelog(Data& data) {
     std::cout << HEADER << "\n\n";
 
     string notes;
-    std::map<Update::ItemID, std::set<Update::Version>> itemVersions;
+    std::map<Update::ItemID, std::set<Utils::Version>> itemVersions;
     std::map<Update::ItemID, std::tuple<string, string, string>> itemInfos;
 
     for (auto bundleIt{bundleBeginIt}; bundleIt != bundleEndIt; ++bundleIt) {
