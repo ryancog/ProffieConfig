@@ -28,7 +28,18 @@ Versions::PropErrorMapping::PropErrorMapping(string arduinoError, string display
     arduinoError{std::move(arduinoError)}, displayError{std::move(displayError)} {}
 
 bool Versions::PropSetting::shouldOutputDefine() const {
-
+    switch (type) {
+        case Type::TOGGLE:
+            return mEnabled and static_cast<const PropToggle *>(this)->value;
+            break;
+        case Type::SELECTION:
+            return mEnabled and static_cast<const PropSelection *>(this)->value();
+            break;
+        case Type::NUMERIC:
+        case Type::DECIMAL:
+            return mEnabled;
+            break;
+    }
 }
 
 optional<string> Versions::PropSetting::generateDefineString() const {
@@ -110,7 +121,12 @@ optional<Versions::Prop> Versions::Prop::generate(const PConf::HashedData& data)
     if (layoutIter == data.end() or layoutIter->second->getType() != PConf::Type::SECTION) {
         logger.info("Skipping missing LAYOUT section...)");
     } else {
-        settingsUsed = PropLayout::generate(std::static_pointer_cast<PConf::Section>(layoutIter->second)->entries, prop.mSettings, prop.mLayout);
+        settingsUsed = PropLayout::generate(
+            std::static_pointer_cast<PConf::Section>(layoutIter->second)->entries,
+            prop.mSettings,
+            prop.mLayout,
+            &logger.binfo("Parsing LAYOUT...")->createLogger("PropLayout::generate()")
+        );
     }
 
     // Purge unused settings and generate setting map
@@ -416,6 +432,81 @@ optional<std::pair<Versions::PropCommonSettingData, PConf::HashedData>> Versions
     return std::pair{commonData, data};
 }
 
+std::set<Versions::PropSetting *> Versions::PropLayout::generate(
+    const PConf::Data& data,
+    const list<PropSettingVariant>& settings,
+    PropLayout& out,
+    Log::Logger *logger
+) {
+    if (not logger) logger = &Log::Context::getGlobal().createLogger("PropLayout::generate()");
+    std::set<PropSetting *> usedSettings;
+
+    for (const auto& entry : data) {
+        if (entry->name == "SETTING") {
+            if (not entry->label) {
+                logger->warn("Skipping setting without label...");
+                continue;
+            }
+
+            const PropSetting *foundSetting{nullptr};
+            for (const auto& setting : settings) {
+                const PropSetting *ptr;
+                if (
+                        (ptr = std::get_if<PropToggle>(&setting)) or
+                        (ptr = std::get_if<PropNumeric>(&setting)) or
+                        (ptr = std::get_if<PropDecimal>(&setting))
+                   ) {
+                    if (ptr->define == *entry->label) {
+                        foundSetting = ptr;
+                        break;
+                    }
+                } else {
+                    for (const auto& sel : std::get<PropOption>(setting).selections()) {
+                        if (sel.define == *entry->label) {
+                            foundSetting = &sel;
+                            break;
+                        }
+                    }
+                    if (foundSetting) break;
+                }
+            }
+            if (not foundSetting) {
+                logger->warn("Skipping unknown setting " + *entry->label + "...");
+                continue;
+            }
+
+            usedSettings.emplace(const_cast<PropSetting *>(foundSetting));
+            out.children.emplace_back(const_cast<PropSetting *>(foundSetting));
+            continue;
+        } 
+
+        PropLayout::Axis axis;
+        if (entry->name == "HORIZONTAL") {
+            axis = PropLayout::Axis::HORIZONTAL;
+        } else if (entry->name == "VERTICAL") {
+            axis = PropLayout::Axis::VERTICAL;
+        } else {
+            logger->warn("Skipping " + entry->name + " entry in layout...");
+            continue;
+        }
+
+        if (entry->getType() != PConf::Type::SECTION) continue;
+        if (entry->label) out.label = *entry->label;
+        auto& child{std::get<PropLayout>(
+            out.children.emplace_back(PropLayout{axis})
+        )};
+        const auto childUsedSettings{generate(
+            std::static_pointer_cast<PConf::Section>(entry)->entries,
+            settings,
+            child,
+            logger
+        )};
+        usedSettings.insert(childUsedSettings.begin(), childUsedSettings.end());
+    }
+
+    return usedSettings;
+}
+
 // void PropFile::readLayout(const PConf::Data& data, Log::Branch& lBranch) {
 // #   define ITEMBORDER wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 5)
 //     auto& logger{lBranch.createLogger("PropFile::readLayout()")};
@@ -598,6 +689,8 @@ Versions::PropButtons Versions::parseButtons(
 
         ret.emplace_back(PropButtonState{stateEntry->label.value(), buttons});
     }
+
+    return ret;
 }
 
 Versions::PropErrors Versions::parseErrors(const PConf::Data& data, Log::Branch& lBranch) {

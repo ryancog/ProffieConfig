@@ -5,6 +5,7 @@
 #include <set>
 #include <unordered_map>
 
+#include "log/logger.h"
 #include "pconf/types.h"
 #include "utils/types.h"
 
@@ -166,7 +167,7 @@ struct PropOption {
         vector<PropSelectionData>
     );
 
-    [[nodiscard]] inline const list<PropSelection>& selections() { return mSelections; }
+    [[nodiscard]] inline const list<PropSelection>& selections() const { return mSelections; }
 
 private:
     friend Prop;
@@ -206,7 +207,21 @@ using PropErrors = vector<PropErrorMapping>;
 using PropSettingVariant = std::variant<PropToggle, PropNumeric, PropDecimal, PropOption>;
 
 struct PropLayout {
-    static std::set<PropSetting *> generate(const PConf::Data&, const list<PropSettingVariant>&, PropLayout&);
+    /**
+     * Generate a prop layout from given PConf data
+     *
+     * @param data PConf input data
+     * @param settings Parsed settings from prop pconf
+     * @param out PropLayout object to fill
+     *
+     * @return Settings used in PropLayout
+     */
+    static std::set<PropSetting *> generate(
+        const PConf::Data& data,
+        const list<PropSettingVariant>& settings,
+        PropLayout& out,
+        Log::Logger * = nullptr
+    );
 
     enum class Axis {
         HORIZONTAL,
