@@ -26,6 +26,7 @@ namespace PConf {
 
 [[nodiscard]] PCONF_EXPORT HashedData hash(const Data&);
 [[nodiscard]] PCONF_EXPORT vector<string> valueAsList(const optional<string>&);
+[[nodiscard]] PCONF_EXPORT optional<string> listAsValue(const vector<string>&);
 
 } // namespace PConf
 
