@@ -47,3 +47,17 @@ vector<string> PConf::valueAsList(const optional<string>& optStr) {
     return ret;
 }
 
+optional<string> PConf::listAsValue(const vector<string>& list) {
+    if (list.empty()) return nullopt;
+
+    string ret;
+    for (const auto& str : list) {
+        ret += str;
+        ret += '\n';
+    }
+    // Pop last newline
+    ret.pop_back();
+
+    return ret;
+}
+
