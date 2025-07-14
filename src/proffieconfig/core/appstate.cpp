@@ -26,6 +26,8 @@ vector<string> propFileNames{};
 
 Utils::Version lastVersion{};
 
+void doNecessaryMigrations();
+
 } // namespace AppState
 
 bool AppState::doneWithFirstRun{false};
@@ -34,18 +36,11 @@ string AppState::manifestChannel;
 void AppState::init() {
     loadState();
 
-    if (lastVersion < Utils::Version{"1.8.0"}) {
-        std::error_code err;
-        fs::remove_all(Paths::resources() / "props", err);
-        fs::remove_all(Paths::proffieos(), err);
-
-        // TODO: Try to download new stuffage
-    }
-
-    saveState();
-
     if (not doneWithFirstRun) OnboardFrame::instance = new OnboardFrame();
-    else MainMenu::instance = new MainMenu();
+    else {
+        doNecessaryMigrations();
+        MainMenu::instance = new MainMenu();
+    }
 }
 
 void AppState::saveState() {
@@ -118,6 +113,18 @@ void AppState::loadState() {
         }
     }
     logger.info("Done");
+}
+
+void AppState::doNecessaryMigrations() {
+    if (lastVersion < Utils::Version{"1.8.0"}) {
+        std::error_code err;
+        fs::remove_all(Paths::resources() / "props", err);
+        fs::remove_all(Paths::proffieos(), err);
+
+        // TODO: Try to download new stuffage
+    }
+
+    saveState();
 }
 
 void AppState::addProp(const string& propName, const string& propPath, const string& propConfigPath) {
