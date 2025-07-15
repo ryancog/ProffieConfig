@@ -116,7 +116,7 @@ wxBoxSizer* GeneralPage::leftOptions(wxStaticBoxSizer* parent) {
     orientation = new PCUI::Choice(parent->GetStaticBox(), wxID_ANY,  Misc::createEntries(Configuration::orientationStrings()), _("Orientation"), wxHORIZONTAL);
     buttons = new PCUI::Numeric(parent->GetStaticBox(), wxID_ANY, 0, 3, 2, 1, wxSP_ARROW_KEYS, _("Number of Buttons"), wxHORIZONTAL);
     volume = new PCUI::Numeric(parent->GetStaticBox(), wxID_ANY, 0, 5000, 1500, 50, wxSP_ARROW_KEYS, _("Max Volume"), wxHORIZONTAL);
-    clash = new PCUI::NumericDec(parent->GetStaticBox(), wxID_ANY, 0.1, 5, 3, 0.1, wxSP_ARROW_KEYS, _("Clash Threshold (Gs)"), wxHORIZONTAL);
+    clash = new PCUI::Decimal(parent->GetStaticBox(), wxID_ANY, 0.1, 5, 3, 0.1, wxSP_ARROW_KEYS, _("Clash Threshold (Gs)"), wxHORIZONTAL);
     pliTime = new PCUI::Numeric(parent->GetStaticBox(), wxID_ANY, 1, 60, 2, 1, wxSP_ARROW_KEYS, _("PLI Timeout (minutes)"), wxHORIZONTAL);
     idleTime = new PCUI::Numeric(parent->GetStaticBox(), wxID_ANY, 1, 60, 10, 1, wxSP_ARROW_KEYS, _("Idle Timeout (minutes)"), wxHORIZONTAL);
     motionTime = new PCUI::Numeric(parent->GetStaticBox(), wxID_ANY, 1, 60, 15, 1, wxSP_ARROW_KEYS, _("Motion Timeout (minutes)"), wxHORIZONTAL);

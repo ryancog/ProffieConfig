@@ -14,7 +14,6 @@
 #include "../../core/defines.h"
 #include "../../core/appstate.h"
 #include "../../core/utilities/misc.h"
-#include "../../core/config/propfile.h"
 #include "../editorwindow.h"
 #include "generalpage.h"
 

@@ -28,7 +28,7 @@ public:
   PCUI::Choice* orientation{nullptr};
   PCUI::Numeric* buttons{nullptr};
   PCUI::Numeric* volume{nullptr};
-  PCUI::NumericDec* clash{nullptr};
+  PCUI::Decimal* clash{nullptr};
   PCUI::Numeric* pliTime{nullptr};
   PCUI::Numeric* idleTime{nullptr};
   PCUI::Numeric* motionTime{nullptr};

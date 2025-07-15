@@ -51,7 +51,7 @@ private:
     union {
         void *const mElement{nullptr};
         PCUI::Numeric *const mNumeric;
-        PCUI::NumericDec *const mNumericDec;
+        PCUI::Decimal *const mNumericDec;
         wxCheckBox *const mCheckBox;
         wxRadioButton *const mRadioButton;
         PCUI::Choice *const mChoice;
@@ -60,7 +60,7 @@ private:
 
 public:
     ProffieDefine(wxString name, PCUI::Numeric* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
-    ProffieDefine(wxString name, PCUI::NumericDec* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
+    ProffieDefine(wxString name, PCUI::Decimal* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);
     ProffieDefine(wxString name, wxCheckBox* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
     ProffieDefine(wxString name, wxRadioButton* element, std::function<bool(const ProffieDefine*)> check = PDEF_DEFAULT_CHECK, bool loose = false);
     ProffieDefine(wxString name, PCUI::Choice* element, std::function<bool(const ProffieDefine*)> check, bool loose = false);

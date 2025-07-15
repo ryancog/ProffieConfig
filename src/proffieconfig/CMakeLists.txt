@@ -14,7 +14,6 @@ add_executable(proffieconfig WIN32
     core/utilities/progress.cpp
     core/config/configuration.cpp
     core/config/settings.cpp
-    core/config/propfile.cpp
     editor/pages/generalpage.cpp
     editor/pages/presetspage.cpp
     editor/pages/bladespage.cpp

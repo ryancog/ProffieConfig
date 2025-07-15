@@ -4,6 +4,9 @@
 
 add_library(pconf SHARED
     pconf.cpp
+    read.cpp
+    utils.cpp
+    write.cpp
 )
 
 target_link_libraries(pconf log)
