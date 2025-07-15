@@ -8,6 +8,7 @@ set(SHARED_COMPONENTS
     ui
     pconf
     paths
+    versions
 )
 
 set(STATIC_COMPONENTS

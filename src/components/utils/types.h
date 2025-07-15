@@ -51,6 +51,7 @@ using byte = uint8;
 
 using cstring = const char *;
 
+// NOLINTBEGIN(misc-unused-using-decls)
 using std::any;
 using std::array;
 using std::deque;
@@ -63,5 +64,8 @@ using std::wstring;
 using std::string_view;
 using std::vector;
 using std::span;
+using std::pair;
 namespace fs = std::filesystem;
 using filepath = fs::path;
+// NOLINTEND(misc-unused-using-decls)
+

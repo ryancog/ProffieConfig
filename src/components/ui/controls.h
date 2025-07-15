@@ -30,17 +30,56 @@
 #include <wx/textctrl.h>
 #include <wx/tglbtn.h>
 
-#include <utils/types.h>
+#include "utils/types.h"
 
 #include "private/export.h"
-#include "wx/string.h"
 
 namespace PCUI {
+
+struct ControlData {
+    ControlData& operator=(const ControlData&) = delete;
+    ControlData& operator=(ControlData&&) = delete;
+
+    /**
+     * A callback to alert program-side code that the contained
+     * value has been updated by the user in UI
+     */
+    std::function<void(void)> onGUIUpdate;
+
+    /**
+     * Enable/disable the UI control.
+     */
+    void enable(bool en = true) {
+        mEnabled = en;
+        pDirty = true; 
+    }
+    void disable() { enable(false); }
+
+    bool isDirty() const { return pDirty; }
+    bool isEnabled() const { return mEnabled; }
+
+protected:
+    ControlData() = default;
+    ControlData(const ControlData&) = default;
+    ControlData(ControlData&&) = default;
+
+    /**
+     * Set true whenever the user modifies the data.
+     *
+     * Windows can use UpdateWindowUI() to force updates for dirty data.
+     */
+    bool pDirty{false};
+
+private:
+    /**
+     * UI Control enabled state
+     */
+    bool mEnabled{true};
+};
 
 /*
  * Arg Order for derived:
  * parent
- * ID
  * ...
  * label
  * orient
@@ -54,116 +93,211 @@ public:
 
     void setToolTip(wxToolTip *tip);
 
-    [[nodiscard]] inline constexpr CONTROL *entry() { return mEntry; }
-    [[nodiscard]] inline constexpr const CONTROL *entry() const { return mEntry; }
-    [[nodiscard]] inline constexpr wxStaticText *text() { return mText; }
-    [[nodiscard]] inline constexpr const wxStaticText *text() const { return mText; }
+    // Hide these for now until I decide we really need them.
+    // [[nodiscard]] inline constexpr CONTROL *entry() { return mEntry; }
+    // [[nodiscard]] inline constexpr const CONTROL *entry() const { return mEntry; }
+    // [[nodiscard]] inline constexpr wxStaticText *text() { return mText; }
+    // [[nodiscard]] inline constexpr const wxStaticText *text() const { return mText; }
 
 protected:
-    ControlBase(wxWindow *parent, wxWindowID winID) : wxPanel(parent, winID) {};
+    ControlBase(wxWindow *parent) : wxPanel(parent, wxID_ANY) {};
 
     void init(CONTROL *control, wxString label, wxOrientation orient) {
         auto *sizer{new wxBoxSizer(orient)};
         constexpr auto PADDING{5};
 
+        pControl = control;
+
         if (not label.empty()) {
-            mText = new wxStaticText(this, wxID_ANY, label);
-            auto sizerFlags{wxSizerFlags(0).Border(wxLEFT | wxRIGHT, PADDING)};
-            sizer->Add(mText, orient == wxHORIZONTAL ? sizerFlags.Center() : sizerFlags);
+            auto sizerFlags{
+                wxSizerFlags(0).Border(wxLEFT | wxRIGHT, PADDING)
+            };
+            sizer->Add(
+                new wxStaticText(this, wxID_ANY, label),
+                orient == wxHORIZONTAL ? sizerFlags.Center() : sizerFlags
+            );
         }
 
-        mEntry = control;
-        sizer->Add(mEntry, wxSizerFlags(1).Expand());
+        sizer->Add(control, wxSizerFlags(1).Expand());
 
         SetSizerAndFit(sizer);
     }
 
-private:
-    CONTROL *mEntry{nullptr};
-    wxStaticText *mText{nullptr};
+    CONTROL *pControl{nullptr};
 };
 
-class UI_EXPORT Bool : public ControlBase<wxToggleButton> {
+struct ToggleData : ControlData {
+    operator bool() const { return mValue; }
+    void operator=(bool val) {
+        mValue = val;
+        pDirty = true;
+    }
+
+private:
+    friend class Toggle;
+    bool mValue;
+};
+
+class UI_EXPORT Toggle : public ControlBase<wxToggleButton> {
 public:
-    Bool(
-            wxWindow *parent,
-            wxWindowID winID,
-            bool initialValue = false,
-            wxString onText = "True",
-            wxString offText = "False",
-            int64 style = 0,
-            const wxString& label = {},
-            wxOrientation orient = wxVERTICAL
+    Toggle(
+        wxWindow *parent,
+        ToggleData& data,
+        wxString onText = "True",
+        wxString offText = "False",
+        int64 style = 0,
+        const wxString& label = {},
+        wxOrientation orient = wxVERTICAL
         );
 
 private:
+    ToggleData& mData;
     wxString mOnText;
     wxString mOffText;
-    int64 mStyle;
+};
+
+struct ChoiceData : ControlData {
+    operator int32() const { return mValue; }
+    void operator=(int32 val) {
+        mValue = val;
+        pDirty = true;
+    }
+
+    const vector<string>& choices() const { return mChoices; }
+    void setChoices(vector<string>&& choices) { 
+        mChoices = std::move(choices); 
+        pDirty = true;
+    }
+
+private:
+    friend class Choice;
+    vector<string> mChoices;
+    int32 mValue;
 };
 
 class UI_EXPORT Choice : public ControlBase<wxChoice> {
 public:
     Choice(
-            wxWindow *parent,
-            wxWindowID winID,
-            const wxArrayString& choices,
-            const wxString& label = {},
-            wxOrientation orient = wxVERTICAL
-          );
+        wxWindow *parent,
+        ChoiceData& data,
+        const wxString& label = {},
+        wxOrientation orient = wxVERTICAL
+        );
+
+private:
+    ChoiceData& mData;
+};
+
+struct ComboBoxData : ControlData {
+    operator string() const { return mValue; }
+    void operator=(string&& val) {
+        mValue = std::move(val);
+        pDirty = true;
+    }
+
+    const vector<string>& defaults() const { return mDefaults; }
+    void setDefaults(vector<string>&& defaults) {
+        mDefaults = std::move(defaults);
+        pDirty = true;
+    }
+
+private:
+    friend class ComboBox;
+    vector<string> mDefaults;
+    string mValue;
 };
 
 class UI_EXPORT ComboBox : public ControlBase<wxComboBox> {
 public:
     ComboBox(
-            wxWindow *parent,
-            wxWindowID winID,
-            const wxArrayString& choices,
-            wxString defaultValue = wxEmptyString,
-            const wxString& label = {},
-            wxOrientation orient = wxVERTICAL
-            );
+        wxWindow *parent,
+        ComboBoxData& data,
+        const wxString& label = {},
+        wxOrientation orient = wxVERTICAL
+        );
+
+private:
+    ComboBoxData& mData;
+};
+
+struct NumericData : ControlData {
+    operator int32() const { return mValue; }
+    void operator=(int32 val) {
+        mValue = val;
+        pDirty = true;
+    }
+
+private:
+    friend class Numeric;
+    int32 mValue;
 };
 
 class UI_EXPORT Numeric : public ControlBase<wxSpinCtrl> {
 public:
     Numeric(
-            wxWindow* parent,
-            wxWindowID winID = wxID_ANY,
-            int32 min       = 0,
-            int32 max       = 100,
-            int32 initial   = 0,
-            int32 increment = 1,
-            int64 style = wxSP_ARROW_KEYS,
-            const wxString& label = {},
-            const wxOrientation& orient = wxVERTICAL
-           );
+        wxWindow *parent,
+        NumericData& data,
+        int32 min       = 0,
+        int32 max       = 100,
+        int32 increment = 1,
+        int64 style = wxSP_ARROW_KEYS,
+        const wxString& label = {},
+        const wxOrientation& orient = wxVERTICAL
+        );
+
+private:
+    NumericData& mData;
 };
 
-class UI_EXPORT NumericDec : public ControlBase<wxSpinCtrlDouble> {
+struct DecimalData : ControlData {
+    operator float64() const { return mValue; }
+    void operator=(float64 val) {
+        mValue = val;
+        pDirty = true;
+    }
+
+private:
+    friend class Decimal;
+    float64 mValue;
+};
+
+class UI_EXPORT Decimal : public ControlBase<wxSpinCtrlDouble> {
 public:
-    NumericDec(
-            wxWindow* parent,
-            wxWindowID winID = wxID_ANY,
-            float64 min       = 0,
-            float64 max       = 100,
-            float64 initial   = 0,
-            float64 increment = 1,
-            int64 style = wxSP_ARROW_KEYS,
-            const wxString& label = {},
-            const wxOrientation& orient = wxVERTICAL
-            );
+    Decimal(
+        wxWindow *parent,
+        DecimalData& data,
+        float64 min       = 0,
+        float64 max       = 100,
+        float64 increment = 1,
+        int64 style = wxSP_ARROW_KEYS,
+        const wxString& label = {},
+        const wxOrientation& orient = wxVERTICAL
+        );
+
+private:
+    DecimalData& mData;
+};
+
+struct TextData : ControlData {
+    operator string() { return mValue; }
+    void operator=(string&& val) {
+        mValue = val;
+        pDirty = true;
+    }
+
+private:
+    friend class Text;
+    string mValue;
 };
 
 class UI_EXPORT Text : public ControlBase<wxTextCtrl> {
 public:
     Text(
-            wxWindow *parent,
-            wxWindowID winID = wxID_ANY,
-            const wxString &initial = {},
-            int64 style = 0,
-            const wxString &label = {},
-            wxOrientation orient = wxVERTICAL
+        wxWindow *parent,
+        TextData& data,
+        int64 style = 0,
+        const wxString &label = {},
+        wxOrientation orient = wxVERTICAL
         );
 
     // TODO: Set up use of validators to forbid certain entry.
@@ -174,6 +308,7 @@ public:
     // [[nodiscard]] wxString getInvalidChars() const;
 
 private:
+    TextData& mData;
     // void pruneText();
 
     // wxString mInvalidChars;

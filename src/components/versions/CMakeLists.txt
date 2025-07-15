@@ -4,6 +4,7 @@
 
 add_library(versions SHARED 
     versions.cpp
+    prop.cpp
 )
 
 target_link_libraries(versions

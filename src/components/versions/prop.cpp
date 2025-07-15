@@ -5,6 +5,7 @@
 #include <fstream>
 #include <memory>
 
+#include <type_traits>
 #include <unordered_set>
 
 #include "log/branch.h"
@@ -21,11 +22,155 @@ namespace Versions {
     PropErrors parseErrors(const PConf::Data& data, Log::Branch& lBranch);
 }
 
+Versions::PropOption::PropOption(Prop& prop, vector<PropSelectionData> selectionDatas) {
+    for (const auto& selectionData : selectionDatas) {
+        PropSelection selection{
+            prop,
+            *this,
+            selectionData.name,
+            selectionData.define,
+            selectionData.description,
+            selectionData.required,
+            selectionData.requiredAny,
+            selectionData.disables,
+            selectionData.shouldOutput
+        };
+        mSelections.emplace_back(std::move(selection));
+    }
+}
+
+Versions::PropOption::PropOption(const PropOption& other, Prop& prop) {
+    for (const auto& sel : other.mSelections) {
+        mSelections.emplace_back(PropSelection{sel, prop, *this});
+    }
+}
+
+void Versions::PropSelection::select() {
+    auto selectionIter{mOption.mSelections.begin()};
+    const auto selectionEndIter{mOption.mSelections.end()};
+    for (auto idx{0}; selectionIter != selectionEndIter; ++idx, ++selectionIter) { 
+        if (&*selectionIter == this) {
+            mOption.mSelected = idx;
+            break;
+        }
+    }
+}
+
+bool Versions::PropSelection::value() const {
+    // TODO: Make sure this works correctly
+    auto selectionIter{mOption.mSelections.begin()};
+    for (auto idx{0}; idx < mOption.mSelected; ++idx, ++selectionIter);
+    return &*selectionIter == this;
+}
+
+bool Versions::PropSelection::isDefault() const {
+    return &mOption.mSelections.front() == this;
+}
+
+Versions::PropLayout::PropLayout(const PropLayout& other, const PropSettingMap& settingMap) {
+    axis = other.axis;
+    label = other.label;
+
+    const auto processChildren{[settingMap](
+        const auto& self,
+        const Children& otherChildren
+    ) -> Children {
+        Children children;
+        for (const auto& child : otherChildren) {
+            if (auto *ptr = std::get_if<PropLayout>(&child)) {
+                children.emplace_back(
+                    std::in_place_type<PropLayout>,
+                    ptr->axis,
+                    ptr->label,
+                    self(self, ptr->children)
+                );
+            } else if (auto *ptr = std::get_if<PropSetting *>(&child)) {
+                const auto settingIter{settingMap.find((*ptr)->define)};
+                assert(settingIter != settingMap.end());
+                children.emplace_back(settingIter->second);
+            }
+        }
+        return children;
+    }};
+
+    children = processChildren(processChildren, other.children);
+}
+
 Versions::PropButtonState::PropButtonState(string stateName, vector<PropButton> buttons) : 
     stateName{std::move(stateName)}, buttons{std::move(buttons)} {}
 
 Versions::PropErrorMapping::PropErrorMapping(string arduinoError, string displayError) :
     arduinoError{std::move(arduinoError)}, displayError{std::move(displayError)} {}
+
+Versions::Prop::Prop(const Prop& other) : 
+    Prop{other.name, other.filename, other.info} {
+
+    for (const auto& setting : other.mSettings) {
+        if (auto *ptr = std::get_if<PropToggle>(&setting)) {
+            mSettings.emplace_back(std::in_place_type<PropToggle>, *ptr, *this);
+        } else if (auto *ptr = std::get_if<PropOption>(&setting)) {
+            mSettings.emplace_back(std::in_place_type<PropOption>, *ptr, *this);
+        } else if (auto *ptr = std::get_if<PropNumeric>(&setting)) {
+            mSettings.emplace_back(std::in_place_type<PropNumeric>, *ptr, *this);
+        } else if (auto *ptr = std::get_if<PropDecimal>(&setting)) {
+            mSettings.emplace_back(std::in_place_type<PropDecimal>, *ptr, *this);
+        } else {
+            assert(0);
+        }
+    }
+
+    rebuildSettingMap();
+
+    mLayout = PropLayout(other.mLayout, mSettingMap);
+
+    mButtons.~array();
+    new(&mButtons) array(other.mButtons);
+    mErrors.~PropErrors();
+    new(&mErrors) PropErrors(other.mErrors);
+}
+
+void Versions::Prop::rebuildSettingMap(optional<std::set<PropSetting *>> pruneList, Log::Branch *lBranch) {
+    auto& logger{Log::Branch::optCreateLogger("Versions::Prop::rebuildSettingMap()", lBranch)};
+    mSettingMap.clear();
+
+    for (auto setting{mSettings.begin()}; setting != mSettings.end();) {
+        PropSetting *ptr;
+        if (
+                (ptr = std::get_if<PropToggle>(&*setting)) or
+                (ptr = std::get_if<PropNumeric>(&*setting)) or
+                (ptr = std::get_if<PropDecimal>(&*setting))
+           ) {
+            if (pruneList and pruneList->find(ptr) == pruneList->end()) {
+                logger.warn("Removing unused setting \"" + ptr->name + "\"...");
+                setting = mSettings.erase(setting);
+                continue;
+            } else {
+                mSettingMap.emplace(ptr->define, ptr);
+            }
+        } else if (auto *ptr = std::get_if<PropOption>(&*setting)) {
+            for (auto selection{ptr->mSelections.begin()}; selection != ptr->mSelections.end();) {
+                if (pruneList and pruneList->find(&*selection) == pruneList->end()) {
+                    logger.warn("Removing unused setting \"" + selection->name + "\"...");
+                    selection = ptr->mSelections.erase(selection);
+                    continue;
+                }
+                ++selection;
+            }
+
+            if (ptr->mSelections.empty()) {
+                logger.warn("Removing empty option...");
+                setting = mSettings.erase(setting);
+                continue;
+            } else {
+                for (auto& selection : ptr->mSelections) {
+                    mSettingMap.emplace(selection.define, &selection);
+                }
+            }
+        }
+
+        ++setting;
+    }
+}
 
 bool Versions::PropSetting::shouldOutputDefine() const {
     switch (type) {
@@ -33,7 +178,10 @@ bool Versions::PropSetting::shouldOutputDefine() const {
             return mEnabled and static_cast<const PropToggle *>(this)->value;
             break;
         case Type::SELECTION:
-            return mEnabled and static_cast<const PropSelection *>(this)->value();
+            return 
+                mEnabled and 
+                static_cast<const PropSelection *>(this)->shouldOutput and 
+                static_cast<const PropSelection *>(this)->value();
             break;
         case Type::NUMERIC:
         case Type::DECIMAL:
@@ -116,6 +264,8 @@ optional<Versions::Prop> Versions::Prop::generate(const PConf::HashedData& data)
         );
     }
 
+    prop.rebuildSettingMap(nullopt, logger.binfo("Building setting map..."));
+
     std::set<PropSetting *> settingsUsed{};
     const auto layoutIter{data.find("LAYOUT")};
     if (layoutIter == data.end() or layoutIter->second->getType() != PConf::Type::SECTION) {
@@ -123,50 +273,13 @@ optional<Versions::Prop> Versions::Prop::generate(const PConf::HashedData& data)
     } else {
         settingsUsed = PropLayout::generate(
             std::static_pointer_cast<PConf::Section>(layoutIter->second)->entries,
-            prop.mSettings,
+            prop.mSettingMap,
             prop.mLayout,
             &logger.binfo("Parsing LAYOUT...")->createLogger("PropLayout::generate()")
         );
     }
 
-    // Purge unused settings and generate setting map
-    for (auto setting{prop.mSettings.begin()}; setting != prop.mSettings.end();) {
-        PropSetting *ptr;
-        if (
-                (ptr = std::get_if<PropToggle>(&*setting)) or
-                (ptr = std::get_if<PropNumeric>(&*setting)) or
-                (ptr = std::get_if<PropDecimal>(&*setting))
-           ) {
-            if (settingsUsed.find(ptr) == settingsUsed.end()) {
-                logger.warn("Removing unused setting \"" + ptr->name + "\"...");
-                setting = prop.mSettings.erase(setting);
-                continue;
-            } else {
-                prop.mSettingMap.emplace(ptr->define, ptr);
-            }
-        } else if (auto *ptr = std::get_if<PropOption>(&*setting)) {
-            for (auto selection{ptr->mSelections.begin()}; selection != ptr->mSelections.end();) {
-                if (settingsUsed.find(&*selection) == settingsUsed.end()) {
-                    logger.warn("Removing unused setting \"" + selection->name + "\"...");
-                    selection = ptr->mSelections.erase(selection);
-                    continue;
-                }
-                ++selection;
-            }
-
-            if (ptr->mSelections.empty()) {
-                logger.warn("Removing empty option...");
-                setting = prop.mSettings.erase(setting);
-                continue;
-            } else {
-                for (auto& selection : ptr->mSelections) {
-                    prop.mSettingMap.emplace(selection.define, &selection);
-                }
-            }
-        }
-
-        ++setting;
-    }
+    prop.rebuildSettingMap(settingsUsed, logger.binfo("Rebuilding setting map..."));
 
     const auto buttonsRange{data.equal_range("BUTTONS")};
     if (buttonsRange.first == buttonsRange.second) {
@@ -250,7 +363,7 @@ list<Versions::PropSettingVariant> Versions::parseSettings(
             parseDisables(entryMap),
         };
 
-        ret.emplace_back(toggle);
+        ret.emplace_back(std::move(toggle));
     }
 
     const auto optionRange{hashedData.equal_range("OPTION")};
@@ -281,10 +394,10 @@ list<Versions::PropSettingVariant> Versions::parseSettings(
                 entryMap.find("NO_OUTPUT") != entryMap.end(),
             };
 
-            selectionDatas.emplace_back(selectionData);
+            selectionDatas.emplace_back(std::move(selectionData));
         }
 
-        ret.emplace_back(PropOption{prop, selectionDatas});
+        ret.emplace_back(std::in_place_type<PropOption>, prop, selectionDatas);
     }
 
     const auto numericRange{hashedData.equal_range("NUMERIC")};
@@ -328,7 +441,7 @@ list<Versions::PropSettingVariant> Versions::parseSettings(
             defaultVal,
         };
 
-        ret.emplace_back(numeric);
+        ret.emplace_back(std::move(numeric));
     }
 
     const auto decimalRange{hashedData.equal_range("DECIMAL")};
@@ -372,7 +485,7 @@ list<Versions::PropSettingVariant> Versions::parseSettings(
             defaultVal,
         };
 
-        ret.emplace_back(decimal);
+        ret.emplace_back(std::move(decimal));
     }
 
     return ret;
@@ -434,7 +547,7 @@ optional<std::pair<Versions::PropCommonSettingData, PConf::HashedData>> Versions
 
 std::set<Versions::PropSetting *> Versions::PropLayout::generate(
     const PConf::Data& data,
-    const list<PropSettingVariant>& settings,
+    const PropSettingMap& settings,
     PropLayout& out,
     Log::Logger *logger
 ) {
@@ -448,35 +561,14 @@ std::set<Versions::PropSetting *> Versions::PropLayout::generate(
                 continue;
             }
 
-            const PropSetting *foundSetting{nullptr};
-            for (const auto& setting : settings) {
-                const PropSetting *ptr;
-                if (
-                        (ptr = std::get_if<PropToggle>(&setting)) or
-                        (ptr = std::get_if<PropNumeric>(&setting)) or
-                        (ptr = std::get_if<PropDecimal>(&setting))
-                   ) {
-                    if (ptr->define == *entry->label) {
-                        foundSetting = ptr;
-                        break;
-                    }
-                } else {
-                    for (const auto& sel : std::get<PropOption>(setting).selections()) {
-                        if (sel.define == *entry->label) {
-                            foundSetting = &sel;
-                            break;
-                        }
-                    }
-                    if (foundSetting) break;
-                }
-            }
-            if (not foundSetting) {
+            const auto settingIter{settings.find(*entry->label)};
+            if (settingIter == settings.end()) {
                 logger->warn("Skipping unknown setting " + *entry->label + "...");
                 continue;
             }
 
-            usedSettings.emplace(const_cast<PropSetting *>(foundSetting));
-            out.children.emplace_back(const_cast<PropSetting *>(foundSetting));
+            usedSettings.emplace(settingIter->second);
+            out.children.emplace_back(settingIter->second);
             continue;
         } 
 

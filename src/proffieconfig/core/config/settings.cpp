@@ -306,7 +306,7 @@ void Settings::parseDefines(std::vector<wxString>& _defList) {
 Settings::ProffieDefine::ProffieDefine(wxString _name, PCUI::Numeric* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) :
     mType(Type::NUMERIC), mLooseChecking(_loose), mIdentifier(std::move(_name)), mElement(_element), checkOutput(std::move(_check)) {}
 
-Settings::ProffieDefine::ProffieDefine(wxString _name, PCUI::NumericDec* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) : 
+Settings::ProffieDefine::ProffieDefine(wxString _name, PCUI::Decimal* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) : 
     mType(Type::DECIMAL), mLooseChecking(_loose), mIdentifier(std::move(_name)), mElement(_element), checkOutput(std::move(_check)) {}
 
 Settings::ProffieDefine::ProffieDefine(wxString _name, wxCheckBox* _element, std::function<bool(const ProffieDefine*)> _check, bool _loose) : 

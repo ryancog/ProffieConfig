@@ -25,116 +25,256 @@
 #include <wx/tglbtn.h>
 #include <wx/spinctrl.h>
 
-PCUI::Bool::Bool(
-        ::wxWindow *parent,
-        wxWindowID winID,
-        bool initialValue,
-        wxString onText,
-        wxString offText,
-        int64 style,
-        const wxString& label,
-        wxOrientation orient) :
-    ControlBase(parent, winID),
-    mOffText(std::move(offText)),
-    mOnText(std::move(onText)) {
-
-    auto *control{new wxToggleButton(this, winID, initialValue ? mOnText : mOffText, wxDefaultPosition, wxDefaultSize, style)};
-    if (initialValue) control->SetValue(true);
+PCUI::Toggle::Toggle(
+    wxWindow *parent,
+    ToggleData& data,
+    wxString onText,
+    wxString offText,
+    int64 style,
+    const wxString& label,
+    wxOrientation orient
+) : ControlBase(parent),
+    mData{data},
+    mOnText{std::move(onText)},
+    mOffText{std::move(offText)} {
+    auto *control{new wxToggleButton(
+        this,
+		wxID_ANY,
+		data ? mOnText : mOffText,
+		wxDefaultPosition,
+		wxDefaultSize,
+		style
+	)};
+    control->SetValue(data);
 
     init(control, label, orient);
 
-    control->Bind(wxEVT_TOGGLEBUTTON, [this](wxCommandEvent&) {
-        entry()->SetLabel(entry()->GetValue() ? mOnText : mOffText);
-    });
+    const auto modifyCallback{[this, control](wxCommandEvent& evt) {
+        control->SetLabel(evt.GetInt() ? mOnText : mOffText);
+        if (not mData.isEnabled() or mData.pDirty) return;
+
+        mData.mValue = evt.GetInt();
+        if (mData.onGUIUpdate) mData.onGUIUpdate();
+    }};
+    const auto updateUICallback{[this, control](wxUpdateUIEvent& evt) {
+        if (not mData.pDirty) return;
+
+        control->SetValue(mData);
+        Enable(mData.isEnabled());
+        mData.pDirty = false;
+    }};
+    Bind(wxEVT_TOGGLEBUTTON, modifyCallback);
+    Bind(wxEVT_UPDATE_UI, updateUICallback);
 }
 
 PCUI::Choice::Choice(
-            wxWindow *parent,
-            wxWindowID winID,
-            const wxArrayString& choices,
-            const wxString& label,
-            wxOrientation orient) :
-    ControlBase(parent, winID) {
+    wxWindow *parent,
+    ChoiceData& data,
+    const wxString& label,
+    wxOrientation orient
+) : ControlBase(parent),
+    mData{data} {
 
-    auto *control{new wxChoice(this, winID, wxDefaultPosition, wxDefaultSize, choices)};
-    if (choices.size()) control->SetSelection(0);
+    auto *control{new wxChoice(
+        this,
+		wxID_ANY,
+		wxDefaultPosition,
+		wxDefaultSize,
+        data.mChoices
+	)};
+    control->SetSelection(data);
 
 #   ifdef __WXGTK__
     control->SetMinSize(control->GetBestSize() + wxSize{ FromDIP(20), 0 });
 #   endif
 
     init(control, label, orient);
+
+    const auto modifyCallback{[this](wxCommandEvent& evt) {
+        if (not mData.isEnabled() or mData.pDirty) return;
+
+        mData.mValue = evt.GetInt();
+        if (mData.onGUIUpdate) mData.onGUIUpdate();
+    }};
+    const auto updateUICallback{[this, control](wxUpdateUIEvent& evt) {
+        if (not mData.pDirty) return;
+
+        control->Set(mData.mChoices);
+        control->SetSelection(mData);
+        Enable(mData.isEnabled());
+        mData.pDirty = false;
+    }};
+    Bind(wxEVT_CHOICE, modifyCallback);
+    Bind(wxEVT_UPDATE_UI, updateUICallback);
 }
 
 PCUI::ComboBox::ComboBox(
-            wxWindow *parent,
-            wxWindowID winID,
-            const wxArrayString& choices,
-            wxString defaultValue,
-            const wxString& label,
-            wxOrientation orient) :
-    ControlBase(parent, winID) {
+    wxWindow *parent,
+    ComboBoxData& data,
+    const wxString& label,
+    wxOrientation orient
+) : ControlBase(parent),
+    mData{data} {
 
-    auto *control{new wxComboBox(this, winID, defaultValue, wxDefaultPosition, wxDefaultSize, choices)};
-    if (choices.size() and defaultValue.empty()) control->SetSelection(0);
+    auto *control{new wxComboBox(
+        this,
+		wxID_ANY,
+        string{data},
+		wxDefaultPosition,
+		wxDefaultSize,
+        data.mDefaults
+	)};
+    if (data.mValue.empty() and not data.mDefaults.empty()) control->SetSelection(0);
 
 #   ifdef __WXGTK__
     control->SetMinSize(control->GetBestSize() + wxSize{ FromDIP(20), 0 });
 #   endif
 
     init(control, label, orient);
+
+    const auto modifyCallback{[this](wxCommandEvent& evt) {
+        if (not mData.isEnabled() or mData.pDirty) return;
+
+        mData.mValue = evt.GetInt();
+        if (mData.onGUIUpdate) mData.onGUIUpdate();
+    }};
+    const auto updateUICallback{[this, control](wxUpdateUIEvent& evt) {
+        if (not mData.pDirty) return;
+
+        control->Set(mData.mDefaults);
+        control->SetValue(string{mData});
+        Enable(mData.isEnabled());
+        mData.pDirty = false;
+    }};
+    Bind(wxEVT_COMBOBOX, modifyCallback);
+    Bind(wxEVT_UPDATE_UI, updateUICallback);
 }
 
 PCUI::Numeric::Numeric(
-        wxWindow* parent,
-        wxWindowID winID,
-        int32_t min,
-        int32_t max,
-        int32_t initial,
-        int32_t increment,
-        int64_t style,
-        const wxString& label,
-        const wxOrientation& orient) :
-    ControlBase(parent, winID) {
+    wxWindow *parent,
+    NumericData& data,
+    int32 min,
+    int32 max,
+    int32 increment,
+    int64 style,
+    const wxString& label,
+    const wxOrientation& orient
+) : ControlBase(parent),
+    mData{data} {
 
-    auto *control{new wxSpinCtrl(this, winID, {}, wxDefaultPosition, wxDefaultSize, style, min, max, initial)};
+    auto *control{new wxSpinCtrl(
+        this,
+        wxID_ANY,
+        {},
+        wxDefaultPosition,
+        wxDefaultSize,
+        style,
+        min,
+        max,
+        mData
+    )};
     control->SetIncrement(increment);
 
     init(control, label, orient);
+
+    const auto modifyCallback{[this](wxCommandEvent& evt) {
+        if (not mData.isEnabled() or mData.pDirty) return;
+
+        mData.mValue = evt.GetInt();
+        if (mData.onGUIUpdate) mData.onGUIUpdate();
+    }};
+    const auto updateUICallback{[this, control](wxUpdateUIEvent& evt) {
+        if (not mData.pDirty) return;
+
+        control->SetValue(mData);
+        Enable(mData.isEnabled());
+        mData.pDirty = false;
+    }};
+    Bind(wxEVT_SPINCTRL, modifyCallback);
+    Bind(wxEVT_UPDATE_UI, updateUICallback);
 }
 
-PCUI::NumericDec::NumericDec(
-        wxWindow* parent,
-        wxWindowID winID,
-        float64 min,
-        float64 max,
-        float64 initial,
-        float64 increment,
-        int64 style,
-        const wxString& label,
-        const wxOrientation& orient) :
-    ControlBase(parent, winID) {
+PCUI::Decimal::Decimal(
+    wxWindow *parent,
+    DecimalData& data,
+    float64 min,
+    float64 max,
+    float64 increment,
+    int64 style,
+    const wxString& label,
+    const wxOrientation& orient
+) : ControlBase(parent),
+    mData{data} {
 
-    auto *control{new wxSpinCtrlDouble(this, winID, {}, wxDefaultPosition, wxDefaultSize, style, min, max, initial)};
+    auto *control{new wxSpinCtrlDouble(
+        this,
+        wxID_ANY,
+        {},
+        wxDefaultPosition,
+        wxDefaultSize,
+        style,
+        min,
+        max,
+        data
+    )};
     control->SetIncrement(increment);
 
     init(control, label, orient);
+
+    const auto modifyCallback{[this](wxCommandEvent& evt) {
+        if (not mData.isEnabled() or mData.pDirty) return;
+
+        mData.mValue = evt.GetInt();
+        if (mData.onGUIUpdate) mData.onGUIUpdate();
+    }};
+    const auto updateUICallback{[this, control](wxUpdateUIEvent& evt) {
+        if (not mData.pDirty) return;
+
+        control->SetValue(mData);
+        Enable(mData.isEnabled());
+        mData.pDirty = false;
+    }};
+    Bind(wxEVT_SPINCTRLDOUBLE, modifyCallback);
+    Bind(wxEVT_UPDATE_UI, updateUICallback);
 }
 
 PCUI::Text::Text(
-        wxWindow *parent,
-        wxWindowID winID,
-        const wxString &initial,
-        int64 style,
-        const wxString &label,
-        wxOrientation orient) :
-    ControlBase(parent, winID) {
+    wxWindow *parent,
+    TextData &data,
+    int64 style,
+    const wxString &label,
+    wxOrientation orient
+) : ControlBase(parent),
+    mData{data} {
 
-    auto *control{new wxTextCtrl(this, winID, initial, wxDefaultPosition, wxDefaultSize, style)};
+    auto *control{new wxTextCtrl(
+        this,
+        wxID_ANY,
+        string{mData},
+        wxDefaultPosition,
+        wxDefaultSize,
+        style
+    )};
 #   ifdef __WXMAC__
     control->OSXDisableAllSmartSubstitutions();
 #   endif
 
     init(control, label, orient);
+
+    const auto modifyCallback{[this](wxCommandEvent& evt) {
+        if (not mData.isEnabled() or mData.pDirty) return;
+
+        mData.mValue = evt.GetInt();
+        if (mData.onGUIUpdate) mData.onGUIUpdate();
+    }};
+    const auto updateUICallback{[this, control](wxUpdateUIEvent& evt) {
+        if (not mData.pDirty) return;
+
+        control->SetValue(string{mData});
+        Enable(mData.isEnabled());
+        mData.pDirty = false;
+    }};
+    Bind(wxEVT_TEXT, modifyCallback);
+    Bind(wxEVT_UPDATE_UI, updateUICallback);
 }
 
