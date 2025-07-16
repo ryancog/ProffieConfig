@@ -39,7 +39,6 @@ MainMenu::MainMenu(wxWindow* parent) :
     PCUI::Frame(parent, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)) {
     createUI();
     createMenuBar();
-    createTooltips();
     bindEvents();
     update();
 
@@ -48,20 +47,20 @@ MainMenu::MainMenu(wxWindow* parent) :
 
 void MainMenu::bindEvents() {
     auto promptClose{[this]() -> bool {
-        for (auto *editor : editors) {
-            if (not editor->isSaved()) {
-                if (PCUI::showMessage(
-                            _("There is at least one editor open with unsaved changes, are you sure you want to exit?") +
-                            "\n\n" +
-                            _("All unsaved changes will be lost!"),
-                            _("Open Editor(s)"),
-                            wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION) == wxNO) {
-                    return false;
-                }
+        // for (auto *editor : editors) {
+        //     if (not editor->isSaved()) {
+        //         if (PCUI::showMessage(
+        //                     _("There is at least one editor open with unsaved changes, are you sure you want to exit?") +
+        //                     "\n\n" +
+        //                     _("All unsaved changes will be lost!"),
+        //                     _("Open Editor(s)"),
+        //                     wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION) == wxNO) {
+        //             return false;
+        //         }
 
-                break;
-            }
-        }
+        //         break;
+        //     }
+        // }
 
         return true;
     }};
@@ -125,7 +124,7 @@ void MainMenu::bindEvents() {
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(this); }, ID_RefreshDev);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         if (activeEditor == nullptr) {
-            activeEditor = generateEditor(configSelect->entry()->GetStringSelection().ToStdString());
+            activeEditor = generateEditor(configSelection);
             if (activeEditor == nullptr) return;
             editors.emplace_back(activeEditor);
         }
@@ -141,32 +140,33 @@ void MainMenu::bindEvents() {
         else SerialMonitor::instance = new SerialMonitor(this);
     }, ID_OpenSerial);
 #	endif
-    Bind(wxEVT_CHOICE, [this](wxCommandEvent&) {
+
+    configSelection.onValueUpdate = [this]() {
         wxSetCursor(wxCURSOR_WAIT);
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
         activeEditor = nullptr;
-        if (configSelect->entry()->GetSelection() == 0) {
+        if (configSelection == 0) {
             update();
             return;
         }
 
         for (auto *editor : editors) {
-            if (configSelect->entry()->GetStringSelection() == wxString{editor->getOpenConfig()}) {
+            if (configSelection == wxString{editor->getOpenConfig()}) {
                 activeEditor = editor;
                 break;
             }
         }
 
         update();
-    }, ID_ConfigSelect);
-    Bind(wxEVT_CHOICE, [this](wxCommandEvent&) { update(); }, ID_DeviceSelect);
+    };
+    boardSelection.onValueUpdate = [this]() { update(); };
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         wxSetCursor(wxCURSOR_WAIT);
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
         if (activeEditor == nullptr) {
-            activeEditor = generateEditor(configSelect->entry()->GetStringSelection().ToStdString());
+            activeEditor = generateEditor(configSelection);
             if (activeEditor == nullptr) return;
             editors.emplace_back(activeEditor);
         }
@@ -183,16 +183,18 @@ void MainMenu::bindEvents() {
         wxSetCursor(wxCURSOR_WAIT);
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
-        auto configPath{Paths::configs() / (addDialog.configName + ".h").ToStdWstring()};
-        if (not addDialog.existingPath.empty()) {
-            fs::copy(addDialog.existingPath.ToStdWstring(), configPath);
+        auto configPath{Paths::configs() / (static_cast<string>(addDialog.configName) + ".h")};
+        if (not static_cast<filepath>(addDialog.importPath).empty()) {
+            fs::copy(addDialog.importPath, configPath);
         } else {
             std::ofstream{configPath}.flush();
         }
 
         update();
-        configSelect->entry()->SetStringSelection(addDialog.configName);
-        wxPostEvent(this, wxCommandEvent{wxEVT_CHOICE, ID_ConfigSelect});
+        auto choices{configSelection.choices()};
+        choices.push_back(addDialog.configName);
+        configSelection.setChoices(std::move(choices));
+        configSelection = configSelection.choices().size() - 1;
     }, ID_AddConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
         if (PCUI::showMessage(
@@ -204,28 +206,11 @@ void MainMenu::bindEvents() {
                 this) == wxYES
            ) {
             if (activeEditor) activeEditor->Close(true);
-            fs::remove(Paths::configs() / (configSelect->entry()->GetStringSelection().ToStdString() + ".h"));
+            fs::remove(Paths::configs() / (static_cast<string>(configSelection) + ".h"));
             activeEditor = nullptr;
             update();
         }
     }, ID_RemoveConfig);
-    Bind(Arduino::EVT_CLEAR_BLIST, [this](Arduino::Event&) {
-        boardSelect->entry()->Clear();
-    });
-    Bind(Arduino::EVT_APPEND_BLIST, [this](Arduino::Event& evt) {
-        boardSelect->entry()->Append(evt.str);
-    });
-    Bind(Arduino::EVT_REFRESH_DONE, [this](Arduino::Event& evt) {
-        boardSelect->entry()->SetStringSelection(evt.str);
-        if (boardSelect->entry()->GetSelection() == -1) boardSelect->entry()->SetSelection(0);
-        update();
-    });
-}
-
-void MainMenu::createTooltips() const {
-  TIP(applyButton, _("Apply the current configuration to the selected Proffieboard."));
-  TIP(boardSelect, _("Select the Proffieboard to connect to.\nThese IDs are assigned by the OS, and can vary."));
-  TIP(refreshButton, _("Generate an up-to-date list of connected boards."));
 }
 
 void MainMenu::createMenuBar() {
@@ -250,96 +235,111 @@ void MainMenu::createMenuBar() {
 }
 
 void MainMenu::createUI() {
-  auto *sizer{new wxBoxSizer(wxVERTICAL)};
+    auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
-  auto *headerSection{new wxBoxSizer(wxHORIZONTAL)};
-  auto *titleSection{new wxBoxSizer(wxVERTICAL)};
-  auto *title{new wxStaticText(this, wxID_ANY, "ProffieConfig")};
-  auto titleFont{title->GetFont()};
-  titleFont.MakeBold();
-# if defined(__WXGTK__) || defined(__WINDOWS__)
-  titleFont.SetPointSize(20);
-# elif defined (__WXOSX__)
-  titleFont.SetPointSize(30);
-#endif
-  title->SetFont(titleFont);
-  auto *subTitle{new wxStaticText(this, wxID_ANY, _("Created by Ryryog25"))};
-  titleSection->Add(title);
-  titleSection->Add(subTitle);
-  headerSection->Add(titleSection);
-  headerSection->AddSpacer(20);
-  headerSection->AddStretchSpacer(1);
-  auto *appIcon{PCUI::createStaticImage(this, wxID_ANY, Image::loadPNG("icon"))};
-  appIcon->SetMaxSize(wxSize{64, 64});
-  headerSection->Add(appIcon);
+    auto *headerSection{new wxBoxSizer(wxHORIZONTAL)};
+    auto *titleSection{new wxBoxSizer(wxVERTICAL)};
+    auto *title{new wxStaticText(this, wxID_ANY, "ProffieConfig")};
+    auto titleFont{title->GetFont()};
+    titleFont.MakeBold();
+#   if defined(__WXGTK__) || defined(__WINDOWS__)
+    titleFont.SetPointSize(20);
+#   elif defined (__WXOSX__)
+    titleFont.SetPointSize(30);
+#   endif
+    title->SetFont(titleFont);
+    auto *subTitle{new wxStaticText(this, wxID_ANY, _("Created by Ryryog25"))};
+    titleSection->Add(title);
+    titleSection->Add(subTitle);
+    headerSection->Add(titleSection);
+    headerSection->AddSpacer(20);
+    headerSection->AddStretchSpacer(1);
+    auto *appIcon{PCUI::createStaticImage(this, wxID_ANY, Image::loadPNG("icon"))};
+    appIcon->SetMaxSize(wxSize{64, 64});
+    headerSection->Add(appIcon);
 
-  auto *configSelectSection{new wxBoxSizer(wxHORIZONTAL)};
-  configSelect = new PCUI::Choice(this, ID_ConfigSelect, { _("Select Config...") });
-  addConfig = new wxButton(this, ID_AddConfig, _("Add"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
-  removeConfig = new wxButton(this, ID_RemoveConfig, _("Remove"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
-  removeConfig->Disable();
-  configSelectSection->Add(configSelect, wxSizerFlags{1}.Expand());
-  configSelectSection->AddSpacer(10);
-  configSelectSection->Add(addConfig, wxSizerFlags{}.Expand());
-  configSelectSection->AddSpacer(10);
-  configSelectSection->Add(removeConfig, wxSizerFlags{}.Expand());
+    auto *configSelectSection{new wxBoxSizer(wxHORIZONTAL)};
+    configSelection.setChoices(Misc::createEntries({ _("Select Config...") }));
+    configSelection = 0;
+    auto *configSelect{new PCUI::Choice(this, configSelection)};
 
-  editConfig = new wxButton(this, ID_EditConfig, _("Edit Selected Configuration"));
-  editConfig->Disable();
+    auto *addConfig{new wxButton(this, ID_AddConfig, _("Add"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT)};
+    removeConfig = new wxButton(
+        this, ID_RemoveConfig, _("Remove"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT
+    );
+    removeConfig->Disable();
+    configSelectSection->Add(configSelect, wxSizerFlags{1}.Expand());
+    configSelectSection->AddSpacer(10);
+    configSelectSection->Add(addConfig, wxSizerFlags{}.Expand());
+    configSelectSection->AddSpacer(10);
+    configSelectSection->Add(removeConfig, wxSizerFlags{}.Expand());
 
-  auto *boardControls{new wxBoxSizer(wxHORIZONTAL)};
-  auto boardEntries{Misc::createEntries({_("Select Board...")})};
-# ifdef __WINDOWS__
-  boardEntries.emplace_back(_("BOOTLOADER RECOVERY"));
-# endif
-  boardSelect = new PCUI::Choice(this, ID_DeviceSelect, boardEntries);
-  refreshButton = new wxButton(this, ID_RefreshDev, _("Refresh Boards"));
-  boardControls->Add(refreshButton);
-  boardControls->AddSpacer(10);
-  boardControls->Add(boardSelect, wxSizerFlags{1});
+    editConfig = new wxButton(this, ID_EditConfig, _("Edit Selected Configuration"));
+    editConfig->Disable();
 
-  applyButton = new wxButton(this, ID_ApplyChanges, _("Apply Selected Configuration to Board"));
-  applyButton->Disable();
-  openSerial = new wxButton(this, ID_OpenSerial, _("Open Serial Monitor"));
-  openSerial->Disable();
+    auto *boardControls{new wxBoxSizer(wxHORIZONTAL)};
+    auto boardEntries{Misc::createEntries({_("Select Board...")})};
+#   ifdef __WINDOWS__
+    boardEntries.emplace_back(_("BOOTLOADER RECOVERY"));
+#   endif
+    boardSelection.setChoices(std::move(boardEntries));
+    auto *boardSelect{new PCUI::Choice(this, boardSelection)};
+    TIP(
+        boardSelect, 
+        _("Select the Proffieboard to connect to.\nThese IDs are assigned by the OS, and can vary.")
+    );
+    auto *refreshButton{new wxButton(this, ID_RefreshDev, _("Refresh Boards"))};
+    TIP(refreshButton, _("Generate an up-to-date list of connected boards."));
+    boardControls->Add(refreshButton);
+    boardControls->AddSpacer(10);
+    boardControls->Add(boardSelect, wxSizerFlags{1});
 
-  sizer->AddSpacer(20);
-  sizer->Add(headerSection, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
-  sizer->AddSpacer(20);
-  sizer->Add(configSelectSection, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
-  sizer->AddSpacer(10);
-  sizer->Add(editConfig, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
-  sizer->AddSpacer(20);
-  sizer->Add(boardControls, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
-  sizer->AddSpacer(10);
-  sizer->Add(applyButton, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
-  sizer->AddSpacer(10);
-  sizer->Add(openSerial, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
-  sizer->AddSpacer(20); // There's a sizing issue I need to figure out... for now we give it a chin
+    applyButton = new wxButton(this, ID_ApplyChanges, _("Apply Selected Configuration to Board"));
+    TIP(applyButton, _("Apply the current configuration to the selected Proffieboard."));
+    applyButton->Disable();
+    openSerial = new wxButton(this, ID_OpenSerial, _("Open Serial Monitor"));
+    openSerial->Disable();
 
-  SetSizerAndFit(sizer);
+    sizer->AddSpacer(20);
+    sizer->Add(headerSection, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+    sizer->AddSpacer(20);
+    sizer->Add(configSelectSection, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+    sizer->AddSpacer(10);
+    sizer->Add(editConfig, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+    sizer->AddSpacer(20);
+    sizer->Add(boardControls, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+    sizer->AddSpacer(10);
+    sizer->Add(applyButton, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+    sizer->AddSpacer(10);
+    sizer->Add(openSerial, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+    sizer->AddSpacer(20); // There's a sizing issue I need to figure out... for now we give it a chin
+
+    SetSizerAndFit(sizer);
 }
 
-void MainMenu::update() const {
-    auto lastConfig = configSelect->entry()->GetStringSelection();
-    auto selectEntry{configSelect->entry()->GetString(0)};
-    configSelect->entry()->Clear();
-    configSelect->entry()->Append(selectEntry);
+void MainMenu::update() {
+    auto configChoices{configSelection.choices()};
+    auto lastChoice{static_cast<string>(configSelection)};
+    configChoices.resize(1);
+    int32 newChoice{0};
 
     fs::directory_iterator configsIterator{Paths::configs()};
     for (const auto& configFile : configsIterator) {
         if (not configFile.is_regular_file()) continue;
         if (configFile.path().extension() != ".h") continue;
 
-        configSelect->entry()->Append(configFile.path().stem().native());
+        const auto& configName{configChoices.emplace_back(configFile.path().stem().native())};
+        if (configName == lastChoice) newChoice = configChoices.size() - 1;
     }
 
-    configSelect->entry()->SetStringSelection(lastConfig);
-    if (configSelect->entry()->GetSelection() == -1) configSelect->entry()->SetSelection(0);
+    configSelection.setChoices(std::move(configChoices));
+    configSelection = newChoice;
 
-    auto configSelected = configSelect->entry()->GetSelection() != 0;
-    auto boardSelected = boardSelect->entry()->GetSelection() != 0;
-    auto recoverySelected = boardSelect->entry()->GetStringSelection().find(_("BOOTLOADER")) != string::npos;
+    bool configSelected{configSelection != 0};
+    bool boardSelected{boardSelection != 0};
+    bool recoverySelected{
+        static_cast<string>(boardSelection).find(_("BOOTLOADER").ToStdString()) != string::npos
+    };
 
     applyButton->Enable(configSelected && boardSelected);
     editConfig->Enable(configSelected);
@@ -358,11 +358,12 @@ void MainMenu::removeEditor(EditorWindow *editor) {
 }
 
 EditorWindow *MainMenu::generateEditor(const string& configName) {
-    auto *newEditor{new EditorWindow(configName, this)};
-    if (not Configuration::readConfig(Paths::configs() / (configName + ".h"), newEditor)) {
-        PCUI::showMessage(_("Error while reading configuration file!"), _("Config Read Error"), wxOK | wxCENTER, this);
-        newEditor->Destroy();
-        return nullptr;
-    }
-    return newEditor;
+    // auto *newEditor{new EditorWindow(configName, this)};
+    // if (not Configuration::readConfig(Paths::configs() / (configName + ".h"), newEditor)) {
+    //     PCUI::showMessage(_("Error while reading configuration file!"), _("Config Read Error"), wxOK | wxCENTER, this);
+    //     newEditor->Destroy();
+    //     return nullptr;
+    // }
+    // return newEditor;
+    return nullptr;
 }

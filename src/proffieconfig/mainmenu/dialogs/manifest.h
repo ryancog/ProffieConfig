@@ -5,8 +5,12 @@
 #include <wx/dialog.h>
 
 #include "../mainmenu.h"
+#include "ui/controls.h"
 
 class ManifestDialog : public wxDialog {
 public:
     ManifestDialog(MainMenu *);
+
+private:
+    PCUI::TextData mEntryData;
 };
