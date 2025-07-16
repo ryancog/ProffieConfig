@@ -5,28 +5,28 @@
 add_executable(proffieconfig WIN32
     main.cpp
 
-    editor/dialogs/bladearraydlg.cpp 
-    editor/dialogs/customoptionsdlg.cpp
-    editor/editorwindow.cpp
-    editor/pages/propspage.cpp
+    # editor/dialogs/bladearraydlg.cpp 
+    # editor/dialogs/customoptionsdlg.cpp
+    # editor/editorwindow.cpp
+    # editor/pages/propspage.cpp
+    # editor/pages/generalpage.cpp
+    # editor/pages/presetspage.cpp
+    # editor/pages/bladespage.cpp
     core/appstate.cpp
     core/utilities/misc.cpp
     core/utilities/progress.cpp
-    core/config/configuration.cpp
-    core/config/settings.cpp
-    editor/pages/generalpage.cpp
-    editor/pages/presetspage.cpp
-    editor/pages/bladespage.cpp
+    # core/config/configuration.cpp
+    # core/config/settings.cpp
     mainmenu/dialogs/addconfig.cpp
     mainmenu/dialogs/props.cpp
     mainmenu/dialogs/manifest.cpp
     mainmenu/mainmenu.cpp
-    onboard/onboard.cpp
-    onboard/pages/dependencypage.cpp
-    onboard/pages/overviewpage.cpp
-    onboard/pages/welcomepage.cpp
-    tools/arduino.cpp
-    tools/serialmonitor.cpp
+    # onboard/onboard.cpp
+    # onboard/pages/dependencypage.cpp
+    # onboard/pages/overviewpage.cpp
+    # onboard/pages/welcomepage.cpp
+    # tools/arduino.cpp
+    # tools/serialmonitor.cpp
 )
 
 set_target_properties(proffieconfig PROPERTIES
