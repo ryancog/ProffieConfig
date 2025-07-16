@@ -18,9 +18,9 @@ namespace Configuration {
     bool readConfig(const filepath&, EditorWindow *editorWindow);
     bool importConfig(EditorWindow *editorWindow);
 
-    using MapPair = std::pair<const wxString, const wxString>;
+    using MapPair = std::pair<const string, const string>;
     using VMap = vector<MapPair>;
-    const MapPair& findInVMap(const VMap&, const wxString& search);
+    const MapPair& findInVMap(const VMap&, const string& search);
 
     enum Orientation {
         ORIENTATION_FETS_TOWARDS_BLADE,
@@ -32,8 +32,8 @@ namespace Configuration {
         ORIENTATION_MAX,
     };
 
-    wxArrayString orientationStrings();
-    wxString orientToStr(Orientation);
+    vector<string> orientationStrings();
+    string orientToStr(Orientation);
 
     constexpr array<cstring, 6> ORIENT_CONFIG_STRINGS = {
         "ORIENTATION_FETS_TOWARDS_BLADE",

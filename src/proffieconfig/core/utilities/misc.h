@@ -20,15 +20,15 @@ public:
 
     static const wxEventTypeTag<wxCommandEvent> EVT_MSGBOX;
 
-    static wxArrayString createEntries(const std::vector<wxString>& vec);
-    static wxArrayString createEntries(const std::initializer_list<wxString>& list);
-    static wxArrayString createEntries(const Configuration::VMap& map);
+    static vector<string> createEntries(const std::vector<wxString>& vec);
+    static vector<string> createEntries(const std::initializer_list<wxString>& list);
+    static vector<string> createEntries(const Configuration::VMap& map);
 
     template<typename T, size_t SIZE>
-    static wxArrayString createEntries(const array<T, SIZE>& list) {
-        wxArrayString entries;
+    static vector<string> createEntries(const array<T, SIZE>& list) {
+        vector<string> entries;
         for (const auto& entry : list) {
-            entries.Add(wxString{entry});
+            entries.push_back(string{entry});
         }
         return entries;
     }
