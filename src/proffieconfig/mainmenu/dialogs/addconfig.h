@@ -16,24 +16,15 @@ public:
     enum {
         ID_CreateNew,
         ID_ImportExisting,
-
-        ID_ChooseConfig,
-        ID_ConfigName,
     };
 
     MainMenu* parent{nullptr};
-    wxString existingPath;
-    wxString configName;
 
-    wxToggleButton* createNew{nullptr};
-    wxToggleButton* importExisting{nullptr};
-    wxFilePickerCtrl* chooseConfig{nullptr};
-    PCUI::Text* configNameEntry{nullptr};
+    PCUI::FilePickerData importPath;
+    PCUI::TextData configName;
     void update();
 
 private:
-    wxStaticText* mChooseConfigText{nullptr};
-
     wxStaticText* mInvalidNameWarning{nullptr};
     wxStaticText* mDuplicateWarning{nullptr};
     wxStaticText* mFileSelectionWarning{nullptr};
