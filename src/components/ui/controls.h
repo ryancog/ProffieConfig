@@ -20,9 +20,11 @@
  */
 
 
+#include <wx/checkbox.h>
 #include <wx/choice.h>
 #include <wx/combobox.h>
 #include <wx/control.h>
+#include <wx/filepicker.h>
 #include <wx/panel.h>
 #include <wx/sizer.h>
 #include <wx/spinctrl.h>
@@ -42,9 +44,9 @@ struct ControlData {
 
     /**
      * A callback to alert program-side code that the contained
-     * value has been updated by the user in UI
+     * value has been updated, either by program or by the user in UI
      */
-    std::function<void(void)> onGUIUpdate;
+    std::function<void(void)> onUpdate;
 
     /**
      * Enable/disable the UI control.
@@ -55,12 +57,23 @@ struct ControlData {
     }
     void disable() { enable(false); }
 
+    /**
+     * Show/hide the UI control.
+     */
+    void show(bool show = true) {
+        mShown = show;
+        pDirty = true;
+    }
+    void hide() { show(false); }
+
     bool isDirty() const { return pDirty; }
-    bool isEnabled() const { return mEnabled; }
+
+    [[nodiscard]] bool isEnabled() const { return mEnabled; }
+    [[nodiscard]] bool isShown() const { return mShown; }
 
 protected:
     ControlData() = default;
-    ControlData(const ControlData&) = default;
+    ControlData(const ControlData&) = delete;
     ControlData(ControlData&&) = default;
 
     /**
@@ -70,24 +83,37 @@ protected:
      */
     bool pDirty{false};
 
+    /**
+     * Control can run this whenever it receives an event.
+     *
+     * @param valueUpdate function to update the control's data. 
+     * Only run if needed.
+     */
+    void genericModifyHandler(function<void(void)>&& valueUpdate);
+
+    /**
+     * @return Whether or not the control needs to process its custom data.
+     */
+    bool genericUIUpdateHandler(wxWindow *);
+
 private:
     /**
-     * UI Control enabled state
+     * UI Control states
      */
     bool mEnabled{true};
+    bool mShown{true};
 };
 
-/*
- * Arg Order for derived:
- * parent
- * ...
- * label
- * orient
- */
-template<class CONTROL>
+template<
+    class DERIVED,
+    typename CONTROL_DATA,
+    class CONTROL,
+    class CONTROL_EVENT
+>
 class ControlBase : public wxPanel {
 public:
-    static_assert(std::is_base_of<wxControl, CONTROL>(), "PCUI Control core must be wxControl descendant");
+    static_assert(std::is_base_of_v<wxControl, CONTROL>, "PCUI Control core must be wxControl descendant");
+    static_assert(std::is_base_of_v<ControlData, CONTROL_DATA>, "PCUI Control data must be ControlData descendant");
 
     operator wxWindow *() { return this; }
 
@@ -100,9 +126,15 @@ public:
     // [[nodiscard]] inline constexpr const wxStaticText *text() const { return mText; }
 
 protected:
-    ControlBase(wxWindow *parent) : wxPanel(parent, wxID_ANY) {};
+    ControlBase(wxWindow *parent, CONTROL_DATA& data) : 
+        wxPanel(parent, wxID_ANY), pData{data} {}
 
-    void init(CONTROL *control, wxString label, wxOrientation orient) {
+    void init(
+        CONTROL *control,
+        const wxEventTypeTag<CONTROL_EVENT>& eventTag,
+        wxString label,
+        wxOrientation orient
+    ) {
         auto *sizer{new wxBoxSizer(orient)};
         constexpr auto PADDING{5};
 
@@ -121,24 +153,52 @@ protected:
         sizer->Add(control, wxSizerFlags(1).Expand());
 
         SetSizerAndFit(sizer);
+
+        Enable(pData.isEnabled());
+        Show(pData.isShown());
+        onUIUpdate();
+
+        Bind(wxEVT_UPDATE_UI, [this](wxUpdateUIEvent&) {
+            if (not pData.isDirty()) return;
+
+            Enable(pData.isEnabled());
+            Show(pData.isShown());
+            onUIUpdate();
+        });
+        Bind(eventTag, [this](CONTROL_EVENT& evt) {
+            if (not pData.isEnabled() or pData.isDirty()) return;
+
+            onModify(evt);
+            if (pData.onUpdate) pData.onUpdate();
+        });
     }
 
+    virtual void onUIUpdate() = 0;
+    virtual void onModify(CONTROL_EVENT&) = 0;
+
     CONTROL *pControl{nullptr};
+    CONTROL_DATA& pData;
 };
 
 struct ToggleData : ControlData {
     operator bool() const { return mValue; }
     void operator=(bool val) {
         mValue = val;
+        if (onUpdate) onUpdate();
         pDirty = true;
     }
 
 private:
     friend class Toggle;
+    friend class CheckBox;
     bool mValue;
 };
 
-class UI_EXPORT Toggle : public ControlBase<wxToggleButton> {
+class UI_EXPORT Toggle : public ControlBase<
+                         Toggle,
+                         ToggleData,
+                         wxToggleButton,
+                         wxCommandEvent> {
 public:
     Toggle(
         wxWindow *parent,
@@ -151,13 +211,39 @@ public:
         );
 
 private:
-    ToggleData& mData;
+    void onUIUpdate() final;
+    void onModify(wxCommandEvent&) final;
+
     wxString mOnText;
     wxString mOffText;
 };
 
+class UI_EXPORT CheckBox : public ControlBase<
+                           CheckBox,
+                           ToggleData,
+                           wxCheckBox,
+                           wxCommandEvent> {
+public:
+    CheckBox(
+        wxWindow *parent,
+        ToggleData& data,
+        int64 style = 0,
+        const wxString& label = {},
+        wxOrientation orient = wxVERTICAL
+    );
+
+private:
+    void onUIUpdate() final;
+    void onModify(wxCommandEvent&) final;
+};
+
 struct ChoiceData : ControlData {
     operator int32() const { return mValue; }
+    operator string() const { 
+        if (mValue == -1) return {};
+        return mChoices[mValue];
+    }
+
     void operator=(int32 val) {
         mValue = val;
         pDirty = true;
@@ -172,10 +258,14 @@ struct ChoiceData : ControlData {
 private:
     friend class Choice;
     vector<string> mChoices;
-    int32 mValue;
+    int32 mValue{-1};
 };
 
-class UI_EXPORT Choice : public ControlBase<wxChoice> {
+class UI_EXPORT Choice : public ControlBase<
+                         Choice,
+                         ChoiceData,
+                         wxChoice,
+                         wxCommandEvent> {
 public:
     Choice(
         wxWindow *parent,
@@ -185,7 +275,8 @@ public:
         );
 
 private:
-    ChoiceData& mData;
+    void onUIUpdate() final;
+    void onModify(wxCommandEvent&) final;
 };
 
 struct ComboBoxData : ControlData {
@@ -207,7 +298,11 @@ private:
     string mValue;
 };
 
-class UI_EXPORT ComboBox : public ControlBase<wxComboBox> {
+class UI_EXPORT ComboBox : public ControlBase<
+                           ComboBox,
+                           ComboBoxData,
+                           wxComboBox,
+                           wxCommandEvent> {
 public:
     ComboBox(
         wxWindow *parent,
@@ -217,7 +312,8 @@ public:
         );
 
 private:
-    ComboBoxData& mData;
+    void onUIUpdate() final;
+    void onModify(wxCommandEvent&) final;
 };
 
 struct NumericData : ControlData {
@@ -229,10 +325,14 @@ struct NumericData : ControlData {
 
 private:
     friend class Numeric;
-    int32 mValue;
+    int32 mValue{0};
 };
 
-class UI_EXPORT Numeric : public ControlBase<wxSpinCtrl> {
+class UI_EXPORT Numeric : public ControlBase<
+                          Numeric,
+                          NumericData,
+                          wxSpinCtrl,
+                          wxSpinEvent> {
 public:
     Numeric(
         wxWindow *parent,
@@ -243,10 +343,11 @@ public:
         int64 style = wxSP_ARROW_KEYS,
         const wxString& label = {},
         const wxOrientation& orient = wxVERTICAL
-        );
+    );
 
 private:
-    NumericData& mData;
+    void onUIUpdate() final;
+    void onModify(wxSpinEvent&) final;
 };
 
 struct DecimalData : ControlData {
@@ -261,7 +362,11 @@ private:
     float64 mValue;
 };
 
-class UI_EXPORT Decimal : public ControlBase<wxSpinCtrlDouble> {
+class UI_EXPORT Decimal : public ControlBase<
+                          Decimal,
+                          DecimalData,
+                          wxSpinCtrlDouble,
+                          wxSpinDoubleEvent> {
 public:
     Decimal(
         wxWindow *parent,
@@ -275,13 +380,14 @@ public:
         );
 
 private:
-    DecimalData& mData;
+    void onUIUpdate() final;
+    void onModify(wxSpinDoubleEvent&) final;
 };
 
 struct TextData : ControlData {
     operator string() { return mValue; }
     void operator=(string&& val) {
-        mValue = val;
+        mValue = std::move(val);
         pDirty = true;
     }
 
@@ -290,7 +396,11 @@ private:
     string mValue;
 };
 
-class UI_EXPORT Text : public ControlBase<wxTextCtrl> {
+class UI_EXPORT Text : public ControlBase<
+                       Text,
+                       TextData,
+                       wxTextCtrl,
+                       wxCommandEvent> {
 public:
     Text(
         wxWindow *parent,
@@ -308,10 +418,44 @@ public:
     // [[nodiscard]] wxString getInvalidChars() const;
 
 private:
-    TextData& mData;
+    void onUIUpdate() final;
+    void onModify(wxCommandEvent&) final;
     // void pruneText();
 
     // wxString mInvalidChars;
+};
+
+struct FilePickerData : ControlData {
+    operator filepath() { return mValue; }
+    void operator=(filepath&& val) {
+        mValue = std::move(val);
+        pDirty = true;
+    }
+
+private:
+    friend class FilePicker;
+    filepath mValue;
+};
+
+class UI_EXPORT FilePicker : public ControlBase<
+                             FilePicker,
+                             FilePickerData,
+                             wxFilePickerCtrl,
+                             wxFileDirPickerEvent> {
+public:
+    FilePicker(
+        wxWindow *parent,
+        FilePickerData& data,
+        int64 style,
+        const wxString& prompt = {},
+        const wxString& wildcard = {},
+        const wxString& label = {},
+        wxOrientation orient = wxVERTICAL
+    );
+    
+private:
+    void onUIUpdate() final;
+    void onModify(wxFileDirPickerEvent&) final;
 };
 
 } // namespace PCUI
