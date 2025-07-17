@@ -30,6 +30,31 @@ namespace PCUI {
 
 } // namespace PCUI
 
+PCUI::Button::Button(
+    wxWindow *parent,
+    ButtonData& data,
+    int64 style,
+    const wxString& label
+) : ControlBase(parent, data) {
+
+    auto *control{new wxButton(
+        this,
+        wxID_ANY,
+        label,
+        wxDefaultPosition,
+        wxDefaultSize,
+        style
+    )};
+
+    init(control, wxEVT_BUTTON, wxEmptyString, wxVERTICAL);
+};
+
+void PCUI::Button::onUIUpdate() {}
+
+void PCUI::Button::onModify(wxCommandEvent&) {
+    pData.pDirty = false;
+}
+
 PCUI::Toggle::Toggle(
     wxWindow *parent,
     ToggleData& data,
