@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2025 Ryan Ogurek
  *
- * components/ui/controls.h
+ * components/ui/controls/controls.h
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,75 +34,10 @@
 
 #include "utils/types.h"
 
-#include "private/export.h"
+#include "../private/export.h"
+#include "controldata.h"
 
 namespace PCUI {
-
-struct ControlData {
-    ControlData& operator=(const ControlData&) = delete;
-    ControlData& operator=(ControlData&&) = delete;
-
-    /**
-     * A callback to alert program-side code that the contained
-     * value has been updated, either by program or by the user in UI
-     */
-    std::function<void(void)> onUpdate;
-
-    /**
-     * Enable/disable the UI control.
-     */
-    void enable(bool en = true) {
-        mEnabled = en;
-        pDirty = true; 
-    }
-    void disable() { enable(false); }
-
-    /**
-     * Show/hide the UI control.
-     */
-    void show(bool show = true) {
-        mShown = show;
-        pDirty = true;
-    }
-    void hide() { show(false); }
-
-    bool isDirty() const { return pDirty; }
-
-    [[nodiscard]] bool isEnabled() const { return mEnabled; }
-    [[nodiscard]] bool isShown() const { return mShown; }
-
-protected:
-    ControlData() = default;
-    ControlData(const ControlData&) = delete;
-    ControlData(ControlData&&) = default;
-
-    /**
-     * Set true whenever the user modifies the data.
-     *
-     * Windows can use UpdateWindowUI() to force updates for dirty data.
-     */
-    bool pDirty{false};
-
-    /**
-     * Control can run this whenever it receives an event.
-     *
-     * @param valueUpdate function to update the control's data. 
-     * Only run if needed.
-     */
-    void genericModifyHandler(function<void(void)>&& valueUpdate);
-
-    /**
-     * @return Whether or not the control needs to process its custom data.
-     */
-    bool genericUIUpdateHandler(wxWindow *);
-
-private:
-    /**
-     * UI Control states
-     */
-    bool mEnabled{true};
-    bool mShown{true};
-};
 
 template<
     class DERIVED,
@@ -180,16 +115,6 @@ protected:
     CONTROL_DATA& pData;
 };
 
-struct ButtonData : ControlData {
-    void operator=(bool val) {
-        if (not val) return;
-        if (onUpdate) onUpdate();
-    }
-
-private:
-    friend class Button;
-};
-
 class UI_EXPORT Button : public ControlBase<
                          Button,
                          ButtonData,
@@ -206,20 +131,6 @@ public:
 private:
     void onUIUpdate() final;
     void onModify(wxCommandEvent&) final;
-};
-
-struct ToggleData : ControlData {
-    operator bool() const { return mValue; }
-    void operator=(bool val) {
-        mValue = val;
-        if (onUpdate) onUpdate();
-        pDirty = true;
-    }
-
-private:
-    friend class Toggle;
-    friend class CheckBox;
-    bool mValue;
 };
 
 class UI_EXPORT Toggle : public ControlBase<
@@ -265,30 +176,6 @@ private:
     void onModify(wxCommandEvent&) final;
 };
 
-struct ChoiceData : ControlData {
-    operator int32() const { return mValue; }
-    operator string() const { 
-        if (mValue == -1) return {};
-        return mChoices[mValue];
-    }
-
-    void operator=(int32 val) {
-        mValue = val;
-        pDirty = true;
-    }
-
-    const vector<string>& choices() const { return mChoices; }
-    void setChoices(vector<string>&& choices) { 
-        mChoices = std::move(choices); 
-        pDirty = true;
-    }
-
-private:
-    friend class Choice;
-    vector<string> mChoices;
-    int32 mValue{-1};
-};
-
 class UI_EXPORT Choice : public ControlBase<
                          Choice,
                          ChoiceData,
@@ -307,25 +194,6 @@ private:
     void onModify(wxCommandEvent&) final;
 };
 
-struct ComboBoxData : ControlData {
-    operator string() const { return mValue; }
-    void operator=(string&& val) {
-        mValue = std::move(val);
-        pDirty = true;
-    }
-
-    const vector<string>& defaults() const { return mDefaults; }
-    void setDefaults(vector<string>&& defaults) {
-        mDefaults = std::move(defaults);
-        pDirty = true;
-    }
-
-private:
-    friend class ComboBox;
-    vector<string> mDefaults;
-    string mValue;
-};
-
 class UI_EXPORT ComboBox : public ControlBase<
                            ComboBox,
                            ComboBoxData,
@@ -342,18 +210,6 @@ public:
 private:
     void onUIUpdate() final;
     void onModify(wxCommandEvent&) final;
-};
-
-struct NumericData : ControlData {
-    operator int32() const { return mValue; }
-    void operator=(int32 val) {
-        mValue = val;
-        pDirty = true;
-    }
-
-private:
-    friend class Numeric;
-    int32 mValue{0};
 };
 
 class UI_EXPORT Numeric : public ControlBase<
@@ -378,18 +234,6 @@ private:
     void onModify(wxSpinEvent&) final;
 };
 
-struct DecimalData : ControlData {
-    operator float64() const { return mValue; }
-    void operator=(float64 val) {
-        mValue = val;
-        pDirty = true;
-    }
-
-private:
-    friend class Decimal;
-    float64 mValue;
-};
-
 class UI_EXPORT Decimal : public ControlBase<
                           Decimal,
                           DecimalData,
@@ -410,18 +254,6 @@ public:
 private:
     void onUIUpdate() final;
     void onModify(wxSpinDoubleEvent&) final;
-};
-
-struct TextData : ControlData {
-    operator string() { return mValue; }
-    void operator=(string&& val) {
-        mValue = std::move(val);
-        pDirty = true;
-    }
-
-private:
-    friend class Text;
-    string mValue;
 };
 
 class UI_EXPORT Text : public ControlBase<
@@ -451,18 +283,6 @@ private:
     // void pruneText();
 
     // wxString mInvalidChars;
-};
-
-struct FilePickerData : ControlData {
-    operator filepath() { return mValue; }
-    void operator=(filepath&& val) {
-        mValue = std::move(val);
-        pDirty = true;
-    }
-
-private:
-    friend class FilePicker;
-    filepath mValue;
 };
 
 class UI_EXPORT FilePicker : public ControlBase<

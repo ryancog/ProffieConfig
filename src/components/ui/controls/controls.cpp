@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024 Ryan Ogurek
  *
- * components/ui/controls.cpp
+ * components/ui/controls/controls.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
