@@ -56,3 +56,33 @@ void PCUI::Choice::onModify(wxCommandEvent& evt) {
     pData->mValue = evt.GetInt();
 }
 
+PCUI::List::List(
+    wxWindow *parent,
+    ChoiceData& data,
+    const wxString& label,
+    wxOrientation orient
+) : ControlBase(parent, data) {
+
+    auto *control{new wxListBox(
+        this,
+		wxID_ANY,
+		wxDefaultPosition,
+		wxDefaultSize,
+        data.mChoices
+	)};
+    control->SetSelection(data);
+
+    init(control, wxEVT_CHOICE, label, orient);
+}
+
+void PCUI::List::onUIUpdate() {
+    pControl->Set(pData->mChoices);
+    pControl->SetSelection(*pData);
+    pData->refreshed();
+}
+
+void PCUI::List::onModify(wxCommandEvent& evt) {
+    pData->mValue = evt.GetInt();
+}
+
+
