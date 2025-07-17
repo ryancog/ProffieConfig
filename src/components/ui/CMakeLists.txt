@@ -6,8 +6,19 @@ add_library(ui SHARED
     frame.cpp
     movable.cpp
     plaque.cpp
-    controls/controls.cpp
     message.cpp
+
+    controls/button.cpp
+    controls/checkbox.cpp
+    controls/checklist.cpp
+    controls/choice.cpp
+    controls/combobox.cpp
+    controls/decimal.cpp
+    controls/filepicker.cpp
+    controls/list.cpp
+    controls/numeric.cpp
+    controls/text.cpp
+    controls/toggle.cpp
 )
 
 target_link_libraries(ui 
