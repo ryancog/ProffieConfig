@@ -106,11 +106,9 @@ public:
 
     // Used for things that like to re-enable themselves
     std::unordered_map<int32_t, bool> mainMenuDisables{
-        { MainMenu::ID_ConfigSelect, true },
         { MainMenu::ID_AddConfig, true },
         { MainMenu::ID_RemoveConfig, true },
         { MainMenu::ID_RefreshDev, true },
-        { MainMenu::ID_DeviceSelect, true },
         { MainMenu::ID_ApplyChanges, true },
         { MainMenu::ID_EditConfig, true },
         { MainMenu::ID_OpenSerial, true }

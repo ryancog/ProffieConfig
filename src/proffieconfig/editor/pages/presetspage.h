@@ -3,7 +3,7 @@
 // Copyright (C) 2025 Ryan Ogurek
 
 #include "../editorwindow.h"
-#include "ui/controls.h"
+#include "ui/controls/controldata.h"
 
 #include <wx/textctrl.h>
 #include <wx/sizer.h>

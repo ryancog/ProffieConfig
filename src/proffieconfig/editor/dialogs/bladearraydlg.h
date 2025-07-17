@@ -4,7 +4,7 @@
 
 #include "../pages/presetspage.h"
 #include "../pages/bladespage.h"
-#include "ui/controls.h"
+#include "ui/controls/controldata.h"
 
 #include <wx/dialog.h>
 #include <wx/sizer.h>

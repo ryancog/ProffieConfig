@@ -5,7 +5,7 @@
 #include <wx/frame.h>
 #include <wx/sizer.h>
 
-#include "ui/controls.h"
+#include "ui/controls/controldata.h"
 #include "ui/frame.h"
 
 // Forward declarations to get around circular dependencies

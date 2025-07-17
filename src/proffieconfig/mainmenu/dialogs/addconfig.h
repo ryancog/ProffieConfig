@@ -3,7 +3,7 @@
 // Copyright (C) 2025 Ryan Ogurek
 
 #include "../../mainmenu/mainmenu.h"
-#include "ui/controls.h"
+#include "ui/controls/controldata.h"
 
 #include <wx/dialog.h>
 #include <wx/textctrl.h>
