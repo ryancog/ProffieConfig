@@ -4,7 +4,7 @@
 
 #include "../editorwindow.h"
 #include "../dialogs/customoptionsdlg.h"
-#include "ui/controls.h"
+#include "ui/controls/controldata.h"
 
 #include <wx/textctrl.h>
 #include <wx/sizer.h>

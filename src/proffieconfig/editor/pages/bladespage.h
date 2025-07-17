@@ -2,7 +2,7 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include "ui/controls.h"
+#include "ui/controls/controldata.h"
 #include "../editorwindow.h"
 
 #include <wx/textctrl.h>

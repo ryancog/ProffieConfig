@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ui/controls.h"
+#include "ui/controls/controldata.h"
 #include "utils/types.h"
 
 namespace Config {

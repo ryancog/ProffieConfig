@@ -9,7 +9,7 @@
 #include <wx/checkbox.h>
 #include <wx/radiobut.h>
 
-#include "ui/controls.h"
+#include "ui/controls/controldata.h"
 #include "../../editor/editorwindow.h"
 #include "wx/osx/radiobut.h"
 
