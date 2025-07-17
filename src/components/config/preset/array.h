@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
  *
- * components/preset/preset.h
+ * components/preset/array.h
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,26 +19,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include "styles/bladestyle.h"
-#include "utils/types.h"
+
+#include "config/types.h"
 
 #include "../private/export.h"
-#include "../wiring/wiring.h"
+#include "preset.h"
 
 namespace Config {
 
-struct CONFIG_EXPORT Preset {
-    string name;
-    string fontDir;
-    // vector<string> fontDirs;
-    string track;
-    struct Style {
-        string comment{"ProffieConfig Default Blue AudioFlicker"};
-        string style{"StyleNormalPtr<AudioFlicker<Blue,DodgerBlue>,BLUE,300,800>()"};
-    };
-    vector<Style> styles;
-    // vector<UID> styles;
+struct CONFIG_EXPORT PresetArray : Tracked {
+    [[nodiscard]] const string& getName() const;
+    bool changeName(const string& name);
+
+    Preset& addPreset();
+    const std::vector<Preset>& getPresets();
+
+    /**
+     * Update the number of styles per preset.
+     */
+    void syncWithBladeArrays(uint32 numStyles);
+
+private:
+    friend class Config;
+    PresetArray(Config& parent, UID, string name);
+
+    string mName;
+    vector<Preset> mPresets;
+
+    Config& mParent;
 };
 
-} // namespace Config
 
+} // namespace Config
