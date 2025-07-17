@@ -52,7 +52,7 @@ PCUI::Button::Button(
 void PCUI::Button::onUIUpdate() {}
 
 void PCUI::Button::onModify(wxCommandEvent&) {
-    pData.pDirty = false;
+    pData->pNew = false;
 }
 
 PCUI::Toggle::Toggle(
@@ -79,11 +79,11 @@ PCUI::Toggle::Toggle(
 
 void PCUI::Toggle::onUIUpdate() {
     pControl->SetValue(pData);
-    pData.pDirty = false;
+    pData->pNew = false;
 }
 
 void PCUI::Toggle::onModify(wxCommandEvent& evt) {
-    pData.mValue = evt.GetInt();
+    pData->mValue = evt.GetInt();
 }
 
 PCUI::CheckBox::CheckBox(
@@ -106,11 +106,11 @@ PCUI::CheckBox::CheckBox(
 
 void PCUI::CheckBox::onUIUpdate() {
     pControl->SetValue(pData);
-    pData.pDirty = false;
+    pData->pNew = false;
 }
 
 void PCUI::CheckBox::onModify(wxCommandEvent& evt) {
-    pData = evt.GetInt();
+    pData->mValue = evt.GetInt();
 }
 
 PCUI::Choice::Choice(
@@ -137,13 +137,13 @@ PCUI::Choice::Choice(
 }
 
 void PCUI::Choice::onUIUpdate() {
-    pControl->Set(pData.mChoices);
-    pControl->SetSelection(pData);
-    pData.pDirty = false;
+    pControl->Set(pData->mChoices);
+    pControl->SetSelection(*pData);
+    pData->pNew = false;
 }
 
 void PCUI::Choice::onModify(wxCommandEvent& evt) {
-    pData.mValue = evt.GetInt();
+    pData->mValue = evt.GetInt();
 }
 
 PCUI::ComboBox::ComboBox(
@@ -170,13 +170,13 @@ PCUI::ComboBox::ComboBox(
 }
 
 void PCUI::ComboBox::onUIUpdate() {
-    pControl->Set(pData.mDefaults);
-    pControl->SetValue(static_cast<string>(pData));
-    pData.pDirty = false;
+    pControl->Set(pData->mDefaults);
+    pControl->SetValue(static_cast<string>(*pData));
+    pData->pNew = false;
 }
 
 void PCUI::ComboBox::onModify(wxCommandEvent& evt) {
-    pData.mValue = evt.GetString().ToStdString();
+    pData->mValue = evt.GetString().ToStdString();
 }
 
 PCUI::Numeric::Numeric(
@@ -199,21 +199,20 @@ PCUI::Numeric::Numeric(
         style,
         min,
         max,
-        pData
+        *pData
     )};
     control->SetIncrement(increment);
 
     init(control, wxEVT_SPINCTRL, label, orient);
-
 }
 
 void PCUI::Numeric::onUIUpdate() {
-    pControl->SetValue(pData);
-    pData.pDirty = false;
+    pControl->SetValue(*pData);
+    pData->pNew = false;
 }
 
 void PCUI::Numeric::onModify(wxSpinEvent& evt) {
-    pData.mValue = evt.GetPosition();
+    pData->mValue = evt.GetPosition();
 }
 
 PCUI::Decimal::Decimal(
@@ -236,7 +235,7 @@ PCUI::Decimal::Decimal(
         style,
         min,
         max,
-        pData
+        *pData
     )};
     control->SetIncrement(increment);
 
@@ -244,12 +243,12 @@ PCUI::Decimal::Decimal(
 }
 
 void PCUI::Decimal::onUIUpdate() {
-    pControl->SetValue(pData);
-    pData.pDirty = false;
+    pControl->SetValue(*pData);
+    pData->pNew = false;
 }
 
 void PCUI::Decimal::onModify(wxSpinDoubleEvent& evt) {
-    pData.mValue = evt.GetValue();
+    pData->mValue = evt.GetValue();
 }
 
 PCUI::Text::Text(
@@ -263,7 +262,7 @@ PCUI::Text::Text(
     auto *control{new wxTextCtrl(
         this,
         wxID_ANY,
-        static_cast<string>(pData),
+        static_cast<string>(*pData),
         wxDefaultPosition,
         wxDefaultSize,
         style
@@ -276,12 +275,12 @@ PCUI::Text::Text(
 }
 
 void PCUI::Text::onUIUpdate() {
-    pControl->SetValue(static_cast<string>(pData));
-    pData.pDirty = false;
+    pControl->SetValue(static_cast<string>(*pData));
+    pData->pNew = false;
 }
 
 void PCUI::Text::onModify(wxCommandEvent& evt) {
-    pData.mValue = evt.GetString().ToStdString();
+    pData->mValue = evt.GetString().ToStdString();
 }
 
 PCUI::FilePicker::FilePicker(
@@ -297,7 +296,7 @@ PCUI::FilePicker::FilePicker(
     auto *control{new wxFilePickerCtrl(
         this,
         wxID_ANY,
-        static_cast<filepath>(pData).string(),
+        static_cast<filepath>(*pData).string(),
         prompt.IsEmpty() ? wxFileSelectorPromptStr : prompt,
         wildcard.IsEmpty() ? wxFileSelectorDefaultWildcardStr : wildcard,
         wxDefaultPosition,
@@ -309,12 +308,12 @@ PCUI::FilePicker::FilePicker(
 };
 
 void PCUI::FilePicker::onUIUpdate() {
-    pControl->SetPath(static_cast<filepath>(pData).string());
-    pData.pDirty = false;
+    pControl->SetPath(static_cast<filepath>(*pData).string());
+    pData->pNew = false;
 }
 
 void PCUI::FilePicker::onModify(wxFileDirPickerEvent& evt) {
-    pData.mValue = evt.GetPath().ToStdString();
+    pData->mValue = evt.GetPath().ToStdString();
 }
 
 
