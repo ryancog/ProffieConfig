@@ -52,7 +52,7 @@ PCUI::Decimal::Decimal(
 
 void PCUI::Decimal::onUIUpdate() {
     pControl->SetValue(*pData);
-    pData->pNew = false;
+    pData->refreshed();
 }
 
 void PCUI::Decimal::onModify(wxSpinDoubleEvent& evt) {

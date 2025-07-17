@@ -47,7 +47,7 @@ PCUI::Toggle::Toggle(
 
 void PCUI::Toggle::onUIUpdate() {
     pControl->SetValue(pData);
-    pData->pNew = false;
+    pData->refreshed();
 }
 
 void PCUI::Toggle::onModify(wxCommandEvent& evt) {
@@ -74,7 +74,7 @@ PCUI::CheckBox::CheckBox(
 
 void PCUI::CheckBox::onUIUpdate() {
     pControl->SetValue(pData);
-    pData->pNew = false;
+    pData->refreshed();
 }
 
 void PCUI::CheckBox::onModify(wxCommandEvent& evt) {

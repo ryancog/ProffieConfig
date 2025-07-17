@@ -48,7 +48,7 @@ PCUI::Text::Text(
 
 void PCUI::Text::onUIUpdate() {
     pControl->SetValue(static_cast<string>(*pData));
-    pData->pNew = false;
+    pData->refreshed();
 }
 
 void PCUI::Text::onModify(wxCommandEvent& evt) {

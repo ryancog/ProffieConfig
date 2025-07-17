@@ -30,7 +30,7 @@ struct FilePickerData : ControlData {
     operator filepath() { return mValue; }
     void operator=(filepath&& val) {
         mValue = std::move(val);
-        pNew = true;
+        refresh();
     }
 
 private:

@@ -30,7 +30,7 @@ struct DecimalData : ControlData {
     operator float64() const { return mValue; }
     void operator=(float64 val) {
         mValue = val;
-        pNew = true;
+        refresh();
     }
 
 private:

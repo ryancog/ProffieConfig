@@ -30,7 +30,7 @@ struct NumericData : ControlData {
     operator int32() const { return mValue; }
     void operator=(int32 val) {
         mValue = val;
-        pNew = true;
+        refresh();
     }
 
 private:

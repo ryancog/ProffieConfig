@@ -49,7 +49,7 @@ PCUI::FilePicker::FilePicker(
 
 void PCUI::FilePicker::onUIUpdate() {
     pControl->SetPath(static_cast<filepath>(*pData).string());
-    pData->pNew = false;
+    pData->refreshed();
 }
 
 void PCUI::FilePicker::onModify(wxFileDirPickerEvent& evt) {

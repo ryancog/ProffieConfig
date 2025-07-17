@@ -45,7 +45,7 @@ PCUI::List::List(
 void PCUI::List::onUIUpdate() {
     pControl->Set(pData->mChoices);
     pControl->SetSelection(*pData);
-    pData->pNew = false;
+    pData->refreshed();
 }
 
 void PCUI::List::onModify(wxCommandEvent& evt) {

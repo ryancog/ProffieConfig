@@ -1,5 +1,4 @@
 #include "checklist.h"
-#include "wx/event.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -45,6 +44,7 @@ PCUI::CheckList::CheckList(
 void PCUI::CheckList::onUIUpdate() {
     pControl->Set(pData->items());
     for (auto idx : static_cast<set<uint32>>(*pData)) pControl->Check(idx);
+    pData->refreshed();
 }
 
 void PCUI::CheckList::onModify(wxCommandEvent& evt) {

@@ -52,7 +52,7 @@ PCUI::Numeric::Numeric(
 
 void PCUI::Numeric::onUIUpdate() {
     pControl->SetValue(*pData);
-    pData->pNew = false;
+    pData->refreshed();
 }
 
 void PCUI::Numeric::onModify(wxSpinEvent& evt) {

@@ -35,13 +35,13 @@ struct ListData : ControlData {
 
     void operator=(int32 val) {
         mValue = val;
-        pNew = true;
+        refresh();
     }
 
     const vector<string>& choices() const { return mChoices; }
     void setChoices(vector<string>&& choices) { 
         mChoices = std::move(choices); 
-        pNew = true;
+        refresh();
     }
 
 private:
