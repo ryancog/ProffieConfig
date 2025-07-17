@@ -25,7 +25,7 @@
 #include <utils/crypto.h>
 
 #include "config/types.h"
-#include "preset/preset.h"
+#include "preset/array.h"
 
 namespace Config {
 
@@ -114,12 +114,5 @@ bool Config::removeConfig(UID id) {
     if (configIt == configs.end()) return false;
     configs.erase(configIt);
     return true;
-}
-
-void Config::fillWithDefaults(const std::shared_ptr<Config>& config) {
-    constexpr cstring NEW_CONFIG_NAME{"New Config"};
-    config->name = NEW_CONFIG_NAME;
-    // TODO: See how this changed and if setup for the new blade array system is needed.
-    // config->wiring.addBladeArray(0, "Blade In");
 }
 
