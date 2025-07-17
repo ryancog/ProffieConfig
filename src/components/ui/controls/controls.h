@@ -62,7 +62,7 @@ public:
 
 protected:
     ControlBase(wxWindow *parent, CONTROL_DATA& data) : 
-        wxPanel(parent, wxID_ANY), pData{data} {}
+        wxPanel(parent, wxID_ANY) { bind(data); }
 
     void init(
         CONTROL *control,
@@ -86,33 +86,34 @@ protected:
         }
 
         sizer->Add(control, wxSizerFlags(1).Expand());
-
         SetSizerAndFit(sizer);
 
-        Enable(pData.isEnabled());
-        Show(pData.isShown());
-        onUIUpdate();
-
         Bind(wxEVT_UPDATE_UI, [this](wxUpdateUIEvent&) {
-            if (not pData.isDirty()) return;
+            if (not pData->isNew()) return;
 
-            Enable(pData.isEnabled());
-            Show(pData.isShown());
+            Enable(pData->isEnabled());
+            Show(pData->isShown());
             onUIUpdate();
         });
         Bind(eventTag, [this](CONTROL_EVENT& evt) {
-            if (not pData.isEnabled() or pData.isDirty()) return;
+            if (not pData->isEnabled() or pData->isNew()) return;
 
             onModify(evt);
-            if (pData.onUpdate) pData.onUpdate();
+            if (pData->onUpdate) pData->onUpdate();
         });
     }
+
+    void bind(CONTROL_DATA& newData) {
+        pData = newData;
+        pData->refresh();
+    };
 
     virtual void onUIUpdate() = 0;
     virtual void onModify(CONTROL_EVENT&) = 0;
 
     CONTROL *pControl{nullptr};
-    CONTROL_DATA& pData;
+    // Never nullptr
+    CONTROL_DATA *pData;
 };
 
 class UI_EXPORT Button : public ControlBase<

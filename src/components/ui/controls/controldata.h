@@ -38,7 +38,7 @@ struct ControlData {
      */
     void enable(bool en = true) {
         mEnabled = en;
-        pDirty = true; 
+        pNew = true; 
     }
     void disable() { enable(false); }
 
@@ -47,11 +47,18 @@ struct ControlData {
      */
     void show(bool show = true) {
         mShown = show;
-        pDirty = true;
+        pNew = true;
     }
     void hide() { show(false); }
 
-    bool isDirty() const { return pDirty; }
+    /**
+     * If data has been updated since the UI has last seen it
+     */
+    bool isNew() const { return pNew; }
+    /**
+     * Mark data new
+     */
+    void refresh() { pNew = true; }
 
     [[nodiscard]] bool isEnabled() const { return mEnabled; }
     [[nodiscard]] bool isShown() const { return mShown; }
@@ -66,7 +73,7 @@ protected:
      *
      * Windows can use UpdateWindowUI() to force updates for dirty data.
      */
-    bool pDirty{false};
+    bool pNew{false};
 
 private:
     /**
@@ -91,7 +98,7 @@ struct ToggleData : ControlData {
     void operator=(bool val) {
         mValue = val;
         if (onUpdate) onUpdate();
-        pDirty = true;
+        pNew = true;
     }
 
 private:
@@ -109,13 +116,13 @@ struct ChoiceData : ControlData {
 
     void operator=(int32 val) {
         mValue = val;
-        pDirty = true;
+        pNew = true;
     }
 
     const vector<string>& choices() const { return mChoices; }
     void setChoices(vector<string>&& choices) { 
         mChoices = std::move(choices); 
-        pDirty = true;
+        pNew = true;
     }
 
 private:
@@ -128,13 +135,13 @@ struct ComboBoxData : ControlData {
     operator string() const { return mValue; }
     void operator=(string&& val) {
         mValue = std::move(val);
-        pDirty = true;
+        pNew = true;
     }
 
     const vector<string>& defaults() const { return mDefaults; }
     void setDefaults(vector<string>&& defaults) {
         mDefaults = std::move(defaults);
-        pDirty = true;
+        pNew = true;
     }
 
 private:
@@ -147,7 +154,7 @@ struct NumericData : ControlData {
     operator int32() const { return mValue; }
     void operator=(int32 val) {
         mValue = val;
-        pDirty = true;
+        pNew = true;
     }
 
 private:
@@ -159,7 +166,7 @@ struct DecimalData : ControlData {
     operator float64() const { return mValue; }
     void operator=(float64 val) {
         mValue = val;
-        pDirty = true;
+        pNew = true;
     }
 
 private:
@@ -171,7 +178,7 @@ struct TextData : ControlData {
     operator string() { return mValue; }
     void operator=(string&& val) {
         mValue = std::move(val);
-        pDirty = true;
+        pNew = true;
     }
 
 private:
@@ -183,7 +190,7 @@ struct FilePickerData : ControlData {
     operator filepath() { return mValue; }
     void operator=(filepath&& val) {
         mValue = std::move(val);
-        pDirty = true;
+        pNew = true;
     }
 
 private:
