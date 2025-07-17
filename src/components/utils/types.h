@@ -27,6 +27,7 @@
 #include <functional>
 #include <list>
 #include <optional>
+#include <set>
 #include <span>
 #include <vector>
 
@@ -63,6 +64,7 @@ using std::string;
 using std::wstring;
 using std::string_view;
 using std::vector;
+using std::set;
 using std::variant;
 using std::monostate;
 using std::span;
