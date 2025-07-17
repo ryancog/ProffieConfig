@@ -63,6 +63,8 @@ using std::string;
 using std::wstring;
 using std::string_view;
 using std::vector;
+using std::variant;
+using std::monostate;
 using std::span;
 using std::pair;
 namespace fs = std::filesystem;
