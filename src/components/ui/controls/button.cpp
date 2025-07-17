@@ -40,11 +40,11 @@ PCUI::Button::Button(
     init(control, wxEVT_BUTTON, wxEmptyString, wxVERTICAL);
 };
 
-void PCUI::Button::onUIUpdate() {}
-
-void PCUI::Button::onModify(wxCommandEvent&) {
-    pData->pNew = false;
+void PCUI::Button::onUIUpdate() {
+    pData->refreshed();
 }
+
+void PCUI::Button::onModify(wxCommandEvent&) {}
 
 
 } // namespace PCUI

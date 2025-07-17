@@ -31,8 +31,7 @@ struct ToggleData : ControlData {
     operator bool() const { return mValue; }
     void operator=(bool val) {
         mValue = val;
-        if (onUpdate) onUpdate();
-        pNew = true;
+        refresh();
     }
 
 private:

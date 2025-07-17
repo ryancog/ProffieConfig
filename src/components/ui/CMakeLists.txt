@@ -9,7 +9,6 @@ add_library(ui SHARED
     message.cpp
 
     controls/button.cpp
-    controls/checkbox.cpp
     controls/checklist.cpp
     controls/choice.cpp
     controls/combobox.cpp

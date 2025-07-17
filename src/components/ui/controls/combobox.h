@@ -30,13 +30,13 @@ struct ComboBoxData : ControlData {
     operator string() const { return mValue; }
     void operator=(string&& val) {
         mValue = std::move(val);
-        pNew = true;
+        refresh();
     }
 
     const vector<string>& defaults() const { return mDefaults; }
     void setDefaults(vector<string>&& defaults) {
         mDefaults = std::move(defaults);
-        pNew = true;
+        refresh();
     }
 
 private:

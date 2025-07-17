@@ -31,18 +31,17 @@ struct ControlData {
     ControlData& operator=(const ControlData&) = delete;
     ControlData& operator=(ControlData&&) = delete;
 
-    /**
-     * A callback to alert program-side code that the contained
-     * value has been updated, either by program or by the user in UI
-     */
-    function<void(void)> onUpdate;
+    void setUpdateHandler(function<void(void)>&& handler) {
+        mOnUpdate = std::move(handler);
+    }
 
     /**
      * Enable/disable the UI control.
      */
     void enable(bool en = true) {
+        if (mEnabled == en) return;
         mEnabled = en;
-        pNew = true; 
+        refresh();
     }
     void disable() { enable(false); }
 
@@ -50,19 +49,24 @@ struct ControlData {
      * Show/hide the UI control.
      */
     void show(bool show = true) {
+        if (mShown == show) return;
         mShown = show;
-        pNew = true;
+        refresh();
     }
     void hide() { show(false); }
 
     /**
      * If data has been updated since the UI has last seen it
      */
-    bool isNew() const { return pNew; }
+    bool isNew() const { return mNew; }
     /**
      * Mark data new
      */
-    void refresh() { pNew = true; }
+    void refresh(bool logic = true, bool ui = true) { 
+        if (logic and mOnUpdate) [[likely]] mOnUpdate();
+        if (ui) [[likely]] mNew = true; 
+    }
+
 
     [[nodiscard]] bool isEnabled() const { return mEnabled; }
     [[nodiscard]] bool isShown() const { return mShown; }
@@ -73,18 +77,28 @@ protected:
     ControlData(ControlData&&) = default;
 
     /**
-     * Set true whenever the user modifies the data.
-     *
-     * Windows can use UpdateWindowUI() to force updates for dirty data.
+     * Only for UI elements to mark they've handled the new data
      */
-    bool pNew{false};
+    void refreshed() { mNew = false; }
 
 private:
+    /**
+     * A callback to alert program-side code that the contained
+     * value has been updated, either by program or by the user in UI
+     */
+    function<void(void)> mOnUpdate;
+
     /**
      * UI Control states
      */
     bool mEnabled{true};
     bool mShown{true};
+    /**
+     * Set true whenever the user modifies the data.
+     *
+     * Windows can use UpdateWindowUI() to force updates for dirty data.
+     */
+    bool mNew{false};
 };
 
 template<
@@ -147,13 +161,13 @@ protected:
             if (not pData->isEnabled() or pData->isNew()) return;
 
             onModify(evt);
-            if (pData->onUpdate) pData->onUpdate();
+            pData->refresh(true, false);
         });
     }
 
     void bind(CONTROL_DATA& newData) {
         pData = newData;
-        pData->refresh();
+        pData->refresh(false);
     };
 
     virtual void onUIUpdate() = 0;

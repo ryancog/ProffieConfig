@@ -29,7 +29,7 @@ namespace PCUI {
 struct ButtonData : ControlData {
     void operator=(bool val) {
         if (not val) return;
-        if (onUpdate) onUpdate();
+        refresh();
     }
 
 private:

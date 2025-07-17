@@ -30,22 +30,23 @@ namespace PCUI {
 
 struct CheckListData : ControlData {
     operator set<uint32>() const { return mSelected; }
+
     void select(uint32 idx) {
         if (idx >= mItems.size()) return;
 
         auto [_, added]{mSelected.insert(idx)};
         if (not added) return;
 
-        pNew = true;
+        refresh();
     }
     void unselect(uint32 idx) {
         if (not mSelected.erase(idx)) return;
-        pNew = true;
+        refresh();
     }
     void clearSelections() { 
         if (mSelected.empty()) return;
         mSelected.clear();
-        pNew = true;
+        refresh();
     }
 
     const vector<string>& items() const { return mItems; }
@@ -55,7 +56,7 @@ struct CheckListData : ControlData {
             if (*iter >= mItems.size()) iter = mSelected.erase(iter);
             else ++iter;
         }
-        pNew = true;
+        refresh();
     }
 
 private:

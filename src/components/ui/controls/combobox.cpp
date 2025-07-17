@@ -49,7 +49,7 @@ PCUI::ComboBox::ComboBox(
 void PCUI::ComboBox::onUIUpdate() {
     pControl->Set(pData->mDefaults);
     pControl->SetValue(static_cast<string>(*pData));
-    pData->pNew = false;
+    pData->refreshed();
 }
 
 void PCUI::ComboBox::onModify(wxCommandEvent& evt) {

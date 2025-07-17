@@ -35,14 +35,14 @@ struct ChoiceData : ControlData {
 
     void operator=(int32 val) {
         mValue = val;
-        pNew = true;
+        refresh();
     }
 
     const vector<string>& choices() const { return mChoices; }
     void setChoices(vector<string>&& choices) { 
         mChoices = std::move(choices); 
         if (mValue >= mChoices.size()) mValue = -1;
-        pNew = true;
+        refresh();
     }
 
 private:

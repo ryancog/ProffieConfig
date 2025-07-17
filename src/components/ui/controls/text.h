@@ -30,7 +30,7 @@ struct TextData : ControlData {
     operator string() { return mValue; }
     void operator=(string&& val) {
         mValue = std::move(val);
-        pNew = true;
+        refresh();
     }
 
 private:

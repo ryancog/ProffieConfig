@@ -49,7 +49,7 @@ PCUI::Choice::Choice(
 void PCUI::Choice::onUIUpdate() {
     pControl->Set(pData->mChoices);
     pControl->SetSelection(*pData);
-    pData->pNew = false;
+    pData->refreshed();
 }
 
 void PCUI::Choice::onModify(wxCommandEvent& evt) {
