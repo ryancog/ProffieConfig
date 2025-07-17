@@ -21,11 +21,10 @@
 
 #include <wx/datetime.h>
 
-#include "preset/preset.h"
+#include "preset/array.h"
 #include "private/export.h"
 #include "settings/settings.h"
 #include "types.h"
-#include "wiring/wiring.h"
 
 namespace Config {
 
@@ -38,7 +37,7 @@ struct CONFIG_EXPORT Config : Tracked {
     wxDateTime modDate;
 
     string name;
-    Wiring::Wiring wiring;
+    // Wiring::Wiring wiring;
     Settings settings;
 
     // Returns `PresetArray` if successfully added, nullptr otherwise.
@@ -70,10 +69,6 @@ CONFIG_EXPORT std::shared_ptr<Config> getConfig(UID);
 CONFIG_EXPORT std::shared_ptr<Config> addConfig();
 // Return true if removed, false if doesn't exist
 CONFIG_EXPORT bool removeConfig(UID);
-
-// Doesn't actually reset things, so this assumes the config in the "new"
-// state. Trying to use this with an already-used config will end poorly. (probably)
-CONFIG_EXPORT void fillWithDefaults(const std::shared_ptr<Config>&);
 
 } // namespace Config
 
