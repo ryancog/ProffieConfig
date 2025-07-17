@@ -6,7 +6,7 @@ add_library(ui SHARED
     frame.cpp
     movable.cpp
     plaque.cpp
-    controls.cpp
+    controls/controls.cpp
     message.cpp
 )
 
