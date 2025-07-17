@@ -180,6 +180,34 @@ protected:
     CONTROL_DATA& pData;
 };
 
+struct ButtonData : ControlData {
+    void operator=(bool val) {
+        if (not val) return;
+        if (onUpdate) onUpdate();
+    }
+
+private:
+    friend class Button;
+};
+
+class UI_EXPORT Button : public ControlBase<
+                         Button,
+                         ButtonData,
+                         wxButton,
+                         wxCommandEvent> {
+public:
+    Button(
+        wxWindow *parent,
+        ButtonData& data,
+        int64 style = 0,
+        const wxString& label = {}
+    );
+
+private:
+    void onUIUpdate() final;
+    void onModify(wxCommandEvent&) final;
+};
+
 struct ToggleData : ControlData {
     operator bool() const { return mValue; }
     void operator=(bool val) {
