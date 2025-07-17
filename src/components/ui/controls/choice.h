@@ -20,6 +20,7 @@
  */
 
 #include <wx/choice.h>
+#include <wx/listbox.h>
 
 #include "base.h"
 #include "../private/export.h"
@@ -47,6 +48,8 @@ struct ChoiceData : ControlData {
 
 private:
     friend class Choice;
+    friend class List;
+    friend class Radios;
     vector<string> mChoices;
     int32 mValue{-1};
 };
@@ -58,6 +61,24 @@ class UI_EXPORT Choice : public ControlBase<
                          wxCommandEvent> {
 public:
     Choice(
+        wxWindow *parent,
+        ChoiceData& data,
+        const wxString& label = {},
+        wxOrientation orient = wxVERTICAL
+        );
+
+private:
+    void onUIUpdate() final;
+    void onModify(wxCommandEvent&) final;
+};
+
+class UI_EXPORT List : public ControlBase<
+                       List,
+                       ChoiceData,
+                       wxListBox,
+                       wxCommandEvent> {
+public:
+    List(
         wxWindow *parent,
         ChoiceData& data,
         const wxString& label = {},

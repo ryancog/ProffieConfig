@@ -51,11 +51,51 @@ PCUI::Numeric::Numeric(
 }
 
 void PCUI::Numeric::onUIUpdate() {
+    pControl->SetRange(pData->mMin, pData->mMax);
+    pControl->SetIncrement(pData->mIncrement);
     pControl->SetValue(*pData);
     pData->refreshed();
 }
 
 void PCUI::Numeric::onModify(wxSpinEvent& evt) {
     pData->mValue = evt.GetPosition();
+}
+
+PCUI::Decimal::Decimal(
+    wxWindow *parent,
+    DecimalData& data,
+    float64 min,
+    float64 max,
+    float64 increment,
+    int64 style,
+    const wxString& label,
+    const wxOrientation& orient
+) : ControlBase(parent, data) {
+
+    auto *control{new wxSpinCtrlDouble(
+        this,
+        wxID_ANY,
+        {},
+        wxDefaultPosition,
+        wxDefaultSize,
+        style,
+        min,
+        max,
+        *pData
+    )};
+    control->SetIncrement(increment);
+
+    init(control, wxEVT_SPINCTRLDOUBLE, label, orient);
+}
+
+void PCUI::Decimal::onUIUpdate() {
+    pControl->SetRange(pData->mMin, pData->mMax);
+    pControl->SetIncrement(pData->mIncrement);
+    pControl->SetValue(*pData);
+    pData->refreshed();
+}
+
+void PCUI::Decimal::onModify(wxSpinDoubleEvent& evt) {
+    pData->mValue = evt.GetValue();
 }
 

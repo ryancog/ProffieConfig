@@ -1,9 +1,9 @@
-#include "decimal.h"
+#include "radios.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
  *
- * components/ui/controls/decimal.cpp
+ * components/ui/controls/radios.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,41 +21,40 @@
 
 namespace PCUI {
 
-} // namespace PCUI
-
-PCUI::Decimal::Decimal(
-    wxWindow *parent,
-    DecimalData& data,
-    float64 min,
-    float64 max,
-    float64 increment,
-    int64 style,
-    const wxString& label,
-    const wxOrientation& orient
-) : ControlBase(parent, data) {
-
-    auto *control{new wxSpinCtrlDouble(
-        this,
-        wxID_ANY,
-        {},
-        wxDefaultPosition,
-        wxDefaultSize,
-        style,
-        min,
-        max,
-        *pData
-    )};
-    control->SetIncrement(increment);
-
-    init(control, wxEVT_SPINCTRLDOUBLE, label, orient);
 }
 
-void PCUI::Decimal::onUIUpdate() {
-    pControl->SetValue(*pData);
+PCUI::Radios::Radios(
+    wxWindow *parent,
+    RadiosData& data,
+    const wxString& label,
+    int64 style,
+    wxOrientation orient
+) : ControlBase(parent, data) {
+
+    auto *control{new wxRadioBox(
+        this,
+        wxID_ANY,
+        label,
+        wxDefaultPosition,
+        wxDefaultSize,
+        pData->mChoices,
+        0,
+        style
+    )};
+
+    init(control, wxEVT_RADIOBOX, wxEmptyString, wxVERTICAL);
+};
+
+void PCUI::Radios::onUIUpdate() {
+    for (auto idx{0}; idx < pData->mChoices.size(); ++idx) {
+        pControl->Show(idx, pData->mShown[idx] or pData->mEnabled[idx]);
+        pControl->Enable(idx, pData->mEnabled[idx]);
+    }
+    pControl->SetSelection(*pData);
     pData->refreshed();
 }
 
-void PCUI::Decimal::onModify(wxSpinDoubleEvent& evt) {
-    pData->mValue = evt.GetValue();
+void PCUI::Radios::onModify(wxCommandEvent& evt) {
+    pData->mSelected = evt.GetInt();
 }
 

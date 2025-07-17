@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <type_traits>
+
 #include <wx/spinctrl.h>
 
 #include "base.h"
@@ -26,17 +28,56 @@
 
 namespace PCUI {
 
-struct NumericData : ControlData {
-    operator int32() const { return mValue; }
-    void operator=(int32 val) {
-        mValue = val;
+class Numeric;
+class Decimal;
+
+namespace Private {
+
+template<typename T> requires std::is_arithmetic_v<T>
+struct NumericDataTemplate : ControlData {
+    operator T() const { return mValue; }
+    void operator=(T val) {
+        const auto newVal{std::clamp(val, mMin, mMax)};
+        if (mValue == newVal) return;
+        mValue = newVal;
         refresh();
     }
 
+    // For now the min, max, and inc won't cause logic update
+    [[nodiscard]] T min() const { return mMin; }
+    [[nodiscard]] T max() const { return mMax; }
+
+    void setRange(T min, T max) { 
+        if (min == mMin and max == mMax) return;
+        assert(min <= max);
+        mMin = min; 
+        mMax = max; 
+        refresh(false, true);
+    }
+
+    [[nodiscard]] T increment() const { return mIncrement; }
+
+    void setIncrement(T inc) {
+        if (inc == mIncrement) return;
+        assert(inc > 0);
+        mIncrement = inc;
+        refresh(false, true);
+    }
+
 private:
-    friend class Numeric;
-    int32 mValue{0};
+    friend class PCUI::Numeric;
+    friend class PCUI::Decimal;
+    T mValue{0};
+    T mMin;
+    T mMax;
+    T mIncrement;
+
 };
+
+} // namespace Private
+
+using NumericData = Private::NumericDataTemplate<int32>;
+using DecimalData = Private::NumericDataTemplate<float64>;
 
 class UI_EXPORT Numeric : public ControlBase<
                           Numeric,
@@ -58,6 +99,28 @@ public:
 private:
     void onUIUpdate() final;
     void onModify(wxSpinEvent&) final;
+};
+
+class UI_EXPORT Decimal : public ControlBase<
+                          Decimal,
+                          DecimalData,
+                          wxSpinCtrlDouble,
+                          wxSpinDoubleEvent> {
+public:
+    Decimal(
+        wxWindow *parent,
+        DecimalData& data,
+        float64 min       = 0,
+        float64 max       = 100,
+        float64 increment = 1,
+        int64 style = wxSP_ARROW_KEYS,
+        const wxString& label = {},
+        const wxOrientation& orient = wxVERTICAL
+        );
+
+private:
+    void onUIUpdate() final;
+    void onModify(wxSpinDoubleEvent&) final;
 };
 
 } // namespace PCUI
