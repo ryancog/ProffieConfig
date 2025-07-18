@@ -25,32 +25,3 @@ namespace Config {
 
 } // namespace Config
 
-Config::PresetArray::PresetArray(Config& parent, UID id, string name) : 
-    Tracked(id), mParent(parent), mName(std::move(name)) {}
-
-const string& Config::PresetArray::getName() const { return mName; }
-
-bool Config::PresetArray::changeName(const string& name) {
-    // Find invalid chars, if any.
-    if (std::find_if(name.begin(), name.end(), [](char chr){ 
-                if (std::isalpha(chr)) return false;
-                if (chr == '_') return false;
-                return true;
-                }) != name.end()) return false;
-    mName = name;
-    return true;
-}
-
-Config::Preset& Config::PresetArray::addPreset() {
-    mPresets.push_back({});
-    return mPresets.back();
-}
-
-const std::vector<Config::Preset>& Config::PresetArray::getPresets() { return mPresets; }
-
-void Config::PresetArray::syncWithBladeArrays(uint32 numBlades) {
-    for (auto& preset : mPresets) {
-        preset.styles.resize(numBlades);
-    }
-}
-

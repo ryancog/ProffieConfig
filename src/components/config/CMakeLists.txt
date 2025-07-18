@@ -5,20 +5,24 @@
 add_library(config SHARED 
     config.cpp
 
-    wiring/blades.cpp
-    wiring/components.cpp
-    wiring/wiring.cpp
+    bladeconfig/bladeconfig.cpp
+    bladeconfig/simple.cpp
+    bladeconfig/ws281x.cpp
 
+    preset/array.cpp
     preset/preset.cpp
+
+    settings/settings.cpp
 )
 target_link_libraries(config 
     wxWidgets
 
+    paths
     # A good story for another time
     # led
     # styles
 )
 
 include(../Component.cmake)
-setup_component(config)
+setup_component(config 1.0.0)
 

@@ -30,8 +30,6 @@ namespace Config {
 struct Config;
 
 struct CONFIG_EXPORT PresetArray {
-    PresetArray(Config& parent);
-
     PCUI::TextData name;
     vector<Preset> presets;
 };
