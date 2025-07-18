@@ -19,19 +19,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config/types.h"
+#include "ui/controls/numeric.h"
+#include "ui/controls/text.h"
 #include "utils/types.h"
+
+#include "ws281x.h"
+#include "simple.h"
 
 namespace Config {
 
 constexpr uint32 NO_BLADE{1000000000};
 
-struct BladeConfig : Tracked {
-    string name;
-    UID presetArray;
-    uint32 id;
+struct BladeConfig {
+    PCUI::TextData name;
+    PCUI::ChoiceData presetArray;
+    PCUI::NumericData id;
+    PCUI::ToggleData noBladeID;
 
-    vector<variant<>> s;
+    vector<variant<WS281XBlade, SimpleBlade>> blades;
 };
 
 } // namespace Config

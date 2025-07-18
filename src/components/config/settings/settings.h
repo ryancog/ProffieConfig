@@ -19,7 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ui/controls/controldata.h"
+#include "ui/controls/choice.h"
+#include "ui/controls/toggle.h"
+#include "ui/controls/numeric.h"
 #include "utils/types.h"
 
 namespace Config {

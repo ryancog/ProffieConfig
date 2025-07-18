@@ -20,33 +20,20 @@
  */
 
 
-#include "config/types.h"
+#include "ui/controls/text.h"
 
 #include "../private/export.h"
 #include "preset.h"
 
 namespace Config {
 
-struct CONFIG_EXPORT PresetArray : Tracked {
-    [[nodiscard]] const string& getName() const;
-    bool changeName(const string& name);
+struct Config;
 
-    Preset& addPreset();
-    const std::vector<Preset>& getPresets();
+struct CONFIG_EXPORT PresetArray {
+    PresetArray(Config& parent);
 
-    /**
-     * Update the number of styles per preset.
-     */
-    void syncWithBladeArrays(uint32 numStyles);
-
-private:
-    friend class Config;
-    PresetArray(Config& parent, UID, string name);
-
-    string mName;
-    vector<Preset> mPresets;
-
-    Config& mParent;
+    PCUI::TextData name;
+    vector<Preset> presets;
 };
 
 

@@ -19,100 +19,75 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <memory>
-#include <unordered_map>
+#include <fstream>
 
-#include <utils/crypto.h>
-
-#include "config/types.h"
-#include "preset/array.h"
+#include "utils/types.h"
+#include "paths/paths.h"
 
 namespace Config {
 
-Map<Config> configs;
+set<std::shared_ptr<Config>> loadedConfigs;
 
 } // namespace Config
 
-Config::Config::Config(UID id) : Tracked(id) {}
+vector<string> Config::fetchListFromDisk() {
+    vector<string> ret;
 
-std::shared_ptr<Config::PresetArray> Config::Config::addPresetArray() {
-    auto arrayID{Crypto::genUID(mPresetArrays)};
+    std::error_code err;
+    for (const auto& entry : fs::directory_iterator{Paths::configs(), err}) {
+        if (not entry.is_regular_file()) continue;
+        if (entry.path().extension() != RAW_FILE_EXTENSION) continue;
+        ret.emplace_back(entry.path().stem());
+    }
+    
+    return ret;
+}
 
-    auto nameIdx{0};
-    constexpr cstring DEFAULT_PRESET_ARRAY_NAME{"presets"};
-    string arrayName;
-    while (not false) {
-        arrayName = DEFAULT_PRESET_ARRAY_NAME;
-        if (nameIdx) arrayName += std::to_string(nameIdx);
-        if (std::find_if(mPresetArrays.begin(), mPresetArrays.end(), [&arrayName](const Map<PresetArray>::value_type& array) -> bool {
-            return array.second->getName() == arrayName;
-        }) == mPresetArrays.end()) break;
-        nameIdx++;
+void Config::rename(const string& oldName, const string& newName) {
+    for (auto& config : loadedConfigs) {
+        if (static_cast<string>(config->name) != oldName) continue;
+
+        config->name = string{newName};
     }
 
-    auto newArray{std::shared_ptr<PresetArray>(new PresetArray(*this, arrayID, arrayName))};
-    mPresetArrays.emplace(arrayID, newArray);
-    return newArray;
+    std::error_code err;
+    fs::rename(
+        Paths::configs() / (oldName + RAW_FILE_EXTENSION),
+        Paths::configs() / (newName + RAW_FILE_EXTENSION),
+        err
+    );
 }
 
-bool Config::Config::removePresetArray(UID id) {
-    auto arrayIt{mPresetArrays.find(id)};
-    if (arrayIt == mPresetArrays.end()) return false;
-
-    mPresetArrays.erase(arrayIt);
-    return true;
-}
-
-std::shared_ptr<Config::PresetArray> Config::Config::getPresetArrayByName(const string& name) {
-    for (const auto& [ id, array ] : mPresetArrays) {
-        if (array->getName() == name) return array;
+bool Config::remove(const string& name) {
+    for (auto& config : loadedConfigs) {
+        if (static_cast<string>(config->name) == name) return false;
     }
 
-    return nullptr;
+    std::error_code err;
+    return fs::remove(Paths::configs() / (name + RAW_FILE_EXTENSION), err);
 }
 
-std::shared_ptr<const Config::PresetArray> Config::Config::getPresetArray(UID id) const {
-    auto arrayIt{mPresetArrays.find(id)};
-    if (arrayIt == mPresetArrays.end()) return nullptr;
-    return arrayIt->second;
+bool Config::close(std::shared_ptr<Config> config) {
+    return loadedConfigs.erase(config);
 }
 
-std::shared_ptr<Config::PresetArray> Config::Config::getPresetArray(UID id) {
-    auto arrayIt{mPresetArrays.find(id)};
-    if (arrayIt == mPresetArrays.end()) return nullptr;
-    return arrayIt->second;
+std::shared_ptr<Config::Config> Config::open(const string& name) {
+    for (auto& config : loadedConfigs) {
+        if (static_cast<string>(config->name) == name) return config;
+    }
+
+    auto ret{*loadedConfigs.emplace().first};
+    ret->name = string{name};
+    return ret;
 }
 
-const Config::Map<Config::PresetArray>& Config::Config::getPresetArrays() { return mPresetArrays; }
+bool Config::save(std::shared_ptr<Config> config) {
+    std::ofstream out{Paths::configs() / (static_cast<string>(config->name) + RAW_FILE_EXTENSION)};
+    if (not out.is_open()) return false;
 
-void Config::loadConfigs() {
+    out << "DUMMY\n";
+    out.close();
 
-}
-
-void Config::saveConfigs() {
-
-}
-
-const std::unordered_map<uint64, std::shared_ptr<Config::Config>>& Config::getConfigs() { return configs; }
-
-std::shared_ptr<Config::Config> Config::getConfig(UID configID) {
-    auto configIt{configs.find(configID)};
-    if (configIt == configs.end()) return nullptr;
-    return configIt->second;
-}
-
-std::shared_ptr<Config::Config> Config::addConfig() {
-    auto uid{Crypto::genUID(configs)};
-    auto newConfig{std::shared_ptr<Config>(new Config(uid))};
-    newConfig->modDate.SetToCurrent();
-    configs.emplace(uid, newConfig);
-    return newConfig;
-}
-
-bool Config::removeConfig(UID id) {
-    auto configIt{configs.find(id)};
-    if (configIt == configs.end()) return false;
-    configs.erase(configIt);
     return true;
 }
 

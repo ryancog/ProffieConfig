@@ -19,6 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ui/controls/choice.h"
+#include "ui/controls/combobox.h"
+#include "ui/controls/numeric.h"
 #include "utils/types.h"
 
 namespace Config {
@@ -43,7 +46,16 @@ enum LED : int32 {
 };
 
 struct SimpleBlade {
+    struct Star {
+        PCUI::ChoiceData led;
+        PCUI::ComboBoxData powerPin;
+        PCUI::NumericData resistance;
+    };
 
+    Star star1;
+    Star star2;
+    Star star3;
+    Star star4;
 };
 
 };
