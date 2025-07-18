@@ -34,9 +34,10 @@ struct PanelData {
         FRAMED,
     };
 
-   PanelData(Type type, string label) :
+    PanelData(Type type, string label) :
         mType{type}, mLabel{std::move(label)} {}
 
+    [[nodiscard]] const string& label() const { return mLabel; }
     // Only used for FRAMED type
     void setLabel(string&& label) {
         if (mLabel == label) return;
