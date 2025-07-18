@@ -9,6 +9,7 @@ set(SHARED_COMPONENTS
     pconf
     paths
     versions
+    config
 )
 
 set(STATIC_COMPONENTS
