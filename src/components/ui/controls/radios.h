@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <limits>
+
 #include <wx/radiobox.h>
 
 #include "base.h"
@@ -27,8 +29,17 @@
 namespace PCUI {
 
 struct RadiosData : ControlData {
-    RadiosData(vector<string>&& choices) :
-        mChoices{std::move(choices)} {
+    RadiosData() = default;
+
+    RadiosData(vector<string>&& choices) {
+        init(std::move(choices));
+    }
+
+    void init(vector<string>&& choices) {
+        assert(mSelected = std::numeric_limits<uint32>::max());
+
+        mSelected = 0;
+        mChoices = std::move(choices);
         mEnabled.resize(mChoices.size());
         mShown.resize(mChoices.size());
     }
@@ -68,7 +79,8 @@ private:
     vector<bool> mEnabled;
     vector<bool> mShown;
     vector<string> mChoices;
-    uint32 mSelected{0};
+    // Max marks the data as not yet initialized.
+    uint32 mSelected{std::numeric_limits<uint32>::max()};
 };
 
 class UI_EXPORT Radios : public ControlBase<

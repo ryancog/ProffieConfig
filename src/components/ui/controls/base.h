@@ -166,7 +166,7 @@ protected:
     }
 
     void bind(CONTROL_DATA& newData) {
-        pData = newData;
+        pData = &newData;
         pData->refresh(false);
     };
 
