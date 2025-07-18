@@ -202,6 +202,7 @@ struct PropSelection : PropSetting {
 
     void select();
     [[nodiscard]] bool value() const;
+    [[nodiscard]] bool enabled() const;
     [[nodiscard]] bool isDefault() const;
 
     const vector<string> disables;
@@ -262,11 +263,12 @@ struct PropOption {
 
     [[nodiscard]] inline const list<PropSelection>& selections() const { return mSelections; }
 
+    PCUI::RadiosData selection;
+
 private:
     friend Prop;
     friend PropSelection;
     list<PropSelection> mSelections;
-    PCUI::RadiosData selection;
 };
 
 /**
@@ -329,9 +331,8 @@ struct PropLayout {
     PropLayout(PropLayout&&) = default;
     PropLayout& operator=(const PropLayout&) = delete;
     PropLayout& operator=(PropLayout&&) = default;
+
     PropLayout(const PropLayout& other, const PropSettingMap& settingMap);
-
-
     PropLayout(Axis axis = Axis::VERTICAL, string label = "", Children children = {}) :
         axis{axis},
         frame{

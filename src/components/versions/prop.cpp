@@ -50,7 +50,7 @@ void Versions::PropSelection::select() {
     const auto selectionEndIter{mOption.mSelections.end()};
     for (auto idx{0}; selectionIter != selectionEndIter; ++idx, ++selectionIter) { 
         if (&*selectionIter == this) {
-            mOption.mSelected = idx;
+            mOption.selection = idx;
             break;
         }
     }
@@ -59,17 +59,23 @@ void Versions::PropSelection::select() {
 bool Versions::PropSelection::value() const {
     // TODO: Make sure this works correctly
     auto selectionIter{mOption.mSelections.begin()};
-    for (auto idx{0}; idx < mOption.mSelected; ++idx, ++selectionIter);
+    for (auto idx{0}; idx < mOption.selection; ++idx, ++selectionIter);
     return &*selectionIter == this;
+}
+
+bool Versions::PropSelection::enabled() const {
+    uint32 idx{0};
+    for (auto iter{mOption.mSelections.begin()}; &*iter != this; ++iter, ++idx);
+    return mOption.selection.enabledChoices()[idx];
 }
 
 bool Versions::PropSelection::isDefault() const {
     return &mOption.mSelections.front() == this;
 }
 
-Versions::PropLayout::PropLayout(const PropLayout& other, const PropSettingMap& settingMap) {
-    axis = other.axis;
-    label = other.label;
+Versions::PropLayout::PropLayout(const PropLayout& other, const PropSettingMap& settingMap) :
+    axis{other.axis},
+    frame{other.frame} {
 
     const auto processChildren{[settingMap](
         const auto& self,
@@ -81,7 +87,7 @@ Versions::PropLayout::PropLayout(const PropLayout& other, const PropSettingMap& 
                 children.emplace_back(
                     std::in_place_type<PropLayout>,
                     ptr->axis,
-                    ptr->label,
+                    ptr->frame.label(),
                     self(self, ptr->children)
                 );
             } else if (auto *ptr = std::get_if<PropSetting *>(&child)) {
@@ -175,18 +181,18 @@ void Versions::Prop::rebuildSettingMap(optional<std::set<PropSetting *>> pruneLi
 bool Versions::PropSetting::shouldOutputDefine() const {
     switch (type) {
         case Type::TOGGLE:
-            return mEnabled and static_cast<const PropToggle *>(this)->value;
-            break;
+            return 
+                static_cast<const PropToggle *>(this)->value.isEnabled() and
+                static_cast<const PropToggle *>(this)->value;
         case Type::SELECTION:
             return 
-                mEnabled and 
+                static_cast<const PropSelection *>(this)->enabled() and
                 static_cast<const PropSelection *>(this)->shouldOutput and 
                 static_cast<const PropSelection *>(this)->value();
-            break;
         case Type::NUMERIC:
+            return static_cast<const PropNumeric *>(this)->value.isEnabled();
         case Type::DECIMAL:
-            return mEnabled;
-            break;
+            return static_cast<const PropDecimal *>(this)->value.isEnabled();
     }
 }
 
@@ -583,7 +589,7 @@ std::set<Versions::PropSetting *> Versions::PropLayout::generate(
         }
 
         if (entry->getType() != PConf::Type::SECTION) continue;
-        if (entry->label) out.label = *entry->label;
+        if (entry->label) out.frame.setLabel(string{*entry->label});
         auto& child{std::get<PropLayout>(
             out.children.emplace_back(PropLayout{axis})
         )};
