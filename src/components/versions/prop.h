@@ -7,6 +7,10 @@
 
 #include "log/logger.h"
 #include "pconf/types.h"
+#include "ui/controls/numeric.h"
+#include "ui/controls/radios.h"
+#include "ui/controls/toggle.h"
+#include "ui/panel.h"
 #include "utils/types.h"
 
 namespace Versions {
@@ -20,11 +24,6 @@ struct PropSetting {
   PropSetting(PropSetting&&) = default;
   PropSetting& operator=(const PropSetting&) = delete;
   PropSetting& operator=(PropSetting&&) = delete;
-
-  /**
-   * @return Whether the setting is enabled
-   */
-  [[nodiscard]] inline bool enabled() const { return mEnabled; }
 
   /**
    * @return True if enabled and value is "active," false otherwise
@@ -78,7 +77,6 @@ protected:
 
 private:
     friend Prop;
-    bool mEnabled;
     Prop& mProp;
 };
 
@@ -112,7 +110,7 @@ struct PropToggle : PropSetting {
         } {}
 
     const vector<string> disables;
-    bool value{false};
+    PCUI::ToggleData value;
 };
 
 struct PropNumeric : PropSetting {
@@ -132,8 +130,11 @@ struct PropNumeric : PropSetting {
         int32 max,
         int32 increment,
         int32 defaultVal
-    ) : PropSetting{prop, Type::NUMERIC, name, define, description, required, requiredAny},
-        min{min}, max{max}, increment{increment}, defaultVal{defaultVal}, value{defaultVal} {}
+    ) : PropSetting{prop, Type::NUMERIC, name, define, description, required, requiredAny} {
+        value.setRange(min, max);
+        value.setIncrement(increment);
+        value = defaultVal;
+    }
 
     PropNumeric(const PropNumeric& other, Prop& prop) :
         PropNumeric{
@@ -143,17 +144,13 @@ struct PropNumeric : PropSetting {
             other.description,
             other.required,
             other.requiredAny,
-            other.min,
-            other.max,
-            other.increment,
-            other.defaultVal
+            other.value.min(),
+            other.value.max(),
+            other.value.increment(),
+            other.value,
         } {}
 
-    int32 value;
-    const int32 min;
-    const int32 max;
-    const int32 increment;
-    const int32 defaultVal;
+    PCUI::NumericData value;
 };
 
 struct PropDecimal : PropSetting {
@@ -173,8 +170,11 @@ struct PropDecimal : PropSetting {
         float64 max,
         float64 increment,
         float64 defaultVal
-    ) : PropSetting{prop, Type::DECIMAL, name, define, description, required, requiredAny},
-        min{min}, max{max}, increment{increment}, defaultVal{defaultVal}, value{defaultVal} {}
+    ) : PropSetting{prop, Type::DECIMAL, name, define, description, required, requiredAny} {
+        value.setRange(min, max);
+        value.setIncrement(increment);
+        value = defaultVal;
+    }
 
     PropDecimal(const PropDecimal& other, Prop& prop) :
         PropDecimal{
@@ -184,17 +184,13 @@ struct PropDecimal : PropSetting {
             other.description,
             other.required,
             other.requiredAny,
-            other.min,
-            other.max,
-            other.increment,
-            other.defaultVal
+            other.value.min(),
+            other.value.max(),
+            other.value.increment(),
+            other.value,
         } {}
 
-    float64 value;
-    const float64 min;
-    const float64 max;
-    const float64 increment;
-    const float64 defaultVal;
+    PCUI::DecimalData value;
 };
 
 struct PropOption;
@@ -270,7 +266,7 @@ private:
     friend Prop;
     friend PropSelection;
     list<PropSelection> mSelections;
-    uint32 mSelected{0};
+    PCUI::RadiosData selection;
 };
 
 /**
@@ -337,10 +333,15 @@ struct PropLayout {
 
 
     PropLayout(Axis axis = Axis::VERTICAL, string label = "", Children children = {}) :
-        axis{axis}, label{std::move(label)}, children{std::move(children)} {}
+        axis{axis},
+        frame{
+            label.empty() ? PCUI::PanelData::Type::BASIC : PCUI::PanelData::Type::FRAMED,
+            std::move(label)
+        },
+        children{std::move(children)} {}
 
     Axis axis;
-    string label;
+    PCUI::PanelData frame;
     Children children;
 };
 
