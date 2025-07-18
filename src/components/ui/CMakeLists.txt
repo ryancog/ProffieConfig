@@ -7,6 +7,7 @@ add_library(ui SHARED
     movable.cpp
     plaque.cpp
     message.cpp
+    panel.cpp
 
     controls/button.cpp
     controls/checklist.cpp
