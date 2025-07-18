@@ -27,7 +27,19 @@ PCUI::Button::Button(
     int64 style,
     const wxString& label
 ) : ControlBase(parent, data) {
+    create(style, label);
+};
 
+PCUI::Button::Button(
+    wxWindow *parent,
+    ButtonDataProxy& proxy,
+    int64 style,
+    const wxString& label
+) : ControlBase(parent, proxy) {
+    create(style, label);
+};
+
+void PCUI::Button::create(int64 style, const wxString& label) {
     auto *control{new wxButton(
         this,
         wxID_ANY,
@@ -38,7 +50,7 @@ PCUI::Button::Button(
     )};
 
     init(control, wxEVT_BUTTON, wxEmptyString, wxVERTICAL);
-};
+}
 
 void PCUI::Button::onUIUpdate() {
     pData->refreshed();

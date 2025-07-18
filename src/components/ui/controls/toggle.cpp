@@ -34,10 +34,32 @@ PCUI::Toggle::Toggle(
 ) : ControlBase(parent, data),
     mOnText{std::move(onText)},
     mOffText{std::move(offText)} {
+    create(style, label, orient);
+}
+
+PCUI::Toggle::Toggle(
+    wxWindow *parent,
+    ToggleDataProxy& proxy,
+    wxString onText,
+    wxString offText,
+    int64 style,
+    const wxString& label,
+    wxOrientation orient
+) : ControlBase(parent, proxy),
+    mOnText{std::move(onText)},
+    mOffText{std::move(offText)} {
+    create(style, label, orient);
+}
+
+void PCUI::Toggle::create(
+    int64 style,
+    const wxString& label,
+    wxOrientation orient
+) {
     auto *control{new wxToggleButton(
         this,
 		wxID_ANY,
-		data ? mOnText : mOffText,
+		(pData ? *pData : false) ? mOnText : mOffText,
 		wxDefaultPosition,
 		wxDefaultSize,
 		style
@@ -61,6 +83,24 @@ PCUI::CheckBox::CheckBox(
     const wxString& label,
     wxOrientation orient
 ) : ControlBase(parent, data) {
+    create(style, label, orient);
+};
+
+PCUI::CheckBox::CheckBox(
+    wxWindow *parent,
+    ToggleDataProxy& proxy,
+    int64 style,
+    const wxString& label,
+    wxOrientation orient
+) : ControlBase(parent, proxy) {
+    create(style, label, orient);
+};
+
+void PCUI::CheckBox::create(
+    int64 style,
+    const wxString& label,
+    wxOrientation orient
+) {
     auto *control{new wxCheckBox(
         this,
         wxID_ANY,
@@ -70,7 +110,7 @@ PCUI::CheckBox::CheckBox(
         style
     )};
     init(control, wxEVT_CHECKBOX, label, orient);
-};
+}
 
 void PCUI::CheckBox::onUIUpdate() {
     pControl->SetValue(pData);

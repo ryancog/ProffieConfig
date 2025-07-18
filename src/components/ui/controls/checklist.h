@@ -65,6 +65,8 @@ private:
     set<uint32> mSelected;
 };
 
+using CheckListDataProxy = ControlDataProxy<CheckListData>;
+
 class UI_EXPORT CheckList : public ControlBase<
                          CheckList,
                          CheckListData,
@@ -77,8 +79,16 @@ public:
         const wxString& label = {},
         wxOrientation orient = wxVERTICAL
         );
+    CheckList(
+        wxWindow *parent,
+        CheckListDataProxy& proxy,
+        const wxString& label = {},
+        wxOrientation orient = wxVERTICAL
+        );
 
 private:
+    void create(const wxString& label, wxOrientation orient);
+
     void onUIUpdate() final;
     void onModify(wxCommandEvent&) final;
 };

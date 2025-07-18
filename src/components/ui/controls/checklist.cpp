@@ -29,9 +29,21 @@ PCUI::CheckList::CheckList(
     const wxString& label,
     wxOrientation orient
 ) : ControlBase(parent, data) {
+    create(label, orient);
+}
 
+PCUI::CheckList::CheckList(
+    wxWindow *parent,
+    CheckListDataProxy& proxy,
+    const wxString& label,
+    wxOrientation orient
+) : ControlBase(parent, proxy) {
+    create(label, orient);
+}
+
+void PCUI::CheckList::create(const wxString& label, wxOrientation orient) {
     auto *control{new wxCheckListBox(
-        parent,
+        this,
         wxID_ANY,
         wxDefaultPosition,
         wxDefaultSize,

@@ -54,6 +54,8 @@ private:
     int32 mValue{-1};
 };
 
+using ChoiceDataProxy = ControlDataProxy<ChoiceData>;
+
 class UI_EXPORT Choice : public ControlBase<
                          Choice,
                          ChoiceData,
@@ -66,8 +68,15 @@ public:
         const wxString& label = {},
         wxOrientation orient = wxVERTICAL
         );
+    Choice(
+        wxWindow *parent,
+        ChoiceDataProxy& proxy,
+        const wxString& label = {},
+        wxOrientation orient = wxVERTICAL
+        );
 
 private:
+    void create(const wxString& label, wxOrientation orient);
     void onUIUpdate() final;
     void onModify(wxCommandEvent&) final;
 };
@@ -84,8 +93,15 @@ public:
         const wxString& label = {},
         wxOrientation orient = wxVERTICAL
         );
+    List(
+        wxWindow *parent,
+        ChoiceDataProxy& proxy,
+        const wxString& label = {},
+        wxOrientation orient = wxVERTICAL
+        );
 
 private:
+    void create(const wxString& label, wxOrientation orient);
     void onUIUpdate() final;
     void onModify(wxCommandEvent&) final;
 };

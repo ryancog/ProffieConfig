@@ -45,6 +45,8 @@ private:
     string mValue;
 };
 
+using ComboBoxDataProxy = ControlDataProxy<ComboBoxData>;
+
 class UI_EXPORT ComboBox : public ControlBase<
                            ComboBox,
                            ComboBoxData,
@@ -57,8 +59,15 @@ public:
         const wxString& label = {},
         wxOrientation orient = wxVERTICAL
         );
+    ComboBox(
+        wxWindow *parent,
+        ComboBoxDataProxy& proxy,
+        const wxString& label = {},
+        wxOrientation orient = wxVERTICAL
+        );
 
 private:
+    void create(const wxString& label, wxOrientation orient);
     void onUIUpdate() final;
     void onModify(wxCommandEvent&) final;
 };

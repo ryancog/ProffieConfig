@@ -38,6 +38,8 @@ private:
     filepath mValue;
 };
 
+using FilePickerDataProxy = ControlDataProxy<FilePickerData>;
+
 class UI_EXPORT FilePicker : public ControlBase<
                              FilePicker,
                              FilePickerData,
@@ -53,8 +55,24 @@ public:
         const wxString& label = {},
         wxOrientation orient = wxVERTICAL
     );
+    FilePicker(
+        wxWindow *parent,
+        FilePickerDataProxy& data,
+        int64 style,
+        const wxString& prompt = {},
+        const wxString& wildcard = {},
+        const wxString& label = {},
+        wxOrientation orient = wxVERTICAL
+    );
     
 private:
+    void create(
+        int64 style,
+        const wxString& prompt,
+        const wxString& wildcard,
+        const wxString& label,
+        wxOrientation orient
+    );
     void onUIUpdate() final;
     void onModify(wxFileDirPickerEvent&) final;
 };

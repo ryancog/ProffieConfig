@@ -36,6 +36,8 @@ private:
     friend class Button;
 };
 
+using ButtonDataProxy = ControlDataProxy<ButtonData>;
+
 class UI_EXPORT Button : public ControlBase<
                          Button,
                          ButtonData,
@@ -48,8 +50,16 @@ public:
         int64 style = 0,
         const wxString& label = {}
     );
+    Button(
+        wxWindow *parent,
+        ButtonDataProxy& proxy,
+        int64 style = 0,
+        const wxString& label = {}
+    );
 
 private:
+    void create(int64 style, const wxString& label);
+
     void onUIUpdate() final;
     void onModify(wxCommandEvent&) final;
 };

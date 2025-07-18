@@ -83,6 +83,8 @@ private:
     uint32 mSelected{std::numeric_limits<uint32>::max()};
 };
 
+using RadiosDataProxy = ControlDataProxy<RadiosData>;
+
 class UI_EXPORT Radios : public ControlBase<
                          Radios,
                          RadiosData,
@@ -93,11 +95,17 @@ public:
         wxWindow *parent,
         RadiosData& data,
         const wxString& label = {},
-        int64 style = wxRA_SPECIFY_COLS,
         wxOrientation orient = wxVERTICAL
-        );
+    );
+    Radios(
+        wxWindow *parent,
+        RadiosDataProxy& proxy,
+        const wxString& label = {},
+        wxOrientation orient = wxVERTICAL
+    );
 
 private:
+    void create(const wxString& label, wxOrientation orient);
     void onUIUpdate() final;
     void onModify(wxCommandEvent&) final;
 };

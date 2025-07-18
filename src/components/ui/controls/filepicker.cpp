@@ -32,7 +32,28 @@ PCUI::FilePicker::FilePicker(
     const wxString& label,
     wxOrientation orient
 ) : ControlBase(parent, data) {
+    create(style, prompt, wildcard, label, orient);
+};
 
+PCUI::FilePicker::FilePicker(
+    wxWindow *parent,
+    FilePickerDataProxy& proxy,
+    int64 style,
+    const wxString& prompt,
+    const wxString& wildcard,
+    const wxString& label,
+    wxOrientation orient
+) : ControlBase(parent, proxy) {
+    create(style, prompt, wildcard, label, orient);
+};
+
+void PCUI::FilePicker::create(
+    int64 style,
+    const wxString& prompt,
+    const wxString& wildcard,
+    const wxString& label,
+    wxOrientation orient
+) {
     auto *control{new wxFilePickerCtrl(
         this,
         wxID_ANY,
@@ -45,7 +66,8 @@ PCUI::FilePicker::FilePicker(
     )};
 
     init(control, wxEVT_FILEPICKER_CHANGED, label, orient);
-};
+
+}
 
 void PCUI::FilePicker::onUIUpdate() {
     pControl->SetPath(static_cast<filepath>(*pData).string());
