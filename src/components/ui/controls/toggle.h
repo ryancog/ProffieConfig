@@ -40,6 +40,8 @@ private:
     bool mValue;
 };
 
+using ToggleDataProxy = ControlDataProxy<ToggleData>;
+
 class UI_EXPORT Toggle : public ControlBase<
                          Toggle,
                          ToggleData,
@@ -54,9 +56,23 @@ public:
         int64 style = 0,
         const wxString& label = {},
         wxOrientation orient = wxVERTICAL
-        );
+    );
+    Toggle(
+        wxWindow *parent,
+        ToggleDataProxy& proxy,
+        wxString onText = "True",
+        wxString offText = "False",
+        int64 style = 0,
+        const wxString& label = {},
+        wxOrientation orient = wxVERTICAL
+    );
 
 private:
+    void create(
+        int64 style,
+        const wxString& label,
+        wxOrientation orient
+    );
     void onUIUpdate() final;
     void onModify(wxCommandEvent&) final;
 
@@ -77,8 +93,20 @@ public:
         const wxString& label = {},
         wxOrientation orient = wxVERTICAL
     );
+    CheckBox(
+        wxWindow *parent,
+        ToggleDataProxy& proxy,
+        int64 style = 0,
+        const wxString& label = {},
+        wxOrientation orient = wxVERTICAL
+    );
 
 private:
+    void create(
+        int64 style,
+        const wxString& label,
+        wxOrientation orient
+    );
     void onUIUpdate() final;
     void onModify(wxCommandEvent&) final;
 };

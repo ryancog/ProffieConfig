@@ -101,6 +101,11 @@ private:
     bool mNew{false};
 };
 
+template<typename DATA_TYPE> requires std::is_base_of_v<ControlData, DATA_TYPE>
+struct ControlDataProxy {
+    DATA_TYPE *data;
+};
+
 template<
     class DERIVED,
     typename CONTROL_DATA,
@@ -123,8 +128,11 @@ public:
     // [[nodiscard]] inline constexpr const wxStaticText *text() const { return mText; }
 
 protected:
-    ControlBase(wxWindow *parent, CONTROL_DATA& data) : 
-        wxPanel(parent, wxID_ANY) { bind(data); }
+    ControlBase(wxWindow *parent, ControlDataProxy<CONTROL_DATA>& proxy) : 
+        wxPanel(parent, wxID_ANY), mDataProxy{proxy} { bind(mDataProxy->data); }
+
+    ControlBase(wxWindow *parent, CONTROL_DATA &data) : 
+        wxPanel(parent, wxID_ANY) { bind(&data); }
 
     void init(
         CONTROL *control,
@@ -151,31 +159,56 @@ protected:
         SetSizerAndFit(sizer);
 
         Bind(wxEVT_UPDATE_UI, [this](wxUpdateUIEvent&) {
+            if (mDataProxy and mDataProxy->data != pData) {
+                bind(mDataProxy->data);
+            }
+            
+            if (not pData) {
+                Disable();
+                Hide();
+                return;
+            }
+
             if (not pData->isNew()) return;
 
             Enable(pData->isEnabled());
             Show(pData->isShown());
             onUIUpdate();
         });
-        Bind(eventTag, [this](CONTROL_EVENT& evt) {
-            if (not pData->isEnabled() or pData->isNew()) return;
-
-            onModify(evt);
-            pData->refresh(true, false);
-        });
+        Bind(eventTag, [this](CONTROL_EVENT& evt) { controlEventHandler(evt); });
     }
 
-    void bind(CONTROL_DATA& newData) {
-        pData = &newData;
-        pData->refresh(false);
-    };
+    void init(
+        CONTROL *control,
+        const wxEventTypeTag<CONTROL_EVENT>& eventTag,
+        const wxEventTypeTag<CONTROL_EVENT>& secondaryTag,
+        wxString label,
+        wxOrientation orient
+    ) {
+        init(control, eventTag, label, orient);
+        Bind(secondaryTag, [this](CONTROL_EVENT& evt) { controlEventHandler(evt); });
+    }
 
     virtual void onUIUpdate() = 0;
     virtual void onModify(CONTROL_EVENT&) = 0;
 
     CONTROL *pControl{nullptr};
-    // Never nullptr
-    CONTROL_DATA *pData;
+    CONTROL_DATA *pData{nullptr};
+
+private:
+    void controlEventHandler(CONTROL_EVENT& evt) {
+        if (not pData or not pData->isEnabled() or pData->isNew()) return;
+
+        onModify(evt);
+        pData->refresh(true, false);
+    }
+
+    void bind(CONTROL_DATA *newData) {
+        pData = newData;
+        if (pData) pData->refresh(false);
+    };
+
+    ControlDataProxy<CONTROL_DATA> *mDataProxy{nullptr};
 };
 
 } // namespace PCUI

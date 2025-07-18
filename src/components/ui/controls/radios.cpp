@@ -27,10 +27,21 @@ PCUI::Radios::Radios(
     wxWindow *parent,
     RadiosData& data,
     const wxString& label,
-    int64 style,
     wxOrientation orient
 ) : ControlBase(parent, data) {
+    create(label, orient);
+};
 
+PCUI::Radios::Radios(
+    wxWindow *parent,
+    RadiosDataProxy& proxy,
+    const wxString& label,
+    wxOrientation orient
+) : ControlBase(parent, proxy) {
+    create(label, orient);
+};
+
+void PCUI::Radios::create(const wxString& label, wxOrientation orient) {
     auto *control{new wxRadioBox(
         this,
         wxID_ANY,
@@ -39,11 +50,11 @@ PCUI::Radios::Radios(
         wxDefaultSize,
         pData->mChoices,
         0,
-        style
+        orient == wxVERTICAL ? wxRA_SPECIFY_COLS : wxRA_SPECIFY_ROWS
     )};
 
     init(control, wxEVT_RADIOBOX, wxEmptyString, wxVERTICAL);
-};
+}
 
 void PCUI::Radios::onUIUpdate() {
     for (auto idx{0}; idx < pData->mChoices.size(); ++idx) {

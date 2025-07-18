@@ -26,14 +26,28 @@ namespace PCUI {
 PCUI::Numeric::Numeric(
     wxWindow *parent,
     NumericData& data,
-    int32 min,
-    int32 max,
-    int32 increment,
     int64 style,
     const wxString& label,
     const wxOrientation& orient
 ) : ControlBase(parent, data) {
+    create(style, label, orient);
+}
 
+PCUI::Numeric::Numeric(
+    wxWindow *parent,
+    NumericDataProxy& proxy,
+    int64 style,
+    const wxString& label,
+    const wxOrientation& orient
+) : ControlBase(parent, proxy) {
+    create(style, label, orient);
+}
+
+void PCUI::Numeric::create(
+    int64 style,
+    const wxString& label,
+    const wxOrientation& orient
+) {
     auto *control{new wxSpinCtrl(
         this,
         wxID_ANY,
@@ -41,11 +55,11 @@ PCUI::Numeric::Numeric(
         wxDefaultPosition,
         wxDefaultSize,
         style,
-        min,
-        max,
-        *pData
+        pData ? pData->min() : 0,
+        pData ? pData->max() : 0,
+        pData ? *pData : 0
     )};
-    control->SetIncrement(increment);
+    if (pData) control->SetIncrement(pData->increment());
 
     init(control, wxEVT_SPINCTRL, label, orient);
 }
@@ -64,14 +78,28 @@ void PCUI::Numeric::onModify(wxSpinEvent& evt) {
 PCUI::Decimal::Decimal(
     wxWindow *parent,
     DecimalData& data,
-    float64 min,
-    float64 max,
-    float64 increment,
     int64 style,
     const wxString& label,
     const wxOrientation& orient
 ) : ControlBase(parent, data) {
+    create(style, label, orient);
+}
 
+PCUI::Decimal::Decimal(
+    wxWindow *parent,
+    DecimalDataProxy& proxy,
+    int64 style,
+    const wxString& label,
+    const wxOrientation& orient
+) : ControlBase(parent, proxy) {
+    create(style, label, orient);
+}
+
+void PCUI::Decimal::create(
+    int64 style,
+    const wxString& label,
+    const wxOrientation& orient
+) {
     auto *control{new wxSpinCtrlDouble(
         this,
         wxID_ANY,
@@ -79,11 +107,11 @@ PCUI::Decimal::Decimal(
         wxDefaultPosition,
         wxDefaultSize,
         style,
-        min,
-        max,
-        *pData
+        pData ? pData->min() : 0,
+        pData ? pData->max() : 0,
+        pData ? *pData : 0
     )};
-    control->SetIncrement(increment);
+    if (pData) control->SetIncrement(pData->increment());
 
     init(control, wxEVT_SPINCTRLDOUBLE, label, orient);
 }

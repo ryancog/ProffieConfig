@@ -78,6 +78,8 @@ private:
 
 using NumericData = Private::NumericDataTemplate<int32>;
 using DecimalData = Private::NumericDataTemplate<float64>;
+using NumericDataProxy = ControlDataProxy<NumericData>;
+using DecimalDataProxy = ControlDataProxy<DecimalData>;
 
 class UI_EXPORT Numeric : public ControlBase<
                           Numeric,
@@ -88,15 +90,24 @@ public:
     Numeric(
         wxWindow *parent,
         NumericData& data,
-        int32 min       = 0,
-        int32 max       = 100,
-        int32 increment = 1,
+        int64 style = wxSP_ARROW_KEYS,
+        const wxString& label = {},
+        const wxOrientation& orient = wxVERTICAL
+    );
+    Numeric(
+        wxWindow *parent,
+        NumericDataProxy& proxy,
         int64 style = wxSP_ARROW_KEYS,
         const wxString& label = {},
         const wxOrientation& orient = wxVERTICAL
     );
 
 private:
+    void create(
+        int64 style,
+        const wxString& label,
+        const wxOrientation& orient
+    );
     void onUIUpdate() final;
     void onModify(wxSpinEvent&) final;
 };
@@ -110,15 +121,24 @@ public:
     Decimal(
         wxWindow *parent,
         DecimalData& data,
-        float64 min       = 0,
-        float64 max       = 100,
-        float64 increment = 1,
         int64 style = wxSP_ARROW_KEYS,
         const wxString& label = {},
         const wxOrientation& orient = wxVERTICAL
-        );
+    );
+    Decimal(
+        wxWindow *parent,
+        DecimalDataProxy& proxy,
+        int64 style = wxSP_ARROW_KEYS,
+        const wxString& label = {},
+        const wxOrientation& orient = wxVERTICAL
+    );
 
 private:
+    void create(
+        int64 style,
+        const wxString& label,
+        const wxOrientation& orient
+    );
     void onUIUpdate() final;
     void onModify(wxSpinDoubleEvent&) final;
 };

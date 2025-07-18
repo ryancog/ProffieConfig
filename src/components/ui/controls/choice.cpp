@@ -29,15 +29,27 @@ PCUI::Choice::Choice(
     const wxString& label,
     wxOrientation orient
 ) : ControlBase(parent, data) {
+    create(label, orient);
+}
 
+PCUI::Choice::Choice(
+    wxWindow *parent,
+    ChoiceDataProxy& proxy,
+    const wxString& label,
+    wxOrientation orient
+) : ControlBase(parent, proxy) {
+    create(label, orient);
+}
+
+void PCUI::Choice::create(const wxString& label, wxOrientation orient) {
     auto *control{new wxChoice(
         this,
 		wxID_ANY,
 		wxDefaultPosition,
 		wxDefaultSize,
-        data.mChoices
+        pData ? pData->mChoices : wxArrayString{}
 	)};
-    control->SetSelection(data);
+    if (pData) control->SetSelection(*pData);
 
 #   ifdef __WXGTK__
     control->SetMinSize(control->GetBestSize() + wxSize{ FromDIP(20), 0 });
@@ -62,15 +74,27 @@ PCUI::List::List(
     const wxString& label,
     wxOrientation orient
 ) : ControlBase(parent, data) {
+    create(label, orient);
+}
 
+PCUI::List::List(
+    wxWindow *parent,
+    ChoiceDataProxy& proxy,
+    const wxString& label,
+    wxOrientation orient
+) : ControlBase(parent, proxy) {
+    create(label, orient);
+}
+
+void PCUI::List::create(const wxString& label, wxOrientation orient) {
     auto *control{new wxListBox(
         this,
 		wxID_ANY,
 		wxDefaultPosition,
 		wxDefaultSize,
-        data.mChoices
+        pData ? pData->mChoices : wxArrayString{}
 	)};
-    control->SetSelection(data);
+    if (pData) control->SetSelection(*pData);
 
     init(control, wxEVT_CHOICE, label, orient);
 }

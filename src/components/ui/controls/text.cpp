@@ -25,25 +25,38 @@ namespace PCUI {
 
 PCUI::Text::Text(
     wxWindow *parent,
-    TextData &data,
+    TextData& data,
+    int64 style,
+    const wxString& label,
+    wxOrientation orient
+) : ControlBase(parent, data) {
+    create(style, label, orient);
+}
+
+PCUI::Text::Text(
+    wxWindow *parent,
+    TextDataProxy& proxy,
     int64 style,
     const wxString &label,
     wxOrientation orient
-) : ControlBase(parent, data) {
+) : ControlBase(parent, proxy) {
+    create(style, label, orient);
+}
 
+void PCUI::Text::create(int64 style, const wxString& label, wxOrientation orient) {
     auto *control{new wxTextCtrl(
         this,
         wxID_ANY,
         static_cast<string>(*pData),
         wxDefaultPosition,
         wxDefaultSize,
-        style
+        style | wxTE_PROCESS_ENTER
     )};
 #   ifdef __WXMAC__
     control->OSXDisableAllSmartSubstitutions();
 #   endif
 
-    init(control, wxEVT_TEXT, label, orient);
+    init(control, wxEVT_TEXT_ENTER, label, orient);
 }
 
 void PCUI::Text::onUIUpdate() {

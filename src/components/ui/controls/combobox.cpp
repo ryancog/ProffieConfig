@@ -29,21 +29,33 @@ PCUI::ComboBox::ComboBox(
     const wxString& label,
     wxOrientation orient
 ) : ControlBase(parent, data) {
+    create(label, orient);
+}
 
+PCUI::ComboBox::ComboBox(
+    wxWindow *parent,
+    ComboBoxDataProxy& proxy,
+    const wxString& label,
+    wxOrientation orient
+) : ControlBase(parent, proxy) {
+    create(label, orient);
+}
+
+void PCUI::ComboBox::create(const wxString& label, wxOrientation orient) {
     auto *control{new wxComboBox(
         this,
 		wxID_ANY,
-        static_cast<string>(data),
+        pData ? static_cast<string>(*pData) : string{},
 		wxDefaultPosition,
 		wxDefaultSize,
-        data.mDefaults
+        pData ? pData->mDefaults : wxArrayString{}
 	)};
 
 #   ifdef __WXGTK__
     control->SetMinSize(control->GetBestSize() + wxSize{ FromDIP(20), 0 });
 #   endif
 
-    init(control, wxEVT_COMBOBOX, label, orient);
+    init(control, wxEVT_COMBOBOX, wxEVT_TEXT_ENTER, label, orient);
 }
 
 void PCUI::ComboBox::onUIUpdate() {

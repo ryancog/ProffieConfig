@@ -38,6 +38,8 @@ private:
     string mValue;
 };
 
+using TextDataProxy = ControlDataProxy<TextData>;
+
 class UI_EXPORT Text : public ControlBase<
                        Text,
                        TextData,
@@ -50,7 +52,14 @@ public:
         int64 style = 0,
         const wxString &label = {},
         wxOrientation orient = wxVERTICAL
-        );
+    );
+    Text(
+        wxWindow *parent,
+        TextDataProxy& proxy,
+        int64 style = 0,
+        const wxString &label = {},
+        wxOrientation orient = wxVERTICAL
+    );
 
     // TODO: Set up use of validators to forbid certain entry.
     //
@@ -60,6 +69,7 @@ public:
     // [[nodiscard]] wxString getInvalidChars() const;
 
 private:
+    void create(int64 style, const wxString& label, wxOrientation orient);
     void onUIUpdate() final;
     void onModify(wxCommandEvent&) final;
     // void pruneText();
