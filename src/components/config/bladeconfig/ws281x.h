@@ -19,21 +19,106 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ui/controls/controldata.h"
+#include "ui/controls/checklist.h"
+#include "ui/controls/choice.h"
+#include "ui/controls/combobox.h"
+#include "ui/controls/numeric.h"
+#include "ui/controls/toggle.h"
+#include "ui/controls/radios.h"
 
 #include "utils/types.h"
 
 namespace Config {
 
-struct Split;
+struct Split {
+    PCUI::NumericData length;
+
+    enum Type {
+        STANDARD,
+        REVERSE,
+        STRIDE,
+        ZIG_ZAG,
+        // Blissfully ignorant of list
+    };
+    PCUI::RadiosData type;
+
+    /*
+     * Stride: Data goes like:
+     * |---|   |---|   |---|
+     * |   | ^ |   | ^ |   |
+     * | | | | | | | | | | |
+     * | | | | | | | | | | |
+     * | | | | | | | | | | |
+     * | | | | | | | | | | |
+     * | V | | | V | | | V |
+     * |   | | |   | | |   |
+     * |---|   |---|   |---|
+     *
+     * But animation should go:
+     *
+     * --------------->
+     * --------------->
+     * --------------->
+     *
+     * ZigZag: Data goes like:
+     *           ------>
+     * |---|  |---|  |---|
+     * |   |  |   |  |   |
+     * | | |  | ^ |  | | |
+     * | | |  | | |  | | |
+     * | | |  | | |  | | |
+     * | | |  | | |  | | |
+     * | V |  | | |  | V |
+     * |   |  |   |  |   |
+     * |---|  |---|  |---|
+     *    ------>
+     *
+     * But animation should go:
+     *
+     * --------------->
+     * --------------->
+     * --------------->        
+     */
+
+    // For stide and zigzag
+    PCUI::NumericData segments;
+};
 
 struct WS281XBlade {
     PCUI::NumericData length;
+
+    PCUI::ComboBoxData dataPin;
+
+    enum ColorOrder3 {
+        GRB,
+        GBR,
+        BGR,
+        BRG,
+        RGB,
+        RBG,
+    };
     PCUI::ChoiceData colorOrder3;
+    enum ColorOrder4 {
+        GRBW,
+        GBRW,
+        BGRW,
+        BRGW,
+        RGBW,
+        RBGW,
+        WGRB,
+        WGBR,
+        WBGR,
+        WBRG,
+        WRGB,
+        WRBG,
+    };
     PCUI::ChoiceData colorOrder4;
+    PCUI::ToggleData hasWhite;
+    PCUI::ToggleData useRGBWithWhite;
 
+    PCUI::CheckListData powerPins;
 
-
+    vector<Split> splits;
 };
 
 } // namespace Config

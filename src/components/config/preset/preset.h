@@ -19,22 +19,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include "styles/bladestyle.h"
+#include "ui/controls/text.h"
 #include "utils/types.h"
 
 #include "../private/export.h"
-#include "../wiring/wiring.h"
 
 namespace Config {
 
 struct CONFIG_EXPORT Preset {
-    string name;
-    string fontDir;
+    PCUI::TextData name;
+    PCUI::TextData fontDir;
     // vector<string> fontDirs;
-    string track;
+    PCUI::TextData track;
     struct Style {
-        string comment{"ProffieConfig Default Blue AudioFlicker"};
-        string style{"StyleNormalPtr<AudioFlicker<Blue,DodgerBlue>,BLUE,300,800>()"};
+        Style();
+        PCUI::TextData comment; // {"ProffieConfig Default Blue AudioFlicker"};
+        PCUI::TextData style; // {"StyleNormalPtr<AudioFlicker<Blue,DodgerBlue>,BLUE,300,800>()"};
     };
     vector<Style> styles;
     // vector<UID> styles;

@@ -21,54 +21,52 @@
 
 #include <wx/datetime.h>
 
+#include "versions/prop.h"
+
 #include "preset/array.h"
+#include "bladeconfig/bladeconfig.h"
 #include "private/export.h"
 #include "settings/settings.h"
-#include "types.h"
 
 namespace Config {
 
-static constexpr cstring BUNDLE_FILE_EXTENSION{".prfcfgbundle"};
 static constexpr cstring RAW_FILE_EXTENSION{".h"};
 
 static constexpr auto MAX_NAME_LENGTH{24};
 
-struct CONFIG_EXPORT Config : Tracked {
-    wxDateTime modDate;
-
-    string name;
-    // Wiring::Wiring wiring;
+struct CONFIG_EXPORT Config {
+    PCUI::TextData name;
     Settings settings;
 
-    // Returns `PresetArray` if successfully added, nullptr otherwise.
-    // If name is empty, a new generic name will be created.
-    std::shared_ptr<PresetArray> addPresetArray();
-    // True if removed, false otherwise
-    bool removePresetArray(UID id);
+    PCUI::ChoiceData propfile;
+    Versions::Prop prop;
 
-    std::shared_ptr<PresetArray> getPresetArrayByName(const string& name);
-
-    std::shared_ptr<const PresetArray> getPresetArray(UID id) const;
-    std::shared_ptr<PresetArray> getPresetArray(UID id);
-
-    const Map<PresetArray>& getPresetArrays();
-
-private:
-    friend std::shared_ptr<Config> addConfig();
-    Config(UID);
-
-    Map<PresetArray> mPresetArrays;
+    vector<PresetArray> presets;
+    vector<BladeConfig> bladeArrays;
 };
 
-CONFIG_EXPORT void loadConfigs();
-CONFIG_EXPORT void saveConfigs();
+/**
+ * Search disk and retrieve list of all config names
+ */
+vector<string> fetchListFromDisk();
 
-CONFIG_EXPORT const Map<Config>& getConfigs();
-CONFIG_EXPORT std::shared_ptr<Config> getConfig(UID);
+void rename(const string& oldName, const string& newName);
 
-CONFIG_EXPORT std::shared_ptr<Config> addConfig();
-// Return true if removed, false if doesn't exist
-CONFIG_EXPORT bool removeConfig(UID);
+bool remove(const string& name);
+
+/**
+ * Parse the config and return a fresh ptr, or return the ptr
+ * of an already-open config.
+ */
+std::shared_ptr<Config> open(const string& name);
+
+bool save(std::shared_ptr<Config>);
+
+/**
+ * Remove from internal storage and let it die once last memory
+ * is forgotten...
+ */
+bool close(std::shared_ptr<Config>);
 
 } // namespace Config
 
