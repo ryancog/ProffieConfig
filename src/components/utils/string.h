@@ -22,6 +22,12 @@
 #include <algorithm>
 #include <cctype>
 
+#include <wx/string.h>
+
+#include "utils/types.h"
+
+#include "private/export.h"
+
 namespace Utils {
 
 template<typename STRING>
@@ -33,5 +39,31 @@ constexpr void trimWhiteSpace(STRING& str) {
         return not std::isspace(chr);
     }).base(), str.end());
 };
+
+template<typename STRING>
+constexpr void trimUnsafe(STRING& str) {
+    auto checkIllegal{[](char chr) -> bool {
+        if (std::isalnum(chr)) return false;
+        if (chr == '-' or chr == '_') return false;
+        return true;
+    }};
+
+    str.erase(
+        std::remove_if(str.begin(), str.end(), checkIllegal),
+        str.end()
+    );
+};
+
+UTILS_EXPORT vector<string> createEntries(const std::vector<wxString>& vec);
+UTILS_EXPORT vector<string> createEntries(const std::initializer_list<wxString>& list);
+
+template<typename T, size_t SIZE>
+vector<string> createEntries(const array<T, SIZE>& list) {
+    vector<string> entries;
+    for (const auto& entry : list) {
+        entries.push_back(string{entry});
+    }
+    return entries;
+}
 
 } // namespace Utils
