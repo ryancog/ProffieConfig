@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024-2025 Ryan Ogurek
  *
- * components/settings/settings.h
+ * components/config/settings/settings.h
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ui/controls/checklist.h"
 #include "ui/controls/choice.h"
+#include "ui/controls/combobox.h"
+#include "ui/controls/text.h"
 #include "ui/controls/toggle.h"
 #include "ui/controls/numeric.h"
+#include "ui/notifier.h"
+#include "ui/panel.h"
 #include "utils/types.h"
 
 namespace Config {
@@ -32,8 +37,22 @@ struct Settings {
      */
     Settings();
 
-    constexpr static cstring NUM_BLADES_STR{"NUM_BLADES"};
+    enum BoardVersion {
+        PROFFIEBOARDV3,
+        PROFFIEBOARDV2,
+        PROFFIEBAORDV1,
+    };
+    PCUI::ChoiceData board;
+
+    PCUI::ToggleData massStorage;
+    constexpr static cstring ENABLE_MASS_STORAGE_STR{"ENABLE_MASS_STORAGE"};
+    PCUI::ToggleData webUSB;
+    constexpr static cstring ENABLE_WEBUSB_STR{"ENABLE_WEBUSB"};
+
+    PCUI::NumericData numButtons;
     constexpr static cstring NUM_BUTTONS_STR{"NUM_BUTTONS"};
+
+    constexpr static cstring NUM_BLADES_STR{"NUM_BLADES"};
     constexpr static cstring EN_AUDIO_STR{"ENABLE_AUDIO"};
     constexpr static cstring EN_MOTION_STR{"ENABLE_MOTION"};
     constexpr static cstring EN_WS2811_STR{"ENABLE_WS2811"};
@@ -43,6 +62,32 @@ struct Settings {
 
     // PCUI::ChoiceData rfidSerial;
     constexpr static cstring RFID_SERIAL_STR{"RFID_SERIAL"};
+
+    constexpr static cstring BLADE_DETECT_PIN_STR{"BLADE_DETECT_PIN"};
+    PCUI::ToggleData bladeDetect;
+    PCUI::ComboBoxData bladeDetectPin;
+
+    constexpr static cstring BLADE_ID_CLASS_STR{"BLADE_ID_CLASS"};
+    constexpr static cstring ENABLE_POWER_FOR_ID_STR{"ENABLE_POWER_FOR_ID"};
+    constexpr static cstring BLADE_ID_SCAN_MILLIS_STR{"BLADE_ID_SCAN_MILLIS"};
+    constexpr static cstring BLADE_ID_TIMES_STR{"BLADE_ID_TIMES"};
+    struct BladeID {
+        PCUI::ToggleData enable;
+        PCUI::ComboBoxData pin;
+        enum Mode {
+            SNAPSHOT = 0,
+            EXTERNAL,
+            BRIDGED,
+        };
+        PCUI::ChoiceData mode;
+        PCUI::ComboBoxData bridgePin;
+        PCUI::NumericData pullup;
+        PCUI::ToggleData powerForID;
+        PCUI::CheckListData powerPins;
+        PCUI::ToggleData continuousScanning;
+        PCUI::NumericData continuousInterval;
+        PCUI::NumericData continuousTimes;
+    } bladeID;
 
     PCUI::NumericData volume;
     constexpr static cstring VOLUME_STR{"VOLUME"};
@@ -94,6 +139,9 @@ struct Settings {
     constexpr static cstring SAVE_VOLUME_STR{"SAVE_VOLUME"};
     PCUI::ToggleData savePreset;
     constexpr static cstring SAVE_PRESET_STR{"SAVE_PRESET"};
+
+    PCUI::ToggleData enableOLED;
+    constexpr static cstring ENABLE_OLED_STR{"ENABLE_SSD1306"};
 
     enum Orientation {
         FETS_TOWARDS_BLADE,
@@ -167,6 +215,29 @@ struct Settings {
     constexpr static cstring KILL_OLD_PLAYERS_STR{"KILL_OLD_PLAYERS"};
 
     // POV Data?
+
+    PCUI::NotifierData customOptionChangeNotifier;
+    struct CustomOption {
+        PCUI::TextData define;
+        PCUI::TextData value;
+    };
+    const list<CustomOption>& customOptions() const { return mCustomOptions; }
+    /**
+     * Create a new custom option, if an empty one does not already exist.
+     *
+     * @return If a new option was created. (Empty didn't exist)
+     */
+    bool addCustomOption();
+
+    /**
+     * Remove a custom option by reference.
+     *
+     * @return If the option was found/removed
+     */
+    bool removeCustomOption(CustomOption&);
+
+private:
+    list<CustomOption> mCustomOptions;
 };
 
 } // namespace Config

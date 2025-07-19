@@ -31,6 +31,13 @@ namespace Config {
 constexpr uint32 NO_BLADE{1000000000};
 
 struct BladeConfig {
+    BladeConfig();
+
+    void addBlade();
+    void removeBlade(uint32 idx);
+    void addSubBlade();
+    void removeSubBlade(uint32 idx);
+
     PCUI::TextData name;
     PCUI::ChoiceData presetArray;
     PCUI::NumericData id;

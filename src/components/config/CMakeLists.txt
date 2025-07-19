@@ -18,6 +18,7 @@ target_link_libraries(config
     wxWidgets
 
     paths
+    utils
     # A good story for another time
     # led
     # styles

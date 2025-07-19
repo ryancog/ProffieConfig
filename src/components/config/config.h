@@ -22,9 +22,8 @@
 #include <wx/datetime.h>
 
 #include "versions/prop.h"
-
 #include "preset/array.h"
-#include "bladeconfig/bladeconfig.h"
+#include "bladeconfig/arrays.h"
 #include "private/export.h"
 #include "settings/settings.h"
 
@@ -42,7 +41,8 @@ struct CONFIG_EXPORT Config {
     Versions::Prop prop;
 
     vector<PresetArray> presets;
-    vector<BladeConfig> bladeArrays;
+
+    BladeArrays bladeArrays;
 };
 
 /**
