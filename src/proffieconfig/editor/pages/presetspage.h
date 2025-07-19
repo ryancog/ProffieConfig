@@ -1,9 +1,6 @@
 #pragma once
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2025 Ryan Ogurek
-
-#include "../editorwindow.h"
-#include "ui/controls/controldata.h"
+// Copyright (C) 2023-2025 Ryan Ogurek
 
 #include <wx/textctrl.h>
 #include <wx/sizer.h>
@@ -13,6 +10,8 @@
 #include <wx/combobox.h>
 #include <wx/listbox.h>
 #include <wx/button.h>
+
+#include "../editorwindow.h"
 
 class PresetsPage : public wxStaticBoxSizer {
 public:

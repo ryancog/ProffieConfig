@@ -5,9 +5,9 @@
 #include <wx/button.h>
 #include <wx/combobox.h>
 
-#include "../editor/editorwindow.h"
-#include "ui/controls/controldata.h"
 #include "ui/frame.h"
+
+#include "../editor/editorwindow.h"
 
 namespace Onboard {
 
