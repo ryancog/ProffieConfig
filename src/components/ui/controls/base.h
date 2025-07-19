@@ -129,7 +129,7 @@ public:
 
 protected:
     ControlBase(wxWindow *parent, ControlDataProxy<CONTROL_DATA>& proxy) : 
-        wxPanel(parent, wxID_ANY), mDataProxy{proxy} { bind(mDataProxy->data); }
+        wxPanel(parent, wxID_ANY), mDataProxy{&proxy} { bind(mDataProxy->data); }
 
     ControlBase(wxWindow *parent, CONTROL_DATA &data) : 
         wxPanel(parent, wxID_ANY) { bind(&data); }
