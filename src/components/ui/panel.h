@@ -56,6 +56,11 @@ struct PanelData {
         mNew = true;
     }
 
+    void refresh() { mNew = true; }
+    void setUpdateHandler(function<void(void)>&& handler) {
+        mOnUpdate = std::move(handler); 
+    }
+
 private:
     friend class Panel;
     Type mType;
@@ -63,6 +68,7 @@ private:
     bool mEnabled{true};
     bool mShown{true};
     string mLabel;
+    function<void(void)> mOnUpdate;
 };
 
 class UI_EXPORT Panel {
@@ -76,9 +82,9 @@ public:
 
     wxWindow *asChild() { return mPanel; }
 
-    void bind(PanelData& data) {
-        assert(data.mType == mData->mType);
-        mData = &data;
+    void bind(PanelData *data) {
+        assert(data->mType == mData->mType);
+        mData = data;
         onUIUpdate();
     }
 

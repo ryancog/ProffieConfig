@@ -8,8 +8,8 @@ add_library(ui SHARED
     plaque.cpp
     message.cpp
     panel.cpp
+    notifier.cpp
 
-    controls/button.cpp
     controls/checklist.cpp
     controls/choice.cpp
     controls/combobox.cpp

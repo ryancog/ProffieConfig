@@ -1,9 +1,9 @@
-#include "panel.h"
+#include "notifier.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
  *
- * components/ui/panel.cpp
+ * components/ui/notifier.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,32 +19,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/event.h>
+
 namespace PCUI {
 
 } // namespace PCUI
 
+PCUI::Notifier::Notifier(wxWindow *window, NotifierData& data) {
+    window->Bind(wxEVT_UPDATE_UI, [this, data](wxUpdateUIEvent& evt) {
+        evt.Skip();
+        if (not data.mNotification) return;
 
-#include <wx/stattext.h>
-
-PCUI::Panel::Panel(wxWindow *parent, PanelData& data) :
-    mData{&data} {
-    mPanel = new wxPanel(parent);
-    if (mData->mType == PanelData::Type::FRAMED) {
-        mStaticBox = new wxStaticBox(mPanel, wxID_ANY, mData->mLabel);
-    }
-    mPanel->Bind(wxEVT_UPDATE_UI, [this](wxUpdateUIEvent&) {
-        if (mData and mData->mOnUpdate) mData->mOnUpdate();
+        handleNotification(*data.mNotification);
     });
-}
-
-void PCUI::Panel::onUIUpdate() {
-    if (not mData) {
-        mPanel->Disable();
-        mPanel->Hide();
-    }
-
-    if (mStaticBox) mStaticBox->SetLabel(mData->mLabel);
-    mPanel->Enable(mData->mEnabled);
-    mPanel->Show(mData->mShown);
 }
 
