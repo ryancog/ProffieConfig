@@ -9,6 +9,7 @@ add_library(utils SHARED
     theme.cpp
     crypto.cpp
     version.cpp
+    string.cpp
 )
 
 target_link_libraries(utils
