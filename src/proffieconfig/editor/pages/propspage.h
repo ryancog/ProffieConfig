@@ -1,6 +1,6 @@
 #pragma once
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2025 Ryan Ogurek
+// Copyright (C) 2023-2025 Ryan Ogurek
 
 #include "../editorwindow.h"
 

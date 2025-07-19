@@ -2,51 +2,44 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include "../editorwindow.h"
-#include "ui/controls/controldata.h"
-
 #include <wx/dialog.h>
 #include <wx/panel.h>
 
-class CustomOptionsDlg : public wxDialog {
-public:
-  CustomOptionsDlg(EditorWindow*);
-  void addDefine(const wxString&, const wxString& = "");
-  std::vector<std::pair<wxString, wxString>> getCustomDefines();
+#include "ui/notifier.h"
 
-  enum {
-    ID_AddDefine,
-  };
+#include "../editorwindow.h"
+
+class CustomOptionsDlg : public wxDialog, PCUI::Notifier {
+public:
+    CustomOptionsDlg(EditorWindow*);
 
 private:
-  wxScrolledWindow *mOptionArea{nullptr};
-  wxButton *mAddDefineButton{nullptr};
-  wxStaticText *mCricketsText{nullptr};
+    void handleNotification(uint32) override;
 
-  class CDefine;
-  vector<CDefine*> mCustomDefines;
+    EditorWindow *mParent;
 
-  void bindEvents();
-  void createUI();
-  void createOptionArea();
-  void updateOptions(bool purge = false);
+    enum {
+        ID_AddDefine,
+    };
 
-  wxBoxSizer *header();
-  static wxStaticBoxSizer *info(wxWindow*);
+    wxScrolledWindow *mOptionArea{nullptr};
+    wxButton *mAddDefineButton{nullptr};
+
+    class CDefine;
+
+    void bindEvents();
+    void createUI();
+    void createOptionArea();
+
+    wxBoxSizer *header();
+    static wxStaticBoxSizer *info(wxWindow*);
 };
 
 class CustomOptionsDlg::CDefine : public wxPanel {
-  public:
-    CDefine(wxScrolledWindow*);
-
-    wxStaticText *defText{nullptr};
-    PCUI::Text *name{nullptr};
-    PCUI::Text *value{nullptr};
-    wxButton *remove{nullptr};
-
-    enum {
-      ID_Name,
-      ID_Value,
-      ID_Remove,
-    };
-  };
+public:
+    CDefine(
+        wxScrolledWindow *,
+        std::shared_ptr<Config::Config>,
+        Config::Settings::CustomOption&
+    );
+};

@@ -1,6 +1,6 @@
 #include "editorwindow.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2025 Ryan Ogurek
+// Copyright (C) 2023-2025 Ryan Ogurek
 
 #include <filesystem>
 #include <fstream>
@@ -19,7 +19,6 @@
 
 #include "log/context.h"
 #include "log/logger.h"
-#include "log/severity.h"
 #include "pages/bladespage.h"
 #include "pages/generalpage.h"
 #include "pages/presetspage.h"
@@ -28,31 +27,26 @@
 #include "paths/paths.h"
 #include "ui/message.h"
 #include "utils/defer.h"
-#include "../core/config/settings.h"
-#include "../core/config/configuration.h"
+
 #include "../core/utilities/misc.h"
 #include "../core/utilities/progress.h"
 
 #include "../tools/arduino.h"
 
-EditorWindow::EditorWindow(const string& _configName, wxWindow* parent) : 
-    PCUI::Frame(parent, wxID_ANY, _("ProffieConfig Editor") + " - " + _configName, wxDefaultPosition, wxDefaultSize),
-    mOpenConfig(_configName) {
+EditorWindow::EditorWindow(wxWindow *parent, std::shared_ptr<Config::Config> config) : 
+    PCUI::Frame(
+        parent,
+        wxID_ANY,
+        _("ProffieConfig Editor") + " - " + static_cast<string>(config->name)
+    ),
+    mConfig{std::move(config)} {
+    auto *sizer{new wxBoxSizer{wxVERTICAL}};
+
     createMenuBar();
-    createPages();
+    createPages(sizer);
     bindEvents();
-    createToolTips();
-    settings = new Settings(this);
 
-# ifdef __WINDOWS__
-    SetIcon( wxICON(IDI_ICON1) );
-    SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
-# endif
     sizer->SetMinSize(450, -1);
-}
-
-EditorWindow::~EditorWindow() {
-    delete settings;
 }
 
 void EditorWindow::bindEvents() {
@@ -72,15 +66,22 @@ void EditorWindow::bindEvents() {
 #           endif
                 this,
                 _("You currently have unsaved changes which will be lost otherwise."),
-                wxString::Format(_("Save Changes to \"%s\"?"), mOpenConfig),
+                wxString::Format(
+                    _("Save Changes to \"%s\"?"),
+                    static_cast<string>(mConfig->name)
+                ),
                 flags
             };
-            saveDialog.SetYesNoCancelLabels(_("Save Changes"), _("Discard Changes"), _("Cancel"));
+            saveDialog.SetYesNoCancelLabels(
+                _("Save Changes"),
+                _("Discard Changes"),
+                _("Cancel")
+            );
             auto saveChoice{saveDialog.ShowModal()};
 
             if (
                     saveChoice == wxID_CANCEL or 
-                    not Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h"), this)
+                    not Config::save(mConfig)
                 ) {
                 event.Veto();
                 return;
@@ -96,7 +97,9 @@ void EditorWindow::bindEvents() {
         PCUI::showMessage(msgEvent.message, msgEvent.caption, msgEvent.style, this);
     }, wxID_ANY);
 
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { Configuration::outputConfig(Paths::configs() / (mOpenConfig + ".h"), this); }, wxID_SAVE); 
+    Bind(wxEVT_MENU, [this](wxCommandEvent&) {
+        Config::save(mConfig);
+    }, wxID_SAVE); 
 
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(this); }, ID_ExportConfig);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(this, this); }, ID_VerifyConfig);
@@ -119,14 +122,15 @@ void EditorWindow::bindEvents() {
 
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("http://profezzorn.github.io/ProffieOS-StyleEditor/style_editor.html"); }, ID_StyleEditor);
 
-    Bind(wxEVT_CHOICE, [&](wxCommandEvent&) {
+    
+    windowSelect.setUpdateHandler([this]() {
         wxSetCursor(wxCURSOR_WAIT);
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
-        generalPage->Show(windowSelect->entry()->GetSelection() == 0);
-        propsPage->Show(windowSelect->entry()->GetSelection() == 1);
-        bladesPage->Show(windowSelect->entry()->GetSelection() == 2);
-        presetsPage->Show(windowSelect->entry()->GetSelection() == 3);
+        generalPage->Show(windowSelect == 0);
+        propsPage->Show(windowSelect == 1);
+        bladesPage->Show(windowSelect == 2);
+        presetsPage->Show(windowSelect == 3);
 
         //generalPage->update();
         bladesPage->update();
@@ -140,10 +144,8 @@ void EditorWindow::bindEvents() {
         if (propsPage->AreAnyItemsShown()) propsPage->Layout();
         if (presetsPage->AreAnyItemsShown()) presetsPage->Layout();
 
-        sizer->Fit(this);
-    }, ID_WindowSelect);
-}
-void EditorWindow::createToolTips() {
+        GetSizer()->Fit(this);
+    });
 }
 
 void EditorWindow::createMenuBar() {
@@ -164,12 +166,19 @@ void EditorWindow::createMenuBar() {
     SetMenuBar(menuBar);
 }
 
-void EditorWindow::createPages() {
-    sizer = new wxBoxSizer(wxVERTICAL);
-
+void EditorWindow::createPages(wxSizer *sizer) {
     auto* optionsSizer{new wxBoxSizer(wxHORIZONTAL)};
-    windowSelect = new PCUI::Choice(this, ID_WindowSelect, Misc::createEntries({_("General"), _("Prop File"), _("Blade Arrays"), _("Presets And Styles")}));
-    optionsSizer->Add(windowSelect, wxSizerFlags(0).Border(wxALL, 10));
+    windowSelect.setChoices(Misc::createEntries({
+        _("General"),
+        _("Prop File"),
+        _("Blade Arrays"),
+        _("Presets And Styles"),
+    }));
+    windowSelect = 0;
+    optionsSizer->Add(
+        new PCUI::Choice(this, windowSelect),
+        wxSizerFlags(0).Border(wxALL, 10)
+    );
 
     generalPage = new GeneralPage(this);
     propsPage = new PropsPage(this);
@@ -195,19 +204,17 @@ void EditorWindow::createPages() {
 }
 
 
-string_view EditorWindow::getOpenConfig() const { return mOpenConfig; }
-
-void EditorWindow::renameConfig(const string& name) {
-    fs::rename(Paths::configs() / (mOpenConfig + ".h"), Paths::configs() / (name + ".h"));
-    mOpenConfig = name;
-    // TODO: 
-}
+std::shared_ptr<Config::Config> EditorWindow::getOpenConfig() const { return mConfig; }
 
 bool EditorWindow::isSaved() {
     auto& logger{Log::Context::getGlobal().createLogger("EditorWindow::isSaved()")};
 
-    const auto currentPath{Paths::configs() / (mOpenConfig + ".h")};
-    const auto validatePath{fs::temp_directory_path() / (mOpenConfig + "-validate")};
+    const auto currentPath{
+        Paths::configs() / (static_cast<string>(mConfig->name) + ".h")
+    };
+    const auto validatePath{
+        fs::temp_directory_path() / (static_cast<string>(mConfig->name) + "-validate")
+    };
 
     auto dummyMessageHandler{[](wxCommandEvent&) {}};
     Bind(Misc::EVT_MSGBOX, dummyMessageHandler);
@@ -224,7 +231,11 @@ bool EditorWindow::isSaved() {
     const auto currentSize{fs::file_size(currentPath, err)};
     const auto validateSize{fs::file_size(validatePath, err)};
     if (currentSize != validateSize) {
-        logger.warn("File sizes do not match (" + std::to_string(currentSize) + '/' + std::to_string(validateSize) + ')');
+        logger.warn(
+            "File sizes do not match (" + 
+            std::to_string(currentSize) + '/' + 
+            std::to_string(validateSize) + ')'
+        );
         return false;
     }
 
