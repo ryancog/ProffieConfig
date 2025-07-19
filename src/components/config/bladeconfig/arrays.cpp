@@ -1,9 +1,9 @@
-#include "bladeconfig.h"
+#include "arrays.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
  *
- * components/config/bladeconfig/bladeconfig.cpp
+ * components/config/bladeconfig/arrays.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,29 +18,5 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#include <algorithm>
-
-#include "utils/string.h"
-
-Config::BladeConfig::BladeConfig() {
-    name.setUpdateHandler([this]() {
-        auto nameValue{static_cast<string>(name)};
-        Utils::trimUnsafe(nameValue);
-        std::transform(
-            nameValue.begin(),
-            nameValue.end(),
-            nameValue.begin(),
-            [](unsigned char chr){ return std::tolower(chr); }
-        );
-        if (static_cast<string>(name) == nameValue) return;
-        name = std::move(nameValue);
-    });
-
-    // presetArray;
-    // id;
-    // noBladeID;
-}
-
 
 
