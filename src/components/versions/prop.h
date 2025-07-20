@@ -28,6 +28,11 @@ struct PropSetting {
   /**
    * @return True if enabled and value is "active," false otherwise
    */
+  [[nodiscard]] bool isActive() const;
+
+  /**
+   * @return True if isActive() and define doesn't have any other blocks to being output.
+   */
   [[nodiscard]] bool shouldOutputDefine() const;
 
   /**
