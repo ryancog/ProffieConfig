@@ -2,6 +2,8 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
+#include <map>
+
 #include <wx/button.h>
 #include <wx/combobox.h>
 
@@ -21,7 +23,6 @@ public:
     MainMenu(wxWindow * = nullptr);
 
     void removeEditor(EditorWindow *);
-    void update();
 
     wxButton* applyButton{nullptr};
     wxButton* openSerial{nullptr};
@@ -31,8 +32,7 @@ public:
     PCUI::ChoiceData boardSelection;
     PCUI::ChoiceData configSelection;
 
-    EditorWindow* activeEditor{nullptr};
-    std::vector<EditorWindow*> editors;
+    std::map<std::shared_ptr<Config::Config>, EditorWindow*> editors;
 
     enum {
         ID_DUMMY1, // on macOS menu items cannot have ID 0
