@@ -15,7 +15,7 @@
 #include "../../editor/pages/propspage.h"
 #include "../../editor/pages/bladespage.h"
 #include "../../editor/pages/presetspage.h"
-#include "../../editor/dialogs/bladearraydlg.h"
+#include "../../editor/dialogs/awarenessdlg.h"
 
 vector<bool*> Onboard::Overview::eventRunTrackers;
 
@@ -42,7 +42,7 @@ Onboard::Overview::Overview(wxWindow* parent) : wxPanel(parent, OnboardFrame::ID
             "\n\n"
             "Go ahead and click on \"Add\" to add your first configuration.\n"
             );
-    mainMenuDisables[MainMenu::ID_AddConfig] = false;
+    // mainMenuDisables[MainMenu::ID_AddConfig] = false;
 
     SetSizerAndFit(mSizer);
 }
@@ -77,9 +77,9 @@ void Onboard::Overview::prepareMainMenu() {
     });
     mGuideMenu->Bind(wxEVT_UPDATE_UI, [&](wxUpdateUIEvent& event) {
         event.Skip();
-        for (const auto& [ id, disabled ] : mainMenuDisables) {
-            MainMenu::FindWindowById(id)->Enable(!disabled);
-        }
+        // for (const auto& [ id, disabled ] : mainMenuDisables) {
+        //     MainMenu::FindWindowById(id)->Enable(!disabled);
+        // }
     });
 }
 
@@ -118,23 +118,23 @@ void Onboard::Overview::linkMainMenuEvents() {
                 "looking for them on your computer to import, and contain all the information needed to make your\n"
                 "Proffieboard work!\n");
     }, MainMenu::ID_AddConfig);
-    mGuideMenu->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
-        EVENT_PAGE_SETUP;
-        generateNewPage("Edit Configuration",
-                "If you import a config later, ProffieConfig will manage it, and you won't need\n"
-                "the file after you do so, though it's never a bad idea to keep backups.\n"
-                "\n"
-                "We'll go over how to export your configuration later, which could also be useful if\n"
-                "you ever need help troubleshooting.\n"
-                "\n\n"
-                "Click on \"Edit Selected Configuration\" in order to open your new config\n"
-                "in the ProffieConfig editor.\n"
-                "(Notice it's been selected in the drop-down)\n");
+    // mGuideMenu->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
+    //     EVENT_PAGE_SETUP;
+    //     generateNewPage("Edit Configuration",
+    //             "If you import a config later, ProffieConfig will manage it, and you won't need\n"
+    //             "the file after you do so, though it's never a bad idea to keep backups.\n"
+    //             "\n"
+    //             "We'll go over how to export your configuration later, which could also be useful if\n"
+    //             "you ever need help troubleshooting.\n"
+    //             "\n\n"
+    //             "Click on \"Edit Selected Configuration\" in order to open your new config\n"
+    //             "in the ProffieConfig editor.\n"
+    //             "(Notice it's been selected in the drop-down)\n");
 
-        mainMenuDisables.at(MainMenu::ID_AddConfig) = true;
-        mainMenuDisables.at(MainMenu::ID_EditConfig) = false;
-        mGuideMenu->Update();
-    }, MainMenu::ID_ConfigSelect);
+    //     // mainMenuDisables.at(MainMenu::ID_AddConfig) = true;
+    //     // mainMenuDisables.at(MainMenu::ID_EditConfig) = false;
+    //     mGuideMenu->Update();
+    // }, MainMenu::ID_ConfigSelect);
     mGuideMenu->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP
         generateNewPage("Configuration - General Settings",
@@ -151,11 +151,11 @@ void Onboard::Overview::linkMainMenuEvents() {
                 "When you're done exploring, switch the page to \"Prop File\" with\n"
                 "the drop down at the top.\n");
 
-        mGuideMenu->activeEditor = mGuideMenu->generateEditor(mGuideMenu->configSelect->entry()->GetStringSelection().ToStdString());
-        mGuideMenu->activeEditor->windowSelect->entry()->Clear();
-        mGuideMenu->activeEditor->windowSelect->entry()->Append("General");
-        mGuideMenu->activeEditor->windowSelect->entry()->Append("Prop File");
-        mGuideMenu->activeEditor->windowSelect->entry()->SetSelection(0);
+        // mGuideMenu->activeEditor = mGuideMenu->generateEditor(mGuideMenu->configSelect->entry()->GetStringSelection().ToStdString());
+        // mGuideMenu->activeEditor->windowSelect->entry()->Clear();
+        // mGuideMenu->activeEditor->windowSelect->entry()->Append("General");
+        // mGuideMenu->activeEditor->windowSelect->entry()->Append("Prop File");
+        // mGuideMenu->activeEditor->windowSelect->entry()->SetSelection(0);
 
         linkEditorEvents();
         prepareEditor();
@@ -165,14 +165,14 @@ void Onboard::Overview::linkMainMenuEvents() {
 void Onboard::Overview::linkEditorEvents() {
     mGuideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_UPDATE_UI, [&](wxUpdateUIEvent& event) {
         event.Skip();
-        for (const auto& [ id, disabled ] : bladeDisables) {
-            mGuideMenu->activeEditor->bladesPage->GetStaticBox()->FindWindow(id)->Enable(!disabled);
-        }
+        // for (const auto& [ id, disabled ] : bladeDisables) {
+        //     mGuideMenu->activeEditor->bladesPage->GetStaticBox()->FindWindow(id)->Enable(!disabled);
+        // }
     });
 
     mGuideMenu->activeEditor->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
-        if (mGuideMenu->activeEditor->windowSelect->entry()->GetSelection() != 1) {
+        if (mGuideMenu->activeEditor->windowSelect != 1) {
             hasRun = false;
             return;
         }
@@ -191,42 +191,42 @@ void Onboard::Overview::linkEditorEvents() {
                 "While the default is a solid place to start, go ahead and select a\n"
                 "different one from the drop-down.\n");
 
-        mGuideMenu->activeEditor->propsPage->buttonInfo->Disable();
-        mGuideMenu->activeEditor->propsPage->propInfo->Disable();
+        mGuideMenu->activeEditor->propsPage->GetStaticBox()->FindWindowById(PropsPage::ID_Buttons)->Disable();
+        mGuideMenu->activeEditor->propsPage->GetStaticBox()->FindWindowById(PropsPage::ID_PropInfo)->Disable();
     }, EditorWindow::ID_WindowSelect);
-    mGuideMenu->activeEditor->propsPage->GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
-        EVENT_PAGE_SETUP;
+    // mGuideMenu->activeEditor->propsPage->GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
+    //     EVENT_PAGE_SETUP;
 
-        generateNewPage("Configuration - Prop File",
-                "Now that you've chosen another prop file, you should see some new settings.\n"
-                "\n"
-                "If not, this prop file may not have any (may just be custom buttons/controls).\n"
-                "You can also choose a different prop file if you'd like to explore.\n"
-                "\n\n"
-                "Once you've configured some settings (if any), go ahead and press \"Buttons...\"\n");
+    //     generateNewPage("Configuration - Prop File",
+    //             "Now that you've chosen another prop file, you should see some new settings.\n"
+    //             "\n"
+    //             "If not, this prop file may not have any (may just be custom buttons/controls).\n"
+    //             "You can also choose a different prop file if you'd like to explore.\n"
+    //             "\n\n"
+    //             "Once you've configured some settings (if any), go ahead and press \"Buttons...\"\n");
 
-        mGuideMenu->activeEditor->propsPage->buttonInfo->Enable();
-        mGuideMenu->activeEditor->propsPage->propInfo->Enable();
-    }, PropsPage::ID_PropSelect);
-    mGuideMenu->activeEditor->propsPage->GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
-        EVENT_PAGE_SETUP;
+    //     mGuideMenu->activeEditor->propsPage->GetStaticBox()->FindWindowById(PropsPage::ID_Buttons)->Enable();
+    //     mGuideMenu->activeEditor->propsPage->GetStaticBox()->FindWindowById(PropsPage::ID_PropInfo)->Enable();
+    // }, PropsPage::ID_PropSelect);
+    // mGuideMenu->activeEditor->propsPage->GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
+    //     EVENT_PAGE_SETUP;
 
-        generateNewPage("Configuration - Prop File",
-                "This shows all the controls for your saber with the specified configuration and\n"
-                "prop file setup.\n"
-                "\n"
-                "Some prop files might not support all types of button configurations, and that\n"
-                "will be noted here too.\n"
-                "\n\n"
-                "You can close out of this window, and once you've gotten a chance to\n"
-                "test out some props/settings, switch the page to \"Blade Arrays\"\n"
-                "to continue configuring.\n");
-        mGuideMenu->activeEditor->windowSelect->entry()->Append("Blade Arrays");
+    //     generateNewPage("Configuration - Prop File",
+    //             "This shows all the controls for your saber with the specified configuration and\n"
+    //             "prop file setup.\n"
+    //             "\n"
+    //             "Some prop files might not support all types of button configurations, and that\n"
+    //             "will be noted here too.\n"
+    //             "\n\n"
+    //             "You can close out of this window, and once you've gotten a chance to\n"
+    //             "test out some props/settings, switch the page to \"Blade Arrays\"\n"
+    //             "to continue configuring.\n");
+    //     mGuideMenu->activeEditor->windowSelect->entry()->Append("Blade Arrays");
 
-    }, PropsPage::ID_Buttons);
+    // }, PropsPage::ID_Buttons);
     mGuideMenu->activeEditor->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
-        if (mGuideMenu->activeEditor->windowSelect->entry()->GetSelection() != 2) {
+        if (mGuideMenu->activeEditor->windowSelect != 2) {
             hasRun = false;
             return;
         }
@@ -246,294 +246,294 @@ void Onboard::Overview::linkEditorEvents() {
                 "Select \"Blade 0\" to configure it.\n"
                 "(Blades begin counting from 0, not 1)\n");
 
-        mGuideMenu->activeEditor->bladesPage->bladeArray->entry()->Disable();
-        mGuideMenu->activeEditor->bladesPage->addBladeButton->Disable();
-        mGuideMenu->activeEditor->bladesPage->bladeArrayButton->Disable();
+        // mGuideMenu->activeEditor->bladesPage->bladeArray->entry()->Disable();
+        // mGuideMenu->activeEditor->bladesPage->addBladeButton->Disable();
+        // mGuideMenu->activeEditor->bladesPage->bladeArrayButton->Disable();
     }, EditorWindow::ID_WindowSelect);
-    mGuideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent& event) {
-        EVENT_PAGE_SETUP;
+    // mGuideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent& event) {
+    //     EVENT_PAGE_SETUP;
 
-        generateNewPage("Configuration - Blade Arrays",
-                "The default type for a blade is \"WS281X\", commonly referred to as a\n"
-                "\"Pixel\" blade, which has many individually-controllable LEDs.\n"
-                "\n"
-                "For these blades, you can choose the Color Order, the Data Pin, and the number\n"
-                "of pixels in the blade.\n"
-                "\n"
-                "Chances are you won't need to change the Color Order, almost every single WS281X blade\n"
-                "uses \"GRB\". If you're unsure, simply leave the color order as it is.\n"
-                "\n"
-                "The data pin is the physical pin your blade is connected to on the Proffieboard for\n"
-                "sending the, well, data. You can select an option from the drop-down, or type directly\n"
-                "in the box to specify any other (supported) pin on the Proffieboard.\n"
-                "\n"
-                "Once you're familiar with these settings, click the \"+\" icon under the \"SubBlades\"\n"
-                "list and select the created SubBlade (\"SubBlade 0\").\n");
+    //     generateNewPage("Configuration - Blade Arrays",
+    //             "The default type for a blade is \"WS281X\", commonly referred to as a\n"
+    //             "\"Pixel\" blade, which has many individually-controllable LEDs.\n"
+    //             "\n"
+    //             "For these blades, you can choose the Color Order, the Data Pin, and the number\n"
+    //             "of pixels in the blade.\n"
+    //             "\n"
+    //             "Chances are you won't need to change the Color Order, almost every single WS281X blade\n"
+    //             "uses \"GRB\". If you're unsure, simply leave the color order as it is.\n"
+    //             "\n"
+    //             "The data pin is the physical pin your blade is connected to on the Proffieboard for\n"
+    //             "sending the, well, data. You can select an option from the drop-down, or type directly\n"
+    //             "in the box to specify any other (supported) pin on the Proffieboard.\n"
+    //             "\n"
+    //             "Once you're familiar with these settings, click the \"+\" icon under the \"SubBlades\"\n"
+    //             "list and select the created SubBlade (\"SubBlade 0\").\n");
 
-        bladeDisables.at(BladesPage::ID_AddSubBlade) = false;
-    }, BladesPage::ID_BladeSelect);
-    mGuideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent& event) {
-        EVENT_PAGE_SETUP;
+    //     bladeDisables.at(BladesPage::ID_AddSubBlade) = false;
+    // }, BladesPage::ID_BladeSelect);
+    // mGuideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent& event) {
+    //     EVENT_PAGE_SETUP;
 
-        generateNewPage("Configuration - Blade Arrays",
-                "SubBlades are specific to WS281X blades, allowing you to seperate one blade into multiple\n"
-                "effective blades, and you'll notice mostly the same controls, but with a few extra specific\n"
-                "to WS281X blades in SubBlade mode.\n"
-                "\n"
-                "There's a few different types of SubBlade setups to choose from which you can read about by\n"
-                "hovering over the option. (\"Standard\", \"Stride\", and \"ZigZag\")\n"
-                "\n"
-                "With the standard type, the range for numbers starts at 0 and ends at one less than\n"
-                "\"Number of Pixels\".\n"
-                "The end of one SubBlade should also not overlap with the start of another,\n"
-                "though these SubBlades don't have to be in order. (e.g. the physical end of a WS281X\n"
-                "blade could be the first SubBlade)\n"
-                "\n"
-                "When SubBlade mode is active, only SubBlade 0 will show blade controls, the\n"
-                "rest will just be the settings for the specific SubBlade (if there are any).\n"
-                "\n"
-                "Now, try changing the type of Blade to \"Simple LED\"\n");
+    //     generateNewPage("Configuration - Blade Arrays",
+    //             "SubBlades are specific to WS281X blades, allowing you to seperate one blade into multiple\n"
+    //             "effective blades, and you'll notice mostly the same controls, but with a few extra specific\n"
+    //             "to WS281X blades in SubBlade mode.\n"
+    //             "\n"
+    //             "There's a few different types of SubBlade setups to choose from which you can read about by\n"
+    //             "hovering over the option. (\"Standard\", \"Stride\", and \"ZigZag\")\n"
+    //             "\n"
+    //             "With the standard type, the range for numbers starts at 0 and ends at one less than\n"
+    //             "\"Number of Pixels\".\n"
+    //             "The end of one SubBlade should also not overlap with the start of another,\n"
+    //             "though these SubBlades don't have to be in order. (e.g. the physical end of a WS281X\n"
+    //             "blade could be the first SubBlade)\n"
+    //             "\n"
+    //             "When SubBlade mode is active, only SubBlade 0 will show blade controls, the\n"
+    //             "rest will just be the settings for the specific SubBlade (if there are any).\n"
+    //             "\n"
+    //             "Now, try changing the type of Blade to \"Simple LED\"\n");
 
-        bladeDisables.at(BladesPage::ID_AddSubBlade) = true;
-        bladeDisables.at(BladesPage::ID_BladeType) = false;
-        mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Clear();
-        mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Append(BD_PIXELRGB);
-        mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Append(BD_PIXELRGBW);
-        mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Append(BD_SIMPLE);
-        mGuideMenu->activeEditor->bladesPage->bladeType->entry()->SetSelection(0);
-    }, BladesPage::ID_SubBladeSelect);
-    mGuideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
-        EVENT_PAGE_SETUP;
-        if (mGuideMenu->activeEditor->bladesPage->bladeType->entry()->GetSelection() != 2) {
-            hasRun = false;
-            return;
-        }
+    //     bladeDisables.at(BladesPage::ID_AddSubBlade) = true;
+    //     bladeDisables.at(BladesPage::ID_BladeType) = false;
+    //     mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Clear();
+    //     mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Append(BD_PIXELRGB);
+    //     mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Append(BD_PIXELRGBW);
+    //     mGuideMenu->activeEditor->bladesPage->bladeType->entry()->Append(BD_SIMPLE);
+    //     mGuideMenu->activeEditor->bladesPage->bladeType->entry()->SetSelection(0);
+    // }, BladesPage::ID_SubBladeSelect);
+    // mGuideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
+    //     EVENT_PAGE_SETUP;
+    //     if (mGuideMenu->activeEditor->bladesPage->bladeType->entry()->GetSelection() != 2) {
+    //         hasRun = false;
+    //         return;
+    //     }
 
-        generateNewPage("Configuration - Blade Arrays",
-                "Another common type of blade is a Simple LED blade, which is commonly used"
-                "for \"In-Hilt\" configurations.\n"
-                "\n"
-                "For this setup, you specify the color of the each LED and the size of resistor\n"
-                "(in mOhms) you placed on the power line going to each LED.\n"
-                "\n"
-                "The LEDs correspond sequentially to the selected Power Pins, and you should select\n"
-                "a number of Power Pins equal to the number of LEDs you're setting up.\n"
-                "(e.g. if Power Pins 2, 3, and 4 are selected, Pin 2 would go to LED1,\n"
-                "Pin 3 would go to LED 2 and Pin 4 would go to LED 3)\n"
-                "\n"
-                "You can also add custom power pins by typing them into the text box, then clicking the \"+\".\n"
-                "For WS281X blades, Power Pins can be shared, which can be useful if you're running low.\n"
-                "\n"
-                "Now that we've covered the basics of blades, you should know you can add as many\n"
-                "blades as you'd like, provided you have the pins on the Proffieboard, of course!\n"
-                "\n"
-                "Click \"Blade Awareness...\" to continue.\n");
+    //     generateNewPage("Configuration - Blade Arrays",
+    //             "Another common type of blade is a Simple LED blade, which is commonly used"
+    //             "for \"In-Hilt\" configurations.\n"
+    //             "\n"
+    //             "For this setup, you specify the color of the each LED and the size of resistor\n"
+    //             "(in mOhms) you placed on the power line going to each LED.\n"
+    //             "\n"
+    //             "The LEDs correspond sequentially to the selected Power Pins, and you should select\n"
+    //             "a number of Power Pins equal to the number of LEDs you're setting up.\n"
+    //             "(e.g. if Power Pins 2, 3, and 4 are selected, Pin 2 would go to LED1,\n"
+    //             "Pin 3 would go to LED 2 and Pin 4 would go to LED 3)\n"
+    //             "\n"
+    //             "You can also add custom power pins by typing them into the text box, then clicking the \"+\".\n"
+    //             "For WS281X blades, Power Pins can be shared, which can be useful if you're running low.\n"
+    //             "\n"
+    //             "Now that we've covered the basics of blades, you should know you can add as many\n"
+    //             "blades as you'd like, provided you have the pins on the Proffieboard, of course!\n"
+    //             "\n"
+    //             "Click \"Blade Awareness...\" to continue.\n");
 
-        mGuideMenu->activeEditor->bladesPage->bladeArrayButton->Enable();
-    }, BladesPage::ID_BladeType);
-    mGuideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
-        EVENT_PAGE_SETUP;
+    //     mGuideMenu->activeEditor->bladesPage->bladeArrayButton->Enable();
+    // }, BladesPage::ID_BladeType);
+    // mGuideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
+    //     EVENT_PAGE_SETUP;
 
-        generateNewPage("Configuration - Blade Awareness",
-                "Blade Awareness is a neat little feature of ProffieOS that, if your saber is installed\n"
-                "in such a way that supports it, allows the saber to respond to what blade is inserted,\n"
-                "or none at all, provided the blade also supports the feature.\n"
-                "\n"
-                "There two main \"elements\" to Blade Awareness, if you will: \"Blade Detect\" and \"Blade ID\",\n"
-                "but ultimately each will, once enabled, create new Blade Arrays which can each have their own\n"
-                "blade configuration and set of presets.\n"
-                "\n"
-                "There's a lot which can be configured here, (currently disabled) and if you're interested\n"
-                "in setting it up, it's recommended to read through what each setting does and how it\n"
-                "works by reading the tool tip when hovering over each setting.\n"
-                "\n"
-                "Close out of this dialog and switch the page to \"Presets And Styles\" to continue.");
+    //     generateNewPage("Configuration - Blade Awareness",
+    //             "Blade Awareness is a neat little feature of ProffieOS that, if your saber is installed\n"
+    //             "in such a way that supports it, allows the saber to respond to what blade is inserted,\n"
+    //             "or none at all, provided the blade also supports the feature.\n"
+    //             "\n"
+    //             "There two main \"elements\" to Blade Awareness, if you will: \"Blade Detect\" and \"Blade ID\",\n"
+    //             "but ultimately each will, once enabled, create new Blade Arrays which can each have their own\n"
+    //             "blade configuration and set of presets.\n"
+    //             "\n"
+    //             "There's a lot which can be configured here, (currently disabled) and if you're interested\n"
+    //             "in setting it up, it's recommended to read through what each setting does and how it\n"
+    //             "works by reading the tool tip when hovering over each setting.\n"
+    //             "\n"
+    //             "Close out of this dialog and switch the page to \"Presets And Styles\" to continue.");
 
-        mGuideMenu->activeEditor->bladesPage->bladeArrayDlg->enableDetect->Disable();
-        mGuideMenu->activeEditor->bladesPage->bladeArrayDlg->enableID->Disable();
-    }, BladesPage::ID_OpenBladeArrays);
-    mGuideMenu->activeEditor->bladesPage->bladeArrayDlg->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
-        EVENT_PAGE_SETUP;
-        mGuideMenu->activeEditor->windowSelect->entry()->Append("Presets And Styles");
-    });
-    mGuideMenu->activeEditor->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
-        EVENT_PAGE_SETUP;
-        if (mGuideMenu->activeEditor->windowSelect->entry()->GetSelection() != 3) {
-            hasRun = false;
-            return;
-        }
+    //     mGuideMenu->activeEditor->bladesPage->bladeArrayDlg->enableDetect->Disable();
+    //     mGuideMenu->activeEditor->bladesPage->bladeArrayDlg->enableID->Disable();
+    // }, BladesPage::ID_OpenBladeArrays);
+    // mGuideMenu->activeEditor->bladesPage->bladeArrayDlg->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
+    //     EVENT_PAGE_SETUP;
+    //     mGuideMenu->activeEditor->windowSelect->entry()->Append("Presets And Styles");
+    // });
+    // mGuideMenu->activeEditor->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
+    //     EVENT_PAGE_SETUP;
+    //     if (mGuideMenu->activeEditor->windowSelect->entry()->GetSelection() != 3) {
+    //         hasRun = false;
+    //         return;
+    //     }
 
-        mGuideMenu->activeEditor->bladesPage->bladeType->entry()->SetSelection(0);
-        generateNewPage("Configuration - Presets and Styles",
-                "Presets are arguably the most important part of the configuration.\n"
-                "\n"
-                "Presets contain all the information about what to actually do with all your LEDs\n"
-                "and what kind of effects should happen on your saber.\n"
-                "\n"
-                "First things first, create a new preset by clicking the \"+\".\n""");
+    //     mGuideMenu->activeEditor->bladesPage->bladeType->entry()->SetSelection(0);
+    //     generateNewPage("Configuration - Presets and Styles",
+    //             "Presets are arguably the most important part of the configuration.\n"
+    //             "\n"
+    //             "Presets contain all the information about what to actually do with all your LEDs\n"
+    //             "and what kind of effects should happen on your saber.\n"
+    //             "\n"
+    //             "First things first, create a new preset by clicking the \"+\".\n""");
 
-        mGuideMenu->activeEditor->presetsPage->bladeArrayChoice->entry()->Disable();
-        mGuideMenu->activeEditor->presetsPage->bladeList->Disable();
-        mGuideMenu->activeEditor->presetsPage->nameInput->entry()->Disable();
-        mGuideMenu->activeEditor->presetsPage->dirInput->entry()->Disable();
-        mGuideMenu->activeEditor->presetsPage->trackInput->entry()->Disable();
-        mGuideMenu->activeEditor->presetsPage->styleInput->entry()->Disable();
-    }, EditorWindow::ID_WindowSelect);
-    mGuideMenu->activeEditor->presetsPage->GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
-        EVENT_PAGE_SETUP;
+    //     mGuideMenu->activeEditor->presetsPage->bladeArrayChoice->entry()->Disable();
+    //     mGuideMenu->activeEditor->presetsPage->bladeList->Disable();
+    //     mGuideMenu->activeEditor->presetsPage->nameInput->entry()->Disable();
+    //     mGuideMenu->activeEditor->presetsPage->dirInput->entry()->Disable();
+    //     mGuideMenu->activeEditor->presetsPage->trackInput->entry()->Disable();
+    //     mGuideMenu->activeEditor->presetsPage->styleInput->entry()->Disable();
+    // }, EditorWindow::ID_WindowSelect);
+    // mGuideMenu->activeEditor->presetsPage->GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
+    //     EVENT_PAGE_SETUP;
 
-        generateNewPage("Configuration - Presets and Styles",
-                "Select your newly-created preset from the list, then choose a "
-                "name for your preset.\n"
-                "\n"
-                "This name is mostly just for reference, and can be whatever you "
-                "want,\n"
-                "but if you're using an OLED and don't have special bitmaps for "
-                "the font,\n"
-                "this text will be displayed upon selecting the preset.\n"
-                "\n"
-                "This name should ideally be kept short, and if you want to put "
-                "some of the name\n"
-                "on a new line on the OLED, you can use \"\\n\" to mean \"Enter\"\n");
+    //     generateNewPage("Configuration - Presets and Styles",
+    //             "Select your newly-created preset from the list, then choose a "
+    //             "name for your preset.\n"
+    //             "\n"
+    //             "This name is mostly just for reference, and can be whatever you "
+    //             "want,\n"
+    //             "but if you're using an OLED and don't have special bitmaps for "
+    //             "the font,\n"
+    //             "this text will be displayed upon selecting the preset.\n"
+    //             "\n"
+    //             "This name should ideally be kept short, and if you want to put "
+    //             "some of the name\n"
+    //             "on a new line on the OLED, you can use \"\\n\" to mean \"Enter\"\n");
 
-        mGuideMenu->activeEditor->presetsPage->nameInput->entry()->Enable();
+    //     mGuideMenu->activeEditor->presetsPage->nameInput->entry()->Enable();
 
-        auto onTrackDone{[this](wxCommandEvent& event) {
-            EVENT_PAGE_SETUP;
+    //     auto onTrackDone{[this](wxCommandEvent& event) {
+    //         EVENT_PAGE_SETUP;
 
-            generateNewPage("Configuration - Presets and Styles",
-                    "Notice the up and down arrows beside the preset "
-                    "list. When you have a preset\n"
-                    "selected, and multiple presets in the list, "
-                    "those allow you to move presets\n"
-                    "up and down through the list.\n"
-                    "\n"
-                    "The order in which you cycle through presets on "
-                    "the saber is determined by the order\n"
-                    "of them here, so you may want to rearrange them "
-                    "at some point.\n"
-                    "\n"
-                    "Choose one of your blades from the list to edit "
-                    "the bladestyle for that blade.\n"
-                    "\n"
-                    "It's worth noting that if you have a blade with "
-                    "SubBlades, then that blade will\n"
-                    "show up in the list as [Blade Number]:[SubBlade "
-                    "Number] (e.g. 0:0), as each SubBlade\n"
-                    "gets its own style too.\n");
+    //         generateNewPage("Configuration - Presets and Styles",
+    //                 "Notice the up and down arrows beside the preset "
+    //                 "list. When you have a preset\n"
+    //                 "selected, and multiple presets in the list, "
+    //                 "those allow you to move presets\n"
+    //                 "up and down through the list.\n"
+    //                 "\n"
+    //                 "The order in which you cycle through presets on "
+    //                 "the saber is determined by the order\n"
+    //                 "of them here, so you may want to rearrange them "
+    //                 "at some point.\n"
+    //                 "\n"
+    //                 "Choose one of your blades from the list to edit "
+    //                 "the bladestyle for that blade.\n"
+    //                 "\n"
+    //                 "It's worth noting that if you have a blade with "
+    //                 "SubBlades, then that blade will\n"
+    //                 "show up in the list as [Blade Number]:[SubBlade "
+    //                 "Number] (e.g. 0:0), as each SubBlade\n"
+    //                 "gets its own style too.\n");
 
-            mGuideMenu->activeEditor->presetsPage->bladeList->Enable();
-        }};
-        auto onDirectoryDone{[this, onTrackDone](wxCommandEvent& event) {
-            EVENT_PAGE_SETUP;
+    //         mGuideMenu->activeEditor->presetsPage->bladeList->Enable();
+    //     }};
+    //     auto onDirectoryDone{[this, onTrackDone](wxCommandEvent& event) {
+    //         EVENT_PAGE_SETUP;
 
-            generateNewPage(
-                    "Configuration - Presets and Styles",
+    //         generateNewPage(
+    //                 "Configuration - Presets and Styles",
 
-                    "Now enter the name of the track you want to be associated "
-                    "with this preset.\n"
-                    "\n"
-                    "This track file can be in any of the directories you just "
-                    "specified, but if\n"
-                    "it's in a folder inside of one of those folders, for example "
-                    "a \"tracks\" folder\n"
-                    "you need to indicate that with a \"/\". (e.g. "
-                    "tracks/myTrack.wav)\n"
-                    "\n"
-                    "\".wav\" will automatically be appended to the track name, as "
-                    "even if you can't\n"
-                    "see this on your computer, all track files end with .wav.\n"
-                    "\n"
-                    "You can leave this empty if you'd like to use no track.\n");
-            mGuideMenu->activeEditor->presetsPage->trackInput->entry()->Enable();
+    //                 "Now enter the name of the track you want to be associated "
+    //                 "with this preset.\n"
+    //                 "\n"
+    //                 "This track file can be in any of the directories you just "
+    //                 "specified, but if\n"
+    //                 "it's in a folder inside of one of those folders, for example "
+    //                 "a \"tracks\" folder\n"
+    //                 "you need to indicate that with a \"/\". (e.g. "
+    //                 "tracks/myTrack.wav)\n"
+    //                 "\n"
+    //                 "\".wav\" will automatically be appended to the track name, as "
+    //                 "even if you can't\n"
+    //                 "see this on your computer, all track files end with .wav.\n"
+    //                 "\n"
+    //                 "You can leave this empty if you'd like to use no track.\n");
+    //         mGuideMenu->activeEditor->presetsPage->trackInput->entry()->Enable();
 
-            useButtonOnPage("Done", onTrackDone);
-        }};
-        auto onNameDone{[this, onDirectoryDone](wxCommandEvent& event) {
-            EVENT_PAGE_SETUP;
+    //         useButtonOnPage("Done", onTrackDone);
+    //     }};
+    //     auto onNameDone{[this, onDirectoryDone](wxCommandEvent& event) {
+    //         EVENT_PAGE_SETUP;
 
-            generateNewPage(
-                    "Configuration - Presets and Styles",
+    //         generateNewPage(
+    //                 "Configuration - Presets and Styles",
 
-                    "In \"Font Directory\", enter the name of the folder on your SD "
-                    "Card\n"
-                    "that contains the sound font associated with this preset.\n"
-                    "\n"
-                    "This folder doesn't need to be added to ProffieConfig in any "
-                    "way, it stays\n"
-                    "on the SD card that is in your Proffieboard.\n"
-                    "\n"
-                    "If you want to specify multiple folders if you, for example, "
-                    "have a \"common\"\n"
-                    "folder, you can seperate folder names with a \";\" (e.g. "
-                    "folderName;common)\n");
+    //                 "In \"Font Directory\", enter the name of the folder on your SD "
+    //                 "Card\n"
+    //                 "that contains the sound font associated with this preset.\n"
+    //                 "\n"
+    //                 "This folder doesn't need to be added to ProffieConfig in any "
+    //                 "way, it stays\n"
+    //                 "on the SD card that is in your Proffieboard.\n"
+    //                 "\n"
+    //                 "If you want to specify multiple folders if you, for example, "
+    //                 "have a \"common\"\n"
+    //                 "folder, you can seperate folder names with a \";\" (e.g. "
+    //                 "folderName;common)\n");
 
-            mGuideMenu->activeEditor->presetsPage->dirInput->entry()->Enable();
+    //         mGuideMenu->activeEditor->presetsPage->dirInput->entry()->Enable();
 
-            useButtonOnPage("Done", onDirectoryDone);
-        }};
+    //         useButtonOnPage("Done", onDirectoryDone);
+    //     }};
 
-        useButtonOnPage("Done", onNameDone);
-    }, PresetsPage::ID_AddPreset);
-    mGuideMenu->activeEditor->presetsPage->GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent& event) {
-        EVENT_PAGE_SETUP;
+    //     useButtonOnPage("Done", onNameDone);
+    // }, PresetsPage::ID_AddPreset);
+    // mGuideMenu->activeEditor->presetsPage->GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent& event) {
+    //     EVENT_PAGE_SETUP;
 
-        generateNewPage("Configuration - Presets and Styles",
-                "Great! Now you'll see what is known as a \"Blade Style\" show up in the box on the right.\n"
-                "\n"
-                "Every blade for every preset has a unique blade style to set up, and these blade styles\n"
-                "are the code that tells your blade what to do. These bladestyles can get really complex,\n"
-                "having all kinds of different effects, reacting to effects on the saber, etc.\n"
-                "\n"
-                "The style this field auto-populates with is pretty simple. It extends and retracts the saber\n"
-                "when you press the button, and it has an \"AudioFlicker\" between a couple of hues of blue\n"
-                "while it's on.\n"
-                "\n"
-                "Fett263's Style Library can be a good place to find bladestyles you can customize, and if\n"
-                "you're feeling adventurous, check out the ProffieOS Style Editor to make your own custom\n"
-                "styles! It's linked in \"Tools\"->\"Style Editor...\"\n"
-                "\n");
+    //     generateNewPage("Configuration - Presets and Styles",
+    //             "Great! Now you'll see what is known as a \"Blade Style\" show up in the box on the right.\n"
+    //             "\n"
+    //             "Every blade for every preset has a unique blade style to set up, and these blade styles\n"
+    //             "are the code that tells your blade what to do. These bladestyles can get really complex,\n"
+    //             "having all kinds of different effects, reacting to effects on the saber, etc.\n"
+    //             "\n"
+    //             "The style this field auto-populates with is pretty simple. It extends and retracts the saber\n"
+    //             "when you press the button, and it has an \"AudioFlicker\" between a couple of hues of blue\n"
+    //             "while it's on.\n"
+    //             "\n"
+    //             "Fett263's Style Library can be a good place to find bladestyles you can customize, and if\n"
+    //             "you're feeling adventurous, check out the ProffieOS Style Editor to make your own custom\n"
+    //             "styles! It's linked in \"Tools\"->\"Style Editor...\"\n"
+    //             "\n");
 
-        mGuideMenu->activeEditor->presetsPage->styleInput->entry()->Enable();
-        mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_StyleEditor, true);
+    //     mGuideMenu->activeEditor->presetsPage->styleInput->entry()->Enable();
+    //     mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_StyleEditor, true);
 
-        auto onContinue{[&](wxCommandEvent& event) {
-            EVENT_PAGE_SETUP;
+    //     auto onContinue{[&](wxCommandEvent& event) {
+    //         EVENT_PAGE_SETUP;
 
-            generateNewPage("Configuration - Saving",
+    //         generateNewPage("Configuration - Saving",
 
-                    "That's all, so next up we want to actually use the config!\n"
-                    "\n"
-                    "When you save your configuration, the ProffieConfig pre-checker will run to ensure there\n"
-                    "are no fatal errors in your current configuration.\n"
-                    "\n"
-                    "If there are such errors, you will be notified, and you will need to fix them before\n"
-                    "you can save your config.\n"
-                    "\n"
-#		            ifdef __WXMAC__
-                    "Press CMD+S or go to \"File\"->\"Save Config\" to save.\n"
-#		            else
-                    "Press CTRL+S or go to \"File\"->\"Save Config\" to save.\n"
-#		            endif
-                    );
+    //                 "That's all, so next up we want to actually use the config!\n"
+    //                 "\n"
+    //                 "When you save your configuration, the ProffieConfig pre-checker will run to ensure there\n"
+    //                 "are no fatal errors in your current configuration.\n"
+    //                 "\n"
+    //                 "If there are such errors, you will be notified, and you will need to fix them before\n"
+    //                 "you can save your config.\n"
+    //                 "\n"
+#	// 	            ifdef __WXMAC__
+    //                 "Press CMD+S or go to \"File\"->\"Save Config\" to save.\n"
+#	// 	            else
+    //                 "Press CTRL+S or go to \"File\"->\"Save Config\" to save.\n"
+#	// 	            endif
+    //                 );
 
-            auto onConfigSave{[&](wxCommandEvent& event) {
-                EVENT_PAGE_SETUP;
+    //         auto onConfigSave{[&](wxCommandEvent& event) {
+    //             EVENT_PAGE_SETUP;
 
-                generateNewPage("Configuration - Verification",
-                        "Now, although your config may have saved successfully and passed the pre-checks,\n"
-                        "it doesn't necessarily mean it's valid and will actually work.\n"
-                        "\n"
-                        "In order to properly confirm your config is valid, you'll want to verify it.\n"
-                        "\n"
-                        "Select \"Verify Config\" from the \"File\" menu to continue.\n");
+    //             generateNewPage("Configuration - Verification",
+    //                     "Now, although your config may have saved successfully and passed the pre-checks,\n"
+    //                     "it doesn't necessarily mean it's valid and will actually work.\n"
+    //                     "\n"
+    //                     "In order to properly confirm your config is valid, you'll want to verify it.\n"
+    //                     "\n"
+    //                     "Select \"Verify Config\" from the \"File\" menu to continue.\n");
 
-                mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_VerifyConfig, true);
-            }};
-            mGuideMenu->activeEditor->Bind(wxEVT_MENU, onConfigSave, wxID_SAVE);
-        }};
-        useButtonOnPage("Continue", onContinue);
-    }, PresetsPage::ID_BladeList);
+    //             mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_VerifyConfig, true);
+    //         }};
+    //         mGuideMenu->activeEditor->Bind(wxEVT_MENU, onConfigSave, wxID_SAVE);
+    //     }};
+    //     useButtonOnPage("Continue", onContinue);
+    // }, PresetsPage::ID_BladeList);
     mGuideMenu->activeEditor->Bind(wxEVT_MENU, [&](wxCommandEvent& event) {
         EVENT_PAGE_SETUP;
 

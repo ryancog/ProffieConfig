@@ -12,13 +12,13 @@
 #include <wx/toplevel.h>
 #include <wx/utils.h>
 
-#include "ui/controls.h"
 #include "ui/message.h"
 #include "ui/plaque.h"
 #include "ui/frame.h"
 #include "utils/defer.h"
 #include "paths/paths.h"
 #include "utils/image.h"
+#include "utils/string.h"
 #include "dialogs/addconfig.h"
 #include "dialogs/manifest.h"
 
@@ -26,7 +26,6 @@
 #include "../core/appstate.h"
 #include "../core/utilities/misc.h"
 #include "../core/utilities/progress.h"
-#include "../core/config/configuration.h"
 #include "../editor/editorwindow.h"
 #include "../onboard/onboard.h"
 #include "../tools/arduino.h"
@@ -137,11 +136,11 @@ void MainMenu::bindEvents() {
 #	else
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
         if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise();
-        else SerialMonitor::instance = new SerialMonitor(this);
+        else SerialMonitor::instance = new SerialMonitor(this, boardSelection);
     }, ID_OpenSerial);
 #	endif
 
-    configSelection.onValueUpdate = [this]() {
+    configSelection.setUpdateHandler([this]() {
         wxSetCursor(wxCURSOR_WAIT);
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
@@ -152,15 +151,15 @@ void MainMenu::bindEvents() {
         }
 
         for (auto *editor : editors) {
-            if (configSelection == wxString{editor->getOpenConfig()}) {
+            if (static_cast<string>(configSelection) == static_cast<string>(editor->getOpenConfig()->name)) {
                 activeEditor = editor;
                 break;
             }
         }
 
         update();
-    };
-    boardSelection.onValueUpdate = [this]() { update(); };
+    });
+    boardSelection.setUpdateHandler([this]() { update(); });
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         wxSetCursor(wxCURSOR_WAIT);
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
@@ -259,7 +258,7 @@ void MainMenu::createUI() {
     headerSection->Add(appIcon);
 
     auto *configSelectSection{new wxBoxSizer(wxHORIZONTAL)};
-    configSelection.setChoices(Misc::createEntries({ _("Select Config...") }));
+    configSelection.setChoices(Utils::createEntries({ _("Select Config...") }));
     configSelection = 0;
     auto *configSelect{new PCUI::Choice(this, configSelection)};
 
@@ -278,7 +277,7 @@ void MainMenu::createUI() {
     editConfig->Disable();
 
     auto *boardControls{new wxBoxSizer(wxHORIZONTAL)};
-    auto boardEntries{Misc::createEntries({_("Select Board...")})};
+    auto boardEntries{Utils::createEntries({_("Select Board...")})};
 #   ifdef __WINDOWS__
     boardEntries.emplace_back(_("BOOTLOADER RECOVERY"));
 #   endif

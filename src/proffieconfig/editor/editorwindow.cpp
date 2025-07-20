@@ -27,6 +27,7 @@
 #include "paths/paths.h"
 #include "ui/message.h"
 #include "utils/defer.h"
+#include "utils/string.h"
 
 #include "../core/utilities/misc.h"
 #include "../core/utilities/progress.h"
@@ -101,7 +102,10 @@ void EditorWindow::bindEvents() {
         Config::save(mConfig);
     }, wxID_SAVE); 
 
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) { Configuration::exportConfig(this); }, ID_ExportConfig);
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+        // TODO: Get the filepath for this
+        // Config::save(mConfig, filepath); 
+    }, ID_ExportConfig);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(this, this); }, ID_VerifyConfig);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
@@ -116,8 +120,7 @@ void EditorWindow::bindEvents() {
             return;
         }
 
-        presetsPage->injections.push_back(fileDialog.GetFilename().ToStdString());
-        presetsPage->update();
+        mConfig->presetArrays.addInjection(fileDialog.GetFilename().ToStdString());
     }, ID_AddInjection);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("http://profezzorn.github.io/ProffieOS-StyleEditor/style_editor.html"); }, ID_StyleEditor);
@@ -131,11 +134,6 @@ void EditorWindow::bindEvents() {
         propsPage->Show(windowSelect == 1);
         bladesPage->Show(windowSelect == 2);
         presetsPage->Show(windowSelect == 3);
-
-        //generalPage->update();
-        bladesPage->update();
-        propsPage->update();
-        presetsPage->update();
 
         if (bladesPage->AreAnyItemsShown()) {
             bladesPage->Fit(bladesPage->GetContainingWindow());
@@ -168,7 +166,7 @@ void EditorWindow::createMenuBar() {
 
 void EditorWindow::createPages(wxSizer *sizer) {
     auto* optionsSizer{new wxBoxSizer(wxHORIZONTAL)};
-    windowSelect.setChoices(Misc::createEntries({
+    windowSelect.setChoices(Utils::createEntries({
         _("General"),
         _("Prop File"),
         _("Blade Arrays"),
@@ -184,11 +182,6 @@ void EditorWindow::createPages(wxSizer *sizer) {
     propsPage = new PropsPage(this);
     presetsPage = new PresetsPage(this);
     bladesPage = new BladesPage(this);
-
-    //generalPage->update();
-    propsPage->update();
-    presetsPage->update();
-    bladesPage->update();
 
     propsPage->Show(false);
     bladesPage->Show(false);
@@ -218,7 +211,7 @@ bool EditorWindow::isSaved() {
 
     auto dummyMessageHandler{[](wxCommandEvent&) {}};
     Bind(Misc::EVT_MSGBOX, dummyMessageHandler);
-    auto res{Configuration::outputConfig(validatePath, this)};
+    auto res{Config::save(mConfig, validatePath)};
     wxYield();
     Unbind(Misc::EVT_MSGBOX, dummyMessageHandler);
 

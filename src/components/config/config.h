@@ -60,7 +60,7 @@ bool remove(const string& name);
  */
 std::shared_ptr<Config> open(const string& name);
 
-bool save(std::shared_ptr<Config>);
+bool save(std::shared_ptr<Config>, filepath = {});
 
 /**
  * Remove from internal storage and let it die once last memory

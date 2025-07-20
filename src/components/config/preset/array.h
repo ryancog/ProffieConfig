@@ -66,7 +66,7 @@ struct CONFIG_EXPORT PresetArrays {
     }
 
     // More params needed
-    void addInjection();
+    void addInjection(const string&);
     void removeInjection(const Injection&);
 
     PCUI::ChoiceDataProxy presetProxy;

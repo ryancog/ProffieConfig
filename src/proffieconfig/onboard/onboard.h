@@ -104,20 +104,20 @@ public:
 
     bool isDone{false};
 
-    // Used for things that like to re-enable themselves
-    std::unordered_map<int32_t, bool> mainMenuDisables{
-        { MainMenu::ID_AddConfig, true },
-        { MainMenu::ID_RemoveConfig, true },
-        { MainMenu::ID_RefreshDev, true },
-        { MainMenu::ID_ApplyChanges, true },
-        { MainMenu::ID_EditConfig, true },
-        { MainMenu::ID_OpenSerial, true }
-    };
-    std::unordered_map<int32_t, bool> bladeDisables{
-        { BladesPage::ID_BladeType, true },
-        { BladesPage::ID_RemoveSubBlade, true },
-        { BladesPage::ID_AddSubBlade, true }
-    };
+    // // Used for things that like to re-enable themselves
+    // std::unordered_map<int32_t, bool> mainMenuDisables{
+    //     { MainMenu::ID_AddConfig, true },
+    //     { MainMenu::ID_RemoveConfig, true },
+    //     { MainMenu::ID_RefreshDev, true },
+    //     { MainMenu::ID_ApplyChanges, true },
+    //     { MainMenu::ID_EditConfig, true },
+    //     { MainMenu::ID_OpenSerial, true }
+    // };
+    // std::unordered_map<int32_t, bool> bladeDisables{
+    //     { BladesPage::ID_BladeType, true },
+    //     { BladesPage::ID_RemoveSubBlade, true },
+    //     { BladesPage::ID_AddSubBlade, true }
+    // };
 
 private:
     bool mDoneWithEditor{false};
