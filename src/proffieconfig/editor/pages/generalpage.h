@@ -2,9 +2,6 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2023-2025 Ryan Ogurek
 
-#include "ui/controls/numeric.h"
-#include "ui/controls/toggle.h"
-
 #include "../editorwindow.h"
 #include "../dialogs/customoptionsdlg.h"
 

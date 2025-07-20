@@ -5,8 +5,6 @@
 #include <wx/button.h>
 
 #include "../../core/defines.h"
-#include "../../core/utilities/misc.h"
-#include "../../core/config/configuration.h"
 
 GeneralPage::GeneralPage(EditorWindow *parent) : 
     wxStaticBoxSizer(wxVERTICAL, parent, ""), 

@@ -2,13 +2,12 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include "../../mainmenu/mainmenu.h"
-#include "ui/controls/controldata.h"
-
 #include <wx/dialog.h>
-#include <wx/textctrl.h>
-#include <wx/tglbtn.h>
-#include <wx/filepicker.h>
+
+#include "ui/controls/filepicker.h"
+#include "ui/controls/text.h"
+
+#include "../../mainmenu/mainmenu.h"
 
 class AddConfig : public wxDialog {
 public:
@@ -18,7 +17,7 @@ public:
         ID_ImportExisting,
     };
 
-    MainMenu* parent{nullptr};
+    MainMenu *parent{nullptr};
 
     PCUI::FilePickerData importPath;
     PCUI::TextData configName;

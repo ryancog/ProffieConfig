@@ -81,8 +81,9 @@ std::shared_ptr<Config::Config> Config::open(const string& name) {
     return ret;
 }
 
-bool Config::save(std::shared_ptr<Config> config) {
-    std::ofstream out{Paths::configs() / (static_cast<string>(config->name) + RAW_FILE_EXTENSION)};
+bool Config::save(std::shared_ptr<Config> config, filepath path) {
+    if (path.empty()) path = Paths::configs() / (static_cast<string>(config->name) + RAW_FILE_EXTENSION);
+    std::ofstream out{path};
     if (not out.is_open()) return false;
 
     out << "DUMMY\n";

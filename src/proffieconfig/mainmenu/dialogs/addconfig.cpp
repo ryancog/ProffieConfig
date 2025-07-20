@@ -1,15 +1,7 @@
 #include "addconfig.h"
-#include "ui/controls.h"
-#include "wx/osx/stattext.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include <wx/filepicker.h>
-#include <wx/string.h>
-#include <wx/event.h>
-#include <wx/sizer.h>
-#include <wx/tglbtn.h>
-#include <wx/button.h>
 #include <wx/sysopt.h>
 
 AddConfig::AddConfig(MainMenu *parent) : 
@@ -38,10 +30,10 @@ void AddConfig::bindEvents() {
         importPath = filepath{};
         update(); 
     }, ID_CreateNew);
-    configName.onValueUpdate = [this]() { update(); };
-    importPath.onValueUpdate = [this]() {
+    configName.setUpdateHandler([this]() { update(); });
+    importPath.setUpdateHandler([this]() {
         configName = static_cast<filepath>(importPath).stem();
-    };
+    });
 }
 
 void AddConfig::createUI() {

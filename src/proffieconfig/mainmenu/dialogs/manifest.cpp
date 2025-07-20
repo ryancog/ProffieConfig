@@ -3,7 +3,6 @@
 // Copyright (C) 2025 Ryan Ogurek
 
 #include <wx/event.h>
-#include <wx/textctrl.h>
 
 #include "../../core/appstate.h"
 
@@ -43,9 +42,9 @@ ManifestDialog::ManifestDialog(MainMenu *mainMenu) :
         Close();
     }, wxID_SAVE);
 
-    mEntryData.onValueUpdate = [this, saveButton]() {
+    mEntryData.setUpdateHandler([this, saveButton]() {
         saveButton->Enable(not static_cast<string>(mEntryData).empty());
-    };
+    });
 
     SetSizerAndFit(sizer);
 }

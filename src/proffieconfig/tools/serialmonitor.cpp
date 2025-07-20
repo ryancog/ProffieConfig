@@ -5,6 +5,8 @@
 #include "ui/message.h"
 
 #include "../mainmenu/mainmenu.h"
+#include "wx/gdicmn.h"
+#include "wx/string.h"
 
 #ifdef __WINDOWS__
 #include <windows.h>
@@ -32,12 +34,12 @@ SerialMonitor::~SerialMonitor() {
 
 #if defined(__WINDOWS__)
 SerialMonitor::SerialMonitor(MainMenu* parent) {
-    if (parent->boardSelect->entry()->GetSelection() > 0) {
+    if (parent->boardSelect->GetSelection() > 0) {
         ShellExecuteW(
             nullptr,
             nullptr,
             (Paths::binaries() / "arduino-cli.exe").c_str(),
-            ("monitor -p " + parent->boardSelect->entry()->GetStringSelection() + " -c baudrate=115200").c_str(),
+            ("monitor -p " + parent->boardSelect->GetStringSelection() + " -c baudrate=115200").c_str(),
             nullptr,
             SW_SHOWNORMAL
         );
@@ -53,24 +55,39 @@ SerialMonitor::SerialMonitor(MainMenu* parent) {
 
 using namespace std::chrono_literals;
 
-SerialMonitor::SerialMonitor(MainMenu* parent) : PCUI::Frame(parent, wxID_ANY, "Proffie Serial") {
+SerialMonitor::SerialMonitor(MainMenu* parent, const string& devPath) : 
+    PCUI::Frame(parent, wxID_ANY, "Proffie Serial") {
     instance = this;
 
     wxBoxSizer *master = new wxBoxSizer(wxVERTICAL);
 
-    input = new PCUI::Text(this, ID_SerialCommand, {}, wxTE_PROCESS_ENTER);
-    output = new PCUI::Text(this, wxID_ANY, {}, wxTE_MULTILINE | wxTE_READONLY | wxTE_DONTWRAP | wxNO_BORDER);
+    input = new wxTextCtrl(
+        this,
+        ID_SerialCommand,
+        wxEmptyString,
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxTE_PROCESS_ENTER
+    );
+    output = new wxTextCtrl(
+        this,
+        wxID_ANY,
+        wxEmptyString,
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxTE_MULTILINE | wxTE_READONLY | wxTE_DONTWRAP | wxNO_BORDER
+    );
     output->SetSize(wxSize{500, 200});
-    auto font{output->entry()->GetFont()};
+    auto font{output->GetFont()};
     font.SetFamily(wxFONTFAMILY_TELETYPE);
-    output->entry()->SetFont(font);
-    output->entry()->AlwaysShowScrollbars(false, false);
+    output->SetFont(font);
+    output->AlwaysShowScrollbars(false, false);
 
     master->Add(input, BOXITEMFLAGS);
     master->Add(output, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
     bindEvents();
-    openDevice();
+    openDevice(devPath);
 
     master->SetMinSize(wxSize{450, 300});
     SetSizerAndFit(master);
@@ -86,8 +103,8 @@ void SerialMonitor::bindEvents() {
     const auto timeStrLen{2 + 1 + 2 + 1 + 2 + 1 + 3 + 3};
 
     Bind(wxEVT_TEXT_ENTER, [&](wxCommandEvent&) {
-        const auto command = input->entry()->GetValue();
-        input->entry()->Clear();
+        const auto command = input->GetValue();
+        input->Clear();
 
         if (history.empty() or history.back() != command) {
             history.emplace_back(command);
@@ -95,28 +112,28 @@ void SerialMonitor::bindEvents() {
         historyIdx = history.size();
 
         if (command == "clear") {
-            output->entry()->Clear();
+            output->Clear();
         } else {
             sendOut = command;
 
             if (not needsTime) {
-                output->entry()->AppendText('\n');
+                output->AppendText('\n');
             }
-            output->entry()->AppendText("-------------> " + history.back() + '\n');
+            output->AppendText("-------------> " + history.back() + '\n');
         }
     }, ID_SerialCommand);
 
-    input->entry()->Bind(wxEVT_KEY_DOWN, [&](wxKeyEvent& evt) {
+    input->Bind(wxEVT_KEY_DOWN, [&](wxKeyEvent& evt) {
         switch (evt.GetKeyCode()) {
             case WXK_DOWN:
             case WXK_NUMPAD_DOWN:
                 if (historyIdx < static_cast<ssize_t>(history.size())) {
                     ++historyIdx;
                     if (historyIdx == static_cast<ssize_t>(history.size())) {
-                        input->entry()->SetValue({});
+                        input->SetValue({});
                     } else {
-                        input->entry()->SetValue(history.at(historyIdx));
-                        input->entry()->SetInsertionPointEnd();
+                        input->SetValue(history.at(historyIdx));
+                        input->SetInsertionPointEnd();
                     }
                 } else {
                     wxBell();
@@ -126,8 +143,8 @@ void SerialMonitor::bindEvents() {
             case WXK_NUMPAD_UP:
                 if (historyIdx > 0) {
                     --historyIdx;
-                    input->entry()->SetValue(history.at(historyIdx));
-                    input->entry()->SetInsertionPointEnd();
+                    input->SetValue(history.at(historyIdx));
+                    input->SetInsertionPointEnd();
                 } else {
                     wxBell();
                 }
@@ -139,23 +156,23 @@ void SerialMonitor::bindEvents() {
 
     Bind(EVT_INPUT, [&](SerialDataEvent& evt) {
         if (evt.value == '\r') {
-            const auto text{output->entry()->GetValue()};
+            const auto text{output->GetValue()};
             const auto endPos{text.rfind('\n')};
 
             if (endPos != string::npos) {
                 if (needsTime) {
-                    output->entry()->SetInsertionPoint(endPos + 1);
+                    output->SetInsertionPoint(endPos + 1);
                 } else {
-                    output->entry()->SetInsertionPoint(endPos + 1 + timeStrLen);
+                    output->SetInsertionPoint(endPos + 1 + timeStrLen);
                 }
             } else {
-                output->entry()->SetInsertionPoint(0);
+                output->SetInsertionPoint(0);
             }
         } else if (evt.value == '\n') {
             needsTime = true;
-            output->entry()->AppendText(evt.value);
+            output->AppendText(evt.value);
         } else if (isascii(evt.value)) {
-            const auto lastPos{output->entry()->GetLastPosition()};
+            const auto lastPos{output->GetLastPosition()};
 
             if (needsTime) {
                 // Time length + " | " + null
@@ -175,29 +192,29 @@ void SerialMonitor::bindEvents() {
                 );
 
 
-                const auto textPos{output->entry()->GetInsertionPoint()};
+                const auto textPos{output->GetInsertionPoint()};
                 if (lastPos == textPos) {
-                    output->entry()->AppendText(wxString().FromAscii(timeBuf.data()));
+                    output->AppendText(wxString().FromAscii(timeBuf.data()));
                 } else {
                     const auto replaceLen{lastPos - textPos};
                     auto timeStr{wxString().FromAscii(timeBuf.data())};
-                    output->entry()->Replace(textPos + 1, textPos + 1 + replaceLen, timeStr);
-                    output->entry()->AppendText(timeStr.substr(replaceLen));
+                    output->Replace(textPos + 1, textPos + 1 + replaceLen, timeStr);
+                    output->AppendText(timeStr.substr(replaceLen));
                 }
 
                 needsTime = false;
             }
 
-            const auto textPos{output->entry()->GetInsertionPoint()};
+            const auto textPos{output->GetInsertionPoint()};
             if (lastPos == textPos) {
-                output->entry()->AppendText(wxString().FromAscii(evt.value));
+                output->AppendText(wxString().FromAscii(evt.value));
             } else {
-                output->entry()->Replace(textPos + 1, textPos + 2, wxString().FromAscii(evt.value));
+                output->Replace(textPos + 1, textPos + 2, wxString().FromAscii(evt.value));
             }
         }
 
-        if (autoScroll) output->entry()->ShowPosition(output->entry()->GetLastPosition());
-        output->entry()->Refresh();
+        if (autoScroll) output->ShowPosition(output->GetLastPosition());
+        output->Refresh();
     }, wxID_ANY);
 
     Bind(EVT_DISCON, [&](SerialDataEvent&) {
@@ -205,11 +222,10 @@ void SerialMonitor::bindEvents() {
     }, wxID_ANY);
 }
 
-void SerialMonitor::openDevice() {
+void SerialMonitor::openDevice(const string& devPath) {
     struct termios newtio;
 
-    const auto boardPath{static_cast<MainMenu*>(GetParent())->boardSelect->entry()->GetStringSelection().ToStdString()};
-    fd = open(boardPath.c_str(), O_RDWR | O_NOCTTY);
+    fd = open(devPath.c_str(), O_RDWR | O_NOCTTY);
     if (fd < 0) {
         PCUI::showMessage(_("Could not connect to Proffieboard."), _("Serial Connection Error"), wxICON_ERROR | wxOK, GetParent());
         SerialMonitor::instance->Close(true);
@@ -230,10 +246,10 @@ void SerialMonitor::openDevice() {
     createListener();
     createWriter();
 
-    devThread = std::thread{[this, boardPath]() {
+    devThread = std::thread{[this, devPath]() {
         struct stat info;
         while (SerialMonitor::instance != nullptr) {
-            if (stat(boardPath.c_str(), &info) != 0) { // Check if device is still present
+            if (stat(devPath.c_str(), &info) != 0) { // Check if device is still present
                 if (SerialMonitor::instance != nullptr) {
                     auto *event = new SerialDataEvent(EVT_DISCON, wxID_ANY, ' ');
                     wxQueueEvent(SerialMonitor::instance, event);

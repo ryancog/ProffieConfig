@@ -4,8 +4,9 @@
 
 #include <wx/dialog.h>
 
+#include "ui/controls/text.h"
+
 #include "../mainmenu.h"
-#include "ui/controls/controldata.h"
 
 class ManifestDialog : public wxDialog {
 public:

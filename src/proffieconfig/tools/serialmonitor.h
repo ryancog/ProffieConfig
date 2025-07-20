@@ -4,7 +4,7 @@
 
 #if not defined(__WINDOWS__)
 #include <thread>
-#include "ui/controls/controldata.h"
+#include <wx/textctrl.h>
 #endif
 
 #include "../mainmenu/mainmenu.h"
@@ -15,7 +15,7 @@ class SerialMonitor : public PCUI::Frame {
 class SerialMonitor {
 #endif
 public:
-    SerialMonitor(MainMenu*);
+    SerialMonitor(MainMenu *, const string&);
     ~SerialMonitor();
     static SerialMonitor* instance;
 
@@ -33,8 +33,8 @@ private:
     std::thread listenThread;
     std::thread writerThread;
 
-    PCUI::Text *input;
-    PCUI::Text *output;
+    wxTextCtrl *input;
+    wxTextCtrl *output;
 
     int32_t fd = 0;
     wxString sendOut;
@@ -44,7 +44,7 @@ private:
 
 
     void bindEvents();
-    void openDevice();
+    void openDevice(const string&);
     void createListener();
     void createWriter();
 #endif // OSX or GTK
