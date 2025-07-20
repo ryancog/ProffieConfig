@@ -84,21 +84,21 @@ void Onboard::Overview::prepareMainMenu() {
 }
 
 void Onboard::Overview::prepareEditor() {
-    mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_ExportConfig, false);
-    mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_StyleEditor, false);
-    mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_VerifyConfig, false);
-    mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_AddInjection, false);
-    mGuideMenu->activeEditor->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
-        if (mDoneWithEditor) {
-            event.Skip();
-            return;
-        }
+    // mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_ExportConfig, false);
+    // mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_StyleEditor, false);
+    // mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_VerifyConfig, false);
+    // mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_AddInjection, false);
+    // mGuideMenu->activeEditor->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
+    //     if (mDoneWithEditor) {
+    //         event.Skip();
+    //         return;
+    //     }
 
-        if (event.CanVeto()) {
-            event.Veto();
-            PCUI::showMessage(_("You cannot close this during First-Time Setup."), _("Close ProffieConfig Editor"), wxOK | wxCENTER, mGuideMenu->activeEditor);
-        }
-    });
+    //     if (event.CanVeto()) {
+    //         event.Veto();
+    //         PCUI::showMessage(_("You cannot close this during First-Time Setup."), _("Close ProffieConfig Editor"), wxOK | wxCENTER, mGuideMenu->activeEditor);
+    //     }
+    // });
 }
 
 void Onboard::Overview::linkMainMenuEvents() {
@@ -163,37 +163,37 @@ void Onboard::Overview::linkMainMenuEvents() {
 }
 
 void Onboard::Overview::linkEditorEvents() {
-    mGuideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_UPDATE_UI, [&](wxUpdateUIEvent& event) {
-        event.Skip();
-        // for (const auto& [ id, disabled ] : bladeDisables) {
-        //     mGuideMenu->activeEditor->bladesPage->GetStaticBox()->FindWindow(id)->Enable(!disabled);
-        // }
-    });
+    // mGuideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_UPDATE_UI, [&](wxUpdateUIEvent& event) {
+    //     event.Skip();
+    //     // for (const auto& [ id, disabled ] : bladeDisables) {
+    //     //     mGuideMenu->activeEditor->bladesPage->GetStaticBox()->FindWindow(id)->Enable(!disabled);
+    //     // }
+    // });
 
-    mGuideMenu->activeEditor->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
-        EVENT_PAGE_SETUP;
-        if (mGuideMenu->activeEditor->windowSelect != 1) {
-            hasRun = false;
-            return;
-        }
+    // mGuideMenu->activeEditor->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
+    //     EVENT_PAGE_SETUP;
+    //     if (mGuideMenu->activeEditor->windowSelect != 1) {
+    //         hasRun = false;
+    //         return;
+    //     }
 
-        generateNewPage("Configuration - Prop File",
-                "In order to change the controls for your Proffieboard, you can choose\n"
-                "what is known as a prop file.\n"
-                "\n"
-                "In ProffieOS, prop files are what control the way you interact with your\n"
-                "saber. Each one is different, and has it's own set of settings you can\n"
-                "configure.\n"
-                "\n"
-                "These prop files are made by various members of the community, and they are\n"
-                "typically listed by their creator name/username.\n"
-                "\n\n"
-                "While the default is a solid place to start, go ahead and select a\n"
-                "different one from the drop-down.\n");
+    //     generateNewPage("Configuration - Prop File",
+    //             "In order to change the controls for your Proffieboard, you can choose\n"
+    //             "what is known as a prop file.\n"
+    //             "\n"
+    //             "In ProffieOS, prop files are what control the way you interact with your\n"
+    //             "saber. Each one is different, and has it's own set of settings you can\n"
+    //             "configure.\n"
+    //             "\n"
+    //             "These prop files are made by various members of the community, and they are\n"
+    //             "typically listed by their creator name/username.\n"
+    //             "\n\n"
+    //             "While the default is a solid place to start, go ahead and select a\n"
+    //             "different one from the drop-down.\n");
 
-        mGuideMenu->activeEditor->propsPage->GetStaticBox()->FindWindowById(PropsPage::ID_Buttons)->Disable();
-        mGuideMenu->activeEditor->propsPage->GetStaticBox()->FindWindowById(PropsPage::ID_PropInfo)->Disable();
-    }, EditorWindow::ID_WindowSelect);
+    //     mGuideMenu->activeEditor->propsPage->GetStaticBox()->FindWindowById(PropsPage::ID_Buttons)->Disable();
+    //     mGuideMenu->activeEditor->propsPage->GetStaticBox()->FindWindowById(PropsPage::ID_PropInfo)->Disable();
+    // }, EditorWindow::ID_WindowSelect);
     // mGuideMenu->activeEditor->propsPage->GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
     //     EVENT_PAGE_SETUP;
 
@@ -224,32 +224,32 @@ void Onboard::Overview::linkEditorEvents() {
     //     mGuideMenu->activeEditor->windowSelect->entry()->Append("Blade Arrays");
 
     // }, PropsPage::ID_Buttons);
-    mGuideMenu->activeEditor->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
-        EVENT_PAGE_SETUP;
-        if (mGuideMenu->activeEditor->windowSelect != 2) {
-            hasRun = false;
-            return;
-        }
+    // mGuideMenu->activeEditor->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
+    //     EVENT_PAGE_SETUP;
+    //     if (mGuideMenu->activeEditor->windowSelect != 2) {
+    //         hasRun = false;
+    //         return;
+    //     }
 
-        generateNewPage("Configuration - Blade Arrays",
-                "This page is where we'll set up all the \"blades\" on your saber.\n"
-                "\n"
-                "Somewhat confusingly, pretty much anything that lights up on your saber\n"
-                "is known as a \"blade\" in ProffieOS.\n"
-                "\n"
-                "This includes any accent LEDs, illuminated connectors, illuminated\n"
-                "switches, etc.\n"
-                "\n"
-                "This guide will show you the different blade types and their features, but\n"
-                "your saber doesn't need to (and most likely won't) use all of them.\n"
-                "\n\n"
-                "Select \"Blade 0\" to configure it.\n"
-                "(Blades begin counting from 0, not 1)\n");
+    //     generateNewPage("Configuration - Blade Arrays",
+    //             "This page is where we'll set up all the \"blades\" on your saber.\n"
+    //             "\n"
+    //             "Somewhat confusingly, pretty much anything that lights up on your saber\n"
+    //             "is known as a \"blade\" in ProffieOS.\n"
+    //             "\n"
+    //             "This includes any accent LEDs, illuminated connectors, illuminated\n"
+    //             "switches, etc.\n"
+    //             "\n"
+    //             "This guide will show you the different blade types and their features, but\n"
+    //             "your saber doesn't need to (and most likely won't) use all of them.\n"
+    //             "\n\n"
+    //             "Select \"Blade 0\" to configure it.\n"
+    //             "(Blades begin counting from 0, not 1)\n");
 
-        // mGuideMenu->activeEditor->bladesPage->bladeArray->entry()->Disable();
-        // mGuideMenu->activeEditor->bladesPage->addBladeButton->Disable();
-        // mGuideMenu->activeEditor->bladesPage->bladeArrayButton->Disable();
-    }, EditorWindow::ID_WindowSelect);
+    //     // mGuideMenu->activeEditor->bladesPage->bladeArray->entry()->Disable();
+    //     // mGuideMenu->activeEditor->bladesPage->addBladeButton->Disable();
+    //     // mGuideMenu->activeEditor->bladesPage->bladeArrayButton->Disable();
+    // }, EditorWindow::ID_WindowSelect);
     // mGuideMenu->activeEditor->bladesPage->GetStaticBox()->Bind(wxEVT_LISTBOX, [&](wxCommandEvent& event) {
     //     EVENT_PAGE_SETUP;
 
@@ -534,65 +534,65 @@ void Onboard::Overview::linkEditorEvents() {
     //     }};
     //     useButtonOnPage("Continue", onContinue);
     // }, PresetsPage::ID_BladeList);
-    mGuideMenu->activeEditor->Bind(wxEVT_MENU, [&](wxCommandEvent& event) {
-        EVENT_PAGE_SETUP;
+    // mGuideMenu->activeEditor->Bind(wxEVT_MENU, [&](wxCommandEvent& event) {
+    //     EVENT_PAGE_SETUP;
 
-        generateNewPage("Configuration - Export Config",
-                "At some point it may be necessary to export your configuration file from ProffieConfig.\n"
-                "\n"
-                "Whether you need to share it with me if you encounter an issue, share it with someone\n"
-                "else for general help or troubleshooting, or just want to make a backup, the ability\n"
-                "to export your config will come in handy.\n"
-                "\n"
-                "When you export your config, it will still be in ProffieConfig, and editing it won't\n"
-                "affect the version in ProffieConfig, but it allows you to share it, or just look at\n"
-                "it yourself if you're curious.\n"
-                "\n"
-                "In order to export your config, select \"Export Config...\" from the \"File\" menu.");
+    //     generateNewPage("Configuration - Export Config",
+    //             "At some point it may be necessary to export your configuration file from ProffieConfig.\n"
+    //             "\n"
+    //             "Whether you need to share it with me if you encounter an issue, share it with someone\n"
+    //             "else for general help or troubleshooting, or just want to make a backup, the ability\n"
+    //             "to export your config will come in handy.\n"
+    //             "\n"
+    //             "When you export your config, it will still be in ProffieConfig, and editing it won't\n"
+    //             "affect the version in ProffieConfig, but it allows you to share it, or just look at\n"
+    //             "it yourself if you're curious.\n"
+    //             "\n"
+    //             "In order to export your config, select \"Export Config...\" from the \"File\" menu.");
 
-        mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_ExportConfig, true);
-    }, EditorWindow::ID_VerifyConfig);
-    mGuideMenu->activeEditor->Bind(wxEVT_MENU, [&](wxCommandEvent& event) {
-        EVENT_PAGE_SETUP;
+    //     mGuideMenu->activeEditor->GetMenuBar()->Enable(EditorWindow::ID_ExportConfig, true);
+    // }, EditorWindow::ID_VerifyConfig);
+    // mGuideMenu->activeEditor->Bind(wxEVT_MENU, [&](wxCommandEvent& event) {
+    //     EVENT_PAGE_SETUP;
 
-        generateNewPage("Configuration - Finishing Up",
-                "We've ran through all the basics of the ProffieConfig editor, and you can now close\n"
-                "it to continue with the rest of the introduction.\n");
-        mDoneWithEditor = true;
+    //     generateNewPage("Configuration - Finishing Up",
+    //             "We've ran through all the basics of the ProffieConfig editor, and you can now close\n"
+    //             "it to continue with the rest of the introduction.\n");
+    //     mDoneWithEditor = true;
 
-        auto onEditorClose{[&](wxCloseEvent& event) {
-            EVENT_PAGE_SETUP;
+    //     auto onEditorClose{[&](wxCloseEvent& event) {
+    //         EVENT_PAGE_SETUP;
 
-            generateNewPage("Finishing Up",
-                    "Once you've created/edited your configuration, the last thing to do is apply\n"
-                    "it to your Proffieboard.\n"
-                    "\n"
-                    "You can do that by pressing \"Refresh Boards\", selecting your board from the list,\n"
-                    "and then clicking \"Apply Selected Configuration to Board\".\n"
-                    "\n"
-#                   ifdef __WINDOWS__
-                    "The board name will be something like \"COM\" and then a number, but chances are\n"
-                    "there'll only be the one you want, and in the event something goes wrong while\n"
-                    "applying changes, you can select \"BOOTLOADER RECOVERY\" and go from there.\n"
-#                   elif defined(__WXOSX__)
-                    "The board name will be something like \"/dev/cu.\" and then a whole bunch of\n"
-                    "letters and numbers, but chances are there'll only be the one you want.\n"
-#                   elif defined(__WXGTK__)
-                    "The board will be named something like \"/dev/tty\" and some more letters and\n"
-                    "numbers, but chances are there'll only be the one you want.\n"
-#                   endif
-                    "\n"
-                    "That covers the basics of ProffieConfig. There's still a few things for you to\n"
-                    "discover, but that should put you well on your way! Go ahead and click \"Finish\",\n"
-                    "and we'll launch the full version for you to use!\n"
-                    "\n"
-                    "The config you started in this introduction will still be there, and you can return\n"
-                    "here any time from the menu bar under File->Re-Run First-Time Setup.\n");
-            isDone = true;
-            OnboardFrame::instance->update();
-        }};
-        mGuideMenu->activeEditor->Bind(wxEVT_CLOSE_WINDOW, onEditorClose);
-    }, EditorWindow::ID_ExportConfig);
+    //         generateNewPage("Finishing Up",
+    //                 "Once you've created/edited your configuration, the last thing to do is apply\n"
+    //                 "it to your Proffieboard.\n"
+    //                 "\n"
+    //                 "You can do that by pressing \"Refresh Boards\", selecting your board from the list,\n"
+    //                 "and then clicking \"Apply Selected Configuration to Board\".\n"
+    //                 "\n"
+#   //                 ifdef __WINDOWS__
+    //                 "The board name will be something like \"COM\" and then a number, but chances are\n"
+    //                 "there'll only be the one you want, and in the event something goes wrong while\n"
+    //                 "applying changes, you can select \"BOOTLOADER RECOVERY\" and go from there.\n"
+#   //                 elif defined(__WXOSX__)
+    //                 "The board name will be something like \"/dev/cu.\" and then a whole bunch of\n"
+    //                 "letters and numbers, but chances are there'll only be the one you want.\n"
+#   //                 elif defined(__WXGTK__)
+    //                 "The board will be named something like \"/dev/tty\" and some more letters and\n"
+    //                 "numbers, but chances are there'll only be the one you want.\n"
+#   //                 endif
+    //                 "\n"
+    //                 "That covers the basics of ProffieConfig. There's still a few things for you to\n"
+    //                 "discover, but that should put you well on your way! Go ahead and click \"Finish\",\n"
+    //                 "and we'll launch the full version for you to use!\n"
+    //                 "\n"
+    //                 "The config you started in this introduction will still be there, and you can return\n"
+    //                 "here any time from the menu bar under File->Re-Run First-Time Setup.\n");
+    //         isDone = true;
+    //         OnboardFrame::instance->update();
+    //     }};
+    //     mGuideMenu->activeEditor->Bind(wxEVT_CLOSE_WINDOW, onEditorClose);
+    // }, EditorWindow::ID_ExportConfig);
 }
 
 void Onboard::Overview::generateNewPage(const wxString& headerText, const wxString& bodyText) {

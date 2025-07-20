@@ -2,7 +2,9 @@
 
 cmake_minimum_required(VERSION 3.20)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum OS X deployment version" FORCE)
-set(CMAKE_OSX_ARCHITECTURES arm64;x86_64 CACHE STRING "Build universal binary" FORCE)
+if (CMAKE_BUILD_TYPE STREQUAL Release)
+    set(CMAKE_OSX_ARCHITECTURES arm64;x86_64 CACHE STRING "Build universal binary" FORCE)
+endif()
 
 project(ProffieConfig VERSION 1.8.0)
 add_compile_definitions(BUILD_SYSTEM_VERSION=${VERSION})

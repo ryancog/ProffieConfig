@@ -39,7 +39,6 @@ MainMenu::MainMenu(wxWindow* parent) :
     createUI();
     createMenuBar();
     bindEvents();
-    update();
 
     Show(true);
 }
@@ -122,12 +121,12 @@ void MainMenu::bindEvents() {
 
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(this); }, ID_RefreshDev);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        if (activeEditor == nullptr) {
-            activeEditor = generateEditor(configSelection);
-            if (activeEditor == nullptr) return;
-            editors.emplace_back(activeEditor);
-        }
-        Arduino::applyToBoard(this, activeEditor);
+        // if (activeEditor == nullptr) {
+        //     activeEditor = generateEditor(configSelection);
+        //     if (activeEditor == nullptr) return;
+        //     editors.emplace_back(activeEditor);
+        // }
+        // Arduino::applyToBoard(this, activeEditor);
     }, ID_ApplyChanges);
 # 	if defined(__WINDOWS__)
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
@@ -141,36 +140,10 @@ void MainMenu::bindEvents() {
 #	endif
 
     configSelection.setUpdateHandler([this]() {
-        wxSetCursor(wxCURSOR_WAIT);
-        Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
-
-        activeEditor = nullptr;
-        if (configSelection == 0) {
-            update();
-            return;
-        }
-
-        for (auto *editor : editors) {
-            if (static_cast<string>(configSelection) == static_cast<string>(editor->getOpenConfig()->name)) {
-                activeEditor = editor;
-                break;
-            }
-        }
-
-        update();
     });
-    boardSelection.setUpdateHandler([this]() { update(); });
+    boardSelection.setUpdateHandler([this]() { 
+    });
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        wxSetCursor(wxCURSOR_WAIT);
-        Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
-
-        if (activeEditor == nullptr) {
-            activeEditor = generateEditor(configSelection);
-            if (activeEditor == nullptr) return;
-            editors.emplace_back(activeEditor);
-        }
-        activeEditor->Show();
-        activeEditor->Raise();
     }, ID_EditConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
         auto addDialog{AddConfig{this}};
@@ -189,7 +162,6 @@ void MainMenu::bindEvents() {
             std::ofstream{configPath}.flush();
         }
 
-        update();
         auto choices{configSelection.choices()};
         choices.push_back(addDialog.configName);
         configSelection.setChoices(std::move(choices));
@@ -204,10 +176,6 @@ void MainMenu::bindEvents() {
                 wxYES_NO | wxNO_DEFAULT | wxCENTER,
                 this) == wxYES
            ) {
-            if (activeEditor) activeEditor->Close(true);
-            fs::remove(Paths::configs() / (static_cast<string>(configSelection) + ".h"));
-            activeEditor = nullptr;
-            update();
         }
     }, ID_RemoveConfig);
 }
@@ -282,6 +250,7 @@ void MainMenu::createUI() {
     boardEntries.emplace_back(_("BOOTLOADER RECOVERY"));
 #   endif
     boardSelection.setChoices(std::move(boardEntries));
+    boardSelection = 0;
     auto *boardSelect{new PCUI::Choice(this, boardSelection)};
     TIP(
         boardSelect, 
@@ -316,41 +285,40 @@ void MainMenu::createUI() {
     SetSizerAndFit(sizer);
 }
 
-void MainMenu::update() {
-    auto configChoices{configSelection.choices()};
-    auto lastChoice{static_cast<string>(configSelection)};
-    configChoices.resize(1);
-    int32 newChoice{0};
-
-    fs::directory_iterator configsIterator{Paths::configs()};
-    for (const auto& configFile : configsIterator) {
-        if (not configFile.is_regular_file()) continue;
-        if (configFile.path().extension() != ".h") continue;
-
-        const auto& configName{configChoices.emplace_back(configFile.path().stem().native())};
-        if (configName == lastChoice) newChoice = configChoices.size() - 1;
-    }
-
-    configSelection.setChoices(std::move(configChoices));
-    configSelection = newChoice;
-
-    bool configSelected{configSelection != 0};
-    bool boardSelected{boardSelection != 0};
-    bool recoverySelected{
-        static_cast<string>(boardSelection).find(_("BOOTLOADER").ToStdString()) != string::npos
-    };
-
-    applyButton->Enable(configSelected && boardSelected);
-    editConfig->Enable(configSelected);
-    removeConfig->Enable(configSelected);
-    openSerial->Enable(boardSelected && !recoverySelected);
-}
+// void MainMenu::update() {
+//     auto configChoices{configSelection.choices()};
+//     auto lastChoice{static_cast<string>(configSelection)};
+//     configChoices.resize(1);
+//     int32 newChoice{0};
+// 
+//     fs::directory_iterator configsIterator{Paths::configs()};
+//     for (const auto& configFile : configsIterator) {
+//         if (not configFile.is_regular_file()) continue;
+//         if (configFile.path().extension() != ".h") continue;
+// 
+//         const auto& configName{configChoices.emplace_back(configFile.path().stem().native())};
+//         if (configName == lastChoice) newChoice = configChoices.size() - 1;
+//     }
+// 
+//     configSelection.setChoices(std::move(configChoices));
+//     configSelection = newChoice;
+// 
+//     bool configSelected{configSelection != 0};
+//     bool boardSelected{boardSelection != 0};
+//     bool recoverySelected{
+//         static_cast<string>(boardSelection).find(_("BOOTLOADER").ToStdString()) != string::npos
+//     };
+// 
+//     applyButton->Enable(configSelected && boardSelected);
+//     editConfig->Enable(configSelected);
+//     removeConfig->Enable(configSelected);
+//     openSerial->Enable(boardSelected && !recoverySelected);
+// }
 
 void MainMenu::removeEditor(EditorWindow *editor) {
     for (auto it{editors.begin()}; it != editors.end(); ++it) {
-        if (*it == editor) {
+        if (it->second == editor) {
             editors.erase(it);
-            if (activeEditor == editor) activeEditor = nullptr;
             break;
         }
     }
