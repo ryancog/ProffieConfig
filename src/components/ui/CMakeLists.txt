@@ -10,6 +10,7 @@ add_library(ui SHARED
     panel.cpp
     notifier.cpp
 
+    controls/base.cpp
     controls/checklist.cpp
     controls/choice.cpp
     controls/combobox.cpp

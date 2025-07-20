@@ -36,7 +36,7 @@ template<
 >
 class ControlBase;
 
-struct ControlData : NotifierData {
+struct UI_EXPORT ControlData : NotifierData {
     ControlData(const ControlData&) = delete;
     ControlData(ControlData&&) = delete;
     ControlData& operator=(const ControlData&) = delete;
@@ -49,30 +49,18 @@ struct ControlData : NotifierData {
         ID_ACTIVE
     };
 
-    void setUpdateHandler(function<void(uint32 id)>&& handler) {
-        mOnUpdate = std::move(handler);
-    }
+    void setUpdateHandler(function<void(uint32 id)>&& handler);
 
     /**
      * Enable/disable the UI control.
      */
-    void enable(bool en = true) {
-        std::scoped_lock scopeLock{getLock()};
-        if (mEnabled == en) return;
-        mEnabled = en;
-        notify(ID_ACTIVE);
-    }
+    void enable(bool en = true);
     void disable() { enable(false); }
 
     /**
      * Show/hide the UI control.
      */
-    void show(bool show = true) {
-        std::scoped_lock scopeLock{getLock()};
-        if (mShown == show) return;
-        mShown = show;
-        notify(ID_VISIBILITY);
-    }
+    void show(bool show = true);
     void hide() { show(false); }
 
     [[nodiscard]] bool isEnabled() const { return mEnabled; }
@@ -84,17 +72,12 @@ protected:
     /**
      * Used by derived friends to update from UI
      */
-    void update(uint32 id) {
-        if (mOnUpdate) mOnUpdate(id);
-    }
+    void update(uint32 id);
 
     /**
      * Used by derived to signal to UI
      */
-    void notify(uint32 id) {
-        if (mOnUpdate) mOnUpdate(id);
-        NotifierData::notify(id);
-    }
+    void notify(uint32 id);
 
 private:
     /**
@@ -146,40 +129,14 @@ protected:
         const wxEventTypeTag<CONTROL_EVENT>& eventTag,
         wxString label,
         wxOrientation orient
-    ) {
-        auto *sizer{new wxBoxSizer(orient)};
-        constexpr auto PADDING{5};
-
-        pControl = control;
-
-        if (not label.empty()) {
-            auto sizerFlags{
-                wxSizerFlags(0).Border(wxLEFT | wxRIGHT, PADDING)
-            };
-            sizer->Add(
-                new wxStaticText(this, wxID_ANY, label),
-                orient == wxHORIZONTAL ? sizerFlags.Center() : sizerFlags
-            );
-        }
-
-        sizer->Add(control, wxSizerFlags(1).Expand());
-        SetSizerAndFit(sizer);
-
-        handleNotification(ID_REBOUND);
-
-        Bind(eventTag, [this](CONTROL_EVENT& evt) { controlEventHandler(evt); });
-    }
-
+    );
     void init(
         CONTROL *control,
         const wxEventTypeTag<CONTROL_EVENT>& eventTag,
         const wxEventTypeTag<CONTROL_EVENT>& secondaryTag,
         wxString label,
         wxOrientation orient
-    ) {
-        init(control, eventTag, label, orient);
-        Bind(secondaryTag, [this](CONTROL_EVENT& evt) { controlEventHandler(evt); });
-    }
+    );
 
     virtual void onUIUpdate(uint32 id) = 0;
     /**
@@ -192,37 +149,9 @@ protected:
     CONTROL_DATA *data() { return static_cast<CONTROL_DATA *>(Notifier::data()); }
 
 private:
-    void handleNotification(uint32 id) final {
-        if (id == ID_REBOUND) {
-            Enable(data()->isEnabled());
-            Show(data()->isShown());
-            onUIUpdate(id);
-            return;
-        }
-        switch (static_cast<ControlData::EventID>(id)) {
-            case ControlData::ID_VISIBILITY:
-                Show(data()->isShown());
-                break;
-            case ControlData::ID_ACTIVE:
-                Enable(data()->isEnabled());
-                break;
-            default:
-                onUIUpdate(id);
-        }
-    }
-
-    void handleUnbound() final {
-        Disable();
-        Hide();
-    }
-
-    void controlEventHandler(CONTROL_EVENT& evt) {
-        if (not data()) return;
-        std::scoped_lock{data()->getLock()};
-        if (not data()->isEnabled() or data()->eventsInFlight()) return;
-
-        onModify(evt);
-    }
+    void handleNotification(uint32 id) final;
+    void handleUnbound() final;
+    void controlEventHandler(CONTROL_EVENT& evt);
 };
 
 } // namespace PCUI
