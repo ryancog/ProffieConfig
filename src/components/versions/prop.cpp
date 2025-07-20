@@ -178,7 +178,7 @@ void Versions::Prop::rebuildSettingMap(optional<std::set<PropSetting *>> pruneLi
     }
 }
 
-bool Versions::PropSetting::shouldOutputDefine() const {
+bool Versions::PropSetting::isActive() const {
     switch (type) {
         case Type::TOGGLE:
             return 
@@ -187,13 +187,22 @@ bool Versions::PropSetting::shouldOutputDefine() const {
         case Type::SELECTION:
             return 
                 static_cast<const PropSelection *>(this)->enabled() and
-                static_cast<const PropSelection *>(this)->shouldOutput and 
                 static_cast<const PropSelection *>(this)->value();
         case Type::NUMERIC:
             return static_cast<const PropNumeric *>(this)->value.isEnabled();
         case Type::DECIMAL:
             return static_cast<const PropDecimal *>(this)->value.isEnabled();
     }
+}
+
+bool Versions::PropSetting::shouldOutputDefine() const {
+    if (not isActive()) return false;
+
+    if (type == Type::SELECTION) {
+        return static_cast<const PropSelection *>(this)->shouldOutput;
+    }
+
+    return true;
 }
 
 optional<string> Versions::PropSetting::generateDefineString() const {
