@@ -59,6 +59,19 @@ void PCUI::Text::create(int64 style, const wxString& label, wxOrientation orient
     init(control, wxEVT_TEXT_ENTER, label, orient);
 }
 
+void PCUI::Text::styleStandard() {
+    pControl->SetFont(wxFont(
+        10,
+        wxFONTFAMILY_TELETYPE,
+        wxFONTSTYLE_NORMAL,
+        wxFONTWEIGHT_NORMAL
+    ));
+}
+
+void PCUI::Text::styleMonospace() {
+    pControl->SetFont(pControl->GetDefaultStyle().GetFont());
+}
+
 void PCUI::Text::onUIUpdate() {
     pControl->SetValue(static_cast<string>(*pData));
     pData->refreshed();

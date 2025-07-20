@@ -61,6 +61,9 @@ public:
         wxOrientation orient = wxVERTICAL
     );
 
+    void styleStandard();
+    void styleMonospace();
+
     // TODO: Set up use of validators to forbid certain entry.
     //
     // Prevent any chars in the given wxString from being entered.

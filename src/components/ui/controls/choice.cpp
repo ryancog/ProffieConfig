@@ -47,7 +47,8 @@ void PCUI::Choice::create(const wxString& label, wxOrientation orient) {
 		wxID_ANY,
 		wxDefaultPosition,
 		wxDefaultSize,
-        pData ? pData->mChoices : wxArrayString{}
+        pData ? pData->mChoices : wxArrayString{},
+        wxBORDER_NONE
 	)};
     if (pData) control->SetSelection(*pData);
 
