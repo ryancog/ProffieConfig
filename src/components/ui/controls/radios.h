@@ -28,7 +28,7 @@
 
 namespace PCUI {
 
-struct RadiosData : ControlData {
+struct UI_EXPORT RadiosData : ControlData {
     RadiosData() = default;
 
     RadiosData(vector<string>&& choices) {

@@ -42,7 +42,7 @@ enum {
 namespace Private {
 
 template<typename T> requires std::is_arithmetic_v<T>
-struct NumericDataTemplate : ControlData {
+struct UI_EXPORT NumericDataTemplate : ControlData {
     operator T() const { return mValue; }
     void operator=(T val);
 
