@@ -11,6 +11,7 @@ target_link_libraries(versions
     wxWidgets
 
     pconf
+    ui
 )
 
 include(../Component.cmake)

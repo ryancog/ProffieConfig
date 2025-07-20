@@ -27,12 +27,12 @@
 #include "paths/paths.h"
 #include "ui/message.h"
 #include "utils/defer.h"
-#include "utils/string.h"
 
 #include "../core/utilities/misc.h"
 #include "../core/utilities/progress.h"
 
 #include "../tools/arduino.h"
+#include "wx/gdicmn.h"
 
 EditorWindow::EditorWindow(wxWindow *parent, std::shared_ptr<Config::Config> config) : 
     PCUI::Frame(
@@ -123,17 +123,17 @@ void EditorWindow::bindEvents() {
         mConfig->presetArrays.addInjection(fileDialog.GetFilename().ToStdString());
     }, ID_AddInjection);
 
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("http://profezzorn.github.io/ProffieOS-StyleEditor/style_editor.html"); }, ID_StyleEditor);
-
-    
-    windowSelect.setUpdateHandler([this]() {
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) { 
+        wxLaunchDefaultBrowser("http://profezzorn.github.io/ProffieOS-StyleEditor/style_editor.html");
+    }, ID_StyleEditor);
+    Bind(wxEVT_CHOICE, [this](wxCommandEvent& evt) {
         wxSetCursor(wxCURSOR_WAIT);
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
-        generalPage->Show(windowSelect == 0);
-        propsPage->Show(windowSelect == 1);
-        bladesPage->Show(windowSelect == 2);
-        presetsPage->Show(windowSelect == 3);
+        generalPage->Show(evt.GetInt() == 0);
+        propsPage->Show(evt.GetInt() == 1);
+        bladesPage->Show(evt.GetInt() == 2);
+        presetsPage->Show(evt.GetInt() == 3);
 
         if (bladesPage->AreAnyItemsShown()) {
             bladesPage->Fit(bladesPage->GetContainingWindow());
@@ -143,7 +143,8 @@ void EditorWindow::bindEvents() {
         if (presetsPage->AreAnyItemsShown()) presetsPage->Layout();
 
         GetSizer()->Fit(this);
-    });
+
+    }, ID_WindowSelect);
 }
 
 void EditorWindow::createMenuBar() {
@@ -153,10 +154,18 @@ void EditorWindow::createMenuBar() {
     file->Append(wxID_SAVE, _("Save Config\tCtrl+S"));
     file->Append(ID_ExportConfig, _("Export Config..."));
     file->AppendSeparator();
-    file->Append(ID_AddInjection, _("Add Injection..."), _("Add a header file to be injected into CONFIG_PRESETS during compilation."));
+    file->Append(
+        ID_AddInjection,
+        _("Add Injection..."),
+        _("Add a header file to be injected into CONFIG_PRESETS during compilation.")
+    );
 
     auto *tools{new wxMenu};
-    tools->Append(ID_StyleEditor, _("Style Editor..."), _("Open the ProffieOS style editor"));
+    tools->Append(
+        ID_StyleEditor,
+        _("Style Editor..."),
+        _("Open the ProffieOS style editor")
+    );
 
     auto *menuBar{new wxMenuBar};
     menuBar->Append(file, _("&File"));
@@ -166,15 +175,21 @@ void EditorWindow::createMenuBar() {
 
 void EditorWindow::createPages(wxSizer *sizer) {
     auto* optionsSizer{new wxBoxSizer(wxHORIZONTAL)};
-    windowSelect.setChoices(Utils::createEntries({
-        _("General"),
-        _("Prop File"),
-        _("Blade Arrays"),
-        _("Presets And Styles"),
-    }));
-    windowSelect = 0;
+    auto *windowSelect{new wxChoice(
+        this,
+        ID_WindowSelect,
+        wxDefaultPosition,
+        wxDefaultSize,
+        {
+            _("General"),
+            _("Prop File"),
+            _("Blade Arrays"),
+            _("Presets And Styles"),
+        }
+    )};
+
     optionsSizer->Add(
-        new PCUI::Choice(this, windowSelect),
+        windowSelect,
         wxSizerFlags(0).Border(wxALL, 10)
     );
 

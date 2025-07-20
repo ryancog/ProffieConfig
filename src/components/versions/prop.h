@@ -194,8 +194,6 @@ struct VERSIONS_EXPORT PropSelection : PropSetting {
     const vector<string> disables;
     const bool shouldOutput;
 
-private:
-    friend PropOption;
     PropSelection(
         Prop& prop,
         PropOption& option,
@@ -222,6 +220,7 @@ private:
             other.shouldOutput,
         } {}
 
+private:
     PropOption& mOption;
 };
 

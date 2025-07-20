@@ -30,8 +30,8 @@ void AddConfig::bindEvents() {
         importPath = filepath{};
         update(); 
     }, ID_CreateNew);
-    configName.setUpdateHandler([this]() { update(); });
-    importPath.setUpdateHandler([this]() {
+    configName.setUpdateHandler([this](uint32) { update(); });
+    importPath.setUpdateHandler([this](uint32) {
         configName = static_cast<filepath>(importPath).stem();
     });
 }

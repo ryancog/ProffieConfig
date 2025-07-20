@@ -13,10 +13,12 @@ ManifestDialog::ManifestDialog(MainMenu *mainMenu) :
     auto initialText{AppState::manifestChannel};
     constexpr cstring STABLE_CHANNEL{"stable"};
     if (initialText.empty()) initialText = STABLE_CHANNEL;
-    mEntryData = std::move(initialText);
-    auto *manifestEntry{new PCUI::Text(this, mEntryData)};
+    auto *manifestEntry{new wxTextCtrl(this, wxID_ANY, initialText)};
 
-    sizer->Add(manifestEntry, wxSizerFlags{}.Expand().Border(wxALL, 12));
+    sizer->Add(
+        manifestEntry,
+        wxSizerFlags{}.Expand().Border(wxALL, 12)
+    );
     auto *buttonSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *cancelButton{new wxButton(this, wxID_CANCEL)};
     auto *resetButton{new wxButton(this, wxID_RESET, _("Reset to Default"))};
@@ -31,22 +33,19 @@ ManifestDialog::ManifestDialog(MainMenu *mainMenu) :
 
     sizer->Add(buttonSizer, wxSizerFlags{}.Expand().Border(wxALL, 10));
 
-    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        mEntryData = STABLE_CHANNEL;
+    Bind(wxEVT_BUTTON, [manifestEntry](wxCommandEvent&) {
+        manifestEntry->SetValue(STABLE_CHANNEL);
     }, wxID_RESET);
     Bind(wxEVT_BUTTON, [this, manifestEntry](wxCommandEvent&) {
-        if (static_cast<string>(mEntryData) == STABLE_CHANNEL) AppState::manifestChannel.clear();
-        else AppState::manifestChannel = mEntryData;
+        if (manifestEntry->GetValue() == STABLE_CHANNEL) AppState::manifestChannel.clear();
+        else AppState::manifestChannel = manifestEntry->GetValue().ToStdString();
 
         AppState::saveState();
         Close();
     }, wxID_SAVE);
-
-    mEntryData.setUpdateHandler([this, saveButton]() {
-        saveButton->Enable(not static_cast<string>(mEntryData).empty());
+    Bind(wxEVT_TEXT, [saveButton](wxCommandEvent& evt) {
+        saveButton->Enable(not evt.GetString().IsEmpty());
     });
-
     SetSizerAndFit(sizer);
 }
-
 

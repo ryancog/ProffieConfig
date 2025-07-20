@@ -28,8 +28,6 @@ public:
     BladesPage *bladesPage{nullptr};
     PresetsPage *presetsPage{nullptr};
 
-    PCUI::ChoiceData windowSelect;
-
     enum {
         ID_WindowSelect,
         ID_DUMMY, // on Win32, for some reason ID #1 is triggerred by hitting enter in pcTextCtrl? This is a workaround.

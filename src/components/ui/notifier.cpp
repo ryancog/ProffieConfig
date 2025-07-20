@@ -80,7 +80,8 @@ void PCUI::NotifierDataProxy::bind(NotifierData *data) {
     }
 }
 
-PCUI::Notifier::Notifier(wxWindow *derived, NotifierData& data) {
+PCUI::Notifier::Notifier(wxWindow *derived, NotifierData& data) :
+    mData{&data} {
     std::scoped_lock scopeLock{data.mLock};
     data.mReceiver = derived;
     data.mInFlight = 0;
@@ -92,7 +93,8 @@ PCUI::Notifier::Notifier(wxWindow *derived, NotifierData& data) {
     });
 }
 
-PCUI::Notifier::Notifier(wxWindow *derived, NotifierDataProxy& proxy) {
+PCUI::Notifier::Notifier(wxWindow *derived, NotifierDataProxy& proxy) :
+    mProxy{&proxy} {
     proxy.mReceiver = derived;
     if (proxy.mData) {
         std::scoped_lock scopeLock{proxy.mData->mLock};
