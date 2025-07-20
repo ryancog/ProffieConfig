@@ -15,45 +15,9 @@
 
 class PresetsPage : public wxStaticBoxSizer {
 public:
-    PresetsPage(wxWindow*);
-
-    void update();
-
-    wxBoxSizer *injectionsSizer{nullptr};
-
-    PCUI::Choice *bladeArrayChoice{nullptr};
-    PCUI::Text *commentInput{nullptr};
-    PCUI::Text *styleInput{nullptr};
-    wxListBox *presetList{nullptr};
-    wxListBox *bladeList{nullptr};
-
-    wxButton *addPreset{nullptr};
-    wxButton *removePreset{nullptr};
-    wxButton *movePresetUp{nullptr};
-    wxButton *movePresetDown{nullptr};
-
-    PCUI::Text *nameInput{nullptr};
-    PCUI::Text *dirInput{nullptr};
-    PCUI::Text *trackInput{nullptr};
-
-    vector<string> injections;
-
-    struct PresetConfig {
-        struct Style {
-            string comment;
-            string style;
-        };
-        vector<Style> styles;
-        string name;
-        string dirs;
-        string track;
-    };
+    PresetsPage(EditorWindow *);
 
     enum {
-        ID_BladeArray,
-        ID_BladeList,
-        ID_PresetList,
-        ID_PresetChange,
         ID_AddPreset,
         ID_RemovePreset,
         ID_MovePresetUp,
@@ -63,8 +27,9 @@ public:
 private:
     EditorWindow *mParent{nullptr};
 
+    wxBoxSizer *mInjectionsSizer;
+
     void bindEvents();
-    void createToolTips() const;
 
     wxBoxSizer *createPresetSelect();
     wxBoxSizer *createPresetConfig();

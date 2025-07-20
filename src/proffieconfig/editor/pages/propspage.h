@@ -17,29 +17,17 @@ class PropFile;
 
 class PropsPage : public wxStaticBoxSizer {
 public:
-    PropsPage(wxWindow*);
-
-    void update();
-    static void updateDisables(PropFile*);
-    void updateProps();
-    void updateSelectedProp(const string& = "");
-    PropFile* getSelectedProp();
-    const vector<PropFile*>& getLoadedProps();
-    wxScrolledWindow* propsWindow{nullptr};
-
-    PCUI::Choice* propSelection{nullptr};
-    wxButton* buttonInfo{nullptr};
-    wxButton* propInfo{nullptr};
+    PropsPage(EditorWindow *);
 
     enum {
-        ID_PropSelect,
-        ID_Option,
         ID_Buttons,
         ID_PropInfo,
     };
+
 private:
+    wxScrolledWindow* mPropsWindow{nullptr};
+
     EditorWindow* mParent{nullptr};
-    wxBoxSizer *mTopSizer{nullptr};
 
     vector<PropFile*> mProps;
 
