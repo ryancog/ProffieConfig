@@ -33,7 +33,9 @@ Config::Blade::Blade() {
 }
 
 Config::BladeConfig::BladeConfig() {
-    name.setUpdateHandler([this]() {
+    name.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::TextData::ID_VALUE) return;
+
         auto nameValue{static_cast<string>(name)};
         Utils::trimUnsafe(nameValue);
         std::transform(
