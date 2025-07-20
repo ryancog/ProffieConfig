@@ -24,7 +24,8 @@ namespace Versions {
 
 Versions::PropOption::PropOption(Prop& prop, vector<PropSelectionData> selectionDatas) {
     for (const auto& selectionData : selectionDatas) {
-        PropSelection selection{
+        mSelections.emplace_back(
+            std::in_place_type<PropSelection>, 
             prop,
             *this,
             selectionData.name,
@@ -34,8 +35,7 @@ Versions::PropOption::PropOption(Prop& prop, vector<PropSelectionData> selection
             selectionData.requiredAny,
             selectionData.disables,
             selectionData.shouldOutput
-        };
-        mSelections.emplace_back(std::move(selection));
+        );
     }
 }
 
