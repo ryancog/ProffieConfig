@@ -21,10 +21,6 @@
 
 namespace PCUI {
 
-enum {
-    ID_VALUE,
-};
-
 } // namespace PCUI
 
 void PCUI::ToggleData::operator=(bool val) {
@@ -80,7 +76,7 @@ void PCUI::Toggle::create(
 }
 
 void PCUI::Toggle::onUIUpdate(uint32 id) {
-    if (ID_REBOUND or ID_VALUE) {
+    if (ID_REBOUND or ToggleData::ID_VALUE) {
         pControl->SetValue(data());
         pControl->SetLabelText(data() ? mOnText : mOffText);
     }
@@ -88,7 +84,7 @@ void PCUI::Toggle::onUIUpdate(uint32 id) {
 
 void PCUI::Toggle::onModify(wxCommandEvent& evt) {
     data()->mValue = evt.GetInt();
-    data()->update(ID_VALUE);
+    data()->update(ToggleData::ID_VALUE);
 }
 
 PCUI::CheckBox::CheckBox(
@@ -128,11 +124,11 @@ void PCUI::CheckBox::create(
 }
 
 void PCUI::CheckBox::onUIUpdate(uint32 id) {
-    if (ID_REBOUND or ID_VALUE) pControl->SetValue(data());
+    if (ID_REBOUND or ToggleData::ID_VALUE) pControl->SetValue(data());
 }
 
 void PCUI::CheckBox::onModify(wxCommandEvent& evt) {
     data()->mValue = evt.GetInt();
-    data()->update(ID_VALUE);
+    data()->update(ToggleData::ID_VALUE);
 }
 

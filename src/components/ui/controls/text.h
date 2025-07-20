@@ -30,6 +30,10 @@ struct TextData : ControlData {
     operator string() { return mValue; }
     void operator=(string&& val);
 
+    enum {
+        ID_VALUE,
+    };
+
 private:
     friend class Text;
     string mValue;

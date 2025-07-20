@@ -31,6 +31,14 @@ namespace PCUI {
 class Numeric;
 class Decimal;
 
+struct NumericEvents {
+enum {
+    ID_VALUE,
+    ID_RANGE,
+    ID_INCREMENT,
+};
+};
+
 namespace Private {
 
 template<typename T> requires std::is_arithmetic_v<T>

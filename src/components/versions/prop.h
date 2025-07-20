@@ -23,7 +23,7 @@ using PropSettingMap = std::unordered_map<string, PropSetting *>;
 
 struct VERSIONS_EXPORT PropSetting {
   PropSetting(const PropSetting&) = delete;
-  PropSetting(PropSetting&&) = default;
+  PropSetting(PropSetting&&) = delete;
   PropSetting& operator=(const PropSetting&) = delete;
   PropSetting& operator=(PropSetting&&) = delete;
 
@@ -88,12 +88,6 @@ private:
 };
 
 struct VERSIONS_EXPORT PropToggle : PropSetting {
-    PropToggle(const PropToggle&) = delete;
-    PropToggle(PropToggle&&) = default;
-    PropToggle& operator=(const PropToggle&) = delete;
-    PropToggle& operator=(PropToggle&&) = delete;
-
-
     PropToggle(
         Prop& prop,
         string name,
@@ -121,11 +115,6 @@ struct VERSIONS_EXPORT PropToggle : PropSetting {
 };
 
 struct VERSIONS_EXPORT PropNumeric : PropSetting {
-    PropNumeric(const PropNumeric&) = delete;
-    PropNumeric(PropNumeric&&) = default;
-    PropNumeric& operator=(const PropNumeric&) = delete;
-    PropNumeric& operator=(PropNumeric&&) = delete;
-
     PropNumeric(
         Prop& prop,
         string name,
@@ -161,11 +150,6 @@ struct VERSIONS_EXPORT PropNumeric : PropSetting {
 };
 
 struct VERSIONS_EXPORT PropDecimal : PropSetting {
-    PropDecimal(const PropDecimal&) = delete;
-    PropDecimal(PropDecimal&&) = default;
-    PropDecimal& operator=(const PropDecimal&) = delete;
-    PropDecimal& operator=(PropDecimal&&) = delete;
-
     PropDecimal(
         Prop& prop,
         string name,
@@ -202,11 +186,6 @@ struct VERSIONS_EXPORT PropDecimal : PropSetting {
 
 struct PropOption;
 struct VERSIONS_EXPORT PropSelection : PropSetting {
-    PropSelection(const PropSelection&) = delete;
-    PropSelection(PropSelection&&) = default;
-    PropSelection& operator=(const PropSelection&) = delete;
-    PropSelection& operator=(PropSelection&&) = delete;
-
     void select();
     [[nodiscard]] bool value() const;
     [[nodiscard]] bool enabled() const;

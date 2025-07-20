@@ -51,6 +51,11 @@ struct RadiosData : ControlData {
     void showChoice(uint32 idx, bool show = true);
     void enableChoice(uint32 idx, bool enable = true);
 
+    enum {
+        ID_SELECTION,
+        ID_CHOICE_STATE,
+    };
+
 private:
     friend class Radios;
     vector<bool> mEnabled;

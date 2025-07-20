@@ -21,12 +21,6 @@
 
 namespace PCUI {
 
-enum {
-    ID_VALUE,
-    ID_DEFAULTS,
-};
-
-
 } // namespace PCUI
 
 void PCUI::ComboBoxData::operator=(string&& val) {
@@ -82,12 +76,12 @@ void PCUI::ComboBox::create(const wxString& label, wxOrientation orient) {
 }
 
 void PCUI::ComboBox::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == ID_DEFAULTS) pControl->Set(data()->mDefaults);
-    if (id == ID_REBOUND or id == ID_VALUE) pControl->SetValue(static_cast<string>(*data()));
+    if (id == ID_REBOUND or id == ComboBoxData::ID_DEFAULTS) pControl->Set(data()->mDefaults);
+    if (id == ID_REBOUND or id == ComboBoxData::ID_VALUE) pControl->SetValue(static_cast<string>(*data()));
 }
 
 void PCUI::ComboBox::onModify(wxCommandEvent& evt) {
     data()->mValue = evt.GetString().ToStdString();
-    data()->update(ID_VALUE);
+    data()->update(ComboBoxData::ID_VALUE);
 }
 

@@ -111,8 +111,8 @@ private:
 };
 
 template<typename DATA_TYPE> requires std::is_base_of_v<ControlData, DATA_TYPE>
-struct ControlDataProxy : private NotifierDataProxy {
-    void operator=(DATA_TYPE *data) { bind(data); }
+struct ControlDataProxy : NotifierDataProxy {
+    void bind(DATA_TYPE *data) { NotifierDataProxy::bind(data); }
     DATA_TYPE *data() { return static_cast<DATA_TYPE *>(NotifierDataProxy::data()); };
 };
 
@@ -137,9 +137,9 @@ public:
 
 protected:
     ControlBase(wxWindow *parent, CONTROL_DATA &data) : 
-        wxPanel(parent, wxID_ANY), Notifier(data) {}
+        wxPanel(parent, wxID_ANY), Notifier(this, data) {}
     ControlBase(wxWindow *parent, ControlDataProxy<CONTROL_DATA>& proxy) : 
-        wxPanel(parent, wxID_ANY), Notifier{proxy} {}
+        wxPanel(parent, wxID_ANY), Notifier{this, proxy} {}
 
     void init(
         CONTROL *control,
@@ -204,7 +204,7 @@ private:
                 Show(data()->isShown());
                 break;
             case ControlData::ID_ACTIVE:
-                Enable(data()->isActive());
+                Enable(data()->isEnabled());
                 break;
             default:
                 onUIUpdate(id);

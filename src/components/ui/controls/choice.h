@@ -39,6 +39,11 @@ struct ChoiceData : ControlData {
     const vector<string>& choices() const { return mChoices; }
     void setChoices(vector<string>&& choices);
 
+    enum {
+        ID_SELECTION,
+        ID_CHOICES,
+    };
+
 private:
     friend class Choice;
     friend class List;

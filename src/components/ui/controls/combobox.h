@@ -34,6 +34,11 @@ struct ComboBoxData : ControlData {
     const vector<string>& defaults() const { return mDefaults; }
     void setDefaults(vector<string>&& defaults);
 
+    enum {
+        ID_VALUE,
+        ID_DEFAULTS,
+    };
+
 private:
     friend class ComboBox;
     vector<string> mDefaults;

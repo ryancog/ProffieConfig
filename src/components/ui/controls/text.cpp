@@ -21,10 +21,6 @@
 
 namespace PCUI {
 
-enum {
-    ID_VALUE,
-};
-
 } // namespace PCUI
 
 void PCUI::TextData::operator=(string&& val) {
@@ -84,11 +80,11 @@ void PCUI::Text::styleMonospace() {
 }
 
 void PCUI::Text::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == ID_VALUE) pControl->SetValue(static_cast<string>(*data()));
+    if (id == ID_REBOUND or id == TextData::ID_VALUE) pControl->SetValue(static_cast<string>(*data()));
 }
 
 void PCUI::Text::onModify(wxCommandEvent& evt) {
     data()->mValue = evt.GetString().ToStdString();
-    data()->update(ID_VALUE);
+    data()->update(TextData::ID_VALUE);
 }
 

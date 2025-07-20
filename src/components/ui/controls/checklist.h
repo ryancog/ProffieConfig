@@ -38,6 +38,11 @@ struct UI_EXPORT CheckListData : ControlData {
     const vector<string>& items() const { return mItems; }
     void setItems(vector<string>&& items) ;
 
+    enum {
+        ID_SELECTION,
+        ID_ITEMS,
+    };
+
 private:
     friend class CheckList;
     vector<string> mItems;
@@ -47,10 +52,10 @@ private:
 using CheckListDataProxy = ControlDataProxy<CheckListData>;
 
 class UI_EXPORT CheckList : public ControlBase<
-                         CheckList,
-                         CheckListData,
-                         wxCheckListBox,
-                         wxCommandEvent> {
+                            CheckList,
+                            CheckListData,
+                            wxCheckListBox,
+                            wxCommandEvent> {
 public:
     CheckList(
         wxWindow *parent,
