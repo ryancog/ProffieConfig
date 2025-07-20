@@ -26,27 +26,25 @@
 
 namespace Config {
 
-enum LED : int32 {
-    NONE = 0,
+enum LED {
+    NONE,
 
-    CREE_RED          = 1 << 1,
-    CREE_GREEN        = 1 << 2,
-    CREE_BLUE         = 1 << 3,
-    CREE_AMBER        = 1 << 4,
-    CREE_RED_ORANGE   = 1 << 5,
-    CREE_WHITE        = 1 << 6,
-    CREE_LED = CREE_RED | CREE_GREEN | CREE_BLUE | CREE_AMBER | CREE_RED_ORANGE | CREE_WHITE,
+    CREE_RED,
+    CREE_GREEN,
+    CREE_BLUE,
+    CREE_AMBER,
+    CREE_RED_ORANGE,
+    CREE_WHITE,
 
-    RED               = 1 << 7,
-    GREEN             = 1 << 8,
-    BLUE              = 1 << 9,
-    SIMPLE_LED = RED | GREEN | BLUE,
-
-    USES_RESISTANCE = CREE_LED,
+    RED,
+    GREEN,
+    BLUE,
 };
 
 struct SimpleBlade {
     struct Star {
+        Star();
+
         PCUI::ChoiceData led;
         PCUI::ComboBoxData powerPin;
         PCUI::NumericData resistance;

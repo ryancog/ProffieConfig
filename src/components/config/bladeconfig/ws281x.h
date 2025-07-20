@@ -31,6 +31,8 @@
 namespace Config {
 
 struct Split {
+    Split();
+
     PCUI::NumericData length;
 
     enum Type {
@@ -85,6 +87,8 @@ struct Split {
 };
 
 struct WS281XBlade {
+    WS281XBlade();
+
     PCUI::NumericData length;
 
     PCUI::ComboBoxData dataPin;

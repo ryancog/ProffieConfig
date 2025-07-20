@@ -23,6 +23,7 @@
 #include "ui/controls/text.h"
 #include "utils/types.h"
 
+#include "../private/export.h"
 #include "ws281x.h"
 #include "simple.h"
 
@@ -30,8 +31,24 @@ namespace Config {
 
 constexpr uint32 NO_BLADE{1000000000};
 
-struct BladeConfig {
+struct CONFIG_EXPORT Blade {
+    Blade();
+
+    enum Type {
+        WS281X,
+        SIMPLE,
+    };
+    PCUI::ChoiceData type;
+private:
+    variant<WS281XBlade, SimpleBlade> mBlade;
+};
+
+struct CONFIG_EXPORT BladeConfig {
     BladeConfig();
+
+    Blade& blade(uint32 idx) { 
+        return *std::next(mBlades.begin(), idx);
+    }
 
     void addBlade();
     void removeBlade(uint32 idx);
@@ -43,7 +60,8 @@ struct BladeConfig {
     PCUI::NumericData id;
     PCUI::ToggleData noBladeID;
 
-    vector<variant<WS281XBlade, SimpleBlade>> blades;
+private:
+    list<Blade> mBlades;
 };
 
 } // namespace Config

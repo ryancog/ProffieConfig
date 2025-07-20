@@ -37,10 +37,10 @@ struct CONFIG_EXPORT Config {
     PCUI::TextData name;
     Settings settings;
 
-    PCUI::ChoiceData propfile;
-    Versions::Prop prop;
+    PCUI::ChoiceData propSelection;
+    vector<Versions::Prop> props;
 
-    vector<PresetArray> presets;
+    PresetArrays presetArrays;
 
     BladeArrays bladeArrays;
 };

@@ -23,6 +23,15 @@
 
 #include "utils/string.h"
 
+Config::Blade::Blade() {
+    type.setChoices(Utils::createEntries({
+        "WS281X",
+        _("Simple"),
+    }));
+
+    // Yeah, we're going to be blissfully ignorant of this handler...
+}
+
 Config::BladeConfig::BladeConfig() {
     name.setUpdateHandler([this]() {
         auto nameValue{static_cast<string>(name)};

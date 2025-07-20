@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
  *
- * components/preset/array.h
+ * components/config/preset/array.h
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
  */
 
 
+#include "ui/controls/choice.h"
 #include "ui/controls/text.h"
 
 #include "../private/export.h"
@@ -27,12 +28,61 @@
 
 namespace Config {
 
-struct Config;
+struct CONFIG_EXPORT Injection {
+    string filename;
+};
 
 struct CONFIG_EXPORT PresetArray {
     PCUI::TextData name;
-    vector<Preset> presets;
+    PCUI::ChoiceData selection;
+
+    [[nodiscard]] Preset& preset(uint32 idx) {
+        return *std::next(mPresets.begin(), idx);
+    };
+
+    void addPreset();
+    void removePreset(uint32);
+
+    void movePresetUp(uint32);
+    void movePresetDown(uint32);
+
+private:
+    list<Preset> mPresets;
 };
 
+struct CONFIG_EXPORT PresetArrays {
+    PCUI::ChoiceData selection;
+
+    [[nodiscard]] PresetArray& array(uint32 idx) { 
+        return *std::next(mArrays.begin(), idx);
+    }
+
+    void addArray();
+    void removeArray(uint32);
+
+    [[nodiscard]] const list<Injection>& injections() const { return mInjections; }
+    [[nodiscard]] Injection& injection(uint32 idx) {
+        return *std::next(mInjections.begin(), idx);
+    }
+
+    // More params needed
+    void addInjection();
+    void removeInjection(const Injection&);
+
+    PCUI::ChoiceDataProxy presetProxy;
+
+    PCUI::TextDataProxy nameProxy;
+    PCUI::TextDataProxy dirProxy;
+    PCUI::TextDataProxy trackProxy;
+
+    PCUI::ChoiceDataProxy bladeProxy;
+
+    PCUI::TextDataProxy commentProxy;
+    PCUI::TextDataProxy styleProxy;
+
+private:
+    list<PresetArray> mArrays;
+    list<Injection> mInjections;
+};
 
 } // namespace Config

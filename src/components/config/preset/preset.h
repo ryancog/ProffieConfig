@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
  *
- * components/preset/preset.h
+ * components/config/preset/preset.h
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,17 +27,24 @@
 namespace Config {
 
 struct CONFIG_EXPORT Preset {
+    Preset();
+
     PCUI::TextData name;
     PCUI::TextData fontDir;
     // vector<string> fontDirs;
     PCUI::TextData track;
+
     struct Style {
         Style();
-        PCUI::TextData comment; // {"ProffieConfig Default Blue AudioFlicker"};
-        PCUI::TextData style; // {"StyleNormalPtr<AudioFlicker<Blue,DodgerBlue>,BLUE,300,800>()"};
+        PCUI::TextData comment;
+        PCUI::TextData style;
     };
-    vector<Style> styles;
-    // vector<UID> styles;
+
+    void addStyle();
+    void removeStyle(uint32);
+
+private:
+    list<Style> styles;
 };
 
 } // namespace Config
