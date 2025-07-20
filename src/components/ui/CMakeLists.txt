@@ -15,6 +15,7 @@ add_library(ui SHARED
     controls/combobox.cpp
     controls/filepicker.cpp
     controls/numeric.cpp
+    controls/radios.cpp
     controls/text.cpp
     controls/toggle.cpp
 )

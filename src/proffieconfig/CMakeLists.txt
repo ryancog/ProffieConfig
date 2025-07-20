@@ -46,6 +46,8 @@ target_link_libraries(proffieconfig
     utils
     pconf
     paths
+    config
+    versions
 )
 
 include (../Common.cmake)

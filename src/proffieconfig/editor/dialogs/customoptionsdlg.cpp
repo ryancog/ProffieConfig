@@ -17,10 +17,9 @@ CustomOptionsDlg::CustomOptionsDlg(EditorWindow *parent) :
         wxDefaultSize,
         wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER
     ),
-    PCUI::Notifier(this, parent->getOpenConfig()->settings.customOptionChangeNotifier),
+    PCUI::Notifier(this, parent->getOpenConfig()->settings.customOptsNotifier),
     mParent{parent} {
     createUI();
-
     bindEvents();
 }
 
@@ -44,6 +43,12 @@ void CustomOptionsDlg::createUI() {
     sizer->SetMinSize(450, 500);
 
     SetSizerAndFit(sizer);
+}
+
+void CustomOptionsDlg::bindEvents() {
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+        mParent->getOpenConfig()->settings.addCustomOption();
+    }, ID_AddDefine);
 }
 
 wxBoxSizer *CustomOptionsDlg::header() {

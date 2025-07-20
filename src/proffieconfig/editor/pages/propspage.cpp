@@ -57,6 +57,7 @@ PropsPage::PropsPage(EditorWindow *parent) :
 
     Add(topSizer);
     Add(mPropsWindow, wxSizerFlags(1).Expand());
+
     loadProps();
     bindEvents();
 }
@@ -112,7 +113,7 @@ void PropsPage::bindEvents() {
 //     }
 // }
 
-// void PropsPage::loadProps() {
+void PropsPage::loadProps() {
 //     mProps.clear();
 // 
 //     auto addProp{[&](const string_view& propName, bool builtin = false) {
@@ -132,4 +133,4 @@ void PropsPage::bindEvents() {
 //     updateProps();
 // 
 //     Layout();
-// }
+}

@@ -144,3 +144,26 @@ Config::Settings::Settings() {
     disableTalkie = false;
     killOldPlayers = false;
 }
+
+bool Config::Settings::addCustomOption() {
+    for (auto& opt : mCustomOptions) {
+        if (static_cast<string>(opt.define).empty()) return false;
+    }
+
+    mCustomOptions.emplace_back();
+    customOptsNotifier.notify();
+    return true;
+}
+
+bool Config::Settings::removeCustomOption(CustomOption& opt) {
+    auto iter{mCustomOptions.begin()};
+    for (; iter != mCustomOptions.end(); ++iter) {
+        if (&*iter == &opt) break;
+    }
+    if (iter == mCustomOptions.end()) return false;
+
+    mCustomOptions.erase(iter);
+    customOptsNotifier.notify();
+    return true;
+}
+

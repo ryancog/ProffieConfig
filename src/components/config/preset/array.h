@@ -22,6 +22,7 @@
 
 #include "ui/controls/choice.h"
 #include "ui/controls/text.h"
+#include "ui/notifier.h"
 
 #include "../private/export.h"
 #include "preset.h"
@@ -53,6 +54,11 @@ private:
 struct CONFIG_EXPORT PresetArrays {
     PCUI::ChoiceData selection;
 
+    enum {
+        NOTIFY_INJECTIONS = 1UL << 0,
+    };
+    PCUI::NotifierData notifier;
+
     [[nodiscard]] PresetArray& array(uint32 idx) { 
         return *std::next(mArrays.begin(), idx);
     }
@@ -65,7 +71,6 @@ struct CONFIG_EXPORT PresetArrays {
         return *std::next(mInjections.begin(), idx);
     }
 
-    // More params needed
     void addInjection(const string&);
     void removeInjection(const Injection&);
 

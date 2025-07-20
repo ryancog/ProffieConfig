@@ -15,7 +15,6 @@ GeneralPage::GeneralPage(EditorWindow *parent) :
     mCustomOptDlg = new CustomOptionsDlg(mParent);
 
     bindEvents();
-    createToolTips();
 }
 
 void GeneralPage::bindEvents() {

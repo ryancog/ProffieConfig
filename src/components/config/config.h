@@ -48,11 +48,11 @@ struct CONFIG_EXPORT Config {
 /**
  * Search disk and retrieve list of all config names
  */
-vector<string> fetchListFromDisk();
+vector<string> CONFIG_EXPORT fetchListFromDisk();
 
-void rename(const string& oldName, const string& newName);
+void CONFIG_EXPORT rename(const string& oldName, const string& newName);
 
-bool remove(const string& name);
+bool CONFIG_EXPORT remove(const string& name);
 
 /**
  * Parse the config and return a fresh ptr, or return the ptr
@@ -60,13 +60,13 @@ bool remove(const string& name);
  */
 std::shared_ptr<Config> open(const string& name);
 
-bool save(std::shared_ptr<Config>, filepath = {});
+bool CONFIG_EXPORT save(std::shared_ptr<Config>, filepath = {});
 
 /**
  * Remove from internal storage and let it die once last memory
  * is forgotten...
  */
-bool close(std::shared_ptr<Config>);
+bool CONFIG_EXPORT close(std::shared_ptr<Config>);
 
 } // namespace Config
 
