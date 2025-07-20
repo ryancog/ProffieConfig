@@ -31,6 +31,10 @@ struct ToggleData : ControlData {
     operator bool() const { return mValue; }
     void operator=(bool val);
 
+    enum {
+        ID_VALUE,
+    };
+
 private:
     friend class Toggle;
     friend class CheckBox;

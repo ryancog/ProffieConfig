@@ -30,6 +30,10 @@ struct FilePickerData : ControlData {
     operator filepath() { return mValue; }
     void operator=(filepath&& val);
 
+    enum {
+        ID_PATH,
+    };
+
 private:
     friend class FilePicker;
     filepath mValue;

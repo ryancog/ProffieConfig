@@ -21,11 +21,6 @@
 
 namespace PCUI {
 
-enum {
-    ID_SELECTION,
-    ID_CHOICE_STATE,
-};
-
 }
 
 void PCUI::RadiosData::init(vector<string>&& choices) {
@@ -95,17 +90,17 @@ void PCUI::Radios::create(const wxString& label, wxOrientation orient) {
 }
 
 void PCUI::Radios::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == ID_CHOICE_STATE) {
+    if (id == ID_REBOUND or id == RadiosData::ID_CHOICE_STATE) {
         for (auto idx{0}; idx < data()->mChoices.size(); ++idx) {
             pControl->Show(idx, data()->mShown[idx] or data()->mEnabled[idx]);
             pControl->Enable(idx, data()->mEnabled[idx]);
         }
     }
-    if (id == ID_REBOUND or id == ID_SELECTION) pControl->SetSelection(*data());
+    if (id == ID_REBOUND or id == RadiosData::ID_SELECTION) pControl->SetSelection(*data());
 }
 
 void PCUI::Radios::onModify(wxCommandEvent& evt) {
     data()->mSelected = evt.GetInt();
-    data()->update(ID_SELECTION);
+    data()->update(RadiosData::ID_SELECTION);
 }
 

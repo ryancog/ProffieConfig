@@ -21,11 +21,6 @@
 
 namespace PCUI {
 
-enum {
-    ID_SELECTION,
-    ID_ITEMS,
-};
-
 } // namespace PCUI
 
 void PCUI::CheckListData::select(uint32 idx) {
@@ -80,15 +75,12 @@ void PCUI::CheckList::create(const wxString& label, wxOrientation orient) {
 }
 
 void PCUI::CheckList::onUIUpdate(uint32 id) {
-    if (
-            id == ID_ITEMS or 
-            id == ID_REBOUND
-       ) {
+    if (id == CheckListData::ID_ITEMS or id == ID_REBOUND) {
         pControl->Set(data()->items());
         for (auto idx : static_cast<set<uint32>>(*data())) {
             pControl->Check(idx);
         }
-    } else if (id == ID_SELECTION) {
+    } else if (id == CheckListData::ID_SELECTION) {
         const auto numItems{data()->items().size()};
         const auto& selected{static_cast<set<uint32>>(*data())};
         for (auto idx{0}; idx < numItems; ++idx) {
@@ -101,6 +93,6 @@ void PCUI::CheckList::onModify(wxCommandEvent& evt) {
     const auto toggledItem{evt.GetInt()};
     if (pControl->IsChecked(toggledItem)) data()->mSelected.insert(toggledItem);
     else data()->mSelected.erase(toggledItem);
-    data()->update(ID_SELECTION);
+    data()->update(CheckListData::ID_SELECTION);
 }
 

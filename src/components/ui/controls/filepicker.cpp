@@ -21,10 +21,6 @@
 
 namespace PCUI {
 
-enum {
-    ID_PATH,
-};
-
 } // namespace PCUI
 
 void PCUI::FilePickerData::operator=(filepath&& val) {
@@ -80,11 +76,11 @@ void PCUI::FilePicker::create(
 }
 
 void PCUI::FilePicker::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == ID_PATH) pControl->SetPath(static_cast<filepath>(*data()).string());
+    if (id == ID_REBOUND or id == FilePickerData::ID_PATH) pControl->SetPath(static_cast<filepath>(*data()).string());
 }
 
 void PCUI::FilePicker::onModify(wxFileDirPickerEvent& evt) {
     data()->mValue = evt.GetPath().ToStdString();
-    data()->update(ID_PATH);
+    data()->update(FilePickerData::ID_PATH);
 }
 

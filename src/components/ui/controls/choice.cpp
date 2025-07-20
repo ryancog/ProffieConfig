@@ -21,11 +21,6 @@
 
 namespace PCUI {
 
-enum {
-    ID_SELECTION,
-    ID_CHOICES,
-};
-
 } // namespace PCUI
 
 void PCUI::ChoiceData::operator=(int32 val) {
@@ -82,17 +77,17 @@ void PCUI::Choice::create(const wxString& label, wxOrientation orient) {
 }
 
 void PCUI::Choice::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == ID_CHOICES) {
+    if (id == ID_REBOUND or id == ChoiceData::ID_CHOICES) {
         pControl->Set(data()->mChoices);
         pControl->SetSelection(*data());
-    } else if (id == ID_SELECTION) {
+    } else if (id == ChoiceData::ID_SELECTION) {
         pControl->SetSelection(*data());
     }
 }
 
 void PCUI::Choice::onModify(wxCommandEvent& evt) {
     data()->mValue = evt.GetInt();
-    data()->update(ID_SELECTION);
+    data()->update(ChoiceData::ID_SELECTION);
 }
 
 PCUI::List::List(
@@ -123,17 +118,17 @@ void PCUI::List::create(const wxString& label, wxOrientation orient) {
 }
 
 void PCUI::List::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == ID_CHOICES) {
+    if (id == ID_REBOUND or id == ChoiceData::ID_CHOICES) {
         pControl->Set(data()->mChoices);
         pControl->SetSelection(*data());
-    } else if (id == ID_SELECTION) {
+    } else if (id == ChoiceData::ID_SELECTION) {
         pControl->SetSelection(*data());
     }
 }
 
 void PCUI::List::onModify(wxCommandEvent& evt) {
     data()->mValue = evt.GetInt();
-    data()->update(ID_SELECTION);
+    data()->update(ChoiceData::ID_SELECTION);
 }
 
 
