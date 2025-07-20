@@ -17,8 +17,6 @@ add_executable(proffieconfig WIN32
     core/appstate.cpp
     core/utilities/misc.cpp
     core/utilities/progress.cpp
-    core/config/configuration.cpp
-    core/config/settings.cpp
 
     mainmenu/dialogs/addconfig.cpp
     mainmenu/dialogs/props.cpp

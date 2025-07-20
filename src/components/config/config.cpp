@@ -1,7 +1,7 @@
 #include "config.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2025 Ryan Ogurek
  *
  * components/config/config.cpp
  *
