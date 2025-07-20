@@ -26,7 +26,6 @@
 #include "ui/controls/toggle.h"
 #include "ui/controls/numeric.h"
 #include "ui/notifier.h"
-#include "ui/panel.h"
 #include "utils/types.h"
 
 namespace Config {

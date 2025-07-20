@@ -24,38 +24,49 @@
 #include "ui/controls/combobox.h"
 #include "ui/controls/numeric.h"
 #include "ui/controls/text.h"
+#include "ui/controls/toggle.h"
 
 #include "config/bladeconfig/bladeconfig.h"
 
 namespace Config {
 
 struct BladeArrays {
-    PCUI::ChoiceData bladeArraySelection;
-    PCUI::ChoiceDataProxy bladeSelection;
-    PCUI::ChoiceDataProxy subBladeSelection;
-    PCUI::ChoiceDataProxy bladeTypeSelection;
+    PCUI::ChoiceData arraySelection;
+
+    PCUI::ChoiceDataProxy bladeSelectionProxy;
+    PCUI::ChoiceDataProxy subBladeSelectionProxy;
+
+    PCUI::ChoiceDataProxy bladeTypeProxy;
 
     void addArray();
     void removeArray(uint32 idx);
     
-    PCUI::CheckListDataProxy poewrPinSelection;
+    PCUI::CheckListDataProxy powerPinProxy;
     PCUI::TextData powerPinNameEntry;
     void addPowerPinFromEntry();
 
-    PCUI::ChoiceDataProxy colorOrder3;
-    PCUI::ChoiceDataProxy colorOrder4;
-    PCUI::ComboBoxDataProxy hasWhite;
+    PCUI::ChoiceDataProxy colorOrder3Proxy;
+    PCUI::ChoiceDataProxy colorOrder4Proxy;
+    PCUI::ToggleDataProxy hasWhiteProxy;
+    PCUI::ToggleDataProxy useRGBWithWhiteProxy;
+
+    PCUI::ComboBoxDataProxy dataPinProxy;
+    PCUI::NumericDataProxy lengthProxy;
+
+    PCUI::RadiosDataProxy subBladeTypeProxy;
+    PCUI::NumericDataProxy subBladeLengthProxy;
+    PCUI::NumericDataProxy subBladeSegmentsProxy;
 
     struct StarProxy {
-        PCUI::ChoiceDataProxy led;
-        PCUI::NumericDataProxy resistance;
-        PCUI::ComboBoxDataProxy powerPin;
+        PCUI::ChoiceDataProxy ledProxy;
+        PCUI::NumericDataProxy resistanceProxy;
+        PCUI::ComboBoxDataProxy powerPinProxy;
     };
 
-    StarProxy star1;
-    StarProxy star2;
-    StarProxy star3;
-    StarProxy star4;
+    StarProxy star1Proxy;
+    StarProxy star2Proxy;
+    StarProxy star3Proxy;
+    StarProxy star4Proxy;
 
 private:
     vector<BladeConfig> mBladeArrays;
