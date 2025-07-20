@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <mutex>
 #include <wx/combobox.h>
 
 #include "base.h"
@@ -28,16 +29,10 @@ namespace PCUI {
 
 struct ComboBoxData : ControlData {
     operator string() const { return mValue; }
-    void operator=(string&& val) {
-        mValue = std::move(val);
-        refresh();
-    }
+    void operator=(string&& val);
 
     const vector<string>& defaults() const { return mDefaults; }
-    void setDefaults(vector<string>&& defaults) {
-        mDefaults = std::move(defaults);
-        refresh();
-    }
+    void setDefaults(vector<string>&& defaults);
 
 private:
     friend class ComboBox;
@@ -68,7 +63,7 @@ public:
 
 private:
     void create(const wxString& label, wxOrientation orient);
-    void onUIUpdate() final;
+    void onUIUpdate(uint32) final;
     void onModify(wxCommandEvent&) final;
 };
 

@@ -28,10 +28,7 @@ namespace PCUI {
 
 struct TextData : ControlData {
     operator string() { return mValue; }
-    void operator=(string&& val) {
-        mValue = std::move(val);
-        refresh();
-    }
+    void operator=(string&& val);
 
 private:
     friend class Text;
@@ -73,7 +70,7 @@ public:
 
 private:
     void create(int64 style, const wxString& label, wxOrientation orient);
-    void onUIUpdate() final;
+    void onUIUpdate(uint32) final;
     void onModify(wxCommandEvent&) final;
     // void pruneText();
 

@@ -21,7 +21,18 @@
 
 namespace PCUI {
 
+enum {
+    ID_VALUE,
+};
+
 } // namespace PCUI
+
+void PCUI::ToggleData::operator=(bool val) {
+    std::scoped_lock scopeLock{getLock()};
+    if (mValue == val) return;
+    mValue = val;
+    notify(ID_VALUE);
+}
 
 PCUI::Toggle::Toggle(
     wxWindow *parent,
@@ -59,21 +70,25 @@ void PCUI::Toggle::create(
     auto *control{new wxToggleButton(
         this,
 		wxID_ANY,
-		(pData ? *pData : false) ? mOnText : mOffText,
+		wxEmptyString,
 		wxDefaultPosition,
 		wxDefaultSize,
 		style
 	)};
+
     init(control, wxEVT_TOGGLEBUTTON, label, orient);
 }
 
-void PCUI::Toggle::onUIUpdate() {
-    pControl->SetValue(pData);
-    pData->refreshed();
+void PCUI::Toggle::onUIUpdate(uint32 id) {
+    if (ID_REBOUND or ID_VALUE) {
+        pControl->SetValue(data());
+        pControl->SetLabelText(data() ? mOnText : mOffText);
+    }
 }
 
 void PCUI::Toggle::onModify(wxCommandEvent& evt) {
-    pData->mValue = evt.GetInt();
+    data()->mValue = evt.GetInt();
+    data()->update(ID_VALUE);
 }
 
 PCUI::CheckBox::CheckBox(
@@ -112,12 +127,12 @@ void PCUI::CheckBox::create(
     init(control, wxEVT_CHECKBOX, label, orient);
 }
 
-void PCUI::CheckBox::onUIUpdate() {
-    pControl->SetValue(pData);
-    pData->refreshed();
+void PCUI::CheckBox::onUIUpdate(uint32 id) {
+    if (ID_REBOUND or ID_VALUE) pControl->SetValue(data());
 }
 
 void PCUI::CheckBox::onModify(wxCommandEvent& evt) {
-    pData->mValue = evt.GetInt();
+    data()->mValue = evt.GetInt();
+    data()->update(ID_VALUE);
 }
 

@@ -36,33 +36,14 @@ namespace Private {
 template<typename T> requires std::is_arithmetic_v<T>
 struct NumericDataTemplate : ControlData {
     operator T() const { return mValue; }
-    void operator=(T val) {
-        const auto newVal{std::clamp(val, mMin, mMax)};
-        if (mValue == newVal) return;
-        mValue = newVal;
-        refresh();
-    }
+    void operator=(T val);
 
-    // For now the min, max, and inc won't cause logic update
     [[nodiscard]] T min() const { return mMin; }
     [[nodiscard]] T max() const { return mMax; }
-
-    void setRange(T min, T max) { 
-        if (min == mMin and max == mMax) return;
-        assert(min <= max);
-        mMin = min; 
-        mMax = max; 
-        refresh(false, true);
-    }
+    void setRange(T min, T max);
 
     [[nodiscard]] T increment() const { return mIncrement; }
-
-    void setIncrement(T inc) {
-        if (inc == mIncrement) return;
-        assert(inc > 0);
-        mIncrement = inc;
-        refresh(false, true);
-    }
+    void setIncrement(T inc);
 
 private:
     friend class PCUI::Numeric;
@@ -108,7 +89,7 @@ private:
         const wxString& label,
         const wxOrientation& orient
     );
-    void onUIUpdate() final;
+    void onUIUpdate(uint32) final;
     void onModify(wxSpinEvent&) final;
 };
 
@@ -139,7 +120,7 @@ private:
         const wxString& label,
         const wxOrientation& orient
     );
-    void onUIUpdate() final;
+    void onUIUpdate(uint32) final;
     void onModify(wxSpinDoubleEvent&) final;
 };
 

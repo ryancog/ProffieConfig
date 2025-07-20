@@ -23,15 +23,33 @@
 #include <wx/sizer.h>
 #include <wx/stattext.h>
 
+#include "ui/notifier.h"
 #include "utils/types.h"
 
 namespace PCUI {
 
-struct ControlData {
+template<
+    class DERIVED,
+    typename CONTROL_DATA,
+    class CONTROL,
+    class CONTROL_EVENT
+>
+class ControlBase;
+
+struct ControlData : NotifierData {
+    ControlData(const ControlData&) = delete;
+    ControlData(ControlData&&) = delete;
     ControlData& operator=(const ControlData&) = delete;
     ControlData& operator=(ControlData&&) = delete;
 
-    void setUpdateHandler(function<void(void)>&& handler) {
+    enum EventID {
+        // Show/hide
+        ID_VISIBILITY = 1000,
+        // Enable/disable
+        ID_ACTIVE
+    };
+
+    void setUpdateHandler(function<void(uint32 id)>&& handler) {
         mOnUpdate = std::move(handler);
     }
 
@@ -39,9 +57,10 @@ struct ControlData {
      * Enable/disable the UI control.
      */
     void enable(bool en = true) {
+        std::scoped_lock scopeLock{getLock()};
         if (mEnabled == en) return;
         mEnabled = en;
-        refresh();
+        notify(ID_ACTIVE);
     }
     void disable() { enable(false); }
 
@@ -49,61 +68,52 @@ struct ControlData {
      * Show/hide the UI control.
      */
     void show(bool show = true) {
+        std::scoped_lock scopeLock{getLock()};
         if (mShown == show) return;
         mShown = show;
-        refresh();
+        notify(ID_VISIBILITY);
     }
     void hide() { show(false); }
-
-    /**
-     * If data has been updated since the UI has last seen it
-     */
-    bool isNew() const { return mNew; }
-    /**
-     * Mark data new
-     */
-    void refresh(bool logic = true, bool ui = true) { 
-        if (logic and mOnUpdate) [[likely]] mOnUpdate();
-        if (ui) [[likely]] mNew = true; 
-    }
-
 
     [[nodiscard]] bool isEnabled() const { return mEnabled; }
     [[nodiscard]] bool isShown() const { return mShown; }
 
 protected:
     ControlData() = default;
-    ControlData(const ControlData&) = delete;
-    ControlData(ControlData&&) = default;
 
     /**
-     * Only for UI elements to mark they've handled the new data
+     * Used by derived friends to update from UI
      */
-    void refreshed() { mNew = false; }
+    void update(uint32 id) {
+        if (mOnUpdate) mOnUpdate(id);
+    }
+
+    /**
+     * Used by derived to signal to UI
+     */
+    void notify(uint32 id) {
+        if (mOnUpdate) mOnUpdate(id);
+        NotifierData::notify(id);
+    }
 
 private:
     /**
      * A callback to alert program-side code that the contained
      * value has been updated, either by program or by the user in UI
      */
-    function<void(void)> mOnUpdate;
+    function<void(uint32 id)> mOnUpdate;
 
     /**
      * UI Control states
      */
     bool mEnabled{true};
     bool mShown{true};
-    /**
-     * Set true whenever the user modifies the data.
-     *
-     * Windows can use UpdateWindowUI() to force updates for dirty data.
-     */
-    bool mNew{false};
 };
 
 template<typename DATA_TYPE> requires std::is_base_of_v<ControlData, DATA_TYPE>
-struct ControlDataProxy {
-    DATA_TYPE *data;
+struct ControlDataProxy : private NotifierDataProxy {
+    void operator=(DATA_TYPE *data) { bind(data); }
+    DATA_TYPE *data() { return static_cast<DATA_TYPE *>(NotifierDataProxy::data()); };
 };
 
 template<
@@ -112,12 +122,10 @@ template<
     class CONTROL,
     class CONTROL_EVENT
 >
-class ControlBase : public wxPanel {
+class ControlBase : public wxPanel, protected Notifier {
 public:
     static_assert(std::is_base_of_v<wxControl, CONTROL>, "PCUI Control core must be wxControl descendant");
     static_assert(std::is_base_of_v<ControlData, CONTROL_DATA>, "PCUI Control data must be ControlData descendant");
-
-    operator wxWindow *() { return this; }
 
     void setToolTip(wxToolTip *tip);
 
@@ -128,11 +136,10 @@ public:
     // [[nodiscard]] inline constexpr const wxStaticText *text() const { return mText; }
 
 protected:
-    ControlBase(wxWindow *parent, ControlDataProxy<CONTROL_DATA>& proxy) : 
-        wxPanel(parent, wxID_ANY), mDataProxy{&proxy} { bind(mDataProxy->data); }
-
     ControlBase(wxWindow *parent, CONTROL_DATA &data) : 
-        wxPanel(parent, wxID_ANY) { bind(&data); }
+        wxPanel(parent, wxID_ANY), Notifier(data) {}
+    ControlBase(wxWindow *parent, ControlDataProxy<CONTROL_DATA>& proxy) : 
+        wxPanel(parent, wxID_ANY), Notifier{proxy} {}
 
     void init(
         CONTROL *control,
@@ -158,23 +165,8 @@ protected:
         sizer->Add(control, wxSizerFlags(1).Expand());
         SetSizerAndFit(sizer);
 
-        Bind(wxEVT_UPDATE_UI, [this](wxUpdateUIEvent&) {
-            if (mDataProxy and mDataProxy->data != pData) {
-                bind(mDataProxy->data);
-            }
-            
-            if (not pData) {
-                Disable();
-                Hide();
-                return;
-            }
+        handleNotification(ID_REBOUND);
 
-            if (not pData->isNew()) return;
-
-            Enable(pData->isEnabled());
-            Show(pData->isShown());
-            onUIUpdate();
-        });
         Bind(eventTag, [this](CONTROL_EVENT& evt) { controlEventHandler(evt); });
     }
 
@@ -189,26 +181,48 @@ protected:
         Bind(secondaryTag, [this](CONTROL_EVENT& evt) { controlEventHandler(evt); });
     }
 
-    virtual void onUIUpdate() = 0;
+    virtual void onUIUpdate(uint32 id) = 0;
+    /**
+     * Must use the data update function to signal
+     * Data is already locked.
+     */
     virtual void onModify(CONTROL_EVENT&) = 0;
 
     CONTROL *pControl{nullptr};
-    CONTROL_DATA *pData{nullptr};
+    CONTROL_DATA *data() { return static_cast<CONTROL_DATA *>(Notifier::data()); }
 
 private:
-    void controlEventHandler(CONTROL_EVENT& evt) {
-        if (not pData or not pData->isEnabled() or pData->isNew()) return;
-
-        onModify(evt);
-        pData->refresh(true, false);
+    void handleNotification(uint32 id) final {
+        if (id == ID_REBOUND) {
+            Enable(data()->isEnabled());
+            Show(data()->isShown());
+            onUIUpdate(id);
+            return;
+        }
+        switch (static_cast<ControlData::EventID>(id)) {
+            case ControlData::ID_VISIBILITY:
+                Show(data()->isShown());
+                break;
+            case ControlData::ID_ACTIVE:
+                Enable(data()->isActive());
+                break;
+            default:
+                onUIUpdate(id);
+        }
     }
 
-    void bind(CONTROL_DATA *newData) {
-        pData = newData;
-        if (pData) pData->refresh(false);
-    };
+    void handleUnbound() final {
+        Disable();
+        Hide();
+    }
 
-    ControlDataProxy<CONTROL_DATA> *mDataProxy{nullptr};
+    void controlEventHandler(CONTROL_EVENT& evt) {
+        if (not data()) return;
+        std::scoped_lock{data()->getLock()};
+        if (not data()->isEnabled() or data()->eventsInFlight()) return;
+
+        onModify(evt);
+    }
 };
 
 } // namespace PCUI

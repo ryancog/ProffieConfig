@@ -21,7 +21,34 @@
 
 namespace PCUI {
 
+enum {
+    ID_SELECTION,
+    ID_CHOICES,
+};
+
 } // namespace PCUI
+
+void PCUI::ChoiceData::operator=(int32 val) {
+    std::scoped_lock scopeLock{getLock()};
+    if (mValue == val) return;
+    mValue = val;
+    notify(ID_SELECTION);
+}
+
+void PCUI::ChoiceData::setChoices(vector<string>&& choices) { 
+    std::scoped_lock scopeLock{getLock()};
+    if (mChoices.size() == choices.size()) {
+        auto idx{0};
+        for (; idx < choices.size(); ++idx) {
+            if (mChoices[idx] != choices[idx]) break;
+        }
+        if (idx == choices.size()) return;
+    }
+
+    mChoices = std::move(choices); 
+    if (mValue >= mChoices.size()) mValue = -1;
+    notify(ID_CHOICES);
+}
 
 PCUI::Choice::Choice(
     wxWindow *parent,
@@ -44,13 +71,8 @@ PCUI::Choice::Choice(
 void PCUI::Choice::create(const wxString& label, wxOrientation orient) {
     auto *control{new wxChoice(
         this,
-		wxID_ANY,
-		wxDefaultPosition,
-		wxDefaultSize,
-        pData ? pData->mChoices : wxArrayString{},
-        wxBORDER_NONE
+		wxID_ANY
 	)};
-    if (pData) control->SetSelection(*pData);
 
 #   ifdef __WXGTK__
     control->SetMinSize(control->GetBestSize() + wxSize{ FromDIP(20), 0 });
@@ -59,14 +81,18 @@ void PCUI::Choice::create(const wxString& label, wxOrientation orient) {
     init(control, wxEVT_CHOICE, label, orient);
 }
 
-void PCUI::Choice::onUIUpdate() {
-    pControl->Set(pData->mChoices);
-    pControl->SetSelection(*pData);
-    pData->refreshed();
+void PCUI::Choice::onUIUpdate(uint32 id) {
+    if (id == ID_REBOUND or id == ID_CHOICES) {
+        pControl->Set(data()->mChoices);
+        pControl->SetSelection(*data());
+    } else if (id == ID_SELECTION) {
+        pControl->SetSelection(*data());
+    }
 }
 
 void PCUI::Choice::onModify(wxCommandEvent& evt) {
-    pData->mValue = evt.GetInt();
+    data()->mValue = evt.GetInt();
+    data()->update(ID_SELECTION);
 }
 
 PCUI::List::List(
@@ -90,24 +116,24 @@ PCUI::List::List(
 void PCUI::List::create(const wxString& label, wxOrientation orient) {
     auto *control{new wxListBox(
         this,
-		wxID_ANY,
-		wxDefaultPosition,
-		wxDefaultSize,
-        pData ? pData->mChoices : wxArrayString{}
+		wxID_ANY
 	)};
-    if (pData) control->SetSelection(*pData);
 
     init(control, wxEVT_CHOICE, label, orient);
 }
 
-void PCUI::List::onUIUpdate() {
-    pControl->Set(pData->mChoices);
-    pControl->SetSelection(*pData);
-    pData->refreshed();
+void PCUI::List::onUIUpdate(uint32 id) {
+    if (id == ID_REBOUND or id == ID_CHOICES) {
+        pControl->Set(data()->mChoices);
+        pControl->SetSelection(*data());
+    } else if (id == ID_SELECTION) {
+        pControl->SetSelection(*data());
+    }
 }
 
 void PCUI::List::onModify(wxCommandEvent& evt) {
-    pData->mValue = evt.GetInt();
+    data()->mValue = evt.GetInt();
+    data()->update(ID_SELECTION);
 }
 
 
