@@ -11,7 +11,4 @@
 class ManifestDialog : public wxDialog {
 public:
     ManifestDialog(MainMenu *);
-
-private:
-    PCUI::TextData mEntryData;
 };

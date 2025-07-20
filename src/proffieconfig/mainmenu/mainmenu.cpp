@@ -139,9 +139,9 @@ void MainMenu::bindEvents() {
     }, ID_OpenSerial);
 #	endif
 
-    configSelection.setUpdateHandler([this]() {
+    configSelection.setUpdateHandler([this](uint32) {
     });
-    boardSelection.setUpdateHandler([this]() { 
+    boardSelection.setUpdateHandler([this](uint32) { 
     });
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
     }, ID_EditConfig);

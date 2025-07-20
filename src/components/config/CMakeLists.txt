@@ -22,6 +22,7 @@ target_link_libraries(config
 
     paths
     utils
+    ui
     # A good story for another time
     # led
     # styles

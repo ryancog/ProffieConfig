@@ -25,7 +25,6 @@ namespace Versions {
 Versions::PropOption::PropOption(Prop& prop, vector<PropSelectionData> selectionDatas) {
     for (const auto& selectionData : selectionDatas) {
         mSelections.emplace_back(
-            std::in_place_type<PropSelection>, 
             prop,
             *this,
             selectionData.name,
@@ -41,7 +40,7 @@ Versions::PropOption::PropOption(Prop& prop, vector<PropSelectionData> selection
 
 Versions::PropOption::PropOption(const PropOption& other, Prop& prop) {
     for (const auto& sel : other.mSelections) {
-        mSelections.emplace_back(PropSelection{sel, prop, *this});
+        mSelections.emplace_back(sel, prop, *this);
     }
 }
 
@@ -368,17 +367,16 @@ list<Versions::PropSettingVariant> Versions::parseSettings(
         if (not commonData) continue;
         const auto& [settingData, entryMap]{*commonData};
 
-        PropToggle toggle{
+        ret.emplace_back(
+            std::in_place_type<PropToggle>,
             prop,
             settingData.name,
             settingData.define,
             settingData.description,
             settingData.required,
             settingData.requiredAny,
-            parseDisables(entryMap),
-        };
-
-        ret.emplace_back(std::move(toggle));
+            parseDisables(entryMap)
+        );
     }
 
     const auto optionRange{hashedData.equal_range("OPTION")};
@@ -443,7 +441,8 @@ list<Versions::PropSettingVariant> Versions::parseSettings(
             defaultVal = strtol(defaultEntry->second->value->c_str(), nullptr, 10);
         }
 
-        PropNumeric numeric{
+        ret.emplace_back(
+            std::in_place_type<PropNumeric>,
             prop,
             settingData.name,
             settingData.define,
@@ -453,10 +452,8 @@ list<Versions::PropSettingVariant> Versions::parseSettings(
             min,
             max,
             increment,
-            defaultVal,
-        };
-
-        ret.emplace_back(std::move(numeric));
+            defaultVal
+        );
     }
 
     const auto decimalRange{hashedData.equal_range("DECIMAL")};
@@ -487,7 +484,8 @@ list<Versions::PropSettingVariant> Versions::parseSettings(
             defaultVal = strtod(defaultEntry->second->value->c_str(), nullptr);
         }
 
-        PropDecimal decimal{
+        ret.emplace_back(
+            std::in_place_type<PropDecimal>,
             prop,
             settingData.name,
             settingData.define,
@@ -497,10 +495,8 @@ list<Versions::PropSettingVariant> Versions::parseSettings(
             min,
             max,
             increment,
-            defaultVal,
-        };
-
-        ret.emplace_back(std::move(decimal));
+            defaultVal
+        );
     }
 
     return ret;
