@@ -23,7 +23,9 @@
 
 Config::Settings::Settings() {
     // Asign update handlers
-    bladeDetect.setUpdateHandler([this]() {
+    bladeDetect.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::ToggleData::ID_VALUE) return;
+
         if (bladeDetect) {
             bladeDetectPin.enable();
         } else {
@@ -31,7 +33,9 @@ Config::Settings::Settings() {
         }
     });
 
-    bladeID.enable.setUpdateHandler([this]() {
+    bladeID.enable.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::ToggleData::ID_VALUE) return;
+
         if (bladeID.enable) {
             bladeID.pin.enable();
             bladeID.mode.enable();
@@ -47,7 +51,9 @@ Config::Settings::Settings() {
         }
     });
 
-    bladeID.mode.setUpdateHandler([this]() {
+    bladeID.mode.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+
         switch (static_cast<BladeID::Mode>(static_cast<uint32>(bladeID.mode))) {
             case BladeID::SNAPSHOT:
                 bladeID.bridgePin.hide();
@@ -64,7 +70,9 @@ Config::Settings::Settings() {
         }
     });
 
-    bladeID.bridgePin.setUpdateHandler([this]() {
+    bladeID.bridgePin.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::ComboBoxData::ID_VALUE) return;
+
         auto pinValue{static_cast<string>(bladeID.bridgePin)};
         Utils::trimUnsafe(pinValue);
         if (static_cast<string>(bladeID.bridgePin) == pinValue) return;
