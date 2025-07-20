@@ -7,9 +7,9 @@
 #include "../editorwindow.h"
 
 
-class BladeArrayDlg : public wxDialog {
+class BladeAwarenessDlg : public wxDialog {
 public:
-  BladeArrayDlg(EditorWindow*);
+  BladeAwarenessDlg(EditorWindow*);
 
 private:
   EditorWindow* mParent{nullptr};

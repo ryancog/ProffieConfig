@@ -1,39 +1,36 @@
-#include "bladearraydlg.h"
+#include "awarenessdlg.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
 #include <wx/tooltip.h>
 #include <wx/button.h>
 
-#include "ui/message.h"
-
 #include "../../core/defines.h"
-#include "../../core/utilities/misc.h"
 #include "../editorwindow.h"
 #include "../pages/bladespage.h"
 
-BladeArrayDlg::BladeArrayDlg(EditorWindow* _parent) :
+BladeAwarenessDlg::BladeAwarenessDlg(EditorWindow* parent) :
     wxDialog(
-        _parent,
+        parent,
         wxID_ANY,
-        _("Blade Awareness") + " - " + static_cast<string>(_parent->getOpenConfig()->name),
+        _("Blade Awareness") + " - " + static_cast<string>(parent->getOpenConfig()->name),
         wxDefaultPosition,
         wxDefaultSize,
         wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER
     ),
-    mParent(_parent) {
+    mParent(parent) {
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
     auto *enableSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *enableDetect{new PCUI::CheckBox(
         this,
-        _parent->getOpenConfig()->settings.bladeID.enable,
+        parent->getOpenConfig()->settings.bladeID.enable,
         0,
         _("Enable Blade Detect")
     )};
     auto *enableID{new PCUI::CheckBox(
         this,
-        _parent->getOpenConfig()->settings.bladeDetect,
+        parent->getOpenConfig()->settings.bladeDetect,
         0,
         _("Enable Blade ID")
     )};
@@ -71,17 +68,16 @@ BladeArrayDlg::BladeArrayDlg(EditorWindow* _parent) :
     createToolTips();
 }
 
-void BladeArrayDlg::bindEvents() {
+void BladeAwarenessDlg::bindEvents() {
     Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
         if (event.CanVeto()) {
-            mParent->bladesPage->update();
             Hide();
             event.Veto();
         } else event.Skip();
     });
 }
 
-void BladeArrayDlg::createToolTips() const {
+void BladeAwarenessDlg::createToolTips() const {
     // TIP(detectPin, _("The pin which will be bridged to BATT- when blade is inserted.\nCannot be the same as ID Pin."));
     // TIP(IDPin, _("The pin used to detect blade resistance values.\nCannot be the same as Detect Pin."));
     // TIP(mode, _("The mode to be used for Blade ID.\nSee the POD page \"Blade ID\" for more info."));
@@ -100,7 +96,7 @@ void BladeArrayDlg::createToolTips() const {
     // TIP(resistanceID, _("The ID of the blade associated with the currently-selected blade array.\nThis value can be measured by typing \"id\" into the Serial Monitor."));
 }
 
-wxStaticBoxSizer* BladeArrayDlg::createIDSetup(wxWindow* parent) {
+wxStaticBoxSizer* BladeAwarenessDlg::createIDSetup(wxWindow* parent) {
     auto config{mParent->getOpenConfig()};
 
     auto *setupSizer{new wxStaticBoxSizer(
@@ -140,7 +136,7 @@ wxStaticBoxSizer* BladeArrayDlg::createIDSetup(wxWindow* parent) {
     return setupSizer;
 }
 
-wxStaticBoxSizer* BladeArrayDlg::createIDPowerSettings(wxWindow* parent) {
+wxStaticBoxSizer* BladeAwarenessDlg::createIDPowerSettings(wxWindow* parent) {
     auto config{mParent->getOpenConfig()};
 
     auto *powerForIDSizer{new wxStaticBoxSizer(
@@ -169,7 +165,7 @@ wxStaticBoxSizer* BladeArrayDlg::createIDPowerSettings(wxWindow* parent) {
     return powerForIDSizer;
 }
 
-wxStaticBoxSizer* BladeArrayDlg::createContinuousScanSettings(wxWindow* parent) {
+wxStaticBoxSizer* BladeAwarenessDlg::createContinuousScanSettings(wxWindow* parent) {
     auto config{mParent->getOpenConfig()};
 
     auto *continuousScansSizer{new wxStaticBoxSizer(
@@ -203,7 +199,7 @@ wxStaticBoxSizer* BladeArrayDlg::createContinuousScanSettings(wxWindow* parent) 
     return continuousScansSizer;
 }
 
-wxStaticBoxSizer* BladeArrayDlg::createBladeDetect(wxWindow* parent) {
+wxStaticBoxSizer* BladeAwarenessDlg::createBladeDetect(wxWindow* parent) {
     auto config{mParent->getOpenConfig()};
 
     auto *bladeDetectSizer{new wxStaticBoxSizer(
@@ -222,7 +218,7 @@ wxStaticBoxSizer* BladeArrayDlg::createBladeDetect(wxWindow* parent) {
     return bladeDetectSizer;
 }
 
-// void BladeArrayDlg::update() {
+// void BladeAwarenessDlg::update() {
 //     if (mLastArraySelection >= 0 && mLastArraySelection < static_cast<int32_t>(bladeArrays.size())) {
 //         bladeArrays.at(mLastArraySelection).name = arrayName->entry()->GetValue().ToStdString();
 //         bladeArrays.at(mLastArraySelection).value = resistanceID->entry()->GetValue();
