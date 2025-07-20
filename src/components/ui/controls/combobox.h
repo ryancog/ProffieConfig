@@ -27,7 +27,7 @@
 
 namespace PCUI {
 
-struct ComboBoxData : ControlData {
+struct UI_EXPORT ComboBoxData : ControlData {
     operator string() const { return mValue; }
     void operator=(string&& val);
 

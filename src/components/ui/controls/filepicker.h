@@ -26,7 +26,7 @@
 
 namespace PCUI {
 
-struct FilePickerData : ControlData {
+struct UI_EXPORT FilePickerData : ControlData {
     operator filepath() { return mValue; }
     void operator=(filepath&& val);
 

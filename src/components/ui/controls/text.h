@@ -26,7 +26,7 @@
 
 namespace PCUI {
 
-struct TextData : ControlData {
+struct UI_EXPORT TextData : ControlData {
     operator string() { return mValue; }
     void operator=(string&& val);
 

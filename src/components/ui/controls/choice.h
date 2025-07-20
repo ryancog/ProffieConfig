@@ -27,7 +27,7 @@
 
 namespace PCUI {
 
-struct ChoiceData : ControlData {
+struct UI_EXPORT ChoiceData : ControlData {
     operator int32() const { return mValue; }
     operator string() const { 
         if (mValue == -1) return {};

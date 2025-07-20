@@ -27,7 +27,7 @@
 
 namespace PCUI {
 
-struct ToggleData : ControlData {
+struct UI_EXPORT ToggleData : ControlData {
     operator bool() const { return mValue; }
     void operator=(bool val);
 
