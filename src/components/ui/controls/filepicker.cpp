@@ -21,7 +21,18 @@
 
 namespace PCUI {
 
+enum {
+    ID_PATH,
+};
+
 } // namespace PCUI
+
+void PCUI::FilePickerData::operator=(filepath&& val) {
+    std::scoped_lock scopeLock{getLock()};
+    if (mValue == val) return;
+    mValue = std::move(val);
+    notify(ID_PATH);
+}
 
 PCUI::FilePicker::FilePicker(
     wxWindow *parent,
@@ -57,24 +68,23 @@ void PCUI::FilePicker::create(
     auto *control{new wxFilePickerCtrl(
         this,
         wxID_ANY,
-        static_cast<filepath>(*pData).string(),
-        prompt.IsEmpty() ? wxFileSelectorPromptStr : prompt,
-        wildcard.IsEmpty() ? wxFileSelectorDefaultWildcardStr : wildcard,
+        wxEmptyString,
+        prompt,
+        wildcard,
         wxDefaultPosition,
         wxDefaultSize,
         style
     )};
 
     init(control, wxEVT_FILEPICKER_CHANGED, label, orient);
-
 }
 
-void PCUI::FilePicker::onUIUpdate() {
-    pControl->SetPath(static_cast<filepath>(*pData).string());
-    pData->refreshed();
+void PCUI::FilePicker::onUIUpdate(uint32 id) {
+    if (id == ID_REBOUND or id == ID_PATH) pControl->SetPath(static_cast<filepath>(*data()).string());
 }
 
 void PCUI::FilePicker::onModify(wxFileDirPickerEvent& evt) {
-    pData->mValue = evt.GetPath().ToStdString();
+    data()->mValue = evt.GetPath().ToStdString();
+    data()->update(ID_PATH);
 }
 

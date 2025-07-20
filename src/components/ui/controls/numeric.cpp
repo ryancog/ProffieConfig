@@ -21,7 +21,44 @@
 
 namespace PCUI {
 
+enum {
+    ID_VALUE,
+    ID_RANGE,
+    ID_INCREMENT,
+};
+
 } // namespace PCUI
+
+template<typename T> requires std::is_arithmetic_v<T>
+void PCUI::Private::NumericDataTemplate<T>::operator=(T val) {
+    std::scoped_lock scopeLock{getLock()};
+    const auto newVal{std::clamp(val, mMin, mMax)};
+    if (mValue == newVal) return;
+    mValue = newVal;
+    notify(ID_VALUE);
+}
+
+template<typename T> requires std::is_arithmetic_v<T>
+void PCUI::Private::NumericDataTemplate<T>:: setRange(T min, T max) { 
+    std::scoped_lock scopeLock{getLock()};
+    if (min == mMin and max == mMax) return;
+    assert(min <= max);
+    mMin = min; 
+    mMax = max; 
+    notify(ID_RANGE);
+}
+
+template<typename T> requires std::is_arithmetic_v<T>
+void PCUI::Private::NumericDataTemplate<T>:: setIncrement(T inc) {
+    std::scoped_lock scopeLock{getLock()};
+    if (inc == mIncrement) return;
+    assert(inc > 0);
+    mIncrement = inc;
+    notify(ID_INCREMENT);
+}
+
+template struct PCUI::Private::NumericDataTemplate<int32>;
+template struct PCUI::Private::NumericDataTemplate<float64>;
 
 PCUI::Numeric::Numeric(
     wxWindow *parent,
@@ -50,29 +87,21 @@ void PCUI::Numeric::create(
 ) {
     auto *control{new wxSpinCtrl(
         this,
-        wxID_ANY,
-        {},
-        wxDefaultPosition,
-        wxDefaultSize,
-        style,
-        pData ? pData->min() : 0,
-        pData ? pData->max() : 0,
-        pData ? *pData : 0
+        wxID_ANY
     )};
-    if (pData) control->SetIncrement(pData->increment());
 
     init(control, wxEVT_SPINCTRL, label, orient);
 }
 
-void PCUI::Numeric::onUIUpdate() {
-    pControl->SetRange(pData->mMin, pData->mMax);
-    pControl->SetIncrement(pData->mIncrement);
-    pControl->SetValue(*pData);
-    pData->refreshed();
+void PCUI::Numeric::onUIUpdate(uint32 id) {
+    if (id == ID_REBOUND or id == ID_RANGE) pControl->SetRange(data()->mMin, data()->mMax);
+    if (id == ID_REBOUND or id == ID_INCREMENT) pControl->SetIncrement(data()->mIncrement);
+    if (id == ID_REBOUND or id == ID_VALUE) pControl->SetValue(*data());
 }
 
 void PCUI::Numeric::onModify(wxSpinEvent& evt) {
-    pData->mValue = evt.GetPosition();
+    data()->mValue = evt.GetPosition();
+    data()->update(ID_VALUE);
 }
 
 PCUI::Decimal::Decimal(
@@ -102,28 +131,20 @@ void PCUI::Decimal::create(
 ) {
     auto *control{new wxSpinCtrlDouble(
         this,
-        wxID_ANY,
-        {},
-        wxDefaultPosition,
-        wxDefaultSize,
-        style,
-        pData ? pData->min() : 0,
-        pData ? pData->max() : 0,
-        pData ? *pData : 0
+        wxID_ANY
     )};
-    if (pData) control->SetIncrement(pData->increment());
 
     init(control, wxEVT_SPINCTRLDOUBLE, label, orient);
 }
 
-void PCUI::Decimal::onUIUpdate() {
-    pControl->SetRange(pData->mMin, pData->mMax);
-    pControl->SetIncrement(pData->mIncrement);
-    pControl->SetValue(*pData);
-    pData->refreshed();
+void PCUI::Decimal::onUIUpdate(uint32 id) {
+    if (id == ID_REBOUND or id == ID_RANGE) pControl->SetRange(data()->mMin, data()->mMax);
+    if (id == ID_REBOUND or id == ID_INCREMENT) pControl->SetIncrement(data()->mIncrement);
+    if (id == ID_REBOUND or id == ID_VALUE) pControl->SetValue(*data());
 }
 
 void PCUI::Decimal::onModify(wxSpinDoubleEvent& evt) {
-    pData->mValue = evt.GetValue();
+    data()->mValue = evt.GetValue();
+    data()->update(ID_VALUE);
 }
 

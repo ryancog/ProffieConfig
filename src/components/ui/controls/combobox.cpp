@@ -21,7 +21,34 @@
 
 namespace PCUI {
 
+enum {
+    ID_VALUE,
+    ID_DEFAULTS,
+};
+
+
 } // namespace PCUI
+
+void PCUI::ComboBoxData::operator=(string&& val) {
+    std::scoped_lock scopeLock{getLock()};
+    if (mValue == val) return;
+    mValue = std::move(val);
+    notify(ID_VALUE);
+}
+
+void PCUI::ComboBoxData::setDefaults(vector<string>&& defaults) {
+    std::scoped_lock scopeLock{getLock()};
+    if (mDefaults.size() == defaults.size()) {
+        auto idx{0};
+        for (; idx < defaults.size(); ++idx) {
+            if (mDefaults[idx] != defaults[idx]) break;
+        }
+        if (idx == defaults.size()) return;
+    }
+    mDefaults = std::move(defaults);
+    notify(ID_DEFAULTS);
+}
+
 
 PCUI::ComboBox::ComboBox(
     wxWindow *parent,
@@ -44,11 +71,7 @@ PCUI::ComboBox::ComboBox(
 void PCUI::ComboBox::create(const wxString& label, wxOrientation orient) {
     auto *control{new wxComboBox(
         this,
-		wxID_ANY,
-        pData ? static_cast<string>(*pData) : string{},
-		wxDefaultPosition,
-		wxDefaultSize,
-        pData ? pData->mDefaults : wxArrayString{}
+		wxID_ANY
 	)};
 
 #   ifdef __WXGTK__
@@ -58,13 +81,13 @@ void PCUI::ComboBox::create(const wxString& label, wxOrientation orient) {
     init(control, wxEVT_COMBOBOX, wxEVT_TEXT_ENTER, label, orient);
 }
 
-void PCUI::ComboBox::onUIUpdate() {
-    pControl->Set(pData->mDefaults);
-    pControl->SetValue(static_cast<string>(*pData));
-    pData->refreshed();
+void PCUI::ComboBox::onUIUpdate(uint32 id) {
+    if (id == ID_REBOUND or id == ID_DEFAULTS) pControl->Set(data()->mDefaults);
+    if (id == ID_REBOUND or id == ID_VALUE) pControl->SetValue(static_cast<string>(*data()));
 }
 
 void PCUI::ComboBox::onModify(wxCommandEvent& evt) {
-    pData->mValue = evt.GetString().ToStdString();
+    data()->mValue = evt.GetString().ToStdString();
+    data()->update(ID_VALUE);
 }
 

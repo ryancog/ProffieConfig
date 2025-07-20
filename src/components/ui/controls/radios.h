@@ -35,22 +35,10 @@ struct RadiosData : ControlData {
         init(std::move(choices));
     }
 
-    void init(vector<string>&& choices) {
-        assert(mSelected = std::numeric_limits<uint32>::max());
-
-        mSelected = 0;
-        mChoices = std::move(choices);
-        mEnabled.resize(mChoices.size());
-        mShown.resize(mChoices.size());
-    }
+    void init(vector<string>&& choices);
 
     operator uint32() const { return mSelected; }
-    void operator=(uint32 idx) {
-        if (mSelected == idx) return;
-        assert(idx < mChoices.size());
-        mSelected = idx;
-        refresh();
-    }
+    void operator=(uint32 idx);
 
     [[nodiscard]] const vector<string>& choices() const { return mChoices; }
 
@@ -60,19 +48,8 @@ struct RadiosData : ControlData {
     [[nodiscard]] const vector<bool>& enabledChoices() const { return mEnabled; }
     [[nodiscard]] const vector<bool>& shownChoices() const { return mShown; }
 
-    void showChoice(uint32 idx, bool show = true) {
-        assert(idx < mChoices.size());
-        if (mShown[idx] == show) return;
-        mShown[idx] = show;
-        refresh();
-    }
-
-    void enableChoice(uint32 idx, bool enable = true) {
-        assert(idx < mChoices.size());
-        if (mEnabled[idx] == enable) return;
-        mEnabled[idx] = enable;
-        refresh();
-    }
+    void showChoice(uint32 idx, bool show = true);
+    void enableChoice(uint32 idx, bool enable = true);
 
 private:
     friend class Radios;
@@ -106,7 +83,7 @@ public:
 
 private:
     void create(const wxString& label, wxOrientation orient);
-    void onUIUpdate() final;
+    void onUIUpdate(uint32) final;
     void onModify(wxCommandEvent&) final;
 };
 

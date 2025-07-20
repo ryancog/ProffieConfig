@@ -28,10 +28,7 @@ namespace PCUI {
 
 struct FilePickerData : ControlData {
     operator filepath() { return mValue; }
-    void operator=(filepath&& val) {
-        mValue = std::move(val);
-        refresh();
-    }
+    void operator=(filepath&& val);
 
 private:
     friend class FilePicker;
@@ -73,7 +70,7 @@ private:
         const wxString& label,
         wxOrientation orient
     );
-    void onUIUpdate() final;
+    void onUIUpdate(uint32) final;
     void onModify(wxFileDirPickerEvent&) final;
 };
 

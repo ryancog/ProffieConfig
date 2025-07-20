@@ -29,10 +29,7 @@ namespace PCUI {
 
 struct ToggleData : ControlData {
     operator bool() const { return mValue; }
-    void operator=(bool val) {
-        mValue = val;
-        refresh();
-    }
+    void operator=(bool val);
 
 private:
     friend class Toggle;
@@ -73,7 +70,7 @@ private:
         const wxString& label,
         wxOrientation orient
     );
-    void onUIUpdate() final;
+    void onUIUpdate(uint32) final;
     void onModify(wxCommandEvent&) final;
 
     wxString mOnText;
@@ -107,7 +104,7 @@ private:
         const wxString& label,
         wxOrientation orient
     );
-    void onUIUpdate() final;
+    void onUIUpdate(uint32) final;
     void onModify(wxCommandEvent&) final;
 };
 

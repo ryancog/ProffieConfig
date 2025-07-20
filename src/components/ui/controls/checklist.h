@@ -28,36 +28,15 @@
 
 namespace PCUI {
 
-struct CheckListData : ControlData {
+struct UI_EXPORT CheckListData : ControlData {
     operator set<uint32>() const { return mSelected; }
 
-    void select(uint32 idx) {
-        if (idx >= mItems.size()) return;
-
-        auto [_, added]{mSelected.insert(idx)};
-        if (not added) return;
-
-        refresh();
-    }
-    void unselect(uint32 idx) {
-        if (not mSelected.erase(idx)) return;
-        refresh();
-    }
-    void clearSelections() { 
-        if (mSelected.empty()) return;
-        mSelected.clear();
-        refresh();
-    }
+    void select(uint32 idx);
+    void unselect(uint32 idx);
+    void clearSelections() ;
 
     const vector<string>& items() const { return mItems; }
-    void setItems(vector<string>&& items) { 
-        mItems = std::move(items); 
-        for (auto iter{mSelected.begin()}; iter != mSelected.end();) {
-            if (*iter >= mItems.size()) iter = mSelected.erase(iter);
-            else ++iter;
-        }
-        refresh();
-    }
+    void setItems(vector<string>&& items) ;
 
 private:
     friend class CheckList;
@@ -89,7 +68,7 @@ public:
 private:
     void create(const wxString& label, wxOrientation orient);
 
-    void onUIUpdate() final;
+    void onUIUpdate(uint32) final;
     void onModify(wxCommandEvent&) final;
 };
 

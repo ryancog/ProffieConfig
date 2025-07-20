@@ -21,6 +21,44 @@
 
 namespace PCUI {
 
+enum {
+    ID_SELECTION,
+    ID_CHOICE_STATE,
+};
+
+}
+
+void PCUI::RadiosData::init(vector<string>&& choices) {
+    assert(mSelected = std::numeric_limits<uint32>::max());
+
+    mSelected = 0;
+    mChoices = std::move(choices);
+    mEnabled.resize(mChoices.size());
+    mShown.resize(mChoices.size());
+}
+
+void PCUI::RadiosData::operator=(uint32 idx) {
+    std::scoped_lock scopeLock{getLock()};
+    if (mSelected == idx) return;
+    assert(idx < mChoices.size());
+    mSelected = idx;
+    notify(ID_SELECTION);
+}
+
+void PCUI::RadiosData::showChoice(uint32 idx, bool show) {
+    std::scoped_lock scopeLock{getLock()};
+    assert(idx < mChoices.size());
+    if (mShown[idx] == show) return;
+    mShown[idx] = show;
+    notify(ID_CHOICE_STATE);
+}
+
+void PCUI::RadiosData::enableChoice(uint32 idx, bool enable) {
+    std::scoped_lock scopeLock{getLock()};
+    assert(idx < mChoices.size());
+    if (mEnabled[idx] == enable) return;
+    mEnabled[idx] = enable;
+    notify(ID_CHOICE_STATE);
 }
 
 PCUI::Radios::Radios(
@@ -48,7 +86,7 @@ void PCUI::Radios::create(const wxString& label, wxOrientation orient) {
         label,
         wxDefaultPosition,
         wxDefaultSize,
-        pData->mChoices,
+        data()->mChoices,
         0,
         orient == wxVERTICAL ? wxRA_SPECIFY_COLS : wxRA_SPECIFY_ROWS
     )};
@@ -56,16 +94,18 @@ void PCUI::Radios::create(const wxString& label, wxOrientation orient) {
     init(control, wxEVT_RADIOBOX, wxEmptyString, wxVERTICAL);
 }
 
-void PCUI::Radios::onUIUpdate() {
-    for (auto idx{0}; idx < pData->mChoices.size(); ++idx) {
-        pControl->Show(idx, pData->mShown[idx] or pData->mEnabled[idx]);
-        pControl->Enable(idx, pData->mEnabled[idx]);
+void PCUI::Radios::onUIUpdate(uint32 id) {
+    if (id == ID_REBOUND or id == ID_CHOICE_STATE) {
+        for (auto idx{0}; idx < data()->mChoices.size(); ++idx) {
+            pControl->Show(idx, data()->mShown[idx] or data()->mEnabled[idx]);
+            pControl->Enable(idx, data()->mEnabled[idx]);
+        }
     }
-    pControl->SetSelection(*pData);
-    pData->refreshed();
+    if (id == ID_REBOUND or id == ID_SELECTION) pControl->SetSelection(*data());
 }
 
 void PCUI::Radios::onModify(wxCommandEvent& evt) {
-    pData->mSelected = evt.GetInt();
+    data()->mSelected = evt.GetInt();
+    data()->update(ID_SELECTION);
 }
 

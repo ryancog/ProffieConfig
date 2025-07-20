@@ -34,22 +34,14 @@ struct ChoiceData : ControlData {
         return mChoices[mValue];
     }
 
-    void operator=(int32 val) {
-        mValue = val;
-        refresh();
-    }
+    void operator=(int32 val);
 
     const vector<string>& choices() const { return mChoices; }
-    void setChoices(vector<string>&& choices) { 
-        mChoices = std::move(choices); 
-        if (mValue >= mChoices.size()) mValue = -1;
-        refresh();
-    }
+    void setChoices(vector<string>&& choices);
 
 private:
     friend class Choice;
     friend class List;
-    friend class Radios;
     vector<string> mChoices;
     int32 mValue{-1};
 };
@@ -77,7 +69,7 @@ public:
 
 private:
     void create(const wxString& label, wxOrientation orient);
-    void onUIUpdate() final;
+    void onUIUpdate(uint32) final;
     void onModify(wxCommandEvent&) final;
 };
 
@@ -102,7 +94,7 @@ public:
 
 private:
     void create(const wxString& label, wxOrientation orient);
-    void onUIUpdate() final;
+    void onUIUpdate(uint32) final;
     void onModify(wxCommandEvent&) final;
 };
 

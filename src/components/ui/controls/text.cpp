@@ -21,7 +21,18 @@
 
 namespace PCUI {
 
+enum {
+    ID_VALUE,
+};
+
 } // namespace PCUI
+
+void PCUI::TextData::operator=(string&& val) {
+    std::scoped_lock scopeLock{getLock()};
+    if (mValue == val) return;
+    mValue = std::move(val);
+    notify(ID_VALUE);
+}
 
 PCUI::Text::Text(
     wxWindow *parent,
@@ -47,7 +58,7 @@ void PCUI::Text::create(int64 style, const wxString& label, wxOrientation orient
     auto *control{new wxTextCtrl(
         this,
         wxID_ANY,
-        static_cast<string>(*pData),
+        wxEmptyString,
         wxDefaultPosition,
         wxDefaultSize,
         style | wxTE_PROCESS_ENTER
@@ -72,12 +83,12 @@ void PCUI::Text::styleMonospace() {
     pControl->SetFont(pControl->GetDefaultStyle().GetFont());
 }
 
-void PCUI::Text::onUIUpdate() {
-    pControl->SetValue(static_cast<string>(*pData));
-    pData->refreshed();
+void PCUI::Text::onUIUpdate(uint32 id) {
+    if (id == ID_REBOUND or id == ID_VALUE) pControl->SetValue(static_cast<string>(*data()));
 }
 
 void PCUI::Text::onModify(wxCommandEvent& evt) {
-    pData->mValue = evt.GetString().ToStdString();
+    data()->mValue = evt.GetString().ToStdString();
+    data()->update(ID_VALUE);
 }
 
