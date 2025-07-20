@@ -18,7 +18,6 @@ private:
     CustomOptionsDlg *mCustomOptDlg{nullptr};
 
     void bindEvents();
-    void createToolTips() const;
 
     wxStaticBoxSizer* boardSection(wxStaticBoxSizer*);
     wxStaticBoxSizer* optionSection(wxStaticBoxSizer*);

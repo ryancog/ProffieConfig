@@ -20,6 +20,7 @@
  */
 
 Config::Preset::Preset() {
+    name = "newpreset";
 
 }
 

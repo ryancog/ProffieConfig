@@ -28,9 +28,11 @@
 #include "ui/notifier.h"
 #include "utils/types.h"
 
+#include "../private/export.h"
+
 namespace Config {
 
-struct Settings {
+struct CONFIG_EXPORT Settings {
     /**
      * Set up defaults and update handlers
      */
@@ -215,7 +217,7 @@ struct Settings {
 
     // POV Data?
 
-    PCUI::NotifierData customOptionChangeNotifier;
+    PCUI::NotifierData customOptsNotifier;
     struct CustomOption {
         PCUI::TextData define;
         PCUI::TextData value;

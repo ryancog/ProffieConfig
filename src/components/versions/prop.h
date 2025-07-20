@@ -13,13 +13,15 @@
 #include "ui/panel.h"
 #include "utils/types.h"
 
+#include "private/export.h"
+
 namespace Versions {
 
 struct Prop;
 struct PropSetting;
 using PropSettingMap = std::unordered_map<string, PropSetting *>;
 
-struct PropSetting {
+struct VERSIONS_EXPORT PropSetting {
   PropSetting(const PropSetting&) = delete;
   PropSetting(PropSetting&&) = default;
   PropSetting& operator=(const PropSetting&) = delete;
@@ -85,7 +87,7 @@ private:
     Prop& mProp;
 };
 
-struct PropToggle : PropSetting {
+struct VERSIONS_EXPORT PropToggle : PropSetting {
     PropToggle(const PropToggle&) = delete;
     PropToggle(PropToggle&&) = default;
     PropToggle& operator=(const PropToggle&) = delete;
@@ -118,7 +120,7 @@ struct PropToggle : PropSetting {
     PCUI::ToggleData value;
 };
 
-struct PropNumeric : PropSetting {
+struct VERSIONS_EXPORT PropNumeric : PropSetting {
     PropNumeric(const PropNumeric&) = delete;
     PropNumeric(PropNumeric&&) = default;
     PropNumeric& operator=(const PropNumeric&) = delete;
@@ -158,7 +160,7 @@ struct PropNumeric : PropSetting {
     PCUI::NumericData value;
 };
 
-struct PropDecimal : PropSetting {
+struct VERSIONS_EXPORT PropDecimal : PropSetting {
     PropDecimal(const PropDecimal&) = delete;
     PropDecimal(PropDecimal&&) = default;
     PropDecimal& operator=(const PropDecimal&) = delete;
@@ -199,7 +201,7 @@ struct PropDecimal : PropSetting {
 };
 
 struct PropOption;
-struct PropSelection : PropSetting {
+struct VERSIONS_EXPORT PropSelection : PropSetting {
     PropSelection(const PropSelection&) = delete;
     PropSelection(PropSelection&&) = default;
     PropSelection& operator=(const PropSelection&) = delete;
@@ -244,7 +246,7 @@ private:
     PropOption& mOption;
 };
 
-struct PropCommonSettingData {
+struct VERSIONS_EXPORT PropCommonSettingData {
     string name;
     string define;
     string description;
@@ -252,7 +254,7 @@ struct PropCommonSettingData {
     vector<string> requiredAny;
 };
 
-struct PropOption {
+struct VERSIONS_EXPORT PropOption {
     PropOption(const PropOption&) = delete;
     PropOption(PropOption&&) = delete;
     PropOption& operator=(const PropOption&) = delete;
@@ -308,7 +310,7 @@ using PropErrors = vector<PropErrorMapping>;
 using PropSettingVariant = std::variant<PropToggle, PropNumeric, PropDecimal, PropOption>;
 using PropSettings = list<PropSettingVariant>;
 
-struct PropLayout {
+struct VERSIONS_EXPORT PropLayout {
     /**
      * Generate a prop layout from given PConf data
      *
@@ -352,7 +354,7 @@ struct PropLayout {
 };
 
 
-struct Prop {
+struct VERSIONS_EXPORT Prop {
     Prop(const Prop&);
     // Both this and PropOption cannot be moved because
     // there would be hanging references.
