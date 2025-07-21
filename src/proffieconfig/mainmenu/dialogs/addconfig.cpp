@@ -1,4 +1,5 @@
 #include "addconfig.h"
+#include "config/config.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
@@ -17,7 +18,6 @@ AddConfig::AddConfig(MainMenu *parent) :
 }
 
 void AddConfig::bindEvents() {
-    // Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { EndModal(wxID_OK); }, wxID_OK);
     // We make sure to set itself to true that way it can't be deselected
     Bind(wxEVT_TOGGLEBUTTON, [this](wxCommandEvent&) { 
         static_cast<wxToggleButton *>(FindWindowById(ID_ImportExisting))->SetValue(true);
@@ -30,8 +30,12 @@ void AddConfig::bindEvents() {
         importPath = filepath{};
         update(); 
     }, ID_CreateNew);
-    configName.setUpdateHandler([this](uint32) { update(); });
-    importPath.setUpdateHandler([this](uint32) {
+    configName.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::TextData::ID_VALUE) return;
+        update();
+    });
+    importPath.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::FilePickerData::ID_PATH) return;
         configName = static_cast<filepath>(importPath).stem();
     });
 }
@@ -121,31 +125,30 @@ void AddConfig::createUI() {
 }
 
 void AddConfig::update() {
-  auto duplicateConfigName = [&]() { 
-      // TODO: Fix this???
-      // for (const auto& config : getConfigFileNames()) {
-      //     if (configName->entry()->GetValue() == config) return true;
-      // }
-      return false;
-  }();
+    auto duplicateConfigName{[&]() { 
+        for (const auto& config : Config::fetchListFromDisk()) {
+            if (static_cast<string>(configName) == config) return true;
+        }
+        return false;
+    }()};
 
-  const auto& configNameText{static_cast<string>(configName)};
-  bool configNameEmpty{configNameText.empty()};
-  bool configNameInvalidCharacters{
-    configNameText.find_first_of(".\\,/!#$%^&*|?<>\"'") != string::npos
-  };
-  bool validConfigName{not configNameEmpty and not duplicateConfigName and not configNameInvalidCharacters};
-  bool importingConfig{static_cast<wxToggleButton *>(FindWindowById(ID_ImportExisting))->GetValue()};
-  bool originFileSelected{not static_cast<filepath>(importPath).empty()};
+    const auto& configNameText{static_cast<string>(configName)};
+    bool configNameEmpty{configNameText.empty()};
+    bool configNameInvalidCharacters{
+        configNameText.find_first_of(".\\,/!#$%^&*|?<>\"'") != string::npos
+    };
+    bool validConfigName{not configNameEmpty and not duplicateConfigName and not configNameInvalidCharacters};
+    bool importingConfig{static_cast<wxToggleButton *>(FindWindowById(ID_ImportExisting))->GetValue()};
+    bool originFileSelected{not static_cast<filepath>(importPath).empty()};
 
-  mDuplicateWarning->Show(duplicateConfigName);
-  mInvalidNameWarning->Show(not validConfigName);
-  mFileSelectionWarning->Show(importingConfig and not originFileSelected);
+    mDuplicateWarning->Show(duplicateConfigName);
+    mInvalidNameWarning->Show(not validConfigName);
+    mFileSelectionWarning->Show(importingConfig and not originFileSelected);
 
-  FindWindowById(wxID_OK)->Enable(validConfigName and (originFileSelected or not importingConfig));
+    FindWindowById(wxID_OK)->Enable(validConfigName and (originFileSelected or not importingConfig));
 
-  importPath.show(importingConfig);
+    importPath.show(importingConfig);
 
-  Layout(); // Although linux and windows seem to work without this, macOS requires it.
-  Fit();
+    GetSizer()->Layout();
+    GetSizer()->Fit(this);
 }
