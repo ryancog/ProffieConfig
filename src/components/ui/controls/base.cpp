@@ -108,6 +108,8 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::handleNot
     switch (static_cast<ControlData::EventID>(id)) {
         case ControlData::ID_VISIBILITY:
             Show(data()->isShown());
+            GetParent()->GetSizer()->Layout();
+            GetParent()->GetSizer()->Fit(GetParent());
             break;
         case ControlData::ID_ACTIVE:
             Enable(data()->isEnabled());

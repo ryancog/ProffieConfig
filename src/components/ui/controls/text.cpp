@@ -1,4 +1,5 @@
 #include "text.h"
+#include "wx/textctrl.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -28,6 +29,7 @@ void PCUI::TextData::operator=(string&& val) {
     if (mValue == val) return;
     mValue = std::move(val);
     notify(ID_VALUE);
+    notify(ID_VALUE_FULL);
 }
 
 PCUI::Text::Text(
@@ -63,7 +65,7 @@ void PCUI::Text::create(int64 style, const wxString& label, wxOrientation orient
     control->OSXDisableAllSmartSubstitutions();
 #   endif
 
-    init(control, wxEVT_TEXT_ENTER, label, orient);
+    init(control, wxEVT_TEXT, wxEVT_TEXT_ENTER, label, orient);
 }
 
 void PCUI::Text::styleStandard() {
@@ -85,6 +87,10 @@ void PCUI::Text::onUIUpdate(uint32 id) {
 
 void PCUI::Text::onModify(wxCommandEvent& evt) {
     data()->mValue = evt.GetString().ToStdString();
-    data()->update(TextData::ID_VALUE);
+    if (evt.GetEventType() == wxEVT_TEXT) {
+        data()->update(TextData::ID_VALUE);
+    } else if (evt.GetEventType() == wxEVT_TEXT_ENTER) {
+        data()->update(TextData::ID_VALUE_FULL);
+    }
 }
 

@@ -31,7 +31,10 @@ struct UI_EXPORT TextData : ControlData {
     void operator=(string&& val);
 
     enum {
+        // Any input
         ID_VALUE,
+        // Assignment or "Enter"
+        ID_VALUE_FULL,
     };
 
 private:
