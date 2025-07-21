@@ -32,7 +32,11 @@ namespace PCUI {
 // TODO: There's still several possible race conditions here that
 // probably deserve a second look.
 
+struct Notifier;
+
 struct UI_EXPORT NotifierData {
+    virtual ~NotifierData();
+
     /**
      * Notify the connected Notifier of an update
      *
@@ -56,9 +60,9 @@ struct UI_EXPORT NotifierData {
     }
 
 private:
-    friend class Notifier;
-    friend class NotifierDataProxy;
-    wxWindow *mReceiver{nullptr};
+    friend struct Notifier;
+    friend struct NotifierDataProxy;
+    Notifier *mNotifier{nullptr};
     /**
      * Events in flight.
      */
@@ -67,13 +71,15 @@ private:
 };
 
 struct UI_EXPORT NotifierDataProxy {
+    virtual ~NotifierDataProxy();
+    
     void bind(NotifierData *);
     NotifierData *data() { return mData; }
 
 private:
-    friend class Notifier;
-    wxWindow *mReceiver{nullptr};
-    NotifierData *mData;
+    friend struct Notifier;
+    Notifier *mNotifier{nullptr};
+    NotifierData *mData{nullptr};
 };
 
 struct UI_EXPORT Notifier {
@@ -112,6 +118,9 @@ protected:
     NotifierData *data();
 
 private:
+    friend NotifierData;
+    friend NotifierDataProxy;
+    wxWindow *mDerived{nullptr};
     NotifierData *mData{nullptr};
     NotifierDataProxy *mProxy{nullptr};
 };
