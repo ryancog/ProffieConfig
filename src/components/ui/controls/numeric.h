@@ -57,9 +57,9 @@ private:
     friend class PCUI::Numeric;
     friend class PCUI::Decimal;
     T mValue{0};
-    T mMin;
-    T mMax;
-    T mIncrement;
+    T mMin{0};
+    T mMax{10};
+    T mIncrement{std::is_integral_v<T> ? static_cast<T>(1) : static_cast<T>(0.1)};
 
 };
 
