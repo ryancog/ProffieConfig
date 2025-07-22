@@ -8,6 +8,7 @@ add_library(config SHARED
     # private/parse.cpp
     # private/output.cpp
 
+    bladeconfig/arrays.cpp
     bladeconfig/bladeconfig.cpp
     bladeconfig/simple.cpp
     bladeconfig/ws281x.cpp

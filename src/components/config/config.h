@@ -38,11 +38,34 @@ struct CONFIG_EXPORT Config {
     Settings settings;
 
     PCUI::ChoiceData propSelection;
-    vector<Versions::Prop> props;
+    enum {
+        ID_PROPSELECTION,
+    };
+    PCUI::NotifierData propNotifier;
+    Versions::Prop& prop(uint32 idx) {
+        return *std::next(mProps.begin(), idx);
+    }
 
     PresetArrays presetArrays;
 
     BladeArrays bladeArrays;
+
+    void rename(const string& newName);
+
+    bool isSaved();
+    bool save(filepath = {});
+
+    /**
+     * Remove from internal storage and let it die once last memory
+     * is forgotten...
+     */
+    void close();
+
+private:
+    friend std::shared_ptr<Config> open(const string&);
+    Config();
+
+    list<Versions::Prop> mProps;
 };
 
 /**
@@ -50,7 +73,10 @@ struct CONFIG_EXPORT Config {
  */
 vector<string> CONFIG_EXPORT fetchListFromDisk();
 
-void CONFIG_EXPORT rename(const string& oldName, const string& newName);
+/**
+ * @return List of configs currently open
+ */
+vector<std::shared_ptr<Config>> CONFIG_EXPORT getOpen();
 
 bool CONFIG_EXPORT remove(const string& name);
 
@@ -58,15 +84,7 @@ bool CONFIG_EXPORT remove(const string& name);
  * Parse the config and return a fresh ptr, or return the ptr
  * of an already-open config.
  */
-std::shared_ptr<Config> open(const string& name);
-
-bool CONFIG_EXPORT save(std::shared_ptr<Config>, filepath = {});
-
-/**
- * Remove from internal storage and let it die once last memory
- * is forgotten...
- */
-bool CONFIG_EXPORT close(std::shared_ptr<Config>);
+std::shared_ptr<Config> CONFIG_EXPORT open(const string& name);
 
 } // namespace Config
 

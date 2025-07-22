@@ -80,6 +80,16 @@ Config::Settings::Settings() {
     });
 
     // Set defaults
+    board.setChoices({
+        "Proffieboard V3",
+        "Proffieboard V2",
+        "Proffieboard V1",
+    });
+    board = PROFFIEBOARDV3;
+
+    numButtons.setRange(0, 3);
+    numButtons = 2;
+
     bladeDetect = false;
     bladeID.enable = false;
     bladeID.mode.setChoices(Utils::createEntries({

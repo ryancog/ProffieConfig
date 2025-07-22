@@ -40,6 +40,7 @@ struct Split {
         REVERSE,
         STRIDE,
         ZIG_ZAG,
+        TYPE_MAX
         // Blissfully ignorant of list
     };
     PCUI::RadiosData type;
