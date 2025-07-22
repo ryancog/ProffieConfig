@@ -50,7 +50,7 @@ PCUI::NotifierData::~NotifierData() {
 
 
 void PCUI::NotifierData::notify(uint32 id) {
-    assert(not mLock.try_lock());
+    std::scoped_lock scopeLock{mLock};
     if (not mNotifier) return;
 
     ++mInFlight;
@@ -64,7 +64,7 @@ void PCUI::NotifierData::notify(uint32 id) {
 }
 
 bool PCUI::NotifierData::eventsInFlight() {
-    assert(not mLock.try_lock());
+    std::scoped_lock scopeLock{mLock};
     return mInFlight; 
 }
 
