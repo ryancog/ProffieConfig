@@ -32,11 +32,13 @@
 
 namespace Config {
 
+struct Config;
+
 struct CONFIG_EXPORT Settings {
     /**
      * Set up defaults and update handlers
      */
-    Settings();
+    Settings(Config&);
 
     enum BoardVersion {
         PROFFIEBOARDV3,
@@ -44,6 +46,11 @@ struct CONFIG_EXPORT Settings {
         PROFFIEBAORDV1,
     };
     PCUI::ChoiceData board;
+
+    // Do NOT set choices manually
+    // Done via Config::refreshVersions
+    PCUI::ChoiceData osVersion;
+    constexpr static cstring OS_VERSION_STR{"OS_VERSION"};
 
     PCUI::ToggleData massStorage;
     constexpr static cstring ENABLE_MASS_STORAGE_STR{"ENABLE_MASS_STORAGE"};
@@ -64,14 +71,10 @@ struct CONFIG_EXPORT Settings {
     // PCUI::ChoiceData rfidSerial;
     constexpr static cstring RFID_SERIAL_STR{"RFID_SERIAL"};
 
-    constexpr static cstring BLADE_DETECT_PIN_STR{"BLADE_DETECT_PIN"};
     PCUI::ToggleData bladeDetect;
     PCUI::ComboBoxData bladeDetectPin;
+    constexpr static cstring BLADE_DETECT_PIN_STR{"BLADE_DETECT_PIN"};
 
-    constexpr static cstring BLADE_ID_CLASS_STR{"BLADE_ID_CLASS"};
-    constexpr static cstring ENABLE_POWER_FOR_ID_STR{"ENABLE_POWER_FOR_ID"};
-    constexpr static cstring BLADE_ID_SCAN_MILLIS_STR{"BLADE_ID_SCAN_MILLIS"};
-    constexpr static cstring BLADE_ID_TIMES_STR{"BLADE_ID_TIMES"};
     struct BladeID {
         PCUI::ToggleData enable;
         PCUI::ComboBoxData pin;
@@ -89,6 +92,10 @@ struct CONFIG_EXPORT Settings {
         PCUI::NumericData continuousInterval;
         PCUI::NumericData continuousTimes;
     } bladeID;
+    constexpr static cstring BLADE_ID_CLASS_STR{"BLADE_ID_CLASS"};
+    constexpr static cstring ENABLE_POWER_FOR_ID_STR{"ENABLE_POWER_FOR_ID"};
+    constexpr static cstring BLADE_ID_SCAN_MILLIS_STR{"BLADE_ID_SCAN_MILLIS"};
+    constexpr static cstring BLADE_ID_TIMES_STR{"BLADE_ID_TIMES"};
 
     PCUI::NumericData volume;
     constexpr static cstring VOLUME_STR{"VOLUME"};
@@ -238,6 +245,7 @@ struct CONFIG_EXPORT Settings {
     bool removeCustomOption(CustomOption&);
 
 private:
+    Config& mParent;
     list<CustomOption> mCustomOptions;
 };
 

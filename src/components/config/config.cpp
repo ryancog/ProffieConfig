@@ -24,6 +24,7 @@
 #include "log/context.h"
 #include "utils/types.h"
 #include "paths/paths.h"
+#include "versions/versions.h"
 
 namespace Config {
 
@@ -31,11 +32,37 @@ list<std::shared_ptr<Config>> loadedConfigs;
 
 } // namespace Config
 
-Config::Config::Config() {
+Config::Config::Config() : settings{*this} {
     propSelection.setUpdateHandler([this](uint32 id) {
         if (id != PCUI::ChoiceData::ID_SELECTION) return;
         propNotifier.notify(ID_PROPSELECTION);
     });
+
+    refreshVersions();
+}
+
+void Config::Config::refreshVersions() {
+    auto osVersions{Versions::getOSVersions()};
+    auto prevOsVer{static_cast<string>(settings.osVersion)};
+    int32 newSel{-1};
+    vector<string> osChoices;
+    osChoices.reserve(osVersions.size());
+    for (auto& osVersion : osVersions) {
+        auto versionStr{static_cast<string>(osVersion.verNum)};
+        if (newSel == -1 and prevOsVer == versionStr) newSel = osChoices.size();
+        osChoices.push_back(std::move(osVersion.verNum));
+    }
+
+    settings.osVersion.setChoices(std::move(osChoices));
+    settings.osVersion = newSel;
+
+    // Show/hide options as necessary.
+
+    refreshPropVersions();
+}
+
+void Config::Config::refreshPropVersions() {
+    // Blissful ignorance
 }
 
 void Config::Config::rename(const string& newName) {
@@ -164,6 +191,9 @@ std::shared_ptr<Config::Config> Config::open(const string& name) {
 
     loadedConfigs.push_back(std::shared_ptr<Config>{new Config()});
     auto ret{loadedConfigs.back()};
+
+    ret->bladeArrays.arraySelection;
+
     ret->name = string{name};
     return ret;
 }
