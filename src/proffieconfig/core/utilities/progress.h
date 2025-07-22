@@ -13,28 +13,27 @@
 #include <wx/progdlg.h>
 #endif
 
+class ProgressEvent;
+
 class Progress : public wxProgressDialog {
 public:
-  class ProgressEvent;
 
   void emitEvent(int8_t, wxString);
   static void handleEvent(ProgressEvent*);
 
-  static const wxEventTypeTag<wxCommandEvent> EVT_UPDATE;
+  static const wxEventTypeTag<ProgressEvent> EVT_UPDATE;
   Progress(wxWindow* parent) : wxProgressDialog("", "", 100, parent, wxPD_APP_MODAL | wxPD_AUTO_HIDE | wxPD_SMOOTH) {}
   bool lastWasPulse;
 
 private:
 };
 
-class Progress::ProgressEvent : public wxCommandEvent {
+class ProgressEvent : public wxCommandEvent {
 public:
-  ProgressEvent(wxEventTypeTag<wxCommandEvent> tag, int32_t id) {
-    SetEventType(tag);
-    SetId(id);
-  }
+    ProgressEvent(wxEventType type, int32_t id) :
+        wxCommandEvent(type, id) {}
 
-  Progress* progDialog;
-  int8_t progress;
-  wxString message;
+    Progress* progDialog;
+    int8_t progress;
+    wxString message;
 };
