@@ -1,4 +1,5 @@
 #include "text.h"
+#include "wx/font.h"
 #include "wx/textctrl.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
@@ -69,20 +70,19 @@ void PCUI::Text::create(int64 style, const wxString& label, wxOrientation orient
 }
 
 void PCUI::Text::styleStandard() {
-    pControl->SetFont(wxFont(
-        10,
-        wxFONTFAMILY_TELETYPE,
-        wxFONTSTYLE_NORMAL,
-        wxFONTWEIGHT_NORMAL
-    ));
+    auto font{pControl->GetFont()};
+    font.SetFamily(wxFONTFAMILY_DEFAULT);
+    pControl->SetFont(font);
 }
 
 void PCUI::Text::styleMonospace() {
-    pControl->SetFont(pControl->GetDefaultStyle().GetFont());
+    auto font{pControl->GetFont()};
+    font.SetFamily(wxFONTFAMILY_TELETYPE);
+    pControl->SetFont(font);
 }
 
 void PCUI::Text::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == TextData::ID_VALUE) pControl->SetValue(static_cast<string>(*data()));
+    if (id == ID_REBOUND or id == TextData::ID_VALUE) pControl->ChangeValue(static_cast<string>(*data()));
 }
 
 void PCUI::Text::onModify(wxCommandEvent& evt) {
