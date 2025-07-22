@@ -295,14 +295,24 @@ wxBoxSizer *BladesPage::createBladeSettings() {
             wxSP_ARROW_KEYS,
             _("Resistance (mOhms)")
         )};
-        starSizer->Add(starColor, MENUITEMFLAGS);
         starSizer->Add(
-            starPowerPin,
-            MENUITEMFLAGS.TripleBorder(wxLEFT).Expand()
+            starColor,
+            wxSizerFlags(0).Border(wxLEFT | wxBOTTOM | wxRIGHT, 5)
         );
         starSizer->Add(
-            starResistance, 
-            MENUITEMFLAGS.TripleBorder(wxLEFT).DoubleBorder(wxBOTTOM).Expand()
+            starPowerPin, 
+            wxSizerFlags(0)
+                .Border(wxLEFT | wxRIGHT, 5)
+                .TripleBorder(wxLEFT)
+                .Expand()
+        );
+        starSizer->AddSpacer(5);
+        starSizer->Add(
+            starResistance,
+            wxSizerFlags(0)
+                .Border(wxLEFT | wxRIGHT, 5)
+                .TripleBorder(wxLEFT)
+                .Expand()
         );
 
         return starSizer;
@@ -329,10 +339,22 @@ wxBoxSizer *BladesPage::createBladeSettings() {
 
     bladeSettings->Add(bladeColor);
     bladeSettings->Add(blade4UseRGB, MENUITEMFLAGS);
-    bladeSettings->Add(starSizer(config->bladeArrays.star1Proxy, _("LED 1")), MENUITEMFLAGS);
-    bladeSettings->Add(starSizer(config->bladeArrays.star2Proxy, _("LED 2")), MENUITEMFLAGS);
-    bladeSettings->Add(starSizer(config->bladeArrays.star3Proxy, _("LED 3")), MENUITEMFLAGS);
-    bladeSettings->Add(starSizer(config->bladeArrays.star4Proxy, _("LED 4")), MENUITEMFLAGS);
+    bladeSettings->Add(
+        starSizer(config->bladeArrays.star1Proxy, _("LED 1")),
+        MENUITEMFLAGS.DoubleBorder(wxBOTTOM)
+    );
+    bladeSettings->Add(
+        starSizer(config->bladeArrays.star2Proxy, _("LED 2")),
+        MENUITEMFLAGS.DoubleBorder(wxBOTTOM)
+    );
+    bladeSettings->Add(
+        starSizer(config->bladeArrays.star3Proxy, _("LED 3")),
+        MENUITEMFLAGS.DoubleBorder(wxBOTTOM)
+    );
+    bladeSettings->Add(
+        starSizer(config->bladeArrays.star4Proxy, _("LED 4")),
+        MENUITEMFLAGS.DoubleBorder(wxBOTTOM)
+    );
     bladeSettings->Add(
         bladeDataPin,
         wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10)
