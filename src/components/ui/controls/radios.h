@@ -65,7 +65,16 @@ private:
     uint32 mSelected{std::numeric_limits<uint32>::max()};
 };
 
-using RadiosDataProxy = ControlDataProxy<RadiosData>;
+struct RadiosDataProxy : ControlDataProxy<RadiosData> {
+    RadiosDataProxy(uint32 numSelections) : numSelections{numSelections} {}
+
+    void bind(RadiosData *data) { 
+        assert(not data or numSelections == data->choices().size());
+        ControlDataProxy::bind(data);
+    }
+
+    const uint32 numSelections;
+};
 
 class UI_EXPORT Radios : public ControlBase<
                          Radios,
