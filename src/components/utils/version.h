@@ -49,18 +49,13 @@ struct UTILS_EXPORT Version {
         STR_EMPTY,
     } err{Err::NONE};
 
-    uint8 major{0};
-    uint8 minor{0};
-    uint8 bugfix{0};
+    enum {
+        NULL_REV = 0xFF,
+    };
 
-    /**
-     * When comparing against another version,
-     * whether same version w/ tag is considered "before" (true) or "after" (false)
-     * this version.
-     *
-     * The tagged version must have this flag cleared.
-     */
-    // bool includeTags{false};
+    uint8 major{0};
+    uint8 minor{NULL_REV};
+    uint8 bugfix{NULL_REV};
 
     /**
      * Used for (optional) tagging of specialized versions. e.g 1.0.0-dev.
