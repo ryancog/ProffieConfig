@@ -14,19 +14,19 @@ AddConfig::AddConfig(MainMenu *parent) :
     createUI();
     bindEvents();
 
-    FindWindowById(wxID_OK)->Disable();
+    FindWindow(wxID_OK)->Disable();
 }
 
 void AddConfig::bindEvents() {
     // We make sure to set itself to true that way it can't be deselected
     Bind(wxEVT_TOGGLEBUTTON, [this](wxCommandEvent&) { 
-        static_cast<wxToggleButton *>(FindWindowById(ID_ImportExisting))->SetValue(true);
-        static_cast<wxToggleButton *>(FindWindowById(ID_CreateNew))->SetValue(false);
+        static_cast<wxToggleButton *>(FindWindow(ID_ImportExisting))->SetValue(true);
+        static_cast<wxToggleButton *>(FindWindow(ID_CreateNew))->SetValue(false);
         update(); 
     }, ID_ImportExisting);
     Bind(wxEVT_TOGGLEBUTTON, [this](wxCommandEvent&) { 
-        static_cast<wxToggleButton *>(FindWindowById(ID_CreateNew))->SetValue(true);
-        static_cast<wxToggleButton *>(FindWindowById(ID_ImportExisting))->SetValue(false);
+        static_cast<wxToggleButton *>(FindWindow(ID_CreateNew))->SetValue(true);
+        static_cast<wxToggleButton *>(FindWindow(ID_ImportExisting))->SetValue(false);
         importPath = filepath{};
         update(); 
     }, ID_CreateNew);
@@ -138,14 +138,14 @@ void AddConfig::update() {
         configNameText.find_first_of(".\\,/!#$%^&*|?<>\"'") != string::npos
     };
     bool validConfigName{not configNameEmpty and not duplicateConfigName and not configNameInvalidCharacters};
-    bool importingConfig{static_cast<wxToggleButton *>(FindWindowById(ID_ImportExisting))->GetValue()};
+    bool importingConfig{static_cast<wxToggleButton *>(FindWindow(ID_ImportExisting))->GetValue()};
     bool originFileSelected{not static_cast<filepath>(importPath).empty()};
 
     mDuplicateWarning->Show(duplicateConfigName);
     mInvalidNameWarning->Show(not validConfigName);
     mFileSelectionWarning->Show(importingConfig and not originFileSelected);
 
-    FindWindowById(wxID_OK)->Enable(validConfigName and (originFileSelected or not importingConfig));
+    FindWindow(wxID_OK)->Enable(validConfigName and (originFileSelected or not importingConfig));
 
     importPath.show(importingConfig);
 

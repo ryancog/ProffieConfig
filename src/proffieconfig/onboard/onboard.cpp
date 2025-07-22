@@ -95,7 +95,9 @@ void OnboardFrame::bindEvents() {
         mDependencyPage->completedInstall = true;
         wxPostEvent(GetEventHandler(), wxCommandEvent(wxEVT_BUTTON, ID_Next));
     }, ID_SkipInstall);
-    Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
+    Bind(Progress::EVT_UPDATE, [&](ProgressEvent& event) { 
+        Progress::handleEvent(&event); 
+    });
     Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
         const auto& msgEvent{static_cast<Misc::MessageBoxEvent&>(event)};
         PCUI::showMessage(msgEvent.message, msgEvent.caption, msgEvent.style, this);

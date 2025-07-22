@@ -78,7 +78,7 @@ void Onboard::Overview::prepareMainMenu() {
     mGuideMenu->Bind(wxEVT_UPDATE_UI, [&](wxUpdateUIEvent& event) {
         event.Skip();
         // for (const auto& [ id, disabled ] : mainMenuDisables) {
-        //     MainMenu::FindWindowById(id)->Enable(!disabled);
+        //     MainMenu::FindWindow(id)->Enable(!disabled);
         // }
     });
 }
@@ -191,8 +191,8 @@ void Onboard::Overview::linkEditorEvents() {
     //             "While the default is a solid place to start, go ahead and select a\n"
     //             "different one from the drop-down.\n");
 
-    //     mGuideMenu->activeEditor->propsPage->GetStaticBox()->FindWindowById(PropsPage::ID_Buttons)->Disable();
-    //     mGuideMenu->activeEditor->propsPage->GetStaticBox()->FindWindowById(PropsPage::ID_PropInfo)->Disable();
+    //     mGuideMenu->activeEditor->propsPage->GetStaticBox()->FindWindow(PropsPage::ID_Buttons)->Disable();
+    //     mGuideMenu->activeEditor->propsPage->GetStaticBox()->FindWindow(PropsPage::ID_PropInfo)->Disable();
     // }, EditorWindow::ID_WindowSelect);
     // mGuideMenu->activeEditor->propsPage->GetStaticBox()->Bind(wxEVT_CHOICE, [&](wxCommandEvent& event) {
     //     EVENT_PAGE_SETUP;
@@ -205,8 +205,8 @@ void Onboard::Overview::linkEditorEvents() {
     //             "\n\n"
     //             "Once you've configured some settings (if any), go ahead and press \"Buttons...\"\n");
 
-    //     mGuideMenu->activeEditor->propsPage->GetStaticBox()->FindWindowById(PropsPage::ID_Buttons)->Enable();
-    //     mGuideMenu->activeEditor->propsPage->GetStaticBox()->FindWindowById(PropsPage::ID_PropInfo)->Enable();
+    //     mGuideMenu->activeEditor->propsPage->GetStaticBox()->FindWindow(PropsPage::ID_Buttons)->Enable();
+    //     mGuideMenu->activeEditor->propsPage->GetStaticBox()->FindWindow(PropsPage::ID_PropInfo)->Enable();
     // }, PropsPage::ID_PropSelect);
     // mGuideMenu->activeEditor->propsPage->GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) {
     //     EVENT_PAGE_SETUP;
