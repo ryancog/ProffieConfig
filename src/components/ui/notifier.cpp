@@ -63,6 +63,12 @@ void PCUI::NotifierData::notify(uint32 id) {
     }
 }
 
+bool PCUI::NotifierData::eventsInFlight() {
+    assert(not mLock.try_lock());
+    return mInFlight; 
+}
+
+
 PCUI::NotifierDataProxy::~NotifierDataProxy() {
     // Handle this dying before the notifier does.
     if (mData) mData->mNotifier = nullptr;
@@ -92,8 +98,19 @@ void PCUI::NotifierDataProxy::bind(NotifierData *data) {
     }
 }
 
-PCUI::Notifier::Notifier(wxWindow *derived, NotifierData& data) :
-    mData{&data}, mDerived{derived} {
+PCUI::Notifier::Notifier(wxWindow *derived, NotifierData& data) {
+    create(derived, data);
+}
+
+PCUI::Notifier::Notifier(wxWindow *derived, NotifierDataProxy& proxy) {
+    create(derived, proxy);
+}
+
+void PCUI::Notifier::create(wxWindow *derived, NotifierData& data) {
+    assert(mDerived == nullptr);
+
+    mData = &data;
+    mDerived = derived;
     std::scoped_lock scopeLock{data.mLock};
     data.mNotifier = this;
     data.mInFlight = 0;
@@ -105,8 +122,11 @@ PCUI::Notifier::Notifier(wxWindow *derived, NotifierData& data) :
     });
 }
 
-PCUI::Notifier::Notifier(wxWindow *derived, NotifierDataProxy& proxy) :
-    mProxy{&proxy}, mDerived{derived} {
+void PCUI::Notifier::create(wxWindow *derived, NotifierDataProxy& proxy) {
+    assert(mDerived == nullptr);
+
+    mProxy = &proxy;
+    mDerived = derived;
     proxy.mNotifier = this;
     if (proxy.mData) {
         std::scoped_lock scopeLock{proxy.mData->mLock};

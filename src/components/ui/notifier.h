@@ -54,10 +54,7 @@ struct UI_EXPORT NotifierData {
      *
      * @return if any events are in flight (UI should not modify data)
      */
-    bool eventsInFlight() { 
-        assert(not mLock.try_lock());
-        return mInFlight; 
-    }
+    bool eventsInFlight() ;
 
 private:
     friend struct Notifier;
@@ -88,6 +85,8 @@ struct UI_EXPORT Notifier {
     };
 
 protected:
+    Notifier() = default;
+
     /**
      * @param derived The window which derived this Notifier, will handle events.
      * @param data Data to bind
@@ -98,6 +97,11 @@ protected:
      * @param proxy Proxy to handle data binding. May be empty (but not null).
      */
     Notifier(wxWindow *derived, NotifierDataProxy& proxy);
+
+    // Late ctors
+    void create(wxWindow *derived, NotifierData& data);
+    void create(wxWindow *derived, NotifierDataProxy& proxy);
+
     virtual ~Notifier();
 
     /**
@@ -115,7 +119,8 @@ protected:
      */
     virtual void handleUnbound() {}
 
-    NotifierData *data();
+    [[nodiscard]] NotifierData *data();
+    [[nodiscard]] NotifierDataProxy *proxy() { return mProxy; }
 
 private:
     friend NotifierData;
