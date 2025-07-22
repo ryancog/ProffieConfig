@@ -47,7 +47,7 @@ struct UI_EXPORT NotifierData {
      */
     void notify(uint32 id = 0);
 
-    std::mutex& getLock() { return mLock; }
+    std::recursive_mutex& getLock() { return mLock; }
 
     /**
      * Does not lock. Must be locked outside this.
@@ -64,7 +64,7 @@ private:
      * Events in flight.
      */
     uint32 mInFlight{0};
-    std::mutex mLock;
+    std::recursive_mutex mLock;
 };
 
 struct UI_EXPORT NotifierDataProxy {

@@ -82,7 +82,6 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::init(
     SetSizerAndFit(sizer);
 
     if (Notifier::data()) {
-        std::scoped_lock scopeLock{Notifier::data()->getLock()};
         Notifier::data()->notify(ID_REBOUND);
     } else {
         handleUnbound();
@@ -106,7 +105,7 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::init(
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::handleNotification(uint32 id) {
     if (id == ID_REBOUND) {
-        Enable(data()->isEnabled());
+        pControl->Enable(data()->isEnabled());
         Show(data()->isShown());
         onUIUpdate(id);
         return;
@@ -114,11 +113,11 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::handleNot
     switch (static_cast<ControlData::EventID>(id)) {
         case ControlData::ID_VISIBILITY:
             Show(data()->isShown());
-            GetParent()->GetSizer()->Layout();
-            GetParent()->GetSizer()->Fit(GetParent());
+            SetSizerAndFit(GetSizer());
+            wxGetTopLevelParent(this)->Layout();
             break;
         case ControlData::ID_ACTIVE:
-            Enable(data()->isEnabled());
+            pControl->Enable(data()->isEnabled());
             break;
         default:
             onUIUpdate(id);
@@ -127,7 +126,7 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::handleNot
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::handleUnbound() {
-    Disable();
+    pControl->Disable();
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
