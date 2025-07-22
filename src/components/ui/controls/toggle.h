@@ -38,7 +38,7 @@ struct UI_EXPORT ToggleData : ControlData {
 private:
     friend class Toggle;
     friend class CheckBox;
-    bool mValue;
+    bool mValue{false};
 };
 
 using ToggleDataProxy = ControlDataProxy<ToggleData>;
@@ -91,22 +91,19 @@ public:
         wxWindow *parent,
         ToggleData& data,
         int64 style = 0,
-        const wxString& label = {},
-        wxOrientation orient = wxVERTICAL
+        const wxString& label = {}
     );
     CheckBox(
         wxWindow *parent,
         ToggleDataProxy& proxy,
         int64 style = 0,
-        const wxString& label = {},
-        wxOrientation orient = wxVERTICAL
+        const wxString& label = {}
     );
 
 private:
     void create(
         int64 style,
-        const wxString& label,
-        wxOrientation orient
+        const wxString& label
     );
     void onUIUpdate(uint32) final;
     void onModify(wxCommandEvent&) final;
