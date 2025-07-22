@@ -7,7 +7,7 @@
 #include <wx/event.h>
 #include <wx/utils.h>
 
-const wxEventTypeTag<wxCommandEvent> Progress::EVT_UPDATE(wxNewEventType());
+const wxEventTypeTag<ProgressEvent> Progress::EVT_UPDATE(wxNewEventType());
 
 void Progress::emitEvent(int8_t progress, wxString message) {
     auto *event{new ProgressEvent(EVT_UPDATE, wxID_ANY)};
