@@ -162,16 +162,15 @@ void MainMenu::bindEvents() {
 
     configSelection.setUpdateHandler([this](uint32 id) {
         if (id != PCUI::ChoiceData::ID_SELECTION) return;
-        std::scoped_lock scopeLock{mNotifyData.getLock()};
         mNotifyData.notify(ID_ConfigSelection);
     });
     boardSelection.setUpdateHandler([this](uint32 id) { 
         if (id != PCUI::ChoiceData::ID_SELECTION) return;
-        std::scoped_lock scopeLock{mNotifyData.getLock()};
         mNotifyData.notify(ID_BoardSelection);
     });
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         wxSetCursor(wxCURSOR_WAIT);
+        Defer cursorDefer{[]() { wxSetCursor(wxNullCursor); }};
         auto config{Config::open(configSelection)};
         auto editorIter{mEditors.find(config)};
         if (editorIter != mEditors.end()) {
@@ -183,7 +182,6 @@ void MainMenu::bindEvents() {
         auto editor{mEditors.emplace(config, new EditorWindow(this, config)).first->second};
         editor->Show();
         editor->Raise();
-        wxSetCursor(wxNullCursor);
     }, ID_EditConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
         auto addDialog{AddConfig{this}};

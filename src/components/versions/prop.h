@@ -340,7 +340,7 @@ struct VERSIONS_EXPORT Prop {
     Prop& operator=(const Prop&) = delete;
     Prop& operator=(Prop&&) = delete;
 
-    static optional<Prop> generate(const PConf::HashedData &);
+    static std::shared_ptr<Prop> generate(const PConf::HashedData &);
 
     const string name;
     const string filename;

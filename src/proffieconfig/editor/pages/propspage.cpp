@@ -61,7 +61,9 @@ PropsPage::PropsPage(EditorWindow *parent) :
     loadProps();
     bindEvents();
     Notifier::create(GetStaticBox(), mNotifyData);
+    mNotifyData.getLock().lock();
     mNotifyData.notify(ID_PropSelection);
+    mNotifyData.getLock().unlock();
 }
 
 void PropsPage::bindEvents() {
@@ -70,19 +72,19 @@ void PropsPage::bindEvents() {
     }, ID_Buttons);
     GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         auto config{mParent->getOpenConfig()};
-        auto& prop{config->prop(config->propSelection)};
+        auto prop{config->prop(config->propSelection)};
 
         wxDialog infoDialog{
             mParent,
             wxID_ANY,
-            wxString::Format(_("%s Prop Info"), prop.name),
+            wxString::Format(_("%s Prop Info"), prop->name),
             wxDefaultPosition,
             wxDefaultSize,
             wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP
         };
         auto *textSizer{new wxBoxSizer(wxVERTICAL)};
         textSizer->Add(
-            infoDialog.CreateTextSizer(prop.info),
+            infoDialog.CreateTextSizer(prop->info),
             wxSizerFlags(0).Border(wxALL, 10)
         );
         infoDialog.SetSizer(textSizer);
