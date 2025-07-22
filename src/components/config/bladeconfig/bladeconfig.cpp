@@ -21,6 +21,7 @@
 
 #include <algorithm>
 
+#include "ui/controls/numeric.h"
 #include "utils/string.h"
 
 Config::Blade::Blade() {
@@ -46,6 +47,18 @@ Config::BladeConfig::BladeConfig() {
         );
         if (static_cast<string>(name) == nameValue) return;
         name = std::move(nameValue);
+    });
+
+    id.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::NumericEvents::ID_VALUE) return;
+
+       noBladeID = this->id == NO_BLADE;
+    });
+
+    noBladeID.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::ToggleData::ID_VALUE) return;
+
+        if (noBladeID) this->id = NO_BLADE;
     });
 
     // presetArray;

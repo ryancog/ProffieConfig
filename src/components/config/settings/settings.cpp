@@ -21,8 +21,15 @@
 
 #include "utils/string.h"
 
-Config::Settings::Settings() {
+#include "../config.h"
+
+Config::Settings::Settings(Config& parent) : mParent{parent} {
     // Asign update handlers
+    osVersion.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+
+        mParent.refreshPropVersions();
+    });
     bladeDetect.setUpdateHandler([this](uint32 id) {
         if (id != PCUI::ToggleData::ID_VALUE) return;
 
@@ -169,7 +176,9 @@ bool Config::Settings::addCustomOption() {
     }
 
     mCustomOptions.emplace_back();
+    customOptsNotifier.getLock().lock();
     customOptsNotifier.notify();
+    customOptsNotifier.getLock().unlock();
     return true;
 }
 
@@ -181,7 +190,9 @@ bool Config::Settings::removeCustomOption(CustomOption& opt) {
     if (iter == mCustomOptions.end()) return false;
 
     mCustomOptions.erase(iter);
+    customOptsNotifier.getLock().lock();
     customOptsNotifier.notify();
+    customOptsNotifier.getLock().unlock();
     return true;
 }
 

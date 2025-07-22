@@ -42,13 +42,19 @@ struct CONFIG_EXPORT Config {
         ID_PROPSELECTION,
     };
     PCUI::NotifierData propNotifier;
-    Versions::Prop& prop(uint32 idx) {
+    std::shared_ptr<Versions::Prop> prop(uint32 idx) {
         return *std::next(mProps.begin(), idx);
     }
 
     PresetArrays presetArrays;
 
     BladeArrays bladeArrays;
+
+    /**
+     * Refresh OS and Prop Version(s) and update accordingly
+     */
+    void refreshVersions();
+    void refreshPropVersions();
 
     void rename(const string& newName);
 
@@ -65,7 +71,7 @@ private:
     friend std::shared_ptr<Config> open(const string&);
     Config();
 
-    list<Versions::Prop> mProps;
+    vector<std::shared_ptr<Versions::Prop>> mProps;
 };
 
 /**

@@ -33,6 +33,7 @@ namespace Config {
 struct BladeArrays {
     BladeArrays();
 
+    // Do not set choices manually
     PCUI::ChoiceData arraySelection;
 
     PCUI::ChoiceDataProxy bladeSelectionProxy;
@@ -40,7 +41,11 @@ struct BladeArrays {
 
     PCUI::ChoiceDataProxy bladeTypeProxy;
 
-    void addArray();
+    [[nodiscard]] BladeConfig& array(uint32 idx) { 
+        return *std::next(mBladeArrays.begin(), idx);
+    }
+
+    void addArray(string&& name, uint32 id);
     void removeArray(uint32 idx);
     
     PCUI::CheckListDataProxy powerPinProxy;
@@ -71,7 +76,7 @@ struct BladeArrays {
     StarProxy star4Proxy;
 
 private:
-    vector<BladeConfig> mBladeArrays;
+    list<BladeConfig> mBladeArrays;
 
 };
 

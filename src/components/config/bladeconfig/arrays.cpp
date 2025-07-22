@@ -26,3 +26,17 @@ Config::BladeArrays::BladeArrays() :
 
 }
 
+void Config::BladeArrays::addArray(string&& name, uint32 id) {
+    auto& array{mBladeArrays.emplace_back()};
+    array.name = std::move(name);
+    array.id = id;
+}
+
+void Config::BladeArrays::removeArray(uint32 idx) {
+
+}
+
+void Config::BladeArrays::addPowerPinFromEntry() {
+    
+}
+
