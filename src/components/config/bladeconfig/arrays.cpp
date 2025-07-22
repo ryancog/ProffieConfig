@@ -19,4 +19,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ws281x.h"
+
+Config::BladeArrays::BladeArrays() :
+    subBladeTypeProxy{Split::TYPE_MAX} {
+
+}
 

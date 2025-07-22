@@ -31,6 +31,8 @@
 namespace Config {
 
 struct BladeArrays {
+    BladeArrays();
+
     PCUI::ChoiceData arraySelection;
 
     PCUI::ChoiceDataProxy bladeSelectionProxy;
