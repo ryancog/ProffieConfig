@@ -22,18 +22,35 @@
 #include "utils/types.h"
 #include "utils/version.h"
 
+#include "prop.h"
+
+#include "private/export.h"
+
 namespace Versions {
 
 struct OSVersion {
-    string name;
     Utils::Version verNum;
     Utils::Version coreVersion;
 };
 
-struct PropVersion {
-    
+struct PropVersions {
+    std::shared_ptr<const Prop> prop;
+    vector<Utils::Version> supportedVersions;
 };
 
-void loadLocal();
+void VERSIONS_EXPORT loadLocal();
+
+/**
+ * @return versions sorted from latest to oldest
+ */
+const vector<OSVersion>& VERSIONS_EXPORT getOSVersions();
+
+const vector<PropVersions>& VERSIONS_EXPORT getProps();
+
+/**
+ * @return all registered props for the version
+ * Must be copied into config (or elsewhere if you're crazy like that) for use.
+ */
+vector<std::shared_ptr<const Prop>> VERSIONS_EXPORT propsForVersion(Utils::Version);
 
 }

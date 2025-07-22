@@ -241,19 +241,19 @@ optional<string> Versions::PropSetting::generateDefineString() const {
 //   return true;
 // }
 
-optional<Versions::Prop> Versions::Prop::generate(const PConf::HashedData& data) {
+std::shared_ptr<Versions::Prop> Versions::Prop::generate(const PConf::HashedData& data) {
     auto& logger{Log::Context::getGlobal().createLogger("Versions::Prop::generate()")};
 
     const auto nameIter{data.find("NAME")};
     if (nameIter == data.end() or not nameIter->second->value) {
         logger.error("Missing NAME entry.");
-        return nullopt;
+        return nullptr;
     }
 
     const auto filenameIter{data.find("FILENAME")};
     if (filenameIter == data.end() or not filenameIter->second->value) {
         logger.error("Missing FILENAME entry.");
-        return nullopt;
+        return nullptr;
     }
 
     const auto infoIter{data.find("INFO")};
@@ -261,24 +261,24 @@ optional<Versions::Prop> Versions::Prop::generate(const PConf::HashedData& data)
         logger.info("Skipping missing INFO entry...");
     } 
 
-    Prop prop{
+    auto prop{std::shared_ptr<Prop>(new Prop(
         nameIter->second->value.value(),
         filenameIter->second->value.value(),
         infoIter->second->value.value_or("Prop has no additional info.")
-    };
+    ))};
 
     const auto settingsIter {data.find("SETTINGS")};
     if (settingsIter == data.end() or settingsIter->second->getType() != PConf::Type::SECTION) {
         logger.info("Skipping missing SETTINGS section...");
     } else {
-        prop.mSettings = parseSettings(
+        prop->mSettings = parseSettings(
             std::static_pointer_cast<PConf::Section>(settingsIter->second)->entries,
-            prop,
+            *prop,
             *logger.bdebug("Parsing SETTINGS...")
         );
     }
 
-    prop.rebuildSettingMap(nullopt, logger.binfo("Building setting map..."));
+    prop->rebuildSettingMap(nullopt, logger.binfo("Building setting map..."));
 
     std::set<PropSetting *> settingsUsed{};
     const auto layoutIter{data.find("LAYOUT")};
@@ -287,13 +287,13 @@ optional<Versions::Prop> Versions::Prop::generate(const PConf::HashedData& data)
     } else {
         settingsUsed = PropLayout::generate(
             std::static_pointer_cast<PConf::Section>(layoutIter->second)->entries,
-            prop.mSettingMap,
-            prop.mLayout,
+            prop->mSettingMap,
+            prop->mLayout,
             &logger.binfo("Parsing LAYOUT...")->createLogger("PropLayout::generate()")
         );
     }
 
-    prop.rebuildSettingMap(settingsUsed, logger.binfo("Rebuilding setting map..."));
+    prop->rebuildSettingMap(settingsUsed, logger.binfo("Rebuilding setting map..."));
 
     const auto buttonsRange{data.equal_range("BUTTONS")};
     if (buttonsRange.first == buttonsRange.second) {
@@ -312,20 +312,20 @@ optional<Versions::Prop> Versions::Prop::generate(const PConf::HashedData& data)
             }
 
             const auto numButtons{entry->labelNum.value()};
-            if (numButtons < 0 or numButtons > prop.mButtons.size()) {
+            if (numButtons < 0 or numButtons > prop->mButtons.size()) {
                 logger.warn( "Skipping BUTTONS with out of range num (" + 
                     std::to_string(numButtons) + ")... ");
                 continue;
             }
 
-            if (not prop.mButtons[numButtons].empty()) {
+            if (not prop->mButtons[numButtons].empty()) {
                 logger.warn("Skipping duplicate BUTTONS{" + std::to_string(numButtons) + "}...");
                 continue;
             }
 
-            prop.mButtons[numButtons] = parseButtons(
+            prop->mButtons[numButtons] = parseButtons(
                 std::static_pointer_cast<PConf::Section>(entry)->entries,
-                prop.mSettingMap,
+                prop->mSettingMap,
                 *logger.binfo("Parsing buttons " + std::to_string(numButtons) + "...")
             );
         }
@@ -335,7 +335,7 @@ optional<Versions::Prop> Versions::Prop::generate(const PConf::HashedData& data)
     if (errorsIter == data.end() or errorsIter->second->getType() != PConf::Type::SECTION) {
         logger.info("Skipping missing ERRORS section...)");
     } else {
-        prop.mErrors = parseErrors(
+        prop->mErrors = parseErrors(
             std::static_pointer_cast<PConf::Section>(errorsIter->second)->entries,
             *logger.binfo("Parsing errors...")
         );
