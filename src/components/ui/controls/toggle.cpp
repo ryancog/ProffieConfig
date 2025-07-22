@@ -1,4 +1,5 @@
 #include "toggle.h"
+#include "wx/string.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -77,7 +78,7 @@ void PCUI::Toggle::create(
 
 void PCUI::Toggle::onUIUpdate(uint32 id) {
     if (ID_REBOUND or ToggleData::ID_VALUE) {
-        pControl->SetValue(data());
+        pControl->SetValue(*data());
         pControl->SetLabelText(data() ? mOnText : mOffText);
     }
 }
@@ -91,26 +92,23 @@ PCUI::CheckBox::CheckBox(
     wxWindow *parent,
     ToggleData& data,
     int64 style,
-    const wxString& label,
-    wxOrientation orient
+    const wxString& label
 ) : ControlBase(parent, data) {
-    create(style, label, orient);
+    create(style, label);
 };
 
 PCUI::CheckBox::CheckBox(
     wxWindow *parent,
     ToggleDataProxy& proxy,
     int64 style,
-    const wxString& label,
-    wxOrientation orient
+    const wxString& label
 ) : ControlBase(parent, proxy) {
-    create(style, label, orient);
+    create(style, label);
 };
 
 void PCUI::CheckBox::create(
     int64 style,
-    const wxString& label,
-    wxOrientation orient
+    const wxString& label
 ) {
     auto *control{new wxCheckBox(
         this,
@@ -120,11 +118,11 @@ void PCUI::CheckBox::create(
         wxDefaultSize,
         style
     )};
-    init(control, wxEVT_CHECKBOX, label, orient);
+    init(control, wxEVT_CHECKBOX, wxEmptyString, wxVERTICAL);
 }
 
 void PCUI::CheckBox::onUIUpdate(uint32 id) {
-    if (ID_REBOUND or ToggleData::ID_VALUE) pControl->SetValue(data());
+    if (ID_REBOUND or ToggleData::ID_VALUE) pControl->SetValue(*data());
 }
 
 void PCUI::CheckBox::onModify(wxCommandEvent& evt) {
