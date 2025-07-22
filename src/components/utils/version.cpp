@@ -1,4 +1,5 @@
 #include "version.h"
+#include <cctype>
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -20,15 +21,15 @@
  */
 
 Utils::Version::Version(string_view str) {
+    if (str.empty()) {
+        err = Err::STR_EMPTY;
+        return;
+    }
+
     string_view convStr{str};
     const cstring end{str.end()};
 
     auto parseNum{[this, &convStr, &end]() -> uint8 {
-        if (convStr.data() >= end) {
-            err = Err::STR_EMPTY;
-            return 0;
-        }
-
         char *parseEnd{};
         int32 ret{};
         ret = strtol(convStr.data(), &parseEnd, 10);
@@ -39,7 +40,7 @@ Utils::Version::Version(string_view str) {
         }
         convStr = parseEnd;
 
-        if (ret > std::numeric_limits<uint8>::max() or ret < 0) {
+        if (ret >= std::numeric_limits<uint8>::max() or ret < 0) {
             err = Err::NUM_RANGE;
             return 0;
         }
@@ -49,36 +50,45 @@ Utils::Version::Version(string_view str) {
 
 
     major = parseNum();
-    if (err != Err::NONE) return;
+    if (err != Err::NONE or convStr.data() == end) return;
 
-    // Jump over '.'
-    convStr.remove_prefix(1);
+    if (convStr[0] == '.') {
+        // Jump over '.'
+        convStr.remove_prefix(1);
+    } else if (convStr[0] == '-') {
+        goto parse_label;
+    } else {
+        err = Err::STR_INVALID;
+        return;
+    }
+
     minor = parseNum();
-    if (err != Err::NONE) {
-        minor = 0;
-        if (err == Err::STR_EMPTY) err = Err::NONE;
+    if (err != Err::NONE or convStr.data() == end) return;
+
+    if (convStr[0] == '.') {
+        // Jump over '.'
+        convStr.remove_prefix(1);
+    } else if (convStr[0] == '-') {
+        goto parse_label;
+    } else {
+        err = Err::STR_INVALID;
         return;
     }
 
-    // Jump over '.'
-    convStr.remove_prefix(1);
     bugfix = parseNum();
-    if (err != Err::NONE) {
-        bugfix = 0;
-        if (err == Err::STR_EMPTY) err = Err::NONE;
-        return;
-    }
-
-    if (convStr == end) return;
+    if (err != Err::NONE or convStr.data() == end) return;
     if (convStr[0] != '-') {
         err = Err::STR_INVALID;
         return;
     }
 
+parse_label:
     // Jump over '-'
     convStr.remove_prefix(1);
-    // If has whitespace
-    if (convStr.end() != std::find_if(convStr.begin(), convStr.end(), [](char chr){ return std::isspace(chr); })) {
+    auto labelCheckInvalid{[](char chr){
+        return not std::isalpha(chr);
+    }};
+    if (convStr.end() != std::find_if(convStr.begin(), convStr.end(), labelCheckInvalid)) {
         err = Err::STR_INVALID;
         return;
     }
@@ -91,7 +101,7 @@ Utils::Version::operator string() const {
         case Err::INVALID:
             return "INVALID";
         case Err::NUM_RANGE:
-            return "Invalid given numeric range";
+            return "Invalid range";
         case Err::STR_INVALID:
             return "Invalid input";
         case Err::STR_EMPTY:
@@ -100,8 +110,8 @@ Utils::Version::operator string() const {
     }
 
     auto ret{std::to_string(major)};
-    ret += '.' + std::to_string(minor);
-    ret += '.' + std::to_string(bugfix);
+    if (minor != NULL_REV) ret += '.' + std::to_string(minor);
+    if (bugfix != NULL_REV) ret += '.' + std::to_string(bugfix);
     if (not tag.empty()) ret += '-' + tag;
     return ret;
 }
