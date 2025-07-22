@@ -64,13 +64,13 @@ public:
         ChoiceData& data,
         const wxString& label = {},
         wxOrientation orient = wxVERTICAL
-        );
+    );
     Choice(
         wxWindow *parent,
         ChoiceDataProxy& proxy,
         const wxString& label = {},
         wxOrientation orient = wxVERTICAL
-        );
+    );
 
 private:
     void create(const wxString& label, wxOrientation orient);
@@ -89,13 +89,13 @@ public:
         ChoiceData& data,
         const wxString& label = {},
         wxOrientation orient = wxVERTICAL
-        );
+    );
     List(
         wxWindow *parent,
         ChoiceDataProxy& proxy,
         const wxString& label = {},
         wxOrientation orient = wxVERTICAL
-        );
+    );
 
 private:
     void create(const wxString& label, wxOrientation orient);

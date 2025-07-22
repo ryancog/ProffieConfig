@@ -1,4 +1,6 @@
 #include "choice.h"
+#include "ui/message.h"
+#include "wx/window.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -80,6 +82,9 @@ void PCUI::Choice::onUIUpdate(uint32 id) {
     if (id == ID_REBOUND or id == ChoiceData::ID_CHOICES) {
         pControl->Set(data()->mChoices);
         pControl->SetSelection(*data());
+        SetSizerAndFit(GetSizer());
+        wxGetTopLevelParent(this)->Layout();
+        wxGetTopLevelParent(this)->Fit();
     } else if (id == ChoiceData::ID_SELECTION) {
         pControl->SetSelection(*data());
     }
@@ -121,6 +126,8 @@ void PCUI::List::onUIUpdate(uint32 id) {
     if (id == ID_REBOUND or id == ChoiceData::ID_CHOICES) {
         pControl->Set(data()->mChoices);
         pControl->SetSelection(*data());
+        SetSizerAndFit(GetSizer());
+        wxGetTopLevelParent(this)->Layout();
     } else if (id == ChoiceData::ID_SELECTION) {
         pControl->SetSelection(*data());
     }

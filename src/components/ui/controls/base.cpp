@@ -27,6 +27,7 @@
 #include "ui/controls/radios.h"
 #include "ui/controls/text.h"
 #include "ui/controls/toggle.h"
+#include <mutex>
 
 void PCUI::ControlData::setUpdateHandler(function<void(uint32 id)>&& handler) {
     mOnUpdate = std::move(handler);
@@ -80,7 +81,12 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::init(
     sizer->Add(control, wxSizerFlags(1).Expand());
     SetSizerAndFit(sizer);
 
-    handleNotification(ID_REBOUND);
+    if (Notifier::data()) {
+        std::scoped_lock scopeLock{Notifier::data()->getLock()};
+        Notifier::data()->notify(ID_REBOUND);
+    } else {
+        handleUnbound();
+    }
 
     Bind(eventTag, [this](CONTROL_EVENT& evt) { controlEventHandler(evt); });
 }
@@ -122,7 +128,6 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::handleNot
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::handleUnbound() {
     Disable();
-    Hide();
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
