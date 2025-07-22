@@ -75,13 +75,19 @@ PCUI::Radios::Radios(
 };
 
 void PCUI::Radios::create(const wxString& label, wxOrientation orient) {
+    assert(data() != nullptr or proxy() != nullptr);
+
+    wxArrayString choices;
+    if (data()) choices = data()->mChoices;
+    else choices.resize(static_cast<RadiosDataProxy *>(proxy())->numSelections);
+
     auto *control{new wxRadioBox(
         this,
         wxID_ANY,
         label,
         wxDefaultPosition,
         wxDefaultSize,
-        data()->mChoices,
+        choices,
         0,
         orient == wxVERTICAL ? wxRA_SPECIFY_COLS : wxRA_SPECIFY_ROWS
     )};
@@ -90,6 +96,14 @@ void PCUI::Radios::create(const wxString& label, wxOrientation orient) {
 }
 
 void PCUI::Radios::onUIUpdate(uint32 id) {
+    if (id == ID_REBOUND) {
+        assert(data()->mChoices.size() == pControl->GetCount());
+
+        for (auto idx{0}; idx < pControl->GetCount(); ++idx) {
+            pControl->SetString(idx, data()->mChoices[idx]);
+        }
+    }
+
     if (id == ID_REBOUND or id == RadiosData::ID_CHOICE_STATE) {
         for (auto idx{0}; idx < data()->mChoices.size(); ++idx) {
             pControl->Show(idx, data()->mShown[idx] or data()->mEnabled[idx]);
