@@ -6,7 +6,14 @@
 #include <wx/sysopt.h>
 
 AddConfig::AddConfig(MainMenu *parent) : 
-    wxDialog(parent, wxID_ANY, _("Add New Config"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE) {
+    wxDialog(
+        parent,
+        wxID_ANY,
+        _("Add New Config"),
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxDEFAULT_DIALOG_STYLE
+    ) {
 #   ifdef __WXOSX__
     wxSystemOptions::SetOption(wxOSX_FILEDIALOG_ALWAYS_SHOW_TYPES, true);
 #   endif
