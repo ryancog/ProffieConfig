@@ -22,7 +22,7 @@
 
 PropButtonsDialog::PropButtonsDialog(EditorWindow *parent) {
     auto config{parent->getOpenConfig()};
-    auto& prop{config->props[config->propSelection]};
+    auto& prop{config->prop(config->propSelection)};
 
     Create(
         parent,

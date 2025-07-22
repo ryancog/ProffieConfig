@@ -1,6 +1,6 @@
 #include "mainmenu.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2025 Ryan Ogurek
+// Copyright (C) 2024-2025 Ryan Ogurek
 
 #include <fstream>
 
@@ -12,6 +12,7 @@
 #include <wx/toplevel.h>
 #include <wx/utils.h>
 
+#include "config/config.h"
 #include "ui/message.h"
 #include "ui/plaque.h"
 #include "ui/frame.h"
@@ -35,30 +36,49 @@
 
 MainMenu* MainMenu::instance{nullptr};
 MainMenu::MainMenu(wxWindow* parent) : 
-    PCUI::Frame(parent, wxID_ANY, "ProffieConfig", wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)) {
+    PCUI::Frame(
+        parent,
+        wxID_ANY,
+        "ProffieConfig",
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)
+    ) {
+    Notifier::create(this, mNotifyData);
+
     createUI();
     createMenuBar();
     bindEvents();
+
+    auto configChoices{configSelection.choices()};
+    {
+        auto configList{Config::fetchListFromDisk()};
+        configChoices.insert(
+            configChoices.end(),
+            configList.begin(),
+            configList.end()
+        );
+    }
+    configSelection.setChoices(std::move(configChoices));
 
     Show(true);
 }
 
 void MainMenu::bindEvents() {
     auto promptClose{[this]() -> bool {
-        // for (auto *editor : editors) {
-        //     if (not editor->isSaved()) {
-        //         if (PCUI::showMessage(
-        //                     _("There is at least one editor open with unsaved changes, are you sure you want to exit?") +
-        //                     "\n\n" +
-        //                     _("All unsaved changes will be lost!"),
-        //                     _("Open Editor(s)"),
-        //                     wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION) == wxNO) {
-        //             return false;
-        //         }
-
-        //         break;
-        //     }
-        // }
+        for (auto& [config, editor]: mEditors) {
+            if (not config->isSaved()) {
+                auto res{PCUI::showMessage(
+                    _("There is at least one editor open with unsaved changes, are you sure you want to exit?") +
+                    "\n\n"+
+                    _("All unsaved changes will be lost!"),
+                    _("Open Editor(s)"),
+                    wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION
+                )};
+                if (res == wxNO) return false;
+                break;
+            }
+        }
 
         return true;
     }};
@@ -70,11 +90,12 @@ void MainMenu::bindEvents() {
         }
         event.Skip();
     });
-    Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
-    Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent &event) {
-        const auto& msgEvent{static_cast<Misc::MessageBoxEvent&>(event)};
-        PCUI::showMessage(msgEvent.message, msgEvent.caption, msgEvent.style, this);
-    }, wxID_ANY);
+    Bind(Progress::EVT_UPDATE, [&](ProgressEvent& event) { 
+        Progress::handleEvent(&event); 
+    });
+    Bind(Misc::EVT_MSGBOX, [&](Misc::MessageBoxEvent& event) {
+        PCUI::showMessage(event.message, event.caption, event.style, this);
+    });
     Bind(wxEVT_MENU, [this, promptClose](wxCommandEvent&) { 
         if (not promptClose()) return;
         Close(true); 
@@ -104,7 +125,7 @@ void MainMenu::bindEvents() {
     }, ID_Copyright);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
-        if (not editors.empty()) {
+        if (not mEditors.empty()) {
             PCUI::showMessage(_("All Editors must be closed to continue."), _("Open Editors"));
             return;
         }
@@ -139,11 +160,30 @@ void MainMenu::bindEvents() {
     }, ID_OpenSerial);
 #	endif
 
-    configSelection.setUpdateHandler([this](uint32) {
+    configSelection.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+        std::scoped_lock scopeLock{mNotifyData.getLock()};
+        mNotifyData.notify(ID_ConfigSelection);
     });
-    boardSelection.setUpdateHandler([this](uint32) { 
+    boardSelection.setUpdateHandler([this](uint32 id) { 
+        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+        std::scoped_lock scopeLock{mNotifyData.getLock()};
+        mNotifyData.notify(ID_BoardSelection);
     });
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+        wxSetCursor(wxCURSOR_WAIT);
+        auto config{Config::open(configSelection)};
+        auto editorIter{mEditors.find(config)};
+        if (editorIter != mEditors.end()) {
+            editorIter->second->Show();
+            editorIter->second->Raise();
+            return;
+        } 
+
+        auto editor{mEditors.emplace(config, new EditorWindow(this, config)).first->second};
+        editor->Show();
+        editor->Raise();
+        wxSetCursor(wxNullCursor);
     }, ID_EditConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
         auto addDialog{AddConfig{this}};
@@ -176,29 +216,54 @@ void MainMenu::bindEvents() {
                 wxYES_NO | wxNO_DEFAULT | wxCENTER,
                 this) == wxYES
            ) {
+            for (auto iter{mEditors.begin()}; iter != mEditors.end(); ++iter) {
+                if (static_cast<string>(iter->first->name) == static_cast<string>(configSelection)) {
+                    iter->first->close();
+                    iter->second->Destroy();
+                    mEditors.erase(iter);
+                    break;
+                }
+            }
+            Config::remove(static_cast<string>(configSelection));
+
+            auto configChoices{configSelection.choices()};
+            configChoices.erase(std::next(configChoices.begin(), configSelection));
+            configSelection.setChoices(std::move(configChoices));
+            configSelection = 0;
         }
     }, ID_RemoveConfig);
 }
 
+void MainMenu::handleNotification(uint32 id) {
+    if (id == ID_ConfigSelection) {
+        editConfig->Enable(configSelection != 0);
+        removeConfig->Enable(configSelection != 0);
+        applyButton->Enable(configSelection != 0 and boardSelection != 0);
+    } else if (id == ID_BoardSelection) {
+        applyButton->Enable(configSelection != 0 and boardSelection != 0);
+        openSerial->Enable(boardSelection != 0);
+    }
+}
+
 void MainMenu::createMenuBar() {
-  auto *file{new wxMenu};
-  file->Append(ID_ReRunSetup, _("Re-Run First-Time Setup..."), _("Install Proffieboard Dependencies and View Tutorial"));
-  file->Append(ID_AddProp, _("Prop Files..."));
-  file->Append(ID_UpdateManifest, _("Update Channel..."));
-  file->AppendSeparator();
-  file->Append(ID_Logs, _("Show Logs..."));
-  file->Append(wxID_ABOUT);
-  file->Append(ID_Copyright, _("Licensing Information"));
-  file->Append(wxID_EXIT);
+    auto *file{new wxMenu};
+    file->Append(ID_ReRunSetup, _("Re-Run First-Time Setup..."), _("Install Proffieboard Dependencies and View Tutorial"));
+    file->Append(ID_AddProp, _("Prop Files..."));
+    file->Append(ID_UpdateManifest, _("Update Channel..."));
+    file->AppendSeparator();
+    file->Append(ID_Logs, _("Show Logs..."));
+    file->Append(wxID_ABOUT);
+    file->Append(ID_Copyright, _("Licensing Information"));
+    file->Append(wxID_EXIT);
 
-  auto* help{new wxMenu};
-  help->Append(ID_Docs, _("Documentation...\tCtrl+H"), _("Open the ProffieConfig docs in your web browser"));
-  help->Append(ID_Issue, _("Help/Bug Report..."), _("Open GitHub to submit issue"));
+    auto* help{new wxMenu};
+    help->Append(ID_Docs, _("Documentation...\tCtrl+H"), _("Open the ProffieConfig docs in your web browser"));
+    help->Append(ID_Issue, _("Help/Bug Report..."), _("Open GitHub to submit issue"));
 
-  auto* menuBar{new wxMenuBar};
-  menuBar->Append(file, _("&File"));
-  menuBar->Append(help, _("&Help"));
-  SetMenuBar(menuBar);
+    auto* menuBar{new wxMenuBar};
+    menuBar->Append(file, _("&File"));
+    menuBar->Append(help, _("&Help"));
+    SetMenuBar(menuBar);
 }
 
 void MainMenu::createUI() {
@@ -226,7 +291,9 @@ void MainMenu::createUI() {
     headerSection->Add(appIcon);
 
     auto *configSelectSection{new wxBoxSizer(wxHORIZONTAL)};
-    configSelection.setChoices(Utils::createEntries({ _("Select Config...") }));
+    configSelection.setChoices(Utils::createEntries({
+        _("Select Config..."),
+    }));
     configSelection = 0;
     auto *configSelect{new PCUI::Choice(this, configSelection)};
 
@@ -316,21 +383,10 @@ void MainMenu::createUI() {
 // }
 
 void MainMenu::removeEditor(EditorWindow *editor) {
-    for (auto it{editors.begin()}; it != editors.end(); ++it) {
+    for (auto it{mEditors.begin()}; it != mEditors.end(); ++it) {
         if (it->second == editor) {
-            editors.erase(it);
+            mEditors.erase(it);
             break;
         }
     }
-}
-
-EditorWindow *MainMenu::generateEditor(const string& configName) {
-    // auto *newEditor{new EditorWindow(configName, this)};
-    // if (not Configuration::readConfig(Paths::configs() / (configName + ".h"), newEditor)) {
-    //     PCUI::showMessage(_("Error while reading configuration file!"), _("Config Read Error"), wxOK | wxCENTER, this);
-    //     newEditor->Destroy();
-    //     return nullptr;
-    // }
-    // return newEditor;
-    return nullptr;
 }

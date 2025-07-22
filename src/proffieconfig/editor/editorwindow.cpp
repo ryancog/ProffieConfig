@@ -17,8 +17,6 @@
 #include <wx/tooltip.h>
 #include <wx/menu.h>
 
-#include "log/context.h"
-#include "log/logger.h"
 #include "pages/bladespage.h"
 #include "pages/generalpage.h"
 #include "pages/presetspage.h"
@@ -57,7 +55,7 @@ void EditorWindow::bindEvents() {
             return;
         }
 
-        if (not isSaved()) {
+        if (not mConfig->isSaved()) {
 #           ifdef __WINDOWS__
             const auto flags{static_cast<long>(wxICON_WARNING | wxYES_NO | wxCANCEL | wxCANCEL_DEFAULT)};
             wxGenericMessageDialog saveDialog{
@@ -82,7 +80,7 @@ void EditorWindow::bindEvents() {
 
             if (
                     saveChoice == wxID_CANCEL or 
-                    not Config::save(mConfig)
+                    not save()
                 ) {
                 event.Veto();
                 return;
@@ -92,14 +90,16 @@ void EditorWindow::bindEvents() {
         reinterpret_cast<MainMenu *>(GetParent())->removeEditor(this);
         event.Skip();
     });
-    Bind(Progress::EVT_UPDATE, [&](wxCommandEvent& event) { Progress::handleEvent((Progress::ProgressEvent*)&event); }, wxID_ANY);
+    Bind(Progress::EVT_UPDATE, [&](ProgressEvent& event) { 
+        Progress::handleEvent(&event); 
+    });
     Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) {
         auto& msgEvent{static_cast<Misc::MessageBoxEvent&>(event)};
         PCUI::showMessage(msgEvent.message, msgEvent.caption, msgEvent.style, this);
     }, wxID_ANY);
 
     Bind(wxEVT_MENU, [this](wxCommandEvent&) {
-        Config::save(mConfig);
+        save();
     }, wxID_SAVE); 
 
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
@@ -211,67 +211,9 @@ void EditorWindow::createPages(wxSizer *sizer) {
     SetSizerAndFit(sizer);
 }
 
+bool EditorWindow::save() {
+    return mConfig->save();
+}
 
 std::shared_ptr<Config::Config> EditorWindow::getOpenConfig() const { return mConfig; }
-
-bool EditorWindow::isSaved() {
-    auto& logger{Log::Context::getGlobal().createLogger("EditorWindow::isSaved()")};
-
-    const auto currentPath{
-        Paths::configs() / (static_cast<string>(mConfig->name) + ".h")
-    };
-    const auto validatePath{
-        fs::temp_directory_path() / (static_cast<string>(mConfig->name) + "-validate")
-    };
-
-    auto dummyMessageHandler{[](wxCommandEvent&) {}};
-    Bind(Misc::EVT_MSGBOX, dummyMessageHandler);
-    auto res{Config::save(mConfig, validatePath)};
-    wxYield();
-    Unbind(Misc::EVT_MSGBOX, dummyMessageHandler);
-
-    if (not res) {
-        logger.warn("Config output failed");
-        return false;
-    }
-
-    std::error_code err;
-    const auto currentSize{fs::file_size(currentPath, err)};
-    const auto validateSize{fs::file_size(validatePath, err)};
-    if (currentSize != validateSize) {
-        logger.warn(
-            "File sizes do not match (" + 
-            std::to_string(currentSize) + '/' + 
-            std::to_string(validateSize) + ')'
-        );
-        return false;
-    }
-
-    std::ifstream current{currentPath};
-    std::ifstream validate{validatePath};
-
-    bool saved{true};
-    while (current.good() && !current.eof() && validate.good() && !validate.eof()) {
-        std::array<char, 4096> currentBuffer;
-        std::array<char, currentBuffer.size()> validateBuffer;
-        currentBuffer.fill(0);
-        validateBuffer.fill(0);
-
-        current.read(currentBuffer.data(), currentBuffer.size());
-        validate.read(validateBuffer.data(), validateBuffer.size());
-
-        if (0 != std::memcmp(currentBuffer.data(), validateBuffer.data(), validateBuffer.size())) {
-            saved = false;
-            break;
-        }
-    }
-
-    current.close();
-    validate.close();
-    // fs::remove(validatePath);
-    if (not saved) {
-        logger.warn("File contents do not match");
-    }
-    return saved;
-}
 

@@ -60,6 +60,8 @@ PropsPage::PropsPage(EditorWindow *parent) :
 
     loadProps();
     bindEvents();
+    Notifier::create(GetStaticBox(), mNotifyData);
+    mNotifyData.notify(ID_PropSelection);
 }
 
 void PropsPage::bindEvents() {
@@ -68,7 +70,7 @@ void PropsPage::bindEvents() {
     }, ID_Buttons);
     GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         auto config{mParent->getOpenConfig()};
-        auto& prop{config->props[config->propSelection]};
+        auto& prop{config->prop(config->propSelection)};
 
         wxDialog infoDialog{
             mParent,
@@ -87,6 +89,14 @@ void PropsPage::bindEvents() {
         infoDialog.DoLayoutAdaptation();
         infoDialog.ShowModal();
     }, ID_PropInfo);
+}
+
+void PropsPage::handleNotification(uint32 id) {
+    if (id == ID_PropSelection) {
+        auto config{mParent->getOpenConfig()};
+        GetStaticBox()->FindWindow(ID_Buttons)->Enable(config->propSelection != -1);
+        GetStaticBox()->FindWindow(ID_PropInfo)->Enable(config->propSelection != -1);
+    }
 }
 
 // void PropsPage::update() {

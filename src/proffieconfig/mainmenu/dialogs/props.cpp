@@ -17,7 +17,7 @@ Props::Props(MainMenu* parent) : wxDialog(parent, wxID_ANY, _("Prop Files"), wxD
   bindEvents();
   update();
 
-  FindWindowById(wxID_OK)->Disable();
+  FindWindow(wxID_OK)->Disable();
 }
 
 void Props::bindEvents() {
@@ -114,7 +114,7 @@ void Props::update() {
     mDuplicateWarning->Show(duplicatePropFile);
     mFileSelectionWarning->Show(not filesSelected);
 
-    FindWindowById(wxID_OK)->Enable(not duplicatePropFile and filesSelected);
+    FindWindow(wxID_OK)->Enable(not duplicatePropFile and filesSelected);
 
     GetSizer()->Layout(); // Although linux and windows seem to work without this, macOS requires it.
     GetSizer()->Fit(this);

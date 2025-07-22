@@ -1,6 +1,6 @@
 #pragma once
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2025 Ryan Ogurek
+// Copyright (C) 2024-2025 Ryan Ogurek
 
 #include <map>
 
@@ -8,6 +8,7 @@
 #include <wx/combobox.h>
 
 #include "ui/frame.h"
+#include "ui/notifier.h"
 
 #include "../editor/editorwindow.h"
 
@@ -17,7 +18,7 @@ class Overview;
 
 } // namespace Onboard
 
-class MainMenu : public PCUI::Frame {
+class MainMenu : public PCUI::Frame, private PCUI::Notifier {
 public:
     static MainMenu* instance;
     MainMenu(wxWindow * = nullptr);
@@ -32,13 +33,10 @@ public:
     PCUI::ChoiceData boardSelection;
     PCUI::ChoiceData configSelection;
 
-    std::map<std::shared_ptr<Config::Config>, EditorWindow*> editors;
-
     enum {
-        ID_DUMMY1, // on macOS menu items cannot have ID 0
-        ID_DUMMY2, // on Win32, for some reason ID #1 is triggerred by hitting enter in pcTextCtrl? This is a workaround.
-
-        ID_Copyright,
+        // on macOS menu items cannot have ID 0
+        // on Win32, for some reason ID #1 is triggerred by hitting enter in pcTextCtrl?
+        ID_Copyright = 2,
         ID_ReRunSetup,
 
         ID_Docs,
@@ -52,18 +50,22 @@ public:
         ID_ApplyChanges,
 
         ID_OpenSerial,
-
         ID_AddConfig,
         ID_RemoveConfig,
         ID_EditConfig,
+
+        ID_BoardSelection,
+        ID_ConfigSelection,
     };
 
 private:
+    PCUI::NotifierData mNotifyData;
+    std::map<std::shared_ptr<Config::Config>, EditorWindow*> mEditors;
 
     friend Onboard::Overview;
     void createUI();
     void createMenuBar();
     void bindEvents();
 
-    EditorWindow *generateEditor(const string& configName);
+    void handleNotification(uint32 id) final;
 };

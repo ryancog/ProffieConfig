@@ -3,25 +3,23 @@
 // Copyright (C) 2023-2025 Ryan Ogurek
 
 #include "../editorwindow.h"
+#include "ui/notifier.h"
 
-#include <wx/window.h>
-#include <wx/checkbox.h>
-#include <wx/radiobut.h>
-#include <wx/combobox.h>
 #include <wx/scrolwin.h>
-#include <wx/sizer.h>
 #include <wx/statbox.h>
 
 // Forward declaration to get around circular dependency
 class PropFile;
 
-class PropsPage : public wxStaticBoxSizer {
+class PropsPage : public wxStaticBoxSizer, PCUI::Notifier {
 public:
     PropsPage(EditorWindow *);
 
     enum {
         ID_Buttons,
         ID_PropInfo,
+
+        ID_PropSelection,
     };
 
 private:
@@ -33,4 +31,7 @@ private:
 
     void loadProps();
     void bindEvents();
+
+    void handleNotification(uint32) final;
+    PCUI::NotifierData mNotifyData;
 };

@@ -6,7 +6,6 @@
 #include <wx/sizer.h>
 
 #include "config/config.h"
-#include "ui/controls/choice.h"
 #include "ui/frame.h"
 
 // Forward declarations to get around circular dependencies
@@ -19,7 +18,8 @@ class EditorWindow : public PCUI::Frame {
 public:
     EditorWindow(wxWindow *, std::shared_ptr<Config::Config>);
 
-    bool isSaved();
+    // Handles errors
+    bool save();
 
     [[nodiscard]] std::shared_ptr<Config::Config> getOpenConfig() const;
 
