@@ -13,7 +13,7 @@
 
 #include "../editorwindow.h"
 
-class PresetsPage : public wxStaticBoxSizer {
+class PresetsPage : public wxStaticBoxSizer, PCUI::Notifier {
 public:
     PresetsPage(EditorWindow *);
 
@@ -21,7 +21,10 @@ public:
         ID_AddPreset,
         ID_RemovePreset,
         ID_MovePresetUp,
-        ID_MovePresetDown
+        ID_MovePresetDown,
+
+        ID_AddArray,
+        ID_RemoveArray,
     };
 
 private:
@@ -29,23 +32,10 @@ private:
 
     wxBoxSizer *mInjectionsSizer;
 
+
+    void createUI();
     void bindEvents();
-
-    wxBoxSizer *createPresetSelect();
-    wxBoxSizer *createPresetConfig();
-
-    void pushIfNewPreset();
-    void rebuildBladeArrayList();
-    void rebuildPresetList();
-    void rebuildBladeList();
-    void resizeAndFillPresets();
-    void updateFields();
-
-    void stripAndSaveEditor();
-    void stripAndSaveComments();
-    void stripAndSaveName();
-    void stripAndSaveDir();
-    void stripAndSaveTrack();
+    void handleNotification(uint32 id);
 
     void rebuildInjections();
 };

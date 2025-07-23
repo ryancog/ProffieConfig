@@ -8,27 +8,159 @@
 #include <wx/statbox.h>
 #include <wx/tooltip.h>
 
+#include "config/preset/array.h"
 #include "ui/message.h"
 #include "paths/paths.h"
 
 #include "../../core/defines.h"
 #include "../editorwindow.h"
+#include "wx/anybutton.h"
 
 
 PresetsPage::PresetsPage(EditorWindow *window) : 
     wxStaticBoxSizer(wxHORIZONTAL, window),
+    PCUI::Notifier(GetStaticBox(), window->getOpenConfig()->presetArrays.notifier),
     mParent(window) {
-    Add(
-        createPresetConfig(),
-        wxSizerFlags(/*proportion*/ 0).Border(wxALL, 10)
-    );
-    Add(
-        createPresetSelect(),
-        wxSizerFlags(/*proportion*/ 0)
-            .Border(wxTOP | wxRIGHT | wxBOTTOM, 10).Expand()
-    );
+    createUI();
+    bindEvents();
+}
 
+void PresetsPage::createUI() {
     auto config{mParent->getOpenConfig()};
+
+    auto *presetSelectionSizer{new wxBoxSizer(wxVERTICAL)};
+
+    auto *arraySelection{new PCUI::Choice(
+        GetStaticBox(),
+        config->presetArrays.selection,
+        _("Presets Array")
+    )};
+
+    auto *arrayButtonsSizer{new wxBoxSizer(wxHORIZONTAL)};
+    auto *addArray{new wxButton(
+        GetStaticBox(),
+        ID_AddArray,
+        _("Add"),
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxBU_EXACTFIT
+    )};
+    auto *removeArray{new wxButton(
+        GetStaticBox(),
+        ID_RemoveArray,
+        _("Remove"),
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxBU_EXACTFIT
+    )};
+    arrayButtonsSizer->Add(addArray, wxSizerFlags(2));
+    arrayButtonsSizer->AddSpacer(5);
+    arrayButtonsSizer->Add(removeArray, wxSizerFlags(3));
+
+    auto *presetListSizer{new wxBoxSizer(wxHORIZONTAL)};
+    auto *presetList{new PCUI::List(
+        GetStaticBox(),
+        config->presetArrays.presetProxy,
+        _("Presets")
+    )};
+
+    auto *arrangeButtonsSizer{new wxBoxSizer(wxVERTICAL)};
+#   ifdef __WXOSX__
+    wxSize arrangeButtonSize{20, 25};
+#   else
+    wxSize arrangeButtonSize{15, 25};
+#   endif
+    auto *movePresetUp = new wxButton(
+        GetStaticBox(),
+        ID_MovePresetUp,
+        L"\u2191" /*up arrow*/,
+        wxDefaultPosition,
+        arrangeButtonSize,
+        wxBU_EXACTFIT
+    );
+    auto *movePresetDown{new wxButton(
+        GetStaticBox(),
+        ID_MovePresetDown,
+        L"\u2193" /*down arrow*/,
+        wxDefaultPosition,
+        arrangeButtonSize,
+        wxBU_EXACTFIT
+    )};
+    arrangeButtonsSizer->AddSpacer(20);
+    arrangeButtonsSizer->Add(movePresetUp);
+    arrangeButtonsSizer->Add(movePresetDown);
+    
+    presetListSizer->Add(presetList, wxSizerFlags(1).Expand());
+    presetListSizer->AddSpacer(5);
+    presetListSizer->Add(arrangeButtonsSizer);
+
+    auto *presetButtonSizer{new wxBoxSizer(wxHORIZONTAL)};
+    auto *addPreset {new wxButton(
+        GetStaticBox(),
+        ID_AddPreset,
+        "+",
+        wxDefaultPosition,
+        SMALLBUTTONSIZE,
+        wxBU_EXACTFIT
+    )};
+    auto *removePreset{new wxButton(
+        GetStaticBox(),
+        ID_RemovePreset,
+        "-",
+        wxDefaultPosition,
+        SMALLBUTTONSIZE,
+        wxBU_EXACTFIT
+    )};
+    presetButtonSizer->Add(addPreset, wxSizerFlags(1));
+    presetButtonSizer->AddSpacer(5);
+    presetButtonSizer->Add(removePreset, wxSizerFlags(1));
+    presetButtonSizer->AddSpacer(arrangeButtonSize.x + 5);
+
+    presetSelectionSizer->Add(arraySelection, wxSizerFlags().Expand());
+    presetSelectionSizer->AddSpacer(10);
+    presetSelectionSizer->Add(arrayButtonsSizer, wxSizerFlags().Expand());
+    presetSelectionSizer->AddSpacer(10);
+    presetSelectionSizer->Add(presetListSizer, wxSizerFlags(1).Expand());
+    presetSelectionSizer->AddSpacer(5);
+    presetSelectionSizer->Add(presetButtonSizer, wxSizerFlags().Expand());
+
+    auto *presetConfigSizer{new wxBoxSizer(wxVERTICAL)};
+    auto *nameInput{new PCUI::Text(
+        GetStaticBox(),
+        config->presetArrays.nameProxy,
+        0,
+        _("Preset Name")
+    )};
+    nameInput->SetMinSize(wxSize(200, -1));
+
+    auto *dirInput{new PCUI::Text(
+        GetStaticBox(),
+        config->presetArrays.dirProxy,
+        0,
+        _("Font Directory")
+    )};
+    dirInput->SetMinSize(wxSize(200, -1));
+
+    auto *trackInput{new PCUI::Text(
+        GetStaticBox(),
+        config->presetArrays.trackProxy,
+        0,
+        _("Track File")
+    )};
+    trackInput->SetMinSize(wxSize(200, -1));
+
+    mInjectionsSizer = new wxBoxSizer(wxVERTICAL);
+
+    presetConfigSizer->Add(nameInput);
+    presetConfigSizer->Add(dirInput);
+    presetConfigSizer->Add(trackInput);
+    presetConfigSizer->Add(mInjectionsSizer);
+
+    auto *bladeList {new PCUI::List(
+        GetStaticBox(),
+        config->presetArrays.bladeProxy,
+        _("Blades")
+    )};
 
     auto *styleCommentSplit{new wxSplitterWindow(
         GetStaticBox(),
@@ -56,12 +188,14 @@ PresetsPage::PresetsPage(EditorWindow *window) :
     styleCommentSplit->SetMinSize(wxSize{500, -1});
     styleCommentSplit->SetMinimumPaneSize(60);
     styleCommentSplit->SplitHorizontally(commentInput, styleInput);
-    Add(
-        styleCommentSplit,
-        wxSizerFlags(1).Border(wxALL, 10).Expand()
-    );
 
-    bindEvents();
+    Add(presetSelectionSizer, wxSizerFlags().Expand());
+    AddSpacer(10);
+    Add(presetConfigSizer, wxSizerFlags().Expand());
+    AddSpacer(10);
+    Add(bladeList, wxSizerFlags().Expand());
+    AddSpacer(10);
+    Add(styleCommentSplit, wxSizerFlags(1).Expand());
 }
 
 void PresetsPage::bindEvents() {
@@ -94,6 +228,21 @@ void PresetsPage::bindEvents() {
 
         presetArray.movePresetDown(presetArray.selection);
     }, ID_MovePresetDown);
+}
+
+void PresetsPage::handleNotification(uint32 id) {
+    auto& presetArrays{mParent->getOpenConfig()->presetArrays};
+    if (id == presetArrays.NOTIFY_INJECTIONS) rebuildInjections();
+    if (id == presetArrays.NOTIFY_SELECTION) {
+        bool hasSelection{presetArrays.selection != -1};
+        GetStaticBox()->FindWindow(ID_RemoveArray)->Enable(hasSelection);
+        if (not hasSelection) {
+            GetStaticBox()->FindWindow(ID_AddPreset)->Disable();
+            GetStaticBox()->FindWindow(ID_RemovePreset)->Disable();
+            GetStaticBox()->FindWindow(ID_MovePresetUp)->Disable();
+            GetStaticBox()->FindWindow(ID_MovePresetDown)->Disable();
+        }
+    }
 }
 
 // void PresetsPage::createToolTips() const {
@@ -130,157 +279,6 @@ void PresetsPage::bindEvents() {
 //     ));
 // }
 
-wxBoxSizer* PresetsPage::createPresetSelect() {
-    auto config{mParent->getOpenConfig()};
-
-    auto *presetSelect{new wxBoxSizer(wxVERTICAL)};
-
-    auto * arraySizer{new wxBoxSizer(wxVERTICAL)};
-    auto *arraySelection{new PCUI::Choice(
-        GetStaticBox(),
-        config->presetArrays.selection,
-        _("Blade Array")
-    )};
-    arraySizer->Add(
-        arraySelection,
-        wxSizerFlags(0).Border(wxBOTTOM, 5).Expand()
-    );
-
-    auto *listSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *arrangeButtonSizer{new wxBoxSizer(wxVERTICAL)};
-    auto *movePresetUp = new wxButton(
-        GetStaticBox(),
-        ID_MovePresetUp,
-        L"\u2191" /*up arrow*/,
-        wxDefaultPosition,
-        wxSize(15, 25),
-        wxBU_EXACTFIT
-    );
-    auto *movePresetDown{new wxButton(
-        GetStaticBox(),
-        ID_MovePresetDown,
-        L"\u2193" /*down arrow*/,
-        wxDefaultPosition,
-        wxSize(15, 25),
-        wxBU_EXACTFIT
-    )};
-    arrangeButtonSizer->Add(movePresetUp, FIRSTITEMFLAGS);
-    arrangeButtonSizer->Add(movePresetDown, MENUITEMFLAGS);
-    listSizer->Add(arrangeButtonSizer, wxSizerFlags(0));
-    auto *presetList{new PCUI::List(
-        GetStaticBox(),
-        config->presetArrays.presetProxy,
-        _("Presets")
-    )};
-    auto *bladeList {new PCUI::List(
-        GetStaticBox(),
-        config->presetArrays.bladeProxy,
-        _("Blades")
-    )};
-    listSizer->Add(
-        presetList,
-        wxSizerFlags(1).Expand().Border(wxALL, 4)
-    );
-    listSizer->Add(
-        bladeList,
-        wxSizerFlags(1).Expand().Border(wxALL, 4)
-    );
-
-    auto* buttonSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *addPreset {new wxButton(
-        GetStaticBox(),
-        ID_AddPreset,
-        "+",
-        wxDefaultPosition,
-        SMALLBUTTONSIZE,
-        wxBU_EXACTFIT
-    )};
-    auto *removePreset{new wxButton(
-        GetStaticBox(),
-        ID_RemovePreset,
-        "-",
-        wxDefaultPosition,
-        SMALLBUTTONSIZE,
-        wxBU_EXACTFIT
-    )};
-    buttonSizer->Add(
-        addPreset,
-        wxSizerFlags(0).Border(wxRIGHT | wxTOP, 5)
-    );
-    buttonSizer->Add(
-        removePreset,
-        wxSizerFlags(0).Border(wxTOP, 5)
-    );
-
-    presetSelect->Add(
-        arraySizer,
-        wxSizerFlags(0).Expand().Border(wxLEFT, 25)
-    );
-    presetSelect->Add(listSizer, wxSizerFlags(1).Expand());
-    presetSelect->Add(
-        buttonSizer,
-        wxSizerFlags(0).Border(wxLEFT, 30)
-    );
-
-    return presetSelect;
-}
-
-wxBoxSizer* PresetsPage::createPresetConfig() {
-    auto config{mParent->getOpenConfig()};
-    auto *presetConfig{new wxBoxSizer(wxVERTICAL)};
-
-    auto *nameInput{new PCUI::Text(
-        GetStaticBox(),
-        config->presetArrays.nameProxy,
-        0,
-        _("Preset Name")
-    )};
-    nameInput->SetMinSize(wxSize(200, -1));
-
-    auto *dirInput{new PCUI::Text(
-        GetStaticBox(),
-        config->presetArrays.dirProxy,
-        0,
-        _("Font Directory")
-    )};
-    dirInput->SetMinSize(wxSize(200, -1));
-
-    auto *trackInput{new PCUI::Text(
-        GetStaticBox(),
-        config->presetArrays.trackProxy,
-        0,
-        _("Track File")
-    )};
-    trackInput->SetMinSize(wxSize(200, -1));
-
-    mInjectionsSizer = new wxBoxSizer(wxVERTICAL);
-
-    presetConfig->Add(
-        nameInput,
-        wxSizerFlags(0)
-            .Border(wxLEFT | wxTOP | wxBOTTOM, 10).Expand()
-    );
-    presetConfig->Add(
-        dirInput,
-        wxSizerFlags(0)
-            .Border(wxLEFT | wxTOP | wxBOTTOM, 10).Expand()
-    );
-    presetConfig->Add(
-        trackInput,
-        wxSizerFlags(0)
-            .Border(wxLEFT | wxTOP | wxBOTTOM, 10).Expand()
-    );
-    presetConfig->Add(
-        mInjectionsSizer,
-        wxSizerFlags(1)
-            .Border(wxLEFT | wxTOP | wxBOTTOM, 10).Expand()
-    );
-
-    rebuildInjections();
-
-    return presetConfig;
-}
-
 void PresetsPage::rebuildInjections() {
     mInjectionsSizer->Clear(true);
 
@@ -292,10 +290,7 @@ void PresetsPage::rebuildInjections() {
         wxID_ANY,
         _("Injections")
     )};
-    mInjectionsSizer->Add(
-        injectionsText,
-        wxSizerFlags().Border(wxLEFT | wxTOP, 10)
-    );
+    mInjectionsSizer->Add(injectionsText);
 
     for (const auto& injection : config->presetArrays.injections()) {
         auto *injectionSizer{new wxBoxSizer(wxHORIZONTAL)};
@@ -342,10 +337,7 @@ void PresetsPage::rebuildInjections() {
         injectionSizer->AddSpacer(10);
         injectionSizer->Add(deleteButton);
 
-        mInjectionsSizer->Add(
-            injectionSizer,
-            wxSizerFlags().Border(wxTOP | wxLEFT, 10)
-        );
+        mInjectionsSizer->Add(injectionSizer);
     }
 
     mInjectionsSizer->Layout();

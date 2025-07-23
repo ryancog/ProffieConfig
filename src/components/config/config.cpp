@@ -32,7 +32,9 @@ list<std::shared_ptr<Config>> loadedConfigs;
 
 } // namespace Config
 
-Config::Config::Config() : settings{*this} {
+Config::Config::Config() :
+    settings{*this},
+    bladeArrays{*this} {
     propSelection.setUpdateHandler([this](uint32 id) {
         if (id != propSelection.ID_SELECTION) return;
         propNotifier.notify(ID_PROPSELECTION);

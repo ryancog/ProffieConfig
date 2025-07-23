@@ -61,9 +61,6 @@ PropsPage::PropsPage(EditorWindow *parent) :
     loadProps();
     bindEvents();
     Notifier::create(GetStaticBox(), mNotifyData);
-    mNotifyData.getLock().lock();
-    mNotifyData.notify(ID_PropSelection);
-    mNotifyData.getLock().unlock();
 }
 
 void PropsPage::bindEvents() {
@@ -94,7 +91,7 @@ void PropsPage::bindEvents() {
 }
 
 void PropsPage::handleNotification(uint32 id) {
-    if (id == ID_PropSelection) {
+    if (id == ID_REBOUND or id == ID_PropSelection) {
         auto config{mParent->getOpenConfig()};
         GetStaticBox()->FindWindow(ID_Buttons)->Enable(config->propSelection != -1);
         GetStaticBox()->FindWindow(ID_PropInfo)->Enable(config->propSelection != -1);

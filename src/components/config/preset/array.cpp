@@ -25,6 +25,27 @@ namespace Config {
 
 } // namespace Config
 
+Config::PresetArrays::PresetArrays() {
+    selection.setUpdateHandler([this](uint32 id) {
+        if (id != selection.ID_SELECTION) return;
+
+        if (selection == -1) {
+            presetProxy.unbind();
+
+            nameProxy.unbind();
+            dirProxy.unbind();
+            trackProxy.unbind();
+
+            bladeProxy.unbind();
+
+            commentProxy.unbind();
+            styleProxy.unbind();
+        } else {
+            presetProxy.bind(std::next(mArrays.begin(), selection)->selection);
+        }
+    });
+}
+
 void Config::PresetArray::addPreset() {
     auto choices{selection.choices()};
     choices.push_back(mPresets.emplace_back().name);
@@ -76,6 +97,10 @@ void Config::PresetArray::movePresetDown(uint32 idx) {
     );
     selection.setChoices(std::move(choices));
 }
+
+void addArray();
+void removeArray(uint32);
+
 
 void Config::PresetArrays::addInjection(const string& name) {
     mInjections.emplace_back(Injection{name});
