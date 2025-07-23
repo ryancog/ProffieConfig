@@ -105,6 +105,12 @@ protected:
     void create(wxWindow *derived, NotifierData& data);
     void create(wxWindow *derived, NotifierDataProxy& proxy);
 
+    /**
+     * Call handleNotification(ID_REBOUND) or handleUnbound() to
+     * set up initial derived state accordingly.
+     */
+    void initializeNotifier();
+
     virtual ~Notifier();
 
     /**
