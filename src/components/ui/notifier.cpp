@@ -129,8 +129,6 @@ void PCUI::Notifier::create(wxWindow *derived, NotifierData& data) {
     std::scoped_lock scopeLock{data.mLock};
     data.mNotifier = this;
     data.mInFlight = 0;
-
-    handleNotification(ID_REBOUND);
 }
 
 void PCUI::Notifier::create(wxWindow *derived, NotifierDataProxy& proxy) {
@@ -153,10 +151,22 @@ void PCUI::Notifier::create(wxWindow *derived, NotifierDataProxy& proxy) {
         std::scoped_lock scopeLock{proxy.mData->mLock};
         proxy.mData->mNotifier = this;
         proxy.mData->mInFlight = 0;
+    }
+}
 
+void PCUI::Notifier::initializeNotifier() {
+    assert(mDerived != nullptr and (mProxy != nullptr or mData != nullptr));
+
+    if (mProxy) {
+        if (mProxy->mData) {
+            std::scoped_lock scopeLock{mProxy->mData->getLock()};
+            handleNotification(ID_REBOUND);
+        } else {
+            handleUnbound();
+        }
+    } else if (mData) {
+        std::scoped_lock scopeLock{mData->getLock()};
         handleNotification(ID_REBOUND);
-    } else {
-        handleUnbound();
     }
 }
 
