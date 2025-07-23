@@ -19,10 +19,11 @@
 
 PresetsPage::PresetsPage(EditorWindow *window) : 
     wxStaticBoxSizer(wxHORIZONTAL, window),
-    PCUI::Notifier(GetStaticBox(), window->getOpenConfig()->presetArrays.notifier),
     mParent(window) {
     createUI();
     bindEvents();
+
+    PCUI::Notifier::create(GetStaticBox(), window->getOpenConfig()->presetArrays.notifier);
 }
 
 void PresetsPage::createUI() {
@@ -231,9 +232,11 @@ void PresetsPage::bindEvents() {
 }
 
 void PresetsPage::handleNotification(uint32 id) {
+    bool rebound{id == ID_REBOUND};
+
     auto& presetArrays{mParent->getOpenConfig()->presetArrays};
-    if (id == presetArrays.NOTIFY_INJECTIONS) rebuildInjections();
-    if (id == presetArrays.NOTIFY_SELECTION) {
+    if (rebound or id == presetArrays.NOTIFY_INJECTIONS) rebuildInjections();
+    if (rebound or id == presetArrays.NOTIFY_SELECTION) {
         bool hasSelection{presetArrays.selection != -1};
         GetStaticBox()->FindWindow(ID_RemoveArray)->Enable(hasSelection);
         if (not hasSelection) {
