@@ -83,8 +83,11 @@ void PCUI::Choice::onUIUpdate(uint32 id) {
         pControl->Set(data()->mChoices);
         pControl->SetSelection(*data());
         SetSizerAndFit(GetSizer());
-        wxGetTopLevelParent(this)->Layout();
-        wxGetTopLevelParent(this)->Fit();
+        auto *parent{wxGetTopLevelParent(this)};
+        if (parent) {
+            parent->Layout();
+            parent->SetSizerAndFit(parent->GetSizer());
+        }
     } else if (id == ChoiceData::ID_SELECTION) {
         pControl->SetSelection(*data());
     }
@@ -127,7 +130,11 @@ void PCUI::List::onUIUpdate(uint32 id) {
         pControl->Set(data()->mChoices);
         pControl->SetSelection(*data());
         SetSizerAndFit(GetSizer());
-        wxGetTopLevelParent(this)->Layout();
+        auto *parent{wxGetTopLevelParent(this)};
+        if (parent) {
+            parent->Layout();
+            parent->SetSizerAndFit(parent->GetSizer());
+        }
     } else if (id == ChoiceData::ID_SELECTION) {
         pControl->SetSelection(*data());
     }

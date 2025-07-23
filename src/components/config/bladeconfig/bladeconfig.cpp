@@ -35,7 +35,7 @@ Config::Blade::Blade() {
 
 Config::BladeConfig::BladeConfig() {
     name.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::TextData::ID_VALUE) return;
+        if (id != name.ID_VALUE) return;
 
         auto nameValue{static_cast<string>(name)};
         Utils::trimUnsafe(nameValue);
@@ -50,13 +50,13 @@ Config::BladeConfig::BladeConfig() {
     });
 
     id.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::NumericEvents::ID_VALUE) return;
+        if (id != this->id.ID_VALUE) return;
 
        noBladeID = this->id == NO_BLADE;
     });
 
     noBladeID.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ToggleData::ID_VALUE) return;
+        if (id != noBladeID.ID_VALUE) return;
 
         if (noBladeID) this->id = NO_BLADE;
     });

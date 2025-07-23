@@ -31,14 +31,6 @@ namespace PCUI {
 class Numeric;
 class Decimal;
 
-struct NumericEvents {
-enum {
-    ID_VALUE,
-    ID_RANGE,
-    ID_INCREMENT,
-};
-};
-
 namespace Private {
 
 template<typename T> requires std::is_arithmetic_v<T>
@@ -52,6 +44,12 @@ struct UI_EXPORT NumericDataTemplate : ControlData {
 
     [[nodiscard]] T increment() const { return mIncrement; }
     void setIncrement(T inc);
+
+    enum {
+        ID_VALUE,
+        ID_RANGE,
+        ID_INCREMENT,
+    };
 
 private:
     friend class PCUI::Numeric;

@@ -34,7 +34,7 @@ list<std::shared_ptr<Config>> loadedConfigs;
 
 Config::Config::Config() : settings{*this} {
     propSelection.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+        if (id != propSelection.ID_SELECTION) return;
         propNotifier.notify(ID_PROPSELECTION);
     });
 
@@ -192,7 +192,10 @@ std::shared_ptr<Config::Config> Config::open(const string& name) {
     loadedConfigs.push_back(std::shared_ptr<Config>{new Config()});
     auto ret{loadedConfigs.back()};
 
-    ret->bladeArrays.arraySelection;
+    if (ret->bladeArrays.arraySelection.choices().empty()) {
+        ret->bladeArrays.addArray("blade_in", 0);
+    } 
+    ret->bladeArrays.arraySelection = 0;
 
     ret->name = string{name};
     return ret;

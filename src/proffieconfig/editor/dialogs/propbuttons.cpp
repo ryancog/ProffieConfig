@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/statbox.h>
+
 
 PropButtonsDialog::PropButtonsDialog(EditorWindow *parent) {
     auto config{parent->getOpenConfig()};

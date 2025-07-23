@@ -2,12 +2,12 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#include <wx/tooltip.h>
 #include <wx/button.h>
+#include <wx/tooltip.h>
+#include <wx/statbox.h>
 
 #include "../../core/defines.h"
 #include "../editorwindow.h"
-#include "../pages/bladespage.h"
 
 BladeAwarenessDlg::BladeAwarenessDlg(EditorWindow* parent) :
     wxDialog(

@@ -24,12 +24,55 @@
 Config::BladeArrays::BladeArrays() :
     subBladeTypeProxy{Split::TYPE_MAX} {
 
+    arraySelection.setUpdateHandler([this](uint32 id) {
+        if (id != arraySelection.ID_SELECTION) return;
+
+        if (arraySelection == -1) {
+            bladeSelectionProxy.unbind();
+            subBladeSelectionProxy.unbind();
+
+            bladeTypeProxy.unbind();
+            powerPinProxy.unbind();
+            powerPinNameEntry.hide();
+
+            colorOrder3Proxy.unbind();
+            colorOrder4Proxy.unbind();
+            hasWhiteProxy.unbind();
+            useRGBWithWhiteProxy.unbind();
+
+            dataPinProxy.unbind();
+            lengthProxy.unbind();
+
+            subBladeTypeProxy.unbind();
+            subBladeLengthProxy.unbind();
+            subBladeSegmentsProxy.unbind();
+
+            star1Proxy.ledProxy.unbind();
+            star1Proxy.powerPinProxy.unbind();
+            star1Proxy.resistanceProxy.unbind();
+            star2Proxy.ledProxy.unbind();
+            star2Proxy.powerPinProxy.unbind();
+            star2Proxy.resistanceProxy.unbind();
+            star3Proxy.ledProxy.unbind();
+            star3Proxy.powerPinProxy.unbind();
+            star3Proxy.resistanceProxy.unbind();
+            star4Proxy.ledProxy.unbind();
+            star4Proxy.powerPinProxy.unbind();
+            star4Proxy.resistanceProxy.unbind();
+            return;
+        }
+
+        bladeSelectionProxy.bind(array(arraySelection).bladeSelection);
+    });
 }
 
 void Config::BladeArrays::addArray(string&& name, uint32 id) {
     auto& array{mBladeArrays.emplace_back()};
     array.name = std::move(name);
     array.id = id;
+    auto choices{arraySelection.choices()};
+    choices.push_back(array.name);
+    arraySelection.setChoices(std::move(choices));
 }
 
 void Config::BladeArrays::removeArray(uint32 idx) {

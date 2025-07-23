@@ -68,8 +68,8 @@ private:
 struct RadiosDataProxy : ControlDataProxy<RadiosData> {
     RadiosDataProxy(uint32 numSelections) : numSelections{numSelections} {}
 
-    void bind(RadiosData *data) { 
-        assert(not data or numSelections == data->choices().size());
+    void bind(RadiosData& data) { 
+        assert(not data or numSelections == data.choices().size());
         ControlDataProxy::bind(data);
     }
 

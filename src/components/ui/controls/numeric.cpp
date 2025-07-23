@@ -29,7 +29,7 @@ void PCUI::Private::NumericDataTemplate<T>::operator=(T val) {
     const auto newVal{std::clamp(val, mMin, mMax)};
     if (mValue == newVal) return;
     mValue = newVal;
-    notify(NumericEvents::ID_VALUE);
+    notify(ID_VALUE);
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
@@ -39,7 +39,7 @@ void PCUI::Private::NumericDataTemplate<T>:: setRange(T min, T max) {
     assert(min <= max);
     mMin = min; 
     mMax = max; 
-    notify(NumericEvents::ID_RANGE);
+    notify(ID_RANGE);
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
@@ -48,7 +48,7 @@ void PCUI::Private::NumericDataTemplate<T>:: setIncrement(T inc) {
     if (inc == mIncrement) return;
     assert(inc > 0);
     mIncrement = inc;
-    notify(NumericEvents::ID_INCREMENT);
+    notify(ID_INCREMENT);
 }
 
 template struct PCUI::Private::NumericDataTemplate<int32>;
@@ -88,14 +88,14 @@ void PCUI::Numeric::create(
 }
 
 void PCUI::Numeric::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == NumericEvents::ID_RANGE) pControl->SetRange(data()->mMin, data()->mMax);
-    if (id == ID_REBOUND or id == NumericEvents::ID_INCREMENT) pControl->SetIncrement(data()->mIncrement);
-    if (id == ID_REBOUND or id == NumericEvents::ID_VALUE) pControl->SetValue(*data());
+    if (id == ID_REBOUND or id == data()->ID_RANGE) pControl->SetRange(data()->mMin, data()->mMax);
+    if (id == ID_REBOUND or id == data()->ID_INCREMENT) pControl->SetIncrement(data()->mIncrement);
+    if (id == ID_REBOUND or id == data()->ID_VALUE) pControl->SetValue(*data());
 }
 
 void PCUI::Numeric::onModify(wxSpinEvent& evt) {
     data()->mValue = evt.GetPosition();
-    data()->update(NumericEvents::ID_VALUE);
+    data()->update(data()->ID_VALUE);
 }
 
 PCUI::Decimal::Decimal(
@@ -132,13 +132,13 @@ void PCUI::Decimal::create(
 }
 
 void PCUI::Decimal::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == NumericEvents::ID_RANGE) pControl->SetRange(data()->mMin, data()->mMax);
-    if (id == ID_REBOUND or id == NumericEvents::ID_INCREMENT) pControl->SetIncrement(data()->mIncrement);
-    if (id == ID_REBOUND or id == NumericEvents::ID_VALUE) pControl->SetValue(*data());
+    if (id == ID_REBOUND or id == data()->ID_RANGE) pControl->SetRange(data()->mMin, data()->mMax);
+    if (id == ID_REBOUND or id == data()->ID_INCREMENT) pControl->SetIncrement(data()->mIncrement);
+    if (id == ID_REBOUND or id == data()->ID_VALUE) pControl->SetValue(*data());
 }
 
 void PCUI::Decimal::onModify(wxSpinDoubleEvent& evt) {
     data()->mValue = evt.GetValue();
-    data()->update(NumericEvents::ID_VALUE);
+    data()->update(data()->ID_VALUE);
 }
 
