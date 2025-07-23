@@ -118,30 +118,23 @@ PCUI::Notifier::Notifier(wxWindow *derived, NotifierDataProxy& proxy) {
 void PCUI::Notifier::create(wxWindow *derived, NotifierData& data) {
     assert(mDerived == nullptr);
 
+    derived->Bind(EVT_NOTIFY, [this](NotifierEvent& evt) {
+        std::scoped_lock scopeLock{evt.getData()->mLock};
+        handleNotification(evt.getID());
+        --evt.getData()->mInFlight;
+    });
+
     mData = &data;
     mDerived = derived;
     std::scoped_lock scopeLock{data.mLock};
     data.mNotifier = this;
     data.mInFlight = 0;
 
-    derived->Bind(EVT_NOTIFY, [this](NotifierEvent& evt) {
-        std::scoped_lock scopeLock{evt.getData()->mLock};
-        handleNotification(evt.getID());
-        --evt.getData()->mInFlight;
-    });
+    handleNotification(ID_REBOUND);
 }
 
 void PCUI::Notifier::create(wxWindow *derived, NotifierDataProxy& proxy) {
     assert(mDerived == nullptr);
-
-    mProxy = &proxy;
-    mDerived = derived;
-    proxy.mNotifier = this;
-    if (proxy.mData) {
-        std::scoped_lock scopeLock{proxy.mData->mLock};
-        proxy.mData->mNotifier = this;
-        proxy.mData->mInFlight = 0;
-    }
 
     derived->Bind(EVT_NOTIFY, [this](NotifierEvent& evt) {
         if (this->data() != evt.getData()) return;
@@ -152,6 +145,19 @@ void PCUI::Notifier::create(wxWindow *derived, NotifierDataProxy& proxy) {
     derived->Bind(EVT_UNBOUND, [this](NotifierEvent& evt) {
         handleUnbound();
     });
+
+    mProxy = &proxy;
+    mDerived = derived;
+    proxy.mNotifier = this;
+    if (proxy.mData) {
+        std::scoped_lock scopeLock{proxy.mData->mLock};
+        proxy.mData->mNotifier = this;
+        proxy.mData->mInFlight = 0;
+
+        handleNotification(ID_REBOUND);
+    } else {
+        handleUnbound();
+    }
 }
 
 PCUI::Notifier::~Notifier() {

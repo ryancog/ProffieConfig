@@ -34,6 +34,9 @@ struct UI_EXPORT ChoiceData : ControlData {
         return mChoices[mValue];
     }
 
+    /**
+     * Efficiently assign/update value
+     */
     void operator=(int32 val);
 
     const vector<string>& choices() const { return mChoices; }

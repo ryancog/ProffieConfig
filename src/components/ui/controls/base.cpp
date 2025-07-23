@@ -105,27 +105,15 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::init(
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::handleNotification(uint32 id) {
-    if (id == ID_REBOUND) {
-        pControl->Enable(data()->isEnabled());
-        Show(data()->isShown());
-        onUIUpdate(id);
-        return;
-    }
-    switch (static_cast<ControlData::EventID>(id)) {
-        case ControlData::ID_VISIBILITY:
-            Show(data()->isShown());
-            break;
-        case ControlData::ID_ACTIVE:
-            pControl->Enable(data()->isEnabled());
-            break;
-        default:
-            onUIUpdate(id);
-    }
+    bool rebound{id == ID_REBOUND};
+    if (rebound or id == ControlData::ID_VISIBILITY) Show(data()->isShown());
+    if (rebound or id == ControlData::ID_ACTIVE) Enable(data()->isEnabled());
+    onUIUpdate(id);
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::handleUnbound() {
-    pControl->Disable();
+    Disable();
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>

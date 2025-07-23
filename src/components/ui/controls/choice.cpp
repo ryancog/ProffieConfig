@@ -1,6 +1,4 @@
 #include "choice.h"
-#include "ui/message.h"
-#include "wx/window.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
