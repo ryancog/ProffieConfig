@@ -55,6 +55,8 @@ struct CONFIG_EXPORT BladeConfig {
     void addSubBlade();
     void removeSubBlade(uint32 idx);
 
+    PCUI::ChoiceData bladeSelection;
+
     PCUI::TextData name;
     PCUI::ChoiceData presetArray;
     PCUI::NumericData id;

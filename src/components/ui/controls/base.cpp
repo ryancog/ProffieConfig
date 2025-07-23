@@ -27,6 +27,7 @@
 #include "ui/controls/radios.h"
 #include "ui/controls/text.h"
 #include "ui/controls/toggle.h"
+#include "wx/window.h"
 #include <mutex>
 
 void PCUI::ControlData::setUpdateHandler(function<void(uint32 id)>&& handler) {
@@ -113,8 +114,6 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::handleNot
     switch (static_cast<ControlData::EventID>(id)) {
         case ControlData::ID_VISIBILITY:
             Show(data()->isShown());
-            SetSizerAndFit(GetSizer());
-            wxGetTopLevelParent(this)->Layout();
             break;
         case ControlData::ID_ACTIVE:
             pControl->Enable(data()->isEnabled());

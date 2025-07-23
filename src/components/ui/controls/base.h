@@ -95,7 +95,8 @@ private:
 
 template<typename DATA_TYPE> requires std::is_base_of_v<ControlData, DATA_TYPE>
 struct ControlDataProxy : NotifierDataProxy {
-    void bind(DATA_TYPE *data) { NotifierDataProxy::bind(data); }
+    void bind(DATA_TYPE& data) { NotifierDataProxy::bind(&data); }
+    void unbind() { NotifierDataProxy::bind(nullptr); }
     DATA_TYPE *data() { return static_cast<DATA_TYPE *>(NotifierDataProxy::data()); };
 };
 
@@ -111,12 +112,6 @@ public:
     static_assert(std::is_base_of_v<ControlData, CONTROL_DATA>, "PCUI Control data must be ControlData descendant");
 
     void setToolTip(wxToolTip *tip);
-
-    // Hide these for now until I decide we really need them.
-    // [[nodiscard]] inline constexpr CONTROL *entry() { return mEntry; }
-    // [[nodiscard]] inline constexpr const CONTROL *entry() const { return mEntry; }
-    // [[nodiscard]] inline constexpr wxStaticText *text() { return mText; }
-    // [[nodiscard]] inline constexpr const wxStaticText *text() const { return mText; }
 
 protected:
     ControlBase(wxWindow *parent, CONTROL_DATA &data) : 

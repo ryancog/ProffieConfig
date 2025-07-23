@@ -74,7 +74,7 @@ bool Versions::PropSelection::isDefault() const {
 
 Versions::PropLayout::PropLayout(const PropLayout& other, const PropSettingMap& settingMap) :
     axis{other.axis},
-    frame{other.frame} {
+    label{other.label} {
 
     const auto processChildren{[settingMap](
         const auto& self,
@@ -86,7 +86,7 @@ Versions::PropLayout::PropLayout(const PropLayout& other, const PropSettingMap& 
                 children.emplace_back(
                     std::in_place_type<PropLayout>,
                     ptr->axis,
-                    ptr->frame.label(),
+                    ptr->label,
                     self(self, ptr->children)
                 );
             } else if (auto *ptr = std::get_if<PropSetting *>(&child)) {
@@ -594,7 +594,7 @@ std::set<Versions::PropSetting *> Versions::PropLayout::generate(
         }
 
         if (entry->getType() != PConf::Type::SECTION) continue;
-        if (entry->label) out.frame.setLabel(string{*entry->label});
+        if (entry->label) out.label = entry->label.value();
         auto& child{std::get<PropLayout>(
             out.children.emplace_back(PropLayout{axis})
         )};

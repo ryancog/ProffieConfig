@@ -10,7 +10,6 @@
 #include "ui/controls/numeric.h"
 #include "ui/controls/radios.h"
 #include "ui/controls/toggle.h"
-#include "ui/panel.h"
 #include "utils/types.h"
 
 #include "private/export.h"
@@ -312,22 +311,14 @@ struct VERSIONS_EXPORT PropLayout {
 
     using Children = vector<std::variant<PropLayout, PropSetting *>>;
 
-    PropLayout(const PropLayout&) = delete;
-    PropLayout(PropLayout&&) = default;
-    PropLayout& operator=(const PropLayout&) = delete;
-    PropLayout& operator=(PropLayout&&) = default;
-
     PropLayout(const PropLayout& other, const PropSettingMap& settingMap);
     PropLayout(Axis axis = Axis::VERTICAL, string label = "", Children children = {}) :
         axis{axis},
-        frame{
-            label.empty() ? PCUI::PanelData::Type::BASIC : PCUI::PanelData::Type::FRAMED,
-            std::move(label)
-        },
+        label{label},
         children{std::move(children)} {}
 
     Axis axis;
-    PCUI::PanelData frame;
+    string label;
     Children children;
 };
 

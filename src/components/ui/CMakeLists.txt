@@ -7,7 +7,6 @@ add_library(ui SHARED
     movable.cpp
     plaque.cpp
     message.cpp
-    panel.cpp
     notifier.cpp
 
     controls/base.cpp

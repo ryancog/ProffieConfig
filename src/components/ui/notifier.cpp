@@ -78,9 +78,11 @@ PCUI::NotifierDataProxy::~NotifierDataProxy() {
 void PCUI::NotifierDataProxy::bind(NotifierData *data) {
     if (mData == data) return;
 
-    mData->mLock.lock();
-    mData->mNotifier = nullptr;
-    mData->mLock.unlock();
+    if (mData) {
+        mData->mLock.lock();
+        mData->mNotifier = nullptr;
+        mData->mLock.unlock();
+    }
 
     mData = data;
     if (mData) {
@@ -141,10 +143,7 @@ void PCUI::Notifier::create(wxWindow *derived, NotifierDataProxy& proxy) {
         --evt.getData()->mInFlight;
     });
     derived->Bind(EVT_UNBOUND, [this](NotifierEvent& evt) {
-        if (this->data() != evt.getData()) return;
-        std::scoped_lock scopeLock{evt.getData()->mLock};
-        handleNotification(evt.getID());
-        --evt.getData()->mInFlight;
+        handleUnbound();
     });
 }
 

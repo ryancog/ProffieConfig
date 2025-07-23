@@ -26,12 +26,12 @@
 Config::Settings::Settings(Config& parent) : mParent{parent} {
     // Asign update handlers
     osVersion.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+        if (id != osVersion.ID_SELECTION) return;
 
         mParent.refreshPropVersions();
     });
     bladeDetect.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ToggleData::ID_VALUE) return;
+        if (id != bladeDetect.ID_VALUE) return;
 
         if (bladeDetect) {
             bladeDetectPin.enable();
@@ -41,7 +41,7 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     });
 
     bladeID.enable.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ToggleData::ID_VALUE) return;
+        if (id != bladeID.enable.ID_VALUE) return;
 
         if (bladeID.enable) {
             bladeID.pin.enable();
@@ -59,7 +59,7 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     });
 
     bladeID.mode.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+        if (id != bladeID.mode.ID_SELECTION) return;
 
         switch (static_cast<BladeID::Mode>(static_cast<uint32>(bladeID.mode))) {
             case BladeID::SNAPSHOT:
@@ -78,7 +78,7 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     });
 
     bladeID.bridgePin.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ComboBoxData::ID_VALUE) return;
+        if (id != bladeID.bridgePin.ID_VALUE) return;
 
         auto pinValue{static_cast<string>(bladeID.bridgePin)};
         Utils::trimUnsafe(pinValue);
