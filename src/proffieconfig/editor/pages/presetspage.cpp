@@ -5,6 +5,7 @@
 #include <wx/gdicmn.h>
 #include <wx/msgdlg.h>
 #include <wx/splitter.h>
+#include <wx/statbox.h>
 #include <wx/tooltip.h>
 
 #include "ui/message.h"

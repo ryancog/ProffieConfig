@@ -38,11 +38,11 @@ void AddConfig::bindEvents() {
         update(); 
     }, ID_CreateNew);
     configName.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::TextData::ID_VALUE) return;
+        if (id != configName.ID_VALUE) return;
         update();
     });
     importPath.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::FilePickerData::ID_PATH) return;
+        if (id != importPath.ID_PATH) return;
         configName = static_cast<filepath>(importPath).stem();
     });
 }
