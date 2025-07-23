@@ -21,7 +21,8 @@
 
 #include "ws281x.h"
 
-Config::BladeArrays::BladeArrays() :
+Config::BladeArrays::BladeArrays(Config& parent) :
+    mParent{parent},
     subBladeTypeProxy{Split::TYPE_MAX} {
 
     arraySelection.setUpdateHandler([this](uint32 id) {

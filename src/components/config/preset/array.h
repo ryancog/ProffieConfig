@@ -52,10 +52,13 @@ private:
 };
 
 struct CONFIG_EXPORT PresetArrays {
+    PresetArrays();
+
     PCUI::ChoiceData selection;
 
     enum {
-        NOTIFY_INJECTIONS = 1UL << 0,
+        NOTIFY_SELECTION,
+        NOTIFY_INJECTIONS,
     };
     PCUI::NotifierData notifier;
 

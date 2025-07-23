@@ -30,8 +30,10 @@
 
 namespace Config {
 
+struct Config;
+
 struct BladeArrays {
-    BladeArrays();
+    BladeArrays(Config&);
 
     // Do not set choices manually
     PCUI::ChoiceData arraySelection;
@@ -76,8 +78,8 @@ struct BladeArrays {
     StarProxy star4Proxy;
 
 private:
+    Config& mParent;
     list<BladeConfig> mBladeArrays;
-
 };
 
 } // namespace Config
