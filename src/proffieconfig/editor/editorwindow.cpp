@@ -44,8 +44,6 @@ EditorWindow::EditorWindow(wxWindow *parent, std::shared_ptr<Config::Config> con
     createMenuBar();
     createPages(sizer);
     bindEvents();
-
-    sizer->SetMinSize(450, -1);
 }
 
 void EditorWindow::bindEvents() {
@@ -130,20 +128,13 @@ void EditorWindow::bindEvents() {
         wxSetCursor(wxCURSOR_WAIT);
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
-        generalPage->Show(evt.GetInt() == 0);
-        propsPage->Show(evt.GetInt() == 1);
-        bladesPage->Show(evt.GetInt() == 2);
-        presetsPage->Show(evt.GetInt() == 3);
+        generalPage->GetStaticBox()->Show(evt.GetInt() == 0);
+        propsPage->GetStaticBox()->Show(evt.GetInt() == 1);
+        bladesPage->GetStaticBox()->Show(evt.GetInt() == 2);
+        presetsPage->GetStaticBox()->Show(evt.GetInt() == 3);
 
-        if (bladesPage->AreAnyItemsShown()) {
-            bladesPage->Fit(bladesPage->GetContainingWindow());
-            bladesPage->Layout();
-        }
-        if (propsPage->AreAnyItemsShown()) propsPage->Layout();
-        if (presetsPage->AreAnyItemsShown()) presetsPage->Layout();
-
-        GetSizer()->Fit(this);
-
+        Layout();
+        SetSizerAndFit(GetSizer());
     }, ID_WindowSelect);
 }
 
@@ -198,9 +189,9 @@ void EditorWindow::createPages(wxSizer *sizer) {
     presetsPage = new PresetsPage(this);
     bladesPage = new BladesPage(this);
 
-    propsPage->Show(false);
-    bladesPage->Show(false);
-    presetsPage->Show(false);
+    propsPage->GetStaticBox()->Show(false);
+    bladesPage->GetStaticBox()->Show(false);
+    presetsPage->GetStaticBox()->Show(false);
 
     sizer->Add(optionsSizer, wxSizerFlags(0).Expand());
     sizer->Add(generalPage, wxSizerFlags(1).Border(wxALL, 10).Expand());

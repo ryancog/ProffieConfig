@@ -3,6 +3,7 @@
 // Copyright (C) 2025 Ryan Ogurek
 
 #include <wx/button.h>
+#include <wx/statbox.h>
 
 #include "../../core/defines.h"
 

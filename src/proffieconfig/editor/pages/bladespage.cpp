@@ -122,16 +122,12 @@ wxBoxSizer *BladesPage::createBladeManager() {
         SMALLBUTTONSIZE,
         wxBU_EXACTFIT
     )};
-    bladeButtons->Add(
-        addBladeButton,
-        wxSizerFlags(0).Border(wxRIGHT, 10)
-    );
-    bladeButtons->Add(removeBladeButton, wxSizerFlags(0));
+    bladeButtons->Add(addBladeButton);
+    bladeButtons->AddSpacer(10);
+    bladeButtons->Add(removeBladeButton);
 
-    bladeSelectionSizer->Add(
-        bladeSelect,
-        wxSizerFlags(1).Expand().Border(wxBOTTOM, 5)
-    );
+    bladeSelectionSizer->Add(bladeSelect, wxSizerFlags(1).Expand());
+    bladeSelectionSizer->AddSpacer(5);
     bladeSelectionSizer->Add(bladeButtons, wxSizerFlags(0).Center());
 
     auto *subBladeSelectionSizer{new wxBoxSizer(wxVERTICAL)};
@@ -157,15 +153,11 @@ wxBoxSizer *BladesPage::createBladeManager() {
         SMALLBUTTONSIZE,
         wxBU_EXACTFIT
     )};
-    subBladeButtonSizer->Add(
-        addSubBladeButton,
-        wxSizerFlags(0).Border(wxRIGHT, 10)
-    );
-    subBladeButtonSizer->Add(removeSubBladeButton, wxSizerFlags(0));
-    subBladeSelectionSizer->Add(
-        subBladeSelect,
-        wxSizerFlags(1).Expand().Border(wxBOTTOM, 5)
-    );
+    subBladeButtonSizer->Add(addSubBladeButton);
+    bladeButtons->AddSpacer(10);
+    subBladeButtonSizer->Add(removeSubBladeButton);
+    subBladeSelectionSizer->Add(subBladeSelect, wxSizerFlags(1).Expand());
+    subBladeSelectionSizer->AddSpacer(5);
     subBladeSelectionSizer->Add(subBladeButtonSizer, wxSizerFlags(0).Center());
 
     bladeManagerSizer->Add(bladeSelectionSizer, wxSizerFlags(1).Expand());
