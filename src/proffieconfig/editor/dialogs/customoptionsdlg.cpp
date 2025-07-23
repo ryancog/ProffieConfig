@@ -17,10 +17,11 @@ CustomOptionsDlg::CustomOptionsDlg(EditorWindow *parent) :
         wxDefaultSize,
         wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER
     ),
-    PCUI::Notifier(this, parent->getOpenConfig()->settings.customOptsNotifier),
     mParent{parent} {
     createUI();
     bindEvents();
+
+    PCUI::Notifier::create(this, mParent->getOpenConfig()->settings.customOptsNotifier);
 }
 
 void CustomOptionsDlg::createUI() {
@@ -116,7 +117,7 @@ void CustomOptionsDlg::createOptionArea() {
     mOptionArea->SetSizerAndFit(sizer);
 }
 
-void CustomOptionsDlg::handleNotification(uint32) {
+void CustomOptionsDlg::handleNotification(uint32 id) {
     mOptionArea->GetSizer()->Clear(true);
 
     auto config{mParent->getOpenConfig()};

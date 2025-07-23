@@ -44,8 +44,6 @@ MainMenu::MainMenu(wxWindow* parent) :
         wxDefaultSize,
         wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)
     ) {
-    Notifier::create(this, mNotifyData);
-
     createUI();
     createMenuBar();
     bindEvents();
@@ -60,6 +58,8 @@ MainMenu::MainMenu(wxWindow* parent) :
         );
     }
     configSelection.setChoices(std::move(configChoices));
+
+    Notifier::create(this, mNotifyData);
 
     Show(true);
 }
@@ -233,11 +233,13 @@ void MainMenu::bindEvents() {
 }
 
 void MainMenu::handleNotification(uint32 id) {
-    if (id == ID_ConfigSelection) {
+    bool rebound{id == ID_REBOUND};
+    if (rebound or id == ID_ConfigSelection) {
         editConfig->Enable(configSelection != 0);
         removeConfig->Enable(configSelection != 0);
         applyButton->Enable(configSelection != 0 and boardSelection != 0);
-    } else if (id == ID_BoardSelection) {
+    } 
+    if (rebound or id == ID_BoardSelection) {
         applyButton->Enable(configSelection != 0 and boardSelection != 0);
         openSerial->Enable(boardSelection != 0);
     }
@@ -299,7 +301,6 @@ void MainMenu::createUI() {
     removeConfig = new wxButton(
         this, ID_RemoveConfig, _("Remove"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT
     );
-    removeConfig->Disable();
     configSelectSection->Add(configSelect, wxSizerFlags{1}.Expand());
     configSelectSection->AddSpacer(10);
     configSelectSection->Add(addConfig, wxSizerFlags{}.Expand());
@@ -307,7 +308,6 @@ void MainMenu::createUI() {
     configSelectSection->Add(removeConfig, wxSizerFlags{}.Expand());
 
     editConfig = new wxButton(this, ID_EditConfig, _("Edit Selected Configuration"));
-    editConfig->Disable();
 
     auto *boardControls{new wxBoxSizer(wxHORIZONTAL)};
     auto boardEntries{Utils::createEntries({_("Select Board...")})};
@@ -329,9 +329,7 @@ void MainMenu::createUI() {
 
     applyButton = new wxButton(this, ID_ApplyChanges, _("Apply Selected Configuration to Board"));
     TIP(applyButton, _("Apply the current configuration to the selected Proffieboard."));
-    applyButton->Disable();
     openSerial = new wxButton(this, ID_OpenSerial, _("Open Serial Monitor"));
-    openSerial->Disable();
 
     sizer->AddSpacer(20);
     sizer->Add(headerSection, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
@@ -349,36 +347,6 @@ void MainMenu::createUI() {
 
     SetSizerAndFit(sizer);
 }
-
-// void MainMenu::update() {
-//     auto configChoices{configSelection.choices()};
-//     auto lastChoice{static_cast<string>(configSelection)};
-//     configChoices.resize(1);
-//     int32 newChoice{0};
-// 
-//     fs::directory_iterator configsIterator{Paths::configs()};
-//     for (const auto& configFile : configsIterator) {
-//         if (not configFile.is_regular_file()) continue;
-//         if (configFile.path().extension() != ".h") continue;
-// 
-//         const auto& configName{configChoices.emplace_back(configFile.path().stem().native())};
-//         if (configName == lastChoice) newChoice = configChoices.size() - 1;
-//     }
-// 
-//     configSelection.setChoices(std::move(configChoices));
-//     configSelection = newChoice;
-// 
-//     bool configSelected{configSelection != 0};
-//     bool boardSelected{boardSelection != 0};
-//     bool recoverySelected{
-//         static_cast<string>(boardSelection).find(_("BOOTLOADER").ToStdString()) != string::npos
-//     };
-// 
-//     applyButton->Enable(configSelected && boardSelected);
-//     editConfig->Enable(configSelected);
-//     removeConfig->Enable(configSelected);
-//     openSerial->Enable(boardSelected && !recoverySelected);
-// }
 
 void MainMenu::removeEditor(EditorWindow *editor) {
     for (auto it{mEditors.begin()}; it != mEditors.end(); ++it) {
