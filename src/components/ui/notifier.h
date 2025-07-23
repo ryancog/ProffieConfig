@@ -33,6 +33,7 @@ namespace PCUI {
 // probably deserve a second look.
 
 struct Notifier;
+struct NotifierDataProxy;
 
 struct UI_EXPORT NotifierData {
     virtual ~NotifierData();
@@ -60,6 +61,8 @@ private:
     friend struct Notifier;
     friend struct NotifierDataProxy;
     Notifier *mNotifier{nullptr};
+    NotifierDataProxy *mProxy{nullptr};
+
     /**
      * Events in flight.
      */

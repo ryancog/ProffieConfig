@@ -44,8 +44,10 @@ const wxEventTypeTag<NotifierEvent> EVT_UNBOUND{wxNewEventType()};
 } // namespace PCUI
 
 PCUI::NotifierData::~NotifierData() {
-    // Handle this dying before the notifier does.
+    // Handle this dying (shortly) before the notifier does.
     if (mNotifier) mNotifier->mData = nullptr;
+    // Handle this dying behind a proxy (allowed)
+    if (mProxy) mProxy->bind(nullptr);
 }
 
 
@@ -71,7 +73,10 @@ bool PCUI::NotifierData::eventsInFlight() {
 
 PCUI::NotifierDataProxy::~NotifierDataProxy() {
     // Handle this dying before the notifier does.
-    if (mData) mData->mNotifier = nullptr;
+    if (mData) {
+        mData->mNotifier = nullptr;
+        mData->mProxy = nullptr;
+    }
     if (mNotifier) mNotifier->mProxy = nullptr;
 }
 
@@ -81,15 +86,17 @@ void PCUI::NotifierDataProxy::bind(NotifierData *data) {
     if (mData) {
         mData->mLock.lock();
         mData->mNotifier = nullptr;
+        mData->mProxy = nullptr;
         mData->mLock.unlock();
     }
 
     mData = data;
     if (mData) {
         std::scoped_lock newLock{mData->mLock};
+        mData->mProxy = this;
         mData->mNotifier = mNotifier;
         mData->notify(Notifier::ID_REBOUND);
-    } else {
+    } else if (mNotifier) {
         if (wxThread::IsMain()) {
             NotifierEvent evt{EVT_UNBOUND, 0, nullptr};
             wxPostEvent(mNotifier->mDerived, evt);
