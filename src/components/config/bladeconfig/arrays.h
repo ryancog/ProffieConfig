@@ -27,6 +27,7 @@
 #include "ui/controls/toggle.h"
 
 #include "config/bladeconfig/bladeconfig.h"
+#include "ui/notifier.h"
 
 namespace Config {
 
@@ -37,6 +38,13 @@ struct BladeArrays {
 
     // Do not set choices manually
     PCUI::ChoiceData arraySelection;
+    enum {
+        ID_ARRAY_SELECTION,
+        ID_BLADE_SELECTION,
+        ID_SUBBLADE_SELECTION,
+        ID_BLADE_TYPE_SELECTION,
+    };
+    PCUI::NotifierData notifyData;
 
     PCUI::ChoiceDataProxy bladeSelectionProxy;
     PCUI::ChoiceDataProxy subBladeSelectionProxy;

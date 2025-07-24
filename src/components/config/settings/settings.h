@@ -40,6 +40,11 @@ struct CONFIG_EXPORT Settings {
      */
     Settings(Config&);
 
+    enum {
+        ID_OS_VERSION,
+    };
+    PCUI::NotifierData notifyData;
+
     enum BoardVersion {
         PROFFIEBOARDV3,
         PROFFIEBOARDV2,
@@ -224,7 +229,7 @@ struct CONFIG_EXPORT Settings {
 
     // POV Data?
 
-    PCUI::NotifierData customOptsNotifier;
+    PCUI::NotifierData customOptsNotifyData;
     struct CustomOption {
         PCUI::TextData define;
         PCUI::TextData value;

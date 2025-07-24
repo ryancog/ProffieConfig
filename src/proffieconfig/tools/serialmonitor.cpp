@@ -83,7 +83,7 @@ SerialMonitor::SerialMonitor(MainMenu* parent, const string& devPath) :
     output->SetFont(font);
     output->AlwaysShowScrollbars(false, false);
 
-    master->Add(input, BOXITEMFLAGS);
+    master->Add(input);
     master->Add(output, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
     bindEvents();

@@ -44,6 +44,10 @@ EditorWindow::EditorWindow(wxWindow *parent, std::shared_ptr<Config::Config> con
     createMenuBar();
     createPages(sizer);
     bindEvents();
+
+    wxCommandEvent event{wxEVT_CHOICE, ID_WindowSelect};
+    event.SetInt(0);
+    wxPostEvent(this, event);
 }
 
 void EditorWindow::bindEvents() {
@@ -134,7 +138,7 @@ void EditorWindow::bindEvents() {
         presetsPage->GetStaticBox()->Show(evt.GetInt() == 3);
 
         Layout();
-        SetSizerAndFit(GetSizer());
+        Fit();
     }, ID_WindowSelect);
 }
 
@@ -189,15 +193,23 @@ void EditorWindow::createPages(wxSizer *sizer) {
     presetsPage = new PresetsPage(this);
     bladesPage = new BladesPage(this);
 
-    propsPage->GetStaticBox()->Show(false);
-    bladesPage->GetStaticBox()->Show(false);
-    presetsPage->GetStaticBox()->Show(false);
-
     sizer->Add(optionsSizer, wxSizerFlags(0).Expand());
-    sizer->Add(generalPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
-    sizer->Add(propsPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
-    sizer->Add(presetsPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
-    sizer->Add(bladesPage, wxSizerFlags(1).Border(wxALL, 10).Expand());
+    sizer->Add(
+        generalPage, 
+        wxSizerFlags(1).Border(wxALL, 10).Expand()
+    );
+    sizer->Add(
+        propsPage,
+        wxSizerFlags(1).Border(wxALL, 10).Expand()
+    );
+    sizer->Add(
+        presetsPage,
+        wxSizerFlags(1).Border(wxALL, 10).Expand()
+    );
+    sizer->Add(
+        bladesPage,
+        wxSizerFlags(1).Border(wxALL, 10).Expand()
+    );
 
     SetSizerAndFit(sizer);
 }
@@ -206,5 +218,23 @@ bool EditorWindow::save() {
     return mConfig->save();
 }
 
+void EditorWindow::Fit() {
+    SetSizeHints({-1, -1}, {-1, -1});
+    PCUI::Frame::Fit();
+    SetMinSize(GetSize());
+    if (
+            generalPage->GetStaticBox()->IsShown() or
+            propsPage->GetStaticBox()->IsShown()
+       ) {
+        SetMaxSize(GetSize());
+    } else if (bladesPage->GetStaticBox()->IsShown()) {
+        SetMaxSize({GetSize().x, -1});
+    } else if (presetsPage->GetStaticBox()->IsShown()) {
+        SetMaxSize({-1, -1});
+    }
+}
+
 std::shared_ptr<Config::Config> EditorWindow::getOpenConfig() const { return mConfig; }
+
+
 

@@ -98,6 +98,19 @@ struct ControlDataProxy : NotifierDataProxy {
     void bind(DATA_TYPE& data) { NotifierDataProxy::bind(&data); }
     void unbind() { NotifierDataProxy::bind(nullptr); }
     DATA_TYPE *data() { return static_cast<DATA_TYPE *>(NotifierDataProxy::data()); };
+
+    /**
+     * Whether to show the control whenever its proxy (this) is unbound.
+     *
+     * Normally the control is simply disabled.
+     * Takes effect on next unbind, NOT immediately
+     */
+    void showWhenUnbound(bool show) { mShowWhenUnbound = show; }
+
+private:
+    template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
+    friend class ControlBase;
+    bool mShowWhenUnbound{true};
 };
 
 template<
@@ -114,10 +127,8 @@ public:
     void setToolTip(wxToolTip *tip);
 
 protected:
-    ControlBase(wxWindow *parent, CONTROL_DATA &data) : 
-        wxPanel(parent, wxID_ANY), Notifier(this, data) {}
-    ControlBase(wxWindow *parent, ControlDataProxy<CONTROL_DATA>& proxy) : 
-        wxPanel(parent, wxID_ANY), Notifier{this, proxy} {}
+    ControlBase(wxWindow *parent, CONTROL_DATA &data);
+    ControlBase(wxWindow *parent, ControlDataProxy<CONTROL_DATA>& proxy);
 
     void init(
         CONTROL *control,

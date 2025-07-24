@@ -25,8 +25,41 @@ Config::BladeArrays::BladeArrays(Config& parent) :
     mParent{parent},
     subBladeTypeProxy{Split::TYPE_MAX} {
 
+    subBladeSelectionProxy.showWhenUnbound(false);
+
+    bladeTypeProxy.showWhenUnbound(false);
+    powerPinProxy.showWhenUnbound(false);
+    powerPinNameEntry.hide();
+
+    colorOrder3Proxy.showWhenUnbound(false);
+    colorOrder4Proxy.showWhenUnbound(false);
+    hasWhiteProxy.showWhenUnbound(false);
+    useRGBWithWhiteProxy.showWhenUnbound(false);
+
+    dataPinProxy.showWhenUnbound(false);
+    lengthProxy.showWhenUnbound(false);
+
+    subBladeTypeProxy.showWhenUnbound(false);
+    subBladeLengthProxy.showWhenUnbound(false);
+    subBladeSegmentsProxy.showWhenUnbound(false);
+
+    star1Proxy.ledProxy.showWhenUnbound(false);
+    star1Proxy.powerPinProxy.showWhenUnbound(false);
+    star1Proxy.resistanceProxy.showWhenUnbound(false);
+    star2Proxy.ledProxy.showWhenUnbound(false);
+    star2Proxy.powerPinProxy.showWhenUnbound(false);
+    star2Proxy.resistanceProxy.showWhenUnbound(false);
+    star3Proxy.ledProxy.showWhenUnbound(false);
+    star3Proxy.powerPinProxy.showWhenUnbound(false);
+    star3Proxy.resistanceProxy.showWhenUnbound(false);
+    star4Proxy.ledProxy.showWhenUnbound(false);
+    star4Proxy.powerPinProxy.showWhenUnbound(false);
+    star4Proxy.resistanceProxy.showWhenUnbound(false);
+
+
     arraySelection.setUpdateHandler([this](uint32 id) {
         if (id != arraySelection.ID_SELECTION) return;
+        notifyData.notify(ID_ARRAY_SELECTION);
 
         if (arraySelection == -1) {
             bladeSelectionProxy.unbind();

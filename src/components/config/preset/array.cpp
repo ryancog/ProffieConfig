@@ -104,7 +104,7 @@ void removeArray(uint32);
 
 void Config::PresetArrays::addInjection(const string& name) {
     mInjections.emplace_back(Injection{name});
-    notifier.notify(NOTIFY_INJECTIONS);
+    notifyData.notify(NOTIFY_INJECTIONS);
 }
 
 void Config::PresetArrays::removeInjection(const Injection& injection) {
@@ -116,6 +116,6 @@ void Config::PresetArrays::removeInjection(const Injection& injection) {
 
     mInjections.erase(iter);
 
-    notifier.notify(NOTIFY_INJECTIONS);
+    notifyData.notify(NOTIFY_INJECTIONS);
 }
 

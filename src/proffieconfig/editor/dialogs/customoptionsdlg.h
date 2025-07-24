@@ -14,7 +14,7 @@ public:
     CustomOptionsDlg(EditorWindow*);
 
 private:
-    void handleNotification(uint32) override;
+    void handleNotification(uint32) final;
 
     EditorWindow *mParent;
 

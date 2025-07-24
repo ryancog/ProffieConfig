@@ -60,7 +60,7 @@ struct CONFIG_EXPORT PresetArrays {
         NOTIFY_SELECTION,
         NOTIFY_INJECTIONS,
     };
-    PCUI::NotifierData notifier;
+    PCUI::NotifierData notifyData;
 
     [[nodiscard]] PresetArray& array(uint32 idx) { 
         return *std::next(mArrays.begin(), idx);

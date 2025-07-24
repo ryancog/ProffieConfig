@@ -37,7 +37,7 @@ Config::Config::Config() :
     bladeArrays{*this} {
     propSelection.setUpdateHandler([this](uint32 id) {
         if (id != propSelection.ID_SELECTION) return;
-        propNotifier.notify(ID_PROPSELECTION);
+        propNotifyData.notify(ID_PROPSELECTION);
     });
 
     refreshVersions();
@@ -193,11 +193,6 @@ std::shared_ptr<Config::Config> Config::open(const string& name) {
 
     loadedConfigs.push_back(std::shared_ptr<Config>{new Config()});
     auto ret{loadedConfigs.back()};
-
-    if (ret->bladeArrays.arraySelection.choices().empty()) {
-        ret->bladeArrays.addArray("blade_in", 0);
-    } 
-    ret->bladeArrays.arraySelection = 0;
 
     ret->name = string{name};
     return ret;

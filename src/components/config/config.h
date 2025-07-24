@@ -41,7 +41,7 @@ struct CONFIG_EXPORT Config {
     enum {
         ID_PROPSELECTION,
     };
-    PCUI::NotifierData propNotifier;
+    PCUI::NotifierData propNotifyData;
     std::shared_ptr<Versions::Prop> prop(uint32 idx) {
         return *std::next(mProps.begin(), idx);
     }
