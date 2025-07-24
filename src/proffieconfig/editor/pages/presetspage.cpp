@@ -19,11 +19,12 @@
 
 PresetsPage::PresetsPage(EditorWindow *window) : 
     wxStaticBoxSizer(wxHORIZONTAL, window),
+    PCUI::Notifier(GetStaticBox(), window->getOpenConfig()->presetArrays.notifyData),
     mParent(window) {
     createUI();
     bindEvents();
-
-    PCUI::Notifier::create(GetStaticBox(), window->getOpenConfig()->presetArrays.notifier);
+    
+    initializeNotifier();
 }
 
 void PresetsPage::createUI() {

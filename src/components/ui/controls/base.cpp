@@ -27,8 +27,6 @@
 #include "ui/controls/radios.h"
 #include "ui/controls/text.h"
 #include "ui/controls/toggle.h"
-#include "wx/window.h"
-#include <mutex>
 
 void PCUI::ControlData::setUpdateHandler(function<void(uint32 id)>&& handler) {
     mOnUpdate = std::move(handler);
@@ -58,6 +56,18 @@ void PCUI::ControlData::notify(uint32 id) {
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
+PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::ControlBase(
+    wxWindow *parent,
+    CONTROL_DATA &data
+) : wxPanel(parent, wxID_ANY), Notifier(this, data) {}
+
+template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
+PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::ControlBase(
+    wxWindow *parent,
+    ControlDataProxy<CONTROL_DATA>& proxy
+) : wxPanel(parent, wxID_ANY), Notifier{this, proxy} {}
+
+template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::init(
     CONTROL *control,
     const wxEventTypeTag<CONTROL_EVENT>& eventTag,
@@ -65,11 +75,11 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::init(
     wxOrientation orient
 ) {
     auto *sizer{new wxBoxSizer(orient)};
-    constexpr auto PADDING{5};
 
     pControl = control;
 
     if (not label.empty()) {
+        constexpr auto PADDING{5};
         auto sizerFlags{
             wxSizerFlags(0).Border(wxLEFT | wxRIGHT, PADDING)
         };
@@ -79,14 +89,16 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::init(
         );
     }
 
-    sizer->Add(control, wxSizerFlags(1).Expand());
+    wxSizerFlags controlFlags;
+    if (orient == wxHORIZONTAL) {
+        controlFlags.Proportion(1).Center();
+    } else {
+        controlFlags.Proportion(1).Expand();
+    }
+    sizer->Add(control, controlFlags);
     SetSizerAndFit(sizer);
 
-    if (Notifier::data()) {
-        Notifier::data()->notify(ID_REBOUND);
-    } else {
-        handleUnbound();
-    }
+    initializeNotifier();
 
     Bind(eventTag, [this](CONTROL_EVENT& evt) { controlEventHandler(evt); });
 }
@@ -114,6 +126,9 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::handleNot
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::handleUnbound() {
     Disable();
+    if (proxy()) {
+       Show(static_cast<ControlDataProxy<CONTROL_DATA> *>(proxy())->mShowWhenUnbound);
+    }
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>

@@ -27,14 +27,6 @@ static constexpr auto COPYRIGHT_NOTICE{
     "related to ProffieOS, created by Fredrik Hubinette."
 };
 
-#define FIRSTITEMFLAGS wxSizerFlags(0).Border(wxALL, 5)
-#define MENUITEMFLAGS  wxSizerFlags(0).Border(wxLEFT | wxBOTTOM | wxRIGHT, 5)
-#define BOXITEMFLAGS wxSizerFlags(0).Border(wxALL, 10).Expand()
-#define TEXTITEMFLAGS wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 5)
-
-#include <wx/tooltip.h>
-#define TIP(object, msg) object->SetToolTip(new wxToolTip(msg));
-
 #define ARDUINOCORE_PBV1 "proffieboard:stm32l4:Proffieboard-L433CC"
 #define ARDUINOCORE_PBV2 "proffieboard:stm32l4:ProffieboardV2-L433CC"
 #define ARDUINOCORE_PBV3 "proffieboard:stm32l4:ProffieboardV3-L452RE"

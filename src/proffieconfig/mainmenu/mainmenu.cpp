@@ -5,6 +5,7 @@
 #include <fstream>
 
 #include <wx/aboutdlg.h>
+#include <wx/cursor.h>
 #include <wx/event.h>
 #include <wx/gdicmn.h>
 #include <wx/menu.h>
@@ -44,6 +45,8 @@ MainMenu::MainMenu(wxWindow* parent) :
         wxDefaultSize,
         wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)
     ) {
+    Notifier::create(this, mNotifyData);
+
     createUI();
     createMenuBar();
     bindEvents();
@@ -59,9 +62,8 @@ MainMenu::MainMenu(wxWindow* parent) :
     }
     configSelection.setChoices(std::move(configChoices));
 
-    Notifier::create(this, mNotifyData);
-
-    Show(true);
+    initializeNotifier();
+    Show();
 }
 
 void MainMenu::bindEvents() {
@@ -235,13 +237,13 @@ void MainMenu::bindEvents() {
 void MainMenu::handleNotification(uint32 id) {
     bool rebound{id == ID_REBOUND};
     if (rebound or id == ID_ConfigSelection) {
-        editConfig->Enable(configSelection != 0);
-        removeConfig->Enable(configSelection != 0);
-        applyButton->Enable(configSelection != 0 and boardSelection != 0);
+        FindWindow(ID_EditConfig)->Enable(configSelection != 0);
+        FindWindow(ID_RemoveConfig)->Enable(configSelection != 0);
+        FindWindow(ID_ApplyChanges)->Enable(configSelection != 0 and boardSelection != 0);
     } 
     if (rebound or id == ID_BoardSelection) {
-        applyButton->Enable(configSelection != 0 and boardSelection != 0);
-        openSerial->Enable(boardSelection != 0);
+        FindWindow(ID_ApplyChanges)->Enable(configSelection != 0 and boardSelection != 0);
+        FindWindow(ID_OpenSerial)->Enable(boardSelection != 0);
     }
 }
 
@@ -270,6 +272,7 @@ void MainMenu::createUI() {
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
     auto *headerSection{new wxBoxSizer(wxHORIZONTAL)};
+
     auto *titleSection{new wxBoxSizer(wxVERTICAL)};
     auto *title{new wxStaticText(this, wxID_ANY, "ProffieConfig")};
     auto titleFont{title->GetFont()};
@@ -283,12 +286,16 @@ void MainMenu::createUI() {
     auto *subTitle{new wxStaticText(this, wxID_ANY, _("Created by Ryryog25"))};
     titleSection->Add(title);
     titleSection->Add(subTitle);
+
+    auto *appIcon{PCUI::createStaticImage(this, wxID_ANY, Image::loadPNG("icon"))};
+    appIcon->SetMaxSize(wxSize{64, 64});
+
+    headerSection->AddSpacer(10);
     headerSection->Add(titleSection);
     headerSection->AddSpacer(20);
     headerSection->AddStretchSpacer(1);
-    auto *appIcon{PCUI::createStaticImage(this, wxID_ANY, Image::loadPNG("icon"))};
-    appIcon->SetMaxSize(wxSize{64, 64});
     headerSection->Add(appIcon);
+    headerSection->AddSpacer(10);
 
     auto *configSelectSection{new wxBoxSizer(wxHORIZONTAL)};
     configSelection.setChoices(Utils::createEntries({
@@ -298,16 +305,28 @@ void MainMenu::createUI() {
     auto *configSelect{new PCUI::Choice(this, configSelection)};
 
     auto *addConfig{new wxButton(this, ID_AddConfig, _("Add"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT)};
-    removeConfig = new wxButton(
-        this, ID_RemoveConfig, _("Remove"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT
-    );
-    configSelectSection->Add(configSelect, wxSizerFlags{1}.Expand());
-    configSelectSection->AddSpacer(10);
-    configSelectSection->Add(addConfig, wxSizerFlags{}.Expand());
-    configSelectSection->AddSpacer(10);
-    configSelectSection->Add(removeConfig, wxSizerFlags{}.Expand());
+    auto *removeConfig{new wxButton(
+        this,
+        ID_RemoveConfig,
+        _("Remove"),
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxBU_EXACTFIT
+    )};
 
-    editConfig = new wxButton(this, ID_EditConfig, _("Edit Selected Configuration"));
+    configSelectSection->AddSpacer(10);
+    configSelectSection->Add(configSelect, wxSizerFlags{1}.Expand());
+    configSelectSection->AddSpacer(5);
+    configSelectSection->Add(addConfig, wxSizerFlags{}.Expand());
+    configSelectSection->AddSpacer(5);
+    configSelectSection->Add(removeConfig, wxSizerFlags{}.Expand());
+    configSelectSection->AddSpacer(10);
+
+    auto *editConfig{new wxButton(
+        this,
+        ID_EditConfig,
+        _("Edit Selected Configuration")
+    )};
 
     auto *boardControls{new wxBoxSizer(wxHORIZONTAL)};
     auto boardEntries{Utils::createEntries({_("Select Board...")})};
@@ -317,32 +336,45 @@ void MainMenu::createUI() {
     boardSelection.setChoices(std::move(boardEntries));
     boardSelection = 0;
     auto *boardSelect{new PCUI::Choice(this, boardSelection)};
-    TIP(
-        boardSelect, 
-        _("Select the Proffieboard to connect to.\nThese IDs are assigned by the OS, and can vary.")
-    );
+    boardSelect->SetToolTip(_("Select the Proffieboard to connect to.\nThese IDs are assigned by the OS, and can vary."));
     auto *refreshButton{new wxButton(this, ID_RefreshDev, _("Refresh Boards"))};
-    TIP(refreshButton, _("Generate an up-to-date list of connected boards."));
-    boardControls->Add(refreshButton);
+    refreshButton->SetToolTip(_("Generate an up-to-date list of connected boards."));
+
     boardControls->AddSpacer(10);
+    boardControls->Add(refreshButton);
+    boardControls->AddSpacer(5);
     boardControls->Add(boardSelect, wxSizerFlags{1});
+    boardControls->AddSpacer(10);
 
-    applyButton = new wxButton(this, ID_ApplyChanges, _("Apply Selected Configuration to Board"));
-    TIP(applyButton, _("Apply the current configuration to the selected Proffieboard."));
-    openSerial = new wxButton(this, ID_OpenSerial, _("Open Serial Monitor"));
+    auto *applyButton{new wxButton(
+        this,
+        ID_ApplyChanges,
+        _("Apply Selected Configuration to Board")
+    )};
+    applyButton->SetToolTip(_("Apply the current configuration to the selected Proffieboard."));
+    auto *openSerial{new wxButton(this, ID_OpenSerial, _("Open Serial Monitor"))};
 
     sizer->AddSpacer(20);
-    sizer->Add(headerSection, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+    sizer->Add(headerSection, wxSizerFlags().Expand());
     sizer->AddSpacer(20);
-    sizer->Add(configSelectSection, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+    sizer->Add(configSelectSection, wxSizerFlags().Expand());
     sizer->AddSpacer(10);
-    sizer->Add(editConfig, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+    sizer->Add(
+        editConfig,
+        wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT, 10)
+    );
     sizer->AddSpacer(20);
-    sizer->Add(boardControls, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+    sizer->Add(boardControls, wxSizerFlags().Expand());
     sizer->AddSpacer(10);
-    sizer->Add(applyButton, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+    sizer->Add(
+        applyButton,
+        wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT, 10)
+    );
     sizer->AddSpacer(10);
-    sizer->Add(openSerial, wxSizerFlags{}.Border(wxLEFT | wxRIGHT, 10).Expand());
+    sizer->Add(
+        openSerial,
+        wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT, 10)
+    );
     sizer->AddSpacer(20); // There's a sizing issue I need to figure out... for now we give it a chin
 
     SetSizerAndFit(sizer);

@@ -25,11 +25,6 @@ public:
 
     void removeEditor(EditorWindow *);
 
-    wxButton* applyButton{nullptr};
-    wxButton* openSerial{nullptr};
-    wxButton* removeConfig{nullptr};
-    wxButton* editConfig{nullptr};
-
     PCUI::ChoiceData boardSelection;
     PCUI::ChoiceData configSelection;
 

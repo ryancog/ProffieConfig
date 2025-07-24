@@ -43,5 +43,7 @@ private:
     void createPages(wxSizer *);
     void bindEvents();
 
+    void Fit() override;
+
     std::shared_ptr<Config::Config> mConfig;
 };

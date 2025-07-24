@@ -28,6 +28,7 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     osVersion.setUpdateHandler([this](uint32 id) {
         if (id != osVersion.ID_SELECTION) return;
 
+        notifyData.notify(ID_OS_VERSION);
         mParent.refreshPropVersions();
     });
     bladeDetect.setUpdateHandler([this](uint32 id) {
@@ -176,9 +177,9 @@ bool Config::Settings::addCustomOption() {
     }
 
     mCustomOptions.emplace_back();
-    customOptsNotifier.getLock().lock();
-    customOptsNotifier.notify();
-    customOptsNotifier.getLock().unlock();
+    customOptsNotifyData.getLock().lock();
+    customOptsNotifyData.notify();
+    customOptsNotifyData.getLock().unlock();
     return true;
 }
 
@@ -190,9 +191,9 @@ bool Config::Settings::removeCustomOption(CustomOption& opt) {
     if (iter == mCustomOptions.end()) return false;
 
     mCustomOptions.erase(iter);
-    customOptsNotifier.getLock().lock();
-    customOptsNotifier.notify();
-    customOptsNotifier.getLock().unlock();
+    customOptsNotifyData.getLock().lock();
+    customOptsNotifyData.notify();
+    customOptsNotifyData.getLock().unlock();
     return true;
 }
 

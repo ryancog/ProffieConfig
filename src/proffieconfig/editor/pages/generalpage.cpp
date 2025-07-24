@@ -5,17 +5,19 @@
 #include <wx/button.h>
 #include <wx/statbox.h>
 
-#include "../../core/defines.h"
-
 GeneralPage::GeneralPage(EditorWindow *parent) : 
     wxStaticBoxSizer(wxVERTICAL, parent, ""), 
+    Notifier(GetStaticBox(), parent->getOpenConfig()->settings.notifyData),
     mParent(parent) {
-    Add(boardSection(this), BOXITEMFLAGS);
-    Add(optionSection(this), BOXITEMFLAGS);
+
+    Add(setupSection(this), wxSizerFlags(0).Expand());
+    AddSpacer(10);
+    Add(optionSection(this), wxSizerFlags(1).Expand());
 
     mCustomOptDlg = new CustomOptionsDlg(mParent);
 
     bindEvents();
+    initializeNotifier();
 }
 
 void GeneralPage::bindEvents() {
@@ -23,6 +25,20 @@ void GeneralPage::bindEvents() {
         if (mCustomOptDlg->IsShown()) mCustomOptDlg->Raise();
         else mCustomOptDlg->Show();
     }, ID_CustomOptions);
+}
+
+void GeneralPage::handleNotification(uint32 id) {
+    bool rebound{id == ID_REBOUND};
+    auto& settings{mParent->getOpenConfig()->settings};
+
+    if (rebound or id == settings.ID_OS_VERSION) {
+        auto *osVersionButton{GetStaticBox()->FindWindow(ID_OSVersion)};
+        if (settings.osVersion != -1) {
+            osVersionButton->SetLabel("OS " + static_cast<string>(settings.osVersion));
+        } else {
+            osVersionButton->SetLabel("No OS Selected");
+        }
+    }
 }
 
 // void GeneralPage::createToolTips() const {
@@ -50,15 +66,22 @@ void GeneralPage::bindEvents() {
 //     TIP(disableDiagnosticCommands, _("Disable diagnostic commands in the Serial Monitor to save memory."));
 // }
 
-wxStaticBoxSizer* GeneralPage::boardSection(wxStaticBoxSizer* parent) {
+wxStaticBoxSizer* GeneralPage::setupSection(wxStaticBoxSizer* parent) {
     auto config{mParent->getOpenConfig()};
 
-    auto *boardSetup{new wxStaticBoxSizer(wxHORIZONTAL, parent->GetStaticBox(), _("Board Setup"))};
+    auto *boardSetup{new wxStaticBoxSizer(
+        wxHORIZONTAL,
+        parent->GetStaticBox(),
+        _("Setup"))
+    };
+
+    auto *osVersion{new wxButton(boardSetup->GetStaticBox(), ID_OSVersion)};
 
     auto *board{new PCUI::Choice(
         boardSetup->GetStaticBox(),
         config->settings.board
     )};
+
     auto *massStorage {new PCUI::CheckBox(
         boardSetup->GetStaticBox(),
         config->settings.massStorage,
@@ -72,28 +95,35 @@ wxStaticBoxSizer* GeneralPage::boardSection(wxStaticBoxSizer* parent) {
         _("Enable WebUSB")
     )};
 
-    boardSetup->Add(
-        board,
-        wxSizerFlags(0).Border(wxALL, 10).Center()
-    );
-    boardSetup->Add(
-        massStorage,
-        wxSizerFlags(0).Border(wxALL, 10).Center()
-    );
-    boardSetup->Add(
-        webUSB,
-        wxSizerFlags(0).Border(wxALL, 10).Center()
-    );
+    auto sizerFlags{wxSizerFlags().Expand()};
+    auto *boardAndVersionSizer{new wxBoxSizer(wxVERTICAL)};
+    boardAndVersionSizer->Add(board, sizerFlags);
+    boardAndVersionSizer->AddSpacer(5);
+    boardAndVersionSizer->Add(osVersion, sizerFlags);
+
+    boardSetup->Add(boardAndVersionSizer, wxSizerFlags().Center());
+    boardSetup->AddSpacer(20);
+    boardSetup->Add(massStorage, wxSizerFlags().Center());
+    boardSetup->AddSpacer(10);
+    boardSetup->Add(webUSB, wxSizerFlags().Center());
 
     return boardSetup;
 }
+
 wxStaticBoxSizer* GeneralPage::optionSection(wxStaticBoxSizer* parent) {
-  auto *options{new wxStaticBoxSizer(wxHORIZONTAL, parent->GetStaticBox(), _("Options"))};
+    auto *options{new wxStaticBoxSizer(wxHORIZONTAL, parent->GetStaticBox(), _("Options"))};
 
-  options->Add(leftOptions(options), wxSizerFlags(0).Border(wxALL, 5).Expand());
-  options->Add(rightOptions(options), wxSizerFlags(0).Border(wxALL, 5).Expand());
+    options->Add(
+        leftOptions(options),
+        wxSizerFlags(20).Expand()
+    );
+    options->AddStretchSpacer(1);
+    options->Add(
+        rightOptions(options),
+        wxSizerFlags(20).Expand()
+    );
 
-  return options;
+    return options;
 }
 
 wxBoxSizer* GeneralPage::rightOptions(wxStaticBoxSizer* parent) {
@@ -157,16 +187,24 @@ wxBoxSizer* GeneralPage::rightOptions(wxStaticBoxSizer* parent) {
         _("Custom Options...")
     )};
 
-    rightOptions->Add(volumeSave, FIRSTITEMFLAGS);
-    rightOptions->Add(presetSave, MENUITEMFLAGS);
-    rightOptions->Add(colorSave, MENUITEMFLAGS);
-    rightOptions->Add(enableOLED, MENUITEMFLAGS);
-    rightOptions->Add(disableColor, MENUITEMFLAGS);
-    rightOptions->Add(noTalkie, MENUITEMFLAGS);
-    rightOptions->Add(noBasicParsers, MENUITEMFLAGS);
-    rightOptions->Add(disableDiagnosticCommands, MENUITEMFLAGS);
-
-    rightOptions->Add(customOptButton, wxSizerFlags(1).Border(wxALL, 10).Expand());
+    auto sizerFlags{wxSizerFlags(1).Expand()};
+    rightOptions->Add(volumeSave, sizerFlags);
+    rightOptions->AddSpacer(5);
+    rightOptions->Add(presetSave, sizerFlags);
+    rightOptions->AddSpacer(5);
+    rightOptions->Add(colorSave, sizerFlags);
+    rightOptions->AddSpacer(5);
+    rightOptions->Add(enableOLED, sizerFlags);
+    rightOptions->AddSpacer(5);
+    rightOptions->Add(disableColor, sizerFlags);
+    rightOptions->AddSpacer(5);
+    rightOptions->Add(noTalkie, sizerFlags);
+    rightOptions->AddSpacer(5);
+    rightOptions->Add(noBasicParsers, sizerFlags);
+    rightOptions->AddSpacer(5);
+    rightOptions->Add(disableDiagnosticCommands, sizerFlags);
+    rightOptions->AddSpacer(5);
+    rightOptions->Add(customOptButton, sizerFlags);
 
     return rightOptions;
 }
@@ -225,13 +263,20 @@ wxBoxSizer* GeneralPage::leftOptions(wxStaticBoxSizer* parent) {
         wxHORIZONTAL
     )};
 
-    leftOptions->Add(orientation, FIRSTITEMFLAGS);
-    leftOptions->Add(buttons, MENUITEMFLAGS);
-    leftOptions->Add(volume, MENUITEMFLAGS);
-    leftOptions->Add(clash, MENUITEMFLAGS);
-    leftOptions->Add(pliTime, MENUITEMFLAGS);
-    leftOptions->Add(idleTime, MENUITEMFLAGS);
-    leftOptions->Add(motionTime, MENUITEMFLAGS);
+    auto sizerFlags{wxSizerFlags(1).Expand()};
+    leftOptions->Add(orientation, sizerFlags);
+    leftOptions->AddSpacer(5);
+    leftOptions->Add(buttons, sizerFlags);
+    leftOptions->AddSpacer(5);
+    leftOptions->Add(volume, sizerFlags);
+    leftOptions->AddSpacer(5);
+    leftOptions->Add(clash, sizerFlags);
+    leftOptions->AddSpacer(5);
+    leftOptions->Add(pliTime, sizerFlags);
+    leftOptions->AddSpacer(5);
+    leftOptions->Add(idleTime, sizerFlags);
+    leftOptions->AddSpacer(5);
+    leftOptions->Add(motionTime, sizerFlags);
 
     return leftOptions;
 }

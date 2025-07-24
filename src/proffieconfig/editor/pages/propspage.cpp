@@ -16,6 +16,7 @@
 PropsPage::PropsPage(EditorWindow *parent) : 
     wxStaticBoxSizer(wxVERTICAL, parent),
     mParent{parent} {
+    Notifier::create(GetStaticBox(), mNotifyData);
     auto config{mParent->getOpenConfig()};
 
     auto *topSizer{new wxBoxSizer(wxHORIZONTAL)};
@@ -35,8 +36,8 @@ PropsPage::PropsPage(EditorWindow *parent) :
         ID_Buttons,
         _("Button Controls...")
     )};
-    TIP(propInfo, _("View prop creator-provided information about this prop and its intended usage."));
-    TIP(buttonInfo, _("View button controls based on specific option settings and number of buttons."));
+    propInfo->SetToolTip(_("View prop creator-provided information about this prop and its intended usage."));
+    buttonInfo->SetToolTip(_("View button controls based on specific option settings and number of buttons."));
     topSizer->Add(
         propSelection,
         wxSizerFlags(0).Border(wxALL, 10)
@@ -60,7 +61,7 @@ PropsPage::PropsPage(EditorWindow *parent) :
 
     loadProps();
     bindEvents();
-    Notifier::create(GetStaticBox(), mNotifyData);
+    initializeNotifier();
 }
 
 void PropsPage::bindEvents() {

@@ -36,8 +36,8 @@ BladeAwarenessDlg::BladeAwarenessDlg(EditorWindow* parent) :
     )};
     enableID->SetToolTip(_("Detect when a specific blade is inserted based on a resistor placed in the blade to give it an identifier."));
     enableDetect->SetToolTip(_("Detect when a blade is inserted into the saber or not."));
-    enableSizer->Add(enableDetect, FIRSTITEMFLAGS);
-    enableSizer->Add(enableID, FIRSTITEMFLAGS);
+    enableSizer->Add(enableDetect);
+    enableSizer->Add(enableID);
 
     auto *topSizer{new wxBoxSizer(wxHORIZONTAL)};
     topSizer->Add(
@@ -128,10 +128,10 @@ wxStaticBoxSizer* BladeAwarenessDlg::createIDSetup(wxWindow* parent) {
         _("Pullup Pin")
     )};
 
-    setupSizer->Add(mode, BOXITEMFLAGS);
-    setupSizer->Add(idPin, BOXITEMFLAGS);
-    setupSizer->Add(pullupResistance, BOXITEMFLAGS);
-    setupSizer->Add(pullupPin, BOXITEMFLAGS);
+    setupSizer->Add(mode);
+    setupSizer->Add(idPin);
+    setupSizer->Add(pullupResistance);
+    setupSizer->Add(pullupPin);
 
     return setupSizer;
 }
@@ -159,7 +159,7 @@ wxStaticBoxSizer* BladeAwarenessDlg::createIDPowerSettings(wxWindow* parent) {
 
     // TODO: Allow powerPin add
 
-    powerForIDSizer->Add(enablePowerForID, MENUITEMFLAGS);
+    powerForIDSizer->Add(enablePowerForID);
     powerForIDSizer->Add(powerPins);
 
     return powerForIDSizer;
@@ -192,9 +192,9 @@ wxStaticBoxSizer* BladeAwarenessDlg::createContinuousScanSettings(wxWindow* pare
         wxSP_ARROW_KEYS,
         _("Scan Interval (ms)")
     )};
-    continuousScansSizer->Add(continuousScans, MENUITEMFLAGS);
-    continuousScansSizer->Add(numIDTimes, MENUITEMFLAGS);
-    continuousScansSizer->Add(scanIDMillis, MENUITEMFLAGS);
+    continuousScansSizer->Add(continuousScans);
+    continuousScansSizer->Add(numIDTimes);
+    continuousScansSizer->Add(scanIDMillis);
 
     return continuousScansSizer;
 }

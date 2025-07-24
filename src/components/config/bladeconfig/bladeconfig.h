@@ -39,6 +39,9 @@ struct CONFIG_EXPORT Blade {
         SIMPLE,
     };
     PCUI::ChoiceData type;
+
+
+
 private:
     variant<WS281XBlade, SimpleBlade> mBlade;
 };
