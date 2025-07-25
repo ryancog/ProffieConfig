@@ -55,20 +55,20 @@ void PCUI::ControlData::notify(uint32 id) {
     NotifierData::notify(id);
 }
 
-template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
-PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::ControlBase(
+template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
+PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::ControlBase(
     wxWindow *parent,
     CONTROL_DATA &data
 ) : wxPanel(parent, wxID_ANY), Notifier(this, data) {}
 
-template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
-PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::ControlBase(
+template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
+PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::ControlBase(
     wxWindow *parent,
     ControlDataProxy<CONTROL_DATA>& proxy
 ) : wxPanel(parent, wxID_ANY), Notifier{this, proxy} {}
 
-template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
-void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::init(
+template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
+void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::init(
     CONTROL *control,
     const wxEventTypeTag<CONTROL_EVENT>& eventTag,
     wxString label,
@@ -103,36 +103,40 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::init(
     Bind(eventTag, [this](CONTROL_EVENT& evt) { controlEventHandler(evt); });
 }
 
-template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
-void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::init(
+template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
+void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::init(
     CONTROL *control,
     const wxEventTypeTag<CONTROL_EVENT>& eventTag,
-    const wxEventTypeTag<CONTROL_EVENT>& secondaryTag,
+    const wxEventTypeTag<SECONDARY_EVENT>& secondaryTag,
     wxString label,
     wxOrientation orient
 ) {
     init(control, eventTag, label, orient);
-    Bind(secondaryTag, [this](CONTROL_EVENT& evt) { controlEventHandler(evt); });
+    Bind(secondaryTag, [this](SECONDARY_EVENT& evt) { secondaryEventHandler(evt); });
 }
 
-template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
-void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::handleNotification(uint32 id) {
+template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
+void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::handleNotification(
+    uint32 id
+) {
     bool rebound{id == ID_REBOUND};
     if (rebound or id == ControlData::ID_VISIBILITY) Show(data()->isShown());
     if (rebound or id == ControlData::ID_ACTIVE) Enable(data()->isEnabled());
     onUIUpdate(id);
 }
 
-template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
-void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::handleUnbound() {
+template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
+void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::handleUnbound() {
     Disable();
     if (proxy()) {
        Show(static_cast<ControlDataProxy<CONTROL_DATA> *>(proxy())->mShowWhenUnbound);
     }
 }
 
-template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
-void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::controlEventHandler(CONTROL_EVENT& evt) {
+template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
+void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::controlEventHandler(
+    CONTROL_EVENT& evt
+) {
     if (not data()) return;
     std::scoped_lock scopeLock{data()->getLock()};
     if (not data()->isEnabled() or data()->eventsInFlight()) return;
@@ -140,13 +144,24 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT>::controlEv
     onModify(evt);
 }
 
+template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
+void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::secondaryEventHandler(
+    SECONDARY_EVENT& evt
+) {
+    if (not data()) return;
+    std::scoped_lock scopeLock{data()->getLock()};
+    if (not data()->isEnabled() or data()->eventsInFlight()) return;
+
+    onModifySecondary(evt);
+}
+
 template class PCUI::ControlBase<PCUI::CheckList, PCUI::CheckListData, wxCheckListBox, wxCommandEvent>;
 template class PCUI::ControlBase<PCUI::Choice, PCUI::ChoiceData, wxChoice, wxCommandEvent>;
 template class PCUI::ControlBase<PCUI::List, PCUI::ChoiceData, wxListBox, wxCommandEvent>;
 template class PCUI::ControlBase<PCUI::ComboBox, PCUI::ComboBoxData, wxComboBox, wxCommandEvent>;
 template class PCUI::ControlBase<PCUI::FilePicker, PCUI::FilePickerData, wxFilePickerCtrl, wxFileDirPickerEvent>;
-template class PCUI::ControlBase<PCUI::Numeric, PCUI::NumericData, wxSpinCtrl, wxSpinEvent>;
-template class PCUI::ControlBase<PCUI::Decimal, PCUI::DecimalData, wxSpinCtrlDouble, wxSpinDoubleEvent>;
+template class PCUI::ControlBase<PCUI::Numeric, PCUI::NumericData, wxSpinCtrl, wxSpinEvent, wxCommandEvent>;
+template class PCUI::ControlBase<PCUI::Decimal, PCUI::DecimalData, wxSpinCtrlDouble, wxSpinDoubleEvent, wxCommandEvent>;
 template class PCUI::ControlBase<PCUI::Radios, PCUI::RadiosData, wxRadioBox, wxCommandEvent>;
 template class PCUI::ControlBase<PCUI::Text, PCUI::TextData, wxTextCtrl, wxCommandEvent>;
 template class PCUI::ControlBase<PCUI::CheckBox, PCUI::ToggleData, wxCheckBox, wxCommandEvent>;

@@ -25,6 +25,7 @@ namespace PCUI {
 
 void PCUI::ChoiceData::operator=(int32 val) {
     std::scoped_lock scopeLock{getLock()};
+    assert(val == -1 or val < mChoices.size());
     if (mValue == val) return;
     mValue = val;
     notify(ID_SELECTION);
@@ -84,7 +85,7 @@ void PCUI::Choice::onUIUpdate(uint32 id) {
         auto *parent{wxGetTopLevelParent(this)};
         if (parent) {
             parent->Layout();
-            parent->SetSizerAndFit(parent->GetSizer());
+            parent->Fit();
         }
     } else if (id == ChoiceData::ID_SELECTION) {
         pControl->SetSelection(*data());

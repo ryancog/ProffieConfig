@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/textctrl.h>
+
 namespace PCUI {
 
 } // namespace PCUI
@@ -26,9 +28,9 @@ namespace PCUI {
 template<typename T> requires std::is_arithmetic_v<T>
 void PCUI::Private::NumericDataTemplate<T>::operator=(T val) {
     std::scoped_lock scopeLock{getLock()};
-    const auto newVal{std::clamp(val, mMin, mMax)};
-    if (mValue == newVal) return;
-    mValue = newVal;
+    if (mValue == val) return;
+    const auto clampedVal{std::clamp(val, mMin, mMax)};
+    mValue = clampedVal;
     notify(ID_VALUE);
 }
 
@@ -81,10 +83,14 @@ void PCUI::Numeric::create(
 ) {
     auto *control{new wxSpinCtrl(
         this,
-        wxID_ANY
+        wxID_ANY,
+        wxEmptyString,
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER | style
     )};
 
-    init(control, wxEVT_SPINCTRL, label, orient);
+    init(control, wxEVT_SPINCTRL, wxEVT_TEXT_ENTER, label, orient);
 }
 
 void PCUI::Numeric::onUIUpdate(uint32 id) {
@@ -96,6 +102,11 @@ void PCUI::Numeric::onUIUpdate(uint32 id) {
 void PCUI::Numeric::onModify(wxSpinEvent& evt) {
     data()->mValue = evt.GetPosition();
     data()->update(data()->ID_VALUE);
+}
+
+void PCUI::Numeric::onModifySecondary(wxCommandEvent& evt) {
+    SetFocusIgnoringChildren();
+    pControl->SetFocus();
 }
 
 PCUI::Decimal::Decimal(
@@ -125,10 +136,14 @@ void PCUI::Decimal::create(
 ) {
     auto *control{new wxSpinCtrlDouble(
         this,
-        wxID_ANY
+        wxID_ANY,
+        wxEmptyString,
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER | style
     )};
 
-    init(control, wxEVT_SPINCTRLDOUBLE, label, orient);
+    init(control, wxEVT_SPINCTRLDOUBLE, wxEVT_TEXT_ENTER, label, orient);
 }
 
 void PCUI::Decimal::onUIUpdate(uint32 id) {
@@ -140,5 +155,10 @@ void PCUI::Decimal::onUIUpdate(uint32 id) {
 void PCUI::Decimal::onModify(wxSpinDoubleEvent& evt) {
     data()->mValue = evt.GetValue();
     data()->update(data()->ID_VALUE);
+}
+
+void PCUI::Decimal::onModifySecondary(wxCommandEvent& evt) {
+    SetFocusIgnoringChildren();
+    pControl->SetFocus();
 }
 

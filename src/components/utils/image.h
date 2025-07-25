@@ -20,6 +20,7 @@
  */
 
 #include <wx/bitmap.h>
+#include <wx/settings.h>
 
 #include <utils/types.h>
 
@@ -27,7 +28,44 @@
 
 namespace Image {
 
+struct UTILS_EXPORT DynamicColor {
+    DynamicColor(wxColour dark, wxColour light);
+    DynamicColor(wxSystemColour color);
+
+    DynamicColor();
+    ~DynamicColor();
+    DynamicColor(const DynamicColor&);
+    DynamicColor& operator=(const DynamicColor&);
+
+    [[nodiscard]] wxColour color() const;
+    [[nodiscard]] operator bool() const;
+
+private:
+    enum class Type {
+        STANDARD,
+        SYSTEM,
+    } mType;
+    union {
+        struct {
+            // Darker color
+            wxColour mDark;
+            // Lighter color
+            wxColour mLight;
+        };
+        wxSystemColour mSysColor;
+    };
+};
+
+extern const wxColour DARK_BLUE;
+extern const wxColour LIGHT_BLUE;
+
 UTILS_EXPORT wxBitmap loadPNG(const string& name, bool dpiScaled = true);
+/**
+ * @param size Size to scale the bitmap to. Only one dimension may be provided.
+ * @param color Optional color to set bitmap to.
+ */
+UTILS_EXPORT wxBitmap loadPNG(const string& name, wxSize size, DynamicColor color = {}); 
+
 UTILS_EXPORT wxBitmap newBitmap(wxSize);
 UTILS_EXPORT int32 getDPIScaleFactor();
 UTILS_EXPORT wxColour getAccentColor();
