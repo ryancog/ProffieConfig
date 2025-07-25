@@ -27,19 +27,24 @@
 namespace PCUI {
 
 struct UI_EXPORT TextData : ControlData {
-    operator string() { return mValue; }
+    operator string() const { return mValue; }
     void operator=(string&& val);
+
+    [[nodiscard]] uint32 getInsertionPoint() { return mInsertionPoint; }
+    void setInsertionPoint(uint32);
 
     enum {
         // Any input
         ID_VALUE,
         // Assignment or "Enter"
         ID_VALUE_FULL,
+        ID_INSERTION,
     };
 
 private:
     friend class Text;
     string mValue;
+    uint32 mInsertionPoint{0};
 };
 
 using TextDataProxy = ControlDataProxy<TextData>;
@@ -79,6 +84,7 @@ private:
     void create(int64 style, const wxString& label, wxOrientation orient);
     void onUIUpdate(uint32) final;
     void onModify(wxCommandEvent&) final;
+    void onModifySecondary(wxCommandEvent&) final;
     // void pruneText();
 
     // wxString mInvalidChars;

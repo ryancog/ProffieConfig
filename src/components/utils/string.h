@@ -40,13 +40,37 @@ constexpr void trimWhiteSpace(STRING& str) {
     }).base(), str.end());
 };
 
+/**
+ * @param str Reference to string to trim
+ * @param[out] numTrimmed The number of characters trimmed
+ * @param countTrimIndex The index before which trims should be counted.
+ */
 template<typename STRING>
-constexpr void trimUnsafe(STRING& str) {
-    auto checkIllegal{[](char chr) -> bool {
+constexpr void trimUnsafe(
+    STRING& str,
+    uint32 *numTrimmed = nullptr,
+    uint32 countTrimIndex = std::numeric_limits<uint32>::max()
+) {
+    if (numTrimmed) *numTrimmed = 0;
+
+    auto checkIllegal{[numTrimmed, &countTrimIndex](char chr) -> bool {
         if (std::isalnum(chr)) return false;
-        if (chr == '-' or chr == '_') return false;
+        if (chr == '_') return false;
+
+        if (numTrimmed and countTrimIndex > 0) {
+            ++*numTrimmed;
+            --countTrimIndex;
+        }
         return true;
     }};
+
+    while (not str.empty() and std::isdigit(str[0])) {
+        if (numTrimmed and countTrimIndex > 0) {
+            ++*numTrimmed;
+            --countTrimIndex;
+        }
+        str.erase(0, 1);
+    }
 
     str.erase(
         std::remove_if(str.begin(), str.end(), checkIllegal),

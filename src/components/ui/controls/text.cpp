@@ -1,6 +1,4 @@
 #include "text.h"
-#include "wx/font.h"
-#include "wx/textctrl.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -31,6 +29,13 @@ void PCUI::TextData::operator=(string&& val) {
     mValue = std::move(val);
     notify(ID_VALUE);
     notify(ID_VALUE_FULL);
+}
+
+void PCUI::TextData::setInsertionPoint(uint32 insertionPoint) {
+    std::scoped_lock scopeLock{getLock()};
+    if (mInsertionPoint == insertionPoint) return;
+    mInsertionPoint = insertionPoint;
+    notify(ID_INSERTION);
 }
 
 PCUI::Text::Text(
@@ -82,15 +87,26 @@ void PCUI::Text::styleMonospace() {
 }
 
 void PCUI::Text::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == TextData::ID_VALUE) pControl->ChangeValue(static_cast<string>(*data()));
+    bool rebound{id == ID_REBOUND};
+
+    if (rebound or id == TextData::ID_VALUE) pControl->ChangeValue(static_cast<string>(*data()));
+    if (rebound or id == TextData::ID_VALUE or id == TextData::ID_INSERTION) {
+        pControl->SetInsertionPoint(data()->mInsertionPoint);
+    }
 }
 
 void PCUI::Text::onModify(wxCommandEvent& evt) {
     data()->mValue = evt.GetString().ToStdString();
+    data()->mInsertionPoint = pControl->GetInsertionPoint();
+
     if (evt.GetEventType() == wxEVT_TEXT) {
         data()->update(TextData::ID_VALUE);
     } else if (evt.GetEventType() == wxEVT_TEXT_ENTER) {
         data()->update(TextData::ID_VALUE_FULL);
     }
+}
+
+void PCUI::Text::onModifySecondary(wxCommandEvent& evt) {
+    onModify(evt);
 }
 
