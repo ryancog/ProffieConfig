@@ -2,6 +2,7 @@
 // Copyright (C) 2025 Ryan Ogurek
 
 #include <wx/app.h>
+#include <wx/image.h>
 
 #include "app/app.h"
 #include "core/appstate.h"
@@ -15,7 +16,7 @@ public:
             return false;
         }
 
-        wxImage::AddHandler(new wxPNGHandler());
+        wxInitAllImageHandlers();
         AppState::init();
 
         return true;

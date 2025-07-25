@@ -24,6 +24,8 @@
 #include "ui/controls/numeric.h"
 #include "utils/string.h"
 
+#include "../config.h"
+
 Config::Blade::Blade() {
     type.setChoices(Utils::createEntries({
         "WS281X",
@@ -33,24 +35,59 @@ Config::Blade::Blade() {
     // Yeah, we're going to be blissfully ignorant of this handler...
 }
 
-Config::BladeConfig::BladeConfig() {
+Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
     name.setUpdateHandler([this](uint32 id) {
         if (id != name.ID_VALUE) return;
 
         auto nameValue{static_cast<string>(name)};
-        Utils::trimUnsafe(nameValue);
+        auto insertionPoint{name.getInsertionPoint()};
+        uint32 numTrimmed;
+        Utils::trimUnsafe(nameValue, &numTrimmed, insertionPoint);
         std::transform(
             nameValue.begin(),
             nameValue.end(),
             nameValue.begin(),
             [](unsigned char chr){ return std::tolower(chr); }
         );
-        if (static_cast<string>(name) == nameValue) return;
+
+        // No further updates needed, can update things.
+        if (static_cast<string>(name) == nameValue) {
+            uint32 idx{0};
+            auto arrayIter{mConfig.bladeArrays.arrays().begin()};
+            auto arrayEnd{mConfig.bladeArrays.arrays().end()};
+            for (; arrayIter != arrayEnd; ++arrayIter, ++idx) {
+                if (this == &*arrayIter) break;
+            }
+
+            auto choices{mConfig.bladeArrays.arraySelection.choices()};
+            choices[idx] = name;
+            mConfig.bladeArrays.arraySelection.setChoices(std::move(choices));
+
+            notifyData.notify();
+            if (
+                    mConfig.bladeArrays.arraySelection != -1 and
+                    &mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection) == this
+                ) {
+                mConfig.bladeArrays.arrayIssues = computeIssues();
+                mConfig.bladeArrays.notifyData.notify(BladeArrays::ID_ARRAY_ISSUES);
+            }
+            return;
+        }
         name = std::move(nameValue);
+        name.setInsertionPoint(insertionPoint - numTrimmed);
     });
 
     id.setUpdateHandler([this](uint32 id) {
         if (id != this->id.ID_VALUE) return;
+
+        notifyData.notify();
+        if (
+                mConfig.bladeArrays.arraySelection != -1 and
+                &mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection) == this
+            ) {
+            mConfig.bladeArrays.arrayIssues = computeIssues();
+            mConfig.bladeArrays.notifyData.notify(BladeArrays::ID_ARRAY_ISSUES);
+        }
 
        noBladeID = this->id == NO_BLADE;
     });
@@ -58,13 +95,58 @@ Config::BladeConfig::BladeConfig() {
     noBladeID.setUpdateHandler([this](uint32 id) {
         if (id != noBladeID.ID_VALUE) return;
 
+        if (not noBladeID and this->id == NO_BLADE) noBladeID = true;
         if (noBladeID) this->id = NO_BLADE;
     });
 
-    // presetArray;
-    // id;
-    // noBladeID;
+    presetArray.setUpdateHandler([this](uint32 id) {
+        if (id != presetArray.ID_SELECTION) return;
+
+        notifyData.notify();
+        if (
+                mConfig.bladeArrays.arraySelection != -1 and
+                &mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection) == this
+            ) {
+            mConfig.bladeArrays.arrayIssues = computeIssues();
+            mConfig.bladeArrays.notifyData.notify(BladeArrays::ID_ARRAY_ISSUES);
+        }
+    });
+
+    id.setRange(0, NO_BLADE);
 }
 
+[[nodiscard]] uint32 Config::BladeConfig::computeIssues() const {
+    uint32 ret{0};
 
+    if (presetArray == -1) ret |= ISSUE_NO_PRESETARRAY;
+
+    if (static_cast<string>(name).empty()) ret |= ISSUE_NO_NAME;
+
+    for (const auto& array : mConfig.bladeArrays.arrays()) {
+        if (&array == this) continue;
+        if (static_cast<string>(array.name) == static_cast<string>(name)) {
+            ret |= ISSUE_DUPLICATE_NAME;
+        }
+        if (static_cast<uint32>(array.id) == static_cast<uint32>(id)) {
+            ret |= ISSUE_DUPLICATE_ID;
+        }
+    }
+
+    return ret;
+}
+
+[[nodiscard]] wxString Config::BladeConfig::issueString(Issue issue) {
+    switch (issue) {
+        case ISSUE_NONE:
+            return _("No Issue");
+        case ISSUE_NO_NAME:
+            return _("Blade Array is unnamed");
+        case ISSUE_NO_PRESETARRAY:
+            return _("Blade Array is not linked to a Preset Array");
+        case ISSUE_DUPLICATE_ID:
+            return _("Blade Array has duplicate ID");
+        case ISSUE_DUPLICATE_NAME:
+            return _("Blade Array has duplicate name");
+    }
+}
 

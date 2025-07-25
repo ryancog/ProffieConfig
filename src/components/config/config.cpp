@@ -34,7 +34,8 @@ list<std::shared_ptr<Config>> loadedConfigs;
 
 Config::Config::Config() :
     settings{*this},
-    bladeArrays{*this} {
+    bladeArrays{*this},
+    presetArrays{*this} {
     propSelection.setUpdateHandler([this](uint32 id) {
         if (id != propSelection.ID_SELECTION) return;
         propNotifyData.notify(ID_PROPSELECTION);

@@ -29,6 +29,8 @@
 
 namespace Config {
 
+struct Config;
+
 struct CONFIG_EXPORT Injection {
     string filename;
 };
@@ -52,7 +54,7 @@ private:
 };
 
 struct CONFIG_EXPORT PresetArrays {
-    PresetArrays();
+    PresetArrays(Config&);
 
     PCUI::ChoiceData selection;
 
@@ -65,9 +67,10 @@ struct CONFIG_EXPORT PresetArrays {
     [[nodiscard]] PresetArray& array(uint32 idx) { 
         return *std::next(mArrays.begin(), idx);
     }
+    [[nodiscard]] vector<string> presetArrayNames() const;
 
-    void addArray();
-    void removeArray(uint32);
+    PresetArray& addArray(string name);
+    void removeArray(uint32 idx);
 
     [[nodiscard]] const list<Injection>& injections() const { return mInjections; }
     [[nodiscard]] Injection& injection(uint32 idx) {
@@ -89,6 +92,7 @@ struct CONFIG_EXPORT PresetArrays {
     PCUI::TextDataProxy styleProxy;
 
 private:
+    Config& mParent;
     list<PresetArray> mArrays;
     list<Injection> mInjections;
 };
