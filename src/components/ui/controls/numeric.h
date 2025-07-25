@@ -68,23 +68,27 @@ using DecimalData = Private::NumericDataTemplate<float64>;
 using NumericDataProxy = ControlDataProxy<NumericData>;
 using DecimalDataProxy = ControlDataProxy<DecimalData>;
 
+/**
+ * wxALIGN and wxSP_WRAP are the only reasonable styles to pass
+ */
 class UI_EXPORT Numeric : public ControlBase<
                           Numeric,
                           NumericData,
                           wxSpinCtrl,
-                          wxSpinEvent> {
+                          wxSpinEvent,
+                          wxCommandEvent> {
 public:
     Numeric(
         wxWindow *parent,
         NumericData& data,
-        int64 style = wxSP_ARROW_KEYS,
+        int64 style = 0,
         const wxString& label = {},
         const wxOrientation& orient = wxVERTICAL
     );
     Numeric(
         wxWindow *parent,
         NumericDataProxy& proxy,
-        int64 style = wxSP_ARROW_KEYS,
+        int64 style = 0,
         const wxString& label = {},
         const wxOrientation& orient = wxVERTICAL
     );
@@ -97,25 +101,27 @@ private:
     );
     void onUIUpdate(uint32) final;
     void onModify(wxSpinEvent&) final;
+    void onModifySecondary(wxCommandEvent&) final;
 };
 
 class UI_EXPORT Decimal : public ControlBase<
                           Decimal,
                           DecimalData,
                           wxSpinCtrlDouble,
-                          wxSpinDoubleEvent> {
+                          wxSpinDoubleEvent,
+                          wxCommandEvent> {
 public:
     Decimal(
         wxWindow *parent,
         DecimalData& data,
-        int64 style = wxSP_ARROW_KEYS,
+        int64 style = 0,
         const wxString& label = {},
         const wxOrientation& orient = wxVERTICAL
     );
     Decimal(
         wxWindow *parent,
         DecimalDataProxy& proxy,
-        int64 style = wxSP_ARROW_KEYS,
+        int64 style = 0,
         const wxString& label = {},
         const wxOrientation& orient = wxVERTICAL
     );
@@ -128,6 +134,7 @@ private:
     );
     void onUIUpdate(uint32) final;
     void onModify(wxSpinDoubleEvent&) final;
+    void onModifySecondary(wxCommandEvent&) final;
 };
 
 } // namespace PCUI

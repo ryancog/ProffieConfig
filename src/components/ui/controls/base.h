@@ -32,7 +32,8 @@ template<
     class DERIVED,
     typename CONTROL_DATA,
     class CONTROL,
-    class CONTROL_EVENT
+    class CONTROL_EVENT,
+    class SECONDARY_EVENT
 >
 class ControlBase;
 
@@ -108,7 +109,13 @@ struct ControlDataProxy : NotifierDataProxy {
     void showWhenUnbound(bool show) { mShowWhenUnbound = show; }
 
 private:
-    template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT>
+    template<
+        class DERIVED,
+        typename CONTROL_DATA,
+        class CONTROL,
+        class CONTROL_EVENT,
+        class SECONDARY_EVENT
+    >
     friend class ControlBase;
     bool mShowWhenUnbound{true};
 };
@@ -117,7 +124,8 @@ template<
     class DERIVED,
     typename CONTROL_DATA,
     class CONTROL,
-    class CONTROL_EVENT
+    class CONTROL_EVENT,
+    class SECONDARY_EVENT = CONTROL_EVENT
 >
 class ControlBase : public wxPanel, protected Notifier {
 public:
@@ -139,7 +147,7 @@ protected:
     void init(
         CONTROL *control,
         const wxEventTypeTag<CONTROL_EVENT>& eventTag,
-        const wxEventTypeTag<CONTROL_EVENT>& secondaryTag,
+        const wxEventTypeTag<SECONDARY_EVENT>& secondaryTag,
         wxString label,
         wxOrientation orient
     );
@@ -151,6 +159,8 @@ protected:
      */
     virtual void onModify(CONTROL_EVENT&) = 0;
 
+    virtual void onModifySecondary(SECONDARY_EVENT&) {}
+
     CONTROL *pControl{nullptr};
     CONTROL_DATA *data() { return static_cast<CONTROL_DATA *>(Notifier::data()); }
 
@@ -158,6 +168,7 @@ private:
     void handleNotification(uint32 id) final;
     void handleUnbound() final;
     void controlEventHandler(CONTROL_EVENT& evt);
+    void secondaryEventHandler(SECONDARY_EVENT& evt);
 };
 
 } // namespace PCUI

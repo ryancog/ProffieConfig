@@ -80,6 +80,12 @@ void PCUI::Toggle::onUIUpdate(uint32 id) {
     if (ID_REBOUND or ToggleData::ID_VALUE) {
         pControl->SetValue(*data());
         pControl->SetLabelText(data() ? mOnText : mOffText);
+        SetSizerAndFit(GetSizer());
+        auto *parent{wxGetTopLevelParent(this)};
+        if (parent) {
+            parent->Layout();
+            parent->Fit();
+        }
     }
 }
 
