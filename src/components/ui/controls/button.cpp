@@ -34,7 +34,7 @@ PCUI::Button::Button(
     if (bmp.empty()) return;
 
     auto handler{[this, bmp, bmpSize, bmpColor](wxSysColourChangedEvent& evt) {
-        auto bitmap{Image::loadPNG(bmp, bmpSize, bmpColor)};
+        auto bitmap{Image::loadPNG(bmp, bmpSize, bmpColor.color())};
         SetBitmap(bitmap);
         evt.Skip();
     }};

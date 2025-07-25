@@ -32,7 +32,7 @@ namespace Image {
 
 // std::unordered_map<string, wxBitmap> bmps;
 const wxColour DARK_BLUE{39, 74, 114};
-const wxColour LIGHT_BLUE{179, 202, 227};
+const wxColour LIGHT_BLUE{31, 99, 168};
 
 } // namespace Image
 
@@ -113,23 +113,23 @@ wxBitmap Image::loadPNG(const string& name, bool dpiScaled) {
     return bitmap;
 }
 
-wxBitmap Image::loadPNG(const string& name, wxSize size, DynamicColor dynColor) {
+wxBitmap Image::loadPNG(const string& name, wxSize size, wxColour color) {
     auto pngPath{Paths::resources() / "icons" / (name + ".png")};
     auto bitmap{wxBitmap{pngPath.native(), wxBITMAP_TYPE_PNG}};
 
-    assert(size.x == -1 or size.y == -1);
+    if (size.x != -1 or size.y != -1) {
+        assert(size.x == -1 or size.y == -1);
+        float64 scaler;
+        if (size.x != -1) {
+            scaler = bitmap.GetLogicalWidth() / size.x;
+        } else {
+            scaler = bitmap.GetLogicalHeight() / size.y;
+        }
 
-    float64 scaler;
-    if (size.x != -1) {
-        scaler = bitmap.GetLogicalWidth() / size.x;
-    } else {
-        scaler = bitmap.GetLogicalHeight() / size.y;
+        bitmap.SetScaleFactor(bitmap.GetScaleFactor() * scaler);
     }
 
-    bitmap.SetScaleFactor(bitmap.GetScaleFactor() * scaler);
-
-    if (dynColor) {
-        auto color{dynColor.color()};
+    if (not color.IsNull()) {
         wxAlphaPixelData data{bitmap};
         auto iter{data.GetPixels()};
         for (auto idx{0}; idx < data.GetWidth() * data.GetHeight(); ++idx) {
