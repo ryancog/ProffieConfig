@@ -29,6 +29,8 @@
 
 namespace Config {
 
+struct Config;
+
 constexpr uint32 NO_BLADE{1000000000};
 
 struct CONFIG_EXPORT Blade {
@@ -47,7 +49,7 @@ private:
 };
 
 struct CONFIG_EXPORT BladeConfig {
-    BladeConfig();
+    BladeConfig(Config&);
 
     Blade& blade(uint32 idx) { 
         return *std::next(mBlades.begin(), idx);
@@ -60,12 +62,33 @@ struct CONFIG_EXPORT BladeConfig {
 
     PCUI::ChoiceData bladeSelection;
 
+    // Notify of issues
+    PCUI::NotifierData notifyData;
+
+    enum Issue {
+        ISSUE_NONE = 0,
+        ISSUE_NO_NAME         = 1UL << 0,
+        ISSUE_NO_PRESETARRAY  = 1UL << 1,
+        ISSUE_DUPLICATE_ID    = 1UL << 2,
+        ISSUE_DUPLICATE_NAME  = 1UL << 3,
+    };
+    static constexpr auto ISSUE_WARNINGS{
+        ISSUE_DUPLICATE_ID
+    };
+    static constexpr auto ISSUE_ERRORS{
+        ISSUE_DUPLICATE_NAME | ISSUE_NO_NAME | ISSUE_NO_PRESETARRAY
+    };
+    [[nodiscard]] uint32 computeIssues() const;
+
+    [[nodiscard]] static wxString issueString(Issue);
+
     PCUI::TextData name;
     PCUI::ChoiceData presetArray;
     PCUI::NumericData id;
     PCUI::ToggleData noBladeID;
 
 private:
+    Config& mConfig;
     list<Blade> mBlades;
 };
 

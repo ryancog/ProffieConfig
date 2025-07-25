@@ -33,29 +33,37 @@ namespace Config {
 
 struct Config;
 
-struct BladeArrays {
+struct CONFIG_EXPORT BladeArrays {
     BladeArrays(Config&);
 
     // Do not set choices manually
     PCUI::ChoiceData arraySelection;
     enum {
         ID_ARRAY_SELECTION,
+        ID_ARRAY_ISSUES,
         ID_BLADE_SELECTION,
         ID_SUBBLADE_SELECTION,
         ID_BLADE_TYPE_SELECTION,
     };
     PCUI::NotifierData notifyData;
 
+    // Issues for the current array, for UI
+    uint32 arrayIssues{BladeConfig::ISSUE_NONE};
+
     PCUI::ChoiceDataProxy bladeSelectionProxy;
     PCUI::ChoiceDataProxy subBladeSelectionProxy;
 
     PCUI::ChoiceDataProxy bladeTypeProxy;
 
+    void refreshPresetArrays();
+
+    [[nodiscard]] const list<BladeConfig>& arrays() const { return mBladeArrays; }
     [[nodiscard]] BladeConfig& array(uint32 idx) { 
+        assert(idx < mBladeArrays.size());
         return *std::next(mBladeArrays.begin(), idx);
     }
 
-    void addArray(string&& name, uint32 id);
+    BladeConfig& addArray(string&& name = {}, uint32 id = 0, uint32 presetArray = -1);
     void removeArray(uint32 idx);
     
     PCUI::CheckListDataProxy powerPinProxy;

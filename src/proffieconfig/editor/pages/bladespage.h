@@ -5,6 +5,8 @@
 #include "../editorwindow.h"
 #include "../dialogs/awarenessdlg.h"
 
+class ArrayEditDlg;
+
 class BladesPage : public wxStaticBoxSizer, PCUI::Notifier {
 public:
     BladesPage(EditorWindow *);
@@ -15,6 +17,9 @@ private:
     enum {
         ID_OpenBladeAwareness,
 
+        ID_IssueIcon,
+
+        ID_EditArray,
         ID_AddArray,
         ID_RemoveArray,
         ID_AddBlade,

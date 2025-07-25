@@ -19,7 +19,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../config.h"
+#include "bladeconfig.h"
+#include "utils/defer.h"
 #include "ws281x.h"
+
 
 Config::BladeArrays::BladeArrays(Config& parent) :
     mParent{parent},
@@ -56,12 +60,12 @@ Config::BladeArrays::BladeArrays(Config& parent) :
     star4Proxy.powerPinProxy.showWhenUnbound(false);
     star4Proxy.resistanceProxy.showWhenUnbound(false);
 
-
     arraySelection.setUpdateHandler([this](uint32 id) {
         if (id != arraySelection.ID_SELECTION) return;
-        notifyData.notify(ID_ARRAY_SELECTION);
+        Defer defer{[this]() { notifyData.notify(ID_ARRAY_SELECTION); }};
 
         if (arraySelection == -1) {
+            arrayIssues = BladeConfig::ISSUE_NONE;
             bladeSelectionProxy.unbind();
             subBladeSelectionProxy.unbind();
 
@@ -96,21 +100,47 @@ Config::BladeArrays::BladeArrays(Config& parent) :
             return;
         }
 
-        bladeSelectionProxy.bind(array(arraySelection).bladeSelection);
+        auto& selectedArray{array(arraySelection)};
+        bladeSelectionProxy.bind(selectedArray.bladeSelection);
+        arrayIssues = selectedArray.computeIssues();
     });
 }
 
-void Config::BladeArrays::addArray(string&& name, uint32 id) {
-    auto& array{mBladeArrays.emplace_back()};
+void Config::BladeArrays::refreshPresetArrays() {
+    const auto& choices{mParent.presetArrays.selection.choices()};
+    for (auto& array : mBladeArrays) {
+        auto stringSelection{static_cast<string>(array.presetArray)};
+        array.presetArray.setChoices(vector{choices});
+        auto idx{0};
+        for (; idx < choices.size(); ++idx) {
+            if (choices[idx] == stringSelection) {
+                array.presetArray = idx;
+                break;
+            }
+        }
+        if (idx == choices.size()) array.presetArray = -1;
+    }
+}
+
+Config::BladeConfig& Config::BladeArrays::addArray(string&& name, uint32 id, uint32 presetArray) {
+    auto& array{mBladeArrays.emplace_back(mParent)};
     array.name = std::move(name);
     array.id = id;
+    array.presetArray.setChoices(mParent.presetArrays.presetArrayNames());
+    array.presetArray = presetArray;
     auto choices{arraySelection.choices()};
     choices.push_back(array.name);
     arraySelection.setChoices(std::move(choices));
+    return array;
 }
 
 void Config::BladeArrays::removeArray(uint32 idx) {
+    assert(idx < mBladeArrays.size());
 
+    mBladeArrays.erase(std::next(mBladeArrays.begin(), idx));
+    auto choices{arraySelection.choices()};
+    choices.erase(std::next(choices.begin(), idx));
+    arraySelection.setChoices(std::move(choices));
 }
 
 void Config::BladeArrays::addPowerPinFromEntry() {

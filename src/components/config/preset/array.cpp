@@ -21,30 +21,11 @@
 
 #include <algorithm>
 
+#include "config/config.h"
+
 namespace Config {
 
 } // namespace Config
-
-Config::PresetArrays::PresetArrays() {
-    selection.setUpdateHandler([this](uint32 id) {
-        if (id != selection.ID_SELECTION) return;
-
-        if (selection == -1) {
-            presetProxy.unbind();
-
-            nameProxy.unbind();
-            dirProxy.unbind();
-            trackProxy.unbind();
-
-            bladeProxy.unbind();
-
-            commentProxy.unbind();
-            styleProxy.unbind();
-        } else {
-            presetProxy.bind(std::next(mArrays.begin(), selection)->selection);
-        }
-    });
-}
 
 void Config::PresetArray::addPreset() {
     auto choices{selection.choices()};
@@ -98,9 +79,50 @@ void Config::PresetArray::movePresetDown(uint32 idx) {
     selection.setChoices(std::move(choices));
 }
 
-void addArray();
-void removeArray(uint32);
+Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
+    selection.setUpdateHandler([this](uint32 id) {
+        if (id != selection.ID_SELECTION) return;
 
+        if (selection == -1) {
+            presetProxy.unbind();
+
+            nameProxy.unbind();
+            dirProxy.unbind();
+            trackProxy.unbind();
+
+            bladeProxy.unbind();
+
+            commentProxy.unbind();
+            styleProxy.unbind();
+        } else {
+            presetProxy.bind(std::next(mArrays.begin(), selection)->selection);
+        }
+    });
+}
+
+vector<string> Config::PresetArrays::presetArrayNames() const {
+    vector<string> ret;
+    ret.reserve(mArrays.size());
+    for (const auto& array : mArrays) {
+        ret.push_back(static_cast<string>(array.name));
+    }
+    return ret;
+}
+
+Config::PresetArray& Config::PresetArrays::addArray(string name) {
+    auto& ret{mArrays.emplace_back()};
+    ret.name = std::move(name);
+    selection.setChoices(presetArrayNames());
+    mParent.bladeArrays.refreshPresetArrays();
+    return ret;
+}
+
+void Config::PresetArrays::removeArray(uint32 idx) {
+    assert(idx < mArrays.size());
+    mArrays.erase(std::next(mArrays.begin(), idx));
+    selection.setChoices(presetArrayNames());
+    mParent.bladeArrays.refreshPresetArrays();
+}
 
 void Config::PresetArrays::addInjection(const string& name) {
     mInjections.emplace_back(Injection{name});

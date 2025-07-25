@@ -221,11 +221,10 @@ bool EditorWindow::save() {
 void EditorWindow::Fit() {
     SetSizeHints({-1, -1}, {-1, -1});
     PCUI::Frame::Fit();
+    if (not generalPage or not propsPage or not bladesPage or not presetsPage) return;
+
     SetMinSize(GetSize());
-    if (
-            generalPage->GetStaticBox()->IsShown() or
-            propsPage->GetStaticBox()->IsShown()
-       ) {
+    if (generalPage->GetStaticBox()->IsShown() or propsPage->GetStaticBox()->IsShown()) {
         SetMaxSize(GetSize());
     } else if (bladesPage->GetStaticBox()->IsShown()) {
         SetMaxSize({GetSize().x, -1});
