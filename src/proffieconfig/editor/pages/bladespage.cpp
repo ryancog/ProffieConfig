@@ -139,25 +139,27 @@ private:
 };
 
 BladesPage::BladesPage(EditorWindow *parent) : 
-    wxStaticBoxSizer(wxHORIZONTAL, parent),
-    Notifier(GetStaticBox(), parent->getOpenConfig()->bladeArrays.notifyData),
+    wxPanel(parent),
+    Notifier(this, parent->getOpenConfig()->bladeArrays.notifyData),
     mParent{static_cast<EditorWindow*>(parent)} {
+    auto *sizer{new wxBoxSizer(wxHORIZONTAL)};
 
     mAwarenessDlg = new BladeAwarenessDlg(parent);
 
-    Add(createBladeSelect(), wxSizerFlags(0).Expand());
-    Add(createBladeSettings(), wxSizerFlags(1).Expand());
+    sizer->Add(createBladeSelect(), wxSizerFlags(0).Expand());
+    sizer->Add(createBladeSettings(), wxSizerFlags(1).Expand());
 
     bindEvents();
     initializeNotifier();
+    SetSizerAndFit(sizer);
 }
  
 void BladesPage::bindEvents() {
-    GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         if (mAwarenessDlg->IsShown()) mAwarenessDlg->Raise();
         else mAwarenessDlg->Show();
     }, ID_OpenBladeAwareness);
-    GetStaticBox()->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto& bladeArrays{mParent->getOpenConfig()->bladeArrays};
         ArrayEditDlg dlg(
             mParent,
@@ -167,7 +169,7 @@ void BladesPage::bindEvents() {
         dlg.buildDone();
         dlg.ShowModal();        
     }, ID_EditArray);
-    GetStaticBox()->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto config{mParent->getOpenConfig()};
         
         ArrayEditDlg dlg(
@@ -187,7 +189,7 @@ void BladesPage::bindEvents() {
             config->bladeArrays.removeArray(config->bladeArrays.arraySelection.choices().size() - 1);
         }
     }, ID_AddArray);
-    GetStaticBox()->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto& bladeArrays{mParent->getOpenConfig()->bladeArrays};
         bladeArrays.removeArray(bladeArrays.arraySelection);
     }, ID_RemoveArray);
@@ -199,15 +201,15 @@ void BladesPage::handleNotification(uint32 id) {
 
     if (rebound or id == bladeArrays.ID_ARRAY_SELECTION) {
         bool hasSelection{bladeArrays.arraySelection != -1};
-        GetStaticBox()->FindWindow(ID_EditArray)->Enable(hasSelection);
-        GetStaticBox()->FindWindow(ID_RemoveArray)->Enable(hasSelection);
-        GetStaticBox()->FindWindow(ID_AddBlade)->Enable(hasSelection);
-        GetStaticBox()->FindWindow(ID_RemoveBlade)->Enable(hasSelection);
+        FindWindow(ID_EditArray)->Enable(hasSelection);
+        FindWindow(ID_RemoveArray)->Enable(hasSelection);
+        FindWindow(ID_AddBlade)->Enable(hasSelection);
+        FindWindow(ID_RemoveBlade)->Enable(hasSelection);
     }
     if (rebound or id == bladeArrays.ID_ARRAY_SELECTION or id == bladeArrays.ID_ARRAY_ISSUES) {
         const auto issues{bladeArrays.arrayIssues};
 
-        auto *issueIcon{GetStaticBox()->FindWindow(ID_IssueIcon)};
+        auto *issueIcon{FindWindow(ID_IssueIcon)};
         if (issues & Config::BladeConfig::ISSUE_ERRORS) {
             issueIcon->SetLabel(L"\u26D4" /* ⛔️ */);
 
@@ -235,14 +237,14 @@ void BladesPage::handleNotification(uint32 id) {
             *bladeArrays.bladeTypeProxy.data() == Config::Blade::WS281X
         };
 
-        GetStaticBox()->FindWindow(ID_Star1Box)->Show(isSimple);
-        GetStaticBox()->FindWindow(ID_Star2Box)->Show(isSimple);
-        GetStaticBox()->FindWindow(ID_Star3Box)->Show(isSimple);
-        GetStaticBox()->FindWindow(ID_Star4Box)->Show(isSimple);
+        FindWindow(ID_Star1Box)->Show(isSimple);
+        FindWindow(ID_Star2Box)->Show(isSimple);
+        FindWindow(ID_Star3Box)->Show(isSimple);
+        FindWindow(ID_Star4Box)->Show(isSimple);
 
-        GetStaticBox()->FindWindow(ID_PinNameAdd)->Show(isPixel);
+        FindWindow(ID_PinNameAdd)->Show(isPixel);
 
-        GetStaticBox()->FindWindow(ID_NoSelectText)->Show(not isPixel and not isSimple);
+        FindWindow(ID_NoSelectText)->Show(not isPixel and not isSimple);
     }
 }
 
@@ -285,12 +287,12 @@ wxSizer *BladesPage::createBladeSelect() {
 
     auto *arraySizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *bladeArray{new PCUI::Choice(
-        GetStaticBox(),
+        this,
         config->bladeArrays.arraySelection,
         _("Blade Array")
     )};
     auto *issueIcon{new wxButton(
-        GetStaticBox(),
+        this,
         ID_IssueIcon,
         wxEmptyString,
         wxDefaultPosition,
@@ -298,7 +300,7 @@ wxSizer *BladesPage::createBladeSelect() {
         wxBU_EXACTFIT
     )};
     auto *editArrayButton{new PCUI::Button(
-        GetStaticBox(),
+        this,
         ID_EditArray,
         wxEmptyString,
         wxDefaultSize,
@@ -315,7 +317,7 @@ wxSizer *BladesPage::createBladeSelect() {
 
     auto *arrayButtonSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *addArrayButton{new wxButton(
-        GetStaticBox(),
+        this,
         ID_AddArray,
         _("Add"),
         wxDefaultPosition,
@@ -323,7 +325,7 @@ wxSizer *BladesPage::createBladeSelect() {
         wxBU_EXACTFIT
     )};
     auto *removeArrayButton{new wxButton(
-        GetStaticBox(),
+        this,
         ID_RemoveArray,
         _("Remove"),
         wxDefaultPosition,
@@ -335,7 +337,7 @@ wxSizer *BladesPage::createBladeSelect() {
     arrayButtonSizer->Add(removeArrayButton, wxSizerFlags(3));
 
     auto *bladeAwarenessButton{new wxButton(
-        GetStaticBox(),
+        this,
         ID_OpenBladeAwareness,
         _("Blade Awareness...")
     )};
@@ -344,7 +346,7 @@ wxSizer *BladesPage::createBladeSelect() {
 
     auto *bladeSelectionSizer{new wxBoxSizer(wxVERTICAL)};
     auto *bladeSelect{new PCUI::List(
-        GetStaticBox(),
+        this,
         config->bladeArrays.bladeSelectionProxy,
         _("Blades")
     )};
@@ -352,7 +354,7 @@ wxSizer *BladesPage::createBladeSelect() {
 
     auto *bladeButtonSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *addBladeButton{new wxButton(
-        GetStaticBox(),
+        this,
         ID_AddBlade,
         "+",
         wxDefaultPosition,
@@ -360,7 +362,7 @@ wxSizer *BladesPage::createBladeSelect() {
         wxBU_EXACTFIT
     )};
     auto *removeBladeButton{new wxButton(
-        GetStaticBox(),
+        this,
         ID_RemoveBlade,
         "-",
         wxDefaultPosition,
@@ -427,7 +429,7 @@ wxSizer *BladesPage::createBladeSettings() {
     auto *settingsSizer{new wxBoxSizer(wxHORIZONTAL)};
 
     auto *noSelectText(new wxStaticText(
-        GetStaticBox(),
+        this,
         ID_NoSelectText,
         "No Blade Selected",
         wxDefaultPosition,
@@ -439,7 +441,7 @@ wxSizer *BladesPage::createBladeSettings() {
     auto *setupSizer{new wxBoxSizer(wxVERTICAL)};
 
     auto *bladeType{new PCUI::Choice(
-        GetStaticBox(),
+        this,
         config->bladeArrays.bladeTypeProxy,
         _("Blade Type")
     )};
@@ -451,7 +453,7 @@ wxSizer *BladesPage::createBladeSettings() {
         ) {
         auto *starSizer{new wxStaticBoxSizer(
             wxVERTICAL,
-            GetStaticBox(),
+            this,
             label
         )};
         starSizer->GetStaticBox()->SetId(id);
@@ -501,12 +503,12 @@ wxSizer *BladesPage::createBladeSettings() {
 
     auto pixelSizer1{new wxBoxSizer(wxHORIZONTAL)};
     auto *dataPin{new PCUI::ComboBox(
-        GetStaticBox(),
+        this,
         config->bladeArrays.dataPinProxy,
         _("Blade Data Pin")
     )};
     auto *length{new PCUI::Numeric(
-        GetStaticBox(),
+        this,
         config->bladeArrays.lengthProxy,
         wxSP_ARROW_KEYS,
         _("Number of Pixels")
@@ -515,32 +517,32 @@ wxSizer *BladesPage::createBladeSettings() {
     pixelSizer1->Add(length);
 
     auto *colorOrder3{new PCUI::Choice(
-        GetStaticBox(),
+        this,
         config->bladeArrays.colorOrder3Proxy,
         _("Color Order")
     )};
     auto *colorOrder4{new PCUI::Choice(
-        GetStaticBox(),
+        this,
         config->bladeArrays.colorOrder4Proxy,
         _("Color Order")
     )};
 
     auto *whiteUseRGB{new PCUI::CheckBox(
-        GetStaticBox(),
+        this,
         config->bladeArrays.useRGBWithWhiteProxy,
         0,
         _("Use RGB with White")
     )};
 
     auto *pixelPowerPins{new PCUI::CheckList(
-        GetStaticBox(),
+        this,
         config->bladeArrays.powerPinProxy
     )};
     pixelPowerPins->SetMinSize(wxSize(200, -1));
 
     auto *pinNameSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *addPowerPin{new wxButton(
-        GetStaticBox(),
+        this,
         ID_PinNameAdd,
         "+",
         wxDefaultPosition,
@@ -548,7 +550,7 @@ wxSizer *BladesPage::createBladeSettings() {
         wxBU_EXACTFIT
     )};
     auto *powerPinName{new PCUI::Text(
-        GetStaticBox(),
+        this,
         config->bladeArrays.powerPinNameEntry,
         0,
         _("Pin Name")

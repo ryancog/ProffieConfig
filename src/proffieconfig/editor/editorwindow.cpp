@@ -17,26 +17,28 @@
 #include <wx/tooltip.h>
 #include <wx/menu.h>
 
+#include "paths/paths.h"
+#include "ui/message.h"
+#include "utils/defer.h"
+#include "utils/image.h"
+
 #include "pages/bladespage.h"
 #include "pages/generalpage.h"
 #include "pages/presetspage.h"
 #include "pages/propspage.h"
-
-#include "paths/paths.h"
-#include "ui/message.h"
-#include "utils/defer.h"
 
 #include "../core/utilities/misc.h"
 #include "../core/utilities/progress.h"
 
 #include "../tools/arduino.h"
 #include "wx/gdicmn.h"
+#include "wx/toolbar.h"
 
 EditorWindow::EditorWindow(wxWindow *parent, std::shared_ptr<Config::Config> config) : 
     PCUI::Frame(
         parent,
         wxID_ANY,
-        _("ProffieConfig Editor") + " - " + static_cast<string>(config->name)
+        /* _("ProffieConfig Editor") + */ static_cast<string>(config->name)
     ),
     mConfig{std::move(config)} {
     auto *sizer{new wxBoxSizer{wxVERTICAL}};
@@ -45,7 +47,7 @@ EditorWindow::EditorWindow(wxWindow *parent, std::shared_ptr<Config::Config> con
     createPages(sizer);
     bindEvents();
 
-    wxCommandEvent event{wxEVT_CHOICE, ID_WindowSelect};
+    wxCommandEvent event{wxEVT_MENU, ID_General};
     event.SetInt(0);
     wxPostEvent(this, event);
 }
@@ -128,18 +130,24 @@ void EditorWindow::bindEvents() {
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { 
         wxLaunchDefaultBrowser("http://profezzorn.github.io/ProffieOS-StyleEditor/style_editor.html");
     }, ID_StyleEditor);
-    Bind(wxEVT_CHOICE, [this](wxCommandEvent& evt) {
+
+    auto windowSelectionHandler{[this](wxCommandEvent& evt) {
         wxSetCursor(wxCURSOR_WAIT);
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
-        generalPage->GetStaticBox()->Show(evt.GetInt() == 0);
-        propsPage->GetStaticBox()->Show(evt.GetInt() == 1);
-        bladesPage->GetStaticBox()->Show(evt.GetInt() == 2);
-        presetsPage->GetStaticBox()->Show(evt.GetInt() == 3);
+        GetToolBar()->ToggleTool(evt.GetId(), false);
+        generalPage->Show(evt.GetId() == ID_General);
+        propsPage->Show(evt.GetId() == ID_Props);
+        bladesPage->Show(evt.GetId() == ID_BladeArrays);
+        presetsPage->Show(evt.GetId() == ID_Presets);
 
         Layout();
         Fit();
-    }, ID_WindowSelect);
+    }};
+    Bind(wxEVT_MENU, windowSelectionHandler, ID_General);
+    Bind(wxEVT_MENU, windowSelectionHandler, ID_Props);
+    Bind(wxEVT_MENU, windowSelectionHandler, ID_Presets);
+    Bind(wxEVT_MENU, windowSelectionHandler, ID_BladeArrays);
 }
 
 void EditorWindow::createMenuBar() {
@@ -169,24 +177,49 @@ void EditorWindow::createMenuBar() {
 }
 
 void EditorWindow::createPages(wxSizer *sizer) {
-    auto* optionsSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *windowSelect{new wxChoice(
-        this,
-        ID_WindowSelect,
-        wxDefaultPosition,
-        wxDefaultSize,
-        {
-            _("General"),
-            _("Prop File"),
-            _("Blade Arrays"),
-            _("Presets And Styles"),
-        }
-    )};
-
-    optionsSizer->Add(
-        windowSelect,
-        wxSizerFlags(0).Border(wxALL, 10)
+    auto *toolbar{CreateToolBar(wxTB_TEXT)};
+    toolbar->AddRadioTool(
+        ID_General,
+        _("General"),
+        Image::loadPNG("settings", wxDefaultSize, Image::LIGHT_BLUE)
     );
+    toolbar->AddRadioTool(
+        ID_Props,
+        _("Prop File"),
+        Image::loadPNG("props", wxDefaultSize, Image::LIGHT_BLUE)
+    );
+    toolbar->AddRadioTool(
+        ID_Presets,
+        _("Presets"),
+        Image::loadPNG("presets", wxDefaultSize, Image::LIGHT_BLUE)
+    );
+    toolbar->AddRadioTool(
+        ID_BladeArrays,
+        _("Blade Arrays"),
+        Image::loadPNG("blade", wxDefaultSize, Image::LIGHT_BLUE)
+    );
+    toolbar->OSXSetSelectableTools(true);
+    toolbar->Realize();
+    toolbar->OSXSelectTool(ID_General);
+
+    auto* optionsSizer{new wxBoxSizer(wxHORIZONTAL)};
+    // auto *windowSelect{new wxChoice(
+    //     this,
+    //     ID_WindowSelect,
+    //     wxDefaultPosition,
+    //     wxDefaultSize,
+    //     {
+    //         _("General"),
+    //         _("Prop File"),
+    //         _("Blade Arrays"),
+    //         _("Presets And Styles"),
+    //     }
+    // )};
+
+    // optionsSizer->Add(
+    //     windowSelect,
+    //     wxSizerFlags(0).Border(wxALL, 10)
+    // );
 
     generalPage = new GeneralPage(this);
     propsPage = new PropsPage(this);
@@ -196,19 +229,19 @@ void EditorWindow::createPages(wxSizer *sizer) {
     sizer->Add(optionsSizer, wxSizerFlags(0).Expand());
     sizer->Add(
         generalPage, 
-        wxSizerFlags(1).Border(wxALL, 10).Expand()
+        wxSizerFlags(1).Border(wxALL, 20).Expand()
     );
     sizer->Add(
         propsPage,
-        wxSizerFlags(1).Border(wxALL, 10).Expand()
+        wxSizerFlags(1).Border(wxALL, 20).Expand()
     );
     sizer->Add(
         presetsPage,
-        wxSizerFlags(1).Border(wxALL, 10).Expand()
+        wxSizerFlags(1).Border(wxALL, 20).Expand()
     );
     sizer->Add(
         bladesPage,
-        wxSizerFlags(1).Border(wxALL, 10).Expand()
+        wxSizerFlags(1).Border(wxALL, 20).Expand()
     );
 
     SetSizerAndFit(sizer);
@@ -224,11 +257,11 @@ void EditorWindow::Fit() {
     if (not generalPage or not propsPage or not bladesPage or not presetsPage) return;
 
     SetMinSize(GetSize());
-    if (generalPage->GetStaticBox()->IsShown() or propsPage->GetStaticBox()->IsShown()) {
+    if (generalPage->IsShown() or propsPage->IsShown()) {
         SetMaxSize(GetSize());
-    } else if (bladesPage->GetStaticBox()->IsShown()) {
+    } else if (bladesPage->IsShown()) {
         SetMaxSize({GetSize().x, -1});
-    } else if (presetsPage->GetStaticBox()->IsShown()) {
+    } else if (presetsPage->IsShown()) {
         SetMaxSize({-1, -1});
     }
 }

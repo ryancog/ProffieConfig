@@ -7,7 +7,7 @@
 
 class ArrayEditDlg;
 
-class BladesPage : public wxStaticBoxSizer, PCUI::Notifier {
+class BladesPage : public wxPanel, PCUI::Notifier {
 public:
     BladesPage(EditorWindow *);
 

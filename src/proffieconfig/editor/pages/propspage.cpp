@@ -14,61 +14,57 @@
 #include "../dialogs/propbuttons.h"
 
 PropsPage::PropsPage(EditorWindow *parent) : 
-    wxStaticBoxSizer(wxVERTICAL, parent),
+    wxPanel(parent),
     mParent{parent} {
-    Notifier::create(GetStaticBox(), mNotifyData);
+    Notifier::create(this, mNotifyData);
     auto config{mParent->getOpenConfig()};
+
+    auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
     auto *topSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *propSelection {new PCUI::Choice(
-        GetStaticBox(),
+        this,
         config->propSelection,
         _("Prop File")
     )};
     propSelection->SetMinSize(wxSize{120, -1});
     auto *propInfo{new wxButton(
-        GetStaticBox(),
+        this,
         ID_PropInfo,
         _("Prop Description and Usage Info...")
     )};
     auto *buttonInfo{new wxButton(
-        GetStaticBox(),
+        this,
         ID_Buttons,
         _("Button Controls...")
     )};
     propInfo->SetToolTip(_("View prop creator-provided information about this prop and its intended usage."));
     buttonInfo->SetToolTip(_("View button controls based on specific option settings and number of buttons."));
-    topSizer->Add(
-        propSelection,
-        wxSizerFlags(0).Border(wxALL, 10)
-    );
-    topSizer->Add(
-        propInfo,
-        wxSizerFlags(0).Border(wxALL, 10).Bottom()
-    );
-    topSizer->Add(
-        buttonInfo,
-        wxSizerFlags(0).Border(wxALL, 10).Bottom()
-    );
+    topSizer->Add(propSelection, wxSizerFlags());
+    topSizer->AddSpacer(5);
+    topSizer->Add(propInfo, wxSizerFlags().Bottom());
+    topSizer->AddSpacer(5);
+    topSizer->Add(buttonInfo, wxSizerFlags().Bottom());
 
-    mPropsWindow = new wxScrolledWindow(GetStaticBox(), wxID_ANY);
+    mPropsWindow = new wxScrolledWindow(this, wxID_ANY);
     auto *propsSizer{new wxBoxSizer(wxVERTICAL)};
     mPropsWindow->SetSizerAndFit(propsSizer);
     mPropsWindow->SetScrollbars(10, 10, -1, 1);
 
-    Add(topSizer);
-    Add(mPropsWindow, wxSizerFlags(1).Expand());
+    sizer->Add(topSizer);
+    sizer->Add(mPropsWindow, wxSizerFlags(1).Expand());
 
     loadProps();
     bindEvents();
     initializeNotifier();
+    SetSizerAndFit(sizer);
 }
 
 void PropsPage::bindEvents() {
-    GetStaticBox()->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         PropButtonsDialog(mParent).ShowModal();
     }, ID_Buttons);
-    GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         auto config{mParent->getOpenConfig()};
         auto prop{config->prop(config->propSelection)};
 
@@ -94,8 +90,8 @@ void PropsPage::bindEvents() {
 void PropsPage::handleNotification(uint32 id) {
     if (id == ID_REBOUND or id == ID_PropSelection) {
         auto config{mParent->getOpenConfig()};
-        GetStaticBox()->FindWindow(ID_Buttons)->Enable(config->propSelection != -1);
-        GetStaticBox()->FindWindow(ID_PropInfo)->Enable(config->propSelection != -1);
+        FindWindow(ID_Buttons)->Enable(config->propSelection != -1);
+        FindWindow(ID_PropInfo)->Enable(config->propSelection != -1);
     }
 }
 
