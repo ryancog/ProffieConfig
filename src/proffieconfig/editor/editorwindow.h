@@ -29,8 +29,10 @@ public:
     PresetsPage *presetsPage{nullptr};
 
     enum {
-        ID_WindowSelect,
-        ID_DUMMY, // on Win32, for some reason ID #1 is triggerred by hitting enter in pcTextCtrl? This is a workaround.
+        ID_General = 2,
+        ID_Props,
+        ID_Presets,
+        ID_BladeArrays,
 
         ID_ExportConfig,
         ID_VerifyConfig,

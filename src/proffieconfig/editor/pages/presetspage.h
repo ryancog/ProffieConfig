@@ -13,7 +13,7 @@
 
 #include "../editorwindow.h"
 
-class PresetsPage : public wxStaticBoxSizer, PCUI::Notifier {
+class PresetsPage : public wxPanel, PCUI::Notifier {
 public:
     PresetsPage(EditorWindow *);
 

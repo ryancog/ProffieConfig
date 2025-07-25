@@ -6,22 +6,24 @@
 #include <wx/statbox.h>
 
 GeneralPage::GeneralPage(EditorWindow *parent) : 
-    wxStaticBoxSizer(wxVERTICAL, parent, ""), 
-    Notifier(GetStaticBox(), parent->getOpenConfig()->settings.notifyData),
+    wxPanel(parent), 
+    Notifier(this, parent->getOpenConfig()->settings.notifyData),
     mParent(parent) {
+    auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
-    Add(setupSection(this), wxSizerFlags(0).Expand());
-    AddSpacer(10);
-    Add(optionSection(this), wxSizerFlags(1).Expand());
+    sizer->Add(setupSection(), wxSizerFlags(0).Expand());
+    sizer->AddSpacer(10);
+    sizer->Add(optionSection(), wxSizerFlags(1).Expand());
 
     mCustomOptDlg = new CustomOptionsDlg(mParent);
 
     bindEvents();
     initializeNotifier();
+    SetSizerAndFit(sizer);
 }
 
 void GeneralPage::bindEvents() {
-    GetStaticBox()->Bind(wxEVT_BUTTON, [&](wxCommandEvent&){
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&){
         if (mCustomOptDlg->IsShown()) mCustomOptDlg->Raise();
         else mCustomOptDlg->Show();
     }, ID_CustomOptions);
@@ -32,7 +34,7 @@ void GeneralPage::handleNotification(uint32 id) {
     auto& settings{mParent->getOpenConfig()->settings};
 
     if (rebound or id == settings.ID_OS_VERSION) {
-        auto *osVersionButton{GetStaticBox()->FindWindow(ID_OSVersion)};
+        auto *osVersionButton{FindWindow(ID_OSVersion)};
         if (settings.osVersion != -1) {
             osVersionButton->SetLabel("OS " + static_cast<string>(settings.osVersion));
         } else {
@@ -66,12 +68,12 @@ void GeneralPage::handleNotification(uint32 id) {
 //     TIP(disableDiagnosticCommands, _("Disable diagnostic commands in the Serial Monitor to save memory."));
 // }
 
-wxStaticBoxSizer* GeneralPage::setupSection(wxStaticBoxSizer* parent) {
+wxSizer *GeneralPage::setupSection() {
     auto config{mParent->getOpenConfig()};
 
     auto *boardSetup{new wxStaticBoxSizer(
         wxHORIZONTAL,
-        parent->GetStaticBox(),
+        this,
         _("Setup"))
     };
 
@@ -110,79 +112,81 @@ wxStaticBoxSizer* GeneralPage::setupSection(wxStaticBoxSizer* parent) {
     return boardSetup;
 }
 
-wxStaticBoxSizer* GeneralPage::optionSection(wxStaticBoxSizer* parent) {
-    auto *options{new wxStaticBoxSizer(wxHORIZONTAL, parent->GetStaticBox(), _("Options"))};
+wxSizer *GeneralPage::optionSection() {
+    auto *optionsSizer{new wxStaticBoxSizer(
+        wxHORIZONTAL, this, _("Options")
+    )};
 
-    options->Add(
-        leftOptions(options),
+    optionsSizer->Add(
+        leftOptions(optionsSizer->GetStaticBox()),
         wxSizerFlags(20).Expand()
     );
-    options->AddStretchSpacer(1);
-    options->Add(
-        rightOptions(options),
+    optionsSizer->AddStretchSpacer(1);
+    optionsSizer->Add(
+        rightOptions(optionsSizer->GetStaticBox()),
         wxSizerFlags(20).Expand()
     );
 
-    return options;
+    return optionsSizer;
 }
 
-wxBoxSizer* GeneralPage::rightOptions(wxStaticBoxSizer* parent) {
+wxSizer *GeneralPage::rightOptions(wxWindow* parent) {
     auto config{mParent->getOpenConfig()};
     auto *rightOptions{new wxBoxSizer(wxVERTICAL)};
 
     // TODO: Save State, yes?
 
     auto *volumeSave{new PCUI::CheckBox(
-        parent->GetStaticBox(),
+        parent,
         config->settings.saveVolume,
         0,
         _("Save Volume")
     )};
     auto *presetSave{new PCUI::CheckBox(
-        parent->GetStaticBox(),
+        parent,
         config->settings.savePreset,
         0,
         _("Save Preset")
     )};
     auto *colorSave{new PCUI::CheckBox(
-        parent->GetStaticBox(),
+        parent,
         config->settings.saveColorChange,
         0,
         _("Save Color")
     )};
     auto *enableOLED{new PCUI::CheckBox(
-        parent->GetStaticBox(),
+        parent,
         config->settings.enableOLED,
         0,
         _("Enable OLED")
     )};
     auto *disableColor{new PCUI::CheckBox(
-        parent->GetStaticBox(),
+        parent,
         config->settings.disableColorChange,
         0,
         _("Disable Color Change")
     )};
     auto *noTalkie{new PCUI::CheckBox(
-        parent->GetStaticBox(),
+        parent,
         config->settings.disableTalkie,
         0,
         _("Disable Talkie")
     )};
     auto *noBasicParsers{new PCUI::CheckBox(
-        parent->GetStaticBox(),
+        parent,
         config->settings.disableBasicParserStyles,
         0,
         _("Disable Basic Parser Styles")
     )};
     auto *disableDiagnosticCommands{new PCUI::CheckBox(
-        parent->GetStaticBox(),
+        parent,
         config->settings.disableDiagnosticCommands,
         0,
         _("Disable Diagnostic Commands")
     )};
 
     auto *customOptButton{new wxButton(
-        parent->GetStaticBox(),
+        parent,
         ID_CustomOptions,
         _("Custom Options...")
     )};
@@ -209,54 +213,54 @@ wxBoxSizer* GeneralPage::rightOptions(wxStaticBoxSizer* parent) {
     return rightOptions;
 }
 
-wxBoxSizer* GeneralPage::leftOptions(wxStaticBoxSizer* parent) {
+wxSizer *GeneralPage::leftOptions(wxWindow *parent) {
     auto config{mParent->getOpenConfig()};
 
     auto *leftOptions{new wxBoxSizer(wxVERTICAL)};
 
     auto *orientation{new PCUI::Choice(
-        parent->GetStaticBox(), 
+        parent, 
         config->settings.orientation,
         _("Orientation"),
         wxHORIZONTAL
     )};
     auto *buttons{new PCUI::Numeric(
-        parent->GetStaticBox(),
+        parent,
         config->settings.numButtons,
         wxSP_ARROW_KEYS,
         _("Number of Buttons"),
         wxHORIZONTAL
     )};
     auto *volume{new PCUI::Numeric(
-        parent->GetStaticBox(),
+        parent,
         config->settings.volume,
         wxSP_ARROW_KEYS,
         _("Max Volume"),
         wxHORIZONTAL
     )};
     auto *clash{new PCUI::Decimal(
-        parent->GetStaticBox(),
+        parent,
         config->settings.clashThreshold,
         wxSP_ARROW_KEYS,
         _("Clash Threshold (Gs)"),
         wxHORIZONTAL
     )};
     auto *pliTime{new PCUI::Decimal(
-        parent->GetStaticBox(),
+        parent,
         config->settings.pliOffTime,
         wxSP_ARROW_KEYS,
         _("PLI Timeout (minutes)"),
         wxHORIZONTAL
     )};
     auto *idleTime{new PCUI::Decimal(
-        parent->GetStaticBox(),
+        parent,
         config->settings.idleOffTime,
         wxSP_ARROW_KEYS,
         _("Idle Timeout (minutes)"),
         wxHORIZONTAL
     )};
     auto *motionTime{new PCUI::Decimal(
-        parent->GetStaticBox(),
+        parent,
         config->settings.motionOffTime,
         wxSP_ARROW_KEYS,
         _("Motion Timeout (minutes)"),

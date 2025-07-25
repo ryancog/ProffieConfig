@@ -5,7 +5,7 @@
 #include "../editorwindow.h"
 #include "../dialogs/customoptionsdlg.h"
 
-class GeneralPage : public wxStaticBoxSizer, PCUI::Notifier {
+class GeneralPage : public wxPanel, PCUI::Notifier {
 public:
     GeneralPage(EditorWindow*);
 
@@ -21,8 +21,8 @@ private:
     void bindEvents();
     void handleNotification(uint32) final;
 
-    wxStaticBoxSizer* setupSection(wxStaticBoxSizer*);
-    wxStaticBoxSizer* optionSection(wxStaticBoxSizer*);
-    wxBoxSizer* rightOptions(wxStaticBoxSizer*);
-    wxBoxSizer* leftOptions(wxStaticBoxSizer*);
+    wxSizer* setupSection();
+    wxSizer* optionSection();
+    wxSizer* rightOptions(wxWindow*);
+    wxSizer* leftOptions(wxWindow*);
 };
