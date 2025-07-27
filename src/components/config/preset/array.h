@@ -36,9 +36,15 @@ struct CONFIG_EXPORT Injection {
 };
 
 struct CONFIG_EXPORT PresetArray {
+    PresetArray(Config&);
+
     PCUI::TextData name;
     PCUI::ChoiceData selection;
 
+    // Notifies on duplicate update
+    PCUI::NotifierData notifyData;
+
+    [[nodiscard]] const list<Preset>& presets() const { return mPresets; }
     [[nodiscard]] Preset& preset(uint32 idx) {
         return *std::next(mPresets.begin(), idx);
     };
@@ -50,6 +56,7 @@ struct CONFIG_EXPORT PresetArray {
     void movePresetDown(uint32);
 
 private:
+    Config& mConfig;
     list<Preset> mPresets;
 };
 
@@ -59,15 +66,38 @@ struct CONFIG_EXPORT PresetArrays {
     PCUI::ChoiceData selection;
 
     enum {
+        /**
+         * New/removed array selection
+         */
         NOTIFY_SELECTION,
+        /**
+         * New/removed preset selection or choices changed
+         */
+        NOTIFY_PRESETS,
+        /**
+         * Injections modified
+         */
         NOTIFY_INJECTIONS,
+        /**
+         * Track modified
+         */
+        NOTIFY_TRACK_INPUT,
+        /**
+         * Window should focus to comments entry
+         */
+        NOTIFY_FOCUS_COMMENTS,
+        /**
+         * Selected array name status change
+         */
+        NOTIFY_ARRAY_NAME,
     };
     PCUI::NotifierData notifyData;
 
+    [[nodiscard]] const list<PresetArray>& arrays() const { return mArrays; }
     [[nodiscard]] PresetArray& array(uint32 idx) { 
+        assert(idx < mArrays.size());
         return *std::next(mArrays.begin(), idx);
     }
-    [[nodiscard]] vector<string> presetArrayNames() const;
 
     PresetArray& addArray(string name);
     void removeArray(uint32 idx);
@@ -86,10 +116,13 @@ struct CONFIG_EXPORT PresetArrays {
     PCUI::TextDataProxy dirProxy;
     PCUI::TextDataProxy trackProxy;
 
-    PCUI::ChoiceDataProxy bladeProxy;
+    PCUI::ChoiceDataProxy styleSelectProxy;
+    PCUI::ChoiceDataProxy styleDisplayProxy;
 
     PCUI::TextDataProxy commentProxy;
     PCUI::TextDataProxy styleProxy;
+    static PCUI::TextData dummyCommentData;
+    static PCUI::TextData dummyStyleData;
 
 private:
     Config& mParent;

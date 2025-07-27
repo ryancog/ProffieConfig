@@ -22,14 +22,81 @@
 #include <algorithm>
 
 #include "config/config.h"
+#include "utils/string.h"
 
 namespace Config {
 
 } // namespace Config
 
+PCUI::TextData Config::PresetArrays::dummyCommentData;
+PCUI::TextData Config::PresetArrays::dummyStyleData;
+
+Config::PresetArray::PresetArray(Config& config) :
+    mConfig{config} {
+
+    auto isCurrentArray{[this]() {
+        if (mConfig.presetArrays.selection == -1) return false;
+        auto& selectedArray{mConfig.presetArrays.array(mConfig.presetArrays.selection)};
+        return &selectedArray == this;
+    }};
+
+    name.setUpdateHandler([this, isCurrentArray](uint32 id) {
+        if (id != name.ID_VALUE) return;
+
+        auto rawValue{static_cast<string>(name)};
+        uint32 numTrimmed{};
+        auto insertionPoint{name.getInsertionPoint()};
+        Utils::trimUnsafe(
+            rawValue,
+            &numTrimmed,
+            insertionPoint
+        );
+
+        if (rawValue == static_cast<string>(name)) {
+            notifyData.notify();
+            if (isCurrentArray()) mConfig.presetArrays.notifyData.notify(PresetArrays::NOTIFY_ARRAY_NAME);
+
+            auto idx{0};
+            auto& arrays{mConfig.presetArrays.arrays()};
+            auto arrayIter{arrays.begin()};
+            auto arrayEnd{arrays.end()};
+            for (; idx < arrays.size(); ++idx, ++arrayIter) {
+                if (&*arrayIter == this) break;
+            }
+            auto choices{mConfig.presetArrays.selection.choices()};
+            if (idx != arrays.size() and idx != choices.size()) {
+                choices[idx] = name;
+                mConfig.presetArrays.selection.setChoices(std::move(choices));
+            }
+
+            return;
+        }
+
+        name = std::move(rawValue);
+        name.setInsertionPoint(insertionPoint - numTrimmed);
+    });
+    selection.setUpdateHandler([this, isCurrentArray](uint32 id) {
+        if (selection == -1) {
+            mConfig.presetArrays.nameProxy.unbind();
+            mConfig.presetArrays.dirProxy.unbind();
+            mConfig.presetArrays.trackProxy.unbind();
+            mConfig.presetArrays.styleSelectProxy.unbind();
+        } else {
+            auto& preset{*std::next(mPresets.begin(), selection)};
+            mConfig.presetArrays.nameProxy.bind(preset.name);
+            mConfig.presetArrays.dirProxy.bind(preset.fontDir);
+            mConfig.presetArrays.trackProxy.bind(preset.track);
+            mConfig.presetArrays.styleDisplayProxy.bind(preset.styleDisplay);
+            mConfig.presetArrays.styleSelectProxy.bind(preset.styleSelection);
+        }
+
+        if (isCurrentArray()) mConfig.presetArrays.notifyData.notify(PresetArrays::NOTIFY_PRESETS);
+    });
+}
+
 void Config::PresetArray::addPreset() {
     auto choices{selection.choices()};
-    choices.push_back(mPresets.emplace_back().name);
+    choices.push_back(mPresets.emplace_back(mConfig, *this).name);
     selection.setChoices(std::move(choices));
 }
 
@@ -54,11 +121,15 @@ void Config::PresetArray::movePresetUp(uint32 idx) {
     );
 
     auto choices{selection.choices()};
+    auto move{std::next(choices.begin(), idx)};
+    auto moveValue{*move};
+    choices.erase(move);
     choices.insert(
         std::next(choices.begin(), idx - 1), 
-        *choices.erase(std::next(choices.begin(), idx))
+        moveValue
     );
     selection.setChoices(std::move(choices));
+    selection = idx - 1;
 }
 
 void Config::PresetArray::movePresetDown(uint32 idx) {
@@ -72,14 +143,26 @@ void Config::PresetArray::movePresetDown(uint32 idx) {
     );
 
     auto choices{selection.choices()};
+    auto move{std::next(choices.begin(), idx)};
+    auto moveValue{*move};
+    choices.erase(move);
     choices.insert(
         std::next(choices.begin(), idx + 1), 
-        *choices.erase(std::next(choices.begin(), idx))
+        moveValue
     );
     selection.setChoices(std::move(choices));
+    selection = idx + 1;
 }
 
 Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
+    dummyCommentData = _("Select or create preset and blade to edit style comments...").ToStdString();
+    dummyCommentData.disable();
+    dummyStyleData = _("Select or create preset and blade to edit style...").ToStdString();
+    dummyStyleData.disable();
+
+    commentProxy.bind(dummyCommentData);
+    styleProxy.bind(dummyStyleData);
+
     selection.setUpdateHandler([this](uint32 id) {
         if (id != selection.ID_SELECTION) return;
 
@@ -90,29 +173,25 @@ Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
             dirProxy.unbind();
             trackProxy.unbind();
 
-            bladeProxy.unbind();
+            styleSelectProxy.unbind();
 
-            commentProxy.unbind();
-            styleProxy.unbind();
+            commentProxy.bind(dummyCommentData);
+            styleProxy.bind(dummyStyleData);
         } else {
             presetProxy.bind(std::next(mArrays.begin(), selection)->selection);
         }
+
+        notifyData.notify(NOTIFY_SELECTION);
     });
 }
 
-vector<string> Config::PresetArrays::presetArrayNames() const {
-    vector<string> ret;
-    ret.reserve(mArrays.size());
-    for (const auto& array : mArrays) {
-        ret.push_back(static_cast<string>(array.name));
-    }
-    return ret;
-}
-
 Config::PresetArray& Config::PresetArrays::addArray(string name) {
-    auto& ret{mArrays.emplace_back()};
+    auto& ret{mArrays.emplace_back(mParent)};
     ret.name = std::move(name);
-    selection.setChoices(presetArrayNames());
+    vector<string> choices;
+    choices.reserve(mArrays.size());
+    for (const auto& array : mArrays) choices.push_back(array.name);
+    selection.setChoices(std::move(choices));
     mParent.bladeArrays.refreshPresetArrays();
     return ret;
 }
@@ -120,7 +199,10 @@ Config::PresetArray& Config::PresetArrays::addArray(string name) {
 void Config::PresetArrays::removeArray(uint32 idx) {
     assert(idx < mArrays.size());
     mArrays.erase(std::next(mArrays.begin(), idx));
-    selection.setChoices(presetArrayNames());
+    vector<string> choices;
+    choices.reserve(mArrays.size());
+    for (const auto& array : mArrays) choices.push_back(array.name);
+    selection.setChoices(std::move(choices));
     mParent.bladeArrays.refreshPresetArrays();
 }
 

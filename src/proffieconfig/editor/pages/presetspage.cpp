@@ -9,13 +9,102 @@
 #include <wx/tooltip.h>
 
 #include "config/preset/array.h"
+#include "ui/controls/button.h"
 #include "ui/message.h"
 #include "paths/paths.h"
 
 #include "../../core/defines.h"
 #include "../editorwindow.h"
 #include "wx/anybutton.h"
+#include "wx/osx/stattext.h"
+#include "wx/settings.h"
 
+class RenameArrayDlg : public wxDialog, PCUI::Notifier {
+public:
+    RenameArrayDlg(
+        wxWindow *parent,
+        Config::Config& config,
+        Config::PresetArray& array,
+        const wxString& title,
+        bool buttons = false
+    ) : wxDialog(parent, wxID_ANY, title),
+        Notifier(this, array.notifyData),
+        mConfig{config}, mArray{array} {
+        auto *sizer{new wxBoxSizer(wxVERTICAL)};
+        auto *entry{new PCUI::Text(
+            this,
+            array.name,
+            0,
+            false,
+            _("Name")
+        )};
+        auto *emptyText{new wxStaticText(
+            this,
+            ID_EmptyText,
+            _("Empty Array Name")
+        )};
+        auto *dupText{new wxStaticText(
+            this,
+            ID_DupText,
+            _("Duplicate Array Name")
+        )};
+        sizer->Add(
+            entry,
+            wxSizerFlags().Expand().Border(wxTOP | wxLEFT | wxRIGHT, 10)
+        );
+        sizer->Add(
+            emptyText,
+            wxSizerFlags().Right().Border(wxALL, 5)
+                .DoubleBorder(wxRIGHT)
+        );
+        sizer->Add(
+            dupText,
+            wxSizerFlags().Right().Border(wxALL, 5)
+                .DoubleBorder(wxRIGHT)
+        );
+        if (buttons) {
+            sizer->Add(
+                CreateStdDialogButtonSizer(wxOK | wxCANCEL),
+                wxSizerFlags().Expand()
+            );
+        } else {
+            sizer->AddSpacer(10);
+        }
+
+        SetSizer(sizer);
+        initializeNotifier();
+    }
+
+private:
+    Config::Config& mConfig;
+    Config::PresetArray& mArray;
+
+    enum {
+        ID_EmptyText,
+        ID_DupText,
+    };
+
+    void handleNotification(uint32) final {
+        bool duplicate{false};
+        for (const auto& array : mConfig.presetArrays.arrays()) {
+            if (&array == &mArray) continue;
+            if (static_cast<string>(array.name) == static_cast<string>(mArray.name)) {
+                duplicate = true;
+                break;
+            }
+        }
+        bool empty{static_cast<string>(mArray.name).empty()};
+
+        FindWindow(ID_EmptyText)->Show(empty);
+        FindWindow(ID_DupText)->Show(duplicate);
+        auto *okButton{FindWindow(wxID_OK)};
+        if (okButton) okButton->Enable(not duplicate and not empty);
+
+        SetMinSize({300, -1});
+        Layout();
+        Fit();
+    }
+};
 
 PresetsPage::PresetsPage(EditorWindow *window) : 
     wxPanel(window),
@@ -33,11 +122,34 @@ void PresetsPage::createUI() {
 
     auto *presetSelectionSizer{new wxBoxSizer(wxVERTICAL)};
 
+    auto *arraySizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *arraySelection{new PCUI::Choice(
         this,
         config->presetArrays.selection,
         _("Presets Array")
     )};
+    auto *issueButton{new wxButton(
+        this,
+        ID_IssueButton,
+        L"\u26D4" /* ⛔️ */,
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxBU_EXACTFIT
+    )};
+    auto *arrayRename{new PCUI::Button(
+        this,
+        ID_RenameArray,
+        wxEmptyString,
+        wxDefaultSize,
+        wxBU_EXACTFIT,
+        "edit",
+        {-1, 16},
+        wxSYS_COLOUR_WINDOWTEXT
+    )};
+    arraySizer->Add(arraySelection, wxSizerFlags(1));
+    arraySizer->Add(issueButton, wxSizerFlags().Border(wxLEFT, 5));
+    arraySizer->AddSpacer(5);
+    arraySizer->Add(arrayRename, wxSizerFlags().Bottom());
 
     auto *arrayButtonsSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *addArray{new wxButton(
@@ -66,6 +178,7 @@ void PresetsPage::createUI() {
         config->presetArrays.presetProxy,
         _("Presets")
     )};
+    presetList->SetMinSize(wxSize{-1, 300});
 
     auto *arrangeButtonsSizer{new wxBoxSizer(wxVERTICAL)};
 #   ifdef __WXOSX__
@@ -119,7 +232,7 @@ void PresetsPage::createUI() {
     presetButtonSizer->Add(removePreset, wxSizerFlags(1));
     presetButtonSizer->AddSpacer(arrangeButtonSize.x + 5);
 
-    presetSelectionSizer->Add(arraySelection, wxSizerFlags().Expand());
+    presetSelectionSizer->Add(arraySizer, wxSizerFlags().Expand());
     presetSelectionSizer->AddSpacer(10);
     presetSelectionSizer->Add(arrayButtonsSizer, wxSizerFlags().Expand());
     presetSelectionSizer->AddSpacer(10);
@@ -131,7 +244,8 @@ void PresetsPage::createUI() {
     auto *nameInput{new PCUI::Text(
         this,
         config->presetArrays.nameProxy,
-        0,
+        wxTE_PROCESS_ENTER,
+        true,
         _("Preset Name")
     )};
     nameInput->SetMinSize(wxSize(200, -1));
@@ -140,30 +254,52 @@ void PresetsPage::createUI() {
         this,
         config->presetArrays.dirProxy,
         0,
+        false,
         _("Font Directory")
     )};
     dirInput->SetMinSize(wxSize(200, -1));
 
+    auto *trackSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *trackInput{new PCUI::Text(
         this,
         config->presetArrays.trackProxy,
         0,
+        false,
         _("Track File")
     )};
     trackInput->SetMinSize(wxSize(200, -1));
+    auto *wavText{new wxStaticText(
+        this,
+        ID_WavText,
+        ".wav"
+    )};
+    trackSizer->Add(trackInput, wxSizerFlags(1));
+    trackSizer->Add(wavText, wxSizerFlags().Bottom());
 
     mInjectionsSizer = new wxBoxSizer(wxVERTICAL);
 
     presetConfigSizer->Add(nameInput);
+    presetConfigSizer->AddSpacer(5);
     presetConfigSizer->Add(dirInput);
-    presetConfigSizer->Add(trackInput);
+    presetConfigSizer->AddSpacer(5);
+    presetConfigSizer->Add(trackSizer);
+    presetConfigSizer->AddSpacer(5);
     presetConfigSizer->Add(mInjectionsSizer);
 
-    auto *bladeList {new PCUI::List(
+    auto *stylesSizer{new wxBoxSizer(wxVERTICAL)};
+    auto *styleDisplay{new PCUI::Choice(
         this,
-        config->presetArrays.bladeProxy,
+        config->presetArrays.styleDisplayProxy,
+        _("Display")
+    )};
+    auto *styleList {new PCUI::List(
+        this,
+        config->presetArrays.styleSelectProxy,
         _("Blades")
     )};
+    stylesSizer->Add(styleDisplay, wxSizerFlags().Expand());
+    stylesSizer->AddSpacer(5);
+    stylesSizer->Add(styleList, wxSizerFlags(1).Expand());
 
     auto *styleCommentSplit{new wxSplitterWindow(
         this,
@@ -177,6 +313,7 @@ void PresetsPage::createUI() {
         styleCommentSplit,
         config->presetArrays.commentProxy,
         wxTE_MULTILINE | wxNO_BORDER,
+        false,
         _("Comments")
     )};
 
@@ -184,6 +321,7 @@ void PresetsPage::createUI() {
         styleCommentSplit,
         config->presetArrays.styleProxy,
         wxTE_DONTWRAP | wxTE_MULTILINE | wxNO_BORDER,
+        false,
         _("Blade Style")
     )};
     styleInput->styleMonospace();
@@ -196,7 +334,7 @@ void PresetsPage::createUI() {
     sizer->AddSpacer(10);
     sizer->Add(presetConfigSizer, wxSizerFlags().Expand());
     sizer->AddSpacer(10);
-    sizer->Add(bladeList, wxSizerFlags().Expand());
+    sizer->Add(stylesSizer, wxSizerFlags().Expand());
     sizer->AddSpacer(10);
     sizer->Add(styleCommentSplit, wxSizerFlags(1).Expand());
 
@@ -204,12 +342,13 @@ void PresetsPage::createUI() {
 }
 
 void PresetsPage::bindEvents() {
-    this->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto config{mParent->getOpenConfig()};
-        if (config->presetArrays.selection == -1) return;
-        config->presetArrays.array(config->presetArrays.selection).addPreset();
+        auto& presetArray{config->presetArrays.array(config->presetArrays.selection)};
+        presetArray.addPreset();
+        presetArray.selection = presetArray.presets().size() - 1;
     }, ID_AddPreset);
-    this->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto config{mParent->getOpenConfig()};
         if (config->presetArrays.selection == -1) return;
         auto& presetArray{config->presetArrays.array(config->presetArrays.selection)};
@@ -217,7 +356,7 @@ void PresetsPage::bindEvents() {
 
         presetArray.removePreset(presetArray.selection);
     }, ID_RemovePreset);
-    this->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto config{mParent->getOpenConfig()};
         if (config->presetArrays.selection == -1) return;
         auto& presetArray{config->presetArrays.array(config->presetArrays.selection)};
@@ -225,7 +364,7 @@ void PresetsPage::bindEvents() {
 
         presetArray.movePresetUp(presetArray.selection);
     }, ID_MovePresetUp);
-    this->Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto config{mParent->getOpenConfig()};
         if (config->presetArrays.selection == -1) return;
         auto& presetArray{config->presetArrays.array(config->presetArrays.selection)};
@@ -233,6 +372,39 @@ void PresetsPage::bindEvents() {
 
         presetArray.movePresetDown(presetArray.selection);
     }, ID_MovePresetDown);
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+        auto& config{*mParent->getOpenConfig()};
+        auto& presetArray{config.presetArrays.array(config.presetArrays.selection)};
+
+        RenameArrayDlg renameDlg(
+            mParent,
+            config,
+            presetArray,
+            _("Rename Preset Array")
+        );
+        renameDlg.ShowModal();
+    }, ID_RenameArray);
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+        auto& config{*mParent->getOpenConfig()};
+
+        Config::PresetArray array(config);
+        RenameArrayDlg dlg(
+            mParent,
+            config,
+            array,
+            _("Add Preset Array"),
+            true
+        );
+        if (wxID_OK == dlg.ShowModal()) {
+            config.presetArrays.addArray(array.name);
+            config.presetArrays.selection = config.presetArrays.arrays().size() - 1;
+        }
+
+    }, ID_AddArray);
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+        auto& presetArrays{mParent->getOpenConfig()->presetArrays};
+        presetArrays.removeArray(presetArrays.selection);
+    }, ID_RemoveArray);
 }
 
 void PresetsPage::handleNotification(uint32 id) {
@@ -242,13 +414,56 @@ void PresetsPage::handleNotification(uint32 id) {
     if (rebound or id == presetArrays.NOTIFY_INJECTIONS) rebuildInjections();
     if (rebound or id == presetArrays.NOTIFY_SELECTION) {
         bool hasSelection{presetArrays.selection != -1};
-        this->FindWindow(ID_RemoveArray)->Enable(hasSelection);
+        FindWindow(ID_RemoveArray)->Enable(hasSelection);
+        FindWindow(ID_RenameArray)->Enable(hasSelection);
+        FindWindow(ID_AddPreset)->Enable(hasSelection);
         if (not hasSelection) {
-            this->FindWindow(ID_AddPreset)->Disable();
-            this->FindWindow(ID_RemovePreset)->Disable();
-            this->FindWindow(ID_MovePresetUp)->Disable();
-            this->FindWindow(ID_MovePresetDown)->Disable();
+            FindWindow(ID_AddPreset)->Disable();
+            FindWindow(ID_RemovePreset)->Disable();
+            FindWindow(ID_MovePresetUp)->Disable();
+            FindWindow(ID_MovePresetDown)->Disable();
         }
+    }
+    if (rebound or id == presetArrays.NOTIFY_PRESETS) {
+        if (presetArrays.selection == -1) {
+            FindWindow(ID_MovePresetUp)->Disable();
+            FindWindow(ID_MovePresetDown)->Disable();
+            FindWindow(ID_RemovePreset)->Disable();
+        } else {
+            auto& presetArray{presetArrays.array(presetArrays.selection)};
+            bool notFirst{presetArray.selection > 0};
+            FindWindow(ID_MovePresetUp)->Enable(notFirst);
+            bool notLast{presetArray.selection < presetArray.selection.choices().size() - 1};
+            FindWindow(ID_MovePresetDown)->Enable(notLast);
+            FindWindow(ID_RemovePreset)->Enable();
+        }
+    }
+    if (rebound or id == presetArrays.NOTIFY_TRACK_INPUT) {
+        auto hasInput{
+            presetArrays.trackProxy.data() and
+            static_cast<string>(*presetArrays.trackProxy.data()).empty()
+        };
+        FindWindow(ID_WavText)->Show(hasInput);
+    }
+    if (rebound or id == presetArrays.NOTIFY_SELECTION or id == presetArrays.NOTIFY_ARRAY_NAME) {
+        auto *issueButton{FindWindow(ID_IssueButton)};
+        if (presetArrays.selection == -1) {
+            issueButton->Hide();
+            return;
+        }
+
+        auto& selectedArray{presetArrays.array(presetArrays.selection)};
+        auto selectedArrayName{static_cast<string>(selectedArray.name)};
+        bool duplicate{false};
+        for (const auto& array : presetArrays.arrays()) {
+            if (&array == &selectedArray) continue;
+
+            if (static_cast<string>(array.name) == selectedArrayName) {
+                duplicate = true;
+                break;
+            }
+        }
+        issueButton->Show(static_cast<string>(selectedArray.name).empty() or duplicate);
     }
 }
 
@@ -351,61 +566,6 @@ void PresetsPage::rebuildInjections() {
     Layout();
 }
 
-// void PresetsPage::updateFields() {
-//     if (presetList->GetSelection() >= 0) {
-//         const auto& currentPreset = mParent->bladesPage->bladeArrayDlg->bladeArrays.at(bladeArrayChoice->entry()->GetSelection()).presets.at(presetList->GetSelection());
-//         int32 insertionPoint{};
-// 
-//         if (bladeList->GetSelection() >= 0) {
-//             const auto& style{currentPreset.styles.at(bladeList->GetSelection())};
-// 
-//             insertionPoint = styleInput->entry()->GetInsertionPoint();
-//             styleInput->entry()->ChangeValue(style.style);
-//             styleInput->entry()->SetInsertionPoint(std::min<int32>(insertionPoint, styleInput->entry()->GetLastPosition()));
-// 
-//             insertionPoint = commentInput->entry()->GetInsertionPoint();
-//             commentInput->entry()->ChangeValue(style.comment);
-//             commentInput->entry()->SetInsertionPoint(std::min<int32>(insertionPoint, commentInput->entry()->GetLastPosition()));
-//         } else {
-//             commentInput->entry()->ChangeValue(_("Select blade to edit style comments..."));
-//             styleInput->entry()->ChangeValue(_("Select blade to edit style..."));
-//         }
-// 
-//         insertionPoint = nameInput->entry()->GetInsertionPoint();
-//         nameInput->entry()->ChangeValue(currentPreset.name);
-//         nameInput->entry()->SetInsertionPoint(std::min<int32>(insertionPoint, static_cast<int32>(nameInput->entry()->GetValue().size())));
-// 
-//         insertionPoint = dirInput->entry()->GetInsertionPoint();
-//         dirInput->entry()->ChangeValue(currentPreset.dirs);
-//         dirInput->entry()->SetInsertionPoint(std::min<int32>(insertionPoint, static_cast<int32>(dirInput->entry()->GetValue().size())));
-// 
-//         insertionPoint = trackInput->entry()->GetInsertionPoint();
-//         trackInput->entry()->ChangeValue(currentPreset.track);
-//         auto trackInputLength{static_cast<int32>(trackInput->entry()->GetValue().size() - 4 /* .wav */)};
-//         trackInput->entry()->SetInsertionPoint(std::min(insertionPoint, trackInputLength));
-//     }
-//     else {
-//         commentInput->entry()->ChangeValue(_("Select or create preset and blade to edit style comments..."));
-//         styleInput->entry()->ChangeValue(_("Select or create preset and blade to edit style..."));
-//         nameInput->entry()->ChangeValue({});
-//         dirInput->entry()->ChangeValue({});
-//         trackInput->entry()->ChangeValue({});
-//     }
-// 
-//     commentInput->entry()->Enable(presetList->GetSelection() != -1 and bladeList->GetSelection() != -1);
-//     styleInput->entry()->Enable(presetList->GetSelection() != -1 and bladeList->GetSelection() != -1);
-//     removePreset->Enable(presetList->GetSelection() != -1);
-//     movePresetDown->Enable(presetList->GetSelection() != -1 && presetList->GetSelection() < static_cast<int32_t>(presetList->GetCount()) - 1);
-//     movePresetUp->Enable(presetList->GetSelection() > 0);
-// 
-//     // Value is flagged as dirty from last change unless we manually reset it, causing overwrites where there shouldn't be.
-//     styleInput->entry()->SetModified(false);
-//     commentInput->entry()->SetModified(false);
-//     nameInput->entry()->SetModified(false);
-//     dirInput->entry()->SetModified(false);
-//     trackInput->entry()->SetModified(false);
-// }
-
 // void PresetsPage::stripAndSaveComments() {
 //     if (presetList->GetSelection() >= 0 && bladeList->GetSelection() >= 0) {
 //         auto comments{commentInput->entry()->GetValue().ToStdString()};
@@ -433,36 +593,5 @@ void PresetsPage::rebuildInjections() {
 //         auto& selectedPreset{selectedBladeArray.presets[presetList->GetSelection()]};
 // 
 //         selectedPreset.styles[bladeList->GetSelection()].style = style;
-//     }
-// }
-// 
-// void PresetsPage::stripAndSaveName() {
-//     if (presetList->GetSelection() >= 0 && mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArrayChoice->entry()->GetSelection()].blades.size() > 0) {
-//         auto name{nameInput->entry()->GetValue().ToStdString()};
-//         name.erase(std::remove(name.begin(), name.end(), ' '), name.end());
-//         std::transform(name.begin(), name.end(), name.begin(), [](unsigned char chr){ return std::tolower(chr); }); // to lowercase
-//         mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArrayChoice->entry()->GetSelection()].presets.at(presetList->GetSelection()).name.assign(name);
-//     }
-// }
-// 
-// void PresetsPage::stripAndSaveDir() {
-//     if (presetList->GetSelection() >= 0 && mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArrayChoice->entry()->GetSelection()].blades.size() > 0) {
-//         auto dir{dirInput->entry()->GetValue().ToStdString()};
-//         // dir.erase(std::remove(dir.begin(), dir.end(), ' '), dir.end());
-//         mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArrayChoice->entry()->GetSelection()].presets.at(presetList->GetSelection()).dirs.assign(dir);
-//     }
-// }
-// 
-// void PresetsPage::stripAndSaveTrack() {
-//     auto track{trackInput->entry()->GetValue().ToStdString()};
-//     track.erase(std::remove(track.begin(), track.end(), ' '), track.end());
-//     if (track.find('.') != string::npos) track.erase(track.find('.'));
-//     if (track.length() > 0) track += ".wav";
-// 
-//     if (presetList->GetSelection() >= 0 && mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArrayChoice->entry()->GetSelection()].blades.size() > 0) {
-//         mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArrayChoice->entry()->GetSelection()].presets.at(presetList->GetSelection()).track.assign(track);
-//     } else {
-//         trackInput->entry()->ChangeValue(track);
-//         trackInput->entry()->SetInsertionPoint(1);
 //     }
 // }
