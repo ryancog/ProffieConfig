@@ -26,6 +26,11 @@ namespace PCUI {
 void PCUI::TextData::operator=(string&& val) {
     std::scoped_lock scopeLock{getLock()};
     if (mValue == val) return;
+    setValue(std::move(val));
+}
+
+void PCUI::TextData::setValue(string&& val) {
+    std::scoped_lock scopeLock{getLock()};
     mValue = std::move(val);
     notify(ID_VALUE);
     notify(ID_VALUE_FULL);
@@ -42,9 +47,11 @@ PCUI::Text::Text(
     wxWindow *parent,
     TextData& data,
     int64 style,
+    bool insertNewline,
     const wxString& label,
     wxOrientation orient
-) : ControlBase(parent, data) {
+) : ControlBase(parent, data),
+    mInsertNewline{insertNewline} {
     create(style, label, orient);
 }
 
@@ -52,20 +59,25 @@ PCUI::Text::Text(
     wxWindow *parent,
     TextDataProxy& proxy,
     int64 style,
+    bool insertNewline,
     const wxString &label,
     wxOrientation orient
-) : ControlBase(parent, proxy) {
+) : ControlBase(parent, proxy),
+    mInsertNewline{insertNewline} {
     create(style, label, orient);
 }
 
 void PCUI::Text::create(int64 style, const wxString& label, wxOrientation orient) {
+    assert(not ((style & wxTE_MULTILINE) and mInsertNewline));
+    assert(mInsertNewline == static_cast<bool>(style & wxTE_PROCESS_ENTER));
+
     auto *control{new wxTextCtrl(
         this,
         wxID_ANY,
         wxEmptyString,
         wxDefaultPosition,
         wxDefaultSize,
-        style | wxTE_PROCESS_ENTER
+        style
     )};
 #   ifdef __WXMAC__
     control->OSXDisableAllSmartSubstitutions();
@@ -99,7 +111,7 @@ void PCUI::Text::onModify(wxCommandEvent& evt) {
     data()->mValue = evt.GetString().ToStdString();
     data()->mInsertionPoint = pControl->GetInsertionPoint();
 
-    if (evt.GetEventType() == wxEVT_TEXT) {
+    if (evt.GetEventType() == wxEVT_TEXT or (evt.GetEventType() == wxEVT_TEXT_ENTER and mInsertNewline)) {
         data()->update(TextData::ID_VALUE);
     } else if (evt.GetEventType() == wxEVT_TEXT_ENTER) {
         data()->update(TextData::ID_VALUE_FULL);
@@ -107,6 +119,12 @@ void PCUI::Text::onModify(wxCommandEvent& evt) {
 }
 
 void PCUI::Text::onModifySecondary(wxCommandEvent& evt) {
+    if (mInsertNewline) {
+        auto newString{pControl->GetValue() + "\\n"};
+        pControl->ChangeValue(newString);
+        pControl->SetInsertionPointEnd();
+        evt.SetString(newString);
+    }
     onModify(evt);
 }
 
