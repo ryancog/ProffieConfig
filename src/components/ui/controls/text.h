@@ -30,6 +30,11 @@ struct UI_EXPORT TextData : ControlData {
     operator string() const { return mValue; }
     void operator=(string&& val);
 
+    /**
+     * Unconditionally set value and trigger update.
+     */
+    void setValue(string&& val);
+
     [[nodiscard]] uint32 getInsertionPoint() { return mInsertionPoint; }
     void setInsertionPoint(uint32);
 
@@ -59,6 +64,7 @@ public:
         wxWindow *parent,
         TextData& data,
         int64 style = 0,
+        bool insertNewline = false,
         const wxString &label = {},
         wxOrientation orient = wxVERTICAL
     );
@@ -66,6 +72,7 @@ public:
         wxWindow *parent,
         TextDataProxy& proxy,
         int64 style = 0,
+        bool insertNewline = false,
         const wxString &label = {},
         wxOrientation orient = wxVERTICAL
     );
@@ -81,6 +88,8 @@ public:
     // [[nodiscard]] wxString getInvalidChars() const;
 
 private:
+    bool mInsertNewline;
+
     void create(int64 style, const wxString& label, wxOrientation orient);
     void onUIUpdate(uint32) final;
     void onModify(wxCommandEvent&) final;

@@ -121,7 +121,7 @@ void PCUI::List::create(const wxString& label, wxOrientation orient) {
 		wxID_ANY
 	)};
 
-    init(control, wxEVT_CHOICE, label, orient);
+    init(control, wxEVT_LISTBOX, label, orient);
 }
 
 void PCUI::List::onUIUpdate(uint32 id) {
