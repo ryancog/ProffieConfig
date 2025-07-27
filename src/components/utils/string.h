@@ -44,18 +44,21 @@ constexpr void trimWhiteSpace(STRING& str) {
  * @param str Reference to string to trim
  * @param[out] numTrimmed The number of characters trimmed
  * @param countTrimIndex The index before which trims should be counted.
+ * @param moreSafe more safe characters
  */
 template<typename STRING>
 constexpr void trimUnsafe(
     STRING& str,
     uint32 *numTrimmed = nullptr,
-    uint32 countTrimIndex = std::numeric_limits<uint32>::max()
+    uint32 countTrimIndex = std::numeric_limits<uint32>::max(),
+    string_view moreSafe = {}
 ) {
     if (numTrimmed) *numTrimmed = 0;
 
-    auto checkIllegal{[numTrimmed, &countTrimIndex](char chr) -> bool {
+    auto checkIllegal{[numTrimmed, &countTrimIndex, moreSafe](char chr) -> bool {
         if (std::isalnum(chr)) return false;
         if (chr == '_') return false;
+        if (moreSafe.find(chr) != std::string::npos) return false;
 
         if (numTrimmed and countTrimIndex > 0) {
             ++*numTrimmed;
