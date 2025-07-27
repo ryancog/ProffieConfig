@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ui/controls/choice.h"
 #include "ui/controls/text.h"
 #include "utils/types.h"
 
@@ -26,8 +27,11 @@
 
 namespace Config {
 
+struct Config;
+struct PresetArray;
+
 struct CONFIG_EXPORT Preset {
-    Preset();
+    Preset(Config&, PresetArray&);
 
     PCUI::TextData name;
     PCUI::TextData fontDir;
@@ -40,11 +44,21 @@ struct CONFIG_EXPORT Preset {
         PCUI::TextData style;
     };
 
-    void addStyle();
-    void removeStyle(uint32);
+    // No set choice manual
+    PCUI::ChoiceData styleSelection;
+    PCUI::ChoiceData styleDisplay;
+
+    [[nodiscard]] Style& style(uint32 idx) {
+        assert(idx < styles.size());
+        return *std::next(styles.begin(), idx);
+    }
+
+    // No touchie. For BladeArrays eyes only
+    list<Style> styles;
 
 private:
-    list<Style> styles;
+    Config& mConfig;
+    PresetArray& mParent;
 };
 
 } // namespace Config

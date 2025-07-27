@@ -38,7 +38,8 @@ public:
             this,
             bladeConfig.name,
             0,
-            "Name"
+            false,
+            _("Name")
         )};
 
         auto *bitsSizer{new wxBoxSizer(wxHORIZONTAL)};
@@ -47,7 +48,7 @@ public:
             this,
             bladeConfig.id,
             wxSP_ARROW_KEYS,
-            "Blade ID"
+            _("Blade ID")
         )};
         idEntry->SetMinSize({100, -1});
 
@@ -62,7 +63,7 @@ public:
         auto *presetEntry{new PCUI::Choice(
             this,
             bladeConfig.presetArray,
-            "Preset Array"
+            _("Preset Array")
         )};
 
         bitsSizer->Add(idEntry, wxSizerFlags(1));
@@ -553,6 +554,7 @@ wxSizer *BladesPage::createBladeSettings() {
         this,
         config->bladeArrays.powerPinNameEntry,
         0,
+        false,
         _("Pin Name")
     )};
     pinNameSizer->Add(powerPinName);

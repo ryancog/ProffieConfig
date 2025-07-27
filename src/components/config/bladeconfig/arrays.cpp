@@ -126,11 +126,16 @@ Config::BladeConfig& Config::BladeArrays::addArray(string&& name, uint32 id, uin
     auto& array{mBladeArrays.emplace_back(mParent)};
     array.name = std::move(name);
     array.id = id;
-    array.presetArray.setChoices(mParent.presetArrays.presetArrayNames());
+    vector<string> presetArrayChoices;
+    presetArrayChoices.reserve(mParent.presetArrays.arrays().size());
+    for (const auto& array : mParent.presetArrays.arrays()) {
+        presetArrayChoices.push_back(array.name);
+    }
+    array.presetArray.setChoices(std::move(presetArrayChoices));
     array.presetArray = presetArray;
-    auto choices{arraySelection.choices()};
-    choices.push_back(array.name);
-    arraySelection.setChoices(std::move(choices));
+    auto bladeArrayChoices{arraySelection.choices()};
+    bladeArrayChoices.push_back(array.name);
+    arraySelection.setChoices(std::move(bladeArrayChoices));
     return array;
 }
 

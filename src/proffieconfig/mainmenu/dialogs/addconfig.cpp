@@ -80,6 +80,7 @@ void AddConfig::createUI() {
         this,
         configName,
         0,
+        false,
         _("Configuration Name")
     )};
 

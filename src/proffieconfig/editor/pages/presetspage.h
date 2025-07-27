@@ -25,13 +25,16 @@ public:
 
         ID_AddArray,
         ID_RemoveArray,
+
+        ID_RenameArray,
+        ID_IssueButton,
+        ID_WavText,
     };
 
 private:
     EditorWindow *mParent{nullptr};
 
     wxBoxSizer *mInjectionsSizer;
-
 
     void createUI();
     void bindEvents();
