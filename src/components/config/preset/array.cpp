@@ -34,6 +34,8 @@ PCUI::TextData Config::PresetArrays::dummyStyleData;
 Config::PresetArray::PresetArray(Config& config) :
     mConfig{config} {
 
+    selection.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
+
     auto isCurrentArray{[this]() {
         if (mConfig.presetArrays.selection == -1) return false;
         auto& selectedArray{mConfig.presetArrays.array(mConfig.presetArrays.selection)};
@@ -61,12 +63,13 @@ Config::PresetArray::PresetArray(Config& config) :
             auto arrayIter{arrays.begin()};
             auto arrayEnd{arrays.end()};
             for (; idx < arrays.size(); ++idx, ++arrayIter) {
-                if (&*arrayIter == this) break;
+                if (&**arrayIter == this) break;
             }
             auto choices{mConfig.presetArrays.selection.choices()};
             if (idx != arrays.size() and idx != choices.size()) {
                 choices[idx] = name;
                 mConfig.presetArrays.selection.setChoices(std::move(choices));
+                mConfig.bladeArrays.refreshPresetArrays();
             }
 
             return;
@@ -108,6 +111,7 @@ void Config::PresetArray::removePreset(uint32 idx) {
     auto choices{selection.choices()};
     choices.erase(std::next(choices.begin(), idx));
     selection.setChoices(std::move(choices));
+    selection = -1;
 }
 
 void Config::PresetArray::movePresetUp(uint32 idx) {
@@ -163,6 +167,8 @@ Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
     commentProxy.bind(dummyCommentData);
     styleProxy.bind(dummyStyleData);
 
+    selection.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
+
     selection.setUpdateHandler([this](uint32 id) {
         if (id != selection.ID_SELECTION) return;
 
@@ -178,7 +184,7 @@ Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
             commentProxy.bind(dummyCommentData);
             styleProxy.bind(dummyStyleData);
         } else {
-            presetProxy.bind(std::next(mArrays.begin(), selection)->selection);
+            presetProxy.bind((**std::next(mArrays.begin(), selection)).selection);
         }
 
         notifyData.notify(NOTIFY_SELECTION);
@@ -186,14 +192,14 @@ Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
 }
 
 Config::PresetArray& Config::PresetArrays::addArray(string name) {
-    auto& ret{mArrays.emplace_back(mParent)};
-    ret.name = std::move(name);
+    auto& ret{mArrays.emplace_back(std::make_unique<PresetArray>(mParent))};
+    ret->name = std::move(name);
     vector<string> choices;
     choices.reserve(mArrays.size());
-    for (const auto& array : mArrays) choices.push_back(array.name);
+    for (const auto& array : mArrays) choices.push_back(array->name);
     selection.setChoices(std::move(choices));
     mParent.bladeArrays.refreshPresetArrays();
-    return ret;
+    return *ret;
 }
 
 void Config::PresetArrays::removeArray(uint32 idx) {
@@ -201,20 +207,21 @@ void Config::PresetArrays::removeArray(uint32 idx) {
     mArrays.erase(std::next(mArrays.begin(), idx));
     vector<string> choices;
     choices.reserve(mArrays.size());
-    for (const auto& array : mArrays) choices.push_back(array.name);
+    for (const auto& array : mArrays) choices.push_back(array->name);
     selection.setChoices(std::move(choices));
-    mParent.bladeArrays.refreshPresetArrays();
+    selection = -1;
+    mParent.bladeArrays.refreshPresetArrays(idx);
 }
 
 void Config::PresetArrays::addInjection(const string& name) {
-    mInjections.emplace_back(Injection{name});
+    mInjections.emplace_back(std::make_unique<Injection>(name));
     notifyData.notify(NOTIFY_INJECTIONS);
 }
 
 void Config::PresetArrays::removeInjection(const Injection& injection) {
     auto iter{mInjections.begin()};
     for (; iter != mInjections.end(); ++iter) {
-        if (&*iter == &injection) break;
+        if (&**iter == &injection) break;
     }
     if (iter == mInjections.end()) return;
 

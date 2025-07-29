@@ -50,6 +50,8 @@ EditorWindow::EditorWindow(wxWindow *parent, std::shared_ptr<Config::Config> con
     wxCommandEvent event{wxEVT_MENU, ID_General};
     event.SetInt(0);
     wxPostEvent(this, event);
+
+    SetSizerAndFit(sizer);
 }
 
 void EditorWindow::bindEvents() {
@@ -101,17 +103,14 @@ void EditorWindow::bindEvents() {
         auto& msgEvent{static_cast<Misc::MessageBoxEvent&>(event)};
         PCUI::showMessage(msgEvent.message, msgEvent.caption, msgEvent.style, this);
     }, wxID_ANY);
-
     Bind(wxEVT_MENU, [this](wxCommandEvent&) {
         save();
     }, wxID_SAVE); 
-
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         // TODO: Get the filepath for this
         // Config::save(mConfig, filepath); 
     }, ID_ExportConfig);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(this, this); }, ID_VerifyConfig);
-
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxFileDialog fileDialog{this, _("Select Injection File"), wxEmptyString, wxEmptyString, "C Header (*.h)|*.h", wxFD_FILE_MUST_EXIST | wxFD_OPEN};
         if (fileDialog.ShowModal() == wxCANCEL) return;
@@ -126,11 +125,9 @@ void EditorWindow::bindEvents() {
 
         mConfig->presetArrays.addInjection(fileDialog.GetFilename().ToStdString());
     }, ID_AddInjection);
-
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { 
         wxLaunchDefaultBrowser("http://profezzorn.github.io/ProffieOS-StyleEditor/style_editor.html");
     }, ID_StyleEditor);
-
     auto windowSelectionHandler{[this](wxCommandEvent& evt) {
         wxSetCursor(wxCURSOR_WAIT);
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
@@ -243,8 +240,6 @@ void EditorWindow::createPages(wxSizer *sizer) {
         bladesPage,
         wxSizerFlags(1).Border(wxALL, 20).Expand()
     );
-
-    SetSizerAndFit(sizer);
 }
 
 bool EditorWindow::save() {
@@ -252,7 +247,7 @@ bool EditorWindow::save() {
 }
 
 void EditorWindow::Fit() {
-    SetSizeHints({-1, -1}, {-1, -1});
+    SetSizeHints(-1, -1, -1, -1);
     PCUI::Frame::Fit();
     if (not generalPage or not propsPage or not bladesPage or not presetsPage) return;
 

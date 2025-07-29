@@ -33,6 +33,7 @@ namespace Config {
 struct Split {
     Split();
 
+    PCUI::NumericData start;
     PCUI::NumericData length;
 
     enum Type {

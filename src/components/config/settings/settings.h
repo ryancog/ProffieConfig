@@ -234,7 +234,7 @@ struct CONFIG_EXPORT Settings {
         PCUI::TextData define;
         PCUI::TextData value;
     };
-    const list<CustomOption>& customOptions() const { return mCustomOptions; }
+    const vector<std::unique_ptr<CustomOption>>& customOptions() const { return mCustomOptions; }
     /**
      * Create a new custom option, if an empty one does not already exist.
      *
@@ -251,7 +251,7 @@ struct CONFIG_EXPORT Settings {
 
 private:
     Config& mParent;
-    list<CustomOption> mCustomOptions;
+    vector<std::unique_ptr<CustomOption>> mCustomOptions;
 };
 
 } // namespace Config

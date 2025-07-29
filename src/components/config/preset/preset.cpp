@@ -97,6 +97,11 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
         track = std::move(rawValue);
         track.setInsertionPoint(insertionPoint - numTrimmed);
     });
+    styleDisplay.setUpdateHandler([this](uint32 id) {
+        if (id == styleDisplay.ID_SELECTION) return;
+
+        syncStyles();
+    });
     styleSelection.setUpdateHandler([this](uint32 id) {
         if (id != styleSelection.ID_SELECTION) return;
 
@@ -115,7 +120,62 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
             mConfig.presetArrays.styleProxy.bind(selectedStyle.style);
         }
     });
+}
 
+void Config::Preset::syncStyles() {
+    if (mConfig.bladeArrays.arraySelection == -1) {
+        styleSelection.setChoices({});
+        return;
+    }
+
+    auto numBlades{mConfig.bladeArrays.numBLades()};
+    auto& bladeArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
+
+    auto count{0};
+    auto mainIdx{0};
+    auto subIdx{0};
+    vector<string> choices;
+    for (const auto& blade : bladeArray.blades()) {
+        if (blade->type == Blade::Type::SIMPLE) {
+            choices.emplace_back("Blade " + std::to_string(mainIdx));
+            ++mainIdx;
+        } else if (blade->type == Blade::Type::WS281X) {
+            auto& ws281x{blade->ws281x()};
+            if (ws281x.splits.empty()) {
+                choices.emplace_back("Blade " + std::to_string(mainIdx));
+            } else {
+                subIdx = 0;
+                for (const auto& split : ws281x.splits) {
+                    switch (static_cast<Split::Type>(static_cast<uint32>(split.type))) {
+                        case Split::REVERSE:
+                        case Split::STANDARD:
+                            choices.emplace_back(
+                                "Blade " + std::to_string(mainIdx) +
+                                ':' + std::to_string(subIdx)
+                            );
+                            break;
+                        case Split::STRIDE:
+                        case Split::ZIG_ZAG:
+                            for (auto idx{0}; idx < split.segments; ++idx) {
+                                choices.emplace_back(
+                                    "Blade " + std::to_string(mainIdx) +
+                                    ':' + std::to_string(subIdx) +
+                                    ':' + std::to_string(idx)
+                                );
+                            }
+                            break;
+                        case Split::TYPE_MAX:
+                        default:
+                            assert(0);
+                    }
+                    ++subIdx;
+                }
+            }
+            ++mainIdx;
+        }
+    }
+
+    styleSelection.setChoices(std::move(choices));
 }
 
 Config::Preset::Style::Style() {

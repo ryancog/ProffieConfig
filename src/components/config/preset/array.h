@@ -32,6 +32,7 @@ namespace Config {
 struct Config;
 
 struct CONFIG_EXPORT Injection {
+    Injection(const string& name) : filename{name} {}
     string filename;
 };
 
@@ -93,18 +94,18 @@ struct CONFIG_EXPORT PresetArrays {
     };
     PCUI::NotifierData notifyData;
 
-    [[nodiscard]] const list<PresetArray>& arrays() const { return mArrays; }
+    [[nodiscard]] const vector<std::unique_ptr<PresetArray>>& arrays() const { return mArrays; }
     [[nodiscard]] PresetArray& array(uint32 idx) { 
         assert(idx < mArrays.size());
-        return *std::next(mArrays.begin(), idx);
+        return **std::next(mArrays.begin(), idx);
     }
 
     PresetArray& addArray(string name);
     void removeArray(uint32 idx);
 
-    [[nodiscard]] const list<Injection>& injections() const { return mInjections; }
+    [[nodiscard]] const vector<std::unique_ptr<Injection>>& injections() const { return mInjections; }
     [[nodiscard]] Injection& injection(uint32 idx) {
-        return *std::next(mInjections.begin(), idx);
+        return **std::next(mInjections.begin(), idx);
     }
 
     void addInjection(const string&);
@@ -126,8 +127,8 @@ struct CONFIG_EXPORT PresetArrays {
 
 private:
     Config& mParent;
-    list<PresetArray> mArrays;
-    list<Injection> mInjections;
+    vector<std::unique_ptr<PresetArray>> mArrays;
+    vector<std::unique_ptr<Injection>> mInjections;
 };
 
 } // namespace Config

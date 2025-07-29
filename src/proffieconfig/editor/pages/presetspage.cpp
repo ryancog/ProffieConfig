@@ -71,6 +71,23 @@ public:
             sizer->AddSpacer(10);
         }
 
+        entry->SetFocus();
+
+        Bind(wxEVT_CHAR_HOOK, [this](wxKeyEvent& evt) {
+            if (evt.GetKeyCode() == WXK_ESCAPE) EndModal(wxID_CANCEL);
+
+            auto *okButton{FindWindow(wxID_OK)};
+            if (
+                    (not okButton or okButton->IsEnabled()) and 
+                    evt.GetKeyCode() == WXK_RETURN and
+                    evt.GetKeyCode() == WXK_NUMPAD_ENTER
+               ) {
+                EndModal(wxID_OK);
+            }
+
+            evt.Skip();
+        });
+
         SetSizer(sizer);
         initializeNotifier();
     }
@@ -87,8 +104,8 @@ private:
     void handleNotification(uint32) final {
         bool duplicate{false};
         for (const auto& array : mConfig.presetArrays.arrays()) {
-            if (&array == &mArray) continue;
-            if (static_cast<string>(array.name) == static_cast<string>(mArray.name)) {
+            if (&*array == &mArray) continue;
+            if (static_cast<string>(array->name) == static_cast<string>(mArray.name)) {
                 duplicate = true;
                 break;
             }
@@ -241,6 +258,8 @@ void PresetsPage::createUI() {
     presetSelectionSizer->Add(presetButtonSizer, wxSizerFlags().Expand());
 
     auto *presetConfigSizer{new wxBoxSizer(wxVERTICAL)};
+    presetConfigSizer->SetMinSize(wxSize(200, -1));
+
     auto *nameInput{new PCUI::Text(
         this,
         config->presetArrays.nameProxy,
@@ -248,7 +267,6 @@ void PresetsPage::createUI() {
         true,
         _("Preset Name")
     )};
-    nameInput->SetMinSize(wxSize(200, -1));
 
     auto *dirInput{new PCUI::Text(
         this,
@@ -257,7 +275,6 @@ void PresetsPage::createUI() {
         false,
         _("Font Directory")
     )};
-    dirInput->SetMinSize(wxSize(200, -1));
 
     auto *trackSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *trackInput{new PCUI::Text(
@@ -267,7 +284,6 @@ void PresetsPage::createUI() {
         false,
         _("Track File")
     )};
-    trackInput->SetMinSize(wxSize(200, -1));
     auto *wavText{new wxStaticText(
         this,
         ID_WavText,
@@ -278,11 +294,11 @@ void PresetsPage::createUI() {
 
     mInjectionsSizer = new wxBoxSizer(wxVERTICAL);
 
-    presetConfigSizer->Add(nameInput);
+    presetConfigSizer->Add(nameInput, wxSizerFlags().Expand());
     presetConfigSizer->AddSpacer(5);
-    presetConfigSizer->Add(dirInput);
+    presetConfigSizer->Add(dirInput, wxSizerFlags().Expand());
     presetConfigSizer->AddSpacer(5);
-    presetConfigSizer->Add(trackSizer);
+    presetConfigSizer->Add(trackSizer, wxSizerFlags().Expand());
     presetConfigSizer->AddSpacer(5);
     presetConfigSizer->Add(mInjectionsSizer);
 
@@ -428,6 +444,7 @@ void PresetsPage::handleNotification(uint32 id) {
         if (presetArrays.selection == -1) {
             FindWindow(ID_MovePresetUp)->Disable();
             FindWindow(ID_MovePresetDown)->Disable();
+            // NOT WORKING??
             FindWindow(ID_RemovePreset)->Disable();
         } else {
             auto& presetArray{presetArrays.array(presetArrays.selection)};
@@ -441,7 +458,7 @@ void PresetsPage::handleNotification(uint32 id) {
     if (rebound or id == presetArrays.NOTIFY_TRACK_INPUT) {
         auto hasInput{
             presetArrays.trackProxy.data() and
-            static_cast<string>(*presetArrays.trackProxy.data()).empty()
+            not static_cast<string>(*presetArrays.trackProxy.data()).empty()
         };
         FindWindow(ID_WavText)->Show(hasInput);
     }
@@ -456,15 +473,17 @@ void PresetsPage::handleNotification(uint32 id) {
         auto selectedArrayName{static_cast<string>(selectedArray.name)};
         bool duplicate{false};
         for (const auto& array : presetArrays.arrays()) {
-            if (&array == &selectedArray) continue;
+            if (&*array == &selectedArray) continue;
 
-            if (static_cast<string>(array.name) == selectedArrayName) {
+            if (static_cast<string>(array->name) == selectedArrayName) {
                 duplicate = true;
                 break;
             }
         }
         issueButton->Show(static_cast<string>(selectedArray.name).empty() or duplicate);
     }
+
+    Layout();
 }
 
 // void PresetsPage::createToolTips() const {
@@ -519,7 +538,7 @@ void PresetsPage::rebuildInjections() {
         auto *injectionText{new wxStaticText(
             this,
             wxID_ANY,
-            injection.filename
+            injection->filename
         )};
         auto *editButton{new wxButton(
             this,
@@ -539,7 +558,7 @@ void PresetsPage::rebuildInjections() {
         )};
 
         editButton->Bind(wxEVT_BUTTON, [&injection](wxCommandEvent&) {
-            wxLaunchDefaultApplication((Paths::injections() / injection.filename).native());
+            wxLaunchDefaultApplication((Paths::injections() / injection->filename).native());
         });
 
         deleteButton->Bind(wxEVT_BUTTON, [this, &injection](wxCommandEvent&) {
@@ -550,7 +569,7 @@ void PresetsPage::rebuildInjections() {
             )};
             if (wxNO == res) return;
 
-            mParent->getOpenConfig()->presetArrays.removeInjection(injection);
+            mParent->getOpenConfig()->presetArrays.removeInjection(*injection);
         });
 
         injectionSizer->Add(injectionText, wxSizerFlags(1).Center());

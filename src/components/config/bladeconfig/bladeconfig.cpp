@@ -36,6 +36,8 @@ Config::Blade::Blade() {
 }
 
 Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
+    presetArray.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
+
     name.setUpdateHandler([this](uint32 id) {
         if (id != name.ID_VALUE) return;
 
@@ -56,7 +58,7 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
             auto arrayIter{mConfig.bladeArrays.arrays().begin()};
             auto arrayEnd{mConfig.bladeArrays.arrays().end()};
             for (; arrayIter != arrayEnd; ++arrayIter, ++idx) {
-                if (this == &*arrayIter) break;
+                if (this == &**arrayIter) break;
             }
 
             auto choices{mConfig.bladeArrays.arraySelection.choices()};
@@ -123,11 +125,11 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
     if (static_cast<string>(name).empty()) ret |= ISSUE_NO_NAME;
 
     for (const auto& array : mConfig.bladeArrays.arrays()) {
-        if (&array == this) continue;
-        if (static_cast<string>(array.name) == static_cast<string>(name)) {
+        if (&*array == this) continue;
+        if (static_cast<string>(array->name) == static_cast<string>(name)) {
             ret |= ISSUE_DUPLICATE_NAME;
         }
-        if (static_cast<uint32>(array.id) == static_cast<uint32>(id)) {
+        if (static_cast<uint32>(array->id) == static_cast<uint32>(id)) {
             ret |= ISSUE_DUPLICATE_ID;
         }
     }

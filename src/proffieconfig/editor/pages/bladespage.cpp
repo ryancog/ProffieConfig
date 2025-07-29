@@ -16,6 +16,7 @@
 #include "config/bladeconfig/bladeconfig.h"
 #include "ui/controls/button.h"
 #include "ui/controls/checklist.h"
+#include "ui/message.h"
 #include "ui/notifier.h"
 #include "utils/image.h"
 #include "wx/anybutton.h"
@@ -112,7 +113,10 @@ private:
     void handleNotification(uint32) {
         auto issues{mBladeConfig.computeIssues()};
         auto *okButton{FindWindow(wxID_OK)};
-        if (okButton) okButton->Enable(issues == Config::BladeConfig::ISSUE_NONE);
+        if (okButton) {
+            constexpr auto PERMIT_ISSUES{Config::BladeConfig::ISSUE_NO_PRESETARRAY};
+            okButton->Enable((issues & ~PERMIT_ISSUES) == Config::BladeConfig::ISSUE_NONE);
+        }
 
         auto *issueText{FindWindow(ArrayEditDlg::ID_IssueText)};
         issueText->Show(issues != Config::BladeConfig::ISSUE_NONE);
@@ -171,11 +175,11 @@ void BladesPage::bindEvents() {
         dlg.ShowModal();        
     }, ID_EditArray);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        auto config{mParent->getOpenConfig()};
+        auto& bladeArrays{mParent->getOpenConfig()->bladeArrays};
         
         ArrayEditDlg dlg(
             mParent,
-            config->bladeArrays.addArray(),
+            bladeArrays.addArray(),
             _("Add Blade Array")
         );
         dlg.GetSizer()->Add(
@@ -185,12 +189,18 @@ void BladesPage::bindEvents() {
         dlg.buildDone();
 
         if (wxID_OK == dlg.ShowModal()) {
-            if (config->bladeArrays.arraySelection == -1) config->bladeArrays.arraySelection = 0;
+            bladeArrays.arraySelection = bladeArrays.arraySelection.choices().size() - 1;
         } else {
-            config->bladeArrays.removeArray(config->bladeArrays.arraySelection.choices().size() - 1);
+            bladeArrays.removeArray(bladeArrays.arraySelection.choices().size() - 1);
         }
     }, ID_AddArray);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+        auto res{PCUI::showMessage(
+            "This action cannot be undone!",
+            "Remove Blade Array?",
+            wxYES_NO | wxNO_DEFAULT
+        )};
+        if (res != wxYES) return;
         auto& bladeArrays{mParent->getOpenConfig()->bladeArrays};
         bladeArrays.removeArray(bladeArrays.arraySelection);
     }, ID_RemoveArray);
@@ -247,6 +257,8 @@ void BladesPage::handleNotification(uint32 id) {
 
         FindWindow(ID_NoSelectText)->Show(not isPixel and not isSimple);
     }
+
+    Layout();
 }
 
 // void BladesPage::createToolTips() const {
@@ -285,9 +297,10 @@ wxSizer *BladesPage::createBladeSelect() {
     auto config{mParent->getOpenConfig()};
 
     auto *bladeSelectSizer{new wxBoxSizer(wxVERTICAL)};
+    bladeSelectSizer->SetMinSize(200, -1);
 
     auto *arraySizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *bladeArray{new PCUI::Choice(
+    auto *arraySelection{new PCUI::Choice(
         this,
         config->bladeArrays.arraySelection,
         _("Blade Array")
@@ -311,8 +324,11 @@ wxSizer *BladesPage::createBladeSelect() {
         wxSYS_COLOUR_WINDOWTEXT
 
     )};
-    arraySizer->Add(bladeArray, wxSizerFlags(1));
-    arraySizer->Add(issueIcon, wxSizerFlags().Border(wxLEFT, 5));
+    arraySizer->Add(arraySelection, wxSizerFlags(1));
+    arraySizer->Add(
+        issueIcon,
+        wxSizerFlags().Border(wxLEFT, 5).Bottom()
+    );
     arraySizer->AddSpacer(5);
     arraySizer->Add(editArrayButton, wxSizerFlags().Bottom());
 
@@ -351,7 +367,6 @@ wxSizer *BladesPage::createBladeSelect() {
         config->bladeArrays.bladeSelectionProxy,
         _("Blades")
     )};
-    bladeSelect->SetMinSize(wxSize{200, 300});
 
     auto *bladeButtonSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *addBladeButton{new wxButton(

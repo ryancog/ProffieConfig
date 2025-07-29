@@ -285,7 +285,7 @@ struct PropErrorMapping {
 using PropErrors = vector<PropErrorMapping>;
 
 using PropSettingVariant = std::variant<PropToggle, PropNumeric, PropDecimal, PropOption>;
-using PropSettings = list<PropSettingVariant>;
+using PropSettings = vector<std::unique_ptr<PropSettingVariant>>;
 
 struct VERSIONS_EXPORT PropLayout {
     /**

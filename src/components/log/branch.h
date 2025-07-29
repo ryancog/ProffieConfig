@@ -19,10 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <list>
-#include <mutex>
-
 #include <wx/string.h>
+
+#include "utils/types.h"
 
 #include "private/export.h"
 #include "message.h"
@@ -48,7 +47,7 @@ public:
     [[nodiscard]] static Logger& optCreateLogger(string name, Branch *);
     [[nodiscard]] Logger& createLogger(string name);
 
-    [[nodiscard]] std::list<Logger *> getLoggers() const;
+    [[nodiscard]] vector<Logger *> getLoggers() const;
 
     [[nodiscard]] Type getType() const override { return Type::BRANCH; }
     
@@ -56,7 +55,7 @@ private:
     friend class Logger;
     Branch(const string& message, Severity, Logger *);
 
-    std::list<Logger *> mLoggers;
+    vector<Logger *> mLoggers;
     std::mutex mListLock;
     const Logger *mParent;
 };

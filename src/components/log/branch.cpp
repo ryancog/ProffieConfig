@@ -46,6 +46,6 @@ Log::Logger& Log::Branch::optCreateLogger(string name, Log::Branch *branch) {
     return branch ? branch->createLogger(std::move(name)) : Context::getGlobal().createLogger(std::move(name));
 }
 
-std::list<Log::Logger *> Log::Branch::getLoggers() const { return mLoggers; }
+vector<Log::Logger *> Log::Branch::getLoggers() const { return mLoggers; }
 
 

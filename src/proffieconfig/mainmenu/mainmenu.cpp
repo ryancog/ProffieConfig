@@ -46,6 +46,8 @@ MainMenu::MainMenu(wxWindow* parent) :
         wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)
     ) {
     Notifier::create(this, mNotifyData);
+    boardSelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_STRING);
+    configSelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_STRING);
 
     createUI();
     createMenuBar();

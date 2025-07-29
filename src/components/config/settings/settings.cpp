@@ -173,7 +173,7 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
 
 bool Config::Settings::addCustomOption() {
     for (auto& opt : mCustomOptions) {
-        if (static_cast<string>(opt.define).empty()) return false;
+        if (static_cast<string>(opt->define).empty()) return false;
     }
 
     mCustomOptions.emplace_back();
@@ -186,7 +186,7 @@ bool Config::Settings::addCustomOption() {
 bool Config::Settings::removeCustomOption(CustomOption& opt) {
     auto iter{mCustomOptions.begin()};
     for (; iter != mCustomOptions.end(); ++iter) {
-        if (&*iter == &opt) break;
+        if (&**iter == &opt) break;
     }
     if (iter == mCustomOptions.end()) return false;
 
