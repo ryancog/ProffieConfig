@@ -117,11 +117,11 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::refreshSizeAndLayout() {
+    SetMinSize({-1, -1});
     Layout();
     Fit();
     
-    auto bestSize{GetBestSize()};
-    SetMinSize(bestSize);
+    SetMinSize(GetBestSize());
 
     auto *parent{wxGetTopLevelParent(this)};
     if (parent) {
@@ -153,6 +153,7 @@ template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVEN
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::controlEventHandler(
     CONTROL_EVENT& evt
 ) {
+
     if (not data()) return;
     std::scoped_lock scopeLock{data()->getLock()};
     if (not data()->isEnabled() or data()->eventsInFlight()) return;

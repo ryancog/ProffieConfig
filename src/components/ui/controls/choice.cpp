@@ -59,31 +59,32 @@ void PCUI::ChoiceData::setChoices(vector<string>&& choices) {
     }
 
     string lastChoice;
+    int32 lastValue{mValue};
     if (mValue != -1) lastChoice = mChoices[mValue];
 
     mChoices = std::move(choices); 
+    mValue = -1;
+
     notify(ID_CHOICES);
 
     switch (mChoicePersistence) {
         case PERSISTENCE_NONE:
-            // Use default update handler
-            *this = -1;
             break;
         case PERSISTENCE_INDEX:
+            mValue = lastValue;
             if (mValue >= mChoices.size()) mValue = -1;
-            notify(ID_SELECTION);
             break;
         case PERSISTENCE_STRING:
-            mValue = -1;
             for (auto idx{0}; idx < mChoices.size(); ++idx) {
                 if (mChoices[idx] == lastChoice) {
                     mValue = idx;
                     break;
                 }
             }
-            notify(ID_SELECTION);
             break;
     }
+
+    if (lastValue != mValue) notify(ID_SELECTION);
 }
 
 PCUI::Choice::Choice(

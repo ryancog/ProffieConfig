@@ -95,6 +95,7 @@ void PCUI::NotifierDataProxy::bind(NotifierData *data) {
         std::scoped_lock newLock{mData->mLock};
         mData->mProxy = this;
         mData->mNotifier = mNotifier;
+        mData->mInFlight = 0;
         mData->notify(Notifier::ID_REBOUND);
     } else if (mNotifier) {
         if (wxThread::IsMain()) {

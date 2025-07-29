@@ -81,6 +81,8 @@ protected:
     void notify(uint32 id);
 
 private:
+    template<typename DATA_TYPE> requires std::is_base_of_v<ControlData, DATA_TYPE>
+    friend struct ControlDataProxy;
     /**
      * A callback to alert program-side code that the contained
      * value has been updated, either by program or by the user in UI
@@ -96,7 +98,10 @@ private:
 
 template<typename DATA_TYPE> requires std::is_base_of_v<ControlData, DATA_TYPE>
 struct ControlDataProxy : NotifierDataProxy {
-    void bind(DATA_TYPE& data) { NotifierDataProxy::bind(&data); }
+    void bind(DATA_TYPE& data) {
+        NotifierDataProxy::bind(&data);
+        data.update(Notifier::ID_REBOUND);
+    }
     void unbind() { NotifierDataProxy::bind(nullptr); }
     DATA_TYPE *data() { return static_cast<DATA_TYPE *>(NotifierDataProxy::data()); };
 
