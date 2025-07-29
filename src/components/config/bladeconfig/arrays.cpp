@@ -127,18 +127,19 @@ Config::BladeConfig& Config::BladeArrays::addArray(string&& name, uint32 id, str
     auto bladeArrayChoices{arraySelection.choices()};
     bladeArrayChoices.push_back(array->name);
     arraySelection.setChoices(std::move(bladeArrayChoices));
+    mParent.presetArrays.syncAllDisplays();
     return *array;
 }
 
 void Config::BladeArrays::removeArray(uint32 idx) {
     assert(idx < mBladeArrays.size());
 
-    bool purgeSelection{arraySelection == idx};
     mBladeArrays.erase(std::next(mBladeArrays.begin(), idx));
     auto choices{arraySelection.choices()};
     choices.erase(std::next(choices.begin(), idx));
     arraySelection.setChoices(std::move(choices));
-    if (purgeSelection) arraySelection = -1;
+    mParent.presetArrays.syncAllDisplays(idx);
+    if (arraySelection == idx) arraySelection = -1;
 }
 
 void Config::BladeArrays::addPowerPinFromEntry() {

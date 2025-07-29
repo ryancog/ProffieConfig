@@ -23,13 +23,13 @@
 
 
 PropButtonsDialog::PropButtonsDialog(EditorWindow *parent) {
-    auto config{parent->getOpenConfig()};
-    auto prop{config->prop(config->propSelection)};
+    auto& config{parent->getOpenConfig()};
+    auto& prop{config.prop(config.propSelection)};
 
     Create(
         parent,
         wxID_ANY,
-        prop->name + _(" Buttons"),
+        prop.name + _(" Buttons"),
         wxDefaultPosition,
         wxDefaultSize,
         wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP | wxRESIZE_BORDER 
@@ -37,7 +37,7 @@ PropButtonsDialog::PropButtonsDialog(EditorWindow *parent) {
 
     auto *textSizer{new wxBoxSizer(wxVERTICAL)};
 
-    auto propButtons{prop->buttons(config->settings.numButtons)};
+    auto propButtons{prop.buttons(config.settings.numButtons)};
 
     if (propButtons.empty()) {
         textSizer->Add(
@@ -67,8 +67,8 @@ PropButtonsDialog::PropButtonsDialog(EditorWindow *parent) {
         for (auto& button : stateButtons) {
             string activePredicate;
             for (const auto& [ predicate, description ]: button.descriptions) {
-                auto setting = prop->settingMap().find(predicate);
-                if (setting == prop->settingMap().end()) continue;
+                auto setting = prop.settingMap().find(predicate);
+                if (setting == prop.settingMap().end()) continue;
 
                 if (setting->second->isActive()) {
                     activePredicate = setting->first;

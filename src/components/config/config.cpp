@@ -28,7 +28,7 @@
 
 namespace Config {
 
-vector<std::shared_ptr<Config>> loadedConfigs;
+vector<std::unique_ptr<Config>> loadedConfigs;
 
 } // namespace Config
 
@@ -172,31 +172,30 @@ vector<string> Config::fetchListFromDisk() {
     return ret;
 }
 
-vector<std::shared_ptr<Config::Config>> Config::getOpen() {
-    vector<std::shared_ptr<Config>> ret;
-    ret.assign(loadedConfigs.begin(), loadedConfigs.end());
-    return ret;
+const vector<std::unique_ptr<Config::Config>>& Config::getOpen() {
+    return loadedConfigs;
 }
 
 bool Config::remove(const string& name) {
-    for (auto& config : loadedConfigs) {
-        if (static_cast<string>(config->name) == name) return false;
-    }
+    if (getIfOpen(name)) return false;
 
     std::error_code err;
     return fs::remove(Paths::configs() / (name + RAW_FILE_EXTENSION), err);
 }
 
-std::shared_ptr<Config::Config> Config::open(const string& name) {
-    for (auto& config : loadedConfigs) {
-        if (static_cast<string>(config->name) == name) return config;
-    }
+Config::Config& Config::open(const string& name) {
+    auto ret{getIfOpen(name)};
+    if (ret) return *ret;
 
-    loadedConfigs.push_back(std::shared_ptr<Config>{new Config()});
-    auto ret{loadedConfigs.back()};
-
+    ret = loadedConfigs.emplace_back(std::unique_ptr<Config>{new Config()}).get();
     ret->name = string{name};
-    return ret;
+    return *ret;
 }
 
+Config::Config *Config::getIfOpen(const string& name) {
+    for (auto& config : loadedConfigs) {
+        if (static_cast<string>(config->name) == name) return &*config;
+    }
+    return nullptr;
+}
 

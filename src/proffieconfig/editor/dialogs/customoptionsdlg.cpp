@@ -12,12 +12,12 @@ CustomOptionsDlg::CustomOptionsDlg(EditorWindow *parent) :
     wxDialog(
         parent,
         wxID_ANY,
-        _("Custom Options") + " - " + static_cast<string>(parent->getOpenConfig()->name),
+        _("Custom Options") + " - " + static_cast<string>(parent->getOpenConfig().name),
         wxDefaultPosition,
         wxDefaultSize,
         wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER
     ),
-    PCUI::Notifier(this, parent->getOpenConfig()->settings.customOptsNotifyData),
+    PCUI::Notifier(this, parent->getOpenConfig().settings.customOptsNotifyData),
     mParent{parent} {
     createUI();
     bindEvents();
@@ -49,7 +49,7 @@ void CustomOptionsDlg::createUI() {
 
 void CustomOptionsDlg::bindEvents() {
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        mParent->getOpenConfig()->settings.addCustomOption();
+        mParent->getOpenConfig().settings.addCustomOption();
     }, ID_AddDefine);
 }
 
@@ -121,8 +121,8 @@ void CustomOptionsDlg::createOptionArea() {
 void CustomOptionsDlg::handleNotification(uint32 id) {
     mOptionArea->GetSizer()->Clear(true);
 
-    auto config{mParent->getOpenConfig()};
-    const auto& customOptions{config->settings.customOptions()};
+    auto& config{mParent->getOpenConfig()};
+    const auto& customOptions{config.settings.customOptions()};
     if (customOptions.empty()) {
         mOptionArea->GetSizer()->AddStretchSpacer();
         mOptionArea->GetSizer()->Add(
@@ -153,7 +153,7 @@ void CustomOptionsDlg::handleNotification(uint32 id) {
 
 CustomOptionsDlg::CDefine::CDefine(
     wxScrolledWindow *parent,
-    std::shared_ptr<Config::Config> config,
+    Config::Config& config,
     Config::Settings::CustomOption& option
 ) : wxPanel(parent, wxID_ANY) {
     auto *sizer{new wxBoxSizer(wxHORIZONTAL)};
@@ -163,8 +163,8 @@ CustomOptionsDlg::CDefine::CDefine(
     auto *value{new PCUI::Text(this, option.value)};
     value->SetMinSize(wxSize{50, -1});
     auto *remove = new wxButton(this, wxID_ANY, _("Remove"));
-    remove->Bind(wxEVT_BUTTON, [config, &option](wxCommandEvent&) {
-        config->settings.removeCustomOption(option);
+    remove->Bind(wxEVT_BUTTON, [&config, &option](wxCommandEvent&) {
+        config.settings.removeCustomOption(option);
     });
 
     sizer->Add(defText, wxSizerFlags(0).Center().Border(wxRIGHT, 5));

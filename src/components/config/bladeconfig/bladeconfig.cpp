@@ -65,6 +65,8 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
             choices[idx] = name;
             mConfig.bladeArrays.arraySelection.setChoices(std::move(choices));
 
+            mConfig.presetArrays.syncAllDisplays();
+
             notifyData.notify();
             if (
                     mConfig.bladeArrays.arraySelection != -1 and
@@ -115,6 +117,26 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
     });
 
     id.setRange(0, NO_BLADE);
+}
+
+void Config::BladeConfig::addBlade() {
+
+    mConfig.presetArrays.syncAllDisplays();
+}
+
+void Config::BladeConfig::removeBlade(uint32 idx) {
+
+    mConfig.presetArrays.syncAllDisplays();
+}
+
+void Config::BladeConfig::addSubBlade() {
+
+    mConfig.presetArrays.syncAllDisplays();
+}
+
+void Config::BladeConfig::removeSubBlade(uint32 idx) {
+
+    mConfig.presetArrays.syncAllDisplays();
 }
 
 [[nodiscard]] uint32 Config::BladeConfig::computeIssues() const {

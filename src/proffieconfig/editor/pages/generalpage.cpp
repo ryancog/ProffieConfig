@@ -7,7 +7,7 @@
 
 GeneralPage::GeneralPage(EditorWindow *parent) : 
     wxPanel(parent), 
-    Notifier(this, parent->getOpenConfig()->settings.notifyData),
+    Notifier(this, parent->getOpenConfig().settings.notifyData),
     mParent(parent) {
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
@@ -31,7 +31,7 @@ void GeneralPage::bindEvents() {
 
 void GeneralPage::handleNotification(uint32 id) {
     bool rebound{id == ID_REBOUND};
-    auto& settings{mParent->getOpenConfig()->settings};
+    auto& settings{mParent->getOpenConfig().settings};
 
     if (rebound or id == settings.ID_OS_VERSION) {
         auto *osVersionButton{FindWindow(ID_OSVersion)};
@@ -69,7 +69,7 @@ void GeneralPage::handleNotification(uint32 id) {
 // }
 
 wxSizer *GeneralPage::setupSection() {
-    auto config{mParent->getOpenConfig()};
+    auto& config{mParent->getOpenConfig()};
 
     auto *boardSetup{new wxStaticBoxSizer(
         wxHORIZONTAL,
@@ -81,18 +81,18 @@ wxSizer *GeneralPage::setupSection() {
 
     auto *board{new PCUI::Choice(
         boardSetup->GetStaticBox(),
-        config->settings.board
+        config.settings.board
     )};
 
     auto *massStorage {new PCUI::CheckBox(
         boardSetup->GetStaticBox(),
-        config->settings.massStorage,
+        config.settings.massStorage,
         0,
         _("Enable Mass Storage")
     )};
     auto *webUSB {new PCUI::CheckBox(
         boardSetup->GetStaticBox(),
-        config->settings.webUSB,
+        config.settings.webUSB,
         0,
         _("Enable WebUSB")
     )};
@@ -131,56 +131,56 @@ wxSizer *GeneralPage::optionSection() {
 }
 
 wxSizer *GeneralPage::rightOptions(wxWindow* parent) {
-    auto config{mParent->getOpenConfig()};
+    auto& config{mParent->getOpenConfig()};
     auto *rightOptions{new wxBoxSizer(wxVERTICAL)};
 
     // TODO: Save State, yes?
 
     auto *volumeSave{new PCUI::CheckBox(
         parent,
-        config->settings.saveVolume,
+        config.settings.saveVolume,
         0,
         _("Save Volume")
     )};
     auto *presetSave{new PCUI::CheckBox(
         parent,
-        config->settings.savePreset,
+        config.settings.savePreset,
         0,
         _("Save Preset")
     )};
     auto *colorSave{new PCUI::CheckBox(
         parent,
-        config->settings.saveColorChange,
+        config.settings.saveColorChange,
         0,
         _("Save Color")
     )};
     auto *enableOLED{new PCUI::CheckBox(
         parent,
-        config->settings.enableOLED,
+        config.settings.enableOLED,
         0,
         _("Enable OLED")
     )};
     auto *disableColor{new PCUI::CheckBox(
         parent,
-        config->settings.disableColorChange,
+        config.settings.disableColorChange,
         0,
         _("Disable Color Change")
     )};
     auto *noTalkie{new PCUI::CheckBox(
         parent,
-        config->settings.disableTalkie,
+        config.settings.disableTalkie,
         0,
         _("Disable Talkie")
     )};
     auto *noBasicParsers{new PCUI::CheckBox(
         parent,
-        config->settings.disableBasicParserStyles,
+        config.settings.disableBasicParserStyles,
         0,
         _("Disable Basic Parser Styles")
     )};
     auto *disableDiagnosticCommands{new PCUI::CheckBox(
         parent,
-        config->settings.disableDiagnosticCommands,
+        config.settings.disableDiagnosticCommands,
         0,
         _("Disable Diagnostic Commands")
     )};
@@ -214,54 +214,54 @@ wxSizer *GeneralPage::rightOptions(wxWindow* parent) {
 }
 
 wxSizer *GeneralPage::leftOptions(wxWindow *parent) {
-    auto config{mParent->getOpenConfig()};
+    auto& config{mParent->getOpenConfig()};
 
     auto *leftOptions{new wxBoxSizer(wxVERTICAL)};
 
     auto *orientation{new PCUI::Choice(
         parent, 
-        config->settings.orientation,
+        config.settings.orientation,
         _("Orientation"),
         wxHORIZONTAL
     )};
     auto *buttons{new PCUI::Numeric(
         parent,
-        config->settings.numButtons,
+        config.settings.numButtons,
         wxSP_ARROW_KEYS,
         _("Number of Buttons"),
         wxHORIZONTAL
     )};
     auto *volume{new PCUI::Numeric(
         parent,
-        config->settings.volume,
+        config.settings.volume,
         wxSP_ARROW_KEYS,
         _("Max Volume"),
         wxHORIZONTAL
     )};
     auto *clash{new PCUI::Decimal(
         parent,
-        config->settings.clashThreshold,
+        config.settings.clashThreshold,
         wxSP_ARROW_KEYS,
         _("Clash Threshold (Gs)"),
         wxHORIZONTAL
     )};
     auto *pliTime{new PCUI::Decimal(
         parent,
-        config->settings.pliOffTime,
+        config.settings.pliOffTime,
         wxSP_ARROW_KEYS,
         _("PLI Timeout (minutes)"),
         wxHORIZONTAL
     )};
     auto *idleTime{new PCUI::Decimal(
         parent,
-        config->settings.idleOffTime,
+        config.settings.idleOffTime,
         wxSP_ARROW_KEYS,
         _("Idle Timeout (minutes)"),
         wxHORIZONTAL
     )};
     auto *motionTime{new PCUI::Decimal(
         parent,
-        config->settings.motionOffTime,
+        config.settings.motionOffTime,
         wxSP_ARROW_KEYS,
         _("Motion Timeout (minutes)"),
         wxHORIZONTAL

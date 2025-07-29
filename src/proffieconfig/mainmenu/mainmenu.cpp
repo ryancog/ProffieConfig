@@ -70,8 +70,8 @@ MainMenu::MainMenu(wxWindow* parent) :
 
 void MainMenu::bindEvents() {
     auto promptClose{[this]() -> bool {
-        for (auto& [config, editor]: mEditors) {
-            if (not config->isSaved()) {
+        for (auto *editor : mEditors) {
+            if (not editor->getOpenConfig().isSaved()) {
                 auto res{PCUI::showMessage(
                     _("There is at least one editor open with unsaved changes, are you sure you want to exit?") +
                     "\n\n"+
@@ -175,15 +175,16 @@ void MainMenu::bindEvents() {
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         wxSetCursor(wxCURSOR_WAIT);
         Defer cursorDefer{[]() { wxSetCursor(wxNullCursor); }};
-        auto config{Config::open(configSelection)};
-        auto editorIter{mEditors.find(config)};
-        if (editorIter != mEditors.end()) {
-            editorIter->second->Show();
-            editorIter->second->Raise();
-            return;
-        } 
+        auto& config{Config::open(configSelection)};
+        for (auto *editor : mEditors) {
+            if (&editor->getOpenConfig() == &config) {
+                editor->Show();
+                editor->Raise();
+                return;
+            }
+        }
 
-        auto editor{mEditors.emplace(config, new EditorWindow(this, config)).first->second};
+        auto editor{mEditors.emplace_back(new EditorWindow(this, config))};
         editor->Show();
         editor->Raise();
     }, ID_EditConfig);
@@ -218,10 +219,11 @@ void MainMenu::bindEvents() {
                 wxYES_NO | wxNO_DEFAULT | wxCENTER,
                 this) == wxYES
            ) {
+            auto *config{Config::getIfOpen(configSelection)};
             for (auto iter{mEditors.begin()}; iter != mEditors.end(); ++iter) {
-                if (static_cast<string>(iter->first->name) == static_cast<string>(configSelection)) {
-                    iter->first->close();
-                    iter->second->Destroy();
+                auto editor{*iter};
+                if (&editor->getOpenConfig() == config) {
+                    editor->Destroy();
                     mEditors.erase(iter);
                     break;
                 }
@@ -384,7 +386,7 @@ void MainMenu::createUI() {
 
 void MainMenu::removeEditor(EditorWindow *editor) {
     for (auto it{mEditors.begin()}; it != mEditors.end(); ++it) {
-        if (it->second == editor) {
+        if (*it == editor) {
             mEditors.erase(it);
             break;
         }

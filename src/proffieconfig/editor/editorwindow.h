@@ -16,12 +16,13 @@ class PresetsPage;
 
 class EditorWindow : public PCUI::Frame {
 public:
-    EditorWindow(wxWindow *, std::shared_ptr<Config::Config>);
+    EditorWindow(wxWindow *, Config::Config&);
+    bool Destroy() final;
 
     // Handles errors
     bool save();
 
-    [[nodiscard]] std::shared_ptr<Config::Config> getOpenConfig() const;
+    [[nodiscard]] Config::Config& getOpenConfig() const;
 
     GeneralPage *generalPage{nullptr};
     PropsPage *propsPage{nullptr};
@@ -47,5 +48,5 @@ private:
 
     void Fit() override;
 
-    std::shared_ptr<Config::Config> mConfig;
+    Config::Config& mConfig;
 };

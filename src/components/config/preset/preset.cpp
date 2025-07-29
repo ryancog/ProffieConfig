@@ -25,6 +25,8 @@
 Config::Preset::Preset(Config& config, PresetArray& presetArray) :
     mConfig{config}, mParent{presetArray} {
     name = "newpreset";
+    styleDisplay.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
+    styleSelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
 
     name.setUpdateHandler([this](uint32 id) {
         if (id != name.ID_VALUE) return;
@@ -45,7 +47,7 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
         if (rawValue == static_cast<string>(name)) {
             auto idx{0};
             for (const auto& preset : mParent.presets()) {
-                if (&preset == this) break;
+                if (&*preset == this) break;
                 ++idx;
             }
             if (idx < mParent.presets().size()) {
@@ -120,16 +122,24 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
             mConfig.presetArrays.styleProxy.bind(selectedStyle.style);
         }
     });
+
+    syncDisplay();
+}
+
+void Config::Preset::syncDisplay(int32 clearIdx) {
+    styleDisplay.setChoices(vector{mConfig.bladeArrays.arraySelection.choices()});
+    if (styleDisplay == clearIdx) styleDisplay = -1;
+    syncStyles();
 }
 
 void Config::Preset::syncStyles() {
-    if (mConfig.bladeArrays.arraySelection == -1) {
+    if (styleDisplay == -1) {
         styleSelection.setChoices({});
         return;
     }
 
     auto numBlades{mConfig.bladeArrays.numBLades()};
-    auto& bladeArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
+    auto& bladeArray{mConfig.bladeArrays.array(styleDisplay)};
 
     auto count{0};
     auto mainIdx{0};

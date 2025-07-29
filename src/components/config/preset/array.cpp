@@ -79,13 +79,15 @@ Config::PresetArray::PresetArray(Config& config) :
         name.setInsertionPoint(insertionPoint - numTrimmed);
     });
     selection.setUpdateHandler([this, isCurrentArray](uint32 id) {
+        if (id != PCUI::Notifier::ID_REBOUND and id != selection.ID_SELECTION) return;
+
         if (selection == -1) {
             mConfig.presetArrays.nameProxy.unbind();
             mConfig.presetArrays.dirProxy.unbind();
             mConfig.presetArrays.trackProxy.unbind();
             mConfig.presetArrays.styleSelectProxy.unbind();
         } else {
-            auto& preset{*std::next(mPresets.begin(), selection)};
+            auto& preset{**std::next(mPresets.begin(), selection)};
             mConfig.presetArrays.nameProxy.bind(preset.name);
             mConfig.presetArrays.dirProxy.bind(preset.fontDir);
             mConfig.presetArrays.trackProxy.bind(preset.track);
@@ -99,7 +101,7 @@ Config::PresetArray::PresetArray(Config& config) :
 
 void Config::PresetArray::addPreset() {
     auto choices{selection.choices()};
-    choices.push_back(mPresets.emplace_back(mConfig, *this).name);
+    choices.push_back(mPresets.emplace_back(std::make_unique<Preset>(mConfig, *this))->name);
     selection.setChoices(std::move(choices));
 }
 
@@ -118,11 +120,9 @@ void Config::PresetArray::movePresetUp(uint32 idx) {
     if (idx >= selection.choices().size()) return;
     if (idx == 0) return;
 
-    mPresets.splice(
-        std::next(mPresets.begin(), idx - 1),
-        mPresets,
-        std::next(mPresets.begin(), idx)
-    );
+    auto ptr{std::move(mPresets[idx])};
+    mPresets.erase(std::next(mPresets.begin(), idx));
+    mPresets.insert(std::next(mPresets.begin(), idx - 1), std::move(ptr));
 
     auto choices{selection.choices()};
     auto move{std::next(choices.begin(), idx)};
@@ -140,11 +140,9 @@ void Config::PresetArray::movePresetDown(uint32 idx) {
     if (idx >= selection.choices().size()) return;
     if (idx == selection.choices().size() - 1) return;
 
-    mPresets.splice(
-        std::next(mPresets.begin(), idx + 2),
-        mPresets,
-        std::next(mPresets.begin(), idx)
-    );
+    auto ptr{std::move(mPresets[idx])};
+    mPresets.erase(std::next(mPresets.begin(), idx));
+    mPresets.insert(std::next(mPresets.begin(), idx + 2), std::move(ptr));
 
     auto choices{selection.choices()};
     auto move{std::next(choices.begin(), idx)};
@@ -185,6 +183,7 @@ Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
             styleProxy.bind(dummyStyleData);
         } else {
             presetProxy.bind((**std::next(mArrays.begin(), selection)).selection);
+
         }
 
         notifyData.notify(NOTIFY_SELECTION);
@@ -209,7 +208,7 @@ void Config::PresetArrays::removeArray(uint32 idx) {
     choices.reserve(mArrays.size());
     for (const auto& array : mArrays) choices.push_back(array->name);
     selection.setChoices(std::move(choices));
-    selection = -1;
+    if (selection == idx) selection = -1;
     mParent.bladeArrays.refreshPresetArrays(idx);
 }
 
@@ -228,5 +227,13 @@ void Config::PresetArrays::removeInjection(const Injection& injection) {
     mInjections.erase(iter);
 
     notifyData.notify(NOTIFY_INJECTIONS);
+}
+
+void Config::PresetArrays::syncAllDisplays(int32 clearIdx) {
+    for (const auto& array : mArrays) {
+        for (const auto& preset : array->presets()) {
+            preset->syncDisplay(clearIdx);
+        }
+    }
 }
 

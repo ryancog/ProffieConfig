@@ -34,13 +34,13 @@
 #include "wx/gdicmn.h"
 #include "wx/toolbar.h"
 
-EditorWindow::EditorWindow(wxWindow *parent, std::shared_ptr<Config::Config> config) : 
+EditorWindow::EditorWindow(wxWindow *parent, Config::Config& config) : 
     PCUI::Frame(
         parent,
         wxID_ANY,
-        /* _("ProffieConfig Editor") + */ static_cast<string>(config->name)
+        /* _("ProffieConfig Editor") + */ static_cast<string>(config.name)
     ),
-    mConfig{std::move(config)} {
+    mConfig{config} {
     auto *sizer{new wxBoxSizer{wxVERTICAL}};
 
     createMenuBar();
@@ -54,14 +54,19 @@ EditorWindow::EditorWindow(wxWindow *parent, std::shared_ptr<Config::Config> con
     SetSizerAndFit(sizer);
 }
 
+bool EditorWindow::Destroy() {
+    mConfig.close();
+    return PCUI::Frame::Destroy();
+}
+
 void EditorWindow::bindEvents() {
     Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event ) {
-        if (!event.CanVeto()) {
+        if (not event.CanVeto()) {
             event.Skip();
             return;
         }
 
-        if (not mConfig->isSaved()) {
+        if (not mConfig.isSaved()) {
 #           ifdef __WINDOWS__
             const auto flags{static_cast<long>(wxICON_WARNING | wxYES_NO | wxCANCEL | wxCANCEL_DEFAULT)};
             wxGenericMessageDialog saveDialog{
@@ -73,7 +78,7 @@ void EditorWindow::bindEvents() {
                 _("You currently have unsaved changes which will be lost otherwise."),
                 wxString::Format(
                     _("Save Changes to \"%s\"?"),
-                    static_cast<string>(mConfig->name)
+                    static_cast<string>(mConfig.name)
                 ),
                 flags
             };
@@ -123,7 +128,7 @@ void EditorWindow::bindEvents() {
             return;
         }
 
-        mConfig->presetArrays.addInjection(fileDialog.GetFilename().ToStdString());
+        mConfig.presetArrays.addInjection(fileDialog.GetFilename().ToStdString());
     }, ID_AddInjection);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { 
         wxLaunchDefaultBrowser("http://profezzorn.github.io/ProffieOS-StyleEditor/style_editor.html");
@@ -243,7 +248,7 @@ void EditorWindow::createPages(wxSizer *sizer) {
 }
 
 bool EditorWindow::save() {
-    return mConfig->save();
+    return mConfig.save();
 }
 
 void EditorWindow::Fit() {
@@ -261,7 +266,7 @@ void EditorWindow::Fit() {
     }
 }
 
-std::shared_ptr<Config::Config> EditorWindow::getOpenConfig() const { return mConfig; }
+Config::Config& EditorWindow::getOpenConfig() const { return mConfig; }
 
 
 
