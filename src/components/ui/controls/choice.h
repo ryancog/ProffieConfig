@@ -38,9 +38,24 @@ struct UI_EXPORT ChoiceData : ControlData {
      * Efficiently assign/update value
      */
     void operator=(int32 val);
+    void operator=(const string& val);
 
     const vector<string>& choices() const { return mChoices; }
     void setChoices(vector<string>&& choices);
+
+    enum Persistence {
+        PERSISTENCE_NONE,
+        PERSISTENCE_INDEX,
+        PERSISTENCE_STRING,
+    };
+
+    /**
+     * Attempt to maintain selection across calls to setChoices()
+     * Disabled by default.
+     */
+    void setPersistence(Persistence persistence) {
+        mChoicePersistence = persistence;
+    }
 
     enum {
         ID_SELECTION,
@@ -52,6 +67,7 @@ private:
     friend class List;
     vector<string> mChoices;
     int32 mValue{-1};
+    Persistence mChoicePersistence{PERSISTENCE_NONE};
 };
 
 using ChoiceDataProxy = ControlDataProxy<ChoiceData>;

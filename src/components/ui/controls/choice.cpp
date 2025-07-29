@@ -31,8 +31,25 @@ void PCUI::ChoiceData::operator=(int32 val) {
     notify(ID_SELECTION);
 }
 
+void PCUI::ChoiceData::operator=(const string& val) {
+    std::scoped_lock scopeLock{getLock()};
+    if (mValue != -1 and mChoices[mValue] == val) return;
+
+    auto idx{0};
+    for (; idx < mChoices.size(); ++idx) {
+        if (mChoices[idx] == val) break;
+    }
+    if (idx == mChoices.size()) idx = -1;
+
+    if (mValue == idx) return;
+    mValue = idx;
+    notify(ID_SELECTION);
+}
+
 void PCUI::ChoiceData::setChoices(vector<string>&& choices) { 
     std::scoped_lock scopeLock{getLock()};
+
+    // If equal return
     if (mChoices.size() == choices.size()) {
         auto idx{0};
         for (; idx < choices.size(); ++idx) {
@@ -41,9 +58,32 @@ void PCUI::ChoiceData::setChoices(vector<string>&& choices) {
         if (idx == choices.size()) return;
     }
 
+    string lastChoice;
+    if (mValue != -1) lastChoice = mChoices[mValue];
+
     mChoices = std::move(choices); 
-    if (mValue >= mChoices.size()) mValue = -1;
     notify(ID_CHOICES);
+
+    switch (mChoicePersistence) {
+        case PERSISTENCE_NONE:
+            // Use default update handler
+            *this = -1;
+            break;
+        case PERSISTENCE_INDEX:
+            if (mValue >= mChoices.size()) mValue = -1;
+            notify(ID_SELECTION);
+            break;
+        case PERSISTENCE_STRING:
+            mValue = -1;
+            for (auto idx{0}; idx < mChoices.size(); ++idx) {
+                if (mChoices[idx] == lastChoice) {
+                    mValue = idx;
+                    break;
+                }
+            }
+            notify(ID_SELECTION);
+            break;
+    }
 }
 
 PCUI::Choice::Choice(
@@ -81,12 +121,7 @@ void PCUI::Choice::onUIUpdate(uint32 id) {
     if (id == ID_REBOUND or id == ChoiceData::ID_CHOICES) {
         pControl->Set(data()->mChoices);
         pControl->SetSelection(*data());
-        SetSizerAndFit(GetSizer());
-        auto *parent{wxGetTopLevelParent(this)};
-        if (parent) {
-            parent->Layout();
-            parent->Fit();
-        }
+        refreshSizeAndLayout();
     } else if (id == ChoiceData::ID_SELECTION) {
         pControl->SetSelection(*data());
     }
@@ -128,12 +163,7 @@ void PCUI::List::onUIUpdate(uint32 id) {
     if (id == ID_REBOUND or id == ChoiceData::ID_CHOICES) {
         pControl->Set(data()->mChoices);
         pControl->SetSelection(*data());
-        SetSizerAndFit(GetSizer());
-        auto *parent{wxGetTopLevelParent(this)};
-        if (parent) {
-            parent->Layout();
-            parent->SetSizerAndFit(parent->GetSizer());
-        }
+        refreshSizeAndLayout();
     } else if (id == ChoiceData::ID_SELECTION) {
         pControl->SetSelection(*data());
     }

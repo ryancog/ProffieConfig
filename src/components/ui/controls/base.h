@@ -153,6 +153,12 @@ protected:
     );
 
     virtual void onUIUpdate(uint32 id) = 0;
+
+    /**
+     * Controls may override to set themselves into a sane state while unbound and disabled
+     */
+    virtual void onUnbound() {};
+
     /**
      * Must use the data update function to signal
      * Data is already locked.
@@ -160,6 +166,8 @@ protected:
     virtual void onModify(CONTROL_EVENT&) = 0;
 
     virtual void onModifySecondary(SECONDARY_EVENT&) {}
+
+    void refreshSizeAndLayout();
 
     CONTROL *pControl{nullptr};
     CONTROL_DATA *data() { return static_cast<CONTROL_DATA *>(Notifier::data()); }
