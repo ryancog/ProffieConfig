@@ -116,6 +116,21 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
+void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::refreshSizeAndLayout() {
+    Layout();
+    Fit();
+    
+    auto bestSize{GetBestSize()};
+    SetMinSize(bestSize);
+
+    auto *parent{wxGetTopLevelParent(this)};
+    if (parent) {
+        parent->Layout();
+    }
+}
+
+
+template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::handleNotification(
     uint32 id
 ) {
@@ -131,6 +146,7 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
     if (proxy()) {
        Show(static_cast<ControlDataProxy<CONTROL_DATA> *>(proxy())->mShowWhenUnbound);
     }
+    onUnbound();
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>

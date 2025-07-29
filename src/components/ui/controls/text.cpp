@@ -107,6 +107,10 @@ void PCUI::Text::onUIUpdate(uint32 id) {
     }
 }
 
+void PCUI::Text::onUnbound() {
+    pControl->Clear();
+}
+
 void PCUI::Text::onModify(wxCommandEvent& evt) {
     data()->mValue = evt.GetString().ToStdString();
     data()->mInsertionPoint = pControl->GetInsertionPoint();

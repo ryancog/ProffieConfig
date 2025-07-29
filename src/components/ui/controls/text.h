@@ -92,6 +92,7 @@ private:
 
     void create(int64 style, const wxString& label, wxOrientation orient);
     void onUIUpdate(uint32) final;
+    void onUnbound() final;
     void onModify(wxCommandEvent&) final;
     void onModifySecondary(wxCommandEvent&) final;
     // void pruneText();
