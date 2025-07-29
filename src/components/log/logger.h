@@ -56,7 +56,7 @@ public:
     void verbose(const string&);
 
     // Copy to avoid concurrent read/mod errors
-    [[nodiscard]] std::list<Message *> getMessages() const;
+    [[nodiscard]] vector<Message *> getMessages() const;
 
 protected:
     friend class Branch;
@@ -67,7 +67,7 @@ protected:
 
 private:
 
-    std::list<Message *> mMessages;
+    vector<Message *> mMessages;
     std::mutex mMessageLock;
 };
 

@@ -42,7 +42,7 @@ public:
     static void destroyGlobal();
 
     [[nodiscard]] Logger& createLogger(string name);
-    [[nodiscard]] list<Logger *> getLoggers() const;
+    [[nodiscard]] vector<Logger *> getLoggers() const;
 
     void setSeverity(Severity);
     void quickLog(Severity, string tag, string message);
@@ -65,8 +65,8 @@ protected:
     const string pName;
 
 private:
-    std::list<Logger *> mLoggers;
-    std::vector<std::ostream *> mOutputs;
+    vector<Logger *> mLoggers;
+    vector<std::ostream *> mOutputs;
 
     std::mutex mSendLock;
     std::mutex mListLock;

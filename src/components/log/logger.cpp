@@ -35,7 +35,7 @@ Log::Logger::~Logger() {
     }
 }
 
-[[nodiscard]] std::list<Log::Message *> Log::Logger::getMessages() const {
+[[nodiscard]] vector<Log::Message *> Log::Logger::getMessages() const {
     return mMessages;
 }
 

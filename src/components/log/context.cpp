@@ -108,4 +108,4 @@ Log::Logger &Log::Context::createLogger(string name) {
     return *mLoggers.back();
 }
 
-std::list<Log::Logger *> Log::Context::getLoggers() const { return mLoggers; }
+vector<Log::Logger *> Log::Context::getLoggers() const { return mLoggers; }

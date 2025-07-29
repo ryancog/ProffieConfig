@@ -55,15 +55,19 @@ struct CONFIG_EXPORT BladeArrays {
 
     PCUI::ChoiceDataProxy bladeTypeProxy;
 
-    void refreshPresetArrays();
+    /**
+     * @param clearIdx Index of preset that was deleted, and should be cleared if
+     * a blade array is holding on to it.
+     */
+    void refreshPresetArrays(int32 clearIdx = -1);
 
-    [[nodiscard]] const list<BladeConfig>& arrays() const { return mBladeArrays; }
+    [[nodiscard]] const vector<std::unique_ptr<BladeConfig>>& arrays() const { return mBladeArrays; }
     [[nodiscard]] BladeConfig& array(uint32 idx) { 
         assert(idx < mBladeArrays.size());
-        return *std::next(mBladeArrays.begin(), idx);
+        return **std::next(mBladeArrays.begin(), idx);
     }
 
-    BladeConfig& addArray(string&& name = {}, uint32 id = 0, uint32 presetArray = -1);
+    BladeConfig& addArray(string&& name = {}, uint32 id = 0, string presetArray = {});
     void removeArray(uint32 idx);
     
     PCUI::CheckListDataProxy powerPinProxy;
@@ -93,9 +97,14 @@ struct CONFIG_EXPORT BladeArrays {
     StarProxy star3Proxy;
     StarProxy star4Proxy;
 
+    /**
+     * @return number of blades across all arrays
+     */
+    uint32 numBLades();
+
 private:
     Config& mParent;
-    list<BladeConfig> mBladeArrays;
+    vector<std::unique_ptr<BladeConfig>> mBladeArrays;
 };
 
 } // namespace Config

@@ -49,16 +49,19 @@ struct CONFIG_EXPORT Preset {
     PCUI::ChoiceData styleDisplay;
 
     [[nodiscard]] Style& style(uint32 idx) {
-        assert(idx < styles.size());
-        return *std::next(styles.begin(), idx);
+        assert(idx < mStyles.size());
+        return *std::next(mStyles.begin(), idx);
     }
 
-    // No touchie. For BladeArrays eyes only
-    list<Style> styles;
+    void syncStyles();
 
 private:
     Config& mConfig;
     PresetArray& mParent;
+
+    // Never shrinks, so data isn't lost.
+    // At worst it's jumbled by moving blades
+    list<Style> mStyles;
 };
 
 } // namespace Config

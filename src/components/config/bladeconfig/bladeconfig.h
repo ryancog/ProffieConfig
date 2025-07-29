@@ -42,7 +42,8 @@ struct CONFIG_EXPORT Blade {
     };
     PCUI::ChoiceData type;
 
-
+    WS281XBlade& ws281x() { return std::get<WS281XBlade>(mBlade); }
+    SimpleBlade& simple() { return std::get<SimpleBlade>(mBlade); }
 
 private:
     variant<WS281XBlade, SimpleBlade> mBlade;
@@ -51,8 +52,9 @@ private:
 struct CONFIG_EXPORT BladeConfig {
     BladeConfig(Config&);
 
-    Blade& blade(uint32 idx) { 
-        return *std::next(mBlades.begin(), idx);
+    [[nodiscard]] const vector<std::unique_ptr<Blade>>& blades() const { return mBlades; }
+    [[nodiscard]] Blade& blade(uint32 idx) const { 
+        return **std::next(mBlades.begin(), idx);
     }
 
     void addBlade();
@@ -89,7 +91,7 @@ struct CONFIG_EXPORT BladeConfig {
 
 private:
     Config& mConfig;
-    list<Blade> mBlades;
+    vector<std::unique_ptr<Blade>> mBlades;
 };
 
 } // namespace Config

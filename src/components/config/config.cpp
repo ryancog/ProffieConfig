@@ -28,7 +28,7 @@
 
 namespace Config {
 
-list<std::shared_ptr<Config>> loadedConfigs;
+vector<std::shared_ptr<Config>> loadedConfigs;
 
 } // namespace Config
 

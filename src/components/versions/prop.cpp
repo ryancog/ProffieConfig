@@ -16,8 +16,11 @@
 #include "utils/string.h"
 
 namespace Versions {
-    list<PropSettingVariant> parseSettings(const PConf::Data&, Prop&, Log::Branch&);
-    optional<std::pair<PropCommonSettingData, PConf::HashedData>> parseSettingCommon(const std::shared_ptr<PConf::Entry>&, Log::Logger&);
+    vector<std::unique_ptr<PropSettingVariant>> parseSettings(const PConf::Data&, Prop&, Log::Branch&);
+    optional<std::pair<PropCommonSettingData, PConf::HashedData>> parseSettingCommon(
+        const std::shared_ptr<PConf::Entry>&,
+        Log::Logger&
+    );
     PropButtons parseButtons(const PConf::Data&, const PropSettingMap&, Log::Branch&);
     PropErrors parseErrors(const PConf::Data& data, Log::Branch& lBranch);
 }
@@ -111,14 +114,22 @@ Versions::Prop::Prop(const Prop& other) :
     Prop{other.name, other.filename, other.info} {
 
     for (const auto& setting : other.mSettings) {
-        if (auto *ptr = std::get_if<PropToggle>(&setting)) {
-            mSettings.emplace_back(std::in_place_type<PropToggle>, *ptr, *this);
-        } else if (auto *ptr = std::get_if<PropOption>(&setting)) {
-            mSettings.emplace_back(std::in_place_type<PropOption>, *ptr, *this);
-        } else if (auto *ptr = std::get_if<PropNumeric>(&setting)) {
-            mSettings.emplace_back(std::in_place_type<PropNumeric>, *ptr, *this);
-        } else if (auto *ptr = std::get_if<PropDecimal>(&setting)) {
-            mSettings.emplace_back(std::in_place_type<PropDecimal>, *ptr, *this);
+        if (auto *ptr = std::get_if<PropToggle>(&*setting)) {
+            mSettings.emplace_back(std::make_unique<PropSettingVariant>(
+                std::in_place_type<PropToggle>, *ptr, *this
+            ));
+        } else if (auto *ptr = std::get_if<PropOption>(&*setting)) {
+            mSettings.emplace_back(std::make_unique<PropSettingVariant>(
+                std::in_place_type<PropOption>, *ptr, *this
+            ));
+        } else if (auto *ptr = std::get_if<PropNumeric>(&*setting)) {
+            mSettings.emplace_back(std::make_unique<PropSettingVariant>(
+                std::in_place_type<PropNumeric>, *ptr, *this
+            ));
+        } else if (auto *ptr = std::get_if<PropDecimal>(&*setting)) {
+            mSettings.emplace_back(std::make_unique<PropSettingVariant>(
+                std::in_place_type<PropDecimal>, *ptr, *this
+            ));
         } else {
             assert(0);
         }
@@ -141,9 +152,9 @@ void Versions::Prop::rebuildSettingMap(optional<std::set<PropSetting *>> pruneLi
     for (auto setting{mSettings.begin()}; setting != mSettings.end();) {
         PropSetting *ptr;
         if (
-                (ptr = std::get_if<PropToggle>(&*setting)) or
-                (ptr = std::get_if<PropNumeric>(&*setting)) or
-                (ptr = std::get_if<PropDecimal>(&*setting))
+                (ptr = std::get_if<PropToggle>(&**setting)) or
+                (ptr = std::get_if<PropNumeric>(&**setting)) or
+                (ptr = std::get_if<PropDecimal>(&**setting))
            ) {
             if (pruneList and pruneList->find(ptr) == pruneList->end()) {
                 logger.warn("Removing unused setting \"" + ptr->name + "\"...");
@@ -152,7 +163,7 @@ void Versions::Prop::rebuildSettingMap(optional<std::set<PropSetting *>> pruneLi
             } else {
                 mSettingMap.emplace(ptr->define, ptr);
             }
-        } else if (auto *ptr = std::get_if<PropOption>(&*setting)) {
+        } else if (auto *ptr = std::get_if<PropOption>(&**setting)) {
             for (auto selection{ptr->mSelections.begin()}; selection != ptr->mSelections.end();) {
                 if (pruneList and pruneList->find(&*selection) == pruneList->end()) {
                     logger.warn("Removing unused setting \"" + selection->name + "\"...");
@@ -344,14 +355,14 @@ std::shared_ptr<Versions::Prop> Versions::Prop::generate(const PConf::HashedData
     return prop;
 }
 
-list<Versions::PropSettingVariant> Versions::parseSettings(
+vector<std::unique_ptr<Versions::PropSettingVariant>> Versions::parseSettings(
     const PConf::Data& data,
     Prop& prop,
     Log::Branch& lBranch
 ) {
     auto& logger{lBranch.createLogger("PropFile::readSettings()")};
 
-    list<PropSettingVariant> ret;
+    vector<std::unique_ptr<PropSettingVariant>> ret;
     const auto hashedData{PConf::hash(data)};
 
     const auto parseDisables{[](const PConf::HashedData& data) -> vector<string> {
@@ -367,7 +378,7 @@ list<Versions::PropSettingVariant> Versions::parseSettings(
         if (not commonData) continue;
         const auto& [settingData, entryMap]{*commonData};
 
-        ret.emplace_back(
+        ret.emplace_back(std::make_unique<PropSettingVariant>(
             std::in_place_type<PropToggle>,
             prop,
             settingData.name,
@@ -376,7 +387,7 @@ list<Versions::PropSettingVariant> Versions::parseSettings(
             settingData.required,
             settingData.requiredAny,
             parseDisables(entryMap)
-        );
+        ));
     }
 
     const auto optionRange{hashedData.equal_range("OPTION")};
@@ -410,7 +421,11 @@ list<Versions::PropSettingVariant> Versions::parseSettings(
             selectionDatas.emplace_back(std::move(selectionData));
         }
 
-        ret.emplace_back(std::in_place_type<PropOption>, prop, selectionDatas);
+        ret.emplace_back(std::make_unique<PropSettingVariant>(
+            std::in_place_type<PropOption>,
+            prop,
+            selectionDatas
+        ));
     }
 
     const auto numericRange{hashedData.equal_range("NUMERIC")};
@@ -441,7 +456,7 @@ list<Versions::PropSettingVariant> Versions::parseSettings(
             defaultVal = strtol(defaultEntry->second->value->c_str(), nullptr, 10);
         }
 
-        ret.emplace_back(
+        ret.emplace_back(std::make_unique<PropSettingVariant>(
             std::in_place_type<PropNumeric>,
             prop,
             settingData.name,
@@ -453,7 +468,7 @@ list<Versions::PropSettingVariant> Versions::parseSettings(
             max,
             increment,
             defaultVal
-        );
+        ));
     }
 
     const auto decimalRange{hashedData.equal_range("DECIMAL")};
@@ -484,7 +499,7 @@ list<Versions::PropSettingVariant> Versions::parseSettings(
             defaultVal = strtod(defaultEntry->second->value->c_str(), nullptr);
         }
 
-        ret.emplace_back(
+        ret.emplace_back(std::make_unique<PropSettingVariant>(
             std::in_place_type<PropDecimal>,
             prop,
             settingData.name,
@@ -496,10 +511,10 @@ list<Versions::PropSettingVariant> Versions::parseSettings(
             max,
             increment,
             defaultVal
-        );
+        ));
     }
 
-    return ret;
+    return std::move(ret);
 }
 
 optional<std::pair<Versions::PropCommonSettingData, PConf::HashedData>> Versions::parseSettingCommon(

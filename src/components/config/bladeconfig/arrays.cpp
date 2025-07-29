@@ -60,6 +60,8 @@ Config::BladeArrays::BladeArrays(Config& parent) :
     star4Proxy.powerPinProxy.showWhenUnbound(false);
     star4Proxy.resistanceProxy.showWhenUnbound(false);
 
+    arraySelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
+
     arraySelection.setUpdateHandler([this](uint32 id) {
         if (id != arraySelection.ID_SELECTION) return;
         Defer defer{[this]() { notifyData.notify(ID_ARRAY_SELECTION); }};
@@ -106,49 +108,73 @@ Config::BladeArrays::BladeArrays(Config& parent) :
     });
 }
 
-void Config::BladeArrays::refreshPresetArrays() {
+void Config::BladeArrays::refreshPresetArrays(int32 clearIdx) {
     const auto& choices{mParent.presetArrays.selection.choices()};
     for (auto& array : mBladeArrays) {
-        auto stringSelection{static_cast<string>(array.presetArray)};
-        array.presetArray.setChoices(vector{choices});
-        auto idx{0};
-        for (; idx < choices.size(); ++idx) {
-            if (choices[idx] == stringSelection) {
-                array.presetArray = idx;
-                break;
-            }
-        }
-        if (idx == choices.size()) array.presetArray = -1;
+        array->presetArray.setChoices(vector{choices});
+        if (array->presetArray == clearIdx) array->presetArray = -1;
     }
 }
 
-Config::BladeConfig& Config::BladeArrays::addArray(string&& name, uint32 id, uint32 presetArray) {
-    auto& array{mBladeArrays.emplace_back(mParent)};
-    array.name = std::move(name);
-    array.id = id;
-    vector<string> presetArrayChoices;
-    presetArrayChoices.reserve(mParent.presetArrays.arrays().size());
-    for (const auto& array : mParent.presetArrays.arrays()) {
-        presetArrayChoices.push_back(array.name);
-    }
-    array.presetArray.setChoices(std::move(presetArrayChoices));
-    array.presetArray = presetArray;
+Config::BladeConfig& Config::BladeArrays::addArray(string&& name, uint32 id, string presetArray) {
+    auto& array{mBladeArrays.emplace_back(std::make_unique<BladeConfig>(mParent))};
+    array->name = std::move(name);
+    array->id = id;
+
+    array->presetArray.setChoices(vector{mParent.presetArrays.selection.choices()});
+    array->presetArray = presetArray;
+
     auto bladeArrayChoices{arraySelection.choices()};
-    bladeArrayChoices.push_back(array.name);
+    bladeArrayChoices.push_back(array->name);
     arraySelection.setChoices(std::move(bladeArrayChoices));
-    return array;
+    return *array;
 }
 
 void Config::BladeArrays::removeArray(uint32 idx) {
     assert(idx < mBladeArrays.size());
 
+    bool purgeSelection{arraySelection == idx};
     mBladeArrays.erase(std::next(mBladeArrays.begin(), idx));
     auto choices{arraySelection.choices()};
     choices.erase(std::next(choices.begin(), idx));
     arraySelection.setChoices(std::move(choices));
+    if (purgeSelection) arraySelection = -1;
 }
 
 void Config::BladeArrays::addPowerPinFromEntry() {
     
+}
+
+uint32 Config::BladeArrays::numBLades() {
+    uint32 ret{0};
+    for (const auto& array : mBladeArrays) {
+        uint32 count{0};
+        for (const auto& blade : array->blades()) {
+            if (blade->type == Blade::SIMPLE) ++count;
+            if (blade->type == Blade::WS281X) {
+                auto& ws281x{blade->ws281x()};
+                if (ws281x.splits.empty()) ++count;
+                else {
+                    for (const auto& split : ws281x.splits){
+                        switch (static_cast<Split::Type>(static_cast<uint32>(split.type))) {
+                            case Split::STANDARD:
+                            case Split::REVERSE:
+                                ++count;
+                                break;
+                            case Split::STRIDE:
+                            case Split::ZIG_ZAG:
+                                count += split.segments;
+                                break;
+                            case Split::TYPE_MAX:
+                            default:
+                                assert(0);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return ret;
 }
 

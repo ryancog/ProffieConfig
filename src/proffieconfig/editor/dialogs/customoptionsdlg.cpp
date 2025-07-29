@@ -139,7 +139,7 @@ void CustomOptionsDlg::handleNotification(uint32 id) {
         mOptionArea->GetSizer()->AddStretchSpacer();
     } else {
         for (const auto& constOption: customOptions) {
-            auto& option{const_cast<Config::Settings::CustomOption&>(constOption)};
+            auto& option{const_cast<Config::Settings::CustomOption&>(*constOption)};
             mOptionArea->GetSizer()->Add(
                 new CDefine(mOptionArea, config, option),
                 wxSizerFlags(0).Expand().Border(wxBOTTOM, 5)
