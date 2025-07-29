@@ -45,9 +45,9 @@ struct CONFIG_EXPORT PresetArray {
     // Notifies on duplicate update
     PCUI::NotifierData notifyData;
 
-    [[nodiscard]] const list<Preset>& presets() const { return mPresets; }
+    [[nodiscard]] const vector<std::unique_ptr<Preset>>& presets() const { return mPresets; }
     [[nodiscard]] Preset& preset(uint32 idx) {
-        return *std::next(mPresets.begin(), idx);
+        return **std::next(mPresets.begin(), idx);
     };
 
     void addPreset();
@@ -58,7 +58,7 @@ struct CONFIG_EXPORT PresetArray {
 
 private:
     Config& mConfig;
-    list<Preset> mPresets;
+    vector<std::unique_ptr<Preset>> mPresets;
 };
 
 struct CONFIG_EXPORT PresetArrays {
@@ -124,6 +124,11 @@ struct CONFIG_EXPORT PresetArrays {
     PCUI::TextDataProxy styleProxy;
     static PCUI::TextData dummyCommentData;
     static PCUI::TextData dummyStyleData;
+
+    /**
+     * Sync all preset style displays. Calls Preset::syncDisplay()
+     */
+    void syncAllDisplays(int32 clearIdx = -1);
 
 private:
     Config& mParent;

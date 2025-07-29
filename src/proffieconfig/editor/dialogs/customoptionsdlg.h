@@ -39,7 +39,7 @@ class CustomOptionsDlg::CDefine : public wxPanel {
 public:
     CDefine(
         wxScrolledWindow *,
-        std::shared_ptr<Config::Config>,
+        Config::Config&,
         Config::Settings::CustomOption&
     );
 };

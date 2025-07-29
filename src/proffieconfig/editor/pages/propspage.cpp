@@ -17,14 +17,14 @@ PropsPage::PropsPage(EditorWindow *parent) :
     wxPanel(parent),
     mParent{parent} {
     Notifier::create(this, mNotifyData);
-    auto config{mParent->getOpenConfig()};
+    auto& config{mParent->getOpenConfig()};
 
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
     auto *topSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *propSelection {new PCUI::Choice(
         this,
-        config->propSelection,
+        config.propSelection,
         _("Prop File")
     )};
     propSelection->SetMinSize(wxSize{120, -1});
@@ -65,20 +65,20 @@ void PropsPage::bindEvents() {
         PropButtonsDialog(mParent).ShowModal();
     }, ID_Buttons);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        auto config{mParent->getOpenConfig()};
-        auto prop{config->prop(config->propSelection)};
+        auto& config{mParent->getOpenConfig()};
+        auto& prop{config.prop(config.propSelection)};
 
         wxDialog infoDialog{
             mParent,
             wxID_ANY,
-            wxString::Format(_("%s Prop Info"), prop->name),
+            wxString::Format(_("%s Prop Info"), prop.name),
             wxDefaultPosition,
             wxDefaultSize,
             wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP
         };
         auto *textSizer{new wxBoxSizer(wxVERTICAL)};
         textSizer->Add(
-            infoDialog.CreateTextSizer(prop->info),
+            infoDialog.CreateTextSizer(prop.info),
             wxSizerFlags(0).Border(wxALL, 10)
         );
         infoDialog.SetSizer(textSizer);
@@ -89,9 +89,9 @@ void PropsPage::bindEvents() {
 
 void PropsPage::handleNotification(uint32 id) {
     if (id == ID_REBOUND or id == ID_PropSelection) {
-        auto config{mParent->getOpenConfig()};
-        FindWindow(ID_Buttons)->Enable(config->propSelection != -1);
-        FindWindow(ID_PropInfo)->Enable(config->propSelection != -1);
+        auto& config{mParent->getOpenConfig()};
+        FindWindow(ID_Buttons)->Enable(config.propSelection != -1);
+        FindWindow(ID_PropInfo)->Enable(config.propSelection != -1);
     }
 }
 

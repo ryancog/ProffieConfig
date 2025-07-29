@@ -19,9 +19,6 @@ public:
         wxInitAllImageHandlers();
         AppState::init();
 
-        // Add updates for styleDisplay
-        // Blades add/remove/modify
-
         return true;
     }
 

@@ -13,7 +13,7 @@ BladeAwarenessDlg::BladeAwarenessDlg(EditorWindow* parent) :
     wxDialog(
         parent,
         wxID_ANY,
-        _("Blade Awareness") + " - " + static_cast<string>(parent->getOpenConfig()->name),
+        _("Blade Awareness") + " - " + static_cast<string>(parent->getOpenConfig().name),
         wxDefaultPosition,
         wxDefaultSize,
         wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER
@@ -24,13 +24,13 @@ BladeAwarenessDlg::BladeAwarenessDlg(EditorWindow* parent) :
     auto *enableSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *enableDetect{new PCUI::CheckBox(
         this,
-        parent->getOpenConfig()->settings.bladeID.enable,
+        parent->getOpenConfig().settings.bladeID.enable,
         0,
         _("Enable Blade Detect")
     )};
     auto *enableID{new PCUI::CheckBox(
         this,
-        parent->getOpenConfig()->settings.bladeDetect,
+        parent->getOpenConfig().settings.bladeDetect,
         0,
         _("Enable Blade ID")
     )};
@@ -97,7 +97,7 @@ void BladeAwarenessDlg::createToolTips() const {
 }
 
 wxStaticBoxSizer* BladeAwarenessDlg::createIDSetup(wxWindow* parent) {
-    auto config{mParent->getOpenConfig()};
+    auto& config{mParent->getOpenConfig()};
 
     auto *setupSizer{new wxStaticBoxSizer(
         wxVERTICAL,
@@ -107,24 +107,24 @@ wxStaticBoxSizer* BladeAwarenessDlg::createIDSetup(wxWindow* parent) {
 
     auto *mode{new PCUI::Choice(
         setupSizer->GetStaticBox(),
-        config->settings.bladeID.mode,
+        config.settings.bladeID.mode,
         _("Blade ID Mode")
     )};
     auto *idPin{new PCUI::ComboBox(
         setupSizer->GetStaticBox(),
-        config->settings.bladeID.pin,
+        config.settings.bladeID.pin,
         _("Blade ID Pin")
     )};
 
     auto *pullupResistance{new PCUI::Numeric(
         setupSizer->GetStaticBox(),
-        config->settings.bladeID.pullup,
+        config.settings.bladeID.pullup,
         wxSP_ARROW_KEYS, 
         _("Pullup Resistance")
     )};
     auto *pullupPin{new PCUI::ComboBox(
         setupSizer->GetStaticBox(),
-        config->settings.bladeID.bridgePin,
+        config.settings.bladeID.bridgePin,
         _("Pullup Pin")
     )};
 
@@ -137,7 +137,7 @@ wxStaticBoxSizer* BladeAwarenessDlg::createIDSetup(wxWindow* parent) {
 }
 
 wxStaticBoxSizer* BladeAwarenessDlg::createIDPowerSettings(wxWindow* parent) {
-    auto config{mParent->getOpenConfig()};
+    auto& config{mParent->getOpenConfig()};
 
     auto *powerForIDSizer{new wxStaticBoxSizer(
         wxVERTICAL,
@@ -147,14 +147,14 @@ wxStaticBoxSizer* BladeAwarenessDlg::createIDPowerSettings(wxWindow* parent) {
 
     auto *enablePowerForID {new PCUI::CheckBox(
         powerForIDSizer->GetStaticBox(),
-        config->settings.bladeID.powerForID,
+        config.settings.bladeID.powerForID,
         0,
         _("Enable Power on ID")
     )};
 
     auto *powerPins{new PCUI::CheckList(
         powerForIDSizer->GetStaticBox(),
-        config->settings.bladeID.powerPins
+        config.settings.bladeID.powerPins
     )};
 
     // TODO: Allow powerPin add
@@ -166,7 +166,7 @@ wxStaticBoxSizer* BladeAwarenessDlg::createIDPowerSettings(wxWindow* parent) {
 }
 
 wxStaticBoxSizer* BladeAwarenessDlg::createContinuousScanSettings(wxWindow* parent) {
-    auto config{mParent->getOpenConfig()};
+    auto& config{mParent->getOpenConfig()};
 
     auto *continuousScansSizer{new wxStaticBoxSizer(
         wxVERTICAL,
@@ -175,20 +175,20 @@ wxStaticBoxSizer* BladeAwarenessDlg::createContinuousScanSettings(wxWindow* pare
     )};
     auto *continuousScans{new PCUI::CheckBox(
         continuousScansSizer->GetStaticBox(),
-        config->settings.bladeID.continuousScanning,
+        config.settings.bladeID.continuousScanning,
         0,
         _("Enable Continuous Scanning")
     )};
 
     auto *numIDTimes{new PCUI::Numeric(
         continuousScansSizer->GetStaticBox(),
-        config->settings.bladeID.continuousTimes,
+        config.settings.bladeID.continuousTimes,
         wxSP_ARROW_KEYS,
         _("Number of Reads to Average")
     )};
     auto *scanIDMillis{new PCUI::Numeric(
         continuousScansSizer->GetStaticBox(),
-        config->settings.bladeID.continuousInterval, 
+        config.settings.bladeID.continuousInterval, 
         wxSP_ARROW_KEYS,
         _("Scan Interval (ms)")
     )};
@@ -200,7 +200,7 @@ wxStaticBoxSizer* BladeAwarenessDlg::createContinuousScanSettings(wxWindow* pare
 }
 
 wxStaticBoxSizer* BladeAwarenessDlg::createBladeDetect(wxWindow* parent) {
-    auto config{mParent->getOpenConfig()};
+    auto& config{mParent->getOpenConfig()};
 
     auto *bladeDetectSizer{new wxStaticBoxSizer(
         wxVERTICAL,
@@ -210,7 +210,7 @@ wxStaticBoxSizer* BladeAwarenessDlg::createBladeDetect(wxWindow* parent) {
 
     auto *detectPin{new PCUI::ComboBox(
         bladeDetectSizer->GetStaticBox(),
-        config->settings.bladeDetectPin,
+        config.settings.bladeDetectPin,
         _("Blade Detect Pin")
     )};
     bladeDetectSizer->Add(detectPin, wxSizerFlags(0).Border(wxALL, 5).Expand());

@@ -34,7 +34,7 @@ public:
 private:
     EditorWindow *mParent{nullptr};
 
-    wxBoxSizer *mInjectionsSizer;
+    wxStaticBoxSizer *mInjectionsSizer;
 
     void createUI();
     void bindEvents();

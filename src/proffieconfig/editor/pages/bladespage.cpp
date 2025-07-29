@@ -145,7 +145,7 @@ private:
 
 BladesPage::BladesPage(EditorWindow *parent) : 
     wxPanel(parent),
-    Notifier(this, parent->getOpenConfig()->bladeArrays.notifyData),
+    Notifier(this, parent->getOpenConfig().bladeArrays.notifyData),
     mParent{static_cast<EditorWindow*>(parent)} {
     auto *sizer{new wxBoxSizer(wxHORIZONTAL)};
 
@@ -165,7 +165,7 @@ void BladesPage::bindEvents() {
         else mAwarenessDlg->Show();
     }, ID_OpenBladeAwareness);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        auto& bladeArrays{mParent->getOpenConfig()->bladeArrays};
+        auto& bladeArrays{mParent->getOpenConfig().bladeArrays};
         ArrayEditDlg dlg(
             mParent,
             bladeArrays.array(bladeArrays.arraySelection),
@@ -175,7 +175,7 @@ void BladesPage::bindEvents() {
         dlg.ShowModal();        
     }, ID_EditArray);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        auto& bladeArrays{mParent->getOpenConfig()->bladeArrays};
+        auto& bladeArrays{mParent->getOpenConfig().bladeArrays};
         
         ArrayEditDlg dlg(
             mParent,
@@ -201,14 +201,14 @@ void BladesPage::bindEvents() {
             wxYES_NO | wxNO_DEFAULT
         )};
         if (res != wxYES) return;
-        auto& bladeArrays{mParent->getOpenConfig()->bladeArrays};
+        auto& bladeArrays{mParent->getOpenConfig().bladeArrays};
         bladeArrays.removeArray(bladeArrays.arraySelection);
     }, ID_RemoveArray);
 }
 
 void BladesPage::handleNotification(uint32 id) {
     bool rebound{id == ID_REBOUND};
-    auto& bladeArrays{mParent->getOpenConfig()->bladeArrays};
+    auto& bladeArrays{mParent->getOpenConfig().bladeArrays};
 
     if (rebound or id == bladeArrays.ID_ARRAY_SELECTION) {
         bool hasSelection{bladeArrays.arraySelection != -1};
@@ -294,7 +294,7 @@ void BladesPage::handleNotification(uint32 id) {
 // }
 
 wxSizer *BladesPage::createBladeSelect() {
-    auto config{mParent->getOpenConfig()};
+    auto& config{mParent->getOpenConfig()};
 
     auto *bladeSelectSizer{new wxBoxSizer(wxVERTICAL)};
     bladeSelectSizer->SetMinSize(200, -1);
@@ -302,7 +302,7 @@ wxSizer *BladesPage::createBladeSelect() {
     auto *arraySizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *arraySelection{new PCUI::Choice(
         this,
-        config->bladeArrays.arraySelection,
+        config.bladeArrays.arraySelection,
         _("Blade Array")
     )};
     auto *issueIcon{new wxButton(
@@ -364,7 +364,7 @@ wxSizer *BladesPage::createBladeSelect() {
     auto *bladeSelectionSizer{new wxBoxSizer(wxVERTICAL)};
     auto *bladeSelect{new PCUI::List(
         this,
-        config->bladeArrays.bladeSelectionProxy,
+        config.bladeArrays.bladeSelectionProxy,
         _("Blades")
     )};
 
@@ -440,7 +440,7 @@ wxSizer *BladesPage::createBladeSelect() {
 }
 
 wxSizer *BladesPage::createBladeSettings() {
-    auto config{mParent->getOpenConfig()};
+    auto& config{mParent->getOpenConfig()};
 
     auto *settingsSizer{new wxBoxSizer(wxHORIZONTAL)};
 
@@ -458,7 +458,7 @@ wxSizer *BladesPage::createBladeSettings() {
 
     auto *bladeType{new PCUI::Choice(
         this,
-        config->bladeArrays.bladeTypeProxy,
+        config.bladeArrays.bladeTypeProxy,
         _("Blade Type")
     )};
 
@@ -511,21 +511,21 @@ wxSizer *BladesPage::createBladeSettings() {
     }};
 
     auto *simpleSizer1{new wxBoxSizer(wxHORIZONTAL)};
-    simpleSizer1->Add(starSizer(config->bladeArrays.star1Proxy, _("LED 1"), ID_Star1Box));
-    simpleSizer1->Add(starSizer(config->bladeArrays.star2Proxy, _("LED 2"), ID_Star2Box));
+    simpleSizer1->Add(starSizer(config.bladeArrays.star1Proxy, _("LED 1"), ID_Star1Box));
+    simpleSizer1->Add(starSizer(config.bladeArrays.star2Proxy, _("LED 2"), ID_Star2Box));
     auto *simpleSizer2{new wxBoxSizer(wxHORIZONTAL)};
-    simpleSizer2->Add(starSizer(config->bladeArrays.star3Proxy, _("LED 3"), ID_Star3Box));
-    simpleSizer2->Add(starSizer(config->bladeArrays.star4Proxy, _("LED 4"), ID_Star4Box));
+    simpleSizer2->Add(starSizer(config.bladeArrays.star3Proxy, _("LED 3"), ID_Star3Box));
+    simpleSizer2->Add(starSizer(config.bladeArrays.star4Proxy, _("LED 4"), ID_Star4Box));
 
     auto pixelSizer1{new wxBoxSizer(wxHORIZONTAL)};
     auto *dataPin{new PCUI::ComboBox(
         this,
-        config->bladeArrays.dataPinProxy,
+        config.bladeArrays.dataPinProxy,
         _("Blade Data Pin")
     )};
     auto *length{new PCUI::Numeric(
         this,
-        config->bladeArrays.lengthProxy,
+        config.bladeArrays.lengthProxy,
         wxSP_ARROW_KEYS,
         _("Number of Pixels")
     )};
@@ -534,25 +534,25 @@ wxSizer *BladesPage::createBladeSettings() {
 
     auto *colorOrder3{new PCUI::Choice(
         this,
-        config->bladeArrays.colorOrder3Proxy,
+        config.bladeArrays.colorOrder3Proxy,
         _("Color Order")
     )};
     auto *colorOrder4{new PCUI::Choice(
         this,
-        config->bladeArrays.colorOrder4Proxy,
+        config.bladeArrays.colorOrder4Proxy,
         _("Color Order")
     )};
 
     auto *whiteUseRGB{new PCUI::CheckBox(
         this,
-        config->bladeArrays.useRGBWithWhiteProxy,
+        config.bladeArrays.useRGBWithWhiteProxy,
         0,
         _("Use RGB with White")
     )};
 
     auto *pixelPowerPins{new PCUI::CheckList(
         this,
-        config->bladeArrays.powerPinProxy
+        config.bladeArrays.powerPinProxy
     )};
     pixelPowerPins->SetMinSize(wxSize(200, -1));
 
@@ -567,7 +567,7 @@ wxSizer *BladesPage::createBladeSettings() {
     )};
     auto *powerPinName{new PCUI::Text(
         this,
-        config->bladeArrays.powerPinNameEntry,
+        config.bladeArrays.powerPinNameEntry,
         0,
         false,
         _("Pin Name")
@@ -589,19 +589,19 @@ wxSizer *BladesPage::createBladeSettings() {
 
     // auto *subBladeType{new PCUI::Radios(
     //     GetStaticBox(),
-    //     config->bladeArrays.subBladeTypeProxy,
+    //     config.bladeArrays.subBladeTypeProxy,
     //     _("SubBlade Type")
     // )};
 
     // auto *splitLength{new PCUI::Numeric(
     //     GetStaticBox(),
-    //     config->bladeArrays.subBladeLengthProxy,
+    //     config.bladeArrays.subBladeLengthProxy,
     //     wxSP_ARROW_KEYS,
     //     _("SubBlade Start")
     // )};
     // auto *splitSegments{new PCUI::Numeric(
     //     GetStaticBox(),
-    //     config->bladeArrays.subBladeSegmentsProxy,
+    //     config.bladeArrays.subBladeSegmentsProxy,
     //     wxSP_ARROW_KEYS,
     //     _("SubBlade End")
     // )};

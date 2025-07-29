@@ -55,7 +55,7 @@ public:
 
 private:
     PCUI::NotifierData mNotifyData;
-    std::map<std::shared_ptr<Config::Config>, EditorWindow*> mEditors;
+    vector<EditorWindow *> mEditors;
 
     friend Onboard::Overview;
     void createUI();

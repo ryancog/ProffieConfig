@@ -42,8 +42,8 @@ struct CONFIG_EXPORT Config {
         ID_PROPSELECTION,
     };
     PCUI::NotifierData propNotifyData;
-    std::shared_ptr<Versions::Prop> prop(uint32 idx) {
-        return *std::next(mProps.begin(), idx);
+    Versions::Prop& prop(uint32 idx) {
+        return **std::next(mProps.begin(), idx);
     }
 
     PresetArrays presetArrays;
@@ -68,29 +68,35 @@ struct CONFIG_EXPORT Config {
     void close();
 
 private:
-    friend std::shared_ptr<Config> open(const string&);
+    friend Config& open(const string&);
     Config();
 
-    vector<std::shared_ptr<Versions::Prop>> mProps;
+    vector<std::unique_ptr<Versions::Prop>> mProps;
 };
 
 /**
  * Search disk and retrieve list of all config names
  */
-vector<string> CONFIG_EXPORT fetchListFromDisk();
+CONFIG_EXPORT vector<string> fetchListFromDisk();
 
 /**
  * @return List of configs currently open
  */
-vector<std::shared_ptr<Config>> CONFIG_EXPORT getOpen();
+CONFIG_EXPORT const vector<std::unique_ptr<Config>>& getOpen();
 
-bool CONFIG_EXPORT remove(const string& name);
+CONFIG_EXPORT bool remove(const string& name);
 
 /**
  * Parse the config and return a fresh ptr, or return the ptr
  * of an already-open config.
  */
-std::shared_ptr<Config> CONFIG_EXPORT open(const string& name);
+CONFIG_EXPORT Config& open(const string& name);
+
+/**
+ * @return the config with name only if config is open
+ * nullptr otherwise
+ */
+CONFIG_EXPORT Config *getIfOpen(const string& name);
 
 } // namespace Config
 
