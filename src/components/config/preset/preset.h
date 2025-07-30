@@ -46,24 +46,11 @@ struct CONFIG_EXPORT Preset {
 
     // No set choice manual
     PCUI::ChoiceData styleSelection;
-    PCUI::ChoiceData styleDisplay;
 
     [[nodiscard]] Style& style(uint32 idx) {
         assert(idx < mStyles.size());
         return *std::next(mStyles.begin(), idx);
     }
-
-    /**
-     * Update style display according to blade arrays
-     *
-     * @param clearIdx If a blade array was removed, it's index to clear selection
-     */
-    void syncDisplay(int32 clearIdx = -1);
-
-    /**
-     * Updates style listing according to style display
-     */
-    void syncStyles();
 
 private:
     Config& mConfig;
