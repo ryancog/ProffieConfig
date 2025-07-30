@@ -306,7 +306,7 @@ void PresetsPage::createUI() {
     auto *stylesSizer{new wxBoxSizer(wxVERTICAL)};
     auto *styleDisplay{new PCUI::Choice(
         this,
-        config.presetArrays.styleDisplayProxy,
+        config.presetArrays.styleDisplay,
         _("Display")
     )};
     auto *styleList {new PCUI::List(

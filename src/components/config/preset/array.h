@@ -117,8 +117,8 @@ struct CONFIG_EXPORT PresetArrays {
     PCUI::TextDataProxy dirProxy;
     PCUI::TextDataProxy trackProxy;
 
+    PCUI::ChoiceData styleDisplay;
     PCUI::ChoiceDataProxy styleSelectProxy;
-    PCUI::ChoiceDataProxy styleDisplayProxy;
 
     PCUI::TextDataProxy commentProxy;
     PCUI::TextDataProxy styleProxy;
@@ -126,9 +126,9 @@ struct CONFIG_EXPORT PresetArrays {
     static PCUI::TextData dummyStyleData;
 
     /**
-     * Sync all preset style displays. Calls Preset::syncDisplay()
+     * Sync all display choice and preset style displays.
      */
-    void syncAllDisplays(int32 clearIdx = -1);
+    void syncStyleDisplay(int32 clearIdx = -1);
 
 private:
     Config& mParent;
