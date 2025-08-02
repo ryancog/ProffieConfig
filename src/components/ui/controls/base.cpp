@@ -146,9 +146,19 @@ bool PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
     } 
 
     if (data()) {
-        return wxPanel::Show(data()->isShown());
+        if (data()->isShown()) {
+            auto ret{wxPanel::Show()};
+            refreshSizeAndLayout();
+            return ret;
+        }
+        return wxPanel::Show(false);
     } else if (proxy()) {
-        return wxPanel::Show(static_cast<ControlDataProxy<CONTROL_DATA> *>(proxy())->mShowWhenUnbound);
+        if (static_cast<ControlDataProxy<CONTROL_DATA> *>(proxy())->mShowWhenUnbound) {
+            auto ret{wxPanel::Show()};
+            refreshSizeAndLayout();
+            return ret;
+        }
+        return wxPanel::Show(false);
     }
     assert(0);
 }
@@ -177,29 +187,33 @@ template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVEN
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::handleNotification(
     uint32 id
 ) {
+    onUIUpdate(id);
+
     bool rebound{id == ID_REBOUND};
     if (rebound or id == ControlData::ID_VISIBILITY) {
-        wxPanel::Show(data()->isShown() and not mHidden);
+        bool show{data()->isShown() and not mHidden};
+        wxPanel::Show(show);
         refreshSizeAndLayout();
     }
     if (rebound or id == ControlData::ID_ACTIVE) Enable(data()->isEnabled());
-    onUIUpdate(id);
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::handleUnbound() {
+    onUnbound();
+
     Disable();
     if (proxy()) {
-        wxPanel::Show(static_cast<ControlDataProxy<CONTROL_DATA> *>(proxy())->mShowWhenUnbound);
+        auto show{static_cast<ControlDataProxy<CONTROL_DATA> *>(proxy())->mShowWhenUnbound};
+        wxPanel::Show(show);
+        refreshSizeAndLayout();
     }
-    onUnbound();
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::controlEventHandler(
     CONTROL_EVENT& evt
 ) {
-
     if (not data()) return;
     std::scoped_lock scopeLock{data()->getLock()};
     if (not data()->isEnabled() or data()->eventsInFlight()) return;
