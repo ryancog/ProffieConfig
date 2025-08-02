@@ -34,15 +34,20 @@ struct UI_EXPORT ComboBoxData : ControlData {
     const vector<string>& defaults() const { return mDefaults; }
     void setDefaults(vector<string>&& defaults);
 
+    [[nodiscard]] uint32 getInsertionPoint() { return mInsertionPoint; }
+    void setInsertionPoint(uint32);
+
     enum {
         ID_VALUE,
         ID_DEFAULTS,
+        ID_INSERTION,
     };
 
 private:
     friend class ComboBox;
     vector<string> mDefaults;
     string mValue;
+    uint32 mInsertionPoint{0};
 };
 
 using ComboBoxDataProxy = ControlDataProxy<ComboBoxData>;

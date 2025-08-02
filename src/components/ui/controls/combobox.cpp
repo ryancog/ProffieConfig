@@ -43,6 +43,12 @@ void PCUI::ComboBoxData::setDefaults(vector<string>&& defaults) {
     notify(ID_DEFAULTS);
 }
 
+void PCUI::ComboBoxData::setInsertionPoint(uint32 insertionPoint) {
+    std::scoped_lock scopeLock{getLock()};
+    if (mInsertionPoint == insertionPoint) return;
+    mInsertionPoint = insertionPoint;
+    notify(ID_INSERTION);
+}
 
 PCUI::ComboBox::ComboBox(
     wxWindow *parent,
@@ -72,16 +78,24 @@ void PCUI::ComboBox::create(const wxString& label, wxOrientation orient) {
     control->SetMinSize(control->GetBestSize() + wxSize{ FromDIP(20), 0 });
 #   endif
 
-    init(control, wxEVT_COMBOBOX, wxEVT_TEXT_ENTER, label, orient);
+    init(control, wxEVT_TEXT, label, orient);
 }
 
 void PCUI::ComboBox::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == ComboBoxData::ID_DEFAULTS) pControl->Set(data()->mDefaults);
-    if (id == ID_REBOUND or id == ComboBoxData::ID_VALUE) pControl->SetValue(static_cast<string>(*data()));
+    bool rebound{id == ID_REBOUND};
+    if (rebound or id == ComboBoxData::ID_DEFAULTS) {
+        pControl->Set(data()->mDefaults);
+        refreshSizeAndLayout();
+    }
+    if (rebound or id == ComboBoxData::ID_VALUE) pControl->SetValue(static_cast<string>(*data()));
+    if (rebound or id == ComboBoxData::ID_VALUE or id == ComboBoxData::ID_INSERTION) {
+        pControl->SetInsertionPoint(data()->mInsertionPoint);
+    }
 }
 
 void PCUI::ComboBox::onModify(wxCommandEvent& evt) {
     data()->mValue = evt.GetString().ToStdString();
+    data()->mInsertionPoint = pControl->GetInsertionPoint();
     data()->update(ComboBoxData::ID_VALUE);
 }
 
