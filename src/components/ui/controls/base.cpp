@@ -81,7 +81,7 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
     if (not label.empty()) {
         constexpr auto PADDING{5};
         auto sizerFlags{
-            wxSizerFlags(0).Border(wxLEFT | wxRIGHT, PADDING)
+            wxSizerFlags().Border(wxLEFT | wxRIGHT, PADDING)
         };
         sizer->Add(
             new wxStaticText(this, wxID_ANY, label),
@@ -96,7 +96,8 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
         controlFlags.Proportion(1).Expand();
     }
     sizer->Add(control, controlFlags);
-    SetSizerAndFit(sizer);
+
+    SetSizer(sizer);
 
     initializeNotifier();
 
@@ -116,13 +117,55 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
+void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::SetToolTip(
+    const wxString& tip
+) {
+    for (auto *child : GetChildren()) {
+        child->SetToolTip(tip);
+    }
+
+    wxPanel::SetToolTip(tip);
+}
+
+template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
+void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::SetMinSize(
+    const wxSize& minSize
+) {
+    mMinSize = minSize;
+    refreshSizeAndLayout();
+}
+
+template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
+bool PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::Show(bool show) {
+    if (mHidden == not show) return false;
+
+    mHidden = not show;
+
+    if (mHidden) {
+        return wxPanel::Show(false);
+    } 
+
+    if (data()) {
+        return wxPanel::Show(data()->isShown());
+    } else if (proxy()) {
+        return wxPanel::Show(static_cast<ControlDataProxy<CONTROL_DATA> *>(proxy())->mShowWhenUnbound);
+    }
+    assert(0);
+}
+
+template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::refreshSizeAndLayout() {
-    SetMinSize({-1, -1});
+    wxPanel::SetMinSize({-1, -1});
+    auto newSize{GetBestSize()};
+    newSize.IncTo(mMinSize);
+    wxPanel::SetMinSize(newSize);
+
+    pControl->SetMinSize({-1, -1});
+    pControl->SetSize(pControl->GetBestSize());
+
     Layout();
     Fit();
     
-    SetMinSize(GetBestSize());
-
     auto *parent{wxGetTopLevelParent(this)};
     if (parent) {
         parent->Layout();
@@ -135,7 +178,10 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
     uint32 id
 ) {
     bool rebound{id == ID_REBOUND};
-    if (rebound or id == ControlData::ID_VISIBILITY) Show(data()->isShown());
+    if (rebound or id == ControlData::ID_VISIBILITY) {
+        wxPanel::Show(data()->isShown() and not mHidden);
+        refreshSizeAndLayout();
+    }
     if (rebound or id == ControlData::ID_ACTIVE) Enable(data()->isEnabled());
     onUIUpdate(id);
 }
@@ -144,7 +190,7 @@ template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVEN
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::handleUnbound() {
     Disable();
     if (proxy()) {
-       Show(static_cast<ControlDataProxy<CONTROL_DATA> *>(proxy())->mShowWhenUnbound);
+        wxPanel::Show(static_cast<ControlDataProxy<CONTROL_DATA> *>(proxy())->mShowWhenUnbound);
     }
     onUnbound();
 }
