@@ -22,6 +22,7 @@
 #include "../config.h"
 #include "bladeconfig.h"
 #include "utils/defer.h"
+#include "utils/string.h"
 #include "ws281x.h"
 
 
@@ -29,82 +30,73 @@ Config::BladeArrays::BladeArrays(Config& parent) :
     mParent{parent},
     subBladeTypeProxy{Split::TYPE_MAX} {
 
-    subBladeSelectionProxy.showWhenUnbound(false);
-
     bladeTypeProxy.showWhenUnbound(false);
-    powerPinProxy.showWhenUnbound(false);
-    powerPinNameEntry.hide();
-
-    colorOrder3Proxy.showWhenUnbound(false);
-    colorOrder4Proxy.showWhenUnbound(false);
-    hasWhiteProxy.showWhenUnbound(false);
-    useRGBWithWhiteProxy.showWhenUnbound(false);
-
-    dataPinProxy.showWhenUnbound(false);
-    lengthProxy.showWhenUnbound(false);
-
-    subBladeTypeProxy.showWhenUnbound(false);
-    subBladeLengthProxy.showWhenUnbound(false);
-    subBladeSegmentsProxy.showWhenUnbound(false);
-
-    star1Proxy.ledProxy.showWhenUnbound(false);
-    star1Proxy.powerPinProxy.showWhenUnbound(false);
-    star1Proxy.resistanceProxy.showWhenUnbound(false);
-    star2Proxy.ledProxy.showWhenUnbound(false);
-    star2Proxy.powerPinProxy.showWhenUnbound(false);
-    star2Proxy.resistanceProxy.showWhenUnbound(false);
-    star3Proxy.ledProxy.showWhenUnbound(false);
-    star3Proxy.powerPinProxy.showWhenUnbound(false);
-    star3Proxy.resistanceProxy.showWhenUnbound(false);
-    star4Proxy.ledProxy.showWhenUnbound(false);
-    star4Proxy.powerPinProxy.showWhenUnbound(false);
-    star4Proxy.resistanceProxy.showWhenUnbound(false);
-
     arraySelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
 
     arraySelection.setUpdateHandler([this](uint32 id) {
         if (id != arraySelection.ID_SELECTION) return;
         Defer defer{[this]() { notifyData.notify(ID_ARRAY_SELECTION); }};
 
-        if (arraySelection == -1) {
-            arrayIssues = BladeConfig::ISSUE_NONE;
-            bladeSelectionProxy.unbind();
-            subBladeSelectionProxy.unbind();
+        arrayIssues = BladeConfig::ISSUE_NONE;
+        bladeSelectionProxy.unbind();
+        subBladeSelectionProxy.unbind();
 
-            bladeTypeProxy.unbind();
-            powerPinProxy.unbind();
-            powerPinNameEntry.hide();
+        bladeTypeProxy.unbind();
+        powerPinProxy.unbind();
 
-            colorOrder3Proxy.unbind();
-            colorOrder4Proxy.unbind();
-            hasWhiteProxy.unbind();
-            useRGBWithWhiteProxy.unbind();
+        colorOrder3Proxy.unbind();
+        colorOrder4Proxy.unbind();
+        hasWhiteProxy.unbind();
+        useRGBWithWhiteProxy.unbind();
 
-            dataPinProxy.unbind();
-            lengthProxy.unbind();
+        dataPinProxy.unbind();
+        lengthProxy.unbind();
 
-            subBladeTypeProxy.unbind();
-            subBladeLengthProxy.unbind();
-            subBladeSegmentsProxy.unbind();
+        subBladeTypeProxy.unbind();
+        subBladeLengthProxy.unbind();
+        subBladeSegmentsProxy.unbind();
 
-            star1Proxy.ledProxy.unbind();
-            star1Proxy.powerPinProxy.unbind();
-            star1Proxy.resistanceProxy.unbind();
-            star2Proxy.ledProxy.unbind();
-            star2Proxy.powerPinProxy.unbind();
-            star2Proxy.resistanceProxy.unbind();
-            star3Proxy.ledProxy.unbind();
-            star3Proxy.powerPinProxy.unbind();
-            star3Proxy.resistanceProxy.unbind();
-            star4Proxy.ledProxy.unbind();
-            star4Proxy.powerPinProxy.unbind();
-            star4Proxy.resistanceProxy.unbind();
-            return;
-        }
+        star1Proxy.ledProxy.unbind();
+        star1Proxy.powerPinProxy.unbind();
+        star1Proxy.resistanceProxy.unbind();
+        star2Proxy.ledProxy.unbind();
+        star2Proxy.powerPinProxy.unbind();
+        star2Proxy.resistanceProxy.unbind();
+        star3Proxy.ledProxy.unbind();
+        star3Proxy.powerPinProxy.unbind();
+        star3Proxy.resistanceProxy.unbind();
+        star4Proxy.ledProxy.unbind();
+        star4Proxy.powerPinProxy.unbind();
+        star4Proxy.resistanceProxy.unbind();
+        if (arraySelection == -1) return;
 
         auto& selectedArray{array(arraySelection)};
         bladeSelectionProxy.bind(selectedArray.bladeSelection);
         arrayIssues = selectedArray.computeIssues();
+    });
+    powerPinNameEntry.setUpdateHandler([this](uint32 id) {
+        if (id == powerPinNameEntry.ID_ENTER) {
+            addPowerPinFromEntry();
+        }
+        if (id != powerPinNameEntry.ID_VALUE) return;
+
+        auto rawValue{static_cast<string>(powerPinNameEntry)};
+        uint32 numTrimmed{};
+        auto insertionPoint{powerPinNameEntry.getInsertionPoint()};
+        Utils::trimUnsafe(
+            rawValue,
+            &numTrimmed,
+            insertionPoint,
+            {},
+            true
+        );
+
+        if (rawValue == static_cast<string>(powerPinNameEntry)) {
+            return;
+        }
+        
+        powerPinNameEntry = std::move(rawValue);
+        powerPinNameEntry.setInsertionPoint(insertionPoint - numTrimmed);
     });
 }
 
@@ -128,6 +120,7 @@ Config::BladeConfig& Config::BladeArrays::addArray(string&& name, uint32 id, str
     bladeArrayChoices.push_back(array->name);
     arraySelection.setChoices(std::move(bladeArrayChoices));
     mParent.presetArrays.syncStyleDisplay();
+    if (mParent.presetArrays.styleDisplay == -1) mParent.presetArrays.styleDisplay = 0;
     return *array;
 }
 
@@ -143,10 +136,24 @@ void Config::BladeArrays::removeArray(uint32 idx) {
 }
 
 void Config::BladeArrays::addPowerPinFromEntry() {
-    
+    if (static_cast<string>(powerPinNameEntry).empty()) return;
+    if (arraySelection == -1) return;
+    auto& selectedArray{array(arraySelection)};
+
+    if (selectedArray.bladeSelection == -1) return;
+    auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
+
+    if (selectedBlade.type != Blade::WS281X) return;
+    auto& ws281x{selectedBlade.ws281x()};
+
+    auto powerPinItems{ws281x.powerPins.items()};
+    powerPinItems.emplace_back(static_cast<string>(powerPinNameEntry));
+    ws281x.powerPins.setItems(std::move(powerPinItems));
+    ws281x.powerPins.select(ws281x.powerPins.items().size() - 1);
+    powerPinNameEntry = "";
 }
 
-uint32 Config::BladeArrays::numBLades() {
+uint32 Config::BladeArrays::numBlades() {
     uint32 ret{0};
     for (const auto& array : mBladeArrays) {
         uint32 count{0};
@@ -154,17 +161,17 @@ uint32 Config::BladeArrays::numBLades() {
             if (blade->type == Blade::SIMPLE) ++count;
             if (blade->type == Blade::WS281X) {
                 auto& ws281x{blade->ws281x()};
-                if (ws281x.splits.empty()) ++count;
+                if (ws281x.splits().empty()) ++count;
                 else {
-                    for (const auto& split : ws281x.splits){
-                        switch (static_cast<Split::Type>(static_cast<uint32>(split.type))) {
+                    for (const auto& split : ws281x.splits()){
+                        switch (static_cast<Split::Type>(static_cast<uint32>(split->type))) {
                             case Split::STANDARD:
                             case Split::REVERSE:
                                 ++count;
                                 break;
                             case Split::STRIDE:
                             case Split::ZIG_ZAG:
-                                count += split.segments;
+                                count += split->segments;
                                 break;
                             case Split::TYPE_MAX:
                             default:
@@ -174,6 +181,7 @@ uint32 Config::BladeArrays::numBLades() {
                 }
             }
         }
+        if (ret < count) ret = count;
     }
 
     return ret;

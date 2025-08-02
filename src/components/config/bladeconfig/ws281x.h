@@ -25,8 +25,9 @@
 #include "ui/controls/numeric.h"
 #include "ui/controls/toggle.h"
 #include "ui/controls/radios.h"
-
 #include "utils/types.h"
+
+#include "../private/export.h"
 
 namespace Config {
 
@@ -88,7 +89,7 @@ struct Split {
     PCUI::NumericData segments;
 };
 
-struct WS281XBlade {
+struct CONFIG_EXPORT WS281XBlade {
     WS281XBlade();
 
     PCUI::NumericData length;
@@ -111,12 +112,16 @@ struct WS281XBlade {
         BRGW,
         RGBW,
         RBGW,
+
         WGRB,
         WGBR,
         WBGR,
         WBRG,
         WRGB,
         WRBG,
+
+        ORDER4_WFIRST_START = WGRB,
+        ORDER4_WFIRST_END = WRBG,
     };
     PCUI::ChoiceData colorOrder4;
     PCUI::ToggleData hasWhite;
@@ -124,7 +129,14 @@ struct WS281XBlade {
 
     PCUI::CheckListData powerPins;
 
-    vector<Split> splits;
+    [[nodiscard]] const vector<std::unique_ptr<Split>>& splits() const { return mSplits; }
+    [[nodiscard]] Split& split(uint32 idx) const {
+        assert(idx < mSplits.size());
+        return *mSplits[idx];
+    }
+
+private:
+    vector<std::unique_ptr<Split>> mSplits;
 };
 
 } // namespace Config

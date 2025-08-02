@@ -51,9 +51,6 @@ struct CONFIG_EXPORT BladeArrays {
     uint32 arrayIssues{BladeConfig::ISSUE_NONE};
 
     PCUI::ChoiceDataProxy bladeSelectionProxy;
-    PCUI::ChoiceDataProxy subBladeSelectionProxy;
-
-    PCUI::ChoiceDataProxy bladeTypeProxy;
 
     /**
      * @param clearIdx Index of preset that was deleted, and should be cleared if
@@ -69,6 +66,9 @@ struct CONFIG_EXPORT BladeArrays {
 
     BladeConfig& addArray(string&& name = {}, uint32 id = 0, string presetArray = {});
     void removeArray(uint32 idx);
+
+    PCUI::ChoiceDataProxy bladeTypeProxy;
+    PCUI::ChoiceDataProxy subBladeSelectionProxy;
     
     PCUI::CheckListDataProxy powerPinProxy;
     PCUI::TextData powerPinNameEntry;
@@ -100,7 +100,7 @@ struct CONFIG_EXPORT BladeArrays {
     /**
      * @return number of blades across all arrays
      */
-    uint32 numBLades();
+    uint32 numBlades();
 
 private:
     Config& mParent;

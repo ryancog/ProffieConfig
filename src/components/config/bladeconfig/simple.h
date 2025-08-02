@@ -24,6 +24,8 @@
 #include "ui/controls/numeric.h"
 #include "utils/types.h"
 
+#include "../private/export.h"
+
 namespace Config {
 
 enum LED {
@@ -41,7 +43,9 @@ enum LED {
     BLUE,
 };
 
-struct SimpleBlade {
+struct CONFIG_EXPORT SimpleBlade {
+    SimpleBlade();
+
     struct Star {
         Star();
 

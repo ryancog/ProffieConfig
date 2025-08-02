@@ -34,7 +34,7 @@ struct Config;
 constexpr uint32 NO_BLADE{1000000000};
 
 struct CONFIG_EXPORT Blade {
-    Blade();
+    Blade(Config&);
 
     enum Type {
         WS281X,
@@ -42,11 +42,13 @@ struct CONFIG_EXPORT Blade {
     };
     PCUI::ChoiceData type;
 
-    WS281XBlade& ws281x() { return std::get<WS281XBlade>(mBlade); }
-    SimpleBlade& simple() { return std::get<SimpleBlade>(mBlade); }
+    WS281XBlade& ws281x() { return mPixelBlade; }
+    SimpleBlade& simple() { return mSimpleBlade; }
 
 private:
-    variant<WS281XBlade, SimpleBlade> mBlade;
+    Config& mConfig;
+    WS281XBlade mPixelBlade;
+    SimpleBlade mSimpleBlade;
 };
 
 struct CONFIG_EXPORT BladeConfig {
@@ -57,7 +59,7 @@ struct CONFIG_EXPORT BladeConfig {
         return **std::next(mBlades.begin(), idx);
     }
 
-    void addBlade();
+    Blade& addBlade();
     void removeBlade(uint32 idx);
     void addSubBlade();
     void removeSubBlade(uint32 idx);

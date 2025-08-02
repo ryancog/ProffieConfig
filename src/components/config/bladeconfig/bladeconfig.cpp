@@ -26,17 +26,33 @@
 
 #include "../config.h"
 
-Config::Blade::Blade() {
+Config::Blade::Blade(Config& config) : mConfig{config} {
+    type.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::Notifier::ID_REBOUND and id != type.ID_SELECTION) return;
+        if (id == type.ID_SELECTION) mConfig.presetArrays.syncStyleDisplay();
+
+        auto arraySelection{static_cast<int32>(mConfig.bladeArrays.arraySelection)};
+        if (arraySelection != -1) {
+            auto& selectedArray{mConfig.bladeArrays.array(arraySelection)};
+            if (selectedArray.bladeSelection != -1) {
+                auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
+                if (&selectedBlade == this) {
+                    mConfig.bladeArrays.notifyData.notify(BladeArrays::ID_BLADE_TYPE_SELECTION);
+                }
+            }
+        }
+    });
+
     type.setChoices(Utils::createEntries({
         "WS281X",
         _("Simple"),
     }));
-
-    // Yeah, we're going to be blissfully ignorant of this handler...
+    type = WS281X;
 }
 
 Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
     presetArray.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
+    bladeSelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
 
     name.setUpdateHandler([this](uint32 id) {
         if (id != name.ID_VALUE) return;
@@ -116,22 +132,122 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
         }
     });
 
+    bladeSelection.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::Notifier::ID_REBOUND and id != bladeSelection.ID_SELECTION) return;
+
+        auto& bladeArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
+        if (&bladeArray != this) return;
+
+        mConfig.bladeArrays.powerPinNameEntry = "";
+
+        if (bladeSelection == -1) {
+            mConfig.bladeArrays.bladeTypeProxy.unbind();
+            mConfig.bladeArrays.subBladeSelectionProxy.unbind();
+
+            mConfig.bladeArrays.powerPinProxy.unbind();
+
+            mConfig.bladeArrays.colorOrder3Proxy.unbind();
+            mConfig.bladeArrays.colorOrder4Proxy.unbind();
+            mConfig.bladeArrays.hasWhiteProxy.unbind();
+            mConfig.bladeArrays.useRGBWithWhiteProxy.unbind();
+
+            mConfig.bladeArrays.dataPinProxy.unbind();
+            mConfig.bladeArrays.lengthProxy.unbind();
+
+            mConfig.bladeArrays.subBladeTypeProxy.unbind();
+            mConfig.bladeArrays.subBladeLengthProxy.unbind();
+            mConfig.bladeArrays.subBladeSegmentsProxy.unbind();
+
+            mConfig.bladeArrays.star1Proxy.ledProxy.unbind();
+            mConfig.bladeArrays.star1Proxy.resistanceProxy.unbind();
+            mConfig.bladeArrays.star1Proxy.powerPinProxy.unbind();
+
+            mConfig.bladeArrays.star2Proxy.ledProxy.unbind();
+            mConfig.bladeArrays.star2Proxy.resistanceProxy.unbind();
+            mConfig.bladeArrays.star2Proxy.powerPinProxy.unbind();
+
+            mConfig.bladeArrays.star3Proxy.ledProxy.unbind();
+            mConfig.bladeArrays.star3Proxy.resistanceProxy.unbind();
+            mConfig.bladeArrays.star3Proxy.powerPinProxy.unbind();
+
+            mConfig.bladeArrays.star4Proxy.ledProxy.unbind();
+            mConfig.bladeArrays.star4Proxy.resistanceProxy.unbind();
+            mConfig.bladeArrays.star4Proxy.powerPinProxy.unbind();
+        } else {
+            auto& selectedBlade{blade(bladeSelection)};
+            mConfig.bladeArrays.bladeTypeProxy.bind(selectedBlade.type);
+
+            // mConfig.bladeArrays.subBladeSelectionProxy.bind();
+
+            mConfig.bladeArrays.powerPinProxy.bind(selectedBlade.ws281x().powerPins);
+
+            mConfig.bladeArrays.colorOrder3Proxy.bind(selectedBlade.ws281x().colorOrder3);
+            mConfig.bladeArrays.colorOrder4Proxy.bind(selectedBlade.ws281x().colorOrder4);
+            mConfig.bladeArrays.hasWhiteProxy.bind(selectedBlade.ws281x().hasWhite);
+            mConfig.bladeArrays.useRGBWithWhiteProxy.bind(selectedBlade.ws281x().useRGBWithWhite);
+
+            mConfig.bladeArrays.dataPinProxy.bind(selectedBlade.ws281x().dataPin);
+            mConfig.bladeArrays.lengthProxy.bind(selectedBlade.ws281x().length);
+
+            // mConfig.bladeArrays.subBladeTypeProxy.bind(selectedBlade.ws281x());
+            // mConfig.bladeArrays.subBladeLengthProxy.bind();
+            // mConfig.bladeArrays.subBladeSegmentsProxy.bind();
+
+            mConfig.bladeArrays.star1Proxy.ledProxy.bind(selectedBlade.simple().star1.led);
+            mConfig.bladeArrays.star1Proxy.resistanceProxy.bind(selectedBlade.simple().star1.resistance);
+            mConfig.bladeArrays.star1Proxy.powerPinProxy.bind(selectedBlade.simple().star1.powerPin);
+
+            mConfig.bladeArrays.star2Proxy.ledProxy.bind(selectedBlade.simple().star2.led);
+            mConfig.bladeArrays.star2Proxy.resistanceProxy.bind(selectedBlade.simple().star2.resistance);
+            mConfig.bladeArrays.star2Proxy.powerPinProxy.bind(selectedBlade.simple().star2.powerPin);
+
+            mConfig.bladeArrays.star3Proxy.ledProxy.bind(selectedBlade.simple().star3.led);
+            mConfig.bladeArrays.star3Proxy.resistanceProxy.bind(selectedBlade.simple().star3.resistance);
+            mConfig.bladeArrays.star3Proxy.powerPinProxy.bind(selectedBlade.simple().star3.powerPin);
+
+            mConfig.bladeArrays.star4Proxy.ledProxy.bind(selectedBlade.simple().star4.led);
+            mConfig.bladeArrays.star4Proxy.resistanceProxy.bind(selectedBlade.simple().star4.resistance);
+            mConfig.bladeArrays.star4Proxy.powerPinProxy.bind(selectedBlade.simple().star4.powerPin);
+        }
+
+        mConfig.bladeArrays.notifyData.notify(BladeArrays::ID_BLADE_SELECTION);
+    });
+
     id.setRange(0, NO_BLADE);
 }
 
-void Config::BladeConfig::addBlade() {
+Config::Blade& Config::BladeConfig::addBlade() {
+    auto& ret{*mBlades.emplace_back(std::make_unique<Blade>(mConfig))};
 
-    mConfig.presetArrays.syncStyleDisplay();
+    vector<string> choices;
+    choices.reserve(mBlades.size());
+    for (auto idx{0}; idx < mBlades.size(); ++idx) {
+        choices.emplace_back("Blade " + std::to_string(idx));
+    }
+    bladeSelection.setChoices(std::move(choices));
+
+    mConfig.presetArrays.syncStyles();
+    return ret;
 }
 
 void Config::BladeConfig::removeBlade(uint32 idx) {
+    assert(idx < mBlades.size());
+    mBlades.erase(std::next(mBlades.begin(), idx));
+
+    vector<string> choices;
+    choices.reserve(mBlades.size());
+    for (auto idx{0}; idx < mBlades.size(); ++idx) {
+        choices.emplace_back("Blade " + std::to_string(idx));
+    }
+    bladeSelection.setChoices(std::move(choices));
+    if (bladeSelection == idx) bladeSelection = -1;
 
     mConfig.presetArrays.syncStyleDisplay();
 }
 
 void Config::BladeConfig::addSubBlade() {
 
-    mConfig.presetArrays.syncStyleDisplay();
+    mConfig.presetArrays.syncStyles();
 }
 
 void Config::BladeConfig::removeSubBlade(uint32 idx) {

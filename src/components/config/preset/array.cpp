@@ -86,6 +86,8 @@ Config::PresetArray::PresetArray(Config& config) :
             mConfig.presetArrays.dirProxy.unbind();
             mConfig.presetArrays.trackProxy.unbind();
             mConfig.presetArrays.styleSelectProxy.unbind();
+            mConfig.presetArrays.commentProxy.bind(PresetArrays::dummyCommentData);
+            mConfig.presetArrays.styleProxy.bind(PresetArrays::dummyStyleData);
         } else {
             auto& preset{**std::next(mPresets.begin(), selection)};
             mConfig.presetArrays.nameProxy.bind(preset.name);
@@ -102,6 +104,7 @@ void Config::PresetArray::addPreset() {
     auto choices{selection.choices()};
     choices.push_back(mPresets.emplace_back(std::make_unique<Preset>(mConfig, *this))->name);
     selection.setChoices(std::move(choices));
+    mConfig.presetArrays.syncStyles();
 }
 
 void Config::PresetArray::removePreset(uint32 idx) {
@@ -189,7 +192,7 @@ Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
         notifyData.notify(NOTIFY_SELECTION);
     });
     styleDisplay.setUpdateHandler([this](uint32 id) {
-        if (id == styleDisplay.ID_SELECTION) return;
+        if (id != styleDisplay.ID_SELECTION) return;
 
         syncStyleDisplay();
     });
@@ -234,42 +237,55 @@ void Config::PresetArrays::removeInjection(const Injection& injection) {
     notifyData.notify(NOTIFY_INJECTIONS);
 }
 
+void Config::PresetArrays::syncStyles() {
+    const auto numBlades{mParent.bladeArrays.numBlades()};
+    for (const auto& array : mArrays) {
+        for (const auto& preset : array->presets()) {
+            const auto newSize{std::max<uint32>(preset->mStyles.size(), numBlades)};
+            preset->mStyles.reserve(newSize);
+            for (auto idx{preset->mStyles.size()}; idx < newSize; ++idx) {
+                preset->mStyles.emplace_back(std::make_unique<Preset::Style>());
+            }
+        }
+    }
+    syncStyleDisplay();
+}
+
 void Config::PresetArrays::syncStyleDisplay(int32 clearIdx) {
     styleDisplay.setChoices(vector{mParent.bladeArrays.arraySelection.choices()});
     if (styleDisplay == clearIdx) styleDisplay = -1;
 
     vector<string> styleChoices;
     if (styleDisplay != -1) {
-        auto numBlades{mParent.bladeArrays.numBLades()};
+        auto numBlades{mParent.bladeArrays.numBlades()};
         auto& bladeArray{mParent.bladeArrays.array(styleDisplay)};
 
         auto count{0};
         auto mainIdx{0};
         auto subIdx{0};
-        vector<string> choices;
         for (const auto& blade : bladeArray.blades()) {
             if (blade->type == Blade::Type::SIMPLE) {
-                choices.emplace_back("Blade " + std::to_string(mainIdx));
+                styleChoices.emplace_back("Blade " + std::to_string(mainIdx));
                 ++mainIdx;
             } else if (blade->type == Blade::Type::WS281X) {
                 auto& ws281x{blade->ws281x()};
-                if (ws281x.splits.empty()) {
-                    choices.emplace_back("Blade " + std::to_string(mainIdx));
+                if (ws281x.splits().empty()) {
+                    styleChoices.emplace_back("Blade " + std::to_string(mainIdx));
                 } else {
                     subIdx = 0;
-                    for (const auto& split : ws281x.splits) {
-                        switch (static_cast<Split::Type>(static_cast<uint32>(split.type))) {
+                    for (const auto& split : ws281x.splits()) {
+                        switch (static_cast<Split::Type>(static_cast<uint32>(split->type))) {
                             case Split::REVERSE:
                             case Split::STANDARD:
-                                choices.emplace_back(
+                                styleChoices.emplace_back(
                                         "Blade " + std::to_string(mainIdx) +
                                         ':' + std::to_string(subIdx)
                                         );
                                 break;
                             case Split::STRIDE:
                             case Split::ZIG_ZAG:
-                                for (auto idx{0}; idx < split.segments; ++idx) {
-                                    choices.emplace_back(
+                                for (auto idx{0}; idx < split->segments; ++idx) {
+                                    styleChoices.emplace_back(
                                             "Blade " + std::to_string(mainIdx) +
                                             ':' + std::to_string(subIdx) +
                                             ':' + std::to_string(idx)
@@ -287,7 +303,6 @@ void Config::PresetArrays::syncStyleDisplay(int32 clearIdx) {
             }
         }
     }
-
     for (const auto& array : mArrays) {
         for (const auto& preset : array->presets()) {
             preset->styleSelection.setChoices(vector{styleChoices});
