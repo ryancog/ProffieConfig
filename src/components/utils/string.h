@@ -41,17 +41,22 @@ constexpr void trimWhiteSpace(STRING& str) {
 };
 
 /**
+ * Trim characters unsafe for a C++ variable name, by default.
+ * May be augmented to be more permissive.
+ *
  * @param str Reference to string to trim
  * @param[out] numTrimmed The number of characters trimmed
  * @param countTrimIndex The index before which trims should be counted.
  * @param moreSafe more safe characters
+ * @param allowNum If a digit is first-encountered, processing switches to ensuring *only* num.
  */
 template<typename STRING>
 constexpr void trimUnsafe(
     STRING& str,
     uint32 *numTrimmed = nullptr,
     uint32 countTrimIndex = std::numeric_limits<uint32>::max(),
-    string_view moreSafe = {}
+    string_view moreSafe = {},
+    bool allowNum = false
 ) {
     if (numTrimmed) *numTrimmed = 0;
 
@@ -67,12 +72,30 @@ constexpr void trimUnsafe(
         return true;
     }};
 
-    while (not str.empty() and std::isdigit(str[0])) {
-        if (numTrimmed and countTrimIndex > 0) {
-            ++*numTrimmed;
-            --countTrimIndex;
+    if (not allowNum) {
+        while (not str.empty() and std::isdigit(str[0])) {
+            if (numTrimmed and countTrimIndex > 0) {
+                ++*numTrimmed;
+                --countTrimIndex;
+            }
+            str.erase(0, 1);
         }
-        str.erase(0, 1);
+    } else {
+        if (not str.empty() and std::isdigit(str[0])) {
+            auto isNotDigit{[numTrimmed, &countTrimIndex](char chr) {
+                if (std::isdigit(chr)) return false;
+                if (numTrimmed and countTrimIndex > 0) {
+                    ++*numTrimmed;
+                    --countTrimIndex;
+                }
+                return true;
+            }};
+            str.erase(
+                std::remove_if(str.begin(), str.end(), isNotDigit),
+                str.end()
+            );
+            return;
+        }
     }
 
     str.erase(
