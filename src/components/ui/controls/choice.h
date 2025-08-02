@@ -94,6 +94,7 @@ public:
 private:
     void create(const wxString& label, wxOrientation orient);
     void onUIUpdate(uint32) final;
+    void onUnbound() final;
     void onModify(wxCommandEvent&) final;
 };
 
@@ -119,6 +120,7 @@ public:
 private:
     void create(const wxString& label, wxOrientation orient);
     void onUIUpdate(uint32) final;
+    void onUnbound() final;
     void onModify(wxCommandEvent&) final;
 };
 

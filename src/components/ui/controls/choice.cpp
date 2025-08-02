@@ -128,6 +128,11 @@ void PCUI::Choice::onUIUpdate(uint32 id) {
     }
 }
 
+void PCUI::Choice::onUnbound() {
+    pControl->Clear();
+}
+
+
 void PCUI::Choice::onModify(wxCommandEvent& evt) {
     data()->mValue = evt.GetInt();
     data()->update(ChoiceData::ID_SELECTION);
@@ -168,6 +173,10 @@ void PCUI::List::onUIUpdate(uint32 id) {
     } else if (id == ChoiceData::ID_SELECTION) {
         pControl->SetSelection(*data());
     }
+}
+
+void PCUI::List::onUnbound() {
+    pControl->Clear();
 }
 
 void PCUI::List::onModify(wxCommandEvent& evt) {
