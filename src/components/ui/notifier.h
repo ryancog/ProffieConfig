@@ -87,6 +87,11 @@ struct UI_EXPORT Notifier {
         ID_REBOUND = 0xFFFFFFFF,
     };
 
+    /**
+     * Sync notifications with GUI
+     */
+    static inline void sync() { wxYield(); }
+
 protected:
     Notifier() = default;
 
