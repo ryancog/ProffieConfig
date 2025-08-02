@@ -80,6 +80,7 @@ void PCUI::CheckList::onUIUpdate(uint32 id) {
         for (auto idx : static_cast<set<uint32>>(*data())) {
             pControl->Check(idx);
         }
+        refreshSizeAndLayout();
     } else if (id == CheckListData::ID_SELECTION) {
         const auto numItems{data()->items().size()};
         const auto& selected{static_cast<set<uint32>>(*data())};
@@ -87,6 +88,10 @@ void PCUI::CheckList::onUIUpdate(uint32 id) {
             pControl->Check(idx, selected.find(idx) != selected.end());
         }
     }
+}
+
+void PCUI::CheckList::onUnbound() {
+    pControl->Clear();
 }
 
 void PCUI::CheckList::onModify(wxCommandEvent& evt) {

@@ -33,7 +33,7 @@ struct UI_EXPORT CheckListData : ControlData {
 
     void select(uint32 idx);
     void unselect(uint32 idx);
-    void clearSelections() ;
+    void clearSelections();
 
     const vector<string>& items() const { return mItems; }
     void setItems(vector<string>&& items) ;
@@ -74,6 +74,7 @@ private:
     void create(const wxString& label, wxOrientation orient);
 
     void onUIUpdate(uint32) final;
+    void onUnbound() final;
     void onModify(wxCommandEvent&) final;
 };
 
