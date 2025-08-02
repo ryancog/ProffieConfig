@@ -96,7 +96,10 @@ void PCUI::Numeric::create(
 void PCUI::Numeric::onUIUpdate(uint32 id) {
     if (id == ID_REBOUND or id == data()->ID_RANGE) pControl->SetRange(data()->mMin, data()->mMax);
     if (id == ID_REBOUND or id == data()->ID_INCREMENT) pControl->SetIncrement(data()->mIncrement);
-    if (id == ID_REBOUND or id == data()->ID_VALUE) pControl->SetValue(*data());
+    if (id == ID_REBOUND or id == data()->ID_VALUE) {
+        pControl->SetValue(*data());
+        refreshSizeAndLayout();
+    }
 }
 
 void PCUI::Numeric::onModify(wxSpinEvent& evt) {
@@ -149,7 +152,10 @@ void PCUI::Decimal::create(
 void PCUI::Decimal::onUIUpdate(uint32 id) {
     if (id == ID_REBOUND or id == data()->ID_RANGE) pControl->SetRange(data()->mMin, data()->mMax);
     if (id == ID_REBOUND or id == data()->ID_INCREMENT) pControl->SetIncrement(data()->mIncrement);
-    if (id == ID_REBOUND or id == data()->ID_VALUE) pControl->SetValue(*data());
+    if (id == ID_REBOUND or id == data()->ID_VALUE) {
+        pControl->SetValue(*data());
+        refreshSizeAndLayout();
+    }
 }
 
 void PCUI::Decimal::onModify(wxSpinDoubleEvent& evt) {
