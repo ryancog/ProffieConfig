@@ -36,7 +36,14 @@ namespace Private {
 template<typename T> requires std::is_arithmetic_v<T>
 struct UI_EXPORT NumericDataTemplate : ControlData {
     operator T() const { return mValue; }
+    /**
+     * Efficient assign/update
+     */
     void operator=(T val);
+    /**
+     * Unconditional assign/update
+     */
+    void setValue(T val);
 
     [[nodiscard]] T min() const { return mMin; }
     [[nodiscard]] T max() const { return mMax; }

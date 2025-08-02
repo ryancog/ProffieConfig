@@ -29,6 +29,12 @@ template<typename T> requires std::is_arithmetic_v<T>
 void PCUI::Private::NumericDataTemplate<T>::operator=(T val) {
     std::scoped_lock scopeLock{getLock()};
     if (mValue == val) return;
+    setValue(val);
+}
+
+template<typename T> requires std::is_arithmetic_v<T>
+void PCUI::Private::NumericDataTemplate<T>::setValue(T val) {
+    std::scoped_lock scopeLock{getLock()};
     const auto clampedVal{std::clamp(val, mMin, mMax)};
     mValue = clampedVal;
     notify(ID_VALUE);
