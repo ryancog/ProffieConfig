@@ -27,6 +27,11 @@ namespace PCUI {
 void PCUI::ToggleData::operator=(bool val) {
     std::scoped_lock scopeLock{getLock()};
     if (mValue == val) return;
+    setValue(val);
+}
+
+void PCUI::ToggleData::setValue(bool val) {
+    std::scoped_lock scopeLock{getLock()};
     mValue = val;
     notify(ID_VALUE);
 }

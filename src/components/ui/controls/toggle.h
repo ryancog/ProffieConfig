@@ -29,7 +29,16 @@ namespace PCUI {
 
 struct UI_EXPORT ToggleData : ControlData {
     operator bool() const { return mValue; }
+
+    /**
+     * Efficiently set/update value
+     */
     void operator=(bool val);
+
+    /**
+     * Unconditionally set/update value
+     */
+    void setValue(bool val);
 
     enum {
         ID_VALUE,
