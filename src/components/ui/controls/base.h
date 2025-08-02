@@ -132,12 +132,20 @@ template<
     class CONTROL_EVENT,
     class SECONDARY_EVENT = CONTROL_EVENT
 >
-class ControlBase : public wxPanel, protected Notifier {
+class UI_EXPORT ControlBase : public wxPanel, protected Notifier {
 public:
     static_assert(std::is_base_of_v<wxControl, CONTROL>, "PCUI Control core must be wxControl descendant");
     static_assert(std::is_base_of_v<ControlData, CONTROL_DATA>, "PCUI Control data must be ControlData descendant");
 
-    void setToolTip(wxToolTip *tip);
+    void SetToolTip(const wxString&);
+    void SetMinSize(const wxSize&) final;
+
+    /**
+     * Should not be used directly. Use the data or proxy methods for show/hide
+     *
+     * Implemented for sizer/parent use.
+     */
+    bool Show(bool show = true) final;
 
 protected:
     ControlBase(wxWindow *parent, CONTROL_DATA &data);
@@ -182,6 +190,9 @@ private:
     void handleUnbound() final;
     void controlEventHandler(CONTROL_EVENT& evt);
     void secondaryEventHandler(SECONDARY_EVENT& evt);
+
+    wxSize mMinSize;
+    bool mHidden{false};
 };
 
 } // namespace PCUI
