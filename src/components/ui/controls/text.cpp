@@ -33,7 +33,6 @@ void PCUI::TextData::setValue(string&& val) {
     std::scoped_lock scopeLock{getLock()};
     mValue = std::move(val);
     notify(ID_VALUE);
-    notify(ID_VALUE_FULL);
 }
 
 void PCUI::TextData::setInsertionPoint(uint32 insertionPoint) {
@@ -69,7 +68,7 @@ PCUI::Text::Text(
 
 void PCUI::Text::create(int64 style, const wxString& label, wxOrientation orient) {
     assert(not ((style & wxTE_MULTILINE) and mInsertNewline));
-    assert(mInsertNewline == static_cast<bool>(style & wxTE_PROCESS_ENTER));
+    assert(not mInsertNewline or static_cast<bool>(style & wxTE_PROCESS_ENTER));
 
     auto *control{new wxTextCtrl(
         this,
@@ -118,7 +117,7 @@ void PCUI::Text::onModify(wxCommandEvent& evt) {
     if (evt.GetEventType() == wxEVT_TEXT or (evt.GetEventType() == wxEVT_TEXT_ENTER and mInsertNewline)) {
         data()->update(TextData::ID_VALUE);
     } else if (evt.GetEventType() == wxEVT_TEXT_ENTER) {
-        data()->update(TextData::ID_VALUE_FULL);
+        data()->update(TextData::ID_ENTER);
     }
 }
 

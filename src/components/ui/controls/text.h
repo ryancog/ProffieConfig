@@ -39,10 +39,8 @@ struct UI_EXPORT TextData : ControlData {
     void setInsertionPoint(uint32);
 
     enum {
-        // Any input
         ID_VALUE,
-        // Assignment or "Enter"
-        ID_VALUE_FULL,
+        ID_ENTER,
         ID_INSERTION,
     };
 
