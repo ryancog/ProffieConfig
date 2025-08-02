@@ -21,7 +21,13 @@
 
 #include <fstream>
 
+#include <random>
 #include <tomcrypt.h>
+
+std::mt19937_64& Crypto::randGen() {
+    static std::mt19937_64 gen{std::random_device{}()};
+    return gen;
+}
 
 string Crypto::computeHash(const filepath& path) {
     auto inputStream{std::ifstream(path, std::ios::binary)};
