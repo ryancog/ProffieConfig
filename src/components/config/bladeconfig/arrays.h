@@ -42,7 +42,7 @@ struct CONFIG_EXPORT BladeArrays {
         ID_ARRAY_SELECTION,
         ID_ARRAY_ISSUES,
         ID_BLADE_SELECTION,
-        ID_SUBBLADE_SELECTION,
+        ID_SPLIT_SELECTION,
         ID_BLADE_TYPE_SELECTION,
     };
     PCUI::NotifierData notifyData;
@@ -68,7 +68,6 @@ struct CONFIG_EXPORT BladeArrays {
     void removeArray(uint32 idx);
 
     PCUI::ChoiceDataProxy bladeTypeProxy;
-    PCUI::ChoiceDataProxy subBladeSelectionProxy;
     
     PCUI::CheckListDataProxy powerPinProxy;
     PCUI::TextData powerPinNameEntry;
@@ -82,9 +81,15 @@ struct CONFIG_EXPORT BladeArrays {
     PCUI::ComboBoxDataProxy dataPinProxy;
     PCUI::NumericDataProxy lengthProxy;
 
-    PCUI::RadiosDataProxy subBladeTypeProxy;
-    PCUI::NumericDataProxy subBladeLengthProxy;
-    PCUI::NumericDataProxy subBladeSegmentsProxy;
+    PCUI::NotifierData visualizerData;
+
+    PCUI::ChoiceDataProxy splitSelectionProxy;
+    PCUI::RadiosDataProxy splitTypeProxy;
+    PCUI::NumericDataProxy splitStartProxy;
+    PCUI::NumericDataProxy splitEndProxy;
+    PCUI::NumericDataProxy splitLengthProxy;
+    PCUI::NumericDataProxy splitSegmentsProxy;
+    PCUI::TextDataProxy splitListProxy;
 
     struct StarProxy {
         PCUI::ChoiceDataProxy ledProxy;

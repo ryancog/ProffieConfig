@@ -13,6 +13,7 @@ add_executable(proffieconfig WIN32
     editor/pages/generalpage.cpp
     editor/pages/presetspage.cpp
     editor/pages/bladespage.cpp
+    editor/special/splitvisualizer.cpp
 
     core/appstate.cpp
     core/utilities/misc.cpp

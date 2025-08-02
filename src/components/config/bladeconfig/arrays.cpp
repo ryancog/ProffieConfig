@@ -28,9 +28,17 @@
 
 Config::BladeArrays::BladeArrays(Config& parent) :
     mParent{parent},
-    subBladeTypeProxy{Split::TYPE_MAX} {
+    splitTypeProxy{Split::TYPE_MAX} {
 
     bladeTypeProxy.showWhenUnbound(false);
+
+    splitTypeProxy.showWhenUnbound(false);
+    splitStartProxy.showWhenUnbound(false);
+    splitEndProxy.showWhenUnbound(false);
+    splitLengthProxy.showWhenUnbound(false);
+    splitSegmentsProxy.showWhenUnbound(false);
+    splitListProxy.showWhenUnbound(false);
+
     arraySelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
 
     arraySelection.setUpdateHandler([this](uint32 id) {
@@ -39,7 +47,6 @@ Config::BladeArrays::BladeArrays(Config& parent) :
 
         arrayIssues = BladeConfig::ISSUE_NONE;
         bladeSelectionProxy.unbind();
-        subBladeSelectionProxy.unbind();
 
         bladeTypeProxy.unbind();
         powerPinProxy.unbind();
@@ -52,9 +59,10 @@ Config::BladeArrays::BladeArrays(Config& parent) :
         dataPinProxy.unbind();
         lengthProxy.unbind();
 
-        subBladeTypeProxy.unbind();
-        subBladeLengthProxy.unbind();
-        subBladeSegmentsProxy.unbind();
+        splitSelectionProxy.unbind();
+        splitTypeProxy.unbind();
+        splitLengthProxy.unbind();
+        splitSegmentsProxy.unbind();
 
         star1Proxy.ledProxy.unbind();
         star1Proxy.powerPinProxy.unbind();

@@ -25,7 +25,8 @@ namespace Versions {
     PropErrors parseErrors(const PConf::Data& data, Log::Branch& lBranch);
 }
 
-Versions::PropOption::PropOption(Prop& prop, vector<PropSelectionData> selectionDatas) {
+Versions::PropOption::PropOption(Prop& prop, vector<PropSelectionData> selectionDatas) :
+    selection{static_cast<uint32>(selectionDatas.size())} {
     for (const auto& selectionData : selectionDatas) {
         mSelections.emplace_back(
             prop,
@@ -41,7 +42,8 @@ Versions::PropOption::PropOption(Prop& prop, vector<PropSelectionData> selection
     }
 }
 
-Versions::PropOption::PropOption(const PropOption& other, Prop& prop) {
+Versions::PropOption::PropOption(const PropOption& other, Prop& prop) :
+    selection{static_cast<uint32>(other.selection.numSelections())} {
     for (const auto& sel : other.mSelections) {
         mSelections.emplace_back(sel, prop, *this);
     }

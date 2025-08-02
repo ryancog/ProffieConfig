@@ -25,8 +25,8 @@ private:
 
         ID_AddBlade,
         ID_RemoveBlade,
-        ID_AddSubBlade,
-        ID_RemoveSubBlade,
+        ID_AddSplit,
+        ID_RemoveSplit,
 
         ID_NoSelectText,
         ID_PinNameAdd,

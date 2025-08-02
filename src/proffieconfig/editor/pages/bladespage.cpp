@@ -10,17 +10,18 @@
 #include <wx/combobox.h>
 #include <wx/tooltip.h>
 
-#include "../editorwindow.h"
-#include "../dialogs/awarenessdlg.h"
-#include "../../core/defines.h"
-#include "config/bladeconfig/bladeconfig.h"
 #include "ui/controls/button.h"
 #include "ui/controls/checklist.h"
 #include "ui/message.h"
 #include "ui/notifier.h"
 #include "utils/image.h"
+#include "config/bladeconfig/bladeconfig.h"
+
+#include "../editorwindow.h"
+#include "../dialogs/awarenessdlg.h"
+#include "../../core/defines.h"
+#include "../special/splitvisualizer.h"
 #include "wx/anybutton.h"
-#include "wx/settings.h"
 
 class ArrayEditDlg : public wxDialog, PCUI::Notifier {
 public:
@@ -217,6 +218,26 @@ void BladesPage::bindEvents() {
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         mParent->getOpenConfig().bladeArrays.addPowerPinFromEntry();
     }, ID_PinNameAdd);
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+        auto& config{mParent->getOpenConfig()};
+        if (config.bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{config.bladeArrays.array(config.bladeArrays.arraySelection)};
+        if (selectedArray.bladeSelection == -1) return;
+        auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
+        if (selectedBlade.type != Config::Blade::WS281X) return;
+        selectedBlade.ws281x().addSplit();
+        selectedBlade.ws281x().splitSelect = selectedBlade.ws281x().splits().size() - 1;
+    }, ID_AddSplit);
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+        auto& config{mParent->getOpenConfig()};
+        if (config.bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{config.bladeArrays.array(config.bladeArrays.arraySelection)};
+        if (selectedArray.bladeSelection == -1) return;
+        auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
+        if (selectedBlade.type != Config::Blade::WS281X) return;
+        if (selectedBlade.ws281x().splitSelect == -1) return;
+        selectedBlade.ws281x().removeSplit(selectedBlade.ws281x().splitSelect);
+    }, ID_RemoveSplit);
 }
 
 void BladesPage::handleNotification(uint32 id) {
@@ -245,12 +266,11 @@ void BladesPage::handleNotification(uint32 id) {
             rebound or 
             id == bladeArrays.ID_ARRAY_SELECTION or
             id == bladeArrays.ID_BLADE_SELECTION or
-            id == bladeArrays.ID_SUBBLADE_SELECTION or
             id == bladeArrays.ID_BLADE_TYPE_SELECTION
        ) {
         bool hasSelection{
             bladeArrays.bladeSelectionProxy.data() and
-                *bladeArrays.bladeSelectionProxy.data() != -1
+            *bladeArrays.bladeSelectionProxy.data() != -1
         };
         bool hasTypeSelection{
             bladeArrays.bladeTypeProxy.data() and
@@ -271,6 +291,19 @@ void BladesPage::handleNotification(uint32 id) {
         mPixelSizer->Show(isPixel);
 
         FindWindow(ID_NoSelectText)->Show(not isPixel and not isSimple);
+    }
+    if (
+            rebound or 
+            id == bladeArrays.ID_ARRAY_SELECTION or
+            id == bladeArrays.ID_BLADE_SELECTION or
+            id == bladeArrays.ID_BLADE_TYPE_SELECTION or
+            id == bladeArrays.ID_SPLIT_SELECTION
+       ) {
+        auto hasSelection{
+            bladeArrays.splitSelectionProxy.data() and
+            *bladeArrays.splitSelectionProxy.data() != -1
+        };
+        FindWindow(ID_RemoveSplit)->Enable(hasSelection);
     }
 
     Layout();
@@ -536,7 +569,8 @@ wxSizer *BladesPage::createBladeSettings() {
     mSimpleSizer->AddSpacer(10);
     mSimpleSizer->Add(simpleSplit2Sizer);
 
-    mPixelSizer = new wxBoxSizer(wxVERTICAL);
+    mPixelSizer = new wxBoxSizer(wxHORIZONTAL);
+    auto pixelMainSizer{new wxBoxSizer(wxVERTICAL)};
     auto *length{new PCUI::Numeric(
         this,
         config.bladeArrays.lengthProxy,
@@ -601,27 +635,121 @@ wxSizer *BladesPage::createBladeSettings() {
     pinNameSizer->Add(powerPinName, wxSizerFlags(1));
     pinNameSizer->Add(addPowerPin, wxSizerFlags().Bottom());
 
-    mPixelSizer->Add(length, wxSizerFlags().Expand());
-    mPixelSizer->AddSpacer(5);
-    mPixelSizer->Add(dataPin);
-    mPixelSizer->AddSpacer(5);
-    mPixelSizer->Add(colorOrder3, wxSizerFlags().Expand());
-    mPixelSizer->Add(colorOrder4, wxSizerFlags().Expand());
-    mPixelSizer->AddSpacer(5);
-    mPixelSizer->Add(hasWhite, wxSizerFlags().Expand());
-    mPixelSizer->Add(
+    pixelMainSizer->Add(length, wxSizerFlags().Expand());
+    pixelMainSizer->AddSpacer(5);
+    pixelMainSizer->Add(dataPin);
+    pixelMainSizer->AddSpacer(5);
+    pixelMainSizer->Add(colorOrder3, wxSizerFlags().Expand());
+    pixelMainSizer->Add(colorOrder4, wxSizerFlags().Expand());
+    pixelMainSizer->AddSpacer(5);
+    pixelMainSizer->Add(hasWhite, wxSizerFlags().Expand());
+    pixelMainSizer->Add(
         whiteUseRGB,
         wxSizerFlags().Expand().Border(wxTOP, 5)
     );
+    pixelMainSizer->AddSpacer(10);
+    pixelMainSizer->Add(pixelPowerPins, wxSizerFlags(1).Expand());
+    pixelMainSizer->AddSpacer(5);
+    pixelMainSizer->Add(pinNameSizer, wxSizerFlags().Expand());
+
+    auto *pixelSplitSizer{new wxBoxSizer(wxVERTICAL)};
+    auto *splitSelect{new PCUI::Choice(
+        this,
+        config.bladeArrays.splitSelectionProxy,
+        _("SubBlades")
+    )};
+    auto *splitButtonSizer{new wxBoxSizer(wxHORIZONTAL)};
+    auto *addSplit{new wxButton(
+        this,
+        ID_AddSplit,
+        "+",
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxBU_EXACTFIT
+    )};
+    auto *removeSplit{new wxButton(
+        this,
+        ID_RemoveSplit,
+        "-",
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxBU_EXACTFIT
+    )};
+    splitButtonSizer->Add(addSplit, wxSizerFlags(1));
+    splitButtonSizer->AddSpacer(5);
+    splitButtonSizer->Add(removeSplit, wxSizerFlags(1));
+
+    auto *splitType{new PCUI::Radios(
+        this,
+        config.bladeArrays.splitTypeProxy,
+        { _("Standard"), _("Reverse"), _("Stride"), _("ZigZag"), _("List") },
+        _("Type")
+    )};
+    
+    auto splitStartEndSizer{new wxBoxSizer(wxHORIZONTAL)};
+    auto *splitStart{new PCUI::Numeric(
+        this,
+        config.bladeArrays.splitStartProxy,
+        0,
+        _("Start")
+    )};
+    auto *splitEnd{new PCUI::Numeric(
+        this,
+        config.bladeArrays.splitEndProxy,
+        0,
+        _("End")
+    )};
+    splitStartEndSizer->Add(splitStart, wxSizerFlags(1));
+    splitStartEndSizer->AddSpacer(5);
+    splitStartEndSizer->Add(splitEnd, wxSizerFlags(1));
+
+    auto *splitLength{new PCUI::Numeric(
+        this,
+        config.bladeArrays.splitLengthProxy,
+        0,
+        _("Length")
+    )};
+    auto *splitSegments{new PCUI::Numeric(
+        this,
+        config.bladeArrays.splitSegmentsProxy,
+        0,
+        _("Number of Segments")
+    )};
+    auto *splitList{new PCUI::Text(
+        this,
+        config.bladeArrays.splitListProxy,
+        0,
+        false,
+        _("List of Pixels")
+    )};
+
+    pixelSplitSizer->Add(splitSelect, wxSizerFlags().Expand());
+    pixelSplitSizer->AddSpacer(5);
+    pixelSplitSizer->Add(splitButtonSizer, wxSizerFlags().Expand());
+    pixelSplitSizer->AddSpacer(10);
+    pixelSplitSizer->Add(splitType, wxSizerFlags().Expand());
+    pixelSplitSizer->AddSpacer(10);
+
+    pixelSplitSizer->Add(splitStartEndSizer, wxSizerFlags().Expand().Border(wxBOTTOM, 5));
+    pixelSplitSizer->Add(splitLength, wxSizerFlags().Expand());
+
+    pixelSplitSizer->Add(splitSegments, wxSizerFlags().Expand().Border(wxTOP, 10));
+
+    pixelSplitSizer->Add(splitList, wxSizerFlags().Expand());
+
+    mPixelSizer->Add(pixelMainSizer, wxSizerFlags().Expand());
     mPixelSizer->AddSpacer(10);
-    mPixelSizer->Add(pixelPowerPins, wxSizerFlags(1).Expand());
-    mPixelSizer->AddSpacer(5);
-    mPixelSizer->Add(pinNameSizer, wxSizerFlags().Expand());
+    mPixelSizer->Add(
+        new SplitVisualizer(this, config.bladeArrays),
+        wxSizerFlags().Expand()
+    );
+    mPixelSizer->AddSpacer(10);
+    mPixelSizer->Add(pixelSplitSizer, wxSizerFlags(1).Expand());
 
     setupSizer->Add(bladeType);
     setupSizer->AddSpacer(10);
     setupSizer->Add(mSimpleSizer, wxSizerFlags(1).Expand());
-    setupSizer->Add(mPixelSizer, wxSizerFlags(1));
+    setupSizer->Add(mPixelSizer, wxSizerFlags(1).Expand());
 
 
     // auto *subBladeType{new PCUI::Radios(

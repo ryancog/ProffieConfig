@@ -26,7 +26,8 @@
 
 #include "../config.h"
 
-Config::Blade::Blade(Config& config) : mConfig{config} {
+Config::Blade::Blade(Config& config) :
+    mConfig{config}, mPixelBlade(config) {
     type.setUpdateHandler([this](uint32 id) {
         if (id != PCUI::Notifier::ID_REBOUND and id != type.ID_SELECTION) return;
         if (id == type.ID_SELECTION) mConfig.presetArrays.syncStyleDisplay();
@@ -142,21 +143,21 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
 
         if (bladeSelection == -1) {
             mConfig.bladeArrays.bladeTypeProxy.unbind();
-            mConfig.bladeArrays.subBladeSelectionProxy.unbind();
 
-            mConfig.bladeArrays.powerPinProxy.unbind();
+            mConfig.bladeArrays.lengthProxy.unbind();
+            mConfig.bladeArrays.dataPinProxy.unbind();
 
             mConfig.bladeArrays.colorOrder3Proxy.unbind();
             mConfig.bladeArrays.colorOrder4Proxy.unbind();
             mConfig.bladeArrays.hasWhiteProxy.unbind();
             mConfig.bladeArrays.useRGBWithWhiteProxy.unbind();
 
-            mConfig.bladeArrays.dataPinProxy.unbind();
-            mConfig.bladeArrays.lengthProxy.unbind();
+            mConfig.bladeArrays.powerPinProxy.unbind();
 
-            mConfig.bladeArrays.subBladeTypeProxy.unbind();
-            mConfig.bladeArrays.subBladeLengthProxy.unbind();
-            mConfig.bladeArrays.subBladeSegmentsProxy.unbind();
+            mConfig.bladeArrays.splitSelectionProxy.unbind();
+            mConfig.bladeArrays.splitTypeProxy.unbind();
+            mConfig.bladeArrays.splitLengthProxy.unbind();
+            mConfig.bladeArrays.splitSegmentsProxy.unbind();
 
             mConfig.bladeArrays.star1Proxy.ledProxy.unbind();
             mConfig.bladeArrays.star1Proxy.resistanceProxy.unbind();
@@ -174,10 +175,8 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
             mConfig.bladeArrays.star4Proxy.resistanceProxy.unbind();
             mConfig.bladeArrays.star4Proxy.powerPinProxy.unbind();
         } else {
-            auto& selectedBlade{blade(bladeSelection)};
-            mConfig.bladeArrays.bladeTypeProxy.bind(selectedBlade.type);
+            auto& selectedBlade{blade(bladeSelection)}; mConfig.bladeArrays.bladeTypeProxy.bind(selectedBlade.type);
 
-            // mConfig.bladeArrays.subBladeSelectionProxy.bind();
 
             mConfig.bladeArrays.powerPinProxy.bind(selectedBlade.ws281x().powerPins);
 
@@ -189,9 +188,7 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
             mConfig.bladeArrays.dataPinProxy.bind(selectedBlade.ws281x().dataPin);
             mConfig.bladeArrays.lengthProxy.bind(selectedBlade.ws281x().length);
 
-            // mConfig.bladeArrays.subBladeTypeProxy.bind(selectedBlade.ws281x());
-            // mConfig.bladeArrays.subBladeLengthProxy.bind();
-            // mConfig.bladeArrays.subBladeSegmentsProxy.bind();
+            mConfig.bladeArrays.splitSelectionProxy.bind(selectedBlade.ws281x().splitSelect);
 
             mConfig.bladeArrays.star1Proxy.ledProxy.bind(selectedBlade.simple().star1.led);
             mConfig.bladeArrays.star1Proxy.resistanceProxy.bind(selectedBlade.simple().star1.resistance);
@@ -222,7 +219,7 @@ Config::Blade& Config::BladeConfig::addBlade() {
     vector<string> choices;
     choices.reserve(mBlades.size());
     for (auto idx{0}; idx < mBlades.size(); ++idx) {
-        choices.emplace_back("Blade " + std::to_string(idx));
+        choices.emplace_back(_("Blade ").ToStdString() + std::to_string(idx));
     }
     bladeSelection.setChoices(std::move(choices));
 
@@ -237,7 +234,7 @@ void Config::BladeConfig::removeBlade(uint32 idx) {
     vector<string> choices;
     choices.reserve(mBlades.size());
     for (auto idx{0}; idx < mBlades.size(); ++idx) {
-        choices.emplace_back("Blade " + std::to_string(idx));
+        choices.emplace_back(_("Blade ").ToStdString() + std::to_string(idx));
     }
     bladeSelection.setChoices(std::move(choices));
     if (bladeSelection == idx) bladeSelection = -1;
