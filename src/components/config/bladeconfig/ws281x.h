@@ -23,6 +23,7 @@
 #include "ui/controls/choice.h"
 #include "ui/controls/combobox.h"
 #include "ui/controls/numeric.h"
+#include "ui/controls/text.h"
 #include "ui/controls/toggle.h"
 #include "ui/controls/radios.h"
 #include "utils/types.h"
@@ -31,21 +32,26 @@
 
 namespace Config {
 
-struct Split {
-    Split();
+struct Config;
 
-    PCUI::NumericData start;
-    PCUI::NumericData length;
+struct WS281XBlade;
+
+struct CONFIG_EXPORT Split {
+    Split(Config&, WS281XBlade&);
 
     enum Type {
         STANDARD,
         REVERSE,
         STRIDE,
         ZIG_ZAG,
+        LIST,
         TYPE_MAX
-        // Blissfully ignorant of list
     };
     PCUI::RadiosData type;
+
+    PCUI::NumericData start;
+    PCUI::NumericData end;
+    PCUI::NumericData length;
 
     /*
      * Stride: Data goes like:
@@ -87,10 +93,17 @@ struct Split {
 
     // For stide and zigzag
     PCUI::NumericData segments;
+
+    // For list
+    PCUI::TextData list;
+
+private:
+    Config& mConfig;
+    WS281XBlade& mParent;
 };
 
 struct CONFIG_EXPORT WS281XBlade {
-    WS281XBlade();
+    WS281XBlade(Config&);
 
     PCUI::NumericData length;
 
@@ -129,13 +142,19 @@ struct CONFIG_EXPORT WS281XBlade {
 
     PCUI::CheckListData powerPins;
 
+    PCUI::ChoiceData splitSelect;
+
     [[nodiscard]] const vector<std::unique_ptr<Split>>& splits() const { return mSplits; }
     [[nodiscard]] Split& split(uint32 idx) const {
         assert(idx < mSplits.size());
         return *mSplits[idx];
     }
 
+    Split& addSplit();
+    void removeSplit(uint32);
+
 private:
+    Config& mConfig;
     vector<std::unique_ptr<Split>> mSplits;
 };
 
