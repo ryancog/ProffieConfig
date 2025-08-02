@@ -99,7 +99,7 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
         track.setInsertionPoint(insertionPoint - numTrimmed);
     });
     styleSelection.setUpdateHandler([this](uint32 id) {
-        if (id != styleSelection.ID_SELECTION) return;
+        if (id != PCUI::Notifier::ID_REBOUND and id != styleSelection.ID_SELECTION) return;
 
         if (mConfig.presetArrays.selection == -1) return;
         auto& selectedArray{mConfig.presetArrays.array(mConfig.presetArrays.selection)};
@@ -108,8 +108,8 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
         if (this != &selectedPreset) return;
 
         if (styleSelection == -1) {
-            mConfig.presetArrays.commentProxy.unbind();
-            mConfig.presetArrays.styleProxy.unbind();
+            mConfig.presetArrays.commentProxy.bind(PresetArrays::dummyCommentData);
+            mConfig.presetArrays.styleProxy.bind(PresetArrays::dummyStyleData);
         } else {
             auto& selectedStyle{style(styleSelection)};
             mConfig.presetArrays.commentProxy.bind(selectedStyle.comment);

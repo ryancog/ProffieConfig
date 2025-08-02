@@ -152,6 +152,7 @@ BladesPage::BladesPage(EditorWindow *parent) :
     mAwarenessDlg = new BladeAwarenessDlg(parent);
 
     sizer->Add(createBladeSelect(), wxSizerFlags(0).Expand());
+    sizer->AddSpacer(10);
     sizer->Add(createBladeSettings(), wxSizerFlags(1).Expand());
 
     bindEvents();
@@ -204,6 +205,18 @@ void BladesPage::bindEvents() {
         auto& bladeArrays{mParent->getOpenConfig().bladeArrays};
         bladeArrays.removeArray(bladeArrays.arraySelection);
     }, ID_RemoveArray);
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+        auto& bladeArrays{mParent->getOpenConfig().bladeArrays};
+        bladeArrays.array(bladeArrays.arraySelection).addBlade();
+    }, ID_AddBlade);
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+        auto& bladeArrays{mParent->getOpenConfig().bladeArrays};
+        auto& array{bladeArrays.array(bladeArrays.arraySelection)};
+        array.removeBlade(array.bladeSelection);
+    }, ID_RemoveBlade);
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+        mParent->getOpenConfig().bladeArrays.addPowerPinFromEntry();
+    }, ID_PinNameAdd);
 }
 
 void BladesPage::handleNotification(uint32 id) {
@@ -215,7 +228,6 @@ void BladesPage::handleNotification(uint32 id) {
         FindWindow(ID_EditArray)->Enable(hasSelection);
         FindWindow(ID_RemoveArray)->Enable(hasSelection);
         FindWindow(ID_AddBlade)->Enable(hasSelection);
-        FindWindow(ID_RemoveBlade)->Enable(hasSelection);
     }
     if (rebound or id == bladeArrays.ID_ARRAY_SELECTION or id == bladeArrays.ID_ARRAY_ISSUES) {
         const auto issues{bladeArrays.arrayIssues};
@@ -231,34 +243,44 @@ void BladesPage::handleNotification(uint32 id) {
     }
     if (
             rebound or 
+            id == bladeArrays.ID_ARRAY_SELECTION or
             id == bladeArrays.ID_BLADE_SELECTION or
             id == bladeArrays.ID_SUBBLADE_SELECTION or
             id == bladeArrays.ID_BLADE_TYPE_SELECTION
        ) {
         bool hasSelection{
+            bladeArrays.bladeSelectionProxy.data() and
+                *bladeArrays.bladeSelectionProxy.data() != -1
+        };
+        bool hasTypeSelection{
             bladeArrays.bladeTypeProxy.data() and
             *bladeArrays.bladeTypeProxy.data() != -1
         };
         bool isSimple{
-            hasSelection and
+            hasTypeSelection and
             *bladeArrays.bladeTypeProxy.data() == Config::Blade::SIMPLE
         };
         bool isPixel{
-            hasSelection and
+            hasTypeSelection and
             *bladeArrays.bladeTypeProxy.data() == Config::Blade::WS281X
         };
 
-        FindWindow(ID_Star1Box)->Show(isSimple);
-        FindWindow(ID_Star2Box)->Show(isSimple);
-        FindWindow(ID_Star3Box)->Show(isSimple);
-        FindWindow(ID_Star4Box)->Show(isSimple);
+        FindWindow(ID_RemoveBlade)->Enable(hasSelection);
 
-        FindWindow(ID_PinNameAdd)->Show(isPixel);
+        mSimpleSizer->Show(isSimple);
+        mPixelSizer->Show(isPixel);
 
         FindWindow(ID_NoSelectText)->Show(not isPixel and not isSimple);
     }
 
     Layout();
+    auto size{GetSize()};
+    auto bestSize{GetBestSize()};
+    if (not size.IsAtLeast(bestSize)) {
+        SetMinSize(bestSize);
+        GetParent()->Layout();
+        GetParent()->Fit();
+    }
 }
 
 // void BladesPage::createToolTips() const {
@@ -449,7 +471,7 @@ wxSizer *BladesPage::createBladeSettings() {
         ID_NoSelectText,
         "No Blade Selected",
         wxDefaultPosition,
-        wxSize(500, -1),
+        wxSize(350, -1),
         wxALIGN_CENTER
     ));
     noSelectText->SetFont(noSelectText->GetFont().MakeLarger());
@@ -464,15 +486,13 @@ wxSizer *BladesPage::createBladeSettings() {
 
     auto starSizer{[this](
             Config::BladeArrays::StarProxy& starProxy,
-            const wxString& label,
-            wxWindowID id
+            const wxString& label
         ) {
         auto *starSizer{new wxStaticBoxSizer(
             wxVERTICAL,
             this,
             label
         )};
-        starSizer->GetStaticBox()->SetId(id);
         auto *starColor{new PCUI::Choice(
             starSizer->GetStaticBox(), starProxy.ledProxy
         )};
@@ -487,62 +507,67 @@ wxSizer *BladesPage::createBladeSettings() {
             wxSP_ARROW_KEYS,
             _("Resistance (mOhms)")
         )};
-        starSizer->Add(
-            starColor,
-            wxSizerFlags(0).Border(wxLEFT | wxBOTTOM | wxRIGHT, 5)
-        );
+
+        starSizer->Add(starColor, wxSizerFlags().Expand());
+        starSizer->AddSpacer(10);
         starSizer->Add(
             starPowerPin, 
-            wxSizerFlags(0)
-                .Border(wxLEFT | wxRIGHT, 5)
-                .TripleBorder(wxLEFT)
-                .Expand()
+            wxSizerFlags().Border(wxLEFT, 20).Expand()
         );
         starSizer->AddSpacer(5);
         starSizer->Add(
             starResistance,
-            wxSizerFlags(0)
-                .Border(wxLEFT | wxRIGHT, 5)
-                .TripleBorder(wxLEFT)
-                .Expand()
+            wxSizerFlags().Border(wxLEFT, 20).Expand()
         );
 
         return starSizer;
     }};
 
-    auto *simpleSizer1{new wxBoxSizer(wxHORIZONTAL)};
-    simpleSizer1->Add(starSizer(config.bladeArrays.star1Proxy, _("LED 1"), ID_Star1Box));
-    simpleSizer1->Add(starSizer(config.bladeArrays.star2Proxy, _("LED 2"), ID_Star2Box));
-    auto *simpleSizer2{new wxBoxSizer(wxHORIZONTAL)};
-    simpleSizer2->Add(starSizer(config.bladeArrays.star3Proxy, _("LED 3"), ID_Star3Box));
-    simpleSizer2->Add(starSizer(config.bladeArrays.star4Proxy, _("LED 4"), ID_Star4Box));
+    mSimpleSizer = new wxBoxSizer(wxVERTICAL);
+    auto *simpleSplit1Sizer{new wxBoxSizer(wxHORIZONTAL)};
+    simpleSplit1Sizer->Add(starSizer(config.bladeArrays.star1Proxy, _("LED 1")));
+    simpleSplit1Sizer->AddSpacer(10);
+    simpleSplit1Sizer->Add(starSizer(config.bladeArrays.star2Proxy, _("LED 2")));
+    auto *simpleSplit2Sizer{new wxBoxSizer(wxHORIZONTAL)};
+    simpleSplit2Sizer->Add(starSizer(config.bladeArrays.star3Proxy, _("LED 3")));
+    simpleSplit2Sizer->AddSpacer(10);
+    simpleSplit2Sizer->Add(starSizer(config.bladeArrays.star4Proxy, _("LED 4")));
+    mSimpleSizer->Add(simpleSplit1Sizer);
+    mSimpleSizer->AddSpacer(10);
+    mSimpleSizer->Add(simpleSplit2Sizer);
 
-    auto pixelSizer1{new wxBoxSizer(wxHORIZONTAL)};
-    auto *dataPin{new PCUI::ComboBox(
-        this,
-        config.bladeArrays.dataPinProxy,
-        _("Blade Data Pin")
-    )};
+    mPixelSizer = new wxBoxSizer(wxVERTICAL);
     auto *length{new PCUI::Numeric(
         this,
         config.bladeArrays.lengthProxy,
         wxSP_ARROW_KEYS,
-        _("Number of Pixels")
+        _("Number of Pixels"),
+        wxHORIZONTAL
     )};
-    pixelSizer1->Add(dataPin);
-    pixelSizer1->Add(length);
-
+    auto *dataPin{new PCUI::ComboBox(
+        this,
+        config.bladeArrays.dataPinProxy,
+        _("Blade Data Pin"),
+        wxHORIZONTAL
+    )};
     auto *colorOrder3{new PCUI::Choice(
         this,
         config.bladeArrays.colorOrder3Proxy,
-        _("Color Order")
+        _("Color Order"),
+        wxHORIZONTAL
     )};
     auto *colorOrder4{new PCUI::Choice(
         this,
         config.bladeArrays.colorOrder4Proxy,
-        _("Color Order")
+        _("Color Order"),
+        wxHORIZONTAL
     )};
-
+    auto *hasWhite{new PCUI::CheckBox(
+        this,
+        config.bladeArrays.hasWhiteProxy,
+        0,
+        _("LEDs Have White Channel")
+    )};
     auto *whiteUseRGB{new PCUI::CheckBox(
         this,
         config.bladeArrays.useRGBWithWhiteProxy,
@@ -552,11 +577,19 @@ wxSizer *BladesPage::createBladeSettings() {
 
     auto *pixelPowerPins{new PCUI::CheckList(
         this,
-        config.bladeArrays.powerPinProxy
+        config.bladeArrays.powerPinProxy,
+        _("Power Pins")
     )};
-    pixelPowerPins->SetMinSize(wxSize(200, -1));
+    pixelPowerPins->SetMinSize(wxSize(-1, 200));
 
     auto *pinNameSizer{new wxBoxSizer(wxHORIZONTAL)};
+    auto *powerPinName{new PCUI::Text(
+        this,
+        config.bladeArrays.powerPinNameEntry,
+        wxTE_PROCESS_ENTER,
+        false,
+        _("Pin Name")
+    )};
     auto *addPowerPin{new wxButton(
         this,
         ID_PinNameAdd,
@@ -565,27 +598,31 @@ wxSizer *BladesPage::createBladeSettings() {
         wxSize(30, 20),
         wxBU_EXACTFIT
     )};
-    auto *powerPinName{new PCUI::Text(
-        this,
-        config.bladeArrays.powerPinNameEntry,
-        0,
-        false,
-        _("Pin Name")
-    )};
-    pinNameSizer->Add(powerPinName);
+    pinNameSizer->Add(powerPinName, wxSizerFlags(1));
     pinNameSizer->Add(addPowerPin, wxSizerFlags().Bottom());
 
+    mPixelSizer->Add(length, wxSizerFlags().Expand());
+    mPixelSizer->AddSpacer(5);
+    mPixelSizer->Add(dataPin);
+    mPixelSizer->AddSpacer(5);
+    mPixelSizer->Add(colorOrder3, wxSizerFlags().Expand());
+    mPixelSizer->Add(colorOrder4, wxSizerFlags().Expand());
+    mPixelSizer->AddSpacer(5);
+    mPixelSizer->Add(hasWhite, wxSizerFlags().Expand());
+    mPixelSizer->Add(
+        whiteUseRGB,
+        wxSizerFlags().Expand().Border(wxTOP, 5)
+    );
+    mPixelSizer->AddSpacer(10);
+    mPixelSizer->Add(pixelPowerPins, wxSizerFlags(1).Expand());
+    mPixelSizer->AddSpacer(5);
+    mPixelSizer->Add(pinNameSizer, wxSizerFlags().Expand());
+
     setupSizer->Add(bladeType);
+    setupSizer->AddSpacer(10);
+    setupSizer->Add(mSimpleSizer, wxSizerFlags(1).Expand());
+    setupSizer->Add(mPixelSizer, wxSizerFlags(1));
 
-    setupSizer->Add(simpleSizer1);
-    setupSizer->Add(simpleSizer2);
-
-    setupSizer->Add(pixelSizer1);
-    setupSizer->Add(colorOrder3);
-    setupSizer->Add(colorOrder4);
-    setupSizer->Add(whiteUseRGB);
-    setupSizer->Add(pixelPowerPins, wxSizerFlags(1));
-    setupSizer->Add(pinNameSizer);
 
     // auto *subBladeType{new PCUI::Radios(
     //     GetStaticBox(),
@@ -626,7 +663,7 @@ wxSizer *BladesPage::createBladeSettings() {
     // );
 
     settingsSizer->Add(noSelectText, wxSizerFlags().Center());
-    settingsSizer->Add(setupSizer, wxSizerFlags().Expand());
+    settingsSizer->Add(setupSizer, wxSizerFlags(1).Expand());
 
     return settingsSizer;
 }

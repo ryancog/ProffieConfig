@@ -49,16 +49,18 @@ struct CONFIG_EXPORT Preset {
 
     [[nodiscard]] Style& style(uint32 idx) {
         assert(idx < mStyles.size());
-        return *std::next(mStyles.begin(), idx);
+        return *mStyles[idx];
     }
 
 private:
+    friend struct PresetArrays;
+
     Config& mConfig;
     PresetArray& mParent;
 
     // Never shrinks, so data isn't lost.
     // At worst it's jumbled by moving blades
-    list<Style> mStyles;
+    vector<std::unique_ptr<Style>> mStyles;
 };
 
 } // namespace Config

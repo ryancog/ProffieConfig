@@ -21,6 +21,10 @@
 
 #include "utils/string.h"
 
+Config::SimpleBlade::SimpleBlade() {
+
+}
+
 Config::SimpleBlade::Star::Star() {
     led.setChoices(Utils::createEntries({
         _("<None>"),
@@ -35,12 +39,24 @@ Config::SimpleBlade::Star::Star() {
         _("Blue"),
     }));
     powerPin.setDefaults(Utils::createEntries({
-        "bladePin",
-        "blade2Pin",
-        "blade3Pin",
-        "blade4Pin",
+        "bladePowerPin1",
+        "bladePowerPin2",
+        "bladePowerPin3",
+        "bladePowerPin4",
+        "bladePowerPin5",
+        "bladePowerPin6",
     }));
     resistance.setRange(0, 10000);
+    resistance.setIncrement(50);
+
+    led.setUpdateHandler([this](uint32 id) {
+        if (id != led.ID_SELECTION) return;
+
+        powerPin.enable(led != NONE);
+        resistance.enable(led != NONE);
+    });
+
+    led = NONE;
 }
 
 // wxString BladesPage::ledToConfigStr(LED led) {

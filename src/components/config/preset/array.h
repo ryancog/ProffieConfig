@@ -126,6 +126,12 @@ struct CONFIG_EXPORT PresetArrays {
     static PCUI::TextData dummyStyleData;
 
     /**
+     * Increase number of styles to match number of blades
+     * Also syncs display
+     */
+    void syncStyles();
+
+    /**
      * Sync all display choice and preset style displays.
      */
     void syncStyleDisplay(int32 clearIdx = -1);

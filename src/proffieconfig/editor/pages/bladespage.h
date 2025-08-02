@@ -22,15 +22,12 @@ private:
         ID_EditArray,
         ID_AddArray,
         ID_RemoveArray,
+
         ID_AddBlade,
         ID_RemoveBlade,
         ID_AddSubBlade,
         ID_RemoveSubBlade,
 
-        ID_Star1Box,
-        ID_Star2Box,
-        ID_Star3Box,
-        ID_Star4Box,
         ID_NoSelectText,
         ID_PinNameAdd,
     };
@@ -42,4 +39,7 @@ private:
 
     wxSizer *createBladeSelect();
     wxSizer *createBladeSettings();
+   
+    wxSizer *mSimpleSizer;
+    wxSizer *mPixelSizer;
 };
