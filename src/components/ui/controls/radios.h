@@ -25,22 +25,24 @@
 
 #include "base.h"
 #include "../private/export.h"
+#include "wx/arrstr.h"
 
 namespace PCUI {
 
 struct UI_EXPORT RadiosData : ControlData {
-    RadiosData() = default;
-
-    RadiosData(vector<string>&& choices) {
-        init(std::move(choices));
-    }
-
-    void init(vector<string>&& choices);
+    RadiosData(uint32 numSelections);
 
     operator uint32() const { return mSelected; }
+    /**
+     * Efficient assign/update
+     */
     void operator=(uint32 idx);
+    /**
+     * Unconditional assign/update
+     */
+    void setValue(uint32 idx);
 
-    [[nodiscard]] const vector<string>& choices() const { return mChoices; }
+    uint32 numSelections() const { return mEnabled.size(); }
 
     /**
      * Choices which are enabled will be shown regardless of their shown value
@@ -58,18 +60,17 @@ struct UI_EXPORT RadiosData : ControlData {
 
 private:
     friend class Radios;
+    friend class RadiosDataProxy;
     vector<bool> mEnabled;
     vector<bool> mShown;
-    vector<string> mChoices;
-    // Max marks the data as not yet initialized.
-    uint32 mSelected{std::numeric_limits<uint32>::max()};
+    uint32 mSelected;
 };
 
 struct RadiosDataProxy : ControlDataProxy<RadiosData> {
     RadiosDataProxy(uint32 numSelections) : numSelections{numSelections} {}
 
     void bind(RadiosData& data) { 
-        assert(not data or numSelections == data.choices().size());
+        assert(numSelections == data.mEnabled.size());
         ControlDataProxy::bind(data);
     }
 
@@ -85,18 +86,20 @@ public:
     Radios(
         wxWindow *parent,
         RadiosData& data,
+        const wxArrayString& labels,
         const wxString& label = {},
         wxOrientation orient = wxVERTICAL
     );
     Radios(
         wxWindow *parent,
         RadiosDataProxy& proxy,
+        const wxArrayString& labels,
         const wxString& label = {},
         wxOrientation orient = wxVERTICAL
     );
 
 private:
-    void create(const wxString& label, wxOrientation orient);
+    void create(const wxArrayString&, const wxString&, wxOrientation);
     void onUIUpdate(uint32) final;
     void onModify(wxCommandEvent&) final;
 };

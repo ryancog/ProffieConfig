@@ -23,26 +23,30 @@ namespace PCUI {
 
 }
 
-void PCUI::RadiosData::init(vector<string>&& choices) {
-    assert(mSelected = std::numeric_limits<uint32>::max());
+PCUI::RadiosData::RadiosData(uint32 numSelections) {
+    assert(numSelections > 0);
 
     mSelected = 0;
-    mChoices = std::move(choices);
-    mEnabled.resize(mChoices.size());
-    mShown.resize(mChoices.size());
+    mEnabled.resize(numSelections, true);
+    mShown.resize(numSelections, true);
 }
 
 void PCUI::RadiosData::operator=(uint32 idx) {
     std::scoped_lock scopeLock{getLock()};
     if (mSelected == idx) return;
-    assert(idx < mChoices.size());
+    setValue(idx);
+}
+
+void PCUI::RadiosData::setValue(uint32 idx) {
+    std::scoped_lock scopeLock{getLock()};
+    assert(idx < mEnabled.size());
     mSelected = idx;
     notify(ID_SELECTION);
 }
 
 void PCUI::RadiosData::showChoice(uint32 idx, bool show) {
     std::scoped_lock scopeLock{getLock()};
-    assert(idx < mChoices.size());
+    assert(idx < mEnabled.size());
     if (mShown[idx] == show) return;
     mShown[idx] = show;
     notify(ID_CHOICE_STATE);
@@ -50,7 +54,7 @@ void PCUI::RadiosData::showChoice(uint32 idx, bool show) {
 
 void PCUI::RadiosData::enableChoice(uint32 idx, bool enable) {
     std::scoped_lock scopeLock{getLock()};
-    assert(idx < mChoices.size());
+    assert(idx < mEnabled.size());
     if (mEnabled[idx] == enable) return;
     mEnabled[idx] = enable;
     notify(ID_CHOICE_STATE);
@@ -59,27 +63,25 @@ void PCUI::RadiosData::enableChoice(uint32 idx, bool enable) {
 PCUI::Radios::Radios(
     wxWindow *parent,
     RadiosData& data,
+    const wxArrayString& labels,
     const wxString& label,
     wxOrientation orient
 ) : ControlBase(parent, data) {
-    create(label, orient);
+    create(labels, label, orient);
 };
 
 PCUI::Radios::Radios(
     wxWindow *parent,
     RadiosDataProxy& proxy,
+    const wxArrayString& labels,
     const wxString& label,
     wxOrientation orient
 ) : ControlBase(parent, proxy) {
-    create(label, orient);
+    create(labels, label, orient);
 };
 
-void PCUI::Radios::create(const wxString& label, wxOrientation orient) {
+void PCUI::Radios::create(const wxArrayString& labels, const wxString& label, wxOrientation orient) {
     assert(data() != nullptr or proxy() != nullptr);
-
-    wxArrayString choices;
-    if (data()) choices = data()->mChoices;
-    else choices.resize(static_cast<RadiosDataProxy *>(proxy())->numSelections);
 
     auto *control{new wxRadioBox(
         this,
@@ -87,9 +89,9 @@ void PCUI::Radios::create(const wxString& label, wxOrientation orient) {
         label,
         wxDefaultPosition,
         wxDefaultSize,
-        choices,
+        labels,
         0,
-        orient == wxVERTICAL ? wxRA_SPECIFY_COLS : wxRA_SPECIFY_ROWS
+        orient == wxHORIZONTAL ? wxRA_SPECIFY_COLS : wxRA_SPECIFY_ROWS
     )};
 
     init(control, wxEVT_RADIOBOX, wxEmptyString, wxVERTICAL);
@@ -97,15 +99,12 @@ void PCUI::Radios::create(const wxString& label, wxOrientation orient) {
 
 void PCUI::Radios::onUIUpdate(uint32 id) {
     if (id == ID_REBOUND) {
-        assert(data()->mChoices.size() == pControl->GetCount());
-
-        for (auto idx{0}; idx < pControl->GetCount(); ++idx) {
-            pControl->SetString(idx, data()->mChoices[idx]);
-        }
+        assert(data()->mEnabled.size() == pControl->GetCount());
+        refreshSizeAndLayout();
     }
 
     if (id == ID_REBOUND or id == RadiosData::ID_CHOICE_STATE) {
-        for (auto idx{0}; idx < data()->mChoices.size(); ++idx) {
+        for (auto idx{0}; idx < data()->mEnabled.size(); ++idx) {
             pControl->Show(idx, data()->mShown[idx] or data()->mEnabled[idx]);
             pControl->Enable(idx, data()->mEnabled[idx]);
         }
