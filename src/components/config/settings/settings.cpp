@@ -34,29 +34,21 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     bladeDetect.setUpdateHandler([this](uint32 id) {
         if (id != bladeDetect.ID_VALUE) return;
 
-        if (bladeDetect) {
-            bladeDetectPin.enable();
-        } else {
-            bladeDetectPin.disable();
-        }
+        bladeDetectPin.enable(bladeDetect);
     });
 
     bladeID.enable.setUpdateHandler([this](uint32 id) {
         if (id != bladeID.enable.ID_VALUE) return;
 
-        if (bladeID.enable) {
-            bladeID.pin.enable();
-            bladeID.mode.enable();
-            bladeID.powerPins.enable();
-            bladeID.bridgePin.enable();
-            bladeID.pullup.enable();
-        } else {
-            bladeID.pin.disable();
-            bladeID.mode.disable();
-            bladeID.powerPins.disable();
-            bladeID.bridgePin.disable();
-            bladeID.pullup.disable();
-        }
+        bladeID.pin.enable(bladeID.enable);
+        bladeID.mode.enable(bladeID.enable);
+        bladeID.powerForID.enable(bladeID.enable);
+        bladeID.powerPins.enable(bladeID.enable);
+        bladeID.powerPinEntry.enable(bladeID.enable);
+        bladeID.bridgePin.enable(bladeID.enable);
+        bladeID.pullup.enable(bladeID.enable);
+        bladeID.continuousScanning = false;
+        bladeID.continuousScanning.enable(bladeID.enable);
     });
 
     bladeID.mode.setUpdateHandler([this](uint32 id) {
@@ -87,6 +79,37 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         bladeID.bridgePin = std::move(pinValue);
     });
 
+    bladeID.continuousScanning.setUpdateHandler([this](uint32 id) {
+        if (id != bladeID.enable.ID_VALUE) return;
+
+        bladeID.continuousInterval.enable(bladeID.continuousScanning);
+        bladeID.continuousTimes.enable(bladeID.continuousScanning);
+    });
+
+    bladeID.powerPinEntry.setUpdateHandler([this](uint32 id) {
+        if (id == bladeID.powerPinEntry.ID_ENTER) {
+            bladeID.addPowerPinFromEntry();
+        }
+        if (id != bladeID.powerPinEntry.ID_VALUE) return;
+
+        auto rawValue{static_cast<string>(bladeID.powerPinEntry)};
+        uint32 numTrimmed{};
+        auto insertionPoint{bladeID.powerPinEntry.getInsertionPoint()};
+        Utils::trimUnsafe(
+            rawValue,
+            &numTrimmed,
+            insertionPoint,
+            {},
+            true
+        );
+
+        if (rawValue != static_cast<string>(bladeID.powerPinEntry)) {
+            bladeID.powerPinEntry = std::move(rawValue);
+            bladeID.powerPinEntry.setInsertionPoint(insertionPoint - numTrimmed);
+            return;
+        }
+    });
+
     // Set defaults
     board.setChoices({
         "Proffieboard V3",
@@ -98,14 +121,18 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     numButtons.setRange(0, 3);
     numButtons = 2;
 
-    bladeDetect = false;
-    bladeID.enable = false;
+    bladeDetect.setValue(false);
+    bladeID.enable.setValue(false);
     bladeID.mode.setChoices(Utils::createEntries({
         _("Snapshot"),
         _("External Pullup"),
         _("Bridged Pullup")
     }));
     bladeID.mode = BladeID::SNAPSHOT;
+    bladeID.continuousTimes.setRange(1, 100);
+    bladeID.continuousTimes = 10;
+    bladeID.continuousInterval.setRange(10, 120000);
+    bladeID.continuousInterval = 1000;
 
     volume.setRange(0, 4000);
     volume.setIncrement(50);
@@ -195,5 +222,15 @@ bool Config::Settings::removeCustomOption(CustomOption& opt) {
     customOptsNotifyData.notify();
     customOptsNotifyData.getLock().unlock();
     return true;
+}
+
+void Config::Settings::BladeID::addPowerPinFromEntry() {
+    if (static_cast<string>(powerPinEntry).empty()) return;
+
+    auto powerPinItems{powerPins.items()};
+    powerPinItems.emplace_back(static_cast<string>(powerPinEntry));
+    powerPins.setItems(std::move(powerPinItems));
+    powerPins.select(powerPins.items().size() - 1);
+    powerPinEntry = "";
 }
 
