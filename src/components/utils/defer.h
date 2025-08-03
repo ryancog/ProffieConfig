@@ -25,15 +25,17 @@
 
 struct Defer {
     Defer(std::function<void(void)> func) : mOnScopeLeave(std::move(func)) {}
-    ~Defer() { mOnScopeLeave(); }
+    ~Defer() { if (mOnScopeLeave) mOnScopeLeave(); }
 
     Defer(const Defer&) = delete;
     Defer(Defer&&) = delete;
     Defer& operator=(const Defer&) = delete;
     Defer& operator=(Defer&&) = delete;
 
+    void diffuse() { mOnScopeLeave = nullptr; }
+
 private:
-    const std::function<void(void)> mOnScopeLeave;
+    std::function<void(void)> mOnScopeLeave;
 };
 
 
