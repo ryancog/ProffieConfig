@@ -43,6 +43,7 @@ public:
             false,
             _("Name")
         )};
+        nameEntry->SetToolTip(_("The name of the blade array.\nEach name must be unique, but it is for reference only (and thus specific names will not make a difference)."));
 
         auto *bitsSizer{new wxBoxSizer(wxHORIZONTAL)};
 
@@ -52,6 +53,7 @@ public:
             wxSP_ARROW_KEYS,
             _("Blade ID")
         )};
+        idEntry->SetToolTip(_("The ID of the blade associated with the currently-selected blade array.\nThis value can be measured by typing \"id\" into the Serial Monitor."));
         idEntry->SetMinSize({100, -1});
 
         cstring bladeIdText{"NO_BLADE"};

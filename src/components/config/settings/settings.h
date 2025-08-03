@@ -93,9 +93,12 @@ struct CONFIG_EXPORT Settings {
         PCUI::NumericData pullup;
         PCUI::ToggleData powerForID;
         PCUI::CheckListData powerPins;
+        PCUI::TextData powerPinEntry;
         PCUI::ToggleData continuousScanning;
         PCUI::NumericData continuousInterval;
         PCUI::NumericData continuousTimes;
+
+        void addPowerPinFromEntry();
     } bladeID;
     constexpr static cstring BLADE_ID_CLASS_STR{"BLADE_ID_CLASS"};
     constexpr static cstring ENABLE_POWER_FOR_ID_STR{"ENABLE_POWER_FOR_ID"};
