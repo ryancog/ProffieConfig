@@ -28,12 +28,10 @@ class SplitVisualizer : public wxWindow, PCUI::Notifier {
 public:
     SplitVisualizer(wxWindow *parent, Config::BladeArrays& bladeArrays);
 
-    wxSize GetMinSize() const final;
-
 private:
     void handleNotification(uint32) final;
-    void handleUnbound() final;
 
+    wxSize calculateSizes();
     void paintEvent(wxPaintEvent&);
     void resize(wxSizeEvent&);
 
@@ -48,5 +46,19 @@ private:
     static const wxColour& color(uint32 idx);
 
     Config::BladeArrays& mBladeArrays;
+
+    struct SplitSize {
+        float64 start;
+        float64 length;
+        uint32 splitIdx;
+        uint32 segments{0};
+        float64 segmentSize;
+
+        bool overlapStart{false};
+        bool overlapEnd{false};
+    };
+    vector<SplitSize> mSizes;
+    int32 selectedSplit{-1};
+    int32 hoveredSplit{-1};
 };
 

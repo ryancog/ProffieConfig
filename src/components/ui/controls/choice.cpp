@@ -25,8 +25,13 @@ namespace PCUI {
 
 void PCUI::ChoiceData::operator=(int32 val) {
     std::scoped_lock scopeLock{getLock()};
-    assert(val == -1 or val < mChoices.size());
     if (mValue == val) return;
+    setValue(val);
+}
+
+void PCUI::ChoiceData::setValue(int32 val) {
+    std::scoped_lock scopeLock{getLock()};
+    assert(val == -1 or val < mChoices.size());
     mValue = val;
     notify(ID_SELECTION);
 }
@@ -34,6 +39,11 @@ void PCUI::ChoiceData::operator=(int32 val) {
 void PCUI::ChoiceData::operator=(const string& val) {
     std::scoped_lock scopeLock{getLock()};
     if (mValue != -1 and mChoices[mValue] == val) return;
+    setValue(val);
+}
+
+void PCUI::ChoiceData::setValue(const string& val) {
+    std::scoped_lock scopeLock{getLock()};
 
     auto idx{0};
     for (; idx < mChoices.size(); ++idx) {

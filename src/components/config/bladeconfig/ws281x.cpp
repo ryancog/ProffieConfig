@@ -37,6 +37,14 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         segments.show(usesSegments);
 
         list.show(type == LIST);
+
+        if (mConfig.bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
+        if (selectedArray.bladeSelection == -1) return;
+        auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
+        if (selectedBlade.type != Blade::WS281X) return;
+        if (&selectedBlade.ws281x() != &mParent) return;
+
         mConfig.bladeArrays.visualizerData.notify();
     });
     start.setUpdateHandler([this](uint32 id) {
@@ -47,6 +55,14 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         }
 
         length = static_cast<uint32>(end) - static_cast<uint32>(start) + 1;
+
+        if (mConfig.bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
+        if (selectedArray.bladeSelection == -1) return;
+        auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
+        if (selectedBlade.type != Blade::WS281X) return;
+        if (&selectedBlade.ws281x() != &mParent) return;
+
         mConfig.bladeArrays.visualizerData.notify();
     });
     end.setUpdateHandler([this](uint32 id) {
@@ -57,6 +73,14 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         }
 
         length = static_cast<uint32>(end) - static_cast<uint32>(start) + 1;
+
+        if (mConfig.bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
+        if (selectedArray.bladeSelection == -1) return;
+        auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
+        if (selectedBlade.type != Blade::WS281X) return;
+        if (&selectedBlade.ws281x() != &mParent) return;
+
         mConfig.bladeArrays.visualizerData.notify();
     });
     length.setUpdateHandler([this](uint32 id) {
@@ -68,14 +92,44 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         }
 
         end = start + length - 1;
+
+        if (mConfig.bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
+        if (selectedArray.bladeSelection == -1) return;
+        auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
+        if (selectedBlade.type != Blade::WS281X) return;
+        if (&selectedBlade.ws281x() != &mParent) return;
+
+        mConfig.bladeArrays.visualizerData.notify();
+    });
+    segments.setUpdateHandler([this](uint32 id) {
+        if (mConfig.bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
+        if (selectedArray.bladeSelection == -1) return;
+        auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
+        if (selectedBlade.type != Blade::WS281X) return;
+        if (&selectedBlade.ws281x() != &mParent) return;
+
+        mConfig.bladeArrays.visualizerData.notify();
+    });
+    list.setUpdateHandler([this](uint32 id) {
+        // Welcome to hell
+
+        if (mConfig.bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
+        if (selectedArray.bladeSelection == -1) return;
+        auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
+        if (selectedBlade.type != Blade::WS281X) return;
+        if (&selectedBlade.ws281x() != &mParent) return;
+
         mConfig.bladeArrays.visualizerData.notify();
     });
 
     segments.setRange(2, 6);
     type.setValue(0);
     length.setRange(0, std::numeric_limits<int32>::max());
-    start.setRange(0, mParent.length);
-    end.setRange(0, mParent.length);
+    start.setRange(0, mParent.length - 1);
+    end.setRange(0, mParent.length - 1);
     start.setValue(0);
 }
 
@@ -84,9 +138,11 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
         if (id != length.ID_VALUE) return;
 
         for (const auto& split : mSplits) {
-            split->start.setRange(0, length);
-            split->end.setRange(0, length);
+            split->start.setRange(0, length - 1);
+            split->end.setRange(0, length - 1);
         }
+
+        mConfig.bladeArrays.visualizerData.notify();
     });
     dataPin.setUpdateHandler([this](uint32 id) {
         if (id != dataPin.ID_VALUE) return;
@@ -142,7 +198,6 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
     });
     splitSelect.setUpdateHandler([this](uint32 id) {
         if (splitSelect.ID_CHOICES) {
-            // splitSelect.show(not splitSelect.choices().empty());
             if (not splitSelect.choices().empty()) {
                 if (splitSelect == -1) splitSelect = 0;
             } 
@@ -183,7 +238,7 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
         "blade3Pin",
         "blade4Pin"
     }));
-    length.setRange(0, 1000);
+    length.setRange(1, 1000);
     length = 144;
     colorOrder3.setChoices(Utils::createEntries({
         _("GRB"),
@@ -234,7 +289,8 @@ void Config::WS281XBlade::removeSplit(uint32 idx) {
     for (auto idx{0}; idx < mSplits.size(); ++idx) {
         choices.emplace_back(_("SubBlade ").ToStdString() + std::to_string(idx));
     }
+    int32 oldSelect{splitSelect};
     splitSelect.setChoices(std::move(choices));
-    if (splitSelect == idx) splitSelect = -1;
+    splitSelect.setValue(std::clamp<int32>(oldSelect, 0, splitSelect.choices().size() - 1));
 }
 
