@@ -15,7 +15,7 @@ private:
     EditorWindow *mParent{nullptr};
 
     enum {
-        ID_OpenBladeAwareness,
+        ID_OpenBladeAwareness = 2,
 
         ID_IssueIcon,
 
