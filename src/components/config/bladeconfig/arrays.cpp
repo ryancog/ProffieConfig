@@ -32,7 +32,6 @@ Config::BladeArrays::BladeArrays(Config& parent) :
 
     bladeTypeProxy.showWhenUnbound(false);
 
-    splitTypeProxy.showWhenUnbound(false);
     splitStartProxy.showWhenUnbound(false);
     splitEndProxy.showWhenUnbound(false);
     splitLengthProxy.showWhenUnbound(false);

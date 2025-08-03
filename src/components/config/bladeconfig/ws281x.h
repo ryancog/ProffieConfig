@@ -96,6 +96,7 @@ struct CONFIG_EXPORT Split {
 
     // For list
     PCUI::TextData list;
+    vector<uint32> listValues() const;
 
     PCUI::NumericData brightness;
 
