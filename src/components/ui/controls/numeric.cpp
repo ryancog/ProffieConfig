@@ -48,6 +48,7 @@ void PCUI::Private::NumericDataTemplate<T>:: setRange(T min, T max) {
     mMin = min; 
     mMax = max; 
     notify(ID_RANGE);
+    setValue(mValue);
 }
 
 template<typename T> requires std::is_arithmetic_v<T>

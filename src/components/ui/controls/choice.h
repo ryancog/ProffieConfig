@@ -40,6 +40,12 @@ struct UI_EXPORT ChoiceData : ControlData {
     void operator=(int32 val);
     void operator=(const string& val);
 
+    /**
+     * Unconditionally assign/update value
+     */
+    void setValue(int32);
+    void setValue(const string&);
+
     const vector<string>& choices() const { return mChoices; }
     void setChoices(vector<string>&& choices);
 

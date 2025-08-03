@@ -713,14 +713,14 @@ wxSizer *BladesPage::createBladeSettings() {
         this,
         config.bladeArrays.splitSegmentsProxy,
         0,
-        _("Number of Segments")
+        _("Segments")
     )};
     auto *splitList{new PCUI::Text(
         this,
         config.bladeArrays.splitListProxy,
         0,
         false,
-        _("List of Pixels")
+        _("Pixel List")
     )};
 
     pixelSplitSizer->Add(splitSelect, wxSizerFlags().Expand());
@@ -750,45 +750,6 @@ wxSizer *BladesPage::createBladeSettings() {
     setupSizer->AddSpacer(10);
     setupSizer->Add(mSimpleSizer, wxSizerFlags(1).Expand());
     setupSizer->Add(mPixelSizer, wxSizerFlags(1).Expand());
-
-
-    // auto *subBladeType{new PCUI::Radios(
-    //     GetStaticBox(),
-    //     config.bladeArrays.subBladeTypeProxy,
-    //     _("SubBlade Type")
-    // )};
-
-    // auto *splitLength{new PCUI::Numeric(
-    //     GetStaticBox(),
-    //     config.bladeArrays.subBladeLengthProxy,
-    //     wxSP_ARROW_KEYS,
-    //     _("SubBlade Start")
-    // )};
-    // auto *splitSegments{new PCUI::Numeric(
-    //     GetStaticBox(),
-    //     config.bladeArrays.subBladeSegmentsProxy,
-    //     wxSP_ARROW_KEYS,
-    //     _("SubBlade End")
-    // )};
-
-    // bladeSettings->Add(
-    //     bladeDataPin,
-    //     wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10)
-    // );
-    // bladeSettings->Add(
-    //     bladePixels,
-    //     wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10)
-    // );
-
-    // bladeSettings->Add(subBladeType);
-    // bladeSettings->Add(
-    //     splitLength,
-    //     wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10)
-    // );
-    // bladeSettings->Add(
-    //     splitSegments,
-    //     wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 10)
-    // );
 
     settingsSizer->Add(noSelectText, wxSizerFlags().Center());
     settingsSizer->Add(setupSizer, wxSizerFlags(1).Expand());
