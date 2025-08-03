@@ -195,7 +195,7 @@ BUTTONS{2} {
 		BUTTON("Short Click Aux") {
 			DESCRIPTION: "Volume Down"
 		}
-		BUTTON("Hold Aux") {
+		BUTTON("Long Click Aux") {
 			DESCRIPTION: "Exit Volume Menu"
 		}
 	}
@@ -264,7 +264,7 @@ BUTTONS{3} {
 		BUTTON("Short Click Aux") {
 			DESCRIPTION: "Volume Down"
 		}
-		BUTTON("Hold + Clash") {
+		BUTTON("Long Click Aux") {
 			DESCRIPTION: "Exit Volume Menu"
 		}
 	}
