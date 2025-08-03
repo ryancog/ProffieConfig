@@ -127,9 +127,17 @@ void Config::BladeArrays::addPowerPinFromEntry() {
     auto& ws281x{selectedBlade.ws281x()};
 
     auto powerPinItems{ws281x.powerPins.items()};
-    powerPinItems.emplace_back(static_cast<string>(powerPinNameEntry));
-    ws281x.powerPins.setItems(std::move(powerPinItems));
-    ws281x.powerPins.select(ws281x.powerPins.items().size() - 1);
+    uint32 idx{0};
+    for (; idx < powerPinItems.size(); ++idx) {
+        if (powerPinItems[idx] == static_cast<string>(powerPinNameEntry)) break;
+    }
+    if (idx != powerPinItems.size()) {
+        ws281x.powerPins.select(idx);
+    } else {
+        powerPinItems.emplace_back(static_cast<string>(powerPinNameEntry));
+        ws281x.powerPins.setItems(std::move(powerPinItems));
+        ws281x.powerPins.select(ws281x.powerPins.items().size() - 1);
+    }
     powerPinNameEntry = "";
 }
 

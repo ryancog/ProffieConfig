@@ -46,6 +46,8 @@ struct UI_EXPORT ControlData : NotifierData {
     enum EventID {
         // Show/hide
         ID_VISIBILITY = 1000,
+        // Show/hide and fit parent
+        ID_VISIBILITY_FIT,
         // Enable/disable
         ID_ACTIVE
     };
@@ -61,7 +63,7 @@ struct UI_EXPORT ControlData : NotifierData {
     /**
      * Show/hide the UI control.
      */
-    void show(bool show = true);
+    void show(bool show = true, bool parentFit = false);
     void hide() { show(false); }
 
     [[nodiscard]] bool isEnabled() const { return mEnabled; }
@@ -180,7 +182,10 @@ protected:
 
     virtual void onModifySecondary(SECONDARY_EVENT&) {}
 
-    void refreshSizeAndLayout();
+    /**
+     * @param parentFit fit top level parent to best size
+     */
+    void refreshSizeAndLayout(bool parentFit = false);
 
     CONTROL *pControl{nullptr};
     CONTROL_DATA *data() { return static_cast<CONTROL_DATA *>(Notifier::data()); }

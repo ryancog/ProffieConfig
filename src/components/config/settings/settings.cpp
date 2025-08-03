@@ -43,11 +43,9 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         bladeID.pin.enable(bladeID.enable);
         bladeID.mode.enable(bladeID.enable);
         bladeID.powerForID.enable(bladeID.enable);
-        bladeID.powerPins.enable(bladeID.enable);
-        bladeID.powerPinEntry.enable(bladeID.enable);
         bladeID.bridgePin.enable(bladeID.enable);
         bladeID.pullup.enable(bladeID.enable);
-        bladeID.continuousScanning = false;
+        if (not bladeID.enable) bladeID.continuousScanning = false;
         bladeID.continuousScanning.enable(bladeID.enable);
     });
 
@@ -56,16 +54,16 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
 
         switch (static_cast<BladeID::Mode>(static_cast<uint32>(bladeID.mode))) {
             case BladeID::SNAPSHOT:
-                bladeID.bridgePin.hide();
-                bladeID.pullup.hide();
+                bladeID.bridgePin.show(false, true);
+                bladeID.pullup.show(false, true);
                 break;
             case BladeID::EXTERNAL:
-                bladeID.bridgePin.hide();
-                bladeID.pullup.show();
+                bladeID.bridgePin.show(false, true);
+                bladeID.pullup.show(true, true);
                 break;
             case BladeID::BRIDGED:
-                bladeID.bridgePin.show();
-                bladeID.pullup.hide();
+                bladeID.bridgePin.show(true, true);
+                bladeID.pullup.show(false, true);
                 break;
         }
     });
@@ -84,6 +82,27 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
 
         bladeID.continuousInterval.enable(bladeID.continuousScanning);
         bladeID.continuousTimes.enable(bladeID.continuousScanning);
+    });
+
+    bladeID.powerForID.setUpdateHandler([this](uint32 id) {
+        if (id != bladeID.powerForID.ID_VALUE) return;
+
+        bladeID.powerPins.enable(bladeID.powerForID);
+        bladeID.powerPinEntry.enable(bladeID.powerForID);
+    });
+
+    bladeID.powerPins.setUpdateHandler([this](uint32 id) {
+        if (id != bladeID.powerPins.ID_SELECTION) return;
+
+        auto selected{static_cast<set<uint32>>(bladeID.powerPins)};
+        auto items{bladeID.powerPins.items()};
+        for (auto idx{6}; idx < items.size(); ++idx) {
+            if (selected.find(idx) == selected.end()) {
+                items.erase(std::next(items.begin(), idx));
+                --idx;
+            }
+        }
+        bladeID.powerPins.setItems(std::move(items));
     });
 
     bladeID.powerPinEntry.setUpdateHandler([this](uint32 id) {
@@ -121,7 +140,14 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     numButtons.setRange(0, 3);
     numButtons = 2;
 
+    vector<string> pinDefaults{
+        "bladePin",
+        "blade2Pin",
+        "blade3Pin",
+        "blade4Pin",
+    };
     bladeDetect.setValue(false);
+    bladeDetectPin.setDefaults(vector{pinDefaults});
     bladeID.enable.setValue(false);
     bladeID.mode.setChoices(Utils::createEntries({
         _("Snapshot"),
@@ -129,10 +155,22 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         _("Bridged Pullup")
     }));
     bladeID.mode = BladeID::SNAPSHOT;
+    bladeID.pin.setDefaults(vector{pinDefaults});
+    bladeID.bridgePin.setDefaults(vector{pinDefaults});
+    bladeID.continuousScanning.setValue(false);
     bladeID.continuousTimes.setRange(1, 100);
     bladeID.continuousTimes = 10;
     bladeID.continuousInterval.setRange(10, 120000);
     bladeID.continuousInterval = 1000;
+    bladeID.powerForID.setValue(false);
+    bladeID.powerPins.setItems({
+        "bladePowerPin1",
+        "bladePowerPin2",
+        "bladePowerPin3",
+        "bladePowerPin4",
+        "bladePowerPin5",
+        "bladePowerPin6",
+    });
 
     volume.setRange(0, 4000);
     volume.setIncrement(50);
@@ -228,9 +266,17 @@ void Config::Settings::BladeID::addPowerPinFromEntry() {
     if (static_cast<string>(powerPinEntry).empty()) return;
 
     auto powerPinItems{powerPins.items()};
-    powerPinItems.emplace_back(static_cast<string>(powerPinEntry));
-    powerPins.setItems(std::move(powerPinItems));
-    powerPins.select(powerPins.items().size() - 1);
+    uint32 idx{0};
+    for (; idx < powerPinItems.size(); ++idx) {
+        if (powerPinItems[idx] == static_cast<string>(powerPinEntry)) break;
+    }
+    if (idx != powerPinItems.size()) {
+        powerPins.select(idx);
+    } else {
+        powerPinItems.emplace_back(static_cast<string>(powerPinEntry));
+        powerPins.setItems(std::move(powerPinItems));
+        powerPins.select(powerPins.items().size() - 1);
+    }
     powerPinEntry = "";
 }
 
