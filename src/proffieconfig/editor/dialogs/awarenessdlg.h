@@ -15,9 +15,6 @@ private:
   EditorWindow* mParent{nullptr};
 
   void bindEvents();
-  void createToolTips() const;
-
-  void stripAndSaveName();
 
   wxStaticBoxSizer *createIDSetup(wxWindow*);
   wxStaticBoxSizer *createIDPowerSettings(wxWindow*);

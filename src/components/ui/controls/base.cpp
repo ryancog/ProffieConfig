@@ -39,11 +39,12 @@ void PCUI::ControlData::enable(bool en) {
     notify(ID_ACTIVE);
 }
 
-void PCUI::ControlData::show(bool show) {
+void PCUI::ControlData::show(bool show, bool fit) {
     std::scoped_lock scopeLock{getLock()};
     if (mShown == show) return;
     mShown = show;
-    notify(ID_VISIBILITY);
+    if (fit) notify(ID_VISIBILITY_FIT);
+    else notify(ID_VISIBILITY);
 }
 
 void PCUI::ControlData::update(uint32 id) {
@@ -164,7 +165,9 @@ bool PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
-void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::refreshSizeAndLayout() {
+void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::refreshSizeAndLayout(
+    bool parentFit
+) {
     wxPanel::SetMinSize({-1, -1});
     auto newSize{GetBestSize()};
     newSize.IncTo(mMinSize);
@@ -179,6 +182,7 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
     auto *parent{wxGetTopLevelParent(this)};
     if (parent) {
         parent->Layout();
+        if (parentFit) parent->Fit();
     }
 }
 
@@ -190,10 +194,10 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
     onUIUpdate(id);
 
     bool rebound{id == ID_REBOUND};
-    if (rebound or id == ControlData::ID_VISIBILITY) {
+    if (rebound or id == ControlData::ID_VISIBILITY or id == ControlData::ID_VISIBILITY_FIT) {
         bool show{data()->isShown() and not mHidden};
         wxPanel::Show(show);
-        refreshSizeAndLayout();
+        refreshSizeAndLayout(id == ControlData::ID_VISIBILITY_FIT);
     }
     if (rebound or id == ControlData::ID_ACTIVE) Enable(data()->isEnabled());
 }
