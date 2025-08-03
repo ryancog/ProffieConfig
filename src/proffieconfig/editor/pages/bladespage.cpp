@@ -565,9 +565,18 @@ wxSizer *BladesPage::createBladeSettings() {
     simpleSplit2Sizer->Add(starSizer(config.bladeArrays.star3Proxy, _("LED 3")));
     simpleSplit2Sizer->AddSpacer(10);
     simpleSplit2Sizer->Add(starSizer(config.bladeArrays.star4Proxy, _("LED 4")));
+    auto *simpleBrightness{new PCUI::Numeric(
+        this,
+        config.bladeArrays.simpleBrightnessProxy,
+        0,
+        _("Brightness"),
+        wxHORIZONTAL
+    )};
     mSimpleSizer->Add(simpleSplit1Sizer);
     mSimpleSizer->AddSpacer(10);
     mSimpleSizer->Add(simpleSplit2Sizer);
+    mSimpleSizer->AddSpacer(10);
+    mSimpleSizer->Add(simpleBrightness);
 
     mPixelSizer = new wxBoxSizer(wxHORIZONTAL);
     auto pixelMainSizer{new wxBoxSizer(wxVERTICAL)};
@@ -608,6 +617,13 @@ wxSizer *BladesPage::createBladeSettings() {
         0,
         _("Use RGB with White")
     )};
+    auto *pixelBrightness{new PCUI::Numeric(
+        this,
+        config.bladeArrays.pixelBrightnessProxy,
+        0,
+        _("Brightness"),
+        wxHORIZONTAL
+    )};
 
     auto *pixelPowerPins{new PCUI::CheckList(
         this,
@@ -647,6 +663,8 @@ wxSizer *BladesPage::createBladeSettings() {
         whiteUseRGB,
         wxSizerFlags().Expand().Border(wxTOP, 5)
     );
+    pixelMainSizer->AddSpacer(10);
+    pixelMainSizer->Add(pixelBrightness, wxSizerFlags().Expand());
     pixelMainSizer->AddSpacer(10);
     pixelMainSizer->Add(pixelPowerPins, wxSizerFlags(1).Expand());
     pixelMainSizer->AddSpacer(5);
@@ -722,6 +740,13 @@ wxSizer *BladesPage::createBladeSettings() {
         false,
         _("Pixel List")
     )};
+    auto *splitBrightness{new PCUI::Numeric(
+        this,
+        config.bladeArrays.splitBrightnessProxy,
+        0,
+        _("Brightness"),
+        wxHORIZONTAL
+    )};
 
     pixelSplitSizer->Add(splitSelect, wxSizerFlags().Expand());
     pixelSplitSizer->AddSpacer(5);
@@ -736,6 +761,9 @@ wxSizer *BladesPage::createBladeSettings() {
     pixelSplitSizer->Add(splitSegments, wxSizerFlags().Expand().Border(wxTOP, 10));
 
     pixelSplitSizer->Add(splitList, wxSizerFlags().Expand());
+
+    pixelSplitSizer->AddSpacer(10);
+    pixelSplitSizer->Add(splitBrightness, wxSizerFlags().Expand());
 
     mPixelSizer->Add(pixelMainSizer, wxSizerFlags().Expand());
     mPixelSizer->AddSpacer(10);

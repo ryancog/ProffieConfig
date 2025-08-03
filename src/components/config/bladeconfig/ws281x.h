@@ -97,6 +97,8 @@ struct CONFIG_EXPORT Split {
     // For list
     PCUI::TextData list;
 
+    PCUI::NumericData brightness;
+
 private:
     Config& mConfig;
     WS281XBlade& mParent;

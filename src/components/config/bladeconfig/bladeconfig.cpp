@@ -38,6 +38,11 @@ Config::Blade::Blade(Config& config) :
             if (selectedArray.bladeSelection != -1) {
                 auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
                 if (&selectedBlade == this) {
+                    if (type == WS281X) {
+                        mConfig.bladeArrays.pixelBrightnessProxy.bind(brightness);
+                    } else if (type == SIMPLE) {
+                        mConfig.bladeArrays.simpleBrightnessProxy.bind(brightness);
+                    }
                     mConfig.bladeArrays.notifyData.notify(BladeArrays::ID_BLADE_TYPE_SELECTION);
                 }
             }
@@ -49,6 +54,9 @@ Config::Blade::Blade(Config& config) :
         _("Simple"),
     }));
     type = WS281X;
+
+    brightness.setRange(0, 100);
+    brightness.setValue(100);
 }
 
 Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
@@ -142,42 +150,11 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
         mConfig.bladeArrays.powerPinNameEntry = "";
 
         if (bladeSelection == -1) {
-            mConfig.bladeArrays.bladeTypeProxy.unbind();
-
-            mConfig.bladeArrays.lengthProxy.unbind();
-            mConfig.bladeArrays.dataPinProxy.unbind();
-
-            mConfig.bladeArrays.colorOrder3Proxy.unbind();
-            mConfig.bladeArrays.colorOrder4Proxy.unbind();
-            mConfig.bladeArrays.hasWhiteProxy.unbind();
-            mConfig.bladeArrays.useRGBWithWhiteProxy.unbind();
-
-            mConfig.bladeArrays.powerPinProxy.unbind();
-
-            mConfig.bladeArrays.splitSelectionProxy.unbind();
-            mConfig.bladeArrays.splitTypeProxy.unbind();
-            mConfig.bladeArrays.splitLengthProxy.unbind();
-            mConfig.bladeArrays.splitSegmentsProxy.unbind();
-
-            mConfig.bladeArrays.star1Proxy.ledProxy.unbind();
-            mConfig.bladeArrays.star1Proxy.resistanceProxy.unbind();
-            mConfig.bladeArrays.star1Proxy.powerPinProxy.unbind();
-
-            mConfig.bladeArrays.star2Proxy.ledProxy.unbind();
-            mConfig.bladeArrays.star2Proxy.resistanceProxy.unbind();
-            mConfig.bladeArrays.star2Proxy.powerPinProxy.unbind();
-
-            mConfig.bladeArrays.star3Proxy.ledProxy.unbind();
-            mConfig.bladeArrays.star3Proxy.resistanceProxy.unbind();
-            mConfig.bladeArrays.star3Proxy.powerPinProxy.unbind();
-
-            mConfig.bladeArrays.star4Proxy.ledProxy.unbind();
-            mConfig.bladeArrays.star4Proxy.resistanceProxy.unbind();
-            mConfig.bladeArrays.star4Proxy.powerPinProxy.unbind();
+            mConfig.bladeArrays.unbindBlade();
         } else {
-            auto& selectedBlade{blade(bladeSelection)}; mConfig.bladeArrays.bladeTypeProxy.bind(selectedBlade.type);
+            auto& selectedBlade{blade(bladeSelection)};
 
-
+            mConfig.bladeArrays.bladeTypeProxy.bind(selectedBlade.type);
             mConfig.bladeArrays.powerPinProxy.bind(selectedBlade.ws281x().powerPins);
 
             mConfig.bladeArrays.colorOrder3Proxy.bind(selectedBlade.ws281x().colorOrder3);

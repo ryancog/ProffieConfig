@@ -47,35 +47,8 @@ Config::BladeArrays::BladeArrays(Config& parent) :
 
         arrayIssues = BladeConfig::ISSUE_NONE;
         bladeSelectionProxy.unbind();
+        unbindBlade();
 
-        bladeTypeProxy.unbind();
-        powerPinProxy.unbind();
-
-        colorOrder3Proxy.unbind();
-        colorOrder4Proxy.unbind();
-        hasWhiteProxy.unbind();
-        useRGBWithWhiteProxy.unbind();
-
-        dataPinProxy.unbind();
-        lengthProxy.unbind();
-
-        splitSelectionProxy.unbind();
-        splitTypeProxy.unbind();
-        splitLengthProxy.unbind();
-        splitSegmentsProxy.unbind();
-
-        star1Proxy.ledProxy.unbind();
-        star1Proxy.powerPinProxy.unbind();
-        star1Proxy.resistanceProxy.unbind();
-        star2Proxy.ledProxy.unbind();
-        star2Proxy.powerPinProxy.unbind();
-        star2Proxy.resistanceProxy.unbind();
-        star3Proxy.ledProxy.unbind();
-        star3Proxy.powerPinProxy.unbind();
-        star3Proxy.resistanceProxy.unbind();
-        star4Proxy.ledProxy.unbind();
-        star4Proxy.powerPinProxy.unbind();
-        star4Proxy.resistanceProxy.unbind();
         if (arraySelection == -1) return;
 
         auto& selectedArray{array(arraySelection)};
@@ -193,5 +166,44 @@ uint32 Config::BladeArrays::numBlades() {
     }
 
     return ret;
+}
+
+void Config::BladeArrays::unbindBlade() {
+    bladeTypeProxy.unbind();
+
+    lengthProxy.unbind();
+    dataPinProxy.unbind();
+
+    colorOrder3Proxy.unbind();
+    colorOrder4Proxy.unbind();
+    hasWhiteProxy.unbind();
+    useRGBWithWhiteProxy.unbind();
+    pixelBrightnessProxy.unbind();
+
+    powerPinProxy.unbind();
+
+    splitSelectionProxy.unbind();
+    splitTypeProxy.unbind();
+    splitLengthProxy.unbind();
+    splitSegmentsProxy.unbind();
+    splitBrightnessProxy.unbind();
+
+    star1Proxy.ledProxy.unbind();
+    star1Proxy.resistanceProxy.unbind();
+    star1Proxy.powerPinProxy.unbind();
+
+    star2Proxy.ledProxy.unbind();
+    star2Proxy.resistanceProxy.unbind();
+    star2Proxy.powerPinProxy.unbind();
+
+    star3Proxy.ledProxy.unbind();
+    star3Proxy.resistanceProxy.unbind();
+    star3Proxy.powerPinProxy.unbind();
+
+    star4Proxy.ledProxy.unbind();
+    star4Proxy.resistanceProxy.unbind();
+    star4Proxy.powerPinProxy.unbind();
+
+    simpleBrightnessProxy.unbind();
 }
 
