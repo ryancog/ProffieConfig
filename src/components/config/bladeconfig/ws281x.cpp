@@ -113,7 +113,52 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         mConfig.bladeArrays.visualizerData.notify();
     });
     list.setUpdateHandler([this](uint32 id) {
-        // Welcome to hell
+        auto str{static_cast<string>(list)};
+        auto insertionPoint{list.getInsertionPoint()};
+
+        for (auto idx{0}; idx < str.size(); ++idx) {
+            if (
+                    (not std::isdigit(str[idx]) and (idx == 0 or str[idx] != ',')) or
+                    (idx != str.size() - 1 and (str[idx] == ',' and str[idx + 1] == ','))
+               ) {
+                if (idx < insertionPoint) --insertionPoint;
+                str.erase(idx, 1);
+                --idx;
+            }
+        }
+
+        bool commaEnd{str.back() == ','};
+        vector<string> values;
+
+        uint32 numStart{0};
+        for (auto idx{0}; idx < str.size(); ++idx) {
+            int32 end{-1};
+            if (not commaEnd and idx == str.size() - 1) end = idx + 1;
+            else if (str[idx] == ',') end = idx;
+
+            if (end != -1) {
+                auto substr{str.substr(numStart, end - numStart)};
+                auto value{std::to_string(std::clamp<uint32>(std::stoi(substr), 0, mParent.length))};
+                values.push_back(value);
+                if (substr != value and insertionPoint >= numStart and insertionPoint < end) {
+                    insertionPoint = end;
+                }
+                numStart = end + 1;
+            }
+        }
+
+        str.clear();
+        for (const auto& value : values) {
+            str += value;
+            str += ',';
+        }
+        if (not commaEnd) str.pop_back();
+
+        if (static_cast<string>(list) != str) {
+            list = std::move(str);
+            list.setInsertionPoint(insertionPoint);
+            return;
+        }
 
         if (mConfig.bladeArrays.arraySelection == -1) return;
         auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
@@ -133,6 +178,28 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
     start.setValue(0);
     brightness.setRange(0, 100);
     brightness.setValue(100);
+}
+
+vector<uint32> Config::Split::listValues() const {
+    const auto str{static_cast<string>(list)};
+    if (str.empty()) return {};
+
+    vector<uint32> ret;
+    bool commaEnd{str.back() == ','};
+
+    uint32 numStart{0};
+    for (auto idx{0}; idx < str.size(); ++idx) {
+        int32 end{-1};
+        if (not commaEnd and idx == str.size() - 1) end = idx + 1;
+        else if (str[idx] == ',') end = idx;
+
+        if (end != -1) {
+            ret.push_back(std::stoi(str.substr(numStart, end - numStart)));
+            numStart = end + 1;
+        }
+    }
+
+    return ret;
 }
 
 Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {

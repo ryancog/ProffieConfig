@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <limits>
 #include <map>
 #include <memory>
 
@@ -165,7 +166,26 @@ static vector<SplitData> generateSplitData(const Config::WS281XBlade& blade) {
             data.splitIdx = idx;
             ret.push_back(std::move(data));
         } else if (split.type == Config::Split::LIST) {
-            // TODO
+            SplitData data;
+            data.start = std::numeric_limits<uint32>::max();
+            for (auto val : split.listValues()) {
+                if (data.start != std::numeric_limits<uint32>::max() and val == data.start + data.length) {
+                    ++data.length;
+                    continue;
+                } else {
+                    if (data.start != std::numeric_limits<uint32>::max()) {
+                        ret.push_back(std::move(data));
+                    }
+
+                    data.start = val;
+                    data.length = 1;
+                    data.segments = 0;
+                    data.splitIdx = idx;
+                }
+            }
+            if (data.start != std::numeric_limits<uint32>::max()) {
+                ret.push_back(std::move(data));
+            }
         }
     }
 
