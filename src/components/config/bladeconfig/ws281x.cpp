@@ -131,6 +131,8 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
     start.setRange(0, mParent.length - 1);
     end.setRange(0, mParent.length - 1);
     start.setValue(0);
+    brightness.setRange(0, 100);
+    brightness.setValue(100);
 }
 
 Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
@@ -218,6 +220,7 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
             mConfig.bladeArrays.splitLengthProxy.bind(selectedSplit.length);
             mConfig.bladeArrays.splitSegmentsProxy.bind(selectedSplit.segments);
             mConfig.bladeArrays.splitListProxy.bind(selectedSplit.list);
+            mConfig.bladeArrays.splitBrightnessProxy.bind(selectedSplit.brightness);
         }
 
         mConfig.bladeArrays.notifyData.notify(BladeArrays::ID_SPLIT_SELECTION);

@@ -78,6 +78,8 @@ struct CONFIG_EXPORT BladeArrays {
     PCUI::ToggleDataProxy hasWhiteProxy;
     PCUI::ToggleDataProxy useRGBWithWhiteProxy;
 
+    PCUI::NumericDataProxy pixelBrightnessProxy;
+
     PCUI::ComboBoxDataProxy dataPinProxy;
     PCUI::NumericDataProxy lengthProxy;
 
@@ -90,6 +92,7 @@ struct CONFIG_EXPORT BladeArrays {
     PCUI::NumericDataProxy splitLengthProxy;
     PCUI::NumericDataProxy splitSegmentsProxy;
     PCUI::TextDataProxy splitListProxy;
+    PCUI::NumericDataProxy splitBrightnessProxy;
 
     struct StarProxy {
         PCUI::ChoiceDataProxy ledProxy;
@@ -101,11 +104,14 @@ struct CONFIG_EXPORT BladeArrays {
     StarProxy star2Proxy;
     StarProxy star3Proxy;
     StarProxy star4Proxy;
+    PCUI::NumericDataProxy simpleBrightnessProxy;
 
     /**
      * @return number of blades across all arrays
      */
     uint32 numBlades();
+
+    void unbindBlade();
 
 private:
     Config& mParent;

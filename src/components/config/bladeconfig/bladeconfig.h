@@ -42,6 +42,8 @@ struct CONFIG_EXPORT Blade {
     };
     PCUI::ChoiceData type;
 
+    PCUI::NumericData brightness;
+
     WS281XBlade& ws281x() { return mPixelBlade; }
     SimpleBlade& simple() { return mSimpleBlade; }
 
