@@ -47,10 +47,10 @@ struct UI_EXPORT NumericDataTemplate : ControlData {
 
     [[nodiscard]] T min() const { return mMin; }
     [[nodiscard]] T max() const { return mMax; }
-    void setRange(T min, T max);
+    void setRange(T min, T max, bool valUpdate = true);
 
     [[nodiscard]] T increment() const { return mIncrement; }
-    void setIncrement(T inc);
+    void setIncrement(T inc, bool valUpdate = true);
 
     enum {
         ID_VALUE,
