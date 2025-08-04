@@ -65,6 +65,8 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
                 bladeID.bridgePin.show(true, true);
                 bladeID.pullup.show(false, true);
                 break;
+            case BladeID::MODE_MAX:
+                assert(0);
         }
     });
 
@@ -129,16 +131,54 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         }
     });
 
+    saveState.setUpdateHandler([this](uint32 id) {
+        if (id != saveState.ID_VALUE) return;
+
+        saveVolume |= saveState;
+        saveVolume.enable(not saveState);
+        savePreset |= saveState;
+        savePreset.enable(not saveState);
+        saveColorChange |= saveState;
+        saveColorChange.enable(not saveState);
+        saveBladeDimming |= saveState;
+        saveBladeDimming.enable(not saveState);
+    });
+
+    enableAllEditOptions.setUpdateHandler([this](uint32 id) {
+        if (id != enableAllEditOptions.ID_VALUE) return;
+        
+        dynamicBladeLength |= enableAllEditOptions;
+        dynamicBladeLength.enable(not enableAllEditOptions);
+        dynamicBladeDimming |= enableAllEditOptions;
+        dynamicBladeDimming.enable(not enableAllEditOptions);
+        dynamicClashThreshold |= enableAllEditOptions;
+        dynamicClashThreshold.enable(not enableAllEditOptions);
+        saveVolume |= enableAllEditOptions;
+        saveVolume.enable(not enableAllEditOptions);
+        saveColorChange |= enableAllEditOptions;
+        saveColorChange.enable(not enableAllEditOptions);
+        saveBladeDimming |= enableAllEditOptions;
+        saveBladeDimming.enable(not enableAllEditOptions);
+        saveClashThreshold |= enableAllEditOptions;
+        saveClashThreshold.enable(not enableAllEditOptions);
+    });
+
+    dynamicBladeDimming.setUpdateHandler([this](uint32 id) {
+        if (id != dynamicBladeDimming.ID_VALUE) return;
+
+        saveBladeDimming.enable(dynamicBladeDimming);
+    });
+
     // Set defaults
     board.setChoices({
         "Proffieboard V3",
         "Proffieboard V2",
         "Proffieboard V1",
     });
-    board = PROFFIEBOARDV3;
+    board.setValue(PROFFIEBOARDV3);
 
     numButtons.setRange(0, 3);
-    numButtons = 2;
+    numButtons.setValue(2);
 
     vector<string> pinDefaults{
         "bladePin",
@@ -154,14 +194,14 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         _("External Pullup"),
         _("Bridged Pullup")
     }));
-    bladeID.mode = BladeID::SNAPSHOT;
+    bladeID.mode.setValue(BladeID::SNAPSHOT);
     bladeID.pin.setDefaults(vector{pinDefaults});
     bladeID.bridgePin.setDefaults(vector{pinDefaults});
     bladeID.continuousScanning.setValue(false);
     bladeID.continuousTimes.setRange(1, 100);
-    bladeID.continuousTimes = 10;
+    bladeID.continuousTimes.setValue(10);
     bladeID.continuousInterval.setRange(10, 120000);
-    bladeID.continuousInterval = 1000;
+    bladeID.continuousInterval.setValue(1000);
     bladeID.powerForID.setValue(false);
     bladeID.powerPins.setItems({
         "bladePowerPin1",
@@ -174,32 +214,32 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
 
     volume.setRange(0, 4000);
     volume.setIncrement(50);
-    volume = 1000;
+    volume.setValue(1000);
 
-    enableBootVolume = false;
+    enableBootVolume.setValue(false);
 
     clashThreshold.setRange(0.1, 5);
     clashThreshold.setIncrement(0.1);
-    clashThreshold = 3.0;
+    clashThreshold.setValue(3.0);
 
-    pliOffTime.setRange(1, 30000);
-    pliOffTime = 2;
+    pliOffTime.setRange(1, 3600);
+    pliOffTime.setValue(10);
     idleOffTime.setRange(1, 30000);
-    idleOffTime = 10;
+    idleOffTime.setValue(10);
     motionOffTime.setRange(1, 30000);
-    motionOffTime = 15;
+    motionOffTime.setValue(15);
 
-    disableColorChange = false;
-    disableBasicParserStyles = false;
-    disableDiagnosticCommands = false;
-    enableDeveloperCommands = false;
+    disableColorChange.setValue(false);
+    disableBasicParserStyles.setValue(false);
+    disableDiagnosticCommands.setValue(false);
+    enableDeveloperCommands.setValue(false);
 
-    saveState = false;
-    enableAllEditOptions = false;
+    saveState.setValue(false);
+    enableAllEditOptions.setValue(false);
 
-    saveColorChange = false;    
-    saveVolume = false;
-    savePreset = false;
+    saveColorChange.setValue(false);
+    saveVolume.setValue(false);
+    savePreset.setValue(false);
 
     orientation.setChoices(Utils::createEntries({
         _("FETs Towards Blade"),
@@ -209,31 +249,31 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         _("Top Towards Blade"),
         _("Bottom Towards Blade")
     }));
-    orientation = FETS_TOWARDS_BLADE;
+    orientation.setValue(FETS_TOWARDS_BLADE);
 
-    orientationRotation.x = 0;
-    orientationRotation.y = 0;
-    orientationRotation.z = 0;
+    orientationRotation.x.setValue(0);
+    orientationRotation.y.setValue(0);
+    orientationRotation.z.setValue(0);
 
-    speakTouchValues = false;
+    speakTouchValues.setValue(false);
 
-    dynamicBladeDimming = false;
-    dynamicBladeLength = false;
-    dynamicClashThreshold = false;
+    dynamicBladeDimming.setValue(false);
+    dynamicBladeLength.setValue(false);
+    dynamicClashThreshold.setValue(false);
 
-    saveBladeDimming = false;
-    saveClashThreshold = false;
+    saveBladeDimming.setValue(false);
+    saveClashThreshold.setValue(false);
 
-    filterCutoff = 100;
-    filterOrder = 8;
+    filterCutoff.setValue(100);
+    filterOrder.setValue(8);
 
-    audioClashSuppressionLevel = 10;
-    dontUseGyroForClash = false;
+    audioClashSuppressionLevel.setValue(10);
+    dontUseGyroForClash.setValue(false);
 
-    noRepeatRandom = false;
-    femaleTalkie = false;
-    disableTalkie = false;
-    killOldPlayers = false;
+    noRepeatRandom.setValue(false);
+    femaleTalkie.setValue(false);
+    disableTalkie.setValue(false);
+    killOldPlayers.setValue(false);
 }
 
 bool Config::Settings::addCustomOption() {

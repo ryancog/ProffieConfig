@@ -26,6 +26,13 @@ Config::SimpleBlade::SimpleBlade() {
 }
 
 Config::SimpleBlade::Star::Star() {
+    led.setUpdateHandler([this](uint32 id) {
+        if (id != led.ID_SELECTION) return;
+
+        powerPin.enable(led != NONE);
+        resistance.enable(led != NONE and led >= USE_RESISTANCE_START and led <= USE_RESISTANCE_END);
+    });
+
     led.setChoices(Utils::createEntries({
         _("<None>"),
         _("Cree Red"),
@@ -38,6 +45,7 @@ Config::SimpleBlade::Star::Star() {
         _("Green"),
         _("Blue"),
     }));
+    led.setValue(NONE);
     powerPin.setDefaults(Utils::createEntries({
         "bladePowerPin1",
         "bladePowerPin2",
@@ -48,40 +56,4 @@ Config::SimpleBlade::Star::Star() {
     }));
     resistance.setRange(0, 10000);
     resistance.setIncrement(50);
-
-    led.setUpdateHandler([this](uint32 id) {
-        if (id != led.ID_SELECTION) return;
-
-        powerPin.enable(led != NONE);
-        resistance.enable(led != NONE);
-    });
-
-    led = NONE;
 }
-
-// wxString BladesPage::ledToConfigStr(LED led) {
-//     switch (led) {
-//         case CREE_RED:
-//             return "CreeXPE2RedTemplate";
-//         case CREE_GREEN:
-//             return "CreeXPE2GreenTemplate";
-//         case CREE_BLUE:
-//             return "CreeXPE2BlueTemplate";
-//         case CREE_AMBER:
-//             return "CreeXPE2AmberTemplate";
-//         case CREE_RED_ORANGE:
-//             return "CreeXPE2RedOrangeTemplate";
-//         case CREE_WHITE:
-//             return "CreeXPE2WhiteTemplate";
-//         case RED:
-//             return "CH1LED";
-//         case GREEN:
-//             return "CH2LED";
-//         case BLUE:
-//             return "CH3LED";
-//         case NONE:
-//         default:
-//             return "NoLED";
-//     }
-// }
-

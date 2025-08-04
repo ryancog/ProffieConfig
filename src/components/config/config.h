@@ -42,8 +42,8 @@ struct CONFIG_EXPORT Config {
         ID_PROPSELECTION,
     };
     PCUI::NotifierData propNotifyData;
-    Versions::Prop& prop(uint32 idx) {
-        return **std::next(mProps.begin(), idx);
+    Versions::Prop& prop(uint32 idx) const {
+        return *mProps[idx];
     }
 
     PresetArrays presetArrays;
@@ -59,7 +59,10 @@ struct CONFIG_EXPORT Config {
     void rename(const string& newName);
 
     bool isSaved();
-    bool save(filepath = {});
+    /**
+     * @return error or nullopt on success
+     */
+    optional<string> save(filepath = {});
 
     /**
      * Remove from internal storage and let it die once last memory

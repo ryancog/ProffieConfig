@@ -1,5 +1,4 @@
 #include "version.h"
-#include <cctype>
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek

@@ -25,6 +25,13 @@
 
 Config::Split::Split(Config& config, WS281XBlade& parent) :
     mConfig{config}, mParent(parent), type{TYPE_MAX} {
+    segments.setRange(2, 6);
+    length.setRange(1, std::numeric_limits<int32>::max());
+    start.setRange(0, mParent.length - 1);
+    end.setRange(0, mParent.length - 1);
+    brightness.setRange(0, 100);
+    brightness.setValue(100);
+
     type.setUpdateHandler([this](uint32 id) {
         if (id != type.ID_SELECTION) return;
 
@@ -35,6 +42,11 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
 
         auto usesSegments{type == STRIDE or type == ZIG_ZAG};
         segments.show(usesSegments);
+        if (segments.isShown()) segments.setValue(segments);
+        else {
+            length.setIncrement(1, false);
+            length.setRange(1, std::numeric_limits<int32>::max());
+        }
 
         list.show(type == LIST);
 
@@ -84,10 +96,14 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         mConfig.bladeArrays.visualizerData.notify();
     });
     length.setUpdateHandler([this](uint32 id) {
-        if (id != start.ID_VALUE) return;
+        if (id != length.ID_VALUE) return;
 
+        if (length > mParent.length) {
+            length = static_cast<uint32>(mParent.length);
+            return;
+        }
         if (start + length > mParent.length) {
-            length = mParent.length - start;
+            start = mParent.length - length;
             return;
         }
 
@@ -103,6 +119,14 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         mConfig.bladeArrays.visualizerData.notify();
     });
     segments.setUpdateHandler([this](uint32 id) {
+        if (id != segments.ID_VALUE) return;
+
+        if (mParent.length < segments) {
+            mParent.length = static_cast<uint32>(segments);
+        }
+        length.setIncrement(segments, false);
+        length.setRange(segments, std::numeric_limits<int32>::max());
+
         if (mConfig.bladeArrays.arraySelection == -1) return;
         auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
         if (selectedArray.bladeSelection == -1) return;
@@ -170,14 +194,7 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         mConfig.bladeArrays.visualizerData.notify();
     });
 
-    segments.setRange(2, 6);
     type.setValue(0);
-    length.setRange(0, std::numeric_limits<int32>::max());
-    start.setRange(0, mParent.length - 1);
-    end.setRange(0, mParent.length - 1);
-    start.setValue(0);
-    brightness.setRange(0, 100);
-    brightness.setValue(100);
 }
 
 vector<uint32> Config::Split::listValues() const {
@@ -207,6 +224,10 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
         if (id != length.ID_VALUE) return;
 
         for (const auto& split : mSplits) {
+            if (split->segments > length) {
+                split->type = Split::STANDARD;
+            }
+
             split->start.setRange(0, length - 1);
             split->end.setRange(0, length - 1);
         }

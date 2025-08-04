@@ -49,13 +49,19 @@ struct CONFIG_EXPORT Settings {
         PROFFIEBOARDV3,
         PROFFIEBOARDV2,
         PROFFIEBAORDV1,
+        VERSION_MAX,
+    };
+    static constexpr array<cstring, VERSION_MAX> BOARD_STRS{
+        "proffieboard_v3_config.h",
+        "proffieboard_v2_config.h",
+        "proffieboard_v1_config.h",
     };
     PCUI::ChoiceData board;
 
     // Do NOT set choices manually
     // Done via Config::refreshVersions
     PCUI::ChoiceData osVersion;
-    constexpr static cstring OS_VERSION_STR{"OS_VERSION"};
+    constexpr static cstring OS_VERSION_STR{"OS_VERSION "};
 
     PCUI::ToggleData massStorage;
     constexpr static cstring ENABLE_MASS_STORAGE_STR{"ENABLE_MASS_STORAGE"};
@@ -63,22 +69,68 @@ struct CONFIG_EXPORT Settings {
     constexpr static cstring ENABLE_WEBUSB_STR{"ENABLE_WEBUSB"};
 
     PCUI::NumericData numButtons;
-    constexpr static cstring NUM_BUTTONS_STR{"NUM_BUTTONS"};
+    constexpr static cstring NUM_BUTTONS_STR{"NUM_BUTTONS "};
+    struct ButtonData {
+        enum Type {
+            BUTTON,
+            PULLDOWN_BUTTON,
+            LATCHING_BUTTON,
+            INVERTED_LATCHING_BUTTON,
+            TOUCH_BUTTON,
 
-    constexpr static cstring NUM_BLADES_STR{"NUM_BLADES"};
-    constexpr static cstring EN_AUDIO_STR{"ENABLE_AUDIO"};
-    constexpr static cstring EN_MOTION_STR{"ENABLE_MOTION"};
-    constexpr static cstring EN_WS2811_STR{"ENABLE_WS2811"};
-    constexpr static cstring EN_SD_STR{"ENABLE_SD"};
+            TYPE_MAX,
+        };
+        static constexpr array<cstring, TYPE_MAX> TYPE_STRS{
+        };
+        PCUI::ChoiceData type;
+        enum Button {
+            POWER,
+            AUX,
+            AUX2,
+            UP,
+            DOWN,
+            LEFT,
+            RIGHT,
+            SELECT,
+            BUTTON_MAX,
+
+            FIRE = UP,
+            MODE_SELECT = DOWN,
+            CLIP_DETECT = LEFT,
+            RELOAD = RIGHT,
+            RANGE = SELECT,
+        };
+        static constexpr array<cstring, BUTTON_MAX> BUTTON_STRS{
+            "BUTTON_POWER",
+            "BUTTON_AUX",
+            "BUTTON_AUX2",
+            "BUTTON_UP",
+            "BUTTON_DOWN",
+            "BUTTON_LEFT",
+            "BUTTON_RIGHT",
+            "BUTTON_SELECT",
+        };
+        PCUI::ChoiceData button;
+
+        PCUI::ComboBoxData pin;
+        PCUI::TextData name;
+        PCUI::NumericData touch;
+    };
+
+    constexpr static cstring NUM_BLADES_STR{"NUM_BLADES "};
+    constexpr static cstring ENABLE_AUDIO_STR{"ENABLE_AUDIO"};
+    constexpr static cstring ENABLE_MOTION_STR{"ENABLE_MOTION"};
+    constexpr static cstring ENABLE_WS2811_STR{"ENABLE_WS2811"};
+    constexpr static cstring ENABLE_SD_STR{"ENABLE_SD"};
     constexpr static cstring SHARED_POWER_PINS_STR{"SHARED_POWER_PINS"};
     constexpr static cstring KEEP_SAVEFILES_STR{"KEEP_SAVEFILES_WHEN_PROGRAMMING"};
 
     // PCUI::ChoiceData rfidSerial;
-    constexpr static cstring RFID_SERIAL_STR{"RFID_SERIAL"};
+    constexpr static cstring RFID_SERIAL_STR{"RFID_SERIAL "};
 
     PCUI::ToggleData bladeDetect;
     PCUI::ComboBoxData bladeDetectPin;
-    constexpr static cstring BLADE_DETECT_PIN_STR{"BLADE_DETECT_PIN"};
+    constexpr static cstring BLADE_DETECT_PIN_STR{"BLADE_DETECT_PIN "};
 
     struct BladeID {
         PCUI::ToggleData enable;
@@ -87,6 +139,12 @@ struct CONFIG_EXPORT Settings {
             SNAPSHOT = 0,
             EXTERNAL,
             BRIDGED,
+            MODE_MAX,
+        };
+        static constexpr array<cstring, MODE_MAX> MODE_STRS{
+            "SnapshotBladeID<",
+            "ExternalPullupBladeID<",
+            "BridgedPullupBladeID<",
         };
         PCUI::ChoiceData mode;
         PCUI::ComboBoxData bridgePin;
@@ -100,26 +158,27 @@ struct CONFIG_EXPORT Settings {
 
         void addPowerPinFromEntry();
     } bladeID;
-    constexpr static cstring BLADE_ID_CLASS_STR{"BLADE_ID_CLASS"};
-    constexpr static cstring ENABLE_POWER_FOR_ID_STR{"ENABLE_POWER_FOR_ID"};
-    constexpr static cstring BLADE_ID_SCAN_MILLIS_STR{"BLADE_ID_SCAN_MILLIS"};
-    constexpr static cstring BLADE_ID_TIMES_STR{"BLADE_ID_TIMES"};
+    constexpr static cstring BLADE_ID_CLASS_STR{"BLADE_ID_CLASS "};
+    constexpr static cstring ENABLE_POWER_FOR_ID_STR{"ENABLE_POWER_FOR_ID PowerPINS<"};
+    constexpr static cstring BLADE_ID_SCAN_MILLIS_STR{"BLADE_ID_SCAN_MILLIS "};
+    constexpr static cstring BLADE_ID_TIMES_STR{"BLADE_ID_TIMES "};
 
     PCUI::NumericData volume;
-    constexpr static cstring VOLUME_STR{"VOLUME"};
+    constexpr static cstring VOLUME_STR{"VOLUME "};
     PCUI::ToggleData enableBootVolume;
     PCUI::NumericData bootVolume;
-    constexpr static cstring BOOT_VOLUME_STR{"BOOT_VOLUME"};
+    constexpr static cstring BOOT_VOLUME_STR{"BOOT_VOLUME "};
     PCUI::DecimalData clashThreshold;
-    constexpr static cstring CLASH_THRESHOLD_STR{"CLASH_THRESHOLD_G"};
+    constexpr static cstring CLASH_THRESHOLD_STR{"CLASH_THRESHOLD_G "};
 
-    // In minutes
+    // In seconds 
     PCUI::DecimalData pliOffTime;
-    constexpr static cstring PLI_OFF_STR{"PLI_OFF_TIME"};
+    constexpr static cstring PLI_OFF_STR{"PLI_OFF_TIME "};
+    // In Minutes
     PCUI::DecimalData idleOffTime;
-    constexpr static cstring IDLE_OFF_STR{"IDLE_OFF_TIME"};
+    constexpr static cstring IDLE_OFF_STR{"IDLE_OFF_TIME "};
     PCUI::DecimalData motionOffTime;
-    constexpr static cstring MOTION_OFF_STR{"MOTION_TIMEOUT"};
+    constexpr static cstring MOTION_OFF_STR{"MOTION_TIMEOUT "};
 
     PCUI::ToggleData disableColorChange;
     constexpr static cstring DISABLE_COLOR_CHANGE_STR{"DISABLE_COLOR_CHANGE"};
@@ -166,15 +225,20 @@ struct CONFIG_EXPORT Settings {
         USB_CW_FROM_BLADE,
         TOP_TOWARDS_BLADE,
         BOTTOM_TOWARDS_BLADE,
+        ORIENTATION_MAX,
+
+        ORIENTATION_NORMAL = FETS_TOWARDS_BLADE,
+    };
+    static constexpr array<cstring, ORIENTATION_MAX> ORIENTATION_STRS{
+        "ORIENTATION_FETS_TOWARDS_BLADE",
+        "ORIENTATION_USB_TOWARDS_BLADE",
+        "ORIENTATION_USB_CCW_FROM_BLADE",
+        "ORIENTATION_USB_CW_FROM_BLADE",
+        "ORIENTATION_TOP_TOWARDS_BLADE",
+        "ORIENTATION_BOTTOM_TOWARDS_BLADE",
     };
     PCUI::ChoiceData orientation;
-    constexpr static cstring ORIENTATION_STR{"ORIENTATION"};
-    constexpr static cstring ORIENT_FETS_TOWARDS_BLADE_STR{"ORIENTATION_FETS_TOWARDS_BLADE"};
-    constexpr static cstring ORIENT_USB_TOWARDS_BLADE_STR{"ORIENTATION_USB_TOWARDS_BLADE"};
-    constexpr static cstring ORIENT_USB_CCW_FROM_BLADE_STR{"ORIENTATION_USB_CCW_FROM_BLADE"};
-    constexpr static cstring ORIENT_USB_CW_FROM_BLADE_STR{"ORIENTATION_USB_CW_FROM_BLADE"};
-    constexpr static cstring ORIENT_TOP_TOWARDS_BLADE_STR{"ORIENTATION_TOP_TOWARDS_BLADE"};
-    constexpr static cstring ORIENT_BOTTOM_TOWARDS_BLADE_STR{"ORIENTATION_BOTTOM_TOWARDS_BLADE"};
+    constexpr static cstring ORIENTATION_STR{"ORIENTATION "};
 
     struct OrientRotation {
         PCUI::NumericData x;
@@ -210,14 +274,15 @@ struct CONFIG_EXPORT Settings {
 
     // Does not affect I2C or S/PDIF
     // Cutoff in Hz
+    PCUI::ToggleData enableFiltering;
     PCUI::NumericData filterCutoff;
-    constexpr static cstring FILTER_CUTOFF_STR{"FILTER_CUTOFF_FREQUENCY"};
+    constexpr static cstring FILTER_CUTOFF_STR{"FILTER_CUTOFF_FREQUENCY "};
     PCUI::NumericData filterOrder;
-    constexpr static cstring FILTER_ORDER_STR{"FILTER_ORDER"};
+    constexpr static cstring FILTER_ORDER_STR{"FILTER_ORDER "};
 
     // Useful range is 1~50
     PCUI::NumericData audioClashSuppressionLevel;
-    constexpr static cstring AUDIO_CLASH_SUPPRESSION_STR{"AUDIO_CLASH_SUPPRESSION_LEVEL"};
+    constexpr static cstring AUDIO_CLASH_SUPPRESSION_STR{"AUDIO_CLASH_SUPPRESSION_LEVEL "};
     PCUI::ToggleData dontUseGyroForClash;
     constexpr static cstring DONT_USE_GYRO_FOR_CLASH_STR{"PROFFIEOS_DONT_USE_GYRO_FOR_CLASH"};
 

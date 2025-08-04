@@ -265,12 +265,18 @@ void Config::PresetArrays::syncStyleDisplay(int32 clearIdx) {
         auto subIdx{0};
         for (const auto& blade : bladeArray.blades()) {
             if (blade->type == Blade::Type::SIMPLE) {
-                styleChoices.emplace_back("Blade " + std::to_string(mainIdx));
+                styleChoices.emplace_back(
+                    wxString::Format(_("Blade %d"), mainIdx).ToStdString()
+                );
                 ++mainIdx;
+                ++count;
             } else if (blade->type == Blade::Type::WS281X) {
                 auto& ws281x{blade->ws281x()};
                 if (ws281x.splits().empty()) {
-                    styleChoices.emplace_back("Blade " + std::to_string(mainIdx));
+                    styleChoices.emplace_back(
+                        wxString::Format(_("Blade %d"), mainIdx).ToStdString()
+                    );
+                    ++count;
                 } else {
                     subIdx = 0;
                     for (const auto& split : ws281x.splits()) {
@@ -278,18 +284,17 @@ void Config::PresetArrays::syncStyleDisplay(int32 clearIdx) {
                             case Split::REVERSE:
                             case Split::STANDARD:
                                 styleChoices.emplace_back(
-                                        "Blade " + std::to_string(mainIdx) +
-                                        ':' + std::to_string(subIdx)
-                                        );
+                                    wxString::Format(_("Blade %d:%d"), mainIdx, subIdx).ToStdString()
+                                );
+                                ++count;
                                 break;
                             case Split::STRIDE:
                             case Split::ZIG_ZAG:
                                 for (auto idx{0}; idx < split->segments; ++idx) {
                                     styleChoices.emplace_back(
-                                            "Blade " + std::to_string(mainIdx) +
-                                            ':' + std::to_string(subIdx) +
-                                            ':' + std::to_string(idx)
-                                            );
+                                        wxString::Format(_("Blade %d:%d:%d"), mainIdx, subIdx, idx).ToStdString()
+                                    );
+                                    ++count;
                                 }
                                 break;
                             case Split::TYPE_MAX:
@@ -301,6 +306,10 @@ void Config::PresetArrays::syncStyleDisplay(int32 clearIdx) {
                 }
                 ++mainIdx;
             }
+        }
+
+        for (auto idx{count}; idx < numBlades; ++idx) {
+            styleChoices.emplace_back(_("Unassigned").ToStdString());
         }
     }
     for (const auto& array : mArrays) {

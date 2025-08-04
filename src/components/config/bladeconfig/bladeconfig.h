@@ -39,6 +39,7 @@ struct CONFIG_EXPORT Blade {
     enum Type {
         WS281X,
         SIMPLE,
+        UNASSIGNED,
     };
     PCUI::ChoiceData type;
 
@@ -73,20 +74,23 @@ struct CONFIG_EXPORT BladeConfig {
 
     enum Issue {
         ISSUE_NONE = 0,
-        ISSUE_NO_NAME         = 1UL << 0,
-        ISSUE_NO_PRESETARRAY  = 1UL << 1,
-        ISSUE_DUPLICATE_ID    = 1UL << 2,
-        ISSUE_DUPLICATE_NAME  = 1UL << 3,
+        ISSUE_NO_PRESETARRAY  = 1UL << 0,
+        ISSUE_DUPLICATE_ID    = 1UL << 1,
+        ISSUE_DUPLICATE_NAME  = 1UL << 2,
     };
     static constexpr auto ISSUE_WARNINGS{
         ISSUE_DUPLICATE_ID
     };
     static constexpr auto ISSUE_ERRORS{
-        ISSUE_DUPLICATE_NAME | ISSUE_NO_NAME | ISSUE_NO_PRESETARRAY
+        ISSUE_DUPLICATE_NAME | ISSUE_NO_PRESETARRAY
     };
     [[nodiscard]] uint32 computeIssues() const;
 
-    [[nodiscard]] static wxString issueString(Issue);
+    /**
+     * @param Issue or bitor'd Issue's
+     * @return untranslated string
+     */
+    [[nodiscard]] static string issueString(uint32 issues);
 
     PCUI::TextData name;
     PCUI::ChoiceData presetArray;

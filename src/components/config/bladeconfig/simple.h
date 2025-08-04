@@ -22,26 +22,10 @@
 #include "ui/controls/choice.h"
 #include "ui/controls/combobox.h"
 #include "ui/controls/numeric.h"
-#include "utils/types.h"
 
 #include "../private/export.h"
 
 namespace Config {
-
-enum LED {
-    NONE,
-
-    CREE_RED,
-    CREE_GREEN,
-    CREE_BLUE,
-    CREE_AMBER,
-    CREE_RED_ORANGE,
-    CREE_WHITE,
-
-    RED,
-    GREEN,
-    BLUE,
-};
 
 struct CONFIG_EXPORT SimpleBlade {
     SimpleBlade();
@@ -49,6 +33,37 @@ struct CONFIG_EXPORT SimpleBlade {
     struct Star {
         Star();
 
+        enum LED {
+            NONE,
+
+            CREE_RED,
+            CREE_GREEN,
+            CREE_BLUE,
+            CREE_AMBER,
+            CREE_RED_ORANGE,
+            CREE_WHITE,
+
+            RED,
+            GREEN,
+            BLUE,
+
+            LED_MAX,
+
+            USE_RESISTANCE_START = CREE_RED,
+            USE_RESISTANCE_END = CREE_WHITE,
+        };
+        static constexpr array<cstring, LED_MAX> LED_STRS{
+            "NoLED",
+            "CreeXPE2RedTemplate",
+            "CreeXPE2GreenTemplate",
+            "CreeXPE2BlueTemplate",
+            "CreeXPE2AmberTemplate",
+            "CreeXPE2RedOrangeTemplate",
+            "CreeXPE2WhiteTemplate",
+            "CH1LED",
+            "CH2LED",
+            "CH3LED",
+        };
         PCUI::ChoiceData led;
         PCUI::ComboBoxData powerPin;
         PCUI::NumericData resistance;

@@ -119,6 +119,15 @@ struct CONFIG_EXPORT WS281XBlade {
         BRG,
         RGB,
         RBG,
+        ORDER_MAX,
+    };
+    static constexpr array<cstring, ORDER_MAX> ORDER_STRS{
+        "GRB",
+        "GBR",
+        "BGR",
+        "BRG",
+        "RGB",
+        "RBG",
     };
     PCUI::ChoiceData colorOrder3;
     enum ColorOrder4 {
