@@ -35,29 +35,30 @@ void PCUI::Private::NumericDataTemplate<T>::operator=(T val) {
 template<typename T> requires std::is_arithmetic_v<T>
 void PCUI::Private::NumericDataTemplate<T>::setValue(T val) {
     std::scoped_lock scopeLock{getLock()};
-    const auto clampedVal{std::clamp(val, mMin, mMax)};
+    const auto clampedVal{std::clamp((val / mIncrement) * mIncrement, mMin, mMax)};
     mValue = clampedVal;
     notify(ID_VALUE);
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-void PCUI::Private::NumericDataTemplate<T>:: setRange(T min, T max) { 
+void PCUI::Private::NumericDataTemplate<T>::setRange(T min, T max, bool valUpdate) {
     std::scoped_lock scopeLock{getLock()};
     if (min == mMin and max == mMax) return;
     assert(min <= max);
     mMin = min; 
     mMax = max; 
     notify(ID_RANGE);
-    setValue(mValue);
+    if (valUpdate) setValue(mValue);
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-void PCUI::Private::NumericDataTemplate<T>:: setIncrement(T inc) {
+void PCUI::Private::NumericDataTemplate<T>::setIncrement(T inc, bool valUpdate) {
     std::scoped_lock scopeLock{getLock()};
     if (inc == mIncrement) return;
     assert(inc > 0);
     mIncrement = inc;
     notify(ID_INCREMENT);
+    if (valUpdate) setValue(mValue);
 }
 
 template struct PCUI::Private::NumericDataTemplate<int32>;
