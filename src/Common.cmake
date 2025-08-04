@@ -4,9 +4,9 @@
 
 function(setup_target TARGET)
     get_target_property(BIN_VERSION ${TARGET} BIN_VERSION)
-    if (BIN_VERSION STREQUAL "BIN_VERSION-NOTFOUND")
-        set(BIN_VERSION ${PROJECT_VERSION})
-    endif()
+    # if (BIN_VERSION STREQUAL "BIN_VERSION-NOTFOUND")
+    #     set(BIN_VERSION ${PROJECT_VERSION})
+    # endif()
 
     if (CMAKE_SYSTEM_NAME STREQUAL Linux)
         set(RPATH "$ORIGIN/../lib:$ORIGIN/../components")
@@ -48,5 +48,5 @@ function(setup_target TARGET)
         BUILD_WITH_INSTALL_RPATH true
     )
 
-    target_compile_definitions(${TARGET} PRIVATE BIN_VERSION=${BIN_VERSION})
+    target_compile_definitions(${TARGET} PRIVATE BIN_VERSION=${BIN_VERSION} VERSION=${PROJECT_VERSION})
 endfunction()

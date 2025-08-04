@@ -164,7 +164,7 @@ void PresetsPage::createUI() {
         wxSYS_COLOUR_WINDOWTEXT
     )};
     arraySizer->Add(arraySelection, wxSizerFlags(1));
-    arraySizer->Add(issueButton, wxSizerFlags().Border(wxLEFT, 5));
+    arraySizer->Add(issueButton, wxSizerFlags().Border(wxLEFT, 5).Bottom());
     arraySizer->AddSpacer(5);
     arraySizer->Add(arrayRename, wxSizerFlags().Bottom());
 

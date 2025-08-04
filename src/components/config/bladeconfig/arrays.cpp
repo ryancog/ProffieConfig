@@ -90,15 +90,16 @@ void Config::BladeArrays::refreshPresetArrays(int32 clearIdx) {
 
 Config::BladeConfig& Config::BladeArrays::addArray(string&& name, uint32 id, string presetArray) {
     auto& array{mBladeArrays.emplace_back(std::make_unique<BladeConfig>(mParent))};
-    array->name = std::move(name);
-    array->id = id;
 
+    auto bladeArrayChoices{arraySelection.choices()};
+    bladeArrayChoices.push_back({});
+    arraySelection.setChoices(std::move(bladeArrayChoices));
+
+    array->name.setValue(std::move(name));
+    array->id = id;
     array->presetArray.setChoices(vector{mParent.presetArrays.selection.choices()});
     array->presetArray = presetArray;
 
-    auto bladeArrayChoices{arraySelection.choices()};
-    bladeArrayChoices.push_back(array->name);
-    arraySelection.setChoices(std::move(bladeArrayChoices));
     mParent.presetArrays.syncStyleDisplay();
     if (mParent.presetArrays.styleDisplay == -1) mParent.presetArrays.styleDisplay = 0;
     return *array;
@@ -141,7 +142,7 @@ void Config::BladeArrays::addPowerPinFromEntry() {
     powerPinNameEntry = "";
 }
 
-uint32 Config::BladeArrays::numBlades() {
+uint32 Config::BladeArrays::numBlades() const {
     uint32 ret{0};
     for (const auto& array : mBladeArrays) {
         uint32 count{0};

@@ -59,7 +59,7 @@ struct CONFIG_EXPORT BladeArrays {
     void refreshPresetArrays(int32 clearIdx = -1);
 
     [[nodiscard]] const vector<std::unique_ptr<BladeConfig>>& arrays() const { return mBladeArrays; }
-    [[nodiscard]] BladeConfig& array(uint32 idx) { 
+    [[nodiscard]] BladeConfig& array(uint32 idx) const {
         assert(idx < mBladeArrays.size());
         return **std::next(mBladeArrays.begin(), idx);
     }
@@ -109,7 +109,7 @@ struct CONFIG_EXPORT BladeArrays {
     /**
      * @return number of blades across all arrays
      */
-    uint32 numBlades();
+    uint32 numBlades() const;
 
     void unbindBlade();
 

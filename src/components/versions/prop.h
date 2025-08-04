@@ -245,14 +245,14 @@ struct VERSIONS_EXPORT PropOption {
     PropOption(Prop&, vector<PropSelectionData>);
     PropOption(const PropOption&, Prop&);
 
-    [[nodiscard]] inline const list<PropSelection>& selections() const { return mSelections; }
+    [[nodiscard]] const vector<std::unique_ptr<PropSelection>>& selections() const { return mSelections; }
 
     PCUI::RadiosData selection;
 
 private:
     friend Prop;
     friend PropSelection;
-    list<PropSelection> mSelections;
+    vector<std::unique_ptr<PropSelection>> mSelections;
 };
 
 /**

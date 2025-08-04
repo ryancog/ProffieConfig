@@ -28,7 +28,7 @@ namespace Versions {
 Versions::PropOption::PropOption(Prop& prop, vector<PropSelectionData> selectionDatas) :
     selection{static_cast<uint32>(selectionDatas.size())} {
     for (const auto& selectionData : selectionDatas) {
-        mSelections.emplace_back(
+        mSelections.push_back(std::make_unique<PropSelection>(
             prop,
             *this,
             selectionData.name,
@@ -38,14 +38,14 @@ Versions::PropOption::PropOption(Prop& prop, vector<PropSelectionData> selection
             selectionData.requiredAny,
             selectionData.disables,
             selectionData.shouldOutput
-        );
+        ));
     }
 }
 
 Versions::PropOption::PropOption(const PropOption& other, Prop& prop) :
     selection{static_cast<uint32>(other.selection.numSelections())} {
     for (const auto& sel : other.mSelections) {
-        mSelections.emplace_back(sel, prop, *this);
+        mSelections.push_back(std::make_unique<PropSelection>(*sel, prop, *this));
     }
 }
 
@@ -53,7 +53,7 @@ void Versions::PropSelection::select() {
     auto selectionIter{mOption.mSelections.begin()};
     const auto selectionEndIter{mOption.mSelections.end()};
     for (auto idx{0}; selectionIter != selectionEndIter; ++idx, ++selectionIter) { 
-        if (&*selectionIter == this) {
+        if (&**selectionIter == this) {
             mOption.selection = idx;
             break;
         }
@@ -64,17 +64,17 @@ bool Versions::PropSelection::value() const {
     // TODO: Make sure this works correctly
     auto selectionIter{mOption.mSelections.begin()};
     for (auto idx{0}; idx < mOption.selection; ++idx, ++selectionIter);
-    return &*selectionIter == this;
+    return &**selectionIter == this;
 }
 
 bool Versions::PropSelection::enabled() const {
     uint32 idx{0};
-    for (auto iter{mOption.mSelections.begin()}; &*iter != this; ++iter, ++idx);
+    for (auto iter{mOption.mSelections.begin()}; &**iter != this; ++iter, ++idx);
     return mOption.selection.enabledChoices()[idx];
 }
 
 bool Versions::PropSelection::isDefault() const {
-    return &mOption.mSelections.front() == this;
+    return &*mOption.mSelections.front() == this;
 }
 
 Versions::PropLayout::PropLayout(const PropLayout& other, const PropSettingMap& settingMap) :
@@ -166,13 +166,13 @@ void Versions::Prop::rebuildSettingMap(optional<std::set<PropSetting *>> pruneLi
                 mSettingMap.emplace(ptr->define, ptr);
             }
         } else if (auto *ptr = std::get_if<PropOption>(&**setting)) {
-            for (auto selection{ptr->mSelections.begin()}; selection != ptr->mSelections.end();) {
-                if (pruneList and pruneList->find(&*selection) == pruneList->end()) {
-                    logger.warn("Removing unused setting \"" + selection->name + "\"...");
-                    selection = ptr->mSelections.erase(selection);
+            for (auto selIter{ptr->mSelections.begin()}; selIter != ptr->mSelections.end();) {
+                if (pruneList and pruneList->find(&**selIter) == pruneList->end()) {
+                    logger.warn("Removing unused setting \"" + (*selIter)->name + "\"...");
+                    selIter = ptr->mSelections.erase(selIter);
                     continue;
                 }
-                ++selection;
+                ++selIter;
             }
 
             if (ptr->mSelections.empty()) {
@@ -181,7 +181,7 @@ void Versions::Prop::rebuildSettingMap(optional<std::set<PropSetting *>> pruneLi
                 continue;
             } else {
                 for (auto& selection : ptr->mSelections) {
-                    mSettingMap.emplace(selection.define, &selection);
+                    mSettingMap.emplace(selection->define, &*selection);
                 }
             }
         }

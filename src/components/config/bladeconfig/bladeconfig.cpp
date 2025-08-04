@@ -38,6 +38,8 @@ Config::Blade::Blade(Config& config) :
             if (selectedArray.bladeSelection != -1) {
                 auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
                 if (&selectedBlade == this) {
+                    mConfig.bladeArrays.pixelBrightnessProxy.unbind();
+                    mConfig.bladeArrays.simpleBrightnessProxy.unbind();
                     if (type == WS281X) {
                         mConfig.bladeArrays.pixelBrightnessProxy.bind(brightness);
                     } else if (type == SIMPLE) {
@@ -52,6 +54,7 @@ Config::Blade::Blade(Config& config) :
     type.setChoices(Utils::createEntries({
         "WS281X",
         _("Simple"),
+        _("Unassigned"),
     }));
     type = WS281X;
 
@@ -87,7 +90,8 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
             }
 
             auto choices{mConfig.bladeArrays.arraySelection.choices()};
-            choices[idx] = name;
+            if (static_cast<string>(name).empty()) choices[idx] = _("[default]").ToStdString();
+            else choices[idx] = static_cast<string>(name);
             mConfig.bladeArrays.arraySelection.setChoices(std::move(choices));
 
             mConfig.presetArrays.syncStyleDisplay();
@@ -234,8 +238,6 @@ void Config::BladeConfig::removeSubBlade(uint32 idx) {
 
     if (presetArray == -1) ret |= ISSUE_NO_PRESETARRAY;
 
-    if (static_cast<string>(name).empty()) ret |= ISSUE_NO_NAME;
-
     for (const auto& array : mConfig.bladeArrays.arrays()) {
         if (&*array == this) continue;
         if (static_cast<string>(array->name) == static_cast<string>(name)) {
@@ -249,18 +251,12 @@ void Config::BladeConfig::removeSubBlade(uint32 idx) {
     return ret;
 }
 
-[[nodiscard]] wxString Config::BladeConfig::issueString(Issue issue) {
-    switch (issue) {
-        case ISSUE_NONE:
-            return _("No Issue");
-        case ISSUE_NO_NAME:
-            return _("Blade Array is unnamed");
-        case ISSUE_NO_PRESETARRAY:
-            return _("Blade Array is not linked to a Preset Array");
-        case ISSUE_DUPLICATE_ID:
-            return _("Blade Array has duplicate ID");
-        case ISSUE_DUPLICATE_NAME:
-            return _("Blade Array has duplicate name");
-    }
+[[nodiscard]] string Config::BladeConfig::issueString(uint32 issues) {
+    string ret;
+    if (issues & ISSUE_NO_PRESETARRAY) (ret += wxTRANSLATE("Blade Array is not linked to a Preset Array")) += '\n';
+    if (issues & ISSUE_DUPLICATE_ID) (ret += wxTRANSLATE("Blade Array has duplicate ID")) += '\n';
+    if (issues & ISSUE_DUPLICATE_NAME) (ret += wxTRANSLATE("Blade Array has duplicate name")) += '\n';
+    if (not ret.empty()) ret.pop_back();
+    return ret;
 }
 

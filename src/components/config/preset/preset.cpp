@@ -69,7 +69,7 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
             rawValue,
             &numTrimmed,
             insertionPoint,
-            "/"
+            "/;"
         );
 
         if (rawValue == static_cast<string>(fontDir)) return;

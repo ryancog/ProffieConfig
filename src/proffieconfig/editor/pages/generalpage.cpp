@@ -249,7 +249,7 @@ wxSizer *GeneralPage::leftOptions(wxWindow *parent) {
         parent,
         config.settings.pliOffTime,
         wxSP_ARROW_KEYS,
-        _("PLI Timeout (minutes)"),
+        _("PLI Timeout (seconds)"),
         wxHORIZONTAL
     )};
     auto *idleTime{new PCUI::Decimal(

@@ -128,9 +128,6 @@ private:
             if (issues & Config::BladeConfig::ISSUE_DUPLICATE_NAME) {
                 label += Config::BladeConfig::issueString(Config::BladeConfig::ISSUE_DUPLICATE_NAME);
             }
-            if (issues & Config::BladeConfig::ISSUE_NO_NAME) {
-                label += Config::BladeConfig::issueString(Config::BladeConfig::ISSUE_NO_NAME);
-            }
             if (issues & Config::BladeConfig::ISSUE_DUPLICATE_ID) {
                 if (not label.empty()) label += '\n';
                 label += Config::BladeConfig::issueString(Config::BladeConfig::ISSUE_DUPLICATE_ID);

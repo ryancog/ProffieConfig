@@ -46,7 +46,7 @@ struct CONFIG_EXPORT PresetArray {
     PCUI::NotifierData notifyData;
 
     [[nodiscard]] const vector<std::unique_ptr<Preset>>& presets() const { return mPresets; }
-    [[nodiscard]] Preset& preset(uint32 idx) {
+    [[nodiscard]] Preset& preset(uint32 idx) const {
         return **std::next(mPresets.begin(), idx);
     };
 

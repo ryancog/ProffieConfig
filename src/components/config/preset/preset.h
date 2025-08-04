@@ -47,7 +47,8 @@ struct CONFIG_EXPORT Preset {
     // No set choice manual
     PCUI::ChoiceData styleSelection;
 
-    [[nodiscard]] Style& style(uint32 idx) {
+    [[nodiscard]] const vector<std::unique_ptr<Style>>& styles() const { return mStyles; }
+    [[nodiscard]] Style& style(uint32 idx) const {
         assert(idx < mStyles.size());
         return *mStyles[idx];
     }

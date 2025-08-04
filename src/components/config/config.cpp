@@ -21,6 +21,7 @@
 
 #include <fstream>
 
+#include "config/private/io.h"
 #include "log/context.h"
 #include "utils/types.h"
 #include "paths/paths.h"
@@ -90,15 +91,9 @@ void Config::Config::close() {
 }
 
 
-bool Config::Config::save(filepath path) {
+optional<string> Config::Config::save(filepath path) {
     if (path.empty()) path = Paths::configs() / (static_cast<string>(name) + RAW_FILE_EXTENSION);
-    std::ofstream out{path};
-    if (not out.is_open()) return false;
-
-    out << "DUMMY\n";
-    out.close();
-
-    return true;
+    return output(path, *this);
 }
 
 bool Config::Config::isSaved() {
@@ -111,9 +106,9 @@ bool Config::Config::isSaved() {
         fs::temp_directory_path() / (static_cast<string>(name) + "-validate")
     };
 
-    auto res{save(validatePath)};
+    auto saveErr{save(validatePath)};
 
-    if (not res) {
+    if (saveErr) {
         logger.warn("Config output failed");
         return false;
     }

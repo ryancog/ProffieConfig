@@ -204,31 +204,11 @@ void EditorWindow::createPages(wxSizer *sizer) {
     toolbar->Realize();
     toolbar->OSXSelectTool(ID_General);
 
-    auto* optionsSizer{new wxBoxSizer(wxHORIZONTAL)};
-    // auto *windowSelect{new wxChoice(
-    //     this,
-    //     ID_WindowSelect,
-    //     wxDefaultPosition,
-    //     wxDefaultSize,
-    //     {
-    //         _("General"),
-    //         _("Prop File"),
-    //         _("Blade Arrays"),
-    //         _("Presets And Styles"),
-    //     }
-    // )};
-
-    // optionsSizer->Add(
-    //     windowSelect,
-    //     wxSizerFlags(0).Border(wxALL, 10)
-    // );
-
     generalPage = new GeneralPage(this);
     propsPage = new PropsPage(this);
     presetsPage = new PresetsPage(this);
     bladesPage = new BladesPage(this);
 
-    sizer->Add(optionsSizer, wxSizerFlags(0).Expand());
     sizer->Add(
         generalPage, 
         wxSizerFlags(1).Border(wxALL, 20).Expand()
@@ -248,7 +228,11 @@ void EditorWindow::createPages(wxSizer *sizer) {
 }
 
 bool EditorWindow::save() {
-    return mConfig.save();
+    auto err{mConfig.save()};
+    if (err) {
+        PCUI::showMessage(*err, _("Config Not Saved"), wxOK | wxCENTER | wxICON_ERROR, this);
+    }
+    return not err;
 }
 
 void EditorWindow::Fit() {
