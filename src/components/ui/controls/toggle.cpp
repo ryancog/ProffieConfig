@@ -30,6 +30,11 @@ void PCUI::ToggleData::operator=(bool val) {
     setValue(val);
 }
 
+void PCUI::ToggleData::operator|=(bool val) {
+    if (not val) return;
+    *this = val;
+}
+
 void PCUI::ToggleData::setValue(bool val) {
     std::scoped_lock scopeLock{getLock()};
     mValue = val;
