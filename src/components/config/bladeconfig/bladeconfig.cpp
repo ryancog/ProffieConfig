@@ -223,16 +223,6 @@ void Config::BladeConfig::removeBlade(uint32 idx) {
     mConfig.presetArrays.syncStyleDisplay();
 }
 
-void Config::BladeConfig::addSubBlade() {
-
-    mConfig.presetArrays.syncStyles();
-}
-
-void Config::BladeConfig::removeSubBlade(uint32 idx) {
-
-    mConfig.presetArrays.syncStyleDisplay();
-}
-
 [[nodiscard]] uint32 Config::BladeConfig::computeIssues() const {
     uint32 ret{0};
 

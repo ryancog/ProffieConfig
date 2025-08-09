@@ -64,8 +64,6 @@ struct CONFIG_EXPORT BladeConfig {
 
     Blade& addBlade();
     void removeBlade(uint32 idx);
-    void addSubBlade();
-    void removeSubBlade(uint32 idx);
 
     PCUI::ChoiceData bladeSelection;
 
