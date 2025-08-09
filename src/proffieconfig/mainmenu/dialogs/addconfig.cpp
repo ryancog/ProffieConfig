@@ -1,5 +1,7 @@
 #include "addconfig.h"
 #include "config/config.h"
+#include "ui/notifier.h"
+#include "utils/image.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
@@ -56,9 +58,11 @@ void AddConfig::createUI() {
         new wxToggleButton(this, ID_CreateNew, _("Create New Config"))
     };
     createNewToggle->SetValue(true);
+    createNewToggle->SetBitmap(Image::loadPNG("new", wxSize{32, -1}));
     auto *importExistingToggle{
         new wxToggleButton(this, ID_ImportExisting, _("Import Existing Config"))
     };
+    importExistingToggle->SetBitmap(Image::loadPNG("import", wxSize{32, -1}));
     addModeSizer->Add(
         createNewToggle,
         wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 10)
@@ -156,6 +160,7 @@ void AddConfig::update() {
     FindWindow(wxID_OK)->Enable(validConfigName and (originFileSelected or not importingConfig));
 
     importPath.show(importingConfig);
+    PCUI::Notifier::sync();
 
     GetSizer()->Layout();
     GetSizer()->Fit(this);
