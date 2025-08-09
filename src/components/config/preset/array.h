@@ -50,7 +50,7 @@ struct CONFIG_EXPORT PresetArray {
         return **std::next(mPresets.begin(), idx);
     };
 
-    void addPreset();
+    Preset& addPreset();
     void removePreset(uint32);
 
     void movePresetUp(uint32);
