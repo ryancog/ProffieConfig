@@ -100,11 +100,13 @@ Config::PresetArray::PresetArray(Config& config) :
     });
 }
 
-void Config::PresetArray::addPreset() {
+Config::Preset& Config::PresetArray::addPreset() {
     auto choices{selection.choices()};
-    choices.push_back(mPresets.emplace_back(std::make_unique<Preset>(mConfig, *this))->name);
+    auto& preset{*mPresets.emplace_back(std::make_unique<Preset>(mConfig, *this))};
+    choices.push_back(preset.name);
     selection.setChoices(std::move(choices));
     mConfig.presetArrays.syncStyles();
+    return preset;
 }
 
 void Config::PresetArray::removePreset(uint32 idx) {
@@ -305,6 +307,9 @@ void Config::PresetArrays::syncStyleDisplay(int32 clearIdx) {
                     }
                 }
                 ++mainIdx;
+            } else if (blade->type == Blade::Type::UNASSIGNED) {
+                styleChoices.emplace_back(_("Unassigned").ToStdString());
+                ++count;
             }
         }
 
