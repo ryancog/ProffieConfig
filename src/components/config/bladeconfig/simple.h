@@ -52,14 +52,14 @@ struct CONFIG_EXPORT SimpleBlade {
             USE_RESISTANCE_START = CREE_RED,
             USE_RESISTANCE_END = CREE_WHITE,
         };
-        static constexpr array<cstring, LED_MAX> LED_STRS{
+        static constexpr array<string_view, LED_MAX> LED_STRS{
             "NoLED",
-            "CreeXPE2RedTemplate",
-            "CreeXPE2GreenTemplate",
-            "CreeXPE2BlueTemplate",
-            "CreeXPE2AmberTemplate",
-            "CreeXPE2RedOrangeTemplate",
-            "CreeXPE2WhiteTemplate",
+            "CreeXPE2RedTemplate<",
+            "CreeXPE2GreenTemplate<",
+            "CreeXPE2BlueTemplate<",
+            "CreeXPE2AmberTemplate<",
+            "CreeXPE2RedOrangeTemplate<",
+            "CreeXPE2WhiteTemplate<",
             "CH1LED",
             "CH2LED",
             "CH3LED",

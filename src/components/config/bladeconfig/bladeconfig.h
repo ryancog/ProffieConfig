@@ -40,6 +40,7 @@ struct CONFIG_EXPORT Blade {
         WS281X,
         SIMPLE,
         UNASSIGNED,
+        TYPE_MAX,
     };
     PCUI::ChoiceData type;
 

@@ -359,6 +359,21 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
     hasWhite.setValue(false);
 }
 
+void Config::WS281XBlade::addPowerPin(string&& str) {
+    auto powerPinItems{powerPins.items()};
+    uint32 idx{0};
+    for (; idx < powerPinItems.size(); ++idx) {
+        if (powerPinItems[idx] == str) break;
+    }
+    if (idx != powerPinItems.size()) {
+        powerPins.select(idx);
+    } else {
+        powerPinItems.emplace_back(std::move(str));
+        powerPins.setItems(std::move(powerPinItems));
+        powerPins.select(powerPins.items().size() - 1);
+    }
+}
+
 Config::Split& Config::WS281XBlade::addSplit() {
     auto& ret{*mSplits.emplace_back(std::make_unique<Split>(mConfig, *this))};
 
