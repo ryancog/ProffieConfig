@@ -289,7 +289,7 @@ void BladesPage::handleNotification(uint32 id) {
         mSimpleSizer->Show(isSimple);
         mPixelSizer->Show(isPixel);
 
-        FindWindow(ID_NoSelectText)->Show(not isPixel and not isSimple);
+        FindWindow(ID_NoSelectText)->Show(not hasSelection);
     }
     if (
             rebound or 
