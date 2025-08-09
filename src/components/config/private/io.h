@@ -32,13 +32,21 @@ namespace Config {
  *
  * @return Error message on failure. nullopt on success
  */
-optional<string> output(const filepath&, Config&, Log::Branch *lBranch = nullptr);
+optional<string> output(const filepath&, const Config&, Log::Branch *lBranch = nullptr);
+
+/**
+ * Parse a config from disk
+ *
+ * @return Error message on failure. nullopt on success.
+ */
+optional<string> parse(const filepath&, Config&, Log::Branch *lBranch = nullptr);
 
 constexpr string_view INJECTION_STR{"injection"};
-constexpr cstring PROFFIECONFIG_SETTING_STR{"//PROFFIECONFIG "};
+constexpr string_view PC_OPT_STR{"//PROFFIECONFIG "};
 constexpr cstring MAX_LEDS_STR{"const unsigned int maxLedsPerStrip = "};
-constexpr cstring DEFINE_STR{"#define "};
-constexpr cstring INCLUDE_STR{"#include "};
+constexpr string_view DEFINE_STR{"#define "};
+constexpr string_view INCLUDE_STR{"#include "};
+constexpr string_view POWER_PINS_STR{"PowerPINS<"};
 
 namespace Private {
 
