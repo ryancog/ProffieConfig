@@ -53,6 +53,13 @@ struct CONFIG_EXPORT Preset {
         return *mStyles[idx];
     }
 
+    /**
+     * Only really needed when parsing a config.
+     * For user interaction the presets should be synced to blade arrays then edited.
+     */
+    Style& addStyle();
+    void popBackStyle();
+
 private:
     friend struct PresetArrays;
 
