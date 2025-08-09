@@ -118,6 +118,14 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
     });
 }
 
+Config::Preset::Style& Config::Preset::addStyle() {
+    return *mStyles.emplace_back(std::make_unique<Style>());
+}
+
+void Config::Preset::popBackStyle() {
+    mStyles.pop_back();
+}
+
 Config::Preset::Style::Style() {
     comment = "ProffieConfig Default Blue AudioFlicker";
     style = "StyleNormalPtr<AudioFlicker<Blue,DodgerBlue>,BLUE,300,800>()";
