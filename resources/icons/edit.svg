@@ -7,7 +7,7 @@
    viewBox="0 0 32.000008 32.000004"
    version="1.1"
    id="svg1"
-   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
+   inkscape:version="1.3-dev (77bc73e, 2022-05-18)"
    sodipodi:docname="edit.svg"
    inkscape:export-filename="edit.png"
    inkscape:export-xdpi="191.99995"
@@ -26,14 +26,14 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#505050"
      inkscape:document-units="px"
-     inkscape:zoom="6.2866212"
-     inkscape:cx="55.037514"
-     inkscape:cy="17.656543"
-     inkscape:window-width="2560"
-     inkscape:window-height="1292"
+     inkscape:zoom="17.78125"
+     inkscape:cx="10.516696"
+     inkscape:cy="13.356766"
+     inkscape:window-width="1390"
+     inkscape:window-height="1205"
      inkscape:window-x="0"
-     inkscape:window-y="0"
-     inkscape:window-maximized="1"
+     inkscape:window-y="25"
+     inkscape:window-maximized="0"
      inkscape:current-layer="layer1"
      showgrid="false" />
   <defs
@@ -118,7 +118,7 @@
      inkscape:groupmode="layer"
      id="layer1">
     <path
-       style="fill:none;fill-rule:evenodd;stroke:#274a72;stroke-width:2.2244;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;paint-order:markers fill stroke;stroke-opacity:1"
+       style="fill:none;fill-rule:evenodd;stroke:#1f63a8;stroke-width:2.2244;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;paint-order:markers fill stroke;stroke-opacity:1"
        id="rect5"
        width="14.579324"
        height="14.579325"
@@ -132,13 +132,13 @@
        inkscape:path-effect="#path-effect7"
        sodipodi:type="rect" />
     <path
-       style="display:inline;fill:none;stroke:#274a72;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+       style="display:inline;fill:none;stroke:#1f63a8;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        d="M -7.4797891,-14.059754 H 15.072056 l 3.460916,-3.122942 -3.634706,-2.998323 H -7.4235501 Z"
        id="path1"
        sodipodi:nodetypes="cccccc"
        transform="matrix(-0.76828159,0.76828159,-0.76828159,-0.76828159,8.5550476,-3.1590143)" />
     <path
-       style="fill:none;stroke:#274a72;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-dasharray:none"
+       style="fill:none;stroke:#1f63a8;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-dasharray:none"
        d="m 22.214411,4.6115993 4.878735,4.8787346"
        id="path7" />
   </g>

@@ -7,7 +7,7 @@
    viewBox="0 0 32.000008 32.000004"
    version="1.1"
    id="svg1"
-   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
+   inkscape:version="1.3-dev (77bc73e, 2022-05-18)"
    sodipodi:docname="import.svg"
    inkscape:export-filename="import.png"
    inkscape:export-xdpi="191.99995"
@@ -27,12 +27,12 @@
      inkscape:deskcolor="#505050"
      inkscape:document-units="px"
      inkscape:zoom="6.2866212"
-     inkscape:cx="11.930097"
-     inkscape:cy="12.725437"
+     inkscape:cx="-6.7603882"
+     inkscape:cy="12.884505"
      inkscape:window-width="1594"
      inkscape:window-height="1244"
      inkscape:window-x="85"
-     inkscape:window-y="70"
+     inkscape:window-y="42"
      inkscape:window-maximized="0"
      inkscape:current-layer="layer1"
      showgrid="false" />
@@ -45,7 +45,7 @@
        refY="0"
        orient="auto-start-reverse"
        inkscape:stockid="Rounded arrow"
-       markerWidth="0.4"
+       markerWidth="0.40000001"
        markerHeight="0.5"
        viewBox="0 0 1 1"
        inkscape:isstock="true"
@@ -56,6 +56,25 @@
          d="m -0.21114562,-4.1055728 6.42229122,3.21114561 a 1,1 90 0 1 0,1.78885438 L -0.21114562,4.1055728 A 1.236068,1.236068 31.717474 0 1 -2,3 v -6 a 1.236068,1.236068 148.28253 0 1 1.78885438,-1.1055728 z"
          style="fill:context-stroke;fill-rule:evenodd;stroke:none"
          id="path8" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="RoundedArrow_Fnone_S-1f63a8"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Rounded arrow"
+       markerWidth="0.40000001"
+       markerHeight="0.5"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="none">
+      <path
+         transform="scale(0.7)"
+         d="m -0.21114562,-4.1055728 6.42229122,3.21114561 a 1,1 90 0 1 0,1.78885438 L -0.21114562,4.1055728 A 1.236068,1.236068 31.717474 0 1 -2,3 v -6 a 1.236068,1.236068 148.28253 0 1 1.78885438,-1.1055728 z"
+         style="fill:#1f63a8;fill-rule:evenodd;stroke:none"
+         id="path1" />
     </marker>
     <inkscape:path-effect
        effect="powermask"
@@ -152,7 +171,7 @@
      inkscape:groupmode="layer"
      id="layer1">
     <path
-       style="fill:none;fill-rule:evenodd;stroke:#274a72;stroke-width:2.10047;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;paint-order:markers fill stroke;stroke-opacity:1"
+       style="fill:none;fill-rule:evenodd;stroke:#1f63a8;stroke-width:2.10047;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;paint-order:markers fill stroke;stroke-opacity:1"
        id="rect5"
        width="14.579324"
        height="14.579325"
@@ -166,7 +185,7 @@
        d="m 11.927146,8.7103405 h 8.145712 c 1.782111,0 3.216806,1.5047295 3.216806,3.3738335 v 7.831657 c 0,1.869104 -1.434695,3.373834 -3.216806,3.373834 h -8.145712 c -1.78211,0 -3.2168055,-1.50473 -3.2168055,-3.373834 v -7.831657 c 0,-1.869104 1.4346955,-3.3738335 3.2168055,-3.3738335 z"
        sodipodi:type="rect" />
     <path
-       style="fill:none;stroke:#274a72;stroke-width:4.00031635;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#RoundedArrow);fill-rule:nonzero;fill-opacity:1"
+       style="fill:none;stroke:#1f63a8;stroke-width:4.00031635;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#RoundedArrow_Fnone_S-1f63a8);fill-rule:nonzero;fill-opacity:1"
        d="M 7.3171261,15.19099 H 24.456699"
        id="path2"
        transform="matrix(0.94609291,0,0,1,-5.0304953,0.80901)" />

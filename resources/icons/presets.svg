@@ -7,7 +7,7 @@
    viewBox="0 0 32.000008 32.000004"
    version="1.1"
    id="svg1"
-   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
+   inkscape:version="1.3-dev (77bc73e, 2022-05-18)"
    sodipodi:docname="presets.svg"
    inkscape:export-filename="presets.png"
    inkscape:export-xdpi="191.99995"
@@ -27,12 +27,12 @@
      inkscape:deskcolor="#505050"
      inkscape:document-units="px"
      inkscape:zoom="16"
-     inkscape:cx="23.65625"
+     inkscape:cx="17.125"
      inkscape:cy="16.25"
      inkscape:window-width="2532"
      inkscape:window-height="1264"
      inkscape:window-x="85"
-     inkscape:window-y="70"
+     inkscape:window-y="42"
      inkscape:window-maximized="0"
      inkscape:current-layer="layer1"
      showgrid="false" />
@@ -116,13 +116,13 @@
        id="g9"
        transform="translate(0,1.9758698)">
       <circle
-         style="fill:#274a72;fill-opacity:1;stroke:none;stroke-width:2.14617;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
+         style="fill:#1f63a8;fill-opacity:1;stroke:none;stroke-width:2.14617;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
          id="path8"
          cx="7.75"
          cy="5.75"
          r="1.75" />
       <path
-         style="fill:none;fill-opacity:1;stroke:#274a72;stroke-width:2.30129;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         style="fill:none;fill-opacity:1;stroke:#1f63a8;stroke-width:2.30129;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
          d="m 12.150645,5.75 h 18.70116"
          id="path9" />
     </g>
@@ -130,31 +130,31 @@
        id="g9-0"
        transform="translate(0,6.9758698)">
       <circle
-         style="fill:#274a72;fill-opacity:1;stroke:none;stroke-width:2.14617;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
+         style="fill:#1f63a8;fill-opacity:1;stroke:none;stroke-width:2.14617;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
          id="path8-6"
          cx="7.75"
          cy="5.75"
          r="1.75" />
       <path
-         style="fill:none;fill-opacity:1;stroke:#274a72;stroke-width:2.30129;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         style="fill:none;fill-opacity:1;stroke:#1f63a8;stroke-width:2.30129;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
          d="m 12.150645,5.75 h 18.70116"
          id="path9-26" />
     </g>
     <path
-       style="fill:none;fill-opacity:1;stroke:#274a72;stroke-width:3.47587;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       style="fill:none;fill-opacity:1;stroke:#1f63a8;stroke-width:3.47587;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
        d="M 1.7259533,2.7379349 H 21.274047"
        id="path9-2" />
     <g
        id="g9-9"
        transform="translate(0.0119819,17.95174)">
       <circle
-         style="fill:#274a72;fill-opacity:1;stroke:none;stroke-width:2.14617;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
+         style="fill:#1f63a8;fill-opacity:1;stroke:none;stroke-width:2.14617;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
          id="path8-2"
          cx="7.75"
          cy="5.75"
          r="1.75" />
       <path
-         style="fill:none;fill-opacity:1;stroke:#274a72;stroke-width:2.30129;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         style="fill:none;fill-opacity:1;stroke:#1f63a8;stroke-width:2.30129;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
          d="m 12.150645,5.75 h 18.70116"
          id="path9-0" />
     </g>
@@ -162,18 +162,18 @@
        id="g9-0-2"
        transform="translate(0.0119819,22.95174)">
       <circle
-         style="fill:#274a72;fill-opacity:1;stroke:none;stroke-width:2.14617;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
+         style="fill:#1f63a8;fill-opacity:1;stroke:none;stroke-width:2.14617;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
          id="path8-6-3"
          cx="7.75"
          cy="5.75"
          r="1.75" />
       <path
-         style="fill:none;fill-opacity:1;stroke:#274a72;stroke-width:2.30129;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         style="fill:none;fill-opacity:1;stroke:#1f63a8;stroke-width:2.30129;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
          d="m 12.150645,5.75 h 18.70116"
          id="path9-26-7" />
     </g>
     <path
-       style="fill:none;fill-opacity:1;stroke:#274a72;stroke-width:3.47587;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       style="fill:none;fill-opacity:1;stroke:#1f63a8;stroke-width:3.47587;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
        d="M 1.7379349,18.713805 H 21.286029"
        id="path9-2-5" />
   </g>

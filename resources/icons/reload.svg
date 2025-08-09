@@ -7,7 +7,7 @@
    viewBox="0 0 32.000008 32.000004"
    version="1.1"
    id="svg1"
-   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
+   inkscape:version="1.3-dev (77bc73e, 2022-05-18)"
    sodipodi:docname="reload.svg"
    inkscape:export-filename="reload.png"
    inkscape:export-xdpi="95.999977"
@@ -27,12 +27,12 @@
      inkscape:deskcolor="#505050"
      inkscape:document-units="px"
      inkscape:zoom="11.313709"
-     inkscape:cx="-13.700193"
-     inkscape:cy="0.88388343"
+     inkscape:cx="-22.892581"
+     inkscape:cy="0.88388344"
      inkscape:window-width="2532"
      inkscape:window-height="1264"
      inkscape:window-x="85"
-     inkscape:window-y="70"
+     inkscape:window-y="42"
      inkscape:window-maximized="0"
      inkscape:current-layer="layer1"
      showgrid="false" />
@@ -45,8 +45,8 @@
        refY="0"
        orient="auto-start-reverse"
        inkscape:stockid="Rounded arrow"
-       markerWidth="0.4"
-       markerHeight="0.4"
+       markerWidth="0.40000001"
+       markerHeight="0.40000001"
        viewBox="0 0 1 1"
        inkscape:isstock="true"
        inkscape:collect="always"
@@ -57,6 +57,25 @@
          style="fill:context-stroke;fill-rule:evenodd;stroke:none;stroke-width:0.7"
          id="path8" />
     </marker>
+    <marker
+       style="overflow:visible"
+       id="RoundedArrow_Fnone_S-1f63a8"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Rounded arrow"
+       markerWidth="0.40000001"
+       markerHeight="0.40000001"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="none"
+       markerUnits="strokeWidth">
+      <path
+         d="m -0.14780188,-2.873901 4.49560378,2.24780197 a 0.7,0.7 0 0 1 0,1.25219806 L -0.14780188,2.873901 A 0.8652476,0.8652476 0 0 1 -1.4,2.1 v -4.2 a 0.8652476,0.8652476 0 0 1 1.25219812,-0.773901 z"
+         style="fill:#1f63a8;fill-rule:evenodd;stroke:none;stroke-width:0.7"
+         id="path2" />
+    </marker>
   </defs>
   <g
      inkscape:label="Layer 1"
@@ -64,7 +83,7 @@
      id="layer1">
     <path
        sodipodi:type="spiral"
-       style="fill:none;fill-rule:evenodd;stroke:#274a72;stroke-width:17.7822;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#RoundedArrow)"
+       style="fill:none;fill-rule:evenodd;stroke:#1f63a8;stroke-width:17.7822;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#RoundedArrow_Fnone_S-1f63a8)"
        id="path1"
        sodipodi:cx="-4.0186405"
        sodipodi:cy="-7.9850874"

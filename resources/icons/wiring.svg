@@ -7,7 +7,7 @@
    viewBox="0 0 32.000008 32.000004"
    version="1.1"
    id="svg1"
-   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
+   inkscape:version="1.3-dev (77bc73e, 2022-05-18)"
    sodipodi:docname="wiring.svg"
    inkscape:export-filename="wiring.png"
    inkscape:export-xdpi="191.99995"
@@ -27,12 +27,12 @@
      inkscape:deskcolor="#505050"
      inkscape:document-units="px"
      inkscape:zoom="8.0000004"
-     inkscape:cx="-41.624998"
-     inkscape:cy="9.7499996"
-     inkscape:window-width="2532"
+     inkscape:cx="-59.249997"
+     inkscape:cy="9.8749995"
+     inkscape:window-width="2097"
      inkscape:window-height="1264"
      inkscape:window-x="85"
-     inkscape:window-y="70"
+     inkscape:window-y="42"
      inkscape:window-maximized="0"
      inkscape:current-layer="layer1"
      showgrid="false" />
@@ -113,38 +113,38 @@
        id="g3-5"
        transform="matrix(0.58598397,0.10287844,-0.10287844,0.58598397,15.86549,12.424347)" />
     <path
-       style="fill:none;fill-opacity:1;stroke:#274a72;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
+       style="fill:none;fill-opacity:1;stroke:#1f63a8;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
        d="m 30.842284,4.0366209 -14.739746,0 V 19.52661 L 1.2270507,19.52001"
        id="path2"
        sodipodi:nodetypes="cccc" />
     <path
-       style="fill:none;fill-opacity:1;stroke:#274a72;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
+       style="fill:none;fill-opacity:1;stroke:#1f63a8;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
        d="M 1.2939453,24.205566 H 20.575927 V 8.1865231 l 10.273925,0"
        id="path4"
        sodipodi:nodetypes="cccc" />
     <path
-       style="fill:none;fill-opacity:1;stroke:#274a72;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
+       style="fill:none;fill-opacity:1;stroke:#1f63a8;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
        d="M 26.346922,28.748778 V 13.135986 l -25.1440412,0"
        id="path5"
        sodipodi:nodetypes="ccc" />
     <path
-       style="fill:none;fill-opacity:1;stroke:#274a72;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
+       style="fill:none;fill-opacity:1;stroke:#1f63a8;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
        d="m 1.2338867,3.4741209 8.6557613,0 v 8.8928221"
        id="path6"
        sodipodi:nodetypes="ccc" />
     <path
-       style="fill:none;fill-opacity:1;stroke:#274a72;stroke-width:2.63863;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
+       style="fill:none;fill-opacity:1;stroke:#1f63a8;stroke-width:2.63863;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
        d="m 1.3977597,28.76953 29.3348513,0"
        id="path7"
        sodipodi:nodetypes="cc" />
     <circle
-       style="fill:#274a72;fill-opacity:1;stroke:none;stroke-width:3.36002;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
+       style="fill:#1f63a8;fill-opacity:1;stroke:none;stroke-width:3.36002;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
        id="path8"
        cx="9.8739004"
        cy="13.039916"
        r="2.4448881" />
     <circle
-       style="fill:#274a72;fill-opacity:1;stroke:none;stroke-width:3.27404;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
+       style="fill:#1f63a8;fill-opacity:1;stroke:none;stroke-width:3.27404;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;paint-order:markers fill stroke"
        id="path8-5"
        cx="26.375"
        cy="28.777588"
