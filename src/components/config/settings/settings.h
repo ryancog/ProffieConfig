@@ -49,12 +49,12 @@ struct CONFIG_EXPORT Settings {
         PROFFIEBOARDV3,
         PROFFIEBOARDV2,
         PROFFIEBAORDV1,
-        VERSION_MAX,
+        BOARD_MAX,
     };
-    static constexpr array<cstring, VERSION_MAX> BOARD_STRS{
-        "proffieboard_v3_config.h",
-        "proffieboard_v2_config.h",
-        "proffieboard_v1_config.h",
+    static constexpr array<cstring, BOARD_MAX> BOARD_STRS{
+        "\"proffieboard_v3_config.h\"",
+        "\"proffieboard_v2_config.h\"",
+        "\"proffieboard_v1_config.h\"",
     };
     PCUI::ChoiceData board;
 
@@ -159,7 +159,7 @@ struct CONFIG_EXPORT Settings {
         void addPowerPinFromEntry();
     } bladeID;
     constexpr static cstring BLADE_ID_CLASS_STR{"BLADE_ID_CLASS "};
-    constexpr static cstring ENABLE_POWER_FOR_ID_STR{"ENABLE_POWER_FOR_ID PowerPINS<"};
+    constexpr static cstring ENABLE_POWER_FOR_ID_STR{"ENABLE_POWER_FOR_ID "};
     constexpr static cstring BLADE_ID_SCAN_MILLIS_STR{"BLADE_ID_SCAN_MILLIS "};
     constexpr static cstring BLADE_ID_TIMES_STR{"BLADE_ID_TIMES "};
 
@@ -304,11 +304,13 @@ struct CONFIG_EXPORT Settings {
     };
     const vector<std::unique_ptr<CustomOption>>& customOptions() const { return mCustomOptions; }
     /**
-     * Create a new custom option, if an empty one does not already exist.
+     * Create a new custom option
      *
-     * @return If a new option was created. (Empty didn't exist)
+     * New option is not created if provided key is empty and empty already exists.
+     *
+     * @return If a new option was created.
      */
-    bool addCustomOption();
+    bool addCustomOption(string&& key = {}, string&& value = {});
 
     /**
      * Remove a custom option by reference.
