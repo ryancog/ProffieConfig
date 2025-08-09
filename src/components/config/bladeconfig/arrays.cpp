@@ -147,7 +147,6 @@ uint32 Config::BladeArrays::numBlades() const {
     for (const auto& array : mBladeArrays) {
         uint32 count{0};
         for (const auto& blade : array->blades()) {
-            if (blade->type == Blade::SIMPLE) ++count;
             if (blade->type == Blade::WS281X) {
                 auto& ws281x{blade->ws281x()};
                 if (ws281x.splits().empty()) ++count;
@@ -168,7 +167,7 @@ uint32 Config::BladeArrays::numBlades() const {
                         }
                     }
                 }
-            }
+            } else ++count;
         }
         if (ret < count) ret = count;
     }
