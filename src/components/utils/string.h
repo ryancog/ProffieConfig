@@ -104,6 +104,31 @@ constexpr void trimUnsafe(
     );
 };
 
+/**
+ * Clears whitespace (if hit) and parses all comment strings encountered until
+ * non-space is encountered.
+ *
+ * @param stream Stream to read from.
+ *
+ * @return comment(s) extracted
+ */
+[[nodiscard]] UTILS_EXPORT string extractComment(std::istream& stream);
+
+/**
+ * Similar to extractComment(), however comment data is not parsed.
+ * All comment data (including start/end conditions) are directly forwarded to the string (if provided).
+ *
+ * stream positions ends at non-comment data.
+ *
+ * @return Whether anything was skipped.
+ */
+UTILS_EXPORT bool skipComment(std::istream& stream, string *str = nullptr);
+
+/**
+ * Purge whitespace around visible chars.
+ */
+UTILS_EXPORT void trimSurroundingWhitespace(string&);
+
 UTILS_EXPORT vector<string> createEntries(const std::vector<wxString>& vec);
 UTILS_EXPORT vector<string> createEntries(const std::initializer_list<wxString>& list);
 
