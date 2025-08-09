@@ -23,9 +23,9 @@
 #include <cstring>
 #include <fstream>
 #include <sstream>
-#include <system_error>
 
 #include <wx/filedlg.h>
+#include <wx/translation.h>
 
 #include "log/branch.h"
 #include "log/context.h"
@@ -43,7 +43,7 @@ namespace Config {
     optional<string> parsePresets(std::ifstream&, Config&, Log::Branch&);
     optional<string> parsePresetArray(const string& data, PresetArray&, Log::Branch&);
     optional<string> parseBladeArrays(const string& data, Config&, Log::Branch&);
-    optional<string> parseBlade(const string& data, Blade&, Log::Branch&);
+    optional<string> parseBlade(string data, BladeConfig&, Blade&, Log::Branch&);
     optional<string> parseStyles(std::ifstream&, Config&, Log::Branch&);
 
     void tryAddInjection(const string& buffer, Config&);
@@ -446,7 +446,11 @@ optional<string> Config::parseBladeArrays(const string& data, Config& config, Lo
         } else if (reading == ID) {
             if (chr == ',') {
                 Utils::trimWhiteSpace(buffer);
-                const auto id{buffer == "NO_BLADE" ? NO_BLADE : std::stoi(buffer)};
+                const auto id{
+                    buffer == "NO_BLADE" ?
+                        NO_BLADE :
+                        std::strtol(buffer.c_str(), nullptr, 10)
+                };
                 config.bladeArrays.arrays().back()->id = id;
                 reading = BLADE_ENTRY;
                 buffer.clear();
@@ -459,11 +463,19 @@ optional<string> Config::parseBladeArrays(const string& data, Config& config, Lo
 
             if (depth.empty()) {
                 if (chr == ',') {
+                    Utils::trimWhiteSpace(buffer);
+                    auto& array{*config.bladeArrays.arrays().back()};
+                    auto& blade{array.addBlade()};
                     auto res{parseBlade(
                         buffer,
-                        config.bladeArrays.arrays().back()->addBlade(),
+                        array,
+                        blade,
                         *logger.binfo("Parsing blade...")
                     )};
+                    if (blade.type == Blade::TYPE_MAX) {
+                        logger.debug("Removing blade parser deemed unnecessary.");
+                        config.bladeArrays.removeArray(config.bladeArrays.arrays().size() - 1);
+                    }
                     if (res) return res;
                     buffer.clear();
                     continue;
@@ -519,127 +531,429 @@ optional<string> Config::parseBladeArrays(const string& data, Config& config, Lo
     return nullopt;
 }
 
-optional<string> Config::parseBlade(const string& data, Blade& blade, Log::Branch& lBranch) {
+optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blade, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Config::parseBlade()")};
 
-                bool subBlade{false};
-                if (buffer.find("SubBlade") == 0) {
-                    if (buffer.find("NULL") != string::npos or buffer.find("nullptr") != string::npos) { // Top Level SubBlade
-                        bladeArray.blades.emplace_back();
-                        bladeArray.blades.back().isSubBlade = true;
-                        if (buffer.find("WithStride") != string::npos) bladeArray.blades.back().useStride = true;
-                        if (buffer.find("ZZ") != string::npos) bladeArray.blades.back().useZigZag = true;
+    static constexpr string_view DIMBLADE_STR{"DimBlade("};
+    const auto parseDimBlade{[&data, &logger](uint32& brightness) -> optional<string> {
+        if (data.starts_with(DIMBLADE_STR)) {
+            data.erase(0, DIMBLADE_STR.length());
+
+            size_t numProcessed{};
+            try {
+                brightness = std::stod(data.c_str(), &numProcessed);
+            } catch (std::exception e) {
+                return errorMessage(logger, wxTRANSLATE("DimBlade has malformed brightness: %s"), e.what());
+            }
+            data.erase(0, numProcessed);
+
+            if (data.empty()) {
+                return errorMessage(logger, wxTRANSLATE("DimBlade is missing blade"));
+            }
+
+            // Now should start at blade. Skipped ','
+            data.erase(0, 1);
+        }
+
+        return nullopt;
+    }};
+
+    uint32 firstBrightness{100};
+    auto res{parseDimBlade(firstBrightness)};
+    if (res) return res;
+
+    constexpr string_view SUBBLADE_STR{"SubBlade"};
+    struct {
+        Split::Type type{Split::TYPE_MAX};
+        uint32 start;
+        uint32 end;
+        uint32 segments;
+        string list;
+    } splitData;
+    if (data.starts_with(SUBBLADE_STR)) {
+        data.erase(0, SUBBLADE_STR.length());
+        if (data.empty()) {
+            return errorMessage(logger, wxTRANSLATE("Unexpected end when parsing SubBlade"));
+        }
+
+        constexpr string_view REVERSE_STR{"Reverse("};
+        constexpr string_view STRIDE_STR{"WithStride("};
+        constexpr string_view ZIGZAG_STR{"ZZ("};
+        constexpr string_view LIST_STR{"WithList<"};
+        if (data[0] == '(') {
+            splitData.type = Split::STANDARD;
+            data.erase(0, 1);
+        } else if (data.starts_with(REVERSE_STR)) {
+            splitData.type = Split::REVERSE;
+            data.erase(0, REVERSE_STR.length());
+        } else if (data.starts_with(STRIDE_STR)) {
+            splitData.type = Split::STRIDE;
+            data.erase(0, STRIDE_STR.length());
+        } else if (data.starts_with(ZIGZAG_STR)) {
+            splitData.type = Split::ZIG_ZAG;
+            data.erase(0, ZIGZAG_STR.length());
+        } else if (data.starts_with(LIST_STR)) {
+            splitData.type = Split::LIST;
+            data.erase(0, LIST_STR.length());
+        } else {
+            return errorMessage(logger, wxTRANSLATE("Encountered unknown/malformed SubBlade"));
+        }
+
+        if (
+                splitData.type == Split::STANDARD or splitData.type == Split::REVERSE or
+                splitData.type == Split::STRIDE or splitData.type == Split::ZIG_ZAG
+           ) {
+            size_t numProcessed{};
+            try {
+                splitData.start = std::stoi(data.c_str(), &numProcessed);
+            } catch (std::exception e) {
+                return errorMessage(logger, wxTRANSLATE("Failed to read SubBlade start: %s"), e.what());
+            }
+            data.erase(0, numProcessed);
+            if (data.empty()) {
+                return errorMessage(logger, wxTRANSLATE("SubBlade missing data after start"));
+            }
+
+            data.erase(0, 1); // ','
+
+            try {
+                splitData.end = std::stoi(data.c_str(), &numProcessed);
+            } catch (std::exception e) {
+                return errorMessage(logger, wxTRANSLATE("Failed to read SubBlade end: %s"), e.what());
+            }
+            data.erase(0, numProcessed);
+            if (data.empty()) {
+                return errorMessage(logger, wxTRANSLATE("SubBlade missing data after end"));
+            }
+
+            data.erase(0, 1); // ','
+        } 
+        if (splitData.type == Split::STRIDE or splitData.type == Split::ZIG_ZAG) {
+            size_t numProcessed{};
+            try {
+                splitData.segments = std::stoi(data.c_str(), &numProcessed);
+            } catch (std::exception e) {
+                return errorMessage(logger, wxTRANSLATE("Failed to read SubBlade stride: %s"), e.what());
+            }
+            data.erase(0, numProcessed);
+            if (data.empty()) {
+                return errorMessage(logger, wxTRANSLATE("SubBlade missing data after stride"));
+            }
+
+            data.erase(0, 1); // ','
+        } 
+        if (splitData.type == Split::ZIG_ZAG) {
+            size_t numProcessed{};
+            uint32 dummyColumn;
+            try {
+                dummyColumn = std::stoi(data.c_str(), &numProcessed);
+            } catch (std::exception e) {
+                return errorMessage(logger, wxTRANSLATE("Failed to read SubBlade column: %s"), e.what());
+            }
+            data.erase(0, numProcessed);
+            if (data.empty()) {
+                return errorMessage(logger, wxTRANSLATE("SubBlade missing data after column"));
+            }
+
+            data.erase(0, 1); // ','
+        }
+        if (splitData.type == Split::LIST) {
+            auto idx{0};
+            for (; idx < data.length(); ++idx) {
+                if (data[idx] == '>') break;
+            }
+            if (idx == data.length()) {
+                return errorMessage(logger, wxTRANSLATE("SubBlade list unterminated"));
+            }
+            if (idx + 2 >= data.length()) {
+                return errorMessage(logger, wxTRANSLATE("SubBlade missing blade after list"));
+            }
+
+            splitData.list = data.substr(0, idx);
+            data.erase(0, idx + 2); // 'list>('
+        }
+    }
+
+    uint32 secondBrightness{100};
+    res = parseDimBlade(secondBrightness);
+    if (res) return res;
+
+    const auto addSplit{[&blade, &splitData, &firstBrightness]() {
+        auto& split{blade.ws281x().addSplit()};
+        split.brightness = firstBrightness;
+        split.type = splitData.type;
+        if (split.type == Split::STANDARD or split.type == Split::REVERSE or split.type == Split::ZIG_ZAG) {
+            split.start = splitData.start;
+            split.end = splitData.end;
+        }
+        if (split.type == Split::STRIDE) {
+            split.start = splitData.start;
+            split.end = splitData.end + splitData.segments - 1;
+        }
+        if (split.type == Split::STRIDE or split.type == Split::ZIG_ZAG) {
+            split.segments = splitData.segments;
+        }
+        if (split.type == Split::LIST) {
+            split.list = std::move(splitData.list);
+        }
+    }};
+
+    constexpr string_view WS281X_STR{"WS281XBladePtr<"};
+    constexpr string_view WS2811_STR{"WS2811BladePtr<"};
+    constexpr string_view SIMPLE_STR{"SimpleBladePtr<"};
+    constexpr string_view NULL_STR{"NULL"};
+    constexpr string_view NULLPTR_STR{"nullptr"};
+    if (data.starts_with(WS281X_STR)) {
+        data.erase(0, WS281X_STR.length());
+        blade.type = Blade::WS281X;
+
+        size_t idx;
+        try {
+            blade.ws281x().length = std::stoi(data.c_str(), &idx);
+        } catch (std::exception e) {
+            return errorMessage(logger, wxTRANSLATE("Failed to read ws281x length: %s"), e.what());
+        }
+        if (idx + 1 >= data.length()) {
+            return errorMessage(logger, wxTRANSLATE("Missing data after ws281x length"));
+        }
+        data.erase(0, idx + 1); // length,
+
+        idx = 0;
+        for (; idx < data.length(); ++idx) {
+            if (data[idx] == ',') break;
+            blade.ws281x().dataPin += data[idx];
+        }
+        if (idx == data.length()) {
+            return errorMessage(logger, wxTRANSLATE("Missing data after ws281x data pin"));
+        }
+        data.erase(0, idx + 1);
+
+        constexpr string_view COLOR8_STR{"Color8::"};
+        if (not data.starts_with(COLOR8_STR)) {
+            return errorMessage(logger, wxTRANSLATE("Malformatted ws281x color order"));
+        }
+        data.erase(0, COLOR8_STR.length());
+        const auto colorOrderEnd{data.find(',')};
+        if (colorOrderEnd == string::npos) {
+            return errorMessage(logger, wxTRANSLATE("Missing data after ws281x color order"));
+        }
+        const auto colorOrder{data.substr(0, colorOrderEnd)};
+        idx = 0;
+        for (; idx < WS281XBlade::ORDER_MAX; ++idx) {
+            if (colorOrder.find(WS281XBlade::ORDER_STRS[idx]) != string::npos) {
+                blade.ws281x().colorOrder3 = idx;                
+                break;
+            }
+        }
+        const auto whitePos{colorOrder.find_first_of("Ww")};
+        blade.ws281x().hasWhite = whitePos != string::npos;
+        if (blade.ws281x().hasWhite) {
+            blade.ws281x().useRGBWithWhite = data[whitePos] == 'W';
+            if (whitePos == 0) {
+                const auto selection{static_cast<uint32>(blade.ws281x().colorOrder4)};
+                blade.ws281x().colorOrder4 = selection + WS281XBlade::ORDER4_WFIRST_START;
+            }
+        }
+
+        if (not data.starts_with(POWER_PINS_STR)) {
+            return errorMessage(logger, wxTRANSLATE("Missing ws281x PowerPINS"));
+        }
+        data.erase(0, POWER_PINS_STR.length());
+        string buffer;
+        for (auto idx{0}; idx < data.length(); ++idx) {
+            if (data[idx] == ',' or data[idx] == '>') {
+                blade.ws281x().addPowerPin(std::move(buffer));
+                buffer.clear();
+                if (data[idx] == '>') break;
+                continue;
+            }
+
+            buffer += data[idx];
+        }
+    } else if (data.starts_with(WS2811_STR)) {
+        data.erase(0, WS2811_STR.length());
+        blade.type = Blade::WS281X;
+
+        size_t idx;
+        try {
+            blade.ws281x().length = std::stoi(data.c_str(), &idx);
+        } catch (std::exception e) {
+            return errorMessage(logger, wxTRANSLATE("Failed to read ws2811 length: %s"), e.what());
+        }
+        if (idx + 1 >= data.length()) {
+            return errorMessage(logger, wxTRANSLATE("Missing data after ws2811 length"));
+        }
+        data.erase(0, idx + 1); // length,
+        
+        const auto configEnd{data.find(',')};
+        string buffer;
+        buffer = data.substr(0, configEnd);
+        for (auto idx{0}; idx < WS281XBlade::ORDER_MAX; ++idx) {
+            if (buffer.find(WS281XBlade::ORDER_STRS[idx]) != string::npos) {
+                blade.ws281x().colorOrder3 = idx;
+                break;
+            }
+        }
+        data.erase(0, configEnd);
+        if (data.empty()) {
+            return errorMessage(logger, wxTRANSLATE("Missing data after ws2811 config"));
+        }
+
+        idx = 0;
+        for (; idx < data.length(); ++idx) {
+            if (data[idx] == ',') break;
+            blade.ws281x().dataPin += data[idx];
+        }
+        if (idx == data.length()) {
+            return errorMessage(logger, wxTRANSLATE("Missing data after ws2811 data pin"));
+        }
+        data.erase(0, idx + 1);
+
+        if (not data.starts_with(POWER_PINS_STR)) {
+            return errorMessage(logger, wxTRANSLATE("Missing ws2811 PowerPINS"));
+        }
+        data.erase(0, POWER_PINS_STR.length());
+        buffer.clear();
+        for (auto idx{0}; idx < data.length(); ++idx) {
+            if (data[idx] == ',' or data[idx] == '>') {
+                blade.ws281x().addPowerPin(std::move(buffer));
+                buffer.clear();
+                if (data[idx] == '>') break;
+                continue;
+            }
+
+            buffer += data[idx];
+        }
+    } else if (data.starts_with(SIMPLE_STR)) {
+        if (splitData.type != Split::TYPE_MAX) {
+            return errorMessage(logger, wxTRANSLATE("Attempted to SubBlade simple blade"));
+        }
+
+        data.erase(0, SIMPLE_STR.length());
+        blade.type = Blade::SIMPLE;
+        blade.brightness = firstBrightness;
+        
+        const auto parseLED{[&data, &logger](SimpleBlade::Star& star) -> optional<string> {
+            auto idx{0};
+            for (; idx < SimpleBlade::Star::LED_MAX; ++idx) {
+                if (data.starts_with(SimpleBlade::Star::LED_STRS[idx])) {
+                    star.led = idx;
+                    data.erase(0, SimpleBlade::Star::LED_STRS[idx].length());
+                    if (
+                            idx >= SimpleBlade::Star::USE_RESISTANCE_START and
+                            idx <= SimpleBlade::Star::USE_RESISTANCE_END
+                       ) {
+                        size_t numProcessed{};
+                        try {
+                            star.resistance = std::stoi(data.c_str(), &numProcessed);
+                        } catch (std::exception e) {
+                            return errorMessage(logger, wxTRANSLATE("Failed to read led resistance: %s"), e.what());
+                        }
+                        if (numProcessed == data.length()) {
+                            return errorMessage(logger, wxTRANSLATE("Missing data after blade led resistance"));
+                        }
+                        data.erase(0, numProcessed + 1); // led>
                     }
-
-                    auto& blade{bladeArray.blades.back()};
-                    buffer = buffer.substr(buffer.find('(') + 1);
-
-                    auto paramEnd{buffer.find(',')};
-                    const auto num1{std::stoi(buffer.substr(0, paramEnd))};
-                    buffer = buffer.substr(paramEnd + 1);
-
-                    paramEnd = buffer.find(',');
-                    const auto num2{std::stoi(buffer.substr(0, paramEnd))};
-                    buffer = buffer.substr(paramEnd + 1);
-
-                    blade.subBlades.emplace_back(num1, num2);
-                    subBlade = true;
+                    if (data.empty()) {
+                        return errorMessage(logger, wxTRANSLATE("Missing data after blade led"));
+                    }
+                    data.erase(0, 1); // ','
+                    break;
                 }
+            }
+            if (idx == SimpleBlade::Star::LED_MAX) {
+                return errorMessage(logger, wxTRANSLATE("Unknown/malformed LED in SimpleBlade"));
+            }
 
-                constexpr string_view WS281X_STR{"WS281XBladePtr"};
-                constexpr string_view SIMPLE_STR{"SimpleBladePtr"};
-                if (buffer.find(WS281X_STR.data()) != string::npos) {
-                    if (not subBlade) bladeArray.blades.emplace_back();
-                    auto& blade{bladeArray.blades.back()};
+            return nullopt;
+        }};
 
-                    buffer = buffer.substr(buffer.find(WS281X_STR.data()) + WS281X_STR.length());
-                    buffer = buffer.substr(buffer.find('<') + 1);
+        res = parseLED(blade.simple().star1);
+        if (res) return res;
+        res = parseLED(blade.simple().star2);
+        if (res) return res;
+        res = parseLED(blade.simple().star3);
+        if (res) return res;
+        res = parseLED(blade.simple().star4);
+        if (res) return res;
 
-                    auto paramEnd{buffer.find(',')};
-                    blade.numPixels = std::stoi(buffer.substr(0, paramEnd));
-                    buffer = buffer.substr(paramEnd + 1);
-
-                    paramEnd = buffer.find(',');
-                    auto dataPinStr{buffer.substr(0, paramEnd)};
-                    trimWhiteSpace(dataPinStr);
-                    blade.dataPin = dataPinStr;
-                    buffer = buffer.substr(paramEnd + 1);
-
-                    constexpr string_view COLOR8{"Color8"};
-                    constexpr string_view NAMESPACE_SEPARATOR{"::"};
-                    buffer = buffer.substr(buffer.find(COLOR8.data()) + COLOR8.length());
-                    buffer = buffer.substr(buffer.find(NAMESPACE_SEPARATOR.data()) + NAMESPACE_SEPARATOR.length());
-
-                    paramEnd = buffer.find(',');
-                    auto colorStr{buffer.substr(0, paramEnd)};
-                    trimWhiteSpace(colorStr);
-
-                    blade.useRGBWithWhite = colorStr.find('W') != string::npos;
-                    blade.type = (blade.useRGBWithWhite or colorStr.find('w') != string::npos) ? BD_PIXELRGBW : BD_PIXELRGB;
-                    blade.colorType.assign(colorStr);
-
-                    constexpr string_view POWER_PINS{"PowerPINS"};
-                    buffer = buffer.substr(buffer.find(POWER_PINS.data()) + POWER_PINS.length());
-                    buffer = buffer.substr(buffer.find('<') + 1);
-
-                    while (!false) {
-                        paramEnd = buffer.find(',');
-                        bool done{paramEnd == string::npos};
-                        if (paramEnd == string::npos) paramEnd = buffer.find('>');
-
-                        auto pinStr{buffer.substr(0, paramEnd)};
-                        trimWhiteSpace(pinStr);
-                        if (not pinStr.empty()) blade.powerPins.emplace_back(pinStr);
-
-                        if (done) break;
-
-                        buffer = buffer.substr(paramEnd + 1);
-                    }
-                } else if (buffer.find(SIMPLE_STR.data()) != string::npos) {
-                    bladeArray.blades.emplace_back();
-
-                    auto& blade{bladeArray.blades.back()};
-                    blade.type = BD_SIMPLE;
-
-                    auto setupStar{[&](BladesPage::LED& led, int32_t& resistance) {
-                        const auto paramEnd{buffer.find(',')};
-                        auto paramStr{buffer.substr(0, paramEnd)};
-
-                        const auto ledEnd{buffer.find('<')};
-                        auto ledStr{paramStr.substr(0, ledEnd)};
-                        trimWhiteSpace(ledStr);
-
-                        led = BladesPage::strToLed(ledStr);;
-                        if (led & BladesPage::USES_RESISTANCE) resistance = std::stoi(paramStr.substr(ledEnd + 1));
-
-                        buffer = buffer.substr(paramEnd + 1);
-                    }};
-
-                    buffer = buffer.substr(buffer.find(SIMPLE_STR.data()) + SIMPLE_STR.length());
-                    buffer = buffer.substr(buffer.find('<') + 1);
-
-                    setupStar(blade.star1, blade.star1Resistance);
-                    setupStar(blade.star2, blade.star2Resistance);
-                    setupStar(blade.star3, blade.star3Resistance);
-                    setupStar(blade.star4, blade.star4Resistance);
-
-                    while (!false) {
-                        auto paramEnd{buffer.find(',')};
-                        bool done{paramEnd == string::npos};
-                        if (paramEnd == string::npos) paramEnd = buffer.find('>');
-
-                        auto pinStr{buffer.substr(0, paramEnd)};
-                        trimWhiteSpace(pinStr);
-                        if (not pinStr.empty() and pinStr != "-1") blade.powerPins.emplace_back(pinStr);
-
-                        if (done) break;
-
-                        buffer = buffer.substr(paramEnd + 1);
-                    }
+        const auto parsePin{[&data](SimpleBlade::Star& star) {
+            if (data.length() >= 2 and data.starts_with("-1")) {
+                data.erase(0, 2);
+            } else {
+                auto idx{0};
+                for (; idx < data.length(); ++idx) {
+                    if (data[idx] == ',' or data[idx] == '>') break;
+                    star.powerPin += data[idx];
                 }
+                data.erase(0, idx);
+            }
+            if (data.empty()) return;
+            data.erase(0, 1); // ',' or '>'
+        }};
+        parsePin(blade.simple().star1);
+        parsePin(blade.simple().star2);
+        parsePin(blade.simple().star3);
+        parsePin(blade.simple().star4);
+    } else if (data.starts_with(NULL_STR) or data.starts_with(NULLPTR_STR)) {
+        blade.type = Blade::TYPE_MAX;
+        if (array.blades().size() == 1) {
+            return errorMessage(logger, wxTRANSLATE("SubBlade with no blade found first in array"));
+        }
+        auto& blade{array.blade(array.blades().size() - 2)};
+        if (blade.type != Blade::WS281X) {
+            return errorMessage(logger, wxTRANSLATE("Tried to add SubBlade to a non-WS281X blade"));
+        }
+        if (blade.ws281x().splits().empty()) {
+            return errorMessage(logger, wxTRANSLATE("Tried to add SubBlade to a non-split WS281X blade"));
+        }
 
-                ++bladesRead;
+        auto& lastSplit{*blade.ws281x().splits().back()};
+        if (lastSplit.type != splitData.type) addSplit();
+        else { // this split is same type as last split
+            if (
+                    lastSplit.type == Split::STANDARD or
+                    lastSplit.type == Split::REVERSE or
+                    lastSplit.type == Split::LIST
+               ) {
+                // These types aren't segmented, just add.
+                addSplit();
+            } else if (lastSplit.type == Split::STRIDE) {
+                if (
+                        // Just make sure this split is same segments
+                        // and the start falls inside last split
+                        lastSplit.segments != splitData.segments or
+                        lastSplit.start > splitData.start or
+                        lastSplit.end < splitData.start
+                   ) {
+                    addSplit();
+                }
+                // Last split is same as this. Nothing to do.
+            } else if (lastSplit.type == Split::ZIG_ZAG) {
+                if (
+                        lastSplit.segments != splitData.segments or
+                        lastSplit.start != splitData.start or
+                        lastSplit.end != splitData.end
+                   ) {
+                    addSplit();
+                }
+                // Last split is same as this. Nothing to do.
+            }
+        }
+    } else {
+        return errorMessage(logger, wxTRANSLATE("Unknown/malformed blade"));
+    }
 
+    if (blade.type == Blade::WS281X) {
+        if (splitData.type == Split::TYPE_MAX) {
+            blade.brightness = firstBrightness;
+        } else {
+            blade.brightness = secondBrightness;
+            addSplit();
+        }
+    }
+
+    return nullopt;
 }
 
 optional<string> Config::parseStyles(std::ifstream& file, Config& config, Log::Branch& lBranch) {
