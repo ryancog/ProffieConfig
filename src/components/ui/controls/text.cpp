@@ -25,51 +25,56 @@ namespace PCUI {
 
 void PCUI::TextData::operator=(string&& val) {
     std::scoped_lock scopeLock{getLock()};
-    if (mValue == val) return;
-    mValue = std::move(val);
+    if (pValue == val) return;
+    pValue = std::move(val);
     notify(ID_VALUE);
 }
 
 void PCUI::TextData::operator+=(string&& val) {
     std::scoped_lock scopeLock{getLock()};
-    mValue += val;
+    pValue += val;
     notify(ID_VALUE);
 }
 
 void PCUI::TextData::operator+=(char val) {
     std::scoped_lock scopeLock{getLock()};
-    mValue += val;
+    pValue += val;
     notify(ID_VALUE);
 }
 
 void PCUI::TextData::clear() {
     std::scoped_lock scopeLock{getLock()};
-    mValue.clear();
+    pValue.clear();
     notify(ID_VALUE);
 }
 
 void PCUI::TextData::erase(string::size_type pos, string::size_type n) {
     std::scoped_lock scopeLock{getLock()};
-    mValue.erase(pos, n);
+    pValue.erase(pos, n);
     notify(ID_VALUE);
 }
 
 void PCUI::TextData::erase(string::const_iterator first, optional<string::const_iterator> last) {
     std::scoped_lock scopeLock{getLock()};
-    mValue.erase(first, last.value_or(mValue.end()));
+    pValue.erase(first, last.value_or(pValue.end()));
     notify(ID_VALUE);
+}
+
+bool PCUI::TextData::operator==(cstring str) {
+    std::scoped_lock scopeLock{getLock()};
+    return pValue == str;
 }
 
 void PCUI::TextData::setValue(string&& val) {
     std::scoped_lock scopeLock{getLock()};
-    mValue = std::move(val);
+    pValue = std::move(val);
     notify(ID_VALUE);
 }
 
 void PCUI::TextData::setInsertionPoint(uint32 insertionPoint) {
     std::scoped_lock scopeLock{getLock()};
-    if (mInsertionPoint == insertionPoint) return;
-    mInsertionPoint = insertionPoint;
+    if (pInsertionPoint == insertionPoint) return;
+    pInsertionPoint = insertionPoint;
     notify(ID_INSERTION);
 }
 
@@ -133,7 +138,7 @@ void PCUI::Text::onUIUpdate(uint32 id) {
 
     if (rebound or id == TextData::ID_VALUE) pControl->ChangeValue(static_cast<string>(*data()));
     if (rebound or id == TextData::ID_VALUE or id == TextData::ID_INSERTION) {
-        pControl->SetInsertionPoint(data()->mInsertionPoint);
+        pControl->SetInsertionPoint(data()->pInsertionPoint);
     }
 }
 
@@ -142,8 +147,8 @@ void PCUI::Text::onUnbound() {
 }
 
 void PCUI::Text::onModify(wxCommandEvent& evt) {
-    data()->mValue = evt.GetString().ToStdString();
-    data()->mInsertionPoint = pControl->GetInsertionPoint();
+    data()->pValue = evt.GetString().ToStdString();
+    data()->pInsertionPoint = pControl->GetInsertionPoint();
 
     if (evt.GetEventType() == wxEVT_TEXT or (evt.GetEventType() == wxEVT_TEXT_ENTER and mInsertNewline)) {
         data()->update(TextData::ID_VALUE);

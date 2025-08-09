@@ -22,32 +22,22 @@
 #include <mutex>
 #include <wx/combobox.h>
 
-#include "base.h"
 #include "../private/export.h"
+#include "ui/controls/text.h"
 
 namespace PCUI {
 
-struct UI_EXPORT ComboBoxData : ControlData {
-    operator string() const { return mValue; }
-    void operator=(string&& val);
-
+struct UI_EXPORT ComboBoxData : TextData {
     const vector<string>& defaults() const { return mDefaults; }
     void setDefaults(vector<string>&& defaults);
 
-    [[nodiscard]] uint32 getInsertionPoint() { return mInsertionPoint; }
-    void setInsertionPoint(uint32);
-
     enum {
-        ID_VALUE,
-        ID_DEFAULTS,
-        ID_INSERTION,
+        ID_DEFAULTS = ID_TEXT_MAX,
     };
 
 private:
     friend class ComboBox;
     vector<string> mDefaults;
-    string mValue;
-    uint32 mInsertionPoint{0};
 };
 
 using ComboBoxDataProxy = ControlDataProxy<ComboBoxData>;

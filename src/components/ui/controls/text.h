@@ -27,39 +27,42 @@
 namespace PCUI {
 
 struct UI_EXPORT TextData : ControlData {
-    operator string() const { return mValue; }
+    operator string() const { return pValue; }
     void operator=(string&& val);
 
     void operator+=(string&& val);
     void operator+=(char val);
 
-    auto begin() { return mValue.begin(); }
-    auto end() { return mValue.end(); }
-    auto rbegin() { return mValue.rbegin(); }
-    auto rend() { return mValue.rend(); }
+    auto begin() { return pValue.begin(); }
+    auto end() { return pValue.end(); }
+    auto rbegin() { return pValue.rbegin(); }
+    auto rend() { return pValue.rend(); }
 
     void clear();
     void erase(string::size_type pos = 0, string::size_type n = string::npos);
     void erase(string::const_iterator first, optional<string::const_iterator> last = nullopt);
+
+    bool operator==(cstring);
 
     /**
      * Unconditionally set value and trigger update.
      */
     void setValue(string&& val);
 
-    [[nodiscard]] uint32 getInsertionPoint() { return mInsertionPoint; }
+    [[nodiscard]] uint32 getInsertionPoint() { return pInsertionPoint; }
     void setInsertionPoint(uint32);
 
     enum {
         ID_VALUE,
         ID_ENTER,
         ID_INSERTION,
+        ID_TEXT_MAX,
     };
 
-private:
+protected:
     friend class Text;
-    string mValue;
-    uint32 mInsertionPoint{0};
+    string pValue;
+    uint32 pInsertionPoint{0};
 };
 
 using TextDataProxy = ControlDataProxy<TextData>;
