@@ -23,13 +23,6 @@ namespace PCUI {
 
 } // namespace PCUI
 
-void PCUI::ComboBoxData::operator=(string&& val) {
-    std::scoped_lock scopeLock{getLock()};
-    if (mValue == val) return;
-    mValue = std::move(val);
-    notify(ID_VALUE);
-}
-
 void PCUI::ComboBoxData::setDefaults(vector<string>&& defaults) {
     std::scoped_lock scopeLock{getLock()};
     if (mDefaults.size() == defaults.size()) {
@@ -41,13 +34,6 @@ void PCUI::ComboBoxData::setDefaults(vector<string>&& defaults) {
     }
     mDefaults = std::move(defaults);
     notify(ID_DEFAULTS);
-}
-
-void PCUI::ComboBoxData::setInsertionPoint(uint32 insertionPoint) {
-    std::scoped_lock scopeLock{getLock()};
-    if (mInsertionPoint == insertionPoint) return;
-    mInsertionPoint = insertionPoint;
-    notify(ID_INSERTION);
 }
 
 PCUI::ComboBox::ComboBox(
@@ -89,13 +75,13 @@ void PCUI::ComboBox::onUIUpdate(uint32 id) {
     }
     if (rebound or id == ComboBoxData::ID_VALUE) pControl->SetValue(static_cast<string>(*data()));
     if (rebound or id == ComboBoxData::ID_VALUE or id == ComboBoxData::ID_INSERTION) {
-        pControl->SetInsertionPoint(data()->mInsertionPoint);
+        pControl->SetInsertionPoint(data()->pInsertionPoint);
     }
 }
 
 void PCUI::ComboBox::onModify(wxCommandEvent& evt) {
-    data()->mValue = evt.GetString().ToStdString();
-    data()->mInsertionPoint = pControl->GetInsertionPoint();
+    data()->pValue = evt.GetString().ToStdString();
+    data()->pInsertionPoint = pControl->GetInsertionPoint();
     data()->update(ComboBoxData::ID_VALUE);
 }
 
