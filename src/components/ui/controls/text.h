@@ -30,6 +30,18 @@ struct UI_EXPORT TextData : ControlData {
     operator string() const { return mValue; }
     void operator=(string&& val);
 
+    void operator+=(string&& val);
+    void operator+=(char val);
+
+    auto begin() { return mValue.begin(); }
+    auto end() { return mValue.end(); }
+    auto rbegin() { return mValue.rbegin(); }
+    auto rend() { return mValue.rend(); }
+
+    void clear();
+    void erase(string::size_type pos = 0, string::size_type n = string::npos);
+    void erase(string::const_iterator first, optional<string::const_iterator> last = nullopt);
+
     /**
      * Unconditionally set value and trigger update.
      */

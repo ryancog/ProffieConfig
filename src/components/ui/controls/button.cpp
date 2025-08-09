@@ -44,6 +44,5 @@ PCUI::Button::Button(
     Bind(wxEVT_SYS_COLOUR_CHANGED, handler);
 }
 
-
 } // namespace PCUI
 

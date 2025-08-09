@@ -26,7 +26,38 @@ namespace PCUI {
 void PCUI::TextData::operator=(string&& val) {
     std::scoped_lock scopeLock{getLock()};
     if (mValue == val) return;
-    setValue(std::move(val));
+    mValue = std::move(val);
+    notify(ID_VALUE);
+}
+
+void PCUI::TextData::operator+=(string&& val) {
+    std::scoped_lock scopeLock{getLock()};
+    mValue += val;
+    notify(ID_VALUE);
+}
+
+void PCUI::TextData::operator+=(char val) {
+    std::scoped_lock scopeLock{getLock()};
+    mValue += val;
+    notify(ID_VALUE);
+}
+
+void PCUI::TextData::clear() {
+    std::scoped_lock scopeLock{getLock()};
+    mValue.clear();
+    notify(ID_VALUE);
+}
+
+void PCUI::TextData::erase(string::size_type pos, string::size_type n) {
+    std::scoped_lock scopeLock{getLock()};
+    mValue.erase(pos, n);
+    notify(ID_VALUE);
+}
+
+void PCUI::TextData::erase(string::const_iterator first, optional<string::const_iterator> last) {
+    std::scoped_lock scopeLock{getLock()};
+    mValue.erase(first, last.value_or(mValue.end()));
+    notify(ID_VALUE);
 }
 
 void PCUI::TextData::setValue(string&& val) {
