@@ -541,7 +541,7 @@ void Config::outputPresetBlades(std::ofstream& outFile, const Config& config) {
                 } else {
                     bladeStr << WS281XBlade::ORDER_STRS[ws281x.colorOrder3];
                 }
-                bladeStr << ", PowerPINS<";
+                bladeStr << ", " << POWER_PINS_STR;
                 const auto selPowerPins{static_cast<set<uint32>>(ws281x.powerPins)};
                 for (auto iter{selPowerPins.begin()}; iter != selPowerPins.end(); ++iter) {
                     bladeStr << ws281x.powerPins.items()[*iter];
@@ -554,7 +554,7 @@ void Config::outputPresetBlades(std::ofstream& outFile, const Config& config) {
 
                 auto outputStar{[&bladeStr](const SimpleBlade::Star& star) {
                     bladeStr << SimpleBlade::Star::LED_STRS[star.led];
-                    if (star.resistance.isEnabled()) bladeStr <<'<' << star.resistance << '>';
+                    if (star.resistance.isEnabled()) bladeStr << star.resistance << '>';
                     bladeStr << ", ";
                 }};
                 outputStar(simple.star1);
