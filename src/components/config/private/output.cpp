@@ -31,24 +31,26 @@
 namespace Config {
     optional<string> runPreChecks(const Config&, Log::Branch&);
 
-    void outputConfigTop(std::ofstream&, const Config&);
-    void outputConfigTopGeneral(std::ofstream&, const Config&);
-    void outputConfigTopBladeAwareness(std::ofstream&, const Config&);
-    void outputConfigTopPropSpecific(std::ofstream&, const Config&);
-    void outputConfigTopSA22C(std::ofstream&, const Config&);
-    void outputConfigTopFett263(std::ofstream&, const Config&);
-    void outputConfigTopBC(std::ofstream&, const Config&);
-    void outputConfigTopCaiwyn(std::ofstream&, const Config&);
-    void outputConfigProp(std::ofstream&, const Config&);
-    void outputConfigPresets(std::ofstream&, const Config&);
-    void outputConfigPresetsStyles(std::ofstream&, const Config&);
-    void outputConfigPresetsBlades(std::ofstream&, const Config&);
-    void genWS281X(std::ofstream&, const BladeConfig&);
-    void genSubBlades(std::ofstream&, const BladeConfig&);
-    void outputConfigButtons(std::ofstream&, const Config&);
+    void outputTop(std::ofstream&, const Config&);
+    void outputTopGeneral(std::ofstream&, const Config&);
+    void outputTopProp(std::ofstream&, const Config&);
+
+    void outputProp(std::ofstream&, const Config&);
+
+    void outputPresets(std::ofstream&, const Config&);
+    void outputPresetStyles(std::ofstream&, const Config&);
+    void outputPresetBlades(std::ofstream&, const Config&);
+
+    void outputButtons(std::ofstream&, const Config&);
+
+    template<typename VAL = string>
+    void outputOpt(std::ofstream&, const string& opt, const VAL& val = {});
+    template<typename VAL = string>
+    void outputDefine(std::ofstream&, const string& define, const VAL& val = {});
+
 } // namespace Config
 
-optional<string> Config::output(const filepath& filePath, Config& config, Log::Branch *lBranch) {
+optional<string> Config::output(const filepath& filePath, const Config& config, Log::Branch *lBranch) {
     auto& logger{Log::Branch::optCreateLogger("Config::output()", lBranch)};
 
     auto precheckErr{runPreChecks(config, *logger.binfo("Running prechecks..."))};
@@ -86,10 +88,10 @@ optional<string> Config::output(const filepath& filePath, Config& config, Log::B
     outFile << " * Version: " wxSTRINGIZE(VERSION) ", Generator Version: " wxSTRINGIZE(BIN_VERSION) "\n";
     outFile << " */\n\n" << std::flush;
 
-    outputConfigTop(outFile, config);
-    outputConfigProp(outFile, config);
-    outputConfigPresets(outFile, config);
-    outputConfigButtons(outFile, config);
+    outputTop(outFile, config);
+    outputProp(outFile, config);
+    outputPresets(outFile, config);
+    outputButtons(outFile, config);
 
     outFile.close();
 
@@ -161,6 +163,15 @@ optional<string> Config::runPreChecks(const Config& config, Log::Branch& lBranch
                 if (star4.led != SimpleBlade::Star::NONE and static_cast<string>(star4.powerPin).empty()) {
                     return errorMessage(logger, SIMPLE_ERR_MSG, 4, bladeIdx, arrayName);
                 }
+
+                if (
+                        star1.led == SimpleBlade::Star::NONE or
+                        star1.led == SimpleBlade::Star::NONE or
+                        star1.led == SimpleBlade::Star::NONE or
+                        star1.led == SimpleBlade::Star::NONE
+                   ) {
+                    return errorMessage(logger, wxTRANSLATE("Blade %d in array %s has no LEDs"), bladeIdx, arrayName);
+                }
             }
         }
     }
@@ -223,23 +234,33 @@ optional<string> Config::runPreChecks(const Config& config, Log::Branch& lBranch
 //     return Config::outputConfig(configLocation.GetPath().ToStdString(), editor);
 // }
 
-void Config::outputConfigTop(std::ofstream& outFile, const Config& config) {
+void Config::outputTop(std::ofstream& outFile, const Config& config) {
     outFile << "#ifdef CONFIG_TOP\n";
-    outputConfigTopGeneral(outFile, config);
-    outputConfigTopPropSpecific(outFile, config);
+    outputTopGeneral(outFile, config);
+    outputTopProp(outFile, config);
     outFile << "#endif\n\n" << std::flush;
 }
 
-void Config::outputConfigTopGeneral(std::ofstream& outFile, const Config& config) {
+template<typename VAL>
+void Config::outputOpt(std::ofstream& outFile, const string& opt, const VAL& val) {
+    outFile << PC_OPT_STR << opt << val << '\n';
+}
+
+template<typename VAL>
+void Config::outputDefine(std::ofstream& outFile, const string& define, const VAL& val) {
+    outFile << DEFINE_STR << define << val << '\n';
+}
+
+void Config::outputTopGeneral(std::ofstream& outFile, const Config& config) {
     if (config.settings.massStorage) {
-        outFile << PROFFIECONFIG_SETTING_STR << Settings::ENABLE_MASS_STORAGE_STR << '\n';
+        outputOpt(outFile, Settings::ENABLE_MASS_STORAGE_STR);
     }
     if (config.settings.webUSB) {
-        outFile << PROFFIECONFIG_SETTING_STR << Settings::ENABLE_WEBUSB_STR << '\n';
+        outputOpt(outFile, Settings::ENABLE_WEBUSB_STR);
     }
 
     Utils::Version osVersion{static_cast<string>(config.settings.osVersion)};
-    if (not osVersion.err) outFile << PROFFIECONFIG_SETTING_STR << Settings::OS_VERSION_STR << static_cast<string>(osVersion) << '\n';
+    if (not osVersion.err) outputOpt(outFile, Settings::OS_VERSION_STR, osVersion);
     outFile << INCLUDE_STR << Settings::BOARD_STRS[config.settings.board] << '\n';
 
     uint32 requiredLedsPerStrip{0};
@@ -259,79 +280,82 @@ void Config::outputConfigTopGeneral(std::ofstream& outFile, const Config& config
 
     if (osVersion.err or osVersion < Utils::Version{"8"}) {
         // No longer needed in OS8 and newer
-        outFile << DEFINE_STR << Settings::ENABLE_AUDIO_STR << '\n';
-        outFile << DEFINE_STR << Settings::ENABLE_MOTION_STR << '\n';
-        outFile << DEFINE_STR << Settings::ENABLE_WS2811_STR << '\n';
-        outFile << DEFINE_STR << Settings::ENABLE_SD_STR << '\n';
+        outputDefine(outFile, Settings::ENABLE_AUDIO_STR);
+        outputDefine(outFile, Settings::ENABLE_MOTION_STR);
+        outputDefine(outFile, Settings::ENABLE_WS2811_STR);
+        outputDefine(outFile, Settings::ENABLE_SD_STR);
     }
 
-    outFile << DEFINE_STR << Settings::SHARED_POWER_PINS_STR << '\n';
-    outFile << DEFINE_STR << Settings::NUM_BLADES_STR << config.bladeArrays.numBlades() << '\n';
-    outFile << DEFINE_STR << Settings::NUM_BUTTONS_STR << config.settings.numButtons << '\n';
+    outputDefine(outFile, Settings::SHARED_POWER_PINS_STR);
+    outputDefine(outFile, Settings::NUM_BLADES_STR, config.bladeArrays.numBlades());
+    outputDefine<uint32>(outFile, Settings::NUM_BUTTONS_STR, config.settings.numButtons);
 
     if (config.settings.bladeDetect) {
-        outFile << DEFINE_STR << Settings::BLADE_DETECT_PIN_STR << static_cast<string>(config.settings.bladeDetectPin) << '\n';
+        outputDefine<string>(outFile, Settings::BLADE_DETECT_PIN_STR, config.settings.bladeDetectPin);
     }
 
     if (config.settings.bladeID.enable) {
-        outFile << DEFINE_STR << Settings::BLADE_ID_CLASS_STR
-            << Settings::BladeID::MODE_STRS[config.settings.bladeID.mode]
-            << static_cast<string>(config.settings.bladeID.pin);
+        string idString{Settings::BladeID::MODE_STRS[config.settings.bladeID.mode]};
+        idString += config.settings.bladeID.pin;
         if (config.settings.bladeID.mode == Settings::BladeID::EXTERNAL) {
-            outFile << ", " << config.settings.bladeID.pullup;
+            (idString += ", ") += config.settings.bladeID.pullup;
         } else if (config.settings.bladeID.mode == Settings::BladeID::BRIDGED) {
-            outFile << ", " << static_cast<string>(config.settings.bladeID.bridgePin);
+            (idString += ", ") += config.settings.bladeID.bridgePin;
         }
-        outFile << ">\n";
+        idString += ">\n";
+        outputDefine(outFile, Settings::BLADE_ID_CLASS_STR, idString);
  
         const auto pinSelect{static_cast<set<uint32>>(config.settings.bladeID.powerPins)};
         if (config.settings.bladeID.powerForID and not pinSelect.empty()) {
-            outFile << DEFINE_STR << Settings::ENABLE_POWER_FOR_ID_STR;
+            string powerString{POWER_PINS_STR};
             for (auto iter{pinSelect.begin()}; iter != pinSelect.end(); ++iter) {
-                outFile << config.settings.bladeID.powerPins.items()[*iter];
-                if (std::next(iter) != pinSelect.end()) outFile << ", ";
+                powerString += config.settings.bladeID.powerPins.items()[*iter];
+                if (std::next(iter) != pinSelect.end()) powerString += ", ";
             }
-            outFile << ">\n";
+            powerString += ">\n";
+            outputDefine(outFile, Settings::ENABLE_POWER_FOR_ID_STR, powerString);
         }
 
         if (config.settings.bladeID.continuousScanning) {
-            outFile << DEFINE_STR << Settings::BLADE_ID_SCAN_MILLIS_STR << config.settings.bladeID.continuousInterval << '\n';
-            outFile << DEFINE_STR << Settings::BLADE_ID_TIMES_STR << config.settings.bladeID.continuousTimes << '\n';
+            outputDefine(outFile, Settings::BLADE_ID_SCAN_MILLIS_STR, config.settings.bladeID.continuousInterval);
+            outputDefine(outFile, Settings::BLADE_ID_TIMES_STR, config.settings.bladeID.continuousTimes);
         }
     }
 
-    outFile << DEFINE_STR << Settings::VOLUME_STR << config.settings.volume << '\n';
+    outputDefine(outFile, Settings::VOLUME_STR, config.settings.volume);
     if (config.settings.enableBootVolume) {
-        outFile << DEFINE_STR << Settings::BOOT_VOLUME_STR << config.settings.bootVolume << '\n';
+        outputDefine(outFile, Settings::BOOT_VOLUME_STR, config.settings.bootVolume);
     }
-    outFile << DEFINE_STR << Settings::CLASH_THRESHOLD_STR << config.settings.clashThreshold << '\n';
+    outputDefine(outFile, Settings::CLASH_THRESHOLD_STR, config.settings.clashThreshold);
 
-    outFile << DEFINE_STR << Settings::PLI_OFF_STR << static_cast<uint32>(std::ceil(config.settings.pliOffTime * 1000)) << '\n';
-    outFile << DEFINE_STR << Settings::IDLE_OFF_STR << static_cast<uint32>(std::ceil(config.settings.idleOffTime * 60)) << " * 1000\n";
-    outFile << DEFINE_STR << Settings::MOTION_OFF_STR << static_cast<uint32>(std::ceil(config.settings.motionOffTime * 60)) << " * 1000\n";
+    outputDefine(outFile, Settings::PLI_OFF_STR, static_cast<uint32>(std::ceil(config.settings.pliOffTime * 1000)));
+    const auto idleOffString{std::to_string(static_cast<uint32>(std::ceil(config.settings.idleOffTime * 60))) + " * 1000"};
+    outputDefine(outFile, Settings::IDLE_OFF_STR,  idleOffString);
+    const auto motionOffString{std::to_string(static_cast<uint32>(std::ceil(config.settings.motionOffTime * 60))) + " * 1000"};
+    outputDefine(outFile, Settings::MOTION_OFF_STR, motionOffString);
 
-    if (config.settings.disableColorChange) outFile << DEFINE_STR << Settings::DISABLE_COLOR_CHANGE_STR << '\n';
-    if (config.settings.disableBasicParserStyles) outFile << DEFINE_STR << Settings::DISABLE_BASIC_PARSERS_STR << '\n';
-    if (config.settings.disableDiagnosticCommands) outFile << DEFINE_STR << Settings::DISABLE_DIAG_COMMANDS_STR << '\n';
-    if (config.settings.enableDeveloperCommands) outFile << DEFINE_STR << Settings::ENABLE_DEV_COMMANDS_STR << '\n';
+    if (config.settings.disableColorChange) outputDefine(outFile, Settings::DISABLE_COLOR_CHANGE_STR);
+    if (config.settings.disableBasicParserStyles) outputDefine(outFile, Settings::DISABLE_BASIC_PARSERS_STR);
+    if (config.settings.disableDiagnosticCommands) outputDefine(outFile, Settings::DISABLE_DIAG_COMMANDS_STR);
+    if (config.settings.enableDeveloperCommands) outputDefine(outFile, Settings::ENABLE_DEV_COMMANDS_STR);
 
-    if (config.settings.saveState) outFile << DEFINE_STR << Settings::SAVE_STATE_STR << '\n';
-    if (config.settings.enableAllEditOptions) outFile << DEFINE_STR << Settings::ENABLE_ALL_EDIT_OPTIONS_STR << '\n';
+    if (config.settings.saveState) outputDefine(outFile, Settings::SAVE_STATE_STR);
+    if (config.settings.enableAllEditOptions) outputDefine(outFile, Settings::ENABLE_ALL_EDIT_OPTIONS_STR);
 
     if (config.settings.saveVolume and config.settings.saveVolume.isEnabled()) {
-        outFile << DEFINE_STR << Settings::SAVE_VOLUME_STR << '\n';
+        outputDefine(outFile, Settings::SAVE_VOLUME_STR);
     }
     if (config.settings.savePreset and config.settings.savePreset.isEnabled()) {
-        outFile << DEFINE_STR << Settings::SAVE_PRESET_STR << '\n';
+        outputDefine(outFile, Settings::SAVE_PRESET_STR);
     }
     if (config.settings.saveColorChange and config.settings.saveColorChange.isEnabled()) {
-        outFile << DEFINE_STR << Settings::SAVE_COLOR_STR << '\n';
+        outputDefine(outFile, Settings::SAVE_COLOR_STR);
     }
 
-    if (config.settings.enableOLED) outFile << DEFINE_STR << Settings::ENABLE_OLED_STR << '\n';
+    if (config.settings.enableOLED) outputDefine(outFile, Settings::ENABLE_OLED_STR);
 
     if (config.settings.orientation != Settings::ORIENTATION_NORMAL) {
-        outFile << DEFINE_STR << Settings::ORIENTATION_STR << Settings::ORIENTATION_STRS[config.settings.orientation] << '\n';
+        outputDefine(outFile, Settings::ORIENTATION_STR, Settings::ORIENTATION_STRS[config.settings.orientation]);
     }
 
     if (
@@ -339,64 +363,63 @@ void Config::outputConfigTopGeneral(std::ofstream& outFile, const Config& config
             config.settings.orientationRotation.y != 0 or
             config.settings.orientationRotation.z != 0
        ) {
-        outFile << DEFINE_STR << Settings::ORIENTATION_ROTATION_STR
-            << config.settings.orientationRotation.x
-            << config.settings.orientationRotation.y
-            << config.settings.orientationRotation.z
-            << '\n';
+        string rotationStr;
+        rotationStr += std::to_string(config.settings.orientationRotation.x);
+        rotationStr += ", ";
+        rotationStr += std::to_string(config.settings.orientationRotation.y);
+        rotationStr += ", ";
+        rotationStr += std::to_string(config.settings.orientationRotation.z);
+        outputDefine(outFile, Settings::ORIENTATION_ROTATION_STR, rotationStr);
     }
 
-    if (config.settings.speakTouchValues) outFile << DEFINE_STR << Settings::SPEAK_TOUCH_VALUES_STR << '\n';
+    if (config.settings.speakTouchValues) outputDefine(outFile, Settings::SPEAK_TOUCH_VALUES_STR);
 
     if (config.settings.dynamicBladeDimming and config.settings.dynamicBladeLength.isEnabled()) {
-        outFile << DEFINE_STR << Settings::DYNAMIC_BLADE_DIMMING_STR << '\n';
+        outputDefine(outFile, Settings::DYNAMIC_BLADE_DIMMING_STR);
     }
     if (config.settings.dynamicBladeLength and config.settings.dynamicBladeLength.isEnabled()) {
-        outFile << DEFINE_STR << Settings::DYNAMIC_BLADE_LENGTH_STR << '\n';
+        outputDefine(outFile, Settings::DYNAMIC_BLADE_LENGTH_STR);
     }
     if (config.settings.dynamicClashThreshold and config.settings.dynamicClashThreshold.isEnabled()) {
-        outFile << DEFINE_STR << Settings::DYNAMIC_CLASH_THRESHOLD_STR << '\n';
+        outputDefine(outFile, Settings::DYNAMIC_CLASH_THRESHOLD_STR);
     }
 
     if (config.settings.saveBladeDimming and config.settings.saveBladeDimming.isEnabled()) {
-        outFile << DEFINE_STR << Settings::SAVE_BLADE_DIM_STR << '\n';
+        outputDefine(outFile, Settings::SAVE_BLADE_DIM_STR);
     }
     if (config.settings.saveClashThreshold and config.settings.saveClashThreshold.isEnabled()) {
-        outFile << DEFINE_STR << Settings::SAVE_CLASH_THRESHOLD_STR << '\n';
+        outputDefine(outFile, Settings::SAVE_CLASH_THRESHOLD_STR);
     }
 
     if (config.settings.enableFiltering) {
-        outFile << DEFINE_STR << Settings::FILTER_CUTOFF_STR << config.settings.filterCutoff << '\n';
-        outFile << DEFINE_STR << Settings::FILTER_ORDER_STR << config.settings.filterOrder << '\n';
+        outputDefine<uint32>(outFile, Settings::FILTER_CUTOFF_STR, config.settings.filterCutoff);
+        outputDefine<uint32>(outFile, Settings::FILTER_ORDER_STR, config.settings.filterOrder);
     }
 
     if (config.settings.audioClashSuppressionLevel != 10) {
-        outFile << DEFINE_STR << Settings::AUDIO_CLASH_SUPPRESSION_STR << config.settings.audioClashSuppressionLevel << '\n';
+        outputDefine<uint32>(outFile, Settings::AUDIO_CLASH_SUPPRESSION_STR, config.settings.audioClashSuppressionLevel);
     }
 
-    if (config.settings.dontUseGyroForClash) outFile << DEFINE_STR << Settings::DONT_USE_GYRO_FOR_CLASH_STR << '\n';
+    if (config.settings.dontUseGyroForClash) outputDefine(outFile, Settings::DONT_USE_GYRO_FOR_CLASH_STR);
 
-    if (config.settings.femaleTalkie) outFile << DEFINE_STR << Settings::FEMALE_TALKIE_STR << '\n';
-    if (config.settings.disableTalkie) outFile << DEFINE_STR << Settings::DISABLE_TALKIE_STR << '\n';
+    if (config.settings.femaleTalkie) outputDefine(outFile, Settings::FEMALE_TALKIE_STR);
+    if (config.settings.disableTalkie) outputDefine(outFile, Settings::DISABLE_TALKIE_STR);
 
     if (osVersion < Utils::Version{"8"}) {
         // Default on newer version
-        if (config.settings.killOldPlayers) outFile << DEFINE_STR << Settings::KILL_OLD_PLAYERS_STR << '\n';
-        if (config.settings.noRepeatRandom) outFile << DEFINE_STR << Settings::NO_REPEAT_RANDOM_STR << '\n';
+        if (config.settings.killOldPlayers) outputDefine(outFile, Settings::KILL_OLD_PLAYERS_STR);
+        if (config.settings.noRepeatRandom) outputDefine(outFile, Settings::NO_REPEAT_RANDOM_STR);
     }
 
     for (const auto& customOpt : config.settings.customOptions()) {
         if (static_cast<string>(customOpt->define).empty()) continue;
 
-        outFile << DEFINE_STR << static_cast<string>(customOpt->define);
-        if (not static_cast<string>(customOpt->value).empty()) {
-            outFile << ' ' << static_cast<string>(customOpt->value);
-        }
-        outFile << '\n';
+        const auto valueStr{static_cast<string>(customOpt->value)};
+        outputDefine(outFile, customOpt->define, valueStr.empty() ? "" : ' ' + valueStr);
     }
 }
 
-void Config::outputConfigTopPropSpecific(std::ofstream& outFile, const Config& config) {
+void Config::outputTopProp(std::ofstream& outFile, const Config& config) {
     if (config.propSelection == -1) return;
     auto& selectedProp{config.prop(config.propSelection)};
 
@@ -416,7 +439,7 @@ void Config::outputConfigTopPropSpecific(std::ofstream& outFile, const Config& c
     outFile << std::flush;
 }
 
-void Config::outputConfigProp(std::ofstream& outFile, const Config& config) {
+void Config::outputProp(std::ofstream& outFile, const Config& config) {
     if (config.propSelection == -1) return;
     auto& selectedProp{config.prop(config.propSelection)};
 
@@ -425,28 +448,31 @@ void Config::outputConfigProp(std::ofstream& outFile, const Config& config) {
     outFile << "#endif\n" << std::flush;
 }
 
-void Config::outputConfigPresets(std::ofstream& outFile, const Config& config) {
+void Config::outputPresets(std::ofstream& outFile, const Config& config) {
     outFile << "#ifdef CONFIG_PRESETS\n";
     for (const auto& injection : config.presetArrays.injections()) {
         outFile << "#include \"" << INJECTION_STR.data() << '/' << injection << "\"\n";
     }
     if (not config.presetArrays.injections().empty()) outFile << '\n';
-    outputConfigPresetsStyles(outFile, config);
-    outputConfigPresetsBlades(outFile, config);
+    outputPresetStyles(outFile, config);
+    outputPresetBlades(outFile, config);
     outFile << "#endif\n\n" << std::flush;
 }
 
-void Config::outputConfigPresetsStyles(std::ofstream& outFile, const Config& config) {
+void Config::outputPresetStyles(std::ofstream& outFile, const Config& config) {
+    const auto numBlades{config.bladeArrays.numBlades()};
+
     for (const auto& presetArray : config.presetArrays.arrays()) {
         outFile << "Preset " << static_cast<string>(presetArray->name) << "[] = {\n";
         for (const auto& preset : presetArray->presets()) {
             outFile << "\t{ \"" << static_cast<string>(preset->fontDir) << "\", \""
                 << static_cast<string>(preset->track) << "\",\n";
 
-            for (const auto& style : preset->styles()) {
+            for (auto idx{0}; idx < numBlades; ++idx) {
+                auto& style{preset->style(idx)};
                 string line;
 
-                const auto commentStr{static_cast<string>(style->comment)};
+                const auto commentStr{static_cast<string>(style.comment)};
                 std::istringstream commentStream{commentStr};
                 if (not commentStr.empty()) {
                     outFile << "\t\t/*\n";
@@ -458,7 +484,7 @@ void Config::outputConfigPresetsStyles(std::ofstream& outFile, const Config& con
                     outFile << "\t\t */\n";
                 }
 
-                const auto styleStr{static_cast<string>(style->style)};
+                const auto styleStr{static_cast<string>(style.style)};
                 std::istringstream styleStream{styleStr};
                 while (!false) {
                     std::getline(styleStream, line);
@@ -477,7 +503,7 @@ void Config::outputConfigPresetsStyles(std::ofstream& outFile, const Config& con
     }
 }
 
-void Config::outputConfigPresetsBlades(std::ofstream& outFile, const Config& config) {
+void Config::outputPresetBlades(std::ofstream& outFile, const Config& config) {
     outFile << "BladeConfig blades[] = {\n";
     for (const auto& bladeArray : config.bladeArrays.arrays()) {
         const auto id{
@@ -624,7 +650,7 @@ void Config::outputConfigPresetsBlades(std::ofstream& outFile, const Config& con
     outFile << "};\n" << std::flush;
 }
 
-void Config::outputConfigButtons(std::ofstream& outFile, const Config& config) {
+void Config::outputButtons(std::ofstream& outFile, const Config& config) {
     outFile << "#ifdef CONFIG_BUTTONS\n";
     if (config.settings.numButtons >= 1) {
         outFile << "Button PowerButton(BUTTON_POWER, powerButtonPin, \"pow\");\n";
