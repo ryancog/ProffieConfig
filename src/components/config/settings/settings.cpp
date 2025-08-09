@@ -276,15 +276,17 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     killOldPlayers.setValue(false);
 }
 
-bool Config::Settings::addCustomOption() {
-    for (auto& opt : mCustomOptions) {
-        if (static_cast<string>(opt->define).empty()) return false;
+bool Config::Settings::addCustomOption(string&& key, string&& value) {
+    if (key.empty()) {
+        for (auto& opt : mCustomOptions) {
+            if (static_cast<string>(opt->define).empty()) return false;
+        }
     }
 
-    mCustomOptions.emplace_back();
-    customOptsNotifyData.getLock().lock();
+    auto& customOpt{*mCustomOptions.emplace_back()};
+    customOpt.define = std::move(key);
+    customOpt.value = std::move(value);
     customOptsNotifyData.notify();
-    customOptsNotifyData.getLock().unlock();
     return true;
 }
 
@@ -296,9 +298,7 @@ bool Config::Settings::removeCustomOption(CustomOption& opt) {
     if (iter == mCustomOptions.end()) return false;
 
     mCustomOptions.erase(iter);
-    customOptsNotifyData.getLock().lock();
     customOptsNotifyData.notify();
-    customOptsNotifyData.getLock().unlock();
     return true;
 }
 
