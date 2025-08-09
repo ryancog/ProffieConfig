@@ -37,12 +37,20 @@ struct CONFIG_EXPORT Config {
     PCUI::TextData name;
     Settings settings;
 
+    /**
+     * Make sure all the "custom" defines really are custom.
+     *
+     * Move them where they belong if not.
+     */
+    void processCustomDefines();
+
     PCUI::ChoiceData propSelection;
     enum {
         ID_PROPSELECTION,
     };
     PCUI::NotifierData propNotifyData;
-    Versions::Prop& prop(uint32 idx) const {
+    [[nodiscard]] const vector<std::unique_ptr<Versions::Prop>>& props() const { return mProps; }
+    [[nodiscard]] Versions::Prop& prop(uint32 idx) const {
         return *mProps[idx];
     }
 
