@@ -183,22 +183,22 @@ void EditorWindow::createPages(wxSizer *sizer) {
     toolbar->AddRadioTool(
         ID_General,
         _("General"),
-        Image::loadPNG("settings", wxDefaultSize, Image::LIGHT_BLUE)
+        Image::loadPNG("settings", wxDefaultSize)
     );
     toolbar->AddRadioTool(
         ID_Props,
         _("Prop File"),
-        Image::loadPNG("props", wxDefaultSize, Image::LIGHT_BLUE)
+        Image::loadPNG("props", wxDefaultSize)
     );
     toolbar->AddRadioTool(
         ID_Presets,
         _("Presets"),
-        Image::loadPNG("presets", wxDefaultSize, Image::LIGHT_BLUE)
+        Image::loadPNG("presets", wxDefaultSize)
     );
     toolbar->AddRadioTool(
         ID_BladeArrays,
         _("Blade Arrays"),
-        Image::loadPNG("blade", wxDefaultSize, Image::LIGHT_BLUE)
+        Image::loadPNG("blade", wxDefaultSize)
     );
     toolbar->OSXSetSelectableTools(true);
     toolbar->Realize();
