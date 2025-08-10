@@ -42,7 +42,7 @@ void CustomOptionsDlg::createUI() {
         info(this),
         wxSizerFlags(0).Expand().Border(wxALL, 10)
     );
-    sizer->SetMinSize(450, 500);
+    sizer->SetMinSize(500, 500);
 
     SetSizerAndFit(sizer);
 }
@@ -168,8 +168,8 @@ CustomOptionsDlg::CDefine::CDefine(
     });
 
     sizer->Add(defText, wxSizerFlags(0).Center().Border(wxRIGHT, 5));
-    sizer->Add(name, wxSizerFlags(3).Border(wxRIGHT, 5));
-    sizer->Add(value, wxSizerFlags(2).Border(wxRIGHT, 5));
+    sizer->Add(name, wxSizerFlags(5).Border(wxRIGHT, 5));
+    sizer->Add(value, wxSizerFlags(3).Border(wxRIGHT, 5));
     sizer->Add(remove, wxSizerFlags(0).Border(wxRIGHT, 10));
 
     SetSizerAndFit(sizer);
