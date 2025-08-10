@@ -1,4 +1,5 @@
 #include "checklist.h"
+#include <mutex>
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -24,6 +25,7 @@ namespace PCUI {
 } // namespace PCUI
 
 void PCUI::CheckListData::select(uint32 idx) {
+    std::scoped_lock scopeLock{getLock()};
     if (idx >= mItems.size()) return;
 
     auto [_, added]{mSelected.insert(idx)};
@@ -31,17 +33,42 @@ void PCUI::CheckListData::select(uint32 idx) {
 
     notify(ID_SELECTION);
 }
+
+void PCUI::CheckListData::select(string&& str) {
+    if (str.empty()) return;
+    std::scoped_lock scopeLock{getLock()};
+
+    uint32 idx{0};
+    for (; idx < mItems.size(); ++idx) {
+        if (mItems[idx] == str) break;
+    }
+    if (idx == mItems.size()) {
+        mItems.emplace_back(std::move(str));
+        mSelected.insert(mItems.size() - 1);
+        notify(ID_ITEMS);
+    } else {
+        mSelected.insert(idx);
+    }
+
+    notify(ID_SELECTION);
+}
+
+
 void PCUI::CheckListData::unselect(uint32 idx) {
+    std::scoped_lock scopeLock{getLock()};
     if (not mSelected.erase(idx)) return;
     notify(ID_SELECTION);
 }
+
 void PCUI::CheckListData::clearSelections() { 
+    std::scoped_lock scopeLock{getLock()};
     if (mSelected.empty()) return;
     mSelected.clear();
     notify(ID_SELECTION);
 }
 
 void PCUI::CheckListData::setItems(vector<string>&& items) { 
+    std::scoped_lock scopeLock{getLock()};
     mItems = std::move(items); 
     for (auto iter{mSelected.begin()}; iter != mSelected.end();) {
         if (*iter >= mItems.size()) iter = mSelected.erase(iter);

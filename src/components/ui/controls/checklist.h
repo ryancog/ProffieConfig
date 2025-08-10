@@ -31,7 +31,16 @@ namespace PCUI {
 struct UI_EXPORT CheckListData : ControlData {
     operator set<uint32>() const { return mSelected; }
 
+    /**
+     * Select item at idx. Does nothing if no item
+     */
     void select(uint32 idx);
+    /**
+     * Select first item with string. Create new item
+     * and select it if none exists.
+     */
+    void select(string&&);
+
     void unselect(uint32 idx);
     void clearSelections();
 
