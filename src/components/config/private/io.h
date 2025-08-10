@@ -43,6 +43,7 @@ optional<string> parse(const filepath&, Config&, Log::Branch *lBranch = nullptr)
 
 constexpr string_view INJECTION_STR{"injection"};
 constexpr string_view PC_OPT_STR{"//PROFFIECONFIG "};
+constexpr string_view PC_OPT_NOCOMMENT_STR{"PROFFIECONFIG "};
 constexpr cstring MAX_LEDS_STR{"const unsigned int maxLedsPerStrip = "};
 constexpr string_view DEFINE_STR{"#define "};
 constexpr string_view INCLUDE_STR{"#include "};

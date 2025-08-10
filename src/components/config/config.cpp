@@ -46,10 +46,6 @@ Config::Config::Config() :
     refreshVersions();
 }
 
-void Config::Config::processCustomDefines() {
-
-}
-
 void Config::Config::refreshVersions() {
     auto osVersions{Versions::getOSVersions()};
     auto prevOsVer{static_cast<string>(settings.osVersion)};
