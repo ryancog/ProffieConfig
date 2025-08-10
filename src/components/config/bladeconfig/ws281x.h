@@ -153,7 +153,6 @@ struct CONFIG_EXPORT WS281XBlade {
     PCUI::ToggleData useRGBWithWhite;
 
     PCUI::CheckListData powerPins;
-    void addPowerPin(string&&);
 
     PCUI::ChoiceData splitSelect;
 

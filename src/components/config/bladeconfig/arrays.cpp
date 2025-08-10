@@ -131,7 +131,7 @@ void Config::BladeArrays::addPowerPinFromEntry() {
     auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
 
     if (selectedBlade.type != Blade::WS281X) return;
-    selectedBlade.ws281x().addPowerPin(static_cast<string>(powerPinNameEntry));
+    selectedBlade.ws281x().powerPins.select(powerPinNameEntry);
     powerPinNameEntry.clear();
 }
 
