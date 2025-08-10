@@ -114,7 +114,7 @@ void CustomOptionsDlg::createOptionArea() {
     mOptionArea = new wxScrolledWindow(this, wxID_ANY);
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
-    mOptionArea->SetScrollRate(0, 10);
+    mOptionArea->SetScrollRate(10, 10);
     mOptionArea->SetSizerAndFit(sizer);
 }
 
@@ -169,7 +169,7 @@ CustomOptionsDlg::CDefine::CDefine(
 
     sizer->Add(defText, wxSizerFlags(0).Center().Border(wxRIGHT, 5));
     sizer->Add(name, wxSizerFlags(3).Border(wxRIGHT, 5));
-    sizer->Add(value, wxSizerFlags(1).Border(wxRIGHT, 5));
+    sizer->Add(value, wxSizerFlags(2).Border(wxRIGHT, 5));
     sizer->Add(remove, wxSizerFlags(0).Border(wxRIGHT, 10));
 
     SetSizerAndFit(sizer);
