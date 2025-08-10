@@ -200,15 +200,16 @@ optional<string> Config::runPreChecks(const Config& config, Log::Branch& lBranch
             for (auto styleIdx{0}; styleIdx < preset.styles().size(); ++styleIdx) {
                 vector<char> depth;
                 for (const char chr : static_cast<string>(preset.style(styleIdx).style)) {
-                    if (chr == '<' or chr == '(') {
+                    if (chr == '<' or chr == '(' or chr == '"') {
                         depth.push_back(chr);
                         continue;
                     }
-                    if (chr == '>' or chr == ')') {
+                    if (chr == '>' or chr == ')' or chr == '"') {
                         if (
                                 depth.empty() or 
                                 (chr == '>' and depth.back() != '<') or
-                                (chr == ')' and depth.back() != '(')
+                                (chr == ')' and depth.back() != '(') or
+                                (chr == '"' and depth.back() != '"')
                            ) {
                             return errorMessage(
                                 logger, STYLE_ERR_STR, styleIdx, presetIdx,
