@@ -45,10 +45,13 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         if (segments.isShown()) segments.setValue(segments);
         else {
             length.setIncrement(1, false);
+            end.setIncrement(1, false);
             length.setRange(1, std::numeric_limits<int32>::max());
         }
 
         list.show(type == LIST);
+
+        mConfig.presetArrays.syncStyles();
 
         if (mConfig.bladeArrays.arraySelection == -1) return;
         auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
@@ -62,11 +65,16 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
     start.setUpdateHandler([this](uint32 id) {
         if (id != start.ID_VALUE) return;
 
-        if (static_cast<uint32>(start) > static_cast<uint32>(end)) {
-            end = static_cast<uint32>(start);
-        }
+        end.setOffset((start % segments) - 1, false);
+        if (end.increment() != 1) {
+            end = start + length - 1;
+        } else {
+            if (static_cast<uint32>(start) > static_cast<uint32>(end)) {
+                end = static_cast<uint32>(start);
+            }
 
-        length = static_cast<uint32>(end) - static_cast<uint32>(start) + 1;
+            length = static_cast<uint32>(end) - static_cast<uint32>(start) + 1;
+        }
 
         if (mConfig.bladeArrays.arraySelection == -1) return;
         auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
@@ -81,7 +89,7 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         if (id != end.ID_VALUE) return;
 
         if (static_cast<uint32>(start) > static_cast<uint32>(end)) {
-            start = static_cast<uint32>(end);
+            start = static_cast<uint32>(end) - start.increment() + 1;
         }
 
         length = static_cast<uint32>(end) - static_cast<uint32>(start) + 1;
@@ -125,7 +133,11 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
             mParent.length = static_cast<uint32>(segments);
         }
         length.setIncrement(segments, false);
+        end.setIncrement(segments, false);
+        end.setOffset((start % segments) - 1, false);
         length.setRange(segments, std::numeric_limits<int32>::max());
+
+        mConfig.presetArrays.syncStyles();
 
         if (mConfig.bladeArrays.arraySelection == -1) return;
         auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
@@ -360,6 +372,8 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
 }
 
 void Config::WS281XBlade::addPowerPin(string&& str) {
+    if (str.empty()) return;
+
     auto powerPinItems{powerPins.items()};
     uint32 idx{0};
     for (; idx < powerPinItems.size(); ++idx) {
@@ -376,6 +390,7 @@ void Config::WS281XBlade::addPowerPin(string&& str) {
 
 Config::Split& Config::WS281XBlade::addSplit() {
     auto& ret{*mSplits.emplace_back(std::make_unique<Split>(mConfig, *this))};
+    mConfig.presetArrays.syncStyles();
 
     vector<string> choices;
     for (auto idx{0}; idx < mSplits.size(); ++idx) {
@@ -390,6 +405,7 @@ void Config::WS281XBlade::removeSplit(uint32 idx) {
     assert(idx < mSplits.size());
 
     mSplits.erase(std::next(mSplits.begin(), idx));
+    mConfig.presetArrays.syncStyles();
 
     vector<string> choices;
     for (auto idx{0}; idx < mSplits.size(); ++idx) {
