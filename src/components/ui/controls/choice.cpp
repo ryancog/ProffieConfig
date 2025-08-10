@@ -74,9 +74,6 @@ void PCUI::ChoiceData::setChoices(vector<string>&& choices) {
 
     mChoices = std::move(choices); 
     mValue = -1;
-
-    notify(ID_CHOICES);
-
     switch (mChoicePersistence) {
         case PERSISTENCE_NONE:
             break;
@@ -94,6 +91,7 @@ void PCUI::ChoiceData::setChoices(vector<string>&& choices) {
             break;
     }
 
+    notify(ID_CHOICES);
     if (lastValue != mValue) notify(ID_SELECTION);
 }
 
