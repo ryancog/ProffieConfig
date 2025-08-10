@@ -58,9 +58,10 @@ optional<string> Config::parse(const filepath& path, Config& config, Log::Branch
         return errorMessage(logger, wxTRANSLATE("Failed to open config from %s"), path.string());
     }
 
-    while (not file.eof() and file.good()) {
-        if (not Utils::extractComment(file).empty()) continue;
-        char chr = file.get();
+    while (file.good()) {
+        if (Utils::extractComment(file)) continue;
+
+        const auto chr{file.get()};
         if (std::isspace(chr)) continue;
         if (chr == '#') {
             string buffer;
@@ -120,7 +121,7 @@ string Config::extractSection(std::ifstream& file) {
                 ret += '#';
                 ret += buffer;
             }
-        } else ret += file.get();
+        } else ret += chr;
     }
     return ret;
 }
@@ -131,7 +132,7 @@ void Config::parseTop(std::ifstream& file, Config& config) {
 
     string buffer;
     while (topStream.good()) {
-        if (not Utils::extractComment(topStream).empty()) continue;
+        if (Utils::extractComment(topStream)) continue;
         std::getline(topStream, buffer);
         enum {
             NONE,
@@ -163,7 +164,7 @@ void Config::parseTop(std::ifstream& file, Config& config) {
         Utils::trimSurroundingWhitespace(buffer);
         const auto keyEnd{buffer.find_first_of(" \t")};
         auto key{buffer.substr(0, keyEnd)};
-        auto value{buffer.substr(keyEnd)};
+        auto value{keyEnd == string::npos ? "" : buffer.substr(keyEnd)};
         Utils::trimSurroundingWhitespace(value);
 
         if (type == DEFINE) config.settings.addCustomOption(std::move(key), std::move(value));
@@ -193,7 +194,7 @@ void Config::parseProp(std::ifstream& file, Config& config) {
 
     string buffer;
     while (propStream.good()) {
-        if (not Utils::extractComment(propStream).empty()) continue;
+        if (Utils::extractComment(propStream)) continue;
         std::getline(propStream, buffer);
         Utils::trimSurroundingWhitespace(buffer);
         if (not buffer.starts_with(INCLUDE_STR)) continue;
@@ -201,7 +202,7 @@ void Config::parseProp(std::ifstream& file, Config& config) {
         buffer = buffer.substr(INCLUDE_STR.length());
         Utils::trimSurroundingWhitespace(buffer);
 
-        constexpr string_view PROP_DIR_STR{"../props/"};
+        static constexpr string_view PROP_DIR_STR{"../props/"};
         // Trim quotes
         if (buffer.size() < 2) continue;
         buffer.pop_back();
@@ -321,9 +322,9 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
 
     while (dataStream.good()) {
         const auto newComments{Utils::extractComment(dataStream)};
-        if (not newComments.empty()) {
+        if (newComments) {
             if (not comments.empty()) comments += '\n';
-            comments += newComments;
+            comments += *newComments;
             continue;
         }
 
@@ -369,12 +370,14 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
                     if (not array.presets().back()->styles().empty()) {
                         array.presets().back()->popBackStyle();
                     }
+                    array.presets().back()->name.clear();
                     reading = NAME;
                     continue;
                 }
                 if (chr == ',') {
                     finishStyleReading();
-                    array.presets().back()->addStyle();
+                    auto& style{array.presets().back()->addStyle()};
+                    style.style.clear();
                     continue;
                 }
             }
@@ -382,6 +385,8 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
                 finishStyleReading();
                 if (not depth.empty()) logger.warn("Hit preset end before finishing style. This will mean errors to correct later!");
                 depth.clear();
+                auto& preset{*array.presets().back()};
+                if (preset.name.empty()) preset.name = "preset" + std::to_string(array.presets().size());
                 reading = NONE;
                 continue;
             }
@@ -472,9 +477,9 @@ optional<string> Config::parseBladeArrays(const string& data, Config& config, Lo
                         blade,
                         *logger.binfo("Parsing blade...")
                     )};
-                    if (blade.type == Blade::TYPE_MAX) {
+                    if (blade.type == Blade::INVALID) {
                         logger.debug("Removing blade parser deemed unnecessary.");
-                        config.bladeArrays.removeArray(config.bladeArrays.arrays().size() - 1);
+                        array.removeBlade(array.blades().size() - 1);
                     }
                     if (res) return res;
                     buffer.clear();
@@ -533,6 +538,7 @@ optional<string> Config::parseBladeArrays(const string& data, Config& config, Lo
 
 optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blade, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Config::parseBlade()")};
+    logger.verbose("Parsing blade \"" + data + "\"...");
 
     static constexpr string_view DIMBLADE_STR{"DimBlade("};
     const auto parseDimBlade{[&data, &logger](uint32& brightness) -> optional<string> {
@@ -562,7 +568,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
     auto res{parseDimBlade(firstBrightness)};
     if (res) return res;
 
-    constexpr string_view SUBBLADE_STR{"SubBlade"};
+    static constexpr string_view SUBBLADE_STR{"SubBlade"};
     struct {
         Split::Type type{Split::TYPE_MAX};
         uint32 start;
@@ -576,10 +582,10 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
             return errorMessage(logger, wxTRANSLATE("Unexpected end when parsing SubBlade"));
         }
 
-        constexpr string_view REVERSE_STR{"Reverse("};
-        constexpr string_view STRIDE_STR{"WithStride("};
-        constexpr string_view ZIGZAG_STR{"ZZ("};
-        constexpr string_view LIST_STR{"WithList<"};
+        static constexpr string_view REVERSE_STR{"Reverse("};
+        static constexpr string_view STRIDE_STR{"WithStride("};
+        static constexpr string_view ZIGZAG_STR{"ZZ("};
+        static constexpr string_view LIST_STR{"WithList<"};
         if (data[0] == '(') {
             splitData.type = Split::STANDARD;
             data.erase(0, 1);
@@ -678,7 +684,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
     res = parseDimBlade(secondBrightness);
     if (res) return res;
 
-    const auto addSplit{[&blade, &splitData, &firstBrightness]() {
+    const auto addSplit{[&splitData, &firstBrightness](Blade& blade) {
         auto& split{blade.ws281x().addSplit()};
         split.brightness = firstBrightness;
         split.type = splitData.type;
@@ -698,11 +704,11 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         }
     }};
 
-    constexpr string_view WS281X_STR{"WS281XBladePtr<"};
-    constexpr string_view WS2811_STR{"WS2811BladePtr<"};
-    constexpr string_view SIMPLE_STR{"SimpleBladePtr<"};
-    constexpr string_view NULL_STR{"NULL"};
-    constexpr string_view NULLPTR_STR{"nullptr"};
+    static constexpr string_view WS281X_STR{"WS281XBladePtr<"};
+    static constexpr string_view WS2811_STR{"WS2811BladePtr<"};
+    static constexpr string_view SIMPLE_STR{"SimpleBladePtr<"};
+    static constexpr string_view NULL_STR{"NULL"};
+    static constexpr string_view NULLPTR_STR{"nullptr"};
     if (data.starts_with(WS281X_STR)) {
         data.erase(0, WS281X_STR.length());
         blade.type = Blade::WS281X;
@@ -711,10 +717,10 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         try {
             blade.ws281x().length = std::stoi(data.c_str(), &idx);
         } catch (std::exception e) {
-            return errorMessage(logger, wxTRANSLATE("Failed to read ws281x length: %s"), e.what());
+            return errorMessage(logger, wxTRANSLATE("Failed to read WS281X length: %s"), e.what());
         }
         if (idx + 1 >= data.length()) {
-            return errorMessage(logger, wxTRANSLATE("Missing data after ws281x length"));
+            return errorMessage(logger, wxTRANSLATE("Missing data after WS281X length"));
         }
         data.erase(0, idx + 1); // length,
 
@@ -724,18 +730,18 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
             blade.ws281x().dataPin += data[idx];
         }
         if (idx == data.length()) {
-            return errorMessage(logger, wxTRANSLATE("Missing data after ws281x data pin"));
+            return errorMessage(logger, wxTRANSLATE("Missing data after WS281X data pin"));
         }
         data.erase(0, idx + 1);
 
-        constexpr string_view COLOR8_STR{"Color8::"};
+        static constexpr string_view COLOR8_STR{"Color8::"};
         if (not data.starts_with(COLOR8_STR)) {
-            return errorMessage(logger, wxTRANSLATE("Malformatted ws281x color order"));
+            return errorMessage(logger, wxTRANSLATE("Malformatted WS281X color order"));
         }
         data.erase(0, COLOR8_STR.length());
         const auto colorOrderEnd{data.find(',')};
         if (colorOrderEnd == string::npos) {
-            return errorMessage(logger, wxTRANSLATE("Missing data after ws281x color order"));
+            return errorMessage(logger, wxTRANSLATE("Missing data after WS281X color order"));
         }
         const auto colorOrder{data.substr(0, colorOrderEnd)};
         idx = 0;
@@ -754,9 +760,10 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
                 blade.ws281x().colorOrder4 = selection + WS281XBlade::ORDER4_WFIRST_START;
             }
         }
+        data.erase(0, colorOrderEnd + 1);
 
         if (not data.starts_with(POWER_PINS_STR)) {
-            return errorMessage(logger, wxTRANSLATE("Missing ws281x PowerPINS"));
+            return errorMessage(logger, wxTRANSLATE("Missing WS281X PowerPINS"));
         }
         data.erase(0, POWER_PINS_STR.length());
         string buffer;
@@ -778,10 +785,10 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         try {
             blade.ws281x().length = std::stoi(data.c_str(), &idx);
         } catch (std::exception e) {
-            return errorMessage(logger, wxTRANSLATE("Failed to read ws2811 length: %s"), e.what());
+            return errorMessage(logger, wxTRANSLATE("Failed to read WS2811 length: %s"), e.what());
         }
         if (idx + 1 >= data.length()) {
-            return errorMessage(logger, wxTRANSLATE("Missing data after ws2811 length"));
+            return errorMessage(logger, wxTRANSLATE("Missing data after WS2811 length"));
         }
         data.erase(0, idx + 1); // length,
         
@@ -796,7 +803,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         }
         data.erase(0, configEnd);
         if (data.empty()) {
-            return errorMessage(logger, wxTRANSLATE("Missing data after ws2811 config"));
+            return errorMessage(logger, wxTRANSLATE("Missing data after WS2811 config"));
         }
 
         idx = 0;
@@ -805,12 +812,12 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
             blade.ws281x().dataPin += data[idx];
         }
         if (idx == data.length()) {
-            return errorMessage(logger, wxTRANSLATE("Missing data after ws2811 data pin"));
+            return errorMessage(logger, wxTRANSLATE("Missing data after WS2811 data pin"));
         }
         data.erase(0, idx + 1);
 
         if (not data.starts_with(POWER_PINS_STR)) {
-            return errorMessage(logger, wxTRANSLATE("Missing ws2811 PowerPINS"));
+            return errorMessage(logger, wxTRANSLATE("Missing WS2811 PowerPINS"));
         }
         data.erase(0, POWER_PINS_STR.length());
         buffer.clear();
@@ -896,7 +903,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         parsePin(blade.simple().star3);
         parsePin(blade.simple().star4);
     } else if (data.starts_with(NULL_STR) or data.starts_with(NULLPTR_STR)) {
-        blade.type = Blade::TYPE_MAX;
+        blade.type = Blade::INVALID;
         if (array.blades().size() == 1) {
             return errorMessage(logger, wxTRANSLATE("SubBlade with no blade found first in array"));
         }
@@ -909,7 +916,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         }
 
         auto& lastSplit{*blade.ws281x().splits().back()};
-        if (lastSplit.type != splitData.type) addSplit();
+        if (lastSplit.type != splitData.type) addSplit(blade);
         else { // this split is same type as last split
             if (
                     lastSplit.type == Split::STANDARD or
@@ -917,7 +924,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
                     lastSplit.type == Split::LIST
                ) {
                 // These types aren't segmented, just add.
-                addSplit();
+                addSplit(blade);
             } else if (lastSplit.type == Split::STRIDE) {
                 if (
                         // Just make sure this split is same segments
@@ -926,7 +933,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
                         lastSplit.start > splitData.start or
                         lastSplit.end < splitData.start
                    ) {
-                    addSplit();
+                    addSplit(blade);
                 }
                 // Last split is same as this. Nothing to do.
             } else if (lastSplit.type == Split::ZIG_ZAG) {
@@ -935,7 +942,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
                         lastSplit.start != splitData.start or
                         lastSplit.end != splitData.end
                    ) {
-                    addSplit();
+                    addSplit(blade);
                 }
                 // Last split is same as this. Nothing to do.
             }
@@ -949,7 +956,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
             blade.brightness = firstBrightness;
         } else {
             blade.brightness = secondBrightness;
-            addSplit();
+            addSplit(blade);
         }
     }
 
@@ -975,30 +982,34 @@ optional<string> Config::parseStyles(std::ifstream& file, Config& config, Log::B
 
     while (stylesStream.good()) {
         auto newComments{Utils::extractComment(stylesStream)};
-        if (not newComments.empty()) {
+        if (newComments) {
             if (not comments.empty()) comments += '\n';
-            comments += newComments;
+            comments += *newComments;
             continue;
         }
 
-        const auto chr{file.get()};
+        const auto chr{stylesStream.get()};
         if (chr == '\r') continue;
 
         if (reading == NONE) {
-            readHistory += static_cast<char>(chr);
-            const auto usingPos{readHistory.rfind("using")};
-            const auto equalPos{readHistory.rfind('=')};
-
-            if (
-                    equalPos != string::npos and
-                    usingPos != string::npos and
-                    usingPos < equalPos
-               ) {
+            if (name.empty()) {
+                readHistory += static_cast<char>(chr);
+                if (readHistory.rfind("using") != string::npos) {
+                    reading = STYLE_NAME;
+                    readHistory.clear();
+                }
+            } else if (chr == '=') {
                 reading = STYLE;
-                readHistory.clear();
-            } else if (usingPos != string::npos) {
-                reading = STYLE_NAME;
             }
+        } else if (reading == STYLE_NAME) {
+            if (std::isspace(chr)) {
+                if (not name.empty()) {
+                    reading = NONE;
+                }
+                continue;
+            }
+
+            name += static_cast<char>(chr);
         } else if (reading == STYLE) {
             if (chr == ';') {
                 Utils::trimWhiteSpace(bladestyle);
@@ -1007,16 +1018,14 @@ optional<string> Config::parseStyles(std::ifstream& file, Config& config, Log::B
                 for (const auto& presetArray : config.presetArrays.arrays()) {
                     for (const auto& preset : presetArray->presets()) {
                         for (const auto& style : preset->styles()) {
-                            auto styleString{static_cast<string>(style->style)};
-                            auto commentString{static_cast<string>(style->comment)};
                             for (;;) { // Just because I can lol, another for loop
-                                const auto usingStylePos{styleString.find(name)};
+                                const auto usingStylePos{style->style.find(name)};
                                 if (usingStylePos == string::npos) break;
 
-                                styleString.erase(usingStylePos, name.length());
-                                styleString.insert(usingStylePos, bladestyle);
-                                if (not commentString.empty()) commentString += '\n';
-                                commentString += comments;
+                                style->style.erase(usingStylePos, name.length());
+                                style->style.insert(usingStylePos, bladestyle);
+                                if (not style->comment.empty()) style->comment += '\n';
+                                style->comment += comments;
                             }
                         }
                     }
@@ -1030,15 +1039,6 @@ optional<string> Config::parseStyles(std::ifstream& file, Config& config, Log::B
             }
 
             bladestyle += static_cast<char>(chr);
-        } else if (reading == STYLE_NAME) {
-            if (chr == ' ') {
-                if (not name.empty()) {
-                    reading = NONE;
-                }
-                continue;
-            }
-
-            name += static_cast<char>(chr);
         }
     }
 

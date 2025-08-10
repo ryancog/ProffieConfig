@@ -5,7 +5,7 @@
 add_library(config SHARED 
     config.cpp
 
-    # private/parse.cpp
+    private/parse.cpp
     private/output.cpp
 
     bladeconfig/arrays.cpp
