@@ -132,7 +132,7 @@ void Config::parseTop(std::ifstream& file, Config& config) {
     std::istringstream commentStream;
 
     string buffer;
-    while (commentStream.good() or topStream.good()) {
+    while (topStream.good() or (commentStream.good() and commentStream.rdbuf()->in_avail())) {
         enum {
             NONE,
             DEFINE,
