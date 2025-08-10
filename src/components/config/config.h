@@ -70,7 +70,7 @@ struct CONFIG_EXPORT Config {
     /**
      * @return error or nullopt on success
      */
-    optional<string> save(filepath = {});
+    optional<string> save(const filepath& = {});
 
     /**
      * Remove from internal storage and let it die once last memory
@@ -79,7 +79,8 @@ struct CONFIG_EXPORT Config {
     void close();
 
 private:
-    friend Config& open(const string&);
+    friend variant<Config *, string> open(const string&);
+    friend variant<Config *, string> import(const string&, const filepath&);
     Config();
 
     vector<std::unique_ptr<Versions::Prop>> mProps;
@@ -100,8 +101,19 @@ CONFIG_EXPORT bool remove(const string& name);
 /**
  * Parse the config and return a fresh ptr, or return the ptr
  * of an already-open config.
+ *
+ * @param name Config name
+ *
+ * @return Config or error message
  */
-CONFIG_EXPORT Config& open(const string& name);
+CONFIG_EXPORT variant<Config *, string> open(const string& name);
+
+/**
+ * Similar to open, but opens from path instead of in save folder by name.
+ *
+ * @return config if imported. nullptr if not
+ */
+CONFIG_EXPORT variant<Config *, string> import(const string& name, const filepath& path);
 
 /**
  * @return the config with name only if config is open

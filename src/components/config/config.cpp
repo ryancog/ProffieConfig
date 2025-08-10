@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <filesystem>
 #include <fstream>
 
 #include "config/private/io.h"
@@ -43,6 +44,10 @@ Config::Config::Config() :
     });
 
     refreshVersions();
+}
+
+void Config::Config::processCustomDefines() {
+
 }
 
 void Config::Config::refreshVersions() {
@@ -91,9 +96,31 @@ void Config::Config::close() {
 }
 
 
-optional<string> Config::Config::save(filepath path) {
-    if (path.empty()) path = Paths::configs() / (static_cast<string>(name) + RAW_FILE_EXTENSION);
-    return output(path, *this);
+optional<string> Config::Config::save(const filepath& path) {
+    auto& logger{Log::Context::getGlobal().createLogger("Config::Config::save()")};
+    logger.info("Saving \"" + static_cast<string>(name) + "\"...");
+
+    optional<string> err;
+    std::error_code errCode;
+    if (not path.empty()) {
+        err = output(path, *this);
+        if (err) fs::remove(path, errCode);
+        return err;
+    } 
+
+    const auto finalPath{Paths::configs() / (static_cast<string>(name) + RAW_FILE_EXTENSION)};
+    const filepath tmpPath{finalPath.string() + ".tmp"};
+    err = output(tmpPath, *this);
+    if (err) {
+        fs::remove(tmpPath, errCode);
+        return err;
+    }
+
+    if (not fs::copy_file(tmpPath, finalPath, fs::copy_options::overwrite_existing, errCode)) {
+        err = errorMessage(logger, wxTRANSLATE("Failed to move temp file: %s"), errCode.message());
+    }
+    fs::remove(tmpPath, errCode);
+    return err;
 }
 
 bool Config::Config::isSaved() {
@@ -178,13 +205,36 @@ bool Config::remove(const string& name) {
     return fs::remove(Paths::configs() / (name + RAW_FILE_EXTENSION), err);
 }
 
-Config::Config& Config::open(const string& name) {
-    auto ret{getIfOpen(name)};
-    if (ret) return *ret;
+variant<Config::Config *, string> Config::open(const string& name) {
+    auto *open{getIfOpen(name)};
+    if (open) return open;
 
-    ret = loadedConfigs.emplace_back(std::unique_ptr<Config>{new Config()}).get();
-    ret->name = string{name};
-    return *ret;
+    std::unique_ptr<Config> config{new Config()};
+    config->name = string{name};
+
+    const auto path{Paths::configs() / (name + RAW_FILE_EXTENSION)};
+    if (fs::exists(path)) {
+        auto err{parse(path, *config)};
+        if (err) return *err;
+    }
+
+    return &*loadedConfigs.emplace_back(std::move(config));
+}
+
+variant<Config::Config *, string> Config::import(const string& name, const filepath& path) {
+    auto& logger{Log::Context::getGlobal().createLogger("Config::import()")};
+    if (getIfOpen(name)) return errorMessage(logger, wxTRANSLATE("Config with name already open"));
+
+    std::unique_ptr<Config> config{new Config()};
+    config->name = string{name};
+
+    auto err{parse(path, *config, logger.binfo("Parsing config..."))};
+    if (err) return *err;
+
+    err = config->save();
+    if (err) return *err;
+    
+    return &*loadedConfigs.emplace_back(std::move(config));
 }
 
 Config::Config *Config::getIfOpen(const string& name) {
