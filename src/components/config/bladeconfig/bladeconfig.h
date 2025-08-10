@@ -50,6 +50,8 @@ struct CONFIG_EXPORT Blade {
     WS281XBlade& ws281x() { return mPixelBlade; }
     SimpleBlade& simple() { return mSimpleBlade; }
 
+    Config& config() const { return mConfig; }
+
 private:
     Config& mConfig;
     WS281XBlade mPixelBlade;
