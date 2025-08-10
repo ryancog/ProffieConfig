@@ -1218,6 +1218,7 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
                 logger.warn(string{"Failed to parse volume: "} + e.what());
             }
         } else if (opt.define == BOOT_VOLUME_STR) {
+            enableBootVolume = true;
             try {
                 bootVolume = std::stoi(opt.value);
             } catch (std::exception e) {
