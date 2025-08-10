@@ -324,19 +324,26 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
     } reading{NONE};
 
     vector<char> depth;
-    string comments;
-    const auto finishStyleReading{[&array, &comments, &depth]() {
+    string commentBuffer;
+    string styleBuffer;
+
+    const auto finishStyleReading{[&array, &styleBuffer, &commentBuffer]() {
+        Utils::trimWhiteSpace(styleBuffer);
+        Utils::trimWhiteSpace(commentBuffer);
+
         auto& style{array.presets().back()->styles().back()};
-        Utils::trimWhiteSpace(style->style);
-        style->comment = std::move(comments);
-        comments.clear();
+        style->comment = std::move(commentBuffer);
+        style->style = std::move(styleBuffer);
+
+        commentBuffer.clear();
+        styleBuffer.clear();
     }};
 
     while (dataStream.good()) {
         const auto newComments{Utils::extractComment(dataStream)};
         if (newComments) {
-            if (not comments.empty()) comments += '\n';
-            comments += *newComments;
+            if (not commentBuffer.empty()) commentBuffer += '\n';
+            commentBuffer += *newComments;
             continue;
         }
 
@@ -371,8 +378,6 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
         } else if (reading == POST_TRACK) {
             if (chr == ',') {
                 auto& style{array.presets().back()->addStyle()};
-                // Comment is assigned later. Doesn't need removal now.
-                style.style.clear(); // Remove default style
                 reading = STYLE;
             }
         } else if (reading == STYLE) {
@@ -389,7 +394,6 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
                 if (chr == ',') {
                     finishStyleReading();
                     auto& style{array.presets().back()->addStyle()};
-                    style.style.clear();
                     continue;
                 }
             }
@@ -420,7 +424,7 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
                 depth.pop_back();
             }
 
-            array.presets().back()->styles().back()->style += chr;
+            styleBuffer += chr;
         } else if (reading == NAME) {
             if (chr == '"' or chr == '}') {
                 reading = NONE;
