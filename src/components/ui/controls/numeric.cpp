@@ -76,25 +76,22 @@ template struct PCUI::Private::NumericDataTemplate<float64>;
 PCUI::Numeric::Numeric(
     wxWindow *parent,
     NumericData& data,
-    int64 style,
     const wxString& label,
     const wxOrientation& orient
 ) : ControlBase(parent, data) {
-    create(style, label, orient);
+    create(label, orient);
 }
 
 PCUI::Numeric::Numeric(
     wxWindow *parent,
     NumericDataProxy& proxy,
-    int64 style,
     const wxString& label,
     const wxOrientation& orient
 ) : ControlBase(parent, proxy) {
-    create(style, label, orient);
+    create(label, orient);
 }
 
 void PCUI::Numeric::create(
-    int64 style,
     const wxString& label,
     const wxOrientation& orient
 ) {
@@ -104,7 +101,7 @@ void PCUI::Numeric::create(
         wxEmptyString,
         wxDefaultPosition,
         wxDefaultSize,
-        wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER | style
+        wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER
     )};
 
     init(control, wxEVT_SPINCTRL, wxEVT_TEXT_ENTER, label, orient);
@@ -132,25 +129,22 @@ void PCUI::Numeric::onModifySecondary(wxCommandEvent& evt) {
 PCUI::Decimal::Decimal(
     wxWindow *parent,
     DecimalData& data,
-    int64 style,
     const wxString& label,
     const wxOrientation& orient
 ) : ControlBase(parent, data) {
-    create(style, label, orient);
+    create(label, orient);
 }
 
 PCUI::Decimal::Decimal(
     wxWindow *parent,
     DecimalDataProxy& proxy,
-    int64 style,
     const wxString& label,
     const wxOrientation& orient
 ) : ControlBase(parent, proxy) {
-    create(style, label, orient);
+    create(label, orient);
 }
 
 void PCUI::Decimal::create(
-    int64 style,
     const wxString& label,
     const wxOrientation& orient
 ) {
@@ -160,7 +154,7 @@ void PCUI::Decimal::create(
         wxEmptyString,
         wxDefaultPosition,
         wxDefaultSize,
-        wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER | style
+        wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER
     )};
 
     init(control, wxEVT_SPINCTRLDOUBLE, wxEVT_TEXT_ENTER, label, orient);

@@ -99,7 +99,6 @@ wxStaticBoxSizer* BladeAwarenessDlg::createIDSetup(wxWindow* parent) {
     auto *pullupResistance{new PCUI::Numeric(
         setupSizer->GetStaticBox(),
         config.settings.bladeID.pullup,
-        wxSP_ARROW_KEYS, 
         _("Pullup Resistance")
     )};
     pullupResistance->SetToolTip(_("The value of the pullup resistor placed on the Blade ID line."));
@@ -183,7 +182,6 @@ wxStaticBoxSizer* BladeAwarenessDlg::createContinuousScanSettings(wxWindow* pare
     auto *numIDTimes{new PCUI::Numeric(
         continuousScansSizer->GetStaticBox(),
         config.settings.bladeID.continuousTimes,
-        wxSP_ARROW_KEYS,
         _("Number of Reads to Average")
     )};
     numIDTimes->SetToolTip(_("Number of times to read the Blade ID to average out the result and compensate for inaccurate readings."));
@@ -191,7 +189,6 @@ wxStaticBoxSizer* BladeAwarenessDlg::createContinuousScanSettings(wxWindow* pare
     auto *scanIDMillis{new PCUI::Numeric(
         continuousScansSizer->GetStaticBox(),
         config.settings.bladeID.continuousInterval, 
-        wxSP_ARROW_KEYS,
         _("Scan Interval (ms)")
     )};
     scanIDMillis->SetToolTip(_("Scan the Blade ID and update accordingly every input number of millis."));

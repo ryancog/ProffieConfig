@@ -227,42 +227,36 @@ wxSizer *GeneralPage::leftOptions(wxWindow *parent) {
     auto *buttons{new PCUI::Numeric(
         parent,
         config.settings.numButtons,
-        wxSP_ARROW_KEYS,
         _("Number of Buttons"),
         wxHORIZONTAL
     )};
     auto *volume{new PCUI::Numeric(
         parent,
         config.settings.volume,
-        wxSP_ARROW_KEYS,
         _("Max Volume"),
         wxHORIZONTAL
     )};
     auto *clash{new PCUI::Decimal(
         parent,
         config.settings.clashThreshold,
-        wxSP_ARROW_KEYS,
         _("Clash Threshold (Gs)"),
         wxHORIZONTAL
     )};
     auto *pliTime{new PCUI::Decimal(
         parent,
         config.settings.pliOffTime,
-        wxSP_ARROW_KEYS,
         _("PLI Timeout (seconds)"),
         wxHORIZONTAL
     )};
     auto *idleTime{new PCUI::Decimal(
         parent,
         config.settings.idleOffTime,
-        wxSP_ARROW_KEYS,
         _("Idle Timeout (minutes)"),
         wxHORIZONTAL
     )};
     auto *motionTime{new PCUI::Decimal(
         parent,
         config.settings.motionTimeout,
-        wxSP_ARROW_KEYS,
         _("Motion Timeout (minutes)"),
         wxHORIZONTAL
     )};
