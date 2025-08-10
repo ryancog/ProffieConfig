@@ -28,21 +28,27 @@ namespace PCUI {
 
 struct UI_EXPORT TextData : ControlData {
     operator string() const { return pValue; }
-    void operator=(string&& val);
+    void operator=(string&&);
 
-    void operator+=(string&& val);
-    void operator+=(char val);
+    void operator+=(const string&);
+    void operator+=(char);
 
+    // In a perfect world the data would get locked to use these...
     auto begin() { return pValue.begin(); }
     auto end() { return pValue.end(); }
     auto rbegin() { return pValue.rbegin(); }
     auto rend() { return pValue.rend(); }
 
+    string::size_type find(char);
+    string::size_type find(const string&);
+
     void clear();
     void erase(string::size_type pos = 0, string::size_type n = string::npos);
     void erase(string::const_iterator first, optional<string::const_iterator> last = nullopt);
+    void insert(string::size_type pos, const string&);
 
-    bool operator==(cstring);
+    [[nodiscard]] bool empty();
+    [[nodiscard]] bool operator==(cstring);
 
     /**
      * Unconditionally set value and trigger update.
