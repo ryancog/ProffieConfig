@@ -51,7 +51,7 @@ struct UI_EXPORT TextData : ControlData {
     void insert(string::size_type pos, const string_view&);
 
     [[nodiscard]] bool empty();
-    [[nodiscard]] bool operator==(cstring);
+    [[nodiscard]] bool operator==(const string_view&);
 
     /**
      * Unconditionally set value and trigger update.
@@ -60,6 +60,7 @@ struct UI_EXPORT TextData : ControlData {
 
     [[nodiscard]] uint32 getInsertionPoint() { return pInsertionPoint; }
     void setInsertionPoint(uint32);
+    void setInsertionPointEnd();
 
     enum {
         ID_VALUE,
