@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "log/branch.h"
 #include "ui/controls/checklist.h"
 #include "ui/controls/choice.h"
 #include "ui/controls/combobox.h"
@@ -61,7 +62,7 @@ struct CONFIG_EXPORT Settings {
     // Do NOT set choices manually
     // Done via Config::refreshVersions
     PCUI::ChoiceData osVersion;
-    constexpr static cstring OS_VERSION_STR{"OS_VERSION "};
+    constexpr static cstring OS_VERSION_STR{"OS_VERSION"};
 
     PCUI::ToggleData massStorage;
     constexpr static cstring ENABLE_MASS_STORAGE_STR{"ENABLE_MASS_STORAGE"};
@@ -69,7 +70,7 @@ struct CONFIG_EXPORT Settings {
     constexpr static cstring ENABLE_WEBUSB_STR{"ENABLE_WEBUSB"};
 
     PCUI::NumericData numButtons;
-    constexpr static cstring NUM_BUTTONS_STR{"NUM_BUTTONS "};
+    constexpr static cstring NUM_BUTTONS_STR{"NUM_BUTTONS"};
     struct ButtonData {
         enum Type {
             BUTTON,
@@ -117,7 +118,7 @@ struct CONFIG_EXPORT Settings {
         PCUI::NumericData touch;
     };
 
-    constexpr static cstring NUM_BLADES_STR{"NUM_BLADES "};
+    constexpr static cstring NUM_BLADES_STR{"NUM_BLADES"};
     constexpr static cstring ENABLE_AUDIO_STR{"ENABLE_AUDIO"};
     constexpr static cstring ENABLE_MOTION_STR{"ENABLE_MOTION"};
     constexpr static cstring ENABLE_WS2811_STR{"ENABLE_WS2811"};
@@ -126,11 +127,11 @@ struct CONFIG_EXPORT Settings {
     constexpr static cstring KEEP_SAVEFILES_STR{"KEEP_SAVEFILES_WHEN_PROGRAMMING"};
 
     // PCUI::ChoiceData rfidSerial;
-    constexpr static cstring RFID_SERIAL_STR{"RFID_SERIAL "};
+    constexpr static cstring RFID_SERIAL_STR{"RFID_SERIAL"};
 
     PCUI::ToggleData bladeDetect;
     PCUI::ComboBoxData bladeDetectPin;
-    constexpr static cstring BLADE_DETECT_PIN_STR{"BLADE_DETECT_PIN "};
+    constexpr static cstring BLADE_DETECT_PIN_STR{"BLADE_DETECT_PIN"};
 
     struct BladeID {
         PCUI::ToggleData enable;
@@ -141,7 +142,7 @@ struct CONFIG_EXPORT Settings {
             BRIDGED,
             MODE_MAX,
         };
-        static constexpr array<cstring, MODE_MAX> MODE_STRS{
+        static constexpr array<string_view, MODE_MAX> MODE_STRS{
             "SnapshotBladeID<",
             "ExternalPullupBladeID<",
             "BridgedPullupBladeID<",
@@ -158,27 +159,27 @@ struct CONFIG_EXPORT Settings {
 
         void addPowerPinFromEntry();
     } bladeID;
-    constexpr static cstring BLADE_ID_CLASS_STR{"BLADE_ID_CLASS "};
-    constexpr static cstring ENABLE_POWER_FOR_ID_STR{"ENABLE_POWER_FOR_ID "};
-    constexpr static cstring BLADE_ID_SCAN_MILLIS_STR{"BLADE_ID_SCAN_MILLIS "};
-    constexpr static cstring BLADE_ID_TIMES_STR{"BLADE_ID_TIMES "};
+    constexpr static cstring BLADE_ID_CLASS_STR{"BLADE_ID_CLASS"};
+    constexpr static cstring ENABLE_POWER_FOR_ID_STR{"ENABLE_POWER_FOR_ID"};
+    constexpr static cstring BLADE_ID_SCAN_MILLIS_STR{"BLADE_ID_SCAN_MILLIS"};
+    constexpr static cstring BLADE_ID_TIMES_STR{"BLADE_ID_TIMES"};
 
     PCUI::NumericData volume;
-    constexpr static cstring VOLUME_STR{"VOLUME "};
+    constexpr static cstring VOLUME_STR{"VOLUME"};
     PCUI::ToggleData enableBootVolume;
     PCUI::NumericData bootVolume;
-    constexpr static cstring BOOT_VOLUME_STR{"BOOT_VOLUME "};
+    constexpr static cstring BOOT_VOLUME_STR{"BOOT_VOLUME"};
     PCUI::DecimalData clashThreshold;
-    constexpr static cstring CLASH_THRESHOLD_STR{"CLASH_THRESHOLD_G "};
+    constexpr static cstring CLASH_THRESHOLD_STR{"CLASH_THRESHOLD_G"};
 
     // In seconds 
     PCUI::DecimalData pliOffTime;
-    constexpr static cstring PLI_OFF_STR{"PLI_OFF_TIME "};
+    constexpr static cstring PLI_OFF_STR{"PLI_OFF_TIME"};
     // In Minutes
     PCUI::DecimalData idleOffTime;
-    constexpr static cstring IDLE_OFF_STR{"IDLE_OFF_TIME "};
-    PCUI::DecimalData motionOffTime;
-    constexpr static cstring MOTION_OFF_STR{"MOTION_TIMEOUT "};
+    constexpr static cstring IDLE_OFF_STR{"IDLE_OFF_TIME"};
+    PCUI::DecimalData motionTimeout;
+    constexpr static cstring MOTION_TIMEOUT_STR{"MOTION_TIMEOUT"};
 
     PCUI::ToggleData disableColorChange;
     constexpr static cstring DISABLE_COLOR_CHANGE_STR{"DISABLE_COLOR_CHANGE"};
@@ -238,7 +239,7 @@ struct CONFIG_EXPORT Settings {
         "ORIENTATION_BOTTOM_TOWARDS_BLADE",
     };
     PCUI::ChoiceData orientation;
-    constexpr static cstring ORIENTATION_STR{"ORIENTATION "};
+    constexpr static cstring ORIENTATION_STR{"ORIENTATION"};
 
     struct OrientRotation {
         PCUI::NumericData x;
@@ -276,13 +277,13 @@ struct CONFIG_EXPORT Settings {
     // Cutoff in Hz
     PCUI::ToggleData enableFiltering;
     PCUI::NumericData filterCutoff;
-    constexpr static cstring FILTER_CUTOFF_STR{"FILTER_CUTOFF_FREQUENCY "};
+    constexpr static cstring FILTER_CUTOFF_STR{"FILTER_CUTOFF_FREQUENCY"};
     PCUI::NumericData filterOrder;
-    constexpr static cstring FILTER_ORDER_STR{"FILTER_ORDER "};
+    constexpr static cstring FILTER_ORDER_STR{"FILTER_ORDER"};
 
     // Useful range is 1~50
     PCUI::NumericData audioClashSuppressionLevel;
-    constexpr static cstring AUDIO_CLASH_SUPPRESSION_STR{"AUDIO_CLASH_SUPPRESSION_LEVEL "};
+    constexpr static cstring AUDIO_CLASH_SUPPRESSION_STR{"AUDIO_CLASH_SUPPRESSION_LEVEL"};
     PCUI::ToggleData dontUseGyroForClash;
     constexpr static cstring DONT_USE_GYRO_FOR_CLASH_STR{"PROFFIEOS_DONT_USE_GYRO_FOR_CLASH"};
 
@@ -302,7 +303,12 @@ struct CONFIG_EXPORT Settings {
         PCUI::TextData define;
         PCUI::TextData value;
     };
-    const vector<std::unique_ptr<CustomOption>>& customOptions() const { return mCustomOptions; }
+    [[nodiscard]] const vector<std::unique_ptr<CustomOption>>& customOptions() const { return mCustomOptions; }
+    [[nodiscard]] CustomOption& customOption(uint32 idx) const {
+        assert(idx < mCustomOptions.size());
+        return *mCustomOptions[idx];
+    }
+
     /**
      * Create a new custom option
      *
@@ -318,6 +324,20 @@ struct CONFIG_EXPORT Settings {
      * @return If the option was found/removed
      */
     bool removeCustomOption(CustomOption&);
+
+    /**
+     * Remove a custom option by idx
+     *
+     * @return If the option was found/removed
+     */
+    bool removeCustomOption(uint32);
+
+    /**
+     * Make sure all the "custom" defines really are custom.
+     *
+     * Move them where they belong if not.
+     */
+    void processCustomDefines(Log::Branch * = nullptr);
 
 private:
     Config& mParent;

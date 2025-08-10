@@ -261,7 +261,7 @@ wxSizer *GeneralPage::leftOptions(wxWindow *parent) {
     )};
     auto *motionTime{new PCUI::Decimal(
         parent,
-        config.settings.motionOffTime,
+        config.settings.motionTimeout,
         wxSP_ARROW_KEYS,
         _("Motion Timeout (minutes)"),
         wxHORIZONTAL
