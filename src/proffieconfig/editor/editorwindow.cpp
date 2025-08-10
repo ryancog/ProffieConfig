@@ -89,10 +89,7 @@ void EditorWindow::bindEvents() {
             );
             auto saveChoice{saveDialog.ShowModal()};
 
-            if (
-                    saveChoice == wxID_CANCEL or 
-                    not save()
-                ) {
+            if (saveChoice == wxID_CANCEL or (saveChoice == wxID_SAVE and not save())) {
                 event.Veto();
                 return;
             }
