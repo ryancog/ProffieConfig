@@ -141,10 +141,16 @@ void MainMenu::bindEvents() {
         ManifestDialog(this).ShowModal();
     }, ID_UpdateManifest);
 
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/ryancog/ProffieConfig/blob/master/docs"); }, ID_Docs);
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) { wxLaunchDefaultBrowser("https://github.com/ryancog/ProffieConfig/issues/new"); }, ID_Issue);
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+        wxLaunchDefaultBrowser("https://github.com/ryancog/ProffieConfig/blob/master/docs");
+    }, ID_Docs);
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+        wxLaunchDefaultBrowser("https://github.com/ryancog/ProffieConfig/issues/new");
+    }, ID_Issue);
 
-    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Arduino::refreshBoards(this); }, ID_RefreshDev);
+    // Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+    //     Arduino::refreshBoards(this);
+    // }, ID_RefreshDev);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         // if (activeEditor == nullptr) {
         //     activeEditor = generateEditor(configSelection);
@@ -159,8 +165,8 @@ void MainMenu::bindEvents() {
     }, ID_OpenSerial);
 #	else
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
-        if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise();
-        else SerialMonitor::instance = new SerialMonitor(this, boardSelection);
+        // if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise();
+        // else SerialMonitor::instance = new SerialMonitor(this, boardSelection);
     }, ID_OpenSerial);
 #	endif
 
@@ -175,7 +181,13 @@ void MainMenu::bindEvents() {
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         wxSetCursor(wxCURSOR_WAIT);
         Defer cursorDefer{[]() { wxSetCursor(wxNullCursor); }};
-        auto& config{Config::open(configSelection)};
+        auto res{Config::open(configSelection)};
+        if (auto *ptr = std::get_if<string>(&res)) {
+            PCUI::showMessage(*ptr, _("Cannot Edit Config"));
+            return;
+        }
+
+        auto& config{*std::get<Config::Config *>(res)};
         for (auto *editor : mEditors) {
             if (&editor->getOpenConfig() == &config) {
                 editor->Show();
@@ -198,17 +210,18 @@ void MainMenu::bindEvents() {
         wxSetCursor(wxCURSOR_WAIT);
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
-        auto configPath{Paths::configs() / (static_cast<string>(addDialog.configName) + ".h")};
-        if (not static_cast<filepath>(addDialog.importPath).empty()) {
-            fs::copy(addDialog.importPath, configPath);
+        if (static_cast<filepath>(addDialog.importPath).empty()) {
+            std::get<Config::Config *>(Config::open(addDialog.configName))->close();
         } else {
-            std::ofstream{configPath}.flush();
+            auto res{Config::import(addDialog.configName, addDialog.importPath)};
+            if (auto *ptr = std::get_if<string>(&res)) {
+                PCUI::showMessage(*ptr, _("Cannot Import Config"));
+                return;
+            }
         }
 
-        auto choices{configSelection.choices()};
-        choices.push_back(addDialog.configName);
-        configSelection.setChoices(std::move(choices));
-        configSelection = configSelection.choices().size() - 1;
+        configSelection.setChoices(Config::fetchListFromDisk());
+        configSelection = addDialog.configName;
     }, ID_AddConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
         if (PCUI::showMessage(
