@@ -1,6 +1,23 @@
 #include "bladespage.h"
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2023-2025 Ryan Ogurek
+/*
+ * ProffieConfig, All-In-One Proffieboard Management Utility
+ * Copyright (C) 2023-2025 Ryan Ogurek
+ *
+ * proffieconfig/editor/pages/bladespage.cpp
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <wx/gdicmn.h>
 #include <wx/button.h>
@@ -21,7 +38,6 @@
 #include "../dialogs/awarenessdlg.h"
 #include "../../core/defines.h"
 #include "../special/splitvisualizer.h"
-#include "wx/anybutton.h"
 
 class ArrayEditDlg : public wxDialog, PCUI::Notifier {
 public:
@@ -314,38 +330,6 @@ void BladesPage::handleNotification(uint32 id) {
     }
 }
 
-// void BladesPage::createToolTips() const {
-//     TIP(bladeArray, _("The currently-selected Blade Array to edit."));
-//     TIP(addBladeButton, _("Add a blade to the selected blade array."));
-//     TIP(removeBladeButton, _("Remove the currently-selected blade."));
-//     TIP(addSubBladeButton, _("Add a Sub-Blade to the currently-selected blade.\nCan only be used with WS281X-type blades."));
-//     TIP(removeSubBladeButton, _("Remove the currently-selected Sub-Blade.\nIf there are less than 2 Sub-Blades after removal, the remaining Sub-Blade will be deleted."));
-// 
-//     TIP(bladeType, _("The type of blade/LED."));
-//     TIP(powerPins, _("The power pins to use for this blade.\nWS281X blades can have as many as are desired (though 2 is generally enough for most blades)"));
-//     TIP(blade3ColorOrder, _("The order of colors for your blade.\nMost of the time this can be left as \"GRB\"."));
-//     TIP(blade4ColorOrder, _("The order of colors for your blade.\nMost of the time this can be left as \"GRBW\"."));
-//     TIP(blade4UseRGB, _("Use the RGB channels alongside the White channel to produce white light.\nThis can result in a brighter blade, but at the cost of higher battery usage and a less \"pure\" white."));
-//     TIP(bladeDataPin, _("The pin name or number used for WS281X data.\nSpecify custom pins by typing in this box."));
-//     TIP(bladePixels, _("The number of pixels in your blade (total)."));
-// 
-//     TIP(useStandard, _("Split apart data into continuous given sections."));
-//     TIP(useStride, _("Useful to KR style blades and other similar types where the data signal \"strides\" back and forth across sides."));
-//     TIP(useZigZag, _("Similar to using stride, but for blades in which the data is continuous, \"zig-zagging\" up and down the blade."));
-//     TIP(subBladeStart, _("The starting pixel number for the current Sub-Blade.\nThis number starts at 0."));
-//     TIP(subBladeEnd, _("The ending pixel number for the current Sub-Blade.\nThis number should not exceed the \"Number of Pixels\" in the blade."));
-// 
-// 
-//     TIP(star1Color, _("The profile/type of the first LED.\nCorresponds to the first-selected power pin."));
-//     TIP(star2Color, _("The profile/type of the second LED.\nCorresponds to the second-selected power pin."));
-//     TIP(star3Color, _("The profile/type of the third LED.\nCorresponds to the third-selected power pin."));
-//     TIP(star4Color, _("The profile/type of the fourth LED.\nCorresponds to the fourth-selected power pin."));
-//     TIP(star1Resistance, _("The value of the resistor placed in series with this led."));
-//     TIP(star2Resistance, _("The value of the resistor placed in series with this led."));
-//     TIP(star3Resistance, _("The value of the resistor placed in series with this led."));
-//     TIP(star4Resistance, _("The value of the resistor placed in series with this led."));
-// }
-
 wxSizer *BladesPage::createBladeSelect() {
     auto& config{mParent->getOpenConfig()};
 
@@ -358,6 +342,7 @@ wxSizer *BladesPage::createBladeSelect() {
         config.bladeArrays.arraySelection,
         _("Blade Array")
     )};
+    arraySelection->SetToolTip(_("The currently-selected Blade Array to edit."));
     auto *issueIcon{new wxButton(
         this,
         ID_IssueIcon,
@@ -446,40 +431,7 @@ wxSizer *BladesPage::createBladeSelect() {
     bladeSelectionSizer->AddSpacer(5);
     bladeSelectionSizer->Add(bladeButtonSizer, wxSizerFlags().Expand());
 
-    // auto *subBladeSelectionSizer{new wxBoxSizer(wxVERTICAL)};
-    // auto *subBladeSelect{new PCUI::List(
-    //     GetStaticBox(),
-    //     config->bladeArrays.subBladeSelectionProxy,
-    //     _("SubBlades")
-    // )};
-    // auto *subBladeButtonSizer{new wxBoxSizer(wxHORIZONTAL)};
-    // auto *addSubBladeButton{new wxButton(
-    //     GetStaticBox(),
-    //     ID_AddSubBlade,
-    //     "+",
-    //     wxDefaultPosition,
-    //     SMALLBUTTONSIZE,
-    //     wxBU_EXACTFIT
-    // )};
-    // auto *removeSubBladeButton{new wxButton(
-    //     GetStaticBox(),
-    //     ID_RemoveSubBlade,
-    //     "-",
-    //     wxDefaultPosition,
-    //     SMALLBUTTONSIZE,
-    //     wxBU_EXACTFIT
-    // )};
-    // subBladeButtonSizer->Add(addSubBladeButton, wxSizerFlags(1));
-    // subBladeButtonSizer->AddSpacer(5);
-    // subBladeButtonSizer->Add(removeSubBladeButton, wxSizerFlags(1));
-
-    // subBladeSelectionSizer->Add(subBladeSelect, wxSizerFlags(1).Expand());
-    // subBladeSelectionSizer->AddSpacer(5);
-    // subBladeSelectionSizer->Add(subBladeButtonSizer, wxSizerFlags().Expand());
-
     bladeManagerSizer->Add(bladeSelectionSizer, wxSizerFlags(1).Expand());
-    // bladeManagerSizer->Add(subBladeSelectionSizer, wxSizerFlags(1).Expand());
-
 
     bladeSelectSizer->Add(arraySizer, wxSizerFlags().Expand());
     bladeSelectSizer->AddSpacer(5);
@@ -537,6 +489,7 @@ wxSizer *BladesPage::createBladeSettings() {
             starProxy.resistanceProxy,
             _("Resistance (mOhms)")
         )};
+        starResistance->SetToolTip(_("The value of the resistor placed in series with this led."));
 
         starSizer->Add(starColor, wxSizerFlags().Expand());
         starSizer->AddSpacer(10);
@@ -582,24 +535,28 @@ wxSizer *BladesPage::createBladeSettings() {
         _("Number of Pixels"),
         wxHORIZONTAL
     )};
+    length->SetToolTip(_("The number of pixels in your blade (total)."));
     auto *dataPin{new PCUI::ComboBox(
         this,
         config.bladeArrays.dataPinProxy,
         _("Blade Data Pin"),
         wxHORIZONTAL
     )};
+    dataPin->SetToolTip(_("The pin name or number used for WS281X data.\nSpecify custom pins by typing in this box."));
     auto *colorOrder3{new PCUI::Choice(
         this,
         config.bladeArrays.colorOrder3Proxy,
         _("Color Order"),
         wxHORIZONTAL
     )};
+    colorOrder3->SetToolTip(_("The order of colors for your blade.\nMost of the time this can be left as \"GRB\"."));
     auto *colorOrder4{new PCUI::Choice(
         this,
         config.bladeArrays.colorOrder4Proxy,
         _("Color Order"),
         wxHORIZONTAL
     )};
+    colorOrder4->SetToolTip(_("The order of colors for your blade.\nMost of the time this can be left as \"GRBW\"."));
     auto *hasWhite{new PCUI::CheckBox(
         this,
         config.bladeArrays.hasWhiteProxy,
@@ -612,6 +569,8 @@ wxSizer *BladesPage::createBladeSettings() {
         0,
         _("Use RGB with White")
     )};
+    whiteUseRGB->SetToolTip(_("Use the RGB channels alongside the White channel to produce white light.\nThis can result in a brighter blade, but at the cost of higher battery usage and a less \"pure\" white."));
+
     auto *pixelBrightness{new PCUI::Numeric(
         this,
         config.bladeArrays.pixelBrightnessProxy,
@@ -625,6 +584,7 @@ wxSizer *BladesPage::createBladeSettings() {
         _("Power Pins")
     )};
     pixelPowerPins->SetMinSize(wxSize(-1, 200));
+    pixelPowerPins->SetToolTip(_("The power pins to use for this blade.\nWS281X blades can have as many as are desired (though 2 is generally enough for most blades)"));
 
     auto *pinNameSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *powerPinName{new PCUI::Text(
@@ -697,6 +657,13 @@ wxSizer *BladesPage::createBladeSettings() {
         { _("Standard"), _("Reverse"), _("Stride"), _("ZigZag"), _("List") },
         _("Type")
     )};
+    splitType->SetToolTip(_(
+        "Standard: Split data into continuous sections.\n\n"
+        "Reverse: Identical to Standard, but reverses the bladestyle direction.\n\n"
+        "Stride: Useful for KR style blades where the data signal \"strides\" back and forth across sides.\n\n"
+        "ZigZag: Similar to Stride, but organizes data in the opposite manner perpendicular to the data signal.\n\n"
+        "List: Discrete LEDs to make part of a SubBlade."
+    ));
     
     auto splitStartEndSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *splitStart{new PCUI::Numeric(
@@ -723,6 +690,7 @@ wxSizer *BladesPage::createBladeSettings() {
         config.bladeArrays.splitSegmentsProxy,
         _("Segments")
     )};
+    splitSegments->SetToolTip(_("Stride length or number of ZigZag columns"));
     auto *splitList{new PCUI::Text(
         this,
         config.bladeArrays.splitListProxy,
@@ -730,6 +698,7 @@ wxSizer *BladesPage::createBladeSettings() {
         false,
         _("Pixel List")
     )};
+    splitList->SetToolTip(_("Data goes along each LED according to their order in the list"));
     auto *splitBrightness{new PCUI::Numeric(
         this,
         config.bladeArrays.splitBrightnessProxy,
