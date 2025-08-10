@@ -96,6 +96,7 @@ void PCUI::NotifierDataProxy::bind(NotifierData *data) {
         mData->mProxy = this;
         mData->mNotifier = mNotifier;
         mData->mInFlight = 0;
+        if (mNotifier) mNotifier->mDerived->DeletePendingEvents();
         mData->notify(Notifier::ID_REBOUND);
     } else if (mNotifier) {
         if (wxThread::IsMain()) {
