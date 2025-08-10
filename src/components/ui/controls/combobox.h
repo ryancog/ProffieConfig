@@ -28,6 +28,8 @@
 namespace PCUI {
 
 struct UI_EXPORT ComboBoxData : TextData {
+    using TextData::operator=;
+
     const vector<string>& defaults() const { return mDefaults; }
     void setDefaults(vector<string>&& defaults);
 
