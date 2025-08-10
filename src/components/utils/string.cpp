@@ -20,6 +20,8 @@
  */
 
 #include <cctype>
+#include <sstream>
+#include <stack>
 
 namespace Utils {
 
@@ -175,5 +177,96 @@ vector<string> Utils::createEntries(const std::vector<wxString>& vec) {
 
 vector<string> Utils::createEntries(const std::initializer_list<wxString>& list) {
     return Utils::createEntries(static_cast<std::vector<wxString>>(list));
+}
+
+// Pulled and adapted from:
+// C++ Program to illustrate how to evalauate a mathematical expression that is stored as string
+// https://www.geeksforgeeks.org/cpp/how-to-parse-mathematical-expressions-in-cpp
+//
+// I should probably review it in depth at some point but for now it's good enough.
+float64 Utils::doStringMath(const string& str) {
+    const auto isOperator{[](char c) {
+        return c == '+' or c == '-' or c == '*' or c == '/' or c == '^';
+    }};
+
+    const auto precedence{[](char op) -> int32 {
+        if (op == '+' or op == '-') return 1;
+        if (op == '*' or op == '/') return 2;
+        if (op == '^') return 3;
+        return 0;
+    }};
+
+    const auto applyOp{[](float64 a, float64 b, char op) -> float64 {
+        // Applies the operator to the operands and returns the
+        // result
+        switch (op) {
+            case '+': return a + b;
+            case '-': return a - b;
+            case '*': return a * b;
+            case '/': return a / b;
+            case '^': return pow(a, b);
+            default: return 0;
+        }
+    }};
+
+    std::stack<char> operators;
+    std::stack<float64> operands;
+
+    std::istringstream ss{str};
+
+    string token;
+    while (std::getline(ss, token, ' ')) {
+        if (token.empty()) continue;
+        if (std::isdigit(token[0])) {
+            float64 num;
+            std::istringstream{token} >> num;
+            operands.push(num);
+        } else if (isOperator(token[0])) {
+            const char op{token[0]};
+
+            while (not operators.empty() and precedence(operators.top()) >= precedence(op)) {
+                const auto operandB{operands.top()};
+                operands.pop();
+                const auto operandA{operands.top()};
+                operands.pop();
+                const auto op{operators.top()};
+                operators.pop();
+
+                operands.push(applyOp(operandA, operandB, op));
+            }
+
+            operators.push(op);
+        } else if (token[0] == '(') { 
+            operators.push('(');
+        } else if (token[0] == ')') {
+            while (not operators.empty() and operators.top() != '(') {
+                const auto operandB{operands.top()};
+                operands.pop();
+                const auto operandA{operands.top()};
+                operands.pop();
+                const auto op{operators.top()};
+                operators.pop();
+
+                operands.push(applyOp(operandA, operandB, op));
+            }
+
+            // Pop the opening parenthesis
+            operators.pop();
+        }
+    }
+
+    while (not operators.empty()) {
+        const auto operandB{operands.top()};
+        operands.pop();
+        const auto operandA{operands.top()};
+        operands.pop();
+        const auto op{operators.top()};
+        operators.pop();
+
+        operands.push(applyOp(operandA, operandB, op));
+    }
+
+    // The result is at the top of the operand stack
+    return operands.empty() ? 0 : operands.top();
 }
 
