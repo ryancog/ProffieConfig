@@ -94,7 +94,7 @@ optional<string> Config::parse(const filepath& path, Config& config, Log::Branch
     }
 
     config.presetArrays.syncStyles();
-    config.processCustomDefines();
+    config.settings.processCustomDefines();
 
     return nullopt;
 }
@@ -129,34 +129,45 @@ string Config::extractSection(std::ifstream& file) {
 void Config::parseTop(std::ifstream& file, Config& config) {
     const auto top{extractSection(file)};
     std::istringstream topStream{top};
+    std::istringstream commentStream;
 
     string buffer;
-    while (topStream.good()) {
-        if (Utils::extractComment(topStream)) continue;
-        std::getline(topStream, buffer);
+    while (commentStream.good() or topStream.good()) {
         enum {
             NONE,
             DEFINE,
             PC_OPT,
-        } type;
-        if (buffer.starts_with(DEFINE_STR)) {
-            type = DEFINE;
-            buffer = buffer.substr(DEFINE_STR.length());
-        } else if (buffer.starts_with(PC_OPT_STR)) {
-            type = PC_OPT;
-            buffer = buffer.substr(PC_OPT_STR.length());
-        } else if (buffer.starts_with(INCLUDE_STR)) {
-            buffer = buffer.substr(INCLUDE_STR.length());
-            Utils::trimSurroundingWhitespace(buffer);
-            if (buffer.size() < 2) continue;
+        } type{NONE};
 
-            for (auto idx{0}; idx < Settings::BOARD_MAX; ++idx) {
-                if (buffer == Settings::BOARD_STRS[idx]) {
-                    config.settings.board = idx;
-                    break;
-                }
+        if (commentStream.good() and commentStream.rdbuf()->in_avail()) {
+            std::getline(commentStream, buffer);
+            if (buffer.starts_with(PC_OPT_NOCOMMENT_STR)) {
+                type = PC_OPT;
+                buffer = buffer.substr(PC_OPT_NOCOMMENT_STR.length());
             }
-            continue;
+        } else {
+            auto res{Utils::extractComment(topStream)};
+            if (res) {
+                commentStream.str(*res);
+                continue;
+            }
+            std::getline(topStream, buffer);
+            if (buffer.starts_with(DEFINE_STR)) {
+                type = DEFINE;
+                buffer = buffer.substr(DEFINE_STR.length());
+            } else if (buffer.starts_with(INCLUDE_STR)) {
+                buffer = buffer.substr(INCLUDE_STR.length());
+                Utils::trimSurroundingWhitespace(buffer);
+                if (buffer.size() < 2) continue;
+
+                for (auto idx{0}; idx < Settings::BOARD_MAX; ++idx) {
+                    if (buffer == Settings::BOARD_STRS[idx]) {
+                        config.settings.board = idx;
+                        break;
+                    }
+                }
+                continue;
+            }
         }
 
         if (type == NONE) continue;
@@ -167,8 +178,9 @@ void Config::parseTop(std::ifstream& file, Config& config) {
         auto value{keyEnd == string::npos ? "" : buffer.substr(keyEnd)};
         Utils::trimSurroundingWhitespace(value);
 
-        if (type == DEFINE) config.settings.addCustomOption(std::move(key), std::move(value));
-        else if (type == PC_OPT) {
+        if (type == DEFINE and not key.empty()) {
+            config.settings.addCustomOption(std::move(key), std::move(value));
+        } else if (type == PC_OPT) {
             if (key == Settings::ENABLE_MASS_STORAGE_STR) {
                 config.settings.massStorage = true;
             } else if (key == Settings::ENABLE_WEBUSB_STR) {
@@ -769,7 +781,9 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         string buffer;
         for (auto idx{0}; idx < data.length(); ++idx) {
             if (data[idx] == ',' or data[idx] == '>') {
-                blade.ws281x().addPowerPin(std::move(buffer));
+                // Use entry for processing
+                blade.config().bladeArrays.powerPinNameEntry = std::move(buffer);
+                blade.ws281x().powerPins.select(blade.config().bladeArrays.powerPinNameEntry);
                 buffer.clear();
                 if (data[idx] == '>') break;
                 continue;
@@ -823,7 +837,9 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         buffer.clear();
         for (auto idx{0}; idx < data.length(); ++idx) {
             if (data[idx] == ',' or data[idx] == '>') {
-                blade.ws281x().addPowerPin(std::move(buffer));
+                // Use entry for processing
+                blade.config().bladeArrays.powerPinNameEntry = std::move(buffer);
+                blade.ws281x().powerPins.select(blade.config().bladeArrays.powerPinNameEntry);
                 buffer.clear();
                 if (data[idx] == '>') break;
                 continue;
@@ -1108,4 +1124,209 @@ void Config::tryAddInjection(const string& buffer, Config& config) {
     logger.debug("Done");
 }
 
+void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
+    auto& logger{Log::Branch::optCreateLogger("Config::Settings::processCustomDefines()", lBranch)};
+    for (auto idx{0}; idx < mCustomOptions.size(); ++idx) {
+        auto& opt{customOption(idx)};
+
+        bool processed{true};
+
+        if (opt.define == NUM_BUTTONS_STR) {
+            try {
+                numButtons = std::stoi(opt.value);
+            } catch (std::exception e) {
+                logger.warn(string{"Couldn't parse num buttons: "} + e.what());
+            }
+        } else if (opt.define == NUM_BLADES_STR) {
+        } else if (opt.define == ENABLE_AUDIO_STR) {
+        } else if (opt.define == ENABLE_MOTION_STR) {
+        } else if (opt.define == ENABLE_WS2811_STR) {
+        } else if (opt.define == ENABLE_SD_STR) {
+        } else if (opt.define == SHARED_POWER_PINS_STR) {
+        } else if (opt.define == KEEP_SAVEFILES_STR) {
+        } else if (opt.define == RFID_SERIAL_STR) {
+            // Not Yet Implemented
+        } else if (opt.define == BLADE_DETECT_PIN_STR) {
+            bladeDetect = true;
+            bladeDetectPin = static_cast<string>(opt.value);
+        } else if (opt.define == BLADE_ID_CLASS_STR) {
+            bladeID.enable = true;
+            auto idx{0};
+            for (; idx < BladeID::MODE_MAX; ++idx) {
+                if (opt.value.startsWith(BladeID::MODE_STRS[idx])) break;
+            }
+            if (idx == BladeID::MODE_MAX) {
+                logger.warn("Cannot parse invalid/unrecognized BladeID class");
+            } else{
+                bladeID.mode = idx;
+                opt.value.erase(0, BladeID::MODE_STRS[idx].length());
+                const auto idPinEnd{opt.value.find(',')};
+                bladeID.pin = opt.value.substr(0, idPinEnd);
+                if (idx == BladeID::EXTERNAL) {
+                    if (idPinEnd == string::npos) {
+                        logger.warn("Missing pullup value for external blade id");
+                    } else {
+                        opt.value.erase(0, idPinEnd + 1);
+                        try {
+                            bladeID.pullup = std::stoi(opt.value);
+                        } catch (std::exception e) {
+                            logger.warn(string{"Failed to parse pullup value for ext blade id: "} + e.what());
+                        }
+                    }
+                } else if (idx == BladeID::BRIDGED) {
+                    if (idPinEnd == string::npos) {
+                        logger.warn("Missing bridge pin for blade id");
+                    } else {
+                        opt.value.erase(0, idPinEnd + 1);
+                        bladeID.bridgePin = static_cast<string>(opt.value);
+                    }
+                }
+            }
+        } else if (opt.define == ENABLE_POWER_FOR_ID_STR) {
+            bladeID.powerForID = true;
+            if (not opt.value.startsWith(POWER_PINS_STR)) {
+                logger.warn("Failed to parse BladeID PowerPINS");
+            } else {
+                opt.value.erase(0, POWER_PINS_STR.length());
+                while (not false) {
+                    const auto endPos{opt.value.find(',')};
+                    // Use the entry for processing
+                    bladeID.powerPinEntry = opt.value.substr(0, endPos);
+                    bladeID.powerPins.select(bladeID.powerPinEntry);
+                    if (endPos == string::npos) break;
+                    opt.value.erase(0, endPos + 1);
+                }
+            }
+        } else if (opt.define == BLADE_ID_SCAN_MILLIS_STR) {
+            bladeID.continuousScanning = true;            
+            try {
+                bladeID.continuousInterval = std::stoi(opt.value);
+            } catch (std::exception e) {
+                logger.warn(string{"Failed to parse blade id scan interval: "} + e.what());
+            }
+        } else if (opt.define == BLADE_ID_TIMES_STR) {
+            bladeID.continuousScanning = true;            
+            try {
+                bladeID.continuousTimes = std::stoi(opt.value);
+            } catch (std::exception e) {
+                logger.warn(string{"Failed to parse blade id scan times: "} + e.what());
+            }
+        } else if (opt.define == VOLUME_STR) {
+            try {
+                volume = std::stoi(opt.value);
+            } catch (std::exception e) {
+                logger.warn(string{"Failed to parse volume: "} + e.what());
+            }
+        } else if (opt.define == BOOT_VOLUME_STR) {
+            try {
+                bootVolume = std::stoi(opt.value);
+            } catch (std::exception e) {
+                logger.warn(string{"Failed to parse boot volume: "} + e.what());
+            }
+        } else if (opt.define == CLASH_THRESHOLD_STR) {
+            try {
+                clashThreshold = std::stod(opt.value);
+            } catch (std::exception e) {
+                logger.warn(string{"Failed to parse clash threshold: "} + e.what());
+            }
+        } else if (opt.define == PLI_OFF_STR) {
+            pliOffTime = Utils::doStringMath(opt.value) / 1000;
+        } else if (opt.define == IDLE_OFF_STR) {
+            idleOffTime = Utils::doStringMath(opt.value) / (60 * 1000);
+        } else if (opt.define == MOTION_TIMEOUT_STR) {
+            motionTimeout = Utils::doStringMath(opt.value) / (60 * 1000);
+        } else if (opt.define == DISABLE_COLOR_CHANGE_STR) {
+            disableColorChange = true;
+        } else if (opt.define == DISABLE_BASIC_PARSERS_STR) {
+            disableBasicParserStyles = true;
+        } else if (opt.define == DISABLE_DIAG_COMMANDS_STR) {
+            enableAllEditOptions = true;
+        } else if (opt.define == ENABLE_DEV_COMMANDS_STR) {
+            enableDeveloperCommands = true;
+        } else if (opt.define == SAVE_STATE_STR) {
+            saveState = true;
+        } else if (opt.define == ENABLE_ALL_EDIT_OPTIONS_STR) {
+            enableAllEditOptions = true;
+        } else if (opt.define == SAVE_COLOR_STR) {
+            saveColorChange = true;
+        } else if (opt.define == SAVE_VOLUME_STR) {
+            saveVolume = true;
+        } else if (opt.define == SAVE_PRESET_STR) {
+            savePreset = true;
+        } else if (opt.define == ENABLE_OLED_STR) {
+            enableOLED = true;
+        } else if (opt.define == ORIENTATION_STR) {
+            auto idx{0};
+            for (; idx < ORIENTATION_MAX; ++idx) {
+                if (opt.value == ORIENTATION_STRS[idx]) break;
+            }
+            if (idx == ORIENTATION_MAX) {
+                logger.warn("Unknown/invalid orientation: " + static_cast<string>(opt.value));
+            } else {
+                orientation = idx;
+            }
+        } else if (opt.define == ORIENTATION_ROTATION_STR) {
+            const auto firstComma{opt.value.find(',')};
+            const auto secondComma{opt.value.find(',', firstComma + 1)};
+            if (firstComma == string::npos or secondComma == string::npos) {
+                logger.warn("Invalid formatting for orientation rotation: " + static_cast<string>(opt.value));
+            } else {
+                try {
+                    orientationRotation.x = std::stod(opt.value);
+                    orientationRotation.y = std::stod(opt.value.substr(firstComma + 1));
+                    orientationRotation.z = std::stod(opt.value.substr(secondComma + 1));
+                } catch (std::exception e) {
+                    logger.warn(string{"Failed to parse orientation rotation: "} + e.what());
+                }
+            }
+        } else if (opt.define == SPEAK_TOUCH_VALUES_STR) {
+            speakTouchValues = true;
+        } else if (opt.define == DYNAMIC_BLADE_DIMMING_STR) {
+            dynamicBladeDimming = true;
+        } else if (opt.define == DYNAMIC_BLADE_LENGTH_STR) {
+            dynamicBladeLength = true;
+        } else if (opt.define == DYNAMIC_CLASH_THRESHOLD_STR) {
+            dynamicClashThreshold = true;
+        } else if (opt.define == SAVE_BLADE_DIM_STR) {
+            saveBladeDimming = true;
+        } else if (opt.define == SAVE_CLASH_THRESHOLD_STR) {
+            saveClashThreshold = true;
+        } else if (opt.define == FILTER_CUTOFF_STR) {
+            try {
+                filterCutoff = std::stoi(opt.value);
+            } catch (std::exception e) {
+                logger.warn(string{"Failed to parse filter cutoff: "} + e.what());
+            }
+        } else if (opt.define == FILTER_ORDER_STR) {
+            try {
+                filterOrder = std::stoi(opt.value);
+            } catch (std::exception e) {
+                logger.warn(string{"Failed to parse filter order: "} + e.what());
+            }
+        } else if (opt.define == AUDIO_CLASH_SUPPRESSION_STR) {
+            try {
+                audioClashSuppressionLevel = std::stoi(opt.value);
+            } catch (std::exception e) {
+                logger.warn(string{"Failed to parse audio clash suppression: "} + e.what());
+            }
+        } else if (opt.define == DONT_USE_GYRO_FOR_CLASH_STR) {
+            dontUseGyroForClash = true;
+        } else if (opt.define == NO_REPEAT_RANDOM_STR) {
+            noRepeatRandom = true;
+        } else if (opt.define == FEMALE_TALKIE_STR) {
+            femaleTalkie = true;
+        } else if (opt.define == DISABLE_TALKIE_STR) {
+            disableTalkie = true;
+        } else if (opt.define == KILL_OLD_PLAYERS_STR) {
+            killOldPlayers = true;
+        } else {
+            processed = false;
+        }
+
+        if (processed) {
+            removeCustomOption(idx);
+            --idx;
+        }
+    }
+}
 

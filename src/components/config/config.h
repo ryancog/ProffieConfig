@@ -37,13 +37,6 @@ struct CONFIG_EXPORT Config {
     PCUI::TextData name;
     Settings settings;
 
-    /**
-     * Make sure all the "custom" defines really are custom.
-     *
-     * Move them where they belong if not.
-     */
-    void processCustomDefines();
-
     PCUI::ChoiceData propSelection;
     enum {
         ID_PROPSELECTION,
