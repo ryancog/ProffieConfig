@@ -1,6 +1,23 @@
 #include "presetspage.h"
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2025 Ryan Ogurek
+/*
+ * ProffieConfig, All-In-One Proffieboard Management Utility
+ * Copyright (C) 2023-2025 Ryan Ogurek
+ *
+ * proffieconfig/editor/pages/presetspage.cpp
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <wx/gdicmn.h>
 #include <wx/msgdlg.h>
@@ -15,9 +32,6 @@
 
 #include "../../core/defines.h"
 #include "../editorwindow.h"
-#include "wx/anybutton.h"
-#include "wx/osx/stattext.h"
-#include "wx/settings.h"
 
 class RenameArrayDlg : public wxDialog, PCUI::Notifier {
 public:
@@ -196,6 +210,7 @@ void PresetsPage::createUI() {
         _("Presets")
     )};
     presetList->SetMinSize(wxSize{-1, 300});
+    presetList->SetToolTip(_("The currently-selected preset array to be edited.\nEach preset array has unique presets."));
 
     auto *arrangeButtonsSizer{new wxBoxSizer(wxVERTICAL)};
 #   ifdef __WXOSX__
@@ -267,6 +282,12 @@ void PresetsPage::createUI() {
         true,
         _("Preset Name")
     )};
+    nameInput->SetToolTip(_(
+        "The name for the preset.\n"
+        "This appears on the OLED screen if no bitmap is supplied, otherwise it's just for reference.\n"
+        "\"\\n\" means \"enter.\" Hitting \"enter\" will insert \"\\n\" which means a new line in the text displayed on the OLED.\n"
+        "For example, \"my\\npreset\" will be displayed on the OLED as two lines, the first being \"my\" and the second being \"preset.\""
+    ));
 
     auto *dirInput{new PCUI::Text(
         this,
@@ -275,6 +296,11 @@ void PresetsPage::createUI() {
         false,
         _("Font Directory")
     )};
+    dirInput->SetToolTip(_(
+        "The path of the folder on the SD card where the font is stored.\n"
+        "If the font folder is inside another folder, it must be indicated by something like \"folderName/fontFolderName\".\n"
+        "In order to specify multiple directories (for example, to include a \"common\" directory), use a semicolon (;) to separate the folders (e.g. \"fontFolderName;common\")."
+    ));
 
     auto *trackSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *trackInput{new PCUI::Text(
@@ -284,6 +310,11 @@ void PresetsPage::createUI() {
         false,
         _("Track File")
     )};
+    trackInput->SetToolTip(_(
+        "The path of the track file on the SD card. May be empty.\n"
+        "If the track is directly inside one of the folders specified in \"Font Directory\" then only the name of the track file is required."
+    ));
+
     auto *wavText{new wxStaticText(
         this,
         ID_WavText,
@@ -309,6 +340,8 @@ void PresetsPage::createUI() {
         config.presetArrays.styleDisplay,
         _("Display")
     )};
+    styleDisplay->SetToolTip(_("Show blade listing corresponding to the selected blade array."));
+
     auto *styleList {new PCUI::List(
         this,
         config.presetArrays.styleSelectProxy,
@@ -333,6 +366,10 @@ void PresetsPage::createUI() {
         false,
         _("Comments")
     )};
+    commentInput->SetToolTip(_(
+        "Any comments about the blade style goes here.\n"
+        "This doesn't affect the blade style at all, but can be a place for helpful notes!"
+    ));
 
     auto *styleInput{new PCUI::Text(
         styleCommentSplit,
@@ -342,6 +379,11 @@ void PresetsPage::createUI() {
         _("Blade Style")
     )};
     styleInput->styleMonospace();
+    styleInput->SetToolTip(_(
+        "Your blade style goes here.\n"
+        "This is the code which sets up what animations and effects your blade (or other LED) will do.\n"
+        "For getting/creating blade styles, see the Documentation (in \"Help->Documentation...\")."
+    ));
 
     styleCommentSplit->SetMinSize(wxSize{500, -1});
     styleCommentSplit->SetMinimumPaneSize(60);
@@ -487,40 +529,6 @@ void PresetsPage::handleNotification(uint32 id) {
     Layout();
 }
 
-// void PresetsPage::createToolTips() const {
-//     TIP(nameInput, _(
-//         "The name for the preset.\n"
-//         "This appears on the OLED screen if no bitmap is supplied, otherwise it's just for reference.\n"
-//         "Using \"\\n\" is like hitting \"enter\" when the text is displayed on the OLED.\n"
-//         "For example, \"my\\npreset\" will be displayed on the OLED as two lines, the first being \"my\" and the second being \"preset\"."
-//     ));
-//     TIP(dirInput, _(
-//         "The path of the folder on the SD card where the font is stored.\n"
-//         "If the font folder is inside another folder, it must be indicated by something like \"folderName/fontFolderName\".\n"
-//         "In order to specify multiple directories (for example, to inlclude a \"common\" directory), use a semicolon (;) to seperate the folders (e.g. \"fontFolderName;common\")."
-//     ));
-//     TIP(trackInput, _(
-//         "The path of the track file on the SD card.\n"
-//         "If the track is directly inside one of the folders specified in \"Font Directory\" then only the name of the track file is required."
-//     ));
-//     TIP(bladeArrayChoice, _("The currently-selected blade array to be edited.\nEach blade array has unique presets."));
-//     TIP(presetList, _("All presets in this blade array.\nSelect a preset and blade to edit associated blade styles."));
-//     TIP(bladeList, _("All blades in this blade array.\nSelect a preset and blade to edit associated blade styles."));
-// 
-//     TIP(addPreset, _("Add a preset to the currently-selected blade array."));
-//     TIP(removePreset, _("Delete the currently-selected preset."));
-// 
-//     TIP(commentInput, _(
-//         "Any comments about the blade style goes here.\n"
-//         "This doesn't affect the blade style at all, but can be a place for helpful notes!"
-//     ));
-//     TIP(styleInput, _(
-//         "Your blade style goes here.\n"
-//         "This is the code which sets up what animations and effects your blade (or other LED) will do.\n"
-//         "For getting/creating blade styles, see the Documentation (in \"Help->Documentation...\")."
-//     ));
-// }
-
 void PresetsPage::rebuildInjections() {
     mInjectionsSizer->Clear(true);
 
@@ -579,32 +587,3 @@ void PresetsPage::rebuildInjections() {
     Layout();
 }
 
-// void PresetsPage::stripAndSaveComments() {
-//     if (presetList->GetSelection() >= 0 && bladeList->GetSelection() >= 0) {
-//         auto comments{commentInput->entry()->GetValue().ToStdString()};
-// 
-//         size_t illegalStrPos{0};
-//         while ((illegalStrPos = comments.find("/*")) != string::npos) comments.erase(illegalStrPos, 2);
-//         while ((illegalStrPos = comments.find("*/")) != string::npos) comments.erase(illegalStrPos, 2);
-//         while ((illegalStrPos = comments.find("//")) != string::npos) comments.erase(illegalStrPos, 2);
-// 
-//         auto& selectedBladeArray{mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArrayChoice->entry()->GetSelection()]};
-//         auto& selectedPreset{selectedBladeArray.presets[presetList->GetSelection()]};
-// 
-//         selectedPreset.styles[bladeList->GetSelection()].comment = comments;
-//     }
-// }
-
-// void PresetsPage::stripAndSaveEditor() {
-//     if (presetList->GetSelection() >= 0 && bladeList->GetSelection() >= 0) {
-//         auto style{styleInput->entry()->GetValue().ToStdString()};
-//         if (style.find('{') != string::npos) style.erase(std::remove(style.begin(), style.end(), '{'), style.end());
-//         if (style.rfind('}') != string::npos) style.erase(std::remove(style.begin(), style.end(), '}'), style.end());
-//         if (style.rfind(')') != string::npos) style.erase(style.rfind(')') + 1);
-// 
-//         auto& selectedBladeArray{mParent->bladesPage->bladeArrayDlg->bladeArrays[bladeArrayChoice->entry()->GetSelection()]};
-//         auto& selectedPreset{selectedBladeArray.presets[presetList->GetSelection()]};
-// 
-//         selectedPreset.styles[bladeList->GetSelection()].style = style;
-//     }
-// }
