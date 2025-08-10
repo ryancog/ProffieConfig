@@ -81,6 +81,8 @@ Config::PresetArray::PresetArray(Config& config) :
     selection.setUpdateHandler([this, isCurrentArray](uint32 id) {
         if (id != PCUI::Notifier::ID_REBOUND and id != selection.ID_SELECTION) return;
 
+        if (not isCurrentArray()) return;
+
         if (selection == -1) {
             mConfig.presetArrays.nameProxy.unbind();
             mConfig.presetArrays.dirProxy.unbind();
@@ -96,7 +98,7 @@ Config::PresetArray::PresetArray(Config& config) :
             mConfig.presetArrays.styleSelectProxy.bind(preset.styleSelection);
         }
 
-        if (isCurrentArray()) mConfig.presetArrays.notifyData.notify(PresetArrays::NOTIFY_PRESETS);
+        mConfig.presetArrays.notifyData.notify(PresetArrays::NOTIFY_PRESETS);
     });
 }
 
@@ -173,6 +175,12 @@ Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
     styleDisplay.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
 
     selection.setUpdateHandler([this](uint32 id) {
+        if (id == selection.ID_CHOICES) {
+            if (not selection.choices().empty() and selection == -1) {
+                selection = 0;
+            }
+            return;
+        }
         if (id != selection.ID_SELECTION) return;
 
         if (selection == -1) {
