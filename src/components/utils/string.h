@@ -141,4 +141,11 @@ vector<string> createEntries(const array<T, SIZE>& list) {
     return entries;
 }
 
+/**
+ * Evaluate the string for math operations
+ *
+ * @return Evaluated value
+ */
+UTILS_EXPORT float64 doStringMath(const string&);
+
 } // namespace Utils
