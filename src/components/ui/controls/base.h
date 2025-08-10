@@ -49,7 +49,9 @@ struct UI_EXPORT ControlData : NotifierData {
         // Show/hide and fit parent
         ID_VISIBILITY_FIT,
         // Enable/disable
-        ID_ACTIVE
+        ID_ACTIVE,
+        // Focus control. Not held in state, cannot be hooked by update handler.
+        ID_FOCUS,
     };
 
     void setUpdateHandler(function<void(uint32 id)>&& handler);
@@ -68,6 +70,8 @@ struct UI_EXPORT ControlData : NotifierData {
 
     [[nodiscard]] bool isEnabled() const { return mEnabled; }
     [[nodiscard]] bool isShown() const { return mShown; }
+
+    void setFocus();
 
 protected:
     ControlData() = default;

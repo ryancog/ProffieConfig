@@ -47,6 +47,10 @@ void PCUI::ControlData::show(bool show, bool fit) {
     else notify(ID_VISIBILITY);
 }
 
+void PCUI::ControlData::setFocus() {
+    NotifierData::notify(ID_FOCUS);
+}
+
 void PCUI::ControlData::update(uint32 id) {
     if (mOnUpdate) mOnUpdate(id);
 }
@@ -200,6 +204,7 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
         refreshSizeAndLayout(id == ControlData::ID_VISIBILITY_FIT);
     }
     if (rebound or id == ControlData::ID_ACTIVE) Enable(data()->isEnabled());
+    if (id == ControlData::ID_FOCUS) pControl->SetFocus();
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
