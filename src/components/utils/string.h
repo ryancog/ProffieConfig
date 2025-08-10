@@ -110,9 +110,9 @@ constexpr void trimUnsafe(
  *
  * @param stream Stream to read from.
  *
- * @return comment(s) extracted
+ * @return comment(s) extracted, nullopt if none
  */
-[[nodiscard]] UTILS_EXPORT string extractComment(std::istream& stream);
+[[nodiscard]] UTILS_EXPORT optional<string> extractComment(std::istream& stream);
 
 /**
  * Similar to extractComment(), however comment data is not parsed.

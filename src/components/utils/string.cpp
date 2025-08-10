@@ -25,14 +25,16 @@ namespace Utils {
 
 }
 
-string Utils::extractComment(std::istream& stream) {
+optional<string> Utils::extractComment(std::istream& stream) {
     enum {
         NONE,
         LINE_COMMENT,
         LONG_COMMENT,
     } reading{NONE};
 
-    string ret;
+    const auto startPos{stream.tellg()};
+
+    optional<string> ret;
     string comment;
     while (stream.good()) {
         const auto chr{stream.get()};
@@ -61,9 +63,11 @@ string Utils::extractComment(std::istream& stream) {
         } else if (reading == LINE_COMMENT) {
             if (chr == '/' and comment.empty()) continue;
             if (chr == '\n') {
-                if (not ret.empty()) ret += '\n';
+                if (not ret) ret.emplace();
+                if (not ret->empty()) *ret += '\n';
                 trimSurroundingWhitespace(comment);
-                ret += comment;
+                *ret += comment;
+                comment.clear();
                 reading = NONE;
                 continue;
             }
@@ -71,13 +75,15 @@ string Utils::extractComment(std::istream& stream) {
         } else if (reading == LONG_COMMENT) {
             bool end{chr == '*' and stream.peek() == '/'};
             if (end or chr == '\n') {
-                if (not ret.empty()) ret += '\n';
+                if (not ret) ret.emplace();
+                if (not ret->empty()) *ret += '\n';
                 trimSurroundingWhitespace(comment);
                 while (not comment.empty() and comment.front() == '*') {
                     comment.erase(0, 1);
                 }
                 trimSurroundingWhitespace(comment);
-                ret += comment;
+                *ret += comment;
+                comment.clear();
 
                 if (end) {
                     reading = NONE;
@@ -89,6 +95,7 @@ string Utils::extractComment(std::istream& stream) {
         }
     }
 
+    if (not ret) stream.seekg(startPos);
     return ret;
 }
 
@@ -107,10 +114,20 @@ bool Utils::skipComment(std::istream& stream, string *str) {
             if (chr == '/') {
                 if (stream.peek() == '*') {
                     reading = LONG_COMMENT;
-                    stream.get();
+                    if (str) {
+                        skipped = true;
+                        *str += chr;
+                        *str += stream.get();
+                    }
+                    continue;
                 } else if (stream.peek() == '/') {
                     reading = LINE_COMMENT;
-                    stream.get();
+                    if (str) {
+                        skipped = true;
+                        *str += chr;
+                        *str += stream.get();
+                    }
+                    continue;
                 }
             } else if (std::isgraph(chr)) {
                 stream.unget();
@@ -123,7 +140,12 @@ bool Utils::skipComment(std::istream& stream, string *str) {
         } else if (reading == LONG_COMMENT) {
             if (chr == '*' and stream.peek() == '/') {
                 reading = NONE;
-                stream.get();
+                if (str) {
+                    skipped = true;
+                    *str += chr;
+                    *str += stream.get();
+                }
+                continue;
             }
         }
 
