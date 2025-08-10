@@ -226,8 +226,8 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     pliOffTime.setValue(10);
     idleOffTime.setRange(1, 30000);
     idleOffTime.setValue(10);
-    motionOffTime.setRange(1, 30000);
-    motionOffTime.setValue(15);
+    motionTimeout.setRange(1, 30000);
+    motionTimeout.setValue(15);
 
     disableColorChange.setValue(false);
     disableBasicParserStyles.setValue(false);
@@ -298,6 +298,14 @@ bool Config::Settings::removeCustomOption(CustomOption& opt) {
     if (iter == mCustomOptions.end()) return false;
 
     mCustomOptions.erase(iter);
+    customOptsNotifyData.notify();
+    return true;
+}
+
+bool Config::Settings::removeCustomOption(uint32 idx) {
+    if (idx >= mCustomOptions.size()) return false;
+
+    mCustomOptions.erase(std::next(mCustomOptions.begin(), idx));
     customOptsNotifyData.notify();
     return true;
 }

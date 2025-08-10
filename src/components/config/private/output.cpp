@@ -44,9 +44,13 @@ namespace Config {
     void outputButtons(std::ofstream&, const Config&);
 
     template<typename VAL = string>
-    void outputOpt(std::ofstream&, const string& opt, const VAL& val = {});
+    void outputOpt(std::ofstream&, const string& opt, const VAL& val);
     template<typename VAL = string>
-    void outputDefine(std::ofstream&, const string& define, const VAL& val = {});
+    void outputOpt(std::ofstream&, const string& opt);
+    template<typename VAL = string>
+    void outputDefine(std::ofstream&, const string& define);
+    template<typename VAL = string>
+    void outputDefine(std::ofstream&, const string& define, const VAL& val);
 
 } // namespace Config
 
@@ -246,13 +250,23 @@ void Config::outputTop(std::ofstream& outFile, const Config& config) {
 }
 
 template<typename VAL>
+void Config::outputOpt(std::ofstream& outFile, const string& opt) {
+    outFile << PC_OPT_STR << opt << '\n';
+}
+
+template<typename VAL>
 void Config::outputOpt(std::ofstream& outFile, const string& opt, const VAL& val) {
-    outFile << PC_OPT_STR << opt << val << '\n';
+    outFile << PC_OPT_STR << opt << ' ' << val << '\n';
+}
+
+template<typename VAL>
+void Config::outputDefine(std::ofstream& outFile, const string& define) {
+    outFile << DEFINE_STR << define << '\n';
 }
 
 template<typename VAL>
 void Config::outputDefine(std::ofstream& outFile, const string& define, const VAL& val) {
-    outFile << DEFINE_STR << define << val << '\n';
+    outFile << DEFINE_STR << define << ' ' << val << '\n';
 }
 
 void Config::outputTopGeneral(std::ofstream& outFile, const Config& config) {
@@ -264,7 +278,7 @@ void Config::outputTopGeneral(std::ofstream& outFile, const Config& config) {
     }
 
     Utils::Version osVersion{static_cast<string>(config.settings.osVersion)};
-    if (not osVersion.err) outputOpt(outFile, Settings::OS_VERSION_STR, osVersion);
+    if (not osVersion.err) outputOpt<string>(outFile, Settings::OS_VERSION_STR, osVersion);
     outFile << INCLUDE_STR << Settings::BOARD_STRS[config.settings.board] << '\n';
 
     uint32 requiredLedsPerStrip{0};
@@ -335,8 +349,8 @@ void Config::outputTopGeneral(std::ofstream& outFile, const Config& config) {
     outputDefine(outFile, Settings::PLI_OFF_STR, static_cast<uint32>(std::ceil(config.settings.pliOffTime * 1000)));
     const auto idleOffString{std::to_string(static_cast<uint32>(std::ceil(config.settings.idleOffTime * 60))) + " * 1000"};
     outputDefine(outFile, Settings::IDLE_OFF_STR,  idleOffString);
-    const auto motionOffString{std::to_string(static_cast<uint32>(std::ceil(config.settings.motionOffTime * 60))) + " * 1000"};
-    outputDefine(outFile, Settings::MOTION_OFF_STR, motionOffString);
+    const auto motionOffString{std::to_string(static_cast<uint32>(std::ceil(config.settings.motionTimeout * 60))) + " * 1000"};
+    outputDefine(outFile, Settings::MOTION_TIMEOUT_STR, motionOffString);
 
     if (config.settings.disableColorChange) outputDefine(outFile, Settings::DISABLE_COLOR_CHANGE_STR);
     if (config.settings.disableBasicParserStyles) outputDefine(outFile, Settings::DISABLE_BASIC_PARSERS_STR);
