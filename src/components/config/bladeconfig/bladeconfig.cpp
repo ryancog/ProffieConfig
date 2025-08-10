@@ -148,14 +148,14 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
     bladeSelection.setUpdateHandler([this](uint32 id) {
         if (id != PCUI::Notifier::ID_REBOUND and id != bladeSelection.ID_SELECTION) return;
 
+        if (mConfig.bladeArrays.arraySelection == -1) return;
         auto& bladeArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
         if (&bladeArray != this) return;
 
         mConfig.bladeArrays.powerPinNameEntry = "";
+        mConfig.bladeArrays.unbindBlade();
 
-        if (bladeSelection == -1) {
-            mConfig.bladeArrays.unbindBlade();
-        } else {
+        if (bladeSelection != -1) {
             auto& selectedBlade{blade(bladeSelection)};
 
             mConfig.bladeArrays.bladeTypeProxy.bind(selectedBlade.type);
