@@ -201,7 +201,11 @@ optional<string> Config::runPreChecks(const Config& config, Log::Branch& lBranch
                         continue;
                     }
                     if (chr == '>' or chr == ')') {
-                        if (depth.empty() or depth.back() != chr) {
+                        if (
+                                depth.empty() or 
+                                (chr == '>' and depth.back() != '<') or
+                                (chr == ')' and depth.back() != '(')
+                           ) {
                             return errorMessage(
                                 logger, STYLE_ERR_STR, styleIdx, presetIdx,
                                 static_cast<string>(preset.name), static_cast<string>(presetArray->name),
@@ -473,20 +477,20 @@ void Config::outputPresetStyles(std::ofstream& outFile, const Config& config) {
                 string line;
 
                 const auto commentStr{static_cast<string>(style.comment)};
-                std::istringstream commentStream{commentStr};
                 if (not commentStr.empty()) {
+                    std::istringstream commentStream{commentStr};
                     outFile << "\t\t/*\n";
                     while (not false) {
                         std::getline(commentStream, line);
-                        if (commentStream.eof()) break;
                         outFile << "\t\t * " << line << '\n';
+                        if (commentStream.eof()) break;
                     }
                     outFile << "\t\t */\n";
                 }
 
                 const auto styleStr{static_cast<string>(style.style)};
                 std::istringstream styleStream{styleStr};
-                while (!false) {
+                while (not false) {
                     std::getline(styleStream, line);
                     outFile << "\t\t" << line;
                     if (styleStream.eof()) {
