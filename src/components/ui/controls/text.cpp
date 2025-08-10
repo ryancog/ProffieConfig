@@ -30,7 +30,7 @@ void PCUI::TextData::operator=(string&& val) {
     notify(ID_VALUE);
 }
 
-void PCUI::TextData::operator+=(const string& val) {
+void PCUI::TextData::operator+=(const string_view& val) {
     std::scoped_lock scopeLock{getLock()};
     pValue += val;
     notify(ID_VALUE);
@@ -42,14 +42,24 @@ void PCUI::TextData::operator+=(char val) {
     notify(ID_VALUE);
 }
 
-string::size_type PCUI::TextData::find(char chr) {
+string::size_type PCUI::TextData::find(char chr, string::size_type pos) {
     std::scoped_lock scopeLock{getLock()};
-    return pValue.find(chr);
+    return pValue.find(chr, pos);
 }
 
-string::size_type PCUI::TextData::find(const string& str) {
+string::size_type PCUI::TextData::find(const string_view& str, string::size_type pos) {
     std::scoped_lock scopeLock{getLock()};
-    return pValue.find(str);
+    return pValue.find(str, pos);
+}
+
+bool PCUI::TextData::startsWith(const string_view& str) {
+    std::scoped_lock scopeLock{getLock()};
+    return pValue.starts_with(str);
+}
+
+string PCUI::TextData::substr(string::size_type pos, string::size_type n) {
+    std::scoped_lock scopeLock{getLock()};
+    return pValue.substr(pos, n);
 }
 
 void PCUI::TextData::clear() {
@@ -70,7 +80,7 @@ void PCUI::TextData::erase(string::const_iterator first, optional<string::const_
     notify(ID_VALUE);
 }
 
-void PCUI::TextData::insert(string::size_type pos, const string& str) {
+void PCUI::TextData::insert(string::size_type pos, const string_view& str) {
     std::scoped_lock scopeLock{getLock()};
     pValue.insert(pos, str);
     notify(ID_VALUE);

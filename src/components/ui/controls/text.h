@@ -30,7 +30,7 @@ struct UI_EXPORT TextData : ControlData {
     operator string() const { return pValue; }
     void operator=(string&&);
 
-    void operator+=(const string&);
+    void operator+=(const string_view&);
     void operator+=(char);
 
     // In a perfect world the data would get locked to use these...
@@ -39,13 +39,16 @@ struct UI_EXPORT TextData : ControlData {
     auto rbegin() { return pValue.rbegin(); }
     auto rend() { return pValue.rend(); }
 
-    string::size_type find(char);
-    string::size_type find(const string&);
+    string::size_type find(char, string::size_type pos = 0);
+    string::size_type find(const string_view&, string::size_type pos = 0);
+    bool startsWith(const string_view&);
+
+    string substr(string::size_type pos, string::size_type n = string::npos);
 
     void clear();
     void erase(string::size_type pos = 0, string::size_type n = string::npos);
     void erase(string::const_iterator first, optional<string::const_iterator> last = nullopt);
-    void insert(string::size_type pos, const string&);
+    void insert(string::size_type pos, const string_view&);
 
     [[nodiscard]] bool empty();
     [[nodiscard]] bool operator==(cstring);
