@@ -52,6 +52,9 @@ struct UI_EXPORT NumericDataTemplate : ControlData {
     [[nodiscard]] T increment() const { return mIncrement; }
     void setIncrement(T inc, bool valUpdate = true);
 
+    [[nodiscard]] T offset() const { return mOffset; }
+    void setOffset(T inc, bool valUpdate = true);
+
     enum {
         ID_VALUE,
         ID_RANGE,
@@ -65,7 +68,7 @@ private:
     T mMin{0};
     T mMax{10};
     T mIncrement{std::is_integral_v<T> ? static_cast<T>(1) : static_cast<T>(0.1)};
-
+    T mOffset{0};
 };
 
 } // namespace Private

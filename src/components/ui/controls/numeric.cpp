@@ -35,7 +35,7 @@ void PCUI::Private::NumericDataTemplate<T>::operator=(T val) {
 template<typename T> requires std::is_arithmetic_v<T>
 void PCUI::Private::NumericDataTemplate<T>::setValue(T val) {
     std::scoped_lock scopeLock{getLock()};
-    const auto clampedVal{std::clamp((val / mIncrement) * mIncrement, mMin, mMax)};
+    const auto clampedVal{std::clamp((((val - mOffset) / mIncrement) * mIncrement) + mOffset, mMin, mMax)};
     mValue = clampedVal;
     notify(ID_VALUE);
 }
@@ -58,6 +58,15 @@ void PCUI::Private::NumericDataTemplate<T>::setIncrement(T inc, bool valUpdate) 
     assert(inc > 0);
     mIncrement = inc;
     notify(ID_INCREMENT);
+    if (valUpdate) setValue(mValue);
+}
+
+template<typename T> requires std::is_arithmetic_v<T>
+void PCUI::Private::NumericDataTemplate<T>::setOffset(T offset, bool valUpdate) {
+    std::scoped_lock scopeLock{getLock()};
+    if (offset == mOffset) return;
+    mOffset = offset;
+    // Nothing to notify, it's purely an ish-this.
     if (valUpdate) setValue(mValue);
 }
 
