@@ -283,7 +283,7 @@ bool Config::Settings::addCustomOption(string&& key, string&& value) {
         }
     }
 
-    auto& customOpt{*mCustomOptions.emplace_back()};
+    auto& customOpt{*mCustomOptions.emplace_back(std::make_unique<CustomOption>())};
     customOpt.define = std::move(key);
     customOpt.value = std::move(value);
     customOptsNotifyData.notify();
