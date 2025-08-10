@@ -41,6 +41,12 @@ Config::BladeArrays::BladeArrays(Config& parent) :
     arraySelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
 
     arraySelection.setUpdateHandler([this](uint32 id) {
+        if (id == arraySelection.ID_CHOICES) {
+            if (not arraySelection.choices().empty() and arraySelection == -1) {
+                arraySelection = 0;
+            }
+            return;
+        }
         if (id != arraySelection.ID_SELECTION) return;
         Defer defer{[this]() { notifyData.notify(ID_ARRAY_SELECTION); }};
 
