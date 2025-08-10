@@ -52,17 +52,7 @@ MainMenu::MainMenu(wxWindow* parent) :
     createUI();
     createMenuBar();
     bindEvents();
-
-    auto configChoices{configSelection.choices()};
-    {
-        auto configList{Config::fetchListFromDisk()};
-        configChoices.insert(
-            configChoices.end(),
-            configList.begin(),
-            configList.end()
-        );
-    }
-    configSelection.setChoices(std::move(configChoices));
+    updateConfigChoices();
 
     initializeNotifier();
     Show();
@@ -220,7 +210,7 @@ void MainMenu::bindEvents() {
             }
         }
 
-        configSelection.setChoices(Config::fetchListFromDisk());
+        updateConfigChoices();
         configSelection = addDialog.configName;
     }, ID_AddConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
@@ -243,12 +233,17 @@ void MainMenu::bindEvents() {
             }
             Config::remove(static_cast<string>(configSelection));
 
-            auto configChoices{configSelection.choices()};
-            configChoices.erase(std::next(configChoices.begin(), configSelection));
-            configSelection.setChoices(std::move(configChoices));
-            configSelection = 0;
+            updateConfigChoices();
         }
     }, ID_RemoveConfig);
+}
+
+void MainMenu::updateConfigChoices() {
+    vector<string> choices{_("Select Config...").ToStdString()};
+    const auto configList{Config::fetchListFromDisk()};
+    choices.insert(choices.end(), configList.begin(), configList.end());
+    configSelection.setChoices(std::move(choices));
+    if (configSelection == -1) configSelection = 0;
 }
 
 void MainMenu::handleNotification(uint32 id) {
@@ -315,10 +310,6 @@ void MainMenu::createUI() {
     headerSection->AddSpacer(10);
 
     auto *configSelectSection{new wxBoxSizer(wxHORIZONTAL)};
-    configSelection.setChoices(Utils::createEntries({
-        _("Select Config..."),
-    }));
-    configSelection = 0;
     auto *configSelect{new PCUI::Choice(this, configSelection)};
 
     auto *addConfig{new wxButton(this, ID_AddConfig, _("Add"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT)};

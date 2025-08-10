@@ -62,5 +62,7 @@ private:
     void createMenuBar();
     void bindEvents();
 
+    void updateConfigChoices();
+
     void handleNotification(uint32 id) final;
 };
