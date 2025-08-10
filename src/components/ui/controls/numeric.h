@@ -91,21 +91,18 @@ public:
     Numeric(
         wxWindow *parent,
         NumericData& data,
-        int64 style = 0,
         const wxString& label = {},
         const wxOrientation& orient = wxVERTICAL
     );
     Numeric(
         wxWindow *parent,
         NumericDataProxy& proxy,
-        int64 style = 0,
         const wxString& label = {},
         const wxOrientation& orient = wxVERTICAL
     );
 
 private:
     void create(
-        int64 style,
         const wxString& label,
         const wxOrientation& orient
     );
@@ -124,21 +121,18 @@ public:
     Decimal(
         wxWindow *parent,
         DecimalData& data,
-        int64 style = 0,
         const wxString& label = {},
         const wxOrientation& orient = wxVERTICAL
     );
     Decimal(
         wxWindow *parent,
         DecimalDataProxy& proxy,
-        int64 style = 0,
         const wxString& label = {},
         const wxOrientation& orient = wxVERTICAL
     );
 
 private:
     void create(
-        int64 style,
         const wxString& label,
         const wxOrientation& orient
     );

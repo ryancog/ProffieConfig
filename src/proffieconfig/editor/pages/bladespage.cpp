@@ -50,7 +50,6 @@ public:
         auto *idEntry{new PCUI::Numeric(
             this,
             bladeConfig.id,
-            wxSP_ARROW_KEYS,
             _("Blade ID")
         )};
         idEntry->SetToolTip(_("The ID of the blade associated with the currently-selected blade array.\nThis value can be measured by typing \"id\" into the Serial Monitor."));
@@ -536,7 +535,6 @@ wxSizer *BladesPage::createBladeSettings() {
         auto *starResistance{new PCUI::Numeric(
             starSizer->GetStaticBox(),
             starProxy.resistanceProxy,
-            wxSP_ARROW_KEYS,
             _("Resistance (mOhms)")
         )};
 
@@ -567,7 +565,6 @@ wxSizer *BladesPage::createBladeSettings() {
     auto *simpleBrightness{new PCUI::Numeric(
         this,
         config.bladeArrays.simpleBrightnessProxy,
-        0,
         _("Brightness"),
         wxHORIZONTAL
     )};
@@ -582,7 +579,6 @@ wxSizer *BladesPage::createBladeSettings() {
     auto *length{new PCUI::Numeric(
         this,
         config.bladeArrays.lengthProxy,
-        wxSP_ARROW_KEYS,
         _("Number of Pixels"),
         wxHORIZONTAL
     )};
@@ -619,7 +615,6 @@ wxSizer *BladesPage::createBladeSettings() {
     auto *pixelBrightness{new PCUI::Numeric(
         this,
         config.bladeArrays.pixelBrightnessProxy,
-        0,
         _("Brightness"),
         wxHORIZONTAL
     )};
@@ -707,13 +702,11 @@ wxSizer *BladesPage::createBladeSettings() {
     auto *splitStart{new PCUI::Numeric(
         this,
         config.bladeArrays.splitStartProxy,
-        0,
         _("Start")
     )};
     auto *splitEnd{new PCUI::Numeric(
         this,
         config.bladeArrays.splitEndProxy,
-        0,
         _("End")
     )};
     splitStartEndSizer->Add(splitStart, wxSizerFlags(1));
@@ -723,13 +716,11 @@ wxSizer *BladesPage::createBladeSettings() {
     auto *splitLength{new PCUI::Numeric(
         this,
         config.bladeArrays.splitLengthProxy,
-        0,
         _("Length")
     )};
     auto *splitSegments{new PCUI::Numeric(
         this,
         config.bladeArrays.splitSegmentsProxy,
-        0,
         _("Segments")
     )};
     auto *splitList{new PCUI::Text(
@@ -742,7 +733,6 @@ wxSizer *BladesPage::createBladeSettings() {
     auto *splitBrightness{new PCUI::Numeric(
         this,
         config.bladeArrays.splitBrightnessProxy,
-        0,
         _("Brightness"),
         wxHORIZONTAL
     )};
