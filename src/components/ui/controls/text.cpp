@@ -1,4 +1,5 @@
 #include "text.h"
+#include <limits>
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -91,7 +92,7 @@ bool PCUI::TextData::empty() {
     return pValue.empty();
 }
 
-bool PCUI::TextData::operator==(cstring str) {
+bool PCUI::TextData::operator==(const string_view& str) {
     std::scoped_lock scopeLock{getLock()};
     return pValue == str;
 }
@@ -107,6 +108,10 @@ void PCUI::TextData::setInsertionPoint(uint32 insertionPoint) {
     if (pInsertionPoint == insertionPoint) return;
     pInsertionPoint = insertionPoint;
     notify(ID_INSERTION);
+}
+
+void PCUI::TextData::setInsertionPointEnd() {
+    setInsertionPoint(std::numeric_limits<uint32>::max());
 }
 
 PCUI::Text::Text(
@@ -169,7 +174,10 @@ void PCUI::Text::onUIUpdate(uint32 id) {
 
     if (rebound or id == TextData::ID_VALUE) pControl->ChangeValue(static_cast<string>(*data()));
     if (rebound or id == TextData::ID_VALUE or id == TextData::ID_INSERTION) {
-        pControl->SetInsertionPoint(data()->pInsertionPoint);
+        if (data()->pInsertionPoint == std::numeric_limits<uint32>::max()) {
+            pControl->SetInsertionPointEnd();
+        } else pControl->SetInsertionPoint(data()->pInsertionPoint);
+        data()->pInsertionPoint = pControl->GetInsertionPoint();
     }
 }
 
