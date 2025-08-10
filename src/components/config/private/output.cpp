@@ -663,8 +663,9 @@ void Config::outputPresetBlades(std::ofstream& outFile, const Config& config) {
         const auto presetArray{
             static_cast<string>(config.presetArrays.arrays()[bladeArray->presetArray]->name)
         };
-        outFile << "\t\tCONFIGARRAY(" << presetArray << "), ";
-        outFile << '\"' << static_cast<string>(bladeArray->name) << "\"\n\t},\n";
+        outFile << "\t\tCONFIGARRAY(" << presetArray << ")";
+        if (not bladeArray->name.empty()) outFile << ", \"" << static_cast<string>(bladeArray->name) << '\"';
+        outFile << "\n\t},\n";
     }
     outFile << "};\n" << std::flush;
 }
