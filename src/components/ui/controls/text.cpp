@@ -142,6 +142,7 @@ void PCUI::Text::create(int64 style, const wxString& label, wxOrientation orient
     assert(not ((style & wxTE_MULTILINE) and mInsertNewline));
     assert(not mInsertNewline or static_cast<bool>(style & wxTE_PROCESS_ENTER));
 
+    if (style & wxTE_MULTILINE) style |= wxTE_PROCESS_TAB;
     auto *control{new wxTextCtrl(
         this,
         wxID_ANY,
