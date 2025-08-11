@@ -22,11 +22,12 @@
 #include <filesystem>
 #include <fstream>
 
-#include "config/private/io.h"
 #include "log/context.h"
 #include "utils/types.h"
 #include "paths/paths.h"
 #include "versions/versions.h"
+
+#include "private/io.h"
 
 namespace Config {
 
