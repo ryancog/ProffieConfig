@@ -30,15 +30,28 @@
 
 namespace Utils {
 
+/**
+ * Purge all whitespace in string
+ */
 template<typename STRING>
-constexpr void trimWhiteSpace(STRING& str) {
+constexpr void trimWhitespace(STRING& str) {
+    str.erase(std::remove_if(str.begin(), str.end(), [](char chr) {
+        return std::isspace(chr);
+    }), str.end());
+};
+
+/**
+ * Purge whitespace around visible chars.
+ */
+template<typename STRING>
+constexpr void trimSurroundingWhitespace(STRING& str) {
     str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](char chr) {
         return not std::isspace(chr);
     }));
     str.erase(std::find_if(str.rbegin(), str.rend(), [](char chr) {
         return not std::isspace(chr);
     }).base(), str.end());
-};
+}
 
 /**
  * Trim characters unsafe for a C++ variable name, by default.
@@ -123,11 +136,6 @@ constexpr void trimUnsafe(
  * @return Whether anything was skipped.
  */
 UTILS_EXPORT bool skipComment(std::istream& stream, string *str = nullptr);
-
-/**
- * Purge whitespace around visible chars.
- */
-UTILS_EXPORT void trimSurroundingWhitespace(string&);
 
 UTILS_EXPORT vector<string> createEntries(const std::vector<wxString>& vec);
 UTILS_EXPORT vector<string> createEntries(const std::initializer_list<wxString>& list);

@@ -328,8 +328,8 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
     string styleBuffer;
 
     const auto finishStyleReading{[&array, &styleBuffer, &commentBuffer]() {
-        Utils::trimWhiteSpace(styleBuffer);
-        Utils::trimWhiteSpace(commentBuffer);
+        Utils::trimWhitespace(styleBuffer);
+        Utils::trimWhitespace(commentBuffer);
 
         auto& style{array.presets().back()->styles().back()};
         style->comment = std::move(commentBuffer);
@@ -466,7 +466,7 @@ optional<string> Config::parseBladeArrays(const string& data, Config& config, Lo
             }
         } else if (reading == ID) {
             if (chr == ',') {
-                Utils::trimWhiteSpace(buffer);
+                Utils::trimWhitespace(buffer);
                 const auto id{
                     buffer == "NO_BLADE" ?
                         NO_BLADE :
@@ -484,7 +484,7 @@ optional<string> Config::parseBladeArrays(const string& data, Config& config, Lo
 
             if (depth.empty()) {
                 if (chr == ',') {
-                    Utils::trimWhiteSpace(buffer);
+                    Utils::trimWhitespace(buffer);
                     auto& array{*config.bladeArrays.arrays().back()};
                     auto& blade{array.addBlade()};
                     auto res{parseBlade(
@@ -528,7 +528,7 @@ optional<string> Config::parseBladeArrays(const string& data, Config& config, Lo
             if (chr == '(') reading = CONFIGARRAY_INNER;
         } else if (reading == CONFIGARRAY_INNER) {
             if (chr == ')') {
-                Utils::trimWhiteSpace(buffer);
+                Utils::trimWhitespace(buffer);
                 config.bladeArrays.arrays().back()->presetArray = buffer;
                 reading = POST_CONFIGARRAY;
                 buffer.clear();
@@ -1032,7 +1032,7 @@ optional<string> Config::parseStyles(std::ifstream& file, Config& config, Log::B
             name += static_cast<char>(chr);
         } else if (reading == STYLE) {
             if (chr == ';') {
-                Utils::trimWhiteSpace(bladestyle);
+                Utils::trimWhitespace(bladestyle);
 
                 // How many nested for loops would you like? Cause here are all of 'em
                 for (const auto& presetArray : config.presetArrays.arrays()) {

@@ -506,7 +506,7 @@ void Config::outputPresetStyles(std::ofstream& outFile, const Config& config) {
                 }
 
                 auto styleStr{static_cast<string>(style.style)};
-                Utils::trimWhiteSpace(styleStr);
+                Utils::trimWhitespace(styleStr);
                 outFile << "\t\t" << styleStr << ",\n";
             }
 
