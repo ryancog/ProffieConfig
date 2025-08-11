@@ -4,6 +4,7 @@
 
 add_library(pconf SHARED
     pconf.cpp
+    info.cpp
     read.cpp
     utils.cpp
     write.cpp

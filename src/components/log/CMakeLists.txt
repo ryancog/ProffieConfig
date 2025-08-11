@@ -3,6 +3,8 @@
 # components/log/CMakeLists.txt
 
 add_library(log SHARED 
+    info.cpp
+
     logger.cpp
     context.cpp
     branch.cpp

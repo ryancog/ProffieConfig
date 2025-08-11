@@ -4,6 +4,7 @@
 
 add_library(paths SHARED 
     paths.cpp
+    info.cpp
 )
 
 target_link_libraries(paths
