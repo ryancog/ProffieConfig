@@ -9,6 +9,8 @@ add_library(ui SHARED
     message.cpp
     notifier.cpp
 
+    info.cpp
+
     controls/base.cpp
     controls/button.cpp
     controls/checklist.cpp

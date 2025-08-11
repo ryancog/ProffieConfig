@@ -10,6 +10,8 @@ add_library(utils SHARED
     crypto.cpp
     version.cpp
     string.cpp
+
+    info.cpp
 )
 
 target_link_libraries(utils
