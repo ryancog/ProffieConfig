@@ -101,7 +101,7 @@ void MainMenu::bindEvents() {
         aboutInfo.SetDescription(
                 _("All-in-one Proffieboard Management Utility") +
                 "\n\n"
-                "ProffieOS v" wxSTRINGIZE(PROFFIEOS_VERSION) " | Arduino CLI v" wxSTRINGIZE(ARDUINO_CLI_VERSION)
+                "Arduino CLI v" wxSTRINGIZE(ARDUINO_CLI_VERSION)
                 );
         aboutInfo.SetVersion(wxSTRINGIZE(BIN_VERSION));
         aboutInfo.SetWebSite("https://proffieconfig.kafrenetrading.com");
@@ -203,9 +203,9 @@ void MainMenu::bindEvents() {
         if (static_cast<filepath>(addDialog.importPath).empty()) {
             std::get<Config::Config *>(Config::open(addDialog.configName))->close();
         } else {
-            auto res{Config::import(addDialog.configName, addDialog.importPath)};
-            if (auto *ptr = std::get_if<string>(&res)) {
-                PCUI::showMessage(*ptr, _("Cannot Import Config"));
+            auto err{Config::import(addDialog.configName, addDialog.importPath)};
+            if (err) {
+                PCUI::showMessage(*err, _("Cannot Import Config"));
                 return;
             }
         }

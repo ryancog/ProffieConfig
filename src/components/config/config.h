@@ -73,7 +73,7 @@ struct CONFIG_EXPORT Config {
 
 private:
     friend variant<Config *, string> open(const string&);
-    friend variant<Config *, string> import(const string&, const filepath&);
+    friend optional<string> import(const string&, const filepath&);
     Config();
 
     vector<std::unique_ptr<Versions::Prop>> mProps;
@@ -104,9 +104,9 @@ CONFIG_EXPORT variant<Config *, string> open(const string& name);
 /**
  * Similar to open, but opens from path instead of in save folder by name.
  *
- * @return config if imported. nullptr if not
+ * @return err or nullopt
  */
-CONFIG_EXPORT variant<Config *, string> import(const string& name, const filepath& path);
+CONFIG_EXPORT optional<string> import(const string& name, const filepath& path);
 
 /**
  * @return the config with name only if config is open
