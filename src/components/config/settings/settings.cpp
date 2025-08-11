@@ -22,6 +22,7 @@
 #include "utils/string.h"
 
 #include "../config.h"
+#include "wx/filedlg.h"
 
 Config::Settings::Settings(Config& parent) : mParent{parent} {
     // Asign update handlers
@@ -131,42 +132,64 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         }
     });
 
-    saveState.setUpdateHandler([this](uint32 id) {
-        if (id != saveState.ID_VALUE) return;
-
-        saveVolume |= saveState;
-        saveVolume.enable(not saveState);
+    const auto updateSaveOptions{[this]() {
+        bool stateOrAll{saveState or enableAllEditOptions};
+        saveVolume |= stateOrAll;
+        saveVolume.enable(not stateOrAll);
         savePreset |= saveState;
         savePreset.enable(not saveState);
-        saveColorChange |= saveState;
-        saveColorChange.enable(not saveState);
-        saveBladeDimming |= saveState;
-        saveBladeDimming.enable(not saveState);
-    });
+        saveColorChange |= stateOrAll;
+        saveColorChange.enable(not stateOrAll);
+        saveBladeDimming |= stateOrAll and dynamicBladeDimming;
+        saveBladeDimming.enable(dynamicBladeDimming and not stateOrAll);
 
-    enableAllEditOptions.setUpdateHandler([this](uint32 id) {
-        if (id != enableAllEditOptions.ID_VALUE) return;
-        
+        saveClashThreshold |= enableAllEditOptions;
+        saveClashThreshold.enable(not enableAllEditOptions);
+
         dynamicBladeLength |= enableAllEditOptions;
         dynamicBladeLength.enable(not enableAllEditOptions);
         dynamicBladeDimming |= enableAllEditOptions;
         dynamicBladeDimming.enable(not enableAllEditOptions);
         dynamicClashThreshold |= enableAllEditOptions;
         dynamicClashThreshold.enable(not enableAllEditOptions);
-        saveVolume |= enableAllEditOptions;
-        saveVolume.enable(not enableAllEditOptions);
-        saveColorChange |= enableAllEditOptions;
-        saveColorChange.enable(not enableAllEditOptions);
-        saveBladeDimming |= enableAllEditOptions;
-        saveBladeDimming.enable(not enableAllEditOptions);
-        saveClashThreshold |= enableAllEditOptions;
-        saveClashThreshold.enable(not enableAllEditOptions);
+    }};
+
+    saveState.setUpdateHandler([this, updateSaveOptions](uint32 id) {
+        if (id != saveState.ID_VALUE) return;
+
+        updateSaveOptions();
     });
 
-    dynamicBladeDimming.setUpdateHandler([this](uint32 id) {
+    enableAllEditOptions.setUpdateHandler([this, updateSaveOptions](uint32 id) {
+        if (id != enableAllEditOptions.ID_VALUE) return;
+        
+        updateSaveOptions();
+    });
+
+    dynamicBladeDimming.setUpdateHandler([this, updateSaveOptions](uint32 id) {
         if (id != dynamicBladeDimming.ID_VALUE) return;
 
-        saveBladeDimming.enable(dynamicBladeDimming);
+        updateSaveOptions();
+    });
+
+    volume.setUpdateHandler([this](uint32 id) {
+        if (id != volume.ID_VALUE) return;
+        bootVolume.setRange(0, volume);
+    });
+    enableBootVolume.setUpdateHandler([this](uint32 id) {
+        if (id != enableBootVolume.ID_VALUE) return;
+        bootVolume.enable(enableBootVolume);
+    });
+
+    enableFiltering.setUpdateHandler([this](uint32 id) {
+        if (id != enableFiltering.ID_VALUE) return;
+        filterOrder.enable(enableFiltering);
+        filterCutoff.enable(enableFiltering);
+    });
+
+    disableTalkie.setUpdateHandler([this](uint32 id) {
+        if (id != disableTalkie.ID_VALUE) return;
+        femaleTalkie.enable(not disableTalkie);
     });
 
     // Set defaults
@@ -212,10 +235,11 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         "bladePowerPin6",
     });
 
-    volume.setRange(0, 4000);
-    volume.setIncrement(50);
+    volume.setRange(0, 4000, false);
+    volume.setIncrement(50, false);
     volume.setValue(1000);
-
+    bootVolume.setRange(0, 4000, false);
+    bootVolume.setIncrement(50, false);
     enableBootVolume.setValue(false);
 
     clashThreshold.setRange(0.1, 5);
@@ -232,7 +256,7 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     disableColorChange.setValue(false);
     disableBasicParserStyles.setValue(false);
     disableDiagnosticCommands.setValue(false);
-    enableDeveloperCommands.setValue(false);
+    // enableDeveloperCommands.setValue(false);
 
     saveState.setValue(false);
     enableAllEditOptions.setValue(false);
@@ -251,11 +275,14 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     }));
     orientation.setValue(FETS_TOWARDS_BLADE);
 
+    orientationRotation.x.setRange(-90, 90);
     orientationRotation.x.setValue(0);
+    orientationRotation.y.setRange(-90, 90);
     orientationRotation.y.setValue(0);
+    orientationRotation.z.setRange(-90, 90);
     orientationRotation.z.setValue(0);
 
-    speakTouchValues.setValue(false);
+    // speakTouchValues.setValue(false);
 
     dynamicBladeDimming.setValue(false);
     dynamicBladeLength.setValue(false);
@@ -264,9 +291,14 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     saveBladeDimming.setValue(false);
     saveClashThreshold.setValue(false);
 
+    filterCutoff.setRange(1, 10000, false);
+    filterCutoff.setIncrement(10, false);
     filterCutoff.setValue(100);
+    filterOrder.setRange(1, 256, false);
     filterOrder.setValue(8);
+    enableFiltering.setValue(false);
 
+    audioClashSuppressionLevel.setRange(1, 50, false);
     audioClashSuppressionLevel.setValue(10);
     dontUseGyroForClash.setValue(false);
 

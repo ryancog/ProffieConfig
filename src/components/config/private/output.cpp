@@ -357,7 +357,7 @@ void Config::outputTopGeneral(std::ofstream& outFile, const Config& config) {
     if (config.settings.disableColorChange) outputDefine(outFile, Settings::DISABLE_COLOR_CHANGE_STR);
     if (config.settings.disableBasicParserStyles) outputDefine(outFile, Settings::DISABLE_BASIC_PARSERS_STR);
     if (config.settings.disableDiagnosticCommands) outputDefine(outFile, Settings::DISABLE_DIAG_COMMANDS_STR);
-    if (config.settings.enableDeveloperCommands) outputDefine(outFile, Settings::ENABLE_DEV_COMMANDS_STR);
+    // if (config.settings.enableDeveloperCommands) outputDefine(outFile, Settings::ENABLE_DEV_COMMANDS_STR);
 
     if (config.settings.saveState) outputDefine(outFile, Settings::SAVE_STATE_STR);
     if (config.settings.enableAllEditOptions) outputDefine(outFile, Settings::ENABLE_ALL_EDIT_OPTIONS_STR);
@@ -392,7 +392,7 @@ void Config::outputTopGeneral(std::ofstream& outFile, const Config& config) {
         outputDefine(outFile, Settings::ORIENTATION_ROTATION_STR, rotationStr);
     }
 
-    if (config.settings.speakTouchValues) outputDefine(outFile, Settings::SPEAK_TOUCH_VALUES_STR);
+    // if (config.settings.speakTouchValues) outputDefine(outFile, Settings::SPEAK_TOUCH_VALUES_STR);
 
     if (config.settings.dynamicBladeDimming and config.settings.dynamicBladeLength.isEnabled()) {
         outputDefine(outFile, Settings::DYNAMIC_BLADE_DIMMING_STR);

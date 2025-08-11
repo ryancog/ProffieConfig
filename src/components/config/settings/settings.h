@@ -185,10 +185,12 @@ struct CONFIG_EXPORT Settings {
     constexpr static cstring DISABLE_COLOR_CHANGE_STR{"DISABLE_COLOR_CHANGE"};
     PCUI::ToggleData disableBasicParserStyles;
     constexpr static cstring DISABLE_BASIC_PARSERS_STR{"DISABLE_BASIC_PARSER_STYLES"};
+    PCUI::ToggleData disableTalkie;
+    constexpr static cstring DISABLE_TALKIE_STR{"DISABLE_TALKIE"};
     PCUI::ToggleData disableDiagnosticCommands;
     constexpr static cstring DISABLE_DIAG_COMMANDS_STR{"DISABLE_DIAGNOSTIC_COMMANDS"};
-    PCUI::ToggleData enableDeveloperCommands;
-    constexpr static cstring ENABLE_DEV_COMMANDS_STR{"ENABLE_DEVELOPER_COMMANDS"};
+    // PCUI::ToggleData enableDeveloperCommands;
+    // constexpr static cstring ENABLE_DEV_COMMANDS_STR{"ENABLE_DEVELOPER_COMMANDS"};
 
     // SAVE_STATE Sets:
     // - saveVolume
@@ -209,12 +211,12 @@ struct CONFIG_EXPORT Settings {
     PCUI::ToggleData enableAllEditOptions;
     constexpr static cstring ENABLE_ALL_EDIT_OPTIONS_STR{"ENABLE_ALL_EDIT_OPTIONS"};
 
-    PCUI::ToggleData saveColorChange;
-    constexpr static cstring SAVE_COLOR_STR{"SAVE_COLOR_CHANGE"};
     PCUI::ToggleData saveVolume;
     constexpr static cstring SAVE_VOLUME_STR{"SAVE_VOLUME"};
     PCUI::ToggleData savePreset;
     constexpr static cstring SAVE_PRESET_STR{"SAVE_PRESET"};
+    PCUI::ToggleData saveColorChange;
+    constexpr static cstring SAVE_COLOR_STR{"SAVE_COLOR_CHANGE"};
 
     PCUI::ToggleData enableOLED;
     constexpr static cstring ENABLE_OLED_STR{"ENABLE_SSD1306"};
@@ -249,8 +251,8 @@ struct CONFIG_EXPORT Settings {
     constexpr static cstring ORIENTATION_ROTATION_STR{"ORIENTATION_ROTATION"};
 
     // For debugging touch buttons:
-    PCUI::ToggleData speakTouchValues;
-    constexpr static cstring SPEAK_TOUCH_VALUES_STR{"SPEAK_TOUCH_VALUES"};
+    // PCUI::ToggleData speakTouchValues;
+    // constexpr static cstring SPEAK_TOUCH_VALUES_STR{"SPEAK_TOUCH_VALUES"};
     
     // Make these be enabled by adding such a device to the
     // wiring. Adjust volume there too? That I don't know...
@@ -291,8 +293,6 @@ struct CONFIG_EXPORT Settings {
     constexpr static cstring NO_REPEAT_RANDOM_STR{"NO_REPEAT_RANDOM"};
     PCUI::ToggleData femaleTalkie;
     constexpr static cstring FEMALE_TALKIE_STR{"FEMALE_TALKIE_VOICE"};
-    PCUI::ToggleData disableTalkie;
-    constexpr static cstring DISABLE_TALKIE_STR{"DISABLE_TALKIE"};
     PCUI::ToggleData killOldPlayers;
     constexpr static cstring KILL_OLD_PLAYERS_STR{"KILL_OLD_PLAYERS"};
 
