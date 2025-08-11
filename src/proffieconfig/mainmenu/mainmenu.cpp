@@ -24,6 +24,14 @@
 #include "dialogs/addconfig.h"
 #include "dialogs/manifest.h"
 
+#include "config/info.h"
+#include "log/info.h"
+#include "paths/info.h"
+#include "pconf/info.h"
+#include "ui/info.h"
+#include "utils/info.h"
+#include "versions/info.h"
+
 #include "../core/defines.h"
 #include "../core/appstate.h"
 #include "../core/utilities/misc.h"
@@ -99,11 +107,18 @@ void MainMenu::bindEvents() {
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxAboutDialogInfo aboutInfo;
         aboutInfo.SetDescription(
-                _("All-in-one Proffieboard Management Utility") +
-                "\n\n"
-                "Arduino CLI v" wxSTRINGIZE(ARDUINO_CLI_VERSION)
-                );
-        aboutInfo.SetVersion(wxSTRINGIZE(BIN_VERSION));
+            _("All-in-one Proffieboard Management Utility") +
+            "\n\n"
+            "Arduino CLI: v" wxSTRINGIZE(ARDUINO_CLI_VERSION) "\n"
+            "Config: v" + Config::version() + "\n"
+            "Log: v" + Log::version() + "\n"
+            "Paths: v" + Paths::version() + "\n"
+            "PConf: v" + PConf::version() + "\n"
+            "PCUI: v" + PCUI::version() + "\n"
+            "Utils: v" + Utils::version() + "\n"
+            "Versions: v" + Versions::version() + "\n"
+        );
+        aboutInfo.SetVersion(wxSTRINGIZE(VERSION));
         aboutInfo.SetWebSite("https://proffieconfig.kafrenetrading.com");
         aboutInfo.SetCopyright("Copyright (C) 2023-2025 Ryan Ogurek");
         aboutInfo.SetName("ProffieConfig");
