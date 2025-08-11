@@ -160,11 +160,6 @@ bool Utils::skipComment(std::istream& stream, string *str) {
     return skipped;
 }
 
-void Utils::trimSurroundingWhitespace(string& str) {
-    while (not str.empty() and std::isspace(str.front())) str.erase(0, 1);
-    while (not str.empty() and std::isspace(str.back())) str.pop_back();
-}
-
 vector<string> Utils::createEntries(const std::vector<wxString>& vec) {
     vector<string> entries;
     entries.reserve(vec.size());

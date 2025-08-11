@@ -531,7 +531,7 @@ optional<std::pair<Versions::PropCommonSettingData, PConf::HashedData>> Versions
     }
 
     commonData.define = *entry->label;
-    Utils::trimWhiteSpace(commonData.define);
+    Utils::trimWhitespace(commonData.define);
     if (commonData.define.empty()) {
         logger.warn(entry->name + " section has empty define/label, ignoring!");
         return nullopt;
