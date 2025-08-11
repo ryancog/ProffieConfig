@@ -324,16 +324,17 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
     } reading{NONE};
 
     vector<char> depth;
+    vector<string> depthBuffer;
     string commentBuffer;
     string styleBuffer;
 
     const auto finishStyleReading{[&array, &styleBuffer, &commentBuffer]() {
-        Utils::trimWhitespace(styleBuffer);
-        Utils::trimWhitespace(commentBuffer);
+        Utils::trimSurroundingWhitespace(styleBuffer);
+        Utils::trimSurroundingWhitespace(commentBuffer);
 
-        auto& style{array.presets().back()->styles().back()};
-        style->comment = std::move(commentBuffer);
-        style->style = std::move(styleBuffer);
+        auto& style{array.presets().back()->addStyle()};
+        style.comment = std::move(commentBuffer);
+        style.style = std::move(styleBuffer);
 
         commentBuffer.clear();
         styleBuffer.clear();
@@ -377,26 +378,22 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
             array.presets().back()->track += static_cast<char>(chr);
         } else if (reading == POST_TRACK) {
             if (chr == ',') {
-                auto& style{array.presets().back()->addStyle()};
                 reading = STYLE;
             }
         } else if (reading == STYLE) {
+            if (std::isspace(chr)) continue;
             if (depth.empty()) {
                 if (chr == '"') {
-                    // This is the name entry, silly!
-                    if (not array.presets().back()->styles().empty()) {
-                        array.presets().back()->popBackStyle();
-                    }
                     array.presets().back()->name.clear();
                     reading = NAME;
                     continue;
                 }
                 if (chr == ',') {
                     finishStyleReading();
-                    auto& style{array.presets().back()->addStyle()};
                     continue;
                 }
             }
+
             if (chr == '}') {
                 finishStyleReading();
                 if (not depth.empty()) logger.warn("Hit preset end before finishing style. This will mean errors to correct later!");
@@ -407,7 +404,14 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
                 continue;
             }
 
-            if (chr == '<' or chr == '(') depth.push_back(chr);
+            if (chr == '<' or chr == '(') {
+                if (depthBuffer.empty()) styleBuffer += chr;
+                else depthBuffer.back() += chr;
+
+                depth.push_back(chr);
+                depthBuffer.emplace_back();
+                continue;
+            }
             if (chr == '>' or chr == ')') {
                 if (depth.empty()) {
                     // TODO: Make this a useful error?
@@ -421,10 +425,50 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
                     return errorMessage(logger, wxTRANSLATE("Found %c when expecting match for %c when parsing style"), chr, depth.back());
                 }
 
+                auto closedBuffer{depthBuffer.back()};
+                depthBuffer.pop_back();
+                string& readout{depthBuffer.empty() ? styleBuffer : depthBuffer.back()};
+
+                bool closedSplitLines{false};
+                if (closedBuffer.length() > 80) {
+                    closedSplitLines = true;
+
+                    string insertStr;
+                    uint32 closeDepth{0};
+                    for (auto idx{0}; idx < closedBuffer.length(); ++idx) {
+                        if (closedBuffer[idx] == '<' or closedBuffer[idx] == '(') {
+                            ++closeDepth;
+                        } else if (closedBuffer[idx] == '>' or closedBuffer[idx] == ')') {
+                            --closeDepth;
+                            continue;
+                        }
+
+                        if (closedBuffer[idx] != ',' or closeDepth != 0) continue;
+
+                        insertStr = '\n';
+                        for (auto idx{0}; idx < depth.size(); ++idx) insertStr += '\t';
+                        closedBuffer.insert(idx + 1, insertStr);
+                        idx += insertStr.length();
+                    }
+                }
+
+                if (closedSplitLines) {
+                    readout += '\n';
+                    for (auto idx{0}; idx < depth.size(); ++idx) readout += '\t';
+                }
+                readout += closedBuffer;
+                if (closedSplitLines) {
+                    readout += '\n';
+                    for (auto idx{0}; idx < depth.size() - 1; ++idx) readout += '\t';
+                }
+                readout += chr;
+
                 depth.pop_back();
+                continue;
             }
 
-            styleBuffer += chr;
+            if (depthBuffer.empty()) styleBuffer += chr;
+            else depthBuffer.back() += chr;
         } else if (reading == NAME) {
             if (chr == '"' or chr == '}') {
                 reading = NONE;

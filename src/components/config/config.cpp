@@ -217,20 +217,24 @@ variant<Config::Config *, string> Config::open(const string& name) {
     return &*loadedConfigs.emplace_back(std::move(config));
 }
 
-variant<Config::Config *, string> Config::import(const string& name, const filepath& path) {
+optional<string> Config::import(const string& name, const filepath& path) {
     auto& logger{Log::Context::getGlobal().createLogger("Config::import()")};
-    if (getIfOpen(name)) return errorMessage(logger, wxTRANSLATE("Config with name already open"));
+    for (const auto& configName : fetchListFromDisk()) {
+        if (configName == name) {
+            return errorMessage(logger, wxTRANSLATE("Config with name already open"));
+        }
+    }
 
     std::unique_ptr<Config> config{new Config()};
     config->name = string{name};
 
     auto err{parse(path, *config, logger.binfo("Parsing config..."))};
-    if (err) return *err;
+    if (err) return err;
 
     err = config->save();
-    if (err) return *err;
+    if (err) return err;
     
-    return &*loadedConfigs.emplace_back(std::move(config));
+    return nullopt;
 }
 
 Config::Config *Config::getIfOpen(const string& name) {
