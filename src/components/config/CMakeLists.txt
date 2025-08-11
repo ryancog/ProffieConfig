@@ -4,6 +4,7 @@
 
 add_library(config SHARED 
     config.cpp
+    info.cpp
 
     private/parse.cpp
     private/output.cpp

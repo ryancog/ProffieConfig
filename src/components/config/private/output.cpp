@@ -23,11 +23,13 @@
 #include <limits>
 #include <sstream>
 
-#include "config/config.h"
-#include "config/bladeconfig/ws281x.h"
 #include "log/branch.h"
 #include "utils/string.h"
 #include "utils/version.h"
+
+#include "../config.h"
+#include "../bladeconfig/ws281x.h"
+#include "info.h"
 
 namespace Config {
     optional<string> runPreChecks(const Config&, Log::Branch&);
@@ -90,7 +92,7 @@ optional<string> Config::output(const filepath& filePath, const Config& config, 
     outFile << " * ProffieConfig is an All-In-One utility for managing your Proffieboard.\n";
     outFile << " * https://proffieconfig.kafrenetrading.com/\n";
     outFile << " *\n";
-    outFile << " * Version: " wxSTRINGIZE(VERSION) ", Generator Version: " wxSTRINGIZE(BIN_VERSION) "\n";
+    outFile << " * Version: " << executableVersion << ", Generator Version: " wxSTRINGIZE(BIN_VERSION) "\n";
     outFile << " */\n\n" << std::flush;
 
     outputTop(outFile, config);

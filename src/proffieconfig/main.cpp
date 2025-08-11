@@ -5,6 +5,7 @@
 #include <wx/image.h>
 
 #include "app/app.h"
+#include "config/info.h"
 #include "core/appstate.h"
 #include "ui/message.h"
 
@@ -16,7 +17,8 @@ public:
             return false;
         }
 
-        wxInitAllImageHandlers();
+        Config::setExecutableVersion(wxSTRINGIZE(VERSION));
+
         AppState::init();
 
         return true;
