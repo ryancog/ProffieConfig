@@ -156,7 +156,7 @@ Config::Preset::Style::Style() {
             rawValue,
             &numTrimmed,
             insertionPoint,
-            "/*<>()&,\"",
+            "/*<>()&,\"\n\t ",
             true
         );
         insertionPoint -= numTrimmed;
