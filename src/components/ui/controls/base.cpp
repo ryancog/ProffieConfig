@@ -85,12 +85,11 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
 
     if (not label.empty()) {
         constexpr auto PADDING{5};
-        auto sizerFlags{
-            wxSizerFlags().Border(wxLEFT | wxRIGHT, PADDING)
-        };
         sizer->Add(
             new wxStaticText(this, wxID_ANY, label),
-            orient == wxHORIZONTAL ? sizerFlags.Center() : sizerFlags
+            orient == wxHORIZONTAL ?
+                wxSizerFlags().Border(wxRIGHT, PADDING).Center() :
+                wxSizerFlags().Border(wxLEFT | wxRIGHT, PADDING)
         );
     }
 
