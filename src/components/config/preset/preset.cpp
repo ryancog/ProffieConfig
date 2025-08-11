@@ -127,6 +127,88 @@ void Config::Preset::popBackStyle() {
 }
 
 Config::Preset::Style::Style() {
+    comment.setUpdateHandler([this](uint32 id) {
+        if (id != comment.ID_VALUE) return;
+
+        auto rawValue{static_cast<string>(comment)};
+        auto insertionPoint{comment.getInsertionPoint()};
+        size_t illegalPos{};
+        while (
+                (illegalPos = rawValue.find("/*")) != string::npos or
+                (illegalPos = rawValue.find("*/")) != string::npos
+              ) {
+            if (illegalPos < insertionPoint) insertionPoint -= 2;
+            rawValue.erase(illegalPos, 2);
+        }
+
+        if (comment != rawValue) {
+            comment = std::move(rawValue);
+            comment.setInsertionPoint(insertionPoint);
+        }
+    });
+    style.setUpdateHandler([this](uint32 id) {
+        if (id != style.ID_VALUE) return;
+
+        auto rawValue{static_cast<string>(style)};
+        auto insertionPoint{style.getInsertionPoint()};
+        uint32 numTrimmed{};
+        Utils::trimUnsafe(
+            rawValue,
+            &numTrimmed,
+            insertionPoint,
+            "/*<>()&,\"",
+            true
+        );
+        insertionPoint -= numTrimmed;
+
+        size_t illegalPos{0};
+        bool commentMove{false};
+        while ((illegalPos = rawValue.find("/*", illegalPos)) != string::npos) {
+            const auto terminatorPos{rawValue.find("*/", illegalPos)};
+            const auto eraseEnd{terminatorPos == string::npos ? string::npos : terminatorPos + 2};
+            if (eraseEnd < insertionPoint) insertionPoint -= eraseEnd - illegalPos;
+            else if (illegalPos < insertionPoint) insertionPoint = illegalPos;
+
+            const auto begin{illegalPos + 2};
+            auto substr{rawValue.substr(begin, terminatorPos - begin)};
+            Utils::trimSurroundingWhitespace(substr);
+            if (not substr.empty()) {
+                if (not comment.empty()) comment += '\n';
+                comment += substr;
+            }
+
+            rawValue.erase(illegalPos, eraseEnd - illegalPos);
+            commentMove = true;
+        }
+
+        // If comment terminator but no opener, move everything before terminator into comment
+        if ((illegalPos = rawValue.rfind("*/")) != string::npos and rawValue.find("/*") == string::npos) {
+            auto substr{rawValue.substr(0, illegalPos)};
+            Utils::trimSurroundingWhitespace(substr);
+            if (not substr.empty()) {
+                if (not comment.empty()) comment += '\n';
+                comment += substr;
+            }
+            const auto eraseEnd{illegalPos + 2};
+            if (eraseEnd < insertionPoint) insertionPoint -= eraseEnd;
+            else insertionPoint = 0;
+            rawValue.erase(0, eraseEnd);
+        }
+
+        if ((illegalPos = rawValue.find(')')) != string::npos) {
+            rawValue.erase(illegalPos + 1);
+            if (insertionPoint > illegalPos + 1) insertionPoint = illegalPos + 1;
+        }
+
+        if (style != rawValue) {
+            style = std::move(rawValue);
+            style.setInsertionPoint(insertionPoint);
+            if (commentMove) {
+                comment.setFocus();
+                comment.setInsertionPointEnd();
+            }
+        }
+    });
     comment = "ProffieConfig Default Blue AudioFlicker";
     style = "StyleNormalPtr<AudioFlicker<Blue,DodgerBlue>,BLUE,300,800>()";
 }

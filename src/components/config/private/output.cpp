@@ -26,6 +26,7 @@
 #include "config/config.h"
 #include "config/bladeconfig/ws281x.h"
 #include "log/branch.h"
+#include "utils/string.h"
 #include "utils/version.h"
 
 namespace Config {
@@ -491,7 +492,8 @@ void Config::outputPresetStyles(std::ofstream& outFile, const Config& config) {
                 auto& style{preset->style(idx)};
                 string line;
 
-                const auto commentStr{static_cast<string>(style.comment)};
+                auto commentStr{static_cast<string>(style.comment)};
+                Utils::trimSurroundingWhitespace(commentStr);
                 if (not commentStr.empty()) {
                     std::istringstream commentStream{commentStr};
                     outFile << "\t\t/*\n";
@@ -503,17 +505,9 @@ void Config::outputPresetStyles(std::ofstream& outFile, const Config& config) {
                     outFile << "\t\t */\n";
                 }
 
-                const auto styleStr{static_cast<string>(style.style)};
-                std::istringstream styleStream{styleStr};
-                while (not false) {
-                    std::getline(styleStream, line);
-                    outFile << "\t\t" << line;
-                    if (styleStream.eof()) {
-                        outFile << ",\n";
-                        break;
-                    } 
-                    outFile << '\n';
-                }
+                auto styleStr{static_cast<string>(style.style)};
+                Utils::trimWhiteSpace(styleStr);
+                outFile << "\t\t" << styleStr << ",\n";
             }
 
             outFile << "\t\t\"" << static_cast<string>(preset->name) << "\"\n\t},\n";
