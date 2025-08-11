@@ -19,7 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include <cstring>
 #include <fstream>
 #include <sstream>
@@ -1290,8 +1289,8 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
             disableBasicParserStyles = true;
         } else if (opt.define == DISABLE_DIAG_COMMANDS_STR) {
             enableAllEditOptions = true;
-        } else if (opt.define == ENABLE_DEV_COMMANDS_STR) {
-            enableDeveloperCommands = true;
+        // } else if (opt.define == ENABLE_DEV_COMMANDS_STR) {
+        //     enableDeveloperCommands = true;
         } else if (opt.define == SAVE_STATE_STR) {
             saveState = true;
         } else if (opt.define == ENABLE_ALL_EDIT_OPTIONS_STR) {
@@ -1328,8 +1327,8 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
                     logger.warn(string{"Failed to parse orientation rotation: "} + e.what());
                 }
             }
-        } else if (opt.define == SPEAK_TOUCH_VALUES_STR) {
-            speakTouchValues = true;
+        // } else if (opt.define == SPEAK_TOUCH_VALUES_STR) {
+        //     speakTouchValues = true;
         } else if (opt.define == DYNAMIC_BLADE_DIMMING_STR) {
             dynamicBladeDimming = true;
         } else if (opt.define == DYNAMIC_BLADE_LENGTH_STR) {

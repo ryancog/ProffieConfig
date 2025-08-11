@@ -1,21 +1,39 @@
 #include "editorwindow.h"
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2023-2025 Ryan Ogurek
+/*
+ * ProffieConfig, All-In-One Proffieboard Management Utility
+ * Copyright (C) 2023-2025 Ryan Ogurek
+ *
+ * proffieconfig/editor/editorwindow.cpp
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 4 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <filesystem>
 #include <fstream>
 
-#include <wx/filedlg.h>
-#include <wx/event.h>
-#include <wx/combobox.h>
 #include <wx/arrstr.h>
-#include <wx/statbox.h>
+#include <wx/combobox.h>
+#include <wx/event.h>
+#include <wx/filedlg.h>
+#include <wx/list.h>
+#include <wx/menu.h>
 #include <wx/settings.h>
 #include <wx/sizer.h>
-#include <wx/list.h>
+#include <wx/statbox.h>
 #include <wx/string.h>
+#include <wx/toolbar.h>
 #include <wx/tooltip.h>
-#include <wx/menu.h>
 
 #include "paths/paths.h"
 #include "ui/message.h"
@@ -31,8 +49,6 @@
 #include "../core/utilities/progress.h"
 
 #include "../tools/arduino.h"
-#include "wx/gdicmn.h"
-#include "wx/toolbar.h"
 
 EditorWindow::EditorWindow(wxWindow *parent, Config::Config& config) : 
     PCUI::Frame(
