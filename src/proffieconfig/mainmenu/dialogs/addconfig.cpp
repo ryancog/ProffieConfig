@@ -45,7 +45,7 @@ void AddConfig::bindEvents() {
     });
     importPath.setUpdateHandler([this](uint32 id) {
         if (id != importPath.ID_PATH) return;
-        configName = static_cast<filepath>(importPath).stem();
+        configName = static_cast<filepath>(importPath).stem().string();
     });
 }
 

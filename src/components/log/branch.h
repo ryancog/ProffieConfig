@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <mutex>
+
 #include <wx/string.h>
 
 #include "utils/types.h"

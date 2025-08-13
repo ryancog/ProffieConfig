@@ -19,6 +19,9 @@ public:
 
         Config::setExecutableVersion(wxSTRINGIZE(VERSION));
 
+        // Version and prop stuffage
+        // Arduino relink
+
         AppState::init();
 
         return true;

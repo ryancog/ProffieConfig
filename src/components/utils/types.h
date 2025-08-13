@@ -29,6 +29,7 @@
 #include <optional>
 #include <set>
 #include <span>
+#include <variant>
 #include <vector>
 
 // "Standard" types for ProffieConfig

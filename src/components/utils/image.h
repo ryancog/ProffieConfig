@@ -46,12 +46,13 @@ private:
         SYSTEM,
     } mType;
     union {
+        // Win32 compiler does not allow anonymous structs in this manner
         struct {
             // Darker color
             wxColour mDark;
             // Lighter color
             wxColour mLight;
-        };
+        } mStd;
         wxSystemColour mSysColor;
     };
 };

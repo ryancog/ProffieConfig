@@ -185,7 +185,7 @@ vector<string> Config::fetchListFromDisk() {
     for (const auto& entry : fs::directory_iterator{Paths::configs(), err}) {
         if (not entry.is_regular_file()) continue;
         if (entry.path().extension() != RAW_FILE_EXTENSION) continue;
-        ret.emplace_back(entry.path().stem());
+        ret.emplace_back(entry.path().stem().string());
     }
     
     return ret;

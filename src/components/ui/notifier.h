@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <atomic>
+#include <mutex>
 
 #include <wx/window.h>
 

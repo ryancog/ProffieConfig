@@ -20,6 +20,7 @@
  */
 
 #include <cctype>
+#include <cmath>
 #include <sstream>
 #include <stack>
 
