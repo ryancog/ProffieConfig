@@ -205,6 +205,7 @@ bool Versions::PropSetting::isActive() const {
         case Type::DECIMAL:
             return static_cast<const PropDecimal *>(this)->value.isEnabled();
     }
+    assert(0);
 }
 
 bool Versions::PropSetting::shouldOutputDefine() const {

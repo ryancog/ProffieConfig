@@ -177,52 +177,82 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
     set_target_properties(wxWidgetsBaseNet PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase330u_net_gcc_win32.dll
         IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase330u_net_gcc_win32.dll)
-	set_target_properties(wxWidgetsBaseXML PROPERTIES
+    set_target_properties(wxWidgetsBaseXML PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase330u_xml_gcc_win32.dll
         IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase330u_xml_gcc_win32.dll)
     set_target_properties(wxWidgetsCore PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw330u_core_gcc_win32.dll
         IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmsw330u_core_gcc_win32.dll)
-	set_target_properties(wxWidgetsXRC PROPERTIES
+    set_target_properties(wxWidgetsXRC PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw330u_xrc_gcc_win32.dll
         IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmsw330u_xrc_gcc_win32.dll)
-	set_target_properties(wxWidgetsHTML PROPERTIES
+    set_target_properties(wxWidgetsHTML PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw330u_html_gcc_win32.dll
         IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmsw330u_html_gcc_win32.dll)
-	set_target_properties(wxWidgetsQA PROPERTIES
+    set_target_properties(wxWidgetsQA PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw330u_qa_gcc_win32.dll
         IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmsw330u_qa_gcc_win32.dll)
 
     set(WX_STATIC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-win32-static)
-    set(WX_LIB_DIR ${WX_STATIC_DIR}/lib64)
-    set_target_properties(wxWidgetsBase-static PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.static.a
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.static.a)
-    set_target_properties(wxWidgetsBaseNet-static PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_net-3.3-x86_64-w64-mingw32.static.a
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu_net-3.3-x86_64-w64-mingw32.static.a)
-    set_target_properties(wxWidgetsBaseXML-static PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_xml-3.3-x86_64-w64-mingw32.static.a
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu_xml-3.3-x86_64-w64-mingw32.static.a)
-    set_target_properties(wxWidgetsCore-static PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_core-3.3-x86_64-w64-mingw32.static.a
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_core-3.3-x86_64-w64-mingw32.static.a)
-    set_target_properties(wxWidgetsXRC-static PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_xrc-3.3-x86_64-w64-mingw32.static.a
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_xrc-3.3-x86_64-w64-mingw32.static.a)
-    set_target_properties(wxWidgetsHTML-static PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_html-3.3-x86_64-w64-mingw32.static.a
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_html-3.3-x86_64-w64-mingw32.static.a)
-    set_target_properties(wxWidgetsQA-static PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_qa-3.3-x86_64-w64-mingw32.static.a
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_qa-3.3-x86_64-w64-mingw32.static.a)
-    set_target_properties(wxWidgetsPNG-static PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.static.a
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.static.a)
-    set_target_properties(wxWidgetsZLib-static PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.static.a
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.static.a)
-
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
+        set(WX_LIB_DIR ${WX_STATIC_DIR}/lib64)
+        set_target_properties(wxWidgetsBase-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.static.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.static.a)
+        set_target_properties(wxWidgetsBaseNet-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_net-3.3-x86_64-w64-mingw32.static.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu_net-3.3-x86_64-w64-mingw32.static.a)
+        set_target_properties(wxWidgetsBaseXML-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_xml-3.3-x86_64-w64-mingw32.static.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu_xml-3.3-x86_64-w64-mingw32.static.a)
+        set_target_properties(wxWidgetsCore-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_core-3.3-x86_64-w64-mingw32.static.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_core-3.3-x86_64-w64-mingw32.static.a)
+        set_target_properties(wxWidgetsXRC-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_xrc-3.3-x86_64-w64-mingw32.static.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_xrc-3.3-x86_64-w64-mingw32.static.a)
+        set_target_properties(wxWidgetsHTML-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_html-3.3-x86_64-w64-mingw32.static.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_html-3.3-x86_64-w64-mingw32.static.a)
+        set_target_properties(wxWidgetsQA-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_qa-3.3-x86_64-w64-mingw32.static.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_qa-3.3-x86_64-w64-mingw32.static.a)
+        set_target_properties(wxWidgetsPNG-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.static.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.static.a)
+        set_target_properties(wxWidgetsZLib-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.static.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.static.a)
+    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin)
+        set(WX_LIB_DIR ${WX_STATIC_DIR}/lib)
+        set_target_properties(wxWidgetsBase-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.a)
+        set_target_properties(wxWidgetsBaseNet-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_net-3.3-x86_64-w64-mingw32.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu_net-3.3-x86_64-w64-mingw32.a)
+        set_target_properties(wxWidgetsBaseXML-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_xml-3.3-x86_64-w64-mingw32.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu_xml-3.3-x86_64-w64-mingw32.a)
+        set_target_properties(wxWidgetsCore-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_core-3.3-x86_64-w64-mingw32.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_core-3.3-x86_64-w64-mingw32.a)
+        set_target_properties(wxWidgetsXRC-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_xrc-3.3-x86_64-w64-mingw32.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_xrc-3.3-x86_64-w64-mingw32.a)
+        set_target_properties(wxWidgetsHTML-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_html-3.3-x86_64-w64-mingw32.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_html-3.3-x86_64-w64-mingw32.a)
+        set_target_properties(wxWidgetsQA-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_qa-3.3-x86_64-w64-mingw32.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_qa-3.3-x86_64-w64-mingw32.a)
+        set_target_properties(wxWidgetsPNG-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.a)
+        set_target_properties(wxWidgetsZLib-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.a
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.a)
+    endif()
 endif()
 
 # Use wx-config to get the proper compile and link flags

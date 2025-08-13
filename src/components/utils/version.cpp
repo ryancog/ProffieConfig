@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
+
 Utils::Version::Version(string_view str) {
     if (str.empty()) {
         err = Err::STR_EMPTY;

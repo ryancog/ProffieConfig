@@ -118,7 +118,12 @@ if [ -d $SWITCH_VAL ]; then
 else
     unset CROSS_COMPILE
     if [ "$TARGET_PLATFORM" == "win32" ]; then
-        export CROSS_COMPILE=x86_64-w64-mingw32.static-
+        if [ "$BUILD_PLATFORM" == "linux" ]; then
+            export CROSS_COMPILE=x86_64-w64-mingw32.static-
+        elif [ "$BUILD_PLATFORM" == "macOS" ]; then
+            export CROSS_COMPILE=x86_64-w64-mingw32-
+            BUILD_FLAGS="CC=\"x86_64-w64-mingw32-gcc -maes\""
+        fi
     fi
 
     make clean &> /dev/null
@@ -128,7 +133,7 @@ else
     if [ "$TARGET_PLATFORM" == "macOS" ]; then
         do_with_log \
             "Building shared (x86)" \
-            "make -f makefile.shared -j`nproc --all` CC=\"clang -arch x86_64\"" \
+            "make -f makefile.shared -j`nproc --all` CC=\"clang -maes -arch x86_64\"" \
             build_x86
         make clean &> /dev/null
         mv libtomcrypt.dylib libtomcrypt-x86_64.dylib
@@ -146,7 +151,7 @@ else
     else
         do_with_log \
             "Building shared" \
-            "make -f makefile.shared -j`nproc --all`" \
+            "make -f makefile.shared -j`nproc --all` $BUILD_FLAGS" \
             build
     fi
     export LDFLAGS=$OLD_LDFLAGS
@@ -172,7 +177,7 @@ else
     else
         do_with_log \
             "Building static" \
-            "make -j`nproc --all`" \
+            "make -j`nproc --all` $BUILD_FLAGS" \
             build
     fi
 
@@ -231,18 +236,25 @@ do_with_log \
 WX_INSTALL_PREFIX=`pwd`/install-$TARGET_PLATFORM
 
 # Use --enable-debug if needed
-WX_FLAGS='--without-opengl --disable-unsafe-conv-in-wxstring --disable-sys-libs --with-macosx-version-min=11.0'
+WX_FLAGS='--without-opengl --disable-unsafe-conv-in-wxstring --disable-sys-libs'
 
 if [ "$TARGET_PLATFORM" == "linux" ]; then
     WX_HOST='x86_64-linux'
     WX_PLATFORM_FLAGS='--with-gtk=3'
 elif [ "$TARGET_PLATFORM" == "macOS" ]; then
-    WX_HOST='x86_64-apple-darwin --enable-universal_binary=x86_64,arm64'
+    WX_HOST='x86_64-apple-darwin --enable-universal_binary=x86_64,arm64 --with-macosx-version-min=11.0'
     WX_PLATFORM_FLAGS='--with-osx'
 elif [ "$TARGET_PLATFORM" == "win32" ]; then
-    WX_HOST='x86_64-w64-mingw32.static'
+    if [ "$BUILD_PLATFORM" == "linux" ]; then
+        WX_HOST='x86_64-w64-mingw32.static'
+    elif [ "$BUILD_PLATFORM" == "macOS" ]; then
+        export LDFLAGS="-static-libstdc++ -static-libgcc -Wl,-Bstatic -lpthread -Wl,-Bdynamic"
+        export CFLAGS="-static-libstdc++ -static-libgcc -Wl,-Bstatic -lpthread -Wl,-Bdynamic"
+        export CXXFLAGS="-static-libstdc++ -static-libgcc -Wl,-Bstatic -lpthread -Wl,-Bdynamic"
+        WX_HOST='x86_64-w64-mingw32'
+    fi
     WX_PLATFORM_FLAGS='--with-msw'
-    VENDOR=win32
+    export VENDOR=win32
 fi
 
 if [ "$BUILD_PLATFORM" == "linux" ]; then

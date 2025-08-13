@@ -166,7 +166,7 @@ void MainMenu::bindEvents() {
     }, ID_ApplyChanges);
 # 	if defined(__WINDOWS__)
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
-        if (not SerialMonitor::instance) SerialMonitor::instance = new SerialMonitor(this);
+        // if (not SerialMonitor::instance) SerialMonitor::instance = new SerialMonitor(this, boardSelection);
     }, ID_OpenSerial);
 #	else
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
@@ -354,7 +354,7 @@ void MainMenu::createUI() {
     auto *boardControls{new wxBoxSizer(wxHORIZONTAL)};
     auto boardEntries{Utils::createEntries({_("Select Board...")})};
 #   ifdef __WINDOWS__
-    boardEntries.emplace_back(_("BOOTLOADER RECOVERY"));
+    boardEntries.emplace_back(_("BOOTLOADER RECOVERY").ToStdString());
 #   endif
     boardSelection.setChoices(std::move(boardEntries));
     boardSelection = 0;

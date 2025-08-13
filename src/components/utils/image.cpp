@@ -37,18 +37,18 @@ const wxColour LIGHT_BLUE{31, 99, 168};
 } // namespace Image
 
 Image::DynamicColor::DynamicColor() :
-    mType{Type::STANDARD}, mDark{wxNullColour}, mLight{wxNullColour} {}
+    mType{Type::STANDARD}, mStd{wxNullColour, wxNullColour} {}
 
 Image::DynamicColor::DynamicColor(wxColour dark, wxColour light) :
-    mType{Type::STANDARD}, mDark{dark}, mLight{light} {}
+    mType{Type::STANDARD}, mStd{dark, light} {}
 
 Image::DynamicColor::DynamicColor(wxSystemColour color) :
     mType{Type::SYSTEM}, mSysColor{color} {}
 
 Image::DynamicColor::~DynamicColor() {
     if (mType == Type::STANDARD) {
-        mDark.~wxColour();
-        mLight.~wxColour();
+        mStd.mDark.~wxColour();
+        mStd.mLight.~wxColour();
     }
 }
 
@@ -59,18 +59,18 @@ wxColour Image::DynamicColor::color() const {
     if (mType == Type::STANDARD) {
         auto isDark{wxSystemSettings::GetAppearance().AreAppsDark()};
 
-        if (mDark.IsNull()) return mLight;
-        if (mLight.IsNull()) return mDark;
+        if (not mStd.mDark.IsOk()) return mStd.mLight;
+        if (not mStd.mLight.IsOk()) return mStd.mDark;
 
-        return isDark ? mLight : mDark;
+        return isDark ? mStd.mLight : mStd.mDark;
     }
     return wxNullColour;
 }
 
 Image::DynamicColor::DynamicColor(const DynamicColor& other) {
     mType = Type::STANDARD;
-    new(&mLight) wxColour;
-    new(&mDark) wxColour;
+    new(&mStd.mLight) wxColour;
+    new(&mStd.mDark) wxColour;
     *this = other;
 }
 
@@ -80,8 +80,8 @@ Image::DynamicColor& Image::DynamicColor::operator=(const DynamicColor& other) {
     mType = other.mType;
     switch (mType) {
         case Type::STANDARD:
-            mDark = other.mDark;
-            mLight = other.mLight;
+            mStd.mDark = other.mStd.mDark;
+            mStd.mLight = other.mStd.mLight;
             break;
         case Type::SYSTEM:
             mSysColor = other.mSysColor;
@@ -94,10 +94,11 @@ Image::DynamicColor& Image::DynamicColor::operator=(const DynamicColor& other) {
 Image::DynamicColor::operator bool() const { 
     switch (mType) {
         case Type::STANDARD: 
-            return not mDark.IsNull() or not mLight.IsNull();
+            return mStd.mDark.IsOk() or mStd.mLight.IsOk();
         case Type::SYSTEM:
             return mSysColor < wxSYS_COLOUR_MAX;
     }
+    assert(0);
 }
 
 wxBitmap Image::loadPNG(const string& name, bool dpiScaled) {
@@ -129,7 +130,7 @@ wxBitmap Image::loadPNG(const string& name, wxSize size, wxColour color) {
         bitmap.SetScaleFactor(bitmap.GetScaleFactor() * scaler);
     }
 
-    if (not color.IsNull()) {
+    if (not color.IsOk()) {
         wxAlphaPixelData data{bitmap};
         auto iter{data.GetPixels()};
         for (auto idx{0}; idx < data.GetWidth() * data.GetHeight(); ++idx) {

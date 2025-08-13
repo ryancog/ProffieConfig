@@ -213,9 +213,13 @@ void EditorWindow::createPages(wxSizer *sizer) {
         _("Blade Arrays"),
         Image::loadPNG("blade", wxDefaultSize)
     );
+#   ifdef __WXOSX__
     toolbar->OSXSetSelectableTools(true);
+#   endif
     toolbar->Realize();
+#   ifdef __WXOSX__
     toolbar->OSXSelectTool(ID_General);
+#   endif
 
     generalPage = new GeneralPage(this);
     propsPage = new PropsPage(this);
