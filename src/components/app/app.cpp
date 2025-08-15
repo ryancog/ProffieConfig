@@ -211,6 +211,8 @@ bool App::init(const string& appName, const string& lockName) {
         return false;
     }
 
+    wxImage::AddHandler(new wxPNGHandler());
+
     logger.info("Initialized.");
     return true;
 }
