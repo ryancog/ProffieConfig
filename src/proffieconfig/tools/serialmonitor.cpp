@@ -253,8 +253,9 @@ bool SerialMonitor::openDevice(const string& boardPath) {
     tcflush(fd, TCIFLUSH);
     tcsetattr(fd, TCSANOW, &newtio);
 #   elif defined(__WXMSW__)
+    const auto safeBoardPath{R"(\\.\)" + boardPath};
     serialHandle = CreateFileA(
-        boardPath.c_str(),
+        safeBoardPath.c_str(),
         GENERIC_READ | GENERIC_WRITE,
         0,
         nullptr,
