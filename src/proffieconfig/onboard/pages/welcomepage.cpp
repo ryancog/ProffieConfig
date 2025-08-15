@@ -7,7 +7,7 @@
 Onboard::Welcome::Welcome(wxWindow* parent) : wxPanel(parent, OnboardFrame::ID_Welcome) {
   auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
-  auto *welcomeText{OnboardFrame::createHeader(this, wxString::Format(_("Welcome to ProffieConfig %s!"), wxSTRINGIZE(BIN_VERSION)))};
+  auto *welcomeText{OnboardFrame::createHeader(this, wxString::Format(_("Welcome to ProffieConfig %s!"), wxSTRINGIZE(VERSION)))};
 
   auto *infoText{new wxStaticText(this, wxID_ANY, _(
               "ProffieConfig is an All-in-One utility for managing your Proffieboard.\n"
