@@ -19,20 +19,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <iostream>
 #include <unordered_map>
 
 #include <wx/bitmap.h>
+#include <wx/dcmemory.h>
+#include <wx/gdicmn.h>
+#include <wx/log.h>
 #include <wx/rawbmp.h>
 #include <wx/settings.h>
 
 #include "paths/paths.h"
-#include "wx/gdicmn.h"
 
 namespace Image {
 
 // std::unordered_map<string, wxBitmap> bmps;
 const wxColour DARK_BLUE{39, 74, 114};
 const wxColour LIGHT_BLUE{31, 99, 168};
+
+void generateMissingBMP(wxBitmap&, const wxSize& = wxDefaultSize);
 
 } // namespace Image
 
@@ -107,7 +112,15 @@ wxBitmap Image::loadPNG(const string& name, bool dpiScaled) {
 
     auto pngPath{Paths::resources() / "icons" / (name + ".png")};
     // std::cout << "Loading PNG \"" << name << "\" from \"" << pngPath.native() << '"' << std::endl;
-    auto bitmap{wxBitmap{pngPath.native(), wxBITMAP_TYPE_PNG}};
+    wxBitmap bitmap;
+    {
+        wxLogNull noErrors;
+        bitmap.LoadFile(pngPath.native(), wxBITMAP_TYPE_PNG);
+        if (not bitmap.IsOk()) {
+            generateMissingBMP(bitmap);
+            return bitmap;
+        }
+    }
     if (dpiScaled) bitmap.SetScaleFactor(getDPIScaleFactor());
 
     // bmps.emplace(name, bitmap);
@@ -116,7 +129,15 @@ wxBitmap Image::loadPNG(const string& name, bool dpiScaled) {
 
 wxBitmap Image::loadPNG(const string& name, wxSize size, wxColour color) {
     auto pngPath{Paths::resources() / "icons" / (name + ".png")};
-    auto bitmap{wxBitmap{pngPath.native(), wxBITMAP_TYPE_PNG}};
+    wxBitmap bitmap;
+    {
+        wxLogNull noErrors;
+        bitmap.LoadFile(pngPath.native(), wxBITMAP_TYPE_PNG);
+        if (not bitmap.IsOk()) {
+            generateMissingBMP(bitmap);
+            return bitmap;
+        }
+    }
 
     if (size.x != -1 or size.y != -1) {
         assert(size.x == -1 or size.y == -1);
@@ -130,7 +151,7 @@ wxBitmap Image::loadPNG(const string& name, wxSize size, wxColour color) {
         bitmap.SetScaleFactor(bitmap.GetScaleFactor() * scaler);
     }
 
-    if (not color.IsOk()) {
+    if (color.IsOk()) {
         wxAlphaPixelData data{bitmap};
         auto iter{data.GetPixels()};
         for (auto idx{0}; idx < data.GetWidth() * data.GetHeight(); ++idx) {
@@ -144,6 +165,31 @@ wxBitmap Image::loadPNG(const string& name, wxSize size, wxColour color) {
     }
 
     return bitmap;
+}
+
+void Image::generateMissingBMP(wxBitmap& bmp, const wxSize& size) {
+    int32 dimension;
+    if (size.GetX() == -1 and size.GetY() == -1) dimension = 32;
+    else dimension = std::max(size.x, size.y);
+
+    bmp.Create(dimension, dimension, 32);
+    wxMemoryDC dc{bmp};
+    dc.SetFont(wxFont{
+        dimension,
+        wxFONTFAMILY_MODERN,
+        wxFONTSTYLE_NORMAL,
+        wxFONTWEIGHT_BOLD
+    });
+
+    dc.Clear();
+    dc.SetBrush(wxBrush(Image::LIGHT_BLUE));
+    dc.DrawRoundedRectangle(0, 0, dimension, dimension, 4);
+
+    auto extent{dc.GetTextExtent("?")};
+    extent /= 2;
+    dimension /= 2;
+    dc.SetTextForeground(Image::DARK_BLUE);
+    dc.DrawText("?", dimension - extent.x, dimension - extent.y);
 }
 
 wxBitmap Image::newBitmap(wxSize size) {
