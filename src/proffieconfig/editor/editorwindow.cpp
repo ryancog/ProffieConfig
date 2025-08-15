@@ -37,6 +37,7 @@
 
 #include "paths/paths.h"
 #include "ui/message.h"
+#include "ui/frame.h"
 #include "utils/defer.h"
 #include "utils/image.h"
 
@@ -60,7 +61,7 @@ EditorWindow::EditorWindow(wxWindow *parent, Config::Config& config) :
     auto *sizer{new wxBoxSizer{wxVERTICAL}};
 
     createMenuBar();
-    createPages(sizer);
+    createUI(sizer);
     bindEvents();
 
     wxCommandEvent event{wxEVT_MENU, ID_General};
@@ -105,7 +106,7 @@ void EditorWindow::bindEvents() {
             );
             auto saveChoice{saveDialog.ShowModal()};
 
-            if (saveChoice == wxID_CANCEL or (saveChoice == wxID_SAVE and not save())) {
+            if (saveChoice == wxID_CANCEL or (saveChoice == wxID_YES and not save())) {
                 event.Veto();
                 return;
             }
@@ -150,7 +151,9 @@ void EditorWindow::bindEvents() {
         wxSetCursor(wxCURSOR_WAIT);
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
+#       ifdef __WXOSX__
         GetToolBar()->ToggleTool(evt.GetId(), false);
+#       endif
         generalPage->Show(evt.GetId() == ID_General);
         propsPage->Show(evt.GetId() == ID_Props);
         bladesPage->Show(evt.GetId() == ID_BladeArrays);
@@ -191,7 +194,7 @@ void EditorWindow::createMenuBar() {
     SetMenuBar(menuBar);
 }
 
-void EditorWindow::createPages(wxSizer *sizer) {
+void EditorWindow::createUI(wxSizer *sizer) {
     auto *toolbar{CreateToolBar(wxTB_TEXT)};
     toolbar->AddRadioTool(
         ID_General,
@@ -213,6 +216,9 @@ void EditorWindow::createPages(wxSizer *sizer) {
         _("Blade Arrays"),
         Image::loadPNG("blade", wxDefaultSize)
     );
+#   ifdef __WXMSW__
+    toolbar->AddStretchableSpace();
+#   endif
 #   ifdef __WXOSX__
     toolbar->OSXSetSelectableTools(true);
 #   endif

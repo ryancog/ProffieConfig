@@ -60,7 +60,7 @@ public:
     };
 private:
     void createMenuBar();
-    void createPages(wxSizer *);
+    void createUI(wxSizer *);
     void bindEvents();
 
     void Fit() override;
