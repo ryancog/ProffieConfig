@@ -248,9 +248,9 @@ elif [ "$TARGET_PLATFORM" == "win32" ]; then
     if [ "$BUILD_PLATFORM" == "linux" ]; then
         WX_HOST='x86_64-w64-mingw32.static'
     elif [ "$BUILD_PLATFORM" == "macOS" ]; then
-        export LDFLAGS="-static-libstdc++ -static-libgcc -Wl,-Bstatic -lpthread -Wl,-Bdynamic"
-        export CFLAGS="-static-libstdc++ -static-libgcc -Wl,-Bstatic -lpthread -Wl,-Bdynamic"
-        export CXXFLAGS="-static-libstdc++ -static-libgcc -Wl,-Bstatic -lpthread -Wl,-Bdynamic"
+        # winpthread dll.a cannot exist because macOS MinGW is stupid.
+        # This is probably a skill issue on my part but I refuse to fix it.
+        export LDFLAGS="-static-libstdc++ -static-libgcc"
         WX_HOST='x86_64-w64-mingw32'
     fi
     WX_PLATFORM_FLAGS='--with-msw'
