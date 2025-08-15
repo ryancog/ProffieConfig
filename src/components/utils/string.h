@@ -41,6 +41,30 @@ constexpr void trimWhitespace(STRING& str) {
 };
 
 /**
+ * Purge all whitespace in a string that is not surrounded by quotes
+ *
+ * Whitespace is ' ' only. Other whitespace is still trimmed
+ */
+template<typename STRING>
+constexpr void trimWhitespaceOutsideString(STRING& str) {
+    bool inDoubleQuote{false};
+    bool inSingleQuote{false};
+    // TODO: Optimize
+    for (auto idx{0}; idx != str.length(); ++idx) {
+        const auto chr{str[idx]};
+        if (chr == '"' and not inSingleQuote) inDoubleQuote = not inDoubleQuote;
+        else if (chr == '\'' and not inDoubleQuote) inSingleQuote = not inSingleQuote;
+        else if (std::isspace(chr)) {
+            if (chr != ' ' or not (inSingleQuote or inDoubleQuote)) {
+                str.erase(idx, 1);
+                --idx;
+
+            }
+        }
+    }
+};
+
+/**
  * Purge whitespace around visible chars.
  */
 template<typename STRING>
