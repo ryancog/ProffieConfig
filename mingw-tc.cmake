@@ -15,8 +15,10 @@ elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin)
     set(CMAKE_FIND_ROOT_PATH /usr/local/opt/mingw-w64/toolchain-x86_64/x86_64-w64-mingw32)
     set(CMAKE_C_COMPILER /usr/local/bin/x86_64-w64-mingw32-gcc)
     set(CMAKE_CXX_COMPILER /usr/local/bin/x86_64-w64-mingw32-g++)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static-libstdc++ -static-libgcc -static -lpthread")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc -static -lpthread")
+    # -Wl,-Bstatic -lwinpthread -Wl,-Bdynamic
+    # The allow multiple definition is because statically linking the gcc library makes things stupid (googal it).
+    # I dunno and I don't care to fix it more elegantly. It's the Windows build. It sucks by nature.
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ -static-libgcc -Wl,-allow-multiple-definition")
 endif()
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
