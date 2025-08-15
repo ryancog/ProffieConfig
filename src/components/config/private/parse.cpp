@@ -21,6 +21,7 @@
 
 #include <cstring>
 #include <fstream>
+#include <iterator>
 #include <sstream>
 
 #include <wx/filedlg.h>
@@ -380,7 +381,14 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
                 reading = STYLE;
             }
         } else if (reading == STYLE) {
-            if (std::isspace(chr)) continue;
+            bool inSingleQuotes{not depth.empty() and depth.back() == '\''};
+            bool inDoubleQuotes{not depth.empty() and depth.back() == '"'};
+            if (std::isspace(chr)) {
+                if (chr != ' ' or not (inSingleQuotes or inDoubleQuotes)) {
+                    continue;
+                }
+            }
+
             if (depth.empty()) {
                 if (chr == '"') {
                     array.presets().back()->name.clear();
@@ -391,6 +399,15 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
                     finishStyleReading();
                     continue;
                 }
+            }
+
+            if (chr == '"' and not inSingleQuotes) {
+                if (not depth.empty() and depth.back() == '"') depth.pop_back();
+                else depth.push_back(chr);
+            }
+            if (chr == '\'' and not inDoubleQuotes) {
+                if (not depth.empty() and depth.back() == '\'') depth.pop_back();
+                else depth.push_back(chr);
             }
 
             if (chr == '}') {
@@ -498,6 +515,7 @@ optional<string> Config::parseBladeArrays(const string& data, Config& config, Lo
 
     string buffer;
     vector<char> depth;
+
     while (dataStream.good()) {
         const auto chr{dataStream.get()};
 
@@ -527,7 +545,6 @@ optional<string> Config::parseBladeArrays(const string& data, Config& config, Lo
 
             if (depth.empty()) {
                 if (chr == ',') {
-                    Utils::trimWhitespace(buffer);
                     auto& array{*config.bladeArrays.arrays().back()};
                     auto& blade{array.addBlade()};
                     auto res{parseBlade(
@@ -1075,7 +1092,7 @@ optional<string> Config::parseStyles(std::ifstream& file, Config& config, Log::B
             name += static_cast<char>(chr);
         } else if (reading == STYLE) {
             if (chr == ';') {
-                Utils::trimWhitespace(bladestyle);
+                Utils::trimWhitespaceOutsideString(bladestyle);
 
                 // How many nested for loops would you like? Cause here are all of 'em
                 for (const auto& presetArray : config.presetArrays.arrays()) {
