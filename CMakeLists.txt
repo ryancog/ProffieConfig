@@ -27,8 +27,6 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-include_directories("${CMAKE_CURRENT_LIST_DIR}/components")
-
 # MinGW requires manual installation of plugin for LTO.
 # See: https://stackoverflow.com/a/32461766
 # This generally causes issues though...
