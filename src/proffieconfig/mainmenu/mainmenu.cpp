@@ -166,7 +166,11 @@ void MainMenu::bindEvents() {
     }, ID_ApplyChanges);
 # 	if defined(__WINDOWS__)
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
-        // if (not SerialMonitor::instance) SerialMonitor::instance = new SerialMonitor(this, boardSelection);
+        if (not SerialMonitor::instance) SerialMonitor::instance = new SerialMonitor(this, boardSelection);
+        else {
+            SerialMonitor::instance->Show();
+            SerialMonitor::instance->Raise();
+        }
     }, ID_OpenSerial);
 #	else
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
@@ -216,7 +220,14 @@ void MainMenu::bindEvents() {
         Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
 
         if (static_cast<filepath>(addDialog.importPath).empty()) {
-            std::get<Config::Config *>(Config::open(addDialog.configName))->close();
+            auto res{Config::open(addDialog.configName)};
+            if (auto *err = std::get_if<string>(&res)) {
+                PCUI::showMessage(*err, _("Failed Creating Config"));
+                return;
+            }
+            auto& config{*std::get<Config::Config *>(res)};
+            config.save();
+            config.close();
         } else {
             auto err{Config::import(addDialog.configName, addDialog.importPath)};
             if (err) {
@@ -270,7 +281,11 @@ void MainMenu::handleNotification(uint32 id) {
     } 
     if (rebound or id == ID_BoardSelection) {
         FindWindow(ID_ApplyChanges)->Enable(configSelection != 0 and boardSelection != 0);
-        FindWindow(ID_OpenSerial)->Enable(boardSelection != 0);
+        bool canOpenSerial{boardSelection != 0};
+#       ifdef __WXMSW__
+        canOpenSerial &= boardSelection != boardSelection.choices().size() - 1;
+#       endif
+        FindWindow(ID_OpenSerial)->Enable(canOpenSerial);
     }
 }
 
@@ -398,7 +413,11 @@ void MainMenu::createUI() {
         openSerial,
         wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT, 10)
     );
+#   ifdef wxMSW__
     sizer->AddSpacer(20); // There's a sizing issue I need to figure out... for now we give it a chin
+#   else
+    sizer->AddSpacer(10);
+#   endif
 
     SetSizerAndFit(sizer);
 }
