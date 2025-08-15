@@ -32,7 +32,7 @@ namespace Crypto {
 /**
  * Can be used for special distributions
  */
-std::mt19937_64& UTILS_EXPORT randGen();
+UTILS_EXPORT std::mt19937_64& randGen();
 
 /**
  * Simple use for random number generation [min, max]
