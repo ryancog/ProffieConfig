@@ -163,7 +163,7 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
             }
         }
 
-        bool commaEnd{str.back() == ','};
+        bool commaEnd{not str.empty() and str.back() == ','};
         vector<string> values;
 
         uint32 numStart{0};
@@ -188,7 +188,7 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
             str += value;
             str += ',';
         }
-        if (not commaEnd) str.pop_back();
+        if (not commaEnd and not str.empty()) str.pop_back();
 
         if (static_cast<string>(list) != str) {
             list = std::move(str);
