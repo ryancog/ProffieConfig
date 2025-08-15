@@ -25,10 +25,6 @@ ProffieConfig will complete its installation and guide you through the setup and
 - Expand pre-checker capabilities (ongoing)
 - Implement interface for `using` syntax (not just the ability to parse)
 - Add blade nicknames
-- Update power pin selection to new list style for blade awareness
-- Add support for `DimBlade()`
-- Add progress percentage while applying
-- Add config percentage of usage
 - Add warnings for soft config fails.
 - Take over the world ;)
 
@@ -36,7 +32,7 @@ ProffieConfig will complete its installation and guide you through the setup and
 
 - [COM ports >= 10 causing issues?](docs/com-ports.md)
 - [Creating/Editing ProffieConfig's `pconf` files](docs/pconfs.md)
-- [Building ProffieConfig for Linux](docs/linux-build.md)
+- [Building ProffieConfig](docs/build.md)
 
 ## Gallery
 
