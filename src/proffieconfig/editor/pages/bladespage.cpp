@@ -187,6 +187,7 @@ void BladesPage::bindEvents() {
             bladeArrays.array(bladeArrays.arraySelection),
             _("Edit Blade Array")
         );
+        dlg.GetSizer()->AddSpacer(10);
         dlg.buildDone();
         dlg.ShowModal();        
     }, ID_EditArray);
@@ -198,9 +199,14 @@ void BladesPage::bindEvents() {
             bladeArrays.addArray(),
             _("Add Blade Array")
         );
+        wxSizerFlags flags;
+        flags.Expand();
+#       ifndef __WXOSX__
+        flags.Border(wxALL, 10);
+#       endif
         dlg.GetSizer()->Add(
             dlg.CreateStdDialogButtonSizer(wxOK | wxCANCEL),
-            wxSizerFlags().Expand()
+            flags
         );
         dlg.buildDone();
 
