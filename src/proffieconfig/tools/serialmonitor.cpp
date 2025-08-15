@@ -1,59 +1,68 @@
 #include "serialmonitor.h"
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2025 Ryan Ogurek
+/*
+ * ProffieConfig, All-In-One Proffieboard Management Utility
+ * Copyright (C) 2024-2025 Ryan Ogurek
+ *
+ * proffieconfig/tools/serialmonitor.cpp
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 4 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-#include "ui/message.h"
-
-#include "../mainmenu/mainmenu.h"
-#include "wx/gdicmn.h"
-#include "wx/string.h"
-
-#ifdef __WINDOWS__
-#include <windows.h>
-#include "paths/paths.h"
-#else
 #include <chrono>
 #include <format>
 
-#include "../core/defines.h"
+#if defined(__WXOSX__) or defined(__WXGTK__)
+#include <fcntl.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <termios.h>
+#elif defined(__WXMSW__)
+#include <fileapi.h>
+#include <handleapi.h>
+#else
+#error Unsupported
 #endif
+
+#include <wx/gdicmn.h>
+#include <wx/string.h>
+
+#include "log/context.h"
+#include "log/severity.h"
+#include "ui/message.h"
+
+#include "../mainmenu/mainmenu.h"
 
 SerialMonitor* SerialMonitor::instance;
 
 SerialMonitor::~SerialMonitor() {
     instance = nullptr;
 
-#	if defined(__WXOSX__) || defined(__WXGTK__)
     if (devThread.joinable()) devThread.join();
     if (listenThread.joinable()) listenThread.join();
     if (writerThread.joinable()) writerThread.join();
 
+#if defined(__WXOSX__) or defined(__WXGTK__)
     close(fd);
-#	endif
+#elif defined(__WXMSW__)
+    CloseHandle(serialHandle);
+#   endif
 }
-
-#if defined(__WINDOWS__)
-SerialMonitor::SerialMonitor(MainMenu* parent, const string& devPath) {
-    ShellExecuteA(
-        nullptr,
-        nullptr,
-        (Paths::binaries() / "arduino-cli.exe").string().c_str(),
-        ("monitor -p " + devPath + " -c baudrate=115200").c_str(),
-        nullptr,
-        SW_SHOWNORMAL
-    );
-}
-
-#elif defined(__WXOSX__) || defined(__WXGTK__)
-#include <fcntl.h>
-#include <stdio.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <termios.h>
 
 using namespace std::chrono_literals;
 
-SerialMonitor::SerialMonitor(MainMenu* parent, const string& devPath) : 
+SerialMonitor::SerialMonitor(MainMenu* parent, const string& boardPath) : 
     PCUI::Frame(parent, wxID_ANY, "Proffie Serial") {
     instance = this;
 
@@ -85,7 +94,10 @@ SerialMonitor::SerialMonitor(MainMenu* parent, const string& devPath) :
     master->Add(output, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
     bindEvents();
-    openDevice(devPath);
+    if (not openDevice(boardPath)) {
+        Destroy();
+        return;
+    }
 
     master->SetMinSize(wxSize{450, 300});
     SetSizerAndFit(master);
@@ -220,14 +232,14 @@ void SerialMonitor::bindEvents() {
     }, wxID_ANY);
 }
 
-void SerialMonitor::openDevice(const string& devPath) {
+bool SerialMonitor::openDevice(const string& boardPath) {
+#   if defined(__WXOSX__) or defined(__WXGTK__)
     struct termios newtio;
 
-    fd = open(devPath.c_str(), O_RDWR | O_NOCTTY);
+    fd = open(boardPath.c_str(), O_RDWR | O_NOCTTY);
     if (fd < 0) {
         PCUI::showMessage(_("Could not connect to Proffieboard."), _("Serial Connection Error"), wxICON_ERROR | wxOK, GetParent());
-        SerialMonitor::instance->Close(true);
-        return;
+        return false;
     }
 
     memset(&newtio, 0, sizeof(newtio));
@@ -240,14 +252,53 @@ void SerialMonitor::openDevice(const string& devPath) {
 
     tcflush(fd, TCIFLUSH);
     tcsetattr(fd, TCSANOW, &newtio);
+#   elif defined(__WXMSW__)
+    serialHandle = CreateFileA(
+        boardPath.c_str(),
+        GENERIC_READ | GENERIC_WRITE,
+        0,
+        nullptr,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        nullptr
+    );
+    if (serialHandle == INVALID_HANDLE_VALUE) {
+        PCUI::showMessage(_("Could not connect to Proffieboard."), _("Serial Connection Error"), wxICON_ERROR | wxOK, GetParent());
+        return false;
+    }
+
+    DCB dcbSerialParameters = {};
+    dcbSerialParameters.DCBlength = sizeof(dcbSerialParameters);
+
+    dcbSerialParameters.BaudRate = CBR_115200;
+    dcbSerialParameters.ByteSize = 8;
+    dcbSerialParameters.StopBits = ONESTOPBIT;
+    dcbSerialParameters.Parity = NOPARITY;
+    dcbSerialParameters.fRtsControl = RTS_CONTROL_ENABLE;
+    dcbSerialParameters.fDtrControl = DTR_CONTROL_ENABLE;
+
+    SetCommState(serialHandle, &dcbSerialParameters);
+#   endif
 
     createListener();
     createWriter();
 
-    devThread = std::thread{[this, devPath]() {
+    devThread = std::thread{[this, boardPath]() {
+#   if defined(__WXOSX__) or defined(__WXGTK__)
+#   elif defined(__WXMSW__)
+#   endif
         struct stat info;
         while (SerialMonitor::instance != nullptr) {
-            if (stat(devPath.c_str(), &info) != 0) { // Check if device is still present
+#           if defined(__WXOSX__) or defined(__WXGTK__)
+            if (stat(boardPath.c_str(), &info) != 0) { // Check if device is still present
+#           elif defined(__WXMSW__)
+            if (not ClearCommError(serialHandle, nullptr, nullptr)) {
+                Log::Context::getGlobal().quickLog(
+                    Log::Severity::DBUG,
+                    "SerialMonitor",
+                    "Device closed with: " + std::to_string(GetLastError())
+                );
+#           endif
                 if (SerialMonitor::instance != nullptr) {
                     auto *event = new SerialDataEvent(EVT_DISCON, wxID_ANY, ' ');
                     wxQueueEvent(SerialMonitor::instance, event);
@@ -258,23 +309,41 @@ void SerialMonitor::openDevice(const string& devPath) {
             std::this_thread::sleep_for(50ms);
         }
     }};
+
+    return true;
 }
 
 void SerialMonitor::createListener() {
     listenThread = std::thread{[this]() {
-        int32_t res;
-        std::array<char, 255> buf;
+        std::array<char, 256> buf;
 
         while (instance != nullptr) {
-            res = read(fd, buf.data(), buf.size());
-            if (res == -1) {
+#           if defined(__WXOSX__) or defined(__WXGTK__)
+            auto bytesRead{read(fd, buf.data(), buf.size() - 1)};
+            if (bytesRead == -1) {
+#           elif defined(__WXMSW__)
+            DWORD bytesRead{};
+            auto res{ReadFile(
+                serialHandle,
+                buf.data(),
+                buf.size() - 1,
+                &bytesRead,
+                nullptr
+            )};
+            if (not res) {
+                Log::Context::getGlobal().quickLog(
+                    Log::Severity::DBUG,
+                    "SerialMonitor",
+                    "Read failed (closing) with: " + std::to_string(GetLastError())
+                );
+#           endif
                 if (SerialMonitor::instance != nullptr) {
                     auto *event = new SerialDataEvent(EVT_DISCON, wxID_ANY, ' ');
                     wxQueueEvent(SerialMonitor::instance, event);
                 }
                 break;
             }
-            buf[res] = '\0';
+            buf[bytesRead] = '\0';
 
 
             for (const char chr : buf) {
@@ -291,18 +360,35 @@ void SerialMonitor::createListener() {
 void SerialMonitor::createWriter() {
     writerThread = std::thread{[&]() {
         while (instance != nullptr) {
-            if (!sendOut.empty()) {
+            if (not sendOut.empty()) {
 
                 sendOut.resize(255);
-                sendOut.at(253) = '\r';
-                sendOut.at(254) = '\n';
+                sendOut.at(sendOut.size() - 2) = '\r';
+                sendOut.at(sendOut.size() - 1) = '\n';
 
-                write(fd, "\r\n", 2);
-                write(fd, sendOut.data(), 255);
+                constexpr string_view NEWLINE{"\r\n"};
+#               if defined(__WXOSX__) or defined(__WXGTK__)
+                write(fd, NEWLINE.data(), NEWLINE.length());
+                write(fd, sendOut.data(), sendOut.length());
+#               elif defined(__WXMSW__)
+                WriteFile(
+                    serialHandle,
+                    NEWLINE.data(),
+                    NEWLINE.length(),
+                    nullptr,
+                    nullptr
+                );
+                WriteFile(
+                    serialHandle,
+                    sendOut.data(),
+                    sendOut.length(),
+                    nullptr,
+                    nullptr
+                );
+#               endif
             }
             sendOut.clear();
             std::this_thread::sleep_for(1ms);
         }
     }};
 }
-#endif
