@@ -37,6 +37,7 @@
 #include <wx/toolbar.h>
 #include <wx/tooltip.h>
 
+#include "utils/crypto.h"
 #include "utils/paths.h"
 #include "ui/message.h"
 #include "ui/frame.h"
@@ -48,22 +49,24 @@
 #include "pages/presetspage.h"
 #include "pages/propspage.h"
 
-#include "../mainmenu/mainmenu.h"
+#include "../core/appstate.h"
 #include "../core/utilities/misc.h"
 #include "../core/utilities/progress.h"
+#include "../mainmenu/mainmenu.h"
 
 #include "../tools/arduino.h"
 
 EditorWindow::EditorWindow(wxWindow *parent, Config::Config& config) : 
     PCUI::Frame(
         parent,
-        wxID_ANY,
+        Crypto::random<int64>(AppState::ID_EditorsBegin),
         /* _("ProffieConfig Editor") + */ static_cast<string>(config.name)
     ),
     mConfig{config},
     mInitialOSVersion{config.settings.getOSVersion()} {
     Notifier::create(this, mNotifyData);
     auto *sizer{new wxBoxSizer{wxVERTICAL}};
+
 
     createMenuBar();
     createUI(sizer);
