@@ -26,10 +26,16 @@
 
 Config::Settings::Settings(Config& parent) : mParent{parent} {
     // Asign update handlers
+    osVersion.setPersistence(PCUI::ChoiceData::PERSISTENCE_STRING);
     osVersion.setUpdateHandler([this](uint32 id) {
-        if (id != osVersion.ID_SELECTION) return;
+        if (id == osVersion.ID_CHOICES) {
+            if (not osVersion.choices().empty() and osVersion == -1) osVersion = 0;
+        } else if (id != osVersion.ID_SELECTION) return;
 
-        notifyData.notify(ID_OS_VERSION);
+        if (osVersion.choices().size() > 1 and osVersion == 0) {
+            osVersion = 1;
+            return;
+        }
         mParent.refreshPropVersions();
     });
     bladeDetect.setUpdateHandler([this](uint32 id) {

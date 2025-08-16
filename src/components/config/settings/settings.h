@@ -42,9 +42,6 @@ struct CONFIG_EXPORT Settings {
      */
     Settings(Config&);
 
-    enum {
-        ID_OS_VERSION,
-    };
     PCUI::NotifierData notifyData;
 
     enum BoardVersion {

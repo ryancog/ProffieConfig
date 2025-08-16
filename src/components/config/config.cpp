@@ -54,18 +54,16 @@ Config::Config::Config() :
 
 void Config::Config::refreshVersions() {
     auto osVersions{Versions::getOSVersions()};
-    auto prevOsVer{static_cast<string>(settings.osVersion)};
-    int32 newSel{-1};
+
     vector<string> osChoices;
-    osChoices.reserve(osVersions.size());
+    osChoices.reserve(osVersions.size() + 1);
+    osChoices.push_back(_("No OS Selected").ToStdString());
     for (auto& osVersion : osVersions) {
         auto versionStr{static_cast<string>(osVersion.verNum)};
-        if (newSel == -1 and prevOsVer == versionStr) newSel = osChoices.size();
-        osChoices.push_back(std::move(osVersion.verNum));
+        osChoices.push_back(wxString::Format(_("OS v%s"), std::move(versionStr)).ToStdString());
     }
 
     settings.osVersion.setChoices(std::move(osChoices));
-    settings.osVersion = newSel;
 
     // Show/hide options as necessary.
 

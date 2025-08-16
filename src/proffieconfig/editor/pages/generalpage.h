@@ -28,7 +28,6 @@ public:
 
     enum {
         ID_CustomOptions = 2,
-        ID_OSVersion,
     };
 
 private:
