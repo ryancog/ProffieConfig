@@ -25,7 +25,7 @@
 
 #include "prop.h"
 
-#include "private/export.h"
+#include "versions_export.h"
 
 namespace Versions {
 

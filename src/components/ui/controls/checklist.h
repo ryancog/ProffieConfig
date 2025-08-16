@@ -24,7 +24,7 @@
 #include "utils/types.h"
 
 #include "base.h"
-#include "../private/export.h"
+#include "ui_export.h"
 
 namespace PCUI {
 

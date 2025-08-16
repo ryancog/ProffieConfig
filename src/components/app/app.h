@@ -24,7 +24,7 @@
 
 #include <utils/types.h>
 
-#include "private/export.h"
+#include "app_export.h"
 
 namespace App {
 
@@ -55,8 +55,7 @@ APP_EXPORT Menus createDefaultMenuBar();
 APP_EXPORT [[nodiscard]] bool darkMode();
 #endif
 
-inline string getAppName() { return wxApp::GetGUIInstance()->GetAppName().ToStdString(); }
+APP_EXPORT string getAppName();
 
 } // namespace App
-
 

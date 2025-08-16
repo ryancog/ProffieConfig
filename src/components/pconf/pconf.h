@@ -21,8 +21,8 @@
 
 #include "utils/types.h"
 
-#include "private/export.h"
 #include "types.h"
+#include "pconf_export.h"
 
 namespace PConf {
 

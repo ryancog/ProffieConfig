@@ -22,8 +22,9 @@
 #include <utility>
 
 #include "utils/types.h"
-#include "private/export.h"
+
 #include "severity.h"
+#include "log_export.h"
 
 namespace Log {
 

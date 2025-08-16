@@ -19,8 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "private/export.h"
 #include "types.h"
+#include "pconf_export.h"
 
 namespace PConf {
 

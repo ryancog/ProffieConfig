@@ -11,6 +11,8 @@ add_library(log SHARED
     message.cpp
 )
 target_link_libraries(log
+    wxWidgets
+
     utils
 )
 

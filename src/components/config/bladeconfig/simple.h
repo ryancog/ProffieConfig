@@ -23,7 +23,7 @@
 #include "ui/controls/combobox.h"
 #include "ui/controls/numeric.h"
 
-#include "../private/export.h"
+#include "config_export.h"
 
 namespace Config {
 

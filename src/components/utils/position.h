@@ -22,7 +22,7 @@
 #include <wx/gdicmn.h>
 
 #include "types.h"
-#include "private/export.h"
+#include "utils_export.h"
 
 struct UTILS_EXPORT Point {
     Point() = default;

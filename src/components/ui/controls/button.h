@@ -24,7 +24,7 @@
 #include "utils/image.h"
 #include "utils/types.h"
 
-#include "../private/export.h"
+#include "ui_export.h"
 
 namespace PCUI {
 

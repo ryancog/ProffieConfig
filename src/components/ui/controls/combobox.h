@@ -22,8 +22,9 @@
 #include <mutex>
 #include <wx/combobox.h>
 
-#include "../private/export.h"
 #include "ui/controls/text.h"
+
+#include "ui_export.h"
 
 namespace PCUI {
 

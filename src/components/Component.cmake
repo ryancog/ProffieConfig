@@ -12,8 +12,9 @@ function(setup_component TARGET VERSION)
     )
 
     generate_export_header(${TARGET}
-        EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/private/export.h
+        EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_export.h
     )
+    target_include_directories(${TARGET} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 
     setup_target(${TARGET})
 endfunction()
@@ -22,8 +23,14 @@ function(setup_component_and_static TARGET VERSION)
     setup_component(${TARGET} ${VERSION})
 
     get_target_property(SOURCES ${TARGET} SOURCES)
-    get_target_property(LINK_LIBRARIES ${TARGET} LINK_LIBRARIES)
     add_library(${TARGET}-static STATIC ${SOURCES})
+
+    target_include_directories(${TARGET}-static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../) # Include components/
+    set_target_properties(${TARGET}-static PROPERTIES
+        BIN_VERSION ${VERSION}
+    )
+
+    get_target_property(LINK_LIBRARIES ${TARGET} LINK_LIBRARIES)
     foreach(LIB IN LISTS LINK_LIBRARIES)
         string(REGEX MATCH "-static$" ALREADY_STATIC ${LIB})
         if (ALREADY_STATIC)
@@ -33,10 +40,9 @@ function(setup_component_and_static TARGET VERSION)
         endif()
     endforeach()
 
-    set_target_properties(${TARGET}-static PROPERTIES BIN_VERSION ${VERSION}})
-    target_include_directories(${TARGET}-static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../) # Include components/
     string(TOUPPER ${TARGET} TARGET_UPPER)
     target_compile_definitions(${TARGET}-static PUBLIC -D${TARGET_UPPER}_STATIC_DEFINE)
+    target_include_directories(${TARGET}-static PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 
     setup_target(${TARGET}-static)
 endfunction()
