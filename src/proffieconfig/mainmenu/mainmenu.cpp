@@ -105,19 +105,35 @@ void MainMenu::bindEvents() {
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxAboutDialogInfo aboutInfo;
-        aboutInfo.SetDescription(
-            _("All-in-one Proffieboard Management Utility") +
-            "\n\n"
-            "Arduino CLI: v" + Arduino::version() + "\n"
+#       ifdef __WXOSX__
+        aboutInfo.SetDescription(_("All-in-one Proffieboard Management Utility"));
+        aboutInfo.SetVersion(
+            wxSTRINGIZE(VERSION),
+            "Core: v" + wxString{wxSTRINGIZE(VERSION)} + "\n"
             "Config: v" + Config::version() + "\n"
             "Log: v" + Log::version() + "\n"
             "PConf: v" + PConf::version() + "\n"
             "PCUI: v" + PCUI::version() + "\n"
             "Utils: v" + Utils::version() + "\n"
             "Versions: v" + Versions::version() + "\n"
+            "Arduino CLI: v" + Arduino::version() + "\n"
+        );
+#       else
+        aboutInfo.SetDescription(
+            _("All-in-one Proffieboard Management Utility") + "\n\n"
+            "Config: v" + Config::version() + "\n"
+            "Log: v" + Log::version() + "\n"
+            "PConf: v" + PConf::version() + "\n"
+            "PCUI: v" + PCUI::version() + "\n"
+            "Utils: v" + Utils::version() + "\n"
+            "Versions: v" + Versions::version() + "\n"
+            "Arduino CLI: v" + Arduino::version()
         );
         aboutInfo.SetVersion(wxSTRINGIZE(VERSION));
+#       endif
+#       ifdef __WXGTK__
         aboutInfo.SetWebSite("https://proffieconfig.kafrenetrading.com");
+#       endif
         aboutInfo.SetCopyright("Copyright (C) 2023-2025 Ryan Ogurek");
         aboutInfo.SetName("ProffieConfig");
         wxAboutBox(aboutInfo, this);
@@ -137,7 +153,9 @@ void MainMenu::bindEvents() {
                 _("Although version management can be done with editors open, some information may be lost when adding/removing props."),
                 _("Please Close Editors"),
                 this,
-                wxYES | wxCANCEL | wxCANCEL_DEFAULT,
+                wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxCENTER,
+                wxEmptyString,
+                wxEmptyString,
                 _("Proceed")
             )};
             AppState::setPreference(AppState::HIDE_EDITOR_MANAGE_VERSIONS_WARN, res.wantsToHide);
