@@ -20,8 +20,9 @@
  */
 
 #include <wx/msgdlg.h>
+#include <wx/richmsgdlg.h>
 
-int32 PCUI::showMessage(const wxString& msg, const wxString& caption, int32 style, wxWindow *parent) {
+int32 PCUI::showMessage(const wxString& msg, const wxString& caption, int64 style, wxWindow *parent) {
 #   ifdef __WXMSW__
     // for dark mode
     wxGenericMessageDialog dlg(parent, msg, caption.empty() ? wxMessageBoxCaptionStr : caption, style);
@@ -38,4 +39,29 @@ int32 PCUI::showMessage(const wxString& msg, const wxString& caption, int32 styl
     return wxMessageBox(msg, caption.empty() ? wxMessageBoxCaptionStr : caption, style, parent);
 #   endif
 }
+
+PCUI::HideableInfo PCUI::showHideablePrompt(
+    const wxString& msg,
+    const wxString& caption,
+    wxWindow *parent,
+    int64 style,
+    const wxString& yesText,
+    const wxString& noText,
+    const wxString& okText,
+    const wxString& cancelText
+) {
+    wxRichMessageDialog dlg{parent, msg, caption, style};
+    dlg.ShowCheckBox(_("Do Not Show Again"));
+    dlg.SetYesNoCancelLabels(
+        yesText.IsEmpty() ? wxMessageDialogBase::ButtonLabel{wxID_YES} : yesText,
+        noText.IsEmpty() ? wxMessageDialogBase::ButtonLabel{wxID_NO} : noText,
+        cancelText.IsEmpty() ? wxMessageDialogBase::ButtonLabel{wxID_CANCEL} : cancelText 
+    );
+
+    HideableInfo ret;
+    ret.result = dlg.ShowModal();
+    ret.wantsToHide = dlg.IsCheckBoxChecked();
+    return ret;
+}
+
 
