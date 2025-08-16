@@ -503,8 +503,8 @@ void MainMenu::createUI() {
         openSerial,
         wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT, 10)
     );
-#   ifdef wxMSW__
-    sizer->AddSpacer(20); // There's a sizing issue I need to figure out... for now we give it a chin
+#   ifdef __WXMSW__
+    sizer->AddSpacer(30); // There's a sizing issue I need to figure out... for now we give it a chin
 #   else
     sizer->AddSpacer(10);
 #   endif
