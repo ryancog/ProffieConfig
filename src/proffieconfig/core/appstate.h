@@ -22,7 +22,6 @@ enum Preference {
 enum {
     ID_MainMenu,
     ID_VersionsManager,
-    ID_EditorsBegin,
 };
 
 bool getPreference(Preference);
