@@ -2,9 +2,6 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2025 Ryan Ogurek
 
-#define PROFFIEOS_VERSION 7.15
-#define ARDUINO_CLI_VERSION 0.34.2
-
 static constexpr auto COPYRIGHT_NOTICE{
     "ProffieConfig Copyright (C) 2023-2025 Ryan Ogurek\n"
     "\n"
@@ -27,6 +24,6 @@ static constexpr auto COPYRIGHT_NOTICE{
     "related to ProffieOS, created by Fredrik Hubinette."
 };
 
-#define ARDUINO_PBPLUGIN_VERSION "3.6" // Make sure the compile output parsing doesn't break if we update this!
+// #define ARDUINO_PBPLUGIN_VERSION "3.6" // Make sure the compile output parsing doesn't break if we update this!
 
 #define SMALLBUTTONSIZE wxSize(30, 20)
