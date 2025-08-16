@@ -23,7 +23,8 @@
 #include <memory>
 #include <utility>
 
-#include "app/app.h"
+#include <wx/app.h>
+
 #include "utils/paths.h"
 #include "utils/types.h"
 
@@ -31,60 +32,58 @@
 
 namespace Log {
 
-constexpr cstring GLOBAL_TAG{"GLOBAL"};
-std::unique_ptr<Log::Context> globalContext;
+    constexpr cstring GLOBAL_TAG{"GLOBAL"};
+    std::unique_ptr<Log::Context> globalContext;
 
 } // namespace Log
 
 Log::Context::Context(string name, vector<std::ostream *> outStreams, bool outputToFile)
     : pName(std::move(name)), mOutputs(std::move(outStreams)) {
 
-  if (outputToFile) {
-    if (pName == GLOBAL_TAG) {
-      mRESOutFile.open(Paths::logDir() / (App::getAppName() + ".log"));
-    } else {
-      mRESOutFile.open(Paths::logDir() / (App::getAppName() + "-" + pName + ".log"));
+    if (outputToFile) {
+        const auto appName{wxApp::GetGUIInstance()->GetAppName().ToStdString()};
+        if (pName == GLOBAL_TAG) {
+            mRESOutFile.open(Paths::logDir() / (appName + ".log"));
+        } else {
+            mRESOutFile.open(Paths::logDir() / (appName + "-" + pName + ".log"));
+        }
+        mOutputs.insert(mOutputs.begin(), &mRESOutFile);
+
+        constexpr cstring HEADER_START{" Log [Context: "};
+        constexpr cstring HEADER_END{"]\n"};
+        constexpr cstring TIME_START{"Started at "};
+
+        auto now{std::chrono::system_clock::now()};
+        auto timeNow{std::chrono::system_clock::to_time_t(now)};
+
+        mRESOutFile << appName.c_str() << " Log (" << wxSTRINGIZE(BIN_VERSION)
+            << ") [Context: " << pName << "]\n";
+        mRESOutFile << "Started at " << std::ctime(&timeNow) << "\n\n"
+            << std::flush;
     }
-    mOutputs.insert(mOutputs.begin(), &mRESOutFile);
-
-    constexpr cstring HEADER_START{" Log [Context: "};
-    constexpr cstring HEADER_END{"]\n"};
-    constexpr cstring TIME_START{"Started at "};
-
-    auto now{std::chrono::system_clock::now()};
-    auto timeNow{std::chrono::system_clock::to_time_t(now)};
-
-    mRESOutFile << App::getAppName().c_str() << " Log (" << wxSTRINGIZE(BIN_VERSION)
-                << ") [Context: " << pName << "]\n";
-    mRESOutFile << "Started at " << std::ctime(&timeNow) << "\n\n"
-                << std::flush;
-  }
 }
 
 Log::Context::~Context() {
-  for (const auto *logger : mLoggers) {
-    delete logger;
-  }
-  mRESOutFile.close();
+    for (const auto *logger : mLoggers) {
+        delete logger;
+    }
+    mRESOutFile.close();
 }
 
 Log::Context &Log::Context::getGlobal() {
-  if (not globalContext) {
-    globalContext = std::make_unique<Log::Context>(GLOBAL_TAG);
-  }
-  return *globalContext;
+    if (not globalContext) {
+        globalContext = std::make_unique<Log::Context>(GLOBAL_TAG);
+    }
+    return *globalContext;
 }
 
 void Log::Context::destroyGlobal() { globalContext.reset(); }
 
-bool Log::Context::setGlobalOuput(vector<std::ostream *> outStreams,
-                                  bool fileOutput) {
-  if (globalContext)
-    return false;
+bool Log::Context::setGlobalOuput(vector<std::ostream *> outStreams, bool fileOutput) {
+    if (globalContext) return false;
 
-  globalContext = std::make_unique<Log::Context>(
-      GLOBAL_TAG, std::move(outStreams), fileOutput);
-  return true;
+    globalContext = std::make_unique<Log::Context>(GLOBAL_TAG, std::move(outStreams), fileOutput);
+    return true;
 }
 
 void Log::Context::setSeverity(Severity sev) { mCurrentSev = sev; }

@@ -24,7 +24,7 @@
 #include <wx/spinctrl.h>
 
 #include "base.h"
-#include "../private/export.h"
+#include "ui_export.h"
 
 namespace PCUI {
 

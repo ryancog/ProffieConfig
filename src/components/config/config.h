@@ -25,10 +25,11 @@
 
 #include "bladeconfig/arrays.h"
 #include "preset/array.h"
-#include "private/export.h"
 #include "settings/settings.h"
 #include "utils/version.h"
 #include "versions/prop.h"
+
+#include "config_export.h"
 
 namespace Config {
 

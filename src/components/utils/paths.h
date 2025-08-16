@@ -23,7 +23,7 @@
 #include "version.h"
 #include "types.h"
 
-#include "private/export.h"
+#include "utils_export.h"
 
 namespace Paths {
 

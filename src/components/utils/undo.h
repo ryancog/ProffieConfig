@@ -23,7 +23,7 @@
 
 #include <utils/types.h>
 
-#include "private/export.h"
+#include "utils_export.h"
 
 namespace Undo {
 

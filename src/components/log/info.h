@@ -21,7 +21,7 @@
 
 #include "utils/types.h"
 
-#include "private/export.h"
+#include "log_export.h"
 
 namespace Log {
 

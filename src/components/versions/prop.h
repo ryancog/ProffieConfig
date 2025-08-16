@@ -12,7 +12,7 @@
 #include "ui/controls/toggle.h"
 #include "utils/types.h"
 
-#include "private/export.h"
+#include "versions_export.h"
 
 namespace Versions {
 

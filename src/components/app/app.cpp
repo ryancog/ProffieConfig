@@ -268,3 +268,7 @@ APP_EXPORT [[nodiscard]] bool App::darkMode() {
 }
 #endif
 
+string App::getAppName() { 
+    return wxApp::GetGUIInstance()->GetAppName().ToStdString();
+}
+

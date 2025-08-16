@@ -23,7 +23,7 @@
 #include <wx/panel.h>
 #include <wx/statbmp.h>
 
-#include "private/export.h"
+#include "ui_export.h"
 
 namespace PCUI {
 

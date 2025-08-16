@@ -28,7 +28,7 @@
 #include "ui/controls/radios.h"
 #include "utils/types.h"
 
-#include "../private/export.h"
+#include "config_export.h"
 
 namespace Config {
 

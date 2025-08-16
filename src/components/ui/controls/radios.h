@@ -24,8 +24,7 @@
 #include <wx/radiobox.h>
 
 #include "base.h"
-#include "../private/export.h"
-#include "wx/arrstr.h"
+#include "ui_export.h"
 
 namespace PCUI {
 

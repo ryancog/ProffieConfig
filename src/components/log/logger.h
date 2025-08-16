@@ -24,9 +24,9 @@
 
 #include <wx/string.h>
 
-#include "private/export.h"
 #include "message.h"
 #include "severity.h"
+#include "log_export.h"
 
 namespace Log {
 class Branch;

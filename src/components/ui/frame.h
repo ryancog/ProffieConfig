@@ -22,9 +22,9 @@
 #include <wx/frame.h>
 #include <wx/panel.h>
 
-#include <app/app.h>
+#include "app/app.h"
 
-#include "private/export.h"
+#include "ui_export.h"
 
 namespace PCUI {
 

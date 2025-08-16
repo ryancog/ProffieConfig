@@ -24,8 +24,8 @@
 #include "ui/controls/text.h"
 #include "ui/notifier.h"
 
-#include "../private/export.h"
 #include "preset.h"
+#include "config_export.h"
 
 namespace Config {
 
