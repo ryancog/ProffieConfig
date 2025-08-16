@@ -304,7 +304,7 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
 }
 
 Utils::Version Config::Settings::getOSVersion() const {
-    if (osVersion == -1) return Utils::Version::invalidObject();
+    if (osVersion < 1) return Utils::Version::invalidObject();
     const auto& osVersions{Versions::getOSVersions()};
     if (osVersion >= osVersions.size()) return Utils::Version::invalidObject();
 
