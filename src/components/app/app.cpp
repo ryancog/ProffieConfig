@@ -164,6 +164,7 @@ bool App::init(const string& appName, const string& lockName) {
     fs::create_directories(Paths::configDir());
     fs::create_directories(Paths::injectionDir());
     fs::create_directories(Paths::propDir());
+    fs::create_directories(Paths::osDir());
 
     auto& logger {Log::Context::getGlobal().createLogger("App::init()")};
     logger.info("First-stage app initialization complete.");
