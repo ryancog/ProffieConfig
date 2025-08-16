@@ -22,7 +22,7 @@
 #include <wx/msgdlg.h>
 #include <wx/richmsgdlg.h>
 
-int32 PCUI::showMessage(const wxString& msg, const wxString& caption, int64 style, wxWindow *parent) {
+int32 PCUI::showMessage(const wxString& msg, const wxString& caption, int32 style, wxWindow *parent) {
 #   ifdef __WXMSW__
     // for dark mode
     wxGenericMessageDialog dlg(parent, msg, caption.empty() ? wxMessageBoxCaptionStr : caption, style);
@@ -44,7 +44,7 @@ PCUI::HideableInfo PCUI::showHideablePrompt(
     const wxString& msg,
     const wxString& caption,
     wxWindow *parent,
-    int64 style,
+    int32 style,
     const wxString& yesText,
     const wxString& noText,
     const wxString& okText,

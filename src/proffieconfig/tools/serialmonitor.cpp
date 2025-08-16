@@ -39,6 +39,7 @@
 #include <wx/string.h>
 
 #include "ui/message.h"
+#include "log/context.h"
 
 #include "../mainmenu/mainmenu.h"
 

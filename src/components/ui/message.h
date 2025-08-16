@@ -43,7 +43,7 @@ namespace PCUI {
 UI_EXPORT int32 showMessage(
     const wxString& msg,
     const wxString& caption = {},
-    int64 style = wxOK | wxCENTER,
+    int32 style = wxOK | wxCENTER,
     wxWindow *parent = nullptr
 );
 
@@ -56,7 +56,7 @@ UI_EXPORT HideableInfo showHideablePrompt(
     const wxString& msg,
     const wxString& caption,
     wxWindow *parent = nullptr,
-    int64 style = wxOK | wxCENTER,
+    int32 style = wxOK | wxCENTER,
     const wxString& yesText = wxEmptyString,
     const wxString& noText = wxEmptyString,
     const wxString& okText = wxEmptyString,

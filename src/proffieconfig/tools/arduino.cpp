@@ -1,5 +1,4 @@
 #include "arduino.h"
-#include "utils/info.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2023-2025 Ryan Ogurek
@@ -29,6 +28,8 @@
 #ifdef __WINDOWS__
 #include <fileapi.h>
 #include <handleapi.h>
+#include <windows.h>
+#include <synchapi.h>
 #else
 #include <termios.h>
 #endif
@@ -44,6 +45,7 @@
 #include "config/config.h"
 #include "log/context.h"
 #include "log/logger.h"
+#include "log/branch.h"
 #include "utils/paths.h"
 #include "utils/types.h"
 #include "versions/versions.h"
@@ -59,7 +61,7 @@ FILE *cli(const string& command);
 struct CompileOutput {
     int32 used;
     int32 total;
-#   ifdef __WXMSW__
+#   ifdef __WINDOWS__
     string tool1;
     string tool2;
 #   endif
@@ -71,12 +73,22 @@ variant<CompileOutput, string> compile(
     Log::Branch&
 );
 
+#ifdef __WINDOWS__
+optional<string> upload(
+    const string& boardPath,
+    const Config::Config&,
+    const CompileOutput&,
+    Progress *,
+    Log::Branch&
+);
+#else
 optional<string> upload(
     const string& boardPath,
     const Config::Config&,
     Progress *,
     Log::Branch&
 );
+#endif
 
 string parseError(const string&, const Config::Config&); 
 
@@ -84,7 +96,7 @@ string parseError(const string&, const Config::Config&);
 inline string windowModePrefix() { 
     return 
         "title ProffieConfig Worker & " + 
-        (Paths::binaries() / "windowMode").string() + 
+        (Paths::binaryDir() / "windowMode").string() + 
         R"( -title "ProffieConfig Worker" -mode force_minimized & )";
 }
 #endif
@@ -353,15 +365,19 @@ variant<Arduino::Result, string> Arduino::applyToBoard(
     if (auto *err = std::get_if<string>(&res)) return *err;
     const auto& compileOutput{std::get<CompileOutput>(res)};
 
+#   ifdef __WINDOWS__
+    auto err{upload(boardPath, config, compileOutput, prog, *logger.binfo("Uploading..."))};
+#   else
     auto err{upload(boardPath, config, prog, *logger.binfo("Uploading..."))};
+#   endif
     if (err) return *err;
 
     if (prog) prog->emitEvent(100, _("Done"));
     logger.info("Applied Successfully");
 
     Arduino::Result ret{
-        .total = compileOutput.total,
         .used = compileOutput.used,
+        .total = compileOutput.total,
     };
     return ret;
 }
@@ -377,8 +393,8 @@ variant<Arduino::Result, string> Arduino::verifyConfig(const Config::Config& con
     logger.info("Verified Successfully");
 
     Arduino::Result ret{
-        .total = compileOutput.total,
         .used = compileOutput.used,
+        .total = compileOutput.total,
     };
     return ret;
 }
@@ -512,36 +528,35 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
     CompileOutput ret;
 
 #   ifdef __WINDOWS__
+    constexpr string_view DFU_STRING{"ProffieOS.ino.dfu"};
+    constexpr string_view DFU_C_STRING{"C:\\"};
+    size_t dfuPos{};
+    size_t dfuCPos{};
     if (
-            error.find("ProffieOS.ino.dfu") != string::npos and
-            error.find("stm32l4") != string::npos and
-            error.find("C:\\") != string::npos
+            (dfuPos = compileOutput.find(DFU_STRING.data())) != string::npos and
+            (dfuCPos = compileOutput.find(DFU_C_STRING.data())) != string::npos and
+            compileOutput.find("stm32l4") != string::npos
        ) {
         logger.debug("Parsing utility paths...");
         array<char, MAX_PATH> shortPath;
 
-        constexpr string_view DFU_STRING{"ProffieOS.ino.dfu"};
-        const auto dfuPos{error.rfind(DFU_STRING.data())};
-        const auto dfuCPos{error.rfind("C:\\", dfuPos)};
-        GetShortPathNameA(error.substr(dfuCPos, dfuPos - dfuCPos + DFU_STRING.length()).c_str(), shortPath.data(), shortPath.size());
-        paths[0] = shortPath.data();
-        logger.debug("Parsed dfu file: " + paths[0]);
+        const auto dfuLongPath{compileOutput.substr(dfuCPos, dfuPos - dfuCPos + DFU_STRING.length())};
+        GetShortPathNameA(dfuLongPath.c_str(), shortPath.data(), shortPath.size());
+        ret.tool1 = shortPath.data();
+        logger.debug("Parsed dfu file: " + ret.tool1);
 
-        const auto dfuSuffixPos{error.rfind("//dfu-suffix.exe")};
-        const auto dfuSuffixCPos{error.rfind("C:\\", dfuSuffixPos)};
-        GetShortPathNameA(error.substr(dfuSuffixCPos, dfuSuffixPos - dfuSuffixCPos).c_str(), shortPath.data(), shortPath.size());
-        paths[1] = string{shortPath.data()} + "\\stm32l4-upload.bat";
-        logger.debug("Parsed upload file: " + paths[1]);
+        const auto dfuSuffixPos{compileOutput.rfind("//dfu-suffix.exe")};
+        const auto dfuSuffixCPos{compileOutput.rfind(DFU_C_STRING, dfuSuffixPos)};
+        const auto dfuSuffixLongPath{compileOutput.substr(dfuSuffixCPos, dfuSuffixPos - dfuSuffixCPos)};
+        GetShortPathNameA(dfuSuffixLongPath.c_str(), shortPath.data(), shortPath.size());
+        ret.tool2 = string{shortPath.data()} + "\\stm32l4-upload.bat";
+        logger.debug("Parsed upload file: " + ret.tool2);
     }
-#   endif
 
-# 	ifdef __WINDOWS__
-    if (paths[0].empty() or paths[1].empty()) {
-        logger.error("Failed to find utilities in output: " + error);
-        _return = "Failed to find required utilities";
-        return nullopt;
+    if (ret.tool1.empty() or ret.tool2.empty()) {
+        logger.error("Failed to find utilities in output: " + compileOutput);
+        return _("Failed to find required utilities").ToStdString();
     }
-    return paths;
 # 	endif
 
     constexpr string_view USED_PREFIX{"Sketch uses "};
@@ -564,7 +579,13 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
 }
 
 #ifdef __WINDOWS__
-bool Arduino::upload(string& _return, EditorWindow *editor, Progress *progDialog, const array<string, 2>& paths, Log::Branch& lBranch) {
+optional<string> Arduino::upload(
+    const string& boardPath,
+    const Config::Config& config,
+    const CompileOutput& compileOutput,
+    Progress* prog,
+    Log::Branch& lBranch
+) {
 #else
 optional<string> Arduino::upload(
     const string& boardPath,
@@ -600,13 +621,20 @@ optional<string> Arduino::upload(
     if (prog) prog->emitEvent(65, wxGetTranslation(UPLOAD_MESSAGE));
 
 #   ifdef __WINDOWS__
-    auto boardPath{static_cast<MainMenu *>(editor->GetParent())->boardSelect->entry()->GetStringSelection()};
     if (boardPath != _("BOOTLOADER RECOVERY")) {
         // See https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#win32-device-namespaces
-        boardPath = R"(\\.\)" + boardPath;
-        progDialog->emitEvent(50, "Rebooting Proffieboard...");
+        const auto safeBoardPath{R"(\\.\)" + boardPath};
+        if (prog) prog->emitEvent(50, "Rebooting Proffieboard...");
 
-        auto *serialHandle{CreateFileW(boardPath, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr)};
+        auto *serialHandle{CreateFileA(
+            safeBoardPath.c_str(),
+            GENERIC_READ | GENERIC_WRITE,
+            0,
+            nullptr,
+            OPEN_EXISTING,
+            FILE_ATTRIBUTE_NORMAL,
+            nullptr
+        )};
         if (serialHandle != INVALID_HANDLE_VALUE) {
             DCB dcbSerialParameters = {};
             dcbSerialParameters.DCBlength = sizeof(dcbSerialParameters);
@@ -666,7 +694,13 @@ optional<string> Arduino::upload(
     // }
 #   endif
 
-#   ifndef __WINDOWS__
+#   ifdef __WINDOWS__
+    string commandString{windowModePrefix()};
+    commandString += compileOutput.tool2 + R"( 0x1209 0x6668 )" + compileOutput.tool1 + R"( 2>&1)";
+    logger.info("Uploading via: " + commandString);
+
+    auto *uploadOutput{popen(commandString.c_str(), "r")};
+#   else
     string uploadCommand = "upload ";
     const auto osVersion{config.settings.getOSVersion()};
     const auto osPath{Paths::os(osVersion)};
@@ -689,12 +723,13 @@ optional<string> Arduino::upload(
             abort();
     }
     uploadCommand += " -v";
-    FILE *arduinoCli = Arduino::cli(uploadCommand);
+    FILE *uploadOutput = Arduino::cli(uploadCommand);
+#   endif
 
     string error;
     array<char, 32> buffer;
-    if (prog) prog->emitEvent(-1, _("Uploading to Proffieboard..."));
-    while(fgets(buffer.data(), buffer.size(), arduinoCli) != nullptr) {
+    if (prog) prog->emitEvent(-1, wxGetTranslation(UPLOAD_MESSAGE));
+    while(fgets(buffer.data(), buffer.size(), uploadOutput) != nullptr) {
         auto *const percentPtr{std::strstr(buffer.data(), "%")};
         if (percentPtr != nullptr and percentPtr - buffer.data() >= 3) {
             auto percent{strtol(percentPtr - 3, nullptr, 10)};
@@ -710,45 +745,16 @@ optional<string> Arduino::upload(
         return parseError(error, config);
     }
 
-    if (pclose(arduinoCli) != 0) {
+    if (pclose(uploadOutput) != 0) {
         logger.error("Error during pclose(): \n" + error);
         return _("Unknown Upload Error").ToStdString();
     }
-#   else
-    string commandString{windowModePrefix()};
-    commandString += paths[1] + R"( 0x1209 0x6668 )" + paths[0] + R"( 2>&1)";
-    logger.info("Uploading via: " + commandString);
 
-    auto *upload{popen(commandString.c_str(), "r")};
-    string error{};
-    progDialog->emitEvent(-1, "");
-    while (fgets(buffer.data(), buffer.size(), upload) != nullptr) {
-        auto *const percentPtr{std::strstr(buffer.data(), "%")};
-        if (percentPtr != nullptr and progDialog != nullptr and percentPtr - buffer.data() >= 3) {
-            auto percent{strtol(percentPtr - 3, nullptr, 10)};
-            progDialog->emitEvent(static_cast<int8>(percent), "");
-        }
-
-        error += buffer.data();
-    }
-
-    if (error.rfind("error") != string::npos || error.rfind("FAIL") != string::npos) {
-        _return = Arduino::parseError(error, editor);
-        logger.error(_return);
-        return false;
-    }
-
-    if (pclose(upload) != 0) {
-        _return = Arduino::parseError(error, editor);
-        logger.error("Error during pclose(): \n" + error);
-        return false;
-    }
-
+    // TODO: Don't remember if this happens on non-msw so guard it for now
+#   ifdef __WINDOWS__
     if (error.find("File downloaded successfully") == string::npos) {
-        progDialog->emitEvent(100, "Error");
-        _return = Arduino::parseError(error, editor);
-        logger.error(_return);
-        return false;
+        logger.error(error);
+        return Arduino::parseError(error, config);
     }
 #   endif
 
