@@ -37,6 +37,8 @@
 #include <wx/toolbar.h>
 #include <wx/tooltip.h>
 
+#include "app/app.h"
+#include "config/config.h"
 #include "utils/paths.h"
 #include "ui/message.h"
 #include "ui/frame.h"
@@ -156,8 +158,17 @@ void EditorWindow::bindEvents() {
         save();
     }, wxID_SAVE); 
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-        // TODO: Get the filepath for this
-        // Config::save(mConfig, filepath); 
+        wxFileDialog fileDlg(
+            this,
+            _("Export ProffieOS Config File"),
+            wxEmptyString,
+            static_cast<string>(mConfig.name) + Config::RAW_FILE_EXTENSION,
+            _("ProffieOS Configuration") + " (*.h)|*.h",
+            wxFD_SAVE | wxFD_OVERWRITE_PROMPT
+        );
+        if (fileDlg.ShowModal() == wxID_CANCEL) return;
+
+        mConfig.save(fileDlg.GetPath().ToStdString()); 
     }, ID_ExportConfig);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxSetCursor(wxCURSOR_WAIT);
@@ -203,7 +214,7 @@ void EditorWindow::bindEvents() {
             _("Select Injection File"),
             wxEmptyString,
             wxEmptyString,
-            "C Header (*.h)|*.h",
+            _("C Header") + " (*.h)|*.h",
             wxFD_FILE_MUST_EXIST | wxFD_OPEN
         };
         if (fileDialog.ShowModal() == wxCANCEL) return;
@@ -248,14 +259,14 @@ void EditorWindow::handleNotification(uint32 id) {
 
 void EditorWindow::createMenuBar() {
     auto *file{new wxMenu};
-    file->Append(ID_VerifyConfig, _("Verify Config\tCtrl+R"));
+    file->Append(ID_VerifyConfig, _("Verify Config") + "\tCtrl+R");
     file->AppendSeparator();
-    file->Append(wxID_SAVE, _("Save Config\tCtrl+S"));
-    file->Append(ID_ExportConfig, _("Export Config..."));
+    file->Append(wxID_SAVE, _("Save Config") + "\tCtrl+S");
+    file->Append(ID_ExportConfig, _("Export Config...") + "\tCtrl+Alt+S");
     file->AppendSeparator();
     file->Append(
         ID_AddInjection,
-        _("Add Injection..."),
+        _("Add Injection...") + "\tCtrl+Alt+I",
         _("Add a header file to be injected into CONFIG_PRESETS during compilation.")
     );
 
@@ -269,6 +280,8 @@ void EditorWindow::createMenuBar() {
     auto *menuBar{new wxMenuBar};
     menuBar->Append(file, _("&File"));
     menuBar->Append(tools, _("&Tools"));
+    App::appendDefaultMenuItems(menuBar);
+
     SetMenuBar(menuBar);
 }
 
