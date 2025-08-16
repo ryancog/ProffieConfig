@@ -73,9 +73,6 @@ struct UTILS_EXPORT Version {
      */
     operator string() const;
     operator bool() const;
-
-private:
-    static const Version mInvalidObject;
 };
 
 } // namespace Utils
