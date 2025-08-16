@@ -13,6 +13,7 @@
 #include <wx/toplevel.h>
 #include <wx/utils.h>
 
+#include "app/app.h"
 #include "config/config.h"
 #include "ui/message.h"
 #include "ui/plaque.h"
@@ -159,7 +160,7 @@ void MainMenu::bindEvents() {
                 _("Proceed")
             )};
             AppState::setPreference(AppState::HIDE_EDITOR_MANAGE_VERSIONS_WARN, res.wantsToHide);
-            if (res.result != wxID_YES) return;
+            if (res.result != wxID_OK) return;
         }
 
         Versions::showOrRaiseManager(this, AppState::ID_VersionsManager);
@@ -390,13 +391,17 @@ void MainMenu::createMenuBar() {
     file->Append(ID_Copyright, _("Licensing Information"));
     file->Append(wxID_EXIT);
 
-    auto* help{new wxMenu};
-    help->Append(ID_Docs, _("Documentation...\tCtrl+H"), _("Open the ProffieConfig docs in your web browser"));
-    help->Append(ID_Issue, _("Help/Bug Report..."), _("Open GitHub to submit issue"));
-
     auto* menuBar{new wxMenuBar};
     menuBar->Append(file, _("&File"));
-    menuBar->Append(help, _("&Help"));
+    App::appendDefaultMenuItems(menuBar);
+
+    const auto helpStr{_("&Help")};
+    const auto helpIdx{menuBar->FindMenu(helpStr)};
+    auto *help{helpIdx == wxNOT_FOUND ? new wxMenu : menuBar->GetMenu(helpIdx)};
+    help->Append(ID_Docs, _("Documentation...\tCtrl+H"), _("Open the ProffieConfig docs in your web browser"));
+    help->Append(ID_Issue, _("Help/Bug Report..."), _("Open GitHub to submit issue"));
+    if (helpIdx == wxNOT_FOUND) menuBar->Append(help, helpStr);
+
     SetMenuBar(menuBar);
 }
 
