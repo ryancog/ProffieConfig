@@ -51,6 +51,8 @@ public:
 
         ID_BoardSelection,
         ID_ConfigSelection,
+
+        ID_AsyncDone,
     };
 
 private:

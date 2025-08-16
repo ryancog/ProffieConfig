@@ -29,7 +29,7 @@
 #include <wx/richmsgdlg.h>
 
 #include "log/logger.h"
-#include "paths/paths.h"
+#include "utils/paths.h"
 #include "pconf/pconf.h"
 #include "pconf/read.h"
 #include "pconf/utils.h"

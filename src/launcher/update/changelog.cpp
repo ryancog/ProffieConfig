@@ -28,7 +28,7 @@
 #include <wx/scrolwin.h>
 
 #include <log/logger.h>
-#include <paths/paths.h>
+#include <utils/paths.h>
 #include <utils/crypto.h>
 
 namespace Update {
@@ -292,16 +292,16 @@ Utils::Version Update::determineCurrentVersion(const Data& data, PCUI::ProgressD
             filepath itemPath;
             switch (id.type) {
                 case ItemType::EXEC:
-                    itemPath = Paths::binaries();
+                    itemPath = Paths::binaryDir();
                     break;
                 case ItemType::LIB:
-                    itemPath = Paths::libraries();
+                    itemPath = Paths::libraryDir();
                     break;
                 case ItemType::COMP:
-                    itemPath = Paths::components();
+                    itemPath = Paths::componentDir();
                     break;
                 case ItemType::RSRC:
-                    itemPath = Paths::resources();
+                    itemPath = Paths::resourceDir();
                     break;
                 case ItemType::TYPE_MAX:
                     break;

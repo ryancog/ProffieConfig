@@ -362,7 +362,7 @@ wxSizer *GeneralPage::editingSection() {
         _("Enable All Edit Options")
     )};
 
-    auto *line{new wxStaticLine(parent)};
+    auto *line1{new wxStaticLine(parent)};
 
     auto *saveVolume{new PCUI::CheckBox(
         parent,
@@ -401,18 +401,13 @@ wxSizer *GeneralPage::editingSection() {
         _("Save Clash Threshold")
     )};
 
+    auto *line2{new wxStaticLine(parent)};
+
     auto *dynamicDimming{new PCUI::CheckBox(
         parent,
         config.settings.dynamicBladeDimming,
         0,
         _("Dynamic Blade Dimming")
-    )};
-
-    auto *dynamicLength{new PCUI::CheckBox(
-        parent,
-        config.settings.dynamicBladeLength,
-        0,
-        _("Dynamic Blade Length")
     )};
 
     auto *dynamicClashThreshold{new PCUI::CheckBox(
@@ -422,11 +417,18 @@ wxSizer *GeneralPage::editingSection() {
         _("Dynamic Clash Threshold")
     )};
 
+    auto *dynamicLength{new PCUI::CheckBox(
+        parent,
+        config.settings.dynamicBladeLength,
+        0,
+        _("Dynamic Blade Length")
+    )};
+
     sizer->Add(saveState, wxSizerFlags().Expand());
     sizer->AddSpacer(5);
     sizer->Add(allEditOpts, wxSizerFlags().Expand());
     sizer->AddSpacer(10);
-    sizer->Add(line, wxSizerFlags().Expand());
+    sizer->Add(line1, wxSizerFlags().Expand());
     sizer->AddSpacer(10);
     sizer->Add(saveVolume, wxSizerFlags().Expand());
     sizer->AddSpacer(5);
@@ -438,11 +440,13 @@ wxSizer *GeneralPage::editingSection() {
     sizer->AddSpacer(5);
     sizer->Add(saveClashThreshold, wxSizerFlags().Expand());
     sizer->AddSpacer(5);
+    sizer->Add(line2, wxSizerFlags().Expand());
+    sizer->AddSpacer(5);
     sizer->Add(dynamicDimming, wxSizerFlags().Expand());
     sizer->AddSpacer(5);
-    sizer->Add(dynamicLength, wxSizerFlags().Expand());
-    sizer->AddSpacer(5);
     sizer->Add(dynamicClashThreshold, wxSizerFlags().Expand());
+    sizer->AddSpacer(5);
+    sizer->Add(dynamicLength, wxSizerFlags().Expand());
 
     return sizer;
 }

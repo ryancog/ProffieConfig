@@ -28,6 +28,7 @@
 #include "ui/controls/numeric.h"
 #include "ui/notifier.h"
 #include "utils/types.h"
+#include "utils/version.h"
 
 #include "../private/export.h"
 
@@ -49,7 +50,7 @@ struct CONFIG_EXPORT Settings {
     enum BoardVersion {
         PROFFIEBOARDV3,
         PROFFIEBOARDV2,
-        PROFFIEBAORDV1,
+        PROFFIEBOARDV1,
         BOARD_MAX,
     };
     static constexpr array<cstring, BOARD_MAX> BOARD_STRS{
@@ -63,6 +64,8 @@ struct CONFIG_EXPORT Settings {
     // Done via Config::refreshVersions
     PCUI::ChoiceData osVersion;
     constexpr static cstring OS_VERSION_STR{"OS_VERSION"};
+
+    Utils::Version getOSVersion() const;
 
     PCUI::ToggleData massStorage;
     constexpr static cstring ENABLE_MASS_STORAGE_STR{"ENABLE_MASS_STORAGE"};

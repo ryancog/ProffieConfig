@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ui/controls/text.h"
 #include "utils/types.h"
 #include "utils/version.h"
 
@@ -28,14 +29,30 @@
 
 namespace Versions {
 
-struct OSVersion {
+struct VersionedOS {
     Utils::Version verNum;
     Utils::Version coreVersion;
 };
 
-struct PropVersions {
+struct VersionedProp {
     std::shared_ptr<const Prop> prop;
+    PCUI::TextData name;
     vector<Utils::Version> supportedVersions;
+
+    /**
+     * Move the prop to the location specified by name
+     *
+     * @return err
+     */
+    optional<string> syncName();
+
+    /**
+     * @return if the name is synced with disk
+     */
+    bool isSynced() const { return mNameIsSynced; }
+
+private:
+    bool mNameIsSynced{true};
 };
 
 void VERSIONS_EXPORT loadLocal();
@@ -43,14 +60,14 @@ void VERSIONS_EXPORT loadLocal();
 /**
  * @return versions sorted from latest to oldest
  */
-const vector<OSVersion>& VERSIONS_EXPORT getOSVersions();
+const vector<VersionedOS>& VERSIONS_EXPORT getOSVersions();
 
-const vector<PropVersions>& VERSIONS_EXPORT getProps();
+const vector<VersionedProp>& VERSIONS_EXPORT getProps();
 
 /**
  * @return all registered props for the version
  * Must be copied into config (or elsewhere if you're crazy like that) for use.
  */
-vector<std::shared_ptr<const Prop>> VERSIONS_EXPORT propsForVersion(Utils::Version);
+vector<VersionedProp *> VERSIONS_EXPORT propsForVersion(Utils::Version);
 
 }

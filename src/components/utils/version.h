@@ -38,7 +38,7 @@ struct UTILS_EXPORT Version {
      */
     Version(string_view str);
 
-    static Version invalidObject();
+    static const Version& invalidObject();
 
     // Version is valid if `err == NONE`
     enum Err : uint8 {
@@ -73,6 +73,9 @@ struct UTILS_EXPORT Version {
      */
     operator string() const;
     operator bool() const;
+
+private:
+    static const Version mInvalidObject;
 };
 
 } // namespace Utils

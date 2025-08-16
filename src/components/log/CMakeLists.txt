@@ -12,7 +12,6 @@ add_library(log SHARED
 )
 target_link_libraries(log
     utils
-    paths
 )
 
 include(../Component.cmake)

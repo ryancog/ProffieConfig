@@ -1,6 +1,6 @@
 #include "onboard.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2025 Ryan Ogurek
+// Copyright (C) 2024-2025 Ryan Ogurek
 
 #include <wx/bitmap.h>
 #include <wx/settings.h>
@@ -10,7 +10,6 @@
 #include <wx/event.h>
 #include <wx/statbmp.h>
 
-#include "../tools/arduino.h"
 #include "../core/utilities/progress.h"
 #include "../core/utilities/misc.h"
 #include "../core/appstate.h"
@@ -140,13 +139,6 @@ void OnboardFrame::bindEvents() {
             PCUI::showMessage(_("Dependency installation failed, please try again.") + "\n\n" + event.message.ToStdString(), _("Installation Failure"), wxOK | wxCENTER, this);
         }
     }, ID_DependencyInstall);
-    Bind(Arduino::EVT_INIT_DONE, [this](Arduino::Event& evt) {
-        auto *event{new Onboard::UpdateEvent{EVT_UPDATE, ID_DependencyInstall}};
-        event->succeeded = evt.succeeded;
-        event->message = evt.str;
-        event->parent = this;
-        wxQueueEvent(GetEventHandler(), event);
-    });
 }
 
 void OnboardFrame::update() {
@@ -175,8 +167,6 @@ void OnboardFrame::dependencyInstall(wxCommandEvent&) {
     mDependencyPage->Layout();
 
     mDependencyPage->barPulser->Start(50);
-
-    Arduino::init(this);
 }
 
 wxStaticText* OnboardFrame::createHeader(wxWindow* parent, const wxString& text) {

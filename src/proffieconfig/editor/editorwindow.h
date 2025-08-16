@@ -31,7 +31,7 @@ class PropsPage;
 class BladesPage;
 class PresetsPage;
 
-class EditorWindow : public PCUI::Frame {
+class EditorWindow : public PCUI::Frame, PCUI::Notifier {
 public:
     EditorWindow(wxWindow *, Config::Config&);
     bool Destroy() final;
@@ -57,7 +57,10 @@ public:
         ID_AddInjection,
 
         ID_StyleEditor,
+
+        ID_AsyncDone,
     };
+
 private:
     void createMenuBar();
     void createUI(wxSizer *);
@@ -65,5 +68,10 @@ private:
 
     void Fit() override;
 
+    void handleNotification(uint32) final;
+
+    PCUI::NotifierData mNotifyData;
     Config::Config& mConfig;
+
+    const Utils::Version mInitialOSVersion;
 };

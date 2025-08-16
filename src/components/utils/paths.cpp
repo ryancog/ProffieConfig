@@ -1,9 +1,9 @@
 #include "paths.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2025 Ryan Ogurek
  *
- * components/paths/paths.cpp
+ * components/utils/paths.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,15 +82,15 @@ filepath Paths::executable(Executable exec) {
 #           elif defined(__linux__)
             return binaries() / "ProffieConfig";
 #           else
-            return binaries() / "ProffieConfig.app" / "Contents" / "MacOS" / "ProffieConfig";
+            return binaryDir() / "ProffieConfig.app" / "Contents" / "MacOS" / "ProffieConfig";
 #           endif
     }
     return {};
 }
 
-filepath Paths::binaries() { return approot() / "bin"; }
+filepath Paths::binaryDir() { return approot() / "bin"; }
 
-filepath Paths::libraries() {
+filepath Paths::libraryDir() {
 #   ifdef __WIN32__
     return binaries();
 #   elif defined(__linux__) or defined(__APPLE__)
@@ -98,7 +98,7 @@ filepath Paths::libraries() {
 #   endif
 }
 
-filepath Paths::components() {
+filepath Paths::componentDir() {
 #   ifdef __WIN32__
     return binaries();
 #   elif defined(__linux__) or defined(__APPLE__)
@@ -106,9 +106,9 @@ filepath Paths::components() {
 #   endif
 }
 
-filepath Paths::resources() { return approot() / "resources"; }
+filepath Paths::resourceDir() { return approot() / "resources"; }
 
-filepath Paths::logs() {
+filepath Paths::logDir() {
 #   if defined(__WIN32__)
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &rawStr);
@@ -123,7 +123,7 @@ filepath Paths::logs() {
 #   endif
 }
 
-filepath Paths::data() {
+filepath Paths::dataDir() {
 #   ifdef __WIN32__
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_RoamingAppData, KF_FLAG_CREATE, nullptr, &rawStr);
@@ -138,12 +138,28 @@ filepath Paths::data() {
 #   endif
 }
 
-filepath Paths::configs() { return Paths::data() / "configs"; }
-filepath Paths::injections() { return Paths::data() / "injections"; }
-filepath Paths::props() { return Paths::data() / "props"; }
-filepath Paths::proffieos() { return Paths::data() / "ProffieOS"; }
+filepath Paths::configDir() { return Paths::dataDir() / "configs"; }
 
-filepath Paths::stateFile() { return Paths::data() / ".state.pconf"; }
+filepath Paths::injectionDir() { return Paths::dataDir() / "injections"; }
+
+filepath Paths::versionDir() { return Paths::dataDir() / "versions"; }
+
+filepath Paths::propDir() { return Paths::versionDir() / "props"; }
+
+std::pair<filepath, filepath> Paths::prop(const string& name) {
+    const auto base{Paths::propDir() / name};
+    return { base / "info.pconf", base / "header.h" };
+}
+
+filepath Paths::osDir() {
+    return Paths::versionDir() / "os";
+}
+
+filepath Paths::os(const Utils::Version& version) {
+    return Paths::osDir() / static_cast<string>(version) / "ProffieOS";
+}
+
+filepath Paths::stateFile() { return Paths::dataDir() / ".state.pconf"; }
 
 
 string Paths::website() { return "https://proffieconfig.kafrenetrading.com"; }

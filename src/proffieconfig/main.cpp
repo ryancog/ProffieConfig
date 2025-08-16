@@ -8,6 +8,7 @@
 #include "config/info.h"
 #include "core/appstate.h"
 #include "ui/message.h"
+#include "versions/versions.h"
 
 class ProffieConfig : public wxApp {
 public:
@@ -18,6 +19,7 @@ public:
         }
 
         Config::setExecutableVersion(wxSTRINGIZE(VERSION));
+        Versions::loadLocal();
 
         // Version and prop stuffage
         // Arduino relink

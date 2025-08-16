@@ -1,7 +1,6 @@
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2025 Ryan Ogurek
-
 #pragma once
+// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
+// Copyright (C) 2024-2025 Ryan Ogurek
 
 #include <unordered_map>
 
@@ -11,7 +10,6 @@
 #include <wx/panel.h>
 
 #include "../mainmenu/mainmenu.h"
-#include "../editor/pages/bladespage.h"
 
 namespace Onboard {
 

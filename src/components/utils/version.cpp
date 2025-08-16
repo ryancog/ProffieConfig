@@ -21,6 +21,8 @@
 
 #include <algorithm>
 
+const Utils::Version Utils::Version::mInvalidObject;
+
 Utils::Version::Version(string_view str) {
     if (str.empty()) {
         err = Err::STR_EMPTY;
@@ -119,9 +121,5 @@ Utils::Version::operator string() const {
 
 Utils::Version::operator bool() const { return err == Err::NONE; }
 
-Utils::Version Utils::Version::invalidObject() {
-    Version ret;
-    ret.err = Err::INVALID;
-    return ret;
-}
+const Utils::Version& Utils::Version::invalidObject() { return mInvalidObject; }
 

@@ -322,7 +322,6 @@ struct VERSIONS_EXPORT PropLayout {
     Children children;
 };
 
-
 struct VERSIONS_EXPORT Prop {
     Prop(const Prop&);
     // Both this and PropOption cannot be moved because
@@ -342,6 +341,8 @@ struct VERSIONS_EXPORT Prop {
     const PropLayout& layout() const { return mLayout; }
     const PropButtons buttons(uint32 idx) const { return mButtons.at(idx); }
     const PropErrors errors() const { return mErrors; }
+
+    void migrateFrom(const Prop&);
 
 private:
     Prop(string name, string filename, string info) : 

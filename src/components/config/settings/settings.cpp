@@ -20,9 +20,9 @@
  */
 
 #include "utils/string.h"
+#include "versions/versions.h"
 
 #include "../config.h"
-#include "wx/filedlg.h"
 
 Config::Settings::Settings(Config& parent) : mParent{parent} {
     // Asign update handlers
@@ -132,7 +132,9 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         }
     });
 
-    const auto updateSaveOptions{[this]() {
+    const auto updateSaveOptions{[this](uint32 id) {
+        if (id != PCUI::ToggleData::ID_VALUE) return;
+
         bool stateOrAll{saveState or enableAllEditOptions};
         saveVolume |= stateOrAll;
         saveVolume.enable(not stateOrAll);
@@ -140,11 +142,11 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         savePreset.enable(not saveState);
         saveColorChange |= stateOrAll;
         saveColorChange.enable(not stateOrAll);
+
         saveBladeDimming |= stateOrAll and dynamicBladeDimming;
         saveBladeDimming.enable(dynamicBladeDimming and not stateOrAll);
-
-        saveClashThreshold |= enableAllEditOptions;
-        saveClashThreshold.enable(not enableAllEditOptions);
+        saveClashThreshold |= enableAllEditOptions and dynamicClashThreshold;
+        saveClashThreshold.enable(dynamicClashThreshold and not enableAllEditOptions);
 
         dynamicBladeLength |= enableAllEditOptions;
         dynamicBladeLength.enable(not enableAllEditOptions);
@@ -154,23 +156,10 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         dynamicClashThreshold.enable(not enableAllEditOptions);
     }};
 
-    saveState.setUpdateHandler([this, updateSaveOptions](uint32 id) {
-        if (id != saveState.ID_VALUE) return;
-
-        updateSaveOptions();
-    });
-
-    enableAllEditOptions.setUpdateHandler([this, updateSaveOptions](uint32 id) {
-        if (id != enableAllEditOptions.ID_VALUE) return;
-        
-        updateSaveOptions();
-    });
-
-    dynamicBladeDimming.setUpdateHandler([this, updateSaveOptions](uint32 id) {
-        if (id != dynamicBladeDimming.ID_VALUE) return;
-
-        updateSaveOptions();
-    });
+    saveState.setUpdateHandler(updateSaveOptions);
+    enableAllEditOptions.setUpdateHandler(updateSaveOptions);
+    dynamicBladeDimming.setUpdateHandler(updateSaveOptions);
+    dynamicClashThreshold.setUpdateHandler(updateSaveOptions);
 
     volume.setUpdateHandler([this](uint32 id) {
         if (id != volume.ID_VALUE) return;
@@ -306,6 +295,14 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     femaleTalkie.setValue(false);
     disableTalkie.setValue(false);
     killOldPlayers.setValue(false);
+}
+
+Utils::Version Config::Settings::getOSVersion() const {
+    if (osVersion == -1) return Utils::Version::invalidObject();
+    const auto& osVersions{Versions::getOSVersions()};
+    if (osVersion >= osVersions.size()) return Utils::Version::invalidObject();
+
+    return osVersions[osVersion].verNum;
 }
 
 bool Config::Settings::addCustomOption(string&& key, string&& value) {

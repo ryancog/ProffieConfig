@@ -49,7 +49,7 @@
 
 #include "log/context.h"
 #include "log/logger.h"
-#include "paths/paths.h"
+#include "utils/paths.h"
 
 namespace App {
 
@@ -89,7 +89,7 @@ App::CrashDialog::CrashDialog(const wxString& error) :
             Close();
             }, ID_OK);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-            wxLaunchDefaultApplication(Paths::logs().native());
+            wxLaunchDefaultApplication(Paths::logDir().native());
             }, ID_LOGS);
 }
 
@@ -159,11 +159,11 @@ bool App::init(const string& appName, const string& lockName) {
     wxApp::GetInstance()->SetAppDisplayName(wxString{appName});
 
     fs::create_directories(Paths::approot());
-    fs::create_directories(Paths::data());
-    fs::create_directories(Paths::logs());
-    fs::create_directories(Paths::configs());
-    fs::create_directories(Paths::injections());
-    fs::create_directories(Paths::props());
+    fs::create_directories(Paths::dataDir());
+    fs::create_directories(Paths::logDir());
+    fs::create_directories(Paths::configDir());
+    fs::create_directories(Paths::injectionDir());
+    fs::create_directories(Paths::propDir());
 
     auto& logger {Log::Context::getGlobal().createLogger("App::init()")};
     logger.info("First-stage app initialization complete.");

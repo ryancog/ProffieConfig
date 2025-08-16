@@ -22,7 +22,7 @@
 #include <ui/message.h>
 
 #include "update.h"
-#include "paths/paths.h"
+#include "utils/paths.h"
 
 namespace Update {
 
@@ -36,7 +36,7 @@ namespace Update {
  */
 [[nodiscard]] optional<Data> parseData(PCUI::ProgressDialog *, Log::Branch&, bool heedMessages = true);
 
-inline filepath manifestFile() { return Paths::data() / "manifest.pconf"; }
+inline filepath manifestFile() { return Paths::dataDir() / "manifest.pconf"; }
 
 } // namespace Update
 
