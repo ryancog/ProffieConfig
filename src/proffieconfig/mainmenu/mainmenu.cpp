@@ -24,13 +24,13 @@
 #include "utils/string.h"
 #include "dialogs/addconfig.h"
 #include "dialogs/manifest.h"
-
 #include "config/info.h"
 #include "log/info.h"
 #include "pconf/info.h"
 #include "ui/info.h"
 #include "utils/info.h"
 #include "versions/info.h"
+#include "versions/manager.h"
 
 #include "../core/defines.h"
 #include "../core/appstate.h"
@@ -40,7 +40,6 @@
 #include "../onboard/onboard.h"
 #include "../tools/arduino.h"
 #include "../tools/serialmonitor.h"
-#include "versions/versions.h"
 
 
 MainMenu* MainMenu::instance{nullptr};
@@ -163,7 +162,7 @@ void MainMenu::bindEvents() {
             if (res.result != wxID_OK) return;
         }
 
-        Versions::showOrRaiseManager(this, AppState::ID_VersionsManager);
+        Versions::Manager::open(this, AppState::ID_VersionsManager);
     }, ID_ManageVersions);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
