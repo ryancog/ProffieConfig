@@ -1,4 +1,5 @@
 #include "arduino.h"
+#include "utils/info.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2023-2025 Ryan Ogurek
@@ -391,7 +392,7 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
     optional<string> err;
 
     if (prog) prog->emitEvent(10, _("Checking OS Version..."));
-    if (config.settings.osVersion == -1) {
+    if (config.settings.getOSVersion() == Utils::Version::invalidObject()) {
         if (prog) prog->emitEvent(100, _("Error"));
         logger.error("Configuration doesn't have an OS Version selected, cannot compile.");
         return _("Please select an OS Version").ToStdString();
@@ -400,7 +401,7 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
     constexpr cstring GENERATE_MESSAGE{wxTRANSLATE("Generating configuration file...")};
     if (prog) prog->emitEvent(20, wxGetTranslation(GENERATE_MESSAGE));
 
-    const auto osVersion{Versions::getOSVersions()[config.settings.osVersion].verNum};
+    const auto osVersion{config.settings.getOSVersion()};
     const auto osPath{Paths::os(osVersion)};
     const auto configPath{
         osPath / "config" / (static_cast<string>(config.name) + Config::RAW_FILE_EXTENSION)
@@ -481,6 +482,8 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
         default: 
             assert(0);
     }
+    // TODO: See if this works
+    compileCommand += "@3.6";
     compileCommand += " --board-options ";
     if (config.settings.massStorage and config.settings.webUSB) compileCommand += "usb=cdc_msc_webusb";
     else if (config.settings.webUSB) compileCommand += "usb=cdc_webusb";
@@ -665,7 +668,7 @@ optional<string> Arduino::upload(
 
 #   ifndef __WINDOWS__
     string uploadCommand = "upload ";
-    const auto osVersion{Versions::getOSVersions()[config.settings.osVersion].verNum};
+    const auto osVersion{config.settings.getOSVersion()};
     const auto osPath{Paths::os(osVersion)};
     uploadCommand += '"' + osPath.string() + '"';
     uploadCommand += " --fqbn ";
