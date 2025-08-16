@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
  *
- * components/versions/private/manager.cpp
+ * components/versions/manager.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,8 +46,6 @@ Versions::Manager::Manager(wxWindow *parent, wxWindowID id) :
 
 void Versions::Manager::createUI() {
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
-
-
 
     SetSizerAndFit(sizer);
 }

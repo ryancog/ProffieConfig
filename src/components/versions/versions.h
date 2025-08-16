@@ -70,6 +70,4 @@ VERSIONS_EXPORT const vector<VersionedProp>& getProps();
  */
 VERSIONS_EXPORT vector<VersionedProp *> propsForVersion(Utils::Version);
 
-VERSIONS_EXPORT void showOrRaiseManager(wxWindow *parent, wxWindowID id);
-
 }

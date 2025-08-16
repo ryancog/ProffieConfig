@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
  *
- * components/versions/private/manager.h
+ * components/versions/manager.h
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,11 +21,13 @@
 
 #include "ui/frame.h"
 
+#include "versions_export.h"
+
 namespace Versions {
 
 class Manager : public PCUI::Frame {
 public:
-    static void open(wxWindow *, wxWindowID);
+    VERSIONS_EXPORT static void open(wxWindow *, wxWindowID);
     bool Destroy() final;
 
 private:

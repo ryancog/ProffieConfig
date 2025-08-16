@@ -25,8 +25,6 @@
 #include "utils/paths.h"
 #include "utils/types.h"
 
-#include "private/manager.h"
-
 namespace Versions {
 
 inline filepath folder() { return Paths::dataDir() / "versions"; }
@@ -54,9 +52,5 @@ vector<Versions::VersionedProp *> Versions::propsForVersion(Utils::Version versi
         ret.push_back(equalIter->second);
     }
     return ret;
-}
-
-VERSIONS_EXPORT void Versions::showOrRaiseManager(wxWindow *parent, wxWindowID id) {
-    Manager::open(parent, id);
 }
 
