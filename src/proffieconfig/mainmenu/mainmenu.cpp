@@ -39,14 +39,14 @@
 #include "../onboard/onboard.h"
 #include "../tools/arduino.h"
 #include "../tools/serialmonitor.h"
-#include "../mainmenu/dialogs/props.h"
+#include "versions/versions.h"
 
 
 MainMenu* MainMenu::instance{nullptr};
 MainMenu::MainMenu(wxWindow* parent) : 
     PCUI::Frame(
         parent,
-        wxID_ANY,
+        AppState::ID_MainMenu,
         "ProffieConfig",
         wxDefaultPosition,
         wxDefaultSize,
@@ -132,13 +132,20 @@ void MainMenu::bindEvents() {
     }, ID_Copyright);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
-        if (not mEditors.empty()) {
-            PCUI::showMessage(_("All Editors must be closed to continue."), _("Open Editors"));
-            return;
+        if (not mEditors.empty() and not AppState::getPreference(AppState::HIDE_EDITOR_MANAGE_VERSIONS_WARN)) {
+            auto res{PCUI::showHideablePrompt(
+                _("Although version management can be done with editors open, some information may be lost when adding/removing props."),
+                _("Please Close Editors"),
+                this,
+                wxYES | wxCANCEL | wxCANCEL_DEFAULT,
+                _("Proceed")
+            )};
+            AppState::setPreference(AppState::HIDE_EDITOR_MANAGE_VERSIONS_WARN, res.wantsToHide);
+            if (res.result != wxID_YES) return;
         }
 
-        Props(this).ShowModal();
-    }, ID_AddProp);
+        Versions::showOrRaiseManager(this, AppState::ID_VersionsManager);
+    }, ID_ManageVersions);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
         ManifestDialog(this).ShowModal();
@@ -357,7 +364,7 @@ void MainMenu::handleNotification(uint32 id) {
 void MainMenu::createMenuBar() {
     auto *file{new wxMenu};
     file->Append(ID_ReRunSetup, _("Re-Run First-Time Setup..."), _("Install Proffieboard Dependencies and View Tutorial"));
-    file->Append(ID_AddProp, _("Prop Files..."));
+    file->Append(ID_ManageVersions, _("Manage Versions..."));
     file->Append(ID_UpdateManifest, _("Update Channel..."));
     file->AppendSeparator();
     file->Append(ID_Logs, _("Show Logs..."));

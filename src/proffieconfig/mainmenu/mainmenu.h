@@ -38,8 +38,8 @@ public:
         ID_Issue,
         ID_Logs,
 
+        ID_ManageVersions,
         ID_UpdateManifest,
-        ID_AddProp,
 
         ID_RefreshDev,
         ID_ApplyChanges,

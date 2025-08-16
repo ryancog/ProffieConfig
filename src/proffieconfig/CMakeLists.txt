@@ -20,7 +20,6 @@ add_executable(proffieconfig WIN32
     core/utilities/progress.cpp
 
     mainmenu/dialogs/addconfig.cpp
-    mainmenu/dialogs/props.cpp
     mainmenu/dialogs/manifest.cpp
     mainmenu/mainmenu.cpp
 
