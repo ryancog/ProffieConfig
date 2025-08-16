@@ -52,10 +52,13 @@ PCUI::HideableInfo PCUI::showHideablePrompt(
 ) {
     wxRichMessageDialog dlg{parent, msg, caption, style};
     dlg.ShowCheckBox(_("Do Not Show Again"));
-    dlg.SetYesNoCancelLabels(
+    dlg.SetOKCancelLabels(
+        okText.IsEmpty() ? wxMessageDialogBase::ButtonLabel{wxID_OK} : okText,
+        cancelText.IsEmpty() ? wxMessageDialogBase::ButtonLabel{wxID_CANCEL} : cancelText
+    );
+    dlg.SetYesNoLabels(
         yesText.IsEmpty() ? wxMessageDialogBase::ButtonLabel{wxID_YES} : yesText,
-        noText.IsEmpty() ? wxMessageDialogBase::ButtonLabel{wxID_NO} : noText,
-        cancelText.IsEmpty() ? wxMessageDialogBase::ButtonLabel{wxID_CANCEL} : cancelText 
+        noText.IsEmpty() ? wxMessageDialogBase::ButtonLabel{wxID_NO} : noText
     );
 
     HideableInfo ret;
