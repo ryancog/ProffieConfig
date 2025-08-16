@@ -1,4 +1,5 @@
 #include "generalpage.h"
+#include "wx/string.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2023-2025 Ryan Ogurek
@@ -66,16 +67,6 @@ void GeneralPage::bindEvents() {
 
 void GeneralPage::handleNotification(uint32 id) {
     bool rebound{id == ID_REBOUND};
-    auto& settings{mParent->getOpenConfig().settings};
-
-    if (rebound or id == settings.ID_OS_VERSION) {
-        auto *osVersionButton{FindWindow(ID_OSVersion)};
-        if (settings.osVersion != -1) {
-            osVersionButton->SetLabel("OS " + static_cast<string>(settings.osVersion));
-        } else {
-            osVersionButton->SetLabel("No OS Selected");
-        }
-    }
 }
 
 wxSizer *GeneralPage::setupSection() {
@@ -87,7 +78,10 @@ wxSizer *GeneralPage::setupSection() {
         _("Setup"))
     };
 
-    auto *osVersion{new wxButton(boardSetup->GetStaticBox(), ID_OSVersion)};
+    auto *osVersion{new PCUI::Choice(
+        boardSetup->GetStaticBox(),
+        config.settings.osVersion
+    )};
 
     auto *board{new PCUI::Choice(
         boardSetup->GetStaticBox(),
