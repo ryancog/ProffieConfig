@@ -32,6 +32,7 @@
 #endif
 
 #include "utils/types.h"
+#include "utils/version.h"
 
 namespace Paths {} // namespace Paths
 
@@ -78,9 +79,9 @@ filepath Paths::executable(Executable exec) {
 #           endif
         case Executable::MAIN:
 #           ifdef __WIN32__
-            return binaries() / "ProffieConfig.exe";
+            return binaryDir() / "ProffieConfig.exe";
 #           elif defined(__linux__)
-            return binaries() / "ProffieConfig";
+            return binaryDir() / "ProffieConfig";
 #           else
             return binaryDir() / "ProffieConfig.app" / "Contents" / "MacOS" / "ProffieConfig";
 #           endif
@@ -92,7 +93,7 @@ filepath Paths::binaryDir() { return approot() / "bin"; }
 
 filepath Paths::libraryDir() {
 #   ifdef __WIN32__
-    return binaries();
+    return binaryDir();
 #   elif defined(__linux__) or defined(__APPLE__)
     return approot() / "lib";
 #   endif
@@ -100,7 +101,7 @@ filepath Paths::libraryDir() {
 
 filepath Paths::componentDir() {
 #   ifdef __WIN32__
-    return binaries();
+    return binaryDir();
 #   elif defined(__linux__) or defined(__APPLE__)
     return approot() / "components";
 #   endif

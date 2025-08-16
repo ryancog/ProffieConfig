@@ -86,14 +86,14 @@ bool EditorWindow::Destroy() {
 }
 
 void EditorWindow::bindEvents() {
-    Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event ) {
-        if (not event.CanVeto()) {
-            event.Skip();
+    Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& evt) {
+        if (not evt.CanVeto()) {
+            evt.Skip();
             return;
         }
 
         if (not mConfig.isSaved()) {
-#           ifdef __WINDOWS__
+#           ifdef __WXMSW__
             const auto flags{static_cast<long>(wxICON_WARNING | wxYES_NO | wxCANCEL | wxCANCEL_DEFAULT)};
             wxGenericMessageDialog saveDialog{
 #           else
@@ -116,15 +116,15 @@ void EditorWindow::bindEvents() {
             auto saveChoice{saveDialog.ShowModal()};
 
             if (saveChoice == wxID_CANCEL or (saveChoice == wxID_YES and not save())) {
-                event.Veto();
+                evt.Veto();
                 return;
             }
         }
 
         if (not mInitialOSVersion.err and mInitialOSVersion != mConfig.settings.getOSVersion()) {
-#           ifdef __WINDOWS__
+#           ifdef __WXMSW__
             const auto flags{static_cast<long>(wxICON_INFORMATION | wxYES_NO | wxNO_DEFAULT)};
-            wxGenericMessageDialog saveDialog{
+            wxGenericMessageDialog osChangeDlg{
 #           else
             const auto flags{wxICON_INFORMATION | wxYES_NO | wxNO_DEFAULT};
             wxMessageDialog osChangeDlg{
@@ -140,13 +140,13 @@ void EditorWindow::bindEvents() {
                 _("Not Yet")
             );
             if (osChangeDlg.ShowModal() != wxID_YES) {
-                event.Veto();
+                evt.Veto();
                 return;
             }
         }
 
         reinterpret_cast<MainMenu *>(GetParent())->removeEditor(this);
-        event.Skip();
+        evt.Skip();
     });
     Bind(Progress::EVT_UPDATE, [&](ProgressEvent& event) { 
         Progress::handleEvent(&event); 
