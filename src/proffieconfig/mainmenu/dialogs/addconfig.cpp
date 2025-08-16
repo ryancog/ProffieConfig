@@ -77,7 +77,7 @@ void AddConfig::createUI() {
         importPath,
         wxFLP_FILE_MUST_EXIST | wxFLP_OPEN | wxFLP_USE_TEXTCTRL,
         _("Configuration to Import"),
-        "ProffieOS Configuration (*.h)|*.h",
+        _("ProffieOS Configuration") + " (*.h)|*.h",
         _("Choose Configuration File to Import")
     )};
     auto *nameEntry{new PCUI::Text(
