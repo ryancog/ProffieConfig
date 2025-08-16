@@ -13,19 +13,22 @@ void init();
 extern bool doneWithFirstRun;
 extern string manifestChannel;
 
+// Default is off
+enum Preference {
+    HIDE_EDITOR_MANAGE_VERSIONS_WARN,
+    PREFERENCE_MAX
+};
+
+enum {
+    ID_MainMenu,
+    ID_VersionsManager,
+    ID_EditorsBegin,
+};
+
+bool getPreference(Preference);
+void setPreference(Preference, bool);
+
 void loadState();
 void saveState();
-
-void addProp(const string& propName, const string& propPath, const string& propConfigPath);
-void removeProp(const string& propName);
-
-const vector<string>& getPropFileNames();
-static constexpr array<cstring, 5> BUILTIN_PROPS{
-    "BC",
-    "caiwyn",
-    "fett263",
-    "sa22c",
-    "shtok",
-};
 
 } // namespace AppState
