@@ -132,7 +132,8 @@ filepath Config::Config::savePath() const {
 
 optional<string> Config::Config::save(const filepath& path, Log::Branch *lBranch) const {
     auto& logger{Log::Branch::optCreateLogger("Config::Config::save()", lBranch)};
-    logger.info("Saving \"" + static_cast<string>(name) + "\"...");
+    if (path.empty()) logger.info("Saving \"" + static_cast<string>(name) + "\"...");
+    else logger.info("Exporting \"" + static_cast<string>(name) + "\" to \"" + path.string() + "\"...");
 
     optional<string> err;
     std::error_code errCode;
