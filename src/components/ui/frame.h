@@ -39,12 +39,9 @@ public:
           const wxString& name = "Frame");
     ~Frame() override;
 
-    [[nodiscard]] App::Menus getMenus();
-
     void setReference(Frame**);
 
 private:
-    App::Menus mMenus;
     Frame** mReference{nullptr};
 };
 
