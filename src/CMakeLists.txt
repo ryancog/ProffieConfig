@@ -7,7 +7,6 @@ set(SHARED_COMPONENTS
     log
     ui
     pconf
-    paths
     versions
     config
 )

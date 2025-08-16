@@ -15,7 +15,7 @@
 #include "pconf/utils.h"
 #include "pconf/write.h"
 #include "ui/message.h"
-#include "paths/paths.h"
+#include "utils/paths.h"
 #include "utils/version.h"
 
 #include "../onboard/onboard.h"
@@ -118,8 +118,8 @@ void AppState::loadState() {
 void AppState::doNecessaryMigrations() {
     if (lastVersion < Utils::Version{"1.8.0"}) {
         std::error_code err;
-        fs::remove_all(Paths::resources() / "props", err);
-        fs::remove_all(Paths::proffieos(), err);
+        fs::remove_all(Paths::resourceDir() / "props", err);
+        fs::remove_all(Paths::osDir(), err);
 
         // TODO: Try to download new stuffage
     }
@@ -145,15 +145,15 @@ void AppState::addProp(const string& propName, const string& propPath, const str
         return;
     }
 
-    fs::copy_file(propConfigPath, Paths::props() / propConfigPath.substr(propConfigPath.rfind('/') + 1), fs::copy_options::overwrite_existing);
-    fs::copy_file(propPath, Paths::proffieos() / "props" / propFileName, fs::copy_options::overwrite_existing);
+    fs::copy_file(propConfigPath, Paths::propDir() / propConfigPath.substr(propConfigPath.rfind('/') + 1), fs::copy_options::overwrite_existing);
+    fs::copy_file(propPath, Paths::osDir() / "props" / propFileName, fs::copy_options::overwrite_existing);
 
     propFileNames.emplace_back(propName);
 }
 
 void AppState::removeProp(const string& propName) {
     auto& logger{Log::Context::getGlobal().createLogger("AppState::removeProp()")};
-    auto propConfigPath{Paths::props() / (propName + ".pconf")};
+    auto propConfigPath{Paths::propDir() / (propName + ".pconf")};
 
     logger.info("Removing prop \"" + propName + '"');
 
@@ -166,7 +166,7 @@ void AppState::removeProp(const string& propName) {
     auto filenameEntry{hashedData.find("FILENAME")};
     if (filenameEntry != hashedData.end() and filenameEntry->second->value) {
         logger.debug("Removing prop file \"" + *filenameEntry->second->value + '"');
-        fs::remove(Paths::proffieos() / "props" / *filenameEntry->second->value);
+        fs::remove(Paths::osDir() / "props" / *filenameEntry->second->value);
     }
 
     logger.debug("Removing prop pconf");

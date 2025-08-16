@@ -29,7 +29,7 @@
 #include <wx/rawbmp.h>
 #include <wx/settings.h>
 
-#include "paths/paths.h"
+#include "utils/paths.h"
 
 namespace Image {
 
@@ -110,7 +110,7 @@ wxBitmap Image::loadPNG(const string& name, bool dpiScaled) {
     // auto bmpIt{bmps.find(name)};
     // if (bmpIt != bmps.end()) return bmpIt->second;
 
-    auto pngPath{Paths::resources() / "icons" / (name + ".png")};
+    auto pngPath{Paths::resourceDir() / "icons" / (name + ".png")};
     // std::cout << "Loading PNG \"" << name << "\" from \"" << pngPath.native() << '"' << std::endl;
     wxBitmap bitmap;
     {
@@ -128,7 +128,7 @@ wxBitmap Image::loadPNG(const string& name, bool dpiScaled) {
 }
 
 wxBitmap Image::loadPNG(const string& name, wxSize size, wxColour color) {
-    auto pngPath{Paths::resources() / "icons" / (name + ".png")};
+    auto pngPath{Paths::resourceDir() / "icons" / (name + ".png")};
     wxBitmap bitmap;
     {
         wxLogNull noErrors;

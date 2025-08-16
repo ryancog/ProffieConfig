@@ -30,7 +30,7 @@
 
 #include <app/app.h>
 #include <log/logger.h>
-#include <paths/paths.h>
+#include <utils/paths.h>
 #include <utils/defer.h>
 
 #include "update.h"
@@ -38,7 +38,7 @@
 
 namespace Update {
 
-inline filepath stagingFolder() { return Paths::data() / "staging"; }
+inline filepath stagingFolder() { return Paths::dataDir() / "staging"; }
 
 string convertSize(uint64 size);
 
@@ -152,13 +152,13 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
     auto baseTypePath{[](ItemType type) -> filepath {
         switch (type) {
         case ItemType::EXEC:
-            return Paths::binaries();
+            return Paths::binaryDir();
         case ItemType::LIB:
-            return Paths::libraries();
+            return Paths::libraryDir();
         case ItemType::COMP:
-            return Paths::components();
+            return Paths::componentDir();
         case ItemType::RSRC:
-            return Paths::resources();
+            return Paths::resourceDir();
         case TYPE_MAX:
             break;
         }

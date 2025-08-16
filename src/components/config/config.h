@@ -19,13 +19,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <map>
+
 #include <wx/datetime.h>
 
-#include "versions/prop.h"
-#include "preset/array.h"
 #include "bladeconfig/arrays.h"
+#include "preset/array.h"
 #include "private/export.h"
 #include "settings/settings.h"
+#include "utils/version.h"
+#include "versions/prop.h"
 
 namespace Config {
 
@@ -42,9 +45,17 @@ struct CONFIG_EXPORT Config {
         ID_PROPSELECTION,
     };
     PCUI::NotifierData propNotifyData;
-    [[nodiscard]] const vector<std::unique_ptr<Versions::Prop>>& props() const { return mProps; }
+
+    [[nodiscard]] const vector<std::unique_ptr<Versions::Prop>>& props() const { 
+        const auto verNum{settings.getOSVersion()};
+        auto iter{mProps.find(verNum)};
+        return iter == mProps.end() ? mEmptyProps : iter->second;
+    }
+
     [[nodiscard]] Versions::Prop& prop(uint32 idx) const {
-        return *mProps[idx];
+        const auto& _props{props()};
+        assert(idx < _props.size());
+        return *_props[idx];
     }
 
     PresetArrays presetArrays;
@@ -60,10 +71,11 @@ struct CONFIG_EXPORT Config {
     void rename(const string& newName);
 
     bool isSaved();
+
     /**
      * @return error or nullopt on success
      */
-    optional<string> save(const filepath& = {});
+    optional<string> save(const filepath& = {}, Log::Branch * = nullptr) const;
 
     /**
      * Remove from internal storage and let it die once last memory
@@ -71,12 +83,20 @@ struct CONFIG_EXPORT Config {
      */
     void close();
 
+    filepath savePath() const;
+
 private:
     friend variant<Config *, string> open(const string&);
     friend optional<string> import(const string&, const filepath&);
     Config();
 
-    vector<std::unique_ptr<Versions::Prop>> mProps;
+    /**
+     * So that options are not lost when changing version, there's a set for each
+     * version rather than overwriting.
+     */
+    std::map<Utils::Version, vector<std::unique_ptr<Versions::Prop>>> mProps;
+
+    static vector<std::unique_ptr<Versions::Prop>> mEmptyProps;
 };
 
 /**

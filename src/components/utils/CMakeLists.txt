@@ -10,6 +10,7 @@ add_library(utils SHARED
     crypto.cpp
     version.cpp
     string.cpp
+    paths.cpp
 
     info.cpp
 )
@@ -17,8 +18,6 @@ add_library(utils SHARED
 target_link_libraries(utils
     wxWidgets
     tomcrypt-static
-
-    paths
 )
 
 include(../Component.cmake)

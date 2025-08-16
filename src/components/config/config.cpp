@@ -24,14 +24,17 @@
 
 #include "log/context.h"
 #include "utils/types.h"
-#include "paths/paths.h"
+#include "utils/paths.h"
 #include "versions/versions.h"
 
 #include "private/io.h"
 
 namespace Config {
 
+vector<std::unique_ptr<Versions::Prop>> Config::mEmptyProps;
 vector<std::unique_ptr<Config>> loadedConfigs;
+
+filepath savePath(const string&);
 
 } // namespace Config
 
@@ -39,6 +42,8 @@ Config::Config::Config() :
     settings{*this},
     bladeArrays{*this},
     presetArrays{*this} {
+    propSelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_STRING);
+
     propSelection.setUpdateHandler([this](uint32 id) {
         if (id != propSelection.ID_SELECTION) return;
         propNotifyData.notify(ID_PROPSELECTION);
@@ -68,16 +73,43 @@ void Config::Config::refreshVersions() {
 }
 
 void Config::Config::refreshPropVersions() {
-    // Blissful ignorance
+    const auto verNum{settings.getOSVersion()};
+    auto& propList{mProps[verNum]};
+    for (const auto& versionedProp : Versions::propsForVersion(verNum)) {
+        bool found{false};
+        for (auto& prop : propList) {
+            // Compare by display name, not unique name, obviously
+            if (prop->name == versionedProp->prop->name) {
+                found = true;
+                auto newProp{std::make_unique<Versions::Prop>(*versionedProp->prop)};
+                newProp->migrateFrom(*prop);
+                prop = std::move(newProp);
+                break;
+            }
+        }
+
+        if (found) continue;
+
+        propList.push_back(std::make_unique<Versions::Prop>(*versionedProp->prop));
+    }
+
+    const auto comp{[](
+        const std::unique_ptr<Versions::Prop>& a,
+        const std::unique_ptr<Versions::Prop>& b
+    ) -> bool {
+        return a->name < b->name;
+    }};
+    std::sort(propList.begin(), propList.end(), comp);
+
+    vector<string> choices;
+    choices.reserve(propList.size());
+    for (const auto& prop : propList) choices.push_back(prop->name);
+    propSelection.setChoices(std::move(choices));
 }
 
 void Config::Config::rename(const string& newName) {
     std::error_code err;
-    fs::rename(
-        Paths::configs() / (static_cast<string>(name) + RAW_FILE_EXTENSION),
-        Paths::configs() / (newName + RAW_FILE_EXTENSION),
-        err
-    );
+    fs::rename(savePath(), ::Config::savePath(newName), err);
 
     name = string{newName};
 }
@@ -92,9 +124,16 @@ void Config::Config::close() {
     }
 }
 
+filepath Config::savePath(const string& name) {
+    return Paths::configDir() / (static_cast<string>(name) + RAW_FILE_EXTENSION);
+}
 
-optional<string> Config::Config::save(const filepath& path) {
-    auto& logger{Log::Context::getGlobal().createLogger("Config::Config::save()")};
+filepath Config::Config::savePath() const {
+    return ::Config::savePath(name);
+}
+
+optional<string> Config::Config::save(const filepath& path, Log::Branch *lBranch) const {
+    auto& logger{Log::Branch::optCreateLogger("Config::Config::save()", lBranch)};
     logger.info("Saving \"" + static_cast<string>(name) + "\"...");
 
     optional<string> err;
@@ -105,9 +144,9 @@ optional<string> Config::Config::save(const filepath& path) {
         return err;
     } 
 
-    const auto finalPath{Paths::configs() / (static_cast<string>(name) + RAW_FILE_EXTENSION)};
+    const auto finalPath{savePath()};
     const filepath tmpPath{finalPath.string() + ".tmp"};
-    err = output(tmpPath, *this);
+    err = output(tmpPath, *this, logger.binfo("Generating output..."));
     if (err) {
         fs::remove(tmpPath, errCode);
         return err;
@@ -123,12 +162,8 @@ optional<string> Config::Config::save(const filepath& path) {
 bool Config::Config::isSaved() {
     auto& logger{Log::Context::getGlobal().createLogger("EditorWindow::isSaved()")};
 
-    const auto currentPath{
-        Paths::configs() / (static_cast<string>(name) + ".h")
-    };
-    const auto validatePath{
-        fs::temp_directory_path() / (static_cast<string>(name) + "-validate")
-    };
+    const auto currentPath{savePath()};
+    const auto validatePath{fs::temp_directory_path() / (static_cast<string>(name) + "-validate")};
 
     auto saveErr{save(validatePath)};
 
@@ -182,7 +217,7 @@ vector<string> Config::fetchListFromDisk() {
     vector<string> ret;
 
     std::error_code err;
-    for (const auto& entry : fs::directory_iterator{Paths::configs(), err}) {
+    for (const auto& entry : fs::directory_iterator{Paths::configDir(), err}) {
         if (not entry.is_regular_file()) continue;
         if (entry.path().extension() != RAW_FILE_EXTENSION) continue;
         ret.emplace_back(entry.path().stem().string());
@@ -199,7 +234,7 @@ bool Config::remove(const string& name) {
     if (getIfOpen(name)) return false;
 
     std::error_code err;
-    return fs::remove(Paths::configs() / (name + RAW_FILE_EXTENSION), err);
+    return fs::remove(savePath(name), err);
 }
 
 variant<Config::Config *, string> Config::open(const string& name) {
@@ -209,7 +244,7 @@ variant<Config::Config *, string> Config::open(const string& name) {
     std::unique_ptr<Config> config{new Config()};
     config->name = string{name};
 
-    const auto path{Paths::configs() / (name + RAW_FILE_EXTENSION)};
+    const auto path{savePath(name)};
     if (fs::exists(path)) {
         auto err{parse(path, *config)};
         if (err) return *err;

@@ -22,16 +22,16 @@
 #include <filesystem>
 #include <map>
 
-#include "paths/paths.h"
+#include "utils/paths.h"
 #include "utils/types.h"
 
 namespace Versions {
 
-inline filepath folder() { return Paths::data() / "versions"; }
+inline filepath folder() { return Paths::dataDir() / "versions"; }
 
-vector<OSVersion> osVersions;
-vector<PropVersions> props;
-std::multimap<Utils::Version, std::shared_ptr<Prop>> propVersionMap;
+vector<VersionedOS> osVersions;
+vector<VersionedProp> props;
+std::multimap<Utils::Version, VersionedProp *> propVersionMap;
 
 } // namespace Versions
 
@@ -42,11 +42,11 @@ void Versions::loadLocal() {
     // TODO: Load
 }
 
-const vector<Versions::OSVersion>& Versions::getOSVersions() { return osVersions; }
-const vector<Versions::PropVersions>& Versions::getProps() { return props; }
+const vector<Versions::VersionedOS>& Versions::getOSVersions() { return osVersions; }
+const vector<Versions::VersionedProp>& Versions::getProps() { return props; }
 
-vector<std::shared_ptr<const Versions::Prop>> Versions::propsForVersion(Utils::Version version) {
-    vector<std::shared_ptr<const Prop>> ret;
+vector<Versions::VersionedProp *> Versions::propsForVersion(Utils::Version version) {
+    vector<VersionedProp *> ret;
     auto [equalIter, equalEnd]{propVersionMap.equal_range(version)};
     for (; equalIter != equalEnd; ++equalIter) {
         ret.push_back(equalIter->second);

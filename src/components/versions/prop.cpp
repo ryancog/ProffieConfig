@@ -147,6 +147,82 @@ Versions::Prop::Prop(const Prop& other) :
     new(&mErrors) PropErrors(other.mErrors);
 }
 
+void Versions::Prop::migrateFrom(const Prop& from) {
+    for (const auto& fromSetting : from.settings()) {
+        if (auto *fromPtr = std::get_if<PropToggle>(&*fromSetting)) {
+            auto iter{mSettingMap.find(fromPtr->define)};
+            if (iter == mSettingMap.end()) continue;
+            const auto setting{iter->second};
+
+            switch (setting->type) {
+                case PropSetting::Type::TOGGLE:
+                    static_cast<PropToggle *>(setting)->value = static_cast<bool>(fromPtr->value);
+                    break;
+                case PropSetting::Type::SELECTION:
+                    if (fromPtr->value) static_cast<PropSelection *>(setting)->select();
+                    break;
+                case PropSetting::Type::NUMERIC:
+                case PropSetting::Type::DECIMAL:
+                    // These don't convert from a toggle
+                    break;
+            }
+        } else if (auto *fromPtr = std::get_if<PropNumeric>(&*fromSetting)) {
+            auto iter{mSettingMap.find(fromPtr->define)};
+            if (iter == mSettingMap.end()) continue;
+            const auto setting{iter->second};
+
+            switch (setting->type) {
+                case PropSetting::Type::TOGGLE:
+                case PropSetting::Type::SELECTION:
+                    // These don't convert from numeric
+                    break;
+                case PropSetting::Type::NUMERIC:
+                    static_cast<PropNumeric *>(setting)->value = static_cast<int32>(fromPtr->value);
+                    break;
+                case PropSetting::Type::DECIMAL:
+                    static_cast<PropDecimal *>(setting)->value = static_cast<int32>(fromPtr->value);
+                    break;
+            }
+        } else if (auto *fromPtr = std::get_if<PropDecimal>(&*fromSetting)) {
+            auto iter{mSettingMap.find(fromPtr->define)};
+            if (iter == mSettingMap.end()) continue;
+            const auto setting{iter->second};
+
+            switch (setting->type) {
+                case PropSetting::Type::TOGGLE:
+                case PropSetting::Type::SELECTION:
+                    // These don't convert from a decimal
+                    break;
+                case PropSetting::Type::NUMERIC:
+                    static_cast<PropNumeric *>(setting)->value = static_cast<float64>(fromPtr->value);
+                    break;
+                case PropSetting::Type::DECIMAL:
+                    static_cast<PropDecimal *>(setting)->value = static_cast<float64>(fromPtr->value);
+                    break;
+            }
+        } else if (auto *fromPtr = std::get_if<PropOption>(&*fromSetting)) {
+            for (const auto& fromSelection : fromPtr->mSelections) {
+                auto iter{mSettingMap.find(fromSelection->define)};
+                if (iter == mSettingMap.end()) continue;
+                const auto setting{iter->second};
+
+                switch (setting->type) {
+                    case PropSetting::Type::TOGGLE:
+                        static_cast<PropToggle *>(setting)->value = fromSelection->value();
+                        break;
+                    case PropSetting::Type::SELECTION:
+                        if (fromSelection->value()) static_cast<PropSelection *>(setting)->select();
+                        break;
+                    case PropSetting::Type::NUMERIC:
+                    case PropSetting::Type::DECIMAL:
+                        // These don't convert from a selection
+                        break;
+                }
+            }
+        }
+    }
+}
+
 void Versions::Prop::rebuildSettingMap(optional<std::set<PropSetting *>> pruneList, Log::Branch *lBranch) {
     auto& logger{Log::Branch::optCreateLogger("Versions::Prop::rebuildSettingMap()", lBranch)};
     mSettingMap.clear();
@@ -189,71 +265,6 @@ void Versions::Prop::rebuildSettingMap(optional<std::set<PropSetting *>> pruneLi
         ++setting;
     }
 }
-
-bool Versions::PropSetting::isActive() const {
-    switch (type) {
-        case Type::TOGGLE:
-            return 
-                static_cast<const PropToggle *>(this)->value.isEnabled() and
-                static_cast<const PropToggle *>(this)->value;
-        case Type::SELECTION:
-            return 
-                static_cast<const PropSelection *>(this)->enabled() and
-                static_cast<const PropSelection *>(this)->value();
-        case Type::NUMERIC:
-            return static_cast<const PropNumeric *>(this)->value.isEnabled();
-        case Type::DECIMAL:
-            return static_cast<const PropDecimal *>(this)->value.isEnabled();
-    }
-    assert(0);
-}
-
-bool Versions::PropSetting::shouldOutputDefine() const {
-    if (not isActive()) return false;
-
-    if (type == Type::SELECTION) {
-        return static_cast<const PropSelection *>(this)->shouldOutput;
-    }
-
-    return true;
-}
-
-optional<string> Versions::PropSetting::generateDefineString() const {
-    if (not shouldOutputDefine()) return nullopt;
-
-    switch (type) {
-        case Type::TOGGLE:
-            return static_cast<const PropToggle *>(this)->value ? optional{define} : nullopt;
-        case Type::SELECTION:
-            return static_cast<const PropSelection *>(this)->value() ? optional{define} : nullopt;
-        case Type::NUMERIC:
-            return define + " " + std::to_string(static_cast<const PropNumeric *>(this)->value);
-        case Type::DECIMAL:
-            return define + " " + std::to_string(static_cast<const PropDecimal *>(this)->value);
-    }
-
-    return {};
-}
-
-// bool PropFile::Setting::checkRequiredSatisfied(const std::unordered_map<string, Setting>& settings) const {
-//   if (not requiredAny.empty()) {
-//     for (const auto& require : requiredAny) {
-//       auto key = settings.find(require);
-//       if (key == settings.end()) continue;
-//       if (!key->second.getOutput().empty()) return true;
-//     }
-// 
-//     return false;
-//   }      
-// 
-//   for (const auto& require : required) {
-//       auto key = settings.find(require);
-//       if (key == settings.end()) return false;
-//       if (key->second.getOutput().empty()) return false;
-//   }
-// 
-//   return true;
-// }
 
 std::shared_ptr<Versions::Prop> Versions::Prop::generate(const PConf::HashedData& data) {
     auto& logger{Log::Context::getGlobal().createLogger("Versions::Prop::generate()")};
@@ -357,6 +368,72 @@ std::shared_ptr<Versions::Prop> Versions::Prop::generate(const PConf::HashedData
 
     return prop;
 }
+
+
+bool Versions::PropSetting::isActive() const {
+    switch (type) {
+        case Type::TOGGLE:
+            return 
+                static_cast<const PropToggle *>(this)->value.isEnabled() and
+                static_cast<const PropToggle *>(this)->value;
+        case Type::SELECTION:
+            return 
+                static_cast<const PropSelection *>(this)->enabled() and
+                static_cast<const PropSelection *>(this)->value();
+        case Type::NUMERIC:
+            return static_cast<const PropNumeric *>(this)->value.isEnabled();
+        case Type::DECIMAL:
+            return static_cast<const PropDecimal *>(this)->value.isEnabled();
+    }
+    assert(0);
+}
+
+bool Versions::PropSetting::shouldOutputDefine() const {
+    if (not isActive()) return false;
+
+    if (type == Type::SELECTION) {
+        return static_cast<const PropSelection *>(this)->shouldOutput;
+    }
+
+    return true;
+}
+
+optional<string> Versions::PropSetting::generateDefineString() const {
+    if (not shouldOutputDefine()) return nullopt;
+
+    switch (type) {
+        case Type::TOGGLE:
+            return static_cast<const PropToggle *>(this)->value ? optional{define} : nullopt;
+        case Type::SELECTION:
+            return static_cast<const PropSelection *>(this)->value() ? optional{define} : nullopt;
+        case Type::NUMERIC:
+            return define + " " + std::to_string(static_cast<const PropNumeric *>(this)->value);
+        case Type::DECIMAL:
+            return define + " " + std::to_string(static_cast<const PropDecimal *>(this)->value);
+    }
+
+    return {};
+}
+
+// bool PropFile::Setting::checkRequiredSatisfied(const std::unordered_map<string, Setting>& settings) const {
+//   if (not requiredAny.empty()) {
+//     for (const auto& require : requiredAny) {
+//       auto key = settings.find(require);
+//       if (key == settings.end()) continue;
+//       if (!key->second.getOutput().empty()) return true;
+//     }
+// 
+//     return false;
+//   }      
+// 
+//   for (const auto& require : required) {
+//       auto key = settings.find(require);
+//       if (key == settings.end()) return false;
+//       if (key->second.getOutput().empty()) return false;
+//   }
+// 
+//   return true;
+// }
 
 vector<std::unique_ptr<Versions::PropSettingVariant>> Versions::parseSettings(
     const PConf::Data& data,

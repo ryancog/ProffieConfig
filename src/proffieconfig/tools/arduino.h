@@ -1,40 +1,63 @@
 #pragma once
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2025 Ryan Ogurek
+/*
+ * ProffieConfig, All-In-One Proffieboard Management Utility
+ * Copyright (C) 2023-2025 Ryan Ogurek
+ *
+ * proffieconfig/tools/arduino.h
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 4 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <wx/combobox.h>
 
-#include "../editor/editorwindow.h"
-#include "../mainmenu/mainmenu.h"
+#include "config/config.h"
 #include "log/branch.h"
 
+#include "../core/utilities/progress.h"
+
 namespace Arduino {
-    void refreshBoards(MainMenu*);
-    void applyToBoard(MainMenu*, EditorWindow*);
-    void verifyConfig(wxWindow*, EditorWindow*);
+    string version();
 
-    void init(wxWindow *);
-    vector<wxString> getBoards(Log::Branch&);
+    struct Result {
+        static constexpr cstring USAGE_MESSAGE{
+            wxTRANSLATE("The configuration uses %d%% of board space. (%d/%d)")
+        };
 
-    enum Proffieboard {
-        PROFFIEBOARDV3 = 0,
-        PROFFIEBOARDV2,
-        PROFFIEBOARDV1,
+        int32 used{-1};
+        int32 total{-1};
+        inline float64 percent() const { return (static_cast<float64>(used) / total) * 100.0; }
     };
 
-    struct Event : wxEvent {
-        Event(wxEventType type) : wxEvent(wxID_ANY, type) {}
+    /**
+     * @param progress May be null
+     *
+     * @return result info or err string
+     */
+    variant<Result, string> applyToBoard(
+        const string& boardPath,
+        const Config::Config&,
+        Progress *progress
+    );
 
-        [[nodiscard]] wxEvent *Clone() const override { return new Event(*this); }
+    /**
+     * @return result info or err string
+     */
+    variant<Result, string> verifyConfig(
+        const Config::Config&,
+        Progress *progress
+    );
 
-        bool succeeded{false};
-        wxString str;
-    };
-
-    wxDECLARE_EVENT(EVT_INIT_DONE, Event);
-    wxDECLARE_EVENT(EVT_APPLY_DONE, Event);
-    wxDECLARE_EVENT(EVT_VERIFY_DONE, Event);
-    wxDECLARE_EVENT(EVT_REFRESH_DONE, Event);
-    wxDECLARE_EVENT(EVT_CLEAR_BLIST, Event);
-    wxDECLARE_EVENT(EVT_APPEND_BLIST, Event);
+    // void init(wxWindow *);
+    vector<string> getBoards(Log::Branch * = nullptr);
 } // namespace Arduino

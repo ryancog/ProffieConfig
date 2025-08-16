@@ -18,7 +18,7 @@
 #include "ui/plaque.h"
 #include "ui/frame.h"
 #include "utils/defer.h"
-#include "paths/paths.h"
+#include "utils/paths.h"
 #include "utils/image.h"
 #include "utils/string.h"
 #include "dialogs/addconfig.h"
@@ -26,7 +26,6 @@
 
 #include "config/info.h"
 #include "log/info.h"
-#include "paths/info.h"
 #include "pconf/info.h"
 #include "ui/info.h"
 #include "utils/info.h"
@@ -109,10 +108,9 @@ void MainMenu::bindEvents() {
         aboutInfo.SetDescription(
             _("All-in-one Proffieboard Management Utility") +
             "\n\n"
-            "Arduino CLI: v" wxSTRINGIZE(ARDUINO_CLI_VERSION) "\n"
+            "Arduino CLI: v" + Arduino::version() + "\n"
             "Config: v" + Config::version() + "\n"
             "Log: v" + Log::version() + "\n"
-            "Paths: v" + Paths::version() + "\n"
             "PConf: v" + PConf::version() + "\n"
             "PCUI: v" + PCUI::version() + "\n"
             "Utils: v" + Utils::version() + "\n"
@@ -126,7 +124,7 @@ void MainMenu::bindEvents() {
     }, wxID_ABOUT);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
-        wxLaunchDefaultApplication(Paths::logs().native());
+        wxLaunchDefaultApplication(Paths::logDir().native());
     }, ID_Logs);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
@@ -153,18 +151,88 @@ void MainMenu::bindEvents() {
         wxLaunchDefaultBrowser("https://github.com/ryancog/ProffieConfig/issues/new");
     }, ID_Issue);
 
-    // Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-    //     Arduino::refreshBoards(this);
-    // }, ID_RefreshDev);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        // if (activeEditor == nullptr) {
-        //     activeEditor = generateEditor(configSelection);
-        //     if (activeEditor == nullptr) return;
-        //     editors.emplace_back(activeEditor);
-        // }
-        // Arduino::applyToBoard(this, activeEditor);
+        wxSetCursor(wxCURSOR_WAIT);
+
+        auto *progDialog{new Progress(this)};
+        progDialog->SetTitle(_("Board Refresh"));
+        progDialog->Update(0, _("Initializing..."));
+
+        std::thread{[this, progDialog]() {
+            progDialog->emitEvent(10, _("Discovering Boards..."));
+            const auto boards{Arduino::getBoards()};
+
+            progDialog->emitEvent(90, _("Processing and Finalizing..."));
+            auto choices{boardSelection.choices()};
+#           ifdef __WXOSX__
+            if (choices.size() > 1) choices.erase(std::next(choices.begin()));
+            choices.reserve(boards.size() + 1);
+#           else
+            choices.erase(std::next(choices.begin()), std::prev(choices.end()));
+            choices.reserve(boards.size() + 2);
+#           endif
+            choices.insert(std::next(choices.begin()), boards.begin(), boards.end());
+            boardSelection.setChoices(std::move(choices));
+
+            progDialog->emitEvent(100, _("Done"));
+            mNotifyData.notify(ID_AsyncDone);
+        }}.detach();
+    }, ID_RefreshDev);
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+        wxSetCursor(wxCURSOR_WAIT);
+
+        auto *config{Config::getIfOpen(configSelection)};
+        const auto configWasOpen{static_cast<bool>(config)};
+        if (not configWasOpen) {
+            const auto res{Config::open(configSelection)};
+            if (auto *err = std::get_if<string>(&res)) {
+                PCUI::showMessage(*err, _("Cannot Open Config for Apply"));
+                return;
+            }
+            config = std::get<Config::Config *>(res);
+        }
+
+        auto *progDialog{new Progress(this)};
+        progDialog->SetTitle(_("Applying Changes"));
+        progDialog->Update(0, _("Initializing..."));
+        
+        std::thread{[this, config, progDialog]() {
+            Defer defer{[this]() { mNotifyData.notify(ID_AsyncDone); }};
+
+            const auto res{
+                Arduino::applyToBoard(boardSelection, *config, progDialog)
+            };
+
+            if (auto *err = std::get_if<string>(&res)) {
+                auto *evt{new Misc::MessageBoxEvent(
+                    Misc::EVT_MSGBOX, wxID_ANY, *err, _("Cannot Apply Changes")
+                )};
+                wxQueueEvent(this, evt);
+                return;
+            }
+            const auto& result{std::get<Arduino::Result>(res)};
+
+            wxString message{_("Changes Successfully Applied to ProffieBoard!")};
+            if (result.total != -1) {
+                message += "\n\n";
+                message += wxString::Format(
+                    wxGetTranslation(Arduino::Result::USAGE_MESSAGE),
+                    result.percent(),
+                    result.used,
+                    result.total
+                );
+            } 
+
+            auto *evt{new Misc::MessageBoxEvent(
+                Misc::EVT_MSGBOX,
+                wxID_ANY,
+                message,
+                _("Apply Changes to Board"),
+                wxOK | wxICON_INFORMATION
+            )};
+            wxQueueEvent(this, evt);
+        }}.detach();
     }, ID_ApplyChanges);
-# 	if defined(__WINDOWS__)
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
         if (not SerialMonitor::instance) SerialMonitor::instance = new SerialMonitor(this, boardSelection);
         else {
@@ -172,12 +240,6 @@ void MainMenu::bindEvents() {
             SerialMonitor::instance->Raise();
         }
     }, ID_OpenSerial);
-#	else
-    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
-        // if (SerialMonitor::instance != nullptr) SerialMonitor::instance->Raise();
-        // else SerialMonitor::instance = new SerialMonitor(this, boardSelection);
-    }, ID_OpenSerial);
-#	endif
 
     configSelection.setUpdateHandler([this](uint32 id) {
         if (id != configSelection.ID_SELECTION) return;
@@ -286,6 +348,9 @@ void MainMenu::handleNotification(uint32 id) {
         canOpenSerial &= boardSelection != boardSelection.choices().size() - 1;
 #       endif
         FindWindow(ID_OpenSerial)->Enable(canOpenSerial);
+    }
+    if (rebound or id == ID_AsyncDone) {
+        wxSetCursor(wxNullCursor);
     }
 }
 

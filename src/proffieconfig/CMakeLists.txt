@@ -46,7 +46,6 @@ target_link_libraries(proffieconfig
     ui
     utils
     pconf
-    paths
     config
     versions
 )

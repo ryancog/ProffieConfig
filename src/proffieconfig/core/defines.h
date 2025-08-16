@@ -27,10 +27,6 @@ static constexpr auto COPYRIGHT_NOTICE{
     "related to ProffieOS, created by Fredrik Hubinette."
 };
 
-#define ARDUINOCORE_PBV1 "proffieboard:stm32l4:Proffieboard-L433CC"
-#define ARDUINOCORE_PBV2 "proffieboard:stm32l4:ProffieboardV2-L433CC"
-#define ARDUINOCORE_PBV3 "proffieboard:stm32l4:ProffieboardV3-L452RE"
-
 #define ARDUINO_PBPLUGIN_VERSION "3.6" // Make sure the compile output parsing doesn't break if we update this!
 
 #define SMALLBUTTONSIZE wxSize(30, 20)

@@ -23,7 +23,7 @@
 
 #include <app/app.h>
 #include <utils/types.h>
-#include <paths/paths.h>
+#include <utils/paths.h>
 #include <ui/message.h>
 #include <log/logger.h>
 

@@ -28,7 +28,7 @@
 #include "config/preset/array.h"
 #include "ui/controls/button.h"
 #include "ui/message.h"
-#include "paths/paths.h"
+#include "utils/paths.h"
 
 #include "../../core/defines.h"
 #include "../editorwindow.h"
@@ -559,7 +559,7 @@ void PresetsPage::rebuildInjections() {
         )};
 
         editButton->Bind(wxEVT_BUTTON, [&injection](wxCommandEvent&) {
-            wxLaunchDefaultApplication((Paths::injections() / injection->filename).native());
+            wxLaunchDefaultApplication((Paths::injectionDir() / injection->filename).native());
         });
 
         deleteButton->Bind(wxEVT_BUTTON, [this, &injection](wxCommandEvent&) {

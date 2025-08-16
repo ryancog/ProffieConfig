@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2025 Ryan Ogurek
  *
- * components/paths/paths.h
+ * components/utils/paths.h
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <utils/types.h>
+
+#include "version.h"
+#include "types.h"
 
 #include "private/export.h"
 
@@ -38,7 +40,7 @@ enum class Executable {
  *
  * @return The full executable path (including file)
  */
-[[nodiscard]] PATHS_EXPORT filepath executable(Executable exec = Executable::CURRENT);
+[[nodiscard]] UTILS_EXPORT filepath executable(Executable exec = Executable::CURRENT);
 
 /**
  * Retrieve the app root path
@@ -48,26 +50,33 @@ enum class Executable {
  *
  * @return root path
  */
-[[nodiscard]] PATHS_EXPORT filepath approot();
+[[nodiscard]] UTILS_EXPORT filepath approot();
 
-[[nodiscard]] PATHS_EXPORT filepath binaries();
-[[nodiscard]] PATHS_EXPORT filepath libraries();
-[[nodiscard]] PATHS_EXPORT filepath components();
-[[nodiscard]] PATHS_EXPORT filepath resources();
+[[nodiscard]] UTILS_EXPORT filepath binaryDir();
+[[nodiscard]] UTILS_EXPORT filepath libraryDir();
+[[nodiscard]] UTILS_EXPORT filepath componentDir();
+[[nodiscard]] UTILS_EXPORT filepath resourceDir();
 
-[[nodiscard]] PATHS_EXPORT filepath data();
-[[nodiscard]] PATHS_EXPORT filepath configs();
-[[nodiscard]] PATHS_EXPORT filepath injections();
-[[nodiscard]] PATHS_EXPORT filepath props();
-[[nodiscard]] PATHS_EXPORT filepath proffieos();
+[[nodiscard]] UTILS_EXPORT filepath dataDir();
+[[nodiscard]] UTILS_EXPORT filepath configDir();
+[[nodiscard]] UTILS_EXPORT filepath injectionDir();
 
-[[nodiscard]] PATHS_EXPORT filepath logs();
+[[nodiscard]] UTILS_EXPORT filepath versionDir();
+[[nodiscard]] UTILS_EXPORT filepath propDir();
+/**
+ * @return <info, header>
+ */
+[[nodiscard]] UTILS_EXPORT std::pair<filepath, filepath> prop(const string&);
+[[nodiscard]] UTILS_EXPORT filepath osDir();
+[[nodiscard]] UTILS_EXPORT filepath os(const Utils::Version&);
 
-[[nodiscard]] PATHS_EXPORT filepath stateFile();
+[[nodiscard]] UTILS_EXPORT filepath logDir();
 
-[[nodiscard]] PATHS_EXPORT string website();
-[[nodiscard]] PATHS_EXPORT string remoteAssets();
-[[nodiscard]] PATHS_EXPORT string remoteUpdateAssets();
+[[nodiscard]] UTILS_EXPORT filepath stateFile();
+
+[[nodiscard]] UTILS_EXPORT string website();
+[[nodiscard]] UTILS_EXPORT string remoteAssets();
+[[nodiscard]] UTILS_EXPORT string remoteUpdateAssets();
 
 } // namespace Paths
 

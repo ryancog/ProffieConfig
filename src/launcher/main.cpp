@@ -27,8 +27,7 @@
 #include "app/app.h"
 #include "log/context.h"
 #include "log/logger.h"
-#include "pconf/pconf.h"
-#include "paths/paths.h"
+#include "utils/paths.h"
 #include "utils/defer.h"
 #include "ui/message.h"
 
@@ -120,14 +119,14 @@ public:
             auto data{Update::parseData(&prog, *logger.binfo("Parsing version data..."))};
             if (not data) {
                 PCUI::showMessage(_("Failed to parse data!\nPlease report this error."), App::getAppName());
-                wxLaunchDefaultApplication(Paths::logs().native());
+                wxLaunchDefaultApplication(Paths::logDir().native());
                 return false;
             }
 
             if (data->bundles.empty()) {
                 logger.error("No valid bundles found!");
                 PCUI::showMessage(_("No valid version bundles found!\nPlease report this error."), App::getAppName());
-                wxLaunchDefaultApplication(Paths::logs().native());
+                wxLaunchDefaultApplication(Paths::logDir().native());
                 if (action == LAUNCH) Routine::launch(*logger.binfo("Launching in lieu of valid update data."));
                 return false;
             }
@@ -169,24 +168,24 @@ public:
 
             std::error_code err;
             prog.Update(30, "Removing binaries...");
-            fs::remove_all(Paths::binaries(), err);
+            fs::remove_all(Paths::binaryDir(), err);
             prog.Update(40, "Removing libraries...");
-            fs::remove_all(Paths::libraries(), err);
+            fs::remove_all(Paths::libraryDir(), err);
             prog.Update(50, "Removing components...");
-            fs::remove_all(Paths::components(), err);
+            fs::remove_all(Paths::componentDir(), err);
             prog.Update(60, "Removing resources...");
-            fs::remove_all(Paths::resources(), err);
+            fs::remove_all(Paths::resourceDir(), err);
 
             if (wxYES == PCUI::showMessage(_("Purge user data? (configurations, saves, etc.)\nIf files are kept, they will be available if reinstalled."), App::getAppName(), wxYES_NO | wxNO_DEFAULT)) {
                 prog.Update(70, "Purging user data...");
-                fs::remove_all(Paths::data());
+                fs::remove_all(Paths::dataDir());
             }
 
             prog.Update(90, "Removing platform setup...");
             Routine::platformUninstall();
 
             prog.Update(95, "Purging logs...");
-            fs::remove_all(Paths::logs(), err);
+            fs::remove_all(Paths::logDir(), err);
 
             prog.Update(95, "Finalizing...");
 #           ifdef __APPLE__

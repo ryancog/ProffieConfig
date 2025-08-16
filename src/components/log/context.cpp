@@ -24,7 +24,7 @@
 #include <utility>
 
 #include "app/app.h"
-#include "paths/paths.h"
+#include "utils/paths.h"
 #include "utils/types.h"
 
 #include "logger.h"
@@ -41,9 +41,9 @@ Log::Context::Context(string name, vector<std::ostream *> outStreams, bool outpu
 
   if (outputToFile) {
     if (pName == GLOBAL_TAG) {
-      mRESOutFile.open(Paths::logs() / (App::getAppName() + ".log"));
+      mRESOutFile.open(Paths::logDir() / (App::getAppName() + ".log"));
     } else {
-      mRESOutFile.open(Paths::logs() / (App::getAppName() + "-" + pName + ".log"));
+      mRESOutFile.open(Paths::logDir() / (App::getAppName() + "-" + pName + ".log"));
     }
     mOutputs.insert(mOutputs.begin(), &mRESOutFile);
 

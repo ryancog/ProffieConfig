@@ -13,7 +13,6 @@ target_link_libraries(app
 
     utils
     log
-    paths
 )
 
 include(../Component.cmake)

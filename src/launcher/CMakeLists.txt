@@ -39,7 +39,6 @@ target_link_libraries(launcher
     utils-static
     ui-static
     pconf-static
-    paths-static
 )
 
 include(../Common.cmake)

@@ -22,7 +22,6 @@ add_library(config SHARED
 target_link_libraries(config 
     wxWidgets
 
-    paths
     utils
     ui
     versions

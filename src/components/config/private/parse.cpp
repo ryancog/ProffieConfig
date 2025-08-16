@@ -30,7 +30,7 @@
 #include "log/branch.h"
 #include "log/context.h"
 #include "ui/message.h"
-#include "paths/paths.h"
+#include "utils/paths.h"
 #include "utils/string.h"
 #include "utils/version.h"
 #include "versions/versions.h"
@@ -624,7 +624,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
             size_t numProcessed{};
             try {
                 brightness = std::stod(data.c_str(), &numProcessed);
-            } catch (std::exception e) {
+            } catch (const std::exception& e) {
                 return errorMessage(logger, wxTRANSLATE("DimBlade has malformed brightness: %s"), e.what());
             }
             data.erase(0, numProcessed);
@@ -688,7 +688,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
             size_t numProcessed{};
             try {
                 splitData.start = std::stoi(data.c_str(), &numProcessed);
-            } catch (std::exception e) {
+            } catch (const std::exception& e) {
                 return errorMessage(logger, wxTRANSLATE("Failed to read SubBlade start: %s"), e.what());
             }
             data.erase(0, numProcessed);
@@ -700,7 +700,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
 
             try {
                 splitData.end = std::stoi(data.c_str(), &numProcessed);
-            } catch (std::exception e) {
+            } catch (const std::exception& e) {
                 return errorMessage(logger, wxTRANSLATE("Failed to read SubBlade end: %s"), e.what());
             }
             data.erase(0, numProcessed);
@@ -714,7 +714,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
             size_t numProcessed{};
             try {
                 splitData.segments = std::stoi(data.c_str(), &numProcessed);
-            } catch (std::exception e) {
+            } catch (const std::exception& e) {
                 return errorMessage(logger, wxTRANSLATE("Failed to read SubBlade stride: %s"), e.what());
             }
             data.erase(0, numProcessed);
@@ -729,7 +729,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
             uint32 dummyColumn;
             try {
                 dummyColumn = std::stoi(data.c_str(), &numProcessed);
-            } catch (std::exception e) {
+            } catch (const std::exception& e) {
                 return errorMessage(logger, wxTRANSLATE("Failed to read SubBlade column: %s"), e.what());
             }
             data.erase(0, numProcessed);
@@ -792,7 +792,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         size_t idx;
         try {
             blade.ws281x().length = std::stoi(data.c_str(), &idx);
-        } catch (std::exception e) {
+        } catch (const std::exception& e) {
             return errorMessage(logger, wxTRANSLATE("Failed to read WS281X length: %s"), e.what());
         }
         if (idx + 1 >= data.length()) {
@@ -862,7 +862,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         size_t idx;
         try {
             blade.ws281x().length = std::stoi(data.c_str(), &idx);
-        } catch (std::exception e) {
+        } catch (const std::exception& e) {
             return errorMessage(logger, wxTRANSLATE("Failed to read WS2811 length: %s"), e.what());
         }
         if (idx + 1 >= data.length()) {
@@ -919,6 +919,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         data.erase(0, SIMPLE_STR.length());
         blade.type = Blade::SIMPLE;
         blade.brightness = firstBrightness;
+        auto& simple{blade.simple()};
         
         const auto parseLED{[&data, &logger](SimpleBlade::Star& star) -> optional<string> {
             auto idx{0};
@@ -933,7 +934,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
                         size_t numProcessed{};
                         try {
                             star.resistance = std::stoi(data.c_str(), &numProcessed);
-                        } catch (std::exception e) {
+                        } catch (const std::exception& e) {
                             return errorMessage(logger, wxTRANSLATE("Failed to read led resistance: %s"), e.what());
                         }
                         if (numProcessed == data.length()) {
@@ -955,13 +956,13 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
             return nullopt;
         }};
 
-        res = parseLED(blade.simple().star1);
+        res = parseLED(simple.star1);
         if (res) return res;
-        res = parseLED(blade.simple().star2);
+        res = parseLED(simple.star2);
         if (res) return res;
-        res = parseLED(blade.simple().star3);
+        res = parseLED(simple.star3);
         if (res) return res;
-        res = parseLED(blade.simple().star4);
+        res = parseLED(simple.star4);
         if (res) return res;
 
         const auto parsePin{[&data](SimpleBlade::Star& star) {
@@ -978,10 +979,20 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
             if (data.empty()) return;
             data.erase(0, 1); // ',' or '>'
         }};
-        parsePin(blade.simple().star1);
-        parsePin(blade.simple().star2);
-        parsePin(blade.simple().star3);
-        parsePin(blade.simple().star4);
+        parsePin(simple.star1);
+        parsePin(simple.star2);
+        parsePin(simple.star3);
+        parsePin(simple.star4);
+
+        
+        if (
+                simple.star1.led == SimpleBlade::Star::LED::NONE and
+                simple.star2.led == SimpleBlade::Star::LED::NONE and
+                simple.star3.led == SimpleBlade::Star::LED::NONE and
+                simple.star4.led == SimpleBlade::Star::LED::NONE
+           ) {
+            blade.type = Blade::UNASSIGNED;
+        }
     } else if (data.starts_with(NULL_STR) or data.starts_with(NULLPTR_STR)) {
         blade.type = Blade::INVALID;
         if (array.blades().size() == 1) {
@@ -1151,7 +1162,7 @@ void Config::tryAddInjection(const string& buffer, Config& config) {
         );
         return;
     }
-    auto filePath{Paths::injections() / injectionFile};
+    auto filePath{Paths::injectionDir() / injectionFile};
     std::error_code err;
     if (not fs::exists(filePath, err)) {
         if (wxYES != PCUI::showMessage(wxString::Format(_("Injection file \"%s\" has not been registered.\nWould you like to add the injection file now?"), injectionFile), _("Unknown Injection Encountered"), wxYES_NO | wxYES_DEFAULT)) {
@@ -1169,7 +1180,7 @@ void Config::tryAddInjection(const string& buffer, Config& config) {
             };
             if (fileDialog.ShowModal() == wxID_CANCEL) return;
 
-            auto copyPath{Paths::injections() / filePath};
+            auto copyPath{Paths::injectionDir() / filePath};
             fs::create_directories(copyPath.parent_path());
             const auto copyOptions{fs::copy_options::overwrite_existing};
             if (not fs::copy_file(fileDialog.GetPath().ToStdString(), copyPath, copyOptions, err)) {
@@ -1198,7 +1209,7 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
         if (opt.define == NUM_BUTTONS_STR) {
             try {
                 numButtons = std::stoi(opt.value);
-            } catch (std::exception e) {
+            } catch (const std::exception& e) {
                 logger.warn(string{"Couldn't parse num buttons: "} + e.what());
             }
         } else if (opt.define == NUM_BLADES_STR) {
@@ -1233,7 +1244,7 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
                         opt.value.erase(0, idPinEnd + 1);
                         try {
                             bladeID.pullup = std::stoi(opt.value);
-                        } catch (std::exception e) {
+                        } catch (const std::exception& e) {
                             logger.warn(string{"Failed to parse pullup value for ext blade id: "} + e.what());
                         }
                     }
@@ -1265,33 +1276,33 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
             bladeID.continuousScanning = true;            
             try {
                 bladeID.continuousInterval = std::stoi(opt.value);
-            } catch (std::exception e) {
+            } catch (const std::exception& e) {
                 logger.warn(string{"Failed to parse blade id scan interval: "} + e.what());
             }
         } else if (opt.define == BLADE_ID_TIMES_STR) {
             bladeID.continuousScanning = true;            
             try {
                 bladeID.continuousTimes = std::stoi(opt.value);
-            } catch (std::exception e) {
+            } catch (const std::exception& e) {
                 logger.warn(string{"Failed to parse blade id scan times: "} + e.what());
             }
         } else if (opt.define == VOLUME_STR) {
             try {
                 volume = std::stoi(opt.value);
-            } catch (std::exception e) {
+            } catch (const std::exception& e) {
                 logger.warn(string{"Failed to parse volume: "} + e.what());
             }
         } else if (opt.define == BOOT_VOLUME_STR) {
             enableBootVolume = true;
             try {
                 bootVolume = std::stoi(opt.value);
-            } catch (std::exception e) {
+            } catch (const std::exception& e) {
                 logger.warn(string{"Failed to parse boot volume: "} + e.what());
             }
         } else if (opt.define == CLASH_THRESHOLD_STR) {
             try {
                 clashThreshold = std::stod(opt.value);
-            } catch (std::exception e) {
+            } catch (const std::exception& e) {
                 logger.warn(string{"Failed to parse clash threshold: "} + e.what());
             }
         } else if (opt.define == PLI_OFF_STR) {
@@ -1340,7 +1351,7 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
                     orientationRotation.x = std::stod(opt.value);
                     orientationRotation.y = std::stod(opt.value.substr(firstComma + 1));
                     orientationRotation.z = std::stod(opt.value.substr(secondComma + 1));
-                } catch (std::exception e) {
+                } catch (const std::exception& e) {
                     logger.warn(string{"Failed to parse orientation rotation: "} + e.what());
                 }
             }
@@ -1359,19 +1370,19 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
         } else if (opt.define == FILTER_CUTOFF_STR) {
             try {
                 filterCutoff = std::stoi(opt.value);
-            } catch (std::exception e) {
+            } catch (const std::exception& e) {
                 logger.warn(string{"Failed to parse filter cutoff: "} + e.what());
             }
         } else if (opt.define == FILTER_ORDER_STR) {
             try {
                 filterOrder = std::stoi(opt.value);
-            } catch (std::exception e) {
+            } catch (const std::exception& e) {
                 logger.warn(string{"Failed to parse filter order: "} + e.what());
             }
         } else if (opt.define == AUDIO_CLASH_SUPPRESSION_STR) {
             try {
                 audioClashSuppressionLevel = std::stoi(opt.value);
-            } catch (std::exception e) {
+            } catch (const std::exception& e) {
                 logger.warn(string{"Failed to parse audio clash suppression: "} + e.what());
             }
         } else if (opt.define == DONT_USE_GYRO_FOR_CLASH_STR) {

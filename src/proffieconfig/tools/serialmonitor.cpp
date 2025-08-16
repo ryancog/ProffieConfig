@@ -38,8 +38,6 @@
 #include <wx/gdicmn.h>
 #include <wx/string.h>
 
-#include "log/context.h"
-#include "log/severity.h"
 #include "ui/message.h"
 
 #include "../mainmenu/mainmenu.h"

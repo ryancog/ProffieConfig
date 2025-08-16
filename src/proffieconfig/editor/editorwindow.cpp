@@ -21,11 +21,13 @@
 
 #include <filesystem>
 #include <fstream>
+#include <thread>
 
 #include <wx/arrstr.h>
 #include <wx/combobox.h>
 #include <wx/event.h>
 #include <wx/filedlg.h>
+#include <wx/gdicmn.h>
 #include <wx/list.h>
 #include <wx/menu.h>
 #include <wx/settings.h>
@@ -35,7 +37,7 @@
 #include <wx/toolbar.h>
 #include <wx/tooltip.h>
 
-#include "paths/paths.h"
+#include "utils/paths.h"
 #include "ui/message.h"
 #include "ui/frame.h"
 #include "utils/defer.h"
@@ -46,6 +48,7 @@
 #include "pages/presetspage.h"
 #include "pages/propspage.h"
 
+#include "../mainmenu/mainmenu.h"
 #include "../core/utilities/misc.h"
 #include "../core/utilities/progress.h"
 
@@ -57,12 +60,15 @@ EditorWindow::EditorWindow(wxWindow *parent, Config::Config& config) :
         wxID_ANY,
         /* _("ProffieConfig Editor") + */ static_cast<string>(config.name)
     ),
-    mConfig{config} {
+    mConfig{config},
+    mInitialOSVersion{config.settings.getOSVersion()} {
+    Notifier::create(this, mNotifyData);
     auto *sizer{new wxBoxSizer{wxVERTICAL}};
 
     createMenuBar();
     createUI(sizer);
     bindEvents();
+    initializeNotifier();
 
     wxCommandEvent event{wxEVT_MENU, ID_General};
     event.SetInt(0);
@@ -112,15 +118,38 @@ void EditorWindow::bindEvents() {
             }
         }
 
+        if (not mInitialOSVersion.err and mInitialOSVersion != mConfig.settings.getOSVersion()) {
+#           ifdef __WINDOWS__
+            const auto flags{static_cast<long>(wxICON_INFORMATION | wxYES_NO | wxNO_DEFAULT)};
+            wxGenericMessageDialog saveDialog{
+#           else
+            const auto flags{wxICON_INFORMATION | wxYES_NO | wxNO_DEFAULT};
+            wxMessageDialog osChangeDlg{
+#           endif
+                this,
+                _("Any settings no longer active in this ProffieOS version are not saved "
+                        "once the editor is closed.\n\nAre you sure you want to continue?"),
+                _("OS Version Changed"),
+                flags
+            };
+            osChangeDlg.SetYesNoLabels(
+                _("Continue"),
+                _("Not Yet")
+            );
+            if (osChangeDlg.ShowModal() != wxID_YES) {
+                event.Veto();
+                return;
+            }
+        }
+
         reinterpret_cast<MainMenu *>(GetParent())->removeEditor(this);
         event.Skip();
     });
     Bind(Progress::EVT_UPDATE, [&](ProgressEvent& event) { 
         Progress::handleEvent(&event); 
     });
-    Bind(Misc::EVT_MSGBOX, [&](wxCommandEvent& event) {
-        auto& msgEvent{static_cast<Misc::MessageBoxEvent&>(event)};
-        PCUI::showMessage(msgEvent.message, msgEvent.caption, msgEvent.style, this);
+    Bind(Misc::EVT_MSGBOX, [&](Misc::MessageBoxEvent& evt) {
+        PCUI::showMessage(evt.message, evt.caption, evt.style, this);
     }, wxID_ANY);
     Bind(wxEVT_MENU, [this](wxCommandEvent&) {
         save();
@@ -129,12 +158,56 @@ void EditorWindow::bindEvents() {
         // TODO: Get the filepath for this
         // Config::save(mConfig, filepath); 
     }, ID_ExportConfig);
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) { Arduino::verifyConfig(this, this); }, ID_VerifyConfig);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-        wxFileDialog fileDialog{this, _("Select Injection File"), wxEmptyString, wxEmptyString, "C Header (*.h)|*.h", wxFD_FILE_MUST_EXIST | wxFD_OPEN};
+        wxSetCursor(wxCURSOR_WAIT);
+
+        auto *prog{new Progress(this)};
+        const auto verifyStr{_("Verify Config")};
+        prog->SetTitle(verifyStr);
+        prog->Update(0, _("Initializing..."));
+
+        std::thread{[this, prog, verifyStr]() {
+            Defer defer{[this]() { mNotifyData.notify(ID_AsyncDone); }};
+
+            auto res{Arduino::verifyConfig(mConfig, prog)};
+            if (auto *err = std::get_if<string>(&res)) {
+                auto *evt{new Misc::MessageBoxEvent(
+                    Misc::EVT_MSGBOX, wxID_ANY, *err, _("Config Verification Failed")
+                )};
+                wxQueueEvent(this, evt);
+                return;
+            }
+            auto result{std::get<Arduino::Result>(res)};
+
+            wxString message{_("Config Verified Successfully!")};
+            if (result.total != -1) {
+                message += "\n\n";
+                message += wxString::Format(
+                    wxGetTranslation(Arduino::Result::USAGE_MESSAGE),
+                    result.percent(),
+                    result.used,
+                    result.total
+                );
+            } 
+
+            auto *evt{new Misc::MessageBoxEvent(
+                Misc::EVT_MSGBOX, wxID_ANY, message, verifyStr
+            )};
+            wxQueueEvent(this, evt);
+        }}.detach();
+    }, ID_VerifyConfig);
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+        wxFileDialog fileDialog{
+            this,
+            _("Select Injection File"),
+            wxEmptyString,
+            wxEmptyString,
+            "C Header (*.h)|*.h",
+            wxFD_FILE_MUST_EXIST | wxFD_OPEN
+        };
         if (fileDialog.ShowModal() == wxCANCEL) return;
 
-        auto copyPath{Paths::injections() / fileDialog.GetFilename().ToStdWstring()};
+        auto copyPath{Paths::injectionDir() / fileDialog.GetFilename().ToStdWstring()};
         const auto copyOptions{fs::copy_options::overwrite_existing};
         std::error_code err;
         if (not fs::copy_file(fileDialog.GetPath().ToStdWstring(), copyPath, copyOptions, err)) {
@@ -166,6 +239,10 @@ void EditorWindow::bindEvents() {
     Bind(wxEVT_MENU, windowSelectionHandler, ID_Props);
     Bind(wxEVT_MENU, windowSelectionHandler, ID_Presets);
     Bind(wxEVT_MENU, windowSelectionHandler, ID_BladeArrays);
+}
+
+void EditorWindow::handleNotification(uint32 id) {
+    if (id == ID_AsyncDone) wxSetCursor(wxNullCursor);
 }
 
 void EditorWindow::createMenuBar() {
