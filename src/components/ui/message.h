@@ -40,7 +40,28 @@ namespace PCUI {
  *
  * @return user selection
  */
-UI_EXPORT int32 showMessage(const wxString& msg, const wxString& caption = {}, int32 style = wxOK | wxCENTER, wxWindow *parent = nullptr);
+UI_EXPORT int32 showMessage(
+    const wxString& msg,
+    const wxString& caption = {},
+    int64 style = wxOK | wxCENTER,
+    wxWindow *parent = nullptr
+);
+
+struct HideableInfo {
+    bool wantsToHide;
+    int32 result;
+};
+
+UI_EXPORT HideableInfo showHideablePrompt(
+    const wxString& msg,
+    const wxString& caption,
+    wxWindow *parent = nullptr,
+    int64 style = wxOK | wxCENTER,
+    const wxString& yesText = wxEmptyString,
+    const wxString& noText = wxEmptyString,
+    const wxString& okText = wxEmptyString,
+    const wxString& cancelText = wxEmptyString
+);
 
 #ifdef __WXMSW__
 using ProgressDialog = wxGenericProgressDialog;
