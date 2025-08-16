@@ -241,14 +241,6 @@ optional<string> Config::runPreChecks(const Config& config, Log::Branch& lBranch
     return nullopt;
 }
 
-// bool Config::exportConfig(Config&editor) {
-//     wxFileDialog configLocation(editor, _("Save ProffieOS Config File"), "", wxString{editor->getOpenConfig()}, _("ProffieOS Config") + " (*.h)|*.h", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-// 
-//     if (configLocation.ShowModal() == wxID_CANCEL) return false; // User Closed
-// 
-//     return Config::outputConfig(configLocation.GetPath().ToStdString(), editor);
-// }
-
 void Config::outputTop(std::ofstream& outFile, const Config& config) {
     outFile << "#ifdef CONFIG_TOP\n";
     outputTopGeneral(outFile, config);
