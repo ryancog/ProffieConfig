@@ -34,7 +34,7 @@ struct VersionedOS {
     Utils::Version coreVersion;
 };
 
-struct VersionedProp {
+struct VERSIONS_EXPORT VersionedProp {
     std::shared_ptr<const Prop> prop;
     PCUI::TextData name;
     vector<Utils::Version> supportedVersions;
@@ -55,19 +55,21 @@ private:
     bool mNameIsSynced{true};
 };
 
-void VERSIONS_EXPORT loadLocal();
+VERSIONS_EXPORT void loadLocal();
 
 /**
  * @return versions sorted from latest to oldest
  */
-const vector<VersionedOS>& VERSIONS_EXPORT getOSVersions();
+VERSIONS_EXPORT const vector<VersionedOS>& getOSVersions();
 
-const vector<VersionedProp>& VERSIONS_EXPORT getProps();
+VERSIONS_EXPORT const vector<VersionedProp>& getProps();
 
 /**
  * @return all registered props for the version
  * Must be copied into config (or elsewhere if you're crazy like that) for use.
  */
-vector<VersionedProp *> VERSIONS_EXPORT propsForVersion(Utils::Version);
+VERSIONS_EXPORT vector<VersionedProp *> propsForVersion(Utils::Version);
+
+VERSIONS_EXPORT void showOrRaiseManager(wxWindow *parent, wxWindowID id);
 
 }
