@@ -217,21 +217,11 @@ bool App::init(const string& appName, const string& lockName) {
     return true;
 }
 
-App::Menus App::createDefaultMenuBar() {
-    Menus ret;
-    ret.menuBar = new wxMenuBar();
-    ret.file = new wxMenu();
-    ret.edit = new wxMenu();
-    ret.view = new wxMenu();
-    ret.help = new wxMenu();
-    ret.menuBar->Append(ret.file, _("&File"));
-    ret.menuBar->Append(ret.edit, _("&Edit"));
-    ret.menuBar->Append(ret.view, _("&View"));
-#   ifdef __WXMAC__
-    ret.menuBar->Append(new wxMenu(), _("&Window"));
+void App::appendDefaultMenuItems(wxMenuBar *menuBar) {
+#   ifdef __WXOSX__
+    menuBar->Append(new wxMenu, _("&Window"));
+    menuBar->Append(new wxMenu, _("&Help"));
 #   endif
-    ret.menuBar->Append(ret.help, _("&Help"));
-    return ret;
 }
 
 void App::exceptionHandler() {

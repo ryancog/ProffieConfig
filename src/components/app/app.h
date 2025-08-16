@@ -40,16 +40,7 @@ APP_EXPORT bool init(const string& appName, const string& lockName = {});
 
 APP_EXPORT void exceptionHandler();
 
-struct APP_EXPORT Menus {
-    wxMenuBar *menuBar;
-    wxMenu *file;
-    wxMenu *edit;
-    wxMenu *view;
-    wxMenu *help;
-};
-
-// This is a memory leak if not used!
-APP_EXPORT Menus createDefaultMenuBar();
+APP_EXPORT void appendDefaultMenuItems(wxMenuBar *);
 
 #if defined(__WIN32__)
 APP_EXPORT [[nodiscard]] bool darkMode();

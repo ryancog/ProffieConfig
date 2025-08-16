@@ -60,18 +60,11 @@ Frame::Frame(wxWindow *parent,
 #	endif
 
     SetDoubleBuffered(true);
-
-#   ifdef __APPLE__
-    mMenus = App::createDefaultMenuBar();
-    SetMenuBar(mMenus.menuBar);
-#   endif
 }
 
 Frame::~Frame() {
     if (mReference and *mReference) (*mReference) = nullptr;
 }
-
-App::Menus Frame::getMenus() { return mMenus; }
 
 void Frame::setReference(Frame** ref) {
     mReference = ref;
