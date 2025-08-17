@@ -21,6 +21,7 @@ add_library(ui SHARED
     controls/radios.cpp
     controls/text.cpp
     controls/toggle.cpp
+    controls/version.cpp
 )
 
 target_link_libraries(ui 
