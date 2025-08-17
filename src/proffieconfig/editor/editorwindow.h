@@ -35,6 +35,8 @@ class EditorWindow : public PCUI::Frame, PCUI::Notifier {
 public:
     EditorWindow(wxWindow *, Config::Config&);
     bool Destroy() final;
+    void Fit() final;
+    void FitAnimated();
 
     // Handles errors
     bool save();
@@ -66,8 +68,6 @@ private:
     void createUI(wxSizer *);
     void bindEvents();
 
-    void Fit() final;
-    void FitAnimated();
     wxSize mBestSize{-1, -1};
     wxSize mStartSize{-1, -1};
     std::chrono::microseconds::rep mStartMicros;
