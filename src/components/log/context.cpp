@@ -32,8 +32,8 @@
 
 namespace Log {
 
-    constexpr cstring GLOBAL_TAG{"GLOBAL"};
-    std::unique_ptr<Log::Context> globalContext;
+constexpr cstring GLOBAL_TAG{"GLOBAL"};
+std::unique_ptr<Log::Context> globalContext;
 
 } // namespace Log
 
@@ -58,8 +58,7 @@ Log::Context::Context(string name, vector<std::ostream *> outStreams, bool outpu
 
         mRESOutFile << appName.c_str() << " Log (" << wxSTRINGIZE(BIN_VERSION)
             << ") [Context: " << pName << "]\n";
-        mRESOutFile << "Started at " << std::ctime(&timeNow) << "\n\n"
-            << std::flush;
+        mRESOutFile << "Started at " << std::ctime(&timeNow) << "\n" << std::flush;
     }
 }
 
