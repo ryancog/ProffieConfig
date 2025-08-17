@@ -457,9 +457,8 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
                 tmpIno << "#define CONFIG_FILE \"config/" << static_cast<string>(config.name) << ".h\"";
                 alreadyOutputConfigDefine = true;
             }
-        /* else if (fileData.find(R"(const char version[] = ")" ) != string::npos) {
-            outputData.push_back(R"(const char version[] = ")" wxSTRINGIZE(PROFFIEOS_VERSION) R"(";)");
-        */
+        } else if (buffer.find(R"(const char version[] = ")" ) == 0) {
+            tmpIno << R"(const char version[] = ")" + static_cast<string>(osVersion) +  R"(";)";
         } else {
             tmpIno << buffer;
         }
