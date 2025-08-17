@@ -266,8 +266,8 @@ void Versions::Prop::rebuildSettingMap(optional<std::set<PropSetting *>> pruneLi
     }
 }
 
-std::shared_ptr<Versions::Prop> Versions::Prop::generate(const PConf::HashedData& data) {
-    auto& logger{Log::Context::getGlobal().createLogger("Versions::Prop::generate()")};
+std::shared_ptr<Versions::Prop> Versions::Prop::generate(const PConf::HashedData& data, Log::Branch *lBranch) {
+    auto& logger{Log::Branch::optCreateLogger("Versions::Prop::generate()", lBranch)};
 
     const auto nameIter{data.find("NAME")};
     if (nameIter == data.end() or not nameIter->second->value) {
