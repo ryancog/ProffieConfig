@@ -282,8 +282,9 @@ void EditorWindow::bindEvents() {
         const auto totalDelta{mBestSize - mStartSize};
 
         const auto newSize{mStartSize + (totalDelta * completion)};
+        SetSizeHints(-1, -1, -1, -1);
         SetSize(newSize);
-        SetSizeHints(newSize, newSize);
+        SetSizeHints(GetSize(), GetSize());
 
         if (completion == 1) {
             configureResizing();
