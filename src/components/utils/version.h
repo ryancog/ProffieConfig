@@ -37,6 +37,8 @@ struct UTILS_EXPORT Version {
      * - major, minor, and bugfix are positive ints [0-255]
      */
     Version(string_view str);
+    Version(uint8 major, uint8 minor = NULL_REV, uint8 bugfix = NULL_REV, const string& tag = {}) :
+        major{major}, minor{minor}, bugfix{bugfix}, tag{tag} {};
 
     static const Version& invalidObject();
 
