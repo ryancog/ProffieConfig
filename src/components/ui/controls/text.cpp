@@ -106,7 +106,7 @@ void PCUI::TextData::setValue(string&& val) {
 void PCUI::TextData::setInsertionPoint(uint32 insertionPoint) {
     std::scoped_lock scopeLock{getLock()};
     if (pInsertionPoint == insertionPoint) return;
-    pInsertionPoint = insertionPoint;
+    pInsertionPoint = std::clamp<uint32>(insertionPoint, 0, pValue.length());
     notify(ID_INSERTION);
 }
 
