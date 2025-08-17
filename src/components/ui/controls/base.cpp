@@ -173,12 +173,12 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
     bool parentFit
 ) {
     wxPanel::SetMinSize({-1, -1});
+    pControl->SetMinSize({-1, -1});
+
     auto newSize{GetBestSize()};
     newSize.IncTo(mMinSize);
+    newSize.DecToIfSpecified(GetMaxSize());
     wxPanel::SetMinSize(newSize);
-
-    pControl->SetMinSize({-1, -1});
-    pControl->SetSize(pControl->GetBestSize());
 
     Layout();
     Fit();
