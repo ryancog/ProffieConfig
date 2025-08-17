@@ -38,7 +38,12 @@ PCUI::VersionData::VersionData() {
             return;
         }
 
-        mMajor = std::move(rawValue);
+        const auto clampedValue{std::clamp(
+            std::stoi(rawValue),
+            0,
+            Utils::Version::NULL_REV - 1
+        )};
+        mMajor = std::move(std::to_string(clampedValue));
         mMajor.setInsertionPoint(insertionPoint - numTrimmed);
     });
     mMinor.setUpdateHandler([this](uint32 id) {
@@ -51,7 +56,12 @@ PCUI::VersionData::VersionData() {
 
         if (numTrimmed == 0) return;
 
-        mMinor = std::move(rawValue);
+        const auto clampedValue{std::clamp(
+            std::stoi(rawValue),
+            0,
+            Utils::Version::NULL_REV - 1
+        )};
+        mMinor = std::move(std::to_string(clampedValue));
         mMinor.setInsertionPoint(insertionPoint - numTrimmed);
     });
     mBugfix.setUpdateHandler([this](uint32 id) {
@@ -71,7 +81,12 @@ PCUI::VersionData::VersionData() {
             return;
         }
 
-        mBugfix = std::move(rawValue);
+        const auto clampedValue{std::clamp(
+            std::stoi(rawValue),
+            0,
+            Utils::Version::NULL_REV - 1
+        )};
+        mBugfix = std::move(std::to_string(clampedValue));
         mBugfix.setInsertionPoint(insertionPoint - numTrimmed);
     });
     mTag.setUpdateHandler([this](uint32 id) {
@@ -124,17 +139,6 @@ PCUI::Version::Version(
     const wxString& label,
     wxOrientation orient
 ) : ControlBase(parent, data) {
-    mMajor = new PCUI::Text(this, data.mMajor);
-    mMinor = new PCUI::Text(
-        this, data.mMinor, 0, false, ".", wxHORIZONTAL
-    );
-    mMinor = new PCUI::Text(
-        this, data.mMinor, 0, false, ".", wxHORIZONTAL
-    );
-    mMinor = new PCUI::Text(
-        this, data.mMinor, 0, false, "-", wxHORIZONTAL
-    );
-
     create(label, orient);
 }
 
@@ -144,25 +148,45 @@ PCUI::Version::Version(
     const wxString& label,
     wxOrientation orient
 ) : ControlBase(parent, proxy) {
-    mMajor = new PCUI::Text(this, proxy.mMajor);
-    mMinor = new PCUI::Text(
-        this, proxy.mMinor, 0, false, ".", wxHORIZONTAL
-    );
-    mMinor = new PCUI::Text(
-        this, proxy.mMinor, 0, false, ".", wxHORIZONTAL
-    );
-    mMinor = new PCUI::Text(
-        this, proxy.mMinor, 0, false, "-", wxHORIZONTAL
-    );
     create(label, orient);
 }
 
 void PCUI::Version::create(const wxString& label, wxOrientation orient) {
     auto *panel{new wxPanel(this)};
+    auto *dataProxy{static_cast<VersionDataProxy *>(proxy())};
+    if (dataProxy) {
+        mMajor = new PCUI::Text(panel, dataProxy->mMajor);
+        mMinor = new PCUI::Text(panel, dataProxy->mMinor);
+        mBugfix = new PCUI::Text(panel, dataProxy->mMinor);
+        mTag = new PCUI::Text(panel, dataProxy->mMinor);
+    } else {
+        mMajor = new PCUI::Text(panel, data()->mMajor);
+        mMinor = new PCUI::Text(panel, data()->mMinor);
+        mBugfix = new PCUI::Text(panel, data()->mMinor);
+        mTag = new PCUI::Text(panel, data()->mMinor);
+    }
+
+    const auto textWidth{GetTextExtent("255").GetWidth() + 5};
+    mMajor->SetMaxSize({textWidth, -1});
+    mMinor->SetMaxSize({textWidth, -1});
+    mBugfix->SetMaxSize({textWidth, -1});
+    mMajor->SetMinSize({textWidth, -1});
+    mMinor->SetMinSize({textWidth, -1});
+    mBugfix->SetMinSize({textWidth, -1});
+
     auto *panelSizer{new wxBoxSizer(wxHORIZONTAL)};
     panelSizer->Add(mMajor);
+    panelSizer->Add(
+        new wxStaticText(panel, wxID_ANY, "."),
+        wxSizerFlags().Bottom()
+    );
     panelSizer->Add(mMinor);
+    panelSizer->Add(
+        new wxStaticText(panel, wxID_ANY, "."),
+        wxSizerFlags().Bottom()
+    );
     panelSizer->Add(mBugfix);
+    panelSizer->Add(new wxStaticText(panel, wxID_ANY, "-"));
     panelSizer->Add(mTag, 1);
     panel->SetSizerAndFit(panelSizer);
 
