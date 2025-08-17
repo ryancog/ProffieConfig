@@ -34,6 +34,7 @@
 namespace Versions {
 
 constexpr cstring INFO_FILE_STR{"info.pconf"};
+constexpr cstring DATA_FILE_STR{"data.pconf"};
 constexpr cstring HEADER_FILE_STR{"header.h"};
 
 constexpr cstring CORE_VERSION_STR{"CORE_VER"};
@@ -107,8 +108,9 @@ void Versions::loadLocal() {
         }
 
         auto propName{entry.path().filename().string()};
-        Utils::trimUnsafe(propName);
-        if (propName != entry.path().filename().string()) {
+        uint32 numTrimmed{};
+        Utils::trimUnsafe(propName, &numTrimmed);
+        if (numTrimmed) {
             logger.warn("Prop entry with invalid name: " + entry.path().filename().string());
             continue;
         }
@@ -120,7 +122,7 @@ void Versions::loadLocal() {
         PConf::read(infoFile, infoData, logger.bverbose("Reading info file..."));
         const auto hashedInfoData{PConf::hash(infoData)};
 
-        vector<Utils::Version> supportedVersions;
+        vector<std::unique_ptr<PCUI::VersionData>> supportedVersions;
         const auto supportedVersionsIter{hashedInfoData.find(SUPPORTED_VERSIONS_STR)};
         if (supportedVersionsIter != hashedInfoData.end()) {
             auto versionStrs{PConf::valueAsList(supportedVersionsIter->second->value)};
@@ -132,12 +134,18 @@ void Versions::loadLocal() {
                 }
 
                 logger.verbose("Prop " + propName + " supports OS version " + static_cast<string>(supportedVersion));
-                supportedVersions.push_back(std::move(supportedVersion));
+                supportedVersions.push_back(std::make_unique<PCUI::VersionData>(supportedVersion));
             }
         }
 
+        // Yeah this naming is stupid, what are you going to do about it?
+        std::ifstream dataFile{Paths::propDir() / propName / INFO_FILE_STR};
+        PConf::Data dataData;
+        PConf::read(dataFile, dataData, logger.bverbose("Reading data file..."));
+        const auto hashedDataData{PConf::hash(dataData)};
+
         const auto prop{
-            Prop::generate(hashedInfoData, logger.bverbose("Generating prop..."))
+            Prop::generate(hashedDataData, logger.bverbose("Generating prop..."))
         };
         if (not prop) {
             logger.warn("Failed generating prop " + propName);
@@ -156,7 +164,7 @@ void Versions::loadLocal() {
     propVersionMap.clear();
     for (const auto& prop : props) {
         for (const auto& version : prop->supportedVersions) {
-            propVersionMap.emplace(version, prop.get());
+            propVersionMap.emplace(*version, prop.get());
         }
     }
 
