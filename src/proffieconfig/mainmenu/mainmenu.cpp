@@ -97,11 +97,6 @@ void MainMenu::bindEvents() {
     Bind(Misc::EVT_MSGBOX, [&](Misc::MessageBoxEvent& event) {
         PCUI::showMessage(event.message, event.caption, event.style, this);
     });
-    Bind(wxEVT_MENU, [this, promptClose](wxCommandEvent&) { 
-        if (not promptClose()) return;
-        Close(true); 
-        OnboardFrame::instance = new OnboardFrame(); 
-    }, ID_ReRunSetup);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxAboutDialogInfo aboutInfo;
@@ -381,7 +376,7 @@ void MainMenu::handleNotification(uint32 id) {
 
 void MainMenu::createMenuBar() {
     auto *file{new wxMenu};
-    file->Append(ID_ReRunSetup, _("Re-Run First-Time Setup..."), _("Install Proffieboard Dependencies and View Tutorial"));
+    // file->Append(ID_ReRunSetup, _("Re-Run First-Time Setup..."), _("Install Proffieboard Dependencies and View Tutorial"));
     file->Append(ID_ManageVersions, _("Manage Versions..."));
     file->Append(ID_UpdateManifest, _("Update Channel..."));
     file->AppendSeparator();
