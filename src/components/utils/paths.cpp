@@ -147,11 +147,6 @@ filepath Paths::versionDir() { return Paths::dataDir() / "versions"; }
 
 filepath Paths::propDir() { return Paths::versionDir() / "props"; }
 
-std::pair<filepath, filepath> Paths::prop(const string& name) {
-    const auto base{Paths::propDir() / name};
-    return { base / "info.pconf", base / "header.h" };
-}
-
 filepath Paths::osDir() {
     return Paths::versionDir() / "os";
 }
