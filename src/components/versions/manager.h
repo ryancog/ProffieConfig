@@ -19,6 +19,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/wrapsizer.h>
+
+#include "ui/controls/text.h"
+#include "ui/controls/version.h"
 #include "ui/frame.h"
 
 #include "versions_export.h"
@@ -33,6 +37,12 @@ public:
 private:
     Manager(wxWindow *, wxWindowID);
     void createUI();
+    void createMenuBar();
+    void bindEvents();
+
+    PCUI::TextDataProxy mPropNameProxy;
+    PCUI::VersionDataProxy mPropVersionProxy;
+    wxWrapSizer *mPropVersionsSizer;
 
     static Manager *smInstance;
 };
