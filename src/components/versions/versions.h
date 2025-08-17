@@ -62,7 +62,7 @@ VERSIONS_EXPORT void loadLocal();
  */
 VERSIONS_EXPORT const vector<VersionedOS>& getOSVersions();
 
-VERSIONS_EXPORT const vector<VersionedProp>& getProps();
+VERSIONS_EXPORT const vector<std::unique_ptr<VersionedProp>>& getProps();
 
 /**
  * @return all registered props for the version
