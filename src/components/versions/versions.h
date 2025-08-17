@@ -20,6 +20,7 @@
  */
 
 #include "ui/controls/text.h"
+#include "ui/controls/version.h"
 #include "utils/types.h"
 #include "utils/version.h"
 
@@ -37,7 +38,7 @@ struct VersionedOS {
 struct VERSIONS_EXPORT VersionedProp {
     std::shared_ptr<const Prop> prop;
     PCUI::TextData name;
-    vector<Utils::Version> supportedVersions;
+    vector<std::unique_ptr<PCUI::VersionData>> supportedVersions;
 
     /**
      * Move the prop to the location specified by name
