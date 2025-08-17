@@ -31,6 +31,7 @@
 
 #include "config/bladeconfig/ws281x.h"
 #include "utils/crypto.h"
+#include "wx/font.h"
 
 struct SplitData {
     uint32 start;
@@ -242,7 +243,10 @@ void SplitVisualizer::paintEvent(wxPaintEvent&) {
         gc->StrokeLine(0, size.start + size.length, windowSize.x, size.start + size.length);
 
         auto font{wxSystemSettings::GetFont(wxSYS_SYSTEM_FONT)};
-        if (size.splitIdx == selectedSplit) font.MakeBold();
+        if (size.splitIdx == selectedSplit) {
+            font.MakeBold();
+            font.SetFractionalPointSize(font.GetFractionalPointSize() * 1.2);
+        }
         gc->SetFont(
             font,
             wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT)
