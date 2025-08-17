@@ -72,7 +72,6 @@ void Versions::Manager::bindEvents() {
 void Versions::Manager::createUI() {
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
-
     auto *notebook{new wxNotebook(this, wxID_ANY)};
 
     auto *propPage{new wxPanel(notebook)};
@@ -98,12 +97,21 @@ void Versions::Manager::createUI() {
         wxBU_EXACTFIT
     )};
     propModSizer->Add(propAdd, 1);
+    propModSizer->AddSpacer(5);
     propModSizer->Add(propRemove, 1);
     propListSizer->Add(propList, 1);
+    propListSizer->AddSpacer(5);
     propListSizer->Add(propModSizer, 0, wxEXPAND);
+    propListSizer->AddSpacer(10);
 
     auto *propEditSizer{new wxBoxSizer(wxVERTICAL)};
-    auto *propName{new PCUI::Text(propPage, mPropNameProxy)};
+    auto *propName{new PCUI::Text(
+        propPage,
+        mPropNameProxy,
+        0,
+        false,
+        _("Prop Name")
+    )};
     auto *propInfo{new wxStaticText(propPage, ID_PropInfo, {})};
     mPropVersionsSizer = new wxWrapSizer;
     auto *propVersion{new PCUI::Version(propPage, mPropVersionProxy)};
@@ -111,21 +119,31 @@ void Versions::Manager::createUI() {
         new wxButton(propPage, ID_PropRemoveVersion, _("Remove"))
     };
     propEditSizer->Add(propName, 0, wxEXPAND);
+    propEditSizer->AddSpacer(5);
     propEditSizer->Add(propInfo, 0, wxEXPAND);
+    propEditSizer->AddSpacer(10);
     propEditSizer->Add(mPropVersionsSizer, 1, wxEXPAND);
+    propEditSizer->AddSpacer(5);
     propEditSizer->Add(propVersion, 0, wxEXPAND);
+    propEditSizer->AddSpacer(5);
     propEditSizer->Add(propDeleteVersion, 0, wxEXPAND);
+    propEditSizer->AddSpacer(10);
 
+    propSizer->AddSpacer(10);
     propSizer->Add(propListSizer, 0, wxEXPAND);
+    propSizer->AddSpacer(10);
     propSizer->Add(propEditSizer);
+    propSizer->AddSpacer(10);
+    propPage->SetSizerAndFit(propSizer);
 
     auto *osPage{new wxPanel(notebook)};
 
     notebook->AddPage(propPage, _("Prop Files"), true);
     notebook->AddPage(osPage, _("ProffieOS"));
 
-    sizer->Add(notebook, wxSizerFlags(1));
+    sizer->Add(notebook, 1, wxEXPAND | wxALL, 10);
     SetSizerAndFit(sizer);
+    SetMaxSize({GetSize().x, -1});
 }
 
 void Versions::Manager::createMenuBar() {
