@@ -44,6 +44,7 @@ struct CONFIG_EXPORT Config {
     PCUI::ChoiceData propSelection;
     enum {
         ID_PROPSELECTION,
+        ID_PROPUPDATE,
     };
     PCUI::NotifierData propNotifyData;
 
@@ -66,7 +67,7 @@ struct CONFIG_EXPORT Config {
     /**
      * Refresh OS and Prop Version(s) and update accordingly
      */
-    void refreshVersions();
+    void refreshOSVersions();
     void refreshPropVersions();
 
     void rename(const string& newName);

@@ -49,10 +49,11 @@ Config::Config::Config() :
         propNotifyData.notify(ID_PROPSELECTION);
     });
 
-    refreshVersions();
+    refreshOSVersions();
+    refreshPropVersions();
 }
 
-void Config::Config::refreshVersions() {
+void Config::Config::refreshOSVersions() {
     auto osVersions{Versions::getOSVersions()};
 
     vector<string> osChoices;
@@ -66,13 +67,13 @@ void Config::Config::refreshVersions() {
     settings.osVersion.setChoices(std::move(osChoices));
 
     // Show/hide options as necessary.
-
-    refreshPropVersions();
 }
 
 void Config::Config::refreshPropVersions() {
     const auto verNum{settings.getOSVersion()};
     auto& propList{mProps[verNum]};
+
+    vector<Versions::Prop *> visibleList;
     for (const auto& versionedProp : Versions::propsForVersion(verNum)) {
         bool found{false};
         for (auto& prop : propList) {
@@ -81,6 +82,7 @@ void Config::Config::refreshPropVersions() {
                 found = true;
                 auto newProp{std::make_unique<Versions::Prop>(*versionedProp->prop)};
                 newProp->migrateFrom(*prop);
+                visibleList.push_back(newProp.get());
                 prop = std::move(newProp);
                 break;
             }
@@ -88,20 +90,48 @@ void Config::Config::refreshPropVersions() {
 
         if (found) continue;
 
-        propList.push_back(std::make_unique<Versions::Prop>(*versionedProp->prop));
+        auto newProp{std::make_unique<Versions::Prop>(*versionedProp->prop)};
+        visibleList.push_back(newProp.get());
+        propList.push_back(std::move(newProp));
     }
 
-    const auto comp{[](
+    const auto comp{[&visibleList](
         const std::unique_ptr<Versions::Prop>& a,
         const std::unique_ptr<Versions::Prop>& b
     ) -> bool {
-        return a->name < b->name;
+        bool aIsVisible{false};
+        bool bIsVisible{false};
+        for (const auto visibleProp : visibleList) {
+            if (visibleProp == a.get()) aIsVisible = true;
+            if (visibleProp == b.get()) bIsVisible = true;
+
+            if (aIsVisible and bIsVisible) break;
+        }
+
+        if (aIsVisible == bIsVisible) return a->name < b->name;
+
+        // One of these is not visible, the other is
+        // Sort a first if a visible
+        return aIsVisible;
     }};
     std::sort(propList.begin(), propList.end(), comp);
 
     vector<string> choices;
     choices.reserve(propList.size());
-    for (const auto& prop : propList) choices.push_back(prop->name);
+    for (const auto& prop : propList) {
+        bool isVisible{false};
+        for (const auto visibleProp : visibleList) {
+            if (visibleProp == prop.get()) {
+                isVisible = true;
+                break;
+            }
+        }
+        if (not isVisible) break;
+
+        choices.push_back(prop->name);
+    }
+
+    propNotifyData.notify(ID_PROPUPDATE);
     propSelection.setChoices(std::move(choices));
 }
 
