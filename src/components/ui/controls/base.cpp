@@ -27,6 +27,7 @@
 #include "ui/controls/radios.h"
 #include "ui/controls/text.h"
 #include "ui/controls/toggle.h"
+#include "ui/controls/version.h"
 
 void PCUI::ControlData::setUpdateHandler(function<void(uint32 id)>&& handler) {
     mOnUpdate = std::move(handler);
@@ -251,4 +252,5 @@ template class PCUI::ControlBase<PCUI::Radios, PCUI::RadiosData, wxRadioBox, wxC
 template class PCUI::ControlBase<PCUI::Text, PCUI::TextData, wxTextCtrl, wxCommandEvent>;
 template class PCUI::ControlBase<PCUI::CheckBox, PCUI::ToggleData, wxCheckBox, wxCommandEvent>;
 template class PCUI::ControlBase<PCUI::Toggle, PCUI::ToggleData, wxToggleButton, wxCommandEvent>;
+template class PCUI::ControlBase<PCUI::Version, PCUI::VersionData, wxPanel, wxEvent>;
 
