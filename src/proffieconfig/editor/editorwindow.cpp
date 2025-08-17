@@ -19,12 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <thread>
 
 #include <wx/arrstr.h>
 #include <wx/combobox.h>
+#include <wx/display.h>
 #include <wx/event.h>
 #include <wx/filedlg.h>
 #include <wx/gdicmn.h>
@@ -66,7 +68,6 @@ EditorWindow::EditorWindow(wxWindow *parent, Config::Config& config) :
     mInitialOSVersion{config.settings.getOSVersion()} {
     Notifier::create(this, mNotifyData);
     auto *sizer{new wxBoxSizer{wxVERTICAL}};
-
 
     createMenuBar();
     createUI(sizer);
@@ -251,6 +252,51 @@ void EditorWindow::bindEvents() {
     Bind(wxEVT_MENU, windowSelectionHandler, ID_Props);
     Bind(wxEVT_MENU, windowSelectionHandler, ID_Presets);
     Bind(wxEVT_MENU, windowSelectionHandler, ID_BladeArrays);
+
+    Bind(wxEVT_IDLE, [this](wxIdleEvent& evt) {
+        if (not mStartSize.IsFullySpecified() or not mBestSize.IsFullySpecified() or mStartMicros == -1) return;
+
+        constexpr auto RESIZE_TIME_MICROS{350 * 1000};
+        static std::chrono::microseconds::rep lastFrameMicros{0};
+
+        const auto display{wxDisplay::GetFromWindow(this)};
+        if (display == wxNOT_FOUND) return;
+        const auto frameRate{wxDisplay(display).GetCurrentMode().GetRefresh()};
+        const std::chrono::microseconds::rep frameIntervalMicros{(1000 * 1000) / frameRate};
+
+        const auto nowMicros{std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now().time_since_epoch()
+        ).count()};
+        
+        if (nowMicros - lastFrameMicros < frameIntervalMicros) {
+            evt.RequestMore();
+            return;
+        }
+
+        const float64 completion{std::clamp<float64>(
+            (nowMicros - mStartMicros) / static_cast<float64>(RESIZE_TIME_MICROS),
+            0, 1
+        )};
+
+        const auto totalDelta{mBestSize - mStartSize};
+
+        const auto newSize{mStartSize + (totalDelta * completion)};
+        SetSize(newSize);
+
+        if (completion == 1) {
+            SetMinSize(GetSize());
+            if (generalPage->IsShown() or propsPage->IsShown()) {
+                SetMaxSize(GetSize());
+            } else if (bladesPage->IsShown()) {
+                SetMaxSize({GetSize().x, -1});
+            } else if (presetsPage->IsShown()) {
+                SetMaxSize({-1, -1});
+            }
+            mStartMicros = -1;
+        } else {
+            evt.RequestMore();
+        }
+    });
 }
 
 void EditorWindow::handleNotification(uint32 id) {
@@ -351,17 +397,18 @@ bool EditorWindow::save() {
 
 void EditorWindow::Fit() {
     SetSizeHints(-1, -1, -1, -1);
-    PCUI::Frame::Fit();
-    if (not generalPage or not propsPage or not bladesPage or not presetsPage) return;
-
-    SetMinSize(GetSize());
-    if (generalPage->IsShown() or propsPage->IsShown()) {
-        SetMaxSize(GetSize());
-    } else if (bladesPage->IsShown()) {
-        SetMaxSize({GetSize().x, -1});
-    } else if (presetsPage->IsShown()) {
-        SetMaxSize({-1, -1});
+    if (not IsShown() or not generalPage or not propsPage or not bladesPage or not presetsPage) {
+        PCUI::Frame::Fit();
+        return;
     }
+
+    const auto clientDelta{GetSize() - GetClientSize()};
+    mStartSize = GetSize();
+    mBestSize = GetBestSize();
+    SetVirtualSize(mBestSize - clientDelta);
+    mStartMicros = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::system_clock::now().time_since_epoch()
+    ).count();
 }
 
 Config::Config& EditorWindow::getOpenConfig() const { return mConfig; }
