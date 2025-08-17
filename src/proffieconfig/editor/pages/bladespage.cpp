@@ -326,13 +326,14 @@ void BladesPage::handleNotification(uint32 id) {
         FindWindow(ID_RemoveSplit)->Enable(hasSelection);
     }
 
-    Layout();
-    auto size{GetSize()};
-    auto bestSize{GetBestSize()};
-    if (not size.IsAtLeast(bestSize)) {
-        SetMinSize(bestSize);
-        GetParent()->Layout();
-        GetParent()->Fit();
+    if (not rebound) {
+        Layout();
+        auto size{GetSize()};
+        auto bestSize{GetBestSize()};
+        if (not size.IsAtLeast(bestSize)) {
+            SetMinSize(bestSize);
+            mParent->FitAnimated();
+        }
     }
 }
 
