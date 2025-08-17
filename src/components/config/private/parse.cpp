@@ -415,7 +415,7 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
                 if (not depth.empty()) logger.warn("Hit preset end before finishing style. This will mean errors to correct later!");
                 depth.clear();
                 auto& preset{*array.presets().back()};
-                if (preset.name.empty()) preset.name = "preset" + std::to_string(array.presets().size());
+                preset.name = "preset" + std::to_string(array.presets().size());
                 reading = NONE;
                 continue;
             }
@@ -486,12 +486,14 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
             if (depthBuffer.empty()) styleBuffer += chr;
             else depthBuffer.back() += chr;
         } else if (reading == NAME) {
+            const auto& preset{array.presets().back()};
             if (chr == '"' or chr == '}') {
                 reading = NONE;
+                if (preset->name.empty()) preset->name = "preset" + std::to_string(array.presets().size());
                 continue;
             }
             
-            array.presets().back()->name += chr;
+            preset->name += chr;
         }
     }
 
