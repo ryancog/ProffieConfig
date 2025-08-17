@@ -66,10 +66,13 @@ private:
     void createUI(wxSizer *);
     void bindEvents();
 
-    void Fit() override;
+    void Fit() final;
+    void FitAnimated();
     wxSize mBestSize{-1, -1};
     wxSize mStartSize{-1, -1};
     std::chrono::microseconds::rep mStartMicros;
+
+    void configureResizing();
 
     void handleNotification(uint32) final;
 

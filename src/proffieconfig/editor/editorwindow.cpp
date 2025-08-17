@@ -245,8 +245,9 @@ void EditorWindow::bindEvents() {
         bladesPage->Show(evt.GetId() == ID_BladeArrays);
         presetsPage->Show(evt.GetId() == ID_Presets);
 
-        Layout();
-        Fit();
+        // Try removing this check, see what happens.
+        if (evt.GetEventObject()) FitAnimated();
+        else Fit();
     }};
     Bind(wxEVT_MENU, windowSelectionHandler, ID_General);
     Bind(wxEVT_MENU, windowSelectionHandler, ID_Props);
@@ -254,7 +255,7 @@ void EditorWindow::bindEvents() {
     Bind(wxEVT_MENU, windowSelectionHandler, ID_BladeArrays);
 
     Bind(wxEVT_IDLE, [this](wxIdleEvent& evt) {
-        if (not mStartSize.IsFullySpecified() or not mBestSize.IsFullySpecified() or mStartMicros == -1) return;
+        if (mStartMicros == -1) return;
 
         constexpr auto RESIZE_TIME_MICROS{350 * 1000};
         static std::chrono::microseconds::rep lastFrameMicros{0};
@@ -282,16 +283,10 @@ void EditorWindow::bindEvents() {
 
         const auto newSize{mStartSize + (totalDelta * completion)};
         SetSize(newSize);
+        SetSizeHints(newSize, newSize);
 
         if (completion == 1) {
-            SetMinSize(GetSize());
-            if (generalPage->IsShown() or propsPage->IsShown()) {
-                SetMaxSize(GetSize());
-            } else if (bladesPage->IsShown()) {
-                SetMaxSize({GetSize().x, -1});
-            } else if (presetsPage->IsShown()) {
-                SetMaxSize({-1, -1});
-            }
+            configureResizing();
             mStartMicros = -1;
         } else {
             evt.RequestMore();
@@ -395,12 +390,21 @@ bool EditorWindow::save() {
     return not err;
 }
 
-void EditorWindow::Fit() {
-    SetSizeHints(-1, -1, -1, -1);
-    if (not IsShown() or not generalPage or not propsPage or not bladesPage or not presetsPage) {
-        PCUI::Frame::Fit();
-        return;
+void EditorWindow::configureResizing() {
+    if (not generalPage or not propsPage or not bladesPage or not presetsPage) return;
+
+    SetMinSize(GetSize());
+    if (generalPage->IsShown() or propsPage->IsShown()) {
+        SetMaxSize(GetSize());
+    } else if (bladesPage->IsShown()) {
+        SetMaxSize({GetSize().x, -1});
+    } else if (presetsPage->IsShown()) {
+        SetMaxSize({-1, -1});
     }
+}
+
+void EditorWindow::FitAnimated() {
+    SetSizeHints(-1, -1, -1, -1);
 
     const auto clientDelta{GetSize() - GetClientSize()};
     mStartSize = GetSize();
@@ -409,6 +413,13 @@ void EditorWindow::Fit() {
     mStartMicros = std::chrono::duration_cast<std::chrono::microseconds>(
         std::chrono::system_clock::now().time_since_epoch()
     ).count();
+}
+
+void EditorWindow::Fit() {
+    SetSizeHints(-1, -1, -1, -1);
+    PCUI::Frame::Fit();
+
+    configureResizing();
 }
 
 Config::Config& EditorWindow::getOpenConfig() const { return mConfig; }
