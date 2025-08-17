@@ -306,9 +306,9 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
 Utils::Version Config::Settings::getOSVersion() const {
     if (osVersion < 1) return Utils::Version::invalidObject();
     const auto& osVersions{Versions::getOSVersions()};
-    if (osVersion >= osVersions.size()) return Utils::Version::invalidObject();
+    if (osVersion - 1 >= osVersions.size()) return Utils::Version::invalidObject();
 
-    return osVersions[osVersion].verNum;
+    return osVersions[osVersion - 1].verNum;
 }
 
 bool Config::Settings::addCustomOption(string&& key, string&& value) {
