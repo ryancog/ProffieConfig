@@ -63,10 +63,6 @@ enum class Executable {
 
 [[nodiscard]] UTILS_EXPORT filepath versionDir();
 [[nodiscard]] UTILS_EXPORT filepath propDir();
-/**
- * @return <info, header>
- */
-[[nodiscard]] UTILS_EXPORT std::pair<filepath, filepath> prop(const string&);
 [[nodiscard]] UTILS_EXPORT filepath osDir();
 [[nodiscard]] UTILS_EXPORT filepath os(const Utils::Version&);
 
