@@ -67,6 +67,9 @@ private:
     void bindEvents();
 
     void Fit() override;
+    wxSize mBestSize{-1, -1};
+    wxSize mStartSize{-1, -1};
+    std::chrono::microseconds::rep mStartMicros;
 
     void handleNotification(uint32) final;
 
