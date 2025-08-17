@@ -20,6 +20,9 @@
  */
 
 #include <algorithm>
+#include <limits>
+
+#include "string.h"
 
 Utils::Version::Version(string_view str) {
     if (str.empty()) {
@@ -86,15 +89,15 @@ Utils::Version::Version(string_view str) {
 parse_label:
     // Jump over '-'
     convStr.remove_prefix(1);
-    auto labelCheckInvalid{[](char chr){
-        return not std::isalpha(chr);
-    }};
-    if (convStr.end() != std::find_if(convStr.begin(), convStr.end(), labelCheckInvalid)) {
+
+    tag = convStr;
+    uint32 numTrimmed{};
+    trimUnsafe(tag, &numTrimmed);
+
+    if (numTrimmed) {
         err = Err::STR_INVALID;
         return;
     }
-
-    tag = convStr;
 }
 
 Utils::Version::operator string() const {

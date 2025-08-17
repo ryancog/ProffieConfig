@@ -86,6 +86,7 @@ void Versions::loadLocal() {
         PConf::read(infoFile, infoData, logger.bverbose("Reading info file..."));
         const auto hashedInfoData{PConf::hash(infoData)};
 
+
         const auto coreVersionIter{hashedInfoData.find(CORE_VERSION_STR)};
         if (coreVersionIter != hashedInfoData.end() and coreVersionIter->second->value) {
             Utils::Version coreVersion{*coreVersionIter->second->value};
@@ -106,13 +107,7 @@ void Versions::loadLocal() {
         }
 
         auto propName{entry.path().filename().string()};
-        Utils::trimUnsafe(
-            propName,
-            nullptr,
-            std::numeric_limits<uint32>::max(),
-            {},
-            true
-        );
+        Utils::trimUnsafe(propName);
         if (propName != entry.path().filename().string()) {
             logger.warn("Prop entry with invalid name: " + entry.path().filename().string());
             continue;
