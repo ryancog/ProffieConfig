@@ -142,6 +142,44 @@ constexpr void trimUnsafe(
 };
 
 /**
+ * Remove all non-digit values, remove leading 0
+ *
+ * @param str Reference to string to trim
+ * @param[out] numTrimmed The number of characters trimmed
+ * @param countTrimIndex The index before which trims should be counted.
+ */
+template<typename STRING>
+constexpr void trimForNumeric(
+    STRING& str,
+    uint32 *numTrimmed = nullptr,
+    uint32 countTrimIndex = std::numeric_limits<uint32>::max()
+) {
+    if (numTrimmed) *numTrimmed = 0;
+
+    bool foundNonZero{false};
+    auto checkIllegal{[numTrimmed, &countTrimIndex, &foundNonZero](char chr) -> bool {
+        if (std::isdigit(chr)) {
+            if (foundNonZero) return false;
+            if (not foundNonZero and chr != '0') {
+                foundNonZero = true;
+                return false;
+            }
+        }
+
+        if (numTrimmed and countTrimIndex > 0) {
+            ++*numTrimmed;
+            --countTrimIndex;
+        }
+        return true;
+    }};
+
+    str.erase(
+        std::remove_if(str.begin(), str.end(), checkIllegal),
+        str.end()
+    );
+};
+
+/**
  * Clears whitespace (if hit) and parses all comment strings encountered until
  * non-space is encountered.
  *
