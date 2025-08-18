@@ -156,6 +156,9 @@ constexpr void trimForNumeric(
 ) {
     if (numTrimmed) *numTrimmed = 0;
 
+    // Special case
+    if (str.size() == 1 and str[0] == '0') return;
+
     bool foundNonZero{false};
     auto checkIllegal{[numTrimmed, &countTrimIndex, &foundNonZero](char chr) -> bool {
         if (std::isdigit(chr)) {
