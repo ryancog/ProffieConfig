@@ -43,7 +43,7 @@ struct CONFIG_EXPORT PresetArray {
     PCUI::ChoiceData selection;
 
     // Notifies on duplicate update
-    PCUI::NotifierData notifyData;
+    PCUI::Notifier notifyData;
 
     [[nodiscard]] const vector<std::unique_ptr<Preset>>& presets() const { return mPresets; }
     [[nodiscard]] Preset& preset(uint32 idx) const {
@@ -92,7 +92,7 @@ struct CONFIG_EXPORT PresetArrays {
          */
         NOTIFY_ARRAY_NAME,
     };
-    PCUI::NotifierData notifyData;
+    PCUI::Notifier notifyData;
 
     [[nodiscard]] const vector<std::unique_ptr<PresetArray>>& arrays() const { return mArrays; }
     [[nodiscard]] PresetArray& array(uint32 idx) { 

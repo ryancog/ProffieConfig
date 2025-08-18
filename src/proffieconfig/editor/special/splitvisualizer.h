@@ -24,7 +24,7 @@
 #include "ui/notifier.h"
 #include "config/bladeconfig/arrays.h"
 
-class SplitVisualizer : public wxWindow, PCUI::Notifier {
+class SplitVisualizer : public wxWindow, PCUI::NotifyReceiver {
 public:
     SplitVisualizer(wxWindow *parent, Config::BladeArrays& bladeArrays);
 

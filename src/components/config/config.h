@@ -46,7 +46,7 @@ struct CONFIG_EXPORT Config {
         ID_PROPSELECTION,
         ID_PROPUPDATE,
     };
-    PCUI::NotifierData propNotifyData;
+    PCUI::Notifier propNotifyData;
 
     [[nodiscard]] const vector<std::unique_ptr<Versions::Prop>>& props() const { 
         const auto verNum{settings.getOSVersion()};

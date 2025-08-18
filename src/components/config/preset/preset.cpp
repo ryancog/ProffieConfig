@@ -99,7 +99,7 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
         track.setInsertionPoint(insertionPoint - numTrimmed);
     });
     styleSelection.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::Notifier::ID_REBOUND and id != styleSelection.ID_SELECTION) return;
+        if (id != PCUI::NotifyReceiver::ID_REBOUND and id != styleSelection.ID_SELECTION) return;
 
         if (mConfig.presetArrays.selection == -1) return;
         auto& selectedArray{mConfig.presetArrays.array(mConfig.presetArrays.selection)};

@@ -26,7 +26,7 @@
 
 GeneralPage::GeneralPage(EditorWindow *parent) : 
     wxPanel(parent), 
-    Notifier(this, parent->getOpenConfig().settings.notifyData),
+    NotifyReceiver(this, parent->getOpenConfig().settings.notifyData),
     mParent(parent) {
     auto *sizer{new wxBoxSizer(wxHORIZONTAL)};
 

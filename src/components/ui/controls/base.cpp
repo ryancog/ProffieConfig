@@ -49,7 +49,7 @@ void PCUI::ControlData::show(bool show, bool fit) {
 }
 
 void PCUI::ControlData::setFocus() {
-    NotifierData::notify(ID_FOCUS);
+    Notifier::notify(ID_FOCUS);
 }
 
 void PCUI::ControlData::update(uint32 id) {
@@ -58,20 +58,20 @@ void PCUI::ControlData::update(uint32 id) {
 
 void PCUI::ControlData::notify(uint32 id) {
     if (mOnUpdate) mOnUpdate(id);
-    NotifierData::notify(id);
+    Notifier::notify(id);
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
 PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::ControlBase(
     wxWindow *parent,
     CONTROL_DATA &data
-) : wxPanel(parent, wxID_ANY), Notifier(this, data) {}
+) : wxPanel(parent, wxID_ANY), NotifyReceiver(this, data) {}
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
 PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::ControlBase(
     wxWindow *parent,
     ControlDataProxy<CONTROL_DATA>& proxy
-) : wxPanel(parent, wxID_ANY), Notifier{this, proxy} {}
+) : wxPanel(parent, wxID_ANY), NotifyReceiver{this, proxy} {}
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::init(
@@ -106,7 +106,7 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
 
     initializeNotifier();
 
-    Bind(eventTag, [this](CONTROL_EVENT& evt) { controlEventHandler(evt); });
+    pControl->Bind(eventTag, [this](CONTROL_EVENT& evt) { controlEventHandler(evt); });
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
@@ -118,7 +118,7 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
     wxOrientation orient
 ) {
     init(control, eventTag, label, orient);
-    Bind(secondaryTag, [this](SECONDARY_EVENT& evt) { secondaryEventHandler(evt); });
+    pControl->Bind(secondaryTag, [this](SECONDARY_EVENT& evt) { secondaryEventHandler(evt); });
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
@@ -131,6 +131,15 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
 
     wxPanel::SetToolTip(tip);
 }
+
+template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
+void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::SetMinSize(
+    const wxSize& minSize, bool considerBest
+) {
+    mConsiderBest = considerBest;
+    SetMinSize(minSize);
+}
+
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::SetMinSize(
@@ -175,8 +184,9 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
     wxPanel::SetMinSize({-1, -1});
     pControl->SetMinSize({-1, -1});
 
-    auto newSize{GetBestSize()};
-    newSize.IncTo(mMinSize);
+    wxSize newSize{GetBestSize()};
+    if (not mConsiderBest) newSize.DecToIfSpecified(mMinSize);
+    else newSize.IncTo(mMinSize);
     newSize.DecToIfSpecified(GetMaxSize());
     wxPanel::SetMinSize(newSize);
 
@@ -228,6 +238,7 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
     if (not data()->isEnabled() or data()->eventsInFlight()) return;
 
     onModify(evt);
+    evt.Skip();
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
@@ -239,6 +250,7 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
     if (not data()->isEnabled() or data()->eventsInFlight()) return;
 
     onModifySecondary(evt);
+    evt.Skip();
 }
 
 template class PCUI::ControlBase<PCUI::CheckList, PCUI::CheckListData, wxCheckListBox, wxCommandEvent>;

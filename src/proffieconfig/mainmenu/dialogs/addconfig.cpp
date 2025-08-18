@@ -160,7 +160,7 @@ void AddConfig::update() {
     FindWindow(wxID_OK)->Enable(validConfigName and (originFileSelected or not importingConfig));
 
     importPath.show(importingConfig);
-    PCUI::Notifier::sync();
+    PCUI::NotifyReceiver::sync();
 
     GetSizer()->Layout();
     GetSizer()->Fit(this);

@@ -39,14 +39,14 @@
 #include "../../core/defines.h"
 #include "../special/splitvisualizer.h"
 
-class ArrayEditDlg : public wxDialog, PCUI::Notifier {
+class ArrayEditDlg : public wxDialog, PCUI::NotifyReceiver {
 public:
     ArrayEditDlg(
         wxWindow *parent,
         Config::BladeConfig& bladeConfig,
         const wxString& title
     ) : wxDialog(parent, wxID_ANY, title),
-        Notifier(this, bladeConfig.notifyData),
+        NotifyReceiver(this, bladeConfig.notifyData),
         mBladeConfig{bladeConfig} {
         auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
@@ -160,7 +160,7 @@ private:
 
 BladesPage::BladesPage(EditorWindow *parent) : 
     wxPanel(parent),
-    Notifier(this, parent->getOpenConfig().bladeArrays.notifyData),
+    NotifyReceiver(this, parent->getOpenConfig().bladeArrays.notifyData),
     mParent{static_cast<EditorWindow*>(parent)} {
     auto *sizer{new wxBoxSizer(wxHORIZONTAL)};
 

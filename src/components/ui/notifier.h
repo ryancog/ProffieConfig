@@ -32,11 +32,11 @@ namespace PCUI {
 // TODO: There's still several possible race conditions here that
 // probably deserve a second look.
 
-struct Notifier;
-struct NotifierDataProxy;
+struct NotifyReceiver;
+struct NotifierProxy;
 
-struct UI_EXPORT NotifierData {
-    virtual ~NotifierData();
+struct UI_EXPORT Notifier {
+    virtual ~Notifier();
 
     /**
      * Notify the connected Notifier of an update
@@ -58,10 +58,10 @@ struct UI_EXPORT NotifierData {
     bool eventsInFlight() ;
 
 private:
-    friend struct Notifier;
-    friend struct NotifierDataProxy;
-    Notifier *mNotifier{nullptr};
-    NotifierDataProxy *mProxy{nullptr};
+    friend struct NotifyReceiver;
+    friend struct NotifierProxy;
+    NotifyReceiver *mNotifier{nullptr};
+    NotifierProxy *mProxy{nullptr};
 
     /**
      * Events in flight.
@@ -70,19 +70,19 @@ private:
     std::recursive_mutex mLock;
 };
 
-struct UI_EXPORT NotifierDataProxy {
-    virtual ~NotifierDataProxy();
+struct UI_EXPORT NotifierProxy {
+    virtual ~NotifierProxy();
     
-    void bind(NotifierData *);
-    NotifierData *data() { return mData; }
+    void bind(Notifier *);
+    Notifier *data() { return mData; }
 
 private:
-    friend struct Notifier;
-    Notifier *mNotifier{nullptr};
-    NotifierData *mData{nullptr};
+    friend struct NotifyReceiver;
+    NotifyReceiver *mNotifier{nullptr};
+    Notifier *mData{nullptr};
 };
 
-struct UI_EXPORT Notifier {
+struct UI_EXPORT NotifyReceiver {
     enum {
         ID_REBOUND = 0xFFFFFFFF,
     };
@@ -93,22 +93,22 @@ struct UI_EXPORT Notifier {
     static inline void sync() { wxYield(); }
 
 protected:
-    Notifier() = default;
+    NotifyReceiver() = default;
 
     /**
      * @param derived The window which derived this Notifier, will handle events.
      * @param data Data to bind
      */
-    Notifier(wxWindow *derived, NotifierData& data);
+    NotifyReceiver(wxWindow *derived, Notifier& data);
     /**
      * @param derived The window which derived this Notifier, will handle events.
      * @param proxy Proxy to handle data binding. May be empty (but not null).
      */
-    Notifier(wxWindow *derived, NotifierDataProxy& proxy);
+    NotifyReceiver(wxWindow *derived, NotifierProxy& proxy);
 
     // Late ctors
-    void create(wxWindow *derived, NotifierData& data);
-    void create(wxWindow *derived, NotifierDataProxy& proxy);
+    void create(wxWindow *derived, Notifier& data);
+    void create(wxWindow *derived, NotifierProxy& proxy);
 
     /**
      * Call handleNotification(ID_REBOUND) or handleUnbound() to
@@ -116,7 +116,7 @@ protected:
      */
     void initializeNotifier();
 
-    virtual ~Notifier();
+    virtual ~NotifyReceiver();
 
     /**
      * Called whenever notification is received.
@@ -133,15 +133,15 @@ protected:
      */
     virtual void handleUnbound() {}
 
-    [[nodiscard]] NotifierData *data();
-    [[nodiscard]] NotifierDataProxy *proxy() { return mProxy; }
+    [[nodiscard]] Notifier *data();
+    [[nodiscard]] NotifierProxy *proxy() { return mProxy; }
 
 private:
-    friend NotifierData;
-    friend NotifierDataProxy;
+    friend Notifier;
+    friend NotifierProxy;
     wxWindow *mDerived{nullptr};
-    NotifierData *mData{nullptr};
-    NotifierDataProxy *mProxy{nullptr};
+    Notifier *mData{nullptr};
+    NotifierProxy *mProxy{nullptr};
 };
 
 } // namespace PCUI

@@ -23,7 +23,7 @@
 
 #include "../editorwindow.h"
 
-class PresetsPage : public wxPanel, PCUI::Notifier {
+class PresetsPage : public wxPanel, PCUI::NotifyReceiver {
 public:
     PresetsPage(EditorWindow *);
 

@@ -72,7 +72,7 @@ struct CONFIG_EXPORT BladeConfig {
     PCUI::ChoiceData bladeSelection;
 
     // Notify of issues
-    PCUI::NotifierData notifyData;
+    PCUI::Notifier notifyData;
 
     enum Issue {
         ISSUE_NONE = 0,

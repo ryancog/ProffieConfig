@@ -37,7 +37,7 @@ template<
 >
 class ControlBase;
 
-struct UI_EXPORT ControlData : NotifierData {
+struct UI_EXPORT ControlData : Notifier {
     ControlData(const ControlData&) = delete;
     ControlData(ControlData&&) = delete;
     ControlData& operator=(const ControlData&) = delete;
@@ -103,13 +103,13 @@ private:
 };
 
 template<typename DATA_TYPE> requires std::is_base_of_v<ControlData, DATA_TYPE>
-struct ControlDataProxy : NotifierDataProxy {
+struct ControlDataProxy : NotifierProxy {
     void bind(DATA_TYPE& data) {
-        NotifierDataProxy::bind(&data);
-        data.update(Notifier::ID_REBOUND);
+        NotifierProxy::bind(&data);
+        data.update(NotifyReceiver::ID_REBOUND);
     }
-    void unbind() { NotifierDataProxy::bind(nullptr); }
-    DATA_TYPE *data() { return static_cast<DATA_TYPE *>(NotifierDataProxy::data()); };
+    void unbind() { NotifierProxy::bind(nullptr); }
+    DATA_TYPE *data() { return static_cast<DATA_TYPE *>(NotifierProxy::data()); };
 
     /**
      * Whether to show the control whenever its proxy (this) is unbound.
@@ -138,13 +138,17 @@ template<
     class CONTROL_EVENT,
     class SECONDARY_EVENT = CONTROL_EVENT
 >
-class UI_EXPORT ControlBase : public wxPanel, protected Notifier {
+class UI_EXPORT ControlBase : public wxPanel, protected NotifyReceiver {
 public:
     static_assert(std::is_base_of_v<wxControl, CONTROL> or std::is_same_v<wxPanel, CONTROL>, "PCUI Control core must be wxControl descendant");
     static_assert(std::is_base_of_v<ControlData, CONTROL_DATA>, "PCUI Control data must be ControlData descendant");
 
     void SetToolTip(const wxString&);
     void SetMinSize(const wxSize&) final;
+    /**
+     * @param obeyControl may be set false to ignore the best size
+     */
+    void SetMinSize(const wxSize&, bool considerBest);
 
     /**
      * Should not be used directly. Use the data or proxy methods for show/hide
@@ -192,7 +196,7 @@ protected:
     void refreshSizeAndLayout(bool parentFit = false);
 
     CONTROL *pControl{nullptr};
-    CONTROL_DATA *data() { return static_cast<CONTROL_DATA *>(Notifier::data()); }
+    CONTROL_DATA *data() { return static_cast<CONTROL_DATA *>(NotifyReceiver::data()); }
 
 private:
     void handleNotification(uint32 id) final;
@@ -201,6 +205,7 @@ private:
     void secondaryEventHandler(SECONDARY_EVENT& evt);
 
     wxSize mMinSize;
+    bool mConsiderBest{true};
     bool mHidden{false};
 };
 

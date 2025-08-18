@@ -155,7 +155,12 @@ void PCUI::Text::create(int64 style, const wxString& label, wxOrientation orient
     control->OSXDisableAllSmartSubstitutions();
 #   endif
 
-    init(control, wxEVT_TEXT, wxEVT_TEXT_ENTER, label, orient);
+    // Shut up wxWidgets
+    if (style & wxTE_PROCESS_ENTER) {
+        init(control, wxEVT_TEXT, wxEVT_TEXT_ENTER, label, orient);
+    } else {
+        init(control, wxEVT_TEXT, label, orient);
+    }
 }
 
 void PCUI::Text::styleStandard() {

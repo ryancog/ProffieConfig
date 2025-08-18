@@ -167,12 +167,10 @@ void PCUI::Version::create(const wxString& label, wxOrientation orient) {
     }
 
     const auto textWidth{GetTextExtent("255").GetWidth() + 5};
-    mMajor->SetMaxSize({textWidth, -1});
-    mMinor->SetMaxSize({textWidth, -1});
-    mBugfix->SetMaxSize({textWidth, -1});
-    mMajor->SetMinSize({textWidth, -1});
-    mMinor->SetMinSize({textWidth, -1});
-    mBugfix->SetMinSize({textWidth, -1});
+    mMajor->SetMinSize({textWidth, -1}, false);
+    mMinor->SetMinSize({textWidth, -1}, false);
+    mBugfix->SetMinSize({textWidth, -1}, false);
+    mTag->SetMinSize({textWidth * 2, -1}, false);
 
     auto *panelSizer{new wxBoxSizer(wxHORIZONTAL)};
     panelSizer->Add(mMajor);

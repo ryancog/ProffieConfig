@@ -28,7 +28,7 @@
 // Forward declaration to get around circular dependency
 class PropFile;
 
-class PropsPage : public wxPanel, PCUI::Notifier {
+class PropsPage : public wxPanel, PCUI::NotifyReceiver {
 public:
     PropsPage(EditorWindow *);
 
