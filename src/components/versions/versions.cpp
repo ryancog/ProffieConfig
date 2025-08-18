@@ -33,10 +33,6 @@
 
 namespace Versions {
 
-constexpr cstring INFO_FILE_STR{"info.pconf"};
-constexpr cstring DATA_FILE_STR{"data.pconf"};
-constexpr cstring HEADER_FILE_STR{"header.h"};
-
 constexpr cstring CORE_VERSION_STR{"CORE_VER"};
 constexpr cstring SUPPORTED_VERSIONS_STR{"SUPPORTED_VERSIONS"};
 
@@ -139,7 +135,7 @@ void Versions::loadLocal() {
         }
 
         // Yeah this naming is stupid, what are you going to do about it?
-        std::ifstream dataFile{Paths::propDir() / propName / INFO_FILE_STR};
+        std::ifstream dataFile{Paths::propDir() / propName / DATA_FILE_STR};
         PConf::Data dataData;
         PConf::read(dataFile, dataData, logger.bverbose("Reading data file..."));
         const auto hashedDataData{PConf::hash(dataData)};
@@ -152,8 +148,7 @@ void Versions::loadLocal() {
             continue;
         }
 
-        auto versionedProp{std::make_unique<VersionedProp>()};
-        versionedProp->name = std::move(propName);
+        auto versionedProp{std::make_unique<VersionedProp>(propName)};
         versionedProp->prop = std::move(prop);
         versionedProp->supportedVersions = std::move(supportedVersions);
 
