@@ -30,6 +30,7 @@
 #include "versions/prop.h"
 
 #include "config_export.h"
+#include "versions/versions.h"
 
 namespace Config {
 
@@ -48,16 +49,33 @@ struct CONFIG_EXPORT Config {
     };
     PCUI::Notifier propNotifyData;
 
-    [[nodiscard]] const vector<std::unique_ptr<Versions::Prop>>& props() const { 
+    [[nodiscard]] vector<Versions::Prop *> props() const { 
+        vector<Versions::Prop *> ret;
         const auto verNum{settings.getOSVersion()};
         auto iter{mProps.find(verNum)};
-        return iter == mProps.end() ? mEmptyProps : iter->second;
+        if (iter == mProps.end()) return ret;
+        ret.reserve(iter->second.size());
+        for (const auto& data : iter->second) {
+            ret.push_back(data.prop.get());
+        }
+        return ret;
+    }
+
+    [[nodiscard]] std::pair<Versions::Prop&, Versions::VersionedProp *> propAndReference(uint32 idx) const {
+        const auto verNum{settings.getOSVersion()};
+        auto iter{mProps.find(verNum)};
+        assert(iter != mProps.end() and idx < iter->second.size());
+
+        auto& propData{iter->second[idx]};
+        return { *propData.prop, propData.reference };
     }
 
     [[nodiscard]] Versions::Prop& prop(uint32 idx) const {
-        const auto& _props{props()};
-        assert(idx < _props.size());
-        return *_props[idx];
+        const auto verNum{settings.getOSVersion()};
+        auto iter{mProps.find(verNum)};
+        assert(iter != mProps.end() and idx < iter->second.size());
+
+        return *iter->second[idx].prop;
     }
 
     PresetArrays presetArrays;
@@ -96,9 +114,11 @@ private:
      * So that options are not lost when changing version, there's a set for each
      * version rather than overwriting.
      */
-    std::map<Utils::Version, vector<std::unique_ptr<Versions::Prop>>> mProps;
-
-    static vector<std::unique_ptr<Versions::Prop>> mEmptyProps;
+    struct PropData {
+        std::unique_ptr<Versions::Prop> prop;
+        Versions::VersionedProp *reference;
+    };
+    std::map<Utils::Version, vector<PropData>> mProps;
 };
 
 /**
