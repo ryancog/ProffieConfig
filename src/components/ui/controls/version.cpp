@@ -98,7 +98,7 @@ PCUI::VersionData::VersionData() {
         uint32 numTrimmed{};
         Utils::trimForNumeric(rawValue, &numTrimmed, insertionPoint);
 
-        if (mMinor.empty()) {
+        if (not rawValue.empty() and mMinor.empty()) {
             mBugfix.clear();
             mMinor = std::move(rawValue);
             mMinor.setInsertionPoint(insertionPoint - numTrimmed);
