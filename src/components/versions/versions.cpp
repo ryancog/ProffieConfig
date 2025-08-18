@@ -27,6 +27,7 @@
 #include "pconf/read.h"
 #include "pconf/pconf.h"
 #include "pconf/utils.h"
+#include "pconf/write.h"
 #include "utils/paths.h"
 #include "utils/string.h"
 #include "utils/types.h"
@@ -43,6 +44,39 @@ vector<std::unique_ptr<VersionedProp>> props;
 std::multimap<Utils::Version, VersionedProp *> propVersionMap;
 
 } // namespace Versions
+
+void Versions::VersionedProp::addVersion() {
+    auto version{std::make_unique<PCUI::VersionData>()};
+    version->setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::VersionData::ID_VALUE) return;
+
+        saveInfo();
+    });
+    mSupportedVersions.push_back(std::move(version));
+    saveInfo();
+}
+
+void Versions::VersionedProp::removeVersion(uint32 idx) {
+    mSupportedVersions.erase(std::next(mSupportedVersions.begin(), idx));
+    saveInfo();
+}
+
+void Versions::VersionedProp::saveInfo() {
+    PConf::Data infoData;
+
+    vector<string> list;
+    list.reserve(mSupportedVersions.size());
+    for (const auto& version : mSupportedVersions) {
+        list.push_back(static_cast<string>(static_cast<Utils::Version>(*version)));
+    }
+    infoData.push_back(std::make_shared<PConf::Entry>(SUPPORTED_VERSIONS_STR, PConf::listAsValue(list)));
+
+    std::ofstream infoFile{Paths::propDir() / name / INFO_FILE_STR};
+    if (not infoFile.is_open()) {
+        throw std::ios_base::failure("Couldn't open prop info file for write.");
+    }
+    PConf::write(infoFile, infoData, nullptr);
+}
 
 void Versions::loadLocal() {
     auto& logger{Log::Context::getGlobal().createLogger("Versions::loadLocal()")};
@@ -118,6 +152,7 @@ void Versions::loadLocal() {
         PConf::read(infoFile, infoData, logger.bverbose("Reading info file..."));
         const auto hashedInfoData{PConf::hash(infoData)};
 
+        auto versionedProp{std::make_unique<VersionedProp>(propName)};
         vector<std::unique_ptr<PCUI::VersionData>> supportedVersions;
         const auto supportedVersionsIter{hashedInfoData.find(SUPPORTED_VERSIONS_STR)};
         if (supportedVersionsIter != hashedInfoData.end()) {
@@ -130,7 +165,14 @@ void Versions::loadLocal() {
                 }
 
                 logger.verbose("Prop " + propName + " supports OS version " + static_cast<string>(supportedVersion));
-                supportedVersions.push_back(std::make_unique<PCUI::VersionData>(supportedVersion));
+                auto version{std::make_unique<PCUI::VersionData>(supportedVersion)};
+                auto *versionedPropPtr{versionedProp.get()};
+                version->setUpdateHandler([versionedPropPtr](uint32 id) {
+                    if (id != PCUI::VersionData::ID_VALUE) return;
+
+                    versionedPropPtr->saveInfo();
+                });
+                supportedVersions.push_back(std::move(version));
             }
         }
 
@@ -148,9 +190,8 @@ void Versions::loadLocal() {
             continue;
         }
 
-        auto versionedProp{std::make_unique<VersionedProp>(propName)};
         versionedProp->prop = std::move(prop);
-        versionedProp->supportedVersions = std::move(supportedVersions);
+        versionedProp->mSupportedVersions = std::move(supportedVersions);
 
         props.push_back(std::move(versionedProp));
     }
@@ -158,7 +199,7 @@ void Versions::loadLocal() {
     logger.debug("Generating prop version map...");
     propVersionMap.clear();
     for (const auto& prop : props) {
-        for (const auto& version : prop->supportedVersions) {
+        for (const auto& version : prop->mSupportedVersions) {
             propVersionMap.emplace(*version, prop.get());
         }
     }
