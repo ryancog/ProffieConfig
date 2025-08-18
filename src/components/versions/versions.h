@@ -30,30 +30,21 @@
 
 namespace Versions {
 
+constexpr cstring INFO_FILE_STR{"info.pconf"};
+constexpr cstring DATA_FILE_STR{"data.pconf"};
+constexpr cstring HEADER_FILE_STR{"header.h"};
+
 struct VersionedOS {
     Utils::Version verNum;
     Utils::Version coreVersion;
 };
 
 struct VERSIONS_EXPORT VersionedProp {
+    VersionedProp(const string& name) : name{name} {}
+
+    const string name;
     std::shared_ptr<const Prop> prop;
-    PCUI::TextData name;
     vector<std::unique_ptr<PCUI::VersionData>> supportedVersions;
-
-    /**
-     * Move the prop to the location specified by name
-     *
-     * @return err
-     */
-    optional<string> syncName();
-
-    /**
-     * @return if the name is synced with disk
-     */
-    bool isSynced() const { return mNameIsSynced; }
-
-private:
-    bool mNameIsSynced{true};
 };
 
 VERSIONS_EXPORT void loadLocal();
