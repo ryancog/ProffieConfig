@@ -44,7 +44,18 @@ struct VERSIONS_EXPORT VersionedProp {
 
     const string name;
     std::shared_ptr<const Prop> prop;
-    vector<std::unique_ptr<PCUI::VersionData>> supportedVersions;
+
+    void addVersion();
+    void removeVersion(uint32 idx);
+
+    [[nodiscard]] const vector<std::unique_ptr<PCUI::VersionData>>& supportedVersions() {
+        return mSupportedVersions;
+    }
+
+private:
+    friend void loadLocal();
+    void saveInfo();
+    vector<std::unique_ptr<PCUI::VersionData>> mSupportedVersions;
 };
 
 VERSIONS_EXPORT void loadLocal();

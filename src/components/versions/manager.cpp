@@ -33,9 +33,11 @@
 #include "log/severity.h"
 #include "ui/controls/version.h"
 #include "ui/message.h"
+#include "utils/defer.h"
 #include "utils/paths.h"
 #include "utils/string.h"
 #include "versions/versions.h"
+#include "wx/event.h"
 #include "wx/gdicmn.h"
 
 namespace Versions {
@@ -216,13 +218,36 @@ void Versions::Manager::bindEvents() {
         }
     }, ID_PropAdd);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+        auto res{PCUI::showMessage(
+            _("This cannot be undone!"), _("Remove Prop"),
+            wxYES_NO | wxNO_DEFAULT, this
+        )};
+        if (res == wxYES) {
+            const auto& versionedProp{
+                getProps()[static_cast<wxListBox *>(FindWindow(ID_PropList))->GetSelection()]
+            };
+            fs::remove_all(Paths::propDir() / versionedProp->name);
+        }
 
+        loadLocal();
+        updatePropList();
     }, ID_PropRemove);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-
+        const auto& versionedProp{
+            getProps()[static_cast<wxListBox *>(FindWindow(ID_PropList))->GetSelection()]
+        };
+        versionedProp->addVersion();
+        updatePropVersionList();
     }, ID_PropVersionListAdd);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+        const auto& versionedProp{
+            getProps()[static_cast<wxListBox *>(FindWindow(ID_PropList))->GetSelection()]
+        };
+        const auto selectedVersion{getVersionSelection()};
+        if (selectedVersion == -1) return;
 
+        versionedProp->removeVersion(selectedVersion);
+        updatePropVersionList();
     }, ID_PropRemoveVersion);
     
     Bind(wxEVT_LISTBOX, [this](wxCommandEvent&) { updatePropSelection(); });
@@ -264,30 +289,47 @@ void Versions::Manager::updatePropSelection() {
         );
     }
 
-    infoText->Show(selection != 1);
+    infoText->Show(selection != -1);
     updatePropVersionList();
 }
 
 void Versions::Manager::updatePropVersionList() {
+    Defer defer{[this]() { updatePropVersionSelection(); }};
+    const auto oldSelection{getVersionSelection()};
+
     const auto propSelection{
         static_cast<wxListBox *>(FindWindow(ID_PropList))->GetSelection()
     };
-    mPropVersionsSizer->Clear();
-    if (propSelection == -1) {
-        updatePropVersionSelection();
-        return;
-    }
+
+    mPropVersionsSizer->Clear(true);
+    if (propSelection == -1) return;
 
     const auto& versionedProp{getProps()[propSelection]};
     int32 id{ID_PropVersionListBegin};
-    for (const auto& version : versionedProp->supportedVersions) {
-        mPropVersionsSizer->Add(new wxToggleButton(
+    for (const auto& version : versionedProp->supportedVersions()) {
+        const auto toggleLabel{static_cast<string>(static_cast<Utils::Version>(*version))};
+        auto *toggle{new wxToggleButton(
             mPropPage,
             id,
-            static_cast<string>(static_cast<Utils::Version>(*version))
-        ));
+            toggleLabel
+        )};
+        toggle->Bind(wxEVT_TOGGLEBUTTON, [this, toggle](wxCommandEvent&) {
+            if (toggle->GetValue()) {
+                for (auto *child : mPropVersionsSizer->GetChildren()) {
+                    auto *childTogglePtr{dynamic_cast<wxToggleButton *>(child->GetWindow())};
+                    if (childTogglePtr == toggle) continue;
+                    
+                    if (childTogglePtr) childTogglePtr->SetValue(false);
+                }
+            }
+            updatePropVersionSelection();
+        });
+        toggle->SetMinSize({toggle->GetTextExtent(toggleLabel).x + 10, -1});
+        if (id - ID_PropVersionListBegin == oldSelection) toggle->SetValue(true);
+        mPropVersionsSizer->Add(toggle);
         ++id;
     }
+    mPropVersionsSizer->AddSpacer(5);
     mPropVersionsSizer->Add(new wxButton(
         mPropPage,
         ID_PropVersionListAdd,
@@ -296,34 +338,27 @@ void Versions::Manager::updatePropVersionList() {
         wxDefaultSize,
         wxBU_EXACTFIT
     ));
-
-    Layout();
-    Fit();
-    SetMinSize(GetSize());
-
-    updatePropVersionSelection();
 }
 
 void Versions::Manager::updatePropVersionSelection() {
-    const auto versionSelection{[this]() {
-        int32 ret{-1};
-        for (const auto *selectionButton : mPropVersionsSizer->GetChildren()) {
-            auto *toggleButton{dynamic_cast<const wxToggleButton *>(selectionButton)};
-            if (toggleButton) {
-                if (toggleButton->GetValue()) ret = toggleButton->GetId() - ID_PropVersionListBegin;
-            }
-        }
-
-        return ret;
-    }()};
+    const auto versionSelection{getVersionSelection()};
 
     FindWindow(ID_PropRemoveVersion)->Enable(versionSelection != -1);
     if (versionSelection != -1) {
         const auto& versionedProp{getProps()[
             static_cast<wxListBox *>(FindWindow(ID_PropList))->GetSelection()
         ]};
-        mPropVersionProxy.bind(*versionedProp->supportedVersions[versionSelection]);
+        mPropVersionProxy.bind(*versionedProp->supportedVersions()[versionSelection]);
+        mPropVersionProxy.data()->setFocus();
     } else mPropVersionProxy.unbind();
+
+    mPropPage->Layout();
+    mPropPage->SetMinSize(mPropPage->GetBestSize());
+    Layout();
+    SetMaxSize({-1, -1});
+    SetMinSize(GetBestSize());
+    Fit();
+    SetMaxSize({GetSize().x, -1});
 }
 
 void Versions::Manager::createUI() {
@@ -365,6 +400,9 @@ void Versions::Manager::createUI() {
     auto *propInfo{new wxStaticText(mPropPage, ID_PropInfo, {})};
     mPropVersionsSizer = new wxWrapSizer;
     auto *propVersion{new PCUI::Version(mPropPage, mPropVersionProxy)};
+    propVersion->Bind(wxEVT_TEXT, [this](wxCommandEvent&) {
+        updatePropVersionList();
+    });
     auto *propDeleteVersion{
         new wxButton(mPropPage, ID_PropRemoveVersion, _("Remove Version"))
     };
@@ -383,7 +421,7 @@ void Versions::Manager::createUI() {
     propSizer->AddSpacer(10);
     propSizer->Add(propListSizer, 0, wxEXPAND);
     propSizer->AddSpacer(10);
-    propSizer->Add(propEditSizer);
+    propSizer->Add(propEditSizer, 0, wxEXPAND);
     propSizer->AddSpacer(10);
     mPropPage->SetSizerAndFit(propSizer);
 
@@ -409,5 +447,19 @@ void Versions::Manager::createMenuBar() {
     App::appendDefaultMenuItems(menuBar);
 
     SetMenuBar(menuBar);
+}
+
+int32 Versions::Manager::getVersionSelection() {
+    int32 ret{-1};
+    for (const auto *selectionButton : mPropVersionsSizer->GetChildren()) {
+        auto *toggleButton{
+            dynamic_cast<const wxToggleButton *>(selectionButton->GetWindow())
+        };
+        if (toggleButton) {
+            if (toggleButton->GetValue()) ret = toggleButton->GetId() - ID_PropVersionListBegin;
+        }
+    }
+
+    return ret;
 }
 

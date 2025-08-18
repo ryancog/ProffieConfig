@@ -35,14 +35,16 @@ public:
 
 private:
     Manager(wxWindow *, wxWindowID);
-    void createUI();
-    void createMenuBar();
     void bindEvents();
-
     void updatePropList();
     void updatePropSelection();
     void updatePropVersionList();
     void updatePropVersionSelection();
+
+    void createUI();
+    void createMenuBar();
+
+    int32 getVersionSelection();
 
     PCUI::VersionDataProxy mPropVersionProxy;
     wxPanel *mPropPage;
