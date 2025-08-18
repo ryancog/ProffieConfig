@@ -148,6 +148,7 @@ uint32 Config::BladeArrays::numBlades() const {
                         switch (static_cast<Split::Type>(static_cast<uint32>(split->type))) {
                             case Split::STANDARD:
                             case Split::REVERSE:
+                            case Split::LIST:
                                 ++count;
                                 break;
                             case Split::STRIDE:

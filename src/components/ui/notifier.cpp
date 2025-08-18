@@ -25,17 +25,17 @@ namespace PCUI {
 
 class NotifierEvent : public wxEvent {
 public:
-    NotifierEvent(wxEventType eventType, uint32 id, NotifierData *data) :
+    NotifierEvent(wxEventType eventType, uint32 id, Notifier *data) :
         wxEvent(wxID_ANY, eventType), mID{id}, mData{data} {}
 
     [[nodiscard]] uint32 getID() const { return mID; }
-    [[nodiscard]] NotifierData *getData() const { return mData; }
+    [[nodiscard]] Notifier *getData() const { return mData; }
 
     virtual wxEvent *Clone() const { return new NotifierEvent(*this); }
 
 private:
     uint32 mID;
-    NotifierData *mData;
+    Notifier *mData;
 };
 
 const wxEventTypeTag<NotifierEvent> EVT_NOTIFY{wxNewEventType()};
@@ -43,7 +43,7 @@ const wxEventTypeTag<NotifierEvent> EVT_UNBOUND{wxNewEventType()};
 
 } // namespace PCUI
 
-PCUI::NotifierData::~NotifierData() {
+PCUI::Notifier::~Notifier() {
     // Handle this dying (shortly) before the notifier does.
     if (mNotifier) mNotifier->mData = nullptr;
     // Handle this dying behind a proxy (allowed)
@@ -51,7 +51,7 @@ PCUI::NotifierData::~NotifierData() {
 }
 
 
-void PCUI::NotifierData::notify(uint32 id) {
+void PCUI::Notifier::notify(uint32 id) {
     std::scoped_lock scopeLock{mLock};
     if (not mNotifier) return;
 
@@ -65,13 +65,13 @@ void PCUI::NotifierData::notify(uint32 id) {
     }
 }
 
-bool PCUI::NotifierData::eventsInFlight() {
+bool PCUI::Notifier::eventsInFlight() {
     std::scoped_lock scopeLock{mLock};
     return mInFlight; 
 }
 
 
-PCUI::NotifierDataProxy::~NotifierDataProxy() {
+PCUI::NotifierProxy::~NotifierProxy() {
     // Handle this dying before the notifier does.
     if (mData) {
         mData->mNotifier = nullptr;
@@ -80,7 +80,7 @@ PCUI::NotifierDataProxy::~NotifierDataProxy() {
     if (mNotifier) mNotifier->mProxy = nullptr;
 }
 
-void PCUI::NotifierDataProxy::bind(NotifierData *data) {
+void PCUI::NotifierProxy::bind(Notifier *data) {
     if (mData == data) return;
 
     if (mData) {
@@ -97,7 +97,7 @@ void PCUI::NotifierDataProxy::bind(NotifierData *data) {
         mData->mNotifier = mNotifier;
         mData->mInFlight = 0;
         if (mNotifier) mNotifier->mDerived->DeletePendingEvents();
-        mData->notify(Notifier::ID_REBOUND);
+        mData->notify(NotifyReceiver::ID_REBOUND);
     } else if (mNotifier) {
         if (wxThread::IsMain()) {
             NotifierEvent evt{EVT_UNBOUND, 0, nullptr};
@@ -109,15 +109,15 @@ void PCUI::NotifierDataProxy::bind(NotifierData *data) {
     }
 }
 
-PCUI::Notifier::Notifier(wxWindow *derived, NotifierData& data) {
+PCUI::NotifyReceiver::NotifyReceiver(wxWindow *derived, Notifier& data) {
     create(derived, data);
 }
 
-PCUI::Notifier::Notifier(wxWindow *derived, NotifierDataProxy& proxy) {
+PCUI::NotifyReceiver::NotifyReceiver(wxWindow *derived, NotifierProxy& proxy) {
     create(derived, proxy);
 }
 
-void PCUI::Notifier::create(wxWindow *derived, NotifierData& data) {
+void PCUI::NotifyReceiver::create(wxWindow *derived, Notifier& data) {
     assert(mDerived == nullptr);
 
     derived->Bind(EVT_NOTIFY, [this](NotifierEvent& evt) {
@@ -133,7 +133,7 @@ void PCUI::Notifier::create(wxWindow *derived, NotifierData& data) {
     data.mInFlight = 0;
 }
 
-void PCUI::Notifier::create(wxWindow *derived, NotifierDataProxy& proxy) {
+void PCUI::NotifyReceiver::create(wxWindow *derived, NotifierProxy& proxy) {
     assert(mDerived == nullptr);
 
     derived->Bind(EVT_NOTIFY, [this](NotifierEvent& evt) {
@@ -156,7 +156,7 @@ void PCUI::Notifier::create(wxWindow *derived, NotifierDataProxy& proxy) {
     }
 }
 
-void PCUI::Notifier::initializeNotifier() {
+void PCUI::NotifyReceiver::initializeNotifier() {
     assert(mDerived != nullptr and (mProxy != nullptr or mData != nullptr));
 
     if (mProxy) {
@@ -172,7 +172,7 @@ void PCUI::Notifier::initializeNotifier() {
     }
 }
 
-PCUI::Notifier::~Notifier() {
+PCUI::NotifyReceiver::~NotifyReceiver() {
     if (mData) {
         std::scoped_lock scopeLock{mData->mLock};
         mData->mNotifier = nullptr;
@@ -186,7 +186,7 @@ PCUI::Notifier::~Notifier() {
     }
 }
 
-PCUI::NotifierData *PCUI::Notifier::data() {
+PCUI::Notifier *PCUI::NotifyReceiver::data() {
     if (mProxy) return mProxy->mData;
     return mData;
 }

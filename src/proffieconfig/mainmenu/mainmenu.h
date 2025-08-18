@@ -18,7 +18,7 @@ class Overview;
 
 } // namespace Onboard
 
-class MainMenu : public PCUI::Frame, private PCUI::Notifier {
+class MainMenu : public PCUI::Frame, private PCUI::NotifyReceiver {
 public:
     static MainMenu* instance;
     MainMenu(wxWindow * = nullptr);
@@ -55,7 +55,7 @@ public:
     };
 
 private:
-    PCUI::NotifierData mNotifyData;
+    PCUI::Notifier mNotifyData;
     vector<EditorWindow *> mEditors;
 
     friend Onboard::Overview;

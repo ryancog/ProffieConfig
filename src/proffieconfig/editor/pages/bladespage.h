@@ -24,7 +24,7 @@
 
 class ArrayEditDlg;
 
-class BladesPage : public wxPanel, PCUI::Notifier {
+class BladesPage : public wxPanel, PCUI::NotifyReceiver {
 public:
     BladesPage(EditorWindow *);
 

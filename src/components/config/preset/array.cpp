@@ -79,7 +79,7 @@ Config::PresetArray::PresetArray(Config& config) :
         name.setInsertionPoint(insertionPoint - numTrimmed);
     });
     selection.setUpdateHandler([this, isCurrentArray](uint32 id) {
-        if (id != PCUI::Notifier::ID_REBOUND and id != selection.ID_SELECTION) return;
+        if (id != PCUI::NotifyReceiver::ID_REBOUND and id != selection.ID_SELECTION) return;
 
         if (not isCurrentArray()) return;
 
@@ -293,6 +293,7 @@ void Config::PresetArrays::syncStyleDisplay(int32 clearIdx) {
                         switch (static_cast<Split::Type>(static_cast<uint32>(split->type))) {
                             case Split::REVERSE:
                             case Split::STANDARD:
+                            case Split::LIST:
                                 styleChoices.emplace_back(
                                     wxString::Format(_("Blade %d:%d"), mainIdx, subIdx).ToStdString()
                                 );

@@ -21,7 +21,6 @@
 
 #include <wx/wrapsizer.h>
 
-#include "ui/controls/text.h"
 #include "ui/controls/version.h"
 #include "ui/frame.h"
 
@@ -40,8 +39,13 @@ private:
     void createMenuBar();
     void bindEvents();
 
-    PCUI::TextDataProxy mPropNameProxy;
+    void updatePropList();
+    void updatePropSelection();
+    void updatePropVersionList();
+    void updatePropVersionSelection();
+
     PCUI::VersionDataProxy mPropVersionProxy;
+    wxPanel *mPropPage;
     wxWrapSizer *mPropVersionsSizer;
 
     static Manager *smInstance;

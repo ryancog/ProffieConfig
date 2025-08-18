@@ -45,7 +45,7 @@ struct CONFIG_EXPORT BladeArrays {
         ID_SPLIT_SELECTION,
         ID_BLADE_TYPE_SELECTION,
     };
-    PCUI::NotifierData notifyData;
+    PCUI::Notifier notifyData;
 
     // Issues for the current array, for UI
     uint32 arrayIssues{BladeConfig::ISSUE_NONE};
@@ -83,7 +83,7 @@ struct CONFIG_EXPORT BladeArrays {
     PCUI::ComboBoxDataProxy dataPinProxy;
     PCUI::NumericDataProxy lengthProxy;
 
-    PCUI::NotifierData visualizerData;
+    PCUI::Notifier visualizerData;
 
     PCUI::ChoiceDataProxy splitSelectionProxy;
     PCUI::RadiosDataProxy splitTypeProxy;

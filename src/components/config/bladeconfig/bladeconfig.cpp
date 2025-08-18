@@ -29,7 +29,7 @@
 Config::Blade::Blade(Config& config) :
     mConfig{config}, mPixelBlade(config) {
     type.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::Notifier::ID_REBOUND and id != type.ID_SELECTION) return;
+        if (id != PCUI::NotifyReceiver::ID_REBOUND and id != type.ID_SELECTION) return;
         if (id == type.ID_SELECTION) mConfig.presetArrays.syncStyleDisplay();
 
         auto arraySelection{static_cast<int32>(mConfig.bladeArrays.arraySelection)};
@@ -146,7 +146,7 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
     });
 
     bladeSelection.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::Notifier::ID_REBOUND and id != bladeSelection.ID_SELECTION) return;
+        if (id != PCUI::NotifyReceiver::ID_REBOUND and id != bladeSelection.ID_SELECTION) return;
 
         if (mConfig.bladeArrays.arraySelection == -1) return;
         auto& bladeArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};

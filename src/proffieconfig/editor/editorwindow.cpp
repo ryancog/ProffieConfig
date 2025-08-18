@@ -66,7 +66,7 @@ EditorWindow::EditorWindow(wxWindow *parent, Config::Config& config) :
     ),
     mConfig{config},
     mInitialOSVersion{config.settings.getOSVersion()} {
-    Notifier::create(this, mNotifyData);
+    NotifyReceiver::create(this, mNotifyData);
     auto *sizer{new wxBoxSizer{wxVERTICAL}};
 
     createMenuBar();

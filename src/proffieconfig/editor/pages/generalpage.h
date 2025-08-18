@@ -22,7 +22,7 @@
 #include "../editorwindow.h"
 #include "../dialogs/customoptionsdlg.h"
 
-class GeneralPage : public wxPanel, PCUI::Notifier {
+class GeneralPage : public wxPanel, PCUI::NotifyReceiver {
 public:
     GeneralPage(EditorWindow*);
 

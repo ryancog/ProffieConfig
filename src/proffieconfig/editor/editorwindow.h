@@ -31,7 +31,7 @@ class PropsPage;
 class BladesPage;
 class PresetsPage;
 
-class EditorWindow : public PCUI::Frame, PCUI::Notifier {
+class EditorWindow : public PCUI::Frame, PCUI::NotifyReceiver {
 public:
     EditorWindow(wxWindow *, Config::Config&);
     bool Destroy() final;
@@ -76,7 +76,7 @@ private:
 
     void handleNotification(uint32) final;
 
-    PCUI::NotifierData mNotifyData;
+    PCUI::Notifier mNotifyData;
     Config::Config& mConfig;
 
     const Utils::Version mInitialOSVersion;

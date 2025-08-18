@@ -17,7 +17,7 @@ CustomOptionsDlg::CustomOptionsDlg(EditorWindow *parent) :
         wxDefaultSize,
         wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER
     ),
-    PCUI::Notifier(this, parent->getOpenConfig().settings.customOptsNotifyData),
+    PCUI::NotifyReceiver(this, parent->getOpenConfig().settings.customOptsNotifyData),
     mParent{parent} {
     createUI();
     bindEvents();

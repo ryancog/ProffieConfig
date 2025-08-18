@@ -32,7 +32,7 @@
 PropsPage::PropsPage(EditorWindow *parent) : 
     wxPanel(parent),
     mParent{parent} {
-    Notifier::create(this, mParent->getOpenConfig().propNotifyData);
+    NotifyReceiver::create(this, mParent->getOpenConfig().propNotifyData);
     auto& config{mParent->getOpenConfig()};
 
     auto *sizer{new wxBoxSizer(wxVERTICAL)};

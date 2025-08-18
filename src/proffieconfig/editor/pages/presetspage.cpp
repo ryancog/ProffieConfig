@@ -33,7 +33,7 @@
 #include "../../core/defines.h"
 #include "../editorwindow.h"
 
-class RenameArrayDlg : public wxDialog, PCUI::Notifier {
+class RenameArrayDlg : public wxDialog, PCUI::NotifyReceiver {
 public:
     RenameArrayDlg(
         wxWindow *parent,
@@ -42,7 +42,7 @@ public:
         const wxString& title,
         bool buttons = false
     ) : wxDialog(parent, wxID_ANY, title),
-        Notifier(this, array.notifyData),
+        NotifyReceiver(this, array.notifyData),
         mConfig{config}, mArray{array} {
         auto *sizer{new wxBoxSizer(wxVERTICAL)};
         auto *entry{new PCUI::Text(
@@ -139,7 +139,7 @@ private:
 
 PresetsPage::PresetsPage(EditorWindow *window) : 
     wxPanel(window),
-    PCUI::Notifier(this, window->getOpenConfig().presetArrays.notifyData),
+    PCUI::NotifyReceiver(this, window->getOpenConfig().presetArrays.notifyData),
     mParent(window) {
     createUI();
     bindEvents();
