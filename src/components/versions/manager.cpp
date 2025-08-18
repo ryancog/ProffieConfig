@@ -39,6 +39,7 @@
 #include "versions/versions.h"
 #include "wx/event.h"
 #include "wx/gdicmn.h"
+#include "wx/utils.h"
 
 namespace Versions {
 
@@ -251,6 +252,48 @@ void Versions::Manager::bindEvents() {
     }, ID_PropRemoveVersion);
     
     Bind(wxEVT_LISTBOX, [this](wxCommandEvent&) { updatePropSelection(); });
+    Bind(wxEVT_MENU, [this](wxCommandEvent&) {
+        loadLocal();
+        updatePropList();
+    }, ID_Refresh);
+    Bind(wxEVT_MENU, [this](wxCommandEvent&) {
+        wxLaunchDefaultApplication(Paths::versionDir().string());
+    }, ID_ShowVersions);
+    Bind(wxEVT_MENU, [this](wxCommandEvent&) {
+        constexpr auto FULL_RESET{wxID_YES};
+        constexpr auto RESTORE_DEFAULTS{wxID_NO};
+        auto res{PCUI::showMessage(
+            _("These actions cannot be undone!\n"
+            "\n"
+            "\"Restore Defaults\" will replace/restore default versions, reverting them but preserving any custom versions.\n"
+            "\n"
+            "\"Full Reset\" will replace/restore default versions and additionally remove any/all custom versions."),
+            _("Restore Default Versions"),
+            wxYES_NO | wxCANCEL | wxCANCEL_DEFAULT,
+            this
+        )};
+
+        if (res == wxCANCEL) return;
+
+        if (res == RESTORE_DEFAULTS) {
+            auto confirm{PCUI::showMessage(
+                _("Are you sure?"),
+                _("Restore Default Versions"),
+                wxYES_NO | wxNO_DEFAULT
+            )};
+            if (confirm != wxYES) return;
+        }
+        if (res == FULL_RESET) {
+            auto confirm{PCUI::showMessage(
+                _("Are you sure?"),
+                _("Full Versions Reset"),
+                wxYES_NO | wxNO_DEFAULT
+            )};
+            if (confirm != wxYES) return;
+        }
+
+        // Alr, now do it.
+    }, ID_Reset);
 }
 
 void Versions::Manager::updatePropList() {
