@@ -31,7 +31,6 @@
 
 namespace Config {
 
-vector<std::unique_ptr<Versions::Prop>> Config::mEmptyProps;
 vector<std::unique_ptr<Config>> loadedConfigs;
 
 filepath savePath(const string&);
@@ -74,41 +73,44 @@ void Config::Config::refreshPropVersions() {
     auto& propList{mProps[verNum]};
 
     vector<Versions::Prop *> visibleList;
-    for (const auto& versionedProp : Versions::propsForVersion(verNum)) {
+    for (auto *versionedProp : Versions::propsForVersion(verNum)) {
         bool found{false};
-        for (auto& prop : propList) {
+        for (auto& data : propList) {
             // Compare by display name, not unique name, obviously
-            if (prop->name == versionedProp->prop->name) {
+            if (data.prop->name == versionedProp->prop->name) {
                 found = true;
                 auto newProp{std::make_unique<Versions::Prop>(*versionedProp->prop)};
-                newProp->migrateFrom(*prop);
+                newProp->migrateFrom(*data.prop);
                 visibleList.push_back(newProp.get());
-                prop = std::move(newProp);
+                data.prop = std::move(newProp);
+                data.reference = versionedProp;
                 break;
             }
         }
 
         if (found) continue;
 
-        auto newProp{std::make_unique<Versions::Prop>(*versionedProp->prop)};
-        visibleList.push_back(newProp.get());
-        propList.push_back(std::move(newProp));
+        PropData newData;
+        newData.prop = std::make_unique<Versions::Prop>(*versionedProp->prop);
+        newData.reference = versionedProp;
+        visibleList.push_back(newData.prop.get());
+        propList.push_back(std::move(newData));
     }
 
     const auto comp{[&visibleList](
-        const std::unique_ptr<Versions::Prop>& a,
-        const std::unique_ptr<Versions::Prop>& b
+        const PropData& a,
+        const PropData& b
     ) -> bool {
         bool aIsVisible{false};
         bool bIsVisible{false};
         for (const auto visibleProp : visibleList) {
-            if (visibleProp == a.get()) aIsVisible = true;
-            if (visibleProp == b.get()) bIsVisible = true;
+            if (visibleProp == a.prop.get()) aIsVisible = true;
+            if (visibleProp == b.prop.get()) bIsVisible = true;
 
             if (aIsVisible and bIsVisible) break;
         }
 
-        if (aIsVisible == bIsVisible) return a->name < b->name;
+        if (aIsVisible == bIsVisible) return a.prop->name < b.prop->name;
 
         // One of these is not visible, the other is
         // Sort a first if a visible
@@ -118,17 +120,20 @@ void Config::Config::refreshPropVersions() {
 
     vector<string> choices;
     choices.reserve(propList.size());
-    for (const auto& prop : propList) {
+    for (auto& propData : propList) {
         bool isVisible{false};
         for (const auto visibleProp : visibleList) {
-            if (visibleProp == prop.get()) {
+            if (visibleProp == propData.prop.get()) {
                 isVisible = true;
                 break;
             }
         }
-        if (not isVisible) break;
 
-        choices.push_back(prop->name);
+        // This is logically a little confusing, but take advantage of
+        // looping over all the props here to clear invalid references,
+        // even though it would be clearer for this to be a separate loop.
+        if (not isVisible) propData.reference = nullptr;
+        else choices.push_back(propData.prop->name);
     }
 
     propNotifyData.notify(ID_PROPUPDATE);

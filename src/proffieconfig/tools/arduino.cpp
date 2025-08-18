@@ -1,4 +1,5 @@
 #include "arduino.h"
+#include "versions/versions.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2023-2025 Ryan Ogurek
@@ -413,11 +414,40 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
         return _("Please select an OS Version").ToStdString();
     }
 
+    const auto osVersion{config.settings.getOSVersion()};
+    const auto osPath{Paths::os(osVersion)};
+
+    if (config.propSelection != -1) {
+        if (prog) prog->emitEvent(15, _("Installing Prop File..."));
+        auto [prop, reference]{config.propAndReference(config.propSelection)};
+        if (not reference) {
+            if (prog) prog->emitEvent(100, _("Error"));
+            logger.error("Prop doesn't have a valid reference.");
+            return _("Invalid Prop Selected").ToStdString();
+        }
+
+        std::error_code err;
+        const auto sourcePropHeader{Paths::propDir() / reference->name / Versions::HEADER_FILE_STR};
+        if (not fs::exists(sourcePropHeader, err)) {
+            if (prog) prog->emitEvent(100, _("Error"));
+            logger.error("Prop doesn't have a header.");
+            return _("Invalid Prop Selected").ToStdString();
+        }
+
+        auto res{fs::copy_file(
+            sourcePropHeader,
+            osPath / "props" / prop.filename
+        )};
+        if (not res) {
+            if (prog) prog->emitEvent(100, _("Error"));
+            logger.error("Failed to copy in prop header.");
+            return _("OS FS Error").ToStdString();
+        }
+    }
+
     constexpr cstring GENERATE_MESSAGE{wxTRANSLATE("Generating configuration file...")};
     if (prog) prog->emitEvent(20, wxGetTranslation(GENERATE_MESSAGE));
 
-    const auto osVersion{config.settings.getOSVersion()};
-    const auto osPath{Paths::os(osVersion)};
     const auto configPath{
         osPath / "config" / (static_cast<string>(config.name) + Config::RAW_FILE_EXTENSION)
     };
