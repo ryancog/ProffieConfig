@@ -159,6 +159,11 @@ PCUI::VersionData::operator Utils::Version() {
     );
 }
 
+PCUI::VersionData::operator string() {
+    std::scoped_lock scopeLock{getLock()};
+    return static_cast<string>(static_cast<Utils::Version>(*this));
+}
+
 void PCUI::VersionData::operator=(const Utils::Version& version) {
     std::scoped_lock scopeLock{getLock()};
     if (version == *this) return;
