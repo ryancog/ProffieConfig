@@ -585,10 +585,20 @@ void VersionsManager::updateOSSelection() {
     if (selection != -1) {
         const auto& versionedOS{Versions::getOSVersions()[selection]};
 
+        const auto defaultStr{_("Default")};
+        const auto coreVersion{versionedOS.coreVersion.err ? defaultStr : static_cast<string>(versionedOS.coreVersion)};
+        const auto coreURL{versionedOS.coreURL.empty() ? defaultStr : versionedOS.coreURL};
+        const auto coreBoardV1{versionedOS.coreBoardV1.empty() ? defaultStr : versionedOS.coreBoardV1};
+        const auto coreBoardV2{versionedOS.coreBoardV2.empty() ? defaultStr : versionedOS.coreBoardV2};
+        const auto coreBoardV3{versionedOS.coreBoardV3.empty() ? defaultStr : versionedOS.coreBoardV3};
+
         infoText->SetLabelText(
             "Version: " + static_cast<string>(versionedOS.verNum) + "\n"
-            "Core Version: " + (versionedOS.coreVersion.err ? "Default" : static_cast<string>(versionedOS.coreVersion)) + "\n"
-            "Core URL: " + (versionedOS.coreURL.empty() ? "None" : versionedOS.coreURL)
+            "Core Version: " + coreVersion + "\n"
+            "Core URL: " + coreURL + "\n"
+            "Core Board V1: " + coreBoardV1 + "\n"
+            "Core Board V2: " + coreBoardV2 + "\n"
+            "Core Board V3: " + coreBoardV3
         );
     }
 
