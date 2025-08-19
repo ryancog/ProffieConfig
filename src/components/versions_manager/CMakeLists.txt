@@ -12,9 +12,9 @@ target_link_libraries(versions_manager
     wxWidgets
 
     versions
+    config
 )
 
 include(../Component.cmake)
-setup_component_and_static(versions_manager 1.0.0)
-
+setup_component(versions_manager 1.0.0)
 

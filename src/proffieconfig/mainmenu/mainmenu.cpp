@@ -30,6 +30,7 @@
 #include "ui/info.h"
 #include "utils/info.h"
 #include "versions/info.h"
+#include "versions_manager/info.h"
 #include "versions_manager/manager.h"
 
 #include "../core/defines.h"
