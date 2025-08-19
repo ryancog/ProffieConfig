@@ -36,6 +36,10 @@ namespace Versions {
 
 constexpr cstring CORE_VERSION_STR{"CORE_VER"};
 constexpr cstring CORE_URL_STR{"CORE_URL"};
+constexpr cstring CORE_BOARDV1_STR{"CORE_BOARDV1"};
+constexpr cstring CORE_BOARDV2_STR{"CORE_BOARDV2"};
+constexpr cstring CORE_BOARDV3_STR{"CORE_BOARDV3"};
+
 constexpr cstring SUPPORTED_VERSIONS_STR{"SUPPORTED_VERSIONS"};
 
 const Utils::Version defaultCoreVersion{"3.6.0"};
@@ -129,6 +133,21 @@ void Versions::loadLocal() {
         if (coreURLIter != hashedInfoData.end() and coreURLIter->second->value) {
             os.coreURL = *coreVersionIter->second->value;
         } 
+
+        const auto coreBoardV1Iter{hashedInfoData.find(CORE_BOARDV1_STR)};
+        if (coreBoardV1Iter != hashedInfoData.end() and coreBoardV1Iter->second->value) {
+            os.coreBoardV1 = *coreVersionIter->second->value;
+        }
+
+        const auto coreBoardV2Iter{hashedInfoData.find(CORE_BOARDV2_STR)};
+        if (coreBoardV2Iter != hashedInfoData.end() and coreBoardV2Iter->second->value) {
+            os.coreBoardV2= *coreBoardV2Iter->second->value;
+        }
+
+        const auto coreBoardV3Iter{hashedInfoData.find(CORE_BOARDV3_STR)};
+        if (coreBoardV3Iter != hashedInfoData.end() and coreBoardV3Iter->second->value) {
+            os.coreBoardV3 = *coreVersionIter->second->value;
+        }
 
         osVersions.push_back(std::move(os));
     }
