@@ -216,20 +216,6 @@ string Arduino::version() {
 //         //     return;
 //         // }
 //         
-//         progDialog->emitEvent(30, "Downloading dependencies...");
-//         install = Arduino::cli("core install proffieboard:stm32l4@" ARDUINO_PBPLUGIN_VERSION " --additional-urls https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json");
-//         while (fgets(buffer.data(), buffer.size(), install) != nullptr) { 
-//             progDialog->emitEvent(-1, ""); 
-//             fulloutput += buffer.data(); 
-//         }
-//         if (pclose(install)) {
-//             progDialog->emitEvent(100, "Error");
-//             const auto coreInstallErrorMessage{"Core install failed:\n\n" + fulloutput};
-//             evt->str = '\n' + coreInstallErrorMessage;
-//             logger.error(coreInstallErrorMessage);
-//             wxQueueEvent(parent->GetEventHandler(), evt);
-//             return;
-//         }
 // 
 // #       ifndef __WXOSX__
 //         constexpr cstring INSTALL_DRIVER_MESSAGE{"Installing drivers..."};
@@ -408,17 +394,37 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
     optional<string> err;
 
     if (prog) prog->emitEvent(10, _("Checking OS Version..."));
-    if (config.settings.getOSVersion() == Utils::Version::invalidObject()) {
+    const auto osVersion{config.settings.getOSVersion()};
+    auto *const versionedOS{Versions::getVersionedOS(osVersion)};
+    if (osVersion == Utils::Version::invalidObject() or not versionedOS) {
         if (prog) prog->emitEvent(100, _("Error"));
-        logger.error("Configuration doesn't have an OS Version selected, cannot compile.");
+        logger.error("Configuration doesn't have a valid OS Version selected (" + static_cast<string>(osVersion) + "), cannot compile.");
         return _("Please select an OS Version").ToStdString();
     }
 
-    const auto osVersion{config.settings.getOSVersion()};
+    if (prog) prog->emitEvent(15, _("Ensuring Core Installation..."));
+    auto coreInstall{Arduino::cli(
+        "core install proffieboard:stm32l4@" +
+        (versionedOS->coreVersion.err ? "3.6.0" : static_cast<string>(versionedOS->coreVersion)) +
+        " --additional-urls " + 
+        (not versionedOS->coreURL.empty() ? versionedOS->coreURL : "https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json")
+    )};
+    array<char, 32> coreInstallBuf;
+    string coreInstallOutput;
+    while (fgets(coreInstallBuf.data(), coreInstallBuf.size(), coreInstall) != nullptr) { 
+        if (prog) prog->emitEvent(-1, ""); 
+        coreInstallOutput += coreInstallBuf.data();
+    }
+    if (pclose(coreInstall)) {
+        if (prog) prog->emitEvent(100, "Error");
+        logger.error("Failed to install core: \n" + coreInstallOutput);
+        return _("Could Not Install Core").ToStdString();
+    }
+
     const auto osPath{Paths::os(osVersion)};
 
     if (config.propSelection != -1) {
-        if (prog) prog->emitEvent(15, _("Installing Prop File..."));
+        if (prog) prog->emitEvent(25, _("Installing Prop File..."));
         auto [prop, reference]{config.propAndReference(config.propSelection)};
         if (not reference) {
             if (prog) prog->emitEvent(100, _("Error"));
@@ -446,7 +452,7 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
     }
 
     constexpr cstring GENERATE_MESSAGE{wxTRANSLATE("Generating configuration file...")};
-    if (prog) prog->emitEvent(20, wxGetTranslation(GENERATE_MESSAGE));
+    if (prog) prog->emitEvent(30, wxGetTranslation(GENERATE_MESSAGE));
 
     const auto configPath{
         osPath / "config" / (static_cast<string>(config.name) + Config::RAW_FILE_EXTENSION)
@@ -458,7 +464,7 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
     }
 
     constexpr cstring UPDATE_INO_MESSAGE{wxTRANSLATE("Updating ProffieOS file...")};
-    if (prog) prog->emitEvent(30, wxGetTranslation(UPDATE_INO_MESSAGE));
+    if (prog) prog->emitEvent(35, wxGetTranslation(UPDATE_INO_MESSAGE));
     const auto inoPath{osPath / "ProffieOS.ino"};
     const auto tmpInoPath{fs::temp_directory_path() / "ProffieOS.ino"};
     std::ifstream ino(inoPath);
@@ -527,7 +533,8 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
             assert(0);
     }
     // TODO: See if this works
-    compileCommand += "@3.6";
+    compileCommand += "@";
+    compileCommand += versionedOS->coreVersion.err ? "3.6.0" : static_cast<string>(versionedOS->coreVersion);
     compileCommand += " --board-options ";
     if (config.settings.massStorage and config.settings.webUSB) compileCommand += "usb=cdc_msc_webusb";
     else if (config.settings.webUSB) compileCommand += "usb=cdc_webusb";
