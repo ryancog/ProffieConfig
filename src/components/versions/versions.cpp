@@ -35,6 +35,7 @@
 namespace Versions {
 
 constexpr cstring CORE_VERSION_STR{"CORE_VER"};
+constexpr cstring CORE_URL_STR{"CORE_URL"};
 constexpr cstring SUPPORTED_VERSIONS_STR{"SUPPORTED_VERSIONS"};
 
 const Utils::Version defaultCoreVersion{"3.6.0"};
@@ -44,6 +45,8 @@ vector<std::unique_ptr<VersionedProp>> props;
 std::multimap<Utils::Version, VersionedProp *> propVersionMap;
 
 } // namespace Versions
+
+Versions::VersionedOS::VersionedOS() : coreVersion{Utils::Version::invalidObject()} {}
 
 void Versions::VersionedProp::addVersion() {
     auto version{std::make_unique<PCUI::VersionData>()};
@@ -117,13 +120,15 @@ void Versions::loadLocal() {
         PConf::read(infoFile, infoData, logger.bverbose("Reading info file..."));
         const auto hashedInfoData{PConf::hash(infoData)};
 
-
         const auto coreVersionIter{hashedInfoData.find(CORE_VERSION_STR)};
         if (coreVersionIter != hashedInfoData.end() and coreVersionIter->second->value) {
-            Utils::Version coreVersion{*coreVersionIter->second->value};
-            if (coreVersion) os.coreVersion = coreVersion;
-            else os.coreVersion = defaultCoreVersion;
-        } else os.coreVersion = defaultCoreVersion;
+            os.coreVersion = static_cast<Utils::Version>(*coreVersionIter->second->value);
+        } 
+
+        const auto coreURLIter{hashedInfoData.find(CORE_URL_STR)};
+        if (coreURLIter != hashedInfoData.end() and coreURLIter->second->value) {
+            os.coreURL = *coreVersionIter->second->value;
+        } 
 
         osVersions.push_back(std::move(os));
     }
@@ -205,6 +210,14 @@ void Versions::loadLocal() {
     }
 
     logger.info("Done");
+}
+
+const Versions::VersionedOS *Versions::getVersionedOS(const Utils::Version& version) {
+    for (const auto& versionedOS : osVersions) {
+        if (versionedOS.verNum == version) return &versionedOS;
+    }
+
+    return nullptr;
 }
 
 const vector<Versions::VersionedOS>& Versions::getOSVersions() { return osVersions; }
