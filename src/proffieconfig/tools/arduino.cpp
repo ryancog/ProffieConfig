@@ -1,5 +1,4 @@
 #include "arduino.h"
-#include "versions/versions.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2023-2025 Ryan Ogurek
@@ -49,6 +48,7 @@
 #include "log/branch.h"
 #include "utils/paths.h"
 #include "utils/types.h"
+#include "versions/versions.h"
 
 #include "../core/utilities/progress.h"
 
@@ -490,13 +490,13 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
                 buffer.find(R"(#define CONFIG_FILE)") == 0
            ) {
             if (not alreadyOutputConfigDefine) {
-                tmpIno << "#define CONFIG_FILE \"config/" << static_cast<string>(config.name) << ".h\"";
+                tmpIno << "#define CONFIG_FILE \"config/" << static_cast<string>(config.name) << ".h\"\n";
                 alreadyOutputConfigDefine = true;
             }
         } else if (buffer.find(R"(const char version[] = ")" ) == 0) {
-            tmpIno << R"(const char version[] = ")" + static_cast<string>(osVersion) +  R"(";)";
+            tmpIno << R"(const char version[] = ")" + static_cast<string>(osVersion) +  "\";\n";
         } else {
-            tmpIno << buffer;
+            tmpIno << buffer << '\n';
         }
     }
     ino.close();
@@ -521,20 +521,17 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
     };
     switch (boardVersion) {
         case Config::Settings::PROFFIEBOARDV3:
-            compileCommand += ARDUINOCORE_PBV3;
+            compileCommand += versionedOS->coreBoardV3.empty() ? ARDUINOCORE_PBV3 : versionedOS->coreBoardV3;
             break;
         case Config::Settings::PROFFIEBOARDV2:
-            compileCommand += ARDUINOCORE_PBV2;
+            compileCommand += versionedOS->coreBoardV2.empty() ? ARDUINOCORE_PBV2 : versionedOS->coreBoardV2;
             break;
         case Config::Settings::PROFFIEBOARDV1:
-            compileCommand += ARDUINOCORE_PBV1;
+            compileCommand += versionedOS->coreBoardV1.empty() ? ARDUINOCORE_PBV1 : versionedOS->coreBoardV1;
             break;
         default: 
             assert(0);
     }
-    // TODO: See if this works
-    compileCommand += "@";
-    compileCommand += versionedOS->coreVersion.err ? "3.6.0" : static_cast<string>(versionedOS->coreVersion);
     compileCommand += " --board-options ";
     if (config.settings.massStorage and config.settings.webUSB) compileCommand += "usb=cdc_msc_webusb";
     else if (config.settings.webUSB) compileCommand += "usb=cdc_webusb";
@@ -552,11 +549,13 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
 
     if (pclose(arduinoCli) != 0) {
         logger.error("Error during pclose():\n" + compileOutput);
+        if (prog) prog->emitEvent(100, _("Error"));
         return parseError(compileOutput, config);
     }
 
     if (compileOutput.find("error") != string::npos) {
         logger.error(compileOutput);
+        if (prog) prog->emitEvent(100, _("Error"));
         return parseError(compileOutput, config);
     }
 
@@ -590,6 +589,7 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
 
     if (ret.tool1.empty() or ret.tool2.empty()) {
         logger.error("Failed to find utilities in output: " + compileOutput);
+        if (prog) prog->emitEvent(100, _("Error"));
         return _("Failed to find required utilities").ToStdString();
     }
 # 	endif
@@ -838,7 +838,7 @@ string Arduino::parseError(const string& error, const Config::Config& config) {
     if (ERRCONTAINS("error:")) {
         const auto errPos{error.find("error:")};
         const auto fileData{error.rfind('/', errPos)};
-        return error.substr(fileData + 1);
+        return error.substr(fileData + 1, MAX_ERRMESSAGE_LENGTH);
     }
 
     return "Unknown error: " + error.substr(0, MAX_ERRMESSAGE_LENGTH);
@@ -852,7 +852,7 @@ FILE* Arduino::cli(const string& command) {
     fullCommand += windowModePrefix();
 #   endif
     fullCommand += '"' + (Paths::binaryDir() / "arduino-cli").string() + '"';
-    fullCommand += " " + command;
+    fullCommand += " --no-color " + command;
     fullCommand += " 2>&1";
 
     logger.debug("Executing command \"" + fullCommand + '"');
