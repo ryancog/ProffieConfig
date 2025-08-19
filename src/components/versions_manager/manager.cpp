@@ -447,7 +447,8 @@ void VersionsManager::reloadFromDisk() {
     Versions::loadLocal();
 
     for (const auto& config : Config::getOpen()) {
-
+        config->refreshOSVersions();
+        config->refreshPropVersions();
     }
 
     updatePropList();
