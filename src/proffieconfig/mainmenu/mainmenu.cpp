@@ -30,7 +30,7 @@
 #include "ui/info.h"
 #include "utils/info.h"
 #include "versions/info.h"
-#include "versions/manager.h"
+#include "versions_manager/manager.h"
 
 #include "../core/defines.h"
 #include "../core/appstate.h"
@@ -100,29 +100,27 @@ void MainMenu::bindEvents() {
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxAboutDialogInfo aboutInfo;
+        const auto componentVersions{
+            "Config: v" + string{Config::version()} + "\n"
+            "Log: v" + Log::version() + "\n"
+            "PConf: v" + PConf::version() + "\n"
+            "PCUI: v" + PCUI::version() + "\n"
+            "Utils: v" + Utils::version() + "\n"
+            "Versions: v" + Versions::version() + "\n"
+            "Versions Manager: v" + VersionsManager::version() + "\n"
+            "Arduino CLI: v" + Arduino::version() + "\n"
+        };
 #       ifdef __WXOSX__
         aboutInfo.SetDescription(_("All-in-one Proffieboard Management Utility"));
         aboutInfo.SetVersion(
             wxSTRINGIZE(VERSION),
             "Core: v" + wxString{wxSTRINGIZE(VERSION)} + "\n"
-            "Config: v" + Config::version() + "\n"
-            "Log: v" + Log::version() + "\n"
-            "PConf: v" + PConf::version() + "\n"
-            "PCUI: v" + PCUI::version() + "\n"
-            "Utils: v" + Utils::version() + "\n"
-            "Versions: v" + Versions::version() + "\n"
-            "Arduino CLI: v" + Arduino::version() + "\n"
+            + componentVersions
         );
 #       else
         aboutInfo.SetDescription(
             _("All-in-one Proffieboard Management Utility") + "\n\n"
-            "Config: v" + Config::version() + "\n"
-            "Log: v" + Log::version() + "\n"
-            "PConf: v" + PConf::version() + "\n"
-            "PCUI: v" + PCUI::version() + "\n"
-            "Utils: v" + Utils::version() + "\n"
-            "Versions: v" + Versions::version() + "\n"
-            "Arduino CLI: v" + Arduino::version()
+            + componentVersions
         );
         aboutInfo.SetVersion(wxSTRINGIZE(VERSION));
 #       endif
@@ -157,7 +155,7 @@ void MainMenu::bindEvents() {
             if (res.result != wxID_OK) return;
         }
 
-        Versions::Manager::open(this, AppState::ID_VersionsManager);
+        VersionsManager::open(this, AppState::ID_VersionsManager);
     }, ID_ManageVersions);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {

@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
  *
- * components/versions/manager.h
+ * components/versions_manager/info.h
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,39 +19,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/wrapsizer.h>
+#include "utils/types.h"
 
-#include "ui/controls/version.h"
-#include "ui/frame.h"
+#include "versions_manager_export.h"
 
-#include "versions_export.h"
+namespace VersionsManager {
 
-namespace Versions {
+VERSIONS_MANAGER_EXPORT cstring version();
 
-class Manager : public PCUI::Frame {
-public:
-    VERSIONS_EXPORT static void open(wxWindow *, wxWindowID);
-    bool Destroy() final;
-
-private:
-    Manager(wxWindow *, wxWindowID);
-    void bindEvents();
-    void updatePropList();
-    void updatePropSelection();
-    void updatePropVersionList();
-    void updatePropVersionSelection();
-
-    void createUI();
-    void createMenuBar();
-
-    int32 getVersionSelection();
-
-    PCUI::VersionDataProxy mPropVersionProxy;
-    wxPanel *mPropPage;
-    wxWrapSizer *mPropVersionsSizer;
-
-    static Manager *smInstance;
-};
-
-} // namespace Versions
+} // namespace VersionsManager
 

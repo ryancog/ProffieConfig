@@ -6,8 +6,6 @@ add_library(versions SHARED
     versions.cpp
     prop.cpp
 
-    manager.cpp
-
     info.cpp
 )
 

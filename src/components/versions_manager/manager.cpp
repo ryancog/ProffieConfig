@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
  *
- * components/versions/manager.cpp
+ * components/versions_manager/manager.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <filesystem>
 #include <wx/button.h>
 #include <wx/dialog.h>
 #include <wx/filepicker.h>
@@ -32,18 +31,15 @@
 #include "log/context.h"
 #include "log/severity.h"
 #include "ui/controls/version.h"
+#include "ui/frame.h"
 #include "ui/message.h"
 #include "utils/defer.h"
 #include "utils/paths.h"
 #include "utils/string.h"
 #include "versions/versions.h"
 #include "wx/event.h"
-#include "wx/gdicmn.h"
-#include "wx/utils.h"
 
-namespace Versions {
-
-Manager *Manager::smInstance;
+namespace VersionsManager {
 
 enum {
     ID_Refresh = 2,
@@ -56,39 +52,69 @@ enum {
     ID_PropInfo,
     ID_PropVersionsText,
     ID_PropRemoveVersion,
+
+    ID_OSList,
+    ID_OSAdd,
+    ID_OSRemove,
+    ID_OSText,
     
     ID_PropVersionListAdd,
     ID_PropVersionListBegin,
 };
 
-} // namespace Versions
+void bindEvents();
 
-void Versions::Manager::open(wxWindow *parent, wxWindowID id) {
-    if (smInstance) smInstance->Raise();
-    else smInstance = new Manager(parent, id);
-}
+void reloadFromDisk();
 
-bool Versions::Manager::Destroy() {
-    smInstance = nullptr;
-    return PCUI::Frame::Destroy();
-}
+void updatePropList();
+void updatePropSelection();
+void updatePropVersionList();
+void updatePropVersionSelection();
 
-Versions::Manager::Manager(wxWindow *parent, wxWindowID id) :
-    PCUI::Frame(parent, id, _("Versions Manager")) {
+void updateOSList();
+void updateOSSelection();
+
+void createUI();
+void createMenuBar();
+
+int32 getVersionSelection();
+
+PCUI::Frame *manager{nullptr};
+
+PCUI::VersionDataProxy mPropVersionProxy;
+wxPanel *mPropPage;
+wxWrapSizer *mPropVersionsSizer;
+
+wxPanel *mOSPage;
+
+} // namespace VersionsManager
+
+void VersionsManager::open(wxWindow *parent, wxWindowID id) {
+    if (manager) {
+        manager->Raise();
+        return;
+    }
+
+    manager = new PCUI::Frame(parent, id, _("Versions Manager"));
+    manager->Bind(wxEVT_CLOSE_WINDOW, [](wxCloseEvent& evt) {
+        manager = nullptr;
+        evt.Skip();
+    });
+
     
     createUI();
     createMenuBar();
     bindEvents();
 
     updatePropList();
-    updatePropVersionList();
+    updateOSList();
 
-    Show();
+    manager->Show();
 }
 
-void Versions::Manager::bindEvents() {
-    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        wxDialog dlg(this, wxID_ANY, _("Add Prop"));
+void VersionsManager::bindEvents() {
+    manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
+        wxDialog dlg(manager, wxID_ANY, _("Add Prop"));
         auto *sizer{new wxBoxSizer(wxVERTICAL)};
         auto *name{new wxTextCtrl(&dlg, wxID_ANY)};
         auto *duplicateMessage{new wxStaticText(
@@ -184,7 +210,7 @@ void Versions::Manager::bindEvents() {
         if (dlg.ShowModal() == wxID_OK) {
             const auto errorTitleStr{_("Failed to Add Prop")};
             const auto errorStr{_("OS FS Failure")};
-            constexpr cstring LOG_TAG{"Versions::Manager Add Prop"};
+            constexpr cstring LOG_TAG{"VersionsManager Add Prop"};
             std::error_code err;
             const auto propDir{Paths::propDir() / name->GetValue().ToStdString()};
             if (not fs::create_directory(propDir, err)) {
@@ -195,7 +221,7 @@ void Versions::Manager::bindEvents() {
                 PCUI::showMessage(errorStr, errorTitleStr);
                 return;
             }
-            if (not fs::copy_file(file->GetPath().ToStdString(), propDir / DATA_FILE_STR, err)) {
+            if (not fs::copy_file(file->GetPath().ToStdString(), propDir / Versions::DATA_FILE_STR, err)) {
                 Log::Context::getGlobal().quickLog(
                     Log::Severity::WARN, LOG_TAG,
                     "Failed to move prop data file: " + err.message()
@@ -204,7 +230,7 @@ void Versions::Manager::bindEvents() {
                 PCUI::showMessage(errorStr, errorTitleStr);
                 return;
             }
-            if (not fs::copy_file(header->GetPath().ToStdString(), propDir / HEADER_FILE_STR, err)) {
+            if (not fs::copy_file(header->GetPath().ToStdString(), propDir / Versions::HEADER_FILE_STR, err)) {
                 Log::Context::getGlobal().quickLog(
                     Log::Severity::WARN, LOG_TAG,
                     "Failed to move prop header file: " + err.message()
@@ -214,24 +240,22 @@ void Versions::Manager::bindEvents() {
                 return;
             }
 
-            loadLocal();
-            updatePropList();
+            reloadFromDisk();
         }
     }, ID_PropAdd);
-    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+    Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
         auto res{PCUI::showMessage(
             _("This cannot be undone!"), _("Remove Prop"),
-            wxYES_NO | wxNO_DEFAULT, this
+            wxYES_NO | wxNO_DEFAULT, manager
         )};
         if (res == wxYES) {
             const auto& versionedProp{
-                getProps()[static_cast<wxListBox *>(FindWindow(ID_PropList))->GetSelection()]
+                Versions::getProps()[static_cast<wxListBox *>(manager->FindWindow(ID_PropList))->GetSelection()]
             };
             fs::remove_all(Paths::propDir() / versionedProp->name);
         }
 
-        loadLocal();
-        updatePropList();
+        reloadFromDisk();
     }, ID_PropRemove);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         const auto& versionedProp{
@@ -250,11 +274,131 @@ void Versions::Manager::bindEvents() {
         versionedProp->removeVersion(selectedVersion);
         updatePropVersionList();
     }, ID_PropRemoveVersion);
+
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+        wxDialog dlg(this, wxID_ANY, _("Add ProffieOS"));
+        auto *sizer{new wxBoxSizer(wxVERTICAL)};
+        PCUI::VersionData versionData;
+        auto *version{new PCUI::Version(&dlg, versionData, _("Version"))};
+        auto *duplicateMessage{new wxStaticText(
+            &dlg,
+            wxID_ANY,
+            _("Duplicate OS Version")
+        )};
+        auto *folder{new wxDirPickerCtrl(
+            &dlg,
+            wxID_ANY,
+            wxEmptyString,
+            _("Select ProffieOS Folder"),
+            wxDefaultPosition,
+            wxDefaultSize,
+            wxDIRP_USE_TEXTCTRL | wxDIRP_DIR_MUST_EXIST
+        )};
+        auto flags{wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT, 10)};
+        sizer->AddSpacer(10);
+        sizer->Add(version, flags);
+        sizer->Add(duplicateMessage, flags);
+        sizer->AddSpacer(5);
+        sizer->Add(new wxStaticText(&dlg, wxID_ANY, _("Folder")), flags);
+        sizer->Add(folder, flags);
+#       ifdef __WXOSX__
+        flags = wxSizerFlags().Expand();
+#       else
+        flags = wxSizerFlags().Expand().Border(wxALL, 10);
+#       endif
+        sizer->Add(
+            dlg.CreateStdDialogButtonSizer(wxOK | wxCANCEL),
+            flags
+        );
+        dlg.SetSizerAndFit(sizer);
+        dlg.SetMinSize({500, -1});
+
+        const auto updateState{[&dlg, &versionData, duplicateMessage, folder]() {
+            bool duplicate{false};
+            const auto versionStr{static_cast<string>(versionData)};
+            for (const auto& entry : fs::directory_iterator{Paths::propDir()}) {
+                if (entry.path().filename() == versionStr) {
+                    duplicate = true;
+                    break;
+                }
+            }
+
+            duplicateMessage->Show(duplicate);
+            const auto folderPath{folder->GetPath().ToStdString()};
+
+            std::error_code err;
+            dlg.FindWindow(wxID_OK)->Enable(
+                not duplicate and
+                not versionStr.empty() and
+                fs::exists(folderPath, err)
+            );
+
+            dlg.Fit();
+        }};
+
+        versionData.setUpdateHandler([updateState](uint32 id) {
+            if (id != PCUI::VersionData::ID_VALUE) return;
+            updateState();
+        });
+        folder->Bind(wxEVT_DIRPICKER_CHANGED, [updateState](wxCommandEvent&) {
+            updateState();
+        });
+        
+        updateState();
+        if (dlg.ShowModal() == wxID_OK) {
+            const auto errorTitleStr{_("Failed to Add ProffieOS")};
+            const auto errorStr{_("OS FS Failure")};
+            constexpr cstring LOG_TAG{"VersionsManager Add Prop"};
+            std::error_code err;
+            const auto osDir{Paths::osDir() / static_cast<string>(versionData)};
+            if (not fs::create_directory(osDir, err)) {
+                Log::Context::getGlobal().quickLog(
+                    Log::Severity::WARN, LOG_TAG,
+                    "Failed to create directory " + osDir.string() + ", " + err.message()
+                );
+                PCUI::showMessage(errorStr, errorTitleStr);
+                return;
+            }
+
+            const auto copyOpts{fs::copy_options::recursive};
+            fs::copy(folder->GetPath().ToStdString(), osDir / "ProffieOS", copyOpts, err);
+            if (err) {
+                Log::Context::getGlobal().quickLog(
+                    Log::Severity::WARN, LOG_TAG,
+                    "Failed to move prop data file: " + err.message()
+                );
+                fs::remove_all(osDir, err);
+                PCUI::showMessage(errorStr, errorTitleStr);
+                return;
+            }
+
+            reloadFromDisk();
+        }
+    }, ID_OSAdd);
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+        auto res{PCUI::showMessage(
+            _("This cannot be undone!"), _("Remove OS"),
+            wxYES_NO | wxNO_DEFAULT, this
+        )};
+        if (res == wxYES) {
+            const auto& versionedOS{
+                getOSVersions()[static_cast<wxListBox *>(FindWindow(ID_OSList))->GetSelection()]
+            };
+            fs::remove_all(Paths::osDir() / static_cast<string>(versionedOS.verNum));
+        }
+
+        reloadFromDisk();
+    }, ID_OSRemove);
     
-    Bind(wxEVT_LISTBOX, [this](wxCommandEvent&) { updatePropSelection(); });
+    Bind(wxEVT_LISTBOX, [this](wxCommandEvent&) {
+        updatePropSelection();
+    }, ID_PropList);
+    Bind(wxEVT_LISTBOX, [this](wxCommandEvent&) {
+        updateOSSelection();
+    }, ID_OSList);
+
     Bind(wxEVT_MENU, [this](wxCommandEvent&) {
-        loadLocal();
-        updatePropList();
+        reloadFromDisk();
     }, ID_Refresh);
     Bind(wxEVT_MENU, [this](wxCommandEvent&) {
         wxLaunchDefaultApplication(Paths::versionDir().string());
@@ -275,28 +419,40 @@ void Versions::Manager::bindEvents() {
 
         if (res == wxCANCEL) return;
 
+        bool confirm{false};
         if (res == RESTORE_DEFAULTS) {
-            auto confirm{PCUI::showMessage(
+            confirm = wxYES == PCUI::showMessage(
                 _("Are you sure?"),
                 _("Restore Default Versions"),
                 wxYES_NO | wxNO_DEFAULT
-            )};
-            if (confirm != wxYES) return;
+            );
         }
         if (res == FULL_RESET) {
-            auto confirm{PCUI::showMessage(
+            confirm = wxYES == PCUI::showMessage(
                 _("Are you sure?"),
                 _("Full Versions Reset"),
                 wxYES_NO | wxNO_DEFAULT
-            )};
-            if (confirm != wxYES) return;
+            );
         }
+
+        if (not confirm) return;
 
         // Alr, now do it.
     }, ID_Reset);
 }
 
-void Versions::Manager::updatePropList() {
+void VersionsManager::reloadFromDisk() {
+    loadLocal();
+
+    for (const auto& config : Config::getOpen()) {
+
+    }
+
+    updatePropList();
+    updateOSList();
+}
+
+void VersionsManager::updatePropList() {
     auto *propList{static_cast<wxListBox *>(FindWindow(ID_PropList))};
     const auto oldSelection{propList->GetSelection()};
 
@@ -309,14 +465,14 @@ void Versions::Manager::updatePropList() {
         propList->SetSelection(
             oldSelection == -1 ?
             oldSelection :
-            std::clamp<int32>(oldSelection, 0,  - 1)
+            std::clamp<int32>(oldSelection, 0,  propList->GetCount() - 1)
         );
     }
 
     updatePropSelection();
 }
 
-void Versions::Manager::updatePropSelection() {
+void VersionsManager::updatePropSelection() {
     const auto selection{static_cast<wxListBox *>(FindWindow(ID_PropList))->GetSelection()};
     FindWindow(ID_PropRemove)->Enable(selection != -1);
     FindWindow(ID_PropVersionsText)->Enable(selection != -1);
@@ -336,7 +492,7 @@ void Versions::Manager::updatePropSelection() {
     updatePropVersionList();
 }
 
-void Versions::Manager::updatePropVersionList() {
+void VersionsManager::updatePropVersionList() {
     Defer defer{[this]() { updatePropVersionSelection(); }};
     const auto oldSelection{getVersionSelection()};
 
@@ -383,7 +539,7 @@ void Versions::Manager::updatePropVersionList() {
     ));
 }
 
-void Versions::Manager::updatePropVersionSelection() {
+void VersionsManager::updatePropVersionSelection() {
     const auto versionSelection{getVersionSelection()};
 
     FindWindow(ID_PropRemoveVersion)->Enable(versionSelection != -1);
@@ -404,7 +560,53 @@ void Versions::Manager::updatePropVersionSelection() {
     SetMaxSize({GetSize().x, -1});
 }
 
-void Versions::Manager::createUI() {
+void VersionsManager::updateOSList() {
+    auto *osList{static_cast<wxListBox *>(FindWindow(ID_OSList))};
+    const auto oldSelection{osList->GetSelection()};
+
+    osList->Clear();
+    for (const auto& versionedOS : getOSVersions()) {
+        osList->Append(static_cast<string>(versionedOS.verNum));
+    }
+
+    if (not osList->IsEmpty()) {
+        osList->SetSelection(
+            oldSelection == -1 ?
+            oldSelection :
+            std::clamp<int32>(oldSelection, 0,  osList->GetCount() - 1)
+        );
+    }
+
+    updateOSSelection();
+}
+
+void VersionsManager::updateOSSelection() {
+    const auto selection{static_cast<wxListBox *>(FindWindow(ID_OSList))->GetSelection()};
+    FindWindow(ID_OSRemove)->Enable(selection != -1);
+    auto *infoText{static_cast<wxStaticText *>(FindWindow(ID_OSText))};
+
+    if (selection != -1) {
+        const auto& versionedOS{getOSVersions()[selection]};
+
+        infoText->SetLabelText(
+            "Version: " + static_cast<string>(versionedOS.verNum) + "\n"
+            "Core Version: " + (versionedOS.coreVersion.err ? "Default" : static_cast<string>(versionedOS.coreVersion)) + "\n"
+            "Core URL: " + (versionedOS.coreURL.empty() ? "None" : versionedOS.coreURL)
+        );
+    }
+
+    infoText->Show(selection != -1);
+
+    mOSPage->Layout();
+    mOSPage->SetMinSize(mOSPage->GetBestSize());
+    Layout();
+    SetMaxSize({-1, -1});
+    SetMinSize(GetBestSize());
+    Fit();
+    SetMaxSize({GetSize().x, -1});
+}
+
+void VersionsManager::createUI() {
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
     auto *notebook{new wxNotebook(this, wxID_ANY)};
@@ -468,17 +670,56 @@ void Versions::Manager::createUI() {
     propSizer->AddSpacer(10);
     mPropPage->SetSizerAndFit(propSizer);
 
-    auto *osPage{new wxPanel(notebook)};
+    mOSPage = new wxPanel(notebook);
+    auto *osSizer{new wxBoxSizer(wxHORIZONTAL)};
+
+    auto *osListSizer{new wxBoxSizer(wxVERTICAL)};
+    auto *osList{new wxListBox(mOSPage, ID_OSList)};
+    auto *osModSizer{new wxBoxSizer(wxHORIZONTAL)};
+    auto *osAdd{new wxButton(
+        mOSPage,
+        ID_OSAdd,
+        "+",
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxBU_EXACTFIT
+    )};
+    auto *osRemove{new wxButton(
+        mOSPage,
+        ID_OSRemove,
+        "-",
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxBU_EXACTFIT
+    )};
+    osModSizer->Add(osAdd, 1);
+    osModSizer->AddSpacer(5);
+    osModSizer->Add(osRemove, 1);
+    osListSizer->Add(osList, 1);
+    osListSizer->AddSpacer(5);
+    osListSizer->Add(osModSizer, 0, wxEXPAND);
+    osListSizer->AddSpacer(10);
+
+    auto *osInfoSizer{new wxBoxSizer(wxVERTICAL)};
+    auto *osInfo{new wxStaticText(mOSPage, ID_OSText, wxEmptyString)};
+    osInfoSizer->Add(osInfo, 1, wxEXPAND);
+
+    osSizer->AddSpacer(10);
+    osSizer->Add(osListSizer, 0, wxEXPAND);
+    osSizer->AddSpacer(10);
+    osSizer->Add(osInfoSizer, 0, wxEXPAND);
+    osSizer->AddSpacer(10);
+    mOSPage->SetSizerAndFit(osSizer);
 
     notebook->AddPage(mPropPage, _("Prop Files"), true);
-    notebook->AddPage(osPage, _("ProffieOS"));
+    notebook->AddPage(mOSPage, _("ProffieOS"));
 
     sizer->Add(notebook, 1, wxEXPAND | wxALL, 10);
     SetSizerAndFit(sizer);
     SetMaxSize({GetSize().x, -1});
 }
 
-void Versions::Manager::createMenuBar() {
+void VersionsManager::createMenuBar() {
     auto *menuBar{new wxMenuBar};
     auto *file{new wxMenu};
     file->Append(ID_Refresh, _("Reload From Disk") + "\tCtrl+Alt+R");
@@ -492,7 +733,7 @@ void Versions::Manager::createMenuBar() {
     SetMenuBar(menuBar);
 }
 
-int32 Versions::Manager::getVersionSelection() {
+int32 VersionsManager::getVersionSelection() {
     int32 ret{-1};
     for (const auto *selectionButton : mPropVersionsSizer->GetChildren()) {
         auto *toggleButton{

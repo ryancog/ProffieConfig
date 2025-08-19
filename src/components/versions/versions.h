@@ -19,7 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ui/controls/text.h"
 #include "ui/controls/version.h"
 #include "utils/types.h"
 #include "utils/version.h"
@@ -34,9 +33,11 @@ constexpr cstring INFO_FILE_STR{"info.pconf"};
 constexpr cstring DATA_FILE_STR{"data.pconf"};
 constexpr cstring HEADER_FILE_STR{"header.h"};
 
-struct VersionedOS {
+struct VERSIONS_EXPORT VersionedOS {
+    VersionedOS();
     Utils::Version verNum;
     Utils::Version coreVersion;
+    string coreURL;
 };
 
 struct VERSIONS_EXPORT VersionedProp {
@@ -59,6 +60,8 @@ private:
 };
 
 VERSIONS_EXPORT void loadLocal();
+
+VERSIONS_EXPORT const VersionedOS *getVersionedOS(const Utils::Version&);
 
 /**
  * @return versions sorted from latest to oldest

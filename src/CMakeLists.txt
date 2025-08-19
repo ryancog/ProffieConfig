@@ -8,6 +8,7 @@ set(SHARED_COMPONENTS
     ui
     pconf
     versions
+    versions_manager
     config
 )
 
