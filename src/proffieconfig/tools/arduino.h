@@ -36,7 +36,7 @@ namespace Arduino {
 
         int32 used{-1};
         int32 total{-1};
-        inline float64 percent() const { return (static_cast<float64>(used) / total) * 100.0; }
+        inline uint32 percent() const { return (static_cast<float64>(used) / total) * 100.0; }
     };
 
     /**
