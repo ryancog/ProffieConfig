@@ -293,7 +293,7 @@ void Config::outputTopGeneral(std::ofstream& outFile, const Config& config) {
         }
     }
 
-    outFile << MAX_LEDS_STR << std::max<uint32>(requiredLedsPerStrip, 144) << '\n';
+    outFile << MAX_LEDS_STR << std::max<uint32>(requiredLedsPerStrip, 144) << ";\n";
 
     if (osVersion.err or osVersion < Utils::Version{"8"}) {
         // No longer needed in OS8 and newer
