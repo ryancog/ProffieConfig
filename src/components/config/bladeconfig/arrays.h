@@ -25,9 +25,9 @@
 #include "ui/controls/numeric.h"
 #include "ui/controls/text.h"
 #include "ui/controls/toggle.h"
+#include "ui/notifier.h"
 
 #include "config/bladeconfig/bladeconfig.h"
-#include "ui/notifier.h"
 
 namespace Config {
 

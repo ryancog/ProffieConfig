@@ -23,9 +23,10 @@
 #include "ui/controls/text.h"
 #include "utils/types.h"
 
-#include "config_export.h"
 #include "ws281x.h"
 #include "simple.h"
+
+#include "config_export.h"
 
 namespace Config {
 

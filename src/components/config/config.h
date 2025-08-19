@@ -28,9 +28,9 @@
 #include "settings/settings.h"
 #include "utils/version.h"
 #include "versions/prop.h"
+#include "versions/versions.h"
 
 #include "config_export.h"
-#include "versions/versions.h"
 
 namespace Config {
 
