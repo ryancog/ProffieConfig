@@ -38,6 +38,9 @@ struct VERSIONS_EXPORT VersionedOS {
     Utils::Version verNum;
     Utils::Version coreVersion;
     string coreURL;
+    string coreBoardV1;
+    string coreBoardV2;
+    string coreBoardV3;
 };
 
 struct VERSIONS_EXPORT VersionedProp {
