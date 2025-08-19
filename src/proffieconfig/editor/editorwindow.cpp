@@ -257,7 +257,7 @@ void EditorWindow::bindEvents() {
     Bind(wxEVT_IDLE, [this](wxIdleEvent& evt) {
         if (mStartMicros == -1) return;
 
-        constexpr auto RESIZE_TIME_MICROS{350 * 1000};
+        constexpr auto RESIZE_TIME_MICROS{300 * 1000};
         static std::chrono::microseconds::rep lastFrameMicros{0};
 
         const auto display{wxDisplay::GetFromWindow(this)};
