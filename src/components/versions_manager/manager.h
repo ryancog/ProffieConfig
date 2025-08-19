@@ -25,7 +25,7 @@
 
 namespace VersionsManager {
 
-VERSIONS_MANAGER_EXPORT static void open(wxWindow *, wxWindowID);
+VERSIONS_MANAGER_EXPORT void open(wxWindow *, wxWindowID);
 
 } // namespace VersionsManager
 

@@ -28,6 +28,7 @@
 #include <wx/wrapsizer.h>
 
 #include "app/app.h"
+#include "config/config.h"
 #include "log/context.h"
 #include "log/severity.h"
 #include "ui/controls/version.h"
@@ -37,7 +38,6 @@
 #include "utils/paths.h"
 #include "utils/string.h"
 #include "versions/versions.h"
-#include "wx/event.h"
 
 namespace VersionsManager {
 
@@ -73,6 +73,8 @@ void updatePropVersionSelection();
 
 void updateOSList();
 void updateOSSelection();
+
+void updateSizeAndLayout();
 
 void createUI();
 void createMenuBar();
@@ -243,7 +245,7 @@ void VersionsManager::bindEvents() {
             reloadFromDisk();
         }
     }, ID_PropAdd);
-    Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
+    manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
         auto res{PCUI::showMessage(
             _("This cannot be undone!"), _("Remove Prop"),
             wxYES_NO | wxNO_DEFAULT, manager
@@ -257,16 +259,16 @@ void VersionsManager::bindEvents() {
 
         reloadFromDisk();
     }, ID_PropRemove);
-    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+    manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
         const auto& versionedProp{
-            getProps()[static_cast<wxListBox *>(FindWindow(ID_PropList))->GetSelection()]
+            Versions::getProps()[static_cast<wxListBox *>(manager->FindWindow(ID_PropList))->GetSelection()]
         };
         versionedProp->addVersion();
         updatePropVersionList();
     }, ID_PropVersionListAdd);
-    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+    manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
         const auto& versionedProp{
-            getProps()[static_cast<wxListBox *>(FindWindow(ID_PropList))->GetSelection()]
+            Versions::getProps()[static_cast<wxListBox *>(manager->FindWindow(ID_PropList))->GetSelection()]
         };
         const auto selectedVersion{getVersionSelection()};
         if (selectedVersion == -1) return;
@@ -275,8 +277,8 @@ void VersionsManager::bindEvents() {
         updatePropVersionList();
     }, ID_PropRemoveVersion);
 
-    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        wxDialog dlg(this, wxID_ANY, _("Add ProffieOS"));
+    manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
+        wxDialog dlg(manager, wxID_ANY, _("Add ProffieOS"));
         auto *sizer{new wxBoxSizer(wxVERTICAL)};
         PCUI::VersionData versionData;
         auto *version{new PCUI::Version(&dlg, versionData, _("Version"))};
@@ -375,14 +377,14 @@ void VersionsManager::bindEvents() {
             reloadFromDisk();
         }
     }, ID_OSAdd);
-    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+    manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
         auto res{PCUI::showMessage(
             _("This cannot be undone!"), _("Remove OS"),
-            wxYES_NO | wxNO_DEFAULT, this
+            wxYES_NO | wxNO_DEFAULT, manager
         )};
         if (res == wxYES) {
             const auto& versionedOS{
-                getOSVersions()[static_cast<wxListBox *>(FindWindow(ID_OSList))->GetSelection()]
+                Versions::getOSVersions()[static_cast<wxListBox *>(manager->FindWindow(ID_OSList))->GetSelection()]
             };
             fs::remove_all(Paths::osDir() / static_cast<string>(versionedOS.verNum));
         }
@@ -390,20 +392,20 @@ void VersionsManager::bindEvents() {
         reloadFromDisk();
     }, ID_OSRemove);
     
-    Bind(wxEVT_LISTBOX, [this](wxCommandEvent&) {
+    manager->Bind(wxEVT_LISTBOX, [](wxCommandEvent&) {
         updatePropSelection();
     }, ID_PropList);
-    Bind(wxEVT_LISTBOX, [this](wxCommandEvent&) {
+    manager->Bind(wxEVT_LISTBOX, [](wxCommandEvent&) {
         updateOSSelection();
     }, ID_OSList);
 
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) {
+    manager->Bind(wxEVT_MENU, [](wxCommandEvent&) {
         reloadFromDisk();
     }, ID_Refresh);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) {
+    manager->Bind(wxEVT_MENU, [](wxCommandEvent&) {
         wxLaunchDefaultApplication(Paths::versionDir().string());
     }, ID_ShowVersions);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) {
+    manager->Bind(wxEVT_MENU, [](wxCommandEvent&) {
         constexpr auto FULL_RESET{wxID_YES};
         constexpr auto RESTORE_DEFAULTS{wxID_NO};
         auto res{PCUI::showMessage(
@@ -414,7 +416,7 @@ void VersionsManager::bindEvents() {
             "\"Full Reset\" will replace/restore default versions and additionally remove any/all custom versions."),
             _("Restore Default Versions"),
             wxYES_NO | wxCANCEL | wxCANCEL_DEFAULT,
-            this
+            manager
         )};
 
         if (res == wxCANCEL) return;
@@ -442,7 +444,7 @@ void VersionsManager::bindEvents() {
 }
 
 void VersionsManager::reloadFromDisk() {
-    loadLocal();
+    Versions::loadLocal();
 
     for (const auto& config : Config::getOpen()) {
 
@@ -453,11 +455,11 @@ void VersionsManager::reloadFromDisk() {
 }
 
 void VersionsManager::updatePropList() {
-    auto *propList{static_cast<wxListBox *>(FindWindow(ID_PropList))};
+    auto *propList{static_cast<wxListBox *>(manager->FindWindow(ID_PropList))};
     const auto oldSelection{propList->GetSelection()};
 
     propList->Clear();
-    for (const auto& versionedProp : getProps()) {
+    for (const auto& versionedProp : Versions::getProps()) {
         propList->Append(static_cast<string>(versionedProp->name));
     }
 
@@ -473,13 +475,13 @@ void VersionsManager::updatePropList() {
 }
 
 void VersionsManager::updatePropSelection() {
-    const auto selection{static_cast<wxListBox *>(FindWindow(ID_PropList))->GetSelection()};
-    FindWindow(ID_PropRemove)->Enable(selection != -1);
-    FindWindow(ID_PropVersionsText)->Enable(selection != -1);
-    auto *infoText{static_cast<wxStaticText *>(FindWindow(ID_PropInfo))};
+    const auto selection{static_cast<wxListBox *>(manager->FindWindow(ID_PropList))->GetSelection()};
+    manager->FindWindow(ID_PropRemove)->Enable(selection != -1);
+    manager->FindWindow(ID_PropVersionsText)->Enable(selection != -1);
+    auto *infoText{static_cast<wxStaticText *>(manager->FindWindow(ID_PropInfo))};
 
     if (selection != -1) {
-        const auto& versionedProp{getProps()[selection]};
+        const auto& versionedProp{Versions::getProps()[selection]};
 
         infoText->SetLabelText(
             "Name: " + versionedProp->name + "\n"
@@ -493,17 +495,17 @@ void VersionsManager::updatePropSelection() {
 }
 
 void VersionsManager::updatePropVersionList() {
-    Defer defer{[this]() { updatePropVersionSelection(); }};
+    Defer defer{[]() { updatePropVersionSelection(); }};
     const auto oldSelection{getVersionSelection()};
 
     const auto propSelection{
-        static_cast<wxListBox *>(FindWindow(ID_PropList))->GetSelection()
+        static_cast<wxListBox *>(manager->FindWindow(ID_PropList))->GetSelection()
     };
 
     mPropVersionsSizer->Clear(true);
     if (propSelection == -1) return;
 
-    const auto& versionedProp{getProps()[propSelection]};
+    const auto& versionedProp{Versions::getProps()[propSelection]};
     int32 id{ID_PropVersionListBegin};
     for (const auto& version : versionedProp->supportedVersions()) {
         const auto toggleLabel{static_cast<string>(static_cast<Utils::Version>(*version))};
@@ -512,7 +514,7 @@ void VersionsManager::updatePropVersionList() {
             id,
             toggleLabel
         )};
-        toggle->Bind(wxEVT_TOGGLEBUTTON, [this, toggle](wxCommandEvent&) {
+        toggle->Bind(wxEVT_TOGGLEBUTTON, [toggle](wxCommandEvent&) {
             if (toggle->GetValue()) {
                 for (auto *child : mPropVersionsSizer->GetChildren()) {
                     auto *childTogglePtr{dynamic_cast<wxToggleButton *>(child->GetWindow())};
@@ -542,30 +544,24 @@ void VersionsManager::updatePropVersionList() {
 void VersionsManager::updatePropVersionSelection() {
     const auto versionSelection{getVersionSelection()};
 
-    FindWindow(ID_PropRemoveVersion)->Enable(versionSelection != -1);
+    manager->FindWindow(ID_PropRemoveVersion)->Enable(versionSelection != -1);
     if (versionSelection != -1) {
-        const auto& versionedProp{getProps()[
-            static_cast<wxListBox *>(FindWindow(ID_PropList))->GetSelection()
+        const auto& versionedProp{Versions::getProps()[
+            static_cast<wxListBox *>(manager->FindWindow(ID_PropList))->GetSelection()
         ]};
         mPropVersionProxy.bind(*versionedProp->supportedVersions()[versionSelection]);
         mPropVersionProxy.data()->setFocus();
     } else mPropVersionProxy.unbind();
 
-    mPropPage->Layout();
-    mPropPage->SetMinSize(mPropPage->GetBestSize());
-    Layout();
-    SetMaxSize({-1, -1});
-    SetMinSize(GetBestSize());
-    Fit();
-    SetMaxSize({GetSize().x, -1});
+    updateSizeAndLayout();
 }
 
 void VersionsManager::updateOSList() {
-    auto *osList{static_cast<wxListBox *>(FindWindow(ID_OSList))};
+    auto *osList{static_cast<wxListBox *>(manager->FindWindow(ID_OSList))};
     const auto oldSelection{osList->GetSelection()};
 
     osList->Clear();
-    for (const auto& versionedOS : getOSVersions()) {
+    for (const auto& versionedOS : Versions::getOSVersions()) {
         osList->Append(static_cast<string>(versionedOS.verNum));
     }
 
@@ -581,12 +577,12 @@ void VersionsManager::updateOSList() {
 }
 
 void VersionsManager::updateOSSelection() {
-    const auto selection{static_cast<wxListBox *>(FindWindow(ID_OSList))->GetSelection()};
-    FindWindow(ID_OSRemove)->Enable(selection != -1);
-    auto *infoText{static_cast<wxStaticText *>(FindWindow(ID_OSText))};
+    const auto selection{static_cast<wxListBox *>(manager->FindWindow(ID_OSList))->GetSelection()};
+    manager->FindWindow(ID_OSRemove)->Enable(selection != -1);
+    auto *infoText{static_cast<wxStaticText *>(manager->FindWindow(ID_OSText))};
 
     if (selection != -1) {
-        const auto& versionedOS{getOSVersions()[selection]};
+        const auto& versionedOS{Versions::getOSVersions()[selection]};
 
         infoText->SetLabelText(
             "Version: " + static_cast<string>(versionedOS.verNum) + "\n"
@@ -597,19 +593,25 @@ void VersionsManager::updateOSSelection() {
 
     infoText->Show(selection != -1);
 
+    updateSizeAndLayout();
+}
+
+void VersionsManager::updateSizeAndLayout() {
+    mPropPage->Layout();
+    mPropPage->SetMinSize(mPropPage->GetBestSize());
     mOSPage->Layout();
     mOSPage->SetMinSize(mOSPage->GetBestSize());
-    Layout();
-    SetMaxSize({-1, -1});
-    SetMinSize(GetBestSize());
-    Fit();
-    SetMaxSize({GetSize().x, -1});
+    manager->Layout();
+    manager->SetMaxSize({-1, -1});
+    manager->SetMinSize(manager->GetBestSize());
+    manager->Fit();
+    manager->SetMaxSize({manager->GetSize().x, -1});
 }
 
 void VersionsManager::createUI() {
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
-    auto *notebook{new wxNotebook(this, wxID_ANY)};
+    auto *notebook{new wxNotebook(manager, wxID_ANY)};
 
     mPropPage = new wxPanel(notebook);
     auto *propSizer{new wxBoxSizer(wxHORIZONTAL)};
@@ -645,7 +647,7 @@ void VersionsManager::createUI() {
     auto *propInfo{new wxStaticText(mPropPage, ID_PropInfo, {})};
     mPropVersionsSizer = new wxWrapSizer;
     auto *propVersion{new PCUI::Version(mPropPage, mPropVersionProxy)};
-    propVersion->Bind(wxEVT_TEXT, [this](wxCommandEvent&) {
+    propVersion->Bind(wxEVT_TEXT, [](wxCommandEvent&) {
         updatePropVersionList();
     });
     auto *propDeleteVersion{
@@ -715,8 +717,8 @@ void VersionsManager::createUI() {
     notebook->AddPage(mOSPage, _("ProffieOS"));
 
     sizer->Add(notebook, 1, wxEXPAND | wxALL, 10);
-    SetSizerAndFit(sizer);
-    SetMaxSize({GetSize().x, -1});
+    manager->SetSizerAndFit(sizer);
+    manager->SetMaxSize({manager->GetSize().x, -1});
 }
 
 void VersionsManager::createMenuBar() {
@@ -730,7 +732,7 @@ void VersionsManager::createMenuBar() {
     menuBar->Append(file, _("&File"));
     App::appendDefaultMenuItems(menuBar);
 
-    SetMenuBar(menuBar);
+    manager->SetMenuBar(menuBar);
 }
 
 int32 VersionsManager::getVersionSelection() {
