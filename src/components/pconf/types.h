@@ -33,41 +33,71 @@ enum class Type {
 struct Entry;
 struct Section;
 
-using Data = vector<std::shared_ptr<Entry>>;
-struct HashedData : std::unordered_multimap<string, std::shared_ptr<Entry>> {
-    [[nodiscard]] std::shared_ptr<PConf::Entry> find(const string& key) const;
-    [[nodiscard]] vector<std::shared_ptr<PConf::Entry>> findAll(const string& key) const;
+using SectionPtr = std::shared_ptr<Section>;
+
+struct PCONF_EXPORT EntryPtr : std::shared_ptr<Entry> {
+    EntryPtr() = default;
+    EntryPtr(std::nullptr_t ptr) : shared_ptr(ptr) {}
+    explicit EntryPtr(Entry *ptr) : shared_ptr(ptr) {}
+    EntryPtr(const SectionPtr& ptr);
+    EntryPtr(SectionPtr&& ptr);
+
+    [[nodiscard]] SectionPtr section() const {
+        return std::dynamic_pointer_cast<Section>(*this);
+    }
+};
+
+using Data = vector<EntryPtr>;
+struct HashedData : std::unordered_multimap<string, EntryPtr> {
+    [[nodiscard]] EntryPtr find(const string& key) const;
+    [[nodiscard]] vector<EntryPtr> findAll(const string& key) const;
 };
 
 struct PCONF_EXPORT Entry {
-    Entry() = default;
-    Entry(
-            string name, 
-            optional<string> value = nullopt, 
-            optional<string> label = nullopt, 
-            optional<int32> labelNum = nullopt
-         );
+    [[nodiscard]] static EntryPtr create(
+        string name,
+        optional<string> value = nullopt,
+        optional<string> label = nullopt,
+        optional<int32> labelNum = nullopt
+    );
     virtual ~Entry() = default;
+
+    [[nodiscard]] virtual Type getType() const { return Type::ENTRY; }
 
     string name;
     optional<string> value{nullopt};
     optional<string> label{nullopt};
     optional<int32> labelNum{nullopt};
 
-    [[nodiscard]] virtual Type getType() const { return Type::ENTRY; }
+private:
+    friend Section;
+    Entry(
+        string name,
+        optional<string> value,
+        optional<string> label,
+        optional<int32> labelNum
+    );
 };
 
 struct PCONF_EXPORT Section : public Entry {
-    Section() = default;
-    Section(
-            string name, 
-            optional<string> label = nullopt, 
-            optional<int32> labelNum = nullopt,
-            Data entries = {}
-           );
-    Data entries;
+    [[nodiscard]] static SectionPtr create(
+        string name,
+        optional<string> label = nullopt,
+        optional<int32> labelNum = nullopt,
+        Data entries = {}
+    );
 
     [[nodiscard]] Type getType() const override { return Type::SECTION; }
+
+    Data entries;
+
+private:
+    Section(
+        string name, 
+        optional<string> label,
+        optional<int32> labelNum,
+        Data entries
+   );
 };
 
 } // namespace PConf

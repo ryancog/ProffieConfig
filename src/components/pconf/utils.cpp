@@ -19,8 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "pconf.h"
-
 PConf::HashedData PConf::hash(const Data& data) {
     HashedData ret;
     for (const auto& entry : data) {

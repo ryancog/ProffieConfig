@@ -25,13 +25,13 @@ namespace {
 
 bool writeEntry(
     std::ostream&,
-    const std::shared_ptr<PConf::Entry>& entry,
+    const PConf::EntryPtr& entry,
     int32 depth,
     Log::Branch&
 );
 bool writeSection(
     std::ostream&,
-    const std::shared_ptr<PConf::Section>& section,
+    const PConf::SectionPtr& section,
     int32 depth,
     Log::Branch&
 );
@@ -45,10 +45,20 @@ void PConf::write(std::ostream& outStream, const Data& pconfData, Log::Branch *l
     for (const auto& entry : pconfData) {
         switch (entry->getType()) {
             case Type::ENTRY:
-                writeEntry(outStream, entry, 0, *logger.binfo("Writing entry: " + entry->name));
+                writeEntry(
+                    outStream,
+                    entry,
+                    0,
+                    *logger.binfo("Writing entry: " + entry->name)
+                );
                 break;
             case Type::SECTION:
-                writeSection(outStream, std::static_pointer_cast<Section>(entry), 0, *logger.binfo("Writing Section: " + entry->name));
+                writeSection(
+                    outStream,
+                    entry.section(),
+                    0,
+                    *logger.binfo("Writing Section: " + entry->name)
+                );
                 break;
         }
     }
@@ -58,7 +68,7 @@ namespace {
 
 bool writeEntry(
     std::ostream& outStream,
-    const std::shared_ptr<PConf::Entry>& entry,
+    const PConf::EntryPtr& entry,
     int32 depth,
     Log::Branch&
 ) {
@@ -99,7 +109,7 @@ bool writeEntry(
 
 bool writeSection(
     std::ostream& outStream,
-    const std::shared_ptr<PConf::Section>& section,
+    const PConf::SectionPtr& section,
     int32 depth,
     Log::Branch& lBranch
 ) {
