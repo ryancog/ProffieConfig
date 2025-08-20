@@ -43,23 +43,20 @@ void PConf::write(std::ostream& outStream, const Data& pconfData, Log::Branch *l
     auto& logger{Log::Branch::optCreateLogger("PConf::write()", lBranch)};
 
     for (const auto& entry : pconfData) {
-        switch (entry->getType()) {
-            case Type::ENTRY:
-                writeEntry(
-                    outStream,
-                    entry,
-                    0,
-                    *logger.binfo("Writing entry: " + entry->name)
-                );
-                break;
-            case Type::SECTION:
-                writeSection(
-                    outStream,
-                    entry.section(),
-                    0,
-                    *logger.binfo("Writing Section: " + entry->name)
-                );
-                break;
+        if (entry.section()) {
+            writeSection(
+                outStream,
+                entry.section(),
+                0,
+                *logger.binfo("Writing Section: " + entry->name)
+            );
+        } else {
+            writeEntry(
+                outStream,
+                entry,
+                0,
+                *logger.binfo("Writing entry: " + entry->name)
+            );
         }
     }
 }
@@ -121,23 +118,20 @@ bool writeSection(
     outStream << " {\n";
 
     for (const auto& entry : section->entries) {
-        switch (entry->getType()) {
-            case PConf::Type::ENTRY:
-                writeEntry(
-                    outStream,
-                    entry,
-                    depth + 1,
-                    *logger.bverbose("Writing entry: " + entry->name)
-                );
-                break;
-            case PConf::Type::SECTION:
-                writeSection(
-                    outStream,
-                    std::static_pointer_cast<PConf::Section>(entry),
-                    depth + 1,
-                    *logger.bverbose("Writing section: " + entry->name)
-                );
-                break;
+        if (entry.section()) {
+            writeSection(
+                outStream,
+                entry.section(),
+                0,
+                *logger.binfo("Writing Section: " + entry->name)
+            );
+        } else {
+            writeEntry(
+                outStream,
+                entry,
+                0,
+                *logger.binfo("Writing entry: " + entry->name)
+            );
         }
     }
 

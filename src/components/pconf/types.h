@@ -62,8 +62,6 @@ struct PCONF_EXPORT Entry {
     );
     virtual ~Entry() = default;
 
-    [[nodiscard]] virtual Type getType() const { return Type::ENTRY; }
-
     string name;
     optional<string> value{nullopt};
     optional<string> label{nullopt};
@@ -86,8 +84,6 @@ struct PCONF_EXPORT Section : public Entry {
         optional<int32> labelNum = nullopt,
         Data entries = {}
     );
-
-    [[nodiscard]] Type getType() const override { return Type::SECTION; }
 
     Data entries;
 
