@@ -1,4 +1,4 @@
-#include "write.h"
+#include "pconf.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -21,15 +21,23 @@
 
 #include "log/logger.h"
 
-#include "pconf.h"
+namespace {
 
-namespace PConf {
+bool writeEntry(
+    std::ostream&,
+    const std::shared_ptr<PConf::Entry>& entry,
+    int32 depth,
+    Log::Branch&
+);
+bool writeSection(
+    std::ostream&,
+    const std::shared_ptr<PConf::Section>& section,
+    int32 depth,
+    Log::Branch&
+);
+std::ostream& writeWithDepth(std::ostream& outStream, int32 depth);
 
-bool writeEntry(std::ostream&, const std::shared_ptr<Entry>& entry, int32 depth, Log::Branch&);
-bool writeSection(std::ostream&, const std::shared_ptr<Section>& section, int32 depth, Log::Branch&);
-std::ostream& writeWithDepth(std::ostream& outStream, int32_t depth);
-
-}
+} // namespace
 
 void PConf::write(std::ostream& outStream, const Data& pconfData, Log::Branch *lBranch) {
     auto& logger{Log::Branch::optCreateLogger("PConf::write()", lBranch)};
@@ -46,8 +54,14 @@ void PConf::write(std::ostream& outStream, const Data& pconfData, Log::Branch *l
     }
 }
 
+namespace {
 
-bool PConf::writeEntry(std::ostream& outStream, const std::shared_ptr<Entry>& entry, int32_t depth, Log::Branch&) {
+bool writeEntry(
+    std::ostream& outStream,
+    const std::shared_ptr<PConf::Entry>& entry,
+    int32 depth,
+    Log::Branch&
+) {
     // auto& logger{lBranch.createLogger("PConf::writeEntry()")};
     
     writeWithDepth(outStream, depth) << entry->name;
@@ -83,7 +97,12 @@ bool PConf::writeEntry(std::ostream& outStream, const std::shared_ptr<Entry>& en
     return true;
 }
 
-bool PConf::writeSection(std::ostream& outStream, const std::shared_ptr<Section>& section, int32_t depth, Log::Branch& lBranch) {
+bool writeSection(
+    std::ostream& outStream,
+    const std::shared_ptr<PConf::Section>& section,
+    int32 depth,
+    Log::Branch& lBranch
+) {
     auto& logger{lBranch.createLogger("PConf::writeSection()")};
 
     writeWithDepth(outStream, depth) << section->name;
@@ -93,11 +112,21 @@ bool PConf::writeSection(std::ostream& outStream, const std::shared_ptr<Section>
 
     for (const auto& entry : section->entries) {
         switch (entry->getType()) {
-            case Type::ENTRY:
-                writeEntry(outStream, entry, depth + 1, *logger.bverbose("Writing entry: " + entry->name));
+            case PConf::Type::ENTRY:
+                writeEntry(
+                    outStream,
+                    entry,
+                    depth + 1,
+                    *logger.bverbose("Writing entry: " + entry->name)
+                );
                 break;
-            case Type::SECTION:
-                writeSection(outStream, std::static_pointer_cast<Section>(entry), depth + 1, *logger.bverbose("Writing section: " + entry->name));
+            case PConf::Type::SECTION:
+                writeSection(
+                    outStream,
+                    std::static_pointer_cast<PConf::Section>(entry),
+                    depth + 1,
+                    *logger.bverbose("Writing section: " + entry->name)
+                );
                 break;
         }
     }
@@ -107,8 +136,10 @@ bool PConf::writeSection(std::ostream& outStream, const std::shared_ptr<Section>
     return true;
 }
 
-std::ostream& PConf::writeWithDepth(std::ostream& outStream, int32_t depth) {
-    for (int32_t i{0}; i < depth; i++) outStream << '\t';
+std::ostream& writeWithDepth(std::ostream& outStream, int32 depth) {
+    for (auto i{0}; i < depth; i++) outStream << '\t';
     return outStream;
 }
+
+} // namespace
 

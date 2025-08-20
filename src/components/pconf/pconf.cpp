@@ -19,9 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
-#include <iostream>
-#include <memory>
 #include <optional>
 
 #include <log/branch.h>
@@ -31,16 +28,3 @@ namespace PConf {
 
 } // namespace PConf
 
-PConf::Entry::Entry(
-        string name, 
-        std::optional<string> value,
-        std::optional<string> label,
-        std::optional<int32_t> labelNum
-        ) : name(std::move(name)), value(std::move(value)), label(std::move(label)), labelNum(labelNum) {}
-
-PConf::Section::Section(
-        string name, 
-        std::optional<string> label, 
-        std::optional<int32_t> labelNum,
-        Data entries
-        ) : Entry(std::move(name), std::nullopt, std::move(label), labelNum), entries(std::move(entries)) {}
