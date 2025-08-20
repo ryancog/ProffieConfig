@@ -49,8 +49,14 @@ struct PCONF_EXPORT EntryPtr : std::shared_ptr<Entry> {
 
 using Data = vector<EntryPtr>;
 struct HashedData : std::unordered_multimap<string, EntryPtr> {
-    [[nodiscard]] EntryPtr find(const string& key) const;
-    [[nodiscard]] vector<EntryPtr> findAll(const string& key) const;
+    struct IndexedEntryPtr : EntryPtr {
+        const const_iterator iter;
+    };
+
+    void erase(const IndexedEntryPtr&);
+
+    [[nodiscard]] IndexedEntryPtr find(const string& key) const;
+    [[nodiscard]] vector<IndexedEntryPtr> findAll(const string& key) const;
 };
 
 struct PCONF_EXPORT Entry {
