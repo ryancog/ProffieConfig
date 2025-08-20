@@ -24,7 +24,7 @@
 #include "log/logger.h"
 #include "pconf.h"
 
-namespace PConf {
+namespace {
 
 // All these return false on a critical error condition.
 bool parseName              (const string& line, std::optional<string>& out, Log::Branch&);
@@ -34,12 +34,12 @@ bool parseValue             (const string& line, std::istream&, std::optional<st
 bool parseSinglelineValue   (const string& line, std::optional<string>& out, Log::Branch&);
 bool parseMultilineValue    (std::istream&, std::optional<string>& out, Log::Branch&);
 
-bool readEntry(std::istream&, std::shared_ptr<Entry>& out, bool& isSect, Log::Branch&);
-bool readSection(std::istream&, std::shared_ptr<Section>& out, Log::Branch&);
+bool readEntry(std::istream&, std::shared_ptr<PConf::Entry>& out, bool& isSect, Log::Branch&);
+bool readSection(std::istream&, std::shared_ptr<PConf::Section>& out, Log::Branch&);
 
 bool readline(std::istream&, string&);
 
-} // namespace PConf
+} // namespace
 
 bool PConf::read(std::istream& inStream, Data& out, Log::Branch *lBranch) {
     auto& logger{Log::Branch::optCreateLogger("PConf::read()", lBranch)};
@@ -70,7 +70,9 @@ bool PConf::read(std::istream& inStream, Data& out, Log::Branch *lBranch) {
     return true;
 }
 
-bool PConf::readEntry(std::istream& inStream, std::shared_ptr<Entry>& out, bool& isSect, Log::Branch& lBranch) {
+namespace {
+
+bool readEntry(std::istream& inStream, std::shared_ptr<PConf::Entry>& out, bool& isSect, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::readEntry()")};
 
     out.reset();
@@ -79,7 +81,7 @@ bool PConf::readEntry(std::istream& inStream, std::shared_ptr<Entry>& out, bool&
     auto prevLinePos{inStream.tellg()};
 
     if (not readline(inStream, line)) {
-        logger.info("Reached end of stream.");
+        logger.verbose("Reached end of stream.");
         return true;
     }
 
@@ -107,7 +109,7 @@ bool PConf::readEntry(std::istream& inStream, std::shared_ptr<Entry>& out, bool&
     isSect = (numOpenBraces - numCloseBraces == 1) and (openBracePos <= closeBracePos) and not hasSeperator;
     if (isSect) {
         inStream.seekg(prevLinePos);
-        logger.debug("Found section.");
+        logger.verbose("Found section.");
         return true;
     }
 
@@ -118,16 +120,16 @@ bool PConf::readEntry(std::istream& inStream, std::shared_ptr<Entry>& out, bool&
         return true;
     }
 
-    out = std::make_shared<Entry>();
+    out = std::make_shared<PConf::Entry>();
     out->name = name.value();
-    if (not parseValue(line, inStream, out->value, *logger.bdebug("Parsing entry \"" + name.value() + "\" value..."))) return false;
-    if (not parseLabel(line, out->label, *logger.bdebug("Parsing entry \"" + name.value() + "\" label..."))) return false;
-    if (not parseLabelNum(line, out->labelNum, *logger.bdebug("Parsing entry \"" + name.value() + "\" number label..."))) return false;
+    if (not parseValue(line, inStream, out->value, *logger.bverbose("Parsing entry \"" + name.value() + "\" value..."))) return false;
+    if (not parseLabel(line, out->label, *logger.bverbose("Parsing entry \"" + name.value() + "\" label..."))) return false;
+    if (not parseLabelNum(line, out->labelNum, *logger.bverbose("Parsing entry \"" + name.value() + "\" number label..."))) return false;
 
     return true;
 }
 
-bool PConf::readSection(std::istream& inStream, std::shared_ptr<Section>& out, Log::Branch& lBranch) {
+bool readSection(std::istream& inStream, std::shared_ptr<PConf::Section>& out, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::readSection()")};
 
     out.reset();
@@ -141,18 +143,18 @@ bool PConf::readSection(std::istream& inStream, std::shared_ptr<Section>& out, L
         return false;
     }
 
-    out = std::make_shared<Section>();
+    out = std::make_shared<PConf::Section>();
     out->name = name.value();
-    if (not parseLabel(line, out->label, *logger.bdebug("Parsing section \"" + name.value() + "\" label..."))) return false;
-    if (not parseLabelNum(line, out->labelNum, *logger.bdebug("Parsing section \"" + name.value() + "\" number label..."))) return false;
+    if (not parseLabel(line, out->label, *logger.bverbose("Parsing section \"" + name.value() + "\" label..."))) return false;
+    if (not parseLabelNum(line, out->labelNum, *logger.bverbose("Parsing section \"" + name.value() + "\" number label..."))) return false;
 
     bool foundSect{false};
     while (inStream.good() and not inStream.eof()) {
         auto startPos{inStream.tellg()};
-        std::shared_ptr<Entry> entry;
+        std::shared_ptr<PConf::Entry> entry;
         if (not readEntry(inStream, entry, foundSect, *logger.bverbose("Reading line (for entry)..."))) return false;
         if (foundSect) {
-            std::shared_ptr<Section> subSect;
+            std::shared_ptr<PConf::Section> subSect;
             if (not readSection(inStream, subSect, *logger.bverbose("Reading section..."))) return false;
             if (not subSect) continue;
             out->entries.push_back(subSect);
@@ -173,7 +175,7 @@ bool PConf::readSection(std::istream& inStream, std::shared_ptr<Section>& out, L
     return false;
 }
 
-bool PConf::parseName(const string& line, std::optional<string>& out, Log::Branch& lBranch) {
+bool parseName(const string& line, std::optional<string>& out, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::parseName()")};
 
     out = std::nullopt;
@@ -184,16 +186,16 @@ bool PConf::parseName(const string& line, std::optional<string>& out, Log::Branc
     auto nameBegin{line.find_first_not_of(" \t")};
     auto spacePos{line.find_first_of(" \t{(", nameBegin)};
     if (nameBegin == spacePos) {
-        logger.debug("Could not find name.");
+        logger.verbose("Could not find name.");
         return true;
     }
 
-    auto nameEnd{std::min(std::min(seperatorPos, spacePos), std::min(bracePos, parenPos))};
+    auto nameEnd{std::min({seperatorPos, spacePos, bracePos, parenPos})};
     out = line.substr(nameBegin, nameEnd - nameBegin);
     return true;
 }
 
-bool PConf::parseValue(const string& line, std::istream& inStream, std::optional<string>& out, Log::Branch& lBranch) {
+bool parseValue(const string& line, std::istream& inStream, std::optional<string>& out, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::parseValue()")};
 
     out = std::nullopt;
@@ -208,13 +210,13 @@ bool PConf::parseValue(const string& line, std::istream& inStream, std::optional
     auto bracePos{line.find('{')};
     auto isMultiline{bracePos != string::npos and seperatorPos < bracePos};
     if (isMultiline) {
-        return parseMultilineValue(inStream, out, *logger.bdebug("Value is multiline, parsing..."));
+        return parseMultilineValue(inStream, out, *logger.bverbose("Value is multiline, parsing..."));
     }
 
-    return parseSinglelineValue(line.substr(seperatorPos + 1), out, *logger.bdebug("Value is single-line, parsing..."));
+    return parseSinglelineValue(line.substr(seperatorPos + 1), out, *logger.bverbose("Value is single-line, parsing..."));
 }
 
-bool PConf::parseSinglelineValue(const string& line, std::optional<string>& out, Log::Branch& lBranch) {
+bool parseSinglelineValue(const string& line, std::optional<string>& out, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::parseSingleLineValue()")};
 
     bool usesQuotes{line.find('"') != string::npos};
@@ -253,7 +255,7 @@ bool PConf::parseSinglelineValue(const string& line, std::optional<string>& out,
     return true;
 }
 
-bool PConf::parseMultilineValue(std::istream& inStream, std::optional<string>& out, Log::Branch& lBranch) {
+bool parseMultilineValue(std::istream& inStream, std::optional<string>& out, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::parseMultilineValue()")};
 
     out = "";
@@ -277,7 +279,7 @@ bool PConf::parseMultilineValue(std::istream& inStream, std::optional<string>& o
     return false;
 }
 
-bool PConf::parseLabel(const string& line, optional<string>& out, Log::Branch& lBranch) {
+bool parseLabel(const string& line, optional<string>& out, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::parseLabel()")};
 
     out = "";
@@ -317,7 +319,7 @@ bool PConf::parseLabel(const string& line, optional<string>& out, Log::Branch& l
     return true;
 }
 
-bool PConf::parseLabelNum(const string& line, std::optional<int32_t>& out, Log::Branch& lBranch) {
+bool parseLabelNum(const string& line, std::optional<int32_t>& out, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::parseLabelNum()")};
 
     out = std::nullopt;
@@ -336,10 +338,12 @@ bool PConf::parseLabelNum(const string& line, std::optional<int32_t>& out, Log::
     return true;
 }
 
-bool PConf::readline(std::istream& stream, string& out) {
+bool readline(std::istream& stream, string& out) {
     if (not std::getline(stream, out)) return false;
 
     out = out.substr(0, out.find("//"));
     return true;
 }
+
+} // namespace
 

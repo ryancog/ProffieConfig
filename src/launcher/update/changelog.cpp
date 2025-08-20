@@ -1,4 +1,5 @@
 #include "changelog.h"
+#include "ui/static_box.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024 Ryan Ogurek
@@ -67,7 +68,7 @@ namespace Update {
         changedFile.id = id;
     }
 
-    if (currentVersion and data.bundles.find(currentVersion) != data.bundles.end()) {
+    if (currentVersion and data.bundles.contains(currentVersion)) {
         for (const auto& [ id, version, hash] : data.bundles.at(currentVersion).reqs) {
             bool newVersionHasFile{false};
             for (const auto& [itemID, version, hash] : data.bundles.find(currentVersion)->second.reqs) {
@@ -134,7 +135,7 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
     }
     mainSizer->Add(whatNewText, wxSizerFlags());
 
-    auto *whatNewBorder{new wxStaticBoxSizer(wxVERTICAL, &dlg)};
+    auto *whatNewBorder{new PCUI::StaticBox(wxVERTICAL, &dlg)};
     auto *whatNewPanel{new wxScrolledWindow(whatNewBorder->GetStaticBox())};
     auto *whatNewSizer{new wxBoxSizer(wxVERTICAL)};
     auto objFont{whatNewPanel->GetFont()};
@@ -228,7 +229,7 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
     whatNewSizer->FitInside(whatNewPanel);
     whatNewPanel->SetScrollRate(4, 4);
     whatNewBorder->Add(whatNewPanel, wxSizerFlags(1).Expand());
-    mainSizer->Add(whatNewBorder, wxSizerFlags(1).Expand());
+    mainSizer->Add(whatNewBorder->underlyingSizer(), wxSizerFlags(1).Expand());
 
     mainSizer->AddSpacer(20);
 

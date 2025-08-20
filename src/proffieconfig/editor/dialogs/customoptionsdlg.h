@@ -32,7 +32,7 @@ private:
     void createOptionArea();
 
     wxBoxSizer *header();
-    static wxStaticBoxSizer *info(wxWindow*);
+    static wxSizer *info(wxWindow*);
 };
 
 class CustomOptionsDlg::CDefine : public wxPanel {

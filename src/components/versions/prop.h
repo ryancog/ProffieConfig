@@ -4,6 +4,7 @@
 
 #include <set>
 #include <unordered_map>
+#include <utility>
 
 #include "log/logger.h"
 #include "pconf/types.h"
@@ -67,8 +68,8 @@ protected:
         string description,
         vector<string> required,
         vector<string> requiredAny
-    ) : mProp{prop}, type{type}, name{name}, define{define}, description{description},
-        required{required}, requiredAny{requiredAny} {}
+    ) : mProp{prop}, type{type}, name{std::move(name)}, define{std::move(define)}, description{std::move(description)},
+        required{std::move(required)}, requiredAny{std::move(requiredAny)} {}
 
     PropSetting(const PropSetting& other, Prop& prop) :
         PropSetting{
@@ -95,8 +96,16 @@ struct VERSIONS_EXPORT PropToggle : PropSetting {
         vector<string> required,
         vector<string> requiredAny,
         vector<string> disables
-    ) : PropSetting{prop, Type::TOGGLE, name, define, description, required, requiredAny},
-        disables{disables} {}
+    ) : PropSetting{
+            prop,
+            Type::TOGGLE,
+            std::move(name),
+            std::move(define),
+            std::move(description),
+            std::move(required),
+            std::move(requiredAny)
+        },
+        disables{std::move(disables)} {}
 
     PropToggle(const PropToggle& other, Prop& prop) :
         PropToggle{
@@ -125,7 +134,15 @@ struct VERSIONS_EXPORT PropNumeric : PropSetting {
         int32 max,
         int32 increment,
         int32 defaultVal
-    ) : PropSetting{prop, Type::NUMERIC, name, define, description, required, requiredAny} {
+    ) : PropSetting{
+            prop,
+            Type::NUMERIC,
+            std::move(name),
+            std::move(define),
+            std::move(description),
+            std::move(required),
+            std::move(requiredAny)
+        } {
         value.setRange(min, max);
         value.setIncrement(increment);
         value = defaultVal;
@@ -160,7 +177,15 @@ struct VERSIONS_EXPORT PropDecimal : PropSetting {
         float64 max,
         float64 increment,
         float64 defaultVal
-    ) : PropSetting{prop, Type::DECIMAL, name, define, description, required, requiredAny} {
+    ) : PropSetting{
+            prop,
+            Type::DECIMAL,
+            std::move(name),
+            std::move(define),
+            std::move(description),
+            std::move(required),
+            std::move(requiredAny)
+        } {
         value.setRange(min, max);
         value.setIncrement(increment);
         value = defaultVal;
@@ -203,8 +228,16 @@ struct VERSIONS_EXPORT PropSelection : PropSetting {
         vector<string> requiredAny,
         vector<string> disables,
         bool shouldOutput
-    ) : PropSetting{prop, Type::SELECTION, name, define, description, required, requiredAny},
-        disables{disables}, shouldOutput{shouldOutput}, mOption{option} {}
+    ) : PropSetting{
+            prop,
+            Type::SELECTION,
+            std::move(name),
+            std::move(define),
+            std::move(description),
+            std::move(required),
+            std::move(requiredAny)
+        },
+        disables{std::move(disables)}, shouldOutput{shouldOutput}, mOption{option} {}
 
     PropSelection(const PropSelection& other, Prop& prop, PropOption& option) :
         PropSelection{
@@ -242,7 +275,7 @@ struct VERSIONS_EXPORT PropOption {
         bool shouldOutput;
     };
 
-    PropOption(Prop&, vector<PropSelectionData>);
+    PropOption(Prop&, const vector<PropSelectionData>&);
     PropOption(const PropOption&, Prop&);
 
     [[nodiscard]] const vector<std::unique_ptr<PropSelection>>& selections() const { return mSelections; }
@@ -312,10 +345,10 @@ struct VERSIONS_EXPORT PropLayout {
     using Children = vector<std::variant<PropLayout, PropSetting *>>;
 
     PropLayout(const PropLayout& other, const PropSettingMap& settingMap);
-    PropLayout(Axis axis = Axis::VERTICAL, string label = "", Children children = {}) :
+    PropLayout(Axis axis = Axis::VERTICAL, string label = "", const Children& children = {}) :
         axis{axis},
-        label{label},
-        children{std::move(children)} {}
+        label{std::move(label)},
+        children{children} {}
 
     Axis axis;
     string label;
@@ -339,14 +372,14 @@ struct VERSIONS_EXPORT Prop {
     const PropSettings& settings() const { return mSettings; }
     const PropSettingMap& settingMap() const { return mSettingMap; }
     const PropLayout& layout() const { return mLayout; }
-    const PropButtons buttons(uint32 idx) const { return mButtons.at(idx); }
-    const PropErrors errors() const { return mErrors; }
+    PropButtons buttons(uint32 idx) const { return mButtons.at(idx); }
+    PropErrors errors() const { return mErrors; }
 
     void migrateFrom(const Prop&);
 
 private:
     Prop(string name, string filename, string info) : 
-        name{name}, filename{filename}, info{info} {}
+        name{std::move(name)}, filename{std::move(filename)}, info{std::move(info)} {}
 
     /**
      * Rebuild mSettingMap according to the current mSettings.

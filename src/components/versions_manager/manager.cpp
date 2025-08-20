@@ -39,7 +39,7 @@
 #include "utils/string.h"
 #include "versions/versions.h"
 
-namespace VersionsManager {
+namespace {
 
 enum {
     ID_Refresh = 2,
@@ -83,13 +83,13 @@ int32 getVersionSelection();
 
 PCUI::Frame *manager{nullptr};
 
-PCUI::VersionDataProxy mPropVersionProxy;
-wxPanel *mPropPage;
-wxWrapSizer *mPropVersionsSizer;
+PCUI::VersionDataProxy propVersionProxy;
+wxPanel *propPage;
+wxWrapSizer *propVersionsSizer;
 
-wxPanel *mOSPage;
+wxPanel *osPage;
 
-} // namespace VersionsManager
+} // namespace
 
 void VersionsManager::open(wxWindow *parent, wxWindowID id) {
     if (manager) {
@@ -114,7 +114,9 @@ void VersionsManager::open(wxWindow *parent, wxWindowID id) {
     manager->Show();
 }
 
-void VersionsManager::bindEvents() {
+namespace {
+
+void bindEvents() {
     manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
         wxDialog dlg(manager, wxID_ANY, _("Add Prop"));
         auto *sizer{new wxBoxSizer(wxVERTICAL)};
@@ -264,7 +266,7 @@ void VersionsManager::bindEvents() {
             Versions::getProps()[static_cast<wxListBox *>(manager->FindWindow(ID_PropList))->GetSelection()]
         };
         versionedProp->addVersion();
-        updatePropVersionList();
+        reloadFromDisk();
     }, ID_PropVersionListAdd);
     manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
         const auto& versionedProp{
@@ -274,7 +276,8 @@ void VersionsManager::bindEvents() {
         if (selectedVersion == -1) return;
 
         versionedProp->removeVersion(selectedVersion);
-        updatePropVersionList();
+
+        reloadFromDisk();
     }, ID_PropRemoveVersion);
 
     manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
@@ -443,7 +446,7 @@ void VersionsManager::bindEvents() {
     }, ID_Reset);
 }
 
-void VersionsManager::reloadFromDisk() {
+void reloadFromDisk() {
     Versions::loadLocal();
 
     for (const auto& config : Config::getOpen()) {
@@ -455,7 +458,7 @@ void VersionsManager::reloadFromDisk() {
     updateOSList();
 }
 
-void VersionsManager::updatePropList() {
+void updatePropList() {
     auto *propList{static_cast<wxListBox *>(manager->FindWindow(ID_PropList))};
     const auto oldSelection{propList->GetSelection()};
 
@@ -468,14 +471,14 @@ void VersionsManager::updatePropList() {
         propList->SetSelection(
             oldSelection == -1 ?
             oldSelection :
-            std::clamp<int32>(oldSelection, 0,  propList->GetCount() - 1)
+            std::clamp<int32>(oldSelection, 0,  static_cast<int32>(propList->GetCount()) - 1)
         );
     }
 
     updatePropSelection();
 }
 
-void VersionsManager::updatePropSelection() {
+void updatePropSelection() {
     const auto selection{static_cast<wxListBox *>(manager->FindWindow(ID_PropList))->GetSelection()};
     manager->FindWindow(ID_PropRemove)->Enable(selection != -1);
     manager->FindWindow(ID_PropVersionsText)->Enable(selection != -1);
@@ -495,7 +498,7 @@ void VersionsManager::updatePropSelection() {
     updatePropVersionList();
 }
 
-void VersionsManager::updatePropVersionList() {
+void updatePropVersionList() {
     Defer defer{[]() { updatePropVersionSelection(); }};
     const auto oldSelection{getVersionSelection()};
 
@@ -503,21 +506,21 @@ void VersionsManager::updatePropVersionList() {
         static_cast<wxListBox *>(manager->FindWindow(ID_PropList))->GetSelection()
     };
 
-    mPropVersionsSizer->Clear(true);
+    propVersionsSizer->Clear(true);
     if (propSelection == -1) return;
 
     const auto& versionedProp{Versions::getProps()[propSelection]};
     int32 id{ID_PropVersionListBegin};
     for (const auto& version : versionedProp->supportedVersions()) {
-        const auto toggleLabel{static_cast<string>(static_cast<Utils::Version>(*version))};
+        const auto toggleLabel{static_cast<string>(*version)};
         auto *toggle{new wxToggleButton(
-            mPropPage,
+            propPage,
             id,
             toggleLabel
         )};
         toggle->Bind(wxEVT_TOGGLEBUTTON, [toggle](wxCommandEvent&) {
             if (toggle->GetValue()) {
-                for (auto *child : mPropVersionsSizer->GetChildren()) {
+                for (auto *child : propVersionsSizer->GetChildren()) {
                     auto *childTogglePtr{dynamic_cast<wxToggleButton *>(child->GetWindow())};
                     if (childTogglePtr == toggle) continue;
                     
@@ -526,14 +529,19 @@ void VersionsManager::updatePropVersionList() {
             }
             updatePropVersionSelection();
         });
-        toggle->SetMinSize({toggle->GetTextExtent(toggleLabel).x + 10, -1});
+#       ifdef __WXGTK__
+        constexpr auto TOGGLE_PADDING{30};
+#       else
+        constexpr auto TOGGLE_PADDING{10};
+#       endif
+        toggle->SetMinSize({toggle->GetTextExtent(toggleLabel).x + TOGGLE_PADDING, -1});
         if (id - ID_PropVersionListBegin == oldSelection) toggle->SetValue(true);
-        mPropVersionsSizer->Add(toggle);
+        propVersionsSizer->Add(toggle);
         ++id;
     }
-    mPropVersionsSizer->AddSpacer(5);
-    mPropVersionsSizer->Add(new wxButton(
-        mPropPage,
+    propVersionsSizer->AddSpacer(5);
+    propVersionsSizer->Add(new wxButton(
+        propPage,
         ID_PropVersionListAdd,
         "+",
         wxDefaultPosition,
@@ -542,7 +550,7 @@ void VersionsManager::updatePropVersionList() {
     ));
 }
 
-void VersionsManager::updatePropVersionSelection() {
+void updatePropVersionSelection() {
     const auto versionSelection{getVersionSelection()};
 
     manager->FindWindow(ID_PropRemoveVersion)->Enable(versionSelection != -1);
@@ -550,14 +558,14 @@ void VersionsManager::updatePropVersionSelection() {
         const auto& versionedProp{Versions::getProps()[
             static_cast<wxListBox *>(manager->FindWindow(ID_PropList))->GetSelection()
         ]};
-        mPropVersionProxy.bind(*versionedProp->supportedVersions()[versionSelection]);
-        mPropVersionProxy.data()->setFocus();
-    } else mPropVersionProxy.unbind();
+        propVersionProxy.bind(*versionedProp->supportedVersions()[versionSelection]);
+        propVersionProxy.data()->setFocus();
+    } else propVersionProxy.unbind();
 
     updateSizeAndLayout();
 }
 
-void VersionsManager::updateOSList() {
+void updateOSList() {
     auto *osList{static_cast<wxListBox *>(manager->FindWindow(ID_OSList))};
     const auto oldSelection{osList->GetSelection()};
 
@@ -570,14 +578,14 @@ void VersionsManager::updateOSList() {
         osList->SetSelection(
             oldSelection == -1 ?
             oldSelection :
-            std::clamp<int32>(oldSelection, 0,  osList->GetCount() - 1)
+            std::clamp<int32>(oldSelection, 0,  static_cast<int32>(osList->GetCount()) - 1)
         );
     }
 
     updateOSSelection();
 }
 
-void VersionsManager::updateOSSelection() {
+void updateOSSelection() {
     const auto selection{static_cast<wxListBox *>(manager->FindWindow(ID_OSList))->GetSelection()};
     manager->FindWindow(ID_OSRemove)->Enable(selection != -1);
     auto *infoText{static_cast<wxStaticText *>(manager->FindWindow(ID_OSText))};
@@ -586,7 +594,7 @@ void VersionsManager::updateOSSelection() {
         const auto& versionedOS{Versions::getOSVersions()[selection]};
 
         const auto defaultStr{_("Default")};
-        const auto coreVersion{versionedOS.coreVersion.err ? defaultStr : static_cast<string>(versionedOS.coreVersion)};
+        const auto coreVersion{versionedOS.coreVersion.err ? defaultStr + " (" + Versions::DEFAULT_CORE_VERSION + ')' : static_cast<string>(versionedOS.coreVersion)};
         const auto coreURL{versionedOS.coreURL.empty() ? defaultStr : versionedOS.coreURL};
         const auto coreBoardV1{versionedOS.coreBoardV1.empty() ? defaultStr : versionedOS.coreBoardV1};
         const auto coreBoardV2{versionedOS.coreBoardV2.empty() ? defaultStr : versionedOS.coreBoardV2};
@@ -607,11 +615,11 @@ void VersionsManager::updateOSSelection() {
     updateSizeAndLayout();
 }
 
-void VersionsManager::updateSizeAndLayout() {
-    mPropPage->Layout();
-    mPropPage->SetMinSize(mPropPage->GetBestSize());
-    mOSPage->Layout();
-    mOSPage->SetMinSize(mOSPage->GetBestSize());
+void updateSizeAndLayout() {
+    propPage->Layout();
+    propPage->SetMinSize(propPage->GetBestSize());
+    osPage->Layout();
+    osPage->SetMinSize(osPage->GetBestSize());
     manager->Layout();
     manager->SetMaxSize({-1, -1});
     manager->SetMinSize(manager->GetBestSize());
@@ -619,19 +627,19 @@ void VersionsManager::updateSizeAndLayout() {
     manager->SetMaxSize({manager->GetSize().x, -1});
 }
 
-void VersionsManager::createUI() {
+void createUI() {
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
     auto *notebook{new wxNotebook(manager, wxID_ANY)};
 
-    mPropPage = new wxPanel(notebook);
+    propPage = new wxPanel(notebook);
     auto *propSizer{new wxBoxSizer(wxHORIZONTAL)};
 
     auto *propListSizer{new wxBoxSizer(wxVERTICAL)};
-    auto *propList{new wxListBox(mPropPage, ID_PropList)};
+    auto *propList{new wxListBox(propPage, ID_PropList)};
     auto *propModSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *propAdd{new wxButton(
-        mPropPage,
+        propPage,
         ID_PropAdd,
         "+",
         wxDefaultPosition,
@@ -639,7 +647,7 @@ void VersionsManager::createUI() {
         wxBU_EXACTFIT
     )};
     auto *propRemove{new wxButton(
-        mPropPage,
+        propPage,
         ID_PropRemove,
         "-",
         wxDefaultPosition,
@@ -649,27 +657,33 @@ void VersionsManager::createUI() {
     propModSizer->Add(propAdd, 1);
     propModSizer->AddSpacer(5);
     propModSizer->Add(propRemove, 1);
+#   ifndef __WXOSX__
+    propListSizer->AddSpacer(10);
+#   endif
     propListSizer->Add(propList, 1);
     propListSizer->AddSpacer(5);
     propListSizer->Add(propModSizer, 0, wxEXPAND);
     propListSizer->AddSpacer(10);
 
     auto *propEditSizer{new wxBoxSizer(wxVERTICAL)};
-    auto *propInfo{new wxStaticText(mPropPage, ID_PropInfo, {})};
-    mPropVersionsSizer = new wxWrapSizer;
-    auto *propVersion{new PCUI::Version(mPropPage, mPropVersionProxy)};
+    auto *propInfo{new wxStaticText(propPage, ID_PropInfo, {})};
+    propVersionsSizer = new wxWrapSizer;
+    auto *propVersion{new PCUI::Version(propPage, propVersionProxy)};
     propVersion->Bind(wxEVT_TEXT, [](wxCommandEvent&) {
-        updatePropVersionList();
+        reloadFromDisk();
     });
     auto *propDeleteVersion{
-        new wxButton(mPropPage, ID_PropRemoveVersion, _("Remove Version"))
+        new wxButton(propPage, ID_PropRemoveVersion, _("Remove Version"))
     };
+#   ifndef __WXOSX__
+    propEditSizer->AddSpacer(10);
+#   endif
     propEditSizer->Add(propInfo, 0, wxEXPAND);
     propEditSizer->AddSpacer(10);
     propEditSizer->Add(
-        new wxStaticText(mPropPage, ID_PropVersionsText, _("Supported OS Versions"))
+        new wxStaticText(propPage, ID_PropVersionsText, _("Supported OS Versions"))
     );
-    propEditSizer->Add(mPropVersionsSizer, 1, wxEXPAND);
+    propEditSizer->Add(propVersionsSizer, 1, wxEXPAND);
     propEditSizer->AddSpacer(5);
     propEditSizer->Add(propVersion, 0, wxEXPAND);
     propEditSizer->AddSpacer(5);
@@ -681,16 +695,16 @@ void VersionsManager::createUI() {
     propSizer->AddSpacer(10);
     propSizer->Add(propEditSizer, 0, wxEXPAND);
     propSizer->AddSpacer(10);
-    mPropPage->SetSizerAndFit(propSizer);
+    propPage->SetSizerAndFit(propSizer);
 
-    mOSPage = new wxPanel(notebook);
+    osPage = new wxPanel(notebook);
     auto *osSizer{new wxBoxSizer(wxHORIZONTAL)};
 
     auto *osListSizer{new wxBoxSizer(wxVERTICAL)};
-    auto *osList{new wxListBox(mOSPage, ID_OSList)};
+    auto *osList{new wxListBox(osPage, ID_OSList)};
     auto *osModSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *osAdd{new wxButton(
-        mOSPage,
+        osPage,
         ID_OSAdd,
         "+",
         wxDefaultPosition,
@@ -698,7 +712,7 @@ void VersionsManager::createUI() {
         wxBU_EXACTFIT
     )};
     auto *osRemove{new wxButton(
-        mOSPage,
+        osPage,
         ID_OSRemove,
         "-",
         wxDefaultPosition,
@@ -708,31 +722,38 @@ void VersionsManager::createUI() {
     osModSizer->Add(osAdd, 1);
     osModSizer->AddSpacer(5);
     osModSizer->Add(osRemove, 1);
+#   ifndef __WXOSX__
+    osListSizer->AddSpacer(10);
+#   endif
     osListSizer->Add(osList, 1);
     osListSizer->AddSpacer(5);
     osListSizer->Add(osModSizer, 0, wxEXPAND);
     osListSizer->AddSpacer(10);
 
     auto *osInfoSizer{new wxBoxSizer(wxVERTICAL)};
-    auto *osInfo{new wxStaticText(mOSPage, ID_OSText, wxEmptyString)};
+    auto *osInfo{new wxStaticText(osPage, ID_OSText, wxEmptyString)};
+#   ifndef __WXOSX__
+    osInfoSizer->AddSpacer(10);
+#   endif
     osInfoSizer->Add(osInfo, 1, wxEXPAND);
+    osInfoSizer->AddSpacer(10);
 
     osSizer->AddSpacer(10);
     osSizer->Add(osListSizer, 0, wxEXPAND);
     osSizer->AddSpacer(10);
     osSizer->Add(osInfoSizer, 0, wxEXPAND);
     osSizer->AddSpacer(10);
-    mOSPage->SetSizerAndFit(osSizer);
+    osPage->SetSizerAndFit(osSizer);
 
-    notebook->AddPage(mPropPage, _("Prop Files"), true);
-    notebook->AddPage(mOSPage, _("ProffieOS"));
+    notebook->AddPage(propPage, _("Prop Files"), true);
+    notebook->AddPage(osPage, _("ProffieOS"));
 
     sizer->Add(notebook, 1, wxEXPAND | wxALL, 10);
     manager->SetSizerAndFit(sizer);
     manager->SetMaxSize({manager->GetSize().x, -1});
 }
 
-void VersionsManager::createMenuBar() {
+void createMenuBar() {
     auto *menuBar{new wxMenuBar};
     auto *file{new wxMenu};
     file->Append(ID_Refresh, _("Reload From Disk") + "\tCtrl+Alt+R");
@@ -746,10 +767,10 @@ void VersionsManager::createMenuBar() {
     manager->SetMenuBar(menuBar);
 }
 
-int32 VersionsManager::getVersionSelection() {
+int32 getVersionSelection() {
     int32 ret{-1};
-    for (const auto *selectionButton : mPropVersionsSizer->GetChildren()) {
-        auto *toggleButton{
+    for (const auto *selectionButton : propVersionsSizer->GetChildren()) {
+        const auto *toggleButton{
             dynamic_cast<const wxToggleButton *>(selectionButton->GetWindow())
         };
         if (toggleButton) {
@@ -759,4 +780,6 @@ int32 VersionsManager::getVersionSelection() {
 
     return ret;
 }
+
+} // namespace
 

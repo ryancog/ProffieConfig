@@ -28,7 +28,7 @@ namespace PCUI {
 
 struct UI_EXPORT TextData : ControlData {
     operator string() const { return pValue; }
-    void operator=(string&&);
+    TextData& operator=(string&&);
 
     void operator+=(const string_view&);
     void operator+=(char);
@@ -58,7 +58,7 @@ struct UI_EXPORT TextData : ControlData {
      */
     void setValue(string&& val);
 
-    [[nodiscard]] uint32 getInsertionPoint() { return pInsertionPoint; }
+    [[nodiscard]] uint32 getInsertionPoint() const { return pInsertionPoint; }
     void setInsertionPoint(uint32);
     void setInsertionPointEnd();
 

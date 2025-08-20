@@ -33,7 +33,7 @@ struct UI_EXPORT ToggleData : ControlData {
     /**
      * Efficiently set/update value
      */
-    void operator=(bool val);
+    ToggleData& operator=(bool val);
     void operator|=(bool val);
 
     /**

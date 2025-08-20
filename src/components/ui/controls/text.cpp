@@ -1,5 +1,4 @@
 #include "text.h"
-#include <limits>
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -24,11 +23,12 @@ namespace PCUI {
 
 } // namespace PCUI
 
-void PCUI::TextData::operator=(string&& val) {
+PCUI::TextData& PCUI::TextData::operator=(string&& val) {
     std::scoped_lock scopeLock{getLock()};
-    if (pValue == val) return;
+    if (pValue == val) return *this;
     pValue = std::move(val);
     notify(ID_VALUE);
+    return *this;
 }
 
 void PCUI::TextData::operator+=(const string_view& val) {
@@ -178,11 +178,11 @@ void PCUI::Text::styleMonospace() {
 void PCUI::Text::onUIUpdate(uint32 id) {
     bool rebound{id == ID_REBOUND};
 
-    if (rebound or id == TextData::ID_VALUE) pControl->ChangeValue(static_cast<string>(*data()));
-    if (rebound or id == TextData::ID_VALUE or id == TextData::ID_INSERTION) {
-        if (data()->pInsertionPoint == std::numeric_limits<uint32>::max()) {
-            pControl->SetInsertionPointEnd();
-        } else pControl->SetInsertionPoint(data()->pInsertionPoint);
+    if (rebound or id == TextData::ID_VALUE) {
+        pControl->ChangeValue(static_cast<string>(*data()));
+    }
+    if (rebound or id == TextData::ID_INSERTION) {
+        pControl->SetInsertionPoint(data()->pInsertionPoint);
         data()->pInsertionPoint = pControl->GetInsertionPoint();
     }
 }

@@ -6,6 +6,8 @@
 #include <wx/tooltip.h>
 #include <wx/statbox.h>
 
+#include "ui/static_box.h"
+
 #include "../editorwindow.h"
 
 BladeAwarenessDlg::BladeAwarenessDlg(EditorWindow* parent) :
@@ -65,10 +67,10 @@ void BladeAwarenessDlg::bindEvents() {
     });
 }
 
-wxStaticBoxSizer* BladeAwarenessDlg::createIDSetup(wxWindow* parent) {
+wxSizer *BladeAwarenessDlg::createIDSetup(wxWindow *parent) {
     auto& config{mParent->getOpenConfig()};
 
-    auto *setupSizer{new wxStaticBoxSizer(
+    auto *setupSizer{new PCUI::StaticBox(
         wxVERTICAL,
         parent,
         _("Blade ID Setup")
@@ -123,13 +125,13 @@ wxStaticBoxSizer* BladeAwarenessDlg::createIDSetup(wxWindow* parent) {
         wxSizerFlags().Expand().Border(wxTOP, 5)
     );
 
-    return setupSizer;
+    return setupSizer->underlyingSizer();
 }
 
-wxStaticBoxSizer* BladeAwarenessDlg::createIDPowerSettings(wxWindow* parent) {
+wxSizer *BladeAwarenessDlg::createIDPowerSettings(wxWindow *parent) {
     auto& config{mParent->getOpenConfig()};
 
-    auto *powerForIDSizer{new wxStaticBoxSizer(
+    auto *powerForIDSizer{new PCUI::StaticBox(
         wxVERTICAL,
         parent,
         _("Power for Blade ID")
@@ -160,13 +162,13 @@ wxStaticBoxSizer* BladeAwarenessDlg::createIDPowerSettings(wxWindow* parent) {
     powerForIDSizer->AddSpacer(5);
     powerForIDSizer->Add(powerPinEntry, wxSizerFlags().Expand());
 
-    return powerForIDSizer;
+    return powerForIDSizer->underlyingSizer();
 }
 
-wxStaticBoxSizer* BladeAwarenessDlg::createContinuousScanSettings(wxWindow* parent) {
+wxSizer *BladeAwarenessDlg::createContinuousScanSettings(wxWindow *parent) {
     auto& config{mParent->getOpenConfig()};
 
-    auto *continuousScansSizer{new wxStaticBoxSizer(
+    auto *continuousScansSizer{new PCUI::StaticBox(
         wxVERTICAL,
         parent,
         _("Continuous Scanning")
@@ -199,13 +201,13 @@ wxStaticBoxSizer* BladeAwarenessDlg::createContinuousScanSettings(wxWindow* pare
     continuousScansSizer->AddSpacer(5);
     continuousScansSizer->Add(scanIDMillis, wxSizerFlags().Expand());
 
-    return continuousScansSizer;
+    return continuousScansSizer->underlyingSizer();
 }
 
-wxStaticBoxSizer* BladeAwarenessDlg::createBladeDetect(wxWindow* parent) {
+wxSizer *BladeAwarenessDlg::createBladeDetect(wxWindow *parent) {
     auto& config{mParent->getOpenConfig()};
 
-    auto *bladeDetectSizer{new wxStaticBoxSizer(
+    auto *bladeDetectSizer{new PCUI::StaticBox(
         wxVERTICAL,
         parent,
         _("Blade Detect")
@@ -229,6 +231,6 @@ wxStaticBoxSizer* BladeAwarenessDlg::createBladeDetect(wxWindow* parent) {
     bladeDetectSizer->AddSpacer(5);
     bladeDetectSizer->Add(detectPin, wxSizerFlags().Expand());
 
-    return bladeDetectSizer;
+    return bladeDetectSizer->underlyingSizer();
 }
 

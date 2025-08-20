@@ -45,6 +45,14 @@ private:
     static vector<wxColour> smIndexColors;
     static const wxColour& color(uint32 idx);
 
+    struct SplitData {
+        uint32 start;
+        uint32 length;
+        uint32 splitIdx;
+        uint32 segments;
+    };
+    static vector<SplitData> generateSplitData(const Config::WS281XBlade&);
+
     Config::BladeArrays& mBladeArrays;
 
     struct SplitSize {
@@ -58,7 +66,7 @@ private:
         bool overlapEnd{false};
     };
     vector<SplitSize> mSizes;
-    int32 selectedSplit{-1};
-    int32 hoveredSplit{-1};
+    int32 mSelectedSplit{-1};
+    int32 mHoveredSplit{-1};
 };
 

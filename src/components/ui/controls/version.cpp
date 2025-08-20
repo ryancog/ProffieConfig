@@ -23,8 +23,7 @@
 
 PCUI::VersionData::VersionData() {
     mMajor.setUpdateHandler([this](uint32 id) {
-        if (id != mMajor.ID_VALUE) return;
-        
+        if (id != PCUI::TextData::ID_VALUE) return;
 
         auto rawValue{static_cast<string>(mMajor)};
         bool jump{not rawValue.empty() and rawValue.back() == '.'};
@@ -60,7 +59,7 @@ PCUI::VersionData::VersionData() {
         notify(ID_VALUE);
     });
     mMinor.setUpdateHandler([this](uint32 id) {
-        if (id != mMinor.ID_VALUE) return;
+        if (id != PCUI::TextData::ID_VALUE) return;
 
         auto rawValue{static_cast<string>(mMinor)};
         bool jump{not rawValue.empty() and rawValue.back() == '.'};
@@ -90,7 +89,7 @@ PCUI::VersionData::VersionData() {
         notify(ID_VALUE);
     });
     mBugfix.setUpdateHandler([this](uint32 id) {
-        if (id != mBugfix.ID_VALUE) return;
+        if (id != PCUI::TextData::ID_VALUE) return;
 
         auto rawValue{static_cast<string>(mBugfix)};
         bool jump{not rawValue.empty() and rawValue.back() == '-'};
@@ -128,7 +127,7 @@ PCUI::VersionData::VersionData() {
         notify(ID_VALUE);
     });
     mTag.setUpdateHandler([this](uint32 id) {
-        if (id != mTag.ID_VALUE) return;
+        if (id != PCUI::TextData::ID_VALUE) return;
 
         auto rawValue{static_cast<string>(mTag)};
         auto insertionPoint{mTag.getInsertionPoint()};
@@ -151,12 +150,12 @@ PCUI::VersionData::VersionData(const Utils::Version& version) : VersionData() {
 
 PCUI::VersionData::operator Utils::Version() {
     std::scoped_lock scopeLock{getLock()};
-    return Utils::Version(
-        std::stoi(mMajor),
-        mMinor.empty() ? Utils::Version::NULL_REV : std::stoi(mMinor),
-        mBugfix.empty() ? Utils::Version::NULL_REV : std::stoi(mBugfix),
+    return {
+        static_cast<uint8>(std::stoi(mMajor)),
+        static_cast<uint8>(mMinor.empty() ? Utils::Version::NULL_REV : std::stoi(mMinor)),
+        static_cast<uint8>(mBugfix.empty() ? Utils::Version::NULL_REV : std::stoi(mBugfix)),
         mTag
-    );
+    };
 }
 
 PCUI::VersionData::operator string() {
@@ -164,10 +163,11 @@ PCUI::VersionData::operator string() {
     return static_cast<string>(static_cast<Utils::Version>(*this));
 }
 
-void PCUI::VersionData::operator=(const Utils::Version& version) {
+PCUI::VersionData& PCUI::VersionData::operator=(const Utils::Version& version) {
     std::scoped_lock scopeLock{getLock()};
-    if (version == *this) return;
+    if (version == *this) return *this;
     setValue(version);
+    return *this;
 }
 
 void PCUI::VersionData::setValue(const Utils::Version& version) {
@@ -212,7 +212,12 @@ void PCUI::Version::create(const wxString& label, wxOrientation orient) {
         mTag = new PCUI::Text(panel, data()->mTag);
     }
 
-    const auto textWidth{GetTextExtent("255").GetWidth() + 5};
+#   ifdef __WXGTK__
+    constexpr auto TEXT_PADDING{20};
+#   else
+    constexpr auto TEXT_PADDING{5};
+#   endif
+    const auto textWidth{GetTextExtent("255").GetWidth() + TEXT_PADDING};
     mMajor->SetMinSize({textWidth, -1}, false);
     mMinor->SetMinSize({textWidth, -1}, false);
     mBugfix->SetMinSize({textWidth, -1}, false);

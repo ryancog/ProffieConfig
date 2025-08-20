@@ -8,6 +8,7 @@ add_library(ui SHARED
     plaque.cpp
     message.cpp
     notifier.cpp
+    static_box.cpp
 
     info.cpp
 

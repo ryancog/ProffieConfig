@@ -8,6 +8,8 @@
 #include <wx/stattext.h>
 #include <wx/statbox.h>
 
+#include "ui/static_box.h"
+
 CustomOptionsDlg::CustomOptionsDlg(EditorWindow *parent) : 
     wxDialog(
         parent,
@@ -70,8 +72,8 @@ wxBoxSizer *CustomOptionsDlg::header() {
     return sizer;
 }
 
-wxStaticBoxSizer *CustomOptionsDlg::info(wxWindow* parent) {
-    auto *infoSizer{new wxStaticBoxSizer(
+wxSizer *CustomOptionsDlg::info(wxWindow *parent) {
+    auto *infoSizer{new PCUI::StaticBox(
         wxVERTICAL,
         parent,
         _("Links For Additional ProffieOS Defines")
@@ -107,7 +109,7 @@ wxStaticBoxSizer *CustomOptionsDlg::info(wxWindow* parent) {
         wxSizerFlags(0).Border(wxLEFT | wxBOTTOM | wxRIGHT, 10)
     );
 
-    return infoSizer;
+    return infoSizer->underlyingSizer();
 }
 
 void CustomOptionsDlg::createOptionArea() {
@@ -118,7 +120,7 @@ void CustomOptionsDlg::createOptionArea() {
     mOptionArea->SetSizerAndFit(sizer);
 }
 
-void CustomOptionsDlg::handleNotification(uint32 id) {
+void CustomOptionsDlg::handleNotification(uint32) {
     mOptionArea->GetSizer()->Clear(true);
 
     auto& config{mParent->getOpenConfig()};

@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <utility>
+
 #include "ui/controls/version.h"
 #include "utils/types.h"
 #include "utils/version.h"
@@ -32,6 +34,7 @@ namespace Versions {
 constexpr cstring INFO_FILE_STR{"info.pconf"};
 constexpr cstring DATA_FILE_STR{"data.pconf"};
 constexpr cstring HEADER_FILE_STR{"header.h"};
+constexpr cstring DEFAULT_CORE_VERSION{"3.6.0"};
 
 struct VERSIONS_EXPORT VersionedOS {
     VersionedOS();
@@ -44,7 +47,7 @@ struct VERSIONS_EXPORT VersionedOS {
 };
 
 struct VERSIONS_EXPORT VersionedProp {
-    VersionedProp(const string& name) : name{name} {}
+    VersionedProp(string name) : name{std::move(name)} {}
 
     const string name;
     std::shared_ptr<const Prop> prop;
@@ -77,6 +80,6 @@ VERSIONS_EXPORT const vector<std::unique_ptr<VersionedProp>>& getProps();
  * @return all registered props for the version
  * Must be copied into config (or elsewhere if you're crazy like that) for use.
  */
-VERSIONS_EXPORT vector<VersionedProp *> propsForVersion(Utils::Version);
+VERSIONS_EXPORT vector<VersionedProp *> propsForVersion(const Utils::Version&);
 
-}
+} // namespace Versions
