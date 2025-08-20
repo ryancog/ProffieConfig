@@ -21,17 +21,53 @@
 
 #include "utils/types.h"
 
+#include "pconf_export.h"
+
 namespace PConf {
+
+enum class Type {
+    ENTRY,
+    SECTION
+};
 
 struct Entry;
 struct Section;
 
 using Data = vector<std::shared_ptr<Entry>>;
-using HashedData = std::unordered_multimap<string, std::shared_ptr<Entry>>;
+struct HashedData : std::unordered_multimap<string, std::shared_ptr<Entry>> {
+    [[nodiscard]] std::shared_ptr<PConf::Entry> find(const string& key) const;
+    [[nodiscard]] vector<std::shared_ptr<PConf::Entry>> findAll(const string& key) const;
+};
 
-enum class Type {
-    ENTRY,
-    SECTION
+struct PCONF_EXPORT Entry {
+    Entry() = default;
+    Entry(
+            string name, 
+            optional<string> value = nullopt, 
+            optional<string> label = nullopt, 
+            optional<int32> labelNum = nullopt
+         );
+    virtual ~Entry() = default;
+
+    string name;
+    optional<string> value{nullopt};
+    optional<string> label{nullopt};
+    optional<int32> labelNum{nullopt};
+
+    [[nodiscard]] virtual Type getType() const { return Type::ENTRY; }
+};
+
+struct PCONF_EXPORT Section : public Entry {
+    Section() = default;
+    Section(
+            string name, 
+            optional<string> label = nullopt, 
+            optional<int32> labelNum = nullopt,
+            Data entries = {}
+           );
+    Data entries;
+
+    [[nodiscard]] Type getType() const override { return Type::SECTION; }
 };
 
 } // namespace PConf

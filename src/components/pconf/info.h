@@ -27,4 +27,4 @@ namespace PConf {
 
 PCONF_EXPORT cstring version();
 
-}
+} // namespace PConf

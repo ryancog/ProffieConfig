@@ -3,11 +3,11 @@
 # components/pconf/CMakeLists.txt
 
 add_library(pconf SHARED
-    pconf.cpp
     info.cpp
     read.cpp
     utils.cpp
     write.cpp
+    types.cpp
 )
 
 target_link_libraries(pconf log)

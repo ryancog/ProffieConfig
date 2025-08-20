@@ -1,4 +1,4 @@
-#include "read.h"
+#include "pconf.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -22,7 +22,6 @@
 #include <algorithm>
 
 #include "log/logger.h"
-#include "pconf.h"
 
 namespace {
 

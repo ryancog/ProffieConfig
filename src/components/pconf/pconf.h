@@ -19,42 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "utils/types.h"
+#include "log/branch.h"
 
 #include "types.h"
 #include "pconf_export.h"
 
 namespace PConf {
 
-struct PCONF_EXPORT Entry {
-    Entry() = default;
-    Entry(
-            string name, 
-            optional<string> value = nullopt, 
-            optional<string> label = nullopt, 
-            optional<int32> labelNum = nullopt
-         );
-    virtual ~Entry() = default;
-
-    string name;
-    optional<string> value{nullopt};
-    optional<string> label{nullopt};
-    optional<int32> labelNum{nullopt};
-
-    [[nodiscard]] virtual Type getType() const { return Type::ENTRY; }
-};
-
-struct PCONF_EXPORT Section : public Entry {
-    Section() = default;
-    Section(
-            string name, 
-            optional<string> label = nullopt, 
-            optional<int32> labelNum = nullopt,
-            Data entries = {}
-           );
-    Data entries;
-
-    [[nodiscard]] Type getType() const override { return Type::SECTION; }
-};
+PCONF_EXPORT void write(std::ostream&, const Data&, Log::Branch *); 
+PCONF_EXPORT bool read(std::istream&, Data& out, Log::Branch *);
 
 } // namespace PConf
