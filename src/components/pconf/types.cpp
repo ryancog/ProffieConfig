@@ -42,14 +42,36 @@ PConf::Section::Section(
     ),
     entries(std::move(entries)) {}
 
-std::shared_ptr<PConf::Entry> PConf::HashedData::find(const string& key) const {
+PConf::EntryPtr::EntryPtr(const SectionPtr& ptr) : shared_ptr(ptr) {}
+PConf::EntryPtr::EntryPtr(SectionPtr&& ptr) : shared_ptr(std::move(ptr)) {}
+
+PConf::EntryPtr PConf::Entry::create(
+    string name,
+    optional<string> value,
+    optional<string> label,
+    optional<int32> labelNum
+) {
+    return EntryPtr(new Entry(std::move(name), std::move(value), std::move(label), labelNum));
+}
+
+PConf::SectionPtr PConf::Section::create(
+    string name,
+    optional<string> label,
+    optional<int32> labelNum,
+    Data entries
+) {
+    return SectionPtr(new Section(std::move(name), std::move(label), labelNum, std::move(entries)));
+}
+
+
+PConf::EntryPtr PConf::HashedData::find(const string& key) const {
     const auto iter{unordered_multimap::find(key)};
     if (iter != end()) return iter->second;
     return nullptr;
 }
 
-vector<std::shared_ptr<PConf::Entry>> PConf::HashedData::findAll(const string& key) const {
-    vector<std::shared_ptr<PConf::Entry>> ret;
+vector<PConf::EntryPtr> PConf::HashedData::findAll(const string& key) const {
+    vector<PConf::EntryPtr> ret;
     auto [iter, end]{unordered_multimap::equal_range(key)};
     for (; iter != end; ++iter) {
         ret.push_back(iter->second);

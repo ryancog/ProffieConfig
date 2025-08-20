@@ -26,15 +26,15 @@
 namespace {
 
 // All these return false on a critical error condition.
-bool parseName              (const string& line, std::optional<string>& out, Log::Branch&);
-bool parseLabel             (const string& line, std::optional<string>& out, Log::Branch&);
-bool parseLabelNum          (const string& line, std::optional<int32_t>& out, Log::Branch&);
-bool parseValue             (const string& line, std::istream&, std::optional<string>& out, Log::Branch&);
-bool parseSinglelineValue   (const string& line, std::optional<string>& out, Log::Branch&);
-bool parseMultilineValue    (std::istream&, std::optional<string>& out, Log::Branch&);
+bool parseName           (const string& line, std::optional<string>& out, Log::Branch&);
+bool parseLabel          (const string& line, std::optional<string>& out, Log::Branch&);
+bool parseLabelNum       (const string& line, std::optional<int32_t>& out, Log::Branch&);
+bool parseValue          (const string& line, std::istream&, std::optional<string>& out, Log::Branch&);
+bool parseSinglelineValue(const string& line, std::optional<string>& out, Log::Branch&);
+bool parseMultilineValue (std::istream&, std::optional<string>& out, Log::Branch&);
 
-bool readEntry(std::istream&, std::shared_ptr<PConf::Entry>& out, bool& isSect, Log::Branch&);
-bool readSection(std::istream&, std::shared_ptr<PConf::Section>& out, Log::Branch&);
+bool readEntry(std::istream&, PConf::EntryPtr& out, bool& isSect, Log::Branch&);
+bool readSection(std::istream&, PConf::SectionPtr& out, Log::Branch&);
 
 bool readline(std::istream&, string&);
 
@@ -46,7 +46,7 @@ bool PConf::read(std::istream& inStream, Data& out, Log::Branch *lBranch) {
     out.clear();
     bool isSect{};
     while (inStream.good() and not inStream.eof()) {
-        std::shared_ptr<Entry> entry;
+        EntryPtr entry;
         if (not readEntry(inStream, entry, isSect, *logger.bverbose("Reading line (for entry)..."))) {
             logger.error("Failed reading pconf.");
             return false;
@@ -54,15 +54,15 @@ bool PConf::read(std::istream& inStream, Data& out, Log::Branch *lBranch) {
         if (not entry and not isSect) continue;
 
         if (entry) {
-            out.push_back(entry);
+            out.push_back(std::move(entry));
         } else {
-            std::shared_ptr<Section> sect;
+            SectionPtr sect;
             if (not readSection(inStream, sect, *logger.bverbose("Reading section..."))) {
                 logger.error("Failed reading pconf.");
                 return false;
             }
             if (not sect) continue;
-            out.push_back(sect);
+            out.emplace_back(sect);
         }
     }
 
@@ -71,7 +71,7 @@ bool PConf::read(std::istream& inStream, Data& out, Log::Branch *lBranch) {
 
 namespace {
 
-bool readEntry(std::istream& inStream, std::shared_ptr<PConf::Entry>& out, bool& isSect, Log::Branch& lBranch) {
+bool readEntry(std::istream& inStream, PConf::EntryPtr& out, bool& isSect, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::readEntry()")};
 
     out.reset();
@@ -119,8 +119,7 @@ bool readEntry(std::istream& inStream, std::shared_ptr<PConf::Entry>& out, bool&
         return true;
     }
 
-    out = std::make_shared<PConf::Entry>();
-    out->name = name.value();
+    out = PConf::Entry::create(*name);
     if (not parseValue(line, inStream, out->value, *logger.bverbose("Parsing entry \"" + name.value() + "\" value..."))) return false;
     if (not parseLabel(line, out->label, *logger.bverbose("Parsing entry \"" + name.value() + "\" label..."))) return false;
     if (not parseLabelNum(line, out->labelNum, *logger.bverbose("Parsing entry \"" + name.value() + "\" number label..."))) return false;
@@ -128,35 +127,34 @@ bool readEntry(std::istream& inStream, std::shared_ptr<PConf::Entry>& out, bool&
     return true;
 }
 
-bool readSection(std::istream& inStream, std::shared_ptr<PConf::Section>& out, Log::Branch& lBranch) {
+bool readSection(std::istream& inStream, PConf::SectionPtr& out, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::readSection()")};
 
     out.reset();
     string line;
     if (not readline(inStream, line)) return true;
 
-    std::optional<string> name;
+    optional<string> name;
     if (not parseName(line, name, *logger.bverbose("Attempting to parse section name..."))) return false;
     if (not name) {
         logger.error("Read this as a section, but missing name. Must be a formatting error!");
         return false;
     }
 
-    out = std::make_shared<PConf::Section>();
-    out->name = name.value();
+    out = PConf::Section::create(*name);
     if (not parseLabel(line, out->label, *logger.bverbose("Parsing section \"" + name.value() + "\" label..."))) return false;
     if (not parseLabelNum(line, out->labelNum, *logger.bverbose("Parsing section \"" + name.value() + "\" number label..."))) return false;
 
     bool foundSect{false};
     while (inStream.good() and not inStream.eof()) {
         auto startPos{inStream.tellg()};
-        std::shared_ptr<PConf::Entry> entry;
+        PConf::EntryPtr entry;
         if (not readEntry(inStream, entry, foundSect, *logger.bverbose("Reading line (for entry)..."))) return false;
         if (foundSect) {
             std::shared_ptr<PConf::Section> subSect;
             if (not readSection(inStream, subSect, *logger.bverbose("Reading section..."))) return false;
             if (not subSect) continue;
-            out->entries.push_back(subSect);
+            out->entries.emplace_back(subSect);
             continue;
         }
         if (not entry) {
