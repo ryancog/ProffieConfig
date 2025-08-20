@@ -51,13 +51,38 @@
 #include "log/logger.h"
 #include "utils/paths.h"
 
-namespace App {
+namespace {
 
-static wxSingleInstanceChecker singleInstance;
+// TODO: Segfaults on close on GTK
+wxSingleInstanceChecker singleInstance;
 
 class CrashDialog : public wxDialog {
 public:
-    CrashDialog(const wxString& error);
+    CrashDialog(const wxString& error) : 
+        wxDialog(nullptr, wxID_ANY, App::getAppName() + " Has Crashed", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxCENTER) {
+
+        auto *sizer{new wxBoxSizer(wxVERTICAL)};
+        auto *errorMessage{new wxStaticText(this, wxID_ANY, error, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER)};
+        sizer->Add(errorMessage, wxSizerFlags(0).Border(wxALL, 10));
+
+        auto *buttonSizer{new wxBoxSizer(wxHORIZONTAL)};
+        auto *logButton{new wxButton(this, ID_LOGS, "Show Log Folder")};
+        buttonSizer->Add(logButton, wxSizerFlags(1).Expand().Border(wxALL, 5));
+
+        auto *okButton{new wxButton(this, ID_OK, "Ok")};
+        buttonSizer->Add(okButton, wxSizerFlags(1).Expand().Border(wxRIGHT | wxTOP | wxBOTTOM, 5));
+
+        sizer->Add(buttonSizer, wxSizerFlags(1).Expand());
+        SetSizerAndFit(sizer);
+
+        Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+            Close();
+        }, ID_OK);
+        Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+            wxLaunchDefaultApplication(Paths::logDir().native());
+        }, ID_LOGS);
+    }
+
 
 private:
     enum {
@@ -66,40 +91,12 @@ private:
     };
 };
 
-} // namespace App
-
-App::CrashDialog::CrashDialog(const wxString& error) : 
-    wxDialog(nullptr, wxID_ANY, getAppName() + " Has Crashed", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxCENTER) {
-
-    auto *sizer{new wxBoxSizer(wxVERTICAL)};
-    auto *errorMessage{new wxStaticText(this, wxID_ANY, error, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER)};
-    sizer->Add(errorMessage, wxSizerFlags(0).Border(wxALL, 10));
-
-    auto *buttonSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *logButton{new wxButton(this, ID_LOGS, "Show Log Folder")};
-    buttonSizer->Add(logButton, wxSizerFlags(1).Expand().Border(wxALL, 5));
-
-    auto *okButton{new wxButton(this, ID_OK, "Ok")};
-    buttonSizer->Add(okButton, wxSizerFlags(1).Expand().Border(wxRIGHT | wxTOP | wxBOTTOM, 5));
-
-    sizer->Add(buttonSizer, wxSizerFlags(1).Expand());
-    SetSizerAndFit(sizer);
-
-    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-            Close();
-            }, ID_OK);
-    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-            wxLaunchDefaultApplication(Paths::logDir().native());
-            }, ID_LOGS);
-}
-
-
 void crashHandler(const wxString& error) { 
     auto& logger{Log::Context::getGlobal().createLogger("Crash Handler")};
     logger.error(error.ToStdString());
 
     if (wxIsMainThread()) {
-        auto errDialog{App::CrashDialog(error)};
+        auto errDialog{CrashDialog(error)};
         errDialog.ShowModal();
     }
 
@@ -131,6 +128,8 @@ void sigHandler(int sig) {
 
     crashHandler(errStr);
 }
+
+} // namespace
 
 bool App::init(const string& appName, const string& lockName) {
 #   if defined(__linux__) or defined(__APPLE__)
@@ -231,7 +230,9 @@ void App::exceptionHandler() {
         throw;
     } catch (const std::exception& e) {
         exceptStr = e.what();
-    } catch (...) {}
+    } catch (...) {
+        exceptStr = "Non-Standard Unknown Exception\nThis is scary, please let me know if you encounter this.";
+    }
 
     if (not exceptStr.empty()) {
         exceptStr = "Unhandled Exception: " + exceptStr;

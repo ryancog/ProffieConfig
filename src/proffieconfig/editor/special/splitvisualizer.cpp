@@ -19,8 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <limits>
-#include <map>
 #include <memory>
 
 #include <wx/dc.h>
@@ -33,17 +33,9 @@
 #include "utils/crypto.h"
 #include "wx/font.h"
 
-struct SplitData {
-    uint32 start;
-    uint32 length;
-    uint32 splitIdx;
-    uint32 segments;
-};
-static vector<SplitData> generateSplitData(const Config::WS281XBlade&);
+constexpr auto MIN_SEGMENT_SIZE{12};
 
 vector<wxColour> SplitVisualizer::smIndexColors;
-
-constexpr auto MIN_SEGMENT_SIZE{12};
 
 SplitVisualizer::SplitVisualizer(wxWindow *parent, Config::BladeArrays& bladeArrays) :
     wxWindow(parent, wxID_ANY), mBladeArrays{bladeArrays}, PCUI::NotifyReceiver(this, bladeArrays.visualizerData) {
@@ -86,7 +78,7 @@ wxSize SplitVisualizer::calculateSizes() {
     for (const auto& data : splitData) {
         if (data.length * stdPixelSize < MIN_SEGMENT_SIZE) {
             float64 requiredPixelSize{static_cast<float64>(MIN_SEGMENT_SIZE) / data.length};
-            if (requiredPixelSize > dilatedSize) dilatedSize = requiredPixelSize;
+            dilatedSize = std::max(requiredPixelSize, dilatedSize);
             for (auto idx{0}; idx < data.length; ++idx) {
                 dilationMap[data.start + idx] = true;
             }
@@ -121,14 +113,14 @@ wxSize SplitVisualizer::calculateSizes() {
                 size.overlapEnd = true;
             }
         }
-        mSizes.push_back(std::move(size));
+        mSizes.push_back(size);
     }
 
-    selectedSplit = ws281x.splitSelect;
+    mSelectedSplit = ws281x.splitSelect;
 
     uint32 maxSegments{0};
     for (const auto& data : splitData) {
-        if (data.segments > maxSegments) maxSegments = data.segments;
+        maxSegments = std::max(data.segments, maxSegments);
     }
     wxSize minSize{
         static_cast<int32>(maxSegments * MIN_SEGMENT_SIZE),
@@ -138,7 +130,7 @@ wxSize SplitVisualizer::calculateSizes() {
     return minSize;
 }
 
-static vector<SplitData> generateSplitData(const Config::WS281XBlade& blade) {
+vector<SplitVisualizer::SplitData> SplitVisualizer::generateSplitData(const Config::WS281XBlade& blade) {
     if (blade.splits().empty()) {
         SplitData ret;
         ret.start = 0;
@@ -158,14 +150,14 @@ static vector<SplitData> generateSplitData(const Config::WS281XBlade& blade) {
             data.length = split.length;
             data.segments = 0;
             data.splitIdx = idx;
-            ret.push_back(std::move(data));
+            ret.push_back(data);
         } else if (split.type == Config::Split::ZIG_ZAG or split.type == Config::Split::STRIDE) {
             SplitData data;
             data.start = split.start;
             data.length = split.length;
             data.segments = split.segments;
             data.splitIdx = idx;
-            ret.push_back(std::move(data));
+            ret.push_back(data);
         } else if (split.type == Config::Split::LIST) {
             SplitData data;
             data.start = std::numeric_limits<uint32>::max();
@@ -173,19 +165,19 @@ static vector<SplitData> generateSplitData(const Config::WS281XBlade& blade) {
                 if (data.start != std::numeric_limits<uint32>::max() and val == data.start + data.length) {
                     ++data.length;
                     continue;
-                } else {
-                    if (data.start != std::numeric_limits<uint32>::max()) {
-                        ret.push_back(std::move(data));
-                    }
-
-                    data.start = val;
-                    data.length = 1;
-                    data.segments = 0;
-                    data.splitIdx = idx;
                 }
+
+                if (data.start != std::numeric_limits<uint32>::max()) {
+                    ret.push_back(data);
+                }
+
+                data.start = val;
+                data.length = 1;
+                data.segments = 0;
+                data.splitIdx = idx;
             }
             if (data.start != std::numeric_limits<uint32>::max()) {
-                ret.push_back(std::move(data));
+                ret.push_back(data);
             }
         }
     }
@@ -194,76 +186,99 @@ static vector<SplitData> generateSplitData(const Config::WS281XBlade& blade) {
 }
 
 void SplitVisualizer::paintEvent(wxPaintEvent&) {
-    wxPaintDC dc{this};
-    std::unique_ptr<wxGraphicsContext> gc{wxGraphicsContext::Create(dc)};
+    wxPaintDC paintDC{this};
+    std::unique_ptr<wxGraphicsContext> paintGC{wxGraphicsContext::Create(paintDC)};
 
     constexpr auto CORNER_RADIUS{10};
     auto windowSize{GetSize()};
 
-    gc->SetPen(*wxTRANSPARENT_PEN);
+    paintGC->SetPen(*wxTRANSPARENT_PEN);
     if (mSizes.empty()) {
-        gc->SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT)));
-        gc->DrawRoundedRectangle(0, 0, windowSize.x, windowSize.y, CORNER_RADIUS);
+        paintGC->SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT)));
+        paintGC->DrawRoundedRectangle(0, 0, windowSize.x, windowSize.y, CORNER_RADIUS);
         return;
     }
 
-    gc->SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOX)));
-    gc->DrawRectangle(0, 0, windowSize.x, windowSize.y);
+    // On GTK the background also gets removed (weird see-through render ensues) because of
+    // rendering reasons. I don't understand anything about the composition modes. The theory formulas
+    // don't seem to match up with any of the backend behaviors, and I don't care to rationalize it.
+#   ifndef __WXOSX__
+    paintGC->SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK)));
+    paintGC->DrawRectangle(0, 0, windowSize.x, windowSize.y);
+    paintGC->BeginLayer(1);
+#   endif
 
-    gc->BeginLayer(1);
+    paintGC->SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOX)));
+    paintGC->DrawRectangle(0, 0, windowSize.x, windowSize.y);
+
+    paintGC->BeginLayer(1);
     for (const auto& size : mSizes) {
         auto splitColor{color(size.splitIdx)};
         bool dark{wxSystemSettings::GetAppearance().AreAppsDark()};
-        if (size.splitIdx == hoveredSplit) {
+        if (size.splitIdx == mHoveredSplit) {
             splitColor = splitColor.ChangeLightness(dark ? 70 : 140);
         }
 
-        gc->SetCompositionMode(wxCOMPOSITION_OVER);
-        gc->SetPen(*wxTRANSPARENT_PEN);
-        gc->SetBrush(wxBrush(splitColor));
-        gc->DrawRectangle(0, size.start, windowSize.x, size.length);
+        paintGC->SetCompositionMode(wxCOMPOSITION_OVER);
+        paintGC->SetPen(*wxTRANSPARENT_PEN);
+        paintGC->SetBrush(wxBrush(splitColor));
+        paintGC->DrawRectangle(0, size.start, windowSize.x, size.length);
 
         wxPen borderPen{};
         borderPen.SetColour(splitColor.ChangeLightness(dark ? 110 : 90));
         borderPen.SetStyle(wxPENSTYLE_SOLID);
-        gc->SetPen(borderPen);
+        paintGC->SetPen(borderPen);
         for (auto idx{1}; idx < size.segments; ++idx) {
             auto segmentX{size.segmentSize * idx};
-            gc->StrokeLine(segmentX, size.start, segmentX, size.start + size.length);
+            paintGC->StrokeLine(segmentX, size.start, segmentX, size.start + size.length);
         }
 
         borderPen.SetColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT));
         if (size.start != 0) {
             borderPen.SetStyle(size.overlapStart ? wxPENSTYLE_DOT : wxPENSTYLE_SOLID);
-            gc->SetPen(borderPen);
-            gc->StrokeLine(0, size.start, windowSize.x, size.start);
+            paintGC->SetPen(borderPen);
+            paintGC->StrokeLine(0, size.start, windowSize.x, size.start);
         }
         borderPen.SetStyle(size.overlapEnd ? wxPENSTYLE_DOT : wxPENSTYLE_SOLID);
-        gc->SetPen(borderPen);
-        gc->StrokeLine(0, size.start + size.length, windowSize.x, size.start + size.length);
+        paintGC->SetPen(borderPen);
+        paintGC->StrokeLine(0, size.start + size.length, windowSize.x, size.start + size.length);
 
         auto font{wxSystemSettings::GetFont(wxSYS_SYSTEM_FONT)};
-        if (size.splitIdx == selectedSplit) {
+        if (size.splitIdx == mSelectedSplit) {
             font.MakeBold();
             font.SetFractionalPointSize(font.GetFractionalPointSize() * 1.2);
         }
-        gc->SetFont(
+        paintGC->SetFont(
             font,
             wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT)
         );
         wxString numText{std::to_string(size.splitIdx)};
-        float64 textWidth;
-        float64 textHeight;
-        gc->GetTextExtent(numText, &textWidth, &textHeight);
-        gc->DrawText(numText, (windowSize.x - textWidth) / 2.0, size.start + ((size.length - textHeight) / 2));
+        float64 textWidth{};
+        float64 textHeight{};
+        paintGC->GetTextExtent(numText, &textWidth, &textHeight);
+        paintGC->DrawText(numText, (windowSize.x - textWidth) / 2.0, size.start + ((size.length - textHeight) / 2));
     }
-    gc->EndLayer();
+    paintGC->EndLayer();
 
-    gc->SetBrush(*wxWHITE_BRUSH);
-    gc->SetCompositionMode(wxCOMPOSITION_DEST_IN);
-    gc->BeginLayer(1);
-    gc->DrawRoundedRectangle(0, 0, windowSize.x, windowSize.y, CORNER_RADIUS);
-    gc->EndLayer();
+    // All that for a rounded border
+#   ifdef __WXOSX__
+    paintGC->SetBrush(*wxWHITE_BRUSH);
+    paintGC->SetCompositionMode(wxCOMPOSITION_DEST_IN);
+    paintGC->BeginLayer(1);
+    paintGC->DrawRoundedRectangle(0, 0, windowSize.x, windowSize.y, CORNER_RADIUS);
+    paintGC->EndLayer();
+#   else
+    paintGC->SetPen(wxNullPen);
+    paintGC->SetCompositionMode(wxCOMPOSITION_DEST_ATOP);
+    paintGC->BeginLayer(1);
+    paintGC->SetBrush(*wxBLACK_BRUSH);
+    paintGC->DrawRectangle(0, 0, windowSize.x, windowSize.y);
+    paintGC->SetBrush(*wxWHITE_BRUSH);
+    paintGC->DrawRoundedRectangle(0, 0, windowSize.x, windowSize.y, CORNER_RADIUS);
+    paintGC->EndLayer();
+    paintGC->SetCompositionMode(wxCOMPOSITION_ATOP);
+    paintGC->EndLayer();
+#   endif
 }
 
 void SplitVisualizer::resize(wxSizeEvent&) {
@@ -274,11 +289,11 @@ void SplitVisualizer::resize(wxSizeEvent&) {
 void SplitVisualizer::mouseMoved(wxMouseEvent& evt) {
     auto pos{evt.GetPosition()};
 
-    hoveredSplit = -1;
+    mHoveredSplit = -1;
     for (auto iter{mSizes.rbegin()}; iter != mSizes.rend(); ++iter) {
         const auto& size{*iter};
         if (pos.y > size.start and pos.y < size.start + size.length) {
-            hoveredSplit = size.splitIdx;
+            mHoveredSplit = static_cast<int32>(size.splitIdx);
             break;
         }
     }
@@ -286,12 +301,12 @@ void SplitVisualizer::mouseMoved(wxMouseEvent& evt) {
 }
 
 void SplitVisualizer::mouseLeave(wxMouseEvent&) {
-    hoveredSplit = -1;
+    mHoveredSplit = -1;
     Refresh();
 }
 
 void SplitVisualizer::mouseClick(wxMouseEvent&) {
-    if (hoveredSplit == -1) return;
+    if (mHoveredSplit == -1) return;
     if (mBladeArrays.arraySelection == -1) return;
     auto& selectedArray{mBladeArrays.array(mBladeArrays.arraySelection)};
     if (selectedArray.bladeSelection == -1) return;
@@ -299,8 +314,8 @@ void SplitVisualizer::mouseClick(wxMouseEvent&) {
     if (selectedBlade.type != Config::Blade::WS281X) return;
     auto& ws281x{selectedBlade.ws281x()};
 
-    if (hoveredSplit >= ws281x.splits().size()) return;
-    ws281x.splitSelect = hoveredSplit;
+    if (mHoveredSplit >= ws281x.splits().size()) return;
+    ws281x.splitSelect = mHoveredSplit;
 }
 
 const wxColour& SplitVisualizer::color(uint32 idx) {

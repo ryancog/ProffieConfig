@@ -324,7 +324,7 @@ void PresetsPage::createUI() {
     trackSizer->Add(trackInput, wxSizerFlags(1));
     trackSizer->Add(wavText, wxSizerFlags().Bottom());
 
-    mInjectionsSizer = new wxStaticBoxSizer(wxVERTICAL, this, _("Injections"));
+    mInjectionsSizer = new PCUI::StaticBox(wxVERTICAL, this, _("Injections"));
 
     presetConfigSizer->Add(nameInput, wxSizerFlags().Expand());
     presetConfigSizer->AddSpacer(5);
@@ -332,7 +332,7 @@ void PresetsPage::createUI() {
     presetConfigSizer->AddSpacer(5);
     presetConfigSizer->Add(trackSizer, wxSizerFlags().Expand());
     presetConfigSizer->AddSpacer(20);
-    presetConfigSizer->Add(mInjectionsSizer, wxSizerFlags(1).Expand());
+    presetConfigSizer->Add(mInjectionsSizer->underlyingSizer(), wxSizerFlags(1).Expand());
 
     auto *stylesSizer{new wxBoxSizer(wxVERTICAL)};
     auto *styleDisplay{new PCUI::Choice(
@@ -405,7 +405,7 @@ void PresetsPage::bindEvents() {
         auto& config{mParent->getOpenConfig()};
         auto& presetArray{config.presetArrays.array(config.presetArrays.selection)};
         presetArray.addPreset();
-        presetArray.selection = presetArray.presets().size() - 1;
+        presetArray.selection = static_cast<int32>(presetArray.presets().size() - 1);
     }, ID_AddPreset);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto& presetArrays{mParent->getOpenConfig().presetArrays};
@@ -456,7 +456,7 @@ void PresetsPage::bindEvents() {
         );
         if (wxID_OK == dlg.ShowModal()) {
             config.presetArrays.addArray(array.name);
-            config.presetArrays.selection = config.presetArrays.arrays().size() - 1;
+            config.presetArrays.selection = static_cast<int32>(config.presetArrays.arrays().size() - 1);
         }
 
     }, ID_AddArray);
@@ -470,14 +470,14 @@ void PresetsPage::handleNotification(uint32 id) {
     bool rebound{id == ID_REBOUND};
 
     auto& presetArrays{mParent->getOpenConfig().presetArrays};
-    if (rebound or id == presetArrays.NOTIFY_INJECTIONS) rebuildInjections();
-    if (rebound or id == presetArrays.NOTIFY_SELECTION) {
+    if (rebound or id == Config::PresetArrays::NOTIFY_INJECTIONS) rebuildInjections();
+    if (rebound or id == Config::PresetArrays::NOTIFY_SELECTION) {
         bool hasSelection{presetArrays.selection != -1};
         FindWindow(ID_RemoveArray)->Enable(hasSelection);
         FindWindow(ID_RenameArray)->Enable(hasSelection);
         FindWindow(ID_AddPreset)->Enable(hasSelection);
     }
-    if (rebound or id == presetArrays.NOTIFY_ARRAY_NAME or id == presetArrays.NOTIFY_SELECTION) {
+    if (rebound or id == Config::PresetArrays::NOTIFY_ARRAY_NAME or id == Config::PresetArrays::NOTIFY_SELECTION) {
         auto *issueButton{FindWindow(ID_IssueButton)};
         if (presetArrays.selection == -1) {
             issueButton->Hide();
@@ -496,7 +496,7 @@ void PresetsPage::handleNotification(uint32 id) {
             issueButton->Show(static_cast<string>(selectedArray.name).empty() or duplicate);
         }
     }
-    if (rebound or id == presetArrays.NOTIFY_PRESETS or id == presetArrays.NOTIFY_SELECTION) {
+    if (rebound or id == Config::PresetArrays::NOTIFY_PRESETS or id == Config::PresetArrays::NOTIFY_SELECTION) {
         if (presetArrays.selection == -1) {
             FindWindow(ID_MovePresetUp)->Disable();
             FindWindow(ID_MovePresetDown)->Disable();
@@ -515,9 +515,9 @@ void PresetsPage::handleNotification(uint32 id) {
     }
     if (
             rebound or
-            id == presetArrays.NOTIFY_TRACK_INPUT or
-            id == presetArrays.NOTIFY_PRESETS or
-            id == presetArrays.NOTIFY_SELECTION
+            id == Config::PresetArrays::NOTIFY_TRACK_INPUT or
+            id == Config::PresetArrays::NOTIFY_PRESETS or
+            id == Config::PresetArrays::NOTIFY_SELECTION
        ) {
         auto hasInput{
             presetArrays.trackProxy.data() and

@@ -1,5 +1,5 @@
 #include "generalpage.h"
-#include "wx/string.h"
+#include "ui/static_box.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2023-2025 Ryan Ogurek
@@ -72,7 +72,7 @@ void GeneralPage::handleNotification(uint32 id) {
 wxSizer *GeneralPage::setupSection() {
     auto& config{mParent->getOpenConfig()};
 
-    auto *boardSetup{new wxStaticBoxSizer(
+    auto *boardSetup{new PCUI::StaticBox(
         wxHORIZONTAL,
         this,
         _("Setup"))
@@ -117,12 +117,12 @@ wxSizer *GeneralPage::setupSection() {
     boardSetup->AddSpacer(10);
     boardSetup->Add(webUSB, wxSizerFlags().Center());
 
-    return boardSetup;
+    return boardSetup->underlyingSizer();
 }
 
 wxSizer *GeneralPage::miscSection() {
     auto& config{mParent->getOpenConfig()};
-    auto *sizer{new wxStaticBoxSizer(wxVERTICAL, this, _("Misc"))};
+    auto *sizer{new PCUI::StaticBox(wxVERTICAL, this, _("Misc"))};
     auto *parent{sizer->GetStaticBox()};
 
     auto *pliTime{new PCUI::Decimal(
@@ -155,12 +155,12 @@ wxSizer *GeneralPage::miscSection() {
     sizer->AddSpacer(5);
     sizer->Add(motionTime, wxSizerFlags().Expand());
 
-    return sizer;
+    return sizer->underlyingSizer();
 }
 
 wxSizer *GeneralPage::installationSection() {
     auto& config{mParent->getOpenConfig()};
-    auto *sizer{new wxStaticBoxSizer(wxVERTICAL, this, _("Installation"))};
+    auto *sizer{new PCUI::StaticBox(wxVERTICAL, this, _("Installation"))};
     auto *parent{sizer->GetStaticBox()};
 
     auto *clash{new PCUI::Decimal(
@@ -242,12 +242,12 @@ wxSizer *GeneralPage::installationSection() {
     sizer->AddSpacer(10);
     sizer->Add(enableOLED, wxSizerFlags().Expand());
 
-    return sizer;
+    return sizer->underlyingSizer();
 }
 
 wxSizer *GeneralPage::tweaksSection() {
     auto& config{mParent->getOpenConfig()};
-    auto *sizer{new wxStaticBoxSizer(wxHORIZONTAL, this, _("Tweaks"))};
+    auto *sizer{new PCUI::StaticBox(wxHORIZONTAL, this, _("Tweaks"))};
     auto *parent{sizer->GetStaticBox()};
 
     auto *noRepeatRandom{new PCUI::CheckBox(
@@ -334,12 +334,12 @@ wxSizer *GeneralPage::tweaksSection() {
     sizer->AddSpacer(10);
     sizer->Add(sizer2, wxSizerFlags().Expand());
 
-    return sizer;
+    return sizer->underlyingSizer();
 }
 
 wxSizer *GeneralPage::editingSection() {
     auto& config{mParent->getOpenConfig()};
-    auto *sizer{new wxStaticBoxSizer(wxVERTICAL, this, _("Editing"))};
+    auto *sizer{new PCUI::StaticBox(wxVERTICAL, this, _("Editing"))};
     auto *parent{sizer->GetStaticBox()};
 
     auto *saveState{new PCUI::CheckBox(
@@ -442,12 +442,12 @@ wxSizer *GeneralPage::editingSection() {
     sizer->AddSpacer(5);
     sizer->Add(dynamicLength, wxSizerFlags().Expand());
 
-    return sizer;
+    return sizer->underlyingSizer();
 }
 
 wxSizer *GeneralPage::audioSection() {
     auto& config{mParent->getOpenConfig()};
-    auto *sizer{new wxStaticBoxSizer(wxVERTICAL, this, _("Audio"))};
+    auto *sizer{new PCUI::StaticBox(wxVERTICAL, this, _("Audio"))};
     auto *parent{sizer->GetStaticBox()};
 
     auto *volume{new PCUI::Numeric(
@@ -528,6 +528,6 @@ wxSizer *GeneralPage::audioSection() {
     sizer->AddSpacer(5);
     sizer->Add(dontUseGyroForClash, wxSizerFlags().Expand());
 
-    return sizer;
+    return sizer->underlyingSizer();
 }
 

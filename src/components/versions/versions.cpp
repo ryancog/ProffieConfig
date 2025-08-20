@@ -32,7 +32,7 @@
 #include "utils/string.h"
 #include "utils/types.h"
 
-namespace Versions {
+namespace {
 
 constexpr cstring CORE_VERSION_STR{"CORE_VER"};
 constexpr cstring CORE_URL_STR{"CORE_URL"};
@@ -42,13 +42,11 @@ constexpr cstring CORE_BOARDV3_STR{"CORE_BOARDV3"};
 
 constexpr cstring SUPPORTED_VERSIONS_STR{"SUPPORTED_VERSIONS"};
 
-const Utils::Version defaultCoreVersion{"3.6.0"};
+vector<Versions::VersionedOS> osVersions;
+vector<std::unique_ptr<Versions::VersionedProp>> props;
+std::multimap<Utils::Version, Versions::VersionedProp *> propVersionMap;
 
-vector<VersionedOS> osVersions;
-vector<std::unique_ptr<VersionedProp>> props;
-std::multimap<Utils::Version, VersionedProp *> propVersionMap;
-
-} // namespace Versions
+} // namespace
 
 Versions::VersionedOS::VersionedOS() : coreVersion{Utils::Version::invalidObject()} {}
 
@@ -88,7 +86,7 @@ void Versions::VersionedProp::saveInfo() {
 void Versions::loadLocal() {
     auto& logger{Log::Context::getGlobal().createLogger("Versions::loadLocal()")};
 
-    logger.debug("Loading ProffieOS Versions...");
+    logger.info("Loading ProffieOS Versions...");
     osVersions.clear();
     for (const auto& entry : fs::directory_iterator(Paths::osDir())) {
         std::error_code err{};
@@ -115,7 +113,7 @@ void Versions::loadLocal() {
             continue;
         }
 
-        logger.debug("Found ProffieOS version " + static_cast<string>(version) + "...");
+        logger.info("Found ProffieOS version " + static_cast<string>(version) + "...");
         VersionedOS os;
         os.verNum = version;
 
@@ -152,7 +150,9 @@ void Versions::loadLocal() {
         osVersions.push_back(std::move(os));
     }
 
-    logger.debug("Loading Props...");
+    logger.info("Loading Props...");
+    // Migrated or should be removed
+    const auto oldProps{std::move(props)};
     props.clear();
     for (const auto& entry : fs::directory_iterator(Paths::propDir())) {
         std::error_code err{};
@@ -169,7 +169,12 @@ void Versions::loadLocal() {
             continue;
         }
 
-        logger.debug("Found prop " + propName + "...");
+        logger.info("Found prop " + propName + "...");
+
+        VersionedProp *oldPropPtr{};
+        for (const auto& oldProp : oldProps) {
+            if (oldProp->name == propName) oldPropPtr = oldProp.get();
+        }
 
         std::ifstream infoFile{Paths::propDir() / propName / INFO_FILE_STR};
         PConf::Data infoData;
@@ -189,7 +194,19 @@ void Versions::loadLocal() {
                 }
 
                 logger.verbose("Prop " + propName + " supports OS version " + static_cast<string>(supportedVersion));
-                auto version{std::make_unique<PCUI::VersionData>(supportedVersion)};
+                std::unique_ptr<PCUI::VersionData> version;
+                
+                if (oldPropPtr) {
+                    for (auto& oldSupportedVersion : oldPropPtr->mSupportedVersions) {
+                        if (oldSupportedVersion and static_cast<Utils::Version>(*oldSupportedVersion) == supportedVersion) {
+                            version = std::move(oldSupportedVersion);
+                            oldSupportedVersion = nullptr;
+                        }
+                    }
+                } 
+
+                if (not version) version = std::make_unique<PCUI::VersionData>(supportedVersion);
+
                 auto *versionedPropPtr{versionedProp.get()};
                 version->setUpdateHandler([versionedPropPtr](uint32 id) {
                     if (id != PCUI::VersionData::ID_VALUE) return;
@@ -206,7 +223,7 @@ void Versions::loadLocal() {
         PConf::read(dataFile, dataData, logger.bverbose("Reading data file..."));
         const auto hashedDataData{PConf::hash(dataData)};
 
-        const auto prop{
+        auto prop{
             Prop::generate(hashedDataData, logger.bverbose("Generating prop..."))
         };
         if (not prop) {
@@ -242,7 +259,7 @@ const Versions::VersionedOS *Versions::getVersionedOS(const Utils::Version& vers
 const vector<Versions::VersionedOS>& Versions::getOSVersions() { return osVersions; }
 const vector<std::unique_ptr<Versions::VersionedProp>>& Versions::getProps() { return props; }
 
-vector<Versions::VersionedProp *> Versions::propsForVersion(Utils::Version version) {
+vector<Versions::VersionedProp *> Versions::propsForVersion(const Utils::Version& version) {
     vector<VersionedProp *> ret;
     auto [equalIter, equalEnd]{propVersionMap.equal_range(version)};
     for (; equalIter != equalEnd; ++equalIter) {

@@ -19,8 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/statbox.h>
-
+#include "ui/static_box.h"
 
 PropButtonsDialog::PropButtonsDialog(EditorWindow *parent) {
     auto& config{parent->getOpenConfig()};
@@ -49,7 +48,7 @@ PropButtonsDialog::PropButtonsDialog(EditorWindow *parent) {
             wxSizerFlags{}.Border(wxALL, 10)
         );
     } else for (auto& [ stateName, stateButtons ] : propButtons) {
-        auto *stateSizer{new wxStaticBoxSizer(
+        auto *stateSizer{new PCUI::StaticBox(
             wxVERTICAL,
             this,
             wxString::Format(_("Button controls while saber is %s:"), stateName)
@@ -64,7 +63,7 @@ PropButtonsDialog::PropButtonsDialog(EditorWindow *parent) {
         controlSizer->Add(actionSizer);
         stateSizer->Add(controlSizer);
 
-        for (auto& button : stateButtons) {
+        for (const auto& button : stateButtons) {
             string activePredicate;
             for (const auto& [ predicate, description ]: button.descriptions) {
                 auto setting = prop.settingMap().find(predicate);
@@ -97,7 +96,7 @@ PropButtonsDialog::PropButtonsDialog(EditorWindow *parent) {
             continue;
         }
         textSizer->Add(
-            stateSizer,
+            stateSizer->underlyingSizer(),
             wxSizerFlags(0)
                 .Border(wxTOP | wxLEFT | wxRIGHT, 10).Expand()
         );

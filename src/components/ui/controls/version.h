@@ -37,7 +37,7 @@ struct UI_EXPORT VersionData : ControlData {
     /**
      * Efficiently set/update value
      */
-    void operator=(const Utils::Version&);
+    VersionData& operator=(const Utils::Version&);
 
     /**
      * Unconditionally set/update value

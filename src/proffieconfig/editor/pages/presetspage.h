@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/sizer.h>
+#include "ui/static_box.h"
 
 #include "../editorwindow.h"
 
@@ -44,11 +44,11 @@ public:
 private:
     EditorWindow *mParent{nullptr};
 
-    wxStaticBoxSizer *mInjectionsSizer;
+    PCUI::StaticBox *mInjectionsSizer;
 
     void createUI();
     void bindEvents();
-    void handleNotification(uint32 id);
+    void handleNotification(uint32) override;
 
     void rebuildInjections();
 };

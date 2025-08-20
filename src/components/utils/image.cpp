@@ -19,8 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
-#include <unordered_map>
+#include <utility>
 
 #include <wx/bitmap.h>
 #include <wx/dcmemory.h>
@@ -31,21 +30,21 @@
 
 #include "utils/paths.h"
 
-namespace Image {
+const wxColour Image::DARK_BLUE{39, 74, 114};
+const wxColour Image::LIGHT_BLUE{31, 99, 168};
+
+namespace {
 
 // std::unordered_map<string, wxBitmap> bmps;
-const wxColour DARK_BLUE{39, 74, 114};
-const wxColour LIGHT_BLUE{31, 99, 168};
-
 void generateMissingBMP(wxBitmap&, const wxSize& = wxDefaultSize);
 
-} // namespace Image
+} // namespace
 
 Image::DynamicColor::DynamicColor() :
-    mType{Type::STANDARD}, mStd{wxNullColour, wxNullColour} {}
+    mType{Type::STANDARD}, mStd{.mDark=wxNullColour, .mLight=wxNullColour} {}
 
 Image::DynamicColor::DynamicColor(wxColour dark, wxColour light) :
-    mType{Type::STANDARD}, mStd{dark, light} {}
+    mType{Type::STANDARD}, mStd{.mDark=std::move(dark), .mLight=std::move(light)} {}
 
 Image::DynamicColor::DynamicColor(wxSystemColour color) :
     mType{Type::SYSTEM}, mSysColor{color} {}
@@ -127,7 +126,7 @@ wxBitmap Image::loadPNG(const string& name, bool dpiScaled) {
     return bitmap;
 }
 
-wxBitmap Image::loadPNG(const string& name, wxSize size, wxColour color) {
+wxBitmap Image::loadPNG(const string& name, wxSize size, const wxColour& color) {
     auto pngPath{Paths::resourceDir() / "icons" / (name + ".png")};
     wxBitmap bitmap;
     {
@@ -141,7 +140,7 @@ wxBitmap Image::loadPNG(const string& name, wxSize size, wxColour color) {
 
     if (size.x != -1 or size.y != -1) {
         assert(size.x == -1 or size.y == -1);
-        float64 scaler;
+        float64 scaler{};
         if (size.x != -1) {
             scaler = bitmap.GetLogicalWidth() / size.x;
         } else {
@@ -167,31 +166,6 @@ wxBitmap Image::loadPNG(const string& name, wxSize size, wxColour color) {
     return bitmap;
 }
 
-void Image::generateMissingBMP(wxBitmap& bmp, const wxSize& size) {
-    int32 dimension;
-    if (size.GetX() == -1 and size.GetY() == -1) dimension = 32;
-    else dimension = std::max(size.x, size.y);
-
-    bmp.Create(dimension, dimension, 32);
-    wxMemoryDC dc{bmp};
-    dc.SetFont(wxFont{
-        dimension,
-        wxFONTFAMILY_MODERN,
-        wxFONTSTYLE_NORMAL,
-        wxFONTWEIGHT_BOLD
-    });
-
-    dc.Clear();
-    dc.SetBrush(wxBrush(Image::LIGHT_BLUE));
-    dc.DrawRoundedRectangle(0, 0, dimension, dimension, 4);
-
-    auto extent{dc.GetTextExtent("?")};
-    extent /= 2;
-    dimension /= 2;
-    dc.SetTextForeground(Image::DARK_BLUE);
-    dc.DrawText("?", dimension - extent.x, dimension - extent.y);
-}
-
 wxBitmap Image::newBitmap(wxSize size) {
     wxBitmap bmp;
     bmp.CreateWithDIPSize(size, getDPIScaleFactor(), 32);
@@ -202,4 +176,35 @@ wxBitmap Image::newBitmap(wxSize size) {
 int32 Image::getDPIScaleFactor() { return 2; }
 
 wxColour Image::getAccentColor() { return { 0x27, 0x4a, 0x72 }; }
+
+namespace {
+
+void generateMissingBMP(wxBitmap& bmp, const wxSize& size) {
+    int32 dimension{};
+    if (size.GetX() == -1 and size.GetY() == -1) dimension = 32;
+    else dimension = std::max(size.x, size.y);
+
+    bmp.Create(dimension, dimension, 32);
+    bmp.UseAlpha(true);
+    wxMemoryDC bmpDC{bmp};
+    bmpDC.SetFont(wxFont{
+        dimension,
+        wxFONTFAMILY_MODERN,
+        wxFONTSTYLE_NORMAL,
+        wxFONTWEIGHT_BOLD
+    });
+
+    bmpDC.SetBrush(*wxTRANSPARENT_BRUSH);
+    bmpDC.DrawRectangle(0, 0, dimension, dimension);
+    bmpDC.SetBrush(wxBrush(Image::LIGHT_BLUE));
+    bmpDC.DrawRoundedRectangle(0, 0, dimension, dimension, 4);
+
+    auto extent{bmpDC.GetTextExtent("?")};
+    extent /= 2;
+    dimension /= 2;
+    bmpDC.SetTextForeground(Image::DARK_BLUE);
+    bmpDC.DrawText("?", dimension - extent.x, dimension - extent.y);
+}
+
+} // namespace
 

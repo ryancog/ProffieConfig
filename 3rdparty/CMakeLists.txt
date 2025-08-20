@@ -98,7 +98,6 @@ if (CMAKE_SYSTEM_NAME STREQUAL Linux)
 	set_target_properties(wxWidgetsQA PROPERTIES
 		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_gtk3u_qa-3.3.so.0)
 
-
     set(WX_STATIC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-linux-static)
     set(WX_LIB_DIR ${WX_STATIC_DIR}/lib64)
     set_target_properties(wxWidgetsBase-static PROPERTIES
@@ -115,6 +114,18 @@ if (CMAKE_SYSTEM_NAME STREQUAL Linux)
 		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_gtk3u_html-3.3.a)
 	set_target_properties(wxWidgetsQA-static PROPERTIES
 		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_gtk3u_qa-3.3.a)
+    set_target_properties(wxWidgetsPNG-static PROPERTIES
+		IMPORTED_LOCATION ${WX_LIB_DIR}/libwxpng-3.3.a)
+    set_target_properties(wxWidgetsZLib-static PROPERTIES
+		IMPORTED_LOCATION ${WX_LIB_DIR}/libwxzlib-3.3.a)
+
+    # TODO: I don't like find_package and I don't know how it works
+    # this is internet copypasta
+    find_package(CURL REQUIRED)
+    set(OPENSSL_USE_STATIC_LIBS TRUE)
+    set(CURL_STATICLIB TRUE)
+
+    target_link_libraries(wxWidgetsBaseNet-static INTERFACE CURL::libcurl ${CURL_LIBRARIES} ${CURL_STATIC_LIBRARIES})
 
 elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
     set(TC_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tomcrypt/build-macOS/)

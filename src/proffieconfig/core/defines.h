@@ -24,6 +24,4 @@ static constexpr auto COPYRIGHT_NOTICE{
     "related to ProffieOS, created by Fredrik Hubinette."
 };
 
-// #define ARDUINO_PBPLUGIN_VERSION "3.6" // Make sure the compile output parsing doesn't break if we update this!
-
 #define SMALLBUTTONSIZE wxSize(30, 20)

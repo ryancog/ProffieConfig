@@ -65,7 +65,7 @@ UTILS_EXPORT wxBitmap loadPNG(const string& name, bool dpiScaled = true);
  * @param size Size to scale the bitmap to. Only one dimension may be provided.
  * @param color Optional color to set bitmap to.
  */
-UTILS_EXPORT wxBitmap loadPNG(const string& name, wxSize size, wxColour color = wxNullColour); 
+UTILS_EXPORT wxBitmap loadPNG(const string& name, wxSize size, const wxColour& color = wxNullColour); 
 
 UTILS_EXPORT wxBitmap newBitmap(wxSize);
 UTILS_EXPORT int32 getDPIScaleFactor();

@@ -21,7 +21,6 @@
 
 #include <chrono>
 #include <filesystem>
-#include <fstream>
 #include <thread>
 
 #include <wx/arrstr.h>
@@ -74,6 +73,9 @@ EditorWindow::EditorWindow(wxWindow *parent, Config::Config& config) :
     bindEvents();
     initializeNotifier();
 
+    propsPage->Hide();
+    bladesPage->Hide();
+    presetsPage->Hide();
     wxCommandEvent event{wxEVT_MENU, ID_General};
     event.SetInt(0);
     wxPostEvent(this, event);
@@ -153,7 +155,7 @@ void EditorWindow::bindEvents() {
         Progress::handleEvent(&event); 
     });
     Bind(Misc::EVT_MSGBOX, [&](Misc::MessageBoxEvent& evt) {
-        PCUI::showMessage(evt.message, evt.caption, evt.style, this);
+        PCUI::showMessage(evt.message, evt.caption, static_cast<int32>(evt.style), this);
     }, wxID_ANY);
     Bind(wxEVT_MENU, [this](wxCommandEvent&) {
         save();
@@ -262,7 +264,9 @@ void EditorWindow::bindEvents() {
 
         const auto display{wxDisplay::GetFromWindow(this)};
         if (display == wxNOT_FOUND) return;
-        const auto frameRate{wxDisplay(display).GetCurrentMode().GetRefresh()};
+        auto frameRate{wxDisplay(display).GetCurrentMode().GetRefresh()};
+        // On Wayland (I assume because of course things don't work on Wayland) this doesn't work
+        if (frameRate == 0) frameRate = 60;
         const std::chrono::microseconds::rep frameIntervalMicros{(1000 * 1000) / frameRate};
 
         const auto nowMicros{std::chrono::duration_cast<std::chrono::microseconds>(
@@ -275,7 +279,7 @@ void EditorWindow::bindEvents() {
         }
 
         const float64 completion{std::clamp<float64>(
-            (nowMicros - mStartMicros) / static_cast<float64>(RESIZE_TIME_MICROS),
+            static_cast<float64>(nowMicros - mStartMicros) / static_cast<float64>(RESIZE_TIME_MICROS),
             0, 1
         )};
 

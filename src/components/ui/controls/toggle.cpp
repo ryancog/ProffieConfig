@@ -1,5 +1,4 @@
 #include "toggle.h"
-#include "wx/string.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -24,10 +23,11 @@ namespace PCUI {
 
 } // namespace PCUI
 
-void PCUI::ToggleData::operator=(bool val) {
+PCUI::ToggleData& PCUI::ToggleData::operator=(bool val) {
     std::scoped_lock scopeLock{getLock()};
-    if (mValue == val) return;
+    if (mValue == val) return *this;
     setValue(val);
+    return *this;
 }
 
 void PCUI::ToggleData::operator|=(bool val) {
@@ -87,7 +87,7 @@ void PCUI::Toggle::create(
 }
 
 void PCUI::Toggle::onUIUpdate(uint32 id) {
-    if (ID_REBOUND or ToggleData::ID_VALUE) {
+    if (id == ID_REBOUND or id == ToggleData::ID_VALUE) {
         pControl->SetValue(*data());
         pControl->SetLabelText(data() ? mOnText : mOffText);
         SetSizerAndFit(GetSizer());
@@ -138,7 +138,7 @@ void PCUI::CheckBox::create(
 }
 
 void PCUI::CheckBox::onUIUpdate(uint32 id) {
-    if (ID_REBOUND or ToggleData::ID_VALUE) pControl->SetValue(*data());
+    if (id == ID_REBOUND or id == ToggleData::ID_VALUE) pControl->SetValue(*data());
 }
 
 void PCUI::CheckBox::onModify(wxCommandEvent& evt) {

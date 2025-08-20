@@ -118,7 +118,7 @@ filepath Paths::logDir() {
     CoTaskMemFree(rawStr);
     return filepath{shortPath.data()} / "ProffieConfig";
 #   elif defined(__linux__)
-    return data() / "logs";
+    return dataDir() / "logs";
 #   elif defined(__APPLE__)
     return string{getpwuid(getuid())->pw_dir} + "/Library/Logs/ProffieConfig";
 #   endif

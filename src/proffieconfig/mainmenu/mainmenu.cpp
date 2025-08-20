@@ -430,11 +430,26 @@ void MainMenu::createUI() {
     auto *configSelectSection{new wxBoxSizer(wxHORIZONTAL)};
     auto *configSelect{new PCUI::Choice(this, configSelection)};
 
-    auto *addConfig{new wxButton(this, ID_AddConfig, _("Add"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT)};
+    auto *addConfig{new wxButton(
+        this,
+        ID_AddConfig,
+#       ifdef __WXGTK__
+        " " + _("Add") + " ",
+#       else
+        _("Add"),
+#       endif
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxBU_EXACTFIT
+    )};
     auto *removeConfig{new wxButton(
         this,
         ID_RemoveConfig,
+#       ifdef __WXGTK__
+        " " + _("Remove") + " ",
+#       else
         _("Remove"),
+#       endif
         wxDefaultPosition,
         wxDefaultSize,
         wxBU_EXACTFIT
