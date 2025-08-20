@@ -63,18 +63,21 @@ PConf::SectionPtr PConf::Section::create(
     return SectionPtr(new Section(std::move(name), std::move(label), labelNum, std::move(entries)));
 }
 
-
-PConf::EntryPtr PConf::HashedData::find(const string& key) const {
-    const auto iter{unordered_multimap::find(key)};
-    if (iter != end()) return iter->second;
-    return nullptr;
+void PConf::HashedData::erase(const IndexedEntryPtr& entry) {
+    unordered_multimap::erase(entry.iter);
 }
 
-vector<PConf::EntryPtr> PConf::HashedData::findAll(const string& key) const {
-    vector<PConf::EntryPtr> ret;
+PConf::HashedData::IndexedEntryPtr PConf::HashedData::find(const string& key) const {
+    const auto iter{unordered_multimap::find(key)};
+    if (iter != end()) return { iter->second, iter };
+    return { nullptr, iter };
+}
+
+vector<PConf::HashedData::IndexedEntryPtr> PConf::HashedData::findAll(const string& key) const {
+    vector<PConf::HashedData::IndexedEntryPtr> ret;
     auto [iter, end]{unordered_multimap::equal_range(key)};
     for (; iter != end; ++iter) {
-        ret.push_back(iter->second);
+        ret.emplace_back(iter->second, iter);
     }
     return ret;
 }

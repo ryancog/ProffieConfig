@@ -26,7 +26,7 @@
 namespace {
 
 // All these return false on a critical error condition.
-bool parseName           (const string& line, std::optional<string>& out, Log::Branch&);
+void parseName           (const string& line, std::optional<string>& out, Log::Branch&);
 bool parseLabel          (const string& line, std::optional<string>& out, Log::Branch&);
 bool parseLabelNum       (const string& line, std::optional<int32_t>& out, Log::Branch&);
 bool parseValue          (const string& line, std::istream&, std::optional<string>& out, Log::Branch&);
@@ -112,8 +112,8 @@ bool readEntry(std::istream& inStream, PConf::EntryPtr& out, bool& isSect, Log::
         return true;
     }
 
-    std::optional<string> name;
-    if (not parseName(line, name, *logger.bverbose("Attempting to parse entry name..."))) return false;
+    optional<string> name;
+    parseName(line, name, *logger.bverbose("Attempting to parse entry name..."));
     if (not name) {
         logger.verbose("Line not an entry/missing name.");
         return true;
@@ -135,7 +135,7 @@ bool readSection(std::istream& inStream, PConf::SectionPtr& out, Log::Branch& lB
     if (not readline(inStream, line)) return true;
 
     optional<string> name;
-    if (not parseName(line, name, *logger.bverbose("Attempting to parse section name..."))) return false;
+    parseName(line, name, *logger.bverbose("Attempting to parse section name..."));
     if (not name) {
         logger.error("Read this as a section, but missing name. Must be a formatting error!");
         return false;
@@ -172,10 +172,10 @@ bool readSection(std::istream& inStream, PConf::SectionPtr& out, Log::Branch& lB
     return false;
 }
 
-bool parseName(const string& line, std::optional<string>& out, Log::Branch& lBranch) {
+void parseName(const string& line, std::optional<string>& out, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::parseName()")};
 
-    out = std::nullopt;
+    out = nullopt;
     auto bracePos{line.find('{')};
     auto parenPos{line.find('(')};
     auto seperatorPos{line.find(':')};
@@ -184,18 +184,17 @@ bool parseName(const string& line, std::optional<string>& out, Log::Branch& lBra
     auto spacePos{line.find_first_of(" \t{(", nameBegin)};
     if (nameBegin == spacePos) {
         logger.verbose("Could not find name.");
-        return true;
+        return;
     }
 
     auto nameEnd{std::min({seperatorPos, spacePos, bracePos, parenPos})};
     out = line.substr(nameBegin, nameEnd - nameBegin);
-    return true;
 }
 
-bool parseValue(const string& line, std::istream& inStream, std::optional<string>& out, Log::Branch& lBranch) {
+bool parseValue(const string& line, std::istream& inStream, optional<string>& out, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::parseValue()")};
 
-    out = std::nullopt;
+    out = nullopt;
     auto seperatorPos{line.find(':')};
     bool hasSeperator{seperatorPos != string::npos};
 
@@ -219,35 +218,33 @@ bool parseSinglelineValue(const string& line, std::optional<string>& out, Log::B
     bool usesQuotes{line.find('"') != string::npos};
     bool record{false};
 
-    size_t lineIdx{0};
     out = "";
-    while (lineIdx < line.size()) {
-        auto buf{line[lineIdx++]};
-        if (buf == EOF) {
-            if (usesQuotes and record) {
-                logger.warn("Entry value w/ quotes not terminated before EOL! (" + line + ")");
-                out = std::nullopt;
-                return false;
-            }
-            return true;
+    for (auto idx{0}; idx < line.length(); ++idx) {
+        const char chr{line[idx]};
+        if (usesQuotes and chr == '"') {
+            record = not record;
+            if (record and not out->empty()) *out += '\n';
+            continue;
+        } 
+        
+        if (not record and chr == ',') {
+            *out += '\n';
+            continue;
         }
 
-        if (usesQuotes) {
-            if (buf == '"') {
-                record = not record;
-                if (record and not out->empty()) *out += '\n';
-                continue;
-            }
-        } else {
-            if (buf == ',') {
-                *out += '\n';
-                continue;
-            }
-            record = buf != ' ' and buf != '\t';
-        }
+        // If `not record` is true, it doesn't matter if we're using quotes or not.
+        // `not record` is always true when not using quotes
+        if (not record and std::isspace(chr)) continue;
 
-        if (record) *out += buf;
+        if (not usesQuotes or record) *out += chr;
     }
+
+    if (usesQuotes and record) {
+        logger.warn("Entry value w/ quotes not terminated before EOL! (" + line + ")");
+        return false;
+    }
+
+    if (out->empty()) out = nullopt;
 
     return true;
 }
@@ -263,6 +260,7 @@ bool parseMultilineValue(std::istream& inStream, std::optional<string>& out, Log
         if (quoteBegin == string::npos or quoteBegin == quoteEnd) {
             if (buf.find('}') != string::npos) {
                 // Pop off trailing newline
+                // Don't trim whitespace. That's intentional for a multiline
                 out->pop_back();
                 return true;
             }
@@ -319,7 +317,7 @@ bool parseLabel(const string& line, optional<string>& out, Log::Branch& lBranch)
 bool parseLabelNum(const string& line, std::optional<int32_t>& out, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::parseLabelNum()")};
 
-    out = std::nullopt;
+    out = nullopt;
     auto numCloseBraces{std::count(line.begin(), line.end(), '}')};
     if (numCloseBraces != 1) return true;
 
@@ -331,7 +329,11 @@ bool parseLabelNum(const string& line, std::optional<int32_t>& out, Log::Branch&
         return false;
     }
 
-    out = std::strtol(line.substr(openBracePos + 1, closeBracePos - openBracePos - 1).c_str(), nullptr, 10);
+    try {
+        out = std::stoi(line.substr(openBracePos + 1, closeBracePos - openBracePos - 1));
+    } catch (const std::exception& err) {
+        out = nullopt;
+    }
     return true;
 }
 
