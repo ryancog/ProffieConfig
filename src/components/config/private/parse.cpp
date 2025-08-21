@@ -808,7 +808,7 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
         }
         data.erase(0, lengthReadIdx + 1); // length,
 
-        auto idx{static_cast<int32>(lengthReadIdx)};
+        auto idx{0};
         for (; idx < data.length(); ++idx) {
             if (data[idx] == ',') break;
             blade.ws281x().dataPin += data[idx];
