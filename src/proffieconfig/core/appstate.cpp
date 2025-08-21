@@ -5,33 +5,34 @@
 #include <bitset>
 #include <filesystem>
 #include <fstream>
-#include <memory>
 
 #include <wx/msgdlg.h>
 
 #include "log/context.h"
 #include "log/logger.h"
 #include "pconf/pconf.h"
-#include "pconf/read.h"
 #include "pconf/utils.h"
-#include "pconf/write.h"
 #include "utils/paths.h"
 #include "utils/version.h"
 
 #include "../onboard/onboard.h"
 
-namespace AppState {
+namespace {
+
+constexpr cstring LAST_VERSION_STR{"LAST_VERSION"};
+constexpr cstring UPDATE_MANIFEST_STR{"UPDATE_MANIFEST"};
+constexpr cstring FIRSTRUN_COMPLETE_STR{"FIRSTRUN_COMPLETE"};
 
 Utils::Version lastVersion{};
 
 void doNecessaryMigrations();
 
-std::bitset<PREFERENCE_MAX> preferences;
-constexpr array<cstring, PREFERENCE_MAX> PREFERENCE_STRS{
+std::bitset<AppState::PREFERENCE_MAX> preferences;
+constexpr array<cstring, AppState::PREFERENCE_MAX> PREFERENCE_STRS{
     "HIDE_EDITOR_MANAGE_VERSIONS_WARN"
 };
 
-} // namespace AppState
+} // namespace
 
 bool AppState::doneWithFirstRun{false};
 string AppState::manifestChannel;
@@ -66,13 +67,13 @@ void AppState::saveState() {
 
     PConf::Data data;
     
-    data.push_back(std::make_shared<PConf::Entry>("LAST_VERSION", wxSTRINGIZE(BIN_VERSION)));
-    if (not manifestChannel.empty()) data.push_back(std::make_shared<PConf::Entry>("UPDATE_MANIFEST", manifestChannel));
-    if (doneWithFirstRun) data.push_back(std::make_shared<PConf::Entry>("FIRSTRUN_COMPLETE"));
+    data.push_back(PConf::Entry::create(LAST_VERSION_STR, wxSTRINGIZE(BIN_VERSION)));
+    if (not manifestChannel.empty()) data.push_back(PConf::Entry::create(UPDATE_MANIFEST_STR, manifestChannel));
+    if (doneWithFirstRun) data.push_back(PConf::Entry::create(FIRSTRUN_COMPLETE_STR));
 
     for (auto idx{0}; idx < PREFERENCE_MAX; ++idx) {
         if (preferences[idx]) {
-            data.push_back(std::make_shared<PConf::Entry>(PREFERENCE_STRS[idx]));
+            data.push_back(PConf::Entry::create(PREFERENCE_STRS[idx]));
         }
     }
 
@@ -108,20 +109,22 @@ void AppState::loadState() {
     stateStream.close();
 
     auto hashedData{PConf::hash(data)};
-    doneWithFirstRun = hashedData.find("FIRSTRUN_COMPLETE") != hashedData.end();
+    doneWithFirstRun = static_cast<bool>(hashedData.find(FIRSTRUN_COMPLETE_STR));
     logger.info(string{"Done with first run: "} + (doneWithFirstRun ? "true" : "false"));
 
     auto lastVersionIter{hashedData.find("LAST_VERSION")};
-    if (lastVersionIter != hashedData.end() and lastVersionIter->second->value) lastVersion = Utils::Version{lastVersionIter->second->value.value()};
+    if (lastVersionIter and lastVersionIter->value) lastVersion = Utils::Version{*lastVersionIter->value};
 
     for (auto idx{0}; idx < PREFERENCE_MAX; ++idx) {
-        preferences[idx] = hashedData.find(PREFERENCE_STRS[idx]) != hashedData.end();
+        preferences[idx] = static_cast<bool>(hashedData.find(PREFERENCE_STRS[idx]));
     }
 
     logger.info("Done");
 }
 
-void AppState::doNecessaryMigrations() {
+namespace {
+
+void doNecessaryMigrations() {
     if (lastVersion < Utils::Version{"1.8.0"}) {
         std::error_code err;
         fs::remove_all(Paths::resourceDir() / "props", err);
@@ -130,6 +133,8 @@ void AppState::doNecessaryMigrations() {
         // TODO: Try to download new stuffage
     }
 
-    saveState();
+    AppState::saveState();
 }
+
+} // namespace
 

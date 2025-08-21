@@ -23,7 +23,6 @@
 #include <cstring>
 #include <filesystem>
 #include <sstream>
-#include <thread>
 
 #ifdef __WINDOWS__
 #include <fileapi.h>
@@ -54,7 +53,7 @@
 
 using namespace std::chrono_literals;
 
-namespace Arduino {
+namespace {
 
 FILE *cli(const string& command);
 
@@ -106,7 +105,7 @@ constexpr cstring ARDUINOCORE_PBV1{"proffieboard:stm32l4:Proffieboard-L433CC"};
 constexpr cstring ARDUINOCORE_PBV2{"proffieboard:stm32l4:ProffieboardV2-L433CC"};
 constexpr cstring ARDUINOCORE_PBV3{"proffieboard:stm32l4:ProffieboardV3-L452RE"};
 
-} // namespace Arduino
+} // namespace
 
 string Arduino::version() {
     auto *arduinoCli{cli("version")};
@@ -281,7 +280,7 @@ vector<string> Arduino::getBoards(Log::Branch *lBranch) {
     vector<string> boards;
     array<char, 32> buffer;
 
-    FILE *arduinoCli = Arduino::cli("board list");
+    FILE *arduinoCli = cli("board list");
     if (not arduinoCli) {
         return boards;
     }
@@ -385,7 +384,9 @@ variant<Arduino::Result, string> Arduino::verifyConfig(const Config::Config& con
     return ret;
 }
 
-variant<Arduino::CompileOutput, string> Arduino::compile(
+namespace {
+
+variant<CompileOutput, string> compile(
     const Config::Config& config,
     Progress *prog,
     Log::Branch& lBranch
@@ -395,7 +396,7 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
 
     if (prog) prog->emitEvent(10, _("Checking OS Version..."));
     const auto osVersion{config.settings.getOSVersion()};
-    auto *const versionedOS{Versions::getVersionedOS(osVersion)};
+    const auto *const versionedOS{Versions::getVersionedOS(osVersion)};
     if (osVersion == Utils::Version::invalidObject() or not versionedOS) {
         if (prog) prog->emitEvent(100, _("Error"));
         logger.error("Configuration doesn't have a valid OS Version selected (" + static_cast<string>(osVersion) + "), cannot compile.");
@@ -403,7 +404,7 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
     }
 
     if (prog) prog->emitEvent(15, _("Ensuring Core Installation..."));
-    auto coreInstall{Arduino::cli(
+    auto *coreInstall{cli(
         "core install proffieboard:stm32l4@" +
         (versionedOS->coreVersion.err ? "3.6.0" : static_cast<string>(versionedOS->coreVersion)) +
         " --additional-urls " + 
@@ -486,14 +487,14 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
         std::getline(ino, buffer);
 
         if (
-                buffer.find(R"(// #define CONFIG_FILE "config/YOUR_CONFIG_FILE_NAME_HERE.h")") == 0 or 
-                buffer.find(R"(#define CONFIG_FILE)") == 0
+                buffer.starts_with(R"(// #define CONFIG_FILE "config/YOUR_CONFIG_FILE_NAME_HERE.h")") or 
+                buffer.starts_with(R"(#define CONFIG_FILE)")
            ) {
             if (not alreadyOutputConfigDefine) {
                 tmpIno << "#define CONFIG_FILE \"config/" << static_cast<string>(config.name) << ".h\"\n";
                 alreadyOutputConfigDefine = true;
             }
-        } else if (buffer.find(R"(const char version[] = ")" ) == 0) {
+        } else if (buffer.starts_with(R"(const char version[] = ")")) {
             tmpIno << R"(const char version[] = ")" + static_cast<string>(osVersion) +  "\";\n";
         } else {
             tmpIno << buffer << '\n';
@@ -517,16 +518,16 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
     string compileCommand = "compile ";
     compileCommand += "-b ";
     const auto boardVersion{
-        static_cast<Config::Settings::BoardVersion>(static_cast<int32>(config.settings.board))
+        static_cast<Config::BoardVersion>(static_cast<int32>(config.settings.board))
     };
     switch (boardVersion) {
-        case Config::Settings::PROFFIEBOARDV3:
+        case Config::PROFFIEBOARDV3:
             compileCommand += versionedOS->coreBoardV3.empty() ? ARDUINOCORE_PBV3 : versionedOS->coreBoardV3;
             break;
-        case Config::Settings::PROFFIEBOARDV2:
+        case Config::PROFFIEBOARDV2:
             compileCommand += versionedOS->coreBoardV2.empty() ? ARDUINOCORE_PBV2 : versionedOS->coreBoardV2;
             break;
-        case Config::Settings::PROFFIEBOARDV1:
+        case Config::PROFFIEBOARDV1:
             compileCommand += versionedOS->coreBoardV1.empty() ? ARDUINOCORE_PBV1 : versionedOS->coreBoardV1;
             break;
         default: 
@@ -537,9 +538,9 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
     else if (config.settings.webUSB) compileCommand += "usb=cdc_webusb";
     else if (config.settings.massStorage) compileCommand += "usb=cdc_msc";
     else compileCommand += "usb=cdc";
-    if (boardVersion == Config::Settings::PROFFIEBOARDV3) compileCommand +=",dosfs=sdmmc1";
+    if (boardVersion == Config::PROFFIEBOARDV3) compileCommand +=",dosfs=sdmmc1";
     compileCommand += " \"" + osPath.string() + "\" -v";
-    FILE *arduinoCli = Arduino::cli(compileCommand);
+    FILE *arduinoCli = cli(compileCommand);
 
     string compileOutput{};
     while(fgets(buffer.data(), buffer.size(), arduinoCli) != nullptr) {
@@ -596,8 +597,8 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
 
     constexpr string_view USED_PREFIX{"Sketch uses "};
     constexpr string_view MAX_PREFIX{"Maximum is "};
-    const auto usedPos{compileOutput.find(USED_PREFIX.data())};
-    const auto maxPos{compileOutput.find(MAX_PREFIX.data())};
+    const auto usedPos{compileOutput.find(USED_PREFIX)};
+    const auto maxPos{compileOutput.find(MAX_PREFIX)};
     if (usedPos != string::npos and maxPos != string::npos) {
         try {
             ret.used = std::stoi(compileOutput.substr(usedPos + USED_PREFIX.length()));
@@ -614,7 +615,7 @@ variant<Arduino::CompileOutput, string> Arduino::compile(
 }
 
 #ifdef __WINDOWS__
-optional<string> Arduino::upload(
+optional<string> upload(
     const string& boardPath,
     const Config::Config& config,
     const CompileOutput& compileOutput,
@@ -622,7 +623,7 @@ optional<string> Arduino::upload(
     Log::Branch& lBranch
 ) {
 #else
-optional<string> Arduino::upload(
+optional<string> upload(
     const string& boardPath,
     const Config::Config& config,
     Progress* prog,
@@ -742,23 +743,23 @@ optional<string> Arduino::upload(
     uploadCommand += '"' + osPath.string() + '"';
     uploadCommand += " --fqbn ";
     const auto boardVersion{
-        static_cast<Config::Settings::BoardVersion>(static_cast<int32>(config.settings.board))
+        static_cast<Config::BoardVersion>(static_cast<int32>(config.settings.board))
     };
     switch (boardVersion) {
-        case Config::Settings::PROFFIEBOARDV3:
+        case Config::PROFFIEBOARDV3:
             uploadCommand += ARDUINOCORE_PBV3;
             break;
-        case Config::Settings::PROFFIEBOARDV2:
+        case Config::PROFFIEBOARDV2:
             uploadCommand += ARDUINOCORE_PBV2;
             break;
-        case Config::Settings::PROFFIEBOARDV1:
+        case Config::PROFFIEBOARDV1:
             uploadCommand += ARDUINOCORE_PBV1;
             break;
         default: 
             abort();
     }
     uploadCommand += " -v";
-    FILE *uploadOutput = Arduino::cli(uploadCommand);
+    FILE *uploadOutput = cli(uploadCommand);
 #   endif
 
     string error;
@@ -797,10 +798,7 @@ optional<string> Arduino::upload(
     return nullopt;
 }
 
-string Arduino::parseError(const string& error, const Config::Config& config) {
-    std::cerr << "An arduino task failed with the following error: " << std::endl;
-    std::cerr << error << std::endl;
-
+string parseError(const string& error, const Config::Config& config) {
 #	define ERRCONTAINS(token) std::strstr(error.data(), token)
     if (ERRCONTAINS("select Proffieboard")) return "Please ensure you've selected the correct board in General";
     if (ERRCONTAINS("expected unqualified-id")) return "Please make sure there are no brackets in your styles (such as \"{\" or \"}\")\n and there is nothing missing or extra from your style! (such as parentheses or \"<>\")";
@@ -808,7 +806,7 @@ string Arduino::parseError(const string& error, const Config::Config& config) {
         const auto maxBytes = error.find("ProffieboardV3") != string::npos ? 507904 : 262144;
         constexpr string_view OVERFLOW_PREFIX{"region `FLASH' overflowed by "};
 
-        const auto overflowPos{error.rfind(OVERFLOW_PREFIX.data())};
+        const auto overflowPos{error.rfind(OVERFLOW_PREFIX)};
         std::ostringstream errMessage;
         if (overflowPos != string::npos) {
             const auto overflowBytes{std::stoi(error.substr(overflowPos + OVERFLOW_PREFIX.length()))};
@@ -845,7 +843,7 @@ string Arduino::parseError(const string& error, const Config::Config& config) {
 #	undef ERRCONTAINS
 }
 
-FILE* Arduino::cli(const string& command) {
+FILE* cli(const string& command) {
     auto& logger{Log::Context::getGlobal().createLogger("Arduino::cli()")};
     string fullCommand;
 #   if defined(__WINDOWS__)
@@ -858,3 +856,6 @@ FILE* Arduino::cli(const string& command) {
     logger.debug("Executing command \"" + fullCommand + '"');
     return popen(fullCommand.data(), "r");
 }
+
+} // namespace
+

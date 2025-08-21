@@ -25,9 +25,6 @@
 #include <wx/scrolwin.h>
 #include <wx/statbox.h>
 
-// Forward declaration to get around circular dependency
-class PropFile;
-
 class PropsPage : public wxPanel, PCUI::NotifyReceiver {
 public:
     PropsPage(EditorWindow *);
@@ -38,11 +35,11 @@ public:
     };
 
 private:
-    wxScrolledWindow* mPropsWindow{nullptr};
+    wxScrolledWindow *mPropsWindow{nullptr};
 
-    EditorWindow* mParent{nullptr};
+    EditorWindow *mParent{nullptr};
 
-    vector<PropFile*> mProps;
+    vector<wxSizer *> mProps;
 
     void loadProps();
     void showSelectedProp();

@@ -21,7 +21,6 @@
 
 #include <cstring>
 #include <fstream>
-#include <iterator>
 #include <sstream>
 
 #include <wx/filedlg.h>
@@ -35,19 +34,21 @@
 #include "utils/version.h"
 #include "versions/versions.h"
 
-namespace Config {
-    string extractSection(std::ifstream&);
+namespace {
 
-    void parseTop(std::ifstream&, Config&);
-    void parseProp(std::ifstream&, Config&);
-    optional<string> parsePresets(std::ifstream&, Config&, Log::Branch&);
-    optional<string> parsePresetArray(const string& data, PresetArray&, Log::Branch&);
-    optional<string> parseBladeArrays(const string& data, Config&, Log::Branch&);
-    optional<string> parseBlade(string data, BladeConfig&, Blade&, Log::Branch&);
-    optional<string> parseStyles(std::ifstream&, Config&, Log::Branch&);
+string extractSection(std::ifstream&);
 
-    void tryAddInjection(const string& buffer, Config&);
-} // namespace Config
+void parseTop(std::ifstream&, Config::Config&);
+void parseProp(std::ifstream&, Config::Config&);
+optional<string> parsePresets(std::ifstream&, Config::Config&, Log::Branch&);
+optional<string> parsePresetArray(const string& data, Config::PresetArray&, Log::Branch&);
+optional<string> parseBladeArrays(const string& data, Config::Config&, Log::Branch&);
+optional<string> parseBlade(string data, Config::BladeConfig&, Config::Blade&, Log::Branch&);
+optional<string> parseStyles(std::ifstream&, Config::Config&, Log::Branch&);
+
+void tryAddInjection(const string& buffer, Config::Config&);
+
+} // namespace
 
 
 optional<string> Config::parse(const filepath& path, Config& config, Log::Branch *lBranch) {
@@ -99,15 +100,9 @@ optional<string> Config::parse(const filepath& path, Config& config, Log::Branch
     return nullopt;
 }
 
-// bool Config::importConfig(Config& editor) {
-//     wxFileDialog configLocation(editor, "Choose ProffieOS Config File", "", "", "C Header Files (*.h)|*.h", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
-// 
-//     if (configLocation.ShowModal() == wxID_CANCEL) return false; // User Closed
-// 
-//     return Config::readConfig(configLocation.GetPath().ToStdString(), editor);
-// }
+namespace {
 
-string Config::extractSection(std::ifstream& file) {
+string extractSection(std::ifstream& file) {
     string ret;
     while (file.good()) {
         if (Utils::skipComment(file, &ret)) continue;
@@ -116,17 +111,19 @@ string Config::extractSection(std::ifstream& file) {
         if (chr == '#') {
             string buffer;
             file >> buffer;
+
             if (buffer == "endif") break;
-            else {
-                ret += '#';
-                ret += buffer;
-            }
-        } else ret += chr;
+
+            ret += '#';
+            ret += buffer;
+        } else ret += static_cast<char>(chr);
     }
     return ret;
 }
 
-void Config::parseTop(std::ifstream& file, Config& config) {
+void parseTop(std::ifstream& file, Config::Config& config) {
+    using namespace Config;
+
     const auto top{extractSection(file)};
     std::istringstream topStream{top};
     std::istringstream commentStream;
@@ -160,8 +157,8 @@ void Config::parseTop(std::ifstream& file, Config& config) {
                 Utils::trimSurroundingWhitespace(buffer);
                 if (buffer.size() < 2) continue;
 
-                for (auto idx{0}; idx < Settings::BOARD_MAX; ++idx) {
-                    if (buffer == Settings::BOARD_STRS[idx]) {
+                for (auto idx{0}; idx < BOARD_MAX; ++idx) {
+                    if (buffer == BOARD_STRS[idx]) {
                         config.settings.board = idx;
                         break;
                     }
@@ -181,11 +178,11 @@ void Config::parseTop(std::ifstream& file, Config& config) {
         if (type == DEFINE and not key.empty()) {
             config.settings.addCustomOption(std::move(key), std::move(value));
         } else if (type == PC_OPT) {
-            if (key == Settings::ENABLE_MASS_STORAGE_STR) {
+            if (key == ENABLE_MASS_STORAGE_STR) {
                 config.settings.massStorage = true;
-            } else if (key == Settings::ENABLE_WEBUSB_STR) {
+            } else if (key == ENABLE_WEBUSB_STR) {
                 config.settings.webUSB = true;
-            } else if (key == Settings::OS_VERSION_STR) {
+            } else if (key == OS_VERSION_STR) {
                 Utils::Version version{value};
                 if (version.err) continue;
                 const auto& osVersions{Versions::getOSVersions()};
@@ -200,7 +197,8 @@ void Config::parseTop(std::ifstream& file, Config& config) {
     }
 }
 
-void Config::parseProp(std::ifstream& file, Config& config) {
+void parseProp(std::ifstream& file, Config::Config& config) {
+    using namespace Config;
     string prop{extractSection(file)};
     std::istringstream propStream{prop};
 
@@ -233,7 +231,8 @@ void Config::parseProp(std::ifstream& file, Config& config) {
     }
 }
 
-optional<string> Config::parsePresets(std::ifstream& file, Config& config, Log::Branch& lBranch) {
+optional<string> parsePresets(std::ifstream& file, Config::Config& config, Log::Branch& lBranch) {
+    using namespace Config;
     auto& logger{lBranch.createLogger("Config::parsePresets()")};
     string presets{extractSection(file)};
     std::istringstream presetsStream{presets};
@@ -277,7 +276,7 @@ optional<string> Config::parsePresets(std::ifstream& file, Config& config, Log::
             } else if (chr == '}') {
                 if (depth == 0) {
                     if (search == PRESET_ARRAY) return errorMessage(logger, wxTRANSLATE("Preset array is missing start { before ending };"));
-                    else return errorMessage(logger, wxTRANSLATE("BladeConfig array is missing start { before ending };"));
+                    return errorMessage(logger, wxTRANSLATE("BladeConfig array is missing start { before ending };"));
                 }
                 --depth;
                 if (depth == 0) {
@@ -305,7 +304,8 @@ optional<string> Config::parsePresets(std::ifstream& file, Config& config, Log::
     return nullopt;
 }
 
-optional<string> Config::parsePresetArray(const string& data, PresetArray& array, Log::Branch& lBranch) {
+optional<string> parsePresetArray(const string& data, Config::PresetArray& array, Log::Branch& lBranch) {
+    using namespace Config;
     auto& logger{lBranch.createLogger("Config::parsePresetArray()")};
     std::istringstream dataStream{data};
 
@@ -403,11 +403,11 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
 
             if (chr == '"' and not inSingleQuotes) {
                 if (not depth.empty() and depth.back() == '"') depth.pop_back();
-                else depth.push_back(chr);
+                else depth.push_back(static_cast<char>(chr));
             }
             if (chr == '\'' and not inDoubleQuotes) {
                 if (not depth.empty() and depth.back() == '\'') depth.pop_back();
-                else depth.push_back(chr);
+                else depth.push_back(static_cast<char>(chr));
             }
 
             if (chr == '}') {
@@ -421,10 +421,10 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
             }
 
             if (chr == '<' or chr == '(') {
-                if (depthBuffer.empty()) styleBuffer += chr;
-                else depthBuffer.back() += chr;
+                if (depthBuffer.empty()) styleBuffer += static_cast<char>(chr);
+                else depthBuffer.back() += static_cast<char>(chr);
 
-                depth.push_back(chr);
+                depth.push_back(static_cast<char>(chr));
                 depthBuffer.emplace_back();
                 continue;
             }
@@ -451,7 +451,7 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
 
                     string insertStr;
                     uint32 closeDepth{0};
-                    for (auto idx{0}; idx < closedBuffer.length(); ++idx) {
+                    for (size_t idx{0}; idx < closedBuffer.length(); ++idx) {
                         if (closedBuffer[idx] == '<' or closedBuffer[idx] == '(') {
                             ++closeDepth;
                         } else if (closedBuffer[idx] == '>' or closedBuffer[idx] == ')') {
@@ -477,14 +477,14 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
                     readout += '\n';
                     for (auto idx{0}; idx < depth.size() - 1; ++idx) readout += '\t';
                 }
-                readout += chr;
+                readout += static_cast<char>(chr);
 
                 depth.pop_back();
                 continue;
             }
 
-            if (depthBuffer.empty()) styleBuffer += chr;
-            else depthBuffer.back() += chr;
+            if (depthBuffer.empty()) styleBuffer += static_cast<char>(chr);
+            else depthBuffer.back() += static_cast<char>(chr);
         } else if (reading == NAME) {
             const auto& preset{array.presets().back()};
             if (chr == '"' or chr == '}') {
@@ -493,14 +493,15 @@ optional<string> Config::parsePresetArray(const string& data, PresetArray& array
                 continue;
             }
             
-            preset->name += chr;
+            preset->name += static_cast<char>(chr);
         }
     }
 
     return nullopt;
 }
 
-optional<string> Config::parseBladeArrays(const string& data, Config& config, Log::Branch& lBranch) {
+optional<string> parseBladeArrays(const string& data, Config::Config& config, Log::Branch& lBranch) {
+    using namespace Config;
     auto& logger{lBranch.createLogger("Config::parseBladeArrays()")};
     std::istringstream dataStream{data};
 
@@ -530,12 +531,16 @@ optional<string> Config::parseBladeArrays(const string& data, Config& config, Lo
         } else if (reading == ID) {
             if (chr == ',') {
                 Utils::trimWhitespace(buffer);
-                const auto id{
-                    buffer == "NO_BLADE" ?
-                        NO_BLADE :
-                        std::strtol(buffer.c_str(), nullptr, 10)
-                };
-                config.bladeArrays.arrays().back()->id = id;
+                try {
+                    const auto id{
+                        buffer == "NO_BLADE" ?
+                            NO_BLADE :
+                            std::stoi(buffer)
+                    };
+                    config.bladeArrays.arrays().back()->id = id;
+                } catch (const std::exception& e){
+                    logger.warn("Invalid blade ID: " + buffer);
+                }
                 reading = BLADE_ENTRY;
                 buffer.clear();
                 continue;
@@ -565,7 +570,7 @@ optional<string> Config::parseBladeArrays(const string& data, Config& config, Lo
                 }
             }
 
-            if (chr == '<' or chr == '(') depth.push_back(chr);
+            if (chr == '<' or chr == '(') depth.push_back(static_cast<char>(chr));
             if (chr == '>' or chr == ')') {
                 if (depth.empty()) {
                     return errorMessage(logger, wxTRANSLATE("Found %c before matching open when parsing blade"), chr);
@@ -596,7 +601,7 @@ optional<string> Config::parseBladeArrays(const string& data, Config& config, Lo
                 buffer.clear();
                 continue;
             }
-            buffer += chr;
+            buffer += static_cast<char>(chr);
         } else if (reading == POST_CONFIGARRAY) {
             if (chr == '}') reading = NONE;
             if (chr == '"') reading = NAME;
@@ -607,25 +612,26 @@ optional<string> Config::parseBladeArrays(const string& data, Config& config, Lo
                 continue;
             }
 
-            buffer += chr;
+            buffer += static_cast<char>(chr);
         }
     }
 
     return nullopt;
 }
 
-optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blade, Log::Branch& lBranch) {
+optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Blade& blade, Log::Branch& lBranch) {
+    using namespace Config;
     auto& logger{lBranch.createLogger("Config::parseBlade()")};
     logger.verbose("Parsing blade \"" + data + "\"...");
 
     static constexpr string_view DIMBLADE_STR{"DimBlade("};
-    const auto parseDimBlade{[&data, &logger](uint32& brightness) -> optional<string> {
+    const auto parseDimBlade{[&data, &logger](int32& brightness) -> optional<string> {
         if (data.starts_with(DIMBLADE_STR)) {
             data.erase(0, DIMBLADE_STR.length());
 
             size_t numProcessed{};
             try {
-                brightness = std::stod(data.c_str(), &numProcessed);
+                brightness = static_cast<int32>(std::stod(data, &numProcessed));
             } catch (const std::exception& e) {
                 return errorMessage(logger, wxTRANSLATE("DimBlade has malformed brightness: %s"), e.what());
             }
@@ -642,16 +648,16 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         return nullopt;
     }};
 
-    uint32 firstBrightness{100};
+    int32 firstBrightness{100};
     auto res{parseDimBlade(firstBrightness)};
     if (res) return res;
 
     static constexpr string_view SUBBLADE_STR{"SubBlade"};
     struct {
         Split::Type type{Split::TYPE_MAX};
-        uint32 start;
-        uint32 end;
-        uint32 segments;
+        int32 start;
+        int32 end;
+        int32 segments;
         string list;
     } splitData;
     if (data.starts_with(SUBBLADE_STR)) {
@@ -689,7 +695,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
            ) {
             size_t numProcessed{};
             try {
-                splitData.start = std::stoi(data.c_str(), &numProcessed);
+                splitData.start = std::stoi(data, &numProcessed);
             } catch (const std::exception& e) {
                 return errorMessage(logger, wxTRANSLATE("Failed to read SubBlade start: %s"), e.what());
             }
@@ -701,7 +707,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
             data.erase(0, 1); // ','
 
             try {
-                splitData.end = std::stoi(data.c_str(), &numProcessed);
+                splitData.end = std::stoi(data, &numProcessed);
             } catch (const std::exception& e) {
                 return errorMessage(logger, wxTRANSLATE("Failed to read SubBlade end: %s"), e.what());
             }
@@ -715,7 +721,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         if (splitData.type == Split::STRIDE or splitData.type == Split::ZIG_ZAG) {
             size_t numProcessed{};
             try {
-                splitData.segments = std::stoi(data.c_str(), &numProcessed);
+                splitData.segments = std::stoi(data, &numProcessed);
             } catch (const std::exception& e) {
                 return errorMessage(logger, wxTRANSLATE("Failed to read SubBlade stride: %s"), e.what());
             }
@@ -728,9 +734,9 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         } 
         if (splitData.type == Split::ZIG_ZAG) {
             size_t numProcessed{};
-            uint32 dummyColumn;
+            uint32 dummyColumn{};
             try {
-                dummyColumn = std::stoi(data.c_str(), &numProcessed);
+                dummyColumn = std::stoi(data, &numProcessed);
             } catch (const std::exception& e) {
                 return errorMessage(logger, wxTRANSLATE("Failed to read SubBlade column: %s"), e.what());
             }
@@ -758,7 +764,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         }
     }
 
-    uint32 secondBrightness{100};
+    int32 secondBrightness{100};
     res = parseDimBlade(secondBrightness);
     if (res) return res;
 
@@ -791,18 +797,18 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         data.erase(0, WS281X_STR.length());
         blade.type = Blade::WS281X;
 
-        size_t idx;
+        size_t lengthReadIdx{};
         try {
-            blade.ws281x().length = std::stoi(data.c_str(), &idx);
+            blade.ws281x().length = std::stoi(data, &lengthReadIdx);
         } catch (const std::exception& e) {
             return errorMessage(logger, wxTRANSLATE("Failed to read WS281X length: %s"), e.what());
         }
-        if (idx + 1 >= data.length()) {
+        if (lengthReadIdx + 1 >= data.length()) {
             return errorMessage(logger, wxTRANSLATE("Missing data after WS281X length"));
         }
-        data.erase(0, idx + 1); // length,
+        data.erase(0, lengthReadIdx + 1); // length,
 
-        idx = 0;
+        auto idx{static_cast<int32>(lengthReadIdx)};
         for (; idx < data.length(); ++idx) {
             if (data[idx] == ',') break;
             blade.ws281x().dataPin += data[idx];
@@ -834,7 +840,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         if (blade.ws281x().hasWhite) {
             blade.ws281x().useRGBWithWhite = data[whitePos] == 'W';
             if (whitePos == 0) {
-                const auto selection{static_cast<uint32>(blade.ws281x().colorOrder4)};
+                const auto selection{static_cast<int32>(blade.ws281x().colorOrder4)};
                 blade.ws281x().colorOrder4 = selection + WS281XBlade::ORDER4_WFIRST_START;
             }
         }
@@ -861,9 +867,9 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
         data.erase(0, WS2811_STR.length());
         blade.type = Blade::WS281X;
 
-        size_t idx;
+        size_t idx{};
         try {
-            blade.ws281x().length = std::stoi(data.c_str(), &idx);
+            blade.ws281x().length = std::stoi(data, &idx);
         } catch (const std::exception& e) {
             return errorMessage(logger, wxTRANSLATE("Failed to read WS2811 length: %s"), e.what());
         }
@@ -935,7 +941,7 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
                        ) {
                         size_t numProcessed{};
                         try {
-                            star.resistance = std::stoi(data.c_str(), &numProcessed);
+                            star.resistance = std::stoi(data, &numProcessed);
                         } catch (const std::exception& e) {
                             return errorMessage(logger, wxTRANSLATE("Failed to read led resistance: %s"), e.what());
                         }
@@ -1056,7 +1062,8 @@ optional<string> Config::parseBlade(string data, BladeConfig& array, Blade& blad
     return nullopt;
 }
 
-optional<string> Config::parseStyles(std::ifstream& file, Config& config, Log::Branch& lBranch) {
+optional<string> parseStyles(std::ifstream& file, Config::Config& config, Log::Branch& lBranch) {
+    using namespace Config;
     auto& logger{lBranch.createLogger("Config::parseStyles()")};
     string styles{extractSection(file)};
     std::istringstream stylesStream{styles};
@@ -1138,7 +1145,8 @@ optional<string> Config::parseStyles(std::ifstream& file, Config& config, Log::B
     return nullopt;
 }
 
-void Config::tryAddInjection(const string& buffer, Config& config) {
+void tryAddInjection(const string& buffer, Config::Config& config) {
+    using namespace Config;
     auto& logger{Log::Context::getGlobal().createLogger("Config::tryAddInjection()")};
 
     auto strStart{buffer.find('"')};
@@ -1146,7 +1154,7 @@ void Config::tryAddInjection(const string& buffer, Config& config) {
     auto strEnd{buffer.find('"', strStart + 1)};
     if (strEnd == string::npos) return;
 
-    auto injectionPos{buffer.find(INJECTION_STR.data(), strStart + 1)};
+    auto injectionPos{buffer.find(INJECTION_STR, strStart + 1)};
     string injectionFile;
     if (injectionPos != string::npos) {
         logger.verbose("Injection string found...");
@@ -1201,6 +1209,8 @@ void Config::tryAddInjection(const string& buffer, Config& config) {
     logger.debug("Done");
 }
 
+} // namespace
+
 void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
     auto& logger{Log::Branch::optCreateLogger("Config::Settings::processCustomDefines()", lBranch)};
     for (auto idx{0}; idx < mCustomOptions.size(); ++idx) {
@@ -1208,19 +1218,22 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
 
         bool processed{true};
 
-        if (opt.define == NUM_BUTTONS_STR) {
+        if (
+                opt.define == NUM_BLADES_STR or
+                opt.define == ENABLE_AUDIO_STR or 
+                opt.define == ENABLE_MOTION_STR or
+                opt.define == ENABLE_WS2811_STR or
+                opt.define == ENABLE_SD_STR or
+                opt.define == SHARED_POWER_PINS_STR or
+                opt.define == KEEP_SAVEFILES_STR
+           ) {
+            // Do nothing
+        } else if (opt.define == NUM_BUTTONS_STR) {
             try {
                 numButtons = std::stoi(opt.value);
             } catch (const std::exception& e) {
                 logger.warn(string{"Couldn't parse num buttons: "} + e.what());
             }
-        } else if (opt.define == NUM_BLADES_STR) {
-        } else if (opt.define == ENABLE_AUDIO_STR) {
-        } else if (opt.define == ENABLE_MOTION_STR) {
-        } else if (opt.define == ENABLE_WS2811_STR) {
-        } else if (opt.define == ENABLE_SD_STR) {
-        } else if (opt.define == SHARED_POWER_PINS_STR) {
-        } else if (opt.define == KEEP_SAVEFILES_STR) {
         } else if (opt.define == RFID_SERIAL_STR) {
             // Not Yet Implemented
         } else if (opt.define == BLADE_DETECT_PIN_STR) {
@@ -1229,17 +1242,17 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
         } else if (opt.define == BLADE_ID_CLASS_STR) {
             bladeID.enable = true;
             auto idx{0};
-            for (; idx < BladeID::MODE_MAX; ++idx) {
-                if (opt.value.startsWith(BladeID::MODE_STRS[idx])) break;
+            for (; idx < BLADEID_MODE_MAX; ++idx) {
+                if (opt.value.startsWith(BLADEID_MODE_STRS[idx])) break;
             }
-            if (idx == BladeID::MODE_MAX) {
+            if (idx == BLADEID_MODE_MAX) {
                 logger.warn("Cannot parse invalid/unrecognized BladeID class");
             } else{
                 bladeID.mode = idx;
-                opt.value.erase(0, BladeID::MODE_STRS[idx].length());
+                opt.value.erase(0, BLADEID_MODE_STRS[idx].length());
                 const auto idPinEnd{opt.value.find(',')};
                 bladeID.pin = opt.value.substr(0, idPinEnd);
-                if (idx == BladeID::EXTERNAL) {
+                if (idx == EXTERNAL) {
                     if (idPinEnd == string::npos) {
                         logger.warn("Missing pullup value for external blade id");
                     } else {
@@ -1250,7 +1263,7 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
                             logger.warn(string{"Failed to parse pullup value for ext blade id: "} + e.what());
                         }
                     }
-                } else if (idx == BladeID::BRIDGED) {
+                } else if (idx == BRIDGED) {
                     if (idPinEnd == string::npos) {
                         logger.warn("Missing bridge pin for blade id");
                     } else {
@@ -1318,7 +1331,7 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
         } else if (opt.define == DISABLE_BASIC_PARSERS_STR) {
             disableBasicParserStyles = true;
         } else if (opt.define == DISABLE_DIAG_COMMANDS_STR) {
-            enableAllEditOptions = true;
+            disableDiagnosticCommands = true;
         // } else if (opt.define == ENABLE_DEV_COMMANDS_STR) {
         //     enableDeveloperCommands = true;
         } else if (opt.define == SAVE_STATE_STR) {
@@ -1350,9 +1363,9 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
                 logger.warn("Invalid formatting for orientation rotation: " + static_cast<string>(opt.value));
             } else {
                 try {
-                    orientationRotation.x = std::stod(opt.value);
-                    orientationRotation.y = std::stod(opt.value.substr(firstComma + 1));
-                    orientationRotation.z = std::stod(opt.value.substr(secondComma + 1));
+                    orientationRotation.x = std::stoi(opt.value);
+                    orientationRotation.y = std::stoi(opt.value.substr(firstComma + 1));
+                    orientationRotation.z = std::stoi(opt.value.substr(secondComma + 1));
                 } catch (const std::exception& e) {
                     logger.warn(string{"Failed to parse orientation rotation: "} + e.what());
                 }

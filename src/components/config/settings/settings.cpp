@@ -28,24 +28,26 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     // Asign update handlers
     osVersion.setPersistence(PCUI::ChoiceData::PERSISTENCE_STRING);
     osVersion.setUpdateHandler([this](uint32 id) {
-        if (id == osVersion.ID_CHOICES) {
+        if (id == PCUI::ChoiceData::ID_CHOICES) {
             if (not osVersion.choices().empty() and osVersion == -1) osVersion = 0;
-        } else if (id != osVersion.ID_SELECTION) return;
+        } else if (id != PCUI::ChoiceData::ID_SELECTION) return;
 
         if (osVersion.choices().size() > 1 and osVersion == 0) {
             osVersion = 1;
             return;
         }
+
+        // Show/hide settings
         mParent.refreshPropVersions();
     });
     bladeDetect.setUpdateHandler([this](uint32 id) {
-        if (id != bladeDetect.ID_VALUE) return;
+        if (id != PCUI::ToggleData::ID_VALUE) return;
 
         bladeDetectPin.enable(bladeDetect);
     });
 
     bladeID.enable.setUpdateHandler([this](uint32 id) {
-        if (id != bladeID.enable.ID_VALUE) return;
+        if (id != PCUI::ToggleData::ID_VALUE) return;
 
         bladeID.pin.enable(bladeID.enable);
         bladeID.mode.enable(bladeID.enable);
@@ -57,28 +59,28 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     });
 
     bladeID.mode.setUpdateHandler([this](uint32 id) {
-        if (id != bladeID.mode.ID_SELECTION) return;
+        if (id != PCUI::ChoiceData::ID_SELECTION) return;
 
-        switch (static_cast<BladeID::Mode>(static_cast<uint32>(bladeID.mode))) {
-            case BladeID::SNAPSHOT:
+        switch (static_cast<BladeIDMode>(static_cast<uint32>(bladeID.mode))) {
+            case SNAPSHOT:
                 bladeID.bridgePin.show(false, true);
                 bladeID.pullup.show(false, true);
                 break;
-            case BladeID::EXTERNAL:
+            case EXTERNAL:
                 bladeID.bridgePin.show(false, true);
                 bladeID.pullup.show(true, true);
                 break;
-            case BladeID::BRIDGED:
+            case BRIDGED:
                 bladeID.bridgePin.show(true, true);
                 bladeID.pullup.show(false, true);
                 break;
-            case BladeID::MODE_MAX:
+            case BLADEID_MODE_MAX:
                 assert(0);
         }
     });
 
     bladeID.bridgePin.setUpdateHandler([this](uint32 id) {
-        if (id != bladeID.bridgePin.ID_VALUE) return;
+        if (id != PCUI::ComboBoxData::ID_VALUE) return;
 
         auto pinValue{static_cast<string>(bladeID.bridgePin)};
         Utils::trimUnsafe(pinValue);
@@ -87,26 +89,26 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     });
 
     bladeID.continuousScanning.setUpdateHandler([this](uint32 id) {
-        if (id != bladeID.enable.ID_VALUE) return;
+        if (id != PCUI::ToggleData::ID_VALUE) return;
 
         bladeID.continuousInterval.enable(bladeID.continuousScanning);
         bladeID.continuousTimes.enable(bladeID.continuousScanning);
     });
 
     bladeID.powerForID.setUpdateHandler([this](uint32 id) {
-        if (id != bladeID.powerForID.ID_VALUE) return;
+        if (id != PCUI::ToggleData::ID_VALUE) return;
 
         bladeID.powerPins.enable(bladeID.powerForID);
         bladeID.powerPinEntry.enable(bladeID.powerForID);
     });
 
     bladeID.powerPins.setUpdateHandler([this](uint32 id) {
-        if (id != bladeID.powerPins.ID_SELECTION) return;
+        if (id != PCUI::CheckListData::ID_SELECTION) return;
 
         auto selected{static_cast<set<uint32>>(bladeID.powerPins)};
         auto items{bladeID.powerPins.items()};
         for (auto idx{6}; idx < items.size(); ++idx) {
-            if (selected.find(idx) == selected.end()) {
+            if (not selected.contains(idx)) {
                 items.erase(std::next(items.begin(), idx));
                 --idx;
             }
@@ -115,10 +117,10 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     });
 
     bladeID.powerPinEntry.setUpdateHandler([this](uint32 id) {
-        if (id == bladeID.powerPinEntry.ID_ENTER) {
+        if (id == PCUI::TextData::ID_ENTER) {
             bladeID.addPowerPinFromEntry();
         }
-        if (id != bladeID.powerPinEntry.ID_VALUE) return;
+        if (id != PCUI::TextData::ID_VALUE) return;
 
         auto rawValue{static_cast<string>(bladeID.powerPinEntry)};
         uint32 numTrimmed{};
@@ -168,22 +170,22 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     dynamicClashThreshold.setUpdateHandler(updateSaveOptions);
 
     volume.setUpdateHandler([this](uint32 id) {
-        if (id != volume.ID_VALUE) return;
+        if (id != PCUI::NumericData::ID_VALUE) return;
         bootVolume.setRange(0, volume);
     });
     enableBootVolume.setUpdateHandler([this](uint32 id) {
-        if (id != enableBootVolume.ID_VALUE) return;
+        if (id != PCUI::ToggleData::ID_VALUE) return;
         bootVolume.enable(enableBootVolume);
     });
 
     enableFiltering.setUpdateHandler([this](uint32 id) {
-        if (id != enableFiltering.ID_VALUE) return;
+        if (id != PCUI::ToggleData::ID_VALUE) return;
         filterOrder.enable(enableFiltering);
         filterCutoff.enable(enableFiltering);
     });
 
     disableTalkie.setUpdateHandler([this](uint32 id) {
-        if (id != disableTalkie.ID_VALUE) return;
+        if (id != PCUI::ToggleData::ID_VALUE) return;
         femaleTalkie.enable(not disableTalkie);
     });
 
@@ -212,7 +214,7 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         _("External Pullup"),
         _("Bridged Pullup")
     }));
-    bladeID.mode.setValue(BladeID::SNAPSHOT);
+    bladeID.mode.setValue(SNAPSHOT);
     bladeID.pin.setDefaults(vector{pinDefaults});
     bladeID.bridgePin.setDefaults(vector{pinDefaults});
     bladeID.continuousScanning.setValue(false);

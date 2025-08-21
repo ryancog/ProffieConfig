@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 
@@ -29,13 +30,13 @@
 
 #include "private/io.h"
 
-namespace Config {
+namespace {
 
-vector<std::unique_ptr<Config>> loadedConfigs;
+vector<std::unique_ptr<Config::Config>> loadedConfigs;
 
 filepath savePath(const string&);
 
-} // namespace Config
+} // namespace
 
 Config::Config::Config() :
     settings{*this},
@@ -44,7 +45,7 @@ Config::Config::Config() :
     propSelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_STRING);
 
     propSelection.setUpdateHandler([this](uint32 id) {
-        if (id != propSelection.ID_SELECTION) return;
+        if (id != PCUI::ChoiceData::ID_SELECTION) return;
         propNotifyData.notify(ID_PROPSELECTION);
     });
 
@@ -64,8 +65,6 @@ void Config::Config::refreshOSVersions() {
     }
 
     settings.osVersion.setChoices(std::move(osChoices));
-
-    // Show/hide options as necessary.
 }
 
 void Config::Config::refreshPropVersions() {
@@ -103,7 +102,7 @@ void Config::Config::refreshPropVersions() {
     ) -> bool {
         bool aIsVisible{false};
         bool bIsVisible{false};
-        for (const auto visibleProp : visibleList) {
+        for (auto *const visibleProp : visibleList) {
             if (visibleProp == a.prop.get()) aIsVisible = true;
             if (visibleProp == b.prop.get()) bIsVisible = true;
 
@@ -116,13 +115,13 @@ void Config::Config::refreshPropVersions() {
         // Sort a first if a visible
         return aIsVisible;
     }};
-    std::sort(propList.begin(), propList.end(), comp);
+    std::ranges::sort(propList, comp);
 
     vector<string> choices;
     choices.reserve(propList.size());
     for (auto& propData : propList) {
         bool isVisible{false};
-        for (const auto visibleProp : visibleList) {
+        for (auto *const visibleProp : visibleList) {
             if (visibleProp == propData.prop.get()) {
                 isVisible = true;
                 break;
@@ -142,7 +141,7 @@ void Config::Config::refreshPropVersions() {
 
 void Config::Config::rename(const string& newName) {
     std::error_code err;
-    fs::rename(savePath(), ::Config::savePath(newName), err);
+    fs::rename(savePath(), ::savePath(newName), err);
 
     name = string{newName};
 }
@@ -157,12 +156,14 @@ void Config::Config::close() {
     }
 }
 
-filepath Config::savePath(const string& name) {
-    return Paths::configDir() / (static_cast<string>(name) + RAW_FILE_EXTENSION);
+namespace {
+filepath savePath(const string& name) {
+    return Paths::configDir() / (static_cast<string>(name) + Config::RAW_FILE_EXTENSION);
 }
+} // namespace
 
 filepath Config::Config::savePath() const {
-    return ::Config::savePath(name);
+    return ::savePath(name);
 }
 
 optional<string> Config::Config::save(const filepath& path, Log::Branch *lBranch) const {
@@ -193,7 +194,7 @@ optional<string> Config::Config::save(const filepath& path, Log::Branch *lBranch
     return err;
 }
 
-bool Config::Config::isSaved() {
+bool Config::Config::isSaved() const {
     auto& logger{Log::Context::getGlobal().createLogger("EditorWindow::isSaved()")};
 
     const auto currentPath{savePath()};

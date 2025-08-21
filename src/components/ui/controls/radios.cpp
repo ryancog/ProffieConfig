@@ -19,10 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace PCUI {
-
-}
-
 PCUI::RadiosData::RadiosData(uint32 numSelections) {
     assert(numSelections > 0);
 
@@ -31,10 +27,11 @@ PCUI::RadiosData::RadiosData(uint32 numSelections) {
     mShown.resize(numSelections, true);
 }
 
-void PCUI::RadiosData::operator=(uint32 idx) {
+PCUI::RadiosData& PCUI::RadiosData::operator=(uint32 idx) {
     std::scoped_lock scopeLock{getLock()};
-    if (mSelected == idx) return;
+    if (mSelected == idx) return *this;
     setValue(idx);
+    return *this;
 }
 
 void PCUI::RadiosData::setValue(uint32 idx) {
@@ -109,7 +106,9 @@ void PCUI::Radios::onUIUpdate(uint32 id) {
             pControl->Enable(idx, data()->mEnabled[idx]);
         }
     }
-    if (id == ID_REBOUND or id == RadiosData::ID_SELECTION) pControl->SetSelection(*data());
+    if (id == ID_REBOUND or id == RadiosData::ID_SELECTION) {
+        pControl->SetSelection(static_cast<int32>(*data()));
+    }
 }
 
 void PCUI::Radios::onModify(wxCommandEvent& evt) {
