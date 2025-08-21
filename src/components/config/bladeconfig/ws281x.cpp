@@ -33,7 +33,7 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
     brightness.setValue(100);
 
     type.setUpdateHandler([this](uint32 id) {
-        if (id != type.ID_SELECTION) return;
+        if (id != PCUI::RadiosData::ID_SELECTION) return;
 
         auto usesLength{type == STANDARD or type == REVERSE or type == STRIDE or type == ZIG_ZAG};
         start.show(usesLength);
@@ -63,17 +63,17 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         mConfig.bladeArrays.visualizerData.notify();
     });
     start.setUpdateHandler([this](uint32 id) {
-        if (id != start.ID_VALUE) return;
+        if (id != PCUI::NumericData::ID_VALUE) return;
 
         end.setOffset((start % segments) - 1, false);
         if (end.increment() != 1) {
             end = start + length - 1;
         } else {
             if (static_cast<uint32>(start) > static_cast<uint32>(end)) {
-                end = static_cast<uint32>(start);
+                end = static_cast<int32>(start);
             }
 
-            length = static_cast<uint32>(end) - static_cast<uint32>(start) + 1;
+            length = static_cast<int32>(end) - static_cast<int32>(start) + 1;
         }
 
         if (mConfig.bladeArrays.arraySelection == -1) return;
@@ -86,13 +86,13 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         mConfig.bladeArrays.visualizerData.notify();
     });
     end.setUpdateHandler([this](uint32 id) {
-        if (id != end.ID_VALUE) return;
+        if (id != PCUI::NumericData::ID_VALUE) return;
 
         if (static_cast<uint32>(start) > static_cast<uint32>(end)) {
-            start = static_cast<uint32>(end) - start.increment() + 1;
+            start = static_cast<int32>(end) - start.increment() + 1;
         }
 
-        length = static_cast<uint32>(end) - static_cast<uint32>(start) + 1;
+        length = static_cast<int32>(end) - static_cast<int32>(start) + 1;
 
         if (mConfig.bladeArrays.arraySelection == -1) return;
         auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
@@ -104,10 +104,10 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         mConfig.bladeArrays.visualizerData.notify();
     });
     length.setUpdateHandler([this](uint32 id) {
-        if (id != length.ID_VALUE) return;
+        if (id != PCUI::NumericData::ID_VALUE) return;
 
         if (length > mParent.length) {
-            length = static_cast<uint32>(mParent.length);
+            length = static_cast<int32>(mParent.length);
             return;
         }
         if (start + length > mParent.length) {
@@ -127,10 +127,10 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         mConfig.bladeArrays.visualizerData.notify();
     });
     segments.setUpdateHandler([this](uint32 id) {
-        if (id != segments.ID_VALUE) return;
+        if (id != PCUI::NumericData::ID_VALUE) return;
 
         if (mParent.length < segments) {
-            mParent.length = static_cast<uint32>(segments);
+            mParent.length = static_cast<int32>(segments);
         }
         length.setIncrement(segments, false);
         end.setIncrement(segments, false);
@@ -148,7 +148,7 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
 
         mConfig.bladeArrays.visualizerData.notify();
     });
-    list.setUpdateHandler([this](uint32 id) {
+    list.setUpdateHandler([this](uint32) {
         auto str{static_cast<string>(list)};
         auto insertionPoint{list.getInsertionPoint()};
 
@@ -233,7 +233,7 @@ vector<uint32> Config::Split::listValues() const {
 
 Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
     length.setUpdateHandler([this](uint32 id) {
-        if (id != length.ID_VALUE) return;
+        if (id != PCUI::NumericData::ID_VALUE) return;
 
         for (const auto& split : mSplits) {
             if (split->segments > length) {
@@ -247,7 +247,7 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
         mConfig.bladeArrays.visualizerData.notify();
     });
     dataPin.setUpdateHandler([this](uint32 id) {
-        if (id != dataPin.ID_VALUE) return;
+        if (id != PCUI::ComboBoxData::ID_VALUE) return;
 
         auto rawValue{static_cast<string>(dataPin)};
         uint32 numTrimmed{};
@@ -268,7 +268,7 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
         dataPin.setInsertionPoint(insertionPoint - numTrimmed);
     });
     hasWhite.setUpdateHandler([this](uint32 id) {
-        if (id != hasWhite.ID_VALUE) return;
+        if (id != PCUI::ToggleData::ID_VALUE) return;
 
         colorOrder3.show(not hasWhite);
         if (not hasWhite) {
@@ -286,12 +286,12 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
         useRGBWithWhite.show(hasWhite);
     });
     powerPins.setUpdateHandler([this](uint32 id) {
-        if (id != powerPins.ID_SELECTION) return;
+        if (id != PCUI::CheckListData::ID_SELECTION) return;
 
         auto selected{static_cast<set<uint32>>(powerPins)};
         auto items{powerPins.items()};
         for (auto idx{6}; idx < items.size(); ++idx) {
-            if (selected.find(idx) == selected.end()) {
+            if (not selected.contains(idx)) {
                 items.erase(std::next(items.begin(), idx));
                 --idx;
             }
@@ -299,7 +299,7 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
         powerPins.setItems(std::move(items));
     });
     splitSelect.setUpdateHandler([this](uint32 id) {
-        if (splitSelect.ID_CHOICES) {
+        if (id == PCUI::ChoiceData::ID_CHOICES) {
             if (not splitSelect.choices().empty()) {
                 if (splitSelect == -1) splitSelect = 0;
             } 
@@ -396,6 +396,6 @@ void Config::WS281XBlade::removeSplit(uint32 idx) {
     }
     int32 oldSelect{splitSelect};
     splitSelect.setChoices(std::move(choices));
-    splitSelect.setValue(std::clamp<int32>(oldSelect, 0, splitSelect.choices().size() - 1));
+    splitSelect.setValue(std::clamp<int32>(oldSelect, 0, static_cast<int32>(splitSelect.choices().size()) - 1));
 }
 

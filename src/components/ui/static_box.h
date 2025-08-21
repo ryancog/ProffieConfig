@@ -33,16 +33,8 @@ class UI_EXPORT StaticBox : public wxStaticBox {
 public:
     StaticBox(wxOrientation, wxWindow *, const wxString& = wxEmptyString);
 
-    struct SizerWrapper : wxBoxSizer {
-        SizerWrapper(StaticBox *box, wxOrientation orient) :
-            wxBoxSizer(orient), mBox{box} {}
-        using wxBoxSizer::wxBoxSizer;
-        wxSizerItem *DoInsert(size_t index, wxSizerItem *) override;
-    private:
-        StaticBox *mBox;
-    };
-
     wxSizer *sizer() { return mSizer; }
+    wxWindow *childParent() { return mPanel; }
 
     [[nodiscard]] wxSize DoGetBestClientSize() const override;
 
@@ -58,7 +50,7 @@ public:
     
 private:
     wxPanel *mPanel;
-    SizerWrapper *mSizer;
+    wxSizer *mSizer;
 };
 
 } // namespace PCUI

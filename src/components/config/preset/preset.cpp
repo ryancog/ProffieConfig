@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
+
 #include "utils/string.h"
 #include "../config.h"
 
@@ -28,7 +30,7 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
     styleSelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
 
     name.setUpdateHandler([this](uint32 id) {
-        if (id != name.ID_VALUE) return;
+        if (id != PCUI::TextData::ID_VALUE) return;
 
         auto rawValue{static_cast<string>(name)};
         uint32 numTrimmed{};
@@ -41,7 +43,9 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
         );
         if (rawValue.length() > 20) rawValue.resize(20);
         // Only allow \n inserted by control or programmatically.
-        if (rawValue.back() == '\\') rawValue.pop_back();
+        if (not rawValue.empty() and rawValue.back() == '\\') {
+            rawValue.pop_back();
+        }
 
         if (rawValue == static_cast<string>(name)) {
             auto idx{0};
@@ -60,7 +64,7 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
         name.setInsertionPoint(insertionPoint - numTrimmed);
     });
     fontDir.setUpdateHandler([this](uint32 id) {
-        if (id != fontDir.ID_VALUE) return;
+        if (id != PCUI::TextData::ID_VALUE) return;
 
         auto rawValue{static_cast<string>(fontDir)};
         uint32 numTrimmed{};
@@ -78,7 +82,7 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
         fontDir.setInsertionPoint(insertionPoint - numTrimmed);
     });
     track.setUpdateHandler([this](uint32 id) {
-        if (id != track.ID_VALUE) return;
+        if (id != PCUI::TextData::ID_VALUE) return;
 
         auto rawValue{static_cast<string>(track)};
         uint32 numTrimmed{};
@@ -99,7 +103,7 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
         track.setInsertionPoint(insertionPoint - numTrimmed);
     });
     styleSelection.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::NotifyReceiver::ID_REBOUND and id != styleSelection.ID_SELECTION) return;
+        if (id != PCUI::NotifyReceiver::ID_REBOUND and id != PCUI::ChoiceData::ID_SELECTION) return;
 
         if (mConfig.presetArrays.selection == -1) return;
         auto& selectedArray{mConfig.presetArrays.array(mConfig.presetArrays.selection)};
@@ -128,7 +132,7 @@ void Config::Preset::popBackStyle() {
 
 Config::Preset::Style::Style() {
     comment.setUpdateHandler([this](uint32 id) {
-        if (id != comment.ID_VALUE) return;
+        if (id != PCUI::TextData::ID_VALUE) return;
 
         auto rawValue{static_cast<string>(comment)};
         auto insertionPoint{comment.getInsertionPoint()};
@@ -147,7 +151,7 @@ Config::Preset::Style::Style() {
         }
     });
     style.setUpdateHandler([this](uint32 id) {
-        if (id != style.ID_VALUE) return;
+        if (id != PCUI::TextData::ID_VALUE) return;
 
         auto rawValue{static_cast<string>(style)};
         auto insertionPoint{style.getInsertionPoint()};
@@ -197,7 +201,7 @@ Config::Preset::Style::Style() {
 
         if ((illegalPos = rawValue.find(')')) != string::npos) {
             rawValue.erase(illegalPos + 1);
-            if (insertionPoint > illegalPos + 1) insertionPoint = illegalPos + 1;
+            insertionPoint = std::min<size_t>(insertionPoint, illegalPos + 1);
         }
 
         if (style != rawValue) {

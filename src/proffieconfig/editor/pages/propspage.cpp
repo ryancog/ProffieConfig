@@ -103,10 +103,10 @@ void PropsPage::bindEvents() {
 
 void PropsPage::handleNotification(uint32 id) {
     if (id == Config::Config::ID_PROPSELECTION) {
-        showSelectedProp();
+        // showSelectedProp();
     }
     if (id == ID_REBOUND or id == Config::Config::ID_PROPUPDATE) {
-        loadProps();
+        // loadProps();
     }
 }
 
@@ -231,7 +231,7 @@ void PropsPage::loadProps() {
                 } else {
                     auto *box{new PCUI::StaticBox(ptr->axis, parent, ptr->label)};
                     newSizer = box->sizer();
-                    self(self, ptr->children, newSizer, box);
+                    self(self, ptr->children, newSizer, box->childParent());
                 }
                 sizer->Add(newSizer, wxSizerFlags().Expand());
             } else {

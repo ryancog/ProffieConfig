@@ -29,7 +29,7 @@ constexpr auto PADDING{10};
 
 PCUI::StaticBox::StaticBox(wxOrientation orient, wxWindow *parent, const wxString& label) :
     wxStaticBox(parent, wxID_ANY, label) {
-    mSizer = new SizerWrapper(this, orient);
+    mSizer = new wxBoxSizer(orient);
     mPanel = new wxPanel(this);
     mPanel->SetSizer(mSizer);
 
@@ -44,23 +44,6 @@ PCUI::StaticBox::StaticBox(wxOrientation orient, wxWindow *parent, const wxStrin
     });
 }
 
-// void PCUI::StaticBox::SizerWrapper::RepositionChildren(const wxSize& minSize) {
-// void Layout() override;
-//     wxBoxSizer::RepositionChildren(minSize - wxSize{20, 20});
-//     int32 topBorder{};
-//     int32 otherBorder{};
-//     mBox->GetBordersForSizer(&topBorder, &otherBorder);
-//     for (auto *item : GetChildren()) {
-//         auto pos{item->GetPosition()};
-//         auto size{item->GetSize()};
-// #       ifndef __WXOSX__
-//         pos.y += 10;
-//         pos.x += 10;
-// #       endif
-//         item->SetDimension(pos, size);
-//     }
-// }
-
 wxSize PCUI::StaticBox::DoGetBestClientSize() const {
     int32 topBorder{};
     int32 otherBorder{};
@@ -71,35 +54,6 @@ wxSize PCUI::StaticBox::DoGetBestClientSize() const {
     ret.x += PADDING * 2;
     ret.y += PADDING * 2;
     return ret;
-
-    // auto ret{wxBoxSizer::CalcMin()};
-
-    // TODO
-    // ret.x = std::max(ret.x, boxWidth);
-
-    // return ret;
-}
-
-wxSizerItem *PCUI::StaticBox::SizerWrapper::DoInsert(size_t index, wxSizerItem *item) {
-    const auto reparentChildren{[this](const auto& self, wxSizer *sizer) -> void {
-        for (const auto *item : sizer->GetChildren()) {
-            if (item->IsWindow()) {
-                auto *window{item->GetWindow()};
-                window->Reparent(mBox->mPanel);
-            } else if (item->IsSizer()) {
-                auto *sizer{item->GetSizer()};
-                self(self, sizer);
-            }
-        }
-    }};
-    if (item->IsWindow()) {
-        if (item->GetWindow()->GetParent() == mBox) {
-            item->GetWindow()->Reparent(mBox->mPanel);
-        }
-    } else if (item->IsSizer()) {
-        reparentChildren(reparentChildren, item->GetSizer());
-    }
-    return wxBoxSizer::DoInsert(index, item);
 }
 
 wxSizerItem *PCUI::StaticBox::Add(wxWindow *window, const wxSizerFlags& flags) {

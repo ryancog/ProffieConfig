@@ -485,15 +485,16 @@ wxSizer *BladesPage::createBladeSettings() {
             label
         )};
         auto *starColor{new PCUI::Choice(
-            starSizer, starProxy.ledProxy
+            starSizer->childParent(),
+            starProxy.ledProxy
         )};
         auto *starPowerPin{new PCUI::ComboBox(
-            starSizer,
+            starSizer->childParent(),
             starProxy.powerPinProxy,
             _("Power Pin")
         )};
         auto *starResistance{new PCUI::Numeric(
-            starSizer,
+            starSizer->childParent(),
             starProxy.resistanceProxy,
             _("Resistance (mOhms)")
         )};

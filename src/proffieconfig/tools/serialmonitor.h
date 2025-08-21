@@ -27,35 +27,34 @@
 class SerialMonitor : public PCUI::Frame {
 public:
     SerialMonitor(MainMenu *, const string&);
-    ~SerialMonitor();
+    ~SerialMonitor() override;
     static SerialMonitor* instance;
 
 private:
     class SerialDataEvent;
-    static wxEventTypeTag<SerialDataEvent> EVT_INPUT;
-    static wxEventTypeTag<SerialDataEvent> EVT_DISCON;
+    static const wxEventTypeTag<SerialDataEvent> EVT_INPUT;
+    static const wxEventTypeTag<SerialDataEvent> EVT_DISCON;
 
     enum {
         ID_SerialCommand
     };
 
-    std::thread devThread;
-    std::thread listenThread;
-    std::thread writerThread;
+    std::thread mDevThread;
+    std::thread mListenThread;
+    std::thread mWriterThread;
 
-    wxTextCtrl *input;
-    wxTextCtrl *output;
+    wxTextCtrl *mInput;
+    wxTextCtrl *mOutput;
 
 #   if defined(__WXOSX__) or defined(__WXGTK__)
-    int32_t fd = 0;
+    int32_t mFd = 0;
 #   elif defined(__WXMSW__)
-    HANDLE serialHandle;
+    HANDLE mSerialHandle;
 #   endif
-    wxString sendOut;
-    vector<wxString> history;
-    ssize_t historyIdx{0};
-    bool autoScroll{true};
-
+    wxString mSendOut;
+    vector<wxString> mHistory;
+    int64 mHistoryIdx{0};
+    bool mAutoScroll{true};
 
     void bindEvents();
     bool openDevice(const string&);

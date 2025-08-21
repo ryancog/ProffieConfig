@@ -80,18 +80,18 @@ wxWindow *CustomOptionsDlg::info(wxWindow *parent) {
     )};
 
     auto *text{new wxStaticText(
-        infoSizer,
+        infoSizer->childParent(),
         wxID_ANY,
         _("(ProffieConfig already handles some of these)\n")
     )};
     auto *optDefines{new wxHyperlinkCtrl(
-        infoSizer,
+        infoSizer->childParent(),
         wxID_ANY,
         _("Optional Defines"),
         "https://pod.hubbe.net/config/the-config_top-section.html#optional-defines"
     )};
     auto *clashSuppress{new wxHyperlinkCtrl(
-        infoSizer,
+        infoSizer->childParent(),
         wxID_ANY,
         _("History of Clash Detection"),
         "https://pod.hubbe.net/explainers/history-of-clash.html"

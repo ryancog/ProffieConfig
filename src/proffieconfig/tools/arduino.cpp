@@ -790,7 +790,7 @@ optional<string> upload(
 #   ifdef __WINDOWS__
     if (error.find("File downloaded successfully") == string::npos) {
         logger.error(error);
-        return Arduino::parseError(error, config);
+        return parseError(error, config);
     }
 #   endif
 
