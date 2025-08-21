@@ -19,9 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <filesystem>
-#include <iostream>
-
 #include <wx/stdpaths.h>
 
 #if defined(__WIN32__)
@@ -48,7 +45,7 @@ filepath Paths::approot() {
 #   elif defined(__APPLE__)
     return filepath(getpwuid(getuid())->pw_dir) / "Library" / "Application Support" / "ProffieConfig";
 #   elif defined(__linux__)
-    return filepath(getpwuid(getuid())->pw_dir) / ".proffieconfig";
+    return filepath(getpwuid(getuid())->pw_dir) / ".local" / "share" / "ProffieConfig";
 #   endif
 }
 
@@ -135,7 +132,7 @@ filepath Paths::dataDir() {
 #   elif defined(__APPLE__)
     return approot();
 #   elif defined(__linux__)
-    return filepath(getpwuid(getuid())->pw_dir) / ".local" / "share" / "ProffieConfig";
+    return approot();
 #   endif
 }
 
