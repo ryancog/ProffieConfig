@@ -90,7 +90,7 @@ void PCUI::Radios::create(const wxArrayString& labels, const wxString& label, wx
     mRadios.reserve(labels.size());
     for (const auto& label : labels) {
         auto *radio{new wxRadioButton(
-            box->GetStaticBox(),
+            box,
             wxID_ANY,
             label,
             wxDefaultPosition,
@@ -119,7 +119,7 @@ void PCUI::Radios::onUIUpdate(uint32 id) {
 
     if (id == ID_REBOUND or id == RadiosData::ID_CHOICE_STATE) {
         for (auto idx{0}; idx < data()->mEnabled.size(); ++idx) {
-            pControl->Show(idx, data()->mShown[idx] or data()->mEnabled[idx]);
+            mRadios[idx]->Show(data()->mShown[idx] or data()->mEnabled[idx]);
             mRadios[idx]->Enable(data()->mEnabled[idx]);
         }
     }
