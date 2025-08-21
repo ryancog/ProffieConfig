@@ -19,8 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <limits>
-
 #include <wx/radiobox.h>
 
 #include "base.h"
@@ -35,13 +33,13 @@ struct UI_EXPORT RadiosData : ControlData {
     /**
      * Efficient assign/update
      */
-    void operator=(uint32 idx);
+    RadiosData& operator=(uint32 idx);
     /**
      * Unconditional assign/update
      */
     void setValue(uint32 idx);
 
-    uint32 numSelections() const { return mEnabled.size(); }
+    [[nodiscard]] uint32 numSelections() const { return mEnabled.size(); }
 
     /**
      * Choices which are enabled will be shown regardless of their shown value

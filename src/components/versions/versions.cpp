@@ -24,10 +24,8 @@
 #include <map>
 
 #include "log/context.h"
-#include "pconf/read.h"
 #include "pconf/pconf.h"
 #include "pconf/utils.h"
-#include "pconf/write.h"
 #include "utils/paths.h"
 #include "utils/string.h"
 #include "utils/types.h"
@@ -74,7 +72,7 @@ void Versions::VersionedProp::saveInfo() {
     for (const auto& version : mSupportedVersions) {
         list.push_back(static_cast<string>(static_cast<Utils::Version>(*version)));
     }
-    infoData.push_back(std::make_shared<PConf::Entry>(SUPPORTED_VERSIONS_STR, PConf::listAsValue(list)));
+    infoData.push_back(PConf::Entry::create(SUPPORTED_VERSIONS_STR, PConf::listAsValue(list)));
 
     std::ofstream infoFile{Paths::propDir() / name / INFO_FILE_STR};
     if (not infoFile.is_open()) {
@@ -122,29 +120,29 @@ void Versions::loadLocal() {
         PConf::read(infoFile, infoData, logger.bverbose("Reading info file..."));
         const auto hashedInfoData{PConf::hash(infoData)};
 
-        const auto coreVersionIter{hashedInfoData.find(CORE_VERSION_STR)};
-        if (coreVersionIter != hashedInfoData.end() and coreVersionIter->second->value) {
-            os.coreVersion = static_cast<Utils::Version>(*coreVersionIter->second->value);
+        const auto coreVersionEntry{hashedInfoData.find(CORE_VERSION_STR)};
+        if (coreVersionEntry and coreVersionEntry->value) {
+            os.coreVersion = static_cast<Utils::Version>(*coreVersionEntry->value);
         } 
 
-        const auto coreURLIter{hashedInfoData.find(CORE_URL_STR)};
-        if (coreURLIter != hashedInfoData.end() and coreURLIter->second->value) {
-            os.coreURL = *coreVersionIter->second->value;
+        const auto coreURLEntry{hashedInfoData.find(CORE_URL_STR)};
+        if (coreURLEntry and coreURLEntry->value) {
+            os.coreURL = *coreVersionEntry->value;
         } 
 
-        const auto coreBoardV1Iter{hashedInfoData.find(CORE_BOARDV1_STR)};
-        if (coreBoardV1Iter != hashedInfoData.end() and coreBoardV1Iter->second->value) {
-            os.coreBoardV1 = *coreVersionIter->second->value;
+        const auto coreBoardV1Entry{hashedInfoData.find(CORE_BOARDV1_STR)};
+        if (coreBoardV1Entry and coreBoardV1Entry->value) {
+            os.coreBoardV1 = *coreVersionEntry->value;
         }
 
-        const auto coreBoardV2Iter{hashedInfoData.find(CORE_BOARDV2_STR)};
-        if (coreBoardV2Iter != hashedInfoData.end() and coreBoardV2Iter->second->value) {
-            os.coreBoardV2= *coreBoardV2Iter->second->value;
+        const auto coreBoardV2Entry{hashedInfoData.find(CORE_BOARDV2_STR)};
+        if (coreBoardV2Entry and coreBoardV2Entry->value) {
+            os.coreBoardV2 = *coreVersionEntry->value;
         }
 
-        const auto coreBoardV3Iter{hashedInfoData.find(CORE_BOARDV3_STR)};
-        if (coreBoardV3Iter != hashedInfoData.end() and coreBoardV3Iter->second->value) {
-            os.coreBoardV3 = *coreVersionIter->second->value;
+        const auto coreBoardV3Entry{hashedInfoData.find(CORE_BOARDV3_STR)};
+        if (coreBoardV3Entry and coreBoardV3Entry->value) {
+            os.coreBoardV3 = *coreVersionEntry->value;
         }
 
         osVersions.push_back(std::move(os));
@@ -182,39 +180,39 @@ void Versions::loadLocal() {
         const auto hashedInfoData{PConf::hash(infoData)};
 
         auto versionedProp{std::make_unique<VersionedProp>(propName)};
+
         vector<std::unique_ptr<PCUI::VersionData>> supportedVersions;
-        const auto supportedVersionsIter{hashedInfoData.find(SUPPORTED_VERSIONS_STR)};
-        if (supportedVersionsIter != hashedInfoData.end()) {
-            auto versionStrs{PConf::valueAsList(supportedVersionsIter->second->value)};
-            for (const auto& verStr : versionStrs) {
-                Utils::Version supportedVersion{verStr};
-                if (supportedVersion.err) {
-                    logger.warn("Prop " + propName + " lists invalid supported version: " + static_cast<string>(supportedVersion));
-                    continue;
-                }
+        const auto supportedVersionsEntry{hashedInfoData.find(SUPPORTED_VERSIONS_STR)};
+        vector<string> versionStrs;
+        if (supportedVersionsEntry) versionStrs =  PConf::valueAsList(supportedVersionsEntry->value);
+        for (const auto& verStr : versionStrs) {
+            Utils::Version supportedVersion{verStr};
+            if (supportedVersion.err) {
+                logger.warn("Prop " + propName + " lists invalid supported version: " + static_cast<string>(supportedVersion));
+                continue;
+            }
 
-                logger.verbose("Prop " + propName + " supports OS version " + static_cast<string>(supportedVersion));
-                std::unique_ptr<PCUI::VersionData> version;
-                
-                if (oldPropPtr) {
-                    for (auto& oldSupportedVersion : oldPropPtr->mSupportedVersions) {
-                        if (oldSupportedVersion and static_cast<Utils::Version>(*oldSupportedVersion) == supportedVersion) {
-                            version = std::move(oldSupportedVersion);
-                            oldSupportedVersion = nullptr;
-                        }
+            logger.verbose("Prop " + propName + " supports OS version " + static_cast<string>(supportedVersion));
+            std::unique_ptr<PCUI::VersionData> version;
+
+            if (oldPropPtr) {
+                for (auto& oldSupportedVersion : oldPropPtr->mSupportedVersions) {
+                    if (oldSupportedVersion and static_cast<Utils::Version>(*oldSupportedVersion) == supportedVersion) {
+                        version = std::move(oldSupportedVersion);
+                        oldSupportedVersion = nullptr;
                     }
-                } 
+                }
+            } 
 
-                if (not version) version = std::make_unique<PCUI::VersionData>(supportedVersion);
+            if (not version) version = std::make_unique<PCUI::VersionData>(supportedVersion);
 
-                auto *versionedPropPtr{versionedProp.get()};
-                version->setUpdateHandler([versionedPropPtr](uint32 id) {
+            auto *versionedPropPtr{versionedProp.get()};
+            version->setUpdateHandler([versionedPropPtr](uint32 id) {
                     if (id != PCUI::VersionData::ID_VALUE) return;
 
                     versionedPropPtr->saveInfo();
-                });
-                supportedVersions.push_back(std::move(version));
-            }
+                    });
+            supportedVersions.push_back(std::move(version));
         }
 
         // Yeah this naming is stupid, what are you going to do about it?

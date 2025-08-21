@@ -63,8 +63,6 @@ PropsPage::PropsPage(EditorWindow *parent) :
     topSizer->Add(buttonInfo, wxSizerFlags().Bottom());
 
     mPropsWindow = new wxScrolledWindow(this, wxID_ANY);
-    auto *propsSizer{new wxBoxSizer(wxVERTICAL)};
-    mPropsWindow->SetSizerAndFit(propsSizer);
     mPropsWindow->SetScrollbars(10, 10, -1, 1);
 
     sizer->Add(topSizer);
@@ -108,6 +106,7 @@ void PropsPage::handleNotification(uint32 id) {
     }
     if (id == ID_REBOUND or id == Config::Config::ID_PROPUPDATE) {
         loadProps();
+        showSelectedProp();
     }
 }
 
@@ -148,23 +147,62 @@ void PropsPage::showSelectedProp() {
 // }
 
 void PropsPage::loadProps() {
-//     mProps.clear();
-// 
-//     auto addProp{[&](const string_view& propName, bool builtin = false) {
-//         auto *propConfig{PropFile::createPropConfig(string{propName}, propsWindow, builtin)};
-//         if (propConfig != nullptr) {
-//             mPropsWindow->GetSizer()->Add(propConfig);
-//             mProps.push_back(propConfig);
-//         }
-//     }};
-// 
-//     for (const auto& prop : AppState::BUILTIN_PROPS) {
-//         addProp(prop, true);
-//     }
-//     for (const auto& prop : AppState::getPropFileNames()) {
-//         addProp(prop);
-//     }
-//     updateProps();
-// 
-//     Layout();
+    SetSizer(nullptr, false);
+    for (auto *sizer : mProps) {
+        sizer->Clear(true);
+        delete sizer;
+    }
+    mProps.clear();
+
+    const auto processChildren{[](
+        const Versions::PropLayout::Children& children,
+        wxSizer *sizer,
+        wxWindow *parent
+    ) {
+        for (const auto& child : children) {
+            if (const auto *ptr = std::get_if<Versions::PropSettingBase *>(&child)) {
+                auto& setting{**ptr};
+                wxWindow *windowToAdd{nullptr};
+                if (Versions::PropSettingType::TOGGLE == setting.settingType) {
+                    auto *control{new PCUI::CheckBox(
+                        parent,
+                        static_cast<Versions::PropToggle&>(setting).value,
+                        0,
+                        setting.id()
+                    )};
+                    control->SetToolTip(static_cast<Versions::PropToggle&>(setting).description);
+                    windowToAdd = control;
+                } else if (Versions::PropSettingType::OPTION == setting.settingType) {
+                    const auto& option{static_cast<Versions::PropOption&>(setting)};
+                    vector<string> labels;
+                    labels.reserve(option.selections().size());
+                    for (const auto& selection : option.selections()) {
+                        labels.push_back(selection->name);
+                    }
+                    auto *control{new PCUI::Radios(
+                        parent,
+                        static_cast<Versions::PropOption&>(setting).selection,
+                        labels
+                    )};
+                    control->SetToolTip(option.description);
+                    windowToAdd = control;
+                }
+
+                if (windowToAdd) sizer->Add(windowToAdd, 0, wxEXPAND);
+            } else if (const auto *ptr = std::get_if<Versions::PropLayout>(&child)) {
+
+            } else {
+                assert(0);
+            }
+        }
+    }};
+
+    for (const auto *const prop : mParent->getOpenConfig().props()) {
+        auto *sizer{mProps.emplace_back(new wxBoxSizer(prop->layout().axis))};
+        // Top layout (as of writing) should never have label
+
+        processChildren(prop->layout().children, sizer, mPropsWindow);
+    }
+
+    Layout();
 }

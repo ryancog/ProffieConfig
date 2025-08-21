@@ -32,7 +32,7 @@ namespace Config {
 
 struct Config;
 
-constexpr uint32 NO_BLADE{1000000000};
+constexpr int32 NO_BLADE{1000000000};
 
 struct CONFIG_EXPORT Blade {
     Blade(Config&);
@@ -51,7 +51,7 @@ struct CONFIG_EXPORT Blade {
     WS281XBlade& ws281x() { return mPixelBlade; }
     SimpleBlade& simple() { return mSimpleBlade; }
 
-    Config& config() const { return mConfig; }
+    [[nodiscard]] Config& config() const { return mConfig; }
 
 private:
     Config& mConfig;

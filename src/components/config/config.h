@@ -54,19 +54,21 @@ struct CONFIG_EXPORT Config {
         const auto verNum{settings.getOSVersion()};
         auto iter{mProps.find(verNum)};
         if (iter == mProps.end()) return ret;
-        ret.reserve(iter->second.size());
+        ret.reserve(propSelection.choices().size());
         for (const auto& data : iter->second) {
+            if (ret.size() >= propSelection.choices().size()) break;
             ret.push_back(data.prop.get());
         }
         return ret;
     }
 
-    [[nodiscard]] std::pair<Versions::Prop&, Versions::VersionedProp *> propAndReference(uint32 idx) const {
+    [[nodiscard]] std::pair<Versions::Prop&, Versions::VersionedProp *>
+    propAndReference(uint32 idx) const {
         const auto verNum{settings.getOSVersion()};
         auto iter{mProps.find(verNum)};
         assert(iter != mProps.end() and idx < iter->second.size());
 
-        auto& propData{iter->second[idx]};
+        const auto& propData{iter->second[idx]};
         return { *propData.prop, propData.reference };
     }
 
@@ -90,7 +92,7 @@ struct CONFIG_EXPORT Config {
 
     void rename(const string& newName);
 
-    bool isSaved();
+    [[nodiscard]] bool isSaved() const;
 
     /**
      * @return error or nullopt on success
@@ -103,7 +105,7 @@ struct CONFIG_EXPORT Config {
      */
     void close();
 
-    filepath savePath() const;
+    [[nodiscard]] filepath savePath() const;
 
 private:
     friend variant<Config *, string> open(const string&);

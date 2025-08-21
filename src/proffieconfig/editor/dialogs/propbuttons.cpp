@@ -66,8 +66,8 @@ PropButtonsDialog::PropButtonsDialog(EditorWindow *parent) {
         for (const auto& button : stateButtons) {
             string activePredicate;
             for (const auto& [ predicate, description ]: button.descriptions) {
-                auto setting = prop.settingMap().find(predicate);
-                if (setting == prop.settingMap().end()) continue;
+                auto setting = prop.dataMap().find(predicate);
+                if (setting == prop.dataMap().end()) continue;
 
                 if (setting->second->isActive()) {
                     activePredicate = setting->first;

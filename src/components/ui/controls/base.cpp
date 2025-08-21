@@ -1,4 +1,6 @@
 #include "base.h"
+
+#include <utility>
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -117,7 +119,7 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
     wxString label,
     wxOrientation orient
 ) {
-    init(control, eventTag, label, orient);
+    init(control, eventTag, std::move(label), orient);
     pControl->Bind(secondaryTag, [this](SECONDARY_EVENT& evt) { secondaryEventHandler(evt); });
 }
 
@@ -166,7 +168,9 @@ bool PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
             return ret;
         }
         return wxPanel::Show(false);
-    } else if (proxy()) {
+    } 
+
+    if (proxy()) {
         if (static_cast<ControlDataProxy<CONTROL_DATA> *>(proxy())->mShowWhenUnbound) {
             auto ret{wxPanel::Show()};
             refreshSizeAndLayout();
@@ -174,6 +178,7 @@ bool PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
         }
         return wxPanel::Show(false);
     }
+
     assert(0);
 }
 

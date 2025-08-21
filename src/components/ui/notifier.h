@@ -55,12 +55,17 @@ struct UI_EXPORT Notifier {
      *
      * @return if any events are in flight (UI should not modify data)
      */
-    bool eventsInFlight() ;
+    bool eventsInFlight();
+
+    /**
+     * @return if this data is linked to a receiver or proxy
+     */
+    [[nodiscard]] bool linked() const { return mReceiver or mProxy; }
 
 private:
     friend struct NotifyReceiver;
     friend struct NotifierProxy;
-    NotifyReceiver *mNotifier{nullptr};
+    NotifyReceiver *mReceiver{nullptr};
     NotifierProxy *mProxy{nullptr};
 
     /**
@@ -83,6 +88,8 @@ private:
 };
 
 struct UI_EXPORT NotifyReceiver {
+    virtual ~NotifyReceiver();
+
     enum {
         ID_REBOUND = 0xFFFFFFFF,
     };
@@ -90,7 +97,7 @@ struct UI_EXPORT NotifyReceiver {
     /**
      * Sync notifications with GUI
      */
-    static inline void sync() { wxYield(); }
+    static void sync() { wxYield(); }
 
 protected:
     NotifyReceiver() = default;
@@ -115,8 +122,6 @@ protected:
      * set up initial derived state accordingly.
      */
     void initializeNotifier();
-
-    virtual ~NotifyReceiver();
 
     /**
      * Called whenever notification is received.

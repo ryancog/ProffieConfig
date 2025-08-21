@@ -70,6 +70,7 @@ using std::variant;
 using std::monostate;
 using std::span;
 using std::pair;
+// NOLINTNEXTLINE(readability-identifier-naming)
 namespace fs = std::filesystem;
 using filepath = fs::path;
 // NOLINTEND(misc-unused-using-decls)
