@@ -90,7 +90,7 @@ void PCUI::Radios::create(const wxArrayString& labels, const wxString& label, wx
     mRadios.reserve(labels.size());
     for (const auto& label : labels) {
         auto *radio{new wxRadioButton(
-            box,
+            box->childParent(),
             wxID_ANY,
             label,
             wxDefaultPosition,

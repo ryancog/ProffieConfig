@@ -196,8 +196,8 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
     wxPanel::SetMinSize(newSize);
 
     Layout();
-    Fit();
-    
+    // Fit();
+
     auto *parent{wxGetTopLevelParent(this)};
     if (parent) {
         parent->Layout();

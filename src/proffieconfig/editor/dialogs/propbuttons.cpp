@@ -78,12 +78,12 @@ PropButtonsDialog::PropButtonsDialog(EditorWindow *parent) {
             auto key = button.descriptions.find(activePredicate);
             if (key != button.descriptions.end() && key->second != "DISABLED") {
                 buttonSizer->Add(new wxStaticText(
-                    stateSizer,
+                    stateSizer->childParent(),
                     wxID_ANY,
                     button.name
                 ));
                 actionSizer->Add(new wxStaticText(
-                    stateSizer,
+                    stateSizer->childParent(),
                     wxID_ANY,
                     " - " + key->second
                 ));
@@ -92,7 +92,6 @@ PropButtonsDialog::PropButtonsDialog(EditorWindow *parent) {
 
         if (actionSizer->IsEmpty()) {
             stateSizer->Destroy();
-            delete stateSizer;
             continue;
         }
         textSizer->Add(

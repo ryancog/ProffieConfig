@@ -77,7 +77,7 @@ wxWindow *BladeAwarenessDlg::createIDSetup(wxWindow *parent) {
     )};
 
     auto *enableID{new PCUI::CheckBox(
-        setupSizer,
+        setupSizer->childParent(),
         config.settings.bladeID.enable,
         0,
         _("Enable Blade ID")
@@ -85,27 +85,27 @@ wxWindow *BladeAwarenessDlg::createIDSetup(wxWindow *parent) {
     enableID->SetToolTip(_("Detect when a specific blade is inserted based on a resistor placed in the blade to give it an identifier."));
 
     auto *mode{new PCUI::Choice(
-        setupSizer,
+        setupSizer->childParent(),
         config.settings.bladeID.mode,
         _("Blade ID Mode")
     )};
     mode->SetToolTip(_("The mode to be used for Blade ID.\nSee the POD page \"Blade ID\" for more info."));
 
     auto *idPin{new PCUI::ComboBox(
-        setupSizer,
+        setupSizer->childParent(),
         config.settings.bladeID.pin,
         _("Blade ID Pin")
     )};
     idPin->SetToolTip(_("The pin used to detect blade resistance values.\nCannot be the same as Detect Pin."));
 
     auto *pullupResistance{new PCUI::Numeric(
-        setupSizer,
+        setupSizer->childParent(),
         config.settings.bladeID.pullup,
         _("Pullup Resistance")
     )};
     pullupResistance->SetToolTip(_("The value of the pullup resistor placed on the Blade ID line."));
     auto *pullupPin{new PCUI::ComboBox(
-        setupSizer,
+        setupSizer->childParent(),
         config.settings.bladeID.bridgePin,
         _("Pullup Pin")
     )};
@@ -138,7 +138,7 @@ wxWindow *BladeAwarenessDlg::createIDPowerSettings(wxWindow *parent) {
     )};
 
     auto *enablePowerForID {new PCUI::CheckBox(
-        powerForIDSizer,
+        powerForIDSizer->childParent(),
         config.settings.bladeID.powerForID,
         0,
         _("Enable Power on ID")
@@ -146,12 +146,12 @@ wxWindow *BladeAwarenessDlg::createIDPowerSettings(wxWindow *parent) {
     enablePowerForID->SetToolTip(_("Enable power during Blade ID.\nThis is required for WS281X blades."));
 
     auto *powerPins{new PCUI::CheckList(
-        powerForIDSizer,
+        powerForIDSizer->childParent(),
         config.settings.bladeID.powerPins
     )};
 
     auto *powerPinEntry{new PCUI::Text(
-        powerForIDSizer,
+        powerForIDSizer->childParent(),
         config.settings.bladeID.powerPinEntry,
         wxTE_PROCESS_ENTER
     )};
@@ -174,7 +174,7 @@ wxWindow *BladeAwarenessDlg::createContinuousScanSettings(wxWindow *parent) {
         _("Continuous Scanning")
     )};
     auto *continuousScans{new PCUI::CheckBox(
-        continuousScansSizer,
+        continuousScansSizer->childParent(),
         config.settings.bladeID.continuousScanning,
         0,
         _("Enable Continuous Scanning")
@@ -182,14 +182,14 @@ wxWindow *BladeAwarenessDlg::createContinuousScanSettings(wxWindow *parent) {
     continuousScans->SetToolTip(_("Continuously monitor the Blade ID to detect changes."));
 
     auto *numIDTimes{new PCUI::Numeric(
-        continuousScansSizer,
+        continuousScansSizer->childParent(),
         config.settings.bladeID.continuousTimes,
         _("Number of Reads to Average")
     )};
     numIDTimes->SetToolTip(_("Number of times to read the Blade ID to average out the result and compensate for inaccurate readings."));
 
     auto *scanIDMillis{new PCUI::Numeric(
-        continuousScansSizer,
+        continuousScansSizer->childParent(),
         config.settings.bladeID.continuousInterval, 
         _("Scan Interval (ms)")
     )};
@@ -213,7 +213,7 @@ wxWindow *BladeAwarenessDlg::createBladeDetect(wxWindow *parent) {
         _("Blade Detect")
     )};
     auto *enableDetect{new PCUI::CheckBox(
-        bladeDetectSizer,
+        bladeDetectSizer->childParent(),
         config.settings.bladeDetect,
         0,
         _("Enable Blade Detect")
@@ -221,7 +221,7 @@ wxWindow *BladeAwarenessDlg::createBladeDetect(wxWindow *parent) {
     enableDetect->SetToolTip(_("Detect when a blade is inserted into the saber or not."));
 
     auto *detectPin{new PCUI::ComboBox(
-        bladeDetectSizer,
+        bladeDetectSizer->childParent(),
         config.settings.bladeDetectPin,
         _("Blade Detect Pin")
     )};
