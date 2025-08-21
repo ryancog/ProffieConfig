@@ -50,6 +50,8 @@ struct PCONF_EXPORT EntryPtr : std::shared_ptr<Entry> {
 using Data = vector<EntryPtr>;
 struct PCONF_EXPORT HashedData : std::unordered_multimap<string, EntryPtr> {
     struct IndexedEntryPtr : EntryPtr {
+        IndexedEntryPtr(EntryPtr ptr, const_iterator iter) :
+            EntryPtr(std::move(ptr)), iter{iter} {}
         const const_iterator iter;
     };
 

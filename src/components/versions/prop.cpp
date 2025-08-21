@@ -49,8 +49,7 @@ Versions::PropOption::PropOption(
 ) : PropSettingBase(PropSettingType::OPTION),
     idLabel{std::move(id)},
     name{std::move(name)},
-    description{std::move(description)},
-    selection{static_cast<uint32>(selectionDatas.size())} {
+    description{std::move(description)}, selection{static_cast<uint32>(selectionDatas.size())} {
     for (const auto& selectionData : selectionDatas) {
         mSelections.push_back(std::make_unique<PropSelection>(
             prop,
@@ -611,7 +610,7 @@ vector<std::unique_ptr<Versions::PropSettingBase>> parseSettings(
 
             Versions::PropOption::PropSelectionData selectionData{
                 .name = settingData.name,
-                .define = selectionEntry->label.value_or({}),
+                .define = selectionEntry->label.value_or(""),
                 .description = settingData.description,
                 .required = settingData.required,
                 .requiredAny = settingData.requiredAny,
