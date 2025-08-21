@@ -443,7 +443,9 @@ variant<CompileOutput, string> compile(
 
         auto res{fs::copy_file(
             sourcePropHeader,
-            osPath / "props" / prop.filename
+            osPath / "props" / prop.filename,
+            fs::copy_options::overwrite_existing,
+            err
         )};
         if (not res) {
             if (prog) prog->emitEvent(100, _("Error"));
