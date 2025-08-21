@@ -627,7 +627,8 @@ void outputPresetBlades(std::ofstream& outFile, const Config::Config& config) {
                 if (split->type == Split::STRIDE or split->type == Split::ZIG_ZAG) {
                     for (auto idx{0}; idx < split->segments; ++idx) {
                         outFile << "\t\t";
-                        // TODO: DimBlade
+
+                        if (split->brightness != 100) outFile << "DimBlade(" << split->brightness << ", ";
 
                         if (split->type == Split::STRIDE) {
                             outFile << "SubBladeWithStride(";
@@ -644,7 +645,8 @@ void outputPresetBlades(std::ofstream& outFile, const Config::Config& config) {
                             outFile << bladeStr.str() << ')';                    
                         } else outFile << "nullptr)";
 
-                        // TODO: DimBlade
+                        if (split->brightness != 100) outFile << ')';
+
                         outFile << ",\n";
                     }
                 }
