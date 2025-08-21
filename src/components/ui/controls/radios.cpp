@@ -78,41 +78,62 @@ PCUI::Radios::Radios(
 };
 
 void PCUI::Radios::create(const wxArrayString& labels, const wxString& label, wxOrientation orient) {
+    assert(labels.size() > 1);
     assert(data() != nullptr or proxy() != nullptr);
 
-    auto *control{new wxRadioBox(
+    auto *box{new PCUI::StaticBox(
+        orient,
         this,
-        wxID_ANY,
-        label,
-        wxDefaultPosition,
-        wxDefaultSize,
-        labels,
-        0,
-        orient == wxHORIZONTAL ? wxRA_SPECIFY_COLS : wxRA_SPECIFY_ROWS
+        label
     )};
 
-    init(control, wxEVT_RADIOBOX, wxEmptyString, wxVERTICAL);
+    mRadios.reserve(labels.size());
+    for (const auto& label : labels) {
+        auto *radio{new wxRadioButton(
+            box->GetStaticBox(),
+            wxID_ANY,
+            label,
+            wxDefaultPosition,
+            wxDefaultSize,
+            mRadios.empty() ? wxRB_GROUP : 0
+        )};
+        if (not mRadios.empty()) box->AddSpacer(5);
+        box->Add(radio);
+
+        mRadios.push_back(radio);
+    }
+
+    init(box, wxEVT_RADIOBUTTON, wxEmptyString, wxVERTICAL);
+}
+
+void PCUI::Radios::SetToolTip(uint32 idx, const wxString& tip) {
+    assert(idx < mRadios.size());
+    mRadios[idx]->SetToolTip(tip);
 }
 
 void PCUI::Radios::onUIUpdate(uint32 id) {
     if (id == ID_REBOUND) {
-        assert(data()->mEnabled.size() == pControl->GetCount());
+        assert(data()->mEnabled.size() == mRadios.size());
         refreshSizeAndLayout();
     }
 
     if (id == ID_REBOUND or id == RadiosData::ID_CHOICE_STATE) {
         for (auto idx{0}; idx < data()->mEnabled.size(); ++idx) {
             pControl->Show(idx, data()->mShown[idx] or data()->mEnabled[idx]);
-            pControl->Enable(idx, data()->mEnabled[idx]);
+            mRadios[idx]->Enable(data()->mEnabled[idx]);
         }
     }
     if (id == ID_REBOUND or id == RadiosData::ID_SELECTION) {
-        pControl->SetSelection(static_cast<int32>(*data()));
+        mRadios[*data()]->SetValue(true);
     }
 }
 
 void PCUI::Radios::onModify(wxCommandEvent& evt) {
-    data()->mSelected = evt.GetInt();
+    auto idx{0};
+    for (; idx < mRadios.size(); ++idx) {
+        if (mRadios[idx] == evt.GetEventObject()) break;
+    }
+    data()->mSelected = idx;
     data()->update(RadiosData::ID_SELECTION);
 }
 

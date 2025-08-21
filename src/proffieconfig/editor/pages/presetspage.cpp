@@ -332,7 +332,7 @@ void PresetsPage::createUI() {
     presetConfigSizer->AddSpacer(5);
     presetConfigSizer->Add(trackSizer, wxSizerFlags().Expand());
     presetConfigSizer->AddSpacer(20);
-    presetConfigSizer->Add(mInjectionsSizer->underlyingSizer(), wxSizerFlags(1).Expand());
+    presetConfigSizer->Add(mInjectionsSizer, wxSizerFlags(1).Expand());
 
     auto *stylesSizer{new wxBoxSizer(wxVERTICAL)};
     auto *styleDisplay{new PCUI::Choice(

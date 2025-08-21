@@ -1,8 +1,7 @@
 #include "changelog.h"
-#include "ui/static_box.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2025 Ryan Ogurek
  *
  * launcher/update/changelog.cpp
  *
@@ -31,6 +30,7 @@
 #include <log/logger.h>
 #include <utils/paths.h>
 #include <utils/crypto.h>
+#include "ui/static_box.h"
 
 namespace Update {
 
@@ -229,7 +229,7 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
     whatNewSizer->FitInside(whatNewPanel);
     whatNewPanel->SetScrollRate(4, 4);
     whatNewBorder->Add(whatNewPanel, wxSizerFlags(1).Expand());
-    mainSizer->Add(whatNewBorder->underlyingSizer(), wxSizerFlags(1).Expand());
+    mainSizer->Add(whatNewBorder, wxSizerFlags(1).Expand());
 
     mainSizer->AddSpacer(20);
 

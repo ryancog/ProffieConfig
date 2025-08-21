@@ -117,7 +117,7 @@ wxSizer *GeneralPage::setupSection() {
     boardSetup->AddSpacer(10);
     boardSetup->Add(webUSB, wxSizerFlags().Center());
 
-    return boardSetup->underlyingSizer();
+    return boardSetup;
 }
 
 wxSizer *GeneralPage::miscSection() {
@@ -155,7 +155,7 @@ wxSizer *GeneralPage::miscSection() {
     sizer->AddSpacer(5);
     sizer->Add(motionTime, wxSizerFlags().Expand());
 
-    return sizer->underlyingSizer();
+    return sizer;
 }
 
 wxSizer *GeneralPage::installationSection() {
@@ -242,7 +242,7 @@ wxSizer *GeneralPage::installationSection() {
     sizer->AddSpacer(10);
     sizer->Add(enableOLED, wxSizerFlags().Expand());
 
-    return sizer->underlyingSizer();
+    return sizer;
 }
 
 wxSizer *GeneralPage::tweaksSection() {
@@ -334,7 +334,7 @@ wxSizer *GeneralPage::tweaksSection() {
     sizer->AddSpacer(10);
     sizer->Add(sizer2, wxSizerFlags().Expand());
 
-    return sizer->underlyingSizer();
+    return sizer;
 }
 
 wxSizer *GeneralPage::editingSection() {
@@ -442,7 +442,7 @@ wxSizer *GeneralPage::editingSection() {
     sizer->AddSpacer(5);
     sizer->Add(dynamicLength, wxSizerFlags().Expand());
 
-    return sizer->underlyingSizer();
+    return sizer;
 }
 
 wxSizer *GeneralPage::audioSection() {
@@ -528,6 +528,6 @@ wxSizer *GeneralPage::audioSection() {
     sizer->AddSpacer(5);
     sizer->Add(dontUseGyroForClash, wxSizerFlags().Expand());
 
-    return sizer->underlyingSizer();
+    return sizer;
 }
 

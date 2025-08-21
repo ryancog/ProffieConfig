@@ -49,11 +49,10 @@ struct VERSIONS_EXPORT PropDataBase {
 
     const string name;
     const string define;
+    const string description;
 
     const vector<string> required;
     const vector<string> requiredAny;
-    // For now this is toggle/selection specific
-    // const vector<string> disables;
 
     const PropDataType dataType;
 
@@ -63,16 +62,19 @@ protected:
         PropDataType type,
         string name,
         string define,
+        string description,
         vector<string> required,
         vector<string> requiredAny
     ) : mProp{prop}, dataType{type}, name{std::move(name)}, define{std::move(define)},
-        required{std::move(required)}, requiredAny{std::move(requiredAny)} {}
+        description{std::move(description)}, required{std::move(required)},
+        requiredAny{std::move(requiredAny)} {}
 
     PropDataBase(const PropDataBase& other, Prop& prop) :
         PropDataBase{
             prop, 
             other.dataType,
             other.name,
+            other.description,
             other.define,
             other.required,
             other.requiredAny
@@ -113,13 +115,13 @@ struct VERSIONS_EXPORT PropToggle : PropDataBase, PropSettingBase {
             PropDataType::TOGGLE,
             std::move(name),
             std::move(define),
+            std::move(description),
             std::move(required),
             std::move(requiredAny)
         },
         PropSettingBase{
             PropSettingType::TOGGLE,
         },
-        description{std::move(description)},
         disables{std::move(disables)} {}
 
     PropToggle(const PropToggle& other, Prop& prop) :
@@ -135,7 +137,6 @@ struct VERSIONS_EXPORT PropToggle : PropDataBase, PropSettingBase {
 
     [[nodiscard]] string id() const override { return define; }
 
-    const string description;
     const vector<string> disables;
 
     PCUI::ToggleData value;
@@ -158,13 +159,13 @@ struct VERSIONS_EXPORT PropNumeric : PropDataBase, PropSettingBase {
             PropDataType::NUMERIC,
             std::move(name),
             std::move(define),
+            std::move(description),
             std::move(required),
             std::move(requiredAny)
         },
         PropSettingBase{
             PropSettingType::NUMERIC,
         }, 
-        description{std::move(description)},
         defaultVal{defaultVal} {
         value.setRange(min, max);
         value.setIncrement(increment);
@@ -187,7 +188,6 @@ struct VERSIONS_EXPORT PropNumeric : PropDataBase, PropSettingBase {
 
     [[nodiscard]] string id() const override { return define; }
 
-    const string description;
     const optional<int32> defaultVal;
 
     PCUI::NumericData value;
@@ -210,13 +210,13 @@ struct VERSIONS_EXPORT PropDecimal : PropDataBase, PropSettingBase {
             PropDataType::DECIMAL,
             std::move(name),
             std::move(define),
+            std::move(description),
             std::move(required),
             std::move(requiredAny)
         },
         PropSettingBase{
             PropSettingType::DECIMAL,
         }, 
-        description{std::move(description)},
         defaultVal{defaultVal} {
         value.setRange(min, max);
         value.setIncrement(increment);
@@ -239,7 +239,6 @@ struct VERSIONS_EXPORT PropDecimal : PropDataBase, PropSettingBase {
 
     [[nodiscard]] string id() const override { return define; }
 
-    const string description;
     const optional<float64> defaultVal;
 
     PCUI::DecimalData value;
@@ -259,6 +258,7 @@ struct VERSIONS_EXPORT PropSelection : PropDataBase {
         PropOption& option,
         string name,
         string define,
+        string description,
         vector<string> required,
         vector<string> requiredAny,
         vector<string> disables
@@ -267,6 +267,7 @@ struct VERSIONS_EXPORT PropSelection : PropDataBase {
             PropDataType::SELECTION,
             std::move(name),
             std::move(define),
+            std::move(description),
             std::move(required),
             std::move(requiredAny)
         },
@@ -279,6 +280,7 @@ struct VERSIONS_EXPORT PropSelection : PropDataBase {
             option,
             other.name,
             other.define,
+            other.description,
             other.required,
             other.requiredAny,
             other.disables
@@ -381,10 +383,11 @@ struct VERSIONS_EXPORT PropLayout {
      *
      * @return IDs used in PropLayout
      */
-    static std::unordered_set<string> generate(
+    static void generate(
         const PConf::Data&,
         const PropSettingMap&,
         PropLayout& out,
+        std::unordered_set<string>& usedSettings,
         Log::Logger * = nullptr
     );
 

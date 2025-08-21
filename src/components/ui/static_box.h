@@ -31,23 +31,50 @@ namespace PCUI {
 /**
  * Simple wrapper class to make sure there's consistent spacing inside a wxStaticBox
  */
-class UI_EXPORT StaticBox : private wxStaticBoxSizer {
+class UI_EXPORT StaticBox : public wxStaticBoxSizer {
 public:
     StaticBox(wxOrientation, wxWindow *, const wxString& = wxEmptyString);
 
-    using wxStaticBoxSizer::GetStaticBox;
-    using wxStaticBoxSizer::Show;
-    using wxStaticBoxSizer::Layout;
+    // NOLINTBEGIN(readability-identifier-naming)
+    virtual void SetFocus() { GetStaticBox()->SetFocus(); }
+    virtual void SetMinSize(const wxSize& size) { GetStaticBox()->SetMinSize(size); }
 
-    wxSizer *underlyingSizer() { return this; }
+    template <typename EventTag, typename Functor>
+    void Bind(
+        const EventTag& eventType,
+        const Functor &functor,
+        int winid = wxID_ANY,
+        int lastId = wxID_ANY,
+        wxObject *userData = nullptr
+    ) {
+        GetStaticBox()->Bind(
+            eventType,
+            functor,
+            winid,
+            lastId,
+            userData
+        );
+    }
 
-#   ifdef __WXOSX__
-    using wxStaticBoxSizer::Add;
-    using wxStaticBoxSizer::AddSpacer;
-    using wxStaticBoxSizer::AddStretchSpacer;
-    using wxStaticBoxSizer::Clear;
-    using wxStaticBoxSizer::IsEmpty;
-#   else
+    template <typename EventTag, typename EventArg>
+    void Bind(
+        const EventTag& eventType,
+        void (*function)(EventArg &),
+        int winid = wxID_ANY,
+        int lastId = wxID_ANY,
+        wxObject *userData = nullptr
+    ) {
+        GetStaticBox()->Bind(
+            eventType,
+            function,
+            winid,
+            lastId,
+            userData
+        );
+    }
+    // NOLINTEND(readability-identifier-naming)
+
+#   ifndef __WXOSX__
     wxSizerItem *Add(wxWindow *, const wxSizerFlags& = {});
     wxSizerItem *Add(wxSizer *, const wxSizerFlags& = {});
     wxSizerItem *AddSpacer(int32 size) override;

@@ -125,7 +125,7 @@ wxSizer *BladeAwarenessDlg::createIDSetup(wxWindow *parent) {
         wxSizerFlags().Expand().Border(wxTOP, 5)
     );
 
-    return setupSizer->underlyingSizer();
+    return setupSizer;
 }
 
 wxSizer *BladeAwarenessDlg::createIDPowerSettings(wxWindow *parent) {
@@ -162,7 +162,7 @@ wxSizer *BladeAwarenessDlg::createIDPowerSettings(wxWindow *parent) {
     powerForIDSizer->AddSpacer(5);
     powerForIDSizer->Add(powerPinEntry, wxSizerFlags().Expand());
 
-    return powerForIDSizer->underlyingSizer();
+    return powerForIDSizer;
 }
 
 wxSizer *BladeAwarenessDlg::createContinuousScanSettings(wxWindow *parent) {
@@ -201,7 +201,7 @@ wxSizer *BladeAwarenessDlg::createContinuousScanSettings(wxWindow *parent) {
     continuousScansSizer->AddSpacer(5);
     continuousScansSizer->Add(scanIDMillis, wxSizerFlags().Expand());
 
-    return continuousScansSizer->underlyingSizer();
+    return continuousScansSizer;
 }
 
 wxSizer *BladeAwarenessDlg::createBladeDetect(wxWindow *parent) {
@@ -231,6 +231,6 @@ wxSizer *BladeAwarenessDlg::createBladeDetect(wxWindow *parent) {
     bladeDetectSizer->AddSpacer(5);
     bladeDetectSizer->Add(detectPin, wxSizerFlags().Expand());
 
-    return bladeDetectSizer->underlyingSizer();
+    return bladeDetectSizer;
 }
 

@@ -57,6 +57,7 @@ Versions::PropOption::PropOption(
             *this,
             selectionData.name,
             selectionData.define,
+            selectionData.description,
             selectionData.required,
             selectionData.requiredAny,
             selectionData.disables
@@ -131,14 +132,14 @@ Versions::PropLayout::PropLayout(const PropLayout& other, const PropSettingMap& 
     children = processChildren(processChildren, other.children);
 }
 
-std::unordered_set<string> Versions::PropLayout::generate(
+void Versions::PropLayout::generate(
     const PConf::Data& data,
     const PropSettingMap& map,
     PropLayout& out,
+    std::unordered_set<string>& usedSettings,
     Log::Logger *logger
 ) {
     if (not logger) logger = &Log::Context::getGlobal().createLogger("PropLayout::generate()");
-    std::unordered_set<string> usedSettings;
 
     for (const auto& entry : data) {
         if (entry->name == "SETTING") {
@@ -150,6 +151,11 @@ std::unordered_set<string> Versions::PropLayout::generate(
             const auto settingIter{map.find(*entry->label)};
             if (settingIter == map.end()) {
                 logger->warn("Skipping unknown setting " + *entry->label + "...");
+                continue;
+            }
+
+            if (usedSettings.contains(*entry->label)) {
+                logger->warn("Setting " + *entry->label + " appeared in layout twice!");
                 continue;
             }
 
@@ -180,16 +186,14 @@ std::unordered_set<string> Versions::PropLayout::generate(
             )
         )};
 
-        const auto childUsedSettings{generate(
+        generate(
             entry.section()->entries,
             map,
             child,
+            usedSettings,
             logger
-        )};
-        usedSettings.insert(childUsedSettings.begin(), childUsedSettings.end());
+        );
     }
-
-    return usedSettings;
 }
 
 Versions::PropButtonState::PropButtonState(string stateName, vector<PropButton> buttons) : 
@@ -403,10 +407,11 @@ std::shared_ptr<Versions::Prop> Versions::Prop::generate(const PConf::HashedData
     if (not layout or not layout.section()) {
         logger.info("Skipping missing LAYOUT section...");
     } else {
-        settingsUsed = PropLayout::generate(
+        PropLayout::generate(
             layout.section()->entries,
             prop->mSettingMap,
             prop->mLayout,
+            settingsUsed,
             &logger.bdebug("Parsing LAYOUT...")->createLogger("PropLayout::generate()")
         );
     }

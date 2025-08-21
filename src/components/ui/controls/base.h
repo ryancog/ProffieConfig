@@ -131,6 +131,8 @@ private:
     bool mShowWhenUnbound{true};
 };
 
+struct StaticBox;
+
 template<
     class DERIVED,
     typename CONTROL_DATA,
@@ -140,7 +142,7 @@ template<
 >
 class UI_EXPORT ControlBase : public wxPanel, protected NotifyReceiver {
 public:
-    static_assert(std::is_base_of_v<wxControl, CONTROL> or std::is_same_v<wxPanel, CONTROL>, "PCUI Control core must be wxControl descendant");
+    static_assert(std::is_base_of_v<wxWindow, CONTROL> or std::is_same_v<PCUI::StaticBox, CONTROL>, "PCUI Control core must be wxWindow descendant");
     static_assert(std::is_base_of_v<ControlData, CONTROL_DATA>, "PCUI Control data must be ControlData descendant");
 
     void SetToolTip(const wxString&);
