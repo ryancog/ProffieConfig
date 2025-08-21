@@ -102,7 +102,7 @@ void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
     } else {
         controlFlags.Proportion(1).Expand();
     }
-    sizer->Add(control, controlFlags);
+        sizer->Add(control, controlFlags);
 
     SetSizer(sizer);
 
@@ -265,7 +265,7 @@ template class PCUI::ControlBase<PCUI::ComboBox, PCUI::ComboBoxData, wxComboBox,
 template class PCUI::ControlBase<PCUI::FilePicker, PCUI::FilePickerData, wxFilePickerCtrl, wxFileDirPickerEvent>;
 template class PCUI::ControlBase<PCUI::Numeric, PCUI::NumericData, wxSpinCtrl, wxSpinEvent, wxCommandEvent>;
 template class PCUI::ControlBase<PCUI::Decimal, PCUI::DecimalData, wxSpinCtrlDouble, wxSpinDoubleEvent, wxCommandEvent>;
-template class PCUI::ControlBase<PCUI::Radios, PCUI::RadiosData, wxRadioBox, wxCommandEvent>;
+template class PCUI::ControlBase<PCUI::Radios, PCUI::RadiosData, PCUI::StaticBox, wxCommandEvent>;
 template class PCUI::ControlBase<PCUI::Text, PCUI::TextData, wxTextCtrl, wxCommandEvent>;
 template class PCUI::ControlBase<PCUI::CheckBox, PCUI::ToggleData, wxCheckBox, wxCommandEvent>;
 template class PCUI::ControlBase<PCUI::Toggle, PCUI::ToggleData, wxToggleButton, wxCommandEvent>;

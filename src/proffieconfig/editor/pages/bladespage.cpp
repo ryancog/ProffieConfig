@@ -516,13 +516,13 @@ wxSizer *BladesPage::createBladeSettings() {
 
     mSimpleSizer = new wxBoxSizer(wxVERTICAL);
     auto *simpleSplit1Sizer{new wxBoxSizer(wxHORIZONTAL)};
-    simpleSplit1Sizer->Add(starSizer(config.bladeArrays.star1Proxy, _("LED 1"))->underlyingSizer());
+    simpleSplit1Sizer->Add(starSizer(config.bladeArrays.star1Proxy, _("LED 1")));
     simpleSplit1Sizer->AddSpacer(10);
-    simpleSplit1Sizer->Add(starSizer(config.bladeArrays.star2Proxy, _("LED 2"))->underlyingSizer());
+    simpleSplit1Sizer->Add(starSizer(config.bladeArrays.star2Proxy, _("LED 2")));
     auto *simpleSplit2Sizer{new wxBoxSizer(wxHORIZONTAL)};
-    simpleSplit2Sizer->Add(starSizer(config.bladeArrays.star3Proxy, _("LED 3"))->underlyingSizer());
+    simpleSplit2Sizer->Add(starSizer(config.bladeArrays.star3Proxy, _("LED 3")));
     simpleSplit2Sizer->AddSpacer(10);
-    simpleSplit2Sizer->Add(starSizer(config.bladeArrays.star4Proxy, _("LED 4"))->underlyingSizer());
+    simpleSplit2Sizer->Add(starSizer(config.bladeArrays.star4Proxy, _("LED 4")));
     auto *simpleBrightness{new PCUI::Numeric(
         this,
         config.bladeArrays.simpleBrightnessProxy,

@@ -109,7 +109,7 @@ wxSizer *CustomOptionsDlg::info(wxWindow *parent) {
         wxSizerFlags(0).Border(wxLEFT | wxBOTTOM | wxRIGHT, 10)
     );
 
-    return infoSizer->underlyingSizer();
+    return infoSizer;
 }
 
 void CustomOptionsDlg::createOptionArea() {

@@ -19,7 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/radiobox.h>
+#include <wx/radiobut.h>
+
+#include "ui/static_box.h"
 
 #include "base.h"
 #include "ui_export.h"
@@ -77,7 +79,7 @@ struct RadiosDataProxy : ControlDataProxy<RadiosData> {
 class UI_EXPORT Radios : public ControlBase<
                          Radios,
                          RadiosData,
-                         wxRadioBox,
+                         PCUI::StaticBox,
                          wxCommandEvent> {
 public:
     Radios(
@@ -95,10 +97,15 @@ public:
         wxOrientation orient = wxVERTICAL
     );
 
+    using ControlBase::SetToolTip;
+    void SetToolTip(uint32 idx, const wxString&);
+
 private:
     void create(const wxArrayString&, const wxString&, wxOrientation);
     void onUIUpdate(uint32) final;
     void onModify(wxCommandEvent&) final;
+
+    vector<wxRadioButton *> mRadios;
 };
 
 } // namespace PCUI

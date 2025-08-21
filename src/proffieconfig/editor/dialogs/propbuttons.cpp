@@ -96,7 +96,7 @@ PropButtonsDialog::PropButtonsDialog(EditorWindow *parent) {
             continue;
         }
         textSizer->Add(
-            stateSizer->underlyingSizer(),
+            stateSizer,
             wxSizerFlags(0)
                 .Border(wxTOP | wxLEFT | wxRIGHT, 10).Expand()
         );

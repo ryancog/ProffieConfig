@@ -101,12 +101,11 @@ void PropsPage::bindEvents() {
 }
 
 void PropsPage::handleNotification(uint32 id) {
-    if (id == ID_REBOUND or id == Config::Config::ID_PROPSELECTION) {
+    if (id == Config::Config::ID_PROPSELECTION) {
         showSelectedProp();
     }
     if (id == ID_REBOUND or id == Config::Config::ID_PROPUPDATE) {
         loadProps();
-        showSelectedProp();
     }
 }
 
@@ -116,10 +115,15 @@ void PropsPage::showSelectedProp() {
     FindWindow(ID_Buttons)->Enable(hasValidSelection);
     FindWindow(ID_PropInfo)->Enable(hasValidSelection);
 
-    // Hide all
+    for (auto *prop : mProps) prop->ShowItems(false);
+    mPropsWindow->SetSizer(nullptr, false);
     if (not hasValidSelection) return;
 
-    // Show
+    auto *sizer{mProps[config.propSelection]};
+    sizer->ShowItems(true);
+    mPropsWindow->SetSizerAndFit(sizer);
+
+    Layout();
 }
 
 // void PropsPage::update() {
@@ -155,42 +159,79 @@ void PropsPage::loadProps() {
     mProps.clear();
 
     const auto processChildren{[](
+        const auto self,
         const Versions::PropLayout::Children& children,
         wxSizer *sizer,
         wxWindow *parent
-    ) {
+    ) -> void {
         for (const auto& child : children) {
             if (const auto *ptr = std::get_if<Versions::PropSettingBase *>(&child)) {
                 auto& setting{**ptr};
                 wxWindow *windowToAdd{nullptr};
                 if (Versions::PropSettingType::TOGGLE == setting.settingType) {
+                    auto& toggle{static_cast<Versions::PropToggle&>(setting)};
                     auto *control{new PCUI::CheckBox(
                         parent,
-                        static_cast<Versions::PropToggle&>(setting).value,
+                        toggle.value,
                         0,
-                        setting.id()
+                        toggle.name
                     )};
-                    control->SetToolTip(static_cast<Versions::PropToggle&>(setting).description);
+                    control->SetToolTip(toggle.description);
                     windowToAdd = control;
                 } else if (Versions::PropSettingType::OPTION == setting.settingType) {
-                    const auto& option{static_cast<Versions::PropOption&>(setting)};
+                    auto& option{static_cast<Versions::PropOption&>(setting)};
+
                     vector<string> labels;
                     labels.reserve(option.selections().size());
                     for (const auto& selection : option.selections()) {
                         labels.push_back(selection->name);
                     }
+
                     auto *control{new PCUI::Radios(
                         parent,
-                        static_cast<Versions::PropOption&>(setting).selection,
-                        labels
+                        option.selection,
+                        labels,
+                        option.name
                     )};
+
                     control->SetToolTip(option.description);
+                    for (auto idx{0}; idx < option.selections().size(); ++idx) {
+                        control->SetToolTip(idx, option.selections()[idx]->description);
+                    }
                     windowToAdd = control;
+                } else if (Versions::PropSettingType::NUMERIC == setting.settingType) {
+                    auto& numeric{static_cast<Versions::PropNumeric&>(setting)};
+                    auto *control{new PCUI::Numeric(
+                        parent,
+                        numeric.value,
+                        numeric.name
+                    )};
+                    control->SetToolTip(numeric.description);
+                    windowToAdd = control;
+                } else if (Versions::PropSettingType::DECIMAL == setting.settingType) {
+                    auto& decimal{static_cast<Versions::PropDecimal&>(setting)};
+                    auto *control{new PCUI::Decimal(
+                        parent,
+                        decimal.value,
+                        decimal.name
+                    )};
+                    control->SetToolTip(decimal.description);
+                    windowToAdd = control;
+                } else {
+                    assert(0);
                 }
 
                 if (windowToAdd) sizer->Add(windowToAdd, 0, wxEXPAND);
             } else if (const auto *ptr = std::get_if<Versions::PropLayout>(&child)) {
-
+                wxSizer *newSizer{};
+                if (ptr->label.empty()) {
+                    newSizer = new wxBoxSizer(ptr->axis);
+                    self(self, ptr->children, newSizer, parent);
+                } else {
+                    newSizer = new PCUI::StaticBox(ptr->axis, parent, ptr->label);
+                    self(self, ptr->children, newSizer, static_cast<wxStaticBoxSizer *>(newSizer)->GetStaticBox());
+                }
+                sizer->Add(newSizer, wxSizerFlags().Expand());
             } else {
                 assert(0);
             }
@@ -201,8 +242,8 @@ void PropsPage::loadProps() {
         auto *sizer{mProps.emplace_back(new wxBoxSizer(prop->layout().axis))};
         // Top layout (as of writing) should never have label
 
-        processChildren(prop->layout().children, sizer, mPropsWindow);
+        processChildren(processChildren, prop->layout().children, sizer, mPropsWindow);
     }
 
-    Layout();
+    showSelectedProp();
 }
