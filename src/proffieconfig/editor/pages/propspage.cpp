@@ -66,6 +66,7 @@ PropsPage::PropsPage(EditorWindow *parent) :
     mPropsWindow->SetScrollbars(10, 10, -1, 1);
 
     sizer->Add(topSizer);
+    sizer->AddSpacer(10);
     sizer->Add(mPropsWindow, wxSizerFlags(1).Expand());
 
     bindEvents();
@@ -228,8 +229,9 @@ void PropsPage::loadProps() {
                     newSizer = new wxBoxSizer(ptr->axis);
                     self(self, ptr->children, newSizer, parent);
                 } else {
-                    newSizer = new PCUI::StaticBox(ptr->axis, parent, ptr->label);
-                    self(self, ptr->children, newSizer, static_cast<wxStaticBoxSizer *>(newSizer)->GetStaticBox());
+                    auto *box{new PCUI::StaticBox(ptr->axis, parent, ptr->label)};
+                    newSizer = box->sizer();
+                    self(self, ptr->children, newSizer, box);
                 }
                 sizer->Add(newSizer, wxSizerFlags().Expand());
             } else {

@@ -19,21 +19,91 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/panel.h>
+
+namespace {
+
+constexpr auto PADDING{10};
+
+} // namespace
+
 PCUI::StaticBox::StaticBox(wxOrientation orient, wxWindow *parent, const wxString& label) :
-    wxStaticBoxSizer(wxVERTICAL, parent, label) {
-#   ifndef __WXOSX__
-    mSizer = new wxBoxSizer(orient);
-    wxStaticBoxSizer::Add(
-        mSizer,
-        wxSizerFlags(1)
-            .Expand().Border(wxALL, 10)
-    );
-#   endif
+    wxStaticBox(parent, wxID_ANY, label) {
+    mSizer = new SizerWrapper(this, orient);
+    mPanel = new wxPanel(this);
+    mPanel->SetSizer(mSizer);
+
+    Bind(wxEVT_SIZE, [this](wxSizeEvent& evt) {
+        int32 topBorder{};
+        int32 otherBorder{};
+        GetBordersForSizer(&topBorder, &otherBorder);
+
+        mPanel->SetSize(GetSize() - wxSize{(PADDING * 2) + (otherBorder * 2), (PADDING * 2) + otherBorder + topBorder});
+        mPanel->SetPosition({PADDING, PADDING});
+        evt.Skip();
+    });
 }
 
-#ifndef __WXOSX__
-wxSizerItem *PCUI::StaticBox::Add(wxWindow *win, const wxSizerFlags& flags) {
-    return mSizer->Add(win, flags);
+// void PCUI::StaticBox::SizerWrapper::RepositionChildren(const wxSize& minSize) {
+// void Layout() override;
+//     wxBoxSizer::RepositionChildren(minSize - wxSize{20, 20});
+//     int32 topBorder{};
+//     int32 otherBorder{};
+//     mBox->GetBordersForSizer(&topBorder, &otherBorder);
+//     for (auto *item : GetChildren()) {
+//         auto pos{item->GetPosition()};
+//         auto size{item->GetSize()};
+// #       ifndef __WXOSX__
+//         pos.y += 10;
+//         pos.x += 10;
+// #       endif
+//         item->SetDimension(pos, size);
+//     }
+// }
+
+wxSize PCUI::StaticBox::DoGetBestClientSize() const {
+    int32 topBorder{};
+    int32 otherBorder{};
+    GetBordersForSizer(&topBorder, &otherBorder);
+    auto ret{mSizer->CalcMin()};
+    ret.x += 2 * otherBorder;
+    ret.y += otherBorder + topBorder;
+    ret.x += PADDING * 2;
+    ret.y += PADDING * 2;
+    return ret;
+
+    // auto ret{wxBoxSizer::CalcMin()};
+
+    // TODO
+    // ret.x = std::max(ret.x, boxWidth);
+
+    // return ret;
+}
+
+wxSizerItem *PCUI::StaticBox::SizerWrapper::DoInsert(size_t index, wxSizerItem *item) {
+    const auto reparentChildren{[this](const auto& self, wxSizer *sizer) -> void {
+        for (const auto *item : sizer->GetChildren()) {
+            if (item->IsWindow()) {
+                auto *window{item->GetWindow()};
+                window->Reparent(mBox->mPanel);
+            } else if (item->IsSizer()) {
+                auto *sizer{item->GetSizer()};
+                self(self, sizer);
+            }
+        }
+    }};
+    if (item->IsWindow()) {
+        if (item->GetWindow()->GetParent() == mBox) {
+            item->GetWindow()->Reparent(mBox->mPanel);
+        }
+    } else if (item->IsSizer()) {
+        reparentChildren(reparentChildren, item->GetSizer());
+    }
+    return wxBoxSizer::DoInsert(index, item);
+}
+
+wxSizerItem *PCUI::StaticBox::Add(wxWindow *window, const wxSizerFlags& flags) {
+    return mSizer->Add(window, flags);
 }
 
 wxSizerItem *PCUI::StaticBox::Add(wxSizer *sizer, const wxSizerFlags& flags) {
@@ -55,5 +125,4 @@ void PCUI::StaticBox::Clear(bool deleteWindows) {
 bool PCUI::StaticBox::IsEmpty() {
     return mSizer->IsEmpty();
 }
-#endif
 

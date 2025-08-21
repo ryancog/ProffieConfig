@@ -16,8 +16,8 @@ private:
 
   void bindEvents();
 
-  wxSizer *createIDSetup(wxWindow *);
-  wxSizer *createIDPowerSettings(wxWindow *);
-  wxSizer *createContinuousScanSettings(wxWindow *);
-  wxSizer *createBladeDetect(wxWindow *);
+  wxWindow *createIDSetup(wxWindow *);
+  wxWindow *createIDPowerSettings(wxWindow *);
+  wxWindow *createContinuousScanSettings(wxWindow *);
+  wxWindow *createBladeDetect(wxWindow *);
 };

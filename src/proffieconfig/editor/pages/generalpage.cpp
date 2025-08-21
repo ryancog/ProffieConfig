@@ -69,7 +69,7 @@ void GeneralPage::handleNotification(uint32 id) {
     bool rebound{id == ID_REBOUND};
 }
 
-wxSizer *GeneralPage::setupSection() {
+wxWindow *GeneralPage::setupSection() {
     auto& config{mParent->getOpenConfig()};
 
     auto *boardSetup{new PCUI::StaticBox(
@@ -79,18 +79,18 @@ wxSizer *GeneralPage::setupSection() {
     };
 
     auto *osVersion{new PCUI::Choice(
-        boardSetup->GetStaticBox(),
+        boardSetup,
         config.settings.osVersion
     )};
 
     auto *board{new PCUI::Choice(
-        boardSetup->GetStaticBox(),
+        boardSetup,
         config.settings.board
     )};
     board->SetToolTip(_("The hardware revision of the physical proffieboard.")); 
 
     auto *massStorage {new PCUI::CheckBox(
-        boardSetup->GetStaticBox(),
+        boardSetup,
         config.settings.massStorage,
         0,
         _("Enable Mass Storage")
@@ -98,7 +98,7 @@ wxSizer *GeneralPage::setupSection() {
     massStorage->SetToolTip(_("Enable to access the contents of your proffieboard's SD card via the USB connection."));
 
     auto *webUSB {new PCUI::CheckBox(
-        boardSetup->GetStaticBox(),
+        boardSetup,
         config.settings.webUSB,
         0,
         _("Enable WebUSB")
@@ -120,10 +120,10 @@ wxSizer *GeneralPage::setupSection() {
     return boardSetup;
 }
 
-wxSizer *GeneralPage::miscSection() {
+wxWindow *GeneralPage::miscSection() {
     auto& config{mParent->getOpenConfig()};
     auto *sizer{new PCUI::StaticBox(wxVERTICAL, this, _("Misc"))};
-    auto *parent{sizer->GetStaticBox()};
+    auto *parent{sizer};
 
     auto *pliTime{new PCUI::Decimal(
         parent,
@@ -158,10 +158,10 @@ wxSizer *GeneralPage::miscSection() {
     return sizer;
 }
 
-wxSizer *GeneralPage::installationSection() {
+wxWindow *GeneralPage::installationSection() {
     auto& config{mParent->getOpenConfig()};
     auto *sizer{new PCUI::StaticBox(wxVERTICAL, this, _("Installation"))};
-    auto *parent{sizer->GetStaticBox()};
+    auto *parent{sizer};
 
     auto *clash{new PCUI::Decimal(
         parent,
@@ -245,10 +245,10 @@ wxSizer *GeneralPage::installationSection() {
     return sizer;
 }
 
-wxSizer *GeneralPage::tweaksSection() {
+wxWindow *GeneralPage::tweaksSection() {
     auto& config{mParent->getOpenConfig()};
     auto *sizer{new PCUI::StaticBox(wxHORIZONTAL, this, _("Tweaks"))};
-    auto *parent{sizer->GetStaticBox()};
+    auto *parent{sizer};
 
     auto *noRepeatRandom{new PCUI::CheckBox(
         parent,
@@ -337,10 +337,10 @@ wxSizer *GeneralPage::tweaksSection() {
     return sizer;
 }
 
-wxSizer *GeneralPage::editingSection() {
+wxWindow *GeneralPage::editingSection() {
     auto& config{mParent->getOpenConfig()};
     auto *sizer{new PCUI::StaticBox(wxVERTICAL, this, _("Editing"))};
-    auto *parent{sizer->GetStaticBox()};
+    auto *parent{sizer};
 
     auto *saveState{new PCUI::CheckBox(
         parent,
@@ -445,10 +445,10 @@ wxSizer *GeneralPage::editingSection() {
     return sizer;
 }
 
-wxSizer *GeneralPage::audioSection() {
+wxWindow *GeneralPage::audioSection() {
     auto& config{mParent->getOpenConfig()};
     auto *sizer{new PCUI::StaticBox(wxVERTICAL, this, _("Audio"))};
-    auto *parent{sizer->GetStaticBox()};
+    auto *parent{sizer};
 
     auto *volume{new PCUI::Numeric(
         parent,
