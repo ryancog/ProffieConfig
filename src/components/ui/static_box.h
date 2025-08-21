@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/panel.h>
 #include <wx/sizer.h>
 #include <wx/statbox.h>
 
@@ -28,65 +29,36 @@
 
 namespace PCUI {
 
-/**
- * Simple wrapper class to make sure there's consistent spacing inside a wxStaticBox
- */
-class UI_EXPORT StaticBox : public wxStaticBoxSizer {
+class UI_EXPORT StaticBox : public wxStaticBox {
 public:
     StaticBox(wxOrientation, wxWindow *, const wxString& = wxEmptyString);
 
+    struct SizerWrapper : wxBoxSizer {
+        SizerWrapper(StaticBox *box, wxOrientation orient) :
+            wxBoxSizer(orient), mBox{box} {}
+        using wxBoxSizer::wxBoxSizer;
+        wxSizerItem *DoInsert(size_t index, wxSizerItem *) override;
+    private:
+        StaticBox *mBox;
+    };
+
+    wxSizer *sizer() { return mSizer; }
+
+    [[nodiscard]] wxSize DoGetBestClientSize() const override;
+
     // NOLINTBEGIN(readability-identifier-naming)
-    virtual void SetFocus() { GetStaticBox()->SetFocus(); }
-    virtual void SetMinSize(const wxSize& size) { GetStaticBox()->SetMinSize(size); }
-
-    template <typename EventTag, typename Functor>
-    void Bind(
-        const EventTag& eventType,
-        const Functor &functor,
-        int winid = wxID_ANY,
-        int lastId = wxID_ANY,
-        wxObject *userData = nullptr
-    ) {
-        GetStaticBox()->Bind(
-            eventType,
-            functor,
-            winid,
-            lastId,
-            userData
-        );
-    }
-
-    template <typename EventTag, typename EventArg>
-    void Bind(
-        const EventTag& eventType,
-        void (*function)(EventArg &),
-        int winid = wxID_ANY,
-        int lastId = wxID_ANY,
-        wxObject *userData = nullptr
-    ) {
-        GetStaticBox()->Bind(
-            eventType,
-            function,
-            winid,
-            lastId,
-            userData
-        );
-    }
-    // NOLINTEND(readability-identifier-naming)
-
-#   ifndef __WXOSX__
     wxSizerItem *Add(wxWindow *, const wxSizerFlags& = {});
     wxSizerItem *Add(wxSizer *, const wxSizerFlags& = {});
-    wxSizerItem *AddSpacer(int32 size) override;
-    wxSizerItem *AddStretchSpacer(int32 prop);
-    void Clear(bool deleteWindows) override;
-    bool IsEmpty();
-#   endif
+    wxSizerItem *AddSpacer(int32 size);
+    wxSizerItem *AddStretchSpacer(int32 prop = 1);
 
-#   ifndef __WXOSX__
+    void Clear(bool deleteWindows = false);
+    bool IsEmpty();
+    // NOLINTEND(readability-identifier-naming)
+    
 private:
-    wxBoxSizer *mSizer;
-#   endif
+    wxPanel *mPanel;
+    SizerWrapper *mSizer;
 };
 
 } // namespace PCUI

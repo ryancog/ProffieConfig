@@ -537,12 +537,12 @@ void PresetsPage::rebuildInjections() {
     for (const auto& injection : config.presetArrays.injections()) {
         auto *injectionSizer{new wxBoxSizer(wxHORIZONTAL)};
         auto *injectionText{new wxStaticText(
-            mInjectionsSizer->GetStaticBox(),
+            mInjectionsSizer,
             wxID_ANY,
             injection->filename
         )};
         auto *editButton{new wxButton(
-            mInjectionsSizer->GetStaticBox(),
+            mInjectionsSizer,
             wxID_ANY,
             _("Edit"),
             wxDefaultPosition,
@@ -550,7 +550,7 @@ void PresetsPage::rebuildInjections() {
             wxBU_EXACTFIT
         )};
         auto *deleteButton{new wxButton(
-            mInjectionsSizer->GetStaticBox(),
+            mInjectionsSizer,
             wxID_ANY,
             _("Delete"),
             wxDefaultPosition,

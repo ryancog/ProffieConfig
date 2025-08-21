@@ -37,11 +37,11 @@ private:
     void bindEvents();
     void handleNotification(uint32) final;
 
-    wxSizer *setupSection();
+    wxWindow *setupSection();
 
-    wxSizer *miscSection();
-    wxSizer *installationSection();
-    wxSizer *tweaksSection();
-    wxSizer *editingSection();
-    wxSizer *audioSection();
+    wxWindow *miscSection();
+    wxWindow *installationSection();
+    wxWindow *tweaksSection();
+    wxWindow *editingSection();
+    wxWindow *audioSection();
 };

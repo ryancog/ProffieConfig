@@ -72,7 +72,7 @@ wxBoxSizer *CustomOptionsDlg::header() {
     return sizer;
 }
 
-wxSizer *CustomOptionsDlg::info(wxWindow *parent) {
+wxWindow *CustomOptionsDlg::info(wxWindow *parent) {
     auto *infoSizer{new PCUI::StaticBox(
         wxVERTICAL,
         parent,
@@ -80,18 +80,18 @@ wxSizer *CustomOptionsDlg::info(wxWindow *parent) {
     )};
 
     auto *text{new wxStaticText(
-        infoSizer->GetStaticBox(),
+        infoSizer,
         wxID_ANY,
         _("(ProffieConfig already handles some of these)\n")
     )};
     auto *optDefines{new wxHyperlinkCtrl(
-        infoSizer->GetStaticBox(),
+        infoSizer,
         wxID_ANY,
         _("Optional Defines"),
         "https://pod.hubbe.net/config/the-config_top-section.html#optional-defines"
     )};
     auto *clashSuppress{new wxHyperlinkCtrl(
-        infoSizer->GetStaticBox(),
+        infoSizer,
         wxID_ANY,
         _("History of Clash Detection"),
         "https://pod.hubbe.net/explainers/history-of-clash.html"
