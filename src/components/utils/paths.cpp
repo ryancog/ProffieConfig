@@ -34,7 +34,9 @@
 namespace Paths {} // namespace Paths
 
 filepath Paths::approot() {
-    std::error_code err;
+#   ifdef APP_DEPLOY_PATH 
+    return APP_DEPLOY_PATH;
+#   else
 #   ifdef __WIN32__
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &rawStr);
@@ -46,6 +48,7 @@ filepath Paths::approot() {
     return filepath(getpwuid(getuid())->pw_dir) / "Library" / "Application Support" / "ProffieConfig";
 #   elif defined(__linux__)
     return filepath(getpwuid(getuid())->pw_dir) / ".local" / "share" / "ProffieConfig";
+#   endif
 #   endif
 }
 
