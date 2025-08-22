@@ -69,7 +69,6 @@ filepath Paths::executable(Executable exec) {
                     throw std::runtime_error{"Failed getting shortname: " + std::to_string(GetLastError())};
                 }
                 CoTaskMemFree(rawStr);
-                std::wcout << shortPath.data() << std::endl;
                 return filepath{shortPath.data()} / "ProffieConfig.exe";
             }
 #           elif defined(__linux__)
