@@ -20,6 +20,7 @@
  */
 
 #include "utils/string.h"
+#include "utils/limits.h"
 
 PCUI::VersionData::VersionData() {
     mMajor.setUpdateHandler([this](uint32 id) {
@@ -39,10 +40,11 @@ PCUI::VersionData::VersionData() {
 
         string newValue;
         if (not rawValue.empty()) {
-            const auto clampedValue{std::clamp(
+            using majorType = decltype(Utils::Version::major);
+            const auto clampedValue{std::clamp<majorType>(
                 std::stoi(rawValue),
                 0,
-                Utils::Version::NULL_REV - 1
+                Utils::MAX<majorType>
             )};
             newValue = std::to_string(clampedValue);
         }
@@ -69,10 +71,11 @@ PCUI::VersionData::VersionData() {
 
         string newValue;
         if (not rawValue.empty()) {
-            const auto clampedValue{std::clamp(
-                std::stoi(rawValue),
+            using minorType = decltype(Utils::Version::minor);
+            const auto clampedValue{std::clamp<minorType>(
+                static_cast<minorType>(std::stoi(rawValue)),
                 0,
-                Utils::Version::NULL_REV - 1
+                Utils::MAX<minorType>
             )};
             newValue = std::to_string(clampedValue);
         }
@@ -107,10 +110,11 @@ PCUI::VersionData::VersionData() {
 
         string newValue;
         if (not rawValue.empty()) {
-            const auto clampedValue{std::clamp(
-                std::stoi(rawValue),
+            using bugfixType = decltype(Utils::Version::bugfix);
+            const auto clampedValue{std::clamp<bugfixType>(
+                static_cast<bugfixType>(std::stoi(rawValue)),
                 0,
-                Utils::Version::NULL_REV - 1
+                Utils::MAX<bugfixType>
             )};
             newValue = std::to_string(clampedValue);
         }
@@ -151,9 +155,9 @@ PCUI::VersionData::VersionData(const Utils::Version& version) : VersionData() {
 PCUI::VersionData::operator Utils::Version() {
     std::scoped_lock scopeLock{getLock()};
     return {
-        static_cast<uint8>(std::stoi(mMajor)),
-        static_cast<uint8>(mMinor.empty() ? Utils::Version::NULL_REV : std::stoi(mMinor)),
-        static_cast<uint8>(mBugfix.empty() ? Utils::Version::NULL_REV : std::stoi(mBugfix)),
+        static_cast<decltype(Utils::Version::major)>(std::stoi(mMajor)),
+        static_cast<decltype(Utils::Version::minor)>(mMinor.empty() ? Utils::Version::NULL_REV : std::stoi(mMinor)),
+        static_cast<decltype(Utils::Version::bugfix)>(mBugfix.empty() ? Utils::Version::NULL_REV : std::stoi(mBugfix)),
         mTag
     };
 }
