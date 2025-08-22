@@ -50,7 +50,7 @@ struct VERSIONS_EXPORT VersionedProp {
     VersionedProp(string name) : name{std::move(name)} {}
 
     const string name;
-    std::shared_ptr<const Prop> prop;
+    std::unique_ptr<const Prop> prop;
 
     void addVersion();
     void removeVersion(uint32 idx);
@@ -60,7 +60,7 @@ struct VERSIONS_EXPORT VersionedProp {
     }
 
 private:
-    friend void loadLocal();
+    friend VERSIONS_EXPORT void loadLocal();
     void saveInfo();
     vector<std::unique_ptr<PCUI::VersionData>> mSupportedVersions;
 };
