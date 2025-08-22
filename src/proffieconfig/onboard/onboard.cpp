@@ -26,7 +26,7 @@ OnboardFrame::OnboardFrame() :
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
     auto *contentSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *icon{PCUI::createStaticImage(this, wxID_ANY, Image::loadPNG("icon"))};
-    icon->SetMaxSize(wxSize{256, 256});
+    icon->SetMaxSize({256, 256});
 
     contentSizer->Add(icon, wxSizerFlags(0).Border(wxALL, 10));
     mWelcomePage = new Onboard::Welcome(this);
