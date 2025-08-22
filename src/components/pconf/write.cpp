@@ -48,14 +48,14 @@ void PConf::write(std::ostream& outStream, const Data& pconfData, Log::Branch *l
                 outStream,
                 entry.section(),
                 0,
-                *logger.binfo("Writing Section: " + entry->name)
+                *logger.bverbose("Writing Section: " + entry->name)
             );
         } else {
             writeEntry(
                 outStream,
                 entry,
                 0,
-                *logger.binfo("Writing entry: " + entry->name)
+                *logger.bverbose("Writing entry: " + entry->name)
             );
         }
     }
