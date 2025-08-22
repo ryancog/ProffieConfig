@@ -2,21 +2,21 @@
 #
 # resources/CMakeLists.txt
 
+install(FILES icons/icon-zoom.png RENAME icon.png DESTINATION ${INSTALL_RESOURCE_DIR}/icons)
 install(FILES
-    # icons/blade.png
+    icons/blade.png
     # icons/chip.png
-    # icons/edit.png
-    icons/icon.png
-    # icons/import.png
+    icons/edit.png
+    icons/import.png
     # icons/led.png
-    # icons/new.png
+    icons/new.png
     # icons/reload.png
     # icons/serial_monitor.png
     # icons/sound.png
-    # icons/settings.png
+    icons/settings.png
     # icons/wiring.png
-    # icons/presets.png
-    # icons/props.png
+    icons/presets.png
+    icons/props.png
 
     DESTINATION ${INSTALL_RESOURCE_DIR}/icons
 )
