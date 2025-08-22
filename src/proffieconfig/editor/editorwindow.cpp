@@ -413,6 +413,8 @@ void EditorWindow::configureResizing() {
 }
 
 void EditorWindow::fitAnimated() {
+    if (not generalPage or not propsPage or not bladesPage or not presetsPage) return;
+
     SetSizeHints(-1, -1, -1, -1);
 
     const auto clientDelta{GetSize() - GetClientSize()};
