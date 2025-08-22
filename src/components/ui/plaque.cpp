@@ -1,5 +1,4 @@
 #include "plaque.h"
-#include "wx/generic/statbmpg.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024 Ryan Ogurek
@@ -23,6 +22,7 @@
 #include <wx/event.h>
 #include <wx/settings.h>
 #include <wx/statbox.h>
+#include <wx/generic/statbmpg.h>
 
 #include <utils/theme.h>
 
@@ -41,7 +41,7 @@ UI_EXPORT wxWindow *PCUI::createPlaque(wxWindow *parent, wxWindowID winID) {
 }
 
 UI_EXPORT wxStaticBitmapBase *PCUI::createStaticImage(wxWindow *parent, wxWindowID winID, const wxBitmap& bitmap) {
-#   ifdef __WINDOWS__
+#   ifndef __WXOSX__
     auto *image{new wxGenericStaticBitmap(parent, winID, bitmap)};
 #   else
     auto *image{new wxStaticBitmap(parent, winID, bitmap)};
