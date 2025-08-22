@@ -125,7 +125,7 @@ void AppState::loadState() {
 namespace {
 
 void doNecessaryMigrations() {
-    if (lastVersion < Utils::Version{"1.8.0"}) {
+    if (lastVersion < Utils::Version{1, 8}) {
         std::error_code err;
         fs::remove_all(Paths::resourceDir() / "props", err);
         fs::remove_all(Paths::osDir(), err);
