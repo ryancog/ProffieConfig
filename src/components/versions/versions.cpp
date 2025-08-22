@@ -147,18 +147,19 @@ void Versions::loadLocal() {
         }
 
         filepath defaultPropDataPath{entry.path() / "default_prop.pconf"};
+        auto& versionedProp{propDefaultVersionMap.emplace(version, "").first->second};
+        PConf::HashedData hashedDefaultPropData;
         if (fs::is_regular_file(defaultPropDataPath, err)) {
             std::ifstream defaultPropDataFile{defaultPropDataPath};
             PConf::Data defaultPropData;
             PConf::read(defaultPropDataFile, defaultPropData, logger.bverbose("Reading default prop file..."));
-            const auto hashedDefaultPropData{PConf::hash(defaultPropData)};
-            auto& versionedProp{propDefaultVersionMap.emplace(version, "").first->second};
-            versionedProp.prop = Prop::generate(
-                hashedDefaultPropData,
-                logger.bverbose("Generating default prop...."),
-                true
-            );
+            hashedDefaultPropData = PConf::hash(defaultPropData);
         }
+        versionedProp.prop = std::move(Prop::generate(
+            hashedDefaultPropData,
+            logger.bverbose("Generating default prop...."),
+            true
+        ));
 
         osVersions.push_back(std::move(os));
     }

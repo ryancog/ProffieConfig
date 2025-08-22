@@ -369,28 +369,45 @@ std::unique_ptr<Versions::Prop> Versions::Prop::generate(
 ) {
     auto& logger{Log::Branch::optCreateLogger("Versions::Prop::generate()", lBranch)};
 
-    const auto nameEntry{data.find("NAME")};
-    const auto filenameEntry{data.find("FILENAME")};
-    if (not forDefault) {
+    string name;
+    if (forDefault) {
+        name = "Default";
+    } else {
+        const auto nameEntry{data.find("NAME")};
         if (not nameEntry or not nameEntry->value) {
             logger.error("Missing name.");
             return nullptr;
         }
+        name = *nameEntry->value;
+    }
+
+    string filename;
+    if (not forDefault) {
+        const auto filenameEntry{data.find("FILENAME")};
         if (not filenameEntry or not filenameEntry->value) {
             logger.error("Missing filename.");
             return nullptr;
         }
+        filename = *filenameEntry->value;
     }
 
+    string info;
     const auto infoEntry{data.find("INFO")};
     if (not infoEntry or not infoEntry->value) {
         logger.info("No info...");
-    } 
+        if (forDefault) {
+            info = "The ProffieOS default prop.";
+        } else {
+            info = "Prop has no additional info.";
+        }
+    } else {
+        info = *infoEntry->value;
+    }
 
     auto prop{std::unique_ptr<Prop>(new Prop(
-        nameEntry->value.value_or("Default"),
-        filenameEntry->value.value_or(""),
-        infoEntry->value.value_or("Prop has no additional info.")
+        name,
+        filename,
+        info
     ))};
 
     const auto settingsEntry{data.find("SETTINGS")};
