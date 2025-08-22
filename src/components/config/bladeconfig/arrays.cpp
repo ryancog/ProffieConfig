@@ -1,4 +1,6 @@
 #include "arrays.h"
+
+#include <algorithm>
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -25,7 +27,6 @@
 #include "utils/string.h"
 #include "ws281x.h"
 
-
 Config::BladeArrays::BladeArrays(Config& parent) :
     mParent{parent},
     splitTypeProxy{Split::TYPE_MAX} {
@@ -41,13 +42,13 @@ Config::BladeArrays::BladeArrays(Config& parent) :
     arraySelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
 
     arraySelection.setUpdateHandler([this](uint32 id) {
-        if (id == arraySelection.ID_CHOICES) {
+        if (id == PCUI::ChoiceData::ID_CHOICES) {
             if (not arraySelection.choices().empty() and arraySelection == -1) {
                 arraySelection = 0;
             }
             return;
         }
-        if (id != arraySelection.ID_SELECTION) return;
+        if (id != PCUI::ChoiceData::ID_SELECTION) return;
         Defer defer{[this]() { notifyData.notify(ID_ARRAY_SELECTION); }};
 
         arrayIssues = BladeConfig::ISSUE_NONE;
@@ -61,10 +62,10 @@ Config::BladeArrays::BladeArrays(Config& parent) :
         arrayIssues = selectedArray.computeIssues();
     });
     powerPinNameEntry.setUpdateHandler([this](uint32 id) {
-        if (id == powerPinNameEntry.ID_ENTER) {
+        if (id == PCUI::TextData::ID_ENTER) {
             addPowerPinFromEntry();
         }
-        if (id != powerPinNameEntry.ID_VALUE) return;
+        if (id != PCUI::TextData::ID_VALUE) return;
 
         auto rawValue{static_cast<string>(powerPinNameEntry)};
         uint32 numTrimmed{};
@@ -94,11 +95,11 @@ void Config::BladeArrays::refreshPresetArrays(int32 clearIdx) {
     }
 }
 
-Config::BladeConfig& Config::BladeArrays::addArray(string&& name, uint32 id, string presetArray) {
+Config::BladeConfig& Config::BladeArrays::addArray(string&& name, int32 id, const string& presetArray) {
     auto& array{mBladeArrays.emplace_back(std::make_unique<BladeConfig>(mParent))};
 
     auto bladeArrayChoices{arraySelection.choices()};
-    bladeArrayChoices.push_back({});
+    bladeArrayChoices.emplace_back();
     arraySelection.setChoices(std::move(bladeArrayChoices));
 
     array->name.setValue(std::move(name));
@@ -118,7 +119,7 @@ void Config::BladeArrays::removeArray(uint32 idx) {
     auto choices{arraySelection.choices()};
     choices.erase(std::next(choices.begin(), idx));
     arraySelection.setChoices(std::move(choices));
-    mParent.presetArrays.syncStyleDisplay(idx);
+    mParent.presetArrays.syncStyleDisplay(static_cast<int32>(idx));
     if (arraySelection == idx) arraySelection = -1;
 }
 
@@ -163,7 +164,7 @@ uint32 Config::BladeArrays::numBlades() const {
                 }
             } else ++count;
         }
-        if (ret < count) ret = count;
+        ret = std::max(ret, count);
     }
 
     return ret;
