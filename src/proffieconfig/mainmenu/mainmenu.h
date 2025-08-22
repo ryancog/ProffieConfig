@@ -2,8 +2,6 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2024-2025 Ryan Ogurek
 
-#include <map>
-
 #include <wx/button.h>
 #include <wx/combobox.h>
 

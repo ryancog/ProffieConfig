@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024-2025 Ryan Ogurek
+ * Copyright (C) 2025 Ryan Ogurek
  *
- * proffieconfig/onboard/onboard.h
+ * proffieconfig/onboard/pages/welcome.h
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,40 +19,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/stattext.h>
-#include <wx/gauge.h>
-#include <wx/timer.h>
 #include <wx/panel.h>
-
-#include "pages/info.h"
-#include "pages/setup.h"
-#include "pages/welcome.h"
-#include "ui/frame.h"
-#include "ui/notifier.h"
 
 namespace Onboard {
 
-wxStaticText *createHeader(wxWindow *, const wxString&);
-
-class Frame : public PCUI::Frame, PCUI::NotifyReceiver {
+class Welcome : public wxPanel {
 public:
-    static Frame* instance;
-    Frame();
-    ~Frame() override;
-
-private:
-    void handleNotification(uint32) override;
-    void bindEvents();
-
-    Onboard::Welcome *mWelcomePage{nullptr};
-    Onboard::Setup *mSetupPage{nullptr};
-    Onboard::Info *mInfoPage{nullptr};
-
-    enum {
-        ID_Back,
-        ID_Next,
-        ID_Cancel,
-    };
+    Welcome(wxWindow *);
 };
 
 } // namespace Onboard

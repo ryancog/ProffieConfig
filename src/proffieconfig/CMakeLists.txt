@@ -24,9 +24,9 @@ add_executable(proffieconfig WIN32
     mainmenu/mainmenu.cpp
 
     onboard/onboard.cpp
-    onboard/pages/dependencypage.cpp
-    onboard/pages/overviewpage.cpp
-    onboard/pages/welcomepage.cpp
+    onboard/pages/welcome.cpp
+    onboard/pages/setup.cpp
+    onboard/pages/info.cpp
 
     tools/arduino.cpp
     tools/serialmonitor.cpp
