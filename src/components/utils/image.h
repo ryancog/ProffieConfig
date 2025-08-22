@@ -60,7 +60,7 @@ private:
 UTILS_EXPORT extern const wxColour DARK_BLUE;
 UTILS_EXPORT extern const wxColour LIGHT_BLUE;
 
-UTILS_EXPORT wxBitmap loadPNG(const string& name, bool dpiScaled = true);
+UTILS_EXPORT wxBitmap loadPNG(const string& name);
 /**
  * @param size Size to scale the bitmap to. Only one dimension may be provided.
  * @param color Optional color to set bitmap to.
@@ -68,7 +68,6 @@ UTILS_EXPORT wxBitmap loadPNG(const string& name, bool dpiScaled = true);
 UTILS_EXPORT wxBitmap loadPNG(const string& name, wxSize size, const wxColour& color = wxNullColour); 
 
 UTILS_EXPORT wxBitmap newBitmap(wxSize);
-UTILS_EXPORT int32 getDPIScaleFactor();
 UTILS_EXPORT wxColour getAccentColor();
 
 } // namespace Image

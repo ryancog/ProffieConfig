@@ -23,6 +23,7 @@
 
 #include <wx/bitmap.h>
 #include <wx/dcmemory.h>
+#include <wx/display.h>
 #include <wx/gdicmn.h>
 #include <wx/log.h>
 #include <wx/rawbmp.h>
@@ -105,7 +106,7 @@ Image::DynamicColor::operator bool() const {
     assert(0);
 }
 
-wxBitmap Image::loadPNG(const string& name, bool dpiScaled) {
+wxBitmap Image::loadPNG(const string& name) {
     // auto bmpIt{bmps.find(name)};
     // if (bmpIt != bmps.end()) return bmpIt->second;
 
@@ -120,7 +121,7 @@ wxBitmap Image::loadPNG(const string& name, bool dpiScaled) {
             return bitmap;
         }
     }
-    if (dpiScaled) bitmap.SetScaleFactor(getDPIScaleFactor());
+    bitmap.SetScaleFactor(wxDisplay{0U}.GetScaleFactor());
 
     // bmps.emplace(name, bitmap);
     return bitmap;
@@ -168,12 +169,10 @@ wxBitmap Image::loadPNG(const string& name, wxSize size, const wxColour& color) 
 
 wxBitmap Image::newBitmap(wxSize size) {
     wxBitmap bmp;
-    bmp.CreateWithDIPSize(size, getDPIScaleFactor(), 32);
+    bmp.CreateWithDIPSize(size, wxDisplay{0U}.GetScaleFactor(), 32);
     bmp.UseAlpha();
     return std::move(bmp);
 }
-
-int32 Image::getDPIScaleFactor() { return 2; }
 
 wxColour Image::getAccentColor() { return { 0x27, 0x4a, 0x72 }; }
 
