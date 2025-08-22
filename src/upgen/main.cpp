@@ -39,6 +39,7 @@
 #include <log/logger.h>
 
 #include "../launcher/update/update.h"
+#include "pconf/utils.h"
 
 class UpGen : public wxAppConsole {
 private:
@@ -108,15 +109,15 @@ private:
     };
 
 
-    static inline std::ostream& resetLine() { std::cout << "\33[2K\r"; return std::cout; }
-    static inline std::ostream& resetToPrevLine() { 
+    static std::ostream& resetLine() { std::cout << "\33[2K\r"; return std::cout; }
+    static std::ostream& resetToPrevLine() { 
         std::cout << "\033[A";
         return resetLine();
     }
-    static inline void updatePrevLine(const string& str) { 
+    static void updatePrevLine(const string& str) { 
         resetToPrevLine() << str << '\n' << std::flush;
     }
-    static inline void clearScreen() {
+    static void clearScreen() {
         std::cout << "\033[2J\033[H" << std::flush;
     }
 
@@ -131,8 +132,8 @@ private:
     static std::pair<Data, vector<Message>> loadCurrentManifest(const filepath&);
 
     static vector<Message> parseMessages(const PConf::HashedData&, Log::Logger&);
-    static std::pair<string, Item> parseItem(const std::shared_ptr<PConf::Entry>&, Log::Logger&);
-    static std::pair<string, Item> parseBundles(const std::shared_ptr<PConf::Entry>&, Log::Logger&);
+    static std::pair<string, Item> parseItem(const PConf::EntryPtr&, Log::Logger&);
+    static std::pair<string, Item> parseBundles(const PConf::EntryPtr&, Log::Logger&);
     static Update::Bundles resolveBundles(const PConf::HashedData&, Log::Logger&);
     static void verifyBundles(const Items&, const Update::Bundles&, Log::Logger&);
 
@@ -163,7 +164,7 @@ public:
         auto& logger{globalContext.createLogger("main()")};
 
         clearScreen();
-        std::cout << HEADER << std::endl;
+        std::cout << HEADER << '\n' << std::flush;
 
         FileMaps fileMaps{};
 
@@ -196,9 +197,7 @@ public:
                     }
 
                     const auto& file{entry.path()};
-                    auto canonFile{fs::canonical(file)};
                     auto fileHash{Crypto::computeHash(file)};
-
                     fileMaps[platformIdx][typeIdx].emplace(fs::relative(file, dirFolder), fileHash);
                 }
             }
@@ -216,7 +215,8 @@ public:
         filepath manifestFile{manifestStr};
         if (manifestFile.is_relative()) manifestFile = STAGING_DIR / manifestFile;
 
-        if (not fs::exists(manifestFile)) {
+        std::error_code err;
+        if (not fs::exists(manifestFile, err)) {
             std::cout << "Manifest file does not exist!\n";
             exit(1);
         }
@@ -227,9 +227,9 @@ public:
 
         std::cout << "Parsing manifest... " << std::flush;
         auto [ data, messages ]{loadCurrentManifest(manifestFile)};
-        std::cout << "Done." << std::endl;
+        std::cout << "Done.\n" << std::flush;
 
-        std::cout << "Running through files..." << std::endl;
+        std::cout << "Running through files...\n" << std::flush;
         handleNewItems(data, fileMaps);
 
         string input;
@@ -281,10 +281,10 @@ public:
         std::filesystem::remove(oldLocation);
         std::filesystem::copy_file(manifestFile, oldLocation);
         generateNewManifest(messages, data);
-        std::cout << "Done." << std::endl;
+        std::cout << "Done.\n" << std::flush;
         std::cout << "Organizing available assets... " << std::flush;
         organizeAssets(fileMaps, data);
-        std::cout << "Done." << std::endl;
+        std::cout << "Done.\n" << std::flush;
 
         return false;
     }
@@ -326,32 +326,31 @@ std::pair<UpGen::Data, vector<UpGen::Message>> UpGen::loadCurrentManifest(const 
 
 vector<UpGen::Message> UpGen::parseMessages(const PConf::HashedData& hashedRawData, Log::Logger& logger) {
     vector<UpGen::Message> ret;
-    auto messageRange{hashedRawData.equal_range("MESSAGE")};
-    for (auto messageIt{messageRange.first}; messageIt != messageRange.second; ++messageIt) {
-        if (messageIt->second->getType() != PConf::Type::SECTION) {
+    auto messageEntries{hashedRawData.findAll("MESSAGE")};
+    for (const auto& messageEntry : messageEntries) {
+        if (not messageEntry.section()) {
             logger.error("Message entry found in pconf! (Not a section)");
             exit(1);
         }
 
-        auto msgSect{std::static_pointer_cast<PConf::Section>(messageIt->second)};
-        if (not msgSect->label) {
+        if (not messageEntry->label) {
             logger.error("Message without version specified is unacceptable.");
             exit(1);
         }
 
-        auto hashedEntries{PConf::hash(msgSect->entries)};
-        auto content{hashedEntries.find("CONTENT")};
-        if (content == hashedEntries.end()) {
+        auto hashedEntries{PConf::hash(messageEntry.section()->entries)};
+        auto contentEntry{hashedEntries.find("CONTENT")};
+        if (not contentEntry) {
             logger.error("Message missing content.");
             exit(1);
         }
 
-        if (not content->second->value) {
+        if (not contentEntry->value) {
             logger.error("Message content entry missing value.");
             exit(1);
         }
 
-        auto label{msgSect->label.value()};
+        auto label{*messageEntry->label};
         Update::Comparator comp{};
         if (label.length() > 1) {
             if (label[0] == '<') comp = Update::Comparator::LESS_THAN;
@@ -370,80 +369,78 @@ vector<UpGen::Message> UpGen::parseMessages(const PConf::HashedData& hashedRawDa
         }
 
         auto& message{ret.emplace_back()};
-        message.fatal = hashedEntries.find("FATAL") != hashedEntries.end();
+        message.fatal = static_cast<bool>(hashedEntries.find("FATAL"));
         message.version = version;
         message.versionComp = comp;
-        message.message = content->second->value.value();
+        message.message = *contentEntry->value;
     }
     return ret;
 }
 
-std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Entry>& entry, Log::Logger& logger) {
+std::pair<string, UpGen::Item> UpGen::parseItem(const PConf::EntryPtr& entry, Log::Logger& logger) {
     if (not entry->label) {
         logger.error("Item missing name!");
         exit(1);
     }
-    auto name{entry->label.value()};
+    auto name{*entry->label};
 
-    if (entry->getType() != PConf::Type::SECTION) {
+    if (not entry.section()) {
         logger.error("Item \"" + name + "\" not a section!");
         exit(1);
     }
-    auto sect{std::static_pointer_cast<PConf::Section>(entry)};
 
-    auto hashedEntries{PConf::hash(sect->entries)};
+    auto hashedEntries{PConf::hash(entry.section()->entries)};
     auto checkPath{[&](cstring spec, cstring key) -> optional<filepath> {
-        auto path{hashedEntries.find(key)};
+        auto pathEntry{hashedEntries.find(key)};
 
         // It may not have a path for certain things, that's fine.
-        if (path == hashedEntries.end()) return nullopt;
+        if (not pathEntry) return nullopt;
 
-        if (not path->second->value) {
+        if (not pathEntry->value) {
             logger.error("Item \"" + name + "\" " + spec + " path missing value!");
             exit(1);
         }
-        if (path->second->value->empty()) {
+        if (pathEntry->value->empty()) {
             logger.error("Item \"" + name + "\" has empty " + spec + " path!");
             exit(1);
         }
-        return path->second->value;
+        return pathEntry->value;
     }};
 
     Item item;
     item.linuxPath = checkPath("Linux", PATH_KEY_LINUX);
     item.win32Path = checkPath("Win32", PATH_KEY_WIN32);
     item.macOSPath = checkPath("macOS", PATH_KEY_MACOS);
-    item.hidden = hashedEntries.find("HIDDEN") != hashedEntries.end();
-    item.deprecated = hashedEntries.find("DEPRECATED") != hashedEntries.end();
+    item.hidden = static_cast<bool>(hashedEntries.find("HIDDEN"));
+    item.deprecated = static_cast<bool>(hashedEntries.find("DEPRECATED"));
 
-    auto versionRange{hashedEntries.equal_range("VERSION")};
-    for (auto versionIt{versionRange.first}; versionIt != versionRange.second; ++versionIt) {
-        if (not versionIt->second->label) {
+    auto versionEntries{hashedEntries.findAll("VERSION")};
+    for (const auto& versionEntry : versionEntries) {
+        if (not versionEntry->label) {
             logger.error("Item \"" + name + "\" version unlabeled.");
             exit(1);
         }
-        if (versionIt->second->getType() != PConf::Type::SECTION) {
+        if (not versionEntry.section()) {
             logger.error("Item \"" + name + "\" version not a section.");
             exit(1);
         }
 
-        Utils::Version version{*versionIt->second->label};
+        Utils::Version version{*versionEntry->label};
         if (not version) {
             string errMsg{"Item \""};
             errMsg += name;
             errMsg += "\" version \"";
-            errMsg += versionIt->second->label.value(); 
+            errMsg += *versionEntry->label;
             errMsg += "\" invalid version str: " + string(version);
             logger.error(errMsg);
             exit(1);
         }
 
-        auto versionSect{std::static_pointer_cast<PConf::Section>(versionIt->second)};
-        auto hashedVersionEntries{PConf::hash(versionSect->entries)};
+        auto hashedVersionEntries{PConf::hash(versionEntry.section()->entries)};
 
         auto checkHash{[&](cstring spec, cstring key) {
-            auto versionHash{hashedVersionEntries.find(key)};
-            if (versionHash == hashedVersionEntries.end()) {
+            auto versionHashEntry{hashedVersionEntries.find(key)};
+            if (not versionHashEntry) {
                 string errMsg{"Item \""}; 
                 errMsg += name;
                 errMsg += "\" version "; 
@@ -452,7 +449,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
                 logger.error(errMsg);
                 exit(1);
             }
-            if (not versionHash->second->value) {
+            if (not versionHashEntry->value) {
                 string errMsg{"Item \""}; 
                 errMsg += name;
                 errMsg += "\" version ";
@@ -461,7 +458,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
                 logger.error(errMsg);
                 exit(1);
             }
-            if (versionHash->second->value->length() != 64) {
+            if (versionHashEntry->value->length() != 64) {
                 string errMsg{"Item \""}; 
                 errMsg += name;
                 errMsg += "\" version ";
@@ -470,7 +467,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
                 logger.error(errMsg);
                 exit(1);
             }
-            return versionHash->second->value.value();
+            return versionHashEntry->value.value();
         }};
 
         ItemVersionData versionData;
@@ -522,7 +519,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
 
         item.versions.emplace(version, versionData);
     }
-    if (versionRange.first == versionRange.second) {
+    if (versionEntries.empty()) {
         logger.error("Item \"" + name + "\" has no versions!");
         exit(1);
     }
@@ -533,37 +530,37 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const std::shared_ptr<PConf::Ent
 Update::Bundles UpGen::resolveBundles(const PConf::HashedData& hashedRawData, Log::Logger& logger) {
     Update::Bundles ret;
 
-    auto bundleRange{hashedRawData.equal_range("BUNDLE")};
-    for (auto bundleIt{bundleRange.first}; bundleIt != bundleRange.second; ++bundleIt) {
-        if (not bundleIt->second->label) {
+    auto bundleEntries{hashedRawData.findAll("BUNDLE")};
+    for (const auto& bundleEntry : bundleEntries) {
+        if (not bundleEntry->label) {
             logger.error("Bundle unlabeled.");
             exit(1);
         }
-        if (bundleIt->second->getType() != PConf::Type::SECTION) {
-            logger.error("Bundle \"" + bundleIt->second->label.value() + "\" not a section.");
+        if (not bundleEntry.section()) {
+            logger.error("Bundle \"" + *bundleEntry->label + "\" not a section.");
             exit(1);
         }
 
-        Utils::Version version{*bundleIt->second->label};
+        Utils::Version version{*bundleEntry->label};
         if (not version) {
-            logger.error("Bundle \"" + bundleIt->second->label.value() + "\" version invalid: " + string(version));
+            logger.error("Bundle \"" + *bundleEntry->label + "\" version invalid: " + string(version));
             exit(1);
         }
 
-        auto hashedEntries{PConf::hash(std::static_pointer_cast<PConf::Section>(bundleIt->second)->entries)};
+        auto hashedEntries{PConf::hash(bundleEntry.section()->entries)};
         Update::Bundle bundle;
 
-        auto noteIt{hashedEntries.find("NOTE")};
-        if (noteIt != hashedEntries.end()) {
-            if (not noteIt->second->value) {
-                logger.error("Bundle \"" + string(version) + "\" note missing value");
+        auto noteEntry{hashedEntries.find("NOTE")};
+        if (not noteEntry) {
+            if (not noteEntry->value) {
+                logger.error("Bundle \"" + static_cast<string>(version) + "\" note missing value");
                 exit(1);
             }
 
-            else bundle.note = noteIt->second->value.value();
+            else bundle.note = *noteEntry->value;
         }
 
-        auto parseReqItem{[&logger, version](const std::shared_ptr<PConf::Entry>& item) -> optional<std::pair<string, Utils::Version>> {
+        const auto parseReqItem{[&logger, version](const PConf::EntryPtr& item) -> optional<std::pair<string, Utils::Version>> {
             if (not item->label) {
                 logger.error("Item is unlabeled");
                 exit(1);
@@ -581,7 +578,7 @@ Update::Bundles UpGen::resolveBundles(const PConf::HashedData& hashedRawData, Lo
             return std::pair{ item->label.value(), version };
         }};
 
-        auto fillReqFiles{[&](auto range, Update::ItemType type) {
+        const auto fillReqFiles{[&](auto range, Update::ItemType type) {
             for (auto itemIt{range.first}; itemIt != range.second; ++itemIt) {
                 auto parsed{parseReqItem(itemIt->second)};
                 if (parsed) {
@@ -673,7 +670,7 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
                             continue;
                         }
 
-                        if (item.versions.find(version) != item.versions.end()) {
+                        if (item.versions.contains(version)) {
                             std::cout << "Version exists, try again. " << std::flush;
                             std::getline(std::cin, input);
                             resetToPrevLine();
@@ -693,7 +690,8 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
                 break;
             }
 
-            std::cout << "Updated \"" << itemID.name << "\" to version " << static_cast<string>(item.versions.rbegin()->first) << std::endl;
+            std::cout << "Updated \"" << itemID.name << "\" to version "
+                << static_cast<string>(item.versions.rbegin()->first) << '\n' << std::flush;
         }
 
         if (win32FileHash) fileMaps[WINDOWS][itemID.type].erase(win32It);
@@ -734,7 +732,7 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
                     auto itemIt{data.items.find({ itemType, itemName })};
                     if (itemIt == data.items.end()) {
                         if (typeIdx == Update::RSRC) {
-                            item = &data.items.emplace(Update::ItemID{ itemType, itemName }, Item{}).first->second;
+                            item = &data.items.emplace(Update::ItemID{ .type=itemType, .name=itemName }, Item{}).first->second;
                             item->hidden = true;
                             newItem = true;
                         } else {
@@ -744,7 +742,7 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
                                 resetToPrevLine();
 
                                 if (input == "y" or input == "Y") {
-                                    item = &data.items.emplace(Update::ItemID{ itemType, itemName }, Item{}).first->second;
+                                    item = &data.items.emplace(Update::ItemID{ .type=itemType, .name=itemName }, Item{}).first->second;
                                     newItem = true;
                                 } else if (input.empty() or input == "n" or input == "N") break;
                                 else continue;
@@ -879,8 +877,11 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
 
                     break;
                 }
-                std::cout << "Added " << platformStr << ' ' << typeStr << ' ' << path << (newVersion ? " to new version " : " to version ") << 
-                    static_cast<string>(item->versions.rbegin()->first) << (newItem ? string{" in new"} + (item->hidden ? " hidden" : "") + " item \"" : " in \"") << itemName << '"' << std::endl;
+                std::cout << "Added " << platformStr << ' ' << typeStr << ' ' << path
+                    << (newVersion ? " to new version " : " to version ")
+                    << static_cast<string>(item->versions.rbegin()->first)
+                    << (newItem ? string{" in new"} + (item->hidden ? " hidden" : "") + " item \"" : " in \"")
+                    << itemName << '"' << '\n' << std::flush;
             }
         }
     }
@@ -990,7 +991,7 @@ void UpGen::generateNewManifest(const vector<Message>& messages, const Data& dat
 }
 
 void UpGen::organizeAssets(const FileMaps& fileMaps, const Data& data) {
-    auto lookupItem{[&](Platform platform, Update::ItemType type, const filepath& path, string hash)
+    const auto lookupItem{[&](Platform platform, Update::ItemType type, const filepath& path, const string& hash)
         -> std::pair<string, Utils::Version> {
         for (const auto& [ itemID, item ] : data.items) {
             if (type != itemID.type) continue;
@@ -1029,11 +1030,11 @@ void UpGen::organizeAssets(const FileMaps& fileMaps, const Data& data) {
                 return { itemID.name, version };
             }
 
-            std::cout << "\nITEM LOOKUP ERR1" << std::endl;
+            std::cout << "\nITEM LOOKUP ERR1\n" << std::flush;
             exit(1);
         }
 
-        std::cout << "\nITEM LOOKUP ERR2" << std::endl;
+        std::cout << "\nITEM LOOKUP ERR2\n" << std::flush;
         exit(1);
     }};
 
@@ -1068,10 +1069,10 @@ void UpGen::listMessages(const vector<Message>& messages, bool hold) {
     uint32 idx{0};
     for (const auto& message : messages) {
         std::cout << "  " << idx << ") ";
-        std::cout << (message.fatal ? "[F] " : "--- ") << 
-            (message.versionComp == Update::Comparator::LESS_THAN ? "<" : 
-             message.versionComp == Update::Comparator::GREATER_THAN ? ">" : 
-             "") << static_cast<string>(message.version) << '\n';
+        std::cout << (message.fatal ? "[F] " : "--- ");
+        if (message.versionComp == Update::Comparator::LESS_THAN) std::cout << '<';
+        else if (message.versionComp == Update::Comparator::GREATER_THAN) std::cout << '>';
+        std::cout << static_cast<string>(message.version) << '\n';
         std::istringstream msgStream{message.message};
         string buffer;
         while (msgStream.good() and not msgStream.eof()) {
@@ -1401,7 +1402,7 @@ void UpGen::addBundle(Data& data, bool fromCurrent) {
             continue;
         }
 
-        if (data.bundles.find(version) != data.bundles.end()) {
+        if (data.bundles.contains(version)) {
             resetToPrevLine() << "Bundle exists, choose another version. " << std::flush;
             std::getline(std::cin, input);
             resetToPrevLine();
@@ -1465,7 +1466,7 @@ void UpGen::addBundle(Data& data, bool fromCurrent) {
                             continue;
                         }
 
-                        if (item->versions.find(version) == item->versions.end()) {
+                        if (not item->versions.contains(version)) {
                             resetToPrevLine() << "Item doesn't have version, try again. " << std::flush;
                             std::getline(std::cin, input);
                             resetToPrevLine();
@@ -1477,8 +1478,9 @@ void UpGen::addBundle(Data& data, bool fromCurrent) {
                     break;
                 }
 
-                bundle.reqs.emplace_back(Update::ItemID{ type, itemName }, version);
-                std::cout << "Added " << itemTypeToStr(type) << ' ' << itemName << " version " << static_cast<string>(version) << std::endl;
+                bundle.reqs.emplace_back(Update::ItemID{ .type=type, .name=itemName }, version);
+                std::cout << "Added " << itemTypeToStr(type) << ' ' << itemName
+                    << " version " << static_cast<string>(version) << '\n' << std::flush;
             }
         }};
 
