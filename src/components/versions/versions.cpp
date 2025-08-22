@@ -43,6 +43,7 @@ constexpr cstring SUPPORTED_VERSIONS_STR{"SUPPORTED_VERSIONS"};
 vector<Versions::VersionedOS> osVersions;
 vector<std::unique_ptr<Versions::VersionedProp>> props;
 std::multimap<Utils::Version, Versions::VersionedProp *> propVersionMap;
+std::map<Utils::Version, Versions::VersionedProp> propDefaultVersionMap;
 
 } // namespace
 
@@ -143,6 +144,20 @@ void Versions::loadLocal() {
         const auto coreBoardV3Entry{hashedInfoData.find(CORE_BOARDV3_STR)};
         if (coreBoardV3Entry and coreBoardV3Entry->value) {
             os.coreBoardV3 = *coreVersionEntry->value;
+        }
+
+        filepath defaultPropDataPath{entry.path() / "default_prop.pconf"};
+        if (fs::is_regular_file(defaultPropDataPath, err)) {
+            std::ifstream defaultPropDataFile{defaultPropDataPath};
+            PConf::Data defaultPropData;
+            PConf::read(defaultPropDataFile, defaultPropData, logger.bverbose("Reading default prop file..."));
+            const auto hashedDefaultPropData{PConf::hash(defaultPropData)};
+            auto& versionedProp{propDefaultVersionMap.emplace(version, "").first->second};
+            versionedProp.prop = Prop::generate(
+                hashedDefaultPropData,
+                logger.bverbose("Generating default prop...."),
+                true
+            );
         }
 
         osVersions.push_back(std::move(os));
@@ -259,6 +274,9 @@ const vector<std::unique_ptr<Versions::VersionedProp>>& Versions::getProps() { r
 
 vector<Versions::VersionedProp *> Versions::propsForVersion(const Utils::Version& version) {
     vector<VersionedProp *> ret;
+    if (not propDefaultVersionMap.contains(version)) return {};
+
+    ret.push_back(&propDefaultVersionMap.find(version)->second);
     auto [equalIter, equalEnd]{propVersionMap.equal_range(version)};
     for (; equalIter != equalEnd; ++equalIter) {
         ret.push_back(equalIter->second);

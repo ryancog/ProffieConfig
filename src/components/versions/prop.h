@@ -373,10 +373,10 @@ struct VERSIONS_EXPORT PropLayout {
     using Children = vector<variant<PropLayout, PropSettingBase *>>;
 
     // Only public for Children emplace_back
-    PropLayout(wxOrientation axis = wxVERTICAL, string label = "", const Children& children = {}) :
+    PropLayout(wxOrientation axis = wxVERTICAL, string label = "", Children children = {}) :
         axis{axis},
         label{std::move(label)},
-        children{children} {}
+        children{std::move(children)} {}
 
     /**
      * Generate a prop layout from given PConf data
@@ -410,7 +410,7 @@ struct VERSIONS_EXPORT Prop {
     Prop& operator=(const Prop&) = delete;
     Prop& operator=(Prop&&) = delete;
 
-    static std::shared_ptr<Prop> generate(const PConf::HashedData&, Log::Branch * = nullptr);
+    static std::unique_ptr<Prop> generate(const PConf::HashedData&, Log::Branch * = nullptr, bool forDefault = false);
 
     const string name;
     const string filename;

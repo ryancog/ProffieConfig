@@ -362,38 +362,43 @@ void Versions::Prop::rebuildMaps(
     }
 }
 
-std::shared_ptr<Versions::Prop> Versions::Prop::generate(const PConf::HashedData& data, Log::Branch *lBranch) {
+std::unique_ptr<Versions::Prop> Versions::Prop::generate(
+    const PConf::HashedData& data,
+    Log::Branch *lBranch,
+    bool forDefault
+) {
     auto& logger{Log::Branch::optCreateLogger("Versions::Prop::generate()", lBranch)};
 
-    const auto name{data.find("NAME")};
-    if (not name or not name->value) {
-        logger.error("Missing name.");
-        return nullptr;
+    const auto nameEntry{data.find("NAME")};
+    const auto filenameEntry{data.find("FILENAME")};
+    if (not forDefault) {
+        if (not nameEntry or not nameEntry->value) {
+            logger.error("Missing name.");
+            return nullptr;
+        }
+        if (not filenameEntry or not filenameEntry->value) {
+            logger.error("Missing filename.");
+            return nullptr;
+        }
     }
 
-    const auto filename{data.find("FILENAME")};
-    if (not filename or not filename->value) {
-        logger.error("Missing filename.");
-        return nullptr;
-    }
-
-    const auto info{data.find("INFO")};
-    if (not info or not info->value) {
-        logger.info("Skipping missing info...");
+    const auto infoEntry{data.find("INFO")};
+    if (not infoEntry or not infoEntry->value) {
+        logger.info("No info...");
     } 
 
-    auto prop{std::shared_ptr<Prop>(new Prop(
-        *name->value,
-        *filename->value,
-        info->value.value_or("Prop has no additional info.")
+    auto prop{std::unique_ptr<Prop>(new Prop(
+        nameEntry->value.value_or("Default"),
+        filenameEntry->value.value_or(""),
+        infoEntry->value.value_or("Prop has no additional info.")
     ))};
 
-    const auto settings{data.find("SETTINGS")};
-    if (not settings or not settings.section()) {
-        logger.info("Skipping missing SETTINGS section...");
+    const auto settingsEntry{data.find("SETTINGS")};
+    if (not settingsEntry or not settingsEntry.section()) {
+        logger.info("No settings section...");
     } else {
         prop->mSettings = parseSettings(
-            settings.section()->entries,
+            settingsEntry.section()->entries,
             *prop,
             *logger.bdebug("Parsing SETTINGS...")
         );
@@ -402,12 +407,12 @@ std::shared_ptr<Versions::Prop> Versions::Prop::generate(const PConf::HashedData
     prop->rebuildMaps(nullopt, logger.bdebug("Building maps..."));
 
     std::unordered_set<string> settingsUsed{};
-    const auto layout{data.find("LAYOUT")};
-    if (not layout or not layout.section()) {
-        logger.info("Skipping missing LAYOUT section...");
+    const auto layoutEntry{data.find("LAYOUT")};
+    if (not layoutEntry or not layoutEntry.section()) {
+        logger.info("No layout section...");
     } else {
         PropLayout::generate(
-            layout.section()->entries,
+            layoutEntry.section()->entries,
             prop->mSettingMap,
             prop->mLayout,
             settingsUsed,
@@ -445,13 +450,16 @@ std::shared_ptr<Versions::Prop> Versions::Prop::generate(const PConf::HashedData
             *logger.bdebug("Parsing buttons " + std::to_string(numButtons) + "...")
         );
     }
+    if (buttonEntries.empty()) {
+        logger.info("No buttons entries...");
+    }
 
-    const auto errors{data.find("ERRORS")};
-    if (not errors or not errors.section()) {
-        logger.info("Skipping missing ERRORS section...");
+    const auto errorsEntry{data.find("ERRORS")};
+    if (not errorsEntry or not errorsEntry.section()) {
+        logger.info("No errors section...");
     } else {
         prop->mErrors = parseErrors(
-            errors.section()->entries,
+            errorsEntry.section()->entries,
             *logger.bdebug("Parsing errors...")
         );
     }
