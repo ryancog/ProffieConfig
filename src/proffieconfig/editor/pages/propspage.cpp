@@ -265,16 +265,16 @@ void PropsPage::loadProps() {
 
                 if (windowToAdd) sizer->Add(windowToAdd, 0, wxEXPAND);
             } else if (const auto *ptr = std::get_if<Versions::PropLayout>(&child)) {
-                wxSizer *newSizer{};
-                if (true or ptr->label.empty()) {
-                    newSizer = new wxBoxSizer(ptr->axis);
+                if (not sizer->IsEmpty()) sizer->AddSpacer(10);
+                if (ptr->label.empty()) {
+                    auto *newSizer{new wxBoxSizer(ptr->axis)};
                     self(self, ptr->children, newSizer, parent);
+                    sizer->Add(newSizer, 0, wxEXPAND);
                 } else {
                     auto *box{new PCUI::StaticBox(ptr->axis, parent, ptr->label)};
-                    newSizer = box->sizer();
-                    self(self, ptr->children, newSizer, box->childParent());
+                    self(self, ptr->children, box->sizer(), box->childParent());
+                    sizer->Add(box, 0, wxEXPAND);
                 }
-                sizer->Add(newSizer, wxSizerFlags().Expand());
             } else {
                 assert(0);
             }
