@@ -16,6 +16,7 @@
 #include "utils/version.h"
 
 #include "../onboard/onboard.h"
+#include "../mainmenu/mainmenu.h"
 
 namespace {
 
@@ -40,7 +41,7 @@ string AppState::manifestChannel;
 void AppState::init() {
     loadState();
 
-    if (not doneWithFirstRun) OnboardFrame::instance = new OnboardFrame();
+    if (not doneWithFirstRun) Onboard::Frame::instance = new Onboard::Frame();
     else {
         doNecessaryMigrations();
         MainMenu::instance = new MainMenu();

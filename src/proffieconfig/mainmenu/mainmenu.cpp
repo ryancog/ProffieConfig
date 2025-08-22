@@ -2,8 +2,6 @@
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
 // Copyright (C) 2024-2025 Ryan Ogurek
 
-#include <fstream>
-
 #include <wx/aboutdlg.h>
 #include <wx/cursor.h>
 #include <wx/event.h>
@@ -38,12 +36,10 @@
 #include "../core/utilities/misc.h"
 #include "../core/utilities/progress.h"
 #include "../editor/editorwindow.h"
-#include "../onboard/onboard.h"
 #include "../tools/arduino.h"
 #include "../tools/serialmonitor.h"
 
-
-MainMenu* MainMenu::instance{nullptr};
+MainMenu *MainMenu::instance{nullptr};
 MainMenu::MainMenu(wxWindow* parent) : 
     PCUI::Frame(
         parent,
@@ -204,7 +200,7 @@ void MainMenu::bindEvents() {
         const auto configWasOpen{static_cast<bool>(config)};
         if (not configWasOpen) {
             const auto res{Config::open(configSelection)};
-            if (auto *err = std::get_if<string>(&res)) {
+            if (const auto *err = std::get_if<string>(&res)) {
                 PCUI::showMessage(*err, _("Cannot Open Config for Apply"));
                 return;
             }
@@ -222,7 +218,7 @@ void MainMenu::bindEvents() {
                 Arduino::applyToBoard(boardSelection, *config, progDialog)
             };
 
-            if (auto *err = std::get_if<string>(&res)) {
+            if (const auto *err = std::get_if<string>(&res)) {
                 auto *evt{new Misc::MessageBoxEvent(
                     Misc::EVT_MSGBOX, wxID_ANY, *err, _("Cannot Apply Changes")
                 )};
@@ -261,11 +257,11 @@ void MainMenu::bindEvents() {
     }, ID_OpenSerial);
 
     configSelection.setUpdateHandler([this](uint32 id) {
-        if (id != configSelection.ID_SELECTION) return;
+        if (id != PCUI::ChoiceData::ID_SELECTION) return;
         mNotifyData.notify(ID_ConfigSelection);
     });
     boardSelection.setUpdateHandler([this](uint32 id) { 
-        if (id != boardSelection.ID_SELECTION) return;
+        if (id != PCUI::ChoiceData::ID_SELECTION) return;
         mNotifyData.notify(ID_BoardSelection);
     });
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
@@ -286,15 +282,12 @@ void MainMenu::bindEvents() {
             }
         }
 
-        auto editor{mEditors.emplace_back(new EditorWindow(this, config))};
+        auto *editor{mEditors.emplace_back(new EditorWindow(this, config))};
         editor->Show();
         editor->Raise();
     }, ID_EditConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
         auto addDialog{AddConfig{this}};
-        if (OnboardFrame::instance != nullptr) {
-            static_cast<wxToggleButton*>(addDialog.FindWindow(AddConfig::ID_ImportExisting))->Disable();
-        }
         if (addDialog.ShowModal() != wxID_OK) return;
 
         wxSetCursor(wxCURSOR_WAIT);
@@ -331,7 +324,7 @@ void MainMenu::bindEvents() {
            ) {
             auto *config{Config::getIfOpen(configSelection)};
             for (auto iter{mEditors.begin()}; iter != mEditors.end(); ++iter) {
-                auto editor{*iter};
+                auto *editor{*iter};
                 if (&editor->getOpenConfig() == config) {
                     editor->Destroy();
                     mEditors.erase(iter);
