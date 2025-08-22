@@ -29,6 +29,12 @@
 
 namespace PCUI {
 
+/**
+ * It's like a wxStaticBoxSizer, but cooler.
+ *
+ * Ensures cross-platform visual consistency.
+ * macOS has a nice border around the box, but other platforms do not.
+ */
 class UI_EXPORT StaticBox : public wxStaticBox {
 public:
     StaticBox(wxOrientation, wxWindow *, const wxString& = wxEmptyString);
