@@ -248,7 +248,7 @@ void EditorWindow::bindEvents() {
         presetsPage->Show(evt.GetId() == ID_Presets);
 
         // Try removing this check, see what happens.
-        if (evt.GetEventObject()) FitAnimated();
+        if (evt.GetEventObject()) fitAnimated();
         else Fit();
     }};
     Bind(wxEVT_MENU, windowSelectionHandler, ID_General);
@@ -286,9 +286,8 @@ void EditorWindow::bindEvents() {
         const auto totalDelta{mBestSize - mStartSize};
 
         const auto newSize{mStartSize + (totalDelta * completion)};
-        SetSizeHints(-1, -1, -1, -1);
+        SetSizeHints(newSize, newSize);
         SetSize(newSize);
-        SetSizeHints(GetSize(), GetSize());
 
         if (completion == 1) {
             configureResizing();
@@ -336,22 +335,22 @@ void EditorWindow::createUI(wxSizer *sizer) {
     toolbar->AddRadioTool(
         ID_General,
         _("General"),
-        Image::loadPNG("settings", wxDefaultSize)
+        Image::loadPNG("settings", {32, -1})
     );
     toolbar->AddRadioTool(
         ID_Props,
         _("Prop File"),
-        Image::loadPNG("props", wxDefaultSize)
+        Image::loadPNG("props", {32, -1})
     );
     toolbar->AddRadioTool(
         ID_Presets,
         _("Presets"),
-        Image::loadPNG("presets", wxDefaultSize)
+        Image::loadPNG("presets", {32, -1})
     );
     toolbar->AddRadioTool(
         ID_BladeArrays,
         _("Blade Arrays"),
-        Image::loadPNG("blade", wxDefaultSize)
+        Image::loadPNG("blade", {32, -1})
     );
 #   ifdef __WXMSW__
     toolbar->AddStretchableSpace();
@@ -398,20 +397,29 @@ bool EditorWindow::save() {
 void EditorWindow::configureResizing() {
     if (not generalPage or not propsPage or not bladesPage or not presetsPage) return;
 
-    SetMinSize(GetSize());
-    if (generalPage->IsShown() or propsPage->IsShown()) {
-        SetMaxSize(GetSize());
+    if (generalPage->IsShown()) {
+        SetSizeHints(GetSize(), GetSize());
+    } else if (propsPage->IsShown()) {
+        auto bestSize{GetBestSize()};
+        SetSizeHints(-1, -1, -1, -1);
+        propsPage->setToActualMinSize();
+        SetSizeHints(GetBestSize(), bestSize);
     } else if (bladesPage->IsShown()) {
-        SetMaxSize({GetSize().x, -1});
+        SetSizeHints(GetSize(), {GetSize().x, -1});
     } else if (presetsPage->IsShown()) {
-        SetMaxSize({-1, -1});
+        SetSizeHints(GetSize(), {-1, -1});
     }
+    SetVirtualSize(-1, -1);
 }
 
-void EditorWindow::FitAnimated() {
+void EditorWindow::fitAnimated() {
     SetSizeHints(-1, -1, -1, -1);
 
     const auto clientDelta{GetSize() - GetClientSize()};
+    if (propsPage->IsShown()) {
+        propsPage->setToActualBestSize();
+    }
+
     mStartSize = GetSize();
     mBestSize = GetBestSize();
     SetVirtualSize(mBestSize - clientDelta);

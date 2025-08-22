@@ -37,7 +37,7 @@ PropsPage::PropsPage(EditorWindow *parent) :
 
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
-    auto *topSizer{new wxBoxSizer(wxHORIZONTAL)};
+    mTopSizer = new wxBoxSizer(wxHORIZONTAL);
     auto *propSelection {new PCUI::Choice(
         this,
         config.propSelection,
@@ -56,18 +56,16 @@ PropsPage::PropsPage(EditorWindow *parent) :
     )};
     propInfo->SetToolTip(_("View prop creator-provided information about this prop and its intended usage."));
     buttonInfo->SetToolTip(_("View button controls based on specific option settings and number of buttons."));
-    topSizer->Add(propSelection, wxSizerFlags());
-    topSizer->AddSpacer(5);
-    topSizer->Add(propInfo, wxSizerFlags().Bottom());
-    topSizer->AddSpacer(5);
-    topSizer->Add(buttonInfo, wxSizerFlags().Bottom());
+    mTopSizer->Add(propSelection, wxSizerFlags());
+    mTopSizer->AddSpacer(5);
+    mTopSizer->Add(propInfo, wxSizerFlags().Bottom());
+    mTopSizer->AddSpacer(5);
+    mTopSizer->Add(buttonInfo, wxSizerFlags().Bottom());
 
     mPropsWindow = new wxScrolledWindow(this, wxID_ANY);
-    mPropsWindow->SetScrollbars(10, 10, -1, 1);
 
-    sizer->Add(topSizer);
+    sizer->Add(mTopSizer);
     sizer->AddSpacer(10);
-    sizer->Add(mPropsWindow, wxSizerFlags(1).Expand());
 
     bindEvents();
     initializeNotifier();
@@ -103,11 +101,52 @@ void PropsPage::bindEvents() {
 
 void PropsPage::handleNotification(uint32 id) {
     if (id == Config::Config::ID_PROPSELECTION) {
-        // showSelectedProp();
+        showSelectedProp();
     }
     if (id == ID_REBOUND or id == Config::Config::ID_PROPUPDATE) {
-        // loadProps();
+        loadProps();
     }
+}
+
+void PropsPage::setToActualMinSize() {
+    SetMinSize(GetSizer()->CalcMin());
+}
+
+void PropsPage::setToActualBestSize() {
+    auto minSize{GetSizer()->CalcMin()};
+    auto propsBestVirtualSize{
+        mPropsWindow->GetBestVirtualSize() +
+        mPropsWindow->GetWindowBorderSize()
+    };
+    SetMinSize({
+        std::max(minSize.x, propsBestVirtualSize.x),
+        minSize.y + propsBestVirtualSize.y
+    });
+}
+
+bool PropsPage::Layout() {
+    auto res{wxPanel::Layout()};
+    if (not res) return false;
+
+    // The props window is not managed by the sizer so
+    // that it's easy to get the actual min size of the window and
+    // do the handling for that for EditorWindow.
+    //
+    // It's easy enough to lay out the props window so there's
+    // no point in trying to hack wxWidgets sizing any more than I
+    // already am...
+    auto propsStartY{GetSizer()->CalcMin().y};
+    auto size{GetSize()};
+
+    mPropsWindow->SetSize(
+        0, propsStartY,
+        size.x, size.y - propsStartY
+    );
+
+    mPropsWindow->FitInside();
+    mPropsWindow->SetScrollRate(10, 10);
+
+    return true;
 }
 
 void PropsPage::showSelectedProp() {
@@ -122,9 +161,11 @@ void PropsPage::showSelectedProp() {
 
     auto *sizer{mProps[config.propSelection]};
     sizer->ShowItems(true);
-    mPropsWindow->SetSizerAndFit(sizer);
 
-    Layout();
+    mPropsWindow->SetSizer(sizer);
+
+    mParent->Layout();
+    mParent->fitAnimated();
 }
 
 // void PropsPage::update() {
@@ -225,7 +266,7 @@ void PropsPage::loadProps() {
                 if (windowToAdd) sizer->Add(windowToAdd, 0, wxEXPAND);
             } else if (const auto *ptr = std::get_if<Versions::PropLayout>(&child)) {
                 wxSizer *newSizer{};
-                if (ptr->label.empty()) {
+                if (true or ptr->label.empty()) {
                     newSizer = new wxBoxSizer(ptr->axis);
                     self(self, ptr->children, newSizer, parent);
                 } else {

@@ -34,8 +34,19 @@ public:
         ID_PropInfo,
     };
 
+    // Because wxWidgets sizing is somewhat annoying,
+    // "best size" vs "min size" means nothing when using sizers.
+    //
+    // This means there's no way to differentiate in the EditorWindow.
+    // It must set our min-size to our best size, calculate its size, then
+    // update our min size to be shrinkable.
+    void setToActualMinSize();
+    void setToActualBestSize();
+    [[nodiscard]] bool Layout() override;
+
 private:
     wxScrolledWindow *mPropsWindow{nullptr};
+    wxSizer *mTopSizer{nullptr};
 
     EditorWindow *mParent{nullptr};
 
@@ -47,3 +58,4 @@ private:
 
     void handleNotification(uint32) final;
 };
+
