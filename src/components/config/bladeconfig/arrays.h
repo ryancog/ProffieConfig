@@ -44,6 +44,7 @@ struct CONFIG_EXPORT BladeArrays {
         ID_BLADE_SELECTION,
         ID_SPLIT_SELECTION,
         ID_BLADE_TYPE_SELECTION,
+        ID_VISUAL_UPDATE
     };
     PCUI::Notifier notifyData;
 
@@ -64,7 +65,7 @@ struct CONFIG_EXPORT BladeArrays {
         return **std::next(mBladeArrays.begin(), idx);
     }
 
-    BladeConfig& addArray(string&& name = {}, uint32 id = 0, string presetArray = {});
+    BladeConfig& addArray(string&& name = {}, int32 id = 0, const string& presetArray = {});
     void removeArray(uint32 idx);
 
     PCUI::ChoiceDataProxy bladeTypeProxy;
