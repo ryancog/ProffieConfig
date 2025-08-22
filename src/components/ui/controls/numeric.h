@@ -39,7 +39,7 @@ struct UI_EXPORT NumericDataTemplate : ControlData {
     /**
      * Efficient assign/update
      */
-    void operator=(T val);
+    NumericDataTemplate& operator=(T val);
     /**
      * Unconditional assign/update
      */
@@ -53,7 +53,7 @@ struct UI_EXPORT NumericDataTemplate : ControlData {
     void setIncrement(T inc, bool valUpdate = true);
 
     [[nodiscard]] T offset() const { return mOffset; }
-    void setOffset(T inc, bool valUpdate = true);
+    void setOffset(T offset, bool valUpdate = true);
 
     enum {
         ID_VALUE,

@@ -26,10 +26,11 @@ namespace PCUI {
 } // namespace PCUI
 
 template<typename T> requires std::is_arithmetic_v<T>
-void PCUI::Private::NumericDataTemplate<T>::operator=(T val) {
+PCUI::Private::NumericDataTemplate<T>& PCUI::Private::NumericDataTemplate<T>::operator=(T val) {
     std::scoped_lock scopeLock{getLock()};
-    if (mValue == val) return;
+    if (mValue == val) return *this;
     setValue(val);
+    return *this;
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
@@ -108,9 +109,13 @@ void PCUI::Numeric::create(
 }
 
 void PCUI::Numeric::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == data()->ID_RANGE) pControl->SetRange(data()->mMin, data()->mMax);
-    if (id == ID_REBOUND or id == data()->ID_INCREMENT) pControl->SetIncrement(data()->mIncrement);
-    if (id == ID_REBOUND or id == data()->ID_VALUE) {
+    if (id == ID_REBOUND or id == NumericData::ID_RANGE) {
+        pControl->SetRange(data()->mMin, data()->mMax);
+    }
+    if (id == ID_REBOUND or id == NumericData::ID_INCREMENT) {
+        pControl->SetIncrement(data()->mIncrement);
+    }
+    if (id == ID_REBOUND or id == NumericData::ID_VALUE) {
         pControl->SetValue(*data());
         refreshSizeAndLayout();
     }
@@ -118,10 +123,10 @@ void PCUI::Numeric::onUIUpdate(uint32 id) {
 
 void PCUI::Numeric::onModify(wxSpinEvent& evt) {
     data()->mValue = evt.GetPosition();
-    data()->update(data()->ID_VALUE);
+    data()->update(NumericData::ID_VALUE);
 }
 
-void PCUI::Numeric::onModifySecondary(wxCommandEvent& evt) {
+void PCUI::Numeric::onModifySecondary(wxCommandEvent&) {
     SetFocusIgnoringChildren();
     pControl->SetFocus();
 }
@@ -161,9 +166,13 @@ void PCUI::Decimal::create(
 }
 
 void PCUI::Decimal::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == data()->ID_RANGE) pControl->SetRange(data()->mMin, data()->mMax);
-    if (id == ID_REBOUND or id == data()->ID_INCREMENT) pControl->SetIncrement(data()->mIncrement);
-    if (id == ID_REBOUND or id == data()->ID_VALUE) {
+    if (id == ID_REBOUND or id == DecimalData::ID_RANGE) {
+        pControl->SetRange(data()->mMin, data()->mMax);
+    }
+    if (id == ID_REBOUND or id == DecimalData::ID_INCREMENT) {
+        pControl->SetIncrement(data()->mIncrement);
+    }
+    if (id == ID_REBOUND or id == DecimalData::ID_VALUE) {
         pControl->SetValue(*data());
         refreshSizeAndLayout();
     }
@@ -171,10 +180,10 @@ void PCUI::Decimal::onUIUpdate(uint32 id) {
 
 void PCUI::Decimal::onModify(wxSpinDoubleEvent& evt) {
     data()->mValue = evt.GetValue();
-    data()->update(data()->ID_VALUE);
+    data()->update(DecimalData::ID_VALUE);
 }
 
-void PCUI::Decimal::onModifySecondary(wxCommandEvent& evt) {
+void PCUI::Decimal::onModifySecondary(wxCommandEvent&) {
     SetFocusIgnoringChildren();
     pControl->SetFocus();
 }
