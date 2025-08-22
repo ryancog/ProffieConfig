@@ -30,6 +30,7 @@
 #include "ui/controls/text.h"
 #include "ui/controls/toggle.h"
 #include "ui/controls/version.h"
+#include "utils/demangle.h"
 
 void PCUI::ControlData::setUpdateHandler(function<void(uint32 id)>&& handler) {
     mOnUpdate = std::move(handler);
@@ -67,13 +68,29 @@ template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVEN
 PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::ControlBase(
     wxWindow *parent,
     CONTROL_DATA &data
-) : wxPanel(parent, wxID_ANY), NotifyReceiver(this, data) {}
+) : wxPanel(
+        parent,
+        wxID_ANY,
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxTAB_TRAVERSAL | wxNO_BORDER,
+        Utils::demangle(typeid(DERIVED).name())
+    ),
+    NotifyReceiver(this, data) {}
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
 PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::ControlBase(
     wxWindow *parent,
     ControlDataProxy<CONTROL_DATA>& proxy
-) : wxPanel(parent, wxID_ANY), NotifyReceiver{this, proxy} {}
+) : wxPanel(
+        parent,
+        wxID_ANY,
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxTAB_TRAVERSAL | wxNO_BORDER,
+        Utils::demangle(typeid(DERIVED).name())
+    ),
+    NotifyReceiver{this, proxy} {}
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
 void PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_EVENT>::init(
