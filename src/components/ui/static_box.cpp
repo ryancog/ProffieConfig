@@ -1,4 +1,5 @@
 #include "static_box.h"
+#include "wx/event.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -30,7 +31,14 @@ constexpr auto PADDING{10};
 PCUI::StaticBox::StaticBox(wxOrientation orient, wxWindow *parent, const wxString& label) :
     wxStaticBox(parent, wxID_ANY, label) {
     mSizer = new wxBoxSizer(orient);
-    mPanel = new wxPanel(this);
+    mPanel = new wxPanel(
+        this,
+        wxID_ANY,
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxTAB_TRAVERSAL | wxNO_BORDER,
+        "PCUI::StaticBox Inside"
+    );
     mPanel->SetSizer(mSizer);
 
     Bind(wxEVT_SIZE, [this](wxSizeEvent& evt) {
