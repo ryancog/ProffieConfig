@@ -162,7 +162,7 @@ void PresetsPage::createUI() {
     auto *issueButton{new wxButton(
         this,
         ID_IssueButton,
-        L"\u26D4" /* ⛔️ */,
+        wxEmptyString,
         wxDefaultPosition,
         wxDefaultSize,
         wxBU_EXACTFIT
@@ -479,6 +479,9 @@ void PresetsPage::handleNotification(uint32 id) {
     }
     if (rebound or id == Config::PresetArrays::NOTIFY_ARRAY_NAME or id == Config::PresetArrays::NOTIFY_SELECTION) {
         auto *issueButton{FindWindow(ID_IssueButton)};
+        // This is late for sizing reasons
+        issueButton->SetLabel(L"\u26D4" /* ⛔️ */);
+
         if (presetArrays.selection == -1) {
             issueButton->Hide();
         } else {
