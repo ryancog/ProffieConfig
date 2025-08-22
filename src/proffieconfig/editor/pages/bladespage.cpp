@@ -333,7 +333,7 @@ void BladesPage::handleNotification(uint32 id) {
         auto bestSize{GetBestSize()};
         if (not size.IsAtLeast(bestSize)) {
             SetMinSize(bestSize);
-            mParent->FitAnimated();
+            mParent->fitAnimated();
         }
     }
 }

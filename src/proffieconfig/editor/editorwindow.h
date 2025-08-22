@@ -36,7 +36,7 @@ public:
     EditorWindow(wxWindow *, Config::Config&);
     bool Destroy() final;
     void Fit() final;
-    void FitAnimated();
+    void fitAnimated();
 
     // Handles errors
     bool save();
