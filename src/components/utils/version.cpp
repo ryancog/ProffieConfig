@@ -19,10 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
-#include <limits>
+#include <charconv>
 
-#include "string.h"
+#include "utils/string.h"
 
 Utils::Version::Version(string_view str) {
     if (str.empty()) {
@@ -33,71 +32,79 @@ Utils::Version::Version(string_view str) {
     string_view convStr{str};
     const cstring end{str.end()};
 
-    auto parseNum{[this, &convStr, &end]() -> uint8 {
-        char *parseEnd{};
-        int32 ret{};
-        ret = strtol(convStr.data(), &parseEnd, 10);
+    auto parseNum{[this, &convStr, &end]<typename T>(T& val) {
+        auto res{std::from_chars(
+            convStr.data(),
+            convStr.data() + convStr.length(),
+            val
+        )};
 
-        if (convStr == parseEnd) {
+        // Yeah this is ugly to check if there was an error...
+        // par for the c++stdlib course
+        if (res.ec != std::errc{}) {
+            if (res.ec == std::errc::result_out_of_range) {
+                err = Err::NUM_RANGE;
+            } else if (res.ec == std::errc::invalid_argument) {
+                err = Err::STR_INVALID;
+            } else {
+                err = Err::UNKNOWN;
+            }
+            return;
+        }
+        convStr = res.ptr;
+    }};
+
+    const auto parseLabel{[this, &convStr]() {
+        // Jump over '-'
+        convStr.remove_prefix(1);
+
+        tag = convStr;
+        uint32 numTrimmed{};
+        trimUnsafe(tag, &numTrimmed);
+
+        if (numTrimmed) {
             err = Err::STR_INVALID;
-            return 0;
+            return;
         }
-        convStr = parseEnd;
-
-        if (ret >= std::numeric_limits<uint8>::max() or ret < 0) {
-            err = Err::NUM_RANGE;
-            return 0;
-        }
-
-        return static_cast<uint8>(ret);
     }};
 
 
-    major = parseNum();
+    parseNum(major);
     if (err != Err::NONE or convStr.data() == end) return;
 
     if (convStr[0] == '.') {
         // Jump over '.'
         convStr.remove_prefix(1);
     } else if (convStr[0] == '-') {
-        goto parse_label;
+        parseLabel();
+        return;
     } else {
         err = Err::STR_INVALID;
         return;
     }
 
-    minor = parseNum();
+    parseNum(minor);
     if (err != Err::NONE or convStr.data() == end) return;
 
     if (convStr[0] == '.') {
         // Jump over '.'
         convStr.remove_prefix(1);
     } else if (convStr[0] == '-') {
-        goto parse_label;
+        parseLabel();
+        return;
     } else {
         err = Err::STR_INVALID;
         return;
     }
 
-    bugfix = parseNum();
+    parseNum(bugfix);
     if (err != Err::NONE or convStr.data() == end) return;
     if (convStr[0] != '-') {
         err = Err::STR_INVALID;
         return;
     }
 
-parse_label:
-    // Jump over '-'
-    convStr.remove_prefix(1);
-
-    tag = convStr;
-    uint32 numTrimmed{};
-    trimUnsafe(tag, &numTrimmed);
-
-    if (numTrimmed) {
-        err = Err::STR_INVALID;
-        return;
-    }
+    parseLabel();
 }
 
 Utils::Version::operator string() const {
@@ -110,6 +117,8 @@ Utils::Version::operator string() const {
             return "Invalid input";
         case Err::STR_EMPTY:
             return "Empty input";
+        case Err::UNKNOWN:
+            return "Unknown (Parse) Error";
         case Err::NONE: break;
     }
 

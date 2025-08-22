@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <utility>
+
 #include "utils/types.h"
 
 #include "utils_export.h"
@@ -34,11 +36,13 @@ struct UTILS_EXPORT Version {
      * Uses the form: "[major](.[minor])(.[bugfix])(-[tag])".
      * - "-[tag]", minor, and bugfix are optional
      * - tag is a string unbroken by space
-     * - major, minor, and bugfix are positive ints [0-255]
+     * - major, minor, and bugfix are positive ints
+     *   - major [0-256]
+     *   - minor and bugfix [0-127]
      */
     Version(string_view str);
-    Version(uint8 major, uint8 minor = NULL_REV, uint8 bugfix = NULL_REV, const string& tag = {}) :
-        major{major}, minor{minor}, bugfix{bugfix}, tag{tag} {};
+    Version(uint8 major, int8 minor = NULL_REV, int8 bugfix = NULL_REV, string tag = {}) :
+        major{major}, minor{minor}, bugfix{bugfix}, tag{std::move(tag)} {};
 
     static const Version& invalidObject();
 
@@ -49,15 +53,14 @@ struct UTILS_EXPORT Version {
         NUM_RANGE,
         STR_INVALID,
         STR_EMPTY,
+        UNKNOWN,
     } err{Err::NONE};
 
-    enum {
-        NULL_REV = 0xFF,
-    };
+    static constexpr int8 NULL_REV{-1};
 
     uint8 major{0};
-    uint8 minor{NULL_REV};
-    uint8 bugfix{NULL_REV};
+    int8 minor{NULL_REV};
+    int8 bugfix{NULL_REV};
 
     /**
      * Used for (optional) tagging of specialized versions. e.g 1.0.0-dev.
@@ -65,6 +68,17 @@ struct UTILS_EXPORT Version {
      */
     string tag;
 
+    /**
+     * Compare versions
+     *
+     * This comparison is based on semantic versioning, and is
+     * invalid for when err != Err::NONE.
+     *
+     * Obviously since this uses the default, tags are compared as
+     * strings.
+     *
+     * NULL_REV is -1 so that v1.1 < v1.1.0, and only v1.2 > v1.1.0 (e.g. next parent ver)
+     */
     auto operator<=>(const Version&) const = default;
 
     /**
