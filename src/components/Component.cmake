@@ -42,7 +42,7 @@ function(setup_component_and_static TARGET VERSION)
     endforeach()
 
     string(TOUPPER ${TARGET} TARGET_UPPER)
-    target_compile_definitions(${TARGET}-static PUBLIC -D${TARGET_UPPER}_STATIC_DEFINE)
+    target_compile_definitions(${TARGET}-static PUBLIC ${TARGET_UPPER}_STATIC_DEFINE)
     target_include_directories(${TARGET}-static PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
     setup_target(${TARGET}-static)
