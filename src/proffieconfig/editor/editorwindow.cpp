@@ -155,7 +155,7 @@ void EditorWindow::bindEvents() {
         Progress::handleEvent(&event); 
     });
     Bind(Misc::EVT_MSGBOX, [&](Misc::MessageBoxEvent& evt) {
-        PCUI::showMessage(evt.message, evt.caption, static_cast<int32>(evt.style), this);
+        PCUI::showMessage(evt.message, evt.caption, evt.style, this);
     }, wxID_ANY);
     Bind(wxEVT_MENU, [this](wxCommandEvent&) {
         save();
