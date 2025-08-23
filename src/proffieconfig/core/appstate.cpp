@@ -113,8 +113,11 @@ void AppState::loadState() {
     doneWithFirstRun = static_cast<bool>(hashedData.find(FIRSTRUN_COMPLETE_STR));
     logger.info(string{"Done with first run: "} + (doneWithFirstRun ? "true" : "false"));
 
-    auto lastVersionIter{hashedData.find("LAST_VERSION")};
-    if (lastVersionIter and lastVersionIter->value) lastVersion = Utils::Version{*lastVersionIter->value};
+    auto lastVersionEntry{hashedData.find(LAST_VERSION_STR)};
+    if (lastVersionEntry and lastVersionEntry->value) lastVersion = Utils::Version{*lastVersionEntry->value};
+
+    auto manifestEntry{hashedData.find(UPDATE_MANIFEST_STR)};
+    if (manifestEntry and manifestEntry->value) manifestChannel = *manifestEntry->value;
 
     for (auto idx{0}; idx < PREFERENCE_MAX; ++idx) {
         preferences[idx] = static_cast<bool>(hashedData.find(PREFERENCE_STRS[idx]));
