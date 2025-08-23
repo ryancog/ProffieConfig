@@ -105,6 +105,10 @@ void Config::Config::refreshPropVersions() {
         const PropData& a,
         const PropData& b
     ) -> bool {
+        // Keep default at top
+        if (a.prop->isDefault()) return true;
+        if (b.prop->isDefault()) return false;
+
         bool aIsVisible{false};
         bool bIsVisible{false};
         for (auto *const visibleProp : visibleList) {

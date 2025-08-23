@@ -425,6 +425,9 @@ struct VERSIONS_EXPORT Prop {
 
     void migrateFrom(const Prop&);
 
+    // TODO: Make this a little more foolproof
+    bool isDefault() { return filename.empty(); }
+
 private:
     Prop(string name, string filename, string info) : 
         name{std::move(name)}, filename{std::move(filename)}, info{std::move(info)} {}
