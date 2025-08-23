@@ -103,15 +103,17 @@ void Process::create(const string_view& executable, const span<string>& args) {
         close(data.parentFromChild[1]);
 
         char **argv{new char *[args.size() + 2]};
-        for (auto idx{1}; idx < args.size(); ++idx) {
-            argv[idx] = new char[args[idx].length() + 1];
-            memcpy(argv[idx], args[idx].data(), args[idx].length());
-            argv[idx][args[idx].length()] = 0;
-        }
         argv[0] = new char[executable.length() + 1];
         memcpy(argv[0], executable.data(), executable.length());
         argv[0][executable.length()] = 0;
-        argv[args.size()] = nullptr;
+
+        for (auto idx{0}; idx < args.size(); ++idx) {
+            argv[idx + 1] = new char[args[idx].length() + 1];
+            memcpy(argv[idx + 1], args[idx].data(), args[idx].length());
+            argv[idx + 1][args[idx].length()] = 0;
+        }
+
+        argv[args.size() + 1] = nullptr;
 
         char *exec{new char[executable.length() + 1]};
         memcpy(exec, executable.data(), executable.length());
