@@ -26,7 +26,6 @@
 #include <sstream>
 #include <set>
 #include <map>
-#include <memory>
 
 #include <wx/app.h>
 
@@ -551,13 +550,13 @@ Update::Bundles UpGen::resolveBundles(const PConf::HashedData& hashedRawData, Lo
         Update::Bundle bundle;
 
         auto noteEntry{hashedEntries.find("NOTE")};
-        if (not noteEntry) {
+        if (noteEntry) {
             if (not noteEntry->value) {
                 logger.error("Bundle \"" + static_cast<string>(version) + "\" note missing value");
                 exit(1);
             }
 
-            else bundle.note = *noteEntry->value;
+            bundle.note = *noteEntry->value;
         }
 
         const auto parseReqItem{[&logger, version](const PConf::EntryPtr& item) -> optional<std::pair<string, Utils::Version>> {
@@ -928,7 +927,7 @@ void UpGen::generateNewManifest(const vector<Message>& messages, const Data& dat
     PConf::Data manifest;
 
     for (const auto& message : messages) {
-        auto msgSect{std::make_shared<PConf::Section>("MESSAGE")};
+        auto msgSect{PConf::Section::create("MESSAGE")};
         switch (message.versionComp) {
             case Update::Comparator::EQUAL:
                 msgSect->label = static_cast<string>(message.version);
@@ -941,31 +940,31 @@ void UpGen::generateNewManifest(const vector<Message>& messages, const Data& dat
                 break;
         }
 
-        if (message.fatal) msgSect->entries.emplace_back(std::make_shared<PConf::Entry>("FATA"));
-        msgSect->entries.emplace_back(std::make_shared<PConf::Entry>("CONTENT", message.message));
+        if (message.fatal) msgSect->entries.emplace_back(PConf::Entry::create("FATAL"));
+        msgSect->entries.emplace_back(PConf::Entry::create("CONTENT", message.message));
 
         manifest.emplace_back(std::move(msgSect));
     }
 
     for (const auto& [ id, item ] : data.items) {
-        auto itemSect{std::make_shared<PConf::Section>(itemTypeToStr(id.type), id.name)};
+        auto itemSect{PConf::Section::create(itemTypeToStr(id.type), id.name)};
 
-        if (item.hidden) itemSect->entries.emplace_back(std::make_shared<PConf::Entry>("HIDDEN"));
-        if (item.deprecated) itemSect->entries.emplace_back(std::make_shared<PConf::Entry>("HIDDEN"));
-        if (item.linuxPath) itemSect->entries.emplace_back(std::make_shared<PConf::Entry>(PATH_KEY_LINUX, item.linuxPath->string()));
-        if (item.macOSPath) itemSect->entries.emplace_back(std::make_shared<PConf::Entry>(PATH_KEY_MACOS, item.macOSPath->string()));
-        if (item.win32Path) itemSect->entries.emplace_back(std::make_shared<PConf::Entry>(PATH_KEY_WIN32, item.win32Path->string()));
+        if (item.hidden) itemSect->entries.emplace_back(PConf::Entry::create("HIDDEN"));
+        if (item.deprecated) itemSect->entries.emplace_back(PConf::Entry::create("HIDDEN"));
+        if (item.linuxPath) itemSect->entries.emplace_back(PConf::Entry::create(PATH_KEY_LINUX, item.linuxPath->string()));
+        if (item.macOSPath) itemSect->entries.emplace_back(PConf::Entry::create(PATH_KEY_MACOS, item.macOSPath->string()));
+        if (item.win32Path) itemSect->entries.emplace_back(PConf::Entry::create(PATH_KEY_WIN32, item.win32Path->string()));
 
         for (const auto& [ version, verData ] : item.versions) {
-            auto versionSect{std::make_shared<PConf::Section>("VERSION", static_cast<string>(version))};
+            auto versionSect{PConf::Section::create("VERSION", static_cast<string>(version))};
 
-            if (item.linuxPath) versionSect->entries.emplace_back(std::make_shared<PConf::Entry>(HASH_KEY_LINUX, verData.linuxHash));
-            if (item.macOSPath) versionSect->entries.emplace_back(std::make_shared<PConf::Entry>(HASH_KEY_MACOS, verData.macOSHash));
-            if (item.win32Path) versionSect->entries.emplace_back(std::make_shared<PConf::Entry>(HASH_KEY_WIN32, verData.win32Hash));
+            if (item.linuxPath) versionSect->entries.emplace_back(PConf::Entry::create(HASH_KEY_LINUX, verData.linuxHash));
+            if (item.macOSPath) versionSect->entries.emplace_back(PConf::Entry::create(HASH_KEY_MACOS, verData.macOSHash));
+            if (item.win32Path) versionSect->entries.emplace_back(PConf::Entry::create(HASH_KEY_WIN32, verData.win32Hash));
 
-            for (const auto& fix : verData.fixes) versionSect->entries.emplace_back(std::make_shared<PConf::Entry>("FIX", fix));
-            for (const auto& change : verData.changes) versionSect->entries.emplace_back(std::make_shared<PConf::Entry>("CHANGE", change));
-            for (const auto& feature : verData.features) versionSect->entries.emplace_back(std::make_shared<PConf::Entry>("FEAT", feature));
+            for (const auto& fix : verData.fixes) versionSect->entries.emplace_back(PConf::Entry::create("FIX", fix));
+            for (const auto& change : verData.changes) versionSect->entries.emplace_back(PConf::Entry::create("CHANGE", change));
+            for (const auto& feature : verData.features) versionSect->entries.emplace_back(PConf::Entry::create("FEAT", feature));
 
             itemSect->entries.emplace_back(std::move(versionSect));
         }
@@ -975,12 +974,12 @@ void UpGen::generateNewManifest(const vector<Message>& messages, const Data& dat
 
     for (auto bundleIt{data.bundles.rbegin()}; bundleIt != data.bundles.rend(); ++bundleIt) {
         const auto& [ version, bundle ]{*bundleIt};
-        auto bundleSect{std::make_shared<PConf::Section>("BUNDLE", static_cast<string>(version))};
+        auto bundleSect{PConf::Section::create("BUNDLE", static_cast<string>(version))};
 
-        if (not bundle.note.empty()) bundleSect->entries.emplace_back(std::make_shared<PConf::Entry>("NOTE", bundle.note));
+        if (not bundle.note.empty()) bundleSect->entries.emplace_back(PConf::Entry::create("NOTE", bundle.note));
 
         for (const auto& [ reqID, reqVer, hash] : bundle.reqs) {
-            bundleSect->entries.emplace_back(std::make_shared<PConf::Entry>(itemTypeToStr(reqID.type), static_cast<string>(reqVer), reqID.name));
+            bundleSect->entries.emplace_back(PConf::Entry::create(itemTypeToStr(reqID.type), static_cast<string>(reqVer), reqID.name));
         }
 
         manifest.emplace_back(std::move(bundleSect));
