@@ -27,37 +27,50 @@
 #include "../core/utilities/progress.h"
 
 namespace Arduino {
-    string version();
 
-    struct Result {
-        static constexpr cstring USAGE_MESSAGE{
-            wxTRANSLATE("The configuration uses %d%% of board space. (%d/%d)")
-        };
+string version();
 
-        int32 used{-1};
-        int32 total{-1};
-        inline uint32 percent() const { return (static_cast<float64>(used) / total) * 100.0; }
+struct Result {
+    static constexpr cstring USAGE_MESSAGE{
+        wxTRANSLATE("The configuration uses %d%% of board space. (%d/%d)")
     };
 
-    /**
-     * @param progress May be null
-     *
-     * @return result info or err string
-     */
-    variant<Result, string> applyToBoard(
-        const string& boardPath,
-        const Config::Config&,
-        Progress *progress
-    );
+    int32 used{-1};
+    int32 total{-1};
+    [[nodiscard]] uint32 percent() const {
+        return static_cast<uint32>((static_cast<float64>(used) / total) * 100.0);
+    }
+};
 
-    /**
-     * @return result info or err string
-     */
-    variant<Result, string> verifyConfig(
-        const Config::Config&,
-        Progress *progress
-    );
+/**
+ * @param progress May be null
+ *
+ * @return result info or err string
+ */
+variant<Result, string> applyToBoard(
+    const string& boardPath,
+    const Config::Config&,
+    Progress *progress
+);
 
-    // void init(wxWindow *);
-    vector<string> getBoards(Log::Branch * = nullptr);
+/**
+ * @return result info or err string
+ */
+variant<Result, string> verifyConfig(
+    const Config::Config&,
+    Progress *progress
+);
+
+// void init(wxWindow *);
+vector<string> getBoards(Log::Branch * = nullptr);
+
+#ifndef __WXOSX__
+/**
+ * Blocking installation.
+ *
+ * @return success
+ */
+bool runDriverInstallation(Log::Branch * = nullptr);
+#endif
+
 } // namespace Arduino
