@@ -74,7 +74,7 @@ void MainMenu::bindEvents() {
                     _("Open Editor(s)"),
                     wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION
                 )};
-                if (res == wxNO) return false;
+                if (res != wxYES) return false;
                 break;
             }
         }
@@ -86,6 +86,7 @@ void MainMenu::bindEvents() {
         AppState::saveState();
         if (event.CanVeto() and not promptClose()) {
             event.Veto();
+            return;
         }
         event.Skip();
     });
