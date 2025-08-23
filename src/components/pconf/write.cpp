@@ -122,14 +122,14 @@ bool writeSection(
             writeSection(
                 outStream,
                 entry.section(),
-                0,
+                depth + 1,
                 *logger.binfo("Writing Section: " + entry->name)
             );
         } else {
             writeEntry(
                 outStream,
                 entry,
-                0,
+                depth + 1,
                 *logger.binfo("Writing entry: " + entry->name)
             );
         }
