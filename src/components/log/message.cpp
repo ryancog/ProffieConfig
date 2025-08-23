@@ -30,7 +30,7 @@ Log::Message::Message(string message, Severity severity, Logger *parent) :
         message(std::move(message)), severity(severity), logTag(parent->name) {}
 
 string Log::Message::formatted() const {
-    string messagePrefix{"[" + logTag + "] "};
+    string messagePrefix;
     switch (severity) {
         case Severity::VERB:
             messagePrefix += "(VERB) ";
@@ -50,6 +50,7 @@ string Log::Message::formatted() const {
         case Severity::MAX:
             abort();
     }
+    messagePrefix += {"[" + logTag + "] "};
     auto tmpMessage{message};
     auto newlinePos{tmpMessage.find('\n')};
     while (newlinePos != string::npos) {
