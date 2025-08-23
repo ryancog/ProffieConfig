@@ -33,6 +33,19 @@
 
 namespace Paths {} // namespace Paths
 
+filepath Paths::user() {
+#   ifdef __WIN32__
+    PWSTR rawStr{};
+    SHGetKnownFolderPath(FOLDERID_Profile, 0, nullptr, &rawStr);
+    array<TCHAR, MAX_PATH> shortPath;
+    GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
+    CoTaskMemFree(rawStr);
+    return shortPath.data();
+#   elif defined(__APPLE__) or defined(__linux__)
+    return getpwuid(getuid())->pw_dir;
+#   endif
+}
+
 filepath Paths::approot() {
 #   ifdef APP_DEPLOY_PATH 
     return APP_DEPLOY_PATH;
