@@ -14,16 +14,15 @@ namespace Misc {
                 int32 id,
                 wxString message,
                 wxString caption,
-                int32 style = wxOK | wxCENTER
-            ) : wxCommandEvent(type, id) {
-                caption = std::move(caption);
-                message = std::move(message);
-                style = style;
-            }
+                int64 style = wxOK | wxCENTER
+            ) : wxCommandEvent(type, id),
+                caption{std::move(caption)},
+                message{std::move(message)},
+                style{style} {}
 
             wxString caption;
             wxString message;
-            int32 style;
+            int64 style;
     };
 
     extern const wxEventTypeTag<MessageBoxEvent> EVT_MSGBOX;
