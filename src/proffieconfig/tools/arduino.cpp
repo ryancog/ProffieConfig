@@ -45,6 +45,7 @@
 #include "log/context.h"
 #include "log/logger.h"
 #include "log/branch.h"
+#include "process/process.h"
 #include "utils/paths.h"
 #include "utils/types.h"
 #include "versions/versions.h"
@@ -54,6 +55,8 @@
 using namespace std::chrono_literals;
 
 namespace {
+
+constexpr cstring DEFAULT_CORE_URL{"https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json"};
 
 FILE *cli(const string& command);
 
@@ -99,6 +102,13 @@ inline string windowModePrefix() {
         R"( -title "ProffieConfig Worker" -mode force_minimized & )";
 }
 #endif
+
+optional<string> ensureCoreInstalled(
+    const string& coreVersion,
+    const string& coreURL,
+    Log::Logger&,
+    Progress * = nullptr
+);
 
 constexpr auto MAX_ERRMESSAGE_LENGTH{1024};
 constexpr cstring ARDUINOCORE_PBV1{"proffieboard:stm32l4:Proffieboard-L433CC"};
@@ -216,56 +226,6 @@ string Arduino::version() {
 //         // }
 //         
 // 
-// #       ifndef __WXOSX__
-//         constexpr cstring INSTALL_DRIVER_MESSAGE{"Installing drivers..."};
-//         progDialog->emitEvent(60, INSTALL_DRIVER_MESSAGE);
-//         logger.info(INSTALL_DRIVER_MESSAGE);
-// 
-// #       if defined(__linux__)
-//         install = popen("pkexec cp ~/.arduino15/packages/proffieboard/hardware/stm32l4/3.6/drivers/linux/*rules /etc/udev/rules.d", "r");
-// #       elif defined(__WINDOWS__)
-//         install = _wpopen((L"title ProffieConfig Worker & " + (Paths::binaries() / "proffie-dfu-setup.exe").native() + L" 2>&1").c_str(), L"r");
-//         // Really I should have a proper wait but I tried with an echo and that didn't work.
-//         // Could maybe revisit this in the future.
-//         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-// 
-//         STARTUPINFOW startupInfo;
-//         PROCESS_INFORMATION procInfo;
-//         memset(&startupInfo, 0, sizeof startupInfo);
-//         startupInfo.cb = sizeof startupInfo;
-//         memset(&procInfo, 0, sizeof procInfo);
-// 
-//         const auto minimizeCommand{(Paths::binaries() / "windowMode").native() + LR"( -title "ProffieConfig Worker" -mode force_minimized)"};
-// 
-//         CreateProcessW(
-//             minimizeCommand.c_str(),
-//             nullptr,
-//             nullptr,
-//             nullptr,
-//             false,
-//             0,
-//             nullptr,
-//             nullptr,
-//             &startupInfo,
-//             &procInfo
-//         );
-// #       endif
-// 
-//         fulloutput.clear();
-//         while (fgets(buffer.data(), buffer.size(), install) != nullptr) { 
-//             progDialog->emitEvent(-1, ""); 
-//             fulloutput += buffer.data(); 
-//         }
-//         if (pclose(install)) {
-//             progDialog->emitEvent(100, "Error");
-//             const auto driverInstallErrorMessage{"Driver install failed:\n\n" + fulloutput};
-//             std::cerr << fulloutput << std::endl;
-//             evt->str = '\n' + driverInstallErrorMessage;
-//             logger.error(driverInstallErrorMessage);
-//             wxQueueEvent(parent, evt);
-//             return;
-//         }
-// #       endif
 // 
 //         progDialog->emitEvent(100, "Done.");
 //         logger.info("Done");
@@ -403,23 +363,18 @@ variant<CompileOutput, string> compile(
         return _("Please select an OS Version").ToStdString();
     }
 
-    if (prog) prog->emitEvent(15, _("Ensuring Core Installation..."));
-    auto *coreInstall{cli(
-        "core install proffieboard:stm32l4@" +
-        (versionedOS->coreVersion.err ? "3.6.0" : static_cast<string>(versionedOS->coreVersion)) +
-        " --additional-urls " + 
-        (not versionedOS->coreURL.empty() ? versionedOS->coreURL : "https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json")
-    )};
-    array<char, 32> coreInstallBuf;
-    string coreInstallOutput;
-    while (fgets(coreInstallBuf.data(), coreInstallBuf.size(), coreInstall) != nullptr) { 
-        if (prog) prog->emitEvent(-1, ""); 
-        coreInstallOutput += coreInstallBuf.data();
-    }
-    if (pclose(coreInstall)) {
-        if (prog) prog->emitEvent(100, "Error");
-        logger.error("Failed to install core: \n" + coreInstallOutput);
-        return _("Could Not Install Core").ToStdString();
+    err = ensureCoreInstalled(
+        versionedOS->coreVersion.err ?
+            Versions::DEFAULT_CORE_VERSION :
+            static_cast<string>(versionedOS->coreVersion),
+        not versionedOS->coreURL.empty() ?
+            versionedOS->coreURL :
+            DEFAULT_CORE_URL,
+        logger,
+        prog
+    );
+    if (err) {
+        return *err;
     }
 
     const auto osPath{Paths::os(osVersion)};
@@ -845,6 +800,35 @@ string parseError(const string& error, const Config::Config& config) {
 #	undef ERRCONTAINS
 }
 
+optional<string> ensureCoreInstalled(
+    const string& coreVersion,
+    const string& coreURL,
+    Log::Logger& logger,
+    Progress *prog
+) {
+    if (prog) prog->emitEvent(15, _("Ensuring Core Installation..."));
+    auto *coreInstall{cli(
+        "core install proffieboard:stm32l4@" +
+        coreVersion +
+        " --additional-urls " + 
+        coreURL
+    )};
+
+    array<char, 32> coreInstallBuf;
+    string coreInstallOutput;
+    while (fgets(coreInstallBuf.data(), coreInstallBuf.size(), coreInstall) != nullptr) { 
+        if (prog) prog->emitEvent(-1, ""); 
+        coreInstallOutput += coreInstallBuf.data();
+    }
+    if (pclose(coreInstall)) {
+        if (prog) prog->emitEvent(100, "Error");
+        logger.error("Failed to install core: \n" + coreInstallOutput);
+        return _("Could Not Install Core").ToStdString();
+    }
+
+    return nullopt;
+}
+
 FILE* cli(const string& command) {
     auto& logger{Log::Context::getGlobal().createLogger("Arduino::cli()")};
     string fullCommand;
@@ -860,4 +844,71 @@ FILE* cli(const string& command) {
 }
 
 } // namespace
+
+bool Arduino::runDriverInstallation(Log::Branch *lBranch) {
+    auto& logger{Log::Branch::optCreateLogger("Arduino::runDriverInstallation()", lBranch)};
+    logger.info("Installing drivers...");
+
+    Process proc;
+
+#   if defined(__linux__)
+    auto err{ensureCoreInstalled(
+        Versions::DEFAULT_CORE_VERSION,
+        DEFAULT_CORE_URL,
+        logger
+    )};
+    if (err) return false;
+
+    const auto rulesPath{
+        Paths::user() / ".arduino15" / "packages" / "proffieboard" / "hardware" / "stm32l4" /
+        Versions::DEFAULT_CORE_VERSION / "drivers" / "linux"
+    };
+    vector<string> args;
+    args.emplace_back("cp");
+    for (const auto& entry : fs::directory_iterator{rulesPath}) {
+        std::error_code err;
+        if (not entry.is_regular_file(err)) continue;
+        if (not entry.path().string().ends_with("rules")) continue;
+
+        args.emplace_back(entry.path().string());
+    }
+    args.emplace_back("/etc/udev/rules.d");
+    proc.create("pkexec", args);
+#   elif defined(__WINDOWS__)
+    install = _wpopen((L"title ProffieConfig Worker & " + (Paths::binaries() / "proffie-dfu-setup.exe").native() + L" 2>&1").c_str(), L"r");
+    // Really I should have a proper wait but I tried with an echo and that didn't work.
+    // Could maybe revisit this in the future.
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+    STARTUPINFOW startupInfo;
+    PROCESS_INFORMATION procInfo;
+    memset(&startupInfo, 0, sizeof startupInfo);
+    startupInfo.cb = sizeof startupInfo;
+    memset(&procInfo, 0, sizeof procInfo);
+
+    const auto minimizeCommand{(Paths::binaries() / "windowMode").native() + LR"( -title "ProffieConfig Worker" -mode force_minimized)"};
+
+    CreateProcessW(
+        minimizeCommand.c_str(),
+        nullptr,
+        nullptr,
+        nullptr,
+        false,
+        0,
+        nullptr,
+        nullptr,
+        &startupInfo,
+        &procInfo
+    );
+#   endif
+
+    auto result{proc.finish()};
+    if (result.err) {
+        logger.error("Installation failed with error " + std::to_string(result.err));
+        if (result.err == Process::Result::UNKNOWN) logger.error("System error: " + std::to_string(result.systemResult));
+        return false;
+    }
+    return true;
+}
+
 
