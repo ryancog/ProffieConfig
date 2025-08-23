@@ -19,9 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <list>
 #include <mutex>
-#include <vector>
 #include <fstream>
 
 #include "utils/types.h"
