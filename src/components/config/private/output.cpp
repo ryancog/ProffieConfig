@@ -457,8 +457,7 @@ void outputTopProp(std::ofstream& outFile, const Config::Config& config) {
 void outputProp(std::ofstream& outFile, const Config::Config& config) {
     if (config.propSelection == -1) return;
     auto& selectedProp{config.prop(config.propSelection)};
-    // This should be the default only
-    if (selectedProp.filename.empty()) return;
+    if (selectedProp.isDefault()) return;
 
     outFile << "#ifdef CONFIG_PROP\n";
     outFile << "#include \"../props/" << selectedProp.filename << "\"\n";
