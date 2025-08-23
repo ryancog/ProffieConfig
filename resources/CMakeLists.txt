@@ -21,16 +21,6 @@ install(FILES
     DESTINATION ${INSTALL_RESOURCE_DIR}/icons
 )
 
-install(FILES
-    props/BC.pconf
-    props/caiwyn.pconf
-    props/fett263.pconf
-    props/sa22c.pconf
-    props/shtok.pconf
-
-    DESTINATION ${INSTALL_RESOURCE_DIR}/props
-)
-
 if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
     install(PROGRAMS bin/macOS/arduino-cli DESTINATION ${INSTALL_BIN_DIR})
 elseif (CMAKE_SYSTEM_NAME STREQUAL Linux)
