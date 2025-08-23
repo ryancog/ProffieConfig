@@ -92,6 +92,12 @@ optional<string> upload(
 );
 #endif
 
+/**
+ * Pre-checks specifically for compilation.
+ * (May be fine for saving though)
+ */
+optional<string> precheckCompile(const Config::Config&, Log::Branch&);
+
 string parseError(const string&, const Config::Config&); 
 
 optional<string> ensureCoreInstalled(
@@ -256,6 +262,13 @@ variant<CompileOutput, string> compile(
     auto& logger{lBranch.createLogger("Arduino::compile()")};
     optional<string> err;
 
+    if (prog) prog->emitEvent(5, _("Running prechecks..."));
+    err = precheckCompile(config, *logger.binfo("Running pre-checks..."));
+    if (err) {
+        if (prog) prog->emitEvent(100, _("Error"));
+        return *err;
+    }
+
     if (prog) prog->emitEvent(10, _("Checking OS Version..."));
     const auto osVersion{config.settings.getOSVersion()};
     const auto *const versionedOS{Versions::getVersionedOS(osVersion)};
@@ -292,22 +305,24 @@ variant<CompileOutput, string> compile(
 
         std::error_code err;
         const auto sourcePropHeader{Paths::propDir() / reference->name / Versions::HEADER_FILE_STR};
-        if (not fs::exists(sourcePropHeader, err)) {
-            if (prog) prog->emitEvent(100, _("Error"));
-            logger.error("Prop doesn't have a header.");
-            return _("Invalid Prop Selected").ToStdString();
-        }
+        if (not reference->prop->filename.empty()) {
+            if (not fs::exists(sourcePropHeader, err)) {
+                if (prog) prog->emitEvent(100, _("Error"));
+                logger.error("Prop doesn't have a header.");
+                return _("Invalid Prop Selected").ToStdString();
+            }
 
-        auto res{fs::copy_file(
-            sourcePropHeader,
-            osPath / "props" / prop.filename,
-            fs::copy_options::overwrite_existing,
-            err
-        )};
-        if (not res) {
-            if (prog) prog->emitEvent(100, _("Error"));
-            logger.error("Failed to copy in prop header.");
-            return _("OS FS Error").ToStdString();
+            auto res{fs::copy_file(
+                    sourcePropHeader,
+                    osPath / "props" / prop.filename,
+                    fs::copy_options::overwrite_existing,
+                    err
+                    )};
+            if (not res) {
+                if (prog) prog->emitEvent(100, _("Error"));
+                logger.error("Failed to copy in prop header.");
+                return _("OS FS Error").ToStdString();
+            }
         }
     }
 
@@ -362,6 +377,8 @@ variant<CompileOutput, string> compile(
     ino.close();
     tmpIno.close();
     std::error_code errCode;
+    // Windows is stupid
+    fs::remove(inoPath, errCode);
     if (not fs::copy_file(tmpInoPath, inoPath, fs::copy_options::overwrite_existing, errCode)) {
         logger.error("Failed to copy in tmp ProffieOS INO: " + errCode.message());
         if (prog) prog->emitEvent(100, _("Error"));
@@ -610,30 +627,31 @@ optional<string> upload(
     };
     proc.create(compileOutput.tool2, args);
 #   else
-    vector<string> args;
-    string uploadCommand = "upload ";
+    vector<string> args{
+        "upload",
+    };
     const auto osVersion{config.settings.getOSVersion()};
     const auto osPath{Paths::os(osVersion)};
-    uploadCommand += '"' + osPath.string() + '"';
-    uploadCommand += " --fqbn ";
+    args.push_back('"' + osPath.string() + '"');
+    args.emplace_back("--fqbn");
     const auto boardVersion{
         static_cast<Config::BoardVersion>(static_cast<int32>(config.settings.board))
     };
     switch (boardVersion) {
         case Config::PROFFIEBOARDV3:
-            uploadCommand += ARDUINOCORE_PBV3;
+            args.emplace_back(ARDUINOCORE_PBV3);
             break;
         case Config::PROFFIEBOARDV2:
-            uploadCommand += ARDUINOCORE_PBV2;
+            args.emplace_back(ARDUINOCORE_PBV2);
             break;
         case Config::PROFFIEBOARDV1:
-            uploadCommand += ARDUINOCORE_PBV1;
+            args.emplace_back(ARDUINOCORE_PBV1);
             break;
         default: 
             abort();
     }
-    uploadCommand += " -v";
-    FILE *uploadOutput = cli(uploadCommand);
+    args.emplace_back("-v");
+    cli(proc, args);
 #   endif
 
     string uploadOutput;
@@ -677,6 +695,17 @@ optional<string> upload(
 #   endif
 
     logger.info("Success");
+    return nullopt;
+}
+
+optional<string> precheckCompile(const Config::Config& config, Log::Branch& lBranch) {
+    auto& logger{lBranch.createLogger("Arduino::precheckCompile()")};
+
+    if (config.bladeArrays.arrays().empty()) {
+        logger.error("Config has no blade arrays, cannot compile.");
+        return _("Config must have at least one blade array to compile.").ToStdString();
+    }
+
     return nullopt;
 }
 
