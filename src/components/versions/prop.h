@@ -183,7 +183,7 @@ struct VERSIONS_EXPORT PropNumeric : PropDataBase, PropSettingBase {
             other.value.min(),
             other.value.max(),
             other.value.increment(),
-            other.value,
+            other.defaultVal,
         } {}
 
     [[nodiscard]] string id() const override { return define; }
@@ -234,7 +234,7 @@ struct VERSIONS_EXPORT PropDecimal : PropDataBase, PropSettingBase {
             other.value.min(),
             other.value.max(),
             other.value.increment(),
-            other.value,
+            other.defaultVal,
         } {}
 
     [[nodiscard]] string id() const override { return define; }

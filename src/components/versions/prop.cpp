@@ -66,6 +66,9 @@ Versions::PropOption::PropOption(
 
 Versions::PropOption::PropOption(const PropOption& other, Prop& prop) :
     PropSettingBase(PropSettingType::OPTION),
+    idLabel{other.idLabel},
+    name{other.name},
+    description{other.description},
     selection{other.selection.numSelections()} {
     for (const auto& sel : other.mSelections) {
         mSelections.push_back(std::make_unique<PropSelection>(*sel, prop, *this));
@@ -324,6 +327,7 @@ void Versions::Prop::rebuildMaps(
 ) {
     auto& logger{Log::Branch::optCreateLogger("Versions::Prop::rebuildSettingMap()", lBranch)};
     mDataMap.clear();
+    mSettingMap.clear();
 
     for (auto iter{mSettings.begin()}; iter != mSettings.end();) {
         auto *setting{(*iter).get()};
@@ -803,12 +807,15 @@ optional<std::pair<CommonData, PConf::HashedData>> parseSettingCommon(
 
     auto data{PConf::hash(entry.section()->entries)};
     const auto nameEntry{data.find("NAME")};
-    if ((not nameEntry or not nameEntry->value) and requireName) {
-        logger.warn(entry->name + " section does not have the required \"NAME\" entry, ignoring!");
-        return nullopt;
+    if (not nameEntry or not nameEntry->value) {
+        if (requireName) {
+            logger.warn(entry->name + " section does not have the required \"NAME\" entry, ignoring!");
+            return nullopt;
+        }
+    } else {
+        commonData.name = *nameEntry->value;
     }
-    commonData.name = *nameEntry->value;
-    data.erase(nameEntry);
+    if (nameEntry) data.erase(nameEntry);
 
     const auto descEntry{data.find("DESCRIPTION")};
     if (descEntry and descEntry->value) {
