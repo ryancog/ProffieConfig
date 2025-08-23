@@ -1,5 +1,4 @@
 #include "static_box.h"
-#include "wx/event.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -46,8 +45,23 @@ PCUI::StaticBox::StaticBox(wxOrientation orient, wxWindow *parent, const wxStrin
         int32 otherBorder{};
         GetBordersForSizer(&topBorder, &otherBorder);
 
-        mPanel->SetSize(GetSize() - wxSize{(PADDING * 2) + (otherBorder * 2), (PADDING * 2) + otherBorder + topBorder});
-        mPanel->SetPosition({PADDING, PADDING});
+        auto size{GetSize()};
+        wxPoint pos{0, 0};
+
+        size.x -= PADDING * 2;
+        size.x -= otherBorder * 2;
+
+        size.y -= PADDING * 2;
+        size.y -= otherBorder + topBorder;
+
+        pos.x += PADDING;
+        pos.y += PADDING;
+#       ifdef __WXMSW__
+        pos.x += otherBorder;
+        pos.y += topBorder;
+#       endif
+
+        mPanel->SetSize(pos.x, pos.y, size.x, size.y);
         evt.Skip();
     });
 }
