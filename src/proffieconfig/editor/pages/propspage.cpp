@@ -168,30 +168,6 @@ void PropsPage::showSelectedProp() {
     mParent->fitAnimated();
 }
 
-// void PropsPage::update() {
-//     if (mPropsWindow->IsShown()) {
-//         mPropsWindow->FitInside();
-//         mPropsWindow->GetSizer()->Layout();
-//         mPropsWindow->GetSizer()->Fit(mPropsWindow);
-// 
-//         mPropsWindow->InvalidateBestSize();
-//         auto propsWindowBestSize{mPropsWindow->GetBestVirtualSize()};
-//         mPropsWindow->SetSizeHints(propsWindowBestSize);
-// 
-//         GetStaticBox()->Layout();
-//         Fit(GetStaticBox());
-// 
-//         auto windowSelectSize{mParent->windowSelect->GetSize()};
-//         auto topSize{mTopSizer->GetSize()};
-//         mParent->SetMinSize(wxSize{
-//             mTopSizer->GetSize().x + 60,
-//             windowSelectSize.y + topSize.y + 200,
-//         });
-//         mParent->Layout();
-//         mParent->Fit();
-//     }
-// }
-
 void PropsPage::loadProps() {
     SetSizer(nullptr, false);
     for (auto *sizer : mProps) {
@@ -210,6 +186,7 @@ void PropsPage::loadProps() {
             if (const auto *ptr = std::get_if<Versions::PropSettingBase *>(&child)) {
                 auto& setting{**ptr};
                 wxWindow *windowToAdd{nullptr};
+                int32 spacer{0};
                 if (Versions::PropSettingType::TOGGLE == setting.settingType) {
                     auto& toggle{static_cast<Versions::PropToggle&>(setting)};
                     auto *control{new PCUI::CheckBox(
@@ -241,6 +218,7 @@ void PropsPage::loadProps() {
                         control->SetToolTip(idx, option.selections()[idx]->description);
                     }
                     windowToAdd = control;
+                    spacer = 10;
                 } else if (Versions::PropSettingType::NUMERIC == setting.settingType) {
                     auto& numeric{static_cast<Versions::PropNumeric&>(setting)};
                     auto *control{new PCUI::Numeric(
@@ -263,7 +241,10 @@ void PropsPage::loadProps() {
                     assert(0);
                 }
 
-                if (windowToAdd) sizer->Add(windowToAdd, 0, wxEXPAND);
+                if (windowToAdd) {
+                    if (spacer > 0) sizer->AddSpacer(spacer);
+                    sizer->Add(windowToAdd, 0, wxEXPAND);
+                }
             } else if (const auto *ptr = std::get_if<Versions::PropLayout>(&child)) {
                 if (not sizer->IsEmpty()) sizer->AddSpacer(10);
                 if (ptr->label.empty()) {
