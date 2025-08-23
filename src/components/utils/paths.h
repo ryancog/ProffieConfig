@@ -34,6 +34,11 @@ enum class Executable {
 };
 
 /**
+ * @return ~/
+ */
+[[nodiscard]] UTILS_EXPORT filepath user();
+
+/**
  * Retrieve the path to an executable binary.
  *
  * @param exec The executable to retrieve a path for. Default is `Executable::CURRENT`
@@ -73,6 +78,7 @@ enum class Executable {
 [[nodiscard]] UTILS_EXPORT string website();
 [[nodiscard]] UTILS_EXPORT string remoteAssets();
 [[nodiscard]] UTILS_EXPORT string remoteUpdateAssets();
+
 
 } // namespace Paths
 
