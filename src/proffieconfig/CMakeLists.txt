@@ -47,6 +47,7 @@ target_link_libraries(proffieconfig
     pconf
     config
     versions_manager
+    process
 )
 
 include (../Common.cmake)

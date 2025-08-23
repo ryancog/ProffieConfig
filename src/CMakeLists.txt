@@ -10,6 +10,7 @@ set(SHARED_COMPONENTS
     versions
     versions_manager
     config
+    process
 )
 
 set(STATIC_COMPONENTS
