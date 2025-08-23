@@ -183,6 +183,7 @@ void PropsPage::loadProps() {
         wxWindow *parent
     ) -> void {
         for (const auto& child : children) {
+            int32 lastSpacer{0};
             if (const auto *ptr = std::get_if<Versions::PropSettingBase *>(&child)) {
                 auto& setting{**ptr};
                 wxWindow *windowToAdd{nullptr};
@@ -241,10 +242,11 @@ void PropsPage::loadProps() {
                     assert(0);
                 }
 
-                if (windowToAdd) {
-                    if (spacer > 0) sizer->AddSpacer(spacer);
-                    sizer->Add(windowToAdd, 0, wxEXPAND);
-                }
+                assert(windowToAdd);
+                spacer = std::max(lastSpacer, spacer);
+                if (spacer > 0) sizer->AddSpacer(spacer);
+                sizer->Add(windowToAdd, 0, wxEXPAND);
+                lastSpacer = spacer;
             } else if (const auto *ptr = std::get_if<Versions::PropLayout>(&child)) {
                 if (not sizer->IsEmpty()) sizer->AddSpacer(10);
                 if (ptr->label.empty()) {
