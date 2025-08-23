@@ -29,7 +29,6 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
     install(PROGRAMS 
         bin/Win32/arduino-cli.exe 
         bin/Win32/proffie-dfu-setup.exe
-        bin/Win32/windowMode.exe
 
         DESTINATION ${INSTALL_BIN_DIR}
     )
