@@ -22,9 +22,11 @@
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <sstream>
 
 #include <wx/uri.h>
 #include <wx/webrequest.h>
+#include <wx/wfstream.h>
 #include <wx/zipstrm.h>
 
 #include "log/context.h"
@@ -33,7 +35,6 @@
 #include "utils/paths.h"
 #include "utils/string.h"
 #include "utils/types.h"
-#include "wx/wfstream.h"
 
 namespace {
 
