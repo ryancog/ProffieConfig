@@ -64,12 +64,8 @@ variant<Result, string> verifyConfig(
 // void init(wxWindow *);
 vector<string> getBoards(Log::Branch * = nullptr);
 
-#ifndef __WXOSX__
-/**
- * Blocking installation.
- *
- * @return success
- */
+bool ensureDefaultCoreInstalled(Log::Branch * = nullptr);
+#if defined(__WINDOWS__) or defined(__linux__)
 bool runDriverInstallation(Log::Branch * = nullptr);
 #endif
 

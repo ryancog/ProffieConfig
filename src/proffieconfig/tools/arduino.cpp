@@ -149,81 +149,6 @@ string Arduino::version() {
 //         string fulloutput;
 //         array<char, 32> buffer;
 // 
-//         // constexpr cstring DOWNLOAD_MESSAGE{"Downloading ProffieOS..."};
-//         // progDialog->emitEvent(5, DOWNLOAD_MESSAGE);
-//         // logger.info(DOWNLOAD_MESSAGE);
-//         // const auto uri{wxURI{Paths::remoteAssets() + "/ProffieOS/" wxSTRINGIZE(PROFFIEOS_VERSION) ".zip"}.BuildURI()};
-//         // auto proffieOSRequest{wxWebSessionSync::GetDefault().CreateRequest(uri)};
-//         // auto requestResult{proffieOSRequest.Execute()};
-// 
-//         // if (not requestResult) {
-//         //     progDialog->emitEvent(100, "Error");
-//         //     const auto downloadFailMessage{"ProffieOS Download Failed\n" + requestResult.error.ToStdString()};
-//         //     evt->str = downloadFailMessage;
-//         //     logger.error(downloadFailMessage);
-//         //     wxQueueEvent(parent->GetEventHandler(), evt);
-//         //     return;
-//         // }
-// 
-//         // fs::remove_all(Paths::proffieos());
-// 
-//         // wxZipInputStream zipStream{*proffieOSRequest.GetResponse().GetStream()};
-//         // if (not zipStream.IsOk()) {
-//         //     progDialog->emitEvent(100, "Error");
-//         //     constexpr cstring ZIP_ERROR_MESSAGE{"Failed Opening ProffieOS ZIP"};
-//         //     evt->str = ZIP_ERROR_MESSAGE;
-//         //     logger.error(ZIP_ERROR_MESSAGE);
-//         //     wxQueueEvent(parent->GetEventHandler(), evt);
-//         //     return;
-//         // }
-// 
-//         // std::unique_ptr<wxZipEntry> entry;
-//         // while (entry.reset(zipStream.GetNextEntry()), entry) {
-//         //     auto fileNameStr{(Paths::proffieos() / entry->GetName().ToStdWstring()).string()};
-//         //     if (fileNameStr.find("__MACOSX") != string::npos) continue;
-// 
-//         //     auto permissionBits{entry->GetMode()};
-//         //     wxFileName fileName;
-//         //     
-//         //     if (entry->IsDir()) fileName.AssignDir(fileNameStr);
-//         //     else fileName.Assign(fileNameStr);
-//         //     
-//         //     if (!wxDirExists(fileName.GetPath())) {
-//         //         wxFileName::Mkdir(fileName.GetPath(), permissionBits, wxPATH_MKDIR_FULL);
-//         //     }
-//         //     
-//         //     if (entry->IsDir()) continue;
-//         //     
-//         //     if (not zipStream.CanRead()) {
-//         //         progDialog->emitEvent(100, "Error");
-//         //         constexpr cstring READ_ERROR_MESSAGE{"ProffieOS Read Failed"};
-//         //         evt->str = READ_ERROR_MESSAGE;
-//         //         logger.error(READ_ERROR_MESSAGE);
-//         //         wxQueueEvent(parent->GetEventHandler(), evt);
-//         //         return;
-//         //     }
-//         //     
-//         //     wxFileOutputStream outStream{fileNameStr};
-//         //     if (not outStream.IsOk()) {
-//         //         progDialog->emitEvent(100, "Error");
-//         //         constexpr cstring WRITE_ERROR_MESSAGE{"ProffieOS Write Failed"};
-//         //         evt->str = WRITE_ERROR_MESSAGE;
-//         //         logger.error(WRITE_ERROR_MESSAGE);
-//         //         wxQueueEvent(parent->GetEventHandler(), evt);
-//         //         return;
-//         //     }
-//         //     
-//         //     zipStream.Read(outStream);
-//         // }
-// 
-//         // if (zipStream.GetLastError() != wxSTREAM_EOF) {
-//         //     progDialog->emitEvent(100, "Error");
-//         //     constexpr cstring PARSE_ERROR_MESSAGE{"Failed Parsing ProffieOS ZIP"};
-//         //     evt->str = PARSE_ERROR_MESSAGE;
-//         //     logger.error(PARSE_ERROR_MESSAGE);
-//         //     wxQueueEvent(parent->GetEventHandler(), evt);
-//         //     return;
-//         // }
 //         
 // 
 // 
@@ -845,6 +770,19 @@ FILE* cli(const string& command) {
 
 } // namespace
 
+bool Arduino::ensureDefaultCoreInstalled(Log::Branch *lBranch) {
+    auto& logger{Log::Branch::optCreateLogger("Arduino::ensureDefaultCoreInstalled()", lBranch)};
+
+    auto err{ensureCoreInstalled(
+        Versions::DEFAULT_CORE_VERSION,
+        DEFAULT_CORE_URL,
+        logger
+    )};
+
+    return not err;
+}
+
+#if defined(__WINDOWS__) or defined(__linux__)
 bool Arduino::runDriverInstallation(Log::Branch *lBranch) {
     auto& logger{Log::Branch::optCreateLogger("Arduino::runDriverInstallation()", lBranch)};
     logger.info("Installing drivers...");
@@ -852,21 +790,19 @@ bool Arduino::runDriverInstallation(Log::Branch *lBranch) {
     Process proc;
 
 #   if defined(__linux__)
-    auto err{ensureCoreInstalled(
-        Versions::DEFAULT_CORE_VERSION,
-        DEFAULT_CORE_URL,
-        logger
-    )};
-    if (err) return false;
-
     const auto rulesPath{
         Paths::user() / ".arduino15" / "packages" / "proffieboard" / "hardware" / "stm32l4" /
         Versions::DEFAULT_CORE_VERSION / "drivers" / "linux"
     };
     vector<string> args;
     args.emplace_back("cp");
-    for (const auto& entry : fs::directory_iterator{rulesPath}) {
-        std::error_code err;
+    std::error_code err;
+    fs::directory_iterator directoryIter{rulesPath, err};
+    if (err) {
+        logger.error("Could not access driver path " + rulesPath.string() + ": " + err.message());
+        return false;
+    }
+    for (const auto& entry : directoryIter) {
         if (not entry.is_regular_file(err)) continue;
         if (not entry.path().string().ends_with("rules")) continue;
 
@@ -904,11 +840,11 @@ bool Arduino::runDriverInstallation(Log::Branch *lBranch) {
 
     auto result{proc.finish()};
     if (result.err) {
-        logger.error("Installation failed with error " + std::to_string(result.err));
+        logger.error("Installation failed with error " + std::to_string(result.err) + ":" + std::to_string(result.systemResult));
         if (result.err == Process::Result::UNKNOWN) logger.error("System error: " + std::to_string(result.systemResult));
         return false;
     }
     return true;
 }
-
+#endif
 
