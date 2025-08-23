@@ -115,7 +115,7 @@ void PropsPage::setToActualMinSize() {
 void PropsPage::setToActualBestSize() {
     auto minSize{GetSizer()->CalcMin()};
     auto propsBestVirtualSize{
-        mPropsWindow->GetBestVirtualSize() +
+        mPropsWindow->GetSizer() ? mPropsWindow->GetSizer()->CalcMin() : wxSize{0, 0} +
         mPropsWindow->GetWindowBorderSize()
     };
     SetMinSize({
