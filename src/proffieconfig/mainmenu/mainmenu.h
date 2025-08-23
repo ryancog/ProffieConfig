@@ -49,6 +49,7 @@ public:
         ID_BoardSelection,
         ID_ConfigSelection,
 
+        ID_RunSetup,
         ID_AsyncDone,
     };
 

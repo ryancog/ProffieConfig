@@ -38,6 +38,7 @@
 #include "../editor/editorwindow.h"
 #include "../tools/arduino.h"
 #include "../tools/serialmonitor.h"
+#include "../onboard/onboard.h"
 
 MainMenu *MainMenu::instance{nullptr};
 MainMenu::MainMenu(wxWindow* parent) : 
@@ -165,6 +166,11 @@ void MainMenu::bindEvents() {
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxLaunchDefaultBrowser("https://github.com/ryancog/ProffieConfig/issues/new");
     }, ID_Issue);
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+        if (Close()) {
+            Onboard::Frame::instance = new Onboard::Frame;
+        }
+    }, ID_RunSetup);
 
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         wxSetCursor(wxCURSOR_WAIT);
@@ -386,6 +392,8 @@ void MainMenu::createMenuBar() {
     auto *help{helpIdx == wxNOT_FOUND ? new wxMenu : menuBar->GetMenu(helpIdx)};
     help->Append(ID_Docs, _("Documentation...\tCtrl+H"), _("Open the ProffieConfig docs in your web browser"));
     help->Append(ID_Issue, _("Help/Bug Report..."), _("Open GitHub to submit issue"));
+    help->AppendSeparator();
+    help->Append(ID_RunSetup, _("Re-Run Setup"));
     if (helpIdx == wxNOT_FOUND) menuBar->Append(help, helpStr);
 
     SetMenuBar(menuBar);
