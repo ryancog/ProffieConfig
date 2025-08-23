@@ -22,16 +22,18 @@
 #include <cassert>
 #include <cstring>
 #include <future>
-#include <windows.h>
-#include <winnt.h>
 
 #if defined(__APPLE__) or defined(__linux__)
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/ioctl.h>
 #elif defined(_WIN32)
+#include <fileapi.h>
+#include <handleapi.h>
 #include <namedpipeapi.h>
 #include <processthreadsapi.h>
+#include <windows.h>
+#include <winnt.h>
 #endif
 
 namespace {
