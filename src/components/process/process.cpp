@@ -25,6 +25,7 @@
 
 #if defined(__APPLE__) or defined(__linux__)
 #include <unistd.h>
+#include <csignal>
 #include <sys/wait.h>
 #include <sys/ioctl.h>
 #elif defined(_WIN32)
@@ -38,12 +39,18 @@
 
 namespace {
 
+#if defined(__APPLE__)
+using PidType = pid_t;
+#elif defined(__linux__)
+using PidType = __pid_t;
+#endif
+
 struct InternalData {
     std::promise<Process::Result> promise;
 #   if defined(__APPLE__) or defined(__linux__)
     int parentFromChild[2];
     int childFromParent[2];
-    __pid_t pid{-1};
+    PidType pid{-1};
 #   elif defined(_WIN32)
     HANDLE parentFromChild[2];
     HANDLE childFromParent[2];
@@ -310,7 +317,7 @@ namespace {
 void onChildExit(int sig) {
     assert(sig == SIGCHLD);
     int status{};
-    __pid_t pid{};
+    PidType pid{};
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
         if (not WIFEXITED(status) and not WIFSIGNALED(status)) continue;
 
