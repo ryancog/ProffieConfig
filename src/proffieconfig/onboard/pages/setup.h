@@ -19,7 +19,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/gauge.h>
 #include <wx/panel.h>
+#include <wx/stattext.h>
+#include <wx/timer.h>
 
 #include "ui/notifier.h"
 
@@ -31,12 +34,32 @@ public:
 
     bool isDone{false};
     void startSetup();
+    // Called in from done or failed
+    void finishSetup(bool done);
+
+    wxString errorMessage;
+    wxString statusMessage;
 
     enum {
         ID_DONE,
         ID_FAILED,
+        ID_STATUS,
     };
     PCUI::Notifier notifier;
+
+    wxStaticText *loadingText{nullptr};
+
+private:
+    wxTimer *mLoadingTimer{nullptr};
+    wxGauge *mLoadingBar{nullptr};
+    wxStaticText *mDoneMessage{nullptr};
+    wxStaticText *mPressNextMessage{nullptr};
+
+    bool mCoreInstalled{false};
+    bool mOSInstalled{false};
+#   if defined(__WINDOWS__) or defined(__linux__)
+    bool mDriverInstalled{false};
+#   endif
 };
 
 } // namespace Onboard

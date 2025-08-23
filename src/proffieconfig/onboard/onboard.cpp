@@ -31,17 +31,28 @@
 #include "../core/utilities/progress.h"
 #include "../core/utilities/misc.h"
 #include "../core/appstate.h"
+#include "../mainmenu/mainmenu.h"
 
 #include "ui/message.h"
+#include "ui/notifier.h"
 #include "utils/image.h"
 #include "ui/plaque.h"
 
-constexpr cstring NEXT_STR{wxTRANSLATE("Next >")};
+constexpr cstring NEXT_STR{wxTRANSLATE("Next")};
+constexpr cstring FINISH_STR{wxTRANSLATE("Finish")};
+constexpr cstring RUN_SETUP_STR{wxTRANSLATE("Run Setup")};
 
 Onboard::Frame* Onboard::Frame::instance{nullptr};
 
 Onboard::Frame::Frame() : 
-    PCUI::Frame(nullptr, wxID_ANY, _("ProffieConfig First-Time Setup"), wxDefaultPosition, wxDefaultSize, wxSYSTEM_MENU | wxCLOSE_BOX | wxMINIMIZE_BOX | wxCAPTION | wxCLIP_CHILDREN) {
+    PCUI::Frame(
+        nullptr,
+        wxID_ANY,
+        _("ProffieConfig First-Time Setup"),
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxSYSTEM_MENU | wxCLOSE_BOX | wxMINIMIZE_BOX | wxCAPTION | wxCLIP_CHILDREN
+    ) {
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
     auto *contentSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *icon{PCUI::createStaticImage(this, wxID_ANY, Image::loadPNG("icon"))};
@@ -61,13 +72,21 @@ Onboard::Frame::Frame() :
     mInfoPage->Hide();
 
     auto *buttonSizer{new wxBoxSizer(wxHORIZONTAL)};
+    auto *skip{new wxButton(this, ID_Skip, _("Skip"))};
+    skip->Hide();
+    auto *cancel{new wxButton(this, wxID_CANCEL)};
+    auto *back{new wxButton(this, wxID_BACKWARD)};
+    back->Disable();
     auto *next{new wxButton(this, ID_Next, wxGetTranslation(NEXT_STR))};
-    auto *cancel{new wxButton(this, ID_Cancel, _("Cancel"))};
-    buttonSizer->AddStretchSpacer();
-    buttonSizer->AddSpacer(10);
-    buttonSizer->Add(next);
     buttonSizer->AddSpacer(10);
     buttonSizer->Add(cancel);
+    buttonSizer->AddSpacer(10);
+    buttonSizer->Add(skip);
+    buttonSizer->AddStretchSpacer();
+    buttonSizer->AddSpacer(10);
+    buttonSizer->Add(back);
+    buttonSizer->AddSpacer(10);
+    buttonSizer->Add(next);
     buttonSizer->AddSpacer(10);
 
     sizer->AddSpacer(10);
@@ -84,8 +103,9 @@ Onboard::Frame::Frame() :
     sizer->SetMinSize(wxSize(900, 430));
     SetSizerAndFit(sizer);
 
-    bindEvents(); // Do this first so children can bind their events to parent state.
-
+    bindEvents();
+    NotifyReceiver::create(this, mSetupPage->notifier);
+    initializeNotifier();
     CentreOnScreen();
     Show(true);
 }
@@ -104,57 +124,121 @@ void Onboard::Frame::bindEvents() {
                 this
             )};
             if (res != wxYES) {
+                if (AppState::doneWithFirstRun) {
+                    MainMenu::instance = new MainMenu;
+                }
                 event.Veto();
                 return;
             }
         }
         event.Skip();
     });
-    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { Close(); }, ID_Cancel);
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+        Close();
+    }, wxID_CANCEL);
     Bind(Progress::EVT_UPDATE, [&](ProgressEvent& event) { 
         Progress::handleEvent(&event); 
     });
     Bind(Misc::EVT_MSGBOX, [&](Misc::MessageBoxEvent& evt) {
         PCUI::showMessage(evt.message, evt.caption, evt.style, this);
     }, wxID_ANY);
+
+    // TODO: Make this button handling sane.
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+        auto res{PCUI::showMessage(
+            _("Skipping will leave ProffieConfig and your computer unprepared.\nYou should only do this if you know what you are doing!"),
+            _("Skip Setup?"),
+            wxYES_NO | wxNO_DEFAULT,
+            this
+        )};
+        if (res == wxYES) {
+            mSetupPage->Hide();
+            mInfoPage->Show();
+            FindWindow(ID_Next)->SetLabel(wxGetTranslation(FINISH_STR));
+            FindWindow(ID_Skip)->Hide();
+            Layout();
+            Fit();
+        }
+    }, ID_Skip);
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
+        if (mInfoPage->IsShown()) {
+            mInfoPage->Hide();
+            mSetupPage->Show();
+            if (mSetupPage->isDone) {
+                FindWindow(ID_Next)->SetLabel(wxGetTranslation(NEXT_STR));
+                FindWindow(ID_Skip)->Hide();
+            } else {
+                FindWindow(ID_Next)->SetLabel(wxGetTranslation(RUN_SETUP_STR));
+                FindWindow(ID_Skip)->Show();
+            }
+        } else if (mSetupPage->IsShown()) {
+            mSetupPage->Hide();
+            mWelcomePage->Show();
+            FindWindow(wxID_BACKWARD)->Disable();
+            FindWindow(ID_Skip)->Hide();
+            FindWindow(ID_Next)->SetLabel(wxGetTranslation(NEXT_STR));
+        }
+
+        Layout();
+        Fit();
+    }, wxID_BACKWARD);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         if (mWelcomePage->IsShown()) {
             mWelcomePage->Hide();
             mSetupPage->Show();
+            FindWindow(ID_Next)->SetLabel(wxGetTranslation(RUN_SETUP_STR));
+            if (not mSetupPage->isDone) FindWindow(ID_Skip)->Show();
         } else if (mSetupPage->IsShown()) {
             if (not mSetupPage->isDone) {
+                FindWindow(ID_Next)->Disable();
+                FindWindow(ID_Skip)->Disable();
+                FindWindow(wxID_BACKWARD)->Disable();
+                FindWindow(wxID_CANCEL)->Disable();
+
                 mSetupPage->startSetup();
-                FindWindow(ID_Next)->SetLabel(_("Run Setup"));
-                Disable();
             } else {
                 mSetupPage->Hide();
                 mInfoPage->Show();
-                FindWindow(ID_Next)->SetLabel(_("Finish"));
+                FindWindow(ID_Next)->SetLabel(wxGetTranslation(FINISH_STR));
             }
         } else if (mInfoPage->IsShown()) {
             AppState::doneWithFirstRun = true;
             AppState::saveState();
             Close(true);
+            MainMenu::instance = new MainMenu;
         }
 
+        FindWindow(wxID_BACKWARD)->Enable();
         Layout();
         Fit();
     }, ID_Next);
 }
 
 void Onboard::Frame::handleNotification(uint32 id) {
+    if (id == Onboard::Setup::ID_DONE or id == Onboard::Setup::ID_FAILED) {
+        mSetupPage->finishSetup(id == Onboard::Setup::ID_DONE);
+
+        FindWindow(ID_Next)->Enable();
+        FindWindow(ID_Skip)->Enable();
+        FindWindow(wxID_BACKWARD)->Enable();
+        FindWindow(wxID_CANCEL)->Enable();
+    }
+
     if (id == Onboard::Setup::ID_DONE) {
-        Enable();
         FindWindow(ID_Next)->SetLabel(wxGetTranslation(NEXT_STR));
+        FindWindow(ID_Skip)->Hide();
     } else if (id == Onboard::Setup::ID_FAILED) {
         FindWindow(ID_Next)->SetLabel(_("Try Again"));
-        Enable();
+        
         PCUI::showMessage(
-            _("Dependency installation failed, please try again."),
+            _("Dependency installation failed, please try again.") + "\n\n"
+            + mSetupPage->errorMessage,
             _("Installation Failure"),
             wxOK | wxCENTER,
             this
         );
+    } else if (id == Onboard::Setup::ID_STATUS) {
+        mSetupPage->loadingText->SetLabelText(mSetupPage->statusMessage);
     }
 }
 

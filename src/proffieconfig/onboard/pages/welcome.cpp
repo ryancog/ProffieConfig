@@ -19,27 +19,55 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/hyperlink.h>
 #include <wx/sizer.h>
 
 #include "../onboard.h"
+#include "utils/paths.h"
 
 Onboard::Welcome::Welcome(wxWindow* parent) : wxPanel(parent) {
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
     auto *welcomeText{Onboard::createHeader(this, wxString::Format(_("Welcome to ProffieConfig %s!"), wxSTRINGIZE(VERSION)))};
 
-    const auto infoString{_(
-        "ProffieConfig is an All-in-One utility for managing your Proffieboard.\n"
-        "Links to documentation can be found in the application under Help->Documentation...\n"
+    const auto infoString1{_(
+        "Thank you for trying out ProffieConfig, the all-in-one proffieboard management utility!\n"
         "\n"
-        "This wizard will guide you through first-time setup and usage of ProffieConfig.\n"
-        "\n\n"
+        "Online guides are available at the link below:"
+    )};
+    const auto infoString2{_(
+        "\n"
+        "To start, ProffieConfig needs to do some setup.\n"
         "Press \"Next\" when you're ready to continue, and we'll get started!"
     )};
-    auto *infoText{new wxStaticText(this, wxID_ANY, infoString)};
+    auto *infoText1{new wxStaticText(
+        this,
+        wxID_ANY,
+        infoString1,
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxALIGN_CENTER
+    )};
+    auto *docLink{new wxHyperlinkCtrl(
+        this,
+        wxID_ANY,
+        _("Guides And Documentation"),
+        Paths::website() + "/docs"
+    )};
+    auto *infoText2{new wxStaticText(
+        this,
+        wxID_ANY,
+        infoString2,
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxALIGN_CENTER
+    )};
 
-    sizer->Add(welcomeText, wxSizerFlags(0).Center());
+    sizer->AddSpacer(20);
+    sizer->Add(welcomeText, 0, wxCENTER);
     sizer->AddSpacer(40);
-    sizer->Add(infoText, wxSizerFlags(0).Center());
+    sizer->Add(infoText1, 0, wxCENTER);
+    sizer->Add(docLink, 0, wxCENTER);
+    sizer->Add(infoText2, 0, wxCENTER);
     SetSizerAndFit(sizer);
 }

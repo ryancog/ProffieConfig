@@ -40,6 +40,11 @@ public:
     Frame();
     ~Frame() override;
 
+    enum {
+        ID_Next,
+        ID_Skip,
+    };
+
 private:
     void handleNotification(uint32) override;
     void bindEvents();
@@ -47,12 +52,6 @@ private:
     Onboard::Welcome *mWelcomePage{nullptr};
     Onboard::Setup *mSetupPage{nullptr};
     Onboard::Info *mInfoPage{nullptr};
-
-    enum {
-        ID_Back,
-        ID_Next,
-        ID_Cancel,
-    };
 };
 
 } // namespace Onboard
