@@ -27,7 +27,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/ioctl.h>
-#elif defined(__WINDOWS__)
+#elif defined(_WIN32)
 #endif
 
 namespace {
@@ -135,7 +135,7 @@ void Process::create(const string_view& executable, const span<string>& args) {
     data.pid = pid;
     close(data.childFromParent[1]);
     close(data.parentFromChild[0]);
-#   elif defined(__WINDOWS__)
+#   elif defined(_WIN32)
 
 #   else
 #   error Unsupported
@@ -157,7 +157,7 @@ optional<string> Process::read() {
         return nullopt;
     }
     return ret;
-#   elif defined(__WINDOWS__)
+#   elif defined(_WIN32)
 #   endif
 }
 
@@ -167,7 +167,7 @@ bool Process::write(const string_view& str) {
 
 #   if defined(__APPLE__) or defined(__linux__)
     return -1 != ::write(data.childFromParent[1], str.data(), str.size());
-#   elif defined(__WINDOWS__)
+#   elif defined(_WIN32)
 #   endif
 }
 

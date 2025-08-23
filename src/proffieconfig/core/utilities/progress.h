@@ -4,7 +4,7 @@
 
 #include <wx/event.h>
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 #undef wxProgressDialog
 #include <wx/progdlg.h>
 #define wxProgressDialog wxGenericProgressDialog

@@ -24,7 +24,7 @@
 #include <filesystem>
 #include <sstream>
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 #include <fileapi.h>
 #include <handleapi.h>
 #include <windows.h>
@@ -63,7 +63,7 @@ FILE *cli(const string& command);
 struct CompileOutput {
     int32 used;
     int32 total;
-#   ifdef __WINDOWS__
+#   ifdef _WIN32
     string tool1;
     string tool2;
 #   endif
@@ -75,7 +75,7 @@ variant<CompileOutput, string> compile(
     Log::Branch&
 );
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 optional<string> upload(
     const string& boardPath,
     const Config::Config&,
@@ -94,7 +94,7 @@ optional<string> upload(
 
 string parseError(const string&, const Config::Config&); 
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 inline string windowModePrefix() { 
     return 
         "title ProffieConfig Worker & " + 
@@ -235,7 +235,7 @@ variant<Arduino::Result, string> Arduino::applyToBoard(
     if (auto *err = std::get_if<string>(&res)) return *err;
     const auto& compileOutput{std::get<CompileOutput>(res)};
 
-#   ifdef __WINDOWS__
+#   ifdef _WIN32
     auto err{upload(boardPath, config, compileOutput, prog, *logger.binfo("Uploading..."))};
 #   else
     auto err{upload(boardPath, config, prog, *logger.binfo("Uploading..."))};
@@ -444,7 +444,7 @@ variant<CompileOutput, string> compile(
 
     CompileOutput ret;
 
-#   ifdef __WINDOWS__
+#   ifdef _WIN32
     constexpr string_view DFU_STRING{"ProffieOS.ino.dfu"};
     constexpr string_view DFU_C_STRING{"C:\\"};
     size_t dfuPos{};
@@ -496,7 +496,7 @@ variant<CompileOutput, string> compile(
     return ret;
 }
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 optional<string> upload(
     const string& boardPath,
     const Config::Config& config,
@@ -538,7 +538,7 @@ optional<string> upload(
     constexpr cstring UPLOAD_MESSAGE{wxTRANSLATE("Uploading to Proffieboard...")};
     if (prog) prog->emitEvent(65, wxGetTranslation(UPLOAD_MESSAGE));
 
-#   ifdef __WINDOWS__
+#   ifdef _WIN32
     if (boardPath != _("BOOTLOADER RECOVERY")) {
         // See https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#win32-device-namespaces
         const auto safeBoardPath{R"(\\.\)" + boardPath};
@@ -612,7 +612,7 @@ optional<string> upload(
     // }
 #   endif
 
-#   ifdef __WINDOWS__
+#   ifdef _WIN32
     string commandString{windowModePrefix()};
     commandString += compileOutput.tool2 + R"( 0x1209 0x6668 )" + compileOutput.tool1 + R"( 2>&1)";
     logger.info("Uploading via: " + commandString);
@@ -669,7 +669,7 @@ optional<string> upload(
     }
 
     // TODO: Don't remember if this happens on non-msw so guard it for now
-#   ifdef __WINDOWS__
+#   ifdef _WIN32
     if (error.find("File downloaded successfully") == string::npos) {
         logger.error(error);
         return parseError(error, config);
@@ -757,7 +757,7 @@ optional<string> ensureCoreInstalled(
 FILE* cli(const string& command) {
     auto& logger{Log::Context::getGlobal().createLogger("Arduino::cli()")};
     string fullCommand;
-#   if defined(__WINDOWS__)
+#   if defined(_WIN32)
     fullCommand += windowModePrefix();
 #   endif
     fullCommand += '"' + (Paths::binaryDir() / "arduino-cli").string() + '"';
@@ -782,7 +782,7 @@ bool Arduino::ensureDefaultCoreInstalled(Log::Branch *lBranch) {
     return not err;
 }
 
-#if defined(__WINDOWS__) or defined(__linux__)
+#if defined(_WIN32) or defined(__linux__)
 bool Arduino::runDriverInstallation(Log::Branch *lBranch) {
     auto& logger{Log::Branch::optCreateLogger("Arduino::runDriverInstallation()", lBranch)};
     logger.info("Installing drivers...");
@@ -810,32 +810,8 @@ bool Arduino::runDriverInstallation(Log::Branch *lBranch) {
     }
     args.emplace_back("/etc/udev/rules.d");
     proc.create("pkexec", args);
-#   elif defined(__WINDOWS__)
-    install = _wpopen((L"title ProffieConfig Worker & " + (Paths::binaries() / "proffie-dfu-setup.exe").native() + L" 2>&1").c_str(), L"r");
-    // Really I should have a proper wait but I tried with an echo and that didn't work.
-    // Could maybe revisit this in the future.
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-    STARTUPINFOW startupInfo;
-    PROCESS_INFORMATION procInfo;
-    memset(&startupInfo, 0, sizeof startupInfo);
-    startupInfo.cb = sizeof startupInfo;
-    memset(&procInfo, 0, sizeof procInfo);
-
-    const auto minimizeCommand{(Paths::binaries() / "windowMode").native() + LR"( -title "ProffieConfig Worker" -mode force_minimized)"};
-
-    CreateProcessW(
-        minimizeCommand.c_str(),
-        nullptr,
-        nullptr,
-        nullptr,
-        false,
-        0,
-        nullptr,
-        nullptr,
-        &startupInfo,
-        &procInfo
-    );
+#   elif defined(_WIN32)
+    proc.create((Paths::binaryDir() / "proffie-dfu-setup.exe").string());
 #   endif
 
     auto result{proc.finish()};

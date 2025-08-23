@@ -408,7 +408,7 @@ void MainMenu::createUI() {
     auto *title{new wxStaticText(this, wxID_ANY, "ProffieConfig")};
     auto titleFont{title->GetFont()};
     titleFont.MakeBold();
-#   if defined(__WXGTK__) || defined(__WINDOWS__)
+#   if defined(__WXGTK__) or defined(__WXMSW__)
     titleFont.SetPointSize(20);
 #   elif defined (__WXOSX__)
     titleFont.SetPointSize(30);
@@ -472,7 +472,7 @@ void MainMenu::createUI() {
 
     auto *boardControls{new wxBoxSizer(wxHORIZONTAL)};
     auto boardEntries{Utils::createEntries({_("Select Board...")})};
-#   ifdef __WINDOWS__
+#   ifdef _WIN32
     boardEntries.emplace_back(_("BOOTLOADER RECOVERY").ToStdString());
 #   endif
     boardSelection.setChoices(std::move(boardEntries));

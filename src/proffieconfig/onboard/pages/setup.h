@@ -57,7 +57,7 @@ private:
 
     bool mCoreInstalled{false};
     bool mOSInstalled{false};
-#   if defined(__WINDOWS__) or defined(__linux__)
+#   if defined(_WIN32) or defined(__linux__)
     bool mDriverInstalled{false};
 #   endif
 };

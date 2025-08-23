@@ -45,7 +45,7 @@ struct PROCESS_EXPORT Process {
     /**
      * Create a new process
      */
-    void create(const string_view& executable, const span<string>& args);
+    void create(const string_view& executable, const span<string>& args = {});
 
     optional<string> read();
     bool write(const string_view&);
@@ -53,6 +53,6 @@ struct PROCESS_EXPORT Process {
     Result finish();
 
 private:
-    void *mRef;
+    void *mRef{nullptr};
 };
 

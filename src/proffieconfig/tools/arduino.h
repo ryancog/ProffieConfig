@@ -65,7 +65,7 @@ variant<Result, string> verifyConfig(
 vector<string> getBoards(Log::Branch * = nullptr);
 
 bool ensureDefaultCoreInstalled(Log::Branch * = nullptr);
-#if defined(__WINDOWS__) or defined(__linux__)
+#if defined(_WIN32) or defined(__linux__)
 bool runDriverInstallation(Log::Branch * = nullptr);
 #endif
 

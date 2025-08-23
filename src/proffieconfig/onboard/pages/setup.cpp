@@ -41,11 +41,11 @@ Onboard::Setup::Setup(wxWindow* parent) : wxPanel(parent) {
         "\n\n" +
         bulletString + _("Core Installation") + '\n' +
         bulletString + _("ProffieOS Installation") + '\n' +
-#       ifdef __WINDOWS__
+#       ifdef _WIN32
         bulletString + _("Bootloader Driver Installation") + '\n' +
 #       endif
         '\n'
-#       ifdef __WINDOWS__
+#       ifdef _WIN32
         + _("When the driver installation starts, you will be prompted, please follow the instructions in the new window.")
 #       endif
     };
@@ -102,7 +102,7 @@ void Onboard::Setup::startSetup() {
             }
         }
 
-#       if defined(__WINDOWS__) or defined(__linux__)
+#       if defined(_WIN32) or defined(__linux__)
         if (not mDriverInstalled) {
             statusMessage = "Installing Driver...";
             notifier.notify(ID_STATUS);
