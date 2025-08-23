@@ -45,6 +45,11 @@ Config::Config::Config() :
     propSelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_STRING);
 
     propSelection.setUpdateHandler([this](uint32 id) {
+        if (id == PCUI::ChoiceData::ID_CHOICES) {
+            if (propSelection == -1 and not propSelection.choices().empty()) {
+                propSelection = 0;
+            }
+        }
         if (id != PCUI::ChoiceData::ID_SELECTION) return;
         propNotifyData.notify(ID_PROPSELECTION);
     });
