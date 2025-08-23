@@ -89,6 +89,8 @@ struct UTILS_EXPORT Version {
      */
     operator string() const;
     operator bool() const;
+
+    bool operator==(const string_view&) const;
 };
 
 } // namespace Utils

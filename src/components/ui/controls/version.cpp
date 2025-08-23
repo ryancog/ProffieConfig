@@ -169,7 +169,7 @@ PCUI::VersionData::operator string() {
 
 PCUI::VersionData& PCUI::VersionData::operator=(const Utils::Version& version) {
     std::scoped_lock scopeLock{getLock()};
-    if (version == *this) return *this;
+    if (version == static_cast<Utils::Version>(*this)) return *this;
     setValue(version);
     return *this;
 }
