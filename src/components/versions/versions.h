@@ -34,7 +34,7 @@ namespace Versions {
 constexpr cstring INFO_FILE_STR{"info.pconf"};
 constexpr cstring DATA_FILE_STR{"data.pconf"};
 constexpr cstring HEADER_FILE_STR{"header.h"};
-constexpr cstring DEFAULT_CORE_VERSION{"3.6.0"};
+constexpr cstring DEFAULT_CORE_VERSION{"3.6"};
 
 struct VERSIONS_EXPORT VersionedOS {
     VersionedOS();
@@ -64,6 +64,8 @@ private:
     void saveInfo();
     vector<std::unique_ptr<PCUI::VersionData>> mSupportedVersions;
 };
+
+VERSIONS_EXPORT optional<string> resetToDefault(bool purge, Log::Branch * = nullptr);
 
 VERSIONS_EXPORT void loadLocal();
 

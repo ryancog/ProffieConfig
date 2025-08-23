@@ -23,12 +23,17 @@
 #include <fstream>
 #include <map>
 
+#include <wx/uri.h>
+#include <wx/webrequest.h>
+#include <wx/zipstrm.h>
+
 #include "log/context.h"
 #include "pconf/pconf.h"
 #include "pconf/utils.h"
 #include "utils/paths.h"
 #include "utils/string.h"
 #include "utils/types.h"
+#include "wx/wfstream.h"
 
 namespace {
 
@@ -283,5 +288,183 @@ vector<Versions::VersionedProp *> Versions::propsForVersion(const Utils::Version
         ret.push_back(equalIter->second);
     }
     return ret;
+}
+
+optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
+    auto& logger{Log::Branch::optCreateLogger("Versions::resetToDefault()", lBranch)};
+
+    const Utils::Version osVersion{7, 15};
+
+    std::error_code err;
+    if (purge) {
+        logger.info("Purging versions...");
+        fs::remove_all(Paths::versionDir(), err);
+        fs::create_directories(Paths::versionDir(), err);
+        if (err) {
+            logger.error("Failed to create versions dir: " + err.message());
+            return _("Failed during setup.").ToStdString();
+        }
+    }
+
+    logger.info("Downloading ProffieOS...");
+    auto uri{wxURI{
+        Paths::remoteAssets() + "/ProffieOS/" +
+            static_cast<string>(osVersion) + ".zip"
+    }.BuildURI()};
+    auto proffieOSRequest{wxWebSessionSync::GetDefault().CreateRequest(uri)};
+    auto requestResult{proffieOSRequest.Execute()};
+
+    if (not requestResult) {
+        logger.error("ProffieOS Download Failed\n" + requestResult.error.ToStdString());
+        return _("Could not download ProffieOS").ToStdString();
+    }
+
+    wxZipInputStream osZipStream{*proffieOSRequest.GetResponse().GetStream()};
+    if (not osZipStream.IsOk()) {
+        logger.error("Could not open ProffieOS zip: " + std::to_string(osZipStream.GetLastError()));
+        return _("Failed Opening ProffieOS ZIP").ToStdString();
+    }
+
+    std::unique_ptr<wxZipEntry> entry;
+    constexpr cstring OS_EXTRACT_FAIL_MSG{wxTRANSLATE("Failed Extracting ProffieOS ZIP")};
+    while (entry.reset(osZipStream.GetNextEntry()), entry) {
+        auto filepath{Paths::os(osVersion) / entry->GetName().ToStdString()};
+        fs::remove_all(filepath, err);
+        if (filepath.string().find("__MACOSX") != string::npos) continue;
+
+        if (entry->IsDir()) {
+            if (not fs::exists(filepath, err)) {
+                if (not fs::create_directories(filepath, err)) {
+                    logger.error(
+                        "Could not create dir " + filepath.string() +
+                        ": " + err.message()
+                    );
+                    return wxGetTranslation(OS_EXTRACT_FAIL_MSG).ToStdString();
+                }
+            }
+            continue;
+        }
+
+        if (not osZipStream.CanRead()) {
+            logger.error("Failed reading ProffieOS: " + std::to_string(osZipStream.GetLastError()));
+            return wxGetTranslation(OS_EXTRACT_FAIL_MSG).ToStdString();
+        }
+
+        wxFileOutputStream outStream{filepath.string()};
+        if (not outStream.IsOk()) {
+            logger.error("Failed writing ProffieOS: " + std::to_string(outStream.GetLastError()));
+            return wxGetTranslation(OS_EXTRACT_FAIL_MSG).ToStdString();
+        }
+
+        osZipStream.Read(outStream);
+
+        // TODO
+        // auto permissionBits{entry->GetMode()};
+        // fs::permissions(
+        //     filepath,
+        //     fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        //     fs::perm_options::add,
+        //     err
+        // );
+    }
+
+    if (osZipStream.GetLastError() != wxSTREAM_EOF) {
+        logger.error("ProffieOS extraction finished with error: " + std::to_string(osZipStream.GetLastError()));
+        return wxGetTranslation(OS_EXTRACT_FAIL_MSG).ToStdString();
+    }
+
+    logger.info("Downloading prop manifest...");
+    uri = wxURI{Paths::remoteAssets() + "/props/manifest.pconf"}.BuildURI();
+    auto propManifestRequest{wxWebSessionSync::GetDefault().CreateRequest(uri)};
+    requestResult = propManifestRequest.Execute();
+
+    if (not requestResult) {
+        logger.error("Prop Manifest Download Failed\n" + requestResult.error.ToStdString());
+        return _("Could not download prop manifest").ToStdString();
+    }
+
+    std::istringstream manifestStream{
+        propManifestRequest.GetResponse().AsString().ToStdString()
+    };
+
+    PConf::Data propManifestData;
+    PConf::read(manifestStream, propManifestData, logger.binfo("Reading prop manifest file..."));
+    bool propBundleExistsForVersion{false};
+    for (const auto& entry : propManifestData) {
+        if (entry->name!= "BUNDLES") continue;
+
+        auto bundleStrings{PConf::valueAsList(entry->value)};
+        for (const auto& bundleString : bundleStrings) {
+            if (osVersion == bundleString) {
+                propBundleExistsForVersion = true;
+                break;
+            }
+        }
+
+        if (propBundleExistsForVersion) break;
+    }
+
+    if (not propBundleExistsForVersion) {
+        logger.error("Server reports no bundle for os version.");
+        return _("Server Error").ToStdString();
+    }
+
+    uri = wxURI{
+        Paths::remoteAssets() + "/props/bundles/" +
+            static_cast<string>(osVersion) + ".zip"
+    }.BuildURI();
+    auto propBundleRequest{wxWebSessionSync::GetDefault().CreateRequest(uri)};
+    requestResult = propBundleRequest.Execute();
+
+    if (not requestResult) {
+        logger.error("Bundle Download Failed\n" + requestResult.error.ToStdString());
+        return _("Could not download prop bundle").ToStdString();
+    }
+
+    wxZipInputStream propBundleZipStream(*propBundleRequest.GetResponse().GetStream());
+    if (not propBundleZipStream.IsOk()) {
+        logger.error("Could not open prop bundle zip: " + std::to_string(propBundleZipStream.GetLastError()));
+        return _("Failed Opening Prop Bundle").ToStdString();
+    }
+
+    constexpr cstring BUNDLE_EXTRACT_FAIL_MSG{wxTRANSLATE("Failed Extracting Prop Bundle")};
+    while (entry.reset(propBundleZipStream.GetNextEntry()), entry) {
+        auto filepath{Paths::propDir() / entry->GetName().ToStdString()};
+        fs::remove_all(filepath, err);
+        if (filepath.string().find("__MACOSX") != string::npos) continue;
+
+        if (entry->IsDir()) {
+            if (not fs::exists(filepath, err)) {
+                if (not fs::create_directories(filepath, err)) {
+                    logger.error(
+                        "Could not create dir " + filepath.string() +
+                        ": " + err.message()
+                    );
+                    return wxGetTranslation(BUNDLE_EXTRACT_FAIL_MSG).ToStdString();
+                }
+            }
+            continue;
+        }
+
+        if (not propBundleZipStream.CanRead()) {
+            logger.error("Failed reading prop bundle: " + std::to_string(propBundleZipStream.GetLastError()));
+            return wxGetTranslation(BUNDLE_EXTRACT_FAIL_MSG).ToStdString();
+        }
+
+        wxFileOutputStream outStream{filepath.string()};
+        if (not outStream.IsOk()) {
+            logger.error("Failed writing prop bundle: " + std::to_string(outStream.GetLastError()));
+            return wxGetTranslation(BUNDLE_EXTRACT_FAIL_MSG).ToStdString();
+        }
+
+        propBundleZipStream.Read(outStream);
+    }
+
+    if (propBundleZipStream.GetLastError() != wxSTREAM_EOF) {
+        logger.error("Bundle extraction finished with error: " + std::to_string(propBundleZipStream.GetLastError()));
+        return wxGetTranslation(BUNDLE_EXTRACT_FAIL_MSG).ToStdString();
+    }
+
+    return nullopt;
 }
 
