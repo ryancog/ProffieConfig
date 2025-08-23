@@ -58,7 +58,7 @@ namespace {
 
 constexpr cstring DEFAULT_CORE_URL{"https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json"};
 
-FILE *cli(const string& command);
+void cli(Process& proc, vector<string>& args);
 
 struct CompileOutput {
     int32 used;
@@ -94,15 +94,6 @@ optional<string> upload(
 
 string parseError(const string&, const Config::Config&); 
 
-#ifdef _WIN32
-inline string windowModePrefix() { 
-    return 
-        "title ProffieConfig Worker & " + 
-        (Paths::binaryDir() / "windowMode").string() + 
-        R"( -title "ProffieConfig Worker" -mode force_minimized & )";
-}
-#endif
-
 optional<string> ensureCoreInstalled(
     const string& coreVersion,
     const string& coreURL,
@@ -118,13 +109,16 @@ constexpr cstring ARDUINOCORE_PBV3{"proffieboard:stm32l4:ProffieboardV3-L452RE"}
 } // namespace
 
 string Arduino::version() {
-    auto *arduinoCli{cli("version")};
+    Process proc;
+    vector<string> args{"version"};
+    cli(proc, args);
 
-    array<char, 32> buffer;
     string output;
-    while (fgets(buffer.data(), buffer.size(), arduinoCli) != nullptr) {
-        output += buffer.data();
+    while (auto buffer = proc.read()) {
+        output += *buffer;
     }
+
+    proc.finish();
 
     constexpr cstring UNKNOWN_STR{wxTRANSLATE("Unknown")};
     constexpr string_view VERSION_TAG{"Version: "};
@@ -138,37 +132,18 @@ string Arduino::version() {
     return output.substr(versionStart, versionEnd - versionStart);
 }
 
-// void Arduino::init(wxWindow *parent) {
-//     auto& logger{Log::Context::getGlobal().createLogger("Arduino::init()")};
-//     auto *progDialog{new Progress(parent)};
-//     progDialog->SetTitle("Dependency Installation");
-// 
-//     std::thread{[progDialog, parent, &logger]() {
-//         auto *const evt{new Arduino::Event(Arduino::EVT_INIT_DONE)};
-//         FILE *install{nullptr};
-//         string fulloutput;
-//         array<char, 32> buffer;
-// 
-//         
-// 
-// 
-//         progDialog->emitEvent(100, "Done.");
-//         logger.info("Done");
-//         evt->succeeded = true;
-//         wxQueueEvent(parent->GetEventHandler(), evt);
-//     }}.detach(); // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
-// }
-
 vector<string> Arduino::getBoards(Log::Branch *lBranch) {
     auto& logger{Log::Branch::optCreateLogger("Arduino::getBoards()", lBranch)};
 
     vector<string> boards;
     array<char, 32> buffer;
 
-    FILE *arduinoCli = cli("board list");
-    if (not arduinoCli) {
-        return boards;
-    }
+    Process proc;
+    vector<string> args{
+        "board",
+        "list",
+    };
+    cli(proc, args);
 
     struct Result {
         Result(string port, bool isProffie) : port{std::move(port)}, isProffie{isProffie} {}
@@ -179,9 +154,11 @@ vector<string> Arduino::getBoards(Log::Branch *lBranch) {
     std::vector<Result> results;
 
     string output;
-    while (fgets(buffer.data(), buffer.size(), arduinoCli) != nullptr) {
-        output += buffer.data();
+    while (auto buffer = proc.read()) {
+        output += *buffer;
     }
+
+    proc.finish();
 
     auto lineEndPos{output.find('\n')};
     while (not false) {
@@ -397,41 +374,52 @@ variant<CompileOutput, string> compile(
     wxString output;
     array<char, 32> buffer;
 
-    string compileCommand = "compile ";
-    compileCommand += "-b ";
+    Process proc;
+    vector<string> args{
+        "compile",
+        "-b",
+    };
     const auto boardVersion{
         static_cast<Config::BoardVersion>(static_cast<int32>(config.settings.board))
     };
     switch (boardVersion) {
         case Config::PROFFIEBOARDV3:
-            compileCommand += versionedOS->coreBoardV3.empty() ? ARDUINOCORE_PBV3 : versionedOS->coreBoardV3;
+            args.push_back(versionedOS->coreBoardV3.empty() ? ARDUINOCORE_PBV3 : versionedOS->coreBoardV3);
             break;
         case Config::PROFFIEBOARDV2:
-            compileCommand += versionedOS->coreBoardV2.empty() ? ARDUINOCORE_PBV2 : versionedOS->coreBoardV2;
+            args.push_back(versionedOS->coreBoardV2.empty() ? ARDUINOCORE_PBV2 : versionedOS->coreBoardV2);
             break;
         case Config::PROFFIEBOARDV1:
-            compileCommand += versionedOS->coreBoardV1.empty() ? ARDUINOCORE_PBV1 : versionedOS->coreBoardV1;
+            args.push_back(versionedOS->coreBoardV1.empty() ? ARDUINOCORE_PBV1 : versionedOS->coreBoardV1);
             break;
         default: 
             assert(0);
     }
-    compileCommand += " --board-options ";
-    if (config.settings.massStorage and config.settings.webUSB) compileCommand += "usb=cdc_msc_webusb";
-    else if (config.settings.webUSB) compileCommand += "usb=cdc_webusb";
-    else if (config.settings.massStorage) compileCommand += "usb=cdc_msc";
-    else compileCommand += "usb=cdc";
-    if (boardVersion == Config::PROFFIEBOARDV3) compileCommand +=",dosfs=sdmmc1";
-    compileCommand += " \"" + osPath.string() + "\" -v";
-    FILE *arduinoCli = cli(compileCommand);
+    args.emplace_back("--board-options");
+    string options;
+    if (config.settings.massStorage and config.settings.webUSB) options = "usb=cdc_msc_webusb";
+    else if (config.settings.webUSB) options = "usb=cdc_webusb";
+    else if (config.settings.massStorage) options = "usb=cdc_msc";
+    else options = "usb=cdc";
+    if (boardVersion == Config::PROFFIEBOARDV3) options +=",dosfs=sdmmc1";
+    args.push_back(std::move(options));
+
+    args.push_back('"' + osPath.string() + '"');
+    args.emplace_back("-v");
+    cli(proc, args);
 
     string compileOutput{};
-    while(fgets(buffer.data(), buffer.size(), arduinoCli) != nullptr) {
+    while(auto buffer = proc.read()) {
         if (prog) prog->emitEvent(-1, ""); // Pulse
-        compileOutput += buffer.data();
+        compileOutput += *buffer;
     }
 
-    if (pclose(arduinoCli) != 0) {
-        logger.error("Error during pclose():\n" + compileOutput);
+    auto res{proc.finish()};
+    if (res.err) {
+        logger.error(
+            "Process error: " + std::to_string(res.err) + ':' + std::to_string(res.systemResult) +
+            "\n" + compileOutput
+        );
         if (prog) prog->emitEvent(100, _("Error"));
         return parseError(compileOutput, config);
     }
@@ -450,8 +438,8 @@ variant<CompileOutput, string> compile(
     size_t dfuPos{};
     size_t dfuCPos{};
     if (
-            (dfuPos = compileOutput.find(DFU_STRING.data())) != string::npos and
-            (dfuCPos = compileOutput.find(DFU_C_STRING.data())) != string::npos and
+            (dfuPos = compileOutput.find(DFU_STRING)) != string::npos and
+            (dfuCPos = compileOutput.find(DFU_C_STRING)) != string::npos and
             compileOutput.find("stm32l4") != string::npos
        ) {
         logger.debug("Parsing utility paths...");
@@ -612,13 +600,17 @@ optional<string> upload(
     // }
 #   endif
 
-#   ifdef _WIN32
-    string commandString{windowModePrefix()};
-    commandString += compileOutput.tool2 + R"( 0x1209 0x6668 )" + compileOutput.tool1 + R"( 2>&1)";
-    logger.info("Uploading via: " + commandString);
+    Process proc;
 
-    auto *uploadOutput{popen(commandString.c_str(), "r")};
+#   ifdef _WIN32
+    array<string, 3> args{
+        "0x1209",
+        "0x6668",
+        compileOutput.tool1
+    };
+    proc.create(compileOutput.tool2, args);
 #   else
+    vector<string> args;
     string uploadCommand = "upload ";
     const auto osVersion{config.settings.getOSVersion()};
     const auto osPath{Paths::os(osVersion)};
@@ -644,35 +636,43 @@ optional<string> upload(
     FILE *uploadOutput = cli(uploadCommand);
 #   endif
 
-    string error;
-    array<char, 32> buffer;
+    string uploadOutput;
     if (prog) prog->emitEvent(-1, wxGetTranslation(UPLOAD_MESSAGE));
-    while(fgets(buffer.data(), buffer.size(), uploadOutput) != nullptr) {
-        auto *const percentPtr{std::strstr(buffer.data(), "%")};
-        if (percentPtr != nullptr and percentPtr - buffer.data() >= 3) {
-            auto percent{strtol(percentPtr - 3, nullptr, 10)};
-            if (prog) prog->emitEvent(static_cast<int8>(percent), "");
-            logger.verbose("Progress: " + std::to_string(percent) + '%');
+    while (auto buffer = proc.read()) {
+        const auto percentPos{buffer->find('%')};
+        if (percentPos != string::npos and percentPos >= 3) {
+            try {
+                auto percent{std::stoi(buffer->substr(percentPos - 3))};
+                if (prog) prog->emitEvent(static_cast<int8>(percent), {});
+                logger.verbose("Progress: " + std::to_string(percent) + '%');
+            } catch (const std::exception&) {
+                uploadOutput += *buffer;
+                continue;
+            }
         }
 
-        error += buffer.data();
+        uploadOutput += *buffer;
     }
 
-    if (error.rfind("error") != string::npos or error.rfind("FAIL") != string::npos) {
-        logger.error(error);
-        return parseError(error, config);
+    if (uploadOutput.rfind("error") != string::npos or uploadOutput.rfind("FAIL") != string::npos) {
+        logger.error(uploadOutput);
+        return parseError(uploadOutput, config);
     }
 
-    if (pclose(uploadOutput) != 0) {
-        logger.error("Error during pclose(): \n" + error);
+    auto res{proc.finish()};
+    if (res.err) {
+        logger.error(
+            "Process error: " + std::to_string(res.err) + ':' + std::to_string(res.systemResult) +
+            "\n" + uploadOutput
+        );
         return _("Unknown Upload Error").ToStdString();
     }
 
     // TODO: Don't remember if this happens on non-msw so guard it for now
 #   ifdef _WIN32
-    if (error.find("File downloaded successfully") == string::npos) {
-        logger.error(error);
-        return parseError(error, config);
+    if (uploadOutput.find("File downloaded successfully") == string::npos) {
+        logger.error(uploadOutput);
+        return parseError(uploadOutput, config);
     }
 #   endif
 
@@ -732,40 +732,38 @@ optional<string> ensureCoreInstalled(
     Progress *prog
 ) {
     if (prog) prog->emitEvent(15, _("Ensuring Core Installation..."));
-    auto *coreInstall{cli(
-        "core install proffieboard:stm32l4@" +
-        coreVersion +
-        " --additional-urls " + 
+    Process proc;
+    vector<string> args{
+        "core",
+        "install",
+        "proffieboard:stm32l4@" + coreVersion,
+        "--additional-urls",
         coreURL
-    )};
+    };
+    cli(proc, args);
 
-    array<char, 32> coreInstallBuf;
     string coreInstallOutput;
-    while (fgets(coreInstallBuf.data(), coreInstallBuf.size(), coreInstall) != nullptr) { 
+    while (auto buffer = proc.read()) {
         if (prog) prog->emitEvent(-1, ""); 
-        coreInstallOutput += coreInstallBuf.data();
+        coreInstallOutput += *buffer;
     }
-    if (pclose(coreInstall)) {
+
+    auto res{proc.finish()};
+    if (res.err) {
         if (prog) prog->emitEvent(100, "Error");
-        logger.error("Failed to install core: \n" + coreInstallOutput);
+        logger.error(
+            "Process error: " + std::to_string(res.err) + ':' + std::to_string(res.systemResult) +
+            "\n" + coreInstallOutput
+        );
         return _("Could Not Install Core").ToStdString();
     }
 
     return nullopt;
 }
 
-FILE* cli(const string& command) {
-    auto& logger{Log::Context::getGlobal().createLogger("Arduino::cli()")};
-    string fullCommand;
-#   if defined(_WIN32)
-    fullCommand += windowModePrefix();
-#   endif
-    fullCommand += '"' + (Paths::binaryDir() / "arduino-cli").string() + '"';
-    fullCommand += " --no-color " + command;
-    fullCommand += " 2>&1";
-
-    logger.debug("Executing command \"" + fullCommand + '"');
-    return popen(fullCommand.data(), "r");
+void cli(Process& proc, vector<string>& args) {
+    args.emplace_back("--no-color");
+    proc.create((Paths::binaryDir() / "arduino-cli").string(), args);
 }
 
 } // namespace
