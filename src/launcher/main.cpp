@@ -191,7 +191,7 @@ public:
 #           ifdef __APPLE__
             const auto currentBundle{currentExec.parent_path().parent_path().parent_path()};
             fs::remove_all(currentBundle);
-#           elif defined (__WINDOWS__)
+#           elif defined (_WIN32)
             MoveFileExW(currentExec.c_str(), nullptr, MOVEFILE_DELAY_UNTIL_REBOOT);
 #           elif defined (__linux__)
             (void)remove(currentExec.c_str());
