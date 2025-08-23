@@ -40,6 +40,34 @@ Versions::PropErrors parseErrors(const PConf::Data&, Log::Branch&);
 
 } // namespace
 
+Versions::PropToggle::PropToggle(
+    Prop& prop,
+    string name,
+    string define,
+    string description,
+    vector<string> required,
+    vector<string> requiredAny,
+    vector<string> disables
+) : PropDataBase{
+        prop,
+        PropDataType::TOGGLE,
+        std::move(name),
+        std::move(define),
+        std::move(description),
+        std::move(required),
+        std::move(requiredAny)
+    },
+    PropSettingBase{
+        PropSettingType::TOGGLE,
+    },
+    disables{std::move(disables)} {
+    value.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::ToggleData::ID_VALUE) return;
+
+        pProp.recalculateRequires();
+    });
+}
+
 Versions::PropOption::PropOption(
     Prop& prop,
     string id,
@@ -62,6 +90,11 @@ Versions::PropOption::PropOption(
             selectionData.disables
         ));
     }
+    selection.setUpdateHandler([prop](uint32 id) mutable {
+        if (id != PCUI::RadiosData::ID_SELECTION) return;
+
+        prop.recalculateRequires();
+    });
 }
 
 Versions::PropOption::PropOption(const PropOption& other, Prop& prop) :
@@ -95,12 +128,39 @@ bool Versions::PropSelection::value() const {
 
 bool Versions::PropSelection::enabled() const {
     uint32 idx{0};
+    if (not mOption.selection.isEnabled()) return false;
+
+    // Individual disabling isn't actually possible yet, but there's no reason
+    // to remove this code for now... even if that "yet" is a little generous.
     for (auto iter{mOption.mSelections.begin()}; &**iter != this; ++iter, ++idx);
     return mOption.selection.enabledChoices()[idx];
 }
 
 bool Versions::PropSelection::isDefault() const {
     return &*mOption.mSelections.front() == this;
+}
+
+Versions::PropSelection::PropSelection(
+    Prop& prop,
+    PropOption& option,
+    string name,
+    string define,
+    string description,
+    vector<string> required,
+    vector<string> requiredAny,
+    vector<string> disables
+) : PropDataBase{
+        prop,
+        PropDataType::SELECTION,
+        std::move(name),
+        std::move(define),
+        std::move(description),
+        std::move(required),
+        std::move(requiredAny)
+    },
+    disables{std::move(disables)}, 
+    mOption{option} {
+
 }
 
 Versions::PropLayout::PropLayout(const PropLayout& other, const PropSettingMap& map) :
@@ -240,6 +300,8 @@ Versions::Prop::Prop(const Prop& other) :
     new(&mButtons) array(other.mButtons);
     mErrors.~PropErrors();
     new(&mErrors) PropErrors(other.mErrors);
+
+    recalculateRequires();
 }
 
 void Versions::Prop::migrateFrom(const Prop& from) {
@@ -346,6 +408,7 @@ void Versions::Prop::rebuildMaps(
             }
 
             for (const auto& selection : option->selections()) {
+                if (selection->define.empty()) continue;
                 mDataMap.emplace(selection->define, selection.get());
             }
         } else if (PropSettingType::TOGGLE == setting->settingType) {
@@ -363,6 +426,83 @@ void Versions::Prop::rebuildMaps(
 
         mSettingMap.emplace(setting->id(), setting);
         ++iter;
+    }
+}
+
+void Versions::Prop::recalculateRequires() {
+    // Anything newly turned-on that results in disables?
+    std::unordered_set<string> disabled;
+    for (const auto& [key, data] : mDataMap) {
+        if (not data->isActive()) continue;
+
+        if (data->dataType == PropDataType::TOGGLE) {
+            for (const auto& disable : static_cast<PropToggle *>(data)->disables) {
+                disabled.emplace(disable);
+            }
+        } else if (data->dataType == PropDataType::SELECTION) {
+            for (const auto& disable : static_cast<PropSelection *>(data)->disables) {
+                disabled.emplace(disable);
+            }
+        }
+    }
+
+    // Alright, then disable them
+    // If circular dependencies are a problem in the future,
+    // just setValue(false) here also to prevent additional logical dependencies,
+    // and then just loop back over again to recalculate.
+    //
+    // Alternatively, disallow them via pre-checking during prop import...
+    for (const auto& disable : disabled) {
+        auto iter{mSettingMap.find(disable)};
+        if (iter == mSettingMap.end()) continue;
+
+        switch (iter->second->settingType) {
+            case TOGGLE:
+                static_cast<PropToggle *>(iter->second)->value.disable();
+                break;
+            case NUMERIC:
+                static_cast<PropNumeric *>(iter->second)->value.disable();
+                break;
+            case DECIMAL:
+                static_cast<PropDecimal *>(iter->second)->value.disable();
+                break;
+            case OPTION:
+                static_cast<PropOption *>(iter->second)->selection.disable();
+                break;
+        }
+    }
+
+    // Now handle requirements
+    for (const auto& [key, data] : mDataMap) {
+        if (disabled.contains(key)) continue;
+
+        bool satisfied{false};
+        if (not data->requiredAny.empty()) {
+            for (const auto& anyRequire : data->requiredAny) {
+                auto iter{mDataMap.find(anyRequire)};
+                if (iter == mDataMap.end()) continue;
+                if (iter->second->isActive()) {
+                    satisfied = true;
+                    break;
+                }
+            }
+
+            if (not satisfied) {
+                data->enable(false);
+                continue;
+            }
+        }
+
+        satisfied = true;
+        for (const auto& require : data->required) {
+            auto iter{mDataMap.find(require)};
+            if (iter == mDataMap.end() or not iter->second->isActive()) {
+                satisfied = false;
+                break;
+            }
+        }
+
+        data->enable(satisfied);
     }
 }
 
@@ -485,9 +625,9 @@ std::unique_ptr<Versions::Prop> Versions::Prop::generate(
         );
     }
 
+    prop->recalculateRequires();
     return prop;
 }
-
 
 bool Versions::PropDataBase::isActive() const {
     switch (dataType) {
@@ -505,6 +645,23 @@ bool Versions::PropDataBase::isActive() const {
             return static_cast<const PropDecimal *>(this)->value.isEnabled();
     }
     assert(0);
+}
+
+void Versions::PropDataBase::enable(bool enable) {
+    switch (dataType) {
+        case PropDataType::TOGGLE:
+            static_cast<PropToggle *>(this)->value.enable(enable);
+            break;
+        case PropDataType::SELECTION:
+            static_cast<PropSelection *>(this)->parent().selection.enable(enable);
+            break;
+        case PropDataType::NUMERIC:
+            static_cast<PropNumeric *>(this)->value.enable(enable);
+            break;
+        case PropDataType::DECIMAL:
+            static_cast<PropDecimal *>(this)->value.enable(enable);
+            break;
+    }
 }
 
 bool Versions::PropDataBase::shouldOutputDefine() const {
@@ -551,26 +708,6 @@ optional<string> Versions::PropDataBase::generateDefineString() const {
 
     return {};
 }
-
-// bool PropFile::Setting::checkRequiredSatisfied(const std::unordered_map<string, Setting>& settings) const {
-//   if (not requiredAny.empty()) {
-//     for (const auto& require : requiredAny) {
-//       auto key = settings.find(require);
-//       if (key == settings.end()) continue;
-//       if (!key->second.getOutput().empty()) return true;
-//     }
-// 
-//     return false;
-//   }      
-// 
-//   for (const auto& require : required) {
-//       auto key = settings.find(require);
-//       if (key == settings.end()) return false;
-//       if (key->second.getOutput().empty()) return false;
-//   }
-// 
-//   return true;
-// }
 
 namespace {
 

@@ -65,7 +65,7 @@ protected:
         string description,
         vector<string> required,
         vector<string> requiredAny
-    ) : mProp{prop}, dataType{type}, name{std::move(name)}, define{std::move(define)},
+    ) : pProp{prop}, dataType{type}, name{std::move(name)}, define{std::move(define)},
         description{std::move(description)}, required{std::move(required)},
         requiredAny{std::move(requiredAny)} {}
 
@@ -80,9 +80,12 @@ protected:
             other.requiredAny
         } {}
 
+    Prop& pProp;
+
 private:
     friend Prop;
-    Prop& mProp;
+
+    void enable(bool);
 };
 
 enum PropSettingType {
@@ -110,19 +113,7 @@ struct VERSIONS_EXPORT PropToggle : PropDataBase, PropSettingBase {
         vector<string> required,
         vector<string> requiredAny,
         vector<string> disables
-    ) : PropDataBase{
-            prop,
-            PropDataType::TOGGLE,
-            std::move(name),
-            std::move(define),
-            std::move(description),
-            std::move(required),
-            std::move(requiredAny)
-        },
-        PropSettingBase{
-            PropSettingType::TOGGLE,
-        },
-        disables{std::move(disables)} {}
+    );
 
     PropToggle(const PropToggle& other, Prop& prop) :
         PropToggle{
@@ -262,17 +253,7 @@ struct VERSIONS_EXPORT PropSelection : PropDataBase {
         vector<string> required,
         vector<string> requiredAny,
         vector<string> disables
-    ) : PropDataBase{
-            prop,
-            PropDataType::SELECTION,
-            std::move(name),
-            std::move(define),
-            std::move(description),
-            std::move(required),
-            std::move(requiredAny)
-        },
-        disables{std::move(disables)}, 
-        mOption{option} {}
+    );
 
     PropSelection(const PropSelection& other, Prop& prop, PropOption& option) :
         PropSelection{
@@ -427,6 +408,8 @@ struct VERSIONS_EXPORT Prop {
 
     // TODO: Make this a little more foolproof
     bool isDefault() { return filename.empty(); }
+
+    void recalculateRequires();
 
 private:
     Prop(string name, string filename, string info) : 
