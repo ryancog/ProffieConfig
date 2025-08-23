@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <iostream>
 #include <utility>
 
 #include <wx/bitmap.h>
@@ -133,6 +134,7 @@ wxBitmap Image::loadPNG(const string& name, wxSize size, const wxColour& color) 
     {
         wxLogNull noErrors;
         bitmap.LoadFile(pngPath.native(), wxBITMAP_TYPE_PNG);
+        bitmap.UseAlpha();
         if (not bitmap.IsOk()) {
             generateMissingBMP(bitmap);
             return bitmap;
@@ -153,14 +155,22 @@ wxBitmap Image::loadPNG(const string& name, wxSize size, const wxColour& color) 
 
     if (color.IsOk()) {
         wxAlphaPixelData data{bitmap};
+        if (not data) return bitmap;
+
         auto iter{data.GetPixels()};
-        for (auto idx{0}; idx < data.GetWidth() * data.GetHeight(); ++idx) {
-            if (iter.Alpha() > 0) {
-                iter.Red() = color.Red();
-                iter.Green() = color.Green();
-                iter.Blue() = color.Blue();
+        for (auto yIdx{0}; yIdx < data.GetHeight(); ++yIdx) {
+            wxAlphaPixelData::Iterator rowStart = iter;
+
+            for (auto xIdx{0}; xIdx < data.GetWidth(); ++xIdx, ++iter) {
+                if (iter.Alpha() > 0) {
+                    iter.Red() = color.Red();
+                    iter.Green() = color.Green();
+                    iter.Blue() = color.Blue();
+                }
             }
-            ++iter;
+
+            iter = rowStart;
+            iter.OffsetY(data, 1);
         }
     }
 
