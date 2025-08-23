@@ -223,7 +223,6 @@ bool parseSinglelineValue(const string& line, std::optional<string>& out, Log::B
         const char chr{line[idx]};
         if (usesQuotes and chr == '"') {
             record = not record;
-            if (record and not out->empty()) *out += '\n';
             continue;
         } 
         
