@@ -1,6 +1,6 @@
 # ProffieConfig 
 
-<img align="left" src=https://github.com/ryancog/ProffieConfig/blob/master/resources/icons/icon.svg width=200> 
+<img align="left" src=/resources/icons/icon.svg width=200> 
   
 All-In-One ProffieBoard Management Utility. 
 
