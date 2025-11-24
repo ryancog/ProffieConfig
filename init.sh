@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # ProffieConfig, All-In-One Proffieboard Management Utility
 # Copyright (C) 2024-2025 Ryan Ogurek
 
