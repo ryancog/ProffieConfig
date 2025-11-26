@@ -21,7 +21,9 @@
 
 #include <algorithm>
 #include <limits>
+#ifndef __WXMSW__
 #include <memory>
+#endif
 
 #include <wx/dc.h>
 #include <wx/dcclient.h>
@@ -187,10 +189,97 @@ vector<SplitVisualizer::SplitData> SplitVisualizer::generateSplitData(const Conf
 
 void SplitVisualizer::paintEvent(wxPaintEvent&) {
     wxPaintDC paintDC{this};
-    std::unique_ptr<wxGraphicsContext> paintGC{wxGraphicsContext::Create(paintDC)};
 
     constexpr auto CORNER_RADIUS{10};
     auto windowSize{GetSize()};
+
+#   ifdef __WXMSW__
+    // GDIPlus doesn't support the layers apparently (and/or doesn't support
+    // the composition modes I need for the masking effect) and Direct2D also
+    // doesn't seem to have it implemented.
+    //
+    // There's other things I could do to render this but I just don't care
+    // enough, so Windows doesn't get rounded corners.
+    //
+    // Sucks to use a bad operating system, should've used a better one...
+    paintDC.SetPen(*wxTRANSPARENT_PEN);
+    if (mSizes.empty()) {
+        paintDC.SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT)));
+        paintDC.DrawRoundedRectangle(0, 0, windowSize.x, windowSize.y, CORNER_RADIUS);
+        return;
+    }
+
+    paintDC.SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOX)));
+    paintDC.DrawRectangle(0, 0, windowSize.x, windowSize.y);
+
+    for (const auto& size : mSizes) {
+        auto splitColor{color(size.splitIdx)};
+        bool dark{wxSystemSettings::GetAppearance().AreAppsDark()};
+        if (size.splitIdx == mHoveredSplit) {
+            splitColor = splitColor.ChangeLightness(dark ? 70 : 140);
+        }
+
+        paintDC.SetPen(*wxTRANSPARENT_PEN);
+        paintDC.SetBrush(wxBrush(splitColor));
+        paintDC.DrawRectangle(
+            0, static_cast<int32>(size.start),
+            windowSize.x, static_cast<int32>(size.length)
+        );
+
+        wxPen borderPen{};
+        borderPen.SetColour(splitColor.ChangeLightness(dark ? 120 : 85));
+        borderPen.SetStyle(wxPENSTYLE_SOLID);
+        paintDC.SetPen(borderPen);
+        for (auto idx{1}; idx < size.segments; ++idx) {
+            auto segmentX{size.segmentSize * idx};
+            paintDC.DrawLine(
+                static_cast<int32>(segmentX),
+                static_cast<int32>(size.start),
+                static_cast<int32>(segmentX),
+                static_cast<int32>(size.start + size.length)
+            );
+        }
+
+        borderPen.SetColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT));
+        if (size.start != 0) {
+            borderPen.SetStyle(size.overlapStart ? wxPENSTYLE_DOT : wxPENSTYLE_SOLID);
+            paintDC.SetPen(borderPen);
+            paintDC.DrawLine(
+                0, static_cast<int32>(size.start),
+                windowSize.x, static_cast<int32>(size.start)
+            );
+        }
+        borderPen.SetStyle(size.overlapEnd ? wxPENSTYLE_DOT : wxPENSTYLE_SOLID);
+        paintDC.SetPen(borderPen);
+        paintDC.DrawLine(
+            0, static_cast<int32>(size.start + size.length),
+            windowSize.x, static_cast<int32>(size.start + size.length)
+        );
+
+        auto font{wxSystemSettings::GetFont(wxSYS_SYSTEM_FONT)};
+        if (size.splitIdx == mSelectedSplit) {
+            font.MakeBold();
+            font.SetFractionalPointSize(font.GetFractionalPointSize() * 1.2);
+        }
+
+        paintDC.SetFont(font);
+        wxString numText{std::to_string(size.splitIdx)};
+        wxCoord textWidth{};
+        wxCoord textHeight{};
+        paintDC.GetTextExtent(numText, &textWidth, &textHeight);
+        paintDC.DrawText(
+            numText,
+            static_cast<int32>((windowSize.x - textWidth) / 2.0),
+            static_cast<int32>(size.start + ((size.length - textHeight) / 2))
+        );
+    }
+    // paintDC.SetPen(*wxTRANSPARENT_PEN);
+    // paintDC.SetBrush(*wxWHITE_BRUSH);
+    // paintDC.SetLogicalFunction(wxAND);
+    // paintDC.DrawRoundedRectangle(0, 0, windowSize.x, windowSize.y, CORNER_RADIUS);
+#   else
+    
+    std::unique_ptr<wxGraphicsContext> paintGC{wxGraphicsContext::Create(paintDC)};
 
     paintGC->SetPen(*wxTRANSPARENT_PEN);
     if (mSizes.empty()) {
@@ -202,7 +291,7 @@ void SplitVisualizer::paintEvent(wxPaintEvent&) {
     // On GTK the background also gets removed (weird see-through render ensues) because of
     // rendering reasons. I don't understand anything about the composition modes. The theory formulas
     // don't seem to match up with any of the backend behaviors, and I don't care to rationalize it.
-#   ifndef __WXOSX__
+#   ifdef __WXGTK__
     paintGC->SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK)));
     paintGC->DrawRectangle(0, 0, windowSize.x, windowSize.y);
     paintGC->BeginLayer(1);
@@ -211,6 +300,7 @@ void SplitVisualizer::paintEvent(wxPaintEvent&) {
     paintGC->SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOX)));
     paintGC->DrawRectangle(0, 0, windowSize.x, windowSize.y);
 
+    paintGC->SetCompositionMode(wxCOMPOSITION_OVER);
     paintGC->BeginLayer(1);
     for (const auto& size : mSizes) {
         auto splitColor{color(size.splitIdx)};
@@ -219,7 +309,6 @@ void SplitVisualizer::paintEvent(wxPaintEvent&) {
             splitColor = splitColor.ChangeLightness(dark ? 70 : 140);
         }
 
-        paintGC->SetCompositionMode(wxCOMPOSITION_OVER);
         paintGC->SetPen(*wxTRANSPARENT_PEN);
         paintGC->SetBrush(wxBrush(splitColor));
         paintGC->DrawRectangle(0, size.start, windowSize.x, size.length);
@@ -261,13 +350,7 @@ void SplitVisualizer::paintEvent(wxPaintEvent&) {
     paintGC->EndLayer();
 
     // All that for a rounded border
-#   ifdef __WXOSX__
-    paintGC->SetBrush(*wxWHITE_BRUSH);
-    paintGC->SetCompositionMode(wxCOMPOSITION_DEST_IN);
-    paintGC->BeginLayer(1);
-    paintGC->DrawRoundedRectangle(0, 0, windowSize.x, windowSize.y, CORNER_RADIUS);
-    paintGC->EndLayer();
-#   else
+#   ifdef __WXGTK__
     paintGC->SetPen(wxNullPen);
     paintGC->SetCompositionMode(wxCOMPOSITION_DEST_ATOP);
     paintGC->BeginLayer(1);
@@ -278,6 +361,13 @@ void SplitVisualizer::paintEvent(wxPaintEvent&) {
     paintGC->EndLayer();
     paintGC->SetCompositionMode(wxCOMPOSITION_ATOP);
     paintGC->EndLayer();
+#   else
+    paintGC->SetBrush(*wxWHITE_BRUSH);
+    paintGC->SetCompositionMode(wxCOMPOSITION_DEST_IN);
+    paintGC->BeginLayer(1);
+    paintGC->DrawRoundedRectangle(0, 0, windowSize.x, windowSize.y, CORNER_RADIUS);
+    paintGC->EndLayer();
+#   endif
 #   endif
 }
 
