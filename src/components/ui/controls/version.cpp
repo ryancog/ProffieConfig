@@ -216,7 +216,7 @@ void PCUI::Version::create(const wxString& label, wxOrientation orient) {
         mTag = new PCUI::Text(panel, data()->mTag);
     }
 
-#   ifdef __WXGTK__
+#   if defined(__WXGTK__) or defined(__WXMSW__)
     constexpr auto TEXT_PADDING{20};
 #   else
     constexpr auto TEXT_PADDING{5};
