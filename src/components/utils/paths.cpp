@@ -21,7 +21,7 @@
 
 #include <wx/stdpaths.h>
 
-#if defined(__WIN32__)
+#if defined(_WIN32)
 #include <shlobj.h>
 #elif defined(__linux__) or defined(__APPLE__)
 #include <pwd.h>
@@ -34,10 +34,10 @@
 namespace Paths {} // namespace Paths
 
 filepath Paths::user() {
-#   ifdef __WIN32__
+#   ifdef _WIN32
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_Profile, 0, nullptr, &rawStr);
-    array<TCHAR, MAX_PATH> shortPath;
+    array<wchar_t, MAX_PATH> shortPath;
     GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
     CoTaskMemFree(rawStr);
     return shortPath.data();
@@ -50,10 +50,10 @@ filepath Paths::approot() {
 #   ifdef APP_DEPLOY_PATH 
     return APP_DEPLOY_PATH;
 #   else
-#   ifdef __WIN32__
+#   ifdef _WIN32
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &rawStr);
-    array<TCHAR, MAX_PATH> shortPath;
+    array<wchar_t, MAX_PATH> shortPath;
     GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
     CoTaskMemFree(rawStr);
     return filepath{shortPath.data()} /  "ProffieConfig";
@@ -77,7 +77,7 @@ filepath Paths::executable(Executable exec) {
                 if (res != S_OK) {
                     throw std::runtime_error{"Failed getting program files: " + std::to_string(res)};
                 }
-                array<TCHAR, MAX_PATH> shortPath;
+                array<wchar_t, MAX_PATH> shortPath;
                 if (0 == GetShortPathNameW(rawStr, shortPath.data(), shortPath.size())) {
                     throw std::runtime_error{"Failed getting shortname: " + std::to_string(GetLastError())};
                 }
@@ -125,7 +125,7 @@ filepath Paths::logDir() {
 #   if defined(__WIN32__)
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &rawStr);
-    array<TCHAR, MAX_PATH> shortPath;
+    array<wchar_t, MAX_PATH> shortPath;
     GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
     CoTaskMemFree(rawStr);
     return filepath{shortPath.data()} / "ProffieConfig";
@@ -140,7 +140,7 @@ filepath Paths::dataDir() {
 #   ifdef __WIN32__
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_RoamingAppData, KF_FLAG_CREATE, nullptr, &rawStr);
-    array<TCHAR, MAX_PATH> shortPath;
+    array<wchar_t, MAX_PATH> shortPath;
     GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
     CoTaskMemFree(rawStr);
     return filepath{shortPath.data()} / "ProffieConfig";
