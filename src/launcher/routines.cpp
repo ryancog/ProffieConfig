@@ -140,7 +140,7 @@ void Routine::platformInstall(Log::Branch& lBranch) {
 
     auto self{Paths::executable().string()};
     constexpr cstring SELFDELETE_BATCH{"C:\\TEMP\\PCFLDel.bat"};
-    std::ofstream batch{SELFDELETE_BATCH};
+    auto batch{Paths::openOutputFile(SELFDELETE_BATCH)};
     batch << "@echo off\n:Repeat\ndel \"" << self << "\"\nif exist \"" << self << "\" goto Repeat\ndel \"%~f0\"\n";
     batch.close();
     ShellExecuteA(nullptr, "open", SELFDELETE_BATCH, nullptr, nullptr, SW_HIDE);

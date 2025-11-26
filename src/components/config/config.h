@@ -108,8 +108,8 @@ struct CONFIG_EXPORT Config {
     [[nodiscard]] filepath savePath() const;
 
 private:
-    friend variant<Config *, string> open(const string&);
-    friend optional<string> import(const string&, const filepath&);
+    friend CONFIG_EXPORT variant<Config *, string> open(const string&, Log::Branch *);
+    friend CONFIG_EXPORT optional<string> import(const string&, const filepath&);
     Config();
 
     /**
@@ -143,7 +143,7 @@ CONFIG_EXPORT bool remove(const string& name);
  *
  * @return Config or error message
  */
-CONFIG_EXPORT variant<Config *, string> open(const string& name);
+CONFIG_EXPORT variant<Config *, string> open(const string& name, Log::Branch * = nullptr);
 
 /**
  * Similar to open, but opens from path instead of in save folder by name.

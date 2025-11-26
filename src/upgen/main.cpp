@@ -39,6 +39,7 @@
 
 #include "../launcher/update/update.h"
 #include "pconf/utils.h"
+#include "utils/paths.h"
 
 class UpGen : public wxAppConsole {
 private:
@@ -294,7 +295,7 @@ wxIMPLEMENT_APP_CONSOLE(UpGen);
 std::pair<UpGen::Data, vector<UpGen::Message>> UpGen::loadCurrentManifest(const filepath& manifest) {
     auto& logger{Log::Context::getGlobal().createLogger("loadCurrentManifest()")};
 
-    std::ifstream manifestStream{manifest};
+    auto manifestStream{Paths::openInputFile(manifest)};
     PConf::Data rawData;
     if (not PConf::read(manifestStream, rawData, logger.binfo("Reading manifest..."))) {
         exit(1);
@@ -985,7 +986,7 @@ void UpGen::generateNewManifest(const vector<Message>& messages, const Data& dat
         manifest.emplace_back(std::move(bundleSect));
     }
 
-    std::ofstream outStream{filepath{STAGING_DIR} / MANIFEST_DEFAULT};
+    auto outStream{Paths::openOutputFile(filepath{STAGING_DIR} / MANIFEST_DEFAULT)};
     PConf::write(outStream, manifest, nullptr);
 }
 
@@ -1044,7 +1045,8 @@ void UpGen::organizeAssets(const FileMaps& fileMaps, const Data& data) {
             for (const auto& [ path, hash ] : fileMaps[platformIdx][typeIdx]) {
 
                 fs::create_directories(destDir);
-                fs::copy_file(filepath{STAGING_DIR} / PLATFORM_DIRS[platformIdx] / typeFolder / path, destDir / hash, fs::copy_options::overwrite_existing);
+                std::error_code err;
+                Paths::copyOverwrite(filepath{STAGING_DIR} / PLATFORM_DIRS[platformIdx] / typeFolder / path, destDir / hash, err);
             }
         }
     }

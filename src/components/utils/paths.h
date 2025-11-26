@@ -19,6 +19,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef _WIN32
+#include <errhandlingapi.h>
+// NOLINTNEXTLINE(readability-identifier-naming)
+extern "C" __attribute__((dllimport)) int CopyFileA(const char *, const char *, int);
+#endif
+
+#include <fstream>
 
 #include "version.h"
 #include "types.h"
@@ -79,6 +86,30 @@ enum class Executable {
 [[nodiscard]] UTILS_EXPORT string remoteAssets();
 [[nodiscard]] UTILS_EXPORT string remoteUpdateAssets();
 
+inline bool copyOverwrite(const fs::path& src, const fs::path& dst, std::error_code& err) {
+#   ifdef _WIN32
+    auto res{CopyFileA(src.string().c_str(), dst.string().c_str(), false)};
+    err = {static_cast<int>(GetLastError()), std::system_category()};
+    return res;
+#   else
+    return fs::copy_file(src, dst, fs::copy_options::overwrite_existing, err);
+#   endif
+}
+
+inline auto openInputFile(const fs::path& path) {
+    // POSIX Specifies that there is no distinction between binary/text modes.
+    // So this shouldn't make a difference on good operating systems.
+    //
+    // On Windows, however, MSVC's STL implementation just kills itself because
+    // it can't handle its own stupid CRLF endings and tellg/seekg plainly do
+    // not work.
+    // See: https://github.com/microsoft/STL/issues/1784
+    return std::ifstream{path, std::ios::binary | std::ios::in};
+}
+
+inline auto openOutputFile(const fs::path& path) {
+    return std::ofstream{path, std::ios::binary | std::ios::out};
+}
 
 } // namespace Paths
 

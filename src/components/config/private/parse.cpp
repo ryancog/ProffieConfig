@@ -36,31 +36,32 @@
 
 namespace {
 
-string extractSection(std::ifstream&);
+string extractSection(std::istream&);
 
-void parseTop(std::ifstream&, Config::Config&);
-void parseProp(std::ifstream&, Config::Config&);
-optional<string> parsePresets(std::ifstream&, Config::Config&, Log::Branch&);
+void parseTop(std::istream&, Config::Config&);
+void parseProp(std::istream&, Config::Config&);
+optional<string> parsePresets(std::istream&, Config::Config&, Log::Branch&);
 optional<string> parsePresetArray(const string& data, Config::PresetArray&, Log::Branch&);
 optional<string> parseBladeArrays(const string& data, Config::Config&, Log::Branch&);
 optional<string> parseBlade(string data, Config::BladeConfig&, Config::Blade&, Log::Branch&);
-optional<string> parseStyles(std::ifstream&, Config::Config&, Log::Branch&);
+optional<string> parseStyles(std::istream&, Config::Config&, Log::Branch&);
 
 void tryAddInjection(const string& buffer, Config::Config&);
 
 } // namespace
 
-
 optional<string> Config::parse(const filepath& path, Config& config, Log::Branch *lBranch) {
     auto& logger{Log::Branch::optCreateLogger("Config::parse()", lBranch)};
 
-    std::ifstream file{path};
+    auto file{Paths::openInputFile(path)};
     if (not file.is_open()) {
         return errorMessage(logger, wxTRANSLATE("Failed to open config from %s"), path.string());
     }
 
     while (file.good()) {
+        const auto prePos{file.tellg()};
         if (Utils::extractComment(file)) continue;
+        const auto postPos{file.tellg()};
 
         const auto chr{file.get()};
         if (std::isspace(chr)) continue;
@@ -69,22 +70,26 @@ optional<string> Config::parse(const filepath& path, Config& config, Log::Branch
             file >> buffer;
             if (buffer == "ifdef") {
                 file >> buffer;
-                if (buffer == "CONFIG_TOP") parseTop(file, config);
-                else if (buffer == "CONFIG_PROP") parseProp(file, config);
-                else if (buffer == "CONFIG_PRESETS") {
-                    auto ret{parsePresets(
+                if (buffer == "CONFIG_TOP") {
+                    logger.info("Parsing top...");
+                    parseTop(file, config);
+                } else if (buffer == "CONFIG_PROP") {
+                    logger.info("Parsing prop...");
+                    parseProp(file, config);
+                } else if (buffer == "CONFIG_PRESETS") {
+                    auto err{parsePresets(
                         file,
                         config,
                         *logger.binfo("Parsing presets...")
                     )};
-                    if (ret) return ret;
+                    if (err) return err;
                 } else if (buffer == "CONFIG_STYLES") {
-                    auto ret{parseStyles(
+                    auto err{parseStyles(
                         file,
                         config,
                         *logger.binfo("Parsing styles...")
                     )};
-                    if (ret) return ret;
+                    if (err) return err;
                 }
             } else if (buffer == "include") {
                 getline(file, buffer);
@@ -102,7 +107,7 @@ optional<string> Config::parse(const filepath& path, Config& config, Log::Branch
 
 namespace {
 
-string extractSection(std::ifstream& file) {
+string extractSection(std::istream& file) {
     string ret;
     while (file.good()) {
         if (Utils::skipComment(file, &ret)) continue;
@@ -121,7 +126,7 @@ string extractSection(std::ifstream& file) {
     return ret;
 }
 
-void parseTop(std::ifstream& file, Config::Config& config) {
+void parseTop(std::istream& file, Config::Config& config) {
     using namespace Config;
 
     const auto top{extractSection(file)};
@@ -197,7 +202,7 @@ void parseTop(std::ifstream& file, Config::Config& config) {
     }
 }
 
-void parseProp(std::ifstream& file, Config::Config& config) {
+void parseProp(std::istream& file, Config::Config& config) {
     using namespace Config;
     string prop{extractSection(file)};
     std::istringstream propStream{prop};
@@ -231,7 +236,7 @@ void parseProp(std::ifstream& file, Config::Config& config) {
     }
 }
 
-optional<string> parsePresets(std::ifstream& file, Config::Config& config, Log::Branch& lBranch) {
+optional<string> parsePresets(std::istream& file, Config::Config& config, Log::Branch& lBranch) {
     using namespace Config;
     auto& logger{lBranch.createLogger("Config::parsePresets()")};
     string presets{extractSection(file)};
@@ -1062,7 +1067,7 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
     return nullopt;
 }
 
-optional<string> parseStyles(std::ifstream& file, Config::Config& config, Log::Branch& lBranch) {
+optional<string> parseStyles(std::istream& file, Config::Config& config, Log::Branch& lBranch) {
     using namespace Config;
     auto& logger{lBranch.createLogger("Config::parseStyles()")};
     string styles{extractSection(file)};
@@ -1192,8 +1197,7 @@ void tryAddInjection(const string& buffer, Config::Config& config) {
 
             auto copyPath{Paths::injectionDir() / filePath};
             fs::create_directories(copyPath.parent_path());
-            const auto copyOptions{fs::copy_options::overwrite_existing};
-            if (not fs::copy_file(fileDialog.GetPath().ToStdString(), copyPath, copyOptions, err)) {
+            if (not Paths::copyOverwrite(fileDialog.GetPath().ToStdString(), copyPath, err)) {
                 auto res{PCUI::showMessage(err.message(), _("Injection file could not be added."), wxOK | wxCANCEL | wxOK_DEFAULT)};
                 if (res == wxCANCEL) return;
 

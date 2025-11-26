@@ -24,6 +24,7 @@
 #include <sstream>
 
 #include "log/branch.h"
+#include "utils/paths.h"
 #include "utils/string.h"
 #include "utils/version.h"
 
@@ -35,26 +36,26 @@ namespace {
 
 optional<string> runPreChecks(const Config::Config&, Log::Branch&);
 
-void outputTop(std::ofstream&, const Config::Config&);
-void outputTopGeneral(std::ofstream&, const Config::Config&);
-void outputTopProp(std::ofstream&, const Config::Config&);
+void outputTop(std::ostream&, const Config::Config&);
+void outputTopGeneral(std::ostream&, const Config::Config&);
+void outputTopProp(std::ostream&, const Config::Config&);
 
-void outputProp(std::ofstream&, const Config::Config&);
+void outputProp(std::ostream&, const Config::Config&);
 
-void outputPresets(std::ofstream&, const Config::Config&);
-void outputPresetStyles(std::ofstream&, const Config::Config&);
-void outputPresetBlades(std::ofstream&, const Config::Config&);
+void outputPresets(std::ostream&, const Config::Config&);
+void outputPresetStyles(std::ostream&, const Config::Config&);
+void outputPresetBlades(std::ostream&, const Config::Config&);
 
-void outputButtons(std::ofstream&, const Config::Config&);
+void outputButtons(std::ostream&, const Config::Config&);
 
 template<typename VAL = string>
-void outputOpt(std::ofstream&, const string& opt, const VAL& val);
+void outputOpt(std::ostream&, const string& opt, const VAL& val);
 template<typename VAL = string>
-void outputOpt(std::ofstream&, const string& opt);
+void outputOpt(std::ostream&, const string& opt);
 template<typename VAL = string>
-void outputDefine(std::ofstream&, const string& define);
+void outputDefine(std::ostream&, const string& define);
 template<typename VAL = string>
-void outputDefine(std::ofstream&, const string& define, const VAL& val);
+void outputDefine(std::ostream&, const string& define, const VAL& val);
 
 } // namespace
 
@@ -70,19 +71,14 @@ optional<string> Config::output(const filepath& filePath, const Config& config, 
     //     for (const auto& injection : editor->presetsPage->injections) {
     //         auto injectionPath{injectionDir / filepath{injection}};
     //         fs::create_directories(injectionPath.parent_path());
-    //         if (not fs::copy_file(
-    //             Paths::injections() / filepath{injection},
-    //             injectionPath,
-    //             fs::copy_options::overwrite_existing,
-    //             err
-    //         )) {
+    //         if (not Paths::copyOverwrite(Paths::injections() / filepath{injection}, injectionPath, err)) {
     //             errorMessage(logger, editor, wxTRANSLATE("Failed setting up injection \"%s\""), injection);
     //             return false;
     //         }
     //     }
     // }
 
-    std::ofstream outFile(filePath);
+    auto outFile{Paths::openOutputFile(filePath)};
     if (not outFile.is_open()) {
         return errorMessage(logger, wxTRANSLATE("Could not open config file for output."));
     }
@@ -245,7 +241,7 @@ optional<string> runPreChecks(const Config::Config& config, Log::Branch& lBranch
     return nullopt;
 }
 
-void outputTop(std::ofstream& outFile, const Config::Config& config) {
+void outputTop(std::ostream& outFile, const Config::Config& config) {
     outFile << "#ifdef CONFIG_TOP\n";
     outputTopGeneral(outFile, config);
     outputTopProp(outFile, config);
@@ -253,26 +249,26 @@ void outputTop(std::ofstream& outFile, const Config::Config& config) {
 }
 
 template<typename VAL>
-void outputOpt(std::ofstream& outFile, const string& opt) {
+void outputOpt(std::ostream& outFile, const string& opt) {
     outFile << Config::PC_OPT_STR << opt << '\n';
 }
 
 template<typename VAL>
-void outputOpt(std::ofstream& outFile, const string& opt, const VAL& val) {
+void outputOpt(std::ostream& outFile, const string& opt, const VAL& val) {
     outFile << Config::PC_OPT_STR << opt << ' ' << val << '\n';
 }
 
 template<typename VAL>
-void outputDefine(std::ofstream& outFile, const string& define) {
+void outputDefine(std::ostream& outFile, const string& define) {
     outFile << Config::DEFINE_STR << define << '\n';
 }
 
 template<typename VAL>
-void outputDefine(std::ofstream& outFile, const string& define, const VAL& val) {
+void outputDefine(std::ostream& outFile, const string& define, const VAL& val) {
     outFile << Config::DEFINE_STR << define << ' ' << val << '\n';
 }
 
-void outputTopGeneral(std::ofstream& outFile, const Config::Config& config) {
+void outputTopGeneral(std::ostream& outFile, const Config::Config& config) {
     using namespace Config;
 
     if (config.settings.massStorage) {
@@ -442,7 +438,7 @@ void outputTopGeneral(std::ofstream& outFile, const Config::Config& config) {
     }
 }
 
-void outputTopProp(std::ofstream& outFile, const Config::Config& config) {
+void outputTopProp(std::ostream& outFile, const Config::Config& config) {
     if (config.propSelection == -1) return;
     auto& selectedProp{config.prop(config.propSelection)};
 
@@ -454,7 +450,7 @@ void outputTopProp(std::ofstream& outFile, const Config::Config& config) {
     outFile << std::flush;
 }
 
-void outputProp(std::ofstream& outFile, const Config::Config& config) {
+void outputProp(std::ostream& outFile, const Config::Config& config) {
     if (config.propSelection == -1) return;
     auto& selectedProp{config.prop(config.propSelection)};
     if (selectedProp.isDefault()) return;
@@ -464,7 +460,7 @@ void outputProp(std::ofstream& outFile, const Config::Config& config) {
     outFile << "#endif\n" << std::flush;
 }
 
-void outputPresets(std::ofstream& outFile, const Config::Config& config) {
+void outputPresets(std::ostream& outFile, const Config::Config& config) {
     outFile << "#ifdef CONFIG_PRESETS\n";
     for (const auto& injection : config.presetArrays.injections()) {
         outFile << "#include \"" << Config::INJECTION_STR.data() << '/' << injection << "\"\n";
@@ -475,7 +471,7 @@ void outputPresets(std::ofstream& outFile, const Config::Config& config) {
     outFile << "#endif\n\n" << std::flush;
 }
 
-void outputPresetStyles(std::ofstream& outFile, const Config::Config& config) {
+void outputPresetStyles(std::ostream& outFile, const Config::Config& config) {
     const auto numBlades{config.bladeArrays.numBlades()};
 
     for (const auto& presetArray : config.presetArrays.arrays()) {
@@ -512,7 +508,7 @@ void outputPresetStyles(std::ofstream& outFile, const Config::Config& config) {
     }
 }
 
-void outputPresetBlades(std::ofstream& outFile, const Config::Config& config) {
+void outputPresetBlades(std::ostream& outFile, const Config::Config& config) {
     using namespace Config;
 
     outFile << "BladeConfig blades[] = {\n";
@@ -664,7 +660,7 @@ void outputPresetBlades(std::ofstream& outFile, const Config::Config& config) {
     outFile << "};\n" << std::flush;
 }
 
-void outputButtons(std::ofstream& outFile, const Config::Config& config) {
+void outputButtons(std::ostream& outFile, const Config::Config& config) {
     outFile << "#ifdef CONFIG_BUTTONS\n";
     if (config.settings.numButtons >= 1) {
         outFile << "Button PowerButton(BUTTON_POWER, powerButtonPin, \"pow\");\n";

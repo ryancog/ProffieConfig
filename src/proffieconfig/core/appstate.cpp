@@ -59,7 +59,7 @@ void AppState::setPreference(Preference preference, bool set) {
 void AppState::saveState() {
     auto& logger{Log::Context::getGlobal().createLogger("AppState::saveState()")};
 
-    std::ofstream stateStream(Paths::stateFile() += ".tmp");
+    auto stateStream{Paths::openOutputFile(Paths::stateFile() += ".tmp")};
     if (!stateStream.is_open()) {
         logger.error("Failed creating temporary save file.");
         stateStream.close();
@@ -93,7 +93,7 @@ void AppState::saveState() {
 
 void AppState::loadState() {
     auto& logger{Log::Context::getGlobal().createLogger("AppState::loadState()")};
-    std::ifstream stateStream(Paths::stateFile());
+    auto stateStream{Paths::openInputFile(Paths::stateFile())};
 
     if (not stateStream.is_open()) {
         logger.warn("Could not open state file, attempting recovery from tmp...");

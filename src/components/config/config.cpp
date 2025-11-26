@@ -166,9 +166,11 @@ void Config::Config::close() {
 }
 
 namespace {
+
 filepath savePath(const string& name) {
     return Paths::configDir() / (static_cast<string>(name) + Config::RAW_FILE_EXTENSION);
 }
+
 } // namespace
 
 filepath Config::Config::savePath() const {
@@ -196,8 +198,8 @@ optional<string> Config::Config::save(const filepath& path, Log::Branch *lBranch
         return err;
     }
 
-    if (not fs::copy_file(tmpPath, finalPath, fs::copy_options::overwrite_existing, errCode)) {
-        err = errorMessage(logger, wxTRANSLATE("Failed to move temp file: %s"), errCode.message());
+    if (not Paths::copyOverwrite(tmpPath, finalPath, errCode)) {
+        err = errorMessage(logger, wxTRANSLATE("Failed to move temp file: %s"), tmpPath.string(), finalPath.string(), errCode.message());
     }
     fs::remove(tmpPath, errCode);
     return err;
@@ -228,8 +230,8 @@ bool Config::Config::isSaved() const {
         return false;
     }
 
-    std::ifstream current{currentPath};
-    std::ifstream validate{validatePath};
+    auto current{Paths::openInputFile(currentPath)};
+    auto validate{Paths::openInputFile(validatePath)};
 
     bool saved{true};
     while (current.good() && !current.eof() && validate.good() && !validate.eof()) {
@@ -253,8 +255,8 @@ bool Config::Config::isSaved() const {
     if (not saved) {
         logger.warn("File contents do not match");
     }
-    return saved;
 
+    return saved;
 }
 
 vector<string> Config::fetchListFromDisk() {
@@ -281,17 +283,25 @@ bool Config::remove(const string& name) {
     return fs::remove(savePath(name), err);
 }
 
-variant<Config::Config *, string> Config::open(const string& name) {
+variant<Config::Config *, string> Config::open(const string& name, Log::Branch *lBranch) {
+    auto& logger{Log::Branch::optCreateLogger("Config::open()", lBranch)};
+
     auto *open{getIfOpen(name)};
-    if (open) return open;
+    if (open) {
+        logger.debug("Config already open, returning...");
+        return open;
+    }
 
     std::unique_ptr<Config> config{new Config()};
     config->name = string{name};
 
     const auto path{savePath(name)};
     if (fs::exists(path)) {
+        logger.info("Config (" + path.string() + ") exists, parsing...");
         auto err{parse(path, *config)};
         if (err) return *err;
+    } else {
+        logger.warn("Config (" + path.string() + ") does not exist, creating new...");
     }
 
     return &*loadedConfigs.emplace_back(std::move(config));

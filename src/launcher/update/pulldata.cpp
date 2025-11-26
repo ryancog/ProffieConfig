@@ -70,7 +70,7 @@ bool Update::pullData(PCUI::ProgressDialog *prog, Log::Branch& lBranch) {
         }
     }};
 
-    std::ifstream stateFile{Paths::stateFile()};
+    auto stateFile{Paths::openInputFile(Paths::stateFile())};
     PConf::Data stateFileData;
     PConf::read(stateFile, stateFileData, logger.binfo("Reading manifest to fetch..."));
     const auto hashedStateFileData{PConf::hash(stateFileData)};
@@ -125,7 +125,7 @@ optional<Update::Data> Update::parseData(PCUI::ProgressDialog *prog, Log::Branch
         return nullopt;
     }
 
-    std::ifstream stream{manifestFile()};
+    auto stream{Paths::openInputFile(manifestFile())};
     PConf::Data rawData;
     PConf::read(stream, rawData, logger.binfo("Parsing manifest..."));
     stream.close();
@@ -180,7 +180,7 @@ bool checkMessages(const PConf::HashedData& hashedRawData, Log::Branch& lBranch)
     vector<string> ignoreMessageList;
     std::unordered_set<string> ignoredMessages;
 
-    std::ifstream stateFile{Paths::stateFile()};
+    auto stateFile{Paths::openInputFile(Paths::stateFile())};
     PConf::read(stateFile, stateData, logger.bdebug("Parsing state file..."));
     stateFile.close();
     for (const auto& entry : stateData) {
@@ -274,7 +274,7 @@ bool checkMessages(const PConf::HashedData& hashedRawData, Log::Branch& lBranch)
     if (not ignoreMessageEntry) ignoreMessageEntry = PConf::Section::create(IGNORED_MESSAGES_STR);
     ignoreMessageEntry->value = PConf::listAsValue(ignoreMessageList);
     const auto tmpPath{Paths::stateFile().append(".tmp")};
-    std::ofstream tmpFile{tmpPath};
+    auto tmpFile{Paths::openOutputFile(tmpPath)};
     PConf::write(tmpFile, stateData, logger.bdebug("Writing statefile..."));
     tmpFile.close();
     std::error_code err;
