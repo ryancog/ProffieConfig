@@ -134,6 +134,8 @@ public:
             Utils::Version currentVersion;
             currentVersion = Update::determineCurrentVersion(data.value(), &prog, *logger.binfo("Determining current version."));
             auto changelog{Update::generateChangelog(data.value(), currentVersion, *logger.binfo("Generating changelog..."))};
+            logger.info("Current Version: " + static_cast<string>(changelog.currentBundleVersion));
+            logger.info("Latest Version: " + static_cast<string>(changelog.latestBundleVersion));
             prog.Hide();
             if (changelog.currentBundleVersion and changelog.latestBundleVersion == changelog.currentBundleVersion) {
                 Routine::launch(*logger.binfo("Up to date, launching..."));
