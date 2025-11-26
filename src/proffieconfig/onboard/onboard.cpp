@@ -60,6 +60,7 @@ Onboard::Frame::Frame() :
 
     contentSizer->AddSpacer(10);
     contentSizer->Add(icon);
+    contentSizer->AddSpacer(10);
     mWelcomePage = new Onboard::Welcome(this);
     mSetupPage = new Onboard::Setup(this);
     mInfoPage = new Onboard::Info(this);
