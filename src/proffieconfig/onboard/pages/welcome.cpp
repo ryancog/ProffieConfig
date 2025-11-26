@@ -30,13 +30,19 @@ Onboard::Welcome::Welcome(wxWindow* parent) : wxPanel(parent) {
 
     auto *welcomeText{Onboard::createHeader(this, wxString::Format(_("Welcome to ProffieConfig %s!"), wxSTRINGIZE(VERSION)))};
 
+    /*
+     * So, cool story, the WIDE window bug on macOS has to do with double
+     * newline characters. E.g. "\n\n".
+     *
+     * Why? Don't Know.
+     */
     const auto infoString1{_(
-        "Thank you for trying out ProffieConfig, the all-in-one proffieboard management utility!\n"
-        "\n"
-        "Online guides are available at the link below:"
+        "Thank you for trying out ProffieConfig, the all-in-one proffieboard management utility!"
     )};
     const auto infoString2{_(
-        "\n"
+        "Online guides are available at the link below:"
+    )};
+    const auto infoString3{_(
         "To start, ProffieConfig needs to do some setup.\n"
         "Press \"Next\" when you're ready to continue, and we'll get started!"
     )};
@@ -48,16 +54,24 @@ Onboard::Welcome::Welcome(wxWindow* parent) : wxPanel(parent) {
         wxDefaultSize,
         wxALIGN_CENTER
     )};
+    auto *infoText2{new wxStaticText(
+        this,
+        wxID_ANY,
+        infoString2,
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxALIGN_CENTER
+    )};
     auto *docLink{new wxHyperlinkCtrl(
         this,
         wxID_ANY,
         _("Guides And Documentation"),
         Paths::website() + "/docs"
     )};
-    auto *infoText2{new wxStaticText(
+    auto *infoText3{new wxStaticText(
         this,
         wxID_ANY,
-        infoString2,
+        infoString3,
         wxDefaultPosition,
         wxDefaultSize,
         wxALIGN_CENTER
@@ -67,7 +81,10 @@ Onboard::Welcome::Welcome(wxWindow* parent) : wxPanel(parent) {
     sizer->Add(welcomeText, 0, wxCENTER);
     sizer->AddSpacer(40);
     sizer->Add(infoText1, 0, wxCENTER);
-    sizer->Add(docLink, 0, wxCENTER);
+    sizer->AddSpacer(20);
     sizer->Add(infoText2, 0, wxCENTER);
+    sizer->Add(docLink, 0, wxCENTER);
+    sizer->AddSpacer(20);
+    sizer->Add(infoText3, 0, wxCENTER);
     SetSizerAndFit(sizer);
 }
