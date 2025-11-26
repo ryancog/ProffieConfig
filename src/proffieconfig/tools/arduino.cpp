@@ -618,7 +618,7 @@ optional<string> upload(
         "0x6668",
         compileOutput.tool1
     };
-    proc.create(compileOutput.tool2, args);
+    proc.create(compileOutput.tool2.c_str(), args);
 #   else
     vector<string> args{
         "upload",
@@ -785,7 +785,8 @@ optional<string> ensureCoreInstalled(
 
 void cli(Process& proc, vector<string>& args) {
     args.emplace_back("--no-color");
-    proc.create((Paths::binaryDir() / "arduino-cli").string(), args);
+    auto arduinoStr{(Paths::binaryDir() / "arduino-cli").string()};
+    proc.create(arduinoStr.c_str(), args);
 }
 
 } // namespace
@@ -807,9 +808,9 @@ bool Arduino::runDriverInstallation(Log::Branch *lBranch) {
     auto& logger{Log::Branch::optCreateLogger("Arduino::runDriverInstallation()", lBranch)};
     logger.info("Installing drivers...");
 
+#   if defined(__linux__)
     Process proc;
 
-#   if defined(__linux__)
     const auto rulesPath{
         Paths::user() / ".arduino15" / "packages" / "proffieboard" / "hardware" / "stm32l4" /
         Versions::DEFAULT_CORE_VERSION / "drivers" / "linux"
@@ -830,11 +831,13 @@ bool Arduino::runDriverInstallation(Log::Branch *lBranch) {
     }
     args.emplace_back("/etc/udev/rules.d");
     proc.create("pkexec", args);
-#   elif defined(_WIN32)
-    proc.create((Paths::binaryDir() / "proffie-dfu-setup.exe").string());
-#   endif
 
     auto result{proc.finish()};
+#   elif defined(_WIN32)
+    auto driverStr{(Paths::binaryDir() / "proffie-dfu-setup.exe").string()};
+    auto result{Process::elevatedProcess(driverStr.c_str())};
+#   endif
+
     if (result.err) {
         logger.error("Installation failed with error " + std::to_string(result.err) + ":" + std::to_string(result.systemResult));
         if (result.err == Process::Result::UNKNOWN) logger.error("System error: " + std::to_string(result.systemResult));

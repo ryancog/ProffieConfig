@@ -45,7 +45,14 @@ struct PROCESS_EXPORT Process {
     /**
      * Create a new process
      */
-    void create(const string_view& executable, const span<string>& args = {});
+    void create(cstring exec, const span<string>& args = {});
+
+#   ifdef _WIN32
+    static Result elevatedProcess(
+        cstring exec, const span<string>& args = {}
+    );
+#   endif
+
 
     optional<string> read();
     bool write(const string_view&);

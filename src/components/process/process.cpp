@@ -81,7 +81,7 @@ Process::~Process() {
     dataLock.unlock();
 }
 
-void Process::create(const string_view& executable, const span<string>& args) {
+void Process::create(cstring exec, const span<string>& args) {
     assert(not mRef);
     dataLock.lock();
     auto& data{internalDatas.emplace_back()};
@@ -122,9 +122,10 @@ void Process::create(const string_view& executable, const span<string>& args) {
         close(data.parentFromChild[1]);
 
         char **argv{new char *[args.size() + 2]};
-        argv[0] = new char[executable.length() + 1];
-        memcpy(argv[0], executable.data(), executable.length());
-        argv[0][executable.length()] = 0;
+        const auto execLength{strlen(exec)};
+        argv[0] = new char[execLength + 1];
+        memcpy(argv[0], exec, execLength);
+        argv[0][execLength] = 0;
 
         for (auto idx{0}; idx < args.size(); ++idx) {
             argv[idx + 1] = new char[args[idx].length() + 1];
@@ -134,20 +135,12 @@ void Process::create(const string_view& executable, const span<string>& args) {
 
         argv[args.size() + 1] = nullptr;
 
-        char *exec{new char[executable.length() + 1]};
-        memcpy(exec, executable.data(), executable.length());
-        exec[executable.length()] = 0;
+        char *execArg{new char[execLength + 1]};
+        memcpy(execArg, exec, execLength);
+        exec[execLength] = 0;
 
-        execvp(exec, argv);
+        execvp(execArg, argv);
         data.promise.set_value({.err=Result::EXECUTION_FAILED});
-        dataLock.lock();
-        for (auto iter{internalDatas.begin()}; iter != internalDatas.end(); ++iter) {
-            if (&*iter == mRef) {
-                internalDatas.erase(iter);
-                break;
-            }
-        }
-        dataLock.unlock();
         exit(1);
     } 
 
@@ -188,7 +181,7 @@ void Process::create(const string_view& executable, const span<string>& args) {
     startupInfo.hStdInput = data.childFromParent[0];
     startupInfo.dwFlags |= STARTF_USESTDHANDLES;
 
-    string execBuffer{executable};
+    string execBuffer{exec};
     for (const auto& arg : args) {
         execBuffer += ' ';
         execBuffer += arg;
@@ -200,14 +193,14 @@ void Process::create(const string_view& executable, const span<string>& args) {
         nullptr,
         nullptr,
         true,
-        0,
+        CREATE_NO_WINDOW,
         nullptr,
         nullptr,
         &startupInfo,
         &procInfo
     )};
     if (not procSuccess) {
-        data.promise.set_value({.err=Result::CREATION_FAILED});
+        data.promise.set_value({.err=Result::CREATION_FAILED, .systemResult=GetLastError()});
         return;
     }
 
@@ -216,26 +209,24 @@ void Process::create(const string_view& executable, const span<string>& args) {
     CloseHandle(data.childFromParent[0]);
     CloseHandle(procInfo.hThread);
 
-    std::thread{[id=procInfo.dwProcessId, procHandle=procInfo.hProcess]() {
+    std::thread{[&data, id=procInfo.dwProcessId, procHandle=procInfo.hProcess]() {
         WaitForSingleObject(procHandle, INFINITE);
         DWORD exitCode{};
         GetExitCodeProcess(procHandle, &exitCode);
 
+        // Needs to lock so data remains valid
         dataLock.lock();
-        for (auto& data : internalDatas) {
-            if (data.id != id) continue;
-
-            if (exitCode == 0) {
-                data.promise.set_value({.err=Process::Result::SUCCESS});
-            } else if (exitCode >= ERROR_SEVERITY_ERROR) {
-                data.promise.set_value({.err=Process::Result::CRASHED, .systemResult=exitCode});
-            } else {
-                data.promise.set_value({.err=Process::Result::EXITED_WITH_FAILURE, .systemResult=exitCode});
-            }
-
-            CloseHandle(data.childFromParent[1]);
-            CloseHandle(data.parentFromChild[0]);
+        if (exitCode == 0) {
+            data.promise.set_value({.err=Result::SUCCESS});
+        } else if (exitCode >= ERROR_SEVERITY_ERROR) {
+            data.promise.set_value({.err=Result::CRASHED, .systemResult=exitCode});
+        } else {
+            data.promise.set_value({.err=Result::EXITED_WITH_FAILURE, .systemResult=exitCode});
         }
+
+        CloseHandle(data.childFromParent[1]);
+        CloseHandle(data.parentFromChild[0]);
+        CloseHandle(procHandle);
         dataLock.unlock();
     }}.detach();
 #   else
@@ -308,7 +299,57 @@ bool Process::write(const string_view& str) {
 
 Process::Result Process::finish() {
     assert(mRef);
-    return reinterpret_cast<InternalData *>(mRef)->promise.get_future().get();
+    auto ret{reinterpret_cast<InternalData *>(mRef)->promise.get_future().get()};
+    dataLock.lock();
+    for (auto iter{internalDatas.begin()}; iter != internalDatas.end(); ++iter) {
+        if (&*iter == mRef) {
+            internalDatas.erase(iter);
+            break;
+        }
+    }
+    dataLock.unlock();
+    return ret;
+}
+
+Process::Result Process::elevatedProcess(
+    cstring exec, const span<string>& args
+) {
+    string argBuffer{};
+    for (auto& arg : args) {
+        if (not argBuffer.empty()) argBuffer += ' ';
+        argBuffer += arg;
+    }
+
+    SHELLEXECUTEINFOA execInfo;
+    memset(&execInfo, 0, sizeof execInfo);
+    execInfo.cbSize = sizeof execInfo;
+    execInfo.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_NOCLOSEPROCESS;
+    execInfo.lpVerb = "runas";
+    execInfo.lpFile = exec;
+    execInfo.lpParameters = argBuffer.c_str();
+    execInfo.nShow = SW_SHOW;
+
+    Result ret;
+
+    if (ShellExecuteExA(&execInfo)) {
+        WaitForSingleObject(execInfo.hProcess, INFINITE);
+        DWORD exitCode{};
+        GetExitCodeProcess(execInfo.hProcess, &exitCode);
+
+        if (exitCode == 0) {
+            ret = {.err=Result::SUCCESS};
+        } else if (exitCode >= ERROR_SEVERITY_ERROR) {
+            ret = {.err=Result::CRASHED, .systemResult=exitCode};
+        } else {
+            ret = {.err=Result::EXITED_WITH_FAILURE, .systemResult=exitCode};
+        }
+
+        CloseHandle(execInfo.hProcess);
+    } else {
+        ret = {.err=Result::CREATION_FAILED, .systemResult=GetLastError()};
+    }
+
+    return ret;
 }
 
 namespace {
