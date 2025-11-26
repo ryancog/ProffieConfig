@@ -335,7 +335,9 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
 
         if (entry->IsDir()) {
             if (not fs::exists(filepath, err)) {
-                if (not fs::create_directories(filepath, err)) {
+                // Return value is just if newly created, not success
+                fs::create_directories(filepath, err);
+                if (err) {
                     logger.error(
                         "Could not create dir " + filepath.string() +
                         ": " + err.message()
@@ -436,7 +438,8 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
 
         if (entry->IsDir()) {
             if (not fs::exists(filepath, err)) {
-                if (not fs::create_directories(filepath, err)) {
+                fs::create_directories(filepath, err);
+                if (err) {
                     logger.error(
                         "Could not create dir " + filepath.string() +
                         ": " + err.message()
