@@ -12,11 +12,13 @@
 #include "log/logger.h"
 #include "pconf/pconf.h"
 #include "pconf/utils.h"
+#include "ui/message.h"
 #include "utils/paths.h"
 #include "utils/version.h"
 
 #include "../onboard/onboard.h"
 #include "../mainmenu/mainmenu.h"
+#include "versions/versions.h"
 
 namespace {
 
@@ -134,7 +136,14 @@ void doNecessaryMigrations() {
         fs::remove_all(Paths::resourceDir() / "props", err);
         fs::remove_all(Paths::osDir(), err);
 
-        // TODO: Try to download new stuffage
+        auto errStr{Versions::resetToDefault(true)};
+        if (errStr) {
+            PCUI::showMessage(
+                _("Versions Download Failed"),
+                _("You should visit the versions manager to retry fetching the defaults soon.") + "\n\n" + *errStr,
+                wxOK | wxCENTER | wxICON_WARNING
+            );
+        }
     }
 
     AppState::saveState();
