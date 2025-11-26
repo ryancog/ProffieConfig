@@ -22,12 +22,13 @@
 #include <cassert>
 #include <cstring>
 #include <future>
+#include <iostream>
 
 #if defined(__APPLE__) or defined(__linux__)
 #include <unistd.h>
 #include <csignal>
 #include <sys/wait.h>
-#include <sys/ioctl.h>
+#include <sys/poll.h>
 #elif defined(_WIN32)
 #include <fileapi.h>
 #include <handleapi.h>
@@ -81,7 +82,7 @@ Process::~Process() {
     dataLock.unlock();
 }
 
-void Process::create(cstring exec, const span<string>& args) {
+void Process::create(string exec, span<string> args) {
     assert(not mRef);
     dataLock.lock();
     auto& data{internalDatas.emplace_back()};
@@ -99,7 +100,7 @@ void Process::create(cstring exec, const span<string>& args) {
 
     if (
             pipe(data.childFromParent) == -1 or
-            pipe(data.parentFromChild)
+            pipe(data.parentFromChild) == -1
        ) {
         data.promise.set_value({.err=Result::CONNECTION_FAILED});
         return;
@@ -116,37 +117,31 @@ void Process::create(cstring exec, const span<string>& args) {
         dup2(data.parentFromChild[1], STDOUT_FILENO);
         dup2(data.parentFromChild[1], STDERR_FILENO);
 
-        close(data.childFromParent[0]);
         close(data.childFromParent[1]);
         close(data.parentFromChild[0]);
-        close(data.parentFromChild[1]);
 
         char **argv{new char *[args.size() + 2]};
-        const auto execLength{strlen(exec)};
-        argv[0] = new char[execLength + 1];
-        memcpy(argv[0], exec, execLength);
-        argv[0][execLength] = 0;
+        argv[0] = new char[exec.length() + 1];
+        memcpy(argv[0], exec.data(), exec.length());
+        argv[0][exec.length()] = 0;
 
         for (auto idx{0}; idx < args.size(); ++idx) {
-            argv[idx + 1] = new char[args[idx].length() + 1];
-            memcpy(argv[idx + 1], args[idx].data(), args[idx].length());
-            argv[idx + 1][args[idx].length()] = 0;
+            auto *& argPtr{argv[idx + 1]};
+            argPtr = new char[args[idx].length() + 1];
+            memcpy(argPtr, args[idx].data(), args[idx].length());
+            argPtr[args[idx].length()] = 0;
         }
 
         argv[args.size() + 1] = nullptr;
 
-        char *execArg{new char[execLength + 1]};
-        memcpy(execArg, exec, execLength);
-        exec[execLength] = 0;
-
-        execvp(execArg, argv);
+        execvp(exec.c_str(), argv);
         data.promise.set_value({.err=Result::EXECUTION_FAILED});
         exit(1);
     } 
 
     data.pid = pid;
-    close(data.childFromParent[1]);
-    close(data.parentFromChild[0]);
+    close(data.childFromParent[0]);
+    close(data.parentFromChild[1]);
 #   elif defined(_WIN32)
     SECURITY_ATTRIBUTES pipeAttributes;
     pipeAttributes.nLength = sizeof pipeAttributes;
@@ -238,16 +233,18 @@ optional<string> Process::read() {
     assert(mRef);
     InternalData& data{*reinterpret_cast<InternalData *>(mRef)};
 #   if defined(__APPLE__) or defined(__linux__)
-    int numBytes{};
-    if (ioctl(data.parentFromChild[0], FIONREAD, &numBytes) == -1) {
-        return nullopt;
+    string ret;
+    ret.resize(2048);
+
+    while (not false) {
+        auto res{::read(data.parentFromChild[0], ret.data(), ret.size())};
+        if (res == -1 and errno == EINTR) continue;
+        if (res == -1 or res == 0) return nullopt;
+
+        ret.resize(res);
+        break;
     }
 
-    string ret;
-    ret.resize(numBytes);
-    if (::read(data.parentFromChild[0], ret.data(), ret.size()) == -1) {
-        return nullopt;
-    }
     return ret;
 #   elif defined(_WIN32)
     DWORD numBytes{};
@@ -311,6 +308,7 @@ Process::Result Process::finish() {
     return ret;
 }
 
+#ifdef _WIN32
 Process::Result Process::elevatedProcess(
     cstring exec, const span<string>& args
 ) {
@@ -351,6 +349,7 @@ Process::Result Process::elevatedProcess(
 
     return ret;
 }
+#endif
 
 namespace {
 #if defined(__APPLE__) or defined(__linux__)

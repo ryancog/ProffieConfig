@@ -45,7 +45,7 @@ struct PROCESS_EXPORT Process {
     /**
      * Create a new process
      */
-    void create(cstring exec, const span<string>& args = {});
+    void create(string exec, span<string> args = {});
 
 #   ifdef _WIN32
     static Result elevatedProcess(
