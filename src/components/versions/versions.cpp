@@ -81,7 +81,7 @@ void Versions::VersionedProp::saveInfo() {
     }
     infoData.push_back(PConf::Entry::create(SUPPORTED_VERSIONS_STR, PConf::listAsValue(list)));
 
-    std::ofstream infoFile{Paths::propDir() / name / INFO_FILE_STR};
+    auto infoFile{Paths::openOutputFile(Paths::propDir() / name / INFO_FILE_STR)};
     if (not infoFile.is_open()) {
         throw std::ios_base::failure("Couldn't open prop info file for write.");
     }
@@ -122,7 +122,7 @@ void Versions::loadLocal() {
         VersionedOS os;
         os.verNum = version;
 
-        std::ifstream infoFile{entry.path() / INFO_FILE_STR};
+        auto infoFile{Paths::openInputFile(entry.path() / INFO_FILE_STR)};
         PConf::Data infoData;
         PConf::read(infoFile, infoData, logger.bverbose("Reading info file..."));
         const auto hashedInfoData{PConf::hash(infoData)};
@@ -156,7 +156,7 @@ void Versions::loadLocal() {
         auto& versionedProp{propDefaultVersionMap.emplace(version, "").first->second};
         PConf::HashedData hashedDefaultPropData;
         if (fs::is_regular_file(defaultPropDataPath, err)) {
-            std::ifstream defaultPropDataFile{defaultPropDataPath};
+            auto defaultPropDataFile{Paths::openInputFile(defaultPropDataPath)};
             PConf::Data defaultPropData;
             PConf::read(defaultPropDataFile, defaultPropData, logger.bverbose("Reading default prop file..."));
             hashedDefaultPropData = PConf::hash(defaultPropData);
@@ -196,7 +196,7 @@ void Versions::loadLocal() {
             if (oldProp->name == propName) oldPropPtr = oldProp.get();
         }
 
-        std::ifstream infoFile{Paths::propDir() / propName / INFO_FILE_STR};
+        auto infoFile{Paths::openInputFile(Paths::propDir() / propName / INFO_FILE_STR)};
         PConf::Data infoData;
         PConf::read(infoFile, infoData, logger.bverbose("Reading info file..."));
         const auto hashedInfoData{PConf::hash(infoData)};
@@ -238,7 +238,7 @@ void Versions::loadLocal() {
         }
 
         // Yeah this naming is stupid, what are you going to do about it?
-        std::ifstream dataFile{Paths::propDir() / propName / DATA_FILE_STR};
+        auto dataFile{Paths::openInputFile(Paths::propDir() / propName / DATA_FILE_STR)};
         PConf::Data dataData;
         PConf::read(dataFile, dataData, logger.bverbose("Reading data file..."));
         const auto hashedDataData{PConf::hash(dataData)};

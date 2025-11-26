@@ -223,9 +223,8 @@ void EditorWindow::bindEvents() {
         if (fileDialog.ShowModal() == wxCANCEL) return;
 
         auto copyPath{Paths::injectionDir() / fileDialog.GetFilename().ToStdWstring()};
-        const auto copyOptions{fs::copy_options::overwrite_existing};
         std::error_code err;
-        if (not fs::copy_file(fileDialog.GetPath().ToStdWstring(), copyPath, copyOptions, err)) {
+        if (not Paths::copyOverwrite(fileDialog.GetPath().ToStdWstring(), copyPath, err)) {
             PCUI::showMessage(err.message(), _("Injection file could not be added."));
             return;
         }

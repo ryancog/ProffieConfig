@@ -197,7 +197,7 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
                 fs::copy_options::overwrite_existing
             );
 
-            std::ofstream infoStream{Paths::executable(Paths::Executable::MAIN).parent_path().parent_path() / "Info.plist"};
+            auto infoStream{Paths::openOutputFile(Paths::executable(Paths::Executable::MAIN).parent_path().parent_path() / "Info.plist")};
             infoStream << 
                 R"(<?xml version="1.0" encoding="UTF-8"?>)" "\n"
                 R"(<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">)" "\n"
@@ -232,7 +232,8 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
         path /= filepath{item.path};
         fs::remove(path);
         fs::create_directories(path.parent_path());
-        fs::copy_file(stagingFolder() / typeFolder(file.id.type) / filepath{item.path}, path, fs::copy_options::overwrite_existing);
+        std::error_code err;
+        Paths::copyOverwrite(stagingFolder() / typeFolder(file.id.type) / filepath{item.path}, path, err);
 #       endif
     }
 

@@ -312,12 +312,7 @@ variant<CompileOutput, string> compile(
                 return _("Invalid Prop Selected").ToStdString();
             }
 
-            auto res{fs::copy_file(
-                    sourcePropHeader,
-                    osPath / "props" / prop.filename,
-                    fs::copy_options::overwrite_existing,
-                    err
-                    )};
+            auto res{Paths::copyOverwrite(sourcePropHeader, osPath / "props" / prop.filename, err)};
             if (not res) {
                 if (prog) prog->emitEvent(100, _("Error"));
                 logger.error("Failed to copy in prop header.");
@@ -342,8 +337,8 @@ variant<CompileOutput, string> compile(
     if (prog) prog->emitEvent(35, wxGetTranslation(UPDATE_INO_MESSAGE));
     const auto inoPath{osPath / "ProffieOS.ino"};
     const auto tmpInoPath{fs::temp_directory_path() / "ProffieOS.ino"};
-    std::ifstream ino(inoPath);
-    std::ofstream tmpIno(tmpInoPath);
+    auto ino{Paths::openInputFile(inoPath)};
+    auto tmpIno{Paths::openOutputFile(tmpInoPath)};
     if (not ino.is_open()) {
         logger.error("Failed to open ProffieOS INO");
         if (prog) prog->emitEvent(100, _("Error"));
@@ -356,7 +351,7 @@ variant<CompileOutput, string> compile(
     }
 
     bool alreadyOutputConfigDefine{false};
-    while(ino.good()) {
+    while (ino.good()) {
         string buffer;
         std::getline(ino, buffer);
 
@@ -377,9 +372,7 @@ variant<CompileOutput, string> compile(
     ino.close();
     tmpIno.close();
     std::error_code errCode;
-    // Windows is stupid
-    fs::remove(inoPath, errCode);
-    if (not fs::copy_file(tmpInoPath, inoPath, fs::copy_options::overwrite_existing, errCode)) {
+    if (not Paths::copyOverwrite(tmpInoPath, inoPath, errCode)) {
         logger.error("Failed to copy in tmp ProffieOS INO: " + errCode.message());
         if (prog) prog->emitEvent(100, _("Error"));
         return _("Computer FS Error").ToStdString();
