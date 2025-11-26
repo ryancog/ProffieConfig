@@ -409,8 +409,9 @@ void bindEvents() {
         wxLaunchDefaultApplication(Paths::versionDir().string());
     }, ID_ShowVersions);
     manager->Bind(wxEVT_MENU, [](wxCommandEvent&) {
-        constexpr auto FULL_RESET{wxID_YES};
-        constexpr auto RESTORE_DEFAULTS{wxID_NO};
+        constexpr auto FULL_RESET{wxYES};
+        constexpr auto RESTORE_DEFAULTS{wxNO};
+        PCUI:
         auto res{PCUI::showMessage(
             _("These actions cannot be undone!\n"
             "\n"
@@ -442,7 +443,7 @@ void bindEvents() {
 
         if (not confirm) return;
 
-        // Alr, now do it.
+        Versions::resetToDefault(res == FULL_RESET);
     }, ID_Reset);
 }
 
