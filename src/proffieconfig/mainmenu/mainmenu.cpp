@@ -274,6 +274,7 @@ void MainMenu::bindEvents() {
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         wxSetCursor(wxCURSOR_WAIT);
         Defer cursorDefer{[]() { wxSetCursor(wxNullCursor); }};
+
         auto res{Config::open(configSelection)};
         if (auto *ptr = std::get_if<string>(&res)) {
             PCUI::showMessage(*ptr, _("Cannot Edit Config"));
@@ -519,7 +520,8 @@ void MainMenu::createUI() {
         wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT, 10)
     );
 #   ifdef __WXMSW__
-    sizer->AddSpacer(30); // There's a sizing issue I need to figure out... for now we give it a chin
+    // There's a sizing issue I need to figure out... for now we give it a chin
+    sizer->AddSpacer(FromDIP(30));
 #   else
     sizer->AddSpacer(10);
 #   endif
