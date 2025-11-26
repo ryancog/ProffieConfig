@@ -80,6 +80,7 @@ struct UTILS_EXPORT Version {
      * NULL_REV is -1 so that v1.1 < v1.1.0, and only v1.2 > v1.1.0 (e.g. next parent ver)
      */
     auto operator<=>(const Version&) const = default;
+    bool operator==(const Version&) const = default;
 
     /**
      * Convert a Version into string representation.
@@ -89,8 +90,6 @@ struct UTILS_EXPORT Version {
      */
     operator string() const;
     operator bool() const;
-
-    bool operator==(const string_view&) const;
 };
 
 } // namespace Utils

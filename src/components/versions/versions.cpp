@@ -396,7 +396,7 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
 
         auto bundleStrings{PConf::valueAsList(entry->value)};
         for (const auto& bundleString : bundleStrings) {
-            if (osVersion == bundleString) {
+            if (osVersion == Utils::Version{bundleString}) {
                 propBundleExistsForVersion = true;
                 break;
             }
