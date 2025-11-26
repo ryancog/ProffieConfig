@@ -24,10 +24,6 @@
 #include <sstream>
 #include <stack>
 
-namespace Utils {
-
-}
-
 optional<string> Utils::extractComment(std::istream& stream) {
     enum {
         NONE,
@@ -41,6 +37,7 @@ optional<string> Utils::extractComment(std::istream& stream) {
     string comment;
     while (stream.good()) {
         const auto chr{stream.get()};
+
         if (chr < 0 or chr > 0xFF) continue;
         if (
                 std::iscntrl(chr) and
@@ -119,16 +116,17 @@ bool Utils::skipComment(std::istream& stream, string *str) {
                     reading = LONG_COMMENT;
                     if (str) {
                         skipped = true;
-                        *str += chr;
-                        *str += stream.get();
+                        *str += static_cast<char>(chr);
+                        *str += static_cast<char>(stream.get());
                     }
                     continue;
-                } else if (stream.peek() == '/') {
+                }
+                if (stream.peek() == '/') {
                     reading = LINE_COMMENT;
                     if (str) {
                         skipped = true;
-                        *str += chr;
-                        *str += stream.get();
+                        *str += static_cast<char>(chr);
+                        *str += static_cast<char>(stream.get());
                     }
                     continue;
                 }
@@ -145,8 +143,8 @@ bool Utils::skipComment(std::istream& stream, string *str) {
                 reading = NONE;
                 if (str) {
                     skipped = true;
-                    *str += chr;
-                    *str += stream.get();
+                    *str += static_cast<char>(chr);
+                    *str += static_cast<char>(stream.get());
                 }
                 continue;
             }
@@ -154,7 +152,7 @@ bool Utils::skipComment(std::istream& stream, string *str) {
 
         if (str) {
             skipped = true;
-            *str += chr;
+            *str += static_cast<char>(chr);
         }
     }
 
@@ -184,7 +182,6 @@ float64 Utils::doStringMath(const string& str) {
     const auto isOperator{[](char c) {
         return c == '+' or c == '-' or c == '*' or c == '/' or c == '^';
     }};
-
     const auto precedence{[](char op) -> int32 {
         if (op == '+' or op == '-') return 1;
         if (op == '*' or op == '/') return 2;
@@ -214,7 +211,7 @@ float64 Utils::doStringMath(const string& str) {
     while (std::getline(ss, token, ' ')) {
         if (token.empty()) continue;
         if (std::isdigit(token[0])) {
-            float64 num;
+            float64 num{};
             std::istringstream{token} >> num;
             operands.push(num);
         } else if (isOperator(token[0])) {
