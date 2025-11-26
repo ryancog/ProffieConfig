@@ -525,6 +525,7 @@ optional<string> parseBladeArrays(const string& data, Config::Config& config, Lo
     vector<char> depth;
 
     while (dataStream.good()) {
+        if (Utils::skipComment(dataStream)) continue;
         const auto chr{dataStream.get()};
 
         if (reading == NONE) {
