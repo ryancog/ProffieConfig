@@ -82,7 +82,13 @@ if (CMAKE_SYSTEM_NAME STREQUAL Linux)
     #     IMPORTED_LOCATION ${FFMPEG_LIB_DIR}/libavcodec.so.61)
 
     set(WX_SHARED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-linux-shared)
-    set(WX_LIB_DIR ${WX_SHARED_DIR}/lib64)
+    if (IS_DIRECTORY ${WX_SHARED_DIR}/lib64)
+        set(WX_LIB_DIR ${WX_SHARED_DIR}/lib64)
+    elseif(IS_DIRECTORY ${WX_SHARED_DIR}/lib)
+        set(WX_LIB_DIR ${WX_SHARED_DIR}/lib)
+    else()
+        message(FATAL_ERROR "Missing lib dir")
+    endif()
     set_target_properties(wxWidgetsBase PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu-3.3.so.0)
 	set_target_properties(wxWidgetsBaseNet PROPERTIES
@@ -99,7 +105,13 @@ if (CMAKE_SYSTEM_NAME STREQUAL Linux)
 		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_gtk3u_qa-3.3.so.0)
 
     set(WX_STATIC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-linux-static)
-    set(WX_LIB_DIR ${WX_STATIC_DIR}/lib64)
+    if (IS_DIRECTORY ${WX_STATIC_DIR}/lib64)
+        set(WX_LIB_DIR ${WX_STATIC_DIR}/lib64)
+    elseif(IS_DIRECTORY ${WX_STATIC_DIR}/lib)
+        set(WX_LIB_DIR ${WX_STATIC_DIR}/lib)
+    else()
+        message(FATAL_ERROR "Missing lib dir")
+    endif()
     set_target_properties(wxWidgetsBase-static PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu-3.3.a)
 	set_target_properties(wxWidgetsBaseNet-static PROPERTIES
@@ -206,7 +218,13 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
 
     set(WX_STATIC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-win32-static)
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-        set(WX_LIB_DIR ${WX_STATIC_DIR}/lib64)
+        if (IS_DIRECTORY ${WX_STATIC_DIR}/lib64)
+            set(WX_LIB_DIR ${WX_STATIC_DIR}/lib64)
+        elseif(IS_DIRECTORY ${WX_STATIC_DIR}/lib)
+            set(WX_LIB_DIR ${WX_STATIC_DIR}/lib)
+        else()
+            message(FATAL_ERROR "Missing lib dir")
+        endif()
         set_target_properties(wxWidgetsBase-static PROPERTIES
             IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.static.a
             IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.static.a)
