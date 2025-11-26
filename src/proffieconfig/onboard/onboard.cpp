@@ -101,7 +101,7 @@ Onboard::Frame::Frame() :
     sizer->Add(buttonSizer, 0, wxEXPAND);
     sizer->AddSpacer(10);
 
-    sizer->SetMinSize(wxSize(900, 430));
+    sizer->SetMinSize(900, 430);
     SetSizerAndFit(sizer);
 
     bindEvents();
