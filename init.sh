@@ -73,7 +73,22 @@ do_with_log() {
 }
 
 patch_rpaths() {
+    switch_to_lib_dir() {
+        local LIB_DIR_1="${WX_INSTALL_PREFIX}-shared/lib64"
+        local LIB_DIR_2="${WX_INSTALL_PREFIX}-shared/lib"
+        if [[ -d $LIB_DIR_1 ]]; then
+            cd $LIB_DIR_1
+        elif [[ -d $LIB_DIR_2 ]]; then
+            cd $LIB_DIR_2
+        else
+            exit "Missing lib dir!"
+            exit 1
+        fi
+    }
+
     if [ "$TARGET_PLATFORM" == "linux" ]; then
+        switch_to_lib_dir
+
         for lib in `ls -1 | grep '.*.so.*'`; do
             if ! [ -L ${lib} ]; then
                 SONAME=`readelf -d ${lib} | grep SONAME | sed -n 's/.*\[\([^]]*\)\].*/\1/p'`
@@ -85,6 +100,8 @@ patch_rpaths() {
             fi
         done
     elif [ "$TARGET_PLATFORM" == "macOS" ]; then
+        switch_to_lib_dir
+
         # set install_name of libs correctly
         #
         # Basically it's just changing the link names of all the libs (and their dependencies) to @rpath/[name] that way
@@ -105,6 +122,8 @@ patch_rpaths() {
             fi
         done
     fi
+
+    cd ..
 }
 
 echo "Initializing 3rd party repositories..."
@@ -315,8 +334,6 @@ else
         install
 
     cd ..
-    platform_switch "${WX_INSTALL_PREFIX}-shared/lib64" "${WX_INSTALL_PREFIX}-shared/lib" ""
-    cd $SWITCH_VAL
     patch_rpaths
 fi
 cd $ROOT_DIR
