@@ -79,7 +79,7 @@ public:
         if (buttons) {
             sizer->Add(
                 CreateStdDialogButtonSizer(wxOK | wxCANCEL),
-                wxSizerFlags().Expand()
+                wxSizerFlags().Expand().Border(wxTOP | wxBOTTOM, 10)
             );
         } else {
             sizer->AddSpacer(10);
