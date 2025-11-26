@@ -30,6 +30,7 @@
 #include <windows.h>
 #include <synchapi.h>
 #else
+#include <thread>
 #include <termios.h>
 #endif
 
@@ -215,7 +216,10 @@ variant<Arduino::Result, string> Arduino::applyToBoard(
     auto& logger{Log::Context::getGlobal().createLogger("Arduino::applyToBoard()")};
 
     auto res{compile(config, prog, *logger.binfo("Compiling..."))};
-    if (auto *err = std::get_if<string>(&res)) return *err;
+    if (auto *err = std::get_if<string>(&res)) {
+        if (prog) prog->emitEvent(100, _("Done"));
+        return *err;
+    }
     const auto& compileOutput{std::get<CompileOutput>(res)};
 
 #   ifdef _WIN32
@@ -223,9 +227,9 @@ variant<Arduino::Result, string> Arduino::applyToBoard(
 #   else
     auto err{upload(boardPath, config, prog, *logger.binfo("Uploading..."))};
 #   endif
+    if (prog) prog->emitEvent(100, _("Done"));
     if (err) return *err;
 
-    if (prog) prog->emitEvent(100, _("Done"));
     logger.info("Applied Successfully");
 
     Arduino::Result ret{
@@ -239,10 +243,11 @@ variant<Arduino::Result, string> Arduino::verifyConfig(const Config::Config& con
     auto& logger{Log::Context::getGlobal().createLogger("Arduino::verifyConfig()")};
 
     auto res{compile(config, prog, *logger.binfo("Compiling..."))};
-    if (auto *err = std::get_if<string>(&res)) return *err;
-    const auto& compileOutput{std::get<CompileOutput>(res)};
-
     if (prog) prog->emitEvent(100, _("Done"));
+
+    if (auto *err = std::get_if<string>(&res)) return *err;
+
+    const auto& compileOutput{std::get<CompileOutput>(res)};
     logger.info("Verified Successfully");
 
     Arduino::Result ret{
@@ -262,14 +267,17 @@ variant<CompileOutput, string> compile(
     auto& logger{lBranch.createLogger("Arduino::compile()")};
     optional<string> err;
 
-    if (prog) prog->emitEvent(5, _("Running prechecks..."));
-    err = precheckCompile(config, *logger.binfo("Running pre-checks..."));
+    constexpr cstring PRECHK_MSG{wxTRANSLATE("Running compile prechecks...")};
+    if (prog) prog->emitEvent(5, wxGetTranslation(PRECHK_MSG));
+    err = precheckCompile(config, *logger.binfo(PRECHK_MSG));
     if (err) {
         if (prog) prog->emitEvent(100, _("Error"));
         return *err;
     }
 
-    if (prog) prog->emitEvent(10, _("Checking OS Version..."));
+    constexpr cstring OSCHK_MSG{wxTRANSLATE("Checking OS Version...")};
+    if (prog) prog->emitEvent(10, wxGetTranslation(OSCHK_MSG));
+    logger.info(OSCHK_MSG);
     const auto osVersion{config.settings.getOSVersion()};
     const auto *const versionedOS{Versions::getVersionedOS(osVersion)};
     if (osVersion == Utils::Version::invalidObject() or not versionedOS) {
@@ -295,7 +303,9 @@ variant<CompileOutput, string> compile(
     const auto osPath{Paths::os(osVersion)};
 
     if (config.propSelection != -1) {
-        if (prog) prog->emitEvent(25, _("Installing Prop File..."));
+        constexpr cstring PROPINST_MSG{wxTRANSLATE("Installing Prop File...")};
+        if (prog) prog->emitEvent(25, wxGetTranslation(PROPINST_MSG));
+        logger.info(PROPINST_MSG);
         auto [prop, reference]{config.propAndReference(config.propSelection)};
         if (not reference) {
             if (prog) prog->emitEvent(100, _("Error"));
@@ -321,12 +331,12 @@ variant<CompileOutput, string> compile(
         }
     }
 
-    constexpr cstring GENERATE_MESSAGE{wxTRANSLATE("Generating configuration file...")};
-    if (prog) prog->emitEvent(30, wxGetTranslation(GENERATE_MESSAGE));
-
     const auto configPath{
         osPath / "config" / (static_cast<string>(config.name) + Config::RAW_FILE_EXTENSION)
     };
+
+    constexpr cstring GENERATE_MESSAGE{wxTRANSLATE("Generating configuration file...")};
+    if (prog) prog->emitEvent(30, wxGetTranslation(GENERATE_MESSAGE));
     err = config.save(configPath, logger.binfo(GENERATE_MESSAGE));
     if (err) {
         if (prog) prog->emitEvent(100, _("Error"));
@@ -335,6 +345,7 @@ variant<CompileOutput, string> compile(
 
     constexpr cstring UPDATE_INO_MESSAGE{wxTRANSLATE("Updating ProffieOS file...")};
     if (prog) prog->emitEvent(35, wxGetTranslation(UPDATE_INO_MESSAGE));
+    logger.info(UPDATE_INO_MESSAGE);
     const auto inoPath{osPath / "ProffieOS.ino"};
     const auto tmpInoPath{fs::temp_directory_path() / "ProffieOS.ino"};
     auto ino{Paths::openInputFile(inoPath)};
@@ -378,8 +389,9 @@ variant<CompileOutput, string> compile(
         return _("Computer FS Error").ToStdString();
     }
 
-    constexpr cstring COMPILE_MESSAGE{"Compiling ProffieOS..."};
-    if (prog) prog->emitEvent(40, COMPILE_MESSAGE);
+    constexpr cstring COMPILE_MESSAGE{wxTRANSLATE("Compiling ProffieOS...")};
+    if (prog) prog->emitEvent(40, wxGetTranslation(COMPILE_MESSAGE));
+    logger.info(COMPILE_MESSAGE);
 
     wxString output;
     array<char, 32> buffer;
@@ -413,8 +425,7 @@ variant<CompileOutput, string> compile(
     else options = "usb=cdc";
     if (boardVersion == Config::PROFFIEBOARDV3) options +=",dosfs=sdmmc1";
     args.push_back(std::move(options));
-
-    args.push_back('"' + osPath.string() + '"');
+    args.push_back(osPath.string());
     args.emplace_back("-v");
     cli(proc, args);
 
@@ -573,41 +584,42 @@ optional<string> upload(
         }
     }
 #   else 
-    // const auto boardPath{static_cast<MainMenu*>(editor->GetParent())->boardSelect->entry()->GetStringSelection().ToStdString()};
-    // if (boardPath.find(_("BOOTLOADER").c_str()) == string::npos) {
-    //     progDialog->emitEvent(-1, "Rebooting Proffieboard...");
-    //     struct termios newtio;
-    //     auto fd = open(boardPath.c_str(), O_RDWR | O_NOCTTY);
-    //     if (fd < 0) {
-    //         _return = "Failed to connect to board for reboot.";
-    //         logger.error(_return);
-    //         return false;
-    //     }
+    if (boardPath.find(_("BOOTLOADER").c_str()) == string::npos) {
+        prog->emitEvent(-1, "Rebooting Proffieboard...");
+        struct termios newtio;
+        auto fd = open(boardPath.c_str(), O_RDWR | O_NOCTTY);
+        if (fd < 0) {
+            if (prog) prog->emitEvent(100, "Error!");
+            logger.warn("Could not open board port.");
+            return _("Board was not reachable for reboot, please try again!").ToStdString();
+        }
 
-    //     memset(&newtio, 0, sizeof(newtio));
+        memset(&newtio, 0, sizeof(newtio));
 
-    //     newtio.c_cflag = B115200 | CRTSCTS | CS8 | CLOCAL | CREAD;
-    //     newtio.c_iflag = IGNPAR;
-    //     newtio.c_oflag = (tcflag_t) NULL;
-    //     newtio.c_lflag &= ~ICANON; /* unset canonical */
-    //     newtio.c_cc[VTIME] = 1; /* 100 millis */
+        newtio.c_cflag = B115200 | CRTSCTS | CS8 | CLOCAL | CREAD;
+        newtio.c_iflag = IGNPAR;
+        newtio.c_oflag = (tcflag_t) NULL;
+        newtio.c_lflag &= ~ICANON; /* unset canonical */
+        newtio.c_cc[VTIME] = 1; /* 100 millis */
 
-    //     tcflush(fd, TCIFLUSH);
-    //     tcsetattr(fd, TCSANOW, &newtio);
+        tcflush(fd, TCIFLUSH);
+        tcsetattr(fd, TCSANOW, &newtio);
 
-    //     char buf[255];
-    //     while(read(fd, buf, 255));
+        char buf[255];
+        while(read(fd, buf, 255));
 
-    //     fsync(fd);
-    //     write(fd, "\r\n", 2);
-    //     write(fd, "\r\n", 2);
-    //     write(fd, "RebootDFU\r\n", 11);
+        fsync(fd);
+        write(fd, "\r\n", 2);
+        write(fd, "\r\n", 2);
+        write(fd, "RebootDFU\r\n", 11);
 
-    //     // Ensure everything is flushed
-    //     std::this_thread::sleep_for(50ms);
-    //     close(fd);
-    //     std::this_thread::sleep_for(5s);
-    // }
+        fsync(fd);
+
+        // Ensure everything is flushed
+        std::this_thread::sleep_for(50ms);
+        close(fd);
+        std::this_thread::sleep_for(5s);
+    }
 #   endif
 
     Process proc;
@@ -625,7 +637,7 @@ optional<string> upload(
     };
     const auto osVersion{config.settings.getOSVersion()};
     const auto osPath{Paths::os(osVersion)};
-    args.push_back('"' + osPath.string() + '"');
+    args.push_back(osPath.string());
     args.emplace_back("--fqbn");
     const auto boardVersion{
         static_cast<Config::BoardVersion>(static_cast<int32>(config.settings.board))
@@ -753,7 +765,10 @@ optional<string> ensureCoreInstalled(
     Log::Logger& logger,
     Progress *prog
 ) {
-    if (prog) prog->emitEvent(15, _("Ensuring Core Installation..."));
+    constexpr cstring MSG{wxTRANSLATE("Ensuring Core Installation...")};
+    if (prog) prog->emitEvent(15, wxGetTranslation(MSG));
+    logger.info(MSG);
+
     Process proc;
     vector<string> args{
         "core",
@@ -786,7 +801,7 @@ optional<string> ensureCoreInstalled(
 void cli(Process& proc, vector<string>& args) {
     args.emplace_back("--no-color");
     auto arduinoStr{(Paths::binaryDir() / "arduino-cli").string()};
-    proc.create(arduinoStr.c_str(), args);
+    proc.create(arduinoStr, args);
 }
 
 } // namespace
