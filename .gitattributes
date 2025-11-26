@@ -63,3 +63,12 @@ resources/bin/* filter=lfs diff=lfs merge=lfs -text
 /screenshots/old/editor-presetsstyles.png filter=lfs diff=lfs merge=lfs -text
 /screenshots/old/editor-propfile-fett263.png filter=lfs diff=lfs merge=lfs -text
 /screenshots/old/mainmenu.png filter=lfs diff=lfs merge=lfs -text
+/screenshots/blades-pixel.png filter=lfs diff=lfs merge=lfs -text
+/screenshots/blades-simple.png filter=lfs diff=lfs merge=lfs -text
+/screenshots/general.png filter=lfs diff=lfs merge=lfs -text
+/screenshots/main.png filter=lfs diff=lfs merge=lfs -text
+/screenshots/presets.png filter=lfs diff=lfs merge=lfs -text
+/screenshots/props.png filter=lfs diff=lfs merge=lfs -text
+/screenshots/serial-monitor.png filter=lfs diff=lfs merge=lfs -text
+/screenshots/versions-manager-os.png filter=lfs diff=lfs merge=lfs -text
+/screenshots/versions-manager-props.png filter=lfs diff=lfs merge=lfs -text
