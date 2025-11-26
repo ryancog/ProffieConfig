@@ -140,9 +140,3 @@ const Utils::Version& Utils::Version::invalidObject() {
     return invalidObject; 
 }
 
-bool Utils::Version::operator==(const string_view& str) const {
-    // This way is probably faster... but realistically it doesn't matter
-    return static_cast<string>(*this) == str;
-}
-
-
