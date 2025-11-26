@@ -466,6 +466,7 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
         return wxGetTranslation(BUNDLE_EXTRACT_FAIL_MSG).ToStdString();
     }
 
+    loadLocal();
     return nullopt;
 }
 
