@@ -30,7 +30,7 @@ std::mt19937_64& Crypto::randGen() {
 }
 
 string Crypto::computeHash(const filepath& path) {
-    auto inputStream{std::ifstream(path, std::ios::binary)};
+    std::ifstream inputStream{path, std::ios::binary};
     array<uint8, 32768> buffer;
 
     hash_state hashState;
