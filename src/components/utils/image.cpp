@@ -19,7 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
 #include <utility>
 
 #include <wx/bitmap.h>
@@ -144,13 +143,22 @@ wxBitmap Image::loadPNG(const string& name, wxSize size, const wxColour& color) 
     if (size.x != -1 or size.y != -1) {
         assert(size.x == -1 or size.y == -1);
         float64 scaler{};
+
         if (size.x != -1) {
             scaler = bitmap.GetLogicalWidth() / size.x;
         } else {
             scaler = bitmap.GetLogicalHeight() / size.y;
         }
 
+#       ifdef _WIN32
+        auto img{bitmap.ConvertToImage()};
+        bitmap = img.Scale(
+            static_cast<int32>(bitmap.GetWidth() / scaler),
+            static_cast<int32>(bitmap.GetHeight() / scaler)
+        );
+#       else
         bitmap.SetScaleFactor(bitmap.GetScaleFactor() * scaler);
+#       endif
     }
 
     if (color.IsOk()) {
@@ -163,9 +171,17 @@ wxBitmap Image::loadPNG(const string& name, wxSize size, const wxColour& color) 
 
             for (auto xIdx{0}; xIdx < data.GetWidth(); ++xIdx, ++iter) {
                 if (iter.Alpha() > 0) {
+#                   ifdef _WIN32
+                    // Idk man windows is funky with its bitmaps.
+                    auto alphaScale{static_cast<float64>(iter.Alpha()) / 0xFF};
+                    iter.Red() = static_cast<uint8>(color.Red() * alphaScale);
+                    iter.Green() = static_cast<uint8>(color.Green() * alphaScale);
+                    iter.Blue() = static_cast<uint8>(color.Blue() * alphaScale);
+#                   else
                     iter.Red() = color.Red();
                     iter.Green() = color.Green();
                     iter.Blue() = color.Blue();
+#                   endif
                 }
             }
 
