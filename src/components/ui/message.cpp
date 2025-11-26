@@ -21,6 +21,9 @@
 
 #include <wx/msgdlg.h>
 #include <wx/richmsgdlg.h>
+#ifdef __WXMSW__
+#include <wx/generic/richmsgdlgg.h>
+#endif
 
 int32 PCUI::showMessage(const wxString& msg, const wxString& caption, int64 style, wxWindow *parent) {
 #   ifdef __WXMSW__
@@ -50,7 +53,11 @@ PCUI::HideableInfo PCUI::showHideablePrompt(
     const wxString& okText,
     const wxString& cancelText
 ) {
-    wxRichMessageDialog dlg{parent, msg, caption, style};
+#   ifdef __WXMSW__
+    wxGenericRichMessageDialog dlg{parent, msg, caption, static_cast<long>(style)};
+#   else
+    wxRichMessageDialog dlg{parent, msg, caption, static_cast<long>(style)};
+#   endif
     dlg.ShowCheckBox(_("Do Not Show Again"));
     dlg.SetOKCancelLabels(
         okText.IsEmpty() ? wxMessageDialogBase::ButtonLabel{wxID_OK} : okText,
