@@ -38,6 +38,7 @@ Frame::Frame(wxWindow *parent,
              const wxSize& size,
              int32_t style,
              const wxString& name) {
+    SetDoubleBuffered(true);
     Create(parent, winID, title, pos, size, style, name);
 
 #	ifdef __WIN32__
@@ -55,11 +56,9 @@ Frame::Frame(wxWindow *parent,
             DWMWINDOWATTRIBUTE::DWMWA_USE_IMMERSIVE_DARK_MODE,
             &useDarkMode,
             sizeof(DWORD)
-            );
+        );
     });
 #	endif
-
-    SetDoubleBuffered(true);
 }
 
 Frame::~Frame() {
