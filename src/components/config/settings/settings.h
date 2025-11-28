@@ -193,6 +193,7 @@ struct CONFIG_EXPORT Settings {
     // Do NOT set choices manually
     // Done via Config::refreshVersions
     PCUI::ChoiceData osVersion;
+    vector<Utils::Version> osVersionMap;
 
     [[nodiscard]] Utils::Version getOSVersion() const;
 

@@ -33,7 +33,6 @@
 #include "utils/string.h"
 #include "utils/version.h"
 #include "versions/prop.h"
-#include "versions/versions.h"
 
 namespace {
 
@@ -242,10 +241,10 @@ void parseTop(std::istream& file, Config::Config& config) {
                 config.settings.webUSB = true;
             } else if (key == OS_VERSION_STR) {
                 Utils::Version version{value};
-                if (version.err) continue;
-                const auto& osVersions{Versions::getOSVersions()};
-                for (auto idx{0}; idx < osVersions.size(); ++idx) {
-                    if (version == osVersions[idx].verNum) {
+                if (not version) continue;
+                auto& osVersionMap{config.settings.osVersionMap};
+                for (auto idx{0}; idx < osVersionMap.size(); ++idx) {
+                    if (version == osVersionMap[idx]) {
                         config.settings.osVersion = idx;
                         break;
                     }
