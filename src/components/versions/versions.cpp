@@ -244,10 +244,10 @@ void Versions::loadLocal() {
 
             auto *versionedPropPtr{versionedProp.get()};
             version->setUpdateHandler([versionedPropPtr](uint32 id) {
-                    if (id != PCUI::VersionData::ID_VALUE) return;
+                if (id != PCUI::VersionData::ID_VALUE) return;
 
-                    versionedPropPtr->saveInfo();
-                    });
+                versionedPropPtr->saveInfo();
+            });
             supportedVersions.push_back(std::move(version));
         }
 
