@@ -136,12 +136,17 @@ PCUI::VersionData::VersionData() {
         auto rawValue{static_cast<string>(mTag)};
         auto insertionPoint{mTag.getInsertionPoint()};
         uint32 numTrimmed{};
-        Utils::trimUnsafe(rawValue, &numTrimmed, insertionPoint);
+        Utils::trimUnsafe(
+            rawValue,
+            &numTrimmed,
+            insertionPoint
+        );
 
-        if (numTrimmed == 0) return;
+        if (numTrimmed != 0) {
+            mTag = std::move(rawValue);
+            mTag.setInsertionPoint(insertionPoint - numTrimmed);
+        }
 
-        mTag = std::move(rawValue);
-        mTag.setInsertionPoint(insertionPoint - numTrimmed);
         notify(ID_VALUE);
     });
 
