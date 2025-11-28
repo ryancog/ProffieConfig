@@ -333,6 +333,7 @@ optional<string> parsePresetArray(const string& data, Config::PresetArray& array
     vector<string> depthBuffer;
     string commentBuffer;
     string styleBuffer;
+    string tmp;
 
     const auto finishStyleReading{[&array, &styleBuffer, &commentBuffer]() {
         Utils::trimSurroundingWhitespace(styleBuffer);
@@ -399,6 +400,7 @@ optional<string> parsePresetArray(const string& data, Config::PresetArray& array
                 if (chr == '"') {
                     array.presets().back()->name.clear();
                     reading = NAME;
+                    tmp.clear();
                     continue;
                 }
                 if (chr == ',') {
@@ -495,11 +497,12 @@ optional<string> parsePresetArray(const string& data, Config::PresetArray& array
             const auto& preset{array.presets().back()};
             if (chr == '"' or chr == '}') {
                 reading = NONE;
-                if (preset->name.empty()) preset->name = "preset" + std::to_string(array.presets().size());
+                if (tmp.empty()) preset->name = "preset" + std::to_string(array.presets().size());
+                else preset->name = std::move(tmp);
                 continue;
             }
             
-            preset->name += static_cast<char>(chr);
+            tmp += static_cast<char>(chr);
         }
     }
 
