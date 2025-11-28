@@ -53,6 +53,14 @@ std::map<Utils::Version, Versions::VersionedProp> propDefaultVersionMap;
 
 } // namespace
 
+Utils::Version Versions::getDefaultCoreVersion() {
+    return {3, 6};
+}
+
+Utils::Version Versions::getDefaultOSVersion() {
+    return {7, 15};
+}
+
 Versions::VersionedOS::VersionedOS() : coreVersion{Utils::Version::invalidObject()} {}
 
 void Versions::VersionedProp::addVersion() {
@@ -169,6 +177,12 @@ void Versions::loadLocal() {
 
         osVersions.push_back(std::move(os));
     }
+    std::ranges::sort(
+        osVersions,
+        [](const VersionedOS& lhs, const VersionedOS& rhs) -> bool {
+            return lhs.verNum < rhs.verNum;
+        }
+    );
 
     logger.info("Loading Props...");
     // Migrated or should be removed
@@ -256,6 +270,13 @@ void Versions::loadLocal() {
 
         props.push_back(std::move(versionedProp));
     }
+    using PropElement = std::unique_ptr<VersionedProp>;
+    std::ranges::sort(
+        props,
+        [](const PropElement& lhs, const PropElement& rhs) -> bool {
+            return lhs->name < rhs->name;
+        }
+    );
 
     logger.debug("Generating prop version map...");
     propVersionMap.clear();
@@ -294,8 +315,6 @@ vector<Versions::VersionedProp *> Versions::propsForVersion(const Utils::Version
 optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
     auto& logger{Log::Branch::optCreateLogger("Versions::resetToDefault()", lBranch)};
 
-    const Utils::Version osVersion{7, 15};
-
     std::error_code err;
     if (purge) {
         logger.info("Purging versions...");
@@ -310,7 +329,7 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
     logger.info("Downloading ProffieOS...");
     auto uri{wxURI{
         Paths::remoteAssets() + "/ProffieOS/" +
-            static_cast<string>(osVersion) + ".zip"
+        static_cast<string>(getDefaultOSVersion()) + ".zip"
     }.BuildURI()};
     auto proffieOSRequest{wxWebSessionSync::GetDefault().CreateRequest(uri)};
     auto requestResult{proffieOSRequest.Execute()};
@@ -329,7 +348,7 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
     std::unique_ptr<wxZipEntry> entry;
     constexpr cstring OS_EXTRACT_FAIL_MSG{wxTRANSLATE("Failed Extracting ProffieOS ZIP")};
     while (entry.reset(osZipStream.GetNextEntry()), entry) {
-        auto filepath{Paths::os(osVersion) / entry->GetName().ToStdString()};
+        auto filepath{Paths::os(getDefaultOSVersion()) / entry->GetName().ToStdString()};
         fs::remove_all(filepath, err);
         if (filepath.string().find("__MACOSX") != string::npos) continue;
 
@@ -360,15 +379,6 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
         }
 
         osZipStream.Read(outStream);
-
-        // TODO
-        // auto permissionBits{entry->GetMode()};
-        // fs::permissions(
-        //     filepath,
-        //     fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
-        //     fs::perm_options::add,
-        //     err
-        // );
     }
 
     if (osZipStream.GetLastError() != wxSTREAM_EOF) {
@@ -398,7 +408,7 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
 
         auto bundleStrings{PConf::valueAsList(entry->value)};
         for (const auto& bundleString : bundleStrings) {
-            if (osVersion == Utils::Version{bundleString}) {
+            if (getDefaultOSVersion() == Utils::Version{bundleString}) {
                 propBundleExistsForVersion = true;
                 break;
             }
@@ -414,7 +424,7 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
 
     uri = wxURI{
         Paths::remoteAssets() + "/props/bundles/" +
-            static_cast<string>(osVersion) + ".zip"
+            static_cast<string>(getDefaultOSVersion()) + ".zip"
     }.BuildURI();
     auto propBundleRequest{wxWebSessionSync::GetDefault().CreateRequest(uri)};
     requestResult = propBundleRequest.Execute();

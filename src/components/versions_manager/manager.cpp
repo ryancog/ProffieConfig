@@ -595,7 +595,11 @@ void updateOSSelection() {
         const auto& versionedOS{Versions::getOSVersions()[selection]};
 
         const auto defaultStr{_("Default")};
-        const auto coreVersion{versionedOS.coreVersion.err ? defaultStr + " (" + Versions::DEFAULT_CORE_VERSION + ')' : static_cast<string>(versionedOS.coreVersion)};
+        const auto coreVersion{
+            versionedOS.coreVersion.err
+                ? defaultStr + " (" + static_cast<string>(Versions::getDefaultCoreVersion()) + ')'
+                : static_cast<string>(versionedOS.coreVersion)
+        };
         const auto coreURL{versionedOS.coreURL.empty() ? defaultStr : versionedOS.coreURL};
         const auto coreBoardV1{versionedOS.coreBoardV1.empty() ? defaultStr : versionedOS.coreBoardV1};
         const auto coreBoardV2{versionedOS.coreBoardV2.empty() ? defaultStr : versionedOS.coreBoardV2};

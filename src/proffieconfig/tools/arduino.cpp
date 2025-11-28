@@ -287,12 +287,12 @@ variant<CompileOutput, string> compile(
     }
 
     err = ensureCoreInstalled(
-        versionedOS->coreVersion.err ?
-            Versions::DEFAULT_CORE_VERSION :
-            static_cast<string>(versionedOS->coreVersion),
-        not versionedOS->coreURL.empty() ?
-            versionedOS->coreURL :
-            DEFAULT_CORE_URL,
+        versionedOS->coreVersion.err
+            ? static_cast<string>(Versions::getDefaultCoreVersion())
+            : static_cast<string>(versionedOS->coreVersion),
+        not versionedOS->coreURL.empty()
+            ? versionedOS->coreURL
+            : DEFAULT_CORE_URL,
         logger,
         prog
     );
@@ -810,7 +810,7 @@ bool Arduino::ensureDefaultCoreInstalled(Log::Branch *lBranch) {
     auto& logger{Log::Branch::optCreateLogger("Arduino::ensureDefaultCoreInstalled()", lBranch)};
 
     auto err{ensureCoreInstalled(
-        Versions::DEFAULT_CORE_VERSION,
+        static_cast<string>(Versions::getDefaultCoreVersion()),
         DEFAULT_CORE_URL,
         logger
     )};
@@ -828,7 +828,7 @@ bool Arduino::runDriverInstallation(Log::Branch *lBranch) {
 
     const auto rulesPath{
         Paths::user() / ".arduino15" / "packages" / "proffieboard" / "hardware" / "stm32l4" /
-        Versions::DEFAULT_CORE_VERSION / "drivers" / "linux"
+        static_cast<string>(Versions::getDefaultCoreVersion()) / "drivers" / "linux"
     };
     vector<string> args;
     args.emplace_back("cp");

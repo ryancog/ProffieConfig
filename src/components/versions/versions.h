@@ -34,7 +34,9 @@ namespace Versions {
 constexpr cstring INFO_FILE_STR{"info.pconf"};
 constexpr cstring DATA_FILE_STR{"data.pconf"};
 constexpr cstring HEADER_FILE_STR{"header.h"};
-constexpr cstring DEFAULT_CORE_VERSION{"3.6"};
+
+VERSIONS_EXPORT Utils::Version getDefaultCoreVersion();
+VERSIONS_EXPORT Utils::Version getDefaultOSVersion();
 
 struct VERSIONS_EXPORT VersionedOS {
     VersionedOS();
