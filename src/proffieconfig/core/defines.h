@@ -24,4 +24,10 @@ static constexpr auto COPYRIGHT_NOTICE{
     "related to ProffieOS, created by Fredrik Hubinette."
 };
 
+#ifdef __WXOSX__
 #define SMALLBUTTONSIZE wxSize(30, 20)
+#elif defined(__WXGTK__)
+#define SMALLBUTTONSIZE wxSize(30, 35)
+#elif defined(__WXMSW__)
+#define SMALLBUTTONSIZE wxSize(30, 25)
+#endif
