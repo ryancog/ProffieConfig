@@ -42,7 +42,8 @@ public:
     wxSizer *sizer() { return mSizer; }
     wxWindow *childParent() { return mPanel; }
 
-    [[nodiscard]] wxSize DoGetBestClientSize() const override;
+    bool Layout() final;
+    [[nodiscard]] wxSize DoGetBestClientSize() const final;
 
     // NOLINTBEGIN(readability-identifier-naming)
     wxSizerItem *Add(wxWindow *, const wxSizerFlags& = {});
