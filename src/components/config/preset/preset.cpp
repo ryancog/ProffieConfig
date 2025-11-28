@@ -34,7 +34,7 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
 
         auto rawValue{static_cast<string>(name)};
         uint32 numTrimmed{};
-        auto insertionPoint{name.getInsertionPoint()};
+        const auto insertionPoint{name.getInsertionPoint()};
         Utils::trimUnsafe(
             rawValue,
             &numTrimmed,
@@ -42,9 +42,24 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
             "\\"
         );
         if (rawValue.length() > 20) rawValue.resize(20);
-        // Only allow \n inserted by control or programmatically.
-        if (not rawValue.empty() and rawValue.back() == '\\') {
-            rawValue.pop_back();
+
+        // Only allow \n
+        uint32 idx{0};
+        for (auto iter{rawValue.begin()}; iter != rawValue.end();) {
+            if (
+                    *iter == '\\' and
+                    (
+                        std::next(iter) == rawValue.end() or
+                        *std::next(iter) != 'n'
+                    )
+               ) {
+                iter = rawValue.erase(iter);
+                if (insertionPoint > idx) ++numTrimmed;
+                continue;
+            }
+
+            ++iter;
+            ++idx;
         }
 
         if (rawValue == static_cast<string>(name)) {
