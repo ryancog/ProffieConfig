@@ -56,6 +56,13 @@ Config::Config::Config() :
 
     refreshOSVersions();
     refreshPropVersions();
+
+    for (auto idx{0}; idx < settings.osVersionMap.size(); ++idx) {
+        if (settings.osVersionMap[idx] == Versions::getDefaultOSVersion()) {
+            settings.osVersion = idx;
+            break;
+        }
+    }
 }
 
 void Config::Config::refreshOSVersions() {
