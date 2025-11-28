@@ -125,11 +125,12 @@ void Onboard::Frame::bindEvents() {
                 this
             )};
             if (res != wxYES) {
-                if (AppState::doneWithFirstRun) {
-                    MainMenu::instance = new MainMenu;
-                }
                 event.Veto();
                 return;
+            }
+
+            if (AppState::doneWithFirstRun) {
+                MainMenu::instance = new MainMenu;
             }
         }
         event.Skip();
