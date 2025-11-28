@@ -454,35 +454,51 @@ variant<CompileOutput, string> compile(
     CompileOutput ret;
 
 #   ifdef _WIN32
-    constexpr string_view DFU_STRING{"ProffieOS.ino.dfu"};
-    constexpr string_view DFU_C_STRING{"C:\\"};
-    size_t dfuPos{};
-    size_t dfuCPos{};
+    constexpr string_view DFU_STR{"ProffieOS.ino.dfu"};
+    constexpr string_view DFU_SUFFIX_STR{"dfu-suffix.exe"};
+    constexpr string_view ROOT_C_STR{"C:\\"};
+    constexpr cstring UTIL_ERR{wxTRANSLATE("Failed to find required utilities")};
+    size_t dfuPos{compileOutput.rfind(DFU_STR)};
+    size_t dfuCPos{compileOutput.rfind(ROOT_C_STR, dfuPos)};
+    size_t dfuSuffixPos{compileOutput.rfind(DFU_SUFFIX_STR)};
+    size_t dfuSuffixCPos{compileOutput.rfind(ROOT_C_STR, dfuSuffixPos)};
     if (
-            (dfuPos = compileOutput.find(DFU_STRING)) != string::npos and
-            (dfuCPos = compileOutput.find(DFU_C_STRING)) != string::npos and
-            compileOutput.find("stm32l4") != string::npos
+            dfuPos != string::npos and
+            dfuCPos != string::npos and
+            dfuSuffixPos != string::npos and
+            dfuSuffixCPos != string::npos
        ) {
         logger.debug("Parsing utility paths...");
         array<char, MAX_PATH> shortPath;
+        DWORD res{};
 
-        const auto dfuLongPath{compileOutput.substr(dfuCPos, dfuPos - dfuCPos + DFU_STRING.length())};
-        GetShortPathNameA(dfuLongPath.c_str(), shortPath.data(), shortPath.size());
+        const auto dfuLongPath{compileOutput.substr(dfuCPos, dfuPos - dfuCPos + DFU_STR.length())};
+        res = GetShortPathNameA(dfuLongPath.c_str(), shortPath.data(), shortPath.size());
+        if (res == 0) {
+            logger.error("Failed to find dfu util in output: " + compileOutput);
+            if (prog) prog->emitEvent(100, _("Error"));
+            return wxGetTranslation(UTIL_ERR).ToStdString();
+        }
+
         ret.tool1 = shortPath.data();
         logger.debug("Parsed dfu file: " + ret.tool1);
 
-        const auto dfuSuffixPos{compileOutput.rfind("//dfu-suffix.exe")};
-        const auto dfuSuffixCPos{compileOutput.rfind(DFU_C_STRING, dfuSuffixPos)};
         const auto dfuSuffixLongPath{compileOutput.substr(dfuSuffixCPos, dfuSuffixPos - dfuSuffixCPos)};
-        GetShortPathNameA(dfuSuffixLongPath.c_str(), shortPath.data(), shortPath.size());
-        ret.tool2 = string{shortPath.data()} + "\\stm32l4-upload.bat";
+        res = GetShortPathNameA(dfuSuffixLongPath.c_str(), shortPath.data(), shortPath.size());
+        if (res == 0) {
+            logger.error("Failed to find dfu suffix in output: " + compileOutput);
+            if (prog) prog->emitEvent(100, _("Error"));
+            return wxGetTranslation(UTIL_ERR).ToStdString();
+        }
+
+        ret.tool2 = string{shortPath.data()} + "stm32l4-upload.bat";
         logger.debug("Parsed upload file: " + ret.tool2);
     }
 
     if (ret.tool1.empty() or ret.tool2.empty()) {
         logger.error("Failed to find utilities in output: " + compileOutput);
         if (prog) prog->emitEvent(100, _("Error"));
-        return _("Failed to find required utilities").ToStdString();
+        return wxGetTranslation(UTIL_ERR).ToStdString();
     }
 # 	endif
 
@@ -630,7 +646,7 @@ optional<string> upload(
         "0x6668",
         compileOutput.tool1
     };
-    proc.create(compileOutput.tool2.c_str(), args);
+    proc.create(compileOutput.tool2, args);
 #   else
     vector<string> args{
         "upload",
