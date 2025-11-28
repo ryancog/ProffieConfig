@@ -91,54 +91,50 @@ template<typename STRING>
 constexpr void trimUnsafe(
     STRING& str,
     uint32 *numTrimmed = nullptr,
-    uint32 countTrimIndex = std::numeric_limits<uint32>::max(),
+    const uint32 countTrimIndex = std::numeric_limits<uint32>::max(),
     string_view moreSafe = {},
     bool allowNum = false
 ) {
     if (numTrimmed) *numTrimmed = 0;
 
-    auto checkIllegal{[numTrimmed, &countTrimIndex, moreSafe](char chr) -> bool {
-        if (std::isalnum(chr)) return false;
-        if (chr == '_') return false;
-        if (moreSafe.find(chr) != std::string::npos) return false;
-
-        if (numTrimmed and countTrimIndex > 0) {
-            ++*numTrimmed;
-            --countTrimIndex;
-        }
-        return true;
-    }};
-
     if (not allowNum) {
         while (not str.empty() and std::isdigit(str[0])) {
             if (numTrimmed and countTrimIndex > 0) {
                 ++*numTrimmed;
-                --countTrimIndex;
             }
             str.erase(0, 1);
         }
-    } else {
-        if (not str.empty() and std::isdigit(str[0])) {
-            auto isNotDigit{[numTrimmed, &countTrimIndex](char chr) {
-                if (std::isdigit(chr)) return false;
-                if (numTrimmed and countTrimIndex > 0) {
-                    ++*numTrimmed;
-                    --countTrimIndex;
-                }
-                return true;
-            }};
-            str.erase(
-                std::remove_if(str.begin(), str.end(), isNotDigit),
-                str.end()
-            );
-            return;
+    } else if (not str.empty() and std::isdigit(str[0])) {
+        uint32 idx{1};
+        auto iter{std::next(str.begin())};
+        while (iter != str.end()) {
+            if (not std::isdigit(*iter)) {
+                if (numTrimmed and countTrimIndex > idx) ++*numTrimmed;
+                iter = str.erase(iter);
+                continue;
+            }
+
+            ++iter;
+            ++idx;
         }
     }
 
-    str.erase(
-        std::remove_if(str.begin(), str.end(), checkIllegal),
-        str.end()
-    );
+    uint32 idx{0};
+    auto iter{str.begin()};
+    while (iter != str.end()) {
+        if (
+                not std::isalnum(*iter) and
+                *iter != '_' and
+                moreSafe.find(*iter) == STRING::npos
+           ) {
+            if (numTrimmed and countTrimIndex > idx) ++*numTrimmed;
+            iter = str.erase(iter);
+            continue;
+        }
+
+        ++iter;
+        ++idx;
+    }
 };
 
 /**
@@ -152,7 +148,7 @@ template<typename STRING>
 constexpr void trimForNumeric(
     STRING& str,
     uint32 *numTrimmed = nullptr,
-    uint32 countTrimIndex = std::numeric_limits<uint32>::max()
+    const uint32 countTrimIndex = std::numeric_limits<uint32>::max()
 ) {
     if (numTrimmed) *numTrimmed = 0;
 
@@ -160,26 +156,27 @@ constexpr void trimForNumeric(
     if (str.size() == 1 and str[0] == '0') return;
 
     bool foundNonZero{false};
-    auto checkIllegal{[numTrimmed, &countTrimIndex, &foundNonZero](char chr) -> bool {
-        if (std::isdigit(chr)) {
-            if (foundNonZero) return false;
-            if (not foundNonZero and chr != '0') {
-                foundNonZero = true;
-                return false;
+    uint32 idx{0};
+    auto iter{str.begin()};
+    while (iter != str.end()) {
+        if (not std::isdigit(*iter)) {
+            if (numTrimmed and countTrimIndex > idx) ++*numTrimmed;
+            iter = str.erase(iter);
+            continue;
+        }
+
+        if (not foundNonZero) {
+            if (*iter == '0') {
+                if (numTrimmed and countTrimIndex > idx) ++*numTrimmed;
+                iter = str.erase(iter);
+                continue;
             }
+            foundNonZero = true;
         }
 
-        if (numTrimmed and countTrimIndex > 0) {
-            ++*numTrimmed;
-            --countTrimIndex;
-        }
-        return true;
-    }};
-
-    str.erase(
-        std::remove_if(str.begin(), str.end(), checkIllegal),
-        str.end()
-    );
+        ++iter;
+        ++idx;
+    }
 };
 
 /**
