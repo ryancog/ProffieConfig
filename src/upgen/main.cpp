@@ -951,7 +951,7 @@ void UpGen::generateNewManifest(const vector<Message>& messages, const Data& dat
         auto itemSect{PConf::Section::create(itemTypeToStr(id.type), id.name)};
 
         if (item.hidden) itemSect->entries.emplace_back(PConf::Entry::create("HIDDEN"));
-        if (item.deprecated) itemSect->entries.emplace_back(PConf::Entry::create("HIDDEN"));
+        if (item.deprecated) itemSect->entries.emplace_back(PConf::Entry::create("DEPRECATED"));
         if (item.linuxPath) itemSect->entries.emplace_back(PConf::Entry::create(PATH_KEY_LINUX, item.linuxPath->string()));
         if (item.macOSPath) itemSect->entries.emplace_back(PConf::Entry::create(PATH_KEY_MACOS, item.macOSPath->string()));
         if (item.win32Path) itemSect->entries.emplace_back(PConf::Entry::create(PATH_KEY_WIN32, item.win32Path->string()));
