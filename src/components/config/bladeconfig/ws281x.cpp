@@ -61,8 +61,6 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         if (&selectedBlade.ws281x() != &mParent) return;
 
         mConfig.bladeArrays.visualizerData.notify();
-        // TODO: fix Notifier::Show so this isn't needed
-        // although in this case for the animation it's nice enough
         mConfig.bladeArrays.notifyData.notify(BladeArrays::ID_VISUAL_UPDATE);
     });
     start.setUpdateHandler([this](uint32 id) {

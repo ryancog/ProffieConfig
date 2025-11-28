@@ -1,4 +1,5 @@
 #include "static_box.h"
+#include "wx/time.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -64,6 +65,13 @@ PCUI::StaticBox::StaticBox(wxOrientation orient, wxWindow *parent, const wxStrin
         mPanel->SetSize(pos.x, pos.y, size.x, size.y);
         evt.Skip();
     });
+
+    SetAutoLayout(true);
+}
+
+bool PCUI::StaticBox::Layout() {
+    mPanel->Layout();
+    return true;
 }
 
 wxSize PCUI::StaticBox::DoGetBestClientSize() const {
