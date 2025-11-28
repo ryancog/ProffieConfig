@@ -55,14 +55,15 @@ Config::Config::Config() :
     });
 
     refreshOSVersions();
-    refreshPropVersions();
-
     for (auto idx{0}; idx < settings.osVersionMap.size(); ++idx) {
         if (settings.osVersionMap[idx] == Versions::getDefaultOSVersion()) {
             settings.osVersion = idx;
             break;
         }
     }
+
+    refreshPropVersions();
+    processCustomToPropOptions();
 }
 
 void Config::Config::refreshOSVersions() {
@@ -160,6 +161,60 @@ void Config::Config::refreshPropVersions() {
 
     propNotifyData.notify(ID_PROPUPDATE);
     propSelection.setChoices(std::move(choices));
+}
+
+void Config::Config::processCustomToPropOptions() {
+    if (propSelection == -1) return;
+
+    const auto& dataMap{prop(propSelection).dataMap()};
+    const auto& customOpts{settings.customOptions()};
+    for (auto idx{0}; idx < customOpts.size(); ++idx) {
+        auto& opt{settings.customOption(idx)};
+
+        auto dataIter{dataMap.find(opt.define)};
+        if (dataIter == dataMap.end()) continue;
+
+        auto valStr{static_cast<string>(opt.value)};
+        switch (dataIter->second->dataType) {
+            case Versions::PropDataType::TOGGLE:
+                {
+                    auto *toggle{static_cast<Versions::PropToggle *>(
+                            dataIter->second
+                            )};
+                    toggle->value.setValue(true);
+                    break;
+                }
+            case Versions::PropDataType::SELECTION:
+                {
+                    auto *selection{static_cast<Versions::PropSelection *>(
+                            dataIter->second
+                            )};
+                    selection->select();
+                    break;
+                }
+            case Versions::PropDataType::NUMERIC:
+                {
+                    auto *numeric{static_cast<Versions::PropNumeric *>(
+                            dataIter->second
+                            )};
+                    auto val{strtol(valStr.c_str(), nullptr, 10)};
+                    numeric->value.setValue(static_cast<int32>(val));
+                    break;
+                }
+            case Versions::PropDataType::DECIMAL:
+                {
+                    auto *decimal{static_cast<Versions::PropDecimal *>(
+                            dataIter->second
+                            )};
+                    auto val{strtod(valStr.c_str(), nullptr)};
+                    decimal->value.setValue(val);
+                    break;
+                }
+        }
+
+        settings.removeCustomOption(idx);
+        --idx;
+    }
 }
 
 void Config::Config::rename(const string& newName) {

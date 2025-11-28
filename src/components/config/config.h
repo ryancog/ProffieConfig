@@ -90,6 +90,11 @@ struct CONFIG_EXPORT Config {
     void refreshOSVersions();
     void refreshPropVersions();
 
+    /**
+     * Try to map custom options to prop options
+     */
+    void processCustomToPropOptions();
+
     void rename(const string& newName);
 
     [[nodiscard]] bool isSaved() const;
