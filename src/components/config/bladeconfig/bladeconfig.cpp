@@ -29,8 +29,13 @@
 Config::Blade::Blade(Config& config) :
     mConfig{config}, mPixelBlade(config) {
     type.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::NotifyReceiver::ID_REBOUND and id != type.ID_SELECTION) return;
-        if (id == type.ID_SELECTION) mConfig.presetArrays.syncStyleDisplay();
+        if (
+                id != PCUI::NotifyReceiver::ID_REBOUND and
+                id != PCUI::ChoiceData::ID_SELECTION
+           ) return;
+        if (id == PCUI::ChoiceData::ID_SELECTION) {
+            mConfig.presetArrays.syncStyleDisplay();
+        }
 
         auto arraySelection{static_cast<int32>(mConfig.bladeArrays.arraySelection)};
         if (arraySelection != -1) {
@@ -67,15 +72,14 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
     bladeSelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
 
     name.setUpdateHandler([this](uint32 id) {
-        if (id != name.ID_VALUE) return;
+        if (id != PCUI::TextData::ID_VALUE) return;
 
         auto nameValue{static_cast<string>(name)};
         auto insertionPoint{name.getInsertionPoint()};
-        uint32 numTrimmed;
+        uint32 numTrimmed{};
         Utils::trimUnsafe(nameValue, &numTrimmed, insertionPoint);
-        std::transform(
-            nameValue.begin(),
-            nameValue.end(),
+        std::ranges::transform(
+            nameValue,
             nameValue.begin(),
             [](unsigned char chr){ return std::tolower(chr); }
         );
@@ -111,7 +115,7 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
     });
 
     id.setUpdateHandler([this](uint32 id) {
-        if (id != this->id.ID_VALUE) return;
+        if (id != PCUI::NumericData::ID_VALUE) return;
 
         notifyData.notify();
         if (
@@ -126,14 +130,14 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
     });
 
     noBladeID.setUpdateHandler([this](uint32 id) {
-        if (id != noBladeID.ID_VALUE) return;
+        if (id != PCUI::ToggleData::ID_VALUE) return;
 
         if (not noBladeID and this->id == NO_BLADE) noBladeID = true;
         if (noBladeID) this->id = NO_BLADE;
     });
 
     presetArray.setUpdateHandler([this](uint32 id) {
-        if (id != presetArray.ID_SELECTION) return;
+        if (id != PCUI::ChoiceData::ID_SELECTION) return;
 
         notifyData.notify();
         if (
@@ -146,7 +150,10 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
     });
 
     bladeSelection.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::NotifyReceiver::ID_REBOUND and id != bladeSelection.ID_SELECTION) return;
+        if (
+                id != PCUI::NotifyReceiver::ID_REBOUND and
+                id != PCUI::ChoiceData::ID_SELECTION
+           ) return;
 
         if (mConfig.bladeArrays.arraySelection == -1) return;
         auto& bladeArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
