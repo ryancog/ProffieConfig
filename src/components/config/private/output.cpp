@@ -278,8 +278,9 @@ void outputTopGeneral(std::ostream& outFile, const Config::Config& config) {
         outputOpt(outFile, ENABLE_WEBUSB_STR);
     }
 
-    Utils::Version osVersion{static_cast<string>(config.settings.osVersion)};
-    if (not osVersion.err) outputOpt<string>(outFile, OS_VERSION_STR, osVersion);
+    Utils::Version osVersion{config.settings.osVersionMap[config.settings.osVersion]};
+    if (osVersion) outputOpt<string>(outFile, OS_VERSION_STR, osVersion);
+
     outFile << INCLUDE_STR << BOARD_STRS[config.settings.board] << '\n';
 
     uint32 requiredLedsPerStrip{0};

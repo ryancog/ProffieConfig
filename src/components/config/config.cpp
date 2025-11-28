@@ -62,14 +62,21 @@ void Config::Config::refreshOSVersions() {
     auto osVersions{Versions::getOSVersions()};
 
     vector<string> osChoices;
+    vector<Utils::Version> osVersionMap;
     osChoices.reserve(osVersions.size() + 1);
+    osVersionMap.reserve(osVersions.size() + 1);
+
     osChoices.push_back(_("No OS Selected").ToStdString());
+    osVersionMap.emplace_back(Utils::Version::invalidObject());
+
     for (auto& osVersion : osVersions) {
         auto versionStr{static_cast<string>(osVersion.verNum)};
         osChoices.push_back(wxString::Format(_("OS v%s"), std::move(versionStr)).ToStdString());
+        osVersionMap.push_back(osVersion.verNum);
     }
 
     settings.osVersion.setChoices(std::move(osChoices));
+    settings.osVersionMap = std::move(osVersionMap);
 }
 
 void Config::Config::refreshPropVersions() {
