@@ -203,12 +203,7 @@ void PCUI::Text::onModify(wxCommandEvent& evt) {
 }
 
 void PCUI::Text::onModifySecondary(wxCommandEvent& evt) {
-    if (mInsertNewline) {
-        auto newString{pControl->GetValue() + "\\n"};
-        pControl->ChangeValue(newString);
-        pControl->SetInsertionPointEnd();
-        evt.SetString(newString);
-    }
-    onModify(evt);
+    if (mInsertNewline) pControl->WriteText("\\n");
+    else onModify(evt);
 }
 
