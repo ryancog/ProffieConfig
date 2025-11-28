@@ -38,7 +38,9 @@ Frame::Frame(wxWindow *parent,
              const wxSize& size,
              int32_t style,
              const wxString& name) {
+#   ifdef __WXMSW__
     SetDoubleBuffered(true);
+#   endif
     Create(parent, winID, title, pos, size, style, name);
 
 #	ifdef __WIN32__
