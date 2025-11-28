@@ -444,6 +444,7 @@ void bindEvents() {
         if (not confirm) return;
 
         Versions::resetToDefault(res == FULL_RESET);
+        reloadFromDisk();
     }, ID_Reset);
 }
 
