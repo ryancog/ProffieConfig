@@ -344,15 +344,18 @@ wxSizer *BladesPage::createBladeSelect() {
     auto *bladeSelectSizer{new wxBoxSizer(wxVERTICAL)};
     bladeSelectSizer->SetMinSize(200, -1);
 
+    auto *arraySectSizer{new PCUI::StaticBox(
+        wxVERTICAL, this, _("Blade Array")
+    )};
+
     auto *arraySizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *arraySelection{new PCUI::Choice(
-        this,
-        config.bladeArrays.arraySelection,
-        _("Blade Array")
+        arraySectSizer->childParent(),
+        config.bladeArrays.arraySelection
     )};
     arraySelection->SetToolTip(_("The currently-selected Blade Array to edit."));
     auto *issueIcon{new wxButton(
-        this,
+        arraySectSizer->childParent(),
         ID_IssueIcon,
         wxEmptyString,
         wxDefaultPosition,
@@ -360,7 +363,7 @@ wxSizer *BladesPage::createBladeSelect() {
         wxBU_EXACTFIT
     )};
     auto *editArrayButton{new PCUI::Button(
-        this,
+        arraySectSizer->childParent(),
         ID_EditArray,
         wxEmptyString,
         wxDefaultSize,
@@ -380,7 +383,7 @@ wxSizer *BladesPage::createBladeSelect() {
 
     auto *arrayButtonSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *addArrayButton{new wxButton(
-        this,
+        arraySectSizer->childParent(),
         ID_AddArray,
         _("Add"),
         wxDefaultPosition,
@@ -388,7 +391,7 @@ wxSizer *BladesPage::createBladeSelect() {
         wxBU_EXACTFIT
     )};
     auto *removeArrayButton{new wxButton(
-        this,
+        arraySectSizer->childParent(),
         ID_RemoveArray,
         _("Remove"),
         wxDefaultPosition,
@@ -399,36 +402,39 @@ wxSizer *BladesPage::createBladeSelect() {
     arrayButtonSizer->AddSpacer(5);
     arrayButtonSizer->Add(removeArrayButton, wxSizerFlags(3));
 
+    arraySectSizer->Add(arraySizer, wxSizerFlags().Expand());
+    arraySectSizer->AddSpacer(5);
+    arraySectSizer->Add(arrayButtonSizer, wxSizerFlags().Expand());
+
     auto *bladeAwarenessButton{new wxButton(
         this,
         ID_OpenBladeAwareness,
         _("Blade Awareness...")
     )};
 
-    auto *bladeManagerSizer{new wxBoxSizer(wxHORIZONTAL)};
-
-    auto *bladeSelectionSizer{new wxBoxSizer(wxVERTICAL)};
+    auto *bladeSelectionSizer{new PCUI::StaticBox(
+        wxVERTICAL, this, _("Blades")
+    )};
     auto *bladeSelect{new PCUI::List(
-        this,
-        config.bladeArrays.bladeSelectionProxy,
-        _("Blades")
+        bladeSelectionSizer->childParent(),
+        config.bladeArrays.bladeSelectionProxy
     )};
 
     auto *bladeButtonSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *addBladeButton{new wxButton(
-        this,
+        bladeSelectionSizer->childParent(),
         ID_AddBlade,
         "+",
         wxDefaultPosition,
-        SMALLBUTTONSIZE,
+        wxDefaultSize,
         wxBU_EXACTFIT
     )};
     auto *removeBladeButton{new wxButton(
-        this,
+        bladeSelectionSizer->childParent(),
         ID_RemoveBlade,
         "-",
         wxDefaultPosition,
-        SMALLBUTTONSIZE,
+        wxDefaultSize,
         wxBU_EXACTFIT
     )};
     bladeButtonSizer->Add(addBladeButton, wxSizerFlags(1));
@@ -439,15 +445,11 @@ wxSizer *BladesPage::createBladeSelect() {
     bladeSelectionSizer->AddSpacer(5);
     bladeSelectionSizer->Add(bladeButtonSizer, wxSizerFlags().Expand());
 
-    bladeManagerSizer->Add(bladeSelectionSizer, wxSizerFlags(1).Expand());
-
-    bladeSelectSizer->Add(arraySizer, wxSizerFlags().Expand());
-    bladeSelectSizer->AddSpacer(5);
-    bladeSelectSizer->Add(arrayButtonSizer, wxSizerFlags().Expand());
+    bladeSelectSizer->Add(arraySectSizer, wxSizerFlags().Expand());
     bladeSelectSizer->AddSpacer(10);
     bladeSelectSizer->Add(bladeAwarenessButton, wxSizerFlags().Expand());
     bladeSelectSizer->AddSpacer(10);
-    bladeSelectSizer->Add(bladeManagerSizer, wxSizerFlags(1).Expand());
+    bladeSelectSizer->Add(bladeSelectionSizer, wxSizerFlags(1).Expand());
 
     return bladeSelectSizer;
 }
@@ -608,7 +610,7 @@ wxSizer *BladesPage::createBladeSettings() {
         ID_PinNameAdd,
         "+",
         wxDefaultPosition,
-        wxSize(30, 20),
+        SMALLBUTTONSIZE,
         wxBU_EXACTFIT
     )};
     pinNameSizer->Add(powerPinName, wxSizerFlags(1));
@@ -633,15 +635,16 @@ wxSizer *BladesPage::createBladeSettings() {
     pixelMainSizer->AddSpacer(5);
     pixelMainSizer->Add(pinNameSizer, wxSizerFlags().Expand());
 
-    auto *pixelSplitSizer{new wxBoxSizer(wxVERTICAL)};
+    auto *pixelSplitSizer{new PCUI::StaticBox(
+        wxVERTICAL, this, _("SubBlades")
+    )};
     auto *splitSelect{new PCUI::Choice(
-        this,
-        config.bladeArrays.splitSelectionProxy,
-        _("SubBlades")
+        pixelSplitSizer->childParent(),
+        config.bladeArrays.splitSelectionProxy
     )};
     auto *splitButtonSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *addSplit{new wxButton(
-        this,
+        pixelSplitSizer->childParent(),
         ID_AddSplit,
         "+",
         wxDefaultPosition,
@@ -649,7 +652,7 @@ wxSizer *BladesPage::createBladeSettings() {
         wxBU_EXACTFIT
     )};
     auto *removeSplit{new wxButton(
-        this,
+        pixelSplitSizer->childParent(),
         ID_RemoveSplit,
         "-",
         wxDefaultPosition,
@@ -661,7 +664,7 @@ wxSizer *BladesPage::createBladeSettings() {
     splitButtonSizer->Add(removeSplit, wxSizerFlags(1));
 
     auto *splitType{new PCUI::Radios(
-        this,
+        pixelSplitSizer->childParent(),
         config.bladeArrays.splitTypeProxy,
         { _("Standard"), _("Reverse"), _("Stride"), _("ZigZag"), _("List") },
         _("Type")
@@ -676,12 +679,12 @@ wxSizer *BladesPage::createBladeSettings() {
     
     auto *splitStartEndSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *splitStart{new PCUI::Numeric(
-        this,
+        pixelSplitSizer->childParent(),
         config.bladeArrays.splitStartProxy,
         _("Start")
     )};
     auto *splitEnd{new PCUI::Numeric(
-        this,
+        pixelSplitSizer->childParent(),
         config.bladeArrays.splitEndProxy,
         _("End")
     )};
@@ -690,18 +693,18 @@ wxSizer *BladesPage::createBladeSettings() {
     splitStartEndSizer->Add(splitEnd, wxSizerFlags(1));
 
     auto *splitLength{new PCUI::Numeric(
-        this,
+        pixelSplitSizer->childParent(),
         config.bladeArrays.splitLengthProxy,
         _("Length")
     )};
     auto *splitSegments{new PCUI::Numeric(
-        this,
+        pixelSplitSizer->childParent(),
         config.bladeArrays.splitSegmentsProxy,
         _("Segments")
     )};
     splitSegments->SetToolTip(_("Stride length or number of ZigZag columns"));
     auto *splitList{new PCUI::Text(
-        this,
+        pixelSplitSizer->childParent(),
         config.bladeArrays.splitListProxy,
         0,
         false,
@@ -709,7 +712,7 @@ wxSizer *BladesPage::createBladeSettings() {
     )};
     splitList->SetToolTip(_("Data goes along each LED according to their order in the list"));
     auto *splitBrightness{new PCUI::Numeric(
-        this,
+        pixelSplitSizer->childParent(),
         config.bladeArrays.splitBrightnessProxy,
         _("Brightness"),
         wxHORIZONTAL
@@ -721,14 +724,10 @@ wxSizer *BladesPage::createBladeSettings() {
     pixelSplitSizer->AddSpacer(10);
     pixelSplitSizer->Add(splitType, wxSizerFlags().Expand());
     pixelSplitSizer->AddSpacer(10);
-
     pixelSplitSizer->Add(splitStartEndSizer, wxSizerFlags().Expand().Border(wxBOTTOM, 5));
     pixelSplitSizer->Add(splitLength, wxSizerFlags().Expand());
-
     pixelSplitSizer->Add(splitSegments, wxSizerFlags().Expand().Border(wxTOP, 10));
-
     pixelSplitSizer->Add(splitList, wxSizerFlags().Expand());
-
     pixelSplitSizer->AddSpacer(10);
     pixelSplitSizer->Add(splitBrightness, wxSizerFlags().Expand());
 

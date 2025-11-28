@@ -153,14 +153,18 @@ void PresetsPage::createUI() {
 
     auto *presetSelectionSizer{new wxBoxSizer(wxVERTICAL)};
 
-    auto *arraySizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *arraySelection{new PCUI::Choice(
+    auto *arraySectSizer{new PCUI::StaticBox(
+        wxVERTICAL,
         this,
-        config.presetArrays.selection,
         _("Presets Array")
     )};
+    auto *arraySizer{new wxBoxSizer(wxHORIZONTAL)};
+    auto *arraySelection{new PCUI::Choice(
+        arraySectSizer->childParent(),
+        config.presetArrays.selection
+    )};
     auto *issueButton{new wxButton(
-        this,
+        arraySectSizer->childParent(),
         ID_IssueButton,
         wxEmptyString,
         wxDefaultPosition,
@@ -168,7 +172,7 @@ void PresetsPage::createUI() {
         wxBU_EXACTFIT
     )};
     auto *arrayRename{new PCUI::Button(
-        this,
+        arraySectSizer->childParent(),
         ID_RenameArray,
         wxEmptyString,
         wxDefaultSize,
@@ -184,7 +188,7 @@ void PresetsPage::createUI() {
 
     auto *arrayButtonsSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *addArray{new wxButton(
-        this,
+        arraySectSizer->childParent(),
         ID_AddArray,
         _("Add"),
         wxDefaultPosition,
@@ -192,7 +196,7 @@ void PresetsPage::createUI() {
         wxBU_EXACTFIT
     )};
     auto *removeArray{new wxButton(
-        this,
+        arraySectSizer->childParent(),
         ID_RemoveArray,
         _("Remove"),
         wxDefaultPosition,
@@ -203,11 +207,15 @@ void PresetsPage::createUI() {
     arrayButtonsSizer->AddSpacer(5);
     arrayButtonsSizer->Add(removeArray, wxSizerFlags(3));
 
+    auto *presetSectSizer{new PCUI::StaticBox(
+        wxVERTICAL,
+        this,
+        _("Presets")
+    )};
     auto *presetListSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *presetList{new PCUI::List(
-        this,
-        config.presetArrays.presetProxy,
-        _("Presets")
+        presetSectSizer->childParent(),
+        config.presetArrays.presetProxy
     )};
     presetList->SetMinSize(wxSize{-1, 300});
     presetList->SetToolTip(_("The currently-selected preset array to be edited.\nEach preset array has unique presets."));
@@ -219,7 +227,7 @@ void PresetsPage::createUI() {
     wxSize arrangeButtonSize{15, 25};
 #   endif
     auto *movePresetUp = new wxButton(
-        this,
+        presetSectSizer->childParent(),
         ID_MovePresetUp,
         L"\u2191" /*up arrow*/,
         wxDefaultPosition,
@@ -227,7 +235,7 @@ void PresetsPage::createUI() {
         wxBU_EXACTFIT
     );
     auto *movePresetDown{new wxButton(
-        this,
+        presetSectSizer->childParent(),
         ID_MovePresetDown,
         L"\u2193" /*down arrow*/,
         wxDefaultPosition,
@@ -244,19 +252,19 @@ void PresetsPage::createUI() {
 
     auto *presetButtonSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *addPreset {new wxButton(
-        this,
+        presetSectSizer->childParent(),
         ID_AddPreset,
         "+",
         wxDefaultPosition,
-        SMALLBUTTONSIZE,
+        wxDefaultSize,
         wxBU_EXACTFIT
     )};
     auto *removePreset{new wxButton(
-        this,
+        presetSectSizer->childParent(),
         ID_RemovePreset,
         "-",
         wxDefaultPosition,
-        SMALLBUTTONSIZE,
+        wxDefaultSize,
         wxBU_EXACTFIT
     )};
     presetButtonSizer->Add(addPreset, wxSizerFlags(1));
@@ -264,13 +272,16 @@ void PresetsPage::createUI() {
     presetButtonSizer->Add(removePreset, wxSizerFlags(1));
     presetButtonSizer->AddSpacer(arrangeButtonSize.x + 5);
 
-    presetSelectionSizer->Add(arraySizer, wxSizerFlags().Expand());
+    arraySectSizer->Add(arraySizer, wxSizerFlags().Expand());
+    arraySectSizer->AddSpacer(10);
+    arraySectSizer->Add(arrayButtonsSizer, wxSizerFlags().Expand());
+    presetSectSizer->Add(presetListSizer, wxSizerFlags(1).Expand());
+    presetSectSizer->AddSpacer(5);
+    presetSectSizer->Add(presetButtonSizer, wxSizerFlags().Expand());
+
+    presetSelectionSizer->Add(arraySectSizer, wxSizerFlags().Expand());
     presetSelectionSizer->AddSpacer(10);
-    presetSelectionSizer->Add(arrayButtonsSizer, wxSizerFlags().Expand());
-    presetSelectionSizer->AddSpacer(10);
-    presetSelectionSizer->Add(presetListSizer, wxSizerFlags(1).Expand());
-    presetSelectionSizer->AddSpacer(5);
-    presetSelectionSizer->Add(presetButtonSizer, wxSizerFlags().Expand());
+    presetSelectionSizer->Add(presetSectSizer, wxSizerFlags(1).Expand());
 
     auto *presetConfigSizer{new wxBoxSizer(wxVERTICAL)};
     presetConfigSizer->SetMinSize(wxSize(200, -1));
