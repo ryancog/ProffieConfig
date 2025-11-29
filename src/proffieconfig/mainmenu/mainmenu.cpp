@@ -364,7 +364,7 @@ void MainMenu::handleNotification(uint32 id) {
     if (rebound or id == ID_BoardSelection) {
         FindWindow(ID_ApplyChanges)->Enable(configSelection != 0 and boardSelection != 0);
         bool canOpenSerial{boardSelection != 0};
-#       ifdef __WXMSW__
+#       if defined _WIN32 or defined __linux__
         canOpenSerial &= boardSelection != boardSelection.choices().size() - 1;
 #       endif
         FindWindow(ID_OpenSerial)->Enable(canOpenSerial);
@@ -474,7 +474,7 @@ void MainMenu::createUI() {
 
     auto *boardControls{new wxBoxSizer(wxHORIZONTAL)};
     auto boardEntries{Utils::createEntries({_("Select Board...")})};
-#   ifdef _WIN32
+#   if defined _WIN32 or defined __linux__
     boardEntries.emplace_back(_("BOOTLOADER RECOVERY").ToStdString());
 #   endif
     boardSelection.setChoices(std::move(boardEntries));
