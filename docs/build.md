@@ -34,7 +34,7 @@ ProffieConfig includes an `init.sh` script to automatically setup and verify wha
 
 Its job is to ensure necessary command line utilities are installed, make sure the 3rd party code ProffieConfig requires is downloaded, and compile the 3rd party libraries.
 
-There are two ways to run the init script, and they are not mutually exclusive.
+There are two ways to run the init script:
 1. Building for Native (i.e. Build on Linux for Linux or Build on macOS for macOS)
 2. Cross-Compiling for Windows (i.e Build on Linux/macOS for Windows)
 
