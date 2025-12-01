@@ -60,36 +60,35 @@ For the sake of convention, I structure the directories such that at ProffieConf
 - `deploy`
 
 Inside each I create folders in the convention of `[platform]-[buildtype]`. e.g. `build/macOS-debug`.
+You should build for `rel` or "Release" mode almost always.
 
 In case you haven't picked up on it by now, there's only really 3(.5) ways ProffieConfig can be built.
 1. Linux for Linux
 2. macOS for macOS
 3. Linux/macOS for Windows (there's a .5 in here somewhere)
 
-For the former two:
+For the former two, for example:
 ```
-cmake -S . -B build/[macOS/linux]-debug -DCMAKE_BUILD_TYPE=[Debug/Release]
+cmake -S . -B build/[macOS/linux]-rel -DCMAKE_BUILD_TYPE=Release -DLOCAL_BUILD=ON
 ```
 
 For Windows:
 ```
-cmake -S . -B build/win32-debug -DCMAKE_BUILD_TYPE=[Debug/Release] --toolchain mingw-tc.cmake
+cmake -S . -B build/win32-rel -DCMAKE_BUILD_TYPE=Release -DLOCAL_BUILD=ON --toolchain mingw-tc.cmake
 ```
 *on macOS `-G Ninja` must also be added. Makefiles don't work on macOS for Windows*
 
 Once the configuration completes, `cd` to the newly-created build directory. (e.g. `build/linux-debug`)
 
-### Debug/Release
+### Local Builds
 
 When ProffieConfig is built by me for people to use, the binaries ultimately are distributed onto my server in order for the ProffieConfig Launcher to manage installation and updates.
 
 This is convenient for end users, but inconvenient for a custom build or for my own development/testing.
 
-Setting the build type to `Debug` configures things in a way that allows ProffieConfig to be run without a formal installation. This is easiest.
+To build in a local way, you can use the `LOCAL_BUILD` flag. This is default in Debug mode, and can be specified in Release explicitly. Most people probably want to do this.
 
-Setting the build type to `Release` configures ProffieConfig to expect a Launcher-installed directory structure and to be in the usual installation path. Installing (and therefore running) ProffieConfig with `Release` configuration is beyond the scope of this document.
-
-A to-do of mine is to make some kind of `LOCAL` flag that does what Debug does but without `Debug` mode. I haven't bothered as of writing.
+Otherwise ProffieConfig is configured to expect a Launcher-installed directory structure and to be in the usual installation path. Installing (and therefore running) ProffieConfig without local configuration is beyond the scope of this document.
 
 ## Build ProffieCOnfig
 
