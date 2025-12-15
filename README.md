@@ -20,6 +20,13 @@ ProffieConfig will complete its installation and guide you through the setup and
 
 *The Chrome browser (and Chromium-based browsers) may block the program, which requires you to visit the "Show All Downloads" page to "keep" the file.*
 
+## Contact
+
+If you have any comments, questions, concerns, or otherwise want to get in contact with me, you can do so via the channels listed below. Note that for reporting bugs for the application itself, I'd prefer if you create an "Issue" on GitHub, though feel free to also reach out . I check all these places pretty regularly.
+
+- [Email](mailto:kafrenetrading@gmail.com)
+- [@Ryryog25 on Discord](https://discord.gg/HQmSrxezRs)
+- [ryryog25 on The Crucible](https://crucible.hubbe.net/u/ryryog25/summary)
 
 ## To-Do (Non-Exhaustive)
 - Expand pre-checker capabilities (ongoing)
