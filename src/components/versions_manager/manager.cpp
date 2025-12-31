@@ -197,7 +197,12 @@ void bindEvents() {
             auto value{name->GetValue().ToStdString()};
             const auto insertionPoint{name->GetInsertionPoint()};
             uint32 numTrimmed{};
-            Utils::trimUnsafe(value, &numTrimmed, insertionPoint);
+            Utils::trim(
+                value,
+                Versions::PROP_NAME_RULES,
+                &numTrimmed,
+                insertionPoint
+            );
             name->ChangeValue(value);
             name->SetInsertionPoint(insertionPoint - numTrimmed);
 

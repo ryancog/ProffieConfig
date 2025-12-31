@@ -43,13 +43,14 @@ Config::PresetArray::PresetArray(Config& config) :
     }};
 
     name.setUpdateHandler([this, isCurrentArray](uint32 id) {
-        if (id != name.ID_VALUE) return;
+        if (id != PCUI::TextData::ID_VALUE) return;
 
         auto rawValue{static_cast<string>(name)};
         uint32 numTrimmed{};
         auto insertionPoint{name.getInsertionPoint()};
-        Utils::trimUnsafe(
+        Utils::trimCppName(
             rawValue,
+            false,
             &numTrimmed,
             insertionPoint
         );
@@ -59,12 +60,14 @@ Config::PresetArray::PresetArray(Config& config) :
             if (isCurrentArray()) mConfig.presetArrays.notifyData.notify(PresetArrays::NOTIFY_ARRAY_NAME);
 
             auto idx{0};
-            auto& arrays{mConfig.presetArrays.arrays()};
+            const auto& arrays{mConfig.presetArrays.arrays()};
+
             auto arrayIter{arrays.begin()};
             auto arrayEnd{arrays.end()};
             for (; idx < arrays.size(); ++idx, ++arrayIter) {
                 if (&**arrayIter == this) break;
             }
+
             auto choices{mConfig.presetArrays.selection.choices()};
             if (idx != arrays.size() and idx != choices.size()) {
                 choices[idx] = name;

@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "ui/controls/version.h"
+#include "utils/string.h"
 #include "utils/types.h"
 #include "utils/version.h"
 
@@ -34,6 +35,12 @@ namespace Versions {
 constexpr cstring INFO_FILE_STR{"info.pconf"};
 constexpr cstring DATA_FILE_STR{"data.pconf"};
 constexpr cstring HEADER_FILE_STR{"header.h"};
+
+constexpr Utils::TrimRules PROP_NAME_RULES{
+    .allowAlpha = true,
+    .allowNum = true,
+    .safeList = "_",
+};
 
 VERSIONS_EXPORT Utils::Version getDefaultCoreVersion();
 VERSIONS_EXPORT Utils::Version getDefaultOSVersion();

@@ -70,12 +70,11 @@ Config::BladeArrays::BladeArrays(Config& parent) :
         auto rawValue{static_cast<string>(powerPinNameEntry)};
         uint32 numTrimmed{};
         auto insertionPoint{powerPinNameEntry.getInsertionPoint()};
-        Utils::trimUnsafe(
+        Utils::trimCppName(
             rawValue,
+            true,
             &numTrimmed,
-            insertionPoint,
-            {},
-            true
+            insertionPoint
         );
 
         if (rawValue == static_cast<string>(powerPinNameEntry)) {

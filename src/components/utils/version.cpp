@@ -60,7 +60,11 @@ Utils::Version::Version(string_view str) {
 
         tag = convStr;
         uint32 numTrimmed{};
-        trimUnsafe(tag, &numTrimmed);
+        trim(
+            tag,
+            {.allowAlpha=true, .allowNum=true},
+            &numTrimmed
+        );
 
         if (numTrimmed) {
             err = Err::STR_INVALID;

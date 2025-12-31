@@ -24,6 +24,147 @@
 #include <sstream>
 #include <stack>
 
+void Utils::trimWhitespace(string& str) {
+    // TODO: Does ranges actually work here? Does it break in unforeseen ways?
+    str.erase(std::remove_if(str.begin(), str.end(), [](char chr) {
+        return std::isspace(chr);
+    }), str.end());
+}
+
+void Utils::trimWhitespaceOutsideString(string& str) {
+    bool inDoubleQuote{false};
+    bool inSingleQuote{false};
+    // TODO: Optimize
+    for (auto idx{0}; idx != str.length(); ++idx) {
+        const auto chr{str[idx]};
+        if (chr == '"' and not inSingleQuote) inDoubleQuote = not inDoubleQuote;
+        else if (chr == '\'' and not inDoubleQuote) inSingleQuote = not inSingleQuote;
+        else if (std::isspace(chr)) {
+            if (chr != ' ' or not (inSingleQuote or inDoubleQuote)) {
+                str.erase(idx, 1);
+                --idx;
+
+            }
+        }
+    }
+}
+
+void Utils::trimSurroundingWhitespace(string& str) {
+    str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](char chr) {
+        return not std::isspace(chr);
+    }));
+    str.erase(std::find_if(str.rbegin(), str.rend(), [](char chr) {
+        return not std::isspace(chr);
+    }).base(), str.end());
+}
+
+void Utils::trimCppName(
+    string& str,
+    bool allowNum,
+    uint32 *numTrimmed,
+    uint32 countTrimIndex
+) {
+    if (numTrimmed) *numTrimmed = 0;
+
+    if (not allowNum) {
+        while (not str.empty() and std::isdigit(str[0])) {
+            if (numTrimmed and countTrimIndex > 0) {
+                ++*numTrimmed;
+            }
+            str.erase(0, 1);
+        }
+    } else if (not str.empty() and std::isdigit(str[0])) {
+        uint32 idx{1};
+        auto iter{std::next(str.begin())};
+        while (iter != str.end()) {
+            if (not std::isdigit(*iter)) {
+                if (numTrimmed and countTrimIndex > idx) ++*numTrimmed;
+                iter = str.erase(iter);
+                continue;
+            }
+
+            ++iter;
+            ++idx;
+        }
+    }
+
+    uint32 idx{0};
+    auto iter{str.begin()};
+    while (iter != str.end()) {
+        if (
+                not std::isalnum(*iter) and
+                *iter != '_'
+           ) {
+            if (numTrimmed and countTrimIndex > idx) ++*numTrimmed;
+            iter = str.erase(iter);
+            continue;
+        }
+
+        ++iter;
+        ++idx;
+    }
+}
+
+void Utils::trim(
+    string& str,
+    TrimRules rules,
+    uint32 *numTrimmed,
+    uint32 countTrimIndex
+) {
+    if (numTrimmed) *numTrimmed = 0;
+
+    uint32 idx{0};
+    auto iter{str.begin()};
+    while (iter != str.end()) {
+        if (
+                not (rules.allowAlpha and std::isalpha(*iter)) and
+                not (rules.allowNum or std::isdigit(*iter)) and
+                rules.safeList.find(*iter) == string::npos
+           ) {
+            if (numTrimmed and countTrimIndex > idx) ++*numTrimmed;
+            iter = str.erase(iter);
+            continue;
+        }
+
+        ++iter;
+        ++idx;
+    }
+}
+
+void Utils::trimForNumeric(
+    string& str,
+    uint32 *numTrimmed,
+    uint32 countTrimIndex
+) {
+    if (numTrimmed) *numTrimmed = 0;
+
+    // Special case
+    if (str.size() == 1 and str[0] == '0') return;
+
+    bool foundNonZero{false};
+    uint32 idx{0};
+    auto iter{str.begin()};
+    while (iter != str.end()) {
+        if (not std::isdigit(*iter)) {
+            if (numTrimmed and countTrimIndex > idx) ++*numTrimmed;
+            iter = str.erase(iter);
+            continue;
+        }
+
+        if (not foundNonZero) {
+            if (*iter == '0') {
+                if (numTrimmed and countTrimIndex > idx) ++*numTrimmed;
+                iter = str.erase(iter);
+                continue;
+            }
+            foundNonZero = true;
+        }
+
+        ++iter;
+        ++idx;
+    }
+}
+
 optional<string> Utils::extractComment(std::istream& stream) {
     enum {
         NONE,
