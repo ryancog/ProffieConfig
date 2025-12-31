@@ -391,7 +391,7 @@ install(FILES ${3RDPARTY_INSTALL_FILES} DESTINATION ${INSTALL_LIB_DIR})
 
 if (CMAKE_BUILD_TYPE STREQUAL Release)
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-        set(STRIP_COMMAND "strip --strip-all")
+        set(STRIP_COMMAND "strip -p --strip-all")
     elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin)
         set(STRIP_COMMAND "strip -S -N -x -X")
     endif()
