@@ -1,5 +1,4 @@
 #include "static_box.h"
-#include "wx/time.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -62,8 +61,8 @@ PCUI::StaticBox::StaticBox(wxOrientation orient, wxWindow *parent, const wxStrin
         size.y -= otherBorder + topBorder;
 
 #       if defined (__WXMSW__)
-        pos.x += otherBorder;
-        pos.y += topBorder;
+        pos.x += otherBorder + PADDING;
+        pos.y += topBorder + PADDING;
 #       elif defined (__WXOSX__)
         pos.x += otherBorder + PADDING;
         pos.y += otherBorder + PADDING;
