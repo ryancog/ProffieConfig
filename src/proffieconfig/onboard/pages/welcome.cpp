@@ -66,7 +66,7 @@ Onboard::Welcome::Welcome(wxWindow* parent) : wxPanel(parent) {
         this,
         wxID_ANY,
         _("Guides And Documentation"),
-        Paths::website() + "/docs"
+        Paths::website() + "/guides"
     )};
     auto *infoText3{new wxStaticText(
         this,
