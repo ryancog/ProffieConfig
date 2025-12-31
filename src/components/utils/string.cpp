@@ -19,10 +19,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <sstream>
 #include <stack>
+
+#include "utils/types.h"
 
 void Utils::trimWhitespace(string& str) {
     // TODO: Does ranges actually work here? Does it break in unforeseen ways?
