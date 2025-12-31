@@ -291,12 +291,19 @@ std::map<Update::ItemID, Update::Item> findItems(
 
     std::map<Update::ItemID, Update::Item> ret;
 
-    auto findType{[&logger, &ret](const vector<PConf::HashedData::IndexedEntryPtr>& entries, Update::ItemType type, const string& typeStr) {
+    auto findType{[&logger, &ret](
+        const vector<PConf::EntryPtr>& entries,
+        Update::ItemType type,
+        const string& typeStr
+    ) {
         for (const auto& entry : entries) {
             auto parsed{parseItem(entry, logger)};
             if (parsed) {
                 logger.info("Sucessfully parsed " + typeStr + ' ' + parsed->first);
-                ret.emplace(Update::ItemID{ .type=type, .name=parsed->first }, parsed->second);
+                ret.emplace(
+                    Update::ItemID{.type=type, .name=parsed->first},
+                    parsed->second
+                );
             }
         }
     }};
@@ -500,12 +507,17 @@ std::map<Utils::Version, Update::Bundle> resolveBundles(const PConf::HashedData&
             return std::pair{ *item->label, version };
         }};
 
-        auto fillReqFiles{[&](const vector<PConf::HashedData::IndexedEntryPtr>& entries, Update::ItemType type) {
+        auto fillReqFiles{[&](
+            const vector<PConf::EntryPtr>& entries, Update::ItemType type
+        ) {
             for (const auto& entry : entries) {
                 auto parsed{parseReqItem(entry)};
                 if (parsed) {
                     logger.debug("Added to Bundle " + static_cast<string>(version) + ": " + parsed->first + ", " + static_cast<string>(parsed->second));
-                    bundle.reqs.emplace_back(Update::ItemID{ .type=type, .name=parsed->first }, parsed->second);
+                    bundle.reqs.emplace_back(
+                        Update::ItemID{.type=type, .name=parsed->first},
+                        parsed->second
+                    );
                 }
             }
         }};

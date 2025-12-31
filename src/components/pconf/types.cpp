@@ -42,16 +42,13 @@ PConf::Section::Section(
     ),
     entries(std::move(entries)) {}
 
-PConf::EntryPtr::EntryPtr(const SectionPtr& ptr) : shared_ptr(ptr) {}
-PConf::EntryPtr::EntryPtr(SectionPtr&& ptr) : shared_ptr(std::move(ptr)) {}
-
 PConf::EntryPtr PConf::Entry::create(
     string name,
     optional<string> value,
     optional<string> label,
     optional<int32> labelNum
 ) {
-    return EntryPtr(new Entry(std::move(name), std::move(value), std::move(label), labelNum));
+    return EntryPtr{new Entry(std::move(name), std::move(value), std::move(label), labelNum)};
 }
 
 PConf::SectionPtr PConf::Section::create(
@@ -63,22 +60,42 @@ PConf::SectionPtr PConf::Section::create(
     return SectionPtr(new Section(std::move(name), std::move(label), labelNum, std::move(entries)));
 }
 
-void PConf::HashedData::erase(const IndexedEntryPtr& entry) {
-    unordered_multimap::erase(entry.iter);
-}
+void PConf::HashedData::erase(const EntryPtr& entry) {
+    auto vecIter{mMap.find(entry->name)};
+    if (vecIter == mMap.end()) return;
 
-PConf::HashedData::IndexedEntryPtr PConf::HashedData::find(const string& key) const {
-    const auto iter{unordered_multimap::find(key)};
-    if (iter != end()) return { iter->second, iter };
-    return { nullptr, iter };
-}
-
-vector<PConf::HashedData::IndexedEntryPtr> PConf::HashedData::findAll(const string& key) const {
-    vector<PConf::HashedData::IndexedEntryPtr> ret;
-    auto [iter, end]{unordered_multimap::equal_range(key)};
-    for (; iter != end; ++iter) {
-        ret.emplace_back(iter->second, iter);
+    auto iter{vecIter->second.begin()};
+    const auto endIter{vecIter->second.end()};
+    for (; iter != endIter; ++iter) {
+        if (iter->get() == entry.get()) {
+            vecIter->second.erase(iter);
+            break;
+        }
     }
-    return ret;
+
+    if (vecIter->second.empty()) {
+        mMap.erase(vecIter);
+    }
+}
+
+PConf::EntryPtr PConf::HashedData::find(const string& key) const {
+    const auto vecIter{mMap.find(key)};
+    if (vecIter == mMap.end()) return nullptr;
+
+    /*
+     * If the vec exists, it's guaranteed to have at least one item.
+     */
+    return vecIter->second[0];
+}
+
+vector<PConf::EntryPtr> PConf::HashedData::findAll(const string& key) const {
+    const auto vecIter{mMap.find(key)};
+    if (vecIter == mMap.end()) return {};
+
+    return vecIter->second;
+}
+
+vector<PConf::EntryPtr>& PConf::HashedData::operator[](const string& key) {
+    return mMap[key];
 }
 
