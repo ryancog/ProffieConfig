@@ -24,7 +24,13 @@
 
 namespace {
 
-constexpr auto PADDING{10};
+constexpr auto PADDING{
+#ifdef __WXOSX__
+    0
+#else
+    10
+#endif
+};
 
 } // namespace
 
@@ -55,11 +61,15 @@ PCUI::StaticBox::StaticBox(wxOrientation orient, wxWindow *parent, const wxStrin
         size.y -= PADDING * 2;
         size.y -= otherBorder + topBorder;
 
-        pos.x += PADDING;
-        pos.y += PADDING;
-#       ifdef __WXMSW__
+#       if defined (__WXMSW__)
         pos.x += otherBorder;
         pos.y += topBorder;
+#       elif defined (__WXOSX__)
+        pos.x += otherBorder + PADDING;
+        pos.y += otherBorder + PADDING;
+#       else
+        pos.x += PADDING;
+        pos.y += PADDING;
 #       endif
 
         mPanel->SetSize(pos.x, pos.y, size.x, size.y);
