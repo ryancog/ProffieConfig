@@ -136,8 +136,9 @@ PCUI::VersionData::VersionData() {
         auto rawValue{static_cast<string>(mTag)};
         auto insertionPoint{mTag.getInsertionPoint()};
         uint32 numTrimmed{};
-        Utils::trimUnsafe(
+        Utils::trim(
             rawValue,
+            {.allowAlpha=true, .allowNum=true, .safeList="_"},
             &numTrimmed,
             insertionPoint
         );

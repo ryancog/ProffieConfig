@@ -35,11 +35,11 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
         auto rawValue{static_cast<string>(name)};
         uint32 numTrimmed{};
         const auto insertionPoint{name.getInsertionPoint()};
-        Utils::trimUnsafe(
+        Utils::trim(
             rawValue,
+            {.allowAlpha=true, .allowNum=true, .safeList="\\"},
             &numTrimmed,
-            insertionPoint,
-            "\\"
+            insertionPoint
         );
         if (rawValue.length() > 20) rawValue.resize(20);
 
@@ -84,11 +84,11 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
         auto rawValue{static_cast<string>(fontDir)};
         uint32 numTrimmed{};
         auto insertionPoint{fontDir.getInsertionPoint()};
-        Utils::trimUnsafe(
+        Utils::trim(
             rawValue,
+            {.allowAlpha=true, .allowNum=true, .safeList="/;_"},
             &numTrimmed,
-            insertionPoint,
-            "/;"
+            insertionPoint
         );
 
         if (rawValue == static_cast<string>(fontDir)) return;
@@ -102,11 +102,11 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
         auto rawValue{static_cast<string>(track)};
         uint32 numTrimmed{};
         auto insertionPoint{track.getInsertionPoint()};
-        Utils::trimUnsafe(
+        Utils::trim(
             rawValue,
+            {.allowAlpha=true, .allowNum=true, .safeList="./_"},
             &numTrimmed,
-            insertionPoint,
-            "./"
+            insertionPoint
         );
 
         if (rawValue == static_cast<string>(track)) {
@@ -171,12 +171,34 @@ Config::Preset::Style::Style() {
         auto rawValue{static_cast<string>(style)};
         auto insertionPoint{style.getInsertionPoint()};
         uint32 numTrimmed{};
-        Utils::trimUnsafe(
+
+        /*
+         * - Only allow chars for the start of a block comment. No other need 
+         *   for backslash
+         *
+         * - <>(), are self-explanatory
+         *
+         * - & for global style objects like the charging style.
+         *
+         * - : for scope resolution operator (there's scoped enums with effects)
+         *
+         * - "" may be used for the dynamic args defaults.
+         *
+         * - \n\t and ' ' are self-explanatory.
+         *
+         * - '-' for negative numbers.
+         *
+         * - '_' because it's just generally used.
+         */
+        Utils::trim(
             rawValue,
+            {
+                .allowAlpha=true,
+                .allowNum=true,
+                .safeList="/*<>(),&_:-\"\n\t "
+            },
             &numTrimmed,
-            insertionPoint,
-            "/*<>()&:,\"\n\t ",
-            true
+            insertionPoint
         );
         insertionPoint -= numTrimmed;
 

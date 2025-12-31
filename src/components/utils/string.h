@@ -19,7 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
 #include <cctype>
 
 #include <wx/string.h>
@@ -33,109 +32,50 @@ namespace Utils {
 /**
  * Purge all whitespace in string
  */
-template<typename STRING>
-constexpr void trimWhitespace(STRING& str) {
-    str.erase(std::remove_if(str.begin(), str.end(), [](char chr) {
-        return std::isspace(chr);
-    }), str.end());
-};
+UTILS_EXPORT void trimWhitespace(string& str);
 
 /**
  * Purge all whitespace in a string that is not surrounded by quotes
  *
  * Whitespace is ' ' only. Other whitespace is still trimmed
  */
-template<typename STRING>
-constexpr void trimWhitespaceOutsideString(STRING& str) {
-    bool inDoubleQuote{false};
-    bool inSingleQuote{false};
-    // TODO: Optimize
-    for (auto idx{0}; idx != str.length(); ++idx) {
-        const auto chr{str[idx]};
-        if (chr == '"' and not inSingleQuote) inDoubleQuote = not inDoubleQuote;
-        else if (chr == '\'' and not inDoubleQuote) inSingleQuote = not inSingleQuote;
-        else if (std::isspace(chr)) {
-            if (chr != ' ' or not (inSingleQuote or inDoubleQuote)) {
-                str.erase(idx, 1);
-                --idx;
-
-            }
-        }
-    }
-};
+UTILS_EXPORT void trimWhitespaceOutsideString(string& str);
 
 /**
  * Purge whitespace around visible chars.
  */
-template<typename STRING>
-constexpr void trimSurroundingWhitespace(STRING& str) {
-    str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](char chr) {
-        return not std::isspace(chr);
-    }));
-    str.erase(std::find_if(str.rbegin(), str.rend(), [](char chr) {
-        return not std::isspace(chr);
-    }).base(), str.end());
-}
+UTILS_EXPORT void trimSurroundingWhitespace(string& str);
 
 /**
- * Trim characters unsafe for a C++ variable name, by default.
- * May be augmented to be more permissive.
+ * Trim characters unsafe for a C++ variable name
  *
  * @param str Reference to string to trim
  * @param[out] numTrimmed The number of characters trimmed
  * @param countTrimIndex The index before which trims should be counted.
- * @param moreSafe more safe characters
  * @param allowNum If a digit is first-encountered, processing switches to ensuring *only* num.
  */
-template<typename STRING>
-constexpr void trimUnsafe(
-    STRING& str,
+UTILS_EXPORT void trimCppName(
+    string& str,
+    bool allowNum = false,
     uint32 *numTrimmed = nullptr,
-    const uint32 countTrimIndex = std::numeric_limits<uint32>::max(),
-    string_view moreSafe = {},
-    bool allowNum = false
-) {
-    if (numTrimmed) *numTrimmed = 0;
+    uint32 countTrimIndex = -1
+);
 
-    if (not allowNum) {
-        while (not str.empty() and std::isdigit(str[0])) {
-            if (numTrimmed and countTrimIndex > 0) {
-                ++*numTrimmed;
-            }
-            str.erase(0, 1);
-        }
-    } else if (not str.empty() and std::isdigit(str[0])) {
-        uint32 idx{1};
-        auto iter{std::next(str.begin())};
-        while (iter != str.end()) {
-            if (not std::isdigit(*iter)) {
-                if (numTrimmed and countTrimIndex > idx) ++*numTrimmed;
-                iter = str.erase(iter);
-                continue;
-            }
-
-            ++iter;
-            ++idx;
-        }
-    }
-
-    uint32 idx{0};
-    auto iter{str.begin()};
-    while (iter != str.end()) {
-        if (
-                not std::isalnum(*iter) and
-                *iter != '_' and
-                moreSafe.find(*iter) == STRING::npos
-           ) {
-            if (numTrimmed and countTrimIndex > idx) ++*numTrimmed;
-            iter = str.erase(iter);
-            continue;
-        }
-
-        ++iter;
-        ++idx;
-    }
+struct TrimRules {
+    bool allowAlpha{false};
+    bool allowNum{false};
+    string_view safeList;
 };
+
+/**
+ * Trim characters for a generic field.
+ */
+UTILS_EXPORT void trim(
+    string& str,
+    TrimRules rules,
+    uint32 *numTrimmed = nullptr,
+    uint32 countTrimIndex = -1
+);
 
 /**
  * Remove all non-digit values, remove leading 0
@@ -144,40 +84,11 @@ constexpr void trimUnsafe(
  * @param[out] numTrimmed The number of characters trimmed
  * @param countTrimIndex The index before which trims should be counted.
  */
-template<typename STRING>
-constexpr void trimForNumeric(
-    STRING& str,
+UTILS_EXPORT void trimForNumeric(
+    string& str,
     uint32 *numTrimmed = nullptr,
-    const uint32 countTrimIndex = std::numeric_limits<uint32>::max()
-) {
-    if (numTrimmed) *numTrimmed = 0;
-
-    // Special case
-    if (str.size() == 1 and str[0] == '0') return;
-
-    bool foundNonZero{false};
-    uint32 idx{0};
-    auto iter{str.begin()};
-    while (iter != str.end()) {
-        if (not std::isdigit(*iter)) {
-            if (numTrimmed and countTrimIndex > idx) ++*numTrimmed;
-            iter = str.erase(iter);
-            continue;
-        }
-
-        if (not foundNonZero) {
-            if (*iter == '0') {
-                if (numTrimmed and countTrimIndex > idx) ++*numTrimmed;
-                iter = str.erase(iter);
-                continue;
-            }
-            foundNonZero = true;
-        }
-
-        ++iter;
-        ++idx;
-    }
-};
+    uint32 countTrimIndex = -1
+);
 
 /**
  * Clears whitespace (if hit) and parses all comment strings encountered until

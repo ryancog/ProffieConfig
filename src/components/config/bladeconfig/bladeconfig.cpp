@@ -77,7 +77,12 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
         auto nameValue{static_cast<string>(name)};
         auto insertionPoint{name.getInsertionPoint()};
         uint32 numTrimmed{};
-        Utils::trimUnsafe(nameValue, &numTrimmed, insertionPoint);
+        Utils::trimCppName(
+            nameValue,
+            false,
+            &numTrimmed,
+            insertionPoint
+        );
         std::ranges::transform(
             nameValue,
             nameValue.begin(),

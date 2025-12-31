@@ -253,12 +253,11 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
         auto rawValue{static_cast<string>(dataPin)};
         uint32 numTrimmed{};
         auto insertionPoint{dataPin.getInsertionPoint()};
-        Utils::trimUnsafe(
+        Utils::trimCppName(
             rawValue,
+            true,
             &numTrimmed,
-            insertionPoint,
-            {},
-            true
+            insertionPoint
         );
 
         if (rawValue == static_cast<string>(dataPin)) {

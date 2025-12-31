@@ -197,7 +197,12 @@ void Versions::loadLocal() {
 
         auto propName{entry.path().filename().string()};
         uint32 numTrimmed{};
-        Utils::trimUnsafe(propName, &numTrimmed);
+        Utils::trim(
+            propName,
+            PROP_NAME_RULES,
+            &numTrimmed,
+            -1
+        );
         if (numTrimmed) {
             logger.warn("Prop entry with invalid name: " + entry.path().filename().string());
             continue;

@@ -82,10 +82,22 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     bladeID.bridgePin.setUpdateHandler([this](uint32 id) {
         if (id != PCUI::ComboBoxData::ID_VALUE) return;
 
-        auto pinValue{static_cast<string>(bladeID.bridgePin)};
-        Utils::trimUnsafe(pinValue);
-        if (static_cast<string>(bladeID.bridgePin) == pinValue) return;
-        bladeID.bridgePin = std::move(pinValue);
+        auto rawValue{static_cast<string>(bladeID.bridgePin)};
+        uint32 numTrimmed{};
+        auto insertionPoint{bladeID.bridgePin.getInsertionPoint()};
+        Utils::trimCppName(
+            rawValue,
+            true,
+            &numTrimmed,
+            insertionPoint
+        );
+
+        if (static_cast<string>(bladeID.bridgePin) == rawValue) {
+            return;
+        }
+        
+        bladeID.bridgePin = std::move(rawValue);
+        bladeID.bridgePin.setInsertionPoint(insertionPoint - numTrimmed);
     });
 
     bladeID.continuousScanning.setUpdateHandler([this](uint32 id) {
@@ -125,12 +137,11 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         auto rawValue{static_cast<string>(bladeID.powerPinEntry)};
         uint32 numTrimmed{};
         auto insertionPoint{bladeID.powerPinEntry.getInsertionPoint()};
-        Utils::trimUnsafe(
+        Utils::trimCppName(
             rawValue,
+            true,
             &numTrimmed,
-            insertionPoint,
-            {},
-            true
+            insertionPoint
         );
 
         if (rawValue != static_cast<string>(bladeID.powerPinEntry)) {
