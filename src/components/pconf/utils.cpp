@@ -22,7 +22,7 @@
 PConf::HashedData PConf::hash(const Data& data) {
     HashedData ret;
     for (const auto& entry : data) {
-        ret.emplace(entry->name, entry);
+        ret[entry->name].push_back(entry);
     }
 
     return ret;

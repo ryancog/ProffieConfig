@@ -36,11 +36,7 @@ struct Section;
 using SectionPtr = std::shared_ptr<Section>;
 
 struct PCONF_EXPORT EntryPtr : std::shared_ptr<Entry> {
-    EntryPtr() = default;
-    EntryPtr(std::nullptr_t ptr) : shared_ptr(ptr) {}
-    explicit EntryPtr(Entry *ptr) : shared_ptr(ptr) {}
-    EntryPtr(const SectionPtr& ptr);
-    EntryPtr(SectionPtr&& ptr);
+    using shared_ptr::shared_ptr;
 
     [[nodiscard]] SectionPtr section() const {
         return std::dynamic_pointer_cast<Section>(*this);
@@ -48,17 +44,23 @@ struct PCONF_EXPORT EntryPtr : std::shared_ptr<Entry> {
 };
 
 using Data = vector<EntryPtr>;
-struct PCONF_EXPORT HashedData : std::unordered_multimap<string, EntryPtr> {
-    struct IndexedEntryPtr : EntryPtr {
-        IndexedEntryPtr(EntryPtr ptr, const_iterator iter) :
-            EntryPtr(std::move(ptr)), iter{iter} {}
-        const const_iterator iter;
-    };
+/*
+ * On Windows, the multimap stores equal-keyed items in reverse order, and
+ * according to the C++ stdlib spec the order of all the items is not
+ * explicitly defined, even within equal (simply that they're contiguous)
+ *
+ * A map w/ vec properly conveys the intent.
+ */
+struct PCONF_EXPORT HashedData {
+    void erase(const EntryPtr&);
 
-    void erase(const IndexedEntryPtr&);
+    [[nodiscard]] EntryPtr find(const string& key) const;
+    [[nodiscard]] vector<EntryPtr> findAll(const string& key) const;
 
-    [[nodiscard]] IndexedEntryPtr find(const string& key) const;
-    [[nodiscard]] vector<IndexedEntryPtr> findAll(const string& key) const;
+    vector<EntryPtr>& operator[](const string& key);
+
+private:
+    std::unordered_map<string, vector<EntryPtr>> mMap;
 };
 
 struct PCONF_EXPORT Entry {

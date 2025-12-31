@@ -22,7 +22,6 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
-#include <fstream>
 #include <sstream>
 #include <set>
 #include <map>
@@ -307,16 +306,20 @@ std::pair<UpGen::Data, vector<UpGen::Message>> UpGen::loadCurrentManifest(const 
     vector<Message> messages{parseMessages(hashedRawData, logger)};
     UpGen::Data data;
 
-    auto enumerateType{[&](auto range, Update::ItemType type) {
-        for (auto itemIt{range.first}; itemIt != range.second; ++itemIt) {
-            auto parsed{parseItem(itemIt->second, logger)};
-            data.items.emplace(Update::ItemID{ type, parsed.first }, parsed.second);
+    auto enumerateType{[&](
+        const vector<PConf::EntryPtr>& vec, Update::ItemType type
+    ) {
+        for (const auto& item : vec) {
+            auto parsed{parseItem(item, logger)};
+            data.items.emplace(
+                Update::ItemID{.type=type, .name=parsed.first}, parsed.second
+            );
         }
     }};
-    enumerateType(hashedRawData.equal_range("EXEC"), Update::ItemType::EXEC);
-    enumerateType(hashedRawData.equal_range("LIB"),  Update::ItemType::LIB);
-    enumerateType(hashedRawData.equal_range("COMP"), Update::ItemType::COMP);
-    enumerateType(hashedRawData.equal_range("RSRC"), Update::ItemType::RSRC);
+    enumerateType(hashedRawData.findAll("EXEC"), Update::ItemType::EXEC);
+    enumerateType(hashedRawData.findAll("LIB"),  Update::ItemType::LIB);
+    enumerateType(hashedRawData.findAll("COMP"), Update::ItemType::COMP);
+    enumerateType(hashedRawData.findAll("RSRC"), Update::ItemType::RSRC);
 
     data.bundles = resolveBundles(hashedRawData, logger);
     verifyBundles(data.items, data.bundles, logger);
@@ -475,9 +478,9 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const PConf::EntryPtr& entry, Lo
         if (item.win32Path) versionData.win32Hash = checkHash("Win32", HASH_KEY_WIN32);
         if (item.macOSPath) versionData.macOSHash = checkHash("macOS", HASH_KEY_MACOS);
 
-        auto fixes{hashedVersionEntries.equal_range("FIX")};
-        for (auto fixIt{fixes.first}; fixIt != fixes.second; ++fixIt) {
-            if (not fixIt->second->value) {
+        auto fixes{hashedVersionEntries.findAll("FIX")};
+        for (const auto& fix : fixes) {
+            if (not fix->value) {
                 string errMsg{"Item \""}; 
                 errMsg += name;
                 errMsg += "\" version "; 
@@ -486,12 +489,12 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const PConf::EntryPtr& entry, Lo
                 logger.error(errMsg);
                 exit(1);
             }
-            versionData.fixes.push_back(fixIt->second->value.value());
+            versionData.fixes.push_back(fix->value.value());
         }
 
-        auto changes{hashedVersionEntries.equal_range("CHANGE")};
-        for (auto changeIt{changes.first}; changeIt != changes.second; ++changeIt) {
-            if (not changeIt->second->value) {
+        auto changes{hashedVersionEntries.findAll("CHANGE")};
+        for (const auto& change : changes) {
+            if (not change->value) {
                 string errMsg{"Item \""}; 
                 errMsg += name;
                 errMsg += "\" version ";
@@ -500,12 +503,12 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const PConf::EntryPtr& entry, Lo
                 logger.error(errMsg);
                 exit(1);
             }
-            versionData.changes.push_back(changeIt->second->value.value());
+            versionData.changes.push_back(change->value.value());
         }
 
-        auto features{hashedVersionEntries.equal_range("FEAT")};
-        for (auto featIt{features.first}; featIt != features.second; ++featIt) {
-            if (not featIt->second->value) {
+        auto features{hashedVersionEntries.findAll("FEAT")};
+        for (const auto& feat : features) {
+            if (not feat->value) {
                 string errMsg{"Item \""}; 
                 errMsg += name;
                 errMsg += "\" version ";
@@ -514,7 +517,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const PConf::EntryPtr& entry, Lo
                 logger.error(errMsg);
                 exit(1);
             }
-            versionData.features.push_back(featIt->second->value.value());
+            versionData.features.push_back(feat->value.value());
         }
 
         item.versions.emplace(version, versionData);
@@ -578,19 +581,25 @@ Update::Bundles UpGen::resolveBundles(const PConf::HashedData& hashedRawData, Lo
             return std::pair{ item->label.value(), version };
         }};
 
-        const auto fillReqFiles{[&](auto range, Update::ItemType type) {
-            for (auto itemIt{range.first}; itemIt != range.second; ++itemIt) {
-                auto parsed{parseReqItem(itemIt->second)};
-                if (parsed) {
-                    bundle.reqs.emplace_back(Update::ItemID{ type, parsed->first }, parsed->second);
-                }
+        const auto fillReqFiles{[&](
+            const vector<PConf::EntryPtr>& vec, Update::ItemType type
+        ) {
+            bundle.reqs.reserve(vec.size());
+            for (const auto& entry : vec) {
+                auto parsed{parseReqItem(entry)};
+                if (not parsed) continue;
+
+                bundle.reqs.emplace_back(
+                    Update::ItemID{.type=type, .name=parsed->first},
+                    parsed->second
+                );
             }
         }};
 
-        fillReqFiles(hashedEntries.equal_range("EXEC"), Update::ItemType::EXEC);
-        fillReqFiles(hashedEntries.equal_range("LIB"),  Update::ItemType::LIB);
-        fillReqFiles(hashedEntries.equal_range("COMP"), Update::ItemType::COMP);
-        fillReqFiles(hashedEntries.equal_range("RSRC"), Update::ItemType::RSRC);
+        fillReqFiles(hashedEntries.findAll("EXEC"), Update::ItemType::EXEC);
+        fillReqFiles(hashedEntries.findAll("LIB"),  Update::ItemType::LIB);
+        fillReqFiles(hashedEntries.findAll("COMP"), Update::ItemType::COMP);
+        fillReqFiles(hashedEntries.findAll("RSRC"), Update::ItemType::RSRC);
         ret.emplace(version, bundle);
     }
 
