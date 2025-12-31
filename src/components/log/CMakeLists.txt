@@ -17,5 +17,5 @@ target_link_libraries(log
 )
 
 include(../Component.cmake)
-setup_component_and_static(log 1.0.3)
+setup_component_and_static(log 1.0.6)
 

@@ -16,5 +16,5 @@ target_link_libraries(versions_manager
 )
 
 include(../Component.cmake)
-setup_component(versions_manager 1.0.0)
+setup_component(versions_manager 1.0.5)
 
