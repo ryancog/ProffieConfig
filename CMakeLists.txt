@@ -27,6 +27,8 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
+set(CMAKE_LINK_DEPENDS_NO_SHARED TRUE)
+
 # MinGW requires manual installation of plugin for LTO.
 # See: https://stackoverflow.com/a/32461766
 # This generally causes issues though...
