@@ -133,9 +133,17 @@ namespace {
 void doNecessaryMigrations() {
     if (lastVersion < Utils::Version{1, 8}) {
         std::error_code err;
-        fs::remove_all(Paths::resourceDir() / "props", err);
-        fs::remove_all(Paths::osDir(), err);
 
+        /*
+         * Purge old ProffieOS and props data 
+         */
+        fs::remove_all(Paths::dataDir() / "ProffieOS", err);
+        fs::remove_all(Paths::dataDir() / "props", err);
+        fs::remove_all(Paths::resourceDir() / "props", err);
+
+        /* 
+         * Install new ProffieOS and props data 
+         */
         auto errStr{Versions::resetToDefault(true)};
         if (errStr) {
             PCUI::showMessage(
