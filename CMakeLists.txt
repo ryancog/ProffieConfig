@@ -6,7 +6,7 @@ if (CMAKE_BUILD_TYPE STREQUAL Release)
     set(CMAKE_OSX_ARCHITECTURES arm64;x86_64 CACHE STRING "Build universal binary" FORCE)
 endif()
 
-project(ProffieConfig VERSION 1.8.0)
+project(ProffieConfig VERSION 1.8.2)
 add_compile_definitions(BUILD_SYSTEM_VERSION=${VERSION})
 
 if (NOT (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux OR CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin))

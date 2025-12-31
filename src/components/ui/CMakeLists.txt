@@ -31,7 +31,7 @@ target_link_libraries(ui
 )
 
 include(../Component.cmake)
-setup_component_and_static(ui 1.0.5)
+setup_component_and_static(ui 1.0.10)
 
 if (CMAKE_SYSTEM_NAME STREQUAL Windows) 
     target_link_libraries(ui dwmapi)
