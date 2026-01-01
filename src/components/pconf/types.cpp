@@ -1,7 +1,7 @@
 #include "types.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/pconf/types.cpp
  *
@@ -23,7 +23,7 @@ PConf::Entry::Entry(
     string name, 
     optional<string> value,
     optional<string> label,
-    optional<int32> labelNum
+    optional<uint32> labelNum
 ) : name(std::move(name)),
     value(std::move(value)),
     label(std::move(label)),
@@ -32,7 +32,7 @@ PConf::Entry::Entry(
 PConf::Section::Section(
     string name, 
     optional<string> label, 
-    optional<int32> labelNum,
+    optional<uint32> labelNum,
     Data entries
 ) : Entry(
         std::move(name),
@@ -46,7 +46,7 @@ PConf::EntryPtr PConf::Entry::create(
     string name,
     optional<string> value,
     optional<string> label,
-    optional<int32> labelNum
+    optional<uint32> labelNum
 ) {
     return EntryPtr{new Entry(std::move(name), std::move(value), std::move(label), labelNum)};
 }
@@ -54,7 +54,7 @@ PConf::EntryPtr PConf::Entry::create(
 PConf::SectionPtr PConf::Section::create(
     string name,
     optional<string> label,
-    optional<int32> labelNum,
+    optional<uint32> labelNum,
     Data entries
 ) {
     return SectionPtr(new Section(std::move(name), std::move(label), labelNum, std::move(entries)));
