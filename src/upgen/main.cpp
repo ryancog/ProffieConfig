@@ -28,17 +28,16 @@
 
 #include <wx/app.h>
 
-#include <app/app.h>
-#include <utils/crypto.h>
-#include <utils/types.h>
-#include <pconf/pconf.h>
-#include <log/context.h>
-#include <log/severity.h>
-#include <log/logger.h>
+#include "log/context.h"
+#include "log/severity.h"
+#include "log/logger.h"
+#include "pconf/pconf.h"
+#include "pconf/utils.h"
+#include "utils/crypto.h"
+#include "utils/paths.h"
+#include "utils/types.h"
 
 #include "../launcher/update/update.h"
-#include "pconf/utils.h"
-#include "utils/paths.h"
 
 class UpGen : public wxAppConsole {
 private:
@@ -195,9 +194,12 @@ public:
                         continue;
                     }
 
-                    const auto& file{entry.path()};
-                    auto fileHash{Crypto::computeHash(file)};
-                    fileMaps[platformIdx][typeIdx].emplace(fs::relative(file, dirFolder), fileHash);
+                    std::ifstream stream{entry.path()};
+                    auto fileHash{Crypto::Hash::stream(stream)};
+                    fileMaps[platformIdx][typeIdx].emplace(
+                        fs::relative(entry.path(), dirFolder),
+                        fileHash
+                    );
                 }
             }
         }

@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * components/utils/crypto.h
  *
@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <istream>
 #include <random>
 #include <type_traits>
 
@@ -61,16 +62,35 @@ inline uint64 genUID(const MAP& collisionMap) {
 }
 
 /**
- * Compute the hash at the given `path`
- *
- * Computes the SHA256 hash of the file using tomcrypt.
- *
- * @param path The path of the file to hash
- *
- * @return The hash as a str
+ * SHA256 Hash
  */
-UTILS_EXPORT string computeHash(const filepath& path);
+struct UTILS_EXPORT Hash {
+    /**
+     * Raw initialization
+     */
+    Hash(array<uint8, 32>);
 
+    /**
+     * Compute the hash of the given stream.
+     *
+     * If a file, should be opened as binary.
+     */
+    static Hash stream(std::istream&);
+
+    /**
+     * Does not compute the hash of the string, but rather parses it as a
+     * hex-encoded 256-bit value.
+     */
+    static optional<Hash> parseString(const string&);
+
+    [[nodiscard]] array<uint8, 32> value() const;
+    explicit operator string() const;
+
+    auto operator<=>(const Hash&) const = default;
+
+private:
+    array<uint8, 32> mValue;
+};
 
 } // namespace Crypto
 

@@ -397,7 +397,9 @@ optional<std::pair<string, Update::Item>> parseItem(
             logger.warn(errMsg);
             continue;
         }
-        if (versionHashEntry->value->length() != 64) {
+
+        const auto hash{Crypto::Hash::parseString(*versionHashEntry->value)};
+        if (not hash) {
             string errMsg{"Item \""}; 
             errMsg += name;
             errMsg += "\" version ";
@@ -407,8 +409,7 @@ optional<std::pair<string, Update::Item>> parseItem(
             continue;
         }
 
-        Update::ItemVersionData versionData;
-        versionData.hash = *versionHashEntry->value;
+        Update::ItemVersionData versionData{.hash=*hash};
 
         auto fixEntries{hashedVersionEntries.findAll("FIX")};
         for (const auto& fixEntry : fixEntries) {
@@ -534,12 +535,17 @@ std::map<Utils::Version, Update::Bundle> resolveBundles(const PConf::HashedData&
     return ret;
 }
 
-void verifyBundles(const std::map<Update::ItemID, Update::Item>& items, std::map<Utils::Version, Update::Bundle>& bundles, Log::Branch& lBranch) {
+void verifyBundles(
+    const std::map<Update::ItemID, Update::Item>& items,
+    std::map<Utils::Version, Update::Bundle>& bundles,
+    Log::Branch& lBranch
+) {
     auto& logger{lBranch.createLogger("Update::verifyBundles()")};
 
     for (auto bundleIt{bundles.begin()}; bundleIt != bundles.end();) {
         auto& [ version, bundle ]{*bundleIt};
         bool eraseBundle{false};
+
         for (auto& [ fileID, fileVer, hash] : bundle.reqs) {
             auto itemIt{items.find(fileID)};
             if (itemIt == items.end()) {
@@ -568,6 +574,7 @@ void verifyBundles(const std::map<Update::ItemID, Update::Item>& items, std::map
             // Assign hash after verification
             hash = itemVerIt->second.hash;
         }
+
         if (eraseBundle) bundleIt = bundles.erase(bundleIt);
         else ++bundleIt;
     }

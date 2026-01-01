@@ -1,7 +1,7 @@
 #include "crypto.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * components/utils/crypto.cpp
  *
@@ -19,8 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <fstream>
-
 #include <random>
 #include <tomcrypt.h>
 
@@ -29,31 +27,58 @@ std::mt19937_64& Crypto::randGen() {
     return gen;
 }
 
-string Crypto::computeHash(const filepath& path) {
-    std::ifstream inputStream{path, std::ios::binary};
+Crypto::Hash::Hash(array<uint8, 32> arr) : mValue{arr} {}
+
+Crypto::Hash Crypto::Hash::stream(std::istream& stream) {
     array<uint8, 32768> buffer;
 
     hash_state hashState;
     sha256_init(&hashState);
 
     while (not false) {
-        inputStream.read(reinterpret_cast<char *>(buffer.data()), buffer.size());
-        auto bytesRead{inputStream.gcount()};
+        stream.read(reinterpret_cast<char *>(buffer.data()), buffer.size());
+        auto bytesRead{stream.gcount()};
         if (bytesRead == 0) break;
 
         sha256_process(&hashState, buffer.data(), bytesRead);
     }
-    inputStream.close();
 
-    string hashStr;
-    hashStr.resize(64);
-    array<uint8_t, 32> hash;
-    sha256_done(&hashState, hash.data());
+    array<uint8, 32> ret;
+    sha256_done(&hashState, ret.data());
 
-    for (uint64 byte{0}; byte < hash.size(); byte++) {
-        (void)snprintf(&hashStr.at(byte * 2), 3, "%02x", hash[byte]);
+    return ret;
+}
+
+optional<Crypto::Hash> Crypto::Hash::parseString(const string& str) {
+    // 32-bytes (256 bits / 8 bits per byte) * 2 chars per byte
+    if (str.length() != 64) return nullopt;
+
+    for (char chr : str) {
+        if (not std::isxdigit(chr)) return nullopt;
     }
 
-    return hashStr;
+    array<uint8, 32> ret;
+    array<char, 3> tmpStr{0, 0, 0};
+    for (auto idx{0}; idx < ret.size(); ++idx) {
+        tmpStr[0] = str[(idx * 2) + 0];
+        tmpStr[1] = str[(idx * 2) + 1];
+        ret[idx] = strtoul(tmpStr.data(), nullptr, 16);
+    }
+
+    return ret;
 }
+
+array<uint8, 32> Crypto::Hash::value() const { return mValue; }
+
+Crypto::Hash::operator string() const {
+    string ret;
+    ret.resize(64);
+
+    for (size idx{0}; idx < mValue.size(); ++idx) {
+        (void)snprintf(&ret[idx * 2], 3, "%02x", mValue[idx]);
+    }
+
+    return ret;
+}
+
 

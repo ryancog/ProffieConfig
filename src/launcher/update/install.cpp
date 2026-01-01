@@ -22,7 +22,6 @@
 #include <chrono>
 #include <filesystem>
 #include <thread>
-#include <fstream>
 
 #include <wx/webrequest.h>
 #include <wx/filefn.h>
@@ -36,15 +35,20 @@
 #include "update.h"
 #include "wx/utils.h"
 
-namespace Update {
+namespace {
 
 inline filepath stagingFolder() { return Paths::dataDir() / "staging"; }
 
 string convertSize(uint64 size);
 
-} // namespace Update
+} // namespace
 
-bool Update::pullNewFiles(const Changelog& changelog, const Data& data, PCUI::ProgressDialog *prog, Log::Branch& lBranch) {
+bool Update::pullNewFiles(
+    const Changelog& changelog,
+    const Data& data,
+    PCUI::ProgressDialog *prog,
+    Log::Branch& lBranch
+) {
     auto& logger{lBranch.createLogger("Update::pullNewFiles()")};
 
     prog->Update(0, "Preparing to download new files...");
@@ -86,7 +90,7 @@ bool Update::pullNewFiles(const Changelog& changelog, const Data& data, PCUI::Pr
         string itemURLString{Paths::remoteUpdateAssets()};
         type = file.id.type;
         itemURLString += '/' + typeFolder(type).string() + '/';
-        itemURLString += file.hash;
+        itemURLString += static_cast<string>(file.hash);
         wxURI url{itemURLString};
         auto request{wxWebSession::GetDefault().CreateRequest(getEventHandler(), url.BuildURI())};
         request.SetStorage(wxWebRequestBase::Storage_File);
@@ -146,7 +150,12 @@ bool Update::pullNewFiles(const Changelog& changelog, const Data& data, PCUI::Pr
     return true;
 }
 
-void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::ProgressDialog *prog, Log::Branch& lBranch) {
+void Update::installFiles(
+    const Changelog& changelog,
+    const Data& data,
+    PCUI::ProgressDialog * /*prog*/,
+    Log::Branch& lBranch
+) {
     auto& logger{lBranch.createLogger("Update::pullNewFiles()")};
 
     auto baseTypePath{[](ItemType type) -> filepath {
@@ -240,7 +249,9 @@ void Update::installFiles(const Changelog& changelog, const Data& data, PCUI::Pr
     fs::remove_all(stagingFolder());
 }
 
-string Update::convertSize(uint64 size) {              
+namespace {
+
+string convertSize(uint64 size) {
     constexpr array<cstring, 4> SIZES{ "B", "KB", "MB", "GB" };
     auto scale{0};
     auto result{static_cast<float128>(size)};
@@ -259,4 +270,6 @@ string Update::convertSize(uint64 size) {
         SIZES[scale]
     };
 }
+
+} // namespace
 
