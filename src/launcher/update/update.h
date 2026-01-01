@@ -21,10 +21,11 @@
 
 #include <map>
 
-#include <utils/types.h>
-#include <ui/message.h>
-#include <log/branch.h>
-#include <utils/version.h>
+#include <wx/event.h>
+
+#include "utils/types.h"
+#include "utils/version.h"
+#include "utils/crypto.h"
 
 namespace Update {
 
@@ -51,7 +52,7 @@ struct ItemID {
 };
 
 struct ItemVersionData {
-    string hash;
+    Crypto::Hash hash;
 
     vector<string> fixes;
     vector<string> changes;
@@ -69,11 +70,12 @@ struct Bundle {
     string note;
 
     struct RequiredItem {
-        RequiredItem(ItemID id, Utils::Version version, string hash = {}) : id{std::move(id)}, version{std::move(version)}, hash{std::move(hash)} {}
+        RequiredItem(ItemID id, Utils::Version version) : 
+            id{std::move(id)}, version{std::move(version)} {}
 
         ItemID id;
         Utils::Version version;
-        string hash;
+        optional<Crypto::Hash> hash;
     };
     vector<RequiredItem> reqs;
 };

@@ -19,7 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <log/branch.h>
+#include "log/branch.h"
+#include "ui/message.h"
 
 #include "update.h"
 
@@ -31,7 +32,7 @@ struct Changelog {
 
     struct ChangedFile {
         ItemID id;
-        string hash;
+        Crypto::Hash hash;
         Utils::Version currentVersion;
         Utils::Version latestVersion;
     };

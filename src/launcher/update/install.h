@@ -26,9 +26,19 @@
 
 namespace Update {
 
-[[nodiscard]] bool pullNewFiles(const Changelog& changelog, const Data& data, PCUI::ProgressDialog *, Log::Branch&);
+[[nodiscard]] bool pullNewFiles(
+    const Changelog& changelog,
+    const Data& data,
+    PCUI::ProgressDialog *,
+    Log::Branch&
+);
 
-void installFiles(const Changelog& changelog, const Data& data, PCUI::ProgressDialog *, Log::Branch&);
+void installFiles(
+    const Changelog& changelog,
+    const Data& data,
+    PCUI::ProgressDialog *,
+    Log::Branch&
+);
 
 } // namespace Update
 

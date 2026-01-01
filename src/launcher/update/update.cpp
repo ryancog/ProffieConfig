@@ -23,12 +23,11 @@
 
 #include <utils/types.h>
 
-namespace Update {
+namespace {
 
 wxEvtHandler *handler{nullptr};
 
-} // namespace Update
-
+} // namespace
 
 void Update::init() {
     handler = new wxEvtHandler();

@@ -27,10 +27,11 @@
 #include <wx/statline.h>
 #include <wx/scrolwin.h>
 
-#include <log/logger.h>
-#include <utils/paths.h>
-#include <utils/crypto.h>
+#include "log/logger.h"
+#include "ui/message.h"
 #include "ui/static_box.h"
+#include "utils/paths.h"
+#include "utils/crypto.h"
 
 namespace Update {
 
@@ -60,12 +61,12 @@ namespace Update {
         auto currentVersion{getVersionInCurrent(id)};
         if (currentVersion == version) continue;
 
-        auto& changedFile{ret.changedFiles.emplace_back()};
-
-        changedFile.currentVersion = currentVersion;
-        changedFile.latestVersion = version;
-        changedFile.hash = hash;
-        changedFile.id = id;
+        auto& changedFile{ret.changedFiles.emplace_back(
+                id,
+                *hash,
+                currentVersion,
+                version
+        )};
     }
 
     if (currentVersion and data.bundles.contains(currentVersion)) {
@@ -277,7 +278,7 @@ Utils::Version Update::determineCurrentVersion(const Data& data, PCUI::ProgressD
 
     // Ensure invalid
     auto ret{Utils::Version::invalidObject()};
-    std::map<filepath, string> hashCache;
+    std::map<filepath, optional<Crypto::Hash>> hashCache;
 
     prog->Pulse("Determining current version...");
     for (auto bundleIt{data.bundles.rbegin()}; bundleIt != data.bundles.rend(); ++bundleIt) {
@@ -322,9 +323,20 @@ Utils::Version Update::determineCurrentVersion(const Data& data, PCUI::ProgressD
             prog->Pulse(status);
 
             auto cachedHash{hashCache.find(itemPath)};
-            string itemHash;
+            optional<Crypto::Hash> itemHash;
             if (cachedHash == hashCache.end()) {
-                itemHash = hashCache[itemPath] = Crypto::computeHash(itemPath);
+                std::ifstream fileStream{itemPath};
+
+                if (fileStream.fail()) {
+                    status = "Could not open " + itemPath.string() + ", does it exist?";
+                    logger.info(status);
+                    prog->Pulse(status);
+                } else {
+                    itemHash = Crypto::Hash::stream(fileStream);
+                }
+
+                // Place even if nullopt to be consistent w/ cache pulls
+                hashCache.emplace(itemPath, itemHash);
             } else {
                 itemHash = cachedHash->second;
             }
