@@ -26,12 +26,12 @@
 namespace {
 
 // All these return false on a critical error condition.
-void parseName           (const string& line, std::optional<string>& out, Log::Branch&);
-bool parseLabel          (const string& line, std::optional<string>& out, Log::Branch&);
-bool parseLabelNum       (const string& line, std::optional<int32_t>& out, Log::Branch&);
-bool parseValue          (const string& line, std::istream&, std::optional<string>& out, Log::Branch&);
-bool parseSinglelineValue(const string& line, std::optional<string>& out, Log::Branch&);
-bool parseMultilineValue (std::istream&, std::optional<string>& out, Log::Branch&);
+void parseName           (const string& line, optional<string>& out, Log::Branch&);
+bool parseLabel          (const string& line, optional<string>& out, Log::Branch&);
+bool parseLabelNum       (const string& line, optional<uint32>& out, Log::Branch&);
+bool parseValue          (const string& line, std::istream&, optional<string>& out, Log::Branch&);
+bool parseSinglelineValue(const string& line, optional<string>& out, Log::Branch&);
+bool parseMultilineValue (std::istream&, optional<string>& out, Log::Branch&);
 
 bool readEntry(std::istream&, PConf::EntryPtr& out, bool& isSect, Log::Branch&);
 bool readSection(std::istream&, PConf::SectionPtr& out, Log::Branch&);
@@ -313,7 +313,7 @@ bool parseLabel(const string& line, optional<string>& out, Log::Branch& lBranch)
     return true;
 }
 
-bool parseLabelNum(const string& line, std::optional<int32_t>& out, Log::Branch& lBranch) {
+bool parseLabelNum(const string& line, optional<uint32>& out, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("PConf::parseLabelNum()")};
 
     out = nullopt;

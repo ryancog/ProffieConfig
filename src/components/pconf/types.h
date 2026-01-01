@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/pconf/types.h
  *
@@ -68,14 +68,14 @@ struct PCONF_EXPORT Entry {
         string name,
         optional<string> value = nullopt,
         optional<string> label = nullopt,
-        optional<int32> labelNum = nullopt
+        optional<uint32> labelNum = nullopt
     );
     virtual ~Entry() = default;
 
     string name;
     optional<string> value{nullopt};
     optional<string> label{nullopt};
-    optional<int32> labelNum{nullopt};
+    optional<uint32> labelNum{nullopt};
 
 private:
     friend Section;
@@ -83,7 +83,7 @@ private:
         string name,
         optional<string> value,
         optional<string> label,
-        optional<int32> labelNum
+        optional<uint32> labelNum
     );
 };
 
@@ -91,7 +91,7 @@ struct PCONF_EXPORT Section : public Entry {
     [[nodiscard]] static SectionPtr create(
         string name,
         optional<string> label = nullopt,
-        optional<int32> labelNum = nullopt,
+        optional<uint32> labelNum = nullopt,
         Data entries = {}
     );
 
@@ -101,7 +101,7 @@ private:
     Section(
         string name, 
         optional<string> label,
-        optional<int32> labelNum,
+        optional<uint32> labelNum,
         Data entries
    );
 };
