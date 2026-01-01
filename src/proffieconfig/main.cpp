@@ -1,6 +1,6 @@
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2023-2025 Ryan Ogurek
+ * Copyright (C) 2023-2026 Ryan Ogurek
  *
  * proffieconfig/main.cpp
  *
@@ -45,15 +45,7 @@ public:
 
         return true;
     }
-
-    bool OnExceptionInMainLoop() override {
-        App::exceptionHandler();
-        return false;
-    }
-
-    void OnUnhandledException() override {
-        App::exceptionHandler();
-    }
 };
 
 wxIMPLEMENT_APP(ProffieConfig);
+

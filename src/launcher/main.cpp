@@ -1,6 +1,6 @@
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * launcher/main.cpp
  *
@@ -205,15 +205,6 @@ public:
 
         Routine::launch(*logger.binfo("Launcher routines done."));
         return false;
-    }
-
-    bool OnExceptionInMainLoop() override {
-        App::exceptionHandler();
-        return false;
-    }
-
-    void OnUnhandledException() override {
-        App::exceptionHandler();
     }
 };
 

@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/versions/versions.h
  *
@@ -61,17 +61,17 @@ struct VERSIONS_EXPORT VersionedProp {
     const string name;
     std::unique_ptr<const Prop> prop;
 
-    void addVersion();
-    void removeVersion(uint32 idx);
+    bool addVersion();
+    bool removeVersion(uint32 idx);
 
-    [[nodiscard]] const vector<std::unique_ptr<PCUI::VersionData>>& supportedVersions() {
+    using SupportedVersionList = vector<std::unique_ptr<PCUI::VersionData>>;
+
+    [[nodiscard]] const SupportedVersionList& supportedVersions() {
         return mSupportedVersions;
     }
 
 private:
-    friend VERSIONS_EXPORT void loadLocal();
-    void saveInfo();
-    vector<std::unique_ptr<PCUI::VersionData>> mSupportedVersions;
+    SupportedVersionList mSupportedVersions;
 };
 
 VERSIONS_EXPORT optional<string> resetToDefault(bool purge, Log::Branch * = nullptr);

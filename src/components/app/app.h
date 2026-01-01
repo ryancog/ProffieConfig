@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * components/app/app.h
  *
@@ -37,8 +37,6 @@ namespace App {
  * @return if the app should continue running or not.
  */
 APP_EXPORT bool init(const string& appName, const string& lockName = {});
-
-APP_EXPORT void exceptionHandler();
 
 APP_EXPORT void appendDefaultMenuItems(wxMenuBar *);
 
