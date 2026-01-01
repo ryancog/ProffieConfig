@@ -1,7 +1,7 @@
 #include "versions.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/versions/versions.h
  *
@@ -32,6 +32,7 @@
 #include "log/context.h"
 #include "pconf/pconf.h"
 #include "pconf/utils.h"
+#include "ui/message.h"
 #include "utils/paths.h"
 #include "utils/string.h"
 #include "utils/types.h"
@@ -51,6 +52,19 @@ vector<std::unique_ptr<Versions::VersionedProp>> props;
 std::multimap<Utils::Version, Versions::VersionedProp *> propVersionMap;
 std::map<Utils::Version, Versions::VersionedProp> propDefaultVersionMap;
 
+bool saveVersionedProp(
+    const string& name,
+    const Versions::VersionedProp::SupportedVersionList& versionList
+);
+
+bool addVersion(Versions::VersionedProp& prop, bool save);
+
+auto& getSupportedVersions(Versions::VersionedProp& prop) {
+    return const_cast<Versions::VersionedProp::SupportedVersionList&>(
+        prop.supportedVersions()
+    );
+};
+
 } // namespace
 
 Utils::Version Versions::getDefaultCoreVersion() {
@@ -63,37 +77,44 @@ Utils::Version Versions::getDefaultOSVersion() {
 
 Versions::VersionedOS::VersionedOS() : coreVersion{Utils::Version::invalidObject()} {}
 
-void Versions::VersionedProp::addVersion() {
+bool Versions::VersionedProp::addVersion() {
+    auto idx{mSupportedVersions.size()};
+
     auto version{std::make_unique<PCUI::VersionData>()};
-    version->setUpdateHandler([this](uint32 id) {
+    version->setUpdateHandler([this, idx](uint32 id) {
         if (id != PCUI::VersionData::ID_VALUE) return;
 
-        saveInfo();
+        if (not saveVersionedProp(name, mSupportedVersions)) {
+            PCUI::showMessage(
+                wxTRANSLATE("Could not save!"),
+                wxTRANSLATE("This shouldn't be a critical error, but Ryan was lazy here.")
+            );
+            exit(1);
+        }
     });
+
     mSupportedVersions.push_back(std::move(version));
-    saveInfo();
+    if (not saveVersionedProp(name, mSupportedVersions)) {
+        mSupportedVersions.pop_back();
+        return false;
+    }
+
+    return true;
 }
 
-void Versions::VersionedProp::removeVersion(uint32 idx) {
+bool Versions::VersionedProp::removeVersion(uint32 idx) {
+    auto preserved{std::move(mSupportedVersions[idx])};
     mSupportedVersions.erase(std::next(mSupportedVersions.begin(), idx));
-    saveInfo();
-}
 
-void Versions::VersionedProp::saveInfo() {
-    PConf::Data infoData;
-
-    vector<string> list;
-    list.reserve(mSupportedVersions.size());
-    for (const auto& version : mSupportedVersions) {
-        list.push_back(static_cast<string>(static_cast<Utils::Version>(*version)));
+    if (not saveVersionedProp(name, mSupportedVersions)) {
+        mSupportedVersions.insert(
+            std::next(mSupportedVersions.begin(), idx), 
+            std::move(preserved)
+        );
+        return false;
     }
-    infoData.push_back(PConf::Entry::create(SUPPORTED_VERSIONS_STR, PConf::listAsValue(list)));
 
-    auto infoFile{Paths::openOutputFile(Paths::propDir() / name / INFO_FILE_STR)};
-    if (not infoFile.is_open()) {
-        throw std::ios_base::failure("Couldn't open prop info file for write.");
-    }
-    PConf::write(infoFile, infoData, nullptr);
+    return true;
 }
 
 void Versions::loadLocal() {
@@ -237,23 +258,21 @@ void Versions::loadLocal() {
             std::unique_ptr<PCUI::VersionData> version;
 
             if (oldPropPtr) {
-                for (auto& oldSupportedVersion : oldPropPtr->mSupportedVersions) {
-                    if (oldSupportedVersion and static_cast<Utils::Version>(*oldSupportedVersion) == supportedVersion) {
+                auto& oldSupportedVersions{getSupportedVersions(*oldPropPtr)};
+                for (auto& oldSupportedVersion : oldSupportedVersions) {
+                    if (not oldSupportedVersion) continue;
+
+                    const auto oldRawVersion{
+                        static_cast<Utils::Version>(*oldSupportedVersion)
+                    };
+                    if (oldRawVersion == supportedVersion) {
                         version = std::move(oldSupportedVersion);
                         oldSupportedVersion = nullptr;
                     }
                 }
             } 
 
-            if (not version) version = std::make_unique<PCUI::VersionData>(supportedVersion);
-
-            auto *versionedPropPtr{versionedProp.get()};
-            version->setUpdateHandler([versionedPropPtr](uint32 id) {
-                if (id != PCUI::VersionData::ID_VALUE) return;
-
-                versionedPropPtr->saveInfo();
-            });
-            supportedVersions.push_back(std::move(version));
+            if (not version) addVersion(*versionedProp, false);
         }
 
         // Yeah this naming is stupid, what are you going to do about it?
@@ -271,7 +290,7 @@ void Versions::loadLocal() {
         }
 
         versionedProp->prop = std::move(prop);
-        versionedProp->mSupportedVersions = std::move(supportedVersions);
+        getSupportedVersions(*versionedProp) = std::move(supportedVersions);
 
         props.push_back(std::move(versionedProp));
     }
@@ -286,7 +305,7 @@ void Versions::loadLocal() {
     logger.debug("Generating prop version map...");
     propVersionMap.clear();
     for (const auto& prop : props) {
-        for (const auto& version : prop->mSupportedVersions) {
+        for (const auto& version : prop->supportedVersions()) {
             propVersionMap.emplace(*version, prop.get());
         }
     }
@@ -487,4 +506,71 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
     loadLocal();
     return nullopt;
 }
+
+namespace {
+
+bool saveVersionedProp(
+    const string& name,
+    const Versions::VersionedProp::SupportedVersionList& versionList
+) {
+    PConf::Data infoData;
+
+    vector<string> list;
+    list.reserve(versionList.size());
+    for (const auto& version : versionList) {
+        list.push_back(
+            static_cast<string>(static_cast<Utils::Version>(*version))
+        );
+    }
+
+    infoData.push_back(PConf::Entry::create(
+        SUPPORTED_VERSIONS_STR,
+        PConf::listAsValue(list)
+    ));
+
+    auto infoFile{Paths::openOutputFile(
+        Paths::propDir() / name / Versions::INFO_FILE_STR
+    )};
+
+    if (not infoFile.is_open()) return false;
+
+    PConf::write(infoFile, infoData, nullptr);
+    return true;
+}
+
+bool addVersion(Versions::VersionedProp& prop, bool save) {
+    auto version{std::make_unique<PCUI::VersionData>()};
+
+    /*
+     * TODO: So much about this is woefully inefficient and error-prone, not to
+     * mention the actual message content itself...
+     *
+     * This really should have a lot more work put into it to make it correct,
+     * but that's a lot more work, and I'm not doing it right now.
+     */
+    version->setUpdateHandler([&prop](uint32 id) {
+        if (id != PCUI::VersionData::ID_VALUE) return;
+
+        if (not saveVersionedProp(prop.name, getSupportedVersions(prop))) {
+            PCUI::showMessage(
+                wxTRANSLATE("Could not save!"),
+                wxTRANSLATE("This shouldn't be a critical error, but Ryan was lazy here.")
+            );
+            exit(1);
+        }
+    });
+
+    getSupportedVersions(prop).push_back(std::move(version));
+
+    if (save) {
+        if (not saveVersionedProp(prop.name, getSupportedVersions(prop))) {
+            getSupportedVersions(prop).pop_back();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+} // namespace
 

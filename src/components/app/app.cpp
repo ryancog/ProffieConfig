@@ -1,7 +1,7 @@
 #include "app.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/app/app.cpp
  *
@@ -122,6 +122,12 @@ void sigHandler(int sig) {
         case SIGABRT:
             signame = "Function Aborted";
             break;
+        case SIGFPE:
+            signame = "Illegal Arithmetic";
+            break;
+        case SIGILL:
+            signame = "Illegal Hardware Instruction";
+            break;
     }
     auto errStr{signame};
 #endif
@@ -138,6 +144,8 @@ bool App::init(const string& appName, const string& lockName) {
     act.sa_sigaction = sigHandler;
     sigaction(SIGSEGV, &act, nullptr);
     sigaction(SIGABRT, &act, nullptr);
+    sigaction(SIGFPE, &act, nullptr);
+    sigaction(SIGILL, &act, nullptr);
 #   elif defined(__WIN32__)
     (void)signal(SIGSEGV, sigHandler);
     (void)signal(SIGABRT, sigHandler);
@@ -222,25 +230,6 @@ void App::appendDefaultMenuItems(wxMenuBar *menuBar) {
     menuBar->Append(new wxMenu, _("&Window"));
     menuBar->Append(new wxMenu, _("&Help"));
 #   endif
-}
-
-void App::exceptionHandler() {
-    wxString exceptStr;
-    try {
-        throw;
-    } catch (const std::exception& e) {
-        exceptStr = e.what();
-    } catch (...) {
-        exceptStr = "Non-Standard Unknown Exception\nThis is scary, please let me know if you encounter this.";
-    }
-
-    if (not exceptStr.empty()) {
-        exceptStr = "Unhandled Exception: " + exceptStr;
-    } else {
-        exceptStr = "Unknown Unhandled Exception";
-    }
-
-    crashHandler(exceptStr);
 }
 
 #if defined(__WIN32__)

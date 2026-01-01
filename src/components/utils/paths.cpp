@@ -73,14 +73,13 @@ filepath Paths::executable(Executable exec) {
 #           ifdef __WIN32__
             {
                 LPWSTR rawStr{};
-                auto res{SHGetKnownFolderPath(FOLDERID_UserProgramFiles, KF_FLAG_CREATE, nullptr, &rawStr)};
-                if (res != S_OK) {
-                    throw std::runtime_error{"Failed getting program files: " + std::to_string(res)};
-                }
+                auto rawPathRes{SHGetKnownFolderPath(FOLDERID_UserProgramFiles, KF_FLAG_CREATE, nullptr, &rawStr)};
+                assert(rawPathRes == S_OK);
+
                 array<wchar_t, MAX_PATH> shortPath;
-                if (0 == GetShortPathNameW(rawStr, shortPath.data(), shortPath.size())) {
-                    throw std::runtime_error{"Failed getting shortname: " + std::to_string(GetLastError())};
-                }
+                auto shortPathRes{GetShortPathNameW(rawStr, shortPath.data(), shortPath.size())};
+                assert(shortPathRes != 0);
+
                 CoTaskMemFree(rawStr);
                 return filepath{shortPath.data()} / "ProffieConfig.exe";
             }
