@@ -1,6 +1,6 @@
 #!/bin/bash
 # ProffieConfig, All-In-One Proffieboard Management Utility
-# Copyright (C) 2024-2025 Ryan Ogurek
+# Copyright (C) 2024-2026 Ryan Ogurek
 
 ROOT_DIR=`dirname -- \` readlink -f -- "$0" \``
 cd $ROOT_DIR
@@ -254,8 +254,7 @@ do_with_log \
 
 WX_INSTALL_PREFIX=`pwd`/install-$TARGET_PLATFORM
 
-# Use --enable-debug if needed
-WX_FLAGS='--without-opengl --disable-unsafe-conv-in-wxstring --disable-sys-libs'
+WX_FLAGS='--without-opengl --disable-unsafe-conv-in-wxstring --disable-sys-libs --enable-debug'
 
 if [ "$TARGET_PLATFORM" == "linux" ]; then
     WX_HOST='x86_64-linux'
