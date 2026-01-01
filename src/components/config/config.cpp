@@ -1,7 +1,7 @@
 #include "config.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024-2025 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * components/config/config.cpp
  *
@@ -124,6 +124,8 @@ void Config::Config::refreshPropVersions() {
         if (a.prop->isDefault()) return true;
         if (b.prop->isDefault()) return false;
 
+        // This being inside the comparison is a little inefficient.
+        // I don't think it really matters at all though. I do worse elsewhere.
         bool aIsVisible{false};
         bool bIsVisible{false};
         for (auto *const visibleProp : visibleList) {
@@ -179,33 +181,36 @@ void Config::Config::processCustomToPropOptions() {
             case Versions::PropDataType::TOGGLE:
                 {
                     auto *toggle{static_cast<Versions::PropToggle *>(
-                            dataIter->second
-                            )};
+                        dataIter->second
+                    )};
                     toggle->value.setValue(true);
                     break;
                 }
             case Versions::PropDataType::SELECTION:
                 {
                     auto *selection{static_cast<Versions::PropSelection *>(
-                            dataIter->second
-                            )};
+                        dataIter->second
+                    )};
                     selection->select();
                     break;
                 }
             case Versions::PropDataType::NUMERIC:
                 {
                     auto *numeric{static_cast<Versions::PropNumeric *>(
-                            dataIter->second
-                            )};
-                    auto val{strtol(valStr.c_str(), nullptr, 10)};
-                    numeric->value.setValue(static_cast<int32>(val));
+                        dataIter->second
+                    )};
+
+                    auto val{Utils::doStringMath(valStr)};
+                    numeric->value.setValue(
+                        static_cast<int32>(val.value_or(0))
+                    );
                     break;
                 }
             case Versions::PropDataType::DECIMAL:
                 {
                     auto *decimal{static_cast<Versions::PropDecimal *>(
-                            dataIter->second
-                            )};
+                        dataIter->second
+                    )};
                     auto val{strtod(valStr.c_str(), nullptr)};
                     decimal->value.setValue(val);
                     break;

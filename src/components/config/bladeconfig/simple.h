@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/config/bladeconfig/simple.h
  *
@@ -54,12 +54,12 @@ struct CONFIG_EXPORT SimpleBlade {
         };
         static constexpr array<string_view, LED_MAX> LED_STRS{
             "NoLED",
-            "CreeXPE2RedTemplate<",
-            "CreeXPE2GreenTemplate<",
-            "CreeXPE2BlueTemplate<",
-            "CreeXPE2AmberTemplate<",
-            "CreeXPE2RedOrangeTemplate<",
-            "CreeXPE2WhiteTemplate<",
+            "CreeXPE2RedTemplate",
+            "CreeXPE2GreenTemplate",
+            "CreeXPE2BlueTemplate",
+            "CreeXPE2AmberTemplate",
+            "CreeXPE2RedOrangeTemplate",
+            "CreeXPE2WhiteTemplate",
             "CH1LED",
             "CH2LED",
             "CH3LED",
@@ -75,4 +75,5 @@ struct CONFIG_EXPORT SimpleBlade {
     Star star4;
 };
 
-};
+} // namespace Config
+

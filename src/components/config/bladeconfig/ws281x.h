@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/config/bladeconfig/ws281x.h
  *
@@ -96,7 +96,7 @@ struct CONFIG_EXPORT Split {
 
     // For list
     PCUI::TextData list;
-    vector<uint32> listValues() const;
+    [[nodiscard]] vector<uint32> listValues() const;
 
     PCUI::NumericData brightness;
 

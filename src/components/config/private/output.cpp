@@ -1,7 +1,7 @@
 #include "io.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2023-2025 Ryan Ogurek
+ * Copyright (C) 2023-2026 Ryan Ogurek
  *
  * components/config/private/output.cpp
  *
@@ -562,7 +562,7 @@ void outputPresetBlades(std::ostream& outFile, const Config::Config& config) {
 
                 auto outputStar{[&bladeStr](const SimpleBlade::Star& star) {
                     bladeStr << SimpleBlade::Star::LED_STRS[star.led];
-                    if (star.resistance.isEnabled()) bladeStr << star.resistance << '>';
+                    if (star.resistance.isEnabled()) bladeStr << '<' << star.resistance << '>';
                     bladeStr << ", ";
                 }};
                 outputStar(simple.star1);

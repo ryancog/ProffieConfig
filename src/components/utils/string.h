@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/utils/string.h
  *
@@ -110,23 +110,14 @@ UTILS_EXPORT void trimForNumeric(
  */
 UTILS_EXPORT bool skipComment(std::istream& stream, string *str = nullptr);
 
-UTILS_EXPORT vector<string> createEntries(const std::vector<wxString>& vec);
-UTILS_EXPORT vector<string> createEntries(const std::initializer_list<wxString>& list);
-
-template<typename T, size_t SIZE>
-vector<string> createEntries(const array<T, SIZE>& list) {
-    vector<string> entries;
-    for (const auto& entry : list) {
-        entries.push_back(string{entry});
-    }
-    return entries;
-}
+[[nodiscard]] UTILS_EXPORT vector<string> createEntries(const std::vector<wxString>& vec);
+[[nodiscard]] UTILS_EXPORT vector<string> createEntries(const std::initializer_list<wxString>& list);
 
 /**
  * Evaluate the string for math operations
  *
  * @return Evaluated value
  */
-UTILS_EXPORT float64 doStringMath(const string&);
+[[nodiscard]] UTILS_EXPORT optional<float64> doStringMath(const string&);
 
 } // namespace Utils

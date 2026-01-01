@@ -1,7 +1,7 @@
 #include "ws281x.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/config/bladeconfig/ws281x.cpp
  *
@@ -173,15 +173,21 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
             if (not commaEnd and idx == str.size() - 1) end = idx + 1;
             else if (str[idx] == ',') end = idx;
 
-            if (end != -1) {
-                auto substr{str.substr(numStart, end - numStart)};
-                auto value{std::to_string(std::clamp<uint32>(std::stoi(substr), 0, mParent.length))};
-                values.push_back(value);
-                if (substr != value and insertionPoint >= numStart and insertionPoint < end) {
-                    insertionPoint = end;
-                }
-                numStart = end + 1;
+            if (end == -1) continue;
+
+            auto substr{str.substr(numStart, end - numStart)};
+
+            // With the stripping above, this should *never* fail!
+            auto value{strtoul(substr.c_str(), nullptr, 10)};
+            auto clampValue{std::clamp<uint32>(value, 0, mParent.length)};
+            auto clampValueStr{std::to_string(clampValue)};
+
+            values.push_back(clampValueStr);
+
+            if (substr != clampValueStr and insertionPoint >= numStart and insertionPoint < end) {
+                insertionPoint = end;
             }
+            numStart = end + 1;
         }
 
         str.clear();
@@ -223,10 +229,15 @@ vector<uint32> Config::Split::listValues() const {
         if (not commaEnd and idx == str.size() - 1) end = idx + 1;
         else if (str[idx] == ',') end = idx;
 
-        if (end != -1) {
-            ret.push_back(std::stoi(str.substr(numStart, end - numStart)));
-            numStart = end + 1;
-        }
+        if (end == -1) continue;
+
+        auto substr{str.substr(numStart, end - numStart)};
+
+        // With the list stripped via update handler, this should never fail
+        auto value{strtoul(substr.c_str(), nullptr, 10)};
+
+        ret.push_back(value);
+        numStart = end + 1;
     }
 
     return ret;

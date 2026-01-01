@@ -1,7 +1,7 @@
 #include "version.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/version.cpp
  *
@@ -40,11 +40,11 @@ PCUI::VersionData::VersionData() {
 
         string newValue;
         if (not rawValue.empty()) {
-            using majorType = decltype(Utils::Version::major);
-            const auto clampedValue{std::clamp<majorType>(
-                std::stoi(rawValue),
+            using MajorType = decltype(Utils::Version::major);
+            const auto clampedValue{std::clamp<MajorType>(
+                strtoul(rawValue.c_str(), nullptr, 10),
                 0,
-                Utils::MAX<majorType>
+                Utils::MAX<MajorType>
             )};
             newValue = std::to_string(clampedValue);
         }
@@ -71,11 +71,11 @@ PCUI::VersionData::VersionData() {
 
         string newValue;
         if (not rawValue.empty()) {
-            using minorType = decltype(Utils::Version::minor);
-            const auto clampedValue{std::clamp<minorType>(
-                static_cast<minorType>(std::stoi(rawValue)),
+            using MinorType = decltype(Utils::Version::minor);
+            const auto clampedValue{std::clamp<MinorType>(
+                static_cast<MinorType>(strtoul(rawValue.c_str(), nullptr, 10)),
                 0,
-                Utils::MAX<minorType>
+                Utils::MAX<MinorType>
             )};
             newValue = std::to_string(clampedValue);
         }
@@ -110,11 +110,11 @@ PCUI::VersionData::VersionData() {
 
         string newValue;
         if (not rawValue.empty()) {
-            using bugfixType = decltype(Utils::Version::bugfix);
-            const auto clampedValue{std::clamp<bugfixType>(
-                static_cast<bugfixType>(std::stoi(rawValue)),
+            using BugfixType = decltype(Utils::Version::bugfix);
+            const auto clampedValue{std::clamp<BugfixType>(
+                static_cast<BugfixType>(strtoul(rawValue.c_str(), nullptr, 10)),
                 0,
-                Utils::MAX<bugfixType>
+                Utils::MAX<BugfixType>
             )};
             newValue = std::to_string(clampedValue);
         }
@@ -161,9 +161,19 @@ PCUI::VersionData::VersionData(const Utils::Version& version) : VersionData() {
 PCUI::VersionData::operator Utils::Version() {
     std::scoped_lock scopeLock{getLock()};
     return {
-        static_cast<decltype(Utils::Version::major)>(std::stoi(mMajor)),
-        static_cast<decltype(Utils::Version::minor)>(mMinor.empty() ? Utils::Version::NULL_REV : std::stoi(mMinor)),
-        static_cast<decltype(Utils::Version::bugfix)>(mBugfix.empty() ? Utils::Version::NULL_REV : std::stoi(mBugfix)),
+        static_cast<decltype(Utils::Version::major)>(
+            strtoul(static_cast<string>(mMajor).c_str(), nullptr, 10)
+        ),
+        static_cast<decltype(Utils::Version::minor)>(
+            mMinor.empty()
+                ? Utils::Version::NULL_REV
+                : strtoul(static_cast<string>(mMinor).c_str(), nullptr, 10)
+        ),
+        static_cast<decltype(Utils::Version::bugfix)>(
+            mBugfix.empty()
+                ? Utils::Version::NULL_REV 
+                : strtoul(static_cast<string>(mBugfix).c_str(), nullptr, 10)
+        ),
         mTag
     };
 }

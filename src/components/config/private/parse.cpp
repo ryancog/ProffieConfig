@@ -1,7 +1,7 @@
 #include "io.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2023-2025 Ryan Ogurek
+ * Copyright (C) 2023-2026 Ryan Ogurek
  *
  * components/config/private/parse.cpp
  *
@@ -541,16 +541,17 @@ optional<string> parseBladeArrays(const string& data, Config::Config& config, Lo
         } else if (reading == ID) {
             if (chr == ',') {
                 Utils::trimWhitespace(buffer);
-                try {
-                    const auto id{
-                        buffer == "NO_BLADE" ?
-                            NO_BLADE :
-                            std::stoi(buffer)
-                    };
-                    config.bladeArrays.arrays().back()->id = id;
-                } catch (const std::exception& e){
-                    logger.warn("Invalid blade ID: " + buffer);
-                }
+
+                auto id{buffer == "NO_BLADE"
+                    ? NO_BLADE
+                    : Utils::doStringMath(buffer)
+                };
+
+                if (id) {
+                    auto& lastArray{*config.bladeArrays.arrays().back()};
+                    lastArray.id = static_cast<int32>(*id);
+                } else logger.warn("Invalid blade ID for array " + std::to_string(config.bladeArrays.arrays().size()));
+
                 reading = BLADE_ENTRY;
                 buffer.clear();
                 continue;
@@ -634,33 +635,35 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
     auto& logger{lBranch.createLogger("Config::parseBlade()")};
     logger.verbose("Parsing blade \"" + data + "\"...");
 
+    optional<string> err;
+
     static constexpr string_view DIMBLADE_STR{"DimBlade("};
     const auto parseDimBlade{[&data, &logger](int32& brightness) -> optional<string> {
         if (data.starts_with(DIMBLADE_STR)) {
             data.erase(0, DIMBLADE_STR.length());
 
-            size_t numProcessed{};
-            try {
-                brightness = static_cast<int32>(std::stod(data, &numProcessed));
-            } catch (const std::exception& e) {
-                return errorMessage(logger, wxTRANSLATE("DimBlade has malformed brightness: %s"), e.what());
-            }
-            data.erase(0, numProcessed);
-
-            if (data.empty()) {
-                return errorMessage(logger, wxTRANSLATE("DimBlade is missing blade"));
+            const auto brightCommaPos{data.find(',')};
+            if (brightCommaPos == string::npos) {
+                return errorMessage(logger, wxTRANSLATE("DimBlade is missing end comma for brightness"));
             }
 
-            // Now should start at blade. Skipped ','
-            data.erase(0, 1);
+            const auto brightStr{data.substr(0, brightCommaPos)};
+            data.erase(0, brightCommaPos + 1);
+
+            const auto bright{Utils::doStringMath(brightStr)};
+            if (not bright) {
+                return errorMessage(logger, wxTRANSLATE("DimBlade has malformed brightness: %s"), brightStr);
+            }
+
+            brightness = static_cast<int32>(*bright);
         }
 
         return nullopt;
     }};
 
     int32 firstBrightness{100};
-    auto res{parseDimBlade(firstBrightness)};
-    if (res) return res;
+    err = parseDimBlade(firstBrightness);
+    if (err) return err;
 
     static constexpr string_view SUBBLADE_STR{"SubBlade"};
     struct {
@@ -703,80 +706,104 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
                 splitData.type == Split::STANDARD or splitData.type == Split::REVERSE or
                 splitData.type == Split::STRIDE or splitData.type == Split::ZIG_ZAG
            ) {
-            size_t numProcessed{};
-            try {
-                splitData.start = std::stoi(data, &numProcessed);
-            } catch (const std::exception& e) {
-                return errorMessage(logger, wxTRANSLATE("Failed to read SubBlade start: %s"), e.what());
-            }
-            data.erase(0, numProcessed);
-            if (data.empty()) {
-                return errorMessage(logger, wxTRANSLATE("SubBlade missing data after start"));
+            auto startCommaPos{data.find(',')};
+            if (startCommaPos == string::npos) {
+                return errorMessage(logger, wxTRANSLATE("Failed to find end comma for SubBlade start"));
             }
 
-            data.erase(0, 1); // ','
+            auto startStr{data.substr(0, startCommaPos)};
+            data.erase(0, startCommaPos + 1);
 
-            try {
-                splitData.end = std::stoi(data, &numProcessed);
-            } catch (const std::exception& e) {
-                return errorMessage(logger, wxTRANSLATE("Failed to read SubBlade end: %s"), e.what());
+            auto start{Utils::doStringMath(startStr)};
+            if (not start) {
+               return errorMessage(logger, wxTRANSLATE("Failed to parse SubBlade start"));
             }
-            data.erase(0, numProcessed);
-            if (data.empty()) {
-                return errorMessage(logger, wxTRANSLATE("SubBlade missing data after end"));
+            splitData.start = static_cast<int32>(*start);
+
+            auto endCommaPos{data.find(',')};
+            if (endCommaPos == string::npos) {
+                return errorMessage(logger, wxTRANSLATE("Failed to find end comma for SubBlade end"));
             }
 
-            data.erase(0, 1); // ','
+            auto endStr{data.substr(0, endCommaPos)};
+            data.erase(0, endCommaPos + 1);
+
+            auto end{Utils::doStringMath(endStr)};
+            if (not end) {
+               return errorMessage(logger, wxTRANSLATE("Failed to parse SubBlade end"));
+            }
+            splitData.end = static_cast<int32>(*end);
         } 
         if (splitData.type == Split::STRIDE or splitData.type == Split::ZIG_ZAG) {
-            size_t numProcessed{};
-            try {
-                splitData.segments = std::stoi(data, &numProcessed);
-            } catch (const std::exception& e) {
-                return errorMessage(logger, wxTRANSLATE("Failed to read SubBlade stride: %s"), e.what());
-            }
-            data.erase(0, numProcessed);
-            if (data.empty()) {
-                return errorMessage(logger, wxTRANSLATE("SubBlade missing data after stride"));
+            auto segCommaPos{data.find(',')};
+            if (segCommaPos == string::npos) {
+                return errorMessage(logger, wxTRANSLATE("Failed to find end comma for SubBlade segments"));
             }
 
-            data.erase(0, 1); // ','
+            auto segmentsStr{data.substr(0, segCommaPos)};
+            data.erase(0, segCommaPos + 1);
+
+            auto segments{Utils::doStringMath(segmentsStr)};
+            if (not segments) {
+               return errorMessage(logger, wxTRANSLATE("Failed to parse SubBlade segments"));
+            }
+            splitData.segments = static_cast<int32>(*segments);
         } 
         if (splitData.type == Split::ZIG_ZAG) {
-            size_t numProcessed{};
-            uint32 dummyColumn{};
-            try {
-                dummyColumn = std::stoi(data, &numProcessed);
-            } catch (const std::exception& e) {
-                return errorMessage(logger, wxTRANSLATE("Failed to read SubBlade column: %s"), e.what());
-            }
-            data.erase(0, numProcessed);
-            if (data.empty()) {
-                return errorMessage(logger, wxTRANSLATE("SubBlade missing data after column"));
+            auto columnCommaPos{data.find(',')};
+            if (columnCommaPos == string::npos) {
+                return errorMessage(logger, wxTRANSLATE("Failed to find end comma for SubBlade column"));
             }
 
-            data.erase(0, 1); // ','
+            auto columnStr{data.substr(0, columnCommaPos)};
+            data.erase(0, columnCommaPos + 1);
+
+            auto column{Utils::doStringMath(columnStr)};
+            if (not column) {
+               return errorMessage(logger, wxTRANSLATE("Failed to parse SubBlade column"));
+            }
+
+            // Column entry is not used, they're assumed to be in order.
+            // Not assuming so makes this parsing more complicated and I don't
+            // feel like dealing with it right now.
+            //
+            // All of 3 people use ZZ subblade anyways. I'll cross that bridge
+            // when someone actually gets there.
         }
         if (splitData.type == Split::LIST) {
-            auto idx{0};
-            for (; idx < data.length(); ++idx) {
-                if (data[idx] == '>') break;
-            }
-            if (idx == data.length()) {
+            // Find the `>` template closing chevron for the `SubBlade`, which
+            // marks the end of the list.
+            auto chevronPos{data.find('>')};
+            if (chevronPos == string::npos) {
                 return errorMessage(logger, wxTRANSLATE("SubBlade list unterminated"));
             }
-            if (idx + 2 >= data.length()) {
-                return errorMessage(logger, wxTRANSLATE("SubBlade missing blade after list"));
+
+            // The list will be processed for sanity once it's actually placed
+            // into the config, just dump the raw string in for now.
+            //
+            // TODO: Maybe do some proper validation on this? Bad things 
+            // could've happened (we've blown past into another template) here!
+            splitData.list = data.substr(0, chevronPos);
+            data.erase(0, chevronPos + 1);
+
+            // List is unique in that it's a variadic arg'd template with the
+            // indexes part of the template, so the `(` also needs to be
+            // cleared, like how a comma would be cleared for the former types.
+            if (data.empty()) {
+                return errorMessage(logger, wxTRANSLATE("Missing data after sub blade list indexes"));
             }
 
-            splitData.list = data.substr(0, idx);
-            data.erase(0, idx + 2); // 'list>('
+            if (data[0] != '(') {
+                return errorMessage(logger, wxTRANSLATE("SubBlade list has invalid chars in between '>' and '('"));
+            }
+
+            data.erase(0, 1);
         }
     }
 
     int32 secondBrightness{100};
-    res = parseDimBlade(secondBrightness);
-    if (res) return res;
+    err = parseDimBlade(secondBrightness);
+    if (err) return err;
 
     const auto addSplit{[&splitData, &firstBrightness](Blade& blade) {
         auto& split{blade.ws281x().addSplit()};
@@ -797,6 +824,59 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
             split.list = std::move(splitData.list);
         }
     }};
+    
+    const auto parseWS281XLength{[&]() -> optional<string> {
+        const auto lengthCommaPos{data.find(',')};
+        if (lengthCommaPos == string::npos) {
+            return errorMessage(logger, wxTRANSLATE("Could not find end comma for WS281X length"));
+        }
+
+        const auto lengthStr{data.substr(0, lengthCommaPos)};
+        data.erase(0, lengthCommaPos + 1);
+
+        const auto length{Utils::doStringMath(lengthStr)};
+        if (not length) {
+            return errorMessage(logger, wxTRANSLATE("Failed to parse WS281X length"));
+        }
+
+        blade.ws281x().length = static_cast<int32>(*length);
+        return nullopt;
+    }};
+
+    const auto parseWS281XData{[&]() -> optional<string> {
+        const auto dataPinCommaPos{data.find(',')};
+        if (dataPinCommaPos == string::npos) {
+            return errorMessage(logger, wxTRANSLATE("Could not find end comma for WS281X data pin"));
+        }
+
+        auto dataPinStr{data.substr(0, dataPinCommaPos)};
+        data.erase(0, dataPinCommaPos + 1);
+
+        blade.ws281x().dataPin = std::move(dataPinStr);
+        return nullopt;
+    }};
+
+    const auto parseWS281XPowerPins{[&]() -> optional<string> {
+        if (not data.starts_with(POWER_PINS_STR)) {
+            return errorMessage(logger, wxTRANSLATE("Missing WS281X PowerPINS"));
+        }
+        data.erase(0, POWER_PINS_STR.length());
+
+        string buffer;
+        for (auto idx{0}; idx < data.length(); ++idx) {
+            if (data[idx] == ',' or data[idx] == '>') {
+                // Use entry for processing
+                blade.config().bladeArrays.powerPinNameEntry = std::move(buffer);
+                blade.ws281x().powerPins.select(blade.config().bladeArrays.powerPinNameEntry);
+                buffer.clear();
+                if (data[idx] == '>') break;
+                continue;
+            }
+
+            buffer += data[idx];
+        }
+        return nullopt;
+    }};
 
     static constexpr string_view WS281X_STR{"WS281XBladePtr<"};
     static constexpr string_view WS2811_STR{"WS2811BladePtr<"};
@@ -807,128 +887,104 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
         data.erase(0, WS281X_STR.length());
         blade.type = Blade::WS281X;
 
-        size_t lengthReadIdx{};
-        try {
-            blade.ws281x().length = std::stoi(data, &lengthReadIdx);
-        } catch (const std::exception& e) {
-            return errorMessage(logger, wxTRANSLATE("Failed to read WS281X length: %s"), e.what());
-        }
-        if (lengthReadIdx + 1 >= data.length()) {
-            return errorMessage(logger, wxTRANSLATE("Missing data after WS281X length"));
-        }
-        data.erase(0, lengthReadIdx + 1); // length,
+        err = parseWS281XLength();
+        if (err) return err;
 
-        auto idx{0};
-        for (; idx < data.length(); ++idx) {
-            if (data[idx] == ',') break;
-            blade.ws281x().dataPin += data[idx];
-        }
-        if (idx == data.length()) {
-            return errorMessage(logger, wxTRANSLATE("Missing data after WS281X data pin"));
-        }
-        data.erase(0, idx + 1);
-
+        err = parseWS281XData();
+        if (err) return err;
+        
         static constexpr string_view COLOR8_STR{"Color8::"};
         if (not data.starts_with(COLOR8_STR)) {
-            return errorMessage(logger, wxTRANSLATE("Malformatted WS281X color order"));
+            return errorMessage(logger, wxTRANSLATE("Malformatted WS281X (missing color order)"));
         }
         data.erase(0, COLOR8_STR.length());
-        const auto colorOrderEnd{data.find(',')};
-        if (colorOrderEnd == string::npos) {
-            return errorMessage(logger, wxTRANSLATE("Missing data after WS281X color order"));
-        }
-        const auto colorOrder{data.substr(0, colorOrderEnd)};
-        idx = 0;
-        for (; idx < WS281XBlade::ORDER_MAX; ++idx) {
-            if (colorOrder.find(WS281XBlade::ORDER_STRS[idx]) != string::npos) {
-                blade.ws281x().colorOrder3 = idx;                
-                break;
-            }
-        }
-        const auto whitePos{colorOrder.find_first_of("Ww")};
-        blade.ws281x().hasWhite = whitePos != string::npos;
-        if (blade.ws281x().hasWhite) {
-            blade.ws281x().useRGBWithWhite = data[whitePos] == 'W';
-            if (whitePos == 0) {
-                const auto selection{static_cast<int32>(blade.ws281x().colorOrder4)};
-                blade.ws281x().colorOrder4 = selection + WS281XBlade::ORDER4_WFIRST_START;
-            }
-        }
-        data.erase(0, colorOrderEnd + 1);
 
-        if (not data.starts_with(POWER_PINS_STR)) {
-            return errorMessage(logger, wxTRANSLATE("Missing WS281X PowerPINS"));
+        const auto colorOrderCommaPos{data.find(',')};
+        if (colorOrderCommaPos == string::npos) {
+            return errorMessage(logger, wxTRANSLATE("Could not find end comma for WS281X color order"));
         }
-        data.erase(0, POWER_PINS_STR.length());
-        string buffer;
-        for (auto idx{0}; idx < data.length(); ++idx) {
-            if (data[idx] == ',' or data[idx] == '>') {
-                // Use entry for processing
-                blade.config().bladeArrays.powerPinNameEntry = std::move(buffer);
-                blade.ws281x().powerPins.select(blade.config().bladeArrays.powerPinNameEntry);
-                buffer.clear();
-                if (data[idx] == '>') break;
-                continue;
+
+        const auto colorOrderStr{data.substr(0, colorOrderCommaPos)};
+        data.erase(0, colorOrderCommaPos + 1);
+
+        const auto parse3ColorOrder{[](
+            const string& str
+        ) -> WS281XBlade::ColorOrder3 {
+            auto colorOrderIdx{0};
+            for (; colorOrderIdx < WS281XBlade::ORDER_MAX; ++colorOrderIdx) {
+                if (str == WS281XBlade::ORDER_STRS[colorOrderIdx]) break;
             }
 
-            buffer += data[idx];
+            return static_cast<WS281XBlade::ColorOrder3>(colorOrderIdx);
+        }};
+
+        constexpr cstring INVALID_COLOR_MSG{wxTRANSLATE("Invalid/unrecognized WS281X color order: %s")};
+        if (colorOrderStr.length() == 3) {
+            const auto order{parse3ColorOrder(colorOrderStr)};
+            if (order == WS281XBlade::ORDER_MAX) {
+                return errorMessage(logger, INVALID_COLOR_MSG, colorOrderStr);
+            }
+
+            blade.ws281x().hasWhite = false;
+            blade.ws281x().colorOrder3 = order;
+        } else if (colorOrderStr.length() == 4) {
+            bool offset{false};
+            if (colorOrderStr[0] == 'w' or colorOrderStr[0] == 'W') {
+                offset = true;
+            } else if (colorOrderStr[3] != 'w' and colorOrderStr[3] != 'W') {
+                return errorMessage(logger, INVALID_COLOR_MSG, colorOrderStr);
+            }
+
+            const auto order3{parse3ColorOrder(
+                colorOrderStr.substr(offset ? 1 : 0)
+            )};
+            if (order3 == WS281XBlade::ORDER_MAX) {
+                return errorMessage(logger, INVALID_COLOR_MSG, colorOrderStr);
+            }
+
+            const auto order4{
+                static_cast<WS281XBlade::ColorOrder4>(order3) + 
+                (offset ? WS281XBlade::ORDER4_WFIRST_START : 0)
+            };
+
+            blade.ws281x().hasWhite = true;
+            blade.ws281x().colorOrder4 = order4;
+                
+        } else {
+            return errorMessage(logger, INVALID_COLOR_MSG, colorOrderStr);
         }
+
+        err = parseWS281XPowerPins();
+        if (err) return err;
     } else if (data.starts_with(WS2811_STR)) {
         data.erase(0, WS2811_STR.length());
         blade.type = Blade::WS281X;
 
-        size_t idx{};
-        try {
-            blade.ws281x().length = std::stoi(data, &idx);
-        } catch (const std::exception& e) {
-            return errorMessage(logger, wxTRANSLATE("Failed to read WS2811 length: %s"), e.what());
-        }
-        if (idx + 1 >= data.length()) {
-            return errorMessage(logger, wxTRANSLATE("Missing data after WS2811 length"));
-        }
-        data.erase(0, idx + 1); // length,
+        err = parseWS281XLength();
+        if (err) return err;
         
-        const auto configEnd{data.find(',')};
-        string buffer;
-        buffer = data.substr(0, configEnd);
+        const auto configCommaPos{data.find(',')};
+        if (configCommaPos == string::npos) {
+            return errorMessage(logger, wxTRANSLATE("Missing end comma for WS2811 config"));
+        }
+
+        auto configStr{data.substr(0, configCommaPos)};
+        data.erase(0, configCommaPos + 1);
+
+        // For the config bitmask, all I care to extract is the color order.
+        // I don't support the other options for WS281X and no one uses them.
         for (auto idx{0}; idx < WS281XBlade::ORDER_MAX; ++idx) {
-            if (buffer.find(WS281XBlade::ORDER_STRS[idx]) != string::npos) {
+            if (configStr.find(WS281XBlade::ORDER_STRS[idx]) != string::npos) {
                 blade.ws281x().colorOrder3 = idx;
                 break;
             }
         }
-        data.erase(0, configEnd);
-        if (data.empty()) {
-            return errorMessage(logger, wxTRANSLATE("Missing data after WS2811 config"));
-        }
 
-        idx = 0;
-        for (; idx < data.length(); ++idx) {
-            if (data[idx] == ',') break;
-            blade.ws281x().dataPin += data[idx];
-        }
-        if (idx == data.length()) {
-            return errorMessage(logger, wxTRANSLATE("Missing data after WS2811 data pin"));
-        }
-        data.erase(0, idx + 1);
+        err = parseWS281XData();
+        if (err) return err;
 
-        if (not data.starts_with(POWER_PINS_STR)) {
-            return errorMessage(logger, wxTRANSLATE("Missing WS2811 PowerPINS"));
-        }
-        data.erase(0, POWER_PINS_STR.length());
-        buffer.clear();
-        for (auto idx{0}; idx < data.length(); ++idx) {
-            if (data[idx] == ',' or data[idx] == '>') {
-                // Use entry for processing
-                blade.config().bladeArrays.powerPinNameEntry = std::move(buffer);
-                blade.ws281x().powerPins.select(blade.config().bladeArrays.powerPinNameEntry);
-                buffer.clear();
-                if (data[idx] == '>') break;
-                continue;
-            }
-
-            buffer += data[idx];
-        }
+        err = parseWS281XPowerPins();
+        if (err) return err;
     } else if (data.starts_with(SIMPLE_STR)) {
         if (splitData.type != Split::TYPE_MAX) {
             return errorMessage(logger, wxTRANSLATE("Attempted to SubBlade simple blade"));
@@ -936,72 +992,114 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
 
         data.erase(0, SIMPLE_STR.length());
         blade.type = Blade::SIMPLE;
+
         blade.brightness = firstBrightness;
         auto& simple{blade.simple()};
-        
-        const auto parseLED{[&data, &logger](SimpleBlade::Star& star) -> optional<string> {
-            auto idx{0};
-            for (; idx < SimpleBlade::Star::LED_MAX; ++idx) {
-                if (data.starts_with(SimpleBlade::Star::LED_STRS[idx])) {
-                    star.led = idx;
-                    data.erase(0, SimpleBlade::Star::LED_STRS[idx].length());
-                    if (
-                            idx >= SimpleBlade::Star::USE_RESISTANCE_START and
-                            idx <= SimpleBlade::Star::USE_RESISTANCE_END
-                       ) {
-                        size_t numProcessed{};
-                        try {
-                            star.resistance = std::stoi(data, &numProcessed);
-                        } catch (const std::exception& e) {
-                            return errorMessage(logger, wxTRANSLATE("Failed to read led resistance: %s"), e.what());
-                        }
-                        if (numProcessed == data.length()) {
-                            return errorMessage(logger, wxTRANSLATE("Missing data after blade led resistance"));
-                        }
-                        data.erase(0, numProcessed + 1); // led>
-                    }
-                    if (data.empty()) {
-                        return errorMessage(logger, wxTRANSLATE("Missing data after blade led"));
-                    }
-                    data.erase(0, 1); // ','
-                    break;
-                }
+
+        const auto selectStar{[&simple](uint32 starIdx) -> SimpleBlade::Star& {
+            switch (starIdx) {
+                case 0: return simple.star1;
+                case 1: return simple.star2;
+                case 2: return simple.star3;
+                case 3: return simple.star4;
+                default: assert(0);
             }
-            if (idx == SimpleBlade::Star::LED_MAX) {
-                return errorMessage(logger, wxTRANSLATE("Unknown/malformed LED in SimpleBlade"));
+        }};
+
+        const auto parseLED{[&](uint32 starIdx) -> optional<string> {
+            auto& star{selectStar(starIdx)};
+
+            const auto ledCommaPos{data.find(',')};
+            if (ledCommaPos == string::npos) {
+                return errorMessage(logger, wxTRANSLATE("Missing end comma for SimpleBlade LED %u"), starIdx + 1);
+            }
+
+            const auto ledStr{data.substr(0, ledCommaPos)};
+            data.erase(0, ledCommaPos + 1);
+
+            auto ledIdx{0};
+            for (; ledIdx < SimpleBlade::Star::LED_MAX; ++ledIdx) {
+                const auto& testLedStr{SimpleBlade::Star::LED_STRS[ledIdx]};
+                if (not ledStr.starts_with(testLedStr)) continue;
+
+                star.led = ledIdx;
+
+                if (
+                        ledIdx >= SimpleBlade::Star::USE_RESISTANCE_START and
+                        ledIdx <= SimpleBlade::Star::USE_RESISTANCE_END
+                   ) {
+                    // At least long enough for chevrons
+                    if (ledStr.length() < testLedStr.length() + 2) {
+                        return errorMessage(logger, wxTRANSLATE("Simple blade which uses resistance missing chevrons: %s"), ledStr);
+                    }
+
+                    // Make sure chevrons are there
+                    if (ledStr[testLedStr.length()] != '<' or ledStr.back() != '>') {
+                        return errorMessage(logger, wxTRANSLATE("Simple blade which uses resistance malformed: %s"), ledStr);
+                    }
+
+                    // Parse the in-between
+                    auto resistanceStr{ledStr.substr(
+                        testLedStr.length() + 1,
+                        ledStr.length() - testLedStr.length() - 2
+                    )};
+                    auto resistance{Utils::doStringMath(resistanceStr)};
+                    
+                    if (not resistance) {
+                        return errorMessage(logger, wxTRANSLATE("Simple blade has invalid resistance: %s"), ledStr);
+                    }
+
+                    star.resistance = static_cast<int32>(*resistance);
+                } else {
+                    // If it doesn't use resistance, should match length exactly
+                    if (ledStr.length() != testLedStr.length()) {
+                        return errorMessage(logger, wxTRANSLATE("Invalid/unrecognized LED for SimpleBlade: %s"), ledStr);
+                    }
+                }
+
+                break;
+            }
+
+            if (ledIdx == SimpleBlade::Star::LED_MAX) {
+                return errorMessage(logger, wxTRANSLATE("Unknown/malformed LED in SimpleBlade: %s"), ledStr);
             }
 
             return nullopt;
         }};
 
-        res = parseLED(simple.star1);
-        if (res) return res;
-        res = parseLED(simple.star2);
-        if (res) return res;
-        res = parseLED(simple.star3);
-        if (res) return res;
-        res = parseLED(simple.star4);
-        if (res) return res;
+        err = parseLED(0);
+        if (err) return err;
+        err = parseLED(1);
+        if (err) return err;
+        err = parseLED(2);
+        if (err) return err;
+        err = parseLED(3);
+        if (err) return err;
 
-        const auto parsePin{[&data](SimpleBlade::Star& star) {
-            if (data.length() >= 2 and data.starts_with("-1")) {
-                data.erase(0, 2);
-            } else {
-                auto idx{0};
-                for (; idx < data.length(); ++idx) {
-                    if (data[idx] == ',' or data[idx] == '>') break;
-                    star.powerPin += data[idx];
-                }
-                data.erase(0, idx);
+        const auto parsePin{[&](uint32 starIdx) -> optional<string> {
+            auto& star{selectStar(starIdx)};
+
+            const auto pinCommaPos{data.find(starIdx == 3 ? '>' : ',')};
+            if (pinCommaPos == string::npos) {
+                return errorMessage(logger, wxTRANSLATE("Missing end comma/chevron for SimpleBlade power pin %u"), starIdx + 1);
             }
-            if (data.empty()) return;
-            data.erase(0, 1); // ',' or '>'
-        }};
-        parsePin(simple.star1);
-        parsePin(simple.star2);
-        parsePin(simple.star3);
-        parsePin(simple.star4);
 
+            auto pinStr{data.substr(0, pinCommaPos)};
+            data.erase(0, pinCommaPos + 1);
+
+            if (pinStr != "-1") star.powerPin = std::move(pinStr);
+
+            return nullopt;
+        }};
+
+        err = parsePin(0);
+        if (err) return err;
+        err = parsePin(1);
+        if (err) return err;
+        err = parsePin(2);
+        if (err) return err;
+        err = parsePin(3);
+        if (err) return err;
         
         if (
                 simple.star1.led == SimpleBlade::Star::LED::NONE and
@@ -1238,13 +1336,11 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
            ) {
             // Do nothing
         } else if (opt.define == NUM_BUTTONS_STR) {
-            try {
-                numButtons = std::stoi(opt.value);
-            } catch (const std::exception& e) {
-                logger.warn(string{"Couldn't parse num buttons: "} + e.what());
-            }
-        } else if (opt.define == RFID_SERIAL_STR) {
-            // Not Yet Implemented
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) numButtons = static_cast<int32>(*val);
+            else logger.warn("Couldn't parse num buttons!");
+        // } else if (opt.define == RFID_SERIAL_STR) {
+        //     // TODO: Not Yet Implemented
         } else if (opt.define == BLADE_DETECT_PIN_STR) {
             bladeDetect = true;
             bladeDetectPin = static_cast<string>(opt.value);
@@ -1254,87 +1350,96 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
             for (; idx < BLADEID_MODE_MAX; ++idx) {
                 if (opt.value.startsWith(BLADEID_MODE_STRS[idx])) break;
             }
+
             if (idx == BLADEID_MODE_MAX) {
                 logger.warn("Cannot parse invalid/unrecognized BladeID class");
-            } else{
+            } else {
                 bladeID.mode = idx;
-                opt.value.erase(0, BLADEID_MODE_STRS[idx].length());
-                const auto idPinEnd{opt.value.find(',')};
-                bladeID.pin = opt.value.substr(0, idPinEnd);
+
+                string str{opt.value};
+                str.erase(0, BLADEID_MODE_STRS[idx].length());
+
+                const auto idPinEnd{str.find(',')};
+                bladeID.pin = str.substr(0, idPinEnd);
+
                 if (idx == EXTERNAL) {
                     if (idPinEnd == string::npos) {
                         logger.warn("Missing pullup value for external blade id");
                     } else {
-                        opt.value.erase(0, idPinEnd + 1);
-                        try {
-                            bladeID.pullup = std::stoi(opt.value);
-                        } catch (const std::exception& e) {
-                            logger.warn(string{"Failed to parse pullup value for ext blade id: "} + e.what());
-                        }
+                        str.erase(0, idPinEnd + 1);
+
+                        auto val{Utils::doStringMath(str)};
+                        if (val) bladeID.pullup = static_cast<int32>(*val);
+                        else logger.warn("Failed to parse pullup value for ext blade id");
                     }
                 } else if (idx == BRIDGED) {
                     if (idPinEnd == string::npos) {
                         logger.warn("Missing bridge pin for blade id");
                     } else {
-                        opt.value.erase(0, idPinEnd + 1);
-                        bladeID.bridgePin = static_cast<string>(opt.value);
+                        str.erase(0, idPinEnd + 1);
+                        bladeID.bridgePin = static_cast<string>(str);
                     }
                 }
             }
         } else if (opt.define == ENABLE_POWER_FOR_ID_STR) {
             bladeID.powerForID = true;
+
             if (not opt.value.startsWith(POWER_PINS_STR)) {
                 logger.warn("Failed to parse BladeID PowerPINS");
             } else {
-                opt.value.erase(0, POWER_PINS_STR.length());
+                string str{opt.value};
+                str.erase(0, POWER_PINS_STR.length());
+
                 while (not false) {
-                    const auto endPos{opt.value.find(',')};
+                    const auto endPos{str.find(',')};
+
                     // Use the entry for processing
-                    bladeID.powerPinEntry = opt.value.substr(0, endPos);
+                    bladeID.powerPinEntry = str.substr(0, endPos);
                     bladeID.powerPins.select(bladeID.powerPinEntry);
+
                     if (endPos == string::npos) break;
-                    opt.value.erase(0, endPos + 1);
+
+                    str.erase(0, endPos + 1);
                 }
             }
         } else if (opt.define == BLADE_ID_SCAN_MILLIS_STR) {
             bladeID.continuousScanning = true;            
-            try {
-                bladeID.continuousInterval = std::stoi(opt.value);
-            } catch (const std::exception& e) {
-                logger.warn(string{"Failed to parse blade id scan interval: "} + e.what());
-            }
+
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) bladeID.continuousInterval = static_cast<int32>(*val);
+            else logger.warn("Failed to parse blade id scan interval");
         } else if (opt.define == BLADE_ID_TIMES_STR) {
             bladeID.continuousScanning = true;            
-            try {
-                bladeID.continuousTimes = std::stoi(opt.value);
-            } catch (const std::exception& e) {
-                logger.warn(string{"Failed to parse blade id scan times: "} + e.what());
-            }
+
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) bladeID.continuousTimes = static_cast<int32>(*val);
+            else logger.warn("Failed to parse blade id scan times");
         } else if (opt.define == VOLUME_STR) {
-            try {
-                volume = std::stoi(opt.value);
-            } catch (const std::exception& e) {
-                logger.warn(string{"Failed to parse volume: "} + e.what());
-            }
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) volume = static_cast<int32>(*val);
+            else logger.warn("Failed to parse volume");
         } else if (opt.define == BOOT_VOLUME_STR) {
             enableBootVolume = true;
-            try {
-                bootVolume = std::stoi(opt.value);
-            } catch (const std::exception& e) {
-                logger.warn(string{"Failed to parse boot volume: "} + e.what());
-            }
+
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) bootVolume = static_cast<int32>(*val);
+            else logger.warn("Failed to parse boot volume");
         } else if (opt.define == CLASH_THRESHOLD_STR) {
-            try {
-                clashThreshold = std::stod(opt.value);
-            } catch (const std::exception& e) {
-                logger.warn(string{"Failed to parse clash threshold: "} + e.what());
-            }
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) clashThreshold = *val;
+            else logger.warn("Failed to parse clash threshold");
         } else if (opt.define == PLI_OFF_STR) {
-            pliOffTime = Utils::doStringMath(opt.value) / 1000;
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) pliOffTime = *val / 1000;
+            else logger.warn("Failed to parse PLI off time");
         } else if (opt.define == IDLE_OFF_STR) {
-            idleOffTime = Utils::doStringMath(opt.value) / (60 * 1000);
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) idleOffTime = *val / (60 * 1000);
+            else logger.warn("Failed to parse idle off time");
         } else if (opt.define == MOTION_TIMEOUT_STR) {
-            motionTimeout = Utils::doStringMath(opt.value) / (60 * 1000);
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) motionTimeout = *val / (60 * 1000);
+            else logger.warn("Failed to parse motion timeout");
         } else if (opt.define == DISABLE_COLOR_CHANGE_STR) {
             disableColorChange = true;
         } else if (opt.define == DISABLE_BASIC_PARSERS_STR) {
@@ -1360,24 +1465,36 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
             for (; idx < ORIENTATION_MAX; ++idx) {
                 if (opt.value == ORIENTATION_STRS[idx]) break;
             }
+
             if (idx == ORIENTATION_MAX) {
-                logger.warn("Unknown/invalid orientation: " + static_cast<string>(opt.value));
+                logger.warn("Unknown/invalid orientation");
             } else {
                 orientation = idx;
             }
         } else if (opt.define == ORIENTATION_ROTATION_STR) {
             const auto firstComma{opt.value.find(',')};
             const auto secondComma{opt.value.find(',', firstComma + 1)};
+
             if (firstComma == string::npos or secondComma == string::npos) {
-                logger.warn("Invalid formatting for orientation rotation: " + static_cast<string>(opt.value));
+                logger.warn("Invalid formatting for orientation rotation");
             } else {
-                try {
-                    orientationRotation.x = std::stoi(opt.value);
-                    orientationRotation.y = std::stoi(opt.value.substr(firstComma + 1));
-                    orientationRotation.z = std::stoi(opt.value.substr(secondComma + 1));
-                } catch (const std::exception& e) {
-                    logger.warn(string{"Failed to parse orientation rotation: "} + e.what());
-                }
+                string str{opt.value};
+                auto xStr{str.substr(0, firstComma)};
+                auto yStr{str.substr(firstComma + 1, secondComma - firstComma - 1)};
+                auto zStr{str.substr(secondComma + 1, str.length() - secondComma - 1)};
+
+                auto xVal{Utils::doStringMath(xStr)};
+                auto yVal{Utils::doStringMath(yStr)};
+                auto zVal{Utils::doStringMath(zStr)};
+
+                if (xVal) orientationRotation.x = static_cast<int32>(*xVal);
+                else logger.warn("Failed to parse orientation rotation X");
+
+                if (yVal) orientationRotation.y = static_cast<int32>(*yVal);
+                else logger.warn("Failed to parse orientation rotation Y");
+
+                if (zVal) orientationRotation.z = static_cast<int32>(*zVal);
+                else logger.warn("Failed to parse orientation rotation Z");
             }
         // } else if (opt.define == SPEAK_TOUCH_VALUES_STR) {
         //     speakTouchValues = true;
@@ -1392,23 +1509,17 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
         } else if (opt.define == SAVE_CLASH_THRESHOLD_STR) {
             saveClashThreshold = true;
         } else if (opt.define == FILTER_CUTOFF_STR) {
-            try {
-                filterCutoff = std::stoi(opt.value);
-            } catch (const std::exception& e) {
-                logger.warn(string{"Failed to parse filter cutoff: "} + e.what());
-            }
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) filterCutoff = static_cast<int32>(*val);
+            else logger.warn("Failed to parse filter cutoff");
         } else if (opt.define == FILTER_ORDER_STR) {
-            try {
-                filterOrder = std::stoi(opt.value);
-            } catch (const std::exception& e) {
-                logger.warn(string{"Failed to parse filter order: "} + e.what());
-            }
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) filterOrder = static_cast<int32>(*val);
+            else logger.warn("Failed to parse filter order");
         } else if (opt.define == AUDIO_CLASH_SUPPRESSION_STR) {
-            try {
-                audioClashSuppressionLevel = std::stoi(opt.value);
-            } catch (const std::exception& e) {
-                logger.warn(string{"Failed to parse audio clash suppression: "} + e.what());
-            }
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) audioClashSuppressionLevel = static_cast<int32>(*val);
+            else logger.warn("Failed to parse audio clash suppression");
         } else if (opt.define == DONT_USE_GYRO_FOR_CLASH_STR) {
             dontUseGyroForClash = true;
         } else if (opt.define == NO_REPEAT_RANDOM_STR) {

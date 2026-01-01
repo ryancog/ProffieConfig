@@ -1,7 +1,7 @@
 #include "arduino.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2023-2025 Ryan Ogurek
+ * Copyright (C) 2023-2026 Ryan Ogurek
  *
  * proffieconfig/tools/arduino.cpp
  *
@@ -502,19 +502,25 @@ variant<CompileOutput, string> compile(
     }
 # 	endif
 
+    // Set to negatives to mark missing
+    ret.used = -1;
+    ret.total = -1;
+
     constexpr string_view USED_PREFIX{"Sketch uses "};
     constexpr string_view MAX_PREFIX{"Maximum is "};
-    const auto usedPos{compileOutput.find(USED_PREFIX)};
-    const auto maxPos{compileOutput.find(MAX_PREFIX)};
-    if (usedPos != string::npos and maxPos != string::npos) {
-        try {
-            ret.used = std::stoi(compileOutput.substr(usedPos + USED_PREFIX.length()));
-            ret.total = std::stoi(compileOutput.substr(maxPos + MAX_PREFIX.length()));
-        } catch (const std::exception& e) {
-            ret.used = -1;
-            ret.total = -1;
-            logger.warn("Usage data not found in compilation output.");
-        }
+    const auto usedPrefixPos{compileOutput.find(USED_PREFIX)};
+    const auto maxPrefixPos{compileOutput.find(MAX_PREFIX)};
+    if (usedPrefixPos != string::npos and maxPrefixPos != string::npos) {
+        const auto usedPos{usedPrefixPos + USED_PREFIX.length()};
+        const auto maxPos{maxPrefixPos + MAX_PREFIX.length()};
+
+        const auto used{strtoul(&compileOutput[usedPos], nullptr, 10)};
+        const auto total{strtoul(&compileOutput[maxPos], nullptr, 10)};
+
+        ret.used = static_cast<int32>(used);
+        ret.total = static_cast<int32>(total);
+    } else {
+        logger.warn("Usage data not found in compilation output.");
     }
 
     logger.info("Success");
@@ -680,14 +686,12 @@ optional<string> upload(
     while (auto buffer = proc.read()) {
         const auto percentPos{buffer->find('%')};
         if (percentPos != string::npos and percentPos >= 3) {
-            try {
-                auto percent{std::stoi(buffer->substr(percentPos - 3))};
-                if (prog) prog->emitEvent(static_cast<int8>(percent), {});
-                logger.verbose("Progress: " + std::to_string(percent) + '%');
-            } catch (const std::exception&) {
-                uploadOutput += *buffer;
-                continue;
-            }
+            const auto percent{strtoul(
+                &(*buffer)[percentPos - 3], nullptr, 10
+            )};
+
+            if (prog) prog->emitEvent(static_cast<int8>(percent), {});
+            logger.verbose("Progress: " + std::to_string(percent) + '%');
         }
 
         uploadOutput += *buffer;
@@ -741,8 +745,13 @@ string parseError(const string& error, const Config::Config& config) {
         const auto overflowPos{error.rfind(OVERFLOW_PREFIX)};
         std::ostringstream errMessage;
         if (overflowPos != string::npos) {
-            const auto overflowBytes{std::stoi(error.substr(overflowPos + OVERFLOW_PREFIX.length()))};
-            const auto percent{(overflowBytes * 100.0 / maxBytes) + 100.0};
+            const auto overflowBytes{strtoul(
+                &error[overflowPos + OVERFLOW_PREFIX.length()], nullptr, 10
+            )};
+            const auto percent{
+                (static_cast<float64>(overflowBytes) * 100.0 / maxBytes)
+                + 100.0
+            };
 
             errMessage << "The specified config uses " << percent << "% of board space, and will not fit on the Proffieboard. (" << overflowBytes << " overflow)";
         } else {

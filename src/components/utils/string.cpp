@@ -1,7 +1,7 @@
 #include "string.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/utils/string.h
  *
@@ -322,14 +322,14 @@ vector<string> Utils::createEntries(const std::initializer_list<wxString>& list)
 // https://www.geeksforgeeks.org/cpp/how-to-parse-mathematical-expressions-in-cpp
 //
 // I should probably review it in depth at some point but for now it's good enough.
-float64 Utils::doStringMath(const string& str) {
+optional<float64> Utils::doStringMath(const string& str) {
     const auto isOperator{[](char c) {
-        return c == '+' or c == '-' or c == '*' or c == '/' or c == '^';
+        return c == '+' or c == '-' or c == '*' or c == '/' /* or c == '^' */;
     }};
     const auto precedence{[](char op) -> int32 {
         if (op == '+' or op == '-') return 1;
         if (op == '*' or op == '/') return 2;
-        if (op == '^') return 3;
+        // if (op == '^') return 3;
         return 0;
     }};
 
@@ -341,7 +341,7 @@ float64 Utils::doStringMath(const string& str) {
             case '-': return a - b;
             case '*': return a * b;
             case '/': return a / b;
-            case '^': return pow(a, b);
+            // case '^': return pow(a, b);
             default: return 0;
         }
     }};
@@ -354,11 +354,8 @@ float64 Utils::doStringMath(const string& str) {
     string token;
     while (std::getline(ss, token, ' ')) {
         if (token.empty()) continue;
-        if (std::isdigit(token[0])) {
-            float64 num{};
-            std::istringstream{token} >> num;
-            operands.push(num);
-        } else if (isOperator(token[0])) {
+
+        if (isOperator(token[0])) {
             const char op{token[0]};
 
             while (not operators.empty() and precedence(operators.top()) >= precedence(op)) {
@@ -389,6 +386,13 @@ float64 Utils::doStringMath(const string& str) {
 
             // Pop the opening parenthesis
             operators.pop();
+        } else {
+            char *end{nullptr};
+            auto num{strtod(token.c_str(), &end)};
+            if (num == HUGE_VAL) return nullopt;
+            if (end != &token[token.size()]) return nullopt;
+
+            operands.push(num);
         }
     }
 
