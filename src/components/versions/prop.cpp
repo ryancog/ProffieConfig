@@ -1,11 +1,12 @@
 #include "prop.h"
 // ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2025 Ryan Ogurek
+// Copyright (C) 2025-2026 Ryan Ogurek
 
 #include "log/branch.h"
 #include "log/context.h"
 #include "log/logger.h"
 #include "pconf/utils.h"
+#include "utils/string.h"
 
 namespace {
 
@@ -813,49 +814,48 @@ vector<std::unique_ptr<Versions::PropSettingBase>> parseSettings(
 
         const auto minEntry{entryMap.find("MIN")};
         if (minEntry and minEntry->value) {
-            try {
-                min = std::stoi(*minEntry->value);
-            } catch (const std::exception& e) {
-                logger.warn("Could not parse " + settingData.name + " min: " + e.what());
-            }
-        }
-        const auto maxEntry{entryMap.find("MAX")};
-        if (maxEntry and maxEntry->value) {
-            try {
-                max = std::stoi(*maxEntry->value);
-            } catch (const std::exception& e) {
-                logger.warn("Could not parse " + settingData.name + " max: " + e.what());
-            }
-        }
-        const auto incrementEntry{entryMap.find("INCREMENT")};
-        if (incrementEntry and incrementEntry->value) {
-            try {
-                increment = std::stoi(*incrementEntry->value);
-            } catch (const std::exception& e) {
-                logger.warn("Could not parse " + settingData.name + " increment: " + e.what());
-            }
-        }
-        const auto defaultEntry{entryMap.find("DEFAULT")};
-        if (defaultEntry and defaultEntry->value) {
-            try {
-                defaultVal = std::stoi(*defaultEntry->value);
-            } catch (const std::exception& e) {
-                logger.warn("Could not parse " + settingData.name + " default: " + e.what());
-            }
+            auto val{Utils::doStringMath(*minEntry->value)};
+            if (val) min = static_cast<int32>(*val);
+            else logger.warn("Could not parse " + settingData.name + " min!");
         }
 
-        ret.emplace_back(new Versions::PropNumeric(
-            prop,
-            settingData.name,
-            *numericEntry->label,
-            settingData.description,
-            settingData.required,
-            settingData.requiredAny,
-            min,
-            max,
-            increment,
-            defaultVal
-        ));
+        const auto maxEntry{entryMap.find("MAX")};
+        if (maxEntry and maxEntry->value) {
+            auto val{Utils::doStringMath(*maxEntry->value)};
+            if (val) max = static_cast<int32>(*val);
+            else logger.warn("Could not parse " + settingData.name + " max!");
+        }
+
+        const auto incrementEntry{entryMap.find("INCREMENT")};
+        if (incrementEntry and incrementEntry->value) {
+            auto val{Utils::doStringMath(*incrementEntry->value)};
+            if (val) increment = static_cast<int32>(*val);
+            else logger.warn("Could not parse " + settingData.name + " increment!");
+        }
+
+        const auto defaultEntry{entryMap.find("DEFAULT")};
+        if (defaultEntry and defaultEntry->value) {
+            auto val{Utils::doStringMath(*defaultEntry->value)};
+            if (val) defaultVal = static_cast<int32>(*val);
+            else logger.warn("Could not parse " + settingData.name + " default!");
+        }
+
+        if (min > max) {
+            logger.warn("Setting " + settingData.name + " has a min value greater than max, this setting will be ignored!");
+        } else {
+            ret.emplace_back(new Versions::PropNumeric(
+                prop,
+                settingData.name,
+                *numericEntry->label,
+                settingData.description,
+                settingData.required,
+                settingData.requiredAny,
+                min,
+                max,
+                increment,
+                defaultVal
+            ));
+        }
     }
 
     const auto decimalEntries{hashedData.findAll("DECIMAL")};
@@ -876,49 +876,48 @@ vector<std::unique_ptr<Versions::PropSettingBase>> parseSettings(
 
         const auto minEntry{entryMap.find("MIN")};
         if (minEntry and minEntry->value) {
-            try {
-                min = std::stod(*minEntry->value);
-            } catch (const std::exception& e) {
-                logger.warn("Could not parse " + settingData.name + " min: " + e.what());
-            }
-        }
-        const auto maxEntry{entryMap.find("MAX")};
-        if (maxEntry and maxEntry->value) {
-            try {
-                max = std::stod(*maxEntry->value);
-            } catch (const std::exception& e) {
-                logger.warn("Could not parse " + settingData.name + " max: " + e.what());
-            }
-        }
-        const auto incrementEntry{entryMap.find("INCREMENT")};
-        if (incrementEntry and incrementEntry->value) {
-            try {
-                increment = std::stod(*incrementEntry->value);
-            } catch (const std::exception& e) {
-                logger.warn("Could not parse " + settingData.name + " increment: " + e.what());
-            }
-        }
-        const auto defaultEntry{entryMap.find("DEFAULT")};
-        if (defaultEntry and defaultEntry->value) {
-            try {
-                defaultVal = std::stod(*defaultEntry->value);
-            } catch (const std::exception& e) {
-                logger.warn("Could not parse " + settingData.name + " default: " + e.what());
-            }
+            auto val{Utils::doStringMath(*minEntry->value)};
+            if (val) min = *val;
+            else logger.warn("Could not parse " + settingData.name + " min!");
         }
 
-        ret.emplace_back(new Versions::PropDecimal(
-            prop,
-            settingData.name,
-            *decimalEntry->label,
-            settingData.description,
-            settingData.required,
-            settingData.requiredAny,
-            min,
-            max,
-            increment,
-            defaultVal
-        ));
+        const auto maxEntry{entryMap.find("MAX")};
+        if (maxEntry and maxEntry->value) {
+            auto val{Utils::doStringMath(*maxEntry->value)};
+            if (val) max = *val;
+            else logger.warn("Could not parse " + settingData.name + " max!");
+        }
+
+        const auto incrementEntry{entryMap.find("INCREMENT")};
+        if (incrementEntry and incrementEntry->value) {
+            auto val{Utils::doStringMath(*incrementEntry->value)};
+            if (val) increment = *val;
+            else logger.warn("Could not parse " + settingData.name + " increment!");
+        }
+
+        const auto defaultEntry{entryMap.find("DEFAULT")};
+        if (defaultEntry and defaultEntry->value) {
+            auto val{Utils::doStringMath(*defaultEntry->value)};
+            if (val) defaultVal = *val;
+            else logger.warn("Could not parse " + settingData.name + " default!");
+        }
+
+        if (min > max) {
+            logger.warn("Setting " + settingData.name + " has a min value greater than max, this setting will be ignored!");
+        } else {
+            ret.emplace_back(new Versions::PropDecimal(
+                prop,
+                settingData.name,
+                *decimalEntry->label,
+                settingData.description,
+                settingData.required,
+                settingData.requiredAny,
+                min,
+                max,
+                increment,
+                defaultVal
+            ));
+        }
     }
 
     return std::move(ret);

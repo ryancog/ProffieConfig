@@ -1,7 +1,7 @@
 #include "pconf.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/pconf/read.cpp
  *
@@ -328,11 +328,15 @@ bool parseLabelNum(const string& line, std::optional<int32_t>& out, Log::Branch&
         return false;
     }
 
-    try {
-        out = std::stoi(line.substr(openBracePos + 1, closeBracePos - openBracePos - 1));
-    } catch (const std::exception& err) {
-        out = nullopt;
+    const auto parseString{line.substr(
+        openBracePos + 1,
+        closeBracePos - openBracePos - 1
+    )};
+    if (parseString.empty() or not std::isdigit(parseString[0])) {
+        return true;
     }
+
+    out = strtoul(parseString.c_str(), nullptr, 0);
     return true;
 }
 
