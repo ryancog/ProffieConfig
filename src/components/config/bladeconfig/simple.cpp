@@ -1,7 +1,7 @@
 #include "simple.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/config/bladeconfig/simple.cpp
  *
@@ -21,13 +21,11 @@
 
 #include "utils/string.h"
 
-Config::SimpleBlade::SimpleBlade() {
-
-}
+Config::SimpleBlade::SimpleBlade() = default;
 
 Config::SimpleBlade::Star::Star() {
     led.setUpdateHandler([this](uint32 id) {
-        if (id != led.ID_SELECTION) return;
+        if (id != PCUI::ChoiceData::ID_SELECTION) return;
 
         powerPin.enable(led != NONE);
         resistance.enable(led != NONE and led >= USE_RESISTANCE_START and led <= USE_RESISTANCE_END);

@@ -1,7 +1,7 @@
 #include "splitvisualizer.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * proffieconfig/editor/special/splitvisualizer.cpp
  *
@@ -33,7 +33,6 @@
 
 #include "config/bladeconfig/ws281x.h"
 #include "utils/crypto.h"
-#include "wx/font.h"
 
 constexpr auto MIN_SEGMENT_SIZE{12};
 
