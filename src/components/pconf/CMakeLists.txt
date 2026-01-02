@@ -13,5 +13,5 @@ add_library(pconf SHARED
 target_link_libraries(pconf log)
 
 include(../Component.cmake)
-setup_component_and_static(pconf 1.0.7)
+setup_component_and_static(pconf 1.0.8)
 
