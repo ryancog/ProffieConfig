@@ -84,18 +84,18 @@ void Log::Logger::log(Severity sev, const string& message) {
 }
 
 void Log::Logger::error(const string& message) {
-    return log(Severity::ERR, message);
+    log(Severity::ERR, message);
 }
 void Log::Logger::warn(const string& message) {
-    return log(Severity::WARN, message);
+    log(Severity::WARN, message);
 }
 void Log::Logger::info(const string& message) {
-    return log(Severity::INFO, message);
+    log(Severity::INFO, message);
 }
 void Log::Logger::debug(const string& message) {
-    return log(Severity::DBUG, message);
+    log(Severity::DBUG, message);
 }
 void Log::Logger::verbose(const string& message) {
-    return log(Severity::VERB, message);
+    log(Severity::VERB, message);
 }
 
