@@ -1,7 +1,7 @@
 #include "settings.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/config/settings/settings.h
  *
@@ -33,6 +33,7 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         } else if (id != PCUI::ChoiceData::ID_SELECTION) return;
 
         if (osVersion.choices().size() > 1 and osVersion == 0) {
+            // Will trigger another update.
             osVersion = 1;
             return;
         }

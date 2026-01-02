@@ -1,7 +1,7 @@
 #include "array.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/config/preset/array.cpp
  *
@@ -24,10 +24,6 @@
 #include "config/config.h"
 #include "utils/string.h"
 
-namespace Config {
-
-} // namespace Config
-
 PCUI::TextData Config::PresetArrays::dummyCommentData;
 PCUI::TextData Config::PresetArrays::dummyStyleData;
 
@@ -38,7 +34,10 @@ Config::PresetArray::PresetArray(Config& config) :
 
     auto isCurrentArray{[this]() {
         if (mConfig.presetArrays.selection == -1) return false;
-        auto& selectedArray{mConfig.presetArrays.array(mConfig.presetArrays.selection)};
+
+        auto& selectedArray{
+            mConfig.presetArrays.array(mConfig.presetArrays.selection)
+        };
         return &selectedArray == this;
     }};
 
@@ -57,7 +56,11 @@ Config::PresetArray::PresetArray(Config& config) :
 
         if (rawValue == static_cast<string>(name)) {
             notifyData.notify();
-            if (isCurrentArray()) mConfig.presetArrays.notifyData.notify(PresetArrays::NOTIFY_ARRAY_NAME);
+            if (isCurrentArray()) {
+                mConfig.presetArrays.notifyData.notify(
+                    PresetArrays::NOTIFY_ARRAY_NAME
+                );
+            }
 
             auto idx{0};
             const auto& arrays{mConfig.presetArrays.arrays()};
@@ -82,7 +85,10 @@ Config::PresetArray::PresetArray(Config& config) :
         name.setInsertionPoint(insertionPoint - numTrimmed);
     });
     selection.setUpdateHandler([this, isCurrentArray](uint32 id) {
-        if (id != PCUI::NotifyReceiver::ID_REBOUND and id != selection.ID_SELECTION) return;
+        if (
+                id != PCUI::NotifyReceiver::ID_REBOUND and 
+                id != PCUI::ChoiceData::ID_SELECTION
+           ) return;
 
         if (not isCurrentArray()) return;
 
@@ -91,8 +97,12 @@ Config::PresetArray::PresetArray(Config& config) :
             mConfig.presetArrays.dirProxy.unbind();
             mConfig.presetArrays.trackProxy.unbind();
             mConfig.presetArrays.styleSelectProxy.unbind();
-            mConfig.presetArrays.commentProxy.bind(PresetArrays::dummyCommentData);
-            mConfig.presetArrays.styleProxy.bind(PresetArrays::dummyStyleData);
+            mConfig.presetArrays.commentProxy.bind(
+                PresetArrays::dummyCommentData
+            );
+            mConfig.presetArrays.styleProxy.bind(
+                PresetArrays::dummyStyleData
+            );
         } else {
             auto& preset{**std::next(mPresets.begin(), selection)};
             mConfig.presetArrays.nameProxy.bind(preset.name);
@@ -107,7 +117,10 @@ Config::PresetArray::PresetArray(Config& config) :
 
 Config::Preset& Config::PresetArray::addPreset() {
     auto choices{selection.choices()};
-    auto& preset{*mPresets.emplace_back(std::make_unique<Preset>(mConfig, *this))};
+    auto& preset{*mPresets.emplace_back(
+        std::make_unique<Preset>(mConfig, *this)
+    )};
+
     choices.push_back(preset.name);
     selection.setChoices(std::move(choices));
     mConfig.presetArrays.syncStyles();
@@ -134,15 +147,15 @@ void Config::PresetArray::movePresetUp(uint32 idx) {
     mPresets.insert(std::next(mPresets.begin(), idx - 1), std::move(ptr));
 
     auto choices{selection.choices()};
-    auto move{std::next(choices.begin(), idx)};
-    auto moveValue{*move};
-    choices.erase(move);
+    auto choiceIter{std::next(choices.begin(), idx)};
+    auto choice{std::move(*choiceIter)};
+    choices.erase(choiceIter);
     choices.insert(
         std::next(choices.begin(), idx - 1), 
-        moveValue
+        std::move(choice)
     );
     selection.setChoices(std::move(choices));
-    selection = idx - 1;
+    selection = static_cast<int32>(idx - 1);
 }
 
 void Config::PresetArray::movePresetDown(uint32 idx) {
@@ -151,18 +164,18 @@ void Config::PresetArray::movePresetDown(uint32 idx) {
 
     auto ptr{std::move(mPresets[idx])};
     mPresets.erase(std::next(mPresets.begin(), idx));
-    mPresets.insert(std::next(mPresets.begin(), idx + 2), std::move(ptr));
+    mPresets.insert(std::next(mPresets.begin(), idx + 1), std::move(ptr));
 
     auto choices{selection.choices()};
-    auto move{std::next(choices.begin(), idx)};
-    auto moveValue{*move};
-    choices.erase(move);
+    auto choiceIter{std::next(choices.begin(), idx)};
+    auto choice{std::move(*choiceIter)};
+    choices.erase(choiceIter);
     choices.insert(
         std::next(choices.begin(), idx + 1), 
-        moveValue
+        std::move(choice)
     );
     selection.setChoices(std::move(choices));
-    selection = idx + 1;
+    selection = static_cast<int32>(idx + 1);
 }
 
 Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
@@ -178,13 +191,13 @@ Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
     styleDisplay.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
 
     selection.setUpdateHandler([this](uint32 id) {
-        if (id == selection.ID_CHOICES) {
+        if (id == PCUI::ChoiceData::ID_CHOICES) {
             if (not selection.choices().empty() and selection == -1) {
                 selection = 0;
             }
             return;
         }
-        if (id != selection.ID_SELECTION) return;
+        if (id != PCUI::ChoiceData::ID_SELECTION) return;
 
         if (selection == -1) {
             presetProxy.unbind();
@@ -198,14 +211,16 @@ Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
             commentProxy.bind(dummyCommentData);
             styleProxy.bind(dummyStyleData);
         } else {
-            presetProxy.bind((**std::next(mArrays.begin(), selection)).selection);
+            presetProxy.bind(
+                (**std::next(mArrays.begin(), selection)).selection
+            );
 
         }
 
         notifyData.notify(NOTIFY_SELECTION);
     });
     styleDisplay.setUpdateHandler([this](uint32 id) {
-        if (id != styleDisplay.ID_SELECTION) return;
+        if (id != PCUI::ChoiceData::ID_SELECTION) return;
 
         syncStyleDisplay();
     });
@@ -225,12 +240,14 @@ Config::PresetArray& Config::PresetArrays::addArray(string name) {
 void Config::PresetArrays::removeArray(uint32 idx) {
     assert(idx < mArrays.size());
     mArrays.erase(std::next(mArrays.begin(), idx));
+
     vector<string> choices;
     choices.reserve(mArrays.size());
     for (const auto& array : mArrays) choices.push_back(array->name);
     selection.setChoices(std::move(choices));
+
     if (selection == idx) selection = -1;
-    mParent.bladeArrays.refreshPresetArrays(idx);
+    mParent.bladeArrays.refreshPresetArrays(static_cast<int32>(idx));
 }
 
 void Config::PresetArrays::addInjection(const string& name) {
@@ -254,7 +271,10 @@ void Config::PresetArrays::syncStyles() {
     const auto numBlades{mParent.bladeArrays.numBlades()};
     for (const auto& array : mArrays) {
         for (const auto& preset : array->presets()) {
-            const auto newSize{std::max<uint32>(preset->mStyles.size(), numBlades)};
+            const auto newSize{
+                std::max<uint32>(preset->mStyles.size(), numBlades)
+            };
+
             preset->mStyles.reserve(newSize);
             for (auto idx{preset->mStyles.size()}; idx < newSize; ++idx) {
                 preset->mStyles.emplace_back(std::make_unique<Preset::Style>());
