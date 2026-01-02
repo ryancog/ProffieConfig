@@ -1,7 +1,7 @@
 #include "image.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * components/utils/image.cpp
  *
@@ -103,7 +103,9 @@ Image::DynamicColor::operator bool() const {
         case Type::SYSTEM:
             return mSysColor < wxSYS_COLOUR_MAX;
     }
+
     assert(0);
+    __builtin_unreachable();
 }
 
 wxBitmap Image::loadPNG(const string& name) {

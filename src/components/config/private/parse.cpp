@@ -1003,6 +1003,7 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
                 case 2: return simple.star3;
                 case 3: return simple.star4;
                 default: assert(0);
+                __builtin_unreachable();
             }
         }};
 
