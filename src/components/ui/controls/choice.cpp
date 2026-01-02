@@ -1,7 +1,7 @@
 #include "choice.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/choice.cpp
  *
@@ -31,7 +31,7 @@ void PCUI::ChoiceData::operator=(int32 val) {
 
 void PCUI::ChoiceData::setValue(int32 val) {
     std::scoped_lock scopeLock{getLock()};
-    assert(val == -1 or val < mChoices.size());
+    assert(val == -1 or (val >= 0 and val < mChoices.size()));
     mValue = val;
     notify(ID_SELECTION);
 }
