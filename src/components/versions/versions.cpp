@@ -22,6 +22,7 @@
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <memory>
 #include <sstream>
 
 #include <wx/uri.h>
@@ -57,7 +58,11 @@ bool saveVersionedProp(
     const Versions::VersionedProp::SupportedVersionList& versionList
 );
 
-bool addVersion(Versions::VersionedProp& prop, bool save);
+bool addVersion(
+    Versions::VersionedProp& prop,
+    bool save,
+    std::unique_ptr<PCUI::VersionData>&& verData = nullptr
+);
 
 auto& getSupportedVersions(Versions::VersionedProp& prop) {
     return const_cast<Versions::VersionedProp::SupportedVersionList&>(
@@ -78,28 +83,7 @@ Utils::Version Versions::getDefaultOSVersion() {
 Versions::VersionedOS::VersionedOS() : coreVersion{Utils::Version::invalidObject()} {}
 
 bool Versions::VersionedProp::addVersion() {
-    auto idx{mSupportedVersions.size()};
-
-    auto version{std::make_unique<PCUI::VersionData>()};
-    version->setUpdateHandler([this, idx](uint32 id) {
-        if (id != PCUI::VersionData::ID_VALUE) return;
-
-        if (not saveVersionedProp(name, mSupportedVersions)) {
-            PCUI::showMessage(
-                wxTRANSLATE("Could not save!"),
-                wxTRANSLATE("This shouldn't be a critical error, but Ryan was lazy here.")
-            );
-            exit(1);
-        }
-    });
-
-    mSupportedVersions.push_back(std::move(version));
-    if (not saveVersionedProp(name, mSupportedVersions)) {
-        mSupportedVersions.pop_back();
-        return false;
-    }
-
-    return true;
+    return ::addVersion(*this, true);
 }
 
 bool Versions::VersionedProp::removeVersion(uint32 idx) {
@@ -243,36 +227,49 @@ void Versions::loadLocal() {
 
         auto versionedProp{std::make_unique<VersionedProp>(propName)};
 
-        vector<std::unique_ptr<PCUI::VersionData>> supportedVersions;
         const auto supportedVersionsEntry{hashedInfoData.find(SUPPORTED_VERSIONS_STR)};
         vector<string> versionStrs;
-        if (supportedVersionsEntry) versionStrs =  PConf::valueAsList(supportedVersionsEntry->value);
+
+        if (supportedVersionsEntry) {
+            versionStrs =  PConf::valueAsList(supportedVersionsEntry->value);
+        }
         for (const auto& verStr : versionStrs) {
-            Utils::Version supportedVersion{verStr};
-            if (supportedVersion.err) {
-                logger.warn("Prop " + propName + " lists invalid supported version: " + static_cast<string>(supportedVersion));
+            Utils::Version version{verStr};
+            if (version.err) {
+                logger.warn("Prop " + propName + " lists invalid supported version: " + static_cast<string>(version));
                 continue;
             }
 
-            logger.verbose("Prop " + propName + " supports OS version " + static_cast<string>(supportedVersion));
-            std::unique_ptr<PCUI::VersionData> version;
+            logger.verbose("Prop " + propName + " supports OS version " + static_cast<string>(version));
+            std::unique_ptr<PCUI::VersionData> versionData;
 
             if (oldPropPtr) {
                 auto& oldSupportedVersions{getSupportedVersions(*oldPropPtr)};
-                for (auto& oldSupportedVersion : oldSupportedVersions) {
-                    if (not oldSupportedVersion) continue;
+                for (auto& oldVersionData : oldSupportedVersions) {
+                    if (not oldVersionData) continue;
 
                     const auto oldRawVersion{
-                        static_cast<Utils::Version>(*oldSupportedVersion)
+                        static_cast<Utils::Version>(*oldVersionData)
                     };
-                    if (oldRawVersion == supportedVersion) {
-                        version = std::move(oldSupportedVersion);
-                        oldSupportedVersion = nullptr;
+                    if (oldRawVersion == version) {
+                        versionData = std::move(oldVersionData);
+                        oldVersionData = nullptr;
                     }
                 }
             } 
 
-            if (not version) addVersion(*versionedProp, false);
+            if (versionData) {
+                addVersion(*versionedProp, false, std::move(versionData));
+            } else {
+                addVersion(
+                    *versionedProp,
+                    false,
+                    std::make_unique<PCUI::VersionData>(version)
+                );
+            }
+
+            if (not versionData) {
+            }
         }
 
         // Yeah this naming is stupid, what are you going to do about it?
@@ -290,8 +287,6 @@ void Versions::loadLocal() {
         }
 
         versionedProp->prop = std::move(prop);
-        getSupportedVersions(*versionedProp) = std::move(supportedVersions);
-
         props.push_back(std::move(versionedProp));
     }
     using PropElement = std::unique_ptr<VersionedProp>;
@@ -538,8 +533,12 @@ bool saveVersionedProp(
     return true;
 }
 
-bool addVersion(Versions::VersionedProp& prop, bool save) {
-    auto version{std::make_unique<PCUI::VersionData>()};
+bool addVersion(
+    Versions::VersionedProp& prop,
+    bool save,
+    std::unique_ptr<PCUI::VersionData>&& verData
+) {
+    if (not verData) verData = std::make_unique<PCUI::VersionData>();
 
     /*
      * TODO: So much about this is woefully inefficient and error-prone, not to
@@ -548,7 +547,7 @@ bool addVersion(Versions::VersionedProp& prop, bool save) {
      * This really should have a lot more work put into it to make it correct,
      * but that's a lot more work, and I'm not doing it right now.
      */
-    version->setUpdateHandler([&prop](uint32 id) {
+    verData->setUpdateHandler([&prop](uint32 id) {
         if (id != PCUI::VersionData::ID_VALUE) return;
 
         if (not saveVersionedProp(prop.name, getSupportedVersions(prop))) {
@@ -560,7 +559,7 @@ bool addVersion(Versions::VersionedProp& prop, bool save) {
         }
     });
 
-    getSupportedVersions(prop).push_back(std::move(version));
+    getSupportedVersions(prop).push_back(std::move(verData));
 
     if (save) {
         if (not saveVersionedProp(prop.name, getSupportedVersions(prop))) {
