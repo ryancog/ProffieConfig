@@ -1,7 +1,7 @@
 #include "editorwindow.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2023-2025 Ryan Ogurek
+ * Copyright (C) 2023-2026 Ryan Ogurek
  *
  * proffieconfig/editor/editorwindow.cpp
  *
@@ -40,11 +40,12 @@
 
 #include "app/app.h"
 #include "config/config.h"
-#include "utils/paths.h"
 #include "ui/message.h"
 #include "ui/frame.h"
 #include "utils/defer.h"
 #include "utils/image.h"
+#include "utils/paths.h"
+#include "utils/string.h"
 
 #include "pages/bladespage.h"
 #include "pages/generalpage.h"
@@ -232,7 +233,26 @@ void EditorWindow::bindEvents() {
         mConfig.presetArrays.addInjection(fileDialog.GetFilename().ToStdString());
     }, ID_AddInjection);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { 
-        wxLaunchDefaultBrowser("http://profezzorn.github.io/ProffieOS-StyleEditor/style_editor.html");
+        string styleStr;
+
+        int32 presetArrayIdx{mConfig.presetArrays.selection};
+        if (presetArrayIdx != -1) {
+            auto& presetArray{mConfig.presetArrays.array(presetArrayIdx)};
+
+            int32 presetIdx{presetArray.selection};
+            if (presetIdx != -1) {
+                auto& preset{presetArray.preset(presetIdx)};
+
+                int32 styleIdx{preset.styleSelection};
+                if (styleIdx != -1) {
+                    auto& style{preset.style(styleIdx)};
+                    styleStr = style.style;
+                    Utils::trimWhitespaceOutsideString(styleStr);
+                }
+            }
+        }
+
+        wxLaunchDefaultBrowser("https://fredrik.hubbe.net/lightsaber/style_editor.html?S=" + styleStr);
     }, ID_StyleEditor);
     auto windowSelectionHandler{[this](wxCommandEvent& evt) {
         wxSetCursor(wxCURSOR_WAIT);
