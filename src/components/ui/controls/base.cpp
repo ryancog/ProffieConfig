@@ -1,9 +1,7 @@
 #include "base.h"
-
-#include <utility>
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/base.cpp
  *
@@ -20,6 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <utility>
 
 #include "ui/controls/checklist.h"
 #include "ui/controls/choice.h"
@@ -197,6 +197,7 @@ bool PCUI::ControlBase<DERIVED, CONTROL_DATA, CONTROL, CONTROL_EVENT, SECONDARY_
     }
 
     assert(0);
+    __builtin_unreachable();
 }
 
 template<class DERIVED, typename CONTROL_DATA, class CONTROL, class CONTROL_EVENT, class SECONDARY_EVENT>
