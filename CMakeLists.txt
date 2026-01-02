@@ -67,13 +67,14 @@ endif()
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
     set(LOCAL_BUILD TRUE)
 
-    set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-    install(FILES ${CMAKE_BINARY_DIR}/compile_commands.json DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
     if (NOT CMAKE_SYSTEM_NAME STREQUAL Windows)
         add_compile_options(-fsanitize=address)
         add_link_options(-fsanitize=address)
     endif()
 endif()
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+install(FILES ${CMAKE_BINARY_DIR}/compile_commands.json DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
 
 if (LOCAL_BUILD)
     set(INSTALL_ITEM_DIR ${INSTALL_DIR}/items)
