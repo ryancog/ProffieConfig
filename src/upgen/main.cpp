@@ -1,6 +1,6 @@
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * upgen/main.cpp
  *
@@ -70,7 +70,7 @@ private:
         "linux",
     };
 
-    using ItemMap = std::map<filepath, string>;
+    using ItemMap = std::map<filepath, Crypto::Hash>;
     using FileMaps = std::array<std::array<ItemMap, Update::TYPE_MAX>, PLATFORM_MAX>;
 
     struct Message {
@@ -80,9 +80,9 @@ private:
         bool fatal;
     };
     struct ItemVersionData {
-        string macOSHash;
-        string win32Hash;
-        string linuxHash;
+        optional<Crypto::Hash> macOSHash;
+        optional<Crypto::Hash> win32Hash;
+        optional<Crypto::Hash> linuxHash;
 
         vector<string> fixes;
         vector<string> changes;
@@ -443,7 +443,9 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const PConf::EntryPtr& entry, Lo
 
         auto hashedVersionEntries{PConf::hash(versionEntry.section()->entries)};
 
-        auto checkHash{[&](cstring spec, cstring key) {
+        auto checkHash{[&hashedVersionEntries, &name, &version, &logger](
+            cstring spec, cstring key
+        ) {
             auto versionHashEntry{hashedVersionEntries.find(key)};
             if (not versionHashEntry) {
                 string errMsg{"Item \""}; 
@@ -463,7 +465,9 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const PConf::EntryPtr& entry, Lo
                 logger.error(errMsg);
                 exit(1);
             }
-            if (versionHashEntry->value->length() != 64) {
+
+            const auto ret{Crypto::Hash::parseString(*versionHashEntry->value)};
+            if (not ret) {
                 string errMsg{"Item \""}; 
                 errMsg += name;
                 errMsg += "\" version ";
@@ -472,7 +476,7 @@ std::pair<string, UpGen::Item> UpGen::parseItem(const PConf::EntryPtr& entry, Lo
                 logger.error(errMsg);
                 exit(1);
             }
-            return versionHashEntry->value.value();
+            return ret;
         }};
 
         ItemVersionData versionData;
@@ -630,14 +634,16 @@ void UpGen::verifyBundles(const Items& items, const Update::Bundles& bundles, Lo
 void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
     // Clear out items we already know about.
     for (auto& [ itemID, item ] : data.items) {
-        auto getFileHash{[&](Platform idx, const optional<filepath>& path) {
+        auto getFileHash{[&](
+            Platform idx, const optional<filepath>& path
+        ) -> std::pair<optional<Crypto::Hash>, ItemMap::iterator> {
             auto mapEnd{fileMaps[idx][itemID.type].end()};
-            if (not path) return std::pair{ optional<string>{nullopt}, mapEnd };
+            if (not path) return std::pair{ nullopt, mapEnd };
 
             auto fileIt{fileMaps[idx][itemID.type].find(path.value())};
-            if (fileIt == mapEnd) return std::pair { optional<string>{nullopt}, mapEnd };
+            if (fileIt == mapEnd) return std::pair { nullopt, mapEnd };
 
-            return std::pair{ optional<string>{fileIt->second}, fileIt };
+            return std::pair{ fileIt->second, fileIt };
         }};
         auto [ win32FileHash, win32It ]{getFileHash(WINDOWS, item.win32Path)};
         auto [ macOSFileHash, macOSIt ]{getFileHash(MACOS, item.macOSPath)};
@@ -692,9 +698,9 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
 
                 if (version != Utils::Version::invalidObject()) {
                     ItemVersionData versionData;
-                    versionData.linuxHash = linuxFileHash.value_or("");
-                    versionData.macOSHash = macOSFileHash.value_or("");
-                    versionData.win32Hash = win32FileHash.value_or("");
+                    versionData.linuxHash = linuxFileHash;
+                    versionData.macOSHash = macOSFileHash;
+                    versionData.win32Hash = win32FileHash;
                     addNotesToItemVersion(itemID.name, item, versionData);
                     item.versions.emplace(version, versionData);
                 }
@@ -853,13 +859,13 @@ void UpGen::handleNewItems(Data& data, FileMaps fileMaps) {
                         bool exists{};
                         switch (Platform(platformIdx)) {
                             case MACOS: 
-                                exists = not versionData->macOSHash.empty();
+                                exists = versionData->macOSHash.has_value();
                                 break;
                             case WINDOWS:
-                                exists = not versionData->win32Hash.empty();
+                                exists = versionData->win32Hash.has_value();
                                 break;
                             case LINUX:
-                                exists = not versionData->linuxHash.empty();
+                                exists = versionData->linuxHash.has_value();
                                 break;
                             case PLATFORM_MAX: break;
                         }
@@ -970,9 +976,15 @@ void UpGen::generateNewManifest(const vector<Message>& messages, const Data& dat
         for (const auto& [ version, verData ] : item.versions) {
             auto versionSect{PConf::Section::create("VERSION", static_cast<string>(version))};
 
-            if (item.linuxPath) versionSect->entries.emplace_back(PConf::Entry::create(HASH_KEY_LINUX, verData.linuxHash));
-            if (item.macOSPath) versionSect->entries.emplace_back(PConf::Entry::create(HASH_KEY_MACOS, verData.macOSHash));
-            if (item.win32Path) versionSect->entries.emplace_back(PConf::Entry::create(HASH_KEY_WIN32, verData.win32Hash));
+            if (item.linuxPath and verData.linuxHash) {
+                versionSect->entries.emplace_back(PConf::Entry::create(HASH_KEY_LINUX, static_cast<string>(*verData.linuxHash)));
+            }
+            if (item.macOSPath and verData.macOSHash) {
+                versionSect->entries.emplace_back(PConf::Entry::create(HASH_KEY_MACOS, static_cast<string>(*verData.macOSHash)));
+            }
+            if (item.win32Path and verData.win32Hash) {
+                versionSect->entries.emplace_back(PConf::Entry::create(HASH_KEY_WIN32, static_cast<string>(*verData.win32Hash)));
+            }
 
             for (const auto& fix : verData.fixes) versionSect->entries.emplace_back(PConf::Entry::create("FIX", fix));
             for (const auto& change : verData.changes) versionSect->entries.emplace_back(PConf::Entry::create("CHANGE", change));
@@ -1002,7 +1014,7 @@ void UpGen::generateNewManifest(const vector<Message>& messages, const Data& dat
 }
 
 void UpGen::organizeAssets(const FileMaps& fileMaps, const Data& data) {
-    const auto lookupItem{[&](Platform platform, Update::ItemType type, const filepath& path, const string& hash)
+    const auto lookupItem{[&](Platform platform, Update::ItemType type, const filepath& path, const Crypto::Hash& hash)
         -> std::pair<string, Utils::Version> {
         for (const auto& [ itemID, item ] : data.items) {
             if (type != itemID.type) continue;
@@ -1057,7 +1069,7 @@ void UpGen::organizeAssets(const FileMaps& fileMaps, const Data& data) {
 
                 fs::create_directories(destDir);
                 std::error_code err;
-                Paths::copyOverwrite(filepath{STAGING_DIR} / PLATFORM_DIRS[platformIdx] / typeFolder / path, destDir / hash, err);
+                Paths::copyOverwrite(filepath{STAGING_DIR} / PLATFORM_DIRS[platformIdx] / typeFolder / path, destDir / static_cast<string>(hash), err);
             }
         }
     }
@@ -1684,8 +1696,10 @@ void UpGen::genBundleChangelog(Data& data) {
     std::cout << notes;
 
     for (const auto& [ id, info ] : itemInfos) {
-        std::cout << "### " << id.name << "\n\n";
         const auto& [ features, changes, fixes ]{info};
+        if (features.empty() and changes.empty() and fixes.empty()) continue;
+
+        std::cout << "### " << id.name << "\n\n";
         if (not features.empty()) {
             std::cout << "**New Features:**\n";
             std::cout << features << '\n';

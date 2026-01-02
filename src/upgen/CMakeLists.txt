@@ -21,3 +21,5 @@ target_link_libraries(upgen
 include (../Common.cmake)
 setup_target(upgen)
 
+install(TARGETS upgen DESTINATION ${PROJECT_SOURCE_DIR} OPTIONAL)
+
