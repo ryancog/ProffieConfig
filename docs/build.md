@@ -1,6 +1,6 @@
 # Building ProffieConfig
 
-**There is no reason to build ProffieConfig unless you want to make your own changes.**
+**There's usually no reason to build ProffieConfig, and it's an advanced procedure. These are instructions to build the application itself, not anything for your proffieboard.**
 
 If you're simply trying to download and use ProffieConfig, go [here](https://proffieconfig.kafrenetrading.com).
 
@@ -10,7 +10,7 @@ If you're simply trying to download and use ProffieConfig, go [here](https://pro
 *If you're on Windows, you'll need a better operating system. (I'm joking, kind of)
 ProffieConfig is not set up to be built on Windows. It may be possible with WSL, but it probably won't be fun.*
 
-ProffieConfig's build system(s) have only been tested on OpenSUSE Tumbleweed and Intel macOS. Other Linux distributions may have quirks with their build tools that require troubleshooting.
+ProffieConfig's build system(s) have only been tested on (all x86) OpenSUSE (Tumbleweed, Early 2025), Debian (Trixie) and macOS (Monterey through Sequoia). Other Linux distributions may have quirks with their build tools that require troubleshooting. Other architectures will also probably require some additional effort and modification to the build scrips. Feel free to reach out and/or submit a PR if you are building elsewhere.
 
 Building for Windows requires MinGW. MinGW is recommended to be installed via homebrew (macOS) or with mxe (Linux). MinGW for Apple Silicon does not have paths configured in the ProffieConfig toolchain. It will require (possibly significant) manual work.
 
