@@ -1,8 +1,7 @@
 #include "generalpage.h"
-#include "ui/static_box.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2023-2025 Ryan Ogurek
+ * Copyright (C) 2023-2026 Ryan Ogurek
  *
  * proffieconfig/editor/pages/generalpage.cpp
  *
@@ -21,8 +20,10 @@
  */
 
 #include <wx/button.h>
-#include <wx/statbox.h>
 #include <wx/statline.h>
+
+#include "ui/controls/button.h"
+#include "ui/static_box.h"
 
 GeneralPage::GeneralPage(EditorWindow *parent) : 
     wxPanel(parent), 
@@ -52,10 +53,16 @@ GeneralPage::GeneralPage(EditorWindow *parent) :
     sizer->Add(sizer2, wxSizerFlags().Expand());
 
     mCustomOptDlg = new CustomOptionsDlg(mParent);
+    mButtonsDlg = new ButtonsDlg(mParent);
 
     bindEvents();
     initializeNotifier();
     SetSizerAndFit(sizer);
+}
+
+GeneralPage::~GeneralPage() {
+    mCustomOptDlg->Destroy();
+    mButtonsDlg->Destroy();
 }
 
 void GeneralPage::bindEvents() {
@@ -63,6 +70,10 @@ void GeneralPage::bindEvents() {
         if (mCustomOptDlg->IsShown()) mCustomOptDlg->Raise();
         else mCustomOptDlg->Show();
     }, ID_CustomOptions);
+    Bind(wxEVT_BUTTON, [&](wxCommandEvent&){
+        if (mButtonsDlg->IsShown()) mButtonsDlg->Raise();
+        else mButtonsDlg->Show();
+    }, ID_Buttons);
 }
 
 void GeneralPage::handleNotification(uint32 id) {
@@ -208,13 +219,15 @@ wxWindow *GeneralPage::installationSection() {
 
     auto *line2{new wxStaticLine(parent)};
 
-    auto *buttons{new PCUI::Numeric(
+    auto *buttons{new PCUI::Button(
         parent,
-        config.settings.numButtons,
-        _("Number of Buttons"),
-        wxHORIZONTAL
+        ID_Buttons,
+        _("Buttons...")
     )};
-    buttons->SetToolTip(_("Physical buttons on the saber.\nNot all prop files support all possible numbers of buttons, and controls may change depending on how many buttons are specified."));
+    buttons->SetToolTip(_(
+        "Configure physical buttons on the saber.\n"
+        "Not all prop files support all possible numbers of buttons, and controls may change depending on how many buttons are specified."
+    ));
 
     auto *line3{new wxStaticLine(parent)};
 

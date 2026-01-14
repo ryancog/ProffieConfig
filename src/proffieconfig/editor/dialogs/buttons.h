@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2023-2026 Ryan Ogurek
+ * Copyright (C) 2026 Ryan Ogurek
  *
- * proffieconfig/editor/pages/generalpage.h
+ * components/config/settings/buttons.h
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,33 +19,45 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/dialog.h>
+#include <wx/panel.h>
+
+#include "ui/notifier.h"
+#include "ui/static_box.h"
+
 #include "../editorwindow.h"
-#include "../dialogs/customoptionsdlg.h"
-#include "../dialogs/buttons.h"
 
-class GeneralPage : public wxPanel, PCUI::NotifyReceiver {
+class ButtonsDlg : public wxDialog, PCUI::NotifyReceiver {
 public:
-    GeneralPage(EditorWindow*);
-    ~GeneralPage() override;
-
-    enum {
-        ID_CustomOptions = 2,
-        ID_Buttons,
-    };
+    ButtonsDlg(EditorWindow*);
 
 private:
-    EditorWindow* mParent{nullptr};
-    CustomOptionsDlg *mCustomOptDlg{nullptr};
-    ButtonsDlg *mButtonsDlg{nullptr};
-
-    void bindEvents();
     void handleNotification(uint32) final;
 
-    wxWindow *setupSection();
+    EditorWindow *mParent;
 
-    wxWindow *miscSection();
-    wxWindow *installationSection();
-    wxWindow *tweaksSection();
-    wxWindow *editingSection();
-    wxWindow *audioSection();
+    enum {
+        ID_AddButton,
+    };
+
+    wxScrolledWindow *mButtonsArea{nullptr};
+    wxButton *mAddButton{nullptr};
+
+    class ButtonPanel;
+
+    void bindEvents();
+    void createUI();
+    void createButtonsArea();
+
+    wxBoxSizer *header();
+    static wxWindow *info(wxWindow*);
+};
+
+class ButtonsDlg::ButtonPanel : public PCUI::StaticBox {
+public:
+    ButtonPanel(
+        wxScrolledWindow *,
+        Config::Config&,
+        Config::Settings::ButtonData&
+    );
 };

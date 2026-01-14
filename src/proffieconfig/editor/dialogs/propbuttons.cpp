@@ -1,7 +1,7 @@
 #include "propbuttons.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2026 Ryan Ogurek
  *
  * proffieconfig/editor/dialogs/propbuttons.cpp
  *
@@ -36,7 +36,7 @@ PropButtonsDialog::PropButtonsDialog(EditorWindow *parent) {
 
     auto *textSizer{new wxBoxSizer(wxVERTICAL)};
 
-    auto propButtons{prop.buttons(config.settings.numButtons)};
+    auto propButtons{prop.buttons(config.settings.numButtons())};
 
     if (propButtons.empty()) {
         textSizer->Add(
