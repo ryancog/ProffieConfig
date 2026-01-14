@@ -312,14 +312,20 @@ Versions::Prop::Prop(const Prop& other) :
 
     rebuildMaps();
 
-    mLayout = PropLayout(other.mLayout, mSettingMap);
+    mLayout = PropLayout{other.mLayout, mSettingMap};
 
-    mButtons.~array();
-    new(&mButtons) array(other.mButtons);
+    mButtons.~map();
+    new (&mButtons) decltype(mButtons){other.mButtons};
+
     mErrors.~PropErrors();
-    new(&mErrors) PropErrors(other.mErrors);
+    new(&mErrors) PropErrors{other.mErrors};
 
     recalculateRequires();
+}
+
+auto Versions::Prop::buttons(uint32 numButtons) const -> PropButtons {
+    if (mButtons.contains(numButtons)) return mButtons.at(numButtons);
+    return {};
 }
 
 void Versions::Prop::migrateFrom(const Prop& from) {
@@ -614,12 +620,7 @@ std::unique_ptr<Versions::Prop> Versions::Prop::generate(
         }
 
         const auto numButtons{*buttonEntry->labelNum};
-        if (numButtons < 0 or numButtons > prop->mButtons.size()) {
-            logger.warn("Skipping BUTTONS with out of range num (" + std::to_string(numButtons) + ")... ");
-            continue;
-        }
-
-        if (not prop->mButtons[numButtons].empty()) {
+        if (prop->mButtons.contains(numButtons)) {
             logger.warn("Skipping duplicate BUTTONS{" + std::to_string(numButtons) + "}...");
             continue;
         }

@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <map>
 #include <unordered_set>
 #include <unordered_map>
 #include <utility>
@@ -414,12 +415,12 @@ struct VERSIONS_EXPORT Prop {
     const string filename;
     const string info;
 
-    const PropSettings& settings() const { return mSettings; }
-    const PropDataMap& dataMap() const { return mDataMap; }
-    const PropSettingMap& settingMap() const { return mSettingMap; }
-    const PropLayout& layout() const { return mLayout; }
-    PropButtons buttons(uint32 idx) const { return mButtons.at(idx); }
-    PropErrors errors() const { return mErrors; }
+    [[nodiscard]] const PropSettings& settings() const { return mSettings; }
+    [[nodiscard]] const PropDataMap& dataMap() const { return mDataMap; }
+    [[nodiscard]] const PropSettingMap& settingMap() const { return mSettingMap; }
+    [[nodiscard]] const PropLayout& layout() const { return mLayout; }
+    [[nodiscard]] PropButtons buttons(uint32 numButtons) const;
+    [[nodiscard]] const PropErrors& errors() const { return mErrors; }
 
     void migrateFrom(const Prop&);
 
@@ -448,7 +449,7 @@ private:
     PropLayout mLayout;
     PropDataMap mDataMap;
     PropSettingMap mSettingMap;
-    array<PropButtons, 4> mButtons;
+    std::map<uint32, PropButtons> mButtons;
     PropErrors mErrors;
 };
 
