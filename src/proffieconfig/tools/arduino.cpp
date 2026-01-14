@@ -43,6 +43,7 @@
 #include <wx/zstream.h>
 
 #include "config/config.h"
+#include "config/private/io.h"
 #include "log/context.h"
 #include "log/logger.h"
 #include "log/branch.h"
@@ -304,7 +305,7 @@ variant<CompileOutput, string> compile(
 
     if (config.propSelection != -1) {
         constexpr cstring PROPINST_MSG{wxTRANSLATE("Installing Prop File...")};
-        if (prog) prog->emitEvent(25, wxGetTranslation(PROPINST_MSG));
+        if (prog) prog->emitEvent(20, wxGetTranslation(PROPINST_MSG));
         logger.info(PROPINST_MSG);
         auto [prop, reference]{config.propAndReference(config.propSelection)};
         if (not reference) {
@@ -328,6 +329,28 @@ variant<CompileOutput, string> compile(
                 logger.error("Failed to copy in prop header.");
                 return _("OS FS Error").ToStdString();
             }
+        }
+    }
+
+    const auto injectionsDir{osPath / "config" / Config::INJECTION_STR};
+    if (not config.presetArrays.injections().empty()) {
+        constexpr cstring PROPINST_MSG{wxTRANSLATE("Installing Injection Files...")};
+        if (prog) prog->emitEvent(25, wxGetTranslation(PROPINST_MSG));
+
+        std::error_code err;
+        if (not fs::create_directories(injectionsDir, err)) {
+            if (prog) prog->emitEvent(100, _("Error"));
+            logger.error("Failed to create injections dir: " + err.message());
+            return _("OS FS Error").ToStdString();
+        }
+    }
+    for (const auto& injection : config.presetArrays.injections()) {
+        auto injectionPath{injectionsDir / injection->filename};
+        std::error_code err;
+        if (not Paths::copyOverwrite(Paths::injectionDir() / injection->filename, injectionPath, err)) {
+            if (prog) prog->emitEvent(100, _("Error"));
+            logger.error("Failed to copy injection file \"" + injectionPath.string() + "\": " + err.message());
+            return _("OS FS Error").ToStdString();
         }
     }
 
