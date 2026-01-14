@@ -15,8 +15,12 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
+target_compile_options(Catch2 PUBLIC
+    -fexceptions
+)
+
 target_link_libraries(test
-    Catch2::Catch2WithMain
+    Catch2::Catch2
 
     app
     config
@@ -29,8 +33,12 @@ target_link_libraries(test
     versions_manager
 )
 
+target_compile_definitions(test PRIVATE
+    CONFIG_DIR_STR="${PROJECT_SOURCE_DIR}/testing/configs"
+)
+
 include (../Common.cmake)
 setup_target(test)
 
-install(TARGETS test DESTINATION ${INSTALL_DIR}/test/ OPTIONAL)
+install(TARGETS test DESTINATION ${PROJECT_SOURCE_DIR} OPTIONAL)
 

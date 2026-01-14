@@ -10,7 +10,7 @@ function(setup_target TARGET)
 
     if (CMAKE_SYSTEM_NAME STREQUAL Linux)
         if (${TARGET} STREQUAL test)
-            set(RPATH "$ORIGIN/../items/lib:$ORIGIN/../items/components")
+            set(RPATH "${INSTALL_ITEM_DIR}/lib:${INSTALL_ITEM_DIR}/components")
         else()
             set(RPATH "$ORIGIN/../lib:$ORIGIN/../components")
         endif()
