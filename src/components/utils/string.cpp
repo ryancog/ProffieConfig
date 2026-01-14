@@ -317,97 +317,242 @@ vector<string> Utils::createEntries(const std::initializer_list<wxString>& list)
     return Utils::createEntries(static_cast<std::vector<wxString>>(list));
 }
 
-// Pulled and adapted from:
-// C++ Program to illustrate how to evalauate a mathematical expression that is stored as string
-// https://www.geeksforgeeks.org/cpp/how-to-parse-mathematical-expressions-in-cpp
-//
-// I should probably review it in depth at some point but for now it's good enough.
 optional<float64> Utils::doStringMath(const string& str) {
-    const auto isOperator{[](char c) {
-        return c == '+' or c == '-' or c == '*' or c == '/' /* or c == '^' */;
-    }};
-    const auto precedence{[](char op) -> int32 {
-        if (op == '+' or op == '-') return 1;
-        if (op == '*' or op == '/') return 2;
-        // if (op == '^') return 3;
-        return 0;
-    }};
-
-    const auto applyOp{[](float64 a, float64 b, char op) -> float64 {
-        // Applies the operator to the operands and returns the
-        // result
-        switch (op) {
-            case '+': return a + b;
-            case '-': return a - b;
-            case '*': return a * b;
-            case '/': return a / b;
-            // case '^': return pow(a, b);
-            default: return 0;
-        }
-    }};
-
-    std::stack<char> operators;
-    std::stack<float64> operands;
-
     std::istringstream ss{str};
 
-    string token;
-    while (std::getline(ss, token, ' ')) {
-        if (token.empty()) continue;
+    enum class Operator {
+        ADD,
+        SUB,
+        MUL,
+        DIV,
 
-        if (isOperator(token[0])) {
-            const char op{token[0]};
+        NEG,
 
-            while (not operators.empty() and precedence(operators.top()) >= precedence(op)) {
-                const auto operandB{operands.top()};
-                operands.pop();
-                const auto operandA{operands.top()};
-                operands.pop();
-                const auto op{operators.top()};
-                operators.pop();
+        PAREN_L,
+        PAREN_R,
+    };
+    struct OpPair {
+        float64 val;
+        optional<Operator> op;
+    };
+    std::stack<vector<OpPair>> stack;
 
-                operands.push(applyOp(operandA, operandB, op));
+    const auto solveLayer{[](vector<OpPair>& layer) -> bool {
+        // Can't solve without inputs
+        if (layer.empty()) return false;
+        // There can't be an operator at the back, e.g. 7 - (6 / 2 +), the plus
+        // is nonsense.
+        if (layer.back().op) return false;
+
+        const auto opPrio{[](Operator op) -> int32 {
+            switch (op) {
+                using enum Operator;
+                case ADD:
+                case SUB:
+                return 1;
+                case MUL:
+                case DIV:
+                return 2;
+                case NEG:
+                return 3;
+                case PAREN_L:
+                case PAREN_R:
+                assert(0);
             }
 
-            operators.push(op);
-        } else if (token[0] == '(') { 
-            operators.push('(');
-        } else if (token[0] == ')') {
-            while (not operators.empty() and operators.top() != '(') {
-                const auto operandB{operands.top()};
-                operands.pop();
-                const auto operandA{operands.top()};
-                operands.pop();
-                const auto op{operators.top()};
-                operators.pop();
+            __builtin_unreachable();
+        }};
 
-                operands.push(applyOp(operandA, operandB, op));
+        const auto apply{[](float64 a, Operator op, float64 b) -> float64 {
+            switch (op) {
+                using enum Operator;
+                case ADD: return a + b;
+                case NEG:
+                case SUB: return a - b;
+                case MUL: return a * b;
+                case DIV: return a / b;
+                case PAREN_L:
+                case PAREN_R:
+                    assert(0);
             }
 
-            // Pop the opening parenthesis
-            operators.pop();
-        } else {
-            char *end{nullptr};
-            auto num{strtod(token.c_str(), &end)};
-            if (num == HUGE_VAL) return nullopt;
-            if (end != &token[token.size()]) return nullopt;
+            __builtin_unreachable();
+        }};
 
-            operands.push(num);
+        while (layer.size() > 1) {
+            int32 highestPrio{-1};
+            auto highestIter{layer.end()};
+            
+            for (auto iter{layer.begin()}; iter->op; ++iter) {
+                auto prio{opPrio(*iter->op)};
+                if (prio > highestPrio) {
+                    highestPrio = prio;
+                    highestIter = iter;
+                }
+            }
+
+            auto nextIter{std::next(highestIter)};
+            assert(
+                highestIter != layer.end() and 
+                nextIter != layer.end()
+            );
+
+            auto val{apply(highestIter->val, *highestIter->op, nextIter->val)};
+            nextIter->val = val;
+
+            layer.erase(highestIter);
         }
+
+        assert(not layer.back().op);
+        return true;
+    }};
+
+    const auto parseOp{[](char c) -> std::optional<Operator> {
+        switch (c) {
+            using enum Operator;
+            case '+': return ADD;
+            case '-': return SUB;
+            case '*': return MUL;
+            case '/': return DIV;
+            case '(': return PAREN_L;
+            case ')': return PAREN_R;
+            default: return nullopt;
+        }
+    }};
+
+    const auto parseNum{[](const string& numStr) -> std::optional<float64> {
+        char *end{nullptr};
+        auto num{strtod(numStr.c_str(), &end)};
+        if (num == HUGE_VAL) return nullopt;
+        if (end != &numStr[numStr.size()]) return nullopt;
+
+        return num;
+    }};
+
+    const auto pushNum{[&](float64 num) -> bool {
+        auto& layer{stack.top()};
+
+        if (not layer.empty()) {
+            // Another number cannot be pushed without an operator.
+            if (not layer.back().op) return false;
+        }
+
+        auto& opPair{layer.emplace_back()};
+        opPair.val = num;
+
+        return true;
+    }};
+
+    const auto pushOp{[&](Operator op) -> bool {
+        auto& layer{stack.top()};
+
+        if (op == Operator::PAREN_L) {
+            if (not stack.top().empty() and not stack.top().back().op) {
+                // If this isn't the start, or there's no operator preceeding
+                // the paren, then we have a situation like `5 (smth)` which,
+                // while valid math notation, is not valid C++.
+                //
+                // Cannot start new layer/parens 
+                return false;
+            }
+
+            // New layer
+            stack.emplace();
+            return true;
+        }
+
+        if (op == Operator::PAREN_R) {
+            // There isn't an extra layer started by a previous '('
+            if (stack.size() == 1) return false;
+
+            if (not solveLayer(stack.top())) return false;
+
+            auto val{stack.top().back().val};
+            stack.pop();
+
+            auto opPair{stack.top().emplace_back()};
+            opPair.val = val;
+
+            return true;
+        }
+
+        // If there's nowhere to place the op.
+        if (layer.empty() or layer.back().op) {
+            switch (op) {
+                using enum Operator;
+                case ADD:
+                    // E.g. 7 - +6, add is noop
+                    return true;
+                case SUB:
+                {
+                    // Push new pair for high-priority negation op.
+                    auto& opPair{layer.emplace_back()};
+                    opPair.val = 0;
+                    opPair.op = NEG;
+                    return true;
+                }
+                case MUL:
+                case DIV:
+                    // MUL and DIV cannot appear before a num.
+                    return false;
+                case NEG:
+                    // Cannot push a neg, it is synthesized automatically.
+                case PAREN_L:
+                case PAREN_R:
+                    // Parens should've been handled above.
+                    assert(0);
+            }
+
+            __builtin_unreachable();
+        }
+
+        layer.back().op = op;
+        return true;
+    }};
+
+    // Create base operations layer;
+    stack.emplace();
+
+    string buf;
+    int chr{};
+    while (chr = ss.get(), not ss.eof()) {
+        if (std::isspace(chr)) {
+            if (buf.empty()) continue;
+
+            auto num{parseNum(buf)};
+            if (not num or not pushNum(*num)) return nullopt;
+
+            continue;
+        }
+
+        if (std::isdigit(chr) or chr == '.' or chr == 'x' or chr == 'X') {
+            // See https://en.cppreference.com/w/cpp/language/floating_literal.html
+            // if I want to make this very ~~correct~~ dumb.
+            buf += static_cast<char>(chr);
+        } else if (auto op{parseOp(static_cast<char>(chr))}) {
+            // Make sure number is parsed and pushed before processing op.
+            if (not buf.empty()) {
+                auto num{parseNum(buf)};
+                if (not num or not pushNum(*num)) return nullopt;
+            }
+
+            if (not pushOp(*op)) return nullopt;
+        } else return nullopt;
     }
 
-    while (not operators.empty()) {
-        const auto operandB{operands.top()};
-        operands.pop();
-        const auto operandA{operands.top()};
-        operands.pop();
-        const auto op{operators.top()};
-        operators.pop();
-
-        operands.push(applyOp(operandA, operandB, op));
+    // Ensure any final number is processed.
+    if (not buf.empty()) {
+        auto num{parseNum(buf)};
+        if (not num or not pushNum(*num)) return nullopt;
     }
 
-    // The result is at the top of the operand stack
-    return operands.empty() ? 0 : operands.top();
+    // Should have a single layer when all is said and done, so long as parens
+    // were properly matched in the string.
+    if (stack.size() != 1) return nullopt;
+
+    // Condense to a single pair w/ value and null op.
+    if (not solveLayer(stack.top())) return nullopt;
+
+    return stack.top().back().val;
 }
 
