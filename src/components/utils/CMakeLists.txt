@@ -21,5 +21,5 @@ target_link_libraries(utils
 )
 
 include(../Component.cmake)
-setup_component_and_static(utils 1.0.11)
+setup_component_and_static(utils 1.0.12)
 
