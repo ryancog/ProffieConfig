@@ -143,7 +143,7 @@ void MainMenu::bindEvents() {
 #       ifdef __WXGTK__
         aboutInfo.SetWebSite("https://proffieconfig.kafrenetrading.com");
 #       endif
-        aboutInfo.SetCopyright("Copyright (C) 2023-2025 Ryan Ogurek");
+        aboutInfo.SetCopyright("Copyright (C) 2023-2026 Ryan Ogurek");
         aboutInfo.SetName("ProffieConfig");
         wxAboutBox(aboutInfo, this);
     }, wxID_ABOUT);

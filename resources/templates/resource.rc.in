@@ -19,7 +19,7 @@ BEGIN
             VALUE "CompanyName", "Kafrene Trading"
             VALUE "FileDescription", "${DESCRIPTION}"
             VALUE "InternalName", "$<TARGET_FILE_BASE_NAME:${TARGET}>"
-            VALUE "LegalCopyright", "(C) 2025 Ryan Ogurek"
+            VALUE "LegalCopyright", "(C) 2023-2026 Ryan Ogurek"
             VALUE "OriginalFilename", "$<TARGET_FILE_NAME:${TARGET}>"
         END
     END
