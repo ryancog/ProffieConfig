@@ -225,6 +225,20 @@ optional<string> runPreChecks(const Config::Config& config, Log::Branch& lBranch
         }
     }
 
+    const auto numButtons{config.settings.numButtons()};
+    for (auto idx{0}; idx < numButtons; ++idx) {
+        const auto& button{config.settings.button(idx)};
+        if (button->type == -1) {
+            return errorMessage(logger, wxTRANSLATE("Button %u doesn't have a type set."), idx);
+        }
+        if (button->event == -1) {
+            return errorMessage(logger, wxTRANSLATE("Button %u doesn't have its event set."), idx);
+        }
+        if (button->pin.empty()) {
+            return errorMessage(logger, wxTRANSLATE("Button %u doesn't have a pin set."), idx);
+        }
+    }
+
     return nullopt;
 }
 
@@ -295,7 +309,7 @@ void outputTopGeneral(std::ostream& outFile, const Config::Config& config) {
 
     outputDefine(outFile, SHARED_POWER_PINS_STR);
     outputDefine(outFile, NUM_BLADES_STR, config.bladeArrays.numBlades());
-    outputDefine<uint32>(outFile, NUM_BUTTONS_STR, config.settings.numButtons);
+    outputDefine<uint32>(outFile, NUM_BUTTONS_STR, config.settings.numButtons());
 
     if (config.settings.bladeDetect) {
         outputDefine<string>(outFile, BLADE_DETECT_PIN_STR, config.settings.bladeDetectPin);
@@ -650,14 +664,18 @@ void outputPresetBlades(std::ostream& outFile, const Config::Config& config) {
 
 void outputButtons(std::ostream& outFile, const Config::Config& config) {
     outFile << "#ifdef CONFIG_BUTTONS\n";
-    if (config.settings.numButtons >= 1) {
-        outFile << "Button PowerButton(BUTTON_POWER, powerButtonPin, \"pow\");\n";
-    }
-    if (config.settings.numButtons >= 2) {
-        outFile << "Button AuxButton(BUTTON_AUX, auxPin, \"aux\");\n";
-    }
-    if (config.settings.numButtons >= 3) {
-        outFile << "Button Aux2Button(BUTTON_AUX2, aux2Pin, \"aux2\");\n";
+    auto idx{1};
+    for (const auto& button : config.settings.buttons()) {
+        outFile << Config::BUTTON_TYPE_STRS[button->type] << ' ';
+        outFile << "Button" << idx << '{';
+        outFile << Config::BUTTON_EVENT_STRS[button->event] << ", ";
+        outFile << static_cast<string>(button->pin) << ", ";
+        if (button->type == Config::ButtonType::TOUCH_BUTTON) {
+            outFile << button->touch << ", ";
+        }
+        outFile << '"' << static_cast<string>(button->name) << '"';
+        outFile << "};\n";
+        ++idx;
     }
     outFile << "#endif\n" << std::flush;
 }

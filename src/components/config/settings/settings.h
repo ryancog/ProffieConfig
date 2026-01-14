@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024-2025 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * components/config/settings/settings.h
  *
@@ -56,9 +56,14 @@ enum ButtonType {
     BUTTON_TYPE_MAX,
 };
 static constexpr array<cstring, BUTTON_TYPE_MAX> BUTTON_TYPE_STRS{
+    "Button",
+    "PullDownButton",
+    "LatchingButton",
+    "InvertedLatchingButton",
+    "TouchButton"
 };
 
-enum Button {
+enum ButtonEvent {
     POWER = 0,
     AUX,
     AUX2,
@@ -68,14 +73,8 @@ enum Button {
     RIGHT,
     SELECT,
     BUTTON_MAX,
-
-    FIRE = UP,
-    MODE_SELECT = DOWN,
-    CLIP_DETECT = LEFT,
-    RELOAD = RIGHT,
-    RANGE = SELECT,
 };
-static constexpr array<cstring, BUTTON_MAX> BUTTON_STRS{
+static constexpr array<cstring, BUTTON_MAX> BUTTON_EVENT_STRS{
     "BUTTON_POWER",
     "BUTTON_AUX",
     "BUTTON_AUX2",
@@ -200,15 +199,28 @@ struct CONFIG_EXPORT Settings {
     PCUI::ToggleData massStorage;
     PCUI::ToggleData webUSB;
 
-    PCUI::NumericData numButtons;
     struct ButtonData {
+        ButtonData();
+
         PCUI::ChoiceData type;
-        PCUI::ChoiceData button;
+        PCUI::ChoiceData event;
 
         PCUI::ComboBoxData pin;
         PCUI::TextData name;
         PCUI::NumericData touch;
     };
+
+    // TODO: For both this and custom opts, this really should be wrapped in 
+    // some nicer abstraction, both for races and optimization (e.g. fine-
+    // grained add/remove/clear events)
+    PCUI::Notifier buttonNotifier;
+    void addButton(std::unique_ptr<ButtonData>&& = nullptr);
+    void removeButton(size);
+    void removeButton(const ButtonData&);
+    [[nodiscard]] const auto& buttons() const { return mButtons; }
+    [[nodiscard]] size numButtons() const { return mButtons.size(); }
+    [[nodiscard]] auto& button(size idx) { return mButtons[idx]; }
+    [[nodiscard]] const auto& button(size idx) const { return mButtons[idx]; }
 
     // PCUI::ChoiceData rfidSerial;
 
@@ -361,6 +373,7 @@ struct CONFIG_EXPORT Settings {
 private:
     Config& mParent;
     vector<std::unique_ptr<CustomOption>> mCustomOptions;
+    vector<std::unique_ptr<ButtonData>> mButtons;
 };
 
 } // namespace Config

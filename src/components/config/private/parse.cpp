@@ -26,6 +26,7 @@
 #include <wx/filedlg.h>
 #include <wx/translation.h>
 
+#include "config/settings/settings.h"
 #include "log/branch.h"
 #include "log/context.h"
 #include "ui/message.h"
@@ -45,6 +46,7 @@ optional<string> parsePresetArray(const string& data, Config::PresetArray&, Log:
 optional<string> parseBladeArrays(const string& data, Config::Config&, Log::Branch&);
 optional<string> parseBlade(string data, Config::BladeConfig&, Config::Blade&, Log::Branch&);
 optional<string> parseStyles(std::istream&, Config::Config&, Log::Branch&);
+optional<string> parseButtons(std::istream&, Config::Config&, Log::Branch&);
 
 void tryAddInjection(const string& buffer, Config::Config&);
 
@@ -90,6 +92,13 @@ optional<string> Config::parse(const filepath& path, Config& config, Log::Branch
                         *logger.binfo("Parsing styles...")
                     )};
                     if (err) return err;
+                } else if (buffer == "CONFIG_BUTTONS") {
+                    auto err{parseButtons(
+                        file,
+                        config,
+                        *logger.binfo("Parsing buttons...")
+                    )};
+                    if (err) return err;
                 }
             } else if (buffer == "include") {
                 getline(file, buffer);
@@ -99,9 +108,13 @@ optional<string> Config::parse(const filepath& path, Config& config, Log::Branch
         }
     }
 
+    logger.info("Parsing complete, finalizing...");
+
     config.presetArrays.syncStyles();
     config.settings.processCustomDefines();
     config.processCustomToPropOptions();
+
+    logger.info("Done");
 
     return nullopt;
 }
@@ -1254,6 +1267,169 @@ optional<string> parseStyles(std::istream& file, Config::Config& config, Log::Br
     return nullopt;
 }
 
+optional<string> parseButtons(std::istream& file, Config::Config& config, Log::Branch& lBranch) {
+    using namespace Config;
+    auto& logger{lBranch.createLogger("Config::parseButtons()")};
+    string sectStr{extractSection(file)};
+    std::istringstream buttonsStream{sectStr};
+
+    enum {
+        NONE,
+        TYPE,
+        POST_TYPE,
+        CPP_NAME,
+        POST_CPP_NAME,
+        INNER,
+        POST_INNER,
+    } reading{NONE};
+
+    string type;
+    string inner;
+    char openChar{};
+
+    while (buttonsStream.good()) {
+        if (Utils::extractComment(buttonsStream)) {
+            if (reading == TYPE) reading = POST_TYPE;
+            if (reading == CPP_NAME) reading = POST_CPP_NAME;
+            continue;
+        }
+
+        const auto chr{buttonsStream.get()};
+
+        if (reading == NONE) {
+            if (std::isgraph(chr)) {
+                reading = TYPE;
+                type = static_cast<char>(chr);
+                continue;
+            }
+        } else if (reading == TYPE) {
+            if (std::isspace(chr)) {
+                reading = POST_TYPE;
+                continue;
+            }
+
+            type += static_cast<char>(chr);
+        } else if (reading == POST_TYPE) {
+            if (std::isgraph(chr)) {
+                reading = CPP_NAME;
+                continue;
+            }
+        } else if (reading == CPP_NAME or reading == POST_CPP_NAME) {
+            if (chr == '{' or chr == '(') {
+                openChar = static_cast<char>(chr);
+                reading = INNER;
+                continue;
+            }
+
+            if (reading == CPP_NAME) {
+                if (std::isspace(chr)) reading = POST_CPP_NAME;
+            } else { // POST_CPP_NAME
+                if (std::isspace(chr)) continue;
+
+                // Not a space and not an opener:
+                return errorMessage(logger, wxTRANSLATE("Unexpected character %#x post cpp name."), chr);
+            }
+        } else if (reading == INNER) {
+            if (
+                    openChar == '{' and chr == '}' or 
+                    openChar == '(' and chr == ')'
+               ) {
+                reading = POST_INNER;
+                continue;
+            }
+
+            if (std::isgraph(chr)) {
+                inner += static_cast<char>(chr);
+            }
+        } else if (reading == POST_INNER) {
+            if (std::isspace(chr)) continue;
+            if (chr != ';') {
+                return errorMessage(logger, wxTRANSLATE("Unexpected character %#x post inner (prior to ;)."), chr);
+            }
+
+            reading = NONE;
+            auto button{std::make_unique<Settings::ButtonData>()};
+
+            int32 typeIdx{0};
+            for (; typeIdx < BUTTON_TYPE_STRS.size(); ++typeIdx) {
+                if (BUTTON_TYPE_STRS[typeIdx] == type) break;
+            }
+            if (typeIdx == BUTTON_TYPE_STRS.size()) {
+                return errorMessage(logger, wxTRANSLATE("Unknown button type: %s"), type);
+            } 
+            button->type.setValue(typeIdx);
+
+            auto eventCommaPos{inner.find(',')};
+            if (eventCommaPos == string::npos) {
+                return errorMessage(logger, wxTRANSLATE("Missing comma for button event."));
+            }
+
+            auto eventStr{inner.substr(0, eventCommaPos)};
+            inner.erase(0, eventCommaPos + 1);
+
+            int32 evtIdx{-1};
+            if (eventStr == "BUTTON_FIRE") evtIdx = UP;
+            else if (eventStr == "BUTTON_MODE_SELECT") evtIdx = DOWN;
+            else if (eventStr == "BUTTON_CLIP_DETECT") evtIdx = LEFT;
+            else if (eventStr == "BUTTON_RELOAD") evtIdx = RIGHT;
+            else if (eventStr == "BUTTON_RANGE") evtIdx = SELECT;
+
+            if (evtIdx == -1) {
+                evtIdx = 0;
+                for (; evtIdx < BUTTON_EVENT_STRS.size(); ++evtIdx) {
+                    if (BUTTON_EVENT_STRS[evtIdx] == eventStr) break;
+                }
+            }
+
+            if (evtIdx == BUTTON_EVENT_STRS.size()) {
+                logger.warn("Unknown button event: " + eventStr);
+                button->event = 0;
+            } else {
+                button->event = evtIdx;
+            }
+
+            auto pinCommaPos{inner.find(',')};
+            if (pinCommaPos == string::npos) {
+                return errorMessage(logger, wxTRANSLATE("Missing comma for button pin."));
+            }
+
+            auto pinStr{inner.substr(0, pinCommaPos)};
+            inner.erase(0, pinCommaPos + 1);
+            button->pin = std::move(pinStr);
+
+            if (button->type == TOUCH_BUTTON) {
+                auto threshCommaPos{inner.find(',')};
+                if (threshCommaPos == string::npos) {
+                    return errorMessage(logger, wxTRANSLATE("Missing comma for touch button threshold."));
+                }
+
+                auto threshStr{inner.substr(0, threshCommaPos)};
+                inner.erase(0, threshCommaPos + 1);
+
+                auto thresh{Utils::doStringMath(threshStr)};
+                if (not thresh) {
+                    logger.warn("Button threshold value \"" + threshStr + "\" could not be parsed.");
+                } else {
+                    button->touch = static_cast<int32>(*thresh);
+                }
+            }
+
+            if (inner.front() != '"' or inner.back() != '"') {
+                logger.warn("Button name doesn't seem to be surrounded by quotes, is it malformatted?");
+                button->name = std::move(inner);
+            } else {
+                button->name = inner.substr(1, inner.length() - 2);
+            }
+
+            config.settings.addButton(std::move(button));
+
+            continue;
+        }
+    }
+
+    return nullopt;
+}
+
 void tryAddInjection(const string& buffer, Config::Config& config) {
     using namespace Config;
     auto& logger{Log::Context::getGlobal().createLogger("Config::tryAddInjection()")};
@@ -1318,227 +1494,4 @@ void tryAddInjection(const string& buffer, Config::Config& config) {
 }
 
 } // namespace
-
-void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
-    auto& logger{Log::Branch::optCreateLogger("Config::Settings::processCustomDefines()", lBranch)};
-    for (auto idx{0}; idx < mCustomOptions.size(); ++idx) {
-        auto& opt{customOption(idx)};
-
-        bool processed{true};
-
-        if (
-                opt.define == NUM_BLADES_STR or
-                opt.define == ENABLE_AUDIO_STR or 
-                opt.define == ENABLE_MOTION_STR or
-                opt.define == ENABLE_WS2811_STR or
-                opt.define == ENABLE_SD_STR or
-                opt.define == SHARED_POWER_PINS_STR or
-                opt.define == KEEP_SAVEFILES_STR
-           ) {
-            // Do nothing
-        } else if (opt.define == NUM_BUTTONS_STR) {
-            auto val{Utils::doStringMath(opt.value)};
-            if (val) numButtons = static_cast<int32>(*val);
-            else logger.warn("Couldn't parse num buttons!");
-        // } else if (opt.define == RFID_SERIAL_STR) {
-        //     // TODO: Not Yet Implemented
-        } else if (opt.define == BLADE_DETECT_PIN_STR) {
-            bladeDetect = true;
-            bladeDetectPin = static_cast<string>(opt.value);
-        } else if (opt.define == BLADE_ID_CLASS_STR) {
-            bladeID.enable = true;
-            auto idx{0};
-            for (; idx < BLADEID_MODE_MAX; ++idx) {
-                if (opt.value.startsWith(BLADEID_MODE_STRS[idx])) break;
-            }
-
-            if (idx == BLADEID_MODE_MAX) {
-                logger.warn("Cannot parse invalid/unrecognized BladeID class");
-            } else {
-                bladeID.mode = idx;
-
-                string str{opt.value};
-                str.erase(0, BLADEID_MODE_STRS[idx].length());
-
-                const auto idPinEnd{str.find(',')};
-                bladeID.pin = str.substr(0, idPinEnd);
-
-                if (idx == EXTERNAL) {
-                    if (idPinEnd == string::npos) {
-                        logger.warn("Missing pullup value for external blade id");
-                    } else {
-                        str.erase(0, idPinEnd + 1);
-
-                        auto val{Utils::doStringMath(str)};
-                        if (val) bladeID.pullup = static_cast<int32>(*val);
-                        else logger.warn("Failed to parse pullup value for ext blade id");
-                    }
-                } else if (idx == BRIDGED) {
-                    if (idPinEnd == string::npos) {
-                        logger.warn("Missing bridge pin for blade id");
-                    } else {
-                        str.erase(0, idPinEnd + 1);
-                        bladeID.bridgePin = static_cast<string>(str);
-                    }
-                }
-            }
-        } else if (opt.define == ENABLE_POWER_FOR_ID_STR) {
-            bladeID.powerForID = true;
-
-            if (not opt.value.startsWith(POWER_PINS_STR)) {
-                logger.warn("Failed to parse BladeID PowerPINS");
-            } else {
-                string str{opt.value};
-                str.erase(0, POWER_PINS_STR.length());
-
-                while (not false) {
-                    const auto endPos{str.find(',')};
-
-                    // Use the entry for processing
-                    bladeID.powerPinEntry = str.substr(0, endPos);
-                    bladeID.powerPins.select(bladeID.powerPinEntry);
-
-                    if (endPos == string::npos) break;
-
-                    str.erase(0, endPos + 1);
-                }
-            }
-        } else if (opt.define == BLADE_ID_SCAN_MILLIS_STR) {
-            bladeID.continuousScanning = true;            
-
-            auto val{Utils::doStringMath(opt.value)};
-            if (val) bladeID.continuousInterval = static_cast<int32>(*val);
-            else logger.warn("Failed to parse blade id scan interval");
-        } else if (opt.define == BLADE_ID_TIMES_STR) {
-            bladeID.continuousScanning = true;            
-
-            auto val{Utils::doStringMath(opt.value)};
-            if (val) bladeID.continuousTimes = static_cast<int32>(*val);
-            else logger.warn("Failed to parse blade id scan times");
-        } else if (opt.define == VOLUME_STR) {
-            auto val{Utils::doStringMath(opt.value)};
-            if (val) volume = static_cast<int32>(*val);
-            else logger.warn("Failed to parse volume");
-        } else if (opt.define == BOOT_VOLUME_STR) {
-            enableBootVolume = true;
-
-            auto val{Utils::doStringMath(opt.value)};
-            if (val) bootVolume = static_cast<int32>(*val);
-            else logger.warn("Failed to parse boot volume");
-        } else if (opt.define == CLASH_THRESHOLD_STR) {
-            auto val{Utils::doStringMath(opt.value)};
-            if (val) clashThreshold = *val;
-            else logger.warn("Failed to parse clash threshold");
-        } else if (opt.define == PLI_OFF_STR) {
-            auto val{Utils::doStringMath(opt.value)};
-            if (val) pliOffTime = *val / 1000;
-            else logger.warn("Failed to parse PLI off time");
-        } else if (opt.define == IDLE_OFF_STR) {
-            auto val{Utils::doStringMath(opt.value)};
-            if (val) idleOffTime = *val / (60 * 1000);
-            else logger.warn("Failed to parse idle off time");
-        } else if (opt.define == MOTION_TIMEOUT_STR) {
-            auto val{Utils::doStringMath(opt.value)};
-            if (val) motionTimeout = *val / (60 * 1000);
-            else logger.warn("Failed to parse motion timeout");
-        } else if (opt.define == DISABLE_COLOR_CHANGE_STR) {
-            disableColorChange = true;
-        } else if (opt.define == DISABLE_BASIC_PARSERS_STR) {
-            disableBasicParserStyles = true;
-        } else if (opt.define == DISABLE_DIAG_COMMANDS_STR) {
-            disableDiagnosticCommands = true;
-        // } else if (opt.define == ENABLE_DEV_COMMANDS_STR) {
-        //     enableDeveloperCommands = true;
-        } else if (opt.define == SAVE_STATE_STR) {
-            saveState = true;
-        } else if (opt.define == ENABLE_ALL_EDIT_OPTIONS_STR) {
-            enableAllEditOptions = true;
-        } else if (opt.define == SAVE_COLOR_STR) {
-            saveColorChange = true;
-        } else if (opt.define == SAVE_VOLUME_STR) {
-            saveVolume = true;
-        } else if (opt.define == SAVE_PRESET_STR) {
-            savePreset = true;
-        } else if (opt.define == ENABLE_OLED_STR) {
-            enableOLED = true;
-        } else if (opt.define == ORIENTATION_STR) {
-            auto idx{0};
-            for (; idx < ORIENTATION_MAX; ++idx) {
-                if (opt.value == ORIENTATION_STRS[idx]) break;
-            }
-
-            if (idx == ORIENTATION_MAX) {
-                logger.warn("Unknown/invalid orientation");
-            } else {
-                orientation = idx;
-            }
-        } else if (opt.define == ORIENTATION_ROTATION_STR) {
-            const auto firstComma{opt.value.find(',')};
-            const auto secondComma{opt.value.find(',', firstComma + 1)};
-
-            if (firstComma == string::npos or secondComma == string::npos) {
-                logger.warn("Invalid formatting for orientation rotation");
-            } else {
-                string str{opt.value};
-                auto xStr{str.substr(0, firstComma)};
-                auto yStr{str.substr(firstComma + 1, secondComma - firstComma - 1)};
-                auto zStr{str.substr(secondComma + 1, str.length() - secondComma - 1)};
-
-                auto xVal{Utils::doStringMath(xStr)};
-                auto yVal{Utils::doStringMath(yStr)};
-                auto zVal{Utils::doStringMath(zStr)};
-
-                if (xVal) orientationRotation.x = static_cast<int32>(*xVal);
-                else logger.warn("Failed to parse orientation rotation X");
-
-                if (yVal) orientationRotation.y = static_cast<int32>(*yVal);
-                else logger.warn("Failed to parse orientation rotation Y");
-
-                if (zVal) orientationRotation.z = static_cast<int32>(*zVal);
-                else logger.warn("Failed to parse orientation rotation Z");
-            }
-        // } else if (opt.define == SPEAK_TOUCH_VALUES_STR) {
-        //     speakTouchValues = true;
-        } else if (opt.define == DYNAMIC_BLADE_DIMMING_STR) {
-            dynamicBladeDimming = true;
-        } else if (opt.define == DYNAMIC_BLADE_LENGTH_STR) {
-            dynamicBladeLength = true;
-        } else if (opt.define == DYNAMIC_CLASH_THRESHOLD_STR) {
-            dynamicClashThreshold = true;
-        } else if (opt.define == SAVE_BLADE_DIM_STR) {
-            saveBladeDimming = true;
-        } else if (opt.define == SAVE_CLASH_THRESHOLD_STR) {
-            saveClashThreshold = true;
-        } else if (opt.define == FILTER_CUTOFF_STR) {
-            auto val{Utils::doStringMath(opt.value)};
-            if (val) filterCutoff = static_cast<int32>(*val);
-            else logger.warn("Failed to parse filter cutoff");
-        } else if (opt.define == FILTER_ORDER_STR) {
-            auto val{Utils::doStringMath(opt.value)};
-            if (val) filterOrder = static_cast<int32>(*val);
-            else logger.warn("Failed to parse filter order");
-        } else if (opt.define == AUDIO_CLASH_SUPPRESSION_STR) {
-            auto val{Utils::doStringMath(opt.value)};
-            if (val) audioClashSuppressionLevel = static_cast<int32>(*val);
-            else logger.warn("Failed to parse audio clash suppression");
-        } else if (opt.define == DONT_USE_GYRO_FOR_CLASH_STR) {
-            dontUseGyroForClash = true;
-        } else if (opt.define == NO_REPEAT_RANDOM_STR) {
-            noRepeatRandom = true;
-        } else if (opt.define == FEMALE_TALKIE_STR) {
-            femaleTalkie = true;
-        } else if (opt.define == DISABLE_TALKIE_STR) {
-            disableTalkie = true;
-        } else if (opt.define == KILL_OLD_PLAYERS_STR) {
-            killOldPlayers = true;
-        } else {
-            processed = false;
-        }
-
-        if (processed) {
-            removeCustomOption(idx);
-            --idx;
-        }
-    }
-}
 
