@@ -1423,6 +1423,7 @@ optional<string> parseButtons(std::istream& file, Config::Config& config, Log::B
 
             config.settings.addButton(std::move(button));
 
+            inner.erase();
             continue;
         }
     }
