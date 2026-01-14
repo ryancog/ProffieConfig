@@ -65,19 +65,6 @@ optional<string> Config::output(const filepath& filePath, const Config& config, 
     auto precheckErr{runPreChecks(config, *logger.binfo("Running prechecks..."))};
     if (precheckErr) return precheckErr;
 
-    // if (fullOutput) {
-    //     std::error_code err;
-    //     const auto injectionDir{Paths::proffieos() / "config" / INJECTION_STR};
-    //     for (const auto& injection : editor->presetsPage->injections) {
-    //         auto injectionPath{injectionDir / filepath{injection}};
-    //         fs::create_directories(injectionPath.parent_path());
-    //         if (not Paths::copyOverwrite(Paths::injections() / filepath{injection}, injectionPath, err)) {
-    //             errorMessage(logger, editor, wxTRANSLATE("Failed setting up injection \"%s\""), injection);
-    //             return false;
-    //         }
-    //     }
-    // }
-
     auto outFile{Paths::openOutputFile(filePath)};
     if (not outFile.is_open()) {
         return errorMessage(logger, wxTRANSLATE("Could not open config file for output."));
