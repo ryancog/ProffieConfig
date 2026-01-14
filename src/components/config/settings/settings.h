@@ -199,7 +199,7 @@ struct CONFIG_EXPORT Settings {
     PCUI::ToggleData massStorage;
     PCUI::ToggleData webUSB;
 
-    struct ButtonData {
+    struct CONFIG_EXPORT ButtonData {
         ButtonData();
 
         PCUI::ChoiceData type;
