@@ -420,12 +420,13 @@ optional<float64> Utils::doStringMath(const string& str) {
         }
     }};
 
-    const auto parseNum{[](const string& numStr) -> std::optional<float64> {
+    const auto parseNum{[](string& numStr) -> std::optional<float64> {
         char *end{nullptr};
         auto num{strtod(numStr.c_str(), &end)};
         if (num == HUGE_VAL) return nullopt;
         if (end != &numStr[numStr.size()]) return nullopt;
 
+        numStr.clear();
         return num;
     }};
 
