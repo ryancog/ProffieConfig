@@ -174,7 +174,7 @@ void MainMenu::bindEvents() {
     }, ID_RunSetup);
 
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        wxSetCursor(wxCURSOR_WAIT);
+        mNotifyData.notify(ID_AsyncStart);
 
         auto *progDialog{new Progress(this)};
         progDialog->SetTitle(_("Board Refresh"));
@@ -201,25 +201,34 @@ void MainMenu::bindEvents() {
         }}.detach();
     }, ID_RefreshDev);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        wxSetCursor(wxCURSOR_WAIT);
-
-        auto *config{Config::getIfOpen(configSelection)};
-        const auto configWasOpen{static_cast<bool>(config)};
-        if (not configWasOpen) {
-            const auto res{Config::open(configSelection)};
-            if (const auto *err = std::get_if<string>(&res)) {
-                PCUI::showMessage(*err, _("Cannot Open Config for Apply"));
-                return;
-            }
-            config = std::get<Config::Config *>(res);
-        }
+        mNotifyData.notify(ID_AsyncStart);
 
         auto *progDialog{new Progress(this)};
         progDialog->SetTitle(_("Applying Changes"));
         progDialog->Update(0, _("Initializing..."));
-        
-        std::thread{[this, config, progDialog]() {
+
+        std::thread{[this, progDialog]() {
             Defer defer{[this]() { mNotifyData.notify(ID_AsyncDone); }};
+
+            progDialog->Update(1, _("Opening Config..."));
+
+            auto *config{Config::getIfOpen(configSelection)};
+            const auto configWasOpen{static_cast<bool>(config)};
+            if (not configWasOpen) {
+                const auto res{Config::open(configSelection)};
+                if (const auto *err = std::get_if<string>(&res)) {
+                    progDialog->Update(100, _("Error"));
+                    auto *evt{new Misc::MessageBoxEvent(
+                        Misc::EVT_MSGBOX, 
+                        wxID_ANY, 
+                        *err, 
+                        _("Cannot Apply Changes")
+                    )};
+                    wxQueueEvent(this, evt);
+                    return;
+                }
+                config = std::get<Config::Config *>(res);
+            }
 
             const auto res{
                 Arduino::applyToBoard(boardSelection, *config, progDialog)
@@ -227,7 +236,10 @@ void MainMenu::bindEvents() {
 
             if (const auto *err = std::get_if<string>(&res)) {
                 auto *evt{new Misc::MessageBoxEvent(
-                    Misc::EVT_MSGBOX, wxID_ANY, *err, _("Cannot Apply Changes")
+                    Misc::EVT_MSGBOX,
+                    wxID_ANY,
+                    *err,
+                    _("Cannot Apply Changes")
                 )};
                 wxQueueEvent(this, evt);
                 return;
@@ -272,54 +284,52 @@ void MainMenu::bindEvents() {
         mNotifyData.notify(ID_BoardSelection);
     });
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        wxSetCursor(wxCURSOR_WAIT);
-        Defer cursorDefer{[]() { wxSetCursor(wxNullCursor); }};
+        mNotifyData.notify(ID_AsyncStart);
 
-        auto res{Config::open(configSelection)};
-        if (auto *ptr = std::get_if<string>(&res)) {
-            PCUI::showMessage(*ptr, _("Cannot Edit Config"));
-            return;
-        }
+        std::thread{[this]() {
+            Defer defer{[&]() { mNotifyData.notify(ID_AsyncDone); }};
 
-        auto& config{*std::get<Config::Config *>(res)};
-        for (auto *editor : mEditors) {
-            if (&editor->getOpenConfig() == &config) {
-                editor->Show();
-                editor->Raise();
+            auto res{Config::open(configSelection)};
+            if (auto *ptr = std::get_if<string>(&res)) {
+                PCUI::showMessage(*ptr, _("Cannot Edit Config"));
                 return;
             }
-        }
 
-        auto *editor{mEditors.emplace_back(new EditorWindow(this, config))};
-        editor->Show();
-        editor->Raise();
+            auto *config{std::get<Config::Config *>(res)};
+            mConfigNeedShown = config;
+        }}.detach();
     }, ID_EditConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
         auto addDialog{AddConfig{this}};
         if (addDialog.ShowModal() != wxID_OK) return;
 
-        wxSetCursor(wxCURSOR_WAIT);
-        Defer deferCursor{[]() { wxSetCursor(wxNullCursor); }};
+        mNotifyData.notify(ID_AsyncStart);
 
-        if (static_cast<filepath>(addDialog.importPath).empty()) {
-            auto res{Config::open(addDialog.configName)};
-            if (auto *err = std::get_if<string>(&res)) {
-                PCUI::showMessage(*err, _("Failed Creating Config"));
-                return;
-            }
-            auto& config{*std::get<Config::Config *>(res)};
-            config.save();
-            config.close();
-        } else {
-            auto err{Config::import(addDialog.configName, addDialog.importPath)};
-            if (err) {
-                PCUI::showMessage(*err, _("Cannot Import Config"));
-                return;
-            }
-        }
+        auto importPath{static_cast<filepath>(addDialog.importPath)};
+        auto name{static_cast<string>(addDialog.configName)};
+        std::thread{[this, importPath, name]() {
+            Defer defer{[&]() { mNotifyData.notify(ID_AsyncDone); }};
 
-        updateConfigChoices();
-        configSelection = addDialog.configName;
+            if (importPath.empty()) {
+                auto res{Config::open(name)};
+                if (auto *err = std::get_if<string>(&res)) {
+                    PCUI::showMessage(*err, _("Failed Creating Config"));
+                    return;
+                }
+                auto& config{*std::get<Config::Config *>(res)};
+                config.save();
+                config.close();
+            } else {
+                auto err{Config::import(name, importPath)};
+                if (err) {
+                    PCUI::showMessage(*err, _("Cannot Import Config"));
+                    return;
+                }
+            }
+
+            updateConfigChoices();
+            configSelection = name;
+        }}.detach();
     }, ID_AddConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
         if (PCUI::showMessage(
@@ -369,8 +379,34 @@ void MainMenu::handleNotification(uint32 id) {
 #       endif
         FindWindow(ID_OpenSerial)->Enable(canOpenSerial);
     }
+
+    if (id == ID_AsyncStart) {
+        wxSetCursor(wxCURSOR_WAIT);
+        mDisabler.emplace();
+    }
     if (rebound or id == ID_AsyncDone) {
+        if (mConfigNeedShown != nullptr) {
+            EditorWindow *editor{nullptr};
+
+            for (auto *listedEditor : mEditors) {
+                if (&listedEditor->getOpenConfig() == mConfigNeedShown) {
+                    editor = listedEditor;
+                    break;
+                }
+            }
+
+            if (editor == nullptr) {
+                editor = new EditorWindow(this, *mConfigNeedShown);
+                mEditors.push_back(editor);
+            }
+
+            editor->Show();
+            editor->Raise();
+            mConfigNeedShown = nullptr;
+        }
+
         wxSetCursor(wxNullCursor);
+        mDisabler.reset();
     }
 }
 
