@@ -72,7 +72,6 @@ public:
     };
 
 private:
-    optional<wxWindowDisabler> mDisabler;
     Config::Config *mConfigNeedShown{nullptr};
 
     PCUI::Notifier mNotifyData;
