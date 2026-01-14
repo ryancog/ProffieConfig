@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/config/settings/settings.h
+ * components/config/settings/settings.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config/private/io.h"
 #include "utils/string.h"
 #include "versions/versions.h"
 
@@ -209,9 +210,6 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     });
     board.setValue(PROFFIEBOARDV3);
 
-    numButtons.setRange(0, 3);
-    numButtons.setValue(2);
-
     vector<string> pinDefaults{
         "bladePin",
         "blade2Pin",
@@ -325,6 +323,141 @@ Utils::Version Config::Settings::getOSVersion() const {
     return osVersions[osVersion - 1].verNum;
 }
 
+Config::Settings::ButtonData::ButtonData() {
+    type.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+
+        touch.show(type == TOUCH_BUTTON);
+    });
+    pin.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::ComboBoxData::ID_VALUE) return;
+
+        auto rawValue{static_cast<string>(pin)};
+        uint32 numTrimmed{};
+        auto insertionPoint{pin.getInsertionPoint()};
+        Utils::trimCppName(
+            rawValue,
+            true,
+            &numTrimmed,
+            insertionPoint
+        );
+
+        if (rawValue == static_cast<string>(pin)) return;
+
+        pin = std::move(rawValue);
+        pin.setInsertionPoint(insertionPoint - numTrimmed);
+    });
+    name.setUpdateHandler([this](uint32 id) {
+        if (id != PCUI::TextData::ID_VALUE) return;
+
+        auto rawValue{static_cast<string>(name)};
+        uint32 numTrimmed{};
+        auto insertionPoint{name.getInsertionPoint()};
+        Utils::trim(
+            rawValue,
+            {.allowAlpha=true, .allowNum=true},
+            &numTrimmed,
+            insertionPoint
+        );
+
+        if (rawValue == static_cast<string>(name)) return;
+
+        name = std::move(rawValue);
+        name.setInsertionPoint(insertionPoint - numTrimmed);
+    });
+
+    type.setChoices(Utils::createEntries({
+        _("Momentary (Pullup)"),
+        _("Momentary (Pulldown)"),
+        _("Latching (Pullup)"),
+        _("Latching (Pulldown)"),
+        _("Touch"),
+    }));
+
+    event.setChoices(Utils::createEntries({
+        _("Power"),
+        _("Aux"),
+        _("Aux 2"),
+        _("Up/Fire"),
+        _("Down/Mode Select"),
+        _("Left/Magazine Detect"),
+        _("Right/Reload"),
+        _("Select/Range"),
+    }));
+
+    pin.setDefaults(Utils::createEntries({
+        _("powerButtonPin"),
+        _("auxPin"),
+        _("aux2Pin"),
+    }));
+
+    touch.setRange(0, 50000, false);
+    touch.setIncrement(10, false);
+    touch.setValue(1700);
+}
+
+void Config::Settings::addButton(std::unique_ptr<ButtonData>&& ptr) {
+    if (ptr) {
+        mButtons.push_back(std::move(ptr));
+        buttonNotifier.notify();
+        return;
+    }
+
+    auto& button{*mButtons.emplace_back(std::make_unique<ButtonData>())};
+    if (mButtons.size() == 1) {
+        button.type = BUTTON;
+        button.event = POWER;
+
+        button.pin = string{button.pin.defaults()[0]};
+        button.name = "pow";
+    } else if (mButtons.size() == 2) {
+        button.type = BUTTON;
+        button.event = AUX;
+
+        button.pin = string{button.pin.defaults()[1]};
+        button.name = "aux";
+    } else if (mButtons.size() == 3) {
+        button.type = BUTTON;
+        button.event = AUX2;
+
+        button.pin = string{button.pin.defaults()[2]};
+        button.name = "aux2";
+    } else {
+        button.type = BUTTON;
+        button.event = POWER;
+    }
+
+    buttonNotifier.notify();
+}
+
+void Config::Settings::removeButton(size idx) {
+    if (idx >= mButtons.size()) return;
+
+    mButtons.erase(std::next(mButtons.begin(), static_cast<ssize>(idx)));
+    buttonNotifier.notify();
+}
+
+void Config::Settings::removeButton(const ButtonData& button) {
+    auto iter{mButtons.begin()};
+    for (; iter != mButtons.end(); ++iter) {
+        if (&**iter == &button) break;
+    }
+    if (iter == mButtons.end()) return;
+
+    mButtons.erase(iter);
+    buttonNotifier.notify();
+}
+
+/*
+ * TODO: Right now all the config editing happens in the main thread, either
+ *       programmatically or from UI updates. Where the config is accessed
+ *       concurrently from another thread, it's behind a modal dialog.
+ *
+ *       Perhaps sometime in the future this may want to change, in that case
+ *       manipulating these vectors (I'm sure there's other cases too) will
+ *       need to be safeguarded.
+ */
+
 bool Config::Settings::addCustomOption(string&& key, string&& value) {
     if (key.empty()) {
         for (auto& opt : mCustomOptions) {
@@ -375,5 +508,225 @@ void Config::Settings::BladeID::addPowerPinFromEntry() {
         powerPins.select(powerPins.items().size() - 1);
     }
     powerPinEntry = "";
+}
+
+void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
+    auto& logger{Log::Branch::optCreateLogger("Config::Settings::processCustomDefines()", lBranch)};
+    for (auto idx{0}; idx < mCustomOptions.size(); ++idx) {
+        auto& opt{customOption(idx)};
+
+        bool processed{true};
+
+        if (
+                opt.define == NUM_BLADES_STR or
+                opt.define == ENABLE_AUDIO_STR or 
+                opt.define == ENABLE_MOTION_STR or
+                opt.define == ENABLE_WS2811_STR or
+                opt.define == ENABLE_SD_STR or
+                opt.define == SHARED_POWER_PINS_STR or
+                opt.define == KEEP_SAVEFILES_STR or
+                opt.define == NUM_BUTTONS_STR
+           ) {
+            // Do nothing
+        // } else if (opt.define == RFID_SERIAL_STR) {
+        // TODO: Not Yet Implemented
+        } else if (opt.define == BLADE_DETECT_PIN_STR) {
+            bladeDetect = true;
+            bladeDetectPin = static_cast<string>(opt.value);
+        } else if (opt.define == BLADE_ID_CLASS_STR) {
+            bladeID.enable = true;
+            auto idx{0};
+            for (; idx < BLADEID_MODE_MAX; ++idx) {
+                if (opt.value.startsWith(BLADEID_MODE_STRS[idx])) break;
+            }
+
+            if (idx == BLADEID_MODE_MAX) {
+                logger.warn("Cannot parse invalid/unrecognized BladeID class");
+            } else {
+                bladeID.mode = idx;
+
+                string str{opt.value};
+                str.erase(0, BLADEID_MODE_STRS[idx].length());
+
+                const auto idPinEnd{str.find(',')};
+                bladeID.pin = str.substr(0, idPinEnd);
+
+                if (idx == EXTERNAL) {
+                    if (idPinEnd == string::npos) {
+                        logger.warn("Missing pullup value for external blade id");
+                    } else {
+                        str.erase(0, idPinEnd + 1);
+
+                        auto val{Utils::doStringMath(str)};
+                        if (val) bladeID.pullup = static_cast<int32>(*val);
+                        else logger.warn("Failed to parse pullup value for ext blade id");
+                    }
+                } else if (idx == BRIDGED) {
+                    if (idPinEnd == string::npos) {
+                        logger.warn("Missing bridge pin for blade id");
+                    } else {
+                        str.erase(0, idPinEnd + 1);
+                        bladeID.bridgePin = static_cast<string>(str);
+                    }
+                }
+            }
+        } else if (opt.define == ENABLE_POWER_FOR_ID_STR) {
+            bladeID.powerForID = true;
+
+            if (not opt.value.startsWith(POWER_PINS_STR)) {
+                logger.warn("Failed to parse BladeID PowerPINS");
+            } else {
+                string str{opt.value};
+                str.erase(0, POWER_PINS_STR.length());
+
+                while (not false) {
+                    const auto endPos{str.find(',')};
+
+                    // Use the entry for processing
+                    bladeID.powerPinEntry = str.substr(0, endPos);
+                    bladeID.powerPins.select(bladeID.powerPinEntry);
+
+                    if (endPos == string::npos) break;
+
+                    str.erase(0, endPos + 1);
+                }
+            }
+        } else if (opt.define == BLADE_ID_SCAN_MILLIS_STR) {
+            bladeID.continuousScanning = true;            
+
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) bladeID.continuousInterval = static_cast<int32>(*val);
+            else logger.warn("Failed to parse blade id scan interval");
+        } else if (opt.define == BLADE_ID_TIMES_STR) {
+            bladeID.continuousScanning = true;            
+
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) bladeID.continuousTimes = static_cast<int32>(*val);
+            else logger.warn("Failed to parse blade id scan times");
+        } else if (opt.define == VOLUME_STR) {
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) volume = static_cast<int32>(*val);
+            else logger.warn("Failed to parse volume");
+        } else if (opt.define == BOOT_VOLUME_STR) {
+            enableBootVolume = true;
+
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) bootVolume = static_cast<int32>(*val);
+            else logger.warn("Failed to parse boot volume");
+        } else if (opt.define == CLASH_THRESHOLD_STR) {
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) clashThreshold = *val;
+            else logger.warn("Failed to parse clash threshold");
+        } else if (opt.define == PLI_OFF_STR) {
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) pliOffTime = *val / 1000;
+            else logger.warn("Failed to parse PLI off time");
+        } else if (opt.define == IDLE_OFF_STR) {
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) idleOffTime = *val / (60 * 1000);
+            else logger.warn("Failed to parse idle off time");
+        } else if (opt.define == MOTION_TIMEOUT_STR) {
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) motionTimeout = *val / (60 * 1000);
+            else logger.warn("Failed to parse motion timeout");
+        } else if (opt.define == DISABLE_COLOR_CHANGE_STR) {
+            disableColorChange = true;
+        } else if (opt.define == DISABLE_BASIC_PARSERS_STR) {
+            disableBasicParserStyles = true;
+        } else if (opt.define == DISABLE_DIAG_COMMANDS_STR) {
+            disableDiagnosticCommands = true;
+        // } else if (opt.define == ENABLE_DEV_COMMANDS_STR) {
+        //     enableDeveloperCommands = true;
+        } else if (opt.define == SAVE_STATE_STR) {
+            saveState = true;
+        } else if (opt.define == ENABLE_ALL_EDIT_OPTIONS_STR) {
+            enableAllEditOptions = true;
+        } else if (opt.define == SAVE_COLOR_STR) {
+            saveColorChange = true;
+        } else if (opt.define == SAVE_VOLUME_STR) {
+            saveVolume = true;
+        } else if (opt.define == SAVE_PRESET_STR) {
+            savePreset = true;
+        } else if (opt.define == ENABLE_OLED_STR) {
+            enableOLED = true;
+        } else if (opt.define == ORIENTATION_STR) {
+            auto idx{0};
+            for (; idx < ORIENTATION_MAX; ++idx) {
+                if (opt.value == ORIENTATION_STRS[idx]) break;
+            }
+
+            if (idx == ORIENTATION_MAX) {
+                logger.warn("Unknown/invalid orientation");
+            } else {
+                orientation = idx;
+            }
+        } else if (opt.define == ORIENTATION_ROTATION_STR) {
+            const auto firstComma{opt.value.find(',')};
+            const auto secondComma{opt.value.find(',', firstComma + 1)};
+
+            if (firstComma == string::npos or secondComma == string::npos) {
+                logger.warn("Invalid formatting for orientation rotation");
+            } else {
+                string str{opt.value};
+                auto xStr{str.substr(0, firstComma)};
+                auto yStr{str.substr(firstComma + 1, secondComma - firstComma - 1)};
+                auto zStr{str.substr(secondComma + 1, str.length() - secondComma - 1)};
+
+                auto xVal{Utils::doStringMath(xStr)};
+                auto yVal{Utils::doStringMath(yStr)};
+                auto zVal{Utils::doStringMath(zStr)};
+
+                if (xVal) orientationRotation.x = static_cast<int32>(*xVal);
+                else logger.warn("Failed to parse orientation rotation X");
+
+                if (yVal) orientationRotation.y = static_cast<int32>(*yVal);
+                else logger.warn("Failed to parse orientation rotation Y");
+
+                if (zVal) orientationRotation.z = static_cast<int32>(*zVal);
+                else logger.warn("Failed to parse orientation rotation Z");
+            }
+        // } else if (opt.define == SPEAK_TOUCH_VALUES_STR) {
+        //     speakTouchValues = true;
+        } else if (opt.define == DYNAMIC_BLADE_DIMMING_STR) {
+            dynamicBladeDimming = true;
+        } else if (opt.define == DYNAMIC_BLADE_LENGTH_STR) {
+            dynamicBladeLength = true;
+        } else if (opt.define == DYNAMIC_CLASH_THRESHOLD_STR) {
+            dynamicClashThreshold = true;
+        } else if (opt.define == SAVE_BLADE_DIM_STR) {
+            saveBladeDimming = true;
+        } else if (opt.define == SAVE_CLASH_THRESHOLD_STR) {
+            saveClashThreshold = true;
+        } else if (opt.define == FILTER_CUTOFF_STR) {
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) filterCutoff = static_cast<int32>(*val);
+            else logger.warn("Failed to parse filter cutoff");
+        } else if (opt.define == FILTER_ORDER_STR) {
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) filterOrder = static_cast<int32>(*val);
+            else logger.warn("Failed to parse filter order");
+        } else if (opt.define == AUDIO_CLASH_SUPPRESSION_STR) {
+            auto val{Utils::doStringMath(opt.value)};
+            if (val) audioClashSuppressionLevel = static_cast<int32>(*val);
+            else logger.warn("Failed to parse audio clash suppression");
+        } else if (opt.define == DONT_USE_GYRO_FOR_CLASH_STR) {
+            dontUseGyroForClash = true;
+        } else if (opt.define == NO_REPEAT_RANDOM_STR) {
+            noRepeatRandom = true;
+        } else if (opt.define == FEMALE_TALKIE_STR) {
+            femaleTalkie = true;
+        } else if (opt.define == DISABLE_TALKIE_STR) {
+            disableTalkie = true;
+        } else if (opt.define == KILL_OLD_PLAYERS_STR) {
+            killOldPlayers = true;
+        } else {
+            processed = false;
+        }
+
+        if (processed) {
+            removeCustomOption(idx);
+            --idx;
+        }
+    }
 }
 
