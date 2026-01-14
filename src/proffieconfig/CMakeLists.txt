@@ -7,6 +7,7 @@ add_executable(proffieconfig WIN32
 
     editor/dialogs/awarenessdlg.cpp
     editor/dialogs/customoptionsdlg.cpp
+    editor/dialogs/buttons.cpp
     editor/dialogs/propbuttons.cpp
     editor/editorwindow.cpp
     editor/pages/propspage.cpp
