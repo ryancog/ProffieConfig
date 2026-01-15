@@ -31,5 +31,5 @@ target_link_libraries(config
 )
 
 include(../Component.cmake)
-setup_component(config 1.0.2)
+setup_component(config 1.0.8)
 
