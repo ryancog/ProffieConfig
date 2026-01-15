@@ -462,6 +462,10 @@ optional<string> parsePresetArray(const string& data, Config::PresetArray& array
                     return errorMessage(logger, wxTRANSLATE("Found %c when expecting match for %c when parsing style"), chr, depth.back());
                 }
 
+                /*
+                 * TODO: Split this out of parsing so that it can be formatted
+                 *       by the user any time.
+                 */
                 auto closedBuffer{depthBuffer.back()};
                 depthBuffer.pop_back();
                 string& readout{depthBuffer.empty() ? styleBuffer : depthBuffer.back()};
