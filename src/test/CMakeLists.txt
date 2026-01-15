@@ -4,6 +4,10 @@
 
 add_executable(test EXCLUDE_FROM_ALL 
     main.cpp
+
+    tests/crypto.cpp
+    tests/config.cpp
+    tests/style.cpp
 )
 
 Include(FetchContent)
