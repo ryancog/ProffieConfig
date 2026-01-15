@@ -2,7 +2,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * test/main.cpp
+ * test/tests/crypto.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,33 +18,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <catch2/catch_session.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#include <wx/app.h>
+#include "utils/crypto.h"
 
-#include "app/app.h"
-#include "config/info.h"
-#include "ui/message.h"
-#include "versions/versions.h"
+// NOLINTNEXTLINE(misc-use-anonymous-namespace)
+TEST_CASE("Crypto::Hash string") {
+    constexpr cstring HASH_STR{"3925fc3ca17db9b69c3ff8d456965ccc838baed6088aab52c1148e757258b077"};
+    auto hash{Crypto::Hash::parseString(HASH_STR)};
 
-class Test : public wxApp {
-public:
-    bool OnInit() override {
-        if (not App::init("Test")) {
-            PCUI::showMessage(_("Test is Already Running"), App::getAppName());
-            return false;
-        }
-
-        Config::setExecutableVersion(wxSTRINGIZE(VERSION));
-        Versions::loadLocal();
-
-        auto res{Catch::Session().run(argc, static_cast<char **>(argv))};
-
-        return false;
-    }
-};
-
-// NOLINTNEXTLINE
-wxIMPLEMENT_APP(Test);
+    REQUIRE(hash);
+    REQUIRE(static_cast<string>(*hash) == HASH_STR);
+}
 
