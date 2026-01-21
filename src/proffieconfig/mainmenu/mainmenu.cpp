@@ -297,7 +297,12 @@ void MainMenu::bindEvents() {
         mNotifyData.notify(ID_ConfigSelection);
     });
     boardSelection.setUpdateHandler([this](uint32 id) { 
+        if (id == PCUI::ChoiceData::ID_CHOICES and boardSelection == -1) {
+            boardSelection = 0;
+            return;
+        }
         if (id != PCUI::ChoiceData::ID_SELECTION) return;
+
         mNotifyData.notify(ID_BoardSelection);
     });
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
