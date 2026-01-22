@@ -225,7 +225,11 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         _("Bridged Pullup")
     }));
     bladeID.mode.setValue(SNAPSHOT);
-    bladeID.pin.setDefaults(vector{pinDefaults});
+    bladeID.pin.setDefaults([&]() {
+        auto v{pinDefaults};
+        v.insert(v.begin(), "bladeIdentifyPin");
+        return v;
+    }());
     bladeID.bridgePin.setDefaults(vector{pinDefaults});
     bladeID.continuousScanning.setValue(false);
     bladeID.continuousTimes.setRange(1, 100);
