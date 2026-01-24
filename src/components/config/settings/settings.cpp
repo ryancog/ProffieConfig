@@ -29,8 +29,21 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     // Asign update handlers
     osVersion.setPersistence(PCUI::ChoiceData::PERSISTENCE_STRING);
     osVersion.setUpdateHandler([this](uint32 id) {
+        // TODO: Around the versions stuff (here and props), it feels like
+        // there's quite a bit of not very optimal logic.
+        //
+        // I don't want to futz with things right now, but it probably would
+        // like to be looked at at some point.
+        //
+        // Props are already horribly sluggish thanks to (probably my poor
+        // handling of) wxWidgets and the layout system seeming to slow down
+        // drastically with many windows (which also deserves attention because
+        // it's getting quite bad)...
         if (id == PCUI::ChoiceData::ID_CHOICES) {
-            if (not osVersion.choices().empty() and osVersion == -1) osVersion = 0;
+            if (not osVersion.choices().empty() and osVersion == -1) {
+                osVersion = 0;
+                return;
+            }
         } else if (id != PCUI::ChoiceData::ID_SELECTION) return;
 
         if (osVersion.choices().size() > 1 and osVersion == 0) {
