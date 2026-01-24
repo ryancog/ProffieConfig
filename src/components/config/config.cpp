@@ -46,8 +46,10 @@ Config::Config::Config() :
 
     propSelection.setUpdateHandler([this](uint32 id) {
         if (id == PCUI::ChoiceData::ID_CHOICES) {
+            propNotifyData.notify(ID_PROPUPDATE);
             if (propSelection == -1 and not propSelection.choices().empty()) {
                 propSelection = 0;
+                return;
             }
         }
         if (id != PCUI::ChoiceData::ID_SELECTION) return;
@@ -161,7 +163,6 @@ void Config::Config::refreshPropVersions() {
         else choices.push_back(propData.prop->name);
     }
 
-    propNotifyData.notify(ID_PROPUPDATE);
     propSelection.setChoices(std::move(choices));
 }
 
