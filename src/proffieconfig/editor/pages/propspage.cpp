@@ -151,7 +151,10 @@ bool PropsPage::Layout() {
 
 void PropsPage::showSelectedProp() {
     auto& config{mParent->getOpenConfig()};
-    bool hasValidSelection{config.propSelection != -1 and config.propSelection < config.props().size()};
+    bool hasValidSelection{
+        config.propSelection != -1 and
+        config.propSelection < config.props().size()
+    };
     FindWindow(ID_Buttons)->Enable(hasValidSelection);
     FindWindow(ID_PropInfo)->Enable(hasValidSelection);
 
@@ -169,7 +172,7 @@ void PropsPage::showSelectedProp() {
 }
 
 void PropsPage::loadProps() {
-    SetSizer(nullptr, false);
+    mPropsWindow->SetSizer(nullptr, false);
     for (auto *sizer : mProps) {
         sizer->Clear(true);
         delete sizer;
