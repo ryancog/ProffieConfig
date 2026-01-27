@@ -4,9 +4,16 @@
 
 function(setup_target TARGET)
     get_target_property(BIN_VERSION ${TARGET} BIN_VERSION)
-    # if (BIN_VERSION STREQUAL "BIN_VERSION-NOTFOUND")
-    #     set(BIN_VERSION ${PROJECT_VERSION})
-    # endif()
+    if (BIN_VERSION STREQUAL "BIN_VERSION-NOTFOUND")
+        message(FATAL_ERROR "No version set for ${TARGET}")
+    endif()
+
+    string(REGEX MATCH "^([0-9]+)\\.([0-9]+)\\.([0-9]+).*" _ ${BIN_VERSION})
+    set_target_properties(${TARGET} PROPERTIES
+        BIN_VERSION_MAJOR ${CMAKE_MATCH_1}
+        BIN_VERSION_MINOR ${CMAKE_MATCH_2}
+        BIN_VERSION_BUGFIX ${CMAKE_MATCH_3}
+    )
 
     if (CMAKE_SYSTEM_NAME STREQUAL Linux)
         if (${TARGET} STREQUAL test)
@@ -33,19 +40,27 @@ function(setup_target TARGET)
         endif()
     elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
         set(RPATH "ThisMeansNothing")
+
         get_target_property(DESCRIPTION ${TARGET} DESCRIPTION)
         if (${DESCRIPTION} STREQUAL "DESCRIPTION-NOTFOUND")
-            set(DESCRIPTION "$<TARGET_FILE_BASE_NAME:${TARGET}> library for ProffieConfig")
+            set_target_properties(${TARGET} PROPERTIES
+                DESCRIPTION "$<TARGET_FILE_BASE_NAME:${TARGET}> library for ProffieConfig"
+            )
         endif()
+
         get_target_property(TRANSLATIONS ${TARGET} TRANSLATION_LIST)
         set(TRANSLATIONS)
         foreach(TRANSLATION ${TRANSLATION_LIST})
             string(APPEND TRANSLATIONS "${TARGET}_${TRANSLATION} MOFILE \"${CMAKE_CURRENT_LIST_DIR}/i18n/${TRANSLATION}/${TARGET}.mo\"")
         endforeach()
-        configure_file(${CMAKE_SOURCE_DIR}/resources/templates/resource.rc.in ${CMAKE_CURRENT_BINARY_DIR}/resource.rc.gen)
+        set_target_properties(${TARGET} PROPERTIES
+            TRANSLATIONS "${TRANSLATIONS}"
+        )
+
+        configure_file(${CMAKE_SOURCE_DIR}/resources/templates/resource.rc.in ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.rc.gen)
         file(GENERATE
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.rc
-            INPUT ${CMAKE_CURRENT_BINARY_DIR}/resource.rc.gen
+            INPUT ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.rc.gen
         )
         target_include_directories(${TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty/wxWidgets/include)
         target_sources(${TARGET} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.rc)

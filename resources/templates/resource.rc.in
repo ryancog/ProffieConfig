@@ -3,11 +3,10 @@
 #include <wx/msw/wx.rc>
 
 ApplicationIcon ICON "${CMAKE_SOURCE_DIR}/resources/icons/icon.ico"
-${TRANSLATIONS}
+$<TARGET_PROPERTY:${TARGET},TRANSLATIONS>
 
 1 VERSIONINFO
-FILEVERSION 1,0,0,0
-PRODUCTVERSION ${PROJECT_VERSION_MAJOR},${PROJECT_VERSION_MINOR},${PROJECT_VERSION_PATCH},0
+FILEVERSION $<TARGET_PROPERTY:${TARGET},BIN_VERSION_MAJOR>,$<TARGET_PROPERTY:${TARGET},BIN_VERSION_MINOR>,$<TARGET_PROPERTY:${TARGET},BIN_VERSION_BUGFIX>,0
 FILEOS VOS_NT
 BEGIN
     BLOCK "StringFileInfo"
@@ -15,9 +14,9 @@ BEGIN
         BLOCK "040904E4" // US English, UTF-8.
         BEGIN
             VALUE "ProductName", "ProffieConfig"
-            VALUE "ProductVersion", "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.0"
             VALUE "CompanyName", "Kafrene Trading"
-            VALUE "FileDescription", "${DESCRIPTION}"
+            VALUE "FileVersion", "$<TARGET_PROPERTY:${TARGET},BIN_VERSION>"
+            VALUE "FileDescription", "$<GENEX_EVAL:$<TARGET_PROPERTY:${TARGET},DESCRIPTION>>"
             VALUE "InternalName", "$<TARGET_FILE_BASE_NAME:${TARGET}>"
             VALUE "LegalCopyright", "(C) 2023-2026 Ryan Ogurek"
             VALUE "OriginalFilename", "$<TARGET_FILE_NAME:${TARGET}>"

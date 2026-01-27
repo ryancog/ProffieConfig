@@ -10,6 +10,10 @@ add_executable(test EXCLUDE_FROM_ALL
     tests/style.cpp
 )
 
+set_target_properties(test PROPERTIES
+    BIN_VERSION "0.0.0"
+)
+
 Include(FetchContent)
 
 FetchContent_Declare(
