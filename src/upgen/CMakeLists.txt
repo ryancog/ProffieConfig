@@ -18,6 +18,10 @@ target_link_libraries(upgen
     pconf-static
 )
 
+set_target_properties(upgen PROPERTIES
+    BIN_VERSION "0.0.0"
+)
+
 include (../Common.cmake)
 setup_target(upgen)
 

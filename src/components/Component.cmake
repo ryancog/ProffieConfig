@@ -27,6 +27,7 @@ function(setup_component_and_static TARGET VERSION)
     add_library(${TARGET}-static STATIC ${SOURCES})
 
     target_include_directories(${TARGET}-static PUBLIC ${_COMPONENT_LIST_DIR}) # Include components/
+
     set_target_properties(${TARGET}-static PROPERTIES
         BIN_VERSION ${VERSION}
     )
