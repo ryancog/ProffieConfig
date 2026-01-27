@@ -716,12 +716,16 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
             saveClashThreshold = true;
         } else if (opt.define == FILTER_CUTOFF_STR) {
             auto val{Utils::doStringMath(opt.value)};
-            if (val) filterCutoff = static_cast<int32>(*val);
-            else logger.warn("Failed to parse filter cutoff");
+            if (val) {
+                filterCutoff = static_cast<int32>(*val);
+                enableFiltering = true;
+            } else logger.warn("Failed to parse filter cutoff");
         } else if (opt.define == FILTER_ORDER_STR) {
             auto val{Utils::doStringMath(opt.value)};
-            if (val) filterOrder = static_cast<int32>(*val);
-            else logger.warn("Failed to parse filter order");
+            if (val) {
+                filterOrder = static_cast<int32>(*val);
+                enableFiltering = true;
+            } else logger.warn("Failed to parse filter order");
         } else if (opt.define == AUDIO_CLASH_SUPPRESSION_STR) {
             auto val{Utils::doStringMath(opt.value)};
             if (val) audioClashSuppressionLevel = static_cast<int32>(*val);
