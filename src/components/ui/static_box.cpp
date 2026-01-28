@@ -1,7 +1,7 @@
 #include "static_box.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/static_box.cpp
  *
@@ -33,8 +33,9 @@ constexpr auto PADDING{
 
 } // namespace
 
-PCUI::StaticBox::StaticBox(wxOrientation orient, wxWindow *parent, const wxString& label) :
-    wxStaticBox(parent, wxID_ANY, label) {
+pcui::StaticBox::StaticBox(
+    wxOrientation orient, wxWindow *parent, const wxString& label
+) : wxStaticBox(parent, wxID_ANY, label) {
     mSizer = new wxBoxSizer(orient);
     mPanel = new wxPanel(
         this,
@@ -42,7 +43,7 @@ PCUI::StaticBox::StaticBox(wxOrientation orient, wxWindow *parent, const wxStrin
         wxDefaultPosition,
         wxDefaultSize,
         wxTAB_TRAVERSAL | wxNO_BORDER,
-        "PCUI::StaticBox Inside"
+        "pcui::StaticBox Inside"
     );
     mPanel->SetSizer(mSizer);
 
@@ -78,12 +79,12 @@ PCUI::StaticBox::StaticBox(wxOrientation orient, wxWindow *parent, const wxStrin
     SetAutoLayout(true);
 }
 
-bool PCUI::StaticBox::Layout() {
+bool pcui::StaticBox::Layout() {
     mPanel->Layout();
     return true;
 }
 
-wxSize PCUI::StaticBox::DoGetBestClientSize() const {
+wxSize pcui::StaticBox::DoGetBestClientSize() const {
     int32 topBorder{};
     int32 otherBorder{};
     GetBordersForSizer(&topBorder, &otherBorder);
@@ -95,27 +96,29 @@ wxSize PCUI::StaticBox::DoGetBestClientSize() const {
     return ret;
 }
 
-wxSizerItem *PCUI::StaticBox::Add(wxWindow *window, const wxSizerFlags& flags) {
+wxSizerItem *pcui::StaticBox::Add(
+    wxWindow *window, const wxSizerFlags& flags
+) {
     return mSizer->Add(window, flags);
 }
 
-wxSizerItem *PCUI::StaticBox::Add(wxSizer *sizer, const wxSizerFlags& flags) {
+wxSizerItem *pcui::StaticBox::Add(wxSizer *sizer, const wxSizerFlags& flags) {
     return mSizer->Add(sizer, flags);
 }
 
-wxSizerItem *PCUI::StaticBox::AddSpacer(int32 size) {
+wxSizerItem *pcui::StaticBox::AddSpacer(int32 size) {
     return mSizer->AddSpacer(size);
 }
 
-wxSizerItem *PCUI::StaticBox::AddStretchSpacer(int32 prop) {
+wxSizerItem *pcui::StaticBox::AddStretchSpacer(int32 prop) {
     return mSizer->AddStretchSpacer(prop);
 }
 
-void PCUI::StaticBox::Clear(bool deleteWindows) {
+void pcui::StaticBox::Clear(bool deleteWindows) {
     mSizer->Clear(deleteWindows);
 }
 
-bool PCUI::StaticBox::IsEmpty() {
+bool pcui::StaticBox::IsEmpty() {
     return mSizer->IsEmpty();
 }
 

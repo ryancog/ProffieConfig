@@ -1,7 +1,7 @@
 #include "frame.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * components/ui/frame.cpp
  *
@@ -29,7 +29,7 @@
 
 #include <app/app.h>
 
-namespace PCUI {
+namespace pcui {
 
 Frame::Frame(wxWindow *parent,
              wxWindowID winID,
@@ -71,5 +71,5 @@ void Frame::setReference(Frame** ref) {
     mReference = ref;
 }
 
-} // namespace PCUI
+} // namespace pcui
 

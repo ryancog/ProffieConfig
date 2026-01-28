@@ -21,5 +21,5 @@
 
 #include <wx/cpp.h>
 
-cstring PCUI::version() { return wxSTRINGIZE(BIN_VERSION); }
+cstring pcui::version() { return wxSTRINGIZE(BIN_VERSION); }
 

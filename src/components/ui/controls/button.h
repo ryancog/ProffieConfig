@@ -26,7 +26,7 @@
 
 #include "ui_export.h"
 
-namespace PCUI {
+namespace pcui {
 
 /**
  * Not a normal PCUI control. No data, simply wrapper for convenience.
@@ -45,4 +45,4 @@ public:
     );
 };
 
-} // namespace PCUI
+} // namespace pcui

@@ -25,11 +25,11 @@
 #include <wx/sizer.h>
 #include <wx/timer.h>
 
-using namespace PCUI;
+using namespace pcui;
 
 wxDEFINE_EVENT(MOVECLICK_FALLTHROUGH, wxMouseEvent);
-wxDEFINE_EVENT(PCUI::MV_START, wxMouseEvent);
-wxDEFINE_EVENT(PCUI::MV_END, wxMouseEvent);
+wxDEFINE_EVENT(pcui::MV_START, wxMouseEvent);
+wxDEFINE_EVENT(pcui::MV_END, wxMouseEvent);
 
 MoveArea::MoveArea(
     wxWindow* parent,
@@ -193,14 +193,14 @@ ScrolledMovePanel::ScrolledMovePanel(
     sizer->Add(this, wxSizerFlags(1).Expand());
     pCanvas->SetSizerAndFit(sizer);
 
-    moveArea->Bind(PCUI::MV_START, [this](wxMouseEvent& evt) {
+    moveArea->Bind(pcui::MV_START, [this](wxMouseEvent& evt) {
         evt.Skip();
         if (not pTimer) pTimer = new wxTimer(this, TIMER_DRAG);
         restoreRoutine(this->pMoveArea->getDragWindow());
         constexpr auto UPDATE_INTERVAL{20};
         pTimer->Start(UPDATE_INTERVAL);
     });
-    moveArea->Bind(PCUI::MV_END, [this](wxMouseEvent& evt) {
+    moveArea->Bind(pcui::MV_END, [this](wxMouseEvent& evt) {
         evt.Skip();
         shrinkToFit();
     });

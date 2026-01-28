@@ -26,7 +26,7 @@
 
 #include <utils/theme.h>
 
-UI_EXPORT wxWindow *PCUI::createPlaque(wxWindow *parent, wxWindowID winID) {
+UI_EXPORT wxWindow *pcui::createPlaque(wxWindow *parent, wxWindowID winID) {
 #   ifdef __WXOSX__
     // This is kind of a reverse way of building what's effectively a wxStaticBoxSizer
     auto *plaque{new wxStaticBox(parent, winID, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0)};
@@ -40,7 +40,7 @@ UI_EXPORT wxWindow *PCUI::createPlaque(wxWindow *parent, wxWindowID winID) {
     return plaque;
 }
 
-UI_EXPORT wxStaticBitmapBase *PCUI::createStaticImage(wxWindow *parent, wxWindowID winID, const wxBitmap& bitmap) {
+UI_EXPORT wxStaticBitmapBase *pcui::createStaticImage(wxWindow *parent, wxWindowID winID, const wxBitmap& bitmap) {
 #   ifndef __WXOSX__
     auto *image{new wxGenericStaticBitmap(parent, winID, bitmap)};
 #   else

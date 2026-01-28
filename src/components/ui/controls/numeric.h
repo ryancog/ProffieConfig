@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/numeric.h
  *
@@ -26,20 +26,22 @@
 #include "base.h"
 #include "ui_export.h"
 
-namespace PCUI {
+namespace pcui {
 
 class Numeric;
 class Decimal;
 
-namespace Private {
+namespace priv {
 
 template<typename T> requires std::is_arithmetic_v<T>
 struct UI_EXPORT NumericDataTemplate : ControlData {
     operator T() const { return mValue; }
+
     /**
      * Efficient assign/update
      */
     NumericDataTemplate& operator=(T val);
+
     /**
      * Unconditional assign/update
      */
@@ -56,14 +58,14 @@ struct UI_EXPORT NumericDataTemplate : ControlData {
     void setOffset(T offset, bool valUpdate = true);
 
     enum {
-        ID_VALUE,
-        ID_RANGE,
-        ID_INCREMENT,
+        eID_Value,
+        eID_Range,
+        eID_Increment,
     };
 
 private:
-    friend class PCUI::Numeric;
-    friend class PCUI::Decimal;
+    friend class pcui::Numeric;
+    friend class pcui::Decimal;
     T mValue{0};
     T mMin{0};
     T mMax{10};
@@ -71,10 +73,10 @@ private:
     T mOffset{0};
 };
 
-} // namespace Private
+} // namespace priv
 
-using NumericData = Private::NumericDataTemplate<int32>;
-using DecimalData = Private::NumericDataTemplate<float64>;
+using NumericData = priv::NumericDataTemplate<int32>;
+using DecimalData = priv::NumericDataTemplate<float64>;
 using NumericDataProxy = ControlDataProxy<NumericData>;
 using DecimalDataProxy = ControlDataProxy<DecimalData>;
 
@@ -141,4 +143,5 @@ private:
     void onModifySecondary(wxCommandEvent&) final;
 };
 
-} // namespace PCUI
+} // namespace pcui
+

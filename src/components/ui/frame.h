@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * components/ui/frame.h
  *
@@ -22,11 +22,9 @@
 #include <wx/frame.h>
 #include <wx/panel.h>
 
-#include "app/app.h"
-
 #include "ui_export.h"
 
-namespace PCUI {
+namespace pcui {
 
 class UI_EXPORT Frame : public wxFrame {
 public:
@@ -45,4 +43,4 @@ private:
     Frame** mReference{nullptr};
 };
 
-} // namespace PCUI
+} // namespace pcui

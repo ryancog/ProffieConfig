@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-PCUI::Button::Button(
+pcui::Button::Button(
     wxWindow *parent,
     wxWindowID id,
     const wxString& label,

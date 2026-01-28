@@ -1,7 +1,7 @@
 #include "message.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * components/ui/message.cpp
  *
@@ -25,10 +25,23 @@
 #include <wx/generic/richmsgdlgg.h>
 #endif
 
-int32 PCUI::showMessage(const wxString& msg, const wxString& caption, int64 style, wxWindow *parent) {
+int32 pcui::showMessage(
+    const wxString& msg,
+    const wxString& caption,
+    int64 style,
+    wxWindow *parent
+) {
 #   ifdef __WXMSW__
     // for dark mode
-    wxGenericMessageDialog dlg(parent, msg, caption.empty() ? wxMessageBoxCaptionStr : caption, style);
+    wxGenericMessageDialog dlg(
+        parent,
+        msg,
+        caption.empty()
+            ? wxMessageBoxCaptionStr
+            : caption,
+        style
+    );
+
     auto ret{dlg.ShowModal()};
     switch (ret) {
         case wxID_OK: return wxOK;
@@ -39,11 +52,18 @@ int32 PCUI::showMessage(const wxString& msg, const wxString& caption, int64 styl
         default: return 0;
     }
 #   else
-    return wxMessageBox(msg, caption.empty() ? wxMessageBoxCaptionStr : caption, style, parent);
+    return wxMessageBox(
+        msg,
+        caption.empty()
+            ? wxMessageBoxCaptionStr
+            : caption,
+        style,
+        parent
+    );
 #   endif
 }
 
-PCUI::HideableInfo PCUI::showHideablePrompt(
+pcui::HideableInfo pcui::showHideablePrompt(
     const wxString& msg,
     const wxString& caption,
     wxWindow *parent,
@@ -54,23 +74,36 @@ PCUI::HideableInfo PCUI::showHideablePrompt(
     const wxString& cancelText
 ) {
 #   ifdef __WXMSW__
-    wxGenericRichMessageDialog dlg{parent, msg, caption, static_cast<long>(style)};
+    wxGenericRichMessageDialog dlg(
+        parent, msg, caption, static_cast<long>(style)
+    );
 #   else
-    wxRichMessageDialog dlg{parent, msg, caption, static_cast<long>(style)};
+    wxRichMessageDialog dlg(
+        parent, msg, caption, static_cast<long>(style)
+    );
 #   endif
+
     dlg.ShowCheckBox(_("Do Not Show Again"));
     dlg.SetOKCancelLabels(
-        okText.IsEmpty() ? wxMessageDialogBase::ButtonLabel{wxID_OK} : okText,
-        cancelText.IsEmpty() ? wxMessageDialogBase::ButtonLabel{wxID_CANCEL} : cancelText
+        okText.IsEmpty()
+            ? wxMessageDialogBase::ButtonLabel{wxID_OK}
+            : okText,
+        cancelText.IsEmpty()
+            ? wxMessageDialogBase::ButtonLabel{wxID_CANCEL}
+            : cancelText
     );
     dlg.SetYesNoLabels(
-        yesText.IsEmpty() ? wxMessageDialogBase::ButtonLabel{wxID_YES} : yesText,
-        noText.IsEmpty() ? wxMessageDialogBase::ButtonLabel{wxID_NO} : noText
+        yesText.IsEmpty()
+            ? wxMessageDialogBase::ButtonLabel{wxID_YES}
+            : yesText,
+        noText.IsEmpty()
+            ? wxMessageDialogBase::ButtonLabel{wxID_NO}
+            : noText
     );
 
     HideableInfo ret;
-    ret.result = dlg.ShowModal();
-    ret.wantsToHide = dlg.IsCheckBoxChecked();
+    ret.result_ = dlg.ShowModal();
+    ret.wantsToHide_ = dlg.IsCheckBoxChecked();
     return ret;
 }
 

@@ -1,7 +1,7 @@
 #include "radios.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/radios.cpp
  *
@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-PCUI::RadiosData::RadiosData(uint32 numSelections) {
+pcui::RadiosData::RadiosData(uint32 numSelections) {
     assert(numSelections > 0);
 
     mSelected = 0;
@@ -27,37 +27,37 @@ PCUI::RadiosData::RadiosData(uint32 numSelections) {
     mShown.resize(numSelections, true);
 }
 
-PCUI::RadiosData& PCUI::RadiosData::operator=(uint32 idx) {
+pcui::RadiosData& pcui::RadiosData::operator=(uint32 idx) {
     std::scoped_lock scopeLock{getLock()};
     if (mSelected == idx) return *this;
     setValue(idx);
     return *this;
 }
 
-void PCUI::RadiosData::setValue(uint32 idx) {
+void pcui::RadiosData::setValue(uint32 idx) {
     std::scoped_lock scopeLock{getLock()};
     assert(idx < mEnabled.size());
     mSelected = idx;
-    notify(ID_SELECTION);
+    notify(eID_Selection);
 }
 
-void PCUI::RadiosData::showChoice(uint32 idx, bool show) {
+void pcui::RadiosData::showChoice(uint32 idx, bool show) {
     std::scoped_lock scopeLock{getLock()};
     assert(idx < mEnabled.size());
     if (mShown[idx] == show) return;
     mShown[idx] = show;
-    notify(ID_CHOICE_STATE);
+    notify(eID_Choice_State);
 }
 
-void PCUI::RadiosData::enableChoice(uint32 idx, bool enable) {
+void pcui::RadiosData::enableChoice(uint32 idx, bool enable) {
     std::scoped_lock scopeLock{getLock()};
     assert(idx < mEnabled.size());
     if (mEnabled[idx] == enable) return;
     mEnabled[idx] = enable;
-    notify(ID_CHOICE_STATE);
+    notify(eID_Choice_State);
 }
 
-PCUI::Radios::Radios(
+pcui::Radios::Radios(
     wxWindow *parent,
     RadiosData& data,
     const wxArrayString& labels,
@@ -67,7 +67,7 @@ PCUI::Radios::Radios(
     create(labels, label, orient);
 };
 
-PCUI::Radios::Radios(
+pcui::Radios::Radios(
     wxWindow *parent,
     RadiosDataProxy& proxy,
     const wxArrayString& labels,
@@ -77,11 +77,11 @@ PCUI::Radios::Radios(
     create(labels, label, orient);
 };
 
-void PCUI::Radios::create(const wxArrayString& labels, const wxString& label, wxOrientation orient) {
+void pcui::Radios::create(const wxArrayString& labels, const wxString& label, wxOrientation orient) {
     assert(labels.size() > 1);
     assert(data() != nullptr or proxy() != nullptr);
 
-    auto *box{new PCUI::StaticBox(
+    auto *box{new pcui::StaticBox(
         orient,
         this,
         label
@@ -106,34 +106,34 @@ void PCUI::Radios::create(const wxArrayString& labels, const wxString& label, wx
     init(box, wxEVT_RADIOBUTTON, wxEmptyString, wxVERTICAL);
 }
 
-void PCUI::Radios::SetToolTip(uint32 idx, const wxString& tip) {
+void pcui::Radios::SetToolTip(uint32 idx, const wxString& tip) {
     assert(idx < mRadios.size());
     mRadios[idx]->SetToolTip(tip);
 }
 
-void PCUI::Radios::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND) {
+void pcui::Radios::onUIUpdate(uint32 id) {
+    if (id == eID_Rebound) {
         assert(data()->mEnabled.size() == mRadios.size());
         refreshSizeAndLayout();
     }
 
-    if (id == ID_REBOUND or id == RadiosData::ID_CHOICE_STATE) {
+    if (id == eID_Rebound or id == RadiosData::eID_Choice_State) {
         for (auto idx{0}; idx < data()->mEnabled.size(); ++idx) {
             mRadios[idx]->Show(data()->mShown[idx] or data()->mEnabled[idx]);
             mRadios[idx]->Enable(data()->mEnabled[idx]);
         }
     }
-    if (id == ID_REBOUND or id == RadiosData::ID_SELECTION) {
+    if (id == eID_Rebound or id == RadiosData::eID_Selection) {
         mRadios[*data()]->SetValue(true);
     }
 }
 
-void PCUI::Radios::onModify(wxCommandEvent& evt) {
+void pcui::Radios::onModify(wxCommandEvent& evt) {
     auto idx{0};
     for (; idx < mRadios.size(); ++idx) {
         if (mRadios[idx] == evt.GetEventObject()) break;
     }
     data()->mSelected = idx;
-    data()->update(RadiosData::ID_SELECTION);
+    data()->update(RadiosData::eID_Selection);
 }
 

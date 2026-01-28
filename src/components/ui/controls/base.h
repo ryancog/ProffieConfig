@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/base.h
  *
@@ -26,14 +26,33 @@
 #include "ui/notifier.h"
 #include "utils/types.h"
 
-namespace PCUI {
+namespace pcui {
+
+enum {
+    /**
+     * Show/hide
+     */
+    eID_Visibility = 1000,
+    /**
+     * Show/hide and fit parent
+     */
+    eID_Visibility_Fit,
+    /**
+     * Enable/disable
+     */
+    eID_Active,
+    /**
+     * Focus control. Not held in state, cannot be hooked by update handler.
+     */
+    eID_Focus,
+};
 
 template<
-    class DERIVED,
-    typename CONTROL_DATA,
-    class CONTROL,
-    class CONTROL_EVENT,
-    class SECONDARY_EVENT
+    typename Derived,
+    typename ControlData,
+    typename Control,
+    typename ControlEvent,
+    typename SecondaryEvent
 >
 class ControlBase;
 
@@ -42,17 +61,6 @@ struct UI_EXPORT ControlData : Notifier {
     ControlData(ControlData&&) = delete;
     ControlData& operator=(const ControlData&) = delete;
     ControlData& operator=(ControlData&&) = delete;
-
-    enum EventID {
-        // Show/hide
-        ID_VISIBILITY = 1000,
-        // Show/hide and fit parent
-        ID_VISIBILITY_FIT,
-        // Enable/disable
-        ID_ACTIVE,
-        // Focus control. Not held in state, cannot be hooked by update handler.
-        ID_FOCUS,
-    };
 
     void setUpdateHandler(function<void(uint32 id)>&& handler);
 
@@ -87,7 +95,7 @@ protected:
     void notify(uint32 id);
 
 private:
-    template<typename DATA_TYPE> requires std::is_base_of_v<ControlData, DATA_TYPE>
+    template<typename DataType> requires std::is_base_of_v<ControlData, DataType>
     friend struct ControlDataProxy;
     /**
      * A callback to alert program-side code that the contained
@@ -102,14 +110,14 @@ private:
     bool mShown{true};
 };
 
-template<typename DATA_TYPE> requires std::is_base_of_v<ControlData, DATA_TYPE>
+template<typename DataType> requires std::is_base_of_v<ControlData, DataType>
 struct ControlDataProxy : NotifierProxy {
-    void bind(DATA_TYPE& data) {
+    void bind(DataType& data) {
         NotifierProxy::bind(&data);
-        data.update(NotifyReceiver::ID_REBOUND);
+        data.update(eID_Rebound);
     }
     void unbind() { NotifierProxy::bind(nullptr); }
-    DATA_TYPE *data() { return static_cast<DATA_TYPE *>(NotifierProxy::data()); };
+    DataType *data() { return static_cast<DataType *>(NotifierProxy::data()); };
 
     /**
      * Whether to show the control whenever its proxy (this) is unbound.
@@ -120,13 +128,7 @@ struct ControlDataProxy : NotifierProxy {
     void showWhenUnbound(bool show) { mShowWhenUnbound = show; }
 
 private:
-    template<
-        class DERIVED,
-        typename CONTROL_DATA,
-        class CONTROL,
-        class CONTROL_EVENT,
-        class SECONDARY_EVENT
-    >
+    template<typename, typename, typename, typename, typename>
     friend class ControlBase;
     bool mShowWhenUnbound{true};
 };
@@ -134,16 +136,16 @@ private:
 struct StaticBox;
 
 template<
-    class DERIVED,
-    typename CONTROL_DATA,
-    class CONTROL,
-    class CONTROL_EVENT,
-    class SECONDARY_EVENT = CONTROL_EVENT
+    typename Derived,
+    typename ControlData,
+    typename Control,
+    typename ControlEvent,
+    typename SecondaryEvent = ControlEvent
 >
 class UI_EXPORT ControlBase : public wxPanel, protected NotifyReceiver {
 public:
-    static_assert(std::is_base_of_v<wxWindow, CONTROL> or std::is_same_v<PCUI::StaticBox, CONTROL>, "PCUI Control core must be wxWindow descendant");
-    static_assert(std::is_base_of_v<ControlData, CONTROL_DATA>, "PCUI Control data must be ControlData descendant");
+    static_assert(std::is_base_of_v<wxWindow, Control> or std::is_same_v<pcui::StaticBox, Control>, "pcui Control core must be wxWindow descendant");
+    static_assert(std::is_base_of_v<ControlData, ControlData>, "pcui Control data must be ControlData descendant");
 
     void SetToolTip(const wxString&);
     void SetMinSize(const wxSize&) final;
@@ -160,19 +162,19 @@ public:
     bool Show(bool show = true) final;
 
 protected:
-    ControlBase(wxWindow *parent, CONTROL_DATA &data);
-    ControlBase(wxWindow *parent, ControlDataProxy<CONTROL_DATA>& proxy);
+    ControlBase(wxWindow *parent, ControlData &data);
+    ControlBase(wxWindow *parent, ControlDataProxy<ControlData>& proxy);
 
     void init(
-        CONTROL *control,
-        const wxEventTypeTag<CONTROL_EVENT>& eventTag,
+        Control *control,
+        const wxEventTypeTag<ControlEvent>& eventTag,
         wxString label,
         wxOrientation orient
     );
     void init(
-        CONTROL *control,
-        const wxEventTypeTag<CONTROL_EVENT>& eventTag,
-        const wxEventTypeTag<SECONDARY_EVENT>& secondaryTag,
+        Control *control,
+        const wxEventTypeTag<ControlEvent>& eventTag,
+        const wxEventTypeTag<SecondaryEvent>& secondaryTag,
         wxString label,
         wxOrientation orient
     );
@@ -188,27 +190,27 @@ protected:
      * Must use the data update function to signal
      * Data is already locked.
      */
-    virtual void onModify(CONTROL_EVENT&) = 0;
+    virtual void onModify(ControlEvent&) = 0;
 
-    virtual void onModifySecondary(SECONDARY_EVENT&) {}
+    virtual void onModifySecondary(SecondaryEvent&) {}
 
     /**
      * @param parentFit fit top level parent to best size
      */
     void refreshSizeAndLayout(bool parentFit = false);
 
-    CONTROL *pControl{nullptr};
-    CONTROL_DATA *data() { return static_cast<CONTROL_DATA *>(NotifyReceiver::data()); }
+    Control *pControl{nullptr};
+    ControlData *data() { return static_cast<ControlData *>(NotifyReceiver::data()); }
 
 private:
     void handleNotification(uint32 id) final;
     void handleUnbound() final;
-    void controlEventHandler(CONTROL_EVENT& evt);
-    void secondaryEventHandler(SECONDARY_EVENT& evt);
+    void controlEventHandler(ControlEvent& evt);
+    void secondaryEventHandler(SecondaryEvent& evt);
 
     wxSize mMinSize;
     bool mConsiderBest{true};
     bool mHidden{false};
 };
 
-} // namespace PCUI
+} // namespace pcui

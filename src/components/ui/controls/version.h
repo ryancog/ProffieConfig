@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/version.h
  *
@@ -25,7 +25,7 @@
 #include "text.h"
 #include "ui_export.h"
 
-namespace PCUI {
+namespace pcui {
 
 struct UI_EXPORT VersionData : ControlData {
     VersionData();
@@ -45,16 +45,16 @@ struct UI_EXPORT VersionData : ControlData {
     void setValue(const Utils::Version&);
 
     enum {
-        ID_VALUE,
+        eID_Value,
     };
 
 private:
     friend class Version;
     friend class VersionDataProxy;
-    PCUI::TextData mMajor;
-    PCUI::TextData mMinor;
-    PCUI::TextData mBugfix;
-    PCUI::TextData mTag;
+    pcui::TextData mMajor;
+    pcui::TextData mMinor;
+    pcui::TextData mBugfix;
+    pcui::TextData mTag;
 };
 
 struct UI_EXPORT VersionDataProxy : ControlDataProxy<VersionData> {
@@ -75,10 +75,10 @@ struct UI_EXPORT VersionDataProxy : ControlDataProxy<VersionData> {
 
 private:
     friend class Version;
-    PCUI::TextDataProxy mMajor;
-    PCUI::TextDataProxy mMinor;
-    PCUI::TextDataProxy mBugfix;
-    PCUI::TextDataProxy mTag;
+    pcui::TextDataProxy mMajor;
+    pcui::TextDataProxy mMinor;
+    pcui::TextDataProxy mBugfix;
+    pcui::TextDataProxy mTag;
 };
 
 class UI_EXPORT Version : public ControlBase<
@@ -108,11 +108,11 @@ private:
     void onUIUpdate(uint32) final;
     void onModify(wxEvent&) final;
 
-    PCUI::Text *mMajor;
-    PCUI::Text *mMinor;
-    PCUI::Text *mBugfix;
-    PCUI::Text *mTag;
+    pcui::Text *mMajor;
+    pcui::Text *mMinor;
+    pcui::Text *mBugfix;
+    pcui::Text *mTag;
 };
 
-} // namespace PCUI
+} // namespace pcui
 

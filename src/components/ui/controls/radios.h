@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/radios.h
  *
@@ -26,7 +26,7 @@
 #include "base.h"
 #include "ui_export.h"
 
-namespace PCUI {
+namespace pcui {
 
 struct UI_EXPORT RadiosData : ControlData {
     RadiosData(uint32 numSelections);
@@ -53,8 +53,8 @@ struct UI_EXPORT RadiosData : ControlData {
     void enableChoice(uint32 idx, bool enable = true);
 
     enum {
-        ID_SELECTION,
-        ID_CHOICE_STATE,
+        eID_Selection,
+        eID_Choice_State,
     };
 
 private:
@@ -66,20 +66,20 @@ private:
 };
 
 struct RadiosDataProxy : ControlDataProxy<RadiosData> {
-    RadiosDataProxy(uint32 numSelections) : numSelections{numSelections} {}
+    RadiosDataProxy(uint32 numSelections) : numSelections_{numSelections} {}
 
     void bind(RadiosData& data) { 
-        assert(numSelections == data.mEnabled.size());
+        assert(numSelections_ == data.mEnabled.size());
         ControlDataProxy::bind(data);
     }
 
-    const uint32 numSelections;
+    const uint32 numSelections_;
 };
 
 class UI_EXPORT Radios : public ControlBase<
                          Radios,
                          RadiosData,
-                         PCUI::StaticBox,
+                         pcui::StaticBox,
                          wxCommandEvent> {
 public:
     Radios(
@@ -108,5 +108,5 @@ private:
     vector<wxRadioButton *> mRadios;
 };
 
-} // namespace PCUI
+} // namespace pcui
 

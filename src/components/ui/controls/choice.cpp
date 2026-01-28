@@ -19,30 +19,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace PCUI {
-
-} // namespace PCUI
-
-void PCUI::ChoiceData::operator=(int32 val) {
+auto pcui::ChoiceData::operator=(int32 val) -> ChoiceData& {
     std::scoped_lock scopeLock{getLock()};
-    if (mValue == val) return;
+    if (mValue == val) return *this;
+
     setValue(val);
+    return *this;
 }
 
-void PCUI::ChoiceData::setValue(int32 val) {
+void pcui::ChoiceData::setValue(int32 val) {
     std::scoped_lock scopeLock{getLock()};
     assert(val == -1 or (val >= 0 and val < mChoices.size()));
     mValue = val;
-    notify(ID_SELECTION);
+    notify(eID_Selection);
 }
 
-void PCUI::ChoiceData::operator=(const string& val) {
+auto pcui::ChoiceData::operator=(const string& val) -> ChoiceData& {
     std::scoped_lock scopeLock{getLock()};
-    if (mValue != -1 and mChoices[mValue] == val) return;
+    if (mValue != -1 and mChoices[mValue] == val) return *this;
+
     setValue(val);
+    return *this;
 }
 
-void PCUI::ChoiceData::setValue(const string& val) {
+void pcui::ChoiceData::setValue(const string& val) {
     std::scoped_lock scopeLock{getLock()};
 
     auto idx{0};
@@ -53,10 +53,10 @@ void PCUI::ChoiceData::setValue(const string& val) {
 
     if (mValue == idx) return;
     mValue = idx;
-    notify(ID_SELECTION);
+    notify(eID_Selection);
 }
 
-void PCUI::ChoiceData::setChoices(vector<string>&& choices) { 
+void pcui::ChoiceData::setChoices(vector<string>&& choices) { 
     std::scoped_lock scopeLock{getLock()};
 
     // If equal return
@@ -74,14 +74,15 @@ void PCUI::ChoiceData::setChoices(vector<string>&& choices) {
 
     mChoices = std::move(choices); 
     mValue = -1;
-    switch (mChoicePersistence) {
-        case PERSISTENCE_NONE:
+    switch (mPersistence) {
+        using enum Persistence;
+        case None:
             break;
-        case PERSISTENCE_INDEX:
+        case Index:
             mValue = lastValue;
             if (mValue >= mChoices.size()) mValue = -1;
             break;
-        case PERSISTENCE_STRING:
+        case String:
             for (auto idx{0}; idx < mChoices.size(); ++idx) {
                 if (mChoices[idx] == lastChoice) {
                     mValue = idx;
@@ -91,11 +92,11 @@ void PCUI::ChoiceData::setChoices(vector<string>&& choices) {
             break;
     }
 
-    notify(ID_CHOICES);
-    if (lastValue != mValue) notify(ID_SELECTION);
+    notify(eID_Choices);
+    if (lastValue != mValue) notify(eID_Selection);
 }
 
-PCUI::Choice::Choice(
+pcui::Choice::Choice(
     wxWindow *parent,
     ChoiceData& data,
     const wxString& label,
@@ -104,7 +105,7 @@ PCUI::Choice::Choice(
     create(label, orient);
 }
 
-PCUI::Choice::Choice(
+pcui::Choice::Choice(
     wxWindow *parent,
     ChoiceDataProxy& proxy,
     const wxString& label,
@@ -113,7 +114,7 @@ PCUI::Choice::Choice(
     create(label, orient);
 }
 
-void PCUI::Choice::create(const wxString& label, wxOrientation orient) {
+void pcui::Choice::create(const wxString& label, wxOrientation orient) {
     auto *control{new wxChoice(
         this,
 		wxID_ANY
@@ -126,27 +127,26 @@ void PCUI::Choice::create(const wxString& label, wxOrientation orient) {
     init(control, wxEVT_CHOICE, label, orient);
 }
 
-void PCUI::Choice::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == ChoiceData::ID_CHOICES) {
+void pcui::Choice::onUIUpdate(uint32 id) {
+    if (id == eID_Rebound or id == ChoiceData::eID_Choices) {
         pControl->Set(data()->mChoices);
         pControl->SetSelection(*data());
         refreshSizeAndLayout();
-    } else if (id == ChoiceData::ID_SELECTION) {
+    } else if (id == ChoiceData::eID_Selection) {
         pControl->SetSelection(*data());
     }
 }
-
-void PCUI::Choice::onUnbound() {
+void pcui::Choice::onUnbound() {
     pControl->Clear();
 }
 
 
-void PCUI::Choice::onModify(wxCommandEvent& evt) {
+void pcui::Choice::onModify(wxCommandEvent& evt) {
     data()->mValue = evt.GetInt();
-    data()->update(ChoiceData::ID_SELECTION);
+    data()->update(ChoiceData::eID_Selection);
 }
 
-PCUI::List::List(
+pcui::List::List(
     wxWindow *parent,
     ChoiceData& data,
     const wxString& label,
@@ -155,7 +155,7 @@ PCUI::List::List(
     create(label, orient);
 }
 
-PCUI::List::List(
+pcui::List::List(
     wxWindow *parent,
     ChoiceDataProxy& proxy,
     const wxString& label,
@@ -164,7 +164,7 @@ PCUI::List::List(
     create(label, orient);
 }
 
-void PCUI::List::create(const wxString& label, wxOrientation orient) {
+void pcui::List::create(const wxString& label, wxOrientation orient) {
     auto *control{new wxListBox(
         this,
 		wxID_ANY
@@ -173,23 +173,22 @@ void PCUI::List::create(const wxString& label, wxOrientation orient) {
     init(control, wxEVT_LISTBOX, label, orient);
 }
 
-void PCUI::List::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == ChoiceData::ID_CHOICES) {
+void pcui::List::onUIUpdate(uint32 id) {
+    if (id == eID_Rebound or id == ChoiceData::eID_Choices) {
         pControl->Set(data()->mChoices);
         pControl->SetSelection(*data());
         refreshSizeAndLayout();
-    } else if (id == ChoiceData::ID_SELECTION) {
+    } else if (id == ChoiceData::eID_Selection) {
         pControl->SetSelection(*data());
     }
 }
 
-void PCUI::List::onUnbound() {
+void pcui::List::onUnbound() {
     pControl->Clear();
 }
 
-void PCUI::List::onModify(wxCommandEvent& evt) {
+void pcui::List::onModify(wxCommandEvent& evt) {
     data()->mValue = evt.GetInt();
-    data()->update(ChoiceData::ID_SELECTION);
+    data()->update(ChoiceData::eID_Selection);
 }
-
 

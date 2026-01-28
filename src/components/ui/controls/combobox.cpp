@@ -1,7 +1,7 @@
 #include "combobox.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/combobox.cpp
  *
@@ -19,12 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace PCUI {
-
-} // namespace PCUI
-
-void PCUI::ComboBoxData::setDefaults(vector<string>&& defaults) {
+void pcui::ComboBoxData::setDefaults(vector<string>&& defaults) {
     std::scoped_lock scopeLock{getLock()};
+
     if (mDefaults.size() == defaults.size()) {
         auto idx{0};
         for (; idx < defaults.size(); ++idx) {
@@ -32,11 +29,12 @@ void PCUI::ComboBoxData::setDefaults(vector<string>&& defaults) {
         }
         if (idx == defaults.size()) return;
     }
+
     mDefaults = std::move(defaults);
-    notify(ID_DEFAULTS);
+    notify(eID_Defaults);
 }
 
-PCUI::ComboBox::ComboBox(
+pcui::ComboBox::ComboBox(
     wxWindow *parent,
     ComboBoxData& data,
     const wxString& label,
@@ -45,7 +43,7 @@ PCUI::ComboBox::ComboBox(
     create(label, orient);
 }
 
-PCUI::ComboBox::ComboBox(
+pcui::ComboBox::ComboBox(
     wxWindow *parent,
     ComboBoxDataProxy& proxy,
     const wxString& label,
@@ -54,7 +52,7 @@ PCUI::ComboBox::ComboBox(
     create(label, orient);
 }
 
-void PCUI::ComboBox::create(const wxString& label, wxOrientation orient) {
+void pcui::ComboBox::create(const wxString& label, wxOrientation orient) {
     auto *control{new wxComboBox(
         this,
 		wxID_ANY
@@ -67,21 +65,29 @@ void PCUI::ComboBox::create(const wxString& label, wxOrientation orient) {
     init(control, wxEVT_TEXT, label, orient);
 }
 
-void PCUI::ComboBox::onUIUpdate(uint32 id) {
-    bool rebound{id == ID_REBOUND};
-    if (rebound or id == ComboBoxData::ID_DEFAULTS) {
+void pcui::ComboBox::onUIUpdate(uint32 id) {
+    bool rebound{id == eID_Rebound};
+    if (rebound or id == ComboBoxData::eID_Defaults) {
         pControl->Set(data()->mDefaults);
         refreshSizeAndLayout();
     }
-    if (rebound or id == ComboBoxData::ID_VALUE) pControl->SetValue(static_cast<string>(*data()));
-    if (rebound or id == ComboBoxData::ID_VALUE or id == ComboBoxData::ID_INSERTION) {
+
+    if (rebound or id == ComboBoxData::eID_Value) {
+        pControl->SetValue(static_cast<string>(*data()));
+    }
+
+    if (
+            rebound or
+            id == ComboBoxData::eID_Value or
+            id == ComboBoxData::eID_Insertion
+       ) {
         pControl->SetInsertionPoint(data()->pInsertionPoint);
     }
 }
 
-void PCUI::ComboBox::onModify(wxCommandEvent& evt) {
+void pcui::ComboBox::onModify(wxCommandEvent& evt) {
     data()->pValue = evt.GetString().ToStdString();
     data()->pInsertionPoint = pControl->GetInsertionPoint();
-    data()->update(ComboBoxData::ID_VALUE);
+    data()->update(ComboBoxData::eID_Value);
 }
 

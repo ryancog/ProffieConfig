@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/checklist.h
  *
@@ -26,9 +26,14 @@
 #include "base.h"
 #include "ui_export.h"
 
-namespace PCUI {
+namespace pcui {
 
 struct UI_EXPORT CheckListData : ControlData {
+    enum {
+        eID_Checked,
+        eID_Items,
+    };
+
     operator set<uint32>() const { return mSelected; }
 
     /**
@@ -44,13 +49,8 @@ struct UI_EXPORT CheckListData : ControlData {
     void unselect(uint32 idx);
     void clearSelections();
 
-    const vector<string>& items() const { return mItems; }
+    [[nodiscard]] const vector<string>& items() const { return mItems; }
     void setItems(vector<string>&& items) ;
-
-    enum {
-        ID_SELECTION,
-        ID_ITEMS,
-    };
 
 private:
     friend class CheckList;
@@ -87,4 +87,4 @@ private:
     void onModify(wxCommandEvent&) final;
 };
 
-} // namespace PCUI
+} // namespace pcui

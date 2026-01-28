@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/toggle.h
  *
@@ -25,7 +25,7 @@
 #include "base.h"
 #include "ui_export.h"
 
-namespace PCUI {
+namespace pcui {
 
 struct UI_EXPORT ToggleData : ControlData {
     operator bool() const { return mValue; }
@@ -42,7 +42,7 @@ struct UI_EXPORT ToggleData : ControlData {
     void setValue(bool val);
 
     enum {
-        ID_VALUE,
+        eID_Value,
     };
 
 private:
@@ -119,4 +119,4 @@ private:
     void onModify(wxCommandEvent&) final;
 };
 
-} // namespace PCUI
+} // namespace pcui

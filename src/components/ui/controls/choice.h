@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/choice.h
  *
@@ -25,9 +25,20 @@
 #include "base.h"
 #include "ui_export.h"
 
-namespace PCUI {
+namespace pcui {
 
 struct UI_EXPORT ChoiceData : ControlData {
+    enum class Persistence {
+        None,
+        Index,
+        String,
+    };
+
+    enum {
+        eID_Selection,
+        eID_Choices,
+    };
+
     operator int32() const { return mValue; }
     operator string() const { 
         if (mValue == -1) return {};
@@ -37,8 +48,8 @@ struct UI_EXPORT ChoiceData : ControlData {
     /**
      * Efficiently assign/update value
      */
-    void operator=(int32 val);
-    void operator=(const string& val);
+    ChoiceData& operator=(int32 val);
+    ChoiceData& operator=(const string& val);
 
     /**
      * Unconditionally assign/update value
@@ -46,34 +57,23 @@ struct UI_EXPORT ChoiceData : ControlData {
     void setValue(int32);
     void setValue(const string&);
 
-    const vector<string>& choices() const { return mChoices; }
+    [[nodiscard]] const vector<string>& choices() const { return mChoices; }
     void setChoices(vector<string>&& choices);
-
-    enum Persistence {
-        PERSISTENCE_NONE,
-        PERSISTENCE_INDEX,
-        PERSISTENCE_STRING,
-    };
 
     /**
      * Attempt to maintain selection across calls to setChoices()
      * Disabled by default.
      */
     void setPersistence(Persistence persistence) {
-        mChoicePersistence = persistence;
+        mPersistence = persistence;
     }
-
-    enum {
-        ID_SELECTION,
-        ID_CHOICES,
-    };
 
 private:
     friend class Choice;
     friend class List;
     vector<string> mChoices;
     int32 mValue{-1};
-    Persistence mChoicePersistence{PERSISTENCE_NONE};
+    Persistence mPersistence{Persistence::None};
 };
 
 using ChoiceDataProxy = ControlDataProxy<ChoiceData>;
@@ -130,4 +130,4 @@ private:
     void onModify(wxCommandEvent&) final;
 };
 
-} // namespace PCUI
+} // namespace pcui
