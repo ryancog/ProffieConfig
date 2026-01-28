@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/combobox.h
  *
@@ -19,23 +19,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mutex>
 #include <wx/combobox.h>
 
 #include "ui/controls/text.h"
 
 #include "ui_export.h"
 
-namespace PCUI {
+namespace pcui {
 
 struct UI_EXPORT ComboBoxData : TextData {
     using TextData::operator=;
 
-    const vector<string>& defaults() const { return mDefaults; }
+    [[nodiscard]] const vector<string>& defaults() const { return mDefaults; }
     void setDefaults(vector<string>&& defaults);
 
     enum {
-        ID_DEFAULTS = ID_TEXT_MAX,
+        eID_Defaults = eID_Text_Max,
     };
 
 private:
@@ -70,4 +69,4 @@ private:
     void onModify(wxCommandEvent&) final;
 };
 
-} // namespace PCUI
+} // namespace pcui

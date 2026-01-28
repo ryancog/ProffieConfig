@@ -30,7 +30,7 @@
 
 #include <utils/types.h>
 
-namespace PCUI {
+namespace pcui {
 
 wxDECLARE_EVENT(MV_START, wxMouseEvent);
 wxDECLARE_EVENT(MV_END, wxMouseEvent);
@@ -182,5 +182,5 @@ protected:
     MoveArea* const pMoveArea{nullptr};
 };
 
-} // namespace PCUI
+} // namespace pcui
 

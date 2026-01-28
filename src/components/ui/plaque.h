@@ -25,7 +25,7 @@
 
 #include "ui_export.h"
 
-namespace PCUI {
+namespace pcui {
 
 // Platform-dependent way of creating a raised "plaque" area for
 // visual distinction.
@@ -33,5 +33,5 @@ namespace PCUI {
 
 [[nodiscard]] UI_EXPORT wxStaticBitmapBase *createStaticImage(wxWindow *parent, wxWindowID winID, const wxBitmap&);
 
-} // namespace PCUI
+} // namespace pcui
 

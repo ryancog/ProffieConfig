@@ -1,7 +1,7 @@
 #include "text.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/text.cpp
  *
@@ -19,104 +19,108 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace PCUI {
-
-} // namespace PCUI
-
-PCUI::TextData& PCUI::TextData::operator=(string&& val) {
+pcui::TextData& pcui::TextData::operator=(string&& val) {
     std::scoped_lock scopeLock{getLock()};
     if (pValue == val) return *this;
     pValue = std::move(val);
-    notify(ID_VALUE);
+    notify(eID_Value);
     return *this;
 }
 
-void PCUI::TextData::operator+=(const string_view& val) {
+void pcui::TextData::operator+=(const string_view& val) {
     std::scoped_lock scopeLock{getLock()};
     pValue += val;
-    notify(ID_VALUE);
+    notify(eID_Value);
 }
 
-void PCUI::TextData::operator+=(char val) {
+void pcui::TextData::operator+=(char val) {
     std::scoped_lock scopeLock{getLock()};
     pValue += val;
-    notify(ID_VALUE);
+    notify(eID_Value);
 }
 
-string::size_type PCUI::TextData::find(char chr, string::size_type pos) {
+string::size_type pcui::TextData::find(char chr, string::size_type pos) {
     std::scoped_lock scopeLock{getLock()};
     return pValue.find(chr, pos);
 }
 
-string::size_type PCUI::TextData::find(const string_view& str, string::size_type pos) {
+string::size_type pcui::TextData::find(
+    const string_view& str, string::size_type pos
+) {
     std::scoped_lock scopeLock{getLock()};
     return pValue.find(str, pos);
 }
 
-bool PCUI::TextData::startsWith(const string_view& str) {
+bool pcui::TextData::startsWith(const string_view& str) {
     std::scoped_lock scopeLock{getLock()};
     return pValue.starts_with(str);
 }
 
-string PCUI::TextData::substr(string::size_type pos, string::size_type n) {
+string pcui::TextData::substr(string::size_type pos, string::size_type n) {
     std::scoped_lock scopeLock{getLock()};
     return pValue.substr(pos, n);
 }
 
-void PCUI::TextData::clear() {
+void pcui::TextData::clear() {
     std::scoped_lock scopeLock{getLock()};
     pValue.clear();
-    notify(ID_VALUE);
+    notify(eID_Value);
 }
 
-void PCUI::TextData::erase(string::size_type pos, string::size_type n) {
+void pcui::TextData::erase(string::size_type pos, string::size_type n) {
     std::scoped_lock scopeLock{getLock()};
     pValue.erase(pos, n);
-    notify(ID_VALUE);
+    notify(eID_Value);
 }
 
-void PCUI::TextData::erase(string::const_iterator first, optional<string::const_iterator> last) {
+void pcui::TextData::erase(
+    string::const_iterator first, optional<string::const_iterator> last
+) {
     std::scoped_lock scopeLock{getLock()};
     pValue.erase(first, last.value_or(pValue.end()));
-    notify(ID_VALUE);
+    notify(eID_Value);
 }
 
-void PCUI::TextData::insert(string::size_type pos, const string_view& str) {
+void pcui::TextData::insert(string::size_type pos, const string_view& str) {
     std::scoped_lock scopeLock{getLock()};
     pValue.insert(pos, str);
-    notify(ID_VALUE);
+    notify(eID_Value);
 }
 
-bool PCUI::TextData::empty() {
+bool pcui::TextData::empty() {
     std::scoped_lock scopeLock{getLock()};
     return pValue.empty();
 }
 
-bool PCUI::TextData::operator==(const string_view& str) {
+bool pcui::TextData::operator==(const string_view& str) {
     std::scoped_lock scopeLock{getLock()};
     return pValue == str;
 }
 
-void PCUI::TextData::setValue(string&& val) {
+void pcui::TextData::setValue(string&& val) {
     std::scoped_lock scopeLock{getLock()};
     pValue = std::move(val);
-    notify(ID_VALUE);
+    notify(eID_Value);
 }
 
-void PCUI::TextData::setInsertionPoint(uint32 insertionPoint) {
+void pcui::TextData::setInsertionPoint(uint32 insertionPoint) {
     std::scoped_lock scopeLock{getLock()};
     if (pInsertionPoint == insertionPoint) return;
-    pInsertionPoint = std::clamp<uint32>(insertionPoint, 0, pValue.length());
-    notify(ID_INSERTION);
+
+    const auto clampedPoint{std::clamp<uint32>(
+        insertionPoint, 0, pValue.length()
+    )};
+    pInsertionPoint = clampedPoint;
+
+    notify(eID_Insertion);
 }
 
-void PCUI::TextData::setInsertionPointEnd() {
+void pcui::TextData::setInsertionPointEnd() {
     setInsertionPoint(std::numeric_limits<uint32>::max());
 }
 
-PCUI::Text::Text(
-    wxWindow *parent,
-    TextData& data,
+pcui::Text::Text(
+    wxWindow *parent, TextData& data,
     int64 style,
     bool insertNewline,
     const wxString& label,
@@ -126,7 +130,7 @@ PCUI::Text::Text(
     create(style, label, orient);
 }
 
-PCUI::Text::Text(
+pcui::Text::Text(
     wxWindow *parent,
     TextDataProxy& proxy,
     int64 style,
@@ -138,9 +142,14 @@ PCUI::Text::Text(
     create(style, label, orient);
 }
 
-void PCUI::Text::create(int64 style, const wxString& label, wxOrientation orient) {
+void pcui::Text::create(
+    int64 style, const wxString& label, wxOrientation orient
+) {
     assert(not ((style & wxTE_MULTILINE) and mInsertNewline));
-    assert(not mInsertNewline or static_cast<bool>(style & wxTE_PROCESS_ENTER));
+    assert(
+        not mInsertNewline or
+        static_cast<bool>(style & wxTE_PROCESS_ENTER)
+    );
 
     if (style & wxTE_MULTILINE) style |= wxTE_PROCESS_TAB;
     auto *control{new wxTextCtrl(
@@ -163,46 +172,49 @@ void PCUI::Text::create(int64 style, const wxString& label, wxOrientation orient
     }
 }
 
-void PCUI::Text::styleStandard() {
+void pcui::Text::styleStandard() {
     auto font{pControl->GetFont()};
     font.SetFamily(wxFONTFAMILY_DEFAULT);
     pControl->SetFont(font);
 }
 
-void PCUI::Text::styleMonospace() {
+void pcui::Text::styleMonospace() {
     auto font{pControl->GetFont()};
     font.SetFamily(wxFONTFAMILY_TELETYPE);
     pControl->SetFont(font);
 }
 
-void PCUI::Text::onUIUpdate(uint32 id) {
-    bool rebound{id == ID_REBOUND};
+void pcui::Text::onUIUpdate(uint32 id) {
+    bool rebound{id == eID_Rebound};
 
-    if (rebound or id == TextData::ID_VALUE) {
+    if (rebound or id == TextData::eID_Value) {
         pControl->ChangeValue(static_cast<string>(*data()));
     }
-    if (rebound or id == TextData::ID_INSERTION) {
+    if (rebound or id == TextData::eID_Insertion) {
         pControl->SetInsertionPoint(data()->pInsertionPoint);
         data()->pInsertionPoint = pControl->GetInsertionPoint();
     }
 }
 
-void PCUI::Text::onUnbound() {
+void pcui::Text::onUnbound() {
     pControl->Clear();
 }
 
-void PCUI::Text::onModify(wxCommandEvent& evt) {
+void pcui::Text::onModify(wxCommandEvent& evt) {
     data()->pValue = evt.GetString().ToStdString();
     data()->pInsertionPoint = pControl->GetInsertionPoint();
 
-    if (evt.GetEventType() == wxEVT_TEXT or (evt.GetEventType() == wxEVT_TEXT_ENTER and mInsertNewline)) {
-        data()->update(TextData::ID_VALUE);
+    if (
+            evt.GetEventType() == wxEVT_TEXT or
+            (evt.GetEventType() == wxEVT_TEXT_ENTER and mInsertNewline)
+       ) {
+        data()->update(TextData::eID_Value);
     } else if (evt.GetEventType() == wxEVT_TEXT_ENTER) {
-        data()->update(TextData::ID_ENTER);
+        data()->update(TextData::eID_Enter);
     }
 }
 
-void PCUI::Text::onModifySecondary(wxCommandEvent& evt) {
+void pcui::Text::onModifySecondary(wxCommandEvent& evt) {
     if (mInsertNewline) pControl->WriteText("\\n");
     else onModify(evt);
 }

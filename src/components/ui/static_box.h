@@ -27,7 +27,7 @@
 
 #include "ui_export.h"
 
-namespace PCUI {
+namespace pcui {
 
 /**
  * It's like a wxStaticBoxSizer, but cooler.
@@ -60,5 +60,5 @@ private:
     wxSizer *mSizer;
 };
 
-} // namespace PCUI
+} // namespace pcui
 

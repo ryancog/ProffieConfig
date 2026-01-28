@@ -1,7 +1,7 @@
 #include "toggle.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/toggle.cpp
  *
@@ -19,29 +19,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace PCUI {
-
-} // namespace PCUI
-
-PCUI::ToggleData& PCUI::ToggleData::operator=(bool val) {
+pcui::ToggleData& pcui::ToggleData::operator=(bool val) {
     std::scoped_lock scopeLock{getLock()};
     if (mValue == val) return *this;
     setValue(val);
     return *this;
 }
 
-void PCUI::ToggleData::operator|=(bool val) {
+void pcui::ToggleData::operator|=(bool val) {
     if (not val) return;
     *this = val;
 }
 
-void PCUI::ToggleData::setValue(bool val) {
+void pcui::ToggleData::setValue(bool val) {
     std::scoped_lock scopeLock{getLock()};
     mValue = val;
-    notify(ID_VALUE);
+    notify(eID_Value);
 }
 
-PCUI::Toggle::Toggle(
+pcui::Toggle::Toggle(
     wxWindow *parent,
     ToggleData& data,
     wxString onText,
@@ -55,7 +51,7 @@ PCUI::Toggle::Toggle(
     create(style, label, orient);
 }
 
-PCUI::Toggle::Toggle(
+pcui::Toggle::Toggle(
     wxWindow *parent,
     ToggleDataProxy& proxy,
     wxString onText,
@@ -69,7 +65,7 @@ PCUI::Toggle::Toggle(
     create(style, label, orient);
 }
 
-void PCUI::Toggle::create(
+void pcui::Toggle::create(
     int64 style,
     const wxString& label,
     wxOrientation orient
@@ -86,8 +82,8 @@ void PCUI::Toggle::create(
     init(control, wxEVT_TOGGLEBUTTON, label, orient);
 }
 
-void PCUI::Toggle::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == ToggleData::ID_VALUE) {
+void pcui::Toggle::onUIUpdate(uint32 id) {
+    if (id == eID_Rebound or id == ToggleData::eID_Value) {
         pControl->SetValue(*data());
         pControl->SetLabelText(data() ? mOnText : mOffText);
         SetSizerAndFit(GetSizer());
@@ -99,12 +95,12 @@ void PCUI::Toggle::onUIUpdate(uint32 id) {
     }
 }
 
-void PCUI::Toggle::onModify(wxCommandEvent& evt) {
+void pcui::Toggle::onModify(wxCommandEvent& evt) {
     data()->mValue = evt.GetInt();
-    data()->update(ToggleData::ID_VALUE);
+    data()->update(ToggleData::eID_Value);
 }
 
-PCUI::CheckBox::CheckBox(
+pcui::CheckBox::CheckBox(
     wxWindow *parent,
     ToggleData& data,
     int64 style,
@@ -113,7 +109,7 @@ PCUI::CheckBox::CheckBox(
     create(style, label);
 };
 
-PCUI::CheckBox::CheckBox(
+pcui::CheckBox::CheckBox(
     wxWindow *parent,
     ToggleDataProxy& proxy,
     int64 style,
@@ -122,7 +118,7 @@ PCUI::CheckBox::CheckBox(
     create(style, label);
 };
 
-void PCUI::CheckBox::create(
+void pcui::CheckBox::create(
     int64 style,
     const wxString& label
 ) {
@@ -137,12 +133,14 @@ void PCUI::CheckBox::create(
     init(control, wxEVT_CHECKBOX, wxEmptyString, wxVERTICAL);
 }
 
-void PCUI::CheckBox::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == ToggleData::ID_VALUE) pControl->SetValue(*data());
+void pcui::CheckBox::onUIUpdate(uint32 id) {
+    if (id == eID_Rebound or id == ToggleData::eID_Value) {
+        pControl->SetValue(*data());
+    }
 }
 
-void PCUI::CheckBox::onModify(wxCommandEvent& evt) {
+void pcui::CheckBox::onModify(wxCommandEvent& evt) {
     data()->mValue = evt.GetInt();
-    data()->update(ToggleData::ID_VALUE);
+    data()->update(ToggleData::eID_Value);
 }
 

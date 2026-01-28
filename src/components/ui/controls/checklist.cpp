@@ -1,8 +1,7 @@
 #include "checklist.h"
-#include <mutex>
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/checklist.cpp
  *
@@ -20,21 +19,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace PCUI {
-
-} // namespace PCUI
-
-void PCUI::CheckListData::select(uint32 idx) {
+void pcui::CheckListData::select(uint32 idx) {
     std::scoped_lock scopeLock{getLock()};
     if (idx >= mItems.size()) return;
 
     auto [_, added]{mSelected.insert(idx)};
     if (not added) return;
 
-    notify(ID_SELECTION);
+    notify(eID_Checked);
 }
 
-void PCUI::CheckListData::select(string&& str) {
+void pcui::CheckListData::select(string&& str) {
     if (str.empty()) return;
     std::scoped_lock scopeLock{getLock()};
 
@@ -45,40 +40,40 @@ void PCUI::CheckListData::select(string&& str) {
     if (idx == mItems.size()) {
         mItems.emplace_back(std::move(str));
         mSelected.insert(mItems.size() - 1);
-        notify(ID_ITEMS);
+        notify(eID_Items);
     } else {
         mSelected.insert(idx);
     }
 
-    notify(ID_SELECTION);
+    notify(eID_Checked);
 }
 
 
-void PCUI::CheckListData::unselect(uint32 idx) {
+void pcui::CheckListData::unselect(uint32 idx) {
     std::scoped_lock scopeLock{getLock()};
     if (not mSelected.erase(idx)) return;
-    notify(ID_SELECTION);
+    notify(eID_Checked);
 }
 
-void PCUI::CheckListData::clearSelections() { 
+void pcui::CheckListData::clearSelections() { 
     std::scoped_lock scopeLock{getLock()};
     if (mSelected.empty()) return;
     mSelected.clear();
-    notify(ID_SELECTION);
+    notify(eID_Checked);
 }
 
-void PCUI::CheckListData::setItems(vector<string>&& items) { 
+void pcui::CheckListData::setItems(vector<string>&& items) { 
     std::scoped_lock scopeLock{getLock()};
     mItems = std::move(items); 
     for (auto iter{mSelected.begin()}; iter != mSelected.end();) {
         if (*iter >= mItems.size()) iter = mSelected.erase(iter);
         else ++iter;
     }
-    notify(ID_ITEMS);
+    notify(eID_Items);
 }
 
 
-PCUI::CheckList::CheckList(
+pcui::CheckList::CheckList(
     wxWindow *parent,
     CheckListData& data,
     const wxString& label,
@@ -87,7 +82,7 @@ PCUI::CheckList::CheckList(
     create(label, orient);
 }
 
-PCUI::CheckList::CheckList(
+pcui::CheckList::CheckList(
     wxWindow *parent,
     CheckListDataProxy& proxy,
     const wxString& label,
@@ -96,35 +91,35 @@ PCUI::CheckList::CheckList(
     create(label, orient);
 }
 
-void PCUI::CheckList::create(const wxString& label, wxOrientation orient) {
+void pcui::CheckList::create(const wxString& label, wxOrientation orient) {
     auto *control{new wxCheckListBox(this, wxID_ANY)};
     init(control, wxEVT_CHECKLISTBOX, label, orient);
 }
 
-void PCUI::CheckList::onUIUpdate(uint32 id) {
-    if (id == CheckListData::ID_ITEMS or id == ID_REBOUND) {
+void pcui::CheckList::onUIUpdate(uint32 id) {
+    if (id == CheckListData::eID_Items or id == eID_Rebound) {
         pControl->Set(data()->items());
         for (auto idx : static_cast<set<uint32>>(*data())) {
             pControl->Check(idx);
         }
         refreshSizeAndLayout();
-    } else if (id == CheckListData::ID_SELECTION) {
+    } else if (id == CheckListData::eID_Checked) {
         const auto numItems{data()->items().size()};
         const auto& selected{static_cast<set<uint32>>(*data())};
         for (auto idx{0}; idx < numItems; ++idx) {
-            pControl->Check(idx, selected.find(idx) != selected.end());
+            pControl->Check(idx, selected.contains(idx));
         }
     }
 }
 
-void PCUI::CheckList::onUnbound() {
+void pcui::CheckList::onUnbound() {
     pControl->Clear();
 }
 
-void PCUI::CheckList::onModify(wxCommandEvent& evt) {
+void pcui::CheckList::onModify(wxCommandEvent& evt) {
     const auto toggledItem{evt.GetInt()};
     if (pControl->IsChecked(toggledItem)) data()->mSelected.insert(toggledItem);
     else data()->mSelected.erase(toggledItem);
-    data()->update(CheckListData::ID_SELECTION);
+    data()->update(CheckListData::eID_Checked);
 }
 

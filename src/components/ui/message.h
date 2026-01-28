@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * components/ui/message.h
  *
@@ -26,7 +26,7 @@
 
 #include "ui_export.h"
 
-namespace PCUI {
+namespace pcui {
 
 /**
  * Show a wxMessageBox (with platform-specific setup)
@@ -48,8 +48,8 @@ UI_EXPORT int32 showMessage(
 );
 
 struct HideableInfo {
-    bool wantsToHide;
-    int32 result;
+    bool wantsToHide_;
+    int32 result_;
 };
 
 UI_EXPORT HideableInfo showHideablePrompt(
@@ -69,5 +69,5 @@ using ProgressDialog = wxGenericProgressDialog;
 using ProgressDialog = wxProgressDialog;
 #endif
 
-} // namespace PCUI
+} // namespace pcui
 

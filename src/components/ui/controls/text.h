@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/text.h
  *
@@ -24,7 +24,7 @@
 #include "base.h"
 #include "ui_export.h"
 
-namespace PCUI {
+namespace pcui {
 
 struct UI_EXPORT TextData : ControlData {
     operator string() const { return pValue; }
@@ -47,7 +47,10 @@ struct UI_EXPORT TextData : ControlData {
 
     void clear();
     void erase(string::size_type pos = 0, string::size_type n = string::npos);
-    void erase(string::const_iterator first, optional<string::const_iterator> last = nullopt);
+    void erase(
+        string::const_iterator first,
+        optional<string::const_iterator> last = nullopt
+    );
     void insert(string::size_type pos, const string_view&);
 
     [[nodiscard]] bool empty();
@@ -63,10 +66,10 @@ struct UI_EXPORT TextData : ControlData {
     void setInsertionPointEnd();
 
     enum {
-        ID_VALUE,
-        ID_ENTER,
-        ID_INSERTION,
-        ID_TEXT_MAX,
+        eID_Value,
+        eID_Enter,
+        eID_Insertion,
+        eID_Text_Max,
     };
 
 protected:
@@ -123,4 +126,4 @@ private:
     // wxString mInvalidChars;
 };
 
-} // namespace PCUI
+} // namespace pcui

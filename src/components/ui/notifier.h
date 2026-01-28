@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/notifier.h
  *
@@ -27,7 +27,7 @@
 
 #include "ui_export.h"
 
-namespace PCUI {
+namespace pcui {
 
 // TODO: There's still several possible race conditions here that
 // probably deserve a second look.
@@ -36,6 +36,10 @@ struct NotifyReceiver;
 struct NotifierProxy;
 
 struct UI_EXPORT Notifier {
+    enum {
+        eID_Rebound = 0xFFFFFFFF,
+    };
+
     virtual ~Notifier();
 
     /**
@@ -90,10 +94,6 @@ private:
 struct UI_EXPORT NotifyReceiver {
     virtual ~NotifyReceiver();
 
-    enum {
-        ID_REBOUND = 0xFFFFFFFF,
-    };
-
     /**
      * Sync notifications with GUI
      */
@@ -103,12 +103,14 @@ protected:
     NotifyReceiver() = default;
 
     /**
-     * @param derived The window which derived this Notifier, will handle events.
+     * @param derived The window which derived this Notifier, will handle
+     *                events.
      * @param data Data to bind
      */
     NotifyReceiver(wxWindow *derived, Notifier& data);
     /**
-     * @param derived The window which derived this Notifier, will handle events.
+     * @param derived The window which derived this Notifier, will handle
+     *                events.
      * @param proxy Proxy to handle data binding. May be empty (but not null).
      */
     NotifyReceiver(wxWindow *derived, NotifierProxy& proxy);
@@ -149,5 +151,5 @@ private:
     NotifierProxy *mProxy{nullptr};
 };
 
-} // namespace PCUI
+} // namespace pcui
 

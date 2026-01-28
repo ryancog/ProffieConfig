@@ -22,9 +22,9 @@
 #include "utils/string.h"
 #include "utils/limits.h"
 
-PCUI::VersionData::VersionData() {
+pcui::VersionData::VersionData() {
     mMajor.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::TextData::ID_VALUE) return;
+        if (id != pcui::TextData::eID_Value) return;
 
         auto rawValue{static_cast<string>(mMajor)};
         bool jump{not rawValue.empty() and rawValue.back() == '.'};
@@ -58,10 +58,10 @@ PCUI::VersionData::VersionData() {
             mMinor.setInsertionPointEnd();
             mMinor.setFocus();
         }
-        notify(ID_VALUE);
+        notify(eID_Value);
     });
     mMinor.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::TextData::ID_VALUE) return;
+        if (id != pcui::TextData::eID_Value) return;
 
         auto rawValue{static_cast<string>(mMinor)};
         bool jump{not rawValue.empty() and rawValue.back() == '.'};
@@ -89,10 +89,10 @@ PCUI::VersionData::VersionData() {
             mBugfix.setInsertionPointEnd();
             mBugfix.setFocus();
         }
-        notify(ID_VALUE);
+        notify(eID_Value);
     });
     mBugfix.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::TextData::ID_VALUE) return;
+        if (id != pcui::TextData::eID_Value) return;
 
         auto rawValue{static_cast<string>(mBugfix)};
         bool jump{not rawValue.empty() and rawValue.back() == '-'};
@@ -128,10 +128,10 @@ PCUI::VersionData::VersionData() {
             mTag.setInsertionPointEnd();
             mTag.setFocus();
         }
-        notify(ID_VALUE);
+        notify(eID_Value);
     });
     mTag.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::TextData::ID_VALUE) return;
+        if (id != pcui::TextData::eID_Value) return;
 
         auto rawValue{static_cast<string>(mTag)};
         auto insertionPoint{mTag.getInsertionPoint()};
@@ -148,17 +148,17 @@ PCUI::VersionData::VersionData() {
             mTag.setInsertionPoint(insertionPoint - numTrimmed);
         }
 
-        notify(ID_VALUE);
+        notify(eID_Value);
     });
 
     mMajor = "0";
 }
 
-PCUI::VersionData::VersionData(const Utils::Version& version) : VersionData() {
+pcui::VersionData::VersionData(const Utils::Version& version) : VersionData() {
     setValue(version);
 }
 
-PCUI::VersionData::operator Utils::Version() {
+pcui::VersionData::operator Utils::Version() {
     std::scoped_lock scopeLock{getLock()};
     return {
         static_cast<decltype(Utils::Version::major)>(
@@ -178,28 +178,28 @@ PCUI::VersionData::operator Utils::Version() {
     };
 }
 
-PCUI::VersionData::operator string() {
+pcui::VersionData::operator string() {
     std::scoped_lock scopeLock{getLock()};
     return static_cast<string>(static_cast<Utils::Version>(*this));
 }
 
-PCUI::VersionData& PCUI::VersionData::operator=(const Utils::Version& version) {
+pcui::VersionData& pcui::VersionData::operator=(const Utils::Version& version) {
     std::scoped_lock scopeLock{getLock()};
     if (version == static_cast<Utils::Version>(*this)) return *this;
     setValue(version);
     return *this;
 }
 
-void PCUI::VersionData::setValue(const Utils::Version& version) {
+void pcui::VersionData::setValue(const Utils::Version& version) {
     std::scoped_lock scopeLock{getLock()};
     mMajor = std::to_string(version.major);
     mMinor = version.minor == Utils::Version::NULL_REV ? "" : std::to_string(version.minor);
     mBugfix = version.bugfix == Utils::Version::NULL_REV ? "" : std::to_string(version.bugfix);
     mTag = string{version.tag};
-    notify(ID_VALUE);
+    notify(eID_Value);
 }
 
-PCUI::Version::Version(
+pcui::Version::Version(
     wxWindow *parent,
     VersionData& data,
     const wxString& label,
@@ -208,7 +208,7 @@ PCUI::Version::Version(
     create(label, orient);
 }
 
-PCUI::Version::Version(
+pcui::Version::Version(
     wxWindow *parent,
     VersionDataProxy& proxy,
     const wxString& label,
@@ -217,19 +217,19 @@ PCUI::Version::Version(
     create(label, orient);
 }
 
-void PCUI::Version::create(const wxString& label, wxOrientation orient) {
+void pcui::Version::create(const wxString& label, wxOrientation orient) {
     auto *panel{new wxPanel(this)};
     auto *dataProxy{static_cast<VersionDataProxy *>(proxy())};
     if (dataProxy) {
-        mMajor = new PCUI::Text(panel, dataProxy->mMajor);
-        mMinor = new PCUI::Text(panel, dataProxy->mMinor);
-        mBugfix = new PCUI::Text(panel, dataProxy->mBugfix);
-        mTag = new PCUI::Text(panel, dataProxy->mTag);
+        mMajor = new pcui::Text(panel, dataProxy->mMajor);
+        mMinor = new pcui::Text(panel, dataProxy->mMinor);
+        mBugfix = new pcui::Text(panel, dataProxy->mBugfix);
+        mTag = new pcui::Text(panel, dataProxy->mTag);
     } else {
-        mMajor = new PCUI::Text(panel, data()->mMajor);
-        mMinor = new PCUI::Text(panel, data()->mMinor);
-        mBugfix = new PCUI::Text(panel, data()->mBugfix);
-        mTag = new PCUI::Text(panel, data()->mTag);
+        mMajor = new pcui::Text(panel, data()->mMajor);
+        mMinor = new pcui::Text(panel, data()->mMinor);
+        mBugfix = new pcui::Text(panel, data()->mBugfix);
+        mTag = new pcui::Text(panel, data()->mTag);
     }
 
 #   if defined(__WXGTK__) or defined(__WXMSW__)
@@ -265,7 +265,7 @@ void PCUI::Version::create(const wxString& label, wxOrientation orient) {
     init(panel, wxEVT_ANY, label, orient);
 }
 
-void PCUI::Version::onUIUpdate(uint32) {}
+void pcui::Version::onUIUpdate(uint32) {}
 
-void PCUI::Version::onModify(wxEvent& evt) { evt.Skip(); }
+void pcui::Version::onModify(wxEvent& evt) { evt.Skip(); }
 

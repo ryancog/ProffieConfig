@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/info.h
  *
@@ -23,8 +23,9 @@
 
 #include "ui_export.h"
 
-namespace PCUI {
+namespace pcui {
 
 UI_EXPORT cstring version();
 
-}
+} // namespace pcui
+

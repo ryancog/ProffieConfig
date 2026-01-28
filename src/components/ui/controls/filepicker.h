@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/filepicker.h
  *
@@ -24,15 +24,15 @@
 #include "base.h"
 #include "ui_export.h"
 
-namespace PCUI {
+namespace pcui {
 
 struct UI_EXPORT FilePickerData : ControlData {
-    operator filepath() { return mValue; }
-    void operator=(filepath&& val);
-
     enum {
-        ID_PATH,
+        eID_Path,
     };
+
+    operator filepath() { return mValue; }
+    FilePickerData& operator=(filepath&& val);
 
 private:
     friend class FilePicker;
@@ -58,7 +58,7 @@ public:
     );
     FilePicker(
         wxWindow *parent,
-        FilePickerDataProxy& data,
+        FilePickerDataProxy& proxy,
         int64 style,
         const wxString& prompt = {},
         const wxString& wildcard = {},
@@ -78,4 +78,4 @@ private:
     void onModify(wxFileDirPickerEvent&) final;
 };
 
-} // namespace PCUI
+} // namespace pcui

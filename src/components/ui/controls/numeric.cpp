@@ -1,7 +1,7 @@
 #include "numeric.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/numeric.cpp
  *
@@ -21,12 +21,10 @@
 
 #include <wx/textctrl.h>
 
-namespace PCUI {
-
-} // namespace PCUI
-
 template<typename T> requires std::is_arithmetic_v<T>
-PCUI::Private::NumericDataTemplate<T>& PCUI::Private::NumericDataTemplate<T>::operator=(T val) {
+auto pcui::priv::NumericDataTemplate<T>::operator=(
+    T val
+) -> NumericDataTemplate& {
     std::scoped_lock scopeLock{getLock()};
     if (mValue == val) return *this;
     setValue(val);
@@ -34,47 +32,59 @@ PCUI::Private::NumericDataTemplate<T>& PCUI::Private::NumericDataTemplate<T>::op
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-void PCUI::Private::NumericDataTemplate<T>::setValue(T val) {
+void pcui::priv::NumericDataTemplate<T>::setValue(T val) {
     std::scoped_lock scopeLock{getLock()};
-    const auto clampedVal{std::clamp((((val - mOffset) / mIncrement) * mIncrement) + mOffset, mMin, mMax)};
+    const auto clampedVal{std::clamp(
+        (((val - mOffset) / mIncrement) * mIncrement) + mOffset,
+        mMin,
+        mMax
+    )};
     mValue = clampedVal;
-    notify(ID_VALUE);
+    notify(eID_Value);
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-void PCUI::Private::NumericDataTemplate<T>::setRange(T min, T max, bool valUpdate) {
+void pcui::priv::NumericDataTemplate<T>::setRange(
+    T min, T max, bool valUpdate
+) {
     std::scoped_lock scopeLock{getLock()};
     if (min == mMin and max == mMax) return;
+
     assert(min <= max);
     mMin = min; 
     mMax = max; 
-    notify(ID_RANGE);
+
+    notify(eID_Range);
     if (valUpdate) setValue(mValue);
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-void PCUI::Private::NumericDataTemplate<T>::setIncrement(T inc, bool valUpdate) {
+void pcui::priv::NumericDataTemplate<T>::setIncrement(T inc, bool valUpdate) {
     std::scoped_lock scopeLock{getLock()};
     if (inc == mIncrement) return;
+
     assert(inc > 0);
     mIncrement = inc;
-    notify(ID_INCREMENT);
+
+    notify(eID_Increment);
     if (valUpdate) setValue(mValue);
 }
 
 template<typename T> requires std::is_arithmetic_v<T>
-void PCUI::Private::NumericDataTemplate<T>::setOffset(T offset, bool valUpdate) {
+void pcui::priv::NumericDataTemplate<T>::setOffset(T offset, bool valUpdate) {
     std::scoped_lock scopeLock{getLock()};
     if (offset == mOffset) return;
+
     mOffset = offset;
-    // Nothing to notify, it's purely an ish-this.
+    
+    // Nothing to notify.
     if (valUpdate) setValue(mValue);
 }
 
-template struct PCUI::Private::NumericDataTemplate<int32>;
-template struct PCUI::Private::NumericDataTemplate<float64>;
+template struct pcui::priv::NumericDataTemplate<int32>;
+template struct pcui::priv::NumericDataTemplate<float64>;
 
-PCUI::Numeric::Numeric(
+pcui::Numeric::Numeric(
     wxWindow *parent,
     NumericData& data,
     const wxString& label,
@@ -83,7 +93,7 @@ PCUI::Numeric::Numeric(
     create(label, orient);
 }
 
-PCUI::Numeric::Numeric(
+pcui::Numeric::Numeric(
     wxWindow *parent,
     NumericDataProxy& proxy,
     const wxString& label,
@@ -92,7 +102,7 @@ PCUI::Numeric::Numeric(
     create(label, orient);
 }
 
-void PCUI::Numeric::create(
+void pcui::Numeric::create(
     const wxString& label,
     const wxOrientation& orient
 ) {
@@ -108,30 +118,30 @@ void PCUI::Numeric::create(
     init(control, wxEVT_SPINCTRL, wxEVT_TEXT_ENTER, label, orient);
 }
 
-void PCUI::Numeric::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == NumericData::ID_RANGE) {
+void pcui::Numeric::onUIUpdate(uint32 id) {
+    if (id == eID_Rebound or id == NumericData::eID_Range) {
         pControl->SetRange(data()->mMin, data()->mMax);
     }
-    if (id == ID_REBOUND or id == NumericData::ID_INCREMENT) {
+    if (id == eID_Rebound or id == NumericData::eID_Increment) {
         pControl->SetIncrement(data()->mIncrement);
     }
-    if (id == ID_REBOUND or id == NumericData::ID_VALUE) {
+    if (id == eID_Rebound or id == NumericData::eID_Value) {
         pControl->SetValue(*data());
         refreshSizeAndLayout();
     }
 }
 
-void PCUI::Numeric::onModify(wxSpinEvent& evt) {
+void pcui::Numeric::onModify(wxSpinEvent& evt) {
     data()->mValue = evt.GetPosition();
-    data()->update(NumericData::ID_VALUE);
+    data()->update(NumericData::eID_Value);
 }
 
-void PCUI::Numeric::onModifySecondary(wxCommandEvent&) {
+void pcui::Numeric::onModifySecondary(wxCommandEvent&) {
     SetFocusIgnoringChildren();
     pControl->SetFocus();
 }
 
-PCUI::Decimal::Decimal(
+pcui::Decimal::Decimal(
     wxWindow *parent,
     DecimalData& data,
     const wxString& label,
@@ -140,7 +150,7 @@ PCUI::Decimal::Decimal(
     create(label, orient);
 }
 
-PCUI::Decimal::Decimal(
+pcui::Decimal::Decimal(
     wxWindow *parent,
     DecimalDataProxy& proxy,
     const wxString& label,
@@ -149,7 +159,7 @@ PCUI::Decimal::Decimal(
     create(label, orient);
 }
 
-void PCUI::Decimal::create(
+void pcui::Decimal::create(
     const wxString& label,
     const wxOrientation& orient
 ) {
@@ -165,25 +175,25 @@ void PCUI::Decimal::create(
     init(control, wxEVT_SPINCTRLDOUBLE, wxEVT_TEXT_ENTER, label, orient);
 }
 
-void PCUI::Decimal::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == DecimalData::ID_RANGE) {
+void pcui::Decimal::onUIUpdate(uint32 id) {
+    if (id == eID_Rebound or id == DecimalData::eID_Range) {
         pControl->SetRange(data()->mMin, data()->mMax);
     }
-    if (id == ID_REBOUND or id == DecimalData::ID_INCREMENT) {
+    if (id == eID_Rebound or id == DecimalData::eID_Increment) {
         pControl->SetIncrement(data()->mIncrement);
     }
-    if (id == ID_REBOUND or id == DecimalData::ID_VALUE) {
+    if (id == eID_Rebound or id == DecimalData::eID_Value) {
         pControl->SetValue(*data());
         refreshSizeAndLayout();
     }
 }
 
-void PCUI::Decimal::onModify(wxSpinDoubleEvent& evt) {
+void pcui::Decimal::onModify(wxSpinDoubleEvent& evt) {
     data()->mValue = evt.GetValue();
-    data()->update(DecimalData::ID_VALUE);
+    data()->update(DecimalData::eID_Value);
 }
 
-void PCUI::Decimal::onModifySecondary(wxCommandEvent&) {
+void pcui::Decimal::onModifySecondary(wxCommandEvent&) {
     SetFocusIgnoringChildren();
     pControl->SetFocus();
 }

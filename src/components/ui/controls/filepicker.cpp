@@ -1,7 +1,7 @@
 #include "filepicker.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/filepicker.cpp
  *
@@ -19,18 +19,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace PCUI {
-
-} // namespace PCUI
-
-void PCUI::FilePickerData::operator=(filepath&& val) {
+auto pcui::FilePickerData::operator=(filepath&& val) -> FilePickerData& {
     std::scoped_lock scopeLock{getLock()};
-    if (mValue == val) return;
+    if (mValue == val) return *this;
+
     mValue = std::move(val);
-    notify(ID_PATH);
+    notify(eID_Path);
+
+    return *this;
 }
 
-PCUI::FilePicker::FilePicker(
+pcui::FilePicker::FilePicker(
     wxWindow *parent,
     FilePickerData& data,
     int64 style,
@@ -42,7 +41,7 @@ PCUI::FilePicker::FilePicker(
     create(style, prompt, wildcard, label, orient);
 };
 
-PCUI::FilePicker::FilePicker(
+pcui::FilePicker::FilePicker(
     wxWindow *parent,
     FilePickerDataProxy& proxy,
     int64 style,
@@ -54,7 +53,7 @@ PCUI::FilePicker::FilePicker(
     create(style, prompt, wildcard, label, orient);
 };
 
-void PCUI::FilePicker::create(
+void pcui::FilePicker::create(
     int64 style,
     const wxString& prompt,
     const wxString& wildcard,
@@ -75,12 +74,14 @@ void PCUI::FilePicker::create(
     init(control, wxEVT_FILEPICKER_CHANGED, label, orient);
 }
 
-void PCUI::FilePicker::onUIUpdate(uint32 id) {
-    if (id == ID_REBOUND or id == FilePickerData::ID_PATH) pControl->SetPath(static_cast<filepath>(*data()).string());
+void pcui::FilePicker::onUIUpdate(uint32 id) {
+    if (id == eID_Rebound or id == FilePickerData::eID_Path) {
+        pControl->SetPath(static_cast<filepath>(*data()).string());
+    }
 }
 
-void PCUI::FilePicker::onModify(wxFileDirPickerEvent& evt) {
+void pcui::FilePicker::onModify(wxFileDirPickerEvent& evt) {
     data()->mValue = evt.GetPath().ToStdString();
-    data()->update(FilePickerData::ID_PATH);
+    data()->update(FilePickerData::eID_Path);
 }
 
