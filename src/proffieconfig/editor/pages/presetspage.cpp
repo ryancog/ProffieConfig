@@ -358,7 +358,7 @@ void PresetsPage::createUI() {
     )};
     styleDisplay->SetToolTip(_("Show blade listing corresponding to the selected blade array."));
 
-    auto *styleList {new pcui::List(
+    auto *styleList{new pcui::List(
         this,
         config.presetArrays.styleSelectProxy,
         _("Blades")
