@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/ui/controls/button.h
  *
@@ -41,7 +41,7 @@ public:
         int64 style = 0,
         const string& bmp = {},
         const wxSize& bmpSize = wxDefaultSize,
-        Image::DynamicColor bmpColor = {}
+        const Image::DynamicColor& bmpColor = {}
     );
 };
 
