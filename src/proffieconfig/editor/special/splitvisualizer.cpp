@@ -39,7 +39,9 @@ constexpr auto MIN_SEGMENT_SIZE{12};
 vector<wxColour> SplitVisualizer::smIndexColors;
 
 SplitVisualizer::SplitVisualizer(wxWindow *parent, Config::BladeArrays& bladeArrays) :
-    wxWindow(parent, wxID_ANY), mBladeArrays{bladeArrays}, PCUI::NotifyReceiver(this, bladeArrays.visualizerData) {
+    wxWindow(parent, wxID_ANY),
+    mBladeArrays{bladeArrays},
+    pcui::NotifyReceiver(this, bladeArrays.visualizerData) {
 
     Bind(wxEVT_PAINT, &SplitVisualizer::paintEvent, this);
     Bind(wxEVT_SIZE, &SplitVisualizer::resize, this);

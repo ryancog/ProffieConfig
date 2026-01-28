@@ -25,7 +25,7 @@
 #include <wx/scrolwin.h>
 #include <wx/statbox.h>
 
-class PropsPage : public wxPanel, PCUI::NotifyReceiver {
+class PropsPage : public wxPanel, pcui::NotifyReceiver {
 public:
     PropsPage(EditorWindow *);
 

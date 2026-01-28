@@ -81,9 +81,9 @@ void createMenuBar();
 
 int32 getVersionSelection();
 
-PCUI::Frame *manager{nullptr};
+pcui::Frame *manager{nullptr};
 
-PCUI::VersionDataProxy propVersionProxy;
+pcui::VersionDataProxy propVersionProxy;
 wxPanel *propPage;
 wxWrapSizer *propVersionsSizer;
 
@@ -97,7 +97,7 @@ void VersionsManager::open(wxWindow *parent, wxWindowID id) {
         return;
     }
 
-    manager = new PCUI::Frame(parent, id, _("Versions Manager"));
+    manager = new pcui::Frame(parent, id, _("Versions Manager"));
     manager->Bind(wxEVT_CLOSE_WINDOW, [](wxCloseEvent& evt) {
         manager = nullptr;
         evt.Skip();
@@ -227,7 +227,7 @@ void bindEvents() {
                     Log::Severity::WARN, LOG_TAG,
                     "Failed to create directory " + propDir.string() + ", " + err.message()
                 );
-                PCUI::showMessage(errorStr, errorTitleStr);
+                pcui::showMessage(errorStr, errorTitleStr);
                 return;
             }
             if (not fs::copy_file(file->GetPath().ToStdString(), propDir / Versions::DATA_FILE_STR, err)) {
@@ -236,7 +236,7 @@ void bindEvents() {
                     "Failed to move prop data file: " + err.message()
                 );
                 fs::remove_all(propDir, err);
-                PCUI::showMessage(errorStr, errorTitleStr);
+                pcui::showMessage(errorStr, errorTitleStr);
                 return;
             }
             if (not fs::copy_file(header->GetPath().ToStdString(), propDir / Versions::HEADER_FILE_STR, err)) {
@@ -245,7 +245,7 @@ void bindEvents() {
                     "Failed to move prop header file: " + err.message()
                 );
                 fs::remove_all(propDir, err);
-                PCUI::showMessage(errorStr, errorTitleStr);
+                pcui::showMessage(errorStr, errorTitleStr);
                 return;
             }
 
@@ -253,7 +253,7 @@ void bindEvents() {
         }
     }, ID_PropAdd);
     manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
-        auto res{PCUI::showMessage(
+        auto res{pcui::showMessage(
             _("This cannot be undone!"), _("Remove Prop"),
             wxYES_NO | wxNO_DEFAULT, manager
         )};
@@ -288,8 +288,8 @@ void bindEvents() {
     manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
         wxDialog dlg(manager, wxID_ANY, _("Add ProffieOS"));
         auto *sizer{new wxBoxSizer(wxVERTICAL)};
-        PCUI::VersionData versionData;
-        auto *version{new PCUI::Version(&dlg, versionData, _("Version"))};
+        pcui::VersionData versionData;
+        auto *version{new pcui::Version(&dlg, versionData, _("Version"))};
         auto *duplicateMessage{new wxStaticText(
             &dlg,
             wxID_ANY,
@@ -347,7 +347,7 @@ void bindEvents() {
         }};
 
         versionData.setUpdateHandler([updateState](uint32 id) {
-            if (id != PCUI::VersionData::ID_VALUE) return;
+            if (id != pcui::VersionData::eID_Value) return;
             updateState();
         });
         folder->Bind(wxEVT_DIRPICKER_CHANGED, [updateState](wxCommandEvent&) {
@@ -366,7 +366,7 @@ void bindEvents() {
                     Log::Severity::WARN, LOG_TAG,
                     "Failed to create directory " + osDir.string() + ", " + err.message()
                 );
-                PCUI::showMessage(errorStr, errorTitleStr);
+                pcui::showMessage(errorStr, errorTitleStr);
                 return;
             }
 
@@ -378,7 +378,7 @@ void bindEvents() {
                     "Failed to move prop data file: " + err.message()
                 );
                 fs::remove_all(osDir, err);
-                PCUI::showMessage(errorStr, errorTitleStr);
+                pcui::showMessage(errorStr, errorTitleStr);
                 return;
             }
 
@@ -386,7 +386,7 @@ void bindEvents() {
         }
     }, ID_OSAdd);
     manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
-        auto res{PCUI::showMessage(
+        auto res{pcui::showMessage(
             _("This cannot be undone!"), _("Remove OS"),
             wxYES_NO | wxNO_DEFAULT, manager
         )};
@@ -416,8 +416,8 @@ void bindEvents() {
     manager->Bind(wxEVT_MENU, [](wxCommandEvent&) {
         constexpr auto FULL_RESET{wxYES};
         constexpr auto RESTORE_DEFAULTS{wxNO};
-        PCUI:
-        auto res{PCUI::showMessage(
+        pcui:
+        auto res{pcui::showMessage(
             _("These actions cannot be undone!\n"
             "\n"
             "\"Restore Defaults\" will replace/restore default versions, reverting them but preserving any custom versions.\n"
@@ -432,14 +432,14 @@ void bindEvents() {
 
         bool confirm{false};
         if (res == RESTORE_DEFAULTS) {
-            confirm = wxYES == PCUI::showMessage(
+            confirm = wxYES == pcui::showMessage(
                 _("Are you sure?"),
                 _("Restore Default Versions"),
                 wxYES_NO | wxNO_DEFAULT
             );
         }
         if (res == FULL_RESET) {
-            confirm = wxYES == PCUI::showMessage(
+            confirm = wxYES == pcui::showMessage(
                 _("Are you sure?"),
                 _("Full Versions Reset"),
                 wxYES_NO | wxNO_DEFAULT
@@ -679,7 +679,7 @@ void createUI() {
     auto *propEditSizer{new wxBoxSizer(wxVERTICAL)};
     auto *propInfo{new wxStaticText(propPage, ID_PropInfo, {})};
     propVersionsSizer = new wxWrapSizer;
-    auto *propVersion{new PCUI::Version(propPage, propVersionProxy)};
+    auto *propVersion{new pcui::Version(propPage, propVersionProxy)};
     propVersion->Bind(wxEVT_TEXT, [](wxCommandEvent&) {
         reloadFromDisk();
     });

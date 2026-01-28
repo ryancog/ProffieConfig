@@ -44,7 +44,7 @@ ButtonsDlg::ButtonsDlg(EditorWindow *parent) :
         wxDefaultSize,
         wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER
     ),
-    PCUI::NotifyReceiver(this, parent->getOpenConfig().settings.buttonNotifier),
+    pcui::NotifyReceiver(this, parent->getOpenConfig().settings.buttonNotifier),
     mParent{parent} {
     createUI();
     bindEvents();
@@ -89,7 +89,7 @@ wxBoxSizer *ButtonsDlg::header() {
 }
 
 wxWindow *ButtonsDlg::info(wxWindow *parent) {
-    auto *infoSizer{new PCUI::StaticBox(
+    auto *infoSizer{new pcui::StaticBox(
         wxVERTICAL,
         parent,
         _("Buttons Configuration Information")
@@ -192,8 +192,8 @@ ButtonsDlg::ButtonPanel::ButtonPanel(
     wxScrolledWindow *parent,
     Config::Config& config,
     Config::Settings::ButtonData& button
-) : PCUI::StaticBox(wxHORIZONTAL, parent) {
-    auto *type{new PCUI::Choice(
+) : pcui::StaticBox(wxHORIZONTAL, parent) {
+    auto *type{new pcui::Choice(
         childParent(),
         button.type,
         _("Type"),
@@ -206,7 +206,7 @@ ButtonsDlg::ButtonPanel::ButtonPanel(
         " - If you're using a pulldown button, be sure the pin is tolerant! See link."
     ));
 
-    auto *event{new PCUI::Choice(
+    auto *event{new pcui::Choice(
         childParent(),
         button.event,
         _("Event"),
@@ -214,7 +214,7 @@ ButtonsDlg::ButtonPanel::ButtonPanel(
     )};
     event->SetToolTip(_("The event a button press triggers."));
 
-    auto *remove{new PCUI::Button(
+    auto *remove{new pcui::Button(
         childParent(),
         wxID_ANY,
         _("Remove")
@@ -228,7 +228,7 @@ ButtonsDlg::ButtonPanel::ButtonPanel(
     column1->AddSpacer(10);
     column1->Add(remove);
 
-    auto *pin{new PCUI::ComboBox(
+    auto *pin{new pcui::ComboBox(
         childParent(),
         button.pin,
         _("Pin"),
@@ -236,7 +236,7 @@ ButtonsDlg::ButtonPanel::ButtonPanel(
     )};
     pin->SetToolTip(_("The pin on the board the button is wired to."));
 
-    auto *name{new PCUI::Text(
+    auto *name{new pcui::Text(
         childParent(),
         button.name,
         0,
@@ -246,7 +246,7 @@ ButtonsDlg::ButtonPanel::ButtonPanel(
     )};
     name->SetToolTip(_("The button name for Serial Monitor and debugging."));
 
-    auto *touch{new PCUI::Numeric(
+    auto *touch{new pcui::Numeric(
         childParent(),
         button.touch,
         _("Threshold"),

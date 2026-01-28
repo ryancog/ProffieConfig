@@ -61,7 +61,7 @@ bool saveVersionedProp(
 bool addVersion(
     Versions::VersionedProp& prop,
     bool save,
-    std::unique_ptr<PCUI::VersionData>&& verData = nullptr
+    std::unique_ptr<pcui::VersionData>&& verData = nullptr
 );
 
 auto& getSupportedVersions(Versions::VersionedProp& prop) {
@@ -241,7 +241,7 @@ void Versions::loadLocal() {
             }
 
             logger.verbose("Prop " + propName + " supports OS version " + static_cast<string>(version));
-            std::unique_ptr<PCUI::VersionData> versionData;
+            std::unique_ptr<pcui::VersionData> versionData;
 
             if (oldPropPtr) {
                 auto& oldSupportedVersions{getSupportedVersions(*oldPropPtr)};
@@ -264,7 +264,7 @@ void Versions::loadLocal() {
                 addVersion(
                     *versionedProp,
                     false,
-                    std::make_unique<PCUI::VersionData>(version)
+                    std::make_unique<pcui::VersionData>(version)
                 );
             }
 
@@ -536,9 +536,9 @@ bool saveVersionedProp(
 bool addVersion(
     Versions::VersionedProp& prop,
     bool save,
-    std::unique_ptr<PCUI::VersionData>&& verData
+    std::unique_ptr<pcui::VersionData>&& verData
 ) {
-    if (not verData) verData = std::make_unique<PCUI::VersionData>();
+    if (not verData) verData = std::make_unique<pcui::VersionData>();
 
     /*
      * TODO: So much about this is woefully inefficient and error-prone, not to
@@ -548,10 +548,10 @@ bool addVersion(
      * but that's a lot more work, and I'm not doing it right now.
      */
     verData->setUpdateHandler([&prop](uint32 id) {
-        if (id != PCUI::VersionData::ID_VALUE) return;
+        if (id != pcui::VersionData::eID_Value) return;
 
         if (not saveVersionedProp(prop.name, getSupportedVersions(prop))) {
-            PCUI::showMessage(
+            pcui::showMessage(
                 wxTRANSLATE("Could not save!"),
                 wxTRANSLATE("This shouldn't be a critical error, but Ryan was lazy here.")
             );

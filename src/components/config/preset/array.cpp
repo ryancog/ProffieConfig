@@ -24,13 +24,13 @@
 #include "config/config.h"
 #include "utils/string.h"
 
-PCUI::TextData Config::PresetArrays::dummyCommentData;
-PCUI::TextData Config::PresetArrays::dummyStyleData;
+pcui::TextData Config::PresetArrays::dummyCommentData;
+pcui::TextData Config::PresetArrays::dummyStyleData;
 
 Config::PresetArray::PresetArray(Config& config) :
     mConfig{config} {
 
-    selection.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
+    selection.setPersistence(pcui::ChoiceData::Persistence::Index);
 
     auto isCurrentArray{[this]() {
         if (mConfig.presetArrays.selection == -1) return false;
@@ -42,7 +42,7 @@ Config::PresetArray::PresetArray(Config& config) :
     }};
 
     name.setUpdateHandler([this, isCurrentArray](uint32 id) {
-        if (id != PCUI::TextData::ID_VALUE) return;
+        if (id != pcui::TextData::eID_Value) return;
 
         auto rawValue{static_cast<string>(name)};
         uint32 numTrimmed{};
@@ -86,8 +86,8 @@ Config::PresetArray::PresetArray(Config& config) :
     });
     selection.setUpdateHandler([this, isCurrentArray](uint32 id) {
         if (
-                id != PCUI::NotifyReceiver::ID_REBOUND and 
-                id != PCUI::ChoiceData::ID_SELECTION
+                id != pcui::Notifier::eID_Rebound and 
+                id != pcui::ChoiceData::eID_Selection
            ) return;
 
         if (not isCurrentArray()) return;
@@ -179,6 +179,7 @@ void Config::PresetArray::movePresetDown(uint32 idx) {
 }
 
 Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
+    // TODO: This should go somewhere else.
     dummyCommentData = _("Select or create preset and blade to edit style comments...").ToStdString();
     dummyCommentData.disable();
     dummyStyleData = _("Select or create preset and blade to edit style...").ToStdString();
@@ -187,17 +188,17 @@ Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
     commentProxy.bind(dummyCommentData);
     styleProxy.bind(dummyStyleData);
 
-    selection.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
-    styleDisplay.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
+    selection.setPersistence(pcui::ChoiceData::Persistence::Index);
+    styleDisplay.setPersistence(pcui::ChoiceData::Persistence::Index);
 
     selection.setUpdateHandler([this](uint32 id) {
-        if (id == PCUI::ChoiceData::ID_CHOICES) {
+        if (id == pcui::ChoiceData::eID_Choices) {
             if (not selection.choices().empty() and selection == -1) {
                 selection = 0;
             }
             return;
         }
-        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+        if (id != pcui::ChoiceData::eID_Selection) return;
 
         if (selection == -1) {
             presetProxy.unbind();
@@ -220,7 +221,7 @@ Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
         notifyData.notify(NOTIFY_SELECTION);
     });
     styleDisplay.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+        if (id != pcui::ChoiceData::eID_Selection) return;
 
         syncStyleDisplay();
     });
@@ -277,7 +278,9 @@ void Config::PresetArrays::syncStyles() {
 
             preset->mStyles.reserve(newSize);
             for (auto idx{preset->mStyles.size()}; idx < newSize; ++idx) {
-                preset->mStyles.emplace_back(std::make_unique<Preset::Style>());
+                preset->mStyles.emplace_back(
+                    std::make_unique<Preset::Style>()
+                );
             }
         }
     }
@@ -285,7 +288,10 @@ void Config::PresetArrays::syncStyles() {
 }
 
 void Config::PresetArrays::syncStyleDisplay(int32 clearIdx) {
-    styleDisplay.setChoices(vector{mParent.bladeArrays.arraySelection.choices()});
+    styleDisplay.setChoices(
+        vector{mParent.bladeArrays.arraySelection.choices()}
+    );
+
     if (styleDisplay == clearIdx) styleDisplay = -1;
 
     vector<string> styleChoices;
@@ -313,20 +319,37 @@ void Config::PresetArrays::syncStyleDisplay(int32 clearIdx) {
                 } else {
                     subIdx = 0;
                     for (const auto& split : ws281x.splits()) {
-                        switch (static_cast<Split::Type>(static_cast<uint32>(split->type))) {
+                        const auto type{static_cast<Split::Type>(
+                            static_cast<uint32>(split->type)
+                        )};
+
+                        switch (type) {
                             case Split::REVERSE:
                             case Split::STANDARD:
                             case Split::LIST:
                                 styleChoices.emplace_back(
-                                    wxString::Format(_("Blade %d:%d"), mainIdx, subIdx).ToStdString()
+                                    wxString::Format(
+                                        _("Blade %d:%d"),
+                                        mainIdx,
+                                        subIdx
+                                    ).ToStdString()
                                 );
                                 ++count;
                                 break;
                             case Split::STRIDE:
                             case Split::ZIG_ZAG:
-                                for (auto idx{0}; idx < split->segments; ++idx) {
+                                for (
+                                        auto idx{0};
+                                        idx < split->segments;
+                                        ++idx
+                                    ) {
                                     styleChoices.emplace_back(
-                                        wxString::Format(_("Blade %d:%d:%d"), mainIdx, subIdx, idx).ToStdString()
+                                        wxString::Format(
+                                            _("Blade %d:%d:%d"),
+                                            mainIdx,
+                                            subIdx,
+                                            idx
+                                        ).ToStdString()
                                     );
                                     ++count;
                                 }

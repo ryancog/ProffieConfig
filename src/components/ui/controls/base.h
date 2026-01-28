@@ -114,7 +114,7 @@ template<typename DataType> requires std::is_base_of_v<ControlData, DataType>
 struct ControlDataProxy : NotifierProxy {
     void bind(DataType& data) {
         NotifierProxy::bind(&data);
-        data.update(eID_Rebound);
+        data.update(Notifier::eID_Rebound);
     }
     void unbind() { NotifierProxy::bind(nullptr); }
     DataType *data() { return static_cast<DataType *>(NotifierProxy::data()); };

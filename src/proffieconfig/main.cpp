@@ -31,7 +31,7 @@ class ProffieConfig : public wxApp {
 public:
     bool OnInit() override {
         if (not App::init("ProffieConfig")) {
-            PCUI::showMessage(_("ProffieConfig is Already Running"), App::getAppName());
+            pcui::showMessage(_("ProffieConfig is Already Running"), App::getAppName());
             return false;
         }
 

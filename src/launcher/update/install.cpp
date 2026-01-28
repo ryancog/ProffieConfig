@@ -46,7 +46,7 @@ string convertSize(uint64 size);
 bool Update::pullNewFiles(
     const Changelog& changelog,
     const Data& data,
-    PCUI::ProgressDialog *prog,
+    pcui::ProgressDialog *prog,
     Log::Branch& lBranch
 ) {
     auto& logger{lBranch.createLogger("Update::pullNewFiles()")};
@@ -141,7 +141,7 @@ bool Update::pullNewFiles(
             auto response{request.GetResponse()};
             auto statusText{response.GetStatusText()};
             logger.error("Download failed! " + (statusText.empty() ? "UError" : statusText.ToStdString()) + " (" + std::to_string(response.GetStatus()) + ')');
-            PCUI::showMessage(_("Failed to download file."), App::getAppName());
+            pcui::showMessage(_("Failed to download file."), App::getAppName());
             fs::remove_all(stagingFolder());
             return false;
         }
@@ -153,7 +153,7 @@ bool Update::pullNewFiles(
 void Update::installFiles(
     const Changelog& changelog,
     const Data& data,
-    PCUI::ProgressDialog * /*prog*/,
+    pcui::ProgressDialog * /*prog*/,
     Log::Branch& lBranch
 ) {
     auto& logger{lBranch.createLogger("Update::pullNewFiles()")};

@@ -24,7 +24,7 @@
 
 #include "../mainmenu/mainmenu.h"
 
-class SerialMonitor : public PCUI::Frame {
+class SerialMonitor : public pcui::Frame {
 public:
     SerialMonitor(MainMenu *, const string&);
     ~SerialMonitor() override;

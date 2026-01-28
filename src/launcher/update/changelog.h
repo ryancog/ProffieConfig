@@ -45,7 +45,7 @@ struct Changelog {
 
 [[nodiscard]] bool promptWithChangelog(const Data&, const Changelog&, Log::Branch&);
 
-[[nodiscard]] Utils::Version determineCurrentVersion(const Data&, PCUI::ProgressDialog *, Log::Branch&);
+[[nodiscard]] Utils::Version determineCurrentVersion(const Data&, pcui::ProgressDialog *, Log::Branch&);
 
 } // namespace Update
 

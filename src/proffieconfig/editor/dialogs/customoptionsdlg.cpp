@@ -19,7 +19,7 @@ CustomOptionsDlg::CustomOptionsDlg(EditorWindow *parent) :
         wxDefaultSize,
         wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER
     ),
-    PCUI::NotifyReceiver(this, parent->getOpenConfig().settings.customOptsNotifyData),
+    pcui::NotifyReceiver(this, parent->getOpenConfig().settings.customOptsNotifyData),
     mParent{parent} {
     createUI();
     bindEvents();
@@ -73,7 +73,7 @@ wxBoxSizer *CustomOptionsDlg::header() {
 }
 
 wxWindow *CustomOptionsDlg::info(wxWindow *parent) {
-    auto *infoSizer{new PCUI::StaticBox(
+    auto *infoSizer{new pcui::StaticBox(
         wxVERTICAL,
         parent,
         _("Links For Additional ProffieOS Defines")
@@ -161,8 +161,8 @@ CustomOptionsDlg::CDefine::CDefine(
     auto *sizer{new wxBoxSizer(wxHORIZONTAL)};
 
     auto *defText {new wxStaticText(this, wxID_ANY, "#define")};
-    auto *name{new PCUI::Text(this, option.define)};
-    auto *value{new PCUI::Text(this, option.value)};
+    auto *name{new pcui::Text(this, option.define)};
+    auto *value{new pcui::Text(this, option.value)};
     value->SetMinSize(wxSize{50, -1});
     auto *remove = new wxButton(this, wxID_ANY, _("Remove"));
     remove->Bind(wxEVT_BUTTON, [&config, &option](wxCommandEvent&) {

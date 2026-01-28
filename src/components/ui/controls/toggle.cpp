@@ -83,7 +83,7 @@ void pcui::Toggle::create(
 }
 
 void pcui::Toggle::onUIUpdate(uint32 id) {
-    if (id == eID_Rebound or id == ToggleData::eID_Value) {
+    if (id == Notifier::eID_Rebound or id == ToggleData::eID_Value) {
         pControl->SetValue(*data());
         pControl->SetLabelText(data() ? mOnText : mOffText);
         SetSizerAndFit(GetSizer());
@@ -134,7 +134,7 @@ void pcui::CheckBox::create(
 }
 
 void pcui::CheckBox::onUIUpdate(uint32 id) {
-    if (id == eID_Rebound or id == ToggleData::eID_Value) {
+    if (id == Notifier::eID_Rebound or id == ToggleData::eID_Value) {
         pControl->SetValue(*data());
     }
 }

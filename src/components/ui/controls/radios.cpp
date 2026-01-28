@@ -112,18 +112,18 @@ void pcui::Radios::SetToolTip(uint32 idx, const wxString& tip) {
 }
 
 void pcui::Radios::onUIUpdate(uint32 id) {
-    if (id == eID_Rebound) {
+    if (id == Notifier::eID_Rebound) {
         assert(data()->mEnabled.size() == mRadios.size());
         refreshSizeAndLayout();
     }
 
-    if (id == eID_Rebound or id == RadiosData::eID_Choice_State) {
+    if (id == Notifier::eID_Rebound or id == RadiosData::eID_Choice_State) {
         for (auto idx{0}; idx < data()->mEnabled.size(); ++idx) {
             mRadios[idx]->Show(data()->mShown[idx] or data()->mEnabled[idx]);
             mRadios[idx]->Enable(data()->mEnabled[idx]);
         }
     }
-    if (id == eID_Rebound or id == RadiosData::eID_Selection) {
+    if (id == Notifier::eID_Rebound or id == RadiosData::eID_Selection) {
         mRadios[*data()]->SetValue(true);
     }
 }

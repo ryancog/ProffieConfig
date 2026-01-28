@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/config/bladeconfig/arrays.h
  *
@@ -37,7 +37,7 @@ struct CONFIG_EXPORT BladeArrays {
     BladeArrays(Config&);
 
     // Do not set choices manually
-    PCUI::ChoiceData arraySelection;
+    pcui::ChoiceData arraySelection;
     enum {
         ID_ARRAY_SELECTION,
         ID_ARRAY_ISSUES,
@@ -46,12 +46,12 @@ struct CONFIG_EXPORT BladeArrays {
         ID_BLADE_TYPE_SELECTION,
         ID_VISUAL_UPDATE
     };
-    PCUI::Notifier notifyData;
+    pcui::Notifier notifyData;
 
     // Issues for the current array, for UI
     uint32 arrayIssues{BladeConfig::ISSUE_NONE};
 
-    PCUI::ChoiceDataProxy bladeSelectionProxy;
+    pcui::ChoiceDataProxy bladeSelectionProxy;
 
     /**
      * @param clearIdx Index of preset that was deleted, and should be cleared if
@@ -68,49 +68,49 @@ struct CONFIG_EXPORT BladeArrays {
     BladeConfig& addArray(string&& name = {}, int32 id = 0, const string& presetArray = {});
     void removeArray(uint32 idx);
 
-    PCUI::ChoiceDataProxy bladeTypeProxy;
+    pcui::ChoiceDataProxy bladeTypeProxy;
     
-    PCUI::CheckListDataProxy powerPinProxy;
-    PCUI::TextData powerPinNameEntry;
+    pcui::CheckListDataProxy powerPinProxy;
+    pcui::TextData powerPinNameEntry;
     void addPowerPinFromEntry();
 
-    PCUI::ChoiceDataProxy colorOrder3Proxy;
-    PCUI::ChoiceDataProxy colorOrder4Proxy;
-    PCUI::ToggleDataProxy hasWhiteProxy;
-    PCUI::ToggleDataProxy useRGBWithWhiteProxy;
+    pcui::ChoiceDataProxy colorOrder3Proxy;
+    pcui::ChoiceDataProxy colorOrder4Proxy;
+    pcui::ToggleDataProxy hasWhiteProxy;
+    pcui::ToggleDataProxy useRGBWithWhiteProxy;
 
-    PCUI::NumericDataProxy pixelBrightnessProxy;
+    pcui::NumericDataProxy pixelBrightnessProxy;
 
-    PCUI::ComboBoxDataProxy dataPinProxy;
-    PCUI::NumericDataProxy lengthProxy;
+    pcui::ComboBoxDataProxy dataPinProxy;
+    pcui::NumericDataProxy lengthProxy;
 
-    PCUI::Notifier visualizerData;
+    pcui::Notifier visualizerData;
 
-    PCUI::ChoiceDataProxy splitSelectionProxy;
-    PCUI::RadiosDataProxy splitTypeProxy;
-    PCUI::NumericDataProxy splitStartProxy;
-    PCUI::NumericDataProxy splitEndProxy;
-    PCUI::NumericDataProxy splitLengthProxy;
-    PCUI::NumericDataProxy splitSegmentsProxy;
-    PCUI::TextDataProxy splitListProxy;
-    PCUI::NumericDataProxy splitBrightnessProxy;
+    pcui::ChoiceDataProxy splitSelectionProxy;
+    pcui::RadiosDataProxy splitTypeProxy;
+    pcui::NumericDataProxy splitStartProxy;
+    pcui::NumericDataProxy splitEndProxy;
+    pcui::NumericDataProxy splitLengthProxy;
+    pcui::NumericDataProxy splitSegmentsProxy;
+    pcui::TextDataProxy splitListProxy;
+    pcui::NumericDataProxy splitBrightnessProxy;
 
     struct StarProxy {
-        PCUI::ChoiceDataProxy ledProxy;
-        PCUI::NumericDataProxy resistanceProxy;
-        PCUI::ComboBoxDataProxy powerPinProxy;
+        pcui::ChoiceDataProxy ledProxy;
+        pcui::NumericDataProxy resistanceProxy;
+        pcui::ComboBoxDataProxy powerPinProxy;
     };
 
     StarProxy star1Proxy;
     StarProxy star2Proxy;
     StarProxy star3Proxy;
     StarProxy star4Proxy;
-    PCUI::NumericDataProxy simpleBrightnessProxy;
+    pcui::NumericDataProxy simpleBrightnessProxy;
 
     /**
      * @return number of blades across all arrays
      */
-    uint32 numBlades() const;
+    [[nodiscard]] uint32 numBlades() const;
 
     void unbindBlade();
 

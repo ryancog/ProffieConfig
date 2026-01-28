@@ -148,7 +148,7 @@ struct VERSIONS_EXPORT PropToggle : PropDataBase, PropSettingBase {
 
     const vector<string> disables;
 
-    PCUI::ToggleData value;
+    pcui::ToggleData value;
 };
 
 struct VERSIONS_EXPORT PropNumeric : PropDataBase, PropSettingBase {
@@ -199,7 +199,7 @@ struct VERSIONS_EXPORT PropNumeric : PropDataBase, PropSettingBase {
 
     const optional<int32> defaultVal;
 
-    PCUI::NumericData value;
+    pcui::NumericData value;
 };
 
 struct VERSIONS_EXPORT PropDecimal : PropDataBase, PropSettingBase {
@@ -250,7 +250,7 @@ struct VERSIONS_EXPORT PropDecimal : PropDataBase, PropSettingBase {
 
     const optional<float64> defaultVal;
 
-    PCUI::DecimalData value;
+    pcui::DecimalData value;
 };
 
 struct PropOption;
@@ -323,7 +323,7 @@ struct VERSIONS_EXPORT PropOption : PropSettingBase {
     const string idLabel;
     const string name;
     const string description;
-    PCUI::RadiosData selection;
+    pcui::RadiosData selection;
 
 private:
     friend PropSelection;

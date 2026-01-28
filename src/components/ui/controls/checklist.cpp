@@ -97,7 +97,7 @@ void pcui::CheckList::create(const wxString& label, wxOrientation orient) {
 }
 
 void pcui::CheckList::onUIUpdate(uint32 id) {
-    if (id == CheckListData::eID_Items or id == eID_Rebound) {
+    if (id == CheckListData::eID_Items or id == Notifier::eID_Rebound) {
         pControl->Set(data()->items());
         for (auto idx : static_cast<set<uint32>>(*data())) {
             pControl->Check(idx);
@@ -118,8 +118,10 @@ void pcui::CheckList::onUnbound() {
 
 void pcui::CheckList::onModify(wxCommandEvent& evt) {
     const auto toggledItem{evt.GetInt()};
-    if (pControl->IsChecked(toggledItem)) data()->mSelected.insert(toggledItem);
-    else data()->mSelected.erase(toggledItem);
+    if (pControl->IsChecked(toggledItem)) {
+        data()->mSelected.insert(toggledItem);
+    } else data()->mSelected.erase(toggledItem);
+
     data()->update(CheckListData::eID_Checked);
 }
 

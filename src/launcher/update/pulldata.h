@@ -29,12 +29,12 @@ namespace Update {
 /**
  * Attempts to download latest version of `MANIFEST_FILE`
  */
-[[nodiscard]] bool pullData(PCUI::ProgressDialog *, Log::Branch&);
+[[nodiscard]] bool pullData(pcui::ProgressDialog *, Log::Branch&);
 
 /**
  * Reads data from `MANIFEST_FILE`
  */
-[[nodiscard]] optional<Data> parseData(PCUI::ProgressDialog *, Log::Branch&, bool heedMessages = true);
+[[nodiscard]] optional<Data> parseData(pcui::ProgressDialog *, Log::Branch&, bool heedMessages = true);
 
 inline filepath manifestFile() { return Paths::dataDir() / "manifest.pconf"; }
 

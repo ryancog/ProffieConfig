@@ -23,7 +23,7 @@
 #include "../dialogs/customoptionsdlg.h"
 #include "../dialogs/buttons.h"
 
-class GeneralPage : public wxPanel, PCUI::NotifyReceiver {
+class GeneralPage : public wxPanel, pcui::NotifyReceiver {
 public:
     GeneralPage(EditorWindow*);
     ~GeneralPage() override;

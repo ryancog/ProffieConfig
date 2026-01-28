@@ -58,7 +58,7 @@ SerialMonitor::~SerialMonitor() {
 using namespace std::chrono_literals;
 
 SerialMonitor::SerialMonitor(MainMenu* parent, const string& boardPath) : 
-    PCUI::Frame(parent, wxID_ANY, "Proffie Serial") {
+    pcui::Frame(parent, wxID_ANY, "Proffie Serial") {
     instance = this;
 
     auto *master{new wxBoxSizer(wxVERTICAL)};
@@ -232,7 +232,7 @@ bool SerialMonitor::openDevice(const string& boardPath) {
 
     mFd = open(boardPath.c_str(), O_RDWR | O_NOCTTY);
     if (mFd < 0) {
-        PCUI::showMessage(_("Could not connect to Proffieboard."), _("Serial Connection Error"), wxICON_ERROR | wxOK, GetParent());
+        pcui::showMessage(_("Could not connect to Proffieboard."), _("Serial Connection Error"), wxICON_ERROR | wxOK, GetParent());
         return false;
     }
 
@@ -258,7 +258,7 @@ bool SerialMonitor::openDevice(const string& boardPath) {
         nullptr
     );
     if (mSerialHandle == INVALID_HANDLE_VALUE) {
-        PCUI::showMessage(_("Could not connect to Proffieboard."), _("Serial Connection Error"), wxICON_ERROR | wxOK, GetParent());
+        pcui::showMessage(_("Could not connect to Proffieboard."), _("Serial Connection Error"), wxICON_ERROR | wxOK, GetParent());
         return false;
     }
 

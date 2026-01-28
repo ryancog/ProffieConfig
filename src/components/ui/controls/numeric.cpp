@@ -119,13 +119,13 @@ void pcui::Numeric::create(
 }
 
 void pcui::Numeric::onUIUpdate(uint32 id) {
-    if (id == eID_Rebound or id == NumericData::eID_Range) {
+    if (id == Notifier::eID_Rebound or id == NumericData::eID_Range) {
         pControl->SetRange(data()->mMin, data()->mMax);
     }
-    if (id == eID_Rebound or id == NumericData::eID_Increment) {
+    if (id == Notifier::eID_Rebound or id == NumericData::eID_Increment) {
         pControl->SetIncrement(data()->mIncrement);
     }
-    if (id == eID_Rebound or id == NumericData::eID_Value) {
+    if (id == Notifier::eID_Rebound or id == NumericData::eID_Value) {
         pControl->SetValue(*data());
         refreshSizeAndLayout();
     }
@@ -176,13 +176,13 @@ void pcui::Decimal::create(
 }
 
 void pcui::Decimal::onUIUpdate(uint32 id) {
-    if (id == eID_Rebound or id == DecimalData::eID_Range) {
+    if (id == Notifier::eID_Rebound or id == DecimalData::eID_Range) {
         pControl->SetRange(data()->mMin, data()->mMax);
     }
-    if (id == eID_Rebound or id == DecimalData::eID_Increment) {
+    if (id == Notifier::eID_Rebound or id == DecimalData::eID_Increment) {
         pControl->SetIncrement(data()->mIncrement);
     }
-    if (id == eID_Rebound or id == DecimalData::eID_Value) {
+    if (id == Notifier::eID_Rebound or id == DecimalData::eID_Value) {
         pControl->SetValue(*data());
         refreshSizeAndLayout();
     }

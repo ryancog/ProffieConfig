@@ -1,7 +1,7 @@
 #include "bladespage.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2023-2025 Ryan Ogurek
+ * Copyright (C) 2023-2026 Ryan Ogurek
  *
  * proffieconfig/editor/pages/bladespage.cpp
  *
@@ -40,7 +40,7 @@
 #include "../../core/defines.h"
 #include "../special/splitvisualizer.h"
 
-class ArrayEditDlg : public wxDialog, PCUI::NotifyReceiver {
+class ArrayEditDlg : public wxDialog, pcui::NotifyReceiver {
 public:
     ArrayEditDlg(
         wxWindow *parent,
@@ -53,7 +53,7 @@ public:
 
         sizer->AddSpacer(10);
 
-        auto *nameEntry{new PCUI::Text(
+        auto *nameEntry{new pcui::Text(
             this,
             bladeConfig.name,
             0,
@@ -64,7 +64,7 @@ public:
 
         auto *bitsSizer{new wxBoxSizer(wxHORIZONTAL)};
 
-        auto *idEntry{new PCUI::Numeric(
+        auto *idEntry{new pcui::Numeric(
             this,
             bladeConfig.id,
             _("Blade ID")
@@ -73,14 +73,14 @@ public:
         idEntry->SetMinSize({100, -1});
 
         constexpr cstring BLADE_ID_TEXT{"NO_BLADE"};
-        auto *noBladeID{new PCUI::Toggle(
+        auto *noBladeID{new pcui::Toggle(
             this,
             bladeConfig.noBladeID,
             BLADE_ID_TEXT,
             BLADE_ID_TEXT
         )};
 
-        auto *presetEntry{new PCUI::Choice(
+        auto *presetEntry{new pcui::Choice(
             this,
             bladeConfig.presetArray,
             _("Preset Array")
@@ -94,7 +94,7 @@ public:
 
         auto *issueText{new wxStaticText(
             this,
-            ID_IssueText,
+            eID_Issue_Text,
             wxEmptyString
         )};
 
@@ -123,7 +123,7 @@ public:
     void buildDone() { initializeNotifier(); }
 
     enum {
-        ID_IssueText
+        eID_Issue_Text
     };
 
 private:
@@ -131,26 +131,39 @@ private:
 
     void handleNotification(uint32) override {
         auto issues{mBladeConfig.computeIssues()};
+
         auto *okButton{FindWindow(wxID_OK)};
         if (okButton) {
-            constexpr auto PERMIT_ISSUES{Config::BladeConfig::ISSUE_NO_PRESETARRAY};
-            okButton->Enable((issues & ~PERMIT_ISSUES) == Config::BladeConfig::ISSUE_NONE);
+            constexpr auto PERMISSIBLE_ISSUES{
+                Config::BladeConfig::ISSUE_NO_PRESETARRAY
+            };
+
+            const auto filteredIssues{issues & ~PERMISSIBLE_ISSUES};
+            okButton->Enable(
+                filteredIssues == Config::BladeConfig::ISSUE_NONE
+            );
         }
 
-        auto *issueText{FindWindow(ArrayEditDlg::ID_IssueText)};
+        auto *issueText{FindWindow(ArrayEditDlg::eID_Issue_Text)};
         issueText->Show(issues != Config::BladeConfig::ISSUE_NONE);
         if (issueText->IsShown()) {
             wxString label;
             if (issues & Config::BladeConfig::ISSUE_DUPLICATE_NAME) {
-                label += Config::BladeConfig::issueString(Config::BladeConfig::ISSUE_DUPLICATE_NAME);
+                label += Config::BladeConfig::issueString(
+                    Config::BladeConfig::ISSUE_DUPLICATE_NAME
+                );
             }
             if (issues & Config::BladeConfig::ISSUE_DUPLICATE_ID) {
                 if (not label.empty()) label += '\n';
-                label += Config::BladeConfig::issueString(Config::BladeConfig::ISSUE_DUPLICATE_ID);
+                label += Config::BladeConfig::issueString(
+                    Config::BladeConfig::ISSUE_DUPLICATE_ID
+                );
             }
             if (issues & Config::BladeConfig::ISSUE_NO_PRESETARRAY) {
                 if (not label.empty()) label += '\n';
-                label += Config::BladeConfig::issueString(Config::BladeConfig::ISSUE_NO_PRESETARRAY);
+                label += Config::BladeConfig::issueString(
+                    Config::BladeConfig::ISSUE_NO_PRESETARRAY
+                );
             }
             issueText->SetLabel(label);
         }
@@ -211,14 +224,17 @@ void BladesPage::bindEvents() {
         );
         dlg.buildDone();
 
+        const auto lastIdx{static_cast<int32>(
+            bladeArrays.arraySelection.choices().size() - 1
+        )};
         if (wxID_OK == dlg.ShowModal()) {
-            bladeArrays.arraySelection = static_cast<int32>(bladeArrays.arraySelection.choices().size() - 1);
+            bladeArrays.arraySelection = lastIdx;
         } else {
-            bladeArrays.removeArray(bladeArrays.arraySelection.choices().size() - 1);
+            bladeArrays.removeArray(lastIdx);
         }
     }, ID_AddArray);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        auto res{PCUI::showMessage(
+        auto res{pcui::showMessage(
             "This action cannot be undone!",
             "Remove Blade Array?",
             wxYES_NO | wxNO_DEFAULT
@@ -240,19 +256,25 @@ void BladesPage::bindEvents() {
         mParent->getOpenConfig().bladeArrays.addPowerPinFromEntry();
     }, ID_PinNameAdd);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        auto& config{mParent->getOpenConfig()};
-        if (config.bladeArrays.arraySelection == -1) return;
-        auto& selectedArray{config.bladeArrays.array(config.bladeArrays.arraySelection)};
+        auto& bladeArrays{mParent->getOpenConfig().bladeArrays};
+
+        if (bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{bladeArrays.array(bladeArrays.arraySelection)};
         if (selectedArray.bladeSelection == -1) return;
         auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
         if (selectedBlade.type != Config::Blade::WS281X) return;
+
         selectedBlade.ws281x().addSplit();
-        selectedBlade.ws281x().splitSelect = static_cast<int32>(selectedBlade.ws281x().splits().size() - 1);
+        const auto lastSplitIdx{static_cast<int32>(
+            selectedBlade.ws281x().splits().size() - 1
+        )};
+        selectedBlade.ws281x().splitSelect = lastSplitIdx;
     }, ID_AddSplit);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        auto& config{mParent->getOpenConfig()};
-        if (config.bladeArrays.arraySelection == -1) return;
-        auto& selectedArray{config.bladeArrays.array(config.bladeArrays.arraySelection)};
+        auto& bladeArrays{mParent->getOpenConfig().bladeArrays};
+
+        if (bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{bladeArrays.array(bladeArrays.arraySelection)};
         if (selectedArray.bladeSelection == -1) return;
         auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
         if (selectedBlade.type != Config::Blade::WS281X) return;
@@ -262,7 +284,7 @@ void BladesPage::bindEvents() {
 }
 
 void BladesPage::handleNotification(uint32 id) {
-    bool rebound{id == ID_REBOUND};
+    bool rebound{id == pcui::Notifier::eID_Rebound};
     auto& bladeArrays{mParent->getOpenConfig().bladeArrays};
 
     if (rebound or id == Config::BladeArrays::ID_ARRAY_SELECTION) {
@@ -271,7 +293,11 @@ void BladesPage::handleNotification(uint32 id) {
         FindWindow(ID_RemoveArray)->Enable(hasSelection);
         FindWindow(ID_AddBlade)->Enable(hasSelection);
     }
-    if (rebound or id == Config::BladeArrays::ID_ARRAY_SELECTION or id == Config::BladeArrays::ID_ARRAY_ISSUES) {
+    if (
+            rebound or
+            id == Config::BladeArrays::ID_ARRAY_SELECTION or
+            id == Config::BladeArrays::ID_ARRAY_ISSUES
+       ) {
         const auto issues{bladeArrays.arrayIssues};
 
         auto *issueIcon{FindWindow(ID_IssueIcon)};
@@ -344,12 +370,12 @@ wxSizer *BladesPage::createBladeSelect() {
     auto *bladeSelectSizer{new wxBoxSizer(wxVERTICAL)};
     bladeSelectSizer->SetMinSize(200, -1);
 
-    auto *arraySectSizer{new PCUI::StaticBox(
+    auto *arraySectSizer{new pcui::StaticBox(
         wxVERTICAL, this, _("Blade Array")
     )};
 
     auto *arraySizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *arraySelection{new PCUI::Choice(
+    auto *arraySelection{new pcui::Choice(
         arraySectSizer->childParent(),
         config.bladeArrays.arraySelection
     )};
@@ -362,7 +388,7 @@ wxSizer *BladesPage::createBladeSelect() {
         wxDefaultSize,
         wxBU_EXACTFIT
     )};
-    auto *editArrayButton{new PCUI::Button(
+    auto *editArrayButton{new pcui::Button(
         arraySectSizer->childParent(),
         ID_EditArray,
         wxEmptyString,
@@ -412,10 +438,10 @@ wxSizer *BladesPage::createBladeSelect() {
         _("Blade Awareness...")
     )};
 
-    auto *bladeSelectionSizer{new PCUI::StaticBox(
+    auto *bladeSelectionSizer{new pcui::StaticBox(
         wxVERTICAL, this, _("Blades")
     )};
-    auto *bladeSelect{new PCUI::List(
+    auto *bladeSelect{new pcui::List(
         bladeSelectionSizer->childParent(),
         config.bladeArrays.bladeSelectionProxy
     )};
@@ -471,7 +497,7 @@ wxSizer *BladesPage::createBladeSettings() {
 
     auto *setupSizer{new wxBoxSizer(wxVERTICAL)};
 
-    auto *bladeType{new PCUI::Choice(
+    auto *bladeType{new pcui::Choice(
         this,
         config.bladeArrays.bladeTypeProxy,
         _("Blade Type")
@@ -481,21 +507,21 @@ wxSizer *BladesPage::createBladeSettings() {
             Config::BladeArrays::StarProxy& starProxy,
             const wxString& label
         ) {
-        auto *starSizer{new PCUI::StaticBox(
+        auto *starSizer{new pcui::StaticBox(
             wxVERTICAL,
             this,
             label
         )};
-        auto *starColor{new PCUI::Choice(
+        auto *starColor{new pcui::Choice(
             starSizer->childParent(),
             starProxy.ledProxy
         )};
-        auto *starPowerPin{new PCUI::ComboBox(
+        auto *starPowerPin{new pcui::ComboBox(
             starSizer->childParent(),
             starProxy.powerPinProxy,
             _("Power Pin")
         )};
-        auto *starResistance{new PCUI::Numeric(
+        auto *starResistance{new pcui::Numeric(
             starSizer->childParent(),
             starProxy.resistanceProxy,
             _("Resistance (mOhms)")
@@ -526,7 +552,7 @@ wxSizer *BladesPage::createBladeSettings() {
     simpleSplit2Sizer->Add(starSizer(config.bladeArrays.star3Proxy, _("LED 3")));
     simpleSplit2Sizer->AddSpacer(10);
     simpleSplit2Sizer->Add(starSizer(config.bladeArrays.star4Proxy, _("LED 4")));
-    auto *simpleBrightness{new PCUI::Numeric(
+    auto *simpleBrightness{new pcui::Numeric(
         this,
         config.bladeArrays.simpleBrightnessProxy,
         _("Brightness"),
@@ -540,41 +566,41 @@ wxSizer *BladesPage::createBladeSettings() {
 
     mPixelSizer = new wxBoxSizer(wxHORIZONTAL);
     auto *pixelMainSizer{new wxBoxSizer(wxVERTICAL)};
-    auto *length{new PCUI::Numeric(
+    auto *length{new pcui::Numeric(
         this,
         config.bladeArrays.lengthProxy,
         _("Number of Pixels"),
         wxHORIZONTAL
     )};
     length->SetToolTip(_("The number of pixels in your blade (total)."));
-    auto *dataPin{new PCUI::ComboBox(
+    auto *dataPin{new pcui::ComboBox(
         this,
         config.bladeArrays.dataPinProxy,
         _("Blade Data Pin"),
         wxHORIZONTAL
     )};
     dataPin->SetToolTip(_("The pin name or number used for WS281X data.\nSpecify custom pins by typing in this box."));
-    auto *colorOrder3{new PCUI::Choice(
+    auto *colorOrder3{new pcui::Choice(
         this,
         config.bladeArrays.colorOrder3Proxy,
         _("Color Order"),
         wxHORIZONTAL
     )};
     colorOrder3->SetToolTip(_("The order of colors for your blade.\nMost of the time this can be left as \"GRB\"."));
-    auto *colorOrder4{new PCUI::Choice(
+    auto *colorOrder4{new pcui::Choice(
         this,
         config.bladeArrays.colorOrder4Proxy,
         _("Color Order"),
         wxHORIZONTAL
     )};
     colorOrder4->SetToolTip(_("The order of colors for your blade.\nMost of the time this can be left as \"GRBW\"."));
-    auto *hasWhite{new PCUI::CheckBox(
+    auto *hasWhite{new pcui::CheckBox(
         this,
         config.bladeArrays.hasWhiteProxy,
         0,
         _("LEDs Have White Channel")
     )};
-    auto *whiteUseRGB{new PCUI::CheckBox(
+    auto *whiteUseRGB{new pcui::CheckBox(
         this,
         config.bladeArrays.useRGBWithWhiteProxy,
         0,
@@ -582,14 +608,14 @@ wxSizer *BladesPage::createBladeSettings() {
     )};
     whiteUseRGB->SetToolTip(_("Use the RGB channels alongside the White channel to produce white light.\nThis can result in a brighter blade, but at the cost of higher battery usage and a less \"pure\" white."));
 
-    auto *pixelBrightness{new PCUI::Numeric(
+    auto *pixelBrightness{new pcui::Numeric(
         this,
         config.bladeArrays.pixelBrightnessProxy,
         _("Brightness"),
         wxHORIZONTAL
     )};
 
-    auto *pixelPowerPins{new PCUI::CheckList(
+    auto *pixelPowerPins{new pcui::CheckList(
         this,
         config.bladeArrays.powerPinProxy,
         _("Power Pins")
@@ -598,7 +624,7 @@ wxSizer *BladesPage::createBladeSettings() {
     pixelPowerPins->SetToolTip(_("The power pins to use for this blade.\nWS281X blades can have as many as are desired (though 2 is generally enough for most blades)"));
 
     auto *pinNameSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *powerPinName{new PCUI::Text(
+    auto *powerPinName{new pcui::Text(
         this,
         config.bladeArrays.powerPinNameEntry,
         wxTE_PROCESS_ENTER,
@@ -635,10 +661,10 @@ wxSizer *BladesPage::createBladeSettings() {
     pixelMainSizer->AddSpacer(5);
     pixelMainSizer->Add(pinNameSizer, wxSizerFlags().Expand());
 
-    auto *pixelSplitSizer{new PCUI::StaticBox(
+    auto *pixelSplitSizer{new pcui::StaticBox(
         wxVERTICAL, this, _("SubBlades")
     )};
-    auto *splitSelect{new PCUI::Choice(
+    auto *splitSelect{new pcui::Choice(
         pixelSplitSizer->childParent(),
         config.bladeArrays.splitSelectionProxy
     )};
@@ -663,7 +689,7 @@ wxSizer *BladesPage::createBladeSettings() {
     splitButtonSizer->AddSpacer(5);
     splitButtonSizer->Add(removeSplit, wxSizerFlags(1));
 
-    auto *splitType{new PCUI::Radios(
+    auto *splitType{new pcui::Radios(
         pixelSplitSizer->childParent(),
         config.bladeArrays.splitTypeProxy,
         { _("Standard"), _("Reverse"), _("Stride"), _("ZigZag"), _("List") },
@@ -678,12 +704,12 @@ wxSizer *BladesPage::createBladeSettings() {
     ));
     
     auto *splitStartEndSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *splitStart{new PCUI::Numeric(
+    auto *splitStart{new pcui::Numeric(
         pixelSplitSizer->childParent(),
         config.bladeArrays.splitStartProxy,
         _("Start")
     )};
-    auto *splitEnd{new PCUI::Numeric(
+    auto *splitEnd{new pcui::Numeric(
         pixelSplitSizer->childParent(),
         config.bladeArrays.splitEndProxy,
         _("End")
@@ -692,18 +718,18 @@ wxSizer *BladesPage::createBladeSettings() {
     splitStartEndSizer->AddSpacer(5);
     splitStartEndSizer->Add(splitEnd, wxSizerFlags(1));
 
-    auto *splitLength{new PCUI::Numeric(
+    auto *splitLength{new pcui::Numeric(
         pixelSplitSizer->childParent(),
         config.bladeArrays.splitLengthProxy,
         _("Length")
     )};
-    auto *splitSegments{new PCUI::Numeric(
+    auto *splitSegments{new pcui::Numeric(
         pixelSplitSizer->childParent(),
         config.bladeArrays.splitSegmentsProxy,
         _("Segments")
     )};
     splitSegments->SetToolTip(_("Stride length or number of ZigZag columns"));
-    auto *splitList{new PCUI::Text(
+    auto *splitList{new pcui::Text(
         pixelSplitSizer->childParent(),
         config.bladeArrays.splitListProxy,
         0,
@@ -711,7 +737,7 @@ wxSizer *BladesPage::createBladeSettings() {
         _("Pixel List")
     )};
     splitList->SetToolTip(_("Data goes along each LED according to their order in the list"));
-    auto *splitBrightness{new PCUI::Numeric(
+    auto *splitBrightness{new pcui::Numeric(
         pixelSplitSizer->childParent(),
         config.bladeArrays.splitBrightnessProxy,
         _("Brightness"),
@@ -724,9 +750,13 @@ wxSizer *BladesPage::createBladeSettings() {
     pixelSplitSizer->AddSpacer(10);
     pixelSplitSizer->Add(splitType, wxSizerFlags().Expand());
     pixelSplitSizer->AddSpacer(10);
-    pixelSplitSizer->Add(splitStartEndSizer, wxSizerFlags().Expand().Border(wxBOTTOM, 5));
+    pixelSplitSizer->Add(
+        splitStartEndSizer, wxSizerFlags().Expand().Border(wxBOTTOM, 5)
+    );
     pixelSplitSizer->Add(splitLength, wxSizerFlags().Expand());
-    pixelSplitSizer->Add(splitSegments, wxSizerFlags().Expand().Border(wxTOP, 10));
+    pixelSplitSizer->Add(
+        splitSegments, wxSizerFlags().Expand().Border(wxTOP, 10)
+    );
     pixelSplitSizer->Add(splitList, wxSizerFlags().Expand());
     pixelSplitSizer->AddSpacer(10);
     pixelSplitSizer->Add(splitBrightness, wxSizerFlags().Expand());
@@ -750,3 +780,4 @@ wxSizer *BladesPage::createBladeSettings() {
 
     return settingsSizer;
 }
+

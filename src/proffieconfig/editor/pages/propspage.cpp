@@ -1,7 +1,7 @@
 #include "propspage.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2023-2025 Ryan Ogurek
+ * Copyright (C) 2023-2026 Ryan Ogurek
  *
  * proffieconfig/editor/pages/propspage.cpp
  *
@@ -38,7 +38,7 @@ PropsPage::PropsPage(EditorWindow *parent) :
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
     mTopSizer = new wxBoxSizer(wxHORIZONTAL);
-    auto *propSelection {new PCUI::Choice(
+    auto *propSelection {new pcui::Choice(
         this,
         config.propSelection,
         _("Prop File")
@@ -103,7 +103,10 @@ void PropsPage::handleNotification(uint32 id) {
     if (id == Config::Config::ID_PROPSELECTION) {
         showSelectedProp();
     }
-    if (id == ID_REBOUND or id == Config::Config::ID_PROPUPDATE) {
+    if (
+            id == pcui::Notifier::eID_Rebound or
+            id == Config::Config::ID_PROPUPDATE
+       ) {
         loadProps();
     }
 }
@@ -115,7 +118,9 @@ void PropsPage::setToActualMinSize() {
 void PropsPage::setToActualBestSize() {
     auto minSize{GetSizer()->CalcMin()};
     auto propsBestVirtualSize{
-        mPropsWindow->GetSizer() ? mPropsWindow->GetSizer()->CalcMin() : wxSize{0, 0} +
+        mPropsWindow->GetSizer() 
+            ? mPropsWindow->GetSizer()->CalcMin() 
+            : wxSize{0, 0} +
         mPropsWindow->GetWindowBorderSize()
     };
     SetMinSize({
@@ -187,13 +192,19 @@ void PropsPage::loadProps() {
     ) -> void {
         for (const auto& child : children) {
             int32 lastSpacer{0};
-            if (const auto *ptr = std::get_if<Versions::PropSettingBase *>(&child)) {
-                auto& setting{**ptr};
+
+            const auto *const settingPtr{
+                std::get_if<Versions::PropSettingBase *>(&child)
+            };
+            if (settingPtr) {
+                auto& setting{**settingPtr};
                 wxWindow *windowToAdd{nullptr};
                 int32 spacer{0};
-                if (Versions::PropSettingType::TOGGLE == setting.settingType) {
+
+                using enum Versions::PropSettingType;
+                if (TOGGLE == setting.settingType) {
                     auto& toggle{static_cast<Versions::PropToggle&>(setting)};
-                    auto *control{new PCUI::CheckBox(
+                    auto *control{new pcui::CheckBox(
                         parent,
                         toggle.value,
                         0,
@@ -201,7 +212,7 @@ void PropsPage::loadProps() {
                     )};
                     control->SetToolTip(toggle.description);
                     windowToAdd = control;
-                } else if (Versions::PropSettingType::OPTION == setting.settingType) {
+                } else if (OPTION == setting.settingType) {
                     auto& option{static_cast<Versions::PropOption&>(setting)};
 
                     vector<string> labels;
@@ -210,7 +221,7 @@ void PropsPage::loadProps() {
                         labels.push_back(selection->name);
                     }
 
-                    auto *control{new PCUI::Radios(
+                    auto *control{new pcui::Radios(
                         parent,
                         option.selection,
                         labels,
@@ -218,23 +229,33 @@ void PropsPage::loadProps() {
                     )};
 
                     control->SetToolTip(option.description);
-                    for (auto idx{0}; idx < option.selections().size(); ++idx) {
-                        control->SetToolTip(idx, option.selections()[idx]->description);
+                    for (
+                            auto idx{0};
+                            idx < option.selections().size();
+                            ++idx
+                        ) {
+                        control->SetToolTip(
+                            idx, option.selections()[idx]->description
+                        );
                     }
                     windowToAdd = control;
                     spacer = 10;
-                } else if (Versions::PropSettingType::NUMERIC == setting.settingType) {
-                    auto& numeric{static_cast<Versions::PropNumeric&>(setting)};
-                    auto *control{new PCUI::Numeric(
+                } else if (NUMERIC == setting.settingType) {
+                    auto& numeric{static_cast<Versions::PropNumeric&>(
+                        setting
+                    )};
+                    auto *control{new pcui::Numeric(
                         parent,
                         numeric.value,
                         numeric.name
                     )};
                     control->SetToolTip(numeric.description);
                     windowToAdd = control;
-                } else if (Versions::PropSettingType::DECIMAL == setting.settingType) {
-                    auto& decimal{static_cast<Versions::PropDecimal&>(setting)};
-                    auto *control{new PCUI::Decimal(
+                } else if (DECIMAL == setting.settingType) {
+                    auto& decimal{static_cast<Versions::PropDecimal&>(
+                        setting
+                    )};
+                    auto *control{new pcui::Decimal(
                         parent,
                         decimal.value,
                         decimal.name
@@ -250,20 +271,36 @@ void PropsPage::loadProps() {
                 if (spacer > 0) sizer->AddSpacer(spacer);
                 sizer->Add(windowToAdd, 0, wxEXPAND);
                 lastSpacer = spacer;
-            } else if (const auto *ptr = std::get_if<Versions::PropLayout>(&child)) {
+
+                continue;
+            }
+
+            const auto *const layoutPtr{
+                std::get_if<Versions::PropLayout>(&child)
+            };
+            if (layoutPtr) {
                 if (not sizer->IsEmpty()) sizer->AddSpacer(10);
-                if (ptr->label.empty()) {
-                    auto *newSizer{new wxBoxSizer(ptr->axis)};
-                    self(self, ptr->children, newSizer, parent);
+                if (layoutPtr->label.empty()) {
+                    auto *newSizer{new wxBoxSizer(layoutPtr->axis)};
+                    self(self, layoutPtr->children, newSizer, parent);
                     sizer->Add(newSizer, 0, wxEXPAND);
                 } else {
-                    auto *box{new PCUI::StaticBox(ptr->axis, parent, ptr->label)};
-                    self(self, ptr->children, box->sizer(), box->childParent());
+                    auto *box{new pcui::StaticBox(
+                        layoutPtr->axis, parent, layoutPtr->label
+                    )};
+                    self(
+                        self,
+                        layoutPtr->children,
+                        box->sizer(),
+                        box->childParent()
+                    );
                     sizer->Add(box, 0, wxEXPAND);
                 }
-            } else {
-                assert(0);
-            }
+
+                continue;
+            } 
+
+            assert(0);
         }
     }};
 
@@ -271,8 +308,14 @@ void PropsPage::loadProps() {
         auto *sizer{mProps.emplace_back(new wxBoxSizer(prop->layout().axis))};
         // Top layout (as of writing) should never have label
 
-        processChildren(processChildren, prop->layout().children, sizer, mPropsWindow);
+        processChildren(
+            processChildren,
+            prop->layout().children,
+            sizer,
+            mPropsWindow
+        );
     }
 
     showSelectedProp();
 }
+

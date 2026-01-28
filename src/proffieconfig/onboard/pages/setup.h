@@ -45,7 +45,7 @@ public:
         ID_FAILED,
         ID_STATUS,
     };
-    PCUI::Notifier notifier;
+    pcui::Notifier notifier;
 
     wxStaticText *loadingText{nullptr};
 

@@ -68,6 +68,19 @@ struct UI_EXPORT ChoiceData : ControlData {
         mPersistence = persistence;
     }
 
+    /**
+     * Enum Extensions
+     */
+    template<typename T> requires std::is_enum_v<T>
+    ChoiceData& operator=(T e) {
+        return *this = static_cast<std::underlying_type_t<T>>(e);
+    }
+
+    template<typename T> requires std::is_enum_v<T>
+    bool operator==(T e) {
+        return *this == static_cast<std::underlying_type_t<T>>(e);
+    }
+
 private:
     friend class Choice;
     friend class List;

@@ -75,7 +75,7 @@ void pcui::FilePicker::create(
 }
 
 void pcui::FilePicker::onUIUpdate(uint32 id) {
-    if (id == eID_Rebound or id == FilePickerData::eID_Path) {
+    if (id == Notifier::eID_Rebound or id == FilePickerData::eID_Path) {
         pControl->SetPath(static_cast<filepath>(*data()).string());
     }
 }

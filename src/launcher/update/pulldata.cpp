@@ -51,7 +51,7 @@ void verifyBundles(const std::map<Update::ItemID, Update::Item>& items, std::map
 
 } // namespace
 
-bool Update::pullData(PCUI::ProgressDialog *prog, Log::Branch& lBranch) {
+bool Update::pullData(pcui::ProgressDialog *prog, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Update::pullData()")};
 
     bool requestComplete{false};
@@ -108,7 +108,7 @@ bool Update::pullData(PCUI::ProgressDialog *prog, Log::Branch& lBranch) {
         const auto statusCode{request.GetResponse().GetStatus()};
         logger.warn("Data pull failed: " + std::to_string(statusCode));
         if (statusCode == 404) {
-            PCUI::showMessage("Check if a custom update channel is being used.\n\nIf not, this is a bug, please contact me.", "Manifest File Invalid");
+            pcui::showMessage("Check if a custom update channel is being used.\n\nIf not, this is a bug, please contact me.", "Manifest File Invalid");
         }
         return false;
     } 
@@ -117,7 +117,7 @@ bool Update::pullData(PCUI::ProgressDialog *prog, Log::Branch& lBranch) {
     return true;
 }
 
-optional<Update::Data> Update::parseData(PCUI::ProgressDialog *prog, Log::Branch& lBranch, bool heedMessages) {
+optional<Update::Data> Update::parseData(pcui::ProgressDialog *prog, Log::Branch& lBranch, bool heedMessages) {
     auto& logger{lBranch.createLogger("Update::pullData()")};
 
     if (not prog->Update(20, "Parsing manifest...")) {

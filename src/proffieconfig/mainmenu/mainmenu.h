@@ -33,15 +33,15 @@ class Overview;
 
 } // namespace Onboard
 
-class MainMenu : public PCUI::Frame, private PCUI::NotifyReceiver {
+class MainMenu : public pcui::Frame, private pcui::NotifyReceiver {
 public:
     static MainMenu* instance;
     MainMenu(wxWindow * = nullptr);
 
     void removeEditor(EditorWindow *);
 
-    PCUI::ChoiceData boardSelection;
-    PCUI::ChoiceData configSelection;
+    pcui::ChoiceData boardSelection;
+    pcui::ChoiceData configSelection;
 
     enum {
         // on macOS menu items cannot have ID 0
@@ -74,7 +74,7 @@ public:
 private:
     Config::Config *mConfigNeedShown{nullptr};
 
-    PCUI::Notifier mNotifyData;
+    pcui::Notifier mNotifyData;
     vector<EditorWindow *> mEditors;
 
     friend Onboard::Overview;

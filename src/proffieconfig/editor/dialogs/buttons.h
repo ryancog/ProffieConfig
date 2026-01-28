@@ -27,7 +27,7 @@
 
 #include "../editorwindow.h"
 
-class ButtonsDlg : public wxDialog, PCUI::NotifyReceiver {
+class ButtonsDlg : public wxDialog, pcui::NotifyReceiver {
 public:
     ButtonsDlg(EditorWindow*);
 
@@ -53,7 +53,7 @@ private:
     static wxWindow *info(wxWindow*);
 };
 
-class ButtonsDlg::ButtonPanel : public PCUI::StaticBox {
+class ButtonsDlg::ButtonPanel : public pcui::StaticBox {
 public:
     ButtonPanel(
         wxScrolledWindow *,

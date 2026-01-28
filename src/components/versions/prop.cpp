@@ -34,10 +34,10 @@ vector<std::unique_ptr<Versions::PropSettingBase>> parseSettings(
 );
 
 struct CommonData {
-    string name;
-    string description;
-    vector<string> required;
-    vector<string> requiredAny;
+    string name_;
+    string description_;
+    vector<string> required_;
+    vector<string> requiredAny_;
 };
 
 /**
@@ -80,7 +80,7 @@ Versions::PropToggle::PropToggle(
     },
     disables{std::move(disables)} {
     value.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ToggleData::ID_VALUE) return;
+        if (id != pcui::ToggleData::eID_Value) return;
 
         pProp.recalculateRequires();
     });
@@ -109,7 +109,7 @@ Versions::PropOption::PropOption(
         ));
     }
     selection.setUpdateHandler([prop](uint32 id) mutable {
-        if (id != PCUI::RadiosData::ID_SELECTION) return;
+        if (id != pcui::RadiosData::eID_Selection) return;
 
         prop.recalculateRequires();
     });
@@ -761,11 +761,11 @@ vector<std::unique_ptr<Versions::PropSettingBase>> parseSettings(
 
         ret.emplace_back(new Versions::PropToggle(
             prop,
-            settingData.name,
+            settingData.name_,
             *toggleEntry->label,
-            settingData.description,
-            settingData.required,
-            settingData.requiredAny,
+            settingData.description_,
+            settingData.required_,
+            settingData.requiredAny_,
             parseDisables(entryMap)
         ));
     }
@@ -796,11 +796,11 @@ vector<std::unique_ptr<Versions::PropSettingBase>> parseSettings(
             const auto& [settingData, entryMap]{*commonData};
 
             Versions::PropOption::PropSelectionData selectionData{
-                .name = settingData.name,
+                .name = settingData.name_,
                 .define = selectionEntry->label.value_or(""),
-                .description = settingData.description,
-                .required = settingData.required,
-                .requiredAny = settingData.requiredAny,
+                .description = settingData.description_,
+                .required = settingData.required_,
+                .requiredAny = settingData.requiredAny_,
                 .disables = parseDisables(entryMap),
             };
 
@@ -810,8 +810,8 @@ vector<std::unique_ptr<Versions::PropSettingBase>> parseSettings(
         ret.emplace_back(new Versions::PropOption(
             prop,
             *optionEntry->label,
-            settingData.name,
-            settingData.description,
+            settingData.name_,
+            settingData.description_,
             selectionDatas
         ));
     }
@@ -836,40 +836,40 @@ vector<std::unique_ptr<Versions::PropSettingBase>> parseSettings(
         if (minEntry and minEntry->value) {
             auto val{Utils::doStringMath(*minEntry->value)};
             if (val) min = static_cast<int32>(*val);
-            else logger.warn("Could not parse " + settingData.name + " min!");
+            else logger.warn("Could not parse " + settingData.name_ + " min!");
         }
 
         const auto maxEntry{entryMap.find("MAX")};
         if (maxEntry and maxEntry->value) {
             auto val{Utils::doStringMath(*maxEntry->value)};
             if (val) max = static_cast<int32>(*val);
-            else logger.warn("Could not parse " + settingData.name + " max!");
+            else logger.warn("Could not parse " + settingData.name_ + " max!");
         }
 
         const auto incrementEntry{entryMap.find("INCREMENT")};
         if (incrementEntry and incrementEntry->value) {
             auto val{Utils::doStringMath(*incrementEntry->value)};
             if (val) increment = static_cast<int32>(*val);
-            else logger.warn("Could not parse " + settingData.name + " increment!");
+            else logger.warn("Could not parse " + settingData.name_ + " increment!");
         }
 
         const auto defaultEntry{entryMap.find("DEFAULT")};
         if (defaultEntry and defaultEntry->value) {
             auto val{Utils::doStringMath(*defaultEntry->value)};
             if (val) defaultVal = static_cast<int32>(*val);
-            else logger.warn("Could not parse " + settingData.name + " default!");
+            else logger.warn("Could not parse " + settingData.name_ + " default!");
         }
 
         if (min > max) {
-            logger.warn("Setting " + settingData.name + " has a min value greater than max, this setting will be ignored!");
+            logger.warn("Setting " + settingData.name_ + " has a min value greater than max, this setting will be ignored!");
         } else {
             ret.emplace_back(new Versions::PropNumeric(
                 prop,
-                settingData.name,
+                settingData.name_,
                 *numericEntry->label,
-                settingData.description,
-                settingData.required,
-                settingData.requiredAny,
+                settingData.description_,
+                settingData.required_,
+                settingData.requiredAny_,
                 min,
                 max,
                 increment,
@@ -898,40 +898,40 @@ vector<std::unique_ptr<Versions::PropSettingBase>> parseSettings(
         if (minEntry and minEntry->value) {
             auto val{Utils::doStringMath(*minEntry->value)};
             if (val) min = *val;
-            else logger.warn("Could not parse " + settingData.name + " min!");
+            else logger.warn("Could not parse " + settingData.name_ + " min!");
         }
 
         const auto maxEntry{entryMap.find("MAX")};
         if (maxEntry and maxEntry->value) {
             auto val{Utils::doStringMath(*maxEntry->value)};
             if (val) max = *val;
-            else logger.warn("Could not parse " + settingData.name + " max!");
+            else logger.warn("Could not parse " + settingData.name_ + " max!");
         }
 
         const auto incrementEntry{entryMap.find("INCREMENT")};
         if (incrementEntry and incrementEntry->value) {
             auto val{Utils::doStringMath(*incrementEntry->value)};
             if (val) increment = *val;
-            else logger.warn("Could not parse " + settingData.name + " increment!");
+            else logger.warn("Could not parse " + settingData.name_ + " increment!");
         }
 
         const auto defaultEntry{entryMap.find("DEFAULT")};
         if (defaultEntry and defaultEntry->value) {
             auto val{Utils::doStringMath(*defaultEntry->value)};
             if (val) defaultVal = *val;
-            else logger.warn("Could not parse " + settingData.name + " default!");
+            else logger.warn("Could not parse " + settingData.name_ + " default!");
         }
 
         if (min > max) {
-            logger.warn("Setting " + settingData.name + " has a min value greater than max, this setting will be ignored!");
+            logger.warn("Setting " + settingData.name_ + " has a min value greater than max, this setting will be ignored!");
         } else {
             ret.emplace_back(new Versions::PropDecimal(
                 prop,
-                settingData.name,
+                settingData.name_,
                 *decimalEntry->label,
-                settingData.description,
-                settingData.required,
-                settingData.requiredAny,
+                settingData.description_,
+                settingData.required_,
+                settingData.requiredAny_,
                 min,
                 max,
                 increment,
@@ -969,25 +969,25 @@ optional<std::pair<CommonData, PConf::HashedData>> parseSettingCommon(
             return nullopt;
         }
     } else {
-        commonData.name = *nameEntry->value;
+        commonData.name_ = *nameEntry->value;
     }
     if (nameEntry) data.erase(nameEntry);
 
     const auto descEntry{data.find("DESCRIPTION")};
     if (descEntry and descEntry->value) {
-        commonData.description = *descEntry->value;
+        commonData.description_ = *descEntry->value;
         data.erase(descEntry);
     }
 
     const auto requireAnyEntry{data.find("REQUIREANY")};
     if (requireAnyEntry and requireAnyEntry->value) {
-        commonData.requiredAny = PConf::valueAsList(requireAnyEntry->value);
+        commonData.requiredAny_ = PConf::valueAsList(requireAnyEntry->value);
         data.erase(requireAnyEntry);
     }
 
     const auto requiredEntry{data.find("REQUIRE")};
     if (requiredEntry and requiredEntry->value) {
-        commonData.required = PConf::valueAsList(requiredEntry->value);
+        commonData.required_ = PConf::valueAsList(requiredEntry->value);
         data.erase(requiredEntry);
     }
 

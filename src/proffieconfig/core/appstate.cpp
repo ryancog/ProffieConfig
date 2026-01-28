@@ -146,7 +146,7 @@ void doNecessaryMigrations() {
          */
         auto errStr{Versions::resetToDefault(true)};
         if (errStr) {
-            PCUI::showMessage(
+            pcui::showMessage(
                 _("Versions Download Failed"),
                 _("You should visit the versions manager to retry fetching the defaults soon.") + "\n\n" + *errStr,
                 wxOK | wxCENTER | wxICON_WARNING
