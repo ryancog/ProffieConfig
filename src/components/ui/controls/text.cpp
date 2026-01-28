@@ -194,6 +194,11 @@ void pcui::Text::onUIUpdate(uint32 id) {
         pControl->SetInsertionPoint(data()->pInsertionPoint);
         data()->pInsertionPoint = pControl->GetInsertionPoint();
     }
+
+    if (rebound) {
+        pControl->DiscardEdits();
+        pControl->EmptyUndoBuffer();
+    }
 }
 
 void pcui::Text::onUnbound() {
