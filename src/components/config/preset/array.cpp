@@ -190,6 +190,7 @@ Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
 
     selection.setPersistence(pcui::ChoiceData::Persistence::Index);
     styleDisplay.setPersistence(pcui::ChoiceData::Persistence::Index);
+    styleSelectProxy.setPersistence(pcui::ChoiceDataProxy::Persistence::Index);
 
     selection.setUpdateHandler([this](uint32 id) {
         if (id == pcui::ChoiceData::eID_Choices) {
