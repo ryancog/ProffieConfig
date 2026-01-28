@@ -89,7 +89,34 @@ private:
     Persistence mPersistence{Persistence::None};
 };
 
-using ChoiceDataProxy = ControlDataProxy<ChoiceData>;
+struct ChoiceDataProxy : ControlDataProxy<ChoiceData> {
+    enum class Persistence {
+        None,
+        Index,
+    };
+
+    /**
+     * Attempt to maintain selection across calls to bind()
+     * Disabled by default.
+     */
+    void setPersistence(Persistence persistence) {
+        mPersistence = persistence;
+    }
+
+    void bind(ChoiceData& other) {
+        if (data() and mPersistence == Persistence::Index) {
+            auto& old{*data()};
+            auto oldSelection{static_cast<int32>(old)};
+            auto numNew{other.choices().size()};
+
+            if (oldSelection < numNew) other = oldSelection;
+        }
+        ControlDataProxy::bind(other);
+    }
+
+private:
+    Persistence mPersistence{Persistence::None};
+};
 
 class UI_EXPORT Choice : public ControlBase<
                          Choice,
