@@ -64,7 +64,7 @@ struct VERSIONS_EXPORT VersionedProp {
     bool addVersion();
     bool removeVersion(uint32 idx);
 
-    using SupportedVersionList = vector<std::unique_ptr<PCUI::VersionData>>;
+    using SupportedVersionList = vector<std::unique_ptr<pcui::VersionData>>;
 
     [[nodiscard]] const SupportedVersionList& supportedVersions() {
         return mSupportedVersions;

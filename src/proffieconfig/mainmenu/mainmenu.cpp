@@ -59,7 +59,7 @@
 
 MainMenu *MainMenu::instance{nullptr};
 MainMenu::MainMenu(wxWindow* parent) : 
-    PCUI::Frame(
+    pcui::Frame(
         parent,
         AppState::ID_MainMenu,
         "ProffieConfig",
@@ -68,8 +68,8 @@ MainMenu::MainMenu(wxWindow* parent) :
         wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)
     ) {
     NotifyReceiver::create(this, mNotifyData);
-    boardSelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_STRING);
-    configSelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_STRING);
+    boardSelection.setPersistence(pcui::ChoiceData::Persistence::String);
+    configSelection.setPersistence(pcui::ChoiceData::Persistence::String);
 
     createUI();
     createMenuBar();
@@ -84,7 +84,7 @@ void MainMenu::bindEvents() {
     auto promptClose{[this]() -> bool {
         for (auto *editor : mEditors) {
             if (not editor->getOpenConfig().isSaved()) {
-                auto res{PCUI::showMessage(
+                auto res{pcui::showMessage(
                     _("There is at least one editor open with unsaved changes, are you sure you want to exit?") +
                     "\n\n"+
                     _("All unsaved changes will be lost!"),
@@ -111,7 +111,7 @@ void MainMenu::bindEvents() {
         Progress::handleEvent(&event); 
     });
     Bind(Misc::EVT_MSGBOX, [&](Misc::MessageBoxEvent& event) {
-        PCUI::showMessage(event.message, event.caption, event.style, this);
+        pcui::showMessage(event.message, event.caption, event.style, this);
     });
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
@@ -120,7 +120,7 @@ void MainMenu::bindEvents() {
             "Config: v" + string{Config::version()} + "\n"
             "Log: v" + Log::version() + "\n"
             "PConf: v" + PConf::version() + "\n"
-            "PCUI: v" + PCUI::version() + "\n"
+            "pcui: v" + pcui::version() + "\n"
             "Utils: v" + Utils::version() + "\n"
             "Versions: v" + Versions::version() + "\n"
             "Versions Manager: v" + VersionsManager::version() + "\n"
@@ -153,12 +153,22 @@ void MainMenu::bindEvents() {
     }, ID_Logs);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
-        PCUI::showMessage(COPYRIGHT_NOTICE, "ProffieConfig Copyright Notice", wxOK | wxICON_INFORMATION);
+        pcui::showMessage(
+            COPYRIGHT_NOTICE,
+            "ProffieConfig Copyright Notice",
+            wxOK | wxICON_INFORMATION
+        );
     }, ID_Copyright);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
-        if (not mEditors.empty() and not AppState::getPreference(AppState::HIDE_EDITOR_MANAGE_VERSIONS_WARN)) {
-            auto res{PCUI::showHideablePrompt(
+        const auto warnPref{AppState::getPreference(
+            AppState::HIDE_EDITOR_MANAGE_VERSIONS_WARN
+        )};
+        if (
+                not mEditors.empty() and
+                not warnPref
+            ) {
+            auto res{pcui::showHideablePrompt(
                 _("Although version management can be done with editors open, some information may be lost when adding/removing props."),
                 _("Please Close Editors"),
                 this,
@@ -167,8 +177,11 @@ void MainMenu::bindEvents() {
                 wxEmptyString,
                 _("Proceed")
             )};
-            AppState::setPreference(AppState::HIDE_EDITOR_MANAGE_VERSIONS_WARN, res.wantsToHide);
-            if (res.result != wxID_OK) return;
+            AppState::setPreference(
+                AppState::HIDE_EDITOR_MANAGE_VERSIONS_WARN,
+                res.wantsToHide_
+            );
+            if (res.result_ != wxID_OK) return;
         }
 
         VersionsManager::open(this, AppState::ID_VersionsManager);
@@ -210,7 +223,11 @@ void MainMenu::bindEvents() {
             choices.erase(std::next(choices.begin()), std::prev(choices.end()));
             choices.reserve(boards.size() + 2);
 #           endif
-            choices.insert(std::next(choices.begin()), boards.begin(), boards.end());
+            choices.insert(
+                std::next(choices.begin()),
+                boards.begin(),
+                boards.end()
+            );
             boardSelection.setChoices(std::move(choices));
 
             progDialog->emitEvent(100, _("Done"));
@@ -285,23 +302,24 @@ void MainMenu::bindEvents() {
         }}.detach();
     }, ID_ApplyChanges);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) { 
-        if (not SerialMonitor::instance) SerialMonitor::instance = new SerialMonitor(this, boardSelection);
-        else {
+        if (not SerialMonitor::instance) {
+            SerialMonitor::instance = new SerialMonitor(this, boardSelection);
+        } else {
             SerialMonitor::instance->Show();
             SerialMonitor::instance->Raise();
         }
     }, ID_OpenSerial);
 
     configSelection.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+        if (id != pcui::ChoiceData::eID_Selection) return;
         mNotifyData.notify(ID_ConfigSelection);
     });
     boardSelection.setUpdateHandler([this](uint32 id) { 
-        if (id == PCUI::ChoiceData::ID_CHOICES and boardSelection == -1) {
+        if (id == pcui::ChoiceData::eID_Choices and boardSelection == -1) {
             boardSelection = 0;
             return;
         }
-        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+        if (id != pcui::ChoiceData::eID_Selection) return;
 
         mNotifyData.notify(ID_BoardSelection);
     });
@@ -313,7 +331,7 @@ void MainMenu::bindEvents() {
 
             auto res{Config::open(configSelection)};
             if (auto *ptr = std::get_if<string>(&res)) {
-                PCUI::showMessage(*ptr, _("Cannot Edit Config"));
+                pcui::showMessage(*ptr, _("Cannot Edit Config"));
                 return;
             }
 
@@ -327,15 +345,15 @@ void MainMenu::bindEvents() {
 
         mNotifyData.notify(ID_AsyncStart);
 
-        auto importPath{static_cast<filepath>(addDialog.importPath)};
-        auto name{static_cast<string>(addDialog.configName)};
+        auto importPath{static_cast<filepath>(addDialog.importPath_)};
+        auto name{static_cast<string>(addDialog.configName_)};
         std::thread{[this, importPath, name]() {
             Defer defer{[&]() { mNotifyData.notify(ID_AsyncDone); }};
 
             if (importPath.empty()) {
                 auto res{Config::open(name)};
                 if (auto *err = std::get_if<string>(&res)) {
-                    PCUI::showMessage(*err, _("Failed Creating Config"));
+                    pcui::showMessage(*err, _("Failed Creating Config"));
                     return;
                 }
                 auto& config{*std::get<Config::Config *>(res)};
@@ -344,7 +362,7 @@ void MainMenu::bindEvents() {
             } else {
                 auto err{Config::import(name, importPath)};
                 if (err) {
-                    PCUI::showMessage(*err, _("Cannot Import Config"));
+                    pcui::showMessage(*err, _("Cannot Import Config"));
                     return;
                 }
             }
@@ -354,8 +372,8 @@ void MainMenu::bindEvents() {
         }}.detach();
     }, ID_AddConfig);
     Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
-        if (PCUI::showMessage(
-                _("Are you sure you want to deleted the selected configuration?") + 
+        if (pcui::showMessage(
+                _("Are you sure you want to deleted the selected configuration?") +
                 "\n\n" +
                 _("This action cannot be undone!"),
                 _("Delete Config"),
@@ -387,17 +405,23 @@ void MainMenu::updateConfigChoices() {
 }
 
 void MainMenu::handleNotification(uint32 id) {
-    bool rebound{id == ID_REBOUND};
+    bool rebound{id == pcui::Notifier::eID_Rebound};
     if (rebound or id == ID_ConfigSelection) {
         FindWindow(ID_EditConfig)->Enable(configSelection != 0);
         FindWindow(ID_RemoveConfig)->Enable(configSelection != 0);
-        FindWindow(ID_ApplyChanges)->Enable(configSelection != 0 and boardSelection != 0);
+        FindWindow(ID_ApplyChanges)->Enable(
+            configSelection != 0 and boardSelection != 0
+        );
     } 
     if (rebound or id == ID_BoardSelection) {
-        FindWindow(ID_ApplyChanges)->Enable(configSelection != 0 and boardSelection != 0);
+        FindWindow(ID_ApplyChanges)->Enable(
+            configSelection != 0 and boardSelection != 0
+        );
+
         bool canOpenSerial{boardSelection != 0};
 #       if defined _WIN32 or defined __linux__
-        canOpenSerial &= boardSelection != boardSelection.choices().size() - 1;
+        const auto bootloaderIdx{boardSelection.choices().size() - 1};
+        canOpenSerial &= boardSelection != bootloaderIdx
 #       endif
         FindWindow(ID_OpenSerial)->Enable(canOpenSerial);
     }
@@ -432,7 +456,6 @@ void MainMenu::handleNotification(uint32 id) {
 
 void MainMenu::createMenuBar() {
     auto *file{new wxMenu};
-    // file->Append(ID_ReRunSetup, _("Re-Run First-Time Setup..."), _("Install Proffieboard Dependencies and View Tutorial"));
     file->Append(ID_ManageVersions, _("Manage Versions..."));
     file->Append(ID_UpdateManifest, _("Update Channel..."));
     file->AppendSeparator();
@@ -447,9 +470,23 @@ void MainMenu::createMenuBar() {
 
     const auto helpStr{_("&Help")};
     const auto helpIdx{menuBar->FindMenu(helpStr)};
-    auto *help{helpIdx == wxNOT_FOUND ? new wxMenu : menuBar->GetMenu(helpIdx)};
-    help->Append(ID_Docs, _("Documentation...\tCtrl+H"), _("Open the ProffieConfig docs in your web browser"));
-    help->Append(ID_Issue, _("Help/Bug Report..."), _("Open GitHub to submit issue"));
+    auto *help{
+        helpIdx == wxNOT_FOUND
+            ? new wxMenu 
+            : menuBar->GetMenu(helpIdx)
+    };
+    help->Append(
+        ID_Docs,
+        _("Guides...\tCtrl+H"),
+        _("Open the ProffieConfig guides in your web browser")
+    );
+    // TODO: Make this a page that has my contact info and a button to go to
+    // the issues page.
+    help->Append(
+        ID_Issue,
+        _("Help/Bug Report..."),
+        _("Open GitHub to submit issue")
+    );
     help->AppendSeparator();
     help->Append(ID_RunSetup, _("Re-Run Setup"));
     if (helpIdx == wxNOT_FOUND) menuBar->Append(help, helpStr);
@@ -472,11 +509,15 @@ void MainMenu::createUI() {
     titleFont.SetPointSize(30);
 #   endif
     title->SetFont(titleFont);
-    auto *subTitle{new wxStaticText(this, wxID_ANY, _("Created by Ryryog25"))};
+    auto *subTitle{new wxStaticText(
+        this, wxID_ANY, _("Created by Ryryog25")
+    )};
     titleSection->Add(title);
     titleSection->Add(subTitle);
 
-    auto *appIcon{PCUI::createStaticImage(this, wxID_ANY, Image::loadPNG("icon"))};
+    auto *appIcon{pcui::createStaticImage(
+        this, wxID_ANY, Image::loadPNG("icon")
+    )};
     appIcon->SetMaxSize(wxSize{64, 64});
 
     headerSection->AddSpacer(10);
@@ -487,7 +528,7 @@ void MainMenu::createUI() {
     headerSection->AddSpacer(10);
 
     auto *configSelectSection{new wxBoxSizer(wxHORIZONTAL)};
-    auto *configSelect{new PCUI::Choice(this, configSelection)};
+    auto *configSelect{new pcui::Choice(this, configSelection)};
 
     auto *addConfig{new wxButton(
         this,
@@ -533,11 +574,15 @@ void MainMenu::createUI() {
 #   if defined _WIN32 or defined __linux__
     boardEntries.emplace_back(_("BOOTLOADER RECOVERY").ToStdString());
 #   endif
+
     boardSelection.setChoices(std::move(boardEntries));
     boardSelection = 0;
-    auto *boardSelect{new PCUI::Choice(this, boardSelection)};
+    auto *boardSelect{new pcui::Choice(this, boardSelection)};
     boardSelect->SetToolTip(_("Select the Proffieboard to connect to.\nThese IDs are assigned by the OS, and can vary."));
-    auto *refreshButton{new wxButton(this, ID_RefreshDev, _("Refresh Boards"))};
+
+    auto *refreshButton{new wxButton(
+        this, ID_RefreshDev, _("Refresh Boards")
+    )};
     refreshButton->SetToolTip(_("Generate an up-to-date list of connected boards."));
 
     boardControls->AddSpacer(10);
@@ -552,7 +597,9 @@ void MainMenu::createUI() {
         _("Apply Selected Configuration to Board")
     )};
     applyButton->SetToolTip(_("Apply the current configuration to the selected Proffieboard."));
-    auto *openSerial{new wxButton(this, ID_OpenSerial, _("Open Serial Monitor"))};
+    auto *openSerial{new wxButton(
+        this, ID_OpenSerial, _("Open Serial Monitor")
+    )};
 
     sizer->AddSpacer(20);
     sizer->Add(headerSection, wxSizerFlags().Expand());
@@ -593,3 +640,4 @@ void MainMenu::removeEditor(EditorWindow *editor) {
         }
     }
 }
+

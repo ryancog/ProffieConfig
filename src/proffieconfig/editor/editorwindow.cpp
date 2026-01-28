@@ -59,7 +59,7 @@
 #include "../tools/arduino.h"
 
 EditorWindow::EditorWindow(wxWindow *parent, Config::Config& config) : 
-    PCUI::Frame(
+    pcui::Frame(
         parent,
         wxID_ANY,
         /* _("ProffieConfig Editor") + */ static_cast<string>(config.name)
@@ -86,7 +86,7 @@ EditorWindow::EditorWindow(wxWindow *parent, Config::Config& config) :
 
 bool EditorWindow::Destroy() {
     mConfig.close();
-    return PCUI::Frame::Destroy();
+    return pcui::Frame::Destroy();
 }
 
 void EditorWindow::bindEvents() {
@@ -156,7 +156,7 @@ void EditorWindow::bindEvents() {
         Progress::handleEvent(&event); 
     });
     Bind(Misc::EVT_MSGBOX, [&](Misc::MessageBoxEvent& evt) {
-        PCUI::showMessage(evt.message, evt.caption, evt.style, this);
+        pcui::showMessage(evt.message, evt.caption, evt.style, this);
     }, wxID_ANY);
     Bind(wxEVT_MENU, [this](wxCommandEvent&) {
         save();
@@ -226,7 +226,7 @@ void EditorWindow::bindEvents() {
         auto copyPath{Paths::injectionDir() / fileDialog.GetFilename().ToStdWstring()};
         std::error_code err;
         if (not Paths::copyOverwrite(fileDialog.GetPath().ToStdWstring(), copyPath, err)) {
-            PCUI::showMessage(err.message(), _("Injection file could not be added."));
+            pcui::showMessage(err.message(), _("Injection file could not be added."));
             return;
         }
 
@@ -408,7 +408,7 @@ void EditorWindow::createUI(wxSizer *sizer) {
 bool EditorWindow::save() {
     auto err{mConfig.save()};
     if (err) {
-        PCUI::showMessage(*err, _("Config Not Saved"), wxOK | wxCENTER | wxICON_ERROR, this);
+        pcui::showMessage(*err, _("Config Not Saved"), wxOK | wxCENTER | wxICON_ERROR, this);
     }
     return not err;
 }
@@ -451,7 +451,7 @@ void EditorWindow::fitAnimated() {
 
 void EditorWindow::Fit() {
     SetSizeHints(-1, -1, -1, -1);
-    PCUI::Frame::Fit();
+    pcui::Frame::Fit();
 
     configureResizing();
 }

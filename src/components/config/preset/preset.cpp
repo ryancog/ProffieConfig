@@ -1,7 +1,7 @@
 #include "preset.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/config/preset/preset.h
  *
@@ -27,10 +27,10 @@
 Config::Preset::Preset(Config& config, PresetArray& presetArray) :
     mConfig{config}, mParent{presetArray} {
     name = "newpreset";
-    styleSelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
+    styleSelection.setPersistence(pcui::ChoiceData::Persistence::Index);
 
     name.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::TextData::ID_VALUE) return;
+        if (id != pcui::TextData::eID_Value) return;
 
         auto rawValue{static_cast<string>(name)};
         uint32 numTrimmed{};
@@ -79,7 +79,7 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
         name.setInsertionPoint(insertionPoint - numTrimmed);
     });
     fontDir.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::TextData::ID_VALUE) return;
+        if (id != pcui::TextData::eID_Value) return;
 
         auto rawValue{static_cast<string>(fontDir)};
         uint32 numTrimmed{};
@@ -97,7 +97,7 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
         fontDir.setInsertionPoint(insertionPoint - numTrimmed);
     });
     track.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::TextData::ID_VALUE) return;
+        if (id != pcui::TextData::eID_Value) return;
 
         auto rawValue{static_cast<string>(track)};
         uint32 numTrimmed{};
@@ -110,7 +110,9 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
         );
 
         if (rawValue == static_cast<string>(track)) {
-            mConfig.presetArrays.notifyData.notify(PresetArrays::NOTIFY_TRACK_INPUT);
+            mConfig.presetArrays.notifyData.notify(
+                PresetArrays::NOTIFY_TRACK_INPUT
+            );
             return;
         }
 
@@ -118,21 +120,25 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
         track.setInsertionPoint(insertionPoint - numTrimmed);
     });
     styleSelection.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::NotifyReceiver::ID_REBOUND and id != PCUI::ChoiceData::ID_SELECTION) return;
+        if (
+                id != pcui::Notifier::eID_Rebound and
+                id != pcui::ChoiceData::eID_Selection
+           ) return;
 
-        if (mConfig.presetArrays.selection == -1) return;
-        auto& selectedArray{mConfig.presetArrays.array(mConfig.presetArrays.selection)};
+        auto& presetArrays{mConfig.presetArrays};
+        if (presetArrays.selection == -1) return;
+        auto& selectedArray{presetArrays.array(presetArrays.selection)};
         if (selectedArray.selection == -1) return;
         auto& selectedPreset{selectedArray.preset(selectedArray.selection)};
         if (this != &selectedPreset) return;
 
         if (styleSelection == -1) {
-            mConfig.presetArrays.commentProxy.bind(PresetArrays::dummyCommentData);
-            mConfig.presetArrays.styleProxy.bind(PresetArrays::dummyStyleData);
+            presetArrays.commentProxy.bind(PresetArrays::dummyCommentData);
+            presetArrays.styleProxy.bind(PresetArrays::dummyStyleData);
         } else {
             auto& selectedStyle{style(styleSelection)};
-            mConfig.presetArrays.commentProxy.bind(selectedStyle.comment);
-            mConfig.presetArrays.styleProxy.bind(selectedStyle.style);
+            presetArrays.commentProxy.bind(selectedStyle.comment);
+            presetArrays.styleProxy.bind(selectedStyle.style);
         }
     });
 }
@@ -147,7 +153,7 @@ void Config::Preset::popBackStyle() {
 
 Config::Preset::Style::Style() {
     comment.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::TextData::ID_VALUE) return;
+        if (id != pcui::TextData::eID_Value) return;
 
         auto rawValue{static_cast<string>(comment)};
         auto insertionPoint{comment.getInsertionPoint()};
@@ -166,7 +172,7 @@ Config::Preset::Style::Style() {
         }
     });
     style.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::TextData::ID_VALUE) return;
+        if (id != pcui::TextData::eID_Value) return;
 
         auto rawValue{static_cast<string>(style)};
         auto insertionPoint{style.getInsertionPoint()};
@@ -214,8 +220,11 @@ Config::Preset::Style::Style() {
                 : terminatorPos + 2
             };
 
-            if (eraseEnd < insertionPoint) insertionPoint -= eraseEnd - illegalPos;
-            else if (illegalPos < insertionPoint) insertionPoint = illegalPos;
+            if (eraseEnd < insertionPoint) {
+                insertionPoint -= eraseEnd - illegalPos;
+            } else if (illegalPos < insertionPoint) {
+                insertionPoint = illegalPos;
+            }
 
             const auto begin{illegalPos + 2};
             auto substr{rawValue.substr(begin, terminatorPos - begin)};
@@ -229,7 +238,8 @@ Config::Preset::Style::Style() {
             commentMove = true;
         }
 
-        // If comment terminator but no opener, move everything before terminator into comment
+        // If comment terminator but no opener, move everything before
+        // terminator into comment
         if (
                 (illegalPos = rawValue.rfind("*/")) != string::npos and 
                 rawValue.find("/*") == string::npos
@@ -257,8 +267,11 @@ Config::Preset::Style::Style() {
                 : terminatorPos + 1
             };
 
-            if (eraseEnd < insertionPoint) insertionPoint -= eraseEnd - illegalPos;
-            else if (illegalPos < insertionPoint) insertionPoint = illegalPos;
+            if (eraseEnd < insertionPoint) {
+                insertionPoint -= eraseEnd - illegalPos;
+            } else if (illegalPos < insertionPoint) {
+                insertionPoint = illegalPos;
+            }
 
             const auto begin{illegalPos + 2};
             auto substr{rawValue.substr(begin, terminatorPos - begin)};

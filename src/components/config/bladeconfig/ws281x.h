@@ -47,11 +47,11 @@ struct CONFIG_EXPORT Split {
         LIST,
         TYPE_MAX
     };
-    PCUI::RadiosData type;
+    pcui::RadiosData type;
 
-    PCUI::NumericData start;
-    PCUI::NumericData end;
-    PCUI::NumericData length;
+    pcui::NumericData start;
+    pcui::NumericData end;
+    pcui::NumericData length;
 
     /*
      * Stride: Data goes like:
@@ -92,13 +92,13 @@ struct CONFIG_EXPORT Split {
      */
 
     // For stide and zigzag
-    PCUI::NumericData segments;
+    pcui::NumericData segments;
 
     // For list
-    PCUI::TextData list;
+    pcui::TextData list;
     [[nodiscard]] vector<uint32> listValues() const;
 
-    PCUI::NumericData brightness;
+    pcui::NumericData brightness;
 
 private:
     Config& mConfig;
@@ -108,9 +108,9 @@ private:
 struct CONFIG_EXPORT WS281XBlade {
     WS281XBlade(Config&);
 
-    PCUI::NumericData length;
+    pcui::NumericData length;
 
-    PCUI::ComboBoxData dataPin;
+    pcui::ComboBoxData dataPin;
 
     enum ColorOrder3 {
         GRB,
@@ -129,7 +129,7 @@ struct CONFIG_EXPORT WS281XBlade {
         "RGB",
         "RBG",
     };
-    PCUI::ChoiceData colorOrder3;
+    pcui::ChoiceData colorOrder3;
     enum ColorOrder4 {
         GRBW,
         GBRW,
@@ -148,13 +148,13 @@ struct CONFIG_EXPORT WS281XBlade {
         ORDER4_WFIRST_START = WGRB,
         ORDER4_WFIRST_END = WRBG,
     };
-    PCUI::ChoiceData colorOrder4;
-    PCUI::ToggleData hasWhite;
-    PCUI::ToggleData useRGBWithWhite;
+    pcui::ChoiceData colorOrder4;
+    pcui::ToggleData hasWhite;
+    pcui::ToggleData useRGBWithWhite;
 
-    PCUI::CheckListData powerPins;
+    pcui::CheckListData powerPins;
 
-    PCUI::ChoiceData splitSelect;
+    pcui::ChoiceData splitSelect;
 
     [[nodiscard]] const vector<std::unique_ptr<Split>>& splits() const { return mSplits; }
     [[nodiscard]] Split& split(uint32 idx) const {

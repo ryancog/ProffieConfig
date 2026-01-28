@@ -1,4 +1,5 @@
 #include "combobox.h"
+#include "ui/notifier.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
@@ -66,7 +67,7 @@ void pcui::ComboBox::create(const wxString& label, wxOrientation orient) {
 }
 
 void pcui::ComboBox::onUIUpdate(uint32 id) {
-    bool rebound{id == eID_Rebound};
+    bool rebound{id == Notifier::eID_Rebound};
     if (rebound or id == ComboBoxData::eID_Defaults) {
         pControl->Set(data()->mDefaults);
         refreshSizeAndLayout();

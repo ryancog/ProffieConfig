@@ -93,7 +93,7 @@ void Routine::platformInstall(Log::Branch& lBranch) {
         if (err) {
             auto errMessage{"Failed to install launcher: " + err.message() + " (" + std::to_string(err.value()) + ')'};
             logger.info(errMessage);
-            PCUI::showMessage(_("Failed to install launcher"), App::getAppName());
+            pcui::showMessage(_("Failed to install launcher"), App::getAppName());
             return;
         }
     }
@@ -156,7 +156,7 @@ void Routine::platformInstall(Log::Branch& lBranch) {
     fs::remove_all(currentBundle, err);
 #   endif
 
-    PCUI::showMessage(_("Launcher has been installed."), App::getAppName());
+    pcui::showMessage(_("Launcher has been installed."), App::getAppName());
 #   ifdef __WIN32__
     if (wxExecute(installedExec.c_str()) == 0) {
         logger.warn("Failed to start launcher.");

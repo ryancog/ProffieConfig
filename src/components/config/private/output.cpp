@@ -627,7 +627,12 @@ void outputPresetBlades(std::ostream& outFile, const Config::Config& config) {
                     for (auto idx{0}; idx < split->segments; ++idx) {
                         outFile << "\t\t";
 
-                        if (split->brightness != 100) outFile << "DimBlade(" << split->brightness << ", ";
+                        if (split->brightness != 100) {
+                            outFile
+                                << "DimBlade("
+                                << split->brightness
+                                << ", ";
+                        }
 
                         if (split->type == Split::STRIDE) {
                             outFile << "SubBladeWithStride(";
@@ -652,11 +657,15 @@ void outputPresetBlades(std::ostream& outFile, const Config::Config& config) {
             }
         }
 
-        const auto presetArray{
-            static_cast<string>(config.presetArrays.arrays()[bladeArray->presetArray]->name)
-        };
+        const auto presetArray{static_cast<string>(
+            config.presetArrays.arrays()[bladeArray->presetArray]->name
+        )};
         outFile << "\t\tCONFIGARRAY(" << presetArray << ")";
-        if (not bladeArray->name.empty()) outFile << ", \"" << static_cast<string>(bladeArray->name) << '\"';
+        if (not bladeArray->name.empty()) {
+            outFile << ", \"";
+            outFile << static_cast<string>(bladeArray->name);
+            outFile << '\"';
+        }
         outFile << "\n\t},\n";
     }
     outFile << "};\n" << std::flush;

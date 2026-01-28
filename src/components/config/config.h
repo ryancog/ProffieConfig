@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024-2025 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * components/config/config.h
  *
@@ -39,15 +39,15 @@ static constexpr cstring RAW_FILE_EXTENSION{".h"};
 static constexpr auto MAX_NAME_LENGTH{24};
 
 struct CONFIG_EXPORT Config {
-    PCUI::TextData name;
+    pcui::TextData name;
     Settings settings;
 
-    PCUI::ChoiceData propSelection;
+    pcui::ChoiceData propSelection;
     enum {
         ID_PROPSELECTION,
         ID_PROPUPDATE,
     };
-    PCUI::Notifier propNotifyData;
+    pcui::Notifier propNotifyData;
 
     [[nodiscard]] vector<Versions::Prop *> props() const { 
         vector<Versions::Prop *> ret;

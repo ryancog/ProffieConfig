@@ -33,19 +33,19 @@ struct PresetArray;
 struct CONFIG_EXPORT Preset {
     Preset(Config&, PresetArray&);
 
-    PCUI::TextData name;
-    PCUI::TextData fontDir;
+    pcui::TextData name;
+    pcui::TextData fontDir;
     // vector<string> fontDirs;
-    PCUI::TextData track;
+    pcui::TextData track;
 
     struct Style {
         Style();
-        PCUI::TextData comment;
-        PCUI::TextData style;
+        pcui::TextData comment;
+        pcui::TextData style;
     };
 
     // No set choice manual
-    PCUI::ChoiceData styleSelection;
+    pcui::ChoiceData styleSelection;
 
     [[nodiscard]] const vector<std::unique_ptr<Style>>& styles() const { return mStyles; }
     [[nodiscard]] Style& style(uint32 idx) const {

@@ -185,7 +185,7 @@ void pcui::Text::styleMonospace() {
 }
 
 void pcui::Text::onUIUpdate(uint32 id) {
-    bool rebound{id == eID_Rebound};
+    bool rebound{id == Notifier::eID_Rebound};
 
     if (rebound or id == TextData::eID_Value) {
         pControl->ChangeValue(static_cast<string>(*data()));

@@ -27,7 +27,7 @@
 
 Config::Settings::Settings(Config& parent) : mParent{parent} {
     // Asign update handlers
-    osVersion.setPersistence(PCUI::ChoiceData::PERSISTENCE_STRING);
+    osVersion.setPersistence(pcui::ChoiceData::Persistence::String);
     osVersion.setUpdateHandler([this](uint32 id) {
         // TODO: Around the versions stuff (here and props), it feels like
         // there's quite a bit of not very optimal logic.
@@ -39,12 +39,12 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         // handling of) wxWidgets and the layout system seeming to slow down
         // drastically with many windows (which also deserves attention because
         // it's getting quite bad)...
-        if (id == PCUI::ChoiceData::ID_CHOICES) {
+        if (id == pcui::ChoiceData::eID_Choices) {
             if (not osVersion.choices().empty() and osVersion == -1) {
                 osVersion = 0;
                 return;
             }
-        } else if (id != PCUI::ChoiceData::ID_SELECTION) return;
+        } else if (id != pcui::ChoiceData::eID_Selection) return;
 
         if (osVersion.choices().size() > 1 and osVersion == 0) {
             // Will trigger another update.
@@ -56,13 +56,13 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
         mParent.refreshPropVersions();
     });
     bladeDetect.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ToggleData::ID_VALUE) return;
+        if (id != pcui::ToggleData::eID_Value) return;
 
         bladeDetectPin.enable(bladeDetect);
     });
 
     bladeID.enable.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ToggleData::ID_VALUE) return;
+        if (id != pcui::ToggleData::eID_Value) return;
 
         bladeID.pin.enable(bladeID.enable);
         bladeID.mode.enable(bladeID.enable);
@@ -74,9 +74,12 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     });
 
     bladeID.mode.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+        if (id != pcui::ChoiceData::eID_Selection) return;
 
-        switch (static_cast<BladeIDMode>(static_cast<uint32>(bladeID.mode))) {
+        const auto mode{
+            static_cast<BladeIDMode>(static_cast<uint32>(bladeID.mode))
+        };
+        switch (mode) {
             case SNAPSHOT:
                 bladeID.bridgePin.show(false, true);
                 bladeID.pullup.show(false, true);
@@ -95,7 +98,7 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     });
 
     bladeID.bridgePin.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ComboBoxData::ID_VALUE) return;
+        if (id != pcui::ComboBoxData::eID_Value) return;
 
         auto rawValue{static_cast<string>(bladeID.bridgePin)};
         uint32 numTrimmed{};
@@ -116,21 +119,21 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     });
 
     bladeID.continuousScanning.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ToggleData::ID_VALUE) return;
+        if (id != pcui::ToggleData::eID_Value) return;
 
         bladeID.continuousInterval.enable(bladeID.continuousScanning);
         bladeID.continuousTimes.enable(bladeID.continuousScanning);
     });
 
     bladeID.powerForID.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ToggleData::ID_VALUE) return;
+        if (id != pcui::ToggleData::eID_Value) return;
 
         bladeID.powerPins.enable(bladeID.powerForID);
         bladeID.powerPinEntry.enable(bladeID.powerForID);
     });
 
     bladeID.powerPins.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::CheckListData::ID_SELECTION) return;
+        if (id != pcui::CheckListData::eID_Checked) return;
 
         auto selected{static_cast<set<uint32>>(bladeID.powerPins)};
         auto items{bladeID.powerPins.items()};
@@ -144,10 +147,10 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     });
 
     bladeID.powerPinEntry.setUpdateHandler([this](uint32 id) {
-        if (id == PCUI::TextData::ID_ENTER) {
+        if (id == pcui::TextData::eID_Enter) {
             bladeID.addPowerPinFromEntry();
         }
-        if (id != PCUI::TextData::ID_VALUE) return;
+        if (id != pcui::TextData::eID_Value) return;
 
         auto rawValue{static_cast<string>(bladeID.powerPinEntry)};
         uint32 numTrimmed{};
@@ -161,13 +164,15 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
 
         if (rawValue != static_cast<string>(bladeID.powerPinEntry)) {
             bladeID.powerPinEntry = std::move(rawValue);
-            bladeID.powerPinEntry.setInsertionPoint(insertionPoint - numTrimmed);
+            bladeID.powerPinEntry.setInsertionPoint(
+                insertionPoint - numTrimmed
+            );
             return;
         }
     });
 
     const auto updateSaveOptions{[this](uint32 id) {
-        if (id != PCUI::ToggleData::ID_VALUE) return;
+        if (id != pcui::ToggleData::eID_Value) return;
 
         bool stateOrAll{saveState or enableAllEditOptions};
         saveVolume |= stateOrAll;
@@ -179,8 +184,11 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
 
         saveBladeDimming |= stateOrAll and dynamicBladeDimming;
         saveBladeDimming.enable(dynamicBladeDimming and not stateOrAll);
-        saveClashThreshold |= enableAllEditOptions and dynamicClashThreshold;
-        saveClashThreshold.enable(dynamicClashThreshold and not enableAllEditOptions);
+        saveClashThreshold |= 
+            enableAllEditOptions and dynamicClashThreshold;
+        saveClashThreshold.enable(
+            dynamicClashThreshold and not enableAllEditOptions
+        );
 
         dynamicBladeLength |= enableAllEditOptions;
         dynamicBladeLength.enable(not enableAllEditOptions);
@@ -196,22 +204,22 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
     dynamicClashThreshold.setUpdateHandler(updateSaveOptions);
 
     volume.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::NumericData::ID_VALUE) return;
+        if (id != pcui::NumericData::eID_Value) return;
         bootVolume.setRange(0, volume);
     });
     enableBootVolume.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ToggleData::ID_VALUE) return;
+        if (id != pcui::ToggleData::eID_Value) return;
         bootVolume.enable(enableBootVolume);
     });
 
     enableFiltering.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ToggleData::ID_VALUE) return;
+        if (id != pcui::ToggleData::eID_Value) return;
         filterOrder.enable(enableFiltering);
         filterCutoff.enable(enableFiltering);
     });
 
     disableTalkie.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ToggleData::ID_VALUE) return;
+        if (id != pcui::ToggleData::eID_Value) return;
         femaleTalkie.enable(not disableTalkie);
     });
 
@@ -334,20 +342,23 @@ Config::Settings::Settings(Config& parent) : mParent{parent} {
 
 Utils::Version Config::Settings::getOSVersion() const {
     if (osVersion < 1) return Utils::Version::invalidObject();
+
     const auto& osVersions{Versions::getOSVersions()};
-    if (osVersion - 1 >= osVersions.size()) return Utils::Version::invalidObject();
+    if (osVersion - 1 >= osVersions.size()) {
+        return Utils::Version::invalidObject();
+    }
 
     return osVersions[osVersion - 1].verNum;
 }
 
 Config::Settings::ButtonData::ButtonData() {
     type.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+        if (id != pcui::ChoiceData::eID_Selection) return;
 
         touch.show(type == TOUCH_BUTTON);
     });
     pin.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ComboBoxData::ID_VALUE) return;
+        if (id != pcui::ComboBoxData::eID_Value) return;
 
         auto rawValue{static_cast<string>(pin)};
         uint32 numTrimmed{};
@@ -365,7 +376,7 @@ Config::Settings::ButtonData::ButtonData() {
         pin.setInsertionPoint(insertionPoint - numTrimmed);
     });
     name.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::TextData::ID_VALUE) return;
+        if (id != pcui::TextData::eID_Value) return;
 
         auto rawValue{static_cast<string>(name)};
         uint32 numTrimmed{};
@@ -482,7 +493,9 @@ bool Config::Settings::addCustomOption(string&& key, string&& value) {
         }
     }
 
-    auto& customOpt{*mCustomOptions.emplace_back(std::make_unique<CustomOption>())};
+    auto& customOpt{*mCustomOptions.emplace_back(
+        std::make_unique<CustomOption>()
+    )};
     customOpt.define = std::move(key);
     customOpt.value = std::move(value);
     customOptsNotifyData.notify();
@@ -686,8 +699,12 @@ void Config::Settings::processCustomDefines(Log::Branch *lBranch) {
             } else {
                 string str{opt.value};
                 auto xStr{str.substr(0, firstComma)};
-                auto yStr{str.substr(firstComma + 1, secondComma - firstComma - 1)};
-                auto zStr{str.substr(secondComma + 1, str.length() - secondComma - 1)};
+                auto yStr{str.substr(
+                    firstComma + 1, secondComma - firstComma - 1
+                )};
+                auto zStr{str.substr(
+                    secondComma + 1, str.length() - secondComma - 1
+                )};
 
                 auto xVal{Utils::doStringMath(xStr)};
                 auto yVal{Utils::doStringMath(yStr)};

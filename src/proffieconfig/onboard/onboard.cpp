@@ -45,7 +45,7 @@ constexpr cstring RUN_SETUP_STR{wxTRANSLATE("Run Setup")};
 Onboard::Frame* Onboard::Frame::instance{nullptr};
 
 Onboard::Frame::Frame() : 
-    PCUI::Frame(
+    pcui::Frame(
         nullptr,
         wxID_ANY,
         _("ProffieConfig First-Time Setup"),
@@ -55,7 +55,7 @@ Onboard::Frame::Frame() :
     ) {
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
     auto *contentSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *icon{PCUI::createStaticImage(this, wxID_ANY, Image::loadPNG("icon"))};
+    auto *icon{pcui::createStaticImage(this, wxID_ANY, Image::loadPNG("icon"))};
     icon->SetMaxSize({256, 256});
 
     contentSizer->AddSpacer(10);
@@ -118,7 +118,7 @@ Onboard::Frame::~Frame() {
 void Onboard::Frame::bindEvents() {
     Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent &event) {
         if (event.CanVeto()) {
-            auto res{PCUI::showMessage(
+            auto res{pcui::showMessage(
                 _("Are you sure you want to cancel setup?"),
                 _("Exit ProffieConfig"),
                 wxYES_NO | wxNO_DEFAULT | wxCENTER,
@@ -142,12 +142,12 @@ void Onboard::Frame::bindEvents() {
         Progress::handleEvent(&event); 
     });
     Bind(Misc::EVT_MSGBOX, [&](Misc::MessageBoxEvent& evt) {
-        PCUI::showMessage(evt.message, evt.caption, evt.style, this);
+        pcui::showMessage(evt.message, evt.caption, evt.style, this);
     }, wxID_ANY);
 
     // TODO: Make this button handling sane.
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        auto res{PCUI::showMessage(
+        auto res{pcui::showMessage(
             _("Skipping will leave ProffieConfig and your computer unprepared.\nYou should only do this if you know what you are doing!"),
             _("Skip Setup?"),
             wxYES_NO | wxNO_DEFAULT,
@@ -232,7 +232,7 @@ void Onboard::Frame::handleNotification(uint32 id) {
     } else if (id == Onboard::Setup::ID_FAILED) {
         FindWindow(ID_Next)->SetLabel(_("Try Again"));
         
-        PCUI::showMessage(
+        pcui::showMessage(
             _("Dependency installation failed, please try again.") + "\n\n"
             + mSetupPage->errorMessage,
             _("Installation Failure"),

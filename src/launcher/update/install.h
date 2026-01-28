@@ -29,14 +29,14 @@ namespace Update {
 [[nodiscard]] bool pullNewFiles(
     const Changelog& changelog,
     const Data& data,
-    PCUI::ProgressDialog *,
+    pcui::ProgressDialog *,
     Log::Branch&
 );
 
 void installFiles(
     const Changelog& changelog,
     const Data& data,
-    PCUI::ProgressDialog *,
+    pcui::ProgressDialog *,
     Log::Branch&
 );
 

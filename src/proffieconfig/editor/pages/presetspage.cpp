@@ -1,7 +1,7 @@
 #include "presetspage.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2023-2025 Ryan Ogurek
+ * Copyright (C) 2023-2026 Ryan Ogurek
  *
  * proffieconfig/editor/pages/presetspage.cpp
  *
@@ -30,10 +30,9 @@
 #include "ui/message.h"
 #include "utils/paths.h"
 
-#include "../../core/defines.h"
 #include "../editorwindow.h"
 
-class RenameArrayDlg : public wxDialog, PCUI::NotifyReceiver {
+class RenameArrayDlg : public wxDialog, pcui::NotifyReceiver {
 public:
     RenameArrayDlg(
         wxWindow *parent,
@@ -45,7 +44,7 @@ public:
         NotifyReceiver(this, array.notifyData),
         mConfig{config}, mArray{array} {
         auto *sizer{new wxBoxSizer(wxVERTICAL)};
-        auto *entry{new PCUI::Text(
+        auto *entry{new pcui::Text(
             this,
             array.name,
             0,
@@ -54,12 +53,12 @@ public:
         )};
         auto *emptyText{new wxStaticText(
             this,
-            ID_EmptyText,
+            eID_Empty_Text,
             _("Empty Array Name")
         )};
         auto *dupText{new wxStaticText(
             this,
-            ID_DupText,
+            eID_Dup_Text,
             _("Duplicate Array Name")
         )};
         sizer->Add(
@@ -111,23 +110,26 @@ private:
     Config::PresetArray& mArray;
 
     enum {
-        ID_EmptyText,
-        ID_DupText,
+        eID_Empty_Text,
+        eID_Dup_Text,
     };
 
     void handleNotification(uint32) final {
         bool duplicate{false};
-        for (const auto& array : mConfig.presetArrays.arrays()) {
-            if (&*array == &mArray) continue;
-            if (static_cast<string>(array->name) == static_cast<string>(mArray.name)) {
+        for (const auto& otherArray : mConfig.presetArrays.arrays()) {
+            if (&*otherArray == &mArray) continue;
+
+            const auto otherArrayName{static_cast<string>(otherArray->name)};
+            const auto arrayName{static_cast<string>(mArray.name)};
+            if (arrayName == otherArrayName) {
                 duplicate = true;
                 break;
             }
         }
         bool empty{static_cast<string>(mArray.name).empty()};
 
-        FindWindow(ID_EmptyText)->Show(empty);
-        FindWindow(ID_DupText)->Show(duplicate);
+        FindWindow(eID_Empty_Text)->Show(empty);
+        FindWindow(eID_Dup_Text)->Show(duplicate);
         auto *okButton{FindWindow(wxID_OK)};
         if (okButton) okButton->Enable(not duplicate and not empty);
 
@@ -139,7 +141,10 @@ private:
 
 PresetsPage::PresetsPage(EditorWindow *window) : 
     wxPanel(window),
-    PCUI::NotifyReceiver(this, window->getOpenConfig().presetArrays.notifyData),
+    pcui::NotifyReceiver(
+        this,
+        window->getOpenConfig().presetArrays.notifyData
+    ),
     mParent(window) {
     createUI();
     bindEvents();
@@ -153,13 +158,13 @@ void PresetsPage::createUI() {
 
     auto *presetSelectionSizer{new wxBoxSizer(wxVERTICAL)};
 
-    auto *arraySectSizer{new PCUI::StaticBox(
+    auto *arraySectSizer{new pcui::StaticBox(
         wxVERTICAL,
         this,
         _("Presets Array")
     )};
     auto *arraySizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *arraySelection{new PCUI::Choice(
+    auto *arraySelection{new pcui::Choice(
         arraySectSizer->childParent(),
         config.presetArrays.selection
     )};
@@ -171,7 +176,7 @@ void PresetsPage::createUI() {
         wxDefaultSize,
         wxBU_EXACTFIT
     )};
-    auto *arrayRename{new PCUI::Button(
+    auto *arrayRename{new pcui::Button(
         arraySectSizer->childParent(),
         ID_RenameArray,
         wxEmptyString,
@@ -207,13 +212,13 @@ void PresetsPage::createUI() {
     arrayButtonsSizer->AddSpacer(5);
     arrayButtonsSizer->Add(removeArray, wxSizerFlags(3));
 
-    auto *presetSectSizer{new PCUI::StaticBox(
+    auto *presetSectSizer{new pcui::StaticBox(
         wxVERTICAL,
         this,
         _("Presets")
     )};
     auto *presetListSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *presetList{new PCUI::List(
+    auto *presetList{new pcui::List(
         presetSectSizer->childParent(),
         config.presetArrays.presetProxy
     )};
@@ -286,7 +291,7 @@ void PresetsPage::createUI() {
     auto *presetConfigSizer{new wxBoxSizer(wxVERTICAL)};
     presetConfigSizer->SetMinSize(wxSize(200, -1));
 
-    auto *nameInput{new PCUI::Text(
+    auto *nameInput{new pcui::Text(
         this,
         config.presetArrays.nameProxy,
         wxTE_PROCESS_ENTER,
@@ -300,7 +305,7 @@ void PresetsPage::createUI() {
         "For example, \"my\\npreset\" will be displayed on the OLED as two lines, the first being \"my\" and the second being \"preset.\""
     ));
 
-    auto *dirInput{new PCUI::Text(
+    auto *dirInput{new pcui::Text(
         this,
         config.presetArrays.dirProxy,
         0,
@@ -314,7 +319,7 @@ void PresetsPage::createUI() {
     ));
 
     auto *trackSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *trackInput{new PCUI::Text(
+    auto *trackInput{new pcui::Text(
         this,
         config.presetArrays.trackProxy,
         0,
@@ -335,7 +340,7 @@ void PresetsPage::createUI() {
     trackSizer->Add(trackInput, wxSizerFlags(1));
     trackSizer->Add(wavText, wxSizerFlags().Bottom());
 
-    mInjectionsSizer = new PCUI::StaticBox(wxVERTICAL, this, _("Injections"));
+    mInjectionsSizer = new pcui::StaticBox(wxVERTICAL, this, _("Injections"));
 
     presetConfigSizer->Add(nameInput, wxSizerFlags().Expand());
     presetConfigSizer->AddSpacer(5);
@@ -346,14 +351,14 @@ void PresetsPage::createUI() {
     presetConfigSizer->Add(mInjectionsSizer, wxSizerFlags(1).Expand());
 
     auto *stylesSizer{new wxBoxSizer(wxVERTICAL)};
-    auto *styleDisplay{new PCUI::Choice(
+    auto *styleDisplay{new pcui::Choice(
         this,
         config.presetArrays.styleDisplay,
         _("Display")
     )};
     styleDisplay->SetToolTip(_("Show blade listing corresponding to the selected blade array."));
 
-    auto *styleList {new PCUI::List(
+    auto *styleList {new pcui::List(
         this,
         config.presetArrays.styleSelectProxy,
         _("Blades")
@@ -370,7 +375,7 @@ void PresetsPage::createUI() {
         wxSP_3DSASH | wxSP_LIVE_UPDATE
     )};
 
-    auto *commentInput{new PCUI::Text(
+    auto *commentInput{new pcui::Text(
         styleCommentSplit,
         config.presetArrays.commentProxy,
         wxTE_MULTILINE | wxNO_BORDER,
@@ -382,7 +387,7 @@ void PresetsPage::createUI() {
         "This doesn't affect the blade style at all, but can be a place for helpful notes!"
     ));
 
-    auto *styleInput{new PCUI::Text(
+    auto *styleInput{new pcui::Text(
         styleCommentSplit,
         config.presetArrays.styleProxy,
         wxTE_DONTWRAP | wxTE_MULTILINE | wxNO_BORDER,
@@ -414,9 +419,14 @@ void PresetsPage::createUI() {
 void PresetsPage::bindEvents() {
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto& config{mParent->getOpenConfig()};
-        auto& presetArray{config.presetArrays.array(config.presetArrays.selection)};
+        auto& presetArray{
+            config.presetArrays.array(config.presetArrays.selection)
+        };
         presetArray.addPreset();
-        presetArray.selection = static_cast<int32>(presetArray.presets().size() - 1);
+        const auto lastIdx{
+            static_cast<int32>(presetArray.presets().size() - 1)
+        };
+        presetArray.selection = lastIdx;
     }, ID_AddPreset);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto& presetArrays{mParent->getOpenConfig().presetArrays};
@@ -444,7 +454,9 @@ void PresetsPage::bindEvents() {
     }, ID_MovePresetDown);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto& config{mParent->getOpenConfig()};
-        auto& presetArray{config.presetArrays.array(config.presetArrays.selection)};
+        auto& presetArray{config.presetArrays.array(
+            config.presetArrays.selection
+        )};
 
         RenameArrayDlg renameDlg(
             mParent,
@@ -467,7 +479,10 @@ void PresetsPage::bindEvents() {
         );
         if (wxID_OK == dlg.ShowModal()) {
             config.presetArrays.addArray(array.name);
-            config.presetArrays.selection = static_cast<int32>(config.presetArrays.arrays().size() - 1);
+            const auto lastIdx{static_cast<int32>(
+                config.presetArrays.arrays().size() - 1
+            )};
+            config.presetArrays.selection = lastIdx;
         }
 
     }, ID_AddArray);
@@ -478,17 +493,23 @@ void PresetsPage::bindEvents() {
 }
 
 void PresetsPage::handleNotification(uint32 id) {
-    bool rebound{id == ID_REBOUND};
+    bool rebound{id == pcui::Notifier::eID_Rebound};
 
     auto& presetArrays{mParent->getOpenConfig().presetArrays};
-    if (rebound or id == Config::PresetArrays::NOTIFY_INJECTIONS) rebuildInjections();
+    if (rebound or id == Config::PresetArrays::NOTIFY_INJECTIONS) {
+        rebuildInjections();
+    }
     if (rebound or id == Config::PresetArrays::NOTIFY_SELECTION) {
         bool hasSelection{presetArrays.selection != -1};
         FindWindow(ID_RemoveArray)->Enable(hasSelection);
         FindWindow(ID_RenameArray)->Enable(hasSelection);
         FindWindow(ID_AddPreset)->Enable(hasSelection);
     }
-    if (rebound or id == Config::PresetArrays::NOTIFY_ARRAY_NAME or id == Config::PresetArrays::NOTIFY_SELECTION) {
+    if (
+            rebound or
+            id == Config::PresetArrays::NOTIFY_ARRAY_NAME or
+            id == Config::PresetArrays::NOTIFY_SELECTION
+       ) {
         auto *issueButton{FindWindow(ID_IssueButton)};
         // This is late for sizing reasons
         issueButton->SetLabel(L"\u26D4" /* ⛔️ */);
@@ -507,10 +528,16 @@ void PresetsPage::handleNotification(uint32 id) {
                     break;
                 }
             }
-            issueButton->Show(static_cast<string>(selectedArray.name).empty() or duplicate);
+            issueButton->Show(
+                static_cast<string>(selectedArray.name).empty() or duplicate
+            );
         }
     }
-    if (rebound or id == Config::PresetArrays::NOTIFY_PRESETS or id == Config::PresetArrays::NOTIFY_SELECTION) {
+    if (
+            rebound or
+            id == Config::PresetArrays::NOTIFY_PRESETS or
+            id == Config::PresetArrays::NOTIFY_SELECTION
+       ) {
         if (presetArrays.selection == -1) {
             FindWindow(ID_MovePresetUp)->Disable();
             FindWindow(ID_MovePresetDown)->Disable();
@@ -520,11 +547,15 @@ void PresetsPage::handleNotification(uint32 id) {
             bool hasPresetSelection{presetArray.selection != -1};
 
             bool notFirst{presetArray.selection > 0};
-            bool notLast{presetArray.selection < presetArray.selection.choices().size() - 1};
+            const auto lastIdx{presetArray.selection.choices().size() - 1};
+            bool notLast{presetArray.selection < lastIdx};
 
-            FindWindow(ID_MovePresetUp)->Enable(hasPresetSelection and notFirst);
-            FindWindow(ID_MovePresetDown)->Enable(hasPresetSelection and notLast);
-            FindWindow(ID_RemovePreset)->Enable(hasPresetSelection);
+            auto *movePresetUp{FindWindow(ID_MovePresetUp)};
+            movePresetUp->Enable(hasPresetSelection and notFirst);
+            auto *movePresetDown{FindWindow(ID_MovePresetDown)};
+            movePresetDown->Enable(hasPresetSelection and notLast);
+            auto *removePreset{FindWindow(ID_RemovePreset)};
+            removePreset->Enable(hasPresetSelection);
         }
     }
     if (
@@ -535,7 +566,7 @@ void PresetsPage::handleNotification(uint32 id) {
        ) {
         auto hasInput{
             presetArrays.trackProxy.data() and
-                not static_cast<string>(*presetArrays.trackProxy.data()).empty()
+            not static_cast<string>(*presetArrays.trackProxy.data()).empty()
         };
         FindWindow(ID_WavText)->Show(hasInput);
     }
@@ -573,11 +604,13 @@ void PresetsPage::rebuildInjections() {
         )};
 
         editButton->Bind(wxEVT_BUTTON, [&injection](wxCommandEvent&) {
-            wxLaunchDefaultApplication((Paths::injectionDir() / injection->filename).native());
+            wxLaunchDefaultApplication(
+                (Paths::injectionDir() / injection->filename).native()
+            );
         });
 
         deleteButton->Bind(wxEVT_BUTTON, [this, &injection](wxCommandEvent&) {
-            auto res{PCUI::showMessage(
+            auto res{pcui::showMessage(
                 _("This action cannot be undone!"),
                 _("Delete Injection"),
                 wxYES_NO | wxNO_DEFAULT

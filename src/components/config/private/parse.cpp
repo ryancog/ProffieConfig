@@ -1456,7 +1456,7 @@ void tryAddInjection(const string& buffer, Config::Config& config) {
 
     logger.debug("Injection file: " + injectionFile); 
     if (injectionFile.find("../") != string::npos or injectionFile.find("/..") != string::npos) {
-        PCUI::showMessage(
+        pcui::showMessage(
             wxString::Format(_("Injection file \"%s\" has an invalid name and cannot be registered.\nYou may add a substitute after import."), injectionFile),
             _("Unknown Injection Encountered")
         );
@@ -1465,7 +1465,7 @@ void tryAddInjection(const string& buffer, Config::Config& config) {
     auto filePath{Paths::injectionDir() / injectionFile};
     std::error_code err;
     if (not fs::exists(filePath, err)) {
-        if (wxYES != PCUI::showMessage(wxString::Format(_("Injection file \"%s\" has not been registered.\nWould you like to add the injection file now?"), injectionFile), _("Unknown Injection Encountered"), wxYES_NO | wxYES_DEFAULT)) {
+        if (wxYES != pcui::showMessage(wxString::Format(_("Injection file \"%s\" has not been registered.\nWould you like to add the injection file now?"), injectionFile), _("Unknown Injection Encountered"), wxYES_NO | wxYES_DEFAULT)) {
             return;
         }
 
@@ -1483,7 +1483,7 @@ void tryAddInjection(const string& buffer, Config::Config& config) {
             auto copyPath{Paths::injectionDir() / filePath};
             fs::create_directories(copyPath.parent_path());
             if (not Paths::copyOverwrite(fileDialog.GetPath().ToStdString(), copyPath, err)) {
-                auto res{PCUI::showMessage(err.message(), _("Injection file could not be added."), wxOK | wxCANCEL | wxOK_DEFAULT)};
+                auto res{pcui::showMessage(err.message(), _("Injection file could not be added."), wxOK | wxCANCEL | wxOK_DEFAULT)};
                 if (res == wxCANCEL) return;
 
                 continue;

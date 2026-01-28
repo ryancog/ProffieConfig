@@ -64,9 +64,9 @@ struct CONFIG_EXPORT SimpleBlade {
             "CH2LED",
             "CH3LED",
         };
-        PCUI::ChoiceData led;
-        PCUI::ComboBoxData powerPin;
-        PCUI::NumericData resistance;
+        pcui::ChoiceData led;
+        pcui::ComboBoxData powerPin;
+        pcui::NumericData resistance;
     };
 
     Star star1;

@@ -39,11 +39,11 @@ struct CONFIG_EXPORT Injection {
 struct CONFIG_EXPORT PresetArray {
     PresetArray(Config&);
 
-    PCUI::TextData name;
-    PCUI::ChoiceData selection;
+    pcui::TextData name;
+    pcui::ChoiceData selection;
 
     // Notifies on duplicate update
-    PCUI::Notifier notifyData;
+    pcui::Notifier notifyData;
 
     [[nodiscard]] const vector<std::unique_ptr<Preset>>& presets() const { return mPresets; }
     [[nodiscard]] Preset& preset(uint32 idx) const {
@@ -64,7 +64,7 @@ private:
 struct CONFIG_EXPORT PresetArrays {
     PresetArrays(Config&);
 
-    PCUI::ChoiceData selection;
+    pcui::ChoiceData selection;
 
     enum {
         /**
@@ -92,7 +92,7 @@ struct CONFIG_EXPORT PresetArrays {
          */
         NOTIFY_ARRAY_NAME,
     };
-    PCUI::Notifier notifyData;
+    pcui::Notifier notifyData;
 
     [[nodiscard]] const vector<std::unique_ptr<PresetArray>>& arrays() const { return mArrays; }
     [[nodiscard]] PresetArray& array(uint32 idx) { 
@@ -111,19 +111,19 @@ struct CONFIG_EXPORT PresetArrays {
     void addInjection(const string&);
     void removeInjection(const Injection&);
 
-    PCUI::ChoiceDataProxy presetProxy;
+    pcui::ChoiceDataProxy presetProxy;
 
-    PCUI::TextDataProxy nameProxy;
-    PCUI::TextDataProxy dirProxy;
-    PCUI::TextDataProxy trackProxy;
+    pcui::TextDataProxy nameProxy;
+    pcui::TextDataProxy dirProxy;
+    pcui::TextDataProxy trackProxy;
 
-    PCUI::ChoiceData styleDisplay;
-    PCUI::ChoiceDataProxy styleSelectProxy;
+    pcui::ChoiceData styleDisplay;
+    pcui::ChoiceDataProxy styleSelectProxy;
 
-    PCUI::TextDataProxy commentProxy;
-    PCUI::TextDataProxy styleProxy;
-    static PCUI::TextData dummyCommentData;
-    static PCUI::TextData dummyStyleData;
+    pcui::TextDataProxy commentProxy;
+    pcui::TextDataProxy styleProxy;
+    static pcui::TextData dummyCommentData;
+    static pcui::TextData dummyStyleData;
 
     /**
      * Increase number of styles to match number of blades

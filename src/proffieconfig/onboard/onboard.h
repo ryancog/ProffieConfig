@@ -34,7 +34,7 @@ namespace Onboard {
 
 wxStaticText *createHeader(wxWindow *, const wxString&);
 
-class Frame : public PCUI::Frame, PCUI::NotifyReceiver {
+class Frame : public pcui::Frame, pcui::NotifyReceiver {
 public:
     static Frame* instance;
     Frame();

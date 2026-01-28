@@ -23,7 +23,7 @@
 
 #include "../editorwindow.h"
 
-class PresetsPage : public wxPanel, PCUI::NotifyReceiver {
+class PresetsPage : public wxPanel, pcui::NotifyReceiver {
 public:
     PresetsPage(EditorWindow *);
 
@@ -44,7 +44,7 @@ public:
 private:
     EditorWindow *mParent{nullptr};
 
-    PCUI::StaticBox *mInjectionsSizer;
+    pcui::StaticBox *mInjectionsSizer;
 
     void createUI();
     void bindEvents();

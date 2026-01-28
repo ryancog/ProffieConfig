@@ -136,7 +136,7 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
     }
     mainSizer->Add(whatNewText, wxSizerFlags());
 
-    auto *whatNewBorder{new PCUI::StaticBox(wxVERTICAL, &dlg)};
+    auto *whatNewBorder{new pcui::StaticBox(wxVERTICAL, &dlg)};
     auto *whatNewPanel{new wxScrolledWindow(whatNewBorder->childParent())};
     auto *whatNewSizer{new wxBoxSizer(wxVERTICAL)};
     auto objFont{whatNewPanel->GetFont()};
@@ -273,7 +273,7 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
     return dlg.ShowModal();
 }
 
-Utils::Version Update::determineCurrentVersion(const Data& data, PCUI::ProgressDialog *prog, Log::Branch& lBranch) {
+Utils::Version Update::determineCurrentVersion(const Data& data, pcui::ProgressDialog *prog, Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Update::determineCurrentVersion()")};
 
     // Ensure invalid

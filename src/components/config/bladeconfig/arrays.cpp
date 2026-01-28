@@ -39,16 +39,19 @@ Config::BladeArrays::BladeArrays(Config& parent) :
     splitSegmentsProxy.showWhenUnbound(false);
     splitListProxy.showWhenUnbound(false);
 
-    arraySelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_INDEX);
+    arraySelection.setPersistence(pcui::ChoiceData::Persistence::Index);
 
     arraySelection.setUpdateHandler([this](uint32 id) {
-        if (id == PCUI::ChoiceData::ID_CHOICES) {
-            if (not arraySelection.choices().empty() and arraySelection == -1) {
+        if (id == pcui::ChoiceData::eID_Choices) {
+            if (
+                    not arraySelection.choices().empty() and
+                    arraySelection == -1
+                ) {
                 arraySelection = 0;
             }
             return;
         }
-        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+        if (id != pcui::ChoiceData::eID_Selection) return;
         Defer defer{[this]() { notifyData.notify(ID_ARRAY_SELECTION); }};
 
         arrayIssues = BladeConfig::ISSUE_NONE;
@@ -62,10 +65,10 @@ Config::BladeArrays::BladeArrays(Config& parent) :
         arrayIssues = selectedArray.computeIssues();
     });
     powerPinNameEntry.setUpdateHandler([this](uint32 id) {
-        if (id == PCUI::TextData::ID_ENTER) {
+        if (id == pcui::TextData::eID_Enter) {
             addPowerPinFromEntry();
         }
-        if (id != PCUI::TextData::ID_VALUE) return;
+        if (id != pcui::TextData::eID_Value) return;
 
         auto rawValue{static_cast<string>(powerPinNameEntry)};
         uint32 numTrimmed{};

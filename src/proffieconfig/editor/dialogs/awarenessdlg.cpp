@@ -70,13 +70,13 @@ void BladeAwarenessDlg::bindEvents() {
 wxWindow *BladeAwarenessDlg::createIDSetup(wxWindow *parent) {
     auto& config{mParent->getOpenConfig()};
 
-    auto *setupSizer{new PCUI::StaticBox(
+    auto *setupSizer{new pcui::StaticBox(
         wxVERTICAL,
         parent,
         _("Blade ID Setup")
     )};
 
-    auto *enableID{new PCUI::CheckBox(
+    auto *enableID{new pcui::CheckBox(
         setupSizer->childParent(),
         config.settings.bladeID.enable,
         0,
@@ -84,27 +84,27 @@ wxWindow *BladeAwarenessDlg::createIDSetup(wxWindow *parent) {
     )};
     enableID->SetToolTip(_("Detect when a specific blade is inserted based on a resistor placed in the blade to give it an identifier."));
 
-    auto *mode{new PCUI::Choice(
+    auto *mode{new pcui::Choice(
         setupSizer->childParent(),
         config.settings.bladeID.mode,
         _("Blade ID Mode")
     )};
     mode->SetToolTip(_("The mode to be used for Blade ID.\nSee the POD page \"Blade ID\" for more info."));
 
-    auto *idPin{new PCUI::ComboBox(
+    auto *idPin{new pcui::ComboBox(
         setupSizer->childParent(),
         config.settings.bladeID.pin,
         _("Blade ID Pin")
     )};
     idPin->SetToolTip(_("The pin used to detect blade resistance values.\nCannot be the same as Detect Pin."));
 
-    auto *pullupResistance{new PCUI::Numeric(
+    auto *pullupResistance{new pcui::Numeric(
         setupSizer->childParent(),
         config.settings.bladeID.pullup,
         _("Pullup Resistance")
     )};
     pullupResistance->SetToolTip(_("The value of the pullup resistor placed on the Blade ID line."));
-    auto *pullupPin{new PCUI::ComboBox(
+    auto *pullupPin{new pcui::ComboBox(
         setupSizer->childParent(),
         config.settings.bladeID.bridgePin,
         _("Pullup Pin")
@@ -131,13 +131,13 @@ wxWindow *BladeAwarenessDlg::createIDSetup(wxWindow *parent) {
 wxWindow *BladeAwarenessDlg::createIDPowerSettings(wxWindow *parent) {
     auto& config{mParent->getOpenConfig()};
 
-    auto *powerForIDSizer{new PCUI::StaticBox(
+    auto *powerForIDSizer{new pcui::StaticBox(
         wxVERTICAL,
         parent,
         _("Power for Blade ID")
     )};
 
-    auto *enablePowerForID {new PCUI::CheckBox(
+    auto *enablePowerForID {new pcui::CheckBox(
         powerForIDSizer->childParent(),
         config.settings.bladeID.powerForID,
         0,
@@ -145,12 +145,12 @@ wxWindow *BladeAwarenessDlg::createIDPowerSettings(wxWindow *parent) {
     )};
     enablePowerForID->SetToolTip(_("Enable power during Blade ID.\nThis is required for WS281X blades."));
 
-    auto *powerPins{new PCUI::CheckList(
+    auto *powerPins{new pcui::CheckList(
         powerForIDSizer->childParent(),
         config.settings.bladeID.powerPins
     )};
 
-    auto *powerPinEntry{new PCUI::Text(
+    auto *powerPinEntry{new pcui::Text(
         powerForIDSizer->childParent(),
         config.settings.bladeID.powerPinEntry,
         wxTE_PROCESS_ENTER
@@ -168,12 +168,12 @@ wxWindow *BladeAwarenessDlg::createIDPowerSettings(wxWindow *parent) {
 wxWindow *BladeAwarenessDlg::createContinuousScanSettings(wxWindow *parent) {
     auto& config{mParent->getOpenConfig()};
 
-    auto *continuousScansSizer{new PCUI::StaticBox(
+    auto *continuousScansSizer{new pcui::StaticBox(
         wxVERTICAL,
         parent,
         _("Continuous Scanning")
     )};
-    auto *continuousScans{new PCUI::CheckBox(
+    auto *continuousScans{new pcui::CheckBox(
         continuousScansSizer->childParent(),
         config.settings.bladeID.continuousScanning,
         0,
@@ -181,14 +181,14 @@ wxWindow *BladeAwarenessDlg::createContinuousScanSettings(wxWindow *parent) {
     )};
     continuousScans->SetToolTip(_("Continuously monitor the Blade ID to detect changes."));
 
-    auto *numIDTimes{new PCUI::Numeric(
+    auto *numIDTimes{new pcui::Numeric(
         continuousScansSizer->childParent(),
         config.settings.bladeID.continuousTimes,
         _("Number of Reads to Average")
     )};
     numIDTimes->SetToolTip(_("Number of times to read the Blade ID to average out the result and compensate for inaccurate readings."));
 
-    auto *scanIDMillis{new PCUI::Numeric(
+    auto *scanIDMillis{new pcui::Numeric(
         continuousScansSizer->childParent(),
         config.settings.bladeID.continuousInterval, 
         _("Scan Interval (ms)")
@@ -207,12 +207,12 @@ wxWindow *BladeAwarenessDlg::createContinuousScanSettings(wxWindow *parent) {
 wxWindow *BladeAwarenessDlg::createBladeDetect(wxWindow *parent) {
     auto& config{mParent->getOpenConfig()};
 
-    auto *bladeDetectSizer{new PCUI::StaticBox(
+    auto *bladeDetectSizer{new pcui::StaticBox(
         wxVERTICAL,
         parent,
         _("Blade Detect")
     )};
-    auto *enableDetect{new PCUI::CheckBox(
+    auto *enableDetect{new pcui::CheckBox(
         bladeDetectSizer->childParent(),
         config.settings.bladeDetect,
         0,
@@ -220,7 +220,7 @@ wxWindow *BladeAwarenessDlg::createBladeDetect(wxWindow *parent) {
     )};
     enableDetect->SetToolTip(_("Detect when a blade is inserted into the saber or not."));
 
-    auto *detectPin{new PCUI::ComboBox(
+    auto *detectPin{new pcui::ComboBox(
         bladeDetectSizer->childParent(),
         config.settings.bladeDetectPin,
         _("Blade Detect Pin")

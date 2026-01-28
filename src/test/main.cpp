@@ -32,7 +32,7 @@ class Test : public wxApp {
 public:
     bool OnInit() override {
         if (not App::init("Test")) {
-            PCUI::showMessage(_("Test is Already Running"), App::getAppName());
+            pcui::showMessage(_("Test is Already Running"), App::getAppName());
             return false;
         }
 

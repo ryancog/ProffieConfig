@@ -9,7 +9,7 @@
 
 #include "../editorwindow.h"
 
-class CustomOptionsDlg : public wxDialog, PCUI::NotifyReceiver {
+class CustomOptionsDlg : public wxDialog, pcui::NotifyReceiver {
 public:
     CustomOptionsDlg(EditorWindow*);
 

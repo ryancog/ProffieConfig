@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/config/bladeconfig/bladeconfig.h
  *
@@ -44,9 +44,9 @@ struct CONFIG_EXPORT Blade {
 
         INVALID = -1,
     };
-    PCUI::ChoiceData type;
+    pcui::ChoiceData type;
 
-    PCUI::NumericData brightness;
+    pcui::NumericData brightness;
 
     WS281XBlade& ws281x() { return mPixelBlade; }
     SimpleBlade& simple() { return mSimpleBlade; }
@@ -62,7 +62,9 @@ private:
 struct CONFIG_EXPORT BladeConfig {
     BladeConfig(Config&);
 
-    [[nodiscard]] const vector<std::unique_ptr<Blade>>& blades() const { return mBlades; }
+    [[nodiscard]] const vector<std::unique_ptr<Blade>>& blades() const {
+        return mBlades;
+    }
     [[nodiscard]] Blade& blade(uint32 idx) const { 
         return **std::next(mBlades.begin(), idx);
     }
@@ -70,12 +72,12 @@ struct CONFIG_EXPORT BladeConfig {
     Blade& addBlade();
     void removeBlade(uint32 idx);
 
-    PCUI::ChoiceData bladeSelection;
+    pcui::ChoiceData bladeSelection;
 
     // Notify of issues
-    PCUI::Notifier notifyData;
+    pcui::Notifier notifyData;
 
-    enum Issue {
+    enum {
         ISSUE_NONE = 0,
         ISSUE_NO_PRESETARRAY  = 1UL << 0,
         ISSUE_DUPLICATE_ID    = 1UL << 1,
@@ -95,10 +97,10 @@ struct CONFIG_EXPORT BladeConfig {
      */
     [[nodiscard]] static string issueString(uint32 issues);
 
-    PCUI::TextData name;
-    PCUI::ChoiceData presetArray;
-    PCUI::NumericData id;
-    PCUI::ToggleData noBladeID;
+    pcui::TextData name;
+    pcui::ChoiceData presetArray;
+    pcui::NumericData id;
+    pcui::ToggleData noBladeID;
 
 private:
     Config& mConfig;

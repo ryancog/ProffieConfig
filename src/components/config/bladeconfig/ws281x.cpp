@@ -33,9 +33,14 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
     brightness.setValue(100);
 
     type.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::RadiosData::ID_SELECTION) return;
+        if (id != pcui::RadiosData::eID_Selection) return;
 
-        auto usesLength{type == STANDARD or type == REVERSE or type == STRIDE or type == ZIG_ZAG};
+        auto usesLength{
+            type == STANDARD or
+            type == REVERSE or
+            type == STRIDE or
+            type == ZIG_ZAG
+        };
         start.show(usesLength);
         end.show(usesLength);
         length.show(usesLength);
@@ -53,8 +58,9 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
 
         mConfig.presetArrays.syncStyles();
 
-        if (mConfig.bladeArrays.arraySelection == -1) return;
-        auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
+        auto& bladeArrays{mConfig.bladeArrays};
+        if (bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{bladeArrays.array(bladeArrays.arraySelection)};
         if (selectedArray.bladeSelection == -1) return;
         auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
         if (selectedBlade.type != Blade::WS281X) return;
@@ -64,7 +70,7 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         mConfig.bladeArrays.notifyData.notify(BladeArrays::ID_VISUAL_UPDATE);
     });
     start.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::NumericData::ID_VALUE) return;
+        if (id != pcui::NumericData::eID_Value) return;
 
         end.setOffset((start % segments) - 1, false);
         if (end.increment() != 1) {
@@ -77,8 +83,9 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
             length = static_cast<int32>(end) - static_cast<int32>(start) + 1;
         }
 
-        if (mConfig.bladeArrays.arraySelection == -1) return;
-        auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
+        auto& bladeArrays{mConfig.bladeArrays};
+        if (bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{bladeArrays.array(bladeArrays.arraySelection)};
         if (selectedArray.bladeSelection == -1) return;
         auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
         if (selectedBlade.type != Blade::WS281X) return;
@@ -87,7 +94,7 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         mConfig.bladeArrays.visualizerData.notify();
     });
     end.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::NumericData::ID_VALUE) return;
+        if (id != pcui::NumericData::eID_Value) return;
 
         if (static_cast<uint32>(start) > static_cast<uint32>(end)) {
             start = static_cast<int32>(end) - start.increment() + 1;
@@ -95,8 +102,9 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
 
         length = static_cast<int32>(end) - static_cast<int32>(start) + 1;
 
-        if (mConfig.bladeArrays.arraySelection == -1) return;
-        auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
+        auto& bladeArrays{mConfig.bladeArrays};
+        if (bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{bladeArrays.array(bladeArrays.arraySelection)};
         if (selectedArray.bladeSelection == -1) return;
         auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
         if (selectedBlade.type != Blade::WS281X) return;
@@ -105,7 +113,7 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         mConfig.bladeArrays.visualizerData.notify();
     });
     length.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::NumericData::ID_VALUE) return;
+        if (id != pcui::NumericData::eID_Value) return;
 
         if (length > mParent.length) {
             length = static_cast<int32>(mParent.length);
@@ -118,8 +126,9 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
 
         end = start + length - 1;
 
-        if (mConfig.bladeArrays.arraySelection == -1) return;
-        auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
+        auto& bladeArrays{mConfig.bladeArrays};
+        if (bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{bladeArrays.array(bladeArrays.arraySelection)};
         if (selectedArray.bladeSelection == -1) return;
         auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
         if (selectedBlade.type != Blade::WS281X) return;
@@ -128,7 +137,7 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
         mConfig.bladeArrays.visualizerData.notify();
     });
     segments.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::NumericData::ID_VALUE) return;
+        if (id != pcui::NumericData::eID_Value) return;
 
         if (mParent.length < segments) {
             mParent.length = static_cast<int32>(segments);
@@ -140,8 +149,9 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
 
         mConfig.presetArrays.syncStyles();
 
-        if (mConfig.bladeArrays.arraySelection == -1) return;
-        auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
+        auto& bladeArrays{mConfig.bladeArrays};
+        if (bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{bladeArrays.array(bladeArrays.arraySelection)};
         if (selectedArray.bladeSelection == -1) return;
         auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
         if (selectedBlade.type != Blade::WS281X) return;
@@ -155,8 +165,10 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
 
         for (auto idx{0}; idx < str.size(); ++idx) {
             if (
-                    (not std::isdigit(str[idx]) and (idx == 0 or str[idx] != ',')) or
-                    (idx != str.size() - 1 and (str[idx] == ',' and str[idx + 1] == ','))
+                    (not std::isdigit(str[idx]) and 
+                     (idx == 0 or str[idx] != ',')) or
+                    (idx != str.size() - 1 and
+                     str[idx] == ',' and str[idx + 1] == ',')
                ) {
                 if (idx < insertionPoint) --insertionPoint;
                 str.erase(idx, 1);
@@ -184,7 +196,11 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
 
             values.push_back(clampValueStr);
 
-            if (substr != clampValueStr and insertionPoint >= numStart and insertionPoint < end) {
+            if (
+                    substr != clampValueStr and
+                    insertionPoint >= numStart and
+                    insertionPoint < end
+               ) {
                 insertionPoint = end;
             }
             numStart = end + 1;
@@ -203,8 +219,9 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
             return;
         }
 
-        if (mConfig.bladeArrays.arraySelection == -1) return;
-        auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
+        auto& bladeArrays{mConfig.bladeArrays};
+        if (bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{bladeArrays.array(bladeArrays.arraySelection)};
         if (selectedArray.bladeSelection == -1) return;
         auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
         if (selectedBlade.type != Blade::WS281X) return;
@@ -245,7 +262,7 @@ vector<uint32> Config::Split::listValues() const {
 
 Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
     length.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::NumericData::ID_VALUE) return;
+        if (id != pcui::NumericData::eID_Value) return;
 
         for (const auto& split : mSplits) {
             if (split->segments > length) {
@@ -259,7 +276,7 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
         mConfig.bladeArrays.visualizerData.notify();
     });
     dataPin.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ComboBoxData::ID_VALUE) return;
+        if (id != pcui::ComboBoxData::eID_Value) return;
 
         auto rawValue{static_cast<string>(dataPin)};
         uint32 numTrimmed{};
@@ -279,12 +296,15 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
         dataPin.setInsertionPoint(insertionPoint - numTrimmed);
     });
     hasWhite.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ToggleData::ID_VALUE) return;
+        if (id != pcui::ToggleData::eID_Value) return;
 
         colorOrder3.show(not hasWhite);
         if (not hasWhite) {
             auto newOrder3{static_cast<int32>(colorOrder4)};
-            if (newOrder3 > ORDER4_WFIRST_START and newOrder3 < ORDER4_WFIRST_END) {
+            if (
+                    newOrder3 > ORDER4_WFIRST_START and
+                    newOrder3 < ORDER4_WFIRST_END
+               ) {
                 newOrder3 -= ORDER4_WFIRST_START;
             }
 
@@ -297,7 +317,7 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
         useRGBWithWhite.show(hasWhite);
     });
     powerPins.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::CheckListData::ID_SELECTION) return;
+        if (id != pcui::CheckListData::eID_Checked) return;
 
         auto selected{static_cast<set<uint32>>(powerPins)};
         auto items{powerPins.items()};
@@ -310,14 +330,16 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
         powerPins.setItems(std::move(items));
     });
     splitSelect.setUpdateHandler([this](uint32 id) {
-        if (id == PCUI::ChoiceData::ID_CHOICES) {
+        if (id == pcui::ChoiceData::eID_Choices) {
             if (not splitSelect.choices().empty()) {
                 if (splitSelect == -1) splitSelect = 0;
             } 
         }
 
-        if (mConfig.bladeArrays.arraySelection == -1) return;
-        auto& selectedArray{mConfig.bladeArrays.array(mConfig.bladeArrays.arraySelection)};
+        auto& bladeArrays{mConfig.bladeArrays};
+
+        if (bladeArrays.arraySelection == -1) return;
+        auto& selectedArray{bladeArrays.array(bladeArrays.arraySelection)};
         if (selectedArray.bladeSelection == -1) return;
         auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
         if (selectedBlade.type != Blade::WS281X) return;
@@ -325,17 +347,17 @@ Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
 
         if (splitSelect != -1) {
             auto& selectedSplit{split(splitSelect)};
-            mConfig.bladeArrays.splitTypeProxy.bind(selectedSplit.type);
-            mConfig.bladeArrays.splitStartProxy.bind(selectedSplit.start);
-            mConfig.bladeArrays.splitEndProxy.bind(selectedSplit.end);
-            mConfig.bladeArrays.splitLengthProxy.bind(selectedSplit.length);
-            mConfig.bladeArrays.splitSegmentsProxy.bind(selectedSplit.segments);
-            mConfig.bladeArrays.splitListProxy.bind(selectedSplit.list);
-            mConfig.bladeArrays.splitBrightnessProxy.bind(selectedSplit.brightness);
+            bladeArrays.splitTypeProxy.bind(selectedSplit.type);
+            bladeArrays.splitStartProxy.bind(selectedSplit.start);
+            bladeArrays.splitEndProxy.bind(selectedSplit.end);
+            bladeArrays.splitLengthProxy.bind(selectedSplit.length);
+            bladeArrays.splitSegmentsProxy.bind(selectedSplit.segments);
+            bladeArrays.splitListProxy.bind(selectedSplit.list);
+            bladeArrays.splitBrightnessProxy.bind(selectedSplit.brightness);
         }
 
-        mConfig.bladeArrays.notifyData.notify(BladeArrays::ID_SPLIT_SELECTION);
-        mConfig.bladeArrays.visualizerData.notify();
+        bladeArrays.notifyData.notify(BladeArrays::ID_SPLIT_SELECTION);
+        bladeArrays.visualizerData.notify();
     });
 
     powerPins.setItems(Utils::createEntries({
@@ -388,7 +410,9 @@ Config::Split& Config::WS281XBlade::addSplit() {
 
     vector<string> choices;
     for (auto idx{0}; idx < mSplits.size(); ++idx) {
-        choices.emplace_back(_("SubBlade ").ToStdString() + std::to_string(idx));
+        choices.emplace_back(
+            _("SubBlade ").ToStdString() + std::to_string(idx)
+        );
     }
     splitSelect.setChoices(std::move(choices));
 
@@ -403,10 +427,18 @@ void Config::WS281XBlade::removeSplit(uint32 idx) {
 
     vector<string> choices;
     for (auto idx{0}; idx < mSplits.size(); ++idx) {
-        choices.emplace_back(_("SubBlade ").ToStdString() + std::to_string(idx));
+        choices.emplace_back(
+            _("SubBlade ").ToStdString() + std::to_string(idx)
+        );
     }
     int32 oldSelect{splitSelect};
     splitSelect.setChoices(std::move(choices));
-    splitSelect.setValue(std::clamp<int32>(oldSelect, 0, static_cast<int32>(splitSelect.choices().size()) - 1));
+    splitSelect.setValue(
+        std::clamp<int32>(
+            oldSelect,
+            0,
+            static_cast<int32>(splitSelect.choices().size()) - 1
+        )
+    );
 }
 

@@ -42,17 +42,17 @@ Config::Config::Config() :
     settings{*this},
     bladeArrays{*this},
     presetArrays{*this} {
-    propSelection.setPersistence(PCUI::ChoiceData::PERSISTENCE_STRING);
+    propSelection.setPersistence(pcui::ChoiceData::Persistence::String);
 
     propSelection.setUpdateHandler([this](uint32 id) {
-        if (id == PCUI::ChoiceData::ID_CHOICES) {
+        if (id == pcui::ChoiceData::eID_Choices) {
             propNotifyData.notify(ID_PROPUPDATE);
             if (propSelection == -1 and not propSelection.choices().empty()) {
                 propSelection = 0;
                 return;
             }
         }
-        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+        if (id != pcui::ChoiceData::eID_Selection) return;
         propNotifyData.notify(ID_PROPSELECTION);
     });
 
@@ -81,7 +81,12 @@ void Config::Config::refreshOSVersions() {
 
     for (auto& osVersion : osVersions) {
         auto versionStr{static_cast<string>(osVersion.verNum)};
-        osChoices.push_back(wxString::Format(_("OS v%s"), std::move(versionStr)).ToStdString());
+        osChoices.push_back(
+            wxString::Format(
+                _("OS v%s"),
+                std::move(versionStr)
+            ).ToStdString()
+        );
         osVersionMap.push_back(osVersion.verNum);
     }
 
@@ -100,11 +105,16 @@ void Config::Config::refreshPropVersions() {
             // Compare by display name, not unique name, obviously
             if (data.prop->name == versionedProp->prop->name) {
                 found = true;
-                auto newProp{std::make_unique<Versions::Prop>(*versionedProp->prop)};
+
+                auto newProp{std::make_unique<Versions::Prop>(
+                    *versionedProp->prop
+                )};
+
                 newProp->migrateFrom(*data.prop);
                 visibleList.push_back(newProp.get());
                 data.prop = std::move(newProp);
                 data.reference = versionedProp;
+
                 break;
             }
         }
@@ -232,18 +242,21 @@ void Config::Config::rename(const string& newName) {
 
 
 void Config::Config::close() {
-    for (auto iter{loadedConfigs.begin()}; iter != loadedConfigs.end(); ++iter) {
-        if (iter->get() == this) {
-            loadedConfigs.erase(iter);
-            return;
-        }
+    auto iter{loadedConfigs.begin()};
+    for (; iter != loadedConfigs.end(); ++iter) {
+        if (iter->get() != this) continue;
+
+        loadedConfigs.erase(iter);
+        return;
     }
 }
 
 namespace {
 
 filepath savePath(const string& name) {
-    return Paths::configDir() / (static_cast<string>(name) + Config::RAW_FILE_EXTENSION);
+    return 
+        Paths::configDir() /
+        (static_cast<string>(name) + Config::RAW_FILE_EXTENSION);
 }
 
 } // namespace
@@ -252,7 +265,9 @@ filepath Config::Config::savePath() const {
     return ::savePath(name);
 }
 
-optional<string> Config::Config::save(const filepath& path, Log::Branch *lBranch) const {
+optional<string> Config::Config::save(
+    const filepath& path, Log::Branch *lBranch
+) const {
     auto& logger{Log::Branch::optCreateLogger("Config::Config::save()", lBranch)};
     if (path.empty()) logger.info("Saving \"" + static_cast<string>(name) + "\"...");
     else logger.info("Exporting \"" + static_cast<string>(name) + "\" to \"" + path.string() + "\"...");
@@ -284,7 +299,9 @@ bool Config::Config::isSaved() const {
     auto& logger{Log::Context::getGlobal().createLogger("EditorWindow::isSaved()")};
 
     const auto currentPath{savePath()};
-    const auto validatePath{fs::temp_directory_path() / (static_cast<string>(name) + "-validate")};
+    const auto validatePath{
+        fs::temp_directory_path() / (static_cast<string>(name) + "-validate")
+    };
 
     auto saveErr{save(validatePath)};
 
@@ -309,16 +326,27 @@ bool Config::Config::isSaved() const {
     auto validate{Paths::openInputFile(validatePath)};
 
     bool saved{true};
-    while (current.good() && !current.eof() && validate.good() && !validate.eof()) {
-        std::array<char, 4096> currentBuffer;
-        std::array<char, currentBuffer.size()> validateBuffer;
-        currentBuffer.fill(0);
-        validateBuffer.fill(0);
 
-        current.read(currentBuffer.data(), currentBuffer.size());
-        validate.read(validateBuffer.data(), validateBuffer.size());
+    constexpr auto BUFFER_SIZE{0x4000};
+    std::array<char, BUFFER_SIZE> currentBuffer;
+    std::array<char, BUFFER_SIZE> validateBuffer;
 
-        if (0 != std::memcmp(currentBuffer.data(), validateBuffer.data(), validateBuffer.size())) {
+    while (
+            current.read(currentBuffer.data(), currentBuffer.size()) and
+            validate.read(validateBuffer.data(), validateBuffer.size())
+          ) {
+        if (current.gcount() != validate.gcount()) {
+            saved = false;
+            break;
+        }
+
+        auto cmp{std::memcmp(
+            currentBuffer.data(),
+            validateBuffer.data(),
+            current.gcount()
+        )};
+
+        if (0 != cmp) {
             saved = false;
             break;
         }
@@ -358,7 +386,9 @@ bool Config::remove(const string& name) {
     return fs::remove(savePath(name), err);
 }
 
-variant<Config::Config *, string> Config::open(const string& name, Log::Branch *lBranch) {
+variant<Config::Config *, string> Config::open(
+    const string& name, Log::Branch *lBranch
+) {
     auto& logger{Log::Branch::optCreateLogger("Config::open()", lBranch)};
 
     auto *open{getIfOpen(name)};

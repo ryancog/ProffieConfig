@@ -77,30 +77,30 @@ void GeneralPage::bindEvents() {
 }
 
 void GeneralPage::handleNotification(uint32 id) {
-    bool rebound{id == ID_REBOUND};
+    bool rebound{id == pcui::Notifier::eID_Rebound};
 }
 
 wxWindow *GeneralPage::setupSection() {
     auto& config{mParent->getOpenConfig()};
 
-    auto *boardSetup{new PCUI::StaticBox(
+    auto *boardSetup{new pcui::StaticBox(
         wxHORIZONTAL,
         this,
         _("Setup"))
     };
 
-    auto *osVersion{new PCUI::Choice(
+    auto *osVersion{new pcui::Choice(
         boardSetup->childParent(),
         config.settings.osVersion
     )};
 
-    auto *board{new PCUI::Choice(
+    auto *board{new pcui::Choice(
         boardSetup->childParent(),
         config.settings.board
     )};
     board->SetToolTip(_("The hardware revision of the physical proffieboard.")); 
 
-    auto *massStorage {new PCUI::CheckBox(
+    auto *massStorage {new pcui::CheckBox(
         boardSetup->childParent(),
         config.settings.massStorage,
         0,
@@ -108,7 +108,7 @@ wxWindow *GeneralPage::setupSection() {
     )};
     massStorage->SetToolTip(_("Enable to access the contents of your proffieboard's SD card via the USB connection."));
 
-    auto *webUSB {new PCUI::CheckBox(
+    auto *webUSB {new pcui::CheckBox(
         boardSetup->childParent(),
         config.settings.webUSB,
         0,
@@ -133,10 +133,10 @@ wxWindow *GeneralPage::setupSection() {
 
 wxWindow *GeneralPage::miscSection() {
     auto& config{mParent->getOpenConfig()};
-    auto *sizer{new PCUI::StaticBox(wxVERTICAL, this, _("Misc"))};
+    auto *sizer{new pcui::StaticBox(wxVERTICAL, this, _("Misc"))};
     auto *parent{sizer->childParent()};
 
-    auto *pliTime{new PCUI::Decimal(
+    auto *pliTime{new pcui::Decimal(
         parent,
         config.settings.pliOffTime,
         _("PLI Timeout (seconds)"),
@@ -144,7 +144,7 @@ wxWindow *GeneralPage::miscSection() {
     )};
     pliTime->SetToolTip(_("Time (in minutes) since last activity before PLI goes to sleep."));
 
-    auto *idleTime{new PCUI::Decimal(
+    auto *idleTime{new pcui::Decimal(
         parent,
         config.settings.idleOffTime,
         _("Idle Timeout (minutes)"),
@@ -152,7 +152,7 @@ wxWindow *GeneralPage::miscSection() {
     )};
     idleTime->SetToolTip(_("Time (in minutes) since last activity before accent LEDs go to sleep."));
 
-    auto *motionTime{new PCUI::Decimal(
+    auto *motionTime{new pcui::Decimal(
         parent,
         config.settings.motionTimeout,
         _("Motion Timeout (minutes)"),
@@ -171,10 +171,10 @@ wxWindow *GeneralPage::miscSection() {
 
 wxWindow *GeneralPage::installationSection() {
     auto& config{mParent->getOpenConfig()};
-    auto *sizer{new PCUI::StaticBox(wxVERTICAL, this, _("Installation"))};
+    auto *sizer{new pcui::StaticBox(wxVERTICAL, this, _("Installation"))};
     auto *parent{sizer->childParent()};
 
-    auto *clash{new PCUI::Decimal(
+    auto *clash{new pcui::Decimal(
         parent,
         config.settings.clashThreshold,
         _("Clash Threshold (Gs)"),
@@ -184,7 +184,7 @@ wxWindow *GeneralPage::installationSection() {
 
     auto *line1{new wxStaticLine(parent)};
 
-    auto *orientation{new PCUI::Choice(
+    auto *orientation{new pcui::Choice(
         parent, 
         config.settings.orientation,
         _("Orientation"),
@@ -193,19 +193,19 @@ wxWindow *GeneralPage::installationSection() {
     orientation->SetToolTip(_("The orientation of the Proffieboard in the saber."));
 
     auto *rotationSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *rotationX{new PCUI::Numeric(
+    auto *rotationX{new pcui::Numeric(
         parent,
         config.settings.orientationRotation.x,
         _("X"),
         wxHORIZONTAL
     )};
-    auto *rotationY{new PCUI::Numeric(
+    auto *rotationY{new pcui::Numeric(
         parent,
         config.settings.orientationRotation.y,
         _("Y"),
         wxHORIZONTAL
     )};
-    auto *rotationZ{new PCUI::Numeric(
+    auto *rotationZ{new pcui::Numeric(
         parent,
         config.settings.orientationRotation.z,
         _("Z"),
@@ -219,7 +219,7 @@ wxWindow *GeneralPage::installationSection() {
 
     auto *line2{new wxStaticLine(parent)};
 
-    auto *buttons{new PCUI::Button(
+    auto *buttons{new pcui::Button(
         parent,
         ID_Buttons,
         _("Buttons...")
@@ -231,7 +231,7 @@ wxWindow *GeneralPage::installationSection() {
 
     auto *line3{new wxStaticLine(parent)};
 
-    auto *enableOLED{new PCUI::CheckBox(
+    auto *enableOLED{new pcui::CheckBox(
         parent,
         config.settings.enableOLED,
         0,
@@ -260,10 +260,10 @@ wxWindow *GeneralPage::installationSection() {
 
 wxWindow *GeneralPage::tweaksSection() {
     auto& config{mParent->getOpenConfig()};
-    auto *sizer{new PCUI::StaticBox(wxHORIZONTAL, this, _("Tweaks"))};
+    auto *sizer{new pcui::StaticBox(wxHORIZONTAL, this, _("Tweaks"))};
     auto *parent{sizer->childParent()};
 
-    auto *noRepeatRandom{new PCUI::CheckBox(
+    auto *noRepeatRandom{new pcui::CheckBox(
         parent,
         config.settings.noRepeatRandom,
         0,
@@ -271,7 +271,7 @@ wxWindow *GeneralPage::tweaksSection() {
     )};
     noRepeatRandom->SetToolTip(_("Do not play the same audio file twice consecutively when randomly selecting."));
 
-    auto *killOldPlayers{new PCUI::CheckBox(
+    auto *killOldPlayers{new pcui::CheckBox(
         parent,
         config.settings.killOldPlayers,
         0,
@@ -279,7 +279,7 @@ wxWindow *GeneralPage::tweaksSection() {
     )};
     killOldPlayers->SetToolTip(_("Stop playing old sounds to ensure new sounds always play"));
 
-    auto *disableColor{new PCUI::CheckBox(
+    auto *disableColor{new pcui::CheckBox(
         parent,
         config.settings.disableColorChange,
         0,
@@ -287,7 +287,7 @@ wxWindow *GeneralPage::tweaksSection() {
     )};
     disableColor->SetToolTip(_("Disable color change controls."));
 
-    auto *noTalkie{new PCUI::CheckBox(
+    auto *noTalkie{new pcui::CheckBox(
         parent,
         config.settings.disableTalkie,
         0,
@@ -295,7 +295,7 @@ wxWindow *GeneralPage::tweaksSection() {
     )};
     noTalkie->SetToolTip(_("Use beeps instead of spoken messages for errors, which saves some memory.\nSee the POD page \"What is it beeping?\"."));
 
-    auto *femaleTalkie{new PCUI::CheckBox(
+    auto *femaleTalkie{new pcui::CheckBox(
         parent,
         config.settings.femaleTalkie,
         0,
@@ -303,7 +303,7 @@ wxWindow *GeneralPage::tweaksSection() {
     )};
     femaleTalkie->SetToolTip(_("Use Female Talkie Voice"));
 
-    auto *noBasicParsers{new PCUI::CheckBox(
+    auto *noBasicParsers{new pcui::CheckBox(
         parent,
         config.settings.disableBasicParserStyles,
         0,
@@ -311,7 +311,7 @@ wxWindow *GeneralPage::tweaksSection() {
     )};
     noBasicParsers->SetToolTip(_("Disable basic styles in the ProffieOS Workbench to save memory."));
 
-    auto *disableDiagnosticCommands{new PCUI::CheckBox(
+    auto *disableDiagnosticCommands{new pcui::CheckBox(
         parent,
         config.settings.disableDiagnosticCommands,
         0,
@@ -352,17 +352,17 @@ wxWindow *GeneralPage::tweaksSection() {
 
 wxWindow *GeneralPage::editingSection() {
     auto& config{mParent->getOpenConfig()};
-    auto *sizer{new PCUI::StaticBox(wxVERTICAL, this, _("Editing"))};
+    auto *sizer{new pcui::StaticBox(wxVERTICAL, this, _("Editing"))};
     auto *parent{sizer->childParent()};
 
-    auto *saveState{new PCUI::CheckBox(
+    auto *saveState{new pcui::CheckBox(
         parent,
         config.settings.saveState,
         0,
         _("Save State")
     )};
 
-    auto *allEditOpts{new PCUI::CheckBox(
+    auto *allEditOpts{new pcui::CheckBox(
         parent,
         config.settings.enableAllEditOptions,
         0,
@@ -371,7 +371,7 @@ wxWindow *GeneralPage::editingSection() {
 
     auto *line1{new wxStaticLine(parent)};
 
-    auto *saveVolume{new PCUI::CheckBox(
+    auto *saveVolume{new pcui::CheckBox(
         parent,
         config.settings.saveVolume,
         0,
@@ -379,7 +379,7 @@ wxWindow *GeneralPage::editingSection() {
     )};
     saveVolume->SetToolTip(_("Save the volume level between board restarts."));
 
-    auto *savePreset{new PCUI::CheckBox(
+    auto *savePreset{new pcui::CheckBox(
         parent,
         config.settings.savePreset,
         0,
@@ -387,7 +387,7 @@ wxWindow *GeneralPage::editingSection() {
     )};
     savePreset->SetToolTip(_("Save the currently-selected preset between board restarts."));
 
-    auto *saveColor{new PCUI::CheckBox(
+    auto *saveColor{new pcui::CheckBox(
         parent,
         config.settings.saveColorChange,
         0,
@@ -395,13 +395,13 @@ wxWindow *GeneralPage::editingSection() {
     )};
     saveColor->SetToolTip(_("Save color edits to presets."));
 
-    auto *saveDimming{new PCUI::CheckBox(
+    auto *saveDimming{new pcui::CheckBox(
         parent,
         config.settings.saveBladeDimming,
         0,
         _("Save Blade Dimming")
     )};
-    auto *saveClashThreshold{new PCUI::CheckBox(
+    auto *saveClashThreshold{new pcui::CheckBox(
         parent,
         config.settings.saveClashThreshold,
         0,
@@ -410,21 +410,21 @@ wxWindow *GeneralPage::editingSection() {
 
     auto *line2{new wxStaticLine(parent)};
 
-    auto *dynamicDimming{new PCUI::CheckBox(
+    auto *dynamicDimming{new pcui::CheckBox(
         parent,
         config.settings.dynamicBladeDimming,
         0,
         _("Dynamic Blade Dimming")
     )};
 
-    auto *dynamicClashThreshold{new PCUI::CheckBox(
+    auto *dynamicClashThreshold{new pcui::CheckBox(
         parent,
         config.settings.dynamicClashThreshold,
         0,
         _("Dynamic Clash Threshold")
     )};
 
-    auto *dynamicLength{new PCUI::CheckBox(
+    auto *dynamicLength{new pcui::CheckBox(
         parent,
         config.settings.dynamicBladeLength,
         0,
@@ -460,10 +460,10 @@ wxWindow *GeneralPage::editingSection() {
 
 wxWindow *GeneralPage::audioSection() {
     auto& config{mParent->getOpenConfig()};
-    auto *sizer{new PCUI::StaticBox(wxVERTICAL, this, _("Audio"))};
+    auto *sizer{new pcui::StaticBox(wxVERTICAL, this, _("Audio"))};
     auto *parent{sizer->childParent()};
 
-    auto *volume{new PCUI::Numeric(
+    auto *volume{new pcui::Numeric(
         parent,
         config.settings.volume,
         _("Max Volume"),
@@ -472,11 +472,11 @@ wxWindow *GeneralPage::audioSection() {
     volume->SetToolTip(_("Maximum volume level.\nDo not increase unless you know what you are doing, as this can damage your speaker."));
 
     auto *bootVolumeSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *enableBootVolume{new PCUI::CheckBox(
+    auto *enableBootVolume{new pcui::CheckBox(
         parent,
         config.settings.enableBootVolume
     )};
-    auto *bootVolume{new PCUI::Numeric(
+    auto *bootVolume{new pcui::Numeric(
         parent,
         config.settings.bootVolume,
         _("Boot Volume"),
@@ -489,19 +489,19 @@ wxWindow *GeneralPage::audioSection() {
 
     auto *line1{new wxStaticLine(parent)};
 
-    auto *enableFilter{new PCUI::CheckBox(
+    auto *enableFilter{new pcui::CheckBox(
         parent,
         config.settings.enableFiltering,
         0,
         _("Enable Filtering")
     )};
-    auto *filterCutoff{new PCUI::Numeric(
+    auto *filterCutoff{new pcui::Numeric(
         parent,
         config.settings.filterCutoff,
         _("Cutoff"),
         wxHORIZONTAL
     )};
-    auto *filterOrder{new PCUI::Numeric(
+    auto *filterOrder{new pcui::Numeric(
         parent,
         config.settings.filterOrder,
         _("Order"),
@@ -510,13 +510,13 @@ wxWindow *GeneralPage::audioSection() {
 
     auto *line2{new wxStaticLine(parent)};
 
-    auto *clashSuppression{new PCUI::Numeric(
+    auto *clashSuppression{new pcui::Numeric(
         parent,
         config.settings.audioClashSuppressionLevel,
         _("Clash Suppression"),
         wxHORIZONTAL
     )};
-    auto *dontUseGyroForClash{new PCUI::CheckBox(
+    auto *dontUseGyroForClash{new pcui::CheckBox(
         parent,
         config.settings.dontUseGyroForClash,
         0,

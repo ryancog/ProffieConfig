@@ -185,35 +185,35 @@ struct CONFIG_EXPORT Settings {
      */
     Settings(Config&);
 
-    PCUI::Notifier notifyData;
+    pcui::Notifier notifyData;
 
-    PCUI::ChoiceData board;
+    pcui::ChoiceData board;
 
     // Do NOT set choices manually
     // Done via Config::refreshVersions
-    PCUI::ChoiceData osVersion;
+    pcui::ChoiceData osVersion;
     vector<Utils::Version> osVersionMap;
 
     [[nodiscard]] Utils::Version getOSVersion() const;
 
-    PCUI::ToggleData massStorage;
-    PCUI::ToggleData webUSB;
+    pcui::ToggleData massStorage;
+    pcui::ToggleData webUSB;
 
     struct CONFIG_EXPORT ButtonData {
         ButtonData();
 
-        PCUI::ChoiceData type;
-        PCUI::ChoiceData event;
+        pcui::ChoiceData type;
+        pcui::ChoiceData event;
 
-        PCUI::ComboBoxData pin;
-        PCUI::TextData name;
-        PCUI::NumericData touch;
+        pcui::ComboBoxData pin;
+        pcui::TextData name;
+        pcui::NumericData touch;
     };
 
     // TODO: For both this and custom opts, this really should be wrapped in 
     // some nicer abstraction, both for races and optimization (e.g. fine-
     // grained add/remove/clear events)
-    PCUI::Notifier buttonNotifier;
+    pcui::Notifier buttonNotifier;
     void addButton(std::unique_ptr<ButtonData>&& = nullptr);
     void removeButton(size);
     void removeButton(const ButtonData&);
@@ -222,50 +222,50 @@ struct CONFIG_EXPORT Settings {
     [[nodiscard]] auto& button(size idx) { return mButtons[idx]; }
     [[nodiscard]] const auto& button(size idx) const { return mButtons[idx]; }
 
-    // PCUI::ChoiceData rfidSerial;
+    // pcui::ChoiceData rfidSerial;
 
-    PCUI::ToggleData bladeDetect;
-    PCUI::ComboBoxData bladeDetectPin;
+    pcui::ToggleData bladeDetect;
+    pcui::ComboBoxData bladeDetectPin;
 
     struct BladeID {
-        PCUI::ToggleData enable;
-        PCUI::ComboBoxData pin;
-        PCUI::ChoiceData mode;
-        PCUI::ComboBoxData bridgePin;
-        PCUI::NumericData pullup;
-        PCUI::ToggleData powerForID;
-        PCUI::CheckListData powerPins;
-        PCUI::TextData powerPinEntry;
-        PCUI::ToggleData continuousScanning;
-        PCUI::NumericData continuousInterval;
-        PCUI::NumericData continuousTimes;
+        pcui::ToggleData enable;
+        pcui::ComboBoxData pin;
+        pcui::ChoiceData mode;
+        pcui::ComboBoxData bridgePin;
+        pcui::NumericData pullup;
+        pcui::ToggleData powerForID;
+        pcui::CheckListData powerPins;
+        pcui::TextData powerPinEntry;
+        pcui::ToggleData continuousScanning;
+        pcui::NumericData continuousInterval;
+        pcui::NumericData continuousTimes;
 
         void addPowerPinFromEntry();
     } bladeID;
 
-    PCUI::NumericData volume;
-    PCUI::ToggleData enableBootVolume;
-    PCUI::NumericData bootVolume;
+    pcui::NumericData volume;
+    pcui::ToggleData enableBootVolume;
+    pcui::NumericData bootVolume;
 
     // Does not affect I2C or S/PDIF
     // Cutoff in Hz
-    PCUI::ToggleData enableFiltering;
-    PCUI::NumericData filterCutoff;
-    PCUI::NumericData filterOrder;
+    pcui::ToggleData enableFiltering;
+    pcui::NumericData filterCutoff;
+    pcui::NumericData filterOrder;
 
-    PCUI::DecimalData clashThreshold;
+    pcui::DecimalData clashThreshold;
 
     // In seconds 
-    PCUI::DecimalData pliOffTime;
+    pcui::DecimalData pliOffTime;
     // In Minutes
-    PCUI::DecimalData idleOffTime;
-    PCUI::DecimalData motionTimeout;
+    pcui::DecimalData idleOffTime;
+    pcui::DecimalData motionTimeout;
 
-    PCUI::ToggleData disableColorChange;
-    PCUI::ToggleData disableBasicParserStyles;
-    PCUI::ToggleData disableTalkie;
-    PCUI::ToggleData disableDiagnosticCommands;
-    // PCUI::ToggleData enableDeveloperCommands;
+    pcui::ToggleData disableColorChange;
+    pcui::ToggleData disableBasicParserStyles;
+    pcui::ToggleData disableTalkie;
+    pcui::ToggleData disableDiagnosticCommands;
+    // pcui::ToggleData enableDeveloperCommands;
     // constexpr static cstring ENABLE_DEV_COMMANDS_STR{"ENABLE_DEVELOPER_COMMANDS"};
 
     // SAVE_STATE Sets:
@@ -273,7 +273,7 @@ struct CONFIG_EXPORT Settings {
     // - savePreset
     // - saveColorChange
     // - saveBladeDimming (only if dynamicBladeDimming is set)
-    PCUI::ToggleData saveState;
+    pcui::ToggleData saveState;
 
     // ENABLE_ALL_EDIT_OPTIONS Sets:
     // - dynamicBladeLength
@@ -283,24 +283,24 @@ struct CONFIG_EXPORT Settings {
     // - saveColorChange
     // - saveBladeDimming
     // - saveClashThreshold
-    PCUI::ToggleData enableAllEditOptions;
+    pcui::ToggleData enableAllEditOptions;
 
-    PCUI::ToggleData saveVolume;
-    PCUI::ToggleData savePreset;
-    PCUI::ToggleData saveColorChange;
+    pcui::ToggleData saveVolume;
+    pcui::ToggleData savePreset;
+    pcui::ToggleData saveColorChange;
 
-    PCUI::ToggleData enableOLED;
+    pcui::ToggleData enableOLED;
 
-    PCUI::ChoiceData orientation;
+    pcui::ChoiceData orientation;
 
     struct OrientRotation {
-        PCUI::NumericData x;
-        PCUI::NumericData y;
-        PCUI::NumericData z;
+        pcui::NumericData x;
+        pcui::NumericData y;
+        pcui::NumericData z;
     } orientationRotation;
 
     // For debugging touch buttons:
-    // PCUI::ToggleData speakTouchValues;
+    // pcui::ToggleData speakTouchValues;
     // constexpr static cstring SPEAK_TOUCH_VALUES_STR{"SPEAK_TOUCH_VALUES"};
     
     // Make these be enabled by adding such a device to the
@@ -311,28 +311,28 @@ struct CONFIG_EXPORT Settings {
     int32 lineOutVolume{2000}; // This can be set to `dynamic_mixer.get_volume()` to follow master
     */
 
-    PCUI::ToggleData dynamicBladeDimming;
-    PCUI::ToggleData dynamicBladeLength;
-    PCUI::ToggleData dynamicClashThreshold;
+    pcui::ToggleData dynamicBladeDimming;
+    pcui::ToggleData dynamicBladeLength;
+    pcui::ToggleData dynamicClashThreshold;
 
     // only should be settable if dynamicBladeDimming is true
-    PCUI::ToggleData saveBladeDimming;
-    PCUI::ToggleData saveClashThreshold;
+    pcui::ToggleData saveBladeDimming;
+    pcui::ToggleData saveClashThreshold;
 
     // Useful range is 1~50
-    PCUI::NumericData audioClashSuppressionLevel;
-    PCUI::ToggleData dontUseGyroForClash;
+    pcui::NumericData audioClashSuppressionLevel;
+    pcui::ToggleData dontUseGyroForClash;
 
-    PCUI::ToggleData noRepeatRandom;
-    PCUI::ToggleData femaleTalkie;
-    PCUI::ToggleData killOldPlayers;
+    pcui::ToggleData noRepeatRandom;
+    pcui::ToggleData femaleTalkie;
+    pcui::ToggleData killOldPlayers;
 
     // POV Data?
 
-    PCUI::Notifier customOptsNotifyData;
+    pcui::Notifier customOptsNotifyData;
     struct CustomOption {
-        PCUI::TextData define;
-        PCUI::TextData value;
+        pcui::TextData define;
+        pcui::TextData value;
     };
     [[nodiscard]] const vector<std::unique_ptr<CustomOption>>& customOptions() const { return mCustomOptions; }
     [[nodiscard]] CustomOption& customOption(uint32 idx) const {

@@ -128,7 +128,7 @@ void pcui::Choice::create(const wxString& label, wxOrientation orient) {
 }
 
 void pcui::Choice::onUIUpdate(uint32 id) {
-    if (id == eID_Rebound or id == ChoiceData::eID_Choices) {
+    if (id == Notifier::eID_Rebound or id == ChoiceData::eID_Choices) {
         pControl->Set(data()->mChoices);
         pControl->SetSelection(*data());
         refreshSizeAndLayout();
@@ -174,7 +174,7 @@ void pcui::List::create(const wxString& label, wxOrientation orient) {
 }
 
 void pcui::List::onUIUpdate(uint32 id) {
-    if (id == eID_Rebound or id == ChoiceData::eID_Choices) {
+    if (id == Notifier::eID_Rebound or id == ChoiceData::eID_Choices) {
         pControl->Set(data()->mChoices);
         pControl->SetSelection(*data());
         refreshSizeAndLayout();

@@ -25,7 +25,7 @@ Config::SimpleBlade::SimpleBlade() = default;
 
 Config::SimpleBlade::Star::Star() {
     led.setUpdateHandler([this](uint32 id) {
-        if (id != PCUI::ChoiceData::ID_SELECTION) return;
+        if (id != pcui::ChoiceData::eID_Selection) return;
 
         powerPin.enable(led != NONE);
         resistance.enable(led != NONE and led >= USE_RESISTANCE_START and led <= USE_RESISTANCE_END);

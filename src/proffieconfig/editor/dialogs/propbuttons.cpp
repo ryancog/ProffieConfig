@@ -48,7 +48,7 @@ PropButtonsDialog::PropButtonsDialog(EditorWindow *parent) {
             wxSizerFlags{}.Border(wxALL, 10)
         );
     } else for (auto& [ stateName, stateButtons ] : propButtons) {
-        auto *stateSizer{new PCUI::StaticBox(
+        auto *stateSizer{new pcui::StaticBox(
             wxVERTICAL,
             this,
             wxString::Format(_("Button controls while saber is %s:"), stateName)
