@@ -32,6 +32,12 @@
 #include "ui/controls/version.h"
 #include "utils/demangle.h"
 
+pcui::ControlData::ControlData(const ControlData& other) :
+    Notifier{},
+    mOnUpdate{other.mOnUpdate},
+    mEnabled{other.mEnabled},
+    mShown{other.mShown} {}
+
 void pcui::ControlData::setUpdateHandler(
     function<void(uint32 id)>&& handler
 ) {

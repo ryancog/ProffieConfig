@@ -57,11 +57,6 @@ template<
 class ControlBase;
 
 struct UI_EXPORT ControlData : Notifier {
-    ControlData(const ControlData&) = delete;
-    ControlData(ControlData&&) = delete;
-    ControlData& operator=(const ControlData&) = delete;
-    ControlData& operator=(ControlData&&) = delete;
-
     void setUpdateHandler(function<void(uint32 id)>&& handler);
 
     /**
@@ -83,6 +78,7 @@ struct UI_EXPORT ControlData : Notifier {
 
 protected:
     ControlData() = default;
+    ControlData(const ControlData&);
 
     /**
      * Used by derived friends to update from UI
