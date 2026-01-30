@@ -32,6 +32,25 @@
 
 #include "../editorwindow.h"
 
+namespace {
+
+enum {
+    eID_Add_Preset = 2,
+    eID_Remove_Preset,
+    eID_Move_Preset_Up,
+    eID_Move_Preset_Down,
+    eID_Duplicate_Preset,
+
+    eID_Add_Array,
+    eID_Remove_Array,
+
+    eID_Rename_Array,
+    eID_Issue_Button,
+    eID_Wav_Text,
+};
+
+} // namespace
+
 class RenameArrayDlg : public wxDialog, pcui::NotifyReceiver {
 public:
     RenameArrayDlg(
@@ -110,7 +129,7 @@ private:
     Config::PresetArray& mArray;
 
     enum {
-        eID_Empty_Text,
+        eID_Empty_Text = 2,
         eID_Dup_Text,
     };
 
@@ -170,7 +189,7 @@ void PresetsPage::createUI() {
     )};
     auto *issueButton{new wxButton(
         arraySectSizer->childParent(),
-        ID_IssueButton,
+        eID_Issue_Button,
         wxEmptyString,
         wxDefaultPosition,
         wxDefaultSize,
@@ -178,7 +197,7 @@ void PresetsPage::createUI() {
     )};
     auto *arrayRename{new pcui::Button(
         arraySectSizer->childParent(),
-        ID_RenameArray,
+        eID_Rename_Array,
         wxEmptyString,
         wxDefaultSize,
         wxBU_EXACTFIT,
@@ -194,7 +213,7 @@ void PresetsPage::createUI() {
     auto *arrayButtonsSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *addArray{new wxButton(
         arraySectSizer->childParent(),
-        ID_AddArray,
+        eID_Add_Array,
         _("Add"),
         wxDefaultPosition,
         wxDefaultSize,
@@ -202,7 +221,7 @@ void PresetsPage::createUI() {
     )};
     auto *removeArray{new wxButton(
         arraySectSizer->childParent(),
-        ID_RemoveArray,
+        eID_Remove_Array,
         _("Remove"),
         wxDefaultPosition,
         wxDefaultSize,
@@ -233,7 +252,7 @@ void PresetsPage::createUI() {
 #   endif
     auto *movePresetUp = new wxButton(
         presetSectSizer->childParent(),
-        ID_MovePresetUp,
+        eID_Move_Preset_Up,
         L"\u2191" /*up arrow*/,
         wxDefaultPosition,
         arrangeButtonSize,
@@ -241,8 +260,16 @@ void PresetsPage::createUI() {
     );
     auto *movePresetDown{new wxButton(
         presetSectSizer->childParent(),
-        ID_MovePresetDown,
+        eID_Move_Preset_Down,
         L"\u2193" /*down arrow*/,
+        wxDefaultPosition,
+        arrangeButtonSize,
+        wxBU_EXACTFIT
+    )};
+    auto *duplicatePreset{new wxButton(
+        presetSectSizer->childParent(),
+        eID_Duplicate_Preset,
+        L"\u29C9" /* ⧉ Double Squares */,
         wxDefaultPosition,
         arrangeButtonSize,
         wxBU_EXACTFIT
@@ -250,6 +277,7 @@ void PresetsPage::createUI() {
     arrangeButtonsSizer->AddSpacer(20);
     arrangeButtonsSizer->Add(movePresetUp);
     arrangeButtonsSizer->Add(movePresetDown);
+    arrangeButtonsSizer->Add(duplicatePreset);
     
     presetListSizer->Add(presetList, wxSizerFlags(1).Expand());
     presetListSizer->AddSpacer(5);
@@ -258,7 +286,7 @@ void PresetsPage::createUI() {
     auto *presetButtonSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *addPreset {new wxButton(
         presetSectSizer->childParent(),
-        ID_AddPreset,
+        eID_Add_Preset,
         "+",
         wxDefaultPosition,
         wxDefaultSize,
@@ -266,7 +294,7 @@ void PresetsPage::createUI() {
     )};
     auto *removePreset{new wxButton(
         presetSectSizer->childParent(),
-        ID_RemovePreset,
+        eID_Remove_Preset,
         "-",
         wxDefaultPosition,
         wxDefaultSize,
@@ -333,7 +361,7 @@ void PresetsPage::createUI() {
 
     auto *wavText{new wxStaticText(
         this,
-        ID_WavText,
+        eID_Wav_Text,
         ".wav"
     )};
     wavText->Hide();
@@ -427,7 +455,7 @@ void PresetsPage::bindEvents() {
             static_cast<int32>(presetArray.presets().size() - 1)
         };
         presetArray.selection = lastIdx;
-    }, ID_AddPreset);
+    }, eID_Add_Preset);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto& presetArrays{mParent->getOpenConfig().presetArrays};
         if (presetArrays.selection == -1) return;
@@ -435,7 +463,7 @@ void PresetsPage::bindEvents() {
         if (presetArray.selection == -1) return;
 
         presetArray.removePreset(presetArray.selection);
-    }, ID_RemovePreset);
+    }, eID_Remove_Preset);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto& presetArrays{mParent->getOpenConfig().presetArrays};
         if (presetArrays.selection == -1) return;
@@ -443,7 +471,7 @@ void PresetsPage::bindEvents() {
         if (presetArray.selection == -1) return;
 
         presetArray.movePresetUp(presetArray.selection);
-    }, ID_MovePresetUp);
+    }, eID_Move_Preset_Up);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto& presetArrays{mParent->getOpenConfig().presetArrays};
         if (presetArrays.selection == -1) return;
@@ -451,7 +479,15 @@ void PresetsPage::bindEvents() {
         if (presetArray.selection == -1) return;
 
         presetArray.movePresetDown(presetArray.selection);
-    }, ID_MovePresetDown);
+    }, eID_Move_Preset_Down);
+    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+        auto& presetArrays{mParent->getOpenConfig().presetArrays};
+        if (presetArrays.selection == -1) return;
+        auto& presetArray{presetArrays.array(presetArrays.selection)};
+        if (presetArray.selection == -1) return;
+
+        presetArray.duplicatePreset(presetArray.selection);
+    }, eID_Duplicate_Preset);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto& config{mParent->getOpenConfig()};
         auto& presetArray{config.presetArrays.array(
@@ -465,7 +501,7 @@ void PresetsPage::bindEvents() {
             _("Rename Preset Array")
         );
         renameDlg.ShowModal();
-    }, ID_RenameArray);
+    }, eID_Rename_Array);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto& config{mParent->getOpenConfig()};
 
@@ -485,11 +521,11 @@ void PresetsPage::bindEvents() {
             config.presetArrays.selection = lastIdx;
         }
 
-    }, ID_AddArray);
+    }, eID_Add_Array);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         auto& presetArrays{mParent->getOpenConfig().presetArrays};
         presetArrays.removeArray(presetArrays.selection);
-    }, ID_RemoveArray);
+    }, eID_Remove_Array);
 }
 
 void PresetsPage::handleNotification(uint32 id) {
@@ -501,16 +537,16 @@ void PresetsPage::handleNotification(uint32 id) {
     }
     if (rebound or id == Config::PresetArrays::NOTIFY_SELECTION) {
         bool hasSelection{presetArrays.selection != -1};
-        FindWindow(ID_RemoveArray)->Enable(hasSelection);
-        FindWindow(ID_RenameArray)->Enable(hasSelection);
-        FindWindow(ID_AddPreset)->Enable(hasSelection);
+        FindWindow(eID_Remove_Array)->Enable(hasSelection);
+        FindWindow(eID_Rename_Array)->Enable(hasSelection);
+        FindWindow(eID_Add_Preset)->Enable(hasSelection);
     }
     if (
             rebound or
             id == Config::PresetArrays::NOTIFY_ARRAY_NAME or
             id == Config::PresetArrays::NOTIFY_SELECTION
        ) {
-        auto *issueButton{FindWindow(ID_IssueButton)};
+        auto *issueButton{FindWindow(eID_Issue_Button)};
         // This is late for sizing reasons
         issueButton->SetLabel(L"\u26D4" /* ⛔️ */);
 
@@ -539,9 +575,10 @@ void PresetsPage::handleNotification(uint32 id) {
             id == Config::PresetArrays::NOTIFY_SELECTION
        ) {
         if (presetArrays.selection == -1) {
-            FindWindow(ID_MovePresetUp)->Disable();
-            FindWindow(ID_MovePresetDown)->Disable();
-            FindWindow(ID_RemovePreset)->Disable();
+            FindWindow(eID_Move_Preset_Up)->Disable();
+            FindWindow(eID_Move_Preset_Down)->Disable();
+            FindWindow(eID_Duplicate_Preset)->Disable();
+            FindWindow(eID_Remove_Preset)->Disable();
         } else {
             auto& presetArray{presetArrays.array(presetArrays.selection)};
             bool hasPresetSelection{presetArray.selection != -1};
@@ -550,12 +587,14 @@ void PresetsPage::handleNotification(uint32 id) {
             const auto lastIdx{presetArray.selection.choices().size() - 1};
             bool notLast{presetArray.selection < lastIdx};
 
-            auto *movePresetUp{FindWindow(ID_MovePresetUp)};
+            auto *movePresetUp{FindWindow(eID_Move_Preset_Up)};
             movePresetUp->Enable(hasPresetSelection and notFirst);
-            auto *movePresetDown{FindWindow(ID_MovePresetDown)};
+            auto *movePresetDown{FindWindow(eID_Move_Preset_Down)};
             movePresetDown->Enable(hasPresetSelection and notLast);
-            auto *removePreset{FindWindow(ID_RemovePreset)};
+            auto *removePreset{FindWindow(eID_Remove_Preset)};
             removePreset->Enable(hasPresetSelection);
+            auto *dupPreset{FindWindow(eID_Duplicate_Preset)};
+            dupPreset->Enable(hasPresetSelection);
         }
     }
     if (
@@ -568,7 +607,7 @@ void PresetsPage::handleNotification(uint32 id) {
             presetArrays.trackProxy.data() and
             not static_cast<string>(*presetArrays.trackProxy.data()).empty()
         };
-        FindWindow(ID_WavText)->Show(hasInput);
+        FindWindow(eID_Wav_Text)->Show(hasInput);
     }
 
     Layout();

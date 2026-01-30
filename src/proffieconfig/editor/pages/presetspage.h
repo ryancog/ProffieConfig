@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2023-2025 Ryan Ogurek
+ * Copyright (C) 2023-2026 Ryan Ogurek
  *
  * proffieconfig/editor/pages/presetspage.h
  *
@@ -26,20 +26,6 @@
 class PresetsPage : public wxPanel, pcui::NotifyReceiver {
 public:
     PresetsPage(EditorWindow *);
-
-    enum {
-        ID_AddPreset,
-        ID_RemovePreset,
-        ID_MovePresetUp,
-        ID_MovePresetDown,
-
-        ID_AddArray,
-        ID_RemoveArray,
-
-        ID_RenameArray,
-        ID_IssueButton,
-        ID_WavText,
-    };
 
 private:
     EditorWindow *mParent{nullptr};
