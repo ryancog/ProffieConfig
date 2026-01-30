@@ -32,6 +32,7 @@ struct PresetArray;
 
 struct CONFIG_EXPORT Preset {
     Preset(Config&, PresetArray&);
+    explicit Preset(const Preset&);
 
     pcui::TextData name;
     pcui::TextData fontDir;
@@ -40,6 +41,8 @@ struct CONFIG_EXPORT Preset {
 
     struct Style {
         Style();
+        explicit Style(const Style&) = default;
+
         pcui::TextData comment;
         pcui::TextData style;
     };

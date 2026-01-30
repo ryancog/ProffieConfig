@@ -143,6 +143,21 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
     });
 }
 
+Config::Preset::Preset(const Preset& other) :
+    Preset{other.mConfig, other.mParent} {
+    name = wxString::Format(
+        _("%s copy"),
+        static_cast<string>(other.name)
+    ).ToStdString();
+    fontDir = static_cast<string>(other.fontDir);
+    track = static_cast<string>(other.track);
+
+    mStyles.reserve(other.mStyles.size());
+    for (const auto& stylePtr : other.mStyles) {
+        mStyles.emplace_back(new Style{*stylePtr});
+    }
+}
+
 Config::Preset::Style& Config::Preset::addStyle() {
     return *mStyles.emplace_back(std::make_unique<Style>());
 }
