@@ -195,8 +195,14 @@ optional<string> runPreChecks(const Config::Config& config, Log::Branch& lBranch
                         continue;
                     }
                     if (chr == '>' or chr == ')') {
+                        if (depth.empty()) {
+                            return errorMessage(
+                                logger, STYLE_ERR_STR, styleIdx, presetIdx,
+                                static_cast<string>(preset.name), static_cast<string>(presetArray->name),
+                                string{chr}
+                            );
+                        }
                         if (
-                                depth.empty() or 
                                 (chr == '>' and depth.back() != '<') or
                                 (chr == ')' and depth.back() != '(')
                            ) {
