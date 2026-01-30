@@ -56,6 +56,7 @@ struct CONFIG_EXPORT PresetArray {
 
     void movePresetUp(uint32);
     void movePresetDown(uint32);
+    void duplicatePreset(uint32);
 
 private:
     Config& mConfig;

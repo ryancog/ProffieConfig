@@ -178,6 +178,25 @@ void Config::PresetArray::movePresetDown(uint32 idx) {
     selection = static_cast<int32>(idx + 1);
 }
 
+void Config::PresetArray::duplicatePreset(uint32 idx) {
+    if (idx >= selection.choices().size()) return;
+
+    auto iter{mPresets.emplace(
+        std::next(mPresets.begin(), idx + 1),
+        new Preset(*mPresets[idx])
+    )};
+
+    auto choices{selection.choices()};
+    choices.emplace(
+        std::next(choices.begin(), idx + 1),
+        (*iter)->name
+    );
+    selection.setChoices(std::move(choices));
+
+    mConfig.presetArrays.syncStyles();
+    selection = static_cast<int32>(idx + 1);
+}
+
 Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
     // TODO: This should go somewhere else.
     dummyCommentData = _("Select or create preset and blade to edit style comments...").ToStdString();
@@ -216,7 +235,6 @@ Config::PresetArrays::PresetArrays(Config& parent) : mParent{parent} {
             presetProxy.bind(
                 (**std::next(mArrays.begin(), selection)).selection
             );
-
         }
 
         notifyData.notify(NOTIFY_SELECTION);
