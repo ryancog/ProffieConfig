@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/config/preset/array.h
  *
@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <utility>
 
 #include "ui/controls/choice.h"
 #include "ui/controls/text.h"
@@ -32,7 +33,7 @@ namespace Config {
 struct Config;
 
 struct CONFIG_EXPORT Injection {
-    Injection(const string& name) : filename{name} {}
+    Injection(string  name) : filename{std::move(name)} {}
     string filename;
 };
 
