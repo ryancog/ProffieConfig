@@ -281,9 +281,10 @@ void EditorWindow::bindEvents() {
         constexpr auto RESIZE_TIME_MICROS{300 * 1000};
         static std::chrono::microseconds::rep lastFrameMicros{0};
 
-        const auto display{wxDisplay::GetFromWindow(this)};
-        if (display == wxNOT_FOUND) return;
-        auto frameRate{wxDisplay(display).GetCurrentMode().GetRefresh()};
+        const wxDisplay display{this};
+        if (not display.IsOk()) return;
+
+        auto frameRate{display.GetCurrentMode().GetRefresh()};
         // On Wayland (I assume because of course things don't work on Wayland) this doesn't work
         if (frameRate == 0) frameRate = 60;
         const std::chrono::microseconds::rep frameIntervalMicros{(1000 * 1000) / frameRate};
