@@ -47,5 +47,6 @@ public:
     }
 };
 
+// NOLINTNEXTLINE(misc-use-internal-linkage)
 wxIMPLEMENT_APP(ProffieConfig);
 
