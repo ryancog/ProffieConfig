@@ -73,7 +73,7 @@ auto& getSupportedVersions(Versions::VersionedProp& prop) {
 } // namespace
 
 Utils::Version Versions::getDefaultCoreVersion() {
-    return {4, 6};
+    return {3, 6};
 }
 
 Utils::Version Versions::getDefaultOSVersion() {
