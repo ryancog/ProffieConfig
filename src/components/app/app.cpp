@@ -21,20 +21,26 @@
 
 #if defined(__linux__) or defined(__APPLE__)
 #include <array>
+#include <execinfo.h>
+#include <unistd.h>
+#include <dlfcn.h>
 #endif
 #include <csignal>
 #include <cstdio>
 #include <filesystem>
+#include <ranges>
 
 #include <wx/snglinst.h>
 #include <wx/utils.h>
 #include <wx/app.h>
 #include <wx/button.h>
 #include <wx/dialog.h>
+#include <wx/font.h>
 #include <wx/menu.h>
 #include <wx/settings.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
+#include <wx/textctrl.h>
 #include <wx/uilocale.h>
 #include <wx/log.h>
 #include <wx/stdpaths.h>
@@ -58,62 +64,151 @@ wxSingleInstanceChecker singleInstance;
 
 class CrashDialog : public wxDialog {
 public:
-    CrashDialog(const wxString& error) : 
-        wxDialog(nullptr, wxID_ANY, App::getAppName() + " Has Crashed", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxCENTER) {
+    CrashDialog(const wxString& error, const wxString& detail) :
+        wxDialog(
+            nullptr,
+            wxID_ANY,
+            App::getAppName() + " Has Crashed",
+            wxDefaultPosition,
+            wxDefaultSize,
+            wxDEFAULT_DIALOG_STYLE | wxCENTER | wxRESIZE_BORDER
+        ) {
 
         auto *sizer{new wxBoxSizer(wxVERTICAL)};
         auto *errorMessage{new wxStaticText(this, wxID_ANY, error, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER)};
         sizer->Add(errorMessage, wxSizerFlags(0).Border(wxALL, 10));
 
+        if (not detail.IsEmpty()) {
+            auto *detailMessage{new wxTextCtrl(this, wxID_ANY, detail, wxDefaultPosition, wxDefaultSize, wxTE_READONLY | wxTE_MULTILINE | wxTE_DONTWRAP)};
+            detailMessage->SetFont(wxFontInfo{}.Family(wxFONTFAMILY_TELETYPE));
+            sizer->Add(detailMessage, 1, wxEXPAND);
+        }
+
         auto *buttonSizer{new wxBoxSizer(wxHORIZONTAL)};
-        auto *logButton{new wxButton(this, ID_LOGS, "Show Log Folder")};
+        auto *logButton{new wxButton(this, eID_Logs, "Show Log Folder")};
         buttonSizer->Add(logButton, wxSizerFlags(1).Expand().Border(wxALL, 5));
 
-        auto *okButton{new wxButton(this, ID_OK, "Ok")};
+        auto *okButton{new wxButton(this, eID_Ok, "Ok")};
         buttonSizer->Add(okButton, wxSizerFlags(1).Expand().Border(wxRIGHT | wxTOP | wxBOTTOM, 5));
 
-        sizer->Add(buttonSizer, wxSizerFlags(1).Expand());
+        sizer->Add(buttonSizer, wxSizerFlags().Expand());
         SetSizerAndFit(sizer);
 
         Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
             Close();
-        }, ID_OK);
+        }, eID_Ok);
         Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
             wxLaunchDefaultApplication(Paths::logDir().native());
-        }, ID_LOGS);
+        }, eID_Logs);
     }
-
 
 private:
     enum {
-        ID_OK,
-        ID_LOGS
+        eID_Ok,
+        eID_Logs
     };
 };
 
-void crashHandler(const wxString& error) { 
+void crashHandler(const wxString& error, const wxString& detail) {
     auto& logger{Log::Context::getGlobal().createLogger("Crash Handler")};
     logger.error(error.ToStdString());
+    if (not detail.IsEmpty()) logger.error(detail.ToStdString());
 
     if (wxIsMainThread()) {
-        auto errDialog{CrashDialog(error)};
+        auto errDialog{CrashDialog(error, detail)};
         errDialog.ShowModal();
     }
 
     _exit(1);
 }
 
-#if defined(__linux__) or defined(__APPLE__)
-void sigHandler(int sig, siginfo_t *info, void *) {
-#elif defined(__WIN32__)
-void sigHandler(int sig) {
-#endif
+cstring addrToStr(
+    void *addr, int width = sizeof(size_t) * 2
+) {
+    thread_local static std::array<char, (sizeof(size_t) * 2) + 3> errAddr;
+    (void)std::snprintf(
+        errAddr.data(),
+        errAddr.size(),
+        "0x%0*zx",
+        width, reinterpret_cast<size_t>(addr)); return errAddr.data();
+};
+
+void appendStackFrame(void *frame, wxString& str) {
+    if (not str.IsEmpty()) str += '\n';
+    str += addrToStr(frame);
+    str += ": ";
+
+    Dl_info info;
+    if (dladdr(frame, &info) == 0 or info.dli_sname == nullptr) {
+        str += "???";
+    } else {
+        str += info.dli_sname;
+        str += '+';
+        const auto diff{
+            reinterpret_cast<size_t>(frame) -
+            reinterpret_cast<size_t>(info.dli_saddr)
+        };
+        str += addrToStr(reinterpret_cast<void *>(diff), 0);
+    }
+}
 
 #if defined(__linux__) or defined(__APPLE__)
-    std::array<char, 19> errAddr;
-    (void)std::snprintf(errAddr.data(), errAddr.size(), "%p", info->si_addr);
-    auto errStr{wxString(strsignal(sig)) + " at address: " + wxString{errAddr.data()}};
+void sigHandler(int sig, siginfo_t *info, void *ucontext) {
+    std::array<void *, 50> trace;
+
+    const auto *context{reinterpret_cast<ucontext_t *>(ucontext)};
+
+    wxString detailAppStr{'\n'};
+    const auto numFrames{backtrace(trace.data(), trace.size())};
+    auto numBeforeBadFrame{0};
+    for (; numBeforeBadFrame < numFrames; ++numBeforeBadFrame) {
+        Dl_info info;
+        if (0 != dladdr(trace[numBeforeBadFrame], &info)) {
+            continue;
+        }
+
+        const auto programCounter{[context]() {
+#           if defined(__x86_64__)
+            return context->uc_mcontext->__ss.__rip;
+#           elif defined(__i386__)
+            return context->uc_mcontext->__ss.__eip;
+#           elif defined(__aarch64__)
+            return context->uc_mcontext->__ss.__pc;
+#           endif
+        }()};
+
+        detailAppStr += "Program Counter: ";
+        detailAppStr += addrToStr(reinterpret_cast<void *>(programCounter));
+        detailAppStr += '\n';
+
+        trace[numBeforeBadFrame] = reinterpret_cast<void *>(programCounter);
+        break;
+    }
+
+    detailAppStr += "Dropped (Signal?) Frames: ";
+    for (auto idx{0}; idx < numBeforeBadFrame; ++idx) {
+        appendStackFrame(trace[idx], detailAppStr);
+    }
+
+    const auto contextFrames{
+        trace |
+        std::views::drop(numBeforeBadFrame) |
+        std::views::take(numFrames - numBeforeBadFrame)
+    };
+
+    wxString errStr{strsignal(sig)};
+    errStr += " at address: ";
+    errStr += addrToStr(info->si_addr);
+
+    wxString detailStr;
+    for (void *const frame : contextFrames) {
+        appendStackFrame(frame, detailStr);
+    }
+
+    detailStr += '\n';
+    detailStr += detailAppStr;
 #elif defined(__WIN32__)
+void sigHandler(int sig) {
     wxString signame;
     switch (sig) {
         case SIGSEGV:
@@ -132,7 +227,7 @@ void sigHandler(int sig) {
     auto errStr{signame};
 #endif
 
-    crashHandler(errStr);
+    crashHandler(errStr, detailStr);
 }
 
 } // namespace
@@ -237,14 +332,14 @@ APP_EXPORT [[nodiscard]] bool App::darkMode() {
     DWORD buffer{};
     DWORD bufferSize{sizeof(buffer)};
     RegGetValueW(
-            HKEY_CURRENT_USER,
-            L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
-            L"AppsUseLightTheme",
-            RRF_RT_REG_DWORD,
-            nullptr,
-            &buffer,
-            &bufferSize
-            );
+        HKEY_CURRENT_USER,
+        L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+        L"AppsUseLightTheme",
+        RRF_RT_REG_DWORD,
+        nullptr,
+        &buffer,
+        &bufferSize
+    );
     return ~buffer;
 }
 #endif
