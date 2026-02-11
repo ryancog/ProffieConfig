@@ -19,6 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/string.h>
+#include <wx/window.h>
+
 #ifdef _WIN32
 #include <errhandlingapi.h>
 // NOLINTNEXTLINE(readability-identifier-naming)
@@ -32,12 +35,14 @@ extern "C" __attribute__((dllimport)) int CopyFileA(const char *, const char *, 
 
 #include "utils_export.h"
 
-namespace Paths {
+namespace paths {
+
+[[nodiscard]] UTILS_EXPORT std::error_code init();
 
 enum class Executable {
-    CURRENT,
-    LAUNCHER,
-    MAIN,
+    Current,
+    Launcher,
+    Main,
 };
 
 /**
@@ -48,11 +53,11 @@ enum class Executable {
 /**
  * Retrieve the path to an executable binary.
  *
- * @param exec The executable to retrieve a path for. Default is `Executable::CURRENT`
+ * @param exec The executable to retrieve a path for.
  *
  * @return The full executable path (including file)
  */
-[[nodiscard]] UTILS_EXPORT filepath executable(Executable exec = Executable::CURRENT);
+[[nodiscard]] UTILS_EXPORT filepath executable(Executable exec = Executable::Current);
 
 /**
  * Retrieve the app root path
@@ -111,5 +116,5 @@ inline auto openOutputFile(const fs::path& path) {
     return std::ofstream{path, std::ios::binary | std::ios::out};
 }
 
-} // namespace Paths
+} // namespace paths
 

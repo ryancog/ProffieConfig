@@ -1,6 +1,23 @@
-#include "misc.h" // IWYU pragma: keep
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2025 Ryan Ogurek
+#include "misc.h"
+/*
+ * ProffieConfig, All-In-One Proffieboard Management Utility
+ * Copyright (C) 2025-2026 Ryan Ogurek
+ *
+ * proffieconfig/core/utilities/misc.cpp
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 4 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-const wxEventTypeTag<Misc::MessageBoxEvent> Misc::EVT_MSGBOX(wxNewEventType());
+const wxEventTypeTag<misc::MessageBoxEvent> misc::EVT_MSGBOX(wxNewEventType());
 

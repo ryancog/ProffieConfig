@@ -19,16 +19,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if defined(__linux__) or defined(__APPLE__)
-#include <array>
-#include <execinfo.h>
-#include <unistd.h>
-#include <dlfcn.h>
-#endif
 #include <csignal>
 #include <cstdio>
-#include <filesystem>
 #include <ranges>
+#include <string>
+
+#if defined(__linux__) or defined(__APPLE__)
+#include <array>
+#include <dlfcn.h>
+#include <execinfo.h>
+#include <unistd.h>
+#endif
+
+#if defined(__linux__)
+#include <sys/ucontext.h>
+#endif
+
+#if defined(_WIN32) and defined(__WXGTK__)
+#include <dwmapi.h>
+#endif
+
+#ifdef _WIN32
+#include <wincon.h>
+#include <winreg.h>
+#include <dbghelp.h>
+#include <backtrace.h>
+#endif
 
 #include <wx/snglinst.h>
 #include <wx/utils.h>
@@ -45,68 +61,77 @@
 #include <wx/log.h>
 #include <wx/stdpaths.h>
 
-#if defined(__WIN32__) and defined(__WXGTK__)
-#include <dwmapi.h>
-#endif
-#ifdef __WIN32__
-#include <wincon.h>
-#include <winreg.h>
-#endif
-
 #include "log/context.h"
 #include "log/logger.h"
-#include "utils/paths.h"
+#include "app/critical_dialog.h"
 
 namespace {
 
+constexpr auto NUM_STACK_FRAMES{64};
+
 // TODO: Segfaults on close on GTK
 wxSingleInstanceChecker singleInstance;
+app::ShowMessageFunc *showMessage;
 
-class CrashDialog : public wxDialog {
-public:
-    CrashDialog(const wxString& error, const wxString& detail) :
-        wxDialog(
-            nullptr,
-            wxID_ANY,
-            App::getAppName() + " Has Crashed",
-            wxDefaultPosition,
-            wxDefaultSize,
-            wxDEFAULT_DIALOG_STYLE | wxCENTER | wxRESIZE_BORDER
-        ) {
+// Win32 assumes/requires the char array comes immediately after the
+// SYMBOL_INFO. This structure formalizes that.
+struct SymbolInfo {
+    SymbolInfo() {
+#       if defined(_WIN32)
+        memset(&mInfo, 0, sizeof(SYMBOL_INFO));
+        // The extra byte for null term is in the SYMBOL_INFO struct
+        mInfo.MaxNameLen = mName.size();
+        mInfo.SizeOfStruct = sizeof(SYMBOL_INFO);
+#       endif
+    }
 
-        auto *sizer{new wxBoxSizer(wxVERTICAL)};
-        auto *errorMessage{new wxStaticText(this, wxID_ANY, error, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER)};
-        sizer->Add(errorMessage, wxSizerFlags(0).Border(wxALL, 10));
+#   if defined(_WIN32)
+    [[nodiscard]] SYMBOL_INFO *raw() { return &mInfo; }
+#   elif defined(__APPLE__) or defined(__linux__)
+    [[nodiscard]] Dl_info *raw() { return &mInfo; }
+#   endif
 
-        if (not detail.IsEmpty()) {
-            auto *detailMessage{new wxTextCtrl(this, wxID_ANY, detail, wxDefaultPosition, wxDefaultSize, wxTE_READONLY | wxTE_MULTILINE | wxTE_DONTWRAP)};
-            detailMessage->SetFont(wxFontInfo{}.Family(wxFONTFAMILY_TELETYPE));
-            sizer->Add(detailMessage, 1, wxEXPAND);
-        }
+    [[nodiscard]] cstring name() const { 
+#       if defined(_WIN32)
+        return mInfo.NameLen ? mInfo.Name : nullptr;
+#       elif defined(__APPLE__) or defined(__linux__)
+        return mInfo.dli_sname;
+#       endif
+    };
 
-        auto *buttonSizer{new wxBoxSizer(wxHORIZONTAL)};
-        auto *logButton{new wxButton(this, eID_Logs, "Show Log Folder")};
-        buttonSizer->Add(logButton, wxSizerFlags(1).Expand().Border(wxALL, 5));
+    [[nodiscard]] void *addr() const {
+#       if defined(_WIN32)
+        return reinterpret_cast<void *>(mInfo.Address);
+#       elif defined(__APPLE__) or defined(__linux__)
+        return mInfo.dli_saddr;
+#       endif
+    };
 
-        auto *okButton{new wxButton(this, eID_Ok, "Ok")};
-        buttonSizer->Add(okButton, wxSizerFlags(1).Expand().Border(wxRIGHT | wxTOP | wxBOTTOM, 5));
+    [[nodiscard]] cstring filename() const {
+#       if defined(_WIN32)
+        (void)this;
+        return nullptr;
+#       elif defined(__APPLE__) or defined(__linux__)
+        return mInfo.dli_fname;
+#       endif
+    }
 
-        sizer->Add(buttonSizer, wxSizerFlags().Expand());
-        SetSizerAndFit(sizer);
-
-        Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-            Close();
-        }, eID_Ok);
-        Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-            wxLaunchDefaultApplication(Paths::logDir().native());
-        }, eID_Logs);
+    [[nodiscard]] void *fileAddr() const {
+#       if defined(_WIN32)
+        (void)this;
+        return nullptr;
+#       elif defined(__APPLE__) or defined(__linux__)
+        return mInfo.dli_fbase;
+#       endif
     }
 
 private:
-    enum {
-        eID_Ok,
-        eID_Logs
-    };
+#   if defined(_WIN32)
+    SYMBOL_INFO mInfo;
+    array<char, 255> mName;
+#   elif defined(__APPLE__) or defined(__linux__)
+    Dl_info mInfo;
+#   endif
 };
 
 void crashHandler(const wxString& error, const wxString& detail) {
@@ -115,7 +140,7 @@ void crashHandler(const wxString& error, const wxString& detail) {
     if (not detail.IsEmpty()) logger.error(detail.ToStdString());
 
     if (wxIsMainThread()) {
-        auto errDialog{CrashDialog(error, detail)};
+        auto errDialog{app::CriticalDialog(error, detail)};
         errDialog.ShowModal();
     }
 
@@ -133,119 +158,234 @@ cstring addrToStr(
         width, reinterpret_cast<size_t>(addr)); return errAddr.data();
 };
 
-void appendStackFrame(void *frame, wxString& str) {
-    if (not str.IsEmpty()) str += '\n';
-    str += addrToStr(frame);
-    str += ": ";
+void fillSymbolInfo(void *frame, SymbolInfo& info) {
+#if defined(__linux__) or defined(__APPLE__)
+    if (dladdr(frame, info.raw()) == 0) {
+        return;
+    } 
+#elif defined(_WIN32)
+    const auto errCB{[&](cstring /* msg */, int /* errnum */) {
+        info.raw()->NameLen = 0;
+        info.raw()->Address = 0;
+    }};
+    const auto errCBWrapper{[](void *arg, cstring msg, int errnum) {
+        const auto& cb{*reinterpret_cast<decltype(errCB) *>(arg)};
+        cb(msg, errnum);
+    }};
 
-    Dl_info info;
-    if (dladdr(frame, &info) == 0 or info.dli_sname == nullptr) {
-        str += "???";
-    } else {
-        str += info.dli_sname;
+    const auto symInfoCB{[&](
+        uintptr_t,
+        cstring symname,
+        uintptr_t symval,
+        uintptr_t /* symsize */
+    ) {
+        if (symname) {
+            info.raw()->NameLen = strnlen(symname, 0xFF);
+            memcpy(info.raw()->Name, symname, info.raw()->NameLen + 1);
+        } else {
+            info.raw()->NameLen = 0;
+        }
+
+        info.raw()->Address = symval;
+    }};
+    const auto symInfoCBWrapper{[](
+        void *arg,
+        uintptr_t pc,
+        cstring symname,
+        uintptr_t symval,
+        uintptr_t symsize
+    ) {
+        const auto& cb{(*reinterpret_cast<decltype(symInfoCB) *>(arg))};
+        cb(pc, symname, symval, symsize);
+    }};
+    
+    HANDLE proc{GetCurrentProcess()};
+    static bool initRes{[proc]() {
+        return static_cast<bool>(SymInitialize(proc, nullptr, true));
+    }()};
+
+    int res{};
+    res = SymFromAddr(
+        proc,
+        reinterpret_cast<DWORD64>(frame),
+        nullptr,
+        info.raw()
+    );
+
+    if (res) return;
+
+    static backtrace_state *state{backtrace_create_state(
+        nullptr,
+        true,
+        errCBWrapper,
+        const_cast<void *>(reinterpret_cast<const void *>(&errCB))
+    )};
+
+    res = backtrace_syminfo(
+        state,
+        reinterpret_cast<uintptr_t>(frame),
+        symInfoCBWrapper,
+        nullptr,
+        const_cast<void *>(reinterpret_cast<const void *>(&symInfoCB))
+    );
+
+    if (not res) {
+        info.raw()->NameLen = 0;
+        info.raw()->Address = 0;
+    }
+#endif
+}
+
+wxString generateBacktrace(void *pc, span<void *> frames) {
+    SymbolInfo info;
+    wxString framesStr;
+    wxString droppedFramesStr;
+    bool inSigFrames{true};
+    for (void *const frame : frames) {
+        if (inSigFrames and frame == pc) {
+            inSigFrames = false;
+        }
+        auto& str{inSigFrames ? droppedFramesStr : framesStr};
+
+        fillSymbolInfo(frame, info);
+
+        if (not str.IsEmpty()) str += '\n';
+        str += addrToStr(frame);
+        str += ": ";
+        str += info.name() ? info.name() : "???";
         str += '+';
         const auto diff{
-            reinterpret_cast<size_t>(frame) -
-            reinterpret_cast<size_t>(info.dli_saddr)
+            reinterpret_cast<ptrdiff_t>(frame) -
+            reinterpret_cast<ptrdiff_t>(info.addr())
         };
         str += addrToStr(reinterpret_cast<void *>(diff), 0);
+        if (info.filename() and info.fileAddr()) {
+            str += " (";
+            str += info.filename();
+            str += '+';
+            const auto diff{
+                reinterpret_cast<ptrdiff_t>(frame) -
+                reinterpret_cast<ptrdiff_t>(info.fileAddr())
+            };
+            str += addrToStr(reinterpret_cast<void *>(diff), 0);
+            str += ')';
+        }
     }
+        
+    return
+        framesStr + "\n\n" +
+        "Dropped (Signal?) Frames:\n" +
+        droppedFramesStr;
 }
 
 #if defined(__linux__) or defined(__APPLE__)
 void sigHandler(int sig, siginfo_t *info, void *ucontext) {
-    std::array<void *, 50> trace;
-
     const auto *context{reinterpret_cast<ucontext_t *>(ucontext)};
 
     wxString detailAppStr{'\n'};
-    const auto numFrames{backtrace(trace.data(), trace.size())};
-    auto numBeforeBadFrame{0};
-    for (; numBeforeBadFrame < numFrames; ++numBeforeBadFrame) {
-        Dl_info info;
-        if (0 != dladdr(trace[numBeforeBadFrame], &info)) {
-            continue;
-        }
-
-        const auto programCounter{[context]() {
-#           if defined(__x86_64__)
-            return context->uc_mcontext->__ss.__rip;
-#           elif defined(__i386__)
-            return context->uc_mcontext->__ss.__eip;
-#           elif defined(__aarch64__)
-            return context->uc_mcontext->__ss.__pc;
-#           endif
-        }()};
-
-        detailAppStr += "Program Counter: ";
-        detailAppStr += addrToStr(reinterpret_cast<void *>(programCounter));
-        detailAppStr += '\n';
-
-        trace[numBeforeBadFrame] = reinterpret_cast<void *>(programCounter);
-        break;
-    }
-
-    detailAppStr += "Dropped (Signal?) Frames: ";
-    for (auto idx{0}; idx < numBeforeBadFrame; ++idx) {
-        appendStackFrame(trace[idx], detailAppStr);
-    }
-
-    const auto contextFrames{
-        trace |
-        std::views::drop(numBeforeBadFrame) |
-        std::views::take(numFrames - numBeforeBadFrame)
-    };
+    void *const programCounter{reinterpret_cast<void *>([context]() {
+#       if defined(__linux__)
+#       if defined(__x86_64__)
+        return context->uc_mcontext.gregs[REG_RIP];
+#       endif
+#       elif defined(__APPLE__)
+#       if defined(__x86_64__)
+        return context->uc_mcontext->__ss.__rip;
+#       elif defined(__i386__)
+        return context->uc_mcontext->__ss.__eip;
+#       elif defined(__aarch64__)
+        return context->uc_mcontext->__ss.__pc;
+#       endif
+#       endif
+    }())};
 
     wxString errStr{strsignal(sig)};
     errStr += " at address: ";
     errStr += addrToStr(info->si_addr);
 
-    wxString detailStr;
-    for (void *const frame : contextFrames) {
-        appendStackFrame(frame, detailStr);
-    }
+    std::array<void *, NUM_STACK_FRAMES> frames;
+    const auto numFrames{backtrace(frames.data(), frames.size())};
+    const auto backtraceStr{generateBacktrace(
+        programCounter, frames | std::views::take(numFrames)
+    )};
 
-    detailStr += '\n';
-    detailStr += detailAppStr;
-#elif defined(__WIN32__)
-void sigHandler(int sig) {
+    crashHandler(errStr, backtraceStr);
+}
+#elif defined(_WIN32)
+WINAPI LONG exceptionFilter(LPEXCEPTION_POINTERS exception) {
     wxString signame;
-    switch (sig) {
-        case SIGSEGV:
-            signame = "Segmentation fault";
+    switch (exception->ExceptionRecord->ExceptionCode) {
+        case EXCEPTION_ACCESS_VIOLATION:
+        case EXCEPTION_IN_PAGE_ERROR:
+            signame = "Access Violation at ";
+            signame += addrToStr(reinterpret_cast<void *>(
+                exception->ExceptionRecord->ExceptionInformation[1]
+            ));
             break;
-        case SIGABRT:
-            signame = "Function Aborted";
+        case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
+        case EXCEPTION_DATATYPE_MISALIGNMENT:
+            signame = "Access Violation";
             break;
-        case SIGFPE:
+        case EXCEPTION_STACK_OVERFLOW:
+            signame = "Stack Overflow";
+        case EXCEPTION_FLT_DENORMAL_OPERAND:
+        case EXCEPTION_FLT_DIVIDE_BY_ZERO:
+        case EXCEPTION_FLT_INEXACT_RESULT:
+        case EXCEPTION_FLT_INVALID_OPERATION:
+        case EXCEPTION_FLT_OVERFLOW:
+        case EXCEPTION_FLT_UNDERFLOW:
+        case EXCEPTION_FLT_STACK_CHECK:
+        case EXCEPTION_INT_DIVIDE_BY_ZERO:
+        case EXCEPTION_INT_OVERFLOW:
             signame = "Illegal Arithmetic";
             break;
-        case SIGILL:
+        case EXCEPTION_ILLEGAL_INSTRUCTION:
+        case EXCEPTION_PRIV_INSTRUCTION:
             signame = "Illegal Hardware Instruction";
             break;
+        default: return true;
     }
     auto errStr{signame};
-#endif
 
-    crashHandler(errStr, detailStr);
+    array<void *, NUM_STACK_FRAMES> frames;
+    const auto numFrames{CaptureStackBackTrace(
+        0,
+        frames.size(),
+        frames.data(),
+        nullptr
+    )};
+    void *const programCounter{exception->ExceptionRecord->ExceptionAddress};
+    const auto backtraceStr{generateBacktrace(
+        programCounter, frames | std::views::take(numFrames)
+    )};
+
+    crashHandler(errStr, backtraceStr);
+    return false;
 }
+#endif
 
 } // namespace
 
-bool App::init(const string& appName, const string& lockName) {
-#   if defined(__linux__) or defined(__APPLE__)
-    struct sigaction act{};
-    act.sa_flags = SA_SIGINFO;
-    act.sa_sigaction = sigHandler;
-    sigaction(SIGSEGV, &act, nullptr);
-    sigaction(SIGABRT, &act, nullptr);
-    sigaction(SIGFPE, &act, nullptr);
-    sigaction(SIGILL, &act, nullptr);
-#   elif defined(__WIN32__)
-    (void)signal(SIGSEGV, sigHandler);
-    (void)signal(SIGABRT, sigHandler);
-#   endif
-#   ifdef __WIN32__
+bool app::setupExclusion(const string& lockName) {
+    singleInstance.Create(wxString{lockName} + '-' + wxGetUserId());
+    if (singleInstance.IsAnotherRunning()) {
+        auto res{showMessage(
+            _("It looks like ProffieConfig is already running, continuing may break things!"),
+            lockName,
+            wxOK | wxCANCEL | wxCANCEL_DEFAULT,
+            nullptr
+        )};
+        if (res == wxCANCEL) return false;
+    }
+
+    return true;
+}
+
+bool app::init() {
+    auto& logger{Log::Context::getGlobal().createLogger("app::init()")};
+
+#   ifdef _WIN32
+    // Must be done before setting control event handlers
     if (AttachConsole(ATTACH_PARENT_PROCESS) /* or AllocConsole() */) {
         (void)freopen("CONOUT$", "w", stdout);
         (void)freopen("CONOUT$", "w", stderr);
@@ -253,25 +393,32 @@ bool App::init(const string& appName, const string& lockName) {
     }
 #   endif
 
+#   if defined(__linux__) or defined(__APPLE__)
+    struct sigaction act{};
+    act.sa_flags = SA_SIGINFO;
+    act.sa_sigaction = sigHandler;
+    if (
+            -1 == sigaction(SIGSEGV, &act, nullptr) or
+            -1 == sigaction(SIGABRT, &act, nullptr) or
+            -1 == sigaction(SIGFPE, &act, nullptr) or
+            -1 == sigaction(SIGILL, &act, nullptr)
+       ) {
+        logger.warn("Signal handlers could not be registered: " + std::to_string(errno));
+    }
+#   elif defined(_WIN32)
+    SetUnhandledExceptionFilter(exceptionFilter);
+#   endif
+
     auto execStr{wxApp::GetInstance()->argv[0]};
     auto runDir{execStr.substr(0, execStr.find_last_of("/\\"))};
-    chdir(runDir.c_str());
+    if (-1 == chdir(runDir.c_str())) {
+        logger.warn("Dir could not be changed: " + std::to_string(errno));
+        return false;
+    }
 
-    wxApp::GetInstance()->SetAppName(wxString{appName});
-    wxApp::GetInstance()->SetAppDisplayName(wxString{appName});
-
-    fs::create_directories(Paths::approot());
-    fs::create_directories(Paths::dataDir());
-    fs::create_directories(Paths::logDir());
-    fs::create_directories(Paths::configDir());
-    fs::create_directories(Paths::injectionDir());
-    fs::create_directories(Paths::propDir());
-    fs::create_directories(Paths::osDir());
-
-    auto& logger {Log::Context::getGlobal().createLogger("App::init()")};
     logger.info("First-stage app initialization complete.");
 
-#   if defined(__WIN32__) and defined(__WXGTK__)
+#   if defined(_WIN32) and defined(__WXGTK__)
     SetEnvironmentVariableA("GTK_CSD", "0");
     constexpr cstring DARK_THEME{"Adwaita:dark"};
     constexpr cstring LIGHT_THEME{"Adwaita"};
@@ -298,7 +445,6 @@ bool App::init(const string& appName, const string& lockName) {
     }
     logger.info("System language: " + std::to_string(wxUILocale::GetSystemLanguage()));
 
-
     if (not translations->AddStdCatalog()) {
         logger.info("Standard catalog not loaded.");
     }
@@ -308,27 +454,14 @@ bool App::init(const string& appName, const string& lockName) {
     }
     logger.info("Translation loading complete.");
 
-    singleInstance.Create(wxString{lockName.empty() ? appName : lockName} + '-' + wxGetUserId());
-    if (singleInstance.IsAnotherRunning()) {
-        logger.info("We already exist, cancelling initialization.");
-        return false;
-    }
-
     wxImage::AddHandler(new wxPNGHandler());
 
     logger.info("Initialized.");
     return true;
 }
 
-void App::appendDefaultMenuItems(wxMenuBar *menuBar) {
-#   ifdef __WXOSX__
-    menuBar->Append(new wxMenu, _("&Window"));
-    menuBar->Append(new wxMenu, _("&Help"));
-#   endif
-}
-
-#if defined(__WIN32__)
-APP_EXPORT [[nodiscard]] bool App::darkMode() { 
+#if defined(_WIN32)
+APP_EXPORT [[nodiscard]] bool app::darkMode() { 
     DWORD buffer{};
     DWORD bufferSize{sizeof(buffer)};
     RegGetValueW(
@@ -344,7 +477,18 @@ APP_EXPORT [[nodiscard]] bool App::darkMode() {
 }
 #endif
 
-string App::getAppName() { 
-    return wxApp::GetGUIInstance()->GetAppName().ToStdString();
+void app::setName(const wxString& appName) {
+    wxApp::GetInstance()->SetAppName(appName);
+    wxApp::GetInstance()->SetAppDisplayName(appName);
+}
+
+wxString app::getName() { 
+    return wxApp::GetGUIInstance()->GetAppName();
+}
+
+void app::provideUI(
+    int32 showMessage(const wxString&, const wxString&, long, wxWindow *)
+) {
+    ::showMessage = showMessage;
 }
 

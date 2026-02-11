@@ -21,14 +21,15 @@
 
 #include <wx/aboutdlg.h>
 #include <wx/cursor.h>
+#include <wx/collpane.h>
 #include <wx/event.h>
 #include <wx/gdicmn.h>
 #include <wx/menu.h>
+#include <wx/scrolwin.h>
 #include <wx/settings.h>
 #include <wx/toplevel.h>
 #include <wx/utils.h>
 
-#include "app/app.h"
 #include "config/config.h"
 #include "ui/message.h"
 #include "ui/plaque.h"
@@ -48,7 +49,7 @@
 #include "versions_manager/info.h"
 #include "versions_manager/manager.h"
 
-#include "../core/defines.h"
+#include "../core/licenses.h"
 #include "../core/appstate.h"
 #include "../core/utilities/misc.h"
 #include "../core/utilities/progress.h"
@@ -110,8 +111,8 @@ void MainMenu::bindEvents() {
     Bind(Progress::EVT_UPDATE, [&](ProgressEvent& event) { 
         Progress::handleEvent(&event); 
     });
-    Bind(Misc::EVT_MSGBOX, [&](Misc::MessageBoxEvent& event) {
-        pcui::showMessage(event.message, event.caption, event.style, this);
+    Bind(misc::EVT_MSGBOX, [&](misc::MessageBoxEvent& event) {
+        pcui::showMessage(event.message_, event.caption_, event.style_, this);
     });
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { Close(true); }, wxID_EXIT);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
@@ -149,15 +150,38 @@ void MainMenu::bindEvents() {
     }, wxID_ABOUT);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
-        wxLaunchDefaultApplication(Paths::logDir().native());
+        wxLaunchDefaultApplication(paths::logDir().native());
     }, ID_Logs);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
-        pcui::showMessage(
-            COPYRIGHT_NOTICE,
-            "ProffieConfig Copyright Notice",
-            wxOK | wxICON_INFORMATION
-        );
+        wxDialog dialog{
+            this,
+            wxID_ANY,
+            wxString::Format(_("ProffieConfig Copyright & License Info")),
+            wxDefaultPosition,
+            wxDefaultSize,
+            wxDEFAULT_DIALOG_STYLE | wxCENTER | wxRESIZE_BORDER
+        };
+
+        auto *scrollWin{new wxScrolledWindow(&dialog)};
+        auto *sizer{new wxBoxSizer(wxVERTICAL)};
+        for (const auto& license : LICENSES) {
+            auto *nameText{new wxStaticText(scrollWin, wxID_ANY, license.name_)};
+            sizer->Add(nameText);
+            auto *copyrightText{new wxStaticText(
+                scrollWin,
+                wxID_ANY,
+                wxString{"Copyright (C) "} + 
+                license.date_ + ' ' + license.author_
+            )};
+            sizer->Add(copyrightText);
+            auto *detailText{new wxStaticText(scrollWin, wxID_ANY, license.detail_)};
+            sizer->Add(detailText);
+            auto *pane{new wxCollapsiblePane(scrollWin, wxID_ANY, "Show License")};
+            auto *licenseText{new wxTextCtrl(pane, wxID_ANY, license.license_)};
+            sizer->Add(pane);
+        }
+        scrollWin->SetSizerAndFit(sizer);
     }, ID_Copyright);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
@@ -252,8 +276,8 @@ void MainMenu::bindEvents() {
                 const auto res{Config::open(configSelection)};
                 if (const auto *err = std::get_if<string>(&res)) {
                     progDialog->Update(100, _("Error"));
-                    auto *evt{new Misc::MessageBoxEvent(
-                        Misc::EVT_MSGBOX, 
+                    auto *evt{new misc::MessageBoxEvent(
+                        misc::EVT_MSGBOX, 
                         wxID_ANY, 
                         *err, 
                         _("Cannot Apply Changes")
@@ -269,8 +293,8 @@ void MainMenu::bindEvents() {
             };
 
             if (const auto *err = std::get_if<string>(&res)) {
-                auto *evt{new Misc::MessageBoxEvent(
-                    Misc::EVT_MSGBOX,
+                auto *evt{new misc::MessageBoxEvent(
+                    misc::EVT_MSGBOX,
                     wxID_ANY,
                     *err,
                     _("Cannot Apply Changes")
@@ -291,8 +315,8 @@ void MainMenu::bindEvents() {
                 );
             } 
 
-            auto *evt{new Misc::MessageBoxEvent(
-                Misc::EVT_MSGBOX,
+            auto *evt{new misc::MessageBoxEvent(
+                misc::EVT_MSGBOX,
                 wxID_ANY,
                 message,
                 _("Apply Changes to Board"),
@@ -421,7 +445,7 @@ void MainMenu::handleNotification(uint32 id) {
         bool canOpenSerial{boardSelection != 0};
 #       if defined _WIN32 or defined __linux__
         const auto bootloaderIdx{boardSelection.choices().size() - 1};
-        canOpenSerial &= boardSelection != bootloaderIdx
+        canOpenSerial &= boardSelection != bootloaderIdx;
 #       endif
         FindWindow(ID_OpenSerial)->Enable(canOpenSerial);
     }
@@ -466,7 +490,7 @@ void MainMenu::createMenuBar() {
 
     auto* menuBar{new wxMenuBar};
     menuBar->Append(file, _("&File"));
-    App::appendDefaultMenuItems(menuBar);
+    pcui::Frame::appendDefaultMenuItems(menuBar);
 
     const auto helpStr{_("&Help")};
     const auto helpIdx{menuBar->FindMenu(helpStr)};

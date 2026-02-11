@@ -100,7 +100,7 @@ bool Update::promptWithChangelog(const Data& data, const Changelog& changelog, L
     auto *iconSizer{new wxBoxSizer(wxVERTICAL)};
 #   ifdef __WXOSX__
     auto *iconElem{new wxStaticBitmap(&dlg, wxID_ANY, wxBitmap("icon", wxBITMAP_TYPE_ICON_RESOURCE))};
-#   elif defined(__WIN32__)
+#   elif defined(_WIN32)
     auto *iconElem{new wxStaticBitmap(&dlg, wxID_ANY, wxICON(ApplicationIcon))};
 #   elif defined(__linux__)
     auto *iconElem{new wxStaticBitmap(&dlg, wxID_ANY, wxBitmap())};
@@ -294,16 +294,16 @@ Utils::Version Update::determineCurrentVersion(const Data& data, pcui::ProgressD
             filepath itemPath;
             switch (id.type) {
                 case ItemType::EXEC:
-                    itemPath = Paths::binaryDir();
+                    itemPath = paths::binaryDir();
                     break;
                 case ItemType::LIB:
-                    itemPath = Paths::libraryDir();
+                    itemPath = paths::libraryDir();
                     break;
                 case ItemType::COMP:
-                    itemPath = Paths::componentDir();
+                    itemPath = paths::componentDir();
                     break;
                 case ItemType::RSRC:
-                    itemPath = Paths::resourceDir();
+                    itemPath = paths::resourceDir();
                     break;
                 case ItemType::TYPE_MAX:
                     break;

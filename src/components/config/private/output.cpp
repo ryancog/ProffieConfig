@@ -65,7 +65,7 @@ optional<string> Config::output(const filepath& filePath, const Config& config, 
     auto precheckErr{runPreChecks(config, *logger.binfo("Running prechecks..."))};
     if (precheckErr) return precheckErr;
 
-    auto outFile{Paths::openOutputFile(filePath)};
+    auto outFile{paths::openOutputFile(filePath)};
     if (not outFile.is_open()) {
         return errorMessage(logger, wxTRANSLATE("Could not open config file for output."));
     }

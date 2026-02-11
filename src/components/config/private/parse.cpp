@@ -55,7 +55,7 @@ void tryAddInjection(const string& buffer, Config::Config&);
 optional<string> Config::parse(const filepath& path, Config& config, Log::Branch *lBranch) {
     auto& logger{Log::Branch::optCreateLogger("Config::parse()", lBranch)};
 
-    auto file{Paths::openInputFile(path)};
+    auto file{paths::openInputFile(path)};
     if (not file.is_open()) {
         return errorMessage(logger, wxTRANSLATE("Failed to open config from %s"), path.string());
     }
@@ -1462,7 +1462,7 @@ void tryAddInjection(const string& buffer, Config::Config& config) {
         );
         return;
     }
-    auto filePath{Paths::injectionDir() / injectionFile};
+    auto filePath{paths::injectionDir() / injectionFile};
     std::error_code err;
     if (not fs::exists(filePath, err)) {
         if (wxYES != pcui::showMessage(wxString::Format(_("Injection file \"%s\" has not been registered.\nWould you like to add the injection file now?"), injectionFile), _("Unknown Injection Encountered"), wxYES_NO | wxYES_DEFAULT)) {
@@ -1480,9 +1480,9 @@ void tryAddInjection(const string& buffer, Config::Config& config) {
             };
             if (fileDialog.ShowModal() == wxID_CANCEL) return;
 
-            auto copyPath{Paths::injectionDir() / filePath};
+            auto copyPath{paths::injectionDir() / filePath};
             fs::create_directories(copyPath.parent_path());
-            if (not Paths::copyOverwrite(fileDialog.GetPath().ToStdString(), copyPath, err)) {
+            if (not paths::copyOverwrite(fileDialog.GetPath().ToStdString(), copyPath, err)) {
                 auto res{pcui::showMessage(err.message(), _("Injection file could not be added."), wxOK | wxCANCEL | wxOK_DEFAULT)};
                 if (res == wxCANCEL) return;
 

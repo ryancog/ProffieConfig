@@ -296,7 +296,7 @@ wxIMPLEMENT_APP_CONSOLE(UpGen);
 std::pair<UpGen::Data, vector<UpGen::Message>> UpGen::loadCurrentManifest(const filepath& manifest) {
     auto& logger{Log::Context::getGlobal().createLogger("loadCurrentManifest()")};
 
-    auto manifestStream{Paths::openInputFile(manifest)};
+    auto manifestStream{paths::openInputFile(manifest)};
     PConf::Data rawData;
     if (not PConf::read(manifestStream, rawData, logger.binfo("Reading manifest..."))) {
         exit(1);
@@ -1009,7 +1009,7 @@ void UpGen::generateNewManifest(const vector<Message>& messages, const Data& dat
         manifest.emplace_back(std::move(bundleSect));
     }
 
-    auto outStream{Paths::openOutputFile(filepath{STAGING_DIR} / MANIFEST_DEFAULT)};
+    auto outStream{paths::openOutputFile(filepath{STAGING_DIR} / MANIFEST_DEFAULT)};
     PConf::write(outStream, manifest, nullptr);
 }
 
@@ -1069,7 +1069,7 @@ void UpGen::organizeAssets(const FileMaps& fileMaps, const Data& data) {
 
                 fs::create_directories(destDir);
                 std::error_code err;
-                Paths::copyOverwrite(filepath{STAGING_DIR} / PLATFORM_DIRS[platformIdx] / typeFolder / path, destDir / static_cast<string>(hash), err);
+                paths::copyOverwrite(filepath{STAGING_DIR} / PLATFORM_DIRS[platformIdx] / typeFolder / path, destDir / static_cast<string>(hash), err);
             }
         }
     }

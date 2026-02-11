@@ -19,10 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <list>
 #include <mutex>
-
-#include <wx/string.h>
 
 #include "message.h"
 #include "severity.h"

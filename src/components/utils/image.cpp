@@ -112,7 +112,7 @@ wxBitmap Image::loadPNG(const string& name) {
     // auto bmpIt{bmps.find(name)};
     // if (bmpIt != bmps.end()) return bmpIt->second;
 
-    auto pngPath{Paths::resourceDir() / "icons" / (name + ".png")};
+    auto pngPath{paths::resourceDir() / "icons" / (name + ".png")};
     // std::cout << "Loading PNG \"" << name << "\" from \"" << pngPath.native() << '"' << std::endl;
     wxBitmap bitmap;
     {
@@ -130,7 +130,7 @@ wxBitmap Image::loadPNG(const string& name) {
 }
 
 wxBitmap Image::loadPNG(const string& name, wxSize size, const wxColour& color) {
-    auto pngPath{Paths::resourceDir() / "icons" / (name + ".png")};
+    auto pngPath{paths::resourceDir() / "icons" / (name + ".png")};
     wxBitmap bitmap;
     {
         wxLogNull noErrors;

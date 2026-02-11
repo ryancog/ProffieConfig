@@ -21,6 +21,9 @@
 
 #include <thread>
 #include <wx/textctrl.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "../mainmenu/mainmenu.h"
 

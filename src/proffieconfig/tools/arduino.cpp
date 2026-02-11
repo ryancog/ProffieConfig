@@ -301,7 +301,7 @@ variant<CompileOutput, string> compile(
         return *err;
     }
 
-    const auto osPath{Paths::os(osVersion)};
+    const auto osPath{paths::os(osVersion)};
 
     if (config.propSelection != -1) {
         constexpr cstring PROPINST_MSG{wxTRANSLATE("Installing Prop File...")};
@@ -315,7 +315,7 @@ variant<CompileOutput, string> compile(
         }
 
         std::error_code err;
-        const auto sourcePropHeader{Paths::propDir() / reference->name / Versions::HEADER_FILE_STR};
+        const auto sourcePropHeader{paths::propDir() / reference->name / Versions::HEADER_FILE_STR};
         if (not reference->prop->filename.empty()) {
             if (not fs::exists(sourcePropHeader, err)) {
                 if (prog) prog->emitEvent(100, _("Error"));
@@ -323,7 +323,7 @@ variant<CompileOutput, string> compile(
                 return _("Invalid Prop Selected").ToStdString();
             }
 
-            auto res{Paths::copyOverwrite(sourcePropHeader, osPath / "props" / prop.filename, err)};
+            auto res{paths::copyOverwrite(sourcePropHeader, osPath / "props" / prop.filename, err)};
             if (not res) {
                 if (prog) prog->emitEvent(100, _("Error"));
                 logger.error("Failed to copy in prop header.");
@@ -347,7 +347,7 @@ variant<CompileOutput, string> compile(
     for (const auto& injection : config.presetArrays.injections()) {
         auto injectionPath{injectionsDir / injection->filename};
         std::error_code err;
-        if (not Paths::copyOverwrite(Paths::injectionDir() / injection->filename, injectionPath, err)) {
+        if (not paths::copyOverwrite(paths::injectionDir() / injection->filename, injectionPath, err)) {
             if (prog) prog->emitEvent(100, _("Error"));
             logger.error("Failed to copy injection file \"" + injectionPath.string() + "\": " + err.message());
             return _("OS FS Error").ToStdString();
@@ -371,8 +371,8 @@ variant<CompileOutput, string> compile(
     logger.info(UPDATE_INO_MESSAGE);
     const auto inoPath{osPath / "ProffieOS.ino"};
     const auto tmpInoPath{fs::temp_directory_path() / "ProffieOS.ino"};
-    auto ino{Paths::openInputFile(inoPath)};
-    auto tmpIno{Paths::openOutputFile(tmpInoPath)};
+    auto ino{paths::openInputFile(inoPath)};
+    auto tmpIno{paths::openOutputFile(tmpInoPath)};
     if (not ino.is_open()) {
         logger.error("Failed to open ProffieOS INO");
         if (prog) prog->emitEvent(100, _("Error"));
@@ -406,7 +406,7 @@ variant<CompileOutput, string> compile(
     ino.close();
     tmpIno.close();
     std::error_code errCode;
-    if (not Paths::copyOverwrite(tmpInoPath, inoPath, errCode)) {
+    if (not paths::copyOverwrite(tmpInoPath, inoPath, errCode)) {
         logger.error("Failed to copy in tmp ProffieOS INO: " + errCode.message());
         if (prog) prog->emitEvent(100, _("Error"));
         return _("Computer FS Error").ToStdString();
@@ -681,7 +681,7 @@ optional<string> upload(
         "upload",
     };
     const auto osVersion{config.settings.getOSVersion()};
-    const auto osPath{Paths::os(osVersion)};
+    const auto osPath{paths::os(osVersion)};
     args.push_back(osPath.string());
     args.emplace_back("--fqbn");
     const auto boardVersion{
@@ -848,7 +848,7 @@ optional<string> ensureCoreInstalled(
 
 void cli(Process& proc, vector<string>& args) {
     args.emplace_back("--no-color");
-    auto arduinoStr{(Paths::binaryDir() / "arduino-cli").string()};
+    auto arduinoStr{(paths::binaryDir() / "arduino-cli").string()};
     proc.create(arduinoStr, args);
 }
 
@@ -875,7 +875,7 @@ bool Arduino::runDriverInstallation(Log::Branch *lBranch) {
     Process proc;
 
     const auto rulesPath{
-        Paths::user() / ".arduino15" / "packages" / "proffieboard" / "hardware" / "stm32l4" /
+        paths::user() / ".arduino15" / "packages" / "proffieboard" / "hardware" / "stm32l4" /
         static_cast<string>(Versions::getDefaultCoreVersion()) / "drivers" / "linux"
     };
     vector<string> args;
@@ -897,7 +897,7 @@ bool Arduino::runDriverInstallation(Log::Branch *lBranch) {
 
     auto result{proc.finish()};
 #   elif defined(_WIN32)
-    auto driverStr{(Paths::binaryDir() / "proffie-dfu-setup.exe").string()};
+    auto driverStr{(paths::binaryDir() / "proffie-dfu-setup.exe").string()};
     auto result{Process::elevatedProcess(driverStr.c_str())};
 #   endif
 

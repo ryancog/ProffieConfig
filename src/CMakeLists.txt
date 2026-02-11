@@ -3,19 +3,20 @@
 # src/CMakeLists.txt
 
 set(SHARED_COMPONENTS
-    utils
+    app
+    config
     log
-    ui
     pconf
+    process
+    ui
+    utils
     versions
     versions_manager
-    config
-    process
 )
 
 set(STATIC_COMPONENTS
-    app
 )
+
 set(ALL_COMPONENTS ${SHARED_COMPONENTS} ${STATIC_COMPONENTS})
 
 foreach(component ${ALL_COMPONENTS})
@@ -31,8 +32,9 @@ add_subdirectory(test)
 install(TARGETS proffieconfig RUNTIME DESTINATION ${INSTALL_BIN_DIR})
 install(TARGETS launcher RUNTIME DESTINATION ${INSTALL_DIR} BUNDLE DESTINATION ${INSTALL_DIR})
 
-install(TARGETS ${SHARED_COMPONENTS} 
-    LIBRARY DESTINATION ${INSTALL_COMPONENTS_DIR}
-    RUNTIME DESTINATION ${INSTALL_COMPONENTS_DIR}
-)
+foreach(component ${SHARED_COMPONENTS})
+    install(FILES $<TARGET_FILE:${component}>
+        DESTINATION ${INSTALL_COMPONENTS_DIR}
+    )
+endforeach()
 

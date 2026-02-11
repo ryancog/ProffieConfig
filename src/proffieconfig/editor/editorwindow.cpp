@@ -38,7 +38,6 @@
 #include <wx/toolbar.h>
 #include <wx/tooltip.h>
 
-#include "app/app.h"
 #include "config/config.h"
 #include "ui/message.h"
 #include "ui/frame.h"
@@ -155,8 +154,8 @@ void EditorWindow::bindEvents() {
     Bind(Progress::EVT_UPDATE, [&](ProgressEvent& event) { 
         Progress::handleEvent(&event); 
     });
-    Bind(Misc::EVT_MSGBOX, [&](Misc::MessageBoxEvent& evt) {
-        pcui::showMessage(evt.message, evt.caption, evt.style, this);
+    Bind(misc::EVT_MSGBOX, [&](misc::MessageBoxEvent& evt) {
+        pcui::showMessage(evt.message_, evt.caption_, evt.style_, this);
     }, wxID_ANY);
     Bind(wxEVT_MENU, [this](wxCommandEvent&) {
         save();
@@ -187,8 +186,8 @@ void EditorWindow::bindEvents() {
 
             auto res{Arduino::verifyConfig(mConfig, prog)};
             if (auto *err = std::get_if<string>(&res)) {
-                auto *evt{new Misc::MessageBoxEvent(
-                    Misc::EVT_MSGBOX, wxID_ANY, *err, _("Config Verification Failed")
+                auto *evt{new misc::MessageBoxEvent(
+                    misc::EVT_MSGBOX, wxID_ANY, *err, _("Config Verification Failed")
                 )};
                 wxQueueEvent(this, evt);
                 return;
@@ -206,8 +205,8 @@ void EditorWindow::bindEvents() {
                 );
             } 
 
-            auto *evt{new Misc::MessageBoxEvent(
-                Misc::EVT_MSGBOX, wxID_ANY, message, verifyStr
+            auto *evt{new misc::MessageBoxEvent(
+                misc::EVT_MSGBOX, wxID_ANY, message, verifyStr
             )};
             wxQueueEvent(this, evt);
         }}.detach();
@@ -223,9 +222,9 @@ void EditorWindow::bindEvents() {
         };
         if (fileDialog.ShowModal() == wxCANCEL) return;
 
-        auto copyPath{Paths::injectionDir() / fileDialog.GetFilename().ToStdWstring()};
+        auto copyPath{paths::injectionDir() / fileDialog.GetFilename().ToStdWstring()};
         std::error_code err;
-        if (not Paths::copyOverwrite(fileDialog.GetPath().ToStdWstring(), copyPath, err)) {
+        if (not paths::copyOverwrite(fileDialog.GetPath().ToStdWstring(), copyPath, err)) {
             pcui::showMessage(err.message(), _("Injection file could not be added."));
             return;
         }
@@ -345,7 +344,7 @@ void EditorWindow::createMenuBar() {
     auto *menuBar{new wxMenuBar};
     menuBar->Append(file, _("&File"));
     menuBar->Append(tools, _("&Tools"));
-    App::appendDefaultMenuItems(menuBar);
+    appendDefaultMenuItems(menuBar);
 
     SetMenuBar(menuBar);
 }

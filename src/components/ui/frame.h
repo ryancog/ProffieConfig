@@ -39,6 +39,8 @@ public:
 
     void setReference(Frame**);
 
+    static void appendDefaultMenuItems(wxMenuBar *);
+
 private:
     Frame** mReference{nullptr};
 };

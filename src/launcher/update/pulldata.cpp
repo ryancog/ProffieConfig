@@ -70,12 +70,12 @@ bool Update::pullData(pcui::ProgressDialog *prog, Log::Branch& lBranch) {
         }
     }};
 
-    auto stateFile{Paths::openInputFile(Paths::stateFile())};
+    auto stateFile{paths::openInputFile(paths::stateFile())};
     PConf::Data stateFileData;
     PConf::read(stateFile, stateFileData, logger.binfo("Reading manifest to fetch..."));
     const auto hashedStateFileData{PConf::hash(stateFileData)};
     const auto updateManifestEntry{hashedStateFileData.find("UPDATE_MANIFEST")};
-    auto pullFrom{Paths::remoteUpdateAssets()};
+    auto pullFrom{paths::remoteUpdateAssets()};
     if (updateManifestEntry and updateManifestEntry->value) {
         pullFrom += "/manifest-" + *updateManifestEntry->value + ".pconf";
     } else {
@@ -125,7 +125,7 @@ optional<Update::Data> Update::parseData(pcui::ProgressDialog *prog, Log::Branch
         return nullopt;
     }
 
-    auto stream{Paths::openInputFile(manifestFile())};
+    auto stream{paths::openInputFile(manifestFile())};
     PConf::Data rawData;
     PConf::read(stream, rawData, logger.binfo("Parsing manifest..."));
     stream.close();
@@ -180,7 +180,7 @@ bool checkMessages(const PConf::HashedData& hashedRawData, Log::Branch& lBranch)
     vector<string> ignoreMessageList;
     std::unordered_set<string> ignoredMessages;
 
-    auto stateFile{Paths::openInputFile(Paths::stateFile())};
+    auto stateFile{paths::openInputFile(paths::stateFile())};
     PConf::read(stateFile, stateData, logger.bdebug("Parsing state file..."));
     stateFile.close();
     for (const auto& entry : stateData) {
@@ -273,12 +273,12 @@ bool checkMessages(const PConf::HashedData& hashedRawData, Log::Branch& lBranch)
 
     if (not ignoreMessageEntry) ignoreMessageEntry = PConf::Section::create(IGNORED_MESSAGES_STR);
     ignoreMessageEntry->value = PConf::listAsValue(ignoreMessageList);
-    const auto tmpPath{Paths::stateFile().append(".tmp")};
-    auto tmpFile{Paths::openOutputFile(tmpPath)};
+    const auto tmpPath{paths::stateFile().append(".tmp")};
+    auto tmpFile{paths::openOutputFile(tmpPath)};
     PConf::write(tmpFile, stateData, logger.bdebug("Writing statefile..."));
     tmpFile.close();
     std::error_code err;
-    fs::rename(tmpPath, Paths::stateFile(), err);
+    fs::rename(tmpPath, paths::stateFile(), err);
 
     return hadFatal;
 }
@@ -332,7 +332,7 @@ optional<std::pair<string, Update::Item>> parseItem(
         return nullopt;
     }
 
-#   ifdef __WIN32__
+#   ifdef _WIN32
     constexpr cstring PATH_KEY{"PATH_Win32"};
     constexpr cstring HASH_KEY{"HASH_Win32"};
 #   elif defined(__APPLE__)

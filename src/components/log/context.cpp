@@ -30,22 +30,23 @@
 
 #include "logger.h"
 
-namespace Log {
+namespace {
 
 constexpr cstring GLOBAL_TAG{"GLOBAL"};
 std::unique_ptr<Log::Context> globalContext;
 
-} // namespace Log
+} // namespace
 
 Log::Context::Context(string name, vector<std::ostream *> outStreams, bool outputToFile)
     : pName(std::move(name)), mOutputs(std::move(outStreams)) {
 
     if (outputToFile) {
         const auto appName{wxApp::GetGUIInstance()->GetAppName().ToStdString()};
+        fs::create_directories(paths::logDir());
         if (pName == GLOBAL_TAG) {
-            mRESOutFile.open(Paths::logDir() / (appName + ".log"));
+            mRESOutFile.open(paths::logDir() / (appName + ".log"));
         } else {
-            mRESOutFile.open(Paths::logDir() / (appName + "-" + pName + ".log"));
+            mRESOutFile.open(paths::logDir() / (appName + "-" + pName + ".log"));
         }
         mOutputs.insert(mOutputs.begin(), &mRESOutFile);
 

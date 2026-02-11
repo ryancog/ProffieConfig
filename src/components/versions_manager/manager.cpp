@@ -1,7 +1,7 @@
 #include "manager.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/versions_manager/manager.cpp
  *
@@ -23,11 +23,11 @@
 #include <wx/dialog.h>
 #include <wx/filepicker.h>
 #include <wx/listbox.h>
+#include <wx/menu.h>
 #include <wx/notebook.h>
 #include <wx/sizer.h>
 #include <wx/wrapsizer.h>
 
-#include "app/app.h"
 #include "config/config.h"
 #include "log/context.h"
 #include "log/severity.h"
@@ -42,24 +42,24 @@
 namespace {
 
 enum {
-    ID_Refresh = 2,
-    ID_Reset,
-    ID_ShowVersions,
+    eID_Refresh = 2,
+    eID_Reset,
+    eID_Show_Versions,
 
-    ID_PropList,
-    ID_PropAdd,
-    ID_PropRemove,
-    ID_PropInfo,
-    ID_PropVersionsText,
-    ID_PropRemoveVersion,
+    eID_Prop_List,
+    eID_Prop_Add,
+    eID_Prop_Remove,
+    eID_Prop_Info,
+    eID_Prop_Versions_Text,
+    eID_Prop_Remove_Version,
 
-    ID_OSList,
-    ID_OSAdd,
-    ID_OSRemove,
-    ID_OSText,
+    eID_OS_List,
+    eID_OS_Add,
+    eID_OS_Remove,
+    eID_OS_Text,
     
-    ID_PropVersionListAdd,
-    ID_PropVersionListBegin,
+    eID_Prop_Version_List_Add,
+    eID_Prop_Version_List_Begin,
 };
 
 void bindEvents();
@@ -103,7 +103,6 @@ void VersionsManager::open(wxWindow *parent, wxWindowID id) {
         evt.Skip();
     });
 
-    
     createUI();
     createMenuBar();
     bindEvents();
@@ -171,7 +170,7 @@ void bindEvents() {
 
         const auto updateState{[&dlg, name, duplicateMessage, file, header]() {
             bool duplicate{false};
-            for (const auto& entry : fs::directory_iterator{Paths::propDir()}) {
+            for (const auto& entry : fs::directory_iterator{paths::propDir()}) {
                 if (entry.path().filename() == name->GetValue().ToStdString()) {
                     duplicate = true;
                     break;
@@ -204,7 +203,9 @@ void bindEvents() {
                 insertionPoint
             );
             name->ChangeValue(value);
-            name->SetInsertionPoint(insertionPoint - numTrimmed);
+            name->SetInsertionPoint(
+                insertionPoint - static_cast<long>(numTrimmed)
+            );
 
             updateState();
         });
@@ -221,7 +222,7 @@ void bindEvents() {
             const auto errorStr{_("OS FS Failure")};
             constexpr cstring LOG_TAG{"VersionsManager Add Prop"};
             std::error_code err;
-            const auto propDir{Paths::propDir() / name->GetValue().ToStdString()};
+            const auto propDir{paths::propDir() / name->GetValue().ToStdString()};
             if (not fs::create_directory(propDir, err)) {
                 Log::Context::getGlobal().quickLog(
                     Log::Severity::WARN, LOG_TAG,
@@ -251,7 +252,7 @@ void bindEvents() {
 
             reloadFromDisk();
         }
-    }, ID_PropAdd);
+    }, eID_Prop_Add);
     manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
         auto res{pcui::showMessage(
             _("This cannot be undone!"), _("Remove Prop"),
@@ -259,23 +260,23 @@ void bindEvents() {
         )};
         if (res == wxYES) {
             const auto& versionedProp{
-                Versions::getProps()[static_cast<wxListBox *>(manager->FindWindow(ID_PropList))->GetSelection()]
+                Versions::getProps()[static_cast<wxListBox *>(manager->FindWindow(eID_Prop_List))->GetSelection()]
             };
-            fs::remove_all(Paths::propDir() / versionedProp->name);
+            fs::remove_all(paths::propDir() / versionedProp->name);
         }
 
         reloadFromDisk();
-    }, ID_PropRemove);
+    }, eID_Prop_Remove);
     manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
         const auto& versionedProp{
-            Versions::getProps()[static_cast<wxListBox *>(manager->FindWindow(ID_PropList))->GetSelection()]
+            Versions::getProps()[static_cast<wxListBox *>(manager->FindWindow(eID_Prop_List))->GetSelection()]
         };
         versionedProp->addVersion();
         reloadFromDisk();
-    }, ID_PropVersionListAdd);
+    }, eID_Prop_Version_List_Add);
     manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
         const auto& versionedProp{
-            Versions::getProps()[static_cast<wxListBox *>(manager->FindWindow(ID_PropList))->GetSelection()]
+            Versions::getProps()[static_cast<wxListBox *>(manager->FindWindow(eID_Prop_List))->GetSelection()]
         };
         const auto selectedVersion{getVersionSelection()};
         if (selectedVersion == -1) return;
@@ -283,7 +284,7 @@ void bindEvents() {
         versionedProp->removeVersion(selectedVersion);
 
         reloadFromDisk();
-    }, ID_PropRemoveVersion);
+    }, eID_Prop_Remove_Version);
 
     manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
         wxDialog dlg(manager, wxID_ANY, _("Add ProffieOS"));
@@ -326,7 +327,7 @@ void bindEvents() {
         const auto updateState{[&dlg, &versionData, duplicateMessage, folder]() {
             bool duplicate{false};
             const auto versionStr{static_cast<string>(versionData)};
-            for (const auto& entry : fs::directory_iterator{Paths::propDir()}) {
+            for (const auto& entry : fs::directory_iterator{paths::propDir()}) {
                 if (entry.path().filename() == versionStr) {
                     duplicate = true;
                     break;
@@ -360,7 +361,7 @@ void bindEvents() {
             const auto errorStr{_("OS FS Failure")};
             constexpr cstring LOG_TAG{"VersionsManager Add Prop"};
             std::error_code err;
-            const auto osDir{Paths::osDir() / static_cast<string>(versionData)};
+            const auto osDir{paths::osDir() / static_cast<string>(versionData)};
             if (not fs::create_directory(osDir, err)) {
                 Log::Context::getGlobal().quickLog(
                     Log::Severity::WARN, LOG_TAG,
@@ -384,7 +385,7 @@ void bindEvents() {
 
             reloadFromDisk();
         }
-    }, ID_OSAdd);
+    }, eID_OS_Add);
     manager->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
         auto res{pcui::showMessage(
             _("This cannot be undone!"), _("Remove OS"),
@@ -392,27 +393,27 @@ void bindEvents() {
         )};
         if (res == wxYES) {
             const auto& versionedOS{
-                Versions::getOSVersions()[static_cast<wxListBox *>(manager->FindWindow(ID_OSList))->GetSelection()]
+                Versions::getOSVersions()[static_cast<wxListBox *>(manager->FindWindow(eID_OS_List))->GetSelection()]
             };
-            fs::remove_all(Paths::osDir() / static_cast<string>(versionedOS.verNum));
+            fs::remove_all(paths::osDir() / static_cast<string>(versionedOS.verNum));
         }
 
         reloadFromDisk();
-    }, ID_OSRemove);
+    }, eID_OS_Remove);
     
     manager->Bind(wxEVT_LISTBOX, [](wxCommandEvent&) {
         updatePropSelection();
-    }, ID_PropList);
+    }, eID_Prop_List);
     manager->Bind(wxEVT_LISTBOX, [](wxCommandEvent&) {
         updateOSSelection();
-    }, ID_OSList);
+    }, eID_OS_List);
 
     manager->Bind(wxEVT_MENU, [](wxCommandEvent&) {
         reloadFromDisk();
-    }, ID_Refresh);
+    }, eID_Refresh);
     manager->Bind(wxEVT_MENU, [](wxCommandEvent&) {
-        wxLaunchDefaultApplication(Paths::versionDir().string());
-    }, ID_ShowVersions);
+        wxLaunchDefaultApplication(paths::versionDir().string());
+    }, eID_Show_Versions);
     manager->Bind(wxEVT_MENU, [](wxCommandEvent&) {
         constexpr auto FULL_RESET{wxYES};
         constexpr auto RESTORE_DEFAULTS{wxNO};
@@ -450,7 +451,7 @@ void bindEvents() {
 
         Versions::resetToDefault(res == FULL_RESET);
         reloadFromDisk();
-    }, ID_Reset);
+    }, eID_Reset);
 }
 
 void reloadFromDisk() {
@@ -466,7 +467,7 @@ void reloadFromDisk() {
 }
 
 void updatePropList() {
-    auto *propList{static_cast<wxListBox *>(manager->FindWindow(ID_PropList))};
+    auto *propList{static_cast<wxListBox *>(manager->FindWindow(eID_Prop_List))};
     const auto oldSelection{propList->GetSelection()};
 
     propList->Clear();
@@ -486,10 +487,10 @@ void updatePropList() {
 }
 
 void updatePropSelection() {
-    const auto selection{static_cast<wxListBox *>(manager->FindWindow(ID_PropList))->GetSelection()};
-    manager->FindWindow(ID_PropRemove)->Enable(selection != -1);
-    manager->FindWindow(ID_PropVersionsText)->Enable(selection != -1);
-    auto *infoText{static_cast<wxStaticText *>(manager->FindWindow(ID_PropInfo))};
+    const auto selection{static_cast<wxListBox *>(manager->FindWindow(eID_Prop_List))->GetSelection()};
+    manager->FindWindow(eID_Prop_Remove)->Enable(selection != -1);
+    manager->FindWindow(eID_Prop_Versions_Text)->Enable(selection != -1);
+    auto *infoText{static_cast<wxStaticText *>(manager->FindWindow(eID_Prop_Info))};
 
     if (selection != -1) {
         const auto& versionedProp{Versions::getProps()[selection]};
@@ -510,14 +511,14 @@ void updatePropVersionList() {
     const auto oldSelection{getVersionSelection()};
 
     const auto propSelection{
-        static_cast<wxListBox *>(manager->FindWindow(ID_PropList))->GetSelection()
+        static_cast<wxListBox *>(manager->FindWindow(eID_Prop_List))->GetSelection()
     };
 
     propVersionsSizer->Clear(true);
     if (propSelection == -1) return;
 
     const auto& versionedProp{Versions::getProps()[propSelection]};
-    int32 id{ID_PropVersionListBegin};
+    int32 id{eID_Prop_Version_List_Begin};
     for (const auto& version : versionedProp->supportedVersions()) {
         const auto toggleLabel{static_cast<string>(*version)};
         auto *toggle{new wxToggleButton(
@@ -542,14 +543,14 @@ void updatePropVersionList() {
         constexpr auto TOGGLE_PADDING{10};
 #       endif
         toggle->SetMinSize({toggle->GetTextExtent(toggleLabel).x + TOGGLE_PADDING, -1});
-        if (id - ID_PropVersionListBegin == oldSelection) toggle->SetValue(true);
+        if (id - eID_Prop_Version_List_Begin == oldSelection) toggle->SetValue(true);
         propVersionsSizer->Add(toggle);
         ++id;
     }
     propVersionsSizer->AddSpacer(5);
     propVersionsSizer->Add(new wxButton(
         propPage,
-        ID_PropVersionListAdd,
+        eID_Prop_Version_List_Add,
         "+",
         wxDefaultPosition,
         wxDefaultSize,
@@ -560,10 +561,10 @@ void updatePropVersionList() {
 void updatePropVersionSelection() {
     const auto versionSelection{getVersionSelection()};
 
-    manager->FindWindow(ID_PropRemoveVersion)->Enable(versionSelection != -1);
+    manager->FindWindow(eID_Prop_Remove_Version)->Enable(versionSelection != -1);
     if (versionSelection != -1) {
         const auto& versionedProp{Versions::getProps()[
-            static_cast<wxListBox *>(manager->FindWindow(ID_PropList))->GetSelection()
+            static_cast<wxListBox *>(manager->FindWindow(eID_Prop_List))->GetSelection()
         ]};
         propVersionProxy.bind(*versionedProp->supportedVersions()[versionSelection]);
         propVersionProxy.data()->setFocus();
@@ -573,7 +574,7 @@ void updatePropVersionSelection() {
 }
 
 void updateOSList() {
-    auto *osList{static_cast<wxListBox *>(manager->FindWindow(ID_OSList))};
+    auto *osList{static_cast<wxListBox *>(manager->FindWindow(eID_OS_List))};
     const auto oldSelection{osList->GetSelection()};
 
     osList->Clear();
@@ -593,9 +594,9 @@ void updateOSList() {
 }
 
 void updateOSSelection() {
-    const auto selection{static_cast<wxListBox *>(manager->FindWindow(ID_OSList))->GetSelection()};
-    manager->FindWindow(ID_OSRemove)->Enable(selection != -1);
-    auto *infoText{static_cast<wxStaticText *>(manager->FindWindow(ID_OSText))};
+    const auto selection{static_cast<wxListBox *>(manager->FindWindow(eID_OS_List))->GetSelection()};
+    manager->FindWindow(eID_OS_Remove)->Enable(selection != -1);
+    auto *infoText{static_cast<wxStaticText *>(manager->FindWindow(eID_OS_Text))};
 
     if (selection != -1) {
         const auto& versionedOS{Versions::getOSVersions()[selection]};
@@ -647,11 +648,11 @@ void createUI() {
     auto *propSizer{new wxBoxSizer(wxHORIZONTAL)};
 
     auto *propListSizer{new wxBoxSizer(wxVERTICAL)};
-    auto *propList{new wxListBox(propPage, ID_PropList)};
+    auto *propList{new wxListBox(propPage, eID_Prop_List)};
     auto *propModSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *propAdd{new wxButton(
         propPage,
-        ID_PropAdd,
+        eID_Prop_Add,
         "+",
         wxDefaultPosition,
         wxDefaultSize,
@@ -659,7 +660,7 @@ void createUI() {
     )};
     auto *propRemove{new wxButton(
         propPage,
-        ID_PropRemove,
+        eID_Prop_Remove,
         "-",
         wxDefaultPosition,
         wxDefaultSize,
@@ -677,14 +678,14 @@ void createUI() {
     propListSizer->AddSpacer(10);
 
     auto *propEditSizer{new wxBoxSizer(wxVERTICAL)};
-    auto *propInfo{new wxStaticText(propPage, ID_PropInfo, {})};
+    auto *propInfo{new wxStaticText(propPage, eID_Prop_Info, {})};
     propVersionsSizer = new wxWrapSizer;
     auto *propVersion{new pcui::Version(propPage, propVersionProxy)};
     propVersion->Bind(wxEVT_TEXT, [](wxCommandEvent&) {
         reloadFromDisk();
     });
     auto *propDeleteVersion{
-        new wxButton(propPage, ID_PropRemoveVersion, _("Remove Version"))
+        new wxButton(propPage, eID_Prop_Remove_Version, _("Remove Version"))
     };
 #   ifndef __WXOSX__
     propEditSizer->AddSpacer(10);
@@ -692,7 +693,7 @@ void createUI() {
     propEditSizer->Add(propInfo, 0, wxEXPAND);
     propEditSizer->AddSpacer(10);
     propEditSizer->Add(
-        new wxStaticText(propPage, ID_PropVersionsText, _("Supported OS Versions"))
+        new wxStaticText(propPage, eID_Prop_Versions_Text, _("Supported OS Versions"))
     );
     propEditSizer->Add(propVersionsSizer, 1, wxEXPAND);
     propEditSizer->AddSpacer(5);
@@ -712,11 +713,11 @@ void createUI() {
     auto *osSizer{new wxBoxSizer(wxHORIZONTAL)};
 
     auto *osListSizer{new wxBoxSizer(wxVERTICAL)};
-    auto *osList{new wxListBox(osPage, ID_OSList)};
+    auto *osList{new wxListBox(osPage, eID_OS_List)};
     auto *osModSizer{new wxBoxSizer(wxHORIZONTAL)};
     auto *osAdd{new wxButton(
         osPage,
-        ID_OSAdd,
+        eID_OS_Add,
         "+",
         wxDefaultPosition,
         wxDefaultSize,
@@ -724,7 +725,7 @@ void createUI() {
     )};
     auto *osRemove{new wxButton(
         osPage,
-        ID_OSRemove,
+        eID_OS_Remove,
         "-",
         wxDefaultPosition,
         wxDefaultSize,
@@ -742,7 +743,7 @@ void createUI() {
     osListSizer->AddSpacer(10);
 
     auto *osInfoSizer{new wxBoxSizer(wxVERTICAL)};
-    auto *osInfo{new wxStaticText(osPage, ID_OSText, wxEmptyString)};
+    auto *osInfo{new wxStaticText(osPage, eID_OS_Text, wxEmptyString)};
 #   ifndef __WXOSX__
     osInfoSizer->AddSpacer(10);
 #   endif
@@ -767,13 +768,13 @@ void createUI() {
 void createMenuBar() {
     auto *menuBar{new wxMenuBar};
     auto *file{new wxMenu};
-    file->Append(ID_Refresh, _("Reload From Disk") + "\tCtrl+Alt+R");
-    file->Append(ID_ShowVersions, _("Show Versions Folder") + "\tCtrl+L");
+    file->Append(eID_Refresh, _("Reload From Disk") + "\tCtrl+Alt+R");
+    file->Append(eID_Show_Versions, _("Show Versions Folder") + "\tCtrl+L");
     file->AppendSeparator();
-    file->Append(ID_Reset, _("Update From Server..."));
+    file->Append(eID_Reset, _("Update From Server..."));
 
     menuBar->Append(file, _("&File"));
-    App::appendDefaultMenuItems(menuBar);
+    pcui::Frame::appendDefaultMenuItems(menuBar);
 
     manager->SetMenuBar(menuBar);
 }
@@ -785,7 +786,7 @@ int32 getVersionSelection() {
             dynamic_cast<const wxToggleButton *>(selectionButton->GetWindow())
         };
         if (toggleButton) {
-            if (toggleButton->GetValue()) ret = toggleButton->GetId() - ID_PropVersionListBegin;
+            if (toggleButton->GetValue()) ret = toggleButton->GetId() - eID_Prop_Version_List_Begin;
         }
     }
 

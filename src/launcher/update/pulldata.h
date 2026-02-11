@@ -36,7 +36,7 @@ namespace Update {
  */
 [[nodiscard]] optional<Data> parseData(pcui::ProgressDialog *, Log::Branch&, bool heedMessages = true);
 
-inline filepath manifestFile() { return Paths::dataDir() / "manifest.pconf"; }
+inline filepath manifestFile() { return paths::dataDir() / "manifest.pconf"; }
 
 } // namespace Update
 

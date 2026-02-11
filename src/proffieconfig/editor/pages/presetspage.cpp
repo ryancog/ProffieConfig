@@ -644,7 +644,7 @@ void PresetsPage::rebuildInjections() {
 
         editButton->Bind(wxEVT_BUTTON, [&injection](wxCommandEvent&) {
             wxLaunchDefaultApplication(
-                (Paths::injectionDir() / injection->filename).native()
+                (paths::injectionDir() / injection->filename).native()
             );
         });
 

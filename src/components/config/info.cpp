@@ -26,6 +26,7 @@
 cstring Config::executableVersion{nullptr};
 
 void Config::setExecutableVersion(cstring version) { executableVersion = version; }
+
 cstring Config::version() { return wxSTRINGIZE(BIN_VERSION); }
 
 

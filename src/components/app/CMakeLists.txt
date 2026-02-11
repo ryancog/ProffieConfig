@@ -2,13 +2,12 @@
 # 
 # components/app/CMakeLists.txt
 
-# This gets statically linked regardless, but there's still 
-# distinction in its dependencies
-add_library(app STATIC 
+add_library(app SHARED
     app.cpp
+    critical_dialog.cpp
 )
 
-target_link_libraries(app 
+target_link_libraries(app
     wxWidgets
 
     utils
@@ -16,5 +15,11 @@ target_link_libraries(app
 )
 
 include(../Component.cmake)
-setup_component_and_static(app 0.0.0)
+setup_component_and_static(app 1.0.0)
+
+
+if (CMAKE_SYSTEM_NAME STREQUAL Windows) 
+    target_link_libraries(app libbacktrace dbghelp imagehlp)
+    target_link_libraries(app-static libbacktrace dbghelp imagehlp)
+endif()
 

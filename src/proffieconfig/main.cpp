@@ -22,16 +22,33 @@
 #include <wx/image.h>
 
 #include "app/app.h"
+#include "app/critical_dialog.h"
 #include "config/info.h"
 #include "core/appstate.h"
 #include "ui/message.h"
+#include "utils/paths.h"
 #include "versions/versions.h"
 
 class ProffieConfig : public wxApp {
 public:
     bool OnInit() override {
-        if (not App::init("ProffieConfig")) {
-            pcui::showMessage(_("ProffieConfig is Already Running"), App::getAppName());
+        app::setName("ProffieConfig");
+        app::provideUI(pcui::showMessage);
+
+        if (auto ec{paths::init()}) {
+            pcui::showMessage(wxString::Format(
+                _("Could not setup paths: %s"),
+                ec.message()
+            ));
+            return false;
+        }
+
+        if (not app::setupExclusion("ProffieConfig")) {
+            return false;
+        }
+
+        if (not app::init()) {
+            app::CriticalDialog dlg{_("Initialization Failed")};
             return false;
         }
 

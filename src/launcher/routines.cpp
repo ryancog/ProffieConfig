@@ -27,7 +27,7 @@
 #include <ui/message.h>
 #include <log/logger.h>
 
-#ifdef __WIN32__
+#ifdef _WIN32
 #include <fstream>
 #include <shlobj.h>
 #include <windows.h>
@@ -40,7 +40,7 @@
 
 namespace Routine {
 
-#ifdef __WIN32__
+#ifdef _WIN32
 constexpr auto SUB_KEY{LR"(Software\Microsoft\Windows\CurrentVersion\Uninstall\ProffieConfig)"};
 #endif
 
@@ -52,8 +52,8 @@ constexpr auto SUB_KEY{LR"(Software\Microsoft\Windows\CurrentVersion\Uninstall\P
 void Routine::launch(Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Routine::launch()")};
     logger.info("Launching ProffieConfig...");
-    auto exec{Paths::executable(Paths::Executable::MAIN)};
-#   ifdef __WIN32__
+    auto exec{paths::executable(paths::Executable::Main)};
+#   ifdef _WIN32
     if (0 == wxExecute(exec.native())) {
         logger.warn("ProffieConfig main binary missing/failed to start.");
     }
@@ -70,8 +70,8 @@ void Routine::platformInstall(Log::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Routine::platformInstall()")};
 
     std::error_code err;
-    auto currentExec{Paths::executable()};
-    auto installedExec{Paths::executable(Paths::Executable::LAUNCHER)};
+    auto currentExec{paths::executable()};
+    auto installedExec{paths::executable(paths::Executable::Launcher)};
     if (fs::exists(installedExec, err)) {
         logger.info("Launcher seems to already be installed, removing...");
 #       ifdef __APPLE__
@@ -86,14 +86,14 @@ void Routine::platformInstall(Log::Branch& lBranch) {
     fs::create_directories(installedExec.parent_path());
 #   endif
 
-#   ifdef __WIN32__
+#   ifdef _WIN32
     logger.info("Moving launcher into install location...");
     if (not MoveFileW(currentExec.c_str(), installedExec.c_str())) {
         err.assign(static_cast<int32>(GetLastError()), std::system_category());
         if (err) {
             auto errMessage{"Failed to install launcher: " + err.message() + " (" + std::to_string(err.value()) + ')'};
             logger.info(errMessage);
-            pcui::showMessage(_("Failed to install launcher"), App::getAppName());
+            pcui::showMessage(_("Failed to install launcher"), app::getName());
             return;
         }
     }
@@ -133,14 +133,14 @@ void Routine::platformInstall(Log::Branch& lBranch) {
     setValue("Publisher", "Kafrene Trading");
     setValue("DisplayVersion", wxSTRINGIZE(BIN_VERSION));
     setValue("DisplayIcon", installedExec.string());
-    setValue("URLInfoAbout", Paths::website());
+    setValue("URLInfoAbout", paths::website());
     setValue("UninstallString", '"' + installedExec.string() + "\" uninstall");
 
     RegCloseKey(hKey);
 
-    auto self{Paths::executable().string()};
+    auto self{paths::executable().string()};
     constexpr cstring SELFDELETE_BATCH{"C:\\TEMP\\PCFLDel.bat"};
-    auto batch{Paths::openOutputFile(SELFDELETE_BATCH)};
+    auto batch{paths::openOutputFile(SELFDELETE_BATCH)};
     batch << "@echo off\n:Repeat\ndel \"" << self << "\"\nif exist \"" << self << "\" goto Repeat\ndel \"%~f0\"\n";
     batch.close();
     ShellExecuteA(nullptr, "open", SELFDELETE_BATCH, nullptr, nullptr, SW_HIDE);
@@ -156,8 +156,8 @@ void Routine::platformInstall(Log::Branch& lBranch) {
     fs::remove_all(currentBundle, err);
 #   endif
 
-    pcui::showMessage(_("Launcher has been installed."), App::getAppName());
-#   ifdef __WIN32__
+    pcui::showMessage(_("Launcher has been installed."), app::getName());
+#   ifdef _WIN32
     if (wxExecute(installedExec.c_str()) == 0) {
         logger.warn("Failed to start launcher.");
     }
@@ -174,7 +174,7 @@ void Routine::platformInstall(Log::Branch& lBranch) {
 }
 
 void Routine::platformUninstall() {
-#   ifdef __WIN32__
+#   ifdef _WIN32
     // Remove start menu shortcut
     LPWSTR rawStr{nullptr};
     SHGetKnownFolderPath(FOLDERID_Programs, KF_FLAG_CREATE, nullptr, &rawStr);

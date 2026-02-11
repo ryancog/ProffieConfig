@@ -21,8 +21,6 @@
 
 #include <mutex>
 
-#include <wx/string.h>
-
 #include "utils/types.h"
 
 #include "message.h"

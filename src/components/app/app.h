@@ -22,29 +22,47 @@
 #include <wx/app.h>
 #include <wx/menu.h>
 
-#include <utils/types.h>
+#include "utils/types.h"
 
 #include "app_export.h"
 
-namespace App {
+namespace app {
+
+/**
+ * Setup one-instance-only lock
+ */
+[[nodiscard]] APP_EXPORT bool setupExclusion(const string& lockName);
 
 /**
  * Initialize an application
  *
- * @param appName the name to use in the Application
- * @param lockName the name to use to lock concurrent runs, defaults to appName
- *
  * @return if the app should continue running or not.
  */
-APP_EXPORT bool init(const string& appName, const string& lockName = {});
+[[nodiscard]] APP_EXPORT bool init();
 
-APP_EXPORT void appendDefaultMenuItems(wxMenuBar *);
-
-#if defined(__WIN32__)
-APP_EXPORT [[nodiscard]] bool darkMode();
+#if defined(_WIN32)
+APP_EXPORT bool darkMode();
 #endif
 
-APP_EXPORT string getAppName();
+/**
+ * Set the app name.
+ *
+ * Is expected to happen first, and before init/setupExclusion.
+ * Should only be called once.
+ */
+APP_EXPORT void setName(const wxString& appName);
+APP_EXPORT wxString getName();
 
-} // namespace App
+using ShowMessageFunc = int32(
+    const wxString&, const wxString&, long, wxWindow *
+);
+
+/**
+ * Provide app component with some UI helpers it cannot link
+ */
+APP_EXPORT void provideUI(
+    ShowMessageFunc showMessage
+);
+
+} // namespace app
 

@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <system_error>
 #include <wx/stdpaths.h>
 
 #if defined(_WIN32)
@@ -31,9 +32,18 @@
 #include "utils/types.h"
 #include "utils/version.h"
 
-namespace Paths {} // namespace Paths
+std::error_code paths::init() {
+    std::error_code ec;
+    fs::create_directories(paths::approot(), ec);
+    fs::create_directories(paths::dataDir(), ec);
+    fs::create_directories(paths::configDir(), ec);
+    fs::create_directories(paths::injectionDir(), ec);
+    fs::create_directories(paths::propDir(), ec);
+    fs::create_directories(paths::osDir(), ec);
+    return ec;
+}
 
-filepath Paths::user() {
+filepath paths::user() {
 #   ifdef _WIN32
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_Profile, 0, nullptr, &rawStr);
@@ -46,7 +56,7 @@ filepath Paths::user() {
 #   endif
 }
 
-filepath Paths::approot() {
+filepath paths::approot() {
 #   ifdef APP_DEPLOY_PATH 
     return APP_DEPLOY_PATH;
 #   else
@@ -65,12 +75,12 @@ filepath Paths::approot() {
 #   endif
 }
 
-filepath Paths::executable(Executable exec) {
+filepath paths::executable(Executable exec) {
     switch (exec) {
-        case Executable::CURRENT:
+        case Executable::Current:
             return wxStandardPaths::Get().GetExecutablePath().ToStdWstring();
-        case Executable::LAUNCHER:
-#           ifdef __WIN32__
+        case Executable::Launcher:
+#           ifdef _WIN32
             {
                 LPWSTR rawStr{};
                 auto rawPathRes{SHGetKnownFolderPath(FOLDERID_UserProgramFiles, KF_FLAG_CREATE, nullptr, &rawStr)};
@@ -88,8 +98,8 @@ filepath Paths::executable(Executable exec) {
 #           elif defined(__APPLE__)
             return filepath(getpwuid(getuid())->pw_dir) / "Applications" / "ProffieConfig.app" / "Contents" / "MacOS" / "ProffieConfig";
 #           endif
-        case Executable::MAIN:
-#           ifdef __WIN32__
+        case Executable::Main:
+#           ifdef _WIN32
             return binaryDir() / "ProffieConfig.exe";
 #           elif defined(__linux__)
             return binaryDir() / "ProffieConfig";
@@ -100,28 +110,28 @@ filepath Paths::executable(Executable exec) {
     return {};
 }
 
-filepath Paths::binaryDir() { return approot() / "bin"; }
+filepath paths::binaryDir() { return approot() / "bin"; }
 
-filepath Paths::libraryDir() {
-#   ifdef __WIN32__
+filepath paths::libraryDir() {
+#   ifdef _WIN32
     return binaryDir();
 #   elif defined(__linux__) or defined(__APPLE__)
     return approot() / "lib";
 #   endif
 }
 
-filepath Paths::componentDir() {
-#   ifdef __WIN32__
+filepath paths::componentDir() {
+#   ifdef _WIN32
     return binaryDir();
 #   elif defined(__linux__) or defined(__APPLE__)
     return approot() / "components";
 #   endif
 }
 
-filepath Paths::resourceDir() { return approot() / "resources"; }
+filepath paths::resourceDir() { return approot() / "resources"; }
 
-filepath Paths::logDir() {
-#   if defined(__WIN32__)
+filepath paths::logDir() {
+#   if defined(_WIN32)
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &rawStr);
     array<wchar_t, MAX_PATH> shortPath;
@@ -135,8 +145,8 @@ filepath Paths::logDir() {
 #   endif
 }
 
-filepath Paths::dataDir() {
-#   ifdef __WIN32__
+filepath paths::dataDir() {
+#   ifdef _WIN32
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_RoamingAppData, KF_FLAG_CREATE, nullptr, &rawStr);
     array<wchar_t, MAX_PATH> shortPath;
@@ -150,31 +160,32 @@ filepath Paths::dataDir() {
 #   endif
 }
 
-filepath Paths::configDir() { return Paths::dataDir() / "configs"; }
+filepath paths::configDir() { return paths::dataDir() / "configs"; }
 
-filepath Paths::injectionDir() { return Paths::dataDir() / "injections"; }
+filepath paths::injectionDir() { return paths::dataDir() / "injections"; }
 
-filepath Paths::versionDir() { return Paths::dataDir() / "versions"; }
+filepath paths::versionDir() { return paths::dataDir() / "versions"; }
 
-filepath Paths::propDir() { return Paths::versionDir() / "props"; }
+filepath paths::propDir() { return paths::versionDir() / "props"; }
 
-filepath Paths::osDir() {
-    return Paths::versionDir() / "os";
+filepath paths::osDir() {
+    return paths::versionDir() / "os";
 }
 
-filepath Paths::os(const Utils::Version& version) {
-    return Paths::osDir() / static_cast<string>(version) / "ProffieOS";
+filepath paths::os(const Utils::Version& version) {
+    return paths::osDir() / static_cast<string>(version) / "ProffieOS";
 }
 
-filepath Paths::stateFile() { return Paths::dataDir() / ".state.pconf"; }
+filepath paths::stateFile() { return paths::dataDir() / ".state.pconf"; }
 
 
-string Paths::website() { return "https://proffieconfig.kafrenetrading.com"; }
+string paths::website() { return "https://proffieconfig.kafrenetrading.com"; }
 
-string Paths::remoteAssets() {
+string paths::remoteAssets() {
     return website() + "/assets/appsupport";
 }
 
-string Paths::remoteUpdateAssets() { 
+string paths::remoteUpdateAssets() { 
     return remoteAssets() + "/update";
 }
+

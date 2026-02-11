@@ -61,7 +61,7 @@ void AppState::setPreference(Preference preference, bool set) {
 void AppState::saveState() {
     auto& logger{Log::Context::getGlobal().createLogger("AppState::saveState()")};
 
-    auto stateStream{Paths::openOutputFile(Paths::stateFile() += ".tmp")};
+    auto stateStream{paths::openOutputFile(paths::stateFile() += ".tmp")};
     if (!stateStream.is_open()) {
         logger.error("Failed creating temporary save file.");
         stateStream.close();
@@ -84,9 +84,9 @@ void AppState::saveState() {
     stateStream.close();
 
     std::error_code err;
-    fs::remove(Paths::stateFile(), err); // we don't care if it fails bc there's nothing there
+    fs::remove(paths::stateFile(), err); // we don't care if it fails bc there's nothing there
     err.clear();
-    fs::rename(Paths::stateFile() += ".tmp", Paths::stateFile(), err);
+    fs::rename(paths::stateFile() += ".tmp", paths::stateFile(), err);
     if (err.value() != 0) {
         logger.error("Failed saving state file.");
         return;
@@ -95,11 +95,11 @@ void AppState::saveState() {
 
 void AppState::loadState() {
     auto& logger{Log::Context::getGlobal().createLogger("AppState::loadState()")};
-    auto stateStream{Paths::openInputFile(Paths::stateFile())};
+    auto stateStream{paths::openInputFile(paths::stateFile())};
 
     if (not stateStream.is_open()) {
         logger.warn("Could not open state file, attempting recovery from tmp...");
-        stateStream.open(Paths::stateFile() += ".tmp");
+        stateStream.open(paths::stateFile() += ".tmp");
         if (!stateStream.is_open()) {
             logger.warn("Could not open temp state file, continuing without...");
             return;
@@ -137,9 +137,9 @@ void doNecessaryMigrations() {
         /*
          * Purge old ProffieOS and props data 
          */
-        fs::remove_all(Paths::dataDir() / "ProffieOS", err);
-        fs::remove_all(Paths::dataDir() / "props", err);
-        fs::remove_all(Paths::resourceDir() / "props", err);
+        fs::remove_all(paths::dataDir() / "ProffieOS", err);
+        fs::remove_all(paths::dataDir() / "props", err);
+        fs::remove_all(paths::resourceDir() / "props", err);
 
         /* 
          * Install new ProffieOS and props data 

@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef __WIN32__
+#ifdef _WIN32
 #include <dwmapi.h>
 #endif
 
@@ -43,12 +43,12 @@ Frame::Frame(wxWindow *parent,
 #   endif
     Create(parent, winID, title, pos, size, style, name);
 
-#	ifdef __WIN32__
+#	ifdef _WIN32
     SetIcon(wxICON(ApplicationIcon));
     SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
 
     Bind(wxEVT_CREATE, [this](wxWindowCreateEvent&) {
-        DWORD useDarkMode{App::darkMode()};
+        DWORD useDarkMode{app::darkMode()};
         DwmSetWindowAttribute(
 #           ifdef __WXGTK__
             GTKGetWin32Handle(),
@@ -69,6 +69,13 @@ Frame::~Frame() {
 
 void Frame::setReference(Frame** ref) {
     mReference = ref;
+}
+
+void Frame::appendDefaultMenuItems(wxMenuBar *menuBar) {
+#   ifdef __WXOSX__
+    menuBar->Append(new wxMenu, _("&Window"));
+    menuBar->Append(new wxMenu, _("&Help"));
+#   endif
 }
 
 } // namespace pcui

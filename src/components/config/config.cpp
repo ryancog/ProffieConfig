@@ -255,7 +255,7 @@ namespace {
 
 filepath savePath(const string& name) {
     return 
-        Paths::configDir() /
+        paths::configDir() /
         (static_cast<string>(name) + Config::RAW_FILE_EXTENSION);
 }
 
@@ -288,7 +288,7 @@ optional<string> Config::Config::save(
         return err;
     }
 
-    if (not Paths::copyOverwrite(tmpPath, finalPath, errCode)) {
+    if (not paths::copyOverwrite(tmpPath, finalPath, errCode)) {
         err = errorMessage(logger, wxTRANSLATE("Failed to move temp file: %s"), tmpPath.string(), finalPath.string(), errCode.message());
     }
     fs::remove(tmpPath, errCode);
@@ -322,8 +322,8 @@ bool Config::Config::isSaved() const {
         return false;
     }
 
-    auto current{Paths::openInputFile(currentPath)};
-    auto validate{Paths::openInputFile(validatePath)};
+    auto current{paths::openInputFile(currentPath)};
+    auto validate{paths::openInputFile(validatePath)};
 
     bool saved{true};
 
@@ -366,7 +366,7 @@ vector<string> Config::fetchListFromDisk() {
     vector<string> ret;
 
     std::error_code err;
-    for (const auto& entry : fs::directory_iterator{Paths::configDir(), err}) {
+    for (const auto& entry : fs::directory_iterator{paths::configDir(), err}) {
         if (not entry.is_regular_file()) continue;
         if (entry.path().extension() != RAW_FILE_EXTENSION) continue;
         ret.emplace_back(entry.path().stem().string());

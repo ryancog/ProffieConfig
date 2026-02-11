@@ -37,7 +37,7 @@
 
 namespace {
 
-inline filepath stagingFolder() { return Paths::dataDir() / "staging"; }
+inline filepath stagingFolder() { return paths::dataDir() / "staging"; }
 
 string convertSize(uint64 size);
 
@@ -87,7 +87,7 @@ bool Update::pullNewFiles(
         if (file.id.ignored) continue;
         const auto& item{data.items.at(file.id)};
 
-        string itemURLString{Paths::remoteUpdateAssets()};
+        string itemURLString{paths::remoteUpdateAssets()};
         type = file.id.type;
         itemURLString += '/' + typeFolder(type).string() + '/';
         itemURLString += static_cast<string>(file.hash);
@@ -141,7 +141,7 @@ bool Update::pullNewFiles(
             auto response{request.GetResponse()};
             auto statusText{response.GetStatusText()};
             logger.error("Download failed! " + (statusText.empty() ? "UError" : statusText.ToStdString()) + " (" + std::to_string(response.GetStatus()) + ')');
-            pcui::showMessage(_("Failed to download file."), App::getAppName());
+            pcui::showMessage(_("Failed to download file."), app::getName());
             fs::remove_all(stagingFolder());
             return false;
         }
@@ -161,13 +161,13 @@ void Update::installFiles(
     auto baseTypePath{[](ItemType type) -> filepath {
         switch (type) {
         case ItemType::EXEC:
-            return Paths::binaryDir();
+            return paths::binaryDir();
         case ItemType::LIB:
-            return Paths::libraryDir();
+            return paths::libraryDir();
         case ItemType::COMP:
-            return Paths::componentDir();
+            return paths::componentDir();
         case ItemType::RSRC:
-            return Paths::resourceDir();
+            return paths::resourceDir();
         case TYPE_MAX:
             break;
         }
@@ -191,22 +191,22 @@ void Update::installFiles(
         auto path{baseTypePath(file.id.type)};
 #       ifdef __APPLE__
         if (file.id.type == ItemType::EXEC and item.path == "ProffieConfig") {
-            fs::create_directories(Paths::executable(Paths::Executable::MAIN).parent_path());
+            fs::create_directories(paths::executable(paths::Executable::Main).parent_path());
             fs::copy_file(
                 stagingFolder() / typeFolder(file.id.type) / item.path,
-                Paths::executable(Paths::Executable::MAIN),
+                paths::executable(paths::Executable::Main),
                 fs::copy_options::overwrite_existing
             );
 
-            const auto resourcesPath{Paths::executable(Paths::Executable::MAIN).parent_path().parent_path() / "Resources"};
+            const auto resourcesPath{paths::executable(paths::Executable::Main).parent_path().parent_path() / "Resources"};
             fs::create_directories(resourcesPath);
             fs::copy_file(
-                Paths::executable(Paths::Executable::LAUNCHER).parent_path().parent_path() / "Resources" / "icon.icns", 
+                paths::executable(paths::Executable::Launcher).parent_path().parent_path() / "Resources" / "icon.icns", 
                 resourcesPath / "icon.icns",
                 fs::copy_options::overwrite_existing
             );
 
-            auto infoStream{Paths::openOutputFile(Paths::executable(Paths::Executable::MAIN).parent_path().parent_path() / "Info.plist")};
+            auto infoStream{paths::openOutputFile(paths::executable(paths::Executable::Main).parent_path().parent_path() / "Info.plist")};
             infoStream << 
                 R"(<?xml version="1.0" encoding="UTF-8"?>)" "\n"
                 R"(<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">)" "\n"
@@ -242,7 +242,7 @@ void Update::installFiles(
         fs::remove(path);
         fs::create_directories(path.parent_path());
         std::error_code err;
-        Paths::copyOverwrite(stagingFolder() / typeFolder(file.id.type) / filepath{item.path}, path, err);
+        paths::copyOverwrite(stagingFolder() / typeFolder(file.id.type) / filepath{item.path}, path, err);
 #       endif
     }
 

@@ -141,8 +141,8 @@ void Onboard::Frame::bindEvents() {
     Bind(Progress::EVT_UPDATE, [&](ProgressEvent& event) { 
         Progress::handleEvent(&event); 
     });
-    Bind(Misc::EVT_MSGBOX, [&](Misc::MessageBoxEvent& evt) {
-        pcui::showMessage(evt.message, evt.caption, evt.style, this);
+    Bind(misc::EVT_MSGBOX, [&](misc::MessageBoxEvent& evt) {
+        pcui::showMessage(evt.message_, evt.caption_, evt.style_, this);
     }, wxID_ANY);
 
     // TODO: Make this button handling sane.

@@ -25,10 +25,12 @@
 #include <wx/generic/richmsgdlgg.h>
 #endif
 
+#include "app/app.h"
+
 int32 pcui::showMessage(
     const wxString& msg,
     const wxString& caption,
-    int64 style,
+    long style,
     wxWindow *parent
 ) {
 #   ifdef __WXMSW__
@@ -37,7 +39,7 @@ int32 pcui::showMessage(
         parent,
         msg,
         caption.empty()
-            ? wxMessageBoxCaptionStr
+            ? app::getName()
             : caption,
         style
     );
@@ -55,7 +57,7 @@ int32 pcui::showMessage(
     return wxMessageBox(
         msg,
         caption.empty()
-            ? wxMessageBoxCaptionStr
+            ? app::getName()
             : caption,
         style,
         parent
@@ -67,7 +69,7 @@ pcui::HideableInfo pcui::showHideablePrompt(
     const wxString& msg,
     const wxString& caption,
     wxWindow *parent,
-    int64 style,
+    long style,
     const wxString& yesText,
     const wxString& noText,
     const wxString& okText,
@@ -75,11 +77,11 @@ pcui::HideableInfo pcui::showHideablePrompt(
 ) {
 #   ifdef __WXMSW__
     wxGenericRichMessageDialog dlg(
-        parent, msg, caption, static_cast<long>(style)
+        parent, msg, caption, style
     );
 #   else
     wxRichMessageDialog dlg(
-        parent, msg, caption, static_cast<long>(style)
+        parent, msg, caption, style
     );
 #   endif
 
@@ -106,5 +108,4 @@ pcui::HideableInfo pcui::showHideablePrompt(
     ret.wantsToHide_ = dlg.IsCheckBoxChecked();
     return ret;
 }
-
 

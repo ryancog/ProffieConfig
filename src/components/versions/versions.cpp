@@ -106,7 +106,7 @@ void Versions::loadLocal() {
 
     logger.info("Loading ProffieOS Versions...");
     osVersions.clear();
-    for (const auto& entry : fs::directory_iterator(Paths::osDir())) {
+    for (const auto& entry : fs::directory_iterator(paths::osDir())) {
         std::error_code err{};
         if (not entry.is_directory(err)) {
             logger.warn("Non-directory OS entry found: " + entry.path().filename().string());
@@ -135,7 +135,7 @@ void Versions::loadLocal() {
         VersionedOS os;
         os.verNum = version;
 
-        auto infoFile{Paths::openInputFile(entry.path() / INFO_FILE_STR)};
+        auto infoFile{paths::openInputFile(entry.path() / INFO_FILE_STR)};
         PConf::Data infoData;
         PConf::read(infoFile, infoData, logger.bverbose("Reading info file..."));
         const auto hashedInfoData{PConf::hash(infoData)};
@@ -169,7 +169,7 @@ void Versions::loadLocal() {
         auto& versionedProp{propDefaultVersionMap.emplace(version, "").first->second};
         PConf::HashedData hashedDefaultPropData;
         if (fs::is_regular_file(defaultPropDataPath, err)) {
-            auto defaultPropDataFile{Paths::openInputFile(defaultPropDataPath)};
+            auto defaultPropDataFile{paths::openInputFile(defaultPropDataPath)};
             PConf::Data defaultPropData;
             PConf::read(defaultPropDataFile, defaultPropData, logger.bverbose("Reading default prop file..."));
             hashedDefaultPropData = PConf::hash(defaultPropData);
@@ -193,7 +193,7 @@ void Versions::loadLocal() {
     // Migrated or should be removed
     const auto oldProps{std::move(props)};
     props.clear();
-    for (const auto& entry : fs::directory_iterator(Paths::propDir())) {
+    for (const auto& entry : fs::directory_iterator(paths::propDir())) {
         std::error_code err{};
         if (not entry.is_directory(err)) {
             logger.warn("Non-directory prop entry found: " + entry.path().filename().string());
@@ -220,7 +220,7 @@ void Versions::loadLocal() {
             if (oldProp->name == propName) oldPropPtr = oldProp.get();
         }
 
-        auto infoFile{Paths::openInputFile(Paths::propDir() / propName / INFO_FILE_STR)};
+        auto infoFile{paths::openInputFile(paths::propDir() / propName / INFO_FILE_STR)};
         PConf::Data infoData;
         PConf::read(infoFile, infoData, logger.bverbose("Reading info file..."));
         const auto hashedInfoData{PConf::hash(infoData)};
@@ -273,7 +273,7 @@ void Versions::loadLocal() {
         }
 
         // Yeah this naming is stupid, what are you going to do about it?
-        auto dataFile{Paths::openInputFile(Paths::propDir() / propName / DATA_FILE_STR)};
+        auto dataFile{paths::openInputFile(paths::propDir() / propName / DATA_FILE_STR)};
         PConf::Data dataData;
         PConf::read(dataFile, dataData, logger.bverbose("Reading data file..."));
         const auto hashedDataData{PConf::hash(dataData)};
@@ -337,8 +337,8 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
     std::error_code err;
     if (purge) {
         logger.info("Purging versions...");
-        fs::remove_all(Paths::versionDir(), err);
-        fs::create_directories(Paths::versionDir(), err);
+        fs::remove_all(paths::versionDir(), err);
+        fs::create_directories(paths::versionDir(), err);
         if (err) {
             logger.error("Failed to create versions dir: " + err.message());
             return _("Failed during setup.").ToStdString();
@@ -347,7 +347,7 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
 
     logger.info("Downloading ProffieOS...");
     auto uri{wxURI{
-        Paths::remoteAssets() + "/ProffieOS/" +
+        paths::remoteAssets() + "/ProffieOS/" +
         static_cast<string>(getDefaultOSVersion()) + ".zip"
     }.BuildURI()};
     auto proffieOSRequest{wxWebSessionSync::GetDefault().CreateRequest(uri)};
@@ -367,7 +367,7 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
     std::unique_ptr<wxZipEntry> entry;
     constexpr cstring OS_EXTRACT_FAIL_MSG{wxTRANSLATE("Failed Extracting ProffieOS ZIP")};
     while (entry.reset(osZipStream.GetNextEntry()), entry) {
-        auto filepath{Paths::os(getDefaultOSVersion()) / entry->GetName().ToStdString()};
+        auto filepath{paths::os(getDefaultOSVersion()) / entry->GetName().ToStdString()};
         fs::remove_all(filepath, err);
         if (filepath.string().find("__MACOSX") != string::npos) continue;
 
@@ -406,7 +406,7 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
     }
 
     logger.info("Downloading prop manifest...");
-    uri = wxURI{Paths::remoteAssets() + "/props/manifest.pconf"}.BuildURI();
+    uri = wxURI{paths::remoteAssets() + "/props/manifest.pconf"}.BuildURI();
     auto propManifestRequest{wxWebSessionSync::GetDefault().CreateRequest(uri)};
     requestResult = propManifestRequest.Execute();
 
@@ -442,7 +442,7 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
     }
 
     uri = wxURI{
-        Paths::remoteAssets() + "/props/bundles/" +
+        paths::remoteAssets() + "/props/bundles/" +
             static_cast<string>(getDefaultOSVersion()) + ".zip"
     }.BuildURI();
     auto propBundleRequest{wxWebSessionSync::GetDefault().CreateRequest(uri)};
@@ -461,7 +461,7 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
 
     constexpr cstring BUNDLE_EXTRACT_FAIL_MSG{wxTRANSLATE("Failed Extracting Prop Bundle")};
     while (entry.reset(propBundleZipStream.GetNextEntry()), entry) {
-        auto filepath{Paths::propDir() / entry->GetName().ToStdString()};
+        auto filepath{paths::propDir() / entry->GetName().ToStdString()};
         fs::remove_all(filepath, err);
         if (filepath.string().find("__MACOSX") != string::npos) continue;
 
@@ -523,8 +523,8 @@ bool saveVersionedProp(
         PConf::listAsValue(list)
     ));
 
-    auto infoFile{Paths::openOutputFile(
-        Paths::propDir() / name / Versions::INFO_FILE_STR
+    auto infoFile{paths::openOutputFile(
+        paths::propDir() / name / Versions::INFO_FILE_STR
     )};
 
     if (not infoFile.is_open()) return false;
