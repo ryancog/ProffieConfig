@@ -337,5 +337,33 @@ else
 fi
 cd $ROOT_DIR
 
+echo "Preparing libbacktrace..."
+cd 3rdparty/libbacktrace
+if [ -d install-$TARGET_PLATFORM ]; then
+    echo "    libbacktrace already built, skipping! (Remove install-$TARGET_PLATFORM to reset)"
+else
+    rm -rf install-$TARGET_PLATFORM
+    rm -rf build-$TARGET_PLATFORM
+    mkdir -p build-$TARGET_PLATFORM
+    cd build-$TARGET_PLATFORM
+
+    do_with_log \
+        "Configuring" \
+        "../configure --host=$WX_HOST --prefix=$PWD/../install-$TARGET_PLATFORM" \
+        configure
+
+    do_with_log \
+        "Building" \
+        "make -j" \
+        build
+
+    do_with_log \
+        "Installing" \
+        "make install" \
+        install
+fi
+
+cd $ROOT_DIR
+
 echo "Done!"
 

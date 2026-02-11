@@ -185,6 +185,11 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
 		IMPORTED_LOCATION ${WX_LIB_DIR}/libwxzlib-3.3.a)
 
 elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
+    add_library(libbacktrace STATIC IMPORTED GLOBAL)
+    set_target_properties(libbacktrace PROPERTIES
+        IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/libbacktrace/install-win32/lib/libbacktrace.a
+        INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/libbacktrace/install-win32/include)
+
     set(TC_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tomcrypt/build-win32/)
     # set_target_properties(tomcrypt PROPERTIES
     #     IMPORTED_IMPLIB ${TC_LIB_DIR}/tomcrypt.dll)
