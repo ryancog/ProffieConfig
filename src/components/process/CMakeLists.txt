@@ -7,6 +7,5 @@ add_library(process SHARED
 )
 
 include(../Component.cmake)
-setup_component(process 1.0.0)
-
+setup_component_and_static(process 1.0.0)
 

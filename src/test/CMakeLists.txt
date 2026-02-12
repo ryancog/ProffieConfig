@@ -30,15 +30,15 @@ target_compile_options(Catch2 PRIVATE
 target_link_libraries(test
     Catch2::Catch2
 
-    app
-    config
-    log
-    pconf
-    process
-    ui
-    utils
-    versions
-    versions_manager
+    app-static
+    config-static
+    log-static
+    pconf-static
+    process-static
+    ui-static
+    utils-static
+    versions-static
+    versions_manager-static
 )
 
 target_compile_definitions(test PRIVATE

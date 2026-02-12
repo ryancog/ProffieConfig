@@ -21,6 +21,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "config/config.h"
+#include "utils/string.h"
 
 namespace {
 
@@ -33,42 +34,51 @@ TEST_CASE("Config") {
     variant<Config::Config *, string> configRes;
 
     SECTION("Tsukuyomi") {
-        configRes = Config::open((CONFIG_DIR / "Tsukuyomi").string());
+        constexpr cstring CONFIG_NAME{"Tsukuyomi"};
+        Config::remove(CONFIG_NAME);
+        auto importErr{Config::import(
+            CONFIG_NAME,
+            CONFIG_DIR / (string{CONFIG_NAME} + ".h")
+        )};
+        REQUIRE(importErr == nullopt);
+
+        configRes = Config::open(CONFIG_NAME);
         REQUIRE(configRes.index() == 0);
-        const auto *tsukuyomi{std::get<Config::Config *>(configRes)};
+        const auto *cfg{std::get<Config::Config *>(configRes)};
 
-        REQUIRE(tsukuyomi->settings.massStorage);
-        REQUIRE(tsukuyomi->settings.webUSB);
+        REQUIRE(cfg->settings.massStorage);
+        REQUIRE(cfg->settings.webUSB);
 
-        REQUIRE(tsukuyomi->settings.volume == 2000);
-        REQUIRE(tsukuyomi->settings.bootVolume == 200);
-        REQUIRE(tsukuyomi->settings.clashThreshold == 2);
-        REQUIRE(tsukuyomi->settings.pliOffTime == 120);
-        REQUIRE(tsukuyomi->settings.idleOffTime == 10);
-        REQUIRE(tsukuyomi->settings.motionTimeout == 15);
+        REQUIRE(cfg->settings.volume == 2000);
+        REQUIRE(cfg->settings.bootVolume == 200);
+        REQUIRE(cfg->settings.clashThreshold == 2);
+        REQUIRE(cfg->settings.pliOffTime == 120);
+        REQUIRE(cfg->settings.idleOffTime == 10);
+        REQUIRE(cfg->settings.motionTimeout == 15);
 
-        REQUIRE(tsukuyomi->bladeArrays.arrays().size() == 1);
-        REQUIRE(tsukuyomi->bladeArrays.arrays()[0]->blades().size() == 7);
+        REQUIRE(cfg->bladeArrays.arrays().size() == 1);
+        REQUIRE(cfg->bladeArrays.arrays()[0]->blades().size() == 7);
 
-        REQUIRE(tsukuyomi->settings.buttons().size() == 2);
-        const auto& powerButton{tsukuyomi->settings.button(0)};
+        REQUIRE(cfg->settings.buttons().size() == 2);
+        const auto& powerButton{cfg->settings.button(0)};
         REQUIRE(powerButton->type == Config::BUTTON);
         REQUIRE(powerButton->event == Config::POWER);
         REQUIRE(powerButton->pin == "powerButtonPin");
         REQUIRE(powerButton->name == "pow");
-        const auto& auxButton{tsukuyomi->settings.button(1)};
+        const auto& auxButton{cfg->settings.button(1)};
         REQUIRE(auxButton->type == Config::BUTTON);
         REQUIRE(auxButton->event == Config::AUX);
         REQUIRE(auxButton->pin == "auxPin");
         REQUIRE(auxButton->name == "aux");
 
         constexpr cstring POWER_RING_EXPANDED_STR{"StylePtr<Layers<TransitionLoop<Black,TrConcat<TrWipeIn<600>,RgbArg<BASE_COLOR_ARG,Blue>,TrWipeIn<600>>>>>()"};
-        REQUIRE(tsukuyomi->presetArrays.arrays().size() == 1);
-        REQUIRE(tsukuyomi->presetArrays.arrays()[0]->name == "presets");
-        const auto& presets{tsukuyomi->presetArrays.arrays()[0]->presets()};
+        REQUIRE(cfg->presetArrays.arrays().size() == 1);
+        REQUIRE(cfg->presetArrays.arrays()[0]->name == "presets");
+        const auto& presets{cfg->presetArrays.arrays()[0]->presets()};
         REQUIRE(presets.size() == 35);
         REQUIRE(presets[0]->styles().size() == 9);
-        const string RgueCmdrStyleStr{presets[0]->styles()[6]->style};
+        string RgueCmdrStyleStr{presets[0]->styles()[6]->style};
+        Utils::trimWhitespaceOutsideString(RgueCmdrStyleStr);
         REQUIRE(RgueCmdrStyleStr == POWER_RING_EXPANDED_STR);
     }
 }

@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/config/preset/preset.h
  *
@@ -39,7 +39,7 @@ struct CONFIG_EXPORT Preset {
     // vector<string> fontDirs;
     pcui::TextData track;
 
-    struct Style {
+    struct CONFIG_EXPORT Style {
         Style();
         explicit Style(const Style&) = default;
 
