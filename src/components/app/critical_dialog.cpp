@@ -36,8 +36,9 @@ enum {
 
 } // namespace
 
-app::CriticalDialog::CriticalDialog(const wxString& error, const wxString& detail) :
-    wxDialog(
+app::CriticalDialog::CriticalDialog(
+    const wxString& error, const wxString& detail
+) : wxDialog(
         nullptr,
         wxID_ANY,
         getName() + " Has Crashed",
@@ -45,13 +46,26 @@ app::CriticalDialog::CriticalDialog(const wxString& error, const wxString& detai
         wxDefaultSize,
         wxDEFAULT_DIALOG_STYLE | wxCENTER | wxRESIZE_BORDER
     ) {
-
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
-    auto *errorMessage{new wxStaticText(this, wxID_ANY, error, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER)};
+    auto *errorMessage{new wxStaticText(
+        this,
+        wxID_ANY,
+        error,
+        wxDefaultPosition,
+        wxDefaultSize,
+        wxALIGN_CENTER
+    )};
     sizer->Add(errorMessage, wxSizerFlags(0).Border(wxALL, 10));
 
     if (not detail.IsEmpty()) {
-        auto *detailMessage{new wxTextCtrl(this, wxID_ANY, detail, wxDefaultPosition, wxDefaultSize, wxTE_READONLY | wxTE_MULTILINE | wxTE_DONTWRAP)};
+        auto *detailMessage{new wxTextCtrl(
+            this,
+            wxID_ANY,
+            detail,
+            wxDefaultPosition,
+            wxDefaultSize,
+            wxTE_READONLY | wxTE_MULTILINE | wxTE_DONTWRAP
+        )};
         detailMessage->SetFont(wxFontInfo{}.Family(wxFONTFAMILY_TELETYPE));
         sizer->Add(detailMessage, 1, wxEXPAND);
     }
@@ -61,7 +75,10 @@ app::CriticalDialog::CriticalDialog(const wxString& error, const wxString& detai
     buttonSizer->Add(logButton, wxSizerFlags(1).Expand().Border(wxALL, 5));
 
     auto *okButton{new wxButton(this, eID_Ok, "Ok")};
-    buttonSizer->Add(okButton, wxSizerFlags(1).Expand().Border(wxRIGHT | wxTOP | wxBOTTOM, 5));
+    buttonSizer->Add(
+        okButton,
+        wxSizerFlags(1).Expand().Border(wxRIGHT | wxTOP | wxBOTTOM, 5)
+    );
 
     sizer->Add(buttonSizer, wxSizerFlags().Expand());
     SetSizerAndFit(sizer);
