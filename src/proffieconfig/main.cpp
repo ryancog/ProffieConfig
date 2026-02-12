@@ -52,7 +52,7 @@ public:
             return false;
         }
 
-        Config::setExecutableVersion(wxSTRINGIZE(VERSION));
+        Config::setExecutableVersion(wxSTRINGIZE(BIN_VERSION));
         Versions::loadLocal();
 
         // Version and prop stuffage
