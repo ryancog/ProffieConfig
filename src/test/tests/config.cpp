@@ -33,7 +33,7 @@ TEST_CASE("Config") {
     variant<Config::Config *, string> configRes;
 
     SECTION("Tsukuyomi") {
-        configRes = Config::open(CONFIG_DIR / "Tsukuyomi");
+        configRes = Config::open((CONFIG_DIR / "Tsukuyomi").string());
         REQUIRE(configRes.index() == 0);
         const auto *tsukuyomi{std::get<Config::Config *>(configRes)};
 

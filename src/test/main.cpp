@@ -53,7 +53,7 @@ public:
             return false;
         }
 
-        Config::setExecutableVersion(wxSTRINGIZE(VERSION));
+        Config::setExecutableVersion(wxSTRINGIZE(BIN_VERSION));
         Versions::loadLocal();
 
         auto res{Catch::Session().run(argc, static_cast<char **>(argv))};

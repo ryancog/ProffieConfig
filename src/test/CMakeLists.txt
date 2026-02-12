@@ -23,7 +23,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-target_compile_options(Catch2 PUBLIC
+target_compile_options(Catch2 PRIVATE
     -fexceptions
 )
 
