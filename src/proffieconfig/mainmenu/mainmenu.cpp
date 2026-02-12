@@ -27,9 +27,11 @@
 #include <wx/menu.h>
 #include <wx/scrolwin.h>
 #include <wx/settings.h>
+#include <wx/textctrl.h>
 #include <wx/toplevel.h>
 #include <wx/utils.h>
 
+#include "app/info.h"
 #include "config/config.h"
 #include "ui/message.h"
 #include "ui/plaque.h"
@@ -118,7 +120,9 @@ void MainMenu::bindEvents() {
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxAboutDialogInfo aboutInfo;
         const auto componentVersions{
-            "Config: v" + string{Config::version()} + "\n"
+            string{} +
+            "App: v" + app::version() + "\n"
+            "Config: v" + Config::version() + "\n"
             "Log: v" + Log::version() + "\n"
             "PConf: v" + PConf::version() + "\n"
             "pcui: v" + pcui::version() + "\n"
@@ -130,8 +134,8 @@ void MainMenu::bindEvents() {
 #       ifdef __WXOSX__
         aboutInfo.SetDescription(_("All-in-one Proffieboard Management Utility"));
         aboutInfo.SetVersion(
-            wxSTRINGIZE(VERSION),
-            "Core: v" + wxString{wxSTRINGIZE(VERSION)} + "\n"
+            wxSTRINGIZE(BIN_VERSION),
+            "Core: v" + wxString{wxSTRINGIZE(BIN_VERSION)} + "\n"
             + componentVersions
         );
 #       else
@@ -139,7 +143,7 @@ void MainMenu::bindEvents() {
             _("All-in-one Proffieboard Management Utility") + "\n\n"
             + componentVersions
         );
-        aboutInfo.SetVersion(wxSTRINGIZE(VERSION));
+        aboutInfo.SetVersion(wxSTRINGIZE(BIN_VERSION));
 #       endif
 #       ifdef __WXGTK__
         aboutInfo.SetWebSite("https://proffieconfig.kafrenetrading.com");
@@ -164,25 +168,77 @@ void MainMenu::bindEvents() {
         };
 
         auto *scrollWin{new wxScrolledWindow(&dialog)};
-        auto *sizer{new wxBoxSizer(wxVERTICAL)};
-        for (const auto& license : LICENSES) {
-            auto *nameText{new wxStaticText(scrollWin, wxID_ANY, license.name_)};
+        auto *scrollWrapSizer{new wxBoxSizer(wxVERTICAL)};
+        for (const auto& info : LICENSES) {
+            auto *sizer{new wxBoxSizer(wxVERTICAL)};
+            auto *nameText{new wxStaticText(scrollWin, wxID_ANY, info.name_)};
+            auto font{nameText->GetFont()};
+            font.SetFractionalPointSize(1.2 * font.GetFractionalPointSize());
+            nameText->SetFont(font);
             sizer->Add(nameText);
             auto *copyrightText{new wxStaticText(
                 scrollWin,
                 wxID_ANY,
-                wxString{"Copyright (C) "} + 
-                license.date_ + ' ' + license.author_
+                wxString{L"Copyright \u00A9 "} + 
+                info.date_ + ' ' + info.author_
             )};
             sizer->Add(copyrightText);
-            auto *detailText{new wxStaticText(scrollWin, wxID_ANY, license.detail_)};
+            auto *detailText{new wxStaticText(scrollWin, wxID_ANY, info.detail_)};
             sizer->Add(detailText);
-            auto *pane{new wxCollapsiblePane(scrollWin, wxID_ANY, "Show License")};
-            auto *licenseText{new wxTextCtrl(pane, wxID_ANY, license.license_)};
-            sizer->Add(pane);
+
+            constexpr auto SHOW_STR{"Show License"};
+            auto *pane{new wxCollapsiblePane(
+                scrollWin,
+                wxID_ANY,
+                SHOW_STR,
+                wxDefaultPosition,
+                wxDefaultSize,
+                wxCP_NO_TLW_RESIZE
+            )};
+            const auto onPaneChanged{[pane, scrollWin](
+                wxCollapsiblePaneEvent& evt
+            ) {
+                pane->SetLabel(evt.GetCollapsed() ? SHOW_STR : "Hide License");
+                scrollWin->Layout();
+                scrollWin->FitInside();
+            }};
+            pane->Bind(wxEVT_COLLAPSIBLEPANE_CHANGED, onPaneChanged);
+            auto *licenseText{new wxTextCtrl(
+                pane->GetPane(),
+                wxID_ANY,
+                info.license_,
+                wxDefaultPosition,
+                wxDefaultSize,
+                wxTE_READONLY | wxTE_MULTILINE |
+                wxTE_NO_VSCROLL | wxTE_WORDWRAP | wxTE_AUTO_URL
+            )};
+            const auto onMouseWheel{[scrollWin](wxMouseEvent& evt) {
+                // Have to forward it up the chain manually.
+                scrollWin->HandleOnMouseWheel(evt);
+            }};
+            licenseText->Bind(wxEVT_MOUSEWHEEL, onMouseWheel);
+            auto licenseExtent{licenseText->GetTextExtent(info.license_)};
+            licenseExtent.IncBy(10);
+            licenseText->SetMinSize(licenseExtent);
+            auto *paneSizer{new wxBoxSizer(wxVERTICAL)};
+            paneSizer->Add(licenseText, 0, wxEXPAND);
+            pane->GetPane()->SetSizer(paneSizer);
+            paneSizer->SetSizeHints(pane->GetPane());
+
+            sizer->Add(pane, 0, wxEXPAND);
+            scrollWrapSizer->AddSpacer(10);
+            scrollWrapSizer->Add(sizer, wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT, 10));
         }
-        scrollWin->SetSizerAndFit(sizer);
-    }, ID_Copyright);
+        scrollWrapSizer->AddSpacer(10);
+        scrollWin->SetSizerAndFit(scrollWrapSizer);
+        scrollWin->SetScrollRate(-1, 10);
+
+        auto *dlgSizer{new wxBoxSizer(wxVERTICAL)};
+        dlgSizer->Add(scrollWin, 1, wxEXPAND);
+        dialog.SetSizerAndFit(dlgSizer);
+
+        dialog.ShowModal();
+    }, ID_Licenses);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
         const auto warnPref{AppState::getPreference(
@@ -485,7 +541,7 @@ void MainMenu::createMenuBar() {
     file->AppendSeparator();
     file->Append(ID_Logs, _("Show Logs..."));
     file->Append(wxID_ABOUT);
-    file->Append(ID_Copyright, _("Licensing Information"));
+    file->Append(ID_Licenses, _("Licensing Information"));
     file->Append(wxID_EXIT);
 
     auto* menuBar{new wxMenuBar};

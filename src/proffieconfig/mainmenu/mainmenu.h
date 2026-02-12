@@ -46,7 +46,7 @@ public:
     enum {
         // on macOS menu items cannot have ID 0
         // on Win32, for some reason ID #1 is triggerred by hitting enter in pcTextCtrl?
-        ID_Copyright = 2,
+        ID_Licenses = 2,
 
         ID_Docs,
         ID_Issue,

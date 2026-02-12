@@ -70,5 +70,5 @@ function(setup_target TARGET)
         BUILD_WITH_INSTALL_RPATH true
     )
 
-    target_compile_definitions(${TARGET} PRIVATE BIN_VERSION=${BIN_VERSION} VERSION=${PROJECT_VERSION})
+    target_compile_definitions(${TARGET} PRIVATE BIN_VERSION=${BIN_VERSION})
 endfunction()
