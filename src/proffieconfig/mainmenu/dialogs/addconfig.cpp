@@ -73,21 +73,21 @@ void AddConfig::createUI() {
     sizer->SetMinSize(wxSize(400, -1));
 
     auto *addModeSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *createNewToggle{
-        new wxToggleButton(this, eID_Create_New, _("Create New Config"))
-    };
-    createNewToggle->SetValue(true);
-    createNewToggle->SetBitmap(Image::loadPNG("new", wxSize{32, -1}));
-    auto *importExistingToggle{new wxToggleButton(
+    mCreateButton = new wxToggleButton(
+        this, eID_Create_New, _("Create New Config")
+    );
+    mCreateButton->SetValue(true);
+    mCreateButton->SetBitmap(Image::loadPNG("new", wxSize{32, -1}));
+    mImportButton = new wxToggleButton(
         this, eID_Import_Existing, _("Import Existing Config")
-    )};
-    importExistingToggle->SetBitmap(Image::loadPNG("import", wxSize{32, -1}));
+    );
+    mImportButton->SetBitmap(Image::loadPNG("import", wxSize{32, -1}));
     addModeSizer->Add(
-        createNewToggle,
+        mCreateButton,
         wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, 10)
     );
     addModeSizer->Add(
-        importExistingToggle,
+        mImportButton,
         wxSizerFlags(0).Border(wxRIGHT | wxTOP | wxBOTTOM, 10)
     );
 
