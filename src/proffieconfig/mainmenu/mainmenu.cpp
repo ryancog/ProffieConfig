@@ -224,11 +224,17 @@ void MainMenu::bindEvents() {
             licenseText->Bind(wxEVT_MOUSEWHEEL, onMouseWheel);
 
             const auto textExtent{licenseText->GetTextExtent('M')};
-            licenseText->SetMinClientSize({
-                textExtent.x * 80,
+            // Width needs to be set first so that the number of lines is
+            // properly calculated
+            const auto width{textExtent.x * 80};
+            licenseText->SetMinClientSize({width, -1});
+            licenseText->SetSize(licenseText->GetMinSize());
+
+            const auto height{
                 (textExtent.y * licenseText->GetNumberOfLines())
                 + (textExtent.y / 2)
-            });
+            };
+            licenseText->SetMinClientSize({width, height});
             licenseText->SetSize(licenseText->GetMinSize());
 
             auto *paneSizer{new wxBoxSizer(wxVERTICAL)};
