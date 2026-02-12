@@ -28,7 +28,7 @@
 Onboard::Welcome::Welcome(wxWindow* parent) : wxPanel(parent) {
     auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
-    auto *welcomeText{Onboard::createHeader(this, wxString::Format(_("Welcome to ProffieConfig %s!"), wxSTRINGIZE(VERSION)))};
+    auto *welcomeText{Onboard::createHeader(this, wxString::Format(_("Welcome to ProffieConfig %s!"), wxSTRINGIZE(BIN_VERSION)))};
 
     /*
      * So, cool story, the WIDE window bug on macOS has to do with double
