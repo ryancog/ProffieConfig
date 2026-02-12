@@ -59,6 +59,7 @@
 #include "../tools/arduino.h"
 #include "../tools/serialmonitor.h"
 #include "../onboard/onboard.h"
+#include "wx/font.h"
 
 MainMenu *MainMenu::instance{nullptr};
 MainMenu::MainMenu(wxWindow* parent) : 
@@ -212,25 +213,45 @@ void MainMenu::bindEvents() {
                 wxTE_READONLY | wxTE_MULTILINE |
                 wxTE_NO_VSCROLL | wxTE_WORDWRAP | wxTE_AUTO_URL
             )};
+            auto licenseFont{licenseText->GetFont()};
+            licenseFont.SetFamily(wxFONTFAMILY_TELETYPE);
+            licenseText->SetFont(licenseFont);
+
             const auto onMouseWheel{[scrollWin](wxMouseEvent& evt) {
                 // Have to forward it up the chain manually.
                 scrollWin->HandleOnMouseWheel(evt);
             }};
             licenseText->Bind(wxEVT_MOUSEWHEEL, onMouseWheel);
-            auto licenseExtent{licenseText->GetTextExtent(info.license_)};
-            licenseExtent.IncBy(10);
-            licenseText->SetMinSize(licenseExtent);
+
+            const auto textExtent{licenseText->GetTextExtent('M')};
+            licenseText->SetMinClientSize({
+                textExtent.x * 80,
+                (textExtent.y * licenseText->GetNumberOfLines())
+                + (textExtent.y / 2)
+            });
+            licenseText->SetSize(licenseText->GetMinSize());
+
             auto *paneSizer{new wxBoxSizer(wxVERTICAL)};
             paneSizer->Add(licenseText, 0, wxEXPAND);
             pane->GetPane()->SetSizer(paneSizer);
-            paneSizer->SetSizeHints(pane->GetPane());
+            pane->SetMinClientSize({
+                pane->GetPane()->GetBestVirtualSize().x, -1
+            });
 
             sizer->Add(pane, 0, wxEXPAND);
             scrollWrapSizer->AddSpacer(10);
-            scrollWrapSizer->Add(sizer, wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT, 10));
+            scrollWrapSizer->Add(
+                sizer,
+                wxSizerFlags()
+                    .Expand()
+                    .Border(wxLEFT | wxRIGHT, 10)
+            );
         }
         scrollWrapSizer->AddSpacer(10);
         scrollWin->SetSizerAndFit(scrollWrapSizer);
+        scrollWin->SetMinSize({
+            scrollWin->GetBestVirtualSize().x, 600
+        });
         scrollWin->SetScrollRate(-1, 10);
 
         auto *dlgSizer{new wxBoxSizer(wxVERTICAL)};
