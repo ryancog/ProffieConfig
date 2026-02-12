@@ -24,7 +24,7 @@ struct LicenseInfo{
     cstring name_;
     cstring detail_;
     cstring date_;
-    // Really, copyright holder...
+    // copyright holder...
     cstring author_;
     cstring license_;
 };
@@ -111,9 +111,13 @@ constexpr array<LicenseInfo, 6> LICENSES{{
     },
     {
         .name_="LibTomCrypt",
-        .detail_="",
-        .date_="",
-        .author_="Team libtom",
+        .detail_=
+        "A fairly comprehensive, modular and portable cryptographic toolkit that\n"
+        "provides developers with a vast array of well known published block ciphers,\n"
+        "one-way hash functions, chaining modes, pseudo-random number generators,\n"
+        "public key cryptography and a plethora of other routines.",
+        .date_="2002-2024",
+        .author_="Tom St Denis et al.",
         .license_=
         "                          The LibTom license\n"
         "\n"
