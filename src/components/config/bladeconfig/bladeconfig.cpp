@@ -209,17 +209,17 @@ Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
             star1Proxy.resistanceProxy.bind(simple.star1.resistance);
             star1Proxy.powerPinProxy.bind(simple.star1.powerPin);
 
-            auto& star2Proxy{bladeArrays.star1Proxy};
+            auto& star2Proxy{bladeArrays.star2Proxy};
             star2Proxy.ledProxy.bind(simple.star2.led);
             star2Proxy.resistanceProxy.bind(simple.star2.resistance);
             star2Proxy.powerPinProxy.bind(simple.star2.powerPin);
 
-            auto& star3Proxy{bladeArrays.star1Proxy};
+            auto& star3Proxy{bladeArrays.star3Proxy};
             star3Proxy.ledProxy.bind(simple.star3.led);
             star3Proxy.resistanceProxy.bind(simple.star3.resistance);
             star3Proxy.powerPinProxy.bind(simple.star3.powerPin);
 
-            auto& star4Proxy{bladeArrays.star1Proxy};
+            auto& star4Proxy{bladeArrays.star4Proxy};
             star4Proxy.ledProxy.bind(simple.star4.led);
             star4Proxy.resistanceProxy.bind(simple.star4.resistance);
             star4Proxy.powerPinProxy.bind(simple.star4.powerPin);
