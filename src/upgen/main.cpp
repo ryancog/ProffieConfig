@@ -1684,9 +1684,9 @@ void UpGen::genBundleChangelog(Data& data) {
 
             auto itemVersion{item.versions.find(reqVer)->second};
             auto& [ features, changes, fixes ]{itemInfos[reqID]};
-            for (const auto& feat : itemVersion.features) features += " - " + feat + '\n';
-            for (const auto& change: itemVersion.changes) changes += " - " + change + '\n';
-            for (const auto& fix: itemVersion.fixes) fixes += " - " + fix + '\n';
+            for (const auto& feat : itemVersion.features) features += "- " + feat + '\n';
+            for (const auto& change: itemVersion.changes) changes += "- " + change + '\n';
+            for (const auto& fix: itemVersion.fixes) fixes += "- " + fix + '\n';
 
             itemVersions[reqID].emplace(reqVer);
         }
@@ -1699,21 +1699,19 @@ void UpGen::genBundleChangelog(Data& data) {
         const auto& [ features, changes, fixes ]{info};
         if (features.empty() and changes.empty() and fixes.empty()) continue;
 
-        std::cout << "### " << id.name << "\n\n";
+        std::cout << "## " << id.name << '\n';
         if (not features.empty()) {
             std::cout << "**New Features:**\n";
-            std::cout << features << '\n';
+            std::cout << features;
         }
         if (not changes.empty()) {
             std::cout << "**Changes:**\n";
-            std::cout << changes << '\n';
+            std::cout << changes;
         }
         if (not fixes.empty()) {
             std::cout << "**Bugfixes:**\n";
-            std::cout << fixes << '\n';
+            std::cout << fixes;
         }
-
-        std::cout << '\n';
     }
 
     std::cout << "\n\nPress ENTER to continue... " << std::flush;
