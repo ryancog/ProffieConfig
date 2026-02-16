@@ -90,18 +90,12 @@ To build in a local way, you can use the `LOCAL_BUILD` flag. This is default in 
 
 Otherwise ProffieConfig is configured to expect a Launcher-installed directory structure and to be in the usual installation path. Installing (and therefore running) ProffieConfig without local configuration is beyond the scope of this document.
 
-## Build ProffieCOnfig
+## Build ProffieConfig
 
 In the build directory, the actual build system must be called.
 
-Normally, this is `make`:
 ```
-make -j`nproc --all` install
-```
-
-If the `Ninja` option above was used:
-```
-cmake --build . && cmake --install .
+cmake --build . --parallel && cmake --install .
 ```
 
 The installation will, after compilation is complete, move the compiled executable(s) and libraries into their correct locations in `deploy/[platform]-[buildtype]`
@@ -110,4 +104,4 @@ The installation will, after compilation is complete, move the compiled executab
 
 That's pretty much all there is to building ProffieConfig.
 
-At this point, provided the `Debug` mode was used, you can simply run the `ProffieConfig[.exe]` binary in `deploy/[platform]-[buildtype]/items/bin`
+At this point, you can simply run the `ProffieConfig[.exe]` binary in `deploy/[platform]-[buildtype]/items/bin`
