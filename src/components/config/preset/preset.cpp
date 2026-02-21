@@ -300,9 +300,43 @@ Config::Preset::Style::Style() {
             commentMove = true;
         }
 
-        if ((illegalPos = rawValue.find(')')) != string::npos) {
-            rawValue.erase(illegalPos + 1);
-            insertionPoint = std::min<size_t>(insertionPoint, illegalPos + 1);
+        // Depth must be traversed here to only clear things out when depth is
+        // at 0 and the closing ) is found.
+        //
+        // This intentionally silently fails on mismatch or overrun.
+        vector<char> depth;
+        for (auto iter{rawValue.begin()}; iter != rawValue.end(); ++iter) {
+            if (*iter == '<' or *iter == '(') {
+                depth.push_back(*iter);
+                continue;
+            }
+
+            if (*iter == '>') {
+                if (depth.empty()) break;
+                if (depth.back() != '<') break;
+
+                depth.pop_back();
+                continue;
+            }
+
+            if (*iter == ')') {
+                if (depth.empty()) break;
+                if (depth.back() != '(') break;
+
+                depth.pop_back();
+
+                // Do the post-end cutoff here, where we know we're outside.
+                if (depth.empty()) {
+                    rawValue.erase(std::next(iter), rawValue.end());
+                    insertionPoint = std::min<size>(
+                        insertionPoint,
+                        rawValue.length()
+                    );
+                    break;
+                }
+
+                continue;
+            }
         }
 
         if (style != rawValue) {
