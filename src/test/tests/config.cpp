@@ -81,5 +81,15 @@ TEST_CASE("Config") {
         Utils::trimWhitespaceOutsideString(RgueCmdrStyleStr);
         REQUIRE(RgueCmdrStyleStr == POWER_RING_EXPANDED_STR);
     }
+
+    SECTION("my_saber2") {
+        constexpr cstring CONFIG_NAME{"my_saber2"};
+        Config::remove(CONFIG_NAME);
+        auto importErr{Config::import(
+            CONFIG_NAME,
+            CONFIG_DIR / (string{CONFIG_NAME} + ".h")
+        )};
+        REQUIRE(importErr == nullopt);
+    }
 }
 

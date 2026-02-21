@@ -12,7 +12,8 @@ Makefile*
 deploy/
 staging/
 /upgen
-/test*
+/test
+/test.exe
 
 # For CMake-generated shared lib export headers
 export.h
@@ -38,3 +39,4 @@ CMakeUserPresets.json
 playground/
 
 *.mo
+
