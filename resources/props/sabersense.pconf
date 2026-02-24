@@ -227,6 +227,7 @@ BUTTONS{1} {
         }
         BUTTON("Four Clicks and Hold Power") {
             DESCRIPTION: "Reset Installer Defaults"
+            DESCRIPTION("SABERSENSE_DISABLE_RESET"): DISABLED
         }
         BUTTON("Hold Power and Clash") {
             DESCRIPTION: "Enter Volume Menu"
@@ -347,6 +348,7 @@ BUTTONS{2} {
         }
         BUTTON("Four Clicks and Hold Power") {
             DESCRIPTION: "Reset Installer Defaults"
+            DESCRIPTION("SABERSENSE_DISABLE_RESET"): DISABLED
         }
         BUTTON("Hold Power and Click Aux") {
             DESCRIPTION: "Enter Volume Menu"
