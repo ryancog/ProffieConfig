@@ -216,6 +216,7 @@ BUTTONS{1} {
         }
         BUTTON("Triple Click Power") {
             DESCRIPTION("SABERSENSE_ARRAY_SELECTOR"): "Cycle to Next Blade Array"
+            DESCRIPTION("SABERSENSE_BLADE_ID"): "Run Blade ID"
         }
         BUTTON("Four Clicks and Hold Power") {
             DESCRIPTION: "Reset Installer Defaults"
@@ -252,6 +253,7 @@ BUTTONS{1} {
         }
         BUTTON("Triple Click Power") {
             DESCRIPTION: "Enter Colour Change Menu"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
         }
     }
 
@@ -270,9 +272,11 @@ BUTTONS{1} {
     STATE("in Color Change") {
         BUTTON("Rotate Hilt") {
             DESCRIPTION: "Change Color"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
         }
         BUTTON("Click Power") {
             DESCRIPTION: "Save and Exit"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
         }
     }
 }
@@ -365,9 +369,11 @@ BUTTONS{2} {
         }
         BUTTON("Triple Click Power") {
             DESCRIPTION: "Enter Colour Change Menu"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
         }
         BUTTON("Hold Power and Click Aux") {
             DESCRIPTION: "Enter Colour Change Menu"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
         }
     }
 
@@ -389,9 +395,11 @@ BUTTONS{2} {
     STATE("in Color Change") {
         BUTTON("Rotate Hilt") {
             DESCRIPTION: "Change Color"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
         }
         BUTTON("Click Power") {
             DESCRIPTION: "Save and Exit"
+            DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
         }
     }
 }
@@ -411,7 +419,6 @@ ERRORS {
     }
     MAP {
         ARDUINO: "[Sabersense] ERROR: Array Selector is not required with only one selectable blade array. "
-    "Please undefine SABERSENSE_ARRAY_SELECTOR."
         DISPLAY: {
             "Array Selector is not required with only one blade array. Please uncheck Manual Array Selector."
         }
