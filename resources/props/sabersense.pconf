@@ -196,14 +196,21 @@ BUTTONS{1} {
         BUTTON("Long Click Power while Pointing Down") {
             DESCRIPTION: "Previous Preset"
         }
-        BUTTON("Hold Power and wait while Pointing Up") {
-            DESCRIPTION: "Skip to First Preset"
+        BUTTON("Double Click and Hold while Pointing Up") {
+            DESCRIPTION: "Skip Forward Five Presets"
+            DESCRIPTION("SABERSENSE_DISABLE_FONT_SKIPPING"): DISABLED
         }
-        BUTTON("Hold Power and wait while Pointing Level") {
-            DESCRIPTION: "Skip to Middle Preset"
+        BUTTON("Double Click and Hold while Pointing Down") {
+            DESCRIPTION: "Skip Back Five Presets"
+            DESCRIPTION("SABERSENSE_DISABLE_FONT_SKIPPING"): DISABLED
         }
-        BUTTON("Hold Power and wait while Pointing Down") {
-            DESCRIPTION: "Skip to Last Preset"
+        BUTTON("Triple Click Hold while Pointing Up") {
+            DESCRIPTION: "Skip Forward Ten Presets"
+            DESCRIPTION("SABERSENSE_DISABLE_FONT_SKIPPING"): DISABLED
+        }
+        BUTTON("Triple Click and Hold while Pointing Down") {
+            DESCRIPTION: "Skip Back Ten Presets"
+            DESCRIPTION("SABERSENSE_DISABLE_FONT_SKIPPING"): DISABLED
         }
         BUTTON("Double Click and Hold Power") {
             DESCRIPTION: "Check Battery"
@@ -300,24 +307,31 @@ BUTTONS{2} {
         }
         BUTTON("Double Click Aux while Pointing Up") {
             DESCRIPTION: "Skip Forward Five Presets"
+            DESCRIPTION("SABERSENSE_DISABLE_FONT_SKIPPING"): DISABLED
         }
         BUTTON("Double Click Aux while Pointing Down") {
             DESCRIPTION: "Skip Back Five Presets"
+            DESCRIPTION("SABERSENSE_DISABLE_FONT_SKIPPING"): DISABLED
         }
         BUTTON("Triple Click Aux while Pointing Up") {
             DESCRIPTION: "Skip Forward Ten Presets"
+            DESCRIPTION("SABERSENSE_DISABLE_FONT_SKIPPING"): DISABLED
         }
         BUTTON("Triple Click Aux while Pointing Down") {
             DESCRIPTION: "Skip Back Ten Presets"
+            DESCRIPTION("SABERSENSE_DISABLE_FONT_SKIPPING"): DISABLED
         }
         BUTTON("Hold Any Button and wait while Pointing Up") {
             DESCRIPTION: "Skip to First Preset"
+            DESCRIPTION("SABERSENSE_DISABLE_FONT_SKIPPING"): DISABLED
         }
         BUTTON("Hold Any Button and wait while Pointing Level") {
             DESCRIPTION: "Skip to Middle Preset"
+            DESCRIPTION("SABERSENSE_DISABLE_FONT_SKIPPING"): DISABLED
         }
         BUTTON("Hold Any Button and wait while Pointing Down") {
             DESCRIPTION: "Skip to Last Preset"
+            DESCRIPTION("SABERSENSE_DISABLE_FONT_SKIPPING"): DISABLED
         }
         BUTTON("Double Click and Hold Power") {
             DESCRIPTION: "Check Battery"
