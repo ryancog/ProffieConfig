@@ -1,44 +1,46 @@
-//  Version 7/8-301.
+//  For Prop Version 7/8-301 or Later.
 NAME: "Sabersense"
 FILENAME: "saber_sabersense_buttons.h"
 INFO: {
-    "Sabersense Lightsaber Controls"
+    "SABERSENSE LIGHTSABER CONTROLS"
     ""
     "The Sabersense button control system has been engineered for simplicity"
     "and usability. Complex gesture controls and features like Battle Mode are"
     "NOT included."
+    ""
     "The system features harmonized controls between one-button and two-button"
     "operation without compromising the greater usability of two-button systems."
     "This makes it useful for users with large collections of one- and two-button"
     "sabers."
+    ""
     "The idea is that by default, users need only remember a minimum set of control"
     "principles in order to access all functions. As such, the logic is that the"
     "same button presses do the same thing within the various states, subject to"
     "inevitable and obvious variants."
     ""
     "The following sound files will help with system navigation and are available"
-    "as a free download from the sabersense website."
-    "www.sabersense.co.uk:"
+    "as a free download from the sabersense website:"
+    "www.sabersense.co.uk"
     ""
     "The Sabersense button control system is optimized for, and included with,"
     "ProffieOS 8.x but is also fully backwards compatible with ProffieOS 7."
     ""
-    "vmbegin.wav    -  Enter Volume Menu"
-    "vmend.wav      -  Exit Volume Menu"
-    "volup.wav      -  Increase volume"
-    "voldown.waV    -  Decrease volume"
-    "volmin.wav     -  Minimum volume reached"
-    "volmax.wav     -  Maximum volume reached"
-    "ccbegin.wav    -  Enter Color Change Mode"
-    "ccchange.wav   -  Change colour"
-    "ccend.wav      -  Exit Color Change Mode"
-    "press.wav      -  Exit Color Change Mode"
-    "release.wav    -  Plays button click press"
-    "blstbgn.wav    -  Plays button click release"
-    "blstend.wav    -  Exit Multi-Blast"
-    "array.wav      -  Array Selector ident"
-    "bladeid.wav    -  BladeID Array ident"
-    "reset.wav      -  Factory default reset completed"
+    "vmbegin.wav		-	Enter Volume Menu"
+    "vmend.wav		-	Exit Volume Menu"
+    "volup.wav		-	Increase volume"
+    "voldown.wav		-	Decrease volume"
+    "volmin.wav		-	Minimum volume reached"
+    "volmax.wav		-	Maximum volume reached"
+    "ccbegin.wav		-	Enter Colour Change Mode"
+    "ccchange.wav	-	Change colour"
+    "ccend.wav		-	Exit Colour Change Mode"
+    "press.wav		-	Plays button click sound on press"
+    "release.wav		-	Plays button click sound on release"		
+    "blstbgn.wav		-	Enter Multi-Blast"	
+    "blstend.wav		-	Exit Multi-Blast"
+    "array.wav		-	Array Selector ident"
+    "bladeid.wav		-	BladeID Array ident"
+    "reset.wav		-	Factory default reset completed"
 }
 
 SETTINGS {
@@ -277,12 +279,12 @@ BUTTONS{1} {
         }
     }
 
-    STATE("in Color Change") {
+    STATE("in Colour Change") {
         BUTTON("Rotate Hilt") {
-            DESCRIPTION: "Change Color"
+            DESCRIPTION: "Change Colour"
             DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
         }
-        BUTTON("Click Power") {
+        BUTTON("Hold Power") {
             DESCRIPTION: "Save and Exit"
             DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
         }
@@ -408,12 +410,12 @@ BUTTONS{2} {
         }
     }
 
-    STATE("in Color Change") {
+    STATE("in Colour Change") {
         BUTTON("Rotate Hilt") {
-            DESCRIPTION: "Change Color"
+            DESCRIPTION: "Change Colour"
             DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
         }
-        BUTTON("Click Power") {
+        BUTTON("Hold Power") {
             DESCRIPTION: "Save and Exit"
             DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
         }
