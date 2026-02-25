@@ -51,15 +51,19 @@ SETTINGS {
     }
     TOGGLE("SABERSENSE_ARRAY_SELECTOR") {
         NAME: "Manual Array Selector"
-        DESCRIPTION: "Manually cycle to next/previous blade array"
+        DESCRIPTION: "Manually cycle to next/previous blade array. Array idents must be 0, 1, 2, 3, 4 etc."
         DISABLE: "SABERSENSE_BLADE_ID"
         ENABLE: "SABERSENSE_DEFAULT_BLADE_ARRAY"
     }
     NUMERIC("SABERSENSE_DEFAULT_BLADE_ARRAY") {
         NAME: "Set Default Blade Array"
-        DESCRIPTION: "Sets the default blade array on multi-array configs by number using zero based counting. Use with SABERSENSE_ARRAY_SELECTOR"
+        DESCRIPTION: "Sets the default blade array on multi-array configs by number using zero based counting. Use with Manual Array Selector"
 		REQUIRE: "SABERSENSE_ARRAY_SELECTOR"
-     }
+    }
+    TOGGLE("SABERSENSE_NO_BLADE") {
+        NAME: "Required for Blade Detect with Array Selector"
+        DESCRIPTION: "Required when using Blade Detect at the same time as Manual Array Selector. Array idents must be NO_BLADE, 1, 2, 3, 4 etc."
+    }
     TOGGLE("SABERSENSE_DISABLE_SAVE_ARRAY") {
         NAME: "Disable Array Saving"
         DESCRIPTION: "Disables array saving so that system will always boot into the first array instead of last array used"
@@ -165,10 +169,11 @@ LAYOUT {
             VERTICAL("Blade Array Management") {
                 SETTING("SABERSENSE_ARRAY_SELECTOR")
                 SETTING("SABERSENSE_DEFAULT_BLADE_ARRAY")
+                SETTING("SABERSENSE_NO_BLADE")
                 SETTING("SABERSENSE_BLADE_ID")
                 SETTING("SABERSENSE_ENABLE_ARRAY_FONT_IDENT")
             }
-            VERTICAL("Preset Navigation") {
+            VERTICAL("Preset and Font Navigation") {
                 SETTING("SABERSENSE_FONT_SKIP_A")
                 SETTING("SABERSENSE_FONT_SKIP_B")
                 SETTING("SABERSENSE_HOT_SKIP_DOWN")
