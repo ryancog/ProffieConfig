@@ -5,7 +5,6 @@
 add_library(utils SHARED 
     trace.cpp
     image.cpp
-    undo.cpp
     theme.cpp
     crypto.cpp
     version.cpp
