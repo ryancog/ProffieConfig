@@ -29,7 +29,7 @@
 #include "config/settings/settings.h"
 #include "log/branch.h"
 #include "log/context.h"
-#include "ui/message.h"
+#include "ui/message.hpp"
 #include "utils/paths.h"
 #include "utils/string.h"
 #include "utils/version.h"

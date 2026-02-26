@@ -28,7 +28,7 @@
 #include <wx/scrolwin.h>
 
 #include "log/logger.h"
-#include "ui/message.h"
+#include "ui/message.hpp"
 #include "ui/static_box.h"
 #include "utils/paths.h"
 #include "utils/crypto.h"

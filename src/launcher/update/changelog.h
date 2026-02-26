@@ -20,7 +20,7 @@
  */
 
 #include "log/branch.h"
-#include "ui/message.h"
+#include "ui/message.hpp"
 
 #include "update.h"
 

@@ -35,7 +35,7 @@
 #include <wx/gdicmn.h>
 #include <wx/string.h>
 
-#include "ui/message.h"
+#include "ui/message.hpp"
 
 #include "../mainmenu/mainmenu.h"
 

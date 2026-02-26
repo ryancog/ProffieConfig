@@ -33,7 +33,7 @@
 #include "log/severity.h"
 #include "ui/controls/version.h"
 #include "ui/frame.hpp"
-#include "ui/message.h"
+#include "ui/message.hpp"
 #include "utils/defer.h"
 #include "utils/paths.h"
 #include "utils/string.h"

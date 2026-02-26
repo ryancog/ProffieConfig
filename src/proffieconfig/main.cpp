@@ -25,7 +25,7 @@
 #include "app/critical_dialog.h"
 #include "config/info.h"
 #include "core/appstate.h"
-#include "ui/message.h"
+#include "ui/message.hpp"
 #include "utils/paths.h"
 #include "versions/versions.h"
 

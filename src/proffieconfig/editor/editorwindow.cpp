@@ -39,7 +39,7 @@
 #include <wx/tooltip.h>
 
 #include "config/config.h"
-#include "ui/message.h"
+#include "ui/message.hpp"
 #include "ui/frame.hpp"
 #include "utils/defer.h"
 #include "utils/image.h"

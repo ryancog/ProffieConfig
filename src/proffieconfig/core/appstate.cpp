@@ -12,7 +12,7 @@
 #include "log/logger.h"
 #include "pconf/pconf.h"
 #include "pconf/utils.h"
-#include "ui/message.h"
+#include "ui/message.hpp"
 #include "utils/paths.h"
 #include "utils/version.h"
 

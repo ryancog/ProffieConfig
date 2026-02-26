@@ -33,7 +33,7 @@
 #include "../core/appstate.h"
 #include "../mainmenu/mainmenu.h"
 
-#include "ui/message.h"
+#include "ui/message.hpp"
 #include "ui/notifier.h"
 #include "utils/image.h"
 #include "ui/plaque.h"

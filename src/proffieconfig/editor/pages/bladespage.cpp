@@ -29,7 +29,7 @@
 
 #include "ui/controls/button.h"
 #include "ui/controls/checklist.h"
-#include "ui/message.h"
+#include "ui/message.hpp"
 #include "ui/notifier.h"
 #include "ui/static_box.h"
 #include "utils/image.h"

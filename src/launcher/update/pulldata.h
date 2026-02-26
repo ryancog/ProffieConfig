@@ -21,7 +21,7 @@
 
 #include "log/branch.h"
 #include "update.h"
-#include "ui/message.h"
+#include "ui/message.hpp"
 #include "utils/paths.h"
 
 namespace Update {

@@ -27,7 +27,7 @@
 
 #include "config/preset/array.h"
 #include "ui/controls/button.h"
-#include "ui/message.h"
+#include "ui/message.hpp"
 #include "utils/paths.h"
 
 #include "../editorwindow.h"

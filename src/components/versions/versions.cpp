@@ -33,7 +33,7 @@
 #include "log/context.h"
 #include "pconf/pconf.h"
 #include "pconf/utils.h"
-#include "ui/message.h"
+#include "ui/message.hpp"
 #include "utils/paths.h"
 #include "utils/string.h"
 #include "utils/types.h"

@@ -30,7 +30,7 @@
 #include "log/logger.h"
 #include "utils/paths.h"
 #include "utils/defer.h"
-#include "ui/message.h"
+#include "ui/message.hpp"
 
 #include "routines.h"
 #include "update/update.h"
