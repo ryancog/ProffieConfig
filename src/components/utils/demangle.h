@@ -33,6 +33,7 @@ inline string demangle(cstring str) {
         nullptr,
         &result
     ), std::free};
+    if (result != 0) return str;
     return res.get();
 }
 
