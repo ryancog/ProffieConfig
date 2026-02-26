@@ -4,33 +4,26 @@
 
 add_library(ui SHARED
     frame.cpp
-    plaque.cpp
-    message.cpp
-    notifier.cpp
-    static_box.cpp
-
+    build.cpp
     info.cpp
 
-    controls/base.cpp
-    controls/button.cpp
-    controls/checklist.cpp
-    controls/choice.cpp
-    controls/combobox.cpp
-    controls/filepicker.cpp
-    controls/numeric.cpp
-    controls/radios.cpp
-    controls/text.cpp
-    controls/toggle.cpp
-    controls/version.cpp
+    priv/helpers.cpp
 
-    declarative/build.cpp
-    declarative/descriptor.cpp
-    declarative/scaffold.cpp
-    declarative/spacer.cpp
-    declarative/stack.cpp
-    declarative/priv/helpers.cpp
-    declarative/controls/button.cpp
-    declarative/controls/checkbox.cpp
+    detail/descriptor.cpp
+    detail/scaffold.cpp
+
+    misc/message.cpp
+
+    static/image.cpp
+    static/label.cpp
+
+    controls/button.cpp
+    controls/checkbox.cpp
+
+    layout/group.cpp
+    layout/selector.cpp
+    layout/spacer.cpp
+    layout/stack.cpp
 )
 
 target_link_libraries(ui 

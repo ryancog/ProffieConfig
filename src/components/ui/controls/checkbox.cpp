@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/declarative/controls/checkbox.cpp
+ * components/ui/controls/checkbox.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,12 @@
 
 #include <wx/checkbox.h>
 
-#include "ui/declarative/priv/helpers.hpp"
-#include "ui/declarative/priv/winbase.hpp"
-#include "ui/declarative/scaffold.hpp"
+#include "ui/priv/helpers.hpp"
+#include "ui/priv/winbase.hpp"
+
+using namespace pcui;
 
 namespace {
-using namespace pcui::declarative;
 
 struct Control : priv::WinBase<wxCheckBox, data::Bool::Receiver> {
     Control(wxWindow *parent, const CheckBox& desc) {
@@ -75,14 +75,14 @@ struct Control : priv::WinBase<wxCheckBox, data::Bool::Receiver> {
 
 } // namespace
 
-std::unique_ptr<Descriptor> CheckBox::operator()() {
+std::unique_ptr<detail::Descriptor> CheckBox::operator()() {
     return std::make_unique<CheckBox::Desc>(std::move(*this));
 }
 
 CheckBox::Desc::Desc(CheckBox&& data) :
     CheckBox{std::move(data)} {}
 
-wxSizerItem *CheckBox::Desc::build(const Scaffold& scaffold) const {
+wxSizerItem *CheckBox::Desc::build(const detail::Scaffold& scaffold) const {
     auto *chk{new Control(scaffold.childParent_, *this)};
     auto *item{new wxSizerItem(chk)};
     priv::apply(base_, item);

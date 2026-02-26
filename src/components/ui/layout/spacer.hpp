@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/declarative/spacer.hpp
+ * components/ui/layout/spacer.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,27 +21,25 @@
 
 #include <wx/sizer.h>
 
-#include "ui/declarative/descriptor.hpp"
+#include "ui/detail/descriptor.hpp"
 #include "utils/types.h"
 
 #include "ui_export.h"
 
-namespace pcui::declarative {
-
-struct Scaffold;
+namespace pcui {
 
 struct UI_EXPORT Spacer {
     struct Desc;
 
     int32 size_{8};
 
-    std::unique_ptr<Descriptor> operator()();
+    std::unique_ptr<detail::Descriptor> operator()();
 };
 
-struct UI_EXPORT Spacer::Desc : Spacer, Descriptor {
+struct UI_EXPORT Spacer::Desc : Spacer, detail::Descriptor {
     Desc(Spacer&&);
 
-    [[nodiscard]] wxSizerItem *build(const Scaffold&) const override;
+    [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
 };
 
 struct UI_EXPORT StretchSpacer {
@@ -50,14 +48,14 @@ struct UI_EXPORT StretchSpacer {
     int32 size_{8};
     int32 proportion_{1};
 
-    std::unique_ptr<Descriptor> operator()();
+    std::unique_ptr<detail::Descriptor> operator()();
 };
 
-struct UI_EXPORT StretchSpacer::Desc : StretchSpacer, Descriptor {
+struct UI_EXPORT StretchSpacer::Desc : StretchSpacer, detail::Descriptor {
     Desc(StretchSpacer&&);
 
-    [[nodiscard]] wxSizerItem *build(const Scaffold&) const override;
+    [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
 };
 
-} // namespace pcui::declarative
+} // namespace pcui
 

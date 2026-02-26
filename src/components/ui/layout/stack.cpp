@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/declarative/stack.cpp
+ * components/ui/layout/stack.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,34 +22,22 @@
 #include <wx/sizer.h>
 #include <wx/statbox.h>
 
-#include "ui/declarative/priv/helpers.hpp"
-#include "ui/declarative/scaffold.hpp"
+#include "ui/priv/helpers.hpp"
 
-using namespace pcui::declarative;
+using namespace pcui;
 
-std::unique_ptr<Descriptor> Stack::operator()() {
+std::unique_ptr<detail::Descriptor> Stack::operator()() {
     return std::make_unique<Stack::Desc>(std::move(*this));
 }
 
 Stack::Desc::Desc(Stack&& data) :
     Stack{std::move(data)} {}
 
-wxSizerItem *Stack::Desc::build(const Scaffold& scaffold) const {
-    wxSizer *sizer{nullptr};
-    Scaffold childScaffold;
-
-    if (label_.empty()) {
-        childScaffold.childParent_ = scaffold.childParent_;
-        sizer = new wxBoxSizer(orient_);
-    } else {
-        auto *statBoxSizer{new wxStaticBoxSizer(
-            orient_,
-            scaffold.childParent_,
-            label_
-        )};
-        childScaffold.childParent_ = statBoxSizer->GetStaticBox();
-        sizer = statBoxSizer;
-    }
+wxSizerItem *Stack::Desc::build(const detail::Scaffold& scaffold) const {
+    detail::Scaffold childScaffold{
+        .childParent_ = scaffold.childParent_
+    };
+    auto *sizer{new wxBoxSizer(orient_)};
 
     for (const auto& child : children_) {
         sizer->Add(child->build(childScaffold));

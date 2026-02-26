@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
- * components/ui/plaque.h
+ * components/ui/static/image.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,19 +19,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/event.h>
-#include <wx/panel.h>
-#include <wx/statbmp.h>
+#include "ui/detail/descriptor.hpp"
+#include "ui/detail/general.hpp"
 
 #include "ui_export.h"
 
 namespace pcui {
 
-// Platform-dependent way of creating a raised "plaque" area for
-// visual distinction.
-[[nodiscard]] UI_EXPORT wxWindow *createPlaque(wxWindow *parent, wxWindowID winID);
+struct UI_EXPORT Image {
+    struct Desc;
 
-[[nodiscard]] UI_EXPORT wxStaticBitmapBase *createStaticImage(wxWindow *parent, wxWindowID winID, const wxBitmap&);
+    // TODO: Make this a base w/ C++ P2287.
+    detail::ChildBase base_;
+
+    wxBitmap src_;
+
+    std::unique_ptr<detail::Descriptor> operator()();
+};
+
+struct UI_EXPORT Image::Desc : Image, detail::Descriptor {
+    Desc(Image&&);
+
+    [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+};
 
 } // namespace pcui
 

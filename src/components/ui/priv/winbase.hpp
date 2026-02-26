@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/declarative/priv/winbase.hpp
+ * components/ui/priv/winbase.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace pcui::declarative::priv {
+namespace pcui::priv {
 
 template <typename Base, typename Receiver>
 struct WinBase : Base, Receiver {
@@ -44,5 +44,5 @@ struct WinBase : Base, Receiver {
     }
 };
 
-} // namespace pcui::declarative::priv
+} // namespace pcui::priv
 

@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/declarative/builder.hpp
+ * components/ui/build.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,17 +21,17 @@
 
 #include <wx/window.h>
 
+#include "ui/detail/descriptor.hpp"
+
 #include "ui_export.h"
 
-namespace pcui::declarative {
-
-struct Descriptor;
+namespace pcui {
 
 /**
  * Build declarative UI and attach to parent as child, replacing any child the
  * parent previously had.
  */
-void UI_EXPORT build(wxWindow *parent, const Descriptor&);
+void UI_EXPORT build(wxWindow *parent, const detail::Descriptor&);
 
-} // namespace pcui::declarative
+} // namespace pcui
 

@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/declarative/general.hpp
+ * components/ui/detail/general.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <vector> // IWYU pragma: export for ChildList
+#include <memory>
 
 #include <wx/gdicmn.h>
 
@@ -27,12 +27,12 @@
 
 #include "ui_export.h"
 
-namespace pcui::declarative {
+namespace pcui::detail {
 
 template <typename T>
-struct UI_EXPORT ChildList : vector<T> {
+struct UI_EXPORT DynamicList : vector<std::unique_ptr<T>> {
     template <typename ...Args>
-    ChildList(Args&&... args) {
+    DynamicList(Args&&... args) {
         this->reserve(sizeof...(args));
         (..., this->push_back(std::forward<Args>(args)));
     }
@@ -62,5 +62,5 @@ struct UI_EXPORT ChildWindowBase {
     wxString tooltip_;
 };
 
-} // namespace pcui::declarative
+} // namespace pcui::detail
 

@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/static_box.h
+ * components/ui/layout/group.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,45 +19,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/panel.h>
-#include <wx/sizer.h>
-#include <wx/statbox.h>
-
-#include "utils/types.h"
+#include "ui/detail/descriptor.hpp"
+#include "ui/detail/general.hpp"
 
 #include "ui_export.h"
 
 namespace pcui {
 
-/**
- * It's like a wxStaticBoxSizer, but cooler.
- *
- * Ensures cross-platform visual consistency.
- * macOS has a nice border around the box, but other platforms do not.
- */
-class UI_EXPORT StaticBox : public wxStaticBox {
-public:
-    StaticBox(wxOrientation, wxWindow *, const wxString& = wxEmptyString);
+struct UI_EXPORT Group {
+    struct Desc;
 
-    wxSizer *sizer() { return mSizer; }
-    wxWindow *childParent() { return mPanel; }
+    // TODO: Make this a base w/ C++ P2287.
+    detail::ChildBase base_;
 
-    bool Layout() final;
-    [[nodiscard]] wxSize DoGetBestClientSize() const final;
+    wxString label_;
+    wxOrientation orient_{wxVERTICAL};
 
-    // NOLINTBEGIN(readability-identifier-naming)
-    wxSizerItem *Add(wxWindow *, const wxSizerFlags& = {});
-    wxSizerItem *Add(wxSizer *, const wxSizerFlags& = {});
-    wxSizerItem *AddSpacer(int32 size);
-    wxSizerItem *AddStretchSpacer(int32 prop = 1);
+    int32 padding_{0};
+    detail::DynamicList<detail::Descriptor> children_;
 
-    void Clear(bool deleteWindows = false);
-    bool IsEmpty();
-    // NOLINTEND(readability-identifier-naming)
-    
-private:
-    wxPanel *mPanel;
-    wxSizer *mSizer;
+    std::unique_ptr<detail::Descriptor> operator()();
+};
+
+struct UI_EXPORT Group::Desc : Group, detail::Descriptor {
+    Desc(Group&&);
+
+    [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
 };
 
 } // namespace pcui

@@ -1,9 +1,9 @@
-#include "helpers.hpp"
+#pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/priv/helpers.cpp
+ * components/ui/detail/builder.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void pcui::priv::apply(const detail::ChildBase& desc, wxSizerItem *item) {
-    item->SetMinSize(desc.minSize_);
-    item->SetProportion(desc.proportion_);
-    item->SetBorder(desc.border_.size_);
-    item->SetFlag(
-        desc.border_.dirs_ | (desc.expand_ ? wxEXPAND : 0) | desc.align_
-    );
-}
+#include <memory>
 
-void pcui::priv::apply(
-    const detail::ChildWindowBase& desc, wxSizerItem *item
-) {
-    item->GetWindow()->SetToolTip(desc.tooltip_);
-}
+#include "data/hierarchy/model.hpp"
+#include "ui/detail/descriptor.hpp"
+
+namespace pcui::detail {
+
+using DescBuilder = function<std::unique_ptr<Descriptor>(data::Model *)>;
+
+} // namespace pcui::detail
 

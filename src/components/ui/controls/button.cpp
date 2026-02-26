@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/declarative/controls/button.cpp
+ * components/ui/controls/button.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,12 @@
 
 #include <wx/button.h>
 
-#include "ui/declarative/priv/helpers.hpp"
-#include "ui/declarative/priv/winbase.hpp"
-#include "ui/declarative/scaffold.hpp"
+#include "ui/priv/helpers.hpp"
+#include "ui/priv/winbase.hpp"
+
+using namespace pcui;
 
 namespace {
-using namespace pcui::declarative;
 
 struct Control : priv::WinBase<wxButton, data::Generic::Receiver> {
     Control(wxWindow *parent, const Button& desc) :
@@ -59,14 +59,14 @@ struct Control : priv::WinBase<wxButton, data::Generic::Receiver> {
 
 } // namespace
 
-std::unique_ptr<Descriptor> Button::operator()() {
+std::unique_ptr<detail::Descriptor> Button::operator()() {
     return std::make_unique<Button::Desc>(std::move(*this));
 }
 
 Button::Desc::Desc(Button&& data) :
     Button{std::move(data)} {}
 
-wxSizerItem *Button::Desc::build(const Scaffold& parent) const {
+wxSizerItem *Button::Desc::build(const detail::Scaffold& parent) const {
     auto *button{new Control(parent.childParent_, *this)};
     auto *item{new wxSizerItem(button)};
     priv::apply(base_, item);

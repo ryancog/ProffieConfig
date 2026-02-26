@@ -1,9 +1,9 @@
-#include "plaque.h"
+#include "image.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024 Ryan Ogurek
  *
- * components/ui/plaque.cpp
+ * components/ui/static/image.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,34 +19,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/event.h>
-#include <wx/settings.h>
-#include <wx/statbox.h>
+#include "ui/priv/helpers.hpp"
+
+#ifndef __WXOSX__
 #include <wx/generic/statbmpg.h>
+#else
+#include <wx/statbmp.h>
+#endif
 
-#include <utils/theme.h>
+using namespace pcui;
 
-UI_EXPORT wxWindow *pcui::createPlaque(wxWindow *parent, wxWindowID winID) {
-#   ifdef __WXOSX__
-    // This is kind of a reverse way of building what's effectively a wxStaticBoxSizer
-    auto *plaque{new wxStaticBox(parent, winID, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0)};
-#   else
-    // TODO: the border doesn't update on color/theme switch
-    constexpr auto STYLE{wxTAB_TRAVERSAL | wxBORDER_SUNKEN};
-    auto *plaque{new wxPanel(parent, winID, wxDefaultPosition, wxDefaultSize, STYLE)};
-    Theme::colorWindow(plaque, {{ 30, 2 }});
-#   endif
-
-    return plaque;
+std::unique_ptr<detail::Descriptor> Image::operator()() {
+    return std::make_unique<Image::Desc>(std::move(*this));
 }
 
-UI_EXPORT wxStaticBitmapBase *pcui::createStaticImage(wxWindow *parent, wxWindowID winID, const wxBitmap& bitmap) {
+Image::Desc::Desc(Image&& data) :
+    Image{std::move(data)} {}
+
+wxSizerItem *Image::Desc::build(const detail::Scaffold& scaffold) const {
 #   ifndef __WXOSX__
-    auto *image{new wxGenericStaticBitmap(parent, winID, bitmap)};
+    auto *img{new wxGenericStaticBitmap(scaffold.childParent_, wxID_ANY, src_)};
 #   else
-    auto *image{new wxStaticBitmap(parent, winID, bitmap)};
+    auto *img{new wxStaticBitmap(scaffold.childParent_, wxID_ANY, src_)};
 #   endif
-    image->SetScaleMode(wxStaticBitmapBase::Scale_AspectFill);
-    return image;
+    img->SetScaleMode(wxStaticBitmapBase::Scale_AspectFill);
+
+    auto *item{new wxSizerItem(img)};
+    priv::apply(base_, item);
+    return item;
 }
 

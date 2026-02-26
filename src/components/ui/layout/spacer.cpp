@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/declarative/spacer.cpp
+ * components/ui/layout/spacer.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ui/declarative/scaffold.hpp"
+using namespace pcui;
 
-using namespace pcui::declarative;
-
-std::unique_ptr<Descriptor> Spacer::operator()() {
+std::unique_ptr<detail::Descriptor> Spacer::operator()() {
     // NOLINTNEXTLINE(performance-move-const-arg)
     return std::make_unique<Spacer::Desc>(std::move(*this));
 }
@@ -32,11 +30,11 @@ Spacer::Desc::Desc(Spacer&& data) :
     // NOLINTNEXTLINE(performance-move-const-arg)
     Spacer{std::move(data)} {}
 
-wxSizerItem *Spacer::Desc::build(const Scaffold&) const {
+wxSizerItem *Spacer::Desc::build(const detail::Scaffold&) const {
     return new wxSizerItem(size_, size_);
 }
 
-std::unique_ptr<Descriptor> StretchSpacer::operator()() {
+std::unique_ptr<detail::Descriptor> StretchSpacer::operator()() {
     // NOLINTNEXTLINE(performance-move-const-arg)
     return std::make_unique<StretchSpacer::Desc>(std::move(*this));
 }
@@ -45,7 +43,7 @@ StretchSpacer::Desc::Desc(StretchSpacer&& data) :
     // NOLINTNEXTLINE(performance-move-const-arg)
     StretchSpacer{std::move(data)} {}
 
-wxSizerItem *StretchSpacer::Desc::build(const Scaffold&) const {
+wxSizerItem *StretchSpacer::Desc::build(const detail::Scaffold&) const {
     return new wxSizerItem(size_, size_, proportion_);
 }
 

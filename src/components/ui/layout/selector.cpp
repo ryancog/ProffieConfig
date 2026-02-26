@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/declarative/selector.cpp
+ * components/ui/layout/selector.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,13 +21,15 @@
 
 #include <wx/panel.h>
 
-#include "ui/declarative/build.hpp"
-#include "ui/declarative/priv/helpers.hpp"
-#include "ui/declarative/priv/winbase.hpp"
-#include "ui/declarative/scaffold.hpp"
+#include "ui/build.hpp"
+#include "ui/priv/helpers.hpp"
+#include "ui/priv/winbase.hpp"
+#include "ui/detail/scaffold.hpp"
+#include "ui/detail/builder.hpp"
+
+using namespace pcui;
 
 namespace {
-using namespace pcui::declarative;
 
 struct Control : priv::WinBase<wxPanel, data::Selector::Receiver>,
                  data::Choice::Receiver {
@@ -55,20 +57,20 @@ struct Control : priv::WinBase<wxPanel, data::Selector::Receiver>,
         build(this, *builder_(nullptr));
     }
 
-    const function<std::unique_ptr<Descriptor>(data::Model *)> builder_;
+    const detail::DescBuilder builder_;
     data::Vector *vec_;
 };
 
 } // namespace
 
-std::unique_ptr<Descriptor> Selector::operator()() {
+std::unique_ptr<detail::Descriptor> Selector::operator()() {
     return std::make_unique<Selector::Desc>(std::move(*this));
 }
 
 Selector::Desc::Desc(Selector&& data) :
     Selector{std::move(data)} {}
 
-wxSizerItem *Selector::Desc::build(const Scaffold& scaffold) const {
+wxSizerItem *Selector::Desc::build(const detail::Scaffold& scaffold) const {
     auto *chk{new Control(scaffold.childParent_, *this)};
     auto *item{new wxSizerItem(chk)};
     priv::apply(base_, item);

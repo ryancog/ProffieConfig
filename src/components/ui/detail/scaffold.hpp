@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/declarative/scaffold.hpp
+ * components/ui/detail/scaffold.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,12 +23,12 @@
 
 #include "ui_export.h"
 
-namespace pcui::declarative {
+namespace pcui::detail {
 
 struct UI_EXPORT Scaffold {
     wxWindow *childParent_;
 };
 
-} // namespace pcui::declarative
+} // namespace pcui::detail
 
 

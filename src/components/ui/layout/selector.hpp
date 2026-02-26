@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/declarative/selector.hpp
+ * components/ui/layout/selector.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,31 +20,32 @@
  */
 
 #include "data/selector.hpp"
-#include "ui/declarative/descriptor.hpp"
-#include "ui/declarative/general.hpp"
+#include "ui/detail/builder.hpp"
+#include "ui/detail/descriptor.hpp"
+#include "ui/detail/general.hpp"
 
 #include "ui_export.h"
 
-namespace pcui::declarative {
+namespace pcui {
 
 struct UI_EXPORT Selector {
     struct Desc;
 
     // TODO: Make this a base w/ C++ P2287.
-    ChildBase base_;
+    detail::ChildBase base_;
 
     data::Selector& data_;
 
-    function<std::unique_ptr<Descriptor>(data::Model *)> builder_;
+    detail::DescBuilder builder_;
 
-    std::unique_ptr<Descriptor> operator()();
+    std::unique_ptr<detail::Descriptor> operator()();
 };
 
-struct UI_EXPORT Selector::Desc : Selector, Descriptor {
+struct UI_EXPORT Selector::Desc : Selector, detail::Descriptor {
     Desc(Selector&&);
 
-    [[nodiscard]] wxSizerItem *build(const Scaffold&) const override;
+    [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
 };
 
-} // namespace pcui::declarative
+} // namespace pcui
 

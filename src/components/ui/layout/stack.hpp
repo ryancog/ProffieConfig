@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/declarative/stack.hpp
+ * components/ui/layout/stack.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,30 +19,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ui/declarative/descriptor.hpp"
-#include "ui/declarative/general.hpp"
+#include "ui/detail/descriptor.hpp"
+#include "ui/detail/general.hpp"
 
 #include "ui_export.h"
 
-namespace pcui::declarative {
+namespace pcui {
 
 struct UI_EXPORT Stack {
     struct Desc;
 
     // TODO: Make this a base w/ C++ P2287.
-    ChildBase base_;
+    detail::ChildBase base_;
 
     wxOrientation orient_{wxVERTICAL};
-    ChildList<std::unique_ptr<Descriptor>> children_;
+    detail::DynamicList<detail::Descriptor> children_;
 
-    std::unique_ptr<Descriptor> operator()();
+    std::unique_ptr<detail::Descriptor> operator()();
 };
 
-struct UI_EXPORT Stack::Desc : Stack, Descriptor {
+struct UI_EXPORT Stack::Desc : Stack, detail::Descriptor {
     Desc(Stack&&);
 
-    [[nodiscard]] wxSizerItem *build(const Scaffold&) const override;
+    [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
 };
 
-} // namespace pcui::declarative
+} // namespace pcui
 

@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/declarative/controls/button.hpp
+ * components/ui/controls/button.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,18 +20,18 @@
  */
 
 #include "data/generic.hpp"
-#include "ui/declarative/descriptor.hpp"
-#include "ui/declarative/general.hpp"
+#include "ui/detail/descriptor.hpp"
+#include "ui/detail/general.hpp"
 
 #include "ui_export.h"
 
-namespace pcui::declarative {
+namespace pcui {
 
 struct UI_EXPORT Button {
     struct Desc;
 
     // TODO: Make this a base w/ C++ P2287.
-    ChildBase base_;
+    detail::ChildBase base_;
 
     data::Generic& data_;
 
@@ -40,14 +40,14 @@ struct UI_EXPORT Button {
 
     function<void()> func_;
 
-    std::unique_ptr<Descriptor> operator()();
+    std::unique_ptr<detail::Descriptor> operator()();
 };
 
-struct UI_EXPORT Button::Desc : Button, Descriptor {
+struct UI_EXPORT Button::Desc : Button, detail::Descriptor {
     Desc(Button&&);
 
-    [[nodiscard]] wxSizerItem *build(const Scaffold&) const override;
+    [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
 };
 
-} // namespace pcui::declarative
+} // namespace pcui
 

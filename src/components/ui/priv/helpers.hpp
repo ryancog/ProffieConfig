@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/declarative/priv/helpers.hpp
+ * components/ui/priv/helpers.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,12 @@
 
 #include <wx/sizer.h>
 
-#include "ui/declarative/general.hpp"
+#include "ui/detail/general.hpp"
 
-namespace pcui::declarative::priv {
+namespace pcui::priv {
 
-void apply(const ChildBase&, wxSizerItem *);
-void apply(const ChildWindowBase&, wxSizerItem *);
+void apply(const detail::ChildBase&, wxSizerItem *);
+void apply(const detail::ChildWindowBase&, wxSizerItem *);
 
-} // namespace pcui::declarative::priv
+} // namespace pcui::priv
 

@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/declarative/descriptor.hpp
+ * components/ui/detail/descriptor.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,11 +21,11 @@
 
 #include <wx/sizer.h>
 
+#include "scaffold.hpp"
+
 #include "ui_export.h"
 
-namespace pcui::declarative {
-
-struct Scaffold;
+namespace pcui::detail {
 
 struct UI_EXPORT Descriptor {
     virtual ~Descriptor();
@@ -36,5 +36,5 @@ struct UI_EXPORT Descriptor {
     [[nodiscard]] virtual wxSizerItem *build(const Scaffold&) const = 0;
 };
 
-} // namespace pcui::declarative
+} // namespace pcui::detail
 

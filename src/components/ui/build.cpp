@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/declarative/build.cpp
+ * components/ui/build.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ui/declarative/descriptor.hpp"
-#include "ui/declarative/scaffold.hpp"
-
-void pcui::declarative::build(wxWindow *parent, const Descriptor& desc) {
+void pcui::build(wxWindow *parent, const detail::Descriptor& desc) {
     assert(parent);
     parent->SetSizer(nullptr);
     parent->DestroyChildren();
 
-    Scaffold scaffold{
+    detail::Scaffold scaffold{
         .childParent_=parent
     };
 
