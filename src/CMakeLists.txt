@@ -5,6 +5,7 @@
 set(SHARED_COMPONENTS
     app
     config
+    data
     log
     pconf
     process

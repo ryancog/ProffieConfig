@@ -1,0 +1,133 @@
+#pragma once
+/*
+ * ProffieConfig, All-In-One Proffieboard Management Utility
+ * Copyright (C) 2025-2026 Ryan Ogurek
+ *
+ * components/data/number.hpp
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <type_traits>
+
+#include "data/hierarchy/model.hpp"
+#include "utils/types.h"
+
+#include "data_export.h"
+
+namespace data {
+
+namespace priv {
+
+template <typename T>
+struct DATA_EXPORT Number : Model {
+    struct Context;
+    struct Receiver;
+
+    struct SetAction;
+    struct UpdateAction;
+
+    Number(Node * = nullptr);
+    Number(const Number&, Node * = nullptr);
+
+    std::unique_ptr<Model> clone(Node *) const override;
+
+    static constexpr T DEFAULT_MIN{0};
+    static constexpr T DEFAULT_MAX{std::is_integral_v<T>
+        ? static_cast<T>(10)
+        : static_cast<T>(1)};
+    static constexpr T DEFAULT_INC{std::is_integral_v<T>
+        ? static_cast<T>(1)
+        : static_cast<T>(0.1)};
+    static constexpr T DEFAULT_OFF{0};
+
+    struct Params {
+        T min_{DEFAULT_MIN};
+        T max_{DEFAULT_MAX};
+        T inc_{DEFAULT_INC};
+        T off_{DEFAULT_OFF};
+
+        auto operator<=>(const Params&) const = default;
+    };
+
+private:
+    [[nodiscard]] T clamp(T) const;
+
+    T mValue{0};
+    Params mParams;
+};
+
+template <typename T>
+struct DATA_EXPORT Number<T>::Context : Model::Context {
+    Context(Number&);
+    ~Context();
+
+    void set(T val);
+    void update(Params);
+
+    [[nodiscard]] T val() const;
+    [[nodiscard]] Params params() const;
+};
+
+template <typename T>
+struct DATA_EXPORT Number<T>::Receiver : Model::Receiver {
+protected:
+    friend Number;
+
+    /**
+     * Value changed.
+     */
+    virtual void onSet(T) {}
+    
+    /**
+     * Params changed.
+     * Value may also have changed.
+     */
+    virtual void onUpdate(Params) {}
+};
+
+template <typename T>
+struct DATA_EXPORT Number<T>::SetAction : Action {
+    SetAction(T val);
+
+    bool shouldPerform(Model&) override;
+    void perform(Model&) override;
+    void retract(Model&) override;
+
+private:
+    const T mValue;
+    T mLast;
+};
+
+template <typename T>
+struct DATA_EXPORT Number<T>::UpdateAction : Action {
+    UpdateAction(Params params);
+
+    bool shouldPerform(Model&) override;
+    void perform(Model&) override;
+    void retract(Model&) override;
+
+private:
+    const Params mParams;
+    Params mLast;
+    T mLastValue;
+};
+
+} // namespace priv
+
+using Integer = priv::Number<int32>;
+using Decimal = priv::Number<float64>;
+
+} // namespace data
+
