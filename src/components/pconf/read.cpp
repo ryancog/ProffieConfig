@@ -20,6 +20,7 @@
  */
 
 #include <algorithm>
+#include <iostream>
 
 #include "log/logger.h"
 
