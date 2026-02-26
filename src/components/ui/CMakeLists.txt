@@ -22,11 +22,21 @@ add_library(ui SHARED
     controls/text.cpp
     controls/toggle.cpp
     controls/version.cpp
+
+    declarative/build.cpp
+    declarative/descriptor.cpp
+    declarative/scaffold.cpp
+    declarative/spacer.cpp
+    declarative/stack.cpp
+    declarative/priv/helpers.cpp
+    declarative/controls/button.cpp
+    declarative/controls/checkbox.cpp
 )
 
 target_link_libraries(ui 
     wxWidgets
     app
+    data
 )
 
 include(../Component.cmake)
