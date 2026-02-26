@@ -23,7 +23,7 @@
 #include <wx/sizer.h>
 
 #include "config/config.h"
-#include "ui/frame.h"
+#include "ui/frame.hpp"
 
 // Forward declarations to get around circular dependencies
 class GeneralPage;

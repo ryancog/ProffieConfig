@@ -32,7 +32,7 @@
 #include "log/context.h"
 #include "log/severity.h"
 #include "ui/controls/version.h"
-#include "ui/frame.h"
+#include "ui/frame.hpp"
 #include "ui/message.h"
 #include "utils/defer.h"
 #include "utils/paths.h"

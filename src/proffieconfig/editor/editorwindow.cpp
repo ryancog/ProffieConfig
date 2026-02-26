@@ -40,7 +40,7 @@
 
 #include "config/config.h"
 #include "ui/message.h"
-#include "ui/frame.h"
+#include "ui/frame.hpp"
 #include "utils/defer.h"
 #include "utils/image.h"
 #include "utils/paths.h"

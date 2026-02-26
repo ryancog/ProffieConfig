@@ -27,7 +27,7 @@
 #include "pages/info.h"
 #include "pages/setup.h"
 #include "pages/welcome.h"
-#include "ui/frame.h"
+#include "ui/frame.hpp"
 #include "ui/notifier.h"
 
 namespace Onboard {

@@ -1,4 +1,4 @@
-#include "frame.h"
+#include "frame.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024-2026 Ryan Ogurek

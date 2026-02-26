@@ -22,7 +22,7 @@
 #include <wx/button.h>
 #include <wx/combobox.h>
 
-#include "ui/frame.h"
+#include "ui/frame.hpp"
 #include "ui/notifier.h"
 
 #include "../editor/editorwindow.h"
