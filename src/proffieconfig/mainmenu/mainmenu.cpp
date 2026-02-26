@@ -45,7 +45,7 @@
 #include "config/info.h"
 #include "log/info.h"
 #include "pconf/info.h"
-#include "ui/info.h"
+#include "ui/info.hpp"
 #include "utils/info.h"
 #include "versions/info.h"
 #include "versions_manager/info.h"
