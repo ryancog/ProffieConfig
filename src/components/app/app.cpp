@@ -61,9 +61,10 @@
 #include <wx/log.h>
 #include <wx/stdpaths.h>
 
+#include "app/critical_dialog.h"
 #include "log/context.h"
 #include "log/logger.h"
-#include "app/critical_dialog.h"
+#include "utils/demangle.h"
 
 namespace {
 
@@ -241,18 +242,38 @@ wxString generateBacktrace(void *pc, span<void *> frames) {
     wxString framesStr;
     wxString droppedFramesStr;
     bool inSigFrames{true};
-    for (void *const frame : frames) {
+    for (auto iter{frames.begin()}; iter != frames.end(); ++iter) {
+        auto *const frame{*iter};
+
+        fillSymbolInfo(frame, info);
+
+#       if defined(__APPLE__) and defined(__x86_64__)
+        auto& str{inSigFrames ? droppedFramesStr : framesStr};
+
+        (void)pc; // Suppress the unused diagnostic
+        if (inSigFrames and 0 == strcmp(info.name(), "_sigtramp")) {
+            // For reasons beyond what I care to understand, the frame above
+            // sigtramp always seems to be corrupted/invalid.
+            //
+            // Note that incrementing the `iter` here means it's invalid below.
+            // There's not a reason to use it below anyways, and it shouldn't
+            // be, but I note this anyways.
+            ++iter;
+            if (iter == frames.end()) break;
+            inSigFrames = false;
+        }
+#       else
         if (inSigFrames and frame == pc) {
             inSigFrames = false;
         }
-        auto& str{inSigFrames ? droppedFramesStr : framesStr};
 
-        fillSymbolInfo(frame, info);
+        auto& str{inSigFrames ? droppedFramesStr : framesStr};
+#       endif
 
         if (not str.IsEmpty()) str += '\n';
         str += addrToStr(frame);
         str += ": ";
-        str += info.name() ? info.name() : "???";
+        str += info.name() ? Utils::demangle(info.name()) : "???";
         str += '+';
         const auto diff{
             reinterpret_cast<ptrdiff_t>(frame) -
