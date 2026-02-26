@@ -4,7 +4,6 @@
 
 add_library(ui SHARED
     frame.cpp
-    movable.cpp
     plaque.cpp
     message.cpp
     notifier.cpp
