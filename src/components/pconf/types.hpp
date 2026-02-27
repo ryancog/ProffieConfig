@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/pconf/types.h
+ * components/pconf/types.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "utils/types.h"
+#include <memory>
+#include <optional>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+#include "utils/types.hpp"
 
 #include "pconf_export.h"
 
-namespace PConf {
+namespace pconf {
 
 enum class Type {
     ENTRY,
@@ -43,7 +49,7 @@ struct PCONF_EXPORT EntryPtr : std::shared_ptr<Entry> {
     }
 };
 
-using Data = vector<EntryPtr>;
+using Data = std::vector<EntryPtr>;
 /*
  * On Windows, the multimap stores equal-keyed items in reverse order, and
  * according to the C++ stdlib spec the order of all the items is not
@@ -54,56 +60,57 @@ using Data = vector<EntryPtr>;
 struct PCONF_EXPORT HashedData {
     void erase(const EntryPtr&);
 
-    [[nodiscard]] EntryPtr find(const string& key) const;
-    [[nodiscard]] vector<EntryPtr> findAll(const string& key) const;
+    [[nodiscard]] EntryPtr find(const std::string& key) const;
+    [[nodiscard]] std::vector<EntryPtr> findAll(const std::string& key) const;
 
-    vector<EntryPtr>& operator[](const string& key);
+    std::vector<EntryPtr>& operator[](const std::string& key);
 
 private:
-    std::unordered_map<string, vector<EntryPtr>> mMap;
+    std::unordered_map<std::string, std::vector<EntryPtr>> mMap;
 };
 
 struct PCONF_EXPORT Entry {
     [[nodiscard]] static EntryPtr create(
-        string name,
-        optional<string> value = nullopt,
-        optional<string> label = nullopt,
-        optional<uint32> labelNum = nullopt
+        std::string name,
+        std::optional<std::string> value = std::nullopt,
+        std::optional<std::string> label = std::nullopt,
+        std::optional<uint32> labelNum = std::nullopt
     );
     virtual ~Entry() = default;
 
-    string name;
-    optional<string> value{nullopt};
-    optional<string> label{nullopt};
-    optional<uint32> labelNum{nullopt};
+    std::string name_;
+    std::optional<std::string> value_{std::nullopt};
+    std::optional<std::string> label_{std::nullopt};
+    std::optional<uint32> labelNum_{std::nullopt};
 
 private:
     friend Section;
     Entry(
-        string name,
-        optional<string> value,
-        optional<string> label,
-        optional<uint32> labelNum
+        std::string name,
+        std::optional<std::string> value,
+        std::optional<std::string> label,
+        std::optional<uint32> labelNum
     );
 };
 
 struct PCONF_EXPORT Section : public Entry {
     [[nodiscard]] static SectionPtr create(
-        string name,
-        optional<string> label = nullopt,
-        optional<uint32> labelNum = nullopt,
+        std::string name,
+        std::optional<std::string> label = std::nullopt,
+        std::optional<uint32> labelNum = std::nullopt,
         Data entries = {}
     );
 
-    Data entries;
+    Data entries_;
 
 private:
     Section(
-        string name, 
-        optional<string> label,
-        optional<uint32> labelNum,
+        std::string name, 
+        std::optional<std::string> label,
+        std::optional<uint32> labelNum,
         Data entries
    );
 };
 
-} // namespace PConf
+} // namespace pconf
+

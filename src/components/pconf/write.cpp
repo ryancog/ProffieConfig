@@ -1,7 +1,7 @@
-#include "pconf.h"
+#include "write.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/pconf/write.cpp
  *
@@ -19,30 +19,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
-
-#include "log/logger.h"
+#include "logging/logger.hpp"
 
 namespace {
 
 bool writeEntry(
     std::ostream&,
-    const PConf::EntryPtr& entry,
+    const pconf::EntryPtr& entry,
     int32 depth,
-    Log::Branch&
+    logging::Branch&
 );
 bool writeSection(
     std::ostream&,
-    const PConf::SectionPtr& section,
+    const pconf::SectionPtr& section,
     int32 depth,
-    Log::Branch&
+    logging::Branch&
 );
 std::ostream& writeWithDepth(std::ostream& outStream, int32 depth);
 
 } // namespace
 
-void PConf::write(std::ostream& outStream, const Data& pconfData, Log::Branch *lBranch) {
-    auto& logger{Log::Branch::optCreateLogger("PConf::write()", lBranch)};
+void pconf::write(
+    std::ostream& outStream, const Data& pconfData, logging::Branch *lBranch
+) {
+    auto& logger{logging::Branch::optCreateLogger("pconf::write()", lBranch)};
 
     for (const auto& entry : pconfData) {
         if (entry.section()) {
@@ -50,14 +50,14 @@ void PConf::write(std::ostream& outStream, const Data& pconfData, Log::Branch *l
                 outStream,
                 entry.section(),
                 0,
-                *logger.bverbose("Writing Section: " + entry->name)
+                *logger.bverbose("Writing Section: " + entry->name_)
             );
         } else {
             writeEntry(
                 outStream,
                 entry,
                 0,
-                *logger.bverbose("Writing entry: " + entry->name)
+                *logger.bverbose("Writing entry: " + entry->name_)
             );
         }
     }
@@ -67,33 +67,33 @@ namespace {
 
 bool writeEntry(
     std::ostream& outStream,
-    const PConf::EntryPtr& entry,
+    const pconf::EntryPtr& entry,
     int32 depth,
-    Log::Branch&
+    logging::Branch&
 ) {
-    // auto& logger{lBranch.createLogger("PConf::writeEntry()")};
+    // auto& logger{lBranch.createLogger("pconf::writeEntry()")};
     
-    writeWithDepth(outStream, depth) << entry->name;
-    if (entry->label) outStream << "(\"" << entry->label.value() << "\")";
-    if (entry->labelNum) outStream << '{' << entry->labelNum.value() << '}';
+    writeWithDepth(outStream, depth) << entry->name_;
+    if (entry->label_) outStream << "(\"" << entry->label_.value() << "\")";
+    if (entry->labelNum_) outStream << '{' << entry->labelNum_.value() << '}';
 
-    if (not entry->value) {
+    if (not entry->value_) {
         outStream << '\n';
         return true;
     }
 
-    const auto& valueStr{entry->value.value()};
+    const auto& valueStr{entry->value_.value()};
     outStream << ": ";
 
     size_t lineBegin{0};
     size_t lineEnd{valueStr.find('\n')};
-    bool containsQuotes{valueStr.find('"') != string::npos};
-    if (lineEnd != string::npos or containsQuotes) {
+    bool containsQuotes{valueStr.find('"') != std::string::npos};
+    if (lineEnd != std::string::npos or containsQuotes) {
         outStream << "{\n";
         writeWithDepth(outStream, depth + 1);
     }
 
-    while (lineEnd != string::npos) {
+    while (lineEnd != std::string::npos) {
         outStream << '"' << valueStr.substr(lineBegin, lineEnd - lineBegin) << "\"\n";
         writeWithDepth(outStream, depth + 1);
         lineBegin = lineEnd + 1;
@@ -108,31 +108,31 @@ bool writeEntry(
 
 bool writeSection(
     std::ostream& outStream,
-    const PConf::SectionPtr& section,
+    const pconf::SectionPtr& section,
     int32 depth,
-    Log::Branch& lBranch
+    logging::Branch& lBranch
 ) {
-    auto& logger{lBranch.createLogger("PConf::writeSection()")};
+    auto& logger{lBranch.createLogger("pconf::writeSection()")};
 
-    writeWithDepth(outStream, depth) << section->name;
-    if (section->label) outStream << "(\"" << section->label.value() << "\")";
-    if (section->labelNum) outStream << '{' << section->labelNum.value() << '}';
+    writeWithDepth(outStream, depth) << section->name_;
+    if (section->label_) outStream << "(\"" << section->label_.value() << "\")";
+    if (section->labelNum_) outStream << '{' << section->labelNum_.value() << '}';
     outStream << " {\n";
 
-    for (const auto& entry : section->entries) {
+    for (const auto& entry : section->entries_) {
         if (entry.section()) {
             writeSection(
                 outStream,
                 entry.section(),
                 depth + 1,
-                *logger.binfo("Writing Section: " + entry->name)
+                *logger.binfo("Writing Section: " + entry->name_)
             );
         } else {
             writeEntry(
                 outStream,
                 entry,
                 depth + 1,
-                *logger.binfo("Writing entry: " + entry->name)
+                *logger.binfo("Writing entry: " + entry->name_)
             );
         }
     }

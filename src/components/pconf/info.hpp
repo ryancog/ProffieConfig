@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/pconf/pconf.h
+ * components/pconf/info.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "log/branch.h"
+#include "utils/types.hpp"
 
-#include "types.h"
 #include "pconf_export.h"
 
-namespace PConf {
+namespace pconf {
 
-PCONF_EXPORT void write(std::ostream&, const Data&, Log::Branch *); 
-PCONF_EXPORT bool read(std::istream&, Data& out, Log::Branch *);
+PCONF_EXPORT cstring version();
 
-} // namespace PConf
+} // namespace pconf
+

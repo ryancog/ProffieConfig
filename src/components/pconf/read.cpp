@@ -1,4 +1,4 @@
-#include "pconf.h"
+#include "read.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
@@ -22,27 +22,52 @@
 #include <algorithm>
 #include <iostream>
 
-#include "log/logger.h"
+#include "logging/logger.hpp"
 
 namespace {
 
 // All these return false on a critical error condition.
-void parseName           (const string& line, optional<string>& out, Log::Branch&);
-bool parseLabel          (const string& line, optional<string>& out, Log::Branch&);
-bool parseLabelNum       (const string& line, optional<uint32>& out, Log::Branch&);
-bool parseValue          (const string& line, std::istream&, optional<string>& out, Log::Branch&);
-bool parseSinglelineValue(const string& line, optional<string>& out, Log::Branch&);
-bool parseMultilineValue (std::istream&, optional<string>& out, Log::Branch&);
+void parseName(
+    const std::string&, std::optional<std::string>&, logging::Branch&
+);
 
-bool readEntry(std::istream&, PConf::EntryPtr& out, bool& isSect, Log::Branch&);
-bool readSection(std::istream&, PConf::SectionPtr& out, Log::Branch&);
+bool parseLabel(
+    const std::string&, std::optional<std::string>&, logging::Branch&
+);
 
-bool readline(std::istream&, string&);
+bool parseLabelNum(
+    const std::string&, std::optional<uint32>&, logging::Branch&
+);
+
+bool parseValue(
+    const std::string&,
+    std::istream&,
+    std::optional<std::string>&,
+    logging::Branch&
+);
+
+bool parseSinglelineValue(
+    const std::string&, std::optional<std::string>&, logging::Branch&
+);
+
+bool parseMultilineValue(
+    std::istream&, std::optional<std::string>&, logging::Branch&
+);
+
+bool readEntry(
+    std::istream&, pconf::EntryPtr& out, bool& isSect, logging::Branch&
+);
+
+bool readSection(
+    std::istream&, pconf::SectionPtr& out, logging::Branch&
+);
+
+bool readline(std::istream&, std::string&);
 
 } // namespace
 
-bool PConf::read(std::istream& inStream, Data& out, Log::Branch *lBranch) {
-    auto& logger{Log::Branch::optCreateLogger("PConf::read()", lBranch)};
+bool pconf::read(std::istream& inStream, Data& out, logging::Branch *lBranch) {
+    auto& logger{logging::Branch::optCreateLogger("pconf::read()", lBranch)};
 
     out.clear();
     bool isSect{};
@@ -72,12 +97,17 @@ bool PConf::read(std::istream& inStream, Data& out, Log::Branch *lBranch) {
 
 namespace {
 
-bool readEntry(std::istream& inStream, PConf::EntryPtr& out, bool& isSect, Log::Branch& lBranch) {
-    auto& logger{lBranch.createLogger("PConf::readEntry()")};
+bool readEntry(
+    std::istream& inStream,
+    pconf::EntryPtr& out,
+    bool& isSect,
+    logging::Branch& lBranch
+) {
+    auto& logger{lBranch.createLogger("pconf::readEntry()")};
 
     out.reset();
     isSect = false;
-    string line;
+    std::string line;
     auto prevLinePos{inStream.tellg()};
 
     if (not readline(inStream, line)) {
@@ -89,7 +119,7 @@ bool readEntry(std::istream& inStream, PConf::EntryPtr& out, bool& isSect, Log::
     auto numCloseBraces{std::count(line.begin(), line.end(), '}')};
     auto openBracePos{line.find('{')};
     auto closeBracePos{line.find('}')};
-    auto hasSeperator{line.find(':') != string::npos};
+    auto hasSeperator{line.find(':') != std::string::npos};
 
     bool correctNumBraces{
         ((numOpenBraces == 0 or numOpenBraces == 1) and (numCloseBraces == numOpenBraces - 1 or numCloseBraces == numOpenBraces)) ||
@@ -113,70 +143,119 @@ bool readEntry(std::istream& inStream, PConf::EntryPtr& out, bool& isSect, Log::
         return true;
     }
 
-    optional<string> name;
+    std::optional<std::string> name;
     parseName(line, name, *logger.bverbose("Attempting to parse entry name..."));
     if (not name) {
         logger.verbose("Line not an entry/missing name.");
         return true;
     }
 
-    out = PConf::Entry::create(*name);
-    if (not parseValue(line, inStream, out->value, *logger.bverbose("Parsing entry \"" + name.value() + "\" value..."))) return false;
-    if (not parseLabel(line, out->label, *logger.bverbose("Parsing entry \"" + name.value() + "\" label..."))) return false;
-    if (not parseLabelNum(line, out->labelNum, *logger.bverbose("Parsing entry \"" + name.value() + "\" number label..."))) return false;
+    out = pconf::Entry::create(*name);
+    if (not parseValue(
+            line,
+            inStream,
+            out->value_,
+            *logger.bverbose("Parsing entry \"" + name.value() + "\" value...")
+        )) return false;
+
+    if (not parseLabel(
+            line,
+            out->label_,
+            *logger.bverbose("Parsing entry \"" + name.value() + "\" label...")
+        )) return false;
+
+    if (not parseLabelNum(
+            line,
+            out->labelNum_,
+            *logger.bverbose("Parsing entry \"" + name.value() + "\" number label...")
+        )) return false;
 
     return true;
 }
 
-bool readSection(std::istream& inStream, PConf::SectionPtr& out, Log::Branch& lBranch) {
-    auto& logger{lBranch.createLogger("PConf::readSection()")};
+bool readSection(
+    std::istream& inStream, pconf::SectionPtr& out, logging::Branch& lBranch
+) {
+    auto& logger{lBranch.createLogger("pconf::readSection()")};
 
     out.reset();
-    string line;
+    std::string line;
     if (not readline(inStream, line)) return true;
 
-    optional<string> name;
+    std::optional<std::string> name;
+
     parseName(line, name, *logger.bverbose("Attempting to parse section name..."));
     if (not name) {
         logger.error("Read this as a section, but missing name. Must be a formatting error!");
         return false;
     }
 
-    out = PConf::Section::create(*name);
-    if (not parseLabel(line, out->label, *logger.bverbose("Parsing section \"" + name.value() + "\" label..."))) return false;
-    if (not parseLabelNum(line, out->labelNum, *logger.bverbose("Parsing section \"" + name.value() + "\" number label..."))) return false;
+    out = pconf::Section::create(*name);
+
+    if (not parseLabel(
+            line,
+            out->label_,
+            *logger.bverbose("Parsing section \"" + name.value() + "\" label...")
+        )) return false;
+
+    if (not parseLabelNum(
+            line,
+            out->labelNum_,
+            *logger.bverbose("Parsing section \"" + name.value() + "\" number label...")
+        )) return false;
 
     bool foundSect{false};
     while (inStream.good() and not inStream.eof()) {
         auto startPos{inStream.tellg()};
-        PConf::EntryPtr entry;
-        if (not readEntry(inStream, entry, foundSect, *logger.bverbose("Reading line (for entry)..."))) return false;
+        pconf::EntryPtr entry;
+
+        if (not readEntry(
+                inStream,
+                entry,
+                foundSect,
+                *logger.bverbose("Reading line (for entry)...")
+            )) return false;
+
         if (foundSect) {
-            std::shared_ptr<PConf::Section> subSect;
-            if (not readSection(inStream, subSect, *logger.bverbose("Reading section..."))) return false;
+            pconf::SectionPtr subSect;
+
+            if (not readSection(
+                    inStream,
+                    subSect,
+                    *logger.bverbose("Reading section...")
+                )) return false;
+
             if (not subSect) continue;
-            out->entries.emplace_back(subSect);
+
+            out->entries_.emplace_back(subSect);
             continue;
         }
+
         if (not entry) {
             // Check for section end
             inStream.seekg(startPos);
             readline(inStream, line);
-            if (line.find('}') != string::npos) return true;
+
+            if (line.find('}') != std::string::npos) return true;
 
             continue;
         }
-        out->entries.push_back(entry);
+
+        out->entries_.push_back(entry);
     }
 
     logger.error("Reached end of stream before section closing, formatting error!");
     return false;
 }
 
-void parseName(const string& line, std::optional<string>& out, Log::Branch& lBranch) {
-    auto& logger{lBranch.createLogger("PConf::parseName()")};
+void parseName(
+    const std::string& line,
+    std::optional<std::string>& out,
+    logging::Branch& lBranch
+) {
+    auto& logger{lBranch.createLogger("pconf::parseName()")};
 
-    out = nullopt;
+    out = std::nullopt;
     auto bracePos{line.find('{')};
     auto parenPos{line.find('(')};
     auto seperatorPos{line.find(':')};
@@ -192,12 +271,17 @@ void parseName(const string& line, std::optional<string>& out, Log::Branch& lBra
     out = line.substr(nameBegin, nameEnd - nameBegin);
 }
 
-bool parseValue(const string& line, std::istream& inStream, optional<string>& out, Log::Branch& lBranch) {
-    auto& logger{lBranch.createLogger("PConf::parseValue()")};
+bool parseValue(
+    const std::string& line,
+    std::istream& inStream,
+    std::optional<std::string>& out,
+    logging::Branch& lBranch
+) {
+    auto& logger{lBranch.createLogger("pconf::parseValue()")};
 
-    out = nullopt;
+    out = std::nullopt;
     auto seperatorPos{line.find(':')};
-    bool hasSeperator{seperatorPos != string::npos};
+    bool hasSeperator{seperatorPos != std::string::npos};
 
     if (not hasSeperator) {
         logger.verbose("No separator, no value.");
@@ -205,18 +289,33 @@ bool parseValue(const string& line, std::istream& inStream, optional<string>& ou
     }
 
     auto bracePos{line.find('{')};
-    auto isMultiline{bracePos != string::npos and seperatorPos < bracePos};
+    auto isMultiline{
+        bracePos != std::string::npos and seperatorPos < bracePos
+    };
+
     if (isMultiline) {
-        return parseMultilineValue(inStream, out, *logger.bverbose("Value is multiline, parsing..."));
+        return parseMultilineValue(
+            inStream,
+            out,
+            *logger.bverbose("Value is multiline, parsing...")
+        );
     }
 
-    return parseSinglelineValue(line.substr(seperatorPos + 1), out, *logger.bverbose("Value is single-line, parsing..."));
+    return parseSinglelineValue(
+        line.substr(seperatorPos + 1),
+        out,
+        *logger.bverbose("Value is single-line, parsing...")
+    );
 }
 
-bool parseSinglelineValue(const string& line, std::optional<string>& out, Log::Branch& lBranch) {
-    auto& logger{lBranch.createLogger("PConf::parseSingleLineValue()")};
+bool parseSinglelineValue(
+    const std::string& line,
+    std::optional<std::string>& out,
+    logging::Branch& lBranch
+) {
+    auto& logger{lBranch.createLogger("pconf::parseSingleLineValue()")};
 
-    bool usesQuotes{line.find('"') != string::npos};
+    bool usesQuotes{line.find('"') != std::string::npos};
     bool record{false};
 
     out = "";
@@ -244,21 +343,25 @@ bool parseSinglelineValue(const string& line, std::optional<string>& out, Log::B
         return false;
     }
 
-    if (out->empty()) out = nullopt;
+    if (out->empty()) out = std::nullopt;
 
     return true;
 }
 
-bool parseMultilineValue(std::istream& inStream, std::optional<string>& out, Log::Branch& lBranch) {
-    auto& logger{lBranch.createLogger("PConf::parseMultilineValue()")};
+bool parseMultilineValue(
+    std::istream& inStream,
+    std::optional<std::string>& out,
+    logging::Branch& lBranch
+) {
+    auto& logger{lBranch.createLogger("pconf::parseMultilineValue()")};
 
     out = "";
-    string buf;
+    std::string buf;
     while (readline(inStream, buf)) {
         auto quoteBegin{buf.find('"')};
         auto quoteEnd{buf.rfind('"')};
-        if (quoteBegin == string::npos or quoteBegin == quoteEnd) {
-            if (buf.find('}') != string::npos) {
+        if (quoteBegin == std::string::npos or quoteBegin == quoteEnd) {
+            if (buf.find('}') != std::string::npos) {
                 // Pop off trailing newline
                 // Don't trim whitespace. That's intentional for a multiline
                 out->pop_back();
@@ -274,8 +377,10 @@ bool parseMultilineValue(std::istream& inStream, std::optional<string>& out, Log
     return false;
 }
 
-bool parseLabel(const string& line, optional<string>& out, Log::Branch& lBranch) {
-    auto& logger{lBranch.createLogger("PConf::parseLabel()")};
+bool parseLabel(
+    const std::string& line, std::optional<std::string>& out, logging::Branch& lBranch
+) {
+    auto& logger{lBranch.createLogger("pconf::parseLabel()")};
 
     out = "";
     bool inParens{false};
@@ -283,11 +388,11 @@ bool parseLabel(const string& line, optional<string>& out, Log::Branch& lBranch)
 
     for (char character : line) {
         if (character == ':') {
-            out = nullopt;
+            out = std::nullopt;
             return true;
         }
         if (character == '"' and not inParens) {
-            out = nullopt;
+            out = std::nullopt;
             return true;
         }
 
@@ -310,21 +415,25 @@ bool parseLabel(const string& line, optional<string>& out, Log::Branch& lBranch)
         return false;
     } 
 
-    if (out->empty()) out = nullopt;
+    if (out->empty()) out = std::nullopt;
     return true;
 }
 
-bool parseLabelNum(const string& line, optional<uint32>& out, Log::Branch& lBranch) {
-    auto& logger{lBranch.createLogger("PConf::parseLabelNum()")};
+bool parseLabelNum(
+    const std::string& line,
+    std::optional<uint32>& out,
+    logging::Branch& lBranch
+) {
+    auto& logger{lBranch.createLogger("pconf::parseLabelNum()")};
 
-    out = nullopt;
+    out = std::nullopt;
     auto numCloseBraces{std::count(line.begin(), line.end(), '}')};
     if (numCloseBraces != 1) return true;
 
     auto openBracePos{line.find('{')};
     auto closeBracePos{line.find('}')};
     bool bracesInOrder{openBracePos < closeBracePos};
-    if (not bracesInOrder or closeBracePos == string::npos) {
+    if (not bracesInOrder or closeBracePos == std::string::npos) {
         logger.error("Entry has malplaced numeric label braces! (" + line + ")");
         return false;
     }
@@ -341,7 +450,7 @@ bool parseLabelNum(const string& line, optional<uint32>& out, Log::Branch& lBran
     return true;
 }
 
-bool readline(std::istream& stream, string& out) {
+bool readline(std::istream& stream, std::string& out) {
     if (not std::getline(stream, out)) return false;
 
     out = out.substr(0, out.find("//"));

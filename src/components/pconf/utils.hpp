@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/pconf/utils.h
+ * components/pconf/utils.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "types.h"
+#include <optional>
+#include <vector>
+#include <string>
+
+#include "pconf/types.hpp"
+
 #include "pconf_export.h"
 
-namespace PConf {
+namespace pconf {
 
 [[nodiscard]] PCONF_EXPORT HashedData hash(const Data&);
-[[nodiscard]] PCONF_EXPORT vector<string> valueAsList(const optional<string>&);
-[[nodiscard]] PCONF_EXPORT optional<string> listAsValue(const vector<string>&);
 
-} // namespace PConf
+[[nodiscard]] PCONF_EXPORT std::vector<std::string> valueAsList(
+    const std::optional<std::string>&
+);
+
+[[nodiscard]] PCONF_EXPORT std::optional<std::string> listAsValue(
+    const std::vector<std::string>&
+);
+
+} // namespace pconf
 
