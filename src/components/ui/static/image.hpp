@@ -21,6 +21,7 @@
 
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
+#include "utils/color.hpp"
 
 #include "ui_export.h"
 
@@ -32,7 +33,16 @@ struct UI_EXPORT Image {
     // TODO: Make this a base w/ C++ P2287.
     detail::ChildBase base_;
 
-    wxBitmap src_;
+    struct LoadDetails {
+        cstring name_;
+        struct {
+            int32 dim_;
+            wxOrientation orient_;
+        } size_;
+        color::Dynamic color_;
+    };
+
+    std::variant<wxBitmap, LoadDetails> src_;
 
     std::unique_ptr<detail::Descriptor> operator()();
 };
