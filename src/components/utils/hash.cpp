@@ -1,9 +1,9 @@
-#include "crypto.h"
+#include "hash.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024-2026 Ryan Ogurek
  *
- * components/utils/crypto.cpp
+ * components/utils/hash.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +19,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <random>
+#include <iostream>
+
 #include <tomcrypt.h>
 
-std::mt19937_64& Crypto::randGen() {
-    static std::mt19937_64 gen{std::random_device{}()};
-    return gen;
-}
+using namespace utils::hash;
 
-Crypto::Hash::Hash(array<uint8, 32> arr) : mValue{arr} {}
+SHA256::SHA256(std::array<uint8, 32> arr) : mValue{arr} {}
 
-Crypto::Hash Crypto::Hash::stream(std::istream& stream) {
-    array<uint8, 32768> buffer;
+SHA256 SHA256::stream(std::istream& stream) {
+    std::array<uint8, 32768> buffer;
 
     hash_state hashState;
     sha256_init(&hashState);
@@ -43,22 +41,22 @@ Crypto::Hash Crypto::Hash::stream(std::istream& stream) {
         sha256_process(&hashState, buffer.data(), bytesRead);
     }
 
-    array<uint8, 32> ret;
+    std::array<uint8, 32> ret;
     sha256_done(&hashState, ret.data());
 
     return ret;
 }
 
-optional<Crypto::Hash> Crypto::Hash::parseString(const string& str) {
+std::optional<SHA256> SHA256::parseString(const std::string& str) {
     // 32-bytes (256 bits / 8 bits per byte) * 2 chars per byte
-    if (str.length() != 64) return nullopt;
+    if (str.length() != 64) return std::nullopt;
 
     for (char chr : str) {
-        if (not std::isxdigit(chr)) return nullopt;
+        if (not std::isxdigit(chr)) return std::nullopt;
     }
 
-    array<uint8, 32> ret;
-    array<char, 3> tmpStr{0, 0, 0};
+    std::array<uint8, 32> ret;
+    std::array<char, 3> tmpStr{0, 0, 0};
     for (auto idx{0}; idx < ret.size(); ++idx) {
         tmpStr[0] = str[(idx * 2) + 0];
         tmpStr[1] = str[(idx * 2) + 1];
@@ -68,10 +66,10 @@ optional<Crypto::Hash> Crypto::Hash::parseString(const string& str) {
     return ret;
 }
 
-array<uint8, 32> Crypto::Hash::value() const { return mValue; }
+std::array<uint8, 32> SHA256::value() const { return mValue; }
 
-Crypto::Hash::operator string() const {
-    string ret;
+SHA256::operator std::string() const {
+    std::string ret;
     ret.resize(64);
 
     for (size idx{0}; idx < mValue.size(); ++idx) {
@@ -80,5 +78,4 @@ Crypto::Hash::operator string() const {
 
     return ret;
 }
-
 
