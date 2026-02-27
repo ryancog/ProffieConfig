@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
  *
- * components/utils/demangle.h
+ * components/utils/demangle.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,21 +20,23 @@
  */
 
 #include <cxxabi.h>
+#include <memory>
+#include <string>
 
-#include "utils/types.h"
+#include "utils/types.hpp"
 
-namespace Utils {
+namespace utils {
 
-inline string demangle(cstring str) {
+inline std::string demangle(cstring str) {
     int32 result{};
     std::unique_ptr<char, void(*)(void*)> res{abi::__cxa_demangle(
         str,
         nullptr,
         nullptr,
         &result
-    ), std::free};
+    ), free};
     if (result != 0) return str;
     return res.get();
 }
 
-} // namespace Utils
+} // namespace utils
