@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/versions/prop.h
+ * components/versions/prop.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,16 +20,22 @@
  */
 
 #include <map>
+#include <optional>
+#include <string>
 #include <unordered_set>
 #include <unordered_map>
 #include <utility>
+#include <variant>
+#include <vector>
 
-#include "log/logger.h"
+#include <wx/gdicmn.h>
+
+#include "data/bool.hpp"
+#include "data/number.hpp"
+#include "data/option.hpp"
+#include "logging/logger.hpp"
 #include "pconf/types.h"
-#include "ui/controls/numeric.h"
-#include "ui/controls/radios.h"
-#include "ui/controls/toggle.h"
-#include "utils/types.h"
+#include "utils/types.hpp"
 
 #include "versions_export.h"
 
@@ -56,21 +62,20 @@ struct VERSIONS_EXPORT PropDataBase {
 
     /**
      * @return True if isActive() and define doesn't have any other blocks to being output.
-     */
-    [[nodiscard]] bool shouldOutputDefine() const;
+     */ [[nodiscard]] bool shouldOutputDefine() const;
 
     /**
      * @return The define str if shouldOutputDefine() returns true, nullopt
      * otherwise
      */
-    [[nodiscard]] optional<string> generateDefineString() const;
+    [[nodiscard]] std::optional<std::string> generateDefineString() const;
 
-    const string name;
-    const string define;
-    const string description;
+    const std::string name;
+    const std::string define;
+    const std::string description;
 
-    const vector<string> required;
-    const vector<string> requiredAny;
+    const std::vector<std::string> required;
+    const std::vector<std::string> requiredAny;
 
     const PropDataType dataType;
 
@@ -78,11 +83,11 @@ protected:
     PropDataBase(
         Prop& prop,
         PropDataType type,
-        string name,
-        string define,
-        string description,
-        vector<string> required,
-        vector<string> requiredAny
+        std::string name,
+        std::string define,
+        std::string description,
+        std::vector<std::string> required,
+        std::vector<std::string> requiredAny
     ) : pProp{prop}, dataType{type}, name{std::move(name)}, define{std::move(define)},
         description{std::move(description)}, required{std::move(required)},
         requiredAny{std::move(requiredAny)} {}
@@ -117,7 +122,7 @@ struct VERSIONS_EXPORT PropSettingBase {
   PropSettingBase(PropSettingType settingType) : settingType(settingType) {}
   virtual ~PropSettingBase() = default;
 
-  [[nodiscard]] virtual string id() const = 0;
+  [[nodiscard]] virtual std::string id() const = 0;
 
   const PropSettingType settingType;
 };
@@ -125,12 +130,12 @@ struct VERSIONS_EXPORT PropSettingBase {
 struct VERSIONS_EXPORT PropToggle : PropDataBase, PropSettingBase {
     PropToggle(
         Prop& prop,
-        string name,
-        string define,
-        string description,
-        vector<string> required,
-        vector<string> requiredAny,
-        vector<string> disables
+        std::string name,
+        std::string define,
+        std::string description,
+        std::vector<std::string> required,
+        std::vector<std::string> requiredAny,
+        std::vector<std::string> disables
     );
 
     PropToggle(const PropToggle& other, Prop& prop) :
@@ -144,25 +149,25 @@ struct VERSIONS_EXPORT PropToggle : PropDataBase, PropSettingBase {
             other.disables,
         } {}
 
-    [[nodiscard]] string id() const override { return define; }
+    [[nodiscard]] std::string id() const override { return define; }
 
-    const vector<string> disables;
+    const std::vector<std::string> disables;
 
-    pcui::ToggleData value;
+    data::Bool value;
 };
 
 struct VERSIONS_EXPORT PropNumeric : PropDataBase, PropSettingBase {
     PropNumeric(
         Prop& prop,
-        string name,
-        string define,
-        string description,
-        vector<string> required,
-        vector<string> requiredAny,
+        std::string name,
+        std::string define,
+        std::string description,
+        std::vector<std::string> required,
+        std::vector<std::string> requiredAny,
         int32 min,
         int32 max,
         int32 increment,
-        optional<int32> defaultVal
+        std::optional<int32> defaultVal
     ) : PropDataBase{
             prop,
             PropDataType::NUMERIC,
@@ -195,25 +200,25 @@ struct VERSIONS_EXPORT PropNumeric : PropDataBase, PropSettingBase {
             other.defaultVal,
         } {}
 
-    [[nodiscard]] string id() const override { return define; }
+    [[nodiscard]] std::string id() const override { return define; }
 
-    const optional<int32> defaultVal;
+    const std::optional<int32> defaultVal;
 
-    pcui::NumericData value;
+    data::Integer value;
 };
 
 struct VERSIONS_EXPORT PropDecimal : PropDataBase, PropSettingBase {
     PropDecimal(
         Prop& prop,
-        string name,
-        string define,
-        string description,
-        vector<string> required,
-        vector<string> requiredAny,
+        std::string name,
+        std::string define,
+        std::string description,
+        std::vector<std::string> required,
+        std::vector<std::string> requiredAny,
         float64 min,
         float64 max,
         float64 increment,
-        optional<float64> defaultVal
+        std::optional<float64> defaultVal
     ) : PropDataBase{
             prop,
             PropDataType::DECIMAL,
@@ -246,11 +251,11 @@ struct VERSIONS_EXPORT PropDecimal : PropDataBase, PropSettingBase {
             other.defaultVal,
         } {}
 
-    [[nodiscard]] string id() const override { return define; }
+    [[nodiscard]] std::string id() const override { return define; }
 
-    const optional<float64> defaultVal;
+    const std::optional<float64> defaultVal;
 
-    pcui::DecimalData value;
+    data::Decimal value;
 };
 
 struct PropOption;
@@ -260,17 +265,17 @@ struct VERSIONS_EXPORT PropSelection : PropDataBase {
     [[nodiscard]] bool enabled() const;
     [[nodiscard]] bool isDefault() const;
 
-    const vector<string> disables;
+    const std::vector<std::string> disables;
 
     PropSelection(
         Prop& prop,
         PropOption& option,
-        string name,
-        string define,
-        string description,
-        vector<string> required,
-        vector<string> requiredAny,
-        vector<string> disables
+        std::string name,
+        std::string define,
+        std::string description,
+        std::vector<std::string> required,
+        std::vector<std::string> requiredAny,
+        std::vector<std::string> disables
     );
 
     PropSelection(const PropSelection& other, Prop& prop, PropOption& option) :
@@ -299,80 +304,80 @@ struct VERSIONS_EXPORT PropOption : PropSettingBase {
     PropOption& operator=(PropOption&&) = delete;
 
     struct PropSelectionData {
-        string name;
-        string define;
-        string description;
-        vector<string> required;
-        vector<string> requiredAny;
-        vector<string> disables;
+        std::string name;
+        std::string define;
+        std::string description;
+        std::vector<std::string> required;
+        std::vector<std::string> requiredAny;
+        std::vector<std::string> disables;
     };
 
     PropOption(
         Prop&,
-        string id,
-        string name,
-        string description,
-        const vector<PropSelectionData>&
+        std::string id,
+        std::string name,
+        std::string description,
+        const std::vector<PropSelectionData>&
     );
     PropOption(const PropOption&, Prop&);
 
-    [[nodiscard]] const vector<std::unique_ptr<PropSelection>>& selections() const { return mSelections; }
+    [[nodiscard]] const std::vector<std::unique_ptr<PropSelection>>& selections() const { return mSelections; }
 
-    [[nodiscard]] string id() const override { return idLabel; }
+    [[nodiscard]] std::string id() const override { return idLabel; }
 
-    const string idLabel;
-    const string name;
-    const string description;
-    pcui::RadiosData selection;
+    const std::string idLabel;
+    const std::string name;
+    const std::string description;
+    data::Option selection;
 
 private:
     friend PropSelection;
-    vector<std::unique_ptr<PropSelection>> mSelections;
+    std::vector<std::unique_ptr<PropSelection>> mSelections;
 };
 
 /**
  * A single button/control mapping to a prop action
  */
 struct PropButton {
-    const string name;
+    const std::string name;
 
     // <Predicate, Description>
-    const std::unordered_map<string, string> descriptions;
+    const std::unordered_map<std::string, std::string> descriptions;
 };
 
 /**
  * A collection of PropButton for a certain prop mode/state
  */
 struct PropButtonState {
-    PropButtonState(string stateName, vector<PropButton> buttons);
+    PropButtonState(std::string stateName, std::vector<PropButton> buttons);
 
-    const string stateName;
-    const vector<PropButton> buttons;
+    const std::string stateName;
+    const std::vector<PropButton> buttons;
 };
 
-using PropButtons = vector<PropButtonState>;
+using PropButtons = std::vector<PropButtonState>;
 
 struct PropErrorMapping {
-    PropErrorMapping(string arduinoError, string displayError);
-    const string arduinoError;
-    const string displayError;
+    PropErrorMapping(std::string arduinoError, std::string displayError);
+    const std::string arduinoError;
+    const std::string displayError;
 };
-using PropErrors = vector<PropErrorMapping>;
+using PropErrors = std::vector<PropErrorMapping>;
 
-using PropSettings = vector<std::unique_ptr<PropSettingBase>>;
+using PropSettings = std::vector<std::unique_ptr<PropSettingBase>>;
 // <ID, Data>
 // ID may be a define or (only this for now) an option id
-using PropSettingMap = std::unordered_map<string, PropSettingBase *>;
+using PropSettingMap = std::unordered_map<std::string, PropSettingBase *>;
 
 // <Define, Data>
-using PropDataMap = std::unordered_map<string, PropDataBase *>;
+using PropDataMap = std::unordered_map<std::string, PropDataBase *>;
 
 
 struct VERSIONS_EXPORT PropLayout {
-    using Children = vector<variant<PropLayout, PropSettingBase *>>;
+    using Children = std::vector<std::variant<PropLayout, PropSettingBase *>>;
 
     // Only public for Children emplace_back
-    PropLayout(wxOrientation axis = wxVERTICAL, string label = "", Children children = {}) :
+    PropLayout(wxOrientation axis = wxVERTICAL, std::string label = "", Children children = {}) :
         axis{axis},
         label{std::move(label)},
         children{std::move(children)} {}
@@ -386,12 +391,12 @@ struct VERSIONS_EXPORT PropLayout {
         const PConf::Data&,
         const PropSettingMap&,
         PropLayout& out,
-        std::unordered_set<string>& usedSettings,
-        Log::Logger * = nullptr
+        std::unordered_set<std::string>& usedSettings,
+        logging::Logger * = nullptr
     );
 
     wxOrientation axis;
-    string label;
+    std::string label;
     Children children;
 
 private:
@@ -411,9 +416,9 @@ struct VERSIONS_EXPORT Prop {
 
     static std::unique_ptr<Prop> generate(const PConf::HashedData&, Log::Branch * = nullptr, bool forDefault = false);
 
-    const string name;
-    const string filename;
-    const string info;
+    const std::string name;
+    const std::string filename;
+    const std::string info;
 
     [[nodiscard]] const PropSettings& settings() const { return mSettings; }
     [[nodiscard]] const PropDataMap& dataMap() const { return mDataMap; }
@@ -430,7 +435,7 @@ struct VERSIONS_EXPORT Prop {
     void recalculateRequires();
 
 private:
-    Prop(string name, string filename, string info) : 
+    Prop(std::string name, std::string filename, std::string info) : 
         name{std::move(name)}, filename{std::move(filename)}, info{std::move(info)} {}
 
     /**
@@ -441,8 +446,8 @@ private:
      * will be pruned. (as well as their data, of course)
      */
     void rebuildMaps(
-        optional<std::unordered_set<string>> pruneList = nullopt,
-        Log::Branch * = nullptr
+        std::optional<std::unordered_set<std::string>> pruneList = std::nullopt,
+        logging::Branch * = nullptr
     );
 
     PropSettings mSettings;

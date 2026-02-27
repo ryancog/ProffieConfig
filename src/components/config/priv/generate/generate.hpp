@@ -1,13 +1,13 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2023-2026 Ryan Ogurek
  *
- * components/config/info.h
+ * components/config/private/generate/generate.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * the Free Software Foundation, either version 4 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -19,13 +19,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "utils/types.h"
+#include <filesystem>
+#include <optional>
+#include <string>
 
-#include "config_export.h"
+#include "config/config.hpp"
+#include "logging/branch.hpp"
 
-namespace Config {
+namespace fs = std::filesystem;
 
-CONFIG_EXPORT void setExecutableVersion(cstring version);
-CONFIG_EXPORT cstring version();
+namespace config::priv {
 
-} // namespace Config
+/**
+ * Output a config to header on disk
+ *
+ * @return Error message on failure. nullopt on success
+ */
+std::optional<std::string> generate(
+    const fs::path&, const Config&, logging::Branch *lBranch = nullptr
+);
+
+} // namespace config::priv
+

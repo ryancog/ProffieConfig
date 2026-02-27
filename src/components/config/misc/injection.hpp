@@ -1,9 +1,9 @@
-#include "info.hpp"
+#pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/config/info.cpp
+ * components/config/misc/injection.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/cpp.h>
+#include <string>
 
-#include "config/priv/data.hpp"
+#include "config_export.h"
 
-cstring config::priv::executableVersion{nullptr};
+namespace config {
 
-void config::setExecutableVersion(cstring version) { priv::executableVersion = version; }
+struct CONFIG_EXPORT Injection {
+    Injection(std::string name) : filename_{std::move(name)} {}
 
-cstring config::version() { return wxSTRINGIZE(BIN_VERSION); }
+    std::string filename_;
+};
+
+} // namespace config
 

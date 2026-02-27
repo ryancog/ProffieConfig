@@ -1,4 +1,4 @@
-#include "prop.h"
+#include "prop.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek

@@ -1,9 +1,9 @@
-#include "info.hpp"
+#pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/config/info.cpp
+ * components/config/presets/array.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/cpp.h>
+#include "config_export.h"
+#include "data/string.hpp"
+#include "data/vector.hpp"
 
-#include "config/priv/data.hpp"
+namespace config {
 
-cstring config::priv::executableVersion{nullptr};
+struct Config;
 
-void config::setExecutableVersion(cstring version) { priv::executableVersion = version; }
+namespace presets {
 
-cstring config::version() { return wxSTRINGIZE(BIN_VERSION); }
+struct CONFIG_EXPORT Array {
+    Array(Config&);
+
+    data::String name_;
+    data::Vector presets_;
+};
+
+} // namespace presets
+
+} // namespace config
 

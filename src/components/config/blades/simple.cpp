@@ -1,4 +1,4 @@
-#include "simple.h"
+#include "simple.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
@@ -19,11 +19,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "utils/string.h"
+#include "utils/string.hpp"
 
-Config::SimpleBlade::SimpleBlade() = default;
+using namespace config::blades;
 
-Config::SimpleBlade::Star::Star() {
+Simple::Simple() = default;
+
+Simple::Star::Star() {
     led.setUpdateHandler([this](uint32 id) {
         if (id != pcui::ChoiceData::eID_Selection) return;
 
@@ -55,3 +57,4 @@ Config::SimpleBlade::Star::Star() {
     resistance.setRange(0, 10000);
     resistance.setIncrement(50);
 }
+

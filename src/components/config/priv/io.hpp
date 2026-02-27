@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/config/private/io.h
+ * components/config/priv/io.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,37 +19,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <optional>
+#include <string>
+#include <string_view>
+
 #include <wx/translation.h>
 
-#include "utils/types.h"
+#include "config/config.hpp"
+#include "logging/logger.hpp"
+#include "utils/types.hpp"
 
-#include "../config.h"
-
-namespace Config {
-
-/**
- * Output a config to header on disk
- *
- * @return Error message on failure. nullopt on success
- */
-optional<string> output(const filepath&, const Config&, Log::Branch *lBranch = nullptr);
+namespace config::priv {
 
 /**
  * Parse a config from disk
  *
  * @return Error message on failure. nullopt on success.
  */
-optional<string> parse(const filepath&, Config&, Log::Branch *lBranch = nullptr);
+std::optional<std::string> parse(
+    const fs::path&, Config&, logging::Branch *lBranch = nullptr
+);
 
-constexpr string_view INJECTION_STR{"injection"};
-constexpr string_view PC_OPT_STR{"//PROFFIECONFIG "};
-constexpr string_view PC_OPT_NOCOMMENT_STR{"PROFFIECONFIG "};
+constexpr std::string_view INJECTION_STR{"injection"};
+constexpr std::string_view PC_OPT_STR{"//PROFFIECONFIG "};
+constexpr std::string_view PC_OPT_NOCOMMENT_STR{"PROFFIECONFIG "};
+constexpr std::string_view DEFINE_STR{"#define "};
+constexpr std::string_view INCLUDE_STR{"#include "};
+constexpr std::string_view POWER_PINS_STR{"PowerPINS<"};
 constexpr cstring MAX_LEDS_STR{"const unsigned int maxLedsPerStrip = "};
-constexpr string_view DEFINE_STR{"#define "};
-constexpr string_view INCLUDE_STR{"#include "};
-constexpr string_view POWER_PINS_STR{"PowerPINS<"};
-
-namespace Private {
 
 template<typename T>
     requires (
@@ -66,16 +63,16 @@ T maybeTranslate(T&& val) {
     return std::forward<T>(val);
 }
 
-} // namespace Private
-
 template<typename ...ARGS>
-string errorMessage(Log::Logger& logger, const wxString& msg, ARGS&&... args) {
+std::string errorMessage(
+    logging::Logger& logger, const wxString& msg, ARGS&&... args
+) {
     logger.error(wxString::Format(msg, args...).ToStdString());
     return wxString::Format(
         wxGetTranslation(msg),
-        Private::maybeTranslate(std::forward<ARGS>(args))...
+        maybeTranslate(std::forward<ARGS>(args))...
     ).ToStdString();
 }
 
-} // namespace Config
+} // namespace config::priv
 

@@ -187,7 +187,7 @@ void Config::Config::processCustomToPropOptions() {
         auto dataIter{dataMap.find(opt.define)};
         if (dataIter == dataMap.end()) continue;
 
-        auto valStr{static_cast<string>(opt.value)};
+        auto valStr{static_cast<string>(opt.value_)};
         switch (dataIter->second->dataType) {
             case Versions::PropDataType::TOGGLE:
                 {

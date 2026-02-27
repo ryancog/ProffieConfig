@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/versions/versions.h
+ * components/versions/versions.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,23 +20,26 @@
  */
 
 #include <utility>
+#include <optional>
+#include <string>
 
+#include "log/branch.h"
 #include "ui/controls/version.h"
-#include "utils/string.h"
-#include "utils/types.h"
+#include "utils/string.hpp"
+#include "utils/types.hpp"
 #include "utils/version.h"
 
 #include "prop.h"
 
 #include "versions_export.h"
 
-namespace Versions {
+namespace versions {
 
 constexpr cstring INFO_FILE_STR{"info.pconf"};
 constexpr cstring DATA_FILE_STR{"data.pconf"};
 constexpr cstring HEADER_FILE_STR{"header.h"};
 
-constexpr Utils::TrimRules PROP_NAME_RULES{
+constexpr utils::TrimRules PROP_NAME_RULES{
     .allowAlpha = true,
     .allowNum = true,
     .safeList = "_",
@@ -49,16 +52,16 @@ struct VERSIONS_EXPORT VersionedOS {
     VersionedOS();
     Utils::Version verNum;
     Utils::Version coreVersion;
-    string coreURL;
-    string coreBoardV1;
-    string coreBoardV2;
-    string coreBoardV3;
+    std::string coreURL;
+    std::string coreBoardV1;
+    std::string coreBoardV2;
+    std::string coreBoardV3;
 };
 
 struct VERSIONS_EXPORT VersionedProp {
-    VersionedProp(string name) : name{std::move(name)} {}
+    VersionedProp(std::string name) : name{std::move(name)} {}
 
-    const string name;
+    const std::string name;
     std::unique_ptr<const Prop> prop;
 
     bool addVersion();
@@ -74,7 +77,9 @@ private:
     SupportedVersionList mSupportedVersions;
 };
 
-VERSIONS_EXPORT optional<string> resetToDefault(bool purge, Log::Branch * = nullptr);
+VERSIONS_EXPORT std::optional<std::string> resetToDefault(
+    bool purge, Log::Branch * = nullptr
+);
 
 VERSIONS_EXPORT void loadLocal();
 
@@ -83,14 +88,15 @@ VERSIONS_EXPORT const VersionedOS *getVersionedOS(const Utils::Version&);
 /**
  * @return versions sorted from latest to oldest
  */
-VERSIONS_EXPORT const vector<VersionedOS>& getOSVersions();
+VERSIONS_EXPORT const std::vector<VersionedOS>& getOSVersions();
 
-VERSIONS_EXPORT const vector<std::unique_ptr<VersionedProp>>& getProps();
+VERSIONS_EXPORT const std::vector<std::unique_ptr<VersionedProp>>& getProps();
 
 /**
  * @return all registered props for the version
  * Must be copied into config (or elsewhere if you're crazy like that) for use.
  */
-VERSIONS_EXPORT vector<VersionedProp *> propsForVersion(const Utils::Version&);
+VERSIONS_EXPORT std::vector<VersionedProp *> propsForVersion(const Utils::Version&);
 
-} // namespace Versions
+} // namespace versions
+

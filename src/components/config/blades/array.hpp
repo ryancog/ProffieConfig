@@ -1,13 +1,13 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/config/private/info.h
+ * components/config/blades/array.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 4 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -19,11 +19,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "utils/types.h"
+#include "config/blades/bladeconfig.hpp"
 
-namespace Config {
+namespace config {
 
-extern cstring executableVersion;
+struct Config;
 
-}
+namespace blades {
+
+struct CONFIG_EXPORT Array {
+    Array(Config&);
+
+    data::Vector bladeConfigs_;
+
+    /**
+     * @return number of blades across all arrays
+     */
+    [[nodiscard]] uint32 numBlades() const;
+
+};
+
+} // namespace blades
+
+} // namespace config
 
