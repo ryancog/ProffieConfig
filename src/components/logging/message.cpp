@@ -1,7 +1,7 @@
-#include "message.h"
+#include "message.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * components/log/private/message.cpp
  *
@@ -19,41 +19,45 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "log/severity.h"
-#include "logger.h"
+#include "logging/severity.hpp"
+#include "logging/logger.hpp"
 
-namespace Log {
+using namespace logging;
 
-} // namespace Log
+Message::Message(std::string message, Severity severity, Logger *parent) :
+        message_(std::move(message)),
+        severity_(severity),
+        logTag_(parent->name_) {}
 
-Log::Message::Message(string message, Severity severity, Logger *parent) :
-        message(std::move(message)), severity(severity), logTag(parent->name) {}
+std::string Message::formatted() const {
+    std::string messagePrefix;
 
-string Log::Message::formatted() const {
-    string messagePrefix;
-    switch (severity) {
-        case Severity::VERB:
+    switch (severity_) {
+        using enum Severity;
+        case Verb:
             messagePrefix += "(VERB) ";
             break;
-        case Severity::DBUG:
+        case Dbug:
             messagePrefix += "(DBUG) ";
             break;
-        case Severity::INFO:
+        case Info:
             messagePrefix += "(INFO) ";
             break;
-        case Severity::WARN:
+        case Warn:
             messagePrefix += "(WARN) ";
             break;
-        case Severity::ERR:
+        case Err:
             messagePrefix += " (ERR) ";
             break;
-        case Severity::MAX:
+        case Max:
             abort();
     }
-    messagePrefix += {"[" + logTag + "] "};
-    auto tmpMessage{message};
+
+    messagePrefix += {"[" + logTag_ + "] "};
+    auto tmpMessage{message_};
     auto newlinePos{tmpMessage.find('\n')};
-    while (newlinePos != string::npos) {
+
+    while (newlinePos != std::string::npos) {
         tmpMessage.insert(newlinePos + 1, messagePrefix.size(), ' ');
         newlinePos = tmpMessage.find('\n', newlinePos + 1);
     }

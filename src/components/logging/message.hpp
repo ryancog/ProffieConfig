@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
- * components/log/message.h
+ * components/log/message.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,13 @@
  */
 
 #include <utility>
+#include <string>
 
-#include "utils/types.h"
+#include "logging/severity.hpp"
 
-#include "severity.h"
 #include "log_export.h"
 
-namespace Log {
+namespace logging {
 
 class Logger;
 class LOG_EXPORT Message {
@@ -41,18 +41,22 @@ public:
 
     [[nodiscard]] virtual Type getType() const { return Type::MESSAGE; }
 
-    [[nodiscard]] string formatted() const;
-    const string message;
-    const Severity severity;
-    const string logTag;
+    [[nodiscard]] std::string formatted() const;
+
+    const std::string message_;
+    const Severity severity_;
+    const std::string logTag_;
 
 protected:
     friend class Logger;
     friend class Context;
-    Message(string message, Severity severity, Logger *parent);
-    Message(string message, Severity severity, string logTag) :
-        message(std::move(message)), severity(severity), logTag(std::move(logTag)) {}
+
+    Message(std::string message, Severity severity, Logger *parent);
+    Message(std::string message, Severity severity, std::string logTag) :
+        message_(std::move(message)),
+        severity_(severity),
+        logTag_(std::move(logTag)) {}
 };
 
-} // namespace Log
+} // namespace logging
 

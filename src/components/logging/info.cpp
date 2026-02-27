@@ -1,9 +1,9 @@
-#pragma once
+#include "info.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/log/severity.h
+ * components/log/info.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Log {
+#include <wx/cpp.h>
 
-enum class Severity {
-    VERB,
-    DBUG,
-    INFO,
-    WARN,
-    ERR,
-    MAX,
-};
-
-} // namespace Log
+cstring logging::version() { return wxSTRINGIZE(BIN_VERSION); }
 

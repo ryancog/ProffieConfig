@@ -1,7 +1,7 @@
-#include "branch.h"
+#include "branch.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * components/log/branch.cpp
  *
@@ -19,33 +19,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "context.h"
-#include "logger.h"
+#include "logging/context.hpp"
+#include "logging/logger.hpp"
 
-namespace Log {
+using namespace logging;
 
-} // namespace Log
-
-Log::Branch::Branch(const string& message, Severity sev, Logger *logger) :
+Branch::Branch(const std::string& message, Severity sev, Logger *logger) :
     Message(message, sev, logger), mParent(logger) {}
 
-Log::Branch::~Branch() {
+Branch::~Branch() {
     for (const auto *logger : mLoggers) {
         delete logger;
     }
 }
 
-Log::Logger& Log::Branch::createLogger(string name) {
-    mListLock.lock();
-    mLoggers.push_back(new Logger{std::move(name), mParent->pContext});
-    mListLock.unlock();
+Logger& Branch::createLogger(std::string name) {
+    std::lock_guard scopeLock{mListLock};
+    mLoggers.push_back(new Logger{
+        std::move(name),
+        mParent->pContext
+    });
     return *mLoggers.back();
 }
 
-Log::Logger& Log::Branch::optCreateLogger(string name, Log::Branch *branch) {
-    return branch ? branch->createLogger(std::move(name)) : Context::getGlobal().createLogger(std::move(name));
+Logger& Branch::optCreateLogger(std::string name, Branch *branch) {
+    return branch
+        ? branch->createLogger(std::move(name))
+        : Context::getGlobal().createLogger(std::move(name));
 }
 
-vector<Log::Logger *> Log::Branch::getLoggers() const { return mLoggers; }
-
+std::vector<Logger *> Branch::getLoggers() const { return mLoggers; }
 

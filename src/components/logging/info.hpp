@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/log/info.h
+ * components/log/info.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "utils/types.h"
+#include "utils/types.hpp"
 
 #include "log_export.h"
 
-namespace Log {
+namespace logging {
 
 LOG_EXPORT cstring version();
 
-}
+} // namespace logging
+

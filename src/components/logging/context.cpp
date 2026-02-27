@@ -1,7 +1,7 @@
-#include "context.h"
+#include "context.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * components/log/context.cpp
  *
@@ -22,31 +22,40 @@
 #include <ctime>
 #include <memory>
 #include <utility>
+#include <string>
 
 #include <wx/app.h>
 
-#include "utils/paths.h"
-#include "utils/types.h"
+#include "logging/logger.hpp"
+#include "utils/paths.hpp"
+#include "utils/types.hpp"
 
-#include "logger.h"
+using namespace logging;
 
 namespace {
 
 constexpr cstring GLOBAL_TAG{"GLOBAL"};
-std::unique_ptr<Log::Context> globalContext;
+std::unique_ptr<Context> globalContext;
 
 } // namespace
 
-Log::Context::Context(string name, vector<std::ostream *> outStreams, bool outputToFile)
-    : pName(std::move(name)), mOutputs(std::move(outStreams)) {
+Context::Context(
+    std::string name,
+    std::vector<std::ostream *> outStreams,
+    bool outputToFile
+) : pName(std::move(name)), mOutputs(std::move(outStreams)) {
 
     if (outputToFile) {
-        const auto appName{wxApp::GetGUIInstance()->GetAppName().ToStdString()};
+        const auto appName{
+            wxApp::GetGUIInstance()->GetAppName().ToStdString()
+        };
+
         fs::create_directories(paths::logDir());
         if (pName == GLOBAL_TAG) {
             mRESOutFile.open(paths::logDir() / (appName + ".log"));
         } else {
-            mRESOutFile.open(paths::logDir() / (appName + "-" + pName + ".log"));
+            const auto filename{appName + "-" + pName + ".log"};
+            mRESOutFile.open(paths::logDir() / filename);
         }
         mOutputs.insert(mOutputs.begin(), &mRESOutFile);
 
@@ -59,40 +68,55 @@ Log::Context::Context(string name, vector<std::ostream *> outStreams, bool outpu
 
         mRESOutFile << appName.c_str() << " Log (" << wxSTRINGIZE(BIN_VERSION)
             << ") [Context: " << pName << "]\n";
-        mRESOutFile << "Started at " << std::ctime(&timeNow) << "\n" << std::flush;
+        mRESOutFile << "Started at " << std::ctime(&timeNow);
+        mRESOutFile << "\n" << std::flush;
     }
 }
 
-Log::Context::~Context() {
+Context::~Context() {
     for (const auto *logger : mLoggers) {
         delete logger;
     }
     mRESOutFile.close();
 }
 
-Log::Context &Log::Context::getGlobal() {
+Context &Context::getGlobal() {
     if (not globalContext) {
-        globalContext = std::make_unique<Log::Context>(GLOBAL_TAG);
+        globalContext = std::make_unique<Context>(GLOBAL_TAG);
     }
     return *globalContext;
 }
 
-void Log::Context::destroyGlobal() { globalContext.reset(); }
+void Context::destroyGlobal() { globalContext.reset(); }
 
-bool Log::Context::setGlobalOuput(vector<std::ostream *> outStreams, bool fileOutput) {
+bool Context::setGlobalOuput(
+    std::vector<std::ostream *> outStreams,
+    bool fileOutput
+) {
     if (globalContext) return false;
 
-    globalContext = std::make_unique<Log::Context>(GLOBAL_TAG, std::move(outStreams), fileOutput);
+    globalContext = std::make_unique<Context>(
+        GLOBAL_TAG,
+        std::move(outStreams),
+        fileOutput
+    );
     return true;
 }
 
-void Log::Context::setSeverity(Severity sev) { mCurrentSev = sev; }
+void Context::setSeverity(Severity sev) { mCurrentSev = sev; }
 
-void Log::Context::quickLog(Severity sev, string tag, string message) {
-    sendOut(sev, Message{std::move(message), sev, std::move(tag)}.formatted());
+void Context::quickLog(Severity sev, std::string tag, std::string message) {
+    sendOut(
+        sev,
+        Message{
+            std::move(message),
+            sev,
+            std::move(tag)
+        }.formatted()
+    );
 }
 
-void Log::Context::sendOut(Severity sev, const string &str) {
+void Context::sendOut(Severity sev, const std::string &str) {
     if (sev < mCurrentSev) return;
 
     mSendLock.lock();
@@ -100,11 +124,12 @@ void Log::Context::sendOut(Severity sev, const string &str) {
     mSendLock.unlock();
 }
 
-Log::Logger &Log::Context::createLogger(string name) {
+Logger &Context::createLogger(std::string name) {
     mListLock.lock();
     mLoggers.push_back(new Logger{std::move(name), this});
     mListLock.unlock();
     return *mLoggers.back();
 }
 
-vector<Log::Logger *> Log::Context::getLoggers() const { return mLoggers; }
+std::vector<Logger *> Context::getLoggers() const { return mLoggers; }
+

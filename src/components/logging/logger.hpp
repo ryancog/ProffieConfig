@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
- * components/log/logger.h
+ * components/log/logger.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,12 +20,16 @@
  */
 
 #include <mutex>
+#include <string>
+#include <vector>
 
-#include "message.h"
-#include "severity.h"
+#include "logging/message.hpp"
+#include "logging/severity.hpp"
+
 #include "log_export.h"
 
-namespace Log {
+namespace logging {
+
 class Branch;
 class Context;
 
@@ -36,37 +40,37 @@ public:
     Logger(const Logger&) = delete;
     ~Logger();
 
-    const string name;
+    const std::string name_;
 
-    [[nodiscard]] Branch *branch(Severity, const string& message);
-    [[nodiscard]] Branch *berror(const string& message);
-    [[nodiscard]] Branch *bwarn(const string& message);
-    [[nodiscard]] Branch *binfo(const string& message);
-    [[nodiscard]] Branch *bdebug(const string& message);
-    [[nodiscard]] Branch *bverbose(const string& message);
+    [[nodiscard]] Branch *branch(Severity, const std::string& message);
+    [[nodiscard]] Branch *berror(const std::string& message);
+    [[nodiscard]] Branch *bwarn(const std::string& message);
+    [[nodiscard]] Branch *binfo(const std::string& message);
+    [[nodiscard]] Branch *bdebug(const std::string& message);
+    [[nodiscard]] Branch *bverbose(const std::string& message);
 
-    void log(Severity, const string&);
-    void error(const string&);
-    void warn(const string&);
-    void info(const string&);
-    void debug(const string&);
-    void verbose(const string&);
+    void log(Severity, const std::string&);
+    void error(const std::string&);
+    void warn(const std::string&);
+    void info(const std::string&);
+    void debug(const std::string&);
+    void verbose(const std::string&);
 
     // Copy to avoid concurrent read/mod errors
-    [[nodiscard]] vector<Message *> getMessages() const;
+    [[nodiscard]] std::vector<Message *> getMessages() const;
 
 protected:
     friend class Branch;
     friend class Context;
 
-    Logger(string name, Context *context);
+    Logger(std::string name, Context *context);
     Context *const pContext;
 
 private:
 
-    vector<Message *> mMessages;
+    std::vector<Message *> mMessages;
     std::mutex mMessageLock;
 };
 
-} // namespace Log
+} // namespace logging
 

@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
- * components/log/branch.h
+ * components/log/branch.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,14 @@
  */
 
 #include <mutex>
+#include <string>
+#include <vector>
 
-#include "utils/types.h"
+#include "logging/message.hpp"
 
-#include "message.h"
 #include "log_export.h"
 
-namespace Log {
+namespace logging {
 
 class Logger;
 
@@ -44,21 +45,22 @@ public:
 
     // Create a logger with the provided branch, if valid, otherwise log
     // with the global context.
-    [[nodiscard]] static Logger& optCreateLogger(string name, Branch *);
-    [[nodiscard]] Logger& createLogger(string name);
+    [[nodiscard]] static Logger& optCreateLogger(std::string name, Branch *);
+    [[nodiscard]] Logger& createLogger(std::string name);
 
-    [[nodiscard]] vector<Logger *> getLoggers() const;
+    [[nodiscard]] std::vector<Logger *> getLoggers() const;
 
     [[nodiscard]] Type getType() const override { return Type::BRANCH; }
     
 private:
     friend class Logger;
-    Branch(const string& message, Severity, Logger *);
 
-    vector<Logger *> mLoggers;
+    Branch(const std::string& message, Severity, Logger *);
+
+    std::vector<Logger *> mLoggers;
     std::mutex mListLock;
     const Logger *mParent;
 };
 
-} // namespace Log
+} // namespace logging
 
