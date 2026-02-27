@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
- * components/utils/defer.h
+ * components/utils/defer.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,23 +19,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <functional>
+// See https://stackoverflow.com/a/42060129
+namespace defer_priv {
 
-#include <utils/types.h>
+struct Dummy {};
 
-struct Defer {
-    Defer(std::function<void(void)> func) : mOnScopeLeave(std::move(func)) {}
-    ~Defer() { if (mOnScopeLeave) mOnScopeLeave(); }
-
-    Defer(const Defer&) = delete;
-    Defer(Defer&&) = delete;
-    Defer& operator=(const Defer&) = delete;
-    Defer& operator=(Defer&&) = delete;
-
-    void diffuse() { mOnScopeLeave = nullptr; }
-
-private:
-    std::function<void(void)> mOnScopeLeave;
+template <typename F>
+struct Handler {
+    ~Handler() { f_(); }
+    F f_;
 };
 
+} // namespace defer_priv
+
+template <typename F>
+defer_priv::Handler<F> operator*(defer_priv::Dummy, F f) { return {f}; }
+
+#define DEFER_DECL_2(LINE) zzDefer##LINE
+#define DEFER_DECL(LINE) DEFER_DECL_2(LINE)
+// NOLINTNEXTLINE(readability-identifier-naming)
+#define defer auto DEFER_DECL(__LINE__) = defer_priv::Dummy{} * [&]()
 
