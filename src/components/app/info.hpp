@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/app/critical_dialog.h
+ * components/app/info.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +19,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/dialog.h>
+#include "utils/types.hpp"
 
 #include "app_export.h"
 
 namespace app {
 
-class APP_EXPORT CriticalDialog : public wxDialog {
-public:
-    CriticalDialog(const wxString& error, const wxString& detail = {});
-};
+APP_EXPORT cstring version();
 
 } // namespace app
 

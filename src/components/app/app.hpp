@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024-2026 Ryan Ogurek
  *
- * components/app/app.h
+ * components/app/app.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 #include <wx/app.h>
 #include <wx/menu.h>
 
-#include "utils/types.h"
+#include "utils/types.hpp"
 
 #include "app_export.h"
 
@@ -31,7 +31,7 @@ namespace app {
 /**
  * Setup one-instance-only lock
  */
-[[nodiscard]] APP_EXPORT bool setupExclusion(const string& lockName);
+[[nodiscard]] APP_EXPORT bool setupExclusion(const std::string& lockName);
 
 /**
  * Initialize an application

@@ -1,4 +1,4 @@
-#include "info.h"
+#include "info.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek

@@ -1,4 +1,4 @@
-#include "critical_dialog.h"
+#include "critical_dialog.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
@@ -24,8 +24,8 @@
 #include <wx/sizer.h>
 #include <wx/textctrl.h>
 
-#include "app/app.h"
-#include "utils/paths.h"
+#include "app/app.hpp"
+#include "utils/paths.hpp"
 
 namespace {
 

@@ -1,4 +1,4 @@
-#include "app.h"
+#include "app.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
@@ -22,6 +22,7 @@
 #include <csignal>
 #include <cstdio>
 #include <ranges>
+#include <span>
 #include <string>
 
 #if defined(__linux__) or defined(__APPLE__)
@@ -61,10 +62,10 @@
 #include <wx/log.h>
 #include <wx/stdpaths.h>
 
-#include "app/critical_dialog.h"
-#include "log/context.h"
-#include "log/logger.h"
-#include "utils/demangle.h"
+#include "app/critical_dialog.hpp"
+#include "logging/context.hpp"
+#include "logging/logger.hpp"
+#include "utils/demangle.hpp"
 
 namespace {
 
@@ -136,7 +137,7 @@ private:
 };
 
 void crashHandler(const wxString& error, const wxString& detail) {
-    auto& logger{Log::Context::getGlobal().createLogger("Crash Handler")};
+    auto& logger{logging::Context::getGlobal().createLogger("Crash Handler")};
     logger.error(error.ToStdString());
     if (not detail.IsEmpty()) logger.error(detail.ToStdString());
 
@@ -237,7 +238,7 @@ void fillSymbolInfo(void *frame, SymbolInfo& info) {
 #endif
 }
 
-wxString generateBacktrace(void *pc, span<void *> frames) {
+wxString generateBacktrace(void *pc, std::span<void *> frames) {
     SymbolInfo info;
     wxString framesStr;
     wxString droppedFramesStr;
@@ -273,7 +274,7 @@ wxString generateBacktrace(void *pc, span<void *> frames) {
         if (not str.IsEmpty()) str += '\n';
         str += addrToStr(frame);
         str += ": ";
-        str += info.name() ? Utils::demangle(info.name()) : "???";
+        str += info.name() ? utils::demangle(info.name()) : "???";
         str += '+';
         const auto diff{
             reinterpret_cast<ptrdiff_t>(frame) -
@@ -387,7 +388,7 @@ WINAPI LONG exceptionFilter(LPEXCEPTION_POINTERS exception) {
 
 } // namespace
 
-bool app::setupExclusion(const string& lockName) {
+bool app::setupExclusion(const std::string& lockName) {
     singleInstance.Create(wxString{lockName} + '-' + wxGetUserId());
     if (singleInstance.IsAnotherRunning()) {
         auto res{showMessage(
@@ -403,7 +404,7 @@ bool app::setupExclusion(const string& lockName) {
 }
 
 bool app::init() {
-    auto& logger{Log::Context::getGlobal().createLogger("app::init()")};
+    auto& logger{logging::Context::getGlobal().createLogger("app::init()")};
 
 #   ifdef _WIN32
     // Must be done before setting control event handlers
