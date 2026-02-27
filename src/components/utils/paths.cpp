@@ -1,7 +1,7 @@
-#include "paths.h"
+#include "paths.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024-2025 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * components/utils/paths.cpp
  *
@@ -19,18 +19,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string>
+
 #include <system_error>
 #include <wx/stdpaths.h>
 
 #if defined(_WIN32)
+#include <array>
 #include <shlobj.h>
 #elif defined(__linux__) or defined(__APPLE__)
 #include <pwd.h>
 #include <unistd.h>
 #endif
-
-#include "utils/types.h"
-#include "utils/version.h"
 
 std::error_code paths::init() {
     std::error_code ec;
@@ -43,11 +43,11 @@ std::error_code paths::init() {
     return ec;
 }
 
-filepath paths::user() {
+fs::path paths::user() {
 #   ifdef _WIN32
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_Profile, 0, nullptr, &rawStr);
-    array<wchar_t, MAX_PATH> shortPath;
+    std::array<wchar_t, MAX_PATH> shortPath;
     GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
     CoTaskMemFree(rawStr);
     return shortPath.data();
@@ -56,26 +56,26 @@ filepath paths::user() {
 #   endif
 }
 
-filepath paths::approot() {
+fs::path paths::approot() {
 #   ifdef APP_DEPLOY_PATH 
     return APP_DEPLOY_PATH;
 #   else
 #   ifdef _WIN32
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &rawStr);
-    array<wchar_t, MAX_PATH> shortPath;
+    std::array<wchar_t, MAX_PATH> shortPath;
     GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
     CoTaskMemFree(rawStr);
-    return filepath{shortPath.data()} /  "ProffieConfig";
+    return fs::path{shortPath.data()} /  "ProffieConfig";
 #   elif defined(__APPLE__)
-    return filepath(getpwuid(getuid())->pw_dir) / "Library" / "Application Support" / "ProffieConfig";
+    return fs::path(getpwuid(getuid())->pw_dir) / "Library" / "Application Support" / "ProffieConfig";
 #   elif defined(__linux__)
-    return filepath(getpwuid(getuid())->pw_dir) / ".local" / "share" / "ProffieConfig";
+    return fs::path(getpwuid(getuid())->pw_dir) / ".local" / "share" / "ProffieConfig";
 #   endif
 #   endif
 }
 
-filepath paths::executable(Executable exec) {
+fs::path paths::executable(Executable exec) {
     switch (exec) {
         case Executable::Current:
             return wxStandardPaths::Get().GetExecutablePath().ToStdWstring();
@@ -86,17 +86,17 @@ filepath paths::executable(Executable exec) {
                 auto rawPathRes{SHGetKnownFolderPath(FOLDERID_UserProgramFiles, KF_FLAG_CREATE, nullptr, &rawStr)};
                 assert(rawPathRes == S_OK);
 
-                array<wchar_t, MAX_PATH> shortPath;
+                std::array<wchar_t, MAX_PATH> shortPath;
                 auto shortPathRes{GetShortPathNameW(rawStr, shortPath.data(), shortPath.size())};
                 assert(shortPathRes != 0);
 
                 CoTaskMemFree(rawStr);
-                return filepath{shortPath.data()} / "ProffieConfig.exe";
+                return fs::path{shortPath.data()} / "ProffieConfig.exe";
             }
 #           elif defined(__linux__)
-            return filepath(getpwuid(getuid())->pw_dir) / ".proffieconfig" / "ProffieConfig";
+            return fs::path(getpwuid(getuid())->pw_dir) / ".proffieconfig" / "ProffieConfig";
 #           elif defined(__APPLE__)
-            return filepath(getpwuid(getuid())->pw_dir) / "Applications" / "ProffieConfig.app" / "Contents" / "MacOS" / "ProffieConfig";
+            return fs::path(getpwuid(getuid())->pw_dir) / "Applications" / "ProffieConfig.app" / "Contents" / "MacOS" / "ProffieConfig";
 #           endif
         case Executable::Main:
 #           ifdef _WIN32
@@ -110,9 +110,9 @@ filepath paths::executable(Executable exec) {
     return {};
 }
 
-filepath paths::binaryDir() { return approot() / "bin"; }
+fs::path paths::binaryDir() { return approot() / "bin"; }
 
-filepath paths::libraryDir() {
+fs::path paths::libraryDir() {
 #   ifdef _WIN32
     return binaryDir();
 #   elif defined(__linux__) or defined(__APPLE__)
@@ -120,7 +120,7 @@ filepath paths::libraryDir() {
 #   endif
 }
 
-filepath paths::componentDir() {
+fs::path paths::componentDir() {
 #   ifdef _WIN32
     return binaryDir();
 #   elif defined(__linux__) or defined(__APPLE__)
@@ -128,31 +128,31 @@ filepath paths::componentDir() {
 #   endif
 }
 
-filepath paths::resourceDir() { return approot() / "resources"; }
+fs::path paths::resourceDir() { return approot() / "resources"; }
 
-filepath paths::logDir() {
+fs::path paths::logDir() {
 #   if defined(_WIN32)
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &rawStr);
-    array<wchar_t, MAX_PATH> shortPath;
+    std::array<wchar_t, MAX_PATH> shortPath;
     GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
     CoTaskMemFree(rawStr);
-    return filepath{shortPath.data()} / "ProffieConfig";
+    return fs::path{shortPath.data()} / "ProffieConfig";
 #   elif defined(__linux__)
     return dataDir() / "logs";
 #   elif defined(__APPLE__)
-    return string{getpwuid(getuid())->pw_dir} + "/Library/Logs/ProffieConfig";
+    return std::string{getpwuid(getuid())->pw_dir} + "/Library/Logs/ProffieConfig";
 #   endif
 }
 
-filepath paths::dataDir() {
+fs::path paths::dataDir() {
 #   ifdef _WIN32
     PWSTR rawStr{};
     SHGetKnownFolderPath(FOLDERID_RoamingAppData, KF_FLAG_CREATE, nullptr, &rawStr);
     array<wchar_t, MAX_PATH> shortPath;
     GetShortPathNameW(rawStr, shortPath.data(), shortPath.size());
     CoTaskMemFree(rawStr);
-    return filepath{shortPath.data()} / "ProffieConfig";
+    return fs::path{shortPath.data()} / "ProffieConfig";
 #   elif defined(__APPLE__)
     return approot();
 #   elif defined(__linux__)
@@ -160,32 +160,27 @@ filepath paths::dataDir() {
 #   endif
 }
 
-filepath paths::configDir() { return paths::dataDir() / "configs"; }
+fs::path paths::configDir() { return paths::dataDir() / "configs"; }
 
-filepath paths::injectionDir() { return paths::dataDir() / "injections"; }
+fs::path paths::injectionDir() { return paths::dataDir() / "injections"; }
 
-filepath paths::versionDir() { return paths::dataDir() / "versions"; }
+fs::path paths::versionDir() { return paths::dataDir() / "versions"; }
 
-filepath paths::propDir() { return paths::versionDir() / "props"; }
+fs::path paths::propDir() { return paths::versionDir() / "props"; }
 
-filepath paths::osDir() {
+fs::path paths::osDir() {
     return paths::versionDir() / "os";
 }
 
-filepath paths::os(const Utils::Version& version) {
-    return paths::osDir() / static_cast<string>(version) / "ProffieOS";
-}
+fs::path paths::stateFile() { return paths::dataDir() / ".state.pconf"; }
 
-filepath paths::stateFile() { return paths::dataDir() / ".state.pconf"; }
+std::string paths::website() { return "https://proffieconfig.kafrenetrading.com"; }
 
-
-string paths::website() { return "https://proffieconfig.kafrenetrading.com"; }
-
-string paths::remoteAssets() {
+std::string paths::remoteAssets() {
     return website() + "/assets/appsupport";
 }
 
-string paths::remoteUpdateAssets() { 
+std::string paths::remoteUpdateAssets() { 
     return remoteAssets() + "/update";
 }
 
