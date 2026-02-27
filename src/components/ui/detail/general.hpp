@@ -20,17 +20,18 @@
  */
 
 #include <memory>
+#include <vector>
 
 #include <wx/gdicmn.h>
 
-#include "utils/types.h"
+#include "utils/types.hpp"
 
 #include "ui_export.h"
 
 namespace pcui::detail {
 
 template <typename T>
-struct UI_EXPORT DynamicList : vector<std::unique_ptr<T>> {
+struct UI_EXPORT DynamicList : std::vector<std::unique_ptr<T>> {
     template <typename ...Args>
     DynamicList(Args&&... args) {
         this->reserve(sizeof...(args));
