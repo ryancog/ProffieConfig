@@ -1,7 +1,7 @@
-#include "version.h"
+#include "version.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/utils/version.cpp
  *
@@ -20,34 +20,33 @@
  */
 
 #include <charconv>
+#include <string>
 
-#include "utils/string.h"
+#include "utils/string.hpp"
 
-Utils::Version::Version(string_view str) {
+utils::Version::Version(std::string_view str) {
     if (str.empty()) {
-        err = Err::STR_EMPTY;
+        err_ = Err::Str_Empty;
         return;
     }
 
-    string_view convStr{str};
+    std::string_view convStr{str};
     const cstring end{str.end()};
 
-    auto parseNum{[this, &convStr, &end]<typename T>(T& val) {
+    auto parseNum{[this, &convStr, &end](VerNum& num) {
         auto res{std::from_chars(
             convStr.data(),
             convStr.data() + convStr.length(),
-            val
+            num.val_
         )};
 
-        // Yeah this is ugly to check if there was an error...
-        // par for the c++stdlib course
         if (res.ec != std::errc{}) {
             if (res.ec == std::errc::result_out_of_range) {
-                err = Err::NUM_RANGE;
+                err_ = Err::Num_Range;
             } else if (res.ec == std::errc::invalid_argument) {
-                err = Err::STR_INVALID;
+                err_ = Err::Str_Invalid;
             } else {
-                err = Err::UNKNOWN;
+                err_ = Err::Unknown;
             }
             return;
         }
@@ -58,23 +57,23 @@ Utils::Version::Version(string_view str) {
         // Jump over '-'
         convStr.remove_prefix(1);
 
-        tag = convStr;
+        tag_.val_ = convStr;
         uint32 numTrimmed{};
         trim(
-            tag,
+            tag_.val_,
             {.allowAlpha=true, .allowNum=true},
             &numTrimmed
         );
 
         if (numTrimmed) {
-            err = Err::STR_INVALID;
+            err_ = Err::Str_Invalid;
             return;
         }
     }};
 
 
-    parseNum(major);
-    if (err != Err::NONE or convStr.data() == end) return;
+    parseNum(major_);
+    if (err_ != Err::None or convStr.data() == end) return;
 
     if (convStr[0] == '.') {
         // Jump over '.'
@@ -83,12 +82,12 @@ Utils::Version::Version(string_view str) {
         parseLabel();
         return;
     } else {
-        err = Err::STR_INVALID;
+        err_ = Err::Str_Invalid;
         return;
     }
 
-    parseNum(minor);
-    if (err != Err::NONE or convStr.data() == end) return;
+    parseNum(minor_);
+    if (err_ != Err::None or convStr.data() == end) return;
 
     if (convStr[0] == '.') {
         // Jump over '.'
@@ -97,50 +96,80 @@ Utils::Version::Version(string_view str) {
         parseLabel();
         return;
     } else {
-        err = Err::STR_INVALID;
+        err_ = Err::Str_Invalid;
         return;
     }
 
-    parseNum(bugfix);
-    if (err != Err::NONE or convStr.data() == end) return;
+    parseNum(bugfix_);
+    if (err_ != Err::None or convStr.data() == end) return;
     if (convStr[0] != '-') {
-        err = Err::STR_INVALID;
+        err_ = Err::Str_Invalid;
         return;
     }
 
     parseLabel();
 }
 
-Utils::Version::operator string() const {
-    switch (err) {
-        case Err::INVALID:
-            return "INVALID";
-        case Err::NUM_RANGE:
-            return "Invalid range";
-        case Err::STR_INVALID:
-            return "Invalid input";
-        case Err::STR_EMPTY:
-            return "Empty input";
-        case Err::UNKNOWN:
+utils::Version::operator std::string() const {
+    switch (err_) {
+        using enum Err;
+        case Invalid:
+            return "Invalid";
+        case Num_Range:
+            return "Invalid Range";
+        case Str_Invalid:
+            return "Invalid Input";
+        case Str_Empty:
+            return "Empty Input";
+        case Unknown:
             return "Unknown (Parse) Error";
-        case Err::NONE: break;
+        case None: break;
     }
 
-    auto ret{std::to_string(major)};
-    if (minor != NULL_REV) ret += '.' + std::to_string(minor);
-    if (bugfix != NULL_REV) ret += '.' + std::to_string(bugfix);
-    if (not tag.empty()) ret += '-' + tag;
+    std::string ret;
+    const auto outNum{[&ret] (const VerNum& num) {
+
+    }};
+
+    if (major_.mode_ == CompMode::Permissive) {
+        ret += 'x';
+    } else {
+        ret += std::to_string(major_.val_);
+    }
+
+    if (minor_.mode_ == CompMode::Permissive) {
+        ret += ".x";
+    } else if (
+        minor_.val_ != 0 or
+        bugfix_.val_ != 0 or
+        bugfix_.mode_ != CompMode::Exact
+    ) {
+        ret += '.';
+        ret += std::to_string(minor_.val_);
+    }
+
+    if (bugfix_.mode_ == CompMode::Permissive) {
+        ret += ".x";
+    } else if (bugfix_.val_ != 0) {
+        ret += '.';
+        ret += std::to_string(bugfix_.val_);
+    }
+
+    if (tag_.mode_ == CompMode::Permissive) {
+        ret += "-*";
+    } else if (not tag_.val_.empty()) {
+        ret += '-';
+        ret += tag_.val_;
+    }
+
     return ret;
 }
 
-Utils::Version::operator bool() const { return err == Err::NONE; }
+utils::Version::operator bool() const { return err_ == Err::None; }
 
-const Utils::Version& Utils::Version::invalidObject() { 
-    static const auto invalidObject{[]() {
-        Version ret;
-        ret.err = INVALID;
-        return ret;
-    }()};
-    return invalidObject; 
+utils::Version utils::Version::invalid() {
+    Version ret;
+    ret.err_ = Err::Invalid;
+    return ret;
 }
 
