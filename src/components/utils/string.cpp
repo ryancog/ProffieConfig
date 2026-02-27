@@ -1,9 +1,9 @@
-#include "string.h"
+#include "string.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/utils/string.h
+ * components/utils/string.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,24 +25,26 @@
 #include <sstream>
 #include <stack>
 
-#include "utils/types.h"
+#include "utils/types.hpp"
 
-void Utils::trimWhitespace(string& str) {
+void utils::trimWhitespace(std::string& str) {
     // TODO: Does ranges actually work here? Does it break in unforeseen ways?
     str.erase(std::remove_if(str.begin(), str.end(), [](char chr) {
         return std::isspace(chr);
     }), str.end());
 }
 
-void Utils::trimWhitespaceOutsideString(string& str) {
+void utils::trimWhitespaceOutsideString(std::string& str) {
     bool inDoubleQuote{false};
     bool inSingleQuote{false};
     // TODO: Optimize
     for (auto idx{0}; idx != str.length(); ++idx) {
         const auto chr{str[idx]};
-        if (chr == '"' and not inSingleQuote) inDoubleQuote = not inDoubleQuote;
-        else if (chr == '\'' and not inDoubleQuote) inSingleQuote = not inSingleQuote;
-        else if (std::isspace(chr)) {
+        if (chr == '"' and not inSingleQuote) {
+            inDoubleQuote = not inDoubleQuote;
+        } else if (chr == '\'' and not inDoubleQuote) {
+            inSingleQuote = not inSingleQuote;
+        } else if (std::isspace(chr)) {
             if (chr != ' ' or not (inSingleQuote or inDoubleQuote)) {
                 str.erase(idx, 1);
                 --idx;
@@ -52,7 +54,7 @@ void Utils::trimWhitespaceOutsideString(string& str) {
     }
 }
 
-void Utils::trimSurroundingWhitespace(string& str) {
+void utils::trimSurroundingWhitespace(std::string& str) {
     str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](char chr) {
         return not std::isspace(chr);
     }));
@@ -61,8 +63,8 @@ void Utils::trimSurroundingWhitespace(string& str) {
     }).base(), str.end());
 }
 
-void Utils::trimCppName(
-    string& str,
+void utils::trimCppName(
+    std::string& str,
     bool allowNum,
     uint32 *numTrimmed,
     uint32 countTrimIndex
@@ -108,8 +110,8 @@ void Utils::trimCppName(
     }
 }
 
-void Utils::trim(
-    string& str,
+void utils::trim(
+    std::string& str,
     TrimRules rules,
     uint32 *numTrimmed,
     uint32 countTrimIndex
@@ -122,7 +124,7 @@ void Utils::trim(
         if (
                 not (rules.allowAlpha and std::isalpha(*iter)) and
                 not (rules.allowNum or std::isdigit(*iter)) and
-                rules.safeList.find(*iter) == string::npos
+                rules.safeList.find(*iter) == std::string::npos
            ) {
             if (numTrimmed and countTrimIndex > idx) ++*numTrimmed;
             iter = str.erase(iter);
@@ -134,8 +136,8 @@ void Utils::trim(
     }
 }
 
-void Utils::trimForNumeric(
-    string& str,
+void utils::trimForNumeric(
+    std::string& str,
     uint32 *numTrimmed,
     uint32 countTrimIndex
 ) {
@@ -168,17 +170,17 @@ void Utils::trimForNumeric(
     }
 }
 
-optional<string> Utils::extractComment(std::istream& stream) {
-    enum {
-        NONE,
-        LINE_COMMENT,
-        LONG_COMMENT,
-    } reading{NONE};
+std::optional<std::string> utils::extractComment(std::istream& stream) {
+    enum class Reading {
+        None,
+        Line_Comment,
+        Long_Comment,
+    } reading{Reading::None};
 
     const auto startPos{stream.tellg()};
 
-    optional<string> ret;
-    string comment;
+    std::optional<std::string> ret;
+    std::string comment;
     while (stream.good()) {
         const auto chr{stream.get()};
 
@@ -189,14 +191,14 @@ optional<string> Utils::extractComment(std::istream& stream) {
                 chr != '\t'
            ) continue;
 
-        if (reading == NONE) {
+        if (reading == Reading::None) {
             if (chr == '/') {
                 if (stream.peek() == '*') {
-                    reading = LONG_COMMENT;
+                    reading = Reading::Long_Comment;
                     comment.clear();
                     stream.get();
                 } else if (stream.peek() == '/') {
-                    reading = LINE_COMMENT;
+                    reading = Reading::Line_Comment;
                     comment.clear();
                     stream.get();
                 }
@@ -204,7 +206,7 @@ optional<string> Utils::extractComment(std::istream& stream) {
                 stream.unget();
                 break;
             }
-        } else if (reading == LINE_COMMENT) {
+        } else if (reading == Reading::Line_Comment) {
             if (chr == '/' and comment.empty()) continue;
             if (chr == '\n') {
                 if (not ret) ret.emplace();
@@ -212,11 +214,11 @@ optional<string> Utils::extractComment(std::istream& stream) {
                 trimSurroundingWhitespace(comment);
                 *ret += comment;
                 comment.clear();
-                reading = NONE;
+                reading = Reading::None;
                 continue;
             }
             comment += static_cast<char>(chr);
-        } else if (reading == LONG_COMMENT) {
+        } else if (reading == Reading::Long_Comment) {
             bool end{chr == '*' and stream.peek() == '/'};
             if (end or chr == '\n') {
                 if (not ret) ret.emplace();
@@ -230,7 +232,7 @@ optional<string> Utils::extractComment(std::istream& stream) {
                 comment.clear();
 
                 if (end) {
-                    reading = NONE;
+                    reading = Reading::None;
                     stream.get();
                 }
                 continue;
@@ -243,21 +245,21 @@ optional<string> Utils::extractComment(std::istream& stream) {
     return ret;
 }
 
-bool Utils::skipComment(std::istream& stream, string *str) {
-    enum {
-        NONE,
-        LINE_COMMENT,
-        LONG_COMMENT,
-    } reading{NONE};
+bool utils::skipComment(std::istream& stream, std::string *str) {
+    enum class Reading {
+        None,
+        Line_Comment,
+        Long_Comment,
+    } reading{Reading::None};
 
     bool skipped{false};
     while (stream.good()) {
         const auto chr{stream.get()};
 
-        if (reading == NONE) {
+        if (reading == Reading::None) {
             if (chr == '/') {
                 if (stream.peek() == '*') {
-                    reading = LONG_COMMENT;
+                    reading = Reading::Long_Comment;
                     if (str) {
                         skipped = true;
                         *str += static_cast<char>(chr);
@@ -266,7 +268,7 @@ bool Utils::skipComment(std::istream& stream, string *str) {
                     continue;
                 }
                 if (stream.peek() == '/') {
-                    reading = LINE_COMMENT;
+                    reading = Reading::Line_Comment;
                     if (str) {
                         skipped = true;
                         *str += static_cast<char>(chr);
@@ -278,13 +280,13 @@ bool Utils::skipComment(std::istream& stream, string *str) {
                 stream.unget();
                 break;
             }
-        } else if (reading == LINE_COMMENT) {
+        } else if (reading == Reading::Line_Comment) {
             if (chr == '\n') {
-                reading = NONE;
+                reading = Reading::None;
             }
-        } else if (reading == LONG_COMMENT) {
+        } else if (reading == Reading::Long_Comment) {
             if (chr == '*' and stream.peek() == '/') {
-                reading = NONE;
+                reading = Reading::None;
                 if (str) {
                     skipped = true;
                     *str += static_cast<char>(chr);
@@ -303,21 +305,24 @@ bool Utils::skipComment(std::istream& stream, string *str) {
     return skipped;
 }
 
-vector<string> Utils::createEntries(const std::vector<wxString>& vec) {
-    vector<string> entries;
-    entries.reserve(vec.size());
-    for (const auto& entry : vec) {
+std::vector<std::string> utils::createEntries(
+    const std::vector<wxString>& vec
+) {
+    std::vector<std::string> entries;
+    entries.reserve(vec.size()); for (const auto& entry : vec) {
         entries.emplace_back(entry.ToStdString());
     }
     return entries;
 }
 
 
-vector<string> Utils::createEntries(const std::initializer_list<wxString>& list) {
-    return Utils::createEntries(static_cast<std::vector<wxString>>(list));
+std::vector<std::string> utils::createEntries(
+    const std::initializer_list<wxString>& list
+) {
+    return utils::createEntries(static_cast<std::vector<wxString>>(list));
 }
 
-optional<float64> Utils::doStringMath(const string& str) {
+std::optional<float64> utils::doStringMath(const std::string& str) {
     std::istringstream ss{str};
 
     enum class Operator {
@@ -332,17 +337,17 @@ optional<float64> Utils::doStringMath(const string& str) {
         PAREN_R,
     };
     struct OpPair {
-        float64 val;
-        optional<Operator> op;
+        float64 val_;
+        std::optional<Operator> op_;
     };
-    std::stack<vector<OpPair>> stack;
+    std::stack<std::vector<OpPair>> stack;
 
-    const auto solveLayer{[](vector<OpPair>& layer) -> bool {
+    const auto solveLayer{[](std::vector<OpPair>& layer) -> bool {
         // Can't solve without inputs
         if (layer.empty()) return false;
         // There can't be an operator at the back, e.g. 7 - (6 / 2 +), the plus
         // is nonsense.
-        if (layer.back().op) return false;
+        if (layer.back().op_) return false;
 
         const auto opPrio{[](Operator op) -> int32 {
             switch (op) {
@@ -383,8 +388,8 @@ optional<float64> Utils::doStringMath(const string& str) {
             int32 highestPrio{-1};
             auto highestIter{layer.end()};
             
-            for (auto iter{layer.begin()}; iter->op; ++iter) {
-                auto prio{opPrio(*iter->op)};
+            for (auto iter{layer.begin()}; iter->op_; ++iter) {
+                auto prio{opPrio(*iter->op_)};
                 if (prio > highestPrio) {
                     highestPrio = prio;
                     highestIter = iter;
@@ -397,13 +402,15 @@ optional<float64> Utils::doStringMath(const string& str) {
                 nextIter != layer.end()
             );
 
-            auto val{apply(highestIter->val, *highestIter->op, nextIter->val)};
-            nextIter->val = val;
+            auto val{apply(
+                highestIter->val_, *highestIter->op_, nextIter->val_
+            )};
+            nextIter->val_ = val;
 
             layer.erase(highestIter);
         }
 
-        assert(not layer.back().op);
+        assert(not layer.back().op_);
         return true;
     }};
 
@@ -416,15 +423,15 @@ optional<float64> Utils::doStringMath(const string& str) {
             case '/': return DIV;
             case '(': return PAREN_L;
             case ')': return PAREN_R;
-            default: return nullopt;
+            default: return std::nullopt;
         }
     }};
 
-    const auto parseNum{[](string& numStr) -> std::optional<float64> {
+    const auto parseNum{[](std::string& numStr) -> std::optional<float64> {
         char *end{nullptr};
         auto num{strtod(numStr.c_str(), &end)};
-        if (num == HUGE_VAL) return nullopt;
-        if (end != &numStr[numStr.size()]) return nullopt;
+        if (num == HUGE_VAL) return std::nullopt;
+        if (end != &numStr[numStr.size()]) return std::nullopt;
 
         numStr.clear();
         return num;
@@ -435,11 +442,11 @@ optional<float64> Utils::doStringMath(const string& str) {
 
         if (not layer.empty()) {
             // Another number cannot be pushed without an operator.
-            if (not layer.back().op) return false;
+            if (not layer.back().op_) return false;
         }
 
         auto& opPair{layer.emplace_back()};
-        opPair.val = num;
+        opPair.val_ = num;
 
         return true;
     }};
@@ -448,7 +455,7 @@ optional<float64> Utils::doStringMath(const string& str) {
         auto& layer{stack.top()};
 
         if (op == Operator::PAREN_L) {
-            if (not stack.top().empty() and not stack.top().back().op) {
+            if (not stack.top().empty() and not stack.top().back().op_) {
                 // If this isn't the start, or there's no operator preceeding
                 // the paren, then we have a situation like `5 (smth)` which,
                 // while valid math notation, is not valid C++.
@@ -468,17 +475,17 @@ optional<float64> Utils::doStringMath(const string& str) {
 
             if (not solveLayer(stack.top())) return false;
 
-            auto val{stack.top().back().val};
+            auto val{stack.top().back().val_};
             stack.pop();
 
             auto opPair{stack.top().emplace_back()};
-            opPair.val = val;
+            opPair.val_ = val;
 
             return true;
         }
 
         // If there's nowhere to place the op.
-        if (layer.empty() or layer.back().op) {
+        if (layer.empty() or layer.back().op_) {
             switch (op) {
                 using enum Operator;
                 case ADD:
@@ -488,8 +495,8 @@ optional<float64> Utils::doStringMath(const string& str) {
                 {
                     // Push new pair for high-priority negation op.
                     auto& opPair{layer.emplace_back()};
-                    opPair.val = 0;
-                    opPair.op = NEG;
+                    opPair.val_ = 0;
+                    opPair.op_ = NEG;
                     return true;
                 }
                 case MUL:
@@ -507,21 +514,21 @@ optional<float64> Utils::doStringMath(const string& str) {
             __builtin_unreachable();
         }
 
-        layer.back().op = op;
+        layer.back().op_ = op;
         return true;
     }};
 
     // Create base operations layer;
     stack.emplace();
 
-    string buf;
+    std::string buf;
     int chr{};
     while (chr = ss.get(), not ss.eof()) {
         if (std::isspace(chr)) {
             if (buf.empty()) continue;
 
             auto num{parseNum(buf)};
-            if (not num or not pushNum(*num)) return nullopt;
+            if (not num or not pushNum(*num)) return std::nullopt;
 
             continue;
         }
@@ -534,26 +541,26 @@ optional<float64> Utils::doStringMath(const string& str) {
             // Make sure number is parsed and pushed before processing op.
             if (not buf.empty()) {
                 auto num{parseNum(buf)};
-                if (not num or not pushNum(*num)) return nullopt;
+                if (not num or not pushNum(*num)) return std::nullopt;
             }
 
-            if (not pushOp(*op)) return nullopt;
-        } else return nullopt;
+            if (not pushOp(*op)) return std::nullopt;
+        } else return std::nullopt;
     }
 
     // Ensure any final number is processed.
     if (not buf.empty()) {
         auto num{parseNum(buf)};
-        if (not num or not pushNum(*num)) return nullopt;
+        if (not num or not pushNum(*num)) return std::nullopt;
     }
 
     // Should have a single layer when all is said and done, so long as parens
     // were properly matched in the string.
-    if (stack.size() != 1) return nullopt;
+    if (stack.size() != 1) return std::nullopt;
 
     // Condense to a single pair w/ value and null op.
-    if (not solveLayer(stack.top())) return nullopt;
+    if (not solveLayer(stack.top())) return std::nullopt;
 
-    return stack.top().back().val;
+    return stack.top().back().val_;
 }
 

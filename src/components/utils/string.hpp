@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/utils/string.h
+ * components/utils/string.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,31 +20,34 @@
  */
 
 #include <cctype>
+#include <optional>
+#include <string>
+#include <string_view>
 
 #include <wx/string.h>
 
-#include "utils/types.h"
+#include "utils/types.hpp"
 
 #include "utils_export.h"
 
-namespace Utils {
+namespace utils {
 
 /**
  * Purge all whitespace in string
  */
-UTILS_EXPORT void trimWhitespace(string& str);
+UTILS_EXPORT void trimWhitespace(std::string& str);
 
 /**
  * Purge all whitespace in a string that is not surrounded by quotes
  *
  * Whitespace is ' ' only. Other whitespace is still trimmed
  */
-UTILS_EXPORT void trimWhitespaceOutsideString(string& str);
+UTILS_EXPORT void trimWhitespaceOutsideString(std::string& str);
 
 /**
  * Purge whitespace around visible chars.
  */
-UTILS_EXPORT void trimSurroundingWhitespace(string& str);
+UTILS_EXPORT void trimSurroundingWhitespace(std::string& str);
 
 /**
  * Trim characters unsafe for a C++ variable name
@@ -55,7 +58,7 @@ UTILS_EXPORT void trimSurroundingWhitespace(string& str);
  * @param allowNum If a digit is first-encountered, processing switches to ensuring *only* num.
  */
 UTILS_EXPORT void trimCppName(
-    string& str,
+    std::string& str,
     bool allowNum = false,
     uint32 *numTrimmed = nullptr,
     uint32 countTrimIndex = -1
@@ -64,14 +67,14 @@ UTILS_EXPORT void trimCppName(
 struct TrimRules {
     bool allowAlpha{false};
     bool allowNum{false};
-    string_view safeList;
+    std::string_view safeList;
 };
 
 /**
  * Trim characters for a generic field.
  */
 UTILS_EXPORT void trim(
-    string& str,
+    std::string& str,
     TrimRules rules,
     uint32 *numTrimmed = nullptr,
     uint32 countTrimIndex = -1
@@ -85,7 +88,7 @@ UTILS_EXPORT void trim(
  * @param countTrimIndex The index before which trims should be counted.
  */
 UTILS_EXPORT void trimForNumeric(
-    string& str,
+    std::string& str,
     uint32 *numTrimmed = nullptr,
     uint32 countTrimIndex = -1
 );
@@ -98,26 +101,35 @@ UTILS_EXPORT void trimForNumeric(
  *
  * @return comment(s) extracted, nullopt if none
  */
-[[nodiscard]] UTILS_EXPORT optional<string> extractComment(std::istream& stream);
+[[nodiscard]] UTILS_EXPORT
+std::optional<std::string> extractComment(std::istream& stream);
 
 /**
  * Similar to extractComment(), however comment data is not parsed.
- * All comment data (including start/end conditions) are directly forwarded to the string (if provided).
+ * All comment data (including start/end conditions) are directly forwarded to
+ * the string (if provided).
  *
  * stream positions ends at non-comment data.
  *
  * @return Whether anything was skipped.
  */
-UTILS_EXPORT bool skipComment(std::istream& stream, string *str = nullptr);
+UTILS_EXPORT bool skipComment(std::istream& stream, std::string *str = nullptr);
 
-[[nodiscard]] UTILS_EXPORT vector<string> createEntries(const std::vector<wxString>& vec);
-[[nodiscard]] UTILS_EXPORT vector<string> createEntries(const std::initializer_list<wxString>& list);
+[[nodiscard]] UTILS_EXPORT
+std::vector<std::string> createEntries(const std::vector<wxString>& vec);
+
+[[nodiscard]] UTILS_EXPORT
+std::vector<std::string> createEntries(
+    const std::initializer_list<wxString>& list
+);
 
 /**
  * Evaluate the string for math operations
  *
  * @return Evaluated value
  */
-[[nodiscard]] UTILS_EXPORT optional<float64> doStringMath(const string&);
+[[nodiscard]] UTILS_EXPORT
+std::optional<float64> doStringMath(const std::string&);
 
-} // namespace Utils
+} // namespace utils
+
