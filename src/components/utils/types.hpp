@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
- * components/utils/types.h
+ * components/utils/types.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,32 +19,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <any>
-#include <array>
 #include <cstdint>
-#include <deque>
-#include <filesystem>
-#include <functional>
-#include <list>
-#include <optional>
-#include <set>
-#include <span>
-#include <variant>
-#include <vector>
+#include <type_traits>
 
 // "Standard" types for ProffieConfig
 
+// NOLINTBEGIN(readability-identifier-naming)
 using int64 = int64_t;
 using int32 = int32_t;
 using int16 = int16_t;
 using int8 = int8_t;
+
 using uint64 = uint64_t;
 using uint32 = uint32_t;
 using uint16 = uint16_t;
 using uint8 = uint8_t;
 
-using ssize = ssize_t;
 using size = size_t;
+using ssize = std::make_signed_t<size>;
 
 // These float sizes technically aren't 100% guaranteed, but
 // afaics on modern desktop this should always be the case...
@@ -52,29 +44,10 @@ using float32 = float;
 using float64 = double;
 using float128 = long double;
 
-using byte = uint8;
+static_assert(sizeof(float32) == 4);
+static_assert(sizeof(float64) == 8);
+static_assert(sizeof(float128) == 16);
 
 using cstring = const char *;
-
-// NOLINTBEGIN(misc-unused-using-decls)
-using std::any;
-using std::array;
-using std::deque;
-using std::function;
-using std::list;
-using std::nullopt;
-using std::optional;
-using std::string;
-using std::wstring;
-using std::string_view;
-using std::vector;
-using std::set;
-using std::variant;
-using std::monostate;
-using std::span;
-using std::pair;
-// NOLINTNEXTLINE(readability-identifier-naming)
-namespace fs = std::filesystem;
-using filepath = fs::path;
-// NOLINTEND(misc-unused-using-decls)
+// NOLINTEND(readability-identifier-naming)
 
