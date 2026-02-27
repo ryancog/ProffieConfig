@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string>
+
 #include "data/hierarchy/model.hpp"
 
 #include "data_export.h"
@@ -39,7 +41,7 @@ struct DATA_EXPORT String : Model {
     std::unique_ptr<Model> clone(Node *) const override;
 
 protected:
-    string pValue;
+    std::string pValue;
     size pPos{0};
 };
 
@@ -50,7 +52,7 @@ struct DATA_EXPORT String::Context : Model::Context {
     /**
      * Insert text at the "cursor" position.
      */
-    void insert(string);
+    void insert(std::string);
 
     /**
      * Remove text, starting from the "cursor" position.
@@ -66,7 +68,7 @@ struct DATA_EXPORT String::Context : Model::Context {
     void moveStart();
     void moveEnd();
 
-    [[nodiscard]] const string& val() const [[clang::lifetimebound]];
+    [[nodiscard]] const std::string& val() const [[clang::lifetimebound]];
     [[nodiscard]] size pos() const;
 };
 
@@ -77,7 +79,7 @@ protected:
     /**
      * Text is changed
      */
-    virtual void onChange(const string&) {}
+    virtual void onChange(const std::string&) {}
 
     /**
      * Cursor position is moved.
@@ -86,14 +88,14 @@ protected:
 };
 
 struct DATA_EXPORT String::InsertAction : Action {
-    InsertAction(string&&);
+    InsertAction(std::string&&);
 
     bool shouldPerform(Model&) override;
     void perform(Model&) override;
     void retract(Model&) override;
 
 private:
-    const string mStr;
+    const std::string mStr;
 };
 
 struct DATA_EXPORT String::RemoveAction : Action {
@@ -105,7 +107,7 @@ struct DATA_EXPORT String::RemoveAction : Action {
 
 private:
     const size mNum;
-    string mRemoved;
+    std::string mRemoved;
 };
 
 struct DATA_EXPORT String::MoveAction : Action {

@@ -19,8 +19,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <vector>
+#include <string>
+
 #include "data/hierarchy/model.hpp"
-#include "utils/types.h"
+#include "utils/types.hpp"
 
 #include "data_export.h"
 
@@ -45,8 +48,8 @@ struct DATA_EXPORT Selection : Model {
     std::unique_ptr<Model> clone(Node *) const override;
 
 private:
-    vector<string> mItems;
-    vector<bool> mSelected;
+    std::vector<std::string> mItems;
+    std::vector<bool> mSelected;
 };
 
 struct DATA_EXPORT Selection::Context : Model::Context {
@@ -63,7 +66,7 @@ struct DATA_EXPORT Selection::Context : Model::Context {
      * Select first item with string. Create new item
      * and select it if none exists.
      */
-    void select(string&&);
+    void select(std::string&&);
 
     /**
      * Remove all selections.
@@ -73,20 +76,21 @@ struct DATA_EXPORT Selection::Context : Model::Context {
     /**
      * Assign a new set of items to the selection. Clears previous selection.
      */
-    void setItems(vector<string>&&);
+    void setItems(std::vector<std::string>&&);
 
     /**
      * Add a new item w/ string.
      */
-    void add(string&&);
+    void add(std::string&&);
 
     /**
      * Remove item at idx.
      */
     void remove(uint32);
 
-    [[nodiscard]] const vector<bool>& selected() [[clang::lifetimebound]];
-    [[nodiscard]] const vector<string>& items() [[clang::lifetimebound]];
+    [[nodiscard]] const std::vector<bool>& selected() [[clang::lifetimebound]];
+    [[nodiscard]] const std::vector<std::string>&
+        items() [[clang::lifetimebound]];
 };
 
 struct DATA_EXPORT Selection::Receiver : Model::Receiver {
@@ -106,12 +110,12 @@ protected:
     /**
      * Items are completely changed.
      */
-    virtual void onItems(const vector<string>&) {}
+    virtual void onItems(const std::vector<std::string>&) {}
 
     /**
      * Item Added
      */
-    virtual void onAdd(uint32, const string&) {}
+    virtual void onAdd(uint32, const std::string&) {}
 
     /**
      * Item Removed
@@ -139,31 +143,31 @@ struct DATA_EXPORT Selection::ClearAction : Action {
     void retract(Model&) override;
 
 private:
-    vector<bool> mLast;
+    std::vector<bool> mLast;
 };
 
 struct DATA_EXPORT Selection::SetItemsAction : Action {
-    SetItemsAction(vector<string>&&);
+    SetItemsAction(std::vector<std::string>&&);
 
     bool shouldPerform(Model&) override;
     void perform(Model&) override;
     void retract(Model&) override;
 
 private:
-    const vector<string> mItems;
-    vector<string> mLast;
-    vector<bool> mLastSelected;
+    const std::vector<std::string> mItems;
+    std::vector<std::string> mLast;
+    std::vector<bool> mLastSelected;
 };
 
 struct DATA_EXPORT Selection::AddAction : Action {
-    AddAction(string&&);
+    AddAction(std::string&&);
 
     bool shouldPerform(Model&) override;
     void perform(Model&) override;
     void retract(Model&) override;
 
 private:
-    const string mItem;
+    const std::string mItem;
 };
 
 struct DATA_EXPORT Selection::RemoveAction : Action {
@@ -175,7 +179,7 @@ struct DATA_EXPORT Selection::RemoveAction : Action {
 
 private:
     const uint32 mIdx;
-    string mItem;
+    std::string mItem;
     bool mLastSelected;
 };
 

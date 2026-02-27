@@ -19,8 +19,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <vector>
+
 #include "data/hierarchy/model.hpp"
-#include "utils/types.h"
+#include "utils/types.hpp"
 
 #include "data_export.h"
 
@@ -40,8 +42,8 @@ struct DATA_EXPORT Option : Model {
     std::unique_ptr<Model> clone(Node *) const override;
 
 private:
-    vector<bool> mEnabled;
-    vector<bool> mShown;
+    std::vector<bool> mEnabled;
+    std::vector<bool> mShown;
     uint32 mSelected;
 };
 
@@ -69,8 +71,10 @@ struct DATA_EXPORT Option::Context : Model::Context {
     [[nodiscard]] uint32 num() const;
     [[nodiscard]] uint32 selected() const;
 
-    [[nodiscard]] const vector<bool>& optEnabled() const [[clang::lifetimebound]];
-    [[nodiscard]] const vector<bool>& optShown() const [[clang::lifetimebound]];
+    [[nodiscard]] const std::vector<bool>&
+        optEnabled() const [[clang::lifetimebound]];
+    [[nodiscard]] const std::vector<bool>&
+        optShown() const [[clang::lifetimebound]];
 };
 
 struct DATA_EXPORT Option::Receiver : Model::Receiver {

@@ -19,8 +19,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <functional>
+#include <string>
+
 #include "data/hierarchy/model.hpp"
-#include "utils/types.h"
+#include "utils/types.hpp"
 
 #include "data_export.h"
 
@@ -49,7 +52,7 @@ protected:
      *
      * @return if enumeration should terminate
      */
-    using EnumFunc = function<bool(Model&, uint64, const string&)>;
+    using EnumFunc = std::function<bool(Model&, uint64, const std::string&)>;
 
     /**
      * Called with a function which should be called once for every child of

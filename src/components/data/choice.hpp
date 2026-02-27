@@ -19,8 +19,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <functional>
+
 #include "data/hierarchy/model.hpp"
-#include "utils/types.h"
+#include "utils/types.hpp"
 
 #include "data_export.h"
 
@@ -33,8 +35,8 @@ struct DATA_EXPORT Choice : Model {
     struct ChoiceAction;
     struct UpdateAction;
 
-    using ChoiceValidator = function<bool(int32)>;
-    using UpdateValidator = function<bool(uint32)>;
+    using ChoiceValidator = std::function<bool(int32)>;
+    using UpdateValidator = std::function<bool(uint32)>;
 
     Choice(Node * = nullptr);
     Choice(const Choice&, Node * = nullptr);

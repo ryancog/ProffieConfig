@@ -38,7 +38,7 @@ data::String::Context::Context(String& text) : Model::Context(text) {}
 
 data::String::Context::~Context() = default;
 
-void data::String::Context::insert(string str) {
+void data::String::Context::insert(std::string str) {
     pModel.processAction(std::make_unique<InsertAction>(
         std::move(str)
     ));
@@ -73,7 +73,7 @@ void data::String::Context::moveEnd() {
     move(text.pValue.size());
 }
 
-const string& data::String::Context::val() const {
+const std::string& data::String::Context::val() const {
     auto& text{static_cast<String&>(pModel)};
     return text.pValue;
 }
@@ -83,7 +83,8 @@ size data::String::Context::pos() const {
     return text.pPos;
 }
 
-data::String::InsertAction::InsertAction(string&& str) : mStr{std::move(str)} {}
+data::String::InsertAction::InsertAction(std::string&& str) :
+    mStr{std::move(str)} {}
 
 bool data::String::InsertAction::shouldPerform(Model&) {
     return true;

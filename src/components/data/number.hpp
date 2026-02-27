@@ -22,7 +22,7 @@
 #include <type_traits>
 
 #include "data/hierarchy/model.hpp"
-#include "utils/types.h"
+#include "utils/types.hpp"
 
 #include "data_export.h"
 

@@ -20,10 +20,14 @@
  */
 
 #include <cassert>
+#include <functional>
+#include <memory>
 #include <mutex>
+#include <set>
+#include <string>
 
 #include "data/hierarchy/action.hpp"
-#include "utils/types.h"
+#include "utils/types.hpp"
 
 #include "data_export.h"
 
@@ -50,12 +54,11 @@ struct DATA_EXPORT Model {
     /**
      * Generate a 64-bit ID from a string.
      */
-    static uint64 strID(const string&);
+    static uint64 strID(const std::string&);
 
     /**
      * Attach a receiver to this model.
-     */
-    void attachReceiver(Receiver&);
+     */ void attachReceiver(Receiver&);
     void detachReceiver(Receiver&);
 
     /**
@@ -97,10 +100,10 @@ private:
     bool mEnabled{true};
     bool mShown{true};
 
-    void sendToReceivers(const function<void(Receiver *)>&);
+    void sendToReceivers(const std::function<void(Receiver *)>&);
     bool processAction(std::unique_ptr<Action>&&, bool);
 
-    set<Receiver *> mReceivers;
+    std::set<Receiver *> mReceivers;
 };
 
 struct DATA_EXPORT Model::Context {

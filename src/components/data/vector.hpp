@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <vector>
+
 #include "data/hierarchy/node.hpp"
 
 #include "data_export.h"
@@ -44,7 +46,7 @@ protected:
     Model *find(uint64) override;
 
 private:
-    vector<std::unique_ptr<Model>> mChildren;
+    std::vector<std::unique_ptr<Model>> mChildren;
 };
 
 struct DATA_EXPORT Vector::Context : Node::Context {
@@ -80,7 +82,7 @@ struct DATA_EXPORT Vector::Context : Node::Context {
 
     void duplicate(size, DuplicationMode);
 
-    [[nodiscard]] const vector<std::unique_ptr<Model>>&
+    [[nodiscard]] const std::vector<std::unique_ptr<Model>>&
         children() const [[clang::lifetimebound]];
 };
 

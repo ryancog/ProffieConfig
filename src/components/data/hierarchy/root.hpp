@@ -20,10 +20,11 @@
  */
 
 #include <memory>
+#include <vector>
 
 #include "data/hierarchy/action.hpp"
 #include "data/hierarchy/node.hpp"
-#include "utils/types.h"
+#include "utils/types.hpp"
 
 #include "data_export.h"
 
@@ -128,7 +129,7 @@ private:
      * only (maybe) operations afterwards.
      */
     size mActionIdx{ACT_IDX_FIRST};
-    vector<vector<std::unique_ptr<Action>>> mActions;
+    std::vector<std::vector<std::unique_ptr<Action>>> mActions;
 
     Receiver *mReceiver{nullptr};
 

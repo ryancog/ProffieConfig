@@ -19,7 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "utils/types.h"
+#include <vector>
+
+#include "utils/types.hpp"
 
 #include "data_export.h"
 
@@ -69,7 +71,7 @@ private:
      * Each represents a unique identifier at a specific level in the
      * hierarchy. Lowest first, up to root level last.
      */
-    vector<uint64> mTrace;
+    std::vector<uint64> mTrace;
 };
 
 } // namespace data

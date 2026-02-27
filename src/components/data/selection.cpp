@@ -46,7 +46,7 @@ void data::Selection::Context::select(uint32 idx, bool select) {
     ));
 }
 
-void data::Selection::Context::select(string&& str) {
+void data::Selection::Context::select(std::string&& str) {
     auto& sel{static_cast<Selection&>(pModel)};
 
     uint32 idx{0};
@@ -67,13 +67,13 @@ void data::Selection::Context::clear() {
     pModel.processAction(std::make_unique<ClearAction>());
 }
 
-void data::Selection::Context::setItems(vector<string>&& items) { 
+void data::Selection::Context::setItems(std::vector<std::string>&& items) {
     pModel.processAction(std::make_unique<SetItemsAction>(
         std::move(items)
     ));
 }
 
-void data::Selection::Context::add(string&& str) {
+void data::Selection::Context::add(std::string&& str) {
     pModel.processAction(std::make_unique<AddAction>(
         std::move(str)
     ));
@@ -85,12 +85,12 @@ void data::Selection::Context::remove(uint32 idx) {
     ));
 }
 
-const vector<bool>& data::Selection::Context::selected() {
+const std::vector<bool>& data::Selection::Context::selected() {
     auto& sel{static_cast<Selection&>(pModel)};
     return sel.mSelected;
 }
 
-const vector<string>& data::Selection::Context::items() {
+const std::vector<std::string>& data::Selection::Context::items() {
     auto& sel{static_cast<Selection&>(pModel)};
     return sel.mItems;
 }
@@ -151,8 +151,9 @@ void data::Selection::ClearAction::retract(Model& model) {
     }
 }
 
-data::Selection::SetItemsAction::SetItemsAction(vector<string>&& items) :
-    mItems{std::move(items)} {}
+data::Selection::SetItemsAction::SetItemsAction(
+    std::vector<std::string>&& items
+) : mItems{std::move(items)} {}
 
 bool data::Selection::SetItemsAction::shouldPerform(Model& model) {
     auto& sel{static_cast<Selection&>(model)};
@@ -184,7 +185,7 @@ void data::Selection::SetItemsAction::retract(Model& model) {
     }
 }
 
-data::Selection::AddAction::AddAction(string&& item) :
+data::Selection::AddAction::AddAction(std::string&& item) :
     mItem{std::move(item)} {}
 
 bool data::Selection::AddAction::shouldPerform(Model&) {
