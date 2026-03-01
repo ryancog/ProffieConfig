@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <functional>
+
 #include "data/generic.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
@@ -38,7 +40,7 @@ struct UI_EXPORT Button {
     wxString label_;
     bool exactFit_{false};
 
-    function<void()> func_;
+    std::function<void()> func_;
 
     std::unique_ptr<detail::Descriptor> operator()();
 };

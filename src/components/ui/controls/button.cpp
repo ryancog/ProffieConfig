@@ -54,7 +54,7 @@ struct Control : priv::WinBase<wxButton, data::Generic::Receiver> {
         if (generic.enabled()) func_();
     }
 
-    const function<void()> func_;
+    const std::function<void()> func_;
 };
 
 } // namespace
