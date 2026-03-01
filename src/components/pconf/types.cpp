@@ -1,4 +1,4 @@
-#include "types.h"
+#include "types.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
@@ -19,49 +19,59 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-PConf::Entry::Entry(
-    string name, 
-    optional<string> value,
-    optional<string> label,
-    optional<uint32> labelNum
-) : name(std::move(name)),
-    value(std::move(value)),
-    label(std::move(label)),
-    labelNum(labelNum) {}
+pconf::Entry::Entry(
+    std::string name, 
+    std::optional<std::string> value,
+    std::optional<std::string> label,
+    std::optional<uint32> labelNum
+) : name_(std::move(name)),
+    value_(std::move(value)),
+    label_(std::move(label)),
+    labelNum_(labelNum) {}
 
-PConf::Section::Section(
-    string name, 
-    optional<string> label, 
-    optional<uint32> labelNum,
+pconf::Section::Section(
+    std::string name, 
+    std::optional<std::string> label, 
+    std::optional<uint32> labelNum,
     Data entries
 ) : Entry(
         std::move(name),
-        nullopt,
+        std::nullopt,
         std::move(label),
         labelNum
     ),
-    entries(std::move(entries)) {}
+    entries_(std::move(entries)) {}
 
-PConf::EntryPtr PConf::Entry::create(
-    string name,
-    optional<string> value,
-    optional<string> label,
-    optional<uint32> labelNum
+pconf::EntryPtr pconf::Entry::create(
+    std::string name,
+    std::optional<std::string> value,
+    std::optional<std::string> label,
+    std::optional<uint32> labelNum
 ) {
-    return EntryPtr{new Entry(std::move(name), std::move(value), std::move(label), labelNum)};
+    return EntryPtr{new Entry(
+        std::move(name),
+        std::move(value),
+        std::move(label),
+        labelNum
+    )};
 }
 
-PConf::SectionPtr PConf::Section::create(
-    string name,
-    optional<string> label,
-    optional<uint32> labelNum,
+pconf::SectionPtr pconf::Section::create(
+    std::string name,
+    std::optional<std::string> label,
+    std::optional<uint32> labelNum,
     Data entries
 ) {
-    return SectionPtr(new Section(std::move(name), std::move(label), labelNum, std::move(entries)));
+    return SectionPtr(new Section(
+        std::move(name),
+        std::move(label),
+        labelNum,
+        std::move(entries)
+    ));
 }
 
-void PConf::HashedData::erase(const EntryPtr& entry) {
-    auto vecIter{mMap.find(entry->name)};
+void pconf::HashedData::erase(const EntryPtr& entry) {
+    auto vecIter{mMap.find(entry->name_)};
     if (vecIter == mMap.end()) return;
 
     auto iter{vecIter->second.begin()};
@@ -78,7 +88,7 @@ void PConf::HashedData::erase(const EntryPtr& entry) {
     }
 }
 
-PConf::EntryPtr PConf::HashedData::find(const string& key) const {
+pconf::EntryPtr pconf::HashedData::find(const std::string& key) const {
     const auto vecIter{mMap.find(key)};
     if (vecIter == mMap.end()) return nullptr;
 
@@ -88,14 +98,18 @@ PConf::EntryPtr PConf::HashedData::find(const string& key) const {
     return vecIter->second[0];
 }
 
-vector<PConf::EntryPtr> PConf::HashedData::findAll(const string& key) const {
+std::vector<pconf::EntryPtr> pconf::HashedData::findAll(
+    const std::string& key
+) const {
     const auto vecIter{mMap.find(key)};
     if (vecIter == mMap.end()) return {};
 
     return vecIter->second;
 }
 
-vector<PConf::EntryPtr>& PConf::HashedData::operator[](const string& key) {
+std::vector<pconf::EntryPtr>& pconf::HashedData::operator[](
+    const std::string& key
+) {
     return mMap[key];
 }
 
