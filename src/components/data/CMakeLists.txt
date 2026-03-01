@@ -12,7 +12,6 @@ add_library(data SHARED
     choice.cpp
     generic.cpp
     number.cpp
-    option.cpp
     selection.cpp
     selector.cpp
     string.cpp
