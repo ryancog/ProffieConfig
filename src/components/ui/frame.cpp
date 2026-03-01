@@ -27,7 +27,7 @@
 #include <wx/sizer.h>
 #include <wx/window.h>
 
-#include <app/app.h>
+#include "app/app.hpp"
 
 namespace pcui {
 
