@@ -20,6 +20,7 @@
  */
 
 #include <charconv>
+#include <compare>
 #include <string>
 
 #include "utils/string.hpp"
@@ -108,6 +109,50 @@ utils::Version::Version(std::string_view str) {
     }
 
     parseLabel();
+}
+
+std::strong_ordering utils::Version::compare(const Version& other) const {
+    const auto compare{[this, &other](
+        auto Version::* item
+    ) -> std::strong_ordering {
+        switch (static_cast<CompMode>((this->*item).mode_)) {
+            case CompMode::Exact:
+                return (this->*item).val_ <=> (other.*item).val_;
+            case CompMode::Permissive:
+                return std::strong_ordering::equal;
+        }
+
+        assert(0);
+        __builtin_unreachable();
+    }};
+
+    auto majorRes{compare(&Version::major_)};
+    if (majorRes != 0) return majorRes;
+
+    auto minorRes{compare(&Version::minor_)};
+    if (minorRes != 0) return minorRes;
+
+    auto bugfixRes{compare(&Version::bugfix_)};
+    if (bugfixRes != 0) return bugfixRes;
+
+    auto tagRes{compare(&Version::tag_)};
+    if (tagRes != 0) return tagRes;
+
+    return std::strong_ordering::equal;
+}
+
+bool utils::Version::dataEqual(const Version& other) const {
+    const auto comp{[this, &other](auto Version::* item) {
+        return
+            (this->*item).mode_ == (other.*item).mode_ and
+            (this->*item).val_ == (other.*item).val_;
+    }};
+
+    return
+        comp(&Version::major_) and
+        comp(&Version::minor_) and
+        comp(&Version::bugfix_) and
+        comp(&Version::tag_);
 }
 
 utils::Version::operator std::string() const {
