@@ -23,7 +23,7 @@
 #include <random>
 #include <type_traits>
 
-#include "utils/types.h"
+#include "utils/types.hpp"
 
 #include "utils_export.h"
 
