@@ -36,10 +36,12 @@ struct DATA_EXPORT Root : Node {
 
     ~Root() override;
 
-    [[nodiscard]] virtual std::unique_ptr<Root> clone() const = 0;
+    [[nodiscard]] virtual std::unique_ptr<Root> clone() const;
 
     void attachReciever(Receiver&);
     void detachReceiver(Receiver&);
+
+    static constexpr auto ACT_IDX_FIRST{~0ULL};
 
 protected:
     Root();
@@ -117,8 +119,6 @@ private:
 
     std::unique_ptr<Model> clone(Node *) const final;
 
-    static constexpr auto ACT_IDX_FIRST{~0ULL};
-
     /**
      * The index corresponds to the "current" action. The one that represents
      * the state as it is currently. To undo, that action must be undone. To
@@ -153,6 +153,8 @@ struct DATA_EXPORT Root::Context {
     Context& operator=(const Context&) = delete;
     Context& operator=(Context&&) = delete;
 
+    [[nodiscard]] size actionIndex() const;
+
     void undo();
     void redo();
 
@@ -178,17 +180,27 @@ protected:
     /**
      * Listener is being detached from the root.
      */
-    virtual void onDetach() {};
+    virtual void onDetach() {}
+
+    /**
+     * Undone now at action
+     */
+    virtual void onActionIdx(size) {}
+
+    /**
+     * Actions have been cleared
+     */
+    virtual void onActionClear(size lastIdx) {}
 
     /**
      * Root now has/no longer has actions to undo.
      */
-    virtual void onCanUndo(bool) {};
+    virtual void onCanUndo(bool) {}
 
     /**
      * Root now has/no longer has actions to redo.
      */
-    virtual void onCanRedo(bool) {};
+    virtual void onCanRedo(bool) {}
 
     friend Root;
     Root *pRoot{nullptr};

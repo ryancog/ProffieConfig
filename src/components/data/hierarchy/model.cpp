@@ -27,22 +27,26 @@
 #include "data/hierarchy/root.hpp"
 
 data::Model::Model(Node *parent, Root *root) :
-    pParent{parent},
-    pRoot{parent ? parent->pRoot : root} {}
+    mParent{parent},
+    mRoot{parent ? parent->root() : root} {}
 
 data::Model::~Model() {
     // Things must be detached by now for similar reasons as receiver.
     assert(mReceivers.empty());
 }
 
-uint64 data::Model::strID(const string& str) {
-    return std::hash<string>{}(str);
+std::unique_ptr<data::Model> data::Model::clone(Node *) const {
+    assert(0);
+    __builtin_unreachable();
+}
+
+uint64 data::Model::strID(const std::string& str) {
+    return std::hash<std::string>{}(str);
 }
 
 data::Model::Model(const Model& other, Node *parent, Root *root) :
     Model(parent, root) {
     mEnabled = other.mEnabled;
-    mShown = other.mShown;
 }
 
 void data::Model::attachReceiver(Receiver& receiver) {
@@ -76,7 +80,7 @@ bool data::Model::processUIAction(std::unique_ptr<Action>&& action) {
     return processAction(std::move(action), true);
 }
 
-void data::Model::sendToReceivers(const function<void(Receiver *)>& func) {
+void data::Model::sendToReceivers(const std::function<void(Receiver *)>& func) {
     std::scoped_lock scopeLock{pLock};
 
     for (auto *receiver : mReceivers) {
@@ -91,47 +95,51 @@ bool data::Model::processAction(
 ) {
     std::scoped_lock scopeLock{pLock};
 
-    if (not action->shouldPerform(*this)) return true;
+    // If UI sent an action, shouldPerform returning false probably means that
+    // filtering or other modifications resulted in the values converging. In
+    // this case, the UI still needs to reload, so that it has the modified
+    // value, and not whatever value that may have happened to have been
+    // modified to be equivalent.
+    if (not action->shouldPerform(*this)) return not fromUI;
 
-    if (pRoot and not pRoot->capturePerformance(fromUI)) return false;
+    if (mRoot and not mRoot->capturePerformance(fromUI)) return false;
 
     action->perform(*this);
 
-    if (pParent) {
+    if (mRoot) {
         action->mTrace.clear();
-        pParent->sendUpAction(*this, std::move(action));
+        mParent->sendUpAction(*this, std::move(action));
     }
 
     return true;
 }
 
-data::Model::Context::Context(Model& base) : pModel{base} {
-    pModel.pLock.lock();
+data::Model::Context::Context(Model& base) : mModel{base} {
+    mModel.pLock.lock();
 }
 
 data::Model::Context::~Context() {
-    pModel.pLock.unlock();
+    mModel.pLock.unlock();
 }
 
 void data::Model::Context::enable(bool en) {
-    pModel.processAction(std::make_unique<EnableAction>(en));
-}
-
-void data::Model::Context::show(bool show) {
-    pModel.processAction(std::make_unique<ShowAction>(show));
+    mModel.processAction(std::make_unique<EnableAction>(en));
 }
 
 bool data::Model::Context::enabled() const {
-    return pModel.mShown and pModel.mEnabled;
-}
-
-bool data::Model::Context::shown() const {
-    return pModel.mShown;
+    return mModel.mEnabled;
 }
 
 void data::Model::Context::focus() {
-    pModel.sendToReceivers(&Receiver::onFocus);
+    mModel.sendToReceivers(&Receiver::onFocus);
 }
+
+data::Model::Receiver::Receiver() = default;
+
+/**
+ * No-op copy constructor to allow derived data copy.
+ */
+data::Model::Receiver::Receiver(const Receiver&) {}
 
 data::Model::Receiver::~Receiver() {
     // Although at first glance it seems like we could simply detach the
@@ -166,25 +174,6 @@ void data::Model::EnableAction::retract(Model& model) {
 
 void data::Model::EnableAction::enable(Model& model, bool en) {
     model.mEnabled = en;
-    if (model.mShown) model.sendToReceivers(&Receiver::onEnabled, en);
-}
-
-data::Model::ShowAction::ShowAction(bool show) : mShow{show} {}
-
-bool data::Model::ShowAction::shouldPerform(Model& model) {
-    return model.mShown != mShow;
-}
-
-void data::Model::ShowAction::perform(Model& model) {
-    show(model, mShow);
-}
-
-void data::Model::ShowAction::retract(Model& model) {
-    show(model, not mShow);
-}
-
-void data::Model::ShowAction::show(Model& model, bool show) {
-    model.mShown = show;
-    model.sendToReceivers(&Receiver::onShown, show);
+    model.sendToReceivers(&Receiver::onEnabled, en);
 }
 

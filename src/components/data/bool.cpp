@@ -19,43 +19,55 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-data::Bool::Bool(Node *parent) : Model(parent) {}
+data::Bool::Bool(Node *parent) : Model(parent) {
+    mRsp = std::make_unique<Responder>();
+    mRsp->attach(*this);
+}
 
-data::Bool::Bool(const Bool& other, Node *parent) :
-    Model(other, parent) {
+data::Bool::Bool(const Bool& other, Node *parent) : Model(other, parent) {
     mValue = other.mValue;
+    mRsp = std::make_unique<Responder>(*other.mRsp);
+    mRsp->attach(*this);
+}
+
+data::Bool::~Bool() {
+    mRsp->detach();
 }
 
 auto data::Bool::clone(Node *parent) const -> std::unique_ptr<Model> {
     return std::make_unique<Bool>(*this, parent);
 }
 
+void data::Bool::setFilter(Filter filter) {
+    std::lock_guard scopeLock{pLock};
+    mFilter = std::move(filter);
+}
+
 data::Bool::Context::Context(Bool& bl) : Model::Context(bl) {}
 
 data::Bool::Context::~Context() = default;
 
-void data::Bool::Context::set(bool val) {
-    pModel.processAction(std::make_unique<SetAction>(
+void data::Bool::Context::set(bool val) const {
+    model().processAction(std::make_unique<SetAction>(
         val
     ));
 }
 
-void data::Bool::Context::operator|=(bool val) {
-    auto& bl{static_cast<Bool&>(pModel)};
-    pModel.processAction(std::make_unique<SetAction>(
-        val or bl.mValue
+void data::Bool::Context::operator|=(bool val) const {
+    model().processAction(std::make_unique<SetAction>(
+        val or model<Bool>().mValue
     ));
 }
 
 bool data::Bool::Context::val() const {
-    auto& bl{static_cast<Bool&>(pModel)};
-    return bl.mValue;
+    return model<Bool>().mValue;
 }
 
 data::Bool::SetAction::SetAction(bool val) : mValue{val} {}
 
 bool data::Bool::SetAction::shouldPerform(Model& model) {
     auto& bl{static_cast<Bool&>(model)};
+    bl.mFilter(mValue);
     return bl.mValue != mValue;
 }
 
@@ -64,7 +76,7 @@ void data::Bool::SetAction::perform(Model& model) {
 
     bl.mValue = mValue;
 
-    bl.sendToReceivers(&Receiver::onSet, bl.mValue);
+    bl.sendToReceivers(&Receiver::onSet);
 }
 
 void data::Bool::SetAction::retract(Model& model) {
@@ -72,6 +84,6 @@ void data::Bool::SetAction::retract(Model& model) {
 
     bl.mValue = not mValue;
 
-    bl.sendToReceivers(&Receiver::onSet, bl.mValue);
+    bl.sendToReceivers(&Receiver::onSet);
 }
 

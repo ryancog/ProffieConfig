@@ -57,8 +57,7 @@ protected:
     Model *find(uint64) override;
 
 private:
-    void onChoice(uint32) override;
-    void onUpdate(uint32) override;
+    void onChoice() override;
 
     void onInsert(size) override;
     void onRemove(size) override;
@@ -74,7 +73,7 @@ struct DATA_EXPORT Selector::Context : Node::Context {
     /**
      * Bind a different vector
      */
-    void bind(Vector *);
+    void bind(Vector *) const;
 
     /**
      * Currently-bound vector

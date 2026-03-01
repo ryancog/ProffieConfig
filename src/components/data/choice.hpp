@@ -31,24 +31,27 @@ namespace data {
 struct DATA_EXPORT Choice : Model {
     struct Context;
     struct Receiver;
+    struct Responder;
 
     struct ChoiceAction;
     struct UpdateAction;
 
-    using ChoiceValidator = std::function<bool(int32)>;
-    using UpdateValidator = std::function<bool(uint32)>;
+    using Filter = std::function<void(int32&)>;
 
     Choice(Node * = nullptr);
     Choice(const Choice&, Node * = nullptr);
+    ~Choice() override;
 
     std::unique_ptr<Model> clone(Node *) const override;
 
-    void setChoiceValidator(ChoiceValidator);
-    void setUpdateValidator(UpdateValidator);
+    void setFilter(Filter);
+
+    [[nodiscard]] Responder& responder() const;
 
 private:
-    ChoiceValidator mChoiceValidator;
-    UpdateValidator mUpdateValidator;
+    std::unique_ptr<Responder> mRsp;
+
+    Filter mFilter;
 
     uint32 mNumChoices{0};
     int32 mIdx{-1};
@@ -61,17 +64,17 @@ struct DATA_EXPORT Choice::Context : Model::Context {
     /**
      * Choose a new choice.
      */
-    void choose(uint32);
+    void choose(int32) const;
 
     /**
      * Remove choice
      */
-    void unchoose();
+    void unchoose() const;
 
     /**
      * Update the number of choices available.
      */
-    void update(uint32);
+    void update(uint32) const;
 
     [[nodiscard]] uint32 numChoices() const;
     [[nodiscard]] int32 choice() const;
@@ -87,14 +90,28 @@ protected:
     friend Choice;
 
     /**
-     * Choice was made.
+     * Choice was changed.
      */
-    virtual void onChoice(uint32) {}
+    virtual void onChoice() {}
 
     /**
-     * Choices updates.
+     * Number of choices updated.
      */
-    virtual void onUpdate(uint32) {}
+    virtual void onUpdate() {}
+};
+
+struct DATA_EXPORT Choice::Responder : Model::Responder<Choice> {
+    Function<> onChoice_;
+    Function<> onUpdate_;
+
+private:
+    void onChoice() override {
+        if (onChoice_) onChoice_(context<Choice>());
+    }
+
+    void onUpdate() override {
+        if (onUpdate_) onUpdate_(context<Choice>());
+    }
 };
 
 struct DATA_EXPORT Choice::ChoiceAction : Action {
@@ -105,7 +122,7 @@ struct DATA_EXPORT Choice::ChoiceAction : Action {
     void retract(Model&) override;
 
 private:
-    const int32 mChoice;
+    int32 mChoice;
     int32 mLast;
 };
 

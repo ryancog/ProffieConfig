@@ -33,6 +33,30 @@ data::Node::Node(const Node& other, Node *parent, Root *root) :
 
 data::Node::~Node() = default;
 
+bool data::Node::forwardAction(std::unique_ptr<Action>&& action) {
+    std::lock_guard scopeLock{pLock};
+
+    Node *node{this};
+    Model *child{};
+    for (
+            auto iter{action->mTrace.rbegin()};
+            iter != action->mTrace.rend();
+            ++iter
+        ) {
+        // If the child can't be found or the trace is longer than the
+        // hierarchy, just return. That's alright.
+        if (node == nullptr) return false;
+
+        child = node->find(*iter);
+        if (child == nullptr) return false;
+
+        node = dynamic_cast<Node *>(child);
+    }
+
+    child->processAction(std::move(action));
+    return true;
+}
+
 uint64 data::Node::idFor(Model& search) {
     uint64 ret{};
 
@@ -57,8 +81,6 @@ void data::Node::sendDownAction(Action& action, ActionMode mode) {
     std::scoped_lock scopeLock{pLock};
 
     assert(not action.mTrace.empty());
-
-    size idx{action.mTrace.size() - 1};
 
     Node *node{this};
     Model *child{};
@@ -89,11 +111,11 @@ void data::Node::sendUpAction(Model& from, std::unique_ptr<Action>&& action) {
 
     action->mTrace.push_back(idFor(from));
 
-    if (this == pRoot) {
-        pRoot->recordAction(std::move(action));
+    if (this == mRoot) {
+        mRoot->recordAction(std::move(action));
         return;
     }
 
-    pParent->sendUpAction(*this, std::move(action));
+    mParent->sendUpAction(*this, std::move(action));
 }
 

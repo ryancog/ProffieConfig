@@ -20,21 +20,69 @@
  */
 
 #include "data/hierarchy/model.hpp"
-#include "utils/version.h"
+#include "utils/version.hpp"
 
 #include "data_export.h"
+#include <memory>
 
 namespace data {
 
-struct DATA_EXPORT Version : Model {
+struct DATA_EXPORT Version final : Model {
     struct Context;
     struct Receiver;
+    struct Responder;
+
+    struct SetAction;
 
     Version(Node * = nullptr);
     Version(const Version&, Node * = nullptr);
+    ~Version() override;
+
+    std::unique_ptr<Model> clone(Node *) const override;
+
+    [[nodiscard]] Responder& responder() const;
 
 private:
-    Utils::Version mValue;
+    std::unique_ptr<Responder> mRsp;
+    utils::Version mValue;
+};
+
+struct DATA_EXPORT Version::Context : Model::Context {
+    Context(Version&);
+    ~Context();
+
+    void set(utils::Version) const;
+    [[nodiscard]] const utils::Version& val() const [[clang::lifetimebound]];
+};
+
+struct DATA_EXPORT Version::Receiver : Model::Receiver {
+protected:
+    friend Version;
+
+    /**
+     * Version changed.
+     */
+    virtual void onSet() {}
+};
+
+struct DATA_EXPORT Version::Responder : Model::Responder<Version> {
+    Function<> onSet_;
+
+private:
+    void onSet() override {
+        if (onSet_) onSet_(context<Version>());
+    }
+};
+
+struct DATA_EXPORT Version::SetAction : Action {
+    SetAction(utils::Version);
+    
+    bool shouldPerform(Model&) override;
+    void perform(Model&) override;
+    void retract(Model&) override;
+
+private:
+    utils::Version mValue;
 };
 
 } // namespace data

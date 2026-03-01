@@ -22,7 +22,10 @@
 #include <cassert>
 #include <memory>
 
-data::Vector::Vector(Node *parent) : Node(parent) {}
+data::Vector::Vector(Node *parent) : Node(parent) {
+    mRsp = std::make_unique<Responder>();
+    mRsp->attach(*this);
+}
 
 data::Vector::Vector(const Vector& other, Node *parent) :
     Node(other, parent) {
@@ -30,6 +33,8 @@ data::Vector::Vector(const Vector& other, Node *parent) :
     for (const auto& child : other.mChildren) {
         mChildren.push_back(child->clone(this));
     }
+    mRsp = std::make_unique<Responder>(*other.mRsp);
+    mRsp->attach(*this);
 }
 
 auto data::Vector::clone(Node *parent) const -> std::unique_ptr<Model> {
@@ -55,32 +60,34 @@ data::Vector::Context::Context(Vector& vec) : Model::Context(vec) {}
 
 data::Vector::Context::~Context() = default;
 
-void data::Vector::Context::insert(size idx, std::unique_ptr<Model>&& model) {
-    pModel.processAction(std::make_unique<InsertAction>(
-        idx, std::move(model)
+void data::Vector::Context::insert(
+    size idx, std::unique_ptr<Model>&& obj
+) const {
+    model().processAction(std::make_unique<InsertAction>(
+        idx, std::move(obj)
     ));
 }
 
-void data::Vector::Context::remove(size idx) {
-    pModel.processAction(std::make_unique<RemoveAction>(
+void data::Vector::Context::remove(size idx) const {
+    model().processAction(std::make_unique<RemoveAction>(
         idx
     ));
 }
 
-void data::Vector::Context::moveUp(size idx) {
-    pModel.processAction(std::make_unique<SwapAction>(
+void data::Vector::Context::moveUp(size idx) const {
+    model().processAction(std::make_unique<SwapAction>(
         idx - 1
     ));
 }
 
-void data::Vector::Context::moveDown(size idx) {
-    pModel.processAction(std::make_unique<SwapAction>(
+void data::Vector::Context::moveDown(size idx) const {
+    model().processAction(std::make_unique<SwapAction>(
         idx
     ));
 }
 
-void data::Vector::Context::duplicate(size idx, DuplicationMode mode) {
-    auto& vec{static_cast<Vector&>(pModel)};
+void data::Vector::Context::duplicate(size idx, DuplicationMode mode) const {
+    auto& vec{model<Vector>()};
 
     assert(idx < vec.mChildren.size());
 
@@ -95,15 +102,14 @@ void data::Vector::Context::duplicate(size idx, DuplicationMode mode) {
             break;
     }
 
-    pModel.processAction(std::make_unique<InsertAction>(
+    vec.processAction(std::make_unique<InsertAction>(
         insertIdx, vec.mChildren[idx]->clone(&vec)
     ));
 }
 
 auto data::Vector::Context::children(
-) const -> const vector<std::unique_ptr<Model>>& {
-    auto& vec{static_cast<Vector&>(pModel)};
-    return vec.mChildren;
+) const -> const std::vector<std::unique_ptr<Model>>& {
+    return model<Vector>().mChildren;
 }
 
 data::Vector::InsertAction::InsertAction(
@@ -148,6 +154,8 @@ bool data::Vector::RemoveAction::shouldPerform(Model& model) {
 
 void data::Vector::RemoveAction::perform(Model& model) {
     auto& vec{static_cast<Vector&>(model)};
+
+    vec.sendToReceivers(&Receiver::preRemove, mPos);
 
     mModel = std::move(vec.mChildren[mPos]);
     vec.mChildren.erase(std::next(

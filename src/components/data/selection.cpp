@@ -23,12 +23,20 @@
 #include <memory>
 
 data::Selection::Selection(Node *parent) :
-    Model{parent} {}
+    Model(parent) {
+    mRsp = std::make_unique<Responder>();
+    mRsp->attach(*this);
+}
 
 data::Selection::Selection(const Selection& other, Node *parent) :
     Model(other, parent) {
     mItems = other.mItems;
     mSelected = other.mSelected;
+    mRsp = std::make_unique<Responder>(*other.mRsp);
+}
+
+data::Selection::~Selection() {
+    mRsp->detach();
 }
 
 auto data::Selection::clone(Node *parent) const -> std::unique_ptr<Model> {
@@ -40,14 +48,16 @@ data::Selection::Context::Context(Selection& sel) :
 
 data::Selection::Context::~Context() = default;
 
-void data::Selection::Context::select(uint32 idx, bool select) {
-    pModel.processAction(std::make_unique<SelectAction>(
+void data::Selection::Context::select(uint32 idx, bool select) const {
+    model().processAction(std::make_unique<SelectAction>(
         idx, select
     ));
 }
 
-void data::Selection::Context::select(std::string&& str) {
-    auto& sel{static_cast<Selection&>(pModel)};
+// TODO: Really this should be a special action so the two are condensed in the
+// undo/redo history.
+void data::Selection::Context::select(std::string&& str) const {
+    auto& sel{model<Selection>()};
 
     uint32 idx{0};
     for (; idx < sel.mItems.size(); ++idx) {
@@ -55,7 +65,7 @@ void data::Selection::Context::select(std::string&& str) {
     }
 
     if (idx == sel.mItems.size()) {
-        pModel.processAction(std::make_unique<AddAction>(
+        sel.processAction(std::make_unique<AddAction>(
             std::move(str)
         ));
     }
@@ -63,36 +73,36 @@ void data::Selection::Context::select(std::string&& str) {
     select(idx);
 }
 
-void data::Selection::Context::clear() { 
-    pModel.processAction(std::make_unique<ClearAction>());
+void data::Selection::Context::clear() const {
+    model().processAction(std::make_unique<ClearAction>());
 }
 
-void data::Selection::Context::setItems(std::vector<std::string>&& items) {
-    pModel.processAction(std::make_unique<SetItemsAction>(
+void data::Selection::Context::setItems(
+    std::vector<std::string>&& items
+) const {
+    model().processAction(std::make_unique<SetItemsAction>(
         std::move(items)
     ));
 }
 
-void data::Selection::Context::add(std::string&& str) {
-    pModel.processAction(std::make_unique<AddAction>(
+void data::Selection::Context::add(std::string&& str) const {
+    model().processAction(std::make_unique<AddAction>(
         std::move(str)
     ));
 }
 
-void data::Selection::Context::remove(uint32 idx) {
-    pModel.processAction(std::make_unique<RemoveAction>(
+void data::Selection::Context::remove(uint32 idx) const {
+    model().processAction(std::make_unique<RemoveAction>(
         idx
     ));
 }
 
-const std::vector<bool>& data::Selection::Context::selected() {
-    auto& sel{static_cast<Selection&>(pModel)};
-    return sel.mSelected;
+const std::vector<bool>& data::Selection::Context::selected() const {
+    return model<Selection>().mSelected;
 }
 
-const std::vector<std::string>& data::Selection::Context::items() {
-    auto& sel{static_cast<Selection&>(pModel)};
-    return sel.mItems;
+const std::vector<std::string>& data::Selection::Context::items() const {
+    return model<Selection>().mItems;
 }
 
 data::Selection::SelectAction::SelectAction(uint32 idx, bool select)
@@ -110,7 +120,7 @@ void data::Selection::SelectAction::perform(Model& model) {
 
     sel.mSelected[mIdx] = mSelect;
 
-    sel.sendToReceivers(&Receiver::onSelection, mIdx, mSelect);
+    sel.sendToReceivers(&Receiver::onSelection, mIdx);
 }
 
 void data::Selection::SelectAction::retract(Model& model) {
@@ -118,7 +128,7 @@ void data::Selection::SelectAction::retract(Model& model) {
 
     sel.mSelected[mIdx] = not mSelect;
 
-    sel.sendToReceivers(&Receiver::onSelection, mIdx, not mSelect);
+    sel.sendToReceivers(&Receiver::onSelection, mIdx);
 }
 
 data::Selection::ClearAction::ClearAction() = default;
@@ -137,7 +147,7 @@ void data::Selection::ClearAction::perform(Model& model) {
     sel.mSelected.resize(sel.mItems.size());
 
     for (size idx{0}; idx < sel.mSelected.size(); ++idx) {
-        sel.sendToReceivers(&Receiver::onSelection, idx, false);
+        sel.sendToReceivers(&Receiver::onSelection, idx);
     }
 }
 
@@ -147,7 +157,7 @@ void data::Selection::ClearAction::retract(Model& model) {
     sel.mSelected = std::move(mLast);
 
     for (size idx{0}; idx < sel.mSelected.size(); ++idx) {
-        sel.sendToReceivers(&Receiver::onSelection, idx, sel.mSelected[idx]);
+        sel.sendToReceivers(&Receiver::onSelection, idx);
     }
 }
 
@@ -170,7 +180,7 @@ void data::Selection::SetItemsAction::perform(Model& model) {
     mLast = std::move(sel.mItems);
     sel.mItems = mItems;
 
-    sel.sendToReceivers(&Receiver::onItems, sel.mItems);
+    sel.sendToReceivers(&Receiver::onItems);
 }
 
 void data::Selection::SetItemsAction::retract(Model& model) {
@@ -179,9 +189,9 @@ void data::Selection::SetItemsAction::retract(Model& model) {
     sel.mItems = std::move(mLast);
     sel.mSelected = std::move(mLastSelected);
 
-    sel.sendToReceivers(&Receiver::onItems, sel.mItems);
+    sel.sendToReceivers(&Receiver::onItems);
     for (size idx{0}; idx < sel.mSelected.size(); ++idx) {
-        sel.sendToReceivers(&Receiver::onSelection, idx, sel.mSelected[idx]);
+        sel.sendToReceivers(&Receiver::onSelection, idx);
     }
 }
 
@@ -199,11 +209,7 @@ void data::Selection::AddAction::perform(Model& model) {
     sel.mSelected.emplace_back();
 
     // size - 1 is the previous end; the receiver's current end.
-    sel.sendToReceivers(
-        &Receiver::onAdd,
-        sel.mItems.size() - 1,
-        sel.mItems.back()
-    );
+    sel.sendToReceivers(&Receiver::onAdd, sel.mItems.size() - 1);
 }
 
 void data::Selection::AddAction::retract(Model& model) {
@@ -247,6 +253,6 @@ void data::Selection::RemoveAction::retract(Model& model) {
         mLastSelected
     );
 
-    sel.sendToReceivers(&Receiver::onAdd, mIdx, sel.mItems[mIdx]);
+    sel.sendToReceivers(&Receiver::onAdd, mIdx);
 }
 

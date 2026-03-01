@@ -19,4 +19,59 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+data::Version::Version(Node *parent) : Model(parent) {
+    mRsp = std::make_unique<Responder>();
+    mRsp->attach(*this);
+}
+
+data::Version::Version(const Version& other, Node *parent) :
+    Model(other, parent) {
+    mValue = other.mValue;
+    mRsp = std::make_unique<Responder>(*other.mRsp);
+    mRsp->attach(*this);
+}
+
+data::Version::~Version() {
+    mRsp->detach();
+}
+
+auto data::Version::clone(Node *parent) const -> std::unique_ptr<Model> {
+    return std::make_unique<Version>(*this, parent);
+}
+
+data::Version::Context::Context(Version& bl) : Model::Context(bl) {}
+
+data::Version::Context::~Context() = default;
+
+void data::Version::Context::set(utils::Version val) const {
+    model().processAction(std::make_unique<SetAction>(
+        std::move(val)
+    ));
+}
+
+const utils::Version& data::Version::Context::val() const {
+    return model<Version>().mValue;
+}
+
+data::Version::SetAction::SetAction(utils::Version val) :
+    mValue{std::move(val)} {}
+
+bool data::Version::SetAction::shouldPerform(Model& model) {
+    auto& ver{static_cast<Version&>(model)};
+    return not ver.mValue.dataEqual(mValue);
+}
+
+void data::Version::SetAction::perform(Model& model) {
+    auto& ver{static_cast<Version&>(model)};
+
+    auto tmp{std::move(ver.mValue)};
+    ver.mValue = std::move(mValue);
+    mValue = std::move(tmp);
+
+    ver.sendToReceivers(&Receiver::onSet);
+}
+
+void data::Version::SetAction::retract(Model& model) {
+    perform(model);
+}
 

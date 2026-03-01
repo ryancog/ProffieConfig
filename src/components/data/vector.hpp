@@ -30,6 +30,7 @@ namespace data {
 struct DATA_EXPORT Vector : Node {
     struct Context;
     struct Receiver;
+    struct Responder;
 
     struct InsertAction;
     struct RemoveAction;
@@ -40,12 +41,15 @@ struct DATA_EXPORT Vector : Node {
 
     std::unique_ptr<Model> clone(Node *) const override;
 
+    [[nodiscard]] Responder& responder() const;
+
 protected:
     bool enumerate(const EnumFunc&) override;
 
     Model *find(uint64) override;
 
 private:
+    std::unique_ptr<Responder> mRsp;
     std::vector<std::unique_ptr<Model>> mChildren;
 };
 
@@ -67,20 +71,20 @@ struct DATA_EXPORT Vector::Context : Node::Context {
     /**
      * Insert model into list at pos.
      */
-    void insert(size, std::unique_ptr<Model>&&);
+    void insert(size, std::unique_ptr<Model>&&) const;
 
     /**
      * Remove item at pos
      */
-    void remove(size);
+    void remove(size) const;
 
     /**
      * Move model up or down in the list.
      */
-    void moveUp(size);
-    void moveDown(size);
+    void moveUp(size) const;
+    void moveDown(size) const;
 
-    void duplicate(size, DuplicationMode);
+    void duplicate(size, DuplicationMode) const;
 
     [[nodiscard]] const std::vector<std::unique_ptr<Model>>&
         children() const [[clang::lifetimebound]];
@@ -109,6 +113,30 @@ protected:
      * Models at pos and pos + 1 swapped.
      */
     virtual void onSwap(size) {}
+};
+
+struct DATA_EXPORT Vector::Responder : Model::Responder<Vector> {
+    Function<size> onInsert_;
+    Function<size> onRemove_;
+    Function<size> preRemove_;
+    Function<size> onSwap_;
+
+private:
+    void onInsert(size pos) override {
+        if (onInsert_) onInsert_(context<Vector>(), pos);
+    }
+
+    void onRemove(size pos) override {
+        if (onRemove_) onRemove_(context<Vector>(), pos);
+    }
+
+    void preRemove(size pos) override {
+        if (preRemove_) preRemove_(context<Vector>(), pos);
+    }
+
+    void onSwap(size pos) override {
+        if (onSwap_) onSwap_(context<Vector>(), pos);
+    }
 };
 
 struct DATA_EXPORT Vector::InsertAction : Action {

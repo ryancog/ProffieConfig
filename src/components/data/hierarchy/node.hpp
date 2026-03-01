@@ -42,6 +42,16 @@ struct DATA_EXPORT Node : Model {
     Node(const Node&, Node *, Root * = nullptr);
     ~Node() override;
 
+    Node(const Node&) = delete;
+
+    /**
+     * Send an action down to be processed, and sent back up/recorded after
+     * completion. If the model could not be found, nothing happens.
+     *
+     * @return if the action found a model
+     */
+    bool forwardAction(std::unique_ptr<Action>&& action);
+
 protected:
     /**
      * Called for each child model of a node.

@@ -28,11 +28,21 @@ namespace data {
 struct DATA_EXPORT Generic final : Model {
     using Context = Model::Context;
     using Receiver = Model::Receiver;
+    struct Responder;
 
     Generic(Node * = nullptr);
     Generic(const Generic&, Node * = nullptr);
+    ~Generic() override;
 
     std::unique_ptr<Model> clone(Node *) const override;
+
+    [[nodiscard]] Responder& responder() const;
+
+private:
+    std::unique_ptr<Responder> mRsp;
+};
+
+struct DATA_EXPORT Generic::Responder : Model::Responder<Generic> {
 };
 
 } // namespace data

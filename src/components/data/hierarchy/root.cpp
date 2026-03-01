@@ -32,6 +32,11 @@ data::Root::Root(const Root&) : Root() {
 
 data::Root::~Root() = default;
 
+std::unique_ptr<data::Root> data::Root::clone() const {
+    assert(0);
+    __builtin_unreachable();
+}
+
 void data::Root::attachReciever(Receiver& receiver) {
     std::scoped_lock scopeLock{pLock};
 
@@ -69,8 +74,11 @@ void data::Root::unsuppressActions() {
     assert(mState == State::Suppressed);
 
     mActions.clear();
+    const auto lastIdx{mActionIdx};
     mActionIdx = ACT_IDX_FIRST;
     if (mReceiver) {
+        mReceiver->onActionClear(lastIdx);
+        mReceiver->onActionIdx(mActionIdx);
         mReceiver->onCanUndo(false);
         mReceiver->onCanRedo(false);
     }
@@ -115,6 +123,8 @@ bool data::Root::capturePerformance(bool fromUI) {
         }
 
         mActions.emplace_back();
+
+        if (mReceiver) mReceiver->onActionIdx(mActionIdx);
     }
 
     return true;
@@ -187,6 +197,10 @@ data::Root::Context::~Context() {
     mRoot.pLock.unlock();
 }
 
+size data::Root::Context::actionIndex() const {
+    return mRoot.mActionIdx;
+}
+
 void data::Root::Context::undo() {
     if (not canUndo()) return;
 
@@ -204,6 +218,7 @@ void data::Root::Context::undo() {
     mRoot.endReplay();
 
     if (mRoot.mReceiver) {
+        mRoot.mReceiver->onActionIdx(mRoot.mActionIdx);
         mRoot.mReceiver->onCanRedo(true);
         mRoot.mReceiver->onCanUndo(canUndo());
     }
@@ -225,6 +240,7 @@ void data::Root::Context::redo() {
     mRoot.endReplay();
 
     if (mRoot.mReceiver) {
+        mRoot.mReceiver->onActionIdx(mRoot.mActionIdx);
         mRoot.mReceiver->onCanUndo(true);
         mRoot.mReceiver->onCanRedo(canRedo());
     }

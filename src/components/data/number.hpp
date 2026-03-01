@@ -34,12 +34,16 @@ template <typename T>
 struct DATA_EXPORT Number : Model {
     struct Context;
     struct Receiver;
+    struct Responder;
 
     struct SetAction;
     struct UpdateAction;
 
+    using Filter = std::function<void(T&)>;
+
     Number(Node * = nullptr);
     Number(const Number&, Node * = nullptr);
+    ~Number() override;
 
     std::unique_ptr<Model> clone(Node *) const override;
 
@@ -61,9 +65,16 @@ struct DATA_EXPORT Number : Model {
         auto operator<=>(const Params&) const = default;
     };
 
+    void setFilter(Filter);
+
+    [[nodiscard]] Responder& responder() const;
+
 private:
     [[nodiscard]] T clamp(T) const;
 
+    std::unique_ptr<Responder> mRsp;
+
+    Filter mFilter;
     T mValue{0};
     Params mParams;
 };
@@ -73,8 +84,8 @@ struct DATA_EXPORT Number<T>::Context : Model::Context {
     Context(Number&);
     ~Context();
 
-    void set(T val);
-    void update(Params);
+    void set(T val) const;
+    void update(Params) const;
 
     [[nodiscard]] T val() const;
     [[nodiscard]] Params params() const;
@@ -88,13 +99,27 @@ protected:
     /**
      * Value changed.
      */
-    virtual void onSet(T) {}
+    virtual void onSet() {}
     
     /**
      * Params changed.
-     * Value may also have changed.
      */
-    virtual void onUpdate(Params) {}
+    virtual void onUpdate() {}
+};
+
+template <typename T>
+struct DATA_EXPORT Number<T>::Responder : Model::Responder<Number> {
+    Model::Responder<Number>::template Function<> onSet_;
+    Model::Responder<Number>::template Function<> onUpdate_;
+
+private:
+    void onSet() override { 
+        if (onSet_) onSet_(context<Number>());
+    }
+
+    void onUpdate() override {
+        if (onUpdate_) onUpdate_(context<Number>());
+    }
 };
 
 template <typename T>
@@ -106,7 +131,7 @@ struct DATA_EXPORT Number<T>::SetAction : Action {
     void retract(Model&) override;
 
 private:
-    const T mValue;
+    T mValue;
     T mLast;
 };
 

@@ -43,13 +43,17 @@ struct Root;
 struct DATA_EXPORT Model {
     struct Context;
     struct Receiver;
+    template<typename>
+    struct Responder;
 
-    struct ShowAction;
     struct EnableAction;
 
     virtual ~Model();
 
-    [[nodiscard]] virtual std::unique_ptr<Model> clone(Node *) const = 0;
+    /**
+     * If not overridden, asserts.
+     */
+    [[nodiscard]] virtual std::unique_ptr<Model> clone(Node *) const;
 
     /**
      * Generate a 64-bit ID from a string.
@@ -58,7 +62,8 @@ struct DATA_EXPORT Model {
 
     /**
      * Attach a receiver to this model.
-     */ void attachReceiver(Receiver&);
+     */
+    void attachReceiver(Receiver&);
     void detachReceiver(Receiver&);
 
     /**
@@ -72,6 +77,16 @@ struct DATA_EXPORT Model {
      * @return if the action was accepted.
      */
     [[nodiscard]] bool processUIAction(std::unique_ptr<Action>&&);
+
+    template<typename T = Root>
+    T *root() const {
+        return static_cast<T *>(mRoot);
+    }
+
+    template<typename T = Node>
+    T *parent() const {
+        return static_cast<T *>(mParent);
+    }
 
 protected:
     friend Node;
@@ -93,17 +108,16 @@ protected:
 
     std::recursive_mutex pLock;
 
-    Node *const pParent;
-    Root *const pRoot;
-
 private:
     bool mEnabled{true};
-    bool mShown{true};
 
     void sendToReceivers(const std::function<void(Receiver *)>&);
     bool processAction(std::unique_ptr<Action>&&, bool);
 
     std::set<Receiver *> mReceivers;
+
+    Node *const mParent;
+    Root *const mRoot;
 };
 
 struct DATA_EXPORT Model::Context {
@@ -115,21 +129,18 @@ struct DATA_EXPORT Model::Context {
     Context& operator=(const Context&) = delete;
     Context& operator=(Context&&) = delete;
 
+    template<typename T = Model>
+    T& model() const {
+        return static_cast<T&>(mModel);
+    }
+
     /**
      * (Dis)allow input to the data
      */
     void enable(bool en = true);
     void disable() { enable(false); }
 
-    /**
-     * Change visibility of associated UI
-     * When "hidden," data is implicitly disabled.
-     */
-    void show(bool show = true);
-    void hide() { show(false); }
-
     [[nodiscard]] bool enabled() const;
-    [[nodiscard]] bool shown() const;
 
     /**
      * If the data has an associated UI, focus it.
@@ -138,14 +149,15 @@ struct DATA_EXPORT Model::Context {
      */
     void focus();
 
-protected:
-    Model& pModel;
+private:
+    Model& mModel;
 };
 
 struct DATA_EXPORT Model::Receiver {
+    Receiver();
+    Receiver(const Receiver&);
     virtual ~Receiver();
 
-protected:
     void attach(Model& model) {
         model.attachReceiver(*this);
     }
@@ -155,6 +167,7 @@ protected:
         mModel->detachReceiver(*this);
     }
 
+protected:
     template<typename T = Model>
     typename T::Context context() {
         assert(mModel);
@@ -182,15 +195,8 @@ protected:
 
     /**
      * Called whenever the UI should be enabled.
-     * Not sent whenever hidden.
      */
-    virtual void onEnabled(bool) {}
-
-    /**
-     * Called whenever the UI should be shown/hidden.
-     * On show, should also update according to enabled.
-     */
-    virtual void onShown(bool) {}
+    virtual void onEnabled() {}
 
     /**
      * Focus the UI Element
@@ -200,8 +206,24 @@ protected:
 private:
     friend Model;
 
-    std::recursive_mutex mLock;
     Model *mModel{nullptr};
+
+    std::recursive_mutex mLock;
+};
+
+template<typename BaseModel>
+struct DATA_EXPORT Model::Responder : BaseModel::Receiver {
+    template <typename ...Args>
+    using Function = void(*)(const typename BaseModel::Context&, Args...);
+
+    Function<> onEnabled_;
+
+private:
+    void onEnabled() override {
+        if (not onEnabled_) return;
+
+        onEnabled_(BaseModel::Receiver::context());
+    }
 };
 
 struct DATA_EXPORT Model::EnableAction : Action {
@@ -215,19 +237,6 @@ private:
     static void enable(Model&, bool);
 
     const bool mEnable;
-};
-
-struct DATA_EXPORT Model::ShowAction : Action {
-    ShowAction(bool);
-
-    bool shouldPerform(Model&) override;
-    void perform(Model&) override;
-    void retract(Model&) override;
-
-private:
-    static void show(Model&, bool);
-
-    const bool mShow;
 };
 
 } // namespace data

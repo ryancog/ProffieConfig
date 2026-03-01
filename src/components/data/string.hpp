@@ -27,22 +27,35 @@
 
 namespace data {
 
+// TODO: The actions for this would like to be more space efficient, and
+// preserve things like selection??
 struct DATA_EXPORT String : Model {
     struct Context;
     struct Receiver;
+    struct Responder;
 
-    struct InsertAction;
-    struct RemoveAction;
+    struct ChangeAction;
     struct MoveAction;
+
+    using Filter = std::function<void(std::string&, size&)>;
 
     String(Node * = nullptr);
     String(const String&, Node * = nullptr);
+    ~String() override;
 
     std::unique_ptr<Model> clone(Node *) const override;
 
-protected:
-    std::string pValue;
-    size pPos{0};
+    void setFilter(Filter);
+
+    [[nodiscard]] Responder& responder() const;
+
+private:
+    std::unique_ptr<Responder> mRsp;
+
+    std::string mValue;
+    size mPos{0};
+
+    Filter mFilter;
 };
 
 struct DATA_EXPORT String::Context : Model::Context {
@@ -50,23 +63,18 @@ struct DATA_EXPORT String::Context : Model::Context {
     ~Context();
 
     /**
-     * Insert text at the "cursor" position.
+     * Replace text with new text and pos.
      */
-    void insert(std::string);
-
-    /**
-     * Remove text, starting from the "cursor" position.
-     */
-    void remove(size);
-    void clear();
+    void change(std::string&&, size) const;
+    void clear() const;
 
     /**
      * Move "cursor"
      * Position represents insertion point, or deletion point + 1
      */
-    void move(size);
-    void moveStart();
-    void moveEnd();
+    void move(size) const;
+    void moveStart() const;
+    void moveEnd() const;
 
     [[nodiscard]] const std::string& val() const [[clang::lifetimebound]];
     [[nodiscard]] size pos() const;
@@ -79,35 +87,38 @@ protected:
     /**
      * Text is changed
      */
-    virtual void onChange(const std::string&) {}
+    virtual void onChange() {}
 
     /**
      * Cursor position is moved.
      */
-    virtual void onMove(size) {}
+    virtual void onMove() {}
 };
 
-struct DATA_EXPORT String::InsertAction : Action {
-    InsertAction(std::string&&);
+struct DATA_EXPORT String::Responder : Model::Responder<String> {
+    Function<> onChange_;
+    Function<> onMove_;
+
+private:
+    void onChange() override {
+        if (onChange_) onChange_(context<String>());
+    }
+
+    void onMove() override {
+        if (onMove_) onMove_(context<String>());
+    }
+};
+
+struct DATA_EXPORT String::ChangeAction : Action {
+    ChangeAction(std::string&&, size);
 
     bool shouldPerform(Model&) override;
     void perform(Model&) override;
     void retract(Model&) override;
 
 private:
-    const std::string mStr;
-};
-
-struct DATA_EXPORT String::RemoveAction : Action {
-    RemoveAction(size);
-
-    bool shouldPerform(Model&) override;
-    void perform(Model&) override;
-    void retract(Model&) override;
-
-private:
-    const size mNum;
-    std::string mRemoved;
+    std::string mStr;
+    size mPos;
 };
 
 struct DATA_EXPORT String::MoveAction : Action {
@@ -118,8 +129,7 @@ struct DATA_EXPORT String::MoveAction : Action {
     void retract(Model&) override;
 
 private:
-    const size mPos;
-    size mLast;
+    size mPos;
 };
 
 } // namespace data

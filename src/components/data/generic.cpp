@@ -19,10 +19,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-data::Generic::Generic(Node *parent) : Model(parent) {}
+data::Generic::Generic(Node *parent) : Model(parent) {
+    mRsp = std::make_unique<Responder>();
+    mRsp->attach(*this);
+}
 
 data::Generic::Generic(const Generic& other, Node *parent) :
-    Model(other, parent) {}
+    Model(other, parent) {
+    mRsp = std::make_unique<Responder>(*other.mRsp);
+    mRsp->attach(*this);
+}
+
+data::Generic::~Generic() {
+    mRsp->detach();
+}
 
 auto data::Generic::clone(Node *parent) const -> std::unique_ptr<Model> {
     return std::make_unique<Generic>(*this, parent);

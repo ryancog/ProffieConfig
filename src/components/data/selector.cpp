@@ -37,6 +37,8 @@ data::Selector::Selector(Node *parent) :
     choice_.attachReceiver(static_cast<Choice::Receiver&>(*this));
 }
 
+// These are specialized "copy constructors"
+// NOLINTNEXTLINE(bugprone-copy-constructor-init)
 data::Selector::Selector(const Selector& other, Node *parent) :
     Node(other, parent),
     choice_(other.choice_, this),
@@ -69,18 +71,17 @@ data::Model *data::Selector::find(uint64 id) {
     return nullptr;
 }
 
-void data::Selector::onChoice(uint32 idx) {
-    Choice::Context choice{choice_};
+void data::Selector::onChoice() {
+    auto choice{Choice::Receiver::context<Choice>()};
 
-    Generic::Context{moveUp_}.enable(idx != 0);
-    Generic::Context{moveDown_}.enable(idx + 1 != choice.numChoices());
-    Generic::Context{duplicate_}.enable();
-}
+    Generic::Context moveUp{moveUp_};
+    moveUp.enable(choice.choice() > 0);
 
-void data::Selector::onUpdate(uint32) {
-    Generic::Context{moveUp_}.disable();
-    Generic::Context{moveDown_}.disable();
-    Generic::Context{duplicate_}.disable();
+    Generic::Context moveDown{moveDown_};
+    moveDown.enable(choice.choice() + 1 != choice.numChoices());
+
+    Generic::Context dup{duplicate_};
+    dup.enable(choice.choice() != -1);
 }
 
 void data::Selector::onInsert(size pos) {
@@ -116,9 +117,9 @@ void data::Selector::onSwap(size pos) {
     Choice::Context choice{choice_};
 
     if (choice.choice() == pos) {
-        choice.choose(pos + 1);
+        choice.choose(static_cast<int32>(pos) + 1);
     } else if (choice.choice() == pos + 1) {
-        choice.choose(pos);
+        choice.choose(static_cast<int32>(pos));
     }
 }
 
@@ -126,15 +127,14 @@ data::Selector::Context::Context(Selector& sel) : Node::Context(sel) {}
 
 data::Selector::Context::~Context() = default;
 
-void data::Selector::Context::bind(Vector *vec) {
-    pModel.processAction(std::make_unique<BindAction>(
+void data::Selector::Context::bind(Vector *vec) const {
+    model().processAction(std::make_unique<BindAction>(
         vec
     ));
 }
 
 data::Vector *data::Selector::Context::bound() const {
-    auto& sel{static_cast<Selector&>(pModel)};
-    return sel.mVec;
+    return model<Selector>().mVec;
 }
 
 data::Selector::BindAction::BindAction(Vector *vec) : mVec{vec} {}

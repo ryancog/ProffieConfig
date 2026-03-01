@@ -22,146 +22,126 @@
 #include <cassert>
 #include <memory>
 
-data::String::String(Node *parent) : Model(parent) {}
+data::String::String(Node *parent) : Model(parent) {
+    mRsp = std::make_unique<Responder>();
+    mRsp->attach(*this);
+}
 
 data::String::String(const String& other, Node *parent) :
     Model(other, parent) {
-    pValue = other.pValue;
-    pPos = other.pPos;
+    mValue = other.mValue;
+    mPos = other.mPos;
+    mRsp = std::make_unique<Responder>(*other.mRsp);
+    mRsp->attach(*this);
+}
+
+data::String::~String() {
+    mRsp->detach();
 }
 
 auto data::String::clone(Node *parent) const -> std::unique_ptr<Model> {
     return std::make_unique<String>(*this, parent);
 }
 
-data::String::Context::Context(String& text) : Model::Context(text) {}
+void data::String::setFilter(Filter filter) {
+    std::lock_guard scopeLock{pLock};
+    mFilter = std::move(filter);
+}
+
+data::String::Context::Context(String& str) : Model::Context(str) {}
 
 data::String::Context::~Context() = default;
 
-void data::String::Context::insert(std::string str) {
-    pModel.processAction(std::make_unique<InsertAction>(
-        std::move(str)
+void data::String::Context::change(std::string&& str, size pos) const {
+    model().processAction(std::make_unique<ChangeAction>(
+        std::move(str), pos
     ));
 }
 
-void data::String::Context::remove(size num) {
-    pModel.processAction(std::make_unique<RemoveAction>(
-        num
+void data::String::Context::clear() const {
+    model().processAction(std::make_unique<ChangeAction>(
+        std::string{}, 0
     ));
 }
 
-void data::String::Context::clear() {
-    auto& text{static_cast<String&>(pModel)};
-    moveEnd();
-    pModel.processAction(std::make_unique<RemoveAction>(
-        text.pValue.size()
-    ));
-}
-
-void data::String::Context::move(size pos) {
-    pModel.processAction(std::make_unique<MoveAction>(
+void data::String::Context::move(size pos) const {
+    model().processAction(std::make_unique<MoveAction>(
         pos
     ));
 }
 
-void data::String::Context::moveStart() {
+void data::String::Context::moveStart() const {
     move(0);
 }
 
-void data::String::Context::moveEnd() {
-    auto& text{static_cast<String&>(pModel)};
-    move(text.pValue.size());
+void data::String::Context::moveEnd() const {
+    move(model<String>().mValue.size());
 }
 
 const std::string& data::String::Context::val() const {
-    auto& text{static_cast<String&>(pModel)};
-    return text.pValue;
+    return model<String>().mValue;
 }
 
 size data::String::Context::pos() const {
-    auto& text{static_cast<String&>(pModel)};
-    return text.pPos;
+    return model<String>().mPos;
 }
 
-data::String::InsertAction::InsertAction(std::string&& str) :
-    mStr{std::move(str)} {}
+data::String::ChangeAction::ChangeAction(std::string&& str, size pos) :
+    mStr{std::move(str)}, mPos{pos} {}
 
-bool data::String::InsertAction::shouldPerform(Model&) {
-    return true;
+bool data::String::ChangeAction::shouldPerform(Model& model) {
+    auto& str{static_cast<String&>(model)};
+
+    assert(mPos <= mStr.length());
+    if (str.mFilter) str.mFilter(mStr, mPos);
+    assert(mPos <= mStr.length());
+
+    return mStr != str.mValue or mPos != str.mPos;
 }
 
-void data::String::InsertAction::perform(Model& model) {
-    auto& text{static_cast<String&>(model)};
+void data::String::ChangeAction::perform(Model& model) {
+    auto& str{static_cast<String&>(model)};
 
-    text.pValue.insert(text.pPos, mStr);
-    text.pPos += mStr.size();
+    { std::string tmp{std::move(str.mValue)};
+        str.mValue = std::move(mStr);
+        mStr = std::move(tmp);
+    }
 
-    text.sendToReceivers(&Receiver::onChange, text.pValue);
-    text.sendToReceivers(&Receiver::onMove, text.pPos);
+    { auto tmp{str.mPos};
+        str.mPos = mPos;
+        mPos = tmp;
+    }
+
+    str.sendToReceivers(&Receiver::onChange);
+    str.sendToReceivers(&Receiver::onMove);
 }
 
-void data::String::InsertAction::retract(Model& model) {
-    auto& text{static_cast<String&>(model)};
-
-    text.pPos -= mStr.size();
-    text.pValue.erase(text.pPos, mStr.size());
-
-    text.sendToReceivers(&Receiver::onChange, text.pValue);
-    text.sendToReceivers(&Receiver::onMove, text.pPos);
-}
-
-data::String::RemoveAction::RemoveAction(size num) : mNum{num} {}
-
-bool data::String::RemoveAction::shouldPerform(Model& model) {
-    auto& text{static_cast<String&>(model)};
-    assert(text.pPos >= mNum);
-    return true;
-}
-
-void data::String::RemoveAction::perform(Model& model) {
-    auto& text{static_cast<String&>(model)};
-
-    text.pPos -= mNum;
-    mRemoved = text.pValue.substr(text.pPos, mNum);
-    text.pValue.erase(text.pPos, mNum);
-
-    text.sendToReceivers(&Receiver::onChange, text.pValue);
-    text.sendToReceivers(&Receiver::onMove, text.pPos);
-}
-
-void data::String::RemoveAction::retract(Model& model) {
-    auto& text{static_cast<String&>(model)};
-
-    text.pValue.insert(text.pPos, mRemoved);
-    text.pPos += mNum;
-
-    text.sendToReceivers(&Receiver::onChange, text.pValue);
-    text.sendToReceivers(&Receiver::onMove, text.pPos);
+void data::String::ChangeAction::retract(Model& model) {
+    // These are identical
+    perform(model);
 }
 
 data::String::MoveAction::MoveAction(size pos) : mPos{pos} {}
 
 bool data::String::MoveAction::shouldPerform(Model& model) {
-    auto& text{static_cast<String&>(model)};
+    auto& str{static_cast<String&>(model)};
 
-    assert(mPos <= text.pValue.size());
-    return mPos != text.pPos;
+    assert(mPos <= str.mValue.size());
+    return mPos != str.mPos;
 }
 
 void data::String::MoveAction::perform(Model& model) {
-    auto& text{static_cast<String&>(model)};
+    auto& str{static_cast<String&>(model)};
 
-    mLast = text.pPos;
-    text.pPos = mPos;
+    auto tmp{str.mPos};
+    str.mPos = mPos;
+    mPos = tmp;
     
-    text.sendToReceivers(&Receiver::onMove, text.pPos);
+    str.sendToReceivers(&Receiver::onMove);
 }
 
 void data::String::MoveAction::retract(Model& model) {
-    auto& text{static_cast<String&>(model)};
-
-    text.pPos = mLast;
-
-    text.sendToReceivers(&Receiver::onMove, text.pPos);
+    // These are identical
+    perform(model);
 }
 

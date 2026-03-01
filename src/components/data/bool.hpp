@@ -28,15 +28,26 @@ namespace data {
 struct DATA_EXPORT Bool final : Model {
     struct Context;
     struct Receiver;
+    struct Responder;
 
     struct SetAction;
 
+    using Filter = std::function<void(bool&)>;
+
     Bool(Node * = nullptr);
     Bool(const Bool&, Node * = nullptr);
+    ~Bool() override;
 
     std::unique_ptr<Model> clone(Node *) const override;
 
+    void setFilter(Filter);
+
+    [[nodiscard]] Responder& responder() const;
+
 private:
+    std::unique_ptr<Responder> mRsp;
+
+    Filter mFilter;
     bool mValue{false};
 };
 
@@ -44,8 +55,8 @@ struct DATA_EXPORT Bool::Context : Model::Context {
     Context(Bool&);
     ~Context();
 
-    void set(bool);
-    void operator|=(bool);
+    void set(bool) const;
+    void operator|=(bool) const;
 
     [[nodiscard]] bool val() const;
 };
@@ -54,7 +65,19 @@ struct DATA_EXPORT Bool::Receiver : Model::Receiver {
 protected:
     friend Bool;
 
-    virtual void onSet(bool) {}
+    /**
+     * Value has changed
+     */
+    virtual void onSet() {}
+};
+
+struct DATA_EXPORT Bool::Responder : Model::Responder<Bool> {
+    Function<> onSet_;
+
+private:
+    void onSet() override { 
+        if (onSet_) onSet_(context<Bool>());
+    }
 };
 
 struct DATA_EXPORT Bool::SetAction : Action {
@@ -65,7 +88,7 @@ struct DATA_EXPORT Bool::SetAction : Action {
     void retract(Model&) override;
 
 private:
-    const bool mValue;
+    bool mValue;
 };
 
 } // namespace data

@@ -22,24 +22,31 @@
 #include <cassert>
 #include <memory>
 
-data::Choice::Choice(Node *parent) : Model(parent) {}
+data::Choice::Choice(Node *parent) : Model(parent) {
+    mRsp = std::make_unique<Responder>();
+    mRsp->attach(*this);
+}
 
 data::Choice::Choice(const Choice& other, Node *parent) :
     Model(other, parent) {
     mNumChoices = other.mNumChoices;
     mIdx = other.mIdx;
+
+    mRsp = std::make_unique<Responder>(*other.mRsp);
+    mRsp->attach(*this);
+}
+
+data::Choice::~Choice() {
+    mRsp->detach();
 }
 
 auto data::Choice::clone(Node *parent) const -> std::unique_ptr<Model> {
     return std::make_unique<Choice>(*this, parent);
 }
 
-void data::Choice::setChoiceValidator(ChoiceValidator validator) {
-    mChoiceValidator = std::move(validator);
-}
-
-void data::Choice::setUpdateValidator(UpdateValidator validator) {
-    mUpdateValidator = std::move(validator);
+void data::Choice::setFilter(Filter filter) {
+    std::lock_guard scopeLock{pLock};
+    mFilter = std::move(filter);
 }
 
 data::Choice::Context::Context(Choice& choice):
@@ -47,38 +54,32 @@ data::Choice::Context::Context(Choice& choice):
 
 data::Choice::Context::~Context() = default;
 
-void data::Choice::Context::choose(uint32 idx) {
-    assert(idx <= std::numeric_limits<int32>::max());
-    pModel.processAction(std::make_unique<ChoiceAction>(
-        static_cast<int32>(idx)
+void data::Choice::Context::choose(int32 idx) const {
+    model().processAction(std::make_unique<ChoiceAction>(
+        idx
     ));
 }
 
-void data::Choice::Context::unchoose() {
-    pModel.processAction(std::make_unique<ChoiceAction>(
-        -1
-    ));
+void data::Choice::Context::unchoose() const {
+    choose(-1);
 }
 
-void data::Choice::Context::update(uint32 num) {
-    pModel.processAction(std::make_unique<UpdateAction>(
+void data::Choice::Context::update(uint32 num) const {
+    model().processAction(std::make_unique<UpdateAction>(
         static_cast<int32>(num)
     ));
 }
 
 uint32 data::Choice::Context::numChoices() const {
-    auto& choice{static_cast<Choice&>(pModel)};
-    return choice.mNumChoices;
+    return model<Choice>().mNumChoices;
 }
 
 int32 data::Choice::Context::choice() const {
-    auto& choice{static_cast<Choice&>(pModel)};
-    return choice.mIdx;
+    return model<Choice>().mIdx;
 }
 
 data::Choice::Context::operator bool() const {
-    auto& choice{static_cast<Choice&>(pModel)};
-    return choice.mIdx >= 0;
+    return model<Choice>().mIdx >= 0;
 }
 
 data::Choice::ChoiceAction::ChoiceAction(int32 choice) : mChoice{choice} {}
@@ -86,24 +87,27 @@ data::Choice::ChoiceAction::ChoiceAction(int32 choice) : mChoice{choice} {}
 bool data::Choice::ChoiceAction::shouldPerform(Model& model) {
     auto& choice{static_cast<Choice&>(model)};
 
+    assert(mChoice >= -1);
     assert(mChoice < choice.mNumChoices);
 
-    if (choice.mIdx == mChoice) return false;
-    if (
-            choice.mChoiceValidator and
-            not choice.mChoiceValidator(mChoice)
-       ) return false;
+    // shouldPerform is effectively the setup function for an action. It is
+    // called only once and called no matter where the action comes from. Thus
+    // it is where the filter should go.
+    if (choice.mFilter) choice.mFilter(mChoice);
 
-    return true;
+    assert(mChoice >= -1);
+    assert(mChoice < choice.mNumChoices);
+
+    return choice.mIdx != mChoice;
 }
 
 void data::Choice::ChoiceAction::perform(Model& model) {
     auto& choice{static_cast<Choice&>(model)};
 
     mLast = choice.mIdx;
-    choice.mIdx = static_cast<int32>(mChoice);
+    choice.mIdx = mChoice;
 
-    choice.sendToReceivers(&Receiver::onChoice, choice.mIdx);
+    choice.sendToReceivers(&Receiver::onChoice);
 }
 
 void data::Choice::ChoiceAction::retract(Model& model) {
@@ -111,7 +115,7 @@ void data::Choice::ChoiceAction::retract(Model& model) {
 
     choice.mIdx = mLast;
 
-    choice.sendToReceivers(&Receiver::onChoice, choice.mIdx);
+    choice.sendToReceivers(&Receiver::onChoice);
 }
 
 data::Choice::UpdateAction::UpdateAction(uint32 num) : mNum{num} {}
@@ -130,7 +134,8 @@ void data::Choice::UpdateAction::perform(Model& model) {
     mLastChoice = choice.mIdx;
     choice.mIdx = -1;
 
-    choice.sendToReceivers(&Receiver::onUpdate, choice.mNumChoices);
+    choice.sendToReceivers(&Receiver::onUpdate);
+    choice.sendToReceivers(&Receiver::onChoice);
 }
 
 void data::Choice::UpdateAction::retract(Model& model) {
@@ -139,7 +144,7 @@ void data::Choice::UpdateAction::retract(Model& model) {
     choice.mIdx = mLastChoice;
     choice.mNumChoices = mLast;
 
-    choice.sendToReceivers(&Receiver::onUpdate, choice.mNumChoices);
-    choice.sendToReceivers(&Receiver::onChoice, choice.mIdx);
+    choice.sendToReceivers(&Receiver::onUpdate);
+    choice.sendToReceivers(&Receiver::onChoice);
 }
 

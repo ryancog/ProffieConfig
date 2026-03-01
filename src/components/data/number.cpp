@@ -23,19 +23,35 @@
 #include <cassert>
 
 template <typename T>
-data::priv::Number<T>::Number(Node *parent) :
-    Model(parent) {}
+data::priv::Number<T>::Number(Node *parent) : Model(parent) {
+    mRsp = std::make_unique<Responder>();
+    mRsp->attach(*this);
+}
 
 template <typename T>
 data::priv::Number<T>::Number(const Number& other, Node *parent) :
     Model(other, parent) {
     mValue = other.mValue;
     mParams = other.mParams;
+
+    mRsp = std::make_unique<Responder>(*other.mRsp);
+    mRsp->attach(*this);
+}
+
+template <typename T>
+data::priv::Number<T>::~Number() {
+    mRsp->detach();
 }
 
 template <typename T>
 auto data::priv::Number<T>::clone(Node *parent) const -> std::unique_ptr<Model> {
     return std::make_unique<Number>(*this, parent);
+}
+
+template <typename T>
+void data::priv::Number<T>::setFilter(Filter filter) {
+    std::lock_guard scopeLock{pLock};
+    mFilter = std::move(filter);
 }
 
 template <typename T>
@@ -55,29 +71,27 @@ template <typename T>
 data::priv::Number<T>::Context::~Context() = default;
 
 template <typename T>
-void data::priv::Number<T>::Context::set(T val) {
-    pModel.processAction(std::make_unique<SetAction>(
+void data::priv::Number<T>::Context::set(T val) const {
+    model().processAction(std::make_unique<SetAction>(
         val
     ));
 }
 
 template <typename T>
-void data::priv::Number<T>::Context::update(Params params) {
-    pModel.processAction(std::make_unique<UpdateAction>(
+void data::priv::Number<T>::Context::update(Params params) const {
+    model().processAction(std::make_unique<UpdateAction>(
         params
     ));
 }
 
 template <typename T>
 T data::priv::Number<T>::Context::val() const {
-    auto& num{static_cast<Number&>(pModel)};
-    return num.mValue;
+    return model<Number>().mValue;
 }
 
 template <typename T>
 auto data::priv::Number<T>::Context::params() const -> Params {
-    auto& num{static_cast<Number&>(pModel)};
-    return num.mParams;
+    return model<Number>().mParams;
 }
 
 template <typename T>
@@ -87,6 +101,10 @@ data::priv::Number<T>::SetAction::SetAction(T val) :
 template <typename T>
 bool data::priv::Number<T>::SetAction::shouldPerform(Model& model) {
     auto& num{static_cast<Number&>(model)};
+
+    num.mFilter(mValue);
+    mValue = num.clamp(mValue);
+
     return mValue != num.mValue;
 }
 
@@ -97,7 +115,7 @@ void data::priv::Number<T>::SetAction::perform(Model& model) {
     mLast = num.mValue;
     num.mValue = num.clamp(mValue);
 
-    num.sendToReceivers(&Receiver::onSet, num.mValue);
+    num.sendToReceivers(&Receiver::onSet);
 }
 
 template <typename T>
@@ -106,7 +124,7 @@ void data::priv::Number<T>::SetAction::retract(Model& model) {
 
     num.mValue = mLast;
 
-    num.sendToReceivers(&Receiver::onSet, num.mValue);
+    num.sendToReceivers(&Receiver::onSet);
 }
 
 template <typename T>
@@ -130,9 +148,13 @@ void data::priv::Number<T>::UpdateAction::perform(Model& model) {
     mLast = num.mParams;
     num.mParams = mParams;
     mLastValue = num.mValue;
-    num.mValue = num.clamp(num.mValue);
 
-    num.sendToReceivers(&Receiver::onUpdate, num.mParams);
+    auto tmp{num.mValue};
+    num.mFilter(tmp);
+    num.mValue = num.clamp(tmp);
+
+    num.sendToReceivers(&Receiver::onUpdate);
+    num.sendToReceivers(&Receiver::onSet);
 }
 
 template <typename T>
@@ -142,7 +164,8 @@ void data::priv::Number<T>::UpdateAction::retract(Model& model) {
     num.mParams = mLast;
     num.mValue = mLastValue;
 
-    num.sendToReceivers(&Receiver::onUpdate, num.mParams);
+    num.sendToReceivers(&Receiver::onUpdate);
+    num.sendToReceivers(&Receiver::onSet);
 }
 
 template struct data::priv::Number<int32>;
