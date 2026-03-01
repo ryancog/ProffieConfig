@@ -55,6 +55,7 @@ struct UTILS_EXPORT Version {
         // Another clang bug w/ implicit ctor :/
         // NOLINTNEXTLINE(modernize-use-equals-default)
         VerNum() {}
+        VerNum(uint8 v) : val_{v} {}
 
         CompMode mode_{CompMode::Exact};
         uint8 val_{0};
@@ -63,6 +64,7 @@ struct UTILS_EXPORT Version {
     struct Tag {
         // NOLINTNEXTLINE(modernize-use-equals-default)
         Tag() {}
+        Tag(std::string s) : val_{std::move(s)} {}
 
         CompMode mode_{CompMode::Exact};
         std::string val_;
@@ -97,6 +99,9 @@ struct UTILS_EXPORT Version {
      */
     Tag tag_;
 
+    auto operator==(const Version&) const = delete;
+    auto operator<=>(const Version&) const = delete;
+
     /**
      * Compare another version to this one, evaluated according to the
      * semantics of *this* version.
@@ -110,7 +115,13 @@ struct UTILS_EXPORT Version {
      * `this`=""
      * v1.8.1 compared to v1.8.x
      */
-    std::strong_ordering operator<=>(const Version&) const;
+    [[nodiscard]] std::strong_ordering compare(const Version&) const;
+
+    /**
+     * Strictly compare the two items based on data content rather than version
+     * semantics.
+     */
+    [[nodiscard]] bool dataEqual(const Version&) const;
 
     /**
      * Convert a Version into string representation.
