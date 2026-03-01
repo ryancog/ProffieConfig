@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "utils.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025 Ryan Ogurek
@@ -19,36 +19,40 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-PConf::HashedData PConf::hash(const Data& data) {
+pconf::HashedData pconf::hash(const Data& data) {
     HashedData ret;
     for (const auto& entry : data) {
-        ret[entry->name].push_back(entry);
+        ret[entry->name_].push_back(entry);
     }
 
     return ret;
 }
 
-vector<string> PConf::valueAsList(const optional<string>& optStr) {
+std::vector<std::string> pconf::valueAsList(
+    const std::optional<std::string>& optStr
+) {
     if (not optStr) return {};
 
-    vector<string> ret;
+    std::vector<std::string> ret;
     auto str{*optStr};
 
     while (true) {
         const auto end{str.find('\n')};
         ret.push_back(str.substr(0, end));
 
-        if (end == string::npos) break;
+        if (end == std::string::npos) break;
         str = str.substr(end + 1);
     }
 
     return ret;
 }
 
-optional<string> PConf::listAsValue(const vector<string>& list) {
-    if (list.empty()) return nullopt;
+std::optional<std::string> pconf::listAsValue(
+    const std::vector<std::string>& list
+) {
+    if (list.empty()) return std::nullopt;
 
-    string ret;
+    std::string ret;
     for (const auto& str : list) {
         ret += str;
         ret += '\n';
