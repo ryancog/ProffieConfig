@@ -3,15 +3,15 @@
 # components/utils/CMakeLists.txt
 
 add_library(utils SHARED 
-    trace.cpp
-    image.cpp
-    theme.cpp
-    crypto.cpp
-    version.cpp
-    string.cpp
-    paths.cpp
-
     info.cpp
+
+    color.cpp
+    files.cpp
+    hash.cpp
+    paths.cpp
+    rand.cpp
+    string.cpp
+    version.cpp
 )
 
 target_link_libraries(utils
