@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024-2026 Ryan Ogurek
  *
- * components/ui/message.cpp
+ * components/ui/misc/message.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 #include <wx/generic/richmsgdlgg.h>
 #endif
 
-#include "app/app.h"
+#include "app/app.hpp"
 
 int32 pcui::showMessage(
     const wxString& msg,

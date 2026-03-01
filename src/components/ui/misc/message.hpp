@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024-2026 Ryan Ogurek
  *
- * components/ui/message.hpp
+ * components/ui/misc/message.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 #include <wx/msgdlg.h>
 #include <wx/progdlg.h>
 
-#include <utils/types.h>
+#include "utils/types.hpp"
 
 #include "ui_export.h"
 
