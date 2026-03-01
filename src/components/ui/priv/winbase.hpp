@@ -35,10 +35,6 @@ struct WinBase : Base, Receiver {
         Base::Enable(en);
     }
 
-    void onShown(bool show) override {
-        Base::Show(show);
-    }
-
     void onFocus() override {
         Base::SetFocus();
     }
