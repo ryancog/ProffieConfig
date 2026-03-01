@@ -22,7 +22,7 @@
 #include <wx/sizer.h>
 
 #include "ui/detail/descriptor.hpp"
-#include "utils/types.h"
+#include "utils/types.hpp"
 
 #include "ui_export.h"
 
