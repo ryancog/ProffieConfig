@@ -63,8 +63,8 @@
 #include <wx/stdpaths.h>
 
 #include "app/critical_dialog.hpp"
-#include "logging/context.hpp"
-#include "logging/logger.hpp"
+#include "log/context.hpp"
+#include "log/logger.hpp"
 #include "utils/demangle.hpp"
 
 namespace {

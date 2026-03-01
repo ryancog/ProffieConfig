@@ -33,7 +33,7 @@
 #include "data/bool.hpp"
 #include "data/number.hpp"
 #include "data/option.hpp"
-#include "logging/logger.hpp"
+#include "log/logger.hpp"
 #include "pconf/types.h"
 #include "utils/types.hpp"
 

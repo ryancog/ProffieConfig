@@ -23,8 +23,8 @@
 #include <string>
 #include <vector>
 
-#include "logging/message.hpp"
-#include "logging/severity.hpp"
+#include "log/message.hpp"
+#include "log/severity.hpp"
 
 #include "log_export.h"
 

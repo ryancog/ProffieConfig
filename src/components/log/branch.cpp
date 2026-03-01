@@ -19,8 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "logging/context.hpp"
-#include "logging/logger.hpp"
+#include "log/context.hpp"
+#include "log/logger.hpp"
 
 using namespace logging;
 

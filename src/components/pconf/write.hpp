@@ -21,7 +21,7 @@
 
 #include <ostream>
 
-#include "logging/branch.hpp"
+#include "log/branch.hpp"
 #include "pconf/types.hpp"
 
 #include "pconf_export.h"

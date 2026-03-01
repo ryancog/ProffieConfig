@@ -22,7 +22,7 @@
 #include <algorithm>
 #include <iostream>
 
-#include "logging/logger.hpp"
+#include "log/logger.hpp"
 
 namespace {
 

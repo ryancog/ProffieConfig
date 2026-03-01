@@ -26,7 +26,7 @@
 
 #include <wx/app.h>
 
-#include "logging/logger.hpp"
+#include "log/logger.hpp"
 #include "utils/paths.hpp"
 #include "utils/types.hpp"
 

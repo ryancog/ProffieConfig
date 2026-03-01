@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-#include "logging/message.hpp"
+#include "log/message.hpp"
 
 #include "log_export.h"
 

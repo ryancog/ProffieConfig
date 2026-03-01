@@ -22,7 +22,7 @@
 #include <utility>
 #include <string>
 
-#include "logging/severity.hpp"
+#include "log/severity.hpp"
 
 #include "log_export.h"
 
