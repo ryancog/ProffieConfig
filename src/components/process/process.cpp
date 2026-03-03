@@ -1,7 +1,7 @@
-#include "process.h"
+#include "process.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * components/process/process.cpp
  *
@@ -22,7 +22,7 @@
 #include <cassert>
 #include <cstring>
 #include <future>
-#include <iostream>
+#include <list>
 
 #if defined(__APPLE__) or defined(__linux__)
 #include <unistd.h>
@@ -47,20 +47,20 @@ using PidType = __pid_t;
 #endif
 
 struct InternalData {
-    std::promise<Process::Result> promise;
+    std::promise<Process::Result> promise_;
 #   if defined(__APPLE__) or defined(__linux__)
-    int parentFromChild[2];
-    int childFromParent[2];
-    PidType pid{-1};
+    int parentFromChild_[2];
+    int childFromParent_[2];
+    PidType pid_{-1};
 #   elif defined(_WIN32)
-    HANDLE parentFromChild[2];
-    HANDLE childFromParent[2];
-    DWORD id;
+    HANDLE parentFromChild_[2];
+    HANDLE childFromParent_[2];
+    DWORD id_;
 #   endif
 };
 
 std::mutex dataLock;
-list<InternalData> internalDatas;
+std::list<InternalData> internalDatas;
 
 #if defined(__APPLE__) or defined(__linux__)
 bool sigHandled{false};
@@ -82,7 +82,7 @@ Process::~Process() {
     dataLock.unlock();
 }
 
-void Process::create(string exec, span<string> args) {
+void Process::create(std::string exec, std::span<std::string> args) {
     assert(not mRef);
     dataLock.lock();
     auto& data{internalDatas.emplace_back()};
@@ -99,26 +99,26 @@ void Process::create(string exec, span<string> args) {
     }
 
     if (
-            pipe(data.childFromParent) == -1 or
-            pipe(data.parentFromChild) == -1
+            pipe(data.childFromParent_) == -1 or
+            pipe(data.parentFromChild_) == -1
        ) {
-        data.promise.set_value({.err=Result::CONNECTION_FAILED});
+        data.promise_.set_value({.err_=Result::eConnection_Failed});
         return;
     }
 
     auto pid{fork()};
     if (pid == -1) {
-        data.promise.set_value({.err=Result::CREATION_FAILED});
+        data.promise_.set_value({.err_=Result::eCreation_Failed});
         return;
     }
 
     if (pid == 0) {
-        dup2(data.childFromParent[0], STDIN_FILENO);
-        dup2(data.parentFromChild[1], STDOUT_FILENO);
-        dup2(data.parentFromChild[1], STDERR_FILENO);
+        dup2(data.childFromParent_[0], STDIN_FILENO);
+        dup2(data.parentFromChild_[1], STDOUT_FILENO);
+        dup2(data.parentFromChild_[1], STDERR_FILENO);
 
-        close(data.childFromParent[1]);
-        close(data.parentFromChild[0]);
+        close(data.childFromParent_[1]);
+        close(data.parentFromChild_[0]);
 
         char **argv{new char *[args.size() + 2]};
         argv[0] = new char[exec.length() + 1];
@@ -135,13 +135,13 @@ void Process::create(string exec, span<string> args) {
         argv[args.size() + 1] = nullptr;
 
         execvp(exec.c_str(), argv);
-        data.promise.set_value({.err=Result::EXECUTION_FAILED});
+        data.promise_.set_value({.err_=Result::eExecution_Failed});
         exit(1);
     } 
 
-    data.pid = pid;
-    close(data.childFromParent[0]);
-    close(data.parentFromChild[1]);
+    data.pid_ = pid;
+    close(data.childFromParent_[0]);
+    close(data.parentFromChild_[1]);
 #   elif defined(_WIN32)
     SECURITY_ATTRIBUTES pipeAttributes;
     pipeAttributes.nLength = sizeof pipeAttributes;
@@ -150,20 +150,20 @@ void Process::create(string exec, span<string> args) {
 
     bool pipeSuccess{true};
     pipeSuccess &= CreatePipe(
-        &data.parentFromChild[0],
-        &data.parentFromChild[1],
+        &data.parentFromChild_[0],
+        &data.parentFromChild_[1],
         &pipeAttributes,
         0
     );
     pipeSuccess &= CreatePipe(
-        &data.childFromParent[0],
-        &data.childFromParent[1],
+        &data.childFromParent_[0],
+        &data.childFromParent_[1],
         &pipeAttributes,
         0
     );
 
     if (not pipeSuccess) {
-        data.promise.set_value({.err=Result::CONNECTION_FAILED});
+        data.promise_.set_value({.err_=Result::eConnection_Failed});
         return;
     }
 
@@ -171,9 +171,9 @@ void Process::create(string exec, span<string> args) {
     PROCESS_INFORMATION procInfo;
     memset(&startupInfo, 0, sizeof startupInfo);
     startupInfo.cb = sizeof startupInfo;
-    startupInfo.hStdError = data.parentFromChild[1];
-    startupInfo.hStdOutput = data.parentFromChild[1];
-    startupInfo.hStdInput = data.childFromParent[0];
+    startupInfo.hStdError = data.parentFromChild_[1];
+    startupInfo.hStdOutput = data.parentFromChild_[1];
+    startupInfo.hStdInput = data.childFromParent_[0];
     startupInfo.dwFlags |= STARTF_USESTDHANDLES;
 
     string execBuffer{exec};
@@ -195,13 +195,16 @@ void Process::create(string exec, span<string> args) {
         &procInfo
     )};
     if (not procSuccess) {
-        data.promise.set_value({.err=Result::CREATION_FAILED, .systemResult=GetLastError()});
+        data.promise_.set_value({
+            .err_=Result::eCreation_Failed,
+            .systemResult_=GetLastError()
+        });
         return;
     }
 
-    data.id = procInfo.dwProcessId;
-    CloseHandle(data.parentFromChild[1]);
-    CloseHandle(data.childFromParent[0]);
+    data.id_ = procInfo.dwProcessId;
+    CloseHandle(data.parentFromChild_[1]);
+    CloseHandle(data.childFromParent_[0]);
     CloseHandle(procInfo.hThread);
 
     std::thread{[&data, id=procInfo.dwProcessId, procHandle=procInfo.hProcess]() {
@@ -212,15 +215,21 @@ void Process::create(string exec, span<string> args) {
         // Needs to lock so data remains valid
         dataLock.lock();
         if (exitCode == 0) {
-            data.promise.set_value({.err=Result::SUCCESS});
+            data.promise_.set_value({.err_=Result::eSuccess});
         } else if (exitCode >= ERROR_SEVERITY_ERROR) {
-            data.promise.set_value({.err=Result::CRASHED, .systemResult=exitCode});
+            data.promise_.set_value({
+                .err_=Result::eCrashed,
+                .systemResult_=exitCode
+            });
         } else {
-            data.promise.set_value({.err=Result::EXITED_WITH_FAILURE, .systemResult=exitCode});
+            data.promise_.set_value({
+                .err_=Result::eExited_With_Failure,
+                .systemResult_=exitCode
+            });
         }
 
-        CloseHandle(data.childFromParent[1]);
-        CloseHandle(data.parentFromChild[0]);
+        CloseHandle(data.childFromParent_[1]);
+        CloseHandle(data.parentFromChild_[0]);
         CloseHandle(procHandle);
         dataLock.unlock();
     }}.detach();
@@ -229,17 +238,18 @@ void Process::create(string exec, span<string> args) {
 #   endif
 }
 
-optional<string> Process::read() {
+std::optional<std::string> Process::read() {
     assert(mRef);
     InternalData& data{*reinterpret_cast<InternalData *>(mRef)};
+
 #   if defined(__APPLE__) or defined(__linux__)
-    string ret;
+    std::string ret;
     ret.resize(2048);
 
     while (not false) {
-        auto res{::read(data.parentFromChild[0], ret.data(), ret.size())};
+        auto res{::read(data.parentFromChild_[0], ret.data(), ret.size())};
         if (res == -1 and errno == EINTR) continue;
-        if (res == -1 or res == 0) return nullopt;
+        if (res == -1 or res == 0) return std::nullopt;
 
         ret.resize(res);
         break;
@@ -249,7 +259,7 @@ optional<string> Process::read() {
 #   elif defined(_WIN32)
     DWORD numBytes{};
     auto peekResult{PeekNamedPipe(
-        data.parentFromChild[0],
+        data.parentFromChild_[0],
         nullptr,
         0,
         nullptr,
@@ -260,10 +270,10 @@ optional<string> Process::read() {
         return nullopt;
     }
 
-    string ret;
+    std::string ret;
     ret.resize(numBytes);
     auto readResult{ReadFile(
-        data.parentFromChild[0],
+        data.parentFromChild_[0],
         ret.data(),
         ret.size(),
         nullptr,
@@ -277,15 +287,15 @@ optional<string> Process::read() {
 #   endif
 }
 
-bool Process::write(const string_view& str) {
+bool Process::write(const std::string_view& str) {
     assert(mRef);
     InternalData& data{*reinterpret_cast<InternalData *>(mRef)};
 
 #   if defined(__APPLE__) or defined(__linux__)
-    return -1 != ::write(data.childFromParent[1], str.data(), str.size());
+    return -1 != ::write(data.childFromParent_[1], str.data(), str.size());
 #   elif defined(_WIN32)
     return WriteFile(
-        data.childFromParent[1],
+        data.childFromParent_[1],
         str.data(),
         str.size(),
         nullptr,
@@ -296,7 +306,7 @@ bool Process::write(const string_view& str) {
 
 Process::Result Process::finish() {
     assert(mRef);
-    auto ret{reinterpret_cast<InternalData *>(mRef)->promise.get_future().get()};
+    auto ret{reinterpret_cast<InternalData *>(mRef)->promise_.get_future().get()};
     dataLock.lock();
     for (auto iter{internalDatas.begin()}; iter != internalDatas.end(); ++iter) {
         if (&*iter == mRef) {
@@ -310,9 +320,9 @@ Process::Result Process::finish() {
 
 #ifdef _WIN32
 Process::Result Process::elevatedProcess(
-    cstring exec, const span<string>& args
+    cstring exec, const std::span<std::string>& args
 ) {
-    string argBuffer{};
+    std::string argBuffer{};
     for (auto& arg : args) {
         if (not argBuffer.empty()) argBuffer += ' ';
         argBuffer += arg;
@@ -335,16 +345,16 @@ Process::Result Process::elevatedProcess(
         GetExitCodeProcess(execInfo.hProcess, &exitCode);
 
         if (exitCode == 0) {
-            ret = {.err=Result::SUCCESS};
+            ret = {.err_=Result::eSuccess};
         } else if (exitCode >= ERROR_SEVERITY_ERROR) {
-            ret = {.err=Result::CRASHED, .systemResult=exitCode};
+            ret = {.err_=Result::eCrashed, .systemResult_=exitCode};
         } else {
-            ret = {.err=Result::EXITED_WITH_FAILURE, .systemResult=exitCode};
+            ret = {.err_=Result_::eExited_With_Failure, .systemResult_=exitCode};
         }
 
         CloseHandle(execInfo.hProcess);
     } else {
-        ret = {.err=Result::CREATION_FAILED, .systemResult=GetLastError()};
+        ret = {.err_=Result::eCreation_Failed, .systemResult_=GetLastError()};
     }
 
     return ret;
@@ -359,26 +369,34 @@ void onChildExit(int sig) {
     int status{};
     PidType pid{};
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+        // Ugly macro stuff false-positive
+        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
         if (not WIFEXITED(status) and not WIFSIGNALED(status)) continue;
 
         dataLock.lock();
         for (auto& data : internalDatas) {
-            if (data.pid != pid) continue;
+            if (data.pid_ != pid) continue;
 
             if (WIFEXITED(status)) {
                 auto exitStatus{WEXITSTATUS(status)};
                 if (exitStatus == 0) {
-                    data.promise.set_value({.err=Process::Result::SUCCESS});
+                    data.promise_.set_value({.err_=Process::Result::eSuccess});
                 } else {
-                    data.promise.set_value({.err=Process::Result::EXITED_WITH_FAILURE, .systemResult=exitStatus});
+                    data.promise_.set_value({
+                        .err_=Process::Result::eExited_With_Failure,
+                        .systemResult_=exitStatus
+                    });
                 }
             } else {
                 auto signal{WTERMSIG(status)};
-                data.promise.set_value({.err=Process::Result::CRASHED, .systemResult=signal});
+                data.promise_.set_value({
+                    .err_=Process::Result::eCrashed,
+                    .systemResult_=signal
+                });
             }
 
-            close(data.childFromParent[1]);
-            close(data.parentFromChild[0]);
+            close(data.childFromParent_[1]);
+            close(data.parentFromChild_[0]);
         }
         dataLock.unlock();
     }
