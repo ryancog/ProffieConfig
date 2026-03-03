@@ -25,7 +25,9 @@
 extern "C" __attribute__((dllimport)) int CopyFileA(const char *, const char *, int);
 #endif
 
-bool files::copyOverwrite(const fs::path& src, const fs::path& dst, std::error_code& err) {
+bool files::copyOverwrite(
+    const fs::path& src, const fs::path& dst, std::error_code& err
+) {
 #   ifdef _WIN32
     auto res{CopyFileA(src.string().c_str(), dst.string().c_str(), false)};
     err = {static_cast<int>(GetLastError()), std::system_category()};

@@ -22,15 +22,17 @@
 #include <filesystem>
 #include <fstream>
 
+#include "utils_export.h"
+
 namespace fs = std::filesystem;
 
 namespace files {
 
-bool copyOverwrite(const fs::path& src, const fs::path& dst, std::error_code& err);
+UTILS_EXPORT bool copyOverwrite(const fs::path& src, const fs::path& dst, std::error_code& err);
 
-std::ifstream openInput(const fs::path& path);
+UTILS_EXPORT std::ifstream openInput(const fs::path& path);
 
-std::ofstream openOutput(const fs::path& path);
+UTILS_EXPORT std::ofstream openOutput(const fs::path& path);
 
 } // namespace files
 
