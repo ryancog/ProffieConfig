@@ -40,8 +40,10 @@ auto data::Bool::clone(Node *parent) const -> std::unique_ptr<Model> {
 
 void data::Bool::setFilter(Filter filter) {
     std::lock_guard scopeLock{pLock};
-    mFilter = std::move(filter);
+    mFilter = filter;
 }
+
+auto data::Bool::responder() const -> Responder& { return *mRsp; }
 
 data::Bool::Context::Context(Bool& bl) : Model::Context(bl) {}
 
@@ -67,7 +69,7 @@ data::Bool::SetAction::SetAction(bool val) : mValue{val} {}
 
 bool data::Bool::SetAction::shouldPerform(Model& model) {
     auto& bl{static_cast<Bool&>(model)};
-    bl.mFilter(mValue);
+    bl.mFilter(bl, mValue);
     return bl.mValue != mValue;
 }
 

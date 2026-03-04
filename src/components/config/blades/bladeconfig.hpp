@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config/blades/simple.hpp"
+#include "config/blades/ws281x.hpp"
 #include "data/bool.hpp"
 #include "data/number.hpp"
 #include "data/selector.hpp"
@@ -35,54 +37,68 @@ namespace blades {
 
 constexpr int32 NO_BLADE{1000000000};
 
-struct CONFIG_EXPORT Blade {
-    Blade(Config&);
+struct CONFIG_EXPORT BladeConfig : data::Node {
+    BladeConfig(data::Node *);
+    ~BladeConfig() override;
 
-    enum class Type {
-        // NOLINTNEXTLINE(readability-identifier-naming)
-        WS281X,
-        Simple,
-        Unassigned,
-    };
-
-    data::Selector type_;
-    data::Vector types_;
-
-    data::Integer brightness_;
-};
-
-struct CONFIG_EXPORT BladeConfig {
-    BladeConfig(Config&);
+    bool enumerate(const EnumFunc&) override;
+    Model *find(uint64) override;
 
     data::Vector blades_;
 
-    // // Notify of issues
-    // pcui::Notifier notifyData;
+    enum {
+        eIssue_None = 0,
+        eIssue_No_Preset_Array  = 1UL << 0,
+        eIssue_Duplicate_ID     = 1UL << 1,
+        eIssue_Duplicate_Name   = 1UL << 2,
+        eIssue_Mask             = 0b111,
+    };
+    static constexpr auto ISSUE_WARNINGS{eIssue_Duplicate_ID};
+    static constexpr auto ISSUE_ERRORS{
+        eIssue_Duplicate_Name | eIssue_No_Preset_Array
+    };
 
-    // enum {
-    //     ISSUE_NONE = 0,
-    //     ISSUE_NO_PRESETARRAY  = 1UL << 0,
-    //     ISSUE_DUPLICATE_ID    = 1UL << 1,
-    //     ISSUE_DUPLICATE_NAME  = 1UL << 2,
-    // };
-    // static constexpr auto ISSUE_WARNINGS{
-    //     ISSUE_DUPLICATE_ID
-    // };
-    // static constexpr auto ISSUE_ERRORS{
-    //     ISSUE_DUPLICATE_NAME | ISSUE_NO_PRESETARRAY
-    // };
-    // [[nodiscard]] uint32 computeIssues() const;
+    // TODO: Another observable.
+    data::Integer issues_;
 
-    // /**
-    //  * @param Issue or bitor'd Issue's
-    //  * @return untranslated string
-    //  */
-    // [[nodiscard]] static string issueString(uint32 issues);
+    /**
+     * @param Issue or bitor'd Issue's
+     * @return untranslated string
+     */
+    [[nodiscard]] static std::string issueString(uint32 issues);
 
     data::String name_;
-    data::Choice presetArray_;
+    data::Selector presetArray_;
     data::Integer id_;
     data::Bool noBladeId_;
+
+private:
+    void recomputeIssues();
+
+};
+
+struct CONFIG_EXPORT Blade : data::Node {
+    Blade(data::Node *);
+    ~Blade() override;
+
+    bool enumerate(const EnumFunc&) override;
+    Model *find(uint64) override;
+
+    [[nodiscard]] WS281X& ws281x() [[clang::lifetimebound]];
+    [[nodiscard]] Simple& simple() [[clang::lifetimebound]];
+
+    enum Type {
+        // NOLINTNEXTLINE(readability-identifier-naming)
+        eWS281X,
+        eSimple,
+        eUnassigned,
+    };
+
+    data::Selector type_;
+    // TODO: Observable with malleable innards
+    data::Vector types_;
+
+    data::Integer brightness_;
 };
 
 } // namespace blades

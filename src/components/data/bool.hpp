@@ -25,14 +25,14 @@
 
 namespace data {
 
-struct DATA_EXPORT Bool final : Model {
+struct DATA_EXPORT Bool : Model {
     struct Context;
     struct Receiver;
     struct Responder;
 
     struct SetAction;
 
-    using Filter = std::function<void(bool&)>;
+    using Filter = void (*)(const Context&, bool&);
 
     Bool(Node * = nullptr);
     Bool(const Bool&, Node * = nullptr);

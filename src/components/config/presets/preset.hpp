@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/config/preset/preset.hpp
+ * components/config/presets/preset.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,60 +19,51 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ui/controls/choice.h"
-#include "ui/controls/text.h"
-#include "utils/types.h"
+#include "data/hierarchy/node.hpp"
+#include "data/string.hpp"
+#include "data/vector.hpp"
 
 #include "config_export.h"
 
-namespace Config {
+namespace config {
 
 struct Config;
-struct PresetArray;
 
-struct CONFIG_EXPORT Preset {
-    Preset(Config&, PresetArray&);
-    explicit Preset(const Preset&);
+namespace presets {
 
-    pcui::TextData name;
-    pcui::TextData fontDir;
+struct Array;
+
+struct CONFIG_EXPORT Preset : data::Node {
+    struct Style;
+
+    Preset(data::Node *);
+    Preset(const Preset&, data::Node *);
+    ~Preset() override;
+
+    bool enumerate(const EnumFunc&) override;
+    Model *find(uint64) override;
+
+    data::String name_;
+    data::String fontDir_;
     // vector<string> fontDirs;
-    pcui::TextData track;
+    data::String track_;
 
-    struct CONFIG_EXPORT Style {
-        Style();
-        explicit Style(const Style&) = default;
-
-        pcui::TextData comment;
-        pcui::TextData style;
-    };
-
-    // No set choice manual
-    pcui::ChoiceData styleSelection;
-
-    [[nodiscard]] const vector<std::unique_ptr<Style>>& styles() const { return mStyles; }
-    [[nodiscard]] Style& style(uint32 idx) const {
-        assert(idx < mStyles.size());
-        return *mStyles[idx];
-    }
-
-    /**
-     * Only really needed when parsing a config.
-     * For user interaction the presets should be synced to blade arrays then edited.
-     */
-    Style& addStyle();
-    void popBackStyle();
-
-private:
-    friend struct PresetArrays;
-
-    Config& mConfig;
-    PresetArray& mParent;
-
-    // Never shrinks, so data isn't lost.
-    // At worst it's jumbled by moving blades
-    vector<std::unique_ptr<Style>> mStyles;
+    data::Vector styles_;
 };
 
-} // namespace Config
+struct CONFIG_EXPORT Style : data::Node {
+    Style(Node *);
+    Style(const Style&, data::Node *);
+
+    bool enumerate(const EnumFunc&) override;
+    Model *find(uint64) override;
+    std::unique_ptr<Model> clone(Node *) const override;
+
+    data::String comment_;
+    data::String content_;
+};
+
+} // namespace presets
+
+} // namespace config
 

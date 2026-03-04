@@ -8,6 +8,8 @@ add_library(data SHARED
     hierarchy/node.cpp
     hierarchy/root.cpp
 
+    helpers/exclusive.cpp
+
     bool.cpp
     choice.cpp
     generic.cpp

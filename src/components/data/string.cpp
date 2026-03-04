@@ -45,8 +45,10 @@ auto data::String::clone(Node *parent) const -> std::unique_ptr<Model> {
 
 void data::String::setFilter(Filter filter) {
     std::lock_guard scopeLock{pLock};
-    mFilter = std::move(filter);
+    mFilter = filter;
 }
+
+auto data::String::responder() const -> Responder& { return *mRsp; }
 
 data::String::Context::Context(String& str) : Model::Context(str) {}
 
@@ -56,6 +58,21 @@ void data::String::Context::change(std::string&& str, size pos) const {
     model().processAction(std::make_unique<ChangeAction>(
         std::move(str), pos
     ));
+}
+
+void data::String::Context::change(std::string&& str) const {
+    const auto pos{str.length()};
+    change(std::move(str), pos);
+}
+
+void data::String::Context::append(char c) const {
+    append(std::string_view{&c, 1});
+}
+
+void data::String::Context::append(std::string_view view) const {
+    auto value{model<String>().mValue};
+    value += view;
+    change(std::move(value));
 }
 
 void data::String::Context::clear() const {
@@ -93,7 +110,7 @@ bool data::String::ChangeAction::shouldPerform(Model& model) {
     auto& str{static_cast<String&>(model)};
 
     assert(mPos <= mStr.length());
-    if (str.mFilter) str.mFilter(mStr, mPos);
+    if (str.mFilter) str.mFilter(str, mStr, mPos);
     assert(mPos <= mStr.length());
 
     return mStr != str.mValue or mPos != str.mPos;

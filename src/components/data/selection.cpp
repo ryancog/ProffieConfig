@@ -21,6 +21,7 @@
 
 #include <cassert>
 #include <memory>
+#include <mutex>
 
 data::Selection::Selection(Node *parent) :
     Model(parent) {
@@ -42,6 +43,13 @@ data::Selection::~Selection() {
 auto data::Selection::clone(Node *parent) const -> std::unique_ptr<Model> {
     return std::make_unique<Selection>(*this, parent);
 }
+
+void data::Selection::setAddFilter(AddFilter filter) {
+    std::lock_guard scopeLock{pLock};
+    mAddFilter = filter;
+}
+
+auto data::Selection::responder() const -> Responder& { return *mRsp; }
 
 data::Selection::Context::Context(Selection& sel) :
     Model::Context{sel} {}
@@ -167,6 +175,20 @@ data::Selection::SetItemsAction::SetItemsAction(
 
 bool data::Selection::SetItemsAction::shouldPerform(Model& model) {
     auto& sel{static_cast<Selection&>(model)};
+
+    for (size idx{0}; idx < mItems.size(); ++idx) {
+        auto& item{mItems[idx]};
+        sel.mAddFilter(item);
+
+        if (item.empty()) {
+            mItems.erase(std::next(
+                mItems.begin(),
+                static_cast<ssize>(idx)
+            ));
+
+            --idx;
+        }
+    }
 
     return sel.mItems != mItems;
 }

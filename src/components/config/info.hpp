@@ -28,5 +28,5 @@ namespace config {
 CONFIG_EXPORT void setExecutableVersion(cstring version);
 CONFIG_EXPORT cstring version();
 
-} // namespace Config
+} // namespace config
 

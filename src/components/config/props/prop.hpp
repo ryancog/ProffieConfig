@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2026 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/config/buttons/button.hpp
+ * components/config/props/prop.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,35 +19,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/choice.hpp"
 #include "data/hierarchy/node.hpp"
-#include "data/number.hpp"
-#include "data/string.hpp"
 
 #include "config_export.h"
 
-namespace config {
+namespace config::props {
 
-struct Config;
-
-namespace buttons {
-
-struct CONFIG_EXPORT Button : data::Node {
-    Button(data::Node *);
-    ~Button() override;
-
-    bool enumerate(const EnumFunc&) override;
-    Model *find(uint64) override;
-
-    data::Choice type_;
-    data::Choice event_;
-
-    data::String pin_;
-    data::String name_;
-    data::Integer touch_;
+struct CONFIG_EXPORT Prop : data::Node {
+    virtual std::string filename() = 0;
+    virtual bool isDefault() = 0;
 };
 
-} // namespace buttons
+struct CONFIG_EXPORT Setting : data::Model {
+    /**
+     * Generate the define string representation for this prop setting.
+     *
+     * @return nullopt if the prop setting is not output, string otherwise.
+     */
+    virtual std::optional<std::string> defineString() = 0;
+};
 
-} // namespace config
+/**
+ * Glue executable must link this w/ the versions manager to provide a way to
+ * generate the prop data when creating a Config
+ */
+using Generator = std::vector<std::unique_ptr<Prop>>(*)(data::Node *parent);
+
+CONFIG_EXPORT void connectGenerator(Generator);
+
+} // namespace config::props
 

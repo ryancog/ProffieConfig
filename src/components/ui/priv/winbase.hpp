@@ -31,8 +31,8 @@ struct WinBase : Base, Receiver {
         Base::Disable();
     }
 
-    void onEnabled(bool en) override {
-        Base::Enable(en);
+    void onEnabled() override {
+        Base::Enable(Receiver::context().enabled());
     }
 
     void onFocus() override {

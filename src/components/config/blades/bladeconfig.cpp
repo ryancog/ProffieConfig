@@ -1,9 +1,9 @@
-#include "bladeconfig.h"
+#include "bladeconfig.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/config/bladeconfig/bladeconfig.cpp
+ * components/config/blades/bladeconfig.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,276 +19,168 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
+#include "config/blades/simple.hpp"
+#include "config/blades/ws281x.hpp"
+#include "config/config.hpp"
+#include "data/number.hpp"
+#include "utils/string.hpp"
+#include "wx/translation.h"
 
-#include "ui/controls/numeric.h"
-#include "utils/string.h"
+using namespace config::blades;
 
-#include "../config.h"
+Blade::Blade(data::Node *parent) : data::Node(parent) {
+    data::Vector::Context types{types_};
+    // Generic used as a dummy for unassigned.
+    types.addCreate<WS281X>();
+    types.addCreate<Simple>();
+    types.addCreate<data::Generic>();
 
-Config::Blade::Blade(Config& config) :
-    mConfig{config}, mPixelBlade(config) {
-    type.setUpdateHandler([this](uint32 id) {
-        if (
-                id != pcui::Notifier::eID_Rebound and
-                id != pcui::ChoiceData::eID_Selection
-           ) return;
-        if (id == pcui::ChoiceData::eID_Selection) {
-            mConfig.presetArrays.syncStyleDisplay();
-        }
+    data::Selector::Context{type_}.bind(&types_);
+    data::Choice::Context{type_.choice_}.choose(0);
 
-        auto& bladeArrays{mConfig.bladeArrays};
-
-        auto arraySelection{static_cast<int32>(bladeArrays.arraySelection)};
-        if (arraySelection != -1) {
-            auto& selectedArray{bladeArrays.array(arraySelection)};
-
-            if (selectedArray.bladeSelection != -1) {
-                auto& selectedBlade{
-                    selectedArray.blade(selectedArray.bladeSelection)
-                };
-
-                if (&selectedBlade == this) {
-                    bladeArrays.pixelBrightnessProxy.unbind();
-                    bladeArrays.simpleBrightnessProxy.unbind();
-
-                    if (type == WS281X) {
-                        bladeArrays.pixelBrightnessProxy.bind(brightness);
-                    } else if (type == SIMPLE) {
-                        bladeArrays.simpleBrightnessProxy.bind(brightness);
-                    }
-
-                    bladeArrays.notifyData.notify(
-                        BladeArrays::ID_BLADE_TYPE_SELECTION
-                    );
-                }
-            }
-        }
-    });
-
-    type.setChoices(Utils::createEntries({
-        "WS281X",
-        _("Simple"),
-        _("Unassigned"),
-    }));
-    type = WS281X;
-
-    brightness.setRange(0, 100);
-    brightness.setValue(100);
+    data::Integer::Context brightness{brightness_};
+    brightness.update({.min_=0, .max_=100});
+    brightness.set(100);
 }
 
-Config::BladeConfig::BladeConfig(Config& config) : mConfig{config} {
-    presetArray.setPersistence(pcui::ChoiceData::Persistence::Index);
-    bladeSelection.setPersistence(pcui::ChoiceData::Persistence::Index);
+Blade::~Blade() = default;
 
-    name.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::TextData::eID_Value) return;
+bool Blade::enumerate(const EnumFunc& func) {
+    assert(0); // TODO
+}
 
-        auto nameValue{static_cast<string>(name)};
-        auto insertionPoint{name.getInsertionPoint()};
+data::Model *Blade::find(uint64) {
+    assert(0); // TODO
+}
+
+WS281X& Blade::ws281x() {
+    data::Vector::Context types{types_};
+
+    const auto& model{types.children()[eWS281X]};
+    // NOLINTNEXTLINE suppress lifetimebound warning
+    return static_cast<WS281X&>(*model);
+}
+
+Simple& Blade::simple() {
+    data::Vector::Context types{types_};
+
+    const auto& model{types.children()[eSimple]};
+    // NOLINTNEXTLINE suppress lifetimebound warning
+    return static_cast<Simple&>(*model);
+}
+
+BladeConfig::BladeConfig(data::Node *parent) : data::Node(parent) {
+    const auto nameFilter{[](
+        const data::String::Context&, std::string& str, size& pos
+    ) {
         uint32 numTrimmed{};
-        Utils::trimCppName(
-            nameValue,
+        utils::trimCppName(
+            str,
             false,
             &numTrimmed,
-            insertionPoint
-        );
-        std::ranges::transform(
-            nameValue,
-            nameValue.begin(),
-            [](unsigned char chr){ return std::tolower(chr); }
+            pos
         );
 
-        // No further updates needed, can update things.
-        if (static_cast<string>(name) == nameValue) {
-            auto& bladeArrays{mConfig.bladeArrays};
+        for (auto& chr : str) chr = static_cast<char>(std::tolower(chr));
+        pos -= numTrimmed;
+    }};
+    name_.setFilter(nameFilter);
 
-            uint32 idx{0};
-            auto arrayIter{bladeArrays.arrays().begin()};
-            auto arrayEnd{bladeArrays.arrays().end()};
-            for (; arrayIter != arrayEnd; ++arrayIter, ++idx) {
-                if (this == &**arrayIter) break;
-            }
+    name_.responder().onChange_ = [](const data::String::Context& ctxt) {
+        ctxt.model().parent<BladeConfig>()->recomputeIssues();
+    };
 
-            auto choices{bladeArrays.arraySelection.choices()};
-            if (static_cast<string>(name).empty()) {
-                choices[idx] = _("[default]").ToStdString();
-            } else choices[idx] = static_cast<string>(name);
-            bladeArrays.arraySelection.setChoices(std::move(choices));
+    id_.responder().onSet_ = [](const data::Integer::Context& ctxt) {
+        auto& bladeConfig{*ctxt.model().parent<BladeConfig>()};
+        bladeConfig.recomputeIssues();
+        data::Bool::Context noBladeId{bladeConfig.noBladeId_};
+        noBladeId.set(ctxt.val() == NO_BLADE);
+    };
 
-            mConfig.presetArrays.syncStyleDisplay();
+    const auto noBladeIdFilter{[](
+        const data::Bool::Context& ctxt, bool& noBladeId
+    ) {
+        auto& bladeConfig{*ctxt.model().parent<BladeConfig>()};
+        data::Integer::Context id{bladeConfig.id_};
+        if (id.val() == NO_BLADE) noBladeId = true;
+    }};
+    noBladeId_.setFilter(noBladeIdFilter);
 
-            notifyData.notify();
-            if (
-                    bladeArrays.arraySelection != -1 and
-                    &bladeArrays.array(bladeArrays.arraySelection) == this
-                ) {
-                bladeArrays.arrayIssues = computeIssues();
-                bladeArrays.notifyData.notify(BladeArrays::ID_ARRAY_ISSUES);
-            }
-            return;
+    noBladeId_.responder().onSet_ = [](const data::Bool::Context& ctxt) {
+        auto& bladeConfig{*ctxt.model().parent<BladeConfig>()};
+        if (ctxt.val()) {
+            data::Integer::Context id{bladeConfig.id_};
+            id.set(NO_BLADE);
         }
-        name = std::move(nameValue);
-        name.setInsertionPoint(insertionPoint - numTrimmed);
-    });
+    };
 
-    id.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::NumericData::eID_Value) return;
+    presetArray_.choice_.responder().onChoice_ = [](
+        const data::Choice::Context& ctxt
+    ) {
+        auto& bladeConfig{*ctxt.model().parent<BladeConfig>()};
+        bladeConfig.recomputeIssues();
+    };
 
-        auto& bladeArrays{mConfig.bladeArrays};
+    blades_.responder().onInsert_ = [](
+        const data::Vector::Context& ctxt, size
+    ) {
+        ctxt.model().root<Config>()->syncStyles();
+    };
 
-        notifyData.notify();
-        if (
-                bladeArrays.arraySelection != -1 and
-                &bladeArrays.array(bladeArrays.arraySelection) == this
-            ) {
-            bladeArrays.arrayIssues = computeIssues();
-            bladeArrays.notifyData.notify(BladeArrays::ID_ARRAY_ISSUES);
-        }
-
-       noBladeID = this->id == NO_BLADE;
-    });
-
-    noBladeID.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::ToggleData::eID_Value) return;
-
-        if (not noBladeID and this->id == NO_BLADE) noBladeID = true;
-        if (noBladeID) this->id = NO_BLADE;
-    });
-
-    presetArray.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::ChoiceData::eID_Selection) return;
-
-        auto& bladeArrays{mConfig.bladeArrays};
-
-        notifyData.notify();
-        if (
-                bladeArrays.arraySelection != -1 and
-                &bladeArrays.array(bladeArrays.arraySelection) == this
-            ) {
-            bladeArrays.arrayIssues = computeIssues();
-            bladeArrays.notifyData.notify(BladeArrays::ID_ARRAY_ISSUES);
-        }
-    });
-
-    bladeSelection.setUpdateHandler([this](uint32 id) {
-        if (
-                id != pcui::Notifier::eID_Rebound and
-                id != pcui::ChoiceData::eID_Selection
-           ) return;
-
-        auto& bladeArrays{mConfig.bladeArrays};
-
-        if (bladeArrays.arraySelection == -1) return;
-        auto& bladeArray{bladeArrays.array(bladeArrays.arraySelection)};
-        if (&bladeArray != this) return;
-
-        bladeArrays.powerPinNameEntry = "";
-        bladeArrays.unbindBlade();
-
-        if (bladeSelection != -1) {
-            auto& selectedBlade{blade(bladeSelection)};
-            auto& ws281x{selectedBlade.ws281x()};
-            auto& simple{selectedBlade.simple()};
-
-            bladeArrays.bladeTypeProxy.bind(selectedBlade.type);
-            bladeArrays.powerPinProxy.bind(ws281x.powerPins);
-
-            bladeArrays.colorOrder3Proxy.bind(ws281x.colorOrder3);
-            bladeArrays.colorOrder4Proxy.bind(ws281x.colorOrder4);
-            bladeArrays.hasWhiteProxy.bind(ws281x.hasWhite);
-            bladeArrays.useRGBWithWhiteProxy.bind(ws281x.useRGBWithWhite);
-
-            bladeArrays.dataPinProxy.bind(ws281x.dataPin);
-            bladeArrays.lengthProxy.bind(ws281x.length);
-
-            bladeArrays.splitSelectionProxy.bind(ws281x.splitSelect);
-
-            auto& star1Proxy{bladeArrays.star1Proxy};
-            star1Proxy.ledProxy.bind(simple.star1.led);
-            star1Proxy.resistanceProxy.bind(simple.star1.resistance);
-            star1Proxy.powerPinProxy.bind(simple.star1.powerPin);
-
-            auto& star2Proxy{bladeArrays.star2Proxy};
-            star2Proxy.ledProxy.bind(simple.star2.led);
-            star2Proxy.resistanceProxy.bind(simple.star2.resistance);
-            star2Proxy.powerPinProxy.bind(simple.star2.powerPin);
-
-            auto& star3Proxy{bladeArrays.star3Proxy};
-            star3Proxy.ledProxy.bind(simple.star3.led);
-            star3Proxy.resistanceProxy.bind(simple.star3.resistance);
-            star3Proxy.powerPinProxy.bind(simple.star3.powerPin);
-
-            auto& star4Proxy{bladeArrays.star4Proxy};
-            star4Proxy.ledProxy.bind(simple.star4.led);
-            star4Proxy.resistanceProxy.bind(simple.star4.resistance);
-            star4Proxy.powerPinProxy.bind(simple.star4.powerPin);
-        }
-
-        mConfig.bladeArrays.notifyData.notify(BladeArrays::ID_BLADE_SELECTION);
-    });
-
-    id.setRange(0, NO_BLADE);
+    data::Integer::Context{id_}.update({.min_=0, .max_=NO_BLADE});
 }
 
-Config::Blade& Config::BladeConfig::addBlade() {
-    auto& ret{*mBlades.emplace_back(std::make_unique<Blade>(mConfig))};
+BladeConfig::~BladeConfig() = default;
 
-    vector<string> choices;
-    choices.reserve(mBlades.size());
-    for (auto idx{0}; idx < mBlades.size(); ++idx) {
-        choices.emplace_back(_("Blade ").ToStdString() + std::to_string(idx));
+bool BladeConfig::enumerate(const EnumFunc& func) {
+    assert(0); // TODO
+}
+
+data::Model *BladeConfig::find(uint64 id) {
+    assert(0); // TODO
+}
+
+void BladeConfig::recomputeIssues() {
+    int32 issues{0};
+
+    if (data::Choice::Context{presetArray_.choice_}.choice() == -1) {
+        issues |= eIssue_No_Preset_Array;
     }
-    bladeSelection.setChoices(std::move(choices));
 
-    mConfig.presetArrays.syncStyles();
-    return ret;
-}
+    data::String::Context name{name_};
+    data::Integer::Context id{id_};
 
-void Config::BladeConfig::removeBlade(uint32 idx) {
-    assert(idx < mBlades.size());
-    mBlades.erase(std::next(mBlades.begin(), idx));
+    auto& config{*root<Config>()};
+    data::Vector::Context bladeConfigs{config.bladeConfigs_};
+    for (const auto& model : bladeConfigs.children()) {
+        auto& bladeconfig{static_cast<BladeConfig&>(*model)};
+        if (&bladeconfig == this) continue;
 
-    vector<string> choices;
-    choices.reserve(mBlades.size());
-    for (auto idx{0}; idx < mBlades.size(); ++idx) {
-        choices.emplace_back(_("Blade ").ToStdString() + std::to_string(idx));
-    }
-    bladeSelection.setChoices(std::move(choices));
-    if (bladeSelection == idx) bladeSelection = -1;
-
-    mConfig.presetArrays.syncStyleDisplay();
-}
-
-[[nodiscard]] uint32 Config::BladeConfig::computeIssues() const {
-    uint32 ret{0};
-
-    if (presetArray == -1) ret |= ISSUE_NO_PRESETARRAY;
-
-    for (const auto& array : mConfig.bladeArrays.arrays()) {
-        if (&*array == this) continue;
-        if (static_cast<string>(array->name) == static_cast<string>(name)) {
-            ret |= ISSUE_DUPLICATE_NAME;
+        data::String::Context otherName{bladeconfig.name_};
+        if (name.val() == otherName.val()) {
+            issues |= eIssue_Duplicate_Name;
         }
-        if (static_cast<uint32>(array->id) == static_cast<uint32>(id)) {
-            ret |= ISSUE_DUPLICATE_ID;
+
+        data::Integer::Context otherID{bladeconfig.id_};
+        if (id.val() == otherID.val()) {
+            issues |= eIssue_Duplicate_ID;
         }
     }
 
-    return ret;
+    data::Integer::Context{issues_}.set(issues);
 }
 
-[[nodiscard]] string Config::BladeConfig::issueString(uint32 issues) {
-    string ret;
-    if (issues & ISSUE_NO_PRESETARRAY) {
+std::string BladeConfig::issueString(uint32 issues) {
+    std::string ret;
+    if (issues & eIssue_No_Preset_Array) {
         ret += wxTRANSLATE("Blade Array is not linked to a Preset Array");
         ret += '\n';
     }
-    if (issues & ISSUE_DUPLICATE_ID) {
+    if (issues & eIssue_Duplicate_ID) {
         ret += wxTRANSLATE("Blade Array has duplicate ID");
         ret += '\n';
     }
-    if (issues & ISSUE_DUPLICATE_NAME) {
+    if (issues & eIssue_Duplicate_Name) {
         ret += wxTRANSLATE("Blade Array has duplicate name");
         ret += '\n';
     }

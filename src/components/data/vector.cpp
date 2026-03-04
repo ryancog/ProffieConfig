@@ -41,6 +41,8 @@ auto data::Vector::clone(Node *parent) const -> std::unique_ptr<Model> {
     return std::make_unique<Vector>(*this, parent);
 }
 
+auto data::Vector::responder() const -> Responder& { return *mRsp; }
+
 bool data::Vector::enumerate(const EnumFunc& func) {
     std::scoped_lock scopeLock{pLock};
 
@@ -63,9 +65,14 @@ data::Vector::Context::~Context() = default;
 void data::Vector::Context::insert(
     size idx, std::unique_ptr<Model>&& obj
 ) const {
+    assert(obj->parent() == &model());
     model().processAction(std::make_unique<InsertAction>(
         idx, std::move(obj)
     ));
+}
+
+void data::Vector::Context::add(std::unique_ptr<Model>&& obj) const {
+    insert(model<Vector>().mChildren.size(), std::move(obj));
 }
 
 void data::Vector::Context::remove(size idx) const {

@@ -74,6 +74,22 @@ struct DATA_EXPORT Vector::Context : Node::Context {
     void insert(size, std::unique_ptr<Model>&&) const;
 
     /**
+     * Add model to end of list
+     */
+    void add(std::unique_ptr<Model>&&) const;
+
+    template <typename Obj, typename ...Args>
+    Obj& addCreate(Args&&... args) {
+        auto obj{std::make_unique<Obj>(
+            &model<Vector>(),
+            std::forward<Args>(args)...
+        )};
+        auto& ret{*obj};
+        add(std::move(obj));
+        return ret;
+    }
+
+    /**
      * Remove item at pos
      */
     void remove(size) const;

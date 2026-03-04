@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025-2026 Ryan Ogurek
+ * Copyright (C) 2026 Ryan Ogurek
  *
- * components/config/blades/array.hpp
+ * components/config/settings/define.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,27 +19,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config/blades/bladeconfig.hpp"
+#include "data/hierarchy/node.hpp"
+#include "data/string.hpp"
+
+#include "config_export.h"
 
 namespace config {
 
-struct Config;
+struct Settings;
 
-namespace blades {
+namespace settings {
 
-struct CONFIG_EXPORT Array {
-    Array(Config&);
+struct CONFIG_EXPORT Define : data::Node {
+    Define(data::Node *, std::string&& = {}, std::string&& = {});
+    ~Define() override;
 
-    data::Vector bladeConfigs_;
+    bool enumerate(const EnumFunc&) override;
+    Model *find(uint64) override;
 
-    /**
-     * @return number of blades across all arrays
-     */
-    [[nodiscard]] uint32 numBlades() const;
-
+    data::String name_;
+    data::String value_;
 };
 
-} // namespace blades
+} // namespace settings
 
 } // namespace config
 

@@ -6,25 +6,30 @@ add_library(config SHARED
     config.cpp
     info.cpp
 
-    private/parse.cpp
-    private/output.cpp
+    priv/parse/parse.cpp
+    priv/generate/generate.cpp
 
-    bladeconfig/arrays.cpp
-    bladeconfig/bladeconfig.cpp
-    bladeconfig/simple.cpp
-    bladeconfig/ws281x.cpp
+    misc/injection.cpp
 
-    preset/array.cpp
-    preset/preset.cpp
+    blades/bladeconfig.cpp
+    blades/simple.cpp
+    blades/ws281x.cpp
+
+    buttons/button.cpp
+
+    presets/array.cpp
+    presets/preset.cpp
 
     settings/settings.cpp
+    settings/bladeawareness.cpp
+    settings/define.cpp
 )
 target_link_libraries(config 
     wxWidgets
 
+    data
     utils
     ui
-    versions
     # A good story for another time
     # led
     # styles

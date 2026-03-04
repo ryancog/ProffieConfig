@@ -29,8 +29,12 @@ struct Config;
 
 namespace presets {
 
-struct CONFIG_EXPORT Array {
-    Array(Config&);
+struct CONFIG_EXPORT Array : data::Node {
+    Array(data::Node *);
+    ~Array() override;
+
+    bool enumerate(const EnumFunc&) override;
+    Model *find(uint64) override;
 
     data::String name_;
     data::Vector presets_;

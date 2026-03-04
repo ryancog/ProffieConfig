@@ -1,5 +1,4 @@
 #include "exclusive.hpp"
-#include <mutex>
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
@@ -20,26 +19,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-data::Exclusive::Exclusive(size num, Node *parent) {
-    assert(num > 1);
+data::detail::Exclusive::Exclusive(
+    std::vector<std::unique_ptr<data::Bool>> data, Node *parent
+) : mData{std::move(data)} {
+    assert(mData.size() > 1);
+    for (auto& data : mData) {
+        assert(data->parent() == parent);
+    }
+
+    mRsp = std::make_unique<Responder>();
+    mRsp->attach(*this);
 
     struct Receiver : Bool::Receiver {
-        Receiver(Exclusive& excl, Bool& bl) : excl_{excl}, bl_{bl} {
-            attach(bl_);
-        }
-        ~Receiver() override {
-            detach();
-        }
+        Receiver(Exclusive& excl) : excl_{excl} {}
 
-        void onSet(bool set) override {
+        void onSet() override {
+            if (not context<Bool>().val()) return;
             std::lock_guard scopeLock{excl_.mLock};
-            assert(set);
 
             size selIdx{};
             for (size idx{0}; idx < excl_.mData.size(); ++idx) {
                 auto& testBl{*excl_.mData[idx]};
 
-                if (&testBl == &bl_) {
+                if (&testBl == &model<Bool>()) {
                     selIdx = idx;
                     continue;
                 }
@@ -52,42 +54,55 @@ data::Exclusive::Exclusive(size num, Node *parent) {
         }
 
         Exclusive& excl_;
-        Bool& bl_;
     };
 
-    mData.reserve(num);
-    for (size idx{0}; idx < num; ++idx) {
-        auto bl{std::make_unique<Bool>(parent)};
-        auto rcvr{std::make_unique<Receiver>(*this, *bl)};
-        manage(std::move(rcvr));
-        mData.push_back(std::move(bl));
+    mRcvrs.reserve(mData.size());
+    for (size idx{0}; idx < mData.size(); ++idx) {
+        auto rcvr{std::make_unique<Receiver>(*this)};
+        rcvr->attach(*mData[idx]);
+        mRcvrs.push_back(std::move(rcvr));
     }
 
     Bool::Context{*mData[0]}.set(true);
 }
 
-data::Exclusive::Exclusive(const Exclusive& other, Node *parent) :
-    Exclusive(other.mData.size(), parent) {
-    
-    for (size idx{0}; idx < other.mData.size(); ++idx) {
-        if (not Bool::Context{*other.mData[idx]}.val()) continue;
+data::detail::Exclusive::Exclusive(const Exclusive& other, Node *parent) :
+    data::Model(other, parent) {
 
-        Bool::Context{*mData[idx]}.set(true);
-        break;
+    mRsp = std::make_unique<Responder>(*other.mRsp);
+    mRsp->attach(*this);
+
+    mSelected = other.mSelected;
+    Bool::Context{*mData[mSelected]}.set(true);
+}
+
+data::detail::Exclusive::~Exclusive() {
+    mRsp->detach();
+    for (auto& rcvr : mRcvrs) {
+        rcvr->detach();
     }
 }
 
-std::span<const std::unique_ptr<data::Bool>> data::Exclusive::data() const {
+std::span<const std::unique_ptr<data::Bool>> data::detail::Exclusive::data(
+) const {
     return mData;
 }
 
-data::Bool& data::Exclusive::operator[](size idx) const {
+data::Bool& data::detail::Exclusive::operator[](size idx) const {
     return *data()[idx];
 }
 
-std::unique_ptr<data::pModel> data::Exclusive::clone(Node *) const {
-    // TODO: There's no sane way to use this.
-    assert(0);
-    __builtin_unreachable();
+size data::detail::Exclusive::selected() {
+    std::lock_guard scopeLock{pLock};
+    return mSelected;
 }
+
+void data::detail::Exclusive::select(size pos) {
+    std::lock_guard scopeLock{pLock};
+
+    assert(pos < mData.size());
+    data::Bool::Context{*mData[pos]}.set(true);
+}
+
+auto data::detail::Exclusive::responder() const -> Responder& { return *mRsp; }
 

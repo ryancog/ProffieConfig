@@ -1,9 +1,9 @@
-#include "ws281x.h"
+#include "ws281x.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/config/bladeconfig/ws281x.cpp
+ * components/config/blades/ws281x.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,149 +19,264 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "utils/string.h"
+#include <algorithm>
 
-#include "../config.h"
+#include "config/config.hpp"
+#include "config/blades/bladeconfig.hpp"
+#include "config/priv/strings.hpp"
+#include "data/number.hpp"
+#include "data/vector.hpp"
+#include "utils/string.hpp"
 
-Config::Split::Split(Config& config, WS281XBlade& parent) :
-    mConfig{config}, mParent(parent), type{TYPE_MAX} {
-    segments.setRange(2, 6);
-    length.setRange(1, std::numeric_limits<int32>::max());
-    start.setRange(0, mParent.length - 1);
-    end.setRange(0, mParent.length - 1);
-    brightness.setRange(0, 100);
-    brightness.setValue(100);
+using namespace config::blades;
 
-    type.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::RadiosData::eID_Selection) return;
+WS281X::WS281X(data::Node *parent) : data::Node{parent} {
+    using namespace priv;
 
-        auto usesLength{
-            type == STANDARD or
-            type == REVERSE or
-            type == STRIDE or
-            type == ZIG_ZAG
-        };
-        start.show(usesLength);
-        end.show(usesLength);
-        length.show(usesLength);
+    length_.responder().onSet_ = [](const data::Integer::Context& ctxt) {
+        auto& ws281x{*ctxt.model().parent<WS281X>()};
+        data::Vector::Context splits{ws281x.splits_};
 
-        auto usesSegments{type == STRIDE or type == ZIG_ZAG};
-        segments.show(usesSegments);
-        if (segments.isShown()) segments.setValue(segments);
-        else {
-            length.setIncrement(1, false);
-            end.setIncrement(1, false);
-            length.setRange(1, std::numeric_limits<int32>::max());
-        }
+        for (const auto& model : splits.children()) {
+            auto& split{static_cast<Split&>(*model)};
 
-        list.show(type == LIST);
-
-        mConfig.presetArrays.syncStyles();
-
-        auto& bladeArrays{mConfig.bladeArrays};
-        if (bladeArrays.arraySelection == -1) return;
-        auto& selectedArray{bladeArrays.array(bladeArrays.arraySelection)};
-        if (selectedArray.bladeSelection == -1) return;
-        auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
-        if (selectedBlade.type != Blade::WS281X) return;
-        if (&selectedBlade.ws281x() != &mParent) return;
-
-        mConfig.bladeArrays.visualizerData.notify();
-        mConfig.bladeArrays.notifyData.notify(BladeArrays::ID_VISUAL_UPDATE);
-    });
-    start.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::NumericData::eID_Value) return;
-
-        end.setOffset((start % segments) - 1, false);
-        if (end.increment() != 1) {
-            end = start + length - 1;
-        } else {
-            if (static_cast<uint32>(start) > static_cast<uint32>(end)) {
-                end = static_cast<int32>(start);
+            if (data::Integer::Context{split.segments_}.val() > ctxt.val()) {
+                data::Bool::Context{
+                    split.type_[Split::eStandard]
+                }.set(true);
             }
 
-            length = static_cast<int32>(end) - static_cast<int32>(start) + 1;
+            data::Integer::Context{split.start_}.update({
+                .min_=0, .max_=ctxt.val() - 1
+            });
+            data::Integer::Context{split.end_}.update({
+                .min_=0, .max_=ctxt.val() - 1
+            });
+        }
+    };
+
+    const auto dataPinFilter{[](
+        const data::String::Context&, std::string& str, size& pos
+    ) {
+        uint32 numTrimmed{};
+        utils::trimCppName(
+            str,
+            true,
+            &numTrimmed,
+            pos
+        );
+
+        pos -= numTrimmed;
+    }};
+    dataPin_.setFilter(dataPinFilter);
+
+    hasWhite_.responder().onSet_ = [](const data::Bool::Context& ctxt) {
+        auto& ws281x{*ctxt.model().parent<WS281X>()};
+
+        if (ctxt.val()) {
+            data::Choice::Context{ws281x.colorOrder4_}.choose(
+                data::Choice::Context{ws281x.colorOrder3_}.choice()
+            );
+            return;
+        } 
+
+        auto order4{static_cast<ColorOrder4>(
+            data::Choice::Context{ws281x.colorOrder4_}.choice()
+        )};
+
+        int32 newOrder3{static_cast<int32>(order4)};
+        if (
+                order4 > eOrder4_White_First_Start and
+                order4 < eOrder4_White_First_End
+           ) {
+            newOrder3 -= eOrder4_White_First_Start;
         }
 
-        auto& bladeArrays{mConfig.bladeArrays};
-        if (bladeArrays.arraySelection == -1) return;
-        auto& selectedArray{bladeArrays.array(bladeArrays.arraySelection)};
-        if (selectedArray.bladeSelection == -1) return;
-        auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
-        if (selectedBlade.type != Blade::WS281X) return;
-        if (&selectedBlade.ws281x() != &mParent) return;
+        data::Choice::Context{ws281x.colorOrder3_}.choose(newOrder3);
+    };
 
-        mConfig.bladeArrays.visualizerData.notify();
+    powerPins_.responder().onSelection_ = [](
+        const data::Selection::Context& ctxt, uint32 idx
+    ) {
+        if (idx < 6) return;
+        if (ctxt.selected()[idx]) return;
+
+        ctxt.remove(idx);
+    };
+
+    splits_.responder().onInsert_ = [](
+        const data::Vector::Context& ctxt, size
+    ) {
+        ctxt.model().root<Config>()->syncStyles();
+    };
+
+    data::Selection::Context{powerPins_}.setItems({
+        "bladePowerPin1",
+        "bladePowerPin2",
+        "bladePowerPin3",
+        "bladePowerPin4",
+        "bladePowerPin5",
+        "bladePowerPin6",
     });
-    end.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::NumericData::eID_Value) return;
 
-        if (static_cast<uint32>(start) > static_cast<uint32>(end)) {
-            start = static_cast<int32>(end) - start.increment() + 1;
+    { data::Integer::Context length{length_};
+        length.update({.min_=1, .max_=1000});
+        length.set(144);
+    }
+
+    { data::Choice::Context order3{colorOrder3_};
+        order3.update(eOrder3_Max);
+        order3.choose(eOrder3_GRB);
+    }
+
+    { data::Choice::Context order3{colorOrder4_};
+        order3.update(eOrder4_Max);
+        order3.choose(eOrder4_GRBW);
+    }
+}
+
+WS281X::~WS281X() = default;
+
+bool WS281X::enumerate(const EnumFunc& func) {
+    assert(0); // TODO
+}
+
+data::Model *WS281X::find(uint64) {
+    assert(0); // TODO
+}
+
+WS281X::Split::Split(data::Node *parent) :
+    data::Node(parent),
+    type_(Type::eMax, this) {
+
+    type_.responder().onSelection_ = [](
+        const data::Exclusive<>::Context& ctxt, size sel
+    ) {
+        auto& split{*ctxt.model().parent<Split>()};
+
+        switch (static_cast<Type>(sel)) {
+            case eStandard:
+            case eReverse:
+                data::Integer::Context{split.length_}.update({
+                    .min_=1,
+                    .max_=std::numeric_limits<int32>::max(),
+                    .inc_=1
+                });
+                data::Integer::Context{split.end_}.update({
+                    .inc_=1
+                });
+                break;
+            case eStride: 
+            case eZig_Zag:
+                // If segments is enabled, it re-called the handler...
+            case eList:
+                break;
+            default:
+                assert(0);
+                __builtin_unreachable();
         }
 
-        length = static_cast<int32>(end) - static_cast<int32>(start) + 1;
+        ctxt.model().root<Config>()->syncStyles();
+    };
 
-        auto& bladeArrays{mConfig.bladeArrays};
-        if (bladeArrays.arraySelection == -1) return;
-        auto& selectedArray{bladeArrays.array(bladeArrays.arraySelection)};
-        if (selectedArray.bladeSelection == -1) return;
-        auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
-        if (selectedBlade.type != Blade::WS281X) return;
-        if (&selectedBlade.ws281x() != &mParent) return;
+    start_.responder().onSet_ = [](const data::Integer::Context& ctxt) {
+        auto& split{*ctxt.model().parent<Split>()};
 
-        mConfig.bladeArrays.visualizerData.notify();
-    });
-    length.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::NumericData::eID_Value) return;
+        const auto segVal{data::Integer::Context{split.segments_}.val()};
+        const auto startVal{ctxt.val()};
 
-        if (length > mParent.length) {
-            length = static_cast<int32>(mParent.length);
+        data::Integer::Context end{split.end_};
+        end.update({
+            .off_=(startVal % segVal) - 1
+        });
+
+        data::Integer::Context length{split.length_};
+        if (end.params().inc_ != 1) {
+            const auto lenVal{length.val()};
+            end.set(startVal + lenVal - 1);
+        } else {
+            if (startVal > end.val()) {
+                end.set(startVal);
+            }
+
+            length.set(end.val() - startVal + 1);
+        }
+    };
+
+    end_.responder().onSet_ = [](const data::Integer::Context& ctxt) {
+        auto& split{*ctxt.model().parent<Split>()};
+
+        const auto endVal{ctxt.val()};
+
+        data::Integer::Context start{split.start_};
+        if (start.val() > endVal) {
+            start.set(endVal - start.params().inc_ + 1);
+        }
+
+        data::Integer::Context length{split.length_};
+        length.set(endVal - start.val() + 1);
+    };
+
+    const auto lenFilter{[](const data::Integer::Context& ctxt, int32& len) {
+        auto parentLen{data::Integer::Context{
+            ctxt.model().parent<Split>()->parent<WS281X>()->length_
+        }.val()};
+
+        if (len > parentLen) len = static_cast<int32>(parentLen);
+    }};
+    length_.setFilter(lenFilter);
+
+    length_.responder().onSet_ = [](const data::Integer::Context& ctxt) {
+        auto& split{*ctxt.model().parent<Split>()};
+        auto parentLen{data::Integer::Context{
+            split.parent<WS281X>()->length_
+        }.val()};
+
+        data::Integer::Context start{split.start_};
+        const auto lengthVal{ctxt.val()};
+
+        if (start.val() + lengthVal > parentLen) {
+            start.set(parentLen - lengthVal);
             return;
         }
-        if (start + length > mParent.length) {
-            start = mParent.length - length;
-            return;
+
+        data::Integer::Context end{split.end_};
+        end.set(start.val() + lengthVal - 1);
+    };
+
+    segments_.responder().onSet_ = [](const data::Integer::Context& ctxt) {
+        auto& split{*ctxt.model().parent<Split>()};
+        auto parentLen{data::Integer::Context{
+            split.parent<WS281X>()->length_
+        }};
+
+        const auto numSeg{ctxt.val()};
+
+        if (parentLen.val() < numSeg) {
+            parentLen.set(numSeg);
         }
 
-        end = start + length - 1;
+        const auto startVal{data::Integer::Context{split.start_}.val()};
 
-        auto& bladeArrays{mConfig.bladeArrays};
-        if (bladeArrays.arraySelection == -1) return;
-        auto& selectedArray{bladeArrays.array(bladeArrays.arraySelection)};
-        if (selectedArray.bladeSelection == -1) return;
-        auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
-        if (selectedBlade.type != Blade::WS281X) return;
-        if (&selectedBlade.ws281x() != &mParent) return;
+        data::Integer::Context{split.length_}.update({
+            .min_=numSeg,
+            .max_=std::numeric_limits<int32>::max(),
+            .inc_=numSeg,
+        });
+        data::Integer::Context{split.end_}.update({
+            .inc_=numSeg, .off_=(startVal % numSeg) - 1
+        });
 
-        mConfig.bladeArrays.visualizerData.notify();
-    });
-    segments.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::NumericData::eID_Value) return;
+        split.root<Config>()->syncStyles();
+    };
 
-        if (mParent.length < segments) {
-            mParent.length = static_cast<int32>(segments);
-        }
-        length.setIncrement(segments, false);
-        end.setIncrement(segments, false);
-        end.setOffset((start % segments) - 1, false);
-        length.setRange(segments, std::numeric_limits<int32>::max());
-
-        mConfig.presetArrays.syncStyles();
-
-        auto& bladeArrays{mConfig.bladeArrays};
-        if (bladeArrays.arraySelection == -1) return;
-        auto& selectedArray{bladeArrays.array(bladeArrays.arraySelection)};
-        if (selectedArray.bladeSelection == -1) return;
-        auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
-        if (selectedBlade.type != Blade::WS281X) return;
-        if (&selectedBlade.ws281x() != &mParent) return;
-
-        mConfig.bladeArrays.visualizerData.notify();
-    });
-    list.setUpdateHandler([this](uint32) {
-        auto str{static_cast<string>(list)};
-        auto insertionPoint{list.getInsertionPoint()};
+    const auto listFilter{[](
+        const data::String::Context& ctxt, std::string& str, size& pos
+    ) {
+        auto& split{*ctxt.model().parent<Split>()};
+        auto parentLen{data::Integer::Context{
+            split.parent<WS281X>()->length_
+        }.val()};
 
         for (auto idx{0}; idx < str.size(); ++idx) {
             if (
@@ -170,14 +285,14 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
                     (idx != str.size() - 1 and
                      str[idx] == ',' and str[idx + 1] == ',')
                ) {
-                if (idx < insertionPoint) --insertionPoint;
+                if (idx < pos) --pos;
                 str.erase(idx, 1);
                 --idx;
             }
         }
 
         bool commaEnd{not str.empty() and str.back() == ','};
-        vector<string> values;
+        std::vector<std::string> values;
 
         uint32 numStart{0};
         for (auto idx{0}; idx < str.size(); ++idx) {
@@ -191,17 +306,17 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
 
             // With the stripping above, this should *never* fail!
             auto value{strtoul(substr.c_str(), nullptr, 10)};
-            auto clampValue{std::clamp<uint32>(value, 0, mParent.length)};
+            auto clampValue{std::clamp<uint32>(value, 0, parentLen)};
             auto clampValueStr{std::to_string(clampValue)};
 
             values.push_back(clampValueStr);
 
             if (
                     substr != clampValueStr and
-                    insertionPoint >= numStart and
-                    insertionPoint < end
+                    pos >= numStart and
+                    pos < end
                ) {
-                insertionPoint = end;
+                pos = end;
             }
             numStart = end + 1;
         }
@@ -212,32 +327,42 @@ Config::Split::Split(Config& config, WS281XBlade& parent) :
             str += ',';
         }
         if (not commaEnd and not str.empty()) str.pop_back();
+    }};
+    list_.setFilter(listFilter);
 
-        if (static_cast<string>(list) != str) {
-            list = std::move(str);
-            list.setInsertionPoint(insertionPoint);
-            return;
-        }
+    data::Integer::Context ws281xLen{parent->parent<WS281X>()->length_};
 
-        auto& bladeArrays{mConfig.bladeArrays};
-        if (bladeArrays.arraySelection == -1) return;
-        auto& selectedArray{bladeArrays.array(bladeArrays.arraySelection)};
-        if (selectedArray.bladeSelection == -1) return;
-        auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
-        if (selectedBlade.type != Blade::WS281X) return;
-        if (&selectedBlade.ws281x() != &mParent) return;
-
-        mConfig.bladeArrays.visualizerData.notify();
+    data::Integer::Context{segments_}.update({.min_=2, .max_=6});
+    data::Integer::Context{length_}.update({
+        .min_=1, .max_=std::numeric_limits<int32>::max()
     });
-
-    type.setValue(0);
+    data::Integer::Context{start_}.update({
+        .min_=0, .max_=ws281xLen.val() - 1
+    });
+    data::Integer::Context{end_}.update({
+        .min_=0, .max_=ws281xLen.val() - 1
+    });
+    data::Integer::Context{brightness_}.update({
+        .min_=0, .max_=100
+    });
+    data::Integer::Context{brightness_}.set(100);
 }
 
-vector<uint32> Config::Split::listValues() const {
-    const auto str{static_cast<string>(list)};
+WS281X::Split::~Split() = default;
+
+bool WS281X::Split::enumerate(const EnumFunc& func) {
+    assert(0); // TODO
+}
+
+data::Model *WS281X::Split::find(uint64 id) {
+    assert(0); // TODO
+}
+
+std::vector<uint32> WS281X::Split::listValues() {
+    const auto str{data::String::Context{list_}.val()};
     if (str.empty()) return {};
 
-    vector<uint32> ret;
+    std::vector<uint32> ret;
     bool commaEnd{str.back() == ','};
 
     uint32 numStart{0};
@@ -258,187 +383,5 @@ vector<uint32> Config::Split::listValues() const {
     }
 
     return ret;
-}
-
-Config::WS281XBlade::WS281XBlade(Config& config) : mConfig{config} {
-    length.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::NumericData::eID_Value) return;
-
-        for (const auto& split : mSplits) {
-            if (split->segments > length) {
-                split->type = Split::STANDARD;
-            }
-
-            split->start.setRange(0, length - 1);
-            split->end.setRange(0, length - 1);
-        }
-
-        mConfig.bladeArrays.visualizerData.notify();
-    });
-    dataPin.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::ComboBoxData::eID_Value) return;
-
-        auto rawValue{static_cast<string>(dataPin)};
-        uint32 numTrimmed{};
-        auto insertionPoint{dataPin.getInsertionPoint()};
-        Utils::trimCppName(
-            rawValue,
-            true,
-            &numTrimmed,
-            insertionPoint
-        );
-
-        if (rawValue == static_cast<string>(dataPin)) {
-            return;
-        }
-        
-        dataPin = std::move(rawValue);
-        dataPin.setInsertionPoint(insertionPoint - numTrimmed);
-    });
-    hasWhite.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::ToggleData::eID_Value) return;
-
-        colorOrder3.show(not hasWhite);
-        if (not hasWhite) {
-            auto newOrder3{static_cast<int32>(colorOrder4)};
-            if (
-                    newOrder3 > ORDER4_WFIRST_START and
-                    newOrder3 < ORDER4_WFIRST_END
-               ) {
-                newOrder3 -= ORDER4_WFIRST_START;
-            }
-
-            colorOrder3 = newOrder3;
-        }
-        colorOrder4.show(hasWhite);
-        if (hasWhite) {
-            colorOrder4 = static_cast<int32>(colorOrder3);
-        }
-        useRGBWithWhite.show(hasWhite);
-    });
-    powerPins.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::CheckListData::eID_Checked) return;
-
-        auto selected{static_cast<set<uint32>>(powerPins)};
-        auto items{powerPins.items()};
-        for (auto idx{6}; idx < items.size(); ++idx) {
-            if (not selected.contains(idx)) {
-                items.erase(std::next(items.begin(), idx));
-                --idx;
-            }
-        }
-        powerPins.setItems(std::move(items));
-    });
-    splitSelect.setUpdateHandler([this](uint32 id) {
-        if (id == pcui::ChoiceData::eID_Choices) {
-            if (not splitSelect.choices().empty()) {
-                if (splitSelect == -1) splitSelect = 0;
-            } 
-        }
-
-        auto& bladeArrays{mConfig.bladeArrays};
-
-        if (bladeArrays.arraySelection == -1) return;
-        auto& selectedArray{bladeArrays.array(bladeArrays.arraySelection)};
-        if (selectedArray.bladeSelection == -1) return;
-        auto& selectedBlade{selectedArray.blade(selectedArray.bladeSelection)};
-        if (selectedBlade.type != Blade::WS281X) return;
-        if (&selectedBlade.ws281x() != this) return;
-
-        if (splitSelect != -1) {
-            auto& selectedSplit{split(splitSelect)};
-            bladeArrays.splitTypeProxy.bind(selectedSplit.type);
-            bladeArrays.splitStartProxy.bind(selectedSplit.start);
-            bladeArrays.splitEndProxy.bind(selectedSplit.end);
-            bladeArrays.splitLengthProxy.bind(selectedSplit.length);
-            bladeArrays.splitSegmentsProxy.bind(selectedSplit.segments);
-            bladeArrays.splitListProxy.bind(selectedSplit.list);
-            bladeArrays.splitBrightnessProxy.bind(selectedSplit.brightness);
-        }
-
-        bladeArrays.notifyData.notify(BladeArrays::ID_SPLIT_SELECTION);
-        bladeArrays.visualizerData.notify();
-    });
-
-    powerPins.setItems(Utils::createEntries({
-        "bladePowerPin1",
-        "bladePowerPin2",
-        "bladePowerPin3",
-        "bladePowerPin4",
-        "bladePowerPin5",
-        "bladePowerPin6",
-    }));
-    dataPin.setDefaults(Utils::createEntries({
-        "bladePin",
-        "blade2Pin",
-        "blade3Pin",
-        "blade4Pin"
-    }));
-    length.setRange(1, 1000);
-    length = 144;
-    colorOrder3.setChoices(Utils::createEntries({
-        _("GRB"),
-        _("GBR"),
-        _("BGR"),
-        _("BRG"),
-        _("RGB"),
-        _("RBG"),
-    }));
-    colorOrder3 = GRB;
-    colorOrder4.setChoices(Utils::createEntries({
-        _("GRBW"),
-        _("GBRW"),
-        _("BGRW"),
-        _("BRGW"),
-        _("RGBW"),
-        _("RBGW"),
-        _("WGRB"),
-        _("WGBR"),
-        _("WBGR"),
-        _("WBRG"),
-        _("WRGB"),
-        _("WRBG"),
-    }));
-    colorOrder4 = GRBW;
-
-    hasWhite.setValue(false);
-}
-
-Config::Split& Config::WS281XBlade::addSplit() {
-    auto& ret{*mSplits.emplace_back(std::make_unique<Split>(mConfig, *this))};
-    mConfig.presetArrays.syncStyles();
-
-    vector<string> choices;
-    for (auto idx{0}; idx < mSplits.size(); ++idx) {
-        choices.emplace_back(
-            _("SubBlade ").ToStdString() + std::to_string(idx)
-        );
-    }
-    splitSelect.setChoices(std::move(choices));
-
-    return ret;
-}
-
-void Config::WS281XBlade::removeSplit(uint32 idx) {
-    assert(idx < mSplits.size());
-
-    mSplits.erase(std::next(mSplits.begin(), idx));
-    mConfig.presetArrays.syncStyles();
-
-    vector<string> choices;
-    for (auto idx{0}; idx < mSplits.size(); ++idx) {
-        choices.emplace_back(
-            _("SubBlade ").ToStdString() + std::to_string(idx)
-        );
-    }
-    int32 oldSelect{splitSelect};
-    splitSelect.setChoices(std::move(choices));
-    splitSelect.setValue(
-        std::clamp<int32>(
-            oldSelect,
-            0,
-            static_cast<int32>(splitSelect.choices().size()) - 1
-        )
-    );
 }
 

@@ -174,6 +174,6 @@ void data::Model::EnableAction::retract(Model& model) {
 
 void data::Model::EnableAction::enable(Model& model, bool en) {
     model.mEnabled = en;
-    model.sendToReceivers(&Receiver::onEnabled, en);
+    model.sendToReceivers(&Receiver::onEnabled);
 }
 

@@ -19,11 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config/props/prop.hpp"
 #include "utils/types.hpp"
 
 namespace config::priv {
 
 extern cstring executableVersion;
+
+extern props::Generator propGenerator;
 
 } // namespace config::priv
 

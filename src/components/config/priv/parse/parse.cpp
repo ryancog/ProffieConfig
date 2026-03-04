@@ -1,9 +1,9 @@
-#include "io.h"
+#include "parse.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2023-2026 Ryan Ogurek
  *
- * components/config/private/parse.cpp
+ * components/config/priv/parse/parse.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,54 +21,91 @@
 
 #include <cstring>
 #include <fstream>
+#include <memory>
 #include <sstream>
 
 #include <wx/filedlg.h>
 #include <wx/translation.h>
 
-#include "config/settings/settings.h"
-#include "log/branch.h"
-#include "log/context.h"
-#include "ui/message.hpp"
-#include "utils/paths.h"
-#include "utils/string.h"
-#include "utils/version.h"
-#include "versions/prop.h"
+#include "config/blades/bladeconfig.hpp"
+#include "config/blades/simple.hpp"
+#include "config/blades/ws281x.hpp"
+#include "config/buttons/button.hpp"
+#include "config/misc/injection.hpp"
+#include "config/presets/array.hpp"
+#include "config/presets/preset.hpp"
+#include "config/priv/io.hpp"
+#include "config/priv/strings.hpp"
+#include "config/props/prop.hpp"
+#include "config/settings/define.hpp"
+#include "config/settings/settings.hpp"
+#include "data/number.hpp"
+#include "data/vector.hpp"
+#include "log/branch.hpp"
+#include "log/context.hpp"
+#include "ui/misc/message.hpp"
+#include "utils/files.hpp"
+#include "utils/paths.hpp"
+#include "utils/string.hpp"
+#include "utils/version.hpp"
 
 namespace {
 
-string extractSection(std::istream&);
+std::string extractSection(std::istream&);
 
-void parseTop(std::istream&, Config::Config&);
-void parseProp(std::istream&, Config::Config&);
-optional<string> parsePresets(std::istream&, Config::Config&, Log::Branch&);
-optional<string> parsePresetArray(const string& data, Config::PresetArray&, Log::Branch&);
-optional<string> parseBladeArrays(const string& data, Config::Config&, Log::Branch&);
-optional<string> parseBlade(string data, Config::BladeConfig&, Config::Blade&, Log::Branch&);
-optional<string> parseStyles(std::istream&, Config::Config&, Log::Branch&);
-optional<string> parseButtons(std::istream&, Config::Config&, Log::Branch&);
+void parseTop(std::istream&, config::Config&);
+void parseProp(std::istream&, config::Config&);
 
-void tryAddInjection(const string& buffer, Config::Config&);
+std::optional<std::string> parsePresets(
+    std::istream&, config::Config&, logging::Branch&
+);
+
+std::optional<std::string> parsePresetArray(
+    const std::string& data, config::presets::Array&, logging::Branch&
+);
+
+std::optional<std::string> parseBladeArrays(
+    const std::string& data, config::Config&, logging::Branch&
+);
+
+std::optional<std::string> parseBlade(
+    std::string data,
+    config::blades::BladeConfig&,
+    config::blades::Blade&,
+    logging::Branch&
+);
+
+std::optional<std::string> parseStyles(
+    std::istream&, config::Config&, logging::Branch&
+);
+
+std::optional<std::string> parseButtons(
+    std::istream&, config::Config&, logging::Branch&
+);
+
+void tryAddInjection(const std::string& buffer, config::Config&);
 
 } // namespace
 
-optional<string> Config::parse(const filepath& path, Config& config, Log::Branch *lBranch) {
-    auto& logger{Log::Branch::optCreateLogger("Config::parse()", lBranch)};
+std::optional<std::string> config::priv::parse(
+    const fs::path& path, Config& config, logging::Branch *lBranch
+) {
+    auto& logger{logging::Branch::optCreateLogger("config::parse()", lBranch)};
 
-    auto file{paths::openInputFile(path)};
+    auto file{files::openInput(path)};
     if (not file.is_open()) {
         return errorMessage(logger, wxTRANSLATE("Failed to open config from %s"), path.string());
     }
 
     while (file.good()) {
         const auto prePos{file.tellg()};
-        if (Utils::extractComment(file)) continue;
+        if (utils::extractComment(file)) continue;
         const auto postPos{file.tellg()};
 
         const auto chr{file.get()};
         if (std::isspace(chr)) continue;
         if (chr == '#') {
-            string buffer;
+            std::string buffer;
             file >> buffer;
             if (buffer == "ifdef") {
                 file >> buffer;
@@ -110,25 +147,24 @@ optional<string> Config::parse(const filepath& path, Config& config, Log::Branch
 
     logger.info("Parsing complete, finalizing...");
 
-    config.presetArrays.syncStyles();
-    config.settings.processCustomDefines();
-    config.processCustomToPropOptions();
+    config.syncStyles();
+    config.settings_.processDefines();
 
     logger.info("Done");
 
-    return nullopt;
+    return std::nullopt;
 }
 
 namespace {
 
-string extractSection(std::istream& file) {
-    string ret;
+std::string extractSection(std::istream& file) {
+    std::string ret;
     while (file.good()) {
-        if (Utils::skipComment(file, &ret)) continue;
+        if (utils::skipComment(file, &ret)) continue;
 
         const auto chr{file.get()};
         if (chr == '#') {
-            string buffer;
+            std::string buffer;
             file >> buffer;
 
             if (buffer == "endif") break;
@@ -140,45 +176,48 @@ string extractSection(std::istream& file) {
     return ret;
 }
 
-void parseTop(std::istream& file, Config::Config& config) {
-    using namespace Config;
+void parseTop(std::istream& file, config::Config& config) {
+    using namespace config;
+    using namespace config::priv;
 
     const auto top{extractSection(file)};
     std::istringstream topStream{top};
     std::istringstream commentStream;
 
-    string buffer;
+    std::string buffer;
     while (topStream.good() or (commentStream.good() and commentStream.rdbuf()->in_avail())) {
         enum {
-            NONE,
-            DEFINE,
-            PC_OPT,
-        } type{NONE};
+            eNone,
+            eDefine,
+            ePC_Opt,
+        } type{eNone};
 
         if (commentStream.good() and commentStream.rdbuf()->in_avail()) {
             std::getline(commentStream, buffer);
             if (buffer.starts_with(PC_OPT_NOCOMMENT_STR)) {
-                type = PC_OPT;
+                type = ePC_Opt;
                 buffer = buffer.substr(PC_OPT_NOCOMMENT_STR.length());
             }
         } else {
-            auto res{Utils::extractComment(topStream)};
+            auto res{utils::extractComment(topStream)};
             if (res) {
                 commentStream.str(*res);
                 continue;
             }
             std::getline(topStream, buffer);
             if (buffer.starts_with(DEFINE_STR)) {
-                type = DEFINE;
+                type = eDefine;
                 buffer = buffer.substr(DEFINE_STR.length());
             } else if (buffer.starts_with(INCLUDE_STR)) {
                 buffer = buffer.substr(INCLUDE_STR.length());
-                Utils::trimSurroundingWhitespace(buffer);
+                utils::trimSurroundingWhitespace(buffer);
                 if (buffer.size() < 2) continue;
 
-                for (auto idx{0}; idx < BOARD_MAX; ++idx) {
+                for (size idx{0}; idx < eBoard_Max; ++idx) {
                     if (buffer == BOARD_STRS[idx]) {
-                        config.settings.board = idx;
+                        data::Choice::Context{
+                            config.settings_.board_
+                        }.choose(static_cast<int32>(idx));
                         break;
                     }
                 }
@@ -186,52 +225,58 @@ void parseTop(std::istream& file, Config::Config& config) {
             }
         }
 
-        if (type == NONE) continue;
+        if (type == eNone) continue;
 
-        Utils::trimSurroundingWhitespace(buffer);
+        utils::trimSurroundingWhitespace(buffer);
         const auto keyEnd{buffer.find_first_of(" \t")};
         auto key{buffer.substr(0, keyEnd)};
-        auto value{keyEnd == string::npos ? "" : buffer.substr(keyEnd)};
-        Utils::trimSurroundingWhitespace(value);
+        auto value{keyEnd == std::string::npos ? "" : buffer.substr(keyEnd)};
+        utils::trimSurroundingWhitespace(value);
 
-        if (type == DEFINE and not key.empty()) {
-            config.settings.addCustomOption(std::move(key), std::move(value));
-        } else if (type == PC_OPT) {
+        if (type == eDefine and not key.empty()) {
+            data::Vector::Context defines{config.settings_.defines_};
+            defines.insert(
+                defines.children().size(),
+                std::make_unique<settings::Define>(
+                    &config.settings_.defines_,
+                    std::move(key),
+                    std::move(value)
+                )
+            );
+        } else if (type == ePC_Opt) {
             if (key == ENABLE_MASS_STORAGE_STR) {
-                config.settings.massStorage = true;
+                data::Bool::Context{config.settings_.massStorage_}.set(true);
             } else if (key == ENABLE_WEBUSB_STR) {
-                config.settings.webUSB = true;
+                data::Bool::Context{config.settings_.webUsb_}.set(true);
             } else if (key == OS_VERSION_STR) {
-                Utils::Version version{value};
+                utils::Version version{value};
                 if (not version) continue;
-                auto& osVersionMap{config.settings.osVersionMap};
-                for (auto idx{0}; idx < osVersionMap.size(); ++idx) {
-                    if (version == osVersionMap[idx]) {
-                        config.settings.osVersion = idx;
-                        break;
-                    }
-                }
+                data::Version::Context{
+                    config.settings_.osVersion_
+                }.set(version);
             }
         }
     }
 }
 
-void parseProp(std::istream& file, Config::Config& config) {
-    using namespace Config;
-    string prop{extractSection(file)};
+void parseProp(std::istream& file, config::Config& config) {
+    using namespace config;
+    using namespace config::priv;
+
+    std::string prop{extractSection(file)};
     std::istringstream propStream{prop};
 
-    string buffer;
+    std::string buffer;
     while (propStream.good()) {
-        if (Utils::extractComment(propStream)) continue;
+        if (utils::extractComment(propStream)) continue;
         std::getline(propStream, buffer);
-        Utils::trimSurroundingWhitespace(buffer);
+        utils::trimSurroundingWhitespace(buffer);
         if (not buffer.starts_with(INCLUDE_STR)) continue;
 
         buffer = buffer.substr(INCLUDE_STR.length());
-        Utils::trimSurroundingWhitespace(buffer);
+        utils::trimSurroundingWhitespace(buffer);
 
-        static constexpr string_view PROP_DIR_STR{"../props/"};
+        static constexpr std::string_view PROP_DIR_STR{"../props/"};
         // Trim quotes
         if (buffer.size() < 2) continue;
         buffer.pop_back();
@@ -240,42 +285,48 @@ void parseProp(std::istream& file, Config::Config& config) {
         if (buffer.size() < PROP_DIR_STR.length()) continue;
         buffer = buffer.substr(PROP_DIR_STR.length());
 
-        for (auto idx{0}; idx < config.props().size(); ++idx) {
-            auto& prop{config.prop(idx)};
-            if (prop.filename == buffer) {
-                config.propSelection = idx;
+        data::Vector::Context props{config.props_};
+        for (auto idx{0}; idx < props.children().size(); ++idx) {
+            auto& prop{static_cast<props::Prop&>(*props.children()[idx])};
+
+            if (prop.filename() == buffer) {
+                data::Choice::Context{config.propSel_.choice_}.choose(idx);
                 return;
             }
         }
     }
 }
 
-optional<string> parsePresets(std::istream& file, Config::Config& config, Log::Branch& lBranch) {
-    using namespace Config;
-    auto& logger{lBranch.createLogger("Config::parsePresets()")};
-    string presets{extractSection(file)};
+std::optional<std::string> parsePresets(
+    std::istream& file, config::Config& config, logging::Branch& lBranch
+) {
+    using namespace config;
+    using namespace config::priv;
+
+    auto& logger{lBranch.createLogger("config::parsePresets()")};
+    std::string presets{extractSection(file)};
     std::istringstream presetsStream{presets};
 
     enum {
-        NONE,
-        PRESET_ARRAY,
-        BLADE_ARRAYS,
-    } search{NONE};
+        eNone,
+        ePreset_Array,
+        eBlade_Arrays,
+    } search{eNone};
     uint32 depth{};
     uint32 start{};
 
-    string element;
+    std::string element;
     while (presetsStream.good()) {
-        if (Utils::skipComment(presetsStream)) continue;
+        if (utils::skipComment(presetsStream)) continue;
 
-        if (search == NONE) {
+        if (search == eNone) {
             presetsStream >> element;
             if (element == "Preset") {
                 presetsStream >> element;
-                search = PRESET_ARRAY;
+                search = ePreset_Array;
                 depth = 0;
             } else if (element == "BladeConfig") {
-                search = BLADE_ARRAYS;
+                search = eBlade_Arrays;
                 depth = 0;
             } else if (element == "#") {
                 presetsStream >> element;                
@@ -287,14 +338,14 @@ optional<string> parsePresets(std::istream& file, Config::Config& config, Log::B
                 getline(presetsStream, element);
                 tryAddInjection(element, config);
             }
-        } else if (search == PRESET_ARRAY or search == BLADE_ARRAYS) {
+        } else if (search == ePreset_Array or search == eBlade_Arrays) {
             const auto chr{presetsStream.get()};
             if (chr == '{') {
                 ++depth;
                 if (depth == 1) start = presetsStream.tellg();
             } else if (chr == '}') {
                 if (depth == 0) {
-                    if (search == PRESET_ARRAY) return errorMessage(logger, wxTRANSLATE("Preset array is missing start { before ending };"));
+                    if (search == ePreset_Array) return errorMessage(logger, wxTRANSLATE("Preset array is missing start { before ending };"));
                     return errorMessage(logger, wxTRANSLATE("BladeConfig array is missing start { before ending };"));
                 }
                 --depth;
@@ -303,65 +354,91 @@ optional<string> parsePresets(std::istream& file, Config::Config& config, Log::B
                     // Include the '}' we're currently at to provide an extra buffer for parsePresetArray()
                     // On the off-chance the config is malformed with a missing last preset }, that may
                     // catch it. Every little bit helps the whacky configs people manage to make/find.
-                    const string data{presets.substr(start, dataEndPos - start + 1)};
-                    optional<string> ret;
-                    if (search == PRESET_ARRAY) {
-                        auto& array{config.presetArrays.addArray(element)};
-                        ret = parsePresetArray(data, array, *logger.binfo("Parsing preset array \"" + element + "\"..."));
-                    } else if (search == BLADE_ARRAYS) {
+                    const auto data{presets.substr(start, dataEndPos - start + 1)};
+                    std::optional<std::string> ret;
+                    if (search == ePreset_Array) {
+                        auto array{std::make_unique<presets::Array>(
+                            &config.presetArrays_
+                        )};
+
+                        ret = parsePresetArray(data, *array, *logger.binfo("Parsing preset array \"" + element + "\"..."));
+
+                        data::Vector::Context presetArrays{config.presetArrays_};
+                        presetArrays.add(std::move(array));
+                    } else if (search == eBlade_Arrays) {
                         ret = parseBladeArrays(data, config, *logger.binfo("Parsing blade arrays..."));
                     }
                     if (ret) return ret;
-                    search = NONE;
+                    search = eNone;
                 }
             }
         }
     }
 
-    if (search != NONE) logger.warn("Searching (" + std::to_string(search) + ") not complete before end.");
+    if (search != eNone) logger.warn("Searching (" + std::to_string(search) + ") not complete before end.");
 
-    return nullopt;
+    return std::nullopt;
 }
 
-optional<string> parsePresetArray(const string& data, Config::PresetArray& array, Log::Branch& lBranch) {
-    using namespace Config;
-    auto& logger{lBranch.createLogger("Config::parsePresetArray()")};
+std::optional<std::string> parsePresetArray(
+    const std::string& data,
+    config::presets::Array& array,
+    logging::Branch& lBranch
+) {
+    using namespace config;
+    using namespace config::priv;
+
+    auto& logger{lBranch.createLogger("config::parsePresetArray()")};
     std::istringstream dataStream{data};
 
     enum {
-        NONE,
+        eNone,
 
-        POST_BRACE,
-        DIR,
-        POST_DIR,
-        TRACK,
-        POST_TRACK,
+        ePost_Brace,
+        eDir,
+        ePost_Dir,
+        eTrack,
+        ePost_Track,
 
-        STYLE,
+        eStyle,
 
-        NAME,
-    } reading{NONE};
+        eName,
+    } reading{eNone};
 
-    vector<char> depth;
-    vector<string> depthBuffer;
-    string commentBuffer;
-    string styleBuffer;
-    string tmp;
+    std::vector<char> depth;
+    std::vector<std::string> depthBuffer;
+    std::string commentBuffer;
+    std::string styleBuffer;
+    std::string tmp;
 
     const auto finishStyleReading{[&array, &styleBuffer, &commentBuffer]() {
-        Utils::trimSurroundingWhitespace(styleBuffer);
-        Utils::trimSurroundingWhitespace(commentBuffer);
+        utils::trimSurroundingWhitespace(styleBuffer);
+        utils::trimSurroundingWhitespace(commentBuffer);
 
-        auto& style{array.presets().back()->addStyle()};
-        style.comment = std::move(commentBuffer);
-        style.style = std::move(styleBuffer);
+        data::Vector::Context presets{array.presets_};
+        data::Vector::Context styles{
+            static_cast<presets::Preset&>(*presets.children().back()).styles_
+        };
+
+        auto styleModel{std::make_unique<presets::Style>(
+            &styles.model<data::Vector>()
+        )};
+
+        data::String::Context comment{styleModel->comment_};
+        comment.change(std::move(commentBuffer));
+        data::String::Context style{styleModel->content_};
+        style.change(std::move(styleBuffer));
+
+        styles.add(std::move(styleModel));
 
         commentBuffer.clear();
         styleBuffer.clear();
     }};
 
+    data::Vector::Context presets{array.presets_};
+
     while (dataStream.good()) {
-        const auto newComments{Utils::extractComment(dataStream)};
+        const auto newComments{utils::extractComment(dataStream)};
         if (newComments) {
             if (not commentBuffer.empty()) commentBuffer += '\n';
             commentBuffer += *newComments;
@@ -371,36 +448,50 @@ optional<string> parsePresetArray(const string& data, Config::PresetArray& array
         const auto chr{dataStream.get()};
         if (chr == '\r') continue;
 
-        if (reading == NONE) {
+        if (reading == eNone) {
             if (chr == '{') {
-                reading = POST_BRACE;
-                array.addPreset();
+                reading = ePost_Brace;
+                presets.add(std::make_unique<presets::Preset>(
+                    &presets.model<data::Vector>()
+                ));
             }
-        } else if (reading == POST_BRACE or reading == POST_DIR) {
+        } else if (reading == ePost_Brace or reading == ePost_Dir) {
             if (chr == '"') {
-                if (reading == POST_BRACE) {
-                    reading = DIR;
-                } else if (reading == POST_DIR) {
-                    reading = TRACK;
+                if (reading == ePost_Brace) {
+                    reading = eDir;
+                } else if (reading == ePost_Dir) {
+                    reading = eTrack;
                 }
             }
-        } else if (reading == DIR) {
+        } else if (reading == eDir) {
             if (chr == '"') {
-                reading = POST_DIR;
+                reading = ePost_Dir;
                 continue;
             }
-            array.presets().back()->fontDir += static_cast<char>(chr);
-        } else if (reading == TRACK) {
+
+            auto& preset{static_cast<presets::Preset&>(
+                *presets.children().back()
+            )};
+
+            data::String::Context fontDir{preset.fontDir_};
+            fontDir.append(static_cast<char>(chr));
+        } else if (reading == eTrack) {
             if (chr == '"') {
-                reading = POST_TRACK;
+                reading = ePost_Track;
                 continue;
             }
-            array.presets().back()->track += static_cast<char>(chr);
-        } else if (reading == POST_TRACK) {
+
+            auto& preset{static_cast<presets::Preset&>(
+                *presets.children().back()
+            )};
+
+            data::String::Context track{preset.track_};
+            track.append(static_cast<char>(chr));
+        } else if (reading == ePost_Track) {
             if (chr == ',') {
-                reading = STYLE;
+                reading = eStyle;
             }
-        } else if (reading == STYLE) {
+        } else if (reading == eStyle) {
             bool inSingleQuotes{not depth.empty() and depth.back() == '\''};
             bool inDoubleQuotes{not depth.empty() and depth.back() == '"'};
             if (std::isspace(chr)) {
@@ -411,8 +502,13 @@ optional<string> parsePresetArray(const string& data, Config::PresetArray& array
 
             if (depth.empty()) {
                 if (chr == '"') {
-                    array.presets().back()->name.clear();
-                    reading = NAME;
+                    auto& preset{static_cast<presets::Preset&>(
+                        *presets.children().back()
+                    )};
+
+                    data::String::Context{preset.name_}.clear();
+
+                    reading = eName;
                     tmp.clear();
                     continue;
                 }
@@ -433,11 +529,19 @@ optional<string> parsePresetArray(const string& data, Config::PresetArray& array
 
             if (chr == '}') {
                 finishStyleReading();
+
                 if (not depth.empty()) logger.warn("Hit preset end before finishing style. This will mean errors to correct later!");
                 depth.clear();
-                auto& preset{*array.presets().back()};
-                preset.name = "preset" + std::to_string(array.presets().size());
-                reading = NONE;
+
+                auto& preset{static_cast<presets::Preset&>(
+                    *presets.children().back()
+                )};
+                data::String::Context name{preset.name_};
+                name.change(
+                    "preset" + std::to_string(presets.children().size())
+                );
+
+                reading = eNone;
                 continue;
             }
 
@@ -468,13 +572,15 @@ optional<string> parsePresetArray(const string& data, Config::PresetArray& array
                  */
                 auto closedBuffer{depthBuffer.back()};
                 depthBuffer.pop_back();
-                string& readout{depthBuffer.empty() ? styleBuffer : depthBuffer.back()};
+                std::string& readout{
+                    depthBuffer.empty() ? styleBuffer : depthBuffer.back()
+                };
 
                 bool closedSplitLines{false};
                 if (closedBuffer.length() > 80) {
                     closedSplitLines = true;
 
-                    string insertStr;
+                    std::string insertStr;
                     uint32 closeDepth{0};
                     for (size_t idx{0}; idx < closedBuffer.length(); ++idx) {
                         if (closedBuffer[idx] == '<' or closedBuffer[idx] == '(') {
@@ -510,12 +616,24 @@ optional<string> parsePresetArray(const string& data, Config::PresetArray& array
 
             if (depthBuffer.empty()) styleBuffer += static_cast<char>(chr);
             else depthBuffer.back() += static_cast<char>(chr);
-        } else if (reading == NAME) {
-            const auto& preset{array.presets().back()};
+        } else if (reading == eName) {
+
             if (chr == '"' or chr == '}') {
-                reading = NONE;
-                if (tmp.empty()) preset->name = "preset" + std::to_string(array.presets().size());
-                else preset->name = std::move(tmp);
+                reading = eNone;
+
+                auto& preset{static_cast<presets::Preset&>(
+                    *presets.children().back()
+                )};
+                data::String::Context name{preset.name_};
+
+                if (tmp.empty()) {
+                    name.change(
+                        "preset" + std::to_string(presets.children().size())
+                    );
+                } else {
+                    name.change(std::move(tmp));
+                }
+
                 continue;
             }
             
@@ -523,74 +641,90 @@ optional<string> parsePresetArray(const string& data, Config::PresetArray& array
         }
     }
 
-    return nullopt;
+    return std::nullopt;
 }
 
-optional<string> parseBladeArrays(const string& data, Config::Config& config, Log::Branch& lBranch) {
-    using namespace Config;
-    auto& logger{lBranch.createLogger("Config::parseBladeArrays()")};
+std::optional<std::string> parseBladeArrays(
+    const std::string& data, config::Config& config, logging::Branch& lBranch
+) {
+    using namespace config;
+    using namespace config::priv;
+
+    auto& logger{lBranch.createLogger("config::parseBladeArrays()")};
     std::istringstream dataStream{data};
 
     enum {
-        NONE,
+        eNone,
 
-        ID,
-        BLADE_ENTRY,
-        CONFIGARRAY,
-        CONFIGARRAY_INNER,
-        POST_CONFIGARRAY,
-        NAME,
-    } reading{NONE};
+        eID,
+        eBlade_Entry,
+        eConfig_Array,
+        eConfig_Array_Inner,
+        ePost_Config_Array,
+        eName,
+    } reading{eNone};
 
-    string buffer;
-    vector<char> depth;
+    std::string buffer;
+    std::vector<char> depth;
+
+    data::Vector::Context bladeConfigs{config.bladeConfigs_};
 
     while (dataStream.good()) {
-        if (Utils::skipComment(dataStream)) continue;
+        if (utils::skipComment(dataStream)) continue;
         const auto chr{dataStream.get()};
 
-        if (reading == NONE) {
+        if (reading == eNone) {
             if (chr == '{') {
-                config.bladeArrays.addArray();
-                reading = ID;
+                bladeConfigs.addCreate<blades::BladeConfig>();
+                reading = eID;
                 buffer.clear();
             }
-        } else if (reading == ID) {
+        } else if (reading == eID) {
             if (chr == ',') {
-                Utils::trimWhitespace(buffer);
+                utils::trimWhitespace(buffer);
 
-                auto id{buffer == "NO_BLADE"
-                    ? NO_BLADE
-                    : Utils::doStringMath(buffer)
+                auto idVal{buffer == "NO_BLADE"
+                    ? blades::NO_BLADE
+                    : utils::doStringMath(buffer)
                 };
 
-                if (id) {
-                    auto& lastArray{*config.bladeArrays.arrays().back()};
-                    lastArray.id = static_cast<int32>(*id);
-                } else logger.warn("Invalid blade ID for array " + std::to_string(config.bladeArrays.arrays().size()));
+                if (idVal) {
+                    auto& lastArray{static_cast<blades::BladeConfig&>(
+                        *bladeConfigs.children().back()
+                    )};
+                    data::Integer::Context id{lastArray.id_};
+                    id.set(static_cast<int32>(*idVal));
+                } else logger.warn("Invalid blade ID for array " + std::to_string(bladeConfigs.children().size()));
 
-                reading = BLADE_ENTRY;
+                reading = eBlade_Entry;
                 buffer.clear();
                 continue;
             }
 
             buffer += static_cast<char>(chr);
-        } else if (reading == BLADE_ENTRY) {
+        } else if (reading == eBlade_Entry) {
             if (std::isspace(chr)) continue;
 
             if (depth.empty()) {
                 if (chr == ',') {
-                    auto& array{*config.bladeArrays.arrays().back()};
-                    auto& blade{array.addBlade()};
+                    auto& array{static_cast<blades::BladeConfig&>(
+                        *bladeConfigs.children().back()
+                    )};
+
+                    data::Vector::Context blades{array.blades_};
+                    auto& blade{blades.addCreate<blades::Blade>()};
+
                     auto res{parseBlade(
                         buffer,
                         array,
                         blade,
                         *logger.binfo("Parsing blade...")
                     )};
-                    if (blade.type == Blade::INVALID) {
+
+                    data::Choice::Context typeChoice{blade.type_.choice_};
+                    if (not typeChoice) {
                         logger.debug("Removing blade parser deemed unnecessary.");
-                        array.removeBlade(array.blades().size() - 1);
+                        blades.remove(blades.children().size() - 1);
                     }
                     if (res) return res;
                     buffer.clear();
@@ -616,27 +750,49 @@ optional<string> parseBladeArrays(const string& data, Config::Config& config, Lo
 
             buffer += static_cast<char>(chr);
             if (buffer == "CONFIGARRAY") {
-                reading = CONFIGARRAY;
+                reading = eConfig_Array;
                 buffer.clear();
             }
-        } else if (reading == CONFIGARRAY) {
-            if (chr == '(') reading = CONFIGARRAY_INNER;
-        } else if (reading == CONFIGARRAY_INNER) {
+        } else if (reading == eConfig_Array) {
+            if (chr == '(') reading = eConfig_Array_Inner;
+        } else if (reading == eConfig_Array_Inner) {
             if (chr == ')') {
-                Utils::trimWhitespace(buffer);
-                config.bladeArrays.arrays().back()->presetArray = buffer;
-                reading = POST_CONFIGARRAY;
+                utils::trimWhitespace(buffer);
+
+                data::Vector::Context presetArrays{config.presetArrays_};
+                int32 idx{0};
+                for (; idx < presetArrays.children().size(); ++idx) {
+                    const auto& model{presetArrays.children()[idx]};
+                    auto& presetArray{static_cast<presets::Array&>(*model)};
+
+                    data::String::Context name{presetArray.name_};
+                    if (name.val() == buffer) break;
+                }
+                if (idx == presetArrays.children().size()) idx = -1;
+
+                auto& array{static_cast<blades::BladeConfig&>(
+                    *bladeConfigs.children().back()
+                )};
+
+                data::Choice::Context{array.presetArray_.choice_}.choose(idx);
+
+                reading = ePost_Config_Array;
                 buffer.clear();
                 continue;
             }
             buffer += static_cast<char>(chr);
-        } else if (reading == POST_CONFIGARRAY) {
-            if (chr == '}') reading = NONE;
-            if (chr == '"') reading = NAME;
-        } else if (reading == NAME) {
+        } else if (reading == ePost_Config_Array) {
+            if (chr == '}') reading = eNone;
+            if (chr == '"') reading = eName;
+        } else if (reading == eName) {
             if (chr == '"' or chr == '}') {
-                config.bladeArrays.arrays().back()->name = std::move(buffer);
-                reading = NONE;
+                auto& array{static_cast<blades::BladeConfig&>(
+                    *bladeConfigs.children().back()
+                )};
+
+                data::String::Context{array.name_}.change(std::move(buffer));
+
+                reading = eNone;
                 continue;
             }
 
@@ -644,30 +800,38 @@ optional<string> parseBladeArrays(const string& data, Config::Config& config, Lo
         }
     }
 
-    return nullopt;
+    return std::nullopt;
 }
 
-optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Blade& blade, Log::Branch& lBranch) {
-    using namespace Config;
-    auto& logger{lBranch.createLogger("Config::parseBlade()")};
+std::optional<std::string> parseBlade(
+    std::string data,
+    config::blades::BladeConfig& array,
+    config::blades::Blade& blade,
+    logging::Branch& lBranch
+) {
+    using namespace config;
+    using namespace config::priv;
+    using namespace config::blades;
+
+    auto& logger{lBranch.createLogger("config::parseBlade()")};
     logger.verbose("Parsing blade \"" + data + "\"...");
 
-    optional<string> err;
+    std::optional<std::string> err;
 
-    static constexpr string_view DIMBLADE_STR{"DimBlade("};
-    const auto parseDimBlade{[&data, &logger](int32& brightness) -> optional<string> {
+    static constexpr std::string_view DIMBLADE_STR{"DimBlade("};
+    const auto parseDimBlade{[&data, &logger](int32& brightness) -> std::optional<std::string> {
         if (data.starts_with(DIMBLADE_STR)) {
             data.erase(0, DIMBLADE_STR.length());
 
             const auto brightCommaPos{data.find(',')};
-            if (brightCommaPos == string::npos) {
+            if (brightCommaPos == std::string::npos) {
                 return errorMessage(logger, wxTRANSLATE("DimBlade is missing end comma for brightness"));
             }
 
             const auto brightStr{data.substr(0, brightCommaPos)};
             data.erase(0, brightCommaPos + 1);
 
-            const auto bright{Utils::doStringMath(brightStr)};
+            const auto bright{utils::doStringMath(brightStr)};
             if (not bright) {
                 return errorMessage(logger, wxTRANSLATE("DimBlade has malformed brightness: %s"), brightStr);
             }
@@ -675,20 +839,20 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
             brightness = static_cast<int32>(*bright);
         }
 
-        return nullopt;
+        return std::nullopt;
     }};
 
     int32 firstBrightness{100};
     err = parseDimBlade(firstBrightness);
     if (err) return err;
 
-    static constexpr string_view SUBBLADE_STR{"SubBlade"};
+    static constexpr std::string_view SUBBLADE_STR{"SubBlade"};
     struct {
-        Split::Type type{Split::TYPE_MAX};
-        int32 start;
-        int32 end;
-        int32 segments;
-        string list;
+        blades::WS281X::Split::Type type_{blades::WS281X::Split::eMax};
+        int32 start_;
+        int32 end_;
+        int32 segments_;
+        std::string list_;
     } splitData;
     if (data.starts_with(SUBBLADE_STR)) {
         data.erase(0, SUBBLADE_STR.length());
@@ -696,86 +860,88 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
             return errorMessage(logger, wxTRANSLATE("Unexpected end when parsing SubBlade"));
         }
 
-        static constexpr string_view REVERSE_STR{"Reverse("};
-        static constexpr string_view STRIDE_STR{"WithStride("};
-        static constexpr string_view ZIGZAG_STR{"ZZ("};
-        static constexpr string_view LIST_STR{"WithList<"};
+        static constexpr std::string_view REVERSE_STR{"Reverse("};
+        static constexpr std::string_view STRIDE_STR{"WithStride("};
+        static constexpr std::string_view ZIGZAG_STR{"ZZ("};
+        static constexpr std::string_view LIST_STR{"WithList<"};
+
+        using enum blades::WS281X::Split::Type;
         if (data[0] == '(') {
-            splitData.type = Split::STANDARD;
+            splitData.type_ = eStandard;
             data.erase(0, 1);
         } else if (data.starts_with(REVERSE_STR)) {
-            splitData.type = Split::REVERSE;
+            splitData.type_ = eReverse;
             data.erase(0, REVERSE_STR.length());
         } else if (data.starts_with(STRIDE_STR)) {
-            splitData.type = Split::STRIDE;
+            splitData.type_ = eStride;
             data.erase(0, STRIDE_STR.length());
         } else if (data.starts_with(ZIGZAG_STR)) {
-            splitData.type = Split::ZIG_ZAG;
+            splitData.type_ = eZig_Zag;
             data.erase(0, ZIGZAG_STR.length());
         } else if (data.starts_with(LIST_STR)) {
-            splitData.type = Split::LIST;
+            splitData.type_ = eList;
             data.erase(0, LIST_STR.length());
         } else {
             return errorMessage(logger, wxTRANSLATE("Encountered unknown/malformed SubBlade"));
         }
 
         if (
-                splitData.type == Split::STANDARD or splitData.type == Split::REVERSE or
-                splitData.type == Split::STRIDE or splitData.type == Split::ZIG_ZAG
+                splitData.type_ == eStandard or splitData.type_ == eReverse or
+                splitData.type_ == eStride or splitData.type_ == eZig_Zag
            ) {
             auto startCommaPos{data.find(',')};
-            if (startCommaPos == string::npos) {
+            if (startCommaPos == std::string::npos) {
                 return errorMessage(logger, wxTRANSLATE("Failed to find end comma for SubBlade start"));
             }
 
             auto startStr{data.substr(0, startCommaPos)};
             data.erase(0, startCommaPos + 1);
 
-            auto start{Utils::doStringMath(startStr)};
+            auto start{utils::doStringMath(startStr)};
             if (not start) {
                return errorMessage(logger, wxTRANSLATE("Failed to parse SubBlade start"));
             }
-            splitData.start = static_cast<int32>(*start);
+            splitData.start_ = static_cast<int32>(*start);
 
             auto endCommaPos{data.find(',')};
-            if (endCommaPos == string::npos) {
+            if (endCommaPos == std::string::npos) {
                 return errorMessage(logger, wxTRANSLATE("Failed to find end comma for SubBlade end"));
             }
 
             auto endStr{data.substr(0, endCommaPos)};
             data.erase(0, endCommaPos + 1);
 
-            auto end{Utils::doStringMath(endStr)};
+            auto end{utils::doStringMath(endStr)};
             if (not end) {
                return errorMessage(logger, wxTRANSLATE("Failed to parse SubBlade end"));
             }
-            splitData.end = static_cast<int32>(*end);
+            splitData.end_ = static_cast<int32>(*end);
         } 
-        if (splitData.type == Split::STRIDE or splitData.type == Split::ZIG_ZAG) {
+        if (splitData.type_ == eStride or splitData.type_ == eZig_Zag) {
             auto segCommaPos{data.find(',')};
-            if (segCommaPos == string::npos) {
+            if (segCommaPos == std::string::npos) {
                 return errorMessage(logger, wxTRANSLATE("Failed to find end comma for SubBlade segments"));
             }
 
             auto segmentsStr{data.substr(0, segCommaPos)};
             data.erase(0, segCommaPos + 1);
 
-            auto segments{Utils::doStringMath(segmentsStr)};
+            auto segments{utils::doStringMath(segmentsStr)};
             if (not segments) {
                return errorMessage(logger, wxTRANSLATE("Failed to parse SubBlade segments"));
             }
-            splitData.segments = static_cast<int32>(*segments);
+            splitData.segments_ = static_cast<int32>(*segments);
         } 
-        if (splitData.type == Split::ZIG_ZAG) {
+        if (splitData.type_ == eZig_Zag) {
             auto columnCommaPos{data.find(',')};
-            if (columnCommaPos == string::npos) {
+            if (columnCommaPos == std::string::npos) {
                 return errorMessage(logger, wxTRANSLATE("Failed to find end comma for SubBlade column"));
             }
 
             auto columnStr{data.substr(0, columnCommaPos)};
             data.erase(0, columnCommaPos + 1);
 
-            auto column{Utils::doStringMath(columnStr)};
+            auto column{utils::doStringMath(columnStr)};
             if (not column) {
                return errorMessage(logger, wxTRANSLATE("Failed to parse SubBlade column"));
             }
@@ -787,11 +953,11 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
             // All of 3 people use ZZ subblade anyways. I'll cross that bridge
             // when someone actually gets there.
         }
-        if (splitData.type == Split::LIST) {
+        if (splitData.type_ == eList) {
             // Find the `>` template closing chevron for the `SubBlade`, which
             // marks the end of the list.
             auto chevronPos{data.find('>')};
-            if (chevronPos == string::npos) {
+            if (chevronPos == std::string::npos) {
                 return errorMessage(logger, wxTRANSLATE("SubBlade list unterminated"));
             }
 
@@ -800,7 +966,7 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
             //
             // TODO: Maybe do some proper validation on this? Bad things 
             // could've happened (we've blown past into another template) here!
-            splitData.list = data.substr(0, chevronPos);
+            splitData.list_ = data.substr(0, chevronPos);
             data.erase(0, chevronPos + 1);
 
             // List is unique in that it's a variadic arg'd template with the
@@ -823,86 +989,105 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
     if (err) return err;
 
     const auto addSplit{[&splitData, &firstBrightness](Blade& blade) {
-        auto& split{blade.ws281x().addSplit()};
-        split.brightness = firstBrightness;
-        split.type = splitData.type;
-        if (split.type == Split::STANDARD or split.type == Split::REVERSE or split.type == Split::ZIG_ZAG) {
-            split.start = splitData.start;
-            split.end = splitData.end;
+        data::Vector::Context splits{blade.ws281x().splits_};
+
+        auto& split{splits.addCreate<WS281X::Split>()};
+
+        data::Integer::Context{split.brightness_}.set(firstBrightness);
+        split.type_.select(splitData.type_);
+
+        using enum WS281X::Split::Type;
+
+        if (
+                splitData.type_ == eStandard or
+                splitData.type_ == eReverse or
+                splitData.type_ == eZig_Zag
+           ) {
+            data::Integer::Context{split.start_}.set(splitData.start_);
+            data::Integer::Context{split.end_}.set(splitData.end_);
         }
-        if (split.type == Split::STRIDE) {
-            split.start = splitData.start;
-            split.end = splitData.end + splitData.segments - 1;
+        if (splitData.type_ == eStride) {
+            data::Integer::Context{split.start_}.set(splitData.start_);
+            data::Integer::Context end{split.end_};
+            end.set(splitData.end_ + splitData.segments_ - 1);
         }
-        if (split.type == Split::STRIDE or split.type == Split::ZIG_ZAG) {
-            split.segments = splitData.segments;
+        if (splitData.type_ == eStride or splitData.type_ == eZig_Zag) {
+            data::Integer::Context{split.segments_}.set(splitData.segments_);
         }
-        if (split.type == Split::LIST) {
-            split.list = std::move(splitData.list);
+        if (splitData.type_ == eList) {
+            data::String::Context list{split.list_};
+            list.change(std::move(splitData.list_));
         }
     }};
     
-    const auto parseWS281XLength{[&]() -> optional<string> {
+    const auto parseWS281XLength{[&]() -> std::optional<std::string> {
         const auto lengthCommaPos{data.find(',')};
-        if (lengthCommaPos == string::npos) {
+        if (lengthCommaPos == std::string::npos) {
             return errorMessage(logger, wxTRANSLATE("Could not find end comma for WS281X length"));
         }
 
         const auto lengthStr{data.substr(0, lengthCommaPos)};
         data.erase(0, lengthCommaPos + 1);
 
-        const auto length{Utils::doStringMath(lengthStr)};
-        if (not length) {
+        const auto lengthVal{utils::doStringMath(lengthStr)};
+        if (not lengthVal) {
             return errorMessage(logger, wxTRANSLATE("Failed to parse WS281X length"));
         }
 
-        blade.ws281x().length = static_cast<int32>(*length);
-        return nullopt;
+        data::Integer::Context length{blade.ws281x().length_};
+        length.set(static_cast<int32>(*lengthVal));
+
+        return std::nullopt;
     }};
 
-    const auto parseWS281XData{[&]() -> optional<string> {
+    const auto parseWS281XData{[&]() -> std::optional<std::string> {
         const auto dataPinCommaPos{data.find(',')};
-        if (dataPinCommaPos == string::npos) {
+        if (dataPinCommaPos == std::string::npos) {
             return errorMessage(logger, wxTRANSLATE("Could not find end comma for WS281X data pin"));
         }
 
         auto dataPinStr{data.substr(0, dataPinCommaPos)};
         data.erase(0, dataPinCommaPos + 1);
 
-        blade.ws281x().dataPin = std::move(dataPinStr);
-        return nullopt;
+        data::String::Context dataPin{blade.ws281x().dataPin_};
+        dataPin.change(std::move(dataPinStr));
+
+        return std::nullopt;
     }};
 
-    const auto parseWS281XPowerPins{[&]() -> optional<string> {
+    const auto parseWS281XPowerPins{[&]() -> std::optional<std::string> {
         if (not data.starts_with(POWER_PINS_STR)) {
             return errorMessage(logger, wxTRANSLATE("Missing WS281X PowerPINS"));
         }
         data.erase(0, POWER_PINS_STR.length());
 
-        string buffer;
+        std::string buffer;
         for (auto idx{0}; idx < data.length(); ++idx) {
             if (data[idx] == ',' or data[idx] == '>') {
-                // Use entry for processing
-                blade.config().bladeArrays.powerPinNameEntry = std::move(buffer);
-                blade.ws281x().powerPins.select(blade.config().bladeArrays.powerPinNameEntry);
+                data::Selection::Context powerPins{blade.ws281x().powerPins_};
+                powerPins.select(std::move(buffer));
                 buffer.clear();
+
                 if (data[idx] == '>') break;
+
                 continue;
             }
 
             buffer += data[idx];
         }
-        return nullopt;
+
+        return std::nullopt;
     }};
 
-    static constexpr string_view WS281X_STR{"WS281XBladePtr<"};
-    static constexpr string_view WS2811_STR{"WS2811BladePtr<"};
-    static constexpr string_view SIMPLE_STR{"SimpleBladePtr<"};
-    static constexpr string_view NULL_STR{"NULL"};
-    static constexpr string_view NULLPTR_STR{"nullptr"};
+    static constexpr std::string_view WS281X_STR{"WS281XBladePtr<"};
+    static constexpr std::string_view WS2811_STR{"WS2811BladePtr<"};
+    static constexpr std::string_view SIMPLE_STR{"SimpleBladePtr<"};
+    static constexpr std::string_view NULL_STR{"NULL"};
+    static constexpr std::string_view NULLPTR_STR{"nullptr"};
     if (data.starts_with(WS281X_STR)) {
         data.erase(0, WS281X_STR.length());
-        blade.type = Blade::WS281X;
+        data::Choice::Context type{blade.type_.choice_};
+        type.choose(Blade::eWS281X);
 
         err = parseWS281XLength();
         if (err) return err;
@@ -910,14 +1095,14 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
         err = parseWS281XData();
         if (err) return err;
         
-        static constexpr string_view COLOR8_STR{"Color8::"};
+        static constexpr std::string_view COLOR8_STR{"Color8::"};
         if (not data.starts_with(COLOR8_STR)) {
             return errorMessage(logger, wxTRANSLATE("Malformatted WS281X (missing color order)"));
         }
         data.erase(0, COLOR8_STR.length());
 
         const auto colorOrderCommaPos{data.find(',')};
-        if (colorOrderCommaPos == string::npos) {
+        if (colorOrderCommaPos == std::string::npos) {
             return errorMessage(logger, wxTRANSLATE("Could not find end comma for WS281X color order"));
         }
 
@@ -925,25 +1110,26 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
         data.erase(0, colorOrderCommaPos + 1);
 
         const auto parse3ColorOrder{[](
-            const string& str
-        ) -> WS281XBlade::ColorOrder3 {
-            auto colorOrderIdx{0};
-            for (; colorOrderIdx < WS281XBlade::ORDER_MAX; ++colorOrderIdx) {
-                if (str == WS281XBlade::ORDER_STRS[colorOrderIdx]) break;
+            const std::string& str
+        ) -> ColorOrder3 {
+            size colorOrderIdx{0};
+            for (; colorOrderIdx < eOrder3_Max; ++colorOrderIdx) {
+                if (str == ORDER_STRS[colorOrderIdx]) break;
             }
 
-            return static_cast<WS281XBlade::ColorOrder3>(colorOrderIdx);
+            return static_cast<ColorOrder3>(colorOrderIdx);
         }};
 
         constexpr cstring INVALID_COLOR_MSG{wxTRANSLATE("Invalid/unrecognized WS281X color order: %s")};
         if (colorOrderStr.length() == 3) {
             const auto order{parse3ColorOrder(colorOrderStr)};
-            if (order == WS281XBlade::ORDER_MAX) {
+            if (order == eOrder3_Max) {
                 return errorMessage(logger, INVALID_COLOR_MSG, colorOrderStr);
             }
 
-            blade.ws281x().hasWhite = false;
-            blade.ws281x().colorOrder3 = order;
+            data::Bool::Context{blade.ws281x().hasWhite_}.set(false);
+            data::Choice::Context order3{blade.ws281x().colorOrder3_};
+            order3.choose(order);
         } else if (colorOrderStr.length() == 4) {
             bool offset{false};
             if (colorOrderStr[0] == 'w' or colorOrderStr[0] == 'W') {
@@ -955,18 +1141,17 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
             const auto order3{parse3ColorOrder(
                 colorOrderStr.substr(offset ? 1 : 0)
             )};
-            if (order3 == WS281XBlade::ORDER_MAX) {
+            if (order3 == eOrder3_Max) {
                 return errorMessage(logger, INVALID_COLOR_MSG, colorOrderStr);
             }
 
-            const auto order4{
-                static_cast<WS281XBlade::ColorOrder4>(order3) + 
-                (offset ? WS281XBlade::ORDER4_WFIRST_START : 0)
+            const auto order4Val{order3 + 
+                (offset ? eOrder4_White_First_Start : 0)
             };
 
-            blade.ws281x().hasWhite = true;
-            blade.ws281x().colorOrder4 = order4;
-                
+            data::Bool::Context{blade.ws281x().hasWhite_}.set(true);
+            data::Choice::Context order4{blade.ws281x().colorOrder4_};
+            order4.choose(order4Val);
         } else {
             return errorMessage(logger, INVALID_COLOR_MSG, colorOrderStr);
         }
@@ -975,13 +1160,14 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
         if (err) return err;
     } else if (data.starts_with(WS2811_STR)) {
         data.erase(0, WS2811_STR.length());
-        blade.type = Blade::WS281X;
+        data::Choice::Context type{blade.type_.choice_};
+        type.choose(Blade::eWS281X);
 
         err = parseWS281XLength();
         if (err) return err;
         
         const auto configCommaPos{data.find(',')};
-        if (configCommaPos == string::npos) {
+        if (configCommaPos == std::string::npos) {
             return errorMessage(logger, wxTRANSLATE("Missing end comma for WS2811 config"));
         }
 
@@ -990,9 +1176,10 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
 
         // For the config bitmask, all I care to extract is the color order.
         // I don't support the other options for WS281X and no one uses them.
-        for (auto idx{0}; idx < WS281XBlade::ORDER_MAX; ++idx) {
-            if (configStr.find(WS281XBlade::ORDER_STRS[idx]) != string::npos) {
-                blade.ws281x().colorOrder3 = idx;
+        for (size idx{0}; idx < eOrder3_Max; ++idx) {
+            if (configStr.find(ORDER_STRS[idx]) != std::string::npos) {
+                data::Choice::Context order3{blade.ws281x().colorOrder3_};
+                order3.choose(static_cast<int32>(idx));
                 break;
             }
         }
@@ -1003,48 +1190,51 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
         err = parseWS281XPowerPins();
         if (err) return err;
     } else if (data.starts_with(SIMPLE_STR)) {
-        if (splitData.type != Split::TYPE_MAX) {
+        if (splitData.type_ != WS281X::Split::eMax) {
             return errorMessage(logger, wxTRANSLATE("Attempted to SubBlade simple blade"));
         }
 
         data.erase(0, SIMPLE_STR.length());
-        blade.type = Blade::SIMPLE;
+        data::Choice::Context type{blade.type_.choice_};
+        type.choose(Blade::eSimple);
 
-        blade.brightness = firstBrightness;
+        data::Integer::Context{blade.brightness_}.set(firstBrightness);
         auto& simple{blade.simple()};
 
-        const auto selectStar{[&simple](uint32 starIdx) -> SimpleBlade::Star& {
-            switch (starIdx) {
-                case 0: return simple.star1;
-                case 1: return simple.star2;
-                case 2: return simple.star3;
-                case 3: return simple.star4;
-                default: assert(0);
-                __builtin_unreachable();
+        const auto starFromIdx{[&](size idx) -> Simple::Star& {
+            switch (idx) {
+                case 0: return simple.star1_;
+                case 1: return simple.star2_;
+                case 2: return simple.star3_;
+                case 3: return simple.star4_;
+                default:
+                    assert(0);
+                    __builtin_unreachable();
             }
         }};
 
-        const auto parseLED{[&](uint32 starIdx) -> optional<string> {
-            auto& star{selectStar(starIdx)};
+        const auto parseLED{[&](size starIdx) -> std::optional<std::string> {
+            auto& star{starFromIdx(starIdx)};
 
             const auto ledCommaPos{data.find(',')};
-            if (ledCommaPos == string::npos) {
-                return errorMessage(logger, wxTRANSLATE("Missing end comma for SimpleBlade LED %u"), starIdx + 1);
+            if (ledCommaPos == std::string::npos) {
+                return errorMessage(logger, wxTRANSLATE("Missing end comma for SimpleBlade LED %u"), starIdx);
             }
 
             const auto ledStr{data.substr(0, ledCommaPos)};
             data.erase(0, ledCommaPos + 1);
 
-            auto ledIdx{0};
-            for (; ledIdx < SimpleBlade::Star::LED_MAX; ++ledIdx) {
-                const auto& testLedStr{SimpleBlade::Star::LED_STRS[ledIdx]};
+            size ledIdx{0};
+            for (; ledIdx < eLED_Max; ++ledIdx) {
+                const auto& testLedStr{LED_STRS[ledIdx]};
                 if (not ledStr.starts_with(testLedStr)) continue;
 
-                star.led = ledIdx;
+                data::Choice::Context led{star.led_};
+                led.choose(static_cast<int32>(ledIdx));
 
                 if (
-                        ledIdx >= SimpleBlade::Star::USE_RESISTANCE_START and
-                        ledIdx <= SimpleBlade::Star::USE_RESISTANCE_END
+                        ledIdx >= eLED_Use_Resistance_Start and
+                        ledIdx <= eLED_Use_Resistance_End
                    ) {
                     // At least long enough for chevrons
                     if (ledStr.length() < testLedStr.length() + 2) {
@@ -1061,13 +1251,14 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
                         testLedStr.length() + 1,
                         ledStr.length() - testLedStr.length() - 2
                     )};
-                    auto resistance{Utils::doStringMath(resistanceStr)};
+                    auto resistanceVal{utils::doStringMath(resistanceStr)};
                     
-                    if (not resistance) {
+                    if (not resistanceVal) {
                         return errorMessage(logger, wxTRANSLATE("Simple blade has invalid resistance: %s"), ledStr);
                     }
 
-                    star.resistance = static_cast<int32>(*resistance);
+                    data::Integer::Context resistance{star.resistance_};
+                    resistance.set(static_cast<int32>(*resistanceVal));
                 } else {
                     // If it doesn't use resistance, should match length exactly
                     if (ledStr.length() != testLedStr.length()) {
@@ -1078,11 +1269,11 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
                 break;
             }
 
-            if (ledIdx == SimpleBlade::Star::LED_MAX) {
+            if (ledIdx == eLED_Max) {
                 return errorMessage(logger, wxTRANSLATE("Unknown/malformed LED in SimpleBlade: %s"), ledStr);
             }
 
-            return nullopt;
+            return std::nullopt;
         }};
 
         err = parseLED(0);
@@ -1094,20 +1285,23 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
         err = parseLED(3);
         if (err) return err;
 
-        const auto parsePin{[&](uint32 starIdx) -> optional<string> {
-            auto& star{selectStar(starIdx)};
+        const auto parsePin{[&](size starIdx) -> std::optional<std::string> {
+            auto& star{starFromIdx(starIdx)};
 
             const auto pinCommaPos{data.find(starIdx == 3 ? '>' : ',')};
-            if (pinCommaPos == string::npos) {
+            if (pinCommaPos == std::string::npos) {
                 return errorMessage(logger, wxTRANSLATE("Missing end comma/chevron for SimpleBlade power pin %u"), starIdx + 1);
             }
 
             auto pinStr{data.substr(0, pinCommaPos)};
             data.erase(0, pinCommaPos + 1);
 
-            if (pinStr != "-1") star.powerPin = std::move(pinStr);
+            if (pinStr != "-1") {
+                data::String::Context powerPin{star.powerPin_};
+                powerPin.change(std::move(pinStr));
+            }
 
-            return nullopt;
+            return std::nullopt;
         }};
 
         err = parsePin(0);
@@ -1119,53 +1313,81 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
         err = parsePin(3);
         if (err) return err;
         
+        data::Choice::Context star1Led{simple.star1_.led_};
+        data::Choice::Context star2Led{simple.star2_.led_};
+        data::Choice::Context star3Led{simple.star3_.led_};
+        data::Choice::Context star4Led{simple.star4_.led_};
+
         if (
-                simple.star1.led == SimpleBlade::Star::LED::NONE and
-                simple.star2.led == SimpleBlade::Star::LED::NONE and
-                simple.star3.led == SimpleBlade::Star::LED::NONE and
-                simple.star4.led == SimpleBlade::Star::LED::NONE
+                star1Led.choice() == eLED_None and
+                star2Led.choice() == eLED_None and
+                star3Led.choice() == eLED_None and
+                star4Led.choice() == eLED_None
            ) {
-            blade.type = Blade::UNASSIGNED;
+            data::Choice::Context type{blade.type_.choice_};
+            type.choose(Blade::eUnassigned);
         }
     } else if (data.starts_with(NULL_STR) or data.starts_with(NULLPTR_STR)) {
-        blade.type = Blade::INVALID;
-        if (array.blades().size() == 1) {
+        data::Choice::Context{blade.type_.choice_}.unchoose();
+
+        data::Vector::Context blades{array.blades_};
+
+        if (blades.children().size() == 1) {
             return errorMessage(logger, wxTRANSLATE("SubBlade with no blade found first in array"));
         }
-        auto& blade{array.blade(array.blades().size() - 2)};
-        if (blade.type != Blade::WS281X) {
+
+        auto& blade{static_cast<Blade&>(
+            *blades.children()[blades.children().size() - 2]
+        )};
+
+        data::Choice::Context type{blade.type_.choice_};
+        if (type.choice() != Blade::eWS281X) {
             return errorMessage(logger, wxTRANSLATE("Tried to add SubBlade to a non-WS281X blade"));
         }
-        if (blade.ws281x().splits().empty()) {
+
+        data::Vector::Context splits{blade.ws281x().splits_};
+
+        if (splits.children().empty()) {
             return errorMessage(logger, wxTRANSLATE("Tried to add SubBlade to a non-split WS281X blade"));
         }
 
-        auto& lastSplit{*blade.ws281x().splits().back()};
-        if (lastSplit.type != splitData.type) addSplit(blade);
+        auto& lastSplit{static_cast<WS281X::Split&>(
+            *splits.children().back()
+        )};
+
+        if (lastSplit.type_.selected() != splitData.type_) addSplit(blade);
         else { // this split is same type as last split
             if (
-                    lastSplit.type == Split::STANDARD or
-                    lastSplit.type == Split::REVERSE or
-                    lastSplit.type == Split::LIST
+                    lastSplit.type_.selected() == WS281X::Split::eStandard or
+                    lastSplit.type_.selected() == WS281X::Split::eReverse or
+                    lastSplit.type_.selected() == WS281X::Split::eList
                ) {
                 // These types aren't segmented, just add.
                 addSplit(blade);
-            } else if (lastSplit.type == Split::STRIDE) {
+            } else if (lastSplit.type_.selected() == WS281X::Split::eStride) {
+                data::Integer::Context segments{lastSplit.segments_};
+                data::Integer::Context start{lastSplit.start_};
+                data::Integer::Context end{lastSplit.end_};
+
                 if (
                         // Just make sure this split is same segments
                         // and the start falls inside last split
-                        lastSplit.segments != splitData.segments or
-                        lastSplit.start > splitData.start or
-                        lastSplit.end < splitData.start
+                        segments.val() != splitData.segments_ or
+                        start.val() > splitData.start_ or
+                        end.val() < splitData.start_
                    ) {
                     addSplit(blade);
                 }
                 // Last split is same as this. Nothing to do.
-            } else if (lastSplit.type == Split::ZIG_ZAG) {
+            } else if (lastSplit.type_.selected() == WS281X::Split::eZig_Zag) {
+                data::Integer::Context segments{lastSplit.segments_};
+                data::Integer::Context start{lastSplit.start_};
+                data::Integer::Context end{lastSplit.end_};
+
                 if (
-                        lastSplit.segments != splitData.segments or
-                        lastSplit.start != splitData.start or
-                        lastSplit.end != splitData.end
+                        segments.val() != splitData.segments_ or
+                        start.val() != splitData.start_ or
+                        end.val() != splitData.end_
                    ) {
                     addSplit(blade);
                 }
@@ -1176,38 +1398,46 @@ optional<string> parseBlade(string data, Config::BladeConfig& array, Config::Bla
         return errorMessage(logger, wxTRANSLATE("Unknown/malformed blade"));
     }
 
-    if (blade.type == Blade::WS281X) {
-        if (splitData.type == Split::TYPE_MAX) {
-            blade.brightness = firstBrightness;
+    data::Choice::Context type{blade.type_.choice_};
+
+    if (type.choice() == Blade::eWS281X) {
+        data::Integer::Context brightness{blade.brightness_};
+
+        if (splitData.type_ == WS281X::Split::eMax) {
+            brightness.set(firstBrightness);
         } else {
-            blade.brightness = secondBrightness;
+            brightness.set(secondBrightness);
             addSplit(blade);
         }
     }
 
-    return nullopt;
+    return std::nullopt;
 }
 
-optional<string> parseStyles(std::istream& file, Config::Config& config, Log::Branch& lBranch) {
-    using namespace Config;
-    auto& logger{lBranch.createLogger("Config::parseStyles()")};
-    string styles{extractSection(file)};
+std::optional<std::string> parseStyles(
+    std::istream& file, config::Config& config, logging::Branch& lBranch
+) {
+    using namespace config;
+    using namespace config::priv;
+
+    auto& logger{lBranch.createLogger("config::parseStyles()")};
+    std::string styles{extractSection(file)};
     std::istringstream stylesStream{styles};
 
     enum {
-        NONE,
-        STYLE,
-        STYLE_NAME,
-    } reading{NONE};
+        eNone,
+        eStyle,
+        eStyle_Name,
+    } reading{eNone};
 
-    string readHistory;
+    std::string readHistory;
 
-    string comments;
-    string bladestyle;
-    string name;
+    std::string comments;
+    std::string bladestyle;
+    std::string name;
 
     while (stylesStream.good()) {
-        auto newComments{Utils::extractComment(stylesStream)};
+        auto newComments{utils::extractComment(stylesStream)};
         if (newComments) {
             if (not comments.empty()) comments += '\n';
             comments += *newComments;
@@ -1217,41 +1447,59 @@ optional<string> parseStyles(std::istream& file, Config::Config& config, Log::Br
         const auto chr{stylesStream.get()};
         if (chr == '\r') continue;
 
-        if (reading == NONE) {
+        if (reading == eNone) {
             if (name.empty()) {
                 readHistory += static_cast<char>(chr);
-                if (readHistory.rfind("using") != string::npos) {
-                    reading = STYLE_NAME;
+                if (readHistory.rfind("using") != std::string::npos) {
+                    reading = eStyle_Name;
                     readHistory.clear();
                 }
             } else if (chr == '=') {
-                reading = STYLE;
+                reading = eStyle;
             }
-        } else if (reading == STYLE_NAME) {
+        } else if (reading == eStyle_Name) {
             if (std::isspace(chr)) {
                 if (not name.empty()) {
-                    reading = NONE;
+                    reading = eNone;
                 }
                 continue;
             }
 
             name += static_cast<char>(chr);
-        } else if (reading == STYLE) {
+        } else if (reading == eStyle) {
             if (chr == ';') {
-                Utils::trimWhitespaceOutsideString(bladestyle);
+                utils::trimWhitespaceOutsideString(bladestyle);
+
+                data::Vector::Context presetArrays{config.presetArrays_};
 
                 // How many nested for loops would you like? Cause here are all of 'em
-                for (const auto& presetArray : config.presetArrays.arrays()) {
-                    for (const auto& preset : presetArray->presets()) {
-                        for (const auto& style : preset->styles()) {
-                            for (;;) { // Just because I can lol, another for loop
-                                const auto usingStylePos{style->style.find(name)};
-                                if (usingStylePos == string::npos) break;
+                for (const auto& model : presetArrays.children()) {
+                    auto& array{static_cast<presets::Array&>(*model)};
 
-                                style->style.erase(usingStylePos, name.length());
-                                style->style.insert(usingStylePos, bladestyle);
-                                if (not style->comment.empty()) style->comment += '\n';
-                                style->comment += comments;
+                    data::Vector::Context presets{array.presets_};
+
+                    for (const auto& model : presets.children()) {
+                        auto& preset{static_cast<presets::Preset&>(*model)};
+
+                        data::Vector::Context styles{preset.styles_};
+
+                        for (const auto& model : styles.children()) {
+                            auto& styleModel{static_cast<presets::Style&>(*model)};
+
+                            data::String::Context style{styleModel.content_};
+                            data::String::Context comment{styleModel.comment_};
+
+                            for (;;) { // Just because I can lol, another for loop
+                                const auto usingStylePos{style.val().find(name)};
+                                if (usingStylePos == std::string::npos) break;
+
+                                auto tmp{style.val()};
+                                tmp.erase(usingStylePos, name.length());
+                                tmp.insert(usingStylePos, bladestyle);
+                                style.change(std::move(tmp));
+
+                                if (not comment.val().empty()) comment.append('\n');
+                                comment.append(std::string{comments});
                             }
                         }
                     }
@@ -1260,7 +1508,7 @@ optional<string> parseStyles(std::istream& file, Config::Config& config, Log::Br
                 name.clear();
                 bladestyle.clear();
                 comments.clear();
-                reading = NONE;
+                reading = eNone;
                 continue;
             }
 
@@ -1268,91 +1516,97 @@ optional<string> parseStyles(std::istream& file, Config::Config& config, Log::Br
         }
     }
 
-    return nullopt;
+    return std::nullopt;
 }
 
-optional<string> parseButtons(std::istream& file, Config::Config& config, Log::Branch& lBranch) {
-    using namespace Config;
-    auto& logger{lBranch.createLogger("Config::parseButtons()")};
-    string sectStr{extractSection(file)};
+std::optional<std::string> parseButtons(
+    std::istream& file, config::Config& config, logging::Branch& lBranch
+) {
+    using namespace config;
+    using namespace config::priv;
+
+    auto& logger{lBranch.createLogger("config::parseButtons()")};
+    std::string sectStr{extractSection(file)};
     std::istringstream buttonsStream{sectStr};
 
     enum {
-        NONE,
-        TYPE,
-        POST_TYPE,
-        CPP_NAME,
-        POST_CPP_NAME,
-        INNER,
-        POST_INNER,
-    } reading{NONE};
+        eNone,
+        eType,
+        ePost_Type,
+        eCpp_Name,
+        ePost_Cpp_Name,
+        eInner,
+        ePost_Inner,
+    } reading{eNone};
 
-    string type;
-    string inner;
+    std::string type;
+    std::string inner;
     char openChar{};
 
     while (buttonsStream.good()) {
-        if (Utils::extractComment(buttonsStream)) {
-            if (reading == TYPE) reading = POST_TYPE;
-            if (reading == CPP_NAME) reading = POST_CPP_NAME;
+        if (utils::extractComment(buttonsStream)) {
+            if (reading == eType) reading = ePost_Type;
+            if (reading == eCpp_Name) reading = ePost_Cpp_Name;
             continue;
         }
 
         const auto chr{buttonsStream.get()};
 
-        if (reading == NONE) {
+        if (reading == eNone) {
             if (std::isgraph(chr)) {
-                reading = TYPE;
+                reading = eType;
                 type = static_cast<char>(chr);
                 continue;
             }
-        } else if (reading == TYPE) {
+        } else if (reading == eType) {
             if (std::isspace(chr)) {
-                reading = POST_TYPE;
+                reading = ePost_Type;
                 continue;
             }
 
             type += static_cast<char>(chr);
-        } else if (reading == POST_TYPE) {
+        } else if (reading == ePost_Type) {
             if (std::isgraph(chr)) {
-                reading = CPP_NAME;
+                reading = eCpp_Name;
                 continue;
             }
-        } else if (reading == CPP_NAME or reading == POST_CPP_NAME) {
+        } else if (reading == eCpp_Name or reading == ePost_Cpp_Name) {
             if (chr == '{' or chr == '(') {
                 openChar = static_cast<char>(chr);
-                reading = INNER;
+                reading = eInner;
                 continue;
             }
 
-            if (reading == CPP_NAME) {
-                if (std::isspace(chr)) reading = POST_CPP_NAME;
+            if (reading == eCpp_Name) {
+                if (std::isspace(chr)) reading = ePost_Cpp_Name;
             } else { // POST_CPP_NAME
                 if (std::isspace(chr)) continue;
 
                 // Not a space and not an opener:
                 return errorMessage(logger, wxTRANSLATE("Unexpected character %#x post cpp name."), chr);
             }
-        } else if (reading == INNER) {
+        } else if (reading == eInner) {
             if (
                     openChar == '{' and chr == '}' or 
                     openChar == '(' and chr == ')'
                ) {
-                reading = POST_INNER;
+                reading = ePost_Inner;
                 continue;
             }
 
             if (std::isgraph(chr)) {
                 inner += static_cast<char>(chr);
             }
-        } else if (reading == POST_INNER) {
+        } else if (reading == ePost_Inner) {
             if (std::isspace(chr)) continue;
             if (chr != ';') {
                 return errorMessage(logger, wxTRANSLATE("Unexpected character %#x post inner (prior to ;)."), chr);
             }
 
-            reading = NONE;
-            auto button{std::make_unique<Settings::ButtonData>()};
+            reading = eNone;
+
+            data::Vector::Context buttons{config.buttons_};
+            auto& button{buttons.addCreate<buttons::Button>()};
 
             int32 typeIdx{0};
             for (; typeIdx < BUTTON_TYPE_STRS.size(); ++typeIdx) {
@@ -1361,10 +1615,11 @@ optional<string> parseButtons(std::istream& file, Config::Config& config, Log::B
             if (typeIdx == BUTTON_TYPE_STRS.size()) {
                 return errorMessage(logger, wxTRANSLATE("Unknown button type: %s"), type);
             } 
-            button->type.setValue(typeIdx);
+            data::Choice::Context type{button.type_};
+            type.choose(typeIdx);
 
             auto eventCommaPos{inner.find(',')};
-            if (eventCommaPos == string::npos) {
+            if (eventCommaPos == std::string::npos) {
                 return errorMessage(logger, wxTRANSLATE("Missing comma for button event."));
             }
 
@@ -1372,11 +1627,11 @@ optional<string> parseButtons(std::istream& file, Config::Config& config, Log::B
             inner.erase(0, eventCommaPos + 1);
 
             int32 evtIdx{-1};
-            if (eventStr == "BUTTON_FIRE") evtIdx = UP;
-            else if (eventStr == "BUTTON_MODE_SELECT") evtIdx = DOWN;
-            else if (eventStr == "BUTTON_CLIP_DETECT") evtIdx = LEFT;
-            else if (eventStr == "BUTTON_RELOAD") evtIdx = RIGHT;
-            else if (eventStr == "BUTTON_RANGE") evtIdx = SELECT;
+            if (eventStr == "BUTTON_FIRE") evtIdx = eBtn_Evt_Up;
+            else if (eventStr == "BUTTON_MODE_SELECT") evtIdx = eBtn_Evt_Down;
+            else if (eventStr == "BUTTON_CLIP_DETECT") evtIdx = eBtn_Evt_Left;
+            else if (eventStr == "BUTTON_RELOAD") evtIdx = eBtn_Evt_Right;
+            else if (eventStr == "BUTTON_RANGE") evtIdx = eBtn_Evt_Select;
 
             if (evtIdx == -1) {
                 evtIdx = 0;
@@ -1385,77 +1640,88 @@ optional<string> parseButtons(std::istream& file, Config::Config& config, Log::B
                 }
             }
 
+            data::Choice::Context event{button.event_};
+
             if (evtIdx == BUTTON_EVENT_STRS.size()) {
                 logger.warn("Unknown button event: " + eventStr);
-                button->event = 0;
+                event.choose(0);
             } else {
-                button->event = evtIdx;
+                event.choose(evtIdx);
             }
 
             auto pinCommaPos{inner.find(',')};
-            if (pinCommaPos == string::npos) {
+            if (pinCommaPos == std::string::npos) {
                 return errorMessage(logger, wxTRANSLATE("Missing comma for button pin."));
             }
 
             auto pinStr{inner.substr(0, pinCommaPos)};
             inner.erase(0, pinCommaPos + 1);
-            button->pin = std::move(pinStr);
+            data::String::Context{button.pin_}.change(std::move(pinStr));
 
-            if (button->type == TOUCH_BUTTON) {
+            if (type.choice() == eBtn_Type_Touch) {
                 auto threshCommaPos{inner.find(',')};
-                if (threshCommaPos == string::npos) {
+                if (threshCommaPos == std::string::npos) {
                     return errorMessage(logger, wxTRANSLATE("Missing comma for touch button threshold."));
                 }
 
                 auto threshStr{inner.substr(0, threshCommaPos)};
                 inner.erase(0, threshCommaPos + 1);
 
-                auto thresh{Utils::doStringMath(threshStr)};
+                auto thresh{utils::doStringMath(threshStr)};
                 if (not thresh) {
                     logger.warn("Button threshold value \"" + threshStr + "\" could not be parsed.");
                 } else {
-                    button->touch = static_cast<int32>(*thresh);
+                    data::Integer::Context touch{button.touch_};
+                    touch.set(static_cast<int32>(*thresh));
                 }
             }
 
+            data::String::Context name{button.name_};
+
             if (inner.front() != '"' or inner.back() != '"') {
                 logger.warn("Button name doesn't seem to be surrounded by quotes, is it malformatted?");
-                button->name = std::move(inner);
+                name.change(std::move(inner));
             } else {
-                button->name = inner.substr(1, inner.length() - 2);
+                name.change(inner.substr(1, inner.length() - 2));
             }
-
-            config.settings.addButton(std::move(button));
 
             inner.erase();
             continue;
         }
     }
 
-    return nullopt;
+    return std::nullopt;
 }
 
-void tryAddInjection(const string& buffer, Config::Config& config) {
-    using namespace Config;
-    auto& logger{Log::Context::getGlobal().createLogger("Config::tryAddInjection()")};
+void tryAddInjection(const std::string& buffer, config::Config& config) {
+    using namespace config;
+    using namespace config::priv;
+
+    auto& logger{logging::Context::getGlobal().createLogger("config::tryAddInjection()")};
 
     auto strStart{buffer.find('"')};
-    if (strStart == string::npos) return;
+    if (strStart == std::string::npos) return;
     auto strEnd{buffer.find('"', strStart + 1)};
-    if (strEnd == string::npos) return;
+    if (strEnd == std::string::npos) return;
 
     auto injectionPos{buffer.find(INJECTION_STR, strStart + 1)};
-    string injectionFile;
-    if (injectionPos != string::npos) {
+    std::string injectionFile;
+    if (injectionPos != std::string::npos) {
         logger.verbose("Injection string found...");
-        injectionFile = buffer.substr(injectionPos + INJECTION_STR.length() + 1, strEnd - injectionPos - INJECTION_STR.length() - 1);
+        injectionFile = buffer.substr(
+            injectionPos + INJECTION_STR.length() + 1,
+            strEnd - injectionPos - INJECTION_STR.length() - 1
+        );
     } else {
         logger.verbose("Injection string missing...");
         injectionFile = buffer.substr(strStart + 1, strEnd - strStart - 1);
     }
 
     logger.debug("Injection file: " + injectionFile); 
-    if (injectionFile.find("../") != string::npos or injectionFile.find("/..") != string::npos) {
+    if (
+            injectionFile.find("../") != std::string::npos or
+            injectionFile.find("/..") != std::string::npos
+       ) {
         pcui::showMessage(
             wxString::Format(_("Injection file \"%s\" has an invalid name and cannot be registered.\nYou may add a substitute after import."), injectionFile),
             _("Unknown Injection Encountered")
@@ -1482,7 +1748,7 @@ void tryAddInjection(const string& buffer, Config::Config& config) {
 
             auto copyPath{paths::injectionDir() / filePath};
             fs::create_directories(copyPath.parent_path());
-            if (not paths::copyOverwrite(fileDialog.GetPath().ToStdString(), copyPath, err)) {
+            if (not files::copyOverwrite(fileDialog.GetPath().ToStdString(), copyPath, err)) {
                 auto res{pcui::showMessage(err.message(), _("Injection file could not be added."), wxOK | wxCANCEL | wxOK_DEFAULT)};
                 if (res == wxCANCEL) return;
 
@@ -1494,7 +1760,9 @@ void tryAddInjection(const string& buffer, Config::Config& config) {
         }
     }
 
-    config.presetArrays.addInjection(injectionFile);
+    data::Vector::Context injections{config.injections_};
+    injections.addCreate<Injection>(std::move(injectionFile));
+
     logger.debug("Done");
 }
 

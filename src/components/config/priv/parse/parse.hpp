@@ -3,11 +3,11 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/config/misc/injection.hpp
+ * components/config/priv/parse/parse.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * the Free Software Foundation, either version 4 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -21,17 +21,21 @@
 
 #include <string>
 
-#include "data/hierarchy/model.hpp"
+#include <wx/translation.h>
 
-#include "config_export.h"
+#include "config/config.hpp"
+#include "log/logger.hpp"
 
-namespace config {
+namespace config::priv {
 
-struct CONFIG_EXPORT Injection : data::Model {
-    Injection(data::Node *, std::string&&);
+/**
+ * Parse a config from disk
+ *
+ * @return Error message on failure. nullopt on success.
+ */
+std::optional<std::string> parse(
+    const fs::path&, Config&, logging::Branch *lBranch = nullptr
+);
 
-    std::string filename_;
-};
-
-} // namespace config
+} // namespace config::priv
 

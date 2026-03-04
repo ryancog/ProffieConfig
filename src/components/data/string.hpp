@@ -37,7 +37,7 @@ struct DATA_EXPORT String : Model {
     struct ChangeAction;
     struct MoveAction;
 
-    using Filter = std::function<void(std::string&, size&)>;
+    using Filter = void (*)(const Context&, std::string&, size&);
 
     String(Node * = nullptr);
     String(const String&, Node * = nullptr);
@@ -66,6 +66,11 @@ struct DATA_EXPORT String::Context : Model::Context {
      * Replace text with new text and pos.
      */
     void change(std::string&&, size) const;
+    void change(std::string&&) const;
+
+    void append(char) const;
+    void append(std::string_view) const;
+
     void clear() const;
 
     /**

@@ -46,8 +46,10 @@ auto data::Choice::clone(Node *parent) const -> std::unique_ptr<Model> {
 
 void data::Choice::setFilter(Filter filter) {
     std::lock_guard scopeLock{pLock};
-    mFilter = std::move(filter);
+    mFilter = filter;
 }
+
+auto data::Choice::responder() const -> Responder& { return *mRsp; }
 
 data::Choice::Context::Context(Choice& choice):
     Model::Context{choice} {}
@@ -93,7 +95,7 @@ bool data::Choice::ChoiceAction::shouldPerform(Model& model) {
     // shouldPerform is effectively the setup function for an action. It is
     // called only once and called no matter where the action comes from. Thus
     // it is where the filter should go.
-    if (choice.mFilter) choice.mFilter(mChoice);
+    if (choice.mFilter) choice.mFilter(choice, mChoice);
 
     assert(mChoice >= -1);
     assert(mChoice < choice.mNumChoices);

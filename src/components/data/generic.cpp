@@ -38,3 +38,5 @@ auto data::Generic::clone(Node *parent) const -> std::unique_ptr<Model> {
     return std::make_unique<Generic>(*this, parent);
 }
 
+auto data::Generic::responder() const -> Responder& { return *mRsp; }
+

@@ -1,9 +1,9 @@
-#include "io.h"
+#include "generate.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2023-2026 Ryan Ogurek
  *
- * components/config/private/output.cpp
+ * components/config/priv/generate/generate.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,52 +20,72 @@
  */
 
 #include <algorithm>
-#include <fstream>
+#include <cmath>
 #include <sstream>
 
-#include "log/branch.h"
-#include "utils/paths.h"
-#include "utils/string.h"
-#include "utils/version.h"
+#include <wx/translation.h>
 
-#include "../config.h"
-#include "../bladeconfig/ws281x.h"
-#include "info.h"
+#include "config/blades/bladeconfig.hpp"
+#include "config/blades/ws281x.hpp"
+#include "config/buttons/button.hpp"
+#include "config/config.hpp"
+#include "config/misc/injection.hpp"
+#include "config/presets/array.hpp"
+#include "config/presets/preset.hpp"
+#include "config/priv/data.hpp"
+#include "config/priv/io.hpp"
+#include "config/priv/strings.hpp"
+#include "config/props/prop.hpp"
+#include "config/settings/define.hpp"
+#include "data/choice.hpp"
+#include "data/number.hpp"
+#include "data/string.hpp"
+#include "log/branch.hpp"
+#include "log/logger.hpp"
+#include "utils/files.hpp"
+#include "utils/string.hpp"
+#include "utils/version.hpp"
+
+using namespace config;
 
 namespace {
 
-optional<string> runPreChecks(const Config::Config&, Log::Branch&);
+std::optional<std::string> runPreChecks(
+    Config&, logging::Branch&
+);
 
-void outputTop(std::ostream&, const Config::Config&);
-void outputTopGeneral(std::ostream&, const Config::Config&);
-void outputTopProp(std::ostream&, const Config::Config&);
+void outputTop(std::ostream&, Config&);
+void outputTopGeneral(std::ostream&, Config&);
+void outputTopProp(std::ostream&, Config&);
 
-void outputProp(std::ostream&, const Config::Config&);
+void outputProp(std::ostream&, Config&);
 
-void outputPresets(std::ostream&, const Config::Config&);
-void outputPresetStyles(std::ostream&, const Config::Config&);
-void outputPresetBlades(std::ostream&, const Config::Config&);
+void outputPresets(std::ostream&, Config&);
+void outputPresetStyles(std::ostream&, Config&);
+void outputPresetBlades(std::ostream&, Config&);
 
-void outputButtons(std::ostream&, const Config::Config&);
+void outputButtons(std::ostream&, Config&);
 
-template<typename VAL = string>
-void outputOpt(std::ostream&, const string& opt, const VAL& val);
-template<typename VAL = string>
-void outputOpt(std::ostream&, const string& opt);
-template<typename VAL = string>
-void outputDefine(std::ostream&, const string& define);
-template<typename VAL = string>
-void outputDefine(std::ostream&, const string& define, const VAL& val);
+template<typename VAL = std::string>
+void outputOpt(std::ostream&, const std::string& opt, const VAL& val);
+template<typename VAL = std::string>
+void outputOpt(std::ostream&, const std::string& opt);
+template<typename VAL = std::string>
+void outputDefine(std::ostream&, const std::string& define);
+template<typename VAL = std::string>
+void outputDefine(std::ostream&, const std::string& define, const VAL& val);
 
 } // namespace
 
-optional<string> Config::output(const filepath& filePath, const Config& config, Log::Branch *lBranch) {
-    auto& logger{Log::Branch::optCreateLogger("Config::output()", lBranch)};
+std::optional<std::string> priv::generate(
+    const fs::path& filePath, Config& config, logging::Branch *lBranch
+) {
+    auto& logger{logging::Branch::optCreateLogger("generate()", lBranch)};
 
     auto precheckErr{runPreChecks(config, *logger.binfo("Running prechecks..."))};
     if (precheckErr) return precheckErr;
 
-    auto outFile{paths::openOutputFile(filePath)};
+    auto outFile{files::openOutput(filePath)};
     if (not outFile.is_open()) {
         return errorMessage(logger, wxTRANSLATE("Could not open config file for output."));
     }
@@ -87,109 +107,202 @@ optional<string> Config::output(const filepath& filePath, const Config& config, 
     outFile.close();
 
     logger.info("Done");
-    return nullopt;
+    return std::nullopt;
 }
 
 namespace {
 
-optional<string> runPreChecks(const Config::Config& config, Log::Branch& lBranch) {
-    using namespace Config;
-    auto& logger{lBranch.createLogger("Config::runPreChecks()")};
+std::optional<std::string> runPreChecks(Config& config, logging::Branch& lBranch) {
+    using namespace config;
+    using namespace config::priv;
+    using namespace config::blades;
 
-    if (config.settings.bladeDetect and static_cast<string>(config.settings.bladeDetectPin) == "") {
+    auto& logger{lBranch.createLogger("runPreChecks()")};
+
+    auto& settings{config.settings_};
+    auto& awareness{config.settings_.bladeAwareness_};
+
+    if (
+            data::Bool::Context{awareness.bladeDetect_.enable_}.val() and
+            data::String::Context{awareness.bladeDetect_.pin_}.val().empty()
+       ) {
         return errorMessage(logger, wxTRANSLATE("Blade Detect Pin cannot be empty."));
     }
-    if (config.settings.bladeID.enable) {
-        if (static_cast<string>(config.settings.bladeID.pin) == "") {
+
+    if (data::Bool::Context{awareness.bladeId_.enable_}.val()) {
+        if (data::String::Context{awareness.bladeId_.pin_}.val().empty()) {
             return errorMessage(logger, wxTRANSLATE("Blade ID Pin cannot be empty."));
         }
+
+        data::Choice::Context idMode{awareness.bladeId_.mode_};
+        data::String::Context bridgePin{awareness.bladeId_.bridgePin_};
         if (
-                config.settings.bladeID.mode == BladeIDMode::BRIDGED and
-                static_cast<string>(config.settings.bladeID.bridgePin) == ""
+                idMode.choice() == eBIDMode_Bridged and
+                bridgePin.val().empty()
            ) {
             return errorMessage(logger, wxTRANSLATE("Pullup Pin cannot be empty."));
         }
     }
+
+    data::String::Context detectPin{awareness.bladeDetect_.pin_};
+    data::String::Context idPin{awareness.bladeId_.pin_};
     if (
-            config.settings.bladeDetect and config.settings.bladeID.enable and
-            static_cast<string>(config.settings.bladeDetectPin) == static_cast<string>(config.settings.bladeID.pin)
+            data::Bool::Context{awareness.bladeId_.enable_}.val() and
+            data::Bool::Context{awareness.bladeDetect_.enable_}.val() and
+            detectPin.val() == idPin.val()
        ) {
         return errorMessage(logger, wxTRANSLATE("Blade ID Pin and Blade Detect Pin cannot be the same."));
     }
 
-    for (const auto& array : config.bladeArrays.arrays()) {
-        auto issues{array->computeIssues()};
-        if (issues != BladeConfig::ISSUE_NONE) {
-            return errorMessage(logger, BladeConfig::issueString(issues));
+    data::Vector::Context bladeConfigs{config.bladeConfigs_};
+    for (const auto& model : bladeConfigs.children()) {
+        auto& bladeConfig{static_cast<BladeConfig&>(*model)};
+
+        data::Integer::Context issues{bladeConfig.issues_};
+        if (issues.val() != BladeConfig::eIssue_None) {
+            return errorMessage(logger, blades::BladeConfig::issueString(issues.val()));
         }
     }
 
-    for (auto arrayIdx{0}; arrayIdx < config.bladeArrays.arrays().size(); ++arrayIdx) {
-        const auto& bladeArray{config.bladeArrays.array(arrayIdx)};
-        const auto arrayName{config.bladeArrays.arraySelection.choices()[arrayIdx]};
-        if (bladeArray.presetArray == -1) {
-            return errorMessage(logger, wxTRANSLATE("Blade array %s has no preset array selection"), arrayName);
-        }
-        for (auto bladeIdx{0}; bladeIdx < bladeArray.blades().size(); ++bladeIdx) {
-            auto& blade{bladeArray.blade(bladeIdx)};
+    for (
+            auto arrayIdx{0};
+            arrayIdx < bladeConfigs.children().size();
+            ++arrayIdx
+        ) {
+        const auto& model{bladeConfigs.children()[arrayIdx]};
+        auto& bladeConfig{static_cast<BladeConfig&>(*model)};
 
-            if (blade.type == Blade::WS281X) {
-                if (static_cast<string>(blade.ws281x().dataPin).empty()) {
-                    return errorMessage(logger, wxTRANSLATE("Blade %d in array %s missing data pin"), bladeIdx, arrayName);
+        data::String::Context name{bladeConfig.name_};
+
+        data::Choice::Context selectedPresetsArray{
+            bladeConfig.presetArray_.choice_
+        };
+
+        if (selectedPresetsArray.choice() == -1) {
+            return errorMessage(logger, wxTRANSLATE("Blade array %s has no preset array selection"), name.val());
+        }
+
+        data::Vector::Context blades{bladeConfig.blades_};
+
+        for (
+                auto bladeIdx{0};
+                bladeIdx < blades.children().size();
+                ++bladeIdx
+            ) {
+            const auto& model{blades.children()[bladeIdx]};
+            auto& blade{static_cast<Blade&>(*model)};
+
+            data::Choice::Context type{blade.type_.choice_};
+
+            if (type.choice() == Blade::eWS281X) {
+                data::String::Context dataPin{blade.ws281x().dataPin_};
+
+                if (dataPin.val().empty()) {
+                    return errorMessage(logger, wxTRANSLATE("Blade %d in array %s missing data pin"), bladeIdx, name.val());
                 }
                 // Subblade overlap
             }
-            if (blade.type == Blade::SIMPLE) {
-                auto& star1{blade.simple().star1};
-                auto& star2{blade.simple().star2};
-                auto& star3{blade.simple().star3};
-                auto& star4{blade.simple().star4};
+
+            if (type.choice() == Blade::eSimple) {
+                auto& star1{blade.simple().star1_};
+                auto& star2{blade.simple().star2_};
+                auto& star3{blade.simple().star3_};
+                auto& star4{blade.simple().star4_};
+
+                data::Choice::Context star1Led{star1.led_};
+                data::Choice::Context star2Led{star2.led_};
+                data::Choice::Context star3Led{star3.led_};
+                data::Choice::Context star4Led{star4.led_};
+
                 constexpr auto SIMPLE_ERR_MSG{wxTRANSLATE("LED %d of blade %d in array %s missing power pin.")};
-                if (star1.led != SimpleBlade::Star::NONE and static_cast<string>(star1.powerPin).empty()) {
-                    return errorMessage(logger, SIMPLE_ERR_MSG, 1, bladeIdx, arrayName);
+                if (
+                        star1Led.choice() != eLED_None and 
+                        data::String::Context{star1.powerPin_}.val().empty()
+                   ) {
+                    return errorMessage(logger, SIMPLE_ERR_MSG, 1, bladeIdx, name.val());
                 }
-                if (star2.led != SimpleBlade::Star::NONE and static_cast<string>(star2.powerPin).empty()) {
-                    return errorMessage(logger, SIMPLE_ERR_MSG, 2, bladeIdx, arrayName);
+                if (
+                        star2Led.choice() != eLED_None and 
+                        data::String::Context{star2.powerPin_}.val().empty()
+                   ) {
+                    return errorMessage(logger, SIMPLE_ERR_MSG, 2, bladeIdx, name.val());
                 }
-                if (star3.led != SimpleBlade::Star::NONE and static_cast<string>(star3.powerPin).empty()) {
-                    return errorMessage(logger, SIMPLE_ERR_MSG, 3, bladeIdx, arrayName);
+                if (
+                        star3Led.choice() != eLED_None and 
+                        data::String::Context{star3.powerPin_}.val().empty()
+                   ) {
+                    return errorMessage(logger, SIMPLE_ERR_MSG, 3, bladeIdx, name.val());
                 }
-                if (star4.led != SimpleBlade::Star::NONE and static_cast<string>(star4.powerPin).empty()) {
-                    return errorMessage(logger, SIMPLE_ERR_MSG, 4, bladeIdx, arrayName);
+                if (
+                        star4Led.choice() != eLED_None and 
+                        data::String::Context{star4.powerPin_}.val().empty()
+                   ) {
+                    return errorMessage(logger, SIMPLE_ERR_MSG, 4, bladeIdx, name.val());
                 }
 
                 if (
-                        star1.led == SimpleBlade::Star::NONE or
-                        star1.led == SimpleBlade::Star::NONE or
-                        star1.led == SimpleBlade::Star::NONE or
-                        star1.led == SimpleBlade::Star::NONE
+                        star1Led.choice() == eLED_None or
+                        star1Led.choice() == eLED_None or
+                        star1Led.choice() == eLED_None or
+                        star1Led.choice() == eLED_None
                    ) {
-                    return errorMessage(logger, wxTRANSLATE("Blade %d in array %s has no LEDs"), bladeIdx, arrayName);
+                    return errorMessage(logger, wxTRANSLATE("Blade %d in array %s has no LEDs"), bladeIdx, name.val());
                 }
             }
         }
     }
 
-    for (const auto& presetArray : config.presetArrays.arrays()) {
-        const auto arrayName{static_cast<string>(presetArray->name)};
-        if (arrayName.empty()) {
+    data::Vector::Context presetArrays{config.presetArrays_};
+    for (const auto& model : presetArrays.children()) {
+        auto& presetArray{static_cast<presets::Array&>(*model)};
+
+        data::String::Context arrayName{presetArray.name_};
+        if (arrayName.val().empty()) {
             return errorMessage(logger, wxTRANSLATE("Preset array has no name"));
         }
-        for (const auto& checkArray : config.presetArrays.arrays()) {
+
+        for (const auto& model : presetArrays.children()) {
+            auto& checkArray{static_cast<presets::Array&>(*model)};
+
             if (&checkArray == &presetArray) continue;
-            if (static_cast<string>(checkArray->name) == arrayName) {
-                return errorMessage(logger, wxTRANSLATE("Duplicate preset arrays %s"), arrayName);
+
+            data::String::Context checkName{checkArray.name_};
+            if (checkName.val() == arrayName.val()) {
+                return errorMessage(logger, wxTRANSLATE("Duplicate preset arrays %s"), arrayName.val());
             }
         }
     }
 
     constexpr cstring STYLE_ERR_STR{wxTRANSLATE("Bladestyle %d in preset %d (%s) in array %s has mismatched %s")};
-    for (const auto& presetArray : config.presetArrays.arrays()) {
-        for (auto presetIdx{0}; presetIdx < presetArray->presets().size(); ++presetIdx) {
-            const auto& preset{presetArray->preset(presetIdx)};
-            for (auto styleIdx{0}; styleIdx < preset.styles().size(); ++styleIdx) {
-                vector<char> depth;
-                for (const char chr : static_cast<string>(preset.style(styleIdx).style)) {
+    for (const auto& model : presetArrays.children()) {
+        auto& presetArray{static_cast<presets::Array&>(*model)};
+
+        data::String::Context arrayName{presetArray.name_};
+        data::Vector::Context presets{presetArray.presets_};
+
+        for (
+                auto presetIdx{0};
+                presetIdx < presets.children().size();
+                ++presetIdx
+            ) {
+            const auto& model{presets.children()[presetIdx]};
+            auto& preset{static_cast<presets::Preset&>(*model)};
+
+            data::String::Context presetName{preset.name_};
+            data::Vector::Context styles{preset.styles_};
+
+            for (
+                    auto styleIdx{0};
+                    styleIdx < styles.children().size();
+                    ++styleIdx
+                ) {
+                const auto& model{styles.children()[styleIdx]};
+                auto& styleModel{static_cast<presets::Style&>(*model)};
+
+                std::vector<char> depth;
+
+                data::String::Context style{styleModel.content_};
+                for (const char chr : style.val()) {
                     if (chr == '<' or chr == '(') {
                         depth.push_back(chr);
                         continue;
@@ -198,20 +311,22 @@ optional<string> runPreChecks(const Config::Config& config, Log::Branch& lBranch
                         if (depth.empty()) {
                             return errorMessage(
                                 logger, STYLE_ERR_STR, styleIdx, presetIdx,
-                                static_cast<string>(preset.name), static_cast<string>(presetArray->name),
-                                string{chr}
+                                presetName.val(), arrayName.val(),
+                                std::string{chr}
                             );
                         }
+
                         if (
                                 (chr == '>' and depth.back() != '<') or
                                 (chr == ')' and depth.back() != '(')
                            ) {
                             return errorMessage(
                                 logger, STYLE_ERR_STR, styleIdx, presetIdx,
-                                static_cast<string>(preset.name), static_cast<string>(presetArray->name),
-                                string{depth.back(), chr}
+                                presetName.val(), arrayName.val(),
+                                std::string{depth.back(), chr}
                             );
                         }
+
                         depth.pop_back();
                         continue;
                     }
@@ -220,35 +335,42 @@ optional<string> runPreChecks(const Config::Config& config, Log::Branch& lBranch
                         else depth.push_back(chr);
                     }
                 }
+
                 if (not depth.empty()) {
                     return errorMessage(
                         logger, STYLE_ERR_STR, styleIdx, presetIdx,
-                        static_cast<string>(preset.name), static_cast<string>(presetArray->name),
-                        string{depth.back()}
+                        presetName.val(), arrayName.val(),
+                        std::string{depth.back()}
                     );
                 }
             }
         }
     }
 
-    const auto numButtons{config.settings.numButtons()};
-    for (auto idx{0}; idx < numButtons; ++idx) {
-        const auto& button{config.settings.button(idx)};
-        if (button->type == -1) {
+    data::Vector::Context buttons{config.buttons_};
+    for (auto idx{0}; idx < buttons.children().size(); ++idx) {
+        auto& model{*buttons.children()[idx]};
+        auto& button{static_cast<buttons::Button&>(model)};
+
+        data::Choice::Context type{button.type_};
+        data::Choice::Context event{button.event_};
+        data::String::Context pin{button.pin_};
+
+        if (type.choice() == -1) {
             return errorMessage(logger, wxTRANSLATE("Button %u doesn't have a type set."), idx);
         }
-        if (button->event == -1) {
+        if (event.choice() == -1) {
             return errorMessage(logger, wxTRANSLATE("Button %u doesn't have its event set."), idx);
         }
-        if (button->pin.empty()) {
+        if (pin.val().empty()) {
             return errorMessage(logger, wxTRANSLATE("Button %u doesn't have a pin set."), idx);
         }
     }
 
-    return nullopt;
+    return std::nullopt;
 }
 
-void outputTop(std::ostream& outFile, const Config::Config& config) {
+void outputTop(std::ostream& outFile, Config& config) {
     outFile << "#ifdef CONFIG_TOP\n";
     outputTopGeneral(outFile, config);
     outputTopProp(outFile, config);
@@ -256,56 +378,75 @@ void outputTop(std::ostream& outFile, const Config::Config& config) {
 }
 
 template<typename VAL>
-void outputOpt(std::ostream& outFile, const string& opt) {
-    outFile << Config::PC_OPT_STR << opt << '\n';
+void outputOpt(std::ostream& outFile, const std::string& opt) {
+    outFile << priv::PC_OPT_STR << opt << '\n';
 }
 
 template<typename VAL>
-void outputOpt(std::ostream& outFile, const string& opt, const VAL& val) {
-    outFile << Config::PC_OPT_STR << opt << ' ' << val << '\n';
+void outputOpt(std::ostream& outFile, const std::string& opt, const VAL& val) {
+    outFile << priv::PC_OPT_STR << opt << ' ' << val << '\n';
 }
 
 template<typename VAL>
-void outputDefine(std::ostream& outFile, const string& define) {
-    outFile << Config::DEFINE_STR << define << '\n';
+void outputDefine(std::ostream& outFile, const std::string& define) {
+    outFile << priv::DEFINE_STR << define << '\n';
 }
 
 template<typename VAL>
-void outputDefine(std::ostream& outFile, const string& define, const VAL& val) {
-    outFile << Config::DEFINE_STR << define << ' ' << val << '\n';
+void outputDefine(
+    std::ostream& outFile, const std::string& define, const VAL& val
+) {
+    outFile << priv::DEFINE_STR << define << ' ' << val << '\n';
 }
 
-void outputTopGeneral(std::ostream& outFile, const Config::Config& config) {
-    using namespace Config;
+void outputTopGeneral(std::ostream& outFile, Config& config) {
+    using namespace config;
+    using namespace config::priv;
 
-    if (config.settings.massStorage) {
+    auto& settings{config.settings_};
+
+    if (data::Bool::Context{settings.massStorage_}.val()) {
         outputOpt(outFile, ENABLE_MASS_STORAGE_STR);
     }
-    if (config.settings.webUSB) {
+
+    if (data::Bool::Context{settings.webUsb_}.val()) {
         outputOpt(outFile, ENABLE_WEBUSB_STR);
     }
 
-    Utils::Version osVersion{config.settings.osVersionMap[config.settings.osVersion]};
-    if (osVersion) outputOpt<string>(outFile, OS_VERSION_STR, osVersion);
+    data::Version::Context osVersion{settings.osVersion_};
+    if (osVersion.val()) outputOpt(outFile, OS_VERSION_STR, osVersion.val());
 
-    outFile << INCLUDE_STR << BOARD_STRS[config.settings.board] << '\n';
+    data::Choice::Context board{settings.board_};
+    outFile << INCLUDE_STR << BOARD_STRS[board.choice()] << '\n';
 
     uint32 requiredLedsPerStrip{0};
-    for (const auto& array : config.bladeArrays.arrays()) {
-        for (const auto& blade : array->blades()) {
-            if (blade->type != Blade::WS281X) continue;
-            bool whiteMultiplier{blade->ws281x().hasWhite};
-            auto length{static_cast<uint32>(blade->ws281x().length)};
-            if (whiteMultiplier) {
-                length = std::ceil((length * 4.0) / 3.0);
+    data::Vector::Context bladeConfigs{config.bladeConfigs_};
+    for (const auto& model : bladeConfigs.children()) {
+        auto& array{static_cast<blades::BladeConfig&>(*model)};
+        data::Vector::Context blades{array.blades_};
+        for (const auto& model : blades.children()) {
+            auto& blade{static_cast<blades::Blade&>(*model)};
+
+            data::Choice::Context type{blade.type_.choice_};
+            if (type.choice() != blades::Blade::eWS281X) continue;
+
+            data::Bool::Context whiteMultiplier{blade.ws281x().hasWhite_};
+            data::Integer::Context length{blade.ws281x().length_};
+
+            auto ledsInStrip{length.val()};
+            if (whiteMultiplier.val()) {
+                ledsInStrip = std::ceil((length.val() * 4.0) / 3.0);
             }
-            requiredLedsPerStrip = std::max(length, requiredLedsPerStrip);
+
+            requiredLedsPerStrip = std::max<uint32>(
+                ledsInStrip, requiredLedsPerStrip
+            );
         }
     }
 
     outFile << MAX_LEDS_STR << std::max<uint32>(requiredLedsPerStrip, 144) << ";\n";
 
-    if (osVersion.err or osVersion < Utils::Version{"8"}) {
+    if (utils::Version{8}.compare(osVersion.val()) > 0) {
         // No longer needed in OS8 and newer
         outputDefine(outFile, ENABLE_AUDIO_STR);
         outputDefine(outFile, ENABLE_MOTION_STR);
@@ -314,186 +455,307 @@ void outputTopGeneral(std::ostream& outFile, const Config::Config& config) {
     }
 
     outputDefine(outFile, SHARED_POWER_PINS_STR);
-    outputDefine(outFile, NUM_BLADES_STR, config.bladeArrays.numBlades());
-    outputDefine<uint32>(outFile, NUM_BUTTONS_STR, config.settings.numButtons());
+    outputDefine(outFile, NUM_BLADES_STR, config.numBlades());
+    data::Vector::Context buttons{config.buttons_};
+    outputDefine(outFile, NUM_BUTTONS_STR, buttons .children().size());
 
-    if (config.settings.bladeDetect) {
-        outputDefine<string>(outFile, BLADE_DETECT_PIN_STR, config.settings.bladeDetectPin);
+    auto& bladeDetect{settings.bladeAwareness_.bladeDetect_};
+    if (data::Bool::Context{bladeDetect.enable_}.val()) {
+        data::String::Context pin{bladeDetect.pin_};
+        outputDefine(outFile, BLADE_DETECT_PIN_STR, pin.val());
     }
 
-    if (config.settings.bladeID.enable) {
-        string idString{BLADEID_MODE_STRS[config.settings.bladeID.mode]};
-        idString += config.settings.bladeID.pin;
-        if (config.settings.bladeID.mode == BladeIDMode::EXTERNAL) {
-            (idString += ", ") += std::to_string(config.settings.bladeID.pullup);
-        } else if (config.settings.bladeID.mode == BladeIDMode::BRIDGED) {
-            (idString += ", ") += config.settings.bladeID.bridgePin;
+    auto& bladeID{settings.bladeAwareness_.bladeId_};
+    if (data::Bool::Context{bladeID.enable_}.val()) {
+        data::Choice::Context idMode{bladeID.mode_};
+        std::string idString{BLADEID_MODE_STRS[idMode.choice()]};
+
+        idString += data::String::Context{bladeID.pin_}.val();
+        if (idMode.choice() == eBIDMode_External) {
+            data::Integer::Context pullup{bladeID.pullup_};
+            (idString += ", ") += std::to_string(pullup.val());
+        } else if (idMode.choice() == eBIDMode_Bridged) {
+            data::String::Context bridgePin{bladeID.bridgePin_};
+            (idString += ", ") += bridgePin.val();
         }
         idString += ">\n";
         outputDefine(outFile, BLADE_ID_CLASS_STR, idString);
  
-        const auto pinSelect{static_cast<set<uint32>>(config.settings.bladeID.powerPins)};
-        if (config.settings.bladeID.powerForID and not pinSelect.empty()) {
-            string powerString{POWER_PINS_STR};
-            for (auto iter{pinSelect.begin()}; iter != pinSelect.end(); ++iter) {
-                powerString += config.settings.bladeID.powerPins.items()[*iter];
-                if (std::next(iter) != pinSelect.end()) powerString += ", ";
+        data::Selection::Context powerPins{bladeID.powerPins_};
+        if (
+                data::Bool::Context{bladeID.powerForId_}.val() and
+                std::ranges::any_of(powerPins.selected(), std::identity{})
+           ) {
+            std::string powerString{POWER_PINS_STR};
+
+            for (auto idx{0}; idx < powerPins.items().size(); ++idx) {
+                if (not powerPins.selected()[idx]) continue;
+
+                powerString += powerPins.items()[idx];
+                if (idx + 1 < powerPins.items().size()) powerString += ", ";
             }
+
             powerString += ">\n";
             outputDefine(outFile, ENABLE_POWER_FOR_ID_STR, powerString);
         }
 
-        if (config.settings.bladeID.continuousScanning) {
-            outputDefine(outFile, BLADE_ID_SCAN_MILLIS_STR, config.settings.bladeID.continuousInterval);
-            outputDefine(outFile, BLADE_ID_TIMES_STR, config.settings.bladeID.continuousTimes);
+        if (data::Bool::Context{bladeID.continuousScanning_}.val()) {
+            data::Integer::Context itvl{bladeID.continuousInterval_};
+            data::Integer::Context times{bladeID.continuousTimes_};
+            outputDefine(outFile, BLADE_ID_SCAN_MILLIS_STR, itvl.val());
+            outputDefine(outFile, BLADE_ID_TIMES_STR, times.val());
         }
     }
 
-    outputDefine(outFile, VOLUME_STR, config.settings.volume);
-    if (config.settings.enableBootVolume) {
-        outputDefine(outFile, BOOT_VOLUME_STR, config.settings.bootVolume);
+    data::Integer::Context volume{settings.volume_};
+    outputDefine(outFile, VOLUME_STR, volume.val());
+    if (data::Bool::Context{settings.enableBootVolume_}.val()) {
+        data::Integer::Context bootVolume{settings.bootVolume_};
+        outputDefine(outFile, BOOT_VOLUME_STR, bootVolume.val());
     }
-    outputDefine(outFile, CLASH_THRESHOLD_STR, config.settings.clashThreshold);
 
-    outputDefine(outFile, PLI_OFF_STR, static_cast<uint32>(std::ceil(config.settings.pliOffTime * 1000)));
-    const auto idleOffString{std::to_string(static_cast<uint32>(std::ceil(config.settings.idleOffTime * 60))) + " * 1000"};
-    outputDefine(outFile, IDLE_OFF_STR,  idleOffString);
-    const auto motionOffString{std::to_string(static_cast<uint32>(std::ceil(config.settings.motionTimeout * 60))) + " * 1000"};
+    data::Decimal::Context clashThresh{settings.clashThreshold_};
+    outputDefine(outFile, CLASH_THRESHOLD_STR, clashThresh.val());
+
+    data::Decimal::Context pliOff{settings.pliOffTime_};
+    auto pliOffCalced{static_cast<uint32>(std::ceil(pliOff.val() * 1000))};
+    outputDefine(outFile, PLI_OFF_STR, pliOffCalced);
+
+    data::Decimal::Context idleOff{settings.idleOffTime_};
+    auto idleOffCalced{static_cast<uint32>(std::ceil(idleOff.val() * 60))};
+    const auto idleOffString{std::to_string(idleOffCalced) + " * 1000"};
+    outputDefine(outFile, IDLE_OFF_STR, idleOffString);
+
+    data::Decimal::Context motionOff{settings.motionTimeout_};
+    auto motionOffCalced{static_cast<uint32>(std::ceil(motionOff.val() * 60))};
+    const auto motionOffString{std::to_string(motionOffCalced) + " * 1000"};
     outputDefine(outFile, MOTION_TIMEOUT_STR, motionOffString);
 
-    if (config.settings.disableColorChange) outputDefine(outFile, DISABLE_COLOR_CHANGE_STR);
-    if (config.settings.disableBasicParserStyles) outputDefine(outFile, DISABLE_BASIC_PARSERS_STR);
-    if (config.settings.disableDiagnosticCommands) outputDefine(outFile, DISABLE_DIAG_COMMANDS_STR);
+    if (data::Bool::Context{settings.disableColorChange_}.val()) {
+        outputDefine(outFile, DISABLE_COLOR_CHANGE_STR);
+    }
+
+    if (data::Bool::Context{settings.disableBasicParserStyles_}.val()) {
+        outputDefine(outFile, DISABLE_BASIC_PARSERS_STR);
+    }
+
+    if (data::Bool::Context{settings.disableDiagnosticCommands_}.val()) {
+        outputDefine(outFile, DISABLE_DIAG_COMMANDS_STR);
+    }
+
     // if (config.settings.enableDeveloperCommands) outputDefine(outFile, ENABLE_DEV_COMMANDS_STR);
 
-    if (config.settings.saveState) outputDefine(outFile, SAVE_STATE_STR);
-    if (config.settings.enableAllEditOptions) outputDefine(outFile, ENABLE_ALL_EDIT_OPTIONS_STR);
+    if (data::Bool::Context{settings.saveState_}.val()) {
+        outputDefine(outFile, SAVE_STATE_STR);
+    }
 
-    if (config.settings.saveVolume and config.settings.saveVolume.isEnabled()) {
+    if (data::Bool::Context{settings.enableAllEditOptions_}.val()) {
+        outputDefine(outFile, ENABLE_ALL_EDIT_OPTIONS_STR);
+    }
+
+    data::Bool::Context saveVolume{settings.saveVolume_};
+    if (saveVolume.val() and saveVolume.enabled()) {
         outputDefine(outFile, SAVE_VOLUME_STR);
     }
-    if (config.settings.savePreset and config.settings.savePreset.isEnabled()) {
+
+    data::Bool::Context savePreset{settings.savePreset_};
+    if (savePreset.val() and savePreset.enabled()) {
         outputDefine(outFile, SAVE_PRESET_STR);
     }
-    if (config.settings.saveColorChange and config.settings.saveColorChange.isEnabled()) {
+
+    data::Bool::Context saveColor{settings.saveColorChange_};
+    if (saveColor.val() and saveColor.enabled()) {
         outputDefine(outFile, SAVE_COLOR_STR);
     }
 
-    if (config.settings.enableOLED) outputDefine(outFile, ENABLE_OLED_STR);
-
-    if (config.settings.orientation != ORIENTATION_NORMAL) {
-        outputDefine(outFile, ORIENTATION_STR, ORIENTATION_STRS[config.settings.orientation]);
+    if (data::Bool::Context{settings.enableOled_}.val()) {
+        outputDefine(outFile, ENABLE_OLED_STR);
     }
 
+    data::Choice::Context orient{settings.orientation_};
+    if (orient.choice() != eOrient_Normal) {
+        const auto& orientStr{ORIENTATION_STRS[orient.choice()]};
+        outputDefine(outFile, ORIENTATION_STR, orientStr);
+    }
+
+    data::Integer::Context orientX{settings.orientationRotation_.x_};
+    data::Integer::Context orientY{settings.orientationRotation_.y_};
+    data::Integer::Context orientZ{settings.orientationRotation_.z_};
     if (
-            config.settings.orientationRotation.x != 0 or
-            config.settings.orientationRotation.y != 0 or
-            config.settings.orientationRotation.z != 0
+            orientX.val() != 0 or
+            orientY.val() != 0 or
+            orientZ.val() != 0
        ) {
-        string rotationStr;
-        rotationStr += std::to_string(config.settings.orientationRotation.x);
+        std::string rotationStr;
+        rotationStr += std::to_string(orientX.val());
         rotationStr += ", ";
-        rotationStr += std::to_string(config.settings.orientationRotation.y);
+        rotationStr += std::to_string(orientY.val());
         rotationStr += ", ";
-        rotationStr += std::to_string(config.settings.orientationRotation.z);
+        rotationStr += std::to_string(orientZ.val());
         outputDefine(outFile, ORIENTATION_ROTATION_STR, rotationStr);
     }
 
     // if (config.settings.speakTouchValues) outputDefine(outFile, SPEAK_TOUCH_VALUES_STR);
 
-    if (config.settings.dynamicBladeDimming and config.settings.dynamicBladeLength.isEnabled()) {
+    data::Bool::Context dynDim{settings.dynamicBladeDimming_};
+    if (dynDim.val() and dynDim.enabled()) {
         outputDefine(outFile, DYNAMIC_BLADE_DIMMING_STR);
     }
-    if (config.settings.dynamicBladeLength and config.settings.dynamicBladeLength.isEnabled()) {
+
+    data::Bool::Context dynLen{settings.dynamicBladeLength_};
+    if (dynLen.val() and dynLen.enabled()) {
         outputDefine(outFile, DYNAMIC_BLADE_LENGTH_STR);
     }
-    if (config.settings.dynamicClashThreshold and config.settings.dynamicClashThreshold.isEnabled()) {
+
+    data::Bool::Context dynClash{settings.dynamicClashThreshold_};
+    if (dynClash.val() and dynClash.enabled()) {
         outputDefine(outFile, DYNAMIC_CLASH_THRESHOLD_STR);
     }
 
-    if (config.settings.saveBladeDimming and config.settings.saveBladeDimming.isEnabled()) {
+    data::Bool::Context saveDim{settings.saveBladeDimming_};
+    if (saveDim.val() and saveDim.enabled()) {
         outputDefine(outFile, SAVE_BLADE_DIM_STR);
     }
-    if (config.settings.saveClashThreshold and config.settings.saveClashThreshold.isEnabled()) {
+
+    data::Bool::Context saveClash{settings.saveClashThreshold_};
+    if (saveClash.val() and saveClash.enabled()) {
         outputDefine(outFile, SAVE_CLASH_THRESHOLD_STR);
     }
 
-    if (config.settings.enableFiltering) {
-        outputDefine<uint32>(outFile, FILTER_CUTOFF_STR, config.settings.filterCutoff);
-        outputDefine<uint32>(outFile, FILTER_ORDER_STR, config.settings.filterOrder);
+    if (data::Bool::Context{settings.enableFiltering_}.val()) {
+        data::Integer::Context cutoff{settings.filterCutoff_};
+        data::Integer::Context order{settings.filterOrder_};
+        outputDefine(outFile, FILTER_CUTOFF_STR, cutoff.val());
+        outputDefine(outFile, FILTER_ORDER_STR, order.val());
     }
 
-    if (config.settings.audioClashSuppressionLevel != 10) {
-        outputDefine<uint32>(outFile, AUDIO_CLASH_SUPPRESSION_STR, config.settings.audioClashSuppressionLevel);
+    data::Integer::Context clashSuppress{settings.audioClashSuppressionLevel_};
+    if (clashSuppress.val() != 10) {
+        outputDefine(outFile, AUDIO_CLASH_SUPPRESSION_STR, clashSuppress.val());
     }
 
-    if (config.settings.dontUseGyroForClash) outputDefine(outFile, DONT_USE_GYRO_FOR_CLASH_STR);
+    if (data::Bool::Context{settings.dontUseGyroForClash_}.val()) {
+        outputDefine(outFile, DONT_USE_GYRO_FOR_CLASH_STR);
+    }
 
-    if (config.settings.femaleTalkie) outputDefine(outFile, FEMALE_TALKIE_STR);
-    if (config.settings.disableTalkie) outputDefine(outFile, DISABLE_TALKIE_STR);
+    if (data::Bool::Context{settings.femaleTalkie_}.val()) {
+        outputDefine(outFile, FEMALE_TALKIE_STR);
+    }
 
-    if (osVersion < Utils::Version{"8"}) {
+    if (data::Bool::Context{settings.disableTalkie_}.val()) {
+        outputDefine(outFile, DISABLE_TALKIE_STR);
+    }
+
+    if (utils::Version{8}.compare(osVersion.val()) > 0) {
         // Default on newer version
-        if (config.settings.killOldPlayers) outputDefine(outFile, KILL_OLD_PLAYERS_STR);
-        if (config.settings.noRepeatRandom) outputDefine(outFile, NO_REPEAT_RANDOM_STR);
+        if (data::Bool::Context{settings.killOldPlayers_}.val()) {
+            outputDefine(outFile, KILL_OLD_PLAYERS_STR);
+        }
+
+        if (data::Bool::Context{settings.noRepeatRandom_}.val()) {
+            outputDefine(outFile, NO_REPEAT_RANDOM_STR);
+        } 
     }
 
-    for (const auto& customOpt : config.settings.customOptions()) {
-        if (static_cast<string>(customOpt->define).empty()) continue;
+    data::Vector::Context defines{settings.defines_};
+    for (const auto& model : defines.children()) {
+        auto& define{static_cast<settings::Define&>(*model)};
 
-        const auto valueStr{static_cast<string>(customOpt->value)};
-        outputDefine(outFile, customOpt->define, valueStr.empty() ? "" : ' ' + valueStr);
+        data::String::Context name{define.name_};
+        if (name.val().empty()) continue;
+
+        data::String::Context value{define.value_};
+        if (value.val().empty()) outputDefine(outFile, name.val());
+        else outputDefine(outFile, name.val(), value.val());
     }
 }
 
-void outputTopProp(std::ostream& outFile, const Config::Config& config) {
-    if (config.propSelection == -1) return;
-    auto& selectedProp{config.prop(config.propSelection)};
+void outputTopProp(std::ostream& outFile, Config& config) {
+    data::Choice::Context propSel{config.propSel_.choice_};
+    if (propSel.choice() == -1) return;
 
-    for (const auto& [define, data] : selectedProp.dataMap()) {
-        auto output{data->generateDefineString()};
-        if (not output) continue;
-        outFile << Config::DEFINE_STR << *output << '\n';
-    }
+    data::Vector::Context props{config.props_};
+    const auto& model{props.children()[propSel.choice()]};
+    auto& prop{static_cast<props::Prop&>(*model)};
+
+    const auto onEnum{[&](
+        data::Model& model, uint64, const std::string&
+    ) -> bool {
+        auto output{static_cast<props::Setting&>(model).defineString()};
+        if (not output) return false;
+
+        outFile << priv::DEFINE_STR << *output << '\n';
+        return false;
+    }};
+    prop.enumerate(onEnum);
+
     outFile << std::flush;
 }
 
-void outputProp(std::ostream& outFile, const Config::Config& config) {
-    if (config.propSelection == -1) return;
-    auto& selectedProp{config.prop(config.propSelection)};
-    if (selectedProp.isDefault()) return;
+void outputProp(std::ostream& outFile, Config& config) {
+    data::Choice::Context propSel{config.propSel_.choice_};
+    if (propSel.choice() == -1) return;
+
+    data::Vector::Context props{config.props_};
+    const auto& model{props.children()[propSel.choice()]};
+    auto& prop{static_cast<props::Prop&>(*model)};
+
+    if (prop.isDefault()) return;
 
     outFile << "#ifdef CONFIG_PROP\n";
-    outFile << "#include \"../props/" << selectedProp.filename << "\"\n";
+    outFile << "#include \"../props/" << prop.filename() << "\"\n";
     outFile << "#endif\n" << std::flush;
 }
 
-void outputPresets(std::ostream& outFile, const Config::Config& config) {
+void outputPresets(std::ostream& outFile, Config& config) {
     outFile << "#ifdef CONFIG_PRESETS\n";
-    for (const auto& injection : config.presetArrays.injections()) {
-        outFile << "#include \"" << Config::INJECTION_STR.data() << '/' << injection << "\"\n";
+
+    data::Vector::Context injections{config.injections_};
+    for (const auto& model : injections.children()) {
+        auto& injection{static_cast<Injection&>(*model)};
+
+        outFile << "#include \"" << priv::INJECTION_STR.data() << '/';
+        outFile << injection.filename_ << "\"\n";
     }
-    if (not config.presetArrays.injections().empty()) outFile << '\n';
+    if (not injections.children().empty()) outFile << '\n';
+
     outputPresetStyles(outFile, config);
     outputPresetBlades(outFile, config);
+
     outFile << "#endif\n\n" << std::flush;
 }
 
-void outputPresetStyles(std::ostream& outFile, const Config::Config& config) {
-    const auto numBlades{config.bladeArrays.numBlades()};
+void outputPresetStyles(std::ostream& outFile, Config& config) {
+    const auto numBlades{config.numBlades()};
 
-    for (const auto& presetArray : config.presetArrays.arrays()) {
-        outFile << "Preset " << static_cast<string>(presetArray->name) << "[] = {\n";
-        for (const auto& preset : presetArray->presets()) {
-            outFile << "\t{ \"" << static_cast<string>(preset->fontDir) << "\", \""
-                << static_cast<string>(preset->track) << "\",\n";
+    data::Vector::Context presetArrays{config.presetArrays_};
+    for (const auto& model : presetArrays.children()) {
+        auto& presetArray{static_cast<presets::Array&>(*model)};
 
+        data::String::Context arrayName{presetArray.name_};
+        outFile << "Preset " << arrayName.val() << "[] = {\n";
+
+        data::Vector::Context presets{presetArray.presets_};
+        for (const auto& model : presets.children()) {
+            auto& preset{static_cast<presets::Preset&>(*model)};
+
+            data::String::Context fontDir{preset.fontDir_};
+            data::String::Context track{preset.track_};
+            outFile << "\t{ \"" << fontDir.val() << "\", \""
+                << track.val() << "\",\n";
+
+            data::Vector::Context styles{preset.styles_};
             for (auto idx{0}; idx < numBlades; ++idx) {
-                auto& style{preset->style(idx)};
-                string line;
+                const auto& model{styles.children()[idx]};
+                auto& style{static_cast<presets::Style&>(*model)};
 
-                auto commentStr{static_cast<string>(style.comment)};
-                Utils::trimSurroundingWhitespace(commentStr);
+                std::string line;
+
+                data::String::Context comment{style.comment_};
+                auto commentStr{comment.val()};
+
+                utils::trimSurroundingWhitespace(commentStr);
+
                 if (not commentStr.empty()) {
                     std::istringstream commentStream{commentStr};
                     outFile << "\t\t/*\n";
@@ -505,157 +767,239 @@ void outputPresetStyles(std::ostream& outFile, const Config::Config& config) {
                     outFile << "\t\t */\n";
                 }
 
-                auto styleStr{static_cast<string>(style.style)};
-                Utils::trimWhitespaceOutsideString(styleStr);
+                data::String::Context content{style.content_};
+                auto styleStr{content.val()};
+
+                utils::trimWhitespaceOutsideString(styleStr);
+
                 outFile << "\t\t" << styleStr << ",\n";
             }
 
-            outFile << "\t\t\"" << static_cast<string>(preset->name) << "\"\n\t},\n";
+            data::String::Context presetName{preset.name_};
+            outFile << "\t\t\"" << presetName.val() << "\"\n\t},\n";
         }
         outFile << "};\n";
     }
 }
 
-void outputPresetBlades(std::ostream& outFile, const Config::Config& config) {
-    using namespace Config;
+void outputPresetBlades(std::ostream& outFile, Config& config) {
+    using namespace priv;
 
     outFile << "BladeConfig blades[] = {\n";
-    for (const auto& bladeArray : config.bladeArrays.arrays()) {
-        const auto id{
-            bladeArray->id == NO_BLADE ? "NO_BLADE" : std::to_string(bladeArray->id)
-        };
-        outFile << "\t{ " << id << ",\n";
-        for (const auto& blade : bladeArray->blades()) {
-            if (blade->type == Blade::UNASSIGNED) {
+
+    data::Vector::Context bladeConfigs{config.bladeConfigs_};
+    for (const auto& model : bladeConfigs.children()) {
+        auto& bladeConfig{static_cast<blades::BladeConfig&>(*model)};
+
+        if (data::Bool::Context{bladeConfig.noBladeId_}.val()) {
+            outFile << "\t{ NO_BLADE,\n";
+        } else {
+            data::Integer::Context id{bladeConfig.id_};
+            outFile << "\t{ " << id.val() << ",\n";
+        }
+
+        data::Vector::Context blades{bladeConfig.blades_};
+        for (const auto& model : blades.children()) {
+            auto& blade{static_cast<blades::Blade&>(*model)};
+
+            data::Choice::Context type{blade.type_.choice_};
+
+            if (type.choice() == blades::Blade::eUnassigned) {
                 outFile << "\t\tSimpleBladePtr<NoLED, NoLED, NoLED, NoLED, -1, -1, -1, -1>(),\n";
                 continue;
             }
 
             std::stringstream bladeStr;
-            if (blade->brightness != 100) bladeStr << "DimBlade(" << blade->brightness << ", ";
+            data::Integer::Context brightness{blade.brightness_};
+            if (brightness.val() != 100) {
+                bladeStr << "DimBlade(" << brightness.val() << ", ";
+            }
 
-            if (blade->type == Blade::WS281X) {
-                const auto& ws281x{blade->ws281x()};
-                bladeStr << "WS281XBladePtr<" << ws281x.length << ", " << static_cast<string>(ws281x.dataPin);
+            if (type.choice() == blades::Blade::eWS281X) {
+                auto& ws281x{blade.ws281x()};
+
+                data::Integer::Context length{ws281x.length_};
+                data::String::Context dataPin{ws281x.dataPin_};
+
+                bladeStr << "WS281XBladePtr<" << length.val() << ", " << dataPin.val();
                 bladeStr << ", Color8::";
-                if (ws281x.hasWhite) {
+
+                if (data::Bool::Context{ws281x.hasWhite_}.val()) {
+                    data::Choice::Context order4{ws281x.colorOrder4_};
                     bool whiteFirst{
-                        ws281x.colorOrder4 >= WS281XBlade::ORDER4_WFIRST_START and
-                        ws281x.colorOrder4 <= WS281XBlade::ORDER4_WFIRST_END
+                        order4.choice() >= eOrder4_White_First_Start and
+                        order4.choice() <= eOrder4_White_First_End
                     };
+
                     if (whiteFirst) {
-                        if (ws281x.useRGBWithWhite) bladeStr << 'W';
-                        else bladeStr << 'w';
-                        auto strIdx{ws281x.colorOrder4 - WS281XBlade::ORDER4_WFIRST_START};
-                        bladeStr << WS281XBlade::ORDER_STRS[strIdx];
+                        if (data::Bool::Context{ws281x.useRgbWithWhite_}.val()) {
+                            bladeStr << 'W';
+                        } else bladeStr << 'w';
+
+                        auto strIdx{order4.choice() - eOrder4_White_First_Start};
+                        bladeStr << ORDER_STRS[strIdx];
                     } else {
-                        bladeStr << WS281XBlade::ORDER_STRS[ws281x.colorOrder4];
-                        if (ws281x.useRGBWithWhite) bladeStr << 'W';
-                        else bladeStr << 'w';
+                        bladeStr << ORDER_STRS[order4.choice()];
+
+                        if (data::Bool::Context{ws281x.useRgbWithWhite_}.val()) {
+                            bladeStr << 'W';
+                        } else bladeStr << 'w';
                     }
                 } else {
-                    bladeStr << WS281XBlade::ORDER_STRS[ws281x.colorOrder3];
+                    data::Choice::Context order3{ws281x.colorOrder3_};
+                    bladeStr << ORDER_STRS[order3.choice()];
                 }
+
                 bladeStr << ", " << POWER_PINS_STR;
-                const auto selPowerPins{static_cast<set<uint32>>(ws281x.powerPins)};
-                for (auto iter{selPowerPins.begin()}; iter != selPowerPins.end(); ++iter) {
-                    bladeStr << ws281x.powerPins.items()[*iter];
-                    if (std::next(iter) != selPowerPins.end()) bladeStr << ", ";
+
+                data::Selection::Context powerPins{ws281x.powerPins_};
+                for (size idx{0}; idx < powerPins.items().size(); ++idx) {
+                    if (not powerPins.selected()[idx]) continue;
+
+                    bladeStr << powerPins.items()[idx];
+                    if (idx + 1 < powerPins.items().size()) bladeStr << ", ";
                 }
+
                 bladeStr << ">>()";
-            } else if (blade->type == Blade::SIMPLE) {
-                const auto& simple{blade->simple()};
+            } else if (type.choice() == blades::Blade::eSimple) {
+                auto& simple{blade.simple()};
+
                 bladeStr << "SimpleBladePtr<";
 
-                auto outputStar{[&bladeStr](const SimpleBlade::Star& star) {
-                    bladeStr << SimpleBlade::Star::LED_STRS[star.led];
-                    if (star.resistance.isEnabled()) bladeStr << '<' << star.resistance << '>';
+                auto outputStar{[&bladeStr](blades::Simple::Star& star) {
+                    data::Choice::Context led{star.led_};
+
+                    bladeStr << LED_STRS[led.choice()];
+
+                    data::Integer::Context resistance{star.resistance_};
+                    if (resistance.enabled()) {
+                        bladeStr << '<' << resistance.val() << '>';
+                    }
+
                     bladeStr << ", ";
                 }};
-                outputStar(simple.star1);
-                outputStar(simple.star2);
-                outputStar(simple.star3);
-                outputStar(simple.star4);
+                outputStar(simple.star1_);
+                outputStar(simple.star2_);
+                outputStar(simple.star3_);
+                outputStar(simple.star4_);
 
-                auto outputStarPower{[&bladeStr](const SimpleBlade::Star& star) {
-                    if (star.powerPin.isEnabled()) bladeStr << static_cast<string>(star.powerPin);
-                    else bladeStr << "-1";
+                auto outputStarPower{[&bladeStr](blades::Simple::Star& star) {
+                    data::String::Context powerPin{star.powerPin_};
+                    
+                    if (powerPin.enabled()) {
+                        bladeStr << powerPin.val();
+                    } else bladeStr << "-1";
                 }};
-                outputStarPower(simple.star1);
+                outputStarPower(simple.star1_);
                 bladeStr << ", ";
-                outputStarPower(simple.star2);
+                outputStarPower(simple.star2_);
                 bladeStr << ", ";
-                outputStarPower(simple.star3);
+                outputStarPower(simple.star3_);
                 bladeStr << ", ";
-                outputStarPower(simple.star4);
+                outputStarPower(simple.star4_);
 
                 bladeStr << ">()";
             }
 
-            if (blade->brightness != 100) bladeStr << ')';
+            if (brightness.val() != 100) bladeStr << ')';
+
+            data::Vector::Context splits{blade.ws281x().splits_};
 
             if (
-                    blade->type == Blade::SIMPLE or 
-                    (blade->type == Blade::WS281X and blade->ws281x().splits().empty())
+                    type.choice() == blades::Blade::eSimple or 
+                    (type.choice() == blades::Blade::eWS281X and
+                     splits.children().empty())
                ) {
                 outFile << "\t\t" << bladeStr.str() << ",\n";
                 continue;
             }
 
-            for (const auto& split : blade->ws281x().splits()) {
+            for (const auto& model : splits.children()) {
+                auto& split{static_cast<blades::WS281X::Split&>(*model)};
+
+                const auto splitType{split.type_.selected()};
+
                 if (
-                        split->type == Split::STANDARD or
-                        split->type == Split::REVERSE or
-                        split->type == Split::LIST
+                        splitType == blades::WS281X::Split::eStandard or
+                        splitType == blades::WS281X::Split::eReverse or
+                        splitType == blades::WS281X::Split::eList
                    ) {
                     outFile << "\t\t";
-                    if (split->brightness != 100) outFile << "DimBlade(" << split->brightness << ", ";
 
-                    if (split->type == Split::STANDARD) {
-                        outFile << "SubBlade(" << split->start << ", " << split->end << ", ";
-                    } else if (split->type == Split::REVERSE) {
-                        outFile << "SubBladeReverse(" << split->start << ", " << split->end << ", ";
-                    } else if (split->type == Split::LIST) {
-                        auto listStr{static_cast<string>(split->list)};
+                    data::Integer::Context brightness{split.brightness_};
+                    if (brightness.val() != 100) {
+                        outFile << "DimBlade(" << brightness.val() << ", ";
+                    }
+
+                    if (splitType == blades::WS281X::Split::eStandard) {
+                        data::Integer::Context start{split.start_};
+                        data::Integer::Context end{split.end_};
+
+                        outFile << "SubBlade(" << start.val() << ", "
+                            << end.val() << ", ";
+                    } else if (splitType == blades::WS281X::Split::eReverse) {
+                        data::Integer::Context start{split.start_};
+                        data::Integer::Context end{split.end_};
+
+                        outFile << "SubBladeReverse(" << start.val() << ", "
+                            << end.val() << ", ";
+                    } else if (splitType == blades::WS281X::Split::eList) {
+                        data::String::Context list{split.list_};
+
+                        auto listStr{list.val()};
                         if (listStr.back() == ',') listStr.pop_back();
+
                         outFile << "SubBladeWithList<" << listStr << ">(";
                     }
 
-                    if (&*split == &*blade->ws281x().splits().front()) {
+                    
+                    if (&split == &*splits.children().front()) {
                         outFile << bladeStr.str() << ')';                    
                     } else outFile << "nullptr)";
 
-                    if (split->brightness != 100) outFile << ')';
+                    if (brightness.val() != 100) outFile << ')';
+
                     outFile << ",\n";
                 }
 
-                if (split->type == Split::STRIDE or split->type == Split::ZIG_ZAG) {
-                    for (auto idx{0}; idx < split->segments; ++idx) {
+                if (
+                        splitType == blades::WS281X::Split::eStride or
+                        splitType == blades::WS281X::Split::eZig_Zag
+                   ) {
+                    data::Integer::Context segments{split.segments_};
+
+                    for (auto idx{0}; idx < segments.val(); ++idx) {
                         outFile << "\t\t";
 
-                        if (split->brightness != 100) {
-                            outFile
-                                << "DimBlade("
-                                << split->brightness
-                                << ", ";
+                        data::Integer::Context brightness{split.brightness_};
+                        if (brightness.val() != 100) {
+                            outFile << "DimBlade(" << brightness.val() << ", ";
                         }
 
-                        if (split->type == Split::STRIDE) {
+                        data::Integer::Context start{split.start_};
+                        data::Integer::Context end{split.end_};
+
+                        if (splitType == blades::WS281X::Split::eStride) {
+                            const auto endVal{
+                                end.val() - (segments.val() - idx - 1)
+                            };
+
                             outFile << "SubBladeWithStride(";
-                            outFile << split->start + idx << ", ";
-                            outFile << split->end - (split->segments - idx - 1) << ", ";
-                            outFile << split->segments << ", ";
-                        } else if (split->type == Split::ZIG_ZAG) {
+                            outFile << start.val() + idx << ", ";
+                            outFile << endVal << ", ";
+                            outFile << segments.val() << ", ";
+                        } else if (splitType == blades::WS281X::Split::eZig_Zag) {
                             outFile << "SubBladeZZ(";
-                            outFile << split->start << ", " << split->end << ", ";
-                            outFile << split->segments << ", " << idx << ", ";
+                            outFile << start.val() << ", " ;
+                            outFile << end.val() << ", ";
+                            outFile << segments.val() << ", " << idx << ", ";
                         }
 
-                        if (idx == 0 and &*split == &*blade->ws281x().splits().front()) {
+                        if (idx == 0 and &split == &*splits.children().front()) {
                             outFile << bladeStr.str() << ')';                    
                         } else outFile << "nullptr)";
 
-                        if (split->brightness != 100) outFile << ')';
+                        if (brightness.val() != 100) outFile << ')';
 
                         outFile << ",\n";
                     }
@@ -663,35 +1007,57 @@ void outputPresetBlades(std::ostream& outFile, const Config::Config& config) {
             }
         }
 
-        const auto presetArray{static_cast<string>(
-            config.presetArrays.arrays()[bladeArray->presetArray]->name
-        )};
-        outFile << "\t\tCONFIGARRAY(" << presetArray << ")";
-        if (not bladeArray->name.empty()) {
+        data::Choice::Context arrayChoice{bladeConfig.presetArray_.choice_};
+        data::Vector::Context presetArrays{config.presetArrays_};
+        const auto& arrayModel{presetArrays.children()[arrayChoice.choice()]};
+        auto& presetArray{static_cast<presets::Array&>(*arrayModel)};
+        data::String::Context presetArrayName{presetArray.name_};
+        
+        outFile << "\t\tCONFIGARRAY(" << presetArrayName.val() << ")";
+
+        data::String::Context bladeConfigName{bladeConfig.name_};
+        if (not bladeConfigName.val().empty()) {
             outFile << ", \"";
-            outFile << static_cast<string>(bladeArray->name);
+            outFile << bladeConfigName.val();
             outFile << '\"';
         }
+
         outFile << "\n\t},\n";
     }
     outFile << "};\n" << std::flush;
 }
 
-void outputButtons(std::ostream& outFile, const Config::Config& config) {
+void outputButtons(std::ostream& outFile, Config& config) {
+    using namespace priv;
+
     outFile << "#ifdef CONFIG_BUTTONS\n";
+
+    data::Vector::Context buttons{config.buttons_};
+
     auto idx{1};
-    for (const auto& button : config.settings.buttons()) {
-        outFile << Config::BUTTON_TYPE_STRS[button->type] << ' ';
+    for (const auto& model : buttons.children()) {
+        auto& button{static_cast<buttons::Button&>(*model)};
+
+        data::Choice::Context type{button.type_};
+        data::Choice::Context event{button.event_};
+        data::String::Context pin{button.pin_};
+
+        outFile << BUTTON_TYPE_STRS[type.choice()] << ' ';
         outFile << "Button" << idx << '{';
-        outFile << Config::BUTTON_EVENT_STRS[button->event] << ", ";
-        outFile << static_cast<string>(button->pin) << ", ";
-        if (button->type == Config::ButtonType::TOUCH_BUTTON) {
-            outFile << button->touch << ", ";
+        outFile << BUTTON_EVENT_STRS[event.choice()] << ", ";
+        outFile << pin.val() << ", ";
+
+        if (type.choice() == eBtn_Type_Touch) {
+            data::Integer::Context touch{button.touch_};
+            outFile << touch.val() << ", ";
         }
-        outFile << '"' << static_cast<string>(button->name) << '"';
+
+        data::String::Context name{button.name_};
+        outFile << '"' << name.val() << '"';
         outFile << "};\n";
         ++idx;
     }
+
     outFile << "#endif\n" << std::flush;
 }
 

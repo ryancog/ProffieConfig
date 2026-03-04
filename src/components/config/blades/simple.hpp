@@ -20,6 +20,7 @@
  */
 
 #include "data/choice.hpp"
+#include "data/hierarchy/node.hpp"
 #include "data/number.hpp"
 #include "data/string.hpp"
 
@@ -27,11 +28,20 @@
 
 namespace config::blades {
 
-struct CONFIG_EXPORT Simple {
-    Simple();
+struct Blade;
 
-    struct Star {
-        Star();
+struct CONFIG_EXPORT Simple : data::Node {
+    Simple(data::Node *);
+    ~Simple() override;
+
+    bool enumerate(const EnumFunc&) override;
+    Model *find(uint64) override;
+
+    struct Star : data::Node {
+        Star(Simple&);
+
+        bool enumerate(const EnumFunc&) override;
+        Model *find(uint64) override;
 
         data::Choice led_;
         data::String powerPin_;

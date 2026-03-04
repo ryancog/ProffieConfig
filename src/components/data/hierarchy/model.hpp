@@ -169,7 +169,13 @@ struct DATA_EXPORT Model::Receiver {
 
 protected:
     template<typename T = Model>
-    typename T::Context context() {
+    T& model() const {
+        assert(mModel);
+        return static_cast<T&>(*mModel);
+    }
+
+    template<typename T = Model>
+    typename T::Context context() const {
         assert(mModel);
         return typename T::Context(static_cast<T&>(*mModel));
     }
@@ -222,7 +228,7 @@ private:
     void onEnabled() override {
         if (not onEnabled_) return;
 
-        onEnabled_(BaseModel::Receiver::context());
+        onEnabled_(Receiver::context<BaseModel>());
     }
 };
 

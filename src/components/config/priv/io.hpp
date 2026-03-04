@@ -19,26 +19,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <optional>
 #include <string>
 #include <string_view>
 
 #include <wx/translation.h>
 
-#include "config/config.hpp"
-#include "logging/logger.hpp"
+#include "log/logger.hpp"
 #include "utils/types.hpp"
 
 namespace config::priv {
-
-/**
- * Parse a config from disk
- *
- * @return Error message on failure. nullopt on success.
- */
-std::optional<std::string> parse(
-    const fs::path&, Config&, logging::Branch *lBranch = nullptr
-);
 
 constexpr std::string_view INJECTION_STR{"injection"};
 constexpr std::string_view PC_OPT_STR{"//PROFFIECONFIG "};
@@ -50,7 +39,7 @@ constexpr cstring MAX_LEDS_STR{"const unsigned int maxLedsPerStrip = "};
 
 template<typename T>
     requires (
-        std::is_same_v<std::decay_t<T>, string> or
+        std::is_same_v<std::decay_t<T>, std::string> or
         std::is_same_v<std::decay_t<T>, wxString> or
         std::is_same_v<std::decay_t<T>, cstring>
     )

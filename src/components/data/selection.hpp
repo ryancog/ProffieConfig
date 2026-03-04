@@ -43,15 +43,21 @@ struct DATA_EXPORT Selection : Model {
     struct AddAction;
     struct RemoveAction;
 
+    using AddFilter = void (*)(std::string&);
+
     Selection(Node * = nullptr);
     Selection(const Selection&, Node * = nullptr);
     ~Selection() override;
 
     std::unique_ptr<Model> clone(Node *) const override;
 
+    void setAddFilter(AddFilter);
+
     [[nodiscard]] Responder& responder() const;
 
 private:
+    AddFilter mAddFilter{nullptr};
+
     std::unique_ptr<Responder> mRsp;
     std::vector<std::string> mItems;
     std::vector<bool> mSelected;
@@ -179,7 +185,7 @@ struct DATA_EXPORT Selection::SetItemsAction : Action {
     void retract(Model&) override;
 
 private:
-    const std::vector<std::string> mItems;
+    std::vector<std::string> mItems;
     std::vector<std::string> mLast;
     std::vector<bool> mLastSelected;
 };

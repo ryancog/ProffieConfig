@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/config/bladeconfig/simple.cpp
+ * components/config/blades/simple.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,42 +19,56 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "utils/string.hpp"
+#include "config/priv/strings.hpp"
+#include "data/number.hpp"
 
 using namespace config::blades;
 
-Simple::Simple() = default;
+Simple::Simple(data::Node *parent) :
+    data::Node(parent),
+    star1_(*this),
+    star2_(*this),
+    star3_(*this),
+    star4_(*this) {}
 
-Simple::Star::Star() {
-    led.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::ChoiceData::eID_Selection) return;
+Simple::~Simple() = default;
 
-        powerPin.enable(led != NONE);
-        resistance.enable(led != NONE and led >= USE_RESISTANCE_START and led <= USE_RESISTANCE_END);
-    });
+bool Simple::enumerate(const EnumFunc& func) {
+    assert(0); // TODO
+}
 
-    led.setChoices(Utils::createEntries({
-        _("<None>"),
-        _("Cree Red"),
-        _("Cree Green"),
-        _("Cree Blue"),
-        _("Cree Amber"),
-        _("Cree Red-Orange"),
-        _("Cree White"),
-        _("Red"),
-        _("Green"),
-        _("Blue"),
-    }));
-    led.setValue(NONE);
-    powerPin.setDefaults(Utils::createEntries({
-        "bladePowerPin1",
-        "bladePowerPin2",
-        "bladePowerPin3",
-        "bladePowerPin4",
-        "bladePowerPin5",
-        "bladePowerPin6",
-    }));
-    resistance.setRange(0, 10000);
-    resistance.setIncrement(50);
+data::Model *Simple::find(uint64) {
+    assert(0); // TODO
+}
+
+Simple::Star::Star(Simple& simple) : data::Node(&simple) {
+    using namespace priv;
+
+    led_.responder().onChoice_ = [](const data::Choice::Context& ctxt) {
+        auto& star{*ctxt.model().parent<Star>()};
+        data::String::Context{star.powerPin_}.enable(
+            ctxt.choice() != eLED_None
+        );
+
+        data::Integer::Context{star.resistance_}.enable(
+            ctxt.choice() >= eLED_Use_Resistance_Start and
+            ctxt.choice() <= eLED_Use_Resistance_End
+        );
+    };
+
+    data::Choice::Context led{led_};
+    led.update(eLED_Max);
+    led.choose(eLED_None);
+
+    data::Integer::Context resistance{resistance_};
+    resistance.update({.min_=0, .max_=10000, .inc_=50});
+}
+
+bool Simple::Star::enumerate(const EnumFunc& func) {
+    assert(0); // TODO
+}
+
+data::Model *Simple::Star::find(uint64) {
+    assert(0); // TODO
 }
 

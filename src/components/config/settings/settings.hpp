@@ -22,12 +22,9 @@
 #include "data/bool.hpp"
 #include "data/choice.hpp"
 #include "data/number.hpp"
-#include "data/selection.hpp"
-#include "data/string.hpp"
 #include "data/vector.hpp"
-#include "logging/branch.hpp"
-#include "utils/types.hpp"
-#include "utils/version.hpp"
+#include "data/version.hpp"
+#include "config/settings/bladeawareness.hpp"
 
 #include "config_export.h"
 
@@ -35,43 +32,25 @@ namespace config {
 
 struct Config;
 
-struct CONFIG_EXPORT Settings {
-    /**
-     * Set up defaults and update handlers
-     */
+struct CONFIG_EXPORT Settings : data::Node {
+    struct ProcessDefinesAction;
+
     Settings(Config&);
+    ~Settings() override;
+
+    bool enumerate(const EnumFunc&) override;
+    Model *find(uint64) override;
 
     data::Choice board_;
 
-    data::Choice osVersion_;
+    data::Version osVersion_;
 
     data::Bool massStorage_;
     data::Bool webUsb_;
 
-    data::Vector buttons_;
-
     // pcui::ChoiceData rfidSerial;
 
-    struct BladeDetect {
-        data::Bool enable_;
-        data::String pin_;
-    } bladeDetect_;
-
-    struct BladeID {
-        data::Bool enable_;
-        data::String pin_;
-
-        data::Choice mode_;
-        data::String bridgePin_;
-        data::Integer pullup_;
-
-        data::Bool powerForId_;
-        data::Selection powerPins_;
-
-        data::Bool continuousScanning_;
-        data::Bool continuousInterval_;
-        data::Bool continuousTimes_;
-    } bladeId_;
+    settings::BladeAwareness bladeAwareness_;
 
     data::Integer volume_;
     data::Bool enableBootVolume_;
@@ -158,11 +137,21 @@ struct CONFIG_EXPORT Settings {
 
     // POV Data?
 
-    struct CustomOption {
-        data::String define_;
-        data::String value_;
-    };
-    data::Vector customOpts_;
+    void processDefines();
+
+    data::Vector defines_;
+};
+
+/**
+ * Look through the defines and see if any should be translated into
+ * ProffieConfig-managed settings.
+ */
+struct CONFIG_EXPORT Settings::ProcessDefinesAction : data::Action {
+    ProcessDefinesAction();
+
+    bool shouldPerform(data::Model&) override;
+    void perform(data::Model&) override;
+    void retract(data::Model&) override;
 };
 
 } // namespace config

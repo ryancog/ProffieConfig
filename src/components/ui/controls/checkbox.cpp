@@ -65,10 +65,10 @@ struct Control : priv::WinBase<wxCheckBox, data::Bool::Receiver> {
         }();
     }
     
-    void onSet(bool val) override {
+    void onSet() override {
         auto *evt{new wxCommandEvent(wxEVT_CHECKBOX, wxID_ANY)};
         evt->SetClientData(reinterpret_cast<void *>(1));
-        evt->SetInt(val);
+        evt->SetInt(context<data::Bool>().val());
         wxQueueEvent(this, evt);
     }
 };

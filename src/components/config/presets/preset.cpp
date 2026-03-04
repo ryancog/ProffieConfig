@@ -1,9 +1,9 @@
-#include "preset.h"
+#include "preset.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/config/preset/preset.h
+ * components/config/presets/preset.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,40 +21,36 @@
 
 #include <algorithm>
 
-#include "utils/string.h"
-#include "../config.h"
+#include "config/presets/array.hpp"
+#include "utils/string.hpp"
 
-Config::Preset::Preset(Config& config, PresetArray& presetArray) :
-    mConfig{config}, mParent{presetArray} {
-    name = "newpreset";
-    styleSelection.setPersistence(pcui::ChoiceData::Persistence::Index);
+using namespace config::presets;
 
-    name.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::TextData::eID_Value) return;
-
-        auto rawValue{static_cast<string>(name)};
+Preset::Preset(data::Node *parent) : data::Node(parent) {
+    const auto nameFilter{[](
+        const data::String::Context&, std::string& str, size& pos
+    ) {
         uint32 numTrimmed{};
-        const auto insertionPoint{name.getInsertionPoint()};
-        Utils::trim(
-            rawValue,
+        utils::trim(
+            str,
             {.allowAlpha=true, .allowNum=true, .safeList="\\"},
             &numTrimmed,
-            insertionPoint
+            pos
         );
-        if (rawValue.length() > 20) rawValue.resize(20);
+        if (str.length() > 20) str.resize(20);
 
         // Only allow \n
         uint32 idx{0};
-        for (auto iter{rawValue.begin()}; iter != rawValue.end();) {
+        for (auto iter{str.begin()}; iter != str.end();) {
             if (
                     *iter == '\\' and
                     (
-                        std::next(iter) == rawValue.end() or
+                        std::next(iter) == str.end() or
                         *std::next(iter) != 'n'
                     )
                ) {
-                iter = rawValue.erase(iter);
-                if (insertionPoint > idx) ++numTrimmed;
+                iter = str.erase(iter);
+                if (pos > idx) ++numTrimmed;
                 continue;
             }
 
@@ -62,135 +58,83 @@ Config::Preset::Preset(Config& config, PresetArray& presetArray) :
             ++idx;
         }
 
-        if (rawValue == static_cast<string>(name)) {
-            auto idx{0};
-            for (const auto& preset : mParent.presets()) {
-                if (&*preset == this) break;
-                ++idx;
-            }
-            if (idx < mParent.presets().size()) {
-                auto choices{mParent.selection.choices()};
-                choices[idx] = name;
-                mParent.selection.setChoices(std::move(choices));
-            }
-        }
+        pos -= numTrimmed;
+    }};
+    name_.setFilter(nameFilter);
 
-        name = std::move(rawValue);
-        name.setInsertionPoint(insertionPoint - numTrimmed);
-    });
-    fontDir.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::TextData::eID_Value) return;
-
-        auto rawValue{static_cast<string>(fontDir)};
+    const auto fontDirFilter{[](
+        const data::String::Context&, std::string& str, size& pos
+    ) {
         uint32 numTrimmed{};
-        auto insertionPoint{fontDir.getInsertionPoint()};
-        Utils::trim(
-            rawValue,
+        utils::trim(
+            str,
             {.allowAlpha=true, .allowNum=true, .safeList="/;_"},
             &numTrimmed,
-            insertionPoint
+            pos
         );
 
-        if (rawValue == static_cast<string>(fontDir)) return;
+        pos -= numTrimmed;
+    }};
+    fontDir_.setFilter(fontDirFilter);
 
-        fontDir = std::move(rawValue);
-        fontDir.setInsertionPoint(insertionPoint - numTrimmed);
-    });
-    track.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::TextData::eID_Value) return;
+    // Next Up:
+    // Kay, here we are again. These are just filters so they can be made to
+    // copy with the elements, but the implementation filter/receivers vs
+    // external bindings is a recurring issue.
 
-        auto rawValue{static_cast<string>(track)};
+    const auto trackFilter{[](std::string& str, size& pos) {
         uint32 numTrimmed{};
-        auto insertionPoint{track.getInsertionPoint()};
-        Utils::trim(
-            rawValue,
+        utils::trim(
+            str,
             {.allowAlpha=true, .allowNum=true, .safeList="./_"},
             &numTrimmed,
-            insertionPoint
+            pos
         );
 
-        if (rawValue == static_cast<string>(track)) {
-            mConfig.presetArrays.notifyData.notify(
-                PresetArrays::NOTIFY_TRACK_INPUT
-            );
-            return;
-        }
+        pos -= numTrimmed;
+    }};
 
-        track = std::move(rawValue);
-        track.setInsertionPoint(insertionPoint - numTrimmed);
-    });
-    styleSelection.setUpdateHandler([this](uint32 id) {
-        if (
-                id != pcui::Notifier::eID_Rebound and
-                id != pcui::ChoiceData::eID_Selection
-           ) return;
-
-        auto& presetArrays{mConfig.presetArrays};
-        if (presetArrays.selection == -1) return;
-        auto& selectedArray{presetArrays.array(presetArrays.selection)};
-        if (selectedArray.selection == -1) return;
-        auto& selectedPreset{selectedArray.preset(selectedArray.selection)};
-        if (this != &selectedPreset) return;
-
-        if (styleSelection == -1) {
-            presetArrays.commentProxy.bind(PresetArrays::dummyCommentData);
-            presetArrays.styleProxy.bind(PresetArrays::dummyStyleData);
-        } else {
-            auto& selectedStyle{style(styleSelection)};
-            presetArrays.commentProxy.bind(selectedStyle.comment);
-            presetArrays.styleProxy.bind(selectedStyle.style);
-        }
-    });
+    data::String::Context{name_}.change("newpreset", 0);
 }
 
-Config::Preset::Preset(const Preset& other) :
-    Preset{other.mConfig, other.mParent} {
-    name = wxString::Format(
-        _("%s copy"),
-        static_cast<string>(other.name)
-    ).ToStdString();
-    fontDir = static_cast<string>(other.fontDir);
-    track = static_cast<string>(other.track);
+Preset::Preset(const Preset& other, data::Node *parent) :
+    data::Node(parent),
+    name_(other.name_, this),
+    fontDir_(other.fontDir_, this),
+    track_(other.track_, this),
+    styles_(other.styles_, this) {}
 
-    mStyles.reserve(other.mStyles.size());
-    for (const auto& stylePtr : other.mStyles) {
-        mStyles.emplace_back(new Style{*stylePtr});
-    }
+Preset::~Preset() = default;
+
+bool Preset::enumerate(const EnumFunc& func) {
+    assert(0); // TODO
 }
 
-Config::Preset::Style& Config::Preset::addStyle() {
-    return *mStyles.emplace_back(std::make_unique<Style>());
+data::Model *Preset::find(uint64 id) {
+    assert(0); // TODO
 }
 
-void Config::Preset::popBackStyle() {
-    mStyles.pop_back();
-}
-
-Config::Preset::Style::Style() {
-    comment.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::TextData::eID_Value) return;
-
-        auto rawValue{static_cast<string>(comment)};
-        auto insertionPoint{comment.getInsertionPoint()};
+Style::Style(Node *parent) : data::Node(parent) {
+    const auto commentFilter{[](
+        const data::String::Context&, std::string& str, size& pos
+    ) {
         size_t illegalPos{};
         while (
-                (illegalPos = rawValue.find("/*")) != string::npos or
-                (illegalPos = rawValue.find("*/")) != string::npos
+                (illegalPos = str.find("/*")) != std::string::npos or
+                (illegalPos = str.find("*/")) != std::string::npos
               ) {
-            if (illegalPos < insertionPoint) insertionPoint -= 2;
-            rawValue.erase(illegalPos, 2);
+            if (illegalPos < pos) pos -= std::max<size>(2, pos - illegalPos);
+            str.erase(illegalPos, 2);
         }
+    }};
+    comment_.setFilter(commentFilter);
 
-        if (comment != rawValue) {
-            comment = std::move(rawValue);
-            comment.setInsertionPoint(insertionPoint);
-        }
-    });
-    style.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::TextData::eID_Value) return;
+    const auto styleFilter{[] (
+        const data::String::Context& ctxt, std::string& str, size& pos
+    ) {
+        // TODO: The replication in here is kind of ugly...
+        auto& style{*ctxt.model().parent<Style>()};
 
-        auto rawValue{static_cast<string>(style)};
-        auto insertionPoint{style.getInsertionPoint()};
         uint32 numTrimmed{};
 
         /*
@@ -211,110 +155,131 @@ Config::Preset::Style::Style() {
          *
          * - '_' because it's just generally used.
          */
-        Utils::trim(
-            rawValue,
+        utils::trim(
+            str,
             {
                 .allowAlpha=true,
                 .allowNum=true,
                 .safeList="/*<>(),&_:-\"\n\t "
             },
             &numTrimmed,
-            insertionPoint
+            pos
         );
-        insertionPoint -= numTrimmed;
+        pos -= numTrimmed;
+
+        data::String::Context comment{style.comment_};
+        const auto addToComment{[&](std::string& addStr) {
+            if (not comment.val().empty()) {
+                addStr.insert(addStr.begin(), '\n');
+            }
+
+            auto commentStr{comment.val()};
+            commentStr.append(addStr);
+
+            const auto newPos{commentStr.length()};
+            comment.change(std::move(commentStr), newPos);
+        }};
 
         size_t illegalPos{0};
         bool commentMove{false};
         while (
-                (illegalPos = rawValue.find("/*", illegalPos)) 
-                != string::npos
+                (illegalPos = str.find("/*", illegalPos)) 
+                != std::string::npos
               ) {
-            const auto terminatorPos{rawValue.find("*/", illegalPos)};
-            const auto eraseEnd{terminatorPos == string::npos
-                ? string::npos 
+            const auto terminatorPos{str.find("*/", illegalPos)};
+            const auto eraseEnd{terminatorPos == std::string::npos
+                ? std::string::npos 
                 : terminatorPos + 2
             };
 
-            if (eraseEnd < insertionPoint) {
-                insertionPoint -= eraseEnd - illegalPos;
-            } else if (illegalPos < insertionPoint) {
-                insertionPoint = illegalPos;
+            if (eraseEnd < pos) {
+                pos -= eraseEnd - illegalPos;
+            } else if (illegalPos < pos) {
+                pos = illegalPos;
             }
 
             const auto begin{illegalPos + 2};
-            auto substr{rawValue.substr(begin, terminatorPos - begin)};
-            Utils::trimSurroundingWhitespace(substr);
+            auto substr{str.substr(begin, terminatorPos - begin)};
+            utils::trimSurroundingWhitespace(substr);
             if (not substr.empty()) {
-                if (not comment.empty()) comment += '\n';
-                comment += substr;
+                addToComment(substr);
             }
 
-            rawValue.erase(illegalPos, eraseEnd - illegalPos);
+            str.erase(illegalPos, eraseEnd - illegalPos);
             commentMove = true;
         }
 
         // If comment terminator but no opener, move everything before
         // terminator into comment
         if (
-                (illegalPos = rawValue.rfind("*/")) != string::npos and 
-                rawValue.find("/*") == string::npos
+                (illegalPos = str.rfind("*/")) != std::string::npos and 
+                str.find("/*") == std::string::npos
            ) {
-            auto substr{rawValue.substr(0, illegalPos)};
-            Utils::trimSurroundingWhitespace(substr);
+            auto substr{str.substr(0, illegalPos)};
+            utils::trimSurroundingWhitespace(substr);
             if (not substr.empty()) {
-                if (not comment.empty()) comment += '\n';
-                comment += substr;
+                addToComment(substr);
             }
             const auto eraseEnd{illegalPos + 2};
-            if (eraseEnd < insertionPoint) insertionPoint -= eraseEnd;
-            else insertionPoint = 0;
-            rawValue.erase(0, eraseEnd);
+            if (eraseEnd < pos) pos -= eraseEnd;
+            else pos = 0;
+            str.erase(0, eraseEnd);
         }
 
         illegalPos = 0;
         while (
-                (illegalPos = rawValue.find("//", illegalPos))
-                != string::npos
+                (illegalPos = str.find("//", illegalPos))
+                != std::string::npos
               ) {
-            const auto terminatorPos{rawValue.find('\n', illegalPos)};
-            const auto eraseEnd{terminatorPos == string::npos
-                ? string::npos 
+            const auto terminatorPos{str.find('\n', illegalPos)};
+            const auto eraseEnd{terminatorPos == std::string::npos
+                ? std::string::npos 
                 : terminatorPos + 1
             };
 
-            if (eraseEnd < insertionPoint) {
-                insertionPoint -= eraseEnd - illegalPos;
-            } else if (illegalPos < insertionPoint) {
-                insertionPoint = illegalPos;
+            if (eraseEnd < pos) {
+                pos -= eraseEnd - illegalPos;
+            } else if (illegalPos < pos) {
+                pos = illegalPos;
             }
 
             const auto begin{illegalPos + 2};
-            auto substr{rawValue.substr(begin, terminatorPos - begin)};
-            Utils::trimSurroundingWhitespace(substr);
+            auto substr{str.substr(begin, terminatorPos - begin)};
+            utils::trimSurroundingWhitespace(substr);
             if (not substr.empty()) {
-                if (not comment.empty()) comment += '\n';
-                comment += substr;
+                addToComment(substr);
             }
 
-            rawValue.erase(illegalPos, eraseEnd - illegalPos);
+            str.erase(illegalPos, eraseEnd - illegalPos);
             commentMove = true;
         }
 
-        if ((illegalPos = rawValue.find(')')) != string::npos) {
-            rawValue.erase(illegalPos + 1);
-            insertionPoint = std::min<size_t>(insertionPoint, illegalPos + 1);
+        if ((illegalPos = str.find(')')) != std::string::npos) {
+            str.erase(illegalPos + 1);
+            pos = std::min<size_t>(pos, illegalPos + 1);
         }
 
-        if (style != rawValue) {
-            style = std::move(rawValue);
-            style.setInsertionPoint(insertionPoint);
-            if (commentMove) {
-                comment.setFocus();
-                comment.setInsertionPointEnd();
-            }
-        }
-    });
-    comment = "ProffieConfig Default Blue AudioFlicker";
-    style = "StyleNormalPtr<AudioFlicker<Blue,DodgerBlue>,BLUE,300,800>()";
+        if (commentMove) comment.focus();
+    }};
+    content_.setFilter(styleFilter);
+
+    data::String::Context{comment_}.change(
+        "ProffieConfig Default Blue AudioFlicker", 0
+    );
+    data::String::Context{content_}.change(
+        "StyleNormalPtr<AudioFlicker<Blue,DodgerBlue>,BLUE,300,800>()", 0
+    );
+}
+
+bool Style::enumerate(const EnumFunc& func) {
+    assert(0); // TODO
+}
+
+data::Model *Style::find(uint64) {
+    assert(0); // TODO
+}
+
+std::unique_ptr<data::Model> Style::clone(Node *parent) const {
+    assert(0); // TODO
 }
 

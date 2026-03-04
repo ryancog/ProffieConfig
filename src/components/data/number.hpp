@@ -28,7 +28,7 @@
 
 namespace data {
 
-namespace priv {
+namespace detail {
 
 template <typename T>
 struct DATA_EXPORT Number : Model {
@@ -39,7 +39,7 @@ struct DATA_EXPORT Number : Model {
     struct SetAction;
     struct UpdateAction;
 
-    using Filter = std::function<void(T&)>;
+    using Filter = void (*)(const Context&, T&);
 
     Number(Node * = nullptr);
     Number(const Number&, Node * = nullptr);
@@ -114,11 +114,15 @@ struct DATA_EXPORT Number<T>::Responder : Model::Responder<Number> {
 
 private:
     void onSet() override { 
-        if (onSet_) onSet_(context<Number>());
+        if (onSet_) onSet_(
+            Model::Responder<Number>::template context<Number>()
+        );
     }
 
     void onUpdate() override {
-        if (onUpdate_) onUpdate_(context<Number>());
+        if (onUpdate_) onUpdate_(
+            Model::Responder<Number>::template context<Number>()
+        );
     }
 };
 
@@ -149,10 +153,10 @@ private:
     T mLastValue;
 };
 
-} // namespace priv
+} // namespace detail
 
-using Integer = priv::Number<int32>;
-using Decimal = priv::Number<float64>;
+using Integer = detail::Number<int32>;
+using Decimal = detail::Number<float64>;
 
 } // namespace data
 

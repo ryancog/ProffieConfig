@@ -39,6 +39,8 @@ auto data::Version::clone(Node *parent) const -> std::unique_ptr<Model> {
     return std::make_unique<Version>(*this, parent);
 }
 
+auto data::Version::responder() const -> Responder& { return *mRsp; }
+
 data::Version::Context::Context(Version& bl) : Model::Context(bl) {}
 
 data::Version::Context::~Context() = default;

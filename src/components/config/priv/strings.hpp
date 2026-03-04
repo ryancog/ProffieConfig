@@ -26,28 +26,28 @@
 
 namespace config::priv {
 
-enum class Board {
-    Proffie_V3,
-    Proffie_V2,
-    Proffie_V1,
-    Max,
+enum Board {
+    eBoard_Proffie_V3,
+    eBoard_Proffie_V2,
+    eBoard_Proffie_V1,
+    eBoard_Max,
 };
-constexpr std::array<cstring, static_cast<size>(Board::Max)> BOARD_STRS{
+constexpr std::array<cstring, eBoard_Max> BOARD_STRS{
     "\"proffieboard_v3_config.h\"",
     "\"proffieboard_v2_config.h\"",
     "\"proffieboard_v1_config.h\"",
 };
 
-enum class ButtonType {
-    Pullup,
-    Pulldown,
-    Latching,
-    Latching_Inverted,
-    Touch,
+enum ButtonType {
+    eBtn_Type_Pullup,
+    eBtn_Type_Pulldown,
+    eBtn_Type_Latching,
+    eBtn_Type_Latching_Inverted,
+    eBtn_Type_Touch,
 
-    Max,
+    eBtn_Type_Max,
 };
-constexpr std::array<cstring, static_cast<size>(ButtonType::Max)>
+constexpr std::array<cstring, eBtn_Type_Max>
 BUTTON_TYPE_STRS{
     "Button",
     "PullDownButton",
@@ -56,18 +56,18 @@ BUTTON_TYPE_STRS{
     "TouchButton"
 };
 
-enum class ButtonEvent {
-    Power,
-    Aux,
-    Aux2,
-    Up,
-    Down,
-    Left,
-    Right,
-    Select,
-    Max
+enum ButtonEvent {
+    eBtn_Evt_Power,
+    eBtn_Evt_Aux,
+    eBtn_Evt_Aux2,
+    eBtn_Evt_Up,
+    eBtn_Evt_Down,
+    eBtn_Evt_Left,
+    eBtn_Evt_Right,
+    eBtn_Evt_Select,
+    eBtn_Evt_Max
 };
-constexpr std::array<cstring, static_cast<size>(ButtonEvent::Max)>
+constexpr std::array<cstring, eBtn_Evt_Max>
 BUTTON_EVENT_STRS{
     "BUTTON_POWER",
     "BUTTON_AUX",
@@ -79,31 +79,31 @@ BUTTON_EVENT_STRS{
     "BUTTON_SELECT",
 };
 
-enum class BladeIDMode {
-    Snapshot,
-    External,
-    Bridged,
-    Max
+enum BladeIDMode {
+    eBIDMode_Snapshot,
+    eBIDMode_External,
+    eBIDMode_Bridged,
+    eBIDMode_Max
 };
-constexpr std::array<std::string_view, static_cast<size>(BladeIDMode::Max)>
+constexpr std::array<std::string_view, eBIDMode_Max>
 BLADEID_MODE_STRS{
     "SnapshotBladeID<",
     "ExternalPullupBladeID<",
     "BridgedPullupBladeID<",
 };
 
-enum class Orientation {
-    Fets_Towards_Blade,
-    USB_Towards_Blade,
-    USB_CCW_From_Blade,
-    USB_CW_From_Blade,
-    Top_Towards_Blade,
-    Bottom_Towards_Blade,
-    Max,
+enum Orientation {
+    eOrient_Fets_Towards_Blade,
+    eOrient_USB_Towards_Blade,
+    eOrient_USB_CCW_From_Blade,
+    eOrient_USB_CW_From_Blade,
+    eOrient_Top_Towards_Blade,
+    eOrient_Bottom_Towards_Blade,
+    eOrient_Max,
 
-    Normal = Fets_Towards_Blade,
+    eOrient_Normal = eOrient_Fets_Towards_Blade,
 };
-constexpr std::array<cstring, static_cast<size>(Orientation::Max)>
+constexpr std::array<cstring, eOrient_Max>
 ORIENTATION_STRS{
     "ORIENTATION_FETS_TOWARDS_BLADE",
     "ORIENTATION_USB_TOWARDS_BLADE",
@@ -113,26 +113,26 @@ ORIENTATION_STRS{
     "ORIENTATION_BOTTOM_TOWARDS_BLADE",
 };
 
-enum class LED {
-    None,
+enum LED {
+    eLED_None,
 
-    Cree_Red,
-    Cree_Green,
-    Cree_Blue,
-    Cree_Amber,
-    Cree_Red_Orange,
-    Cree_White,
+    eLED_Cree_Red,
+    eLED_Cree_Green,
+    eLED_Cree_Blue,
+    eLED_Cree_Amber,
+    eLED_Cree_Red_Orange,
+    eLED_Cree_White,
 
-    Red,
-    Green,
-    Blue,
+    eLED_Red,
+    eLED_Green,
+    eLED_Blue,
 
-    Max,
+    eLED_Max,
 
-    Use_Resistance_Start = Cree_Red,
-    Use_Resistance_End = Cree_White,
+    eLED_Use_Resistance_Start = eLED_Cree_Red,
+    eLED_Use_Resistance_End = eLED_Cree_White,
 };
-constexpr std::array<std::string_view, static_cast<size>(LED::Max)> LED_STRS{
+constexpr std::array<std::string_view, eLED_Max> LED_STRS{
     "NoLED",
     "CreeXPE2RedTemplate",
     "CreeXPE2GreenTemplate",
@@ -145,16 +145,16 @@ constexpr std::array<std::string_view, static_cast<size>(LED::Max)> LED_STRS{
     "CH3LED",
 };
 
-enum class ColorOrder3 {
-    GRB,
-    GBR,
-    BGR,
-    BRG,
-    RGB,
-    RBG,
-    Max,
+enum ColorOrder3 {
+    eOrder3_GRB,
+    eOrder3_GBR,
+    eOrder3_BGR,
+    eOrder3_BRG,
+    eOrder3_RGB,
+    eOrder3_RBG,
+    eOrder3_Max,
 };
-constexpr std::array<cstring, static_cast<size>(ColorOrder3::Max)> ORDER_STRS{
+constexpr std::array<cstring, eOrder3_Max> ORDER_STRS{
     "GRB",
     "GBR",
     "BGR",
@@ -164,22 +164,24 @@ constexpr std::array<cstring, static_cast<size>(ColorOrder3::Max)> ORDER_STRS{
 };
 
 enum ColorOrder4 {
-    GRBW,
-    GBRW,
-    BGRW,
-    BRGW,
-    RGBW,
-    RBGW,
+    eOrder4_GRBW,
+    eOrder4_GBRW,
+    eOrder4_BGRW,
+    eOrder4_BRGW,
+    eOrder4_RGBW,
+    eOrder4_RBGW,
 
-    WGRB,
-    WGBR,
-    WBGR,
-    WBRG,
-    WRGB,
-    WRBG,
+    eOrder4_WGRB,
+    eOrder4_WGBR,
+    eOrder4_WBGR,
+    eOrder4_WBRG,
+    eOrder4_WRGB,
+    eOrder4_WRBG,
 
-    ORDER4_WFIRST_START = WGRB,
-    ORDER4_WFIRST_END = WRBG,
+    eOrder4_Max,
+
+    eOrder4_White_First_Start = eOrder4_WGRB,
+    eOrder4_White_First_End = eOrder4_WRBG,
 };
 
 constexpr cstring OS_VERSION_STR{"OS_VERSION"};

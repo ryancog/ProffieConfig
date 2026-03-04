@@ -1,9 +1,9 @@
-#pragma once
+#include "injection.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/config/misc/injection.hpp
+ * components/config/misc/injection.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,19 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string>
+config::Injection::Injection(data::Node *parent, std::string&& str) :
+    data::Model(parent), filename_{std::move(str)} {}
 
-#include "data/hierarchy/model.hpp"
-
-#include "config_export.h"
-
-namespace config {
-
-struct CONFIG_EXPORT Injection : data::Model {
-    Injection(data::Node *, std::string&&);
-
-    std::string filename_;
-};
-
-} // namespace config
 

@@ -25,21 +25,23 @@
 
 #include "data/bool.hpp"
 
-#include "data/helpers/rcvr_manager.hpp"
 #include "data_export.h"
 
 namespace data {
+
+namespace detail {
 
 /**
  * An intentionally-flat structure for radio-style data.
  * Parent must register not only this, but also the child datas.
  */
-struct DATA_EXPORT Exclusive : data::pModel, data::RcvrManager {
+struct DATA_EXPORT Exclusive : data::Model {
     struct Receiver;
-    struct FuncRcvr;
+    struct Responder;
 
-    Exclusive(size, Node * = nullptr);
+    Exclusive(std::vector<std::unique_ptr<Bool>>, Node * = nullptr);
     Exclusive(const Exclusive&, Node * = nullptr);
+    ~Exclusive() override;
 
     void attachReceiver(Receiver&);
     void detachReceiver(Receiver&);
@@ -47,11 +49,19 @@ struct DATA_EXPORT Exclusive : data::pModel, data::RcvrManager {
     [[nodiscard]] std::span<const std::unique_ptr<Bool>> data() const;
     [[nodiscard]] Bool& operator[](size idx) const;
 
-    std::unique_ptr<Model> clone(Node *) const override;
+    // TODO: This should go into a context.
+    [[nodiscard]] size selected();
+    void select(size);
+
+    [[nodiscard]] Responder& responder() const;
 
 private:
+    std::unique_ptr<Responder> mRsp;
+
     std::recursive_mutex mLock;
-    std::set<Receiver *> mReceivers;
+    size mSelected{0};
+
+    std::vector<std::unique_ptr<Model::Receiver>> mRcvrs;
     std::vector<std::unique_ptr<Bool>> mData;
 };
 
@@ -65,13 +75,27 @@ protected:
     virtual void onSelection(size) {}
 };
 
-struct DATA_EXPORT Exclusive::FuncRcvr : Model::FuncRcvr<Exclusive::Receiver> {
-    std::function<void(size)> onSelection_;
+struct DATA_EXPORT Exclusive::Responder : Model::Responder<Exclusive> {
+    Function<size> onSelection_;
 
 private:
     void onSelection(size sel) override {
-        if (onSelection_) onSelection_(sel);
+        if (onSelection_) onSelection_(context<Exclusive>(), sel);
     }
+};
+
+} // namespace detail
+
+template<typename T = Bool>
+struct DATA_EXPORT Exclusive : detail::Exclusive {
+    Exclusive(size num, Node *parent = nullptr) :
+        detail::Exclusive{[num, parent]() {
+            std::vector<std::unique_ptr<Bool>> vec;
+            for (size idx{0}; idx < num; ++idx) {
+                vec.push_back(std::make_unique<Bool>(parent));
+            }
+            return vec;
+        }(), parent} {};
 };
 
 } // namespace data

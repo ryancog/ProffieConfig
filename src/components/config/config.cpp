@@ -1,4 +1,4 @@
-#include "config.h"
+#include "config.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024-2026 Ryan Ogurek
@@ -19,423 +19,412 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
 #include <filesystem>
-#include <fstream>
+#include <mutex>
 
-#include "log/context.h"
-#include "utils/types.h"
-#include "utils/paths.h"
-#include "versions/versions.h"
-
-#include "private/io.h"
+#include "config/blades/bladeconfig.hpp"
+#include "config/blades/simple.hpp"
+#include "config/blades/ws281x.hpp"
+#include "config/presets/array.hpp"
+#include "config/presets/preset.hpp"
+#include "config/priv/data.hpp"
+#include "config/priv/generate/generate.hpp"
+#include "config/priv/io.hpp"
+#include "config/priv/parse/parse.hpp"
+#include "log/context.hpp"
+#include "log/severity.hpp"
+#include "utils/files.hpp"
+#include "utils/types.hpp"
+#include "utils/paths.hpp"
 
 namespace {
 
-vector<std::unique_ptr<Config::Config>> loadedConfigs;
+fs::path savePath(const std::string&);
 
-filepath savePath(const string&);
+constexpr uint64 SETTINGS_ID{0};
+constexpr uint64 PROPS_ID{1};
+constexpr uint64 PROPSEL_ID{2};
+constexpr uint64 PRESET_ARRAYS_ID{3};
+constexpr uint64 BLADE_CONFIGS_ID{4};
+constexpr uint64 BUTTONS_ID{5};
 
 } // namespace
 
-Config::Config::Config() :
-    settings{*this},
-    bladeArrays{*this},
-    presetArrays{*this} {
-    propSelection.setPersistence(pcui::ChoiceData::Persistence::String);
+data::Vector config::list;
 
-    propSelection.setUpdateHandler([this](uint32 id) {
-        if (id == pcui::ChoiceData::eID_Choices) {
-            propNotifyData.notify(ID_PROPUPDATE);
-            if (propSelection == -1 and not propSelection.choices().empty()) {
-                propSelection = 0;
-                return;
+struct config::Config::SavedReceiver : Root::Receiver {
+    SavedReceiver(Config& cfg) : cfg_{cfg} {
+        Root::Receiver::attach(cfg_);
+    }
+
+    void onActionIdx(size idx) override {
+        data::Bool::Context{cfg_.isSaved_}.set(idx == cfg_.mSavedAction);
+    }
+
+    void onActionClear(size lastIdx) override {
+        if (lastIdx == cfg_.mSavedAction) {
+            cfg_.mSavedAction = Root::ACT_IDX_FIRST;
+        }
+    }
+
+    Config& cfg_;
+};
+
+config::Config::Config() :
+    settings_{*this},
+    props_{this},
+    propSel_{this},
+    presetArrays_{this},
+    bladeConfigs_{this},
+    buttons_{this} {
+
+    data::Vector::Context props{props_};
+    for (auto& prop : priv::propGenerator(&props_)) {
+        props.add(std::move(prop));
+    }
+
+    const auto propSelFilt{[](const data::Choice::Context& ctxt, int32& idx) {
+        if (idx == -1 and ctxt.numChoices()) idx = 0;
+    }};
+    propSel_.choice_.setFilter(propSelFilt);
+
+    mRcvr = new SavedReceiver(*this);
+}
+
+config::Config::~Config() {
+    delete mRcvr;
+}
+
+bool config::Config::enumerate(const EnumFunc& func) {
+    if (func(settings_, SETTINGS_ID, {})) return true;
+    if (func(props_, PROPS_ID, {})) return true;
+    if (func(propSel_, PROPSEL_ID, {})) return true;
+    if (func(presetArrays_, PRESET_ARRAYS_ID, {})) return true;
+    if (func(bladeConfigs_, BLADE_CONFIGS_ID, {})) return true;
+    if (func(buttons_, BUTTONS_ID, {})) return true;
+    return false;
+}
+
+data::Model *config::Config::find(uint64 id) {
+    if (id == SETTINGS_ID) return &settings_;
+    if (id == PROPS_ID) return &props_;
+    if (id == PROPSEL_ID) return &propSel_;
+    if (id == PRESET_ARRAYS_ID) return &presetArrays_;
+    if (id == BLADE_CONFIGS_ID) return &bladeConfigs_;
+    if (id == BUTTONS_ID) return &buttons_;
+    return nullptr;
+}
+
+size config::Config::numBlades() {
+    data::Vector::Context bladeConfigs{bladeConfigs_};
+
+    size num{0};
+    for (const auto& model : bladeConfigs.children()) {
+        auto& bladeConfig{static_cast<blades::BladeConfig&>(*model)};
+
+        size sum{0};
+
+        data::Vector::Context blades{bladeConfig.blades_};
+        for (const auto& model : blades.children()) {
+            auto& blade{static_cast<blades::Blade&>(*model)};
+
+            data::Choice::Context typeChoice{blade.type_.choice_};
+            data::Vector::Context types{blade.types_};
+            auto *typeModel{types.children()[typeChoice.choice()].get()};
+
+            if (auto *ptr = dynamic_cast<blades::WS281X *>(typeModel)) {
+                data::Vector::Context splits{ptr->splits_};
+
+                if (splits.children().size() == 0) {
+                    ++sum;
+                    continue;
+                }
+
+                for (const auto& model : splits.children()) {
+                    auto& split{static_cast<blades::WS281X::Split&>(*model)};
+
+                    const auto type{static_cast<blades::WS281X::Split::Type>(
+                        split.type_.selected()
+                    )};
+                    switch (type) {
+                        using enum blades::WS281X::Split::Type;
+                        case eStandard:
+                        case eReverse:
+                        case eList:
+                            ++sum;
+                            break;
+                        case eStride:
+                        case eZig_Zag:
+                            sum += data::Integer::Context{
+                                split.segments_
+                            }.val();
+                            break;
+                        default:
+                            assert(0);
+                            __builtin_unreachable();
+                    }
+                }
+
+                continue;
+            } 
+
+            if (auto *ptr = dynamic_cast<blades::Simple *>(typeModel)) {
+                ++sum;
+                continue;
             }
         }
-        if (id != pcui::ChoiceData::eID_Selection) return;
-        propNotifyData.notify(ID_PROPSELECTION);
-    });
+    }
 
-    refreshOSVersions();
-    for (auto idx{0}; idx < settings.osVersionMap.size(); ++idx) {
-        if (settings.osVersionMap[idx] == Versions::getDefaultOSVersion()) {
-            settings.osVersion = idx;
+    return num;
+}
+
+void config::Config::syncStyles() {
+    std::lock_guard scopeLock{pLock};
+
+    const auto numBlades{this->numBlades()};
+    data::Vector::Context presetArrays{presetArrays_};
+
+    for (const auto& model : presetArrays.children()) {
+        auto& arrayModel{static_cast<presets::Array&>(*model)};
+        data::Vector::Context presets{arrayModel.presets_};
+
+        for (const auto& model : presets.children()) {
+            auto& presetModel{static_cast<presets::Preset&>(*model)};
+            data::Vector::Context styles{presetModel.styles_};
+
+            const auto newSize{std::max<uint32>(
+                styles.children().size(), numBlades
+            )};
+
+            while (styles.children().size() < newSize) {
+                styles.insert(
+                    styles.children().size(),
+                    std::make_unique<presets::Style>(
+                        &styles.model<data::Vector>()
+                    )
+                );
+            }
+        }
+    }
+}
+
+config::Info::Info() = default;
+
+fs::path config::Info::path() {
+    return ::savePath(data::String::Context{name_}.val());
+}
+
+std::optional<std::string> config::Info::save(
+    const fs::path& path, logging::Branch *lBranch
+) {
+    std::lock_guard scopeLock{pLock};
+    auto& logger{logging::Branch::optCreateLogger("config::Info::save()", lBranch)};
+
+    if (not mConfig) {
+        return priv::errorMessage(logger, wxTRANSLATE("Config not loaded"));
+    }
+
+    // Create context to lock.
+    Config::Context ctxt{*mConfig};
+    data::String::Context name{name_};
+
+    std::optional<std::string> err;
+    std::error_code errCode;
+    if (not path.empty()) {
+        err = priv::generate(
+            path,
+            *mConfig,
+            logger.binfo("Exporting \"" + name.val() + "\" to \"" + path.string() + "\"...")
+        );
+        if (err) fs::remove(path, errCode);
+        return err;
+    } 
+
+    const auto finalPath{this->path()};
+    const fs::path tmpPath{finalPath.string() + ".tmp"};
+    err = priv::generate(
+        tmpPath,
+        *mConfig,
+        logger.binfo("Saving \"" + name.val() + "\"...")
+    );
+    if (err) {
+        fs::remove(tmpPath, errCode);
+        return err;
+    }
+
+    if (not files::copyOverwrite(tmpPath, finalPath, errCode)) {
+        err = priv::errorMessage(logger, wxTRANSLATE("Failed to move temp file: %s"), tmpPath.string(), finalPath.string(), errCode.message());
+    }
+    fs::remove(tmpPath, errCode);
+
+    mConfig->mSavedAction = ctxt.actionIndex();
+
+    return err;
+}
+
+std::optional<std::string> config::Info::load() {
+    std::lock_guard scopeLock{pLock};
+    auto& logger{logging::Context::getGlobal().createLogger("config::Info::load()")};
+
+    if (mConfig) return std::nullopt;
+
+    mConfig.reset(new Config);
+
+    const auto cfgPath{path()};
+    if (fs::exists(cfgPath)) { 
+        auto err{priv::parse(
+            cfgPath,
+            *mConfig,
+            logger.binfo("Config (" + cfgPath.string() + ") exists, parsing...")
+        )};
+        if (err) return err;
+    } else {
+        logger.warn("Config (" + cfgPath.string() + ") does not exist, creating new...");
+    }
+
+    return std::nullopt;
+}
+
+void config::Info::unload() {
+    data::Vector::Context list{config::list};
+
+    data::String::Context name{name_};
+
+    bool found{false};
+    std::error_code err;
+    for (const auto& entry : fs::directory_iterator{paths::configDir(), err}) {
+        if (not entry.is_regular_file()) continue;
+        if (entry.path().extension() != RAW_FILE_EXTENSION) continue;
+
+        if (name.val() == entry.path().stem().string()) {
+            found = true;
             break;
         }
     }
 
-    refreshPropVersions();
-    processCustomToPropOptions();
+    if (not found) {
+        size idx{0};
+        for (; idx < list.children().size(); ++idx) {
+            if (&*list.children()[idx] == this) break;
+        }
+        list.remove(idx);
+    }
 }
 
-void Config::Config::refreshOSVersions() {
-    auto osVersions{Versions::getOSVersions()};
+auto config::Info::config() -> const std::unique_ptr<Config>& {
+    return mConfig;
+}
 
-    vector<string> osChoices;
-    vector<Utils::Version> osVersionMap;
-    osChoices.reserve(osVersions.size() + 1);
-    osVersionMap.reserve(osVersions.size() + 1);
+void config::update() {
+    data::Vector::Context list{config::list};
 
-    osChoices.push_back(_("No OS Selected").ToStdString());
-    osVersionMap.emplace_back(Utils::Version::invalidObject());
+    std::vector<std::string> files;
 
-    for (auto& osVersion : osVersions) {
-        auto versionStr{static_cast<string>(osVersion.verNum)};
-        osChoices.push_back(
-            wxString::Format(
-                _("OS v%s"),
-                std::move(versionStr)
-            ).ToStdString()
-        );
-        osVersionMap.push_back(osVersion.verNum);
+    std::error_code err;
+    for (const auto& entry : fs::directory_iterator{paths::configDir(), err}) {
+        if (not entry.is_regular_file()) continue;
+        if (entry.path().extension() != RAW_FILE_EXTENSION) continue;
+
+        files.emplace_back(entry.path().stem().string());
     }
 
-    settings.osVersion.setChoices(std::move(osChoices));
-    settings.osVersionMap = std::move(osVersionMap);
-}
+    for (size idx{0}; idx < list.children().size(); ++idx) {
+        auto& info{static_cast<Info&>(*list.children()[idx])};
 
-void Config::Config::refreshPropVersions() {
-    const auto verNum{settings.getOSVersion()};
-    auto& propList{mProps[verNum]};
+        data::String::Context name{info.name_};
 
-    vector<Versions::Prop *> visibleList;
-    for (auto *versionedProp : Versions::propsForVersion(verNum)) {
         bool found{false};
-        for (auto& data : propList) {
-            // Compare by display name, not unique name, obviously
-            if (data.prop->name == versionedProp->prop->name) {
+        for (const auto& file : files) {
+            if (file == name.val()) {
                 found = true;
+                break;
+            }
+        }
 
-                auto newProp{std::make_unique<Versions::Prop>(
-                    *versionedProp->prop
-                )};
+        if (not found) {
+            list.remove(idx);
+            --idx;
+        }
+    }
 
-                newProp->migrateFrom(*data.prop);
-                visibleList.push_back(newProp.get());
-                data.prop = std::move(newProp);
-                data.reference = versionedProp;
+    for (const auto& file : files) {
+        bool found{false};
+        for (size idx{0}; idx < list.children().size(); ++idx) {
+            auto& info{static_cast<Info&>(*list.children()[idx])};
 
+            data::String::Context name{info.name_};
+            if (name.val() == file) {
+                found = true;
                 break;
             }
         }
 
         if (found) continue;
 
-        PropData newData;
-        newData.prop = std::make_unique<Versions::Prop>(*versionedProp->prop);
-        newData.reference = versionedProp;
-        visibleList.push_back(newData.prop.get());
-        propList.push_back(std::move(newData));
+        auto info{std::unique_ptr<Info>{new Info}};
+        data::String::Context{info->name_}.change(std::string{file}, 0);
+        list.insert(list.children().size(), std::move(info));
     }
 
-    const auto comp{[&visibleList](
-        const PropData& a,
-        const PropData& b
-    ) -> bool {
-        // Keep default at top
-        if (a.prop->isDefault()) return true;
-        if (b.prop->isDefault()) return false;
-
-        // This being inside the comparison is a little inefficient.
-        // I don't think it really matters at all though. I do worse elsewhere.
-        bool aIsVisible{false};
-        bool bIsVisible{false};
-        for (auto *const visibleProp : visibleList) {
-            if (visibleProp == a.prop.get()) aIsVisible = true;
-            if (visibleProp == b.prop.get()) bIsVisible = true;
-
-            if (aIsVisible and bIsVisible) break;
-        }
-
-        if (aIsVisible == bIsVisible) return a.prop->name < b.prop->name;
-
-        // One of these is not visible, the other is
-        // Sort a first if a visible
-        return aIsVisible;
-    }};
-    std::ranges::sort(propList, comp);
-
-    vector<string> choices;
-    choices.reserve(propList.size());
-    for (auto& propData : propList) {
-        bool isVisible{false};
-        for (auto *const visibleProp : visibleList) {
-            if (visibleProp == propData.prop.get()) {
-                isVisible = true;
-                break;
-            }
-        }
-
-        // This is logically a little confusing, but take advantage of
-        // looping over all the props here to clear invalid references,
-        // even though it would be clearer for this to be a separate loop.
-        if (not isVisible) propData.reference = nullptr;
-        else choices.push_back(propData.prop->name);
-    }
-
-    propSelection.setChoices(std::move(choices));
-}
-
-void Config::Config::processCustomToPropOptions() {
-    if (propSelection == -1) return;
-
-    const auto& dataMap{prop(propSelection).dataMap()};
-    const auto& customOpts{settings.customOptions()};
-    for (auto idx{0}; idx < customOpts.size(); ++idx) {
-        auto& opt{settings.customOption(idx)};
-
-        auto dataIter{dataMap.find(opt.define)};
-        if (dataIter == dataMap.end()) continue;
-
-        auto valStr{static_cast<string>(opt.value_)};
-        switch (dataIter->second->dataType) {
-            case Versions::PropDataType::TOGGLE:
-                {
-                    auto *toggle{static_cast<Versions::PropToggle *>(
-                        dataIter->second
-                    )};
-                    toggle->value.setValue(true);
-                    break;
-                }
-            case Versions::PropDataType::SELECTION:
-                {
-                    auto *selection{static_cast<Versions::PropSelection *>(
-                        dataIter->second
-                    )};
-                    selection->select();
-                    break;
-                }
-            case Versions::PropDataType::NUMERIC:
-                {
-                    auto *numeric{static_cast<Versions::PropNumeric *>(
-                        dataIter->second
-                    )};
-
-                    auto val{Utils::doStringMath(valStr)};
-                    numeric->value.setValue(
-                        static_cast<int32>(val.value_or(0))
-                    );
-                    break;
-                }
-            case Versions::PropDataType::DECIMAL:
-                {
-                    auto *decimal{static_cast<Versions::PropDecimal *>(
-                        dataIter->second
-                    )};
-                    auto val{strtod(valStr.c_str(), nullptr)};
-                    decimal->value.setValue(val);
-                    break;
-                }
-        }
-
-        settings.removeCustomOption(idx);
-        --idx;
+    if (err) {
+        logging::Context::getGlobal().quickLog(
+            logging::Severity::Err,
+            "config::update()",
+            "Failed to get path list: " + err.message()
+        );
     }
 }
 
-void Config::Config::rename(const string& newName) {
+bool config::remove(Info& info) {
+    data::Vector::Context vec{list};
+
+    size idx{0};
+    for (;idx < vec.children().size(); ++idx) {
+        if (&static_cast<Info&>(*vec.children()[idx]) == &info) {
+            break;
+        }
+    }
+    if (idx == vec.children().size()) return false;
+
     std::error_code err;
-    fs::rename(savePath(), ::savePath(newName), err);
+    auto res{fs::remove(info.path(), err)};
+    if (not res) return false;
 
-    name = string{newName};
+    vec.remove(idx);
+    return true;
 }
 
+std::optional<std::string> config::import(
+    const std::string& name, const fs::path& path
+) {
+    auto& logger{logging::Context::getGlobal().createLogger("config::import()")};
 
-void Config::Config::close() {
-    auto iter{loadedConfigs.begin()};
-    for (; iter != loadedConfigs.end(); ++iter) {
-        if (iter->get() != this) continue;
+    data::Vector::Context vec{list};
 
-        loadedConfigs.erase(iter);
-        return;
+    for (size idx{0}; idx < vec.children().size(); ++idx) {
+        auto& info{static_cast<Info&>(*vec.children()[idx])};
+        if (data::String::Context{info.name_}.val() == name) {
+            return priv::errorMessage(logger, wxTRANSLATE("Config with name already open"));
+        }
     }
+
+    std::error_code err;
+    if (not files::copyOverwrite(path, savePath(name), err)) {
+        return priv::errorMessage(logger, wxTRANSLATE("Could not copy in config file: %s"), err.message());
+    }
+
+    update();
+
+    return std::nullopt;
 }
 
 namespace {
 
-filepath savePath(const string& name) {
+fs::path savePath(const std::string& name) {
     return 
         paths::configDir() /
-        (static_cast<string>(name) + Config::RAW_FILE_EXTENSION);
+        (static_cast<std::string>(name) + config::RAW_FILE_EXTENSION);
 }
 
 } // namespace
-
-filepath Config::Config::savePath() const {
-    return ::savePath(name);
-}
-
-optional<string> Config::Config::save(
-    const filepath& path, Log::Branch *lBranch
-) const {
-    auto& logger{Log::Branch::optCreateLogger("Config::Config::save()", lBranch)};
-    if (path.empty()) logger.info("Saving \"" + static_cast<string>(name) + "\"...");
-    else logger.info("Exporting \"" + static_cast<string>(name) + "\" to \"" + path.string() + "\"...");
-
-    optional<string> err;
-    std::error_code errCode;
-    if (not path.empty()) {
-        err = output(path, *this);
-        if (err) fs::remove(path, errCode);
-        return err;
-    } 
-
-    const auto finalPath{savePath()};
-    const filepath tmpPath{finalPath.string() + ".tmp"};
-    err = output(tmpPath, *this, logger.binfo("Generating output..."));
-    if (err) {
-        fs::remove(tmpPath, errCode);
-        return err;
-    }
-
-    if (not paths::copyOverwrite(tmpPath, finalPath, errCode)) {
-        err = errorMessage(logger, wxTRANSLATE("Failed to move temp file: %s"), tmpPath.string(), finalPath.string(), errCode.message());
-    }
-    fs::remove(tmpPath, errCode);
-    return err;
-}
-
-bool Config::Config::isSaved() const {
-    auto& logger{Log::Context::getGlobal().createLogger("EditorWindow::isSaved()")};
-
-    const auto currentPath{savePath()};
-    const auto validatePath{
-        fs::temp_directory_path() / (static_cast<string>(name) + "-validate")
-    };
-
-    auto saveErr{save(validatePath)};
-
-    if (saveErr) {
-        logger.warn("Config output failed");
-        return false;
-    }
-
-    std::error_code err;
-    const auto currentSize{fs::file_size(currentPath, err)};
-    const auto validateSize{fs::file_size(validatePath, err)};
-    if (currentSize != validateSize) {
-        logger.warn(
-            "File sizes do not match (" + 
-            std::to_string(currentSize) + '/' + 
-            std::to_string(validateSize) + ')'
-        );
-        return false;
-    }
-
-    auto current{paths::openInputFile(currentPath)};
-    auto validate{paths::openInputFile(validatePath)};
-
-    bool saved{true};
-
-    constexpr auto BUFFER_SIZE{0x4000};
-    std::array<char, BUFFER_SIZE> currentBuffer;
-    std::array<char, BUFFER_SIZE> validateBuffer;
-
-    while (
-            current.read(currentBuffer.data(), currentBuffer.size()) and
-            validate.read(validateBuffer.data(), validateBuffer.size())
-          ) {
-        if (current.gcount() != validate.gcount()) {
-            saved = false;
-            break;
-        }
-
-        auto cmp{std::memcmp(
-            currentBuffer.data(),
-            validateBuffer.data(),
-            current.gcount()
-        )};
-
-        if (0 != cmp) {
-            saved = false;
-            break;
-        }
-    }
-
-    current.close();
-    validate.close();
-    fs::remove(validatePath, err);
-    if (not saved) {
-        logger.warn("File contents do not match");
-    }
-
-    return saved;
-}
-
-vector<string> Config::fetchListFromDisk() {
-    vector<string> ret;
-
-    std::error_code err;
-    for (const auto& entry : fs::directory_iterator{paths::configDir(), err}) {
-        if (not entry.is_regular_file()) continue;
-        if (entry.path().extension() != RAW_FILE_EXTENSION) continue;
-        ret.emplace_back(entry.path().stem().string());
-    }
-    
-    return ret;
-}
-
-const vector<std::unique_ptr<Config::Config>>& Config::getOpen() {
-    return loadedConfigs;
-}
-
-bool Config::remove(const string& name) {
-    if (getIfOpen(name)) return false;
-
-    std::error_code err;
-    return fs::remove(savePath(name), err);
-}
-
-variant<Config::Config *, string> Config::open(
-    const string& name, Log::Branch *lBranch
-) {
-    auto& logger{Log::Branch::optCreateLogger("Config::open()", lBranch)};
-
-    auto *open{getIfOpen(name)};
-    if (open) {
-        logger.debug("Config already open, returning...");
-        return open;
-    }
-
-    std::unique_ptr<Config> config{new Config()};
-    config->name = string{name};
-
-    const auto path{savePath(name)};
-    if (fs::exists(path)) {
-        logger.info("Config (" + path.string() + ") exists, parsing...");
-        auto err{parse(path, *config)};
-        if (err) return *err;
-    } else {
-        logger.warn("Config (" + path.string() + ") does not exist, creating new...");
-    }
-
-    return &*loadedConfigs.emplace_back(std::move(config));
-}
-
-optional<string> Config::import(const string& name, const filepath& path) {
-    auto& logger{Log::Context::getGlobal().createLogger("Config::import()")};
-    for (const auto& configName : fetchListFromDisk()) {
-        if (configName == name) {
-            return errorMessage(logger, wxTRANSLATE("Config with name already open"));
-        }
-    }
-
-    std::unique_ptr<Config> config{new Config()};
-    config->name = string{name};
-
-    auto err{parse(path, *config, logger.binfo("Parsing config..."))};
-    if (err) return err;
-
-    err = config->save();
-    if (err) return err;
-    
-    return nullopt;
-}
-
-Config::Config *Config::getIfOpen(const string& name) {
-    for (auto& config : loadedConfigs) {
-        if (static_cast<string>(config->name) == name) return &*config;
-    }
-    return nullptr;
-}
 

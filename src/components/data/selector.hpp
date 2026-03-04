@@ -28,7 +28,7 @@
 
 namespace data {
 
-struct DATA_EXPORT Selector final : Node, Choice::Receiver, Vector::Receiver {
+struct DATA_EXPORT Selector : Node, Choice::Receiver, Vector::Receiver {
     struct Context;
     struct Receiver;
 

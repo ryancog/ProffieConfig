@@ -38,6 +38,17 @@ enum class ActionMode {
 };
 
 struct DATA_EXPORT Node : Model {
+    /**
+     * Called for each child model of a node.
+     *
+     * If the model has a representative string the id is derived from, it may
+     * be passed to be used as the preferred method for identification w.r.t.
+     * serialization. If not, it may be left empty.
+     *
+     * @return if enumeration should terminate
+     */
+    using EnumFunc = std::function<bool(Model&, uint64, const std::string&)>;
+
     Node(Node *, Root * = nullptr);
     Node(const Node&, Node *, Root * = nullptr);
     ~Node() override;
@@ -52,18 +63,6 @@ struct DATA_EXPORT Node : Model {
      */
     bool forwardAction(std::unique_ptr<Action>&& action);
 
-protected:
-    /**
-     * Called for each child model of a node.
-     *
-     * If the model has a representative string the id is derived from, it may
-     * be passed to be used as the preferred method for identification w.r.t.
-     * serialization. If not, it may be left empty.
-     *
-     * @return if enumeration should terminate
-     */
-    using EnumFunc = std::function<bool(Model&, uint64, const std::string&)>;
-
     /**
      * Called with a function which should be called once for every child of
      * the node.
@@ -72,6 +71,7 @@ protected:
      */
     virtual bool enumerate(const EnumFunc&) = 0;
 
+protected:
     /**
      * Find the model with specified id
      */

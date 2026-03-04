@@ -27,7 +27,7 @@
 
 namespace data {
 
-struct DATA_EXPORT Version final : Model {
+struct DATA_EXPORT Version : Model {
     struct Context;
     struct Receiver;
     struct Responder;

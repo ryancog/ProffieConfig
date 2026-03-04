@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2023-2026 Ryan Ogurek
  *
- * components/config/private/generate/generate.hpp
+ * components/config/priv/generate/generate.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 #include <string>
 
 #include "config/config.hpp"
-#include "logging/branch.hpp"
+#include "log/branch.hpp"
 
 namespace fs = std::filesystem;
 
@@ -36,7 +36,7 @@ namespace config::priv {
  * @return Error message on failure. nullopt on success
  */
 std::optional<std::string> generate(
-    const fs::path&, const Config&, logging::Branch *lBranch = nullptr
+    const fs::path&, Config&, logging::Branch *lBranch = nullptr
 );
 
 } // namespace config::priv

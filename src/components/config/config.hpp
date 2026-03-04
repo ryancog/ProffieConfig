@@ -19,71 +19,107 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <map>
+#include <filesystem>
+#include <memory>
 
-#include "config/blades/array.hpp"
-#include "config/presets/array.hpp"
 #include "config/settings/settings.hpp"
-#include "utils/version.hpp"
+#include "data/hierarchy/root.hpp"
+#include "data/selector.hpp"
+#include "data/vector.hpp"
 // #include "versions/prop.hpp"
 // #include "versions/versions.hpp"
 
 #include "config_export.h"
+#include "log/branch.hpp"
+
+namespace fs = std::filesystem;
 
 namespace config {
 
-static constexpr cstring RAW_FILE_EXTENSION{".h"};
+constexpr cstring RAW_FILE_EXTENSION{".h"};
+constexpr auto MAX_NAME_LENGTH{24};
 
-static constexpr auto MAX_NAME_LENGTH{24};
+struct CONFIG_EXPORT Config : data::Root {
+    ~Config() override;
 
-struct CONFIG_EXPORT Config {
-    data::String name;
+    bool enumerate(const EnumFunc&) override;
+    Model *find(uint64) override;
 
-    Settings settings;
+    Settings settings_;
 
-    data::Vector presetArrays;
-    blades::Array bladeArrays;
+    data::Vector props_;
+    data::Selector propSel_;
 
-    [[nodiscard]] bool isSaved() const;
+    data::Vector presetArrays_;
+    data::Vector bladeConfigs_;
+
+    data::Vector buttons_;
+
+    /**
+     * Not a part of the usual state. Free-floating data.
+     * Should not be set manually, only to be listened to.
+     *
+     * TODO: A proper construct to only allow listening to data.
+     */
+    data::Bool isSaved_;
+
+    data::Vector injections_;
+
+    size numBlades();
+    void syncStyles();
 
 private:
+    friend struct Info;
+
+    // NOLINTNEXTLINE(modernize-use-equals-delete)
     Config();
+
+    struct SavedReceiver;
+    SavedReceiver *mRcvr;
+    std::optional<size> mSavedAction;
 };
 
-// /**
-//  * Search disk and retrieve list of all config names
-//  */
-// CONFIG_EXPORT vector<string> fetchListFromDisk();
-// 
-// /**
-//  * @return List of configs currently open
-//  */
-// CONFIG_EXPORT const vector<std::unique_ptr<Config>>& getOpen();
-// 
-// CONFIG_EXPORT bool remove(const string& name);
-// 
-// /**
-//  * Parse the config and return a fresh ptr, or return the ptr
-//  * of an already-open config.
-//  *
-//  * @param name Config name
-//  *
-//  * @return Config or error message
-//  */
-// CONFIG_EXPORT variant<Config *, string> open(const string& name, Log::Branch * = nullptr);
-// 
-// /**
-//  * Similar to open, but opens from path instead of in save folder by name.
-//  *
-//  * @return err or nullopt
-//  */
-// CONFIG_EXPORT optional<string> import(const string& name, const filepath& path);
-// 
-// /**
-//  * @return the config with name only if config is open
-//  * nullptr otherwise
-//  */
-// CONFIG_EXPORT Config *getIfOpen(const string& name);
+struct CONFIG_EXPORT Info : data::Model {
+    // TODO: Same issue as isSaved_
+    data::String name_;
+
+    fs::path path();
+
+    [[nodiscard]] std::optional<std::string> save(
+        const fs::path& = {}, logging::Branch * = nullptr
+    );
+
+    std::optional<std::string> load();
+    void unload();
+
+    const std::unique_ptr<Config>& config();
+
+private:
+    friend void update();
+
+    Info();
+
+    std::unique_ptr<Config> mConfig;
+};
+
+// Another point where an observable is required...
+CONFIG_EXPORT extern data::Vector list;
+
+/**
+ * Search disk and update list of all available configs
+ */
+CONFIG_EXPORT void update();
+
+CONFIG_EXPORT bool remove(Info&);
+
+/**
+ * Similar to open, but opens from path instead of in save folder by name.
+ *
+ * @return err or nullopt
+ */
+CONFIG_EXPORT std::optional<std::string> import(
+    const std::string& name, const fs::path& path
+);
 
 } // namespace config
 

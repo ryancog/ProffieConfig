@@ -3,11 +3,11 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/config/buttons/button.hpp
+ * components/config/settings/bladeawareness.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * the Free Software Foundation, either version 4 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -19,35 +19,51 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "data/bool.hpp"
 #include "data/choice.hpp"
-#include "data/hierarchy/node.hpp"
 #include "data/number.hpp"
+#include "data/selection.hpp"
 #include "data/string.hpp"
+#include "data/hierarchy/node.hpp"
 
 #include "config_export.h"
 
 namespace config {
 
-struct Config;
+struct Settings;
 
-namespace buttons {
+namespace settings {
 
-struct CONFIG_EXPORT Button : data::Node {
-    Button(data::Node *);
-    ~Button() override;
+struct CONFIG_EXPORT BladeAwareness : data::Node {
+    BladeAwareness(Settings&);
+    ~BladeAwareness() override;
 
     bool enumerate(const EnumFunc&) override;
     Model *find(uint64) override;
 
-    data::Choice type_;
-    data::Choice event_;
+    struct {
+        data::Bool enable_;
+        data::String pin_;
+    } bladeDetect_;
 
-    data::String pin_;
-    data::String name_;
-    data::Integer touch_;
+    struct {
+        data::Bool enable_;
+        data::String pin_;
+
+        data::Choice mode_;
+        data::String bridgePin_;
+        data::Integer pullup_;
+
+        data::Bool powerForId_;
+        data::Selection powerPins_;
+
+        data::Bool continuousScanning_;
+        data::Integer continuousInterval_;
+        data::Integer continuousTimes_;
+    } bladeId_;
 };
 
-} // namespace buttons
+} // namespace settings
 
 } // namespace config
 

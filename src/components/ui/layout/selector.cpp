@@ -45,10 +45,11 @@ struct Control : priv::WinBase<wxPanel, data::Selector::Receiver>,
         data::Choice::Receiver::detach();
     }
 
-    void onChoice(int32 choice) override {
+    void onChoice() override {
         data::Vector::Context vec{*vec_};
 
-        build(this, *builder_(&*vec.children()[choice]));
+        auto ctxt{data::Choice::Receiver::context<data::Choice>()};
+        build(this, *builder_(&*vec.children()[ctxt.choice()]));
     }
 
     void onRebound(data::Vector *vec) override {
