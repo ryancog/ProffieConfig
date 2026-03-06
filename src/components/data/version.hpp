@@ -28,6 +28,7 @@
 namespace data {
 
 struct DATA_EXPORT Version : Model {
+    struct ROContext;
     struct Context;
     struct Receiver;
     struct Responder;
@@ -47,12 +48,18 @@ private:
     utils::Version mValue;
 };
 
-struct DATA_EXPORT Version::Context : Model::Context {
+struct DATA_EXPORT Version::ROContext : virtual Model::ROContext {
+    ROContext(const Version&);
+    ~ROContext();
+
+    [[nodiscard]] const utils::Version& val() const [[clang::lifetimebound]];
+};
+
+struct DATA_EXPORT Version::Context : Model::Context, ROContext {
     Context(Version&);
     ~Context();
 
     void set(utils::Version) const;
-    [[nodiscard]] const utils::Version& val() const [[clang::lifetimebound]];
 };
 
 struct DATA_EXPORT Version::Receiver : Model::Receiver {

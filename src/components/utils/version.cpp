@@ -22,6 +22,7 @@
 #include <charconv>
 #include <compare>
 #include <string>
+#include <sys/types.h>
 
 #include "utils/string.hpp"
 
@@ -141,18 +142,32 @@ std::strong_ordering utils::Version::compare(const Version& other) const {
     return std::strong_ordering::equal;
 }
 
-bool utils::Version::dataEqual(const Version& other) const {
+std::strong_ordering utils::Version::operator<=>(const Version& other) const {
     const auto comp{[this, &other](auto Version::* item) {
-        return
-            (this->*item).mode_ == (other.*item).mode_ and
-            (this->*item).val_ == (other.*item).val_;
+        const auto modeComp{(this->*item).mode_ <=> (other.*item).mode_};
+        if (modeComp != std::strong_ordering::equal) return modeComp;
+
+        return (this->*item).val_ <=> (other.*item).val_;
     }};
 
-    return
-        comp(&Version::major_) and
-        comp(&Version::minor_) and
-        comp(&Version::bugfix_) and
-        comp(&Version::tag_);
+    const auto majorComp{comp(&Version::major_)};
+    if (majorComp != std::strong_ordering::equal) return majorComp;
+
+    const auto minorComp{comp(&Version::minor_)};
+    if (minorComp != std::strong_ordering::equal) return minorComp;
+
+    const auto bugfixComp{comp(&Version::bugfix_)};
+    if (bugfixComp != std::strong_ordering::equal) return bugfixComp;
+
+    return comp(&Version::tag_);
+}
+
+bool utils::Version::isExact() const {
+    if (major_.mode_ != CompMode::Exact) return false;
+    if (minor_.mode_ != CompMode::Exact) return false;
+    if (bugfix_.mode_ != CompMode::Exact) return false;
+    if (tag_.mode_ != CompMode::Exact) return false;
+    return true;
 }
 
 utils::Version::operator std::string() const {

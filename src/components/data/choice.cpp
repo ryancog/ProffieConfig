@@ -51,8 +51,25 @@ void data::Choice::setFilter(Filter filter) {
 
 auto data::Choice::responder() const -> Responder& { return *mRsp; }
 
-data::Choice::Context::Context(Choice& choice):
-    Model::Context{choice} {}
+data::Choice::ROContext::ROContext(const Choice& choice) :
+    Model::ROContext(choice) {}
+
+data::Choice::ROContext::~ROContext() = default;
+
+uint32 data::Choice::ROContext::numChoices() const {
+    return model<Choice>().mNumChoices;
+}
+
+int32 data::Choice::ROContext::choice() const {
+    return model<Choice>().mIdx;
+}
+
+data::Choice::ROContext::operator bool() const {
+    return model<Choice>().mIdx >= 0;
+}
+
+data::Choice::Context::Context(Choice& choice) :
+    Model::Context(choice), ROContext(choice), Model::ROContext(choice) {}
 
 data::Choice::Context::~Context() = default;
 
@@ -70,18 +87,6 @@ void data::Choice::Context::update(uint32 num) const {
     model().processAction(std::make_unique<UpdateAction>(
         static_cast<int32>(num)
     ));
-}
-
-uint32 data::Choice::Context::numChoices() const {
-    return model<Choice>().mNumChoices;
-}
-
-int32 data::Choice::Context::choice() const {
-    return model<Choice>().mIdx;
-}
-
-data::Choice::Context::operator bool() const {
-    return model<Choice>().mIdx >= 0;
 }
 
 data::Choice::ChoiceAction::ChoiceAction(int32 choice) : mChoice{choice} {}

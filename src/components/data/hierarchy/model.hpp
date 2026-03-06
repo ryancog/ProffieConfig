@@ -41,6 +41,7 @@ struct Root;
  * Basis for data model structures.
  */
 struct DATA_EXPORT Model {
+    struct ROContext;
     struct Context;
     struct Receiver;
     template<typename>
@@ -120,37 +121,47 @@ private:
     Root *const mRoot;
 };
 
-struct DATA_EXPORT Model::Context {
+struct DATA_EXPORT Model::ROContext {
+    ROContext(const Model&);
+    ~ROContext();
+
+    ROContext(const ROContext&) = delete;
+    ROContext(ROContext&&) = delete;
+    ROContext& operator=(const ROContext&) = delete;
+    ROContext& operator=(ROContext&&) = delete;
+
+    template<typename T = Model>
+    [[nodiscard]] const T& model() const {
+        return static_cast<const T&>(mModel);
+    }
+
+    [[nodiscard]] bool enabled() const;
+
+private:
+    const Model& mModel;
+};
+
+struct DATA_EXPORT Model::Context : virtual ROContext {
     Context(Model&);
     ~Context();
 
-    Context(const Context&) = delete;
-    Context(Context&&) = delete;
-    Context& operator=(const Context&) = delete;
-    Context& operator=(Context&&) = delete;
-
     template<typename T = Model>
-    T& model() const {
-        return static_cast<T&>(mModel);
+    [[nodiscard]] T& model() const {
+        return const_cast<T&>(model<T>());
     }
 
     /**
      * (Dis)allow input to the data
      */
-    void enable(bool en = true);
-    void disable() { enable(false); }
-
-    [[nodiscard]] bool enabled() const;
+    void enable(bool en = true) const;
+    void disable() const { enable(false); }
 
     /**
      * If the data has an associated UI, focus it.
      * This is a transient change. It only takes effect if UI is currently
      * bound.
      */
-    void focus();
-
-private:
-    Model& mModel;
+    void focus() const;
 };
 
 struct DATA_EXPORT Model::Receiver {

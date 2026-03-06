@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/static/label.hpp
+ * components/versions/priv/data.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,36 +19,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/font.h>
+#include <mutex>
 
-#include "ui/detail/descriptor.hpp"
-#include "ui/detail/general.hpp"
-#include "ui/text.hpp"
+#include "versions/os.hpp"
+#include "versions/prop.hpp"
 
-#include "ui_export.h"
+namespace versions::priv {
 
-namespace pcui {
+extern std::recursive_mutex lock;
+extern std::vector<std::unique_ptr<props::Versioned>> props;
+extern std::vector<std::unique_ptr<os::Versioned>> os;
 
-struct UI_EXPORT Label {
-    struct Desc;
+extern std::vector<os::Available> availableOS;
+extern std::vector<props::Available> availableProps;
 
-    // TODO: Make these base w/ C++ P2287.
-    detail::ChildBase base_;
-    detail::ChildWindowBase win_;
-
-    wxString label_;
-
-    text::detail::StyleData style_;
-
-    std::unique_ptr<detail::Descriptor> operator()();
-};
-
-struct UI_EXPORT Label::Desc : Label, detail::Descriptor {
-    Desc(Label&&);
-
-    [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
-};
-
-} // namespace pcui
-
+} // namespace versions::priv
 

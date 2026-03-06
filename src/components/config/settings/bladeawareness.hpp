@@ -39,7 +39,7 @@ struct CONFIG_EXPORT BladeAwareness : data::Node {
     ~BladeAwareness() override;
 
     bool enumerate(const EnumFunc&) override;
-    Model *find(uint64) override;
+    [[nodiscard]] Model *find(uint64) override;
 
     struct {
         data::Bool enable_;

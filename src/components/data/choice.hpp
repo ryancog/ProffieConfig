@@ -27,6 +27,7 @@
 namespace data {
 
 struct DATA_EXPORT Choice : Model {
+    struct ROContext;
     struct Context;
     struct Receiver;
     struct Responder;
@@ -55,7 +56,20 @@ private:
     int32 mIdx{-1};
 };
 
-struct DATA_EXPORT Choice::Context : Model::Context {
+struct DATA_EXPORT Choice::ROContext : virtual Model::ROContext {
+    ROContext(const Choice&);
+    ~ROContext();
+
+    [[nodiscard]] uint32 numChoices() const;
+    [[nodiscard]] int32 choice() const;
+    
+    /**
+     * Whether or not this has a choice.
+     */
+    explicit operator bool() const;
+};
+
+struct DATA_EXPORT Choice::Context : Model::Context, ROContext {
     Context(Choice&);
     ~Context();
 
@@ -73,14 +87,6 @@ struct DATA_EXPORT Choice::Context : Model::Context {
      * Update the number of choices available.
      */
     void update(uint32) const;
-
-    [[nodiscard]] uint32 numChoices() const;
-    [[nodiscard]] int32 choice() const;
-    
-    /**
-     * Whether or not this has a choice.
-     */
-    explicit operator bool() const;
 };
 
 struct DATA_EXPORT Choice::Receiver : Model::Receiver {

@@ -26,6 +26,7 @@
 namespace data {
 
 struct DATA_EXPORT Bool : Model {
+    struct ROContext;
     struct Context;
     struct Receiver;
     struct Responder;
@@ -51,14 +52,19 @@ private:
     bool mValue{false};
 };
 
-struct DATA_EXPORT Bool::Context : Model::Context {
+struct DATA_EXPORT Bool::ROContext : virtual Model::ROContext {
+    ROContext(const Bool&);
+    ~ROContext();
+
+    [[nodiscard]] bool val() const;
+};
+
+struct DATA_EXPORT Bool::Context : Model::Context, ROContext {
     Context(Bool&);
     ~Context();
 
     void set(bool) const;
     void operator|=(bool) const;
-
-    [[nodiscard]] bool val() const;
 };
 
 struct DATA_EXPORT Bool::Receiver : Model::Receiver {

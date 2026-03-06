@@ -75,7 +75,7 @@ protected:
     /**
      * Find the model with specified id
      */
-    virtual Model *find(uint64) [[clang::lifetimebound]] = 0;
+    [[nodiscard]] virtual Model *find(uint64) [[clang::lifetimebound]] = 0;
 
     /**
      * Get ID For Model

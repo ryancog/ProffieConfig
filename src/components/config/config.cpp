@@ -27,7 +27,6 @@
 #include "config/blades/ws281x.hpp"
 #include "config/presets/array.hpp"
 #include "config/presets/preset.hpp"
-#include "config/priv/data.hpp"
 #include "config/priv/generate/generate.hpp"
 #include "config/priv/io.hpp"
 #include "config/priv/parse/parse.hpp"
@@ -36,17 +35,21 @@
 #include "utils/files.hpp"
 #include "utils/types.hpp"
 #include "utils/paths.hpp"
+#include "versions/os.hpp"
 
 namespace {
 
 fs::path savePath(const std::string&);
 
 constexpr uint64 SETTINGS_ID{0};
-constexpr uint64 PROPS_ID{1};
-constexpr uint64 PROPSEL_ID{2};
-constexpr uint64 PRESET_ARRAYS_ID{3};
-constexpr uint64 BLADE_CONFIGS_ID{4};
-constexpr uint64 BUTTONS_ID{5};
+constexpr uint64 PROPSEL_ID{1};
+constexpr uint64 PRESET_ARRAYS_ID{2};
+constexpr uint64 BLADE_CONFIGS_ID{3};
+constexpr uint64 BUTTONS_ID{4};
+
+constexpr auto propsStrID(const utils::Version& ver) {
+    return "Props::" + static_cast<std::string>(ver);
+}
 
 } // namespace
 
@@ -58,7 +61,7 @@ struct config::Config::SavedReceiver : Root::Receiver {
     }
 
     void onActionIdx(size idx) override {
-        data::Bool::Context{cfg_.isSaved_}.set(idx == cfg_.mSavedAction);
+        data::Bool::Context{cfg_.mIsSaved}.set(idx == cfg_.mSavedAction);
     }
 
     void onActionClear(size lastIdx) override {
@@ -72,21 +75,15 @@ struct config::Config::SavedReceiver : Root::Receiver {
 
 config::Config::Config() :
     settings_{*this},
-    props_{this},
-    propSel_{this},
+    mPropSel{this},
     presetArrays_{this},
     bladeConfigs_{this},
     buttons_{this} {
 
-    data::Vector::Context props{props_};
-    for (auto& prop : priv::propGenerator(&props_)) {
-        props.add(std::move(prop));
-    }
-
     const auto propSelFilt{[](const data::Choice::Context& ctxt, int32& idx) {
         if (idx == -1 and ctxt.numChoices()) idx = 0;
     }};
-    propSel_.choice_.setFilter(propSelFilt);
+    mPropSel.choice_.setFilter(propSelFilt);
 
     mRcvr = new SavedReceiver(*this);
 }
@@ -97,8 +94,11 @@ config::Config::~Config() {
 
 bool config::Config::enumerate(const EnumFunc& func) {
     if (func(settings_, SETTINGS_ID, {})) return true;
-    if (func(props_, PROPS_ID, {})) return true;
-    if (func(propSel_, PROPSEL_ID, {})) return true;
+    for (auto& [ver, prop] : mPropMap) {
+        const auto strId{propsStrID(ver)};
+        if (func(prop, strID(strId), strId)) return true;
+    }
+    if (func(mPropSel, PROPSEL_ID, {})) return true;
     if (func(presetArrays_, PRESET_ARRAYS_ID, {})) return true;
     if (func(bladeConfigs_, BLADE_CONFIGS_ID, {})) return true;
     if (func(buttons_, BUTTONS_ID, {})) return true;
@@ -107,12 +107,53 @@ bool config::Config::enumerate(const EnumFunc& func) {
 
 data::Model *config::Config::find(uint64 id) {
     if (id == SETTINGS_ID) return &settings_;
-    if (id == PROPS_ID) return &props_;
-    if (id == PROPSEL_ID) return &propSel_;
+    for (auto& [ver, props] : mPropMap) {
+        const auto strId{propsStrID(ver)};
+        if (strID(strId) == id) return &props;
+    }
+    if (id == PROPSEL_ID) return &mPropSel;
     if (id == PRESET_ARRAYS_ID) return &presetArrays_;
     if (id == BLADE_CONFIGS_ID) return &bladeConfigs_;
     if (id == BUTTONS_ID) return &buttons_;
     return nullptr;
+}
+
+const data::Vector& config::Config::osVersions() {
+    return mOsVersions;
+}
+
+const data::Vector *config::Config::boards() {
+    data::Choice::Context osSel{osVersion_.choice_};
+    if (osSel.choice() == -1) return nullptr;
+
+    data::Vector::Context osVersions{mOsVersions};
+    auto& osVersion{static_cast<versions::os::Versioned&>(
+        *osVersions.children()[osSel.choice()]
+    )};
+
+    return &osVersion.boards_;
+}
+
+const data::Selector& config::Config::board() {
+    return mBoard;
+}
+
+const data::Vector *config::Config::props() {
+    data::Choice::Context osSel{osVersion_.choice_};
+    if (osSel.choice() == -1) return nullptr;
+
+    data::Vector::Context osVersions{mOsVersions};
+    auto& osVersion{static_cast<versions::os::Versioned&>(
+        *osVersions.children()[osSel.choice()]
+    )};
+
+    auto iter{mPropMap.find(osVersion.version_)};
+    if (iter == mPropMap.end()) return nullptr;
+    return &iter->second;
+}
+
+const data::Selector& config::Config::propSel() {
+    return mPropSel;
 }
 
 size config::Config::numBlades() {

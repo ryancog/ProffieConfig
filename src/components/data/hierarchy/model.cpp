@@ -114,24 +114,28 @@ bool data::Model::processAction(
     return true;
 }
 
-data::Model::Context::Context(Model& base) : mModel{base} {
-    mModel.pLock.lock();
+data::Model::ROContext::ROContext(const Model& base) : mModel{base} {
+    const_cast<Model&>(mModel).pLock.lock();
+} 
+
+data::Model::ROContext::~ROContext() {
+    const_cast<Model&>(mModel).pLock.unlock();
 }
 
-data::Model::Context::~Context() {
-    mModel.pLock.unlock();
+bool data::Model::ROContext::enabled() const {
+    return model().mEnabled;
 }
 
-void data::Model::Context::enable(bool en) {
-    mModel.processAction(std::make_unique<EnableAction>(en));
+data::Model::Context::Context(Model& base) : ROContext(base) {}
+
+data::Model::Context::~Context() = default;
+
+void data::Model::Context::enable(bool en) const {
+    model().processAction(std::make_unique<EnableAction>(en));
 }
 
-bool data::Model::Context::enabled() const {
-    return mModel.mEnabled;
-}
-
-void data::Model::Context::focus() {
-    mModel.sendToReceivers(&Receiver::onFocus);
+void data::Model::Context::focus() const {
+    model().sendToReceivers(&Receiver::onFocus);
 }
 
 data::Model::Receiver::Receiver() = default;

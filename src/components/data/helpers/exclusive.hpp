@@ -29,8 +29,6 @@
 
 namespace data {
 
-namespace detail {
-
 /**
  * An intentionally-flat structure for radio-style data.
  * Parent must register not only this, but also the child datas.
@@ -38,6 +36,15 @@ namespace detail {
 struct DATA_EXPORT Exclusive : data::Model {
     struct Receiver;
     struct Responder;
+
+    Exclusive(size num, Node *parent = nullptr) :
+        Exclusive{[num, parent]() {
+            std::vector<std::unique_ptr<Bool>> vec;
+            for (size idx{0}; idx < num; ++idx) {
+                vec.push_back(std::make_unique<Bool>(parent));
+            }
+            return vec;
+        }(), parent} {};
 
     Exclusive(std::vector<std::unique_ptr<Bool>>, Node * = nullptr);
     Exclusive(const Exclusive&, Node * = nullptr);
@@ -82,20 +89,6 @@ private:
     void onSelection(size sel) override {
         if (onSelection_) onSelection_(context<Exclusive>(), sel);
     }
-};
-
-} // namespace detail
-
-template<typename T = Bool>
-struct DATA_EXPORT Exclusive : detail::Exclusive {
-    Exclusive(size num, Node *parent = nullptr) :
-        detail::Exclusive{[num, parent]() {
-            std::vector<std::unique_ptr<Bool>> vec;
-            for (size idx{0}; idx < num; ++idx) {
-                vec.push_back(std::make_unique<Bool>(parent));
-            }
-            return vec;
-        }(), parent} {};
 };
 
 } // namespace data

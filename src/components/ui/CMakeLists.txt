@@ -6,6 +6,7 @@ add_library(ui SHARED
     frame.cpp
     build.cpp
     info.cpp
+    text.cpp
 
     priv/helpers.cpp
 
@@ -19,11 +20,14 @@ add_library(ui SHARED
 
     controls/button.cpp
     controls/checkbox.cpp
+    controls/radios.cpp
+    controls/stepper.cpp
 
     layout/group.cpp
     layout/selector.cpp
     layout/spacer.cpp
     layout/stack.cpp
+    layout/priv/groupbox.cpp
 )
 
 target_link_libraries(ui 

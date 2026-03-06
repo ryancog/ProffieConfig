@@ -150,7 +150,7 @@ WS281X::Split::Split(data::Node *parent) :
     type_(Type::eMax, this) {
 
     type_.responder().onSelection_ = [](
-        const data::Exclusive<>::Context& ctxt, size sel
+        const data::Exclusive::Context& ctxt, size sel
     ) {
         auto& split{*ctxt.model().parent<Split>()};
 

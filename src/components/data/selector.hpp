@@ -29,6 +29,7 @@
 namespace data {
 
 struct DATA_EXPORT Selector : Node, Choice::Receiver, Vector::Receiver {
+    struct ROContext;
     struct Context;
     struct Receiver;
 
@@ -40,7 +41,7 @@ struct DATA_EXPORT Selector : Node, Choice::Receiver, Vector::Receiver {
 
     [[nodiscard]] std::unique_ptr<Model> clone(Node *) const override;
 
-    Choice choice_;
+    mutable Choice choice_;
 
     /**
      * For each of these, dis/enable is managed by the selector, and should not
@@ -66,7 +67,17 @@ private:
     Vector *mVec{nullptr};
 };
 
-struct DATA_EXPORT Selector::Context : Node::Context {
+struct DATA_EXPORT Selector::ROContext : virtual Model::ROContext {
+    ROContext(const Selector&);
+    ~ROContext();
+
+    /**
+     * Currently-bound vector
+     */
+    [[nodiscard]] Vector *bound() const;
+};
+
+struct DATA_EXPORT Selector::Context : Model::Context, ROContext {
     Context(Selector&);
     ~Context();
 
@@ -74,11 +85,6 @@ struct DATA_EXPORT Selector::Context : Node::Context {
      * Bind a different vector
      */
     void bind(Vector *) const;
-
-    /**
-     * Currently-bound vector
-     */
-    [[nodiscard]] Vector *bound() const;
 };
 
 struct DATA_EXPORT Selector::Receiver : Model::Receiver {

@@ -30,6 +30,7 @@ target_link_libraries(config
     data
     utils
     ui
+    versions
     # A good story for another time
     # led
     # styles

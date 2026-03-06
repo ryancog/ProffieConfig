@@ -32,6 +32,7 @@ namespace detail {
 
 template <typename T>
 struct DATA_EXPORT Number : Model {
+    struct ROContext;
     struct Context;
     struct Receiver;
     struct Responder;
@@ -80,15 +81,21 @@ private:
 };
 
 template <typename T>
-struct DATA_EXPORT Number<T>::Context : Model::Context {
+struct DATA_EXPORT Number<T>::ROContext : virtual Model::ROContext {
+    ROContext(const Number&);
+    ~ROContext();
+
+    [[nodiscard]] T val() const;
+    [[nodiscard]] Params params() const;
+};
+
+template <typename T>
+struct DATA_EXPORT Number<T>::Context : Model::Context, ROContext {
     Context(Number&);
     ~Context();
 
     void set(T val) const;
     void update(Params) const;
-
-    [[nodiscard]] T val() const;
-    [[nodiscard]] Params params() const;
 };
 
 template <typename T>

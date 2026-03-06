@@ -123,7 +123,17 @@ void data::Selector::onSwap(size pos) {
     }
 }
 
-data::Selector::Context::Context(Selector& sel) : Node::Context(sel) {}
+data::Selector::ROContext::ROContext(const Selector& sel) :
+    Model::ROContext(sel) {}
+
+data::Selector::ROContext::~ROContext() = default;
+
+data::Vector *data::Selector::ROContext::bound() const {
+    return model<Selector>().mVec;
+}
+
+data::Selector::Context::Context(Selector& sel) :
+    Model::Context(sel), ROContext(sel), Model::ROContext(sel) {}
 
 data::Selector::Context::~Context() = default;
 
@@ -131,10 +141,6 @@ void data::Selector::Context::bind(Vector *vec) const {
     model().processAction(std::make_unique<BindAction>(
         vec
     ));
-}
-
-data::Vector *data::Selector::Context::bound() const {
-    return model<Selector>().mVec;
 }
 
 data::Selector::BindAction::BindAction(Vector *vec) : mVec{vec} {}

@@ -23,7 +23,6 @@
 #include "data/choice.hpp"
 #include "data/number.hpp"
 #include "data/vector.hpp"
-#include "data/version.hpp"
 #include "config/settings/bladeawareness.hpp"
 
 #include "config_export.h"
@@ -39,11 +38,7 @@ struct CONFIG_EXPORT Settings : data::Node {
     ~Settings() override;
 
     bool enumerate(const EnumFunc&) override;
-    Model *find(uint64) override;
-
-    data::Choice board_;
-
-    data::Version osVersion_;
+    [[nodiscard]] Model *find(uint64) override;
 
     data::Bool massStorage_;
     data::Bool webUsb_;

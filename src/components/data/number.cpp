@@ -69,8 +69,25 @@ T data::detail::Number<T>::Number::clamp(T val) const {
 }
 
 template <typename T>
+data::detail::Number<T>::ROContext::ROContext(const Number& num)
+    : Model::ROContext(num) {}
+
+template <typename T>
+data::detail::Number<T>::ROContext::~ROContext() = default;
+
+template <typename T>
+T data::detail::Number<T>::ROContext::val() const {
+    return model<Number>().mValue;
+}
+
+template <typename T>
+auto data::detail::Number<T>::ROContext::params() const -> Params {
+    return model<Number>().mParams;
+}
+
+template <typename T>
 data::detail::Number<T>::Context::Context(Number& num)
-    : Model::Context{num} {}
+    : Model::Context(num), Number<T>::ROContext(num), Model::ROContext(num) {}
 
 template <typename T>
 data::detail::Number<T>::Context::~Context() = default;
@@ -87,16 +104,6 @@ void data::detail::Number<T>::Context::update(Params params) const {
     model().processAction(std::make_unique<UpdateAction>(
         params
     ));
-}
-
-template <typename T>
-T data::detail::Number<T>::Context::val() const {
-    return model<Number>().mValue;
-}
-
-template <typename T>
-auto data::detail::Number<T>::Context::params() const -> Params {
-    return model<Number>().mParams;
 }
 
 template <typename T>

@@ -45,7 +45,16 @@ void data::Bool::setFilter(Filter filter) {
 
 auto data::Bool::responder() const -> Responder& { return *mRsp; }
 
-data::Bool::Context::Context(Bool& bl) : Model::Context(bl) {}
+data::Bool::ROContext::ROContext(const Bool& bl) : Model::ROContext(bl) {}
+
+data::Bool::ROContext::~ROContext() = default;
+
+bool data::Bool::ROContext::val() const {
+    return model<Bool>().mValue;
+}
+
+data::Bool::Context::Context(Bool& bl) : 
+    Model::Context(bl), ROContext(bl), Model::ROContext(bl) {}
 
 data::Bool::Context::~Context() = default;
 
@@ -59,10 +68,6 @@ void data::Bool::Context::operator|=(bool val) const {
     model().processAction(std::make_unique<SetAction>(
         val or model<Bool>().mValue
     ));
-}
-
-bool data::Bool::Context::val() const {
-    return model<Bool>().mValue;
 }
 
 data::Bool::SetAction::SetAction(bool val) : mValue{val} {}

@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/static/label.hpp
+ * components/ui/controls/radios.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,36 +19,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/font.h>
-
+#include "data/helpers/exclusive.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
-#include "ui/text.hpp"
 
 #include "ui_export.h"
 
 namespace pcui {
 
-struct UI_EXPORT Label {
+struct UI_EXPORT Radios {
     struct Desc;
 
-    // TODO: Make these base w/ C++ P2287.
+    // TODO: Make this a base w/ C++ P2287.
     detail::ChildBase base_;
-    detail::ChildWindowBase win_;
 
+    data::Exclusive& data_;
     wxString label_;
-
-    text::detail::StyleData style_;
+    std::vector<wxString> labels_;
 
     std::unique_ptr<detail::Descriptor> operator()();
 };
 
-struct UI_EXPORT Label::Desc : Label, detail::Descriptor {
-    Desc(Label&&);
+struct UI_EXPORT Radios::Desc : Radios, detail::Descriptor {
+    Desc(Radios&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
 };
 
 } // namespace pcui
-
 

@@ -33,6 +33,7 @@ namespace data {
 //       It is currently configured the way it is because it is used solely for power pins, whose elements are intrinsically non-localized, unique
 //       strings.
 struct DATA_EXPORT Selection : Model {
+    struct ROContext;
     struct Context;
     struct Receiver;
     struct Responder;
@@ -63,7 +64,17 @@ private:
     std::vector<bool> mSelected;
 };
 
-struct DATA_EXPORT Selection::Context : Model::Context {
+struct DATA_EXPORT Selection::ROContext : virtual Model::ROContext {
+    ROContext(const Selection&);
+    ~ROContext();
+
+    [[nodiscard]] const std::vector<bool>&
+        selected() const [[clang::lifetimebound]];
+    [[nodiscard]] const std::vector<std::string>&
+        items() const [[clang::lifetimebound]];
+};
+
+struct DATA_EXPORT Selection::Context : Model::Context, ROContext {
     Context(Selection&);
     ~Context();
 
@@ -98,11 +109,6 @@ struct DATA_EXPORT Selection::Context : Model::Context {
      * Remove item at idx.
      */
     void remove(uint32) const;
-
-    [[nodiscard]] const std::vector<bool>&
-        selected() const [[clang::lifetimebound]];
-    [[nodiscard]] const std::vector<std::string>&
-        items() const [[clang::lifetimebound]];
 };
 
 struct DATA_EXPORT Selection::Receiver : Model::Receiver {

@@ -1,9 +1,9 @@
-#pragma once
+#include "hyperlink.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/static/label.hpp
+ * components/ui/static/hyperlink.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,36 +19,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/hyperlink.h>
+
 #include <wx/font.h>
+#include <wx/stattext.h>
 
-#include "ui/detail/descriptor.hpp"
-#include "ui/detail/general.hpp"
-#include "ui/text.hpp"
+#include "ui/priv/helpers.hpp"
 
-#include "ui_export.h"
+using namespace pcui;
 
-namespace pcui {
+std::unique_ptr<detail::Descriptor> Hyperlink::operator()() {
+    return std::make_unique<Hyperlink::Desc>(std::move(*this));
+}
 
-struct UI_EXPORT Label {
-    struct Desc;
+Hyperlink::Desc::Desc(Hyperlink&& link) :
+    Hyperlink(std::move(link)) {}
 
-    // TODO: Make these base w/ C++ P2287.
-    detail::ChildBase base_;
-    detail::ChildWindowBase win_;
+wxSizerItem *Hyperlink::Desc::build(const detail::Scaffold& scaffold) const {
+    auto *link{new wxHyperlinkCtrl(
+        scaffold.childParent_,
+        wxID_ANY,
+        label_,
+        link_
+    )};
 
-    wxString label_;
+    link->SetFont(style_.makeFont());
 
-    text::detail::StyleData style_;
+    auto *item{new wxSizerItem(link)};
+    priv::apply(base_, item);
+    priv::apply(win_, item);
 
-    std::unique_ptr<detail::Descriptor> operator()();
-};
-
-struct UI_EXPORT Label::Desc : Label, detail::Descriptor {
-    Desc(Label&&);
-
-    [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
-};
-
-} // namespace pcui
-
+    return item;
+}
 

@@ -26,18 +26,6 @@
 
 namespace config::priv {
 
-enum Board {
-    eBoard_Proffie_V3,
-    eBoard_Proffie_V2,
-    eBoard_Proffie_V1,
-    eBoard_Max,
-};
-constexpr std::array<cstring, eBoard_Max> BOARD_STRS{
-    "\"proffieboard_v3_config.h\"",
-    "\"proffieboard_v2_config.h\"",
-    "\"proffieboard_v1_config.h\"",
-};
-
 enum ButtonType {
     eBtn_Type_Pullup,
     eBtn_Type_Pulldown,

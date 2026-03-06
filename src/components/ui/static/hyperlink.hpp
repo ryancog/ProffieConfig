@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/static/label.hpp
+ * components/ui/static/hyperlink.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
  */
 
 #include <wx/font.h>
+#include <wx/uri.h>
 
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
@@ -29,7 +30,7 @@
 
 namespace pcui {
 
-struct UI_EXPORT Label {
+struct UI_EXPORT Hyperlink {
     struct Desc;
 
     // TODO: Make these base w/ C++ P2287.
@@ -37,18 +38,18 @@ struct UI_EXPORT Label {
     detail::ChildWindowBase win_;
 
     wxString label_;
+    wxString link_;
 
     text::detail::StyleData style_;
 
     std::unique_ptr<detail::Descriptor> operator()();
 };
 
-struct UI_EXPORT Label::Desc : Label, detail::Descriptor {
-    Desc(Label&&);
+struct UI_EXPORT Hyperlink::Desc : Hyperlink, detail::Descriptor {
+    Desc(Hyperlink&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
 };
 
 } // namespace pcui
-
 

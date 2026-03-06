@@ -35,7 +35,6 @@
 #include "config/priv/data.hpp"
 #include "config/priv/io.hpp"
 #include "config/priv/strings.hpp"
-#include "config/props/prop.hpp"
 #include "config/settings/define.hpp"
 #include "data/choice.hpp"
 #include "data/number.hpp"
@@ -45,6 +44,8 @@
 #include "utils/files.hpp"
 #include "utils/string.hpp"
 #include "utils/version.hpp"
+#include "versions/os.hpp"
+#include "versions/prop.hpp"
 
 using namespace config;
 
@@ -413,11 +414,21 @@ void outputTopGeneral(std::ostream& outFile, Config& config) {
         outputOpt(outFile, ENABLE_WEBUSB_STR);
     }
 
-    data::Version::Context osVersion{settings.osVersion_};
-    if (osVersion.val()) outputOpt(outFile, OS_VERSION_STR, osVersion.val());
+    auto osVersion{static_cast<versions::os::Versioned&>(
+        *data::Vector::ROContext{config.osVersions()}.children()[
+            data::Choice::Context{config.osVersion_.choice_}.choice()
+        ]
+    ).version_};
 
-    data::Choice::Context board{settings.board_};
-    outFile << INCLUDE_STR << BOARD_STRS[board.choice()] << '\n';
+    outputOpt(outFile, OS_VERSION_STR, osVersion);
+
+    auto boardInclude{static_cast<versions::os::BoardInfo&>(
+        *data::Vector::ROContext{*config.boards()}.children()[
+            data::Choice::Context{config.board().choice_}.choice()
+        ]
+    ).include_};
+
+    outFile << INCLUDE_STR << boardInclude << '\n';
 
     uint32 requiredLedsPerStrip{0};
     data::Vector::Context bladeConfigs{config.bladeConfigs_};
@@ -446,7 +457,7 @@ void outputTopGeneral(std::ostream& outFile, Config& config) {
 
     outFile << MAX_LEDS_STR << std::max<uint32>(requiredLedsPerStrip, 144) << ";\n";
 
-    if (utils::Version{8}.compare(osVersion.val()) > 0) {
+    if (utils::Version{8}.compare(osVersion) > 0) {
         // No longer needed in OS8 and newer
         outputDefine(outFile, ENABLE_AUDIO_STR);
         outputDefine(outFile, ENABLE_MOTION_STR);
@@ -646,7 +657,7 @@ void outputTopGeneral(std::ostream& outFile, Config& config) {
         outputDefine(outFile, DISABLE_TALKIE_STR);
     }
 
-    if (utils::Version{8}.compare(osVersion.val()) > 0) {
+    if (utils::Version{8}.compare(osVersion) > 0) {
         // Default on newer version
         if (data::Bool::Context{settings.killOldPlayers_}.val()) {
             outputDefine(outFile, KILL_OLD_PLAYERS_STR);
@@ -671,17 +682,20 @@ void outputTopGeneral(std::ostream& outFile, Config& config) {
 }
 
 void outputTopProp(std::ostream& outFile, Config& config) {
-    data::Choice::Context propSel{config.propSel_.choice_};
+    data::Choice::Context propSel{config.propSel().choice_};
     if (propSel.choice() == -1) return;
 
-    data::Vector::Context props{config.props_};
+    data::Vector::ROContext props{*config.props()};
     const auto& model{props.children()[propSel.choice()]};
-    auto& prop{static_cast<props::Prop&>(*model)};
+    auto& prop{static_cast<versions::props::Prop&>(*model)};
 
     const auto onEnum{[&](
         data::Model& model, uint64, const std::string&
     ) -> bool {
-        auto output{static_cast<props::Setting&>(model).defineString()};
+        auto output{dynamic_cast<versions::props::detail::SettingBase&>(
+            model
+        ).generateDefineString()};
+
         if (not output) return false;
 
         outFile << priv::DEFINE_STR << *output << '\n';
@@ -693,17 +707,17 @@ void outputTopProp(std::ostream& outFile, Config& config) {
 }
 
 void outputProp(std::ostream& outFile, Config& config) {
-    data::Choice::Context propSel{config.propSel_.choice_};
+    data::Choice::Context propSel{config.propSel().choice_};
     if (propSel.choice() == -1) return;
 
-    data::Vector::Context props{config.props_};
+    data::Vector::ROContext props{*config.props()};
     const auto& model{props.children()[propSel.choice()]};
-    auto& prop{static_cast<props::Prop&>(*model)};
+    auto& prop{static_cast<versions::props::Prop&>(*model)};
 
-    if (prop.isDefault()) return;
+    if (prop.filename_.empty()) return;
 
     outFile << "#ifdef CONFIG_PROP\n";
-    outFile << "#include \"../props/" << prop.filename() << "\"\n";
+    outFile << "#include \"../props/" << prop.filename_ << "\"\n";
     outFile << "#endif\n" << std::flush;
 }
 

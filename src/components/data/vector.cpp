@@ -58,7 +58,18 @@ data::Model *data::Vector::find(uint64 id) {
     return mChildren[id].get();
 }
 
-data::Vector::Context::Context(Vector& vec) : Model::Context(vec) {}
+data::Vector::ROContext::ROContext(const Vector& vec) :
+    Model::ROContext(vec) {}
+
+data::Vector::ROContext::~ROContext() = default;
+
+auto data::Vector::ROContext::children(
+) const -> const std::vector<std::unique_ptr<Model>>& {
+    return model<Vector>().mChildren;
+}
+
+data::Vector::Context::Context(Vector& vec) :
+    Model::Context(vec), ROContext(vec), Model::ROContext(vec) {}
 
 data::Vector::Context::~Context() = default;
 
@@ -112,11 +123,6 @@ void data::Vector::Context::duplicate(size idx, DuplicationMode mode) const {
     vec.processAction(std::make_unique<InsertAction>(
         insertIdx, vec.mChildren[idx]->clone(&vec)
     ));
-}
-
-auto data::Vector::Context::children(
-) const -> const std::vector<std::unique_ptr<Model>>& {
-    return model<Vector>().mChildren;
 }
 
 data::Vector::InsertAction::InsertAction(

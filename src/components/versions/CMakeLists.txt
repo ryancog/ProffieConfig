@@ -5,6 +5,8 @@
 add_library(versions SHARED 
     versions.cpp
     prop.cpp
+    os.cpp
+    priv/data.cpp
 
     info.cpp
 )

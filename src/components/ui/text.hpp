@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/static/label.hpp
+ * components/ui/text.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,34 +21,24 @@
 
 #include <wx/font.h>
 
-#include "ui/detail/descriptor.hpp"
-#include "ui/detail/general.hpp"
-#include "ui/text.hpp"
+namespace pcui::text {
 
-#include "ui_export.h"
-
-namespace pcui {
-
-struct UI_EXPORT Label {
-    struct Desc;
-
-    // TODO: Make these base w/ C++ P2287.
-    detail::ChildBase base_;
-    detail::ChildWindowBase win_;
-
-    wxString label_;
-
-    text::detail::StyleData style_;
-
-    std::unique_ptr<detail::Descriptor> operator()();
+enum class Style {
+    Normal,
+    Header,
 };
 
-struct UI_EXPORT Label::Desc : Label, detail::Descriptor {
-    Desc(Label&&);
+namespace detail {
 
-    [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+struct StyleData : std::variant<Style, wxFontInfo> {
+    using variant::variant;
+
+    StyleData() : variant{Style::Normal} {}
+
+    [[nodiscard]] wxFontInfo makeFont() const;
 };
 
-} // namespace pcui
+} // namespace detail
 
+} // namespace pcui::text
 

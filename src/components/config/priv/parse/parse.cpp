@@ -36,7 +36,6 @@
 #include "config/presets/preset.hpp"
 #include "config/priv/io.hpp"
 #include "config/priv/strings.hpp"
-#include "config/props/prop.hpp"
 #include "config/settings/define.hpp"
 #include "config/settings/settings.hpp"
 #include "data/number.hpp"
@@ -48,6 +47,8 @@
 #include "utils/paths.hpp"
 #include "utils/string.hpp"
 #include "utils/version.hpp"
+#include "versions/prop.hpp"
+#include "versions/os.hpp"
 
 namespace {
 
@@ -213,14 +214,22 @@ void parseTop(std::istream& file, config::Config& config) {
                 utils::trimSurroundingWhitespace(buffer);
                 if (buffer.size() < 2) continue;
 
-                for (size idx{0}; idx < eBoard_Max; ++idx) {
-                    if (buffer == BOARD_STRS[idx]) {
-                        data::Choice::Context{
-                            config.settings_.board_
-                        }.choose(static_cast<int32>(idx));
-                        break;
-                    }
+                data::Selector::ROContext board{config.board()};
+                if (not board.bound()) continue;
+
+                data::Vector::Context boards{*board.bound()};
+                for (size idx{0}; idx < boards.children().size(); ++idx) {
+                    auto& bInfo{static_cast<versions::os::BoardInfo&>(
+                        *boards.children()[idx]
+                    )};
+                    if (bInfo.include_ != buffer) continue;
+
+                    data::Choice::Context{config.board().choice_}.choose(
+                        static_cast<int32>(idx)
+                    );
+                    break;
                 }
+
                 continue;
             }
         }
@@ -251,9 +260,20 @@ void parseTop(std::istream& file, config::Config& config) {
             } else if (key == OS_VERSION_STR) {
                 utils::Version version{value};
                 if (not version) continue;
-                data::Version::Context{
-                    config.settings_.osVersion_
-                }.set(version);
+
+                data::Vector::ROContext osVersions{config.osVersions()};
+                for (size idx{0}; idx < osVersions.children().size(); ++idx) {
+                    auto& osVer{static_cast<versions::os::Versioned&>(
+                        *osVersions.children()[idx]
+                    )};
+
+                    if (osVer.version_.compare(version) != 0) continue;
+
+                    data::Choice::Context osChoice{config.osVersion_.choice_};
+                    osChoice.choose(static_cast<int32>(idx));
+
+                    break;
+                }
             }
         }
     }
@@ -262,6 +282,9 @@ void parseTop(std::istream& file, config::Config& config) {
 void parseProp(std::istream& file, config::Config& config) {
     using namespace config;
     using namespace config::priv;
+
+    if (not config.props()) return;
+    data::Vector::ROContext props{*config.props()};
 
     std::string prop{extractSection(file)};
     std::istringstream propStream{prop};
@@ -285,12 +308,11 @@ void parseProp(std::istream& file, config::Config& config) {
         if (buffer.size() < PROP_DIR_STR.length()) continue;
         buffer = buffer.substr(PROP_DIR_STR.length());
 
-        data::Vector::Context props{config.props_};
         for (auto idx{0}; idx < props.children().size(); ++idx) {
-            auto& prop{static_cast<props::Prop&>(*props.children()[idx])};
+            auto& prop{static_cast<versions::props::Prop&>(*props.children()[idx])};
 
-            if (prop.filename() == buffer) {
-                data::Choice::Context{config.propSel_.choice_}.choose(idx);
+            if (prop.filename_ == buffer) {
+                data::Choice::Context{config.propSel().choice_}.choose(idx);
                 return;
             }
         }

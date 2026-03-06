@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-data::detail::Exclusive::Exclusive(
+data::Exclusive::Exclusive(
     std::vector<std::unique_ptr<data::Bool>> data, Node *parent
 ) : mData{std::move(data)} {
     assert(mData.size() > 1);
@@ -66,7 +66,7 @@ data::detail::Exclusive::Exclusive(
     Bool::Context{*mData[0]}.set(true);
 }
 
-data::detail::Exclusive::Exclusive(const Exclusive& other, Node *parent) :
+data::Exclusive::Exclusive(const Exclusive& other, Node *parent) :
     data::Model(other, parent) {
 
     mRsp = std::make_unique<Responder>(*other.mRsp);
@@ -76,33 +76,33 @@ data::detail::Exclusive::Exclusive(const Exclusive& other, Node *parent) :
     Bool::Context{*mData[mSelected]}.set(true);
 }
 
-data::detail::Exclusive::~Exclusive() {
+data::Exclusive::~Exclusive() {
     mRsp->detach();
     for (auto& rcvr : mRcvrs) {
         rcvr->detach();
     }
 }
 
-std::span<const std::unique_ptr<data::Bool>> data::detail::Exclusive::data(
+std::span<const std::unique_ptr<data::Bool>> data::Exclusive::data(
 ) const {
     return mData;
 }
 
-data::Bool& data::detail::Exclusive::operator[](size idx) const {
+data::Bool& data::Exclusive::operator[](size idx) const {
     return *data()[idx];
 }
 
-size data::detail::Exclusive::selected() {
+size data::Exclusive::selected() {
     std::lock_guard scopeLock{pLock};
     return mSelected;
 }
 
-void data::detail::Exclusive::select(size pos) {
+void data::Exclusive::select(size pos) {
     std::lock_guard scopeLock{pLock};
 
     assert(pos < mData.size());
     data::Bool::Context{*mData[pos]}.set(true);
 }
 
-auto data::detail::Exclusive::responder() const -> Responder& { return *mRsp; }
+auto data::Exclusive::responder() const -> Responder& { return *mRsp; }
 

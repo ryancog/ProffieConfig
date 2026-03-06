@@ -41,7 +41,17 @@ auto data::Version::clone(Node *parent) const -> std::unique_ptr<Model> {
 
 auto data::Version::responder() const -> Responder& { return *mRsp; }
 
-data::Version::Context::Context(Version& bl) : Model::Context(bl) {}
+data::Version::ROContext::ROContext(const Version& ver) :
+    Model::ROContext(ver) {}
+
+data::Version::ROContext::~ROContext() = default;
+
+const utils::Version& data::Version::ROContext::val() const {
+    return model<Version>().mValue;
+}
+
+data::Version::Context::Context(Version& ver) :
+    Model::Context(ver), ROContext(ver), Model::ROContext(ver) {}
 
 data::Version::Context::~Context() = default;
 
@@ -51,16 +61,12 @@ void data::Version::Context::set(utils::Version val) const {
     ));
 }
 
-const utils::Version& data::Version::Context::val() const {
-    return model<Version>().mValue;
-}
-
 data::Version::SetAction::SetAction(utils::Version val) :
     mValue{std::move(val)} {}
 
 bool data::Version::SetAction::shouldPerform(Model& model) {
     auto& ver{static_cast<Version&>(model)};
-    return not ver.mValue.dataEqual(mValue);
+    return (ver.mValue <=> mValue) != 0;
 }
 
 void data::Version::SetAction::perform(Model& model) {

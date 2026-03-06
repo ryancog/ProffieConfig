@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/static/label.hpp
+ * components/ui/layout/priv/groupbox.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,36 +19,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/font.h>
+#include <wx/panel.h>
+#include <wx/sizer.h>
+#include <wx/statbox.h>
 
-#include "ui/detail/descriptor.hpp"
-#include "ui/detail/general.hpp"
-#include "ui/text.hpp"
+namespace pcui::priv {
 
-#include "ui_export.h"
+/**
+ * It's like a wxStaticBoxSizer, but cooler.
+ *
+ * Ensures cross-platform visual consistency.
+ * macOS has a nice border around the box, but other platforms do not.
+ */
+class GroupBox : public wxStaticBox {
+public:
+    GroupBox();
+    GroupBox(wxOrientation orient, wxWindow *parent, const wxString& label);
 
-namespace pcui {
+    void create(wxOrientation orient, wxWindow *parent, const wxString& label);
 
-struct UI_EXPORT Label {
-    struct Desc;
+    wxSizer *sizer();
+    wxWindow *childParent();
 
-    // TODO: Make these base w/ C++ P2287.
-    detail::ChildBase base_;
-    detail::ChildWindowBase win_;
+    bool Layout() final;
 
-    wxString label_;
+    wxSize DoGetBestClientSize() const final;
 
-    text::detail::StyleData style_;
-
-    std::unique_ptr<detail::Descriptor> operator()();
+private:
+    wxPanel *mPanel;
+    wxSizer *mSizer;
 };
 
-struct UI_EXPORT Label::Desc : Label, detail::Descriptor {
-    Desc(Label&&);
-
-    [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
-};
-
-} // namespace pcui
-
+} // namespace pcui::priv
 

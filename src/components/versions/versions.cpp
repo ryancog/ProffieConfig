@@ -21,7 +21,6 @@
 
 #include <filesystem>
 #include <fstream>
-#include <map>
 #include <memory>
 #include <sstream>
 
@@ -30,82 +29,35 @@
 #include <wx/wfstream.h>
 #include <wx/zipstrm.h>
 
-#include "log/context.h"
-#include "pconf/pconf.h"
-#include "pconf/utils.h"
-#include "ui/message.hpp"
-#include "utils/paths.h"
-#include "utils/string.h"
-#include "utils/types.h"
+#include "log/context.hpp"
+#include "log/logger.hpp"
+#include "pconf/utils.hpp"
+#include "pconf/read.hpp"
+#include "pconf/write.hpp"
+#include "utils/files.hpp"
+#include "utils/paths.hpp"
+#include "utils/types.hpp"
+#include "utils/version.hpp"
+#include "versions/detail/boards.hpp"
+#include "versions/detail/strings.hpp"
+#include "versions/os.hpp"
+#include "versions/priv/data.hpp"
+#include "versions/prop.hpp"
 
 namespace {
 
-constexpr cstring CORE_VERSION_STR{"CORE_VER"};
-constexpr cstring CORE_URL_STR{"CORE_URL"};
-constexpr cstring CORE_BOARDV1_STR{"CORE_BOARDV1"};
-constexpr cstring CORE_BOARDV2_STR{"CORE_BOARDV2"};
-constexpr cstring CORE_BOARDV3_STR{"CORE_BOARDV3"};
+constexpr utils::Version DEFAULT_OS_VERSION{7, 15};
 
-constexpr cstring SUPPORTED_VERSIONS_STR{"SUPPORTED_VERSIONS"};
-
-vector<Versions::VersionedOS> osVersions;
-vector<std::unique_ptr<Versions::VersionedProp>> props;
-std::multimap<Utils::Version, Versions::VersionedProp *> propVersionMap;
-std::map<Utils::Version, Versions::VersionedProp> propDefaultVersionMap;
-
-bool saveVersionedProp(
-    const string& name,
-    const Versions::VersionedProp::SupportedVersionList& versionList
-);
-
-bool addVersion(
-    Versions::VersionedProp& prop,
-    bool save,
-    std::unique_ptr<pcui::VersionData>&& verData = nullptr
-);
-
-auto& getSupportedVersions(Versions::VersionedProp& prop) {
-    return const_cast<Versions::VersionedProp::SupportedVersionList&>(
-        prop.supportedVersions()
-    );
-};
+std::optional<std::string> downloadOS(utils::Version, logging::Branch&);
+std::optional<std::string> downloadProps(utils::Version, logging::Branch&);
 
 } // namespace
 
-Utils::Version Versions::getDefaultCoreVersion() {
-    return {3, 6};
-}
-
-Utils::Version Versions::getDefaultOSVersion() {
-    return {7, 15};
-}
-
-Versions::VersionedOS::VersionedOS() : coreVersion{Utils::Version::invalidObject()} {}
-
-bool Versions::VersionedProp::addVersion() {
-    return ::addVersion(*this, true);
-}
-
-bool Versions::VersionedProp::removeVersion(uint32 idx) {
-    auto preserved{std::move(mSupportedVersions[idx])};
-    mSupportedVersions.erase(std::next(mSupportedVersions.begin(), idx));
-
-    if (not saveVersionedProp(name, mSupportedVersions)) {
-        mSupportedVersions.insert(
-            std::next(mSupportedVersions.begin(), idx), 
-            std::move(preserved)
-        );
-        return false;
-    }
-
-    return true;
-}
-
-void Versions::loadLocal() {
-    auto& logger{Log::Context::getGlobal().createLogger("Versions::loadLocal()")};
+void versions::loadLocal(logging::Branch *lBranch) {
+    auto& logger{logging::Branch::optCreateLogger("Versions::loadLocal()", lBranch)};
 
     logger.info("Loading ProffieOS Versions...");
-    osVersions.clear();
+    priv::os.clear();
     for (const auto& entry : fs::directory_iterator(paths::osDir())) {
         std::error_code err{};
         if (not entry.is_directory(err)) {
@@ -113,86 +65,109 @@ void Versions::loadLocal() {
             continue;
         }
 
-        Utils::Version version{entry.path().filename().string()};
-        if (version.err) {
+        utils::Version version{entry.path().filename().string()};
+        if (not version or not version.isExact()) {
             logger.warn("OS dir with invalid version: " + entry.path().filename().string());
             continue;
         }
 
         bool duplicate{false};
-        for (const auto& versionedOS : osVersions) {
-            if (versionedOS.verNum == version) {
+        for (const auto& versionedOS : priv::os) {
+            if (versionedOS->version_.compare(version) == 0) {
                 duplicate = true;
                 break;
             }
         }
+
         if (duplicate) {
-            logger.warn("Duplicate os entry: " + static_cast<string>(version));
+            logger.warn("Duplicate os entry: " + static_cast<std::string>(version));
             continue;
         }
 
-        logger.info("Found ProffieOS version " + static_cast<string>(version) + "...");
-        VersionedOS os;
-        os.verNum = version;
+        logger.info("Found ProffieOS version " + static_cast<std::string>(version) + "...");
 
-        auto infoFile{paths::openInputFile(entry.path() / INFO_FILE_STR)};
-        PConf::Data infoData;
-        PConf::read(infoFile, infoData, logger.bverbose("Reading info file..."));
-        const auto hashedInfoData{PConf::hash(infoData)};
+        auto infoFile{files::openInput(entry.path() / detail::INFO_FILE_STR)};
+        pconf::Data infoData;
+        if (not pconf::read(infoFile, infoData, logger.bverbose("Reading info file..."))) {
+            logger.error("Could not read info pconf.");
+            continue;
+        }
 
-        const auto coreVersionEntry{hashedInfoData.find(CORE_VERSION_STR)};
-        if (coreVersionEntry and coreVersionEntry->value) {
-            os.coreVersion = static_cast<Utils::Version>(*coreVersionEntry->value);
+        const auto hashedInfoData{pconf::hash(infoData)};
+
+        const auto coreVersionEntry{hashedInfoData.find(detail::CORE_VER_STR)};
+        if (not coreVersionEntry or not coreVersionEntry->value_) {
+            logger.error("Missing core version entry.");
+            continue;
         } 
 
-        const auto coreURLEntry{hashedInfoData.find(CORE_URL_STR)};
-        if (coreURLEntry and coreURLEntry->value) {
-            os.coreURL = *coreVersionEntry->value;
+        utils::Version coreVersion{*coreVersionEntry->value_};
+        if (not coreVersion or not coreVersion.isExact()) {
+            logger.error("Invalid core version entry.");
+            continue;
+        }
+
+        const auto coreURLEntry{hashedInfoData.find(detail::CORE_URL_STR)};
+        if (not coreURLEntry or not coreURLEntry->value_) {
+            logger.error("Missing core url entry.");
+            continue;
         } 
 
-        const auto coreBoardV1Entry{hashedInfoData.find(CORE_BOARDV1_STR)};
-        if (coreBoardV1Entry and coreBoardV1Entry->value) {
-            os.coreBoardV1 = *coreVersionEntry->value;
+        auto& coreURL{*coreURLEntry->value_};
+
+        std::vector<os::BoardInfo> boards;
+
+        const auto boardEntries{hashedInfoData.findAll(detail::BOARD_STR)};
+        for (const auto& boardEntry : boardEntries) {
+            std::string include;
+            std::string coreId;
+
+            bool boardKnown{false};
+            for (const auto& board : detail::BOARDS) {
+                if (boardEntry->label_ != board.name_) continue;
+
+                boardKnown = true;
+                include = board.include_;
+                coreId = board.coreId_;
+            }
+
+            if (not boardKnown) {
+                logger.error("Invalid board entry.");
+                continue;
+            }
+
+            if (auto boardSection{boardEntry.section()}) {
+                const auto boardVars{pconf::hash(boardSection->entries_)};
+
+                auto coreIdEntry{boardVars.find(detail::CORE_ID_STR)};
+                if (coreIdEntry and coreIdEntry->value_) {
+                    coreId = *coreIdEntry->value_;
+                }
+
+                auto includeEntry{boardVars.find(detail::INCLUDE_STR)};
+                if (includeEntry and includeEntry->value_) {
+                    include = *includeEntry->value_;
+                }
+            }
+
+            boards.emplace_back(
+                std::move(*boardEntry->label_),
+                std::move(coreId),
+                std::move(include)
+            );
         }
 
-        const auto coreBoardV2Entry{hashedInfoData.find(CORE_BOARDV2_STR)};
-        if (coreBoardV2Entry and coreBoardV2Entry->value) {
-            os.coreBoardV2 = *coreVersionEntry->value;
-        }
-
-        const auto coreBoardV3Entry{hashedInfoData.find(CORE_BOARDV3_STR)};
-        if (coreBoardV3Entry and coreBoardV3Entry->value) {
-            os.coreBoardV3 = *coreVersionEntry->value;
-        }
-
-        filepath defaultPropDataPath{entry.path() / "default_prop.pconf"};
-        auto& versionedProp{propDefaultVersionMap.emplace(version, "").first->second};
-        PConf::HashedData hashedDefaultPropData;
-        if (fs::is_regular_file(defaultPropDataPath, err)) {
-            auto defaultPropDataFile{paths::openInputFile(defaultPropDataPath)};
-            PConf::Data defaultPropData;
-            PConf::read(defaultPropDataFile, defaultPropData, logger.bverbose("Reading default prop file..."));
-            hashedDefaultPropData = PConf::hash(defaultPropData);
-        }
-        versionedProp.prop = std::move(Prop::generate(
-            hashedDefaultPropData,
-            logger.bverbose("Generating default prop...."),
-            true
+        priv::os.push_back(std::make_unique<os::Versioned>(
+            std::move(version),
+            std::move(coreURL),
+            std::move(coreVersion),
+            std::move(boards)
         ));
-
-        osVersions.push_back(std::move(os));
     }
-    std::ranges::sort(
-        osVersions,
-        [](const VersionedOS& lhs, const VersionedOS& rhs) -> bool {
-            return lhs.verNum < rhs.verNum;
-        }
-    );
 
     logger.info("Loading Props...");
-    // Migrated or should be removed
-    const auto oldProps{std::move(props)};
-    props.clear();
+
+    priv::props.clear();
     for (const auto& entry : fs::directory_iterator(paths::propDir())) {
         std::error_code err{};
         if (not entry.is_directory(err)) {
@@ -202,7 +177,7 @@ void Versions::loadLocal() {
 
         auto propName{entry.path().filename().string()};
         uint32 numTrimmed{};
-        Utils::trim(
+        utils::trim(
             propName,
             PROP_NAME_RULES,
             &numTrimmed,
@@ -215,124 +190,282 @@ void Versions::loadLocal() {
 
         logger.info("Found prop " + propName + "...");
 
-        VersionedProp *oldPropPtr{};
-        for (const auto& oldProp : oldProps) {
-            if (oldProp->name == propName) oldPropPtr = oldProp.get();
-        }
-
-        auto infoFile{paths::openInputFile(paths::propDir() / propName / INFO_FILE_STR)};
-        PConf::Data infoData;
-        PConf::read(infoFile, infoData, logger.bverbose("Reading info file..."));
-        const auto hashedInfoData{PConf::hash(infoData)};
-
-        auto versionedProp{std::make_unique<VersionedProp>(propName)};
-
-        const auto supportedVersionsEntry{hashedInfoData.find(SUPPORTED_VERSIONS_STR)};
-        vector<string> versionStrs;
-
-        if (supportedVersionsEntry) {
-            versionStrs =  PConf::valueAsList(supportedVersionsEntry->value);
-        }
-        for (const auto& verStr : versionStrs) {
-            Utils::Version version{verStr};
-            if (version.err) {
-                logger.warn("Prop " + propName + " lists invalid supported version: " + static_cast<string>(version));
-                continue;
-            }
-
-            logger.verbose("Prop " + propName + " supports OS version " + static_cast<string>(version));
-            std::unique_ptr<pcui::VersionData> versionData;
-
-            if (oldPropPtr) {
-                auto& oldSupportedVersions{getSupportedVersions(*oldPropPtr)};
-                for (auto& oldVersionData : oldSupportedVersions) {
-                    if (not oldVersionData) continue;
-
-                    const auto oldRawVersion{
-                        static_cast<Utils::Version>(*oldVersionData)
-                    };
-                    if (oldRawVersion == version) {
-                        versionData = std::move(oldVersionData);
-                        oldVersionData = nullptr;
-                    }
-                }
-            } 
-
-            if (versionData) {
-                addVersion(*versionedProp, false, std::move(versionData));
-            } else {
-                addVersion(
-                    *versionedProp,
-                    false,
-                    std::make_unique<pcui::VersionData>(version)
-                );
-            }
-
-            if (not versionData) {
-            }
-        }
-
-        // Yeah this naming is stupid, what are you going to do about it?
-        auto dataFile{paths::openInputFile(paths::propDir() / propName / DATA_FILE_STR)};
-        PConf::Data dataData;
-        PConf::read(dataFile, dataData, logger.bverbose("Reading data file..."));
-        const auto hashedDataData{PConf::hash(dataData)};
-
-        auto prop{
-            Prop::generate(hashedDataData, logger.bverbose("Generating prop..."))
-        };
-        if (not prop) {
-            logger.warn("Failed generating prop " + propName);
+        auto infoFile{files::openInput(
+            paths::propDir() / propName / detail::INFO_FILE_STR
+        )};
+        pconf::Data infoData;
+        if (not pconf::read(infoFile, infoData, logger.bverbose("Reading info file..."))) {
+            logger.error("Could not read info pconf.");
             continue;
         }
 
-        versionedProp->prop = std::move(prop);
-        props.push_back(std::move(versionedProp));
-    }
-    using PropElement = std::unique_ptr<VersionedProp>;
-    std::ranges::sort(
-        props,
-        [](const PropElement& lhs, const PropElement& rhs) -> bool {
-            return lhs->name < rhs->name;
-        }
-    );
+        const auto hashedInfoData{pconf::hash(infoData)};
 
-    logger.debug("Generating prop version map...");
-    propVersionMap.clear();
-    for (const auto& prop : props) {
-        for (const auto& version : prop->supportedVersions()) {
-            propVersionMap.emplace(*version, prop.get());
+        const auto supportedVersionsEntry{
+            hashedInfoData.find(detail::SUPPORTED_VERSIONS_STR)
+        };
+        if (not supportedVersionsEntry) {
+            logger.error("Prop missing supported versions.");
+            continue;
         }
+        std::vector<std::string> versionStrs{pconf::valueAsList(
+            supportedVersionsEntry->value_
+        )};
+
+        std::vector<utils::Version> versions;
+
+        for (const auto& verStr : versionStrs) {
+            utils::Version version{verStr};
+            if (not version) {
+                logger.warn("Prop " + propName + " lists invalid supported version: " + static_cast<std::string>(version));
+                continue;
+            }
+
+            logger.verbose("Prop " + propName + " supports OS version " + static_cast<std::string>(version));
+            versions.push_back(std::move(version));
+        }
+
+        // Yeah this naming is stupid, what are you going to do about it?
+        auto dataFile{files::openInput(
+            paths::propDir() / propName / detail::DATA_FILE_STR
+        )};
+        pconf::Data dataData;
+        if (not pconf::read(dataFile, dataData, logger.bverbose("Reading data file..."))) {
+            logger.error("Cannot read data file for " + propName);
+            continue;
+        }
+        const auto hashedDataData{pconf::hash(dataData)};
+
+        auto prop{props::Prop::generate(
+            hashedDataData, logger.bverbose("Generating prop...")
+        )};
+        if (not prop) {
+            logger.error("Failed generating prop " + propName);
+            continue;
+        }
+
+        priv::props.push_back(std::make_unique<props::Versioned>(
+            std::move(propName),
+            std::move(versions),
+            std::move(prop)
+        ));
     }
 
     logger.info("Done");
 }
 
-const Versions::VersionedOS *Versions::getVersionedOS(const Utils::Version& version) {
-    for (const auto& versionedOS : osVersions) {
-        if (versionedOS.verNum == version) return &versionedOS;
+std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
+    auto& logger{logging::Branch::optCreateLogger("versions::fetch()", lBranch)};
+
+    wxURI uri;
+    wxWebRequestSync request;
+    wxWebRequestSync::Result result;
+    std::istringstream stream;
+    pconf::Data data;
+
+    logger.info("Downloading prop manifest...");
+    uri = paths::remoteAssets() + "/props/manifest.pconf";
+    request = wxWebSessionSync::GetDefault().CreateRequest(
+        uri.BuildURI()
+    );
+
+    result = request.Execute();
+
+    if (not result) {
+        logger.error("Prop Manifest Download Failed\n" + result.error.ToStdString());
+        return _("Could not download prop manifest").ToStdString();
     }
 
-    return nullptr;
-}
+    stream.str(request.GetResponse().AsString().ToStdString());
 
-const vector<Versions::VersionedOS>& Versions::getOSVersions() { return osVersions; }
-const vector<std::unique_ptr<Versions::VersionedProp>>& Versions::getProps() { return props; }
-
-vector<Versions::VersionedProp *> Versions::propsForVersion(const Utils::Version& version) {
-    vector<VersionedProp *> ret;
-    if (not propDefaultVersionMap.contains(version)) return {};
-
-    ret.push_back(&propDefaultVersionMap.find(version)->second);
-    auto [equalIter, equalEnd]{propVersionMap.equal_range(version)};
-    for (; equalIter != equalEnd; ++equalIter) {
-        ret.push_back(equalIter->second);
+    if (not pconf::read(stream, data, logger.binfo("Reading prop manifest file..."))) {
+        logger.error("Prop Manifest Parse Failed.");
+        return _("Could not parse prop manifest").ToStdString();
     }
-    return ret;
+
+    { std::lock_guard scopeLock{priv::lock};
+        priv::availableProps.clear();
+        for (const auto& entry : data) {
+            if (entry->name_ != detail::PROP_STR) continue;
+            auto section{entry.section()};
+            if (not section) continue;
+            if (not section->label_) {
+                logger.warn("Prop entry missing name.");
+                continue;
+            }
+
+            auto name{*section->label_};
+
+            uint32 numTrimmed{};
+            utils::TrimRules rules{
+                .allowAlpha=true,
+                .allowNum=true,
+                .safeList="_-"
+            };
+            utils::trim(name, rules, &numTrimmed);
+
+            if (numTrimmed) {
+                logger.warn("Prop entry invalid name: " + name);
+                continue;
+            }
+
+            auto hashedPropEntries{pconf::hash(section->entries_)};
+
+            auto supportedVersionsEntry{hashedPropEntries.find(
+                detail::SUPPORTED_VERSIONS_STR
+            )};
+            if (
+                    not supportedVersionsEntry or
+                    not supportedVersionsEntry->value_
+               ) {
+                logger.warn("Prop " + name + " missing supported versions.");
+                continue;
+            }
+
+            auto supportedVersionsStrs{pconf::valueAsList(
+                supportedVersionsEntry->value_
+            )};
+
+            std::vector<utils::Version> supportedVersions;
+            for (const auto& suppVerStr : supportedVersionsStrs) {
+                utils::Version ver{suppVerStr};
+                if (not ver) {
+                    logger.warn("Prop " + name + " invalid supported version: " += suppVerStr);
+                    continue;
+                }
+
+                supportedVersions.push_back(std::move(ver));
+            }
+
+            priv::availableProps.push_back(props::Available{
+                .name_ = name,
+                .supportedVersions_ = std::move(supportedVersions),
+            });
+        }
+    }
+
+    logger.info("Downloading ProffieOS manifest...");
+    uri = paths::remoteAssets() + "/ProffieOS/manifest.pconf";
+    request = wxWebSessionSync::GetDefault().CreateRequest(
+        uri.BuildURI()
+    );
+
+    result = request.Execute();
+
+    if (not result) {
+        logger.error("ProffieOS Manifest Download Failed\n" + result.error.ToStdString());
+        return _("Could not download ProffieOS manifest").ToStdString();
+    }
+
+    stream.str(request.GetResponse().AsString().ToStdString());
+
+    if (not pconf::read(stream, data, logger.binfo("Reading ProffieOS manifest file..."))) {
+        logger.error("ProffieOS Manifest Parse Failed.");
+        return _("Could not parse ProffieOS manifest").ToStdString();
+    }
+
+    { std::lock_guard scopeLock{priv::lock};
+        priv::availableOS.clear();
+        for (const auto& entry : data) {
+            if (entry->name_ != detail::OS_STR) continue;
+            auto section{entry.section()};
+            if (not section) continue;
+            if (not section->label_) {
+                logger.warn("ProffieOS entry missing version");
+                continue;
+            }
+
+            const auto& verStr{*section->label_};
+            utils::Version ver{verStr};
+
+            if (not ver or not ver.isExact()) {
+                logger.warn("ProffieOS entry invalid version: " + verStr);
+                continue;
+            }
+
+            auto propEntries{pconf::hash(section->entries_)};
+
+            std::string coreUrl{"https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json"};
+            if (auto coreUrlEntry{propEntries.find(detail::CORE_URL_STR)}) {
+                if (coreUrlEntry->value_) {
+                    if (not wxURI{*coreUrlEntry->value_}.IsReference()) {
+                        logger.warn("ProffieOS " + verStr + " invalid coreURL: " + *coreUrlEntry->value_);
+                    } else coreUrl = *coreUrlEntry->value_;
+                }
+            }
+
+            utils::Version coreVersion{3, 6};
+            if (auto coreVerEntry{propEntries.find(detail::CORE_VER_STR)}) {
+                if (coreVerEntry->value_) {
+                    utils::Version ver{*coreVerEntry->value_};
+                    if (not ver or not ver.isExact()) {
+                        logger.warn("ProffieOS " + verStr + " invalid core version: " + *coreVerEntry->value_);
+                    } else coreVersion = ver;
+                }
+            }
+
+            std::vector<os::Available::BoardInfo> boards;
+            auto boardEntries{propEntries.findAll(detail::BOARD_STR)};
+            for (auto& boardEntry : boardEntries) {
+                if (not boardEntry->label_) {
+                    logger.warn("ProffieOS " + verStr + " board version missing");
+                    continue;
+                }
+
+                std::string include;
+                std::string coreId;
+
+                bool boardKnown{false};
+                for (const auto& board : detail::BOARDS) {
+                    if (boardEntry->label_ != board.name_) continue;
+
+                    boardKnown = true;
+                    include = board.include_;
+                    coreId = board.coreId_;
+                }
+
+                if (not boardKnown) {
+                    logger.error("Invalid board entry.");
+                    continue;
+                }
+
+                if (auto boardSection{boardEntry.section()}) {
+                    const auto boardVars{pconf::hash(boardSection->entries_)};
+
+                    auto coreIdEntry{boardVars.find(detail::CORE_ID_STR)};
+                    if (coreIdEntry and coreIdEntry->value_) {
+                        coreId = *coreIdEntry->value_;
+                    }
+
+                    auto includeEntry{boardVars.find(detail::INCLUDE_STR)};
+                    if (includeEntry and includeEntry->value_) {
+                        include = *includeEntry->value_;
+                    }
+                }
+
+                boards.push_back(os::Available::BoardInfo{
+                    .name_=std::move(*boardEntry->label_),
+                    .coreId_=std::move(coreId),
+                    .include_=std::move(include),
+                });
+            }
+
+            priv::availableOS.push_back(os::Available{
+                .version_=std::move(ver),
+                .coreUrl_=std::move(coreUrl),
+                .coreVersion_=std::move(coreVersion),
+                .boards_=std::move(boards),
+            });
+        }
+    }
+
+    return std::nullopt;
 }
 
-optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
-    auto& logger{Log::Branch::optCreateLogger("Versions::resetToDefault()", lBranch)};
+std::optional<std::string> versions::installDefault(
+    bool purge, logging::Branch *lBranch
+) {
+    auto& logger{logging::Branch::optCreateLogger("Versions::resetToDefault()", lBranch)};
 
     std::error_code err;
     if (purge) {
@@ -345,12 +478,58 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
         }
     }
 
+    auto osDownErr{downloadOS(DEFAULT_OS_VERSION, logger.binfo("Downloading ProffieOS"))};
+    if (osDownErr) return osDownErr;
+
+    { std::lock_guard scopeLock{priv::lock};
+        for (const auto& availProp : priv::availableProps) {
+            bool supportsDefault{false};
+            for (const auto& ver : availProp.supportedVersions_) {
+                if (ver.compare(DEFAULT_OS_VERSION) != 0) continue;
+
+                supportsDefault = true;
+                break;
+            }
+
+            auto downErr{downloadProp(availProp.name_, logger.binfo("Downloading Prop " + availProp.name_))};
+            if (downErr) return downErr;
+        }
+    }
+
+    return std::nullopt;
+}
+
+
+std::optional<std::string> versions::downloadOS(
+    const utils::Version& ver, logging::Branch *lBranch
+) {
+    std::lock_guard scopeLock{priv::lock};
+
+    auto& logger{logging::Branch::optCreateLogger("versions::downloadOS()", lBranch)};
+
+    bool known{false};
+    const os::Available *info{};
+    for (const auto& avail : priv::availableOS) {
+        if (avail.version_.compare(ver) != 0) continue;
+
+        known = true;
+        info = &avail;
+        break;
+    }
+
+    if (not known) {
+        logger.error("Unknown ProffieOS version: " + static_cast<std::string>(ver));
+        return _("Unknown ProffieOS Version").ToStdString();
+    }
+
     logger.info("Downloading ProffieOS...");
-    auto uri{wxURI{
+    wxURI uri{
         paths::remoteAssets() + "/ProffieOS/" +
-        static_cast<string>(getDefaultOSVersion()) + ".zip"
-    }.BuildURI()};
-    auto proffieOSRequest{wxWebSessionSync::GetDefault().CreateRequest(uri)};
+        static_cast<std::string>(ver) + ".zip"
+    };
+    auto proffieOSRequest{wxWebSessionSync::GetDefault().CreateRequest(
+        uri.BuildURI()
+    )};
     auto requestResult{proffieOSRequest.Execute()};
 
     if (not requestResult) {
@@ -364,21 +543,27 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
         return _("Failed Opening ProffieOS ZIP").ToStdString();
     }
 
+    std::error_code ec;
+    
     std::unique_ptr<wxZipEntry> entry;
     constexpr cstring OS_EXTRACT_FAIL_MSG{wxTRANSLATE("Failed Extracting ProffieOS ZIP")};
     while (entry.reset(osZipStream.GetNextEntry()), entry) {
-        auto filepath{paths::os(getDefaultOSVersion()) / entry->GetName().ToStdString()};
-        fs::remove_all(filepath, err);
-        if (filepath.string().find("__MACOSX") != string::npos) continue;
+        auto filepath{
+            paths::osDir() /
+            static_cast<std::string>(ver) /
+            entry->GetName().ToStdString()
+        };
+        fs::remove_all(filepath, ec);
+        if (filepath.string().find("__MACOSX") != std::string::npos) continue;
 
         if (entry->IsDir()) {
-            if (not fs::exists(filepath, err)) {
+            if (not fs::exists(filepath, ec)) {
                 // Return value is just if newly created, not success
-                fs::create_directories(filepath, err);
-                if (err) {
+                fs::create_directories(filepath, ec);
+                if (ec) {
                     logger.error(
                         "Could not create dir " + filepath.string() +
-                        ": " + err.message()
+                        ": " + ec.message()
                     );
                     return wxGetTranslation(OS_EXTRACT_FAIL_MSG).ToStdString();
                 }
@@ -405,171 +590,143 @@ optional<string> Versions::resetToDefault(bool purge, Log::Branch *lBranch) {
         return wxGetTranslation(OS_EXTRACT_FAIL_MSG).ToStdString();
     }
 
-    logger.info("Downloading prop manifest...");
-    uri = wxURI{paths::remoteAssets() + "/props/manifest.pconf"}.BuildURI();
-    auto propManifestRequest{wxWebSessionSync::GetDefault().CreateRequest(uri)};
-    requestResult = propManifestRequest.Execute();
-
-    if (not requestResult) {
-        logger.error("Prop Manifest Download Failed\n" + requestResult.error.ToStdString());
-        return _("Could not download prop manifest").ToStdString();
-    }
-
-    std::istringstream manifestStream{
-        propManifestRequest.GetResponse().AsString().ToStdString()
-    };
-
-    PConf::Data propManifestData;
-    PConf::read(manifestStream, propManifestData, logger.binfo("Reading prop manifest file..."));
-    bool propBundleExistsForVersion{false};
-    for (const auto& entry : propManifestData) {
-        if (entry->name!= "BUNDLES") continue;
-
-        auto bundleStrings{PConf::valueAsList(entry->value)};
-        for (const auto& bundleString : bundleStrings) {
-            if (getDefaultOSVersion() == Utils::Version{bundleString}) {
-                propBundleExistsForVersion = true;
-                break;
-            }
-        }
-
-        if (propBundleExistsForVersion) break;
-    }
-
-    if (not propBundleExistsForVersion) {
-        logger.error("Server reports no bundle for os version.");
-        return _("Server Error").ToStdString();
-    }
-
-    uri = wxURI{
-        paths::remoteAssets() + "/props/bundles/" +
-            static_cast<string>(getDefaultOSVersion()) + ".zip"
-    }.BuildURI();
-    auto propBundleRequest{wxWebSessionSync::GetDefault().CreateRequest(uri)};
-    requestResult = propBundleRequest.Execute();
-
-    if (not requestResult) {
-        logger.error("Bundle Download Failed\n" + requestResult.error.ToStdString());
-        return _("Could not download prop bundle").ToStdString();
-    }
-
-    wxZipInputStream propBundleZipStream(*propBundleRequest.GetResponse().GetStream());
-    if (not propBundleZipStream.IsOk()) {
-        logger.error("Could not open prop bundle zip: " + std::to_string(propBundleZipStream.GetLastError()));
-        return _("Failed Opening Prop Bundle").ToStdString();
-    }
-
-    constexpr cstring BUNDLE_EXTRACT_FAIL_MSG{wxTRANSLATE("Failed Extracting Prop Bundle")};
-    while (entry.reset(propBundleZipStream.GetNextEntry()), entry) {
-        auto filepath{paths::propDir() / entry->GetName().ToStdString()};
-        fs::remove_all(filepath, err);
-        if (filepath.string().find("__MACOSX") != string::npos) continue;
-
-        if (entry->IsDir()) {
-            if (not fs::exists(filepath, err)) {
-                fs::create_directories(filepath, err);
-                if (err) {
-                    logger.error(
-                        "Could not create dir " + filepath.string() +
-                        ": " + err.message()
-                    );
-                    return wxGetTranslation(BUNDLE_EXTRACT_FAIL_MSG).ToStdString();
-                }
-            }
-            continue;
-        }
-
-        if (not propBundleZipStream.CanRead()) {
-            logger.error("Failed reading prop bundle: " + std::to_string(propBundleZipStream.GetLastError()));
-            return wxGetTranslation(BUNDLE_EXTRACT_FAIL_MSG).ToStdString();
-        }
-
-        wxFileOutputStream outStream{filepath.string()};
-        if (not outStream.IsOk()) {
-            logger.error("Failed writing prop bundle: " + std::to_string(outStream.GetLastError()));
-            return wxGetTranslation(BUNDLE_EXTRACT_FAIL_MSG).ToStdString();
-        }
-
-        propBundleZipStream.Read(outStream);
-    }
-
-    if (propBundleZipStream.GetLastError() != wxSTREAM_EOF) {
-        logger.error("Bundle extraction finished with error: " + std::to_string(propBundleZipStream.GetLastError()));
-        return wxGetTranslation(BUNDLE_EXTRACT_FAIL_MSG).ToStdString();
-    }
-
-    loadLocal();
-    return nullopt;
-}
-
-namespace {
-
-bool saveVersionedProp(
-    const string& name,
-    const Versions::VersionedProp::SupportedVersionList& versionList
-) {
-    PConf::Data infoData;
-
-    vector<string> list;
-    list.reserve(versionList.size());
-    for (const auto& version : versionList) {
-        list.push_back(
-            static_cast<string>(static_cast<Utils::Version>(*version))
-        );
-    }
-
-    infoData.push_back(PConf::Entry::create(
-        SUPPORTED_VERSIONS_STR,
-        PConf::listAsValue(list)
+    pconf::Data data;
+    data.push_back(pconf::Entry::create(
+        detail::CORE_URL_STR, info->coreUrl_
+    ));
+    data.push_back(pconf::Entry::create(
+        detail::CORE_VER_STR, info->coreVersion_
     ));
 
-    auto infoFile{paths::openOutputFile(
-        paths::propDir() / name / Versions::INFO_FILE_STR
-    )};
+    for (const auto& board : info->boards_) {
+        auto sect{pconf::Section::create(detail::BOARD_STR, board.name_)};
 
-    if (not infoFile.is_open()) return false;
+        sect->entries_.push_back(
+            pconf::Entry::create(detail::CORE_ID_STR, board.coreId_)
+        );
+        sect->entries_.push_back(
+            pconf::Entry::create(detail::INCLUDE_STR, board.include_)
+        );
 
-    PConf::write(infoFile, infoData, nullptr);
-    return true;
-}
-
-bool addVersion(
-    Versions::VersionedProp& prop,
-    bool save,
-    std::unique_ptr<pcui::VersionData>&& verData
-) {
-    if (not verData) verData = std::make_unique<pcui::VersionData>();
-
-    /*
-     * TODO: So much about this is woefully inefficient and error-prone, not to
-     * mention the actual message content itself...
-     *
-     * This really should have a lot more work put into it to make it correct,
-     * but that's a lot more work, and I'm not doing it right now.
-     */
-    verData->setUpdateHandler([&prop](uint32 id) {
-        if (id != pcui::VersionData::eID_Value) return;
-
-        if (not saveVersionedProp(prop.name, getSupportedVersions(prop))) {
-            pcui::showMessage(
-                wxTRANSLATE("Could not save!"),
-                wxTRANSLATE("This shouldn't be a critical error, but Ryan was lazy here.")
-            );
-            exit(1);
-        }
-    });
-
-    getSupportedVersions(prop).push_back(std::move(verData));
-
-    if (save) {
-        if (not saveVersionedProp(prop.name, getSupportedVersions(prop))) {
-            getSupportedVersions(prop).pop_back();
-            return false;
-        }
+        data.emplace_back(std::move(sect));
     }
 
-    return true;
+    auto fstream{files::openOutput(
+        paths::osDir() / static_cast<std::string>(ver) / detail::INFO_FILE_STR
+    )};
+
+    pconf::write(fstream, data, logger.binfo("Writing ProffieOS info file..."));
+
+    if (fstream.fail()) {
+        logger.error("Info file write failed: " + std::to_string(fstream.rdstate()));
+        return _("Could not write ProffieOS info file").ToStdString();
+    }
+
+    return std::nullopt;
 }
 
-} // namespace
+std::optional<std::string> versions::downloadProp(
+    const std::string& name, logging::Branch *lBranch
+) {
+    std::lock_guard scopeLock{priv::lock};
+
+    auto& logger{logging::Branch::optCreateLogger("versions::downloadProp()", lBranch)};
+
+    bool known{false};
+    const props::Available *info{};
+    for (const auto& avail : priv::availableProps) {
+        if (avail.name_ != name) continue;
+
+        known = true;
+        info = &avail;
+        break;
+    }
+
+    if (not known) {
+        logger.error("Unknown prop: " + name);
+        return _("Unknown Prop File").ToStdString();
+    }
+
+    bool copyRes{};
+    std::error_code ec;
+    wxWebRequestSync request;
+    wxWebRequestSync::Result result;
+
+    fs::create_directories(paths::propDir() / name, ec);
+
+    wxURI baseURI{paths::remoteAssets() + "/props/" + name};
+    
+    wxURI dataURI{detail::DATA_FILE_STR};
+    dataURI.Resolve(baseURI);
+
+    request = wxWebSessionSync::GetDefault().CreateRequest(
+        dataURI.BuildURI()
+    );
+    request.SetStorage(wxWebRequestSync::Storage::Storage_File);
+    result = request.Execute();
+
+    if (not result) {
+        logger.error("Prop data download failed\n" + result.error.ToStdString());
+        return _("Could not download prop").ToStdString();
+    }
+
+    copyRes = files::copyOverwrite(
+        request.GetResponse().GetDataFile().ToStdString(),
+        paths::propDir() / name / detail::DATA_FILE_STR,
+        ec
+    );
+
+    if (not copyRes) {
+        logger.error("Failed to copy data file: " + ec.message());
+        return _("Could not copy prop data file").ToStdString();
+    }
+
+    wxURI headerURI{detail::HEADER_FILE_STR};
+    headerURI.Resolve(baseURI);
+
+    request = wxWebSessionSync::GetDefault().CreateRequest(
+        headerURI.BuildURI()
+    );
+    request.SetStorage(wxWebRequestSync::Storage::Storage_File);
+    result = request.Execute();
+
+    if (not result) {
+        logger.error("Prop header download failed\n" + result.error.ToStdString());
+        return _("Could not download prop").ToStdString();
+    }
+
+    copyRes = files::copyOverwrite(
+        request.GetResponse().GetDataFile().ToStdString(),
+        paths::propDir() / name / detail::HEADER_FILE_STR,
+        ec
+    );
+
+    if (not copyRes) {
+        logger.error("Failed to copy header file: " + ec.message());
+        return _("Could not copy prop header file").ToStdString();
+    }
+
+    pconf::Data data;
+    
+    std::vector<std::string> verStrs;
+    verStrs.reserve(info->supportedVersions_.size());
+    for (const auto& ver : info->supportedVersions_) verStrs.push_back(ver);
+
+    data.push_back(pconf::Entry::create(
+        detail::SUPPORTED_VERSIONS_STR, pconf::listAsValue(verStrs)
+    ));
+
+    auto fstream{files::openOutput(
+        paths::propDir() / name / detail::INFO_FILE_STR
+    )};
+
+    pconf::write(fstream, data, logger.binfo("Writing prop info file..."));
+
+    if (fstream.fail()) {
+        logger.error("Info file write failed: " + std::to_string(fstream.rdstate()));
+        return _("Could not write prop info file").ToStdString();
+    }
+
+    return std::nullopt;
+}
 

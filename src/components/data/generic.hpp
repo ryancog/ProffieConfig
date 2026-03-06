@@ -26,6 +26,7 @@
 namespace data {
 
 struct DATA_EXPORT Generic : Model {
+    using ROContext = Model::ROContext;
     using Context = Model::Context;
     using Receiver = Model::Receiver;
     struct Responder;

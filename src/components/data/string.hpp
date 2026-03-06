@@ -30,6 +30,7 @@ namespace data {
 // TODO: The actions for this would like to be more space efficient, and
 // preserve things like selection??
 struct DATA_EXPORT String : Model {
+    struct ROContext;
     struct Context;
     struct Receiver;
     struct Responder;
@@ -58,7 +59,15 @@ private:
     Filter mFilter;
 };
 
-struct DATA_EXPORT String::Context : Model::Context {
+struct DATA_EXPORT String::ROContext : virtual Model::ROContext {
+    ROContext(const String&);
+    ~ROContext();
+
+    [[nodiscard]] const std::string& val() const [[clang::lifetimebound]];
+    [[nodiscard]] size pos() const;
+};
+
+struct DATA_EXPORT String::Context : Model::Context, ROContext {
     Context(String&);
     ~Context();
 
@@ -80,9 +89,6 @@ struct DATA_EXPORT String::Context : Model::Context {
     void move(size) const;
     void moveStart() const;
     void moveEnd() const;
-
-    [[nodiscard]] const std::string& val() const [[clang::lifetimebound]];
-    [[nodiscard]] size pos() const;
 };
 
 struct DATA_EXPORT String::Receiver : Model::Receiver {

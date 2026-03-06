@@ -28,6 +28,7 @@
 namespace data {
 
 struct DATA_EXPORT Vector : Node {
+    struct ROContext;
     struct Context;
     struct Receiver;
     struct Responder;
@@ -43,17 +44,25 @@ struct DATA_EXPORT Vector : Node {
 
     [[nodiscard]] Responder& responder() const;
 
-protected:
     bool enumerate(const EnumFunc&) override;
 
-    Model *find(uint64) override;
+protected:
+    [[nodiscard]] Model *find(uint64) override;
 
 private:
     std::unique_ptr<Responder> mRsp;
     std::vector<std::unique_ptr<Model>> mChildren;
 };
 
-struct DATA_EXPORT Vector::Context : Node::Context {
+struct DATA_EXPORT Vector::ROContext : virtual Model::ROContext {
+    ROContext(const Vector&);
+    ~ROContext();
+
+    [[nodiscard]] const std::vector<std::unique_ptr<Model>>&
+        children() const [[clang::lifetimebound]];
+};
+
+struct DATA_EXPORT Vector::Context : Model::Context, ROContext {
     enum class DuplicationMode {
         /**
          * Append duplicated item to the end of the list.
@@ -101,9 +110,6 @@ struct DATA_EXPORT Vector::Context : Node::Context {
     void moveDown(size) const;
 
     void duplicate(size, DuplicationMode) const;
-
-    [[nodiscard]] const std::vector<std::unique_ptr<Model>>&
-        children() const [[clang::lifetimebound]];
 };
 
 struct DATA_EXPORT Vector::Receiver : Node::Receiver {

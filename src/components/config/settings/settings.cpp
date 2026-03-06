@@ -139,11 +139,6 @@ config::Settings::Settings(Config& parent) :
         femaleTalkie.enable(not ctxt.val());
     };
 
-    { data::Choice::Context board{board_};
-        board.update(eBoard_Max);
-        board.choose(eBoard_Proffie_V3);
-    }
-
     /*
     board_.setChoices({
         "Proffieboard V3",
@@ -212,10 +207,6 @@ config::Settings::Settings(Config& parent) :
     { data::Integer::Context suppress{audioClashSuppressionLevel_};
         suppress.update({.min_=1, .max_=50});
         suppress.set(10);
-    }
-
-    { data::Version::Context version{osVersion_};
-        version.set({8, 10});
     }
 }
 
@@ -583,25 +574,27 @@ void config::Settings::ProcessDefinesAction::perform(data::Model& model) {
     };
 
     auto& config{*settings.parent<Config>()};
-    data::Vector::Context props{config.props_};
-    for (auto idx{0}; idx < defines.size(); ++idx) {
-        auto& defModel{static_cast<settings::Define&>(*defines[idx])};
-        data::String::Context define{defModel.name_};
-        data::String::Context value{defModel.value_};
+    if (config.props()) {
+        data::Vector::ROContext props{*config.props()};
+        for (auto idx{0}; idx < defines.size(); ++idx) {
+            auto& defModel{static_cast<settings::Define&>(*defines[idx])};
+            data::String::Context define{defModel.name_};
+            data::String::Context value{defModel.value_};
 
-        bool used{false};
-        for (const auto& propModel : props.children()) {
-            auto& node{static_cast<Node&>(*propModel)};
+            bool used{false};
+            for (const auto& propModel : props.children()) {
+                auto& node{static_cast<Node&>(*propModel)};
 
-            auto action{std::make_unique<PropProcDefAction>(
-                define.val(), value.val()
-            )};
-            auto res{node.forwardAction(std::move(action))};
-        }
+                auto action{std::make_unique<PropProcDefAction>(
+                    define.val(), value.val()
+                )};
+                auto res{node.forwardAction(std::move(action))};
+            }
 
-        if (used) {
-            defineVec.remove(idx);
-            --idx;
+            if (used) {
+                defineVec.remove(idx);
+                --idx;
+            }
         }
     }
 }

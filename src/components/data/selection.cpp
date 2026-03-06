@@ -51,8 +51,21 @@ void data::Selection::setAddFilter(AddFilter filter) {
 
 auto data::Selection::responder() const -> Responder& { return *mRsp; }
 
+data::Selection::ROContext::ROContext(const Selection& sel) :
+    Model::ROContext(sel) {}
+
+data::Selection::ROContext::~ROContext() = default;
+
+const std::vector<bool>& data::Selection::ROContext::selected() const {
+    return model<Selection>().mSelected;
+}
+
+const std::vector<std::string>& data::Selection::ROContext::items() const {
+    return model<Selection>().mItems;
+}
+
 data::Selection::Context::Context(Selection& sel) :
-    Model::Context{sel} {}
+    Model::Context(sel), ROContext(sel), Model::ROContext(sel) {}
 
 data::Selection::Context::~Context() = default;
 
@@ -103,14 +116,6 @@ void data::Selection::Context::remove(uint32 idx) const {
     model().processAction(std::make_unique<RemoveAction>(
         idx
     ));
-}
-
-const std::vector<bool>& data::Selection::Context::selected() const {
-    return model<Selection>().mSelected;
-}
-
-const std::vector<std::string>& data::Selection::Context::items() const {
-    return model<Selection>().mItems;
 }
 
 data::Selection::SelectAction::SelectAction(uint32 idx, bool select)

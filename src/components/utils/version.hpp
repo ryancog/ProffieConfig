@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <compare>
 #include <utility>
 #include <string>
 #include <string_view>
@@ -54,8 +55,8 @@ struct UTILS_EXPORT Version {
     struct VerNum {
         // Another clang bug w/ implicit ctor :/
         // NOLINTNEXTLINE(modernize-use-equals-default)
-        VerNum() {}
-        VerNum(uint8 v) : val_{v} {}
+        constexpr VerNum() {}
+        constexpr VerNum(uint8 v) : val_{v} {}
 
         CompMode mode_{CompMode::Exact};
         uint8 val_{0};
@@ -63,8 +64,8 @@ struct UTILS_EXPORT Version {
 
     struct Tag {
         // NOLINTNEXTLINE(modernize-use-equals-default)
-        Tag() {}
-        Tag(std::string s) : val_{std::move(s)} {}
+        constexpr Tag() {}
+        constexpr Tag(std::string s) : val_{std::move(s)} {}
 
         CompMode mode_{CompMode::Exact};
         std::string val_;
@@ -81,7 +82,7 @@ struct UTILS_EXPORT Version {
      * Unpopulated nums are set to 0/Exact
      */
     Version(std::string_view str);
-    Version(
+    constexpr Version(
         VerNum major = {}, VerNum minor = {}, VerNum bugfix = {}, Tag tag = {}
     ) : major_{major}, minor_{minor}, bugfix_{bugfix}, tag_{std::move(tag)} {}
 
@@ -98,9 +99,6 @@ struct UTILS_EXPORT Version {
      * "dev" would be the tag.
      */
     Tag tag_;
-
-    auto operator==(const Version&) const = delete;
-    auto operator<=>(const Version&) const = delete;
 
     /**
      * Compare another version to this one, evaluated according to the
@@ -121,7 +119,13 @@ struct UTILS_EXPORT Version {
      * Strictly compare the two items based on data content rather than version
      * semantics.
      */
-    [[nodiscard]] bool dataEqual(const Version&) const;
+    auto operator==(const Version&) const = delete;
+    std::strong_ordering operator<=>(const Version&) const;
+
+    /**
+     * If the Version refers to a distinct, singular version.
+     */
+    [[nodiscard]] bool isExact() const;
 
     /**
      * Convert a Version into string representation.

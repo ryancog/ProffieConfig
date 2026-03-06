@@ -20,17 +20,17 @@
  */
 
 #include <filesystem>
+#include <map>
 #include <memory>
 
 #include "config/settings/settings.hpp"
 #include "data/hierarchy/root.hpp"
 #include "data/selector.hpp"
 #include "data/vector.hpp"
-// #include "versions/prop.hpp"
-// #include "versions/versions.hpp"
 
 #include "config_export.h"
 #include "log/branch.hpp"
+#include "utils/version.hpp"
 
 namespace fs = std::filesystem;
 
@@ -45,25 +45,23 @@ struct CONFIG_EXPORT Config : data::Root {
     bool enumerate(const EnumFunc&) override;
     Model *find(uint64) override;
 
+    const data::Vector& osVersions();
+    const data::Selector osVersion_; 
+
+    const data::Vector *boards();
+    const data::Selector& board();
+
+    const data::Vector *props();
+    const data::Selector& propSel();
+
     Settings settings_;
-
-    data::Vector props_;
-    data::Selector propSel_;
-
     data::Vector presetArrays_;
     data::Vector bladeConfigs_;
 
     data::Vector buttons_;
-
-    /**
-     * Not a part of the usual state. Free-floating data.
-     * Should not be set manually, only to be listened to.
-     *
-     * TODO: A proper construct to only allow listening to data.
-     */
-    data::Bool isSaved_;
-
     data::Vector injections_;
+
+    const data::Bool& isSaved();
 
     size numBlades();
     void syncStyles();
@@ -73,6 +71,14 @@ private:
 
     // NOLINTNEXTLINE(modernize-use-equals-delete)
     Config();
+
+    void ensurePropsForVersion();
+
+    data::Vector mOsVersions;
+    std::map<utils::Version, data::Vector> mPropMap;
+    data::Selector mPropSel;
+    data::Selector mBoard;
+    data::Bool mIsSaved;
 
     struct SavedReceiver;
     SavedReceiver *mRcvr;

@@ -72,7 +72,7 @@ struct CONFIG_EXPORT WS281X::Split : data::Node {
         eList,
         eMax,
     };
-    data::Exclusive<> type_;
+    data::Exclusive type_;
 
     data::Integer start_;
     data::Integer end_;

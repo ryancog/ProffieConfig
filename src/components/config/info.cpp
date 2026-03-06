@@ -25,8 +25,6 @@
 
 cstring config::priv::executableVersion{nullptr};
 
-config::props::Generator config::priv::propGenerator{nullptr};
-
 void config::setExecutableVersion(cstring version) { priv::executableVersion = version; }
 
 cstring config::version() { return wxSTRINGIZE(BIN_VERSION); }

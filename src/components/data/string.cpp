@@ -50,7 +50,21 @@ void data::String::setFilter(Filter filter) {
 
 auto data::String::responder() const -> Responder& { return *mRsp; }
 
-data::String::Context::Context(String& str) : Model::Context(str) {}
+data::String::ROContext::ROContext(const String& str) :
+    Model::ROContext(str) {}
+
+data::String::ROContext::~ROContext() = default;
+
+const std::string& data::String::ROContext::val() const {
+    return model<String>().mValue;
+}
+
+size data::String::ROContext::pos() const {
+    return model<String>().mPos;
+}
+
+data::String::Context::Context(String& str) :
+    Model::Context(str), ROContext(str), Model::ROContext(str) {}
 
 data::String::Context::~Context() = default;
 
@@ -93,14 +107,6 @@ void data::String::Context::moveStart() const {
 
 void data::String::Context::moveEnd() const {
     move(model<String>().mValue.size());
-}
-
-const std::string& data::String::Context::val() const {
-    return model<String>().mValue;
-}
-
-size data::String::Context::pos() const {
-    return model<String>().mPos;
 }
 
 data::String::ChangeAction::ChangeAction(std::string&& str, size pos) :
