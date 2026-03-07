@@ -32,6 +32,7 @@ struct UI_EXPORT Radios {
 
     // TODO: Make this a base w/ C++ P2287.
     detail::ChildBase base_;
+    detail::ChildWindowBase win_;
 
     data::Exclusive& data_;
     wxString label_;

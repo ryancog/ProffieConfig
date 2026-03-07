@@ -1,9 +1,9 @@
-#include "build.hpp"
+#pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/build.cpp
+ * components/ui/static/divider.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +19,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void pcui::build(wxWindow *parent, const DescriptorPtr& desc) {
-    assert(parent);
-    parent->SetSizer(nullptr);
-    parent->DestroyChildren();
+#include <wx/gdicmn.h>
 
-    if (not desc) return;
+#include "ui/detail/general.hpp"
+#include "ui/types.hpp"
 
-    detail::Scaffold scaffold{
-        .childParent_=parent
-    };
+#include "ui_export.h"
 
-    auto *item{desc->build(scaffold)};
-    if (item->IsSizer()) parent->SetSizer(item->GetSizer());
-}
+namespace pcui {
+
+struct UI_EXPORT Divider {
+    struct Desc;
+
+    // TODO: Make these base w/ C++ P2287.
+    detail::ChildBase base_;
+    wxOrientation orient_{wxHORIZONTAL};
+
+    DescriptorPtr operator()();
+};
+
+struct UI_EXPORT Divider::Desc : Divider, detail::Descriptor {
+    Desc(Divider&&);
+
+    [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+};
+
+} // namespace pcui
 

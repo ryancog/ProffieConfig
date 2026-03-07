@@ -15,8 +15,12 @@ add_library(ui SHARED
 
     misc/message.cpp
 
+    static/divider.cpp
     static/image.cpp
     static/label.cpp
+    static/hyperlink.cpp
+
+    indication/progress.cpp
 
     controls/button.cpp
     controls/checkbox.cpp
@@ -27,6 +31,7 @@ add_library(ui SHARED
     layout/selector.cpp
     layout/spacer.cpp
     layout/stack.cpp
+    layout/panel.cpp
     layout/priv/groupbox.cpp
 )
 

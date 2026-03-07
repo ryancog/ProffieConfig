@@ -33,6 +33,7 @@ struct UI_EXPORT Selector {
 
     // TODO: Make this a base w/ C++ P2287.
     detail::ChildBase base_;
+    detail::ChildWindowBase win_;
 
     data::Selector& data_;
 

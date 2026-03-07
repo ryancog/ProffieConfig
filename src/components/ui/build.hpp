@@ -21,7 +21,7 @@
 
 #include <wx/window.h>
 
-#include "ui/detail/descriptor.hpp"
+#include "ui/types.hpp"
 
 #include "ui_export.h"
 
@@ -31,7 +31,7 @@ namespace pcui {
  * Build declarative UI and attach to parent as child, replacing any child the
  * parent previously had.
  */
-void UI_EXPORT build(wxWindow *parent, const detail::Descriptor&);
+void UI_EXPORT build(wxWindow *parent, const DescriptorPtr&);
 
 } // namespace pcui
 

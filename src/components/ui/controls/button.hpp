@@ -21,7 +21,7 @@
 
 #include <functional>
 
-#include "data/generic.hpp"
+#include "data/string.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
 
@@ -34,10 +34,13 @@ struct UI_EXPORT Button {
 
     // TODO: Make this a base w/ C++ P2287.
     detail::ChildBase base_;
+    detail::ChildWindowBase win_;
 
-    data::Generic& data_;
+    std::variant<
+        wxString,
+        std::reference_wrapper<data::String>
+    > label_;
 
-    wxString label_;
     bool exactFit_{false};
 
     std::function<void()> func_;

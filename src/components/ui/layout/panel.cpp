@@ -1,9 +1,9 @@
-#include "build.hpp"
+#include "panel.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/build.cpp
+ * components/ui/layout/panel.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +19,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void pcui::build(wxWindow *parent, const DescriptorPtr& desc) {
-    assert(parent);
-    parent->SetSizer(nullptr);
-    parent->DestroyChildren();
+#include <wx/panel.h>
 
-    if (not desc) return;
+#include "ui/build.hpp"
+#include "ui/priv/helpers.hpp"
 
-    detail::Scaffold scaffold{
-        .childParent_=parent
-    };
+using namespace pcui;
 
-    auto *item{desc->build(scaffold)};
-    if (item->IsSizer()) parent->SetSizer(item->GetSizer());
+std::unique_ptr<detail::Descriptor> Panel::operator()() {
+    return std::make_unique<Panel::Desc>(std::move(*this));
+}
+
+Panel::Desc::Desc(Panel&& data) :
+    Panel{std::move(data)} {}
+
+wxSizerItem *Panel::Desc::build(const detail::Scaffold& scaffold) const {
+    auto *panel{new wxPanel(scaffold.childParent_)};
+
+    pcui::build(panel, child_);
+
+    auto *item{new wxSizerItem(panel)};
+    priv::apply(base_, item);
+
+    return item;
 }
 

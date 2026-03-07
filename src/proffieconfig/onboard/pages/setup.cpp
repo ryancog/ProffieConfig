@@ -1,4 +1,4 @@
-#include "setup.h"
+#include "setup.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2024-2025 Ryan Ogurek
@@ -24,127 +24,133 @@
 #include <wx/sizer.h>
 #include <wx/time.h>
 
-#include "../onboard.h"
-#include "../../tools/arduino.h"
+#include "data/logic/adapter.hpp"
+#include "data/logic/operators.hpp"
+#include "ui/layout/spacer.hpp"
+#include "ui/layout/stack.hpp"
+#include "ui/static/label.hpp"
+#include "utils/defer.hpp"
+#include "versions/versions.hpp"
 
-#include "utils/defer.h"
-#include "versions/versions.h"
-
-Onboard::Setup::Setup(wxWindow* parent) : wxPanel(parent) {
-    auto *sizer{new wxBoxSizer(wxVERTICAL)};
-    auto *title{Onboard::createHeader(this, _("Setup"))};
-
+pcui::DescriptorPtr onboard::Setup::ui() {
     auto bulletString{wxString::FromUTF8("\t• ")};
-    auto descriptionString{
-        _("Setup is about to begin.") + '\n' +
-        _("An internet connection is required, and installation may take several minutes.") + 
-        "\n\n" +
-        bulletString + _("Core Installation") + '\n' +
-        bulletString + _("ProffieOS Installation") + '\n' +
-#       ifdef _WIN32
-        bulletString + _("Bootloader Driver Installation") + '\n' +
-#       endif
-        '\n'
-#       ifdef _WIN32
-        + _("When the driver installation starts, you will be prompted, please follow the instructions in the new window.")
-#       endif
-    };
+    return pcui::Stack{
+      .children_={
+        pcui::Spacer{20}(),
+        pcui::Label{
+          .label_=_("Setup"),
+          .style_=pcui::text::Style::Header,
+        }(),
+        pcui::Spacer{20}(),
+        pcui::Label{
+          .label_={
+            _("Setup is about to begin.") + '\n' +
+            _("An internet connection is required, and installation may take several minutes.") + 
+            "\n\n" +
+            bulletString + _("Core Installation") + '\n' +
+            bulletString + _("ProffieOS Installation") + '\n' +
+#           ifdef _WIN32
+            bulletString + _("Bootloader Driver Installation") + '\n' +
+#           endif
+            '\n'
+#           ifdef _WIN32
+            + _("When the driver installation starts, you will be prompted, please follow the instructions in the new window.")
+#           endif
+          }
+        }(),
+        pcui::Spacer{10}(),
+        pcui::Label{
+            .win_={
+                .show_={
+                    not data::logic::adapt(isDone_) and
+                    not data::logic::adapt(inProgress_)
+                },
+            },
+            .label_=_("Press \"Next\" to begin installation.\n"),
+        }(),
+        pcui::Label{
+            .win_{
+                .show_=data::logic::adapt(isDone_),
+            },
+            .label_=_("The installation completed successfully. Press \"Next\" to continue..."),
+        }(),
+        pcui::Label{
+            .win_={.show_=data::logic::adapt(inProgress_)},
+            .label_=statusMessage_,
+        }(),
+        pcui::Progress{
+            .win_={.show_=data::logic::adapt(inProgress_)},
+            .data_=progress_,
+        }()
+      }
+    }();
+}
 
-    auto *description{new wxStaticText(this, wxID_ANY, descriptionString)};
-    mPressNextMessage = new wxStaticText(this, wxID_ANY, _("Press \"Next\" to begin installation.\n"));
-    mDoneMessage = new wxStaticText(this, wxID_ANY, _("The installation completed successfully. Press \"Next\" to continue..."));
-    mDoneMessage->Hide();
-
-    mLoadingBar = new wxGauge(this, wxID_ANY, 50, wxDefaultPosition, wxDefaultSize, wxGA_HORIZONTAL | wxGA_SMOOTH);
-    loadingText = new wxStaticText(this, wxID_ANY, wxEmptyString);
-    mLoadingBar->SetMinSize({200, -1});
-    mLoadingBar->Hide();
-    loadingText->Hide();
-
-    sizer->AddSpacer(20);
-    sizer->Add(title);
-    sizer->AddSpacer(20);
-    sizer->Add(description);
-    sizer->AddSpacer(10);
-    sizer->Add(mPressNextMessage);
-    sizer->Add(mDoneMessage);
-    sizer->Add(loadingText);
-    sizer->Add(mLoadingBar);
-    SetSizerAndFit(sizer);
-
-    Bind(wxEVT_TIMER, [this](wxTimerEvent&) { 
-        mLoadingBar->Pulse(); 
+onboard::Setup::Setup() {
+    mLoadingTimer = new wxTimer();
+    mLoadingTimer->Start(50);
+    mLoadingTimer->Bind(wxEVT_TIMER, [this](wxTimerEvent&) {
+        progress_.pulse(); 
     });
 }
 
-void Onboard::Setup::startSetup() {
-    static bool inProgress{false};
-    assert(not inProgress);
+void onboard::Setup::startSetup() {
+    data::Bool::Context inProgress{inProgress_};
+    assert(not inProgress.val());
 
-    mLoadingTimer = new wxTimer(this);
-    mLoadingTimer->Start(50);
-    mPressNextMessage->Hide();
-    loadingText->Show();
-    mLoadingBar->Show();
+    inProgress.set(true);
 
     std::thread{[this]() {
-        Defer defer{[]() { inProgress = false; }};
-
-        if (not mCoreInstalled) {
-            statusMessage = "Installing Core...";
-            notifier.notify(ID_STATUS);
-            if (Arduino::ensureDefaultCoreInstalled()) {
-                mCoreInstalled = true;
-            } else {
-                errorMessage = _("Failed to install core.");
-                notifier.notify(ID_FAILED);
-                return;
-            }
-        }
+        defer { 
+            data::Bool::Context inProgress{inProgress_};
+            inProgress.set(false);
+        };
 
 #       if defined(_WIN32) or defined(__linux__)
         if (not mDriverInstalled) {
-            statusMessage = "Installing Driver...";
-            notifier.notify(ID_STATUS);
+            data::String::Context{statusMessage_}.change(
+                _("Installing Driver...").ToStdString()
+            );
+
             if (Arduino::runDriverInstallation()) {
                 mDriverInstalled = true;
             } else {
-                errorMessage = _("Failed to install driver.");
-                notifier.notify(ID_FAILED);
+                data::String::Context{errorMessage_}.change(
+                    _("Failed to install driver.").ToStdString()
+                );
                 return;
             }
         }
 #       endif
 
         if (not mOSInstalled) {
-            statusMessage = "Installing ProffieOS...";
-            notifier.notify(ID_STATUS);
-            auto err{Versions::resetToDefault(true)};
+            data::String::Context{statusMessage_}.change(
+                _("Installing ProffieOS...").ToStdString()
+            );
+
+            std::optional<std::string> err;
+
+            err = versions::fetch();
             if (err) {
-                errorMessage = *err;
-                notifier.notify(ID_FAILED);
+                data::String::Context{errorMessage_}.change(std::move(*err));
+                return;
+            }
+
+            err = versions::installDefault(true);
+            if (err) {
+                data::String::Context{errorMessage_}.change(std::move(*err));
                 return;
             }
         }
 
-        isDone = true;
-        notifier.notify(ID_DONE);
+        data::Bool::Context{isDone_}.set(true);
     }}.detach();
 }
 
-void Onboard::Setup::finishSetup(bool done) {
-    loadingText->Hide();
-    mLoadingBar->Hide();
-    if (done) {
-        mDoneMessage->Show();
-    } else {
-        mPressNextMessage->Show();
-    }
-
-    delete mLoadingTimer;
-
+void onboard::Setup::finishSetup(bool done) {
+    /*
     Layout();
     Fit();
+    */
 }
-
 

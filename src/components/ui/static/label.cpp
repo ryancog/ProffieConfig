@@ -23,8 +23,38 @@
 #include <wx/stattext.h>
 
 #include "ui/priv/helpers.hpp"
+#include "ui/priv/winbase.hpp"
 
 using namespace pcui;
+
+namespace {
+
+struct Static : priv::WinBase<wxStaticText, data::String::Receiver> {
+    Static(wxWindow *parent, const Label& desc) : WinBase(desc.win_) {
+        if (const auto *ptr{std::get_if<wxString>(&desc.label_ )}) {
+            Create(parent, wxID_ANY, *ptr);
+            return;
+        } 
+
+        const auto& model{std::get<1>(desc.label_)};
+        data::String::ROContext str{model};
+        Create(parent, wxID_ANY, str.val());
+        
+        attach(model);
+    }
+
+    ~Static() override {
+        detach();
+    }
+
+    void onChange() override {
+        CallAfter([this, str=context<data::String>().val()]() {
+            SetLabel(str);
+        });
+    }
+};
+
+} // namespace
 
 std::unique_ptr<detail::Descriptor> Label::operator()() {
     return std::make_unique<Label::Desc>(std::move(*this));
@@ -34,13 +64,11 @@ Label::Desc::Desc(Label&& label) :
     Label(std::move(label)) {}
 
 wxSizerItem *Label::Desc::build(const detail::Scaffold& scaffold) const {
-    auto *text{new wxStaticText(scaffold.childParent_, wxID_ANY, label_)};
-
+    auto *text{new Static(scaffold.childParent_, *this)};
     text->SetFont(style_.makeFont());
 
     auto *item{new wxSizerItem(text)};
     priv::apply(base_, item);
-    priv::apply(win_, item);
 
     return item;
 }

@@ -31,7 +31,12 @@ using namespace pcui;
 namespace {
 
 struct RadioControl : priv::WinBase<wxRadioButton, data::Model::Receiver> {
-    RadioControl(wxWindow *parent, const wxString& label, data::Bool& data) {
+    RadioControl(
+        wxWindow *parent,
+        const wxString& label,
+        data::Bool& data,
+        const detail::ChildWindowBase& win
+    ) : WinBase(win) {
         Create(parent, wxID_ANY, label);
 
         attach(data);
@@ -45,7 +50,7 @@ struct RadioControl : priv::WinBase<wxRadioButton, data::Model::Receiver> {
 };
 
 struct Control : priv::WinBase<priv::GroupBox, data::Exclusive::Receiver> {
-    Control(wxWindow *parent, const Radios& desc) {
+    Control(wxWindow *parent, const Radios& desc) : WinBase(desc.win_) {
         create(
             wxVERTICAL,
             parent,
@@ -61,7 +66,9 @@ struct Control : priv::WinBase<priv::GroupBox, data::Exclusive::Receiver> {
                 : "UNLABELED"
             };
 
-            auto *radio{new RadioControl(childParent(), label, bl)};
+            auto *radio{new RadioControl(
+                childParent(), label, bl, desc.win_
+            )};
 
             if (not childParent()->GetChildren().empty()) {
                 sizer()->AddSpacer(5);

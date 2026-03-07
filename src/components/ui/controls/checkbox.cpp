@@ -29,7 +29,7 @@ using namespace pcui;
 namespace {
 
 struct Control : priv::WinBase<wxCheckBox, data::Bool::Receiver> {
-    Control(wxWindow *parent, const CheckBox& desc) {
+    Control(wxWindow *parent, const CheckBox& desc) : WinBase(desc.win_) {
         Create(
             parent,
             wxID_ANY,

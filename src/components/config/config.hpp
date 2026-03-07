@@ -75,7 +75,9 @@ private:
     void ensurePropsForVersion();
 
     data::Vector mOsVersions;
-    std::map<utils::Version, data::Vector> mPropMap;
+    std::map<
+        utils::Version, data::Vector, utils::Version::RawOrderer
+    > mPropMap;
     data::Selector mPropSel;
     data::Selector mBoard;
     data::Bool mIsSaved;

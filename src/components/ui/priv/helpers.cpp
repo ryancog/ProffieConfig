@@ -28,9 +28,3 @@ void pcui::priv::apply(const detail::ChildBase& desc, wxSizerItem *item) {
     );
 }
 
-void pcui::priv::apply(
-    const detail::ChildWindowBase& desc, wxSizerItem *item
-) {
-    item->GetWindow()->SetToolTip(desc.tooltip_);
-}
-

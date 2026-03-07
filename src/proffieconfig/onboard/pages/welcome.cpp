@@ -1,7 +1,7 @@
-#include "welcome.h"
+#include "welcome.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024-2025 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * proffieconfig/onboard/pages/welcome.cpp
  *
@@ -22,69 +22,52 @@
 #include <wx/hyperlink.h>
 #include <wx/sizer.h>
 
-#include "../onboard.h"
-#include "utils/paths.h"
+#include "ui/build.hpp"
+#include "ui/layout/spacer.hpp"
+#include "ui/layout/stack.hpp"
+#include "ui/static/hyperlink.hpp"
+#include "ui/static/label.hpp"
+#include "utils/paths.hpp"
 
-Onboard::Welcome::Welcome(wxWindow* parent) : wxPanel(parent) {
-    auto *sizer{new wxBoxSizer(wxVERTICAL)};
-
-    auto *welcomeText{Onboard::createHeader(this, wxString::Format(_("Welcome to ProffieConfig %s!"), wxSTRINGIZE(BIN_VERSION)))};
-
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+pcui::DescriptorPtr onboard::Welcome::ui() {
     /*
      * So, cool story, the WIDE window bug on macOS has to do with double
      * newline characters. E.g. "\n\n".
      *
      * Why? Don't Know.
      */
-    const auto infoString1{_(
-        "Thank you for trying out ProffieConfig, the all-in-one proffieboard management utility!"
-    )};
-    const auto infoString2{_(
-        "Online guides are available at the link below:"
-    )};
-    const auto infoString3{_(
-        "To start, ProffieConfig needs to do some setup.\n"
-        "Press \"Next\" when you're ready to continue, and we'll get started!"
-    )};
-    auto *infoText1{new wxStaticText(
-        this,
-        wxID_ANY,
-        infoString1,
-        wxDefaultPosition,
-        wxDefaultSize,
-        wxALIGN_CENTER
-    )};
-    auto *infoText2{new wxStaticText(
-        this,
-        wxID_ANY,
-        infoString2,
-        wxDefaultPosition,
-        wxDefaultSize,
-        wxALIGN_CENTER
-    )};
-    auto *docLink{new wxHyperlinkCtrl(
-        this,
-        wxID_ANY,
-        _("Guides And Documentation"),
-        paths::website() + "/guides"
-    )};
-    auto *infoText3{new wxStaticText(
-        this,
-        wxID_ANY,
-        infoString3,
-        wxDefaultPosition,
-        wxDefaultSize,
-        wxALIGN_CENTER
-    )};
-
-    sizer->AddSpacer(20);
-    sizer->Add(welcomeText, 0, wxCENTER);
-    sizer->AddSpacer(40);
-    sizer->Add(infoText1, 0, wxCENTER);
-    sizer->AddSpacer(20);
-    sizer->Add(infoText2, 0, wxCENTER);
-    sizer->Add(docLink, 0, wxCENTER);
-    sizer->AddSpacer(20);
-    sizer->Add(infoText3, 0, wxCENTER);
-    SetSizerAndFit(sizer);
+    return pcui::Stack{
+        .orient_=wxVERTICAL,
+        .children_={
+            pcui::Spacer{20}(),
+            pcui::Label{
+                .label_=wxString::Format(_("Welcome to ProffieConfig %s!"), wxSTRINGIZE(BIN_VERSION)),
+                .style_=pcui::text::Style::Header,
+            }(),
+            pcui::Spacer{40}(),
+            pcui::Label{
+                .base_={.align_=wxALIGN_CENTER,},
+                .label_=_("Thank you for trying out ProffieConfig, the all-in-one proffieboard management utility!"),
+            }(),
+            pcui::Spacer{20}(),
+            pcui::Label{
+                .base_={.align_=wxALIGN_CENTER,},
+                .label_=_("Online guides are available at the link below:"),
+            }(),
+            pcui::Hyperlink{
+                .label_=_("Guides And Documentation"),
+                .link_=paths::website() + "/guides",
+            }(),
+            pcui::Spacer{20}(),
+            pcui::Label{
+                .base_={.align_=wxALIGN_CENTER,},
+                .label_=_(
+                    "To start, ProffieConfig needs to do some setup.\n"
+                    "Press \"Next\" when you're ready to continue, and we'll get started!"
+                ),
+            }(),
+        }
+    }();
 }
+

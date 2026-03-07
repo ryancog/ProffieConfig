@@ -1,9 +1,9 @@
-#include "build.hpp"
+#pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/build.cpp
+ * components/data/logic/adapter.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void pcui::build(wxWindow *parent, const DescriptorPtr& desc) {
-    assert(parent);
-    parent->SetSizer(nullptr);
-    parent->DestroyChildren();
+#include "data/bool.hpp"
+#include "data/logic/logic.hpp"
 
-    if (not desc) return;
+#include "data_export.h"
 
-    detail::Scaffold scaffold{
-        .childParent_=parent
-    };
+namespace data::logic {
 
-    auto *item{desc->build(scaffold)};
-    if (item->IsSizer()) parent->SetSizer(item->GetSizer());
-}
+DATA_EXPORT Element adapt(data::Bool&);
+
+} // namespace data::logic
 

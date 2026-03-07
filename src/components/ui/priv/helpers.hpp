@@ -26,7 +26,6 @@
 namespace pcui::priv {
 
 void apply(const detail::ChildBase&, wxSizerItem *);
-void apply(const detail::ChildWindowBase&, wxSizerItem *);
 
 } // namespace pcui::priv
 

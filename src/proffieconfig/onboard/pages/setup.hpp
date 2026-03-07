@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024-2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * proffieconfig/onboard/onboard.h
+ * proffieconfig/onboard/pages/setup.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,40 +19,42 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/stattext.h>
 #include <wx/gauge.h>
-#include <wx/timer.h>
 #include <wx/panel.h>
+#include <wx/stattext.h>
+#include <wx/timer.h>
 
-#include "pages/info.h"
-#include "pages/setup.h"
-#include "pages/welcome.h"
-#include "ui/frame.hpp"
-#include "ui/notifier.h"
+#include "data/bool.hpp"
+#include "data/string.hpp"
+#include "ui/types.hpp"
+#include "ui/indication/progress.hpp"
 
-namespace Onboard {
+namespace onboard {
 
-wxStaticText *createHeader(wxWindow *, const wxString&);
+struct Setup {
+    Setup();
 
-class Frame : public pcui::Frame, pcui::NotifyReceiver {
-public:
-    static Frame* instance;
-    Frame();
-    ~Frame() override;
+    pcui::DescriptorPtr ui();
 
-    enum {
-        ID_Next,
-        ID_Skip,
-    };
+    data::Bool isDone_;
+    data::Bool inProgress_;
+
+    void startSetup();
+    // Called in from done or failed
+    void finishSetup(bool done);
+
+    pcui::Progress::Data progress_;
+    data::String statusMessage_;
+    data::String errorMessage_;
 
 private:
-    void handleNotification(uint32) override;
-    void bindEvents();
+    wxTimer *mLoadingTimer{nullptr};
 
-    Onboard::Welcome *mWelcomePage{nullptr};
-    Onboard::Setup *mSetupPage{nullptr};
-    Onboard::Info *mInfoPage{nullptr};
+    bool mOSInstalled{false};
+#   if defined(_WIN32) or defined(__linux__)
+    bool mDriverInstalled{false};
+#   endif
 };
 
-} // namespace Onboard
+} // namespace onboard
 

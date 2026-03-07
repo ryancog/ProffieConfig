@@ -5,32 +5,12 @@
 add_executable(proffieconfig WIN32
     main.cpp
 
-    editor/dialogs/awarenessdlg.cpp
-    editor/dialogs/customoptionsdlg.cpp
-    editor/dialogs/buttons.cpp
-    editor/dialogs/propbuttons.cpp
-    editor/editorwindow.cpp
-    editor/pages/propspage.cpp
-    editor/pages/generalpage.cpp
-    editor/pages/presetspage.cpp
-    editor/pages/bladespage.cpp
-    editor/special/splitvisualizer.cpp
-
-    core/appstate.cpp
-    core/utilities/misc.cpp
-    core/utilities/progress.cpp
-
-    mainmenu/dialogs/addconfig.cpp
-    mainmenu/dialogs/manifest.cpp
-    mainmenu/mainmenu.cpp
+    core/state.cpp
 
     onboard/onboard.cpp
     onboard/pages/welcome.cpp
     onboard/pages/setup.cpp
     onboard/pages/info.cpp
-
-    tools/arduino.cpp
-    tools/serialmonitor.cpp
 )
 
 set_target_properties(proffieconfig PROPERTIES
@@ -48,7 +28,6 @@ target_link_libraries(proffieconfig
     utils
     pconf
     config
-    versions_manager
     process
 )
 

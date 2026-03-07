@@ -66,7 +66,7 @@ data::Version::SetAction::SetAction(utils::Version val) :
 
 bool data::Version::SetAction::shouldPerform(Model& model) {
     auto& ver{static_cast<Version&>(model)};
-    return (ver.mValue <=> mValue) != 0;
+    return utils::Version::RawComparator{}(ver.mValue, mValue) != 0;
 }
 
 void data::Version::SetAction::perform(Model& model) {

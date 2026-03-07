@@ -35,7 +35,6 @@ struct UI_EXPORT Hyperlink {
 
     // TODO: Make these base w/ C++ P2287.
     detail::ChildBase base_;
-    detail::ChildWindowBase win_;
 
     wxString label_;
     wxString link_;

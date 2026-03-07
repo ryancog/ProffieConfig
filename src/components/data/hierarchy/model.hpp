@@ -169,14 +169,8 @@ struct DATA_EXPORT Model::Receiver {
     Receiver(const Receiver&);
     virtual ~Receiver();
 
-    void attach(Model& model) {
-        model.attachReceiver(*this);
-    }
-
-    void detach() {
-        assert(mModel);
-        mModel->detachReceiver(*this);
-    }
+    void attach(Model& model);
+    void detach();
 
 protected:
     template<typename T = Model>

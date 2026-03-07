@@ -156,8 +156,19 @@ data::Model::Receiver::~Receiver() {
     assert(not mModel);
 }
 
+void data::Model::Receiver::attach(Model& model) {
+    std::lock_guard scopeLock{mLock};
+    model.attachReceiver(*this);
+}
+
+void data::Model::Receiver::detach() {
+    std::lock_guard scopeLock{mLock};
+    if (mModel == nullptr) return;
+    mModel->detachReceiver(*this);
+}
+
 bool data::Model::Receiver::processAction(std::unique_ptr<Action>&& action) {
-    std::scoped_lock scopeLock{mLock};
+    std::lock_guard scopeLock{mLock};
     if (not mModel) return false;
     return mModel->processAction(std::move(action), true);
 }

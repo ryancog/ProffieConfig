@@ -23,24 +23,42 @@
 
 #include "ui/priv/helpers.hpp"
 #include "ui/priv/winbase.hpp"
+#include "wx/gdicmn.h"
 
 using namespace pcui;
 
 namespace {
 
-struct Control : priv::WinBase<wxButton, data::Generic::Receiver> {
+struct Control : priv::WinBase<wxButton, data::String::Receiver> {
     Control(wxWindow *parent, const Button& desc) :
+        WinBase(desc.win_),
         func_{desc.func_} {
+        const auto style{desc.exactFit_ ? wxBU_EXACTFIT : 0};
+        if (const auto *ptr{std::get_if<wxString>(&desc.label_ )}) {
+            Create(
+                parent,
+                wxID_ANY,
+                *ptr,
+                wxDefaultPosition,
+                wxDefaultSize,
+                style 
+            );
+            return;
+        }
+
+        const auto& model{std::get<1>(desc.label_)};
+        data::String::ROContext str{model};
         Create(
             parent,
             wxID_ANY,
-            desc.label_,
+            str.val(),
             wxDefaultPosition,
             wxDefaultSize,
-            desc.exactFit_ ? wxBU_EXACTFIT : 0
+            style
         );
 
-        attach(desc.data_);
+        attach(model);
+
         Bind(wxEVT_BUTTON, &Control::onPress, this);
     }
 
@@ -50,8 +68,14 @@ struct Control : priv::WinBase<wxButton, data::Generic::Receiver> {
     }
 
     void onPress(wxCommandEvent&) {
-        auto generic{context<data::Generic>()};
-        if (generic.enabled()) func_();
+        auto generic{context()};
+        if (generic.enabled() and func_) func_();
+    }
+
+    void onChange() override {
+        CallAfter([this, str=context<data::String>().val()]() {
+            SetLabel(str);
+        });
     }
 
     const std::function<void()> func_;

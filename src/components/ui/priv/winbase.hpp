@@ -19,25 +19,60 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ui/detail/general.hpp"
+#include "data/logic/logic.hpp"
+
 namespace pcui::priv {
 
 template <typename Base, typename Receiver>
 struct WinBase : Base, Receiver {
+    WinBase(const detail::ChildWindowBase& desc) {
+        mShow = desc.show_;
+        if (mShow) mShowReceiver = std::make_unique<ShowReceiver>(this);
+
+        Base::SetToolTip(desc.tooltip_);
+    }
+
     void onAttach() override {
-        Base::Enable(Receiver::context().enabled());
+        Base::CallAfter([this]() {
+            Base::Enable(Receiver::context().enabled());
+        });
     }
 
     void onDetach() override {
-        Base::Disable();
+        Base::CallAfter([this]() {
+            Base::Disable();
+        });
     }
 
     void onEnabled() override {
-        Base::Enable(Receiver::context().enabled());
+        Base::CallAfter([this]() {
+            Base::Enable(Receiver::context().enabled());
+        });
     }
 
     void onFocus() override {
-        Base::SetFocus();
+        Base::CallAfter([this]() {
+            Base::SetFocus();
+        });
     }
+
+private:
+    struct ShowReceiver : data::logic::Receiver {
+        ShowReceiver(WinBase *ptr) : winbase_{ptr} {
+            attach(*winbase_->mShow);
+        }
+
+        void onChange(bool val) override {
+            winbase_->CallAfter([this, val]() {
+                winbase_->Base::Enable(val);
+            });
+        }
+
+        WinBase *winbase_;
+    };
+    std::unique_ptr<ShowReceiver> mShowReceiver;
+    data::logic::Holder mShow;
 };
 
 } // namespace pcui::priv

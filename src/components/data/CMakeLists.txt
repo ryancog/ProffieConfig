@@ -10,6 +10,10 @@ add_library(data SHARED
 
     helpers/exclusive.cpp
 
+    logic/logic.cpp
+    logic/adapter.cpp
+    logic/operators.cpp
+
     bool.cpp
     choice.cpp
     generic.cpp

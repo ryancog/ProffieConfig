@@ -420,7 +420,7 @@ void outputTopGeneral(std::ostream& outFile, Config& config) {
         ]
     ).version_};
 
-    outputOpt(outFile, OS_VERSION_STR, osVersion);
+    outputOpt(outFile, OS_VERSION_STR, osVersion.string());
 
     auto boardInclude{static_cast<versions::os::BoardInfo&>(
         *data::Vector::ROContext{*config.boards()}.children()[

@@ -1,7 +1,7 @@
-#include "onboard.h"
+#include "onboard.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024-2025 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * proffieconfig/onboard/onboard.cpp
  *
@@ -19,32 +19,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/bitmap.h>
-#include <wx/button.h>
-#include <wx/settings.h>
-#include <wx/sizer.h>
-#include <wx/timer.h>
-#include <wx/statline.h>
-#include <wx/event.h>
-#include <wx/statbmp.h>
+#include "ui/controls/button.hpp"
+#include "ui/layout/panel.hpp"
+#include "ui/layout/spacer.hpp"
+#include "ui/layout/stack.hpp"
+#include "ui/misc/message.hpp"
+#include "ui/static/divider.hpp"
+#include "ui/static/image.hpp"
 
-#include "../core/utilities/progress.h"
-#include "../core/utilities/misc.h"
-#include "../core/appstate.h"
-#include "../mainmenu/mainmenu.h"
+#include "../core/state.hpp"
 
-#include "ui/message.hpp"
-#include "ui/notifier.h"
-#include "utils/image.h"
-#include "ui/plaque.h"
+namespace {
 
 constexpr cstring NEXT_STR{wxTRANSLATE("Next")};
 constexpr cstring FINISH_STR{wxTRANSLATE("Finish")};
 constexpr cstring RUN_SETUP_STR{wxTRANSLATE("Run Setup")};
 
-Onboard::Frame* Onboard::Frame::instance{nullptr};
+} // namespace
 
-Onboard::Frame::Frame() : 
+onboard::Frame* onboard::Frame::instance{nullptr};
+
+onboard::Frame::Frame() : 
     pcui::Frame(
         nullptr,
         wxID_ANY,
@@ -53,69 +48,84 @@ Onboard::Frame::Frame() :
         wxDefaultSize,
         wxSYSTEM_MENU | wxCLOSE_BOX | wxMINIMIZE_BOX | wxCAPTION | wxCLIP_CHILDREN
     ) {
-    auto *sizer{new wxBoxSizer(wxVERTICAL)};
-    auto *contentSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *icon{pcui::createStaticImage(this, wxID_ANY, Image::loadPNG("icon"))};
-    icon->SetMaxSize({256, 256});
-
-    contentSizer->AddSpacer(10);
-    contentSizer->Add(icon);
-    contentSizer->AddSpacer(10);
-    mWelcomePage = new Onboard::Welcome(this);
-    mSetupPage = new Onboard::Setup(this);
-    mInfoPage = new Onboard::Info(this);
-    contentSizer->Add(mWelcomePage, wxSizerFlags(1).Expand());
-    contentSizer->Add(mSetupPage, wxSizerFlags(1).Expand());
-    contentSizer->Add(mInfoPage, wxSizerFlags(1).Expand());
-    contentSizer->AddSpacer(10);
-
-    mSetupPage->Hide();
-    mInfoPage->Hide();
-
-    auto *buttonSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *skip{new wxButton(this, ID_Skip, _("Skip"))};
-    skip->Hide();
-    auto *cancel{new wxButton(this, wxID_CANCEL)};
-    auto *back{new wxButton(this, wxID_BACKWARD)};
-    back->Disable();
-    auto *next{new wxButton(this, ID_Next, wxGetTranslation(NEXT_STR))};
-    buttonSizer->AddSpacer(10);
-    buttonSizer->Add(cancel);
-    buttonSizer->AddSpacer(10);
-    buttonSizer->Add(skip);
-    buttonSizer->AddStretchSpacer();
-    buttonSizer->AddSpacer(10);
-    buttonSizer->Add(back);
-    buttonSizer->AddSpacer(10);
-    buttonSizer->Add(next);
-    buttonSizer->AddSpacer(10);
-
-    sizer->AddSpacer(10);
-    sizer->Add(contentSizer, 1, wxEXPAND);
-    sizer->AddSpacer(10);
-    sizer->Add(
-        new wxStaticLine(this, wxID_ANY),
-        wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT, 10)
-    );
-    sizer->AddSpacer(10);
-    sizer->Add(buttonSizer, 0, wxEXPAND);
-    sizer->AddSpacer(10);
-
-    sizer->SetMinSize(900, 430);
-    SetSizerAndFit(sizer);
 
     bindEvents();
-    NotifyReceiver::create(this, mSetupPage->notifier);
-    initializeNotifier();
     CentreOnScreen();
     Show(true);
 }
 
-Onboard::Frame::~Frame() {
+onboard::Frame::~Frame() {
     instance = nullptr;
 }
 
-void Onboard::Frame::bindEvents() {
+pcui::DescriptorPtr onboard::Frame::ui() {
+    return pcui::Stack{
+      .base_={.minSize_={900, 430},},
+      .children_={
+        pcui::Spacer{10}(),
+        pcui::Stack{
+          .orient_=wxHORIZONTAL,
+          .children_={
+            pcui::Spacer{10}(),
+            pcui::Image{
+              .src_=pcui::Image::LoadDetails{
+                .name_="icon",
+                .size_={.dim_=256},
+              },
+            }(),
+            pcui::Spacer{10}(),
+            pcui::Panel{
+                .win_={.show_={}},
+                .child_=mWelcomePage.ui(),
+            }(),
+            pcui::Panel{
+                .win_={.show_={}},
+                .child_=mSetupPage.ui(),
+            }(),
+            pcui::Panel{
+                .win_={.show_={}},
+                .child_=mInfoPage.ui(),
+            }(),
+            pcui::Spacer{10}(),
+          }
+        }(),
+        pcui::Spacer{10}(),
+        pcui::Divider{
+            .base_={
+                .border_={.size_=10, .dirs_=wxLEFT | wxRIGHT,},
+                .expand_=true
+            },
+        }(),
+        pcui::Spacer{10}(),
+        pcui::Stack{
+            .orient_=wxHORIZONTAL,
+            .children_={
+              pcui::Spacer{10}(),
+              pcui::Button{
+                .label_=_("Cancel"),
+              }(),
+              pcui::Spacer{10}(),
+              pcui::Button{
+                .label_=_("Skip"),
+              }(),
+              pcui::StretchSpacer{}(),
+              pcui::Spacer{10}(),
+              pcui::Button{
+                .label_=_("Back"),
+              }(),
+              pcui::Spacer{10}(),
+              pcui::Button{
+                .label_=wxGetTranslation(NEXT_STR),
+              }(),
+              pcui::Spacer{10}(),
+            }
+        }(),
+        pcui::Spacer{10}(),
+      }
+    }();
+}
+
+void onboard::Frame::bindEvents() {
     Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent &event) {
         if (event.CanVeto()) {
             auto res{pcui::showMessage(
@@ -129,8 +139,8 @@ void Onboard::Frame::bindEvents() {
                 return;
             }
 
-            if (AppState::doneWithFirstRun) {
-                MainMenu::instance = new MainMenu;
+            if (state::doneWithFirstRun) {
+                // MainMenu::instance = new MainMenu;
             }
         }
         event.Skip();
@@ -138,14 +148,8 @@ void Onboard::Frame::bindEvents() {
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         Close();
     }, wxID_CANCEL);
-    Bind(Progress::EVT_UPDATE, [&](ProgressEvent& event) { 
-        Progress::handleEvent(&event); 
-    });
-    Bind(misc::EVT_MSGBOX, [&](misc::MessageBoxEvent& evt) {
-        pcui::showMessage(evt.message_, evt.caption_, evt.style_, this);
-    }, wxID_ANY);
-
     // TODO: Make this button handling sane.
+    /*
     Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
         auto res{pcui::showMessage(
             _("Skipping will leave ProffieConfig and your computer unprepared.\nYou should only do this if you know what you are doing!"),
@@ -214,8 +218,10 @@ void Onboard::Frame::bindEvents() {
         Layout();
         Fit();
     }, ID_Next);
+    */
 }
 
+/*
 void Onboard::Frame::handleNotification(uint32 id) {
     if (id == Onboard::Setup::ID_DONE or id == Onboard::Setup::ID_FAILED) {
         mSetupPage->finishSetup(id == Onboard::Setup::ID_DONE);
@@ -243,13 +249,5 @@ void Onboard::Frame::handleNotification(uint32 id) {
         mSetupPage->loadingText->SetLabelText(mSetupPage->statusMessage);
     }
 }
+*/
 
-wxStaticText *Onboard::createHeader(wxWindow* parent, const wxString& text) {
-    auto *header{new wxStaticText(parent, wxID_ANY, text)};
-    auto font = header->GetFont();
-    font.MakeBold();
-    font.SetPointSize(20);
-    header->SetFont(font);
-
-    return header;
-}

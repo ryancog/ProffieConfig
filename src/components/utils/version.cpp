@@ -142,26 +142,6 @@ std::strong_ordering utils::Version::compare(const Version& other) const {
     return std::strong_ordering::equal;
 }
 
-std::strong_ordering utils::Version::operator<=>(const Version& other) const {
-    const auto comp{[this, &other](auto Version::* item) {
-        const auto modeComp{(this->*item).mode_ <=> (other.*item).mode_};
-        if (modeComp != std::strong_ordering::equal) return modeComp;
-
-        return (this->*item).val_ <=> (other.*item).val_;
-    }};
-
-    const auto majorComp{comp(&Version::major_)};
-    if (majorComp != std::strong_ordering::equal) return majorComp;
-
-    const auto minorComp{comp(&Version::minor_)};
-    if (minorComp != std::strong_ordering::equal) return minorComp;
-
-    const auto bugfixComp{comp(&Version::bugfix_)};
-    if (bugfixComp != std::strong_ordering::equal) return bugfixComp;
-
-    return comp(&Version::tag_);
-}
-
 bool utils::Version::isExact() const {
     if (major_.mode_ != CompMode::Exact) return false;
     if (minor_.mode_ != CompMode::Exact) return false;
@@ -170,7 +150,7 @@ bool utils::Version::isExact() const {
     return true;
 }
 
-utils::Version::operator std::string() const {
+std::string utils::Version::string() const {
     switch (err_) {
         using enum Err;
         case Invalid:
@@ -225,11 +205,43 @@ utils::Version::operator std::string() const {
     return ret;
 }
 
+utils::Version::operator std::string() const {
+    return string();
+}
+
 utils::Version::operator bool() const { return err_ == Err::None; }
 
 utils::Version utils::Version::invalid() {
     Version ret;
     ret.err_ = Err::Invalid;
     return ret;
+}
+
+std::strong_ordering utils::Version::RawComparator::operator()(
+    const Version& lhs, const Version& rhs
+) const {
+    const auto comp{[this, &lhs, &rhs](auto Version::* item) {
+        const auto modeComp{(lhs.*item).mode_ <=> (rhs.*item).mode_};
+        if (modeComp != std::strong_ordering::equal) return modeComp;
+
+        return (lhs.*item).val_ <=> (rhs.*item).val_;
+    }};
+
+    const auto majorComp{comp(&Version::major_)};
+    if (majorComp != std::strong_ordering::equal) return majorComp;
+
+    const auto minorComp{comp(&Version::minor_)};
+    if (minorComp != std::strong_ordering::equal) return minorComp;
+
+    const auto bugfixComp{comp(&Version::bugfix_)};
+    if (bugfixComp != std::strong_ordering::equal) return bugfixComp;
+
+    return comp(&Version::tag_);
+}
+
+bool utils::Version::RawOrderer::operator()(
+    const Version& lhs, const Version& rhs
+) const {
+    return RawComparator{}(lhs, rhs) < 0;
 }
 

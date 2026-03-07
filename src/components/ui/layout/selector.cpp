@@ -33,7 +33,7 @@ namespace {
 
 struct Control : priv::WinBase<wxPanel, data::Selector::Receiver>,
                  data::Choice::Receiver {
-    Control(wxWindow *parent, const Selector& desc) {
+    Control(wxWindow *parent, const Selector& desc) : WinBase(desc.win_) {
         Create(parent);
 
         data::Selector::Receiver::attach(desc.data_);
@@ -49,13 +49,13 @@ struct Control : priv::WinBase<wxPanel, data::Selector::Receiver>,
         data::Vector::Context vec{*vec_};
 
         auto ctxt{data::Choice::Receiver::context<data::Choice>()};
-        build(this, *builder_(&*vec.children()[ctxt.choice()]));
+        build(this, builder_(&*vec.children()[ctxt.choice()]));
     }
 
     void onRebound(data::Vector *vec) override {
         vec_ = vec;
 
-        build(this, *builder_(nullptr));
+        build(this, builder_(nullptr));
     }
 
     const detail::DescBuilder builder_;

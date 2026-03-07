@@ -1,13 +1,13 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2026 Ryan Ogurek
  *
- * proffieconfig/onboard/pages/info.h
+ * components/ui/layout/panel.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 4 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -19,14 +19,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/panel.h>
+#include "ui/detail/general.hpp"
+#include "ui/types.hpp"
 
-namespace Onboard {
+#include "ui_export.h"
 
-class Info : public wxPanel {
-public:
-    Info(wxWindow*);
+namespace pcui {
+
+struct UI_EXPORT Panel {
+    struct Desc;
+
+    // TODO: Make this a base w/ C++ P2287.
+    detail::ChildBase base_;
+    detail::ChildWindowBase win_;
+
+    DescriptorPtr child_;
+
+    DescriptorPtr operator()();
 };
 
-} // namespace Onboard
+struct UI_EXPORT Panel::Desc : Panel, detail::Descriptor {
+    Desc(Panel&&);
+
+    [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+};
+
+} // namespace pcui
+
 

@@ -1,7 +1,7 @@
-#include "info.h"
+#include "info.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * proffieconfig/onboard/pages/info.cpp
  *
@@ -21,34 +21,36 @@
 
 #include <wx/sizer.h>
 
-#include "../onboard.h"
+#include "ui/layout/spacer.hpp"
+#include "ui/layout/stack.hpp"
 
-Onboard::Info::Info(wxWindow *parent) : wxPanel(parent) {
-    auto *sizer{new wxBoxSizer(wxVERTICAL)};
+#include "ui/static/label.hpp"
 
-    auto *welcomeText{Onboard::createHeader(this, _("Ready To Go!"))};
-
-    const auto infoString{_(
-        "ProffieConfig is all set up and ready to go!\n"
-        "\n"
-        "You can always re-run this setup from the main menu File drop-down.\n"
-        "\n"
-        "Additionally, the documentation linked earlier is available in the Help menu,\n"
-        "and don't hesitate to reach out to for help. I'm available in a few places\n"
-        "which I list on the ProffieConfig website. :)\n"
-        "\n"
-        "Happy Saber-ing!"
-    )};
-    auto *infoText{new wxStaticText(
-        this,
-        wxID_ANY,
-        infoString
-    )};
-
-    sizer->AddSpacer(20);
-    sizer->Add(welcomeText, 0);
-    sizer->AddSpacer(20);
-    sizer->Add(infoText, 0);
-    SetSizerAndFit(sizer);
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+pcui::DescriptorPtr onboard::Info::ui() {
+    return pcui::Stack{
+        .orient_=wxVERTICAL,
+        .children_={
+            pcui::Spacer{20}(),
+            pcui::Label{
+                .label_=_("Ready To Go!"),
+                .style_=pcui::text::Style::Header,
+            }(),
+            pcui::Spacer{20}(),
+            pcui::Label{
+                .label_=_(
+                    "ProffieConfig is all set up and ready to go!\n"
+                    "\n"
+                    "You can always re-run this setup from the main menu File drop-down.\n"
+                    "\n"
+                    "Additionally, the documentation linked earlier is available in the Help menu,\n"
+                    "and don't hesitate to reach out to for help. I'm available in a few places\n"
+                    "which I list on the ProffieConfig website. :)\n"
+                    "\n"
+                    "Happy Saber-ing!"
+                )
+            }(),
+        }
+    }();
 }
 

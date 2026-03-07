@@ -47,7 +47,6 @@ wxSizerItem *Hyperlink::Desc::build(const detail::Scaffold& scaffold) const {
 
     auto *item{new wxSizerItem(link)};
     priv::apply(base_, item);
-    priv::apply(win_, item);
 
     return item;
 }

@@ -30,7 +30,7 @@ using namespace pcui;
 namespace {
 
 struct IntCtrl : priv::WinBase<wxSpinCtrl, data::Integer::Receiver> {
-    IntCtrl(wxWindow *parent, const Stepper& desc) {
+    IntCtrl(wxWindow *parent, const Stepper& desc) : WinBase(desc.win_) {
         Create(
             parent,
             wxID_ANY,
@@ -91,7 +91,7 @@ struct IntCtrl : priv::WinBase<wxSpinCtrl, data::Integer::Receiver> {
 };
 
 struct DoubleCtrl : priv::WinBase<wxSpinCtrlDouble, data::Integer::Receiver> {
-    DoubleCtrl(wxWindow *parent, const Stepper& desc) {
+    DoubleCtrl(wxWindow *parent, const Stepper& desc) : WinBase(desc.win_) {
         Create(
             parent,
             wxID_ANY,

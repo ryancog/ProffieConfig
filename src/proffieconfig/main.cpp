@@ -18,16 +18,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cstddef>
 #include <wx/app.h>
 #include <wx/image.h>
 
-#include "app/app.h"
-#include "app/critical_dialog.h"
-#include "config/info.h"
-#include "core/appstate.h"
-#include "ui/message.hpp"
-#include "utils/paths.h"
-#include "versions/versions.h"
+#include "app/app.hpp"
+#include "app/critical_dialog.hpp"
+#include "config/info.hpp"
+#include "core/state.hpp"
+#include "ui/misc/message.hpp"
+#include "utils/paths.hpp"
+#include "versions/versions.hpp"
 
 class ProffieConfig : public wxApp {
 public:
@@ -52,10 +53,12 @@ public:
             return false;
         }
 
-        Config::setExecutableVersion(wxSTRINGIZE(BIN_VERSION));
-        Versions::loadLocal();
+        wxDialog dlg{nullptr, wxID_ANY, "Title"};
 
-        AppState::init();
+        config::setExecutableVersion(wxSTRINGIZE(BIN_VERSION));
+        versions::loadLocal();
+
+        state::init();
 
         return true;
     }

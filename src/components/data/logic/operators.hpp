@@ -1,13 +1,13 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2026 Ryan Ogurek
  *
- * proffieconfig/onboard/pages/welcome.h
+ * components/data/logic/operators.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 4 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -19,14 +19,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/panel.h>
+#include "data/logic/logic.hpp"
 
-namespace Onboard {
+#include "data_export.h"
 
-class Welcome : public wxPanel {
-public:
-    Welcome(wxWindow *);
-};
+namespace data::logic {
 
-} // namespace Onboard
+DATA_EXPORT Element operator not(
+    Element&&
+);
+
+DATA_EXPORT Element operator or(
+    Element&&, Element&&
+);
+
+DATA_EXPORT Element operator and(
+    Element&&, Element&&
+);
+
+} // namespace data::logic
 

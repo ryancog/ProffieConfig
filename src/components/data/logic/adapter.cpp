@@ -1,9 +1,9 @@
-#include "build.hpp"
+#include "adapter.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/build.cpp
+ * components/data/logic/adapter.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +19,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void pcui::build(wxWindow *parent, const DescriptorPtr& desc) {
-    assert(parent);
-    parent->SetSizer(nullptr);
-    parent->DestroyChildren();
+auto data::logic::adapt(data::Bool& bl) -> Element {
+    struct Adapter : detail::Base, data::Bool::Receiver {
+        Adapter(data::Bool& bl) : bl_{bl} {}
+        ~Adapter() override { detach(); }
 
-    if (not desc) return;
+        bool doActivate(ChangeFunc changeFunc) override {
+            changeFunc_ = std::move(changeFunc);
+            attach(bl_);
+            return context<Bool>().val();
+        }
 
-    detail::Scaffold scaffold{
-        .childParent_=parent
+        void onSet() override {
+            std::lock_guard scopeLock{*pLock};
+            changeFunc_(context<Bool>().val());
+        }
+
+        data::Bool& bl_;
+        ChangeFunc changeFunc_;
     };
 
-    auto *item{desc->build(scaffold)};
-    if (item->IsSizer()) parent->SetSizer(item->GetSizer());
+    return std::make_unique<Adapter>(bl);
 }
 

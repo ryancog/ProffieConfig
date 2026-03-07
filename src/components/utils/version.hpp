@@ -116,13 +116,6 @@ struct UTILS_EXPORT Version {
     [[nodiscard]] std::strong_ordering compare(const Version&) const;
 
     /**
-     * Strictly compare the two items based on data content rather than version
-     * semantics.
-     */
-    auto operator==(const Version&) const = delete;
-    std::strong_ordering operator<=>(const Version&) const;
-
-    /**
      * If the Version refers to a distinct, singular version.
      */
     [[nodiscard]] bool isExact() const;
@@ -133,9 +126,26 @@ struct UTILS_EXPORT Version {
      * If valid, it returns [major](.[minor])(.[bugfix])(-[tag]).
      * If invalid, it returns a string form of the `Err`
      */
+    [[nodiscard]] std::string string() const;
     operator std::string() const;
-    operator bool() const;
+
+    explicit operator bool() const;
+
+    struct RawComparator;
+    struct RawOrderer;
 };
+
+struct UTILS_EXPORT Version::RawComparator {
+    std::strong_ordering operator()(const Version&, const Version&) const;
+};
+
+/**
+ * For use in map
+ */
+struct UTILS_EXPORT Version::RawOrderer {
+    bool operator()(const Version&, const Version&) const;
+};
+
 
 } // namespace utils
 

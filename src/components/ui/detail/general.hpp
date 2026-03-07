@@ -24,6 +24,7 @@
 
 #include <wx/gdicmn.h>
 
+#include "data/logic/logic.hpp"
 #include "utils/types.hpp"
 
 #include "ui_export.h"
@@ -60,6 +61,7 @@ struct UI_EXPORT ChildBase {
  * General properties for child window items.
  */
 struct UI_EXPORT ChildWindowBase {
+    data::logic::Holder show_;
     wxString tooltip_;
 };
 
