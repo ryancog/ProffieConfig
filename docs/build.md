@@ -8,11 +8,11 @@ If you're simply trying to download and use ProffieConfig, go [here](https://pro
 ### Notes and Disclaimers
 
 *If you're on Windows, you'll need a better operating system. (I'm joking, kind of)
-ProffieConfig is not set up to be built on Windows. It may be possible with WSL, but it probably won't be fun.*
+ProffieConfig is not set up to be built on Windows with MSVC. You'll need something like MSYS2 or WSL with MinGW.*
 
 ProffieConfig's build system(s) have only been tested on (all x86) OpenSUSE (Tumbleweed, Early 2025), Debian (Trixie) and macOS (Monterey through Sequoia). Other Linux distributions may have quirks with their build tools that require troubleshooting. Other architectures will also probably require some additional effort and modification to the build scrips. Feel free to reach out and/or submit a PR if you are building elsewhere.
 
-Building for Windows requires MinGW. MinGW is recommended to be installed via homebrew (macOS) or with mxe (Linux). MinGW for Apple Silicon does not have paths configured in the ProffieConfig toolchain. It will require (possibly significant) manual work.
+Building for Windows requires MinGW. MinGW is recommended to be installed via homebrew (macOS) or ~~with mxe (Linux)~~ with your system's package manager on Linux (mxe's gcc is too far out of date now). MinGW for Apple Silicon does not have paths configured in the ProffieConfig toolchain. It will require (possibly significant) manual work.
 
 With MinGW, I've recently encountered an issue with a typeinfo operator== being duplicated (added to stdc++ static lib and compiled into application code), despite being marked inline. There's some chatter around this online, but I simply added `__attribute__((always_inline))` to its signature in typeinfo header, as suggested. This means modifying system headers.
 
