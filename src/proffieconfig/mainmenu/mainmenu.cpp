@@ -155,7 +155,7 @@ pcui::DescriptorPtr MainMenu::ui() {
             pcui::Button{
               .win_={
                 .base_={.expand_=true},
-                .enable_=not (configSel_.choice_ | data::logic::HasSelection{{-1}}),
+                .enable_=configSel_.choice_ | data::logic::HasSelection{},
               },
               .label_=_("Remove"),
               .exactFit_=true,
@@ -166,7 +166,7 @@ pcui::DescriptorPtr MainMenu::ui() {
         pcui::Button{
           .win_={
             .base_={.expand_=true},
-            .enable_=not (configSel_.choice_ | data::logic::HasSelection{{-1}})
+            .enable_=configSel_.choice_ | data::logic::HasSelection{},
           },
           .label_=_("Edit Selected Configuration"),
           .func_=[this] {
@@ -235,8 +235,8 @@ pcui::DescriptorPtr MainMenu::ui() {
           .win_={
             .base_={.expand_=true},
             .enable_={
-              not (configSel_.choice_ | data::logic::HasSelection{{-1}}) and
-              not (board_ | data::logic::HasSelection{{-1}})
+              configSel_.choice_ | data::logic::HasSelection{} and
+              board_ | data::logic::HasSelection{}
             },
             .tooltip_=_("Compile and upload the selected configuration to the selected Proffieboard."),
           },
@@ -246,7 +246,7 @@ pcui::DescriptorPtr MainMenu::ui() {
         pcui::Button{
           .win_={
             .base_={.expand_=true},
-            .enable_=not (board_ | data::logic::HasSelection{{-1}}),
+            .enable_=board_ | data::logic::HasSelection{},
           },
           .label_=_("Open Serial Monitor"),
         }(),
