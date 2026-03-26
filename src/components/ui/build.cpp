@@ -20,12 +20,15 @@
  */
 
 #include <wx/panel.h>
+#include <wx/wupdlock.h>
 
 #include "ui/frame.hpp"
 #include "ui/priv/helpers.hpp"
 #include "ui/priv/winbase.hpp"
 
 void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
+    wxWindowUpdateLocker lock(win);
+
     teardown(win);
 
     auto *parent{win};
@@ -48,11 +51,14 @@ void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
     auto *item{desc->build(scaffold)};
     sizer->Add(item);
 
-    // Flush any updates that were immediately caused from building the new UI
-    // elements, such as show/enables, which could otherwise cause flickering
-    // as things update. This is particularly undesirable for new windows that
-    // could flicker/jitter immediately upon showing otherwise.
-    priv::flushLayoutQueueFor(win);
+    // Immediately flush any show updates that were caused from building the
+    // new UI elements, which could otherwise be seen by the user as
+    // "flickering" as things update between the event loop servicing the UI.
+    priv::flushShowQueueFor(win);
+
+    // Also, clear out any layout requests that were generated from the build,
+    // they're redundant since layout will be processed here shortly.
+    priv::discardLayoutsFor(win);
 
     // The sizer SetSizerAndFit, contrary to its name, does not SetSizer() and
     // Fit(). Instead, it calls some special functions to do something similar.
@@ -80,18 +86,23 @@ void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
     // I'm not sure if this is the best way to do things though, or if the
     // Layout() responsibility should be pushed to the caller. For now, it's
     // unexpected that build() doesn't always result in a clean new setup, so
-    // do this for consistency.
-    if (oldSize == parent->GetVirtualSize()) parent->Layout();
+    // do this for consistency. 
+    if (oldSize == parent->GetVirtualSize()) {
+        priv::layoutAndFitFor(win);
+        priv::flushLayoutQueueFor(win);
+    }
 }
 
-void pcui::teardown(wxWindow *parent) {
+void pcui::teardown(wxWindow *win) {
+    wxWindowUpdateLocker lock(win);
+
     assert(parent);
 
     // First, delete all children of the active sizer, and the sizer itself.
     // That should clear out most windows in most cases.
-    if (parent->GetSizer()) {
-        parent->GetSizer()->DeleteWindows();
-        parent->SetSizer(nullptr, true);
+    if (win->GetSizer()) {
+        win->GetSizer()->DeleteWindows();
+        win->SetSizer(nullptr, true);
     }
 
     // Then, check for any other children. They cannot be unconditionally
@@ -101,15 +112,15 @@ void pcui::teardown(wxWindow *parent) {
     // There might be a cleaner and/or more efficient way to do this, but we
     // can't just iterate over GetChildren() directly, because the iterators
     // will be invalidated as child Destroy() is called.
-    auto iter{parent->GetChildren().begin()};
-    while (iter != parent->GetChildren().end()) {
-        if (not parent->IsClientAreaChild(*iter)) {
+    auto iter{win->GetChildren().begin()};
+    while (iter != win->GetChildren().end()) {
+        if (not win->IsClientAreaChild(*iter)) {
             ++iter;
             continue;
         }
 
         (*iter)->Destroy();
-        iter = parent->GetChildren().begin();
+        iter = win->GetChildren().begin();
     }
 }
 
