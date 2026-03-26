@@ -89,18 +89,16 @@ struct WinBase : Base, Receiver {
     }
 
     virtual void updateSizes() {
-        auto maxSize{mMaxSize};
-
-        Base::SetMinSize({0, 0});
+        Base::SetMinSize({-1, -1});
 
         auto minSize{mMinSize};
         minSize.IncTo(Base::GetBestSize());
 
-        if (maxSize.IsFullySpecified()) {
-            minSize.DecTo(maxSize);
+        if (mMaxSize.IsFullySpecified()) {
+            minSize.DecTo(mMaxSize);
+            Base::SetMaxSize(mMaxSize);
         }
 
-        Base::SetMaxSize(maxSize);
         Base::SetMinSize(minSize);
     }
 
