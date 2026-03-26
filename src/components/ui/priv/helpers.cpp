@@ -21,6 +21,8 @@
 
 #include <cassert>
 
+#include "utils/defer.hpp"
+
 namespace {
 
 // All this stuff happens on the main thread, no locking required.
@@ -166,15 +168,16 @@ void pcui::priv::flushLayoutQueueFor(wxWindow *win) {
         // since this set is empty, must have all been children of the window
         // being flushed (this set could be a child set of the flushed window
         // or the it belonged to, depending on how things fell out).
-        assert([iter] mutable {
-            ++iter;
-            while (iter != updateList.end()) {
-                if (not iter->empty()) return false;
-                ++iter;
+        const auto allClear{[checkIter=iter] mutable {
+            ++checkIter;
+            while (checkIter != updateList.end()) {
+                if (not checkIter->empty()) return false;
+                ++checkIter;
             }
             
             return true;
-        }());
+        }()};
+        assert(allClear);
 
         iter = updateList.erase(iter, updateList.end());
     }
