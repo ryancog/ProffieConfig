@@ -62,7 +62,6 @@ struct UI_EXPORT Button {
         Maintain,
     };
 
-
     // TODO: Make this a base w/ C++ P2287.
     detail::ChildWindowBase win_;
 
