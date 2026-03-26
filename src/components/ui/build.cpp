@@ -96,7 +96,7 @@ void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
 void pcui::teardown(wxWindow *win) {
     wxWindowUpdateLocker lock(win);
 
-    assert(parent);
+    assert(win);
 
     // First, delete all children of the active sizer, and the sizer itself.
     // That should clear out most windows in most cases.

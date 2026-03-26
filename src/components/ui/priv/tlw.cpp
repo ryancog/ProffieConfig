@@ -23,7 +23,7 @@
 
 #ifdef _WIN32
 #include <dwmapi.h>
-#include <tlwdows.h>
+#include <windows.h>
 
 #include "app/app.hpp"
 #include "log/context.hpp"

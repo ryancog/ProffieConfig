@@ -36,7 +36,7 @@ void bindOnCreate(wxTopLevelWindow *tlw);
 );
 
 template <typename TLW>
-void fit(wxTopLevelWindow *tlw) {
+void fit(auto *tlw) {
     // IMO it's silly that the usual fit doesn't set min size. Fit is supposed
     // to set it to fit around the children (i.e. at min size), so not making
     // it so the sizing reflects that is a little odd. Probably historical.

@@ -25,6 +25,7 @@
 
 #include <wx/filedlg.h>
 #include <wx/menu.h>
+#include <wx/toolbar.h>
 #include <wx/uri.h>
 
 #include "config/misc/injection.hpp"
