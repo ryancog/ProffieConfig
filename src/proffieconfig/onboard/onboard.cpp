@@ -37,14 +37,6 @@
 #include "../core/state.hpp"
 #include "../mainmenu/mainmenu.hpp"
 
-namespace {
-
-constexpr cstring NEXT_STR{wxTRANSLATE("Next")};
-constexpr cstring FINISH_STR{wxTRANSLATE("Finish")};
-constexpr cstring RUN_SETUP_STR{wxTRANSLATE("Run Setup")};
-
-} // namespace
-
 onboard::Frame* onboard::Frame::instance{nullptr};
 
 onboard::Frame::Frame() : 
@@ -146,14 +138,14 @@ pcui::DescriptorPtr onboard::Frame::ui() {
             pcui::Spacer{10}(),
             pcui::Panel{
               .win_={
-                .base_={.proportion_=1,},
+                .base_={.proportion_=1},
                 .show_=mPhase | data::logic::HasSelection{{ePhase_Welcome}}
               },
               .child_=mWelcomePage.ui(),
             }(),
             pcui::Panel{
               .win_={
-                .base_={.proportion_=1,},
+                .base_={.proportion_=1},
                 .show_=mPhase | data::logic::HasSelection{{
                     ePhase_Setup_Pre,
                     ePhase_Setup_Prog,
@@ -187,7 +179,14 @@ pcui::DescriptorPtr onboard::Frame::ui() {
                   _("Cancel"), mCancelButton
               },
               .func_=[this] {
-                  Close();
+                  auto res{pcui::showMessage(
+                      _("Are you sure you want to cancel setup?"),
+                      _("Exit ProffieConfig"),
+                      wxYES_NO | wxNO_DEFAULT | wxCENTER,
+                      this
+                  )};
+
+                  if (res == wxYES) Close();
               }
             }(),
             pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
@@ -283,22 +282,8 @@ pcui::DescriptorPtr onboard::Frame::ui() {
 
 void onboard::Frame::bindEvents() {
     Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent &event) {
-        if (event.CanVeto()) {
-            auto res{pcui::showMessage(
-                _("Are you sure you want to cancel setup?"),
-                _("Exit ProffieConfig"),
-                wxYES_NO | wxNO_DEFAULT | wxCENTER,
-                this
-            )};
-
-            if (res != wxYES) {
-                event.Veto();
-                return;
-            }
-
-            if (state::doneWithFirstRun) {
-                MainMenu::instance = new MainMenu;
-            }
+        if (event.CanVeto() and state::doneWithFirstRun) {
+            MainMenu::instance = new MainMenu;
         }
 
         event.Skip();
