@@ -22,6 +22,7 @@
 #include <wx/panel.h>
 
 #include "ui/frame.hpp"
+#include "ui/priv/helpers.hpp"
 #include "ui/priv/winbase.hpp"
 
 void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
@@ -46,6 +47,12 @@ void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
 
     auto *item{desc->build(scaffold)};
     sizer->Add(item);
+
+    // Flush any updates that were immediately caused from building the new UI
+    // elements, such as show/enables, which could otherwise cause flickering
+    // as things update. This is particularly undesirable for new windows that
+    // could flicker/jitter immediately upon showing otherwise.
+    priv::flushLayoutQueueFor(win);
 
     // The sizer SetSizerAndFit, contrary to its name, does not SetSizer() and
     // Fit(). Instead, it calls some special functions to do something similar.
