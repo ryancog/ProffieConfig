@@ -61,6 +61,7 @@ auto data::logic::operator|(
         }
 
         bool isTrue(int32 choice) {
+            if (sels_.empty()) return choice != -1;
             return sels_.contains(choice);
         }
 

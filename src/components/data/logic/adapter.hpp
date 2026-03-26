@@ -33,6 +33,11 @@ struct IsSet {};
 
 DATA_EXPORT Element operator|(const data::Bool&, IsSet);
 
+/**
+ * If values are provided, checks if the data has a selection in the set.
+ * If no values are provided, checks that the data has a valid selection. E.g.
+ * not -1 for a choice
+ */
 struct DATA_EXPORT HasSelection : std::set<int32> {};
 
 DATA_EXPORT Element operator|(const data::Choice&, HasSelection);
