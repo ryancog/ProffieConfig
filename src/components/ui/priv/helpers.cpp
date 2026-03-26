@@ -193,6 +193,9 @@ namespace {
  * programmatic in nature).
  */
 void performUpdate() {
+    // Make sure this is always reset.
+    defer { updateRequested = false; };
+
     // If a flush was invoked before the usual update occurred, then it's
     // possible no update is needed at all anymore.
     if (updateList.empty()) return;
@@ -214,7 +217,6 @@ void performUpdate() {
     }
 
     updateList.clear();
-    updateRequested = false;
 }
 
 void processTLW(wxWindow *win) {
