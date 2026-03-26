@@ -44,7 +44,7 @@ struct UI_EXPORT ChildBase {
         int32 dirs_{0};
     } border_;
 
-    int32 align_{wxALIGN_NOT};
+    wxAlignment align_{wxALIGN_NOT};
 };
 
 /**
