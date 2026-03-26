@@ -52,7 +52,9 @@ private:
     friend struct Setup;
 
     pcui::DescriptorPtr ui();
+
     void bindEvents();
+    void createMenuBar();
 
     data::Choice mPhase;
 

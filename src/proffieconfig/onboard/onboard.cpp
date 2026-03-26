@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/toplevel.h>
+#include <wx/menu.h>
 
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
@@ -33,6 +33,7 @@
 #include "ui/static/image.hpp"
 #include "ui/values.hpp"
 #include "utils/parent.hpp"
+#include "utils/paths.hpp"
 
 #include "../core/state.hpp"
 #include "../mainmenu/mainmenu.hpp"
@@ -109,7 +110,9 @@ onboard::Frame::Frame() :
 
     pcui::build(this, ui());
 
+    createMenuBar();
     bindEvents();
+
     CentreOnScreen();
     Show(true);
 }
@@ -281,12 +284,28 @@ pcui::DescriptorPtr onboard::Frame::ui() {
 }
 
 void onboard::Frame::bindEvents() {
-    Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent &event) {
+    Bind(wxEVT_CLOSE_WINDOW, [this](wxCloseEvent &event) {
         if (event.CanVeto() and state::doneWithFirstRun) {
             MainMenu::instance = new MainMenu;
         }
 
         event.Skip();
     });
+
+    Bind(wxEVT_MENU, [this](wxCommandEvent&) {
+        wxLaunchDefaultApplication(paths::logDir().native());
+    }, wxID_FILE1);
+}
+
+void onboard::Frame::createMenuBar() {
+    auto *menubar{new wxMenuBar};
+
+    auto *file{new wxMenu};
+    file->Append(wxID_FILE1, _("Show Logs..."));
+
+    menubar->Append(file, _("&File"));
+    appendDefaultMenuItems(menubar);
+
+    SetMenuBar(menubar);
 }
 
