@@ -119,9 +119,9 @@ patch_rpaths() {
                 NEWNAME=`otool -D ${lib} | sed -n 2$RENAME_KEY`
                 mv -f ${lib} $NEWNAME
                 install_name_tool -id @rpath/${NEWNAME} ${NEWNAME}
-                for dep in `otool -L ${NEWNAME} | grep '/libwx' | sed -n $RENAME_KEY`; do
-                    CLEANED_DEP_NAME=`echo "${dep}" | sed -n `
-                    install_name_tool -change ${dep} @rpath/${CLEANED_DEP_NAME} ${NEWNAME}
+                for dep in `otool -L ${NEWNAME} | grep $'\t.*/libwx' | awk '{print $1}'`; do
+                    CLEANED=`echo $dep | sed -n $RENAME_KEY`
+                    install_name_tool -change ${dep} @rpath/${CLEANED} ${NEWNAME}
                 done
             else
                 rm ${lib}
