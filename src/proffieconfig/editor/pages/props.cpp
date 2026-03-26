@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "data/logic/adapter.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/choice.hpp"
 #include "ui/helpers/labeled.hpp"
@@ -51,6 +52,9 @@ pcui::DescriptorPtr PropsPage::ui() {
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::Button{
               .win_={
+                .base_={.align_=wxALIGN_BOTTOM},
+                .enable_=mConfig.propSel().choice_ |
+                    data::logic::HasSelection{},
                 .tooltip_=_("View prop creator-provided information about this prop and its intended usage."),
               },
               .label_=_("Prop Description and Usage Info..."),
@@ -58,6 +62,9 @@ pcui::DescriptorPtr PropsPage::ui() {
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::Button{
               .win_={
+                .base_={.align_=wxALIGN_BOTTOM},
+                .enable_=mConfig.propSel().choice_ |
+                    data::logic::HasSelection{},
                 .tooltip_=_("View button controls based on specific option settings and number of buttons."),
               },
               .label_=_("Button Controls..."),
