@@ -19,14 +19,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cassert>
+
 namespace {
 
 // All this stuff happens on the main thread, no locking required.
+
+// This bool tracks whether a CallAfter event to run performUpdate() has been
+// sent, or if another one is needed. It does not track whether or not that
+// event is needed anymore (due to early flushing), as that status could
+// change, possibly multiple times, between one initially being sent and
+// everything being added to the lists. (e.g. add, flush, add)
 bool updateRequested{false};
+
 std::vector<std::set<wxWindow *>> updateList;
 std::unordered_map<wxWindow *, bool> showList;
 
 void performUpdate();
+
+void processTLW(wxWindow *);
+void processChild(wxWindow *);
 
 } // namespace
 
@@ -50,7 +62,7 @@ void pcui::priv::apply(const detail::ChildBase& desc, wxSizerItem *item) {
 }
 
 void pcui::priv::queueShow(wxWindow *win, bool show) {
-    assert(wxIsMainThread());;
+    assert(wxIsMainThread());
 
     showList[win] = show;
 }
@@ -70,7 +82,7 @@ void pcui::priv::queueShow(wxWindow *win, bool show) {
  * unnecessarily grow, which is undesirable.
  */
 void pcui::priv::layoutAndFitFor(wxWindow *win) {
-    assert(wxIsMainThread());;
+    assert(wxIsMainThread());
 
     auto *top{win};
 
@@ -100,6 +112,74 @@ void pcui::priv::layoutAndFitFor(wxWindow *win) {
     }
 }
 
+void pcui::priv::flushLayoutQueueFor(wxWindow *win) {
+    assert(wxIsMainThread());
+
+    if (updateList.empty()) return;
+
+    // Throughout this, wxWindow::IsDescendant is used quite a bit. It seems
+    // worth mentioning that the name is a little confusing, and it's checking
+    // if the window passed is a descendant of `this`, *NOT* if `this` is a
+    // descendant of the arg as the name would imply if read naturally.
+
+    // Go through the showlist and process any windows which are a descendant
+    // of the window we're flushing for, erasing the entry for any processed.
+    for (auto iter{showList.begin()}; iter != showList.end();) {
+        auto [winToShow, show]{*iter};
+
+        if (not win->IsDescendant(winToShow)) {
+            ++iter;
+            continue;
+        }
+
+        winToShow->Show(show);
+        iter = showList.erase(iter);
+    }
+
+    // First, process all the windows and remove the individual listings from
+    // each subset as appropriate.
+    for (auto iter{updateList.rbegin()};; ++iter) {
+        bool isTlw{std::next(iter) == updateList.rend()};
+
+        for (auto winIt{iter->begin()}; winIt != iter->end();) {
+            if (not win->IsDescendant(*winIt)) {
+                ++iter;
+                continue;
+            }
+
+            if (isTlw) processTLW(*winIt);
+            else processChild(*winIt);
+
+            winIt = iter->erase(winIt);
+        }
+
+        if (isTlw) break;
+    }
+
+    // Now, remove any empty sets.
+    for (auto iter{updateList.begin()}; iter != updateList.end();) {
+        if (not iter->empty()) continue;
+
+        // By the parent->child nature of the way the list is constructed,
+        // once an empty set is reached, all the remaining sets must also be
+        // empty. All remaining sets were children of this set windows, which,
+        // since this set is empty, must have all been children of the window
+        // being flushed (this set could be a child set of the flushed window
+        // or the it belonged to, depending on how things fell out).
+        assert([iter] mutable {
+            ++iter;
+            while (iter != updateList.end()) {
+                if (not iter->empty()) return false;
+                ++iter;
+            }
+            
+            return true;
+        }());
+
+        iter = updateList.erase(iter, updateList.end());
+    }
+}
+
 namespace {
 
 /**
@@ -113,8 +193,9 @@ namespace {
  * programmatic in nature).
  */
 void performUpdate() {
-    // If an update is requested, this should never be empty.
-    assert(not updateList.empty());
+    // If a flush was invoked before the usual update occurred, then it's
+    // possible no update is needed at all anymore.
+    if (updateList.empty()) return;
 
     for (auto [win, show] : showList) {
         win->Show(show);
@@ -122,34 +203,37 @@ void performUpdate() {
     showList.clear();
 
     for (auto iter{updateList.rbegin()};; ++iter) {
-        if (std::next(iter) == updateList.rend()) {
-            // Update top levels
-            for (auto *win : *iter) {
-                auto oldSize{win->GetSize()};
+        bool isTlw{std::next(iter) == updateList.rend()};
 
-                win->Fit();
-
-                if (win->GetWindowStyle() & wxRESIZE_BORDER) {
-                    auto fitSize{win->GetSize()};
-                    fitSize.IncTo(oldSize);
-                    win->SetSize(fitSize);
-                }
-
-                win->Layout();
-            }
-
-            break;
-        }
-
-        // Update lower levels
         for (auto *win : *iter) {
-            win->Fit();
-            win->Layout();
+            if (isTlw) processTLW(win);
+            else processChild(win);
         }
+
+        if (isTlw) break;
     }
 
     updateList.clear();
     updateRequested = false;
+}
+
+void processTLW(wxWindow *win) {
+    auto oldSize{win->GetSize()};
+
+    win->Fit();
+
+    if (win->GetWindowStyle() & wxRESIZE_BORDER) {
+        auto fitSize{win->GetSize()};
+        fitSize.IncTo(oldSize);
+        win->SetSize(fitSize);
+    }
+
+    win->Layout();
+}
+
+void processChild(wxWindow *win) {
+    win->Fit();
+    win->Layout();
 }
 
 } // namespace
