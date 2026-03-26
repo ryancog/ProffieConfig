@@ -42,6 +42,8 @@ void performUpdate();
 void processTLW(wxWindow *);
 void processChild(wxWindow *);
 
+void doFlushLayout(wxWindow *win, bool process);
+
 } // namespace
 
 void pcui::priv::apply(const detail::ChildBase& desc, wxSizerItem *item) {
@@ -69,20 +71,18 @@ void pcui::priv::queueShow(wxWindow *win, bool show) {
     showList[win] = show;
 }
 
-/*
- * This does not actually do any layout or fitting itself.
- *
- * It finds the top-level window associated with the window that caused the
- * layout to be required, adds it into the `updateList`, and queues
- * performUpdate(), if it hasn't been queued already.
- *
- * This is for the case where multiple UI updates would come in such a way that
- * one child is shown, *then* another is hidden, and where they may occupy the
- * same or similar space.
- *
- * If the layout and fitting occurred immediately, then the window may
- * unnecessarily grow, which is undesirable.
- */
+// This does not actually do any layout or fitting itself.
+//
+// It finds the top-level window associated with the window that caused the
+// layout to be required, adds it into the `updateList`, and queues
+// performUpdate(), if it hasn't been queued already.
+//
+// This is for the case where multiple UI updates would come in such a way that
+// one child is shown, *then* another is hidden, and where they may occupy the
+// same or similar space.
+//
+// If the layout and fitting occurred immediately, then the window may
+// unnecessarily grow, which is undesirable.
 void pcui::priv::layoutAndFitFor(wxWindow *win) {
     assert(wxIsMainThread());
 
@@ -114,15 +114,12 @@ void pcui::priv::layoutAndFitFor(wxWindow *win) {
     }
 }
 
-void pcui::priv::flushLayoutQueueFor(wxWindow *win) {
+// Throughout this and layout flush, wxWindow::IsDescendant is used.
+// It seems worth mentioning that the name is a little confusing, and it's
+// checking if the window passed is a descendant of `this`, *NOT* if `this` is
+// a descendant of the arg as the name would imply if read naturally.
+void pcui::priv::flushShowQueueFor(wxWindow *win) {
     assert(wxIsMainThread());
-
-    if (updateList.empty()) return;
-
-    // Throughout this, wxWindow::IsDescendant is used quite a bit. It seems
-    // worth mentioning that the name is a little confusing, and it's checking
-    // if the window passed is a descendant of `this`, *NOT* if `this` is a
-    // descendant of the arg as the name would imply if read naturally.
 
     // Go through the showlist and process any windows which are a descendant
     // of the window we're flushing for, erasing the entry for any processed.
@@ -137,6 +134,79 @@ void pcui::priv::flushLayoutQueueFor(wxWindow *win) {
         winToShow->Show(show);
         iter = showList.erase(iter);
     }
+}
+
+void pcui::priv::flushLayoutQueueFor(wxWindow *win) {
+    doFlushLayout(win, true);
+}
+
+void pcui::priv::discardLayoutsFor(wxWindow *win) {
+    doFlushLayout(win, false);
+}
+
+namespace {
+
+/**
+ * On every window, starting from the lowest in the hierarchy, Fit() is called.
+ * Top level windows have some additional handling to not shrink.
+ *
+ * Fit() is used on every window as, while wxWidgets normally only has it as a
+ * size set (no min size), it's the seemingly most semantically clear place for
+ * windows to implement min size recalculation (Layout() is not suitable as
+ * it's called during user resize, and many other times. Fit() is more
+ * programmatic in nature).
+ */
+void performUpdate() {
+    // Make sure this is always reset.
+    defer { updateRequested = false; };
+
+    // First, always: process the shows
+    for (auto [win, show] : showList) {
+        win->Show(show);
+    }
+    showList.clear();
+
+    // If a flush was invoked before the usual update occurred, then it's
+    // possible no update is needed at all anymore.
+    if (updateList.empty()) return;
+
+    for (auto iter{updateList.rbegin()};; ++iter) {
+        bool isTlw{std::next(iter) == updateList.rend()};
+
+        for (auto *win : *iter) {
+            if (isTlw) processTLW(win);
+            else processChild(win);
+        }
+
+        if (isTlw) break;
+    }
+
+    updateList.clear();
+}
+
+void processTLW(wxWindow *win) {
+    auto oldSize{win->GetSize()};
+
+    win->Fit();
+
+    if (win->GetWindowStyle() & wxRESIZE_BORDER) {
+        auto fitSize{win->GetSize()};
+        fitSize.IncTo(oldSize);
+        win->SetSize(fitSize);
+    }
+
+    win->Layout();
+}
+
+void processChild(wxWindow *win) {
+    win->Fit();
+    win->Layout();
+}
+
+void doFlushLayout(wxWindow *win, bool process) {
+    assert(wxIsMainThread());
+
+    if (updateList.empty()) return;
 
     // First, process all the windows and remove the individual listings from
     // each subset as appropriate.
@@ -149,8 +219,10 @@ void pcui::priv::flushLayoutQueueFor(wxWindow *win) {
                 continue;
             }
 
-            if (isTlw) processTLW(*winIt);
-            else processChild(*winIt);
+            if (process) {
+                if (isTlw) processTLW(*winIt);
+                else processChild(*winIt);
+            }
 
             winIt = iter->erase(winIt);
         }
@@ -184,64 +256,6 @@ void pcui::priv::flushLayoutQueueFor(wxWindow *win) {
 
         iter = updateList.erase(iter, updateList.end());
     }
-}
-
-namespace {
-
-/**
- * On every window, starting from the lowest in the hierarchy, Fit() is called.
- * Top level windows have some additional handling to not shrink.
- *
- * Fit() is used on every window as, while wxWidgets normally only has it as a
- * size set (no min size), it's the seemingly most semantically clear place for
- * windows to implement min size recalculation (Layout() is not suitable as
- * it's called during user resize, and many other times. Fit() is more
- * programmatic in nature).
- */
-void performUpdate() {
-    // Make sure this is always reset.
-    defer { updateRequested = false; };
-
-    // If a flush was invoked before the usual update occurred, then it's
-    // possible no update is needed at all anymore.
-    if (updateList.empty()) return;
-
-    for (auto [win, show] : showList) {
-        win->Show(show);
-    }
-    showList.clear();
-
-    for (auto iter{updateList.rbegin()};; ++iter) {
-        bool isTlw{std::next(iter) == updateList.rend()};
-
-        for (auto *win : *iter) {
-            if (isTlw) processTLW(win);
-            else processChild(win);
-        }
-
-        if (isTlw) break;
-    }
-
-    updateList.clear();
-}
-
-void processTLW(wxWindow *win) {
-    auto oldSize{win->GetSize()};
-
-    win->Fit();
-
-    if (win->GetWindowStyle() & wxRESIZE_BORDER) {
-        auto fitSize{win->GetSize()};
-        fitSize.IncTo(oldSize);
-        win->SetSize(fitSize);
-    }
-
-    win->Layout();
-}
-
-void processChild(wxWindow *win) {
-    win->Fit();
-    win->Layout();
 }
 
 } // namespace

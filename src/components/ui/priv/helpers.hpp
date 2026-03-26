@@ -47,10 +47,22 @@ void queueShow(wxWindow *, bool);
 void layoutAndFitFor(wxWindow *);
 
 /**
- * Immediately processes any layout or shows queued for the given window and
- * any children.
+ * Immediately processes any shows queued for the given window and any
+ * children.
+ */
+void flushShowQueueFor(wxWindow *);
+
+/**
+ * Immediately processes any layout queued for the given window and any
+ * children.
  */
 void flushLayoutQueueFor(wxWindow *);
+
+/**
+ * Discard any layout actions that were for this window or any of its children.
+ * Presumably they were/are going to be handled elsewhere.
+ */
+void discardLayoutsFor(wxWindow *);
 
 } // namespace pcui::priv
 
