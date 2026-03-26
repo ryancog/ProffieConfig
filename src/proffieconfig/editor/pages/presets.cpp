@@ -73,8 +73,16 @@ pcui::DescriptorPtr PresetsPage::selection() {
               .orient_=wxHORIZONTAL,
               .children_={
                 pcui::Choice{
-                  .win_={.base_={.proportion_=1}},
+                  .win_={
+                    .base_={
+                      .minSize_={150, -1},
+                      .proportion_=1,
+                    },
+                  },
                   .data_=mArraySel.choice_,
+                  .style_=pcui::Choice::PopUp{
+                    .unselected_=_("Select Array"),
+                  }
                 }(),
                 pcui::Button{
                   .win_={.base_={
@@ -290,6 +298,9 @@ pcui::DescriptorPtr PresetsPage::displayAndBlade() {
             .tooltip_=_("Show blade listing corresponding to the selected blade array."),
           },
           .data_=mDisplaySel.choice_,
+          .style_=pcui::Choice::PopUp{
+            .unselected_=_("Select Blade Array"),
+          }
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Label{
