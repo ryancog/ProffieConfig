@@ -145,7 +145,7 @@ void pcui::priv::flushLayoutQueueFor(wxWindow *win) {
 
         for (auto winIt{iter->begin()}; winIt != iter->end();) {
             if (not win->IsDescendant(*winIt)) {
-                ++iter;
+                ++winIt;
                 continue;
             }
 
@@ -160,7 +160,10 @@ void pcui::priv::flushLayoutQueueFor(wxWindow *win) {
 
     // Now, remove any empty sets.
     for (auto iter{updateList.begin()}; iter != updateList.end();) {
-        if (not iter->empty()) continue;
+        if (not iter->empty()) {
+            ++iter;
+            continue;
+        }
 
         // By the parent->child nature of the way the list is constructed,
         // once an empty set is reached, all the remaining sets must also be
