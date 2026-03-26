@@ -65,9 +65,23 @@ void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
     // TL;DR SetSizerAndFit() does not call Fit().
     parent->SetSizer(sizer);
 
+    // Grab old size for Layout() test below.
+    const auto oldSize{parent->GetVirtualSize()};
+
     // In any case, we actually don't want Fit() on the parent, but rather on
     // the win. The parent might be an intermediary panel!!
     win->Fit();
+
+    // If the old and new items resulted in exactly the same size, layout has
+    // to be triggered manually (AutoLayout from the sizer doesn't occur w/o
+    // resize event).
+    //
+    // Since layout isn't cheap afaics, actually check that size is the same.
+    // I'm not sure if this is the best way to do things though, or if the
+    // Layout() responsibility should be pushed to the caller. For now, it's
+    // unexpected that build() doesn't always result in a clean new setup, so
+    // do this for consistency.
+    if (oldSize == parent->GetVirtualSize()) parent->Layout();
 }
 
 void pcui::teardown(wxWindow *parent) {
