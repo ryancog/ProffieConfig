@@ -10,58 +10,29 @@ target_include_directories(tomcrypt-static INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
 add_library(wxWidgets INTERFACE)
 add_library(wxWidgets-static INTERFACE)
 
-add_library(wxWidgetsBase       SHARED IMPORTED GLOBAL)
-add_library(wxWidgetsBaseNet    SHARED IMPORTED GLOBAL)
-add_library(wxWidgetsBaseXML    SHARED IMPORTED GLOBAL)
-add_library(wxWidgetsCore       SHARED IMPORTED GLOBAL)
-add_library(wxWidgetsXRC        SHARED IMPORTED GLOBAL)
-add_library(wxWidgetsHTML       SHARED IMPORTED GLOBAL)
-add_library(wxWidgetsQA         SHARED IMPORTED GLOBAL)
+add_library(wxBase  SHARED IMPORTED GLOBAL)
+add_library(wxNet   SHARED IMPORTED GLOBAL)
+add_library(wxCore  SHARED IMPORTED GLOBAL)
 
-add_library(wxWidgetsBase-static       STATIC IMPORTED GLOBAL)
-add_library(wxWidgetsBaseNet-static    STATIC IMPORTED GLOBAL)
-add_library(wxWidgetsBaseXML-static    STATIC IMPORTED GLOBAL)
-add_library(wxWidgetsCore-static       STATIC IMPORTED GLOBAL)
-add_library(wxWidgetsXRC-static        STATIC IMPORTED GLOBAL)
-add_library(wxWidgetsHTML-static       STATIC IMPORTED GLOBAL)
-add_library(wxWidgetsQA-static         STATIC IMPORTED GLOBAL)
-add_library(wxWidgetsPNG-static        STATIC IMPORTED GLOBAL)
-add_library(wxWidgetsZLib-static       STATIC IMPORTED GLOBAL)
+add_library(wxBase-static           STATIC IMPORTED GLOBAL)
+add_library(wxNet-static            STATIC IMPORTED GLOBAL)
+add_library(wxCore-static           STATIC IMPORTED GLOBAL)
+add_library(wxWidgets-PNG-static    STATIC IMPORTED GLOBAL)
+add_library(wxWidgets-ZLib-static   STATIC IMPORTED GLOBAL)
 
 target_link_libraries(wxWidgets INTERFACE
-    wxWidgetsBase
-    wxWidgetsBaseNet
-    wxWidgetsBaseXML
-    wxWidgetsCore
-    wxWidgetsXRC
-    wxWidgetsHTML
-    wxWidgetsQA
+    wxBase
+    wxNet
+    wxCore
 )
 
 target_link_libraries(wxWidgets-static INTERFACE
-    wxWidgetsBase-static
-    wxWidgetsBaseNet-static
-    wxWidgetsBaseXML-static
-    wxWidgetsCore-static
-    wxWidgetsXRC-static
-    wxWidgetsHTML-static
-    wxWidgetsQA-static
-    wxWidgetsPNG-static
-    wxWidgetsZLib-static
+    wxBase-static
+    wxNet-static
+    wxCore-static
+    wxWidgets-PNG-static
+    wxWidgets-ZLib-static
 )
-
-# add_library(swresample   SHARED IMPORTED GLOBAL)
-# add_library(avutil       SHARED IMPORTED GLOBAL)
-# add_library(avformat     SHARED IMPORTED GLOBAL)
-# add_library(avcodec      SHARED IMPORTED GLOBAL)
-#
-# add_library(ffmpeg INTERFACE)
-# target_link_libraries(ffmpeg INTERFACE
-#     swresample
-#     avutil
-#     avformat
-#     avcodec
-# )
 
 if (CMAKE_SYSTEM_NAME STREQUAL Linux)
     set(TC_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tomcrypt/build-linux/)
@@ -69,18 +40,6 @@ if (CMAKE_SYSTEM_NAME STREQUAL Linux)
     #     IMPORTED_LOCATION ${TC_LIB_DIR}/libtomcrypt.so)
     set_target_properties(tomcrypt-static PROPERTIES
         IMPORTED_LOCATION ${TC_LIB_DIR}/libtomcrypt.a)
-
-    # set(FFMPEG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/install-linux)
-    # set(FFMPEG_LIB_DIR ${FFMPEG_DIR}/lib)
-    # target_include_directories(ffmpeg INTERFACE ${FFMPEG_DIR}/include)
-    # set_target_properties(swresample PROPERTIES
-    #     IMPORTED_LOCATION ${FFMPEG_LIB_DIR}/libswresample.so.5)
-    # set_target_properties(avutil PROPERTIES
-    #     IMPORTED_LOCATION ${FFMPEG_LIB_DIR}/libavutil.so.59)
-    # set_target_properties(avformat PROPERTIES
-    #     IMPORTED_LOCATION ${FFMPEG_LIB_DIR}/libavformat.so.61)
-    # set_target_properties(avcodec PROPERTIES
-    #     IMPORTED_LOCATION ${FFMPEG_LIB_DIR}/libavcodec.so.61)
 
     set(WX_SHARED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-linux-shared)
     if (IS_DIRECTORY ${WX_SHARED_DIR}/lib64)
@@ -90,20 +49,12 @@ if (CMAKE_SYSTEM_NAME STREQUAL Linux)
     else()
         message(FATAL_ERROR "Missing lib dir")
     endif()
-    set_target_properties(wxWidgetsBase PROPERTIES
+    set_target_properties(wxBase PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu.so)
-	set_target_properties(wxWidgetsBaseNet PROPERTIES
+	set_target_properties(wxNet PROPERTIES
 		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_net.so)
-	set_target_properties(wxWidgetsBaseXML PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_xml.so)
-    set_target_properties(wxWidgetsCore PROPERTIES
+    set_target_properties(wxCore PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_gtk3u_core.so)
-	set_target_properties(wxWidgetsXRC PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_gtk3u_xrc.so)
-	set_target_properties(wxWidgetsHTML PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_gtk3u_html.so)
-	set_target_properties(wxWidgetsQA PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_gtk3u_qa.so)
 
     set(WX_STATIC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-linux-static)
     if (IS_DIRECTORY ${WX_STATIC_DIR}/lib64)
@@ -113,23 +64,15 @@ if (CMAKE_SYSTEM_NAME STREQUAL Linux)
     else()
         message(FATAL_ERROR "Missing lib dir")
     endif()
-    set_target_properties(wxWidgetsBase-static PROPERTIES
+    set_target_properties(wxBase-static PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu-3.3.a)
-	set_target_properties(wxWidgetsBaseNet-static PROPERTIES
+	set_target_properties(wxNet-static PROPERTIES
 		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_net-3.3.a)
-	set_target_properties(wxWidgetsBaseXML-static PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_xml-3.3.a)
-    set_target_properties(wxWidgetsCore-static PROPERTIES
+    set_target_properties(wxCore-static PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_gtk3u_core-3.3.a)
-	set_target_properties(wxWidgetsXRC-static PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_gtk3u_xrc-3.3.a)
-	set_target_properties(wxWidgetsHTML-static PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_gtk3u_html-3.3.a)
-	set_target_properties(wxWidgetsQA-static PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_gtk3u_qa-3.3.a)
-    set_target_properties(wxWidgetsPNG-static PROPERTIES
+    set_target_properties(wxWidgets-PNG-static PROPERTIES
 		IMPORTED_LOCATION ${WX_LIB_DIR}/libwxpng-3.3.a)
-    set_target_properties(wxWidgetsZLib-static PROPERTIES
+    set_target_properties(wxWidgets-ZLib-static PROPERTIES
 		IMPORTED_LOCATION ${WX_LIB_DIR}/libwxzlib-3.3.a)
 
     # TODO: I don't like find_package and I don't know how it works
@@ -138,7 +81,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL Linux)
     set(OPENSSL_USE_STATIC_LIBS TRUE)
     set(CURL_STATICLIB TRUE)
 
-    target_link_libraries(wxWidgetsBaseNet-static INTERFACE CURL::libcurl ${CURL_LIBRARIES} ${CURL_STATIC_LIBRARIES})
+    target_link_libraries(wxNet-static INTERFACE CURL::libcurl ${CURL_LIBRARIES} ${CURL_STATIC_LIBRARIES})
 
 elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
     set(TC_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tomcrypt/build-macOS/)
@@ -149,40 +92,24 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
 
     set(WX_SHARED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-macOS-shared)
     set(WX_LIB_DIR ${WX_SHARED_DIR}/lib)
-    set_target_properties(wxWidgetsBase PROPERTIES
+    set_target_properties(wxBase PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu.dylib)
-	set_target_properties(wxWidgetsBaseNet PROPERTIES
+	set_target_properties(wxNet PROPERTIES
 		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_net.dylib)
-	set_target_properties(wxWidgetsBaseXML PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_xml.dylib)
-    set_target_properties(wxWidgetsCore PROPERTIES
+    set_target_properties(wxCore PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_osx_cocoau_core.dylib)
-	set_target_properties(wxWidgetsXRC PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_osx_cocoau_xrc.dylib)
-	set_target_properties(wxWidgetsHTML PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_osx_cocoau_html.dylib)
-	set_target_properties(wxWidgetsQA PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_osx_cocoau_qa.dylib)
 
     set(WX_STATIC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-macOS-static)
     set(WX_LIB_DIR ${WX_STATIC_DIR}/lib)
-    set_target_properties(wxWidgetsBase-static PROPERTIES
+    set_target_properties(wxBase-static PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu-3.3.a)
-	set_target_properties(wxWidgetsBaseNet-static PROPERTIES
+	set_target_properties(wxNet-static PROPERTIES
 		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_net-3.3.a)
-	set_target_properties(wxWidgetsBaseXML-static PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_xml-3.3.a)
-    set_target_properties(wxWidgetsCore-static PROPERTIES
+    set_target_properties(wxCore-static PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_osx_cocoau_core-3.3.a)
-	set_target_properties(wxWidgetsXRC-static PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_osx_cocoau_xrc-3.3.a)
-	set_target_properties(wxWidgetsHTML-static PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_osx_cocoau_html-3.3.a)
-	set_target_properties(wxWidgetsQA-static PROPERTIES
-		IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_osx_cocoau_qa-3.3.a)
-    set_target_properties(wxWidgetsPNG-static PROPERTIES
+    set_target_properties(wxWidgets-PNG-static PROPERTIES
 		IMPORTED_LOCATION ${WX_LIB_DIR}/libwxpng-3.3.a)
-    set_target_properties(wxWidgetsZLib-static PROPERTIES
+    set_target_properties(wxWidgets-ZLib-static PROPERTIES
 		IMPORTED_LOCATION ${WX_LIB_DIR}/libwxzlib-3.3.a)
 
 elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
@@ -200,27 +127,15 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
 
     set(WX_SHARED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-win32-shared)
     set(WX_LIB_DIR ${WX_SHARED_DIR}/bin)
-    set_target_properties(wxWidgetsBase PROPERTIES
+    set_target_properties(wxBase PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase332u_gcc_win32.dll
         IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase332u_gcc_win32.dll)
-    set_target_properties(wxWidgetsBaseNet PROPERTIES
+    set_target_properties(wxNet PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase332u_net_gcc_win32.dll
         IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase332u_net_gcc_win32.dll)
-    set_target_properties(wxWidgetsBaseXML PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase332u_xml_gcc_win32.dll
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase332u_xml_gcc_win32.dll)
-    set_target_properties(wxWidgetsCore PROPERTIES
+    set_target_properties(wxCore PROPERTIES
         IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw332u_core_gcc_win32.dll
         IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmsw332u_core_gcc_win32.dll)
-    set_target_properties(wxWidgetsXRC PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw332u_xrc_gcc_win32.dll
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmsw332u_xrc_gcc_win32.dll)
-    set_target_properties(wxWidgetsHTML PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw332u_html_gcc_win32.dll
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmsw332u_html_gcc_win32.dll)
-    set_target_properties(wxWidgetsQA PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw332u_qa_gcc_win32.dll
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmsw332u_qa_gcc_win32.dll)
 
     set(WX_STATIC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-win32-static)
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
@@ -232,61 +147,37 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
             message(FATAL_ERROR "Missing lib dir")
         endif()
 
-        set_target_properties(wxWidgetsBase-static PROPERTIES
+        set_target_properties(wxBase-static PROPERTIES
             IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.a
             IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgetsBaseNet-static PROPERTIES
+        set_target_properties(wxNet-static PROPERTIES
             IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_net-3.3-x86_64-w64-mingw32.a
             IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu_net-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgetsBaseXML-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_xml-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu_xml-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgetsCore-static PROPERTIES
+        set_target_properties(wxCore-static PROPERTIES
             IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_core-3.3-x86_64-w64-mingw32.a
             IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_core-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgetsXRC-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_xrc-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_xrc-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgetsHTML-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_html-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_html-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgetsQA-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_qa-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_qa-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgetsPNG-static PROPERTIES
+        set_target_properties(wxWidgets-PNG-static PROPERTIES
             IMPORTED_LOCATION ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.a
             IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgetsZLib-static PROPERTIES
+        set_target_properties(wxWidgets-ZLib-static PROPERTIES
             IMPORTED_LOCATION ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.a
             IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.a)
 
     elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin)
         set(WX_LIB_DIR ${WX_STATIC_DIR}/lib)
-        set_target_properties(wxWidgetsBase-static PROPERTIES
+        set_target_properties(wxBase-static PROPERTIES
             IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.a
             IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgetsBaseNet-static PROPERTIES
+        set_target_properties(wxNet-static PROPERTIES
             IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_net-3.3-x86_64-w64-mingw32.a
             IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu_net-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgetsBaseXML-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_xml-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu_xml-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgetsCore-static PROPERTIES
+        set_target_properties(wxCore-static PROPERTIES
             IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_core-3.3-x86_64-w64-mingw32.a
             IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_core-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgetsXRC-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_xrc-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_xrc-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgetsHTML-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_html-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_html-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgetsQA-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_qa-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_qa-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgetsPNG-static PROPERTIES
+        set_target_properties(wxWidgets-PNG-static PROPERTIES
             IMPORTED_LOCATION ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.a
             IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgetsZLib-static PROPERTIES
+        set_target_properties(wxWidgets-ZLib-static PROPERTIES
             IMPORTED_LOCATION ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.a
             IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.a)
     endif()
@@ -350,18 +241,9 @@ process_wx_ldflags(${WX_SHARED_CONFIG} wxWidgets)
 process_wx_ldflags(${WX_STATIC_CONFIG} wxWidgets-static)
 
 set(3RDPARTY_INSTALL_FILES
-    # $<TARGET_FILE:tomcrypt>
-    # $<TARGET_FILE:swresample>
-    # $<TARGET_FILE:avutil>
-    # $<TARGET_FILE:avformat>
-    # $<TARGET_FILE:avcodec>
-    $<TARGET_FILE:wxWidgetsBase>
-    $<TARGET_FILE:wxWidgetsBaseNet>
-    $<TARGET_FILE:wxWidgetsBaseXML>
-    $<TARGET_FILE:wxWidgetsCore>
-    $<TARGET_FILE:wxWidgetsXRC>
-    $<TARGET_FILE:wxWidgetsHTML>
-    $<TARGET_FILE:wxWidgetsQA>
+    $<TARGET_FILE:wxBase>
+    $<TARGET_FILE:wxNet>
+    $<TARGET_FILE:wxCore>
 )
 
 install(FILES ${3RDPARTY_INSTALL_FILES} DESTINATION ${INSTALL_LIB_DIR})
