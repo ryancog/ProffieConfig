@@ -214,7 +214,6 @@ function(process_wx_ldflags CONFIG TARGET)
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
-    # Remove all -lwx links... CMake will handle those
     string(REPLACE " " ";" WX_LDFLAG_LIST "${WX_LDFLAGS}")
     foreach(FLAG ${WX_LDFLAG_LIST})
         string(FIND "${FLAG}" "-framework" pos)
@@ -223,14 +222,24 @@ function(process_wx_ldflags CONFIG TARGET)
             continue()
         endif()
 
+        # Ignore all -lwx links... CMake will handle those
         string(FIND "${FLAG}" "-lwx" pos1)
-        if (pos1 EQUAL -1)
-            if (FOUND_FRAMEWORK)
-                set(FLAG "-framework ${FLAG}")
-                set(FOUND_FRAMEWORK false)
-            endif()
-            target_link_libraries(${TARGET} INTERFACE "${FLAG}")
+        if (NOT pos1 EQUAL -1)
+            continue()
         endif()
+
+        # Ignore all other libwx links... CMake will handle those
+        string(FIND "${FLAG}" "libwx" pos1)
+        if (NOT pos1 EQUAL -1)
+            continue()
+        endif()
+
+        if (FOUND_FRAMEWORK)
+            set(FLAG "-framework ${FLAG}")
+            set(FOUND_FRAMEWORK false)
+        endif()
+
+        target_link_libraries(${TARGET} INTERFACE "${FLAG}")
     endforeach()
 endfunction()
 
