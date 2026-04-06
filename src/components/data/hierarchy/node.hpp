@@ -20,7 +20,7 @@
  */
 
 #include <functional>
-#include <string>
+#include <string_view>
 
 #include "data/hierarchy/model.hpp"
 #include "utils/types.hpp"
@@ -47,7 +47,7 @@ struct DATA_EXPORT Node : Model {
      *
      * @return if enumeration should terminate
      */
-    using EnumFunc = std::function<bool(Model&, uint64, const std::string&)>;
+    using EnumFunc = std::function<bool(Model&, uint64, std::string_view)>;
 
     Node(Node *, Root * = nullptr);
     Node(const Node&, Node *, Root * = nullptr);

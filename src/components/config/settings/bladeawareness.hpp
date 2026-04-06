@@ -71,7 +71,10 @@ struct CONFIG_EXPORT BladeAwareness : data::Node {
 private:
     void buildMap();
 
-    std::unordered_map<uint64, std::pair<cstring, data::Model *>> mMap;
+    std::unordered_map<
+        uint64,
+        std::pair<std::string_view, data::Model *>
+    > mMap;
 };
 
 } // namespace settings

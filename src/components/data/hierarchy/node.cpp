@@ -61,7 +61,7 @@ uint64 data::Node::idFor(Model& search) {
     uint64 ret{};
 
     const auto onEnum{[&search, &ret](
-        Model& model, uint64 id, const std::string&
+        Model& model, uint64 id, std::string_view
     ) -> bool {
         if (&model != &search) return false;
 

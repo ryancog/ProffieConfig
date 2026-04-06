@@ -267,7 +267,7 @@ void config::Settings::processDefines() {
 }
 
 void config::Settings::buildMap() {
-    const auto process{[this] (cstring str, data::Model& model) {
+    const auto process{[this] (std::string_view str, data::Model& model) {
         mMap[strID(str)] = {str, &model};
     }};
 

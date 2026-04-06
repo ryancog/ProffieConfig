@@ -687,7 +687,7 @@ void outputTopProp(std::ostream& outFile, const Config& config) {
     auto& prop{static_cast<versions::props::Prop&>(*model)};
 
     const auto onEnum{[&](
-        data::Model& model, uint64, const std::string&
+        data::Model& model, uint64, std::string_view
     ) -> bool {
         auto output{dynamic_cast<versions::props::detail::SettingBase&>(
             model

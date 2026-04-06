@@ -159,7 +159,7 @@ void BladeAwareness::init() {
 }
 
 void BladeAwareness::buildMap() {
-    const auto process{[this] (cstring str, data::Model& model) {
+    const auto process{[this] (std::string_view str, data::Model& model) {
         mMap[strID(str)] = {str, &model};
     }};
 

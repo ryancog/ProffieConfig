@@ -486,7 +486,7 @@ void Prop::recalculateRequires() {
     std::set<uint64> disabled;
 
     const auto onEnum{[&disabled](
-        data::Model& model, uint64, const std::string&
+        data::Model& model, uint64, std::string_view
     ) {
         if (auto *ptr = dynamic_cast<Toggle *>(&model)) {
             if (not ptr->isActive()) return false;
