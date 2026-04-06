@@ -22,7 +22,10 @@
 #include <wx/gdicmn.h>
 #include <wx/msgdlg.h>
 
+#include "config/presets/array.hpp"
 #include "config/presets/preset.hpp"
+#include "data/logic/adapter.hpp"
+#include "data/logic/operators.hpp"
 #include "ui/bitmap.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/choice.hpp"
@@ -84,22 +87,39 @@ pcui::DescriptorPtr PresetsPage::selection() {
                     .unselected_=_("Select Array"),
                   }
                 }(),
-                pcui::Button{
-                  .win_={.base_={
-                    .border_={
-                      .size_=pcui::interControlSpacing(),
-                      .dirs_=wxLEFT
-                    },
-                  }},
-                  .label_="ISS",
-                  .exactFit_=true,
+                pcui::Selector{
+                  .data_=mArraySel,
+                  .builder_=[](data::Model *model) -> pcui::DescriptorPtr {
+                    if (not model) return pcui::Spacer{.size_=0}();
+
+                    const auto& array{
+                        *static_cast<config::presets::Array *>(model)
+                    };
+
+                    return pcui::Button{
+                      .win_={
+                        .base_={
+                          .border_={
+                            .size_=pcui::interControlSpacing(),
+                            .dirs_=wxLEFT
+                          },
+                        },
+                        .show_=not (array.issues() |
+                          data::logic::Equals{.val_=0})
+                      },
+                      .label_="\u26D4\uFE0E", // No entry sym
+                      .exactFit_=true,
+                    }();
+                  }
                 }(),
                 pcui::Spacer{.size_=pcui::interControlSpacing()}(),
                 pcui::Button{
-                  .win_={.base_={
-                    .minSize_=pcui::iconButtonSize(),
-                    .expand_=true
-                  }},
+                  .win_={
+                    .base_={
+                      .minSize_=pcui::iconButtonSize(),
+                      .expand_=true,
+                    },
+                  },
                   .bitmap_={
                     .src_=pcui::Bitmap("edit").color(wxSYS_COLOUR_WINDOWTEXT),
                   },
