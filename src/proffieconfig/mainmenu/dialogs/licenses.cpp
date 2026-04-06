@@ -27,6 +27,7 @@
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/static/label.hpp"
+#include "ui/symbols.hpp"
 #include "ui/text.hpp"
 
 #include "../../core/licenses.hpp"
@@ -75,7 +76,7 @@ pcui::DescriptorPtr LicenseDialog::ui() {
               .style_=pcui::text::Style::Header,
             }(),
             pcui::Label{
-              .label_=wxString{L"Copyright \u00A9 "} +
+              .label_=wxString{"Copyright "} + pcui::syms::COPYRIGHT + ' ' +
                   info.date_ + ' ' + info.author_
             }(),
             pcui::Label{

@@ -36,6 +36,7 @@
 #include "ui/layout/split.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/static/label.hpp"
+#include "ui/symbols.hpp"
 #include "ui/types.hpp"
 #include "ui/values.hpp"
 
@@ -107,7 +108,7 @@ pcui::DescriptorPtr PresetsPage::selection() {
                         .show_=not (array.issues() |
                           data::logic::Equals{.val_=0})
                       },
-                      .label_="\u26D4\uFE0E", // No entry sym
+                      .label_=pcui::syms::NO_ENTRY,
                       .exactFit_=true,
                     }();
                   }
@@ -172,13 +173,13 @@ pcui::DescriptorPtr PresetsPage::selection() {
                   .children_={
                     pcui::Button{
                       .win_={.base_={.minSize_=pcui::iconButtonSize()}},
-                      .label_="+",
+                      .label_=pcui::syms::PLUS,
                       .style_=pcui::Button::Style::Companion,
                       .exactFit_=true,
                     }(),
                     pcui::Button{
                       .win_={.base_={.minSize_=pcui::iconButtonSize()}},
-                      .label_="-",
+                      .label_=pcui::syms::MINUS,
                       .style_=pcui::Button::Style::Companion,
                       .exactFit_=true,
                     }(),
@@ -191,19 +192,19 @@ pcui::DescriptorPtr PresetsPage::selection() {
               .children_={
                 pcui::Button{
                   .win_={.base_={.minSize_=pcui::iconButtonSize(true)}},
-                  .label_=L"\u2191", // Up Arrow
+                  .label_=pcui::syms::UP_ARROW,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
                 }(),
                 pcui::Button{
                   .win_={.base_={.minSize_=pcui::iconButtonSize(true)}},
-                  .label_=L"\u2193", // Down Arrow
+                  .label_=pcui::syms::DOWN_ARROW,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
                 }(),
                 pcui::Button{
                   .win_={.base_={.minSize_=pcui::iconButtonSize(true)}},
-                  .label_=L"\u29C9", // ⧉ Double Squares
+                  .label_=pcui::syms::DOUBLE_SQUARES,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
                 }(),

@@ -31,6 +31,7 @@
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/static/label.hpp"
+#include "ui/symbols.hpp"
 #include "ui/types.hpp"
 #include "ui/values.hpp"
 #include "utils/parent.hpp"
@@ -230,7 +231,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                     .base_={.minSize_=pcui::iconButtonSize()},
                     .enable_=mArraySel.choice_ | data::logic::HasSelection{},
                   },
-                  .label_="+",
+                  .label_=pcui::syms::PLUS,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
                 }(),
@@ -239,7 +240,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                     .base_={.minSize_=pcui::iconButtonSize()},
                     .enable_=mBladeSel.choice_ | data::logic::HasSelection{},
                   },
-                  .label_="-",
+                  .label_=pcui::syms::MINUS,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
                 }(),
@@ -339,9 +340,9 @@ void BladesPage::IssueReceiver::updateLabel() {
 
     std::string label;
     if (issues & eIssue_Errors) {
-        label = "\u26D4\uFE0E"; // No entry sym
+        label = pcui::syms::NO_ENTRY;
     } else if (issues & eIssue_Warnings) {
-        label = "\u26A0"; // warn
+        label = pcui::syms::WARNING;
     }
 
     data::String::Context{page.mIssueLabel}.change(std::move(label));
