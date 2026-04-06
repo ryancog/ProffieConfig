@@ -72,6 +72,8 @@ struct DATA_EXPORT Node : Model {
     virtual bool enumerate(const EnumFunc&) = 0;
 
 protected:
+    struct CreationScope;
+
     /**
      * Find the model with specified id
      */
@@ -95,6 +97,24 @@ private:
      * Send action to root, building trace.
      */
     void sendUpAction(Model& from, std::unique_ptr<Action>&&);
+
+    bool mCreationSuppression{false};
+};
+
+/**
+ * Whenever a model is created, it may be necessary to set some of its own
+ * values to defaults, but those actions need to be suppressed so they don't
+ * try to propagate.
+ *
+ * This is similar to suppression at root, but primarily for dynamically added
+ * objects, after initial root creation suppression.
+ */
+struct DATA_EXPORT Node::CreationScope {
+    CreationScope(Node&);
+    ~CreationScope();
+
+private:
+    Node& mNode;
 };
 
 } // namespace data

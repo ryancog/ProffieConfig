@@ -104,20 +104,24 @@ bool data::Model::processAction(
 ) {
     std::scoped_lock scopeLock{pLock};
 
-    // If UI sent an action, shouldPerform returning false probably means that
+    // If UI sent an action, setup returning false probably means that
     // filtering or other modifications resulted in the values converging. In
     // this case, the UI still needs to reload, so that it has the modified
     // value, and not whatever value that may have happened to have been
     // modified to be equivalent.
     if (not action->setup(*this)) return not fromUI;
 
-    if (mRoot and not mRoot->capturePerformance(fromUI)) return false;
+    if (not mParent or not mParent->mCreationSuppression) {
+        if (mRoot and not mRoot->capturePerformance(fromUI)) return false;
+    }
 
     action->perform(*this);
 
-    if (mRoot and mRoot->isActuallyCapturing()) {
-        action->mTrace.clear();
-        mParent->sendUpAction(*this, std::move(action));
+    if (not mParent or not mParent->mCreationSuppression) {
+        if (mRoot and mRoot->isActuallyCapturing()) {
+            action->mTrace.clear();
+            mParent->sendUpAction(*this, std::move(action));
+        }
     }
 
     return true;

@@ -109,6 +109,8 @@ void data::Node::sendDownAction(Action& action, ActionMode mode) {
 void data::Node::sendUpAction(Model& from, std::unique_ptr<Action>&& action) {
     std::scoped_lock scopeLock{pLock};
 
+    if (mCreationSuppression) return;
+
     action->mTrace.push_back(idFor(from));
 
     if (this == mRoot) {
@@ -117,5 +119,13 @@ void data::Node::sendUpAction(Model& from, std::unique_ptr<Action>&& action) {
     }
 
     mParent->sendUpAction(*this, std::move(action));
+}
+
+data::Node::CreationScope::CreationScope(Node& node) : mNode{node} {
+    mNode.mCreationSuppression = true;
+}
+
+data::Node::CreationScope::~CreationScope() {
+    mNode.mCreationSuppression = false;
 }
 
