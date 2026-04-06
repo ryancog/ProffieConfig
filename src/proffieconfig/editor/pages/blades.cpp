@@ -22,6 +22,7 @@
 #include "config/blades/bladeconfig.hpp"
 #include "config/blades/ws281x.hpp"
 #include "data/logic/adapter.hpp"
+#include "data/logic/operators.hpp"
 #include "ui/build.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/choice.hpp"
@@ -54,13 +55,15 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
         if (ctxt.choice() == -1) {
             page.mIssueReceiver.detach();
         } else {
+            using namespace config::blades;
             data::Vector::ROContext bladeConfigs{page.mConfig.bladeConfigs_};
-            const auto& selected{*bladeConfigs.children()[ctxt.choice()]};
-            page.mIssueReceiver.attach(selected);
+            auto& selModel{*bladeConfigs.children()[ctxt.choice()]};
+            auto& selected{static_cast<BladeConfig&>(selModel)};
+            page.mIssueReceiver.attach(selected.issues());
         }
     };
 
-    data::Selector::Context{mArraySel}.bind(&config.presetArrays_);
+    data::Selector::Context{mArraySel}.bind(&config.bladeConfigs_);
 }
 
 pcui::DescriptorPtr BladesPage::ui() {
@@ -179,7 +182,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                 pcui::Button{
                   .win_={
                     .base_={.proportion_=1},
-                    .enable_=mBladeSel.choice_ | data::logic::HasSelection{},
+                    .enable_=mArraySel.choice_ | data::logic::HasSelection{},
                   },
                   .label_=_("Remove"),
                   .exactFit_=true,
