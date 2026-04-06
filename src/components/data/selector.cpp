@@ -114,7 +114,7 @@ void data::Selector::onRemove(size pos) {
     choice.update(vec.children().size());
 
     if (mLastChoice == pos) return;
-    if (mLastChoice > pos) --mLastChoice;
+    if (mLastChoice != -1 and mLastChoice > pos) --mLastChoice;
 
     choice.choose(mLastChoice);
 }
