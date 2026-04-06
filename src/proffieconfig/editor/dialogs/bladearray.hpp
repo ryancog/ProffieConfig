@@ -24,11 +24,15 @@
 #include "ui/types.hpp"
 
 struct BladeArrayDlg : pcui::Dialog {
-    BladeArrayDlg(wxWindow *, config::blades::BladeConfig&);
+    BladeArrayDlg(
+        wxWindow *,
+        config::blades::BladeConfig&,
+        bool mayCancel
+    );
 
 private:
     config::blades::BladeConfig& mConfig;
 
-    pcui::DescriptorPtr ui();
+    pcui::DescriptorPtr ui(bool);
 };
 

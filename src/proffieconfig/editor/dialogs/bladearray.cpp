@@ -32,16 +32,18 @@
 #include "ui/static/label.hpp"
 #include "ui/types.hpp"
 #include "ui/values.hpp"
+#include "wx/event.h"
 
 BladeArrayDlg::BladeArrayDlg(
     wxWindow *parent,
-    config::blades::BladeConfig& config
+    config::blades::BladeConfig& config,
+    bool mayCancel
 ) : pcui::Dialog(parent, wxID_ANY, _("Edit Blade Array")),
     mConfig{config} {
-    pcui::build(this, ui());
+    pcui::build(this, ui(mayCancel));
 }
 
-pcui::DescriptorPtr BladeArrayDlg::ui() {
+pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
     using namespace config::blades;
 
     return pcui::Stack{
@@ -142,8 +144,17 @@ pcui::DescriptorPtr BladeArrayDlg::ui() {
         pcui::DialogButtons{
           .base_={.expand_=true},
           .ok_=pcui::Button{
-            .label_=_("Close"),
+            .label_=mayCancel ? _("OK") : _("Close"),
+            .func_=[this]() {
+                EndModal(wxID_OK);
+            },
           }(),
+          .cancel_=mayCancel ? pcui::Button{
+            .label_=_("Cancel"),
+            .func_=[this]() {
+                EndModal(wxID_CANCEL);
+            },
+          }() : nullptr,
         }(),
       }
     }();
