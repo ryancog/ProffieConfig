@@ -53,7 +53,7 @@ typename detail::MemberTraits<decltype(MEM_PTR)>::ParentType& parent(
 }
 
 template<auto MEM_PTR>
-const typename detail::MemberTraits<decltype(MEM_PTR)>::ParentType& parent(
+typename detail::MemberTraits<decltype(MEM_PTR)>::ParentType& parent(
     const typename detail::MemberTraits<decltype(MEM_PTR)>::MemberType& _
 ) {
     using ParentType = typename detail::MemberTraits<
@@ -63,8 +63,8 @@ const typename detail::MemberTraits<decltype(MEM_PTR)>::ParentType& parent(
     ParentType *dummy{nullptr};
     const auto *offset{reinterpret_cast<uint8 *>(&(dummy->*MEM_PTR))};
 
-    return *reinterpret_cast<const ParentType *>(
-        reinterpret_cast<const uint8 *>(&_) - offset
+    return *reinterpret_cast<ParentType *>(
+        const_cast<uint8 *>(reinterpret_cast<const uint8 *>(&_)) - offset
     );
 }
 
