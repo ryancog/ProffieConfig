@@ -34,6 +34,7 @@ add_library(ui SHARED
     helpers/labeled.cpp
 
     controls/button.cpp
+    controls/toggle_button.cpp
     controls/checkbox.cpp
     controls/choice.cpp
     controls/radios.cpp
