@@ -106,11 +106,12 @@ struct ControlBase : detail::DataWindow<Ctrl, data::Choice::Receiver> {
                 continue;
             }
 
+            const auto self{static_cast<Derived *>(this)};
             const auto& model{std::get<1>(res).get()};
             data::String::ROContext ctxt{model};
             choices.emplace_back(ctxt.val());
             mRcvrs.push_back(std::make_unique<LabelReceiver>(
-                this, idx, model
+                this, self->dataToControl(idx), model
             ));
         }
 
