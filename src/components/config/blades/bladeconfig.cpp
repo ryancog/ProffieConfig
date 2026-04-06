@@ -92,6 +92,8 @@ BladeConfig::BladeConfig(data::Node *parent) :
     name_(this),
     presetArray_(this),
     id_(this) {
+    CreationScope createScope{*this};
+
     const auto nameFilter{[](
         const data::String::ROContext&, std::string& str, size& pos
     ) {
@@ -123,7 +125,7 @@ BladeConfig::BladeConfig(data::Node *parent) :
         const data::Bool::ROContext& ctxt, bool& noBladeId
     ) {
         const auto& bladeConfig{utils::parent<&BladeConfig::noBladeId_>(
-            static_cast<const data::Bool&>(ctxt.model())
+            ctxt.model<data::Bool>()
         )};
 
         data::Integer::ROContext id{bladeConfig.id_};
@@ -132,7 +134,9 @@ BladeConfig::BladeConfig(data::Node *parent) :
     noBladeId_.setFilter(noBladeIdFilter);
 
     noBladeId_.responder().onSet_ = [](const data::Bool::ROContext& ctxt) {
-        auto& bladeConfig{*ctxt.model().parent<BladeConfig>()};
+        auto& bladeConfig{utils::parent<&BladeConfig::noBladeId_>(
+            ctxt.model<data::Bool>()
+        )};
         if (ctxt.val()) {
             data::Integer::Context id{bladeConfig.id_};
             id.set(NO_BLADE);
