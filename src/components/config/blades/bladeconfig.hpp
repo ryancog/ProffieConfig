@@ -46,7 +46,7 @@ struct CONFIG_EXPORT BladeConfig : data::Node {
 
     data::Vector blades_;
 
-    enum {
+    enum Issues {
         eIssue_None = 0,
         eIssue_No_Preset_Array  = 1UL << 0,
         eIssue_Duplicate_ID     = 1UL << 1,
@@ -59,7 +59,7 @@ struct CONFIG_EXPORT BladeConfig : data::Node {
         eIssue_Warnings         = eIssue_Duplicate_ID,
     };
 
-    const data::Integer& issues();
+    [[nodiscard]] const data::Integer& issues() const;
 
     data::String name_;
     data::Selector presetArray_;
@@ -89,11 +89,14 @@ struct CONFIG_EXPORT Blade : data::Node {
         eUnassigned,
     };
 
-    data::Selector type_;
-    // TODO: Observable with malleable innards
-    data::Vector types_;
+    const data::Selector& type();
+    const data::Vector& types();
 
     data::Integer brightness_;
+
+private:
+    data::Selector mType;
+    data::Vector mTypes;
 };
 
 } // namespace blades

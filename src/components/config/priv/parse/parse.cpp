@@ -743,7 +743,7 @@ std::optional<std::string> parseBladeArrays(
                         *logger.binfo("Parsing blade...")
                     )};
 
-                    data::Choice::Context typeChoice{blade.type_.choice_};
+                    data::Choice::Context typeChoice{blade.type().choice_};
                     if (not typeChoice) {
                         logger.debug("Removing blade parser deemed unnecessary.");
                         blades.remove(blades.children().size() - 1);
@@ -1108,7 +1108,7 @@ std::optional<std::string> parseBlade(
     static constexpr std::string_view NULLPTR_STR{"nullptr"};
     if (data.starts_with(WS281X_STR)) {
         data.erase(0, WS281X_STR.length());
-        data::Choice::Context type{blade.type_.choice_};
+        data::Choice::Context type{blade.type().choice_};
         type.choose(Blade::eWS281X);
 
         err = parseWS281XLength();
@@ -1182,7 +1182,7 @@ std::optional<std::string> parseBlade(
         if (err) return err;
     } else if (data.starts_with(WS2811_STR)) {
         data.erase(0, WS2811_STR.length());
-        data::Choice::Context type{blade.type_.choice_};
+        data::Choice::Context type{blade.type().choice_};
         type.choose(Blade::eWS281X);
 
         err = parseWS281XLength();
@@ -1217,7 +1217,7 @@ std::optional<std::string> parseBlade(
         }
 
         data.erase(0, SIMPLE_STR.length());
-        data::Choice::Context type{blade.type_.choice_};
+        data::Choice::Context type{blade.type().choice_};
         type.choose(Blade::eSimple);
 
         data::Integer::Context{blade.brightness_}.set(firstBrightness);
@@ -1346,11 +1346,11 @@ std::optional<std::string> parseBlade(
                 star3Led.choice() == eLED_None and
                 star4Led.choice() == eLED_None
            ) {
-            data::Choice::Context type{blade.type_.choice_};
+            data::Choice::Context type{blade.type().choice_};
             type.choose(Blade::eUnassigned);
         }
     } else if (data.starts_with(NULL_STR) or data.starts_with(NULLPTR_STR)) {
-        data::Choice::Context{blade.type_.choice_}.unchoose();
+        data::Choice::Context{blade.type().choice_}.unchoose();
 
         data::Vector::Context blades{array.blades_};
 
@@ -1362,7 +1362,7 @@ std::optional<std::string> parseBlade(
             *blades.children()[blades.children().size() - 2]
         )};
 
-        data::Choice::Context type{blade.type_.choice_};
+        data::Choice::Context type{blade.type().choice_};
         if (type.choice() != Blade::eWS281X) {
             return errorMessage(logger, wxTRANSLATE("Tried to add SubBlade to a non-WS281X blade"));
         }
@@ -1420,7 +1420,7 @@ std::optional<std::string> parseBlade(
         return errorMessage(logger, wxTRANSLATE("Unknown/malformed blade"));
     }
 
-    data::Choice::Context type{blade.type_.choice_};
+    data::Choice::Context type{blade.type().choice_};
 
     if (type.choice() == Blade::eWS281X) {
         data::Integer::Context brightness{blade.brightness_};

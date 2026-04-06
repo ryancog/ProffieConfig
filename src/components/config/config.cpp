@@ -216,8 +216,8 @@ size config::Config::numBlades() const {
         for (const auto& model : blades.children()) {
             auto& blade{static_cast<blades::Blade&>(*model)};
 
-            data::Choice::Context typeChoice{blade.type_.choice_};
-            data::Vector::Context types{blade.types_};
+            data::Choice::ROContext typeChoice{blade.type().choice_};
+            data::Vector::ROContext types{blade.types()};
             auto *typeModel{types.children()[typeChoice.choice()].get()};
 
             if (auto *ptr = dynamic_cast<blades::WS281X *>(typeModel)) {

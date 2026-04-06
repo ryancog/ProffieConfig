@@ -20,12 +20,22 @@
  */
 
 #include "config/config.hpp"
+#include "data/vector.hpp"
 #include "utils/string.hpp"
 
 using namespace config::presets;
 
+namespace {
+
+constexpr std::string_view NAME_STR{"Name"};
+constexpr std::string_view PRESETS_STR{"Presets"};
+
+} // namespace
+
 Array::Array(data::Node *parent) :
-    data::Node{parent} {
+    data::Node{parent},
+    name_(this),
+    presets_(this) {
     const auto nameFilter{[](std::string& str, size& pos) {
         uint32 numTrimmed{};
         utils::trimCppName(
@@ -43,34 +53,56 @@ Array::Array(data::Node *parent) :
     ) {
         ctxt.model().root<Config>()->syncStyles();
     };
+
+    name_.responder().onChange_ = [](
+        const data::String::ROContext& ctxt
+    ) {
+        ctxt.model().parent<Array>()->recomputeIssues();
+    };
 }
 
 Array::~Array() = default;
 
 bool Array::enumerate(const EnumFunc& func) {
-    assert(0); // TODO
+    if (func(name_, strID(NAME_STR), NAME_STR)) return true;
+    if (func(presets_, strID(PRESETS_STR), PRESETS_STR)) return true;
+    return false;
 }
 
 data::Model *Array::find(uint64 id) {
-    assert(0); // TODO
+    if (id == strID(NAME_STR)) return &name_;
+    if (id == strID(PRESETS_STR)) return &presets_;
+    return nullptr;
 }
 
-/*
-void Config::PresetArrays::addInjection(const string& name) {
-    mInjections.emplace_back(std::make_unique<Injection>(name));
-    notifyData.notify(NOTIFY_INJECTIONS);
+const data::Integer& Array::issues() const {
+    return mIssues;
 }
 
-void Config::PresetArrays::removeInjection(const Injection& injection) {
-    auto iter{mInjections.begin()};
-    for (; iter != mInjections.end(); ++iter) {
-        if (&**iter == &injection) break;
+void Array::recomputeIssues() {
+    auto& vec{*parent<data::Vector>()};
+
+    int32 issues{0};
+
+    data::String::ROContext nameCtxt{name_};
+
+    data::Vector::ROContext vecCtxt{vec};
+    for (const auto& child : vecCtxt.children()) {
+        if (child.get() == this) continue;
+
+        auto& otherName{static_cast<Array&>(*child).name_};
+        data::String::ROContext otherNameCtxt{otherName};
+
+        if (otherNameCtxt.val() == nameCtxt.val()) {
+            issues |= eIssue_Name_Duplicate;
+            break;
+        }
     }
-    if (iter == mInjections.end()) return;
 
-    mInjections.erase(iter);
+    if (nameCtxt.val().empty()) {
+        issues |= eIssue_Name_Empty;
+    }
 
-    notifyData.notify(NOTIFY_INJECTIONS);
+    data::Integer::Context{mIssues}.set(issues);
 }
-*/
 

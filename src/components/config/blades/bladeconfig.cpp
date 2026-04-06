@@ -23,20 +23,29 @@
 #include "config/blades/ws281x.hpp"
 #include "config/config.hpp"
 #include "data/number.hpp"
+#include "utils/parent.hpp"
 #include "utils/string.hpp"
-#include "wx/translation.h"
+
+namespace {
+
+constexpr std::string_view BLADES_STR{"Blades"};
+constexpr std::string_view NAME_STR{"Name"};
+constexpr std::string_view PRESETARR_STR{"PresetArray"};
+constexpr std::string_view ID_STR{"ID"};
+
+} // namespace
 
 using namespace config::blades;
 
 Blade::Blade(data::Node *parent) : data::Node(parent) {
-    data::Vector::Context types{types_};
+    data::Vector::Context types{mTypes};
     // Generic used as a dummy for unassigned.
     types.addCreate<WS281X>();
     types.addCreate<Simple>();
     types.addCreate<data::Generic>();
 
-    data::Selector::Context{type_}.bind(&types_);
-    data::Choice::Context{type_.choice_}.choose(0);
+    data::Selector::Context{mType}.bind(&mTypes);
+    data::Choice::Context{mType.choice_}.choose(0);
 
     data::Integer::Context brightness{brightness_};
     brightness.update({.min_=0, .max_=100});
@@ -54,7 +63,7 @@ data::Model *Blade::find(uint64) {
 }
 
 WS281X& Blade::ws281x() {
-    data::Vector::Context types{types_};
+    data::Vector::Context types{mTypes};
 
     const auto& model{types.children()[eWS281X]};
     // NOLINTNEXTLINE suppress lifetimebound warning
@@ -62,14 +71,27 @@ WS281X& Blade::ws281x() {
 }
 
 Simple& Blade::simple() {
-    data::Vector::Context types{types_};
+    data::Vector::Context types{mTypes};
 
     const auto& model{types.children()[eSimple]};
     // NOLINTNEXTLINE suppress lifetimebound warning
     return static_cast<Simple&>(*model);
 }
 
-BladeConfig::BladeConfig(data::Node *parent) : data::Node(parent) {
+const data::Selector& Blade::type() {
+    return mType;
+}
+
+const data::Vector& Blade::types() {
+    return mTypes;
+}
+
+BladeConfig::BladeConfig(data::Node *parent) :
+    data::Node(parent),
+    blades_(this),
+    name_(this),
+    presetArray_(this),
+    id_(this) {
     const auto nameFilter{[](
         const data::String::ROContext&, std::string& str, size& pos
     ) {
@@ -100,8 +122,11 @@ BladeConfig::BladeConfig(data::Node *parent) : data::Node(parent) {
     const auto noBladeIdFilter{[](
         const data::Bool::ROContext& ctxt, bool& noBladeId
     ) {
-        auto& bladeConfig{*ctxt.model().parent<BladeConfig>()};
-        data::Integer::Context id{bladeConfig.id_};
+        const auto& bladeConfig{utils::parent<&BladeConfig::noBladeId_>(
+            static_cast<const data::Bool&>(ctxt.model())
+        )};
+
+        data::Integer::ROContext id{bladeConfig.id_};
         if (id.val() == NO_BLADE) noBladeId = true;
     }};
     noBladeId_.setFilter(noBladeIdFilter);
@@ -133,14 +158,24 @@ BladeConfig::BladeConfig(data::Node *parent) : data::Node(parent) {
 BladeConfig::~BladeConfig() = default;
 
 bool BladeConfig::enumerate(const EnumFunc& func) {
-    assert(0); // TODO
+    if (func(blades_, strID(BLADES_STR), BLADES_STR)) return true;
+    if (func(name_, strID(NAME_STR), NAME_STR)) return true;
+    if (func(presetArray_, strID(PRESETARR_STR), PRESETARR_STR)) return true;
+    if (func(id_, strID(ID_STR), ID_STR)) return true;
+
+    return false;
 }
 
 data::Model *BladeConfig::find(uint64 id) {
-    assert(0); // TODO
+    if (id == strID(BLADES_STR)) return &blades_;
+    if (id == strID(NAME_STR)) return &name_;
+    if (id == strID(PRESETARR_STR)) return &presetArray_;
+    if (id == strID(ID_STR)) return &id_;
+
+    return nullptr;
 }
 
-const data::Integer& BladeConfig::issues() {
+const data::Integer& BladeConfig::issues() const {
     return mIssues;
 }
 

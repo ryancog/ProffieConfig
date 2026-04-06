@@ -19,9 +19,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config_export.h"
+#include "data/number.hpp"
 #include "data/string.hpp"
 #include "data/vector.hpp"
+
+#include "config_export.h"
 
 namespace config {
 
@@ -36,8 +38,20 @@ struct CONFIG_EXPORT Array : data::Node {
     bool enumerate(const EnumFunc&) override;
     Model *find(uint64) override;
 
+    enum {
+        eIssue_Name_Empty       = 1 << 0,
+        eIssue_Name_Duplicate   = 1 << 1,
+    };
+
+    [[nodiscard]] const data::Integer& issues() const;
+
     data::String name_;
     data::Vector presets_;
+
+private:
+    void recomputeIssues();
+
+    data::Integer mIssues;
 };
 
 } // namespace presets

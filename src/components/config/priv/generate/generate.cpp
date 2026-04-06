@@ -194,7 +194,7 @@ std::optional<std::string> runPreChecks(
             const auto& model{blades.children()[bladeIdx]};
             auto& blade{static_cast<Blade&>(*model)};
 
-            data::Choice::ROContext type{blade.type_.choice_};
+            data::Choice::ROContext type{blade.type().choice_};
 
             if (type.choice() == Blade::eWS281X) {
                 data::String::ROContext dataPin{blade.ws281x().dataPin_};
@@ -435,7 +435,7 @@ void outputTopGeneral(std::ostream& outFile, const Config& config) {
         for (const auto& model : blades.children()) {
             auto& blade{static_cast<blades::Blade&>(*model)};
 
-            data::Choice::ROContext type{blade.type_.choice_};
+            data::Choice::ROContext type{blade.type().choice_};
             if (type.choice() != blades::Blade::eWS281X) continue;
 
             data::Bool::ROContext whiteMultiplier{blade.ws281x().hasWhite_};
@@ -813,7 +813,7 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
         for (const auto& model : blades.children()) {
             auto& blade{static_cast<blades::Blade&>(*model)};
 
-            data::Choice::ROContext type{blade.type_.choice_};
+            data::Choice::ROContext type{blade.type().choice_};
 
             if (type.choice() == blades::Blade::eUnassigned) {
                 outFile << "\t\tSimpleBladePtr<NoLED, NoLED, NoLED, NoLED, -1, -1, -1, -1>(),\n";
