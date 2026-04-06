@@ -20,7 +20,11 @@
  */
 
 #include "config/config.hpp"
+#include "config/blades/ws281x.hpp"
+#include "config/blades/simple.hpp"
 #include "ui/types.hpp"
+
+#include "../dialogs/bladearray.hpp"
 
 struct BladesPage {
     BladesPage(config::Config&);
@@ -30,12 +34,24 @@ struct BladesPage {
 private:
     pcui::DescriptorPtr selection();
     pcui::DescriptorPtr blades();
-    pcui::DescriptorPtr simple();
-    pcui::DescriptorPtr ws281x();
+    pcui::DescriptorPtr simple(config::blades::Simple&);
+    pcui::DescriptorPtr ws281x(config::blades::WS281X&);
 
     config::Config& mConfig;
 
     data::Selector mArraySel;
     data::Selector mBladeSel;
+
+    struct IssueReceiver : data::Integer::Receiver {
+        ~IssueReceiver() override;
+        void onSet() override;
+        void onAttach() override;
+        void preDetach() override;
+        void updateLabel();
+    } mIssueReceiver;
+
+    data::String mIssueLabel;
+
+    BladeArrayDlg *mDlg{nullptr};
 };
 

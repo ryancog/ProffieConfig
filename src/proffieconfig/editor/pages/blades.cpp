@@ -19,6 +19,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config/blades/bladeconfig.hpp"
+#include "config/blades/ws281x.hpp"
+#include "data/logic/adapter.hpp"
+#include "ui/build.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/choice.hpp"
 #include "ui/layout/group.hpp"
@@ -27,12 +31,37 @@
 #include "ui/layout/stack.hpp"
 #include "ui/static/label.hpp"
 #include "ui/types.hpp"
-
-#include "../dialogs/bladearray.hpp"
-// #include "../special/splitvisualizer.h"
 #include "ui/values.hpp"
+#include "utils/parent.hpp"
 
-BladesPage::BladesPage(config::Config& config) : mConfig{config} {}
+BladesPage::BladesPage(config::Config& config) : mConfig{config} {
+    mArraySel.choice_.responder().onChoice_ = [](
+        const data::Choice::ROContext& ctxt
+    ) {
+        auto& arraySel{*ctxt.model().parent<data::Selector>()};
+        auto& page{utils::parent<&BladesPage::mArraySel>(arraySel)};
+
+        if (page.mDlg) {
+            pcui::cripple(page.mDlg);
+
+            page.mDlg->CallAfter([dlg=page.mDlg] {
+                dlg->Close(true);
+            });
+
+            page.mDlg = nullptr;
+        }
+
+        if (ctxt.choice() == -1) {
+            page.mIssueReceiver.detach();
+        } else {
+            data::Vector::ROContext bladeConfigs{page.mConfig.bladeConfigs_};
+            const auto& selected{*bladeConfigs.children()[ctxt.choice()]};
+            page.mIssueReceiver.attach(selected);
+        }
+    };
+
+    data::Selector::Context{mArraySel}.bind(&config.presetArrays_);
+}
 
 pcui::DescriptorPtr BladesPage::ui() {
     return pcui::Stack{
@@ -82,12 +111,42 @@ pcui::DescriptorPtr BladesPage::selection() {
                     .unselected_=_("Select Array"),
                   },
                 }(),
+                pcui::Button{
+                  .win_={
+                    .base_={
+                      .border_={
+                        .size_=pcui::interControlSpacing(),
+                        .dirs_=wxLEFT
+                      },
+                    },
+                    .show_=not (mIssueLabel | data::logic::IsEmpty{}),
+                  },
+                  .label_=mIssueLabel,
+                  .exactFit_=true,
+                }(),
                 pcui::Spacer{.size_=pcui::interControlSpacing()}(),
                 pcui::Button{
+                  .win_={
+                    .enable_=mArraySel.choice_ | data::logic::HasSelection{},
+                  },
                   .bitmap_={
                     .src_=pcui::Bitmap{"edit"}.color(wxSYS_COLOUR_WINDOWTEXT),
                   },
                   .exactFit_=true,
+                  .func_=[this](const pcui::CallbackContext& ctxt) {
+                      if (mDlg) {
+                          mDlg->Raise();
+                          return;
+                      }
+
+                      using namespace config::blades;
+
+                      data::Selector::Context sel{mArraySel};
+                      auto& cfg{static_cast<BladeConfig&>(*sel.selected())};
+                      mDlg = new BladeArrayDlg(ctxt.topLevel_, cfg, false);
+
+                      mDlg->Show();
+                  }
                 }(),
               }
             }(),
@@ -100,10 +159,28 @@ pcui::DescriptorPtr BladesPage::selection() {
                   .win_={.base_={.proportion_=1}},
                   .label_=_("Add"),
                   .exactFit_=true,
+                  .func_=[this](const pcui::CallbackContext& ctxt) {
+                      // Only ever allow one of these dialogs. Not a technical
+                      // limitation, just don't want things cluttered.
+                      if (mDlg) mDlg->Close(true);
+
+                      data::Vector::Context vec{mConfig.bladeConfigs_};
+                      auto& cfg{vec.addCreate<config::blades::BladeConfig>()};
+
+                      BladeArrayDlg dlg(ctxt.topLevel_, cfg, true);
+
+                      auto res{dlg.ShowModal()};
+                      if (res != wxID_OK) {
+                          vec.remove(vec.children().size() - 1);
+                      }
+                  }
                 }(),
                 pcui::Spacer{.size_=pcui::interControlSpacing()}(),
                 pcui::Button{
-                  .win_={.base_={.proportion_=1}},
+                  .win_={
+                    .base_={.proportion_=1},
+                    .enable_=mBladeSel.choice_ | data::logic::HasSelection{},
+                  },
                   .label_=_("Remove"),
                   .exactFit_=true,
                 }(),
@@ -113,7 +190,7 @@ pcui::DescriptorPtr BladesPage::selection() {
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         pcui::Group{
-          .base_={.expand_=true},
+          .base_={.expand_=true, .proportion_=1},
           .label_=_("Blades"),
           .orient_=wxVERTICAL,
           .children_={
@@ -128,6 +205,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                 pcui::Button{
                   .win_={
                     .base_={.minSize_=pcui::iconButtonSize()},
+                    .enable_=mArraySel.choice_ | data::logic::HasSelection{},
                   },
                   .label_="+",
                   .style_=pcui::Button::Style::Companion,
@@ -136,6 +214,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                 pcui::Button{
                   .win_={
                     .base_={.minSize_=pcui::iconButtonSize()},
+                    .enable_=mBladeSel.choice_ | data::logic::HasSelection{},
                   },
                   .label_="-",
                   .style_=pcui::Button::Style::Companion,
@@ -150,12 +229,28 @@ pcui::DescriptorPtr BladesPage::selection() {
 }
 
 pcui::DescriptorPtr BladesPage::blades() {
-    const auto builder{[](data::Model *model) -> pcui::DescriptorPtr {
+    const auto typeBuilder{[this](data::Model *model) -> pcui::DescriptorPtr {
+        using namespace config::blades;
+
+        if (auto *ptr{dynamic_cast<WS281X *>(model)}) {
+            return ws281x(*ptr);
+        }
+        if (auto *ptr{dynamic_cast<Simple *>(model)}) {
+            return simple(*ptr);
+        }
+
+        return pcui::Spacer{.size_=0}();
+    }};
+
+    const auto builder{[this, typeBuilder](
+        data::Model *model
+    ) -> pcui::DescriptorPtr {
         if (model == nullptr) {
             return pcui::Label{
               .win_={
                 .base_={
                   .minSize_={350, -1},
+                  .proportion_=1,
                   .align_=wxALIGN_CENTER,
                 },
               },
@@ -165,8 +260,20 @@ pcui::DescriptorPtr BladesPage::blades() {
             }();
         }
 
+        auto& blade{*static_cast<config::blades::Blade *>(model)};
         return pcui::Stack{
-
+            .base_={.expand_=true, .proportion_=1},
+            .orient_=wxVERTICAL,
+            .children_={
+              pcui::Choice{
+                .data_=blade.type().choice_
+              }(),
+              pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+              pcui::Selector{
+                .data_=blade.type(),
+                .builder_=typeBuilder,
+              }(),
+            }
         }();
     }};
 
@@ -176,12 +283,45 @@ pcui::DescriptorPtr BladesPage::blades() {
     }();
 }
 
-pcui::DescriptorPtr BladesPage::simple() {
-
+pcui::DescriptorPtr BladesPage::simple(config::blades::Simple& simple) {
+    return pcui::Label{.label_="TODO"}();
 }
 
-pcui::DescriptorPtr BladesPage::ws281x() {
+pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
+    return pcui::Label{.label_="TODO"}();
+}
 
+BladesPage::IssueReceiver::~IssueReceiver() {
+    detach();
+}
+
+void BladesPage::IssueReceiver::onSet() {
+    updateLabel();
+}
+
+void BladesPage::IssueReceiver::onAttach() {
+    updateLabel();
+}
+
+void BladesPage::IssueReceiver::preDetach() {
+    auto& page{utils::parent<&BladesPage::mIssueReceiver>(*this)};
+    data::String::Context{page.mIssueLabel}.clear();
+}
+
+void BladesPage::IssueReceiver::updateLabel() {
+    auto& page{utils::parent<&BladesPage::mIssueReceiver>(*this)};
+
+    const auto issues{context<data::Integer>().val()};
+    using enum config::blades::BladeConfig::Issues;
+
+    std::string label;
+    if (issues & eIssue_Errors) {
+        label = "\u26D4\uFE0E"; // No entry sym
+    } else if (issues & eIssue_Warnings) {
+        label = "\u26A0"; // warn
+    }
+
+    data::String::Context{page.mIssueLabel}.change(std::move(label));
 }
  
 /*
