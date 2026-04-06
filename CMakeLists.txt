@@ -98,8 +98,11 @@ else()
 endif()
 
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    add_compile_definitions(LIFETIMEBOUND="[[clang::lifetimebound]]")
+if (
+        CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
+        CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"
+)
+    add_compile_definitions(LIFETIMEBOUND=[[clang::lifetimebound]])
 else()
     add_compile_definitions(LIFETIMEBOUND=)
 endif()
