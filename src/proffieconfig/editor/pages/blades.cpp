@@ -52,9 +52,10 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
             page.mDlg = nullptr;
         }
 
-        if (ctxt.choice() == -1) {
-            page.mIssueReceiver.detach();
-        } else {
+        // Always detach first
+        page.mIssueReceiver.detach();
+
+        if (ctxt.choice() != -1) {
             using namespace config::blades;
             data::Vector::ROContext bladeConfigs{page.mConfig.bladeConfigs_};
             auto& selModel{*bladeConfigs.children()[ctxt.choice()]};
@@ -138,6 +139,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                   .exactFit_=true,
                   .func_=[this](const pcui::CallbackContext& ctxt) {
                       if (mDlg) {
+                          mDlg->Show();
                           mDlg->Raise();
                           return;
                       }
@@ -175,6 +177,10 @@ pcui::DescriptorPtr BladesPage::selection() {
                       auto res{dlg.ShowModal()};
                       if (res != wxID_OK) {
                           vec.remove(vec.children().size() - 1);
+                      } else {
+                          data::Choice::Context{mArraySel.choice_}.choose(
+                              static_cast<int32>(vec.children().size() - 1)
+                          );
                       }
                   }
                 }(),
