@@ -22,12 +22,18 @@
 namespace {
 
 struct True : data::logic::detail::Base {
+    void lock() override {}
+    void unlock() override {}
+
     bool doActivate() override {
         return true;
     }
 };
 
 struct False : data::logic::detail::Base {
+    void lock() override {}
+    void unlock() override {}
+
     bool doActivate() override {
         return false;
     }

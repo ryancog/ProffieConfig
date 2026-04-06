@@ -24,6 +24,14 @@ auto data::logic::operator|(const data::Bool& bl, IsSet) -> Element {
         Adapter(const data::Bool& bl) : bl_{bl} {}
         ~Adapter() override { detach(); }
 
+        void lock() override {
+            bl_.lock();
+        }
+
+        void unlock() override {
+            bl_.unlock();
+        }
+
         bool doActivate() override {
             data::Bool::ROContext ctxt{bl_};
             attach(bl_);
@@ -48,6 +56,14 @@ auto data::logic::operator|(
         Adapter(const data::Choice& choice, HasSelection sels) :
             choice_{choice}, sels_{std::move(sels)} {}
         ~Adapter() override { detach(); }
+
+        void lock() override {
+            choice_.lock();
+        }
+
+        void unlock() override {
+            choice_.unlock();
+        }
 
         bool doActivate() override {
             data::Choice::ROContext ctxt{choice_};
@@ -80,6 +96,14 @@ auto data::logic::operator|(
             str_{str} {}
         ~Adapter() override { detach(); }
 
+        void lock() override {
+            str_.lock();
+        }
+
+        void unlock() override {
+            str_.unlock();
+        }
+
         bool doActivate() override {
             data::String::ROContext ctxt{str_};
             attach(str_);
@@ -102,12 +126,20 @@ auto data::logic::operator|(
 ) -> Element {
     struct Adapter : detail::Base, data::Integer::Receiver {
         Adapter(const data::Integer& model, BitAnd val) :
-            model_{model}, val_{val} {}
+            int_{model}, val_{val} {}
         ~Adapter() override { detach(); }
 
+        void lock() override {
+            int_.lock();
+        }
+
+        void unlock() override {
+            int_.unlock();
+        }
+
         bool doActivate() override {
-            data::Integer::ROContext ctxt{model_};
-            attach(model_);
+            data::Integer::ROContext ctxt{int_};
+            attach(int_);
             return isTrue(ctxt.val());
         }
 
@@ -121,7 +153,7 @@ auto data::logic::operator|(
         }
 
         BitAnd val_;
-        const Integer& model_;
+        const Integer& int_;
     };
 
     return std::make_unique<Adapter>(model, val);

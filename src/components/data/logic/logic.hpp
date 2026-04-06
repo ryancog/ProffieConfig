@@ -40,6 +40,12 @@ struct DATA_EXPORT Base {
      */
     using ChangeFunc = std::function<void(bool)>;
 
+    /**
+     * Prevent models this depends on from changing
+     */
+    virtual void lock() = 0;
+    virtual void unlock() = 0;
+
 protected:
     bool activate(detail::Base&, ChangeFunc);
 
@@ -78,11 +84,13 @@ struct Receiver;
 struct DATA_EXPORT Manager {
     Manager(Element&&);
 
+    void lock();
+    void unlock();
+
     /**
-     * Use with care, consider as an approximation as it may be invalidated
-     * immediately afterwards.
+     * Should only be accessed when locked.
      */
-    bool val() const;
+    [[nodiscard]] bool val() const;
 
 private:
     friend Receiver;
@@ -121,7 +129,7 @@ struct DATA_EXPORT Receiver {
 protected:
     friend Manager;
 
-    virtual void onChange(bool) = 0;
+    virtual void onChange() = 0;
 
 private:
     std::recursive_mutex mLock;

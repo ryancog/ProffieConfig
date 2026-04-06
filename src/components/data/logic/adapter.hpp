@@ -47,7 +47,7 @@ struct DATA_EXPORT IsEmpty {};
 DATA_EXPORT Element operator|(const data::String&, IsEmpty);
 
 struct DATA_EXPORT BitAnd {
-    uint32 val_;
+    int32 val_;
 };
 
 DATA_EXPORT Element operator|(const data::Integer&, BitAnd);

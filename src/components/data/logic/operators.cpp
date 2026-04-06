@@ -28,6 +28,14 @@ auto data::logic::operator not(
         Operator(Element&& child) :
             child_{std::move(child)} {}
 
+        void lock() override {
+            child_->lock();
+        }
+
+        void unlock() override {
+            child_->unlock();
+        }
+
         bool doActivate() override {
             const auto childChange{[this](bool val) {
                 onChange(not val);
@@ -47,6 +55,16 @@ auto data::logic::operator or(
     struct Operator : detail::Base {
         Operator(Element&& lhs, Element&& rhs) :
             lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
+
+        void lock() override {
+            lhs_->lock();
+            rhs_->lock();
+        }
+
+        void unlock() override {
+            lhs_->unlock();
+            rhs_->unlock();
+        }
 
         bool doActivate() override {
             const auto onLHSChange{[this](bool val) {
@@ -87,6 +105,16 @@ auto data::logic::operator and(
     struct Operator : detail::Base {
         Operator(Element&& lhs, Element&& rhs) :
             lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
+
+        void lock() override {
+            lhs_->lock();
+            rhs_->lock();
+        }
+
+        void unlock() override {
+            lhs_->unlock();
+            rhs_->unlock();
+        }
 
         bool doActivate() override {
             const auto onLHSChange{[this](bool val) {

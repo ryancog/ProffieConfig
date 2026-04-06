@@ -55,14 +55,23 @@ Manager::Manager(Element&& child) :
         mVal = val;
 
         for (auto *rcvr : mReceivers) {
-            rcvr->onChange(val);
+            rcvr->onChange();
         }
     }};
     mVal = mChild->activate(changeFunc, &mLock);
 }
 
+void Manager::lock() {
+    mLock.lock();
+    mChild->lock();
+}
+
+void Manager::unlock() {
+    mChild->unlock();
+    mLock.lock();
+}
+
 bool Manager::val() const {
-    std::lock_guard scopeLock{mLock};
     return mVal;
 }
 
@@ -78,7 +87,7 @@ void Receiver::attach(Manager& man) {
 
     mMan = &man;
     man.mReceivers.insert(this);
-    onChange(man.mVal);
+    onChange();
 }
 
 void Receiver::detach() {
