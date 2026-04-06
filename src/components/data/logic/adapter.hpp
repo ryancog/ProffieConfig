@@ -52,5 +52,11 @@ struct DATA_EXPORT BitAnd {
 
 DATA_EXPORT Element operator|(const data::Integer&, BitAnd);
 
+struct DATA_EXPORT Equals {
+    int32 val_;
+};
+
+DATA_EXPORT Element operator|(const data::Integer&, Equals);
+
 } // namespace data::logic
 

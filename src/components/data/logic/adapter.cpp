@@ -159,3 +159,41 @@ auto data::logic::operator|(
     return std::make_unique<Adapter>(model, val);
 }
 
+auto data::logic::operator|(
+    const data::Integer& model, Equals equals
+) -> Element {
+    struct Adapter : detail::Base, data::Integer::Receiver {
+        Adapter(const data::Integer& model, Equals equals) :
+            int_{model}, equals_{equals} {}
+        ~Adapter() override { detach(); }
+
+        void lock() override {
+            int_.lock();
+        }
+
+        void unlock() override {
+            int_.unlock();
+        }
+
+        bool doActivate() override {
+            data::Integer::ROContext ctxt{int_};
+            attach(int_);
+            return isTrue(ctxt.val());
+        }
+
+        void onSet() override {
+            std::lock_guard scopeLock{*pLock};
+            Base::onChange(isTrue(context<Integer>().val()));
+        }
+
+        [[nodiscard]] bool isTrue(int32 val) const {
+            return val == equals_.val_;
+        }
+
+        Equals equals_;
+        const Integer& int_;
+    };
+
+    return std::make_unique<Adapter>(model, equals);
+}
+
