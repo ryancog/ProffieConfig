@@ -23,6 +23,7 @@
 #include <wx/sizer.h>
 #include <wx/window.h>
 
+#include "ui/build.hpp"
 #include "ui/priv/tlw.hpp"
 
 using namespace pcui;
@@ -56,7 +57,9 @@ Dialog::Dialog(
     });
 }
 
-Dialog::~Dialog() = default;
+Dialog::~Dialog() {
+    cripple(this);
+}
 
 void Dialog::Fit() {
     priv::tlw::fit<wxDialog>(this);

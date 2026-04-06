@@ -23,6 +23,7 @@
 #include <wx/sizer.h>
 #include <wx/window.h>
 
+#include "ui/build.hpp"
 #include "ui/priv/tlw.hpp"
 
 using namespace pcui;
@@ -52,6 +53,7 @@ Frame::Frame(
 }
 
 Frame::~Frame() {
+    cripple(this);
     if (mReference and *mReference) (*mReference) = nullptr;
 }
 
