@@ -81,6 +81,14 @@ bool data::Model::processUIAction(std::unique_ptr<Action>&& action) {
     return processAction(std::move(action), true);
 }
 
+void data::Model::lock() const {
+    pLock.lock();
+}
+
+void data::Model::unlock() const {
+    pLock.unlock();
+}
+
 void data::Model::sendToReceivers(const std::function<void(Receiver *)>& func) {
     std::scoped_lock scopeLock{pLock};
 

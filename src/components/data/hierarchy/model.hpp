@@ -89,6 +89,15 @@ struct DATA_EXPORT Model {
         return static_cast<T *>(mParent);
     }
 
+    /**
+     * Prevent any changes from occurring to the model.
+     * Similar to holding a context, but useful for something which itself may
+     * not know everything it depends on (so children need to be able to lock
+     * their respective models to ensure parent state)
+     */
+    void lock() const;
+    void unlock() const;
+
 protected:
     friend Node;
 
