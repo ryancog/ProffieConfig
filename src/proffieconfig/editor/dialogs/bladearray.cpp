@@ -22,8 +22,10 @@
 #include "data/logic/adapter.hpp"
 #include "ui/build.hpp"
 #include "ui/controls/button.hpp"
+#include "ui/controls/choice.hpp"
 #include "ui/controls/stepper.hpp"
 #include "ui/controls/text.hpp"
+#include "ui/controls/toggle_button.hpp"
 #include "ui/dialog.hpp"
 #include "ui/helpers/dialog_buttons.hpp"
 #include "ui/helpers/labeled.hpp"
@@ -78,17 +80,19 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
               .orient_=wxVERTICAL,
               .ctrl_=pcui::Stepper{
                 .win_={
+                  .base_={.expand_=true},
                   .tooltip_=_("The ID of the blade associated with the currently-selected blade array.\nThis value can be measured by typing \"id\" into the Serial Monitor."),
                 },
                 .data_=mConfig.id_,
               }(),
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-            pcui::Button{
+            pcui::ToggleButton{
               .win_={
                 .base_={.align_=wxALIGN_BOTTOM},
               },
               .label_="NO_BLADE",
+              .data_=mConfig.noBladeId_,
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::Labeled{
@@ -98,11 +102,11 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
               },
               .label_=_("Preset Array"),
               .orient_=wxVERTICAL,
-              .ctrl_=pcui::Stepper{
+              .ctrl_=pcui::Choice{
                 .win_={
-                  .tooltip_=_("The ID of the blade associated with the currently-selected blade array.\nThis value can be measured by typing \"id\" into the Serial Monitor."),
+                  .base_={.expand_=true},
                 },
-                .data_=mConfig.id_,
+                .data_=mConfig.presetArray_.choice_,
               }(),
             }(),
           }
