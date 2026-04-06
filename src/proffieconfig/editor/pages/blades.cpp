@@ -112,6 +112,12 @@ pcui::DescriptorPtr BladesPage::selection() {
                   .style_=pcui::Choice::PopUp{
                     .unselected_=_("Select Array"),
                   },
+                  .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
+                      data::Vector::ROContext vec{mConfig.bladeConfigs_};
+                      using namespace config::blades;
+                      auto& cfg{static_cast<BladeConfig&>(*vec.children()[idx])};
+                      return cfg.name_;
+                  }
                 }(),
                 pcui::Button{
                   .win_={
