@@ -105,6 +105,12 @@ struct DATA_EXPORT Vector::Context : Model::Context, ROContext {
     void remove(size) const;
 
     /**
+     * Remove item by addr
+     * @return if found and removed
+     */
+    bool remove(Model&) const;
+
+    /**
      * Move model up or down in the list.
      */
     void moveUp(size) const;

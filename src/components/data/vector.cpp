@@ -96,6 +96,17 @@ void data::Vector::Context::remove(size idx) const {
     ));
 }
 
+bool data::Vector::Context::remove(Model& model) const {
+    for (size idx{0}; idx < children().size(); ++idx) {
+        if (children()[idx].get() != &model) continue;
+
+        remove(idx);
+        return true;
+    }
+
+    return false;
+}
+
 void data::Vector::Context::moveUp(size idx) const {
     model().processAction(std::make_unique<SwapAction>(
         idx - 1
