@@ -46,10 +46,8 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
             pcui::cripple(page.mDlg);
 
             page.mDlg->CallAfter([dlg=page.mDlg] {
-                dlg->Close(true);
+                dlg->Destroy();
             });
-
-            page.mDlg = nullptr;
         }
 
         // Always detach first
@@ -149,6 +147,10 @@ pcui::DescriptorPtr BladesPage::selection() {
                       data::Selector::Context sel{mArraySel};
                       auto& cfg{static_cast<BladeConfig&>(*sel.selected())};
                       mDlg = new BladeArrayDlg(ctxt.topLevel_, cfg, false);
+                      const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
+                          if (evt.GetEventObject() == mDlg) mDlg = nullptr;
+                      }};
+                      mDlg->Bind(wxEVT_DESTROY, onDestroy);
 
                       mDlg->Show();
                   }
@@ -192,6 +194,12 @@ pcui::DescriptorPtr BladesPage::selection() {
                   },
                   .label_=_("Remove"),
                   .exactFit_=true,
+                  .func_=[this] {
+                      data::Selector::ROContext sel{mArraySel};
+                      data::Vector::Context vec{mConfig.bladeConfigs_};
+
+                      vec.remove(*sel.selected());
+                  }
                 }(),
               }
             }(),
