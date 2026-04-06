@@ -115,21 +115,15 @@ struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
         if (not en) return;
 
         auto& str{const_cast<data::String&>(model<data::String>())};
+
         auto res{str.processUIAction(std::make_unique<data::String::ChangeAction>(
-            /*
-             * TODO: Play with how to get accurate insertion point, since
-             * GetInsertionPoint is not accurate on Windows. Combining with
-             * PositionToXY and some math might be viable?
-             *
-             * Also need to consider the other direction (onMove event)
-             */
-            GetValue().ToStdString(), 0 
+            GetValue().ToStdString(), posFromInsertPoint(GetInsertionPoint())
         ))};
 
         if (not res) {
             auto ctxt{context<data::String>()};
             ChangeValue(ctxt.val());
-            // SetInsertionPoint
+            SetInsertionPoint(insertPointFromPos(ctxt.pos()));
         }
     }
 
@@ -142,14 +136,50 @@ struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
         const auto val{context<data::String>().val()};
         safeCall([this, val] {
             ChangeValue(val);
-            // SetInsertionPoint
         });
     }
 
     void onMove() override {
-        safeCall([this] {
-            // SetInsertionPoint
+        const auto pos{context<data::String>().pos()};
+        safeCall([this, pos] {
+            SetInsertionPoint(insertPointFromPos(pos));
         });
+    }
+
+    long insertPointFromPos(size pos) const {
+        size numNewlines{0};
+        ssize lastNewlinePos{-1};
+
+        const auto str{GetValue()};
+        assert(pos <= str.length());
+
+        for (long idx{0}; idx < pos; ++idx) {
+            if (str[idx] == '\n') {
+                ++numNewlines;
+                lastNewlinePos = idx;
+            }
+        }
+
+        return XYToPosition(
+            static_cast<long>(pos - lastNewlinePos - 1),
+            static_cast<long>(numNewlines)
+        );
+    }
+
+    size posFromInsertPoint(long ip) const {
+        long x{};
+        long y{};
+        PositionToXY(ip, &x, &y);
+
+        long pos{0};
+        for (auto idx{0}; idx < y; ++idx) {
+            pos += GetLineLength(idx);
+            // And consider the newline
+            pos += 1;
+        }
+        pos += x;
+
+        return pos;
     }
 };
 
