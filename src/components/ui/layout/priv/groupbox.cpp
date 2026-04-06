@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/colour.h>
+
 #include "utils/types.hpp"
 
 using namespace pcui::priv;
@@ -59,6 +61,7 @@ void GroupBox::create(
     );
 #   ifdef __WXOSX__
     mPanel->MacClipsToBounds(false);
+    mPanel->SetBackgroundColour(wxTransparentColour);
 #   endif
     mPanel->SetSizer(mSizer);
 

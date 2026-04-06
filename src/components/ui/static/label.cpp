@@ -24,8 +24,7 @@
 #include <wx/stattext.h>
 
 #include "ui/detail/scaffold.hpp"
-#include "ui/priv/helpers.hpp"
-#include "ui/priv/winbase.hpp"
+#include "ui/detail/datawin.hpp"
 #include "ui/types.hpp"
 #include "wx/event.h"
 
@@ -33,7 +32,7 @@ using namespace pcui;
 
 namespace {
 
-struct Static : priv::WinBase<wxStaticText, data::String::Receiver> {
+struct Static : detail::DataWindow<wxStaticText, data::String::Receiver> {
     Static(const detail::Scaffold& scaffold, const Label& desc) {
         const auto style{desc.win_.base_.align_};
 
@@ -112,7 +111,7 @@ wxSizerItem *Label::Desc::build(const detail::Scaffold& scaffold) const {
     auto *text{new Static(scaffold, *this)};
 
     auto *item{new wxSizerItem(text)};
-    priv::apply(win_.base_, item);
+    detail::apply(win_.base_, item);
 
     return item;
 }

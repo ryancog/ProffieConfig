@@ -22,8 +22,6 @@
 #include <wx/sizer.h>
 #include <wx/statbox.h>
 
-#include "ui/priv/helpers.hpp"
-
 using namespace pcui;
 
 std::unique_ptr<detail::Descriptor> Stack::operator()() {
@@ -44,7 +42,7 @@ wxSizerItem *Stack::Desc::build(const detail::Scaffold& scaffold) const {
     }
 
     auto *item{new wxSizerItem(sizer)};
-    priv::apply(base_, item);
+    detail::apply(base_, item);
 
     return item;
 }

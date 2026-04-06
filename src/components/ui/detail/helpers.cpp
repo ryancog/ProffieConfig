@@ -20,7 +20,10 @@
  */
 
 #include <cassert>
+#include <set>
+#include <vector>
 
+#include "utils/types.hpp"
 #include "utils/defer.hpp"
 
 namespace {
@@ -46,26 +49,7 @@ void doFlushLayout(wxWindow *win, bool process);
 
 } // namespace
 
-void pcui::priv::apply(const detail::ChildBase& desc, wxSizerItem *item) {
-    // wxSizerItem only calls the virtual func for a window, not a sizer,
-    // So I have to do this check manually here in addition to the item call.
-    if (item->IsSizer()) {
-        item->GetSizer()->SetMinSize(desc.minSize_);
-    } else {
-        // Although in most cases the window min size will be handled by
-        // WinBase, there may be some that aren't, so set it here anyways.
-        // Worst case it's redundant.
-        item->SetMinSize(desc.minSize_);
-    }
-
-    item->SetProportion(desc.proportion_);
-    item->SetBorder(desc.border_.size_);
-    item->SetFlag(
-        desc.border_.dirs_ | (desc.expand_ ? wxEXPAND : 0) | desc.align_
-    );
-}
-
-void pcui::priv::queueShow(wxWindow *win, bool show) {
+void pcui::detail::queueShow(wxWindow *win, bool show) {
     assert(wxIsMainThread());
 
     showList[win] = show;
@@ -83,7 +67,7 @@ void pcui::priv::queueShow(wxWindow *win, bool show) {
 //
 // If the layout and fitting occurred immediately, then the window may
 // unnecessarily grow, which is undesirable.
-void pcui::priv::layoutAndFitFor(wxWindow *win) {
+void pcui::detail::layoutAndFitFor(wxWindow *win) {
     assert(wxIsMainThread());
 
     auto *top{win};
@@ -118,7 +102,7 @@ void pcui::priv::layoutAndFitFor(wxWindow *win) {
 // It seems worth mentioning that the name is a little confusing, and it's
 // checking if the window passed is a descendant of `this`, *NOT* if `this` is
 // a descendant of the arg as the name would imply if read naturally.
-void pcui::priv::flushShowQueueFor(wxWindow *win) {
+void pcui::detail::flushShowQueueFor(wxWindow *win) {
     assert(wxIsMainThread());
 
     // Go through the showlist and process any windows which are a descendant
@@ -136,11 +120,11 @@ void pcui::priv::flushShowQueueFor(wxWindow *win) {
     }
 }
 
-void pcui::priv::flushLayoutQueueFor(wxWindow *win) {
+void pcui::detail::flushLayoutQueueFor(wxWindow *win) {
     doFlushLayout(win, true);
 }
 
-void pcui::priv::discardLayoutsFor(wxWindow *win) {
+void pcui::detail::discardLayoutsFor(wxWindow *win) {
     doFlushLayout(win, false);
 }
 

@@ -24,23 +24,28 @@
 #include <wx/listbox.h>
 
 #include "ui/detail/scaffold.hpp"
-#include "ui/priv/helpers.hpp"
-#include "ui/priv/winbase.hpp"
+#include "ui/detail/datawin.hpp"
+#include "utils/defer.hpp"
 
 using namespace pcui;
 
 namespace {
 
 template<typename Derived, typename Ctrl>
-struct ControlBase : priv::WinBase<Ctrl, data::Choice::Receiver> {
-    ~ControlBase() override {
-        Ctrl::Unbind(Derived::evt(), &ControlBase::onChoice, this);
-        data::Choice::Receiver::detach();
+struct ControlBase : detail::DataWindow<Ctrl, data::Choice::Receiver> {
+    void preDestroyCripple() override {
+        this->detach();
+        detail::DataWindow<Ctrl, data::Choice::Receiver>::preDestroyCripple();
     }
 
     void onChoice(wxCommandEvent& evt) {
+        auto en{this->freezeGetRealEnable()};
+        defer { this->thawRealEnable(); };
+
+        if (not en) return;
+        
         auto& ch{const_cast<data::Choice&>(
-            data::Choice::Receiver::model<data::Choice>()
+            this->template model<data::Choice>()
         )};
 
         const auto self{static_cast<Derived *>(this)};
@@ -51,10 +56,9 @@ struct ControlBase : priv::WinBase<Ctrl, data::Choice::Receiver> {
         )};
 
         if (not res) {
-            [this, ch=ControlBase::template context<data::Choice>()]() {
-                const auto self{static_cast<Derived *>(this)};
-                Ctrl::SetSelection(self->dataToControl(ch.choice()));
-            }();
+            auto ctxt{this->template context<data::Choice>()};
+            const auto self{static_cast<Derived *>(this)};
+            this->SetSelection(self->dataToControl(ctxt.choice()));
         }
     }
     
@@ -126,7 +130,7 @@ private:
             wxDefaultSize
         );
 
-        priv::WinBase<Ctrl, data::Choice::Receiver>::postCreation(
+        detail::DataWindow<Ctrl, data::Choice::Receiver>::postCreation(
             scaffold, desc.win_
         );
 
@@ -248,7 +252,7 @@ wxSizerItem *Choice::Desc::build(const detail::Scaffold& scaffold) const {
     }
 
     auto *item{new wxSizerItem(ctrl)};
-    priv::apply(win_.base_, item);
+    detail::apply(win_.base_, item);
     return item;
 }
 

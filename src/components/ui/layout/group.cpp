@@ -23,7 +23,6 @@
 #include <wx/statbox.h>
 
 #include "ui/layout/priv/groupbox.hpp"
-#include "ui/priv/helpers.hpp"
 
 using namespace pcui;
 
@@ -48,7 +47,7 @@ wxSizerItem *Group::Desc::build(const detail::Scaffold& scaffold) const {
     }
 
     auto *item{new wxSizerItem(box)};
-    priv::apply(base_, item);
+    detail::apply(base_, item);
 
     return item;
 }

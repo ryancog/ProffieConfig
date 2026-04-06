@@ -23,8 +23,8 @@
 #include <wx/wupdlock.h>
 
 #include "ui/frame.hpp"
-#include "ui/priv/helpers.hpp"
-#include "ui/priv/winbase.hpp"
+#include "ui/detail/helpers.hpp"
+#include "ui/detail/datawin.hpp"
 
 void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
     wxWindowUpdateLocker lock(win);
@@ -54,11 +54,11 @@ void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
     // Immediately flush any show updates that were caused from building the
     // new UI elements, which could otherwise be seen by the user as
     // "flickering" as things update between the event loop servicing the UI.
-    priv::flushShowQueueFor(win);
+    detail::flushShowQueueFor(win);
 
     // Also, clear out any layout requests that were generated from the build,
     // they're redundant since layout will be processed here shortly.
-    priv::discardLayoutsFor(win);
+    detail::discardLayoutsFor(win);
 
     // The sizer SetSizerAndFit, contrary to its name, does not SetSizer() and
     // Fit(). Instead, it calls some special functions to do something similar.
@@ -88,8 +88,42 @@ void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
     // unexpected that build() doesn't always result in a clean new setup, so
     // do this for consistency. 
     if (oldSize == parent->GetVirtualSize()) {
-        priv::layoutAndFitFor(win);
-        priv::flushLayoutQueueFor(win);
+        detail::layoutAndFitFor(win);
+        detail::flushLayoutQueueFor(win);
+    }
+}
+
+void pcui::cripple(wxWindow *win) {
+    if (auto *ptr{dynamic_cast<detail::IDataDriven *>(win)}) {
+        ptr->preDestroyCripple();
+    }
+
+    if (win->GetSizer()) {
+        for (auto *child : win->GetSizer()->GetChildren()) {
+            cripple(child);
+        }
+    } else {
+        for (auto *child : win->GetChildren()) {
+            cripple(child);
+        }
+    }
+}
+
+void pcui::cripple(wxSizerItem *item) {
+    // Enable the TrackerDummy hack
+    if (auto *ptr{dynamic_cast<detail::IDataDriven *>(item)}) {
+        ptr->preDestroyCripple();
+    }
+
+    if (item->IsWindow()) {
+        pcui::cripple(item->GetWindow());
+        return;
+    }
+
+    if (not item->IsSizer()) return;
+
+    for (auto *childItem : item->GetSizer()->GetChildren()) {
+        pcui::cripple(childItem);
     }
 }
 

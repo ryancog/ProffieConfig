@@ -1,9 +1,9 @@
-#include "winbase.hpp"
+#pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/priv/winbase.cpp
+ * components/ui/utils.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,25 +19,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/event.h>
-#include <wx/scrolwin.h>
-#include <wx/sizer.h>
-#include <wx/toplevel.h>
-#include <wx/window.h>
+#include <functional>
 
-void pcui::priv::windowPostCreation(
-    const detail::Scaffold& scaffold,
-    const detail::ChildWindowBase& desc,
-    wxWindow *win
-) {
-    win->SetToolTip(desc.tooltip_);
+#include "ui_export.h"
 
-    if (scaffold.scrolled_) {
-        const auto onWheel{[scrolled=scaffold.scrolled_](wxMouseEvent& evt) {
-            scrolled->HandleOnMouseWheel(evt);
+namespace pcui {
 
-        }};
-        win->Bind(wxEVT_MOUSEWHEEL, onWheel);
-    }
-}
+UI_EXPORT void safeCall(std::function<void()>&&);
+
+} // namespace pcui
 

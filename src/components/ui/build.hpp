@@ -34,6 +34,12 @@ namespace pcui {
 void UI_EXPORT build(wxWindow *, const DescriptorPtr&);
 
 /**
+ * Call prior to teardown/destroy to disable data-linked UI.
+ */
+void UI_EXPORT cripple(wxWindow *);
+void UI_EXPORT cripple(wxSizerItem *);
+
+/**
  * Call to teardown UI creation.
  */
 void UI_EXPORT teardown(wxWindow *);

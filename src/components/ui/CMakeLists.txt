@@ -10,12 +10,13 @@ add_library(ui SHARED
     text.cpp
     values.cpp
     bitmap.cpp
+    utils.cpp
 
-    priv/helpers.cpp
-    priv/winbase.cpp
     priv/tlw.cpp
 
     detail/descriptor.cpp
+    detail/general.cpp
+    detail/helpers.cpp
     detail/scaffold.cpp
 
     dialogs/message.cpp

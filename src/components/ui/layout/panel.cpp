@@ -25,14 +25,13 @@
 
 #include <wx/panel.h>
 
-#include "ui/priv/helpers.hpp"
-#include "ui/priv/winbase.hpp"
+#include "ui/detail/datawin.hpp"
 
 using namespace pcui;
 
 namespace {
 
-struct Layout : priv::WinBase<wxPanel, data::Generic::Receiver> {
+struct Layout : detail::DataWindow<wxPanel, data::Generic::Receiver> {
     Layout(const detail::Scaffold& scaffold, const Panel& desc) {
         Create(scaffold.childParent_);
 
@@ -79,7 +78,7 @@ wxSizerItem *Panel::Desc::build(const detail::Scaffold& scaffold) const {
     auto *panel{new Layout(scaffold, *this)};
 
     auto *item{new wxSizerItem(panel)};
-    priv::apply(win_.base_, item);
+    detail::apply(win_.base_, item);
 
     return item;
 }

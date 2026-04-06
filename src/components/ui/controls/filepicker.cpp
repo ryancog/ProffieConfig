@@ -22,14 +22,14 @@
 #include <wx/filepicker.h>
 
 #include "ui/detail/scaffold.hpp"
-#include "ui/priv/helpers.hpp"
-#include "ui/priv/winbase.hpp"
+#include "ui/detail/datawin.hpp"
+#include "utils/defer.hpp"
 
 using namespace pcui;
 
 namespace {
 
-struct Control : priv::WinBase<wxFilePickerCtrl, data::String::Receiver> {
+struct Control : detail::DataWindow<wxFilePickerCtrl, data::String::Receiver> {
     Control(const detail::Scaffold& scaffold, const FilePicker &desc) {
         // Use textctrl default is platform-dependent, check if it exists in
         // the defaults instead of unilaterally setting it.
@@ -64,12 +64,17 @@ struct Control : priv::WinBase<wxFilePickerCtrl, data::String::Receiver> {
         Bind(wxEVT_FILEPICKER_CHANGED, &Control::onPick, this);
     }
 
-    ~Control() override {
-        Unbind(wxEVT_FILEPICKER_CHANGED, &Control::onPick, this);
+    void preDestroyCripple() override {
         detach();
+        DataWindow::preDestroyCripple();
     }
 
     void onPick(wxCommandEvent&) {
+        auto en{freezeGetRealEnable()};
+        defer { thawRealEnable(); };
+
+        if (not en) return;
+
         auto& str{const_cast<data::String&>(model<data::String>())};
         auto path{GetPath().ToStdString()};
         const auto len{path.length()};
@@ -78,9 +83,10 @@ struct Control : priv::WinBase<wxFilePickerCtrl, data::String::Receiver> {
             std::move(path), len
         ))};
 
-        if (not res) [this, str=context<data::String>()]() {
-            SetPath(str.val());
-        }();
+        if (not res) {
+            auto ctxt{context<data::String>()};
+            SetPath(ctxt.val());
+        }
     }
 
     void onChange() override {
@@ -103,7 +109,7 @@ FilePicker::Desc::Desc(FilePicker&& data) :
 wxSizerItem *FilePicker::Desc::build(const detail::Scaffold& scaffold) const {
     auto *chk{new Control(scaffold, *this)};
     auto *item{new wxSizerItem(chk)};
-    priv::apply(win_.base_, item);
+    detail::apply(win_.base_, item);
     return item;
 }
 

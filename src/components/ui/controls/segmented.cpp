@@ -25,8 +25,8 @@
 
 #include "data/helpers/exclusive.hpp"
 #include "ui/detail/scaffold.hpp"
-#include "ui/priv/helpers.hpp"
-#include "ui/priv/winbase.hpp"
+#include "ui/detail/datawin.hpp"
+#include "utils/defer.hpp"
 
 using namespace pcui;
 
@@ -42,7 +42,7 @@ using namespace pcui;
 
 namespace {
 
-struct Control : priv::WinBase<wxToggleButton, data::Model::Receiver> {
+struct Control : detail::DataWindow<wxToggleButton, data::Model::Receiver> {
     Control(
         const detail::Scaffold& scaffold,
         const Segmented::Label& label,
@@ -76,14 +76,15 @@ struct Control : priv::WinBase<wxToggleButton, data::Model::Receiver> {
         attach(data);
     }
 
-    ~Control() override {
+    void preDestroyCripple() override {
         detach();
+        DataWindow::preDestroyCripple();
     }
 
     Bitmap bmp_;
 };
 
-struct Manager : priv::WinBase<wxPanel, data::Exclusive::Receiver> {
+struct Manager : detail::DataWindow<wxPanel, data::Exclusive::Receiver> {
     Manager(const detail::Scaffold& scaffold, const Segmented& desc) {
         Create(scaffold.childParent_);
         auto *sizer{new wxBoxSizer(wxHORIZONTAL)};
@@ -110,12 +111,17 @@ struct Manager : priv::WinBase<wxPanel, data::Exclusive::Receiver> {
         Bind(wxEVT_TOGGLEBUTTON, &Manager::onSet, this);
     }
 
-    ~Manager() override {
-        Unbind(wxEVT_TOGGLEBUTTON, &Manager::onSet, this);
+    void preDestroyCripple() override {
         detach();
+        DataWindow::preDestroyCripple();
     }
 
     void onSet(wxCommandEvent& evt) {
+        auto en{freezeGetRealEnable()};
+        defer { thawRealEnable(); };
+
+        if (not en) return;
+
         for (auto *child : GetChildren()) {
             if (child != evt.GetEventObject()) continue;
 
@@ -163,7 +169,7 @@ Segmented::Desc::Desc(Segmented&& data) :
 wxSizerItem *Segmented::Desc::build(const detail::Scaffold& scaffold) const {
     auto *chk{new Manager(scaffold, *this)};
     auto *item{new wxSizerItem(chk)};
-    priv::apply(win_.base_, item);
+    detail::apply(win_.base_, item);
     return item;
 }
 

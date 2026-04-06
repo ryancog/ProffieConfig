@@ -21,16 +21,18 @@
 
 #include <wx/button.h>
 #include <wx/gdicmn.h>
+#include <wx/window.h>
 
 #include "ui/detail/scaffold.hpp"
-#include "ui/priv/helpers.hpp"
-#include "ui/priv/winbase.hpp"
+#include "ui/detail/helpers.hpp"
+#include "ui/detail/datawin.hpp"
+#include "utils/defer.hpp"
 
 using namespace pcui;
 
 namespace {
 
-struct Control : priv::WinBase<wxButton, data::String::Receiver> {
+struct Control : detail::DataWindow<wxButton, data::String::Receiver> {
     Control(const detail::Scaffold& scaffold, const Button& desc) :
         func_{desc.func_} {
 
@@ -97,9 +99,9 @@ struct Control : priv::WinBase<wxButton, data::String::Receiver> {
         Bind(wxEVT_BUTTON, &Control::onPress, this);
     }
 
-    ~Control() override {
-        Unbind(wxEVT_BUTTON, &Control::onPress, this);
+    void preDestroyCripple() override {
         detach();
+        DataWindow::preDestroyCripple();
     }
 
     void SetLabel(const wxString& str) override {
@@ -118,21 +120,39 @@ struct Control : priv::WinBase<wxButton, data::String::Receiver> {
     }
 
     void onPress(wxCommandEvent&) {
-        if (const auto *ptr{maybeModel<data::String>()}) {
-            data::String::ROContext ctxt{*ptr};
-            if (ctxt.enabled() and func_) func_();
-        } else if (func_) func_();
+        auto en{freezeGetRealEnable()};
+        defer { thawRealEnable(); };
+
+        if (not en) return;
+
+        callback();
     }
 
     void onChange() override {
-        GetWindowStyle();
         safeCall([this, str=context<data::String>().val()]() {
             SetLabel(str);
         });
     }
 
+    void callback() {
+        if (const auto *ptr{std::get_if<0>(&func_)}) {
+            if (*ptr) (*ptr)();
+        } else if (const auto *ptr{std::get_if<1>(&func_)}) {
+            if (*ptr) {
+                CallbackContext ctxt{
+                    .window_ = this,
+                    .topLevel_ = static_cast<wxTopLevelWindow *>(
+                        wxGetTopLevelParent(this)
+                    ),
+                };
+
+                (*ptr)(ctxt);
+            }
+        }
+    }
+
     Bitmap bmp_;
-    const std::function<void()> func_;
+    const Button::MaybeContextualCallback func_;
 };
 
 } // namespace
@@ -158,7 +178,7 @@ Button::Desc::Desc(Button&& data) :
 wxSizerItem *Button::Desc::build(const detail::Scaffold& scaffold) const {
     auto *button{new Control(scaffold, *this)};
     auto *item{new wxSizerItem(button)};
-    priv::apply(win_.base_, item);
+    detail::apply(win_.base_, item);
     return item;
 }
 

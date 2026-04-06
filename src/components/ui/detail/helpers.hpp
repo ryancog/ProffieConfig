@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/priv/helpers.hpp
+ * components/ui/detail/helpers.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,14 +22,9 @@
 #include <wx/sizer.h>
 #include <wx/toplevel.h>
 
-#include "ui/detail/general.hpp"
+#include "ui_export.h"
 
-namespace pcui::priv {
-
-/**
- * Apply general ChildBase attributes to a sizer item.
- */
-void apply(const detail::ChildBase&, wxSizerItem *);
+namespace pcui::detail {
 
 /**
  * Queue a window to be shown when updates take place.
@@ -38,31 +33,31 @@ void apply(const detail::ChildBase&, wxSizerItem *);
  * it's laid out to ensure the window doesn't appear in an unexpected place to
  * the user.
  */
-void queueShow(wxWindow *, bool);
+UI_EXPORT void queueShow(wxWindow *, bool);
 
 /**
  * Layout this window and its parents recursively, queued to ensure multiple
  * updates only require a single set of recalculations.
  */
-void layoutAndFitFor(wxWindow *);
+UI_EXPORT void layoutAndFitFor(wxWindow *);
 
 /**
  * Immediately processes any shows queued for the given window and any
  * children.
  */
-void flushShowQueueFor(wxWindow *);
+UI_EXPORT void flushShowQueueFor(wxWindow *);
 
 /**
  * Immediately processes any layout queued for the given window and any
  * children.
  */
-void flushLayoutQueueFor(wxWindow *);
+UI_EXPORT void flushLayoutQueueFor(wxWindow *);
 
 /**
  * Discard any layout actions that were for this window or any of its children.
  * Presumably they were/are going to be handled elsewhere.
  */
-void discardLayoutsFor(wxWindow *);
+UI_EXPORT void discardLayoutsFor(wxWindow *);
 
-} // namespace pcui::priv
+} // namespace pcui::detail
 

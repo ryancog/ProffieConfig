@@ -24,14 +24,14 @@
 #include <wx/sizer.h>
 
 #include "ui/detail/scaffold.hpp"
-#include "ui/priv/helpers.hpp"
-#include "ui/priv/winbase.hpp"
+#include "ui/detail/datawin.hpp"
+#include "utils/defer.hpp"
 
 using namespace pcui;
 
 namespace {
 
-struct Control : priv::WinBase<wxTextCtrl, data::String::Receiver> {
+struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
     Control(const detail::Scaffold& scaffold, const Text& desc) {
         wxString initial;
         long style{0};
@@ -103,13 +103,17 @@ struct Control : priv::WinBase<wxTextCtrl, data::String::Receiver> {
         }
     }
 
-    ~Control() override {
-        Unbind(wxEVT_TEXT, &Control::onText, this);
-        Unbind(wxEVT_TEXT_ENTER, &Control::onEnter, this);
+    void preDestroyCripple() override {
         detach();
+        DataWindow::preDestroyCripple();
     }
 
     void onText(wxCommandEvent&) {
+        auto en{freezeGetRealEnable()};
+        defer { thawRealEnable(); };
+
+        if (not en) return;
+
         auto& str{const_cast<data::String&>(model<data::String>())};
         auto res{str.processUIAction(std::make_unique<data::String::ChangeAction>(
             /*
@@ -121,13 +125,16 @@ struct Control : priv::WinBase<wxTextCtrl, data::String::Receiver> {
              */
             GetValue().ToStdString(), 0 
         ))};
-        if (not res) [this, str=context<data::String>()]() {
-            ChangeValue(str.val());
+
+        if (not res) {
+            auto ctxt{context<data::String>()};
+            ChangeValue(ctxt.val());
             // SetInsertionPoint
-        }();
+        }
     }
 
     void onEnter(wxCommandEvent&) {
+        // Simply forward the work to normal onText
         WriteText("\\n");
     }
     
@@ -159,7 +166,8 @@ wxSizerItem *Text::Desc::build(const detail::Scaffold& scaffold) const {
     auto *ctrl{new Control(scaffold, *this)};
     auto *item{new wxSizerItem(ctrl)};
 
-    priv::apply(win_.base_, item);
+    detail::apply(win_.base_, item);
+
     if (const auto *ptr{std::get_if<Text::MultiLine>(&mode_)}) {
         if (not ptr->scroll_.vertical_) {
             const auto lineHeight{ctrl->GetTextExtent('M').y};

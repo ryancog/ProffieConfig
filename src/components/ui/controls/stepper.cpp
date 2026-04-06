@@ -20,17 +20,18 @@
  */
 
 #include <wx/spinctrl.h>
+#include <wx/colour.h>
 
 #include "data/number.hpp"
 #include "ui/detail/scaffold.hpp"
-#include "ui/priv/helpers.hpp"
-#include "ui/priv/winbase.hpp"
+#include "ui/detail/datawin.hpp"
+#include "utils/defer.hpp"
 
 using namespace pcui;
 
 namespace {
 
-struct IntCtrl : priv::WinBase<wxSpinCtrl, data::Integer::Receiver> {
+struct IntCtrl : detail::DataWindow<wxSpinCtrl, data::Integer::Receiver> {
     IntCtrl(const detail::Scaffold& scaffold, const Stepper& desc) {
         Create(
             scaffold.childParent_,
@@ -52,19 +53,26 @@ struct IntCtrl : priv::WinBase<wxSpinCtrl, data::Integer::Receiver> {
         Bind(wxEVT_SPINCTRL, &IntCtrl::onSpin, this);
     }
 
-    ~IntCtrl() override {
-        Unbind(wxEVT_SPINCTRL, &IntCtrl::onSpin, this);
+    void preDestroyCripple() override {
         detach();
+        DataWindow::preDestroyCripple();
     }
 
     void onSpin(wxSpinEvent& evt) {
+        auto en{freezeGetRealEnable()};
+        defer { thawRealEnable(); };
+
+        if (not en) return;
+
         auto& num{const_cast<data::Integer&>(model<data::Integer>())};
         auto res{num.processUIAction(
             std::make_unique<data::Integer::SetAction>(evt.GetValue())
         )};
-        if (not res) [this, ctxt=context<data::Integer>()]() {
+
+        if (not res) {
+            auto ctxt{context<data::Integer>()};
             SetValue(ctxt.val());
-        }();
+        }
     }
     
     void onSet() override {
@@ -83,7 +91,7 @@ struct IntCtrl : priv::WinBase<wxSpinCtrl, data::Integer::Receiver> {
     }
 };
 
-struct DoubleCtrl : priv::WinBase<wxSpinCtrlDouble, data::Integer::Receiver> {
+struct DoubleCtrl : detail::DataWindow<wxSpinCtrlDouble, data::Integer::Receiver> {
     DoubleCtrl(const detail::Scaffold& scaffold, const Stepper& desc) {
         Create(
             scaffold.childParent_,
@@ -105,19 +113,26 @@ struct DoubleCtrl : priv::WinBase<wxSpinCtrlDouble, data::Integer::Receiver> {
         Bind(wxEVT_SPINCTRLDOUBLE, &DoubleCtrl::onSpin, this);
     }
 
-    ~DoubleCtrl() override {
-        Unbind(wxEVT_SPINCTRLDOUBLE, &DoubleCtrl::onSpin, this);
+    void preDestroyCripple() override {
         detach();
+        DataWindow::preDestroyCripple();
     }
 
     void onSpin(wxSpinDoubleEvent& evt) {
+        auto en{freezeGetRealEnable()};
+        defer { thawRealEnable(); };
+
+        if (not en) return;
+
         auto& dec{const_cast<data::Decimal&>(model<data::Decimal>())};
         auto res{dec.processUIAction(
             std::make_unique<data::Decimal::SetAction>(evt.GetValue())
         )};
-        if (not res) [this, ctxt=context<data::Decimal>()]() {
+
+        if (not res) {
+            auto ctxt{context<data::Decimal>()};
             SetValue(ctxt.val());
-        }();
+        }
     }
     
     void onSet() override {
@@ -155,7 +170,7 @@ wxSizerItem *Stepper::Desc::build(const detail::Scaffold& scaffold) const {
     }
 
     auto *item{new wxSizerItem(spin)};
-    priv::apply(win_.base_, item);
+    detail::apply(win_.base_, item);
 
     return item;
 }

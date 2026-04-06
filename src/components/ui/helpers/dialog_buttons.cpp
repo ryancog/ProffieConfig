@@ -22,7 +22,6 @@
 #include <wx/sizer.h>
 #include <wx/statbox.h>
 
-#include "ui/priv/helpers.hpp"
 #include "ui/values.hpp"
 
 using namespace pcui;
@@ -101,7 +100,7 @@ wxSizerItem *DialogButtons::Desc::build(const detail::Scaffold& scaffold) const 
 #   endif
 
     auto *item{new wxSizerItem(sizer)};
-    priv::apply(base_, item);
+    detail::apply(base_, item);
     return item;
 }
 

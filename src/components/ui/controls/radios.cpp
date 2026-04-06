@@ -24,14 +24,14 @@
 #include "data/helpers/exclusive.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/layout/priv/groupbox.hpp"
-#include "ui/priv/helpers.hpp"
-#include "ui/priv/winbase.hpp"
+#include "ui/detail/datawin.hpp"
+#include "utils/defer.hpp"
 
 using namespace pcui;
 
 namespace {
 
-struct Control : priv::WinBase<wxRadioButton, data::Model::Receiver> {
+struct Control : detail::DataWindow<wxRadioButton, data::Model::Receiver> {
     Control(
         const detail::Scaffold& scaffold,
         const wxString& label,
@@ -48,14 +48,15 @@ struct Control : priv::WinBase<wxRadioButton, data::Model::Receiver> {
         attach(data);
     }
 
-    ~Control() override {
+    void preDestroyCripple() override {
         detach();
+        DataWindow::preDestroyCripple();
     }
 
     friend struct Manager;
 };
 
-struct Manager : priv::WinBase<priv::GroupBox, data::Exclusive::Receiver> {
+struct Manager : detail::DataWindow<priv::GroupBox, data::Exclusive::Receiver> {
     Manager(const detail::Scaffold& scaffold, const Radios& desc) {
         create(
             wxVERTICAL,
@@ -89,12 +90,17 @@ struct Manager : priv::WinBase<priv::GroupBox, data::Exclusive::Receiver> {
         Bind(wxEVT_RADIOBUTTON, &Manager::onSet, this);
     }
 
-    ~Manager() override {
-        Unbind(wxEVT_RADIOBUTTON, &Manager::onSet, this);
+    void preDestroyCripple() override {
         detach();
+        DataWindow::preDestroyCripple();
     }
 
     void onSet(wxCommandEvent& evt) {
+        auto en{freezeGetRealEnable()};
+        defer { thawRealEnable(); };
+
+        if (not en) return;
+
         for (auto *child : childParent()->GetChildren()) {
             if (child != evt.GetEventObject()) continue;
 
@@ -135,7 +141,7 @@ Radios::Desc::Desc(Radios&& data) :
 wxSizerItem *Radios::Desc::build(const detail::Scaffold& scaffold) const {
     auto *chk{new Manager(scaffold, *this)};
     auto *item{new wxSizerItem(chk)};
-    priv::apply(win_.base_, item);
+    detail::apply(win_.base_, item);
     return item;
 }
 

@@ -21,6 +21,7 @@
 
 #include <wx/event.h>
 #include <wx/gdicmn.h>
+#include <wx/sizer.h>
 
 #include "data/logic/logic.hpp"
 #include "utils/types.hpp"
@@ -66,6 +67,11 @@ struct UI_EXPORT ChildWindowBase {
      */
     bool forwardMouse_{false};
 };
+
+/**
+ * Apply general ChildBase attributes to a sizer item.
+ */
+UI_EXPORT void apply(const ChildBase&, wxSizerItem *);
 
 } // namespace pcui::detail
 

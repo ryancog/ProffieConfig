@@ -1,9 +1,9 @@
-#include "hyperlink.hpp"
+#include "utils.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/static/hyperlink.cpp
+ * components/ui/utils.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,33 +19,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/hyperlink.h>
+#include <wx/app.h>
+#include <wx/thread.h>
 
-#include <wx/font.h>
-#include <wx/stattext.h>
-
-using namespace pcui;
-
-std::unique_ptr<detail::Descriptor> Hyperlink::operator()() {
-    return std::make_unique<Hyperlink::Desc>(std::move(*this));
-}
-
-Hyperlink::Desc::Desc(Hyperlink&& link) :
-    Hyperlink(std::move(link)) {}
-
-wxSizerItem *Hyperlink::Desc::build(const detail::Scaffold& scaffold) const {
-    auto *link{new wxHyperlinkCtrl(
-        scaffold.childParent_,
-        wxID_ANY,
-        label_,
-        link_
-    )};
-
-    link->SetOwnFont(style_.makeFont());
-
-    auto *item{new wxSizerItem(link)};
-    detail::apply(base_, item);
-
-    return item;
+void pcui::safeCall(std::function<void()>&& func) {
+    if (wxIsMainThread()) func();
+    else wxTheApp->CallAfter(std::move(func));
 }
 

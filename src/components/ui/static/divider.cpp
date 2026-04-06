@@ -21,8 +21,6 @@
 
 #include <wx/statline.h>
 
-#include "ui/priv/helpers.hpp"
-
 using namespace pcui;
 
 std::unique_ptr<detail::Descriptor> Divider::operator()() {
@@ -35,7 +33,7 @@ Divider::Desc::Desc(Divider&& div) :
 wxSizerItem *Divider::Desc::build(const detail::Scaffold& scaffold) const {
     auto *text{new wxStaticLine(scaffold.childParent_, wxID_ANY)};
     auto *item{new wxSizerItem(text)};
-    priv::apply(base_, item);
+    detail::apply(base_, item);
     return item;
 }
 

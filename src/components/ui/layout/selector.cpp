@@ -21,9 +21,11 @@
 
 #include <wx/panel.h>
 
-#include "ui/priv/winbase.hpp"
+#include "ui/build.hpp"
+#include "ui/detail/datawin.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/builder.hpp"
+#include "ui/utils.hpp"
 
 using namespace pcui;
 
@@ -37,7 +39,9 @@ namespace {
  * makes sense enough that it be the same parent as the rebuilt item, since
  * it can't be the item itself.
  */
-struct TrackerDummy : wxSizerItem, data::Choice::Receiver {
+struct TrackerDummy : detail::IDataDriven,
+                      wxSizerItem,
+                      data::Choice::Receiver {
     TrackerDummy(const detail::Scaffold& scaffold, const Selector& desc) :
         wxSizerItem(0, 0),
         scaffold_{scaffold},
@@ -49,7 +53,7 @@ struct TrackerDummy : wxSizerItem, data::Choice::Receiver {
         attach(desc.data_.choice_);
     }
 
-    ~TrackerDummy() override {
+    void preDestroyCripple() override {
         detach();
     }
 
@@ -57,8 +61,12 @@ struct TrackerDummy : wxSizerItem, data::Choice::Receiver {
     // as a result of unbinding (or rebinding), so it's all we need to listen
     // to.
     void onChoice() override {
-        auto ctxt{context<data::Choice>()};
-        buildAndReplace(ctxt);
+        if (last_) pcui::cripple(last_);
+
+        pcui::safeCall([this] { 
+            auto ctxt{context<data::Choice>()};
+            buildAndReplace(ctxt);
+        });
     }
 
     // Build a new item and replace the old one with it, or insert a new item

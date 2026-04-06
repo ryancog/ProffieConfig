@@ -23,15 +23,14 @@
 #include <wx/gauge.h>
 
 #include "ui/detail/scaffold.hpp"
-#include "ui/priv/helpers.hpp"
-#include "ui/priv/winbase.hpp"
+#include "ui/detail/datawin.hpp"
 #include "ui/types.hpp"
 
 using namespace pcui;
 
 namespace {
 
-struct Indicator : priv::WinBase<wxGauge, Progress::Data::Receiver> {
+struct Indicator : detail::DataWindow<wxGauge, Progress::Data::Receiver> {
     Indicator(const detail::Scaffold& scaffold, const Progress& desc) {
         Create(
             scaffold.childParent_,
@@ -47,9 +46,10 @@ struct Indicator : priv::WinBase<wxGauge, Progress::Data::Receiver> {
         attach(desc.data_);
     }
 
-    ~Indicator() override {
+    void preDestroyCripple() override {
         detach();
     }
+
     void onSet() override {
         safeCall([this, val=context<Progress::Data>().val()] {
             SetValue(val);
@@ -80,7 +80,7 @@ Progress::Desc::Desc(Progress&& prog) : Progress(std::move(prog)) {}
 wxSizerItem *Progress::Desc::build(const detail::Scaffold& scaffold) const {
     auto *bar{new Indicator(scaffold, *this)};
     auto *item{new wxSizerItem(bar)};
-    priv::apply(win_.base_, item);
+    detail::apply(win_.base_, item);
     return item;
 }
 
@@ -104,6 +104,14 @@ data::logic::Element Progress::Data::operator|(Logic logic) {
     struct DoneAdapter : data::logic::detail::Base, Receiver {
         DoneAdapter(const Data& data) : data_{data} {}
         ~DoneAdapter() override { detach(); }
+
+        void lock() override {
+            data_.lock();
+        }
+
+        void unlock() override {
+            data_.unlock();
+        }
 
         bool doActivate() override {
             attach(data_);

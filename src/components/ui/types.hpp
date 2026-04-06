@@ -21,6 +21,9 @@
 
 #include <memory>
 
+#include <wx/toplevel.h>
+#include <wx/window.h>
+
 #include "data/string.hpp"
 #include "ui/detail/descriptor.hpp"
 
@@ -35,6 +38,11 @@ using LabelData = std::variant<
     wxString,
     pcui::RefWrap<const data::String>
 >;
+
+struct CallbackContext {
+    wxWindow *window_;
+    wxTopLevelWindow *topLevel_;
+};
 
 } // namespace pcui
 

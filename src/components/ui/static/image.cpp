@@ -32,8 +32,7 @@
 #include <wx/statbmp.h>
 #endif
 
-#include "ui/priv/helpers.hpp"
-#include "ui/priv/winbase.hpp"
+#include "ui/detail/datawin.hpp"
 #include "ui/types.hpp"
 
 using namespace pcui;
@@ -46,7 +45,7 @@ using Widget = wxStaticBitmap;
 using Widget = wxGenericStaticBitmap;
 #endif
 
-struct Static : priv::WinBase<Widget, data::Generic::Receiver> {
+struct Static : detail::DataWindow<Widget, data::Generic::Receiver> {
     Static(
         const detail::Scaffold& scaffold,
         const Image& desc
@@ -91,7 +90,7 @@ Image::Desc::Desc(Image&& data) :
 wxSizerItem *Image::Desc::build(const detail::Scaffold& scaffold) const {
     auto *img{new Static(scaffold, *this)};
     auto *item{new wxSizerItem(img)};
-    priv::apply(win_.base_, item);
+    detail::apply(win_.base_, item);
     return item;
 }
 

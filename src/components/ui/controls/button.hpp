@@ -91,7 +91,11 @@ struct UI_EXPORT Button {
      */
     bool default_{false};
 
-    std::function<void()> func_;
+    using MaybeContextualCallback = std::variant<
+        std::function<void()>,
+        std::function<void(const CallbackContext&)>
+    >;
+    MaybeContextualCallback func_;
 
     DescriptorPtr operator()();
 };

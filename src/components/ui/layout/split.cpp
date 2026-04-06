@@ -23,14 +23,13 @@
 #include <wx/splitter.h>
 
 #include "ui/build.hpp"
-#include "ui/priv/helpers.hpp"
-#include "ui/priv/winbase.hpp"
+#include "ui/detail/datawin.hpp"
 
 using namespace pcui;
 
 namespace {
 
-struct Layout : priv::WinBase<wxSplitterWindow, data::Generic::Receiver> {
+struct Layout : detail::DataWindow<wxSplitterWindow, data::Generic::Receiver> {
     Layout(const detail::Scaffold& scaffold, const Split& desc) {
         Create(
             scaffold.childParent_,
@@ -82,7 +81,7 @@ wxSizerItem *Split::Desc::build(const detail::Scaffold& scaffold) const {
     auto *split{new Layout(scaffold, *this)};
 
     auto *item{new wxSizerItem(split)};
-    priv::apply(win_.base_, item);
+    detail::apply(win_.base_, item);
 
     return item;
 }

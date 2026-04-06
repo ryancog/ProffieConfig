@@ -22,14 +22,14 @@
 #include <wx/checkbox.h>
 
 #include "ui/detail/scaffold.hpp"
-#include "ui/priv/helpers.hpp"
-#include "ui/priv/winbase.hpp"
+#include "ui/detail/datawin.hpp"
+#include "utils/defer.hpp"
 
 using namespace pcui;
 
 namespace {
 
-struct Control : priv::WinBase<wxCheckBox, data::Bool::Receiver> {
+struct Control : detail::DataWindow<wxCheckBox, data::Bool::Receiver> {
     Control(const detail::Scaffold& scaffold, const CheckBox& desc) {
         Create(
             scaffold.childParent_,
@@ -49,19 +49,26 @@ struct Control : priv::WinBase<wxCheckBox, data::Bool::Receiver> {
         Bind(wxEVT_CHECKBOX, &Control::onCheck, this);
     }
 
-    ~Control() override {
-        Unbind(wxEVT_CHECKBOX, &Control::onCheck, this);
+    void preDestroyCripple() override {
         detach();
+        DataWindow::preDestroyCripple();
     }
 
     void onCheck(wxCommandEvent& evt) {
+        auto en{freezeGetRealEnable()};
+        defer { thawRealEnable(); };
+
+        if (not en) return;
+
         auto& bl{const_cast<data::Bool&>(model<data::Bool>())};
         auto res{bl.processUIAction(std::make_unique<data::Bool::SetAction>(
             evt.IsChecked()
         ))};
-        if (not res) [this, bl=context<data::Bool>()]() {
-            SetValue(bl.val());
-        }();
+
+        if (not res) {
+            auto ctxt{context<data::Bool>()};
+            SetValue(ctxt.val());
+        }
     }
     
     void onSet() override {
@@ -84,7 +91,7 @@ CheckBox::Desc::Desc(CheckBox&& data) :
 wxSizerItem *CheckBox::Desc::build(const detail::Scaffold& scaffold) const {
     auto *chk{new Control(scaffold, *this)};
     auto *item{new wxSizerItem(chk)};
-    priv::apply(win_.base_, item);
+    detail::apply(win_.base_, item);
     return item;
 }
 

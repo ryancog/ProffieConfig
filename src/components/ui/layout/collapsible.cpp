@@ -22,15 +22,15 @@
 #include <wx/collpane.h>
 #include <wx/gdicmn.h>
 
+#include "ui/detail/helpers.hpp"
 #include "ui/detail/scaffold.hpp"
-#include "ui/priv/helpers.hpp"
-#include "ui/priv/winbase.hpp"
+#include "ui/detail/datawin.hpp"
 
 using namespace pcui;
 
 namespace {
 
-struct Layout : priv::WinBase<wxCollapsiblePane, data::Generic::Receiver> {
+struct Layout : detail::DataWindow<wxCollapsiblePane, data::Generic::Receiver> {
     Layout(const detail::Scaffold& scaffold, const Collapsible& desc) {
         long style{wxCP_DEFAULT_STYLE | wxCP_NO_TLW_RESIZE};
         // if (not desc.autoTopLevelResize_) style |= wxCP_NO_TLW_RESIZE;
@@ -63,7 +63,7 @@ struct Layout : priv::WinBase<wxCollapsiblePane, data::Generic::Receiver> {
             wxCollapsiblePaneEvent& evt
         ) {
             SetLabel(evt.GetCollapsed() ? show : hide);
-            priv::layoutAndFitFor(this);
+            detail::layoutAndFitFor(this);
         }};
         Bind(wxEVT_COLLAPSIBLEPANE_CHANGED, onPaneChanged);
     }
@@ -86,7 +86,7 @@ wxSizerItem *Collapsible::Desc::build(const detail::Scaffold& scaffold) const {
     auto *panel{new Layout(scaffold, *this)};
 
     auto *item{new wxSizerItem(panel)};
-    priv::apply(win_.base_, item);
+    detail::apply(win_.base_, item);
 
     return item;
 }
