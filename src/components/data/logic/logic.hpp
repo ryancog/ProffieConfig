@@ -77,6 +77,12 @@ private:
  */
 struct DATA_EXPORT Element : std::unique_ptr<detail::Base> {
     using unique_ptr::unique_ptr;
+
+    /**
+     * Otherwise it's very easy to miss including the operators and use the
+     * standard boolean operator not()
+     */
+    operator bool() = delete;
 };
 
 struct Receiver;

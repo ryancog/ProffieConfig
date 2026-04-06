@@ -46,7 +46,7 @@ bool detail::Base::activate(
 
 Manager::Manager(Element&& child) :
     mChild{std::move(child)} {
-    assert(mChild);
+    assert(mChild.get());
 
     std::lock_guard scopeLock{mLock};
 
