@@ -146,15 +146,23 @@ void pcui::teardown(wxWindow *win) {
     // There might be a cleaner and/or more efficient way to do this, but we
     // can't just iterate over GetChildren() directly, because the iterators
     // will be invalidated as child Destroy() is called.
-    auto iter{win->GetChildren().begin()};
-    while (iter != win->GetChildren().end()) {
-        if (not win->IsClientAreaChild(*iter)) {
-            ++iter;
+    //
+    // Previously, trying to iterate over things and reset to the begin when
+    // finding an item that needs destruction was tried, but this lead to
+    // issues with a child TLW, which is not immediately destroyed and so the
+    // list is not immediately updated.
+    std::set<wxWindow *> toDelete;
+
+    for (auto *child : win->GetChildren()) {
+        if (not win->IsClientAreaChild(child)) {
             continue;
         }
 
-        (*iter)->Destroy();
-        iter = win->GetChildren().begin();
+        toDelete.insert(child);
+    }
+
+    for (auto *child : toDelete) {
+        child->Destroy();
     }
 }
 
