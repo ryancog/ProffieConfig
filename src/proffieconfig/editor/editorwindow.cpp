@@ -162,6 +162,8 @@ void EditorWindow::bindEvents() {
         GetToolBar()->OSXSelectTool(evt.GetId());
 #       endif
 
+        pcui::cripple(this);
+
         if (evt.GetId() == ePage_General) {
             pcui::build(this, mGeneralPage.ui());
         } else if (evt.GetId() == ePage_Props) {
