@@ -77,6 +77,8 @@ struct DATA_EXPORT Selector::ROContext : virtual Model::ROContext {
      * Currently-bound vector
      */
     [[nodiscard]] const Vector *bound() const;
+
+    [[nodiscard]] Model *selected() const;
 };
 
 struct DATA_EXPORT Selector::Context : Model::Context, ROContext {

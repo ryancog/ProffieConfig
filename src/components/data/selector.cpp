@@ -138,6 +138,17 @@ const data::Vector *data::Selector::ROContext::bound() const {
     return model<Selector>().mVec;
 }
 
+data::Model *data::Selector::ROContext::selected() const {
+    if (not bound()) return nullptr;
+
+    data::Vector::ROContext vec{*bound()};
+    data::Choice::ROContext sel{model<Selector>().choice_};
+
+    if (sel.choice() == -1) return nullptr;
+
+    return vec.children()[sel.choice()].get();
+}
+
 data::Selector::Context::Context(Selector& sel) :
     Model::Context(sel), ROContext(sel), Model::ROContext(sel) {}
 
