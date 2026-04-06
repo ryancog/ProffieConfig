@@ -53,7 +53,8 @@ Dialog::Dialog(
 
     Bind(wxEVT_CHAR_HOOK, [this](wxKeyEvent& evt) {
         if (evt.GetKeyCode() == WXK_ESCAPE) EndModal(wxID_CANCEL);
-        evt.Skip();
+        // Don't always skip, otherwise, on macOS, the bell is rung.
+        else evt.Skip();
     });
 }
 
