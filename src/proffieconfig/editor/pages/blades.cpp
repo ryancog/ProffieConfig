@@ -118,7 +118,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                       using namespace config::blades;
                       auto& cfg{static_cast<BladeConfig&>(*vec.children()[idx])};
                       return cfg.name_;
-                  }
+                  },
                 }(),
                 pcui::Button{
                   .win_={
@@ -176,7 +176,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                   .func_=[this](const pcui::CallbackContext& ctxt) {
                       // Only ever allow one of these dialogs. Not a technical
                       // limitation, just don't want things cluttered.
-                      if (mDlg) mDlg->Close(true);
+                      if (mDlg) mDlg->Destroy();
 
                       data::Vector::Context vec{mConfig.bladeConfigs_};
                       auto& cfg{vec.addCreate<config::blades::BladeConfig>()};
