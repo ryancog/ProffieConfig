@@ -21,10 +21,7 @@
 
 namespace {
 
-constexpr cstring CHOICE_STRID{"CHOICE"};
-constexpr cstring MOVEUP_STRID{"MOVEDN"};
-constexpr cstring MOVEDN_STRID{"MOVEDN"};
-constexpr cstring DUP_STRID{"DUP"};
+constexpr cstring CHOICE_STRID{"Choice"};
 
 } // namespace
 
@@ -32,6 +29,10 @@ data::Selector::Selector(Node *parent) :
     Node(parent),
     choice_(this) {
     choice_.attachReceiver(static_cast<Choice::Receiver&>(*this));
+
+    data::Bool::Context{mMoveUp}.set(false);
+    data::Bool::Context{mMoveDown}.set(false);
+    data::Bool::Context{mHasSel}.set(false);
 }
 
 // These are specialized "copy constructors"
@@ -41,7 +42,7 @@ data::Selector::Selector(const Selector& other, Node *parent) :
     choice_(other.choice_, this),
     mMoveUp(other.mMoveUp),
     mMoveDown(other.mMoveDown),
-    mDupRemove(other.mDupRemove) {}
+    mHasSel(other.mHasSel) {}
 
 data::Selector::~Selector() {
     choice_.detachReceiver(static_cast<Choice::Receiver&>(*this));
@@ -52,40 +53,45 @@ auto data::Selector::clone(Node *parent) const -> std::unique_ptr<Model> {
     return std::make_unique<Selector>(*this, parent);
 }
 
+const data::Bool& data::Selector::canMoveUp() {
+    return mMoveUp;
+}
+
+const data::Bool& data::Selector::canMoveDown() {
+    return mMoveDown;
+}
+
+const data::Bool& data::Selector::hasSelection() {
+    return mHasSel;
+}
+
 bool data::Selector::enumerate(const EnumFunc& func) {
-    if (func(choice_, strID(CHOICE_STRID), CHOICE_STRID)) return true;
-    if (func(mMoveUp, strID(MOVEUP_STRID), MOVEUP_STRID)) return true;
-    if (func(mMoveDown, strID(MOVEDN_STRID), MOVEDN_STRID)) return true;
-    if (func(mDupRemove, strID(DUP_STRID), DUP_STRID)) return true;
-    return false;
+    return func(choice_, strID(CHOICE_STRID), CHOICE_STRID);
 }
 
 data::Model *data::Selector::find(uint64 id) {
     if (id == strID(CHOICE_STRID)) return &choice_;
-    if (id == strID(MOVEUP_STRID)) return &mMoveUp;
-    if (id == strID(MOVEDN_STRID)) return &mMoveDown;
-    if (id == strID(DUP_STRID)) return &mDupRemove;
     return nullptr;
 }
 
 void data::Selector::onChoice() {
     auto choice{Choice::Receiver::context<Choice>()};
 
-    Generic::Context moveUp{mMoveUp};
-    moveUp.enable(choice.choice() > 0);
+    Bool::Context moveUp{mMoveUp};
+    moveUp.set(choice.idx() > 0);
 
-    Generic::Context moveDown{mMoveDown};
-    moveDown.enable(choice.choice() + 1 != choice.numChoices());
+    Bool::Context moveDown{mMoveDown};
+    moveDown.set(choice.idx() + 1 != choice.numChoices());
 
-    Generic::Context dup{mDupRemove};
-    dup.enable(choice.choice() != -1);
+    Bool::Context hasSel{mHasSel};
+    hasSel.set(choice.idx() != -1);
 }
 
 void data::Selector::onInsert(size pos) {
     Choice::Context choice{choice_};
     Vector::ROContext vec{*mVec};
 
-    auto lastChoice{choice.choice()};
+    auto lastChoice{choice.idx()};
 
     choice.update(vec.children().size());
 
@@ -100,7 +106,7 @@ void data::Selector::preRemove(size) {
     // will be cleared. E.g. label data models
 
     Choice::Context choice{choice_};
-    mLastChoice = choice.choice();
+    mLastChoice = choice.idx();
     choice.update(0);
 }
 
@@ -119,33 +125,41 @@ void data::Selector::onRemove(size pos) {
 void data::Selector::onSwap(size pos) {
     Choice::Context choice{choice_};
 
-    if (choice.choice() == pos) {
+    if (choice.idx() == pos) {
         choice.choose(static_cast<int32>(pos) + 1);
-    } else if (choice.choice() == pos + 1) {
+    } else if (choice.idx() == pos + 1) {
         choice.choose(static_cast<int32>(pos));
     }
 }
 
 data::Selector::ROContext::ROContext(const Selector& sel) :
-    Model::ROContext(sel) {}
+    Model::ROContext(sel) {
+    // Also make sure the choice does not change.
+    sel.choice_.lock();
+}
 
-data::Selector::ROContext::~ROContext() = default;
+data::Selector::ROContext::~ROContext() {
+    model<data::Selector>().choice_.unlock();
+}
 
 const data::Vector *data::Selector::ROContext::bound() const {
     return model<Selector>().mVec;
 }
 
+int32 data::Selector::ROContext::choiceIdx() const {
+    return data::Choice::ROContext{model<data::Selector>().choice_}.idx();
+}
+
 data::Model *data::Selector::ROContext::selected() const {
     if (not bound()) return nullptr;
 
+    const auto idx{choiceIdx()};
+    if (idx == -1) return nullptr;
+
     data::Vector::ROContext vec{*bound()};
-    data::Choice::ROContext sel{model<Selector>().choice_};
-
-    if (sel.choice() == -1) return nullptr;
-
     // In this selector context, the lifetimebound state should be fine.
     // NOLINTNEXTLINE
-    return vec.children()[sel.choice()].get();
+    return vec.children()[idx].get();
 }
 
 data::Selector::Context::Context(Selector& sel) :
@@ -171,7 +185,7 @@ void data::Selector::BindAction::perform(Model& model) {
     Choice::Context choice{sel.choice_};
 
     mLast = sel.mVec;
-    mLastSel = choice.choice();
+    mLastSel = choice.idx();
 
     if (mLast) {
         mLast->detachReceiver(static_cast<Vector::Receiver&>(sel));

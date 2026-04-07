@@ -19,9 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "data/bool.hpp"
 #include "data/hierarchy/node.hpp"
 #include "data/choice.hpp"
-#include "data/generic.hpp"
 #include "data/vector.hpp"
 
 #include "data_export.h"
@@ -44,12 +44,11 @@ struct DATA_EXPORT Selector : Node, Choice::Receiver, Vector::Receiver {
     mutable Choice choice_;
 
     /**
-     * Non-tree-linked models which can be observed to know enable-state of
-     * whether the respective actions may be completed.
+     * Non-tree-linked models which can be observed to understand state.
      */
-    const Generic& moveUp();
-    const Generic& moveDown();
-    const Generic& dupOrRemove();
+    const Bool& canMoveUp();
+    const Bool& canMoveDown();
+    const Bool& hasSelection();
 
 protected:
     bool enumerate(const EnumFunc&) override;
@@ -63,9 +62,9 @@ private:
     void onRemove(size) override;
     void onSwap(size) override;
 
-    Generic mMoveUp;
-    Generic mMoveDown;
-    Generic mDupRemove;
+    Bool mMoveUp;
+    Bool mMoveDown;
+    Bool mHasSel;
 
     int32 mLastChoice;
     const Vector *mVec{nullptr};
@@ -80,6 +79,7 @@ struct DATA_EXPORT Selector::ROContext : virtual Model::ROContext {
      */
     [[nodiscard]] const Vector *bound() const;
 
+    [[nodiscard]] int32 choiceIdx() const;
     [[nodiscard]] Model *selected() const;
 };
 
