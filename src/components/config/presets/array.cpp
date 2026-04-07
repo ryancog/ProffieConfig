@@ -59,6 +59,8 @@ Array::Array(data::Node *parent) :
     ) {
         ctxt.model().parent<Array>()->recomputeIssues();
     };
+
+    recomputeIssues();
 }
 
 Array::~Array() = default;

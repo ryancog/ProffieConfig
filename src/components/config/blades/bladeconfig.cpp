@@ -22,6 +22,7 @@
 #include "config/blades/simple.hpp"
 #include "config/blades/ws281x.hpp"
 #include "config/config.hpp"
+#include "data/generic.hpp"
 #include "data/number.hpp"
 #include "utils/parent.hpp"
 #include "utils/string.hpp"
@@ -157,6 +158,8 @@ BladeConfig::BladeConfig(data::Node *parent) :
     };
 
     data::Integer::Context{id_}.update({.min_=0, .max_=NO_BLADE});
+
+    recomputeIssues();
 }
 
 BladeConfig::~BladeConfig() = default;
