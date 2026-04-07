@@ -77,7 +77,7 @@ MainMenu::MainMenu(wxWindow* parent) :
 }
 
 MainMenu::~MainMenu() {
-    pcui::teardown(this);
+    pcui::cripple(this);
 }
 
 void MainMenu::removeEditor(EditorWindow *editor) {

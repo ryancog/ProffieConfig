@@ -63,6 +63,10 @@ EditorWindow::EditorWindow(wxWindow *parent, config::Info& info) :
     wxPostEvent(this, event);
 }
 
+EditorWindow::~EditorWindow() {
+    pcui::cripple(this);
+}
+
 void EditorWindow::bindEvents() {
     Bind(wxEVT_MENU, [this](wxCommandEvent&) {
         save();

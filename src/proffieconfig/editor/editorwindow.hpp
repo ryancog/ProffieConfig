@@ -30,6 +30,7 @@
 
 struct EditorWindow : pcui::Frame {
     EditorWindow(wxWindow *, config::Info&);
+    ~EditorWindow() override;
 
     // void Fit() final;
     // void fitAnimated();
