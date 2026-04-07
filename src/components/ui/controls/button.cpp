@@ -64,10 +64,6 @@ struct Control : detail::DataWindow<wxButton, data::String::Receiver> {
         postCreation(scaffold, desc.win_);
 
         if (const auto *ptr{std::get_if<1>(&desc.label_)}) {
-            const auto& [label, model]{*ptr};
-            SetLabel(label);
-            modelPtr = &model.get();
-        } else if (const auto *ptr{std::get_if<2>(&desc.label_)}) {
             data::String::ROContext str{*ptr};
             SetLabel(str.val());
             modelPtr = &ptr->get();

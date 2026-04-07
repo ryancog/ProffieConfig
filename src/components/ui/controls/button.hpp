@@ -21,7 +21,6 @@
 
 #include <wx/bitmap.h>
 
-#include "data/generic.hpp"
 #include "data/string.hpp"
 #include "ui/bitmap.hpp"
 #include "ui/detail/descriptor.hpp"
@@ -65,13 +64,8 @@ struct UI_EXPORT Button {
     // TODO: Make this a base w/ C++ P2287.
     detail::ChildWindowBase win_;
 
-    using LabelWithState = std::pair<
-        wxString, RefWrap<const data::Generic>
-    >;
-
     std::variant<
         wxString,
-        LabelWithState,
         RefWrap<const data::String>
     > label_;
 
