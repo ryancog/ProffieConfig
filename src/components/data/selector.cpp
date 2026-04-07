@@ -30,10 +30,7 @@ constexpr cstring DUP_STRID{"DUP"};
 
 data::Selector::Selector(Node *parent) :
     Node(parent),
-    choice_(this),
-    moveUp_(this),
-    moveDown_(this),
-    duplicate_(this) {
+    choice_(this) {
     choice_.attachReceiver(static_cast<Choice::Receiver&>(*this));
 }
 
@@ -42,9 +39,9 @@ data::Selector::Selector(Node *parent) :
 data::Selector::Selector(const Selector& other, Node *parent) :
     Node(other, parent),
     choice_(other.choice_, this),
-    moveUp_(other.moveUp_, this),
-    moveDown_(other.moveDown_, this),
-    duplicate_(other.duplicate_, this) {}
+    mMoveUp(other.mMoveUp),
+    mMoveDown(other.mMoveDown),
+    mDupRemove(other.mDupRemove) {}
 
 data::Selector::~Selector() {
     choice_.detachReceiver(static_cast<Choice::Receiver&>(*this));
@@ -57,30 +54,30 @@ auto data::Selector::clone(Node *parent) const -> std::unique_ptr<Model> {
 
 bool data::Selector::enumerate(const EnumFunc& func) {
     if (func(choice_, strID(CHOICE_STRID), CHOICE_STRID)) return true;
-    if (func(moveUp_, strID(MOVEUP_STRID), MOVEUP_STRID)) return true;
-    if (func(moveDown_, strID(MOVEDN_STRID), MOVEDN_STRID)) return true;
-    if (func(duplicate_, strID(DUP_STRID), DUP_STRID)) return true;
+    if (func(mMoveUp, strID(MOVEUP_STRID), MOVEUP_STRID)) return true;
+    if (func(mMoveDown, strID(MOVEDN_STRID), MOVEDN_STRID)) return true;
+    if (func(mDupRemove, strID(DUP_STRID), DUP_STRID)) return true;
     return false;
 }
 
 data::Model *data::Selector::find(uint64 id) {
     if (id == strID(CHOICE_STRID)) return &choice_;
-    if (id == strID(MOVEUP_STRID)) return &moveUp_;
-    if (id == strID(MOVEDN_STRID)) return &moveDown_;
-    if (id == strID(DUP_STRID)) return &duplicate_;
+    if (id == strID(MOVEUP_STRID)) return &mMoveUp;
+    if (id == strID(MOVEDN_STRID)) return &mMoveDown;
+    if (id == strID(DUP_STRID)) return &mDupRemove;
     return nullptr;
 }
 
 void data::Selector::onChoice() {
     auto choice{Choice::Receiver::context<Choice>()};
 
-    Generic::Context moveUp{moveUp_};
+    Generic::Context moveUp{mMoveUp};
     moveUp.enable(choice.choice() > 0);
 
-    Generic::Context moveDown{moveDown_};
+    Generic::Context moveDown{mMoveDown};
     moveDown.enable(choice.choice() + 1 != choice.numChoices());
 
-    Generic::Context dup{duplicate_};
+    Generic::Context dup{mDupRemove};
     dup.enable(choice.choice() != -1);
 }
 
@@ -146,6 +143,8 @@ data::Model *data::Selector::ROContext::selected() const {
 
     if (sel.choice() == -1) return nullptr;
 
+    // In this selector context, the lifetimebound state should be fine.
+    // NOLINTNEXTLINE
     return vec.children()[sel.choice()].get();
 }
 

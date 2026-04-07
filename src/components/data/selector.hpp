@@ -44,14 +44,12 @@ struct DATA_EXPORT Selector : Node, Choice::Receiver, Vector::Receiver {
     mutable Choice choice_;
 
     /**
-     * For each of these, dis/enable is managed by the selector, and should not
-     * be modified manually.
-     *
-     * TODO: A way to enforce that?
+     * Non-tree-linked models which can be observed to know enable-state of
+     * whether the respective actions may be completed.
      */
-    Generic moveUp_;
-    Generic moveDown_;
-    Generic duplicate_;
+    const Generic& moveUp();
+    const Generic& moveDown();
+    const Generic& dupOrRemove();
 
 protected:
     bool enumerate(const EnumFunc&) override;
@@ -64,6 +62,10 @@ private:
     void preRemove(size) override;
     void onRemove(size) override;
     void onSwap(size) override;
+
+    Generic mMoveUp;
+    Generic mMoveDown;
+    Generic mDupRemove;
 
     int32 mLastChoice;
     const Vector *mVec{nullptr};
