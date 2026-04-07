@@ -150,7 +150,7 @@ int32 data::Selector::ROContext::choiceIdx() const {
     return data::Choice::ROContext{model<data::Selector>().choice_}.idx();
 }
 
-data::Model *data::Selector::ROContext::selected() const {
+data::Model *data::Selector::ROContext::selectedImpl() const {
     if (not bound()) return nullptr;
 
     const auto idx{choiceIdx()};

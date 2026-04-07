@@ -80,7 +80,14 @@ struct DATA_EXPORT Selector::ROContext : virtual Model::ROContext {
     [[nodiscard]] const Vector *bound() const;
 
     [[nodiscard]] int32 choiceIdx() const;
-    [[nodiscard]] Model *selected() const;
+
+    template <typename T = Model>
+    [[nodiscard]] T *selected() const {
+        return static_cast<T *>(selectedImpl());
+    }
+
+private:
+    [[nodiscard]] Model *selectedImpl() const;
 };
 
 struct DATA_EXPORT Selector::Context : Model::Context, ROContext {
