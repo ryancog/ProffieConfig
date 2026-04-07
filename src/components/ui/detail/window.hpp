@@ -38,8 +38,10 @@ struct Window : IDataDriven, Base {
     }
 
     void preDestroyCripple() override {
-        if (mShowReceiver) mShowReceiver.reset();
-        if (mEnableReceiver) mEnableReceiver.reset();
+        mShowReceiver.reset();
+        mShow.reset();
+        mEnableReceiver.reset();
+        mEnable.reset();
     }
 
     /**
