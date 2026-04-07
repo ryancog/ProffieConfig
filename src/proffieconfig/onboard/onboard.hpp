@@ -19,8 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "data/bool.hpp"
 #include "data/choice.hpp"
-#include "data/generic.hpp"
 #include "data/string.hpp"
 #include "ui/frame.hpp"
 
@@ -58,9 +58,9 @@ private:
 
     data::Choice mPhase;
 
-    data::Generic mCancelButton;
-    data::Generic mSkipButton;
-    data::Generic mBackButton;
+    data::Bool mMayCancel;
+    data::Bool mMaySkip;
+    data::Bool mMayGoBack;
     data::String mNextButton;
 
     bool mSetupDone{false};

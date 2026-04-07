@@ -56,9 +56,9 @@ onboard::Frame::Frame() :
 
         const auto phase{static_cast<Phase>(ctxt.idx())};
 
-        data::Generic::Context cancelButton{frame.mCancelButton};
-        data::Generic::Context skipButton{frame.mSkipButton};
-        data::Generic::Context backButton{frame.mBackButton};
+        data::Bool::Context mayCancel{frame.mMayCancel};
+        data::Bool::Context maySkip{frame.mMaySkip};
+        data::Bool::Context mayGoBack{frame.mMayGoBack};
         data::String::Context nextButton{frame.mNextButton};
 
         switch (phase) {
@@ -81,9 +81,9 @@ onboard::Frame::Frame() :
                 break;
         }
 
-        cancelButton.enable(phase != ePhase_Setup_Prog);
-        skipButton.enable(phase != ePhase_Setup_Prog);
-        backButton.enable(
+        mayCancel.set(phase != ePhase_Setup_Prog);
+        maySkip.set(phase != ePhase_Setup_Prog);
+        mayGoBack.set(
             phase != ePhase_Welcome and phase != ePhase_Setup_Prog
         );
         nextButton.enable(phase != ePhase_Setup_Prog);
@@ -178,9 +178,10 @@ pcui::DescriptorPtr onboard::Frame::ui() {
           .orient_=wxHORIZONTAL,
           .children_={
             pcui::Button{
-              .label_=pcui::Button::LabelWithState{
-                  _("Cancel"), mCancelButton
+              .win_={
+                .enable_=mMayCancel | data::logic::IsSet{},
               },
+              .label_=_("Cancel"),
               .func_=[this] {
                   auto res{pcui::showMessage(
                       _("Are you sure you want to cancel setup?"),
@@ -199,11 +200,10 @@ pcui::DescriptorPtr onboard::Frame::ui() {
                     ePhase_Welcome,
                     ePhase_Setup_Done,
                     ePhase_Info
-                  }})
+                  }}),
+                .enable_=mMaySkip | data::logic::IsSet{},
               },
-              .label_=pcui::Button::LabelWithState{
-                  _("Skip"), mSkipButton
-              },
+              .label_=_("Skip"),
               .func_=[this] {
                   auto res{pcui::showMessage(
                       _("Skipping will leave ProffieConfig and your computer unprepared.") +
@@ -221,9 +221,10 @@ pcui::DescriptorPtr onboard::Frame::ui() {
             pcui::StretchSpacer{}(),
             pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
             pcui::Button{
-              .label_=pcui::Button::LabelWithState{
-                  _("Back"), mBackButton
+              .win_={
+                .enable_=mMayGoBack | data::logic::IsSet{},
               },
+              .label_=_("Back"),
               .func_=[this] {
                   data::Choice::Context phase{mPhase};
 
