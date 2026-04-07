@@ -37,6 +37,17 @@ struct DATA_EXPORT Vector : Node {
     struct RemoveAction;
     struct SwapAction;
 
+    enum class DuplicationMode {
+        /**
+         * Append duplicated item to the end of the list.
+         */
+        Append,
+        /**
+         * Insert duplicated item into the list after the source item.
+         */
+        Insert,
+    };
+
     Vector(Node * = nullptr);
     Vector(const Vector&, Node * = nullptr);
     ~Vector() override;
@@ -64,17 +75,6 @@ struct DATA_EXPORT Vector::ROContext : virtual Model::ROContext {
 };
 
 struct DATA_EXPORT Vector::Context : Model::Context, ROContext {
-    enum class DuplicationMode {
-        /**
-         * Append duplicated item to the end of the list.
-         */
-        Append,
-        /**
-         * Insert duplicated item into the list after the source item.
-         */
-        Insert,
-    };
-
     Context(Vector&);
     ~Context();
 
