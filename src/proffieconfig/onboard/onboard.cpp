@@ -54,7 +54,7 @@ onboard::Frame::Frame() :
             const_cast<data::Choice&>(ctxt.model<data::Choice>())
         )};
 
-        const auto phase{static_cast<Phase>(ctxt.choice())};
+        const auto phase{static_cast<Phase>(ctxt.idx())};
 
         data::Generic::Context cancelButton{frame.mCancelButton};
         data::Generic::Context skipButton{frame.mSkipButton};
@@ -227,7 +227,7 @@ pcui::DescriptorPtr onboard::Frame::ui() {
               .func_=[this] {
                   data::Choice::Context phase{mPhase};
 
-                  switch (static_cast<Phase>(phase.choice())) {
+                  switch (static_cast<Phase>(phase.idx())) {
                       case ePhase_Setup_Pre:
                       case ePhase_Setup_Fail:
                       case ePhase_Setup_Done:
@@ -251,7 +251,7 @@ pcui::DescriptorPtr onboard::Frame::ui() {
               .func_=[this] {
                   data::Choice::Context phase{mPhase};
 
-                  switch (static_cast<Phase>(phase.choice())) {
+                  switch (static_cast<Phase>(phase.idx())) {
                       case ePhase_Welcome:
                           if (mSetupDone) {
                               phase.choose(ePhase_Setup_Done);

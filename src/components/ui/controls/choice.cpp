@@ -58,14 +58,14 @@ struct ControlBase : detail::DataWindow<Ctrl, data::Choice::Receiver> {
         if (not res) {
             auto ctxt{this->template context<data::Choice>()};
             const auto self{static_cast<Derived *>(this)};
-            this->SetSelection(self->dataToControl(ctxt.choice()));
+            this->SetSelection(self->dataToControl(ctxt.idx()));
         }
     }
     
     void onChoice() override {
         const auto self{static_cast<Derived *>(this)};
         const auto model{data::Choice::Receiver::context<data::Choice>()};
-        this->safeCall([this, self, choice=model.choice()] {
+        this->safeCall([this, self, choice=model.idx()] {
             Ctrl::SetSelection(self->dataToControl(choice));
         });
     }
@@ -139,7 +139,7 @@ private:
         const auto self{static_cast<Derived *>(this)};
         Ctrl::Set(self->generateChoices(ctxt.numChoices()));
         Ctrl::SetSelection(self->dataToControl(
-            ctxt.choice()
+            ctxt.idx()
         ));
 
         data::Choice::Receiver::attach(desc.data_);

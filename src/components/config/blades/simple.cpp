@@ -45,12 +45,12 @@ Simple::Star::Star(Simple& simple) : data::Node(&simple) {
     led_.responder().onChoice_ = [](const data::Choice::ROContext& ctxt) {
         auto& star{*ctxt.model().parent<Star>()};
         data::String::Context{star.powerPin_}.enable(
-            ctxt.choice() != eLED_None
+            ctxt.idx() != eLED_None
         );
 
         data::Integer::Context{star.resistance_}.enable(
-            ctxt.choice() >= eLED_Use_Resistance_Start and
-            ctxt.choice() <= eLED_Use_Resistance_End
+            ctxt.idx() >= eLED_Use_Resistance_Start and
+            ctxt.idx() <= eLED_Use_Resistance_End
         );
     };
 

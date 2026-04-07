@@ -130,12 +130,12 @@ data::Model *config::Config::find(uint64 id) {
 
 std::optional<versions::os::OSData> config::Config::osVersion() const {
     data::Choice::ROContext osSel{osVersion_.choice_};
-    if (osSel.choice() == -1) return std::nullopt;
+    if (osSel.idx() == -1) return std::nullopt;
 
     data::Vector::ROContext osVersions{mOsVersions};
 
     auto& osVersion{static_cast<versions::os::OS&>(
-        *osVersions.children()[osSel.choice()]
+        *osVersions.children()[osSel.idx()]
     )};
 
     return osVersion;
@@ -147,11 +147,11 @@ const data::Vector& config::Config::osVersions() const {
 
 const data::Vector *config::Config::boards() const {
     data::Choice::ROContext osSel{osVersion_.choice_};
-    if (osSel.choice() == -1) return nullptr;
+    if (osSel.idx() == -1) return nullptr;
 
     data::Vector::ROContext osVersions{mOsVersions};
     auto& osVersion{static_cast<versions::os::OS&>(
-        *osVersions.children()[osSel.choice()]
+        *osVersions.children()[osSel.idx()]
     )};
 
     return &osVersion.boards_;
@@ -167,11 +167,11 @@ const versions::os::Board *config::Config::board() const {
 
     data::Vector::ROContext vec{*sel.bound()};
     data::Choice::ROContext choice{mBoardSel.choice_};
-    if (choice.choice() < 0) return nullptr;
+    if (choice.idx() < 0) return nullptr;
 
     return static_cast<const versions::os::Board *>(
         // NOLINTNEXTLINE suppress lifetimebound warning
-        vec.children()[choice.choice()].get()
+        vec.children()[choice.idx()].get()
     );
 
 }
@@ -191,11 +191,11 @@ const versions::props::Prop *config::Config::prop() const {
 
     data::Vector::ROContext vec{*sel.bound()};
     data::Choice::ROContext choice{mPropSel.choice_};
-    if (choice.choice() < 0) return nullptr;
+    if (choice.idx() < 0) return nullptr;
 
     return static_cast<const versions::props::Prop *>(
         // NOLINTNEXTLINE suppress lifetimebound warning
-        vec.children()[choice.choice()].get()
+        vec.children()[choice.idx()].get()
     );
 }
 
@@ -218,7 +218,7 @@ size config::Config::numBlades() const {
 
             data::Choice::ROContext typeChoice{blade.type().choice_};
             data::Vector::ROContext types{blade.types()};
-            auto *typeModel{types.children()[typeChoice.choice()].get()};
+            auto *typeModel{types.children()[typeChoice.idx()].get()};
 
             if (auto *ptr = dynamic_cast<blades::WS281X *>(typeModel)) {
                 data::Vector::Context splits{ptr->splits_};

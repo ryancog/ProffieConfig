@@ -172,10 +172,10 @@ pcui::DescriptorPtr MainMenu::ui() {
           .func_=[this] {
               data::Choice::ROContext choice{configSel_.choice_};
               data::Vector::ROContext vec{config::list()};
-              if (choice.choice() >= vec.children().size()) return;
+              if (choice.idx() >= vec.children().size()) return;
 
               auto& info{static_cast<config::Info&>(
-                  *vec.children()[choice.choice()]
+                  *vec.children()[choice.idx()]
               )};
 
               auto err{info.load()};

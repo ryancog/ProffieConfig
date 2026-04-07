@@ -139,7 +139,7 @@ std::optional<std::string> runPreChecks(
         data::Choice::ROContext idMode{awareness.bladeId_.mode_};
         data::String::ROContext bridgePin{awareness.bladeId_.bridgePin_};
         if (
-                idMode.choice() == eBIDMode_Bridged and
+                idMode.idx() == eBIDMode_Bridged and
                 bridgePin.val().empty()
            ) {
             return errorMessage(logger, wxTRANSLATE("Pullup Pin cannot be empty."));
@@ -180,7 +180,7 @@ std::optional<std::string> runPreChecks(
             bladeConfig.presetArray_.choice_
         };
 
-        if (selectedPresetsArray.choice() == -1) {
+        if (selectedPresetsArray.idx() == -1) {
             return errorMessage(logger, wxTRANSLATE("Blade array %s has no preset array selection"), name.val());
         }
 
@@ -196,7 +196,7 @@ std::optional<std::string> runPreChecks(
 
             data::Choice::ROContext type{blade.type().choice_};
 
-            if (type.choice() == Blade::eWS281X) {
+            if (type.idx() == Blade::eWS281X) {
                 data::String::ROContext dataPin{blade.ws281x().dataPin_};
 
                 if (dataPin.val().empty()) {
@@ -205,7 +205,7 @@ std::optional<std::string> runPreChecks(
                 // Subblade overlap
             }
 
-            if (type.choice() == Blade::eSimple) {
+            if (type.idx() == Blade::eSimple) {
                 auto& star1{blade.simple().star1_};
                 auto& star2{blade.simple().star2_};
                 auto& star3{blade.simple().star3_};
@@ -218,35 +218,35 @@ std::optional<std::string> runPreChecks(
 
                 constexpr auto SIMPLE_ERR_MSG{wxTRANSLATE("LED %d of blade %d in array %s missing power pin.")};
                 if (
-                        star1Led.choice() != eLED_None and 
+                        star1Led.idx() != eLED_None and 
                         data::String::ROContext{star1.powerPin_}.val().empty()
                    ) {
                     return errorMessage(logger, SIMPLE_ERR_MSG, 1, bladeIdx, name.val());
                 }
                 if (
-                        star2Led.choice() != eLED_None and 
+                        star2Led.idx() != eLED_None and 
                         data::String::ROContext{star2.powerPin_}.val().empty()
                    ) {
                     return errorMessage(logger, SIMPLE_ERR_MSG, 2, bladeIdx, name.val());
                 }
                 if (
-                        star3Led.choice() != eLED_None and 
+                        star3Led.idx() != eLED_None and 
                         data::String::ROContext{star3.powerPin_}.val().empty()
                    ) {
                     return errorMessage(logger, SIMPLE_ERR_MSG, 3, bladeIdx, name.val());
                 }
                 if (
-                        star4Led.choice() != eLED_None and 
+                        star4Led.idx() != eLED_None and 
                         data::String::ROContext{star4.powerPin_}.val().empty()
                    ) {
                     return errorMessage(logger, SIMPLE_ERR_MSG, 4, bladeIdx, name.val());
                 }
 
                 if (
-                        star1Led.choice() == eLED_None or
-                        star1Led.choice() == eLED_None or
-                        star1Led.choice() == eLED_None or
-                        star1Led.choice() == eLED_None
+                        star1Led.idx() == eLED_None or
+                        star1Led.idx() == eLED_None or
+                        star1Led.idx() == eLED_None or
+                        star1Led.idx() == eLED_None
                    ) {
                     return errorMessage(logger, wxTRANSLATE("Blade %d in array %s has no LEDs"), bladeIdx, name.val());
                 }
@@ -358,10 +358,10 @@ std::optional<std::string> runPreChecks(
         data::Choice::ROContext event{button.event_};
         data::String::ROContext pin{button.pin_};
 
-        if (type.choice() == -1) {
+        if (type.idx() == -1) {
             return errorMessage(logger, wxTRANSLATE("Button %u doesn't have a type set."), idx);
         }
-        if (event.choice() == -1) {
+        if (event.idx() == -1) {
             return errorMessage(logger, wxTRANSLATE("Button %u doesn't have its event set."), idx);
         }
         if (pin.val().empty()) {
@@ -417,7 +417,7 @@ void outputTopGeneral(std::ostream& outFile, const Config& config) {
 
     auto osVersion{static_cast<versions::os::OS&>(
         *data::Vector::ROContext{config.osVersions()}.children()[
-            data::Choice::ROContext{config.osVersion_.choice_}.choice()
+            data::Choice::ROContext{config.osVersion_.choice_}.idx()
         ]
     ).version_};
 
@@ -436,7 +436,7 @@ void outputTopGeneral(std::ostream& outFile, const Config& config) {
             auto& blade{static_cast<blades::Blade&>(*model)};
 
             data::Choice::ROContext type{blade.type().choice_};
-            if (type.choice() != blades::Blade::eWS281X) continue;
+            if (type.idx() != blades::Blade::eWS281X) continue;
 
             data::Bool::ROContext whiteMultiplier{blade.ws281x().hasWhite_};
             data::Integer::ROContext length{blade.ws281x().length_};
@@ -476,13 +476,13 @@ void outputTopGeneral(std::ostream& outFile, const Config& config) {
     const auto& bladeID{settings.bladeAwareness_.bladeId_};
     if (data::Bool::ROContext{bladeID.enable_}.val()) {
         data::Choice::ROContext idMode{bladeID.mode_};
-        std::string idString{BLADEID_MODE_STRS[idMode.choice()]};
+        std::string idString{BLADEID_MODE_STRS[idMode.idx()]};
 
         idString += data::String::ROContext{bladeID.pin_}.val();
-        if (idMode.choice() == eBIDMode_External) {
+        if (idMode.idx() == eBIDMode_External) {
             data::Integer::ROContext pullup{bladeID.pullup_};
             (idString += ", ") += std::to_string(pullup.val());
-        } else if (idMode.choice() == eBIDMode_Bridged) {
+        } else if (idMode.idx() == eBIDMode_Bridged) {
             data::String::ROContext bridgePin{bladeID.bridgePin_};
             (idString += ", ") += bridgePin.val();
         }
@@ -581,8 +581,8 @@ void outputTopGeneral(std::ostream& outFile, const Config& config) {
     }
 
     data::Choice::ROContext orient{settings.orientation_};
-    if (orient.choice() != eOrient_Normal) {
-        const auto& orientStr{ORIENTATION_STRS[orient.choice()]};
+    if (orient.idx() != eOrient_Normal) {
+        const auto& orientStr{ORIENTATION_STRS[orient.idx()]};
         outputDefine(outFile, ORIENTATION_STR, orientStr);
     }
 
@@ -680,10 +680,10 @@ void outputTopGeneral(std::ostream& outFile, const Config& config) {
 
 void outputTopProp(std::ostream& outFile, const Config& config) {
     data::Choice::ROContext propSel{config.propSel().choice_};
-    if (propSel.choice() == -1) return;
+    if (propSel.idx() == -1) return;
 
     data::Vector::ROContext props{*config.props()};
-    const auto& model{props.children()[propSel.choice()]};
+    const auto& model{props.children()[propSel.idx()]};
     auto& prop{static_cast<versions::props::Prop&>(*model)};
 
     const auto onEnum{[&](
@@ -705,10 +705,10 @@ void outputTopProp(std::ostream& outFile, const Config& config) {
 
 void outputProp(std::ostream& outFile, const Config& config) {
     data::Choice::ROContext propSel{config.propSel().choice_};
-    if (propSel.choice() == -1) return;
+    if (propSel.idx() == -1) return;
 
     data::Vector::ROContext props{*config.props()};
-    const auto& model{props.children()[propSel.choice()]};
+    const auto& model{props.children()[propSel.idx()]};
     auto& prop{static_cast<versions::props::Prop&>(*model)};
 
     if (prop.filename_.empty()) return;
@@ -815,7 +815,7 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
 
             data::Choice::ROContext type{blade.type().choice_};
 
-            if (type.choice() == blades::Blade::eUnassigned) {
+            if (type.idx() == blades::Blade::eUnassigned) {
                 outFile << "\t\tSimpleBladePtr<NoLED, NoLED, NoLED, NoLED, -1, -1, -1, -1>(),\n";
                 continue;
             }
@@ -826,7 +826,7 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
                 bladeStr << "DimBlade(" << brightness.val() << ", ";
             }
 
-            if (type.choice() == blades::Blade::eWS281X) {
+            if (type.idx() == blades::Blade::eWS281X) {
                 auto& ws281x{blade.ws281x()};
 
                 data::Integer::ROContext length{ws281x.length_};
@@ -838,8 +838,8 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
                 if (data::Bool::ROContext{ws281x.hasWhite_}.val()) {
                     data::Choice::ROContext order4{ws281x.colorOrder4_};
                     bool whiteFirst{
-                        order4.choice() >= eOrder4_White_First_Start and
-                        order4.choice() <= eOrder4_White_First_End
+                        order4.idx() >= eOrder4_White_First_Start and
+                        order4.idx() <= eOrder4_White_First_End
                     };
 
                     if (whiteFirst) {
@@ -847,10 +847,10 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
                             bladeStr << 'W';
                         } else bladeStr << 'w';
 
-                        auto strIdx{order4.choice() - eOrder4_White_First_Start};
+                        auto strIdx{order4.idx() - eOrder4_White_First_Start};
                         bladeStr << ORDER_STRS[strIdx];
                     } else {
-                        bladeStr << ORDER_STRS[order4.choice()];
+                        bladeStr << ORDER_STRS[order4.idx()];
 
                         if (data::Bool::ROContext{ws281x.useRgbWithWhite_}.val()) {
                             bladeStr << 'W';
@@ -858,7 +858,7 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
                     }
                 } else {
                     data::Choice::ROContext order3{ws281x.colorOrder3_};
-                    bladeStr << ORDER_STRS[order3.choice()];
+                    bladeStr << ORDER_STRS[order3.idx()];
                 }
 
                 bladeStr << ", " << POWER_PINS_STR;
@@ -872,7 +872,7 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
                 }
 
                 bladeStr << ">>()";
-            } else if (type.choice() == blades::Blade::eSimple) {
+            } else if (type.idx() == blades::Blade::eSimple) {
                 auto& simple{blade.simple()};
 
                 bladeStr << "SimpleBladePtr<";
@@ -880,7 +880,7 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
                 auto outputStar{[&bladeStr](blades::Simple::Star& star) {
                     data::Choice::ROContext led{star.led_};
 
-                    bladeStr << LED_STRS[led.choice()];
+                    bladeStr << LED_STRS[led.idx()];
 
                     data::Integer::ROContext resistance{star.resistance_};
                     if (resistance.enabled()) {
@@ -917,8 +917,8 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
             data::Vector::ROContext splits{blade.ws281x().splits_};
 
             if (
-                    type.choice() == blades::Blade::eSimple or 
-                    (type.choice() == blades::Blade::eWS281X and
+                    type.idx() == blades::Blade::eSimple or 
+                    (type.idx() == blades::Blade::eWS281X and
                      splits.children().empty())
                ) {
                 outFile << "\t\t" << bladeStr.str() << ",\n";
@@ -1020,7 +1020,7 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
 
         data::Choice::ROContext arrayChoice{bladeConfig.presetArray_.choice_};
         data::Vector::ROContext presetArrays{config.presetArrays_};
-        const auto& arrayModel{presetArrays.children()[arrayChoice.choice()]};
+        const auto& arrayModel{presetArrays.children()[arrayChoice.idx()]};
         auto& presetArray{static_cast<presets::Array&>(*arrayModel)};
         data::String::ROContext presetArrayName{presetArray.name_};
         
@@ -1053,12 +1053,12 @@ void outputButtons(std::ostream& outFile, const Config& config) {
         data::Choice::ROContext event{button.event_};
         data::String::ROContext pin{button.pin_};
 
-        outFile << BUTTON_TYPE_STRS[type.choice()] << ' ';
+        outFile << BUTTON_TYPE_STRS[type.idx()] << ' ';
         outFile << "Button" << idx << '{';
-        outFile << BUTTON_EVENT_STRS[event.choice()] << ", ";
+        outFile << BUTTON_EVENT_STRS[event.idx()] << ", ";
         outFile << pin.val() << ", ";
 
-        if (type.choice() == eBtn_Type_Touch) {
+        if (type.idx() == eBtn_Type_Touch) {
             data::Integer::ROContext touch{button.touch_};
             outFile << touch.val() << ", ";
         }

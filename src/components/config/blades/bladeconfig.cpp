@@ -186,7 +186,7 @@ const data::Integer& BladeConfig::issues() const {
 void BladeConfig::recomputeIssues() {
     int32 issues{0};
 
-    if (data::Choice::Context{presetArray_.choice_}.choice() == -1) {
+    if (data::Choice::Context{presetArray_.choice_}.idx() == -1) {
         issues |= eIssue_No_Preset_Array;
     }
 

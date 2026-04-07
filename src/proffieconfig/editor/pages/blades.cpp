@@ -54,10 +54,10 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
         // Always detach first
         page.mIssueReceiver.detach();
 
-        if (ctxt.choice() != -1) {
+        if (ctxt.idx() != -1) {
             using namespace config::blades;
             data::Vector::ROContext bladeConfigs{page.mConfig.bladeConfigs_};
-            auto& selModel{*bladeConfigs.children()[ctxt.choice()]};
+            auto& selModel{*bladeConfigs.children()[ctxt.idx()]};
             auto& selected{static_cast<BladeConfig&>(selModel)};
             page.mIssueReceiver.attach(selected.issues());
         }

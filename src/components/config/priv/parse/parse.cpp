@@ -1341,10 +1341,10 @@ std::optional<std::string> parseBlade(
         data::Choice::Context star4Led{simple.star4_.led_};
 
         if (
-                star1Led.choice() == eLED_None and
-                star2Led.choice() == eLED_None and
-                star3Led.choice() == eLED_None and
-                star4Led.choice() == eLED_None
+                star1Led.idx() == eLED_None and
+                star2Led.idx() == eLED_None and
+                star3Led.idx() == eLED_None and
+                star4Led.idx() == eLED_None
            ) {
             data::Choice::Context type{blade.type().choice_};
             type.choose(Blade::eUnassigned);
@@ -1363,7 +1363,7 @@ std::optional<std::string> parseBlade(
         )};
 
         data::Choice::Context type{blade.type().choice_};
-        if (type.choice() != Blade::eWS281X) {
+        if (type.idx() != Blade::eWS281X) {
             return errorMessage(logger, wxTRANSLATE("Tried to add SubBlade to a non-WS281X blade"));
         }
 
@@ -1422,7 +1422,7 @@ std::optional<std::string> parseBlade(
 
     data::Choice::Context type{blade.type().choice_};
 
-    if (type.choice() == Blade::eWS281X) {
+    if (type.idx() == Blade::eWS281X) {
         data::Integer::Context brightness{blade.brightness_};
 
         if (splitData.type_ == WS281X::Split::eMax) {
@@ -1680,7 +1680,7 @@ std::optional<std::string> parseButtons(
             inner.erase(0, pinCommaPos + 1);
             data::String::Context{button.pin_}.change(std::move(pinStr));
 
-            if (type.choice() == eBtn_Type_Touch) {
+            if (type.idx() == eBtn_Type_Touch) {
                 auto threshCommaPos{inner.find(',')};
                 if (threshCommaPos == std::string::npos) {
                     return errorMessage(logger, wxTRANSLATE("Missing comma for touch button threshold."));

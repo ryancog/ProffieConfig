@@ -68,12 +68,12 @@ auto data::logic::operator|(
         bool doActivate() override {
             data::Choice::ROContext ctxt{choice_};
             attach(choice_);
-            return isTrue(ctxt.choice());
+            return isTrue(ctxt.idx());
         }
 
         void onChoice() override {
             std::lock_guard scopeLock{*pLock};
-            onChange(isTrue(context<Choice>().choice()));
+            onChange(isTrue(context<Choice>().idx()));
         }
 
         bool isTrue(int32 choice) {

@@ -73,13 +73,13 @@ WS281X::WS281X(data::Node *parent) : data::Node{parent} {
 
         if (ctxt.val()) {
             data::Choice::Context{ws281x.colorOrder4_}.choose(
-                data::Choice::Context{ws281x.colorOrder3_}.choice()
+                data::Choice::Context{ws281x.colorOrder3_}.idx()
             );
             return;
         } 
 
         auto order4{static_cast<ColorOrder4>(
-            data::Choice::Context{ws281x.colorOrder4_}.choice()
+            data::Choice::Context{ws281x.colorOrder4_}.idx()
         )};
 
         int32 newOrder3{static_cast<int32>(order4)};

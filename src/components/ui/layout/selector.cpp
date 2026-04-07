@@ -76,12 +76,12 @@ struct TrackerDummy : detail::IDataDriven,
 
         // If we have a choice, then a vector is guaranteed to be bound. If
         // not, it doesn't matter in any case.
-        if (choice.choice() != -1) {
+        if (choice.idx() != -1) {
             data::Selector::ROContext sel{sel_};
             data::Vector::ROContext vec{*sel.bound()};
 
             // Grab the model to build off of.
-            model = &*vec.children()[choice.choice()];
+            model = &*vec.children()[choice.idx()];
         }
 
         auto desc{builder_(model)};

@@ -105,8 +105,8 @@ void onboard::Setup::startSetup() {
     auto& phaseModel{utils::parent<&Frame::mSetupPage>(*this).mPhase};
     data::Choice::Context phase{phaseModel};
     assert(
-        phase.choice() == Frame::ePhase_Setup_Pre or
-        phase.choice() == Frame::ePhase_Setup_Fail
+        phase.idx() == Frame::ePhase_Setup_Pre or
+        phase.idx() == Frame::ePhase_Setup_Fail
     );
 
     phase.choose(Frame::ePhase_Setup_Prog);

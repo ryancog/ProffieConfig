@@ -60,7 +60,7 @@ uint32 data::Choice::ROContext::numChoices() const {
     return model<Choice>().mNumChoices;
 }
 
-int32 data::Choice::ROContext::choice() const {
+int32 data::Choice::ROContext::idx() const {
     return model<Choice>().mIdx;
 }
 

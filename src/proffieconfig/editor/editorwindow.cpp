@@ -140,10 +140,10 @@ void EditorWindow::bindEvents() {
 
         data::Selector::ROContext styleSel{mPresetsPage.styleSel()};
         data::Choice::ROContext styleChoice{mPresetsPage.styleSel().choice_};
-        if (styleChoice.choice() != -1) {
+        if (styleChoice.idx() != -1) {
             data::Vector::ROContext styleVec{*styleSel.bound()};
 
-            auto& model{*styleVec.children()[styleChoice.choice()]};
+            auto& model{*styleVec.children()[styleChoice.idx()]};
             auto& style{static_cast<config::presets::Style&>(model)};
 
             data::String::ROContext content{style.content_};

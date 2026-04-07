@@ -61,7 +61,7 @@ struct DATA_EXPORT Choice::ROContext : virtual Model::ROContext {
     ~ROContext();
 
     [[nodiscard]] uint32 numChoices() const;
-    [[nodiscard]] int32 choice() const;
+    [[nodiscard]] int32 idx() const;
     
     /**
      * Whether or not this has a choice.
