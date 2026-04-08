@@ -89,9 +89,15 @@ struct TrackerDummy : detail::IDataDriven,
 
         int32 insertLoc{-1};
         if (last_) {
+            wxWindow *toDelete{nullptr};
+
             // If last_ holds a window, Remove will not destroy it, which
-            // would be a memory leak if not cleaned up here.
-            if (last_->IsWindow()) last_->GetWindow()->Destroy();
+            // would be a memory leak if not cleaned up explicitly.
+            //
+            // Don't destroy it yet though so that the sizer child list isn't
+            // modified.
+            if (last_->IsWindow())
+                toDelete = last_->GetWindow();
 
             // The old item needs to be removed from the sizer, but wxSizer
             // only provides remove by index or wxSizer *, and only provides
@@ -118,6 +124,11 @@ struct TrackerDummy : detail::IDataDriven,
                 scaffold_.sizer_->Remove(static_cast<int>(idx));
                 break;
             }
+
+            // Now the list has been walked and sizer item removed, destroy
+            // window.
+            if (toDelete)
+                toDelete->Destroy();
         }
 
         // Now, the wxSizerItem is deleted, if it existed.
@@ -129,6 +140,10 @@ struct TrackerDummy : detail::IDataDriven,
         } else {
             scaffold_.sizer_->Insert(insertLoc, item);
         }
+
+        // And don't forget to layout w/ the new insertion into the sizer
+        // list.
+        detail::layoutAndFitFor(scaffold_.childParent_);
     }
 
     // The last-built item that is currently being held in whatever sizer
