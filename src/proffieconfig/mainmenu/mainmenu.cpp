@@ -130,7 +130,7 @@ pcui::DescriptorPtr MainMenu::ui() {
           .children_={
             pcui::Choice{
               .win_={.base_={.proportion_=1}},
-              .data_=configSel_.choice_,
+              .data_=configSel_,
               .style_=pcui::Choice::PopUp{
                 .unselected_=_("Select Config"),
               },

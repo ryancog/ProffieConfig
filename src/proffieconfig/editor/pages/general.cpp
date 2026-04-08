@@ -85,7 +85,7 @@ pcui::DescriptorPtr GeneralPage::setup() {
                 .base_={.expand_=true},
                 .tooltip_=_("The hardware revision of the physical proffieboard."),
               },
-              .data_=mConfig.boardSel().choice_,
+              .data_=mConfig.boardSel(),
               .style_=pcui::Choice::PopUp{
                 .unselected_=_("Select Board"),
               },
@@ -95,7 +95,7 @@ pcui::DescriptorPtr GeneralPage::setup() {
               .win_={
                 .base_={.expand_=true},
               },
-              .data_=mConfig.osVersion_.choice_,
+              .data_=mConfig.osVersion_,
               .style_=pcui::Choice::PopUp{
                 .unselected_=_("Select ProffieOS"),
               },

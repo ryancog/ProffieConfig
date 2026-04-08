@@ -109,7 +109,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                     .base_={.proportion_=1},
                     .tooltip_=_("The currently-selected Blade Array to edit."),
                   },
-                  .data_=mArraySel.choice_,
+                  .data_=mArraySel,
                   .style_=pcui::Choice::PopUp{
                     .unselected_=_("Select Array"),
                   },
@@ -220,7 +220,7 @@ pcui::DescriptorPtr BladesPage::selection() {
           .children_={
             pcui::Choice{
               .win_={.base_={.expand_=true, .proportion_=1}},
-              .data_=mBladeSel.choice_,
+              .data_=mBladeSel,
               .style_=pcui::Choice::List{},
             }(),
             pcui::Stack{
@@ -290,7 +290,7 @@ pcui::DescriptorPtr BladesPage::blades() {
             .orient_=wxVERTICAL,
             .children_={
               pcui::Choice{
-                .data_=blade.type().choice_
+                .data_=blade.type()
               }(),
               pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
               pcui::Selector{

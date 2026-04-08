@@ -43,7 +43,7 @@ pcui::DescriptorPtr PropsPage::ui() {
             pcui::Labeled{
               .label_=_("Prop File"),
               .ctrl_=pcui::Choice{
-                .data_=mConfig.propSel().choice_,
+                .data_=mConfig.propSel(),
                 .style_=pcui::Choice::PopUp{
                   .unselected_=_("Select Prop"),
                 }

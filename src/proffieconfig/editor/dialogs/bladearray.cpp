@@ -106,7 +106,7 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
                 .win_={
                   .base_={.expand_=true},
                 },
-                .data_=mConfig.presetArray_.choice_,
+                .data_=mConfig.presetArray_,
               }(),
             }(),
           }
