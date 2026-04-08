@@ -43,6 +43,8 @@ struct CONFIG_EXPORT Preset : data::Node {
     bool enumerate(const EnumFunc&) override;
     Model *find(uint64) override;
 
+    [[nodiscard]] std::unique_ptr<Model> clone(Node *) const override;
+
     data::String name_;
     data::String fontDir_;
     // vector<string> fontDirs;

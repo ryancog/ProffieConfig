@@ -21,11 +21,34 @@
 
 #include <algorithm>
 
+#include <wx/translation.h>
+
 #include "utils/string.hpp"
 
 using namespace config::presets;
 
-Preset::Preset(data::Node *parent) : data::Node(parent) {
+namespace {
+
+constexpr std::string_view NAME_STR{"Name"};
+constexpr std::string_view FONTDIR_STR{"FontDir"};
+constexpr std::string_view TRACK_STR{"Track"};
+constexpr std::string_view STYLES_STR{"Styles"};
+
+constexpr std::string_view COMMENT_STR{"Comment"};
+constexpr std::string_view CONTENT_STR{"Content"};
+
+constexpr size MAX_NAME_LEN{24};
+
+} // namespace
+
+Preset::Preset(data::Node *parent) :
+    data::Node(parent),
+    name_(this),
+    fontDir_(this),
+    track_(this),
+    styles_(this) {
+    CreationScope createScope{*this};
+
     const auto nameFilter{[](
         const data::String::ROContext&, std::string& str, size& pos
     ) {
@@ -36,7 +59,7 @@ Preset::Preset(data::Node *parent) : data::Node(parent) {
             &numTrimmed,
             pos
         );
-        if (str.length() > 20) str.resize(20);
+        if (str.length() > MAX_NAME_LEN) str.resize(MAX_NAME_LEN);
 
         // Only allow \n
         uint32 idx{0};
@@ -76,11 +99,6 @@ Preset::Preset(data::Node *parent) : data::Node(parent) {
     }};
     fontDir_.setFilter(fontDirFilter);
 
-    // Next Up:
-    // Kay, here we are again. These are just filters so they can be made to
-    // copy with the elements, but the implementation filter/receivers vs
-    // external bindings is a recurring issue.
-
     const auto trackFilter{[](std::string& str, size& pos) {
         uint32 numTrimmed{};
         utils::trim(
@@ -101,19 +119,54 @@ Preset::Preset(const Preset& other, data::Node *parent) :
     name_(other.name_, this),
     fontDir_(other.fontDir_, this),
     track_(other.track_, this),
-    styles_(other.styles_, this) {}
+    styles_(other.styles_, this) {
+    CreationScope createScope{*this};
+
+    // The extra work here avoid truncating "copy", and instead tries to
+    // truncate the old name.
+    data::String::Context name{name_};
+    const auto formatStr{_("%s copy")};
+
+    const auto newLen{std::min(
+        // The - 2 accounts for the %s
+        MAX_NAME_LEN - formatStr.length() - 2,
+        name.val().length()
+    )};
+
+    name.change(wxString::Format(
+        formatStr,
+        name.val().substr(0, newLen)
+    ).ToStdString());
+}
 
 Preset::~Preset() = default;
 
 bool Preset::enumerate(const EnumFunc& func) {
-    assert(0); // TODO
+    if (func(name_, strID(NAME_STR), NAME_STR)) return true;
+    if (func(fontDir_, strID(FONTDIR_STR), FONTDIR_STR)) return true;
+    if (func(track_, strID(TRACK_STR), TRACK_STR)) return true;
+    if (func(styles_, strID(STYLES_STR), STYLES_STR)) return true;
+    return false;
 }
 
 data::Model *Preset::find(uint64 id) {
-    assert(0); // TODO
+    if (id == strID(NAME_STR)) return &name_;
+    if (id == strID(FONTDIR_STR)) return &fontDir_;
+    if (id == strID(TRACK_STR)) return &track_;
+    if (id == strID(STYLES_STR)) return &styles_;
+    return nullptr;
 }
 
-Style::Style(Node *parent) : data::Node(parent) {
+std::unique_ptr<data::Model> Preset::clone(Node *parent) const {
+    return std::make_unique<Preset>(*this, parent);
+}
+
+Style::Style(Node *parent) :
+    data::Node(parent),
+    comment_(this),
+    content_(this) {
+    CreationScope createScope{*this};
+
     const auto commentFilter{[](
         const data::String::ROContext&, std::string& str, size& pos
     ) {
@@ -270,15 +323,24 @@ Style::Style(Node *parent) : data::Node(parent) {
     );
 }
 
+Style::Style(const Style& other, data::Node *parent) :
+    data::Node(parent),
+    comment_(other.comment_, this),
+    content_(other.content_, this) {}
+
 bool Style::enumerate(const EnumFunc& func) {
-    assert(0); // TODO
+    if (func(comment_, strID(COMMENT_STR), COMMENT_STR)) return true;
+    if (func(content_, strID(CONTENT_STR), CONTENT_STR)) return true;
+    return false;
 }
 
-data::Model *Style::find(uint64) {
-    assert(0); // TODO
+data::Model *Style::find(uint64 id) {
+    if (id == strID(COMMENT_STR)) return &comment_;
+    if (id == strID(CONTENT_STR)) return &content_;
+    return nullptr;
 }
 
 std::unique_ptr<data::Model> Style::clone(Node *parent) const {
-    assert(0); // TODO
+    return std::make_unique<Style>(*this, parent);
 }
 
