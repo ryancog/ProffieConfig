@@ -208,7 +208,7 @@ data::Vector::SwapAction::SwapAction(size pos) : mPos{pos} {}
 
 bool data::Vector::SwapAction::setup(Model& model) {
     auto& vec{static_cast<Vector&>(model)};
-    assert(mPos > 0 and mPos < vec.mChildren.size());
+    assert(mPos >= 0 and mPos < vec.mChildren.size() - 1);
     return true;
 }
 
