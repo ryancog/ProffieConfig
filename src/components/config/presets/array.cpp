@@ -36,7 +36,15 @@ Array::Array(data::Node *parent) :
     data::Node{parent},
     name_(this),
     presets_(this) {
-    const auto nameFilter{[](std::string& str, size& pos) {
+    presets_.responder().onInsert_ = [](
+        const data::Vector::ROContext& ctxt, size
+    ) {
+        ctxt.model().root<Config>()->syncStyles();
+    };
+
+    const auto nameFilter{[](
+        const data::String::ROContext&, std::string& str, size& pos
+    ) {
         uint32 numTrimmed{};
         utils::trimCppName(
             str,
@@ -47,13 +55,7 @@ Array::Array(data::Node *parent) :
 
         pos -= numTrimmed;
     }};
-
-    presets_.responder().onInsert_ = [](
-        const data::Vector::ROContext& ctxt, size
-    ) {
-        ctxt.model().root<Config>()->syncStyles();
-    };
-
+    name_.setFilter(nameFilter);
     name_.responder().onChange_ = [](
         const data::String::ROContext& ctxt
     ) {
