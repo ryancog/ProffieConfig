@@ -121,11 +121,17 @@ void utils::trim(
     uint32 idx{0};
     auto iter{str.begin()};
     while (iter != str.end()) {
-        if (
-                not (rules.allowAlpha and std::isalpha(*iter)) and
-                not (rules.allowNum or std::isdigit(*iter)) and
-                rules.safeList.find(*iter) == std::string::npos
-           ) {
+        bool allowed{};
+
+        if (std::isalpha(*iter)) {
+            allowed = rules.allowAlpha;
+        } else if (std::isdigit(*iter)) {
+            allowed = rules.allowNum;
+        } else {
+            allowed = rules.safeList.contains(*iter);
+        }
+
+        if (not allowed) {
             if (numTrimmed and countTrimIndex > idx) ++*numTrimmed;
             iter = str.erase(iter);
             continue;
