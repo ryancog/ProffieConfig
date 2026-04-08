@@ -140,6 +140,13 @@ struct ControlBase : detail::DataWindow<Ctrl, data::Choice::Receiver>,
         auto tmp{Ctrl::GetString(size)};
         Ctrl::SetString(size, Ctrl::GetString(size + 1));
         Ctrl::SetString(size + 1, tmp);
+
+        // Also swap receiver idxs if found
+        for (auto& rcvr : mRcvrs) {
+            auto& labelRcvr{static_cast<LabelReceiver&>(*rcvr)};
+            if (labelRcvr.idx_ == size) labelRcvr.idx_ = size + 1;
+            else if (labelRcvr.idx_ == size + 1) labelRcvr.idx_ = size;
+        }
     }
 
 private:
@@ -201,7 +208,7 @@ private:
             ControlBase *ctrl,
             uint32 idx,
             const data::String& model
-        ) : mCtrl{ctrl}, mIdx{idx} {
+        ) : mCtrl{ctrl}, idx_{idx} {
             attach(model);
         }
 
@@ -213,15 +220,16 @@ private:
             // Capture info by value, the receiver could die before the UI
             // updates occur.
             mCtrl->safeCall([
-                ctrl=mCtrl, idx=mIdx, val=context<data::String>().val()
+                ctrl=mCtrl, idx=idx_, val=context<data::String>().val()
             ] {
                 ctrl->SetString(idx, val);
             });
         }
 
+        uint32 idx_;
+
     private:
         ControlBase *mCtrl;
-        uint32 mIdx;
     };
 };
 
