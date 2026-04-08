@@ -99,7 +99,7 @@ struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
         Bind(wxEVT_TEXT, &Control::onText, this);
 
         if (handleEnter) {
-            Bind(wxEVT_TEXT, &Control::onEnter, this);
+            Bind(wxEVT_TEXT_ENTER, &Control::onEnter, this);
         }
     }
 
