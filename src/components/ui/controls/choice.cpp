@@ -82,7 +82,9 @@ struct ControlBase : detail::DataWindow<Ctrl, data::Choice::Receiver>,
         )};
 
         this->safeCall([this, choices] {
+            auto sel{Ctrl::GetSelection()};
             Ctrl::Set(choices);
+            Ctrl::SetSelection(sel);
         });
     }
 
