@@ -108,18 +108,22 @@ struct ControlBase : detail::DataWindow<Ctrl, data::Choice::Receiver>,
             }
 
             auto res{mLabeler(idx)};
-            if (auto *ptr{std::get_if<wxString>(&res)}) {
-                choices.emplace_back(std::move(*ptr));
-                continue;
+
+            wxString str;
+            if (auto *ptr{std::get_if<1>(&res)}) {
+                const auto self{static_cast<Derived *>(this)};
+                const auto& model{std::get<1>(res).get()};
+                data::String::ROContext ctxt{model};
+                str = ctxt.val();
+                mRcvrs.push_back(std::make_unique<LabelReceiver>(
+                    this, self->dataToControl(idx), model
+                ));
+            } else {
+                str = std::move(std::get<0>(res));
             }
 
-            const auto self{static_cast<Derived *>(this)};
-            const auto& model{std::get<1>(res).get()};
-            data::String::ROContext ctxt{model};
-            choices.emplace_back(ctxt.val());
-            mRcvrs.push_back(std::make_unique<LabelReceiver>(
-                this, self->dataToControl(idx), model
-            ));
+            if (str.empty()) choices.push_back(mEmptyLabel);
+            else choices.emplace_back(std::move(str));
         }
 
         return choices;
@@ -143,6 +147,7 @@ private:
 
     void create(const detail::Scaffold& scaffold, const Choice& desc) {
         mLabeler = desc.labeler_;
+        mEmptyLabel = desc.emptyLabel_;
 
         Ctrl::Create(
             scaffold.childParent_,
@@ -189,6 +194,7 @@ private:
 
     std::vector<std::unique_ptr<data::String::Receiver>> mRcvrs;
     pcui::Choice::Labeler mLabeler;
+    wxString mEmptyLabel;
 
     struct LabelReceiver final : data::String::Receiver {
         LabelReceiver(

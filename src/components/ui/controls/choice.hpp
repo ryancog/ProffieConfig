@@ -60,6 +60,11 @@ struct UI_EXPORT Choice {
     using Label = std::variant<wxString, RefWrap<const data::String>>;
     using Labeler = std::function<Label(uint32)>;
 
+    /**
+     * Label to use when labeler provides an empty label.
+     */
+    wxString emptyLabel_;
+
     Labeler labeler_;
 
     std::unique_ptr<detail::Descriptor> operator()();
