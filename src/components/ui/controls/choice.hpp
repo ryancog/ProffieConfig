@@ -20,6 +20,7 @@
  */
 
 #include "data/choice.hpp"
+#include "data/selector.hpp"
 #include "data/string.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
@@ -35,7 +36,7 @@ struct UI_EXPORT Choice {
     // TODO: Make this a base w/ C++ P2287.
     detail::ChildWindowBase win_;
 
-    data::Choice& data_;
+    std::variant<RefWrap<data::Choice>, RefWrap<const data::Selector>> data_;
 
     /**
      * A "ChoiceBox" or PopupButton
@@ -44,8 +45,6 @@ struct UI_EXPORT Choice {
         /**
          * Entry label for whenever there is no choice selected.
          * Instead of no selection resulting in a blank control.
-         *
-         * This is only useful for `Pop_Up` style.
          */
         wxString unselected_;
     };

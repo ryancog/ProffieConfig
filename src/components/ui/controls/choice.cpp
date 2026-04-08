@@ -32,9 +32,14 @@ using namespace pcui;
 namespace {
 
 template<typename Derived, typename Ctrl>
-struct ControlBase : detail::DataWindow<Ctrl, data::Choice::Receiver> {
+struct ControlBase : detail::DataWindow<Ctrl, data::Choice::Receiver>,
+                     data::Selector::Receiver,
+                     data::Vector::Receiver {
     void preDestroyCripple() override {
-        this->detach();
+        data::Choice::Receiver::detach();
+        data::Selector::Receiver::detach();
+        data::Vector::Receiver::detach();
+
         detail::DataWindow<Ctrl, data::Choice::Receiver>::preDestroyCripple();
     }
 
@@ -45,7 +50,7 @@ struct ControlBase : detail::DataWindow<Ctrl, data::Choice::Receiver> {
         if (not en) return;
         
         auto& ch{const_cast<data::Choice&>(
-            this->template model<data::Choice>()
+            data::Choice::Receiver::model<data::Choice>()
         )};
 
         const auto self{static_cast<Derived *>(this)};
@@ -56,7 +61,7 @@ struct ControlBase : detail::DataWindow<Ctrl, data::Choice::Receiver> {
         )};
 
         if (not res) {
-            auto ctxt{this->template context<data::Choice>()};
+            auto ctxt{data::Choice::Receiver::context<data::Choice>()};
             const auto self{static_cast<Derived *>(this)};
             this->SetSelection(self->dataToControl(ctxt.idx()));
         }
@@ -118,6 +123,19 @@ struct ControlBase : detail::DataWindow<Ctrl, data::Choice::Receiver> {
         return choices;
     }
 
+    void onRebound() override {
+        auto selCtxt{data::Selector::Receiver::context<data::Selector>()};
+
+        data::Vector::Receiver::detach();
+        if (selCtxt.bound()) data::Vector::Receiver::attach(*selCtxt.bound());
+    }
+
+    void onSwap(size size) override {
+        auto tmp{Ctrl::GetString(size)};
+        Ctrl::SetString(size, Ctrl::GetString(size + 1));
+        Ctrl::SetString(size + 1, tmp);
+    }
+
 private:
     friend Derived;
 
@@ -135,14 +153,28 @@ private:
             scaffold, desc.win_
         );
 
-        data::Choice::Context ctxt{desc.data_};
+        data::Choice *choice{};
+        const data::Selector *sel{};
+        if (const auto *ptr{std::get_if<1>(&desc.data_)}) {
+            sel = &ptr->get();
+            choice = &ptr->get().choice_;
+        } else choice = &std::get<0>(desc.data_).get();
+
+        data::Choice::Context ctxt{*choice};
         const auto self{static_cast<Derived *>(this)};
         Ctrl::Set(self->generateChoices(ctxt.numChoices()));
         Ctrl::SetSelection(self->dataToControl(
             ctxt.idx()
         ));
 
-        data::Choice::Receiver::attach(desc.data_);
+        data::Choice::Receiver::attach(*choice);
+        if (sel) {
+            data::Selector::ROContext selCtxt{*sel};
+            if (selCtxt.bound()) {
+                data::Vector::Receiver::attach(*selCtxt.bound());
+            }
+            data::Selector::Receiver::attach(*sel);
+        }
 
         Ctrl::Bind(Derived::evt(), &ControlBase::onChoice, this);
     }
