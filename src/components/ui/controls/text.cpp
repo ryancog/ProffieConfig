@@ -82,6 +82,14 @@ struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
         postCreation(scaffold, desc.win_);
         SetOwnFont(desc.style_.makeFont());
 
+        if (const auto *ptr{std::get_if<Text::SingleLine>(&desc.mode_)}) {
+            // Only call set if it's non-empty... these things tend to have
+            // side-effects.
+            if (not ptr->hint_.empty()) {
+                SetHint(ptr->hint_);
+            }
+        }
+
 #       ifdef __WXMAC__
         if (GetFont().GetFamily() == wxFONTFAMILY_TELETYPE) {
             OSXDisableAllSmartSubstitutions();

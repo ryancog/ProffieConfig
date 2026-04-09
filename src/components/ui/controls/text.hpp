@@ -54,6 +54,11 @@ struct UI_EXPORT Text {
          * Insert '\n' on enter.
          */
         bool insertNewline_;
+
+        /**
+         * Placeholder text displayed when no text has been entered yet.
+         */
+        wxString hint_;
     };
 
     struct MultiLine {
