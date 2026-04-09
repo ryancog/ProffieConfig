@@ -217,10 +217,11 @@ void data::Selection::SetItemsAction::perform(Model& model) {
     auto& sel{static_cast<Selection&>(model)};
 
     mLastSelected = std::move(sel.mSelected);
+    mLast = std::move(sel.mItems);
+
+    sel.mItems = std::move(mItems);
     sel.mSelected.clear();
     sel.mSelected.resize(sel.mItems.size());
-    mLast = std::move(sel.mItems);
-    sel.mItems = mItems;
 
     sel.sendToReceivers(&Receiver::onItems);
 }
@@ -255,7 +256,7 @@ void data::Selection::AddAction::perform(Model& model) {
     sel.mSelected.emplace_back();
 
     // size - 1 is the previous end; the receiver's current end.
-    sel.sendToReceivers(&Receiver::onAdd, sel.mItems.size() - 1);
+    sel.sendToReceivers(&Receiver::onInsert, sel.mItems.size() - 1);
 }
 
 void data::Selection::AddAction::retract(Model& model) {
@@ -299,6 +300,6 @@ void data::Selection::RemoveAction::retract(Model& model) {
         mLastSelected
     );
 
-    sel.sendToReceivers(&Receiver::onAdd, mIdx);
+    sel.sendToReceivers(&Receiver::onInsert, mIdx);
 }
 

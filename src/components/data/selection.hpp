@@ -131,9 +131,9 @@ protected:
     virtual void onItems() {}
 
     /**
-     * Item Added
+     * Item Inserted
      */
-    virtual void onAdd(uint32) {}
+    virtual void onInsert(uint32) {}
 
     /**
      * Item Removed
@@ -144,7 +144,7 @@ protected:
 struct DATA_EXPORT Selection::Responder : Model::Responder<Selection> {
     Function<uint32> onSelection_;
     Function<> onItems_;
-    Function<uint32> onAdd_;
+    Function<uint32> onInsert_;
     Function<uint32> onRemove_;
 
 private:
@@ -156,8 +156,8 @@ private:
         if (onItems_) onItems_(context<Selection>());
     }
 
-    void onAdd(uint32 idx) override {
-        if (onAdd_) onAdd_(context<Selection>(), idx);
+    void onInsert(uint32 idx) override {
+        if (onInsert_) onInsert_(context<Selection>(), idx);
     }
 
     void onRemove(uint32 idx) override {
