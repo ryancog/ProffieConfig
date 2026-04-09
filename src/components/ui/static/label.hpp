@@ -19,7 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/string.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
 #include "ui/text.hpp"
