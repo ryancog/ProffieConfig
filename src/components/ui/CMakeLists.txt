@@ -36,7 +36,9 @@ add_library(ui SHARED
     controls/button.cpp
     controls/toggle_button.cpp
     controls/checkbox.cpp
+    controls/checklist.cpp
     controls/choice.cpp
+    controls/combobox.cpp
     controls/radios.cpp
     controls/segmented.cpp
     controls/stepper.cpp
