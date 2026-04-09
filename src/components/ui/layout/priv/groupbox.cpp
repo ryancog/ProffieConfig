@@ -61,7 +61,6 @@ void GroupBox::create(
     );
 #   ifdef __WXOSX__
     mPanel->MacClipsToBounds(false);
-    mPanel->SetBackgroundColour(wxTransparentColour);
 #   endif
     mPanel->SetSizer(mSizer);
 
