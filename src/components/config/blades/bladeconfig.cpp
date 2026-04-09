@@ -34,11 +34,21 @@ constexpr std::string_view NAME_STR{"Name"};
 constexpr std::string_view PRESETARR_STR{"PresetArray"};
 constexpr std::string_view ID_STR{"ID"};
 
+constexpr std::string_view BRIGHTNESS_STR{"Brightness"};
+constexpr std::string_view TYPE_STR{"Type"};
+constexpr std::string_view TYPES_STR{"Types"};
+
 } // namespace
 
 using namespace config::blades;
 
-Blade::Blade(data::Node *parent) : data::Node(parent) {
+Blade::Blade(data::Node *parent) :
+    data::Node(parent),
+    brightness_(this),
+    mType(this),
+    mTypes(this) {
+    CreationScope createScope(*this);
+
     data::Vector::Context types{mTypes};
     // Generic used as a dummy for unassigned.
     types.addCreate<WS281X>();
@@ -56,11 +66,17 @@ Blade::Blade(data::Node *parent) : data::Node(parent) {
 Blade::~Blade() = default;
 
 bool Blade::enumerate(const EnumFunc& func) {
-    assert(0); // TODO
+    if (func(brightness_, strID(BRIGHTNESS_STR), BRIGHTNESS_STR)) return true;
+    if (func(mType, strID(TYPE_STR), TYPE_STR)) return true;
+    if (func(mTypes, strID(TYPES_STR), TYPES_STR)) return true;
+    return false;
 }
 
-data::Model *Blade::find(uint64) {
-    assert(0); // TODO
+data::Model *Blade::find(uint64 id) {
+	if (id == strID(BRIGHTNESS_STR)) return &brightness_;
+	if (id == strID(TYPE_STR)) return &mType;
+	if (id == strID(TYPES_STR)) return &mTypes;
+    return nullptr;
 }
 
 WS281X& Blade::ws281x() {
