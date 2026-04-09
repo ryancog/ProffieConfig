@@ -19,14 +19,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config/config.hpp"
+#include "config/presets/array.hpp"
 #include "ui/dialog.hpp"
 #include "ui/types.hpp"
 
 struct PresetArrayDlg : pcui::Dialog {
-    PresetArrayDlg(wxWindow *, config::Config&);
+    PresetArrayDlg(wxWindow *, config::presets::Array&, bool mayCancel);
 
 private:
-    pcui::DescriptorPtr ui();
+    config::presets::Array& mArray;
+
+    pcui::DescriptorPtr ui(bool);
 };
 

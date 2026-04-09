@@ -19,108 +19,100 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-class RenameArrayDlg : pcui::Dialog {
-public:
-    RenameArrayDlg(
-        wxWindow *parent,
-        Config::Config& config,
-        Config::PresetArray& array,
-        const wxString& title,
-        bool buttons = false
-    ) : wxDialog(parent, wxID_ANY, title),
-        NotifyReceiver(this, array.notifyData),
-        mConfig{config}, mArray{array} {
-        auto *sizer{new wxBoxSizer(wxVERTICAL)};
-        auto *entry{new pcui::Text(
-            this,
-            array.name,
-            0,
-            false,
-            _("Name")
-        )};
-        auto *emptyText{new wxStaticText(
-            this,
-            eID_Empty_Text,
-            _("Empty Array Name")
-        )};
-        auto *dupText{new wxStaticText(
-            this,
-            eID_Dup_Text,
-            _("Duplicate Array Name")
-        )};
-        sizer->Add(
-            entry,
-            wxSizerFlags().Expand().Border(wxTOP | wxLEFT | wxRIGHT, 10)
-        );
-        sizer->Add(
-            emptyText,
-            wxSizerFlags().Right().Border(wxALL, 5)
-                .DoubleBorder(wxRIGHT)
-        );
-        sizer->Add(
-            dupText,
-            wxSizerFlags().Right().Border(wxALL, 5)
-                .DoubleBorder(wxRIGHT)
-        );
-        if (buttons) {
-            sizer->Add(
-                CreateStdDialogButtonSizer(wxOK | wxCANCEL),
-                wxSizerFlags().Expand().Border(wxTOP | wxBOTTOM, 10)
-            );
-        } else {
-            sizer->AddSpacer(10);
-        }
+#include "config/presets/array.hpp"
+#include "data/logic/adapter.hpp"
+#include "ui/build.hpp"
+#include "ui/controls/button.hpp"
+#include "ui/controls/text.hpp"
+#include "ui/helpers/dialog_buttons.hpp"
+#include "ui/helpers/labeled.hpp"
+#include "ui/layout/spacer.hpp"
+#include "ui/layout/stack.hpp"
+#include "ui/static/label.hpp"
+#include "ui/values.hpp"
 
-        entry->SetFocus();
+PresetArrayDlg::PresetArrayDlg(
+    wxWindow *parent,
+    config::presets::Array& array,
+    bool mayCancel
+) : pcui::Dialog(parent, wxID_ANY, _("Edit Preset Array")),
+    mArray{array} {
+    pcui::build(this, ui(mayCancel));
 
-        Bind(wxEVT_CHAR_HOOK, [this](wxKeyEvent& evt) {
-            auto *okButton{FindWindow(wxID_OK)};
-            if (
-                    (not okButton or okButton->IsEnabled()) and 
-                    evt.GetKeyCode() == WXK_RETURN and
-                    evt.GetKeyCode() == WXK_NUMPAD_ENTER
-               ) {
+    Bind(wxEVT_CHAR_HOOK, [this](wxKeyEvent& evt) {
+        if (
+                (evt.GetKeyCode() == WXK_RETURN or
+                evt.GetKeyCode() == WXK_NUMPAD_ENTER) and
+                data::Integer::ROContext{mArray.issues()}.val() == 0
+           ) {
+            EndModal(wxID_OK);
+        } else evt.Skip();
+    });
+}
+
+pcui::DescriptorPtr PresetArrayDlg::ui(bool mayCancel) {
+    using namespace config::presets;
+
+    return pcui::Stack{
+      .base_={
+        .minSize_={300, -1},
+        .border_={.size_=pcui::winEdgeSpacing(), .dirs_=wxALL},
+      },
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::Labeled{
+          .base_={.expand_=true},
+          .label_=_("Name"),
+          .orient_=wxVERTICAL,
+          .ctrl_=pcui::Text{
+            .win_={.base_={.expand_=true}},
+            .data_=mArray.name_,
+          }(),
+        }(),
+        pcui::Label{
+          .win_={
+            .base_={
+              .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+              .align_=wxALIGN_RIGHT,
+            },
+            .show_=mArray.issues() | data::logic::BitAnd{
+                .val_=Array::eIssue_Name_Empty
+            },
+          },
+          .label_=_("Preset Array must be named"),
+        }(),
+        pcui::Label{
+          .win_={
+            .base_={
+              .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+              .align_=wxALIGN_RIGHT,
+            },
+            .show_=mArray.issues() | data::logic::BitAnd{
+                .val_=Array::eIssue_Name_Duplicate
+            },
+          },
+          .label_=_("Preset Array has duplicate name"),
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::DialogButtons{
+          .base_={.expand_=true},
+          .ok_=pcui::Button{
+            .win_={
+              .enable_=mArray.issues() | data::logic::Equals{.val_=0},
+            },
+            .label_=mayCancel ? _("OK") : _("Close"),
+            .func_=[this]() {
                 EndModal(wxID_OK);
-            }
-
-            evt.Skip();
-        });
-
-        SetSizer(sizer);
-        initializeNotifier();
-    }
-
-private:
-    Config::Config& mConfig;
-    Config::PresetArray& mArray;
-
-    enum {
-        eID_Empty_Text = 2,
-        eID_Dup_Text,
-    };
-
-    void handleNotification(uint32) final {
-        bool duplicate{false};
-        for (const auto& otherArray : mConfig.presetArrays.arrays()) {
-            if (&*otherArray == &mArray) continue;
-
-            const auto otherArrayName{static_cast<string>(otherArray->name)};
-            const auto arrayName{static_cast<string>(mArray.name)};
-            if (arrayName == otherArrayName) {
-                duplicate = true;
-                break;
-            }
-        }
-        bool empty{static_cast<string>(mArray.name).empty()};
-
-        FindWindow(eID_Empty_Text)->Show(empty);
-        FindWindow(eID_Dup_Text)->Show(duplicate);
-        auto *okButton{FindWindow(wxID_OK)};
-        if (okButton) okButton->Enable(not duplicate and not empty);
-
-        SetMinSize({300, -1});
-        Layout();
-        Fit();
-    }
-};
+            },
+          }(),
+          .cancel_=mayCancel ? pcui::Button{
+            .label_=_("Cancel"),
+            .func_=[this]() {
+                EndModal(wxID_CANCEL);
+            },
+          }() : nullptr,
+        }(),
+      }
+    }();
+}
 

@@ -25,6 +25,8 @@
 #include "data/selector.hpp"
 #include "ui/types.hpp"
 
+#include "../dialogs/presetarray.hpp"
+
 struct PresetsPage {
     PresetsPage(config::Config&);
 
@@ -40,15 +42,17 @@ private:
     pcui::DescriptorPtr displayAndBlade();
     pcui::DescriptorPtr style();
 
+    void updateBladeStrings();
+
     config::Config& mConfig;
 
     data::Selector mArraySel;
     data::Selector mPresetSel;
     data::Selector mDisplaySel;
-
-    // These two are similar, but blade sel is persistent, and control-linked,
-    // while style sel is essentially just a conditional follower.
-    data::Selector mBladeSel;
     data::Selector mStyleSel;
+    
+    std::vector<data::String> mBladeStrings;
+
+    PresetArrayDlg *mDlg{nullptr};
 };
 

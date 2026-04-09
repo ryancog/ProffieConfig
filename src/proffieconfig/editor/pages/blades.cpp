@@ -25,8 +25,16 @@
 #include "data/logic/operators.hpp"
 #include "ui/build.hpp"
 #include "ui/controls/button.hpp"
+#include "ui/controls/checkbox.hpp"
+#include "ui/controls/checklist.hpp"
 #include "ui/controls/choice.hpp"
+#include "ui/controls/combobox.hpp"
+#include "ui/controls/radios.hpp"
+#include "ui/controls/stepper.hpp"
+#include "ui/controls/text.hpp"
+#include "ui/helpers/labeled.hpp"
 #include "ui/layout/group.hpp"
+#include "ui/layout/panel.hpp"
 #include "ui/layout/selector.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
@@ -35,6 +43,9 @@
 #include "ui/types.hpp"
 #include "ui/values.hpp"
 #include "utils/parent.hpp"
+#include "utils/string.hpp"
+
+#include "../special/splitvisualizer.hpp"
 
 BladesPage::BladesPage(config::Config& config) : mConfig{config} {
     mArraySel.choice_.responder().onChoice_ = [](
@@ -51,6 +62,8 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
             });
         }
 
+        data::Selector::Context bladeSel{page.mBladeSel};
+
         // Always detach first
         page.mIssueReceiver.detach();
 
@@ -60,10 +73,30 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
             auto& selModel{*bladeConfigs.children()[ctxt.idx()]};
             auto& selected{static_cast<BladeConfig&>(selModel)};
             page.mIssueReceiver.attach(selected.issues());
+
+            bladeSel.bind(&selected.blades_);
+        } else {
+            bladeSel.bind(nullptr);
         }
     };
 
+    const auto powerPinFilter{[](
+        const data::String::ROContext&, std::string& str, size& pos
+    ) {
+        uint32 numTrimmed{};
+        utils::trimCppName(
+            str,
+            false,
+            &numTrimmed,
+            pos
+        );
+
+        pos -= numTrimmed;
+    }};
+    mPowerPinAddField.setFilter(powerPinFilter);
+
     data::Selector::Context{mArraySel}.bind(&config.bladeConfigs_);
+    data::Selector::Context{mBladeSel}.bind(&config.bladeConfigs_);
 }
 
 pcui::DescriptorPtr BladesPage::ui() {
@@ -183,6 +216,10 @@ pcui::DescriptorPtr BladesPage::selection() {
                       data::Vector::Context vec{mConfig.bladeConfigs_};
                       auto& cfg{vec.addCreate<config::blades::BladeConfig>()};
 
+                      // For new creation, for things like this, it would make
+                      // more sense to create a temporary and then add it in
+                      // later on confirm, so as to not clutter the action
+                      // tree.
                       BladeArrayDlg dlg(ctxt.topLevel_, cfg, true);
 
                       auto res{dlg.ShowModal()};
@@ -224,6 +261,9 @@ pcui::DescriptorPtr BladesPage::selection() {
               .win_={.base_={.expand_=true, .proportion_=1}},
               .data_=mBladeSel,
               .style_=pcui::Choice::List{},
+              .labeler_=[](uint32 idx) -> pcui::Choice::Label {
+                  return wxString::Format(_("Blade %d"), idx);
+              }
             }(),
             pcui::Stack{
               .orient_=wxHORIZONTAL,
@@ -236,6 +276,13 @@ pcui::DescriptorPtr BladesPage::selection() {
                   .label_=pcui::syms::PLUS,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
+                  .func_=[this] {
+                      data::Selector::ROContext sel{mBladeSel};
+                      data::Vector::Context vec{
+                          const_cast<data::Vector&>(*sel.bound())
+                      };
+                      vec.addCreate<config::blades::Blade>();
+                  },
                 }(),
                 pcui::Button{
                   .win_={
@@ -245,6 +292,13 @@ pcui::DescriptorPtr BladesPage::selection() {
                   .label_=pcui::syms::MINUS,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
+                  .func_=[this] {
+                      data::Selector::ROContext sel{mBladeSel};
+                      data::Vector::Context vec{
+                          const_cast<data::Vector&>(*sel.bound())
+                      };
+                      vec.remove(*sel.selected());
+                  },
                 }(),
               }
             }(),
@@ -292,7 +346,14 @@ pcui::DescriptorPtr BladesPage::blades() {
             .orient_=wxVERTICAL,
             .children_={
               pcui::Choice{
-                .data_=blade.type()
+                .data_=blade.type(),
+                .labeler_=[](uint32 idx) -> pcui::Choice::Label {
+                    using enum config::blades::Blade::Type;
+                    if (idx == eWS281X) return "WS281X";
+                    if (idx == eSimple) return _("Simple");
+                    if (idx == eUnassigned) return _("Unassigned");
+                    return {};
+                }
               }(),
               pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
               pcui::Selector{
@@ -310,11 +371,200 @@ pcui::DescriptorPtr BladesPage::blades() {
 }
 
 pcui::DescriptorPtr BladesPage::simple(config::blades::Simple& simple) {
-    return pcui::Label{.label_="TODO"}();
+    return pcui::Stack{
+    }();
 }
 
 pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
-    return pcui::Label{.label_="TODO"}();
+    { data::Selector::Context ctxt{mSubBladeSel};
+        ctxt.bind(&ws281x.splits_);
+    }
+
+    auto& blade{*ws281x.parent()->parent<config::blades::Blade>()};
+
+    return pcui::Stack{
+      .base_={.expand_=true, .proportion_=1},
+      .orient_=wxHORIZONTAL,
+      .children_={
+        pcui::Group{
+          .base_={.expand_=true},
+          .orient_=wxVERTICAL,
+          .children_={
+            pcui::Labeled{
+              .base_={.expand_=true},
+              .label_=_("Number of Pixels"),
+              .orient_=wxHORIZONTAL,
+              .ctrl_=pcui::Stepper{
+                .data_=ws281x.length_,
+              }(),
+            }(),
+            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            pcui::Labeled{
+              .base_={.expand_=true},
+              .label_=_("Data Pin"),
+              .orient_=wxHORIZONTAL,
+              .ctrl_=pcui::ComboBox{
+                .win_={.base_={.proportion_=1}},
+                .data_=ws281x.dataPin_,
+                .defaults_={
+                  "bladePin",
+                  "blade2Pin",
+                  "blade3Pin",
+                  "blade4Pin",
+                }
+              }(),
+            }(),
+            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            pcui::Panel{
+              .win_={
+                .base_={.expand_=true},
+                .show_=not (ws281x.hasWhite_ | data::logic::IsSet{}),
+              },
+              .child_=pcui::Labeled{
+                .base_={
+                  .expand_=true,
+                  .border_={
+                    .size_=pcui::interControlSpacing(),
+                    .dirs_=wxBOTTOM
+                  },
+                },
+                .label_=_("Color Order"),
+                .orient_=wxHORIZONTAL,
+                .ctrl_=pcui::Choice{
+                  .win_={.base_={.proportion_=1}},
+                  .data_=ws281x.colorOrder3_,
+                }(),
+              }(),
+            }(),
+            pcui::Panel{
+              .win_={
+                .base_={.expand_=true},
+                .show_=ws281x.hasWhite_ | data::logic::IsSet{},
+              },
+              .child_=pcui::Labeled{
+                .base_={
+                  .expand_=true,
+                  .border_={
+                    .size_=pcui::interControlSpacing(),
+                    .dirs_=wxBOTTOM
+                  },
+                },
+                .label_=_("Color Order"),
+                .orient_=wxHORIZONTAL,
+                .ctrl_=pcui::Choice{
+                  .win_={.base_={.proportion_=1}},
+                  .data_=ws281x.colorOrder4_,
+                }(),
+              }(),
+            }(),
+            pcui::CheckBox{
+              .win_={.base_={.align_=wxALIGN_RIGHT}},
+              .label_=_("LEDs Have White Channel"),
+              .data_=ws281x.hasWhite_,
+            }(),
+            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            pcui::Labeled{
+              .base_={.expand_=true},
+              .label_=_("Brightness"),
+              .orient_=wxHORIZONTAL,
+              .ctrl_=pcui::Stepper{
+                .win_={.base_={.proportion_=1}},
+                .data_=blade.brightness_,
+              }(),
+            }(),
+            pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+            pcui::Group{
+              .base_={
+                .minSize_={-1, 200},
+                .expand_=true,
+                .proportion_=1,
+              },
+              .label_=_("Power Pins"),
+              .orient_=wxVERTICAL,
+              .children_={
+                pcui::CheckList{
+                  .win_={.base_={.expand_=true, .proportion_=1}},
+                  .data_=ws281x.powerPins_,
+                }(),
+                pcui::Stack{
+                  .base_={.expand_=true},
+                  .orient_=wxHORIZONTAL,
+                  .children_={
+                    pcui::Text{
+                      .win_={.base_={.proportion_=1}},
+                      .data_=mPowerPinAddField,
+                      .mode_=pcui::Text::SingleLine{
+                        .hint_=_("Pin Name"),
+                      },
+                    }(),
+                    pcui::Button{
+                      .win_={
+                        .base_={.minSize_=pcui::iconButtonSize()},
+                        .enable_=not (mPowerPinAddField |
+                            data::logic::IsEmpty{}),
+                      },
+                      .label_=pcui::syms::PLUS,
+                      .style_=pcui::Button::Style::Companion,
+                      .exactFit_=true,
+                    }(),
+                  }
+                }(),
+              }
+            }(),
+          }
+        }(),
+        pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+        SplitVisualizer{
+          .base_={.expand_=true},
+          .blade_=ws281x,
+          .subSel_=mSubBladeSel,
+        }(),
+        pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+        pcui::Group{
+          .base_={.expand_=true},
+          .label_=_("SubBlades"),
+          .orient_=wxVERTICAL,
+          .children_={
+            pcui::Choice{
+              .win_={.base_={.expand_=true}},
+              .data_=mSubBladeSel,
+              .emptyLabel_=_("Select SubBlade"),
+            }(),
+            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            pcui::Stack{
+              .base_={.expand_=true},
+              .orient_=wxHORIZONTAL,
+              .children_={
+                pcui::Button{
+                  .win_={.base_={.proportion_=1}},
+                  .label_=_("Add"),
+                }(),
+                pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+                pcui::Button{
+                  .win_={
+                    .base_={.proportion_=1},
+                    .enable_=mSubBladeSel.choice_ |
+                        data::logic::HasSelection{},
+                  },
+                  .label_=_("Remove"),
+                }(),
+              }
+            }(),
+            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            /*
+            pcui::Radios{
+              .win_={.base_={.expand_=true}},
+              .label_=_("Type"),
+              .data_=*nullptr,
+              .labels_={
+
+              },
+            }(),
+            */
+          }
+        }(),
+      }
+    }();
 }
 
 BladesPage::IssueReceiver::~IssueReceiver() {

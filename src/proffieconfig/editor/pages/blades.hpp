@@ -52,6 +52,9 @@ private:
 
     data::String mIssueLabel;
 
+    data::Selector mSubBladeSel;
+    data::String mPowerPinAddField;
+
     BladeArrayDlg *mDlg{nullptr};
 };
 
