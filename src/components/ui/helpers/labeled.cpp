@@ -33,9 +33,11 @@ DescriptorPtr Labeled::operator()() {
       .orient_=orient_,
       .children_={
         pcui::Label{
-          .win_={.base_={
-            .align_=orient_==wxHORIZONTAL ? wxALIGN_CENTER : wxALIGN_NOT
-          }},
+          .win_={
+            .base_={
+              .align_=orient_==wxHORIZONTAL? wxALIGN_CENTER : wxALIGN_NOT,
+            },
+          },
           .label_=label_,
         }(),
         pcui::If{
