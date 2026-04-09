@@ -114,6 +114,10 @@ struct DATA_EXPORT Node::CreationScope {
     ~CreationScope();
 
 private:
+    // TODO: I don't like having things like this in a "public" header
+    static bool creationLockEnum(data::Model&, uint64, std::string_view);
+    static bool creationUnlockEnum(data::Model&, uint64, std::string_view);
+
     Node& mNode;
 };
 

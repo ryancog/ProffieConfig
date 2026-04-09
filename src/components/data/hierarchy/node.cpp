@@ -109,8 +109,6 @@ void data::Node::sendDownAction(Action& action, ActionMode mode) {
 void data::Node::sendUpAction(Model& from, std::unique_ptr<Action>&& action) {
     std::scoped_lock scopeLock{pLock};
 
-    if (mCreationSuppression) return;
-
     action->mTrace.push_back(idFor(from));
 
     if (this == mRoot) {
@@ -123,9 +121,35 @@ void data::Node::sendUpAction(Model& from, std::unique_ptr<Action>&& action) {
 
 data::Node::CreationScope::CreationScope(Node& node) : mNode{node} {
     mNode.mCreationSuppression = true;
+    mNode.enumerate(creationLockEnum);
 }
 
 data::Node::CreationScope::~CreationScope() {
     mNode.mCreationSuppression = false;
+    mNode.enumerate(creationUnlockEnum);
+}
+
+bool data::Node::CreationScope::creationLockEnum(
+    data::Model& model, uint64, std::string_view
+) {
+    auto *node{dynamic_cast<data::Node *>(&model)};
+    if (not node) return false;
+
+    node->mCreationSuppression = true;
+    node->enumerate(creationLockEnum);
+
+    return false;
+}
+
+bool data::Node::CreationScope::creationUnlockEnum(
+    data::Model& model, uint64, std::string_view
+) {
+    auto *node{dynamic_cast<data::Node *>(&model)};
+    if (not node) return false;
+
+    node->mCreationSuppression = false;
+    node->enumerate(creationUnlockEnum);
+
+    return false;
 }
 
