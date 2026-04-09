@@ -30,7 +30,38 @@
 
 using namespace config::blades;
 
-WS281X::WS281X(data::Node *parent) : data::Node{parent} {
+namespace {
+
+constexpr std::string_view LENGTH_STR{"Length"};
+constexpr std::string_view DATAPIN_STR{"DataPin"};
+constexpr std::string_view COLORORDER3_STR{"ColorOrder3"};
+constexpr std::string_view COLORORDER4_STR{"ColorOrder4"};
+constexpr std::string_view HASWHITE_STR{"HasWhite"};
+constexpr std::string_view USERGB_STR{"UseRGBWithWhite"};
+constexpr std::string_view POWERPINS_STR{"PowerPins"};
+constexpr std::string_view SPLITS_STR{"Splits"};
+
+constexpr std::string_view TYPE_STR{"Type"};
+constexpr std::string_view START_STR{"Start"};
+constexpr std::string_view END_STR{"End"};
+constexpr std::string_view SEGMENTS_STR{"Segments"};
+constexpr std::string_view LIST_STR{"List"};
+constexpr std::string_view BRIGHTNESS_STR{"Brightness"};
+
+} // namespace
+
+WS281X::WS281X(data::Node *parent) :
+    data::Node(parent),
+    length_(this),
+    dataPin_(this),
+    colorOrder3_(this),
+    colorOrder4_(this),
+    hasWhite_(this),
+    useRgbWithWhite_(this),
+    powerPins_(this),
+    splits_(this) {
+    CreationScope createScope(*this);
+
     length_.responder().onSet_ = [](const data::Integer::ROContext& ctxt) {
         auto& ws281x{*ctxt.model().parent<WS281X>()};
         data::Vector::Context splits{ws281x.splits_};
@@ -129,21 +160,48 @@ WS281X::WS281X(data::Node *parent) : data::Node{parent} {
         order3.update(eOrder4_Max);
         order3.choose(eOrder4_GRBW);
     }
+
+    { data::String::Context pin{dataPin_};
+        pin.change("bladePin");
+    }
 }
 
 WS281X::~WS281X() = default;
 
 bool WS281X::enumerate(const EnumFunc& func) {
-    assert(0); // TODO
+	if (func(length_, strID(LENGTH_STR), LENGTH_STR)) return true;
+	if (func(dataPin_, strID(DATAPIN_STR), DATAPIN_STR)) return true;
+	if (func(colorOrder3_, strID(COLORORDER3_STR), COLORORDER3_STR)) return true;
+	if (func(colorOrder4_, strID(COLORORDER4_STR), COLORORDER4_STR)) return true;
+	if (func(hasWhite_, strID(HASWHITE_STR), HASWHITE_STR)) return true;
+	if (func(useRgbWithWhite_, strID(USERGB_STR), USERGB_STR)) return true;
+	if (func(powerPins_, strID(POWERPINS_STR), POWERPINS_STR)) return true;
+	if (func(splits_, strID(SPLITS_STR), SPLITS_STR)) return true;
+    return false;
 }
 
-data::Model *WS281X::find(uint64) {
-    assert(0); // TODO
+data::Model *WS281X::find(uint64 id) {
+	if (id == strID(LENGTH_STR)) return &length_;
+	if (id == strID(DATAPIN_STR)) return &dataPin_;
+	if (id == strID(COLORORDER3_STR)) return &colorOrder3_;
+	if (id == strID(COLORORDER4_STR)) return &colorOrder4_;
+	if (id == strID(HASWHITE_STR)) return &hasWhite_;
+	if (id == strID(USERGB_STR)) return &useRgbWithWhite_;
+	if (id == strID(POWERPINS_STR)) return &powerPins_;
+	if (id == strID(SPLITS_STR)) return &splits_;
+    return nullptr;
 }
 
 WS281X::Split::Split(data::Node *parent) :
     data::Node(parent),
-    type_(Type::eMax, this) {
+    type_(Type::eMax, this),
+    start_(this),
+    end_(this),
+    length_(this),
+    segments_(this),
+    list_(this),
+    brightness_(this) {
+    CreationScope createScope(*this);
 
     type_.responder().onSelection_ = [](
         const data::Exclusive::ROContext& ctxt, size sel
@@ -347,11 +405,23 @@ WS281X::Split::Split(data::Node *parent) :
 WS281X::Split::~Split() = default;
 
 bool WS281X::Split::enumerate(const EnumFunc& func) {
-    assert(0); // TODO
+	if (func(type_, strID(TYPE_STR), TYPE_STR)) return true;
+	if (func(start_, strID(START_STR), START_STR)) return true;
+	if (func(end_, strID(END_STR), END_STR)) return true;
+	if (func(segments_, strID(SEGMENTS_STR), SEGMENTS_STR)) return true;
+	if (func(list_, strID(LIST_STR), LIST_STR)) return true;
+	if (func(brightness_, strID(BRIGHTNESS_STR), BRIGHTNESS_STR)) return true;
+    return false;
 }
 
 data::Model *WS281X::Split::find(uint64 id) {
-    assert(0); // TODO
+	if (id == strID(TYPE_STR)) return &type_;
+	if (id == strID(START_STR)) return &start_;
+	if (id == strID(END_STR)) return &end_;
+	if (id == strID(SEGMENTS_STR)) return &segments_;
+	if (id == strID(LIST_STR)) return &list_;
+	if (id == strID(BRIGHTNESS_STR)) return &brightness_;
+    return nullptr;
 }
 
 std::vector<uint32> WS281X::Split::listValues() {
