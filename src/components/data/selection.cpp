@@ -140,7 +140,7 @@ void data::Selection::SelectAction::perform(Model& model) {
 
     sel.sendToReceivers(&Receiver::onSelection, mIdx);
 
-    if (sel.mPruner and sel.mPruner(sel, mIdx)) {
+    if (not mSelect and sel.mPruner and sel.mPruner(sel, mIdx)) {
         sel.processAction(std::make_unique<RemoveAction>(mIdx));
     }
 }
@@ -173,7 +173,11 @@ void data::Selection::ClearAction::perform(Model& model) {
     }
 
     for (size idx{0}; idx < sel.mSelected.size(); ++idx) {
-        if (not sel.mPruner or not sel.mPruner(sel, idx)) continue;
+        if (
+                sel.mSelected[idx] or
+                not sel.mPruner or
+                not sel.mPruner(sel, idx)
+           ) continue;
 
         sel.processAction(std::make_unique<RemoveAction>(idx));
     }
