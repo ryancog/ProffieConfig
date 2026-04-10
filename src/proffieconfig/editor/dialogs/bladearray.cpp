@@ -64,6 +64,9 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
               .tooltip_=_("The name of the blade array.\nEach name must be unique, but it is for reference only (and thus specific names will not make a difference)."),
             },
             .data_=mConfig.name_,
+            .mode_=pcui::Text::SingleLine{
+              .hint_=_("[default]"),
+            }
           }(),
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
@@ -152,6 +155,7 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
           .base_={.expand_=true},
           .ok_=pcui::Button{
             .label_=mayCancel ? _("OK") : _("Close"),
+            .default_=true,
             .func_=[this]() {
                 EndModal(wxID_OK);
             },

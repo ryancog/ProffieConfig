@@ -101,6 +101,7 @@ pcui::DescriptorPtr PresetArrayDlg::ui(bool mayCancel) {
               .enable_=mArray.issues() | data::logic::Equals{.val_=0},
             },
             .label_=mayCancel ? _("OK") : _("Close"),
+            .default_=true,
             .func_=[this]() {
                 EndModal(wxID_OK);
             },
