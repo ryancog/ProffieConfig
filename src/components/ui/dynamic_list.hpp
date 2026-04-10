@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/detail/dynamic_list.hpp
+ * components/ui/dynamic_list.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 
 #include "ui_export.h"
 
-namespace pcui::detail {
+namespace pcui {
 
 struct UI_EXPORT DynamicList : std::vector<DescriptorPtr> {
     DynamicList(const DynamicList&) = default;
@@ -52,5 +52,5 @@ struct UI_EXPORT DynamicList : std::vector<DescriptorPtr> {
     }
 };
 
-} // namespace pcui::detail
+} // namespace pcui
 

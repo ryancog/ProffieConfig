@@ -20,8 +20,8 @@
  */
 
 #include "ui/detail/descriptor.hpp"
-#include "ui/detail/dynamic_list.hpp"
 #include "ui/detail/general.hpp"
+#include "ui/dynamic_list.hpp"
 
 #include "ui_export.h"
 
@@ -36,7 +36,7 @@ struct UI_EXPORT Group {
     wxString label_;
     wxOrientation orient_{wxVERTICAL};
 
-    detail::DynamicList children_;
+    DynamicList children_;
 
     std::unique_ptr<detail::Descriptor> operator()();
 };

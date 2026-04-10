@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ui/detail/dynamic_list.hpp"
+#include "ui/dynamic_list.hpp"
 
 #include "ui_export.h"
 
@@ -29,12 +29,12 @@ struct UI_EXPORT If {
     struct Desc;
 
     bool cond_;
-    detail::DynamicList then_;
+    DynamicList then_;
 
-    detail::DynamicList operator()() {
+    DynamicList operator()() {
         return cond_
             ? std::move(then_)
-            : detail::DynamicList{};
+            : DynamicList{};
     }
 };
 

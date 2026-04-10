@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ui/detail/dynamic_list.hpp"
+#include "ui/dynamic_list.hpp"
 
 namespace pcui {
 
@@ -28,8 +28,8 @@ struct ForEach {
     const Container& of_;
     const Functor do_;
 
-    detail::DynamicList operator()() {
-        detail::DynamicList ret;
+    DynamicList operator()() {
+        DynamicList ret;
         ret.reserve(std::ranges::distance(of_.begin(), of_.end()));
         for (const auto& item : of_) {
             ret.add(do_(item));
