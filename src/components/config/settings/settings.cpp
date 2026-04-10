@@ -272,61 +272,61 @@ void config::Settings::buildMap() {
         mMap[strID(str)] = {str, &model};
     }};
 
-	process("MassStorage", massStorage_);
-	process("WebUSB", webUsb_);
+    process("MassStorage", massStorage_);
+    process("WebUSB", webUsb_);
 
-	process("BladeAwareness", bladeAwareness_);
+    process("BladeAwareness", bladeAwareness_);
 
-	process("Volume", volume_);
-	process("BootVolume.Enable", bootVolume_.enable_);
-	process("Bootvolume.Value", bootVolume_.value_);
+    process("Volume", volume_);
+    process("BootVolume.Enable", bootVolume_.enable_);
+    process("Bootvolume.Value", bootVolume_.value_);
 
-	process("Filter.Enable", filter_.enable_);
-	process("Filter.Cutoff", filter_.cutoff_);
-	process("Filter.Order", filter_.order_);
+    process("Filter.Enable", filter_.enable_);
+    process("Filter.Cutoff", filter_.cutoff_);
+    process("Filter.Order", filter_.order_);
 
-	process("ClashThreshold", clashThreshold_);
+    process("ClashThreshold", clashThreshold_);
 
-	process("PLIOffTime", pliOffTime_);
-	process("IdleOffTime", idleOffTime_);
-	process("MotionTimeout", motionTimeout_);
+    process("PLIOffTime", pliOffTime_);
+    process("IdleOffTime", idleOffTime_);
+    process("MotionTimeout", motionTimeout_);
 
-	process("DisableColorChange", disableColorChange_);
-	process("DisableBasicParserStyles", disableBasicParserStyles_);
-	process("DisableTalkie", disableTalkie_);
-	process("DisableDiagnosticCommands", disableDiagnosticCommands_);
+    process("DisableColorChange", disableColorChange_);
+    process("DisableBasicParserStyles", disableBasicParserStyles_);
+    process("DisableTalkie", disableTalkie_);
+    process("DisableDiagnosticCommands", disableDiagnosticCommands_);
 
-	process("SaveState", saveState_);
+    process("SaveState", saveState_);
 
-	process("EnableAllEditOptions", enableAllEditOptions_);
+    process("EnableAllEditOptions", enableAllEditOptions_);
 
-	process("SaveVolume", saveVolume_);
-	process("SavePreset", savePreset_);
-	process("SaveColorChange", saveColorChange_);
+    process("SaveVolume", saveVolume_);
+    process("SavePreset", savePreset_);
+    process("SaveColorChange", saveColorChange_);
 
-	process("EnableOLED", enableOled_);
+    process("EnableOLED", enableOled_);
 
-	process("Orientation", orientation_);
+    process("Orientation", orientation_);
 
-	process("OrientationRotation.X", orientationRotation_.x_);
-	process("OrientationRotation.Y", orientationRotation_.y_);
-	process("OrientationRotation.Z", orientationRotation_.z_);
+    process("OrientationRotation.X", orientationRotation_.x_);
+    process("OrientationRotation.Y", orientationRotation_.y_);
+    process("OrientationRotation.Z", orientationRotation_.z_);
 
-	process("DynamicBladeDimming", dynamicBladeDimming_);
-	process("DynamicBladeLength", dynamicBladeLength_);
-	process("DynamicClashThreshold", dynamicClashThreshold_);
+    process("DynamicBladeDimming", dynamicBladeDimming_);
+    process("DynamicBladeLength", dynamicBladeLength_);
+    process("DynamicClashThreshold", dynamicClashThreshold_);
 
-	process("SaveBladeDimming", saveBladeDimming_);
-	process("SaveClashThreshold", saveClashThreshold_);
+    process("SaveBladeDimming", saveBladeDimming_);
+    process("SaveClashThreshold", saveClashThreshold_);
 
-	process("AudioClashSuppression", audioClashSuppressionLevel_);
-	process("DontUseGyroForClash", dontUseGyroForClash_);
+    process("AudioClashSuppression", audioClashSuppressionLevel_);
+    process("DontUseGyroForClash", dontUseGyroForClash_);
 
-	process("NoRepeatRandom", noRepeatRandom_);
-	process("FemaleTalkie", femaleTalkie_);
-	process("KillOldPlayers", killOldPlayers_);
+    process("NoRepeatRandom", noRepeatRandom_);
+    process("FemaleTalkie", femaleTalkie_);
+    process("KillOldPlayers", killOldPlayers_);
 
-	process("Other", defines_);
+    process("Other", defines_);
 }
 
 config::Settings::ProcessDefinesAction::ProcessDefinesAction() = default;

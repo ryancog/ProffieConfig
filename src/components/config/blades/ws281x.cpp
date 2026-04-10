@@ -162,26 +162,26 @@ WS281X::WS281X(data::Node *parent) :
 WS281X::~WS281X() = default;
 
 bool WS281X::enumerate(const EnumFunc& func) {
-	if (func(length_, strID(LENGTH_STR), LENGTH_STR)) return true;
-	if (func(dataPin_, strID(DATAPIN_STR), DATAPIN_STR)) return true;
-	if (func(colorOrder3_, strID(COLORORDER3_STR), COLORORDER3_STR)) return true;
-	if (func(colorOrder4_, strID(COLORORDER4_STR), COLORORDER4_STR)) return true;
-	if (func(hasWhite_, strID(HASWHITE_STR), HASWHITE_STR)) return true;
-	if (func(useRgbWithWhite_, strID(USERGB_STR), USERGB_STR)) return true;
-	if (func(powerPins_, strID(POWERPINS_STR), POWERPINS_STR)) return true;
-	if (func(splits_, strID(SPLITS_STR), SPLITS_STR)) return true;
+    if (func(length_, strID(LENGTH_STR), LENGTH_STR)) return true;
+    if (func(dataPin_, strID(DATAPIN_STR), DATAPIN_STR)) return true;
+    if (func(colorOrder3_, strID(COLORORDER3_STR), COLORORDER3_STR)) return true;
+    if (func(colorOrder4_, strID(COLORORDER4_STR), COLORORDER4_STR)) return true;
+    if (func(hasWhite_, strID(HASWHITE_STR), HASWHITE_STR)) return true;
+    if (func(useRgbWithWhite_, strID(USERGB_STR), USERGB_STR)) return true;
+    if (func(powerPins_, strID(POWERPINS_STR), POWERPINS_STR)) return true;
+    if (func(splits_, strID(SPLITS_STR), SPLITS_STR)) return true;
     return false;
 }
 
 data::Model *WS281X::find(uint64 id) {
-	if (id == strID(LENGTH_STR)) return &length_;
-	if (id == strID(DATAPIN_STR)) return &dataPin_;
-	if (id == strID(COLORORDER3_STR)) return &colorOrder3_;
-	if (id == strID(COLORORDER4_STR)) return &colorOrder4_;
-	if (id == strID(HASWHITE_STR)) return &hasWhite_;
-	if (id == strID(USERGB_STR)) return &useRgbWithWhite_;
-	if (id == strID(POWERPINS_STR)) return &powerPins_;
-	if (id == strID(SPLITS_STR)) return &splits_;
+    if (id == strID(LENGTH_STR)) return &length_;
+    if (id == strID(DATAPIN_STR)) return &dataPin_;
+    if (id == strID(COLORORDER3_STR)) return &colorOrder3_;
+    if (id == strID(COLORORDER4_STR)) return &colorOrder4_;
+    if (id == strID(HASWHITE_STR)) return &hasWhite_;
+    if (id == strID(USERGB_STR)) return &useRgbWithWhite_;
+    if (id == strID(POWERPINS_STR)) return &powerPins_;
+    if (id == strID(SPLITS_STR)) return &splits_;
     return nullptr;
 }
 

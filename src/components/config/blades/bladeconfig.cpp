@@ -73,9 +73,9 @@ bool Blade::enumerate(const EnumFunc& func) {
 }
 
 data::Model *Blade::find(uint64 id) {
-	if (id == strID(BRIGHTNESS_STR)) return &brightness_;
-	if (id == strID(TYPE_STR)) return &mType;
-	if (id == strID(TYPES_STR)) return &mTypes;
+    if (id == strID(BRIGHTNESS_STR)) return &brightness_;
+    if (id == strID(TYPE_STR)) return &mType;
+    if (id == strID(TYPES_STR)) return &mTypes;
     return nullptr;
 }
 
