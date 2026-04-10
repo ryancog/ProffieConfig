@@ -56,11 +56,10 @@ protected:
     Root(const Root&);
 
     /**
-     * Used during object creation/setup phase, where many actions are taking
-     * place programmatically.
-     *
      * When this function is called, UI entry is denied and no actions are
-     * recorded. All actions are performed.
+     * recorded until unsuppressed. All actions are performed, but they do not
+     * get recorded into the undo/redo like normal (not that it matters since
+     * it's cleared soon anyways.)
      */
     void suppressActions();
 
