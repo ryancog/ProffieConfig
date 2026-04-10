@@ -68,12 +68,19 @@ WS281X::WS281X(data::Node *parent) :
                 }.set(true);
             }
 
-            data::Integer::Context{split.start_}.update({
-                .min_=0, .max_=ctxt.val() - 1
-            });
-            data::Integer::Context{split.end_}.update({
-                .min_=0, .max_=ctxt.val() - 1
-            });
+            { data::Integer::Context start{split.start_};
+                auto params{start.params()};
+                params.min_=0;
+                params.max_=ctxt.val() - 1;
+                start.update(params);
+            }
+
+            { data::Integer::Context end{split.end_};
+                auto params{end.params()};
+                params.min_=0;
+                params.max_=ctxt.val() - 1;
+                end.update(params);
+            }
         }
     };
 
@@ -196,6 +203,11 @@ WS281X::Split::Split(data::Node *parent) :
     brightness_(this) {
     CreationScope createScope(*this);
 
+    // The logic for the interactions between these controls is more fragile
+    // than I'd like, but I don't have a great idea of how to make it better,
+    // nor do I feel like spending a particularly large amount of time on it
+    // right now.
+
     type_.responder().onSelection_ = [](
         const data::Exclusive::ROContext& ctxt, size sel
     ) {
@@ -204,18 +216,24 @@ WS281X::Split::Split(data::Node *parent) :
         switch (static_cast<Type>(sel)) {
             case eStandard:
             case eReverse:
-                data::Integer::Context{split.length_}.update({
-                    .min_=1,
-                    .max_=std::numeric_limits<int32>::max(),
-                    .inc_=1
-                });
-                data::Integer::Context{split.end_}.update({
-                    .inc_=1
-                });
+                { data::Integer::Context length{split.length_};
+                    auto params{length.params()};
+                    params.min_=1;
+                    params.max_=std::numeric_limits<int32>::max();
+                    params.inc_=1;
+                    length.update(params);
+                }
+                { data::Integer::Context end{split.end_};
+                    auto params{end.params()};
+                    params.inc_=1;
+                    end.update(params);
+                }
                 break;
             case eStride: 
             case eZig_Zag:
-                // If segments is enabled, it re-called the handler...
+                // Update offset/inc and stuff for these.
+                split.segments_.responder().onSet_(split.segments_);
+                break;
             case eList:
                 break;
             default:
@@ -233,12 +251,13 @@ WS281X::Split::Split(data::Node *parent) :
         const auto startVal{ctxt.val()};
 
         data::Integer::Context end{split.end_};
-        end.update({
-            .off_=(startVal % segVal) - 1
-        });
+
+        auto endParams{end.params()};
+        endParams.off_=(startVal % segVal) - 1;
+        end.update(endParams);
 
         data::Integer::Context length{split.length_};
-        if (end.params().inc_ != 1) {
+        if (endParams.inc_ != 1) {
             const auto lenVal{length.val()};
             end.set(startVal + lenVal - 1);
         } else {
@@ -305,14 +324,20 @@ WS281X::Split::Split(data::Node *parent) :
 
         const auto startVal{data::Integer::Context{split.start_}.val()};
 
-        data::Integer::Context{split.length_}.update({
-            .min_=numSeg,
-            .max_=std::numeric_limits<int32>::max(),
-            .inc_=numSeg,
-        });
-        data::Integer::Context{split.end_}.update({
-            .inc_=numSeg, .off_=(startVal % numSeg) - 1
-        });
+        { data::Integer::Context length{split.length_};
+            auto params{length.params()};
+            params.min_=numSeg;
+            params.max_=std::numeric_limits<int32>::max();
+            params.inc_=numSeg;
+            length.update(params);
+        }
+
+        { data::Integer::Context end{split.end_};
+            auto params{end.params()};
+            params.inc_=numSeg;
+            params.off_=(startVal % numSeg) - 1;
+            end.update(params);
+        }
 
         split.root<Config>()->syncStyles();
     };
