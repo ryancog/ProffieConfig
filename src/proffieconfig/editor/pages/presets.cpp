@@ -235,7 +235,11 @@ pcui::DescriptorPtr PresetsPage::selection() {
                       PresetArrayDlg dlg(ctxt.topLevel_, cfg, true);
 
                       auto res{dlg.ShowModal()};
+
                       if (res != wxID_OK) {
+                          // Make sure the dialog is crippled before removing
+                          // the model it's linked to.
+                          pcui::cripple(&dlg);
                           vec.remove(vec.children().size() - 1);
                       } else {
                           data::Choice::Context{mArraySel.choice_}.choose(

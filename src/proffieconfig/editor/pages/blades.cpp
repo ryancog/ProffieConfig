@@ -259,6 +259,7 @@ pcui::DescriptorPtr BladesPage::selection() {
 
                       auto res{dlg.ShowModal()};
                       if (res != wxID_OK) {
+                          pcui::cripple(&dlg);
                           vec.remove(vec.children().size() - 1);
                       } else {
                           data::Choice::Context{mArraySel.choice_}.choose(
@@ -633,7 +634,12 @@ pcui::DescriptorPtr BladesPage::splits(config::blades::WS281X& ws281x) {
         pcui::Choice{
           .win_={.base_={.expand_=true}},
           .data_=mSubBladeSel,
-          .emptyLabel_=_("Select SubBlade"),
+          .style_=pcui::Choice::PopUp{
+            .unselected_=_("Select SubBlade"),
+          },
+          .labeler_=[](uint32 idx) -> pcui::Choice::Label {
+              return wxString::Format(_("SubBlade %d"), idx);
+          }
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Stack{
@@ -656,10 +662,15 @@ pcui::DescriptorPtr BladesPage::splits(config::blades::WS281X& ws281x) {
             pcui::Button{
               .win_={
                 .base_={.proportion_=1},
-                .enable_=mSubBladeSel.choice_ |
-                    data::logic::HasSelection{},
+                .enable_=mSubBladeSel.choice_ | data::logic::HasSelection{},
               },
               .label_=_("Remove"),
+              .func_=[this, &ws281x] {
+                  data::Selector::ROContext sel{mSubBladeSel};
+                  data::Vector::Context vec{ws281x.splits_};
+
+                  vec.remove(*sel.selected());
+              }
             }(),
           }
         }(),
@@ -693,6 +704,8 @@ pcui::DescriptorPtr BladesPage::splits(config::blades::WS281X& ws281x) {
 }
 
 pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
+    using enum config::blades::WS281X::Split::Type;
+
     return pcui::Stack{
       .base_={.expand_=true, .proportion_=1},
       .orient_=wxVERTICAL,
@@ -718,13 +731,23 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
             _("List"),
           },
         }(),
-        pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         pcui::Stack{
-          .base_={.expand_=true},
+          .base_={
+            .expand_=true,
+            .border_={.size_=pcui::interGroupSpacing(), .dirs_=wxTOP},
+          },
           .orient_=wxHORIZONTAL,
           .children_={
             pcui::Labeled{
-              .win_={.base_={.proportion_=1}},
+              .win_={
+                .base_={.proportion_=1},
+                .show_={
+                  (*split.type_.data()[eStandard] | data::logic::IsSet{}) or
+                  (*split.type_.data()[eReverse] | data::logic::IsSet{}) or
+                  (*split.type_.data()[eStride] | data::logic::IsSet{}) or
+                  (*split.type_.data()[eZig_Zag] | data::logic::IsSet{})
+                },
+              },
               .label_=_("Start"),
               .orient_=wxVERTICAL,
               .ctrl_=pcui::Stepper{
@@ -732,11 +755,15 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
                 .data_=split.start_,
               }(),
             }(),
+            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::Labeled{
               .win_={
-                .base_={
-                  .proportion_=1,
-                  .border_={.size_=pcui::interControlSpacing(), .dirs_=wxLEFT},
+                .base_={.proportion_=1},
+                .show_={
+                  (*split.type_.data()[eStandard] | data::logic::IsSet{}) or
+                  (*split.type_.data()[eReverse] | data::logic::IsSet{}) or
+                  (*split.type_.data()[eStride] | data::logic::IsSet{}) or
+                  (*split.type_.data()[eZig_Zag] | data::logic::IsSet{})
                 },
               },
               .label_=_("End"),
@@ -754,6 +781,12 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
               .expand_=true,
               .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
             },
+            .show_={
+              (*split.type_.data()[eStandard] | data::logic::IsSet{}) or
+              (*split.type_.data()[eReverse] | data::logic::IsSet{}) or
+              (*split.type_.data()[eStride] | data::logic::IsSet{}) or
+              (*split.type_.data()[eZig_Zag] | data::logic::IsSet{})
+            },
           },
           .label_=_("Length"),
           .orient_=wxVERTICAL,
@@ -767,6 +800,10 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
             .base_={
               .expand_=true,
               .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+            },
+            .show_={
+              (*split.type_.data()[eStride] | data::logic::IsSet{}) or
+              (*split.type_.data()[eZig_Zag] | data::logic::IsSet{})
             },
             .tooltip_=_("Stride length or number of ZigZag columns"),
           },
@@ -785,6 +822,7 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
               .expand_=true,
               .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
             },
+            .show_=*split.type_.data()[eList] | data::logic::IsSet{},
             .tooltip_=_("Data goes along each LED according to their order in the list")
           },
           .label_=_("List"),
