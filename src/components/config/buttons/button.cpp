@@ -21,7 +21,14 @@
 
 using namespace config::buttons;
 
-Button::Button(data::Node *parent) : data::Node(parent) {
+Button::Button(data::Node *parent) :
+    data::Node(parent),
+    type_(this),
+    event_(this),
+    pin_(this),
+    name_(this),
+    touch_(this) {
+    CreationScope createScope(*this);
     /*
     type.setUpdateHandler([this](uint32 id) {
         if (id != pcui::ChoiceData::eID_Selection) return;

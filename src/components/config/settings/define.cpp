@@ -28,6 +28,8 @@ Define::Define(
     std::string&& name,
     std::string&& value
 ) : data::Node(parent) {
+    CreationScope createScope(*this);
+
     const auto defineFilter{[](
         const data::String::ROContext& ctxt, std::string& str, size& pos
     ) {

@@ -33,7 +33,6 @@
 #include "ui/controls/checkbox.hpp"
 #include "ui/controls/radios.hpp"
 #include "ui/controls/stepper.hpp"
-#include "ui/detail/descriptor.hpp"
 #include "ui/layout/group.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/types.hpp"
@@ -318,6 +317,7 @@ Prop::Prop(const Prop& other, data::Node *parent) :
     mLayout{other.mLayout},
     mButtons{other.mButtons},
     mErrors{other.mErrors} {
+    CreationScope createScope(*this);
 
     mSettings.reserve(other.mSettings.size());
     for (const auto& setting : other.mSettings) {
@@ -479,7 +479,9 @@ Prop::Prop(std::string name, std::string filename, std::string info) :
     data::Node(nullptr),
     name_{std::move(name)},
     filename_{std::move(filename)},
-    info_{std::move(info)} {}
+    info_{std::move(info)} {
+    CreationScope(*this, true);
+}
 
 void Prop::recalculateRequires() {
     // Anything newly turned-on that results in disables?

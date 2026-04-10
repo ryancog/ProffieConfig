@@ -64,6 +64,7 @@ config::Settings::Settings(Config& parent) :
     femaleTalkie_(this),
     killOldPlayers_(this),
     defines_(this) {
+    CreationScope createScope(*this);
     buildMap();
 }
 

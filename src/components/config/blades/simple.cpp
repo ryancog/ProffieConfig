@@ -42,7 +42,9 @@ Simple::Simple(data::Node *parent) :
     star1_(*this),
     star2_(*this),
     star3_(*this),
-    star4_(*this) {}
+    star4_(*this) {
+    CreationScope(*this, true);
+}
 
 Simple::~Simple() = default;
 

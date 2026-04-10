@@ -49,6 +49,7 @@ BladeAwareness::BladeAwareness(Settings& settings) :
             .times_=this
         }
     } {
+    CreationScope createScope(*this);
     buildMap();
 }
 

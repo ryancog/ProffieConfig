@@ -326,7 +326,9 @@ Style::Style(Node *parent) :
 Style::Style(const Style& other, data::Node *parent) :
     data::Node(parent),
     comment_(other.comment_, this),
-    content_(other.content_, this) {}
+    content_(other.content_, this) {
+    CreationScope(*this, true);
+}
 
 bool Style::enumerate(const EnumFunc& func) {
     if (func(comment_, strID(COMMENT_STR), COMMENT_STR)) return true;
