@@ -59,8 +59,8 @@ struct Control : detail::DataWindow<wxRadioButton, data::Model::Receiver> {
 struct Manager : detail::DataWindow<priv::GroupBox, data::Exclusive::Receiver> {
     Manager(const detail::Scaffold& scaffold, const Radios& desc) {
         create(
-            wxVERTICAL,
             scaffold.childParent_,
+            wxVERTICAL,
             desc.label_
         );
 

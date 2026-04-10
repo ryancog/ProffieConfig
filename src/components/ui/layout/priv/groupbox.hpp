@@ -34,9 +34,17 @@ namespace pcui::priv {
 class GroupBox : public wxStaticBox {
 public:
     GroupBox();
-    GroupBox(wxOrientation orient, wxWindow *parent, const wxString& label);
+    GroupBox(
+        wxWindow *parent,
+        wxOrientation orient,
+        const wxString& label
+    );
 
-    void create(wxOrientation orient, wxWindow *parent, const wxString& label);
+    void create(
+        wxWindow *parent,
+        wxOrientation orient,
+        const wxString& label
+    );
 
     wxSizer *sizer();
     wxWindow *childParent();

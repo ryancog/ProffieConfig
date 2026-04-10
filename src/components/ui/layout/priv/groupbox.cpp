@@ -40,12 +40,14 @@ constexpr auto PADDING{
 GroupBox::GroupBox() = default;
 
 GroupBox::GroupBox(
-    wxOrientation orient, wxWindow *parent, const wxString& label
-) { create(orient, parent, label); }
+    wxWindow *parent, wxOrientation orient, const wxString& label
+) {
+    create(parent, orient, label);
+}
 
 void GroupBox::create(
-    wxOrientation orient,
     wxWindow *parent,
+    wxOrientation orient,
     const wxString& label
 ) {
     Create(parent, wxID_ANY, label);

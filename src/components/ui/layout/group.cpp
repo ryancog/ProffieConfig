@@ -22,9 +22,36 @@
 #include <wx/panel.h>
 #include <wx/statbox.h>
 
+#include "ui/detail/scaffold.hpp"
 #include "ui/layout/priv/groupbox.hpp"
+#include "ui/detail/window.hpp"
 
 using namespace pcui;
+
+namespace {
+
+struct Layout : detail::Window<priv::GroupBox> {
+    Layout(const detail::Scaffold& scaffold, const Group& desc) {
+        create(
+            scaffold.childParent_,
+            desc.orient_,
+            desc.label_
+        );
+
+        postCreation(scaffold, desc.win_);
+
+        detail::Scaffold childScaffold{scaffold};
+        childScaffold.childParent_ = childParent();
+        childScaffold.sizer_ = sizer();
+
+        for (const auto& child : desc.children_) {
+            sizer()->Add(child->build(childScaffold));
+        }
+    }
+
+};
+
+} // namespace
 
 std::unique_ptr<detail::Descriptor> Group::operator()() {
     return std::make_unique<Group::Desc>(std::move(*this));
@@ -34,20 +61,10 @@ Group::Desc::Desc(Group&& data) :
     Group{std::move(data)} {}
 
 wxSizerItem *Group::Desc::build(const detail::Scaffold& scaffold) const {
-    auto *box{new priv::GroupBox(
-        orient_, scaffold.childParent_, label_
-    )};
-
-    detail::Scaffold childScaffold{scaffold};
-    childScaffold.childParent_ = box->childParent();
-    childScaffold.sizer_ = box->sizer();
-
-    for (const auto& child : children_) {
-        box->sizer()->Add(child->build(childScaffold));
-    }
+    auto *box{new Layout(scaffold, *this)};
 
     auto *item{new wxSizerItem(box)};
-    detail::apply(base_, item);
+    detail::apply(win_.base_, item);
 
     return item;
 }
