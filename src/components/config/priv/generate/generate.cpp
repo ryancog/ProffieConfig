@@ -121,6 +121,15 @@ std::optional<std::string> runPreChecks(
 
     auto& logger{lBranch.createLogger("runPreChecks()")};
 
+    // Right now, the only way to save is in `.h`, but serializing to pconf
+    // would remove this restriction.
+    //
+    // It's a semi-arbitrary restriction, but there might be data loss and
+    // things like this.
+    if (data::Choice::ROContext{config.osVersion_.choice_}.idx() == -1) {
+        return errorMessage(logger, wxTRANSLATE("Config must have an OS Version selected."));
+    }
+
     const auto& settings{config.settings_};
     const auto& awareness{config.settings_.bladeAwareness_};
 
