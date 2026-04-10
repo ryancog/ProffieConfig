@@ -53,7 +53,7 @@ EditorWindow::EditorWindow(wxWindow *parent, config::Info& info) :
     mPresetsPage(*info.config()),
     mBladesPage(*info.config()) {
 
-    // createMenuBar();
+    createMenuBar();
     createToolBar();
 
     bindEvents();
