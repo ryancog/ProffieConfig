@@ -66,7 +66,6 @@ private:
     Bool mMoveDown;
     Bool mHasSel;
 
-    int32 mLastChoice;
     const Vector *mVec{nullptr};
 };
 

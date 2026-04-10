@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "utils/defer.hpp"
+
 namespace {
 
 constexpr cstring CHOICE_STRID{"Choice"};
@@ -91,35 +93,43 @@ void data::Selector::onInsert(size pos) {
     Choice::Context choice{choice_};
     Vector::ROContext vec{*mVec};
 
-    auto lastChoice{choice.idx()};
-
-    choice.update(vec.children().size());
-
-    if (lastChoice != -1 and lastChoice >= pos) {
-        ++lastChoice;
+    auto idx{choice.idx()};
+    if (idx >= static_cast<int32>(pos)) {
+        ++idx;
     }
-    choice.choose(lastChoice);
+
+    choice.update(vec.children().size(), idx);
 }
 
-void data::Selector::preRemove(size) {
-    // Prior to removal, clear the choice data so that any data held in proxy
-    // will be cleared. E.g. label data models
+void data::Selector::preRemove(size pos) {
+    // Prevent anything from being tampered with across the removal.
+    lock();
+    choice_.lock();
 
+    // Clear the choice if it's about to be removed.
     Choice::Context choice{choice_};
-    mLastChoice = choice.idx();
-    choice.update(0);
+    if (choice.idx() == pos) {
+        choice.unchoose();
+    }
 }
 
 void data::Selector::onRemove(size pos) {
+    defer {
+        choice_.unlock();
+        unlock();
+    };
+
     Choice::Context choice{choice_};
     Vector::ROContext vec{*mVec};
 
-    choice.update(vec.children().size());
+    auto idx{choice.idx()};
+    if (idx == static_cast<int32>(pos)) {
+        idx = -1;
+    } else if (idx > static_cast<int32>(pos)) {
+        --idx;
+    }
 
-    if (mLastChoice == pos) return;
-    if (mLastChoice != -1 and mLastChoice > pos) --mLastChoice;
-
-    choice.choose(mLastChoice);
+    choice.update(vec.children().size(), idx);
 }
 
 void data::Selector::onSwap(size pos) {
@@ -223,8 +233,7 @@ void data::Selector::BindAction::retract(Model& model) {
         sel.mVec->attachReceiver(static_cast<Vector::Receiver&>(sel));
 
         Vector::ROContext vec{*sel.mVec};
-        choice.update(vec.children().size());
-        choice.choose(mLastSel);
+        choice.update(vec.children().size(), mLastSel);
     } else {
         choice.update(0);
     }
