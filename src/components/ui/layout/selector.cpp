@@ -98,6 +98,13 @@ struct TrackerDummy : detail::IDataDriven,
             // modified.
             if (last_->IsWindow())
                 toDelete = last_->GetWindow();
+            // Similarly, removing a sizer won't delete the windows in the
+            // sizer. This is just a quirk of wxWidget's ownership model The
+            // parent window owns its children, not the sizer, so destroying
+            // the sizer doesn't normally remove the windows.
+            else if (last_->IsSizer()) {
+                last_->GetSizer()->DeleteWindows();
+            }
 
             // The old item needs to be removed from the sizer, but wxSizer
             // only provides remove by index or wxSizer *, and only provides
