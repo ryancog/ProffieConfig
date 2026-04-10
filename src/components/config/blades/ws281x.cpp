@@ -41,13 +41,6 @@ constexpr std::string_view USERGB_STR{"UseRGBWithWhite"};
 constexpr std::string_view POWERPINS_STR{"PowerPins"};
 constexpr std::string_view SPLITS_STR{"Splits"};
 
-constexpr std::string_view TYPE_STR{"Type"};
-constexpr std::string_view START_STR{"Start"};
-constexpr std::string_view END_STR{"End"};
-constexpr std::string_view SEGMENTS_STR{"Segments"};
-constexpr std::string_view LIST_STR{"List"};
-constexpr std::string_view BRIGHTNESS_STR{"Brightness"};
-
 } // namespace
 
 WS281X::WS281X(data::Node *parent) :
@@ -273,7 +266,7 @@ WS281X::Split::Split(data::Node *parent) :
 
     const auto lenFilter{[](const data::Integer::ROContext& ctxt, int32& len) {
         auto parentLen{data::Integer::Context{
-            ctxt.model().parent<Split>()->parent<WS281X>()->length_
+            ctxt.model().parent<Split>()->parent()->parent<WS281X>()->length_
         }.val()};
 
         if (len > parentLen) len = static_cast<int32>(parentLen);
@@ -283,7 +276,7 @@ WS281X::Split::Split(data::Node *parent) :
     length_.responder().onSet_ = [](const data::Integer::ROContext& ctxt) {
         auto& split{*ctxt.model().parent<Split>()};
         auto parentLen{data::Integer::Context{
-            split.parent<WS281X>()->length_
+            split.parent()->parent<WS281X>()->length_
         }.val()};
 
         data::Integer::Context start{split.start_};
@@ -301,7 +294,7 @@ WS281X::Split::Split(data::Node *parent) :
     segments_.responder().onSet_ = [](const data::Integer::ROContext& ctxt) {
         auto& split{*ctxt.model().parent<Split>()};
         auto parentLen{data::Integer::Context{
-            split.parent<WS281X>()->length_
+            split.parent()->parent<WS281X>()->length_
         }};
 
         const auto numSeg{ctxt.val()};
@@ -329,7 +322,7 @@ WS281X::Split::Split(data::Node *parent) :
     ) {
         auto& split{*ctxt.model().parent<Split>()};
         auto parentLen{data::Integer::Context{
-            split.parent<WS281X>()->length_
+            split.parent()->parent<WS281X>()->length_
         }.val()};
 
         for (auto idx{0}; idx < str.size(); ++idx) {
@@ -400,28 +393,26 @@ WS281X::Split::Split(data::Node *parent) :
         .min_=0, .max_=100
     });
     data::Integer::Context{brightness_}.set(100);
+
+    buildMap();
 }
 
 WS281X::Split::~Split() = default;
 
 bool WS281X::Split::enumerate(const EnumFunc& func) {
-	if (func(type_, strID(TYPE_STR), TYPE_STR)) return true;
-	if (func(start_, strID(START_STR), START_STR)) return true;
-	if (func(end_, strID(END_STR), END_STR)) return true;
-	if (func(segments_, strID(SEGMENTS_STR), SEGMENTS_STR)) return true;
-	if (func(list_, strID(LIST_STR), LIST_STR)) return true;
-	if (func(brightness_, strID(BRIGHTNESS_STR), BRIGHTNESS_STR)) return true;
+    for (auto& [id, data] : mMap) {
+        auto& [str, model]{data};
+        if (func(*model, id, str)) return true;
+    }
+
     return false;
 }
 
 data::Model *WS281X::Split::find(uint64 id) {
-	if (id == strID(TYPE_STR)) return &type_;
-	if (id == strID(START_STR)) return &start_;
-	if (id == strID(END_STR)) return &end_;
-	if (id == strID(SEGMENTS_STR)) return &segments_;
-	if (id == strID(LIST_STR)) return &list_;
-	if (id == strID(BRIGHTNESS_STR)) return &brightness_;
-    return nullptr;
+    auto iter{mMap.find(id)};
+    if (iter == mMap.end()) return nullptr;
+
+    return iter->second.second;
 }
 
 std::vector<uint32> WS281X::Split::listValues() {
@@ -449,5 +440,25 @@ std::vector<uint32> WS281X::Split::listValues() {
     }
 
     return ret;
+}
+
+void WS281X::Split::buildMap() {
+    const auto process{[this] (std::string_view str, data::Model& model) {
+        mMap[strID(str)] = {str, &model};
+    }};
+
+    process("Type", type_);
+
+    process("Type.Standard", *type_.data()[eStandard]);
+    process("Type.Reverse", *type_.data()[eReverse]);
+    process("Type.Stride", *type_.data()[eStride]);
+    process("Type.ZigZag", *type_.data()[eZig_Zag]);
+    process("Type.List", *type_.data()[eList]);
+
+    process("Start", start_);
+    process("End", end_);
+    process("Segments", segments_);
+    process("List", list_);
+    process("Brightness", brightness_);
 }
 

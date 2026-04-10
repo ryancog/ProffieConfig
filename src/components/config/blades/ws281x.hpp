@@ -124,6 +124,14 @@ struct CONFIG_EXPORT WS281X::Split : data::Node {
     [[nodiscard]] std::vector<uint32> listValues();
 
     data::Integer brightness_;
+
+private:
+    void buildMap();
+
+    std::unordered_map<
+        uint64,
+        std::pair<std::string_view, data::Model *>
+    > mMap;
 };
 
 } // namespace config::blades
