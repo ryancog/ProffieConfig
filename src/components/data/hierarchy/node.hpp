@@ -98,7 +98,7 @@ private:
      */
     void sendUpAction(Model& from, std::unique_ptr<Action>&&);
 
-    bool mCreationSuppression{false};
+    bool mCreationSuppression{true};
 };
 
 /**
@@ -108,9 +108,11 @@ private:
  *
  * This is similar to suppression at root, but primarily for dynamically added
  * objects, after initial root creation suppression.
+ *
+ * This object must be created in derived ctor.
  */
 struct DATA_EXPORT Node::CreationScope {
-    CreationScope(Node&);
+    CreationScope(Node&, bool skipChildren = false);
     ~CreationScope();
 
 private:
@@ -119,6 +121,7 @@ private:
     static bool creationUnlockEnum(data::Model&, uint64, std::string_view);
 
     Node& mNode;
+    bool mSkipChildren;
 };
 
 } // namespace data

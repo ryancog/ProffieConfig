@@ -119,14 +119,18 @@ void data::Node::sendUpAction(Model& from, std::unique_ptr<Action>&& action) {
     mParent->sendUpAction(*this, std::move(action));
 }
 
-data::Node::CreationScope::CreationScope(Node& node) : mNode{node} {
-    mNode.mCreationSuppression = true;
-    mNode.enumerate(creationLockEnum);
+data::Node::CreationScope::CreationScope(Node& node, bool skipChildren) :
+    mNode{node}, mSkipChildren{skipChildren} {
+    // The creation suppression begins true. The only way it is true is if the
+    // node was just created. This is the only time CreationScope is allowed to
+    // be created, so it's a sanity check.
+    assert(mNode.mCreationSuppression);
+    if (not mSkipChildren) mNode.enumerate(creationLockEnum);
 }
 
 data::Node::CreationScope::~CreationScope() {
     mNode.mCreationSuppression = false;
-    mNode.enumerate(creationUnlockEnum);
+    if (not mSkipChildren) mNode.enumerate(creationUnlockEnum);
 }
 
 bool data::Node::CreationScope::creationLockEnum(
