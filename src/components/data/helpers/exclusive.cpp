@@ -21,7 +21,7 @@
 
 data::Exclusive::Exclusive(
     std::vector<std::unique_ptr<data::Bool>> data, Node *parent
-) : mData{std::move(data)} {
+) : data::Model(parent), mData{std::move(data)} {
     assert(mData.size() > 1);
     for (auto& data : mData) {
         assert(data->parent() == parent);
