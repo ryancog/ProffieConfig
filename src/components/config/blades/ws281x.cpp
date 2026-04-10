@@ -457,6 +457,7 @@ void WS281X::Split::buildMap() {
 
     process("Start", start_);
     process("End", end_);
+    process("Length", length_);
     process("Segments", segments_);
     process("List", list_);
     process("Brightness", brightness_);
