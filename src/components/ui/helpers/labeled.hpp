@@ -26,19 +26,10 @@
 
 namespace pcui {
 
-// TODO: In the prior UI stuff I had, *everything* went onto an intermediary
-// panel, and the panel, the text, and the control were all tooltipped. The
-// panel was overkill, but it would be nice to be able to to have a way to
-// tooltip both the static text and control.
-//
-// I'd like the tooltip from ctrl_ (if it has one) to be applied to the label
-// automatically, but ctrl_ being provided as DescriptorPtr and just the
-// general way the window data is handled currently (as an arbitrary member)
-// makes this tricky.
-//
-// So yeah... todo I guess.
 struct UI_EXPORT Labeled {
-    detail::ChildBase base_;
+    struct Desc;
+
+    detail::ChildWindowBase win_;
 
     LabelData label_;
     wxOrientation orient_{wxVERTICAL};

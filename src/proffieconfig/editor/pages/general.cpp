@@ -131,37 +131,37 @@ pcui::DescriptorPtr GeneralPage::misc() {
       .orient_=wxVERTICAL,
       .children_={
         pcui::Labeled{
-          .base_={.expand_=true},
+          .win_={
+            .base_={.expand_=true},
+            .tooltip_=_("Time (in minutes) since last activity before PLI goes to sleep."),
+          },
           .label_=_("PLI Timeout (seconds)"),
           .ctrl_=pcui::Stepper{
-            .win_={
-              .base_={.expand_=true},
-              .tooltip_=_("Time (in minutes) since last activity before PLI goes to sleep."),
-            },
+            .win_={.base_={.expand_=true}},
             .data_=mConfig.settings_.pliOffTime_,
           }(),
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Labeled{
-          .base_={.expand_=true},
+          .win_={
+            .base_={.expand_=true},
+            .tooltip_=_("Time (in minutes) since last activity before accent LEDs go to sleep."),
+          },
           .label_=_("Idle Timeout (minutes)"),
           .ctrl_=pcui::Stepper{
-            .win_={
-              .base_={.expand_=true},
-              .tooltip_=_("Time (in minutes) since last activity before accent LEDs go to sleep."),
-            },
+            .win_={.base_={.expand_=true}},
             .data_=mConfig.settings_.idleOffTime_,
           }(),
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Labeled{
-          .base_={.expand_=true},
+          .win_={
+            .base_={.expand_=true},
+            .tooltip_=_("Time (in minutes) since last activity before gesture controls are disabled."),
+          },
           .label_=_("Motion Timeout (minutes)"),
           .ctrl_=pcui::Stepper{
-            .win_={
-              .base_={.expand_=true},
-              .tooltip_=_("Time (in minutes) since last activity before gesture controls are disabled."),
-            },
+            .win_={.base_={.expand_=true}},
             .data_=mConfig.settings_.motionTimeout_,
           }(),
         }(),
@@ -176,14 +176,14 @@ pcui::DescriptorPtr GeneralPage::installation() {
       .orient_=wxVERTICAL,
       .children_={
         pcui::Labeled{
-          .base_={.expand_=true},
+          .win_={
+            .base_={.expand_=true},
+            .tooltip_=_("Impact required to trigger a clash effect.\nMeasured in Gs."),
+          },
           .label_=_("Clash Threshold (Gs)"),
           .orient_=wxHORIZONTAL,
           .ctrl_=pcui::Stepper{
-            .win_={
-              .base_={.proportion_=1},
-              .tooltip_=_("Impact required to trigger a clash effect.\nMeasured in Gs."),
-            },
+            .win_={.base_={.proportion_=1}},
             .data_=mConfig.settings_.clashThreshold_,
           }(),
         }(),
@@ -194,14 +194,14 @@ pcui::DescriptorPtr GeneralPage::installation() {
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Labeled{
-          .base_={.expand_=true},
+          .win_={
+            .base_={.expand_=true},
+            .tooltip_=_("The orientation of the Proffieboard in the saber."),
+          },
           .label_=_("Orientation"),
           .orient_=wxHORIZONTAL,
           .ctrl_=pcui::Choice{
-            .win_={
-              .base_={.proportion_=1},
-              .tooltip_=_("The orientation of the Proffieboard in the saber."),
-            },
+            .win_={.base_={.proportion_=1}},
             .data_=mConfig.settings_.orientation_,
             .labeler_=[](uint32 idx) -> wxString {
                 switch (static_cast<config::Orientation>(idx)) {
@@ -452,14 +452,14 @@ pcui::DescriptorPtr GeneralPage::audio() {
       .orient_=wxVERTICAL,
       .children_={
         pcui::Labeled{
-          .base_={.expand_=true},
+          .win_={
+            .base_={.expand_=true},
+            .tooltip_=_("Maximum volume level.\nDo not increase unless you know what you are doing, as this can damage your speaker."),
+          },
           .label_=_("Max Volume"),
           .orient_=wxHORIZONTAL,
           .ctrl_=pcui::Stepper{
-            .win_={
-              .base_={.proportion_=1},
-              .tooltip_=_("Maximum volume level.\nDo not increase unless you know what you are doing, as this can damage your speaker."),
-            },
+            .win_={.base_={.proportion_=1}},
             .data_=mConfig.settings_.volume_,
           }(),
         }(),
@@ -495,7 +495,7 @@ pcui::DescriptorPtr GeneralPage::audio() {
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Labeled{
-          .base_={.expand_=true},
+          .win_={.base_={.expand_=true}},
           .label_=_("Cutoff"),
           .orient_=wxHORIZONTAL,
           .ctrl_=pcui::Stepper{
@@ -505,7 +505,7 @@ pcui::DescriptorPtr GeneralPage::audio() {
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Labeled{
-          .base_={.expand_=true},
+          .win_={.base_={.expand_=true}},
           .label_=_("Order"),
           .orient_=wxHORIZONTAL,
           .ctrl_=pcui::Stepper{
@@ -520,7 +520,7 @@ pcui::DescriptorPtr GeneralPage::audio() {
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Labeled{
-          .base_={.expand_=true},
+          .win_={.base_={.expand_=true}},
           .label_=_("Clash Suppression"),
           .orient_=wxHORIZONTAL,
           .ctrl_=pcui::Stepper{

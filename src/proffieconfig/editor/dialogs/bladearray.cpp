@@ -55,14 +55,14 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
       .orient_=wxVERTICAL,
       .children_={
         pcui::Labeled{
-          .base_={.expand_=true},
+          .win_={
+            .base_={.expand_=true},
+            .tooltip_=_("The name of the blade array.\nEach name must be unique, but it is for reference only (and thus specific names will not make a difference)."),
+          },
           .label_=_("Name"),
           .orient_=wxVERTICAL,
           .ctrl_=pcui::Text{
-            .win_={
-              .base_={.expand_=true},
-              .tooltip_=_("The name of the blade array.\nEach name must be unique, but it is for reference only (and thus specific names will not make a difference)."),
-            },
+            .win_={.base_={.expand_=true}},
             .data_=mConfig.name_,
             .mode_=pcui::Text::SingleLine{
               .hint_=_("[default]"),
@@ -75,17 +75,17 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
           .orient_=wxHORIZONTAL,
           .children_={
             pcui::Labeled{
-              .base_={
-                .minSize_={100, -1},
-                .proportion_=1,
+              .win_={
+                .base_={
+                  .minSize_={100, -1},
+                  .proportion_=1,
+                },
+                .tooltip_=_("The ID of the blade associated with the currently-selected blade array.\nThis value can be measured by typing \"id\" into the Serial Monitor."),
               },
               .label_=_("Blade ID"),
               .orient_=wxVERTICAL,
               .ctrl_=pcui::Stepper{
-                .win_={
-                  .base_={.expand_=true},
-                  .tooltip_=_("The ID of the blade associated with the currently-selected blade array.\nThis value can be measured by typing \"id\" into the Serial Monitor."),
-                },
+                .win_={.base_={.expand_=true}},
                 .data_=mConfig.id_,
               }(),
             }(),
@@ -99,9 +99,11 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::Labeled{
-              .base_={
-                .minSize_={100, -1},
-                .proportion_=2,
+              .win_={
+                .base_={
+                  .minSize_={100, -1},
+                  .proportion_=2,
+                },
               },
               .label_=_("Preset Array"),
               .orient_=wxVERTICAL,

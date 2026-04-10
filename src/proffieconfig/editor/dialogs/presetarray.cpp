@@ -61,7 +61,7 @@ pcui::DescriptorPtr PresetArrayDlg::ui(bool mayCancel) {
       .orient_=wxVERTICAL,
       .children_={
         pcui::Labeled{
-          .base_={.expand_=true},
+          .win_={.base_={.expand_=true}},
           .label_=_("Name"),
           .orient_=wxVERTICAL,
           .ctrl_=pcui::Text{

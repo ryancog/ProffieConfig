@@ -32,6 +32,7 @@
 #include "ui/controls/button.hpp"
 #include "ui/controls/choice.hpp"
 #include "ui/controls/text.hpp"
+#include "ui/helpers/labeled.hpp"
 #include "ui/layout/group.hpp"
 #include "ui/layout/selector.hpp"
 #include "ui/layout/spacer.hpp"
@@ -42,6 +43,7 @@
 #include "ui/types.hpp"
 #include "ui/values.hpp"
 #include "utils/parent.hpp"
+#include "wx/event.h"
 
 PresetsPage::PresetsPage(config::Config& config) : mConfig{config} {
     mArraySel.choice_.responder().onChoice_ = [](
@@ -402,82 +404,92 @@ pcui::DescriptorPtr PresetsPage::fields() {
       },
       .orient_=wxVERTICAL,
       .children_{
-        pcui::Label{
+        pcui::Labeled{
+          .win_={
+            .base_={.expand_=true},
+          },
           .label_=_("Preset Name"),
-        }(),
-        pcui::Selector{
-          .data_=mPresetSel,
-          .builder_=[](data::Model *model) {
-            pcui::Text text{
-              .win_={
-                .base_={.expand_=true},
-                .tooltip_=_(
-                    "The name for the preset.\n"
-                    "This appears on the OLED screen if no bitmap is supplied, otherwise it's just for reference.\n"
-                    "\"\\n\" means \"enter.\" Hitting \"enter\" will insert \"\\n\" which means a new line in the text displayed on the OLED.\n"
-                    "For example, \"my\\npreset\" will be displayed on the OLED as two lines, the first being \"my\" and the second being \"preset.\""
-                )
-              },
-              .mode_=pcui::Text::SingleLine{
-                .onEnter_=pcui::Text::InsertLiteral{},
-              },
-            };
+          .ctrl_=pcui::Selector{
+            .data_=mPresetSel,
+            .builder_=[](data::Model *model) {
+              pcui::Text text{
+                .win_={
+                  .base_={.expand_=true},
+                  .tooltip_=_(
+                      "The name for the preset.\n"
+                      "This appears on the OLED screen if no bitmap is supplied, otherwise it's just for reference.\n"
+                      "\"\\n\" means \"enter.\" Hitting \"enter\" will insert \"\\n\" which means a new line in the text displayed on the OLED.\n"
+                      "For example, \"my\\npreset\" will be displayed on the OLED as two lines, the first being \"my\" and the second being \"preset.\""
+                  )
+                },
+                .mode_=pcui::Text::SingleLine{
+                  .onEnter_=pcui::Text::InsertLiteral{},
+                },
+              };
 
-            if (model == nullptr) return text();
+              if (model == nullptr) return text();
 
-            auto *preset{static_cast<config::presets::Preset *>(model)};
-            text.data_ = preset->name_;
-            return text();
-          }
+              auto *preset{static_cast<config::presets::Preset *>(model)};
+              text.data_ = preset->name_;
+              return text();
+            }
+          }(),
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Label{
+        pcui::Labeled{
+          .win_={
+            .base_={.expand_=true},
+            .tooltip_=_(
+                "The path of the folder on the SD card where the font is stored.\n"
+                "If the font folder is inside another folder, it must be indicated by something like \"folderName/fontFolderName\".\n"
+                "In order to specify multiple directories (for example, to include a \"common\" directory), use a semicolon (;) to separate the folders (e.g. \"fontFolderName;common\")."
+            )
+          },
           .label_=_("Font Directory"),
-        }(),
-        pcui::Selector{
-          .data_=mPresetSel,
-          .builder_=[](data::Model *model) {
-            pcui::Text text{
-              .win_={
-                .base_={.expand_=true},
-                .tooltip_=_(
-                    "The path of the folder on the SD card where the font is stored.\n"
-                    "If the font folder is inside another folder, it must be indicated by something like \"folderName/fontFolderName\".\n"
-                    "In order to specify multiple directories (for example, to include a \"common\" directory), use a semicolon (;) to separate the folders (e.g. \"fontFolderName;common\")."
-                )
-              },
-            };
+          .ctrl_=pcui::Selector{
+            .data_=mPresetSel,
+            .builder_=[](data::Model *model) {
+              pcui::Text text{
+                .win_={
+                  .base_={.expand_=true},
+                },
+              };
 
-            if (model == nullptr) return text();
+              if (model == nullptr) return text();
 
-            auto *preset{static_cast<config::presets::Preset *>(model)};
-            text.data_ = preset->fontDir_;
-            return text();
-          }
+              auto *preset{static_cast<config::presets::Preset *>(model)};
+              text.data_ = preset->fontDir_;
+              return text();
+            }
+          }(),
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Label{
+        pcui::Labeled{
+          .win_={
+            .base_={.expand_=true},
+            .tooltip_=_(
+                "The path of the track file on the SD card. May be empty.\n"
+                "If the track is directly inside one of the folders specified in \"Font Directory\" then only the name of the track file is required."
+            ),
+          },
           .label_=_("Track File"),
-        }(),
-        pcui::Selector{
-          .data_=mPresetSel,
-          .builder_=[](data::Model *model) {
-            pcui::Text text{
-              .win_={
-                .base_={.expand_=true},
-                .tooltip_=_(
-                    "The path of the track file on the SD card. May be empty.\n"
-                    "If the track is directly inside one of the folders specified in \"Font Directory\" then only the name of the track file is required."
-                )
-              },
-            };
+          .orient_=wxVERTICAL,
+          .ctrl_=pcui::Selector{
+            .data_=mPresetSel,
+            .builder_=[](data::Model *model) {
+              pcui::Text text{
+                .win_={
+                  .base_={.expand_=true},
+                },
+              };
 
-            if (model == nullptr) return text();
+              if (model == nullptr) return text();
 
-            auto *preset{static_cast<config::presets::Preset *>(model)};
-            text.data_ = preset->track_;
-            return text();
-          }
+              auto *preset{static_cast<config::presets::Preset *>(model)};
+              text.data_ = preset->track_;
+              return text();
+            }
+          }(),
         }(),
       }
     }();

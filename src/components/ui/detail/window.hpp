@@ -96,7 +96,9 @@ protected:
         mEnable = desc.enable_;
         if (mEnable) mEnableReceiver = std::make_unique<EnableReceiver>(this);
 
-        this->SetToolTip(desc.tooltip_);
+        if (desc.tooltip_.empty() and this->GetParent()) {
+            this->SetToolTip(this->GetParent()->GetToolTip());
+        } else this->SetToolTip(desc.tooltip_);
 
         if (scaffold.scrolled_) {
             const auto onWheel{[scrolled=scaffold.scrolled_](

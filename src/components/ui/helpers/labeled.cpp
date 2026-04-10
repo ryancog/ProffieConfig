@@ -20,6 +20,7 @@
  */
 
 #include "ui/helpers/if.hpp"
+#include "ui/layout/panel.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/static/label.hpp"
@@ -28,24 +29,27 @@
 using namespace pcui;
 
 DescriptorPtr Labeled::operator()() {
-    return pcui::Stack{
-      .base_=base_,
-      .orient_=orient_,
-      .children_={
-        pcui::Label{
-          .win_={
-            .base_={
-              .align_=orient_==wxHORIZONTAL? wxALIGN_CENTER : wxALIGN_NOT,
+    return pcui::Panel{
+      .win_=win_,
+      .child_=pcui::Stack{
+        .base_={.expand_=true, .proportion_=1},
+        .orient_=orient_,
+        .children_={
+          pcui::Label{
+            .win_={
+              .base_={
+                .align_=orient_==wxHORIZONTAL? wxALIGN_CENTER : wxALIGN_NOT,
+              },
             },
-          },
-          .label_=label_,
-        }(),
-        pcui::If{
-          .cond_=orient_==wxHORIZONTAL,
-          .then_=pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        }(),
-        std::move(ctrl_),
-      }
+            .label_=label_,
+          }(),
+          pcui::If{
+            .cond_=orient_==wxHORIZONTAL,
+            .then_=pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+          }(),
+          std::move(ctrl_),
+        }
+      }(),
     }();
 }
 

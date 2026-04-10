@@ -446,7 +446,7 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
           .orient_=wxVERTICAL,
           .children_={
             pcui::Labeled{
-              .base_={.expand_=true},
+              .win_={.base_={.expand_=true}},
               .label_=_("Number of Pixels"),
               .orient_=wxHORIZONTAL,
               .ctrl_=pcui::Stepper{
@@ -455,7 +455,7 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::Labeled{
-              .base_={.expand_=true},
+              .win_={.base_={.expand_=true}},
               .label_=_("Data Pin"),
               .orient_=wxHORIZONTAL,
               .ctrl_=pcui::ComboBox{
@@ -476,11 +476,13 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
                 .show_=not (ws281x.hasWhite_ | data::logic::IsSet{}),
               },
               .child_=pcui::Labeled{
-                .base_={
-                  .expand_=true,
-                  .border_={
-                    .size_=pcui::interControlSpacing(),
-                    .dirs_=wxBOTTOM
+                .win_={
+                  .base_={
+                    .expand_=true,
+                    .border_={
+                      .size_=pcui::interControlSpacing(),
+                      .dirs_=wxBOTTOM
+                    },
                   },
                 },
                 .label_=_("Color Order"),
@@ -510,11 +512,13 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
                 .show_=ws281x.hasWhite_ | data::logic::IsSet{},
               },
               .child_=pcui::Labeled{
-                .base_={
-                  .expand_=true,
-                  .border_={
-                    .size_=pcui::interControlSpacing(),
-                    .dirs_=wxBOTTOM
+                .win_={
+                  .base_={
+                    .expand_=true,
+                    .border_={
+                      .size_=pcui::interControlSpacing(),
+                      .dirs_=wxBOTTOM
+                    },
                   },
                 },
                 .label_=_("Color Order"),
@@ -551,7 +555,7 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::Labeled{
-              .base_={.expand_=true},
+              .win_={.base_={.expand_=true}},
               .label_=_("Brightness"),
               .orient_=wxHORIZONTAL,
               .ctrl_=pcui::Stepper{
@@ -720,7 +724,7 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
           .orient_=wxHORIZONTAL,
           .children_={
             pcui::Labeled{
-              .base_={.proportion_=1},
+              .win_={.base_={.proportion_=1}},
               .label_=_("Start"),
               .orient_=wxVERTICAL,
               .ctrl_=pcui::Stepper{
@@ -729,9 +733,11 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
               }(),
             }(),
             pcui::Labeled{
-              .base_={
-                .proportion_=1,
-                .border_={.size_=pcui::interControlSpacing(), .dirs_=wxLEFT},
+              .win_={
+                .base_={
+                  .proportion_=1,
+                  .border_={.size_=pcui::interControlSpacing(), .dirs_=wxLEFT},
+                },
               },
               .label_=_("End"),
               .orient_=wxVERTICAL,
@@ -743,9 +749,11 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
           }
         }(),
         pcui::Labeled{
-          .base_={
-            .expand_=true,
-            .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+          .win_={
+            .base_={
+              .expand_=true,
+              .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+            },
           },
           .label_=_("Length"),
           .orient_=wxVERTICAL,
@@ -755,38 +763,40 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
           }(),
         }(),
         pcui::Labeled{
-          .base_={
-            .expand_=true,
-            .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+          .win_={
+            .base_={
+              .expand_=true,
+              .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+            },
+            .tooltip_=_("Stride length or number of ZigZag columns"),
           },
           .label_=_("Segments"),
           .orient_=wxVERTICAL,
           .ctrl_=pcui::Stepper{
             .win_={
               .base_={.expand_=true},
-              .tooltip_=_("Stride length or number of ZigZag columns"),
             },
             .data_=split.segments_,
           }(),
         }(),
         pcui::Labeled{
-          .base_={
-            .expand_=true,
-            .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+          .win_={
+            .base_={
+              .expand_=true,
+              .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+            },
+            .tooltip_=_("Data goes along each LED according to their order in the list")
           },
           .label_=_("List"),
           .orient_=wxVERTICAL,
           .ctrl_=pcui::Text{
-            .win_={
-              .base_={.expand_=true},
-              .tooltip_=_("Data goes along each LED according to their order in the list")
-            },
+            .win_={.base_={.expand_=true}},
             .data_=split.list_,
           }(),
         }(),
         pcui::StretchSpacer{}(),
         pcui::Labeled{
-          .base_={.expand_=true},
+          .win_={.base_={.expand_=true}},
           .label_=_("Brightness"),
           .orient_=wxVERTICAL,
           .ctrl_=pcui::Stepper{
