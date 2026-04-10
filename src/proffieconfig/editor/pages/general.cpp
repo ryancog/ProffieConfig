@@ -72,7 +72,7 @@ pcui::DescriptorPtr GeneralPage::ui() {
 
 pcui::DescriptorPtr GeneralPage::setup() {
     return pcui::Group{
-      .base_={.expand_=true},
+      .win_={.base_={.expand_=true}},
       .label_=_("Setup"),
       .orient_=wxHORIZONTAL,
       .children_={
@@ -126,7 +126,7 @@ pcui::DescriptorPtr GeneralPage::setup() {
 
 pcui::DescriptorPtr GeneralPage::misc() {
     return pcui::Group{
-      .base_={.expand_=true, .proportion_=1},
+      .win_={.base_={.expand_=true, .proportion_=1}},
       .label_=_("Misc"),
       .orient_=wxVERTICAL,
       .children_={
@@ -171,7 +171,7 @@ pcui::DescriptorPtr GeneralPage::misc() {
 
 pcui::DescriptorPtr GeneralPage::installation() {
     return pcui::Group{
-      .base_={.expand_=true},
+      .win_={.base_={.expand_=true}},
       .label_=_("Installation"),
       .orient_=wxVERTICAL,
       .children_={
@@ -290,7 +290,7 @@ pcui::DescriptorPtr GeneralPage::installation() {
 
 pcui::DescriptorPtr GeneralPage::tweaks() {
     return pcui::Group{
-      .base_={.expand_=true},
+      .win_={.base_={.expand_=true}},
       .label_=_("Tweaks"),
       .orient_=wxHORIZONTAL,
       .children_={
@@ -370,7 +370,7 @@ pcui::DescriptorPtr GeneralPage::tweaks() {
 
 pcui::DescriptorPtr GeneralPage::editing() {
     return pcui::Group{
-      .base_={.expand_=true},
+      .win_={.base_={.expand_=true}},
       .label_=_("Editing"),
       .orient_=wxVERTICAL,
       .children_={

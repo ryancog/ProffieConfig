@@ -128,7 +128,7 @@ pcui::DescriptorPtr PresetsPage::selection() {
       .orient_=wxVERTICAL,
       .children_={
         pcui::Group{
-          .base_={.expand_=true},
+          .win_={.base_={.expand_=true}},
           .label_=_("Presets Array"),
           .orient_=wxVERTICAL,
           .children_={
@@ -262,7 +262,7 @@ pcui::DescriptorPtr PresetsPage::selection() {
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         pcui::Group{
-          .base_={.expand_=true, .proportion_=1},
+          .win_={.base_={.expand_=true, .proportion_=1}},
           .label_=_("Presets"),
           .orient_=wxHORIZONTAL,
           .children_={
@@ -419,7 +419,7 @@ pcui::DescriptorPtr PresetsPage::fields() {
                 )
               },
               .mode_=pcui::Text::SingleLine{
-                  .insertNewline_=true,
+                .onEnter_=pcui::Text::InsertLiteral{},
               },
             };
 
