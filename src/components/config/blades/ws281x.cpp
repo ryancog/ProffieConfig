@@ -115,8 +115,8 @@ WS281X::WS281X(data::Node *parent) :
 
         int32 newOrder3{static_cast<int32>(order4)};
         if (
-                order4 > eOrder4_White_First_Start and
-                order4 < eOrder4_White_First_End
+                order4 >= eOrder4_White_First_Start and
+                order4 <= eOrder4_White_First_End
            ) {
             newOrder3 -= eOrder4_White_First_Start;
         }
