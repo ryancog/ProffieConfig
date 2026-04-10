@@ -75,16 +75,16 @@ struct ControlBase : detail::DataWindow<Ctrl, data::Choice::Receiver>,
         });
     }
 
-    void onUpdate() override {
+    void onUpdate(data::Choice::Receiver::UpdateInfo info) override {
         const auto self{static_cast<Derived *>(this)};
         const auto choices{self->generateChoices(
             data::Choice::Receiver::context<data::Choice>().numChoices()
         )};
 
-        this->safeCall([this, choices] {
+        this->safeCall([this, choices, info] {
             auto sel{Ctrl::GetSelection()};
             Ctrl::Set(choices);
-            Ctrl::SetSelection(sel);
+            if (info.choicePreserved_) Ctrl::SetSelection(sel);
         });
     }
 
