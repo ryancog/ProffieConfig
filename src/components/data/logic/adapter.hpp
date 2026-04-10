@@ -23,6 +23,7 @@
 #include "data/choice.hpp"
 #include "data/number.hpp"
 #include "data/string.hpp"
+#include "data/vector.hpp"
 #include "data/logic/logic.hpp"
 
 #include "data_export.h"
@@ -45,6 +46,8 @@ DATA_EXPORT Element operator|(const data::Choice&, HasSelection);
 struct DATA_EXPORT IsEmpty {};
 
 DATA_EXPORT Element operator|(const data::String&, IsEmpty);
+
+DATA_EXPORT Element operator|(const data::Vector&, IsEmpty);
 
 struct DATA_EXPORT BitAnd {
     int32 val_;

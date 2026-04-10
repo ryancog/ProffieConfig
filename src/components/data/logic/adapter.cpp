@@ -122,6 +122,48 @@ auto data::logic::operator|(
 }
 
 auto data::logic::operator|(
+    const data::Vector& choice, IsEmpty
+) -> Element {
+    struct Adapter : detail::Base, data::Vector::Receiver {
+        Adapter(const data::Vector& vec) :
+            vec_{vec} {}
+        ~Adapter() override { detach(); }
+
+        void lock() override {
+            vec_.lock();
+        }
+
+        void unlock() override {
+            vec_.unlock();
+        }
+
+        bool doActivate() override {
+            data::Vector::ROContext ctxt{vec_};
+            attach(vec_);
+            return isTrue(ctxt);
+        }
+
+        void onInsert(size) override {
+            std::lock_guard scopeLock{*pLock};
+            onChange(isTrue(vec_));
+        }
+
+        void preRemove(size) override {
+            std::lock_guard scopeLock{*pLock};
+            onChange(isTrue(vec_));
+        }
+
+        static bool isTrue(const data::Vector::ROContext& ctxt) {
+            return ctxt.children().empty();
+        }
+
+        const Vector& vec_;
+    };
+
+    return std::make_unique<Adapter>(choice);
+}
+
+auto data::logic::operator|(
     const data::Integer& model, BitAnd val
 ) -> Element {
     struct Adapter : detail::Base, data::Integer::Receiver {
@@ -145,7 +187,7 @@ auto data::logic::operator|(
 
         void onSet() override {
             std::lock_guard scopeLock{*pLock};
-            Base::onChange(isTrue(context<Integer>().val()));
+            onChange(isTrue(context<Integer>().val()));
         }
 
         [[nodiscard]] bool isTrue(int32 val) const {
@@ -183,7 +225,7 @@ auto data::logic::operator|(
 
         void onSet() override {
             std::lock_guard scopeLock{*pLock};
-            Base::onChange(isTrue(context<Integer>().val()));
+            onChange(isTrue(context<Integer>().val()));
         }
 
         [[nodiscard]] bool isTrue(int32 val) const {
