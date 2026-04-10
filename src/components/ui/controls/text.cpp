@@ -35,16 +35,12 @@ struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
     Control(const detail::Scaffold& scaffold, const Text& desc) {
         wxString initial;
         long style{0};
-        bool handleEnter{false};
 
         if (desc.readOnly_) style |= wxTE_READONLY;
         if (desc.autoLink_) style |= wxTE_AUTO_URL;
 
         if (const auto *ptr{std::get_if<Text::SingleLine>(&desc.mode_)}) {
-            if (ptr->insertNewline_) {
-                handleEnter = true;
-                style |= wxTE_PROCESS_ENTER;
-            }
+            onEnter_ = ptr->onEnter_;
         } else {
             const auto& mode{std::get<Text::MultiLine>(desc.mode_)};
             style |= wxTE_PROCESS_TAB;
@@ -68,6 +64,10 @@ struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
 
         if (desc.data_.index() == 0) {
             style |= wxTE_READONLY;
+        }
+
+        if (onEnter_.index() != 0) {
+            style |= wxTE_PROCESS_ENTER;
         }
 
         Create(
@@ -106,7 +106,7 @@ struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
 
         Bind(wxEVT_TEXT, &Control::onText, this);
 
-        if (handleEnter) {
+        if (onEnter_.index() != 0) {
             Bind(wxEVT_TEXT_ENTER, &Control::onEnter, this);
         }
     }
@@ -136,8 +136,12 @@ struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
     }
 
     void onEnter(wxCommandEvent&) {
-        // Simply forward the work to normal onText
-        WriteText("\\n");
+        if (auto *ptr{std::get_if<std::function<void()>>(&onEnter_)}) {
+            (*ptr)();
+        } else if (std::get_if<Text::InsertLiteral>(&onEnter_)) {
+            // Simply forward the work to normal onText
+            WriteText("\\n");
+        }
     }
     
     void onChange() override {
@@ -189,6 +193,8 @@ struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
 
         return pos;
     }
+
+    Text::SingleLine::EnterAction onEnter_;
 };
 
 } // namespace

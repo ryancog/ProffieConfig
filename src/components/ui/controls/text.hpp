@@ -49,16 +49,26 @@ struct UI_EXPORT Text {
 
     text::detail::StyleData style_;
 
-    struct SingleLine {
-        /**
-         * Insert '\n' on enter.
-         */
-        bool insertNewline_;
+    /**
+     * Insert "\n" on enter.
+     */
+    struct InsertLiteral {};
 
+    struct SingleLine {
         /**
          * Placeholder text displayed when no text has been entered yet.
          */
         wxString hint_;
+
+        using EnterAction = std::variant<
+            std::monostate, std::function<void()>, InsertLiteral
+        >;
+
+        /**
+         * How to handle the enter key being pressed.
+         */
+        EnterAction onEnter_;
+
     };
 
     struct MultiLine {
