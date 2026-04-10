@@ -36,16 +36,7 @@ struct Static : detail::DataWindow<wxStaticText, data::String::Receiver> {
     Static(const detail::Scaffold& scaffold, const Label& desc) {
         const auto style{desc.win_.base_.align_};
 
-        if (const auto *ptr{std::get_if<wxString>(&desc.label_ )}) {
-            Create(
-                scaffold.childParent_,
-                wxID_ANY,
-                *ptr,
-                wxDefaultPosition,
-                wxDefaultSize,
-                style
-            );
-
+        const auto setup{[&] {
             if (desc.color_) {
                 color_ = desc.color_;
 
@@ -64,7 +55,22 @@ struct Static : detail::DataWindow<wxStaticText, data::String::Receiver> {
             }
 
             SetOwnFont(desc.style_.makeFont());
+            Wrap(desc.wrapWidth_);
+        }};
+
+        if (const auto *ptr{std::get_if<wxString>(&desc.label_ )}) {
+            Create(
+                scaffold.childParent_,
+                wxID_ANY,
+                *ptr,
+                wxDefaultPosition,
+                wxDefaultSize,
+                style
+            );
+
             postCreation(scaffold, desc.win_);
+            setup();
+
             return;
         } 
 
@@ -79,8 +85,8 @@ struct Static : detail::DataWindow<wxStaticText, data::String::Receiver> {
             style
         );
         
-        SetOwnFont(desc.style_.makeFont());
         postCreation(scaffold, desc.win_);
+        setup();
 
         attach(model);
     }

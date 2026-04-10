@@ -39,6 +39,7 @@ struct UI_EXPORT Label {
 
     text::detail::StyleData style_;
     color::Dynamic color_;
+    int32 wrapWidth_{-1};
 
     DescriptorPtr operator()();
 };
