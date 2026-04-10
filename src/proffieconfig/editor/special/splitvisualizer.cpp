@@ -53,6 +53,9 @@ struct Window : pcui::detail::IDataDriven, wxWindow {
     void preDestroyCripple() override;
     bool Layout() override;
 
+    void regenerateSplitData();
+    void recalcSizes();
+
     wxSize DoGetBestClientSize() const override;
 
     void paintEvent(wxPaintEvent&);
@@ -66,16 +69,19 @@ struct Window : pcui::detail::IDataDriven, wxWindow {
     static std::vector<wxColour> smIndexColors;
     static const wxColour& color(uint32 idx);
 
+    config::blades::WS281X& mBlade_;
+    data::Selector& mSubSel_;
+
     struct SplitData {
         uint32 start_;
         uint32 length_;
         uint32 splitIdx_;
         uint32 segments_;
     };
-    std::vector<SplitData> generateSplitData() const;
 
-    config::blades::WS281X& mBlade_;
-    data::Selector& mSubSel_;
+    std::vector<SplitData> splitData_;
+    int32 mSelectedSplit_{-1};
+    int32 mHoveredSplit_{-1};
 
     struct SplitSize {
         float64 start_;
@@ -88,10 +94,7 @@ struct Window : pcui::detail::IDataDriven, wxWindow {
         bool overlapEnd_{false};
     };
 
-    mutable std::vector<SplitSize> mSizes_;
-    mutable int32 mSelectedSplit_{-1};
-
-    int32 mHoveredSplit_{-1};
+    std::vector<SplitSize> mSizes_;
 };
 
 } // namespace
@@ -106,13 +109,13 @@ SplitVisualizer::Desc::Desc(SplitVisualizer&& vis) :
 wxSizerItem *SplitVisualizer::Desc::build(
     const pcui::detail::Scaffold& scaffold
 ) const {
-    auto *text{new Window(
+    auto *win{new Window(
         scaffold.childParent_,
         blade_,
         subSel_
     )};
 
-    auto *item{new wxSizerItem(text)};
+    auto *item{new wxSizerItem(win)};
     pcui::detail::apply(base_, item);
 
     return item;
@@ -136,7 +139,8 @@ Window::Window(
     Bind(wxEVT_LEFT_UP, &Window::mouseClick, this);
 
     SetAutoLayout(true);
-    Layout();
+
+    regenerateSplitData();
 }
 
 void Window::preDestroyCripple() {
@@ -144,25 +148,108 @@ void Window::preDestroyCripple() {
 }
 
 bool Window::Layout() {
+    recalcSizes();
     Refresh();
     return true;
 }
 
 wxSize Window::DoGetBestClientSize() const {
     static const wxSize defaultSize{50, 200};
+
+    uint32 maxSegments{0};
+    for (const auto& data : splitData_) {
+        maxSegments = std::max(data.segments_, maxSegments);
+    }
+
+    wxSize minSize{
+        static_cast<int32>(maxSegments * MIN_SEGMENT_SIZE),
+        static_cast<int32>(splitData_.size() * MIN_SEGMENT_SIZE)
+    };
+    minSize.IncTo(defaultSize);
+    return minSize;
+}
+
+void Window::regenerateSplitData() {
+    data::Vector::ROContext splitVec{mBlade_.splits_};
+    data::Integer::ROContext length{mBlade_.length_};
+
+    splitData_.clear();
+
+    if (splitVec.children().empty()) {
+        SplitData data;
+        data.start_ = 0;
+        data.length_ = length.val();
+        data.splitIdx_ = 0;
+        data.segments_ = 0;
+
+        splitData_.push_back(data);
+        return;
+    }
+
+    for (auto idx{0}; idx < splitVec.children().size(); ++idx) {
+        auto& split{static_cast<config::blades::WS281X::Split&>(
+            *splitVec.children()[idx]
+        )};
+
+        auto type{split.type_.selected()};
+        using enum config::blades::WS281X::Split::Type;
+
+        if (type == eStandard or type == eReverse) {
+            SplitData data;
+            data.start_ = data::Integer::ROContext{split.start_}.val();
+            data.length_ = data::Integer::ROContext{split.length_}.val();
+            data.segments_ = 0;
+            data.splitIdx_ = idx;
+            splitData_.push_back(data);
+        } else if (type == eZig_Zag or type == eStride) {
+            SplitData data;
+            data.start_ = data::Integer::ROContext{split.start_}.val();
+            data.length_ = data::Integer::ROContext{split.length_}.val();
+            data.segments_ = data::Integer::ROContext{split.segments_}.val();
+            data.splitIdx_ = idx;
+            splitData_.push_back(data);
+        } else if (type == eList) {
+            SplitData data;
+            data.start_ = std::numeric_limits<uint32>::max();
+
+            for (auto val : split.listValues()) {
+                if (
+                        data.start_ != std::numeric_limits<uint32>::max() and
+                        val == data.start_ + data.length_
+                   ) {
+                    ++data.length_;
+                    continue;
+                }
+
+                if (data.start_ != std::numeric_limits<uint32>::max()) {
+                    splitData_.push_back(data);
+                }
+
+                data.start_ = val;
+                data.length_ = 1;
+                data.segments_ = 0;
+                data.splitIdx_ = idx;
+            }
+
+            if (data.start_ != std::numeric_limits<uint32>::max()) {
+                splitData_.push_back(data);
+            }
+        }
+    }
+}
+
+void Window::recalcSizes() {
+    data::Integer::ROContext length{mBlade_.length_};
+
     mSizes_.clear();
 
-    data::Integer::ROContext length{mBlade_.length_};
-    data::Choice::ROContext subChoice{mSubSel_.choice_};
-
     const auto windowSize{GetSize()};
-    const auto splitData{generateSplitData()};
     std::vector<bool> dilationMap(length.val());
     float64 stdPixelSize{static_cast<float64>(windowSize.y) / length.val()};
 
     uint32 dilatedPixels{0};
     float64 dilatedSize{0};
-    for (const auto& data : splitData) {
+    for (const auto& data : splitData_) {
         if (data.length_ * stdPixelSize < MIN_SEGMENT_SIZE) {
             float64 requiredPixelSize{
                 static_cast<float64>(MIN_SEGMENT_SIZE) / data.length_
@@ -182,7 +269,7 @@ wxSize Window::DoGetBestClientSize() const {
         (windowSize.y - (dilatedPixels * dilatedSize)) / dynamicPixels
     };
     
-    for (const auto& data : splitData) {
+    for (const auto& data : splitData_) {
         SplitSize size;
         float64 pos{0};
         for (auto idx{0}; idx < data.start_ + data.length_; ++idx) {
@@ -195,7 +282,7 @@ wxSize Window::DoGetBestClientSize() const {
         size.segments_ = data.segments_;
         size.segmentSize_ = static_cast<float64>(windowSize.x) / size.segments_;
 
-        for (const auto& checkData : splitData) {
+        for (const auto& checkData : splitData_) {
             if (&data == &checkData) continue;
             auto end{data.start_ + data.length_};
             auto checkEnd{checkData.start_ + checkData.length_};
@@ -208,87 +295,6 @@ wxSize Window::DoGetBestClientSize() const {
         }
         mSizes_.push_back(size);
     }
-
-    mSelectedSplit_ = subChoice.idx();
-
-    uint32 maxSegments{0};
-    for (const auto& data : splitData) {
-        maxSegments = std::max(data.segments_, maxSegments);
-    }
-
-    wxSize minSize{
-        static_cast<int32>(maxSegments * MIN_SEGMENT_SIZE),
-        static_cast<int32>(splitData.size() * MIN_SEGMENT_SIZE)
-    };
-    minSize.IncTo(defaultSize);
-    return minSize;
-}
-
-std::vector<Window::SplitData>
-Window::generateSplitData() const {
-    data::Vector::ROContext splitVec{mBlade_.splits_};
-    data::Integer::ROContext length{mBlade_.length_};
-
-    if (splitVec.children().empty()) {
-        SplitData ret;
-        ret.start_ = 0;
-        ret.length_ = length.val();
-        ret.splitIdx_ = 0;
-        ret.segments_ = 0;
-        return {ret};
-    }
-
-    std::vector<SplitData> ret;
-    for (auto idx{0}; idx < splitVec.children().size(); ++idx) {
-        auto& split{static_cast<config::blades::WS281X::Split&>(
-            *splitVec.children()[idx]
-        )};
-
-        auto type{split.type_.selected()};
-        using enum config::blades::WS281X::Split::Type;
-
-        if (type == eStandard or type == eReverse) {
-            SplitData data;
-            data.start_ = data::Integer::ROContext{split.start_}.val();
-            data.length_ = data::Integer::ROContext{split.length_}.val();
-            data.segments_ = 0;
-            data.splitIdx_ = idx;
-            ret.push_back(data);
-        } else if (type == eZig_Zag or type == eStride) {
-            SplitData data;
-            data.start_ = data::Integer::ROContext{split.start_}.val();
-            data.length_ = data::Integer::ROContext{split.length_}.val();
-            data.segments_ = data::Integer::ROContext{split.segments_}.val();
-            data.splitIdx_ = idx;
-            ret.push_back(data);
-        } else if (type == eList) {
-            SplitData data;
-            data.start_ = std::numeric_limits<uint32>::max();
-            for (auto val : split.listValues()) {
-                if (
-                        data.start_ != std::numeric_limits<uint32>::max() and
-                        val == data.start_ + data.length_
-                   ) {
-                    ++data.length_;
-                    continue;
-                }
-
-                if (data.start_ != std::numeric_limits<uint32>::max()) {
-                    ret.push_back(data);
-                }
-
-                data.start_ = val;
-                data.length_ = 1;
-                data.segments_ = 0;
-                data.splitIdx_ = idx;
-            }
-            if (data.start_ != std::numeric_limits<uint32>::max()) {
-                ret.push_back(data);
-            }
-        }
-    }
-
-    return ret;
 }
 
 void Window::paintEvent(wxPaintEvent&) {
