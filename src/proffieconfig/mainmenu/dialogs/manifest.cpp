@@ -65,6 +65,7 @@ ManifestDialog::ManifestDialog(MainMenu *mainMenu) :
               .enable_=not (mText | data::logic::IsEmpty{}),
             },
             .label_=_("Save"),
+            .default_=true,
             .func_=[this] {
                 data::String::Context str{mText};
                 if (str.val() == STABLE_CHANNEL) state::manifestChannel.clear();

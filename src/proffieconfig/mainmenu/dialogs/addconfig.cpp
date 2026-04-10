@@ -208,6 +208,7 @@ pcui::DescriptorPtr AddConfigDialog::ui() {
               },
             },
             .label_=_("OK"),
+            .default_=true,
             .func_=[this] { EndModal(wxID_OK); }
           }(),
           .cancel_=pcui::Button{
