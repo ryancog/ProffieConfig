@@ -82,7 +82,7 @@ config::Config::Config() :
     mOsVersions(this),
     mPropSel(this),
     mBoardSel(this) {
-    suppressActions();
+    CreationScope createScope(*this);
 
     const auto propSelFilt{[](
         const data::Choice::ROContext& ctxt, int32& idx
@@ -94,8 +94,6 @@ config::Config::Config() :
     mRcvr = new SavedReceiver(*this);
 
     settings_.init();
-
-    unsuppressActions();
 }
 
 config::Config::~Config() {
