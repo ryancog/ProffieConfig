@@ -32,6 +32,8 @@ data::Choice::Choice(const Choice& other, Node *parent) :
     mNumChoices = other.mNumChoices;
     mIdx = other.mIdx;
 
+    mFilter = other.mFilter;
+
     mRsp = std::make_unique<Responder>(*other.mRsp);
     mRsp->attach(*this);
 }
