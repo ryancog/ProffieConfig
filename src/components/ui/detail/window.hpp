@@ -97,7 +97,10 @@ protected:
         if (mEnable) mEnableReceiver = std::make_unique<EnableReceiver>(this);
 
         if (desc.tooltip_.empty() and this->GetParent()) {
-            this->SetToolTip(this->GetParent()->GetToolTip());
+            // GetToolTip returns a ptr, and these tool tips cannot be shared
+            // across windows, so get the text and SetToolTip will create a new
+            // tip from it.
+            this->SetToolTip(this->GetParent()->GetToolTipText());
         } else this->SetToolTip(desc.tooltip_);
 
         if (scaffold.scrolled_) {
