@@ -19,8 +19,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/settings.h>
+
 #include "config/blades/bladeconfig.hpp"
 #include "config/blades/ws281x.hpp"
+#include "config/strings.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
 #include "ui/build.hpp"
@@ -75,9 +78,38 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
             page.mIssueReceiver.attach(selected.issues());
 
             bladeSel.bind(&selected.blades_);
+
+            data::Choice::Context selChoice{page.mBladeSel.choice_};
+            if (
+                    page.mLastBladeChoice != -1 and
+                    page.mLastBladeChoice < selChoice.numChoices()
+               ) {
+                selChoice.choose(page.mLastBladeChoice);
+            }
         } else {
             bladeSel.bind(nullptr);
         }
+    };
+
+    mBladeSel.choice_.responder().onChoice_ = [](
+        const data::Choice::ROContext& ctxt
+    ) {
+        auto& bladeSel{*ctxt.model().parent<data::Selector>()};
+        auto& page{utils::parent<&BladesPage::mBladeSel>(bladeSel)};
+
+        // Only preserve real choices.
+        if (ctxt.idx() != -1)
+            page.mLastBladeChoice = ctxt.idx();
+    };
+
+    mSubBladeSel.choice_.responder().onChoice_ = [](
+        const data::Choice::ROContext& ctxt
+    ) {
+        auto& subSel{*ctxt.model().parent<data::Selector>()};
+        auto& page{utils::parent<&BladesPage::mSubBladeSel>(subSel)};
+
+        if (ctxt.idx() != -1)
+            page.mLastSubChoice = ctxt.idx();
     };
 
     const auto powerPinFilter{[](
@@ -96,7 +128,10 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
     mPowerPinAddField.setFilter(powerPinFilter);
 
     data::Selector::Context{mArraySel}.bind(&config.bladeConfigs_);
-    data::Selector::Context{mBladeSel}.bind(&config.bladeConfigs_);
+}
+
+BladesPage::~BladesPage() {
+    mIssueReceiver.detach();
 }
 
 pcui::DescriptorPtr BladesPage::ui() {
@@ -129,7 +164,7 @@ pcui::DescriptorPtr BladesPage::selection() {
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         pcui::Group{
-          .base_={.expand_=true},
+          .win_={.base_={.expand_=true}},
           .label_=_("Blade Array"),
           .orient_=wxVERTICAL,
           .children_={
@@ -253,7 +288,7 @@ pcui::DescriptorPtr BladesPage::selection() {
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         pcui::Group{
-          .base_={.expand_=true, .proportion_=1},
+          .win_={.base_={.expand_=true, .proportion_=1}},
           .label_=_("Blades"),
           .orient_=wxVERTICAL,
           .children_={
@@ -378,16 +413,36 @@ pcui::DescriptorPtr BladesPage::simple(config::blades::Simple& simple) {
 pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
     { data::Selector::Context ctxt{mSubBladeSel};
         ctxt.bind(&ws281x.splits_);
+
+        data::Choice::Context selChoice{mSubBladeSel.choice_};
+        if (
+                mLastSubChoice != -1 and
+                mLastSubChoice < selChoice.numChoices()
+           ) {
+            selChoice.choose(mLastSubChoice);
+        }
     }
 
     auto& blade{*ws281x.parent()->parent<config::blades::Blade>()};
+
+    const auto onAddPowerPin{[this, &ws281x] {
+        data::String::Context entry{mPowerPinAddField};
+
+        // Could be empty coming from add field enter action.
+        if (entry.val().empty()) return;
+
+        data::Selection::Context powerPins{ws281x.powerPins_};
+
+        powerPins.select(std::string{entry.val()});
+        entry.clear();
+    }};
 
     return pcui::Stack{
       .base_={.expand_=true, .proportion_=1},
       .orient_=wxHORIZONTAL,
       .children_={
         pcui::Group{
-          .base_={.expand_=true},
+          .win_={.base_={.expand_=true}},
           .orient_=wxVERTICAL,
           .children_={
             pcui::Labeled{
@@ -433,6 +488,19 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
                 .ctrl_=pcui::Choice{
                   .win_={.base_={.proportion_=1}},
                   .data_=ws281x.colorOrder3_,
+                  .labeler_=[](uint32 idx) -> pcui::Choice::Label {
+                      switch (static_cast<config::ColorOrder3>(idx)) {
+                          using enum config::ColorOrder3;
+                          case eOrder3_GRB: return _("GRB");
+                          case eOrder3_GBR: return _("GBR");
+                          case eOrder3_BGR: return _("BGR");
+                          case eOrder3_BRG: return _("BRG");
+                          case eOrder3_RGB: return _("RGB");
+                          case eOrder3_RBG: return _("RBG");
+                          case eOrder3_Max: break;
+                      }
+                      return {};
+                  }
                 }(),
               }(),
             }(),
@@ -454,6 +522,25 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
                 .ctrl_=pcui::Choice{
                   .win_={.base_={.proportion_=1}},
                   .data_=ws281x.colorOrder4_,
+                  .labeler_=[](uint32 idx) -> pcui::Choice::Label {
+                      switch (static_cast<config::ColorOrder4>(idx)) {
+                          using enum config::ColorOrder4;
+                          case eOrder4_GRBW: return _("GRBW");
+                          case eOrder4_GBRW: return _("GBRW");
+                          case eOrder4_BGRW: return _("BGRW");
+                          case eOrder4_BRGW: return _("BRGW");
+                          case eOrder4_RGBW: return _("RGBW");
+                          case eOrder4_RBGW: return _("RBGW");
+                          case eOrder4_WGRB: return _("WGRB");
+                          case eOrder4_WGBR: return _("WGBR");
+                          case eOrder4_WBGR: return _("WBGR");
+                          case eOrder4_WBRG: return _("WBRG");
+                          case eOrder4_WRGB: return _("WRGB");
+                          case eOrder4_WRBG: return _("WRBG");
+                          case eOrder4_Max: break;
+                      }
+                      return {};
+                  }
                 }(),
               }(),
             }(),
@@ -474,10 +561,16 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
             }(),
             pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
             pcui::Group{
-              .base_={
-                .minSize_={-1, 200},
-                .expand_=true,
-                .proportion_=1,
+              .win_={
+                .base_={
+                  .minSize_={-1, 200},
+                  .expand_=true,
+                  .proportion_=1,
+                },
+                .tooltip_={
+                  _("The power pins to use for this blade.") + '\n' +
+                  _("WS281X blades can have as many as are desired, though 2 is generally enough for most.")
+                },
               },
               .label_=_("Power Pins"),
               .orient_=wxVERTICAL,
@@ -495,6 +588,7 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
                       .data_=mPowerPinAddField,
                       .mode_=pcui::Text::SingleLine{
                         .hint_=_("Pin Name"),
+                        .onEnter_=onAddPowerPin,
                       },
                     }(),
                     pcui::Button{
@@ -506,6 +600,7 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
                       .label_=pcui::syms::PLUS,
                       .style_=pcui::Button::Style::Companion,
                       .exactFit_=true,
+                      .func_=onAddPowerPin,
                     }(),
                   }
                 }(),
@@ -520,55 +615,187 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
           .subSel_=mSubBladeSel,
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
-        pcui::Group{
+        splits(ws281x),
+      }
+    }();
+}
+
+pcui::DescriptorPtr BladesPage::splits(config::blades::WS281X& ws281x) {
+    return pcui::Group{
+      .win_={.base_={.expand_=true}},
+      .label_=_("SubBlades"),
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::Choice{
+          .win_={.base_={.expand_=true}},
+          .data_=mSubBladeSel,
+          .emptyLabel_=_("Select SubBlade"),
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Stack{
           .base_={.expand_=true},
-          .label_=_("SubBlades"),
-          .orient_=wxVERTICAL,
+          .orient_=wxHORIZONTAL,
           .children_={
-            pcui::Choice{
-              .win_={.base_={.expand_=true}},
-              .data_=mSubBladeSel,
-              .emptyLabel_=_("Select SubBlade"),
-            }(),
-            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-            pcui::Stack{
-              .base_={.expand_=true},
-              .orient_=wxHORIZONTAL,
-              .children_={
-                pcui::Button{
-                  .win_={.base_={.proportion_=1}},
-                  .label_=_("Add"),
-                }(),
-                pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-                pcui::Button{
-                  .win_={
-                    .base_={.proportion_=1},
-                    .enable_=mSubBladeSel.choice_ |
-                        data::logic::HasSelection{},
-                  },
-                  .label_=_("Remove"),
-                }(),
+            pcui::Button{
+              .win_={.base_={.proportion_=1}},
+              .label_=_("Add"),
+              .func_=[this, &ws281x] {
+                  data::Vector::Context vec{ws281x.splits_};
+                  data::Choice::Context choice{mSubBladeSel.choice_};
+                  vec.addCreate<config::blades::WS281X::Split>();
+                  choice.choose(static_cast<int32>(
+                      vec.children().size() - 1
+                  ));
               }
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-            /*
-            pcui::Radios{
-              .win_={.base_={.expand_=true}},
-              .label_=_("Type"),
-              .data_=*nullptr,
-              .labels_={
-
+            pcui::Button{
+              .win_={
+                .base_={.proportion_=1},
+                .enable_=mSubBladeSel.choice_ |
+                    data::logic::HasSelection{},
               },
+              .label_=_("Remove"),
             }(),
-            */
+          }
+        }(),
+        pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+        pcui::Selector{
+          .data_=mSubBladeSel,
+          .builder_=[this](data::Model *model) -> pcui::DescriptorPtr {
+              if (model == nullptr) {
+                  return pcui::Stack{
+                    .base_={.expand_=true, .proportion_=1},
+                    .orient_=wxVERTICAL,
+                    .children_={
+                      pcui::StretchSpacer{}(),
+                      pcui::Label{
+                        .win_={.base_={.proportion_=1, .align_=wxALIGN_CENTER}},
+                        .label_=_("Add SubBlades to edit them here."),
+                        .color_=wxSYS_COLOUR_GRAYTEXT,
+                        .wrapWidth_=120,
+                      }(),
+                      pcui::StretchSpacer{}(),
+                    }
+                  }();
+              }
+
+              using Split = config::blades::WS281X::Split;
+              return split(static_cast<Split&>(*model));
           }
         }(),
       }
     }();
 }
 
-BladesPage::IssueReceiver::~IssueReceiver() {
-    detach();
+pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
+    return pcui::Stack{
+      .base_={.expand_=true, .proportion_=1},
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::Radios{
+          .win_={
+            .base_={.expand_=true},
+            .tooltip_=_(
+              "Standard: Split data into continuous sections.\n\n"
+              "Reverse: Identical to Standard, but reverses the bladestyle direction.\n\n"
+              "Stride: Useful for KR style blades where the data signal \"strides\" back and forth across sides.\n\n"
+              "ZigZag: Similar to Stride, but organizes data in the opposite manner perpendicular to the data signal.\n\n"
+              "List: Discrete LEDs to make part of a SubBlade."
+            ),
+          },
+          .label_=_("Type"),
+          .data_=split.type_,
+          .labels_={
+            _("Standard"),
+            _("Reverse"),
+            _("Stride"),
+            _("ZigZag"),
+            _("List"),
+          },
+        }(),
+        pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+        pcui::Stack{
+          .base_={.expand_=true},
+          .orient_=wxHORIZONTAL,
+          .children_={
+            pcui::Labeled{
+              .base_={.proportion_=1},
+              .label_=_("Start"),
+              .orient_=wxVERTICAL,
+              .ctrl_=pcui::Stepper{
+                .win_={.base_={.expand_=true}},
+                .data_=split.start_,
+              }(),
+            }(),
+            pcui::Labeled{
+              .base_={
+                .proportion_=1,
+                .border_={.size_=pcui::interControlSpacing(), .dirs_=wxLEFT},
+              },
+              .label_=_("End"),
+              .orient_=wxVERTICAL,
+              .ctrl_=pcui::Stepper{
+                .win_={.base_={.expand_=true}},
+                .data_=split.end_,
+              }(),
+            }(),
+          }
+        }(),
+        pcui::Labeled{
+          .base_={
+            .expand_=true,
+            .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+          },
+          .label_=_("Length"),
+          .orient_=wxVERTICAL,
+          .ctrl_=pcui::Stepper{
+            .win_={.base_={.expand_=true}},
+            .data_=split.length_,
+          }(),
+        }(),
+        pcui::Labeled{
+          .base_={
+            .expand_=true,
+            .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+          },
+          .label_=_("Segments"),
+          .orient_=wxVERTICAL,
+          .ctrl_=pcui::Stepper{
+            .win_={
+              .base_={.expand_=true},
+              .tooltip_=_("Stride length or number of ZigZag columns"),
+            },
+            .data_=split.segments_,
+          }(),
+        }(),
+        pcui::Labeled{
+          .base_={
+            .expand_=true,
+            .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+          },
+          .label_=_("List"),
+          .orient_=wxVERTICAL,
+          .ctrl_=pcui::Text{
+            .win_={
+              .base_={.expand_=true},
+              .tooltip_=_("Data goes along each LED according to their order in the list")
+            },
+            .data_=split.list_,
+          }(),
+        }(),
+        pcui::StretchSpacer{}(),
+        pcui::Labeled{
+          .base_={.expand_=true},
+          .label_=_("Brightness"),
+          .orient_=wxVERTICAL,
+          .ctrl_=pcui::Stepper{
+            .win_={.base_={.expand_=true}},
+            .data_=split.brightness_,
+          }(),
+        }(),
+      }
+    }();
 }
 
 void BladesPage::IssueReceiver::onSet() {
@@ -828,164 +1055,7 @@ wxSizer *BladesPage::createBladeSettings() {
         _("Power Pins")
     )};
     pixelPowerPins->SetMinSize(wxSize(-1, 200));
-    pixelPowerPins->SetToolTip(_("The power pins to use for this blade.\nWS281X blades can have as many as are desired (though 2 is generally enough for most blades)"));
-
-    auto *pinNameSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *powerPinName{new pcui::Text(
-        this,
-        config.bladeArrays.powerPinNameEntry,
-        wxTE_PROCESS_ENTER,
-        false,
-        _("Pin Name")
-    )};
-    auto *addPowerPin{new wxButton(
-        this,
-        ID_PinNameAdd,
-        "+",
-        wxDefaultPosition,
-        SMALLBUTTONSIZE,
-        wxBU_EXACTFIT
-    )};
-    pinNameSizer->Add(powerPinName, wxSizerFlags(1));
-    pinNameSizer->Add(addPowerPin, wxSizerFlags().Bottom());
-
-    pixelMainSizer->Add(length, wxSizerFlags().Expand());
-    pixelMainSizer->AddSpacer(5);
-    pixelMainSizer->Add(dataPin);
-    pixelMainSizer->AddSpacer(5);
-    pixelMainSizer->Add(colorOrder3, wxSizerFlags().Expand());
-    pixelMainSizer->Add(colorOrder4, wxSizerFlags().Expand());
-    pixelMainSizer->AddSpacer(5);
-    pixelMainSizer->Add(hasWhite, wxSizerFlags().Expand());
-    pixelMainSizer->Add(
-        whiteUseRGB,
-        wxSizerFlags().Expand().Border(wxTOP, 5)
-    );
-    pixelMainSizer->AddSpacer(10);
-    pixelMainSizer->Add(pixelBrightness, wxSizerFlags().Expand());
-    pixelMainSizer->AddSpacer(10);
-    pixelMainSizer->Add(pixelPowerPins, wxSizerFlags(1).Expand());
-    pixelMainSizer->AddSpacer(5);
-    pixelMainSizer->Add(pinNameSizer, wxSizerFlags().Expand());
-
-    auto *pixelSplitSizer{new pcui::StaticBox(
-        wxVERTICAL, this, _("SubBlades")
-    )};
-    auto *splitSelect{new pcui::Choice(
-        pixelSplitSizer->childParent(),
-        config.bladeArrays.splitSelectionProxy
-    )};
-    auto *splitButtonSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *addSplit{new wxButton(
-        pixelSplitSizer->childParent(),
-        ID_AddSplit,
-        "+",
-        wxDefaultPosition,
-        wxDefaultSize,
-        wxBU_EXACTFIT
-    )};
-    auto *removeSplit{new wxButton(
-        pixelSplitSizer->childParent(),
-        ID_RemoveSplit,
-        "-",
-        wxDefaultPosition,
-        wxDefaultSize,
-        wxBU_EXACTFIT
-    )};
-    splitButtonSizer->Add(addSplit, wxSizerFlags(1));
-    splitButtonSizer->AddSpacer(5);
-    splitButtonSizer->Add(removeSplit, wxSizerFlags(1));
-
-    auto *splitType{new pcui::Radios(
-        pixelSplitSizer->childParent(),
-        config.bladeArrays.splitTypeProxy,
-        { _("Standard"), _("Reverse"), _("Stride"), _("ZigZag"), _("List") },
-        _("Type")
-    )};
-    splitType->SetToolTip(_(
-        "Standard: Split data into continuous sections.\n\n"
-        "Reverse: Identical to Standard, but reverses the bladestyle direction.\n\n"
-        "Stride: Useful for KR style blades where the data signal \"strides\" back and forth across sides.\n\n"
-        "ZigZag: Similar to Stride, but organizes data in the opposite manner perpendicular to the data signal.\n\n"
-        "List: Discrete LEDs to make part of a SubBlade."
-    ));
-    
-    auto *splitStartEndSizer{new wxBoxSizer(wxHORIZONTAL)};
-    auto *splitStart{new pcui::Numeric(
-        pixelSplitSizer->childParent(),
-        config.bladeArrays.splitStartProxy,
-        _("Start")
-    )};
-    auto *splitEnd{new pcui::Numeric(
-        pixelSplitSizer->childParent(),
-        config.bladeArrays.splitEndProxy,
-        _("End")
-    )};
-    splitStartEndSizer->Add(splitStart, wxSizerFlags(1));
-    splitStartEndSizer->AddSpacer(5);
-    splitStartEndSizer->Add(splitEnd, wxSizerFlags(1));
-
-    auto *splitLength{new pcui::Numeric(
-        pixelSplitSizer->childParent(),
-        config.bladeArrays.splitLengthProxy,
-        _("Length")
-    )};
-    auto *splitSegments{new pcui::Numeric(
-        pixelSplitSizer->childParent(),
-        config.bladeArrays.splitSegmentsProxy,
-        _("Segments")
-    )};
-    splitSegments->SetToolTip(_("Stride length or number of ZigZag columns"));
-    auto *splitList{new pcui::Text(
-        pixelSplitSizer->childParent(),
-        config.bladeArrays.splitListProxy,
-        0,
-        false,
-        _("Pixel List")
-    )};
-    splitList->SetToolTip(_("Data goes along each LED according to their order in the list"));
-    auto *splitBrightness{new pcui::Numeric(
-        pixelSplitSizer->childParent(),
-        config.bladeArrays.splitBrightnessProxy,
-        _("Brightness"),
-        wxHORIZONTAL
-    )};
-
-    pixelSplitSizer->Add(splitSelect, wxSizerFlags().Expand());
-    pixelSplitSizer->AddSpacer(5);
-    pixelSplitSizer->Add(splitButtonSizer, wxSizerFlags().Expand());
-    pixelSplitSizer->AddSpacer(10);
-    pixelSplitSizer->Add(splitType, wxSizerFlags().Expand());
-    pixelSplitSizer->AddSpacer(10);
-    pixelSplitSizer->Add(
-        splitStartEndSizer, wxSizerFlags().Expand().Border(wxBOTTOM, 5)
-    );
-    pixelSplitSizer->Add(splitLength, wxSizerFlags().Expand());
-    pixelSplitSizer->Add(
-        splitSegments, wxSizerFlags().Expand().Border(wxTOP, 10)
-    );
-    pixelSplitSizer->Add(splitList, wxSizerFlags().Expand());
-    pixelSplitSizer->AddSpacer(10);
-    pixelSplitSizer->Add(splitBrightness, wxSizerFlags().Expand());
-
-    mPixelSizer->Add(pixelMainSizer, wxSizerFlags().Expand());
-    mPixelSizer->AddSpacer(10);
-    mPixelSizer->Add(
-        new SplitVisualizer(this, config.bladeArrays),
-        wxSizerFlags().Expand()
-    );
-    mPixelSizer->AddSpacer(10);
-    mPixelSizer->Add(pixelSplitSizer, wxSizerFlags(1).Expand());
-
-    setupSizer->Add(bladeType);
-    setupSizer->AddSpacer(10);
-    setupSizer->Add(mSimpleSizer, wxSizerFlags(1).Expand());
-    setupSizer->Add(mPixelSizer, wxSizerFlags(1).Expand());
-
-    settingsSizer->Add(noSelectText, wxSizerFlags().Center());
-    settingsSizer->Add(setupSizer, wxSizerFlags(1).Expand());
-
-    return settingsSizer;
+    pixelPowerPins->SetToolTip();
 }
 */
 

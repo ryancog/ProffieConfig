@@ -28,6 +28,7 @@
 
 struct BladesPage {
     BladesPage(config::Config&);
+    ~BladesPage();
 
     pcui::DescriptorPtr ui();
 
@@ -36,23 +37,27 @@ private:
     pcui::DescriptorPtr blades();
     pcui::DescriptorPtr simple(config::blades::Simple&);
     pcui::DescriptorPtr ws281x(config::blades::WS281X&);
+    pcui::DescriptorPtr splits(config::blades::WS281X&);
+    pcui::DescriptorPtr split(config::blades::WS281X::Split&);
 
     config::Config& mConfig;
 
     data::Selector mArraySel;
     data::Selector mBladeSel;
+    data::Selector mSubBladeSel;
+
+    // To try and preserve choice across various changes.
+    int32 mLastBladeChoice{-1};
+    int32 mLastSubChoice{-1};
 
     struct IssueReceiver : data::Integer::Receiver {
-        ~IssueReceiver() override;
         void onSet() override;
         void onAttach() override;
         void preDetach() override;
         void updateLabel();
     } mIssueReceiver;
-
     data::String mIssueLabel;
 
-    data::Selector mSubBladeSel;
     data::String mPowerPinAddField;
 
     BladeArrayDlg *mDlg{nullptr};
