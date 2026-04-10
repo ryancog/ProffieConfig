@@ -271,7 +271,7 @@ pcui::DescriptorPtr ui(
 
     const auto makeFileItem{[&](
         const Update::Changelog::ChangedFile& file
-    ) -> pcui::detail::DynamicList {
+    ) -> pcui::DynamicList {
         if (file.id.ignored) return {};
 
         auto fileItem{data.items.at(file.id)};
@@ -280,7 +280,7 @@ pcui::DescriptorPtr ui(
         auto section{[&](
             const std::string& sectName,
             std::vector<std::string> Update::ItemVersionData::*field
-        ) -> pcui::detail::DynamicList {
+        ) -> pcui::DynamicList {
             const auto versionsStart{
                 file.currentVersion ? 
                     std::next(fileItem.versions.find(file.currentVersion)) : 
@@ -401,7 +401,7 @@ pcui::DescriptorPtr ui(
               .style_=pcui::text::Style::Header,
             }(),
             pcui::Group{
-              .base_={.expand_=true, .proportion_=1},
+              .win_={.base_={.expand_=true, .proportion_=1}},
               .children_={
                 pcui::Scrolled{
                   .win_={
