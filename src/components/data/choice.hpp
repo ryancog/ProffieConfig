@@ -85,8 +85,10 @@ struct DATA_EXPORT Choice::Context : Model::Context, ROContext {
 
     /**
      * Update the number of choices available.
+     *
+     * Optionally provide new index.
      */
-    void update(uint32) const;
+    void update(uint32, int32 = -1) const;
 };
 
 struct DATA_EXPORT Choice::Receiver : Model::Receiver {
@@ -98,23 +100,27 @@ protected:
      */
     virtual void onChoice() {}
 
+    struct UpdateInfo {
+        bool choicePreserved_;
+    };
+
     /**
      * Number of choices updated.
      */
-    virtual void onUpdate() {}
+    virtual void onUpdate(UpdateInfo) {}
 };
 
 struct DATA_EXPORT Choice::Responder : Model::Responder<Choice> {
     Function<> onChoice_;
-    Function<> onUpdate_;
+    Function<UpdateInfo> onUpdate_;
 
 private:
     void onChoice() override {
         if (onChoice_) onChoice_(context<Choice>());
     }
 
-    void onUpdate() override {
-        if (onUpdate_) onUpdate_(context<Choice>());
+    void onUpdate(UpdateInfo info) override {
+        if (onUpdate_) onUpdate_(context<Choice>(), info);
     }
 };
 
@@ -131,7 +137,7 @@ private:
 };
 
 struct DATA_EXPORT Choice::UpdateAction : Action {
-    UpdateAction(uint32 num);
+    UpdateAction(uint32 num, int32 idx);
 
     bool setup(Model&) override;
     void perform(Model&) override;
@@ -140,7 +146,8 @@ struct DATA_EXPORT Choice::UpdateAction : Action {
 private:
     const uint32 mNum;
     uint32 mLast;
-    int32 mLastChoice;
+    int32 mIdx;
+    int32 mLastIdx;
 };
 
 } // namespace data

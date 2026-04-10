@@ -83,9 +83,9 @@ void data::Choice::Context::unchoose() const {
     choose(-1);
 }
 
-void data::Choice::Context::update(uint32 num) const {
+void data::Choice::Context::update(uint32 num, int32 idx) const {
     model().processAction(std::make_unique<UpdateAction>(
-        static_cast<int32>(num)
+        num, idx
     ));
 }
 
@@ -125,33 +125,47 @@ void data::Choice::ChoiceAction::retract(Model& model) {
     choice.sendToReceivers(&Receiver::onChoice);
 }
 
-data::Choice::UpdateAction::UpdateAction(uint32 num) : mNum{num} {}
+data::Choice::UpdateAction::UpdateAction(uint32 num, int32 idx) :
+    mNum{num}, mIdx{idx} {}
 
 bool data::Choice::UpdateAction::setup(Model& model) {
     auto& choice{static_cast<Choice&>(model)};
+    assert(mIdx >= -1 and mIdx < static_cast<int32>(mNum));
     return choice.mNumChoices != mNum;
 }
 
 void data::Choice::UpdateAction::perform(Model& model) {
     auto& choice{static_cast<Choice&>(model)};
 
+    Receiver::UpdateInfo info{
+        .choicePreserved_=choice.mIdx == mIdx
+    };
+
     mLast = choice.mNumChoices;
     choice.mNumChoices = mNum;
 
-    mLastChoice = choice.mIdx;
-    choice.mIdx = -1;
+    mLastIdx = choice.mIdx;
+    choice.mIdx = mIdx;
 
-    choice.sendToReceivers(&Receiver::onUpdate);
-    choice.sendToReceivers(&Receiver::onChoice);
+    choice.sendToReceivers(&Receiver::onUpdate, info);
+    if (not info.choicePreserved_) {
+        choice.sendToReceivers(&Receiver::onChoice);
+    }
 }
 
 void data::Choice::UpdateAction::retract(Model& model) {
     auto& choice{static_cast<Choice&>(model)};
 
-    choice.mIdx = mLastChoice;
+    Receiver::UpdateInfo info{
+        .choicePreserved_=choice.mIdx == mLastIdx
+    };
+
+    choice.mIdx = mLastIdx;
     choice.mNumChoices = mLast;
 
-    choice.sendToReceivers(&Receiver::onUpdate);
-    choice.sendToReceivers(&Receiver::onChoice);
+    choice.sendToReceivers(&Receiver::onUpdate, info);
+    if (not info.choicePreserved_) {
+        choice.sendToReceivers(&Receiver::onChoice);
+    }
 }
 
