@@ -155,6 +155,7 @@ pcui::DescriptorPtr BladesPage::selection() {
       .base_={
         .minSize_={200, -1},
         .expand_=true,
+        .proportion_=1,
       },
       .orient_=wxVERTICAL,
       .children_={
@@ -366,7 +367,7 @@ pcui::DescriptorPtr BladesPage::blades() {
               .win_={
                 .base_={
                   .minSize_={350, -1},
-                  .proportion_=1,
+                  .proportion_=2,
                   .align_=wxALIGN_CENTER,
                 },
               },
@@ -378,7 +379,7 @@ pcui::DescriptorPtr BladesPage::blades() {
 
         auto& blade{*static_cast<config::blades::Blade *>(model)};
         return pcui::Stack{
-            .base_={.expand_=true, .proportion_=1},
+            .base_={.expand_=true, .proportion_=2},
             .orient_=wxVERTICAL,
             .children_={
               pcui::Choice{
@@ -615,7 +616,7 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         SplitVisualizer{
-          .base_={.expand_=true},
+          .base_={.expand_=true, .proportion_=1},
           .blade_=ws281x,
           .subSel_=mSubBladeSel,
         }(),
@@ -627,7 +628,7 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
 
 pcui::DescriptorPtr BladesPage::splits(config::blades::WS281X& ws281x) {
     return pcui::Group{
-      .win_={.base_={.expand_=true}},
+      .win_={.base_={.expand_=true, .proportion_=4}},
       .label_=_("SubBlades"),
       .orient_=wxVERTICAL,
       .children_={
@@ -731,49 +732,44 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
             _("List"),
           },
         }(),
-        pcui::Stack{
-          .base_={
-            .expand_=true,
-            .border_={.size_=pcui::interGroupSpacing(), .dirs_=wxTOP},
+        pcui::Panel{
+          .win_={
+            .base_={
+              .expand_=true,
+              .border_={.size_=pcui::interGroupSpacing(), .dirs_=wxTOP},
+            },
+            .show_={
+              (*split.type_.data()[eStandard] | data::logic::IsSet{}) or
+              (*split.type_.data()[eReverse] | data::logic::IsSet{}) or
+              (*split.type_.data()[eStride] | data::logic::IsSet{}) or
+              (*split.type_.data()[eZig_Zag] | data::logic::IsSet{})
+            },
           },
-          .orient_=wxHORIZONTAL,
-          .children_={
-            pcui::Labeled{
-              .win_={
-                .base_={.proportion_=1},
-                .show_={
-                  (*split.type_.data()[eStandard] | data::logic::IsSet{}) or
-                  (*split.type_.data()[eReverse] | data::logic::IsSet{}) or
-                  (*split.type_.data()[eStride] | data::logic::IsSet{}) or
-                  (*split.type_.data()[eZig_Zag] | data::logic::IsSet{})
-                },
-              },
-              .label_=_("Start"),
-              .orient_=wxVERTICAL,
-              .ctrl_=pcui::Stepper{
-                .win_={.base_={.expand_=true}},
-                .data_=split.start_,
+          .child_=pcui::Stack{
+            .base_={.expand_=true, .proportion_=1},
+            .orient_=wxHORIZONTAL,
+            .children_={
+              pcui::Labeled{
+                .win_={.base_={.proportion_=1}},
+                .label_=_("Start"),
+                .orient_=wxVERTICAL,
+                .ctrl_=pcui::Stepper{
+                  .win_={.base_={.expand_=true}},
+                  .data_=split.start_,
+                }(),
               }(),
-            }(),
-            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-            pcui::Labeled{
-              .win_={
-                .base_={.proportion_=1},
-                .show_={
-                  (*split.type_.data()[eStandard] | data::logic::IsSet{}) or
-                  (*split.type_.data()[eReverse] | data::logic::IsSet{}) or
-                  (*split.type_.data()[eStride] | data::logic::IsSet{}) or
-                  (*split.type_.data()[eZig_Zag] | data::logic::IsSet{})
-                },
-              },
-              .label_=_("End"),
-              .orient_=wxVERTICAL,
-              .ctrl_=pcui::Stepper{
-                .win_={.base_={.expand_=true}},
-                .data_=split.end_,
+              pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+              pcui::Labeled{
+                .win_={.base_={.proportion_=1}},
+                .label_=_("End"),
+                .orient_=wxVERTICAL,
+                .ctrl_=pcui::Stepper{
+                  .win_={.base_={.expand_=true}},
+                  .data_=split.end_,
+                }(),
               }(),
-            }(),
-          }
+            }
+          }(),
         }(),
         pcui::Labeled{
           .win_={
