@@ -166,18 +166,26 @@ void data::detail::Number<T>::UpdateAction::perform(Model& model) {
     num.mValue = num.clamp(tmp);
 
     num.sendToReceivers(&Receiver::onUpdate);
-    num.sendToReceivers(&Receiver::onSet);
+
+    if (mLastValue != num.mValue) {
+        num.sendToReceivers(&Receiver::onSet);
+    }
 }
 
 template <typename T>
 void data::detail::Number<T>::UpdateAction::retract(Model& model) {
     auto& num{static_cast<Number&>(model)};
 
+    bool valChanged{num.mValue != mLastValue};
+
     num.mParams = mLast;
     num.mValue = mLastValue;
 
     num.sendToReceivers(&Receiver::onUpdate);
-    num.sendToReceivers(&Receiver::onSet);
+
+    if (valChanged) {
+        num.sendToReceivers(&Receiver::onSet);
+    }
 }
 
 template struct data::detail::Number<int32>;
