@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <map>
 #ifndef __WXMSW__
 #include <memory>
 #endif
@@ -34,9 +35,13 @@
 #include <wx/window.h>
 
 #include "config/blades/ws281x.hpp"
+#include "data/helpers/exclusive.hpp"
 #include "data/number.hpp"
 #include "data/selector.hpp"
+#include "data/string.hpp"
 #include "ui/detail/datadriven.hpp"
+#include "ui/utils.hpp"
+#include "utils/parent.hpp"
 #include "utils/rand.hpp"
 
 constexpr auto MIN_SEGMENT_SIZE{12};
@@ -66,11 +71,11 @@ struct Window : pcui::detail::IDataDriven, wxWindow {
     /**
      * Sure let's regenerate this every program run...
      */
-    static std::vector<wxColour> smIndexColors;
+    static std::vector<wxColour> sIndexColors;
     static const wxColour& color(uint32 idx);
 
-    config::blades::WS281X& mBlade_;
-    data::Selector& mSubSel_;
+    config::blades::WS281X& blade_;
+    data::Selector& subSel_;
 
     struct SplitData {
         uint32 start_;
@@ -80,8 +85,8 @@ struct Window : pcui::detail::IDataDriven, wxWindow {
     };
 
     std::vector<SplitData> splitData_;
-    int32 mSelectedSplit_{-1};
-    int32 mHoveredSplit_{-1};
+    int32 selectedSplit_{-1};
+    int32 hoveredSplit_{-1};
 
     struct SplitSize {
         float64 start_;
@@ -94,7 +99,46 @@ struct Window : pcui::detail::IDataDriven, wxWindow {
         bool overlapEnd_{false};
     };
 
-    std::vector<SplitSize> mSizes_;
+    std::vector<SplitSize> sizes_;
+
+    struct VecReceiver : data::Vector::Receiver {
+        void onInsert(size) override;
+        void preRemove(size) override;
+    } vecReceiver_;
+
+    struct SelReceiver : data::Choice::Receiver {
+        void onChoice() override;
+    } selChoiceReceiver_;
+
+    struct ExclReceiver : data::Exclusive::Receiver {
+        void onSelection(size) override;
+        Window *window_;
+    };
+
+    struct IntReceiver : data::Integer::Receiver {
+        void onSet() override;
+        Window *window_;
+    };
+
+    struct StrReceiver : data::String::Receiver {
+        void onChange() override;
+        Window *window_;
+    };
+
+    struct SplitReceivers {
+        ExclReceiver type_;
+        IntReceiver start_;
+        IntReceiver end_;
+        // start and end should cover length
+        IntReceiver segments_;
+        StrReceiver list_;
+    };
+    // Use a map so don't have to keep track of movement up/down, etc.
+    // That doesn't happen with splits currently, but still..
+    //
+    // The map is only accesses from ctor and vec receiver, so no extra
+    // locking is required.
+    std::map<data::Model *, SplitReceivers> splitReceiversMap_;
 };
 
 } // namespace
@@ -123,15 +167,42 @@ wxSizerItem *SplitVisualizer::Desc::build(
 
 namespace {
 
-std::vector<wxColour> Window::smIndexColors;
+std::vector<wxColour> Window::sIndexColors;
 
 Window::Window(
     wxWindow *parent,
     config::blades::WS281X& ws281x,
     data::Selector& subSel
 ) : wxWindow(parent, wxID_ANY),
-    mBlade_{ws281x},
-    mSubSel_{subSel} {
+    blade_{ws281x},
+    subSel_{subSel} {
+
+    {
+        data::Vector::ROContext vecCtxt{blade_.splits_};
+        data::Choice::ROContext choiceCtxt{subSel.choice_};
+
+        for (const auto& model : vecCtxt.children()) {
+            auto& split{static_cast<config::blades::WS281X::Split&>(*model)};
+            auto& rcvrs{splitReceiversMap_[model.get()]};
+
+            rcvrs.type_.window_ = this;
+            rcvrs.start_.window_ = this;
+            rcvrs.end_.window_ = this;
+            rcvrs.segments_.window_ = this;
+            rcvrs.list_.window_ = this;
+
+            rcvrs.type_.attach(split.type_);
+            rcvrs.start_.attach(split.start_);
+            rcvrs.end_.attach(split.end_);
+            rcvrs.segments_.attach(split.segments_);
+            rcvrs.list_.attach(split.list_);
+        }
+
+        selectedSplit_ = choiceCtxt.idx();
+
+        vecReceiver_.attach(blade_.splits_);
+        selChoiceReceiver_.attach(subSel.choice_);
+    }
 
     Bind(wxEVT_PAINT, &Window::paintEvent, this);
     Bind(wxEVT_MOTION, &Window::mouseMoved, this);
@@ -170,8 +241,8 @@ wxSize Window::DoGetBestClientSize() const {
 }
 
 void Window::regenerateSplitData() {
-    data::Vector::ROContext splitVec{mBlade_.splits_};
-    data::Integer::ROContext length{mBlade_.length_};
+    data::Vector::ROContext splitVec{blade_.splits_};
+    data::Integer::ROContext length{blade_.length_};
 
     splitData_.clear();
 
@@ -239,9 +310,9 @@ void Window::regenerateSplitData() {
 }
 
 void Window::recalcSizes() {
-    data::Integer::ROContext length{mBlade_.length_};
+    data::Integer::ROContext length{blade_.length_};
 
-    mSizes_.clear();
+    sizes_.clear();
 
     const auto windowSize{GetSize()};
     std::vector<bool> dilationMap(length.val());
@@ -293,7 +364,7 @@ void Window::recalcSizes() {
                 size.overlapEnd_ = true;
             }
         }
-        mSizes_.push_back(size);
+        sizes_.push_back(size);
     }
 }
 
@@ -313,7 +384,7 @@ void Window::paintEvent(wxPaintEvent&) {
     //
     // Sucks to use a bad operating system, should've used a better one...
     paintDC.SetPen(*wxTRANSPARENT_PEN);
-    if (mSizes.empty()) {
+    if (sizes_.empty()) {
         paintDC.SetBrush(wxBrush(
             wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT)
         ));
@@ -328,10 +399,10 @@ void Window::paintEvent(wxPaintEvent&) {
     ));
     paintDC.DrawRectangle(0, 0, windowSize.x, windowSize.y);
 
-    for (const auto& size : mSizes) {
+    for (const auto& size : sizes_) {
         auto splitColor{color(size.splitIdx)};
         bool dark{wxSystemSettings::GetAppearance().AreAppsDark()};
-        if (size.splitIdx == mHoveredSplit) {
+        if (size.splitIdx == hoveredSplit_) {
             splitColor = splitColor.ChangeLightness(dark ? 70 : 140);
         }
 
@@ -383,7 +454,7 @@ void Window::paintEvent(wxPaintEvent&) {
         );
 
         auto font{wxSystemSettings::GetFont(wxSYS_SYSTEM_FONT)};
-        if (size.splitIdx == mSelectedSplit) {
+        if (size.splitIdx == selectedSplit_) {
             font.MakeBold();
             font.SetFractionalPointSize(font.GetFractionalPointSize() * 1.2);
         }
@@ -410,7 +481,7 @@ void Window::paintEvent(wxPaintEvent&) {
     };
 
     paintGC->SetPen(*wxTRANSPARENT_PEN);
-    if (mSizes_.empty()) {
+    if (sizes_.empty()) {
         paintGC->SetBrush(wxBrush(
             wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT)
         ));
@@ -439,10 +510,10 @@ void Window::paintEvent(wxPaintEvent&) {
 
     paintGC->SetCompositionMode(wxCOMPOSITION_OVER);
     paintGC->BeginLayer(1);
-    for (const auto& size : mSizes_) {
+    for (const auto& size : sizes_) {
         auto splitColor{color(size.splitIdx_)};
         bool dark{wxSystemSettings::GetAppearance().AreAppsDark()};
-        if (size.splitIdx_ == mHoveredSplit_) {
+        if (size.splitIdx_ == hoveredSplit_) {
             splitColor = splitColor.ChangeLightness(dark ? 70 : 140);
         }
 
@@ -495,7 +566,7 @@ void Window::paintEvent(wxPaintEvent&) {
         );
 
         auto font{wxSystemSettings::GetFont(wxSYS_SYSTEM_FONT)};
-        if (size.splitIdx_ == mSelectedSplit_) {
+        if (size.splitIdx_ == selectedSplit_) {
             font.MakeBold();
             font.SetFractionalPointSize(
                 font.GetFractionalPointSize() * 1.2
@@ -548,11 +619,11 @@ void Window::paintEvent(wxPaintEvent&) {
 void Window::mouseMoved(wxMouseEvent& evt) {
     auto pos{evt.GetPosition()};
 
-    mHoveredSplit_ = -1;
-    for (auto iter{mSizes_.rbegin()}; iter != mSizes_.rend(); ++iter) {
+    hoveredSplit_ = -1;
+    for (auto iter{sizes_.rbegin()}; iter != sizes_.rend(); ++iter) {
         const auto& size{*iter};
         if (pos.y > size.start_ and pos.y < size.start_ + size.length_) {
-            mHoveredSplit_ = static_cast<int32>(size.splitIdx_);
+            hoveredSplit_ = static_cast<int32>(size.splitIdx_);
             break;
         }
     }
@@ -560,22 +631,22 @@ void Window::mouseMoved(wxMouseEvent& evt) {
 }
 
 void Window::mouseLeave(wxMouseEvent&) {
-    mHoveredSplit_ = -1;
+    hoveredSplit_ = -1;
     Refresh();
 }
 
 void Window::mouseClick(wxMouseEvent&) {
-    if (mHoveredSplit_ == -1) return;
+    if (hoveredSplit_ == -1) return;
 
-    data::Vector::ROContext splits{mBlade_.splits_};
-    if (mHoveredSplit_ >= splits.children().size()) return;
+    data::Vector::ROContext splits{blade_.splits_};
+    if (hoveredSplit_ >= splits.children().size()) return;
 
-    data::Choice::Context subSel{mSubSel_.choice_};
-    subSel.choose(mHoveredSplit_);
+    data::Choice::Context subSel{subSel_.choice_};
+    subSel.choose(hoveredSplit_);
 }
 
 const wxColour& Window::color(uint32 idx) {
-    while (idx >= smIndexColors.size()) {
+    while (idx >= sIndexColors.size()) {
         const auto hue{utils::rand::get(0.0, 1.0)};
         const auto saturation{utils::rand::get(0.4, 0.7)};
 
@@ -583,7 +654,7 @@ const wxColour& Window::color(uint32 idx) {
             hue, saturation, 0.7
         })};
 
-        smIndexColors.emplace_back(
+        sIndexColors.emplace_back(
             rgbValue.red,
             rgbValue.green,
             rgbValue.blue,
@@ -591,7 +662,83 @@ const wxColour& Window::color(uint32 idx) {
         );
     }
 
-    return smIndexColors[idx];
+    return sIndexColors[idx];
+}
+
+void Window::VecReceiver::onInsert(size pos) {
+    auto *win{&utils::parent<&Window::vecReceiver_>(*this)};
+    auto ctxt{context<data::Vector>()};
+
+    const auto& model{ctxt.children()[pos]};
+    auto& split{static_cast<config::blades::WS281X::Split&>(*model)};
+    auto& rcvrs{win->splitReceiversMap_[model.get()]};
+
+    rcvrs.type_.window_ = win;
+    rcvrs.start_.window_ = win;
+    rcvrs.end_.window_ = win;
+    rcvrs.segments_.window_ = win;
+    rcvrs.list_.window_ = win;
+
+    rcvrs.type_.attach(split.type_);
+    rcvrs.start_.attach(split.start_);
+    rcvrs.end_.attach(split.end_);
+    rcvrs.segments_.attach(split.segments_);
+    rcvrs.list_.attach(split.list_);
+
+    pcui::safeCall([win] {
+        win->regenerateSplitData();
+        win->Layout();
+    });
+}
+
+void Window::VecReceiver::preRemove(size pos) {
+    auto *win{&utils::parent<&Window::vecReceiver_>(*this)};
+    auto ctxt{context<data::Vector>()};
+
+    const auto& model{ctxt.children()[pos]};
+    auto& rcvrs{win->splitReceiversMap_[model.get()]};
+
+    rcvrs.type_.detach();
+    rcvrs.start_.detach();
+    rcvrs.end_.detach();
+    rcvrs.segments_.detach();
+    rcvrs.list_.detach();
+
+    win->splitReceiversMap_.erase(model.get());
+
+    pcui::safeCall([win] {
+        win->regenerateSplitData();
+        win->Layout();
+    });
+}
+
+void Window::SelReceiver::onChoice() {
+    auto& win{utils::parent<&Window::selChoiceReceiver_>(*this)};
+    pcui::safeCall([&win, idx=context<data::Choice>().idx()] {
+        win.selectedSplit_ = idx;
+        win.Refresh();
+    });
+}
+
+void Window::ExclReceiver::onSelection(size) {
+    pcui::safeCall([win=window_] {
+        win->regenerateSplitData();
+        win->Layout();
+    });
+}
+
+void Window::IntReceiver::onSet() {
+    pcui::safeCall([win=window_] {
+        win->regenerateSplitData();
+        win->Layout();
+    });
+}
+
+void Window::StrReceiver::onChange() {
+    pcui::safeCall([win=window_] {
+        win->regenerateSplitData();
+        win->Layout();
+    });
 }
 
 } // namespace
