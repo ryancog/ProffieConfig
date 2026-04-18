@@ -22,8 +22,8 @@
 #include <wx/app.h>
 #include <wx/thread.h>
 
-void pcui::safeCall(std::function<void()>&& func) {
+void pcui::safeCall(const std::function<void()>& func) {
     if (wxIsMainThread()) func();
-    else wxTheApp->CallAfter(std::move(func));
+    else wxTheApp->CallAfter(func);
 }
 

@@ -25,7 +25,7 @@
 
 namespace pcui {
 
-UI_EXPORT void safeCall(std::function<void()>&&);
+UI_EXPORT void safeCall(const std::function<void()>&);
 
 } // namespace pcui
 
