@@ -165,6 +165,10 @@ wxSizerItem *SplitVisualizer::Desc::build(
     return item;
 }
 
+pcui::detail::Descriptor *SplitVisualizer::Desc::clone() const {
+    return new Desc(*this);
+}
+
 namespace {
 
 std::vector<wxColour> Window::sIndexColors;
@@ -215,7 +219,16 @@ Window::Window(
 }
 
 void Window::preDestroyCripple() {
+    vecReceiver_.detach();
+    selChoiceReceiver_.detach();
 
+    for (auto& [model, rcvrs] : splitReceiversMap_) {
+        rcvrs.type_.detach();
+        rcvrs.start_.detach();
+        rcvrs.end_.detach();
+        rcvrs.segments_.detach();
+        rcvrs.list_.detach();
+    }
 }
 
 bool Window::Layout() {

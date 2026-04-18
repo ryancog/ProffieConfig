@@ -42,5 +42,7 @@ struct UI_EXPORT SplitVisualizer::Desc : SplitVisualizer,
     [[nodiscard]] wxSizerItem *build(
         const pcui::detail::Scaffold&
     ) const override;
+
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
