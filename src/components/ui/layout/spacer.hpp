@@ -32,7 +32,7 @@ namespace pcui {
 struct UI_EXPORT Spacer {
     struct Desc;
 
-    int32 size_{8};
+    int32 size_{0};
 
     DescriptorPtr operator()();
 };
@@ -47,7 +47,7 @@ struct UI_EXPORT Spacer::Desc : Spacer, detail::Descriptor {
 struct UI_EXPORT StretchSpacer {
     struct Desc;
 
-    int32 size_{8};
+    int32 size_{0};
     int32 proportion_{1};
 
     DescriptorPtr operator()();
