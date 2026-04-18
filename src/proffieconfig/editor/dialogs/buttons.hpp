@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/config/settings/buttons.h
+ * proffieconfig/editor/dialogs/buttons.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,42 +22,22 @@
 #include <wx/dialog.h>
 #include <wx/panel.h>
 
-#include "ui/notifier.h"
-#include "ui/static_box.h"
+#include "config/config.hpp"
+#include "ui/dialog.hpp"
+#include "ui/types.hpp"
 
-#include "../editorwindow.h"
-
-class ButtonsDlg : public wxDialog, pcui::NotifyReceiver {
-public:
-    ButtonsDlg(EditorWindow*);
+struct ButtonsDlg : pcui::Dialog {
+    ButtonsDlg(wxWindow *, config::Config&);
 
 private:
-    void handleNotification(uint32) final;
+    pcui::DescriptorPtr ui();
 
-    EditorWindow *mParent;
+    pcui::DescriptorPtr header();
+    pcui::DescriptorPtr info();
+    static pcui::DescriptorPtr button(data::Model&);
 
-    enum {
-        ID_AddButton,
-    };
+    void addButton();
 
-    wxScrolledWindow *mButtonsArea{nullptr};
-    wxButton *mAddButton{nullptr};
-
-    class ButtonPanel;
-
-    void bindEvents();
-    void createUI();
-    void createButtonsArea();
-
-    wxBoxSizer *header();
-    static wxWindow *info(wxWindow*);
+    config::Config& mConfig;
 };
 
-class ButtonsDlg::ButtonPanel : public pcui::StaticBox {
-public:
-    ButtonPanel(
-        wxScrolledWindow *,
-        Config::Config&,
-        Config::Settings::ButtonData&
-    );
-};

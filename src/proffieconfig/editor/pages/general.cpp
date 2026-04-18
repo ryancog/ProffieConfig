@@ -283,6 +283,14 @@ pcui::DescriptorPtr GeneralPage::installation() {
             },
           },
           .label_=_("Buttons..."),
+          .func_=[this](pcui::CallbackContext ctxt) {
+              if (not mButtonDlg) {
+                  mButtonDlg = new ButtonsDlg(ctxt.topLevel_, mConfig);
+              }
+
+              mButtonDlg->Show();
+              mButtonDlg->Raise();
+          }
         }(),
       }
     }();

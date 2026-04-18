@@ -1,9 +1,9 @@
-#include "buttons.h"
+#include "buttons.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/config/settings/buttons.cpp
+ * proffieconfig/editor/dialogs/buttons.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,117 +18,295 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/hyperlink.h>
-#include <wx/scrolwin.h>
-#include <wx/button.h>
-#include <wx/stattext.h>
-#include <wx/statbox.h>
-#include <wx/wrapsizer.h>
-
-#include "ui/controls/button.h"
-#include "ui/static_box.h"
-#include "wx/event.h"
+#include "config/buttons/button.hpp"
+#include "config/strings.hpp"
+#include "data/logic/adapter.hpp"
+#include "ui/build.hpp"
+#include "ui/controls/button.hpp"
+#include "ui/controls/choice.hpp"
+#include "ui/controls/combobox.hpp"
+#include "ui/controls/stepper.hpp"
+#include "ui/controls/text.hpp"
+#include "ui/helpers/labeled.hpp"
+#include "ui/layout/group.hpp"
+#include "ui/layout/scrolled.hpp"
+#include "ui/layout/spacer.hpp"
+#include "ui/layout/stack.hpp"
+#include "ui/layout/vecstack.hpp"
+#include "ui/static/divider.hpp"
+#include "ui/static/hyperlink.hpp"
+#include "ui/static/label.hpp"
+#include "ui/types.hpp"
+#include "ui/values.hpp"
 
 namespace {
 
 constexpr auto PANEL_PADDING{3};
 
+const std::vector<wxString> pinDefaults{
+    _("powerButtonPin"),
+    _("auxPin"),
+    _("aux2Pin"),
+};
+
 } // namespace
 
-ButtonsDlg::ButtonsDlg(EditorWindow *parent) : 
-    wxDialog(
+ButtonsDlg::ButtonsDlg(wxWindow *parent, config::Config& config) :
+    pcui::Dialog(
         parent,
         wxID_ANY,
-        _("Buttons") + " - " + static_cast<string>(parent->getOpenConfig().name),
-        wxDefaultPosition,
-        wxDefaultSize,
+        _("Buttons"),
         wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER
     ),
-    pcui::NotifyReceiver(this, parent->getOpenConfig().settings.buttonNotifier),
-    mParent{parent} {
-    createUI();
-    bindEvents();
+    mConfig{config} {
 
-    initializeNotifier();
+    pcui::build(this, ui());
 }
 
-void ButtonsDlg::createUI() {
-    auto *sizer{new wxBoxSizer(wxVERTICAL)};
+pcui::DescriptorPtr ButtonsDlg::ui() {
+    return pcui::Stack{
+      .base_={
+        .minSize_={400, 500},
+        .expand_=true,
+        .proportion_=1,
+        .border_={.size_=pcui::winEdgeSpacing(), .dirs_=wxALL},
+      },
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::Group{
+          .win_={.base_={.expand_=true, .proportion_=1}},
+          .padded_=false,
+          .children_={
+            pcui::Scrolled{
+              .win_={.base_={.expand_=true, .proportion_=1}},
+              .scrollRate_={.y_=4},
+              .child_=pcui::VecStack{
+                .base_={
+                  .expand_=true,
+                  .proportion_=1,
+                  .border_={.size_=pcui::interGroupSpacing(), .dirs_=wxALL},
+                },
+                .orient_=wxVERTICAL,
+                .data_=mConfig.buttons_,
+                .builder_=button,
+                .separator_=pcui::Stack{
+                  .base_={.expand_=true},
+                  .children_={
+                    pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+                    pcui::Divider{
+                      .base_={.expand_=true},
+                      .orient_=wxHORIZONTAL,
+                    }(),
+                    pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+                  }
+                }(),
+                .empty_=pcui::Stack{
+                  .base_={.expand_=true, .proportion_=1},
+                  .children_={
+                    pcui::StretchSpacer{.proportion_=1}(),
+                    pcui::Label{
+                      .win_={
+                        .base_={
+                          .border_={.size_=pcui::interGroupSpacing(), .dirs_=wxALL},
+                          .align_=wxALIGN_CENTER,
+                        },
+                      },
+                      .label_=_("No Buttons"),
+                      .color_=wxSYS_COLOUR_GRAYTEXT,
+                    }(),
+                    pcui::StretchSpacer{.proportion_=1}(),
+                  }
+                }(),
+              }(),
+            }(),
+          }
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Button{
+          .win_={.base_={.align_=wxALIGN_RIGHT}},
+          .label_=_("New Button"),
+          .func_=[this] { addButton(); },
 
-    createButtonsArea();
-
-    sizer->Add(
-        header(),
-        wxSizerFlags(0).Expand().Border(wxALL, 10)
-    );
-    sizer->Add(
-        mButtonsArea,
-        wxSizerFlags(1).Expand().Border(wxALL, 10)
-    );
-    sizer->Add(
-        info(this),
-        wxSizerFlags(0).Expand().Border(wxALL, 10)
-    );
-
-    SetSizerAndFit(sizer);
+        }(),
+        pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+        info(),
+      }
+    }();
 }
 
-void ButtonsDlg::bindEvents() {
-    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        mParent->getOpenConfig().settings.addButton();
-    }, ID_AddButton);
+pcui::DescriptorPtr ButtonsDlg::button(data::Model& model) {
+    auto& button{static_cast<config::buttons::Button&>(model)};
+
+    return pcui::Stack{
+      .base_={.expand_=true},
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::Stack{
+          .base_={.expand_=true},
+          .orient_=wxHORIZONTAL,
+          .children_={
+            pcui::Labeled{
+              .win_={
+                .tooltip_=_("The event triggered when the button is pressed."),
+              },
+              .label_=_("Event"),
+              .orient_=wxHORIZONTAL,
+              .ctrl_=pcui::Choice{
+                .win_={.base_={.proportion_=1}},
+                .data_=button.event_,
+              }(),
+            }(),
+            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            pcui::Labeled{
+              .win_={
+                .base_={.proportion_=1},
+                .tooltip_=_("The button name for Serial Monitor and debugging."),
+              },
+              .label_=_("Name"),
+              .orient_=wxHORIZONTAL,
+              .ctrl_=pcui::Text{
+                .win_={.base_={.proportion_=1}},
+                .data_=button.name_,
+              }(),
+            }(),
+          }
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Stack{
+          .base_={.expand_=true},
+          .orient_=wxHORIZONTAL,
+          .children_={
+            pcui::Labeled{
+              .win_={
+                .tooltip_={
+                  _("The physical kind of button wired to the board.") + '\n' +
+                  _("Pull-Up means the switch is wired to its pin and GND.") + '\n' +
+                  _("Pull-Down means the switch is wired to its pin and 3v3 or BATT+") + '\n' +
+                  _("If you're using a Pull-Down button with BATT+, be sure the pin is tolerant! See link.")
+                },
+              },
+              .label_=_("Type"),
+              .orient_=wxHORIZONTAL,
+              .ctrl_=pcui::Choice{
+                .win_={.base_={.proportion_=1}},
+                .data_=button.type_,
+              }(),
+            }(),
+            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            pcui::Stack{
+              .base_={.proportion_=1},
+              .orient_=wxVERTICAL,
+              .children_={
+                pcui::Labeled{
+                  .win_={
+                    .base_={.expand_=true},
+                    .tooltip_=_("The pin on the board the button is wired to."),
+                  },
+                  .label_=_("Pin"),
+                  .orient_=wxHORIZONTAL,
+                  .ctrl_=pcui::ComboBox{
+                    .win_={.base_={.proportion_=1}},
+                    .data_=button.pin_,
+                    .defaults_=pinDefaults,
+                  }(),
+                }(),
+                pcui::Labeled{
+                  .win_={
+                    .base_={
+                      .expand_=true,
+                      .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+                    },
+                    .show_=button.type_ |
+                        data::logic::HasSelection{{config::eBtn_Type_Touch}},
+                    .tooltip_=_("Touch threshold. See the link for more information below."),
+                  },
+                  .label_=_("Threshold"),
+                  .orient_=wxHORIZONTAL,
+                  .ctrl_=pcui::Stepper{
+                    .win_={.base_={.proportion_=1}},
+                    .data_=button.touch_,
+                  }(),
+                }(),
+              }
+            }(),
+          }
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Button{
+          .win_={.base_={.align_=wxALIGN_RIGHT}},
+          .label_=_("Remove"),
+          .func_=[&button, &model](pcui::CallbackContext ctxt) {
+              auto& vec{*button.parent<data::Vector>()};
+
+              // Removing the model will destroy this UI first, and the UI
+              // cannot be destroyed from inside the callback.
+              ctxt.topLevel_->CallAfter([&vec, &model] {
+                  data::Vector::Context vecCtxt{vec};
+                  vecCtxt.remove(model);
+              });
+          }
+        }(),
+      }
+    }();
 }
 
-wxBoxSizer *ButtonsDlg::header() {
-    auto *sizer{new wxBoxSizer(wxHORIZONTAL)};
+void ButtonsDlg::addButton() {
+    data::Vector::Context vec{mConfig.buttons_};
+    auto& button{vec.addCreate<config::buttons::Button>()};
 
-    mAddButton = new wxButton(this, ID_AddButton, _("New Button"));
-    sizer->Add(mAddButton);
+    data::Choice::Context event{button.event_};
+    data::String::Context name{button.name_};
 
-    return sizer;
+    data::Choice::Context type{button.type_};
+    data::String::Context pin{button.pin_};
+
+    type.choose(config::eBtn_Type_Pullup);
+
+    switch (vec.children().size()) {
+        case 1:
+            event.choose(config::eBtn_Evt_Power);
+            name.change("pow");
+            pin.change(pinDefaults[0].ToStdString());
+            break;
+        case 2:
+            event.choose(config::eBtn_Evt_Aux);
+            name.change("aux");
+            pin.change(pinDefaults[1].ToStdString());
+            break;
+        case 3:
+            event.choose(config::eBtn_Evt_Aux2);
+            name.change("aux2");
+            pin.change(pinDefaults[2].ToStdString());
+            break;
+        default:
+    }
 }
 
-wxWindow *ButtonsDlg::info(wxWindow *parent) {
-    auto *infoSizer{new pcui::StaticBox(
-        wxVERTICAL,
-        parent,
-        _("Buttons Configuration Information")
-    )};
-
-    auto *touchInfo{new wxHyperlinkCtrl(
-        infoSizer->childParent(),
-        wxID_ANY,
-        _("Touch Button Info"),
-        "https://pod.hubbe.net/hardware/touch-buttons.html"
-    )};
-    auto *commands{new wxHyperlinkCtrl(
-        infoSizer->childParent(),
-        wxID_ANY,
-        _("Button Commands"),
-        "https://pod.hubbe.net/tools/button-commands.html"
-    )};
-    auto *safePins{new wxHyperlinkCtrl(
-        infoSizer->childParent(),
-        wxID_ANY,
-        _("Pins Safe for Pulldown Buttons"),
-        "https://crucible.hubbe.net/t/button-types/5137/16?u=ryryog25"
-    )};
-    infoSizer->Add(
-        touchInfo,
-        wxSizerFlags().Border(wxLEFT | wxTOP | wxRIGHT, 10)
-    );
-    infoSizer->Add(
-        commands,
-        wxSizerFlags().Border(wxLEFT | wxRIGHT, 10)
-    );
-    infoSizer->Add(
-        safePins,
-        wxSizerFlags().Border(wxLEFT | wxBOTTOM | wxRIGHT, 10)
-    );
-
-    return infoSizer;
+pcui::DescriptorPtr ButtonsDlg::info() {
+    return pcui::Group{
+      .win_={.base_={.expand_=true}},
+      .label_=_("Buttons Configuration Information"),
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::Hyperlink{
+          .label_=_("Touch Button Info"),
+          .link_="https://pod.hubbe.net/hardware/touch-buttons.html"
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Hyperlink{
+          .label_=_("Button Commands"),
+          .link_="https://pod.hubbe.net/tools/button-commands.html"
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Hyperlink{
+          .label_=_("Pins Safe for Pulldown Buttons"),
+          .link_="https://crucible.hubbe.net/t/button-types/5137/16?u=ryryog25"
+        }(),
+      }
+    }();
 }
 
+/*
 void ButtonsDlg::createButtonsArea() {
     mButtonsArea = new wxScrolledWindow(this, wxID_ANY);
     mButtonsArea->Bind(wxEVT_SIZE, [this](wxSizeEvent& evt) {
@@ -154,122 +332,5 @@ void ButtonsDlg::createButtonsArea() {
     }
 
 }
-
-void ButtonsDlg::handleNotification(uint32) {
-    mButtonsArea->GetSizer()->Clear(true);
-
-    auto& config{mParent->getOpenConfig()};
-    const auto& numButtons{config.settings.numButtons()};
-    if (numButtons == 0) {
-        mButtonsArea->GetSizer()->AddStretchSpacer();
-        mButtonsArea->GetSizer()->Add(
-            new wxStaticText(
-                mButtonsArea,
-                wxID_ANY,
-                _("This config has no buttons."),
-                wxDefaultPosition,
-                wxDefaultSize,
-                wxALIGN_CENTER_HORIZONTAL
-            ),
-            wxSizerFlags(0).Expand()
-        );
-        mButtonsArea->GetSizer()->AddStretchSpacer();
-    } else {
-        for (auto idx{0}; idx < numButtons; ++idx) {
-            auto& button{config.settings.button(idx)};
-            mButtonsArea->GetSizer()->Add(
-                new ButtonPanel(mButtonsArea, config, *button),
-                wxSizerFlags(0).Border(wxALL, PANEL_PADDING)
-            );
-        }
-    }
-
-    Layout();
-}
-
-
-ButtonsDlg::ButtonPanel::ButtonPanel(
-    wxScrolledWindow *parent,
-    Config::Config& config,
-    Config::Settings::ButtonData& button
-) : pcui::StaticBox(wxHORIZONTAL, parent) {
-    auto *type{new pcui::Choice(
-        childParent(),
-        button.type,
-        _("Type"),
-        wxHORIZONTAL
-    )};
-    type->SetToolTip(_(
-        "The physical kind of button wired to the board.\n"
-        "Pullup means the switch is wired to its pin and GND.\n"
-        "Pulldown means the switch is wired to its pin and 3v3 or BATT+\n"
-        " - If you're using a pulldown button, be sure the pin is tolerant! See link."
-    ));
-
-    auto *event{new pcui::Choice(
-        childParent(),
-        button.event,
-        _("Event"),
-        wxHORIZONTAL
-    )};
-    event->SetToolTip(_("The event a button press triggers."));
-
-    auto *remove{new pcui::Button(
-        childParent(),
-        wxID_ANY,
-        _("Remove")
-    )};
-    remove->SetToolTip(_("Remove this button"));
-
-    auto *column1{new wxBoxSizer{wxVERTICAL}};
-    column1->Add(type, 0, wxEXPAND);
-    column1->AddSpacer(10);
-    column1->Add(event, 0, wxEXPAND);
-    column1->AddSpacer(10);
-    column1->Add(remove);
-
-    auto *pin{new pcui::ComboBox(
-        childParent(),
-        button.pin,
-        _("Pin"),
-        wxHORIZONTAL
-    )};
-    pin->SetToolTip(_("The pin on the board the button is wired to."));
-
-    auto *name{new pcui::Text(
-        childParent(),
-        button.name,
-        0,
-        false,
-        _("Name"),
-        wxHORIZONTAL
-    )};
-    name->SetToolTip(_("The button name for Serial Monitor and debugging."));
-
-    auto *touch{new pcui::Numeric(
-        childParent(),
-        button.touch,
-        _("Threshold"),
-        wxHORIZONTAL
-    )};
-    touch->SetToolTip(_("Touch threshold. See the link for more information below."));
-
-    auto *column2{new wxBoxSizer{wxVERTICAL}};
-    column2->Add(pin, 0, wxEXPAND);
-    column2->AddSpacer(10);
-    column2->Add(name, 0, wxEXPAND);
-    column2->AddSpacer(10);
-    column2->Add(touch, 0, wxEXPAND);
-
-    Add(column1, 0);
-    AddSpacer(10);
-    Add(column2, 0);
-
-    remove->Bind(wxEVT_BUTTON, [&config, &button](wxCommandEvent&) {
-        config.settings.removeButton(button);
-    });
-
-    Layout();
-    Fit();
-}
+*/
 

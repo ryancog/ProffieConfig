@@ -16,6 +16,7 @@ add_executable(proffieconfig WIN32
     editor/editorwindow.cpp
     editor/special/splitvisualizer.cpp
     editor/dialogs/bladearray.cpp
+    editor/dialogs/buttons.cpp
     editor/dialogs/presetarray.cpp
     editor/pages/general.cpp
     editor/pages/props.cpp

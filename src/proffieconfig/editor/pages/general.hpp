@@ -22,6 +22,8 @@
 #include "config/config.hpp"
 #include "ui/types.hpp"
 
+#include "../dialogs/buttons.hpp"
+
 struct GeneralPage {
     GeneralPage(config::Config&);
 
@@ -36,4 +38,6 @@ private:
     pcui::DescriptorPtr audio();
 
     config::Config& mConfig;
+
+    ButtonsDlg *mButtonDlg{nullptr};
 };
