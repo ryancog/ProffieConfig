@@ -28,7 +28,7 @@
 
 struct BladesPage {
     BladesPage(config::Config&);
-    ~BladesPage();
+    void deinit();
 
     pcui::DescriptorPtr ui();
 

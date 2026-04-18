@@ -100,6 +100,8 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
         // Only preserve real choices.
         if (ctxt.idx() != -1)
             page.mLastBladeChoice = ctxt.idx();
+
+        data::Selector::Context{page.mSubBladeSel}.bind(nullptr);
     };
 
     mSubBladeSel.choice_.responder().onChoice_ = [](
@@ -130,7 +132,8 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
     data::Selector::Context{mArraySel}.bind(&config.bladeConfigs_);
 }
 
-BladesPage::~BladesPage() {
+void BladesPage::deinit() {
+    data::Selector::Context{mArraySel}.bind(nullptr);
     mIssueReceiver.detach();
 }
 

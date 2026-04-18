@@ -29,6 +29,7 @@
 
 struct PresetsPage {
     PresetsPage(config::Config&);
+    void deinit();
 
     pcui::DescriptorPtr ui();
 

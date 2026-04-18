@@ -35,6 +35,7 @@
 #include "ui/dialogs/message.hpp"
 #include "ui/dialogs/progress.hpp"
 #include "ui/helpers/busy.hpp"
+#include "utils/defer.hpp"
 #include "utils/files.hpp"
 #include "utils/paths.hpp"
 #include "utils/string.hpp"
@@ -63,11 +64,44 @@ EditorWindow::EditorWindow(wxWindow *parent, config::Info& info) :
     wxPostEvent(this, event);
 }
 
-EditorWindow::~EditorWindow() {
-    pcui::cripple(this);
-}
+EditorWindow::~EditorWindow() = default;
 
 void EditorWindow::bindEvents() {
+    Bind(wxEVT_CLOSE_WINDOW, [this](wxCloseEvent& evt) {
+        evt.Skip();
+
+        defer {
+            if (not evt.GetVeto()) {
+                pcui::cripple(this);
+                mPresetsPage.deinit();
+                mBladesPage.deinit();
+                mInfo.unload();
+            }
+        };
+
+        if (not evt.CanVeto()) return;
+
+        data::Bool::ROContext isSaved{mInfo.config()->isSaved()};
+        if (isSaved.val()) return;
+
+        data::String::ROContext name{mInfo.name()};
+
+        auto choice{pcui::showMessage(
+            wxString::Format(_("\"%s\" Has Unsaved Changes"), name.val()),
+            {
+                .caption_=_("Close Editor"),
+                .style_=wxICON_WARNING | wxYES_NO | wxCANCEL | wxCANCEL_DEFAULT,
+                .labels_={.yes_=_("Save Changes"), .no_=_("Discard Changes")},
+                .parent_=this
+            }
+        )};
+
+        if (choice == wxCANCEL or (choice == wxYES and not save())) {
+            evt.Skip(false);
+            evt.Veto();
+        }
+    });
+
     Bind(wxEVT_MENU, [this](wxCommandEvent&) {
         save();
     }, wxID_SAVE); 

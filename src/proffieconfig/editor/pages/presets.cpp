@@ -104,6 +104,12 @@ PresetsPage::PresetsPage(config::Config& config) : mConfig{config} {
     data::Selector::Context{mDisplaySel}.bind(&config.bladeConfigs_);
 }
 
+void PresetsPage::deinit() {
+    // This'll cascade to preset and style sels
+    data::Selector::Context{mArraySel}.bind(nullptr);
+    data::Selector::Context{mDisplaySel}.bind(nullptr);
+}
+
 pcui::DescriptorPtr PresetsPage::ui() {
     return pcui::Stack{
       .base_={
