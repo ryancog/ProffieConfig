@@ -116,10 +116,10 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
             }(),
           }
         }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Label{
           .win_={
             .base_={
-              .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
               .align_=wxALIGN_RIGHT,
             },
             .show_=mConfig.issues() | data::logic::BitAnd{
@@ -131,7 +131,6 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
         pcui::Label{
           .win_={
             .base_={
-              .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
               .align_=wxALIGN_RIGHT,
             },
             .show_=mConfig.issues() | data::logic::BitAnd{
@@ -143,7 +142,6 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
         pcui::Label{
           .win_={
             .base_={
-              .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
               .align_=wxALIGN_RIGHT,
             },
             .show_=mConfig.issues() | data::logic::BitAnd{
