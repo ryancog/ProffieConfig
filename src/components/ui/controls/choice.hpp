@@ -67,13 +67,14 @@ struct UI_EXPORT Choice {
 
     Labeler labeler_;
 
-    std::unique_ptr<detail::Descriptor> operator()();
+    DescriptorPtr operator()();
 };
 
 struct UI_EXPORT Choice::Desc : Choice, detail::Descriptor {
     Desc(Choice&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

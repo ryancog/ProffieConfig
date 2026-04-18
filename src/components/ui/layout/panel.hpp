@@ -43,6 +43,7 @@ struct UI_EXPORT Panel::Desc : Panel, detail::Descriptor {
     Desc(Panel&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

@@ -85,7 +85,7 @@ struct Window : detail::DataWindow<wxScrolledWindow, data::Generic::Receiver> {
 
 } // namespace
 
-std::unique_ptr<detail::Descriptor> Scrolled::operator()() {
+DescriptorPtr Scrolled::operator()() {
     return std::make_unique<Scrolled::Desc>(std::move(*this));
 }
 
@@ -99,5 +99,9 @@ wxSizerItem *Scrolled::Desc::build(const detail::Scaffold& scaffold) const {
     detail::apply(win_.base_, item);
 
     return item;
+}
+
+detail::Descriptor *Scrolled::Desc::clone() const {
+    return new Desc(*this);
 }
 

@@ -49,6 +49,7 @@ struct UI_EXPORT Scrolled::Desc : Scrolled, detail::Descriptor {
     Desc(Scrolled&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

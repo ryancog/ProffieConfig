@@ -25,6 +25,7 @@
 #include "ui/detail/datawin.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/builder.hpp"
+#include "ui/types.hpp"
 #include "ui/utils.hpp"
 
 using namespace pcui;
@@ -61,9 +62,13 @@ struct TrackerDummy : detail::IDataDriven,
     // as a result of unbinding (or rebinding), so it's all we need to listen
     // to.
     void onChoice() override {
-        if (last_) pcui::cripple(last_);
+        // Access to last_ is safe here because inside buildAndReplace it will
+        // only be accessed once a model context is acquired. Inside this
+        // handler, the model is guaranteed to be locked.
+        if (last_)
+            cripple(last_);
 
-        pcui::safeCall([this] { 
+        safeCall([this] { 
             auto ctxt{context<data::Choice>()};
             buildAndReplace(ctxt);
         });
@@ -167,7 +172,7 @@ struct TrackerDummy : detail::IDataDriven,
 
 } // namespace
 
-std::unique_ptr<detail::Descriptor> Selector::operator()() {
+DescriptorPtr Selector::operator()() {
     assert(builder_);
     return std::make_unique<Selector::Desc>(std::move(*this));
 }
@@ -177,5 +182,9 @@ Selector::Desc::Desc(Selector&& data) :
 
 wxSizerItem *Selector::Desc::build(const detail::Scaffold& scaffold) const {
     return new TrackerDummy(scaffold, *this);
+}
+
+detail::Descriptor *Selector::Desc::clone() const {
+    return new Desc(*this);
 }
 

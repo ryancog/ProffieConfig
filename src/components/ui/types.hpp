@@ -29,14 +29,29 @@
 
 namespace pcui {
 
-using DescriptorPtr = std::unique_ptr<detail::Descriptor>;
+struct DescriptorPtr : std::unique_ptr<detail::Descriptor> {
+    using unique_ptr::unique_ptr;
+    using unique_ptr::operator=;
+
+    DescriptorPtr(const DescriptorPtr& other) :
+        unique_ptr(other ? other->clone() : nullptr) {}
+
+    DescriptorPtr& operator=(const DescriptorPtr& other) {
+        if (this == &other) return *this;
+
+        if (other)
+            reset(other->clone());
+
+        return *this;
+    }
+};
 
 template<typename T>
 using RefWrap = std::reference_wrapper<T>;
 
 using LabelData = std::variant<
     wxString,
-    pcui::RefWrap<const data::String>
+    RefWrap<const data::String>
 >;
 
 struct CallbackContext {

@@ -26,6 +26,7 @@
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/helpers.hpp"
 #include "ui/detail/datawin.hpp"
+#include "ui/types.hpp"
 #include "utils/defer.hpp"
 
 using namespace pcui;
@@ -153,7 +154,7 @@ struct Control : detail::DataWindow<wxButton, data::String::Receiver> {
 
 } // namespace
 
-std::unique_ptr<detail::Descriptor> Button::operator()() {
+DescriptorPtr Button::operator()() {
     // The proper in-button size for a bitmap depends on the platform
     if (bitmap_.mode_ == BitmapMode::Clamped and bitmap_.src_) {
 #       if defined(__WXOSX__)
@@ -176,5 +177,9 @@ wxSizerItem *Button::Desc::build(const detail::Scaffold& scaffold) const {
     auto *item{new wxSizerItem(button)};
     detail::apply(win_.base_, item);
     return item;
+}
+
+detail::Descriptor *Button::Desc::clone() const {
+    return new Desc(*this);
 }
 

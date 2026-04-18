@@ -23,6 +23,7 @@
 
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
+#include "ui/types.hpp"
 #include "utils/defer.hpp"
 
 using namespace pcui;
@@ -112,7 +113,7 @@ struct Control : detail::DataWindow<
 
 } // namespace
 
-std::unique_ptr<detail::Descriptor> CheckList::operator()() {
+DescriptorPtr CheckList::operator()() {
     return std::make_unique<CheckList::Desc>(std::move(*this));
 }
 
@@ -124,5 +125,9 @@ wxSizerItem *CheckList::Desc::build(const detail::Scaffold& scaffold) const {
     auto *item{new wxSizerItem(ctrl)};
     detail::apply(win_.base_, item);
     return item;
+}
+
+detail::Descriptor *CheckList::Desc::clone() const {
+    return new Desc(*this);
 }
 

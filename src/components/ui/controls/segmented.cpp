@@ -26,6 +26,7 @@
 #include "data/helpers/exclusive.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
+#include "ui/types.hpp"
 #include "utils/defer.hpp"
 
 using namespace pcui;
@@ -156,7 +157,7 @@ struct Manager : detail::DataWindow<wxPanel, data::Exclusive::Receiver> {
 
 } // namespace
 
-std::unique_ptr<detail::Descriptor> Segmented::operator()() {
+DescriptorPtr Segmented::operator()() {
     // Make sure there's the correct labels for the data.
     assert(labels_.size() == data_.data().size());
 
@@ -171,5 +172,9 @@ wxSizerItem *Segmented::Desc::build(const detail::Scaffold& scaffold) const {
     auto *item{new wxSizerItem(chk)};
     detail::apply(win_.base_, item);
     return item;
+}
+
+detail::Descriptor *Segmented::Desc::clone() const {
+    return new Desc(*this);
 }
 

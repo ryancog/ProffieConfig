@@ -22,11 +22,12 @@
 #include <wx/sizer.h>
 #include <wx/statbox.h>
 
+#include "ui/types.hpp"
 #include "ui/values.hpp"
 
 using namespace pcui;
 
-std::unique_ptr<detail::Descriptor> DialogButtons::operator()() {
+DescriptorPtr DialogButtons::operator()() {
     // Always expand
     base_.expand_ = true;
 
@@ -102,5 +103,9 @@ wxSizerItem *DialogButtons::Desc::build(const detail::Scaffold& scaffold) const 
     auto *item{new wxSizerItem(sizer)};
     detail::apply(base_, item);
     return item;
+}
+
+detail::Descriptor *DialogButtons::Desc::clone() const {
+    return new Desc(*this);
 }
 

@@ -19,14 +19,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/hyperlink.h>
-
 #include <wx/font.h>
+#include <wx/hyperlink.h>
 #include <wx/stattext.h>
+
+#include "ui/types.hpp"
 
 using namespace pcui;
 
-std::unique_ptr<detail::Descriptor> Hyperlink::operator()() {
+DescriptorPtr Hyperlink::operator()() {
     return std::make_unique<Hyperlink::Desc>(std::move(*this));
 }
 
@@ -47,5 +48,9 @@ wxSizerItem *Hyperlink::Desc::build(const detail::Scaffold& scaffold) const {
     detail::apply(base_, item);
 
     return item;
+}
+
+detail::Descriptor *Hyperlink::Desc::clone() const {
+    return new Desc(*this);
 }
 

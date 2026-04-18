@@ -122,3 +122,7 @@ wxSizerItem *Label::Desc::build(const detail::Scaffold& scaffold) const {
     return item;
 }
 
+detail::Descriptor *Label::Desc::clone() const {
+    return new Desc(*this);
+}
+

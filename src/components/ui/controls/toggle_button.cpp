@@ -23,6 +23,7 @@
 
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
+#include "ui/types.hpp"
 #include "utils/defer.hpp"
 
 using namespace pcui;
@@ -81,7 +82,7 @@ struct Control : detail::DataWindow<wxToggleButton, data::Bool::Receiver> {
 
 } // namespace
 
-std::unique_ptr<detail::Descriptor> ToggleButton::operator()() {
+DescriptorPtr ToggleButton::operator()() {
     return std::make_unique<ToggleButton::Desc>(std::move(*this));
 }
 
@@ -93,5 +94,9 @@ wxSizerItem *ToggleButton::Desc::build(const detail::Scaffold& scaffold) const {
     auto *item{new wxSizerItem(chk)};
     detail::apply(win_.base_, item);
     return item;
+}
+
+detail::Descriptor *ToggleButton::Desc::clone() const {
+    return new Desc(*this);
 }
 

@@ -22,6 +22,7 @@
 #include "data/string.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
+#include "ui/types.hpp"
 
 #include "ui_export.h"
 
@@ -37,15 +38,15 @@ struct UI_EXPORT ComboBox {
 
     std::vector<wxString> defaults_;
 
-    std::unique_ptr<detail::Descriptor> operator()();
+    DescriptorPtr operator()();
 };
 
 struct UI_EXPORT ComboBox::Desc : ComboBox, detail::Descriptor {
     Desc(ComboBox&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui
-
 

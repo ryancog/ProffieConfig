@@ -41,6 +41,7 @@ struct UI_EXPORT Selector::Desc : Selector, detail::Descriptor {
     Desc(Selector&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

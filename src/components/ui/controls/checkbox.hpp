@@ -22,6 +22,7 @@
 #include "data/bool.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
+#include "ui/types.hpp"
 
 #include "ui_export.h"
 
@@ -36,13 +37,14 @@ struct UI_EXPORT CheckBox {
     wxString label_;
     data::Bool& data_;
 
-    std::unique_ptr<detail::Descriptor> operator()();
+    DescriptorPtr operator()();
 };
 
 struct UI_EXPORT CheckBox::Desc : CheckBox, detail::Descriptor {
     Desc(CheckBox&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

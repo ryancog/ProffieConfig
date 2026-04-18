@@ -94,3 +94,7 @@ wxSizerItem *Image::Desc::build(const detail::Scaffold& scaffold) const {
     return item;
 }
 
+detail::Descriptor *Image::Desc::clone() const {
+    return new Desc(*this);
+}
+

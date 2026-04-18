@@ -87,13 +87,14 @@ struct UI_EXPORT Text {
 
     std::variant<SingleLine, MultiLine> mode_;
 
-    std::unique_ptr<detail::Descriptor> operator()();
+    DescriptorPtr operator()();
 };
 
 struct UI_EXPORT Text::Desc : Text, detail::Descriptor {
     Desc(Text&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

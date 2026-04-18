@@ -1,4 +1,5 @@
 #include "panel.hpp"
+#include "ui/types.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
@@ -67,7 +68,7 @@ struct Layout : detail::DataWindow<wxPanel, data::Generic::Receiver> {
 
 } // namespace
 
-std::unique_ptr<detail::Descriptor> Panel::operator()() {
+DescriptorPtr Panel::operator()() {
     return std::make_unique<Panel::Desc>(std::move(*this));
 }
 
@@ -81,5 +82,9 @@ wxSizerItem *Panel::Desc::build(const detail::Scaffold& scaffold) const {
     detail::apply(win_.base_, item);
 
     return item;
+}
+
+detail::Descriptor *Panel::Desc::clone() const {
+    return new Desc(*this);
 }
 

@@ -21,9 +21,11 @@
 
 #include <wx/statline.h>
 
+#include "ui/types.hpp"
+
 using namespace pcui;
 
-std::unique_ptr<detail::Descriptor> Divider::operator()() {
+DescriptorPtr Divider::operator()() {
     return std::make_unique<Divider::Desc>(std::move(*this));
 }
 
@@ -35,5 +37,9 @@ wxSizerItem *Divider::Desc::build(const detail::Scaffold& scaffold) const {
     auto *item{new wxSizerItem(text)};
     detail::apply(base_, item);
     return item;
+}
+
+detail::Descriptor *Divider::Desc::clone() const {
+    return new Desc(*this);
 }
 

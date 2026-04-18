@@ -25,6 +25,7 @@
 #include "ui/detail/scaffold.hpp"
 #include "ui/layout/priv/groupbox.hpp"
 #include "ui/detail/window.hpp"
+#include "ui/types.hpp"
 
 using namespace pcui;
 
@@ -53,7 +54,7 @@ struct Layout : detail::Window<priv::GroupBox> {
 
 } // namespace
 
-std::unique_ptr<detail::Descriptor> Group::operator()() {
+DescriptorPtr Group::operator()() {
     return std::make_unique<Group::Desc>(std::move(*this));
 }
 
@@ -67,5 +68,9 @@ wxSizerItem *Group::Desc::build(const detail::Scaffold& scaffold) const {
     detail::apply(win_.base_, item);
 
     return item;
+}
+
+detail::Descriptor *Group::Desc::clone() const {
+    return new Desc(*this);
 }
 

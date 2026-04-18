@@ -50,6 +50,7 @@ struct UI_EXPORT Image::Desc : Image, detail::Descriptor {
     Desc(Image&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

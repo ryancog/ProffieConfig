@@ -56,6 +56,7 @@ struct UI_EXPORT Split::Desc : Split, detail::Descriptor {
     Desc(Split&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

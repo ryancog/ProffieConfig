@@ -54,6 +54,7 @@ struct UI_EXPORT Segmented::Desc : Segmented, detail::Descriptor {
     Desc(Segmented&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

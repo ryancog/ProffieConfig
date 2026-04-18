@@ -23,6 +23,7 @@
 
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
+#include "ui/types.hpp"
 #include "utils/defer.hpp"
 
 using namespace pcui;
@@ -81,7 +82,7 @@ struct Control : detail::DataWindow<wxCheckBox, data::Bool::Receiver> {
 
 } // namespace
 
-std::unique_ptr<detail::Descriptor> CheckBox::operator()() {
+DescriptorPtr CheckBox::operator()() {
     return std::make_unique<CheckBox::Desc>(std::move(*this));
 }
 
@@ -93,5 +94,9 @@ wxSizerItem *CheckBox::Desc::build(const detail::Scaffold& scaffold) const {
     auto *item{new wxSizerItem(chk)};
     detail::apply(win_.base_, item);
     return item;
+}
+
+detail::Descriptor *CheckBox::Desc::clone() const {
+    return new Desc(*this);
 }
 

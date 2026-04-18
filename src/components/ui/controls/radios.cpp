@@ -25,6 +25,7 @@
 #include "ui/detail/scaffold.hpp"
 #include "ui/layout/priv/groupbox.hpp"
 #include "ui/detail/datawin.hpp"
+#include "ui/types.hpp"
 #include "utils/defer.hpp"
 
 using namespace pcui;
@@ -131,7 +132,7 @@ struct Manager : detail::DataWindow<priv::GroupBox, data::Exclusive::Receiver> {
 
 } // namespace
 
-std::unique_ptr<detail::Descriptor> Radios::operator()() {
+DescriptorPtr Radios::operator()() {
     return std::make_unique<Radios::Desc>(std::move(*this));
 }
 
@@ -143,5 +144,9 @@ wxSizerItem *Radios::Desc::build(const detail::Scaffold& scaffold) const {
     auto *item{new wxSizerItem(chk)};
     detail::apply(win_.base_, item);
     return item;
+}
+
+detail::Descriptor *Radios::Desc::clone() const {
+    return new Desc(*this);
 }
 

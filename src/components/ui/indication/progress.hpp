@@ -54,6 +54,7 @@ struct UI_EXPORT Progress::Desc : Progress, detail::Descriptor {
     Desc(Progress&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 struct UI_EXPORT Progress::Data : data::Model {

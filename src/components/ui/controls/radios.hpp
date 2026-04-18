@@ -46,6 +46,7 @@ struct UI_EXPORT Radios::Desc : Radios, detail::Descriptor {
     Desc(Radios&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

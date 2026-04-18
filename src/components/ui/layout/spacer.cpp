@@ -19,9 +19,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ui/types.hpp"
+
 using namespace pcui;
 
-std::unique_ptr<detail::Descriptor> Spacer::operator()() {
+DescriptorPtr Spacer::operator()() {
     // NOLINTNEXTLINE(performance-move-const-arg)
     return std::make_unique<Spacer::Desc>(std::move(*this));
 }
@@ -34,7 +36,11 @@ wxSizerItem *Spacer::Desc::build(const detail::Scaffold&) const {
     return new wxSizerItem(size_, size_);
 }
 
-std::unique_ptr<detail::Descriptor> StretchSpacer::operator()() {
+detail::Descriptor *Spacer::Desc::clone() const {
+    return new Desc(*this);
+}
+
+DescriptorPtr StretchSpacer::operator()() {
     // NOLINTNEXTLINE(performance-move-const-arg)
     return std::make_unique<StretchSpacer::Desc>(std::move(*this));
 }
@@ -45,5 +51,9 @@ StretchSpacer::Desc::Desc(StretchSpacer&& data) :
 
 wxSizerItem *StretchSpacer::Desc::build(const detail::Scaffold&) const {
     return new wxSizerItem(size_, size_, proportion_);
+}
+
+detail::Descriptor *StretchSpacer::Desc::clone() const {
+    return new Desc(*this);
 }
 

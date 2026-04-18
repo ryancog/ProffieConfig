@@ -37,13 +37,14 @@ struct UI_EXPORT DialogButtons {
     DescriptorPtr cancel_;
     DescriptorPtr apply_;
 
-    std::unique_ptr<detail::Descriptor> operator()();
+    DescriptorPtr operator()();
 };
 
 struct UI_EXPORT DialogButtons::Desc : DialogButtons, detail::Descriptor {
     Desc(DialogButtons&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

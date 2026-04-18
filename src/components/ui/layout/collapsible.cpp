@@ -25,6 +25,7 @@
 #include "ui/detail/helpers.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
+#include "ui/types.hpp"
 
 using namespace pcui;
 
@@ -75,7 +76,7 @@ struct Layout : detail::DataWindow<wxCollapsiblePane, data::Generic::Receiver> {
 
 } // namespace
 
-std::unique_ptr<detail::Descriptor> Collapsible::operator()() {
+DescriptorPtr Collapsible::operator()() {
     return std::make_unique<Collapsible::Desc>(std::move(*this));
 }
 
@@ -89,5 +90,9 @@ wxSizerItem *Collapsible::Desc::build(const detail::Scaffold& scaffold) const {
     detail::apply(win_.base_, item);
 
     return item;
+}
+
+detail::Descriptor *Collapsible::Desc::clone() const {
+    return new Desc(*this);
 }
 

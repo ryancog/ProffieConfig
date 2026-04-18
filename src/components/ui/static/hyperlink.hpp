@@ -25,6 +25,7 @@
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
 #include "ui/text.hpp"
+#include "ui/types.hpp"
 
 #include "ui_export.h"
 
@@ -41,13 +42,14 @@ struct UI_EXPORT Hyperlink {
 
     text::detail::StyleData style_;
 
-    std::unique_ptr<detail::Descriptor> operator()();
+    DescriptorPtr operator()();
 };
 
 struct UI_EXPORT Hyperlink::Desc : Hyperlink, detail::Descriptor {
     Desc(Hyperlink&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

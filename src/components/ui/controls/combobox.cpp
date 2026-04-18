@@ -24,6 +24,7 @@
 
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
+#include "ui/types.hpp"
 #include "utils/defer.hpp"
 
 using namespace pcui;
@@ -97,7 +98,7 @@ struct Control : detail::DataWindow<wxComboBox, data::String::Receiver> {
 
 } // namespace
 
-std::unique_ptr<detail::Descriptor> ComboBox::operator()() {
+DescriptorPtr ComboBox::operator()() {
     return std::make_unique<ComboBox::Desc>(std::move(*this));
 }
 
@@ -111,5 +112,9 @@ wxSizerItem *ComboBox::Desc::build(const detail::Scaffold& scaffold) const {
     detail::apply(win_.base_, item);
 
     return item;
+}
+
+detail::Descriptor *ComboBox::Desc::clone() const {
+    return new Desc(*this);
 }
 

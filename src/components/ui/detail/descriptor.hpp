@@ -34,6 +34,8 @@ struct UI_EXPORT Descriptor {
      * Build w/ a parent element.
      */
     [[nodiscard]] virtual wxSizerItem *build(const Scaffold&) const = 0;
+
+    [[nodiscard]] virtual Descriptor *clone() const = 0;
 };
 
 } // namespace pcui::detail

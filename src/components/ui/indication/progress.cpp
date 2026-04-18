@@ -84,6 +84,10 @@ wxSizerItem *Progress::Desc::build(const detail::Scaffold& scaffold) const {
     return item;
 }
 
+detail::Descriptor *Progress::Desc::clone() const {
+    return new Desc(*this);
+}
+
 Progress::Data::Data() = default;
 
 Progress::Data::~Data() = default;

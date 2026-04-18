@@ -46,6 +46,7 @@ struct UI_EXPORT Collapsible::Desc : Collapsible, detail::Descriptor {
     Desc(Collapsible&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

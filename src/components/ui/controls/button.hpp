@@ -98,6 +98,7 @@ struct UI_EXPORT Button::Desc : Button, detail::Descriptor {
     Desc(Button&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

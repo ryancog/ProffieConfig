@@ -25,6 +25,7 @@
 
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
+#include "ui/types.hpp"
 #include "utils/defer.hpp"
 
 using namespace pcui;
@@ -200,7 +201,7 @@ private:
     }
 
     std::vector<std::unique_ptr<data::String::Receiver>> mRcvrs;
-    pcui::Choice::Labeler mLabeler;
+    Choice::Labeler mLabeler;
     wxString mEmptyLabel;
 
     struct LabelReceiver final : data::String::Receiver {
@@ -285,7 +286,7 @@ struct ListControl : ControlBase<ListControl, wxListBox> {
 
 } // namespace
 
-std::unique_ptr<detail::Descriptor> Choice::operator()() {
+DescriptorPtr Choice::operator()() {
     return std::make_unique<Choice::Desc>(std::move(*this));
 }
 
@@ -303,5 +304,9 @@ wxSizerItem *Choice::Desc::build(const detail::Scaffold& scaffold) const {
     auto *item{new wxSizerItem(ctrl)};
     detail::apply(win_.base_, item);
     return item;
+}
+
+detail::Descriptor *Choice::Desc::clone() const {
+    return new Desc(*this);
 }
 

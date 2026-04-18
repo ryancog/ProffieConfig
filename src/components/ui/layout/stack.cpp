@@ -24,7 +24,7 @@
 
 using namespace pcui;
 
-std::unique_ptr<detail::Descriptor> Stack::operator()() {
+DescriptorPtr Stack::operator()() {
     return std::make_unique<Stack::Desc>(std::move(*this));
 }
 
@@ -45,5 +45,9 @@ wxSizerItem *Stack::Desc::build(const detail::Scaffold& scaffold) const {
     detail::apply(base_, item);
 
     return item;
+}
+
+detail::Descriptor *Stack::Desc::clone() const {
+    return new Desc(*this);
 }
 

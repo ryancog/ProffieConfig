@@ -22,8 +22,8 @@
 #include "data/number.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
-
 #include "ui/types.hpp"
+
 #include "ui_export.h"
 
 namespace pcui {
@@ -39,13 +39,14 @@ struct UI_EXPORT Stepper {
         RefWrap<data::Decimal>
     > data_;
 
-    std::unique_ptr<detail::Descriptor> operator()();
+    DescriptorPtr operator()();
 };
 
 struct UI_EXPORT Stepper::Desc : Stepper, detail::Descriptor {
     Desc(Stepper&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

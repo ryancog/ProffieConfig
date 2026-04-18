@@ -48,6 +48,7 @@ struct UI_EXPORT Label::Desc : Label, detail::Descriptor {
     Desc(Label&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

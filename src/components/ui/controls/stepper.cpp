@@ -25,6 +25,7 @@
 #include "data/number.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
+#include "ui/types.hpp"
 #include "utils/defer.hpp"
 
 using namespace pcui;
@@ -153,7 +154,7 @@ struct DoubleCtrl : detail::DataWindow<wxSpinCtrlDouble, data::Integer::Receiver
 
 } // namespace
 
-std::unique_ptr<detail::Descriptor> Stepper::operator()() {
+DescriptorPtr Stepper::operator()() {
     return std::make_unique<Stepper::Desc>(std::move(*this));
 }
 
@@ -173,5 +174,9 @@ wxSizerItem *Stepper::Desc::build(const detail::Scaffold& scaffold) const {
     detail::apply(win_.base_, item);
 
     return item;
+}
+
+detail::Descriptor *Stepper::Desc::clone() const {
+    return new Desc(*this);
 }
 

@@ -22,6 +22,7 @@
 #include <wx/sizer.h>
 
 #include "ui/detail/descriptor.hpp"
+#include "ui/types.hpp"
 #include "utils/types.hpp"
 
 #include "ui_export.h"
@@ -33,13 +34,14 @@ struct UI_EXPORT Spacer {
 
     int32 size_{8};
 
-    std::unique_ptr<detail::Descriptor> operator()();
+    DescriptorPtr operator()();
 };
 
 struct UI_EXPORT Spacer::Desc : Spacer, detail::Descriptor {
     Desc(Spacer&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 struct UI_EXPORT StretchSpacer {
@@ -48,13 +50,14 @@ struct UI_EXPORT StretchSpacer {
     int32 size_{8};
     int32 proportion_{1};
 
-    std::unique_ptr<detail::Descriptor> operator()();
+    DescriptorPtr operator()();
 };
 
 struct UI_EXPORT StretchSpacer::Desc : StretchSpacer, detail::Descriptor {
     Desc(StretchSpacer&&);
 
     [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
+    [[nodiscard]] Descriptor *clone() const override;
 };
 
 } // namespace pcui

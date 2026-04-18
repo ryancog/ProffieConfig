@@ -23,6 +23,7 @@
 
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
+#include "ui/types.hpp"
 #include "utils/defer.hpp"
 
 using namespace pcui;
@@ -99,7 +100,7 @@ struct Control : detail::DataWindow<wxFilePickerCtrl, data::String::Receiver> {
 
 } // namespace
 
-std::unique_ptr<detail::Descriptor> FilePicker::operator()() {
+DescriptorPtr FilePicker::operator()() {
     return std::make_unique<FilePicker::Desc>(std::move(*this));
 }
 
@@ -111,5 +112,9 @@ wxSizerItem *FilePicker::Desc::build(const detail::Scaffold& scaffold) const {
     auto *item{new wxSizerItem(chk)};
     detail::apply(win_.base_, item);
     return item;
+}
+
+detail::Descriptor *FilePicker::Desc::clone() const {
+    return new Desc(*this);
 }
 

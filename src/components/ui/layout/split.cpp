@@ -24,6 +24,7 @@
 
 #include "ui/build.hpp"
 #include "ui/detail/datawin.hpp"
+#include "ui/types.hpp"
 
 using namespace pcui;
 
@@ -70,7 +71,7 @@ struct Layout : detail::DataWindow<wxSplitterWindow, data::Generic::Receiver> {
 
 } // namespace
 
-std::unique_ptr<detail::Descriptor> Split::operator()() {
+DescriptorPtr Split::operator()() {
     return std::make_unique<Split::Desc>(std::move(*this));
 }
 
@@ -84,5 +85,9 @@ wxSizerItem *Split::Desc::build(const detail::Scaffold& scaffold) const {
     detail::apply(win_.base_, item);
 
     return item;
+}
+
+detail::Descriptor *Split::Desc::clone() const {
+    return new Desc(*this);
 }
 
