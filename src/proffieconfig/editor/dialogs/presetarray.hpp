@@ -27,8 +27,8 @@ struct PresetArrayDlg : pcui::Dialog {
     PresetArrayDlg(wxWindow *, config::presets::Array&, bool mayCancel);
 
 private:
-    config::presets::Array& mArray;
-
     pcui::DescriptorPtr ui(bool);
+
+    config::presets::Array& mArray;
 };
 
