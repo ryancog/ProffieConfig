@@ -19,7 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/generic.hpp"
 #include "ui/detail/general.hpp"
 #include "ui/types.hpp"
 
@@ -37,8 +36,6 @@ struct UI_EXPORT Scrolled {
         int32 x_{-1};
         int32 y_{-1};
     } scrollRate_;
-
-    std::optional<RefWrap<data::Generic>> data_;
 
     DescriptorPtr child_;
 

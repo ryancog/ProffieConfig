@@ -21,14 +21,15 @@
 
 #include <wx/scrolwin.h>
 
-#include "ui/detail/datawin.hpp"
+#include "ui/detail/window.hpp"
+#include "ui/types.hpp"
 
 using namespace pcui;
 
 namespace {
 
-struct Window : detail::DataWindow<wxScrolledWindow, data::Generic::Receiver> {
-    Window(const detail::Scaffold& scaffold, const Scrolled& desc) {
+struct Layout : detail::Window<wxScrolledWindow> {
+    Layout(const detail::Scaffold& scaffold, const Scrolled& desc) {
         Create(scaffold.childParent_, wxID_ANY);
 
         postCreation(scaffold, desc.win_);
@@ -43,16 +44,10 @@ struct Window : detail::DataWindow<wxScrolledWindow, data::Generic::Receiver> {
 
         sizer->Add(desc.child_->build(childScaffold));
         SetSizer(sizer);
-
-        if (desc.data_) attach(*desc.data_);
-    }
-
-    ~Window() override {
-        detach();
     }
 
     void updateSizes() override {
-        DataWindow::updateSizes();
+        Window::updateSizes();
         
         if (GetSizer() == nullptr) return;
 
@@ -93,7 +88,7 @@ Scrolled::Desc::Desc(Scrolled&& data) :
     Scrolled{std::move(data)} {}
 
 wxSizerItem *Scrolled::Desc::build(const detail::Scaffold& scaffold) const {
-    auto *win{new Window(scaffold, *this)};
+    auto *win{new Layout(scaffold, *this)};
 
     auto *item{new wxSizerItem(win)};
     detail::apply(win_.base_, item);
