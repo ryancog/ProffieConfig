@@ -23,6 +23,7 @@
 #include <wx/menu.h>
 
 #include "utils/types.hpp"
+#include "ui/dialogs/message_types.hpp"
 
 #include "app_export.h"
 
@@ -54,7 +55,7 @@ APP_EXPORT void setName(const wxString& appName);
 APP_EXPORT wxString getName();
 
 using ShowMessageFunc = int32(
-    const wxString&, const wxString&, long, wxWindow *
+    const wxString&, const pcui::dialogs::message::Args&
 );
 
 /**

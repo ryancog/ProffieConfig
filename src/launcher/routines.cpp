@@ -34,7 +34,6 @@
 #include <pwd.h>
 #endif
 
-#include "app/app.hpp"
 #include "ui/dialogs/message.hpp"
 #include "utils/paths.hpp"
 #include "log/logger.hpp"
@@ -95,7 +94,7 @@ void routine::platformInstall(logging::Branch& lBranch) {
         if (ec) {
             auto errMessage{"Failed to install launcher: " + ec.message() + " (" + std::to_string(ec.value()) + ')'};
             logger.info(errMessage);
-            pcui::showMessage(_("Failed to install launcher"), app::getName());
+            pcui::showMessage(_("Failed to install launcher"));
             return;
         }
     }
@@ -158,7 +157,7 @@ void routine::platformInstall(logging::Branch& lBranch) {
     fs::remove_all(currentBundle, ec);
 #   endif
 
-    pcui::showMessage(_("Launcher has been installed."), app::getName());
+    pcui::showMessage(_("Launcher has been installed."));
 #   ifdef _WIN32
     if (wxExecute(installedExec.c_str()) == 0) {
         logger.warn("Failed to start launcher.");

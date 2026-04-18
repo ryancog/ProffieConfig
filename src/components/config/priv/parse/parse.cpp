@@ -1745,17 +1745,30 @@ void tryAddInjection(const std::string& buffer, config::Config& config) {
             injectionFile.find("/..") != std::string::npos
        ) {
         pcui::showMessage(
-            wxString::Format(_("Injection file \"%s\" has an invalid name and cannot be registered.\nYou may add a substitute after import."), injectionFile),
-            _("Unknown Injection Encountered")
+            wxString::Format(
+                _("Injection file \"%s\" has an invalid name and cannot be registered.") + '\n' +
+                _("You may add a substitute after import."),
+                injectionFile
+            ),
+            {.caption_=_("Unknown Injection Encountered")}
         );
         return;
     }
     auto filePath{paths::injectionDir() / injectionFile};
     std::error_code err;
     if (not fs::exists(filePath, err)) {
-        if (wxYES != pcui::showMessage(wxString::Format(_("Injection file \"%s\" has not been registered.\nWould you like to add the injection file now?"), injectionFile), _("Unknown Injection Encountered"), wxYES_NO | wxYES_DEFAULT)) {
-            return;
-        }
+        const auto registerChoice{pcui::showMessage(
+            wxString::Format(
+                _("Injection file \"%s\" has not been registered.") + '\n' +
+                _("Would you like to add the injection file now?"),
+                injectionFile
+            ),
+            {
+                .caption_=_("Unknown Injection Encountered"),
+                .style_=wxYES_NO | wxYES_DEFAULT
+            }
+        )};
+        if (wxYES != registerChoice) return;
 
         while (not false) {
             wxFileDialog fileDialog{
@@ -1771,8 +1784,15 @@ void tryAddInjection(const std::string& buffer, config::Config& config) {
             auto copyPath{paths::injectionDir() / filePath};
             fs::create_directories(copyPath.parent_path());
             if (not files::copyOverwrite(fileDialog.GetPath().ToStdString(), copyPath, err)) {
-                auto res{pcui::showMessage(err.message(), _("Injection file could not be added."), wxOK | wxCANCEL | wxOK_DEFAULT)};
-                if (res == wxCANCEL) return;
+                auto choice{pcui::showMessage(
+                    err.message(),
+                    {
+                        .caption_=_("Injection file could not be added."),
+                        .style_=wxOK | wxCANCEL | wxOK_DEFAULT
+                    }
+                )};
+
+                if (choice == wxCANCEL) return;
 
                 continue;
             }

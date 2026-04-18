@@ -90,14 +90,23 @@ public:
 
         if (argc == 2 and argv[1] == "uninstall") {
             action_ = Action::Uninstall;
-            if (wxNO == pcui::showMessage(_("Are you sure you want to uninstall ProffieConfig?"), app::getName(), wxYES_NO | wxNO_DEFAULT)) {
+            auto choice{pcui::showMessage(
+                _("Are you sure you want to uninstall ProffieConfig?"),
+                {.style_=wxYES_NO | wxNO_DEFAULT}
+            )};
+            if (wxNO == choice) {
                 return false;
             }
         } else {
             if (not fs::exists(paths::executable(paths::Executable::Main))) {
                 action_ = Action::First_Install;
                 logger.info("Main ProffieConfig binary missing, update/install routine required.");
-                if (wxNO == pcui::showMessage(_("ProffieConfig installation needs to run, continue?"), app::getName(), wxYES_NO | wxYES_DEFAULT)) {
+
+                auto choice{pcui::showMessage(
+                    _("ProffieConfig installation needs to run, continue?"),
+                    {.style_=wxYES_NO | wxYES_DEFAULT}
+                )};
+                if (wxNO == choice) {
                     return false;
                 }
             }
@@ -237,7 +246,12 @@ public:
         prog.set(60, "Removing resources...");
         fs::remove_all(paths::resourceDir(), err);
 
-        if (wxYES == pcui::showMessage(_("Purge user data? (configurations, saves, etc.)\nIf files are kept, they will be available if reinstalled."), app::getName(), wxYES_NO | wxNO_DEFAULT)) {
+        auto choice{pcui::showMessage(
+            _("Purge user data? (configurations, saves, etc.)") + '\n' +
+            _("If files are kept, they will be available if reinstalled."), 
+            {.style_=wxYES_NO | wxNO_DEFAULT}
+        )};
+        if (wxYES == choice) {
             prog.set(70, "Purging user data...");
             fs::remove_all(paths::dataDir());
         }

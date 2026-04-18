@@ -96,9 +96,11 @@ onboard::Frame::Frame() :
                     _("Dependency installation failed, please try again.") +
                     "\n\n" +
                     data::String::Context{frame.mSetupPage.errorMessage_}.val(),
-                    _("Installation Failure"),
-                    wxOK | wxCENTER,
-                    &frame
+                    {
+                        .caption_=_("Installation Failure"),
+                        .style_=wxOK | wxCENTER,
+                        .parent_=&frame
+                    }
                 );
             });
         }
@@ -185,9 +187,11 @@ pcui::DescriptorPtr onboard::Frame::ui() {
               .func_=[this] {
                   auto res{pcui::showMessage(
                       _("Are you sure you want to cancel setup?"),
-                      _("Exit ProffieConfig"),
-                      wxYES_NO | wxNO_DEFAULT | wxCENTER,
-                      this
+                      {
+                          .caption_=_("Exit ProffieConfig"),
+                          .style_=wxYES_NO | wxNO_DEFAULT | wxCENTER,
+                          .parent_=this
+                      }
                   )};
 
                   if (res == wxYES) Close();
@@ -209,9 +213,11 @@ pcui::DescriptorPtr onboard::Frame::ui() {
                       _("Skipping will leave ProffieConfig and your computer unprepared.") +
                       "\n\n" +
                       _("You should only do this if you know what you are doing!"),
-                      _("Skip Setup?"),
-                      wxYES_NO | wxNO_DEFAULT,
-                      this
+                      {
+                          .caption_=_("Skip Setup?"),
+                          .style_=wxYES_NO | wxNO_DEFAULT,
+                          .parent_=this
+                      }
                   )};
                   if (res == wxYES) {
                       data::Choice::Context{mPhase}.choose(ePhase_Info);

@@ -393,9 +393,10 @@ bool app::setupExclusion(const std::string& lockName) {
     if (singleInstance.IsAnotherRunning()) {
         auto res{showMessage(
             _("It looks like ProffieConfig is already running, continuing may break things!"),
-            lockName,
-            wxOK | wxCANCEL | wxCANCEL_DEFAULT,
-            nullptr
+            {
+                .caption_=lockName,
+                .style_=wxOK | wxCANCEL | wxCANCEL_DEFAULT,
+            }
         )};
         if (res == wxCANCEL) return false;
     }
@@ -509,7 +510,7 @@ wxString app::getName() {
 }
 
 void app::provideUI(
-    int32 showMessage(const wxString&, const wxString&, long, wxWindow *)
+    ShowMessageFunc showMessage
 ) {
     ::showMessage = showMessage;
 }

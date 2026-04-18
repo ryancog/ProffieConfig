@@ -123,7 +123,7 @@ void EditorWindow::bindEvents() {
         if (not files::copyOverwrite(src, dst, ec)) {
             pcui::showMessage(
                 ec.message(),
-                _("Injection file could not be added.")
+                {.caption_=_("Injection file could not be added.")}
             );
             return;
         }
@@ -292,7 +292,14 @@ void EditorWindow::createToolBar() {
 bool EditorWindow::save() {
     auto err{mInfo.save()};
     if (err) {
-        pcui::showMessage(*err, _("Config Not Saved"), wxOK | wxCENTER | wxICON_ERROR, this);
+        pcui::showMessage(
+            *err,
+            {
+                .caption_=_("Config Not Saved"),
+                .style_=wxOK | wxCENTER | wxICON_ERROR,
+                .parent_=this
+            }
+        );
     }
     return not err;
 }

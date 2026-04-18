@@ -309,11 +309,13 @@ void MainMenu::bindEvents() {
             }
 
             auto res{pcui::showMessage(
-                _("There is at least one editor open with unsaved changes, are you sure you want to exit?") +
-                "\n\n"+
+                _("There is at least one editor open with unsaved changes.") + '\n' +
+                _("Are you sure you want to exit?") + "\n\n"+
                 _("All unsaved changes will be lost!"),
-                _("Open Editor(s)"),
-                wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION
+                {
+                    .caption_=_("Open Editor(s)"),
+                    .style_=wxYES_NO | wxNO_DEFAULT | wxCENTER | wxICON_EXCLAMATION
+                }
             )};
             if (res != wxYES) return false;
             break;
@@ -359,18 +361,18 @@ void MainMenu::bindEvents() {
             ) {
             auto res{pcui::showHideablePrompt(
                 _("Although version management can be done with editors open, some information may be lost when adding/removing props."),
-                _("Please Close Editors"),
-                this,
-                wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxCENTER,
-                wxEmptyString,
-                wxEmptyString,
-                _("Proceed")
+                {
+                    .caption_=_("Please Close Editors"),
+                    .style_=wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxCENTER,
+                    .labels_={.ok_=_("Proceed")},
+                    .parent_=this,
+                }
             )};
             state::setPreference(
                 state::ePreference_Hide_Editor_Manage_Versions_Warn,
-                res.wantsToHide_
+                res.wantsHide_
             );
-            if (res.result_ != wxID_OK) return;
+            if (res.id_ != wxID_OK) return;
         }
 
         // REVIEW
@@ -527,7 +529,7 @@ void MainMenu::importConfig() {
             if (file.fail()) {
                 pcui::showMessage(
                     _("File could not be created."),
-                    _("Config Add Error")
+                    {.caption_=_("Config Add Error")}
                 );
                 return;
             }
@@ -536,7 +538,7 @@ void MainMenu::importConfig() {
         } else {
             auto err{config::import(result.name_, result.path_)};
             if (err) {
-                pcui::showMessage(*err, _("Import Error"));
+                pcui::showMessage(*err, {.caption_=_("Import Error")});
             }
         }
 

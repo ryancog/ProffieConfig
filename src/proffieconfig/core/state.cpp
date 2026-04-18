@@ -188,8 +188,10 @@ void doNecessaryMigrations() {
            ) {
             pcui::showMessage(
                 _("You should visit the versions manager to retry fetching the defaults soon."),
-                _("Versions Download Failed"),
-                wxOK | wxCENTER | wxICON_WARNING
+                {
+                    .caption_=_("Versions Download Failed"),
+                    .style_=wxOK | wxCENTER | wxICON_WARNING
+                }
             );
         }
     }
