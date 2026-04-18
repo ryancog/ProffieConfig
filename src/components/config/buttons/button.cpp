@@ -19,7 +19,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config/strings.hpp"
+#include "utils/string.hpp"
+
 using namespace config::buttons;
+
+namespace {
+
+constexpr std::string_view TYPE_STR{"Type"};
+constexpr std::string_view EVENT_STR{"Event"};
+constexpr std::string_view PIN_STR{"Pin"};
+constexpr std::string_view NAME_STR{"Name"};
+constexpr std::string_view TOUCH_STR{"TouchThreshold"};
+
+} // namespace
 
 Button::Button(data::Node *parent) :
     data::Node(parent),
@@ -29,62 +42,59 @@ Button::Button(data::Node *parent) :
     name_(this),
     touch_(this) {
     CreationScope createScope(*this);
-    /*
-    type.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::ChoiceData::eID_Selection) return;
 
-        touch.show(type == TOUCH_BUTTON);
-    });
-    pin.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::ComboBoxData::eID_Value) return;
-
-        auto rawValue{static_cast<string>(pin)};
+    const auto pinFilter{[](
+        const data::String::ROContext&, std::string& str, size& pos
+    ) {
         uint32 numTrimmed{};
-        auto insertionPoint{pin.getInsertionPoint()};
-        Utils::trimCppName(
-            rawValue,
+        utils::trimCppName(
+            str,
             true,
             &numTrimmed,
-            insertionPoint
+            pos
         );
+        pos -= numTrimmed;
+    }};
+    pin_.setFilter(pinFilter);
 
-        if (rawValue == static_cast<string>(pin)) return;
-
-        pin = std::move(rawValue);
-        pin.setInsertionPoint(insertionPoint - numTrimmed);
-    });
-    name.setUpdateHandler([this](uint32 id) {
-        if (id != pcui::TextData::eID_Value) return;
-
-        auto rawValue{static_cast<string>(name)};
+    const auto nameFilter{[](
+        const data::String::ROContext&, std::string& str, size& pos
+    ) {
         uint32 numTrimmed{};
-        auto insertionPoint{name.getInsertionPoint()};
-        Utils::trim(
-            rawValue,
+        utils::trim(
+            str,
             {.allowAlpha=true, .allowNum=true},
             &numTrimmed,
-            insertionPoint
+            pos
         );
+        pos -= numTrimmed;
+    }};
 
-        if (rawValue == static_cast<string>(name)) return;
+    data::Choice::Context{type_}.update(config::eBtn_Type_Max);
+    data::Choice::Context{event_}.update(config::eBtn_Evt_Max);
 
-        name = std::move(rawValue);
-        name.setInsertionPoint(insertionPoint - numTrimmed);
-    });
-
-    touch.setRange(0, 50000, false);
-    touch.setIncrement(10, false);
-    touch.setValue(1700);
-    */
+    data::Integer::Context touch{touch_};
+    touch.update({.min_=0, .max_=50000, .inc_=10});
+    touch.set(1700);
 }
 
 Button::~Button() = default;
 
-bool Button::enumerate(const EnumFunc&) {
-    assert(0); // TODO
+bool Button::enumerate(const EnumFunc& func) {
+    if (func(type_, strID(TYPE_STR), TYPE_STR)) return true;
+    if (func(event_, strID(EVENT_STR), EVENT_STR)) return true;
+    if (func(pin_, strID(PIN_STR), PIN_STR)) return true;
+    if (func(name_, strID(NAME_STR), NAME_STR)) return true;
+    if (func(touch_, strID(TOUCH_STR), TOUCH_STR)) return true;
+    return false;
 }
 
-data::Model *Button::find(uint64) {
-    assert(0); // TODO
+data::Model *Button::find(uint64 id) {
+	if (id == strID(TYPE_STR)) return &type_;
+	if (id == strID(EVENT_STR)) return &event_;
+	if (id == strID(PIN_STR)) return &pin_;
+	if (id == strID(NAME_STR)) return &name_;
+	if (id == strID(TOUCH_STR)) return &touch_;
+    return nullptr;
 }
 
