@@ -94,6 +94,10 @@ void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
 }
 
 void pcui::cripple(wxWindow *win) {
+    // TODO: These dynamic casts just... aren't working?
+    // I guess this is a gap in my knowledge of C++, afaik up-side cast should
+    // be possible, but e.g. SplitVisualizer preDestroyCripple() is never
+    // called (the cast failed).
     if (auto *ptr{dynamic_cast<detail::IDataDriven *>(win)}) {
         ptr->preDestroyCripple();
     }
