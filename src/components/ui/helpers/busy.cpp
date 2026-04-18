@@ -23,7 +23,9 @@
 #include <wx/busycursor.h>
 #include <wx/thread.h>
 
-pcui::BusyTracker::BusyTracker(wxWindow *win) : mWindow{win} {
+using namespace pcui;
+
+BusyTracker::BusyTracker(wxWindow *win) : mWindow{win} {
     if (wxIsMainThread()) {
         wxBeginBusyCursor();
     } else {
@@ -34,7 +36,7 @@ pcui::BusyTracker::BusyTracker(wxWindow *win) : mWindow{win} {
     }
 }
 
-pcui::BusyTracker::~BusyTracker() {
+BusyTracker::~BusyTracker() {
     if (wxIsMainThread()) {
         wxEndBusyCursor();
     } else {
@@ -45,6 +47,6 @@ pcui::BusyTracker::~BusyTracker() {
     }
 }
 
-pcui::BusyTracker::BusyTracker(const BusyTracker& other) :
+BusyTracker::BusyTracker(const BusyTracker& other) :
     BusyTracker(other.mWindow) {}
 

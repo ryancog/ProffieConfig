@@ -55,7 +55,7 @@ wxSizerItem *DialogButtons::Desc::build(const detail::Scaffold& scaffold) const 
     if (cancel_) {
         auto *item{cancel_->build(childScaffold)};
 
-        item->SetBorder(pcui::interGroupSpacing());
+        item->SetBorder(interGroupSpacing());
         const auto nonDirMask{item->GetFlag() & ~wxDIRECTION_MASK};
         item->SetFlag(nonDirMask | wxLEFT);
 
@@ -65,7 +65,7 @@ wxSizerItem *DialogButtons::Desc::build(const detail::Scaffold& scaffold) const 
     if (apply_) {
         auto *item{apply_->build(childScaffold)};
 
-        item->SetBorder(pcui::interGroupSpacing());
+        item->SetBorder(interGroupSpacing());
         const auto nonDirMask{item->GetFlag() & ~wxDIRECTION_MASK};
         item->SetFlag(nonDirMask | wxLEFT);
 
@@ -82,7 +82,7 @@ wxSizerItem *DialogButtons::Desc::build(const detail::Scaffold& scaffold) const 
     if (cancel_) {
         auto *item{cancel_->build(childScaffold)};
 
-        item->SetBorder(pcui::interGroupSpacing());
+        item->SetBorder(interGroupSpacing());
         const auto nonDirMask{item->GetFlag() & ~wxDIRECTION_MASK};
         item->SetFlag(nonDirMask | wxLEFT);
 
@@ -92,7 +92,7 @@ wxSizerItem *DialogButtons::Desc::build(const detail::Scaffold& scaffold) const 
     if (ok_) {
         auto *item{ok_->build(childScaffold)};
 
-        item->SetBorder(pcui::interGroupSpacing());
+        item->SetBorder(interGroupSpacing());
         const auto nonDirMask{item->GetFlag() & ~wxDIRECTION_MASK};
         item->SetFlag(nonDirMask | wxLEFT);
 

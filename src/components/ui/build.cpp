@@ -32,7 +32,7 @@ void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
     teardown(win);
 
     auto *parent{win};
-    if (dynamic_cast<pcui::Frame *>(parent)) {
+    if (dynamic_cast<Frame *>(parent)) {
         parent = new wxPanel(win);
     }
 
@@ -116,14 +116,14 @@ void pcui::cripple(wxSizerItem *item) {
     }
 
     if (item->IsWindow()) {
-        pcui::cripple(item->GetWindow());
+        cripple(item->GetWindow());
         return;
     }
 
     if (not item->IsSizer()) return;
 
     for (auto *childItem : item->GetSizer()->GetChildren()) {
-        pcui::cripple(childItem);
+        cripple(childItem);
     }
 }
 

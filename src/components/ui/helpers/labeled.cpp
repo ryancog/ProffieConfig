@@ -29,13 +29,13 @@
 using namespace pcui;
 
 DescriptorPtr Labeled::operator()() {
-    return pcui::Panel{
+    return Panel{
       .win_=win_,
-      .child_=pcui::Stack{
+      .child_=Stack{
         .base_={.expand_=true, .proportion_=1},
         .orient_=orient_,
         .children_={
-          pcui::Label{
+          Label{
             .win_={
               .base_={
                 .align_=orient_==wxHORIZONTAL? wxALIGN_CENTER : wxALIGN_NOT,
@@ -43,9 +43,9 @@ DescriptorPtr Labeled::operator()() {
             },
             .label_=label_,
           }(),
-          pcui::If{
+          If{
             .cond_=orient_==wxHORIZONTAL,
-            .then_=pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            .then_=Spacer{.size_=interControlSpacing()}(),
           }(),
           std::move(ctrl_),
         }

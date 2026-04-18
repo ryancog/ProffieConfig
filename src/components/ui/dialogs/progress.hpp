@@ -28,7 +28,7 @@
 
 namespace pcui {
 
-struct UI_EXPORT ProgressDialog : private pcui::Dialog {
+struct UI_EXPORT ProgressDialog : private Dialog {
     ProgressDialog(
         wxWindow *parent,
         const wxString& title, 

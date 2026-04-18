@@ -26,6 +26,8 @@
 
 #include "utils/paths.hpp"
 
+using namespace pcui;
+
 namespace {
 
 const wxColour DARK_BLUE{39, 74, 114};
@@ -37,9 +39,9 @@ void doColor(wxBitmap&, const color::Dynamic&);
 
 } // namespace
 
-pcui::Bitmap::Bitmap() = default;
+Bitmap::Bitmap() = default;
 
-pcui::Bitmap::Bitmap(std::string_view src, Type type) {
+Bitmap::Bitmap(std::string_view src, Type type) {
     // In this function, the load can trigger a log dialog if not found. I use
     // the missing bitmap as a fallback, so the dialog is unwanted.
     wxLogNull noErrors;
@@ -70,15 +72,15 @@ pcui::Bitmap::Bitmap(std::string_view src, Type type) {
     if (display.IsOk()) SetScaleFactor(display.GetScaleFactor());
 }
 
-pcui::Bitmap::Bitmap(const wxBitmap& other) : wxBitmap(other) {}
+Bitmap::Bitmap(const wxBitmap& other) : wxBitmap(other) {}
 
-pcui::Bitmap::Bitmap(wxBitmap&& other) : wxBitmap(std::move(other)) {}
+Bitmap::Bitmap(wxBitmap&& other) : wxBitmap(std::move(other)) {}
 
 #ifdef _WIN32
-pcui::Bitmap::Bitmap(const wxIcon& icon) : wxBitmap(icon) {}
+Bitmap::Bitmap(const wxIcon& icon) : wxBitmap(icon) {}
 #endif
 
-pcui::Bitmap& pcui::Bitmap::scale(float64 scale) {
+Bitmap& Bitmap::scale(float64 scale) {
 #   ifdef _WIN32
     static_cast<wxBitmap&>(*this) = ConvertToImage().Scale(
         static_cast<int32>(GetWidth() / scale),
@@ -91,7 +93,7 @@ pcui::Bitmap& pcui::Bitmap::scale(float64 scale) {
     return *this;
 }
 
-pcui::Bitmap& pcui::Bitmap::scaleTo(uint32 dim, wxOrientation orient) {
+Bitmap& Bitmap::scaleTo(uint32 dim, wxOrientation orient) {
     float64 scaler{};
     if (orient == wxHORIZONTAL) {
         scaler = GetLogicalWidth() / dim;
@@ -104,7 +106,7 @@ pcui::Bitmap& pcui::Bitmap::scaleTo(uint32 dim, wxOrientation orient) {
     return *this;
 }
 
-pcui::Bitmap& pcui::Bitmap::pad(
+Bitmap& Bitmap::pad(
     uint32 padding, int32 withDim, wxOrientation orient
 ) {
     if (withDim == -1) {
@@ -155,16 +157,16 @@ pcui::Bitmap& pcui::Bitmap::pad(
     return *this;
 }
 
-pcui::Bitmap& pcui::Bitmap::color(const color::Dynamic& dyn) {
+Bitmap& Bitmap::color(const color::Dynamic& dyn) {
     mColor = dyn;
     return *this;
 }
 
-pcui::Bitmap::operator bool() const {
+Bitmap::operator bool() const {
     return IsOk();
 }
 
-wxBitmap pcui::Bitmap::realize() const {
+wxBitmap Bitmap::realize() const {
     wxBitmap ret{static_cast<const wxBitmap&>(*this)};
     doColor(ret, mColor);
     return ret;

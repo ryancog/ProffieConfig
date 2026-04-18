@@ -31,13 +31,15 @@
 #include "ui/frame.hpp"
 #endif
 
-void pcui::priv::tlw::preCreate(wxTopLevelWindow *tlw) {
+using namespace pcui;
+
+void priv::tlw::preCreate(wxTopLevelWindow *tlw) {
 #   ifdef __WXMSW__
     tlw->SetDoubleBuffered(true);
 #   endif
 }
 
-void pcui::priv::tlw::postCreate(wxTopLevelWindow *tlw) {
+void priv::tlw::postCreate(wxTopLevelWindow *tlw) {
 #   ifdef _WIN32
     tlw->SetIcon(wxICON(ApplicationIcon));
 
@@ -53,7 +55,7 @@ void pcui::priv::tlw::postCreate(wxTopLevelWindow *tlw) {
 #   endif
 }
 
-void pcui::priv::tlw::bindOnCreate(wxTopLevelWindow *tlw) {
+void priv::tlw::bindOnCreate(wxTopLevelWindow *tlw) {
     tlw->Bind(wxEVT_CREATE, [tlw](wxWindowCreateEvent& evt) {
         evt.Skip();
         if (evt.GetEventObject() != tlw) return;
@@ -79,7 +81,7 @@ void pcui::priv::tlw::bindOnCreate(wxTopLevelWindow *tlw) {
             logger.warn("Immersive dark mode setup failed: " + std::to_string(res));
         }
 
-        auto backdrop{dynamic_cast<pcui::Frame *>(tlw)
+        auto backdrop{dynamic_cast<Frame *>(tlw)
             ? DWMSBT_MAINWINDOW
             : DWMSBT_TRANSIENTWINDOW
         };
@@ -97,7 +99,7 @@ void pcui::priv::tlw::bindOnCreate(wxTopLevelWindow *tlw) {
 }
 
 [[nodiscard]] std::unique_ptr<data::String::Receiver>
-pcui::priv::tlw::setTitle(
+priv::tlw::setTitle(
     wxTopLevelWindow *tlw,
     const LabelData& title
 ) {

@@ -44,14 +44,14 @@ ProgressDialog::ProgressDialog(
     wxSize size,
     long style
 ) : Dialog(parent, wxID_ANY, title, style) {
-    pcui::build(this, ui(mayCancel, size));
+    build(this, ui(mayCancel, size));
 
     if (parent) ShowWindowModal();
     else Show();
 }
 
 ProgressDialog::~ProgressDialog() {
-    pcui::teardown(this);
+    teardown(this);
 }
 
 void ProgressDialog::set(uint32 val, const wxString& message) {
@@ -122,25 +122,24 @@ void ProgressDialog::show(bool show) {
 }
 
 DescriptorPtr ProgressDialog::ui(bool mayCancel, wxSize size) {
-    return pcui::Stack{
+    return Stack{
       .base_={
         .minSize_=size,
-        .border_={.size_=pcui::winEdgeSpacing(), .dirs_=wxALL}
+        .border_={.size_=winEdgeSpacing(), .dirs_=wxALL}
       },
       .children_={
-        pcui::Label{
+        Label{
           .label_=mMessage,
         }(),
-        pcui::Spacer{.size_=4}(),
-        pcui::Progress{
+        Spacer{.size_=4}(),
+        Progress{
           .win_={.base_={.expand_=true}},
           .data_=mData,
           .showOnBar_=true,
         }(),
-        pcui::Spacer{.size_=8}(),
-        pcui::DialogButtons{
-          .base_={.expand_=true},
-          .ok_=pcui::Button{
+        Spacer{.size_=8}(),
+        DialogButtons{
+          .ok_=Button{
             .win_={
               .show_=mData | Progress::Logic::Is_Done,
             },
@@ -149,7 +148,7 @@ DescriptorPtr ProgressDialog::ui(bool mayCancel, wxSize size) {
                 EndModal(wxID_OK);
             },
           }(),
-          .cancel_=mayCancel ? pcui::Button{
+          .cancel_=mayCancel ? Button{
             .win_={
               .show_=not (mData | Progress::Logic::Is_Done),
               .enable_=not (mCancelled | data::logic::IsSet{}),
