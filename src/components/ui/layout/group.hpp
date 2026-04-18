@@ -36,6 +36,7 @@ struct UI_EXPORT Group {
 
     wxString label_;
     wxOrientation orient_{wxVERTICAL};
+    bool padded_{true};
 
     DynamicList children_;
 

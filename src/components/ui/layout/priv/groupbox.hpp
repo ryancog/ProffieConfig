@@ -37,13 +37,15 @@ public:
     GroupBox(
         wxWindow *parent,
         wxOrientation orient,
-        const wxString& label
+        const wxString& label,
+        bool padded = true
     );
 
     void create(
         wxWindow *parent,
         wxOrientation orient,
-        const wxString& label
+        const wxString& label,
+        bool padded = true
     );
 
     wxSizer *sizer();
@@ -54,6 +56,7 @@ public:
     wxSize DoGetBestClientSize() const override;
 
 private:
+    bool mPadded;
     wxPanel *mPanel{nullptr};
     wxSizer *mSizer{nullptr};
 };

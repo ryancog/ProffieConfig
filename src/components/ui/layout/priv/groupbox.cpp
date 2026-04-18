@@ -40,16 +40,22 @@ constexpr auto PADDING{
 GroupBox::GroupBox() = default;
 
 GroupBox::GroupBox(
-    wxWindow *parent, wxOrientation orient, const wxString& label
+    wxWindow *parent,
+    wxOrientation orient,
+    const wxString& label,
+    bool padded
 ) {
-    create(parent, orient, label);
+    create(parent, orient, label, padded);
 }
 
 void GroupBox::create(
     wxWindow *parent,
     wxOrientation orient,
-    const wxString& label
+    const wxString& label,
+    bool padded
 ) {
+    mPadded = padded;
+
     Create(parent, wxID_ANY, label);
 
     mSizer = new wxBoxSizer(orient);
@@ -86,26 +92,35 @@ void GroupBox::create(
         auto size{GetClientSize()};
         wxPoint pos{0, 0};
 
-        size.x -= PADDING * 2;
-        size.y -= PADDING * 2;
+        if (mPadded) {
+            size.x -= PADDING * 2;
+            size.y -= PADDING * 2;
+        }
 
-        size.x -= otherBorder * 2;
 #       if defined(__WXOSX__)
-        size.y -= otherBorder * 2;
+        if (mPadded) {
+            size.x -= otherBorder * 2;
+            size.y -= otherBorder * 2;
+        }
 #       else
+        size.x -= otherBorder * 2;
         size.y -= otherBorder + topBorder;
 #       endif
 
-#       if defined(__WXMSW__)
-        pos.x += otherBorder + PADDING;
-        pos.y += topBorder + PADDING;
+#       if defined(__WXMSW__) or defined(__WXGTK__)
+        pos.x += otherBorder;
+        pos.y += topBorder;
 #       elif defined(__WXOSX__)
-        pos.x += otherBorder + PADDING;
-        pos.y += otherBorder + PADDING;
-#       elif defined(__WXGTK__)
-        pos.x += PADDING;
-        pos.y += PADDING;
+        if (mPadded) {
+            pos.x += otherBorder;
+            pos.y += otherBorder;
+        }
 #       endif
+
+        if (mPadded) {
+            pos.x += PADDING;
+            pos.y += PADDING;
+        }
 
         mPanel->SetSize(pos.x, pos.y, size.x, size.y);
         evt.Skip();
