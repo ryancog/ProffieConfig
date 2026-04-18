@@ -444,7 +444,6 @@ pcui::DescriptorPtr ui(
             }(),
             pcui::Spacer{.size_=20}(),
             pcui::DialogButtons{
-              .base_={.expand_=true},
               .ok_=pcui::Button{
                 .label_="Update Now",
                 .default_=true,

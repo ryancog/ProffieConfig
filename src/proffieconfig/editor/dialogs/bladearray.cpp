@@ -154,7 +154,6 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::DialogButtons{
-          .base_={.expand_=true},
           .ok_=pcui::Button{
             .label_=mayCancel ? _("OK") : _("Close"),
             .default_=true,

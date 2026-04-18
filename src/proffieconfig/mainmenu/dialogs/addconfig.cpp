@@ -198,7 +198,6 @@ pcui::DescriptorPtr AddConfigDialog::ui() {
         }(),
         pcui::StretchSpacer{}(),
         pcui::DialogButtons{
-          .base_={.expand_=true},
           .ok_=pcui::Button{
             .win_{
               .enable_={

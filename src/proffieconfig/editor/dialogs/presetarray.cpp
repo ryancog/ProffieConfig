@@ -95,7 +95,6 @@ pcui::DescriptorPtr PresetArrayDlg::ui(bool mayCancel) {
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::DialogButtons{
-          .base_={.expand_=true},
           .ok_=pcui::Button{
             .win_={
               .enable_=mArray.issues() | data::logic::Equals{.val_=0},
