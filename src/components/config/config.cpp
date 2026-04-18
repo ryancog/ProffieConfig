@@ -369,24 +369,25 @@ void config::Info::unload() {
 
     data::String::Context name{mName};
 
-    bool found{false};
-    std::error_code err;
-    for (const auto& entry : fs::directory_iterator{paths::configDir(), err}) {
-        if (not entry.is_regular_file()) continue;
-        if (entry.path().extension() != RAW_FILE_EXTENSION) continue;
+    mConfig.reset();
 
-        if (name.val() == entry.path().stem().string()) {
-            found = true;
-            break;
-        }
-    }
+    // Check if the file still exists and remove this from the list if not.
+    { bool found{false};
+        std::error_code err;
+        fs::directory_iterator iter{paths::configDir(), err};
+        for (const auto& entry : iter) {
+            if (not entry.is_regular_file()) continue;
+            if (entry.path().extension() != RAW_FILE_EXTENSION) continue;
 
-    if (not found) {
-        size idx{0};
-        for (; idx < list.children().size(); ++idx) {
-            if (&*list.children()[idx] == this) break;
+            if (name.val() == entry.path().stem().string()) {
+                found = true;
+                break;
+            }
         }
-        list.remove(idx);
+
+        if (not found) {
+            list.remove(*this);
+        }
     }
 }
 
