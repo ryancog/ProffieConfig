@@ -20,8 +20,8 @@
  */
 
 #include <wx/msgdlg.h>
-#include <wx/progdlg.h>
 
+#include "ui/dialogs/message_types.hpp"
 #include "utils/types.hpp"
 
 #include "ui_export.h"
@@ -33,34 +33,19 @@ namespace pcui {
  *
  * Blocks until user has acknowledged the window.
  *
- * @param msg The main message within the box to show
- * @param caption The box window title
- * @param style Augmenting style flags
- * @param parent Window to be modal over
- *
  * @return user selection
  */
 UI_EXPORT int32 showMessage(
-    const wxString& msg,
-    const wxString& caption = {},
-    long style = wxOK | wxCENTER,
-    wxWindow *parent = nullptr
+    const wxString& msg, const dialogs::message::Args& = {}
 );
 
-struct HideableInfo {
-    bool wantsToHide_;
-    int32 result_;
+struct HideableResult {
+    bool wantsHide_;
+    int32 id_;
 };
 
-UI_EXPORT HideableInfo showHideablePrompt(
-    const wxString& msg,
-    const wxString& caption,
-    wxWindow *parent = nullptr,
-    long style = wxOK | wxCENTER,
-    const wxString& yesText = wxEmptyString,
-    const wxString& noText = wxEmptyString,
-    const wxString& okText = wxEmptyString,
-    const wxString& cancelText = wxEmptyString
+UI_EXPORT HideableResult showHideablePrompt(
+    const wxString& msg, const dialogs::message::Args& = {}
 );
 
 } // namespace pcui

@@ -29,20 +29,19 @@
 
 int32 pcui::showMessage(
     const wxString& msg,
-    const wxString& caption,
-    long style,
-    wxWindow *parent
+    const dialogs::message::Args& args
 ) {
+    const auto& caption{args.caption_.empty() ? app::getName() : args.caption_};
+
 #   ifdef __WXMSW__
     // for dark mode
-    wxGenericMessageDialog dlg(
-        parent,
-        msg,
-        caption.empty()
-            ? app::getName()
-            : caption,
-        style
-    );
+    wxGenericMessageDialog dlg(args.parent_, msg, caption, args.style_);
+#   else
+    wxMessageDialog dlg(args.parent_, msg, caption, args.style_);
+#   endif
+
+    dlg.SetOKCancelLabels(args.labels_.ok_, args.labels_.cancel_);
+    dlg.SetYesNoLabels(args.labels_.yes_, args.labels_.no_);
 
     auto ret{dlg.ShowModal()};
     switch (ret) {
@@ -53,59 +52,29 @@ int32 pcui::showMessage(
         case wxID_HELP: return wxHELP;
         default: return 0;
     }
-#   else
-    return wxMessageBox(
-        msg,
-        caption.empty()
-            ? app::getName()
-            : caption,
-        style,
-        parent
-    );
-#   endif
 }
 
-pcui::HideableInfo pcui::showHideablePrompt(
+pcui::HideableResult pcui::showHideablePrompt(
     const wxString& msg,
-    const wxString& caption,
-    wxWindow *parent,
-    long style,
-    const wxString& yesText,
-    const wxString& noText,
-    const wxString& okText,
-    const wxString& cancelText
+    const dialogs::message::Args& args
 ) {
+    const auto& caption{args.caption_.empty() ? app::getName() : args.caption_};
+
 #   ifdef __WXMSW__
-    wxGenericRichMessageDialog dlg(
-        parent, msg, caption, style
+    wxGenericRichMessageDialog dlg(args.parent_, msg, caption, args.style_);
     );
 #   else
-    wxRichMessageDialog dlg(
-        parent, msg, caption, style
-    );
+    wxRichMessageDialog dlg(args.parent_, msg, caption, args.style_);
 #   endif
 
-    dlg.ShowCheckBox(_("Do Not Show Again"));
-    dlg.SetOKCancelLabels(
-        okText.IsEmpty()
-            ? wxMessageDialogBase::ButtonLabel{wxID_OK}
-            : okText,
-        cancelText.IsEmpty()
-            ? wxMessageDialogBase::ButtonLabel{wxID_CANCEL}
-            : cancelText
-    );
-    dlg.SetYesNoLabels(
-        yesText.IsEmpty()
-            ? wxMessageDialogBase::ButtonLabel{wxID_YES}
-            : yesText,
-        noText.IsEmpty()
-            ? wxMessageDialogBase::ButtonLabel{wxID_NO}
-            : noText
-    );
+    dlg.SetOKCancelLabels(args.labels_.ok_, args.labels_.cancel_);
+    dlg.SetYesNoLabels(args.labels_.yes_, args.labels_.no_);
 
-    HideableInfo ret;
-    ret.result_ = dlg.ShowModal();
-    ret.wantsToHide_ = dlg.IsCheckBoxChecked();
+    dlg.ShowCheckBox(_("Do Not Show Again"));
+
+    HideableResult ret;
+    ret.id_ = dlg.ShowModal();
+    ret.wantsHide_ = dlg.IsCheckBoxChecked();
     return ret;
 }
 
