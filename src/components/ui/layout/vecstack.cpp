@@ -1,0 +1,251 @@
+#include "vecstack.hpp"
+/*
+ * ProffieConfig, All-In-One Proffieboard Management Utility
+ * Copyright (C) 2026 Ryan Ogurek
+ *
+ * components/ui/layout/vecstack.cpp
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <list>
+
+#include <wx/event.h>
+#include <wx/sizer.h>
+
+#include "ui/build.hpp"
+#include "ui/detail/datadriven.hpp"
+#include "ui/detail/helpers.hpp"
+#include "ui/detail/scaffold.hpp"
+#include "ui/types.hpp"
+#include "ui/utils.hpp"
+
+using namespace pcui;
+
+namespace {
+
+struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
+    Layout(const detail::Scaffold& scaffold, const VecStack& desc) :
+        wxBoxSizer(desc.orient_) {
+        builder_ = desc.builder_;
+        seperator_ = desc.separator_;
+
+        childScaffold_ = scaffold;
+        childScaffold_.sizer_ = this;
+
+        if (desc.empty_)
+            emptyElem_ = desc.empty_->build(childScaffold_);
+
+        data::Vector::ROContext ctxt{desc.data_};
+
+        if (emptyElem_)
+            Add(emptyElem_);
+
+        for (const auto& model : ctxt.children()) {
+            Add(builder_(*model)->build(childScaffold_));
+
+            if (seperator_)
+                Add(seperator_->build(childScaffold_));
+        }
+
+        attach(desc.data_);
+    }
+
+    void preDestroyCripple() override {
+        detach();
+    }
+
+    void onInsert(size pos) override {
+        auto mapIter{map_.emplace(
+            map_.end(),
+            context<data::Vector>().children()[pos].get(),
+            nullptr
+        )};
+
+        // In all GUI operations, `pos` is captured solely for the GUI
+        // functions. The data is accessed separately, as it may be out of
+        // sync.
+        safeCall([this, pos, mapIter] {
+            // To lock map_
+            auto ctxt{context<data::Vector>()};
+
+            assert(mapIter->second == nullptr);
+            if (mapIter->first) {
+                mapIter->second = builder_(*mapIter->first)->build(childScaffold_);
+            } else {
+                // Even if the model has died, the GUI hasn't caught up, so
+                // create a dummy in the interim.
+                mapIter->second = new wxSizerItem(0, 0);
+            }
+
+            if (seperator_ and anyContentChildren()) {
+                // For insertions anywhere but beginning, since, with a separator,
+                // the sizerPos() computes after where the separator goes.
+                int insertPos{sizerPos(pos) - 1};
+                if (pos == 0)
+                    // Both will prepend, separator goes first, so it will be after
+                    // the item.
+                    insertPos = 0;
+
+                Insert(insertPos, seperator_->build(childScaffold_));
+            }
+
+            Insert(sizerPos(pos), mapIter->second);
+
+            if (anyContentChildren() and emptyElem_)
+                emptyElem_->Show(false);
+
+            if (auto *win{GetContainingWindow()})
+                detail::layoutAndFitFor(win);
+        });
+    }
+
+    void preRemove(size pos) override {
+        auto ctxt{context<data::Vector>()};
+        auto *toRemove{ctxt.children()[pos].get()};
+
+        // Find the mapping for the model, and store the iter so the safeCall
+        // knows what to erase.
+        auto iter{map_.begin()};
+        for (; iter != map_.end(); ++iter) {
+            if (iter->first != toRemove) continue;
+
+            // Make sure the item is crippled since the model it was built on
+            // is about to die.
+            if (iter->second)
+                cripple(iter->second);
+
+            // In case the remove happens before the GUI insert can.
+            iter->first = nullptr;
+
+            break;
+        }
+        assert(iter != map_.end());
+
+        safeCall([this, pos, iter] {
+            // To lock map_
+            auto ctxt{context<data::Vector>()};
+
+            wxWindow *toDelete{nullptr};
+
+            // This logic is similar to that of Selector's buildAndReplace
+            if (iter->second->IsWindow())
+                toDelete = iter->second->GetWindow();
+            else if (iter->second->IsSizer())
+                iter->second->GetSizer()->DeleteWindows();
+
+            Remove(sizerPos(pos));
+
+            if (seperator_) {
+                wxWindow *separatorToDelete{nullptr};
+
+                // Remove the separator from the next element that moved "up"
+                int removePos{sizerPos(pos)};
+
+                // But if this is the last element there isn't a next seperator.
+                if (pos + 1 == numContentChildren())
+                    removePos = sizerPos(pos) - 1;
+
+                auto *sepItem{GetItem(removePos)};
+                if (sepItem->IsWindow())
+                    separatorToDelete = sepItem->GetWindow();
+                else if (sepItem->IsSizer())
+                    sepItem->GetSizer()->DeleteWindows();
+
+                Remove(removePos);
+
+                if (separatorToDelete)
+                    separatorToDelete->Destroy();
+            }
+
+            if (toDelete)
+                toDelete->Destroy();
+
+            if (not anyContentChildren() and emptyElem_)
+                emptyElem_->Show(false);
+
+            if (auto *win{GetContainingWindow()})
+                detail::layoutAndFitFor(win);
+
+            // This is the end of the model<->item lifecycle, remove from map.
+            map_.erase(iter);
+        });
+    }
+
+    void onSwap(size pos) override {
+        safeCall([this, pos] {
+            // First, detach the "lower" item and bring it up above the "upper"
+            // one.
+            auto *item{GetItem(sizerPos(pos + 1))};
+            Detach(sizerPos(pos + 1));
+            Insert(sizerPos(pos), item);
+
+            if (seperator_) {
+                // If there's a separator, now detach the "upper" (but now below
+                // what was formerly "lower") item and move it to where "lower"
+                // used to be (properly in between separators.
+                auto *item{GetItem(sizerPos(pos) + 1)};
+                Detach(sizerPos(pos) + 1);
+                Insert(sizerPos(pos + 1), item);
+            }
+
+            wxBoxSizer::Layout();
+        });
+    }
+
+    int sizerPos(size pos) {
+        if (seperator_) return static_cast<int>(pos * 2);
+        return static_cast<int>(pos);
+    }
+
+    size numContentChildren() {
+        if (emptyElem_) return GetChildren().size() - 1;
+        return GetChildren().size();
+    }
+
+    bool anyContentChildren() {
+        return numContentChildren() > 0;
+    }
+
+    detail::Scaffold childScaffold_;
+    VecStack::Builder builder_;
+    DescriptorPtr seperator_;
+    wxSizerItem *emptyElem_;
+
+    // Because the GUI might not (and realistically won't be during quick
+    // changes) be synced, keep a mapping of items and what model they were
+    // built off.
+    //
+    // These use the model/context mutex for locking.
+    std::list<std::pair<data::Model *, wxSizerItem *>> map_;
+};
+
+} // namespace
+
+DescriptorPtr VecStack::operator()() {
+    return std::make_unique<VecStack::Desc>(std::move(*this));
+}
+
+VecStack::Desc::Desc(VecStack&& data) : VecStack{std::move(data)} {}
+
+wxSizerItem *VecStack::Desc::build(const detail::Scaffold& scaffold) const {
+    auto *item{new wxSizerItem(new Layout(scaffold, *this))};
+    detail::apply(base_, item);
+    return item;
+}
+
+detail::Descriptor *VecStack::Desc::clone() const {
+    return new Desc(*this);
+}
+
