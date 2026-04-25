@@ -269,7 +269,7 @@ void parseName(
     out = std::nullopt;
     auto bracePos{line.find('{')};
     auto parenPos{line.find('(')};
-    auto seperatorPos{line.find(':')};
+    auto separatorPos{line.find(':')};
 
     auto nameBegin{line.find_first_not_of(" \t")};
     auto spacePos{line.find_first_of(" \t{(", nameBegin)};
@@ -278,7 +278,7 @@ void parseName(
         return;
     }
 
-    auto nameEnd{std::min({seperatorPos, spacePos, bracePos, parenPos})};
+    auto nameEnd{std::min({separatorPos, spacePos, bracePos, parenPos})};
     out = line.substr(nameBegin, nameEnd - nameBegin);
 }
 
@@ -291,8 +291,8 @@ bool parseValue(
     auto& logger{lBranch.createLogger("pconf::parseValue()")};
 
     out = std::nullopt;
-    auto seperatorPos{line.find(':')};
-    bool hasSeperator{seperatorPos != std::string::npos};
+    auto separatorPos{line.find(':')};
+    bool hasSeperator{separatorPos != std::string::npos};
 
     if (not hasSeperator) {
         logger.verbose("No separator, no value.");
@@ -301,7 +301,7 @@ bool parseValue(
 
     auto bracePos{line.find('{')};
     auto isMultiline{
-        bracePos != std::string::npos and seperatorPos < bracePos
+        bracePos != std::string::npos and separatorPos < bracePos
     };
 
     if (isMultiline) {
@@ -313,7 +313,7 @@ bool parseValue(
     }
 
     return parseSinglelineValue(
-        line.substr(seperatorPos + 1),
+        line.substr(separatorPos + 1),
         out,
         *logger.bverbose("Value is single-line, parsing...")
     );
