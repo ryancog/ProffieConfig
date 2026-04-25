@@ -105,9 +105,9 @@ pcui::DescriptorPtr MainMenu::ui() {
                 pcui::Label{
                   .label_="ProffieConfig",
 #                 if defined(__WXGTK__) or defined(__WXMSW__)
-                  .style_=wxFontInfo{20}.Bold(),
+                  .font_=wxFontInfo{20}.Bold(),
 #                 elif defined (__WXOSX__)
-                  .style_=wxFontInfo{30}.Bold(),
+                  .font_=wxFontInfo{30}.Bold(),
 #                 endif
                 }(),
                 pcui::Label{

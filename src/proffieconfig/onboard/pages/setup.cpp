@@ -32,8 +32,11 @@
 #include "utils/parent.hpp"
 #include "versions/versions.hpp"
 
-#include "../../tools/arduino.hpp"
 #include "../onboard.hpp"
+
+#ifndef __APPLE__
+#include "../../tools/arduino.hpp"
+#endif
 
 onboard::Setup::Setup() {
     mLoadingTimer = new wxTimer();
@@ -54,7 +57,7 @@ pcui::DescriptorPtr onboard::Setup::ui() {
         pcui::Spacer{20}(),
         pcui::Label{
           .label_=_("Setup"),
-          .style_=pcui::text::Style::Title,
+          .font_=pcui::Font::Title,
         }(),
         pcui::Spacer{20}(),
         pcui::Label{

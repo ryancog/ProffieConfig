@@ -64,7 +64,7 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
           .ctrl_=pcui::Text{
             .win_={.base_={.expand_=true}},
             .data_=mConfig.name_,
-            .mode_=pcui::Text::SingleLine{
+            .style_=pcui::Text::SingleLine{
               .hint_=_("[default]"),
             }
           }(),

@@ -21,6 +21,7 @@
 
 #include "ui/build.hpp"
 #include "ui/controls/text.hpp"
+#include "ui/font.hpp"
 #include "ui/helpers/foreach.hpp"
 #include "ui/layout/collapsible.hpp"
 #include "ui/layout/scrolled.hpp"
@@ -28,11 +29,10 @@
 #include "ui/layout/stack.hpp"
 #include "ui/static/label.hpp"
 #include "ui/symbols.hpp"
-#include "ui/text.hpp"
+#include "ui/values.hpp"
 
 #include "../../core/licenses.hpp"
 #include "../mainmenu.hpp"
-#include "ui/values.hpp"
 
 LicenseDialog::LicenseDialog(MainMenu *mainMenu) : 
     Dialog(
@@ -49,7 +49,7 @@ LicenseDialog::~LicenseDialog() {
 }
 
 pcui::DescriptorPtr LicenseDialog::ui() {
-    auto licenseFont{pcui::text::detail::StyleData{}.makeFont()};
+    auto licenseFont{pcui::detail::FontData{}.makeFont()};
     licenseFont.SetFamily(wxFONTFAMILY_TELETYPE);
 
     const auto licenseBoxWidth{[&] {
@@ -73,7 +73,7 @@ pcui::DescriptorPtr LicenseDialog::ui() {
           .children_={
             pcui::Label{
               .label_=info.name_,
-              .style_=pcui::text::Style::Header,
+              .font_=pcui::Font::Header,
             }(),
             pcui::Label{
               .label_=wxString{"Copyright "} + pcui::syms::COPYRIGHT + ' ' +
@@ -95,8 +95,8 @@ pcui::DescriptorPtr LicenseDialog::ui() {
                 },
                 .data_=info.license_,
                 .autoLink_=true,
-                .style_=licenseFont,
-                .mode_=pcui::Text::MultiLine{
+                .font_=licenseFont,
+                .style_=pcui::Text::MultiLine{
                   .scroll_={.vertical_=false, .horizontal_=false},
                 }
               }(),

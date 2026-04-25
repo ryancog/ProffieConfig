@@ -46,7 +46,7 @@ pcui::DescriptorPtr onboard::Welcome::ui() {
             .base_={.align_=wxALIGN_CENTER},
           },
           .label_=wxString::Format(_("Welcome to ProffieConfig %s!"), wxSTRINGIZE(BIN_VERSION)),
-          .style_=pcui::text::Style::Title,
+          .font_=pcui::Font::Title,
         }(),
         pcui::Spacer{40}(),
         pcui::Label{

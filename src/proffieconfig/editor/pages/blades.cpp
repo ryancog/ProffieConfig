@@ -375,7 +375,7 @@ pcui::DescriptorPtr BladesPage::blades() {
                 },
               },
               .label_=_("No Blade Selected"),
-              .style_=pcui::text::Style::Header,
+              .font_=pcui::Font::Header,
               .color_=wxSYS_COLOUR_GRAYTEXT,
             }();
         }
@@ -595,7 +595,7 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
                     pcui::Text{
                       .win_={.base_={.proportion_=1}},
                       .data_=mPowerPinAddField,
-                      .mode_=pcui::Text::SingleLine{
+                      .style_=pcui::Text::SingleLine{
                         .hint_=_("Pin Name"),
                         .onEnter_=onAddPowerPin,
                       },

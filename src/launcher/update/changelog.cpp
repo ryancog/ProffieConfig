@@ -36,7 +36,7 @@
 #include "ui/static/divider.hpp"
 #include "ui/static/image.hpp"
 #include "ui/static/label.hpp"
-#include "ui/text.hpp"
+#include "ui/font.hpp"
 #include "ui/types.hpp"
 #include "ui/values.hpp"
 #include "utils/hash.hpp"
@@ -235,18 +235,18 @@ pcui::DescriptorPtr ui(
     const Update::Data& data,
     const Update::Changelog& log
 ) {
-    auto objFont{- pcui::text::Style::Normal};
+    auto objFont{- pcui::Font::Normal};
     objFont.SetWeight(wxFONTWEIGHT_BOLD);
     objFont.SetPointSize(objFont.GetPointSize() + 2);
 
-    auto versionFont{- pcui::text::Style::Normal};
+    auto versionFont{- pcui::Font::Normal};
     versionFont.SetStyle(wxFONTSTYLE_ITALIC);
     versionFont.SetPointSize(versionFont.GetPointSize() - 2);
 
-    auto headFont{- pcui::text::Style::Normal};
+    auto headFont{- pcui::Font::Normal};
     headFont.SetWeight(wxFONTWEIGHT_BOLD);
 
-    auto listFont{- pcui::text::Style::Normal};
+    auto listFont{- pcui::Font::Normal};
 
     // TODO: This logic seems a little silly.
     auto noteStartIt{log.currentBundleVersion
@@ -264,7 +264,7 @@ pcui::DescriptorPtr ui(
           .then_=pcui::Label{
             .win_={.base_={.border_={.size_=10, .dirs_=wxBOTTOM}}},
             .label_=bundle.second.note,
-            .style_=listFont,
+            .font_=listFont,
           }(),
         }();
     }};
@@ -305,14 +305,14 @@ pcui::DescriptorPtr ui(
               pcui::Label{
                 // Tab breaks this, so spaces are used instead!!
                 .label_="    " + sectName + ':',
-                .style_=headFont,
+                .font_=headFont,
               }(),
               pcui::ForEach{
                 .of_=itemBullets,
                 .do_=[&](const std::string& bullet) {
                   return pcui::Label{
                     .label_="        - " + bullet,
-                    .style_=listFont,
+                    .font_=listFont,
                   }();
                 }
               }(),
@@ -323,14 +323,14 @@ pcui::DescriptorPtr ui(
         return {
           pcui::Label{
             .label_=file.id.name,
-            .style_=objFont,
+            .font_=objFont,
           }(),
           pcui::Spacer{.size_=5}(),
           pcui::Label{
             .label_=(file.currentVersion
               ? file.currentVersion.string()
               : "[NONE]") + " -> " + file.latestVersion.string(),
-            .style_=versionFont,
+            .font_=versionFont,
           }(),
           pcui::Spacer{.size_=10}(),
           section("Features", &Update::ItemVersionData::features),
@@ -379,7 +379,7 @@ pcui::DescriptorPtr ui(
               .children_={
                 pcui::Label{
                   .label_="ProffieConfig is ready for an update!",
-                  .style_=pcui::text::Style::Title,
+                  .font_=pcui::Font::Title,
                 }(),
                 pcui::Spacer{.size_=10}(),
                 pcui::Label{
@@ -387,8 +387,8 @@ pcui::DescriptorPtr ui(
                     '(' + log.currentBundleVersion.string() + " -> " +
                     log.latestBundleVersion.string() + ')'
                   },
-                  .style_=[]() {
-                    auto font{- pcui::text::Style::Title};
+                  .font_=[]() {
+                    auto font{- pcui::Font::Title};
                     font.SetWeight(wxFONTWEIGHT_NORMAL);
                     return font;
                   }(),
@@ -398,7 +398,7 @@ pcui::DescriptorPtr ui(
             pcui::Spacer{.size_=10}(),
             pcui::Label{
               .label_="What's New?",
-              .style_=pcui::text::Style::Header,
+              .font_=pcui::Font::Header,
             }(),
             pcui::Group{
               .win_={.base_={.expand_=true, .proportion_=1}},

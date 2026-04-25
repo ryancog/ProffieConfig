@@ -29,28 +29,31 @@
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 pcui::DescriptorPtr onboard::Info::ui() {
     return pcui::Stack{
-        .orient_=wxVERTICAL,
-        .children_={
-            pcui::Spacer{20}(),
-            pcui::Label{
-                .label_=_("Ready To Go!"),
-                .style_=pcui::text::Style::Title,
-            }(),
-            pcui::Spacer{20}(),
-            pcui::Label{
-                .label_=_(
-                    "ProffieConfig is all set up and ready to go!\n"
-                    "\n"
-                    "You can always re-run this setup from the main menu File drop-down.\n"
-                    "\n"
-                    "Additionally, the documentation linked earlier is available in the Help menu,\n"
-                    "and don't hesitate to reach out to for help. I'm available in a few places\n"
-                    "which I list on the ProffieConfig website. :)\n"
-                    "\n"
-                    "Happy Saber-ing!"
-                )
-            }(),
-        }
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::Spacer{20}(),
+        pcui::Label{
+          .label_=_("Ready To Go!"),
+          .font_=pcui::Font::Title,
+        }(),
+        pcui::Spacer{20}(),
+        pcui::Label{
+          .label_={
+            _("ProffieConfig is all set up and ready to go!") + '\n' +
+            '\n' +
+            _("You can always re-run this setup from the main menu File drop-down.") + '\n' +
+            '\n' +
+            _(
+              "Additionally, the documentation linked earlier is available in "
+              "the Help menu, and don't hesitate to reach out directly either. "
+              "I'm available in a few places which I list on the ProffieConfig website."
+            ) + '\n' +
+            '\n' +
+            _("Happy Saber-ing! :)")
+          },
+          .wrapWidth_=550,
+        }(),
+      }
     }();
 }
 

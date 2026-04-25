@@ -432,7 +432,7 @@ pcui::DescriptorPtr PresetsPage::fields() {
                       "For example, \"my\\npreset\" will be displayed on the OLED as two lines, the first being \"my\" and the second being \"preset.\""
                   )
                 },
-                .mode_=pcui::Text::SingleLine{
+                .style_=pcui::Text::SingleLine{
                   .onEnter_=pcui::Text::InsertLiteral{},
                 },
               };
@@ -571,7 +571,7 @@ pcui::DescriptorPtr PresetsPage::style() {
                       "This doesn't affect the blade style at all, but can be a place for helpful notes!"
                   ),
                 }, 
-                .mode_=pcui::Text::MultiLine{},
+                .style_=pcui::Text::MultiLine{},
               };
 
               if (model == nullptr) {
@@ -606,7 +606,7 @@ pcui::DescriptorPtr PresetsPage::style() {
                       "For getting/creating blade styles, see the Documentation (in \"Help->Documentation...\")."
                   )
                 }, 
-                .mode_=pcui::Text::MultiLine{
+                .style_=pcui::Text::MultiLine{
                   .wrap_=pcui::Text::MultiLine::Wrap::None,
                 },
               };
