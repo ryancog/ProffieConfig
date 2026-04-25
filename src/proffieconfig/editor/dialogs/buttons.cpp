@@ -154,6 +154,24 @@ pcui::DescriptorPtr ButtonsDlg::button(data::Model& model) {
               .ctrl_=pcui::Choice{
                 .win_={.base_={.proportion_=1}},
                 .data_=button.event_,
+                .style_=pcui::Choice::PopUp{
+                  .unselected_=_("Select Event"),
+                },
+                .labeler_=[](uint32 idx) -> pcui::Choice::Label {
+                    switch (static_cast<config::ButtonEvent>(idx)) {
+                        using enum config::ButtonEvent;
+                        case eBtn_Evt_Power: return _("Power");
+                        case eBtn_Evt_Aux: return _("Aux");
+                        case eBtn_Evt_Aux2: return _("Aux 2");
+                        case eBtn_Evt_Up: return _("Up/Fire");
+                        case eBtn_Evt_Down: return _("Down/Mode Select");
+                        case eBtn_Evt_Left: return _("Left/Magazine Detect");
+                        case eBtn_Evt_Right: return _("Right/Reload");
+                        case eBtn_Evt_Select: return _("Select/Range");
+                        case eBtn_Evt_Max: break;
+                    }
+                    return {};
+                }
               }(),
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
@@ -167,6 +185,9 @@ pcui::DescriptorPtr ButtonsDlg::button(data::Model& model) {
               .ctrl_=pcui::Text{
                 .win_={.base_={.proportion_=1}},
                 .data_=button.name_,
+                .style_=pcui::Text::SingleLine{
+                  .hint_=_("\"Display\" Name"),
+                }
               }(),
             }(),
           }
@@ -190,6 +211,27 @@ pcui::DescriptorPtr ButtonsDlg::button(data::Model& model) {
               .ctrl_=pcui::Choice{
                 .win_={.base_={.proportion_=1}},
                 .data_=button.type_,
+                .style_=pcui::Choice::PopUp{
+                  .unselected_=_("Select Type"),
+                },
+                .labeler_=[](uint32 idx) -> pcui::Choice::Label {
+                    switch (static_cast<config::ButtonType>(idx)) {
+                        using enum config::ButtonType;
+                        case eBtn_Type_Pullup:
+                            return _("Momentary (Pull-Up)");
+                        case eBtn_Type_Pulldown:
+                            return _("Momentary (Pull-Down)");
+                        case eBtn_Type_Latching:
+                            return _("Latching (Pull-Up)");
+                        case eBtn_Type_Latching_Inverted:
+                            return _("Latching (Pull-Down");
+                        case eBtn_Type_Touch:
+                            return _("Touch");
+                        case eBtn_Type_Max:
+                            break;
+                    }
+                    return {};
+                }
               }(),
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
@@ -207,6 +249,7 @@ pcui::DescriptorPtr ButtonsDlg::button(data::Model& model) {
                   .ctrl_=pcui::ComboBox{
                     .win_={.base_={.proportion_=1}},
                     .data_=button.pin_,
+                    .hint_=_("Board Button Pin"),
                     .defaults_=pinDefaults,
                   }(),
                 }(),
@@ -260,22 +303,24 @@ void ButtonsDlg::addButton() {
     data::Choice::Context type{button.type_};
     data::String::Context pin{button.pin_};
 
-    type.choose(config::eBtn_Type_Pullup);
-
+    // Assign some reasonable defaults for the first buttons created.
     switch (vec.children().size()) {
         case 1:
             event.choose(config::eBtn_Evt_Power);
             name.change("pow");
+            type.choose(config::eBtn_Type_Pullup);
             pin.change(pinDefaults[0].ToStdString());
             break;
         case 2:
             event.choose(config::eBtn_Evt_Aux);
             name.change("aux");
+            type.choose(config::eBtn_Type_Pullup);
             pin.change(pinDefaults[1].ToStdString());
             break;
         case 3:
             event.choose(config::eBtn_Evt_Aux2);
             name.change("aux2");
+            type.choose(config::eBtn_Type_Pullup);
             pin.change(pinDefaults[2].ToStdString());
             break;
         default:
