@@ -46,6 +46,9 @@ struct Control : detail::DataWindow<wxComboBox, data::String::Receiver> {
 
         postCreation(scaffold, desc.win_);
 
+        if (not desc.hint_.empty())
+            SetHint(desc.hint_);
+
         Set(desc.defaults_);
 
         data::String::Context ctxt{desc.data_};

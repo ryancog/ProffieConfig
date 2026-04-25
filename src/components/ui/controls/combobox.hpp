@@ -36,6 +36,7 @@ struct UI_EXPORT ComboBox {
 
     data::String& data_;
 
+    wxString hint_;
     std::vector<wxString> defaults_;
 
     DescriptorPtr operator()();
