@@ -21,6 +21,7 @@
 
 #include <wx/scrolwin.h>
 
+#include "ui/build.hpp"
 #include "ui/detail/window.hpp"
 #include "ui/types.hpp"
 
@@ -44,6 +45,12 @@ struct Layout : detail::Window<wxScrolledWindow> {
 
         sizer->Add(desc.child_->build(childScaffold));
         SetSizer(sizer);
+    }
+
+    void preDestroyCripple() override {
+        for (auto *child : GetChildren()) {
+            cripple(child);
+        }
     }
 
     void updateSizes() override {

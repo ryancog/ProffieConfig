@@ -19,9 +19,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ui_export.h"
+
 namespace pcui::detail {
 
-struct IDataDriven {
+struct UI_EXPORT IDataDriven {
     virtual ~IDataDriven() = default;
 
     /**
@@ -36,6 +38,30 @@ struct IDataDriven {
      * event to the main queue and waiting for it could very easily cause a
      * deadlock with an earlier event waiting on the very data currently
      * locked.
+     *
+     * NOTE: This is going to access GUI structures (GetChildren()) without
+     * holding the GUI Mutex. This means a special care is needed for things
+     * where those children can change on the main thread independent of data.
+     *
+     * I'm not aware of anything like this, and e.g. VecStack has special
+     * handling for precisely this reason, but I need to be careful here. The
+     * GUI lock in general is tricky because of the following:
+     *
+     *     Main Thread          Other Thread
+     *
+     *   +---------------+     +----------------+
+     *   | Locks GUI Mux |     | Locks Data Mux |
+     *   +---------------+     +----------------+
+     *          |                       |
+     *          V                       V
+     *   +----------------+    +----------------+
+     *   | Data-Mod Event |    | Try GUI Mutex  |
+     *   +----------------+    +----------------+
+     *          |
+     *          V                   ^
+     *   +----------------+         |
+     *   | Try Data Mutex |    <-DEADLOCK
+     *   +----------------+
      */
     virtual void preDestroyCripple() = 0;
 };

@@ -26,6 +26,14 @@
 #include "ui/detail/helpers.hpp"
 #include "ui/detail/datawin.hpp"
 
+namespace {
+
+void doCripple(wxWindow *, bool checkAsChild = true);
+void doCripple(wxSizerItem *);
+void doCripple(wxSizer *);
+
+} // namespace
+
 void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
     wxWindowUpdateLocker lock(win);
 
@@ -94,41 +102,15 @@ void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
 }
 
 void pcui::cripple(wxWindow *win) {
-    // TODO: These dynamic casts just... aren't working?
-    // I guess this is a gap in my knowledge of C++, afaik up-side cast should
-    // be possible, but e.g. SplitVisualizer preDestroyCripple() is never
-    // called (the cast failed).
-    if (auto *ptr{dynamic_cast<detail::IDataDriven *>(win)}) {
-        ptr->preDestroyCripple();
-    }
-
-    if (win->GetSizer()) {
-        for (auto *child : win->GetSizer()->GetChildren()) {
-            cripple(child);
-        }
-    } else {
-        for (auto *child : win->GetChildren()) {
-            cripple(child);
-        }
-    }
+    doCripple(win, false);
 }
 
 void pcui::cripple(wxSizerItem *item) {
-    // Enable the TrackerDummy hack
-    if (auto *ptr{dynamic_cast<detail::IDataDriven *>(item)}) {
-        ptr->preDestroyCripple();
-    }
+    doCripple(item);
+}
 
-    if (item->IsWindow()) {
-        cripple(item->GetWindow());
-        return;
-    }
-
-    if (not item->IsSizer()) return;
-
-    for (auto *childItem : item->GetSizer()->GetChildren()) {
-        cripple(childItem);
-    }
+void pcui::cripple(wxSizer *sizer) {
+    doCripple(sizer);
 }
 
 void pcui::teardown(wxWindow *win) {
@@ -158,9 +140,8 @@ void pcui::teardown(wxWindow *win) {
     std::set<wxWindow *> toDelete;
 
     for (auto *child : win->GetChildren()) {
-        if (not win->IsClientAreaChild(child)) {
+        if (child->IsTopLevel() or not win->IsClientAreaChild(child))
             continue;
-        }
 
         toDelete.insert(child);
     }
@@ -169,4 +150,57 @@ void pcui::teardown(wxWindow *win) {
         child->Destroy();
     }
 }
+
+namespace {
+using namespace pcui;
+
+void doCripple(wxWindow *win, bool checkAsChild) {
+    if (checkAsChild) {
+        // A dialog probably, ignore it during cripple, it's ignored during
+        // teardown.
+        if (win->IsTopLevel())
+            return;
+
+        // Toolbar items or similar, similarly ignore.
+        if (not win->GetParent()->IsClientAreaChild(win))
+            return;
+    }
+
+    if (auto *ptr{dynamic_cast<detail::IDataDriven *>(win)}) {
+        ptr->preDestroyCripple();
+    }
+
+    if (auto *sizer{win->GetSizer()}) {
+        doCripple(sizer);
+    } else {
+        for (auto *child : win->GetChildren()) {
+            doCripple(child);
+        }
+    }
+}
+
+void doCripple(wxSizerItem *item) {
+    // Enable the TrackerDummy hack
+    if (auto *ptr{dynamic_cast<detail::IDataDriven *>(item)}) {
+        ptr->preDestroyCripple();
+    }
+
+    if (item->IsWindow()) {
+        doCripple(item->GetWindow());
+    } else if (item->IsSizer()) {
+        doCripple(item->GetSizer());
+    }
+}
+
+void doCripple(wxSizer *sizer) {
+    if (auto *ptr{dynamic_cast<detail::IDataDriven *>(sizer)}) {
+        ptr->preDestroyCripple();
+    }
+
+    for (auto *childItem : sizer->GetChildren()) {
+        doCripple(childItem);
+    }
+}
+
+} // namespace
 

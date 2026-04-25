@@ -56,7 +56,6 @@ struct Control : detail::DataWindow<
 
     void preDestroyCripple() override {
         detach();
-
         DataWindow::preDestroyCripple();
     }
 

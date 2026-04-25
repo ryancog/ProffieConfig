@@ -65,7 +65,20 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
     }
 
     void preDestroyCripple() override {
+        // To lock map_
+        auto ctxt{context<data::Vector>()};
+
         detach();
+
+        // The receiver will not be called any more.
+        // Clear the map and cripple children in the same fashion as
+        // preRemove().
+        for (auto& [model, item] : map_) {
+            if (item)
+                cripple(item);
+
+            model = nullptr;
+        }
     }
 
     void onInsert(size pos) override {

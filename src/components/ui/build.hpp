@@ -38,6 +38,7 @@ void UI_EXPORT build(wxWindow *, const DescriptorPtr&);
  */
 void UI_EXPORT cripple(wxWindow *);
 void UI_EXPORT cripple(wxSizerItem *);
+void UI_EXPORT cripple(wxSizer *);
 
 /**
  * Call to teardown UI creation.

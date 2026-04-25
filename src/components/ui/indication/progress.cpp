@@ -48,6 +48,7 @@ struct Indicator : detail::DataWindow<wxGauge, Progress::Data::Receiver> {
 
     void preDestroyCripple() override {
         detach();
+        DataWindow::preDestroyCripple();
     }
 
     void onSet() override {
