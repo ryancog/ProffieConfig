@@ -56,4 +56,3 @@ struct UI_EXPORT VecStack::Desc : VecStack, detail::Descriptor {
 
 } // namespace pcui
 
-

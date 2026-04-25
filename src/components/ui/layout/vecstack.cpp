@@ -39,7 +39,7 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
     Layout(const detail::Scaffold& scaffold, const VecStack& desc) :
         wxBoxSizer(desc.orient_) {
         builder_ = desc.builder_;
-        seperator_ = desc.separator_;
+        separator_ = desc.separator_;
 
         childScaffold_ = scaffold;
         childScaffold_.sizer_ = this;
@@ -49,14 +49,16 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
 
         data::Vector::ROContext ctxt{desc.data_};
 
-        if (emptyElem_)
+        if (emptyElem_) {
             Add(emptyElem_);
+            Show(0UL, ctxt.children().empty());
+        }
 
         for (const auto& model : ctxt.children()) {
             Add(builder_(*model)->build(childScaffold_));
 
-            if (seperator_)
-                Add(seperator_->build(childScaffold_));
+            if (separator_)
+                Add(separator_->build(childScaffold_));
         }
 
         attach(desc.data_);
@@ -89,7 +91,11 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
                 mapIter->second = new wxSizerItem(0, 0);
             }
 
-            if (seperator_ and anyContentChildren()) {
+            if (emptyElem_) {
+                Hide(0UL);
+            }
+
+            if (separator_ and AreAnyItemsShown()) {
                 // For insertions anywhere but beginning, since, with a separator,
                 // the sizerPos() computes after where the separator goes.
                 int insertPos{sizerPos(pos) - 1};
@@ -98,13 +104,10 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
                     // the item.
                     insertPos = 0;
 
-                Insert(insertPos, seperator_->build(childScaffold_));
+                Insert(insertPos, separator_->build(childScaffold_));
             }
 
             Insert(sizerPos(pos), mapIter->second);
-
-            if (anyContentChildren() and emptyElem_)
-                emptyElem_->Show(false);
 
             if (auto *win{GetContainingWindow()})
                 detail::layoutAndFitFor(win);
@@ -147,33 +150,45 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
 
             Remove(sizerPos(pos));
 
-            if (seperator_) {
-                wxWindow *separatorToDelete{nullptr};
-
+            if (separator_ and AreAnyItemsShown()) {
                 // Remove the separator from the next element that moved "up"
                 int removePos{sizerPos(pos)};
 
-                // But if this is the last element there isn't a next seperator.
-                if (pos + 1 == numContentChildren())
-                    removePos = sizerPos(pos) - 1;
+                // Notice here the end is checked w/ removePos & GetChildren(),
+                // but the beginning is checked w/ pos. This is intentional to
+                // account for both separators and empty elem, or lack thereof.
+                //
+                // If this is the last item, there is no next separator.
+                if (removePos == GetChildren().size()) {
+                    // Even if there isn't a next separator to remove, maybe
+                    // there's a previous one that needs removal (if this isn't
+                    // the first.)
+                    if (pos > 0) --removePos;
 
-                auto *sepItem{GetItem(removePos)};
-                if (sepItem->IsWindow())
-                    separatorToDelete = sepItem->GetWindow();
-                else if (sepItem->IsSizer())
-                    sepItem->GetSizer()->DeleteWindows();
+                    // Otherwise, let GetItem fail.
+                }
 
-                Remove(removePos);
+                if (auto *item{GetItem(removePos)}) {
+                    wxWindow *separatorToDelete{nullptr};
 
-                if (separatorToDelete)
-                    separatorToDelete->Destroy();
+                    if (item->IsWindow())
+                        separatorToDelete = item->GetWindow();
+                    else if (item->IsSizer())
+                        item->GetSizer()->DeleteWindows();
+
+                    Remove(removePos);
+
+                    if (separatorToDelete)
+                        separatorToDelete->Destroy();
+                }
             }
 
             if (toDelete)
                 toDelete->Destroy();
 
-            if (not anyContentChildren() and emptyElem_)
-                emptyElem_->Show(false);
+            if (emptyElem_ and GetChildren().size() == 1) {
+                Show(0UL);
+            }
 
             if (auto *win{GetContainingWindow()})
                 detail::layoutAndFitFor(win);
@@ -183,7 +198,11 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
         });
     }
 
-    void onSwap(size pos) override {
+    void onSwap(size) override {
+        // Don't know how to do detach/insert w/o deleting the item yet.
+        assert(0);
+
+        /*
         safeCall([this, pos] {
             // First, detach the "lower" item and bring it up above the "upper"
             // one.
@@ -191,7 +210,7 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
             Detach(sizerPos(pos + 1));
             Insert(sizerPos(pos), item);
 
-            if (seperator_) {
+            if (separator_) {
                 // If there's a separator, now detach the "upper" (but now below
                 // what was formerly "lower") item and move it to where "lower"
                 // used to be (properly in between separators.
@@ -202,26 +221,20 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
 
             wxBoxSizer::Layout();
         });
+        */
     }
 
     int sizerPos(size pos) {
-        if (seperator_) return static_cast<int>(pos * 2);
+        if (separator_) pos *= 2;
+        if (emptyElem_) pos +=1;
+
         return static_cast<int>(pos);
-    }
-
-    size numContentChildren() {
-        if (emptyElem_) return GetChildren().size() - 1;
-        return GetChildren().size();
-    }
-
-    bool anyContentChildren() {
-        return numContentChildren() > 0;
     }
 
     detail::Scaffold childScaffold_;
     VecStack::Builder builder_;
-    DescriptorPtr seperator_;
-    wxSizerItem *emptyElem_;
+    DescriptorPtr separator_;
+    wxSizerItem *emptyElem_{nullptr};
 
     // Because the GUI might not (and realistically won't be during quick
     // changes) be synced, keep a mapping of items and what model they were
