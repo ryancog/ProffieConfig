@@ -220,10 +220,10 @@ private:
         void onChange() override {
             // Capture info by value, the receiver could die before the UI
             // updates occur.
-            mCtrl->safeCall([
-                ctrl=mCtrl, idx=idx_, val=context<data::String>().val()
-            ] {
-                ctrl->SetString(idx, val);
+            const auto val{context<data::String>().val()};
+            const auto str{val.empty() ? mCtrl->mEmptyLabel : val};
+            mCtrl->safeCall([ctrl=mCtrl, idx=idx_, str] {
+                ctrl->SetString(idx, str);
             });
         }
 
