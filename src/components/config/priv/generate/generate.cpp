@@ -41,6 +41,7 @@
 #include "data/string.hpp"
 #include "log/branch.hpp"
 #include "log/logger.hpp"
+#include "utils/defer.hpp"
 #include "utils/files.hpp"
 #include "utils/string.hpp"
 #include "utils/version.hpp"
@@ -82,6 +83,9 @@ std::optional<std::string> priv::generate(
     const fs::path& filePath, const Config& config, logging::Branch *lBranch
 ) {
     auto& logger{logging::Branch::optCreateLogger("generate()", lBranch)};
+
+    config.lock();
+    defer { config.unlock(); };
 
     auto precheckErr{runPreChecks(config, *logger.binfo("Running prechecks..."))};
     if (precheckErr) return precheckErr;
@@ -472,9 +476,10 @@ void outputTopGeneral(std::ostream& outFile, const Config& config) {
     }
 
     outputDefine(outFile, SHARED_POWER_PINS_STR);
-    outputDefine(outFile, NUM_BLADES_STR, config.numBlades());
+    data::Integer::ROContext numBlades{config.numBlades()};
+    outputDefine(outFile, NUM_BLADES_STR, numBlades.val());
     data::Vector::ROContext buttons{config.buttons_};
-    outputDefine(outFile, NUM_BUTTONS_STR, buttons .children().size());
+    outputDefine(outFile, NUM_BUTTONS_STR, buttons.children().size());
 
     const auto& bladeDetect{settings.bladeAwareness_.bladeDetect_};
     if (data::Bool::ROContext{bladeDetect.enable_}.val()) {
@@ -746,7 +751,7 @@ void outputPresets(std::ostream& outFile, const Config& config) {
 }
 
 void outputPresetStyles(std::ostream& outFile, const Config& config) {
-    const auto numBlades{config.numBlades()};
+    data::Integer::ROContext numBlades{config.numBlades()};
 
     data::Vector::ROContext presetArrays{config.presetArrays_};
     for (const auto& model : presetArrays.children()) {
@@ -765,7 +770,7 @@ void outputPresetStyles(std::ostream& outFile, const Config& config) {
                 << track.val() << "\",\n";
 
             data::Vector::ROContext styles{preset.styles_};
-            for (auto idx{0}; idx < numBlades; ++idx) {
+            for (auto idx{0}; idx < numBlades.val(); ++idx) {
                 const auto& model{styles.children()[idx]};
                 auto& style{static_cast<presets::Style&>(*model)};
 

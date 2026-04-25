@@ -35,6 +35,7 @@
 #include "log/severity.hpp"
 #include "utils/files.hpp"
 #include "utils/types.hpp"
+#include "utils/parent.hpp"
 #include "utils/paths.hpp"
 #include "versions/os.hpp"
 
@@ -90,6 +91,16 @@ config::Config::Config() :
         if (idx == -1 and ctxt.numChoices()) idx = 0;
     }};
     mPropSel.choice_.setFilter(propSelFilt);
+
+    mNumBlades.responder().onSet_ = [](
+        const data::Integer::ROContext& ctxt
+    ) {
+        auto& config{utils::parent<&Config::mNumBlades>(
+            ctxt.model<data::Integer>()
+        )};
+
+        config.syncStyles();
+    };
 
     mRcvr = new SavedReceiver(*this);
 
@@ -201,7 +212,11 @@ const data::Bool& config::Config::isSaved() const {
     return mIsSaved;
 }
 
-size config::Config::numBlades() const {
+const data::Integer& config::Config::numBlades() const {
+    return mNumBlades;
+}
+
+void config::Config::calcNumBlades() {
     data::Vector::ROContext bladeConfigs{bladeConfigs_};
 
     size num{0};
@@ -259,16 +274,19 @@ size config::Config::numBlades() const {
                 continue;
             }
         }
+
+        num += sum;
     }
 
-    return num;
+    data::Integer::Context ctxt{mNumBlades};
+    ctxt.set(static_cast<int32>(num));
 }
 
-void config::Config::syncStyles() {
+void config::Config::syncStyles() const {
     std::lock_guard scopeLock{pLock};
 
-    const auto numBlades{this->numBlades()};
-    data::Vector::Context presetArrays{presetArrays_};
+    data::Integer::ROContext numBlades{mNumBlades};
+    data::Vector::ROContext presetArrays{presetArrays_};
 
     for (const auto& model : presetArrays.children()) {
         auto& arrayModel{static_cast<presets::Array&>(*model)};
@@ -279,7 +297,7 @@ void config::Config::syncStyles() {
             data::Vector::Context styles{presetModel.styles_};
 
             const auto newSize{std::max<uint32>(
-                styles.children().size(), numBlades
+                styles.children().size(), numBlades.val()
             )};
 
             while (styles.children().size() < newSize) {

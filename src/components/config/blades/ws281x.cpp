@@ -131,11 +131,13 @@ WS281X::WS281X(data::Node *parent) :
     }};
     powerPins_.setPruner(powerPinPruner);
 
-    splits_.responder().onInsert_ = [](
+    const auto onSplitsChange{[](
         const data::Vector::ROContext& ctxt, size
     ) {
-        ctxt.model().root<Config>()->syncStyles();
-    };
+        ctxt.model().root<Config>()->calcNumBlades();
+    }};
+    splits_.responder().onInsert_ = onSplitsChange;
+    splits_.responder().onRemove_ = onSplitsChange;
 
     data::Selection::Context{powerPins_}.setItems({
         "bladePowerPin1",
@@ -241,7 +243,7 @@ WS281X::Split::Split(data::Node *parent) :
                 __builtin_unreachable();
         }
 
-        ctxt.model().root<Config>()->syncStyles();
+        ctxt.model().root<Config>()->calcNumBlades();
     };
 
     start_.responder().onSet_ = [](const data::Integer::ROContext& ctxt) {
@@ -339,7 +341,7 @@ WS281X::Split::Split(data::Node *parent) :
             end.update(params);
         }
 
-        split.root<Config>()->syncStyles();
+        split.root<Config>()->calcNumBlades();
     };
 
     const auto listFilter{[](

@@ -69,13 +69,14 @@ struct CONFIG_EXPORT Config : data::Root {
 
     const data::Bool& isSaved() const;
 
-    size numBlades() const;
-    void syncStyles();
+    const data::Integer& numBlades() const;
+
+    void calcNumBlades();
+    void syncStyles() const;
 
 private:
     friend struct Info;
 
-    // NOLINTNEXTLINE(modernize-use-equals-delete)
     Config();
 
     void ensurePropsForVersion();
@@ -86,6 +87,9 @@ private:
     > mPropMap;
     data::Selector mPropSel;
     data::Selector mBoardSel;
+
+    data::Integer mNumBlades;
+
     data::Bool mIsSaved;
 
     struct SavedReceiver;

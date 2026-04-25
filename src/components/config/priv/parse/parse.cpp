@@ -148,7 +148,6 @@ std::optional<std::string> config::priv::parse(
 
     logger.info("Parsing complete, finalizing...");
 
-    config.syncStyles();
     config.settings_.processDefines();
 
     logger.info("Done");

@@ -167,11 +167,13 @@ BladeConfig::BladeConfig(data::Node *parent) :
         bladeConfig.recomputeIssues();
     };
 
-    blades_.responder().onInsert_ = [](
+    const auto onBladesChange{[](
         const data::Vector::ROContext& ctxt, size
     ) {
-        ctxt.model().root<Config>()->syncStyles();
-    };
+        ctxt.model().root<Config>()->calcNumBlades();
+    }};
+    blades_.responder().onInsert_ = onBladesChange;
+    blades_.responder().onRemove_ = onBladesChange;
 
     data::Integer::Context{id_}.update({.min_=0, .max_=NO_BLADE});
 
