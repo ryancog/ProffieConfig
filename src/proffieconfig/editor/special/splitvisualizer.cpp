@@ -104,7 +104,12 @@ struct Window : pcui::detail::IDataDriven, wxWindow {
     struct VecReceiver : data::Vector::Receiver {
         void onInsert(size) override;
         void preRemove(size) override;
+        void onRemove(size) override;
     } vecReceiver_;
+
+    struct LengthReceiver : data::Integer::Receiver {
+        void onSet() override;
+    } lengthReceiver_;
 
     struct SelReceiver : data::Choice::Receiver {
         void onChoice() override;
@@ -205,6 +210,7 @@ Window::Window(
         selectedSplit_ = choiceCtxt.idx();
 
         vecReceiver_.attach(blade_.splits_);
+        lengthReceiver_.attach(blade_.length_);
         selChoiceReceiver_.attach(subSel.choice_);
     }
 
@@ -220,6 +226,7 @@ Window::Window(
 
 void Window::preDestroyCripple() {
     vecReceiver_.detach();
+    lengthReceiver_.detach();
     selChoiceReceiver_.detach();
 
     for (auto& [model, rcvrs] : splitReceiversMap_) {
@@ -718,7 +725,18 @@ void Window::VecReceiver::preRemove(size pos) {
     rcvrs.list_.detach();
 
     win->splitReceiversMap_.erase(model.get());
+}
 
+void Window::VecReceiver::onRemove(size) {
+    auto *win{&utils::parent<&Window::vecReceiver_>(*this)};
+    pcui::safeCall([win] {
+        win->regenerateSplitData();
+        win->Layout();
+    });
+}
+
+void Window::LengthReceiver::onSet() {
+    auto *win{&utils::parent<&Window::lengthReceiver_>(*this)};
     pcui::safeCall([win] {
         win->regenerateSplitData();
         win->Layout();
