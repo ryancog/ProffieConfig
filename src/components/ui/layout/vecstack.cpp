@@ -65,6 +65,9 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
     }
 
     void preDestroyCripple() override {
+        // Already crippled, can't create a context w/o a model.
+        if (not maybeModel()) return;
+
         // To lock map_
         auto ctxt{context<data::Vector>()};
 
