@@ -250,7 +250,8 @@ pcui::DescriptorPtr BladesPage::selection() {
                   .func_=[this](const pcui::CallbackContext& ctxt) {
                       // Only ever allow one of these dialogs. Not a technical
                       // limitation, just don't want things cluttered.
-                      if (mDlg) mDlg->Destroy();
+                      if (mDlg)
+                          mDlg->Destroy();
 
                       data::Vector::Context vec{mConfig.bladeConfigs_};
                       auto& cfg{vec.addCreate<config::blades::BladeConfig>()};
@@ -269,8 +270,6 @@ pcui::DescriptorPtr BladesPage::selection() {
                               static_cast<int32>(vec.children().size() - 1)
                           );
                       }
-
-                      pcui::cripple(&dlg);
                   }
                 }(),
                 pcui::Spacer{.size_=pcui::interControlSpacing()}(),
