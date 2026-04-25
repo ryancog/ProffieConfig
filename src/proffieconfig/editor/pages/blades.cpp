@@ -263,13 +263,14 @@ pcui::DescriptorPtr BladesPage::selection() {
 
                       auto res{dlg.ShowModal()};
                       if (res != wxID_OK) {
-                          pcui::cripple(&dlg);
                           vec.remove(vec.children().size() - 1);
                       } else {
                           data::Choice::Context{mArraySel.choice_}.choose(
                               static_cast<int32>(vec.children().size() - 1)
                           );
                       }
+
+                      pcui::cripple(&dlg);
                   }
                 }(),
                 pcui::Spacer{.size_=pcui::interControlSpacing()}(),
