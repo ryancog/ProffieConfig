@@ -20,6 +20,7 @@
  */
 
 #include "config/strings.hpp"
+#include "ui/build.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/checkbox.hpp"
 #include "ui/controls/choice.hpp"
@@ -33,6 +34,13 @@
 #include "ui/values.hpp"
 
 GeneralPage::GeneralPage(config::Config& config) : mConfig{config} {}
+
+void GeneralPage::deinit() {
+    if (mButtonDlg) {
+        pcui::cripple(mButtonDlg);
+        delete mButtonDlg;
+    }
+}
 
 pcui::DescriptorPtr GeneralPage::ui() {
     return pcui::Stack{

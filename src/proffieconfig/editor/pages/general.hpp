@@ -26,6 +26,7 @@
 
 struct GeneralPage {
     GeneralPage(config::Config&);
+    void deinit();
 
     pcui::DescriptorPtr ui();
 
