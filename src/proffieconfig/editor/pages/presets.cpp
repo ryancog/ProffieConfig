@@ -521,7 +521,16 @@ pcui::DescriptorPtr PresetsPage::displayAndBlade() {
           .data_=mDisplaySel,
           .style_=pcui::Choice::PopUp{
             .unselected_=_("Select Blade Array"),
-          }
+          },
+          .emptyLabel_=_("[default]"),
+          .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
+              data::Selector::ROContext displaySel{mDisplaySel};
+              data::Vector::ROContext vec{*displaySel.bound()};
+              auto& array{static_cast<config::blades::BladeConfig&>(
+                  *vec.children()[idx]
+              )};
+              return array.name_;
+          },
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Label{
