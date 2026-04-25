@@ -69,6 +69,7 @@ Button::Button(data::Node *parent) :
         );
         pos -= numTrimmed;
     }};
+    name_.setFilter(nameFilter);
 
     data::Choice::Context{type_}.update(config::eBtn_Type_Max);
     data::Choice::Context{event_}.update(config::eBtn_Evt_Max);
