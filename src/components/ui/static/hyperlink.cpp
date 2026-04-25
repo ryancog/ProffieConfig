@@ -42,7 +42,7 @@ wxSizerItem *Hyperlink::Desc::build(const detail::Scaffold& scaffold) const {
         link_
     )};
 
-    link->SetOwnFont(style_.makeFont());
+    link->SetOwnFont(font_.makeFont());
 
     auto *item{new wxSizerItem(link)};
     detail::apply(base_, item);

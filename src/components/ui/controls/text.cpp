@@ -40,10 +40,10 @@ struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
         if (desc.readOnly_) style |= wxTE_READONLY;
         if (desc.autoLink_) style |= wxTE_AUTO_URL;
 
-        if (const auto *ptr{std::get_if<Text::SingleLine>(&desc.mode_)}) {
+        if (const auto *ptr{std::get_if<Text::SingleLine>(&desc.style_)}) {
             onEnter_ = ptr->onEnter_;
         } else {
-            const auto& mode{std::get<Text::MultiLine>(desc.mode_)};
+            const auto& mode{std::get<Text::MultiLine>(desc.style_)};
             style |= wxTE_PROCESS_TAB;
             style |= wxTE_MULTILINE;
             switch (mode.wrap_) {
@@ -81,9 +81,9 @@ struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
         );
 
         postCreation(scaffold, desc.win_);
-        SetOwnFont(desc.style_.makeFont());
+        SetOwnFont(desc.font_.makeFont());
 
-        if (const auto *ptr{std::get_if<Text::SingleLine>(&desc.mode_)}) {
+        if (const auto *ptr{std::get_if<Text::SingleLine>(&desc.style_)}) {
             // Only call set if it's non-empty... these things tend to have
             // side-effects.
             if (not ptr->hint_.empty()) {
@@ -213,7 +213,7 @@ wxSizerItem *Text::Desc::build(const detail::Scaffold& scaffold) const {
 
     detail::apply(win_.base_, item);
 
-    if (const auto *ptr{std::get_if<Text::MultiLine>(&mode_)}) {
+    if (const auto *ptr{std::get_if<Text::MultiLine>(&style_)}) {
         if (not ptr->scroll_.vertical_) {
             const auto lineHeight{ctrl->GetTextExtent('M').y};
             

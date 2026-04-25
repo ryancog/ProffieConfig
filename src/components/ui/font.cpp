@@ -1,9 +1,9 @@
-#include "text.hpp"
+#include "font.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/text.cpp
+ * components/ui/font.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 
 #include <wx/settings.h>
 
-wxFont pcui::text::detail::StyleData::makeFont() const {
+wxFont pcui::detail::FontData::makeFont() const {
     if (const auto *ptr{std::get_if<wxFont>(this)}) {
         return *ptr;
     } 
@@ -31,24 +31,27 @@ wxFont pcui::text::detail::StyleData::makeFont() const {
     // but incorrect spacing.
     //
     // I don't know why, and I can't seem to figure out how to make things
-    // more elegant. Probably some platform-specific code here to try and
-    // pierce wxWidgets would be ideal, but that's a future issue.
+    // more elegant. Probably need to investigate this and raise an issue w/
+    // wx if it's consistent in a sample.
     auto sysFont{[] {
+        const auto defaultFont{wxFont{wxFontInfo{}}};
+        const auto defaultFontSize{defaultFont.GetFractionalPointSize()};
+
         auto guiFont{wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT)};
-        auto defaultFont{wxFont{wxFontInfo{}}};
-        guiFont.SetFractionalPointSize(defaultFont.GetFractionalPointSize());
+        guiFont.SetFractionalPointSize(defaultFontSize);
+
         return guiFont;
     }()};
 
-    switch (std::get<text::Style>(*this)) {
-        using enum text::Style;
+    switch (std::get<Font>(*this)) {
+        using enum Font;
         case Normal:
             return sysFont;
         case Title:
             sysFont.Scale(1.5);
             sysFont.MakeBold();
             return sysFont;
-        case Style::Header:
+        case Font::Header:
             return sysFont.Scale(1.2);
         }
 
@@ -56,7 +59,7 @@ wxFont pcui::text::detail::StyleData::makeFont() const {
     __builtin_unreachable();
 }
 
-wxFont pcui::text::operator-(Style style) {
-    return detail::StyleData{style}.makeFont();
+wxFont pcui::operator-(Font style) {
+    return detail::FontData{style}.makeFont();
 }
 

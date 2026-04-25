@@ -54,7 +54,7 @@ struct Static : detail::DataWindow<wxStaticText, data::String::Receiver> {
                 onColorChange();
             }
 
-            SetOwnFont(desc.style_.makeFont());
+            SetOwnFont(desc.font_.makeFont());
             Wrap(desc.wrapWidth_);
         }};
 

@@ -21,7 +21,7 @@
 
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
-#include "ui/text.hpp"
+#include "ui/font.hpp"
 #include "ui/types.hpp"
 
 #include "ui_export.h"
@@ -37,7 +37,7 @@ struct UI_EXPORT Label {
 
     LabelData label_;
 
-    text::detail::StyleData style_;
+    detail::FontData font_;
     color::Dynamic color_;
     int32 wrapWidth_{-1};
 

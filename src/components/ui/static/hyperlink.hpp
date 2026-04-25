@@ -24,7 +24,7 @@
 
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
-#include "ui/text.hpp"
+#include "ui/font.hpp"
 #include "ui/types.hpp"
 
 #include "ui_export.h"
@@ -40,7 +40,7 @@ struct UI_EXPORT Hyperlink {
     wxString label_;
     wxString link_;
 
-    text::detail::StyleData style_;
+    detail::FontData font_;
 
     DescriptorPtr operator()();
 };

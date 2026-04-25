@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/text.hpp
+ * components/ui/font.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,9 +25,9 @@
 
 #include "ui_export.h"
 
-namespace pcui::text {
+namespace pcui {
 
-enum class Style {
+enum class Font {
     Normal,
     Title,
     Header,
@@ -35,17 +35,17 @@ enum class Style {
 
 namespace detail {
 
-struct UI_EXPORT StyleData : std::variant<Style, wxFont> {
+struct UI_EXPORT FontData : std::variant<Font, wxFont> {
     using variant::variant;
 
-    StyleData() : variant{Style::Normal} {}
+    FontData() : variant{Font::Normal} {}
 
     [[nodiscard]] wxFont makeFont() const;
 };
 
 } // namespace detail
 
-wxFont operator-(Style);
+wxFont operator-(Font);
 
-} // namespace pcui::text
+} // namespace pcui
 

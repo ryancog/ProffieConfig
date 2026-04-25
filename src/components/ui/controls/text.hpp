@@ -22,7 +22,7 @@
 #include "data/string.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
-#include "ui/text.hpp"
+#include "ui/font.hpp"
 #include "ui/types.hpp"
 
 #include "ui_export.h"
@@ -47,7 +47,7 @@ struct UI_EXPORT Text {
      */
     bool autoLink_{false};
 
-    text::detail::StyleData style_;
+    detail::FontData font_;
 
     /**
      * Insert "\n" on enter.
@@ -85,7 +85,7 @@ struct UI_EXPORT Text {
         } wrap_{Wrap::Best};
     };
 
-    std::variant<SingleLine, MultiLine> mode_;
+    std::variant<SingleLine, MultiLine> style_;
 
     DescriptorPtr operator()();
 };
