@@ -24,6 +24,7 @@
 #include "config/blades/simple.hpp"
 #include "ui/types.hpp"
 
+#include "../dialogs/awareness.hpp"
 #include "../dialogs/bladearray.hpp"
 
 struct BladesPage {
@@ -60,6 +61,7 @@ private:
 
     data::String mPowerPinAddField;
 
-    BladeArrayDlg *mDlg{nullptr};
+    BladeArrayDlg *mArrayDlg{nullptr};
+    BladeAwarenessDlg *mAwarenessDlg{nullptr};
 };
 

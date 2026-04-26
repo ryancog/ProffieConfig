@@ -57,10 +57,10 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
         auto& arraySel{*ctxt.model().parent<data::Selector>()};
         auto& page{utils::parent<&BladesPage::mArraySel>(arraySel)};
 
-        if (page.mDlg) {
-            pcui::cripple(page.mDlg);
+        if (page.mArrayDlg) {
+            pcui::cripple(page.mArrayDlg);
 
-            page.mDlg->CallAfter([dlg=page.mDlg] {
+            page.mArrayDlg->CallAfter([dlg=page.mArrayDlg] {
                 dlg->Destroy();
             });
         }
@@ -135,6 +135,11 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
 void BladesPage::deinit() {
     data::Selector::Context{mArraySel}.bind(nullptr);
     mIssueReceiver.detach();
+
+    if (mAwarenessDlg) {
+        pcui::cripple(mAwarenessDlg);
+        mAwarenessDlg->Destroy();
+    }
 }
 
 pcui::DescriptorPtr BladesPage::ui() {
@@ -165,6 +170,16 @@ pcui::DescriptorPtr BladesPage::selection() {
         pcui::Button{
           .win_={.base_={.expand_=true}},
           .label_=_("Blade Awareness..."),
+          .func_=[this](const pcui::CallbackContext& ctxt) {
+              if (not mAwarenessDlg) {
+                  mAwarenessDlg = new BladeAwarenessDlg(
+                      ctxt.topLevel_, mConfig
+                  );
+              }
+
+              mAwarenessDlg->Show();
+              mAwarenessDlg->Raise();
+          }
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         pcui::Group{
@@ -218,9 +233,9 @@ pcui::DescriptorPtr BladesPage::selection() {
                   },
                   .exactFit_=true,
                   .func_=[this](const pcui::CallbackContext& ctxt) {
-                      if (mDlg) {
-                          mDlg->Show();
-                          mDlg->Raise();
+                      if (mArrayDlg) {
+                          mArrayDlg->Show();
+                          mArrayDlg->Raise();
                           return;
                       }
 
@@ -228,13 +243,13 @@ pcui::DescriptorPtr BladesPage::selection() {
 
                       data::Selector::Context sel{mArraySel};
                       auto& cfg{static_cast<BladeConfig&>(*sel.selected())};
-                      mDlg = new BladeArrayDlg(ctxt.topLevel_, cfg, false);
+                      mArrayDlg = new BladeArrayDlg(ctxt.topLevel_, cfg, false);
                       const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
-                          if (evt.GetEventObject() == mDlg) mDlg = nullptr;
+                          if (evt.GetEventObject() == mArrayDlg) mArrayDlg = nullptr;
                       }};
-                      mDlg->Bind(wxEVT_DESTROY, onDestroy);
+                      mArrayDlg->Bind(wxEVT_DESTROY, onDestroy);
 
-                      mDlg->Show();
+                      mArrayDlg->Show();
                   }
                 }(),
               }
@@ -251,8 +266,8 @@ pcui::DescriptorPtr BladesPage::selection() {
                   .func_=[this](const pcui::CallbackContext& ctxt) {
                       // Only ever allow one of these dialogs. Not a technical
                       // limitation, just don't want things cluttered.
-                      if (mDlg)
-                          mDlg->Destroy();
+                      if (mArrayDlg)
+                          mArrayDlg->Destroy();
 
                       data::Vector::Context vec{mConfig.bladeConfigs_};
                       auto& cfg{vec.addCreate<config::blades::BladeConfig>()};
