@@ -26,7 +26,6 @@
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
 #include "ui/types.hpp"
-#include "wx/event.h"
 
 using namespace pcui;
 
@@ -91,8 +90,9 @@ struct Static : detail::DataWindow<wxStaticText, data::String::Receiver> {
         attach(model);
     }
 
-    ~Static() override {
+    void preDestroyCripple() override {
         detach();
+        DataWindow::preDestroyCripple();
     }
 
     void onChange() override {

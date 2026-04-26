@@ -51,6 +51,8 @@ struct Layout : detail::Window<wxScrolledWindow> {
         for (auto *child : GetChildren()) {
             cripple(child);
         }
+
+        Window::preDestroyCripple();
     }
 
     void updateSizes() override {
