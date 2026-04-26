@@ -65,7 +65,10 @@ pcui::DescriptorPtr PresetArrayDlg::ui(bool mayCancel) {
           .label_=_("Name"),
           .orient_=wxVERTICAL,
           .ctrl_=pcui::Text{
-            .win_={.base_={.expand_=true}},
+            .win_={
+              .base_={.expand_=true},
+              .focus_=true,
+            },
             .data_=mArray.name_,
           }(),
         }(),
