@@ -1,178 +1,193 @@
-#include "customoptionsdlg.h"
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2025 Ryan Ogurek
+#include "customopts.hpp"
+/*
+ * ProffieConfig, All-In-One Proffieboard Management Utility
+ * Copyright (C) 2025-2026 Ryan Ogurek
+ *
+ * proffieconfig/editor/dialogs/customopts.cpp
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-#include <wx/hyperlink.h>
-#include <wx/scrolwin.h>
-#include <wx/button.h>
-#include <wx/stattext.h>
-#include <wx/statbox.h>
+#include "config/settings/define.hpp"
+#include "ui/build.hpp"
+#include "ui/controls/button.hpp"
+#include "ui/controls/text.hpp"
+#include "ui/layout/group.hpp"
+#include "ui/layout/scrolled.hpp"
+#include "ui/layout/spacer.hpp"
+#include "ui/layout/stack.hpp"
+#include "ui/layout/vecstack.hpp"
+#include "ui/static/divider.hpp"
+#include "ui/static/hyperlink.hpp"
+#include "ui/static/label.hpp"
+#include "ui/types.hpp"
+#include "ui/values.hpp"
 
-#include "ui/static_box.h"
-
-CustomOptionsDlg::CustomOptionsDlg(EditorWindow *parent) : 
-    wxDialog(
+CustomOptionsDlg::CustomOptionsDlg(wxWindow *parent, config::Config& config) :
+    pcui::Dialog(
         parent,
         wxID_ANY,
-        _("Custom Options") + " - " + static_cast<string>(parent->getOpenConfig().name),
-        wxDefaultPosition,
-        wxDefaultSize,
+        _("Custom Options"),
         wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER
     ),
-    pcui::NotifyReceiver(this, parent->getOpenConfig().settings.customOptsNotifyData),
-    mParent{parent} {
-    createUI();
-    bindEvents();
-
-    initializeNotifier();
+    mConfig{config} {
+    pcui::build(this, ui());
 }
 
-void CustomOptionsDlg::createUI() {
-    auto *sizer{new wxBoxSizer(wxVERTICAL)};
-
-    createOptionArea();
-
-    sizer->Add(
-        header(),
-        wxSizerFlags(0).Expand().Border(wxALL, 10)
-    );
-    sizer->Add(
-        mOptionArea,
-        wxSizerFlags(1).Expand().Border(wxALL, 10)
-    );
-    sizer->Add(
-        info(this),
-        wxSizerFlags(0).Expand().Border(wxALL, 10)
-    );
-    sizer->SetMinSize(500, 500);
-
-    SetSizerAndFit(sizer);
+pcui::DescriptorPtr CustomOptionsDlg::ui() {
+    return pcui::Stack{
+      .base_={
+        .minSize_={400, 500},
+        .expand_=true,
+        .proportion_=1,
+        .border_={.size_=pcui::winEdgeSpacing(), .dirs_=wxALL},
+      },
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::Group{
+          .win_={.base_={.expand_=true, .proportion_=1}},
+          .padded_=false,
+          .children_={
+            pcui::Scrolled{
+              .win_={.base_={.expand_=true, .proportion_=1}},
+              .scrollRate_={.y_=4},
+              .child_=pcui::VecStack{
+                .base_={
+                  .expand_=true,
+                  .proportion_=1,
+                  .border_={.size_=pcui::interGroupSpacing(), .dirs_=wxALL},
+                },
+                .orient_=wxVERTICAL,
+                .data_=mConfig.settings_.defines_,
+                .builder_=option,
+                .separator_=pcui::Stack{
+                  .base_={.expand_=true},
+                  .children_={
+                    pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+                    pcui::Divider{
+                      .base_={.expand_=true},
+                      .orient_=wxHORIZONTAL,
+                    }(),
+                    pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+                  }
+                }(),
+                .empty_=pcui::Stack{
+                  .base_={.expand_=true, .proportion_=1},
+                  .children_={
+                    pcui::StretchSpacer{}(),
+                    pcui::Label{
+                      .win_={
+                        .base_={
+                          .border_={
+                            .size_=pcui::interGroupSpacing(),
+                            .dirs_=wxALL
+                          },
+                          .align_=wxALIGN_CENTER,
+                        },
+                      },
+                      .label_=_("Once you add custom options they'll show up here."),
+                      .color_=wxSYS_COLOUR_GRAYTEXT,
+                    }(),
+                    pcui::StretchSpacer{}(),
+                  }
+                }(),
+              }(),
+            }(),
+          }
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Button{
+          .win_={.base_={.align_=wxALIGN_RIGHT}},
+          .label_=_("Add Option"),
+          .func_=[this] { addOption(); },
+        }(),
+        pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+        info(),
+      }
+    }();
 }
 
-void CustomOptionsDlg::bindEvents() {
-    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        mParent->getOpenConfig().settings.addCustomOption();
-    }, ID_AddDefine);
+pcui::DescriptorPtr CustomOptionsDlg::info() {
+    return pcui::Group{
+      .win_={.base_={.expand_=true}},
+      .label_=_("Links For Additional ProffieOS Defines"),
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::Label{
+          .label_=_("ProffieConfig already handles most of these"),
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Hyperlink{
+          .label_=_("Optional Defines"),
+          .link_="https://pod.hubbe.net/config/the-config_top-section.html#optional-defines",
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Hyperlink{
+          .label_=_("History of Clash Detection"),
+          .link_="https://pod.hubbe.net/explainers/history-of-clash.html",
+        }(),
+      }
+    }();
 }
 
-wxBoxSizer *CustomOptionsDlg::header() {
-    auto *sizer{new wxBoxSizer(wxHORIZONTAL)};
+pcui::DescriptorPtr CustomOptionsDlg::option(data::Model& model) {
+    auto& option{static_cast<config::settings::Define&>(model)};
 
-    auto *text{new wxStaticText(
-        this,
-        wxID_ANY, 
-        _("Defines are in the format:\n#define [NAME] [VALUE]")
-    )};
-    mAddDefineButton = new wxButton(this, ID_AddDefine, _("Add Custom Define"));
-    sizer->Add(text, wxSizerFlags(0).Center());
-    sizer->AddSpacer(50);
-    sizer->AddStretchSpacer();
-    sizer->Add(mAddDefineButton);
+    return pcui::Stack{
+      .base_={.expand_=true},
+      .orient_=wxHORIZONTAL,
+      .children_={
+        pcui::Label{
+          .win_={.base_={.align_=wxALIGN_CENTER}},
+          .label_="#define"
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Text{
+          .win_={.base_={.proportion_=5}},
+          .data_=option.name_,
+          .style_=pcui::Text::SingleLine{
+            .hint_=_("Name"),
+          }
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Text{
+          .win_={.base_={.proportion_=3}},
+          .data_=option.value_,
+          .style_=pcui::Text::SingleLine{
+            .hint_=_("Value"),
+          }
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Button{
+          .label_=_("Remove"),
+          .func_=[&option, &model](pcui::CallbackContext ctxt) {
+              auto& vec{*option.parent<data::Vector>()};
 
-    return sizer;
+              // Removing the model will destroy this UI first, and the UI
+              // cannot be destroyed from inside the callback.
+              ctxt.topLevel_->CallAfter([&vec, &model] {
+                  data::Vector::Context vecCtxt{vec};
+                  vecCtxt.remove(model);
+              });
+          }
+        }(),
+      }
+    }();
 }
 
-wxWindow *CustomOptionsDlg::info(wxWindow *parent) {
-    auto *infoSizer{new pcui::StaticBox(
-        wxVERTICAL,
-        parent,
-        _("Links For Additional ProffieOS Defines")
-    )};
-
-    auto *text{new wxStaticText(
-        infoSizer->childParent(),
-        wxID_ANY,
-        _("(ProffieConfig already handles some of these)\n")
-    )};
-    auto *optDefines{new wxHyperlinkCtrl(
-        infoSizer->childParent(),
-        wxID_ANY,
-        _("Optional Defines"),
-        "https://pod.hubbe.net/config/the-config_top-section.html#optional-defines"
-    )};
-    auto *clashSuppress{new wxHyperlinkCtrl(
-        infoSizer->childParent(),
-        wxID_ANY,
-        _("History of Clash Detection"),
-        "https://pod.hubbe.net/explainers/history-of-clash.html"
-    )};
-    infoSizer->Add(
-        text,
-        wxSizerFlags(0).Border(wxLEFT | wxTOP | wxRIGHT, 10)
-    );
-    infoSizer->Add(
-        optDefines,
-        wxSizerFlags(0).Border(wxLEFT | wxRIGHT, 10)
-    );
-    infoSizer->Add(
-        clashSuppress,
-        wxSizerFlags(0).Border(wxLEFT | wxBOTTOM | wxRIGHT, 10)
-    );
-
-    return infoSizer;
+void CustomOptionsDlg::addOption() {
+    data::Vector::Context vec{mConfig.settings_.defines_};
+    auto& option{vec.addCreate<config::settings::Define>()};
 }
 
-void CustomOptionsDlg::createOptionArea() {
-    mOptionArea = new wxScrolledWindow(this, wxID_ANY);
-    auto *sizer{new wxBoxSizer(wxVERTICAL)};
-
-    mOptionArea->SetScrollRate(10, 10);
-    mOptionArea->SetSizerAndFit(sizer);
-}
-
-void CustomOptionsDlg::handleNotification(uint32) {
-    mOptionArea->GetSizer()->Clear(true);
-
-    auto& config{mParent->getOpenConfig()};
-    const auto& customOptions{config.settings.customOptions()};
-    if (customOptions.empty()) {
-        mOptionArea->GetSizer()->AddStretchSpacer();
-        mOptionArea->GetSizer()->Add(
-            new wxStaticText(
-                    mOptionArea,
-                    wxID_ANY,
-                    _("Once you add custom options they'll show up here."),
-                    wxDefaultPosition,
-                    wxDefaultSize,
-                    wxALIGN_CENTER_HORIZONTAL
-            ),
-            wxSizerFlags(0).Expand()
-        );
-        mOptionArea->GetSizer()->AddStretchSpacer();
-    } else {
-        for (const auto& constOption: customOptions) {
-            auto& option{const_cast<Config::Settings::CustomOption&>(*constOption)};
-            mOptionArea->GetSizer()->Add(
-                new CDefine(mOptionArea, config, option),
-                wxSizerFlags(0).Expand().Border(wxBOTTOM, 5)
-            );
-        }
-    }
-
-    Layout();
-}
-
-
-CustomOptionsDlg::CDefine::CDefine(
-    wxScrolledWindow *parent,
-    Config::Config& config,
-    Config::Settings::CustomOption& option
-) : wxPanel(parent, wxID_ANY) {
-    auto *sizer{new wxBoxSizer(wxHORIZONTAL)};
-
-    auto *defText {new wxStaticText(this, wxID_ANY, "#define")};
-    auto *name{new pcui::Text(this, option.define)};
-    auto *value{new pcui::Text(this, option.value)};
-    value->SetMinSize(wxSize{50, -1});
-    auto *remove = new wxButton(this, wxID_ANY, _("Remove"));
-    remove->Bind(wxEVT_BUTTON, [&config, &option](wxCommandEvent&) {
-        config.settings.removeCustomOption(option);
-    });
-
-    sizer->Add(defText, wxSizerFlags(0).Center().Border(wxRIGHT, 5));
-    sizer->Add(name, wxSizerFlags(5).Border(wxRIGHT, 5));
-    sizer->Add(value, wxSizerFlags(3).Border(wxRIGHT, 5));
-    sizer->Add(remove, wxSizerFlags(0).Border(wxRIGHT, 10));
-
-    SetSizerAndFit(sizer);
-}
