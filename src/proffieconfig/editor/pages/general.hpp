@@ -23,6 +23,7 @@
 #include "ui/types.hpp"
 
 #include "../dialogs/buttons.hpp"
+#include "../dialogs/customopts.hpp"
 
 struct GeneralPage {
     GeneralPage(config::Config&);
@@ -41,4 +42,5 @@ private:
     config::Config& mConfig;
 
     ButtonsDlg *mButtonDlg{nullptr};
+    CustomOptionsDlg *mOptionsDlg{nullptr};
 };

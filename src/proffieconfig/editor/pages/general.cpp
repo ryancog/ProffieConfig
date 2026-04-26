@@ -40,6 +40,10 @@ void GeneralPage::deinit() {
         pcui::cripple(mButtonDlg);
         mButtonDlg->Destroy();
     }
+    if (mOptionsDlg) {
+        pcui::cripple(mOptionsDlg);
+        mOptionsDlg->Destroy();
+    }
 }
 
 pcui::DescriptorPtr GeneralPage::ui() {
@@ -380,6 +384,16 @@ pcui::DescriptorPtr GeneralPage::tweaks() {
             pcui::Button{
               .win_={.base_={.expand_=true}},
               .label_=_("Custom Options..."),
+              .func_=[this](pcui::CallbackContext ctxt) {
+                  if (not mOptionsDlg) {
+                      mOptionsDlg = new CustomOptionsDlg(
+                          ctxt.topLevel_, mConfig
+                      );
+                  }
+
+                  mOptionsDlg->Show();
+                  mOptionsDlg->Raise();
+              }
             }(),
           }
         }(),
