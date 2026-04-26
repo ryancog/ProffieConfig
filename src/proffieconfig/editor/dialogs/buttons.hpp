@@ -19,9 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/dialog.h>
-#include <wx/panel.h>
-
 #include "config/config.hpp"
 #include "ui/dialog.hpp"
 #include "ui/types.hpp"
@@ -32,7 +29,6 @@ struct ButtonsDlg : pcui::Dialog {
 private:
     pcui::DescriptorPtr ui();
 
-    pcui::DescriptorPtr header();
     pcui::DescriptorPtr info();
     static pcui::DescriptorPtr button(data::Model&);
 

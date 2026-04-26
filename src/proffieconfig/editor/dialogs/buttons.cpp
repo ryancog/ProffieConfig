@@ -103,18 +103,21 @@ pcui::DescriptorPtr ButtonsDlg::ui() {
                 .empty_=pcui::Stack{
                   .base_={.expand_=true, .proportion_=1},
                   .children_={
-                    pcui::StretchSpacer{.proportion_=1}(),
+                    pcui::StretchSpacer{}(),
                     pcui::Label{
                       .win_={
                         .base_={
-                          .border_={.size_=pcui::interGroupSpacing(), .dirs_=wxALL},
+                          .border_={
+                            .size_=pcui::interGroupSpacing(),
+                            .dirs_=wxALL
+                          },
                           .align_=wxALIGN_CENTER,
                         },
                       },
                       .label_=_("No Buttons"),
                       .color_=wxSYS_COLOUR_GRAYTEXT,
                     }(),
-                    pcui::StretchSpacer{.proportion_=1}(),
+                    pcui::StretchSpacer{}(),
                   }
                 }(),
               }(),
@@ -130,6 +133,30 @@ pcui::DescriptorPtr ButtonsDlg::ui() {
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         info(),
+      }
+    }();
+}
+
+pcui::DescriptorPtr ButtonsDlg::info() {
+    return pcui::Group{
+      .win_={.base_={.expand_=true}},
+      .label_=_("Buttons Configuration Information"),
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::Hyperlink{
+          .label_=_("Touch Button Info"),
+          .link_="https://pod.hubbe.net/hardware/touch-buttons.html"
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Hyperlink{
+          .label_=_("Button Commands"),
+          .link_="https://pod.hubbe.net/tools/button-commands.html"
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Hyperlink{
+          .label_=_("Pins Safe for Pulldown Buttons"),
+          .link_="https://crucible.hubbe.net/t/button-types/5137/16?u=ryryog25"
+        }(),
       }
     }();
 }
@@ -325,29 +352,5 @@ void ButtonsDlg::addButton() {
             break;
         default:
     }
-}
-
-pcui::DescriptorPtr ButtonsDlg::info() {
-    return pcui::Group{
-      .win_={.base_={.expand_=true}},
-      .label_=_("Buttons Configuration Information"),
-      .orient_=wxVERTICAL,
-      .children_={
-        pcui::Hyperlink{
-          .label_=_("Touch Button Info"),
-          .link_="https://pod.hubbe.net/hardware/touch-buttons.html"
-        }(),
-        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Hyperlink{
-          .label_=_("Button Commands"),
-          .link_="https://pod.hubbe.net/tools/button-commands.html"
-        }(),
-        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Hyperlink{
-          .label_=_("Pins Safe for Pulldown Buttons"),
-          .link_="https://crucible.hubbe.net/t/button-types/5137/16?u=ryryog25"
-        }(),
-      }
-    }();
 }
 
