@@ -37,21 +37,21 @@ struct CONFIG_EXPORT Simple : data::Node {
     bool enumerate(const EnumFunc&) override;
     Model *find(uint64) override;
 
-    struct Star : data::Node {
-        Star(Simple&);
+    struct LED : data::Node {
+        LED(Simple&);
 
         bool enumerate(const EnumFunc&) override;
         Model *find(uint64) override;
 
-        data::Choice led_;
+        data::Choice profile_;
         data::String powerPin_;
         data::Integer resistance_;
     };
 
-    Star star1_;
-    Star star2_;
-    Star star3_;
-    Star star4_;
+    LED led1_;
+    LED led2_;
+    LED led3_;
+    LED led4_;
 };
 
 } // namespace config::blades

@@ -219,47 +219,47 @@ std::optional<std::string> runPreChecks(
             }
 
             if (type.idx() == Blade::eSimple) {
-                auto& star1{blade.simple().star1_};
-                auto& star2{blade.simple().star2_};
-                auto& star3{blade.simple().star3_};
-                auto& star4{blade.simple().star4_};
+                auto& led1{blade.simple().led1_};
+                auto& led2{blade.simple().led2_};
+                auto& led3{blade.simple().led3_};
+                auto& led4{blade.simple().led4_};
 
-                data::Choice::ROContext star1Led{star1.led_};
-                data::Choice::ROContext star2Led{star2.led_};
-                data::Choice::ROContext star3Led{star3.led_};
-                data::Choice::ROContext star4Led{star4.led_};
+                data::Choice::ROContext led1Profile{led1.profile_};
+                data::Choice::ROContext led2Profile{led2.profile_};
+                data::Choice::ROContext led3Profile{led3.profile_};
+                data::Choice::ROContext led4Profile{led4.profile_};
 
                 constexpr auto SIMPLE_ERR_MSG{wxTRANSLATE("LED %d of blade %d in array %s missing power pin.")};
                 if (
-                        star1Led.idx() != eLED_None and 
-                        data::String::ROContext{star1.powerPin_}.val().empty()
+                        led1Profile.idx() != eLED_None and
+                        data::String::ROContext{led1.powerPin_}.val().empty()
                    ) {
                     return errorMessage(logger, SIMPLE_ERR_MSG, 1, bladeIdx, name.val());
                 }
                 if (
-                        star2Led.idx() != eLED_None and 
-                        data::String::ROContext{star2.powerPin_}.val().empty()
+                        led2Profile.idx() != eLED_None and
+                        data::String::ROContext{led2.powerPin_}.val().empty()
                    ) {
                     return errorMessage(logger, SIMPLE_ERR_MSG, 2, bladeIdx, name.val());
                 }
                 if (
-                        star3Led.idx() != eLED_None and 
-                        data::String::ROContext{star3.powerPin_}.val().empty()
+                        led3Profile.idx() != eLED_None and
+                        data::String::ROContext{led3.powerPin_}.val().empty()
                    ) {
                     return errorMessage(logger, SIMPLE_ERR_MSG, 3, bladeIdx, name.val());
                 }
                 if (
-                        star4Led.idx() != eLED_None and 
-                        data::String::ROContext{star4.powerPin_}.val().empty()
+                        led4Profile.idx() != eLED_None and
+                        data::String::ROContext{led4.powerPin_}.val().empty()
                    ) {
                     return errorMessage(logger, SIMPLE_ERR_MSG, 4, bladeIdx, name.val());
                 }
 
                 if (
-                        star1Led.idx() == eLED_None or
-                        star1Led.idx() == eLED_None or
-                        star1Led.idx() == eLED_None or
-                        star1Led.idx() == eLED_None
+                        led1Profile.idx() == eLED_None or
+                        led1Profile.idx() == eLED_None or
+                        led1Profile.idx() == eLED_None or
+                        led1Profile.idx() == eLED_None
                    ) {
                     return errorMessage(logger, wxTRANSLATE("Blade %d in array %s has no LEDs"), bladeIdx, name.val());
                 }
@@ -891,37 +891,37 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
 
                 bladeStr << "SimpleBladePtr<";
 
-                auto outputStar{[&bladeStr](blades::Simple::Star& star) {
-                    data::Choice::ROContext led{star.led_};
+                auto outputLEDProfile{[&bladeStr](blades::Simple::LED& led) {
+                    data::Choice::ROContext profile{led.profile_};
 
-                    bladeStr << LED_STRS[led.idx()];
+                    bladeStr << LED_STRS[profile.idx()];
 
-                    data::Integer::ROContext resistance{star.resistance_};
+                    data::Integer::ROContext resistance{led.resistance_};
                     if (resistance.enabled()) {
                         bladeStr << '<' << resistance.val() << '>';
                     }
 
                     bladeStr << ", ";
                 }};
-                outputStar(simple.star1_);
-                outputStar(simple.star2_);
-                outputStar(simple.star3_);
-                outputStar(simple.star4_);
+                outputLEDProfile(simple.led1_);
+                outputLEDProfile(simple.led2_);
+                outputLEDProfile(simple.led3_);
+                outputLEDProfile(simple.led4_);
 
-                auto outputStarPower{[&bladeStr](blades::Simple::Star& star) {
-                    data::String::ROContext powerPin{star.powerPin_};
+                auto outputLEDPower{[&bladeStr](blades::Simple::LED& led) {
+                    data::String::ROContext powerPin{led.powerPin_};
                     
                     if (powerPin.enabled()) {
                         bladeStr << powerPin.val();
                     } else bladeStr << "-1";
                 }};
-                outputStarPower(simple.star1_);
+                outputLEDPower(simple.led1_);
                 bladeStr << ", ";
-                outputStarPower(simple.star2_);
+                outputLEDPower(simple.led2_);
                 bladeStr << ", ";
-                outputStarPower(simple.star3_);
+                outputLEDPower(simple.led3_);
                 bladeStr << ", ";
-                outputStarPower(simple.star4_);
+                outputLEDPower(simple.led4_);
 
                 bladeStr << ">()";
             }

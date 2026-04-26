@@ -1222,40 +1222,40 @@ std::optional<std::string> parseBlade(
         data::Integer::Context{blade.brightness_}.set(firstBrightness);
         auto& simple{blade.simple()};
 
-        const auto starFromIdx{[&](size idx) -> Simple::Star& {
+        const auto ledFromIdx{[&](size idx) -> Simple::LED& {
             switch (idx) {
-                case 0: return simple.star1_;
-                case 1: return simple.star2_;
-                case 2: return simple.star3_;
-                case 3: return simple.star4_;
+                case 0: return simple.led1_;
+                case 1: return simple.led2_;
+                case 2: return simple.led3_;
+                case 3: return simple.led4_;
                 default:
                     assert(0);
                     __builtin_unreachable();
             }
         }};
 
-        const auto parseLED{[&](size starIdx) -> std::optional<std::string> {
-            auto& star{starFromIdx(starIdx)};
+        const auto parseProfile{[&](size ledIdx) -> std::optional<std::string> {
+            auto& led{ledFromIdx(ledIdx)};
 
             const auto ledCommaPos{data.find(',')};
             if (ledCommaPos == std::string::npos) {
-                return errorMessage(logger, wxTRANSLATE("Missing end comma for SimpleBlade LED %u"), starIdx);
+                return errorMessage(logger, wxTRANSLATE("Missing end comma for SimpleBlade LED %u"), ledIdx);
             }
 
             const auto ledStr{data.substr(0, ledCommaPos)};
             data.erase(0, ledCommaPos + 1);
 
-            size ledIdx{0};
-            for (; ledIdx < eLED_Max; ++ledIdx) {
-                const auto& testLedStr{LED_STRS[ledIdx]};
+            size profileIdx{0};
+            for (; profileIdx < eLED_Max; ++profileIdx) {
+                const auto& testLedStr{LED_STRS[profileIdx]};
                 if (not ledStr.starts_with(testLedStr)) continue;
 
-                data::Choice::Context led{star.led_};
-                led.choose(static_cast<int32>(ledIdx));
+                data::Choice::Context profile{led.profile_};
+                profile.choose(static_cast<int32>(profileIdx));
 
                 if (
-                        ledIdx >= eLED_Use_Resistance_Start and
-                        ledIdx <= eLED_Use_Resistance_End
+                        profileIdx >= eLED_Use_Resistance_Start and
+                        profileIdx <= eLED_Use_Resistance_End
                    ) {
                     // At least long enough for chevrons
                     if (ledStr.length() < testLedStr.length() + 2) {
@@ -1278,7 +1278,7 @@ std::optional<std::string> parseBlade(
                         return errorMessage(logger, wxTRANSLATE("Simple blade has invalid resistance: %s"), ledStr);
                     }
 
-                    data::Integer::Context resistance{star.resistance_};
+                    data::Integer::Context resistance{led.resistance_};
                     resistance.set(static_cast<int32>(*resistanceVal));
                 } else {
                     // If it doesn't use resistance, should match length exactly
@@ -1290,35 +1290,35 @@ std::optional<std::string> parseBlade(
                 break;
             }
 
-            if (ledIdx == eLED_Max) {
+            if (profileIdx == eLED_Max) {
                 return errorMessage(logger, wxTRANSLATE("Unknown/malformed LED in SimpleBlade: %s"), ledStr);
             }
 
             return std::nullopt;
         }};
 
-        err = parseLED(0);
+        err = parseProfile(0);
         if (err) return err;
-        err = parseLED(1);
+        err = parseProfile(1);
         if (err) return err;
-        err = parseLED(2);
+        err = parseProfile(2);
         if (err) return err;
-        err = parseLED(3);
+        err = parseProfile(3);
         if (err) return err;
 
-        const auto parsePin{[&](size starIdx) -> std::optional<std::string> {
-            auto& star{starFromIdx(starIdx)};
+        const auto parsePin{[&](size ledIdx) -> std::optional<std::string> {
+            auto& led{ledFromIdx(ledIdx)};
 
-            const auto pinCommaPos{data.find(starIdx == 3 ? '>' : ',')};
+            const auto pinCommaPos{data.find(ledIdx == 3 ? '>' : ',')};
             if (pinCommaPos == std::string::npos) {
-                return errorMessage(logger, wxTRANSLATE("Missing end comma/chevron for SimpleBlade power pin %u"), starIdx + 1);
+                return errorMessage(logger, wxTRANSLATE("Missing end comma/chevron for SimpleBlade power pin %u"), ledIdx + 1);
             }
 
             auto pinStr{data.substr(0, pinCommaPos)};
             data.erase(0, pinCommaPos + 1);
 
             if (pinStr != "-1") {
-                data::String::Context powerPin{star.powerPin_};
+                data::String::Context powerPin{led.powerPin_};
                 powerPin.change(std::move(pinStr));
             }
 
@@ -1334,16 +1334,16 @@ std::optional<std::string> parseBlade(
         err = parsePin(3);
         if (err) return err;
         
-        data::Choice::Context star1Led{simple.star1_.led_};
-        data::Choice::Context star2Led{simple.star2_.led_};
-        data::Choice::Context star3Led{simple.star3_.led_};
-        data::Choice::Context star4Led{simple.star4_.led_};
+        data::Choice::Context led1Profile{simple.led1_.profile_};
+        data::Choice::Context led2Profile{simple.led2_.profile_};
+        data::Choice::Context led3Profile{simple.led3_.profile_};
+        data::Choice::Context led4Profile{simple.led4_.profile_};
 
         if (
-                star1Led.idx() == eLED_None and
-                star2Led.idx() == eLED_None and
-                star3Led.idx() == eLED_None and
-                star4Led.idx() == eLED_None
+                led1Profile.idx() == eLED_None and
+                led2Profile.idx() == eLED_None and
+                led3Profile.idx() == eLED_None and
+                led4Profile.idx() == eLED_None
            ) {
             data::Choice::Context type{blade.type().choice_};
             type.choose(Blade::eUnassigned);
