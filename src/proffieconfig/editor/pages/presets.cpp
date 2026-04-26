@@ -82,10 +82,9 @@ PresetsPage::PresetsPage(config::Config& config) : mConfig{config} {
         data::Selector::Context styleSel{page.mStyleSel};
 
         data::Vector *styles{nullptr};
-        if (presetSelCtxt.choiceIdx() != -1) {
-            using namespace config::presets;
-            auto& curPreset{*presetSelCtxt.selected<Preset>()};
-            styles = &curPreset.styles_;
+        using namespace config::presets;
+        if (auto *curPreset{presetSelCtxt.selected<Preset>()}) {
+            styles = &curPreset->styles_;
         }
         styleSel.bind(styles);
     };
@@ -96,9 +95,16 @@ PresetsPage::PresetsPage(config::Config& config) : mConfig{config} {
         auto& displaySel{*ctxt.model().parent<data::Selector>()};
         auto& page{utils::parent<&PresetsPage::mDisplaySel>(displaySel)};
 
-        if (ctxt.idx() != -1)
-            page.updateBladeStrings();
+        page.updateBladeStrings();
     };
+
+    const auto displayFilter{[](
+        const data::Choice::ROContext& ctxt, int32& idx
+    ) {
+        if (idx == -1 and ctxt.numChoices())
+            idx = 0;
+    }};
+    mDisplaySel.choice_.setFilter(displayFilter);
 
     data::Selector::Context{mArraySel}.bind(&config.presetArrays_);
     data::Selector::Context{mDisplaySel}.bind(&config.bladeConfigs_);
@@ -534,16 +540,17 @@ pcui::DescriptorPtr PresetsPage::displayAndBlade() {
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Label{
-          .label_=_("Blades"),
+          .label_=_("Styles"),
         }(),
         pcui::Choice{
           .win_={.base_={.expand_=true, .proportion_=1}},
           .data_=mStyleSel,
+          .clamp_=mConfig.numBlades(),
           .style_=pcui::Choice::List{},
           .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
               if (idx == 0) {
-                  data::Choice::ROContext choice{mStyleSel.choice_};
-                  mBladeStrings.resize(choice.numChoices());
+                  data::Integer::ROContext numBlades{mConfig.numBlades()};
+                  mBladeStrings.resize(numBlades.val());
                   updateBladeStrings();
               }
 
@@ -642,34 +649,18 @@ void PresetsPage::updateBladeStrings() {
     using namespace config::blades;
 
     data::Selector::ROContext displaySel{mDisplaySel};
-    auto& bladeCfg{*displaySel.selected<BladeConfig>()};
     
-    data::Vector::ROContext bladeVec{bladeCfg.blades_};
-
-    size labelIdx{0};
-
     size count{0};
-    size mainIdx{0};
-    for (const auto& child : bladeVec.children()) {
-        auto& blade{static_cast<Blade&>(*child)};
-        data::Choice::ROContext type{blade.type().choice_};
 
-        if (type.idx() == Blade::eSimple) {
-            if (count == mBladeStrings.size()) return;
+    if (auto *bladeCfg{displaySel.selected<BladeConfig>()}) {
+        data::Vector::ROContext bladeVec{bladeCfg->blades_};
+        size labelIdx{0};
+        size mainIdx{0};
+        for (const auto& child : bladeVec.children()) {
+            auto& blade{static_cast<Blade&>(*child)};
+            data::Choice::ROContext type{blade.type().choice_};
 
-            data::String::Context label{mBladeStrings[count]};
-            label.change(wxString::Format(
-                _("Blade %d"), mainIdx
-            ).ToStdString());
-
-            ++mainIdx;
-            ++count;
-        } else if (type.idx() == Blade::eWS281X) {
-            auto& ws281x{blade.ws281x()};
-
-            data::Vector::ROContext splits{ws281x.splits_};
-
-            if (splits.children().empty()) {
+            if (type.idx() == Blade::eSimple) {
                 if (count == mBladeStrings.size()) return;
 
                 data::String::Context label{mBladeStrings[count]};
@@ -677,74 +668,92 @@ void PresetsPage::updateBladeStrings() {
                     _("Blade %d"), mainIdx
                 ).ToStdString());
 
+                ++mainIdx;
                 ++count;
-            } else {
-                size subIdx{0};
-                for (const auto& child : splits.children()) {
-                    auto& split{static_cast<WS281X::Split&>(*child)};
+            } else if (type.idx() == Blade::eWS281X) {
+                auto& ws281x{blade.ws281x()};
 
-                    const auto splitType{static_cast<WS281X::Split::Type>(
-                        split.type_.selected()
-                    )};
+                data::Vector::ROContext splits{ws281x.splits_};
 
-                    switch (splitType) {
-                        using enum WS281X::Split::Type;
-                        case eReverse:
-                        case eStandard:
-                        case eList:
-                        {
-                            if (count == mBladeStrings.size()) return;
+                if (splits.children().empty()) {
+                    if (count == mBladeStrings.size()) return;
 
-                            data::String::Context label{mBladeStrings[count]};
-                            label.change(wxString::Format(
-                                _("Blade %d:%d"), mainIdx, subIdx
-                            ).ToStdString());
+                    data::String::Context label{mBladeStrings[count]};
+                    label.change(wxString::Format(
+                        _("Blade %d"), mainIdx
+                    ).ToStdString());
 
-                            ++count;
-                            break;
-                        }
-                        case eStride:
-                        case eZig_Zag:
-                        {
-                            data::Integer::ROContext numSegments{
-                                split.segments_
-                            };
-                            for (
-                                    size idx{0};
-                                    idx < numSegments.val();
-                                    ++idx
-                                ) {
+                    ++count;
+                } else {
+                    size subIdx{0};
+                    for (const auto& child : splits.children()) {
+                        auto& split{static_cast<WS281X::Split&>(*child)};
+
+                        const auto splitType{static_cast<WS281X::Split::Type>(
+                            split.type_.selected()
+                        )};
+
+                        switch (splitType) {
+                            using enum WS281X::Split::Type;
+                            case eReverse:
+                            case eStandard:
+                            case eList:
+                            {
                                 if (count == mBladeStrings.size()) return;
 
                                 data::String::Context label{
                                     mBladeStrings[count]
                                 };
                                 label.change(wxString::Format(
-                                    _("Blade %d:%d:%d"),
-                                    mainIdx,
-                                    subIdx,
-                                    idx
+                                    _("Blade %d:%d"), mainIdx, subIdx
                                 ).ToStdString());
 
                                 ++count;
+                                break;
                             }
-                            break;
+                            case eStride:
+                            case eZig_Zag:
+                            {
+                                data::Integer::ROContext numSegments{
+                                    split.segments_
+                                };
+                                for (
+                                        size idx{0};
+                                        idx < numSegments.val();
+                                        ++idx
+                                    ) {
+                                    if (count == mBladeStrings.size()) return;
+
+                                    data::String::Context label{
+                                        mBladeStrings[count]
+                                    };
+                                    label.change(wxString::Format(
+                                        _("Blade %d:%d:%d"),
+                                        mainIdx,
+                                        subIdx,
+                                        idx
+                                    ).ToStdString());
+
+                                    ++count;
+                                }
+                                break;
+                            }
+                            case eMax:
+                                __builtin_unreachable();
                         }
-                        case eMax:
-                            __builtin_unreachable();
+                        ++subIdx;
                     }
-                    ++subIdx;
                 }
+
+                ++mainIdx;
+            } else if (type.idx() == Blade::eUnassigned) {
+                if (count == mBladeStrings.size()) return;
+
+                data::String::Context label{mBladeStrings[count]};
+                label.change(_("Unassigned").ToStdString());
+
+                ++count;
             }
-
-            ++mainIdx;
-        } else if (type.idx() == Blade::eUnassigned) {
-            if (count == mBladeStrings.size()) return;
-
-            data::String::Context label{mBladeStrings[count]};
-            label.change(_("Unassigned").ToStdString());
-
-            ++count;
         }
     }
 
