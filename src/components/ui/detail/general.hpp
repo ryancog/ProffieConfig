@@ -62,6 +62,11 @@ struct UI_EXPORT ChildWindowBase {
     wxString tooltip_;
 
     /**
+     * Make this window be focused by default.
+     */
+    bool focus_{false};
+
+    /**
      * Forward mouse events upwards. I.e. skip them on this window.
      * Useful inside scrolled.
      */

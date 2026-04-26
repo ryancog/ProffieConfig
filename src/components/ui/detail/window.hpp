@@ -91,17 +91,21 @@ protected:
         mMaxSize = desc.maxSize_;
 
         mShow = desc.show_;
-        if (mShow) mShowReceiver = std::make_unique<ShowReceiver>(this);
+        if (mShow)
+            mShowReceiver = std::make_unique<ShowReceiver>(this);
 
         mEnable = desc.enable_;
-        if (mEnable) mEnableReceiver = std::make_unique<EnableReceiver>(this);
+        if (mEnable)
+            mEnableReceiver = std::make_unique<EnableReceiver>(this);
 
         if (desc.tooltip_.empty() and this->GetParent()) {
             // GetToolTip returns a ptr, and these tool tips cannot be shared
             // across windows, so get the text and SetToolTip will create a new
             // tip from it.
             this->SetToolTip(this->GetParent()->GetToolTipText());
-        } else this->SetToolTip(desc.tooltip_);
+        } else {
+            this->SetToolTip(desc.tooltip_);
+        }
 
         if (scaffold.scrolled_) {
             const auto onWheel{[scrolled=scaffold.scrolled_](
@@ -113,6 +117,9 @@ protected:
         }
 
         updateSizes();
+
+        if (desc.focus_)
+            this->SetFocus();
     }
 
     void safeCall(std::function<void()>&& func) {
