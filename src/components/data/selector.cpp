@@ -203,18 +203,24 @@ void data::Selector::BindAction::perform(Model& model) {
 
     sel.mVec = mVec;
 
-    // Send onRebound before updating the choice.
-    sel.sendToReceivers(&Receiver::onRebound);
-    
+    // So, I've gone back and forth with this, but I think it's best to update
+    // the choice first. This way, both the receiver calls for the choice and
+    // this are made with valid state.
+    //
+    // If onRebound is called first, the choice state isn't valid yet.
+    uint32 numChoices{0};
     if (sel.mVec) {
         sel.mVec->attachReceiver(static_cast<Vector::Receiver&>(sel));
 
         Vector::ROContext vec{*sel.mVec};
-        choice.update(vec.children().size());
-        // TODO: Persistence here.
-    } else {
-        choice.update(0);
+        numChoices = vec.children().size();
     }
+
+    // For now, if both vecs have same length the choice will persist the
+    // selection automatically since no update will actually occur.
+    choice.update(numChoices);
+
+    sel.sendToReceivers(&Receiver::onRebound);
 }
 
 void data::Selector::BindAction::retract(Model& model) {
