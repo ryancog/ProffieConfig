@@ -1,236 +1,338 @@
-#include "awarenessdlg.h"
-// ProffieConfig, All-In-One GUI Proffieboard Configuration Utility
-// Copyright (C) 2025 Ryan Ogurek
+#include "awareness.hpp"
+/*
+ * ProffieConfig, All-In-One Proffieboard Management Utility
+ * Copyright (C) 2025-2026 Ryan Ogurek
+ *
+ * proffieconfig/editor/dialogs/awareness.cpp
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-#include <wx/button.h>
-#include <wx/tooltip.h>
-#include <wx/statbox.h>
+#include "config/strings.hpp"
+#include "data/logic/adapter.hpp"
+#include "data/logic/operators.hpp"
+#include "ui/build.hpp"
+#include "ui/controls/button.hpp"
+#include "ui/controls/checkbox.hpp"
+#include "ui/controls/checklist.hpp"
+#include "ui/controls/choice.hpp"
+#include "ui/controls/combobox.hpp"
+#include "ui/controls/stepper.hpp"
+#include "ui/controls/text.hpp"
+#include "ui/helpers/labeled.hpp"
+#include "ui/layout/group.hpp"
+#include "ui/layout/spacer.hpp"
+#include "ui/layout/stack.hpp"
+#include "ui/symbols.hpp"
+#include "ui/values.hpp"
 
-#include "ui/static_box.h"
-
-#include "../editorwindow.h"
-
-BladeAwarenessDlg::BladeAwarenessDlg(EditorWindow* parent) :
-    wxDialog(
+BladeAwarenessDlg::BladeAwarenessDlg(
+    wxWindow* parent, config::Config& config
+) : pcui::Dialog(
         parent,
         wxID_ANY,
-        _("Blade Awareness") + " - " + static_cast<string>(parent->getOpenConfig().name),
-        wxDefaultPosition,
-        wxDefaultSize,
-        wxDEFAULT_DIALOG_STYLE
+        _("Blade Awareness")
     ),
-    mParent(parent) {
-    auto *sizer{new wxBoxSizer(wxVERTICAL)};
+    mConfig(config) {
 
-    auto *topSizer{new wxBoxSizer(wxHORIZONTAL)};
-    topSizer->AddSpacer(10);
-    topSizer->Add(
-        createBladeDetect(this),
-        wxSizerFlags(1).Expand()
-    );
-    topSizer->AddSpacer(10);
-    topSizer->Add(
-        createIDSetup(this),
-        wxSizerFlags(1).Expand()
-    );
-    topSizer->AddSpacer(10);
-
-    auto *bottomSizer{new wxBoxSizer(wxHORIZONTAL)};
-    bottomSizer->AddSpacer(10);
-    bottomSizer->Add(
-        createIDPowerSettings(this),
-        wxSizerFlags(1).Expand()
-    );
-    bottomSizer->AddSpacer(10);
-    bottomSizer->Add(
-        createContinuousScanSettings(this),
-        wxSizerFlags(1).Expand()
-    );
-    bottomSizer->AddSpacer(10);
-
-    sizer->AddSpacer(10);
-    sizer->Add(topSizer, wxSizerFlags().Expand());
-    sizer->AddSpacer(10);
-    sizer->Add(bottomSizer, wxSizerFlags().Expand());
-    sizer->AddSpacer(10);
-
-    SetSizerAndFit(sizer);
-    bindEvents();
+    pcui::build(this, ui());
 }
 
-void BladeAwarenessDlg::bindEvents() {
-    Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event) {
-        if (event.CanVeto()) {
-            Hide();
-            event.Veto();
-        } else event.Skip();
-    });
+pcui::DescriptorPtr BladeAwarenessDlg::ui() {
+    return pcui::Stack{
+      .base_={
+        .expand_=true,
+        .proportion_=1,
+        .border_={.size_=pcui::winEdgeSpacing(), .dirs_=wxALL},
+      },
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::Stack{
+          .base_={.expand_=true},
+          .orient_=wxHORIZONTAL,
+          .children_={
+            detect(),
+            pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+            idSetup(),
+          }
+        }(),
+        pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+        pcui::Stack{
+          .base_={.expand_=true},
+          .orient_=wxHORIZONTAL,
+          .children_={
+            idPower(),
+            pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+            idContinuous(),
+          }
+        }(),
+      }
+    }();
 }
 
-wxWindow *BladeAwarenessDlg::createIDSetup(wxWindow *parent) {
-    auto& config{mParent->getOpenConfig()};
+pcui::DescriptorPtr BladeAwarenessDlg::idSetup() {
+    auto& bladeId{mConfig.settings_.bladeAwareness_.bladeId_};
 
-    auto *setupSizer{new pcui::StaticBox(
-        wxVERTICAL,
-        parent,
-        _("Blade ID Setup")
-    )};
-
-    auto *enableID{new pcui::CheckBox(
-        setupSizer->childParent(),
-        config.settings.bladeID.enable,
-        0,
-        _("Enable Blade ID")
-    )};
-    enableID->SetToolTip(_("Detect when a specific blade is inserted based on a resistor placed in the blade to give it an identifier."));
-
-    auto *mode{new pcui::Choice(
-        setupSizer->childParent(),
-        config.settings.bladeID.mode,
-        _("Blade ID Mode")
-    )};
-    mode->SetToolTip(_("The mode to be used for Blade ID.\nSee the POD page \"Blade ID\" for more info."));
-
-    auto *idPin{new pcui::ComboBox(
-        setupSizer->childParent(),
-        config.settings.bladeID.pin,
-        _("Blade ID Pin")
-    )};
-    idPin->SetToolTip(_("The pin used to detect blade resistance values.\nCannot be the same as Detect Pin."));
-
-    auto *pullupResistance{new pcui::Numeric(
-        setupSizer->childParent(),
-        config.settings.bladeID.pullup,
-        _("Pullup Resistance")
-    )};
-    pullupResistance->SetToolTip(_("The value of the pullup resistor placed on the Blade ID line."));
-    auto *pullupPin{new pcui::ComboBox(
-        setupSizer->childParent(),
-        config.settings.bladeID.bridgePin,
-        _("Pullup Pin")
-    )};
-    pullupPin->SetToolTip(_("The pin number or name of the pin which ID Pin is bridged to for pullup.\n This pin cannot be used for anything else."));
-
-    setupSizer->Add(enableID);
-    setupSizer->AddSpacer(5);
-    setupSizer->Add(mode, wxSizerFlags().Expand());
-    setupSizer->AddSpacer(5);
-    setupSizer->Add(idPin, wxSizerFlags().Expand());
-    setupSizer->Add(
-        pullupResistance,
-        wxSizerFlags().Expand().Border(wxTOP, 5)
-    );
-    setupSizer->Add(
-        pullupPin,
-        wxSizerFlags().Expand().Border(wxTOP, 5)
-    );
-
-    return setupSizer;
+    return pcui::Group{
+      .win_={
+        .base_={.expand_=true, .proportion_=1},
+        .tooltip_=_("Detect when a specific blade is inserted based on a resistor placed in the blade to give it an identifier."),
+      },
+      .label_=_("Blade ID Setup"),
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::CheckBox{
+          .label_=_("Enable"),
+          .data_=bladeId.enable_,
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Labeled{
+          .win_={
+            .base_={.expand_=true},
+            .enable_=bladeId.mode_ | data::logic::IsEnabled{},
+            .tooltip_=_("The mode to be used for Blade ID.\nSee the POD page \"Blade ID\" for more info."),
+          },
+          .label_=_("Mode"),
+          .orient_=wxHORIZONTAL,
+          .ctrl_=pcui::Choice{
+            .win_={.base_={.proportion_=1}},
+            .data_=bladeId.mode_,
+            .labeler_=[](uint32 idx) -> pcui::Choice::Label {
+                switch (static_cast<config::BladeIDMode>(idx)) {
+                    using enum config::BladeIDMode;
+                    case eBIDMode_Snapshot: return _("Snapshot");
+                    case eBIDMode_External: return _("External Pullup");
+                    case eBIDMode_Bridged: return _("Bridged Pullup");
+                    case eBIDMode_Max:
+                        break;
+                }
+                return {};
+            }
+          }(),
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Labeled{
+          .win_={
+            .base_={.expand_=true},
+            .enable_=bladeId.pin_ | data::logic::IsEnabled{},
+            .tooltip_=_("The pin used to detect blade resistance values.\nCannot be the same as Detect Pin."),
+          },
+          .label_=_("Pin"),
+          .orient_=wxHORIZONTAL,
+          .ctrl_=pcui::ComboBox{
+            .win_={.base_={.proportion_=1}},
+            .data_=bladeId.pin_,
+            .defaults_={
+              "bladeIdentifyPin",
+              "bladePin",
+              "blade2Pin",
+              "blade3Pin",
+              "blade4Pin",
+            }
+          }(),
+        }(),
+        pcui::Labeled{
+          .win_={
+            .base_={
+              .expand_=true,
+              .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+            },
+            .show_=bladeId.mode_ | data::logic::HasSelection{{
+              config::eBIDMode_External
+            }},
+            .enable_=bladeId.pullup_ | data::logic::IsEnabled{},
+            .tooltip_=_("The value of the pullup resistor placed on the Blade ID line."),
+          },
+          .label_=_("Pull-Up Resistance"),
+          .orient_=wxHORIZONTAL,
+          .ctrl_=pcui::Stepper{
+            .win_={.base_={.proportion_=1}},
+            .data_=bladeId.pullup_,
+          }(),
+        }(),
+        pcui::Labeled{
+          .win_={
+            .base_={
+              .expand_=true,
+              .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+            },
+            .show_=bladeId.mode_ | data::logic::HasSelection{{
+              config::eBIDMode_Bridged
+            }},
+            .enable_=bladeId.bridgePin_ | data::logic::IsEnabled{},
+            .tooltip_=_("The pin number or name of the pin which ID Pin is bridged to for pullup.\n This pin cannot be used for anything else."),
+          },
+          .label_=_("Bridge Pin"),
+          .orient_=wxHORIZONTAL,
+          .ctrl_=pcui::ComboBox{
+            .win_={.base_={.proportion_=1}},
+            .data_=bladeId.bridgePin_,
+          }(),
+        }(),
+      }
+    }();
 }
 
-wxWindow *BladeAwarenessDlg::createIDPowerSettings(wxWindow *parent) {
-    auto& config{mParent->getOpenConfig()};
+pcui::DescriptorPtr BladeAwarenessDlg::idPower() {
+    auto& bladeId{mConfig.settings_.bladeAwareness_.bladeId_};
 
-    auto *powerForIDSizer{new pcui::StaticBox(
-        wxVERTICAL,
-        parent,
-        _("Power for Blade ID")
-    )};
+    const auto onAddPowerPin{[this, &bladeId] {
+        data::String::Context entry{mPowerPinAddField};
 
-    auto *enablePowerForID {new pcui::CheckBox(
-        powerForIDSizer->childParent(),
-        config.settings.bladeID.powerForID,
-        0,
-        _("Enable Power on ID")
-    )};
-    enablePowerForID->SetToolTip(_("Enable power during Blade ID.\nThis is required for WS281X blades."));
+        // Could be empty coming from add field enter action.
+        if (entry.val().empty()) return;
 
-    auto *powerPins{new pcui::CheckList(
-        powerForIDSizer->childParent(),
-        config.settings.bladeID.powerPins
-    )};
+        data::Selection::Context powerPins{bladeId.powerPins_};
 
-    auto *powerPinEntry{new pcui::Text(
-        powerForIDSizer->childParent(),
-        config.settings.bladeID.powerPinEntry,
-        wxTE_PROCESS_ENTER
-    )};
+        powerPins.select(std::string{entry.val()});
+        entry.clear();
+    }};
 
-    powerForIDSizer->Add(enablePowerForID);
-    powerForIDSizer->AddSpacer(5);
-    powerForIDSizer->Add(powerPins, wxSizerFlags().Expand());
-    powerForIDSizer->AddSpacer(5);
-    powerForIDSizer->Add(powerPinEntry, wxSizerFlags().Expand());
-
-    return powerForIDSizer;
+    return pcui::Group{
+      .win_={
+        .base_={.expand_=true, .proportion_=1},
+        .tooltip_=_("Power up during Blade ID.\nThis is required for WS281X blades."),
+      },
+      .label_=_("Power for Blade ID"),
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::CheckBox{
+          .label_=_("Enable"),
+          .data_=bladeId.powerForId_,
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::CheckList{
+          .win_={.base_={.expand_=true}},
+          .data_=bladeId.powerPins_,
+        }(),
+        pcui::Stack{
+          .base_={.expand_=true},
+          .orient_=wxHORIZONTAL,
+          .children_={
+            pcui::Text{
+              .win_={
+                .base_={.proportion_=1},
+                .enable_=bladeId.powerForId_ | data::logic::IsSet{},
+              },
+              .data_=mPowerPinAddField,
+              .style_=pcui::Text::SingleLine{
+                .hint_=_("Pin Name"),
+                .onEnter_=onAddPowerPin,
+              },
+            }(),
+            pcui::Button{
+              .win_={
+                .base_={.minSize_=pcui::iconButtonSize()},
+                .enable_={
+                    bladeId.powerForId_ | data::logic::IsSet{} and
+                    not (mPowerPinAddField | data::logic::IsEmpty{})
+                },
+              },
+              .label_=pcui::syms::PLUS,
+              .style_=pcui::Button::Style::Companion,
+              .exactFit_=true,
+              .func_=onAddPowerPin,
+            }(),
+          }
+        }(),
+      }
+    }();
 }
 
-wxWindow *BladeAwarenessDlg::createContinuousScanSettings(wxWindow *parent) {
-    auto& config{mParent->getOpenConfig()};
+pcui::DescriptorPtr BladeAwarenessDlg::idContinuous() {
+    auto& bladeId{mConfig.settings_.bladeAwareness_.bladeId_};
 
-    auto *continuousScansSizer{new pcui::StaticBox(
-        wxVERTICAL,
-        parent,
-        _("Continuous Scanning")
-    )};
-    auto *continuousScans{new pcui::CheckBox(
-        continuousScansSizer->childParent(),
-        config.settings.bladeID.continuousScanning,
-        0,
-        _("Enable Continuous Scanning")
-    )};
-    continuousScans->SetToolTip(_("Continuously monitor the Blade ID to detect changes."));
-
-    auto *numIDTimes{new pcui::Numeric(
-        continuousScansSizer->childParent(),
-        config.settings.bladeID.continuousTimes,
-        _("Number of Reads to Average")
-    )};
-    numIDTimes->SetToolTip(_("Number of times to read the Blade ID to average out the result and compensate for inaccurate readings."));
-
-    auto *scanIDMillis{new pcui::Numeric(
-        continuousScansSizer->childParent(),
-        config.settings.bladeID.continuousInterval, 
-        _("Scan Interval (ms)")
-    )};
-    scanIDMillis->SetToolTip(_("Scan the Blade ID and update accordingly every input number of millis."));
-
-    continuousScansSizer->Add(continuousScans);
-    continuousScansSizer->AddSpacer(5);
-    continuousScansSizer->Add(numIDTimes, wxSizerFlags().Expand());
-    continuousScansSizer->AddSpacer(5);
-    continuousScansSizer->Add(scanIDMillis, wxSizerFlags().Expand());
-
-    return continuousScansSizer;
+    return pcui::Group{
+      .win_={
+        .base_={.expand_=true, .proportion_=1},
+        .tooltip_=_("Continuously monitor the Blade ID to detect changes."),
+      },
+      .label_=_("Continuous Scanning"),
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::CheckBox{
+          .label_=_("Enable"),
+          .data_=bladeId.continuous_.enable_,
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Labeled{
+          .win_={
+            .base_={.expand_=true},
+            .enable_=bladeId.continuous_.times_ | data::logic::IsEnabled{},
+            .tooltip_=_("Number of times to read the Blade ID to average out the result and compensate for inaccurate readings."),
+          },
+          .label_=_("Number of Reads to Average"),
+          .orient_=wxVERTICAL,
+          .ctrl_=pcui::Stepper{
+            .win_={.base_={.expand_=true}},
+            .data_=bladeId.continuous_.times_,
+          }(),
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Labeled{
+          .win_={
+            .base_={.expand_=true},
+            .enable_=bladeId.continuous_.interval_ | data::logic::IsEnabled{},
+            .tooltip_=_("Scan the Blade ID and update accordingly every input number of millis."),
+          },
+          .label_=_("Scan Interval (ms)"),
+          .orient_=wxVERTICAL,
+          .ctrl_=pcui::Stepper{
+            .win_={.base_={.expand_=true}},
+            .data_=bladeId.continuous_.interval_,
+          }(),
+        }(),
+      }
+    }();
 }
 
-wxWindow *BladeAwarenessDlg::createBladeDetect(wxWindow *parent) {
-    auto& config{mParent->getOpenConfig()};
+pcui::DescriptorPtr BladeAwarenessDlg::detect() {
+    auto& bladeDetect{mConfig.settings_.bladeAwareness_.bladeDetect_};
 
-    auto *bladeDetectSizer{new pcui::StaticBox(
-        wxVERTICAL,
-        parent,
-        _("Blade Detect")
-    )};
-    auto *enableDetect{new pcui::CheckBox(
-        bladeDetectSizer->childParent(),
-        config.settings.bladeDetect,
-        0,
-        _("Enable Blade Detect")
-    )};
-    enableDetect->SetToolTip(_("Detect when a blade is inserted into the saber or not."));
-
-    auto *detectPin{new pcui::ComboBox(
-        bladeDetectSizer->childParent(),
-        config.settings.bladeDetectPin,
-        _("Blade Detect Pin")
-    )};
-    detectPin->SetToolTip(_("The pin which will be bridged to BATT- when blade is inserted.\nCannot be the same as ID Pin."));
-
-    bladeDetectSizer->Add(enableDetect, wxSizerFlags().Expand());
-    bladeDetectSizer->AddSpacer(5);
-    bladeDetectSizer->Add(detectPin, wxSizerFlags().Expand());
-
-    return bladeDetectSizer;
+    return pcui::Group{
+      .win_={
+        .base_={.expand_=true, .proportion_=1},
+        .tooltip_=_("Detect when a blade is inserted into the saber or not."),
+      },
+      .label_=_("Blade Detect"),
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::CheckBox{
+          .label_=_("Enable"),
+          .data_=bladeDetect.enable_
+        }(),
+        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+        pcui::Labeled{
+          .win_={
+            .base_={.expand_=true},
+            .enable_=bladeDetect.pin_ | data::logic::IsEnabled{},
+            .tooltip_=_("The pin which will be bridged to BATT- when blade is inserted.\nCannot be the same as ID Pin.")
+          },
+          .label_=_("Pin"),
+          .orient_=wxHORIZONTAL,
+          .ctrl_=pcui::ComboBox{
+            .win_={.base_={.proportion_=1}},
+            .data_=bladeDetect.pin_,
+            .defaults_={
+              "bladePin",
+              "blade2Pin",
+              "blade3Pin",
+              "blade4Pin",
+            }
+          }(),
+        }(),
+      }
+    }();
 }
 
