@@ -32,8 +32,20 @@ Spacer::Desc::Desc(Spacer&& data) :
     // NOLINTNEXTLINE(performance-move-const-arg)
     Spacer{std::move(data)} {}
 
-wxSizerItem *Spacer::Desc::build(const detail::Scaffold&) const {
-    return new wxSizerItem(size_, size_);
+wxSizerItem *Spacer::Desc::build(const detail::Scaffold& scaffold) const {
+    int orient{};
+
+    if (auto *box{dynamic_cast<wxBoxSizer *>(scaffold.sizer_)}) {
+        orient = box->GetOrientation();
+    } else {
+        // Only box sizer is used currently.
+        assert(0);
+    }
+
+    return new wxSizerItem(
+        orient == wxHORIZONTAL ? size_ : 0,
+        orient == wxVERTICAL ? size_ : 0
+    );
 }
 
 detail::Descriptor *Spacer::Desc::clone() const {
@@ -49,8 +61,23 @@ StretchSpacer::Desc::Desc(StretchSpacer&& data) :
     // NOLINTNEXTLINE(performance-move-const-arg)
     StretchSpacer{std::move(data)} {}
 
-wxSizerItem *StretchSpacer::Desc::build(const detail::Scaffold&) const {
-    return new wxSizerItem(size_, size_, proportion_);
+wxSizerItem *StretchSpacer::Desc::build(
+    const detail::Scaffold& scaffold
+) const {
+    int orient{};
+
+    if (auto *box{dynamic_cast<wxBoxSizer *>(scaffold.sizer_)}) {
+        orient = box->GetOrientation();
+    } else {
+        // Only box sizer is used currently.
+        assert(0);
+    }
+
+    return new wxSizerItem(
+        orient == wxHORIZONTAL ? size_ : 0,
+        orient == wxVERTICAL ? size_ : 0,
+        proportion_
+    );
 }
 
 detail::Descriptor *StretchSpacer::Desc::clone() const {
