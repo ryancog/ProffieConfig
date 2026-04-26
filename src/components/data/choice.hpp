@@ -132,7 +132,7 @@ struct DATA_EXPORT Choice::ChoiceAction : Action {
     void retract(Model&) override;
 
 private:
-    int32 mChoice;
+    int32 mIdx;
     int32 mLast;
 };
 

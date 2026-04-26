@@ -91,30 +91,30 @@ void data::Choice::Context::update(uint32 num, int32 idx) const {
     ));
 }
 
-data::Choice::ChoiceAction::ChoiceAction(int32 choice) : mChoice{choice} {}
+data::Choice::ChoiceAction::ChoiceAction(int32 choice) : mIdx{choice} {}
 
 bool data::Choice::ChoiceAction::setup(Model& model) {
     auto& choice{static_cast<Choice&>(model)};
 
-    assert(mChoice >= -1);
-    assert(mChoice < static_cast<int32>(choice.mNumChoices));
+    assert(mIdx >= -1);
+    assert(mIdx < static_cast<int32>(choice.mNumChoices));
 
     // shouldPerform is effectively the setup function for an action. It is
     // called only once and called no matter where the action comes from. Thus
     // it is where the filter should go.
-    if (choice.mFilter) choice.mFilter(choice, mChoice);
+    if (choice.mFilter) choice.mFilter(choice, mIdx);
 
-    assert(mChoice >= -1);
-    assert(mChoice < static_cast<int32>(choice.mNumChoices));
+    assert(mIdx >= -1);
+    assert(mIdx < static_cast<int32>(choice.mNumChoices));
 
-    return choice.mIdx != mChoice;
+    return choice.mIdx != mIdx;
 }
 
 void data::Choice::ChoiceAction::perform(Model& model) {
     auto& choice{static_cast<Choice&>(model)};
 
     mLast = choice.mIdx;
-    choice.mIdx = mChoice;
+    choice.mIdx = mIdx;
 
     choice.sendToReceivers(&Receiver::onChoice);
 }
