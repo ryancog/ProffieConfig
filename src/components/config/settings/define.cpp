@@ -19,7 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config/settings/settings.hpp"
+#include "utils/string.hpp"
+
+namespace {
+
+constexpr std::string_view NAME_STR{"Name"};
+constexpr std::string_view VALUE_STR{"Value"};
+
+} // namespace
 
 using namespace config::settings;
 
@@ -31,29 +38,33 @@ Define::Define(
     CreationScope createScope(*this);
 
     const auto defineFilter{[](
-        const data::String::ROContext& ctxt, std::string& str, size& pos
+        const data::String::ROContext&, std::string& str, size& pos
     ) {
-
+        uint32 numTrimmed{};
+        utils::trimCppName(
+            str,
+            false,
+            &numTrimmed,
+            pos
+        );
+        pos -= numTrimmed;
     }};
     name_.setFilter(defineFilter);
     data::String::Context{name_}.change(std::move(name), 0);
-
-    const auto valFilter{[](
-        const data::String::ROContext& ctxt, std::string& str, size& pos
-    ) {
-
-    }};
-    value_.setFilter(valFilter);
     data::String::Context{value_}.change(std::move(value), 0);
 }
 
 Define::~Define() = default;
 
-bool Define::enumerate(const EnumFunc&) {
-    assert(0); // TODO
+bool Define::enumerate(const EnumFunc& func) {
+    if (func(name_, strID(NAME_STR), NAME_STR)) return true;
+    if (func(value_, strID(VALUE_STR), VALUE_STR)) return true;
+    return false;
 }
 
-data::Model *Define::find(uint64) {
-    assert(0); // TODO
+data::Model *Define::find(uint64 id) {
+    if (id == strID(NAME_STR)) return &name_;
+    if (id == strID(VALUE_STR)) return &value_;
+    return nullptr;
 }
 
