@@ -1,5 +1,4 @@
 #include "panel.hpp"
-#include "ui/types.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
@@ -27,6 +26,7 @@
 #include <wx/panel.h>
 
 #include "ui/detail/datawin.hpp"
+#include "ui/types.hpp"
 
 using namespace pcui;
 
