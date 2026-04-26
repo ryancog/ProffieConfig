@@ -72,15 +72,15 @@ data::Model *BladeAwareness::find(uint64 id) {
 }
 
 void BladeAwareness::init() {
-    bladeDetect_.enable_.responder().onSet_ = [](
+    (bladeDetect_.enable_.responder().onSet_ = [](
         const data::Bool::ROContext& ctxt
     ) {
         auto& awareness{*ctxt.model().parent<BladeAwareness>()};
         data::String::Context pin{awareness.bladeDetect_.pin_};
         pin.enable(ctxt.val());
-    };
+    })(bladeDetect_.enable_);
 
-    bladeId_.enable_.responder().onSet_ = [](
+    (bladeId_.enable_.responder().onSet_ = [](
         const data::Bool::ROContext& ctxt
     ) {
         auto& bladeId{ctxt.model().parent<BladeAwareness>()->bladeId_};
@@ -91,7 +91,7 @@ void BladeAwareness::init() {
         data::Integer::Context{bladeId.pullup_}.enable(ctxt.val());
         data::Bool::Context{bladeId.continuous_.enable_}.enable(ctxt.val());
         // if (not set) bladeId_.continuousScanning = false;
-    };
+    })(bladeId_.enable_);
 
     { data::Choice::Context idMode{bladeId_.mode_};
         idMode.update(eBIDMode_Max);
