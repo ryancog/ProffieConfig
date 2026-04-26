@@ -19,6 +19,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+auto data::logic::operator|(const data::Model& model, IsEnabled) -> Element {
+    struct Adapter : detail::Base, data::Model::Receiver {
+        Adapter(const data::Model& model) : model_{model} {}
+        ~Adapter() override { detach(); }
+
+        void lock() override {
+            model_.lock();
+        }
+
+        void unlock() override {
+            model_.unlock();
+        }
+
+        bool doActivate() override {
+            data::Model::ROContext ctxt{model_};
+            attach(model_);
+            return ctxt.enabled();
+        }
+
+        void onEnabled() override {
+            std::lock_guard scopeLock{*pLock};
+            onChange(context().enabled());
+        }
+
+        const data::Model& model_;
+    };
+
+    return std::make_unique<Adapter>(model);
+}
+
 auto data::logic::operator|(const data::Bool& bl, IsSet) -> Element {
     struct Adapter : detail::Base, data::Bool::Receiver {
         Adapter(const data::Bool& bl) : bl_{bl} {}

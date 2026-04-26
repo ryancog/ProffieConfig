@@ -30,6 +30,10 @@
 
 namespace data::logic {
 
+struct IsEnabled {};
+
+DATA_EXPORT Element operator|(const data::Model&, IsEnabled);
+
 struct IsSet {};
 
 DATA_EXPORT Element operator|(const data::Bool&, IsSet);
