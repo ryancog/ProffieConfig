@@ -35,11 +35,13 @@ namespace {
 template<typename Derived, typename Ctrl>
 struct ControlBase : detail::DataWindow<Ctrl, data::Choice::Receiver>,
                      data::Selector::Receiver,
-                     data::Vector::Receiver {
+                     data::Vector::Receiver,
+                     data::Integer::Receiver {
     void preDestroyCripple() override {
         data::Choice::Receiver::detach();
         data::Selector::Receiver::detach();
         data::Vector::Receiver::detach();
+        data::Integer::Receiver::detach();
 
         detail::DataWindow<Ctrl, data::Choice::Receiver>::preDestroyCripple();
     }
@@ -89,52 +91,25 @@ struct ControlBase : detail::DataWindow<Ctrl, data::Choice::Receiver>,
         });
     }
 
-    [[nodiscard]] int32 controlToData(int32 choice) const {
-        return choice;
-    }
+    void onSet() override {
+        const auto self{static_cast<Derived *>(this)};
+        const auto choices{self->generateChoices(
+            data::Choice::Receiver::context<data::Choice>().numChoices()
+        )};
 
-    [[nodiscard]] int32 dataToControl(int32 choice) const {
-        return choice;
-    }
-
-    std::vector<wxString> generateChoices(uint32 num) {
-        std::vector<wxString> choices;
-
-        mRcvrs.clear();
-
-        for (uint32 idx{0}; idx < num; ++idx) {
-            if (not mLabeler) {
-                choices.emplace_back("LABEL???");
-                continue;
-            }
-
-            auto res{mLabeler(idx)};
-
-            wxString str;
-            if (auto *ptr{std::get_if<1>(&res)}) {
-                const auto self{static_cast<Derived *>(this)};
-                const auto& model{std::get<1>(res).get()};
-                data::String::ROContext ctxt{model};
-                str = ctxt.val();
-                mRcvrs.push_back(std::make_unique<LabelReceiver>(
-                    this, self->dataToControl(idx), model
-                ));
-            } else {
-                str = std::move(std::get<0>(res));
-            }
-
-            if (str.empty()) choices.push_back(mEmptyLabel);
-            else choices.emplace_back(std::move(str));
-        }
-
-        return choices;
+        this->safeCall([this, choices] {
+            auto sel{Ctrl::GetSelection()};
+            Ctrl::Set(choices);
+            Ctrl::SetSelection(sel);
+        });
     }
 
     void onRebound() override {
         auto selCtxt{data::Selector::Receiver::context<data::Selector>()};
 
         data::Vector::Receiver::detach();
-        if (selCtxt.bound()) data::Vector::Receiver::attach(*selCtxt.bound());
+        if (selCtxt.bound())
+            data::Vector::Receiver::attach(*selCtxt.bound());
     }
 
     void onSwap(size size) override {
@@ -148,6 +123,51 @@ struct ControlBase : detail::DataWindow<Ctrl, data::Choice::Receiver>,
             if (labelRcvr.idx_ == size) labelRcvr.idx_ = size + 1;
             else if (labelRcvr.idx_ == size + 1) labelRcvr.idx_ = size;
         }
+    }
+
+    [[nodiscard]] int32 controlToData(int32 choice) const {
+        return choice;
+    }
+
+    [[nodiscard]] int32 dataToControl(int32 choice) const {
+        return choice;
+    }
+
+    std::vector<wxString> generateChoices(uint32 num) {
+        std::vector<wxString> choices;
+
+        mRcvrs.clear();
+
+        if (data::Integer::Receiver::maybeModel()) {
+            auto ctxt{data::Integer::Receiver::context<data::Integer>()};
+            num = std::min<uint32>(ctxt.val(), num);
+        }
+
+        for (uint32 idx{0}; idx < num; ++idx) {
+            if (not mLabeler) {
+                choices.emplace_back("LABEL???");
+                continue;
+            }
+
+            auto res{mLabeler(idx)};
+
+            wxString str;
+            if (auto *ptr{std::get_if<1>(&res)}) {
+                const auto self{static_cast<Derived *>(this)};
+                data::String::ROContext ctxt{*ptr};
+                str = ctxt.val();
+                mRcvrs.push_back(std::make_unique<LabelReceiver>(
+                    this, self->dataToControl(idx), *ptr
+                ));
+            } else {
+                str = std::move(std::get<0>(res));
+            }
+
+            if (str.empty()) choices.push_back(mEmptyLabel);
+            else choices.emplace_back(std::move(str));
+        }
+
+        return choices;
     }
 
 private:
@@ -167,6 +187,12 @@ private:
         detail::DataWindow<Ctrl, data::Choice::Receiver>::postCreation(
             scaffold, desc.win_
         );
+
+        if (desc.clamp_) {
+            // Lock while things are being setup.
+            desc.clamp_->get().lock();
+            data::Integer::Receiver::attach(desc.clamp_->get());
+        }
 
         data::Choice *choice{};
         const data::Selector *sel{};
@@ -192,6 +218,10 @@ private:
         }
 
         Ctrl::Bind(Derived::evt(), &ControlBase::onChoice, this);
+
+        if (desc.clamp_) {
+            desc.clamp_->get().unlock();
+        }
     }
 
     ControlBase() = default;

@@ -20,6 +20,7 @@
  */
 
 #include "data/choice.hpp"
+#include "data/number.hpp"
 #include "data/selector.hpp"
 #include "data/string.hpp"
 #include "ui/detail/descriptor.hpp"
@@ -37,6 +38,11 @@ struct UI_EXPORT Choice {
     detail::ChildWindowBase win_;
 
     std::variant<RefWrap<data::Choice>, RefWrap<const data::Selector>> data_;
+
+    /**
+     * Maximum number of choices to display.
+     */
+    std::optional<RefWrap<const data::Integer>> clamp_;
 
     /**
      * A "ChoiceBox" or PopupButton
