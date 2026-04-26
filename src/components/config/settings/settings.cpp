@@ -190,34 +190,6 @@ void config::Settings::init() {
         femaleTalkie.enable(not ctxt.val());
     };
 
-    /*
-    board_.setChoices({
-        "Proffieboard V3",
-        "Proffieboard V2",
-        "Proffieboard V1",
-    });
-    vector<string> pinDefaults{
-        "bladePin",
-        "blade2Pin",
-        "blade3Pin",
-        "blade4Pin",
-    };
-    bladeId_.mode.setChoices(Utils::createEntries({
-        _("Snapshot"),
-        _("External Pullup"),
-        _("Bridged Pullup")
-    }));
-        v.insert(v.begin(), "bladeIdentifyPin");
-    orientation.setChoices(Utils::createEntries({
-        _("FETs Towards Blade"),
-        _("USB Towards Blade"),
-        _("USB CCW From Blade"),
-        _("USB CW From Blade"),
-        _("Top Towards Blade"),
-        _("Bottom Towards Blade")
-    }));
-        */
-
     { data::Decimal::Context clashThresh{clashThreshold_};
         clashThresh.update({.min_=0.1, .max_=5, .inc_=0.1});
         clashThresh.set(3.0);
