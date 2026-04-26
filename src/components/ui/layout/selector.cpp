@@ -42,34 +42,41 @@ namespace {
  */
 struct TrackerDummy : detail::IDataDriven,
                       wxSizerItem,
-                      data::Choice::Receiver {
+                      data::Choice::Receiver,
+                      data::Selector::Receiver {
     TrackerDummy(const detail::Scaffold& scaffold, const Selector& desc) :
         wxSizerItem(0, 0),
         scaffold_{scaffold},
-        builder_{desc.builder_},
-        sel_{desc.data_} {
+        builder_{desc.builder_} {
         data::Choice::Context ctxt{desc.data_.choice_};
 
         buildAndReplace(ctxt);
-        attach(desc.data_.choice_);
+        data::Choice::Receiver::attach(desc.data_.choice_);
+        data::Selector::Receiver::attach(desc.data_);
     }
 
     void preDestroyCripple() override {
-        detach();
+        data::Choice::Receiver::detach();
+        data::Selector::Receiver::detach();
     }
 
-    // onChoice will be called for both direct choices and indirect choices
-    // as a result of unbinding (or rebinding), so it's all we need to listen
-    // to.
     void onChoice() override {
+        handlRebuild();
+    }
+
+    void onRebound() override {
+        handlRebuild();
+    }
+
+    void handlRebuild() {
         // Access to last_ is safe here because inside buildAndReplace it will
-        // only be accessed once a model context is acquired. Inside this
-        // handler, the model is guaranteed to be locked.
+        // only be accessed once a model context is acquired. Inside handlers,
+        // the model is guaranteed to be locked.
         if (last_)
             cripple(last_);
 
         safeCall([this] { 
-            auto ctxt{context<data::Choice>()};
+            auto ctxt{data::Choice::Receiver::context<data::Choice>()};
             buildAndReplace(ctxt);
         });
     }
@@ -82,12 +89,16 @@ struct TrackerDummy : detail::IDataDriven,
         // If we have a choice, then a vector is guaranteed to be bound. If
         // not, it doesn't matter in any case.
         if (choice.idx() != -1) {
-            data::Selector::ROContext sel{sel_};
+            auto sel{data::Selector::Receiver::context<data::Selector>()};
             data::Vector::ROContext vec{*sel.bound()};
 
             // Grab the model to build off of.
             model = &*vec.children()[choice.idx()];
         }
+
+        // If a UI element has already been built and the model to be built off
+        // is the same, then there's nothing to do, just leave things alone.
+        if (last_ and lastModel_ == model) return;
 
         auto desc{builder_(model)};
         auto *item{desc->build(scaffold_)};
@@ -146,6 +157,7 @@ struct TrackerDummy : detail::IDataDriven,
         // Now, the wxSizerItem is deleted, if it existed.
         // Track the new item.
         last_ = item;
+        lastModel_ = model;
 
         if (insertLoc == -1) {
             scaffold_.sizer_->Add(item);
@@ -161,13 +173,10 @@ struct TrackerDummy : detail::IDataDriven,
     // The last-built item that is currently being held in whatever sizer
     // is hold us.
     wxSizerItem *last_{nullptr};
+    data::Model *lastModel_{nullptr};
 
     const detail::Scaffold scaffold_;
     const detail::DescBuilder builder_;
-
-    // Since we're not a receiver for the selector, have to hold onto this
-    // ourselves.
-    const data::Selector& sel_;
 };
 
 } // namespace
