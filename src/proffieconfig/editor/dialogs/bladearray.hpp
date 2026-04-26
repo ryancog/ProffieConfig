@@ -27,8 +27,8 @@ struct BladeArrayDlg : pcui::Dialog {
     BladeArrayDlg(wxWindow *, config::blades::BladeConfig&, bool mayCancel);
 
 private:
-    config::blades::BladeConfig& mConfig;
-
     pcui::DescriptorPtr ui(bool);
+
+    config::blades::BladeConfig& mConfig;
 };
 

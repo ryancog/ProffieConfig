@@ -351,31 +351,3 @@ pcui::DescriptorPtr ButtonsDlg::info() {
     }();
 }
 
-/*
-void ButtonsDlg::createButtonsArea() {
-    mButtonsArea = new wxScrolledWindow(this, wxID_ANY);
-    mButtonsArea->Bind(wxEVT_SIZE, [this](wxSizeEvent& evt) {
-        mButtonsArea->SetVirtualSize(
-            mButtonsArea->GetSize().x,
-            mButtonsArea->GetVirtualSize().y
-        );
-        evt.Skip();
-    });
-    auto *sizer{new wxWrapSizer(wxHORIZONTAL, wxREMOVE_LEADING_SPACES)};
-
-    mButtonsArea->SetScrollRate(-1, 10);
-    mButtonsArea->SetSizerAndFit(sizer);
-
-    { 
-        Config::Settings::ButtonData dummy;
-        auto *dummyPanel{new ButtonPanel(mButtonsArea, mParent->getOpenConfig(), dummy)};
-        mButtonsArea->SetMinSize({
-            dummyPanel->GetBestSize().x + (PANEL_PADDING * 2),
-            300
-        });
-        dummyPanel->Destroy();
-    }
-
-}
-*/
-
