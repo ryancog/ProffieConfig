@@ -176,6 +176,20 @@ pcui::DescriptorPtr BladesPage::selection() {
               .base_={.expand_=true},
               .orient_=wxHORIZONTAL,
               .children_={
+                pcui::Label{
+                  .win_={
+                    .base_={
+                      .border_={
+                        .size_=pcui::interControlSpacing(),
+                        .dirs_=wxRIGHT
+                      },
+                      .align_=wxALIGN_CENTER,
+                    },
+                    .show_=not (mIssueLabel | data::logic::IsEmpty{}),
+                    .tooltip_=_("There's issues with this array, open the edit dialog to see them."),
+                  },
+                  .label_=mIssueLabel,
+                }(),
                 pcui::Choice{
                   .win_={
                     .base_={.proportion_=1},
@@ -193,19 +207,6 @@ pcui::DescriptorPtr BladesPage::selection() {
                       )};
                       return cfg.name_;
                   },
-                }(),
-                pcui::Button{
-                  .win_={
-                    .base_={
-                      .border_={
-                        .size_=pcui::interControlSpacing(),
-                        .dirs_=wxLEFT
-                      },
-                    },
-                    .show_=not (mIssueLabel | data::logic::IsEmpty{}),
-                  },
-                  .label_=mIssueLabel,
-                  .exactFit_=true,
                 }(),
                 pcui::Spacer{.size_=pcui::interControlSpacing()}(),
                 pcui::Button{
@@ -359,7 +360,26 @@ pcui::DescriptorPtr BladesPage::blades() {
             return simple(*ptr);
         }
 
-        return pcui::Spacer{.size_=0}();
+        return pcui::Stack{
+          .base_={.expand_=true, .proportion_=1},
+          .children_={
+            pcui::StretchSpacer{}(),
+            pcui::Label{
+              .win_={.base_={.align_=wxALIGN_CENTER}},
+              .label_=_("\"Dummy\" Blade"),
+              .font_=pcui::Font::Header,
+              .color_=wxSYS_COLOUR_GRAYTEXT,
+            }(),
+            pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+            pcui::Label{
+              .win_={.base_={.align_=wxALIGN_CENTER}},
+              .label_=_("This is useful to, e.g., act as a \"spacer\" to line up bladestyles across multiple arrays which use the same preset array."),
+              .color_=wxSYS_COLOUR_GRAYTEXT,
+              .wrapWidth_=300,
+            }(),
+            pcui::StretchSpacer{}(),
+          }
+        }();
     }};
 
     const auto builder{[this, typeBuilder](
@@ -411,7 +431,108 @@ pcui::DescriptorPtr BladesPage::blades() {
 }
 
 pcui::DescriptorPtr BladesPage::simple(config::blades::Simple& simple) {
+    const auto led{[](
+        config::blades::Simple::LED& led,
+        uint32 idx
+    ) -> pcui::DescriptorPtr {
+        return pcui::Group{
+          .win_={.base_={.expand_=true, .proportion_=1}},
+          .label_=wxString::Format(_("LED %d"), idx),
+          .children_={
+            pcui::Choice{
+              .win_={.base_={.expand_=true}},
+              .data_=led.profile_,
+              .labeler_=[](uint32 idx) -> pcui::Choice::Label {
+                  switch (static_cast<config::LED>(idx)) {
+                      using enum config::LED;
+                      case eLED_None: return _("<None>");
+                      case eLED_Cree_Red: return _("Cree Red");
+                      case eLED_Cree_Green: return _("Cree Green");
+                      case eLED_Cree_Blue: return _("Cree Blue");
+                      case eLED_Cree_Amber: return _("Cree Amber");
+                      case eLED_Cree_Red_Orange: return _("Cree Red-Orange");
+                      case eLED_Cree_White: return _("Cree White");
+                      case eLED_Red: return _("Red");
+                      case eLED_Green: return _("Green");
+                      case eLED_Blue: return _("Blue");
+                      case eLED_Max: break;
+                  }
+                  return {};
+              }
+            }(),
+            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            pcui::Labeled{
+              .win_={
+                .base_={.expand_=true},
+                .enable_=led.powerPin_ | data::logic::IsEnabled{},
+              },
+              .label_=_("Power Pin"),
+              .orient_=wxVERTICAL,
+              .ctrl_=pcui::ComboBox{
+                .win_={.base_={.expand_=true}},
+                .data_=led.powerPin_,
+                .defaults_={
+                  "bladePowerPin1",
+                  "bladePowerPin2",
+                  "bladePowerPin3",
+                  "bladePowerPin4",
+                  "bladePowerPin5",
+                  "bladePowerPin6",
+                }
+              }(),
+            }(),
+            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            pcui::Labeled{
+              .win_={
+                .base_={.expand_=true},
+                .enable_=led.resistance_ | data::logic::IsEnabled{},
+                .tooltip_=_("The value of the resistor placed in series with this led."),
+              },
+              .label_=_("Resistance (mOhms)"),
+              .orient_=wxVERTICAL,
+              .ctrl_=pcui::Stepper{
+                .win_={.base_={.expand_=true}},
+                .data_=led.resistance_,
+              }(),
+            }(),
+          }
+        }();
+    }};
+
+    auto& blade{*simple.parent()->parent<config::blades::Blade>()};
+
     return pcui::Stack{
+      .base_={.expand_=true, .proportion_=1},
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::Stack{
+          .base_={.expand_=true, .proportion_=1},
+          .orient_=wxHORIZONTAL,
+          .children_={
+            led(simple.led1_, 1),
+            pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+            led(simple.led2_, 2),
+          }
+        }(),
+        pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+        pcui::Stack{
+          .base_={.expand_=true, .proportion_=1},
+          .orient_=wxHORIZONTAL,
+          .children_={
+            led(simple.led3_, 3),
+            pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+            led(simple.led4_, 4),
+          }
+        }(),
+        pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+        pcui::Labeled{
+          .label_=_("Brightness"),
+          .orient_=wxHORIZONTAL,
+          .ctrl_=pcui::Stepper{
+            .data_=blade.brightness_,
+          }(),
+        }(),
+      }
     }();
 }
 
@@ -460,7 +581,10 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::Labeled{
-              .win_={.base_={.expand_=true}},
+              .win_={
+                .base_={.expand_=true},
+                .tooltip_=_("The pin name or number used for WS281X data."),
+              },
               .label_=_("Data Pin"),
               .orient_=wxHORIZONTAL,
               .ctrl_=pcui::ComboBox{
@@ -489,6 +613,7 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
                       .dirs_=wxBOTTOM
                     },
                   },
+                  .tooltip_=_("The order of colors for your blade.\nMost of the time this can be left as \"GRB\"."),
                 },
                 .label_=_("Color Order"),
                 .orient_=wxHORIZONTAL,
@@ -525,6 +650,7 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
                       .dirs_=wxBOTTOM
                     },
                   },
+                  .tooltip_=_("The order of colors for your blade.\nMost of the time this can be left as \"GRBW\"."),
                 },
                 .label_=_("Color Order"),
                 .orient_=wxHORIZONTAL,
@@ -557,6 +683,18 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
               .win_={.base_={.align_=wxALIGN_RIGHT}},
               .label_=_("LEDs Have White Channel"),
               .data_=ws281x.hasWhite_,
+            }(),
+            pcui::CheckBox{
+              .win_={
+                .base_={
+                  .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+                  .align_=wxALIGN_RIGHT,
+                },
+                .show_=ws281x.hasWhite_ | data::logic::IsSet{},
+                .tooltip_=_("Use the RGB channels alongside the White channel to produce white light.\nThis can result in a brighter blade, but at the cost of higher battery usage and a less \"pure\" white."),
+              },
+              .label_=_("Use RGB With White"),
+              .data_=ws281x.useRgbWithWhite_
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::Labeled{
@@ -790,7 +928,10 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
           .label_=_("Length"),
           .orient_=wxVERTICAL,
           .ctrl_=pcui::Stepper{
-            .win_={.base_={.expand_=true}},
+            .win_={
+              .base_={.expand_=true},
+              .tooltip_=_("The number of pixels in your blade (total)."),
+            },
             .data_=split.length_,
           }(),
         }(),
@@ -874,235 +1015,3 @@ void BladesPage::IssueReceiver::updateLabel() {
     data::String::Context{page.mIssueLabel}.change(std::move(label));
 }
  
-/*
-void BladesPage::bindEvents() {
-    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        auto res{pcui::showMessage(
-            "This action cannot be undone!",
-            "Remove Blade Array?",
-            wxYES_NO | wxNO_DEFAULT
-        )};
-        if (res != wxYES) return;
-        auto& bladeArrays{mParent->getOpenConfig().bladeArrays};
-        bladeArrays.removeArray(bladeArrays.arraySelection);
-    }, ID_RemoveArray);
-}
-*/
-
-/*
-void BladesPage::handleNotification(uint32 id) {
-    bool rebound{id == pcui::Notifier::eID_Rebound};
-    auto& bladeArrays{mParent->getOpenConfig().bladeArrays};
-
-    if (rebound or id == Config::BladeArrays::ID_ARRAY_SELECTION) {
-        bool hasSelection{bladeArrays.arraySelection != -1};
-        FindWindow(ID_EditArray)->Enable(hasSelection);
-        FindWindow(ID_RemoveArray)->Enable(hasSelection);
-        FindWindow(ID_AddBlade)->Enable(hasSelection);
-    }
-    if (
-            rebound or
-            id == Config::BladeArrays::ID_ARRAY_SELECTION or
-            id == Config::BladeArrays::ID_ARRAY_ISSUES
-       ) {
-        const auto issues{bladeArrays.arrayIssues};
-
-        auto *issueIcon{FindWindow(ID_IssueIcon)};
-        if (issues & Config::BladeConfig::ISSUE_ERRORS) {
-            issueIcon->SetLabel(L"\u26D4"); // ⛔️
-
-        } else if (issues & Config::BladeConfig::ISSUE_WARNINGS) {
-            issueIcon->SetLabel(L"\u26A0"); // ⚠️
-        }
-        issueIcon->Show(issues != Config::BladeConfig::ISSUE_NONE);
-    }
-    if (
-            rebound or 
-            id == Config::BladeArrays::ID_ARRAY_SELECTION or
-            id == Config::BladeArrays::ID_BLADE_SELECTION or
-            id == Config::BladeArrays::ID_BLADE_TYPE_SELECTION
-       ) {
-        bool hasSelection{
-            bladeArrays.bladeSelectionProxy.data() and
-            *bladeArrays.bladeSelectionProxy.data() != -1
-        };
-        bool hasTypeSelection{
-            bladeArrays.bladeTypeProxy.data() and
-            *bladeArrays.bladeTypeProxy.data() != -1
-        };
-        bool isSimple{
-            hasTypeSelection and
-            *bladeArrays.bladeTypeProxy.data() == Config::Blade::SIMPLE
-        };
-        bool isPixel{
-            hasTypeSelection and
-            *bladeArrays.bladeTypeProxy.data() == Config::Blade::WS281X
-        };
-
-        FindWindow(ID_RemoveBlade)->Enable(hasSelection);
-
-        mSimpleSizer->Show(isSimple);
-        mPixelSizer->Show(isPixel);
-
-        FindWindow(ID_NoSelectText)->Show(not hasSelection);
-    }
-    if (
-            rebound or 
-            id == Config::BladeArrays::ID_ARRAY_SELECTION or
-            id == Config::BladeArrays::ID_BLADE_SELECTION or
-            id == Config::BladeArrays::ID_BLADE_TYPE_SELECTION or
-            id == Config::BladeArrays::ID_SPLIT_SELECTION
-       ) {
-        auto hasSelection{
-            bladeArrays.splitSelectionProxy.data() and
-            *bladeArrays.splitSelectionProxy.data() != -1
-        };
-        FindWindow(ID_RemoveSplit)->Enable(hasSelection);
-    }
-}
-
-wxSizer *BladesPage::createBladeSettings() {
-    auto& config{mParent->getOpenConfig()};
-
-    auto *settingsSizer{new wxBoxSizer(wxHORIZONTAL)};
-
-    auto *noSelectText(new wxStaticText(
-        this,
-        ID_NoSelectText,
-        "No Blade Selected",
-        wxDefaultPosition,
-        wxSize(350, -1),
-        wxALIGN_CENTER
-    ));
-    noSelectText->SetFont(noSelectText->GetFont().MakeLarger());
-
-    auto *setupSizer{new wxBoxSizer(wxVERTICAL)};
-
-    auto *bladeType{new pcui::Choice(
-        this,
-        config.bladeArrays.bladeTypeProxy,
-        _("Blade Type")
-    )};
-
-    auto starSizer{[this](
-            Config::BladeArrays::StarProxy& starProxy,
-            const wxString& label
-        ) {
-        auto *starSizer{new pcui::StaticBox(
-            wxVERTICAL,
-            this,
-            label
-        )};
-        auto *starColor{new pcui::Choice(
-            starSizer->childParent(),
-            starProxy.ledProxy
-        )};
-        auto *starPowerPin{new pcui::ComboBox(
-            starSizer->childParent(),
-            starProxy.powerPinProxy,
-            _("Power Pin")
-        )};
-        auto *starResistance{new pcui::Numeric(
-            starSizer->childParent(),
-            starProxy.resistanceProxy,
-            _("Resistance (mOhms)")
-        )};
-        starResistance->SetToolTip(_("The value of the resistor placed in series with this led."));
-
-        starSizer->Add(starColor, wxSizerFlags().Expand());
-        starSizer->AddSpacer(10);
-        starSizer->Add(
-            starPowerPin, 
-            wxSizerFlags().Border(wxLEFT, 20).Expand()
-        );
-        starSizer->AddSpacer(5);
-        starSizer->Add(
-            starResistance,
-            wxSizerFlags().Border(wxLEFT, 20).Expand()
-        );
-
-        return starSizer;
-    }};
-
-    mSimpleSizer = new wxBoxSizer(wxVERTICAL);
-    auto *simpleSplit1Sizer{new wxBoxSizer(wxHORIZONTAL)};
-    simpleSplit1Sizer->Add(starSizer(config.bladeArrays.star1Proxy, _("LED 1")));
-    simpleSplit1Sizer->AddSpacer(10);
-    simpleSplit1Sizer->Add(starSizer(config.bladeArrays.star2Proxy, _("LED 2")));
-    auto *simpleSplit2Sizer{new wxBoxSizer(wxHORIZONTAL)};
-    simpleSplit2Sizer->Add(starSizer(config.bladeArrays.star3Proxy, _("LED 3")));
-    simpleSplit2Sizer->AddSpacer(10);
-    simpleSplit2Sizer->Add(starSizer(config.bladeArrays.star4Proxy, _("LED 4")));
-    auto *simpleBrightness{new pcui::Numeric(
-        this,
-        config.bladeArrays.simpleBrightnessProxy,
-        _("Brightness"),
-        wxHORIZONTAL
-    )};
-    mSimpleSizer->Add(simpleSplit1Sizer);
-    mSimpleSizer->AddSpacer(10);
-    mSimpleSizer->Add(simpleSplit2Sizer);
-    mSimpleSizer->AddSpacer(10);
-    mSimpleSizer->Add(simpleBrightness);
-
-    mPixelSizer = new wxBoxSizer(wxHORIZONTAL);
-    auto *pixelMainSizer{new wxBoxSizer(wxVERTICAL)};
-    auto *length{new pcui::Numeric(
-        this,
-        config.bladeArrays.lengthProxy,
-        _("Number of Pixels"),
-        wxHORIZONTAL
-    )};
-    length->SetToolTip(_("The number of pixels in your blade (total)."));
-    auto *dataPin{new pcui::ComboBox(
-        this,
-        config.bladeArrays.dataPinProxy,
-        _("Blade Data Pin"),
-        wxHORIZONTAL
-    )};
-    dataPin->SetToolTip(_("The pin name or number used for WS281X data.\nSpecify custom pins by typing in this box."));
-    auto *colorOrder3{new pcui::Choice(
-        this,
-        config.bladeArrays.colorOrder3Proxy,
-        _("Color Order"),
-        wxHORIZONTAL
-    )};
-    colorOrder3->SetToolTip(_("The order of colors for your blade.\nMost of the time this can be left as \"GRB\"."));
-    auto *colorOrder4{new pcui::Choice(
-        this,
-        config.bladeArrays.colorOrder4Proxy,
-        _("Color Order"),
-        wxHORIZONTAL
-    )};
-    colorOrder4->SetToolTip(_("The order of colors for your blade.\nMost of the time this can be left as \"GRBW\"."));
-    auto *hasWhite{new pcui::CheckBox(
-        this,
-        config.bladeArrays.hasWhiteProxy,
-        0,
-        _("LEDs Have White Channel")
-    )};
-    auto *whiteUseRGB{new pcui::CheckBox(
-        this,
-        config.bladeArrays.useRGBWithWhiteProxy,
-        0,
-        _("Use RGB with White")
-    )};
-    whiteUseRGB->SetToolTip(_("Use the RGB channels alongside the White channel to produce white light.\nThis can result in a brighter blade, but at the cost of higher battery usage and a less \"pure\" white."));
-
-    auto *pixelBrightness{new pcui::Numeric(
-        this,
-        config.bladeArrays.pixelBrightnessProxy,
-        _("Brightness"),
-        wxHORIZONTAL
-    )};
-
-    auto *pixelPowerPins{new pcui::CheckList(
-        this,
-        config.bladeArrays.powerPinProxy,
-        _("Power Pins")
-    )};
-    pixelPowerPins->SetMinSize(wxSize(-1, 200));
-    pixelPowerPins->SetToolTip();
-}
-*/
-
