@@ -132,8 +132,23 @@ data::Choice::UpdateAction::UpdateAction(uint32 num, int32 idx) :
 
 bool data::Choice::UpdateAction::setup(Model& model) {
     auto& choice{static_cast<Choice&>(model)};
+
+    if (choice.mNumChoices == mNum) return false;
+
     assert(mIdx >= -1 and mIdx < static_cast<int32>(mNum));
-    return choice.mNumChoices != mNum;
+    if (choice.mFilter) {
+        // Make it so that the filter sees the proposed number of choices
+        // rather than the current number.
+        auto tmp{choice.mNumChoices};
+        choice.mNumChoices = mNum;
+
+        choice.mFilter(choice, mIdx);
+
+        choice.mNumChoices = tmp;
+    }
+    assert(mIdx >= -1 and mIdx < static_cast<int32>(mNum));
+
+    return true;
 }
 
 void data::Choice::UpdateAction::perform(Model& model) {
