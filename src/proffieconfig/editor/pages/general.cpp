@@ -38,7 +38,7 @@ GeneralPage::GeneralPage(config::Config& config) : mConfig{config} {}
 void GeneralPage::deinit() {
     if (mButtonDlg) {
         pcui::cripple(mButtonDlg);
-        delete mButtonDlg;
+        mButtonDlg->Destroy();
     }
 }
 
@@ -213,20 +213,23 @@ pcui::DescriptorPtr GeneralPage::installation() {
             .data_=mConfig.settings_.orientation_,
             .labeler_=[](uint32 idx) -> wxString {
                 switch (static_cast<config::Orientation>(idx)) {
-                    case config::eOrient_Fets_Towards_Blade:
+                    using enum config::Orientation;
+                    case eOrient_Fets_Towards_Blade:
                         return _("FETs Towards Blade");
-                    case config::eOrient_USB_Towards_Blade:
+                    case eOrient_USB_Towards_Blade:
                         return _("USB Towards Blade");
-                    case config::eOrient_USB_CCW_From_Blade:
+                    case eOrient_USB_CCW_From_Blade:
                         return _("USB CCW From Blade");
-                    case config::eOrient_USB_CW_From_Blade:
+                    case eOrient_USB_CW_From_Blade:
                         return _("USB CW From Blade");
-                    case config::eOrient_Top_Towards_Blade:
+                    case eOrient_Top_Towards_Blade:
                         return _("Top Towards Blade");
-                    case config::eOrient_Bottom_Towards_Blade:
+                    case eOrient_Bottom_Towards_Blade:
                         return _("Bottom Towards Blade");
-                    default: return {};
+                    case eOrient_Max:
+                        break;
                 }
+                return {};
             },
           }(),
         }(),
