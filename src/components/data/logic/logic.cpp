@@ -48,10 +48,10 @@ Manager::Manager(Element&& child) :
     mChild{std::move(child)} {
     assert(mChild.get());
 
-    std::lock_guard scopeLock{mLock};
+    std::lock_guard scopeLock(mLock);
 
     const auto changeFunc{[this](bool val) {
-        std::lock_guard scopeLock{mLock};
+        std::lock_guard scopeLock(mLock);
         mVal = val;
 
         for (auto *rcvr : mReceivers) {
@@ -81,7 +81,7 @@ Holder::Holder(Element&& child) :
 Receiver::~Receiver() = default;
 
 void Receiver::attach(Manager& man) {
-    std::scoped_lock scopeLock{mLock, man.mLock};
+    std::scoped_lock scopeLock(mLock, man.mLock);
 
     detach();
 
@@ -91,10 +91,10 @@ void Receiver::attach(Manager& man) {
 }
 
 void Receiver::detach() {
-    std::lock_guard scopeLock{mLock};
+    std::lock_guard scopeLock(mLock);
 
     if (mMan != nullptr) {
-        std::lock_guard scopeLock{mMan->mLock};
+        std::lock_guard scopeLock(mMan->mLock);
 
         mMan->mReceivers.erase(this);
         mMan = nullptr;

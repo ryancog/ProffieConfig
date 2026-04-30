@@ -19,11 +19,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/bool.hpp"
-#include "data/choice.hpp"
-#include "data/number.hpp"
-#include "data/string.hpp"
-#include "data/vector.hpp"
+#include "data/base/model.hpp"
+#include "data/base/models/bool.hpp"
+#include "data/base/models/choice.hpp"
+#include "data/base/models/number.hpp"
+#include "data/base/models/string.hpp"
+#include "data/base/models/vector.hpp"
 #include "data/logic/logic.hpp"
 
 #include "data_export.h"
@@ -32,11 +33,11 @@ namespace data::logic {
 
 struct IsEnabled {};
 
-DATA_EXPORT Element operator|(const data::Model&, IsEnabled);
+DATA_EXPORT Element operator|(const base::Model&, IsEnabled);
 
 struct IsSet {};
 
-DATA_EXPORT Element operator|(const data::Bool&, IsSet);
+DATA_EXPORT Element operator|(const base::Bool&, IsSet);
 
 /**
  * If values are provided, checks if the data has a selection in the set.
@@ -45,25 +46,25 @@ DATA_EXPORT Element operator|(const data::Bool&, IsSet);
  */
 struct DATA_EXPORT HasSelection : std::set<int32> {};
 
-DATA_EXPORT Element operator|(const data::Choice&, HasSelection);
+DATA_EXPORT Element operator|(const base::Choice&, HasSelection);
 
 struct DATA_EXPORT IsEmpty {};
 
-DATA_EXPORT Element operator|(const data::String&, IsEmpty);
+DATA_EXPORT Element operator|(const base::String&, IsEmpty);
 
-DATA_EXPORT Element operator|(const data::Vector&, IsEmpty);
+DATA_EXPORT Element operator|(const base::Vector&, IsEmpty);
 
 struct DATA_EXPORT BitAnd {
     int32 val_;
 };
 
-DATA_EXPORT Element operator|(const data::Integer&, BitAnd);
+DATA_EXPORT Element operator|(const base::Integer&, BitAnd);
 
 struct DATA_EXPORT Equals {
     int32 val_;
 };
 
-DATA_EXPORT Element operator|(const data::Integer&, Equals);
+DATA_EXPORT Element operator|(const base::Integer&, Equals);
 
 } // namespace data::logic
 

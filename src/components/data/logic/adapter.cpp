@@ -19,10 +19,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-auto data::logic::operator|(const data::Model& model, IsEnabled) -> Element {
-    struct Adapter : detail::Base, data::Model::Receiver {
-        Adapter(const data::Model& model) : model_{model} {}
-        ~Adapter() override { detach(); }
+#include "data/context.hpp"
+#include "data/receiver.hpp"
+
+// TODO: Looking back on this, it all feels kind of ugly. I'm not sure what a
+// better solution might look like. Building some kind of operator/link
+// representation and then having a single object that is a model and has a
+// RecvTable w/ a boolean update cb feels like the most consistent way.
+//
+// That'd require splitting base::Model apart and having some other base the
+// Receiver uses as a base (so that the base::Model enable and focus stuff
+// isn't unnecessarily present), that has the main interface stuff. It's
+// probably a good idea anyways, but I don't know what that should look like
+// organizationally.
+//
+// The representation is also kind of a tedious issue of its own.
+//
+// Anyways, what's here right now is a half-baked fudge adaptation from the
+// old models stuff and so doesn't make much sense. Not that it made a
+// terrible amount of sense to begin with.
+
+auto data::logic::operator|(const base::Model& model, IsEnabled) -> Element {
+    struct Adapter : detail::Base, data::Receiver {
+        Adapter(const base::Model& model) : model_{model} {
+            static const auto table{[] {
+                base::Model::RecvTable table;
+                table.onEnable_ = map(&Adapter::onEnabled);
+                return table;
+            }()};
+
+            pRecvMap[&model_] = &table;
+        }
+        
+        ~Adapter() override { deactivate(); }
 
         void lock() override {
             model_.lock();
@@ -33,26 +62,35 @@ auto data::logic::operator|(const data::Model& model, IsEnabled) -> Element {
         }
 
         bool doActivate() override {
-            data::Model::ROContext ctxt{model_};
-            attach(model_);
+            base::Model::ROContext ctxt{model_};
+            Receiver::activate();
             return ctxt.enabled();
         }
 
-        void onEnabled() override {
-            std::lock_guard scopeLock{*pLock};
-            onChange(context().enabled());
+        void onEnabled() {
+            std::lock_guard scopeLock(*pLock);
+            onChange(context(model_).enabled());
         }
 
-        const data::Model& model_;
+        const base::Model& model_;
     };
 
     return std::make_unique<Adapter>(model);
 }
 
-auto data::logic::operator|(const data::Bool& bl, IsSet) -> Element {
-    struct Adapter : detail::Base, data::Bool::Receiver {
-        Adapter(const data::Bool& bl) : bl_{bl} {}
-        ~Adapter() override { detach(); }
+auto data::logic::operator|(const base::Bool& bl, IsSet) -> Element {
+    struct Adapter : detail::Base, data::Receiver {
+        Adapter(const base::Bool& bl) : bl_{bl} {
+            static const auto table{[] {
+                base::Bool::RecvTable table;
+                table.onSet_ = map(&Adapter::onSet);
+                return table;
+            }()};
+
+            pRecvMap[&bl_] = &table;
+        }
+
+        ~Adapter() override { deactivate(); }
 
         void lock() override {
             bl_.lock();
@@ -63,29 +101,38 @@ auto data::logic::operator|(const data::Bool& bl, IsSet) -> Element {
         }
 
         bool doActivate() override {
-            data::Bool::ROContext ctxt{bl_};
-            attach(bl_);
+            base::Bool::ROContext ctxt{bl_};
+            Receiver::activate();
             return ctxt.val();
         }
 
-        void onSet() override {
-            std::lock_guard scopeLock{*pLock};
-            onChange(context<Bool>().val());
+        void onSet() {
+            std::lock_guard scopeLock(*pLock);
+            onChange(context(bl_).val());
         }
 
-        const data::Bool& bl_;
+        const base::Bool& bl_;
     };
 
     return std::make_unique<Adapter>(bl);
 }
 
 auto data::logic::operator|(
-    const data::Choice& choice, HasSelection sels
+    const base::Choice& choice, HasSelection sels
 ) -> Element {
-    struct Adapter : detail::Base, data::Choice::Receiver {
-        Adapter(const data::Choice& choice, HasSelection sels) :
-            choice_{choice}, sels_{std::move(sels)} {}
-        ~Adapter() override { detach(); }
+    struct Adapter : detail::Base, data::Receiver {
+        Adapter(const base::Choice& choice, HasSelection sels) :
+            choice_{choice}, sels_{std::move(sels)} {
+            static const auto table{[] {
+                base::Choice::RecvTable table;
+                table.onChoice_ = map(&Adapter::onChoice);
+                return table;
+            }()};
+
+            pRecvMap[&choice_] = &table;
+        }
+
+        ~Adapter() override { deactivate(); }
 
         void lock() override {
             choice_.lock();
@@ -96,14 +143,14 @@ auto data::logic::operator|(
         }
 
         bool doActivate() override {
-            data::Choice::ROContext ctxt{choice_};
-            attach(choice_);
+            base::Choice::ROContext ctxt{choice_};
+            Receiver::activate();
             return isTrue(ctxt.idx());
         }
 
-        void onChoice() override {
-            std::lock_guard scopeLock{*pLock};
-            onChange(isTrue(context<Choice>().idx()));
+        void onChoice() {
+            std::lock_guard scopeLock(*pLock);
+            onChange(isTrue(context(choice_).idx()));
         }
 
         bool isTrue(int32 choice) {
@@ -111,7 +158,7 @@ auto data::logic::operator|(
             return sels_.contains(choice);
         }
 
-        const data::Choice& choice_;
+        const base::Choice& choice_;
         HasSelection sels_;
     };
 
@@ -119,12 +166,20 @@ auto data::logic::operator|(
 }
 
 auto data::logic::operator|(
-    const data::String& choice, IsEmpty
+    const base::String& choice, IsEmpty
 ) -> Element {
-    struct Adapter : detail::Base, data::String::Receiver {
-        Adapter(const data::String& str) :
-            str_{str} {}
-        ~Adapter() override { detach(); }
+    struct Adapter : detail::Base, data::Receiver {
+        Adapter(const base::String& str) : str_{str} {
+            static const auto table{[] {
+                base::String::RecvTable table;
+                table.onChange_ = map(&Adapter::onChange);
+                return table;
+            }()};
+
+            pRecvMap[&str_] = &table;
+        }
+
+        ~Adapter() override { deactivate(); }
 
         void lock() override {
             str_.lock();
@@ -135,29 +190,38 @@ auto data::logic::operator|(
         }
 
         bool doActivate() override {
-            data::String::ROContext ctxt{str_};
-            attach(str_);
+            base::String::ROContext ctxt{str_};
+            Receiver::activate();
             return ctxt.val().empty();
         }
 
-        void onChange() override {
-            std::lock_guard scopeLock{*pLock};
-            Base::onChange(context<String>().val().empty());
+        void onChange() {
+            std::lock_guard scopeLock(*pLock);
+            Base::onChange(context(str_).val().empty());
         }
 
-        const String& str_;
+        const base::String& str_;
     };
 
     return std::make_unique<Adapter>(choice);
 }
 
 auto data::logic::operator|(
-    const data::Vector& choice, IsEmpty
+    const base::Vector& choice, IsEmpty
 ) -> Element {
-    struct Adapter : detail::Base, data::Vector::Receiver {
-        Adapter(const data::Vector& vec) :
-            vec_{vec} {}
-        ~Adapter() override { detach(); }
+    struct Adapter : detail::Base, data::Receiver {
+        Adapter(const base::Vector& vec) : vec_{vec} {
+            static const auto table{[] {
+                base::Vector::RecvTable table;
+                table.onInsert_ = map(&Adapter::onInsert);
+                table.preRemove_ = map(&Adapter::preRemove);
+                return table;
+            }()};
+
+            pRecvMap[&vec_] = &table;
+        }
+
+        ~Adapter() override { deactivate(); }
 
         void lock() override {
             vec_.lock();
@@ -168,38 +232,47 @@ auto data::logic::operator|(
         }
 
         bool doActivate() override {
-            data::Vector::ROContext ctxt{vec_};
-            attach(vec_);
+            base::Vector::ROContext ctxt{vec_};
+            Receiver::activate();
             return isTrue(ctxt);
         }
 
-        void onInsert(size) override {
-            std::lock_guard scopeLock{*pLock};
+        void onInsert(size) {
+            std::lock_guard scopeLock(*pLock);
             onChange(isTrue(vec_));
         }
 
-        void preRemove(size) override {
-            std::lock_guard scopeLock{*pLock};
+        void preRemove(size) {
+            std::lock_guard scopeLock(*pLock);
             onChange(isTrue(vec_));
         }
 
-        static bool isTrue(const data::Vector::ROContext& ctxt) {
+        static bool isTrue(const base::Vector::ROContext& ctxt) {
             return ctxt.children().empty();
         }
 
-        const Vector& vec_;
+        const base::Vector& vec_;
     };
 
     return std::make_unique<Adapter>(choice);
 }
 
 auto data::logic::operator|(
-    const data::Integer& model, BitAnd val
+    const base::Integer& model, BitAnd val
 ) -> Element {
-    struct Adapter : detail::Base, data::Integer::Receiver {
-        Adapter(const data::Integer& model, BitAnd val) :
-            int_{model}, val_{val} {}
-        ~Adapter() override { detach(); }
+    struct Adapter : detail::Base, data::Receiver {
+        Adapter(const base::Integer& model, BitAnd val) :
+            int_{model}, val_{val} {
+            static const auto table{[] {
+                base::Integer::RecvTable table;
+                table.onSet_ = map(&Adapter::onSet);
+                return table;
+            }()};
+
+            pRecvMap[&int_] = &table;
+        }
+
+        ~Adapter() override { deactivate(); }
 
         void lock() override {
             int_.lock();
@@ -210,14 +283,14 @@ auto data::logic::operator|(
         }
 
         bool doActivate() override {
-            data::Integer::ROContext ctxt{int_};
-            attach(int_);
+            base::Integer::ROContext ctxt{int_};
+            Receiver::activate();
             return isTrue(ctxt.val());
         }
 
-        void onSet() override {
-            std::lock_guard scopeLock{*pLock};
-            onChange(isTrue(context<Integer>().val()));
+        void onSet() {
+            std::lock_guard scopeLock(*pLock);
+            onChange(isTrue(context(int_).val()));
         }
 
         [[nodiscard]] bool isTrue(int32 val) const {
@@ -225,19 +298,28 @@ auto data::logic::operator|(
         }
 
         BitAnd val_;
-        const Integer& int_;
+        const base::Integer& int_;
     };
 
     return std::make_unique<Adapter>(model, val);
 }
 
 auto data::logic::operator|(
-    const data::Integer& model, Equals equals
+    const base::Integer& model, Equals equals
 ) -> Element {
-    struct Adapter : detail::Base, data::Integer::Receiver {
-        Adapter(const data::Integer& model, Equals equals) :
-            int_{model}, equals_{equals} {}
-        ~Adapter() override { detach(); }
+    struct Adapter : detail::Base, data::Receiver {
+        Adapter(const base::Integer& model, Equals equals) :
+            int_{model}, equals_{equals} {
+            static const auto table{[] {
+                base::Integer::RecvTable table;
+                table.onSet_ = map(&Adapter::onSet);
+                return table;
+            }()};
+
+            pRecvMap[&int_] = &table;
+        }
+
+        ~Adapter() override { deactivate(); }
 
         void lock() override {
             int_.lock();
@@ -248,14 +330,14 @@ auto data::logic::operator|(
         }
 
         bool doActivate() override {
-            data::Integer::ROContext ctxt{int_};
-            attach(int_);
+            base::Integer::ROContext ctxt{int_};
+            Receiver::activate();
             return isTrue(ctxt.val());
         }
 
-        void onSet() override {
-            std::lock_guard scopeLock{*pLock};
-            onChange(isTrue(context<Integer>().val()));
+        void onSet() {
+            std::lock_guard scopeLock(*pLock);
+            onChange(isTrue(context(int_).val()));
         }
 
         [[nodiscard]] bool isTrue(int32 val) const {
@@ -263,7 +345,7 @@ auto data::logic::operator|(
         }
 
         Equals equals_;
-        const Integer& int_;
+        const base::Integer& int_;
     };
 
     return std::make_unique<Adapter>(model, equals);

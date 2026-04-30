@@ -35,7 +35,7 @@ data::Exclusive::Exclusive(
 
         void onSet() override {
             if (not context<Bool>().val()) return;
-            std::lock_guard scopeLock{excl_.mLock};
+            std::lock_guard scopeLock(excl_.mLock);
 
             size selIdx{};
             for (size idx{0}; idx < excl_.mData.size(); ++idx) {
@@ -94,12 +94,12 @@ data::Bool& data::Exclusive::operator[](size idx) const {
 }
 
 size data::Exclusive::selected() const {
-    std::lock_guard scopeLock{pLock};
+    std::lock_guard scopeLock(pLock);
     return mSelected;
 }
 
 void data::Exclusive::select(size pos) {
-    std::lock_guard scopeLock{pLock};
+    std::lock_guard scopeLock(pLock);
 
     assert(pos < mData.size());
     data::Bool::Context{*mData[pos]}.set(true);
