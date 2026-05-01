@@ -40,8 +40,8 @@ struct DATA_EXPORT Model : virtual base::Model {
     Model(const Model &) = delete;
 
     template<typename T = Root>
-    T *root() const {
-        return static_cast<T *>(mRoot);
+    T& root() const {
+        return static_cast<T&>(mRoot);
     }
 
     bool enable(bool en) override;
