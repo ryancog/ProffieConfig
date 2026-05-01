@@ -40,7 +40,7 @@ UTILS_EXPORT std::mt19937_64& gen();
  * @param min lower bound of generation
  * @param max upper bound of generation
  */
-template<typename T = uint32>
+template <typename T = uint32>
 inline T get(T min = std::numeric_limits<T>::min(), T max = std::numeric_limits<T>::max()) {
     static_assert(std::is_arithmetic_v<T>);
     if constexpr (std::is_integral_v<T>) {

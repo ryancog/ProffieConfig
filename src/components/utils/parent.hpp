@@ -25,10 +25,10 @@ namespace utils {
 
 namespace detail {
 
-template<typename T>
+template <typename T>
 struct MemberTraits;
 
-template<class Parent, class Member>
+template <class Parent, class Member>
 struct MemberTraits<Member Parent::*>  {
     using ParentType = Parent;
     using MemberType = Member;
@@ -36,7 +36,7 @@ struct MemberTraits<Member Parent::*>  {
 
 } // namespace detail
 
-template<auto MEM_PTR>
+template <auto MEM_PTR>
 typename detail::MemberTraits<decltype(MEM_PTR)>::ParentType& parent(
     typename detail::MemberTraits<decltype(MEM_PTR)>::MemberType& _
 ) {
@@ -52,7 +52,7 @@ typename detail::MemberTraits<decltype(MEM_PTR)>::ParentType& parent(
     );
 }
 
-template<auto MEM_PTR>
+template <auto MEM_PTR>
 typename detail::MemberTraits<decltype(MEM_PTR)>::ParentType& parent(
     const typename detail::MemberTraits<decltype(MEM_PTR)>::MemberType& _
 ) {
