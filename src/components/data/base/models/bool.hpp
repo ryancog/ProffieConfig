@@ -68,7 +68,7 @@ struct DATA_EXPORT Bool::Context : Model::Context, ROContext {
 };
 
 struct DATA_EXPORT Bool::RecvTable : Model::RecvTable {
-    Mapping<> onSet_;
+    Mapping<> onSet_{nullptr};
 };
 
 } // namespace data::base

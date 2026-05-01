@@ -140,8 +140,8 @@ struct DATA_EXPORT Model::Context : virtual ROContext {
 };
 
 struct DATA_EXPORT Model::RecvTable : data::RecvTable {
-    Mapping<> onEnable_;
-    Mapping<> onFocus_;
+    Mapping<> onEnable_{nullptr};
+    Mapping<> onFocus_{nullptr};
 };
 
 } // namespace base

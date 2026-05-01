@@ -111,8 +111,8 @@ struct DATA_EXPORT Number<T>::Context : Model::Context, ROContext {
 
 template <typename T>
 struct DATA_EXPORT Number<T>::RecvTable : Model::RecvTable {
-    Mapping<> onSet_;
-    Mapping<> onUpdate_;
+    Mapping<> onSet_{nullptr};
+    Mapping<> onUpdate_{nullptr};
 };
 
 } // namespace detail

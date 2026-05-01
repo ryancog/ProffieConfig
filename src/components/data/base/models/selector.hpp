@@ -109,11 +109,11 @@ struct DATA_EXPORT Selector::RecvTable : Model::RecvTable {
     /**
      * Selector bound to a different Vector
      */
-    Mapping<> onRebound_;
+    Mapping<> onRebound_{nullptr};
 
-    Mapping<bool> onCanMoveUp_;
-    Mapping<bool> onCanMoveDown_;
-    Mapping<bool> onHasSelection_;
+    Mapping<bool> onCanMoveUp_{nullptr};
+    Mapping<bool> onCanMoveDown_{nullptr};
+    Mapping<bool> onHasSelection_{nullptr};
 };
 
 } // namespace data::base
