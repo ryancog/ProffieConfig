@@ -50,10 +50,12 @@ bool Selector::setupBind(const Vector *vec) {
 }
 
 const Vector *Selector::doBind(const Vector *vec) {
+    std::lock_guard scopeLock(pMutex);
     auto choiceCtxt{context(choice())};
 
-    deactivate();
-    pRecvMap.erase(mVec);
+    sendToReceivers(&RecvTable::preRebound_);
+
+    repeal(*mVec);
 
     auto ret{mVec};
     mVec = vec;
@@ -64,8 +66,8 @@ const Vector *Selector::doBind(const Vector *vec) {
     //
     // If onRebound is called first, the choice state isn't valid yet.
     if (mVec) {
-        pRecvMap[mVec] = &smVecTable;
-        pRecvMap[&choice()] = &smChoiceTable;
+        amend(*mVec, smVecTable);
+        amend(choice(), smChoiceTable);
 
         // For now, if both vecs have same length the choice will persist the
         // selection automatically since no update will actually occur.
@@ -73,8 +75,6 @@ const Vector *Selector::doBind(const Vector *vec) {
     } else {
         choiceCtxt.update(0);
     }
-
-    activate();
 
     sendToReceivers(&RecvTable::onRebound_);
 

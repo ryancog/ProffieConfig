@@ -20,6 +20,9 @@
  */
 
 #include <map>
+#include <mutex>
+
+#include "data_export.h"
 
 namespace data {
 
@@ -31,7 +34,7 @@ struct Model;
 
 } // namespace base
 
-struct Receiver {
+struct DATA_EXPORT Receiver {
     Receiver(Receiver&&) = delete;
     Receiver(const Receiver&) = delete;
 
@@ -42,20 +45,26 @@ struct Receiver {
     void activate();
     void deactivate();
 
+    void amend(const base::Model&, const RecvTable&);
+    void repeal(const base::Model&);
+
 protected:
+    using RecvMap = std::map<const base::Model *, const RecvTable *>;
+
     Receiver();
 
     virtual void onActivate() {}
     virtual void onDeactivate() {}
 
-    /**
-     * To be initialized by derived on creation.
-     */
-    std::map<const base::Model *, const RecvTable *> pRecvMap;
+    std::recursive_mutex pMutex;
 
 private:
     friend base::Model;
 
+    /**
+     * To be initialized by derived on creation.
+     */
+    RecvMap mRecvMap;
     bool mAttached{false};
 };
 

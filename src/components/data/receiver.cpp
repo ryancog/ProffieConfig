@@ -37,13 +37,15 @@ Receiver::~Receiver() {
 }
 
 void Receiver::activate() {
+    std::lock_guard scopeLock(pMutex);
+
     // Can't double-activate.
     assert(not mAttached);
 
     // First, lock everything we plan to attach to to ensure consistent state.
     // Attach can also happen here, sequentially, since nothing else will be
     // allowed to occur until unlock.
-    for (auto [model, map] : pRecvMap) {
+    for (auto [model, map] : mRecvMap) {
         model->lock();
         model->mReceivers.insert(this);
     }
@@ -55,12 +57,14 @@ void Receiver::activate() {
     // to do whatever (re)setup it needs.
     onActivate();
 
-    for (auto [model, map] : pRecvMap) {
+    for (auto [model, map] : mRecvMap) {
         model->unlock();
     }
 }
 
 void Receiver::deactivate() {
+    std::lock_guard scopeLock(pMutex);
+
     // Do allow double-deactivate so that deactivate can be called before
     // when it might be called "normally."
     //
@@ -69,7 +73,7 @@ void Receiver::deactivate() {
     if (not mAttached) return;
 
     // The remaining flow mirrors activate()
-    for (auto [model, map] : pRecvMap) {
+    for (auto [model, map] : mRecvMap) {
         model->lock();
         model->mReceivers.erase(this);
     }
@@ -78,8 +82,33 @@ void Receiver::deactivate() {
 
     onDeactivate();
 
-    for (auto [model, map] : pRecvMap) {
+    for (auto [model, map] : mRecvMap) {
         model->unlock();
+    }
+}
+
+void Receiver::amend(const base::Model& model, const RecvTable& table) {
+    std::lock_guard scopeLock(pMutex);
+
+    mRecvMap[&model] = &table;
+
+    // If things are already attached, then this needs special treatment.
+    // This won't call onActivate again, if needed another hook can be added,
+    // but I don't think it's needed currently.
+    if (mAttached) {
+        std::lock_guard scopeLock(model);
+        model.mReceivers.insert(this);
+    }
+}
+
+void Receiver::repeal(const base::Model& model) {
+    std::lock_guard scopeLock(pMutex);
+
+    mRecvMap.erase(&model);
+
+    if (mAttached) {
+        std::lock_guard scopeLock(model);
+        model.mReceivers.erase(this);
     }
 }
 

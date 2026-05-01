@@ -47,8 +47,7 @@ auto data::logic::operator|(const base::Model& model, IsEnabled) -> Element {
                 table.onEnable_ = map(&Adapter::onEnabled);
                 return table;
             }()};
-
-            pRecvMap[&model_] = &table;
+            amend(model_, table);
         }
         
         ~Adapter() override { deactivate(); }
@@ -86,8 +85,7 @@ auto data::logic::operator|(const base::Bool& bl, IsSet) -> Element {
                 table.onSet_ = map(&Adapter::onSet);
                 return table;
             }()};
-
-            pRecvMap[&bl_] = &table;
+            amend(bl_, table);
         }
 
         ~Adapter() override { deactivate(); }
@@ -128,8 +126,7 @@ auto data::logic::operator|(
                 table.onChoice_ = map(&Adapter::onChoice);
                 return table;
             }()};
-
-            pRecvMap[&choice_] = &table;
+            amend(choice_, table);
         }
 
         ~Adapter() override { deactivate(); }
@@ -175,8 +172,7 @@ auto data::logic::operator|(
                 table.onChange_ = map(&Adapter::onChange);
                 return table;
             }()};
-
-            pRecvMap[&str_] = &table;
+            amend(str_, table);
         }
 
         ~Adapter() override { deactivate(); }
@@ -217,8 +213,7 @@ auto data::logic::operator|(
                 table.preRemove_ = map(&Adapter::preRemove);
                 return table;
             }()};
-
-            pRecvMap[&vec_] = &table;
+            amend(vec_, table);
         }
 
         ~Adapter() override { deactivate(); }
@@ -268,8 +263,7 @@ auto data::logic::operator|(
                 table.onSet_ = map(&Adapter::onSet);
                 return table;
             }()};
-
-            pRecvMap[&int_] = &table;
+            amend(int_, table);
         }
 
         ~Adapter() override { deactivate(); }
@@ -315,8 +309,7 @@ auto data::logic::operator|(
                 table.onSet_ = map(&Adapter::onSet);
                 return table;
             }()};
-
-            pRecvMap[&int_] = &table;
+            amend(int_, table);
         }
 
         ~Adapter() override { deactivate(); }

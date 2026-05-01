@@ -28,7 +28,7 @@
 
 namespace data::base {
 
-struct DATA_EXPORT Selector : virtual Model, Receiver {
+struct DATA_EXPORT Selector : virtual Model, virtual Receiver {
     struct ROContext;
     struct Context;
     struct RecvTable;
@@ -106,6 +106,8 @@ struct DATA_EXPORT Selector::Context : Model::Context, ROContext {
 };
 
 struct DATA_EXPORT Selector::RecvTable : Model::RecvTable {
+    Mapping<> preRebound_;
+
     /**
      * Selector bound to a different Vector
      */

@@ -56,12 +56,12 @@ void Model::sendToReceivers(
     const std::function<void(Receiver *, const data::RecvTable *)>& tryTable
 ) const {
     for (auto *receiver : mReceivers) {
-        auto iter{receiver->pRecvMap.find(this)};
-        if (iter == receiver->pRecvMap.end()) continue;
+        std::lock_guard scopeLock(receiver->pMutex);
 
-        tryTable(receiver, iter->second);
+        // If the receiver is in `mReceivers` then it's guaranteed the model is
+        // in the map.
+        tryTable(receiver, receiver->mRecvMap[this]);
     }
-
 }
 
 Model::ROContext::ROContext(const Model& model) : mModel{model} {
