@@ -13,6 +13,7 @@ add_library(data SHARED
     base/model.cpp
     base/models/bool.cpp
     base/models/choice.cpp
+    base/models/exclusive.cpp
     base/models/number.cpp
     base/models/selection.cpp
     base/models/selector.cpp
@@ -25,6 +26,7 @@ add_library(data SHARED
     hierarchic/root.cpp
     hierarchic/models/bool.cpp
     hierarchic/models/choice.cpp
+    hierarchic/models/exclusive.cpp
     hierarchic/models/number.cpp
     hierarchic/models/selection.cpp
     hierarchic/models/selector.cpp
@@ -35,6 +37,7 @@ add_library(data SHARED
     primitive/model.cpp
     primitive/models/bool.cpp
     primitive/models/choice.cpp
+    primitive/models/exclusive.cpp
     primitive/models/number.cpp
     primitive/models/selection.cpp
     primitive/models/selector.cpp
