@@ -43,6 +43,11 @@ struct DATA_EXPORT String : virtual Model {
     void setFilter(Filter);
 
     /**
+     * Replace text, moving pos to end.
+     */
+    bool change(std::string&&);
+
+    /**
      * Replace text with new text and pos.
      */
     virtual bool change(std::string&&, size) = 0;

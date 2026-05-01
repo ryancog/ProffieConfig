@@ -31,6 +31,10 @@ void String::setFilter(Filter filter) {
     mFilter = filter;
 }
 
+bool String::change(std::string&& str) {
+    return change(std::move(str), str.length());
+}
+
 bool String::setupChange(std::string& str, size& pos) {
     assert(pos <= str.length());
 

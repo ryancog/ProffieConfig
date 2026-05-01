@@ -33,6 +33,7 @@ struct DATA_EXPORT String : base::String, Model {
     String(Root&);
     String(const String&, Root&);
 
+    using base::String::change;
     bool change(std::string&&, size) override;
     bool move(size) override;
 };
