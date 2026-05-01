@@ -86,7 +86,12 @@ protected:
             Receiver *receiver, const data::RecvTable *table
         ) {
             if (auto *derived{dynamic_cast<const Table *>(table)}) {
-                (receiver->*(derived->*mapping))(args...);
+                auto variant{derived->*mapping};
+                if (auto *ptr{std::get_if<1>(&variant)}) {
+                    (receiver->*(*ptr))(args...);
+                } else if (auto *ptr{std::get_if<2>(&variant)}) {
+                    (receiver->*(*ptr))(*this, args...);
+                }
             }
         }};
         sendToReceivers(tryTable);
@@ -140,8 +145,8 @@ struct DATA_EXPORT Model::Context : virtual ROContext {
 };
 
 struct DATA_EXPORT Model::RecvTable : data::RecvTable {
-    Mapping<> onEnable_{nullptr};
-    Mapping<> onFocus_{nullptr};
+    Mapping<> onEnable_;
+    Mapping<> onFocus_;
 };
 
 } // namespace base

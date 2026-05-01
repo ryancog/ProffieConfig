@@ -130,22 +130,22 @@ struct DATA_EXPORT Selection::RecvTable : Model::RecvTable {
     /**
      * Item is (de)selected.
      */
-    Mapping<uint32> onSelection_{nullptr};
+    Mapping<uint32> onSelection_;
 
     /**
      * Items are completely changed.
      */
-    Mapping<> onItems_{nullptr};
+    Mapping<> onItems_;
 
     /**
      * Item Inserted
      */
-    Mapping<uint32> onInsert_{nullptr};
+    Mapping<uint32> onInsert_;
 
     /**
      * Item Removed
      */
-    Mapping<uint32> onRemove_{nullptr};
+    Mapping<uint32> onRemove_;
 };
 
 } // namespace data::base

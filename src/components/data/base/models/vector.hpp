@@ -105,22 +105,22 @@ struct DATA_EXPORT Vector::RecvTable : Model::RecvTable {
     /**
      * Model inserted at pos
      */
-    Mapping<size> onInsert_{nullptr};
+    Mapping<size> onInsert_;
 
     /**
      * Model removed from pos
      */
-    Mapping<size> onRemove_{nullptr};
+    Mapping<size> onRemove_;
 
     /**
      * Model at pos is about to be removed.
      */
-    Mapping<size> preRemove_{nullptr};
+    Mapping<size> preRemove_;
 
     /**
      * Models at pos and pos + 1 swapped.
      */
-    Mapping<size> onSwap_{nullptr};
+    Mapping<size> onSwap_;
 };
 
 } // namespace data::base

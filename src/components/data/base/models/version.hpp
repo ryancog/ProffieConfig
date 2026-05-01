@@ -66,7 +66,7 @@ struct DATA_EXPORT Version::RecvTable : Model::RecvTable {
     /**
      * Version changed.
      */
-    Mapping<> onSet_{nullptr};
+    Mapping<> onSet_;
 };
 
 } // namespace data::base

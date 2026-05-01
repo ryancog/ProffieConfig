@@ -176,29 +176,29 @@ struct DATA_EXPORT Root::RecvTable : Model::RecvTable {
     /**
      * Listener is being detached from the root.
      */
-    Mapping<> onDetach_{nullptr};
+    Mapping<> onDetach_;
 
     /**
      * Undone now at action
      */
-    Mapping<size> onActionIdx_{nullptr};
+    Mapping<size> onActionIdx_;
 
     /**
      * Actions have been cleared
      *
      * size lastIdx
      */
-    Mapping<size> onActionClear_{nullptr};
+    Mapping<size> onActionClear_;
 
     /**
      * Root now has/no longer has actions to undo.
      */
-    Mapping<bool> onCanUndo_{nullptr};
+    Mapping<bool> onCanUndo_;
 
     /**
      * Root now has/no longer has actions to redo.
      */
-    Mapping<bool> onCanRedo_{nullptr};
+    Mapping<bool> onCanRedo_;
 };
 
 } // namespace data::hier

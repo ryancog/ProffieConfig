@@ -20,10 +20,17 @@
  */
 
 #include <type_traits>
+#include <variant>
 
 #include "data_export.h"
 
 namespace data {
+
+namespace base {
+
+struct Model;
+
+} // namespace base
 
 struct Receiver;
 
@@ -31,13 +38,17 @@ struct DATA_EXPORT RecvTable {
     virtual ~RecvTable() = default;
 
     template <typename ...Args>
-    using Mapping = void (Receiver::*)(Args...);
+    using Mapping = std::variant<
+        std::monostate,
+        void (Receiver::*)(Args...),
+        void (Receiver::*)(const base::Model&, Args...)
+    >;
 };
 
-template <typename Receiver, typename ...Args>
-requires std::is_base_of_v<data::Receiver, Receiver>
-auto map(void (Receiver::*func)(Args...)) {
-    return reinterpret_cast<RecvTable::Mapping<Args...>>(func);
+template <typename DerivedRcvr, typename ...Args>
+requires std::is_base_of_v<Receiver, DerivedRcvr>
+auto map(void (DerivedRcvr::*func)(Args...)) {
+    return reinterpret_cast<void (Receiver::*)(Args...)>(func);
 }
 
 } // namespace data

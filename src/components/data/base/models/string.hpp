@@ -100,12 +100,12 @@ struct DATA_EXPORT String::RecvTable : Model::RecvTable {
     /**
      * Text is changed
      */
-    Mapping<> onChange_{nullptr};
+    Mapping<> onChange_;
 
     /**
      * Cursor position is moved.
      */
-    Mapping<> onMove_{nullptr};
+    Mapping<> onMove_;
 };
 
 } // namespace data::base
