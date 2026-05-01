@@ -87,8 +87,7 @@ void String::Context::change(std::string&& str, size pos) const {
 }
 
 void String::Context::change(std::string&& str) const {
-    const auto pos{str.length()};
-    change(std::move(str), pos);
+    change(std::move(str), str.length());
 }
 
 void String::Context::append(char c) const {
