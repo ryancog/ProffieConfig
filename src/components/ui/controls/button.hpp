@@ -21,7 +21,7 @@
 
 #include <wx/bitmap.h>
 
-#include "data/string.hpp"
+#include "data/base/models/string.hpp"
 #include "ui/bitmap.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
@@ -66,7 +66,7 @@ struct UI_EXPORT Button {
 
     std::variant<
         wxString,
-        RefWrap<const data::String>
+        RefWrap<const data::base::String>
     > label_;
 
     struct {

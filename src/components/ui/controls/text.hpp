@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/string.hpp"
+#include "data/base/models/string.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
 #include "ui/font.hpp"
@@ -35,7 +35,7 @@ struct UI_EXPORT Text {
     // TODO: Make this a base w/ C++ P2287.
     detail::ChildWindowBase win_;
 
-    std::variant<wxString, RefWrap<data::String>> data_;
+    std::variant<wxString, RefWrap<data::base::String>> data_;
 
     /**
      * Implicitly true if only a static string is provided for data.

@@ -23,7 +23,7 @@
 
 namespace pcui {
 
-template<typename Container, typename Functor>
+template <typename Container, typename Functor>
 struct ForEach {
     const Container& of_;
     const Functor do_;

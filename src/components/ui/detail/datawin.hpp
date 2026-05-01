@@ -21,67 +21,37 @@
 
 #include <wx/thread.h>
 
+#include "data/base/model.hpp"
 #include "ui/detail/window.hpp"
+
+#include "ui_export.h"
 
 class wxWindow;
 
 namespace pcui::detail {
 
-template <typename Base, typename Receiver>
-struct DataWindow : Window<Base>, Receiver {
-    DataWindow() = default;
+// TODO: Whenever I update the data logic stuff, this and Window<> also need
+// reworking. Similarly ugly things here.
 
-    void onDetach() override {
-        Window<Base>::updateVisualEnable();
-    }
+struct UI_EXPORT DataWindowImpl : virtual WindowImpl {
+    void onActivate() override;
+    void onDeactivate() override;
 
-    void onAttach() override {
-        Window<Base>::updateVisualEnable();
-    }
+    void onEnable();
+    void onFocus();
 
-    void onEnabled() override {
-        Window<Base>::updateVisualEnable();
-    }
+    virtual const data::base::Model *primaryModel() = 0;
 
-    void onFocus() override {
-        this->safeCall([this]() {
-            Window<Base>::SetFocus();
-        });
-    }
-
-    // Derived likely has receivers, it must handle detach, so nothing to
-    // override preDestroyCripple() here for.
-
-    bool freezeGetRealEnable() {
-        auto *ptr{Receiver::maybeModel()};
-        using ModelType = std::decay_t<decltype(*ptr)>;
-
-        bool modelEn{true};
-        if (ptr) {
-            ptr->lock();
-            modelEn = typename ModelType::ROContext(*ptr).enabled();
-        }
-
-        return Window<Base>::freezeGetRealEnable() and modelEn;
-    }
-
-    void thawRealEnable() {
-        auto *ptr{Receiver::maybeModel()};
-        using ModelType = std::decay_t<decltype(*ptr)>;
-
-        if (ptr) ptr->unlock();
-
-        Window<Base>::thawRealEnable();
-    }
+    bool freezeGetRealEnable() override;
+    void thawRealEnable() override;
 
 private:
-    bool visualEnableOverride() override {
-        auto *ptr{Receiver::maybeModel()};
-        using ModelType = std::decay_t<decltype(*ptr)>;
+    bool visualEnableOverride() override;
+};
 
-        if (not ptr) return true;
-        return typename ModelType::ROContext(*ptr).enabled();
-    }
+template <typename Base>
+struct DataWindow : DataWindowImpl, Window<Base> {
+    DataWindow() = default;
 };
 
 } // namespace pcui::detail

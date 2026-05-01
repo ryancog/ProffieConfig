@@ -21,8 +21,10 @@
 
 #include <wx/panel.h>
 
+#include "data/context.hpp"
 #include "ui/build.hpp"
 #include "ui/detail/datawin.hpp"
+#include "ui/detail/helpers.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/builder.hpp"
 #include "ui/types.hpp"
@@ -40,31 +42,38 @@ namespace {
  * makes sense enough that it be the same parent as the rebuilt item, since
  * it can't be the item itself.
  */
-struct TrackerDummy : detail::IDataDriven,
-                      wxSizerItem,
-                      data::Choice::Receiver,
-                      data::Selector::Receiver {
+struct TrackerDummy : wxSizerItem, data::Receiver {
     TrackerDummy(const detail::Scaffold& scaffold, const Selector& desc) :
         wxSizerItem(0, 0),
         scaffold_{scaffold},
-        builder_{desc.builder_} {
-        data::Choice::Context ctxt{desc.data_.choice_};
+        builder_{desc.builder_},
+        sel_{desc.data_} {
+        static const auto table{[] {
+            data::base::Selector::RecvTable table;
+            table.onRebound_ = data::map(&TrackerDummy::onRebound);
+            return table;
+        }()};
+        amend(sel_, table);
 
-        buildAndReplace(ctxt);
-        data::Choice::Receiver::attach(desc.data_.choice_);
-        data::Selector::Receiver::attach(desc.data_);
+        static const auto choiceTable{[] {
+            data::base::Choice::RecvTable table;
+            table.onChoice_ = data::map(&TrackerDummy::onChoice);
+            return table;
+        }()};
+        amend(sel_.choice(), choiceTable);
+
+        activate();
     }
 
-    void preDestroyCripple() override {
-        data::Choice::Receiver::detach();
-        data::Selector::Receiver::detach();
+    void onActivate() override {
+        buildAndReplace();
     }
 
-    void onChoice() override {
+    void onChoice() {
         handlRebuild();
     }
 
-    void onRebound() override {
+    void onRebound() {
         handlRebuild();
     }
 
@@ -76,25 +85,22 @@ struct TrackerDummy : detail::IDataDriven,
             cripple(last_);
 
         safeCall([this] { 
-            auto ctxt{data::Choice::Receiver::context<data::Choice>()};
-            buildAndReplace(ctxt);
+            buildAndReplace();
         });
     }
 
     // Build a new item and replace the old one with it, or insert a new item
     // if we don't have one yet.
-    void buildAndReplace(const data::Choice::ROContext& choice) {
-        data::Model *model{nullptr};
+    void buildAndReplace() {
+        auto ctxt{data::context(sel_.choice())};
+
+        data::base::Model *model{nullptr};
 
         // If we have a choice, then a vector is guaranteed to be bound. If
         // not, it doesn't matter in any case.
-        if (choice.idx() != -1) {
-            auto sel{data::Selector::Receiver::context<data::Selector>()};
-            data::Vector::ROContext vec{*sel.bound()};
-
+        if (ctxt.idx() != -1)
             // Grab the model to build off of.
-            model = &*vec.children()[choice.idx()];
-        }
+            model = data::context(sel_).selected();
 
         // If a UI element has already been built and the model to be built off
         // is the same, then there's nothing to do, just leave things alone.
@@ -170,13 +176,15 @@ struct TrackerDummy : detail::IDataDriven,
         detail::layoutAndFitFor(scaffold_.childParent_);
     }
 
+    const data::base::Selector& sel_;
+
     // The last-built item that is currently being held in whatever sizer
     // is hold us.
     wxSizerItem *last_{nullptr};
-    data::Model *lastModel_{nullptr};
+    data::base::Model *lastModel_{nullptr};
 
     const detail::Scaffold scaffold_;
-    const detail::DescBuilder builder_;
+    const std::function<detail::DescBuilder> builder_;
 };
 
 } // namespace

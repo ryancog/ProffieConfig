@@ -23,6 +23,7 @@
 #include <wx/event.h>
 #include <wx/listbox.h>
 
+#include "data/context.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
 #include "ui/types.hpp"
@@ -32,146 +33,15 @@ using namespace pcui;
 
 namespace {
 
-template<typename Derived, typename Ctrl>
-struct ControlBase : detail::DataWindow<Ctrl, data::Choice::Receiver>,
-                     data::Selector::Receiver,
-                     data::Vector::Receiver,
-                     data::Integer::Receiver {
-    void preDestroyCripple() override {
-        data::Choice::Receiver::detach();
-        data::Selector::Receiver::detach();
-        data::Vector::Receiver::detach();
-        data::Integer::Receiver::detach();
+template <typename Ctrl>
+struct ControlBase : detail::DataWindow<Ctrl> {
+    using DataWindow = detail::DataWindow<Ctrl>;
 
-        detail::DataWindow<Ctrl, data::Choice::Receiver>::preDestroyCripple();
+    ControlBase() = default;
+
+    ControlBase(const detail::Scaffold& scaffold, const Choice& desc) {
+        create(scaffold, desc);
     }
-
-    void onChoice(wxCommandEvent& evt) {
-        auto en{this->freezeGetRealEnable()};
-        defer { this->thawRealEnable(); };
-
-        if (not en) return;
-        
-        auto& ch{const_cast<data::Choice&>(
-            data::Choice::Receiver::model<data::Choice>()
-        )};
-
-        const auto self{static_cast<Derived *>(this)};
-        auto res{ch.processUIAction(
-            std::make_unique<data::Choice::ChoiceAction>(
-                self->controlToData(evt.GetInt())
-            )
-        )};
-
-        if (not res) {
-            auto ctxt{data::Choice::Receiver::context<data::Choice>()};
-            const auto self{static_cast<Derived *>(this)};
-            this->SetSelection(self->dataToControl(ctxt.idx()));
-        }
-    }
-    
-    void onChoice() override {
-        const auto self{static_cast<Derived *>(this)};
-        const auto model{data::Choice::Receiver::context<data::Choice>()};
-        this->safeCall([this, self, choice=model.idx()] {
-            Ctrl::SetSelection(self->dataToControl(choice));
-        });
-    }
-
-    void onUpdate(data::Choice::Receiver::UpdateInfo info) override {
-        const auto self{static_cast<Derived *>(this)};
-        const auto choices{self->generateChoices(
-            data::Choice::Receiver::context<data::Choice>().numChoices()
-        )};
-
-        this->safeCall([this, choices, info] {
-            auto sel{Ctrl::GetSelection()};
-            Ctrl::Set(choices);
-            if (info.choicePreserved_) Ctrl::SetSelection(sel);
-        });
-    }
-
-    void onSet() override {
-        const auto self{static_cast<Derived *>(this)};
-        const auto choices{self->generateChoices(
-            data::Choice::Receiver::context<data::Choice>().numChoices()
-        )};
-
-        this->safeCall([this, choices] {
-            auto sel{Ctrl::GetSelection()};
-            Ctrl::Set(choices);
-            Ctrl::SetSelection(sel);
-        });
-    }
-
-    void onRebound() override {
-        auto selCtxt{data::Selector::Receiver::context<data::Selector>()};
-
-        data::Vector::Receiver::detach();
-        if (selCtxt.bound())
-            data::Vector::Receiver::attach(*selCtxt.bound());
-    }
-
-    void onSwap(size size) override {
-        auto tmp{Ctrl::GetString(size)};
-        Ctrl::SetString(size, Ctrl::GetString(size + 1));
-        Ctrl::SetString(size + 1, tmp);
-
-        // Also swap receiver idxs if found
-        for (auto& rcvr : mRcvrs) {
-            auto& labelRcvr{static_cast<LabelReceiver&>(*rcvr)};
-            if (labelRcvr.idx_ == size) labelRcvr.idx_ = size + 1;
-            else if (labelRcvr.idx_ == size + 1) labelRcvr.idx_ = size;
-        }
-    }
-
-    [[nodiscard]] int32 controlToData(int32 choice) const {
-        return choice;
-    }
-
-    [[nodiscard]] int32 dataToControl(int32 choice) const {
-        return choice;
-    }
-
-    std::vector<wxString> generateChoices(uint32 num) {
-        std::vector<wxString> choices;
-
-        mRcvrs.clear();
-
-        if (data::Integer::Receiver::maybeModel()) {
-            auto ctxt{data::Integer::Receiver::context<data::Integer>()};
-            num = std::min<uint32>(ctxt.val(), num);
-        }
-
-        for (uint32 idx{0}; idx < num; ++idx) {
-            if (not mLabeler) {
-                choices.emplace_back("LABEL???");
-                continue;
-            }
-
-            auto res{mLabeler(idx)};
-
-            wxString str;
-            if (auto *ptr{std::get_if<1>(&res)}) {
-                const auto self{static_cast<Derived *>(this)};
-                data::String::ROContext ctxt{*ptr};
-                str = ctxt.val();
-                mRcvrs.push_back(std::make_unique<LabelReceiver>(
-                    this, self->dataToControl(idx), *ptr
-                ));
-            } else {
-                str = std::move(std::get<0>(res));
-            }
-
-            if (str.empty()) choices.push_back(mEmptyLabel);
-            else choices.emplace_back(std::move(str));
-        }
-
-        return choices;
-    }
-
-private:
-    friend Derived;
 
     void create(const detail::Scaffold& scaffold, const Choice& desc) {
         mLabeler = desc.labeler_;
@@ -184,87 +54,226 @@ private:
             wxDefaultSize
         );
 
-        detail::DataWindow<Ctrl, data::Choice::Receiver>::postCreation(
+        DataWindow::postCreation(
             scaffold, desc.win_
         );
 
-        if (desc.clamp_) {
-            // Lock while things are being setup.
-            desc.clamp_->get().lock();
-            data::Integer::Receiver::attach(desc.clamp_->get());
-        }
+        static const auto choiceTable{[] {
+            data::base::Choice::RecvTable table;
+            table.onEnable_ = data::map(&DataWindow::onEnable);
+            table.onFocus_ = data::map(&DataWindow::onFocus);
+            table.onChoice_ = data::map(&ControlBase::onChoice);
+            table.onUpdate_ = data::map(&ControlBase::onUpdate);
+            return table;
+        }()};
 
-        data::Choice *choice{};
-        const data::Selector *sel{};
         if (const auto *ptr{std::get_if<1>(&desc.data_)}) {
-            sel = &ptr->get();
-            choice = &ptr->get().choice_;
-        } else choice = &std::get<0>(desc.data_).get();
+            choice_ = &ptr->get().choice();
+            sel_ = &ptr->get();
 
-        data::Choice::Context ctxt{*choice};
-        const auto self{static_cast<Derived *>(this)};
-        Ctrl::Set(self->generateChoices(ctxt.numChoices()));
-        Ctrl::SetSelection(self->dataToControl(
-            ctxt.idx()
-        ));
+            static const auto selTable{[] {
+                data::base::Selector::RecvTable table;
+                table.preRebound_ = data::map(&ControlBase::preSelRebound);
+                table.onRebound_ = data::map(&ControlBase::onSelRebound);
+                return table;
+            }()};
+            data::Receiver::amend(*sel_, selTable); } else choice_ = &std::get<0>(desc.data_).get();
 
-        data::Choice::Receiver::attach(*choice);
-        if (sel) {
-            data::Selector::ROContext selCtxt{*sel};
-            if (selCtxt.bound()) {
-                data::Vector::Receiver::attach(*selCtxt.bound());
-            }
-            data::Selector::Receiver::attach(*sel);
-        }
-
-        Ctrl::Bind(Derived::evt(), &ControlBase::onChoice, this);
+        data::Receiver::amend(*choice_, choiceTable);
 
         if (desc.clamp_) {
-            desc.clamp_->get().unlock();
+            clamp_ = &desc.clamp_->get();
+
+            static const auto clampTable{[] {
+                data::base::Integer::RecvTable table;
+                table.onSet_ = data::map(&ControlBase::onClampSet);
+                return table;
+            }()};
+            data::Receiver::amend(*clamp_, clampTable);
+        }
+
+        data::Receiver::activate();
+    }
+
+    void onActivate() override {
+        DataWindow::onActivate();
+
+        auto ctxt{data::context(*choice_)};
+        Ctrl::Set(generateChoices(ctxt.num()));
+        Ctrl::SetSelection(dataToControl(ctxt.idx()));
+
+        if (sel_) {
+            auto selCtxt{data::context(*sel_)};
+            if (selCtxt.bound()) {
+                data::Receiver::amend(*selCtxt.bound(), smVecTable);
+            }
+        }
+
+        Ctrl::Bind(event(), &ControlBase::onChoiceEvt, this);
+    }
+
+    const data::base::Model *primaryModel() override {
+        return choice_;
+    }
+
+    void onChoiceEvt(wxCommandEvent& evt) {
+        auto en{this->freezeGetRealEnable()};
+        defer { this->thawRealEnable(); };
+
+        if (not en) return;
+        
+        auto res{choice_->choose(controlToData(evt.GetInt()))};
+
+        if (not res) {
+            auto ctxt{data::context(*choice_)};
+            Ctrl::SetSelection(dataToControl(ctxt.idx()));
         }
     }
-
-    ControlBase() = default;
-
-    ControlBase(const detail::Scaffold& scaffold, const Choice& desc) {
-        create(scaffold, desc);
+    
+    void onChoice() {
+        const auto idx{data::context(*choice_).idx()};
+        detail::WindowImpl::safeCall([this, idx] {
+            Ctrl::SetSelection(dataToControl(idx));
+        });
     }
 
-    std::vector<std::unique_ptr<data::String::Receiver>> mRcvrs;
+    void onUpdate(data::base::Choice::UpdateInfo info) {
+        const auto choices{
+            generateChoices(data::context(*choice_).num())
+        };
+
+        detail::WindowImpl::safeCall([this, choices, info] {
+            auto sel{Ctrl::GetSelection()};
+            Ctrl::Set(choices);
+            if (info.choicePreserved_) Ctrl::SetSelection(sel);
+        });
+    }
+
+    void preSelRebound() {
+        data::Receiver::repeal(*data::context(*sel_).bound());
+    }
+
+    void onSelRebound() {
+        auto ctxt{data::context(*sel_)};
+        if (not ctxt.bound()) return;
+
+        data::Receiver::amend(*ctxt.bound(), smVecTable);
+    }
+
+    void onClampSet() {
+        const auto choices{
+            generateChoices(data::context(*choice_).num())
+        };
+
+        detail::WindowImpl::safeCall([this, choices] {
+            auto sel{Ctrl::GetSelection()};
+            Ctrl::Set(choices);
+            Ctrl::SetSelection(sel);
+        });
+    }
+
+    void onVectorSwap(size idx) {
+        for (auto& [model, mapIdx] : mLabelMapping) {
+            if (mapIdx == idx)
+                mapIdx = idx + 1;
+            else if (mapIdx == idx + 1)
+                mapIdx = idx;
+        }
+
+        detail::WindowImpl::safeCall([this, idx] {
+            auto tmp{Ctrl::GetString(idx)};
+            Ctrl::SetString(idx, Ctrl::GetString(idx + 1));
+            Ctrl::SetString(idx + 1, tmp);
+        });
+    }
+
+    void onLabelChange(const data::base::Model& model) {
+        auto& strModel{dynamic_cast<const data::base::String&>(model)};
+        auto str{data::context(strModel).val()};
+        auto idx{mLabelMapping[&strModel]};
+
+        detail::WindowImpl::safeCall([this, idx=idx, str=std::move(str)] {
+            Ctrl::SetString(idx, str.empty() ? mEmptyLabel : str);
+        });
+    }
+
+    [[nodiscard]] virtual int32 controlToData(int32 choice) const {
+        return choice;
+    }
+
+    [[nodiscard]] virtual int32 dataToControl(int32 choice) const {
+        return choice;
+    }
+
+    [[nodiscard]] virtual const wxEventTypeTag<wxCommandEvent>&
+        event() const = 0;
+
+    virtual std::vector<wxString> generateChoices(uint32 num) {
+        std::lock_guard scopeLock(data::Receiver::pMutex);
+
+        std::vector<wxString> choices;
+
+        for (auto [str, idx] : mLabelMapping) {
+            data::Receiver::repeal(*str);
+        }
+        mLabelMapping.clear();
+
+        if (clamp_)
+            num = std::min<uint32>(data::context(*clamp_).val(), num);
+
+        for (uint32 idx{0}; idx < num; ++idx) {
+            if (not mLabeler) {
+                choices.emplace_back("LABEL???");
+                continue;
+            }
+
+            auto res{mLabeler(idx)};
+
+            wxString str;
+            if (auto *ptr{std::get_if<1>(&res)}) {
+                auto ctxt{data::context(ptr->get())};
+                str = ctxt.val();
+
+                mLabelMapping[&ptr->get()] = idx;
+
+                static const auto labelTable{[] {
+                    data::base::String::RecvTable table;
+                    table.onChange_ = data::map(&ControlBase::onLabelChange);
+                    return table;
+                }()};
+                data::Receiver::amend(ptr->get(), labelTable);
+            } else {
+                str = std::move(std::get<0>(res));
+            }
+
+            if (str.empty()) choices.push_back(mEmptyLabel);
+            else choices.emplace_back(std::move(str));
+        }
+
+        return choices;
+    }
+
+    // Should never be null, but it's assigned late, so ptr.
+    data::base::Choice *choice_;
+    const data::base::Selector *sel_{nullptr};
+    const data::base::Integer *clamp_{nullptr};
+
+private:
+    std::map<const data::base::String *, uint32> mLabelMapping;
     Choice::Labeler mLabeler;
     wxString mEmptyLabel;
 
-    struct LabelReceiver final : data::String::Receiver {
-        LabelReceiver(
-            ControlBase *ctrl,
-            uint32 idx,
-            const data::String& model
-        ) : mCtrl{ctrl}, idx_{idx} {
-            attach(model);
-        }
-
-        ~LabelReceiver() override {
-            detach();
-        }
-
-        void onChange() override {
-            // Capture info by value, the receiver could die before the UI
-            // updates occur.
-            const auto val{context<data::String>().val()};
-            const auto str{val.empty() ? mCtrl->mEmptyLabel : val};
-            mCtrl->safeCall([ctrl=mCtrl, idx=idx_, str] {
-                ctrl->SetString(idx, str);
-            });
-        }
-
-        uint32 idx_;
-
-    private:
-        ControlBase *mCtrl;
-    };
+    static const data::base::Vector::RecvTable smVecTable;
 };
 
-struct PopUpControl : ControlBase<PopUpControl, wxChoice> {
+template <typename Ctrl>
+const data::base::Vector::RecvTable ControlBase<Ctrl>::smVecTable{[] {
+    data::base::Vector::RecvTable table;
+    table.onSwap_ = data::map(&ControlBase::onVectorSwap);
+    return table;
+}()};
+
+struct PopUpControl : ControlBase<wxChoice> {
     PopUpControl(
         const detail::Scaffold& scaffold,
         const Choice& desc,
@@ -273,17 +282,19 @@ struct PopUpControl : ControlBase<PopUpControl, wxChoice> {
         create(scaffold, desc);
     }
 
-    static const auto& evt() { return wxEVT_CHOICE; }
+    const wxEventTypeTag<wxCommandEvent>& event() const override {
+        return wxEVT_CHOICE;
+    }
 
-    [[nodiscard]] int32 controlToData(int32 choice) const {
+    [[nodiscard]] int32 controlToData(int32 choice) const override {
         return unselected_.empty() ? choice : choice - 1;
     }
 
-    [[nodiscard]] int32 dataToControl(int32 choice) const {
+    [[nodiscard]] int32 dataToControl(int32 choice) const override {
         return unselected_.empty() ? choice : choice + 1;
     }
 
-    std::vector<wxString> generateChoices(uint32 num) {
+    std::vector<wxString> generateChoices(uint32 num) override {
         std::vector<wxString> choices;
 
         if (not unselected_.empty()) {
@@ -303,15 +314,16 @@ struct PopUpControl : ControlBase<PopUpControl, wxChoice> {
     wxString unselected_;
 };
 
-struct ListControl : ControlBase<ListControl, wxListBox> {
+struct ListControl : ControlBase<wxListBox> {
     ListControl(
         const detail::Scaffold& scaffold,
         const Choice& desc,
         const Choice::List&
-    ) : ControlBase(scaffold, desc) {
-    }
+    ) : ControlBase(scaffold, desc) {}
 
-    static const auto& evt() { return wxEVT_LISTBOX; }
+    const wxEventTypeTag<wxCommandEvent>& event() const override {
+        return wxEVT_LISTBOX;
+    }
 };
 
 } // namespace

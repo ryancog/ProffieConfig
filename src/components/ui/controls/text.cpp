@@ -23,6 +23,7 @@
 #include <wx/textctrl.h>
 #include <wx/sizer.h>
 
+#include "data/context.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
 #include "ui/types.hpp"
@@ -32,7 +33,7 @@ using namespace pcui;
 
 namespace {
 
-struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
+struct Control : detail::DataWindow<wxTextCtrl> {
     Control(const detail::Scaffold& scaffold, const Text& desc) {
         wxString initial;
         long style{0};
@@ -97,24 +98,38 @@ struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
         }
 #       endif
 
-        if (const auto *ptr{std::get_if<1>(&desc.data_)}) {
-            data::String::Context ctxt{*ptr};
-            SetValue(ctxt.val());
-            attach(*ptr);
-        } else {
-            SetValue(std::get<0>(desc.data_));
+        if (const auto *ptr{std::get_if<0>(&desc.data_)}) {
+            SetValue(*ptr);
+            return;
         }
 
-        Bind(wxEVT_TEXT, &Control::onText, this);
+        str_ = &std::get<1>(desc.data_).get();
 
-        if (onEnter_.index() != 0) {
-            Bind(wxEVT_TEXT_ENTER, &Control::onEnter, this);
-        }
+        static const auto table{[] {
+            data::base::String::RecvTable table;
+            table.onEnable_ = data::map(&DataWindow::onEnable);
+            table.onFocus_ = data::map(&DataWindow::onFocus);
+            table.onChange_ = data::map(&Control::onChange);
+            table.onMove_ = data::map(&Control::onMove);
+            return table;
+        }()};
+        amend(*str_, table);
+
+        activate();
     }
 
-    void preDestroyCripple() override {
-        detach();
-        DataWindow::preDestroyCripple();
+    void onActivate() override {
+        DataWindow::onActivate();
+
+        SetValue(data::context(*str_).val());
+
+        Bind(wxEVT_TEXT, &Control::onText, this);
+        if (onEnter_.index() != 0)
+            Bind(wxEVT_TEXT_ENTER, &Control::onEnter, this);
+    }
+
+    const data::base::Model *primaryModel() override {
+        return str_;
     }
 
     void onText(wxCommandEvent&) {
@@ -123,14 +138,12 @@ struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
 
         if (not en) return;
 
-        auto& str{const_cast<data::String&>(model<data::String>())};
-
-        auto res{str.processUIAction(std::make_unique<data::String::ChangeAction>(
+        auto res{str_->change(
             GetValue().ToStdString(), posFromInsertPoint(GetInsertionPoint())
-        ))};
+        )};
 
         if (not res) {
-            auto ctxt{context<data::String>()};
+            auto ctxt{data::context(*str_)};
             ChangeValue(ctxt.val());
             SetInsertionPoint(insertPointFromPos(ctxt.pos()));
         }
@@ -145,16 +158,14 @@ struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
         }
     }
     
-    void onChange() override {
-        const auto val{context<data::String>().val()};
-        safeCall([this, val] {
+    void onChange() {
+        safeCall([this, val=data::context(*str_).val()] {
             ChangeValue(val);
         });
     }
 
-    void onMove() override {
-        const auto pos{context<data::String>().pos()};
-        safeCall([this, pos] {
+    void onMove() {
+        safeCall([this, pos=data::context(*str_).pos()] {
             SetInsertionPoint(insertPointFromPos(pos));
         });
     }
@@ -196,6 +207,7 @@ struct Control : detail::DataWindow<wxTextCtrl, data::String::Receiver> {
     }
 
     Text::SingleLine::EnterAction onEnter_;
+    data::base::String *str_{nullptr};
 };
 
 } // namespace

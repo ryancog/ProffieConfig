@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/hierarchy/model.hpp"
+#include "data/primitive/model.hpp"
 #include "ui/detail/general.hpp"
 #include "ui/types.hpp"
 
@@ -38,7 +38,7 @@ struct UI_EXPORT Progress {
     // TODO: Make this base w/ C++ P2287.
     detail::ChildWindowBase win_;
 
-    Data& data_;
+    const Data& data_;
 
     wxOrientation orient_{wxHORIZONTAL};
     
@@ -57,19 +57,11 @@ struct UI_EXPORT Progress::Desc : Progress, detail::Descriptor {
     [[nodiscard]] Descriptor *clone() const override;
 };
 
-struct UI_EXPORT Progress::Data : data::Model {
+struct UI_EXPORT Progress::Data : data::prim::Model {
     struct ROContext;
     struct Context;
-    struct Receiver;
+    struct RecvTable;
 
-    Data();
-    ~Data() override;
-
-    /**
-     * Due to the nature in which this data is likely to be used, these are
-     * provided; the verbosity of strictly conveying contextual semantics is
-     * violated in favor of... sanity, really.
-     */
     void set(uint32);
     void range(uint32);
 
@@ -101,24 +93,21 @@ struct UI_EXPORT Progress::Data::Context : Model::Context, ROContext {
     void pulse() const;
 };
 
-struct UI_EXPORT Progress::Data::Receiver : Model::Receiver {
-protected:
-    friend Data;
-
+struct UI_EXPORT Progress::Data::RecvTable : Model::RecvTable {
     /**
      * Value changed
      */
-    virtual void onSet() {}
+    Mapping<> onSet_;
 
     /**
      * Range updated
      */
-    virtual void onRange() {}
+    Mapping<> onRange_;
 
     /**
      * Pulsed.
      */
-    virtual void onPulse() {}
+    Mapping<> onPulse_;
 };
 
 } // namespace pcui

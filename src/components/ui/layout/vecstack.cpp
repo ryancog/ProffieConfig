@@ -24,8 +24,9 @@
 #include <wx/event.h>
 #include <wx/sizer.h>
 
+#include "data/context.hpp"
+#include "data/receiver.hpp"
 #include "ui/build.hpp"
-#include "ui/detail/datadriven.hpp"
 #include "ui/detail/helpers.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/types.hpp"
@@ -35,9 +36,10 @@ using namespace pcui;
 
 namespace {
 
-struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
+struct Layout : wxBoxSizer, data::Receiver {
     Layout(const detail::Scaffold& scaffold, const VecStack& desc) :
-        wxBoxSizer(desc.orient_) {
+        wxBoxSizer(desc.orient_),
+        vec_{desc.data_} {
         builder_ = desc.builder_;
         separator_ = desc.separator_;
 
@@ -47,7 +49,20 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
         if (desc.empty_)
             emptyElem_ = desc.empty_->build(childScaffold_);
 
-        data::Vector::ROContext ctxt{desc.data_};
+        static const auto table{[] {
+            data::base::Vector::RecvTable table;
+            table.onInsert_ = data::map(&Layout::onInsert);
+            table.preRemove_ = data::map(&Layout::preRemove);
+            table.onSwap_ = data::map(&Layout::onSwap);
+            return table;
+        }()};
+        amend(vec_, table);
+
+        activate();
+    }
+
+    void onActivate() override {
+        auto ctxt{data::context(vec_)};
 
         if (emptyElem_) {
             Add(emptyElem_);
@@ -60,34 +75,12 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
             if (separator_)
                 Add(separator_->build(childScaffold_));
         }
-
-        attach(desc.data_);
     }
 
-    void preDestroyCripple() override {
-        // Already crippled, can't create a context w/o a model.
-        if (not maybeModel()) return;
-
-        // To lock map_
-        auto ctxt{context<data::Vector>()};
-
-        detach();
-
-        // The receiver will not be called any more.
-        // Clear the map and cripple children in the same fashion as
-        // preRemove().
-        for (auto& [model, item] : map_) {
-            if (item)
-                cripple(item);
-
-            model = nullptr;
-        }
-    }
-
-    void onInsert(size pos) override {
+    void onInsert(size pos) {
         auto mapIter{map_.emplace(
             map_.end(),
-            context<data::Vector>().children()[pos].get(),
+            data::context(vec_).children()[pos].get(),
             nullptr
         )};
 
@@ -96,7 +89,7 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
         // sync.
         safeCall([this, pos, mapIter] {
             // To lock map_
-            auto ctxt{context<data::Vector>()};
+            std::lock_guard scopeLock(pMutex);
 
             assert(mapIter->second == nullptr);
             if (mapIter->first) {
@@ -130,8 +123,9 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
         });
     }
 
-    void preRemove(size pos) override {
-        auto ctxt{context<data::Vector>()};
+    void preRemove(size pos) {
+        auto ctxt{data::context(vec_)};
+
         auto *toRemove{ctxt.children()[pos].get()};
 
         // Find the mapping for the model, and store the iter so the safeCall
@@ -154,7 +148,7 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
 
         safeCall([this, pos, iter] {
             // To lock map_
-            auto ctxt{context<data::Vector>()};
+            std::lock_guard scopeLock(pMutex);
 
             wxWindow *toDelete{nullptr};
 
@@ -214,7 +208,7 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
         });
     }
 
-    void onSwap(size) override {
+    void onSwap(size) {
         // Don't know how to do detach/insert w/o deleting the item yet.
         assert(0);
 
@@ -247,6 +241,7 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
         return static_cast<int>(pos);
     }
 
+    const data::base::Vector& vec_;
     detail::Scaffold childScaffold_;
     VecStack::Builder builder_;
     DescriptorPtr separator_;
@@ -256,8 +251,8 @@ struct Layout : wxBoxSizer, detail::IDataDriven, data::Vector::Receiver {
     // changes) be synced, keep a mapping of items and what model they were
     // built off.
     //
-    // These use the model/context mutex for locking.
-    std::list<std::pair<data::Model *, wxSizerItem *>> map_;
+    // These use the receiver mutex for locking.
+    std::list<std::pair<data::base::Model *, wxSizerItem *>> map_;
 };
 
 } // namespace

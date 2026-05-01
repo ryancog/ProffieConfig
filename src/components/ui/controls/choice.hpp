@@ -19,10 +19,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/choice.hpp"
-#include "data/number.hpp"
-#include "data/selector.hpp"
-#include "data/string.hpp"
+#include "data/base/models/choice.hpp"
+#include "data/base/models/number.hpp"
+#include "data/base/models/selector.hpp"
+#include "data/base/models/string.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
 #include "ui/types.hpp"
@@ -37,12 +37,15 @@ struct UI_EXPORT Choice {
     // TODO: Make this a base w/ C++ P2287.
     detail::ChildWindowBase win_;
 
-    std::variant<RefWrap<data::Choice>, RefWrap<const data::Selector>> data_;
+    std::variant<
+        RefWrap<data::base::Choice>,
+        RefWrap<const data::base::Selector>
+    > data_;
 
     /**
      * Maximum number of choices to display.
      */
-    std::optional<RefWrap<const data::Integer>> clamp_;
+    std::optional<RefWrap<const data::base::Integer>> clamp_;
 
     /**
      * A "ChoiceBox" or PopupButton
@@ -63,7 +66,7 @@ struct UI_EXPORT Choice {
 
     std::variant<PopUp, List> style_;
 
-    using Label = std::variant<wxString, RefWrap<const data::String>>;
+    using Label = std::variant<wxString, RefWrap<const data::base::String>>;
     using Labeler = std::function<Label(uint32)>;
 
     /**

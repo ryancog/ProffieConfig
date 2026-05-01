@@ -154,6 +154,32 @@ void pcui::teardown(wxWindow *win) {
 namespace {
 using namespace pcui;
 
+/*
+ * NOTE: This is going to access GUI structures (GetChildren()) without
+ * holding the GUI Mutex. This means a special care is needed for things
+ * where those children can change on the main thread independent of data.
+ *
+ * I'm not aware of anything like this, and e.g. VecStack has special
+ * handling for precisely this reason, but I need to be careful here. The
+ * GUI lock in general is tricky because of the following:
+ *
+ *     Main Thread          Other Thread
+ *
+ *   +---------------+     +----------------+
+ *   | Locks GUI Mux |     | Locks Data Mux |
+ *   +---------------+     +----------------+
+ *          |                       |
+ *          V                       V
+ *   +----------------+    +----------------+
+ *   | Data-Mod Event |    | Try GUI Mutex  |
+ *   +----------------+    +----------------+
+ *          |
+ *          V                   ^
+ *   +----------------+         |
+ *   | Try Data Mutex |    <-DEADLOCK
+ *   +----------------+
+ */
+
 void doCripple(wxWindow *win, bool checkAsChild) {
     if (checkAsChild) {
         // A dialog probably, ignore it during cripple, it's ignored during
@@ -166,8 +192,8 @@ void doCripple(wxWindow *win, bool checkAsChild) {
             return;
     }
 
-    if (auto *ptr{dynamic_cast<detail::IDataDriven *>(win)}) {
-        ptr->preDestroyCripple();
+    if (auto *ptr{dynamic_cast<data::Receiver *>(win)}) {
+        ptr->deactivate();
     }
 
     if (auto *sizer{win->GetSizer()}) {
@@ -181,8 +207,8 @@ void doCripple(wxWindow *win, bool checkAsChild) {
 
 void doCripple(wxSizerItem *item) {
     // Enable the TrackerDummy hack
-    if (auto *ptr{dynamic_cast<detail::IDataDriven *>(item)}) {
-        ptr->preDestroyCripple();
+    if (auto *ptr{dynamic_cast<data::Receiver *>(item)}) {
+        ptr->deactivate();
     }
 
     if (item->IsWindow()) {
@@ -193,8 +219,8 @@ void doCripple(wxSizerItem *item) {
 }
 
 void doCripple(wxSizer *sizer) {
-    if (auto *ptr{dynamic_cast<detail::IDataDriven *>(sizer)}) {
-        ptr->preDestroyCripple();
+    if (auto *ptr{dynamic_cast<data::Receiver *>(sizer)}) {
+        ptr->deactivate();
     }
 
     for (auto *childItem : sizer->GetChildren()) {

@@ -98,37 +98,3 @@ void priv::tlw::bindOnCreate(wxTopLevelWindow *tlw) {
     });
 }
 
-[[nodiscard]] std::unique_ptr<data::String::Receiver>
-priv::tlw::setTitle(
-    wxTopLevelWindow *tlw,
-    const LabelData& title
-) {
-    if (const auto *ptr{std::get_if<0>(&title)}) {
-        tlw->SetTitle(std::get<0>(title));
-        return nullptr;
-    }
-
-    const auto& data{std::get<1>(title)};
-    data::String::ROContext ctxt{data};
-    tlw->SetTitle(ctxt.val());
-
-    struct Receiver : data::String::Receiver {
-        Receiver(wxTopLevelWindow *tlw) : mTlw{tlw} {}
-
-        ~Receiver() override {
-            detach();
-        }
-
-        void onChange() override {
-            mTlw->SetTitle(context<data::String>().val());
-        }
-
-    private:
-        wxTopLevelWindow *mTlw;
-    };
-
-    auto ret{std::make_unique<Receiver>(tlw)};
-    ret->attach(data);
-    return ret;
-}
-

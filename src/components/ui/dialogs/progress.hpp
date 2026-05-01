@@ -19,8 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/bool.hpp"
-#include "data/string.hpp"
+#include "data/primitive/models/bool.hpp"
+#include "data/primitive/models/string.hpp"
 #include "ui/dialog.hpp"
 #include "ui/indication/progress.hpp"
 
@@ -54,8 +54,8 @@ struct UI_EXPORT ProgressDialog : private Dialog {
 private:
     DescriptorPtr ui(bool, wxSize);
 
-    data::Bool mCancelled;
-    data::String mMessage;
+    data::prim::Bool mCancelled;
+    data::prim::String mMessage;
     Progress::Data mData;
 };
 

@@ -22,18 +22,11 @@
 #include <wx/string.h>
 #include <wx/toplevel.h>
 
-#include "ui/types.hpp"
-
 namespace pcui::priv::tlw {
 
 void preCreate(wxTopLevelWindow *tlw);
 void postCreate(wxTopLevelWindow *tlw);
 void bindOnCreate(wxTopLevelWindow *tlw);
-
-[[nodiscard]] std::unique_ptr<data::String::Receiver> setTitle(
-    wxTopLevelWindow *tlw,
-    const LabelData& title
-);
 
 template <typename TLW>
 void fit(auto *tlw) {

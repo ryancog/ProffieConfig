@@ -21,28 +21,16 @@
 
 #include <wx/scrolwin.h>
 
+#include "data/receiver.hpp"
 #include "ui/detail/general.hpp"
-#include "ui/detail/helpers.hpp"
 #include "ui/detail/scaffold.hpp"
-#include "ui/detail/datadriven.hpp"
+
+#include "ui_export.h"
 
 namespace pcui::detail {
 
-/**
- * Common utilities for a window.
- */
-template <typename Base>
-struct Window : IDataDriven, Base {
-    void Fit() override {
-        updateSizes();
-    }
-
-    void preDestroyCripple() override {
-        mShowReceiver.reset();
-        mShow.reset();
-        mEnableReceiver.reset();
-        mEnable.reset();
-    }
+struct UI_EXPORT WindowImpl : data::Receiver {
+    void onDeactivate() override;
 
     /**
      * Freeze the and fetch the current enable state, preventing anything from
@@ -52,140 +40,61 @@ struct Window : IDataDriven, Base {
      * desynchronized with the data which dictates whether or not the window
      * may be enabled, this provides a reliable indicator.
      */
-    bool freezeGetRealEnable() {
-        if (not mEnable) return true;
+    virtual bool freezeGetRealEnable();
 
-        mEnable->lock();
-        return mEnable->val();
-    }
+    virtual void thawRealEnable();
 
-    void thawRealEnable() {
-        if (mEnable) mEnable->unlock();
-    }
+    void updateVisualEnable();
 
-    void updateVisualEnable() {
-        safeCall([this]() {
-            // Don't worry about locking here. If this happens to see something
-            // a bit early that's fine.
-            const auto winEn{not mEnable or mEnable->val()};
-            const auto en{winEn and visualEnableOverride()};
-            Base::Enable(en);
-        });
-    }
-
-    /**
-     * @return visual override from a higher level
-     */
     virtual bool visualEnableOverride() { return true; }
 
 protected:
-    Window() = default;
+    WindowImpl() = default;
 
     /**
      * Post window creation, prior to receiver attachment.
      */
     void postCreation(
-        const detail::Scaffold& scaffold, const detail::ChildWindowBase& desc
-    ) {
-        mMinSize = desc.base_.minSize_;
-        mMaxSize = desc.maxSize_;
+        const Scaffold& scaffold, const ChildWindowBase& desc
+    );
 
-        mShow = desc.show_;
-        if (mShow)
-            mShowReceiver = std::make_unique<ShowReceiver>(this);
+    void safeCall(const std::function<void()>& func);
 
-        mEnable = desc.enable_;
-        if (mEnable)
-            mEnableReceiver = std::make_unique<EnableReceiver>(this);
-
-        if (desc.tooltip_.empty() and this->GetParent()) {
-            // GetToolTip returns a ptr, and these tool tips cannot be shared
-            // across windows, so get the text and SetToolTip will create a new
-            // tip from it.
-            this->SetToolTip(this->GetParent()->GetToolTipText());
-        } else {
-            this->SetToolTip(desc.tooltip_);
-        }
-
-        if (scaffold.scrolled_) {
-            const auto onWheel{[scrolled=scaffold.scrolled_](
-                wxMouseEvent& evt
-            ) {
-                scrolled->HandleOnMouseWheel(evt);
-            }};
-            this->Bind(wxEVT_MOUSEWHEEL, onWheel);
-        }
-
-        updateSizes();
-
-        if (desc.focus_)
-            this->SetFocus();
-    }
-
-    void safeCall(std::function<void()>&& func) {
-        if (wxIsMainThread()) func();
-        else Base::CallAfter(std::move(func));
-    }
-
-    virtual void updateSizes() {
-        Base::SetMinSize({-1, -1});
-
-        auto minSize{mMinSize};
-        minSize.IncTo(Base::GetBestSize());
-
-        if (mMaxSize.IsFullySpecified()) {
-            minSize.DecTo(mMaxSize);
-            Base::SetMaxSize(mMaxSize);
-        }
-
-        Base::SetMinSize(minSize);
-    }
+    virtual void updateSizes();
 
 private:
-    template <typename, typename>
-    friend struct DataWindow;
-
     struct ShowReceiver : data::logic::Receiver {
-        ShowReceiver(Window *win) : win_{win} {
-            attach(*win_->mShow);
-        }
-
-        ~ShowReceiver() override {
-            detach();
-        }
-
-        void onChange() override {
-            win_->safeCall([this, val=win_->mShow->val()]() {
-                detail::queueShow(win_, val);
-                detail::layoutAndFitFor(win_);
-            });
-        }
-
-        Window *win_;
+        ShowReceiver(WindowImpl *win);
+        ~ShowReceiver() override;
+        void onChange() override;
+    private:
+        WindowImpl *mWin;
     };
     data::logic::Holder mShow;
     std::unique_ptr<ShowReceiver> mShowReceiver;
 
     struct EnableReceiver : data::logic::Receiver {
-        EnableReceiver(Window *win) : win_{win} {
-            attach(*win_->mEnable);
-        }
-
-        ~EnableReceiver() override {
-            detach();
-        }
-
-        void onChange() override {
-            win_->updateVisualEnable();
-        }
-
-        Window *win_;
+        EnableReceiver(WindowImpl *win);
+        ~EnableReceiver() override;
+        void onChange() override;
+    private:
+        WindowImpl *mWin;
     };
     data::logic::Holder mEnable;
     std::unique_ptr<EnableReceiver> mEnableReceiver;
 
     wxSize mMinSize;
     wxSize mMaxSize;
+};
+
+/**
+ * Common utilities for a window.
+ */
+template <typename Base>
+struct Window : Base, virtual WindowImpl {
+    void Fit() override {
+        updateSizes();
+    }
 };
 
 } // namespace pcui::detail

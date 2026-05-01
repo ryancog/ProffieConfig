@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/helpers/exclusive.hpp"
+#include "data/base/models/exclusive.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
 #include "ui/types.hpp"
@@ -36,7 +36,7 @@ struct UI_EXPORT Radios {
 
     wxString label_;
 
-    data::Exclusive& data_;
+    data::base::Exclusive& data_;
     std::vector<wxString> labels_;
 
     DescriptorPtr operator()();

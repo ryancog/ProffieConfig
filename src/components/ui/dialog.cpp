@@ -31,7 +31,7 @@ using namespace pcui;
 Dialog::Dialog(
     wxWindow *parent,
     wxWindowID id,
-    const LabelData& title,
+    const wxString& title,
     long style
 ) {
     priv::tlw::bindOnCreate(this);
@@ -40,7 +40,7 @@ Dialog::Dialog(
     Create(
         parent,
         id,
-        wxEmptyString,
+        title,
         wxDefaultPosition,
         wxDefaultSize,
         style,
@@ -48,8 +48,6 @@ Dialog::Dialog(
     );
 
     priv::tlw::postCreate(this);
-
-    mTitleRcvr = priv::tlw::setTitle(this, title);
 
     Bind(wxEVT_CHAR_HOOK, [this](wxKeyEvent& evt) {
         if (evt.GetKeyCode() == WXK_ESCAPE) EndModal(wxID_CANCEL);

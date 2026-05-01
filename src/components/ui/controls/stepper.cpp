@@ -22,7 +22,8 @@
 #include <wx/spinctrl.h>
 #include <wx/colour.h>
 
-#include "data/number.hpp"
+#include "data/base/models/number.hpp"
+#include "data/context.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
 #include "ui/types.hpp"
@@ -32,8 +33,9 @@ using namespace pcui;
 
 namespace {
 
-struct IntCtrl : detail::DataWindow<wxSpinCtrl, data::Integer::Receiver> {
-    IntCtrl(const detail::Scaffold& scaffold, const Stepper& desc) {
+struct IntCtrl : detail::DataWindow<wxSpinCtrl> {
+    IntCtrl(const detail::Scaffold& scaffold, const Stepper& desc) :
+        int_{std::get<0>(desc.data_).get()} {
         Create(
             scaffold.childParent_,
             wxID_ANY,
@@ -43,20 +45,34 @@ struct IntCtrl : detail::DataWindow<wxSpinCtrl, data::Integer::Receiver> {
             desc.win_.base_.align_ & wxALIGN_RIGHT
         );
 
-        data::Integer::Context ctxt{std::get<0>(desc.data_)};
+        postCreation(scaffold, desc.win_);
+
+        static const auto table{[] {
+            data::base::Integer::RecvTable table;
+            table.onEnable_ = data::map(&DataWindow::onEnable);
+            table.onFocus_ = data::map(&DataWindow::onFocus);
+            table.onSet_ = data::map(&IntCtrl::onSet);
+            table.onUpdate_ = data::map(&IntCtrl::onUpdate);
+            return table;
+        }()};
+        amend(int_, table);
+
+        activate();
+    }
+
+    void onActivate() override {
+        DataWindow::onActivate();
+
+        auto ctxt{data::context(int_)};
         SetRange(ctxt.params().min_, ctxt.params().max_);
         SetIncrement(ctxt.params().inc_);
         SetValue(ctxt.val());
 
-        postCreation(scaffold, desc.win_);
-
-        attach(std::get<0>(desc.data_));
         Bind(wxEVT_SPINCTRL, &IntCtrl::onSpin, this);
     }
 
-    void preDestroyCripple() override {
-        detach();
-        DataWindow::preDestroyCripple();
+    const data::base::Model *primaryModel() override {
+        return &int_;
     }
 
     void onSpin(wxSpinEvent& evt) {
@@ -65,35 +81,31 @@ struct IntCtrl : detail::DataWindow<wxSpinCtrl, data::Integer::Receiver> {
 
         if (not en) return;
 
-        auto& num{const_cast<data::Integer&>(model<data::Integer>())};
-        auto res{num.processUIAction(
-            std::make_unique<data::Integer::SetAction>(evt.GetValue())
-        )};
+        auto res{int_.set(evt.GetValue())};
 
-        if (not res) {
-            auto ctxt{context<data::Integer>()};
-            SetValue(ctxt.val());
-        }
+        if (not res)
+            SetValue(data::context(int_).val());
     }
     
-    void onSet() override {
-        const auto val{context<data::Integer>().val()};
-        safeCall([this, val] {
+    void onSet() {
+        safeCall([this, val=data::context(int_).val()] {
             SetValue(val);
         });
     }
 
-    void onUpdate() override {
-        auto params{context<data::Integer>().params()};
-        safeCall([this, params] {
+    void onUpdate() {
+        safeCall([this, params=data::context(int_).params()] {
             SetRange(params.min_, params.max_);
             SetIncrement(params.inc_);
         });
     }
+
+    data::base::Integer& int_;
 };
 
-struct DoubleCtrl : detail::DataWindow<wxSpinCtrlDouble, data::Integer::Receiver> {
-    DoubleCtrl(const detail::Scaffold& scaffold, const Stepper& desc) {
+struct DoubleCtrl : detail::DataWindow<wxSpinCtrlDouble> {
+    DoubleCtrl(const detail::Scaffold& scaffold, const Stepper& desc) :
+        dec_{std::get<1>(desc.data_).get()} {
         Create(
             scaffold.childParent_,
             wxID_ANY,
@@ -105,18 +117,32 @@ struct DoubleCtrl : detail::DataWindow<wxSpinCtrlDouble, data::Integer::Receiver
 
         postCreation(scaffold, desc.win_);
 
-        data::Decimal::Context ctxt{std::get<1>(desc.data_)};
+        static const auto table{[] {
+            data::base::Decimal::RecvTable table;
+            table.onEnable_ = data::map(&DataWindow::onEnable);
+            table.onFocus_ = data::map(&DataWindow::onFocus);
+            table.onSet_ = data::map(&IntCtrl::onSet);
+            table.onUpdate_ = data::map(&IntCtrl::onUpdate);
+            return table;
+        }()};
+        amend(dec_, table);
+
+        activate();
+    }
+
+    void onActivate() override {
+        DataWindow::onActivate();
+
+        auto ctxt{data::context(dec_)};
         SetRange(ctxt.params().min_, ctxt.params().max_);
         SetIncrement(ctxt.params().inc_);
         SetValue(ctxt.val());
 
-        attach(std::get<1>(desc.data_));
         Bind(wxEVT_SPINCTRLDOUBLE, &DoubleCtrl::onSpin, this);
     }
 
-    void preDestroyCripple() override {
-        detach();
-        DataWindow::preDestroyCripple();
+    const data::base::Model *primaryModel() override {
+        return &dec_;
     }
 
     void onSpin(wxSpinDoubleEvent& evt) {
@@ -125,31 +151,26 @@ struct DoubleCtrl : detail::DataWindow<wxSpinCtrlDouble, data::Integer::Receiver
 
         if (not en) return;
 
-        auto& dec{const_cast<data::Decimal&>(model<data::Decimal>())};
-        auto res{dec.processUIAction(
-            std::make_unique<data::Decimal::SetAction>(evt.GetValue())
-        )};
+        auto res{dec_.set(evt.GetValue())};
 
-        if (not res) {
-            auto ctxt{context<data::Decimal>()};
-            SetValue(ctxt.val());
-        }
+        if (not res)
+            SetValue(data::context(dec_).val());
     }
     
-    void onSet() override {
-        const auto val{context<data::Decimal>().val()};
-        safeCall([this, val] {
+    void onSet() {
+        safeCall([this, val=data::context(dec_).val()] {
             SetValue(val);
         });
     }
 
-    void onUpdate() override {
-        auto params{context<data::Decimal>().params()};
-        safeCall([this, params] {
+    void onUpdate() {
+        safeCall([this, params=data::context(dec_).params()] {
             SetRange(params.min_, params.max_);
             SetIncrement(params.inc_);
         });
     }
+    
+    data::base::Decimal& dec_;
 };
 
 } // namespace

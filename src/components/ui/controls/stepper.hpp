@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/number.hpp"
+#include "data/base/models/number.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
 #include "ui/types.hpp"
@@ -35,8 +35,8 @@ struct UI_EXPORT Stepper {
     detail::ChildWindowBase win_;
 
     std::variant<
-        RefWrap<data::Integer>,
-        RefWrap<data::Decimal>
+        RefWrap<data::base::Integer>,
+        RefWrap<data::base::Decimal>
     > data_;
 
     DescriptorPtr operator()();

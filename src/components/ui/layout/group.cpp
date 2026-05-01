@@ -49,8 +49,9 @@ struct Layout : detail::Window<priv::GroupBox> {
         for (const auto& child : desc.children_) {
             sizer()->Add(child->build(childScaffold));
         }
-    }
 
+        activate();
+    }
 };
 
 } // namespace

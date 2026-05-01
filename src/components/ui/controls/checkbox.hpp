@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/bool.hpp"
+#include "data/base/models/bool.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
 #include "ui/types.hpp"
@@ -35,7 +35,7 @@ struct UI_EXPORT CheckBox {
     detail::ChildWindowBase win_;
 
     wxString label_;
-    data::Bool& data_;
+    data::base::Bool& data_;
 
     DescriptorPtr operator()();
 };

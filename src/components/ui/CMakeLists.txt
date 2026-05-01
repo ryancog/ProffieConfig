@@ -18,6 +18,8 @@ add_library(ui SHARED
     detail/general.cpp
     detail/helpers.cpp
     detail/scaffold.cpp
+    detail/window.cpp
+    detail/datawin.cpp
 
     dialogs/message.cpp
     dialogs/progress.cpp
@@ -55,6 +57,7 @@ add_library(ui SHARED
     layout/stack.cpp
     layout/vecstack.cpp
     layout/priv/groupbox.cpp
+    layout/priv/panel.cpp
 )
 
 target_link_libraries(ui 

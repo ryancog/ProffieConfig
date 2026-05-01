@@ -21,7 +21,7 @@
 
 #include <wx/radiobut.h>
 
-#include "data/helpers/exclusive.hpp"
+#include "data/context.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/layout/priv/groupbox.hpp"
 #include "ui/detail/datawin.hpp"
@@ -32,33 +32,71 @@ using namespace pcui;
 
 namespace {
 
-struct Control : detail::DataWindow<wxRadioButton, data::Model::Receiver> {
+struct Control : detail::DataWindow<wxRadioButton> {
     Control(
         const detail::Scaffold& scaffold,
         const wxString& label,
-        data::Bool& data,
+        data::base::Bool& data,
         const detail::ChildWindowBase& win
-    ) {
+    ) : bl_{data} {
         Create(scaffold.childParent_, wxID_ANY, label);
 
         postCreation(scaffold, win);
 
-        data::Bool::Context ctxt{data};
-        SetValue(ctxt.val());
+        static const auto table{[] {
+            data::base::Bool::RecvTable table;
+            table.onEnable_ = data::map(&DataWindow::onEnable);
+            table.onFocus_ = data::map(&DataWindow::onFocus);
+            table.onSet_ = data::map(&Control::onSet);
+            return table;
+        }()};
+        amend(bl_, table);
 
-        attach(data);
+        activate();
     }
 
-    void preDestroyCripple() override {
-        detach();
-        DataWindow::preDestroyCripple();
+    void onActivate() override {
+        DataWindow::onActivate();
+
+        SetValue(data::context(bl_).val());
+
+        Bind(wxEVT_RADIOBUTTON, &Control::onButton, this);
     }
 
-    friend struct Manager;
+    const data::base::Model *primaryModel() override {
+        return &bl_;
+    }
+
+    void onButton(wxCommandEvent& evt) {
+        if (not evt.GetInt()) return;
+
+        auto en{freezeGetRealEnable()};
+        defer { thawRealEnable(); };
+
+        if (not en) return;
+
+        wxRadioButton *last{GetFirstInGroup()};
+        for (; last != nullptr; last = last->GetNextInGroup()) {
+            if (last != this and last->GetValue())
+                break;
+        }
+        auto res{bl_.set(true)};
+
+        if (not res)
+            last->SetValue(true);
+    }
+
+    void onSet() {
+        safeCall([this, val=data::context(bl_).val()] {
+            SetValue(val);
+        });
+    }
+    
+    data::base::Bool& bl_;
 };
 
-struct Manager : detail::DataWindow<priv::GroupBox, data::Exclusive::Receiver> {
-    Manager(const detail::Scaffold& scaffold, const Radios& desc) {
+struct Box : detail::Window<priv::GroupBox> {
+    Box(const detail::Scaffold& scaffold, const Radios& desc) {
         create(
             scaffold.childParent_,
             wxVERTICAL,
@@ -69,8 +107,10 @@ struct Manager : detail::DataWindow<priv::GroupBox, data::Exclusive::Receiver> {
 
         auto childScaffold{scaffold};
         childScaffold.childParent_ = childParent();
-        for (auto idx{0}; idx < desc.data_.data().size(); ++idx) {
-            auto& bl{*desc.data_.data()[idx]};
+
+        auto ctxt{data::context(desc.data_)};
+        for (size idx{0}; idx < ctxt.num(); ++idx) {
+            auto& bl{ctxt[idx]};
             auto label{idx < desc.labels_.size()
                 ? desc.labels_[idx]
                 : "UNLABELED"
@@ -81,52 +121,14 @@ struct Manager : detail::DataWindow<priv::GroupBox, data::Exclusive::Receiver> {
             )};
 
             if (not childParent()->GetChildren().empty()) {
+                // TODO: Should this be interControlSpacing()?
                 sizer()->AddSpacer(5);
             }
 
             sizer()->Add(radio);
         }
 
-        attach(desc.data_);
-        Bind(wxEVT_RADIOBUTTON, &Manager::onSet, this);
-    }
-
-    void preDestroyCripple() override {
-        detach();
-        DataWindow::preDestroyCripple();
-    }
-
-    void onSet(wxCommandEvent& evt) {
-        auto en{freezeGetRealEnable()};
-        defer { thawRealEnable(); };
-
-        if (not en) return;
-
-        for (auto *child : childParent()->GetChildren()) {
-            if (child != evt.GetEventObject()) continue;
-
-            auto& bl{const_cast<data::Bool&>(
-                static_cast<Control *>(child)->model<data::Bool>()
-            )};
-            auto res{bl.processUIAction(
-                std::make_unique<data::Bool::SetAction>(true)
-            )};
-
-            if (not res) {
-                auto selected{model<data::Exclusive>().selected()};
-                auto *child{childParent()->GetChildren()[selected]};
-
-                static_cast<Control *>(child)->SetValue(true);
-            }
-            break;
-        }
-    }
-    
-    void onSelection(size idx) override {
-        safeCall([this, idx] {
-            auto *child{childParent()->GetChildren()[idx]};
-            static_cast<wxRadioButton *>(child)->SetValue(true);
-        });
+        activate();
     }
 };
 
@@ -140,7 +142,7 @@ Radios::Desc::Desc(Radios&& data) :
     Radios{std::move(data)} {}
 
 wxSizerItem *Radios::Desc::build(const detail::Scaffold& scaffold) const {
-    auto *chk{new Manager(scaffold, *this)};
+    auto *chk{new Box(scaffold, *this)};
     auto *item{new wxSizerItem(chk)};
     detail::apply(win_.base_, item);
     return item;

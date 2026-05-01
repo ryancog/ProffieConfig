@@ -22,6 +22,7 @@
 #include <wx/combobox.h>
 #include <wx/sizer.h>
 
+#include "data/context.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
 #include "ui/types.hpp"
@@ -31,8 +32,9 @@ using namespace pcui;
 
 namespace {
 
-struct Control : detail::DataWindow<wxComboBox, data::String::Receiver> {
-    Control(const detail::Scaffold& scaffold, const ComboBox& desc) {
+struct Control : detail::DataWindow<wxComboBox> {
+    Control(const detail::Scaffold& scaffold, const ComboBox& desc) :
+        str_{desc.data_} {
         wxString initial;
 
         Create(
@@ -51,16 +53,29 @@ struct Control : detail::DataWindow<wxComboBox, data::String::Receiver> {
 
         Set(desc.defaults_);
 
-        data::String::Context ctxt{desc.data_};
-        SetValue(ctxt.val());
-        attach(desc.data_);
+        static const auto table{[] {
+            data::base::String::RecvTable table;
+            table.onEnable_ = data::map(&DataWindow::onEnable);
+            table.onFocus_ = data::map(&DataWindow::onFocus);
+            table.onChange_ = data::map(&Control::onChange);
+            table.onMove_ = data::map(&Control::onMove);
+            return table;
+        }()};
+        amend(str_, table);
+
+        activate();
+    }
+
+    void onActivate() override {
+        DataWindow::onActivate();
+
+        SetValue(data::context(str_).val());
 
         Bind(wxEVT_TEXT, &Control::onText, this);
     }
 
-    void preDestroyCripple() override {
-        detach();
-        DataWindow::preDestroyCripple();
+    const data::base::Model *primaryModel() override {
+        return &str_;
     }
 
     void onText(wxCommandEvent&) {
@@ -69,34 +84,28 @@ struct Control : detail::DataWindow<wxComboBox, data::String::Receiver> {
 
         if (not en) return;
 
-        auto& str{const_cast<data::String&>(model<data::String>())};
-
-        auto res{str.processUIAction(
-            std::make_unique<data::String::ChangeAction>(
-                GetValue().ToStdString(), GetInsertionPoint()
-            )
-        )};
+        auto res{str_.change(GetValue().ToStdString(), GetInsertionPoint())};
 
         if (not res) {
-            auto ctxt{context<data::String>()};
+            auto ctxt{data::context(str_)};
             ChangeValue(ctxt.val());
             SetInsertionPoint(static_cast<long>(ctxt.pos()));
         }
     }
 
-    void onChange() override {
-        const auto val{context<data::String>().val()};
-        safeCall([this, val] {
+    void onChange() {
+        safeCall([this, val=data::context(str_).val()] {
             ChangeValue(val);
         });
     }
 
-    void onMove() override {
-        const auto pos{context<data::String>().pos()};
-        safeCall([this, pos] {
+    void onMove() {
+        safeCall([this, pos=data::context(str_).pos()] {
             SetInsertionPoint(static_cast<long>(pos));
         });
     }
+
+    data::base::String& str_;
 };
 
 } // namespace

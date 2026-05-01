@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/layout/panel.hpp
+ * components/ui/layout/priv/panel.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,30 +19,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ui/detail/general.hpp"
-#include "ui/types.hpp"
+#include <wx/panel.h>
 
-#include "ui_export.h"
+namespace pcui::priv {
 
-namespace pcui {
+class Panel : public wxPanel {
+public:
+    Panel() = default;
+    Panel(
+        wxWindow *parent,
+        long style = wxTAB_TRAVERSAL,
+        const wxString& name = wxPanelNameStr
+    );
 
-struct UI_EXPORT Panel {
-    struct Desc;
+    bool Create(
+        wxWindow *,
+        wxWindowID,
+        const wxPoint&,
+        const wxSize&,
+        long,
+        const wxString&
+    ) = delete;
 
-    // TODO: Make this a base w/ C++ P2287.
-    detail::ChildWindowBase win_;
-
-    DescriptorPtr child_;
-
-    DescriptorPtr operator()();
+    void create(
+        wxWindow *parent,
+        long style = wxTAB_TRAVERSAL,
+        const wxString& name = wxPanelNameStr
+    );
 };
 
-struct UI_EXPORT Panel::Desc : Panel, detail::Descriptor {
-    Desc(Panel&&);
-
-    [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
-    [[nodiscard]] Descriptor *clone() const override;
-};
-
-} // namespace pcui
+} // namespace pcui::priv
 

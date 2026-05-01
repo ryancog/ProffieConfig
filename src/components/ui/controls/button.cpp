@@ -23,6 +23,7 @@
 #include <wx/gdicmn.h>
 #include <wx/window.h>
 
+#include "data/context.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/helpers.hpp"
 #include "ui/detail/datawin.hpp"
@@ -33,14 +34,12 @@ using namespace pcui;
 
 namespace {
 
-struct Control : detail::DataWindow<wxButton, data::String::Receiver> {
+struct Control : detail::DataWindow<wxButton> {
     Control(const detail::Scaffold& scaffold, const Button& desc) :
         func_{desc.func_} {
 
         long style{0};
         if (desc.exactFit_) style |= wxBU_EXACTFIT;
-
-        const data::Model *modelPtr{nullptr};
 
         switch (desc.style_) {
             using enum Button::Style;
@@ -65,9 +64,7 @@ struct Control : detail::DataWindow<wxButton, data::String::Receiver> {
         postCreation(scaffold, desc.win_);
 
         if (const auto *ptr{std::get_if<1>(&desc.label_)}) {
-            data::String::ROContext str{*ptr};
-            SetLabel(str.val());
-            modelPtr = &ptr->get();
+            str_ = &ptr->get();
         } else {
             SetLabel(std::get<0>(desc.label_));
         }
@@ -92,13 +89,31 @@ struct Control : detail::DataWindow<wxButton, data::String::Receiver> {
 
         if (desc.default_) SetDefault();
 
-        if (modelPtr) attach(*modelPtr);
+        if (str_) {
+            static const auto table{[] {
+                data::base::String::RecvTable table;
+                table.onEnable_ = data::map(&DataWindow::onEnable);
+                table.onFocus_ = data::map(&DataWindow::onFocus);
+                table.onChange_ = data::map(&Control::onChange);
+                return table;
+            }()};
+            amend(*str_, table);
+        }
+
+        activate();
+    }
+
+    void onActivate() override {
+        DataWindow::onActivate();
+
+        if (str_)
+            SetLabel(data::context(*str_).val());
+
         Bind(wxEVT_BUTTON, &Control::onPress, this);
     }
 
-    void preDestroyCripple() override {
-        detach();
-        DataWindow::preDestroyCripple();
+    const data::base::Model *primaryModel() override {
+        return str_;
     }
 
     void SetLabel(const wxString& str) override {
@@ -125,8 +140,8 @@ struct Control : detail::DataWindow<wxButton, data::String::Receiver> {
         callback();
     }
 
-    void onChange() override {
-        safeCall([this, str=context<data::String>().val()]() {
+    void onChange() {
+        safeCall([this, str=data::context(*str_).val()]() {
             SetLabel(str);
         });
     }
@@ -149,6 +164,7 @@ struct Control : detail::DataWindow<wxButton, data::String::Receiver> {
     }
 
     Bitmap bmp_;
+    const data::base::String *str_{nullptr};
     const Button::MaybeContextualCallback func_;
 };
 

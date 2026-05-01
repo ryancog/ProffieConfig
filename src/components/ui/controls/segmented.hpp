@@ -22,7 +22,7 @@
 #include <wx/bitmap.h>
 #include <wx/string.h>
 
-#include "data/helpers/exclusive.hpp"
+#include "data/base/models/exclusive.hpp"
 #include "ui/bitmap.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
@@ -38,7 +38,7 @@ struct UI_EXPORT Segmented {
     // TODO: Make this a base w/ C++ P2287.
     detail::ChildWindowBase win_;
 
-    data::Exclusive& data_;
+    data::base::Exclusive& data_;
 
     struct Label {
         wxString text_;

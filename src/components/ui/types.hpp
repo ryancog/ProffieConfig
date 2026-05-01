@@ -24,7 +24,7 @@
 #include <wx/toplevel.h>
 #include <wx/window.h>
 
-#include "data/string.hpp"
+#include "data/base/models/string.hpp"
 #include "ui/detail/descriptor.hpp"
 
 namespace pcui {
@@ -46,12 +46,12 @@ struct DescriptorPtr : std::unique_ptr<detail::Descriptor> {
     }
 };
 
-template<typename T>
+template <typename T>
 using RefWrap = std::reference_wrapper<T>;
 
 using LabelData = std::variant<
     wxString,
-    RefWrap<const data::String>
+    RefWrap<const data::base::String>
 >;
 
 struct CallbackContext {

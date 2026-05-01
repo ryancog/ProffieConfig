@@ -21,6 +21,7 @@
 
 #include <wx/checkbox.h>
 
+#include "data/context.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
 #include "ui/types.hpp"
@@ -30,8 +31,9 @@ using namespace pcui;
 
 namespace {
 
-struct Control : detail::DataWindow<wxCheckBox, data::Bool::Receiver> {
-    Control(const detail::Scaffold& scaffold, const CheckBox& desc) {
+struct Control : detail::DataWindow<wxCheckBox> {
+    Control(const detail::Scaffold& scaffold, const CheckBox& desc) :
+        bl_{desc.data_} {
         Create(
             scaffold.childParent_,
             wxID_ANY,
@@ -43,16 +45,29 @@ struct Control : detail::DataWindow<wxCheckBox, data::Bool::Receiver> {
 
         postCreation(scaffold, desc.win_);
 
-        data::Bool::Context ctxt{desc.data_};
+        static const auto table{[] {
+            data::base::Bool::RecvTable table;
+            table.onEnable_ = data::map(&DataWindow::onEnable);
+            table.onFocus_ = data::map(&DataWindow::onFocus);
+            table.onSet_ = data::map(&Control::onSet);
+            return table;
+        }()};
+        amend(bl_, table);
+
+        activate();
+    }
+
+    void onActivate() override {
+        DataWindow::onActivate();
+
+        auto ctxt{data::context(bl_)};
         SetValue(ctxt.val());
 
-        attach(desc.data_);
         Bind(wxEVT_CHECKBOX, &Control::onCheck, this);
     }
 
-    void preDestroyCripple() override {
-        detach();
-        DataWindow::preDestroyCripple();
+    const data::base::Model *primaryModel() override {
+        return &bl_;
     }
 
     void onCheck(wxCommandEvent& evt) {
@@ -61,23 +76,21 @@ struct Control : detail::DataWindow<wxCheckBox, data::Bool::Receiver> {
 
         if (not en) return;
 
-        auto& bl{const_cast<data::Bool&>(model<data::Bool>())};
-        auto res{bl.processUIAction(std::make_unique<data::Bool::SetAction>(
-            evt.IsChecked()
-        ))};
+        auto res{bl_.set(evt.IsChecked())};
 
         if (not res) {
-            auto ctxt{context<data::Bool>()};
+            auto ctxt{data::context(bl_)};
             SetValue(ctxt.val());
         }
     }
     
-    void onSet() override {
-        const auto val{context<data::Bool>().val()};
-        safeCall([this, val] {
+    void onSet() {
+        safeCall([this, val=data::context(bl_).val()] {
             SetValue(val);
         });
     }
+
+    data::base::Bool& bl_;
 };
 
 } // namespace

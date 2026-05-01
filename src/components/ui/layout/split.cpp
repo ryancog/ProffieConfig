@@ -23,14 +23,14 @@
 #include <wx/splitter.h>
 
 #include "ui/build.hpp"
-#include "ui/detail/datawin.hpp"
+#include "ui/detail/window.hpp"
 #include "ui/types.hpp"
 
 using namespace pcui;
 
 namespace {
 
-struct Layout : detail::DataWindow<wxSplitterWindow, data::Generic::Receiver> {
+struct Layout : detail::Window<wxSplitterWindow> {
     Layout(const detail::Scaffold& scaffold, const Split& desc) {
         Create(
             scaffold.childParent_,
@@ -61,11 +61,7 @@ struct Layout : detail::DataWindow<wxSplitterWindow, data::Generic::Receiver> {
             SplitVertically(pane1, pane2);
         } else SplitHorizontally(pane1, pane2);
 
-        if (desc.data_) attach(*desc.data_);
-    }
-
-    ~Layout() override {
-        detach();
+        activate();
     }
 };
 

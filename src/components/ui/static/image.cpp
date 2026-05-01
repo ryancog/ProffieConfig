@@ -32,7 +32,7 @@
 #include <wx/statbmp.h>
 #endif
 
-#include "ui/detail/datawin.hpp"
+#include "ui/detail/window.hpp"
 #include "ui/types.hpp"
 
 using namespace pcui;
@@ -45,7 +45,7 @@ using Widget = wxStaticBitmap;
 using Widget = wxGenericStaticBitmap;
 #endif
 
-struct Static : detail::DataWindow<Widget, data::Generic::Receiver> {
+struct Static : detail::Window<Widget> {
     Static(
         const detail::Scaffold& scaffold,
         const Image& desc
@@ -56,23 +56,18 @@ struct Static : detail::DataWindow<Widget, data::Generic::Receiver> {
 
         bmp_ = desc.src_;
 
-        const auto updateBitmap{[this]() {
-            SetBitmap(bmp_.realize());
-        }};
-
         Bind(
             wxEVT_SYS_COLOUR_CHANGED,
-            [updateBitmap](wxSysColourChangedEvent& evt) {
+            [this](wxSysColourChangedEvent& evt) {
                 evt.Skip();
-                updateBitmap();
+                SetBitmap(bmp_.realize());
             }
         );
 
-        updateBitmap();
-
+        SetBitmap(bmp_.realize());
         SetScaleMode(desc.scale_);
 
-        if (desc.data_) attach(*desc.data_);
+        activate();
     }
 
     Bitmap bmp_;

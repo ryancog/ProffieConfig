@@ -23,6 +23,7 @@
 #include <wx/gdicmn.h>
 #include <wx/stattext.h>
 
+#include "data/context.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
 #include "ui/types.hpp"
@@ -31,7 +32,7 @@ using namespace pcui;
 
 namespace {
 
-struct Static : detail::DataWindow<wxStaticText, data::String::Receiver> {
+struct Static : detail::DataWindow<wxStaticText> {
     Static(const detail::Scaffold& scaffold, const Label& desc) {
         const auto style{desc.win_.base_.align_};
 
@@ -73,12 +74,12 @@ struct Static : detail::DataWindow<wxStaticText, data::String::Receiver> {
             return;
         } 
 
-        const auto& model{std::get<1>(desc.label_)};
-        data::String::ROContext str{model};
+        str_ = &std::get<1>(desc.label_).get();
+
         Create(
             scaffold.childParent_,
             wxID_ANY,
-            str.val(),
+            wxEmptyString,
             wxDefaultPosition,
             wxDefaultSize,
             style
@@ -87,21 +88,36 @@ struct Static : detail::DataWindow<wxStaticText, data::String::Receiver> {
         postCreation(scaffold, desc.win_);
         setup();
 
-        attach(model);
+        static const auto table{[] {
+            data::base::String::RecvTable table;
+            table.onEnable_ = data::map(&DataWindow::onEnable);
+            table.onFocus_ = data::map(&DataWindow::onFocus);
+            table.onChange_ = data::map(&Static::onChange);
+            return table;
+        }()};
+        amend(*str_, table);
+
+        activate();
     }
 
-    void preDestroyCripple() override {
-        detach();
-        DataWindow::preDestroyCripple();
+    void onActivate() override {
+        DataWindow::onActivate();
+
+        SetLabel(data::context(*str_).val());
     }
 
-    void onChange() override {
-        safeCall([this, str=context<data::String>().val()]() {
+    const data::base::Model *primaryModel() override {
+        return str_;
+    }
+
+    void onChange() {
+        safeCall([this, str=data::context(*str_).val()]() {
             SetLabel(str);
         });
     }
 
     color::Dynamic color_;
+    const data::base::String *str_{nullptr};
 };
 
 } // namespace

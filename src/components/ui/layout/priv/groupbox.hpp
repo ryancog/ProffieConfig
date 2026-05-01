@@ -41,6 +41,16 @@ public:
         bool padded = true
     );
 
+    bool Create(
+        wxWindow *,
+        wxWindowID,
+        const wxString&,
+        const wxPoint&,
+        const wxSize&,
+        long,
+        const wxString&
+    ) = delete;
+
     void create(
         wxWindow *parent,
         wxOrientation orient,

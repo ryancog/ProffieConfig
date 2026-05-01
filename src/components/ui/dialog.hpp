@@ -21,9 +21,6 @@
 
 #include <wx/dialog.h>
 
-#include "data/string.hpp"
-#include "ui/types.hpp"
-
 #include "ui_export.h"
 
 namespace pcui {
@@ -33,15 +30,12 @@ public:
     Dialog(
         wxWindow* parent,
         wxWindowID id,
-        const LabelData& title,
+        const wxString& title,
         long style = wxDEFAULT_DIALOG_STYLE
     );
     ~Dialog() override;
 
     void Fit() override;
-
-private:
-    std::unique_ptr<data::String::Receiver> mTitleRcvr;
 };
 
 } // namespace pcui

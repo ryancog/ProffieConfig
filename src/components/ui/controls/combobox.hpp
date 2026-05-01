@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/string.hpp"
+#include "data/base/models/string.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
 #include "ui/types.hpp"
@@ -34,7 +34,7 @@ struct UI_EXPORT ComboBox {
     // TODO: Make this a base w/ C++ P2287.
     detail::ChildWindowBase win_;
 
-    data::String& data_;
+    data::base::String& data_;
 
     wxString hint_;
     std::vector<wxString> defaults_;

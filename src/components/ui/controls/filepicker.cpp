@@ -21,6 +21,7 @@
 
 #include <wx/filepicker.h>
 
+#include "data/context.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
 #include "ui/types.hpp"
@@ -30,8 +31,9 @@ using namespace pcui;
 
 namespace {
 
-struct Control : detail::DataWindow<wxFilePickerCtrl, data::String::Receiver> {
-    Control(const detail::Scaffold& scaffold, const FilePicker &desc) {
+struct Control : detail::DataWindow<wxFilePickerCtrl> {
+    Control(const detail::Scaffold& scaffold, const FilePicker &desc) :
+        str_{desc.data_} {
         // Use textctrl default is platform-dependent, check if it exists in
         // the defaults instead of unilaterally setting it.
         long style{wxFLP_DEFAULT_STYLE & wxFLP_USE_TEXTCTRL};
@@ -58,16 +60,28 @@ struct Control : detail::DataWindow<wxFilePickerCtrl, data::String::Receiver> {
 
         postCreation(scaffold, desc.win_);
 
-        data::String::Context ctxt{desc.data_};
-        SetPath(ctxt.val());
+        static const auto table{[] {
+            data::base::String::RecvTable table;
+            table.onEnable_ = data::map(&DataWindow::onEnable);
+            table.onFocus_ = data::map(&DataWindow::onFocus);
+            table.onChange_ = data::map(&Control::onChange);
+            return table;
+        }()};
+        amend(str_, table);
 
-        attach(desc.data_);
+        activate();
+    }
+
+    void onActivate() override {
+        DataWindow::onActivate();
+
+        SetPath(data::context(str_).val());
+
         Bind(wxEVT_FILEPICKER_CHANGED, &Control::onPick, this);
     }
 
-    void preDestroyCripple() override {
-        detach();
-        DataWindow::preDestroyCripple();
+    const data::base::Model *primaryModel() override {
+        return &str_;
     }
 
     void onPick(wxCommandEvent&) {
@@ -76,26 +90,19 @@ struct Control : detail::DataWindow<wxFilePickerCtrl, data::String::Receiver> {
 
         if (not en) return;
 
-        auto& str{const_cast<data::String&>(model<data::String>())};
-        auto path{GetPath().ToStdString()};
-        const auto len{path.length()};
+        auto res{str_.change(GetPath().ToStdString(), GetPath().length())};
 
-        auto res{str.processUIAction(std::make_unique<data::String::ChangeAction>(
-            std::move(path), len
-        ))};
-
-        if (not res) {
-            auto ctxt{context<data::String>()};
-            SetPath(ctxt.val());
-        }
+        if (not res)
+            SetPath(data::context(str_).val());
     }
 
-    void onChange() override {
-        const auto val{context<data::String>().val()};
-        safeCall([this, val] {
+    void onChange() {
+        safeCall([this, val=data::context(str_).val()] {
             SetPath(val);
         });
     }
+
+    data::base::String& str_;
 };
 
 } // namespace

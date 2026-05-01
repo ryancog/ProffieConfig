@@ -1,0 +1,69 @@
+#include "datawin.hpp"
+/*
+ * ProffieConfig, All-In-One Proffieboard Management Utility
+ * Copyright (C) 2026 Ryan Ogurek
+ *
+ * components/ui/detail/datawin.cpp
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "data/context.hpp"
+
+using namespace pcui::detail;
+
+void DataWindowImpl::onActivate() {
+    updateVisualEnable();
+    WindowImpl::onActivate();
+}
+
+void DataWindowImpl::onDeactivate() {
+    updateVisualEnable();
+    WindowImpl::onDeactivate();
+}
+
+void DataWindowImpl::onEnable() {
+    updateVisualEnable();
+}
+
+void DataWindowImpl::onFocus() {
+    safeCall([this]() {
+        dynamic_cast<wxWindow *>(this)->SetFocus();
+    });
+}
+
+bool DataWindowImpl::freezeGetRealEnable() {
+    bool modelEn{true};
+    if (auto *model{primaryModel()}) {
+        model->lock();
+        modelEn = data::context(*model).enabled();
+    }
+
+    return WindowImpl::freezeGetRealEnable() and modelEn;
+}
+
+void DataWindowImpl::thawRealEnable() {
+    if (auto *model{primaryModel()})
+        return model->unlock();
+
+    WindowImpl::thawRealEnable();
+}
+
+bool DataWindowImpl::visualEnableOverride() {
+    if (auto *model{primaryModel()})
+        return data::context(*model).enabled();
+
+    return true;
+}
+

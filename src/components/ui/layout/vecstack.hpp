@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/vector.hpp"
+#include "data/base/models/vector.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
 #include "ui/types.hpp"
@@ -36,9 +36,9 @@ struct UI_EXPORT VecStack {
 
     wxOrientation orient_{wxVERTICAL};
 
-    const data::Vector& data_;
+    const data::base::Vector& data_;
 
-    using Builder = std::function<DescriptorPtr(data::Model&)>;
+    using Builder = std::function<DescriptorPtr(data::base::Model&)>;
 
     Builder builder_;
     DescriptorPtr separator_;

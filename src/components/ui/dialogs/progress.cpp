@@ -23,9 +23,9 @@
 
 #include <wx/thread.h>
 
+#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
-#include "data/string.hpp"
 #include "ui/build.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/dialog.hpp"
@@ -56,7 +56,7 @@ ProgressDialog::~ProgressDialog() {
 
 void ProgressDialog::set(uint32 val, const wxString& message) {
     if (not message.empty()) {
-        data::String::Context{mMessage}.change(message.ToStdString());
+        mMessage.change(message.ToStdString());
     }
 
     mData.set(val);
@@ -68,14 +68,14 @@ void ProgressDialog::range(uint32 val) {
 
 void ProgressDialog::pulse(const wxString& message) {
     if (not message.empty()) {
-        data::String::Context{mMessage}.change(message.ToStdString());
+        mMessage.change(message.ToStdString());
     }
 
     mData.pulse();
 }
 
 void ProgressDialog::finish(bool modalWait, const wxString& message) {
-    data::String::Context{mMessage}.change(message.ToStdString());
+    mMessage.change(message.ToStdString());
 
     { Progress::Data::Context ctxt{mData};
         ctxt.set(ctxt.range());
@@ -89,7 +89,7 @@ void ProgressDialog::finish(bool modalWait, const wxString& message) {
         // The data has been set as finished and the cancel button therefore is
         // hidden. Now check if the cancel button wasn't handled by the data
         // processor.
-        if (data::Bool::Context{mCancelled}.val()) {
+        if (data::context(mCancelled).val()) {
             // If it's been pressed, we don't wait in any case.
             return;
         }
@@ -114,7 +114,7 @@ void ProgressDialog::finish(bool modalWait, const wxString& message) {
 }
 
 bool ProgressDialog::cancelled() {
-    return data::Bool::Context{mCancelled}.val();
+    return data::context(mCancelled).val();
 }
 
 void ProgressDialog::show(bool show) {
@@ -155,7 +155,7 @@ DescriptorPtr ProgressDialog::ui(bool mayCancel, wxSize size) {
             },
             .label_=_("Cancel"),
             .func_=[this] {
-                data::Bool::Context{mCancelled}.set(true);
+                mCancelled.set(true);
             }
           }() : nullptr,
         }(),

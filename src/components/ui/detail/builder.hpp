@@ -19,15 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <functional>
 #include <memory>
 
-#include "data/hierarchy/model.hpp"
+#include "data/base/model.hpp"
 #include "ui/detail/descriptor.hpp"
 
 namespace pcui::detail {
 
-using DescBuilder = std::function<std::unique_ptr<Descriptor>(data::Model *)>;
+using DescBuilder = std::unique_ptr<Descriptor>(data::base::Model *);
 
 } // namespace pcui::detail
 

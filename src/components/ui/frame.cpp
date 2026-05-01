@@ -31,7 +31,7 @@ using namespace pcui;
 Frame::Frame(
     wxWindow *parent,
     wxWindowID id,
-    const LabelData& title,
+    const wxString& title,
     long style
 ) {
     priv::tlw::bindOnCreate(this);
@@ -40,7 +40,7 @@ Frame::Frame(
     Create(
         parent,
         id,
-        wxEmptyString,
+        title,
         wxDefaultPosition,
         wxDefaultSize,
         style,
@@ -48,8 +48,6 @@ Frame::Frame(
     );
 
     priv::tlw::postCreate(this);
-
-    mTitleRcvr = priv::tlw::setTitle(this, title);
 }
 
 Frame::~Frame() {

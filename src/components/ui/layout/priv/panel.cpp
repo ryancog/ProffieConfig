@@ -1,9 +1,10 @@
-#pragma once
+#include "panel.hpp"
+#include "wx/gdicmn.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/layout/panel.hpp
+ * components/ui/layout/priv/panel.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,30 +20,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ui/detail/general.hpp"
-#include "ui/types.hpp"
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
-#include "ui_export.h"
+using namespace pcui::priv;
 
-namespace pcui {
+Panel::Panel(wxWindow *parent, long style, const wxString& name) {
+    create(parent, style, name);
+}
 
-struct UI_EXPORT Panel {
-    struct Desc;
+void Panel::create(wxWindow *parent, long style, const wxString& name) {
+    wxPanel::Create(
+        parent,
+        wxID_ANY,
+        wxDefaultPosition,
+        wxDefaultSize,
+        style,
+        name
+    );
 
-    // TODO: Make this a base w/ C++ P2287.
-    detail::ChildWindowBase win_;
+#   ifdef _WIN32
+#   ifdef __WXGTK__
+    auto *hwnd{GTKGetWin32Handle()};
+#   else
+    auto *hwnd{GetHWND()};
+#   endif
 
-    DescriptorPtr child_;
-
-    DescriptorPtr operator()();
-};
-
-struct UI_EXPORT Panel::Desc : Panel, detail::Descriptor {
-    Desc(Panel&&);
-
-    [[nodiscard]] wxSizerItem *build(const detail::Scaffold&) const override;
-    [[nodiscard]] Descriptor *clone() const override;
-};
-
-} // namespace pcui
+    auto exStyle{GetWindowLongA(hwnd, GWL_EXSTYLE)};
+    SetWindowLongA(hwnd, GWL_EXSTYLE, exStyle | WS_EX_LAYERED);
+#   endif
+}
 

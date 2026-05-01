@@ -31,7 +31,7 @@ using namespace pcui;
 
 namespace {
 
-struct Layout : detail::DataWindow<wxCollapsiblePane, data::Generic::Receiver> {
+struct Layout : detail::Window<wxCollapsiblePane> {
     Layout(const detail::Scaffold& scaffold, const Collapsible& desc) {
         long style{wxCP_DEFAULT_STYLE | wxCP_NO_TLW_RESIZE};
         // if (not desc.autoTopLevelResize_) style |= wxCP_NO_TLW_RESIZE;
@@ -56,22 +56,22 @@ struct Layout : detail::DataWindow<wxCollapsiblePane, data::Generic::Receiver> {
         sizer->Add(desc.child_->build(childScaffold));
         GetPane()->SetSizer(sizer);
 
-        if (desc.data_) attach(*desc.data_);
-
-        const auto onPaneChanged{[
-            this, show=desc.showLabel_, hide=desc.hideLabel_
-        ](
-            wxCollapsiblePaneEvent& evt
-        ) {
-            SetLabel(evt.GetCollapsed() ? show : hide);
-            detail::layoutAndFitFor(this);
-        }};
-        Bind(wxEVT_COLLAPSIBLEPANE_CHANGED, onPaneChanged);
+        activate();
     }
 
-    ~Layout() override {
-        detach();
+    void onActivate() override {
+        Window::onActivate();
+
+        Bind(wxEVT_COLLAPSIBLEPANE_CHANGED, &Layout::onChanged, this);
     }
+
+    void onChanged(wxCollapsiblePaneEvent& evt) {
+        SetLabel(evt.GetCollapsed() ? showLabel_ : hideLabel_);
+        detail::layoutAndFitFor(this);
+    }
+
+    wxString showLabel_;
+    wxString hideLabel_;
 };
 
 } // namespace

@@ -23,9 +23,10 @@
 #include <wx/sizer.h>
 #include <wx/tglbtn.h>
 
-#include "data/helpers/exclusive.hpp"
+#include "data/context.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
+#include "ui/layout/priv/panel.hpp"
 #include "ui/types.hpp"
 #include "utils/defer.hpp"
 
@@ -43,14 +44,15 @@ using namespace pcui;
 
 namespace {
 
-struct Control : detail::DataWindow<wxToggleButton, data::Model::Receiver> {
+struct Control : detail::DataWindow<wxToggleButton> {
     Control(
         const detail::Scaffold& scaffold,
         const Segmented::Label& label,
-        data::Bool& data,
+        data::base::Bool& data,
         const detail::ChildWindowBase& win
-    ) {
+    ) : bl_{data} {
         Create(scaffold.childParent_, wxID_ANY, label.text_);
+
         if (label.bmp_) {
             bmp_ = label.bmp_;
 
@@ -71,87 +73,88 @@ struct Control : detail::DataWindow<wxToggleButton, data::Model::Receiver> {
 
         postCreation(scaffold, win);
 
-        data::Bool::Context ctxt{data};
-        SetValue(ctxt.val());
+        static const auto table{[] {
+            data::base::Bool::RecvTable table;
+            table.onEnable_ = data::map(&DataWindow::onEnable);
+            table.onFocus_ = data::map(&DataWindow::onFocus);
+            table.onSet_ = data::map(&Control::onSet);
+            return table;
+        }()};
+        amend(bl_, table);
 
-        attach(data);
+        activate();
     }
 
-    void preDestroyCripple() override {
-        detach();
-        DataWindow::preDestroyCripple();
+    void onActivate() override {
+        DataWindow::onActivate();
+
+        SetValue(data::context(bl_).val());
+
+        Bind(wxEVT_TOGGLEBUTTON, &Control::onButton, this);
     }
 
+    const data::base::Model *primaryModel() override {
+        return &bl_;
+    }
+
+    void onButton(wxCommandEvent& evt) {
+        if (not evt.GetInt()) return;
+
+        auto en{freezeGetRealEnable()};
+        defer { thawRealEnable(); };
+
+        if (not en) return;
+
+        auto& all{GetParent()->GetChildren()};
+        wxToggleButton *last{nullptr};
+        for (auto *child : all) {
+            auto *btn{static_cast<wxToggleButton *>(last)};
+            if (child != this and btn->GetValue()) {
+                last = btn;
+                break;
+            }
+        }
+        auto res{bl_.set(true)};
+
+        if (not res)
+            last->SetValue(true);
+    }
+
+    void onSet() {
+        safeCall([this, val=data::context(bl_).val()] {
+            SetValue(val);
+        });
+    }
+    
     Bitmap bmp_;
+    data::base::Bool& bl_;
 };
 
-struct Manager : detail::DataWindow<wxPanel, data::Exclusive::Receiver> {
+struct Manager : detail::Window<priv::Panel> {
     Manager(const detail::Scaffold& scaffold, const Segmented& desc) {
-        Create(scaffold.childParent_);
+        create(scaffold.childParent_);
         auto *sizer{new wxBoxSizer(wxHORIZONTAL)};
 
         postCreation(scaffold, desc.win_);
 
         auto childScaffold{scaffold};
         childScaffold.childParent_ = this;
-        for (auto idx{0}; idx < desc.data_.data().size(); ++idx) {
-            auto& bl{*desc.data_.data()[idx]};
+
+        auto ctxt{data::context(desc.data_)};
+        for (size idx{0}; idx < ctxt.num(); ++idx) {
+            auto& bl{ctxt[idx]};
             auto *ctrl{new Control(
                 childScaffold,
                 desc.labels_[idx],
                 bl,
                 desc.win_
             )};
-
             sizer->Add(ctrl);
         }
 
         SetSizer(sizer);
 
-        attach(desc.data_);
-        Bind(wxEVT_TOGGLEBUTTON, &Manager::onSet, this);
-    }
-
-    void preDestroyCripple() override {
-        detach();
-        DataWindow::preDestroyCripple();
-    }
-
-    void onSet(wxCommandEvent& evt) {
-        auto en{freezeGetRealEnable()};
-        defer { thawRealEnable(); };
-
-        if (not en) return;
-
-        for (auto *child : GetChildren()) {
-            if (child != evt.GetEventObject()) continue;
-
-            auto& bl{const_cast<data::Bool&>(
-                static_cast<Control *>(child)->model<data::Bool>()
-            )};
-            auto res{bl.processUIAction(
-                std::make_unique<data::Bool::SetAction>(true)
-            )};
-
-            if (not res) {
-                auto selected{model<data::Exclusive>().selected()};
-                auto *child{GetChildren()[selected]};
-
-                static_cast<Control *>(child)->SetValue(true);
-            }
-            break;
-        }
-    }
-    
-    void onSelection(size idx) override {
-        safeCall([this, idx] {
-            auto& children{GetChildren()};
-
-            for (size childIdx{0}; childIdx < children.size(); ++childIdx) {
-                auto *child{static_cast<wxToggleButton *>(children[childIdx])};
-                child->SetValue(childIdx == idx);
-            }
-        });
+        activate();
     }
 };
 
@@ -159,7 +162,7 @@ struct Manager : detail::DataWindow<wxPanel, data::Exclusive::Receiver> {
 
 DescriptorPtr Segmented::operator()() {
     // Make sure there's the correct labels for the data.
-    assert(labels_.size() == data_.data().size());
+    assert(labels_.size() == data::context(data_).num());
 
     return std::make_unique<Segmented::Desc>(std::move(*this));
 }

@@ -21,6 +21,8 @@
 
 #include <wx/checklst.h>
 
+#include "data/base/models/selection.hpp"
+#include "data/context.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
 #include "ui/types.hpp"
@@ -30,11 +32,9 @@ using namespace pcui;
 
 namespace {
 
-struct Control : detail::DataWindow<
-                     wxCheckListBox,
-                     data::Selection::Receiver
-                 > {
-    Control(const detail::Scaffold& scaffold, const CheckList& desc) {
+struct Control : detail::DataWindow<wxCheckListBox> {
+    Control(const detail::Scaffold& scaffold, const CheckList& desc) :
+        sel_{desc.data_} {
         Create(
             scaffold.childParent_,
             wxID_ANY,
@@ -44,19 +44,35 @@ struct Control : detail::DataWindow<
 
         DataWindow::postCreation(scaffold, desc.win_);
 
-        data::Selection::Context ctxt{desc.data_};
+        static const auto table{[] {
+            data::base::Selection::RecvTable table;
+            table.onEnable_ = data::map(&DataWindow::onEnable);
+            table.onFocus_ = data::map(&DataWindow::onFocus);
+            table.onSelection_ = data::map(&Control::onSelection);
+            table.onItems_ = data::map(&Control::onItems);
+            table.onInsert_ = data::map(&Control::onInsert);
+            table.onRemove_ = data::map(&Control::onRemove);
+            return table;
+        }()};
+        amend(sel_, table);
+
+        activate();
+    }
+
+    void onActivate() override {
+        DataWindow::onActivate();
+
+        auto ctxt{data::context(sel_)};
         Set(ctxt.items());
         for (auto idx{0}; idx < ctxt.selected().size(); ++idx) {
             Check(idx, ctxt.selected()[idx]);
         }
 
-        attach(desc.data_);
         Bind(wxEVT_CHECKLISTBOX, &Control::onCheck, this);
     }
 
-    void preDestroyCripple() override {
-        detach();
-        DataWindow::preDestroyCripple();
+    const data::base::Model *primaryModel() override {
+        return &sel_;
     }
 
     void onCheck(wxCommandEvent& evt) {
@@ -65,49 +81,45 @@ struct Control : detail::DataWindow<
 
         if (not en) return;
         
-        auto& ch{const_cast<data::Selection&>(model<data::Selection>())};
-
-        auto res{ch.processUIAction(
-            std::make_unique<data::Selection::SelectAction>(
-                evt.GetInt(), IsChecked(evt.GetInt())
-            )
+        auto res{sel_.select(
+            evt.GetInt(), IsChecked(evt.GetInt())
         )};
 
         if (not res) {
-            auto ctxt{context<data::Selection>()};
+            auto ctxt{data::context(sel_)};
             Check(evt.GetInt(), ctxt.selected()[evt.GetInt()]);
         }
     }
 
-    void onSelection(uint32 idx) override {
-        auto state{context<data::Selection>().selected()[idx]};
+    void onSelection(uint32 idx) {
+        auto state{data::context(sel_).selected()[idx]};
         safeCall([this, idx, state] {
             Check(idx, state);
         });
     }
 
-    void onItems() override {
-        auto items{context<data::Selection>().items()};
+    void onItems() {
+        auto items{data::context(sel_).items()};
         safeCall([this, items] {
             Set(items);
         });
     }
 
-    void onInsert(uint32 idx) override {
-        auto ctxt{context<data::Selection>()};
+    void onInsert(uint32 idx) {
+        auto ctxt{data::context(sel_)};
         auto item{ctxt.items()[idx]};
-        auto state{ctxt.selected()[idx]};
-        safeCall([this, item, idx, state] {
+        safeCall([this, item, idx] {
             Insert(item, idx);
-            Check(idx, state);
         });
     }
 
-    void onRemove(uint32 idx) override {
+    void onRemove(uint32 idx) {
         safeCall([this, idx] {
             Delete(idx);
         });
     }
+
+    data::base::Selection& sel_;
 };
 
 } // namespace

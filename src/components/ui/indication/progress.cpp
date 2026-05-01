@@ -22,6 +22,7 @@
 #include <wx/event.h>
 #include <wx/gauge.h>
 
+#include "data/context.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
 #include "ui/types.hpp"
@@ -30,8 +31,9 @@ using namespace pcui;
 
 namespace {
 
-struct Indicator : detail::DataWindow<wxGauge, Progress::Data::Receiver> {
-    Indicator(const detail::Scaffold& scaffold, const Progress& desc) {
+struct Indicator : detail::DataWindow<wxGauge> {
+    Indicator(const detail::Scaffold& scaffold, const Progress& desc) :
+        data_{desc.data_} {
         Create(
             scaffold.childParent_,
             wxID_ANY,
@@ -43,31 +45,50 @@ struct Indicator : detail::DataWindow<wxGauge, Progress::Data::Receiver> {
 
         postCreation(scaffold, desc.win_);
 
-        attach(desc.data_);
+        static const auto table{[] {
+            Progress::Data::RecvTable table;
+            table.onEnable_ = data::map(&DataWindow::onEnable);
+            table.onSet_ = data::map(&Indicator::onSet);
+            table.onRange_ = data::map(&Indicator::onRange);
+            table.onPulse_ = data::map(&Indicator::onPulse);
+            return table;
+        }()};
+        amend(desc.data_, table);
+
+        activate();
     }
 
-    void preDestroyCripple() override {
-        detach();
-        DataWindow::preDestroyCripple();
+    const data::base::Model *primaryModel() override {
+        return &data_;
     }
 
-    void onSet() override {
-        safeCall([this, val=context<Progress::Data>().val()] {
+    void onActivate() override {
+        DataWindow::onActivate();
+
+        auto ctxt{data::context(data_)};
+        SetRange(static_cast<int>(ctxt.range()));
+        SetValue(ctxt.val());
+    }
+
+    void onSet() {
+        safeCall([this, val=data::context(data_).val()] {
             SetValue(val);
         });
     }
 
-    void onRange() override {
-        safeCall([this, range=context<Progress::Data>().range()] {
-            SetRange(static_cast<int32>(range));
+    void onRange() {
+        safeCall([this, range=data::context(data_).range()] {
+            SetRange(static_cast<int>(range));
         });
     }
 
-    void onPulse() override {
-        safeCall([this]{
+    void onPulse() {
+        safeCall([this] {
             Pulse();
         });
     }
+
+    const Progress::Data& data_;
 };
 
 } // namespace
@@ -89,10 +110,6 @@ detail::Descriptor *Progress::Desc::clone() const {
     return new Desc(*this);
 }
 
-Progress::Data::Data() = default;
-
-Progress::Data::~Data() = default;
-
 void Progress::Data::set(uint32 val) {
     Context{*this}.set(val);
 }
@@ -106,9 +123,18 @@ void Progress::Data::pulse() {
 }
 
 data::logic::Element Progress::Data::operator|(Logic logic) {
-    struct DoneAdapter : data::logic::detail::Base, Receiver {
-        DoneAdapter(const Data& data) : data_{data} {}
-        ~DoneAdapter() override { detach(); }
+    struct DoneAdapter : data::logic::detail::Base, data::Receiver {
+        DoneAdapter(const Data& data) : data_{data} {
+            static const auto table{[] {
+                RecvTable table;
+                table.onSet_ = map(&DoneAdapter::onSet);
+                return table;
+            }()};
+
+            amend(data_, table);
+        }
+
+        ~DoneAdapter() override { deactivate(); }
 
         void lock() override {
             data_.lock();
@@ -119,17 +145,17 @@ data::logic::Element Progress::Data::operator|(Logic logic) {
         }
 
         bool doActivate() override {
-            attach(data_);
-            return isTrue();
+            auto ctxt{data::context(data_)};
+            Receiver::activate();
+            return isTrue(ctxt);
         }
 
-        void onSet() override {
-            std::lock_guard scopeLock{*pLock};
-            Base::onChange(isTrue());
+        void onSet() {
+            std::lock_guard scopeLock(*pLock);
+            Base::onChange(isTrue(data_));
         }
 
-        bool isTrue() {
-            auto ctxt{context<Data>()};
+        bool isTrue(const ROContext& ctxt) {
             return ctxt.val() == ctxt.range();
         }
 
@@ -170,20 +196,20 @@ void Progress::Data::Context::set(uint32 v) const {
     auto& data{model<Data>()};
 
     data.mVal = static_cast<int32>(v);
-    data.sendToReceivers(&Receiver::onSet);
+    data.sendToReceivers(&RecvTable::onSet_);
 }
 
 void Progress::Data::Context::setRange(uint32 r) const {
     auto& data{model<Data>()};
 
     data.mRange = r;
-    data.sendToReceivers(&Receiver::onRange);
+    data.sendToReceivers(&RecvTable::onRange_);
 }
 
 void Progress::Data::Context::pulse() const {
     auto& data{model<Data>()};
 
     data.mVal = -1;
-    data.sendToReceivers(&Receiver::onPulse);
+    data.sendToReceivers(&RecvTable::onPulse_);
 }
 

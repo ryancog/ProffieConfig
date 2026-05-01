@@ -21,7 +21,6 @@
 
 #include <wx/statbmp.h>
 
-#include "data/generic.hpp"
 #include "ui/bitmap.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
@@ -36,8 +35,6 @@ struct UI_EXPORT Image {
 
     // TODO: Make this a base w/ C++ P2287.
     detail::ChildWindowBase win_;
-
-    std::optional<RefWrap<data::Generic>> data_;
 
     wxStaticBitmapBase::ScaleMode scale_{wxStaticBitmapBase::Scale_AspectFill};
 

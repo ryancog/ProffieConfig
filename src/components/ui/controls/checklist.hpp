@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/selection.hpp"
+#include "data/base/models/selection.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
 #include "ui/types.hpp"
@@ -34,7 +34,7 @@ struct UI_EXPORT CheckList {
     // TODO: Make this a base w/ C++ P2287.
     detail::ChildWindowBase win_;
 
-    data::Selection& data_;
+    data::base::Selection& data_;
 
     DescriptorPtr operator()();
 };

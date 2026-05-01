@@ -19,7 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/selector.hpp"
+#include <functional>
+
+#include "data/base/models/selector.hpp"
 #include "ui/detail/builder.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/types.hpp"
@@ -31,8 +33,8 @@ namespace pcui {
 struct UI_EXPORT Selector {
     struct Desc;
 
-    const data::Selector& data_;
-    detail::DescBuilder builder_;
+    const data::base::Selector& data_;
+    std::function<detail::DescBuilder> builder_;
 
     DescriptorPtr operator()();
 };
