@@ -21,6 +21,11 @@
 
 using namespace data::hier;
 
+Bool::Bool(Root& root) : Model(root) {}
+
+Bool::Bool(const Bool& other, Root& root) :
+    base::Bool(other), Model(other, root) {}
+
 bool Bool::set(bool val) {
     return processAction(std::make_unique<SetAction>(val));
 }
