@@ -39,6 +39,7 @@ struct DATA_EXPORT Number : virtual Model {
 
     using Filter = void (*)(const ROContext&, T&);
 
+    Number() = default;
     Number(const Number&);
 
     static constexpr T DEFAULT_MIN{0};
