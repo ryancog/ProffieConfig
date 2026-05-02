@@ -32,7 +32,7 @@ struct DATA_EXPORT Exclusive : base::Exclusive, Model {
     bool select(size) override;
 
 private:
-    std::unique_ptr<base::Bool> create() override;
+    std::unique_ptr<base::Bool> create(size) override;
 };
 
 } // namespace data::prim

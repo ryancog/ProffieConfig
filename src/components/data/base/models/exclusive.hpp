@@ -40,7 +40,7 @@ protected:
     // Separate init to access `create`.
     void init(size);
 
-    virtual std::unique_ptr<Bool> create() = 0;
+    virtual std::unique_ptr<Bool> create(size) = 0;
 
     bool setupSelect(size&);
     size doSelect(size);

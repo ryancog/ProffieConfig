@@ -36,7 +36,7 @@ bool Exclusive::select(size idx) {
     return true;
 }
 
-std::unique_ptr<data::base::Bool> Exclusive::create() {
+std::unique_ptr<data::base::Bool> Exclusive::create(size) {
     return std::make_unique<Bool>();
 }
 

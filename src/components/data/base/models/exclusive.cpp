@@ -32,7 +32,7 @@ void Exclusive::init(size num) {
     assert(num > 1);
 
     for (size idx{0}; idx < num; ++idx) {
-        auto obj{create()};
+        auto obj{create(idx)};
 
         const auto table{[] {
             Bool::RecvTable table;
@@ -41,7 +41,7 @@ void Exclusive::init(size num) {
         }()};
         amend(*obj, table);
 
-        mData.push_back(create());
+        mData.push_back(std::move(obj));
     }
 
     mData[0]->set(true);
