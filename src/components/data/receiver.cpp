@@ -90,6 +90,10 @@ void Receiver::deactivate() {
 void Receiver::amend(const base::Model& model, const RecvTable& table) {
     std::lock_guard scopeLock(pMutex);
 
+    // Don't leave a hanging reference in a prior-listed model.
+    // I think it's best to require explicit repeal(), to make the flow clear.
+    assert(not mRecvMap.contains(&model));
+
     mRecvMap[&model] = &table;
 
     // If things are already attached, then this needs special treatment.
