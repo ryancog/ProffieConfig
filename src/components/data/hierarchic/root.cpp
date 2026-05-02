@@ -20,7 +20,6 @@
  */
 
 #include <cassert>
-#include <thread>
 #include <mutex>
 
 using namespace data::hier;
@@ -36,41 +35,36 @@ Root::Root(const Root&) : Root() {
 Root::~Root() = default;
 
 void Root::suppressActions() {
-    std::lock_guard scopeLock(mMutex);
+    mMutex.lock();
 
-    // I don't remember if the reason for this is sane.
-    while (mState != State::Normal) {
-        mMutex.unlock();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        mMutex.lock();
-    }
-
-    mState = State::Suppressed;
+    mStates.push_back(State::Suppressed);
 }
 
-void Root::unsuppressActions() {
-    std::lock_guard scopeLock(mMutex);
+void Root::unsuppressActions(bool clearHistory) {
+    assert(mStates.back() == State::Suppressed);
 
-    assert(mState == State::Suppressed);
+    if (clearHistory) {
+        mActions.clear();
+        const auto lastIdx{mActionIdx};
+        mActionIdx = eAct_Idx_First;
 
-    mActions.clear();
-    const auto lastIdx{mActionIdx};
-    mActionIdx = eAct_Idx_First;
+        sendToReceivers(&RecvTable::onActionClear_, lastIdx);
+        sendToReceivers(&RecvTable::onActionIdx_, mActionIdx);
+        sendToReceivers(&RecvTable::onCanUndo_, false);
+        sendToReceivers(&RecvTable::onCanRedo_, false);
+    }
 
-    sendToReceivers(&RecvTable::onActionClear_, lastIdx);
-    sendToReceivers(&RecvTable::onActionIdx_, mActionIdx);
-    sendToReceivers(&RecvTable::onCanUndo_, false);
-    sendToReceivers(&RecvTable::onCanRedo_, false);
+    mStates.pop_back();
 
-    mState = State::Normal;
+    mMutex.unlock();
 }
 
 bool Root::capturePerformance() {
     std::lock_guard scopeLock(mMutex);
 
-    switch (mState) {
+    switch (mStates.back()) {
         case State::Normal:
-            mState = State::Performance;
+            mStates.push_back(State::Performance);
             break;
         case State::Suppressed:
             // Don't care about setting anything up for recording.
@@ -111,34 +105,35 @@ bool Root::capturePerformance() {
 bool Root::isActuallyCapturing() {
     std::lock_guard scopeLock(mMutex);
 
-    return mState == State::Performance;
+    return mStates.back() == State::Performance;
 }
 
 void Root::abortCapture() {
     std::lock_guard scopeLock(mMutex);
 
     mActions.pop_back();
-    mState = State::Normal;
+    mStates.pop_back();
 }
 
 // The begin and end replay here aren't currently necessary (nor are the checks
 // for replay state elsewhere), since undo/redo occurs inside locked Context.
 bool Root::beginReplay() {
-    if (mState != State::Normal) return false;
+    if (mStates.back() != State::Normal) return false;
 
-    mState = State::Replay;
+    mStates.push_back(State::Replay);
     return true;
 }
 
 void Root::endReplay() {
-    assert(mState == State::Replay);
-    mState = State::Normal;
+    assert(mStates.back() == State::Replay);
+
+    mStates.pop_back();
 }
 
 void Root::recordAction(std::unique_ptr<Action>&& action) {
     std::lock_guard scopeLock(mMutex);
 
-    assert(mState == State::Performance);
+    assert(mStates.back() == State::Performance);
 
     mActions[mActionIdx].push_back(std::move(action));
 
@@ -166,7 +161,7 @@ void Root::recordAction(std::unique_ptr<Action>&& action) {
             }
         }
 
-        mState = State::Normal;
+        mStates.pop_back();
     }
 }
 

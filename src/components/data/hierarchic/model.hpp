@@ -35,6 +35,7 @@ struct Root;
  * Basis for data model structures.
  */
 struct DATA_EXPORT Model : virtual base::Model {
+    struct CreationScope;
     struct EnableAction;
 
     Model(const Model &) = delete;
@@ -48,6 +49,8 @@ struct DATA_EXPORT Model : virtual base::Model {
 
     void lock() const override;
     void unlock() const override;
+
+    virtual std::vector<Model *> children() { return {}; }
 
 protected:
     Model(Root&);
@@ -68,6 +71,15 @@ struct DATA_EXPORT Model::EnableAction : Action {
 
 private:
     bool mEnable;
+};
+
+struct Model::CreationScope {
+    // ptr for convenience with `this`
+    CreationScope(Model *);
+    ~CreationScope();
+
+private:
+    Model& mModel;
 };
 
 } // namespace data::hier

@@ -74,3 +74,12 @@ void Model::EnableAction::retract() {
     source<Model>().doEnable(not mEnable);
 }
 
+Model::CreationScope::CreationScope(Model *model) : mModel{*model} {
+    assert(model);
+    mModel.root().suppressActions();
+}
+
+Model::CreationScope::~CreationScope() {
+    mModel.root().unsuppressActions(false);
+}
+

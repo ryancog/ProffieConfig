@@ -56,22 +56,23 @@ protected:
     Root(const Root&);
 
     /**
-     * When this function is called, UI entry is denied and no actions are
-     * recorded until unsuppressed. All actions are performed, but they do not
-     * get recorded into the undo/redo like normal (not that it matters since
-     * it's cleared soon anyways.)
+     * Do not record any actions until unsuppressed. All actions are performed,
+     * but they do not get recorded into the undo/redo like normal.
      */
     void suppressActions();
 
     /**
      * Counterpart to suppressActions()
      *
-     * Calling this function releases that suppressed state, and necessarily
+     * Calling this function releases that suppressed state, and, if set,
      * purges any undo/redo info present, as the state is assumed to have been
      * tampered with in a way that makes it incompatible with any prior
      * recordings.
+     *
+     * For special cases, the undo/redo information can be left, but this must
+     * be used with care. (e.g. new object creation)
      */
-    void unsuppressActions();
+    void unsuppressActions(bool clearHistory = true);
 
 private:
     friend Model;
@@ -144,7 +145,9 @@ private:
         Suppressed,
         Performance,
         Replay,
-    } mState{State::Normal};
+    };
+    std::vector<State> mStates{State::Normal};
+
     uint32 mPerformanceNesting{0};
 
     std::recursive_mutex mMutex;
