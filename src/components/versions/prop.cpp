@@ -21,11 +21,9 @@
 
 #include <memory>
 #include <mutex>
-#include <set>
+#include <optional>
 
-#include "data/bool.hpp"
-#include "data/helpers/exclusive.hpp"
-#include "data/number.hpp"
+#include "data/context.hpp"
 #include "log/branch.hpp"
 #include "log/context.hpp"
 #include "log/logger.hpp"
@@ -43,16 +41,9 @@ using namespace versions::props;
 
 namespace {
 
-Settings parseSettings(
-    const pconf::Data&, Prop&, logging::Branch&
+std::vector<std::unique_ptr<detail::Data>> parseSettings(
+    const pconf::Data&, logging::Branch&
 );
-
-struct CommonData {
-    std::string name_;
-    std::string description_;
-    std::vector<uint64> required_;
-    std::vector<uint64> requiredAny_;
-};
 
 /**
  * Parse entries that are somewhat common across setting/data sections,
@@ -61,7 +52,7 @@ struct CommonData {
  * @param requireLabel If the label is actually required for this section
  * @param requireName If the NAME entry is required for this section
  */
-std::optional<std::pair<CommonData, pconf::HashedData>> parseSettingCommon(
+std::optional<std::pair<detail::Data, pconf::HashedData>> parseSettingCommon(
     const pconf::EntryPtr&,
     logging::Logger&,
     bool requireLabel,
@@ -69,7 +60,8 @@ std::optional<std::pair<CommonData, pconf::HashedData>> parseSettingCommon(
 );
 
 Layout parseLayout(
-    const pconf::Data&, const SettingMap&, logging::Branch&
+    const pconf::Data&,
+    logging::Branch&
 );
 
 Buttons parseButtons(const pconf::Data&, logging::Branch&);
@@ -77,263 +69,280 @@ Errors parseErrors(const pconf::Data&, logging::Branch&);
 
 } // namespace
 
-detail::SettingBase::~SettingBase() = default;
+detail::Data::Data(
+    std::string name,
+    std::string define,
+    std::string description,
+    std::vector<std::string> required,
+    std::vector<std::string> requireAny
+) : name_(std::move(name)),
+    define_(std::move(define)),
+    description_(std::move(description)),
+    required_(std::move(required)),
+    requireAny_(std::move(requireAny)) {}
 
-data::Model& detail::SettingBase::model() {
-    if (auto *ptr{dynamic_cast<Toggle *>(this)}) {
-        return *ptr;
-    }
-    if (auto *ptr{dynamic_cast<Option *>(this)}) {
-        return *ptr;
-    }
-    if (auto *ptr{dynamic_cast<Option::Selection *>(this)}) {
-        return *ptr;
-    }
-    if (auto *ptr{dynamic_cast<Integer *>(this)}) {
-        return *ptr;
-    }
-    if (auto *ptr{dynamic_cast<Decimal *>(this)}) {
-        return *ptr;
-    }
+ToggleData::ToggleData(Data data, std::vector<std::string> disables) :
+    Data(std::move(data)), disables_(std::move(disables)) {}
 
-    assert(0);
-    __builtin_unreachable();
+Toggle::Toggle(Prop& prop, ToggleData data) :
+    data::hier::Bool(prop.root()),
+    detail::Data(std::move(data)),
+    ToggleData(std::move(data)) {}
+
+bool Toggle::isActive() const {
+    auto ctxt{data::context(*this)};
+    return ctxt.enabled() and ctxt.val();
 }
 
-bool detail::SettingBase::isActive() {
-    if (auto *ptr{dynamic_cast<Toggle *>(this)}) {
-        data::Bool::Context ctxt{*ptr};
-        if (not ctxt.val()) return false;
-    } else if (auto *ptr{dynamic_cast<Option::Selection *>(this)}) {
-        data::Bool::Context ctxt{*ptr};
-        if (not ctxt.val()) return false;
-    }
-
-    data::Model::Context ctxt{model()};
-    return ctxt.enabled();
+bool Toggle::shouldOutputDefine() const {
+    return isActive();
 }
 
-bool detail::SettingBase::shouldOutputDefine() {
-    if (not isActive()) return false;
-
-    if (auto *ptr{dynamic_cast<Option::Selection *>(this)}) {
-        return not ptr->define_.empty();
-    }
-    if (auto *ptr{dynamic_cast<Integer *>(this)}) {
-        return ptr->defaultVal_ != data::Integer::Context{*ptr}.val();
-    }
-    if (auto *ptr{dynamic_cast<Decimal *>(this)}) {
-        return ptr->defaultVal_ != data::Decimal::Context{*ptr}.val();
-    }
-
-    return true;
-}
-
-std::optional<std::string> detail::SettingBase::generateDefineString() {
+std::optional<std::string> Toggle::generateDefineString() const {
     if (not shouldOutputDefine()) return std::nullopt;
 
-    if (auto *ptr{dynamic_cast<Toggle *>(this)}) {
-        return define_;
-    }
-    if (auto *ptr{dynamic_cast<Option::Selection *>(this)}) {
-        return define_;
-    }
-    if (auto *ptr{dynamic_cast<Integer *>(this)}) {
-        data::Integer::Context ctxt{*ptr};
-        return define_ + ' ' + std::to_string(ctxt.val());
-    }
-    if (auto *ptr{dynamic_cast<Decimal *>(this)}) {
-        data::Decimal::Context ctxt{*ptr};
-        return define_ + ' ' + std::to_string(ctxt.val());
-    }
+    return define_;
+}
 
+IntegerData::IntegerData(
+    Data data,
+    data::base::Integer::Params params,
+    std::optional<int32> defaultVal
+) : Data(std::move(data)),
+    params_(params),
+    defaultVal_(defaultVal) {}
+
+Integer::Integer(Prop& prop, IntegerData data) :
+    data::hier::Integer(prop.root()),
+    detail::Data(std::move(data)),
+    IntegerData(std::move(data)) {
+    update(params_);
+    if (defaultVal_) set(*defaultVal_);
+}
+
+bool Integer::isActive() const {
+    return data::context(*this).enabled();
+}
+
+bool Integer::shouldOutputDefine() const {
+    auto ctxt{data::context(*this)};
+    return isActive() and ctxt.val() != defaultVal_;
+}
+
+std::optional<std::string> Integer::generateDefineString() const {
+    if (not shouldOutputDefine()) return std::nullopt;
+
+    auto ctxt{data::context(*this)};
+    return define_ + ' ' + std::to_string(ctxt.val());
+}
+
+DecimalData::DecimalData(
+    Data data, 
+    data::base::Decimal::Params params,
+    std::optional<float64> defaultVal
+) : Data(std::move(data)),
+    params_(params),
+    defaultVal_(defaultVal) {}
+
+Decimal::Decimal(Prop& prop, DecimalData data) :
+    data::hier::Decimal(prop.root()), 
+    detail::Data(std::move(data)),
+    DecimalData(std::move(data)) {
+    update(params_);
+    if (defaultVal_) set(*defaultVal_);
+}
+
+bool Decimal::isActive() const {
+    return data::context(*this).enabled();
+}
+
+bool Decimal::shouldOutputDefine() const {
+    auto ctxt{data::context(*this)};
+    return isActive() and ctxt.val() != defaultVal_;
+}
+
+std::optional<std::string> Decimal::generateDefineString() const {
+    if (not shouldOutputDefine()) return std::nullopt;
+
+    auto ctxt{data::context(*this)};
+    return define_ + ' ' + std::to_string(ctxt.val());
+}
+
+OptionData::OptionData(Data data, std::vector<SelectionData *> selections) :
+    Data(std::move(data)), selections_(std::move(selections)) {}
+
+Option::Option(Prop& prop, OptionData data) :
+    data::hier::Exclusive(prop.root(), data.selections_.size()),
+    detail::Data(std::move(data)),
+    OptionData(std::move(data)) {}
+
+std::unique_ptr<data::base::Bool> Option::create(size idx) {
+    // This is kind of awkward, but when the Option is first created, it'll
+    // have ptrs to some extra data which it was copied from.
+    //
+    // Those are used to create the children, but then the children, which
+    // copy the data themselves, are used to replace the ptrs.
+    auto obj{std::make_unique<Selection>(root(), *selections_[idx])};
+    selections_[idx] = obj.get();
+    return obj;
+}
+
+bool Option::isActive() const {
+    return data::context(*this).enabled();
+}
+
+bool Option::shouldOutputDefine() const {
+    // The Selection handles this.
+    return false;
+}
+
+std::optional<std::string> Option::generateDefineString() const {
     return std::nullopt;
 }
 
-void detail::SettingBase::enable(bool en) {
-    data::Model::Context{model()}.enable(en);
+OptionData::SelectionData::SelectionData(
+    Data data, std::vector<std::string> disables
+) : Data(std::move(data)), disables_(std::move(disables)) {}
+
+Option::Selection::Selection(data::hier::Root& root, SelectionData data) :
+    data::hier::Bool(root),
+    detail::Data(std::move(data)),
+    SelectionData(std::move(data)) {}
+
+bool Option::Selection::isActive() const {
+    auto ctxt{data::context(*this)};
+    return ctxt.enabled() and ctxt.val();
 }
 
-Toggle::Toggle(
-    Prop& prop,
+bool Option::Selection::shouldOutputDefine() const {
+    return isActive() and not define_.empty();
+}
+
+std::optional<std::string> Option::Selection::generateDefineString() const {
+    if (not shouldOutputDefine()) return std::nullopt;
+
+    return define_;
+}
+
+Prop::Prop(
+    data::hier::Root& root,
     std::string name,
-    std::string define,
-    std::string description,
-    std::vector<uint64> required,
-    std::vector<uint64> requiredAny,
-    std::vector<uint64> disables
-) : detail::SettingBase(
-        std::move(name),
-        std::move(define),
-        std::move(description),
-        std::move(required),
-        std::move(requiredAny)
-    ),
-    data::Bool(&prop),
-    disables_{std::move(disables)} {
-    responder().onSet_ = [](const data::Bool::ROContext& ctxt) {
-        ctxt.model().parent<Prop>()->recalculateRequires();
-    };
-}
+    std::string filename,
+    std::string info,
+    std::map<uint32, Buttons> buttons,
+    Layout layout,
+    Errors errors
+) : data::hier::Model(root),
+    name_(std::move(name)),
+    filename_(std::move(filename)),
+    info_(std::move(info)),
+    mButtons(std::move(buttons)),
+    mLayout(std::move(layout)),
+    mErrors(std::move(errors)) {}
 
-Toggle::Toggle(const Toggle& other, Prop& prop) :
-    detail::SettingBase(other),
-    data::Bool(other, &prop),
-    disables_{other.disables_} {}
+std::optional<PropData> PropData::generate(
+    const pconf::HashedData& data,
+    logging::Branch *lBranch
+) {
+    auto& logger{logging::Branch::optCreateLogger("versions::Prop::generate()", lBranch)};
 
-Integer::Integer(
-    Prop& prop,
-    std::string name,
-    std::string define,
-    std::string description,
-    std::vector<uint64> required,
-    std::vector<uint64> requiredAny,
-    data::Integer::Params params,
-    std::optional<int32> defaultVal
-) : detail::SettingBase(
-        std::move(name),
-        std::move(define),
-        std::move(description),
-        std::move(required),
-        std::move(requiredAny)
-    ),
-    data::Integer(&prop),
-    defaultVal_{defaultVal} {
+    const auto nameEntry{data.find("NAME")};
+    if (not nameEntry or not nameEntry->value_) {
+        logger.error("Missing name.");
+        return std::nullopt;
+    }
+    auto name{*nameEntry->value_};
 
-    data::Integer::Context ctxt{*this};
-    ctxt.update(params);
+    const auto filenameEntry{data.find("FILENAME")};
+    if (not filenameEntry or not filenameEntry->value_) {
+        logger.error("Missing filename.");
+        return std::nullopt;
+    }
+    auto filename{*filenameEntry->value_};
 
-    if (defaultVal) ctxt.set(*defaultVal);
-}
-
-Integer::Integer(const Integer& other, Prop& prop) :
-    detail::SettingBase(other),
-    data::Integer(other, &prop),
-    defaultVal_{other.defaultVal_} {}
-
-Decimal::Decimal(
-    Prop& prop,
-    std::string name,
-    std::string define,
-    std::string description,
-    std::vector<uint64> required,
-    std::vector<uint64> requiredAny,
-    data::Decimal::Params params,
-    std::optional<float64> defaultVal
-) : detail::SettingBase(
-        std::move(name),
-        std::move(define),
-        std::move(description),
-        std::move(required),
-        std::move(requiredAny)
-    ),
-    data::Decimal(&prop),
-    defaultVal_{defaultVal} {
-
-    data::Decimal::Context ctxt{*this};
-    ctxt.update(params);
-
-    if (defaultVal) ctxt.set(*defaultVal);
-}
-
-Decimal::Decimal(const Decimal& other, Prop& prop) :
-    detail::SettingBase(other),
-    data::Decimal(other, &prop),
-    defaultVal_{other.defaultVal_} {}
-
-Option::Option(
-    Prop& prop,
-    std::string id,
-    std::string name,
-    std::string description,
-    std::vector<std::unique_ptr<Selection>>& selections
-) : detail::SettingBase(
-        std::move(name),
-        std::move(id),
-        std::move(description),
-        {},
-        {}
-    ),
-    data::Exclusive(
-        [&selections]() {
-            std::vector<std::unique_ptr<data::Bool>> ret;
-            ret.reserve(selections.size());
-            for (auto& sel : selections) ret.push_back(std::move(sel));
-            return ret;
-        }(),
-        &prop
-    ) {}
-
-Option::Option(const Option& other, Prop& prop) :
-    detail::SettingBase(other),
-    data::Exclusive(other, &prop) {}
-
-Option::Selection::Selection(
-    Prop& prop,
-    std::string name,
-    std::string define,
-    std::string description,
-    std::vector<uint64> required,
-    std::vector<uint64> requiredAny,
-    std::vector<uint64> disables
-) : detail::SettingBase(
-        std::move(name),
-        std::move(define),
-        std::move(description),
-        std::move(required),
-        std::move(requiredAny)
-    ),
-    data::Bool(&prop),
-    disables_{std::move(disables)} {
-    responder().onSet_ = [](const data::Bool::ROContext& ctxt) {
-        ctxt.model().parent<Prop>()->recalculateRequires();
-    };
-}
-
-Option::Selection::Selection(const Selection& other, Prop& prop) :
-    detail::SettingBase(other),
-    data::Bool(other, &prop),
-    disables_{other.disables_} {}
-
-
-std::string Option::Selection::idString(const std::string& optId) {
-    return optId + "::" + define_;
-}
-
-ButtonState::ButtonState(std::string stateName, std::vector<Button> buttons) : 
-    stateName_{std::move(stateName)}, buttons_{std::move(buttons)} {}
-
-ErrorMapping::ErrorMapping(
-    std::string arduinoError,
-    std::string displayError
-) : arduinoError_{std::move(arduinoError)},
-    displayError_{std::move(displayError)} {}
-
-Prop::Prop(const Prop& other, data::Node *parent) :
-    data::Node(parent),
-    name_{other.name_},
-    filename_{other.filename_},
-    info_{other.info_},
-    mLayout{other.mLayout},
-    mButtons{other.mButtons},
-    mErrors{other.mErrors} {
-    CreationScope createScope(*this);
-
-    mSettings.reserve(other.mSettings.size());
-    for (const auto& setting : other.mSettings) {
-        if (auto *ptr{dynamic_cast<Toggle *>(setting.get())}) {
-            mSettings.push_back(std::make_unique<Toggle>(*ptr, *this));
-        } else if (auto *ptr{dynamic_cast<Option *>(setting.get())}) {
-            mSettings.push_back(std::make_unique<Option>(*ptr, *this));
-        } else if (auto *ptr{dynamic_cast<Integer *>(setting.get())}) {
-            mSettings.push_back(std::make_unique<Integer>(*ptr, *this));
-        } else if (auto *ptr{dynamic_cast<Decimal *>(setting.get())}) {
-            mSettings.push_back(std::make_unique<Decimal>(*ptr, *this));
-        }
+    std::string info;
+    const auto infoEntry{data.find("INFO")};
+    if (not infoEntry or not infoEntry->value_) {
+        logger.info("No info...");
+        info = "Prop has no additional info.";
+    } else {
+        info = *infoEntry->value_;
     }
 
-    rebuildLookup();
-    recalculateRequires();
+    std::vector<std::unique_ptr<detail::Data>> settings;
+
+    const auto settingsEntry{data.find("SETTINGS")};
+    if (not settingsEntry or not settingsEntry.section()) {
+        logger.info("No settings section...");
+    } else {
+        settings = parseSettings(
+            settingsEntry.section()->entries_,
+            *logger.bdebug("Parsing SETTINGS...")
+        );
+    }
+
+    Layout layout;
+
+    const auto layoutEntry{data.find("LAYOUT")};
+    if (not layoutEntry or not layoutEntry.section()) {
+        logger.info("No layout section...");
+    } else {
+        layout = parseLayout(
+            layoutEntry.section()->entries_,
+            *logger.bdebug("Parsing LAYOUT...")
+        );
+    }
+
+    std::map<uint32, Buttons> buttons;
+
+    const auto buttonEntries{data.findAll("BUTTONS")};
+    for (const auto& buttonEntry : buttonEntries) {
+        if (not buttonEntry.section()) {
+            logger.warn("Skipping non-section BUTTONS...");
+            continue;
+        }
+
+        if (not buttonEntry->labelNum_) {
+            logger.warn("Skipping BUTTONS w/o num label...");
+            continue;
+        }
+
+        const auto numButtons{*buttonEntry->labelNum_};
+        if (buttons.contains(numButtons)) {
+            logger.warn("Skipping duplicate BUTTONS{" + std::to_string(numButtons) + "}...");
+            continue;
+        }
+
+        buttons[numButtons] = parseButtons(
+            buttonEntry.section()->entries_,
+            *logger.bdebug("Parsing buttons " + std::to_string(numButtons) + "...")
+        );
+    }
+    if (buttonEntries.empty()) {
+        logger.info("No buttons entries...");
+    }
+
+    Errors errors;
+
+    const auto errorsEntry{data.find("ERRORS")};
+    if (not errorsEntry or not errorsEntry.section()) {
+        logger.info("No errors section...");
+    } else {
+        errors = parseErrors(
+            errorsEntry.section()->entries_,
+            *logger.bdebug("Parsing errors...")
+        );
+    }
+
+    return std::make_optional<PropData>(
+        std::move(name),
+        std::move(filename),
+        std::move(info),
+        std::move(settings),
+        std::move(buttons),
+        std::move(layout),
+        std::move(errors)
+    );
 }
 
 auto Prop::buttons(uint32 numButtons) const -> Buttons {
@@ -342,6 +351,8 @@ auto Prop::buttons(uint32 numButtons) const -> Buttons {
 }
 
 pcui::DescriptorPtr Prop::layout() {
+    auto& logger{logging::Context::getGlobal().createLogger("versions::props::Prop::layout()")};
+
     struct Layer {
         const Layout& layout_;
         decltype(Layout::children_)::const_iterator iter_;
@@ -384,8 +395,14 @@ pcui::DescriptorPtr Prop::layout() {
         const auto& child{*layers.back().iter_};
         ++layers.back().iter_;
 
-        if (const auto *id{std::get_if<uint64>(&child)}) {
-            auto *setting{find(*id)};
+        if (const auto *id{std::get_if<std::string>(&child)}) {
+            auto iter{mMap.find(*id)};
+            if (iter == mMap.end()) {
+                logger.warn("Unknown setting in layout: " + *id);
+                continue;
+            }
+
+            auto *setting{iter->second};
 
             auto& children{layers.back().children()};
             if (auto *ptr{dynamic_cast<Toggle *>(setting)}) {
@@ -404,6 +421,8 @@ pcui::DescriptorPtr Prop::layout() {
                 children.push_back(pcui::Stepper{
                     .data_ = *ptr,
                 }());
+            } else {
+                logger.warn("Setting in layout cannot be positioned: " + *id);
             }
 
             continue;
@@ -431,267 +450,192 @@ pcui::DescriptorPtr Prop::layout() {
     return nullptr;
 }
 
-const Errors& Prop::errors() const {
-    return mErrors;
-}
-
 void Prop::migrateFrom(const Prop& from) {
-    for (const auto& [id, data] : from.mSettingMap) {
-        auto iter{mSettingMap.find(id)};
-        if (iter == mSettingMap.end()) continue;
+    for (const auto& [id, data] : from.mMap) {
+        auto iter{mMap.find(id)};
+        if (iter == mMap.end()) continue;
+
         auto *const setting{iter->second};
 
-        if (auto *ptr{dynamic_cast<Toggle *>(setting)}) {
-            data::Bool::Context toggle{*ptr};
-            if (auto *ptr{dynamic_cast<Toggle *>(data)}) {
-                toggle.set(data::Bool::Context{*ptr}.val());
-            } else if (auto *ptr{dynamic_cast<Option::Selection *>(data)}) {
-                toggle.set(data::Bool::Context{*ptr}.val());
+        if (auto *self{dynamic_cast<Toggle *>(setting)}) {
+            if (auto *other{dynamic_cast<Toggle *>(data)}) {
+                self->set(data::context(*other).val());
+            } else if (auto *other{dynamic_cast<Option::Selection *>(data)}) {
+                self->set(data::context(*other).val());
             }
-        } else if (auto *ptr{dynamic_cast<Option::Selection *>(setting)}) {
-            data::Bool::Context toggle{*ptr};
-            if (auto *ptr{dynamic_cast<Option::Selection *>(data)}) {
-                toggle.set(data::Bool::Context{*ptr}.val());
-            } else if (auto *ptr{dynamic_cast<Toggle *>(data)}) {
-                toggle.set(data::Bool::Context{*ptr}.val());
+        } else if (auto *self{dynamic_cast<Option::Selection *>(setting)}) {
+            if (auto *other{dynamic_cast<Option::Selection *>(data)}) {
+                self->set(data::context(*other).val());
+            } else if (auto *other{dynamic_cast<Toggle *>(data)}) {
+                self->set(data::context(*other).val());
             }
-        } else if (auto *ptr{dynamic_cast<Integer *>(setting)}) {
-            data::Integer::Context num{*ptr};
-            if (auto *ptr{dynamic_cast<Integer *>(data)}) {
-                num.set(data::Integer::Context{*ptr}.val());
-            } else if (auto *ptr{dynamic_cast<Decimal *>(data)}) {
-                const auto fromVal{data::Decimal::Context{*ptr}.val()};
-                num.set(static_cast<int32>(fromVal));
+        } else if (auto *self{dynamic_cast<Integer *>(setting)}) {
+            if (auto *other{dynamic_cast<Integer *>(data)}) {
+                self->set(data::context(*other).val());
+            } else if (auto *other{dynamic_cast<Decimal *>(data)}) {
+                self->set(static_cast<int32>(data::context(*other).val()));
             }
-        } else if (auto *ptr{dynamic_cast<Decimal *>(setting)}) {
-            data::Decimal::Context num{*ptr};
-            if (auto *ptr{dynamic_cast<Decimal *>(data)}) {
-                num.set(data::Decimal::Context{*ptr}.val());
-            } else if (auto *ptr{dynamic_cast<Integer *>(data)}) {
-                const auto fromVal{data::Integer::Context{*ptr}.val()};
-                num.set(static_cast<float64>(fromVal));
+        } else if (auto *self{dynamic_cast<Decimal *>(setting)}) {
+            if (auto *other{dynamic_cast<Decimal *>(data)}) {
+                self->set(data::context(*other).val());
+            } else if (auto *other{dynamic_cast<Integer *>(data)}) {
+                self->set(static_cast<float64>(data::context(*other).val()));
             }
         }
     }
 }
 
-Prop::Prop(std::string name, std::string filename, std::string info) :
-    data::Node(nullptr),
-    name_{std::move(name)},
-    filename_{std::move(filename)},
-    info_{std::move(info)} {
-    CreationScope(*this, true);
+void Prop::rebuildLookup(logging::Branch *lBranch) {
+    auto& logger{logging::Branch::optCreateLogger("versions::props::Prop::rebuildLookup()", lBranch)};
+
+    mMap.clear();
+    mReqMap.clear();
+    mDisMap.clear();
+
+    // First build the id->setting map, and then use it to build others
+
+    for (const auto& setting : mSettings) {
+        // Maybe a selection w/ empty id. This'll already be validated, so
+        // just check the value and not the validity of having an empty define.
+        if (setting->define_.empty()) continue;
+
+        if (mMap.contains(setting->define_)) {
+            logger.warn("Multiple settings registered under identifier \"" + setting->define_ + '"');
+        }
+
+        mMap[setting->define_] = setting.get();
+    }
+
+    for (const auto& setting : mSettings) {
+        const auto getDisables{[&] -> const std::vector<std::string> * {
+            using Selection = Option::Selection;
+            if (auto *ptr{dynamic_cast<const Toggle *>(setting.get())})
+                return &ptr->disables_;
+
+            if (auto *ptr{dynamic_cast<const Selection *>(setting.get())})
+                return &ptr->disables_;
+
+            return nullptr;
+        }};
+
+        if (auto *disables{getDisables()}) {
+            for (const auto& disable : *disables) {
+                auto iter{mMap.find(disable)};
+                if (iter == mMap.end()) {
+                    logger.warn("Unknown disable \"" + disable + "\" for \"" + setting->define_ + '"');
+                    continue;
+                }
+
+                mDisMap[iter->second].insert(setting.get());
+            }
+        }
+
+        for (const auto& required : setting->required_) {
+            auto iter{mMap.find(required)};
+            if (iter == mMap.end()) {
+                logger.warn("Unknown requires \"" + required + "\" for \"" + setting->define_ + '"');
+                continue;
+            }
+
+            mReqMap[iter->second].insert(setting.get());
+        }
+
+        for (const auto& required : setting->requireAny_) {
+            auto iter{mMap.find(required)};
+            if (iter == mMap.end()) {
+                logger.warn("Unknown any requires \"" + required + "\" for \"" + setting->define_ + '"');
+                continue;
+            }
+
+            mReqMap[iter->second].insert(setting.get());
+        }
+    }
 }
 
-void Prop::recalculateRequires() {
-    // Anything newly turned-on that results in disables?
-    std::set<uint64> disabled;
+void Prop::onSet(const data::base::Model& model) {
+    auto& setting{dynamic_cast<const detail::SettingBase&>(model)};
 
-    const auto onEnum{[&disabled](
-        data::Model& model, uint64, std::string_view
-    ) {
-        if (auto *ptr = dynamic_cast<Toggle *>(&model)) {
-            if (not ptr->isActive()) return false;
+    // First, grab all of the settings whose state could be affected by this
+    // change.
 
-            for (auto disable : ptr->disables_) {
-                disabled.emplace(disable);
-            }
-        } else if (auto *ptr = dynamic_cast<Option::Selection *>(&model)) {
-            if (not ptr->isActive()) return false;
+    std::set<detail::SettingBase *> affectedSet;
 
-            for (auto disable : ptr->disables_) {
-                disabled.emplace(disable);
-            }
+    const auto& disables{[&] -> const auto& {
+        if (auto *ptr{dynamic_cast<const Toggle *>(&model)})
+            return ptr->disables_;
+
+        if (auto *ptr{dynamic_cast<const Option::Selection *>(&model)})
+            return ptr->disables_;
+
+        assert(0);
+        __builtin_unreachable();
+    }()};
+
+    for (const auto& disable : disables) {
+        auto iter{mMap.find(disable)};
+
+        if (iter == mMap.end())
+            // Issues were already logged during map generation.
+            continue;
+
+        affectedSet.insert(iter->second);
+    }
+
+    for (auto *requiredBy : mReqMap[&setting]) {
+        affectedSet.insert(requiredBy);
+    }
+
+    // And then fully compute the state for each.
+
+    const auto computeRequired{[&](detail::SettingBase *setting) {
+        for (const auto& required : setting->required_) {
+            auto iter{mMap.find(required)};
+
+            if (iter == mMap.end())
+                // Issues were already logged during map generation.
+                continue;
+
+            if (not iter->second->isActive())
+                return false;
+        }
+
+        return true;
+    }};
+
+    const auto computeRequireAny{[&](detail::SettingBase *setting) {
+        if (setting->requireAny_.empty()) return true;
+
+        for (const auto& reqAny : setting->requireAny_) {
+            auto iter{mMap.find(reqAny)};
+
+            if (iter == mMap.end())
+                // Issues were already logged during map generation.
+                continue;
+
+            if (iter->second->isActive())
+                return true;
+
         }
 
         return false;
     }};
-    enumerate(onEnum);
 
-    // Alright, then disable them
-    // If circular dependencies are a problem in the future,
-    // just setValue(false) here also to prevent additional logical dependencies,
-    // and then just loop back over again to recalculate.
-    //
-    // Alternatively, disallow them via pre-checking during prop import...
-    for (auto disable : disabled) {
-        auto iter{mSettingMap.find(disable)};
-        if (iter == mSettingMap.end()) continue;
-
-        data::Model::Context{iter->second->model()}.disable();
-    }
-
-    // Now handle requirements
-    for (const auto& [id, data] : mSettingMap) {
-        if (disabled.contains(id)) continue;
-
-        bool satisfied{false};
-        if (not data->requiredAny_.empty()) {
-            for (auto anyRequire : data->requiredAny_) {
-                auto iter{mSettingMap.find(anyRequire)};
-                if (iter == mSettingMap.end()) continue;
-
-                if (iter->second->isActive()) {
-                    satisfied = true;
-                    break;
-                }
-            }
-
-            if (not satisfied) {
-                data->enable(false);
-                continue;
-            }
+    const auto computeDisabledBy{[&](detail::SettingBase *setting) {
+        for (const auto& disabledBy : mDisMap[setting]) {
+            if (disabledBy->isActive()) return false;
         }
 
-        satisfied = true;
-        for (auto require : data->required_) {
-            auto iter{mSettingMap.find(require)};
-            if (iter == mSettingMap.end() or not iter->second->isActive()) {
-                satisfied = false;
-                break;
-            }
-        }
+        return true;
+    }};
 
-        data->enable(satisfied);
-    }
-}
-
-void Prop::rebuildLookup() {
-    mSettingMap.clear();
-
-    for (const auto& setting : mSettings) {
-        mSettingMap[strID(setting->define_)] = setting.get();
-
-        if (auto *ptr{dynamic_cast<Option *>(setting.get())}) {
-            for (const auto& model : ptr->data()) {
-                auto& sel{static_cast<Option::Selection&>(*model)};
-                mSettingMap[strID(sel.define_)] = &sel;
-            }
-        }
-    }
-}
-
-bool Prop::enumerate(const EnumFunc& func) {
-    for (auto& [id, setting] : mSettingMap) {
-        if (func(setting->model(), id, setting->define_)) return true;
-    }
-
-    return false;
-}
-
-data::Model *Prop::find(uint64 id) {
-    auto iter{mSettingMap.find(id)};
-    if (iter != mSettingMap.end()) return &iter->second->model();
-    return nullptr;
-}
-
-std::unique_ptr<Prop> Prop::generate(
-    const pconf::HashedData& data,
-    logging::Branch *lBranch
-) {
-    auto& logger{logging::Branch::optCreateLogger("versions::Prop::generate()", lBranch)};
-
-    const auto nameEntry{data.find("NAME")};
-    if (not nameEntry or not nameEntry->value_) {
-        logger.error("Missing name.");
-        return nullptr;
-    }
-    const auto name{*nameEntry->value_};
-
-    const auto filenameEntry{data.find("FILENAME")};
-    if (not filenameEntry or not filenameEntry->value_) {
-        logger.error("Missing filename.");
-        return nullptr;
-    }
-    const auto filename{*filenameEntry->value_};
-
-    std::string info;
-    const auto infoEntry{data.find("INFO")};
-    if (not infoEntry or not infoEntry->value_) {
-        logger.info("No info...");
-        info = "Prop has no additional info.";
-    } else {
-        info = *infoEntry->value_;
-    }
-
-    auto prop{std::unique_ptr<Prop>(new Prop(
-        name,
-        filename,
-        info
-    ))};
-
-    const auto settingsEntry{data.find("SETTINGS")};
-    if (not settingsEntry or not settingsEntry.section()) {
-        logger.info("No settings section...");
-    } else {
-        prop->mSettings = parseSettings(
-            settingsEntry.section()->entries_,
-            *prop,
-            *logger.bdebug("Parsing SETTINGS...")
+    for (auto *affected : affectedSet) {
+        dynamic_cast<data::base::Model *>(affected)->enable(
+            computeRequired(affected) and
+            computeRequireAny(affected) and
+            computeDisabledBy(affected)
         );
     }
-
-    prop->rebuildLookup();
-
-    const auto layoutEntry{data.find("LAYOUT")};
-    if (not layoutEntry or not layoutEntry.section()) {
-        logger.info("No layout section...");
-    } else {
-        prop->mLayout = parseLayout(
-            layoutEntry.section()->entries_,
-            prop->mSettingMap,
-            *logger.bdebug("Parsing LAYOUT...")
-        );
-    }
-
-    const auto buttonEntries{data.findAll("BUTTONS")};
-    for (const auto& buttonEntry : buttonEntries) {
-        if (not buttonEntry.section()) {
-            logger.warn("Skipping non-section BUTTONS...");
-            continue;
-        }
-
-        if (not buttonEntry->labelNum_) {
-            logger.warn("Skipping BUTTONS w/o num label...");
-            continue;
-        }
-
-        const auto numButtons{*buttonEntry->labelNum_};
-        if (prop->mButtons.contains(numButtons)) {
-            logger.warn("Skipping duplicate BUTTONS{" + std::to_string(numButtons) + "}...");
-            continue;
-        }
-
-        prop->mButtons[numButtons] = parseButtons(
-            buttonEntry.section()->entries_,
-            *logger.bdebug("Parsing buttons " + std::to_string(numButtons) + "...")
-        );
-    }
-    if (buttonEntries.empty()) {
-        logger.info("No buttons entries...");
-    }
-
-    const auto errorsEntry{data.find("ERRORS")};
-    if (not errorsEntry or not errorsEntry.section()) {
-        logger.info("No errors section...");
-    } else {
-        prop->mErrors = parseErrors(
-            errorsEntry.section()->entries_,
-            *logger.bdebug("Parsing errors...")
-        );
-    }
-
-    prop->recalculateRequires();
-    return prop;
 }
-
-Versioned::Versioned(
-    std::string name,
-    std::vector<utils::Version> supportedVersions,
-    std::unique_ptr<const Prop> prop
-) : name_{std::move(name)},
-    supportedVersions_{std::move(supportedVersions)},
-    prop_{std::move(prop)} {}
 
 Context::Context() { priv::lock.lock(); }
 Context::~Context() { priv::lock.unlock(); }
@@ -708,14 +652,14 @@ const std::vector<std::unique_ptr<Versioned>>& Context::list() {
 
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 std::vector<std::unique_ptr<Prop>> Context::forVersion(
-    const utils::Version& ver, data::Node *parent
+    const utils::Version& ver, data::hier::Root& root
 ) {
     std::vector<std::unique_ptr<Prop>> ret;
 
-    for (const auto& prop : priv::props) {
+    for (const auto& versioned : priv::props) {
         bool supported{false};
 
-        for (const auto& supVer : prop->supportedVersions_) {
+        for (const auto& supVer : versioned->supportedVersions_) {
             if (supVer.compare(ver) != 0) continue;
 
             supported = true;
@@ -724,7 +668,69 @@ std::vector<std::unique_ptr<Prop>> Context::forVersion(
 
         if (not supported) continue;
 
-        ret.emplace_back(new Prop(*prop->prop_, parent));
+        const auto& data{versioned->data_};
+
+        auto& prop{*ret.emplace_back(new Prop(
+            root,
+            data.name_,
+            data.filename_,
+            data.info_,
+            data.buttons_,
+            data.layout_,
+            data.errors_
+        ))};
+
+        for (const auto& set : data.settings_) {
+            data::base::Model *model{nullptr};
+            detail::SettingBase *setting{nullptr};
+
+            if (auto *ptr{dynamic_cast<ToggleData *>(set.get())}) {
+                auto *toggle{new Toggle(prop, *ptr)};
+                setting = toggle;
+                model = toggle;
+            } else if (auto *ptr{dynamic_cast<OptionData *>(set.get())}) {
+                auto *option{new Option(prop, *ptr)};
+                setting = option;
+                model = option;
+            } else if (auto *ptr{dynamic_cast<IntegerData *>(set.get())}) {
+                auto *integer{new Integer(prop, *ptr)};
+                setting = integer;
+                model = integer;
+            } else if (auto *ptr{dynamic_cast<DecimalData *>(set.get())}) {
+                auto *decimal{new Decimal(prop, *ptr)};
+                setting = decimal;
+                model = decimal;
+            }
+
+            if (setting)
+                prop.mSettings.emplace_back(setting);
+
+            if (
+                    model and 
+                    (not set->requireAny_.empty() or
+                     not set->required_.empty())
+               ) {
+                model->disable();
+            }
+        }
+
+        prop.rebuildLookup();
+
+        for (const auto& setting : prop.mSettings) {
+            static const auto table{[] {
+                data::base::Bool::RecvTable table;
+                table.onSet_ = data::map(&Prop::onSet);
+                return table;
+            }()};
+
+            using Selection = Option::Selection;
+
+            if (auto *ptr{dynamic_cast<Toggle *>(setting.get())}) {
+                prop.amend(*ptr, table);
+            } else if (auto *ptr{dynamic_cast<Selection *>(setting.get())}) {
+                prop.amend(*ptr, table);
+            }
+        }
     }
 
     return ret;
@@ -732,109 +738,92 @@ std::vector<std::unique_ptr<Prop>> Context::forVersion(
 
 namespace {
 
-Settings parseSettings(
-    const pconf::Data& data, Prop& prop, logging::Branch& lBranch
+std::vector<std::unique_ptr<detail::Data>> parseSettings(
+    const pconf::Data& data, logging::Branch& lBranch
 ) {
     auto& logger{lBranch.createLogger("PropFile::readSettings()")};
 
-    Settings ret;
+    std::vector<std::unique_ptr<detail::Data>> ret;
     const auto hashedData{pconf::hash(data)};
 
     const auto parseDisables{[](
         const pconf::HashedData& data
-    ) -> std::vector<uint64> {
+    ) -> std::vector<std::string> {
         const auto disableEntry{data.find("DISABLE")};
         if (not disableEntry or not disableEntry->value_) return {};
 
-        const auto strs{pconf::valueAsList(disableEntry->value_)};
-        std::vector<uint64> ret;
-        ret.reserve(strs.size());
-
-        for (const auto& str : strs) {
-            ret.push_back(data::Model::strID(str));
-        }
-        return ret;
+        return pconf::valueAsList(disableEntry->value_);
     }};
 
     const auto toggleEntries{hashedData.findAll("TOGGLE")};
     for (const auto& toggleEntry : toggleEntries) {
-        const auto commonData{parseSettingCommon(
+        auto commonData{parseSettingCommon(
             toggleEntry,
             logger,
             true,
             true
         )};
         if (not commonData) continue;
-        const auto& [settingData, entryMap]{*commonData};
+        auto& [settingData, entryMap]{*commonData};
 
-        ret.push_back(std::make_unique<Toggle>(
-            prop,
-            settingData.name_,
-            *toggleEntry->label_,
-            settingData.description_,
-            settingData.required_,
-            settingData.requiredAny_,
+        ret.push_back(std::make_unique<ToggleData>(
+            std::move(settingData),
             parseDisables(entryMap)
         ));
     }
 
     const auto optionEntries{hashedData.findAll("OPTION")};
     for (const auto& optionEntry : optionEntries) {
-        const auto commonData{parseSettingCommon(
+        auto commonData{parseSettingCommon(
             optionEntry,
             logger,
             true,
             false
         )};
         if (not commonData) continue;
-        const auto& [settingData, entryMap]{*commonData};
+        auto& [settingData, entryMap]{*commonData};
 
         const auto optionData{pconf::hash(optionEntry.section()->entries_)};
-        std::vector<std::unique_ptr<Option::Selection>> selections;
+
+        std::vector<OptionData::SelectionData *> selections;
 
         const auto selectionEntries{optionData.findAll("SELECTION")};
         for (const auto& selectionEntry : selectionEntries) {
-            const auto commonData{parseSettingCommon(
+            auto commonData{parseSettingCommon(
                 selectionEntry,
                 logger,
                 false,
                 true 
             )};
             if (not commonData)  continue;
-            const auto& [settingData, entryMap]{*commonData};
+            auto& [settingData, entryMap]{*commonData};
 
-            selections.push_back(std::make_unique<Option::Selection>(
-                prop,
-                settingData.name_,
-                selectionEntry->label_.value_or(""),
-                settingData.description_,
-                settingData.required_,
-                settingData.requiredAny_,
+            auto selData{std::make_unique<Option::SelectionData>(
+                std::move(settingData),
                 parseDisables(entryMap)
-            ));
+            )};
+            selections.push_back(selData.get());
+            ret.push_back(std::move(selData));
         }
 
-        ret.push_back(std::make_unique<Option>(
-            prop,
-            *optionEntry->label_,
-            settingData.name_,
-            settingData.description_,
-            selections
+        ret.push_back(std::make_unique<OptionData>(
+            std::move(settingData),
+            std::move(selections)
         ));
     }
 
     const auto numericEntries{hashedData.findAll("NUMERIC")};
     for (const auto& numericEntry : numericEntries) {
-        const auto commonData{parseSettingCommon(
+        auto commonData{parseSettingCommon(
             numericEntry,
             logger,
             true,
             true 
         )};
         if (not commonData)  continue;
-        const auto& [settingData, entryMap]{*commonData};
+        auto& [settingData, entryMap]{*commonData};
 
-        data::Integer::Params params;
+        data::base::Integer::Params params;
         std::optional<int32> defaultVal;
 
         const auto minEntry{entryMap.find("MIN")};
@@ -868,13 +857,8 @@ Settings parseSettings(
         if (params.min_ > params.max_) {
             logger.warn("Setting " + settingData.name_ + " has a min value greater than max, this setting will be ignored!");
         } else {
-            ret.emplace_back(std::make_unique<Integer>(
-                prop,
-                settingData.name_,
-                *numericEntry->label_,
-                settingData.description_,
-                settingData.required_,
-                settingData.requiredAny_,
+            ret.emplace_back(std::make_unique<IntegerData>(
+                std::move(settingData),
                 params,
                 defaultVal
             ));
@@ -883,16 +867,16 @@ Settings parseSettings(
 
     const auto decimalEntries{hashedData.findAll("DECIMAL")};
     for (const auto& decimalEntry : decimalEntries) {
-        const auto commonData{parseSettingCommon(
+        auto commonData{parseSettingCommon(
             decimalEntry,
             logger,
             true,
             true 
         )};
         if (not commonData)  continue;
-        const auto& [settingData, entryMap]{*commonData};
+        auto& [settingData, entryMap]{*commonData};
 
-        data::Decimal::Params params;
+        data::base::Decimal::Params params;
         std::optional<float64> defaultVal;
 
         const auto minEntry{entryMap.find("MIN")};
@@ -926,13 +910,8 @@ Settings parseSettings(
         if (params.min_ > params.max_) {
             logger.warn("Setting " + settingData.name_ + " has a min value greater than max, this setting will be ignored!");
         } else {
-            ret.emplace_back(std::make_unique<Decimal>(
-                prop,
-                settingData.name_,
-                *decimalEntry->label_,
-                settingData.description_,
-                settingData.required_,
-                settingData.requiredAny_,
+            ret.emplace_back(std::make_unique<DecimalData>(
+                std::move(settingData),
                 params,
                 defaultVal
             ));
@@ -942,14 +921,12 @@ Settings parseSettings(
     return std::move(ret);
 }
 
-std::optional<std::pair<CommonData, pconf::HashedData>> parseSettingCommon(
+std::optional<std::pair<detail::Data, pconf::HashedData>> parseSettingCommon(
     const pconf::EntryPtr& entry,
     logging::Logger& logger,
     bool requireLabel,
     bool requireName
 ) {
-    CommonData commonData;
-
     if (not entry->label_ and requireLabel) {
         logger.warn(entry->name_ + " section has no label, ignoring!");
         return std::nullopt;
@@ -960,6 +937,8 @@ std::optional<std::pair<CommonData, pconf::HashedData>> parseSettingCommon(
         return std::nullopt;
     }
 
+    std::string name;
+
     auto data{pconf::hash(entry.section()->entries_)};
     const auto nameEntry{data.find("NAME")};
     if (not nameEntry or not nameEntry->value_) {
@@ -968,49 +947,50 @@ std::optional<std::pair<CommonData, pconf::HashedData>> parseSettingCommon(
             return std::nullopt;
         }
     } else {
-        commonData.name_ = *nameEntry->value_;
+        name = *nameEntry->value_;
     }
     if (nameEntry) data.erase(nameEntry);
 
+    std::string description;
+
     const auto descEntry{data.find("DESCRIPTION")};
     if (descEntry and descEntry->value_) {
-        commonData.description_ = *descEntry->value_;
+        description = *descEntry->value_;
         data.erase(descEntry);
     }
 
+    std::vector<std::string> requireAny;
+
     const auto requireAnyEntry{data.find("REQUIREANY")};
     if (requireAnyEntry and requireAnyEntry->value_) {
-        const auto strList{pconf::valueAsList(requireAnyEntry->value_)};
-        commonData.requiredAny_.reserve(strList.size());
-
-        for (const auto& str : strList) {
-            commonData.requiredAny_.push_back(data::Model::strID(str));
-        }
-
+        requireAny = pconf::valueAsList(requireAnyEntry->value_);
         data.erase(requireAnyEntry);
     }
 
+    std::vector<std::string> required;
+
     const auto requiredEntry{data.find("REQUIRE")};
     if (requiredEntry and requiredEntry->value_) {
-        const auto strList{pconf::valueAsList(requiredEntry->value_)};
-        commonData.required_.reserve(strList.size());
-
-        for (const auto& str : strList) {
-            commonData.required_.push_back(data::Model::strID(str));
-        }
-
+        required = pconf::valueAsList(requiredEntry->value_);
         data.erase(requiredEntry);
     }
 
-    return std::pair{commonData, data};
+    return std::pair{
+        detail::Data(
+            std::move(name),
+            *entry->label_,
+            std::move(description),
+            std::move(required),
+            std::move(requireAny)
+        ),
+        data
+    };
 }
 
 Layout parseLayout(
-    const pconf::Data& data, const SettingMap& setmap, logging::Branch& lBranch
+    const pconf::Data& data, logging::Branch& lBranch
 ) {
     auto& logger{lBranch.createLogger("versions::props::parseLayout()")};
-
-    std::set<uint64> usedSettings;
 
     Layout ret;
 
@@ -1043,22 +1023,7 @@ Layout parseLayout(
                 continue;
             }
 
-            const auto id{data::Model::strID(*entry->label_)};
-            const auto settingIter{setmap.find(id)};
-
-            if (settingIter == setmap.end()) {
-                logger.warn("Skipping unknown setting " + *entry->label_ + "...");
-                continue;
-            }
-
-            if (usedSettings.contains(id)) {
-                logger.warn("Setting " + *entry->label_ + " appeared in layout twice!");
-            }
-
-            usedSettings.insert(id);
-
-            layers.back().layout_.children_.emplace_back(id);
-
+            layers.back().layout_.children_.emplace_back(*entry->label_);
             continue;
         } 
 
@@ -1137,7 +1102,7 @@ Buttons parseButtons(
                 continue;
             }
 
-            std::unordered_map<uint64, std::string> descriptions;
+            std::unordered_map<std::string, std::string> descriptions;
             const auto& descEntries{buttonEntry.section()->entries_};
             for (const auto& descEntry : descEntries) {
                 if (descEntry->name_ != "DESCRIPTION") {
@@ -1151,7 +1116,7 @@ Buttons parseButtons(
                 }
 
                 const auto [iter, success]{descriptions.try_emplace(
-                    data::Model::strID(descEntry->label_.value_or("")),
+                    descEntry->label_.value_or(""),
                     descEntry->value_.value()
                 )};
 

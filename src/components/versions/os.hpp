@@ -19,70 +19,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <memory>
 #include <vector>
 
-#include "data/hierarchy/model.hpp"
-#include "data/vector.hpp"
 #include "utils/version.hpp"
 
 #include "versions_export.h"
 
 namespace versions::os {
 
-struct BoardData {
+struct VERSIONS_EXPORT Board {
     const std::string name_;
     const std::string coreId_;
     const std::string include_;
 };
 
-struct VERSIONS_EXPORT OSData {
+struct VERSIONS_EXPORT OS {
     const utils::Version version_;
 
     const std::string coreUrl_;
     const utils::Version coreVersion_;
 
-    const std::vector<BoardData> boards_;
-};
-
-struct VERSIONS_EXPORT Board : data::Model {
-    Board(
-        std::string name,
-        std::string coreId,
-        std::string include
-    );
-
-    Board(const Board&, data::Node *);
-
-    const std::string name_;
-    const std::string coreId_;
-    const std::string include_;
-};
-
-struct VERSIONS_EXPORT OS : data::Model {
-    OS(
-        utils::Version version,
-        std::string coreUrl,
-        utils::Version coreVer,
-        std::vector<Board> boards
-    );
-
-    OS(const OS&, data::Node *);
-
-    const utils::Version version_;
-
-    const std::string coreUrl_;
-    const utils::Version coreVersion_;
-
-    const data::Vector boards_;
-
-    operator OSData() const;
+    const std::vector<Board> boards_;
 };
 
 struct VERSIONS_EXPORT Context {
     Context();
     ~Context();
 
-    const std::vector<OSData>& available() LIFETIMEBOUND;
+    const std::vector<std::unique_ptr<OS>>& available() LIFETIMEBOUND;
     const std::vector<std::unique_ptr<OS>>& list() LIFETIMEBOUND;
 };
 

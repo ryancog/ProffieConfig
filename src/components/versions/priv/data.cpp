@@ -21,10 +21,10 @@
 
 using namespace versions;
 
-std::recursive_mutex versions::priv::lock;
-std::vector<std::unique_ptr<props::Versioned>> versions::priv::props;
-std::vector<std::unique_ptr<os::OS>> versions::priv::os;
+std::recursive_mutex priv::lock;
+std::vector<std::unique_ptr<props::Versioned>> priv::props;
+std::vector<std::unique_ptr<os::OS>> priv::os;
 
-std::vector<os::OSData> versions::priv::availableOS;
-std::vector<props::Available> versions::priv::availableProps;
+std::vector<std::unique_ptr<os::OS>> priv::availableOS;
+std::vector<props::Available> priv::availableProps;
 

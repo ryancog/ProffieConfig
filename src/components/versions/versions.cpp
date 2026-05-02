@@ -238,7 +238,7 @@ void versions::loadLocal(logging::Branch *lBranch) {
         }
         const auto hashedDataData{pconf::hash(dataData)};
 
-        auto prop{props::Prop::generate(
+        auto prop{props::PropData::generate(
             hashedDataData, logger.bverbose("Generating prop...")
         )};
         if (not prop) {
@@ -246,10 +246,10 @@ void versions::loadLocal(logging::Branch *lBranch) {
             continue;
         }
 
-        priv::props.push_back(std::make_unique<props::Versioned>(
+        priv::props.emplace_back(new props::Versioned(
             std::move(propName),
             std::move(versions),
-            std::move(prop)
+            std::move(*prop)
         ));
     }
 
@@ -290,7 +290,7 @@ std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
         return _("Could not parse prop manifest").ToStdString();
     }
 
-    { std::lock_guard scopeLock{priv::lock};
+    { std::lock_guard scopeLock(priv::lock);
         priv::availableProps.clear();
         for (const auto& entry : data) {
             if (entry->name_ != detail::PROP_STR) continue;
@@ -372,7 +372,7 @@ std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
         return _("Could not parse ProffieOS manifest").ToStdString();
     }
 
-    { std::lock_guard scopeLock{priv::lock};
+    { std::lock_guard scopeLock(priv::lock);
         priv::availableOS.clear();
         for (const auto& entry : data) {
             if (entry->name_ != detail::OS_STR) continue;
@@ -412,7 +412,7 @@ std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
                 }
             }
 
-            std::vector<os::BoardData> boards;
+            std::vector<os::Board> boards;
             auto boardEntries{propEntries.findAll(detail::BOARD_STR)};
             for (auto& boardEntry : boardEntries) {
                 if (not boardEntry->label_) {
@@ -451,14 +451,14 @@ std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
                     }
                 }
 
-                boards.push_back(os::BoardData{
+                boards.push_back(os::Board{
                     .name_=std::move(*boardEntry->label_),
                     .coreId_=std::move(coreId),
                     .include_=std::move(include),
                 });
             }
 
-            priv::availableOS.push_back(os::OSData{
+            priv::availableOS.emplace_back(new os::OS{
                 .version_=std::move(ver),
                 .coreUrl_=std::move(coreUrl),
                 .coreVersion_=std::move(coreVersion),
@@ -489,7 +489,7 @@ std::optional<std::string> versions::installDefault(
     auto osDownErr{downloadOS(DEFAULT_OS_VERSION, logger.binfo("Downloading ProffieOS"))};
     if (osDownErr) return osDownErr;
 
-    { std::lock_guard scopeLock{priv::lock};
+    { std::lock_guard scopeLock(priv::lock);
         for (const auto& availProp : priv::availableProps) {
             bool supportsDefault{false};
             for (const auto& ver : availProp.supportedVersions_) {
@@ -511,17 +511,17 @@ std::optional<std::string> versions::installDefault(
 std::optional<std::string> versions::downloadOS(
     const utils::Version& ver, logging::Branch *lBranch
 ) {
-    std::lock_guard scopeLock{priv::lock};
+    std::lock_guard scopeLock(priv::lock);
 
     auto& logger{logging::Branch::optCreateLogger("versions::downloadOS()", lBranch)};
 
     bool known{false};
-    const os::OSData *info{};
+    const os::OS *info{};
     for (const auto& avail : priv::availableOS) {
-        if (avail.version_.compare(ver) != 0) continue;
+        if (avail->version_.compare(ver) != 0) continue;
 
         known = true;
-        info = &avail;
+        info = avail.get();
         break;
     }
 
@@ -636,7 +636,7 @@ std::optional<std::string> versions::downloadOS(
 std::optional<std::string> versions::downloadProp(
     const std::string& name, logging::Branch *lBranch
 ) {
-    std::lock_guard scopeLock{priv::lock};
+    std::lock_guard scopeLock(priv::lock);
 
     /*
      * The wxWebRequestSync will call wxRemoveFile on the data tmp file if it

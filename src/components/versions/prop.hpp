@@ -24,21 +24,19 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include <wx/gdicmn.h>
 
-#include "data/bool.hpp"
-#include "data/hierarchy/node.hpp"
-#include "data/number.hpp"
-#include "data/helpers/exclusive.hpp"
+#include "data/hierarchic/models/bool.hpp"
+#include "data/hierarchic/models/exclusive.hpp"
+#include "data/hierarchic/models/number.hpp"
 #include "log/branch.hpp"
 #include "pconf/types.hpp"
 #include "ui/types.hpp"
 #include "utils/types.hpp"
-
 #include "utils/version.hpp"
+
 #include "versions_export.h"
 
 namespace versions::props {
@@ -48,205 +46,190 @@ struct Context;
 
 namespace detail {
 
-struct VERSIONS_EXPORT SettingBase {
-    virtual ~SettingBase();
-
-    SettingBase(SettingBase&&) = delete;
-    SettingBase& operator=(const SettingBase&) = delete;
-    SettingBase& operator=(SettingBase&&) = delete;
-
-    data::Model& model();
-
-    /**
-     * @return True if enabled and value is "active," false otherwise
-     */
-    [[nodiscard]] bool isActive();
-
-    /**
-     * @return True if isActive() and define doesn't have any other blocks to being output.
-     */
-    [[nodiscard]] bool shouldOutputDefine();
-
-    /**
-     * @return The define str if shouldOutputDefine() returns true, nullopt
-     * otherwise
-     */
-    [[nodiscard]] std::optional<std::string> generateDefineString();
+struct VERSIONS_EXPORT Data {
+    Data(
+        std::string,
+        std::string,
+        std::string,
+        std::vector<std::string>,
+        std::vector<std::string>
+    );
+    Data(Data&&) = default;
+    Data(const Data&) = default;
+    virtual ~Data() = default;
 
     const std::string name_;
     const std::string define_;
     const std::string description_;
 
-    const std::vector<uint64> required_;
-    const std::vector<uint64> requiredAny_;
+    const std::vector<std::string> required_;
+    const std::vector<std::string> requireAny_;
+};
 
-protected:
-    SettingBase(
-        std::string name,
-        std::string define,
-        std::string description,
-        std::vector<uint64> required,
-        std::vector<uint64> requiredAny
-    ) : name_{std::move(name)}, define_{std::move(define)},
-        description_{std::move(description)}, required_{std::move(required)},
-        requiredAny_{std::move(requiredAny)} {}
+// The consistency of these state getters generally relies on the underlying
+// models being locked by hierarchy.
+struct VERSIONS_EXPORT SettingBase : virtual detail::Data {
+    /**
+     * @return True if enabled and value is "active," false otherwise
+     */
+    [[nodiscard]] virtual bool isActive() const = 0;
 
-    SettingBase(const SettingBase& other) :
-        SettingBase{
-            other.name_,
-            other.description_,
-            other.define_,
-            other.required_,
-            other.requiredAny_
-        } {}
+    /**
+     * @return True if isActive() and define doesn't have any other blocks to
+     * being output.
+     */
+    [[nodiscard]] virtual bool shouldOutputDefine() const = 0;
 
-private:
-    friend Prop;
-
-    void enable(bool);
+    /**
+     * @return The define str if shouldOutputDefine() returns true, nullopt
+     * otherwise
+     */
+    [[nodiscard]] virtual std::optional<std::string>
+        generateDefineString() const = 0;
 };
 
 } // namespace detail
 
-struct VERSIONS_EXPORT Toggle : detail::SettingBase, data::Bool {
-    Toggle(
-        Prop&,
-        std::string name,
-        std::string define,
-        std::string description,
-        std::vector<uint64> required,
-        std::vector<uint64> requiredAny,
-        std::vector<uint64> disables
-    );
+struct VERSIONS_EXPORT ToggleData : virtual detail::Data {
+    ToggleData(Data, std::vector<std::string>);
 
-    Toggle(const Toggle& other, Prop& prop);
-
-    const std::vector<uint64> disables_;
+    const std::vector<std::string> disables_;
 };
 
-struct VERSIONS_EXPORT Integer : detail::SettingBase, data::Integer {
-    Integer(
-        Prop& prop,
-        std::string name,
-        std::string define,
-        std::string description,
-        std::vector<uint64> required,
-        std::vector<uint64> requiredAny,
-        data::Integer::Params params,
-        std::optional<int32> defaultVal
-    );
+struct VERSIONS_EXPORT Toggle : detail::SettingBase,
+                                ToggleData,
+                                data::hier::Bool {
+    Toggle(Prop&, ToggleData);
+    bool isActive() const override;
+    bool shouldOutputDefine() const override;
+    std::optional<std::string> generateDefineString() const override;
+};
 
-    Integer(const Integer& other, Prop& prop);
+struct VERSIONS_EXPORT IntegerData : virtual detail::Data {
+    IntegerData(Data, data::base::Integer::Params, std::optional<int32>);
 
+    const data::base::Integer::Params params_;
     const std::optional<int32> defaultVal_;
 };
 
-struct VERSIONS_EXPORT Decimal : detail::SettingBase, data::Decimal {
-    Decimal(
-        Prop& prop,
-        std::string name,
-        std::string define,
-        std::string description,
-        std::vector<uint64> required,
-        std::vector<uint64> requiredAny,
-        data::Decimal::Params params,
-        std::optional<float64> defaultVal
-    );
+struct VERSIONS_EXPORT Integer : detail::SettingBase,
+                                 IntegerData,
+                                 data::hier::Integer {
+    Integer(Prop&, IntegerData);
+    bool isActive() const override;
+    bool shouldOutputDefine() const override;
+    std::optional<std::string> generateDefineString() const override;
+};
 
-    Decimal(const Decimal& other, Prop& prop);
+struct VERSIONS_EXPORT DecimalData : virtual detail::Data {
+    DecimalData(Data, data::base::Decimal::Params, std::optional<float64>);
 
+    const data::base::Decimal::Params params_;
     const std::optional<float64> defaultVal_;
 };
 
-struct VERSIONS_EXPORT Option : detail::SettingBase, data::Exclusive {
-    struct Selection;
-
-    Option(
-        Prop&,
-        std::string id,
-        std::string name,
-        std::string description,
-        std::vector<std::unique_ptr<Selection>>&
-    );
-
-    Option(const Option&, Prop&);
+struct VERSIONS_EXPORT Decimal : detail::SettingBase,
+                                 DecimalData,
+                                 data::hier::Decimal {
+    Decimal(Prop& prop, DecimalData);
+    bool isActive() const override;
+    bool shouldOutputDefine() const override;
+    std::optional<std::string> generateDefineString() const override;
 };
 
-struct VERSIONS_EXPORT Option::Selection : detail::SettingBase, data::Bool {
-    Selection(
-        Prop& prop,
-        std::string name,
-        std::string define,
-        std::string description,
-        std::vector<uint64> required,
-        std::vector<uint64> requiredAny,
-        std::vector<uint64> disables
-    );
 
-    Selection(const Selection& other, Prop& prop);
+struct VERSIONS_EXPORT OptionData : virtual detail::Data {
+    struct SelectionData;
 
-    // Since the label may be left blank, need more to identify
-    std::string idString(const std::string& optId);
+    OptionData(Data, std::vector<SelectionData *>);
 
-    const std::vector<uint64> disables_;
+    std::vector<SelectionData *> selections_;
+};
+
+struct VERSIONS_EXPORT Option : detail::SettingBase, 
+                                OptionData,
+                                data::hier::Exclusive {
+    struct Selection;
+
+    Option(Prop&, OptionData);
+    std::unique_ptr<data::base::Bool> create(size) override;
+    bool isActive() const override;
+    bool shouldOutputDefine() const override;
+    std::optional<std::string> generateDefineString() const override;
+};
+
+struct VERSIONS_EXPORT OptionData::SelectionData : virtual detail::Data {
+    SelectionData(Data, std::vector<std::string>);
+
+    const std::vector<std::string> disables_;
+};
+
+struct VERSIONS_EXPORT Option::Selection : detail::SettingBase, 
+                                           SelectionData,
+                                           data::hier::Bool {
+    Selection(data::hier::Root&, SelectionData);
+    bool isActive() const override;
+    bool shouldOutputDefine() const override;
+    std::optional<std::string> generateDefineString() const override;
 };
 
 /**
  * A single button/control mapping to a prop action
  */
-struct Button {
+struct VERSIONS_EXPORT Button {
     const std::string name_;
 
     // <Predicate, Description>
-    const std::unordered_map<uint64, std::string> descriptions_;
+    const std::unordered_map<std::string, std::string> descriptions_;
 };
 
 /**
- * A collection of PropButton for a certain prop mode/state
+ * A collection of Button for a certain prop mode/state
  */
-struct ButtonState {
-    ButtonState(std::string stateName, std::vector<Button> buttons);
-
+struct VERSIONS_EXPORT ButtonState {
     const std::string stateName_;
     const std::vector<Button> buttons_;
 };
 
 using Buttons = std::vector<ButtonState>;
 
-struct ErrorMapping {
-    ErrorMapping(std::string arduinoError, std::string displayError);
+struct VERSIONS_EXPORT ErrorMapping {
     const std::string arduinoError_;
     const std::string displayError_;
 };
+
 using Errors = std::vector<ErrorMapping>;
 
-using Settings = std::vector<std::unique_ptr<detail::SettingBase>>;
-using SettingMap = std::unordered_map<uint64, detail::SettingBase *>;
-
-struct Layout {
+struct VERSIONS_EXPORT Layout {
     wxOrientation orient_;
     wxString label_;
-    std::vector<std::variant<uint64, Layout>> children_;
+    std::vector<std::variant<std::string, Layout>> children_;
 };
 
-struct VERSIONS_EXPORT Prop : data::Node {
-    bool enumerate(const EnumFunc&) override;
-    Model *find(uint64) override;
-
-    static std::unique_ptr<Prop> generate(
+struct VERSIONS_EXPORT PropData {
+    static std::optional<PropData> generate(
         const pconf::HashedData& data,
         logging::Branch *lBranch
     );
 
-    [[nodiscard]] const Settings& settings() const;
+    std::string name_;
+    std::string filename_;
+    std::string info_;
+
+    std::vector<std::unique_ptr<detail::Data>> settings_;
+    std::map<uint32, Buttons> buttons_;
+    Layout layout_;
+    Errors errors_;
+};
+
+struct VERSIONS_EXPORT Prop : data::hier::Model, private data::Receiver {
+    [[nodiscard]] const auto& settings() const { return mSettings; }
     [[nodiscard]] Buttons buttons(uint32 numButtons) const;
-    [[nodiscard]] const Errors& errors() const;
+    [[nodiscard]] const Errors& errors() const { return mErrors; }
 
     [[nodiscard]] pcui::DescriptorPtr layout();
 
     void migrateFrom(const Prop&);
-
-    void recalculateRequires();
 
     const std::string name_;
     const std::string filename_;
@@ -255,30 +238,49 @@ struct VERSIONS_EXPORT Prop : data::Node {
 private:
     friend versions::props::Context;
 
-    Prop(std::string name, std::string filename, std::string info);
-    Prop(const Prop& other, data::Node *);
+    Prop(
+        data::hier::Root&,
+        std::string name,
+        std::string filename,
+        std::string info,
+        std::map<uint32, Buttons> buttons,
+        Layout layout,
+        Errors errors
+    );
 
-    void rebuildLookup();
+    void rebuildLookup(logging::Branch * = nullptr);
+    void onSet(const data::base::Model&);
 
-    Settings mSettings;
-    SettingMap mSettingMap;
-    Layout mLayout;
+    std::vector<std::unique_ptr<detail::SettingBase>> mSettings;
+    const std::map<uint32, Buttons> mButtons;
+    const Layout mLayout;
+    const Errors mErrors;
 
-    std::map<uint32, Buttons> mButtons;
-    Errors mErrors;
+    // Maps to accelerate setting lookup. 
+    //
+    // Mapping of all settings' define/IDs (if they're named) to the data.
+    std::unordered_map<std::string, detail::SettingBase *> mMap;
+
+    using RelationMap = std::map<
+        const detail::SettingBase *, std::set<detail::SettingBase *>
+    >;
+    // <Required, Required By>
+    //
+    // E.g. If `OPTION1` `REQUIRES` `OPTION2`, then the mapping is:
+    // mReqMap[`OPTION2`] = {`OPTION1`}
+    RelationMap mReqMap;
+    // <Disabled, Disabled By>
+    //
+    // E.g. If `OPTION1` `DISABLE`s `OPTION2`, then the mapping is:
+    // mReqMap[`OPTION2`] = {`OPTION1`}
+    RelationMap mDisMap;
 };
 
 struct VERSIONS_EXPORT Versioned {
-    Versioned(
-        std::string name,
-        std::vector<utils::Version> supportedVersions,
-        std::unique_ptr<const Prop> prop
-    );
-
     const std::string name_;
     const std::vector<utils::Version> supportedVersions_;
 
-    const std::unique_ptr<const Prop> prop_;
+    const PropData data_;
 };
 
 struct VERSIONS_EXPORT Available {
@@ -295,10 +297,10 @@ struct VERSIONS_EXPORT Context {
     const std::vector<std::unique_ptr<Versioned>>& list() LIFETIMEBOUND;
 
     /**
-     * Build a set of props for version and node.
+     * Build a set of props for version
      */
     std::vector<std::unique_ptr<Prop>> forVersion(
-        const utils::Version&, data::Node *
+        const utils::Version&, data::hier::Root&
     );
 };
 
