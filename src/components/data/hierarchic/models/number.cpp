@@ -22,6 +22,13 @@
 using namespace data::hier;
 
 template <typename T>
+detail::Number<T>::Number(Root& root) : Model(root) {}
+
+template <typename T>
+detail::Number<T>::Number(const Number& other, Root& root) :
+    base::detail::Number<T>(other), Model(other, root) {}
+
+template <typename T>
 bool detail::Number<T>::set(T val) {
     return processAction(std::make_unique<SetAction>(val));
 }

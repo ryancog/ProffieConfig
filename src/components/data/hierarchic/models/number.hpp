@@ -33,6 +33,9 @@ struct DATA_EXPORT Number : base::detail::Number<T>, Model {
     struct SetAction;
     struct UpdateAction;
 
+    Number(Root&);
+    Number(const Number&, Root&);
+
     bool set(T) override;
     bool update(Number<T>::Params) override;
 };
