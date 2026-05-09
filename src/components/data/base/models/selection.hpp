@@ -46,6 +46,7 @@ struct DATA_EXPORT Selection : virtual Model {
      */
     using Pruner = bool (*)(const ROContext&, uint32);
 
+    Selection() = default;
     Selection(const Selection&);
 
     void setAddFilter(AddFilter);

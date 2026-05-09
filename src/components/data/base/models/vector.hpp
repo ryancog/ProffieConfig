@@ -43,13 +43,24 @@ struct DATA_EXPORT Vector : virtual Model {
     virtual bool insert(size, std::unique_ptr<Model>&&) = 0;
 
     /**
+     * Add model to end
+     */
+    bool append(std::unique_ptr<base::Model>&&);
+
+    /**
      * Remove item at pos
      */
     virtual bool remove(size) = 0;
 
-    virtual bool swap(size) = 0;
+    /**
+     * Move model up or down in the list.
+     */
+    bool moveUp(size);
+    bool moveDown(size);
 
 protected:
+    virtual bool swap(size) = 0;
+
     bool setupInsert(size, const std::unique_ptr<Model>&);
     void doInsert(size, std::unique_ptr<Model>&&);
 
@@ -81,10 +92,15 @@ struct DATA_EXPORT Vector::Context : Model::Context, ROContext {
 
     void insert(size, std::unique_ptr<Model>&&) const;
 
-    /**
-     * Add model to end
-     */
-    void add(std::unique_ptr<Model>&&) const;
+    void append(std::unique_ptr<Model>&&) const;
+
+    template <typename T, typename ...Args>
+    T& append(Args&& ...args) const {
+        auto obj{std::make_unique<T>(std::forward<Args>(args)...)};
+        auto& ret{*obj};
+        append(std::move(obj));
+        return ret;
+    }
 
     void remove(size) const;
 
@@ -94,9 +110,6 @@ struct DATA_EXPORT Vector::Context : Model::Context, ROContext {
      */
     bool remove(Model&) const;
 
-    /**
-     * Move model up or down in the list.
-     */
     void moveUp(size) const;
     void moveDown(size) const;
 };

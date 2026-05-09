@@ -21,8 +21,22 @@
 
 #include <cassert>
 #include <memory>
+#include <mutex>
 
 using namespace data::base;
+
+bool Vector::append(std::unique_ptr<base::Model>&& obj) {
+    std::lock_guard scopeLock(*this);
+    return insert(mChildren.size(), std::move(obj));
+}
+
+bool Vector::moveUp(size idx) {
+    return swap(idx - 1);
+}
+
+bool Vector::moveDown(size idx) {
+    return swap(idx);
+}
 
 bool Vector::setupInsert(size idx, const std::unique_ptr<Model>& obj) {
     assert(idx <= mChildren.size());
@@ -85,8 +99,8 @@ void Vector::Context::insert(
     model().insert(idx, std::move(obj));
 }
 
-void Vector::Context::add(std::unique_ptr<Model>&& obj) const {
-    insert(model().mChildren.size(), std::move(obj));
+void Vector::Context::append(std::unique_ptr<base::Model>&& obj) const {
+    model().append(std::move(obj));
 }
 
 void Vector::Context::remove(size idx) const {

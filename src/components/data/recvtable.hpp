@@ -34,6 +34,16 @@ struct Model;
 
 struct Receiver;
 
+// TODO: Can I come up with a more brief way to use this?
+//
+// Right now my usual solution is something like:
+// static const auto table{[] {
+//     RecvTable table;
+//     ... mappings ...
+//     return table;
+// }()};
+//
+// Which is a lot of clutter...
 struct DATA_EXPORT RecvTable {
     virtual ~RecvTable() = default;
 

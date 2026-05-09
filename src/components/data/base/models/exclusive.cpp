@@ -47,6 +47,10 @@ void Exclusive::init(size num) {
     mData[0]->set(true);
 }
 
+std::span<const std::unique_ptr<Bool>> Exclusive::data() const {
+    return mData;
+}
+
 bool Exclusive::setupSelect(size& idx) {
     assert(idx < mData.size());
     return true;
@@ -80,7 +84,7 @@ void Exclusive::onSet(const Model& model) {
     }
 
     mSelected = selIdx;
-    sendToReceivers(&RecvTable::onSelection_, selIdx);
+    sendToReceivers(&RecvTable::onSelection_);
 }
 
 Exclusive::ROContext::ROContext(const Exclusive& excl) :

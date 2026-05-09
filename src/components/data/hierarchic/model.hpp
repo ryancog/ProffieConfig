@@ -38,6 +38,9 @@ struct DATA_EXPORT Model : virtual base::Model {
     struct CreationScope;
     struct EnableAction;
 
+    Model(Root&);
+    Model(const Model&, Root&);
+
     Model(const Model &) = delete;
 
     template<typename T = Root>
@@ -53,9 +56,6 @@ struct DATA_EXPORT Model : virtual base::Model {
     virtual std::vector<Model *> children() { return {}; }
 
 protected:
-    Model(Root&);
-    Model(const Model&, Root&);
-
     bool processAction(std::unique_ptr<Action>&&);
     
 private:

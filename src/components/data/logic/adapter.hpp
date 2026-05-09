@@ -22,7 +22,9 @@
 #include "data/base/model.hpp"
 #include "data/base/models/bool.hpp"
 #include "data/base/models/choice.hpp"
+#include "data/base/models/exclusive.hpp"
 #include "data/base/models/number.hpp"
+#include "data/base/models/selector.hpp"
 #include "data/base/models/string.hpp"
 #include "data/base/models/vector.hpp"
 #include "data/logic/logic.hpp"
@@ -47,6 +49,16 @@ DATA_EXPORT Element operator|(const base::Bool&, IsSet);
 struct DATA_EXPORT HasSelection : std::set<int32> {};
 
 DATA_EXPORT Element operator|(const base::Choice&, HasSelection);
+
+DATA_EXPORT Element operator|(const base::Exclusive&, HasSelection);
+
+struct CanMoveUp {};
+
+DATA_EXPORT Element operator|(const base::Selector&, CanMoveUp);
+
+struct CanMoveDown {};
+
+DATA_EXPORT Element operator|(const base::Selector&, CanMoveDown);
 
 struct DATA_EXPORT IsEmpty {};
 

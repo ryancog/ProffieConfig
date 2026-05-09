@@ -22,6 +22,7 @@
 #include <cassert>
 
 #include "data/base/model.hpp"
+#include "data/hierarchic/model.hpp"
 
 using namespace data;
 
@@ -57,6 +58,15 @@ void Receiver::activate() {
     // to do whatever (re)setup it needs.
     onActivate();
 
+    // And activate any children
+    if (auto *ptr{dynamic_cast<hier::Model *>(this)}) {
+        for (auto *child : ptr->children()) {
+            if (auto *childRcvr{dynamic_cast<Receiver *>(child)}) {
+                childRcvr->activate();
+            }
+        }
+    }
+
     for (auto [model, map] : mRecvMap) {
         model->unlock();
     }
@@ -79,6 +89,14 @@ void Receiver::deactivate() {
     }
 
     mAttached = false;
+
+    if (auto *ptr{dynamic_cast<hier::Model *>(this)}) {
+        for (auto *child : ptr->children()) {
+            if (auto *childRcvr{dynamic_cast<Receiver *>(child)}) {
+                childRcvr->deactivate();
+            }
+        }
+    }
 
     onDeactivate();
 

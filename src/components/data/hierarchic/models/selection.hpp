@@ -32,6 +32,9 @@ struct DATA_EXPORT Selection : base::Selection, Model {
     struct InsertAction;
     struct RemoveAction;
 
+    Selection(Root&);
+    Selection(const Selection&, Root&);
+
     bool select(uint32 idx, bool select = true) override;
     bool select(std::string&&) override;
     bool setItems(std::vector<std::string>&&) override;

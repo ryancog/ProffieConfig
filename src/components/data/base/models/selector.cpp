@@ -55,7 +55,8 @@ const Vector *Selector::doBind(const Vector *vec) {
 
     sendToReceivers(&RecvTable::preRebound_);
 
-    repeal(*mVec);
+    if (mVec)
+        repeal(*mVec);
 
     auto ret{mVec};
     mVec = vec;
@@ -89,26 +90,17 @@ bool Selector::canMoveDown(const Choice::ROContext& ctxt) {
     return ctxt.idx() + 1 != ctxt.num();
 }
 
-bool Selector::hasSelection(const Choice::ROContext& ctxt) {
-    return ctxt.idx() != -1;
-}
-
 void Selector::onChoice() {
     auto ctxt{context(choice())};
 
     if (canMoveUp(ctxt) != mLastCanMoveUp) {
-        sendToReceivers(&RecvTable::onCanMoveUp_, canMoveUp(ctxt));
+        sendToReceivers(&RecvTable::onCanMoveUp_);
         mLastCanMoveUp = canMoveUp(ctxt);
     }
 
     if (canMoveDown(ctxt) != mLastCanMoveDown) {
-        sendToReceivers(&RecvTable::onCanMoveDown_, canMoveDown(ctxt));
+        sendToReceivers(&RecvTable::onCanMoveDown_);
         mLastCanMoveDown = canMoveDown(ctxt);
-    }
-
-    if (hasSelection(ctxt) != mLastHasSelection) {
-        sendToReceivers(&RecvTable::onHasSelection_, hasSelection(ctxt));
-        mLastHasSelection = hasSelection(ctxt);
     }
 }
 
@@ -189,10 +181,6 @@ bool Selector::ROContext::canMoveUp() const {
 
 bool Selector::ROContext::canMoveDown() const {
     return Selector::canMoveDown(context(model().choice()));
-}
-
-bool Selector::ROContext::hasSelection() const {
-    return Selector::hasSelection(context(model().choice()));
 }
 
 Model *Selector::ROContext::selectedImpl() const {

@@ -161,3 +161,15 @@ void Selection::Context::select(uint32 idx, bool select) const {
     model().select(idx, select);
 }
 
+void Selection::Context::select(std::string&& str) const {
+    model().select(std::move(str));
+}
+
+void Selection::Context::setItems(std::vector<std::string>&& items) const {
+    model().setItems(std::move(items));
+}
+
+void Selection::Context::remove(uint32 idx) const {
+    model().remove(idx);
+}
+

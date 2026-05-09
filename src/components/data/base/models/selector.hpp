@@ -49,7 +49,6 @@ protected:
 
     static bool canMoveUp(const Choice::ROContext&);
     static bool canMoveDown(const Choice::ROContext&);
-    static bool hasSelection(const Choice::ROContext&);
 
 private:
     void onChoice();
@@ -61,7 +60,6 @@ private:
 
     bool mLastCanMoveUp{false};
     bool mLastCanMoveDown{false};
-    bool mLastHasSelection{false};
 
     const Vector *mVec{nullptr};
 
@@ -85,12 +83,11 @@ struct DATA_EXPORT Selector::ROContext : virtual Model::ROContext {
 
     template <typename T = Model>
     [[nodiscard]] T *selected() const {
-        return static_cast<T *>(selectedImpl());
+        return dynamic_cast<T *>(selectedImpl());
     }
 
     [[nodiscard]] bool canMoveUp() const;
     [[nodiscard]] bool canMoveDown() const;
-    [[nodiscard]] bool hasSelection() const;
 
 private:
     [[nodiscard]] Model *selectedImpl() const;
@@ -113,9 +110,8 @@ struct DATA_EXPORT Selector::RecvTable : Model::RecvTable {
      */
     Mapping<> onRebound_;
 
-    Mapping<bool> onCanMoveUp_;
-    Mapping<bool> onCanMoveDown_;
-    Mapping<bool> onHasSelection_;
+    Mapping<> onCanMoveUp_;
+    Mapping<> onCanMoveDown_;
 };
 
 } // namespace data::base

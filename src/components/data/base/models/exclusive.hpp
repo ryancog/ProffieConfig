@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <span>
+
 #include "data/base/model.hpp"
 #include "data/base/models/bool.hpp"
 #include "data/receiver.hpp"
@@ -39,6 +41,8 @@ struct DATA_EXPORT Exclusive : virtual Model, virtual Receiver {
 protected:
     // Separate init to access `create`.
     void init(size);
+
+    std::span<const std::unique_ptr<Bool>> data() const;
 
     virtual std::unique_ptr<Bool> create(size) = 0;
 
@@ -77,7 +81,7 @@ struct DATA_EXPORT Exclusive::RecvTable : Model::RecvTable {
     /**
      * New option was selected
      */
-    Mapping<size> onSelection_;
+    Mapping<> onSelection_;
 };
 
 } // namespace data::base

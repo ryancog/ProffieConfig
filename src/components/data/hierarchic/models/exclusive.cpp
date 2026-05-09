@@ -28,6 +28,17 @@ Exclusive::Exclusive(Root& root, size num) :
     init(num);
 }
 
+auto Exclusive::children() -> std::vector<Model *> {
+    std::vector<Model *> ret;
+    ret.reserve(data().size());
+
+    for (const auto& child : data()) {
+        ret.push_back(dynamic_cast<Model *>(child.get()));
+    }
+
+    return ret;
+}
+
 bool Exclusive::select(size idx) {
     return processAction(std::make_unique<SelectAction>(idx));
 }

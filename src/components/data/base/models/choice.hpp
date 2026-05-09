@@ -47,6 +47,8 @@ struct DATA_EXPORT Choice : virtual Model {
      */
     virtual bool choose(int32) = 0;
 
+    bool unchoose() { return choose(-1); }
+
     /**
      * Update the number of choices available.
      *

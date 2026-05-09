@@ -42,6 +42,8 @@ struct DATA_EXPORT String : virtual Model {
 
     void setFilter(Filter);
 
+    bool clear();
+
     /**
      * Replace text, moving pos to end.
      */

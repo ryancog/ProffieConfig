@@ -31,6 +31,10 @@ void String::setFilter(Filter filter) {
     mFilter = filter;
 }
 
+bool String::clear() {
+    return change({});
+}
+
 bool String::change(std::string&& str) {
     return change(std::move(str), str.length());
 }
@@ -105,7 +109,7 @@ void String::Context::append(std::string_view view) const {
 }
 
 void String::Context::clear() const {
-    model().change(std::string{}, 0);
+    model().clear();
 }
 
 void String::Context::move(size pos) const {

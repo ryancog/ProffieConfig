@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "data/base/models/exclusive.hpp"
 #include "data/context.hpp"
 #include "data/receiver.hpp"
 
@@ -160,6 +161,133 @@ auto data::logic::operator|(
     };
 
     return std::make_unique<Adapter>(choice, std::move(sels));
+}
+
+auto data::logic::operator|(
+    const base::Exclusive& excl, HasSelection sels
+) -> Element {
+    struct Adapter : detail::Base, data::Receiver {
+        Adapter(const base::Exclusive& excl, HasSelection sels) :
+            excl_{excl}, sels_{std::move(sels)} {
+            static const auto table{[] {
+                base::Exclusive::RecvTable table;
+                table.onSelection_ = map(&Adapter::onSelection);
+                return table;
+            }()};
+            amend(excl_, table);
+        }
+
+        ~Adapter() override { deactivate(); }
+
+        void lock() override {
+            excl_.lock();
+        }
+
+        void unlock() override {
+            excl_.unlock();
+        }
+
+        bool doActivate() override {
+            auto ctxt{data::context(excl_)};
+            Receiver::activate();
+            return isTrue(ctxt.selected());
+        }
+
+        void onSelection() {
+            std::lock_guard scopeLock(*pLock);
+            onChange(isTrue(context(excl_).selected()));
+        }
+
+        bool isTrue(size sel) {
+            if (sels_.empty()) return sel != -1;
+            return sels_.contains(static_cast<int32>(sel));
+        }
+
+        const base::Exclusive& excl_;
+        HasSelection sels_;
+    };
+
+    return std::make_unique<Adapter>(excl, std::move(sels));
+}
+
+auto data::logic::operator|(const base::Selector& sel, CanMoveUp) -> Element {
+    struct Adapter : detail::Base, data::Receiver {
+        Adapter(const base::Selector& sel) :
+            sel_{sel} {
+            static const auto table{[] {
+                base::Selector::RecvTable table;
+                table.onCanMoveUp_ = map(&Adapter::onCanMoveUp);
+                return table;
+            }()};
+            amend(sel_, table);
+        }
+
+        ~Adapter() override { deactivate(); }
+
+        void lock() override {
+            sel_.lock();
+        }
+
+        void unlock() override {
+            sel_.unlock();
+        }
+
+        bool doActivate() override {
+            auto ctxt{context(sel_)};
+            Receiver::activate();
+            return ctxt.canMoveUp();
+        }
+
+        void onCanMoveUp() {
+            std::lock_guard scopeLock(*pLock);
+            onChange(context(sel_).canMoveUp());
+        }
+
+        const base::Selector& sel_;
+    };
+
+    return std::make_unique<Adapter>(sel);
+}
+
+auto data::logic::operator|(
+    const base::Selector& sel, CanMoveDown
+) -> Element {
+    struct Adapter : detail::Base, data::Receiver {
+        Adapter(const base::Selector& sel) :
+            sel_{sel} {
+            static const auto table{[] {
+                base::Selector::RecvTable table;
+                table.onCanMoveDown_ = map(&Adapter::onCanMoveDown);
+                return table;
+            }()};
+            amend(sel_, table);
+        }
+
+        ~Adapter() override { deactivate(); }
+
+        void lock() override {
+            sel_.lock();
+        }
+
+        void unlock() override {
+            sel_.unlock();
+        }
+
+        bool doActivate() override {
+            auto ctxt{context(sel_)};
+            Receiver::activate();
+            return ctxt.canMoveDown();
+        }
+
+        void onCanMoveDown() {
+            std::lock_guard scopeLock(*pLock);
+            onChange(context(sel_).canMoveDown());
+        }
+
+        const base::Selector& sel_;
+    };
+
+    return std::make_unique<Adapter>(sel);
 }
 
 auto data::logic::operator|(

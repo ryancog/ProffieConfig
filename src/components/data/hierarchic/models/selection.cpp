@@ -23,6 +23,11 @@
 
 using namespace data::hier;
 
+Selection::Selection(Root& root) : Model(root) {}
+
+Selection::Selection(const Selection& other, Root& root) :
+    base::Selection(other), Model(other, root) {}
+
 bool Selection::select(uint32 idx, bool select) {
     return processAction(std::make_unique<SelectAction>(idx, select));
 }
