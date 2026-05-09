@@ -47,8 +47,11 @@ struct VERSIONS_EXPORT Context {
     Context();
     ~Context();
 
-    const std::vector<std::unique_ptr<OS>>& available() LIFETIMEBOUND;
-    const std::vector<std::unique_ptr<OS>>& list() LIFETIMEBOUND;
+    [[nodiscard]] const std::vector<std::unique_ptr<OS>>&
+        available() LIFETIMEBOUND;
+
+    [[nodiscard]] const std::vector<std::unique_ptr<OS>>&
+        list() LIFETIMEBOUND;
 };
 
 } // namespace versions::os

@@ -223,9 +223,12 @@ struct VERSIONS_EXPORT PropData {
 };
 
 struct VERSIONS_EXPORT Prop : data::hier::Model, private data::Receiver {
-    [[nodiscard]] const auto& settings() const { return mSettings; }
+    [[nodiscard]] std::span<const std::unique_ptr<detail::SettingBase>>
+        settings() const { return mSettings; }
     [[nodiscard]] Buttons buttons(uint32 numButtons) const;
     [[nodiscard]] const Errors& errors() const { return mErrors; }
+
+    [[nodiscard]] detail::SettingBase *find(const std::string&) const;
 
     [[nodiscard]] pcui::DescriptorPtr layout();
 

@@ -350,6 +350,12 @@ auto Prop::buttons(uint32 numButtons) const -> Buttons {
     return {};
 }
 
+detail::SettingBase *Prop::find(const std::string& key) const {
+    auto iter{mMap.find(key)};
+    if (iter == mMap.end()) return nullptr;
+    return iter->second;
+}
+
 pcui::DescriptorPtr Prop::layout() {
     auto& logger{logging::Context::getGlobal().createLogger("versions::props::Prop::layout()")};
 
