@@ -21,6 +21,12 @@
 
 using namespace versions;
 
+// ptr-in-a-vec is "needed" because there's const members in these structures,
+// which prevents a vector working normally.
+//
+// This probably isn't a very ideal solution, and if the ergonomics of it are
+// particularly annoying I might want to do something different.
+
 std::recursive_mutex priv::lock;
 std::vector<std::unique_ptr<props::Versioned>> priv::props;
 std::vector<std::unique_ptr<os::OS>> priv::os;
