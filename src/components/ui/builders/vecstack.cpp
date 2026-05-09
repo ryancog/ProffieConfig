@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/layout/vecstack.cpp
+ * components/ui/builders/vecstack.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@
 #include "ui/utils.hpp"
 
 using namespace pcui;
+using namespace pcui::builders;
 
 namespace {
 

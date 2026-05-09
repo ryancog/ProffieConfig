@@ -13,6 +13,7 @@ add_library(ui SHARED
     utils.cpp
 
     priv/tlw.cpp
+    priv/tracker.cpp
 
     detail/descriptor.cpp
     detail/general.cpp
@@ -35,6 +36,10 @@ add_library(ui SHARED
     helpers/dialog_buttons.cpp
     helpers/labeled.cpp
 
+    builders/selector.cpp
+    builders/choice.cpp
+    builders/vecstack.cpp
+
     controls/button.cpp
     controls/toggle_button.cpp
     controls/checkbox.cpp
@@ -51,11 +56,9 @@ add_library(ui SHARED
     layout/group.cpp
     layout/panel.cpp
     layout/scrolled.cpp
-    layout/selector.cpp
     layout/spacer.cpp
     layout/split.cpp
     layout/stack.cpp
-    layout/vecstack.cpp
     layout/priv/groupbox.cpp
     layout/priv/panel.cpp
 )

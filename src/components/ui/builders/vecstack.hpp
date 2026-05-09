@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/layout/vecstack.hpp
+ * components/ui/builders/vecstack.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 
 #include "ui_export.h"
 
-namespace pcui {
+namespace pcui::builders {
 
 struct UI_EXPORT VecStack {
     struct Desc;
@@ -54,5 +54,5 @@ struct UI_EXPORT VecStack::Desc : VecStack, detail::Descriptor {
     [[nodiscard]] Descriptor *clone() const override;
 };
 
-} // namespace pcui
+} // namespace pcui::builders
 
