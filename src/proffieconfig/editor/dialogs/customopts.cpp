@@ -20,14 +20,15 @@
  */
 
 #include "config/settings/define.hpp"
+#include "data/context.hpp"
 #include "ui/build.hpp"
+#include "ui/builders/vecstack.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/text.hpp"
 #include "ui/layout/group.hpp"
 #include "ui/layout/scrolled.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
-#include "ui/layout/vecstack.hpp"
 #include "ui/static/divider.hpp"
 #include "ui/static/hyperlink.hpp"
 #include "ui/static/label.hpp"
@@ -62,7 +63,7 @@ pcui::DescriptorPtr CustomOptionsDlg::ui() {
             pcui::Scrolled{
               .win_={.base_={.expand_=true, .proportion_=1}},
               .scrollRate_={.y_=4},
-              .child_=pcui::VecStack{
+              .child_=pcui::builders::VecStack{
                 .base_={
                   .expand_=true,
                   .proportion_=1,
@@ -141,8 +142,8 @@ pcui::DescriptorPtr CustomOptionsDlg::info() {
     }();
 }
 
-pcui::DescriptorPtr CustomOptionsDlg::option(data::Model& model) {
-    auto& option{static_cast<config::settings::Define&>(model)};
+pcui::DescriptorPtr CustomOptionsDlg::option(data::base::Model& model) {
+    auto& option{dynamic_cast<config::settings::Define&>(model)};
 
     return pcui::Stack{
       .base_={.expand_=true},
@@ -172,12 +173,12 @@ pcui::DescriptorPtr CustomOptionsDlg::option(data::Model& model) {
         pcui::Button{
           .label_=_("Remove"),
           .func_=[&option, &model](pcui::CallbackContext ctxt) {
-              auto& vec{*option.parent<data::Vector>()};
+              auto& vec{option.root<config::Config>().settings_.defines_};
 
               // Removing the model will destroy this UI first, and the UI
               // cannot be destroyed from inside the callback.
               ctxt.topLevel_->CallAfter([&vec, &model] {
-                  data::Vector::Context vecCtxt{vec};
+                  auto vecCtxt{data::context(vec)};
                   vecCtxt.remove(model);
               });
           }
@@ -187,7 +188,7 @@ pcui::DescriptorPtr CustomOptionsDlg::option(data::Model& model) {
 }
 
 void CustomOptionsDlg::addOption() {
-    data::Vector::Context vec{mConfig.settings_.defines_};
-    auto& option{vec.addCreate<config::settings::Define>()};
+    auto vec{data::context(mConfig.settings_.defines_)};
+    vec.append(std::make_unique<config::settings::Define>(mConfig));
 }
 

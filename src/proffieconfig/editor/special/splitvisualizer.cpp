@@ -21,7 +21,6 @@
 
 #include <algorithm>
 #include <limits>
-#include <map>
 #ifndef __WXMSW__
 #include <memory>
 #endif
@@ -35,27 +34,23 @@
 #include <wx/window.h>
 
 #include "config/blades/ws281x.hpp"
-#include "data/helpers/exclusive.hpp"
-#include "data/number.hpp"
-#include "data/selector.hpp"
-#include "data/string.hpp"
-#include "ui/detail/datadriven.hpp"
+#include "data/context.hpp"
 #include "ui/utils.hpp"
-#include "utils/parent.hpp"
 #include "utils/rand.hpp"
 
 constexpr auto MIN_SEGMENT_SIZE{12};
 
 namespace {
 
-struct Window : pcui::detail::IDataDriven, wxWindow {
+struct Window : data::Receiver, wxWindow {
     Window(
         wxWindow *,
         config::blades::WS281X&,
-        data::Selector&
+        data::base::Selector&
     );
 
-    void preDestroyCripple() override;
+    void onActivate() override;
+
     bool Layout() override;
 
     void regenerateSplitData();
@@ -75,7 +70,7 @@ struct Window : pcui::detail::IDataDriven, wxWindow {
     static const wxColour& color(uint32 idx);
 
     config::blades::WS281X& blade_;
-    data::Selector& subSel_;
+    data::base::Selector& subSel_;
 
     struct SplitData {
         uint32 start_;
@@ -101,49 +96,17 @@ struct Window : pcui::detail::IDataDriven, wxWindow {
 
     std::vector<SplitSize> sizes_;
 
-    struct VecReceiver : data::Vector::Receiver {
-        void onInsert(size) override;
-        void preRemove(size) override;
-        void onRemove(size) override;
-    } vecReceiver_;
+    void onVecInsert(size);
+    void preVecRemove(size);
+    void onVecRemove(size);
 
-    struct LengthReceiver : data::Integer::Receiver {
-        void onSet() override;
-    } lengthReceiver_;
+    void onLength();
+    void onChoice();
 
-    struct SelReceiver : data::Choice::Receiver {
-        void onChoice() override;
-    } selChoiceReceiver_;
+    void onSplitChange();
 
-    struct ExclReceiver : data::Exclusive::Receiver {
-        void onSelection(size) override;
-        Window *window_;
-    };
-
-    struct IntReceiver : data::Integer::Receiver {
-        void onSet() override;
-        Window *window_;
-    };
-
-    struct StrReceiver : data::String::Receiver {
-        void onChange() override;
-        Window *window_;
-    };
-
-    struct SplitReceivers {
-        ExclReceiver type_;
-        IntReceiver start_;
-        IntReceiver end_;
-        // start and end should cover length
-        IntReceiver segments_;
-        StrReceiver list_;
-    };
-    // Use a map so don't have to keep track of movement up/down, etc.
-    // That doesn't happen with splits currently, but still..
-    //
-    // The map is only accesses from ctor and vec receiver, so no extra
-    // locking is required.
-    std::map<data::Model *, SplitReceivers> splitReceiversMap_;
+    void attachSplit(config::blades::WS281X::Split&);
+    void detachSplit(config::blades::WS281X::Split&);
 };
 
 } // namespace
@@ -181,61 +144,55 @@ std::vector<wxColour> Window::sIndexColors;
 Window::Window(
     wxWindow *parent,
     config::blades::WS281X& ws281x,
-    data::Selector& subSel
+    data::base::Selector& subSel
 ) : wxWindow(parent, wxID_ANY),
     blade_{ws281x},
     subSel_{subSel} {
 
-    {
-        data::Vector::ROContext vecCtxt{blade_.splits_};
-        data::Choice::ROContext choiceCtxt{subSel.choice_};
+    static const auto splitTable{[] {
+        data::base::Vector::RecvTable table;
+        table.onInsert_ = data::map(&Window::onVecInsert);
+        table.preRemove_ = data::map(&Window::preVecRemove);
+        table.onRemove_ = data::map(&Window::onVecRemove);
+        return table;
+    }()};
+    amend(blade_.splits_, splitTable);
 
-        for (const auto& model : vecCtxt.children()) {
-            auto& split{static_cast<config::blades::WS281X::Split&>(*model)};
-            auto& rcvrs{splitReceiversMap_[model.get()]};
+    static const auto lengthTable{[] {
+        data::base::Integer::RecvTable table;
+        table.onSet_ = data::map(&Window::onLength);
+        return table;
+    }()};
+    amend(blade_.length_, lengthTable);
 
-            rcvrs.type_.window_ = this;
-            rcvrs.start_.window_ = this;
-            rcvrs.end_.window_ = this;
-            rcvrs.segments_.window_ = this;
-            rcvrs.list_.window_ = this;
+    static const auto choiceTable{[] {
+        data::base::Choice::RecvTable table;
+        table.onChoice_ = data::map(&Window::onChoice);
+        return table;
+    }()};
+    amend(subSel_.choice(), choiceTable);
 
-            rcvrs.type_.attach(split.type_);
-            rcvrs.start_.attach(split.start_);
-            rcvrs.end_.attach(split.end_);
-            rcvrs.segments_.attach(split.segments_);
-            rcvrs.list_.attach(split.list_);
-        }
+    SetAutoLayout(true);
+}
 
-        selectedSplit_ = choiceCtxt.idx();
+void Window::onActivate() {
+    auto vecCtxt{data::context(blade_.splits_)};
+    auto choiceCtxt{data::context(subSel_.choice())};
 
-        vecReceiver_.attach(blade_.splits_);
-        lengthReceiver_.attach(blade_.length_);
-        selChoiceReceiver_.attach(subSel.choice_);
+    for (const auto& model : vecCtxt.children()) {
+        auto& split{dynamic_cast<config::blades::WS281X::Split&>(*model)};
+
+        attachSplit(split);
     }
+
+    selectedSplit_ = choiceCtxt.idx();
+
+    regenerateSplitData();
 
     Bind(wxEVT_PAINT, &Window::paintEvent, this);
     Bind(wxEVT_MOTION, &Window::mouseMoved, this);
     Bind(wxEVT_LEAVE_WINDOW, &Window::mouseLeave, this);
     Bind(wxEVT_LEFT_UP, &Window::mouseClick, this);
-
-    SetAutoLayout(true);
-
-    regenerateSplitData();
-}
-
-void Window::preDestroyCripple() {
-    vecReceiver_.detach();
-    lengthReceiver_.detach();
-    selChoiceReceiver_.detach();
-
-    for (auto& [model, rcvrs] : splitReceiversMap_) {
-        rcvrs.type_.detach();
-        rcvrs.start_.detach();
-        rcvrs.end_.detach();
-        rcvrs.segments_.detach();
-        rcvrs.list_.detach();
-    }
 }
 
 bool Window::Layout() {
@@ -261,8 +218,8 @@ wxSize Window::DoGetBestClientSize() const {
 }
 
 void Window::regenerateSplitData() {
-    data::Vector::ROContext splitVec{blade_.splits_};
-    data::Integer::ROContext length{blade_.length_};
+    auto splitVec{data::context(blade_.splits_)};
+    auto length{data::context(blade_.length_)};
 
     splitData_.clear();
 
@@ -278,28 +235,33 @@ void Window::regenerateSplitData() {
     }
 
     for (auto idx{0}; idx < splitVec.children().size(); ++idx) {
-        auto& split{static_cast<config::blades::WS281X::Split&>(
+        auto& split{dynamic_cast<config::blades::WS281X::Split&>(
             *splitVec.children()[idx]
         )};
 
-        auto type{split.type_.selected()};
+        auto type{data::context(split.type_)};
+
         using enum config::blades::WS281X::Split::Type;
 
-        if (type == eStandard or type == eReverse) {
+        auto start{data::context(split.start_)};
+        auto length{data::context(split.length_)};
+        auto segments{data::context(split.segments_)};
+
+        if (type.selected() == eStandard or type.selected() == eReverse) {
             SplitData data;
-            data.start_ = data::Integer::ROContext{split.start_}.val();
-            data.length_ = data::Integer::ROContext{split.length_}.val();
+            data.start_ = start.val();
+            data.length_ = length.val();
             data.segments_ = 0;
             data.splitIdx_ = idx;
             splitData_.push_back(data);
-        } else if (type == eZig_Zag or type == eStride) {
+        } else if (type.selected() == eZig_Zag or type.selected() == eStride) {
             SplitData data;
-            data.start_ = data::Integer::ROContext{split.start_}.val();
-            data.length_ = data::Integer::ROContext{split.length_}.val();
-            data.segments_ = data::Integer::ROContext{split.segments_}.val();
+            data.start_ = start.val();
+            data.length_ = length.val();
+            data.segments_ = segments.val();
             data.splitIdx_ = idx;
             splitData_.push_back(data);
-        } else if (type == eList) {
+        } else if (type.selected() == eList) {
             SplitData data;
             data.start_ = std::numeric_limits<uint32>::max();
 
@@ -330,7 +292,7 @@ void Window::regenerateSplitData() {
 }
 
 void Window::recalcSizes() {
-    data::Integer::ROContext length{blade_.length_};
+    auto length{data::context(blade_.length_)};
 
     sizes_.clear();
 
@@ -658,10 +620,10 @@ void Window::mouseLeave(wxMouseEvent&) {
 void Window::mouseClick(wxMouseEvent&) {
     if (hoveredSplit_ == -1) return;
 
-    data::Vector::ROContext splits{blade_.splits_};
+    auto splits{data::context(blade_.splits_)};
     if (hoveredSplit_ >= splits.children().size()) return;
 
-    data::Choice::Context subSel{subSel_.choice_};
+    auto subSel{data::context(subSel_.choice())};
     subSel.choose(hoveredSplit_);
 }
 
@@ -685,91 +647,89 @@ const wxColour& Window::color(uint32 idx) {
     return sIndexColors[idx];
 }
 
-void Window::VecReceiver::onInsert(size pos) {
-    auto *win{&utils::parent<&Window::vecReceiver_>(*this)};
-    auto ctxt{context<data::Vector>()};
+void Window::onVecInsert(size pos) {
+    auto splits{data::context(blade_.splits_)};
 
-    const auto& model{ctxt.children()[pos]};
-    auto& split{static_cast<config::blades::WS281X::Split&>(*model)};
-    auto& rcvrs{win->splitReceiversMap_[model.get()]};
+    const auto& model{splits.children()[pos]};
+    auto& split{dynamic_cast<config::blades::WS281X::Split&>(*model)};
 
-    rcvrs.type_.window_ = win;
-    rcvrs.start_.window_ = win;
-    rcvrs.end_.window_ = win;
-    rcvrs.segments_.window_ = win;
-    rcvrs.list_.window_ = win;
+    attachSplit(split);
 
-    rcvrs.type_.attach(split.type_);
-    rcvrs.start_.attach(split.start_);
-    rcvrs.end_.attach(split.end_);
-    rcvrs.segments_.attach(split.segments_);
-    rcvrs.list_.attach(split.list_);
-
-    pcui::safeCall([win] {
-        win->regenerateSplitData();
-        win->Layout();
+    pcui::safeCall([this] {
+        regenerateSplitData();
+        Layout();
     });
 }
 
-void Window::VecReceiver::preRemove(size pos) {
-    auto *win{&utils::parent<&Window::vecReceiver_>(*this)};
-    auto ctxt{context<data::Vector>()};
+void Window::preVecRemove(size pos) {
+    auto splits{data::context(blade_.splits_)};
 
-    const auto& model{ctxt.children()[pos]};
-    auto& rcvrs{win->splitReceiversMap_[model.get()]};
+    const auto& model{splits.children()[pos]};
+    auto& split{dynamic_cast<config::blades::WS281X::Split&>(*model)};
 
-    rcvrs.type_.detach();
-    rcvrs.start_.detach();
-    rcvrs.end_.detach();
-    rcvrs.segments_.detach();
-    rcvrs.list_.detach();
-
-    win->splitReceiversMap_.erase(model.get());
+    detachSplit(split);
 }
 
-void Window::VecReceiver::onRemove(size) {
-    auto *win{&utils::parent<&Window::vecReceiver_>(*this)};
-    pcui::safeCall([win] {
-        win->regenerateSplitData();
-        win->Layout();
+void Window::onVecRemove(size) {
+    pcui::safeCall([this] {
+        regenerateSplitData();
+        Layout();
     });
 }
 
-void Window::LengthReceiver::onSet() {
-    auto *win{&utils::parent<&Window::lengthReceiver_>(*this)};
-    pcui::safeCall([win] {
-        win->regenerateSplitData();
-        win->Layout();
+void Window::onLength() {
+    pcui::safeCall([this] {
+        regenerateSplitData();
+        Layout();
     });
 }
 
-void Window::SelReceiver::onChoice() {
-    auto& win{utils::parent<&Window::selChoiceReceiver_>(*this)};
-    pcui::safeCall([&win, idx=context<data::Choice>().idx()] {
-        win.selectedSplit_ = idx;
-        win.Refresh();
+void Window::onChoice() {
+    pcui::safeCall([this, idx=data::context(subSel_).choiceIdx()] {
+        selectedSplit_ = idx;
+        Refresh();
     });
 }
 
-void Window::ExclReceiver::onSelection(size) {
-    pcui::safeCall([win=window_] {
-        win->regenerateSplitData();
-        win->Layout();
+void Window::onSplitChange() {
+    pcui::safeCall([this] {
+        regenerateSplitData();
+        Layout();
     });
 }
 
-void Window::IntReceiver::onSet() {
-    pcui::safeCall([win=window_] {
-        win->regenerateSplitData();
-        win->Layout();
-    });
+void Window::attachSplit(config::blades::WS281X::Split& split) {
+    static const auto typeTable{[] {
+        data::base::Exclusive::RecvTable table;
+        table.onSelection_ = data::map(&Window::onSplitChange);
+        return table;
+    }()};
+
+    static const auto intTable{[] {
+        data::base::Integer::RecvTable table;
+        table.onSet_ = data::map(&Window::onSplitChange);
+        return table;
+    }()};
+
+    static const auto listTable{[] {
+        data::base::String::RecvTable table;
+        table.onChange_ = data::map(&Window::onSplitChange);
+        return table;
+    }()};
+
+    amend(split.type_, typeTable);
+    amend(split.start_, intTable);
+    amend(split.end_, intTable);
+    amend(split.segments_, intTable);
+    amend(split.list_, listTable);
 }
 
-void Window::StrReceiver::onChange() {
-    pcui::safeCall([win=window_] {
-        win->regenerateSplitData();
-        win->Layout();
-    });
+void Window::detachSplit(config::blades::WS281X::Split& split) {
+    repeal(split.type_);
+    repeal(split.start_);
+    repeal(split.end_);
+    repeal(split.segments_);
+    repeal(split.list_);
 }
 
 } // namespace

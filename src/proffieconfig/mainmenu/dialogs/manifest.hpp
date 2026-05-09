@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/string.hpp"
+#include "data/primitive/models/string.hpp"
 #include "ui/dialog.hpp"
 
 struct MainMenu;
@@ -29,6 +29,6 @@ struct ManifestDialog : pcui::Dialog {
     ~ManifestDialog() override;
 
 private:
-    data::String mText;
+    data::prim::String mText;
 };
 

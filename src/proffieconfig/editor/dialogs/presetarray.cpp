@@ -20,6 +20,7 @@
  */
 
 #include "config/presets/array.hpp"
+#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "ui/build.hpp"
 #include "ui/controls/button.hpp"
@@ -40,10 +41,11 @@ PresetArrayDlg::PresetArrayDlg(
     pcui::build(this, ui(mayCancel));
 
     Bind(wxEVT_CHAR_HOOK, [this](wxKeyEvent& evt) {
+        auto issues{data::context(mArray.issues())};
         if (
                 (evt.GetKeyCode() == WXK_RETURN or
                 evt.GetKeyCode() == WXK_NUMPAD_ENTER) and
-                data::Integer::ROContext{mArray.issues()}.val() == 0
+                issues.val() == 0
            ) {
             EndModal(wxID_OK);
         } else evt.Skip();

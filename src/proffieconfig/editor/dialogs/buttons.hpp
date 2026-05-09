@@ -30,7 +30,7 @@ private:
     pcui::DescriptorPtr ui();
 
     pcui::DescriptorPtr info();
-    static pcui::DescriptorPtr button(data::Model&);
+    static pcui::DescriptorPtr button(data::base::Model&);
 
     void addButton();
 

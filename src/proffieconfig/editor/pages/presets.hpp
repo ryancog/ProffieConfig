@@ -22,18 +22,21 @@
 #include <wx/window.h>
 
 #include "config/config.hpp"
-#include "data/selector.hpp"
+#include "data/primitive/models/selector.hpp"
+#include "data/primitive/models/string.hpp"
 #include "ui/types.hpp"
 
 #include "../dialogs/presetarray.hpp"
 
-struct PresetsPage {
+struct PresetsPage : data::Receiver {
     PresetsPage(config::Config&);
-    void deinit();
+
+    void onActivate() override;
+    void onDeactivate() override;
 
     pcui::DescriptorPtr ui();
 
-    [[nodiscard]] const data::Selector& styleSel() const {
+    [[nodiscard]] const data::prim::Selector& styleSel() const {
         return mStyleSel;
     }
 
@@ -43,16 +46,20 @@ private:
     pcui::DescriptorPtr displayAndBlade();
     pcui::DescriptorPtr style();
 
+    void onArrayChoice();
+    void onPresetChoice();
+    void onDisplayChoice();
+
     void updateBladeStrings();
 
     config::Config& mConfig;
 
-    data::Selector mArraySel;
-    data::Selector mPresetSel;
-    data::Selector mDisplaySel;
-    data::Selector mStyleSel;
+    data::prim::Selector mArraySel;
+    data::prim::Selector mPresetSel;
+    data::prim::Selector mDisplaySel;
+    data::prim::Selector mStyleSel;
     
-    std::vector<data::String> mBladeStrings;
+    std::vector<std::unique_ptr<data::prim::String>> mBladeStrings;
 
     PresetArrayDlg *mDlg{nullptr};
 };

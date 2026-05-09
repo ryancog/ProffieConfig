@@ -21,6 +21,7 @@
 
 #include <wx/menu.h>
 
+#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
 #include "ui/bitmap.hpp"
@@ -32,7 +33,6 @@
 #include "ui/static/divider.hpp"
 #include "ui/static/image.hpp"
 #include "ui/values.hpp"
-#include "utils/parent.hpp"
 #include "utils/paths.hpp"
 
 #include "../core/state.hpp"
@@ -49,63 +49,7 @@ onboard::Frame::Frame() :
         wxCAPTION | wxCLIP_CHILDREN
     ) {
 
-    mPhase.responder().onChoice_ = [](const data::Choice::ROContext& ctxt) {
-        auto& frame{utils::parent<&Frame::mPhase>(
-            const_cast<data::Choice&>(ctxt.model<data::Choice>())
-        )};
-
-        const auto phase{static_cast<Phase>(ctxt.idx())};
-
-        data::Bool::Context mayCancel{frame.mMayCancel};
-        data::Bool::Context maySkip{frame.mMaySkip};
-        data::Bool::Context mayGoBack{frame.mMayGoBack};
-        data::String::Context nextButton{frame.mNextButton};
-
-        switch (phase) {
-            case ePhase_Welcome:
-            case ePhase_Setup_Prog:
-            case ePhase_Setup_Done:
-                nextButton.change(_("Next").ToStdString());
-                break;
-            case ePhase_Setup_Pre:
-                nextButton.change(_("Run Setup").ToStdString());
-                break;
-            case ePhase_Setup_Fail:
-                nextButton.change(_("Try Again").ToStdString());
-                break;
-            case ePhase_Info:
-                nextButton.change(_("Finish").ToStdString());
-                break;
-            case ePhase_Max:
-                nextButton.change("Where Are You?");
-                break;
-        }
-
-        mayCancel.set(phase != ePhase_Setup_Prog);
-        maySkip.set(phase != ePhase_Setup_Prog);
-        mayGoBack.set(
-            phase != ePhase_Welcome and phase != ePhase_Setup_Prog
-        );
-        nextButton.enable(phase != ePhase_Setup_Prog);
-
-        frame.mSetupDone |= phase == ePhase_Setup_Done;
-
-        if (phase == ePhase_Setup_Fail) {
-            frame.CallAfter([&frame] {
-                pcui::showMessage(
-                    _("Dependency installation failed, please try again.") +
-                    "\n\n" +
-                    data::String::Context{frame.mSetupPage.errorMessage_}.val(),
-                    {
-                        .caption_=_("Installation Failure"),
-                        .style_=wxOK | wxCENTER,
-                        .parent_=&frame
-                    }
-                );
-            });
-        }
-    };
-    { data::Choice::Context phase{mPhase};
+    { auto phase{data::context(mPhase)};
         phase.update(ePhase_Max);
         phase.choose(ePhase_Welcome);
     }
@@ -220,7 +164,7 @@ pcui::DescriptorPtr onboard::Frame::ui() {
                       }
                   )};
                   if (res == wxYES) {
-                      data::Choice::Context{mPhase}.choose(ePhase_Info);
+                      mPhase.choose(ePhase_Info);
                   }
               }
             }(),
@@ -232,7 +176,7 @@ pcui::DescriptorPtr onboard::Frame::ui() {
               },
               .label_=_("Back"),
               .func_=[this] {
-                  data::Choice::Context phase{mPhase};
+                  auto phase{data::context(mPhase)};
 
                   switch (static_cast<Phase>(phase.idx())) {
                       case ePhase_Setup_Pre:
@@ -256,7 +200,7 @@ pcui::DescriptorPtr onboard::Frame::ui() {
             pcui::Button{
               .label_=mNextButton,
               .func_=[this] {
-                  data::Choice::Context phase{mPhase};
+                  auto phase{data::context(mPhase)};
 
                   switch (static_cast<Phase>(phase.idx())) {
                       case ePhase_Welcome:
@@ -314,5 +258,58 @@ void onboard::Frame::createMenuBar() {
     appendDefaultMenuItems(menubar);
 
     SetMenuBar(menubar);
+}
+
+void onboard::Frame::onPhase() {
+    auto phase{data::context(mPhase)};
+
+    auto mayCancel{data::context(mMayCancel)};
+    auto maySkip{data::context(mMaySkip)};
+    auto mayGoBack{data::context(mMayGoBack)};
+    auto nextButton{data::context(mNextButton)};
+
+    switch (static_cast<Phase>(phase.idx())) {
+        case ePhase_Welcome:
+        case ePhase_Setup_Prog:
+        case ePhase_Setup_Done:
+            nextButton.change(_("Next").ToStdString());
+            break;
+        case ePhase_Setup_Pre:
+            nextButton.change(_("Run Setup").ToStdString());
+            break;
+        case ePhase_Setup_Fail:
+            nextButton.change(_("Try Again").ToStdString());
+            break;
+        case ePhase_Info:
+            nextButton.change(_("Finish").ToStdString());
+            break;
+        case ePhase_Max:
+            nextButton.change("Where Are You?");
+            break;
+    }
+
+    mayCancel.set(phase.idx() != ePhase_Setup_Prog);
+    maySkip.set(phase.idx() != ePhase_Setup_Prog);
+    mayGoBack.set(
+        phase.idx() != ePhase_Welcome and phase.idx() != ePhase_Setup_Prog
+    );
+    nextButton.enable(phase.idx() != ePhase_Setup_Prog);
+
+    mSetupDone |= phase.idx() == ePhase_Setup_Done;
+
+    if (phase.idx() == ePhase_Setup_Fail) {
+        CallAfter([this] {
+            pcui::showMessage(
+                _("Dependency installation failed, please try again.") +
+                "\n\n" +
+                data::context(mSetupPage.errorMessage_).val(),
+                {
+                    .caption_=_("Installation Failure"),
+                    .style_=wxOK | wxCENTER,
+                    .parent_=this
+                }
+            );
+        });
+    }
 }
 

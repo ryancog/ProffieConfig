@@ -22,19 +22,17 @@
 #include "config/blades/bladeconfig.hpp"
 #include "config/presets/array.hpp"
 #include "config/presets/preset.hpp"
-#include "data/choice.hpp"
-#include "data/helpers/exclusive.hpp"
+#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
-#include "data/selector.hpp"
 #include "ui/bitmap.hpp"
 #include "ui/build.hpp"
+#include "ui/builders/selector.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/choice.hpp"
 #include "ui/controls/text.hpp"
 #include "ui/helpers/labeled.hpp"
 #include "ui/layout/group.hpp"
-#include "ui/layout/selector.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/split.hpp"
 #include "ui/layout/stack.hpp"
@@ -42,78 +40,47 @@
 #include "ui/symbols.hpp"
 #include "ui/types.hpp"
 #include "ui/values.hpp"
-#include "utils/parent.hpp"
-#include "wx/event.h"
 
 PresetsPage::PresetsPage(config::Config& config) : mConfig{config} {
-    mArraySel.choice_.responder().onChoice_ = [](
-        const data::Choice::ROContext& ctxt
-    ) {
-        auto& arraySel{*ctxt.model().parent<data::Selector>()};
-        auto& page{utils::parent<&PresetsPage::mArraySel>(arraySel)};
+    static const auto arrayTable{[] {
+        data::prim::Choice::RecvTable table;
+        table.onChoice_ = data::map(&PresetsPage::onArrayChoice);
+        return table;
+    }()};
+    amend(mArraySel.choice(), arrayTable);
 
-        if (page.mDlg) {
-            pcui::cripple(page.mDlg);
+    static const auto presetTable{[] {
+        data::prim::Choice::RecvTable table;
+        table.onChoice_ = data::map(&PresetsPage::onPresetChoice);
+        return table;
+    }()};
+    amend(mPresetSel.choice(), presetTable);
 
-            page.mDlg->CallAfter([dlg=page.mDlg] {
-                dlg->Destroy();
-            });
-        }
-
-        data::Selector::ROContext arraySelCtxt{arraySel};
-        data::Selector::Context presetSel{page.mPresetSel};
-
-        data::Vector *presets{nullptr};
-        if (arraySelCtxt.choiceIdx() != -1) {
-            using namespace config::presets;
-            auto& curArray{*arraySelCtxt.selected<Array>()};
-            presets = &curArray.presets_;
-        }
-        presetSel.bind(presets);
-    };
-
-    mPresetSel.choice_.responder().onChoice_ = [](
-        const data::Choice::ROContext& ctxt
-    ) {
-        auto& presetSel{*ctxt.model().parent<data::Selector>()};
-        auto& page{utils::parent<&PresetsPage::mPresetSel>(presetSel)};
-
-        data::Selector::ROContext presetSelCtxt{presetSel};
-        data::Selector::Context styleSel{page.mStyleSel};
-
-        data::Vector *styles{nullptr};
-        using namespace config::presets;
-        if (auto *curPreset{presetSelCtxt.selected<Preset>()}) {
-            styles = &curPreset->styles_;
-        }
-        styleSel.bind(styles);
-    };
-
-    mDisplaySel.choice_.responder().onChoice_ = [](
-        const data::Choice::ROContext& ctxt
-    ) {
-        auto& displaySel{*ctxt.model().parent<data::Selector>()};
-        auto& page{utils::parent<&PresetsPage::mDisplaySel>(displaySel)};
-
-        page.updateBladeStrings();
-    };
+    static const auto displayTable{[] {
+        data::prim::Choice::RecvTable table;
+        table.onChoice_ = data::map(&PresetsPage::onDisplayChoice);
+        return table;
+    }()};
+    amend(mDisplaySel.choice(), displayTable);
 
     const auto displayFilter{[](
-        const data::Choice::ROContext& ctxt, int32& idx
+        const data::base::Choice::ROContext& ctxt, int32& idx
     ) {
-        if (idx == -1 and ctxt.numChoices())
+        if (idx == -1 and ctxt.num())
             idx = 0;
     }};
-    mDisplaySel.choice_.setFilter(displayFilter);
-
-    data::Selector::Context{mArraySel}.bind(&config.presetArrays_);
-    data::Selector::Context{mDisplaySel}.bind(&config.bladeConfigs_);
+    mDisplaySel.choice().setFilter(displayFilter);
 }
 
-void PresetsPage::deinit() {
+void PresetsPage::onActivate() {
+    mArraySel.bind(&mConfig.presetArrays_);
+    mDisplaySel.bind(&mConfig.bladeConfigs_);
+}
+
+void PresetsPage::onDeactivate() {
     // This'll cascade to preset and style sels
-    data::Selector::Context{mArraySel}.bind(nullptr);
-    data::Selector::Context{mDisplaySel}.bind(nullptr);
+    mArraySel.bind(nullptr);
+    mDisplaySel.bind(nullptr);
 }
 
 pcui::DescriptorPtr PresetsPage::ui() {
@@ -162,35 +129,37 @@ pcui::DescriptorPtr PresetsPage::selection() {
                     .unselected_=_("Select Array"),
                   },
                   .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-                      data::Vector::ROContext vec{mConfig.presetArrays_};
+                      auto vec{data::context(mConfig.presetArrays_)};
                       using namespace config::presets;
-                      auto& cfg{static_cast<Array&>(*vec.children()[idx])};
+                      auto& cfg{dynamic_cast<Array&>(*vec.children()[idx])};
                       return cfg.name_;
                   },
                 }(),
-                pcui::Selector{
+                pcui::builders::Selector{
                   .data_=mArraySel,
-                  .builder_=[](data::Model *model) -> pcui::DescriptorPtr {
-                    if (not model) return pcui::Spacer{.size_=0}();
+                  .builder_=[](
+                      data::base::Model *model
+                  ) -> pcui::DescriptorPtr {
+                      if (not model) return pcui::Spacer{.size_=0}();
 
-                    const auto& array{
-                        *static_cast<config::presets::Array *>(model)
-                    };
+                      const auto& array{
+                          *dynamic_cast<config::presets::Array *>(model)
+                      };
 
-                    return pcui::Button{
-                      .win_={
-                        .base_={
-                          .border_={
-                            .size_=pcui::interControlSpacing(),
-                            .dirs_=wxLEFT
+                      return pcui::Button{
+                          .win_={
+                              .base_={
+                                  .border_={
+                                      .size_=pcui::interControlSpacing(),
+                                      .dirs_=wxLEFT
+                                  },
+                              },
+                              .show_=not (array.issues() |
+                                      data::logic::Equals{.val_=0})
                           },
-                        },
-                        .show_=not (array.issues() |
-                          data::logic::Equals{.val_=0})
-                      },
-                      .label_=pcui::syms::NO_ENTRY,
-                      .exactFit_=true,
-                    }();
+                              .label_=pcui::syms::NO_ENTRY,
+                              .exactFit_=true,
+                      }();
                   }
                 }(),
                 pcui::Spacer{.size_=pcui::interControlSpacing()}(),
@@ -200,7 +169,7 @@ pcui::DescriptorPtr PresetsPage::selection() {
                       .minSize_=pcui::iconButtonSize(),
                       .expand_=true,
                     },
-                    .enable_=mArraySel.hasSelection() | data::logic::IsSet{},
+                    .enable_=mArraySel.choice() | data::logic::HasSelection{},
                   },
                   .bitmap_={
                     .src_=pcui::Bitmap("edit").color(wxSYS_COLOUR_WINDOWTEXT),
@@ -215,8 +184,8 @@ pcui::DescriptorPtr PresetsPage::selection() {
 
                       using namespace config::presets;
 
-                      data::Selector::Context sel{mArraySel};
-                      auto& cfg{static_cast<Array&>(*sel.selected())};
+                      auto sel{data::context(mArraySel)};
+                      auto& cfg{dynamic_cast<Array&>(*sel.selected())};
                       mDlg = new PresetArrayDlg(ctxt.topLevel_, cfg, false);
                       const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
                           if (evt.GetEventObject() == mDlg) mDlg = nullptr;
@@ -241,8 +210,8 @@ pcui::DescriptorPtr PresetsPage::selection() {
                       // limitation, just don't want things cluttered.
                       if (mDlg) mDlg->Destroy();
 
-                      data::Vector::Context vec{mConfig.presetArrays_};
-                      auto& cfg{vec.addCreate<config::presets::Array>()};
+                      auto vec{data::context(mConfig.presetArrays_)};
+                      auto& cfg{vec.append<config::presets::Array>(mConfig)};
 
                       PresetArrayDlg dlg(ctxt.topLevel_, cfg, true);
 
@@ -254,7 +223,7 @@ pcui::DescriptorPtr PresetsPage::selection() {
                           pcui::cripple(&dlg);
                           vec.remove(vec.children().size() - 1);
                       } else {
-                          data::Choice::Context{mArraySel.choice_}.choose(
+                          mArraySel.choice().choose(
                               static_cast<int32>(vec.children().size() - 1)
                           );
                       }
@@ -264,12 +233,12 @@ pcui::DescriptorPtr PresetsPage::selection() {
                 pcui::Button{
                   .win_={
                     .base_={.proportion_=1},
-                    .enable_=mArraySel.hasSelection() | data::logic::IsSet{},
+                    .enable_=mArraySel.choice() | data::logic::HasSelection{},
                   },
                   .label_=_("Remove"),
                   .func_=[this] {
-                      data::Selector::ROContext sel{mArraySel};
-                      data::Vector::Context vec{mConfig.presetArrays_};
+                      auto sel{data::context(mArraySel)};
+                      auto vec{data::context(mConfig.presetArrays_)};
 
                       vec.remove(*sel.selected());
                   }
@@ -300,10 +269,10 @@ pcui::DescriptorPtr PresetsPage::selection() {
                   .data_=mPresetSel,
                   .style_=pcui::Choice::List{},
                   .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-                      data::Selector::ROContext sel{mPresetSel};
-                      data::Vector::ROContext vec{*sel.bound()};
+                      auto sel{data::context(mPresetSel)};
+                      auto vec{data::context(*sel.bound())};
                       using namespace config::presets;
-                      auto& cfg{static_cast<Preset&>(*vec.children()[idx])};
+                      auto& cfg{dynamic_cast<Preset&>(*vec.children()[idx])};
                       return cfg.name_;
                   },
                 }(),
@@ -313,35 +282,33 @@ pcui::DescriptorPtr PresetsPage::selection() {
                     pcui::Button{
                       .win_={
                         .base_={.minSize_=pcui::iconButtonSize()},
-                        .enable_=mArraySel.hasSelection() |
-                            data::logic::IsSet{},
+                        .enable_=mArraySel.choice() | data::logic::HasSelection{},
                       },
                       .label_=pcui::syms::PLUS,
                       .style_=pcui::Button::Style::Companion,
                       .exactFit_=true,
                       .func_=[this] {
-                          data::Selector::ROContext sel{mPresetSel};
-                          data::Vector::Context vec{
-                              const_cast<data::Vector&>(*sel.bound())
+                          auto sel{data::context(mPresetSel)};
+                          auto& vec{
+                              const_cast<data::base::Vector&>(*sel.bound())
                           };
-                          vec.addCreate<config::presets::Preset>();
+                          vec.append(std::make_unique<config::presets::Preset>(mConfig));
                       },
                     }(),
                     pcui::Button{
                       .win_={
                         .base_={.minSize_=pcui::iconButtonSize()},
-                        .enable_=mPresetSel.hasSelection() |
-                            data::logic::IsSet{},
+                        .enable_=mPresetSel.choice() | data::logic::HasSelection{},
                       },
                       .label_=pcui::syms::MINUS,
                       .style_=pcui::Button::Style::Companion,
                       .exactFit_=true,
                       .func_=[this] {
-                          data::Selector::ROContext sel{mPresetSel};
-                          data::Vector::Context vec{
-                              const_cast<data::Vector&>(*sel.bound())
+                          auto sel{data::context(mPresetSel)};
+                          auto& vec{
+                              const_cast<data::base::Vector&>(*sel.bound())
                           };
-                          vec.remove(*sel.selected());
+                          vec.remove(sel.choiceIdx());
                       },
                     }(),
                   }
@@ -354,54 +321,56 @@ pcui::DescriptorPtr PresetsPage::selection() {
                 pcui::Button{
                   .win_={
                     .base_={.minSize_=pcui::iconButtonSize(true)},
-                    .enable_=mPresetSel.canMoveUp() | data::logic::IsSet{},
+                    .enable_=mPresetSel | data::logic::CanMoveUp{},
                   },
                   .label_=pcui::syms::UP_ARROW,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
                   .func_=[this] {
-                      data::Selector::ROContext sel{mPresetSel};
-                      data::Vector::Context vec{
-                          const_cast<data::Vector&>(*sel.bound())
-                      };
+                      auto sel{data::context(mPresetSel)};
+                      auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
                       vec.moveUp(sel.choiceIdx());
                   }
                 }(),
                 pcui::Button{
                   .win_={
                     .base_={.minSize_=pcui::iconButtonSize(true)},
-                    .enable_=mPresetSel.canMoveDown() | data::logic::IsSet{},
+                    .enable_=mPresetSel | data::logic::CanMoveDown{},
                   },
                   .label_=pcui::syms::DOWN_ARROW,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
                   .func_=[this] {
-                      data::Selector::ROContext sel{mPresetSel};
-                      data::Vector::Context vec{
-                          const_cast<data::Vector&>(*sel.bound())
-                      };
+                      auto sel{data::context(mPresetSel)};
+                      auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
                       vec.moveDown(sel.choiceIdx());
                   }
                 }(),
                 pcui::Button{
                   .win_={
                     .base_={.minSize_=pcui::iconButtonSize(true)},
-                    .enable_=mPresetSel.hasSelection() | data::logic::IsSet{},
+                    .enable_=mPresetSel.choice() | data::logic::HasSelection{},
                   },
                   .label_=pcui::syms::DOUBLE_SQUARES,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
                   .func_=[this] {
-                      data::Selector::ROContext sel{mPresetSel};
-                      data::Choice::Context choice{mPresetSel.choice_};
-                      data::Vector::Context vec{
-                          const_cast<data::Vector&>(*sel.bound())
-                      };
-                      vec.duplicate(
-                          choice.idx(),
-                          data::Vector::DuplicationMode::Insert
+                      auto sel{data::context(mPresetSel)};
+                      auto vec{data::context(
+                          const_cast<data::base::Vector&>(*sel.bound())
+                      )};
+
+                      auto& source{dynamic_cast<config::presets::Preset&>(
+                          *vec.children()[sel.choiceIdx()]
+                      )};
+
+                      vec.insert(
+                          sel.choiceIdx() + 1,
+                          std::make_unique<config::presets::Preset>(
+                              source, mConfig
+                          )
                       );
-                      choice.choose(choice.idx() + 1);
+                      mPresetSel.choice().choose(sel.choiceIdx() + 1);
                   }
                 }(),
               }
@@ -425,9 +394,9 @@ pcui::DescriptorPtr PresetsPage::fields() {
             .base_={.expand_=true},
           },
           .label_=_("Preset Name"),
-          .ctrl_=pcui::Selector{
+          .ctrl_=pcui::builders::Selector{
             .data_=mPresetSel,
-            .builder_=[](data::Model *model) {
+            .builder_=[](data::base::Model *model) {
               pcui::Text text{
                 .win_={
                   .base_={.expand_=true},
@@ -445,7 +414,7 @@ pcui::DescriptorPtr PresetsPage::fields() {
 
               if (model == nullptr) return text();
 
-              auto *preset{static_cast<config::presets::Preset *>(model)};
+              auto *preset{dynamic_cast<config::presets::Preset *>(model)};
               text.data_ = preset->name_;
               return text();
             }
@@ -462,9 +431,9 @@ pcui::DescriptorPtr PresetsPage::fields() {
             )
           },
           .label_=_("Font Directory"),
-          .ctrl_=pcui::Selector{
+          .ctrl_=pcui::builders::Selector{
             .data_=mPresetSel,
-            .builder_=[](data::Model *model) {
+            .builder_=[](data::base::Model *model) {
               pcui::Text text{
                 .win_={
                   .base_={.expand_=true},
@@ -473,7 +442,7 @@ pcui::DescriptorPtr PresetsPage::fields() {
 
               if (model == nullptr) return text();
 
-              auto *preset{static_cast<config::presets::Preset *>(model)};
+              auto *preset{dynamic_cast<config::presets::Preset *>(model)};
               text.data_ = preset->fontDir_;
               return text();
             }
@@ -490,9 +459,9 @@ pcui::DescriptorPtr PresetsPage::fields() {
           },
           .label_=_("Track File"),
           .orient_=wxVERTICAL,
-          .ctrl_=pcui::Selector{
+          .ctrl_=pcui::builders::Selector{
             .data_=mPresetSel,
-            .builder_=[](data::Model *model) {
+            .builder_=[](data::base::Model *model) {
               pcui::Text text{
                 .win_={
                   .base_={.expand_=true},
@@ -501,7 +470,7 @@ pcui::DescriptorPtr PresetsPage::fields() {
 
               if (model == nullptr) return text();
 
-              auto *preset{static_cast<config::presets::Preset *>(model)};
+              auto *preset{dynamic_cast<config::presets::Preset *>(model)};
               text.data_ = preset->track_;
               return text();
             }
@@ -530,9 +499,9 @@ pcui::DescriptorPtr PresetsPage::displayAndBlade() {
           },
           .emptyLabel_=_("[default]"),
           .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-              data::Selector::ROContext displaySel{mDisplaySel};
-              data::Vector::ROContext vec{*displaySel.bound()};
-              auto& array{static_cast<config::blades::BladeConfig&>(
+              auto displaySel{data::context(mDisplaySel)};
+              auto vec{data::context(*displaySel.bound())};
+              auto& array{dynamic_cast<config::blades::BladeConfig&>(
                   *vec.children()[idx]
               )};
               return array.name_;
@@ -549,12 +518,12 @@ pcui::DescriptorPtr PresetsPage::displayAndBlade() {
           .style_=pcui::Choice::List{},
           .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
               if (idx == 0) {
-                  data::Integer::ROContext numBlades{mConfig.numBlades()};
+                  auto numBlades{data::context(mConfig.numBlades())};
                   mBladeStrings.resize(numBlades.val());
                   updateBladeStrings();
               }
 
-              return mBladeStrings[idx];
+              return *mBladeStrings[idx];
           },
         }(),
       }
@@ -576,9 +545,9 @@ pcui::DescriptorPtr PresetsPage::style() {
           pcui::Label{
             .label_=_("Comments"),
           }(),
-          pcui::Selector{
+          pcui::builders::Selector{
             .data_=mStyleSel,
-            .builder_=[](data::Model *model) {
+            .builder_=[](data::base::Model *model) {
               pcui::Text text{
                 .win_={
                   .base_={.expand_=true, .proportion_=1},
@@ -596,7 +565,7 @@ pcui::DescriptorPtr PresetsPage::style() {
                   return text();
               }
 
-              auto *style{static_cast<config::presets::Style *>(model)};
+              auto *style{dynamic_cast<config::presets::Style *>(model)};
               text.data_ = style->comment_;
               return text();
             }
@@ -610,9 +579,9 @@ pcui::DescriptorPtr PresetsPage::style() {
           pcui::Label{
             .label_=_("Blade Style"),
           }(),
-          pcui::Selector{
+          pcui::builders::Selector{
             .data_=mStyleSel,
-            .builder_=[](data::Model *model) {
+            .builder_=[](data::base::Model *model) {
               pcui::Text text{
                 .win_={
                   .base_={.expand_=true, .proportion_=1},
@@ -633,7 +602,7 @@ pcui::DescriptorPtr PresetsPage::style() {
                   return text();
               }
 
-              auto *style{static_cast<config::presets::Style *>(model)};
+              auto *style{dynamic_cast<config::presets::Style *>(model)};
               text.data_ = style->content_;
               return text();
             }
@@ -648,22 +617,22 @@ pcui::DescriptorPtr PresetsPage::style() {
 void PresetsPage::updateBladeStrings() {
     using namespace config::blades;
 
-    data::Selector::ROContext displaySel{mDisplaySel};
+    auto displaySel{data::context(mDisplaySel)};
     
     size count{0};
 
     if (auto *bladeCfg{displaySel.selected<BladeConfig>()}) {
-        data::Vector::ROContext bladeVec{bladeCfg->blades_};
+        auto bladeVec{data::context(bladeCfg->blades_)};
         size labelIdx{0};
         size mainIdx{0};
         for (const auto& child : bladeVec.children()) {
-            auto& blade{static_cast<Blade&>(*child)};
-            data::Choice::ROContext type{blade.type().choice_};
+            auto& blade{dynamic_cast<Blade&>(*child)};
+            auto type{data::context(blade.type().choice())};
 
             if (type.idx() == Blade::eSimple) {
                 if (count == mBladeStrings.size()) return;
 
-                data::String::Context label{mBladeStrings[count]};
+                auto label{data::context(*mBladeStrings[count])};
                 label.change(wxString::Format(
                     _("Blade %d"), mainIdx
                 ).ToStdString());
@@ -673,12 +642,12 @@ void PresetsPage::updateBladeStrings() {
             } else if (type.idx() == Blade::eWS281X) {
                 auto& ws281x{blade.ws281x()};
 
-                data::Vector::ROContext splits{ws281x.splits_};
+                auto splits{data::context(ws281x.splits_)};
 
                 if (splits.children().empty()) {
                     if (count == mBladeStrings.size()) return;
 
-                    data::String::Context label{mBladeStrings[count]};
+                    auto label{data::context(*mBladeStrings[count])};
                     label.change(wxString::Format(
                         _("Blade %d"), mainIdx
                     ).ToStdString());
@@ -687,13 +656,14 @@ void PresetsPage::updateBladeStrings() {
                 } else {
                     size subIdx{0};
                     for (const auto& child : splits.children()) {
-                        auto& split{static_cast<WS281X::Split&>(*child)};
+                        auto& split{dynamic_cast<WS281X::Split&>(*child)};
 
-                        const auto splitType{static_cast<WS281X::Split::Type>(
-                            split.type_.selected()
+                        auto type{data::context(split.type_)};
+                        auto selType{static_cast<WS281X::Split::Type>(
+                            type.selected()
                         )};
 
-                        switch (splitType) {
+                        switch (selType) {
                             using enum WS281X::Split::Type;
                             case eReverse:
                             case eStandard:
@@ -701,10 +671,7 @@ void PresetsPage::updateBladeStrings() {
                             {
                                 if (count == mBladeStrings.size()) return;
 
-                                data::String::Context label{
-                                    mBladeStrings[count]
-                                };
-                                label.change(wxString::Format(
+                                mBladeStrings[count]->change(wxString::Format(
                                     _("Blade %d:%d"), mainIdx, subIdx
                                 ).ToStdString());
 
@@ -714,19 +681,15 @@ void PresetsPage::updateBladeStrings() {
                             case eStride:
                             case eZig_Zag:
                             {
-                                data::Integer::ROContext numSegments{
-                                    split.segments_
-                                };
+                                auto segments{data::context(split.segments_)};
                                 for (
                                         size idx{0};
-                                        idx < numSegments.val();
+                                        idx < segments.val();
                                         ++idx
                                     ) {
                                     if (count == mBladeStrings.size()) return;
 
-                                    data::String::Context label{
-                                        mBladeStrings[count]
-                                    };
+                                    auto& label{*mBladeStrings[count]};
                                     label.change(wxString::Format(
                                         _("Blade %d:%d:%d"),
                                         mainIdx,
@@ -749,8 +712,7 @@ void PresetsPage::updateBladeStrings() {
             } else if (type.idx() == Blade::eUnassigned) {
                 if (count == mBladeStrings.size()) return;
 
-                data::String::Context label{mBladeStrings[count]};
-                label.change(_("Unassigned").ToStdString());
+                mBladeStrings[count]->change(_("Unassigned").ToStdString());
 
                 ++count;
             }
@@ -758,9 +720,45 @@ void PresetsPage::updateBladeStrings() {
     }
 
     for (auto idx{count}; idx < mBladeStrings.size(); ++idx) {
-        data::String::Context label{mBladeStrings[idx]};
-        label.change(_("Unassigned").ToStdString());
+        mBladeStrings[idx]->change(_("Unassigned").ToStdString());
     }
+}
+
+void PresetsPage::onArrayChoice() {
+    if (mDlg) {
+        pcui::cripple(mDlg);
+
+        mDlg->CallAfter([dlg=mDlg] {
+            dlg->Destroy();
+        });
+    }
+
+    auto arraySel{data::context(mArraySel)};
+    auto presetSel{data::context(mPresetSel)};
+
+    data::base::Vector *presets{nullptr};
+    if (arraySel.choiceIdx() != -1) {
+        using namespace config::presets;
+        auto& curArray{*arraySel.selected<Array>()};
+        presets = &curArray.presets_;
+    }
+    presetSel.bind(presets);
+}
+
+void PresetsPage::onPresetChoice() {
+    auto presetSel{data::context(mPresetSel)};
+    auto styleSel{data::context(mStyleSel)};
+
+    data::base::Vector *styles{nullptr};
+    using namespace config::presets;
+    if (auto *curPreset{presetSel.selected<Preset>()}) {
+        styles = &curPreset->styles_;
+    }
+    styleSel.bind(styles);
+}
+
+void PresetsPage::onDisplayChoice() {
+    updateBladeStrings();
 }
 
 /*

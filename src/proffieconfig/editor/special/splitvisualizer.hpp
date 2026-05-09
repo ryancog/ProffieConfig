@@ -20,7 +20,7 @@
  */
 
 #include "config/blades/ws281x.hpp"
-#include "data/selector.hpp"
+#include "data/base/models/selector.hpp"
 #include "ui/detail/general.hpp"
 #include "ui/types.hpp"
 
@@ -30,7 +30,7 @@ struct SplitVisualizer {
     pcui::detail::ChildBase base_;
 
     config::blades::WS281X& blade_;
-    data::Selector& subSel_;
+    data::base::Selector& subSel_;
 
     pcui::DescriptorPtr operator()();
 };

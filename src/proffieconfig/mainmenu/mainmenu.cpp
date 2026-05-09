@@ -26,6 +26,7 @@
 #include <wx/utils.h>
 
 #include "config/config.hpp"
+#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
 #include "ui/bitmap.hpp"
@@ -65,9 +66,7 @@ MainMenu::MainMenu(wxWindow* parent) :
     createMenuBar();
     bindEvents();
 
-    { data::Selector::Context ctxt{configSel_};
-        ctxt.bind(&config::list());
-    }
+    configSel_.bind(&config::list());
 
     config::update();
 
@@ -135,10 +134,10 @@ pcui::DescriptorPtr MainMenu::ui() {
                 .unselected_=_("Select Config"),
               },
               .labeler_=[this](uint32 sel) -> pcui::Choice::Label {
-                  data::Vector::ROContext vec{config::list()};
+                  auto vec{data::context(config::list())};
                   if (sel >= vec.children().size()) return {};
 
-                  auto& info{static_cast<config::Info&>(*vec.children()[sel])};
+                  auto& info{dynamic_cast<config::Info&>(*vec.children()[sel])};
                   return info.name();
               }
             }(),
@@ -155,7 +154,7 @@ pcui::DescriptorPtr MainMenu::ui() {
             pcui::Button{
               .win_={
                 .base_={.expand_=true},
-                .enable_=configSel_.choice_ | data::logic::HasSelection{},
+                .enable_=configSel_.choice() | data::logic::HasSelection{},
               },
               .label_=_("Remove"),
               .exactFit_=true,
@@ -166,15 +165,15 @@ pcui::DescriptorPtr MainMenu::ui() {
         pcui::Button{
           .win_={
             .base_={.expand_=true},
-            .enable_=configSel_.choice_ | data::logic::HasSelection{},
+            .enable_=configSel_.choice() | data::logic::HasSelection{},
           },
           .label_=_("Edit Selected Configuration"),
           .func_=[this] {
-              data::Choice::ROContext choice{configSel_.choice_};
-              data::Vector::ROContext vec{config::list()};
+              auto choice{data::context(configSel_.choice())};
+              auto vec{data::context(config::list())};
               if (choice.idx() >= vec.children().size()) return;
 
-              auto& info{static_cast<config::Info&>(
+              auto& info{dynamic_cast<config::Info&>(
                   *vec.children()[choice.idx()]
               )};
 
@@ -235,7 +234,7 @@ pcui::DescriptorPtr MainMenu::ui() {
           .win_={
             .base_={.expand_=true},
             .enable_={
-              configSel_.choice_ | data::logic::HasSelection{} and
+              configSel_.choice() | data::logic::HasSelection{} and
               board_ | data::logic::HasSelection{}
             },
             .tooltip_=_("Compile and upload the selected configuration to the selected Proffieboard."),
@@ -303,7 +302,7 @@ void MainMenu::bindEvents() {
         for (auto [info, editor] : mEditors) {
             if (
                     info->config() and
-                    data::Bool::ROContext{info->config()->isSaved()}.val()
+                    data::context(info->config()->isSaved()).val()
                ) {
                 continue;
             }
@@ -542,13 +541,13 @@ void MainMenu::importConfig() {
             }
         }
 
-        data::Selector::Context configSel{configSel_};
-        data::Vector::ROContext vec{*configSel.bound()};
-        data::Choice::Context choice{configSel_.choice_};
+        auto configSel{data::context(configSel_)};
+        auto vec{data::context(*configSel.bound())};
+        auto choice{data::context(configSel_.choice())};
 
         for (size idx{0}; idx < vec.children().size(); ++idx) {
-            auto& info{static_cast<config::Info&>(*vec.children()[idx])};
-            data::String::ROContext nameCtxt{info.name()};
+            auto& info{dynamic_cast<config::Info&>(*vec.children()[idx])};
+            auto nameCtxt{data::context(info.name())};
 
             if (nameCtxt.val() != result.name_) continue;
 

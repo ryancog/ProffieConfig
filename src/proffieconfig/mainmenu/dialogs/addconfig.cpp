@@ -24,10 +24,9 @@
 #include <wx/filedlg.h>
 
 #include "config/config.hpp"
-#include "data/helpers/exclusive.hpp"
+#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
-#include "data/string.hpp"
 #include "ui/build.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/filepicker.hpp"
@@ -63,66 +62,37 @@ AddConfigDialog::~AddConfigDialog() {
     pcui::teardown(this);
 }
 
+void AddConfigDialog::onActivate() {
+    onName();
+    onPath();
+}
+
 AddConfigDialog::Result AddConfigDialog::getResult() {
-    data::String::ROContext name{mConfigName};
-    data::String::ROContext path{mImportPath};
+    auto name{data::context(mConfigName)};
+    auto path{data::context(mImportPath)};
+    auto mode{data::context(mMode)};
 
     return {
-        .mode_=static_cast<Result::Mode>(mMode.selected()),
+        .mode_=static_cast<Result::Mode>(mode.selected()),
         .path_=path.val(),
         .name_=name.val(),
     };
 }
 
 void AddConfigDialog::bindEvents() {
-    mConfigName.responder().onChange_ = [](
-        const data::String::ROContext& ctxt
-    ) {
-        auto& self{utils::parent<&AddConfigDialog::mConfigName>(
-            const_cast<data::String&>(ctxt.model<data::String>())
-        )};
-
-        bool dupName{false};
-        data::Vector::ROContext list{config::list()};
-        for (const auto& model : list.children()) {
-            auto& exist{static_cast<config::Info&>(*model)};
-            data::String::ROContext existName{exist.name()};
-            if (existName.val() != ctxt.val()) continue;
-
-            dupName = true;
-            break;
-        }
-        data::Bool::Context{self.mDupName}.set(dupName);
-
-        bool nameEmpty{ctxt.val().empty()};
-        bool nameBadChars{
-            ctxt.val().find_first_of(".\\,/!#$%^&*|?<>\"'") != std::string::npos
-        };
-
-        data::Bool::Context{self.mNameValid}.set(
-            not nameEmpty and
-            not dupName and
-            not nameBadChars
-        );
-    };
-    mConfigName.responder().onChange_(mConfigName);
-
-    mImportPath.responder().onChange_ = [](
-        const data::String::ROContext& ctxt
-    ) {
-        auto& self{utils::parent<&AddConfigDialog::mImportPath>(
-            const_cast<data::String&>(ctxt.model<data::String>())
-        )};
-
-        data::Bool::Context{self.mNeedImportPath}.set(ctxt.val().empty());
-
-        fs::path path{ctxt.val()};
-        if (path.has_stem()) {
-            data::String::Context configName{self.mConfigName};
-            configName.change(path.stem().string());
-        }
-    };
-    mImportPath.responder().onChange_(mImportPath);
+    static const auto nameTable{[] {
+        data::prim::String::RecvTable table;
+        table.onChange_ = data::map(&AddConfigDialog::onName);
+        return table;
+    }()};
+    amend(mConfigName, nameTable);
+    
+    static const auto pathTable{[] {
+        data::prim::String::RecvTable table;
+        table.onChange_ = data::map(&AddConfigDialog::onPath);
+        return table;
+    }()};
+    amend(mImportPath, pathTable);
 }
 
 pcui::DescriptorPtr AddConfigDialog::ui() {
@@ -149,14 +119,14 @@ pcui::DescriptorPtr AddConfigDialog::ui() {
         pcui::Label{
           .win_={
             .base_={.border_={.dirs_=wxTOP}},
-            .show_=mMode[eMode_Import] | data::logic::IsSet{}
+            .show_=mMode | data::logic::HasSelection{{eMode_Import}},
           },
           .label_=_("Configuration to Import"),
         }(),
         pcui::FilePicker{
           .win_={
             .base_{.expand_=true},
-            .show_=mMode[eMode_Import] | data::logic::IsSet{}
+            .show_=mMode | data::logic::HasSelection{{eMode_Import}},
           },
           .data_=mImportPath,
           .message_=_("Choose Configuration File to Import"),
@@ -191,7 +161,7 @@ pcui::DescriptorPtr AddConfigDialog::ui() {
             .base_={.align_=wxALIGN_RIGHT},
             .show_={
               (mNeedImportPath | data::logic::IsSet{}) and
-              (mMode[eMode_Import] | data::logic::IsSet{})
+              mMode | data::logic::HasSelection{{eMode_Import}},
             }
           },
           .label_=_("Please choose a configuration file to import"),
@@ -202,7 +172,7 @@ pcui::DescriptorPtr AddConfigDialog::ui() {
             .win_{
               .enable_={
                 mNameValid | data::logic::IsSet{} and
-                (not (mMode[eMode_Import] | data::logic::IsSet{}) or
+                (not (mMode | data::logic::HasSelection{{eMode_Import}}) or
                  not (mNeedImportPath | data::logic::IsSet{}))
               },
             },
@@ -217,5 +187,44 @@ pcui::DescriptorPtr AddConfigDialog::ui() {
         }(),
       },
     }();
+}
+
+void AddConfigDialog::onName() {
+    auto name{data::context(mConfigName)};
+
+    bool dupName{false};
+    auto list{data::context(config::list())};
+    for (const auto& model : list.children()) {
+        auto& exist{dynamic_cast<config::Info&>(*model)};
+        auto existName{data::context(exist.name())};
+        if (existName.val() != name.val()) continue;
+
+        dupName = true;
+        break;
+    }
+    mDupName.set(dupName);
+
+    bool nameEmpty{name.val().empty()};
+    bool nameBadChars{
+        name.val().find_first_of(".\\,/!#$%^&*|?<>\"'") != std::string::npos
+    };
+
+    mNameValid.set(
+        not nameEmpty and
+        not dupName and
+        not nameBadChars
+    );
+}
+
+void AddConfigDialog::onPath() {
+    auto path{data::context(mImportPath)};
+
+    mNeedImportPath.set(path.val().empty());
+
+    fs::path fsPath{path.val()};
+    if (fsPath.has_stem()) {
+        auto configName{data::context(mConfigName)};
+        configName.change(fsPath.stem().string());
+    }
 }
 

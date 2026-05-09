@@ -21,6 +21,7 @@
 
 #include <wx/event.h>
 
+#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
 #include "ui/build.hpp"
@@ -38,12 +39,11 @@ ManifestDialog::ManifestDialog(MainMenu *mainMenu) :
     Dialog{mainMenu, wxID_ANY, _("Set Update Channel")} {
     constexpr cstring STABLE_CHANNEL{"stable"};
 
-    { data::String::Context ctxt{mText};
-        ctxt.change(state::manifestChannel.empty()
-            ? STABLE_CHANNEL
-            : state::manifestChannel
-        );
-    }
+    mText.change(state::manifestChannel.empty()
+        ? STABLE_CHANNEL
+        : state::manifestChannel
+    );
+
     const auto ui{pcui::Stack{
       .base_={
         .border_={.size_=pcui::winEdgeSpacing(), .dirs_=wxALL},
@@ -67,7 +67,7 @@ ManifestDialog::ManifestDialog(MainMenu *mainMenu) :
             .label_=_("Save"),
             .default_=true,
             .func_=[this] {
-                data::String::Context str{mText};
+                auto str{data::context(mText)};
                 if (str.val() == STABLE_CHANNEL) state::manifestChannel.clear();
                 else state::manifestChannel = str.val();
 
@@ -84,7 +84,7 @@ ManifestDialog::ManifestDialog(MainMenu *mainMenu) :
           .apply_=pcui::Button{
             .label_=_("Reset to Default"),
             .func_=[this] {
-                data::String::Context{mText}.change(STABLE_CHANNEL);
+                mText.change(STABLE_CHANNEL);
             }
           }(),
         }(),

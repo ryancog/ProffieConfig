@@ -46,6 +46,7 @@
 #include "config/config.hpp"
 #include "config/priv/io.hpp"
 #include "config/misc/injection.hpp"
+#include "data/context.hpp"
 #include "log/context.hpp"
 #include "log/logger.hpp"
 #include "log/branch.hpp"
@@ -311,21 +312,20 @@ std::variant<CompileOutput, wxString> compile(
     prog.set(10, wxGetTranslation(OSCHK_MSG));
     logger.info(OSCHK_MSG);
 
-    const auto osVersion{config.osVersion()};
-    if (not osVersion) {
+    if (config.os() == nullptr) {
         logger.error("Configuration doesn't have an OS Version selected, cannot compile.");
         return _("Please select an OS Version");
     }
 
     err = ensureCoreInstalled(
-        osVersion->coreVersion_,
-        osVersion->coreUrl_,
+        config.os()->coreVersion_,
+        config.os()->coreUrl_,
         logger,
         &prog
     );
     if (err) return *err;
 
-    const auto osPath{paths::osDir() / osVersion->version_.string()};
+    const auto osPath{paths::osDir() / config.os()->version_.string()};
 
     if (const auto *prop{config.prop()}) {
         constexpr cstring PROPINST_MSG{wxTRANSLATE("Installing Prop File...")};
@@ -356,7 +356,7 @@ std::variant<CompileOutput, wxString> compile(
     }
 
     const auto injectionsDest{osPath / "config" / config::priv::INJECTION_STR};
-    data::Vector::ROContext injectionVec{config.injections_};
+    auto injectionVec{data::context(config.injections_)};
 
     if (not injectionVec.children().empty()) {
         constexpr cstring PROPINST_MSG{wxTRANSLATE("Installing Injection Files...")};
@@ -370,7 +370,7 @@ std::variant<CompileOutput, wxString> compile(
     }
 
     for (const auto& model : injectionVec.children()) {
-        auto& injection{static_cast<config::Injection&>(*model)};
+        auto& injection{dynamic_cast<config::Injection&>(*model)};
 
         const auto srcPath{paths::injectionDir() / injection.filename_};
         const auto dstPath{injectionsDest / injection.filename_};
@@ -434,7 +434,7 @@ std::variant<CompileOutput, wxString> compile(
             }
         } else if (buffer.starts_with(R"(const char version[] = ")")) {
             tmpIno << R"(const char version[] = ")";
-            tmpIno << osVersion->version_.string() << "\";\n";
+            tmpIno << config.os()->version_.string() << "\";\n";
         } else {
             tmpIno << buffer << '\n';
         }
@@ -471,8 +471,8 @@ std::variant<CompileOutput, wxString> compile(
     args.emplace_back("--board-options");
 
     std::string options;
-    data::Bool::ROContext massStorage{config.settings_.massStorage_};
-    data::Bool::ROContext webUSB{config.settings_.webUsb_};
+    auto massStorage{data::context(config.settings_.massStorage_)};
+    auto webUSB{data::context(config.settings_.webUsb_)};
 
     if (massStorage.val() and webUSB.val()) options = "usb=cdc_msc_webusb";
     else if (webUSB.val()) options = "usb=cdc_webusb";
@@ -787,7 +787,7 @@ std::optional<wxString> precheckCompile(
 ) {
     auto& logger{lBranch.createLogger("arduino::precheckCompile()")};
 
-    data::Vector::ROContext bladeConfigs{config.bladeConfigs_};
+    auto bladeConfigs{data::context(config.bladeConfigs_)};
     if (bladeConfigs.children().empty()) {
         logger.error("Config has no blade arrays, cannot compile.");
         return _("Config must have at least one blade array to compile.");

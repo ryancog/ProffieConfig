@@ -29,7 +29,7 @@ private:
     pcui::DescriptorPtr ui();
 
     pcui::DescriptorPtr info();
-    static pcui::DescriptorPtr option(data::Model&);
+    static pcui::DescriptorPtr option(data::base::Model&);
 
     void addOption();
 

@@ -22,16 +22,22 @@
 #include "config/config.hpp"
 #include "config/blades/ws281x.hpp"
 #include "config/blades/simple.hpp"
+#include "data/primitive/models/selector.hpp"
+#include "data/primitive/models/string.hpp"
 #include "ui/types.hpp"
 
 #include "../dialogs/awareness.hpp"
 #include "../dialogs/bladearray.hpp"
 
-struct BladesPage {
+struct BladesPage : data::Receiver {
     BladesPage(config::Config&);
     void deinit();
 
     pcui::DescriptorPtr ui();
+
+protected:
+    void onActivate() override;
+    void onDeactivate() override;
 
 private:
     pcui::DescriptorPtr selection();
@@ -41,25 +47,29 @@ private:
     pcui::DescriptorPtr splits(config::blades::WS281X&);
     pcui::DescriptorPtr split(config::blades::WS281X::Split&);
 
+    void onArrayChoice();
+    void onBladeChoice();
+    void onSubChoice();
+
+    void attachIssues(const data::base::Integer&);
+    void detachIssues();
+
+    void onIssues();
+
     config::Config& mConfig;
 
-    data::Selector mArraySel;
-    data::Selector mBladeSel;
-    data::Selector mSubBladeSel;
+    data::prim::Selector mArraySel;
+    data::prim::Selector mBladeSel;
+    data::prim::Selector mSubBladeSel;
 
     // To try and preserve choice across various changes.
     int32 mLastBladeChoice{-1};
     int32 mLastSubChoice{-1};
 
-    struct IssueReceiver : data::Integer::Receiver {
-        void onSet() override;
-        void onAttach() override;
-        void preDetach() override;
-        void updateLabel();
-    } mIssueReceiver;
-    data::String mIssueLabel;
+    data::prim::String mIssueLabel;
+    const data::base::Integer *mIssues{nullptr};
 
-    data::String mPowerPinAddField;
+    data::prim::String mPowerPinAddField;
 
     BladeArrayDlg *mArrayDlg{nullptr};
     BladeAwarenessDlg *mAwarenessDlg{nullptr};

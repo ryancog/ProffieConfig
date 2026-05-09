@@ -24,9 +24,11 @@
 #include "config/blades/bladeconfig.hpp"
 #include "config/blades/ws281x.hpp"
 #include "config/strings.hpp"
+#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
 #include "ui/build.hpp"
+#include "ui/builders/selector.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/checkbox.hpp"
 #include "ui/controls/checklist.hpp"
@@ -38,84 +40,40 @@
 #include "ui/helpers/labeled.hpp"
 #include "ui/layout/group.hpp"
 #include "ui/layout/panel.hpp"
-#include "ui/layout/selector.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/static/label.hpp"
 #include "ui/symbols.hpp"
 #include "ui/types.hpp"
 #include "ui/values.hpp"
-#include "utils/parent.hpp"
 #include "utils/string.hpp"
 
 #include "../special/splitvisualizer.hpp"
 
 BladesPage::BladesPage(config::Config& config) : mConfig{config} {
-    mArraySel.choice_.responder().onChoice_ = [](
-        const data::Choice::ROContext& ctxt
-    ) {
-        auto& arraySel{*ctxt.model().parent<data::Selector>()};
-        auto& page{utils::parent<&BladesPage::mArraySel>(arraySel)};
+    static const auto arrayTable{[] {
+        data::prim::Choice::RecvTable table;
+        table.onChoice_ = data::map(&BladesPage::onArrayChoice);
+        return table;
+    }()};
+    amend(mArraySel.choice(), arrayTable);
 
-        if (page.mArrayDlg) {
-            pcui::cripple(page.mArrayDlg);
+    static const auto bladeTable{[] {
+        data::prim::Choice::RecvTable table;
+        table.onChoice_ = data::map(&BladesPage::onBladeChoice);
+        return table;
+    }()};
+    amend(mBladeSel.choice(), bladeTable);
 
-            page.mArrayDlg->CallAfter([dlg=page.mArrayDlg] {
-                dlg->Destroy();
-            });
-        }
-
-        data::Selector::Context bladeSel{page.mBladeSel};
-
-        // Always detach first
-        page.mIssueReceiver.detach();
-
-        if (ctxt.idx() != -1) {
-            using namespace config::blades;
-            data::Vector::ROContext bladeConfigs{page.mConfig.bladeConfigs_};
-            auto& selModel{*bladeConfigs.children()[ctxt.idx()]};
-            auto& selected{static_cast<BladeConfig&>(selModel)};
-            page.mIssueReceiver.attach(selected.issues());
-
-            bladeSel.bind(&selected.blades_);
-
-            data::Choice::Context selChoice{page.mBladeSel.choice_};
-            if (
-                    page.mLastBladeChoice != -1 and
-                    page.mLastBladeChoice < selChoice.numChoices()
-               ) {
-                selChoice.choose(page.mLastBladeChoice);
-            }
-        } else {
-            bladeSel.bind(nullptr);
-        }
-    };
-
-    mBladeSel.choice_.responder().onChoice_ = [](
-        const data::Choice::ROContext& ctxt
-    ) {
-        auto& bladeSel{*ctxt.model().parent<data::Selector>()};
-        auto& page{utils::parent<&BladesPage::mBladeSel>(bladeSel)};
-
-        // Only preserve real choices.
-        if (ctxt.idx() != -1)
-            page.mLastBladeChoice = ctxt.idx();
-
-        data::Selector::Context{page.mSubBladeSel}.bind(nullptr);
-    };
-
-    mSubBladeSel.choice_.responder().onChoice_ = [](
-        const data::Choice::ROContext& ctxt
-    ) {
-        auto& subSel{*ctxt.model().parent<data::Selector>()};
-        auto& page{utils::parent<&BladesPage::mSubBladeSel>(subSel)};
-
-        if (ctxt.idx() != -1)
-            page.mLastSubChoice = ctxt.idx();
-    };
+    static const auto subTable{[] {
+        data::prim::Choice::RecvTable table;
+        table.onChoice_ = data::map(&BladesPage::onSubChoice);
+        return table;
+    }()};
+    amend(mSubBladeSel.choice(), subTable);
 
     const auto powerPinFilter{[](
-        const data::String::ROContext&, std::string& str, size& pos
+        const data::base::String::ROContext&, std::string& str, size& pos
     ) {
         uint32 numTrimmed{};
         utils::trimCppName(
@@ -128,14 +86,13 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
         pos -= numTrimmed;
     }};
     mPowerPinAddField.setFilter(powerPinFilter);
-
-    data::Selector::Context{mArraySel}.bind(&config.bladeConfigs_);
 }
 
-void BladesPage::deinit() {
-    data::Selector::Context{mArraySel}.bind(nullptr);
-    mIssueReceiver.detach();
+void BladesPage::onActivate() {
+    mArraySel.bind(&mConfig.bladeConfigs_);
+}
 
+void BladesPage::onDeactivate() {
     if (mAwarenessDlg) {
         pcui::cripple(mAwarenessDlg);
         mAwarenessDlg->Destroy();
@@ -216,8 +173,8 @@ pcui::DescriptorPtr BladesPage::selection() {
                   },
                   .emptyLabel_=_("[default]"),
                   .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-                      data::Vector::ROContext vec{mConfig.bladeConfigs_};
-                      auto& cfg{static_cast<config::blades::BladeConfig&>(
+                      auto vec{data::context(mConfig.bladeConfigs_)};
+                      auto& cfg{dynamic_cast<config::blades::BladeConfig&>(
                           *vec.children()[idx]
                       )};
                       return cfg.name_;
@@ -226,7 +183,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                 pcui::Spacer{.size_=pcui::interControlSpacing()}(),
                 pcui::Button{
                   .win_={
-                    .enable_=mArraySel.choice_ | data::logic::HasSelection{},
+                    .enable_=mArraySel.choice() | data::logic::HasSelection{},
                   },
                   .bitmap_={
                     .src_=pcui::Bitmap{"edit"}.color(wxSYS_COLOUR_WINDOWTEXT),
@@ -241,8 +198,8 @@ pcui::DescriptorPtr BladesPage::selection() {
 
                       using namespace config::blades;
 
-                      data::Selector::Context sel{mArraySel};
-                      auto& cfg{static_cast<BladeConfig&>(*sel.selected())};
+                      auto sel{data::context(mArraySel)};
+                      auto& cfg{dynamic_cast<BladeConfig&>(*sel.selected())};
                       mArrayDlg = new BladeArrayDlg(ctxt.topLevel_, cfg, false);
                       const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
                           if (evt.GetEventObject() == mArrayDlg) mArrayDlg = nullptr;
@@ -269,8 +226,8 @@ pcui::DescriptorPtr BladesPage::selection() {
                       if (mArrayDlg)
                           mArrayDlg->Destroy();
 
-                      data::Vector::Context vec{mConfig.bladeConfigs_};
-                      auto& cfg{vec.addCreate<config::blades::BladeConfig>()};
+                      auto vec{data::context(mConfig.bladeConfigs_)};
+                      auto& cfg{vec.append<config::blades::BladeConfig>(mConfig)};
 
                       // For new creation, for things like this, it would make
                       // more sense to create a temporary and then add it in
@@ -282,7 +239,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                       if (res != wxID_OK) {
                           vec.remove(vec.children().size() - 1);
                       } else {
-                          data::Choice::Context{mArraySel.choice_}.choose(
+                          mArraySel.choice().choose(
                               static_cast<int32>(vec.children().size() - 1)
                           );
                       }
@@ -292,13 +249,13 @@ pcui::DescriptorPtr BladesPage::selection() {
                 pcui::Button{
                   .win_={
                     .base_={.proportion_=1},
-                    .enable_=mArraySel.choice_ | data::logic::HasSelection{},
+                    .enable_=mArraySel.choice() | data::logic::HasSelection{},
                   },
                   .label_=_("Remove"),
                   .exactFit_=true,
                   .func_=[this] {
-                      data::Selector::ROContext sel{mArraySel};
-                      data::Vector::Context vec{mConfig.bladeConfigs_};
+                      auto sel{data::context(mArraySel)};
+                      auto vec{data::context(mConfig.bladeConfigs_)};
 
                       vec.remove(*sel.selected());
                   }
@@ -327,33 +284,29 @@ pcui::DescriptorPtr BladesPage::selection() {
                 pcui::Button{
                   .win_={
                     .base_={.minSize_=pcui::iconButtonSize()},
-                    .enable_=mArraySel.choice_ | data::logic::HasSelection{},
+                    .enable_=mArraySel.choice() | data::logic::HasSelection{},
                   },
                   .label_=pcui::syms::PLUS,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
                   .func_=[this] {
-                      data::Selector::ROContext sel{mBladeSel};
-                      data::Vector::Context vec{
-                          const_cast<data::Vector&>(*sel.bound())
-                      };
-                      vec.addCreate<config::blades::Blade>();
+                      auto sel{data::context(mBladeSel)};
+                      auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
+                      vec.append(std::make_unique<config::blades::Blade>(mConfig));
                   },
                 }(),
                 pcui::Button{
                   .win_={
                     .base_={.minSize_=pcui::iconButtonSize()},
-                    .enable_=mBladeSel.choice_ | data::logic::HasSelection{},
+                    .enable_=mBladeSel.choice() | data::logic::HasSelection{},
                   },
                   .label_=pcui::syms::MINUS,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
                   .func_=[this] {
-                      data::Selector::ROContext sel{mBladeSel};
-                      data::Vector::Context vec{
-                          const_cast<data::Vector&>(*sel.bound())
-                      };
-                      vec.remove(*sel.selected());
+                      auto sel{data::context(mBladeSel)};
+                      auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
+                      vec.remove(sel.choiceIdx());
                   },
                 }(),
               }
@@ -365,7 +318,9 @@ pcui::DescriptorPtr BladesPage::selection() {
 }
 
 pcui::DescriptorPtr BladesPage::blades() {
-    const auto typeBuilder{[this](data::Model *model) -> pcui::DescriptorPtr {
+    const auto typeBuilder{[this](
+        data::base::Model *model
+    ) -> pcui::DescriptorPtr {
         using namespace config::blades;
 
         if (auto *ptr{dynamic_cast<WS281X *>(model)}) {
@@ -398,7 +353,7 @@ pcui::DescriptorPtr BladesPage::blades() {
     }};
 
     const auto builder{[this, typeBuilder](
-        data::Model *model
+        data::base::Model *model
     ) -> pcui::DescriptorPtr {
         if (model == nullptr) {
             return pcui::Label{
@@ -415,7 +370,7 @@ pcui::DescriptorPtr BladesPage::blades() {
             }();
         }
 
-        auto& blade{*static_cast<config::blades::Blade *>(model)};
+        auto& blade{*dynamic_cast<config::blades::Blade *>(model)};
         return pcui::Stack{
             .base_={.expand_=true, .proportion_=2},
             .orient_=wxVERTICAL,
@@ -431,7 +386,7 @@ pcui::DescriptorPtr BladesPage::blades() {
                 }
               }(),
               pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
-              pcui::Selector{
+              pcui::builders::Selector{
                 .data_=blade.type(),
                 .builder_=typeBuilder,
               }(),
@@ -439,13 +394,15 @@ pcui::DescriptorPtr BladesPage::blades() {
         }();
     }};
 
-    return pcui::Selector{
+    return pcui::builders::Selector{
       .data_=mBladeSel,
       .builder_=builder,
     }();
 }
 
 pcui::DescriptorPtr BladesPage::simple(config::blades::Simple& simple) {
+    auto& blade{simple.parent_};
+
     const auto led{[](
         config::blades::Simple::LED& led,
         uint32 idx
@@ -514,8 +471,6 @@ pcui::DescriptorPtr BladesPage::simple(config::blades::Simple& simple) {
         }();
     }};
 
-    auto& blade{*simple.parent()->parent<config::blades::Blade>()};
-
     return pcui::Stack{
       .base_={.expand_=true, .proportion_=1},
       .orient_=wxVERTICAL,
@@ -552,27 +507,27 @@ pcui::DescriptorPtr BladesPage::simple(config::blades::Simple& simple) {
 }
 
 pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
-    { data::Selector::Context ctxt{mSubBladeSel};
+    auto& blade{ws281x.parent_};
+
+    { auto ctxt{data::context(mSubBladeSel)};
         ctxt.bind(&ws281x.splits_);
 
-        data::Choice::Context selChoice{mSubBladeSel.choice_};
+        auto selChoice{data::context(mSubBladeSel.choice())};
         if (
                 mLastSubChoice != -1 and
-                mLastSubChoice < selChoice.numChoices()
+                mLastSubChoice < selChoice.num()
            ) {
             selChoice.choose(mLastSubChoice);
         }
     }
 
-    auto& blade{*ws281x.parent()->parent<config::blades::Blade>()};
-
     const auto onAddPowerPin{[this, &ws281x] {
-        data::String::Context entry{mPowerPinAddField};
+        auto entry{data::context(mPowerPinAddField)};
 
         // Could be empty coming from add field enter action.
         if (entry.val().empty()) return;
 
-        data::Selection::Context powerPins{ws281x.powerPins_};
+        auto powerPins{data::context(ws281x.powerPins_)};
 
         powerPins.select(std::string{entry.val()});
         entry.clear();
@@ -807,24 +762,23 @@ pcui::DescriptorPtr BladesPage::splits(config::blades::WS281X& ws281x) {
               .win_={.base_={.proportion_=1}},
               .label_=_("Add"),
               .func_=[this, &ws281x] {
-                  data::Vector::Context vec{ws281x.splits_};
-                  data::Choice::Context choice{mSubBladeSel.choice_};
-                  vec.addCreate<config::blades::WS281X::Split>();
-                  choice.choose(static_cast<int32>(
-                      vec.children().size() - 1
-                  ));
+                  auto vec{data::context(ws281x.splits_)};
+                  auto choice{data::context(mSubBladeSel.choice())};
+
+                  vec.append(std::make_unique<config::blades::WS281X::Split>(ws281x));
+                  choice.choose(static_cast<int32>(vec.children().size() - 1));
               }
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::Button{
               .win_={
                 .base_={.proportion_=1},
-                .enable_=mSubBladeSel.choice_ | data::logic::HasSelection{},
+                .enable_=mSubBladeSel.choice() | data::logic::HasSelection{},
               },
               .label_=_("Remove"),
               .func_=[this, &ws281x] {
-                  data::Selector::ROContext sel{mSubBladeSel};
-                  data::Vector::Context vec{ws281x.splits_};
+                  auto sel{data::context(mSubBladeSel)};
+                  auto vec{data::context(ws281x.splits_)};
 
                   vec.remove(*sel.selected());
               }
@@ -832,9 +786,9 @@ pcui::DescriptorPtr BladesPage::splits(config::blades::WS281X& ws281x) {
           }
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
-        pcui::Selector{
+        pcui::builders::Selector{
           .data_=mSubBladeSel,
-          .builder_=[this](data::Model *model) -> pcui::DescriptorPtr {
+          .builder_=[this](data::base::Model *model) -> pcui::DescriptorPtr {
               if (model == nullptr) {
                   return pcui::Stack{
                     .base_={.expand_=true, .proportion_=1},
@@ -853,7 +807,7 @@ pcui::DescriptorPtr BladesPage::splits(config::blades::WS281X& ws281x) {
               }
 
               using Split = config::blades::WS281X::Split;
-              return split(static_cast<Split&>(*model));
+              return split(dynamic_cast<Split&>(*model));
           }
         }(),
       }
@@ -894,12 +848,14 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
               .expand_=true,
               .border_={.size_=pcui::interGroupSpacing(), .dirs_=wxTOP},
             },
-            .show_={
-              (*split.type_.data()[eStandard] | data::logic::IsSet{}) or
-              (*split.type_.data()[eReverse] | data::logic::IsSet{}) or
-              (*split.type_.data()[eStride] | data::logic::IsSet{}) or
-              (*split.type_.data()[eZig_Zag] | data::logic::IsSet{})
-            },
+            .show_=[&] {
+                auto type{data::context(split.type_)};
+                return 
+                    (type[eStandard] | data::logic::IsSet{}) or
+                    (type[eReverse] | data::logic::IsSet{}) or
+                    (type[eStride] | data::logic::IsSet{}) or
+                    (type[eZig_Zag] | data::logic::IsSet{});
+            }(),
           },
           .child_=pcui::Stack{
             .base_={.expand_=true, .proportion_=1},
@@ -933,12 +889,14 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
               .expand_=true,
               .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
             },
-            .show_={
-              (*split.type_.data()[eStandard] | data::logic::IsSet{}) or
-              (*split.type_.data()[eReverse] | data::logic::IsSet{}) or
-              (*split.type_.data()[eStride] | data::logic::IsSet{}) or
-              (*split.type_.data()[eZig_Zag] | data::logic::IsSet{})
-            },
+            .show_=[&] {
+                auto type{data::context(split.type_)};
+                return 
+                    (type[eStandard] | data::logic::IsSet{}) or
+                    (type[eReverse] | data::logic::IsSet{}) or
+                    (type[eStride] | data::logic::IsSet{}) or
+                    (type[eZig_Zag] | data::logic::IsSet{});
+            }(),
           },
           .label_=_("Length"),
           .orient_=wxVERTICAL,
@@ -956,10 +914,12 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
               .expand_=true,
               .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
             },
-            .show_={
-              (*split.type_.data()[eStride] | data::logic::IsSet{}) or
-              (*split.type_.data()[eZig_Zag] | data::logic::IsSet{})
-            },
+            .show_=[&] {
+                auto type{data::context(split.type_)};
+                return 
+                    (type[eStride] | data::logic::IsSet{}) or
+                    (type[eZig_Zag] | data::logic::IsSet{});
+            }(),
             .tooltip_=_("Stride length or number of ZigZag columns"),
           },
           .label_=_("Segments"),
@@ -977,7 +937,10 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
               .expand_=true,
               .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
             },
-            .show_=*split.type_.data()[eList] | data::logic::IsSet{},
+            .show_=[&] {
+                auto type{data::context(split.type_)};
+                return type[eList] | data::logic::IsSet{};
+            }(),
             .tooltip_=_("Data goes along each LED according to their order in the list")
           },
           .label_=_("List"),
@@ -1001,32 +964,93 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
     }();
 }
 
-void BladesPage::IssueReceiver::onSet() {
-    updateLabel();
+void BladesPage::onArrayChoice() {
+    if (mArrayDlg) {
+        pcui::cripple(mArrayDlg);
+
+        mArrayDlg->CallAfter([dlg=mArrayDlg] {
+            dlg->Destroy();
+        });
+    }
+
+    auto arraySel{data::context(mArraySel)};
+
+    // Always detach first
+    detachIssues();
+
+    if (arraySel.choiceIdx() != -1) {
+        using namespace config::blades;
+        auto bladeConfigs{data::context(mConfig.bladeConfigs_)};
+        auto& selModel{*bladeConfigs.children()[arraySel.choiceIdx()]};
+        auto& selected{dynamic_cast<BladeConfig&>(selModel)};
+
+        attachIssues(selected.issues());
+
+        mBladeSel.bind(&selected.blades_);
+
+        auto selChoice{data::context(mBladeSel.choice())};
+        if (
+                mLastBladeChoice != -1 and
+                mLastBladeChoice < selChoice.num()
+           ) {
+            selChoice.choose(mLastBladeChoice);
+        }
+    } else {
+        mBladeSel.bind(nullptr);
+    }
 }
 
-void BladesPage::IssueReceiver::onAttach() {
-    updateLabel();
+void BladesPage::onBladeChoice() {
+    auto bladeSel{data::context(mBladeSel)};
+
+    // Only preserve real choices.
+    if (bladeSel.choiceIdx() != -1)
+        mLastBladeChoice = bladeSel.choiceIdx();
+
+    mSubBladeSel.bind(nullptr);
 }
 
-void BladesPage::IssueReceiver::preDetach() {
-    auto& page{utils::parent<&BladesPage::mIssueReceiver>(*this)};
-    data::String::Context{page.mIssueLabel}.clear();
+void BladesPage::onSubChoice() {
+    auto subSel{data::context(mSubBladeSel)};
+
+    if (subSel.choiceIdx() != -1)
+        mLastSubChoice = subSel.choiceIdx();
 }
 
-void BladesPage::IssueReceiver::updateLabel() {
-    auto& page{utils::parent<&BladesPage::mIssueReceiver>(*this)};
+void BladesPage::attachIssues(const data::base::Integer& issues) {
+    mIssues = &issues;
 
-    const auto issues{context<data::Integer>().val()};
+    static const auto issueTable{[] {
+        data::base::Integer::RecvTable table;
+        table.onSet_ = data::map(&BladesPage::onIssues);
+        return table;
+    }()};
+    amend(issues, issueTable);
+
+    // Update the label
+    onIssues();
+}
+
+void BladesPage::detachIssues() {
+    if (mIssues == nullptr) return;
+
+    mIssueLabel.clear();
+
+    repeal(*mIssues);
+}
+
+void BladesPage::onIssues() {
+    auto issues{data::context(*mIssues)};
+
     using enum config::blades::BladeConfig::Issues;
 
     std::string label;
-    if (issues & eIssue_Errors) {
+    if (issues.val() & eIssue_Errors) {
         label = pcui::syms::NO_ENTRY;
-    } else if (issues & eIssue_Warnings) {
+    } else if (issues.val() & eIssue_Warnings) {
         label = pcui::syms::WARNING;
     }
 
-    data::String::Context{page.mIssueLabel}.change(std::move(label));
+    mIssueLabel.change(std::move(label));
 }
- 
+

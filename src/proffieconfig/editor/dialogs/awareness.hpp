@@ -35,6 +35,6 @@ private:
 
     config::Config& mConfig;
 
-    data::String mPowerPinAddField;
+    data::prim::String mPowerPinAddField;
 };
 

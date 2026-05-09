@@ -20,8 +20,10 @@
 
 #include "config/buttons/button.hpp"
 #include "config/strings.hpp"
+#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "ui/build.hpp"
+#include "ui/builders/vecstack.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/choice.hpp"
 #include "ui/controls/combobox.hpp"
@@ -32,7 +34,6 @@
 #include "ui/layout/scrolled.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
-#include "ui/layout/vecstack.hpp"
 #include "ui/static/divider.hpp"
 #include "ui/static/hyperlink.hpp"
 #include "ui/static/label.hpp"
@@ -80,7 +81,7 @@ pcui::DescriptorPtr ButtonsDlg::ui() {
             pcui::Scrolled{
               .win_={.base_={.expand_=true, .proportion_=1}},
               .scrollRate_={.y_=4},
-              .child_=pcui::VecStack{
+              .child_=pcui::builders::VecStack{
                 .base_={
                   .expand_=true,
                   .proportion_=1,
@@ -161,8 +162,8 @@ pcui::DescriptorPtr ButtonsDlg::info() {
     }();
 }
 
-pcui::DescriptorPtr ButtonsDlg::button(data::Model& model) {
-    auto& button{static_cast<config::buttons::Button&>(model)};
+pcui::DescriptorPtr ButtonsDlg::button(data::base::Model& model) {
+    auto& button{dynamic_cast<config::buttons::Button&>(model)};
 
     return pcui::Stack{
       .base_={.expand_=true},
@@ -306,12 +307,12 @@ pcui::DescriptorPtr ButtonsDlg::button(data::Model& model) {
           .win_={.base_={.align_=wxALIGN_RIGHT}},
           .label_=_("Remove"),
           .func_=[&button, &model](pcui::CallbackContext ctxt) {
-              auto& vec{*button.parent<data::Vector>()};
+              auto& vec{button.root<config::Config>().buttons_};
 
               // Removing the model will destroy this UI first, and the UI
               // cannot be destroyed from inside the callback.
               ctxt.topLevel_->CallAfter([&vec, &model] {
-                  data::Vector::Context vecCtxt{vec};
+                  auto vecCtxt{data::context(vec)};
                   vecCtxt.remove(model);
               });
           }
@@ -321,14 +322,14 @@ pcui::DescriptorPtr ButtonsDlg::button(data::Model& model) {
 }
 
 void ButtonsDlg::addButton() {
-    data::Vector::Context vec{mConfig.buttons_};
-    auto& button{vec.addCreate<config::buttons::Button>()};
+    auto vec{data::context(mConfig.buttons_)};
+    auto& button{vec.append<config::buttons::Button>(mConfig)};
 
-    data::Choice::Context event{button.event_};
-    data::String::Context name{button.name_};
+    auto event{data::context(button.event_)};
+    auto name{data::context(button.name_)};
 
-    data::Choice::Context type{button.type_};
-    data::String::Context pin{button.pin_};
+    auto type{data::context(button.type_)};
+    auto pin{data::context(button.pin_)};
 
     // Assign some reasonable defaults for the first buttons created.
     switch (vec.children().size()) {

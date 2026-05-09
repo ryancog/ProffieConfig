@@ -20,6 +20,7 @@
  */
 
 #include "config/strings.hpp"
+#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
 #include "ui/build.hpp"
@@ -188,12 +189,12 @@ pcui::DescriptorPtr BladeAwarenessDlg::idPower() {
     auto& bladeId{mConfig.settings_.bladeAwareness_.bladeId_};
 
     const auto onAddPowerPin{[this, &bladeId] {
-        data::String::Context entry{mPowerPinAddField};
+        auto entry{data::context(mPowerPinAddField)};
 
         // Could be empty coming from add field enter action.
         if (entry.val().empty()) return;
 
-        data::Selection::Context powerPins{bladeId.powerPins_};
+        auto powerPins{data::context(bladeId.powerPins_)};
 
         powerPins.select(std::string{entry.val()});
         entry.clear();

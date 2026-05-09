@@ -19,15 +19,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/generic.hpp"
-#include "data/helpers/exclusive.hpp"
-#include "data/string.hpp"
+#include "data/primitive/models/bool.hpp"
+#include "data/primitive/models/exclusive.hpp"
+#include "data/primitive/models/string.hpp"
 #include "ui/dialog.hpp"
 #include "ui/types.hpp"
 
 struct MainMenu;
 
-struct AddConfigDialog : pcui::Dialog {
+struct AddConfigDialog : pcui::Dialog, data::Receiver {
     AddConfigDialog(MainMenu *);
     ~AddConfigDialog() override;
 
@@ -45,24 +45,27 @@ struct AddConfigDialog : pcui::Dialog {
 
     Result getResult();
 
-private:
-    data::Generic mCreateButton;
-    data::Generic mImportButton;
+protected:
+    void onActivate() override;
 
-    data::Bool mNameValid;
-    data::Bool mDupName;
-    data::Bool mNeedImportPath;
+private:
+    pcui::DescriptorPtr ui();
+    void bindEvents();
+
+    void onName();
+    void onPath();
+
+    data::prim::Bool mNameValid;
+    data::prim::Bool mDupName;
+    data::prim::Bool mNeedImportPath;
 
     enum {
         eMode_Create,
         eMode_Import,
         eMode_Max,
     };
-    data::Exclusive mMode{eMode_Max};
-    data::String mImportPath;
-    data::String mConfigName;
-    
-    pcui::DescriptorPtr ui();
-    void bindEvents();
+    data::prim::Exclusive mMode{eMode_Max};
+    data::prim::String mImportPath;
+    data::prim::String mConfigName;
 };
 

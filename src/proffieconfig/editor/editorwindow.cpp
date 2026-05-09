@@ -19,7 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <chrono>
 #include <filesystem>
 #include <thread>
 
@@ -30,6 +29,7 @@
 
 #include "config/misc/injection.hpp"
 #include "config/presets/preset.hpp"
+#include "data/context.hpp"
 #include "ui/bitmap.hpp"
 #include "ui/build.hpp"
 #include "ui/dialogs/message.hpp"
@@ -46,7 +46,8 @@ EditorWindow::EditorWindow(wxWindow *parent, config::Info& info) :
     pcui::Frame(
         parent,
         wxID_ANY,
-        info.name()
+        // TODO: Add receiver and update name on change.
+        data::context(info.name()).val()
     ),
     mInfo{info},
     mGeneralPage(*info.config()),
@@ -73,19 +74,16 @@ void EditorWindow::bindEvents() {
         defer {
             if (not evt.GetVeto()) {
                 pcui::cripple(this);
-                mGeneralPage.deinit();
-                mPresetsPage.deinit();
-                mBladesPage.deinit();
                 mInfo.unload();
             }
         };
 
         if (not evt.CanVeto()) return;
 
-        data::Bool::ROContext isSaved{mInfo.config()->isSaved()};
+        auto isSaved{data::context(mInfo.config()->isSaved())};
         if (isSaved.val()) return;
 
-        data::String::ROContext name{mInfo.name()};
+        auto name{data::context(mInfo.name())};
 
         auto choice{pcui::showMessage(
             wxString::Format(_("\"%s\" Has Unsaved Changes"), name.val()),
@@ -108,12 +106,13 @@ void EditorWindow::bindEvents() {
     }, wxID_SAVE); 
 
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-        const auto name{data::String::ROContext{mInfo.name()}.val()};
+        auto name{data::context(mInfo.name())};
+
         wxFileDialog fileDlg(
             this,
             _("Export ProffieOS Config File"),
             wxEmptyString,
-            name + config::RAW_FILE_EXTENSION,
+            name.val() + config::RAW_FILE_EXTENSION,
             _("ProffieOS Configuration") + " (*.h)|*.h",
             wxFD_SAVE | wxFD_OVERWRITE_PROMPT
         );
@@ -163,25 +162,24 @@ void EditorWindow::bindEvents() {
             return;
         }
 
-        auto& injectionVec{mInfo.config()->injections_};
-        data::Vector::Context injections{injectionVec};
-        injections.add(std::make_unique<config::Injection>(
-            &injectionVec, fileDialog.GetFilename().ToStdString()
+        auto& config{*mInfo.config()};
+        config.injections_.append(std::make_unique<config::Injection>(
+            config, fileDialog.GetFilename().ToStdString()
         ));
     }, eID_Add_Injection);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent&) { 
         std::string styleStr;
 
-        data::Selector::ROContext styleSel{mPresetsPage.styleSel()};
-        data::Choice::ROContext styleChoice{mPresetsPage.styleSel().choice_};
+        auto styleSel{data::context(mPresetsPage.styleSel())};
+        auto styleChoice{data::context(mPresetsPage.styleSel().choice())};
         if (styleChoice.idx() != -1) {
-            data::Vector::ROContext styleVec{*styleSel.bound()};
+            auto styleVec{data::context(*styleSel.bound())};
 
             auto& model{*styleVec.children()[styleChoice.idx()]};
-            auto& style{static_cast<config::presets::Style&>(model)};
+            auto& style{dynamic_cast<config::presets::Style&>(model)};
 
-            data::String::ROContext content{style.content_};
+            auto content{data::context(style.content_)};
             styleStr = content.val();
 
             utils::trimWhitespaceOutsideString(styleStr);

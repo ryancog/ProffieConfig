@@ -24,7 +24,7 @@
 #include <wx/stattext.h>
 #include <wx/timer.h>
 
-#include "data/string.hpp"
+#include "data/primitive/models/string.hpp"
 #include "ui/types.hpp"
 #include "ui/indication/progress.hpp"
 
@@ -38,13 +38,13 @@ struct Setup {
 
     void startSetup();
 
-    data::String errorMessage_;
+    data::prim::String errorMessage_;
 
 private:
     wxTimer *mLoadingTimer{nullptr};
 
     pcui::Progress::Data mProgress;
-    data::String mStatusMessage;
+    data::prim::String mStatusMessage;
 
     bool mOSInstalled{false};
 #   if defined(_WIN32) or defined(__linux__)

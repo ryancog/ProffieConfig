@@ -20,11 +20,11 @@
  */
 
 #include "data/logic/adapter.hpp"
+#include "ui/builders/choice.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/choice.hpp"
 #include "ui/helpers/labeled.hpp"
 #include "ui/layout/scrolled.hpp"
-#include "ui/layout/selector.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/types.hpp"
@@ -43,7 +43,7 @@ pcui::DescriptorPtr PropsPage::ui() {
             pcui::Labeled{
               .label_=_("Prop File"),
               .ctrl_=pcui::Choice{
-                .data_=mConfig.propSel(),
+                .data_=mConfig.propChoice(),
                 .style_=pcui::Choice::PopUp{
                   .unselected_=_("Select Prop"),
                 }
@@ -53,8 +53,7 @@ pcui::DescriptorPtr PropsPage::ui() {
             pcui::Button{
               .win_={
                 .base_={.align_=wxALIGN_BOTTOM},
-                .enable_=mConfig.propSel().choice_ |
-                    data::logic::HasSelection{},
+                .enable_=mConfig.propChoice() | data::logic::HasSelection{},
                 .tooltip_=_("View prop creator-provided information about this prop and its intended usage."),
               },
               .label_=_("Prop Description and Usage Info..."),
@@ -63,8 +62,7 @@ pcui::DescriptorPtr PropsPage::ui() {
             pcui::Button{
               .win_={
                 .base_={.align_=wxALIGN_BOTTOM},
-                .enable_=mConfig.propSel().choice_ |
-                    data::logic::HasSelection{},
+                .enable_=mConfig.propChoice() | data::logic::HasSelection{},
                 .tooltip_=_("View button controls based on specific option settings and number of buttons."),
               },
               .label_=_("Button Controls..."),
@@ -74,16 +72,13 @@ pcui::DescriptorPtr PropsPage::ui() {
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         pcui::Scrolled{
           .scrollRate_={.x_=10, .y_=10},
-          .child_=pcui::Selector{
-            .data_=mConfig.propSel(),
-            .builder_=[](data::Model *model) {
-                if (not model) return pcui::Spacer{.size_=0}();
+          .child_=pcui::builders::Choice{
+            .data_=mConfig.propChoice(),
+            .builder_=[this](int32 idx) {
+                if (idx == -1)
+                    return pcui::Spacer{}();
 
-                auto *prop{static_cast<versions::props::Prop *>(
-                    model
-                )};
-
-                return prop->layout();
+                return (*mConfig.propVec())[idx]->layout();
             }
           }(),
         }(),

@@ -24,6 +24,7 @@
 #include <wx/sizer.h>
 #include <wx/time.h>
 
+#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
@@ -106,7 +107,7 @@ pcui::DescriptorPtr onboard::Setup::ui() {
 
 void onboard::Setup::startSetup() {
     auto& phaseModel{utils::parent<&Frame::mSetupPage>(*this).mPhase};
-    data::Choice::Context phase{phaseModel};
+    auto phase{data::context(phaseModel)};
     assert(
         phase.idx() == Frame::ePhase_Setup_Pre or
         phase.idx() == Frame::ePhase_Setup_Fail
@@ -117,7 +118,7 @@ void onboard::Setup::startSetup() {
     std::thread{[this, &phaseModel]() {
         bool success{false};
         defer {
-            data::Choice::Context phase{phaseModel};
+            auto phase{data::context(phaseModel)};
             phase.choose(success
                 ? Frame::ePhase_Setup_Done
                 : Frame::ePhase_Setup_Fail
@@ -142,21 +143,19 @@ void onboard::Setup::startSetup() {
 #       endif
 
         if (not mOSInstalled) {
-            data::String::Context{mStatusMessage}.change(
-                _("Installing ProffieOS...").ToStdString()
-            );
+            mStatusMessage.change(_("Installing ProffieOS...").ToStdString());
 
             std::optional<std::string> err;
 
             err = versions::fetch();
             if (err) {
-                data::String::Context{errorMessage_}.change(std::move(*err));
+                errorMessage_.change(std::move(*err));
                 return;
             }
 
             err = versions::installDefault(true);
             if (err) {
-                data::String::Context{errorMessage_}.change(std::move(*err));
+                errorMessage_.change(std::move(*err));
                 return;
             }
         }

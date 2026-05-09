@@ -112,6 +112,9 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
                   .base_={.expand_=true},
                 },
                 .data_=mConfig.presetArray_,
+                .style_=pcui::Choice::PopUp{
+                  .unselected_=_("Select Array"),
+                },
               }(),
             }(),
           }

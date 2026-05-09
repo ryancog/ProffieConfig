@@ -97,20 +97,26 @@ pcui::DescriptorPtr GeneralPage::setup() {
                 .base_={.expand_=true},
                 .tooltip_=_("The hardware revision of the physical proffieboard."),
               },
-              .data_=mConfig.boardSel(),
+              .data_=mConfig.boardChoice(),
               .style_=pcui::Choice::PopUp{
                 .unselected_=_("Select Board"),
               },
+              .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
+                  return mConfig.os()->boards_[idx].name_;
+              }
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::Choice{
               .win_={
                 .base_={.expand_=true},
               },
-              .data_=mConfig.osVersion_,
+              .data_=mConfig.osChoice(),
               .style_=pcui::Choice::PopUp{
                 .unselected_=_("Select ProffieOS"),
               },
+              .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
+                  return mConfig.osVec()[idx]->version_.string();
+              }
             }(),
           }
         }(),

@@ -22,8 +22,8 @@
 #include <map>
 
 #include "config/config.hpp"
-#include "data/choice.hpp"
-#include "data/selector.hpp"
+#include "data/primitive/models/choice.hpp"
+#include "data/primitive/models/selector.hpp"
 #include "ui/frame.hpp"
 #include "ui/types.hpp"
 
@@ -63,8 +63,8 @@ struct MainMenu : pcui::Frame {
 
     void removeEditor(EditorWindow *);
 
-    data::Choice board_;
-    data::Selector configSel_;
+    data::prim::Choice board_;
+    data::prim::Selector configSel_;
 
     static MainMenu* instance;
 

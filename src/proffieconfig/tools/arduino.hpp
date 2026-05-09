@@ -30,7 +30,7 @@
 
 namespace arduino {
 
-    std::string version();
+std::string version();
 
 void applyToBoard(
     const std::string& boardPath,

@@ -19,9 +19,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/bool.hpp"
-#include "data/choice.hpp"
-#include "data/string.hpp"
+#include "data/primitive/models/bool.hpp"
+#include "data/primitive/models/choice.hpp"
+#include "data/primitive/models/string.hpp"
+#include "data/receiver.hpp"
 #include "ui/frame.hpp"
 
 #include "pages/info.hpp"
@@ -32,7 +33,7 @@ namespace onboard {
 
 wxStaticText *createHeader(wxWindow *, const wxString&);
 
-struct Frame : pcui::Frame {
+struct Frame : pcui::Frame, data::Receiver {
     enum Phase {
         ePhase_Welcome,
         ePhase_Setup_Pre,
@@ -56,12 +57,14 @@ private:
     void bindEvents();
     void createMenuBar();
 
-    data::Choice mPhase;
+    void onPhase();
 
-    data::Bool mMayCancel;
-    data::Bool mMaySkip;
-    data::Bool mMayGoBack;
-    data::String mNextButton;
+    data::prim::Choice mPhase;
+
+    data::prim::Bool mMayCancel;
+    data::prim::Bool mMaySkip;
+    data::prim::Bool mMayGoBack;
+    data::prim::String mNextButton;
 
     bool mSetupDone{false};
 
