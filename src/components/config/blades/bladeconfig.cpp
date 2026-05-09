@@ -22,97 +22,58 @@
 #include "config/blades/simple.hpp"
 #include "config/blades/ws281x.hpp"
 #include "config/config.hpp"
-#include "data/generic.hpp"
-#include "data/number.hpp"
+#include "data/context.hpp"
 #include "utils/parent.hpp"
 #include "utils/string.hpp"
 
-namespace {
-
-constexpr std::string_view BLADES_STR{"Blades"};
-constexpr std::string_view NAME_STR{"Name"};
-constexpr std::string_view PRESETARR_STR{"PresetArray"};
-constexpr std::string_view ID_STR{"ID"};
-
-constexpr std::string_view BRIGHTNESS_STR{"Brightness"};
-constexpr std::string_view TYPE_STR{"Type"};
-constexpr std::string_view TYPES_STR{"Types"};
-
-} // namespace
-
 using namespace config::blades;
 
-Blade::Blade(data::Node *parent) :
-    data::Node(parent),
-    brightness_(this),
-    mType(this),
-    mTypes(this) {
-    CreationScope createScope(*this);
+BladeConfig::BladeConfig(Config& config) :
+    Model(config),
+    blades_(root()),
+    name_(root()),
+    presetArray_(root()),
+    id_(root()) {
+    CreationScope createScope(this);
 
-    data::Vector::Context types{mTypes};
-    // Generic used as a dummy for unassigned.
-    types.addCreate<WS281X>();
-    types.addCreate<Simple>();
-    types.addCreate<data::Generic>();
+    static const auto nameTable{[] {
+        data::hier::String::RecvTable table;
+        table.onChange_ = data::map(&BladeConfig::onNameChange);
+        return table;
+    }()};
+    amend(name_, nameTable);
 
-    data::Selector::Context{mType}.bind(&mTypes);
-    data::Choice::Context{mType.choice_}.choose(0);
+    static const auto idTable{[] {
+        data::hier::Integer::RecvTable table;
+        table.onSet_ = data::map(&BladeConfig::onID);
+        return table;
+    }()};
+    amend(id_, idTable);
 
-    data::Integer::Context brightness{brightness_};
-    brightness.update({.min_=0, .max_=100});
-    brightness.set(100);
-}
+    static const auto noBladeIDTable{[] {
+        data::hier::Bool::RecvTable table;
+        table.onSet_ = data::map(&BladeConfig::onNoBladeIDSet);
+        return table;
+    }()};
+    amend(noBladeId_, noBladeIDTable);
 
-Blade::~Blade() = default;
+    static const auto presetArrayTable{[] {
+        data::hier::Choice::RecvTable table;
+        table.onChoice_ = data::map(&BladeConfig::onPresetArrayChoice);
+        return table;
+    }()};
+    amend(presetArray_, presetArrayTable);
 
-bool Blade::enumerate(const EnumFunc& func) {
-    if (func(brightness_, strID(BRIGHTNESS_STR), BRIGHTNESS_STR)) return true;
-    if (func(mType, strID(TYPE_STR), TYPE_STR)) return true;
-    if (func(mTypes, strID(TYPES_STR), TYPES_STR)) return true;
-    return false;
-}
-
-data::Model *Blade::find(uint64 id) {
-    if (id == strID(BRIGHTNESS_STR)) return &brightness_;
-    if (id == strID(TYPE_STR)) return &mType;
-    if (id == strID(TYPES_STR)) return &mTypes;
-    return nullptr;
-}
-
-WS281X& Blade::ws281x() {
-    data::Vector::Context types{mTypes};
-
-    const auto& model{types.children()[eWS281X]};
-    // NOLINTNEXTLINE suppress lifetimebound warning
-    return static_cast<WS281X&>(*model);
-}
-
-Simple& Blade::simple() {
-    data::Vector::Context types{mTypes};
-
-    const auto& model{types.children()[eSimple]};
-    // NOLINTNEXTLINE suppress lifetimebound warning
-    return static_cast<Simple&>(*model);
-}
-
-const data::Selector& Blade::type() {
-    return mType;
-}
-
-const data::Vector& Blade::types() {
-    return mTypes;
-}
-
-BladeConfig::BladeConfig(data::Node *parent) :
-    data::Node(parent),
-    blades_(this),
-    name_(this),
-    presetArray_(this),
-    id_(this) {
-    CreationScope createScope{*this};
+    static const auto bladesTable{[] {
+        data::hier::Vector::RecvTable table;
+        table.onInsert_ = data::map(&BladeConfig::onBladesModify);
+        table.onRemove_ = data::map(&BladeConfig::onBladesModify);
+        return table;
+    }()};
+    amend(blades_, bladesTable);
 
     const auto nameFilter{[](
-        const data::String::ROContext&, std::string& str, size& pos
+        const data::base::String::ROContext&, std::string& str, size& pos
     ) {
         uint32 numTrimmed{};
         utils::trimCppName(
@@ -127,110 +88,142 @@ BladeConfig::BladeConfig(data::Node *parent) :
     }};
     name_.setFilter(nameFilter);
 
-    name_.responder().onChange_ = [](const data::String::ROContext& ctxt) {
-        ctxt.model().parent<BladeConfig>()->recomputeIssues();
-    };
-
-    id_.responder().onSet_ = [](const data::Integer::ROContext& ctxt) {
-        auto& bladeConfig{*ctxt.model().parent<BladeConfig>()};
-        bladeConfig.recomputeIssues();
-        data::Bool::Context noBladeId{bladeConfig.noBladeId_};
-        noBladeId.set(ctxt.val() == NO_BLADE);
-    };
-
     const auto noBladeIdFilter{[](
-        const data::Bool::ROContext& ctxt, bool& noBladeId
+        const data::base::Bool::ROContext& ctxt, bool& noBladeId
     ) {
         const auto& bladeConfig{utils::parent<&BladeConfig::noBladeId_>(
-            ctxt.model<data::Bool>()
+            ctxt.model<data::prim::Bool>()
         )};
 
-        data::Integer::ROContext id{bladeConfig.id_};
-        if (id.val() == NO_BLADE) noBladeId = true;
+        auto id{data::context(bladeConfig.id_)};
+        if (id.val() == NO_BLADE)
+            noBladeId = true;
     }};
     noBladeId_.setFilter(noBladeIdFilter);
 
-    noBladeId_.responder().onSet_ = [](const data::Bool::ROContext& ctxt) {
-        auto& bladeConfig{utils::parent<&BladeConfig::noBladeId_>(
-            ctxt.model<data::Bool>()
-        )};
-        if (ctxt.val()) {
-            data::Integer::Context id{bladeConfig.id_};
-            id.set(NO_BLADE);
-        }
-    };
-
-    presetArray_.choice_.responder().onChoice_ = [](
-        const data::Choice::ROContext& ctxt
-    ) {
-        auto& bladeConfig{*ctxt.model().parent<BladeConfig>()};
-        bladeConfig.recomputeIssues();
-    };
-
-    const auto onBladesChange{[](
-        const data::Vector::ROContext& ctxt, size
-    ) {
-        ctxt.model().root<Config>()->calcNumBlades();
-    }};
-    blades_.responder().onInsert_ = onBladesChange;
-    blades_.responder().onRemove_ = onBladesChange;
-
-    data::Integer::Context{id_}.update({.min_=0, .max_=NO_BLADE});
+    id_.update({.min_=0, .max_=NO_BLADE});
+    presetArray_.bind(&config.presetArrays_);
 
     recomputeIssues();
 }
 
-BladeConfig::~BladeConfig() = default;
-
-bool BladeConfig::enumerate(const EnumFunc& func) {
-    if (func(blades_, strID(BLADES_STR), BLADES_STR)) return true;
-    if (func(name_, strID(NAME_STR), NAME_STR)) return true;
-    if (func(presetArray_, strID(PRESETARR_STR), PRESETARR_STR)) return true;
-    if (func(id_, strID(ID_STR), ID_STR)) return true;
-
-    return false;
+auto BladeConfig::children() -> std::vector<Model *> {
+    return {
+        &blades_,
+        &name_,
+        &presetArray_,
+        &id_,
+    };
 }
 
-data::Model *BladeConfig::find(uint64 id) {
-    if (id == strID(BLADES_STR)) return &blades_;
-    if (id == strID(NAME_STR)) return &name_;
-    if (id == strID(PRESETARR_STR)) return &presetArray_;
-    if (id == strID(ID_STR)) return &id_;
-
-    return nullptr;
-}
-
-const data::Integer& BladeConfig::issues() const {
+const data::base::Integer& BladeConfig::issues() const {
     return mIssues;
 }
 
 void BladeConfig::recomputeIssues() {
     int32 issues{0};
 
-    if (data::Choice::Context{presetArray_.choice_}.idx() == -1) {
+    auto presetArray{data::context(presetArray_)};
+    if (presetArray.choiceIdx() == -1) {
         issues |= eIssue_No_Preset_Array;
     }
 
-    data::String::Context name{name_};
-    data::Integer::Context id{id_};
+    auto name{data::context(name_)};
+    auto id{data::context(id_)};
 
-    auto& config{*root<Config>()};
-    data::Vector::Context bladeConfigs{config.bladeConfigs_};
+    auto bladeConfigs{data::context(root<Config>().bladeConfigs_)};
     for (const auto& model : bladeConfigs.children()) {
-        auto& bladeconfig{static_cast<BladeConfig&>(*model)};
-        if (&bladeconfig == this) continue;
+        auto& bladeConfig{dynamic_cast<BladeConfig&>(*model)};
+        if (&bladeConfig == this) continue;
 
-        data::String::Context otherName{bladeconfig.name_};
+        auto otherName{data::context(bladeConfig.name_)};
         if (name.val() == otherName.val()) {
             issues |= eIssue_Duplicate_Name;
         }
 
-        data::Integer::Context otherID{bladeconfig.id_};
+        auto otherID{data::context(bladeConfig.id_)};
         if (id.val() == otherID.val()) {
             issues |= eIssue_Duplicate_ID;
         }
     }
 
-    data::Integer::Context{mIssues}.set(issues);
+    mIssues.set(issues);
+}
+
+void BladeConfig::onNameChange() {
+    recomputeIssues();
+}
+
+void BladeConfig::onID() {
+    recomputeIssues();
+
+    auto id{data::context(id_)};
+    noBladeId_.set(id.val() == NO_BLADE);
+}
+
+void BladeConfig::onNoBladeIDSet() {
+    auto noBladeID{data::context(noBladeId_)};
+
+    if (noBladeID.val())
+        id_.set(NO_BLADE);
+}
+
+void BladeConfig::onPresetArrayChoice() {
+    recomputeIssues();
+}
+
+void BladeConfig::onBladesModify(size) {
+    root<Config>().calcNumBlades();
+}
+
+Blade::Blade(Config& config) :
+    Model(config),
+    brightness_(root()),
+    mType(root()),
+    mTypes(root()) {
+    CreationScope createScope(this);
+
+    // Model used as a dummy for unassigned.
+    mTypes.append(std::make_unique<WS281X>(*this));
+    mTypes.append(std::make_unique<Simple>(*this));
+    mTypes.append(std::make_unique<data::hier::Model>(root()));
+
+    mType.bind(&mTypes);
+    mType.choice().choose(0);
+
+    brightness_.update({.min_=0, .max_=100});
+    brightness_.set(100);
+}
+
+auto Blade::children() -> std::vector<Model *> {
+    return {
+        &brightness_,
+        &mType,
+        &mTypes,
+    };
+}
+
+const data::base::Selector& Blade::type() {
+    return mType;
+}
+
+const data::base::Vector& Blade::types() {
+    return mTypes;
+}
+
+WS281X& Blade::ws281x() {
+    auto types{data::context(mTypes)};
+
+    const auto& model{types.children()[eWS281X]};
+    // NOLINTNEXTLINE suppress lifetimebound warning
+    return dynamic_cast<WS281X&>(*model);
+}
+
+Simple& Blade::simple() {
+    auto types{data::context(mTypes)};
+
+    const auto& model{types.children()[eSimple]};
+    // NOLINTNEXTLINE suppress lifetimebound warning
+    return dynamic_cast<Simple&>(*model);
 }
 

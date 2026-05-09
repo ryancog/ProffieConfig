@@ -21,85 +21,64 @@
 
 #include "config/strings.hpp"
 #include "config/settings/settings.hpp"
-#include "data/hierarchy/node.hpp"
-#include "data/number.hpp"
-#include "data/selection.hpp"
+#include "data/context.hpp"
 #include "utils/string.hpp"
 
 using namespace config::settings;
 
 BladeAwareness::BladeAwareness(Settings& settings) :
-    data::Node(&settings),
+    Model(settings.root()),
     // TODO: Is there a more legible way of doing this?
     bladeDetect_{
-        .enable_=this,
-        .pin_=this
+        .enable_=root(),
+        .pin_=root()
     },
     bladeId_{
-        .enable_=this,
-        .pin_=this,
-        .mode_=this,
-        .bridgePin_=this,
-        .pullup_=this,
-        .powerForId_=this,
-        .powerPins_=this,
+        .enable_=root(),
+        .pin_=root(),
+        .mode_=root(),
+        .bridgePin_=root(),
+        .pullup_=root(),
+        .powerForId_=root(),
+        .powerPins_=root(),
         .continuous_={
-            .enable_=this,
-            .interval_=this,
-            .times_=this
+            .enable_=root(),
+            .interval_=root(),
+            .times_=root()
         }
     } {
-    CreationScope createScope(*this);
-    buildMap();
-}
+    CreationScope createScope(this);
 
-BladeAwareness::~BladeAwareness() = default;
+    static const auto detectEnableTable{[] {
+        data::hier::Bool::RecvTable table;
+        table.onSet_ = data::map(&BladeAwareness::onDetectEnable);
+        return table;
+    }()};
+    amend(bladeDetect_.enable_, detectEnableTable);
 
-bool BladeAwareness::enumerate(const EnumFunc& func) {
-    for (auto& [id, data] : mMap) {
-        auto& [str, model]{data};
-        if (func(*model, id, str)) return true;
-    }
+    static const auto idEnableTable{[] {
+        data::hier::Bool::RecvTable table;
+        table.onSet_ = data::map(&BladeAwareness::onIDEnable);
+        return table;
+    }()};
+    amend(bladeId_.enable_, idEnableTable);
 
-    return false;
-}
+    static const auto continuousEnableTable{[] {
+        data::hier::Bool::RecvTable table;
+        table.onSet_ = data::map(&BladeAwareness::onContinuousEnable);
+        return table;
+    }()};
+    amend(bladeId_.continuous_.enable_, continuousEnableTable);
 
-data::Model *BladeAwareness::find(uint64 id) {
-    auto iter{mMap.find(id)};
-    if (iter == mMap.end()) return nullptr;
-
-    return iter->second.second;
-}
-
-void BladeAwareness::init() {
-    (bladeDetect_.enable_.responder().onSet_ = [](
-        const data::Bool::ROContext& ctxt
-    ) {
-        auto& awareness{*ctxt.model().parent<BladeAwareness>()};
-        data::String::Context pin{awareness.bladeDetect_.pin_};
-        pin.enable(ctxt.val());
-    })(bladeDetect_.enable_);
-
-    (bladeId_.enable_.responder().onSet_ = [](
-        const data::Bool::ROContext& ctxt
-    ) {
-        auto& bladeId{ctxt.model().parent<BladeAwareness>()->bladeId_};
-        data::String::Context{bladeId.pin_}.enable(ctxt.val());
-        data::Choice::Context{bladeId.mode_}.enable(ctxt.val());
-        data::Bool::Context{bladeId.powerForId_}.enable(ctxt.val());
-        data::String::Context{bladeId.bridgePin_}.enable(ctxt.val());
-        data::Integer::Context{bladeId.pullup_}.enable(ctxt.val());
-        data::Bool::Context{bladeId.continuous_.enable_}.enable(ctxt.val());
-        // if (not set) bladeId_.continuousScanning = false;
-    })(bladeId_.enable_);
-
-    { data::Choice::Context idMode{bladeId_.mode_};
-        idMode.update(eBIDMode_Max);
-        idMode.choose(0);
-    }
+    static const auto idPowerTable{[] {
+        data::hier::Bool::RecvTable table;
+        table.onSet_ = data::map(&BladeAwareness::onIDPower);
+        return table;
+    }()};
+    amend(bladeId_.powerForId_, idPowerTable);
 
     const auto bridgePinFilter{[](
-        const data::String::ROContext&, std::string& str, size& pos
+        const data::base::String::ROContext&, std::string& str, size& pos
     ) {
         uint32 numTrimmed{};
         utils::trimCppName(
@@ -113,73 +92,86 @@ void BladeAwareness::init() {
     }};
     bladeId_.bridgePin_.setFilter(bridgePinFilter);
 
-    { data::Integer::Context times{bladeId_.continuous_.times_};
-        times.update({.min_ = 1, .max_ = 100});
-        times.set(8);
-    }
-
-    { data::Integer::Context interval{bladeId_.continuous_.interval_};
-        interval.update({.min_ = 1, .max_ = 120000});
-        interval.set(300);
-    }
-
-    (bladeId_.continuous_.enable_.responder().onSet_ = [](
-        const data::Bool::ROContext& ctxt
-    ) {
-        auto& bladeId{ctxt.model().parent<BladeAwareness>()->bladeId_};
-        data::Integer::Context itvl{bladeId.continuous_.interval_};
-        itvl.enable(ctxt.val());
-        data::Integer::Context times{bladeId.continuous_.times_};
-        times.enable(ctxt.val());
-    })(bladeId_.continuous_.enable_);
-
-    (bladeId_.powerForId_.responder().onSet_ = [](
-        const data::Bool::ROContext& ctxt
-    ) {
-        auto& bladeId{ctxt.model().parent<BladeAwareness>()->bladeId_};
-        data::Selection::Context{bladeId.powerPins_}.enable(ctxt.val());
-    })(bladeId_.powerForId_);
-
     const auto powerPinPruner{[](
-        const data::Selection::ROContext&, uint32 idx
+        const data::base::Selection::ROContext&, uint32 idx
     ) {
         return idx >= 6;
     }};
     bladeId_.powerPins_.setPruner(powerPinPruner);
 
-    { data::Selection::Context powerPins{bladeId_.powerPins_};
-        powerPins.setItems({
-            "bladePowerPin1",
-            "bladePowerPin2",
-            "bladePowerPin3",
-            "bladePowerPin4",
-            "bladePowerPin5",
-            "bladePowerPin6",
-        });
-    }
+    bladeId_.mode_.update(eBIDMode_Max);
+    bladeId_.mode_.choose(0);
+    
+    bladeId_.continuous_.times_.update({.min_=1, .max_=100});
+    bladeId_.continuous_.times_.set(8);
+
+    bladeId_.continuous_.interval_.update({.min_=1, .max_=120000});
+    bladeId_.continuous_.interval_.set(300);
+
+    bladeId_.powerPins_.setItems({
+        "bladePowerPin1",
+        "bladePowerPin2",
+        "bladePowerPin3",
+        "bladePowerPin4",
+        "bladePowerPin5",
+        "bladePowerPin6",
+    });
 }
 
-void BladeAwareness::buildMap() {
-    const auto process{[this] (std::string_view str, data::Model& model) {
-        mMap[strID(str)] = {str, &model};
-    }};
+BladeAwareness::~BladeAwareness() = default;
 
-    process("BladeDetect.Enable", bladeDetect_.enable_);
-    process("BladeDetect.Pin", bladeDetect_.pin_);
+void BladeAwareness::onActivate() {
+    onDetectEnable();
+    onIDEnable();
+    onContinuousEnable();
+    onIDPower();
+}
 
-    process("BladeID.Enable", bladeId_.enable_);
-    process("BladeID.Pin", bladeId_.pin_);
+auto BladeAwareness::children() -> std::vector<Model *> {
+    return {
+		&bladeDetect_.enable_,
+		&bladeDetect_.pin_,
 
-    process("BladeID.Mode", bladeId_.mode_);
-    process("BladeID.BridgePin", bladeId_.bridgePin_);
-    process("BladeID.Pullup", bladeId_.pullup_);
+		&bladeId_.enable_,
+		&bladeId_.pin_,
 
-    process("BladeID.PowerForID", bladeId_.powerForId_);
-    process("BladeID.PowerPins", bladeId_.powerPins_);
+		&bladeId_.mode_,
+		&bladeId_.bridgePin_,
+		&bladeId_.pullup_,
 
-    auto& scan{bladeId_.continuous_};
-    process("BladeID.Continuous.Enable", scan.enable_);
-    process("BladeID.Continuous.Interval", scan.interval_);
-    process("BladeID.Continuous.Times", scan.times_);
+		&bladeId_.powerForId_,
+		&bladeId_.powerPins_,
+
+		&bladeId_.continuous_.enable_,
+		&bladeId_.continuous_.interval_,
+		&bladeId_.continuous_.times_,
+    };
+}
+
+void BladeAwareness::onDetectEnable() {
+    auto ctxt{data::context(bladeDetect_.enable_)};
+    bladeDetect_.pin_.enable(ctxt.val());
+}
+
+void BladeAwareness::onIDEnable() {
+    auto ctxt{data::context(bladeId_.enable_)};
+    bladeId_.pin_.enable(ctxt.val());
+    bladeId_.mode_.enable(ctxt.val());
+    bladeId_.powerForId_.enable(ctxt.val());
+    bladeId_.bridgePin_.enable(ctxt.val());
+    bladeId_.pullup_.enable(ctxt.val());
+    bladeId_.continuous_.enable_.enable(ctxt.val());
+    // if (not set) bladeId_.continuousScanning = false;
+}
+
+void BladeAwareness::onContinuousEnable() {
+    auto ctxt{data::context(bladeId_.continuous_.enable_)};
+    bladeId_.continuous_.interval_.enable(ctxt.val());
+    bladeId_.continuous_.times_.enable(ctxt.val());
+}
+
+void BladeAwareness::onIDPower() {
+    auto ctxt{data::context(bladeId_.powerForId_)};
+    bladeId_.powerPins_.enable(ctxt.val());
 }
 

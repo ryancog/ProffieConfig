@@ -22,6 +22,7 @@
 #include <filesystem>
 #include <mutex>
 
+#include "data/context.hpp"
 #include "config/blades/bladeconfig.hpp"
 #include "config/blades/simple.hpp"
 #include "config/blades/ws281x.hpp"
@@ -35,206 +36,183 @@
 #include "log/severity.hpp"
 #include "utils/files.hpp"
 #include "utils/types.hpp"
-#include "utils/parent.hpp"
 #include "utils/paths.hpp"
 #include "versions/os.hpp"
+
+using namespace config;
 
 namespace {
 
 fs::path savePath(const std::string&);
 
-constexpr uint64 SETTINGS_ID{0};
-constexpr uint64 PROPSEL_ID{1};
-constexpr uint64 PRESET_ARRAYS_ID{2};
-constexpr uint64 BLADE_CONFIGS_ID{3};
-constexpr uint64 BUTTONS_ID{4};
-
-constexpr auto propsStrID(const utils::Version& ver) {
-    return "Props::" + static_cast<std::string>(ver);
-}
-
 } // namespace
 
-struct config::Config::SavedReceiver : Root::Receiver {
-    SavedReceiver(Config& cfg) : cfg_{cfg} {
-        Root::Receiver::attach(cfg_);
-    }
+Config::Config() :
+    settings_(*this),
+    presetArrays_(*this),
+    bladeConfigs_(*this),
+    buttons_(*this),
+    injections_(*this),
+    mOsChoice(*this),
+    mPropChoice(*this),
+    mBoardChoice(*this) {
+    CreationScope createScope(this);
 
-    void onActionIdx(size idx) override {
-        data::Bool::Context{cfg_.mIsSaved}.set(idx == cfg_.mSavedAction);
-    }
+    const auto propFilt{[](
+        const data::base::Choice::ROContext& ctxt, int32& idx
+    ) {
+        if (idx == -1 and ctxt.num()) idx = 0;
+    }};
+    mPropChoice.setFilter(propFilt);
 
-    void onActionClear(size lastIdx) override {
-        if (lastIdx == cfg_.mSavedAction) {
-            cfg_.mSavedAction = Root::eAct_Idx_First;
+    { 
+        versions::os::Context osCtxt;
+        versions::props::Context propCtxt;
+
+        mOsVec.reserve(osCtxt.list().size());
+        for (auto& os : osCtxt.list()) {
+            mOsVec.emplace_back(new versions::os::OS(*os));
+
+            auto& propVec{mPropMap[os->version_]};
+            propVec = propCtxt.forVersion(os->version_, *this);
         }
     }
 
-    Config& cfg_;
-};
+    static const auto selfTable{[] {
+        data::hier::Root::RecvTable table;
+        table.onActionIdx_ = data::map(&Config::onActionIdx);
+        table.onActionClear_ = data::map(&Config::onActionClear);
+        return table;
+    }()};
+    amend(*this, selfTable);
 
-config::Config::Config() :
-    osVersion_(this),
-    settings_(*this),
-    presetArrays_(this),
-    bladeConfigs_(this),
-    buttons_(this),
-    injections_(this),
-    mOsVersions(this),
-    mPropSel(this),
-    mBoardSel(this) {
-    CreationScope createScope(*this);
+    static const auto numBladesTable{[] {
+        data::base::Integer::RecvTable table;
+        table.onSet_ = data::map(&Config::onNumBlades);
+        return table;
+    }()};
+    amend(mNumBlades, numBladesTable);
 
-    const auto propSelFilt{[](
-        const data::Choice::ROContext& ctxt, int32& idx
-    ) {
-        if (idx == -1 and ctxt.numChoices()) idx = 0;
-    }};
-    mPropSel.choice_.setFilter(propSelFilt);
+    static const auto osChoiceTable{[] {
+        data::base::Choice::RecvTable table;
+        table.onChoice_ = data::map(&Config::onOSChoice);
+        return table;
+    }()};
+    amend(mOsChoice, osChoiceTable);
+    mOsChoice.update(mOsVec.size());
 
-    mNumBlades.responder().onSet_ = [](
-        const data::Integer::ROContext& ctxt
-    ) {
-        auto& config{utils::parent<&Config::mNumBlades>(
-            ctxt.model<data::Integer>()
-        )};
+    activate();
+}
 
-        config.syncStyles();
+Config::~Config() = default;
+
+std::vector<data::hier::Model *> Config::children() {
+    std::vector<data::hier::Model *> ret{
+        &settings_,
+        &mPropChoice,
+        &mOsChoice,
+        &mBoardChoice,
+        &presetArrays_,
+        &bladeConfigs_,
+        &buttons_,
     };
 
-    mRcvr = new SavedReceiver(*this);
+    for (auto& [ver, vec] : mPropMap)
+        for (auto& prop : vec)
+            ret.push_back(prop.get());
 
-    settings_.init();
+    return ret;
 }
 
-config::Config::~Config() {
-    delete mRcvr;
+std::span<const std::unique_ptr<versions::os::OS>> Config::osVec() const {
+    return mOsVec;
 }
 
-bool config::Config::enumerate(const EnumFunc& func) {
-    if (func(settings_, SETTINGS_ID, {})) return true;
-    for (auto& [ver, prop] : mPropMap) {
-        const auto strId{propsStrID(ver)};
-        if (func(prop, strID(strId), strId)) return true;
-    }
-    if (func(mPropSel, PROPSEL_ID, {})) return true;
-    if (func(presetArrays_, PRESET_ARRAYS_ID, {})) return true;
-    if (func(bladeConfigs_, BLADE_CONFIGS_ID, {})) return true;
-    if (func(buttons_, BUTTONS_ID, {})) return true;
-    return false;
+data::base::Choice& Config::osChoice() {
+    return mOsChoice;
 }
 
-data::Model *config::Config::find(uint64 id) {
-    if (id == SETTINGS_ID) return &settings_;
-    for (auto& [ver, props] : mPropMap) {
-        const auto strId{propsStrID(ver)};
-        if (strID(strId) == id) return &props;
-    }
-    if (id == PROPSEL_ID) return &mPropSel;
-    if (id == PRESET_ARRAYS_ID) return &presetArrays_;
-    if (id == BLADE_CONFIGS_ID) return &bladeConfigs_;
-    if (id == BUTTONS_ID) return &buttons_;
-    return nullptr;
+const data::base::Choice& Config::osChoice() const {
+    return mOsChoice;
 }
 
-std::optional<versions::os::OSData> config::Config::osVersion() const {
-    data::Choice::ROContext osSel{osVersion_.choice_};
-    if (osSel.idx() == -1) return std::nullopt;
-
-    data::Vector::ROContext osVersions{mOsVersions};
-
-    auto& osVersion{static_cast<versions::os::OS&>(
-        *osVersions.children()[osSel.idx()]
-    )};
-
-    return osVersion;
+const versions::os::OS *Config::os() const {
+    auto ctxt{data::context(mOsChoice)};
+    if (ctxt.idx() == -1) return nullptr;
+    return mOsVec[ctxt.idx()].get();
 }
 
-const data::Vector& config::Config::osVersions() const {
-    return mOsVersions;
+data::base::Choice& Config::boardChoice() {
+    return mBoardChoice;
 }
 
-const data::Vector *config::Config::boards() const {
-    data::Choice::ROContext osSel{osVersion_.choice_};
-    if (osSel.idx() == -1) return nullptr;
-
-    data::Vector::ROContext osVersions{mOsVersions};
-    auto& osVersion{static_cast<versions::os::OS&>(
-        *osVersions.children()[osSel.idx()]
-    )};
-
-    return &osVersion.boards_;
+const data::base::Choice& Config::boardChoice() const {
+    return mBoardChoice;
 }
 
-const data::Selector& config::Config::boardSel() const {
-    return mBoardSel;
+const versions::os::Board *Config::board() const {
+    auto *os{this->os()};
+    if (os == nullptr) return nullptr;
+
+    auto ctxt{data::context(mBoardChoice)};
+    if (ctxt.idx() == -1) return nullptr;
+
+    return &os->boards_[ctxt.idx()];
 }
 
-const versions::os::Board *config::Config::board() const {
-    data::Selector::ROContext sel{mBoardSel};
-    if (sel.bound() == nullptr) return nullptr;
+std::optional<std::span<const std::unique_ptr<versions::props::Prop>>>
+Config::propVec() const {
+    auto *os{this->os()};
+    if (os == nullptr) return std::nullopt;
 
-    data::Vector::ROContext vec{*sel.bound()};
-    data::Choice::ROContext choice{mBoardSel.choice_};
-    if (choice.idx() < 0) return nullptr;
-
-    return static_cast<const versions::os::Board *>(
-        // NOLINTNEXTLINE suppress lifetimebound warning
-        vec.children()[choice.idx()].get()
-    );
-
+    return mPropMap.find(os->version_)->second;
 }
 
-const data::Vector *config::Config::props() const {
-    data::Selector::ROContext sel{mPropSel};
-    return sel.bound();
+data::base::Choice& Config::propChoice() {
+    return mPropChoice;
 }
 
-const data::Selector& config::Config::propSel() const {
-    return mPropSel;
+const data::base::Choice& Config::propChoice() const {
+    return mPropChoice;
 }
 
-const versions::props::Prop *config::Config::prop() const {
-    data::Selector::ROContext sel{mPropSel};
-    if (sel.bound() == nullptr) return nullptr;
+const versions::props::Prop *Config::prop() const {
+    auto propVec{this->propVec()};
+    if (not propVec) return nullptr;
 
-    data::Vector::ROContext vec{*sel.bound()};
-    data::Choice::ROContext choice{mPropSel.choice_};
-    if (choice.idx() < 0) return nullptr;
+    auto ctxt{data::context(mPropChoice)};
+    if (ctxt.idx() == -1) return nullptr;
 
-    return static_cast<const versions::props::Prop *>(
-        // NOLINTNEXTLINE suppress lifetimebound warning
-        vec.children()[choice.idx()].get()
-    );
+    return (*propVec)[ctxt.idx()].get();
 }
 
-const data::Bool& config::Config::isSaved() const {
+const data::base::Bool& Config::isSaved() const {
     return mIsSaved;
 }
 
-const data::Integer& config::Config::numBlades() const {
+const data::base::Integer& Config::numBlades() const {
     return mNumBlades;
 }
 
-void config::Config::calcNumBlades() {
-    data::Vector::ROContext bladeConfigs{bladeConfigs_};
+void Config::calcNumBlades() {
+    auto bladeConfigs{data::context(bladeConfigs_)};
 
     size num{0};
     for (const auto& model : bladeConfigs.children()) {
-        auto& bladeConfig{static_cast<blades::BladeConfig&>(*model)};
+        auto& bladeConfig{dynamic_cast<blades::BladeConfig&>(*model)};
 
         size sum{0};
 
-        data::Vector::Context blades{bladeConfig.blades_};
+        auto blades{data::context(bladeConfig.blades_)};
         for (const auto& model : blades.children()) {
-            auto& blade{static_cast<blades::Blade&>(*model)};
+            auto& blade{dynamic_cast<blades::Blade&>(*model)};
 
-            data::Choice::ROContext typeChoice{blade.type().choice_};
-            data::Vector::ROContext types{blade.types()};
+            auto typeChoice{data::context(blade.type().choice())};
+            auto types{data::context(blade.types())};
             auto *typeModel{types.children()[typeChoice.idx()].get()};
 
             if (auto *ptr = dynamic_cast<blades::WS281X *>(typeModel)) {
-                data::Vector::Context splits{ptr->splits_};
+                auto splits{data::context(ptr->splits_)};
 
                 if (splits.children().size() == 0) {
                     ++sum;
@@ -242,10 +220,11 @@ void config::Config::calcNumBlades() {
                 }
 
                 for (const auto& model : splits.children()) {
-                    auto& split{static_cast<blades::WS281X::Split&>(*model)};
+                    auto& split{dynamic_cast<blades::WS281X::Split&>(*model)};
+                    auto splitType{data::context(split.type_)};
 
                     const auto type{static_cast<blades::WS281X::Split::Type>(
-                        split.type_.selected()
+                        splitType.selected()
                     )};
                     switch (type) {
                         using enum blades::WS281X::Split::Type;
@@ -256,9 +235,7 @@ void config::Config::calcNumBlades() {
                             break;
                         case eStride:
                         case eZig_Zag:
-                            sum += data::Integer::Context{
-                                split.segments_
-                            }.val();
+                            sum += data::context(split.segments_).val();
                             break;
                         default:
                             assert(0);
@@ -278,23 +255,20 @@ void config::Config::calcNumBlades() {
         num += sum;
     }
 
-    data::Integer::Context ctxt{mNumBlades};
-    ctxt.set(static_cast<int32>(num));
+    mNumBlades.set(static_cast<int32>(num));
 }
 
-void config::Config::syncStyles() const {
-    std::lock_guard scopeLock{pLock};
-
-    data::Integer::ROContext numBlades{mNumBlades};
-    data::Vector::ROContext presetArrays{presetArrays_};
+void Config::syncStyles() {
+    auto numBlades{data::context(mNumBlades)};
+    auto presetArrays{data::context(presetArrays_)};
 
     for (const auto& model : presetArrays.children()) {
-        auto& arrayModel{static_cast<presets::Array&>(*model)};
-        data::Vector::Context presets{arrayModel.presets_};
+        auto& array{dynamic_cast<presets::Array&>(*model)};
+        auto presets{data::context(array.presets_)};
 
         for (const auto& model : presets.children()) {
-            auto& presetModel{static_cast<presets::Preset&>(*model)};
-            data::Vector::Context styles{presetModel.styles_};
+            auto& preset{dynamic_cast<presets::Preset&>(*model)};
+            auto styles{data::context(preset.styles_)};
 
             const auto newSize{std::max<uint32>(
                 styles.children().size(), numBlades.val()
@@ -303,37 +277,55 @@ void config::Config::syncStyles() const {
             while (styles.children().size() < newSize) {
                 styles.insert(
                     styles.children().size(),
-                    std::make_unique<presets::Style>(
-                        &styles.model<data::Vector>()
-                    )
+                    std::make_unique<presets::Style>(*this)
                 );
             }
         }
     }
 }
 
-config::Info::Info() : data::Model(&priv::list) {}
+void Config::onActionIdx(size idx) {
+    mIsSaved.set(idx == mSavedAction);
+}
 
-const data::String& config::Info::name() {
+void Config::onActionClear(size lastIdx) {
+    if (lastIdx == mSavedAction)
+        mSavedAction = Root::eAct_Idx_First;
+    else
+        mSavedAction = std::nullopt;
+}
+
+void Config::onNumBlades() {
+    syncStyles();
+}
+
+void Config::onOSChoice() {
+    mBoardChoice.update(os()->boards_.size());
+}
+
+Info::Info() = default;
+
+const data::base::String& Info::name() {
     return mName;
 }
 
-fs::path config::Info::path() {
-    return ::savePath(data::String::Context{mName}.val());
+fs::path Info::path() {
+    return ::savePath(data::context(mName).val());
 }
 
-std::optional<std::string> config::Info::save(
+std::optional<std::string> Info::save(
     logging::Branch *lBranch
 ) {
-    std::lock_guard scopeLock{pLock};
-    auto& logger{logging::Branch::optCreateLogger("config::Info::save()", lBranch)};
+    std::lock_guard scopeLock(*this);
+
+    auto& logger{logging::Branch::optCreateLogger("Info::save()", lBranch)};
 
     if (not mConfig) {
         return priv::errorMessage(logger, wxTRANSLATE("Config not loaded"));
     }
 
     Config::Context ctxt{*mConfig};
-    data::String::Context name{mName};
+    auto name{data::context(mName)};
 
     std::optional<std::string> err;
     std::error_code errCode;
@@ -359,9 +351,10 @@ std::optional<std::string> config::Info::save(
     return err;
 }
 
-std::optional<std::string> config::Info::load() {
-    std::lock_guard scopeLock{pLock};
-    auto& logger{logging::Context::getGlobal().createLogger("config::Info::load()")};
+std::optional<std::string> Info::load() {
+    std::lock_guard scopeLock(*this);
+
+    auto& logger{logging::Context::getGlobal().createLogger("Info::load()")};
 
     if (mConfig) return std::nullopt;
 
@@ -382,10 +375,9 @@ std::optional<std::string> config::Info::load() {
     return std::nullopt;
 }
 
-void config::Info::unload() {
-    data::Vector::Context list{priv::list};
-
-    data::String::Context name{mName};
+void Info::unload() {
+    auto list{data::context(priv::list)};
+    auto name{data::context(mName)};
 
     mConfig.reset();
 
@@ -409,21 +401,22 @@ void config::Info::unload() {
     }
 }
 
-auto config::Info::config() -> const std::unique_ptr<Config>& {
+auto Info::config() -> const std::unique_ptr<Config>& {
     return mConfig;
 }
 
-const data::Vector& config::list() {
+const data::base::Vector& config::list() {
     return priv::list;
 }
 
 void config::update() {
-    data::Vector::Context list{priv::list};
+    auto list{data::context(priv::list)};
 
     std::vector<std::string> files;
 
     std::error_code err;
-    for (const auto& entry : fs::directory_iterator{paths::configDir(), err}) {
+    fs::directory_iterator iter(paths::configDir(), err);
+    for (const auto& entry : iter) {
         if (not entry.is_regular_file()) continue;
         if (entry.path().extension() != RAW_FILE_EXTENSION) continue;
 
@@ -431,9 +424,8 @@ void config::update() {
     }
 
     for (size idx{0}; idx < list.children().size(); ++idx) {
-        auto& info{static_cast<Info&>(*list.children()[idx])};
-
-        data::String::Context name{info.mName};
+        auto& info{dynamic_cast<Info&>(*list.children()[idx])};
+        auto name{data::context(info.mName)};
 
         bool found{false};
         for (const auto& file : files) {
@@ -452,9 +444,9 @@ void config::update() {
     for (const auto& file : files) {
         bool found{false};
         for (size idx{0}; idx < list.children().size(); ++idx) {
-            auto& info{static_cast<Info&>(*list.children()[idx])};
+            auto& info{dynamic_cast<Info&>(*list.children()[idx])};
+            auto name{data::context(info.mName)};
 
-            data::String::Context name{info.mName};
             if (name.val() == file) {
                 found = true;
                 break;
@@ -464,25 +456,25 @@ void config::update() {
         if (found) continue;
 
         auto info{std::unique_ptr<Info>{new Info}};
-        data::String::Context{info->mName}.change(std::string{file}, 0);
-        list.insert(list.children().size(), std::move(info));
+        info->mName.change(std::string(file));
+        list.append(std::move(info));
     }
 
     if (err) {
         logging::Context::getGlobal().quickLog(
             logging::Severity::Err,
-            "config::update()",
+            "update()",
             "Failed to get path list: " + err.message()
         );
     }
 }
 
 bool config::remove(Info& info) {
-    data::Vector::Context vec{priv::list};
+    auto vec{data::context(priv::list)};
 
     size idx{0};
     for (;idx < vec.children().size(); ++idx) {
-        if (&static_cast<Info&>(*vec.children()[idx]) == &info) {
+        if (&dynamic_cast<Info&>(*vec.children()[idx]) == &info) {
             break;
         }
     }
@@ -499,13 +491,13 @@ bool config::remove(Info& info) {
 std::optional<std::string> config::import(
     const std::string& name, const fs::path& path
 ) {
-    auto& logger{logging::Context::getGlobal().createLogger("config::import()")};
+    auto& logger{logging::Context::getGlobal().createLogger("import()")};
 
-    data::Vector::Context vec{priv::list};
+    auto vec{data::context(priv::list)};
 
     for (size idx{0}; idx < vec.children().size(); ++idx) {
-        auto& info{static_cast<Info&>(*vec.children()[idx])};
-        if (data::String::ROContext{info.name()}.val() == name) {
+        auto& info{dynamic_cast<Info&>(*vec.children()[idx])};
+        if (data::context(info.name()).val() == name) {
             return priv::errorMessage(logger, wxTRANSLATE("Config with name already open"));
         }
     }
@@ -523,10 +515,7 @@ std::optional<std::string> config::import(
 std::optional<std::string> config::generate(
     const Config& config, const fs::path& path, logging::Branch *lBranch
 ) {
-    auto& logger{logging::Branch::optCreateLogger("config::generate()", lBranch)};
-
-    // Create context to lock.
-    Config::ROContext ctxt{config};
+    auto& logger{logging::Branch::optCreateLogger("generate()", lBranch)};
 
     std::optional<std::string> err;
     std::error_code errCode;
@@ -547,7 +536,7 @@ namespace {
 fs::path savePath(const std::string& name) {
     return 
         paths::configDir() /
-        (static_cast<std::string>(name) + config::RAW_FILE_EXTENSION);
+        (static_cast<std::string>(name) + RAW_FILE_EXTENSION);
 }
 
 } // namespace

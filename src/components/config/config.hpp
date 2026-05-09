@@ -22,17 +22,22 @@
 #include <filesystem>
 #include <map>
 #include <memory>
+#include <span>
 
 #include "config/settings/settings.hpp"
-#include "data/hierarchy/root.hpp"
-#include "data/selector.hpp"
-#include "data/vector.hpp"
-
-#include "config_export.h"
+#include "data/hierarchic/root.hpp"
+#include "data/hierarchic/models/vector.hpp"
+#include "data/hierarchic/models/choice.hpp"
+#include "data/primitive/model.hpp"
+#include "data/primitive/models/bool.hpp"
+#include "data/primitive/models/number.hpp"
+#include "data/primitive/models/string.hpp"
 #include "log/branch.hpp"
 #include "utils/version.hpp"
 #include "versions/os.hpp"
 #include "versions/prop.hpp"
+
+#include "config_export.h"
 
 namespace fs = std::filesystem;
 
@@ -41,64 +46,71 @@ namespace config {
 constexpr cstring RAW_FILE_EXTENSION{".h"};
 constexpr auto MAX_NAME_LENGTH{24};
 
-struct CONFIG_EXPORT Config : data::Root {
+struct CONFIG_EXPORT Config : data::hier::Root, data::Receiver {
     ~Config() override;
 
-    bool enumerate(const EnumFunc&) override;
-    Model *find(uint64) override;
+    std::vector<Model *> children() override;
 
-    std::optional<versions::os::OSData> osVersion() const;
+    std::span<const std::unique_ptr<versions::os::OS>> osVec() const;
 
-    const data::Vector& osVersions() const;
-    const data::Selector osVersion_; 
+    data::base::Choice& osChoice();
+    const data::base::Choice& osChoice() const;
+    const versions::os::OS *os() const;
 
-    const data::Vector *boards() const;
-    const data::Selector& boardSel() const;
+    data::base::Choice& boardChoice();
+    const data::base::Choice& boardChoice() const;
     const versions::os::Board *board() const;
 
-    const data::Selector& propSel() const;
-    const data::Vector *props() const;
+    std::optional<std::span<const std::unique_ptr<versions::props::Prop>>>
+        propVec() const;
+
+    data::base::Choice& propChoice();
+    const data::base::Choice& propChoice() const;
     const versions::props::Prop *prop() const;
 
     Settings settings_;
-    data::Vector presetArrays_;
-    data::Vector bladeConfigs_;
+    data::hier::Vector presetArrays_;
+    data::hier::Vector bladeConfigs_;
 
-    data::Vector buttons_;
-    data::Vector injections_;
+    data::hier::Vector buttons_;
+    data::hier::Vector injections_;
 
-    const data::Bool& isSaved() const;
+    const data::base::Bool& isSaved() const;
 
-    const data::Integer& numBlades() const;
+    const data::base::Integer& numBlades() const;
 
     void calcNumBlades();
-    void syncStyles() const;
+    void syncStyles();
 
 private:
     friend struct Info;
 
     Config();
 
-    void ensurePropsForVersion();
+    void onActionIdx(size);
+    void onActionClear(size);
 
-    data::Vector mOsVersions;
+    void onNumBlades();
+    void onOSChoice();
+
+    std::vector<std::unique_ptr<versions::os::OS>> mOsVec;
     std::map<
-        utils::Version, data::Vector, utils::Version::RawOrderer
+        utils::Version,
+        std::vector<std::unique_ptr<versions::props::Prop>>,
+        utils::Version::RawOrderer
     > mPropMap;
-    data::Selector mPropSel;
-    data::Selector mBoardSel;
+    data::hier::Choice mOsChoice;
+    data::hier::Choice mPropChoice;
+    data::hier::Choice mBoardChoice;
 
-    data::Integer mNumBlades;
+    data::prim::Integer mNumBlades;
+    data::prim::Bool mIsSaved;
 
-    data::Bool mIsSaved;
-
-    struct SavedReceiver;
-    SavedReceiver *mRcvr;
     std::optional<size> mSavedAction;
 };
 
-struct CONFIG_EXPORT Info : data::Model {
-    const data::String& name();
+struct CONFIG_EXPORT Info : data::prim::Model {
+    const data::base::String& name();
 
     fs::path path();
 
@@ -116,11 +128,11 @@ private:
 
     Info();
 
-    data::String mName;
+    data::prim::String mName;
     std::unique_ptr<Config> mConfig;
 };
 
-CONFIG_EXPORT const data::Vector& list();
+CONFIG_EXPORT const data::base::Vector& list();
 
 /**
  * Search disk and update list of all available configs

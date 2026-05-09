@@ -19,7 +19,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-config::Injection::Injection(data::Node *parent, std::string&& str) :
-    data::Model(parent), filename_{std::move(str)} {}
+#include "config/config.hpp"
 
+using namespace config;
+
+Injection::Injection(Config& config, std::string&& str) :
+    Model(config), filename_{std::move(str)} {}
 

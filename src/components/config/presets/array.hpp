@@ -19,9 +19,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/number.hpp"
-#include "data/string.hpp"
-#include "data/vector.hpp"
+#include "data/hierarchic/model.hpp"
+#include "data/hierarchic/models/string.hpp"
+#include "data/hierarchic/models/vector.hpp"
+#include "data/primitive/models/number.hpp"
+#include "data/receiver.hpp"
 
 #include "config_export.h"
 
@@ -31,27 +33,29 @@ struct Config;
 
 namespace presets {
 
-struct CONFIG_EXPORT Array : data::Node {
-    Array(data::Node *);
+struct CONFIG_EXPORT Array : data::hier::Model, private data::Receiver {
+    Array(Config&);
     ~Array() override;
 
-    bool enumerate(const EnumFunc&) override;
-    Model *find(uint64) override;
+    std::vector<Model *> children() override;
 
     enum {
         eIssue_Name_Empty       = 1 << 0,
         eIssue_Name_Duplicate   = 1 << 1,
     };
 
-    [[nodiscard]] const data::Integer& issues() const;
+    [[nodiscard]] const data::base::Integer& issues() const;
 
-    data::String name_;
-    data::Vector presets_;
+    data::hier::String name_;
+    data::hier::Vector presets_;
 
 private:
     void recomputeIssues();
 
-    data::Integer mIssues;
+    void onPresetInsert(size);
+    void onNameChange();
+
+    data::prim::Integer mIssues;
 };
 
 } // namespace presets

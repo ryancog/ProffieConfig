@@ -19,9 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/hierarchy/node.hpp"
-#include "data/string.hpp"
-#include "data/vector.hpp"
+#include "data/hierarchic/model.hpp"
+#include "data/hierarchic/models/string.hpp"
+#include "data/hierarchic/models/vector.hpp"
 
 #include "config_export.h"
 
@@ -33,36 +33,28 @@ namespace presets {
 
 struct Array;
 
-struct CONFIG_EXPORT Preset : data::Node {
-    struct Style;
+struct CONFIG_EXPORT Preset : data::hier::Model {
+    Preset(Config&);
+    Preset(const Preset&, Config&);
 
-    Preset(data::Node *);
-    Preset(const Preset&, data::Node *);
-    ~Preset() override;
+    std::vector<Model *> children() override;
 
-    bool enumerate(const EnumFunc&) override;
-    Model *find(uint64) override;
-
-    [[nodiscard]] std::unique_ptr<Model> clone(Node *) const override;
-
-    data::String name_;
-    data::String fontDir_;
+    data::hier::String name_;
+    data::hier::String fontDir_;
     // vector<string> fontDirs;
-    data::String track_;
+    data::hier::String track_;
 
-    data::Vector styles_;
+    data::hier::Vector styles_;
 };
 
-struct CONFIG_EXPORT Style : data::Node {
-    Style(Node *);
-    Style(const Style&, data::Node *);
+struct CONFIG_EXPORT Style : data::hier::Model {
+    Style(Config&);
+    Style(const Style&, Config&);
 
-    bool enumerate(const EnumFunc&) override;
-    Model *find(uint64) override;
-    std::unique_ptr<Model> clone(Node *) const override;
+    std::vector<Model *> children() override;
 
-    data::String comment_;
-    data::String content_;
+    data::hier::String comment_;
+    data::hier::String content_;
 };
 
 } // namespace presets

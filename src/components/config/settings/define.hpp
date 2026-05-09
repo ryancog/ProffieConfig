@@ -19,26 +19,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/hierarchy/node.hpp"
-#include "data/string.hpp"
+#include "data/hierarchic/model.hpp"
+#include "data/hierarchic/models/string.hpp"
 
 #include "config_export.h"
 
 namespace config {
 
-struct Settings;
+struct Config;
 
 namespace settings {
 
-struct CONFIG_EXPORT Define : data::Node {
-    Define(data::Node *, std::string&& = {}, std::string&& = {});
+struct CONFIG_EXPORT Define : data::hier::Model {
+    Define(Config&, std::string&& = {}, std::string&& = {});
     ~Define() override;
 
-    bool enumerate(const EnumFunc&) override;
-    Model *find(uint64) override;
+    std::vector<Model *> children() override;
 
-    data::String name_;
-    data::String value_;
+    data::hier::String name_;
+    data::hier::String value_;
 };
 
 } // namespace settings

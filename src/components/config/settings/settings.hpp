@@ -19,11 +19,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/bool.hpp"
-#include "data/choice.hpp"
-#include "data/number.hpp"
-#include "data/vector.hpp"
 #include "config/settings/bladeawareness.hpp"
+#include "data/hierarchic/model.hpp"
+#include "data/hierarchic/models/bool.hpp"
+#include "data/hierarchic/models/choice.hpp"
+#include "data/hierarchic/models/number.hpp"
+#include "data/hierarchic/models/vector.hpp"
 
 #include "config_export.h"
 
@@ -31,51 +32,49 @@ namespace config {
 
 struct Config;
 
-struct CONFIG_EXPORT Settings : data::Node {
+struct CONFIG_EXPORT Settings : data::hier::Model, private data::Receiver {
     struct ProcessDefinesAction;
 
     Settings(Config&);
     ~Settings() override;
 
-    bool enumerate(const EnumFunc&) override;
-    [[nodiscard]] Model *find(uint64) override;
+    void onActivate() override;
+    std::vector<Model *> children() override;
 
-    void init();
-
-    data::Bool massStorage_;
-    data::Bool webUsb_;
+    data::hier::Bool massStorage_;
+    data::hier::Bool webUsb_;
 
     // pcui::ChoiceData rfidSerial;
 
     settings::BladeAwareness bladeAwareness_;
 
-    data::Integer volume_;
+    data::hier::Integer volume_;
 
     struct {
-        data::Bool enable_;
-        data::Integer value_;
+        data::hier::Bool enable_;
+        data::hier::Integer value_;
     } bootVolume_;
 
     // Does not affect I2C or S/PDIF
     // Cutoff in Hz
     struct {
-        data::Bool enable_;
-        data::Integer cutoff_;
-        data::Integer order_;
+        data::hier::Bool enable_;
+        data::hier::Integer cutoff_;
+        data::hier::Integer order_;
     } filter_;
 
-    data::Decimal clashThreshold_;
+    data::hier::Decimal clashThreshold_;
 
     // In seconds 
-    data::Decimal pliOffTime_;
+    data::hier::Decimal pliOffTime_;
     // In Minutes
-    data::Decimal idleOffTime_;
-    data::Decimal motionTimeout_;
+    data::hier::Decimal idleOffTime_;
+    data::hier::Decimal motionTimeout_;
 
-    data::Bool disableColorChange_;
-    data::Bool disableBasicParserStyles_;
-    data::Bool disableTalkie_;
-    data::Bool disableDiagnosticCommands_;
+    data::hier::Bool disableColorChange_;
+    data::hier::Bool disableBasicParserStyles_;
+    data::hier::Bool disableTalkie_;
+    data::hier::Bool disableDiagnosticCommands_;
     // pcui::ToggleData enableDeveloperCommands;
 
     // SAVE_STATE Sets:
@@ -83,7 +82,7 @@ struct CONFIG_EXPORT Settings : data::Node {
     // - savePreset
     // - saveColorChange
     // - saveBladeDimming (only if dynamicBladeDimming is set)
-    data::Bool saveState_;
+    data::hier::Bool saveState_;
 
     // ENABLE_ALL_EDIT_OPTIONS Sets:
     // - dynamicBladeLength
@@ -93,20 +92,20 @@ struct CONFIG_EXPORT Settings : data::Node {
     // - saveColorChange
     // - saveBladeDimming
     // - saveClashThreshold
-    data::Bool enableAllEditOptions_;
+    data::hier::Bool enableAllEditOptions_;
 
-    data::Bool saveVolume_;
-    data::Bool savePreset_;
-    data::Bool saveColorChange_;
+    data::hier::Bool saveVolume_;
+    data::hier::Bool savePreset_;
+    data::hier::Bool saveColorChange_;
 
-    data::Bool enableOled_;
+    data::hier::Bool enableOled_;
 
-    data::Choice orientation_;
+    data::hier::Choice orientation_;
 
     struct OrientRotation {
-        data::Integer x_;
-        data::Integer y_;
-        data::Integer z_;
+        data::hier::Integer x_;
+        data::hier::Integer y_;
+        data::hier::Integer z_;
     } orientationRotation_;
 
     // For debugging touch buttons:
@@ -121,47 +120,46 @@ struct CONFIG_EXPORT Settings : data::Node {
     int32 lineOutVolume{2000}; // This can be set to `dynamic_mixer.get_volume()` to follow master
     */
 
-    data::Bool dynamicBladeDimming_;
-    data::Bool dynamicBladeLength_;
-    data::Bool dynamicClashThreshold_;
+    data::hier::Bool dynamicBladeDimming_;
+    data::hier::Bool dynamicBladeLength_;
+    data::hier::Bool dynamicClashThreshold_;
 
     // only should be settable if dynamicBladeDimming is true
-    data::Bool saveBladeDimming_;
-    data::Bool saveClashThreshold_;
+    data::hier::Bool saveBladeDimming_;
+    data::hier::Bool saveClashThreshold_;
 
     // Useful range is 1~50
-    data::Integer audioClashSuppressionLevel_;
-    data::Bool dontUseGyroForClash_;
+    data::hier::Integer audioClashSuppressionLevel_;
+    data::hier::Bool dontUseGyroForClash_;
 
-    data::Bool noRepeatRandom_;
-    data::Bool femaleTalkie_;
-    data::Bool killOldPlayers_;
+    data::hier::Bool noRepeatRandom_;
+    data::hier::Bool femaleTalkie_;
+    data::hier::Bool killOldPlayers_;
 
     // POV Data?
 
     void processDefines();
 
-    data::Vector defines_;
+    data::hier::Vector defines_;
 
-private:
-    void buildMap();
-
-    std::unordered_map<
-        uint64,
-        std::pair<std::string_view, data::Model *>
-    > mMap;
+protected:
+    void onSaveOptSet();
+    void onVolume();
+    void onBootVolumeEnable();
+    void onFilterEnableSet();
+    void onDisableTalkieSet();
 };
 
 /**
  * Look through the defines and see if any should be translated into
  * ProffieConfig-managed settings.
  */
-struct CONFIG_EXPORT Settings::ProcessDefinesAction : data::Action {
+struct CONFIG_EXPORT Settings::ProcessDefinesAction : data::hier::Action {
     ProcessDefinesAction();
 
-    bool setup(data::Model&) override;
-    void perform(data::Model&) override;
-    void retract(data::Model&) override;
+    bool setup() override;
+    void perform() override;
+    void retract() override;
 };
 
 } // namespace config

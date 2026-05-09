@@ -23,304 +23,281 @@
 #include "config/priv/io.hpp"
 #include "config/strings.hpp"
 #include "config/settings/define.hpp"
-#include "data/number.hpp"
+#include "data/context.hpp"
 #include "utils/string.hpp"
 #include "log/branch.hpp"
 #include "log/context.hpp"
 #include "log/logger.hpp"
 
-config::Settings::Settings(Config& parent) :
-    data::Node(&parent),
-    massStorage_(this),
-    webUsb_(this),
+using namespace config;
+
+Settings::Settings(Config& parent) :
+    Model(parent),
+    massStorage_(root()),
+    webUsb_(root()),
     bladeAwareness_(*this),
-    volume_(this),
-    bootVolume_{.enable_=this, .value_=this},
-    filter_{.enable_=this, .cutoff_=this, .order_=this},
-    clashThreshold_(this),
-    pliOffTime_(this),
-    idleOffTime_(this),
-    motionTimeout_(this),
-    disableColorChange_(this),
-    disableBasicParserStyles_(this),
-    disableTalkie_(this),
-    disableDiagnosticCommands_(this),
-    saveState_(this),
-    enableAllEditOptions_(this),
-    saveVolume_(this),
-    savePreset_(this),
-    saveColorChange_(this),
-    enableOled_(this),
-    orientation_(this),
-    orientationRotation_{.x_=this, .y_=this, .z_=this},
-    dynamicBladeDimming_(this),
-    dynamicBladeLength_(this),
-    dynamicClashThreshold_(this),
-    saveBladeDimming_(this),
-    saveClashThreshold_(this),
-    audioClashSuppressionLevel_(this),
-    dontUseGyroForClash_(this),
-    noRepeatRandom_(this),
-    femaleTalkie_(this),
-    killOldPlayers_(this),
-    defines_(this) {
-    CreationScope createScope(*this);
-    buildMap();
+    volume_(root()),
+    bootVolume_{.enable_=root(), .value_=root()},
+    filter_{.enable_=root(), .cutoff_=root(), .order_=root()},
+    clashThreshold_(root()),
+    pliOffTime_(root()),
+    idleOffTime_(root()),
+    motionTimeout_(root()),
+    disableColorChange_(root()),
+    disableBasicParserStyles_(root()),
+    disableTalkie_(root()),
+    disableDiagnosticCommands_(root()),
+    saveState_(root()),
+    enableAllEditOptions_(root()),
+    saveVolume_(root()),
+    savePreset_(root()),
+    saveColorChange_(root()),
+    enableOled_(root()),
+    orientation_(root()),
+    orientationRotation_{.x_=root(), .y_=root(), .z_=root()},
+    dynamicBladeDimming_(root()),
+    dynamicBladeLength_(root()),
+    dynamicClashThreshold_(root()),
+    saveBladeDimming_(root()),
+    saveClashThreshold_(root()),
+    audioClashSuppressionLevel_(root()),
+    dontUseGyroForClash_(root()),
+    noRepeatRandom_(root()),
+    femaleTalkie_(root()),
+    killOldPlayers_(root()),
+    defines_(root()) {
+    CreationScope createScope(this);
+
+    static const auto saveOptTable{[] {
+        data::hier::Bool::RecvTable table;
+        table.onSet_ = data::map(&Settings::onSaveOptSet);
+        return table;
+    }()};
+    amend(saveState_, saveOptTable);
+    amend(enableAllEditOptions_, saveOptTable);
+    amend(dynamicBladeDimming_, saveOptTable);
+    amend(dynamicClashThreshold_, saveOptTable);
+
+    static const auto volumeTable{[] {
+        data::hier::Integer::RecvTable table;
+        table.onSet_ = data::map(&Settings::onVolume);
+        return table;
+    }()};
+    amend(volume_, volumeTable);
+
+    static const auto bootVolEnableTable{[] {
+        data::hier::Bool::RecvTable table;
+        table.onSet_ = data::map(&Settings::onBootVolumeEnable);
+        return table;
+    }()};
+    amend(bootVolume_.enable_, bootVolEnableTable);
+
+    static const auto filterEnableTable{[] {
+        data::hier::Bool::RecvTable table;
+        table.onSet_ = data::map(&Settings::onFilterEnableSet);
+        return table;
+    }()};
+    amend(filter_.enable_, filterEnableTable);
+
+    static const auto disableTalkieTable{[] {
+        data::hier::Bool::RecvTable table;
+        table.onSet_ = data::map(&Settings::onDisableTalkieSet);
+        return table;
+    }()};
+    amend(filter_.enable_, filterEnableTable);
+
+    volume_.update({.min_=0, .max_=4000, .inc_=50});
+    volume_.set(1000);
+
+    bootVolume_.value_.update({.min_=0, .max_=4000, .inc_=50});
+    bootVolume_.value_.set(1000);
+
+    filter_.cutoff_.update({.min_=1, .max_=10000, .inc_=10});
+    filter_.cutoff_.set(100);
+
+    filter_.order_.update({.min_=1, .max_=2560});
+    filter_.order_.set(8);
+
+    clashThreshold_.update({.min_=0.1, .max_=5, .inc_=0.1});
+    clashThreshold_.set(3.0);
+
+    pliOffTime_.update({.min_=1, .max_=3600});
+    pliOffTime_.set(10);
+
+    idleOffTime_.update({.min_=1, .max_=30000});
+    idleOffTime_.set(10);
+
+    motionTimeout_.update({.min_=1, .max_=30000});
+    motionTimeout_.set(15);
+
+    orientation_.update(eOrient_Max);
+    orientation_.choose(eOrient_Fets_Towards_Blade);
+
+    orientationRotation_.x_.update({.min_=-90, .max_=90});
+    orientationRotation_.y_.update({.min_=-90, .max_=90});
+    orientationRotation_.z_.update({.min_=-90, .max_=90});
+
+    audioClashSuppressionLevel_.update({.min_=1, .max_=50});
+    audioClashSuppressionLevel_.set(10);
 }
 
-config::Settings::~Settings() = default;
+Settings::~Settings() = default;
 
-bool config::Settings::enumerate(const EnumFunc& func) {
-    for (auto& [id, data] : mMap) {
-        auto& [str, model]{data};
-        if (func(*model, id, str)) return true;
-    }
-
-    return false;
+void Settings::onActivate() {
+    onSaveOptSet();
+    onBootVolumeEnable();
+    onFilterEnableSet();
 }
 
-data::Model *config::Settings::find(uint64 id) {
-    auto iter{mMap.find(id)};
-    if (iter == mMap.end()) return nullptr;
+auto Settings::children() -> std::vector<Model *> {
+    return {
+		&massStorage_,
+		&webUsb_,
 
-    return iter->second.second;
-}
+		&bladeAwareness_,
 
-void config::Settings::init() {
-    const auto onSaveOptSet{[](const data::Bool::ROContext& ctxt) {
-        auto& settings{*ctxt.model().parent<Settings>()};
-        using BCtxt = data::Bool::Context;
-        BCtxt saveState{settings.saveState_};
-        BCtxt enableAllEditOptions{settings.enableAllEditOptions_};
-        BCtxt saveVolume{settings.saveVolume_};
-        BCtxt savePreset{settings.savePreset_};
-        BCtxt saveColorChange{settings.saveColorChange_};
-        BCtxt saveBladeDimming{settings.saveBladeDimming_};
-        BCtxt saveClashThreshold{settings.saveClashThreshold_};
-        BCtxt dynamicBladeLength{settings.dynamicBladeLength_};
-        BCtxt dynamicBladeDimming{settings.dynamicBladeDimming_};
-        BCtxt dynamicClashThreshold{settings.dynamicClashThreshold_};
+		&volume_,
+		&bootVolume_.enable_,
+		&bootVolume_.value_,
 
-        bool stateOrAll{saveState.val() or enableAllEditOptions.val()};
+		&filter_.enable_,
+		&filter_.cutoff_,
+		&filter_.order_,
 
-        saveVolume |= stateOrAll;
-        saveVolume.enable(not stateOrAll);
+		&clashThreshold_,
 
-        savePreset |= saveState.val();
-        savePreset.enable(not saveState.val());
+		&pliOffTime_,
+		&idleOffTime_,
+		&motionTimeout_,
 
-        saveColorChange |= stateOrAll;
-        saveColorChange.enable(not stateOrAll);
+		&disableColorChange_,
+		&disableBasicParserStyles_,
+		&disableTalkie_,
+		&disableDiagnosticCommands_,
 
-        saveBladeDimming |= stateOrAll and dynamicBladeDimming.val();
-        saveBladeDimming.enable(dynamicBladeDimming.val() and not stateOrAll);
-        saveClashThreshold |=
-            enableAllEditOptions.val() and dynamicClashThreshold.val();
-        saveClashThreshold.enable(
-            dynamicClashThreshold.val() and not enableAllEditOptions.val()
-        );
+		&saveState_,
 
-        dynamicBladeLength |= enableAllEditOptions.val();
-        dynamicBladeLength.enable(not enableAllEditOptions.val());
-        dynamicBladeDimming |= enableAllEditOptions.val();
-        dynamicBladeDimming.enable(not enableAllEditOptions.val());
-        dynamicClashThreshold |= enableAllEditOptions.val();
-        dynamicClashThreshold.enable(not enableAllEditOptions.val());
-    }};
+		&enableAllEditOptions_,
 
-    saveState_.responder().onSet_ = onSaveOptSet;
-    enableAllEditOptions_.responder().onSet_ = onSaveOptSet;
-    dynamicBladeDimming_.responder().onSet_ = onSaveOptSet;
-    dynamicClashThreshold_.responder().onSet_ = onSaveOptSet;
+		&saveVolume_,
+		&savePreset_,
+		&saveColorChange_,
 
-    // Call to update, param doesn't matter
-    onSaveOptSet(saveState_);
+		&enableOled_,
 
-    data::Integer::Context{volume_}.update({
-        .min_=0, .max_=4000, .inc_=50
-    });
-    data::Integer::Context{bootVolume_.value_}.update({
-        .min_=0, .max_=4000, .inc_=50
-    });
+		&orientation_,
 
-    volume_.responder().onSet_ = [](const data::Integer::ROContext& ctxt) {
-        auto& settings{*ctxt.model().parent<Settings>()};
-        data::Integer::Context bootVolume{settings.bootVolume_.value_};
+		&orientationRotation_.x_,
+		&orientationRotation_.y_,
+		&orientationRotation_.z_,
 
-        auto params{bootVolume.params()};
-        params.max_ = ctxt.val();
-        bootVolume.update(params);
+		&dynamicBladeDimming_,
+		&dynamicBladeLength_,
+		&dynamicClashThreshold_,
+
+		&saveBladeDimming_,
+		&saveClashThreshold_,
+
+		&audioClashSuppressionLevel_,
+		&dontUseGyroForClash_,
+
+		&noRepeatRandom_,
+		&femaleTalkie_,
+		&killOldPlayers_,
+
+		&defines_,
     };
-
-    data::Integer::Context{volume_}.set(1000);
-    data::Integer::Context{bootVolume_.value_}.set(1000);
-
-    (bootVolume_.enable_.responder().onSet_ = [](
-        const data::Bool::ROContext& ctxt
-    ) {
-        auto& settings{*ctxt.model().parent<Settings>()};
-        data::Integer::Context bootVolume{settings.bootVolume_.value_};
-        bootVolume.enable(ctxt.val());
-    })(bootVolume_.enable_);
-
-    (filter_.enable_.responder().onSet_ = [](
-        const data::Bool::ROContext& ctxt
-    ) {
-        auto& settings{*ctxt.model().parent<Settings>()};
-        data::Integer::Context order{settings.filter_.order_};
-        order.enable(ctxt.val());
-
-        data::Integer::Context cutoff{settings.filter_.cutoff_};
-        cutoff.enable(ctxt.val());
-    })(filter_.enable_);
-
-    { data::Integer::Context cutoff{filter_.cutoff_};
-        cutoff.update({.min_=1, .max_=10000, .inc_=10});
-        cutoff.set(100);
-    }
-
-    { data::Integer::Context order{filter_.order_};
-        order.update({.min_=1, .max_=2560});
-        order.set(8);
-    }
-
-    disableTalkie_.responder().onSet_ = [](const data::Bool::ROContext& ctxt) {
-        auto& settings{*ctxt.model().parent<Settings>()};
-        data::Bool::Context femaleTalkie{settings.femaleTalkie_};
-        femaleTalkie.enable(not ctxt.val());
-    };
-
-    { data::Decimal::Context clashThresh{clashThreshold_};
-        clashThresh.update({.min_=0.1, .max_=5, .inc_=0.1});
-        clashThresh.set(3.0);
-    }
-
-    { data::Decimal::Context pliOff{pliOffTime_};
-        pliOff.update({.min_=1, .max_=3600});
-        pliOff.set(10);
-    }
-
-    { data::Decimal::Context idleOff{idleOffTime_};
-        idleOff.update({.min_=1, .max_=30000});
-        idleOff.set(10);
-    }
-
-    { data::Decimal::Context motionOff{motionTimeout_};
-        motionOff.update({.min_=1, .max_=30000});
-        motionOff.set(15);
-    }
-
-    { data::Choice::Context orient{orientation_};
-        orient.update(eOrient_Max);
-        orient.choose(eOrient_Fets_Towards_Blade);
-    }
-
-    data::Integer::Context{orientationRotation_.x_}.update({
-        .min_=-90, .max_=90
-    });
-
-    data::Integer::Context{orientationRotation_.y_}.update({
-        .min_=-90, .max_=90
-    });
-
-    data::Integer::Context{orientationRotation_.z_}.update({
-        .min_=-90, .max_=90
-    });
-
-    { data::Integer::Context suppress{audioClashSuppressionLevel_};
-        suppress.update({.min_=1, .max_=50});
-        suppress.set(10);
-    }
-
-    bladeAwareness_.init();
 }
 
-void config::Settings::processDefines() {
+void Settings::processDefines() {
     processAction(std::make_unique<ProcessDefinesAction>());
 }
 
-void config::Settings::buildMap() {
-    const auto process{[this] (std::string_view str, data::Model& model) {
-        mMap[strID(str)] = {str, &model};
-    }};
+void Settings::onSaveOptSet() {
+    auto saveState{data::context(saveState_)};
+    auto enableAllEditOptions{data::context(enableAllEditOptions_)};
+    auto saveVolume{data::context(saveVolume_)};
+    auto savePreset{data::context(savePreset_)};
+    auto saveColorChange{data::context(saveColorChange_)};
+    auto saveBladeDimming{data::context(saveBladeDimming_)};
+    auto saveClashThreshold{data::context(saveClashThreshold_)};
+    auto dynamicBladeLength{data::context(dynamicBladeLength_)};
+    auto dynamicBladeDimming{data::context(dynamicBladeDimming_)};
+    auto dynamicClashThreshold{data::context(dynamicClashThreshold_)};
 
-    process("MassStorage", massStorage_);
-    process("WebUSB", webUsb_);
+    bool stateOrAll{saveState.val() or enableAllEditOptions.val()};
 
-    process("BladeAwareness", bladeAwareness_);
+    saveVolume |= stateOrAll;
+    saveVolume.enable(not stateOrAll);
 
-    process("Volume", volume_);
-    process("BootVolume.Enable", bootVolume_.enable_);
-    process("Bootvolume.Value", bootVolume_.value_);
+    savePreset |= saveState.val();
+    savePreset.enable(not saveState.val());
 
-    process("Filter.Enable", filter_.enable_);
-    process("Filter.Cutoff", filter_.cutoff_);
-    process("Filter.Order", filter_.order_);
+    saveColorChange |= stateOrAll;
+    saveColorChange.enable(not stateOrAll);
 
-    process("ClashThreshold", clashThreshold_);
+    saveBladeDimming |= stateOrAll and dynamicBladeDimming.val();
+    saveBladeDimming.enable(dynamicBladeDimming.val() and not stateOrAll);
+    saveClashThreshold |=
+        enableAllEditOptions.val() and dynamicClashThreshold.val();
+    saveClashThreshold.enable(
+        dynamicClashThreshold.val() and not enableAllEditOptions.val()
+    );
 
-    process("PLIOffTime", pliOffTime_);
-    process("IdleOffTime", idleOffTime_);
-    process("MotionTimeout", motionTimeout_);
-
-    process("DisableColorChange", disableColorChange_);
-    process("DisableBasicParserStyles", disableBasicParserStyles_);
-    process("DisableTalkie", disableTalkie_);
-    process("DisableDiagnosticCommands", disableDiagnosticCommands_);
-
-    process("SaveState", saveState_);
-
-    process("EnableAllEditOptions", enableAllEditOptions_);
-
-    process("SaveVolume", saveVolume_);
-    process("SavePreset", savePreset_);
-    process("SaveColorChange", saveColorChange_);
-
-    process("EnableOLED", enableOled_);
-
-    process("Orientation", orientation_);
-
-    process("OrientationRotation.X", orientationRotation_.x_);
-    process("OrientationRotation.Y", orientationRotation_.y_);
-    process("OrientationRotation.Z", orientationRotation_.z_);
-
-    process("DynamicBladeDimming", dynamicBladeDimming_);
-    process("DynamicBladeLength", dynamicBladeLength_);
-    process("DynamicClashThreshold", dynamicClashThreshold_);
-
-    process("SaveBladeDimming", saveBladeDimming_);
-    process("SaveClashThreshold", saveClashThreshold_);
-
-    process("AudioClashSuppression", audioClashSuppressionLevel_);
-    process("DontUseGyroForClash", dontUseGyroForClash_);
-
-    process("NoRepeatRandom", noRepeatRandom_);
-    process("FemaleTalkie", femaleTalkie_);
-    process("KillOldPlayers", killOldPlayers_);
-
-    process("Other", defines_);
+    dynamicBladeLength |= enableAllEditOptions.val();
+    dynamicBladeLength.enable(not enableAllEditOptions.val());
+    dynamicBladeDimming |= enableAllEditOptions.val();
+    dynamicBladeDimming.enable(not enableAllEditOptions.val());
+    dynamicClashThreshold |= enableAllEditOptions.val();
+    dynamicClashThreshold.enable(not enableAllEditOptions.val());
 }
 
-config::Settings::ProcessDefinesAction::ProcessDefinesAction() = default;
+void Settings::onVolume() {
+    auto ctxt{data::context(volume_)};
 
-bool config::Settings::ProcessDefinesAction::setup(data::Model&) {
+    auto bootVolume{data::context(bootVolume_.value_)};
+    auto params{bootVolume.params()};
+    params.max_ = ctxt.val();
+    bootVolume.update(params);
+}
+
+void Settings::onBootVolumeEnable() {
+    auto ctxt{data::context(bootVolume_.enable_)};
+    bootVolume_.value_.enable(ctxt.val());
+}
+
+void Settings::onFilterEnableSet() {
+    auto ctxt{data::context(filter_.enable_)};
+    filter_.order_.enable(ctxt.val());
+    filter_.cutoff_.enable(ctxt.val());
+}
+
+void Settings::onDisableTalkieSet() {
+    auto ctxt{data::context(filter_.enable_)};
+    femaleTalkie_.enable(not ctxt.val());
+}
+
+Settings::ProcessDefinesAction::ProcessDefinesAction() = default;
+
+bool Settings::ProcessDefinesAction::setup() {
+    // TODO: Validate if this needs to happen.
     return true;
 }
 
-void config::Settings::ProcessDefinesAction::perform(data::Model& model) {
-    auto& settings{static_cast<Settings&>(model)};
+void Settings::ProcessDefinesAction::perform() {
+    auto& settings{source<Settings>()};
     auto& logger{logging::Context::getGlobal().createLogger("config::Settings::ProcessDefinesAction")};
 
-    data::Vector::Context defineVec{settings.defines_};
+    auto defineVec{data::context(settings.defines_)};
     const auto& defines{defineVec.children()};
 
     using namespace priv;
 
     // First for builtins
     for (auto idx{0}; idx < defines.size(); ++idx) {
-        auto& defModel{static_cast<settings::Define&>(*defines[idx])};
-        data::String::Context define{defModel.name_};
-        data::String::Context value{defModel.value_};
+        auto& defModel{dynamic_cast<settings::Define&>(*defines[idx])};
+        auto define{data::context(defModel.name_)};
+        auto value{data::context(defModel.value_)};
 
         bool processed{true};
 
@@ -339,13 +316,11 @@ void config::Settings::ProcessDefinesAction::perform(data::Model& model) {
         // TODO: Not Yet Implemented
         } else if (define.val() == BLADE_DETECT_PIN_STR) {
             auto& bladeDetect{settings.bladeAwareness_.bladeDetect_};
-            data::Bool::Context{bladeDetect.enable_}.set(true);
-            data::String::Context{bladeDetect.pin_}.change(
-                std::string{value.val()}, 0
-            );
+            bladeDetect.enable_.set(true);
+            bladeDetect.pin_.change(std::string(value.val()));
         } else if (define.val() == BLADE_ID_CLASS_STR) {
             auto& bladeId{settings.bladeAwareness_.bladeId_};
-            data::Bool::Context{bladeId.enable_}.set(true);
+            bladeId.enable_.set(true);
 
             size mode{0};
             for (; mode < eBIDMode_Max; ++mode) {
@@ -355,17 +330,13 @@ void config::Settings::ProcessDefinesAction::perform(data::Model& model) {
             if (mode == eBIDMode_Max) {
                 logger.warn("Cannot parse invalid/unrecognized BladeID class");
             } else {
-                data::Choice::Context{
-                    bladeId.mode_
-                }.choose(static_cast<int32>(mode));
+                bladeId.mode_.choose(static_cast<int32>(mode));
 
                 std::string str{value.val()};
                 str.erase(0, BLADEID_MODE_STRS[mode].length());
 
                 const auto idPinEnd{str.find(',')};
-                data::String::Context{bladeId.pin_}.change(
-                    str.substr(0, idPinEnd), 0
-                );
+                bladeId.pin_.change(str.substr(0, idPinEnd));
 
                 if (mode == eBIDMode_External) {
                     if (idPinEnd == std::string::npos) {
@@ -375,9 +346,7 @@ void config::Settings::ProcessDefinesAction::perform(data::Model& model) {
 
                         auto val{utils::doStringMath(str)};
                         if (val) {
-                            data::Integer::Context{
-                                bladeId.pullup_
-                            }.set(static_cast<int32>(*val));
+                            bladeId.pullup_.set(static_cast<int32>(*val));
                         } else logger.warn("Failed to parse pullup value for ext blade id");
                     }
                 } else if (mode == eBIDMode_Bridged) {
@@ -385,15 +354,13 @@ void config::Settings::ProcessDefinesAction::perform(data::Model& model) {
                         logger.warn("Missing bridge pin for blade id");
                     } else {
                         str.erase(0, idPinEnd + 1);
-                        data::String::Context{bladeId.bridgePin_}.change(
-                            std::string{str}, 0
-                        );
+                        bladeId.bridgePin_.change(std::string(str));
                     }
                 }
             }
         } else if (define.val() == ENABLE_POWER_FOR_ID_STR) {
             auto& bladeId{settings.bladeAwareness_.bladeId_};
-            data::Bool::Context{bladeId.powerForId_}.set(true);
+            bladeId.powerForId_.set(true);
 
             if (not value.val().starts_with(POWER_PINS_STR)) {
                 logger.warn("Failed to parse BladeID PowerPINS");
@@ -401,7 +368,7 @@ void config::Settings::ProcessDefinesAction::perform(data::Model& model) {
                 std::string str{value.val()};
                 str.erase(0, POWER_PINS_STR.length());
 
-                data::Selection::Context powerPins{bladeId.powerPins_};
+                auto powerPins{data::context(bladeId.powerPins_)};
 
                 while (not false) {
                     const auto endPos{str.find(',')};
@@ -415,82 +382,74 @@ void config::Settings::ProcessDefinesAction::perform(data::Model& model) {
             }
         } else if (define.val() == BLADE_ID_SCAN_MILLIS_STR) {
             auto& bladeId{settings.bladeAwareness_.bladeId_};
-            data::Bool::Context{bladeId.continuous_.enable_}.set(true);
+            bladeId.continuous_.enable_.set(true);
 
             auto val{utils::doStringMath(value.val())};
             if (val) {
-                data::Integer::Context{
-                    bladeId.continuous_.interval_
-                }.set(static_cast<int32>(*val));
+                bladeId.continuous_.interval_.set(static_cast<int32>(*val));
             } else logger.warn("Failed to parse blade id scan interval");
         } else if (define.val() == BLADE_ID_TIMES_STR) {
             auto& bladeId{settings.bladeAwareness_.bladeId_};
-            data::Bool::Context{bladeId.continuous_.enable_}.set(true);            
+            bladeId.continuous_.enable_.set(true);
 
             auto val{utils::doStringMath(value.val())};
             if (val) {
-                data::Integer::Context{
-                    bladeId.continuous_.times_
-                }.set(static_cast<int32>(*val));
+                bladeId.continuous_.times_.set(static_cast<int32>(*val));
             } else logger.warn("Failed to parse blade id scan times");
         } else if (define.val() == VOLUME_STR) {
             auto val{utils::doStringMath(value.val())};
             if (val) {
-                data::Integer::Context{
-                    settings.volume_
-                }.set(static_cast<int32>(*val));
+                settings.volume_.set(static_cast<int32>(*val));
             } else logger.warn("Failed to parse volume");
         } else if (define.val() == BOOT_VOLUME_STR) {
-            data::Bool::Context{settings.bootVolume_.enable_}.set(true);
+            settings.bootVolume_.enable_.set(true);
 
             auto val{utils::doStringMath(value.val())};
             if (val) {
-                data::Integer::Context{
-                    settings.bootVolume_.value_
-                }.set(static_cast<int32>(*val));
+                settings.bootVolume_.value_.set(static_cast<int32>(*val));
             } else logger.warn("Failed to parse boot volume");
         } else if (define.val() == CLASH_THRESHOLD_STR) {
             auto val{utils::doStringMath(value.val())};
             if (val) {
-                data::Decimal::Context{settings.clashThreshold_}.set(*val);
+                settings.clashThreshold_.set(*val);
             } else logger.warn("Failed to parse clash threshold");
         } else if (define.val() == PLI_OFF_STR) {
             auto val{utils::doStringMath(value.val())};
             if (val) {
-                data::Decimal::Context{settings.pliOffTime_}.set(*val / 1000);
+                settings.pliOffTime_.set(*val / 1000);
             } else logger.warn("Failed to parse PLI off time");
         } else if (define.val() == IDLE_OFF_STR) {
             auto val{utils::doStringMath(value.val())};
             if (val) {
                 const auto frac{*val / (60 * 1000)};
-                data::Decimal::Context{settings.idleOffTime_}.set(frac);
+                settings.idleOffTime_.set(frac);
             } else logger.warn("Failed to parse idle off time");
         } else if (define.val() == MOTION_TIMEOUT_STR) {
             auto val{utils::doStringMath(value.val())};
             if (val) {
                 const auto frac{*val / (60 * 1000)};
-                data::Decimal::Context{settings.motionTimeout_}.set(frac);
+                settings.motionTimeout_.set(frac);
             } else logger.warn("Failed to parse motion timeout");
         } else if (define.val() == DISABLE_COLOR_CHANGE_STR) {
-            data::Bool::Context{settings.disableColorChange_}.set(true);
+            settings.disableColorChange_.set(true);
         } else if (define.val() == DISABLE_BASIC_PARSERS_STR) {
-            data::Bool::Context{settings.disableBasicParserStyles_}.set(true);
+            settings.disableBasicParserStyles_.set(true);
         } else if (define.val() == DISABLE_DIAG_COMMANDS_STR) {
-            data::Bool::Context{settings.disableDiagnosticCommands_}.set(true);
+            settings.disableDiagnosticCommands_.set(true);
         // } else if (define.val() == ENABLE_DEV_COMMANDS_STR) {
         //     enableDeveloperCommands = true;
         } else if (define.val() == SAVE_STATE_STR) {
-            data::Bool::Context{settings.saveState_}.set(true);
+            settings.saveState_.set(true);
         } else if (define.val() == ENABLE_ALL_EDIT_OPTIONS_STR) {
-            data::Bool::Context{settings.enableAllEditOptions_}.set(true);
+            settings.enableAllEditOptions_.set(true);
         } else if (define.val() == SAVE_COLOR_STR) {
-            data::Bool::Context{settings.saveColorChange_}.set(true);
+            settings.saveColorChange_.set(true);
         } else if (define.val() == SAVE_VOLUME_STR) {
-            data::Bool::Context{settings.saveVolume_}.set(true);
+            settings.saveVolume_.set(true);
         } else if (define.val() == SAVE_PRESET_STR) {
-            data::Bool::Context{settings.savePreset_}.set(true);
+            settings.savePreset_.set(true);
         } else if (define.val() == ENABLE_OLED_STR) {
-            data::Bool::Context{settings.enableOled_}.set(true);
+            settings.enableOled_.set(true);
         } else if (define.val() == ORIENTATION_STR) {
             size orient{0};
             for (; orient < eOrient_Max; ++orient) {
@@ -500,9 +459,7 @@ void config::Settings::ProcessDefinesAction::perform(data::Model& model) {
             if (orient == eOrient_Max) {
                 logger.warn("Unknown/invalid orientation");
             } else {
-                data::Choice::Context{
-                    settings.orientation_
-                }.choose(static_cast<int32>(orient));
+                settings.orientation_.choose(static_cast<int32>(orient));
             }
         } else if (define.val() == ORIENTATION_ROTATION_STR) {
             const auto firstComma{value.val().find(',')};
@@ -527,70 +484,58 @@ void config::Settings::ProcessDefinesAction::perform(data::Model& model) {
                 auto yVal{utils::doStringMath(yStr)};
                 auto zVal{utils::doStringMath(zStr)};
 
-                data::Integer::Context orientX{
-                    settings.orientationRotation_.x_
-                };
-                data::Integer::Context orientY{
-                    settings.orientationRotation_.y_
-                };
-                data::Integer::Context orientZ{
-                    settings.orientationRotation_.z_
-                };
+                auto& rot{settings.orientationRotation_};
 
-                if (xVal) orientX.set(static_cast<int32>(*xVal));
+                if (xVal) rot.x_.set(static_cast<int32>(*xVal));
                 else logger.warn("Failed to parse orientation rotation X");
 
-                if (yVal) orientY.set(static_cast<int32>(*yVal));
+                if (yVal) rot.y_.set(static_cast<int32>(*yVal));
                 else logger.warn("Failed to parse orientation rotation Y");
 
-                if (zVal) orientZ.set(static_cast<int32>(*zVal));
+                if (zVal) rot.z_.set(static_cast<int32>(*zVal));
                 else logger.warn("Failed to parse orientation rotation Z");
             }
         // } else if (define.val() == SPEAK_TOUCH_VALUES_STR) {
         //     speakTouchValues = true;
         } else if (define.val() == DYNAMIC_BLADE_DIMMING_STR) {
-            data::Bool::Context{settings.dynamicBladeDimming_}.set(true);
+            settings.dynamicBladeDimming_.set(true);
         } else if (define.val() == DYNAMIC_BLADE_LENGTH_STR) {
-            data::Bool::Context{settings.dynamicBladeLength_}.set(true);
+            settings.dynamicBladeLength_.set(true);
         } else if (define.val() == DYNAMIC_CLASH_THRESHOLD_STR) {
-            data::Bool::Context{settings.dynamicClashThreshold_}.set(true);
+            settings.dynamicClashThreshold_.set(true);
         } else if (define.val() == SAVE_BLADE_DIM_STR) {
-            data::Bool::Context{settings.saveBladeDimming_}.set(true);
+            settings.saveBladeDimming_.set(true);
         } else if (define.val() == SAVE_CLASH_THRESHOLD_STR) {
-            data::Bool::Context{settings.saveClashThreshold_}.set(true);
+            settings.saveClashThreshold_.set(true);
         } else if (define.val() == FILTER_CUTOFF_STR) {
             auto val{utils::doStringMath(value.val())};
             if (val) {
-                data::Bool::Context{settings.filter_.enable_}.set(true);
-                data::Integer::Context{
-                    settings.filter_.cutoff_
-                }.set(static_cast<int32>(*val));
+                settings.filter_.enable_.set(true);
+                settings.filter_.cutoff_.set(static_cast<int32>(*val));
             } else logger.warn("Failed to parse filter cutoff");
         } else if (define.val() == FILTER_ORDER_STR) {
             auto val{utils::doStringMath(value.val())};
             if (val) {
-                data::Bool::Context{settings.filter_.enable_}.set(true);
-                data::Integer::Context{
-                    settings.filter_.order_
-                }.set(static_cast<int32>(*val));
+                settings.filter_.enable_.set(true);
+                settings.filter_.order_.set(static_cast<int32>(*val));
             } else logger.warn("Failed to parse filter order");
         } else if (define.val() == AUDIO_CLASH_SUPPRESSION_STR) {
             auto val{utils::doStringMath(value.val())};
             if (val) {
-                data::Integer::Context{
-                    settings.audioClashSuppressionLevel_
-                }.set(static_cast<int32>(*val));
+                settings.audioClashSuppressionLevel_.set(
+                    static_cast<int32>(*val)
+                );
             } else logger.warn("Failed to parse audio clash suppression");
         } else if (define.val() == DONT_USE_GYRO_FOR_CLASH_STR) {
-            data::Bool::Context{settings.dontUseGyroForClash_}.set(true);
+            settings.dontUseGyroForClash_.set(true);
         } else if (define.val() == NO_REPEAT_RANDOM_STR) {
-            data::Bool::Context{settings.noRepeatRandom_}.set(true);
+            settings.noRepeatRandom_.set(true);
         } else if (define.val() == FEMALE_TALKIE_STR) {
-            data::Bool::Context{settings.femaleTalkie_}.set(true);
+            settings.femaleTalkie_.set(true);
         } else if (define.val() == DISABLE_TALKIE_STR) {
-            data::Bool::Context{settings.disableTalkie_}.set(true);
+            settings.disableTalkie_.set(true);
         } else if (define.val() == KILL_OLD_PLAYERS_STR) {
-            data::Bool::Context{settings.killOldPlayers_}.set(true);
+            settings.killOldPlayers_.set(true);
         } else {
             processed = false;
         }
@@ -601,71 +546,31 @@ void config::Settings::ProcessDefinesAction::perform(data::Model& model) {
         }
     }
 
-    // Again for props
-    struct PropProcDefAction : data::Action {
-        PropProcDefAction(std::string def, std::string val) :
-            mDef{std::move(def)}, mVal{std::move(val)} {}
-
-        bool setup(data::Model& model) override {
-            // TODO: Can this be setup to actually use the respective action's
-            // check rather than trying to emulate it?
-            if (auto *ptr = dynamic_cast<data::Bool *>(&model)) {
-                return not data::Bool::Context{*ptr}.val();
-            }
-            if (auto *ptr = dynamic_cast<data::Integer *>(&model)) {
-                data::Integer::Context intgr{*ptr};
-                return intgr.val() != utils::doStringMath(mVal);
-            } 
-            if (auto *ptr = dynamic_cast<data::Decimal *>(&model)) {
-                data::Decimal::Context intgr{*ptr};
-                return intgr.val() != utils::doStringMath(mVal);
-            }
-
-            assert(0);
-            __builtin_unreachable();
-        }
-
-        void perform(data::Model& model) override {
-            if (auto *ptr = dynamic_cast<data::Bool *>(&model)) {
-                data::Bool::Context{*ptr}.set(true);
-                return;
-            }
-
-            auto num{utils::doStringMath(mVal)};
-            if (auto *ptr = dynamic_cast<data::Integer *>(&model)) {
-                data::Integer::Context intgr{*ptr};
-                intgr.set(static_cast<int32>(num.value_or(0)));
-            } else if (auto *ptr = dynamic_cast<data::Decimal *>(&model)) {
-                data::Decimal::Context dec{*ptr};
-                dec.set(num.value_or(0));
-            }
-        }
-
-        void retract(data::Model&) override {
-            // We only performed actions. Those will be undone automatically.
-        }
-
-    private:
-        const std::string mDef;
-        const std::string mVal;
-    };
-
-    auto& config{*settings.parent<Config>()};
-    if (config.props()) {
-        data::Vector::ROContext props{*config.props()};
+    auto& config{settings.root<Config>()};
+    if (auto propVec{config.propVec()}) {
         for (auto idx{0}; idx < defines.size(); ++idx) {
-            auto& defModel{static_cast<settings::Define&>(*defines[idx])};
-            data::String::Context define{defModel.name_};
-            data::String::Context value{defModel.value_};
+            auto& define{dynamic_cast<settings::Define&>(*defines[idx])};
+            auto name{data::context(define.name_)};
+            auto value{data::context(define.value_)};
+            auto numVal{utils::doStringMath(value.val())};
 
             bool used{false};
-            for (const auto& propModel : props.children()) {
-                auto& node{static_cast<Node&>(*propModel)};
+            for (const auto& prop : *propVec) {
+                auto *setting{prop->find(name.val())};
 
-                auto action{std::make_unique<PropProcDefAction>(
-                    define.val(), value.val()
-                )};
-                auto res{node.forwardAction(std::move(action))};
+                using namespace versions::props;
+
+                if (auto *ptr{dynamic_cast<data::hier::Bool *>(setting)}) {
+                    ptr->set(true);
+                } else if (auto *ptr{dynamic_cast<Integer *>(setting)}) {
+                    if (numVal)
+                        ptr->set(static_cast<int32>(*numVal));
+                } else if (auto *ptr{dynamic_cast<Decimal *>(setting)}) {
+                    if (numVal)
+                        ptr->set(*numVal);
+                }
+
+                used = true;
             }
 
             if (used) {
@@ -676,7 +581,7 @@ void config::Settings::ProcessDefinesAction::perform(data::Model& model) {
     }
 }
 
-void config::Settings::ProcessDefinesAction::retract(data::Model& model) {
+void config::Settings::ProcessDefinesAction::retract() {
     // Nothing to do here. The only thing this action does is cause other
     // actions, and reverting those is the job of the root.
 }

@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <sstream>
 
 #include <wx/translation.h>
@@ -36,12 +37,9 @@
 #include "config/priv/io.hpp"
 #include "config/strings.hpp"
 #include "config/settings/define.hpp"
-#include "data/choice.hpp"
-#include "data/number.hpp"
-#include "data/string.hpp"
+#include "data/context.hpp"
 #include "log/branch.hpp"
 #include "log/logger.hpp"
-#include "utils/defer.hpp"
 #include "utils/files.hpp"
 #include "utils/string.hpp"
 #include "utils/version.hpp"
@@ -68,13 +66,13 @@ void outputPresetBlades(std::ostream&, const Config&);
 
 void outputButtons(std::ostream&, const Config&);
 
-template<typename VAL = std::string>
+template <typename VAL = std::string>
 void outputOpt(std::ostream&, const std::string& opt, const VAL& val);
-template<typename VAL = std::string>
+template <typename VAL = std::string>
 void outputOpt(std::ostream&, const std::string& opt);
-template<typename VAL = std::string>
+template <typename VAL = std::string>
 void outputDefine(std::ostream&, const std::string& define);
-template<typename VAL = std::string>
+template <typename VAL = std::string>
 void outputDefine(std::ostream&, const std::string& define, const VAL& val);
 
 } // namespace
@@ -84,8 +82,7 @@ std::optional<std::string> priv::generate(
 ) {
     auto& logger{logging::Branch::optCreateLogger("generate()", lBranch)};
 
-    config.lock();
-    defer { config.unlock(); };
+    std::lock_guard scopeLock{config};
 
     auto precheckErr{runPreChecks(config, *logger.binfo("Running prechecks..."))};
     if (precheckErr) return precheckErr;
@@ -101,11 +98,15 @@ std::optional<std::string> priv::generate(
     outFile << " * https://proffieconfig.kafrenetrading.com/\n";
     outFile << " *\n";
     outFile << " * Version: " << executableVersion << ", Generator Version: " wxSTRINGIZE(BIN_VERSION) "\n";
-    outFile << " */\n\n" << std::flush;
+    outFile << " */\n";
 
+    outFile << '\n';
     outputTop(outFile, config);
+    outFile << '\n';
     outputProp(outFile, config);
+    outFile << '\n';
     outputPresets(outFile, config);
+    outFile << '\n';
     outputButtons(outFile, config);
 
     outFile.close();
@@ -130,52 +131,53 @@ std::optional<std::string> runPreChecks(
     //
     // It's a semi-arbitrary restriction, but there might be data loss and
     // things like this.
-    if (data::Choice::ROContext{config.osVersion_.choice_}.idx() == -1) {
+    if (config.os() == nullptr) {
         return errorMessage(logger, wxTRANSLATE("Config must have an OS Version selected."));
     }
 
     const auto& settings{config.settings_};
     const auto& awareness{config.settings_.bladeAwareness_};
 
-    if (
-            data::Bool::ROContext{awareness.bladeDetect_.enable_}.val() and
-            data::String::ROContext{awareness.bladeDetect_.pin_}.val().empty()
-       ) {
+    auto bladeDetectEnable{data::context(awareness.bladeDetect_.enable_)};
+    auto bladeDetectPin{data::context(awareness.bladeDetect_.pin_)};
+    if (bladeDetectEnable.val() and bladeDetectPin.val().empty()) {
         return errorMessage(logger, wxTRANSLATE("Blade Detect Pin cannot be empty."));
     }
 
-    if (data::Bool::ROContext{awareness.bladeId_.enable_}.val()) {
-        if (data::String::ROContext{awareness.bladeId_.pin_}.val().empty()) {
+    auto bladeIDEnable{data::context(awareness.bladeId_.enable_)};
+    auto bladeIDPin{data::context(awareness.bladeId_.pin_)};
+    if (bladeIDEnable.val()) {
+        if (bladeIDPin.val().empty()) {
             return errorMessage(logger, wxTRANSLATE("Blade ID Pin cannot be empty."));
         }
 
-        data::Choice::ROContext idMode{awareness.bladeId_.mode_};
-        data::String::ROContext bridgePin{awareness.bladeId_.bridgePin_};
-        if (
-                idMode.idx() == eBIDMode_Bridged and
-                bridgePin.val().empty()
-           ) {
+        auto mode{data::context(awareness.bladeId_.mode_)};
+        auto bridgePin{data::context(awareness.bladeId_.bridgePin_)};
+        if (mode.idx() == eBIDMode_Bridged and bridgePin.val().empty()) {
             return errorMessage(logger, wxTRANSLATE("Pullup Pin cannot be empty."));
         }
     }
 
-    data::String::ROContext detectPin{awareness.bladeDetect_.pin_};
-    data::String::ROContext idPin{awareness.bladeId_.pin_};
     if (
-            data::Bool::ROContext{awareness.bladeId_.enable_}.val() and
-            data::Bool::ROContext{awareness.bladeDetect_.enable_}.val() and
-            detectPin.val() == idPin.val()
+            bladeIDEnable.val() and
+            bladeDetectEnable.val() and
+            bladeDetectPin.val() == bladeIDPin.val()
        ) {
         return errorMessage(logger, wxTRANSLATE("Blade ID Pin and Blade Detect Pin cannot be the same."));
     }
 
-    data::Vector::ROContext bladeConfigs{config.bladeConfigs_};
+    auto bladeConfigs{data::context(config.bladeConfigs_)};
     for (const auto& model : bladeConfigs.children()) {
-        auto& bladeConfig{static_cast<BladeConfig&>(*model)};
+        auto& bladeConfig{dynamic_cast<BladeConfig&>(*model)};
 
-        data::Integer::ROContext issues{bladeConfig.issues()};
+        auto issues{data::context(bladeConfig.issues())};
         if (issues.val() != BladeConfig::eIssue_None) {
-            return errorMessage(logger, wxTRANSLATE("Blade Array %s has issues, and isn't ready yet."), data::String::ROContext{bladeConfig.name_}.val());
+            auto name{data::context(bladeConfig.name_)};
+            const auto arrayName{name.val().empty()
+                ? _("[default]")
+                : name.val()
+            };
+            return errorMessage(logger, wxTRANSLATE("Blade array %s has issues, and isn't ready yet."), arrayName);
         }
     }
 
@@ -185,19 +187,20 @@ std::optional<std::string> runPreChecks(
             ++arrayIdx
         ) {
         const auto& model{bladeConfigs.children()[arrayIdx]};
-        auto& bladeConfig{static_cast<BladeConfig&>(*model)};
+        auto& bladeConfig{dynamic_cast<BladeConfig&>(*model)};
 
-        data::String::ROContext name{bladeConfig.name_};
+        auto name{data::context(bladeConfig.name_)};
+        auto presetArray{data::context(bladeConfig.presetArray_)};
 
-        data::Choice::ROContext selectedPresetsArray{
-            bladeConfig.presetArray_.choice_
-        };
-
-        if (selectedPresetsArray.idx() == -1) {
-            return errorMessage(logger, wxTRANSLATE("Blade array %s has no preset array selection"), name.val());
+        if (presetArray.choiceIdx() == -1) {
+            const auto arrayName{name.val().empty()
+                ? _("[default]")
+                : name.val()
+            };
+            return errorMessage(logger, wxTRANSLATE("Blade array %s has no preset array selection"), arrayName);
         }
 
-        data::Vector::ROContext blades{bladeConfig.blades_};
+        auto blades{data::context(bladeConfig.blades_)};
 
         for (
                 auto bladeIdx{0};
@@ -205,12 +208,12 @@ std::optional<std::string> runPreChecks(
                 ++bladeIdx
             ) {
             const auto& model{blades.children()[bladeIdx]};
-            auto& blade{static_cast<Blade&>(*model)};
+            auto& blade{dynamic_cast<Blade&>(*model)};
 
-            data::Choice::ROContext type{blade.type().choice_};
+            auto type{data::context(blade.type())};
 
-            if (type.idx() == Blade::eWS281X) {
-                data::String::ROContext dataPin{blade.ws281x().dataPin_};
+            if (type.choiceIdx() == Blade::eWS281X) {
+                auto dataPin{data::context(blade.ws281x().dataPin_)};
 
                 if (dataPin.val().empty()) {
                     return errorMessage(logger, wxTRANSLATE("Blade %d in array %s missing data pin"), bladeIdx, name.val());
@@ -218,40 +221,33 @@ std::optional<std::string> runPreChecks(
                 // Subblade overlap
             }
 
-            if (type.idx() == Blade::eSimple) {
+            if (type.choiceIdx() == Blade::eSimple) {
                 auto& led1{blade.simple().led1_};
                 auto& led2{blade.simple().led2_};
                 auto& led3{blade.simple().led3_};
                 auto& led4{blade.simple().led4_};
 
-                data::Choice::ROContext led1Profile{led1.profile_};
-                data::Choice::ROContext led2Profile{led2.profile_};
-                data::Choice::ROContext led3Profile{led3.profile_};
-                data::Choice::ROContext led4Profile{led4.profile_};
+                auto led1Profile{data::context(led1.profile_)};
+                auto led2Profile{data::context(led2.profile_)};
+                auto led3Profile{data::context(led3.profile_)};
+                auto led4Profile{data::context(led4.profile_)};
+
+                auto led1Pin{data::context(led1.powerPin_)};
+                auto led2Pin{data::context(led2.powerPin_)};
+                auto led3Pin{data::context(led3.powerPin_)};
+                auto led4Pin{data::context(led4.powerPin_)};
 
                 constexpr auto SIMPLE_ERR_MSG{wxTRANSLATE("LED %d of blade %d in array %s missing power pin.")};
-                if (
-                        led1Profile.idx() != eLED_None and
-                        data::String::ROContext{led1.powerPin_}.val().empty()
-                   ) {
+                if (led1Profile.idx() != eLED_None and led1Pin.val().empty()) {
                     return errorMessage(logger, SIMPLE_ERR_MSG, 1, bladeIdx, name.val());
                 }
-                if (
-                        led2Profile.idx() != eLED_None and
-                        data::String::ROContext{led2.powerPin_}.val().empty()
-                   ) {
+                if (led2Profile.idx() != eLED_None and led2Pin.val().empty()) {
                     return errorMessage(logger, SIMPLE_ERR_MSG, 2, bladeIdx, name.val());
                 }
-                if (
-                        led3Profile.idx() != eLED_None and
-                        data::String::ROContext{led3.powerPin_}.val().empty()
-                   ) {
+                if (led3Profile.idx() != eLED_None and led3Pin.val().empty()) {
                     return errorMessage(logger, SIMPLE_ERR_MSG, 3, bladeIdx, name.val());
                 }
-                if (
-                        led4Profile.idx() != eLED_None and
-                        data::String::ROContext{led4.powerPin_}.val().empty()
-                   ) {
+                if (led4Profile.idx() != eLED_None and led4Pin.val().empty()) {
                     return errorMessage(logger, SIMPLE_ERR_MSG, 4, bladeIdx, name.val());
                 }
 
@@ -267,21 +263,22 @@ std::optional<std::string> runPreChecks(
         }
     }
 
-    data::Vector::ROContext presetArrays{config.presetArrays_};
-    for (const auto& model : presetArrays.children()) {
-        auto& presetArray{static_cast<presets::Array&>(*model)};
+    auto presetArrays{data::context(config.presetArrays_)};
 
-        data::String::ROContext arrayName{presetArray.name_};
+    for (const auto& model : presetArrays.children()) {
+        auto& presetArray{dynamic_cast<presets::Array&>(*model)};
+
+        auto arrayName{data::context(presetArray.name_)};
         if (arrayName.val().empty()) {
             return errorMessage(logger, wxTRANSLATE("Preset array has no name"));
         }
 
         for (const auto& model : presetArrays.children()) {
-            auto& checkArray{static_cast<presets::Array&>(*model)};
+            auto& checkArray{dynamic_cast<presets::Array&>(*model)};
 
             if (&checkArray == &presetArray) continue;
 
-            data::String::ROContext checkName{checkArray.name_};
+            auto checkName{data::context(checkArray.name_)};
             if (checkName.val() == arrayName.val()) {
                 return errorMessage(logger, wxTRANSLATE("Duplicate preset arrays %s"), arrayName.val());
             }
@@ -290,10 +287,10 @@ std::optional<std::string> runPreChecks(
 
     constexpr cstring STYLE_ERR_STR{wxTRANSLATE("Bladestyle %d in preset %d (%s) in array %s has mismatched %s")};
     for (const auto& model : presetArrays.children()) {
-        auto& presetArray{static_cast<presets::Array&>(*model)};
+        auto& presetArray{dynamic_cast<presets::Array&>(*model)};
 
-        data::String::ROContext arrayName{presetArray.name_};
-        data::Vector::ROContext presets{presetArray.presets_};
+        auto arrayName{data::context(presetArray.name_)};
+        auto presets{data::context(presetArray.presets_)};
 
         for (
                 auto presetIdx{0};
@@ -301,10 +298,10 @@ std::optional<std::string> runPreChecks(
                 ++presetIdx
             ) {
             const auto& model{presets.children()[presetIdx]};
-            auto& preset{static_cast<presets::Preset&>(*model)};
+            auto& preset{dynamic_cast<presets::Preset&>(*model)};
 
-            data::String::ROContext presetName{preset.name_};
-            data::Vector::ROContext styles{preset.styles_};
+            auto presetName{data::context(preset.name_)};
+            auto styles{data::context(preset.styles_)};
 
             for (
                     auto styleIdx{0};
@@ -312,12 +309,12 @@ std::optional<std::string> runPreChecks(
                     ++styleIdx
                 ) {
                 const auto& model{styles.children()[styleIdx]};
-                auto& styleModel{static_cast<presets::Style&>(*model)};
+                auto& style{dynamic_cast<presets::Style&>(*model)};
 
                 std::vector<char> depth;
 
-                data::String::ROContext style{styleModel.content_};
-                for (const char chr : style.val()) {
+                auto content{data::context(style.content_)};
+                for (const char chr : content.val()) {
                     if (chr == '<' or chr == '(') {
                         depth.push_back(chr);
                         continue;
@@ -362,14 +359,14 @@ std::optional<std::string> runPreChecks(
         }
     }
 
-    data::Vector::ROContext buttons{config.buttons_};
+    auto buttons{data::context(config.buttons_)};
     for (auto idx{0}; idx < buttons.children().size(); ++idx) {
         auto& model{*buttons.children()[idx]};
-        auto& button{static_cast<buttons::Button&>(model)};
+        auto& button{dynamic_cast<buttons::Button&>(model)};
 
-        data::Choice::ROContext type{button.type_};
-        data::Choice::ROContext event{button.event_};
-        data::String::ROContext pin{button.pin_};
+        auto type{data::context(button.type_)};
+        auto event{data::context(button.event_)};
+        auto pin{data::context(button.pin_)};
 
         if (type.idx() == -1) {
             return errorMessage(logger, wxTRANSLATE("Button %u doesn't have a type set."), idx);
@@ -389,25 +386,25 @@ void outputTop(std::ostream& outFile, const Config& config) {
     outFile << "#ifdef CONFIG_TOP\n";
     outputTopGeneral(outFile, config);
     outputTopProp(outFile, config);
-    outFile << "#endif\n\n" << std::flush;
+    outFile << "#endif\n";
 }
 
-template<typename VAL>
+template <typename VAL>
 void outputOpt(std::ostream& outFile, const std::string& opt) {
     outFile << priv::PC_OPT_STR << opt << '\n';
 }
 
-template<typename VAL>
+template <typename VAL>
 void outputOpt(std::ostream& outFile, const std::string& opt, const VAL& val) {
     outFile << priv::PC_OPT_STR << opt << ' ' << val << '\n';
 }
 
-template<typename VAL>
+template <typename VAL>
 void outputDefine(std::ostream& outFile, const std::string& define) {
     outFile << priv::DEFINE_STR << define << '\n';
 }
 
-template<typename VAL>
+template <typename VAL>
 void outputDefine(
     std::ostream& outFile, const std::string& define, const VAL& val
 ) {
@@ -420,19 +417,15 @@ void outputTopGeneral(std::ostream& outFile, const Config& config) {
 
     const auto& settings{config.settings_};
 
-    if (data::Bool::ROContext{settings.massStorage_}.val()) {
+    if (data::context(settings.massStorage_).val()) {
         outputOpt(outFile, ENABLE_MASS_STORAGE_STR);
     }
 
-    if (data::Bool::ROContext{settings.webUsb_}.val()) {
+    if (data::context(settings.webUsb_).val()) {
         outputOpt(outFile, ENABLE_WEBUSB_STR);
     }
 
-    auto osVersion{static_cast<versions::os::OS&>(
-        *data::Vector::ROContext{config.osVersions()}.children()[
-            data::Choice::ROContext{config.osVersion_.choice_}.idx()
-        ]
-    ).version_};
+    auto osVersion{config.os()->version_};
 
     outputOpt(outFile, OS_VERSION_STR, osVersion.string());
 
@@ -441,21 +434,22 @@ void outputTopGeneral(std::ostream& outFile, const Config& config) {
     outFile << INCLUDE_STR << boardInclude << '\n';
 
     uint32 requiredLedsPerStrip{0};
-    data::Vector::ROContext bladeConfigs{config.bladeConfigs_};
+    auto bladeConfigs{data::context(config.bladeConfigs_)};
     for (const auto& model : bladeConfigs.children()) {
-        auto& array{static_cast<blades::BladeConfig&>(*model)};
-        data::Vector::ROContext blades{array.blades_};
+        auto& array{dynamic_cast<blades::BladeConfig&>(*model)};
+        auto blades{data::context(array.blades_)};
+
         for (const auto& model : blades.children()) {
-            auto& blade{static_cast<blades::Blade&>(*model)};
+            auto& blade{dynamic_cast<blades::Blade&>(*model)};
 
-            data::Choice::ROContext type{blade.type().choice_};
-            if (type.idx() != blades::Blade::eWS281X) continue;
+            auto type{data::context(blade.type())};
+            if (type.choiceIdx() != blades::Blade::eWS281X) continue;
 
-            data::Bool::ROContext whiteMultiplier{blade.ws281x().hasWhite_};
-            data::Integer::ROContext length{blade.ws281x().length_};
+            auto hasWhite{data::context(blade.ws281x().hasWhite_)};
+            auto length{data::context(blade.ws281x().length_)};
 
             auto ledsInStrip{length.val()};
-            if (whiteMultiplier.val()) {
+            if (hasWhite.val()) {
                 ledsInStrip = std::ceil((length.val() * 4.0) / 3.0);
             }
 
@@ -476,36 +470,36 @@ void outputTopGeneral(std::ostream& outFile, const Config& config) {
     }
 
     outputDefine(outFile, SHARED_POWER_PINS_STR);
-    data::Integer::ROContext numBlades{config.numBlades()};
+    auto numBlades{data::context(config.numBlades())};
     outputDefine(outFile, NUM_BLADES_STR, numBlades.val());
-    data::Vector::ROContext buttons{config.buttons_};
+    auto buttons{data::context(config.buttons_)};
     outputDefine(outFile, NUM_BUTTONS_STR, buttons.children().size());
 
     const auto& bladeDetect{settings.bladeAwareness_.bladeDetect_};
-    if (data::Bool::ROContext{bladeDetect.enable_}.val()) {
-        data::String::ROContext pin{bladeDetect.pin_};
+    if (data::context(bladeDetect.enable_).val()) {
+        auto pin{data::context(bladeDetect.pin_)};
         outputDefine(outFile, BLADE_DETECT_PIN_STR, pin.val());
     }
 
     const auto& bladeID{settings.bladeAwareness_.bladeId_};
-    if (data::Bool::ROContext{bladeID.enable_}.val()) {
-        data::Choice::ROContext idMode{bladeID.mode_};
-        std::string idString{BLADEID_MODE_STRS[idMode.idx()]};
+    if (data::context(bladeID.enable_).val()) {
+        auto mode{data::context(bladeID.mode_)};
+        std::string idString{BLADEID_MODE_STRS[mode.idx()]};
 
-        idString += data::String::ROContext{bladeID.pin_}.val();
-        if (idMode.idx() == eBIDMode_External) {
-            data::Integer::ROContext pullup{bladeID.pullup_};
+        idString += data::context(bladeID.pin_).val();
+        if (mode.idx() == eBIDMode_External) {
+            auto pullup{data::context(bladeID.pullup_)};
             (idString += ", ") += std::to_string(pullup.val());
-        } else if (idMode.idx() == eBIDMode_Bridged) {
-            data::String::ROContext bridgePin{bladeID.bridgePin_};
+        } else if (mode.idx() == eBIDMode_Bridged) {
+            auto bridgePin{data::context(bladeID.bridgePin_)};
             (idString += ", ") += bridgePin.val();
         }
         idString += ">\n";
         outputDefine(outFile, BLADE_ID_CLASS_STR, idString);
  
-        data::Selection::ROContext powerPins{bladeID.powerPins_};
+        auto powerPins{data::context(bladeID.powerPins_)};
         if (
-                data::Bool::ROContext{bladeID.powerForId_}.val() and
+                data::context(bladeID.powerForId_).val() and
                 std::ranges::any_of(powerPins.selected(), std::identity{})
            ) {
             std::string powerString{POWER_PINS_STR};
@@ -521,88 +515,88 @@ void outputTopGeneral(std::ostream& outFile, const Config& config) {
             outputDefine(outFile, ENABLE_POWER_FOR_ID_STR, powerString);
         }
 
-        if (data::Bool::ROContext{bladeID.continuous_.enable_}.val()) {
-            data::Integer::ROContext itvl{bladeID.continuous_.interval_};
-            data::Integer::ROContext times{bladeID.continuous_.times_};
+        if (data::context(bladeID.continuous_.enable_).val()) {
+            auto itvl{data::context(bladeID.continuous_.interval_)};
+            auto times{data::context(bladeID.continuous_.times_)};
             outputDefine(outFile, BLADE_ID_SCAN_MILLIS_STR, itvl.val());
             outputDefine(outFile, BLADE_ID_TIMES_STR, times.val());
         }
     }
 
-    data::Integer::ROContext volume{settings.volume_};
+    auto volume{data::context(settings.volume_)};
     outputDefine(outFile, VOLUME_STR, volume.val());
-    if (data::Bool::ROContext{settings.bootVolume_.enable_}.val()) {
-        data::Integer::ROContext bootVolume{settings.bootVolume_.value_};
+    if (data::context(settings.bootVolume_.enable_).val()) {
+        auto bootVolume{data::context(settings.bootVolume_.value_)};
         outputDefine(outFile, BOOT_VOLUME_STR, bootVolume.val());
     }
 
-    data::Decimal::ROContext clashThresh{settings.clashThreshold_};
+    auto clashThresh{data::context(settings.clashThreshold_)};
     outputDefine(outFile, CLASH_THRESHOLD_STR, clashThresh.val());
 
-    data::Decimal::ROContext pliOff{settings.pliOffTime_};
+    auto pliOff{data::context(settings.pliOffTime_)};
     auto pliOffCalced{static_cast<uint32>(std::ceil(pliOff.val() * 1000))};
     outputDefine(outFile, PLI_OFF_STR, pliOffCalced);
 
-    data::Decimal::ROContext idleOff{settings.idleOffTime_};
+    auto idleOff{data::context(settings.idleOffTime_)};
     auto idleOffCalced{static_cast<uint32>(std::ceil(idleOff.val() * 60))};
     const auto idleOffString{std::to_string(idleOffCalced) + " * 1000"};
     outputDefine(outFile, IDLE_OFF_STR, idleOffString);
 
-    data::Decimal::ROContext motionOff{settings.motionTimeout_};
+    auto motionOff{data::context(settings.motionTimeout_)};
     auto motionOffCalced{static_cast<uint32>(std::ceil(motionOff.val() * 60))};
     const auto motionOffString{std::to_string(motionOffCalced) + " * 1000"};
     outputDefine(outFile, MOTION_TIMEOUT_STR, motionOffString);
 
-    if (data::Bool::ROContext{settings.disableColorChange_}.val()) {
+    if (data::context(settings.disableColorChange_).val()) {
         outputDefine(outFile, DISABLE_COLOR_CHANGE_STR);
     }
 
-    if (data::Bool::ROContext{settings.disableBasicParserStyles_}.val()) {
+    if (data::context(settings.disableBasicParserStyles_).val()) {
         outputDefine(outFile, DISABLE_BASIC_PARSERS_STR);
     }
 
-    if (data::Bool::ROContext{settings.disableDiagnosticCommands_}.val()) {
+    if (data::context(settings.disableDiagnosticCommands_).val()) {
         outputDefine(outFile, DISABLE_DIAG_COMMANDS_STR);
     }
 
     // if (config.settings.enableDeveloperCommands) outputDefine(outFile, ENABLE_DEV_COMMANDS_STR);
 
-    if (data::Bool::ROContext{settings.saveState_}.val()) {
+    if (data::context(settings.saveState_).val()) {
         outputDefine(outFile, SAVE_STATE_STR);
     }
 
-    if (data::Bool::ROContext{settings.enableAllEditOptions_}.val()) {
+    if (data::context(settings.enableAllEditOptions_).val()) {
         outputDefine(outFile, ENABLE_ALL_EDIT_OPTIONS_STR);
     }
 
-    data::Bool::ROContext saveVolume{settings.saveVolume_};
+    auto saveVolume{data::context(settings.saveVolume_)};
     if (saveVolume.val() and saveVolume.enabled()) {
         outputDefine(outFile, SAVE_VOLUME_STR);
     }
 
-    data::Bool::ROContext savePreset{settings.savePreset_};
+    auto savePreset{data::context(settings.savePreset_)};
     if (savePreset.val() and savePreset.enabled()) {
         outputDefine(outFile, SAVE_PRESET_STR);
     }
 
-    data::Bool::ROContext saveColor{settings.saveColorChange_};
+    auto saveColor{data::context(settings.saveColorChange_)};
     if (saveColor.val() and saveColor.enabled()) {
         outputDefine(outFile, SAVE_COLOR_STR);
     }
 
-    if (data::Bool::ROContext{settings.enableOled_}.val()) {
+    if (data::context(settings.enableOled_).val()) {
         outputDefine(outFile, ENABLE_OLED_STR);
     }
 
-    data::Choice::ROContext orient{settings.orientation_};
+    auto orient{data::context(settings.orientation_)};
     if (orient.idx() != eOrient_Normal) {
         const auto& orientStr{ORIENTATION_STRS[orient.idx()]};
         outputDefine(outFile, ORIENTATION_STR, orientStr);
     }
 
-    data::Integer::ROContext orientX{settings.orientationRotation_.x_};
-    data::Integer::ROContext orientY{settings.orientationRotation_.y_};
-    data::Integer::ROContext orientZ{settings.orientationRotation_.z_};
+    auto orientX{data::context(settings.orientationRotation_.x_)};
+    auto orientY{data::context(settings.orientationRotation_.y_)};
+    auto orientZ{data::context(settings.orientationRotation_.z_)};
     if (
             orientX.val() != 0 or
             orientY.val() != 0 or
@@ -619,125 +613,110 @@ void outputTopGeneral(std::ostream& outFile, const Config& config) {
 
     // if (config.settings.speakTouchValues) outputDefine(outFile, SPEAK_TOUCH_VALUES_STR);
 
-    data::Bool::ROContext dynDim{settings.dynamicBladeDimming_};
+    auto dynDim{data::context(settings.dynamicBladeDimming_)};
     if (dynDim.val() and dynDim.enabled()) {
         outputDefine(outFile, DYNAMIC_BLADE_DIMMING_STR);
     }
 
-    data::Bool::ROContext dynLen{settings.dynamicBladeLength_};
+    auto dynLen{data::context(settings.dynamicBladeLength_)};
     if (dynLen.val() and dynLen.enabled()) {
         outputDefine(outFile, DYNAMIC_BLADE_LENGTH_STR);
     }
 
-    data::Bool::ROContext dynClash{settings.dynamicClashThreshold_};
+    auto dynClash{data::context(settings.dynamicClashThreshold_)};
     if (dynClash.val() and dynClash.enabled()) {
         outputDefine(outFile, DYNAMIC_CLASH_THRESHOLD_STR);
     }
 
-    data::Bool::ROContext saveDim{settings.saveBladeDimming_};
+    auto saveDim{data::context(settings.saveBladeDimming_)};
     if (saveDim.val() and saveDim.enabled()) {
         outputDefine(outFile, SAVE_BLADE_DIM_STR);
     }
 
-    data::Bool::ROContext saveClash{settings.saveClashThreshold_};
+    auto saveClash{data::context(settings.saveClashThreshold_)};
     if (saveClash.val() and saveClash.enabled()) {
         outputDefine(outFile, SAVE_CLASH_THRESHOLD_STR);
     }
 
-    if (data::Bool::ROContext{settings.filter_.enable_}.val()) {
-        data::Integer::ROContext cutoff{settings.filter_.cutoff_};
-        data::Integer::ROContext order{settings.filter_.order_};
+    if (data::context(settings.filter_.enable_).val()) {
+        auto cutoff{data::context(settings.filter_.cutoff_)};
+        auto order{data::context(settings.filter_.order_)};
         outputDefine(outFile, FILTER_CUTOFF_STR, cutoff.val());
         outputDefine(outFile, FILTER_ORDER_STR, order.val());
     }
 
-    data::Integer::ROContext clashSuppress{settings.audioClashSuppressionLevel_};
+    auto clashSuppress{data::context(settings.audioClashSuppressionLevel_)};
     if (clashSuppress.val() != 10) {
         outputDefine(outFile, AUDIO_CLASH_SUPPRESSION_STR, clashSuppress.val());
     }
 
-    if (data::Bool::ROContext{settings.dontUseGyroForClash_}.val()) {
+    if (data::context(settings.dontUseGyroForClash_).val()) {
         outputDefine(outFile, DONT_USE_GYRO_FOR_CLASH_STR);
     }
 
-    if (data::Bool::ROContext{settings.femaleTalkie_}.val()) {
+    if (data::context(settings.femaleTalkie_).val()) {
         outputDefine(outFile, FEMALE_TALKIE_STR);
     }
 
-    if (data::Bool::ROContext{settings.disableTalkie_}.val()) {
+    if (data::context(settings.disableTalkie_).val()) {
         outputDefine(outFile, DISABLE_TALKIE_STR);
     }
 
     if (utils::Version{8}.compare(osVersion) > 0) {
         // Default on newer version
-        if (data::Bool::ROContext{settings.killOldPlayers_}.val()) {
+        if (data::context(settings.killOldPlayers_).val()) {
             outputDefine(outFile, KILL_OLD_PLAYERS_STR);
         }
 
-        if (data::Bool::ROContext{settings.noRepeatRandom_}.val()) {
+        if (data::context(settings.noRepeatRandom_).val()) {
             outputDefine(outFile, NO_REPEAT_RANDOM_STR);
         } 
     }
 
-    data::Vector::ROContext defines{settings.defines_};
+    auto defines{data::context(settings.defines_)};
     for (const auto& model : defines.children()) {
-        auto& define{static_cast<settings::Define&>(*model)};
+        auto& define{dynamic_cast<settings::Define&>(*model)};
 
-        data::String::ROContext name{define.name_};
+        auto name{data::context(define.name_)};
         if (name.val().empty()) continue;
 
-        data::String::ROContext value{define.value_};
+        auto value{data::context(define.value_)};
         if (value.val().empty()) outputDefine(outFile, name.val());
         else outputDefine(outFile, name.val(), value.val());
     }
 }
 
 void outputTopProp(std::ostream& outFile, const Config& config) {
-    data::Choice::ROContext propSel{config.propSel().choice_};
-    if (propSel.idx() == -1) return;
+    auto *prop{config.prop()};
 
-    data::Vector::ROContext props{*config.props()};
-    const auto& model{props.children()[propSel.idx()]};
-    auto& prop{static_cast<versions::props::Prop&>(*model)};
+    if (prop == nullptr) return;
+    
+    for (const auto& setting : prop->settings()) {
+        auto output{setting->generateDefineString()};
 
-    const auto onEnum{[&](
-        data::Model& model, uint64, std::string_view
-    ) -> bool {
-        auto output{dynamic_cast<versions::props::detail::SettingBase&>(
-            model
-        ).generateDefineString()};
-
-        if (not output) return false;
+        if (not output) continue;
 
         outFile << priv::DEFINE_STR << *output << '\n';
-        return false;
-    }};
-    prop.enumerate(onEnum);
-
-    outFile << std::flush;
+    }
 }
 
 void outputProp(std::ostream& outFile, const Config& config) {
-    data::Choice::ROContext propSel{config.propSel().choice_};
-    if (propSel.idx() == -1) return;
+    auto *prop{config.prop()};
 
-    data::Vector::ROContext props{*config.props()};
-    const auto& model{props.children()[propSel.idx()]};
-    auto& prop{static_cast<versions::props::Prop&>(*model)};
-
-    if (prop.filename_.empty()) return;
+    if (prop == nullptr) return;
+    if (prop->filename_.empty()) return;
 
     outFile << "#ifdef CONFIG_PROP\n";
-    outFile << "#include \"../props/" << prop.filename_ << "\"\n";
-    outFile << "#endif\n" << std::flush;
+    outFile << "#include \"../props/" << prop->filename_ << "\"\n";
+    outFile << "#endif\n";
 }
 
 void outputPresets(std::ostream& outFile, const Config& config) {
     outFile << "#ifdef CONFIG_PRESETS\n";
 
-    data::Vector::ROContext injections{config.injections_};
+    auto injections{data::context(config.injections_)};
     for (const auto& model : injections.children()) {
-        auto& injection{static_cast<Injection&>(*model)};
+        auto& injection{dynamic_cast<Injection&>(*model)};
 
         outFile << "#include \"" << priv::INJECTION_STR.data() << '/';
         outFile << injection.filename_ << "\"\n";
@@ -747,36 +726,36 @@ void outputPresets(std::ostream& outFile, const Config& config) {
     outputPresetStyles(outFile, config);
     outputPresetBlades(outFile, config);
 
-    outFile << "#endif\n\n" << std::flush;
+    outFile << "#endif\n";
 }
 
 void outputPresetStyles(std::ostream& outFile, const Config& config) {
-    data::Integer::ROContext numBlades{config.numBlades()};
+    auto numBlades{data::context(config.numBlades())};
 
-    data::Vector::ROContext presetArrays{config.presetArrays_};
+    auto presetArrays{data::context(config.presetArrays_)};
     for (const auto& model : presetArrays.children()) {
-        auto& presetArray{static_cast<presets::Array&>(*model)};
+        auto& presetArray{dynamic_cast<presets::Array&>(*model)};
 
-        data::String::ROContext arrayName{presetArray.name_};
+        auto arrayName{data::context(presetArray.name_)};
         outFile << "Preset " << arrayName.val() << "[] = {\n";
 
-        data::Vector::ROContext presets{presetArray.presets_};
+        auto presets{data::context(presetArray.presets_)};
         for (const auto& model : presets.children()) {
-            auto& preset{static_cast<presets::Preset&>(*model)};
+            auto& preset{dynamic_cast<presets::Preset&>(*model)};
 
-            data::String::ROContext fontDir{preset.fontDir_};
-            data::String::ROContext track{preset.track_};
+            auto fontDir{data::context(preset.fontDir_)};
+            auto track{data::context(preset.track_)};
             outFile << "\t{ \"" << fontDir.val() << "\", \""
                 << track.val() << "\",\n";
 
-            data::Vector::ROContext styles{preset.styles_};
+            auto styles{data::context(preset.styles_)};
             for (auto idx{0}; idx < numBlades.val(); ++idx) {
                 const auto& model{styles.children()[idx]};
-                auto& style{static_cast<presets::Style&>(*model)};
+                auto& style{dynamic_cast<presets::Style&>(*model)};
 
                 std::string line;
 
-                data::String::ROContext comment{style.comment_};
+                auto comment{data::context(style.comment_)};
                 auto commentStr{comment.val()};
 
                 utils::trimSurroundingWhitespace(commentStr);
@@ -792,7 +771,7 @@ void outputPresetStyles(std::ostream& outFile, const Config& config) {
                     outFile << "\t\t */\n";
                 }
 
-                data::String::ROContext content{style.content_};
+                auto content{data::context(style.content_)};
                 auto styleStr{content.val()};
 
                 utils::trimWhitespaceOutsideString(styleStr);
@@ -800,7 +779,7 @@ void outputPresetStyles(std::ostream& outFile, const Config& config) {
                 outFile << "\t\t" << styleStr << ",\n";
             }
 
-            data::String::ROContext presetName{preset.name_};
+            auto presetName{data::context(preset.name_)};
             outFile << "\t\t\"" << presetName.val() << "\"\n\t},\n";
         }
         outFile << "};\n";
@@ -812,52 +791,52 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
 
     outFile << "BladeConfig blades[] = {\n";
 
-    data::Vector::ROContext bladeConfigs{config.bladeConfigs_};
+    auto bladeConfigs{data::context(config.bladeConfigs_)};
     for (const auto& model : bladeConfigs.children()) {
-        auto& bladeConfig{static_cast<blades::BladeConfig&>(*model)};
+        auto& bladeConfig{dynamic_cast<blades::BladeConfig&>(*model)};
 
-        if (data::Bool::ROContext{bladeConfig.noBladeId_}.val()) {
+        if (data::context(bladeConfig.noBladeId_).val()) {
             outFile << "\t{ NO_BLADE,\n";
         } else {
-            data::Integer::ROContext id{bladeConfig.id_};
+            auto id{data::context(bladeConfig.id_)};
             outFile << "\t{ " << id.val() << ",\n";
         }
 
-        data::Vector::ROContext blades{bladeConfig.blades_};
+        auto blades{data::context(bladeConfig.blades_)};
         for (const auto& model : blades.children()) {
-            auto& blade{static_cast<blades::Blade&>(*model)};
+            auto& blade{dynamic_cast<blades::Blade&>(*model)};
 
-            data::Choice::ROContext type{blade.type().choice_};
+            auto type{data::context(blade.type())};
 
-            if (type.idx() == blades::Blade::eUnassigned) {
+            if (type.choiceIdx() == blades::Blade::eUnassigned) {
                 outFile << "\t\tSimpleBladePtr<NoLED, NoLED, NoLED, NoLED, -1, -1, -1, -1>(),\n";
                 continue;
             }
 
             std::stringstream bladeStr;
-            data::Integer::ROContext brightness{blade.brightness_};
+            auto brightness{data::context(blade.brightness_)};
             if (brightness.val() != 100) {
                 bladeStr << "DimBlade(" << brightness.val() << ", ";
             }
 
-            if (type.idx() == blades::Blade::eWS281X) {
+            if (type.choiceIdx() == blades::Blade::eWS281X) {
                 auto& ws281x{blade.ws281x()};
 
-                data::Integer::ROContext length{ws281x.length_};
-                data::String::ROContext dataPin{ws281x.dataPin_};
+                auto length{data::context(ws281x.length_)};
+                auto dataPin{data::context(ws281x.dataPin_)};
 
                 bladeStr << "WS281XBladePtr<" << length.val() << ", " << dataPin.val();
                 bladeStr << ", Color8::";
 
-                if (data::Bool::ROContext{ws281x.hasWhite_}.val()) {
-                    data::Choice::ROContext order4{ws281x.colorOrder4_};
+                if (data::context(ws281x.hasWhite_).val()) {
+                    auto order4{data::context(ws281x.colorOrder4_)};
                     bool whiteFirst{
                         order4.idx() >= eOrder4_White_First_Start and
                         order4.idx() <= eOrder4_White_First_End
                     };
 
                     if (whiteFirst) {
-                        if (data::Bool::ROContext{ws281x.useRgbWithWhite_}.val()) {
+                        if (data::context(ws281x.useRgbWithWhite_).val()) {
                             bladeStr << 'W';
                         } else bladeStr << 'w';
 
@@ -866,18 +845,18 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
                     } else {
                         bladeStr << ORDER_STRS[order4.idx()];
 
-                        if (data::Bool::ROContext{ws281x.useRgbWithWhite_}.val()) {
+                        if (data::context(ws281x.useRgbWithWhite_).val()) {
                             bladeStr << 'W';
                         } else bladeStr << 'w';
                     }
                 } else {
-                    data::Choice::ROContext order3{ws281x.colorOrder3_};
+                    auto order3{data::context(ws281x.colorOrder3_)};
                     bladeStr << ORDER_STRS[order3.idx()];
                 }
 
                 bladeStr << ", " << POWER_PINS_STR;
 
-                data::Selection::ROContext powerPins{ws281x.powerPins_};
+                auto powerPins{data::context(ws281x.powerPins_)};
                 for (size idx{0}; idx < powerPins.items().size(); ++idx) {
                     if (not powerPins.selected()[idx]) continue;
 
@@ -886,17 +865,17 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
                 }
 
                 bladeStr << ">>()";
-            } else if (type.idx() == blades::Blade::eSimple) {
+            } else if (type.choiceIdx() == blades::Blade::eSimple) {
                 auto& simple{blade.simple()};
 
                 bladeStr << "SimpleBladePtr<";
 
                 auto outputLEDProfile{[&bladeStr](blades::Simple::LED& led) {
-                    data::Choice::ROContext profile{led.profile_};
+                    auto profile{data::context(led.profile_)};
 
                     bladeStr << LED_STRS[profile.idx()];
 
-                    data::Integer::ROContext resistance{led.resistance_};
+                    auto resistance{data::context(led.resistance_)};
                     if (resistance.enabled()) {
                         bladeStr << '<' << resistance.val() << '>';
                     }
@@ -909,7 +888,7 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
                 outputLEDProfile(simple.led4_);
 
                 auto outputLEDPower{[&bladeStr](blades::Simple::LED& led) {
-                    data::String::ROContext powerPin{led.powerPin_};
+                    auto powerPin{data::context(led.powerPin_)};
                     
                     if (powerPin.enabled()) {
                         bladeStr << powerPin.val();
@@ -928,11 +907,11 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
 
             if (brightness.val() != 100) bladeStr << ')';
 
-            data::Vector::ROContext splits{blade.ws281x().splits_};
+            auto splits{data::context(blade.ws281x().splits_)};
 
             if (
-                    type.idx() == blades::Blade::eSimple or 
-                    (type.idx() == blades::Blade::eWS281X and
+                    type.choiceIdx() == blades::Blade::eSimple or
+                    (type.choiceIdx() == blades::Blade::eWS281X and
                      splits.children().empty())
                ) {
                 outFile << "\t\t" << bladeStr.str() << ",\n";
@@ -940,36 +919,38 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
             }
 
             for (const auto& model : splits.children()) {
-                auto& split{static_cast<blades::WS281X::Split&>(*model)};
+                auto& split{dynamic_cast<blades::WS281X::Split&>(*model)};
 
-                const auto splitType{split.type_.selected()};
+                auto type{data::context(split.type_)};
+
+                using enum blades::WS281X::Split::Type;
 
                 if (
-                        splitType == blades::WS281X::Split::eStandard or
-                        splitType == blades::WS281X::Split::eReverse or
-                        splitType == blades::WS281X::Split::eList
+                        type.selected() == eStandard or
+                        type.selected() == eReverse or
+                        type.selected() == eList
                    ) {
                     outFile << "\t\t";
 
-                    data::Integer::ROContext brightness{split.brightness_};
+                    auto brightness{data::context(split.brightness_)};
                     if (brightness.val() != 100) {
                         outFile << "DimBlade(" << brightness.val() << ", ";
                     }
 
-                    if (splitType == blades::WS281X::Split::eStandard) {
-                        data::Integer::ROContext start{split.start_};
-                        data::Integer::ROContext end{split.end_};
+                    if (type.selected() == eStandard) {
+                        auto start{data::context(split.start_)};
+                        auto end{data::context(split.end_)};
 
                         outFile << "SubBlade(" << start.val() << ", "
                             << end.val() << ", ";
-                    } else if (splitType == blades::WS281X::Split::eReverse) {
-                        data::Integer::ROContext start{split.start_};
-                        data::Integer::ROContext end{split.end_};
+                    } else if (type.selected() == eReverse) {
+                        auto start{data::context(split.start_)};
+                        auto end{data::context(split.end_)};
 
                         outFile << "SubBladeReverse(" << start.val() << ", "
                             << end.val() << ", ";
-                    } else if (splitType == blades::WS281X::Split::eList) {
-                        data::String::ROContext list{split.list_};
+                    } else if (type.selected() == eList) {
+                        auto list{data::context(split.list_)};
 
                         auto listStr{list.val()};
                         if (listStr.back() == ',') listStr.pop_back();
@@ -988,23 +969,23 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
                 }
 
                 if (
-                        splitType == blades::WS281X::Split::eStride or
-                        splitType == blades::WS281X::Split::eZig_Zag
+                        type.selected() == eStride or
+                        type.selected() == eZig_Zag
                    ) {
-                    data::Integer::ROContext segments{split.segments_};
+                    auto segments{data::context(split.segments_)};
 
                     for (auto idx{0}; idx < segments.val(); ++idx) {
                         outFile << "\t\t";
 
-                        data::Integer::ROContext brightness{split.brightness_};
+                        auto brightness{data::context(split.brightness_)};
                         if (brightness.val() != 100) {
                             outFile << "DimBlade(" << brightness.val() << ", ";
                         }
 
-                        data::Integer::ROContext start{split.start_};
-                        data::Integer::ROContext end{split.end_};
+                        auto start{data::context(split.start_)};
+                        auto end{data::context(split.end_)};
 
-                        if (splitType == blades::WS281X::Split::eStride) {
+                        if (type.selected() == eStride) {
                             const auto endVal{
                                 end.val() - (segments.val() - idx - 1)
                             };
@@ -1013,7 +994,7 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
                             outFile << start.val() + idx << ", ";
                             outFile << endVal << ", ";
                             outFile << segments.val() << ", ";
-                        } else if (splitType == blades::WS281X::Split::eZig_Zag) {
+                        } else if (type.selected() == eZig_Zag) {
                             outFile << "SubBladeZZ(";
                             outFile << start.val() << ", " ;
                             outFile << end.val() << ", ";
@@ -1032,15 +1013,15 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
             }
         }
 
-        data::Choice::ROContext arrayChoice{bladeConfig.presetArray_.choice_};
-        data::Vector::ROContext presetArrays{config.presetArrays_};
+        auto arrayChoice{data::context(bladeConfig.presetArray_.choice())};
+        auto presetArrays{data::context(config.presetArrays_)};
         const auto& arrayModel{presetArrays.children()[arrayChoice.idx()]};
-        auto& presetArray{static_cast<presets::Array&>(*arrayModel)};
-        data::String::ROContext presetArrayName{presetArray.name_};
+        auto& presetArray{dynamic_cast<presets::Array&>(*arrayModel)};
+        auto presetArrayName{data::context(presetArray.name_)};
         
         outFile << "\t\tCONFIGARRAY(" << presetArrayName.val() << ")";
 
-        data::String::ROContext bladeConfigName{bladeConfig.name_};
+        auto bladeConfigName{data::context(bladeConfig.name_)};
         if (not bladeConfigName.val().empty()) {
             outFile << ", \"";
             outFile << bladeConfigName.val();
@@ -1049,7 +1030,7 @@ void outputPresetBlades(std::ostream& outFile, const Config& config) {
 
         outFile << "\n\t},\n";
     }
-    outFile << "};\n" << std::flush;
+    outFile << "};\n";
 }
 
 void outputButtons(std::ostream& outFile, const Config& config) {
@@ -1057,15 +1038,15 @@ void outputButtons(std::ostream& outFile, const Config& config) {
 
     outFile << "#ifdef CONFIG_BUTTONS\n";
 
-    data::Vector::ROContext buttons{config.buttons_};
+    auto buttons{data::context(config.buttons_)};
 
     auto idx{1};
     for (const auto& model : buttons.children()) {
-        auto& button{static_cast<buttons::Button&>(*model)};
+        auto& button{dynamic_cast<buttons::Button&>(*model)};
 
-        data::Choice::ROContext type{button.type_};
-        data::Choice::ROContext event{button.event_};
-        data::String::ROContext pin{button.pin_};
+        auto type{data::context(button.type_)};
+        auto event{data::context(button.event_)};
+        auto pin{data::context(button.pin_)};
 
         outFile << BUTTON_TYPE_STRS[type.idx()] << ' ';
         outFile << "Button" << idx << '{';
@@ -1073,17 +1054,17 @@ void outputButtons(std::ostream& outFile, const Config& config) {
         outFile << pin.val() << ", ";
 
         if (type.idx() == eBtn_Type_Touch) {
-            data::Integer::ROContext touch{button.touch_};
+            auto touch{data::context(button.touch_)};
             outFile << touch.val() << ", ";
         }
 
-        data::String::ROContext name{button.name_};
+        auto name{data::context(button.name_)};
         outFile << '"' << name.val() << '"';
         outFile << "};\n";
         ++idx;
     }
 
-    outFile << "#endif\n" << std::flush;
+    outFile << "#endif\n";
 }
 
 } // namespace

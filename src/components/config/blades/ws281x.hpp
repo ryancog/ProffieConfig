@@ -19,50 +19,59 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/bool.hpp"
-#include "data/choice.hpp"
-#include "data/helpers/exclusive.hpp"
-#include "data/number.hpp"
-#include "data/selection.hpp"
-#include "data/string.hpp"
-#include "data/vector.hpp"
+#include "data/hierarchic/model.hpp"
+#include "data/hierarchic/models/number.hpp"
+#include "data/hierarchic/models/string.hpp"
+#include "data/hierarchic/models/choice.hpp"
+#include "data/hierarchic/models/bool.hpp"
+#include "data/hierarchic/models/selection.hpp"
+#include "data/hierarchic/models/vector.hpp"
+#include "data/hierarchic/models/exclusive.hpp"
 #include "utils/types.hpp"
 
 #include "config_export.h"
 
-namespace config::blades {
+namespace config {
+
+struct Config;
+
+namespace blades {
 
 struct Blade;
 
-struct CONFIG_EXPORT WS281X : data::Node {
+struct CONFIG_EXPORT WS281X : data::hier::Model, private data::Receiver {
     struct Split;
 
-    WS281X(data::Node *);
-    ~WS281X() override;
+    WS281X(Blade&);
 
-    bool enumerate(const EnumFunc&) override;
-    Model *find(uint64) override;
+    std::vector<Model *> children() override;
 
-    data::Integer length_;
+    data::hier::Integer length_;
 
-    data::String dataPin_;
+    data::hier::String dataPin_;
 
-    data::Choice colorOrder3_;
-    data::Choice colorOrder4_;
-    data::Bool hasWhite_;
-    data::Bool useRgbWithWhite_;
+    data::hier::Choice colorOrder3_;
+    data::hier::Choice colorOrder4_;
+    data::hier::Bool hasWhite_;
+    data::hier::Bool useRgbWithWhite_;
 
-    data::Selection powerPins_;
+    data::hier::Selection powerPins_;
 
-    data::Vector splits_;
+    data::hier::Vector splits_;
+
+    Blade& parent_;
+
+private:
+    void onLength();
+    void onHasWhiteSet();
+    void onSplitsModify(size);
 };
 
-struct CONFIG_EXPORT WS281X::Split : data::Node {
-    Split(data::Node *);
-    ~Split() override;
+struct CONFIG_EXPORT WS281X::Split : data::hier::Model, 
+                                     private data::Receiver {
+    Split(WS281X&);
 
-    bool enumerate(const EnumFunc&) override;
-    Model *find(uint64) override;
+    std::vector<Model *> children() override;
 
     enum Type {
         eStandard,
@@ -72,11 +81,11 @@ struct CONFIG_EXPORT WS281X::Split : data::Node {
         eList,
         eMax,
     };
-    data::Exclusive type_;
+    data::hier::Exclusive type_;
 
-    data::Integer start_;
-    data::Integer end_;
-    data::Integer length_;
+    data::hier::Integer start_;
+    data::hier::Integer end_;
+    data::hier::Integer length_;
 
     /*
      * Stride: Data goes like:
@@ -117,22 +126,32 @@ struct CONFIG_EXPORT WS281X::Split : data::Node {
      */
 
     // For stide and zigzag
-    data::Integer segments_;
+    data::hier::Integer segments_;
 
     // For list
-    data::String list_;
+    data::hier::String list_;
     [[nodiscard]] std::vector<uint32> listValues();
 
-    data::Integer brightness_;
+    data::hier::Integer brightness_;
 
 private:
-    void buildMap();
+    WS281X& mParent;
 
-    std::unordered_map<
-        uint64,
-        std::pair<std::string_view, data::Model *>
-    > mMap;
+    void onType(uint32);
+    void onStart();
+    void onEnd();
+    void onLength();
+    void onSegments();
+
+    static void lengthFilter(
+        const data::base::Integer::ROContext&, int32&
+    );
+    static void listFilter(
+        const data::base::String::ROContext&, std::string&, size&
+    );
 };
 
-} // namespace config::blades
+} // namespace blades
+
+} // namespace config
 

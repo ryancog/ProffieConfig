@@ -38,8 +38,7 @@
 #include "config/strings.hpp"
 #include "config/settings/define.hpp"
 #include "config/settings/settings.hpp"
-#include "data/number.hpp"
-#include "data/vector.hpp"
+#include "data/context.hpp"
 #include "log/branch.hpp"
 #include "log/context.hpp"
 #include "ui/dialogs/message.hpp"
@@ -213,19 +212,14 @@ void parseTop(std::istream& file, config::Config& config) {
                 utils::trimSurroundingWhitespace(buffer);
                 if (buffer.size() < 2) continue;
 
-                data::Selector::ROContext boardSel{config.boardSel()};
-                if (not boardSel.bound()) continue;
+                if (not config.os()) continue;
 
-                data::Vector::ROContext boards{*boardSel.bound()};
-                for (size idx{0}; idx < boards.children().size(); ++idx) {
-                    auto& bInfo{static_cast<versions::os::Board&>(
-                        *boards.children()[idx]
-                    )};
-                    if (bInfo.include_ != buffer) continue;
+                auto& boards{config.os()->boards_};
+                for (size idx{0}; idx < boards.size(); ++idx) {
+                    const auto& board{boards[idx]};
+                    if (board.include_ != buffer) continue;
 
-                    data::Choice::Context{config.boardSel().choice_}.choose(
-                        static_cast<int32>(idx)
-                    );
+                    config.boardChoice().choose(static_cast<int32>(idx));
                     break;
                 }
 
@@ -242,33 +236,29 @@ void parseTop(std::istream& file, config::Config& config) {
         utils::trimSurroundingWhitespace(value);
 
         if (type == eDefine and not key.empty()) {
-            data::Vector::Context defines{config.settings_.defines_};
-            defines.insert(
-                defines.children().size(),
+            auto defines{data::context(config.settings_.defines_)};
+            defines.append(
                 std::make_unique<settings::Define>(
-                    &config.settings_.defines_,
+                    config,
                     std::move(key),
                     std::move(value)
                 )
             );
         } else if (type == ePC_Opt) {
             if (key == ENABLE_MASS_STORAGE_STR) {
-                data::Bool::Context{config.settings_.massStorage_}.set(true);
+                config.settings_.massStorage_.set(true);
             } else if (key == ENABLE_WEBUSB_STR) {
-                data::Bool::Context{config.settings_.webUsb_}.set(true);
+                config.settings_.webUsb_.set(true);
             } else if (key == OS_VERSION_STR) {
                 utils::Version version{value};
                 if (not version) continue;
 
-                data::Vector::ROContext osVersions{config.osVersions()};
-                for (size idx{0}; idx < osVersions.children().size(); ++idx) {
-                    auto& osVer{static_cast<versions::os::OS&>(
-                        *osVersions.children()[idx]
-                    )};
+                for (size idx{0}; idx < config.osVec().size(); ++idx) {
+                    auto& osVer{*config.osVec()[idx]};
 
                     if (osVer.version_.compare(version) != 0) continue;
 
-                    data::Choice::Context osChoice{config.osVersion_.choice_};
+                    auto osChoice{data::context(config.osChoice())};
                     osChoice.choose(static_cast<int32>(idx));
 
                     break;
@@ -282,8 +272,8 @@ void parseProp(std::istream& file, config::Config& config) {
     using namespace config;
     using namespace config::priv;
 
-    if (not config.props()) return;
-    data::Vector::ROContext props{*config.props()};
+    auto propVec{config.propVec()};
+    if (not propVec) return;
 
     std::string prop{extractSection(file)};
     std::istringstream propStream{prop};
@@ -307,11 +297,11 @@ void parseProp(std::istream& file, config::Config& config) {
         if (buffer.size() < PROP_DIR_STR.length()) continue;
         buffer = buffer.substr(PROP_DIR_STR.length());
 
-        for (auto idx{0}; idx < props.children().size(); ++idx) {
-            auto& prop{static_cast<versions::props::Prop&>(*props.children()[idx])};
+        for (auto idx{0}; idx < propVec->size(); ++idx) {
+            auto& prop{static_cast<versions::props::Prop&>(*(*propVec)[idx])};
 
             if (prop.filename_ == buffer) {
-                data::Choice::Context{config.propSel().choice_}.choose(idx);
+                config.propChoice().choose(idx);
                 return;
             }
         }
@@ -378,16 +368,22 @@ std::optional<std::string> parsePresets(
                     const auto data{presets.substr(start, dataEndPos - start + 1)};
                     std::optional<std::string> ret;
                     if (search == ePreset_Array) {
-                        auto array{std::make_unique<presets::Array>(
-                            &config.presetArrays_
-                        )};
+                        auto array{std::make_unique<presets::Array>(config)};
 
-                        ret = parsePresetArray(data, *array, *logger.binfo("Parsing preset array \"" + element + "\"..."));
+                        ret = parsePresetArray(
+                            data,
+                            *array,
+                            *logger.binfo("Parsing preset array \"" + element + "\"...")
+                        );
 
-                        data::Vector::Context presetArrays{config.presetArrays_};
-                        presetArrays.add(std::move(array));
+                        auto presetArrays{data::context(config.presetArrays_)};
+                        presetArrays.append(std::move(array));
                     } else if (search == eBlade_Arrays) {
-                        ret = parseBladeArrays(data, config, *logger.binfo("Parsing blade arrays..."));
+                        ret = parseBladeArrays(
+                            data,
+                            config,
+                            *logger.binfo("Parsing blade arrays...")
+                        );
                     }
                     if (ret) return ret;
                     search = eNone;
@@ -436,27 +432,23 @@ std::optional<std::string> parsePresetArray(
         utils::trimSurroundingWhitespace(styleBuffer);
         utils::trimSurroundingWhitespace(commentBuffer);
 
-        data::Vector::Context presets{array.presets_};
-        data::Vector::Context styles{
-            static_cast<presets::Preset&>(*presets.children().back()).styles_
-        };
-
-        auto styleModel{std::make_unique<presets::Style>(
-            &styles.model<data::Vector>()
+        auto presets{data::context(array.presets_)};
+        auto& preset{dynamic_cast<presets::Preset&>(
+            *presets.children().back()
         )};
+        auto styles{data::context(preset.styles_)};
+        auto style{std::make_unique<presets::Style>(array.root<Config>())};
 
-        data::String::Context comment{styleModel->comment_};
-        comment.change(std::move(commentBuffer));
-        data::String::Context style{styleModel->content_};
-        style.change(std::move(styleBuffer));
+        style->comment_.change(std::move(commentBuffer));
+        style->content_.change(std::move(styleBuffer));
 
-        styles.add(std::move(styleModel));
+        styles.append(std::move(style));
 
         commentBuffer.clear();
         styleBuffer.clear();
     }};
 
-    data::Vector::Context presets{array.presets_};
+    auto presets{data::context(array.presets_)};
 
     while (dataStream.good()) {
         const auto newComments{utils::extractComment(dataStream)};
@@ -472,8 +464,8 @@ std::optional<std::string> parsePresetArray(
         if (reading == eNone) {
             if (chr == '{') {
                 reading = ePost_Brace;
-                presets.add(std::make_unique<presets::Preset>(
-                    &presets.model<data::Vector>()
+                presets.append(std::make_unique<presets::Preset>(
+                    array.root<Config>()
                 ));
             }
         } else if (reading == ePost_Brace or reading == ePost_Dir) {
@@ -490,11 +482,11 @@ std::optional<std::string> parsePresetArray(
                 continue;
             }
 
-            auto& preset{static_cast<presets::Preset&>(
+            auto& preset{dynamic_cast<presets::Preset&>(
                 *presets.children().back()
             )};
 
-            data::String::Context fontDir{preset.fontDir_};
+            auto fontDir{data::context(preset.fontDir_)};
             fontDir.append(static_cast<char>(chr));
         } else if (reading == eTrack) {
             if (chr == '"') {
@@ -502,11 +494,11 @@ std::optional<std::string> parsePresetArray(
                 continue;
             }
 
-            auto& preset{static_cast<presets::Preset&>(
+            auto& preset{dynamic_cast<presets::Preset&>(
                 *presets.children().back()
             )};
 
-            data::String::Context track{preset.track_};
+            auto track{data::context(preset.track_)};
             track.append(static_cast<char>(chr));
         } else if (reading == ePost_Track) {
             if (chr == ',') {
@@ -523,11 +515,11 @@ std::optional<std::string> parsePresetArray(
 
             if (depth.empty()) {
                 if (chr == '"') {
-                    auto& preset{static_cast<presets::Preset&>(
+                    auto& preset{dynamic_cast<presets::Preset&>(
                         *presets.children().back()
                     )};
 
-                    data::String::Context{preset.name_}.clear();
+                    preset.name_.clear();
 
                     reading = eName;
                     tmp.clear();
@@ -554,11 +546,11 @@ std::optional<std::string> parsePresetArray(
                 if (not depth.empty()) logger.warn("Hit preset end before finishing style. This will mean errors to correct later!");
                 depth.clear();
 
-                auto& preset{static_cast<presets::Preset&>(
+                auto& preset{dynamic_cast<presets::Preset&>(
                     *presets.children().back()
                 )};
-                data::String::Context name{preset.name_};
-                name.change(
+
+                preset.name_.change(
                     "preset" + std::to_string(presets.children().size())
                 );
 
@@ -642,17 +634,16 @@ std::optional<std::string> parsePresetArray(
             if (chr == '"' or chr == '}') {
                 reading = eNone;
 
-                auto& preset{static_cast<presets::Preset&>(
+                auto& preset{dynamic_cast<presets::Preset&>(
                     *presets.children().back()
                 )};
-                data::String::Context name{preset.name_};
 
                 if (tmp.empty()) {
-                    name.change(
+                    preset.name_.change(
                         "preset" + std::to_string(presets.children().size())
                     );
                 } else {
-                    name.change(std::move(tmp));
+                    preset.name_.change(std::move(tmp));
                 }
 
                 continue;
@@ -688,7 +679,7 @@ std::optional<std::string> parseBladeArrays(
     std::string buffer;
     std::vector<char> depth;
 
-    data::Vector::Context bladeConfigs{config.bladeConfigs_};
+    auto bladeConfigs{data::context(config.bladeConfigs_)};
 
     while (dataStream.good()) {
         if (utils::skipComment(dataStream)) continue;
@@ -696,7 +687,9 @@ std::optional<std::string> parseBladeArrays(
 
         if (reading == eNone) {
             if (chr == '{') {
-                bladeConfigs.addCreate<blades::BladeConfig>();
+                bladeConfigs.append(
+                    std::make_unique<blades::BladeConfig>(config)
+                );
                 reading = eID;
                 buffer.clear();
             }
@@ -710,11 +703,10 @@ std::optional<std::string> parseBladeArrays(
                 };
 
                 if (idVal) {
-                    auto& lastArray{static_cast<blades::BladeConfig&>(
+                    auto& lastArray{dynamic_cast<blades::BladeConfig&>(
                         *bladeConfigs.children().back()
                     )};
-                    data::Integer::Context id{lastArray.id_};
-                    id.set(static_cast<int32>(*idVal));
+                    lastArray.id_.set(static_cast<int32>(*idVal));
                 } else logger.warn("Invalid blade ID for array " + std::to_string(bladeConfigs.children().size()));
 
                 reading = eBlade_Entry;
@@ -728,12 +720,12 @@ std::optional<std::string> parseBladeArrays(
 
             if (depth.empty()) {
                 if (chr == ',') {
-                    auto& array{static_cast<blades::BladeConfig&>(
+                    auto& array{dynamic_cast<blades::BladeConfig&>(
                         *bladeConfigs.children().back()
                     )};
 
-                    data::Vector::Context blades{array.blades_};
-                    auto& blade{blades.addCreate<blades::Blade>()};
+                    auto blades{data::context(array.blades_)};
+                    auto& blade{blades.append<blades::Blade>(config)};
 
                     auto res{parseBlade(
                         buffer,
@@ -742,12 +734,15 @@ std::optional<std::string> parseBladeArrays(
                         *logger.binfo("Parsing blade...")
                     )};
 
-                    data::Choice::Context typeChoice{blade.type().choice_};
-                    if (not typeChoice) {
+                    auto type{data::context(blade.type())};
+                    if (type.choiceIdx() == -1) {
                         logger.debug("Removing blade parser deemed unnecessary.");
                         blades.remove(blades.children().size() - 1);
                     }
+
+                    // TODO: Shouldn't this be right after parseBlade()...?
                     if (res) return res;
+
                     buffer.clear();
                     continue;
                 }
@@ -780,22 +775,22 @@ std::optional<std::string> parseBladeArrays(
             if (chr == ')') {
                 utils::trimWhitespace(buffer);
 
-                data::Vector::Context presetArrays{config.presetArrays_};
+                auto presetArrays{data::context(config.presetArrays_)};
                 int32 idx{0};
                 for (; idx < presetArrays.children().size(); ++idx) {
                     const auto& model{presetArrays.children()[idx]};
-                    auto& presetArray{static_cast<presets::Array&>(*model)};
+                    auto& presetArray{dynamic_cast<presets::Array&>(*model)};
 
-                    data::String::Context name{presetArray.name_};
+                    auto name{data::context(presetArray.name_)};
                     if (name.val() == buffer) break;
                 }
                 if (idx == presetArrays.children().size()) idx = -1;
 
-                auto& array{static_cast<blades::BladeConfig&>(
+                auto& array{dynamic_cast<blades::BladeConfig&>(
                     *bladeConfigs.children().back()
                 )};
 
-                data::Choice::Context{array.presetArray_.choice_}.choose(idx);
+                array.presetArray_.choice().choose(idx);
 
                 reading = ePost_Config_Array;
                 buffer.clear();
@@ -807,11 +802,11 @@ std::optional<std::string> parseBladeArrays(
             if (chr == '"') reading = eName;
         } else if (reading == eName) {
             if (chr == '"' or chr == '}') {
-                auto& array{static_cast<blades::BladeConfig&>(
+                auto& array{dynamic_cast<blades::BladeConfig&>(
                     *bladeConfigs.children().back()
                 )};
 
-                data::String::Context{array.name_}.change(std::move(buffer));
+                array.name_.change(std::move(buffer));
 
                 reading = eNone;
                 continue;
@@ -1010,11 +1005,12 @@ std::optional<std::string> parseBlade(
     if (err) return err;
 
     const auto addSplit{[&splitData, &firstBrightness](Blade& blade) {
-        data::Vector::Context splits{blade.ws281x().splits_};
+        auto& ws281x{blade.ws281x()};
 
-        auto& split{splits.addCreate<WS281X::Split>()};
+        auto splits{data::context(ws281x.splits_)};
+        auto& split{splits.append<WS281X::Split>(ws281x)};
 
-        data::Integer::Context{split.brightness_}.set(firstBrightness);
+        split.brightness_.set(firstBrightness);
         split.type_.select(splitData.type_);
 
         using enum WS281X::Split::Type;
@@ -1024,20 +1020,18 @@ std::optional<std::string> parseBlade(
                 splitData.type_ == eReverse or
                 splitData.type_ == eZig_Zag
            ) {
-            data::Integer::Context{split.start_}.set(splitData.start_);
-            data::Integer::Context{split.end_}.set(splitData.end_);
+            split.start_.set(splitData.start_);
+            split.end_.set(splitData.end_);
         }
         if (splitData.type_ == eStride) {
-            data::Integer::Context{split.start_}.set(splitData.start_);
-            data::Integer::Context end{split.end_};
-            end.set(splitData.end_ + splitData.segments_ - 1);
+            split.start_.set(splitData.start_);
+            split.end_.set(splitData.end_ + splitData.segments_ - 1);
         }
         if (splitData.type_ == eStride or splitData.type_ == eZig_Zag) {
-            data::Integer::Context{split.segments_}.set(splitData.segments_);
+            split.segments_.set(splitData.segments_);
         }
         if (splitData.type_ == eList) {
-            data::String::Context list{split.list_};
-            list.change(std::move(splitData.list_));
+            split.list_.change(std::move(splitData.list_));
         }
     }};
     
@@ -1055,8 +1049,7 @@ std::optional<std::string> parseBlade(
             return errorMessage(logger, wxTRANSLATE("Failed to parse WS281X length"));
         }
 
-        data::Integer::Context length{blade.ws281x().length_};
-        length.set(static_cast<int32>(*lengthVal));
+        blade.ws281x().length_.set(static_cast<int32>(*lengthVal));
 
         return std::nullopt;
     }};
@@ -1070,8 +1063,7 @@ std::optional<std::string> parseBlade(
         auto dataPinStr{data.substr(0, dataPinCommaPos)};
         data.erase(0, dataPinCommaPos + 1);
 
-        data::String::Context dataPin{blade.ws281x().dataPin_};
-        dataPin.change(std::move(dataPinStr));
+        blade.ws281x().dataPin_.change(std::move(dataPinStr));
 
         return std::nullopt;
     }};
@@ -1085,8 +1077,7 @@ std::optional<std::string> parseBlade(
         std::string buffer;
         for (auto idx{0}; idx < data.length(); ++idx) {
             if (data[idx] == ',' or data[idx] == '>') {
-                data::Selection::Context powerPins{blade.ws281x().powerPins_};
-                powerPins.select(std::move(buffer));
+                blade.ws281x().powerPins_.select(std::move(buffer));
                 buffer.clear();
 
                 if (data[idx] == '>') break;
@@ -1107,8 +1098,7 @@ std::optional<std::string> parseBlade(
     static constexpr std::string_view NULLPTR_STR{"nullptr"};
     if (data.starts_with(WS281X_STR)) {
         data.erase(0, WS281X_STR.length());
-        data::Choice::Context type{blade.type().choice_};
-        type.choose(Blade::eWS281X);
+        blade.type().choice().choose(Blade::eWS281X);
 
         err = parseWS281XLength();
         if (err) return err;
@@ -1148,9 +1138,9 @@ std::optional<std::string> parseBlade(
                 return errorMessage(logger, INVALID_COLOR_MSG, colorOrderStr);
             }
 
-            data::Bool::Context{blade.ws281x().hasWhite_}.set(false);
-            data::Choice::Context order3{blade.ws281x().colorOrder3_};
-            order3.choose(order);
+            auto& ws281x{blade.ws281x()};
+            ws281x.hasWhite_.set(false);
+            ws281x.colorOrder3_.choose(order);
         } else if (colorOrderStr.length() == 4) {
             bool offset{false};
             if (colorOrderStr[0] == 'w' or colorOrderStr[0] == 'W') {
@@ -1170,9 +1160,9 @@ std::optional<std::string> parseBlade(
                 (offset ? eOrder4_White_First_Start : 0)
             };
 
-            data::Bool::Context{blade.ws281x().hasWhite_}.set(true);
-            data::Choice::Context order4{blade.ws281x().colorOrder4_};
-            order4.choose(order4Val);
+            auto& ws281x{blade.ws281x()};
+            ws281x.hasWhite_.set(true);
+            ws281x.colorOrder4_.choose(order4Val);
         } else {
             return errorMessage(logger, INVALID_COLOR_MSG, colorOrderStr);
         }
@@ -1181,8 +1171,7 @@ std::optional<std::string> parseBlade(
         if (err) return err;
     } else if (data.starts_with(WS2811_STR)) {
         data.erase(0, WS2811_STR.length());
-        data::Choice::Context type{blade.type().choice_};
-        type.choose(Blade::eWS281X);
+        blade.type().choice().choose(Blade::eWS281X);
 
         err = parseWS281XLength();
         if (err) return err;
@@ -1199,8 +1188,7 @@ std::optional<std::string> parseBlade(
         // I don't support the other options for WS281X and no one uses them.
         for (size idx{0}; idx < eOrder3_Max; ++idx) {
             if (configStr.find(ORDER_STRS[idx]) != std::string::npos) {
-                data::Choice::Context order3{blade.ws281x().colorOrder3_};
-                order3.choose(static_cast<int32>(idx));
+                blade.ws281x().colorOrder3_.choose(static_cast<int32>(idx));
                 break;
             }
         }
@@ -1216,10 +1204,9 @@ std::optional<std::string> parseBlade(
         }
 
         data.erase(0, SIMPLE_STR.length());
-        data::Choice::Context type{blade.type().choice_};
-        type.choose(Blade::eSimple);
+        blade.type().choice().choose(Blade::eSimple);
 
-        data::Integer::Context{blade.brightness_}.set(firstBrightness);
+        blade.brightness_.set(firstBrightness);
         auto& simple{blade.simple()};
 
         const auto ledFromIdx{[&](size idx) -> Simple::LED& {
@@ -1250,8 +1237,7 @@ std::optional<std::string> parseBlade(
                 const auto& testLedStr{LED_STRS[profileIdx]};
                 if (not ledStr.starts_with(testLedStr)) continue;
 
-                data::Choice::Context profile{led.profile_};
-                profile.choose(static_cast<int32>(profileIdx));
+                led.profile_.choose(static_cast<int32>(profileIdx));
 
                 if (
                         profileIdx >= eLED_Use_Resistance_Start and
@@ -1278,8 +1264,7 @@ std::optional<std::string> parseBlade(
                         return errorMessage(logger, wxTRANSLATE("Simple blade has invalid resistance: %s"), ledStr);
                     }
 
-                    data::Integer::Context resistance{led.resistance_};
-                    resistance.set(static_cast<int32>(*resistanceVal));
+                    led.resistance_.set(static_cast<int32>(*resistanceVal));
                 } else {
                     // If it doesn't use resistance, should match length exactly
                     if (ledStr.length() != testLedStr.length()) {
@@ -1318,8 +1303,7 @@ std::optional<std::string> parseBlade(
             data.erase(0, pinCommaPos + 1);
 
             if (pinStr != "-1") {
-                data::String::Context powerPin{led.powerPin_};
-                powerPin.change(std::move(pinStr));
+                led.powerPin_.change(std::move(pinStr));
             }
 
             return std::nullopt;
@@ -1334,10 +1318,10 @@ std::optional<std::string> parseBlade(
         err = parsePin(3);
         if (err) return err;
         
-        data::Choice::Context led1Profile{simple.led1_.profile_};
-        data::Choice::Context led2Profile{simple.led2_.profile_};
-        data::Choice::Context led3Profile{simple.led3_.profile_};
-        data::Choice::Context led4Profile{simple.led4_.profile_};
+        auto led1Profile{data::context(simple.led1_.profile_)};
+        auto led2Profile{data::context(simple.led2_.profile_)};
+        auto led3Profile{data::context(simple.led3_.profile_)};
+        auto led4Profile{data::context(simple.led4_.profile_)};
 
         if (
                 led1Profile.idx() == eLED_None and
@@ -1345,50 +1329,51 @@ std::optional<std::string> parseBlade(
                 led3Profile.idx() == eLED_None and
                 led4Profile.idx() == eLED_None
            ) {
-            data::Choice::Context type{blade.type().choice_};
-            type.choose(Blade::eUnassigned);
+            blade.type().choice().choose(Blade::eUnassigned);
         }
     } else if (data.starts_with(NULL_STR) or data.starts_with(NULLPTR_STR)) {
-        data::Choice::Context{blade.type().choice_}.unchoose();
+        blade.type().choice().unchoose();
 
-        data::Vector::Context blades{array.blades_};
+        auto blades{data::context(array.blades_)};
 
         if (blades.children().size() == 1) {
             return errorMessage(logger, wxTRANSLATE("SubBlade with no blade found first in array"));
         }
 
-        auto& blade{static_cast<Blade&>(
+        auto& blade{dynamic_cast<Blade&>(
             *blades.children()[blades.children().size() - 2]
         )};
 
-        data::Choice::Context type{blade.type().choice_};
+        auto type{data::context(blade.type().choice())};
         if (type.idx() != Blade::eWS281X) {
             return errorMessage(logger, wxTRANSLATE("Tried to add SubBlade to a non-WS281X blade"));
         }
 
-        data::Vector::Context splits{blade.ws281x().splits_};
+        auto splits{data::context(blade.ws281x().splits_)};
 
         if (splits.children().empty()) {
             return errorMessage(logger, wxTRANSLATE("Tried to add SubBlade to a non-split WS281X blade"));
         }
 
-        auto& lastSplit{static_cast<WS281X::Split&>(
+        auto& lastSplit{dynamic_cast<WS281X::Split&>(
             *splits.children().back()
         )};
 
-        if (lastSplit.type_.selected() != splitData.type_) addSplit(blade);
-        else { // this split is same type as last split
+        auto lastSplitType{data::context(lastSplit.type_)};
+        if (lastSplitType.selected() != splitData.type_) {
+            addSplit(blade);
+        } else { // this split is same type as last split
             if (
-                    lastSplit.type_.selected() == WS281X::Split::eStandard or
-                    lastSplit.type_.selected() == WS281X::Split::eReverse or
-                    lastSplit.type_.selected() == WS281X::Split::eList
+                    lastSplitType.selected() == WS281X::Split::eStandard or
+                    lastSplitType.selected() == WS281X::Split::eReverse or
+                    lastSplitType.selected() == WS281X::Split::eList
                ) {
                 // These types aren't segmented, just add.
                 addSplit(blade);
-            } else if (lastSplit.type_.selected() == WS281X::Split::eStride) {
-                data::Integer::Context segments{lastSplit.segments_};
-                data::Integer::Context start{lastSplit.start_};
-                data::Integer::Context end{lastSplit.end_};
+            } else if (lastSplitType.selected() == WS281X::Split::eStride) {
+                auto segments{data::context(lastSplit.segments_)};
+                auto start{data::context(lastSplit.start_)};
+                auto end{data::context(lastSplit.end_)};
 
                 if (
                         // Just make sure this split is same segments
@@ -1400,10 +1385,10 @@ std::optional<std::string> parseBlade(
                     addSplit(blade);
                 }
                 // Last split is same as this. Nothing to do.
-            } else if (lastSplit.type_.selected() == WS281X::Split::eZig_Zag) {
-                data::Integer::Context segments{lastSplit.segments_};
-                data::Integer::Context start{lastSplit.start_};
-                data::Integer::Context end{lastSplit.end_};
+            } else if (lastSplitType.selected() == WS281X::Split::eZig_Zag) {
+                auto segments{data::context(lastSplit.segments_)};
+                auto start{data::context(lastSplit.start_)};
+                auto end{data::context(lastSplit.end_)};
 
                 if (
                         segments.val() != splitData.segments_ or
@@ -1419,15 +1404,13 @@ std::optional<std::string> parseBlade(
         return errorMessage(logger, wxTRANSLATE("Unknown/malformed blade"));
     }
 
-    data::Choice::Context type{blade.type().choice_};
+    auto type{data::context(blade.type().choice())};
 
     if (type.idx() == Blade::eWS281X) {
-        data::Integer::Context brightness{blade.brightness_};
-
         if (splitData.type_ == WS281X::Split::eMax) {
-            brightness.set(firstBrightness);
+            blade.brightness_.set(firstBrightness);
         } else {
-            brightness.set(secondBrightness);
+            blade.brightness_.set(secondBrightness);
             addSplit(blade);
         }
     }
@@ -1491,35 +1474,35 @@ std::optional<std::string> parseStyles(
             if (chr == ';') {
                 utils::trimWhitespaceOutsideString(bladestyle);
 
-                data::Vector::Context presetArrays{config.presetArrays_};
+                auto presetArrays{data::context(config.presetArrays_)};
 
                 // How many nested for loops would you like? Cause here are all of 'em
                 for (const auto& model : presetArrays.children()) {
-                    auto& array{static_cast<presets::Array&>(*model)};
-
-                    data::Vector::Context presets{array.presets_};
+                    auto& array{dynamic_cast<presets::Array&>(*model)};
+                    auto presets{data::context(array.presets_)};
 
                     for (const auto& model : presets.children()) {
-                        auto& preset{static_cast<presets::Preset&>(*model)};
-
-                        data::Vector::Context styles{preset.styles_};
+                        auto& preset{dynamic_cast<presets::Preset&>(*model)};
+                        auto styles{data::context(preset.styles_)};
 
                         for (const auto& model : styles.children()) {
-                            auto& styleModel{static_cast<presets::Style&>(*model)};
+                            auto& style{dynamic_cast<presets::Style&>(*model)};
 
-                            data::String::Context style{styleModel.content_};
-                            data::String::Context comment{styleModel.comment_};
+                            auto content{data::context(style.content_)};
+                            auto comment{data::context(style.comment_)};
 
                             for (;;) { // Just because I can lol, another for loop
-                                const auto usingStylePos{style.val().find(name)};
+                                const auto usingStylePos{content.val().find(name)};
                                 if (usingStylePos == std::string::npos) break;
 
-                                auto tmp{style.val()};
+                                auto tmp{content.val()};
                                 tmp.erase(usingStylePos, name.length());
                                 tmp.insert(usingStylePos, bladestyle);
-                                style.change(std::move(tmp));
+                                content.change(std::move(tmp));
 
-                                if (not comment.val().empty()) comment.append('\n');
+                                if (not comment.val().empty())
+                                    comment.append('\n');
+
                                 comment.append(std::string{comments});
                             }
                         }
@@ -1560,7 +1543,7 @@ std::optional<std::string> parseButtons(
         ePost_Inner,
     } reading{eNone};
 
-    std::string type;
+    std::string typeStr;
     std::string inner;
     char openChar{};
 
@@ -1576,7 +1559,7 @@ std::optional<std::string> parseButtons(
         if (reading == eNone) {
             if (std::isgraph(chr)) {
                 reading = eType;
-                type = static_cast<char>(chr);
+                typeStr = static_cast<char>(chr);
                 continue;
             }
         } else if (reading == eType) {
@@ -1585,7 +1568,7 @@ std::optional<std::string> parseButtons(
                 continue;
             }
 
-            type += static_cast<char>(chr);
+            typeStr += static_cast<char>(chr);
         } else if (reading == ePost_Type) {
             if (std::isgraph(chr)) {
                 reading = eCpp_Name;
@@ -1626,18 +1609,18 @@ std::optional<std::string> parseButtons(
 
             reading = eNone;
 
-            data::Vector::Context buttons{config.buttons_};
-            auto& button{buttons.addCreate<buttons::Button>()};
+            auto buttons{data::context(config.buttons_)};
+            auto& button{buttons.append<buttons::Button>(config)};
 
             int32 typeIdx{0};
             for (; typeIdx < BUTTON_TYPE_STRS.size(); ++typeIdx) {
-                if (BUTTON_TYPE_STRS[typeIdx] == type) break;
+                if (BUTTON_TYPE_STRS[typeIdx] == typeStr) break;
             }
             if (typeIdx == BUTTON_TYPE_STRS.size()) {
-                return errorMessage(logger, wxTRANSLATE("Unknown button type: %s"), type);
+                return errorMessage(logger, wxTRANSLATE("Unknown button type: %s"), typeStr);
             } 
-            data::Choice::Context type{button.type_};
-            type.choose(typeIdx);
+
+            button.type_.choose(typeIdx);
 
             auto eventCommaPos{inner.find(',')};
             if (eventCommaPos == std::string::npos) {
@@ -1661,13 +1644,11 @@ std::optional<std::string> parseButtons(
                 }
             }
 
-            data::Choice::Context event{button.event_};
-
             if (evtIdx == BUTTON_EVENT_STRS.size()) {
                 logger.warn("Unknown button event: " + eventStr);
-                event.choose(0);
+                button.event_.choose(0);
             } else {
-                event.choose(evtIdx);
+                button.event_.choose(evtIdx);
             }
 
             auto pinCommaPos{inner.find(',')};
@@ -1677,9 +1658,9 @@ std::optional<std::string> parseButtons(
 
             auto pinStr{inner.substr(0, pinCommaPos)};
             inner.erase(0, pinCommaPos + 1);
-            data::String::Context{button.pin_}.change(std::move(pinStr));
+            button.pin_.change(std::move(pinStr));
 
-            if (type.idx() == eBtn_Type_Touch) {
+            if (typeIdx == eBtn_Type_Touch) {
                 auto threshCommaPos{inner.find(',')};
                 if (threshCommaPos == std::string::npos) {
                     return errorMessage(logger, wxTRANSLATE("Missing comma for touch button threshold."));
@@ -1692,18 +1673,15 @@ std::optional<std::string> parseButtons(
                 if (not thresh) {
                     logger.warn("Button threshold value \"" + threshStr + "\" could not be parsed.");
                 } else {
-                    data::Integer::Context touch{button.touch_};
-                    touch.set(static_cast<int32>(*thresh));
+                    button.touch_.set(static_cast<int32>(*thresh));
                 }
             }
 
-            data::String::Context name{button.name_};
-
             if (inner.front() != '"' or inner.back() != '"') {
                 logger.warn("Button name doesn't seem to be surrounded by quotes, is it malformatted?");
-                name.change(std::move(inner));
+                button.name_.change(std::move(inner));
             } else {
-                name.change(inner.substr(1, inner.length() - 2));
+                button.name_.change(inner.substr(1, inner.length() - 2));
             }
 
             inner.erase();
@@ -1801,8 +1779,9 @@ void tryAddInjection(const std::string& buffer, config::Config& config) {
         }
     }
 
-    data::Vector::Context injections{config.injections_};
-    injections.addCreate<Injection>(std::move(injectionFile));
+    config.injections_.append(
+        std::make_unique<Injection>(config, std::move(injectionFile))
+    );
 
     logger.debug("Done");
 }

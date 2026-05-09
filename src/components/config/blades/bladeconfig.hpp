@@ -21,10 +21,12 @@
 
 #include "config/blades/simple.hpp"
 #include "config/blades/ws281x.hpp"
-#include "data/bool.hpp"
-#include "data/number.hpp"
-#include "data/selector.hpp"
-#include "data/string.hpp"
+#include "data/hierarchic/model.hpp"
+#include "data/hierarchic/models/number.hpp"
+#include "data/hierarchic/models/selector.hpp"
+#include "data/hierarchic/models/string.hpp"
+#include "data/primitive/models/bool.hpp"
+#include "data/primitive/models/number.hpp"
 #include "utils/types.hpp"
 
 #include "config_export.h"
@@ -37,14 +39,12 @@ namespace blades {
 
 constexpr int32 NO_BLADE{1000000000};
 
-struct CONFIG_EXPORT BladeConfig : data::Node {
-    BladeConfig(data::Node *);
-    ~BladeConfig() override;
+struct CONFIG_EXPORT BladeConfig : data::hier::Model, private data::Receiver {
+    BladeConfig(Config&);
 
-    bool enumerate(const EnumFunc&) override;
-    Model *find(uint64) override;
+    std::vector<Model *> children() override;
 
-    data::Vector blades_;
+    data::hier::Vector blades_;
 
     enum Issues {
         eIssue_None = 0,
@@ -59,28 +59,29 @@ struct CONFIG_EXPORT BladeConfig : data::Node {
         eIssue_Warnings         = eIssue_Duplicate_ID,
     };
 
-    [[nodiscard]] const data::Integer& issues() const;
+    [[nodiscard]] const data::base::Integer& issues() const;
 
-    data::String name_;
-    data::Selector presetArray_;
-    data::Integer id_;
-    data::Bool noBladeId_;
+    data::hier::String name_;
+    data::hier::Selector presetArray_;
+    data::hier::Integer id_;
+    data::prim::Bool noBladeId_;
 
 private:
     void recomputeIssues();
 
-    data::Integer mIssues;
+    void onNameChange();
+    void onID();
+    void onNoBladeIDSet();
+    void onPresetArrayChoice();
+    void onBladesModify(size);
+
+    data::prim::Integer mIssues;
 };
 
-struct CONFIG_EXPORT Blade : data::Node {
-    Blade(data::Node *);
-    ~Blade() override;
+struct CONFIG_EXPORT Blade : data::hier::Model {
+    Blade(Config&);
 
-    bool enumerate(const EnumFunc&) override;
-    Model *find(uint64) override;
-
-    [[nodiscard]] WS281X& ws281x() LIFETIMEBOUND;
-    [[nodiscard]] Simple& simple() LIFETIMEBOUND;
+    std::vector<Model *> children() override;
 
     enum Type {
         // NOLINTNEXTLINE(readability-identifier-naming)
@@ -89,14 +90,17 @@ struct CONFIG_EXPORT Blade : data::Node {
         eUnassigned,
     };
 
-    const data::Selector& type();
-    const data::Vector& types();
+    const data::base::Selector& type();
+    const data::base::Vector& types();
 
-    data::Integer brightness_;
+    [[nodiscard]] WS281X& ws281x() LIFETIMEBOUND;
+    [[nodiscard]] Simple& simple() LIFETIMEBOUND;
+
+    data::hier::Integer brightness_;
 
 private:
-    data::Selector mType;
-    data::Vector mTypes;
+    data::hier::Selector mType;
+    data::hier::Vector mTypes;
 };
 
 } // namespace blades

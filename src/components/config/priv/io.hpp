@@ -37,7 +37,7 @@ constexpr std::string_view INCLUDE_STR{"#include "};
 constexpr std::string_view POWER_PINS_STR{"PowerPINS<"};
 constexpr cstring MAX_LEDS_STR{"const unsigned int maxLedsPerStrip = "};
 
-template<typename T>
+template <typename T>
     requires (
         std::is_same_v<std::decay_t<T>, std::string> or
         std::is_same_v<std::decay_t<T>, wxString> or
@@ -47,12 +47,12 @@ wxString maybeTranslate(const T& str) {
     return wxGetTranslation(str);
 }
 
-template<typename T>
+template <typename T>
 T maybeTranslate(T&& val) {
     return std::forward<T>(val);
 }
 
-template<typename ...ARGS>
+template <typename ...ARGS>
 std::string errorMessage(
     logging::Logger& logger, const wxString& msg, ARGS&&... args
 ) {

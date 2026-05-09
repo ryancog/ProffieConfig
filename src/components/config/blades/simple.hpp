@@ -19,40 +19,49 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/choice.hpp"
-#include "data/hierarchy/node.hpp"
-#include "data/number.hpp"
-#include "data/string.hpp"
+#include "data/hierarchic/model.hpp"
+#include "data/hierarchic/models/choice.hpp"
+#include "data/hierarchic/models/number.hpp"
+#include "data/hierarchic/models/string.hpp"
+#include "data/receiver.hpp"
 
 #include "config_export.h"
 
-namespace config::blades {
+namespace config {
+
+struct Config;
+
+namespace blades {
 
 struct Blade;
 
-struct CONFIG_EXPORT Simple : data::Node {
-    Simple(data::Node *);
-    ~Simple() override;
+struct CONFIG_EXPORT Simple : data::hier::Model {
+    Simple(Blade&);
 
-    bool enumerate(const EnumFunc&) override;
-    Model *find(uint64) override;
+    std::vector<Model *> children() override;
 
-    struct LED : data::Node {
+    struct LED : data::hier::Model, private data::Receiver {
         LED(Simple&);
 
-        bool enumerate(const EnumFunc&) override;
-        Model *find(uint64) override;
+        std::vector<Model *> children() override;
 
-        data::Choice profile_;
-        data::String powerPin_;
-        data::Integer resistance_;
+        data::hier::Choice profile_;
+        data::hier::String powerPin_;
+        data::hier::Integer resistance_;
+
+    private:
+        void onProfile();
     };
 
     LED led1_;
     LED led2_;
     LED led3_;
     LED led4_;
+
+    Blade& parent_;
 };
 
-} // namespace config::blades
+} // namespace blades
+
+} // namespace config
 

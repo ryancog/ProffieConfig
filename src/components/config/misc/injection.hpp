@@ -21,14 +21,16 @@
 
 #include <string>
 
-#include "data/hierarchy/model.hpp"
+#include "data/hierarchic/model.hpp"
 
 #include "config_export.h"
 
 namespace config {
 
-struct CONFIG_EXPORT Injection : data::Model {
-    Injection(data::Node *, std::string&&);
+struct Config;
+
+struct CONFIG_EXPORT Injection : data::hier::Model {
+    Injection(Config&, std::string&&);
 
     std::string filename_;
 };

@@ -19,14 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/vector.hpp"
+#include "data/primitive/models/vector.hpp"
 #include "utils/types.hpp"
 
 namespace config::priv {
 
 extern cstring executableVersion;
 
-extern data::Vector list;
+extern data::prim::Vector list;
 
 } // namespace config::priv
 

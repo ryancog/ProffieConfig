@@ -20,30 +20,31 @@
  */
 
 #include "config/config.hpp"
-#include "data/vector.hpp"
+#include "data/context.hpp"
 #include "utils/string.hpp"
 
 using namespace config::presets;
 
-namespace {
+Array::Array(Config& config) :
+    Model(config),
+    name_(root()),
+    presets_(root()) {
+    static const auto presetTable{[] {
+        data::hier::Vector::RecvTable table;
+        table.onInsert_ = data::map(&Array::onPresetInsert);
+        return table;
+    }()};
+    amend(presets_, presetTable);
 
-constexpr std::string_view NAME_STR{"Name"};
-constexpr std::string_view PRESETS_STR{"Presets"};
-
-} // namespace
-
-Array::Array(data::Node *parent) :
-    data::Node{parent},
-    name_(this),
-    presets_(this) {
-    presets_.responder().onInsert_ = [](
-        const data::Vector::ROContext& ctxt, size
-    ) {
-        ctxt.model().root<Config>()->syncStyles();
-    };
+    static const auto nameTable{[] {
+        data::hier::String::RecvTable table;
+        table.onChange_ = data::map(&Array::onNameChange);
+        return table;
+    }()};
+    amend(name_, nameTable);
 
     const auto nameFilter{[](
-        const data::String::ROContext&, std::string& str, size& pos
+        const data::base::String::ROContext&, std::string& str, size& pos
     ) {
         uint32 numTrimmed{};
         utils::trimCppName(
@@ -56,57 +57,54 @@ Array::Array(data::Node *parent) :
         pos -= numTrimmed;
     }};
     name_.setFilter(nameFilter);
-    name_.responder().onChange_ = [](
-        const data::String::ROContext& ctxt
-    ) {
-        ctxt.model().parent<Array>()->recomputeIssues();
-    };
 
     recomputeIssues();
 }
 
 Array::~Array() = default;
 
-bool Array::enumerate(const EnumFunc& func) {
-    if (func(name_, strID(NAME_STR), NAME_STR)) return true;
-    if (func(presets_, strID(PRESETS_STR), PRESETS_STR)) return true;
-    return false;
+auto Array::children() -> std::vector<Model *> {
+    return {
+        &name_,
+        &presets_,
+    };
 }
 
-data::Model *Array::find(uint64 id) {
-    if (id == strID(NAME_STR)) return &name_;
-    if (id == strID(PRESETS_STR)) return &presets_;
-    return nullptr;
-}
-
-const data::Integer& Array::issues() const {
+const data::base::Integer& Array::issues() const {
     return mIssues;
 }
 
 void Array::recomputeIssues() {
-    auto& vec{*parent<data::Vector>()};
+    auto& config{root<Config>()};
 
     int32 issues{0};
 
-    data::String::ROContext nameCtxt{name_};
+    auto name{data::context(name_)};
+    auto vec{data::context(config.presetArrays_)};
 
-    data::Vector::ROContext vecCtxt{vec};
-    for (const auto& child : vecCtxt.children()) {
+    for (const auto& child : vec.children()) {
         if (child.get() == this) continue;
 
-        auto& otherName{static_cast<Array&>(*child).name_};
-        data::String::ROContext otherNameCtxt{otherName};
+        auto otherName{data::context(dynamic_cast<Array&>(*child).name_)};
 
-        if (otherNameCtxt.val() == nameCtxt.val()) {
+        if (otherName.val() == name.val()) {
             issues |= eIssue_Name_Duplicate;
             break;
         }
     }
 
-    if (nameCtxt.val().empty()) {
+    if (name.val().empty()) {
         issues |= eIssue_Name_Empty;
     }
 
-    data::Integer::Context{mIssues}.set(issues);
+    mIssues.set(issues);
+}
+
+void Array::onPresetInsert(size) {
+    root<Config>().syncStyles();
+}
+
+void Array::onNameChange() {
+    recomputeIssues();
 }
 

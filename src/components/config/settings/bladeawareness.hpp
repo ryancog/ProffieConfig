@@ -19,16 +19,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <unordered_map>
-
-#include "data/bool.hpp"
-#include "data/choice.hpp"
-#include "data/number.hpp"
-#include "data/selection.hpp"
-#include "data/string.hpp"
-#include "data/hierarchy/node.hpp"
+#include "data/hierarchic/model.hpp"
+#include "data/hierarchic/models/bool.hpp"
+#include "data/hierarchic/models/choice.hpp"
+#include "data/hierarchic/models/number.hpp"
+#include "data/hierarchic/models/selection.hpp"
+#include "data/hierarchic/models/string.hpp"
 
 #include "config_export.h"
+#include "data/receiver.hpp"
 
 namespace config {
 
@@ -36,45 +35,43 @@ struct Settings;
 
 namespace settings {
 
-struct CONFIG_EXPORT BladeAwareness : data::Node {
+struct CONFIG_EXPORT BladeAwareness : data::hier::Model,
+                                      private data::Receiver {
     BladeAwareness(Settings&);
     ~BladeAwareness() override;
 
-    bool enumerate(const EnumFunc&) override;
-    [[nodiscard]] Model *find(uint64) override;
-
-    void init();
+    std::vector<Model *> children() override;
 
     struct {
-        data::Bool enable_;
-        data::String pin_;
+        data::hier::Bool enable_;
+        data::hier::String pin_;
     } bladeDetect_;
 
     struct {
-        data::Bool enable_;
-        data::String pin_;
+        data::hier::Bool enable_;
+        data::hier::String pin_;
 
-        data::Choice mode_;
-        data::String bridgePin_;
-        data::Integer pullup_;
+        data::hier::Choice mode_;
+        data::hier::String bridgePin_;
+        data::hier::Integer pullup_;
 
-        data::Bool powerForId_;
-        data::Selection powerPins_;
+        data::hier::Bool powerForId_;
+        data::hier::Selection powerPins_;
 
         struct {
-            data::Bool enable_;
-            data::Integer interval_;
-            data::Integer times_;
+            data::hier::Bool enable_;
+            data::hier::Integer interval_;
+            data::hier::Integer times_;
         } continuous_;
     } bladeId_;
 
-private:
-    void buildMap();
+protected:
+    void onActivate() override;
 
-    std::unordered_map<
-        uint64,
-        std::pair<std::string_view, data::Model *>
-    > mMap;
+    void onDetectEnable();
+    void onIDEnable();
+    void onContinuousEnable();
+    void onIDPower();
 };
 
 } // namespace settings

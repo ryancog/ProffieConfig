@@ -19,10 +19,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/choice.hpp"
-#include "data/hierarchy/node.hpp"
-#include "data/number.hpp"
-#include "data/string.hpp"
+#include "data/hierarchic/model.hpp"
+#include "data/hierarchic/models/choice.hpp"
+#include "data/hierarchic/models/string.hpp"
+#include "data/hierarchic/models/number.hpp"
 
 #include "config_export.h"
 
@@ -32,19 +32,18 @@ struct Config;
 
 namespace buttons {
 
-struct CONFIG_EXPORT Button : data::Node {
-    Button(data::Node *);
+struct CONFIG_EXPORT Button : data::hier::Model {
+    Button(Config&);
     ~Button() override;
 
-    bool enumerate(const EnumFunc&) override;
-    Model *find(uint64) override;
+    std::vector<Model *> children() override;
 
-    data::Choice type_;
-    data::Choice event_;
+    data::hier::Choice type_;
+    data::hier::Choice event_;
 
-    data::String pin_;
-    data::String name_;
-    data::Integer touch_;
+    data::hier::String pin_;
+    data::hier::String name_;
+    data::hier::Integer touch_;
 };
 
 } // namespace buttons

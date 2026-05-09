@@ -23,34 +23,29 @@
 
 #include <wx/translation.h>
 
+#include "data/context.hpp"
+#include "config/config.hpp"
+#include "utils/parent.hpp"
 #include "utils/string.hpp"
 
 using namespace config::presets;
 
 namespace {
 
-constexpr std::string_view NAME_STR{"Name"};
-constexpr std::string_view FONTDIR_STR{"FontDir"};
-constexpr std::string_view TRACK_STR{"Track"};
-constexpr std::string_view STYLES_STR{"Styles"};
-
-constexpr std::string_view COMMENT_STR{"Comment"};
-constexpr std::string_view CONTENT_STR{"Content"};
-
 constexpr size MAX_NAME_LEN{24};
 
 } // namespace
 
-Preset::Preset(data::Node *parent) :
-    data::Node(parent),
-    name_(this),
-    fontDir_(this),
-    track_(this),
-    styles_(this) {
-    CreationScope createScope{*this};
+Preset::Preset(Config& config) :
+    Model(config),
+    name_(root()),
+    fontDir_(root()),
+    track_(root()),
+    styles_(root()) {
+    CreationScope createScope(this);
 
     const auto nameFilter{[](
-        const data::String::ROContext&, std::string& str, size& pos
+        const data::base::String::ROContext&, std::string& str, size& pos
     ) {
         uint32 numTrimmed{};
         utils::trim(
@@ -85,7 +80,7 @@ Preset::Preset(data::Node *parent) :
     name_.setFilter(nameFilter);
 
     const auto fontDirFilter{[](
-        const data::String::ROContext&, std::string& str, size& pos
+        const data::base::String::ROContext&, std::string& str, size& pos
     ) {
         uint32 numTrimmed{};
         utils::trim(
@@ -111,20 +106,26 @@ Preset::Preset(data::Node *parent) :
         pos -= numTrimmed;
     }};
 
-    data::String::Context{name_}.change("newpreset", 0);
+    name_.change("newpreset");
 }
 
-Preset::Preset(const Preset& other, data::Node *parent) :
-    data::Node(parent),
-    name_(other.name_, this),
-    fontDir_(other.fontDir_, this),
-    track_(other.track_, this),
-    styles_(other.styles_, this) {
-    CreationScope createScope{*this};
+Preset::Preset(const Preset& other, Config& config) :
+    Model(config),
+    name_(other.name_, root()),
+    fontDir_(other.fontDir_, root()),
+    track_(other.track_, root()),
+    styles_(root()) {
+    CreationScope createScope(this);
+
+    auto otherStyles{data::context(other.styles_)};
+    for (const auto& model : otherStyles.children()) {
+        auto *otherStyle{dynamic_cast<Style *>(model.get())};
+        styles_.append(std::make_unique<Style>(*otherStyle, root<Config>()));
+    }
 
     // The extra work here avoid truncating "copy", and instead tries to
     // truncate the old name.
-    data::String::Context name{name_};
+    auto name{data::context(name_)};
     const auto formatStr{_("%s copy")};
 
     const auto newLen{std::min(
@@ -139,36 +140,23 @@ Preset::Preset(const Preset& other, data::Node *parent) :
     ).ToStdString());
 }
 
-Preset::~Preset() = default;
-
-bool Preset::enumerate(const EnumFunc& func) {
-    if (func(name_, strID(NAME_STR), NAME_STR)) return true;
-    if (func(fontDir_, strID(FONTDIR_STR), FONTDIR_STR)) return true;
-    if (func(track_, strID(TRACK_STR), TRACK_STR)) return true;
-    if (func(styles_, strID(STYLES_STR), STYLES_STR)) return true;
-    return false;
+auto Preset::children() -> std::vector<Model *> {
+    return {
+        &name_,
+        &fontDir_,
+        &track_,
+        &styles_,
+    };
 }
 
-data::Model *Preset::find(uint64 id) {
-    if (id == strID(NAME_STR)) return &name_;
-    if (id == strID(FONTDIR_STR)) return &fontDir_;
-    if (id == strID(TRACK_STR)) return &track_;
-    if (id == strID(STYLES_STR)) return &styles_;
-    return nullptr;
-}
-
-std::unique_ptr<data::Model> Preset::clone(Node *parent) const {
-    return std::make_unique<Preset>(*this, parent);
-}
-
-Style::Style(Node *parent) :
-    data::Node(parent),
-    comment_(this),
-    content_(this) {
-    CreationScope createScope{*this};
+Style::Style(Config& config) :
+    Model(config),
+    comment_(root()),
+    content_(root()) {
+    CreationScope createScope(this);
 
     const auto commentFilter{[](
-        const data::String::ROContext&, std::string& str, size& pos
+        const data::base::String::ROContext&, std::string& str, size& pos
     ) {
         size_t illegalPos{};
         while (
@@ -181,11 +169,13 @@ Style::Style(Node *parent) :
     }};
     comment_.setFilter(commentFilter);
 
-    const auto styleFilter{[] (
-        const data::String::ROContext& ctxt, std::string& str, size& pos
+    const auto contentFilter{[] (
+        const data::base::String::ROContext& ctxt, std::string& str, size& pos
     ) {
         // TODO: The replication in here is kind of ugly...
-        auto& style{*ctxt.model().parent<Style>()};
+        auto& style{utils::parent<&Style::content_>(
+            ctxt.model<data::hier::String>()
+        )};
 
         uint32 numTrimmed{};
 
@@ -219,7 +209,7 @@ Style::Style(Node *parent) :
         );
         pos -= numTrimmed;
 
-        data::String::Context comment{style.comment_};
+        auto comment{data::context(style.comment_)};
         const auto addToComment{[&](std::string& addStr) {
             if (not comment.val().empty()) {
                 addStr.insert(addStr.begin(), '\n');
@@ -313,36 +303,21 @@ Style::Style(Node *parent) :
 
         if (commentMove) comment.focus();
     }};
-    content_.setFilter(styleFilter);
+    content_.setFilter(contentFilter);
 
-    data::String::Context{comment_}.change(
-        "ProffieConfig Default Blue AudioFlicker", 0
-    );
-    data::String::Context{content_}.change(
-        "StyleNormalPtr<AudioFlicker<Blue,DodgerBlue>,BLUE,300,800>()", 0
-    );
+    comment_.change("ProffieConfig Default Blue AudioFlicker");
+    content_.change("StyleNormalPtr<AudioFlicker<Blue,DodgerBlue>,Blue,300,800>()");
 }
 
-Style::Style(const Style& other, data::Node *parent) :
-    data::Node(parent),
-    comment_(other.comment_, this),
-    content_(other.content_, this) {
-    CreationScope(*this, true);
-}
+Style::Style(const Style& other, Config& config) :
+    Model(config),
+    comment_(other.comment_, root()),
+    content_(other.content_, root()) {}
 
-bool Style::enumerate(const EnumFunc& func) {
-    if (func(comment_, strID(COMMENT_STR), COMMENT_STR)) return true;
-    if (func(content_, strID(CONTENT_STR), CONTENT_STR)) return true;
-    return false;
-}
-
-data::Model *Style::find(uint64 id) {
-    if (id == strID(COMMENT_STR)) return &comment_;
-    if (id == strID(CONTENT_STR)) return &content_;
-    return nullptr;
-}
-
-std::unique_ptr<data::Model> Style::clone(Node *parent) const {
-    return std::make_unique<Style>(*this, parent);
+auto Style::children() -> std::vector<Model *> {
+    return {
+        &comment_,
+        &content_,
+    };
 }
 

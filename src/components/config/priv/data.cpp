@@ -21,5 +21,5 @@
 
 cstring config::priv::executableVersion;
 
-data::Vector config::priv::list;
+data::prim::Vector config::priv::list;
 
