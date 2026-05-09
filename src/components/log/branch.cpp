@@ -34,7 +34,7 @@ Branch::~Branch() {
 }
 
 Logger& Branch::createLogger(std::string name) {
-    std::lock_guard scopeLock{mListLock};
+    std::lock_guard scopeLock(mListLock);
     mLoggers.push_back(new Logger{
         std::move(name),
         mParent->pContext
