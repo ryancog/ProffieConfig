@@ -32,14 +32,16 @@ using namespace pcui;
 namespace {
 
 struct Layout : detail::Window<wxCollapsiblePane> {
-    Layout(const detail::Scaffold& scaffold, const Collapsible& desc) {
+    Layout(const detail::Scaffold& scaffold, const Collapsible& desc) :
+        showLabel_(desc.showLabel_),
+        hideLabel_(desc.hideLabel_) {
         long style{wxCP_DEFAULT_STYLE | wxCP_NO_TLW_RESIZE};
         // if (not desc.autoTopLevelResize_) style |= wxCP_NO_TLW_RESIZE;
 
         Create(
             scaffold.childParent_,
             wxID_ANY,
-            desc.showLabel_,
+            showLabel_,
             wxDefaultPosition,
             wxDefaultSize,
             style
