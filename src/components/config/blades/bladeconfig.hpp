@@ -42,6 +42,7 @@ constexpr int32 NO_BLADE{1000000000};
 struct CONFIG_EXPORT BladeConfig : data::hier::Model, data::Receiver {
     BladeConfig(Config&);
 
+    void onActivate() override;
     std::vector<Model *> children() override;
 
     data::hier::Vector blades_;

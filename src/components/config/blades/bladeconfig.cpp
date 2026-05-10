@@ -62,7 +62,7 @@ BladeConfig::BladeConfig(Config& config) :
         table.onChoice_ = data::map(&BladeConfig::onPresetArrayChoice);
         return table;
     }()};
-    amend(presetArray_, presetArrayTable);
+    amend(presetArray_.choice(), presetArrayTable);
 
     static const auto bladesTable{[] {
         data::hier::Vector::RecvTable table;
@@ -103,7 +103,9 @@ BladeConfig::BladeConfig(Config& config) :
 
     id_.update({.min_=0, .max_=NO_BLADE});
     presetArray_.bind(&config.presetArrays_);
+}
 
+void BladeConfig::onActivate() {
     recomputeIssues();
 }
 
