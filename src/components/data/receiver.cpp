@@ -26,6 +26,13 @@
 
 using namespace data;
 
+namespace {
+
+void activateHierarchic(hier::Model *);
+void deactivateHierarchic(hier::Model *);
+
+} // namespace
+
 Receiver::Receiver() = default;
 
 Receiver::~Receiver() {
@@ -59,13 +66,8 @@ void Receiver::activate() {
     onActivate();
 
     // And activate any children
-    if (auto *ptr{dynamic_cast<hier::Model *>(this)}) {
-        for (auto *child : ptr->children()) {
-            if (auto *childRcvr{dynamic_cast<Receiver *>(child)}) {
-                childRcvr->activate();
-            }
-        }
-    }
+    if (auto *ptr{dynamic_cast<hier::Model *>(this)})
+        activateHierarchic(ptr);
 
     for (auto [model, map] : mRecvMap) {
         model->unlock();
@@ -90,13 +92,8 @@ void Receiver::deactivate() {
 
     mAttached = false;
 
-    if (auto *ptr{dynamic_cast<hier::Model *>(this)}) {
-        for (auto *child : ptr->children()) {
-            if (auto *childRcvr{dynamic_cast<Receiver *>(child)}) {
-                childRcvr->deactivate();
-            }
-        }
-    }
+    if (auto *ptr{dynamic_cast<hier::Model *>(this)})
+        deactivateHierarchic(ptr);
 
     onDeactivate();
 
@@ -133,4 +130,26 @@ void Receiver::repeal(const base::Model& model) {
         model.mReceivers.erase(this);
     }
 }
+
+namespace {
+
+void activateHierarchic(hier::Model *model) {
+    for (auto *child : model->children()) {
+        if (auto *childRcvr{dynamic_cast<Receiver *>(child)})
+            childRcvr->activate();
+        else
+            activateHierarchic(child);
+    }
+}
+
+void deactivateHierarchic(hier::Model *model) {
+    for (auto *child : model->children()) {
+        if (auto *childRcvr{dynamic_cast<Receiver *>(child)})
+            childRcvr->deactivate();
+        else
+            deactivateHierarchic(child);
+    }
+}
+
+} // namespace
 
