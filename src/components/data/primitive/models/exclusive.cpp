@@ -28,6 +28,10 @@ Exclusive::Exclusive(size num) {
     activate();
 }
 
+Exclusive::~Exclusive() {
+    deactivate();
+}
+
 bool Exclusive::select(size idx) {
     std::lock_guard scopeLock(*this);
 

@@ -28,6 +28,7 @@ namespace data::prim {
 
 struct DATA_EXPORT Exclusive : base::Exclusive, Model {
     Exclusive(size);
+    ~Exclusive() override;
 
     bool select(size) override;
 
