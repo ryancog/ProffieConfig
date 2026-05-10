@@ -196,35 +196,35 @@ WS281X::Split::Split(WS281X& ws281x) :
     // nor do I feel like spending a particularly large amount of time on it
     // right now.
 
-    const auto typeTable{[] {
+    static const auto typeTable{[] {
         data::base::Selection::RecvTable table;
         table.onSelection_ = data::map(&Split::onType);
         return table;
     }()};
     amend(type_, typeTable);
 
-    const auto startTable{[] {
+    static const auto startTable{[] {
         data::base::Integer::RecvTable table;
         table.onSet_ = data::map(&Split::onStart);
         return table;
     }()};
     amend(start_, startTable);
 
-    const auto endTable{[] {
+    static const auto endTable{[] {
         data::base::Integer::RecvTable table;
         table.onSet_ = data::map(&Split::onEnd);
         return table;
     }()};
     amend(end_, endTable);
 
-    const auto lengthTable{[] {
+    static const auto lengthTable{[] {
         data::base::Integer::RecvTable table;
         table.onSet_ = data::map(&Split::onLength);
         return table;
     }()};
     amend(length_, lengthTable);
 
-    const auto segmentsTable{[] {
+    static const auto segmentsTable{[] {
         data::base::Integer::RecvTable table;
         table.onSet_ = data::map(&Split::onSegments);
         return table;
