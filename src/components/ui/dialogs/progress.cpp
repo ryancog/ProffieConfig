@@ -30,6 +30,7 @@
 #include "ui/controls/button.hpp"
 #include "ui/dialog.hpp"
 #include "ui/helpers/dialog_buttons.hpp"
+#include "ui/helpers/if.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/static/label.hpp"
@@ -130,6 +131,21 @@ DescriptorPtr ProgressDialog::ui(bool mayCancel, wxSize size) {
         .border_={.size_=winEdgeSpacing(), .dirs_=wxALL}
       },
       .children_={
+#       ifdef __WXOSX__
+        // On macOS, if we have a parent and are going to be shown WindowModal,
+        // then the title won't be used (because this'll be displayed as a
+        // sheet), so add the title to the content/UI directly.
+        If{
+          .cond_=GetParent() != nullptr,
+          .then_={
+            Label{
+              .label_=GetTitle(),
+              .font_=detail::FontData{Font::Normal}.makeFont().MakeBold(),
+            }(),
+            Spacer{.size_=interControlSpacing()}(),
+          },
+        }(),
+#       endif
         Label{
           .label_=mMessage,
         }(),
