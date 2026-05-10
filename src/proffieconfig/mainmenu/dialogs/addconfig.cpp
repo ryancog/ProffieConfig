@@ -54,6 +54,8 @@ AddConfigDialog::AddConfigDialog(MainMenu *parent) :
 
     pcui::build(this, ui());
     bindEvents();
+
+    activate();
 }
 
 AddConfigDialog::~AddConfigDialog() {
