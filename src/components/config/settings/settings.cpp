@@ -104,7 +104,7 @@ Settings::Settings(Config& parent) :
         table.onSet_ = data::map(&Settings::onDisableTalkieSet);
         return table;
     }()};
-    amend(filter_.enable_, filterEnableTable);
+    amend(disableTalkie_, disableTalkieTable);
 
     volume_.update({.min_=0, .max_=4000, .inc_=50});
     volume_.set(1000);
