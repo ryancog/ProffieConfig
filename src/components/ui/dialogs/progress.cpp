@@ -51,7 +51,7 @@ ProgressDialog::ProgressDialog(
 }
 
 ProgressDialog::~ProgressDialog() {
-    teardown(this);
+    cripple(this);
 }
 
 void ProgressDialog::set(uint32 val, const wxString& message) {

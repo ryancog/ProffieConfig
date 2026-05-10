@@ -59,7 +59,7 @@ AddConfigDialog::AddConfigDialog(MainMenu *parent) :
 }
 
 AddConfigDialog::~AddConfigDialog() {
-    pcui::teardown(this);
+    pcui::cripple(this);
 }
 
 void AddConfigDialog::onActivate() {

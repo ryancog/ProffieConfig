@@ -64,7 +64,7 @@ onboard::Frame::Frame() :
 }
 
 onboard::Frame::~Frame() {
-    pcui::teardown(this);
+    pcui::cripple(this);
     instance = nullptr;
 }
 

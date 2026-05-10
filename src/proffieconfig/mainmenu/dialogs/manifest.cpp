@@ -95,6 +95,6 @@ ManifestDialog::ManifestDialog(MainMenu *mainMenu) :
 }
 
 ManifestDialog::~ManifestDialog() {
-    pcui::teardown(this);
+    pcui::cripple(this);
 }
 

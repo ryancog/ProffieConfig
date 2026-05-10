@@ -45,7 +45,7 @@ LicenseDialog::LicenseDialog(MainMenu *mainMenu) :
 }
 
 LicenseDialog::~LicenseDialog() {
-    pcui::teardown(this);
+    pcui::cripple(this);
 }
 
 pcui::DescriptorPtr LicenseDialog::ui() {
