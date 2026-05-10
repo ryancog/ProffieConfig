@@ -87,10 +87,12 @@ protected:
         ) {
             if (auto *derived{dynamic_cast<const Table *>(table)}) {
                 auto variant{derived->*mapping};
-                if (auto *ptr{std::get_if<1>(&variant)}) {
-                    (receiver->*(*ptr))(args...);
-                } else if (auto *ptr{std::get_if<2>(&variant)}) {
-                    (receiver->*(*ptr))(*this, args...);
+                if (auto *ptr{std::get_if<0>(&variant)}) {
+                    if (*ptr)
+                        (*ptr)(receiver, args...);
+                } else if (auto *ptr{std::get_if<1>(&variant)}) {
+                    if (*ptr)
+                        (*ptr)(receiver, *this, args...);
                 }
             }
         }};
