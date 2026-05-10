@@ -44,6 +44,8 @@ struct DATA_EXPORT Selector : virtual Model, virtual Receiver {
     virtual bool bind(const Vector *) = 0;
 
 protected:
+    void init();
+
     bool setupBind(const Vector *);
     const Vector *doBind(const Vector *);
 

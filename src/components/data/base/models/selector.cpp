@@ -42,6 +42,10 @@ const Choice::RecvTable Selector::smChoiceTable{[] {
     return table;
 }()};
 
+void Selector::init() {
+    amend(choice(), smChoiceTable);
+}
+
 // No copy ctor because this state can't be preserved. `other` would need to
 // be locked and this would need to be activated immediately.
 
@@ -67,12 +71,13 @@ const Vector *Selector::doBind(const Vector *vec) {
     //
     // If onRebound is called first, the choice state isn't valid yet.
     if (mVec) {
+        auto vecCtxt{context(*mVec)};
+
         amend(*mVec, smVecTable);
-        amend(choice(), smChoiceTable);
 
         // For now, if both vecs have same length the choice will persist the
         // selection automatically since no update will actually occur.
-        choiceCtxt.update(context(*mVec).children().size());
+        choiceCtxt.update(vecCtxt.children().size());
     } else {
         choiceCtxt.update(0);
     }

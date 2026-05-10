@@ -21,7 +21,9 @@
 
 using namespace data::hier;
 
-Selector::Selector(Root& root) : Model(root), mChoice(root) {}
+Selector::Selector(Root& root) : Model(root), mChoice(root) {
+    init();
+}
 
 Selector::Selector(const Selector& other, Root& root) :
     Model(other, root), mChoice(root) {}

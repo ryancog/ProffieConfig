@@ -23,6 +23,11 @@
 
 using namespace data::prim;
 
+Selector::Selector() {
+    init();
+    activate();
+}
+
 data::base::Choice& Selector::choice() const {
     return mChoice;
 }
