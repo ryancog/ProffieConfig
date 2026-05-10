@@ -57,11 +57,13 @@ Array::Array(Config& config) :
         pos -= numTrimmed;
     }};
     name_.setFilter(nameFilter);
-
-    recomputeIssues();
 }
 
 Array::~Array() = default;
+
+void Array::onActivate() {
+    recomputeIssues();
+}
 
 auto Array::children() -> std::vector<Model *> {
     return {

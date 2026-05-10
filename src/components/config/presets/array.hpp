@@ -37,6 +37,7 @@ struct CONFIG_EXPORT Array : data::hier::Model, data::Receiver {
     Array(Config&);
     ~Array() override;
 
+    void onActivate() override;
     std::vector<Model *> children() override;
 
     enum {
