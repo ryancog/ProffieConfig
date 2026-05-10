@@ -148,7 +148,8 @@ struct ControlBase : detail::DataWindow<Ctrl> {
     }
 
     void preSelRebound() {
-        data::Receiver::repeal(*data::context(*sel_).bound());
+        if (auto *ptr{data::context(*sel_).bound()})
+            data::Receiver::repeal(*ptr);
     }
 
     void onSelRebound() {
