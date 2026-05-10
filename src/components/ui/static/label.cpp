@@ -24,6 +24,7 @@
 #include <wx/stattext.h>
 
 #include "data/context.hpp"
+#include "ui/detail/helpers.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
 #include "ui/types.hpp"
@@ -115,6 +116,7 @@ struct Static : detail::DataWindow<wxStaticText> {
     void onChange() {
         safeCall([this, str=data::context(*str_).val()]() {
             SetLabel(str);
+            detail::layoutAndFitFor(this);
         });
     }
 
