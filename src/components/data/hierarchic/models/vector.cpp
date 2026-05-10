@@ -19,11 +19,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "data/context.hpp"
+#include "data/receiver.hpp"
+
 using namespace data::hier;
 
 Vector::Vector(Root& root) : Model(root) {}
 
 // No copy ctor. Don't know how to copy children (or if they even can be).
+
+std::vector<Model *> Vector::children() {
+    std::vector<Model *> ret;
+
+    auto ctxt{context(*this)};
+
+    ret.reserve(ctxt.children().size());
+    for (const auto& child : ctxt.children()) {
+        ret.push_back(dynamic_cast<data::hier::Model *>(child.get()));
+    }
+
+    return ret;
+}
 
 bool Vector::insert(size idx, std::unique_ptr<base::Model>&& obj) {
     return processAction(std::make_unique<InsertAction>(idx, std::move(obj)));
@@ -46,10 +62,18 @@ bool Vector::InsertAction::setup() {
 }
 
 void Vector::InsertAction::perform() {
-    return source<Vector>().doInsert(mPos, std::move(mModel));
+    auto *raw{mModel.get()};
+
+    source<Vector>().doInsert(mPos, std::move(mModel));
+
+    if (auto rcvr{dynamic_cast<Receiver *>(raw)})
+        rcvr->activate();
 }
 
 void Vector::InsertAction::retract() {
+    if (auto rcvr{dynamic_cast<Receiver *>(source<Vector>().children()[mPos])})
+        rcvr->deactivate();
+
     mModel = source<Vector>().doRemove(mPos);
 }
 
@@ -60,11 +84,19 @@ bool Vector::RemoveAction::setup() {
 }
 
 void Vector::RemoveAction::perform() {
+    if (auto rcvr{dynamic_cast<Receiver *>(source<Vector>().children()[mPos])})
+        rcvr->deactivate();
+
     mModel = source<Vector>().doRemove(mPos);
 }
 
 void Vector::RemoveAction::retract() {
+    auto *raw{mModel.get()};
+
     source<Vector>().doInsert(mPos, std::move(mModel));
+
+    if (auto rcvr{dynamic_cast<Receiver *>(raw)})
+        rcvr->activate();
 }
 
 Vector::SwapAction::SwapAction(size pos) : mPos{pos} {}
