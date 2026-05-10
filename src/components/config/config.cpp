@@ -157,7 +157,8 @@ const versions::os::Board *Config::board() const {
     auto ctxt{data::context(mBoardChoice)};
     if (ctxt.idx() == -1) return nullptr;
 
-    return &os->boards_[ctxt.idx()];
+    auto iter{std::next(os->boards_.begin(), ctxt.idx())};
+    return &iter->second;
 }
 
 std::optional<std::span<const std::unique_ptr<versions::props::Prop>>>

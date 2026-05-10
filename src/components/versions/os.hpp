@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -40,7 +41,7 @@ struct VERSIONS_EXPORT OS {
     const std::string coreUrl_;
     const utils::Version coreVersion_;
 
-    const std::vector<Board> boards_;
+    const std::map<size, Board> boards_;
 };
 
 struct VERSIONS_EXPORT Context {

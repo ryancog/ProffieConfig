@@ -429,9 +429,7 @@ void outputTopGeneral(std::ostream& outFile, const Config& config) {
 
     outputOpt(outFile, OS_VERSION_STR, osVersion.string());
 
-    auto boardInclude{config.board()->include_};
-
-    outFile << INCLUDE_STR << boardInclude << '\n';
+    outFile << INCLUDE_STR << '"' << config.board()->include_ << '"' << '\n';
 
     uint32 requiredLedsPerStrip{0};
     auto bladeConfigs{data::context(config.bladeConfigs_)};

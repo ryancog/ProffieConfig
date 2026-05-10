@@ -102,7 +102,8 @@ pcui::DescriptorPtr GeneralPage::setup() {
                 .unselected_=_("Select Board"),
               },
               .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-                  return mConfig.os()->boards_[idx].name_;
+                  auto iter{std::next(mConfig.os()->boards_.begin(), idx)};
+                  return iter->second.name_;
               }
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
@@ -115,7 +116,10 @@ pcui::DescriptorPtr GeneralPage::setup() {
                 .unselected_=_("Select ProffieOS"),
               },
               .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-                  return mConfig.osVec()[idx]->version_.string();
+                  return wxString::Format(
+                      _("ProffieOS %s"),
+                      mConfig.osVec()[idx]->version_.string()
+                  );
               }
             }(),
           }

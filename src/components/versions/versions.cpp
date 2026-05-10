@@ -51,6 +51,8 @@ constexpr utils::Version DEFAULT_OS_VERSION{7, 15};
 
 } // namespace
 
+// TODO: Cleanup duplicate logic in here.
+
 void versions::loadLocal(logging::Branch *lBranch) {
     auto& logger{logging::Branch::optCreateLogger("Versions::loadLocal()", lBranch)};
 
@@ -114,23 +116,25 @@ void versions::loadLocal(logging::Branch *lBranch) {
 
         auto& coreURL{*coreURLEntry->value_};
 
-        std::vector<os::Board> boards;
+        std::map<size, os::Board> boards;
 
         const auto boardEntries{hashedInfoData.findAll(detail::BOARD_STR)};
         for (const auto& boardEntry : boardEntries) {
             std::string include;
             std::string coreId;
 
-            bool boardKnown{false};
-            for (const auto& board : detail::BOARDS) {
+            std::optional<size> knownBoard;
+            for (size idx{0}; idx < detail::BOARDS.size(); ++idx) {
+                auto& board{detail::BOARDS[idx]};
                 if (boardEntry->label_ != board.name_) continue;
 
-                boardKnown = true;
+                knownBoard = idx;
                 include = board.include_;
                 coreId = board.coreId_;
+                break;
             }
 
-            if (not boardKnown) {
+            if (not knownBoard) {
                 logger.error("Invalid board entry.");
                 continue;
             }
@@ -149,11 +153,11 @@ void versions::loadLocal(logging::Branch *lBranch) {
                 }
             }
 
-            boards.emplace_back(
-                std::move(*boardEntry->label_),
-                std::move(coreId),
-                std::move(include)
-            );
+            boards.emplace(*knownBoard, os::Board{
+                .name_=std::move(*boardEntry->label_),
+                .coreId_=std::move(coreId),
+                .include_=std::move(include)
+            });
         }
 
         priv::os.push_back(std::make_unique<os::OS>(
@@ -412,7 +416,7 @@ std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
                 }
             }
 
-            std::vector<os::Board> boards;
+            std::map<size, os::Board> boards;
             auto boardEntries{propEntries.findAll(detail::BOARD_STR)};
             for (auto& boardEntry : boardEntries) {
                 if (not boardEntry->label_) {
@@ -423,16 +427,18 @@ std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
                 std::string include;
                 std::string coreId;
 
-                bool boardKnown{false};
-                for (const auto& board : detail::BOARDS) {
+                std::optional<size> knownBoard;
+                for (size idx{0}; idx < detail::BOARDS.size(); ++idx) {
+                    auto& board{detail::BOARDS[idx]};
                     if (boardEntry->label_ != board.name_) continue;
 
-                    boardKnown = true;
+                    knownBoard = idx;
                     include = board.include_;
                     coreId = board.coreId_;
+                    break;
                 }
 
-                if (not boardKnown) {
+                if (not knownBoard) {
                     logger.error("Invalid board entry.");
                     continue;
                 }
@@ -451,7 +457,7 @@ std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
                     }
                 }
 
-                boards.push_back(os::Board{
+                boards.emplace(*knownBoard, os::Board{
                     .name_=std::move(*boardEntry->label_),
                     .coreId_=std::move(coreId),
                     .include_=std::move(include),
@@ -606,7 +612,7 @@ std::optional<std::string> versions::downloadOS(
         detail::CORE_VER_STR, info->coreVersion_
     ));
 
-    for (const auto& board : info->boards_) {
+    for (const auto& [idx, board] : info->boards_) {
         auto sect{pconf::Section::create(detail::BOARD_STR, board.name_)};
 
         sect->entries_.push_back(

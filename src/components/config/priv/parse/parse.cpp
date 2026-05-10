@@ -212,11 +212,16 @@ void parseTop(std::istream& file, config::Config& config) {
                 utils::trimSurroundingWhitespace(buffer);
                 if (buffer.size() < 2) continue;
 
+                // Remove quotes
+                buffer = buffer.substr(1, buffer.size() - 2);
+
                 if (not config.os()) continue;
 
                 auto& boards{config.os()->boards_};
                 for (size idx{0}; idx < boards.size(); ++idx) {
-                    const auto& board{boards[idx]};
+                    const auto& board{std::next(
+                        boards.begin(), static_cast<ssize>(idx)
+                    )->second};
                     if (board.include_ != buffer) continue;
 
                     config.boardChoice().choose(static_cast<int32>(idx));
