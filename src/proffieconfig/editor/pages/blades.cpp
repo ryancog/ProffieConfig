@@ -86,6 +86,8 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
         pos -= numTrimmed;
     }};
     mPowerPinAddField.setFilter(powerPinFilter);
+
+    activate();
 }
 
 void BladesPage::onActivate() {

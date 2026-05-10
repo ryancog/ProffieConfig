@@ -70,6 +70,8 @@ PresetsPage::PresetsPage(config::Config& config) : mConfig{config} {
             idx = 0;
     }};
     mDisplaySel.choice().setFilter(displayFilter);
+
+    activate();
 }
 
 void PresetsPage::onActivate() {
