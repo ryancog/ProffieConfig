@@ -55,7 +55,7 @@ int32 Choice::doChoose(int32 idx) {
 bool Choice::setupUpdate(uint32 num, int32& idx) {
     if (mNum == num) return false;
 
-    assert(num >= -1 and idx < static_cast<int32>(num));
+    assert(idx >= -1 and idx < static_cast<int32>(num));
     if (mFilter) {
         // Make it so that the filter sees the proposed number of choices
         // rather than the current number.
