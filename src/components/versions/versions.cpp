@@ -565,6 +565,7 @@ std::optional<std::string> versions::downloadOS(
         auto filepath{
             paths::osDir() /
             static_cast<std::string>(ver) /
+            "ProffieOS" /
             entry->GetName().ToStdString()
         };
         fs::remove_all(filepath, ec);
