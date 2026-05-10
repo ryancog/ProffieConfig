@@ -41,6 +41,7 @@ auto Simple::children() -> std::vector<Model *> {
         &led4_,
     };
 }
+
 Simple::LED::LED(Simple& simple) :
     Model(simple.root()),
     profile_(root()),
