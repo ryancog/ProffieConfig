@@ -34,7 +34,7 @@ void Exclusive::init(size num) {
     for (size idx{0}; idx < num; ++idx) {
         auto obj{create(idx)};
 
-        const auto table{[] {
+        static const auto table{[] {
             Bool::RecvTable table;
             table.onSet_ = map(&Exclusive::onSet);
             return table;
