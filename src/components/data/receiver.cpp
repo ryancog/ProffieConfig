@@ -26,13 +26,6 @@
 
 using namespace data;
 
-namespace {
-
-void activateHierarchic(hier::Model *);
-void deactivateHierarchic(hier::Model *);
-
-} // namespace
-
 void Receiver::maybeActivate(base::Model *model) {
     if (auto *rcvr{dynamic_cast<Receiver *>(model)})
         rcvr->activate();
@@ -45,6 +38,30 @@ void Receiver::maybeDeactivate(base::Model *model) {
         rcvr->deactivate();
     else if (auto *hier{dynamic_cast<hier::Model *>(model)})
         deactivateHierarchic(hier);
+}
+
+void Receiver::activateHierarchic(hier::Model *model) {
+    for (auto *child : model->children()) {
+        if (auto *childRcvr{dynamic_cast<Receiver *>(child)}) {
+            std::lock_guard scopeLock{childRcvr->pMutex};
+
+            // When recursively activating things, some stuff might acceptably
+            // already have been activated, so skip those.
+            if (not childRcvr->mAttached)
+                childRcvr->activate();
+        } else {
+            activateHierarchic(child);
+        }
+    }
+}
+
+void Receiver::deactivateHierarchic(hier::Model *model) {
+    for (auto *child : model->children()) {
+        if (auto *childRcvr{dynamic_cast<Receiver *>(child)})
+            childRcvr->deactivate();
+        else
+            deactivateHierarchic(child);
+    }
 }
 
 Receiver::Receiver() = default;
@@ -144,26 +161,4 @@ void Receiver::repeal(const base::Model& model) {
         model.mReceivers.erase(this);
     }
 }
-
-namespace {
-
-void activateHierarchic(hier::Model *model) {
-    for (auto *child : model->children()) {
-        if (auto *childRcvr{dynamic_cast<Receiver *>(child)})
-            childRcvr->activate();
-        else
-            activateHierarchic(child);
-    }
-}
-
-void deactivateHierarchic(hier::Model *model) {
-    for (auto *child : model->children()) {
-        if (auto *childRcvr{dynamic_cast<Receiver *>(child)})
-            childRcvr->deactivate();
-        else
-            deactivateHierarchic(child);
-    }
-}
-
-} // namespace
 

@@ -34,6 +34,12 @@ struct Model;
 
 } // namespace base
 
+namespace hier {
+
+struct Model;
+
+} // namespace hier
+
 struct DATA_EXPORT Receiver {
     static void maybeActivate(base::Model *);
     static void maybeDeactivate(base::Model *);
@@ -59,10 +65,13 @@ protected:
     virtual void onActivate() {}
     virtual void onDeactivate() {}
 
-    std::recursive_mutex pMutex;
+    mutable std::recursive_mutex pMutex;
 
 private:
     friend base::Model;
+
+    static void activateHierarchic(hier::Model *);
+    static void deactivateHierarchic(hier::Model *);
 
     /**
      * To be initialized by derived on creation.
