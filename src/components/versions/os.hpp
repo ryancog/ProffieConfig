@@ -21,7 +21,7 @@
 
 #include <map>
 #include <memory>
-#include <vector>
+#include <span>
 
 #include "utils/version.hpp"
 
@@ -48,10 +48,10 @@ struct VERSIONS_EXPORT Context {
     Context();
     ~Context();
 
-    [[nodiscard]] const std::vector<std::unique_ptr<OS>>&
+    [[nodiscard]] std::span<const std::unique_ptr<OS>>
         available() LIFETIMEBOUND;
 
-    [[nodiscard]] const std::vector<std::unique_ptr<OS>>&
+    [[nodiscard]] std::span<const std::unique_ptr<OS>>
         list() LIFETIMEBOUND;
 };
 

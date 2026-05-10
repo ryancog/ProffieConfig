@@ -29,13 +29,13 @@ Context::Context() { priv::lock.lock(); }
 Context::~Context() { priv::lock.unlock(); }
 
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-const std::vector<std::unique_ptr<OS>>& Context::available() {
+std::span<const std::unique_ptr<OS>> Context::available() {
     std::lock_guard scopeLock(priv::lock);
     return priv::availableOS;
 }
 
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-const std::vector<std::unique_ptr<OS>>& Context::list() {
+std::span<const std::unique_ptr<OS>> Context::list() {
     std::lock_guard scopeLock(priv::lock);
     return priv::os;
 }
