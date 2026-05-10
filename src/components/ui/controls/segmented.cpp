@@ -177,9 +177,11 @@ Segmented::Desc::Desc(Segmented&& data) :
     Segmented{std::move(data)} {}
 
 wxSizerItem *Segmented::Desc::build(const detail::Scaffold& scaffold) const {
-    auto *chk{new Manager(scaffold, *this)};
-    auto *item{new wxSizerItem(chk)};
+    auto *seg{new Manager(scaffold, *this)};
+
+    auto *item{new wxSizerItem(seg)};
     detail::apply(win_.base_, item);
+
     return item;
 }
 

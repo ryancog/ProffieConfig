@@ -115,9 +115,11 @@ FilePicker::Desc::Desc(FilePicker&& data) :
     FilePicker{std::move(data)} {}
 
 wxSizerItem *FilePicker::Desc::build(const detail::Scaffold& scaffold) const {
-    auto *chk{new Control(scaffold, *this)};
-    auto *item{new wxSizerItem(chk)};
+    auto *pick{new Control(scaffold, *this)};
+
+    auto *item{new wxSizerItem(pick)};
     detail::apply(win_.base_, item);
+
     return item;
 }
 

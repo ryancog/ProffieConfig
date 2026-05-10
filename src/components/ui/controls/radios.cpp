@@ -146,9 +146,11 @@ Radios::Desc::Desc(Radios&& data) :
     Radios{std::move(data)} {}
 
 wxSizerItem *Radios::Desc::build(const detail::Scaffold& scaffold) const {
-    auto *chk{new Box(scaffold, *this)};
-    auto *item{new wxSizerItem(chk)};
+    auto *box{new Box(scaffold, *this)};
+
+    auto *item{new wxSizerItem(box)};
     detail::apply(win_.base_, item);
+
     return item;
 }
 

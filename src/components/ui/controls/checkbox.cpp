@@ -104,8 +104,10 @@ CheckBox::Desc::Desc(CheckBox&& data) :
 
 wxSizerItem *CheckBox::Desc::build(const detail::Scaffold& scaffold) const {
     auto *chk{new Control(scaffold, *this)};
+
     auto *item{new wxSizerItem(chk)};
     detail::apply(win_.base_, item);
+
     return item;
 }
 

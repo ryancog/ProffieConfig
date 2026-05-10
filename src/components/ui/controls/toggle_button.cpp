@@ -102,9 +102,11 @@ ToggleButton::Desc::Desc(ToggleButton&& data) :
     ToggleButton{std::move(data)} {}
 
 wxSizerItem *ToggleButton::Desc::build(const detail::Scaffold& scaffold) const {
-    auto *chk{new Control(scaffold, *this)};
-    auto *item{new wxSizerItem(chk)};
+    auto *tog{new Control(scaffold, *this)};
+
+    auto *item{new wxSizerItem(tog)};
     detail::apply(win_.base_, item);
+
     return item;
 }
 
