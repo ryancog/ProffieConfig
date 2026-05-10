@@ -77,9 +77,13 @@ struct Control : detail::DataWindow<wxRadioButton> {
 
         wxRadioButton *last{GetFirstInGroup()};
         for (; last != nullptr; last = last->GetNextInGroup()) {
-            if (last != this and last->GetValue())
+            // At least on macOS, this can be sent even when the button is
+            // already selected, so don't exclude `this` from the check.
+            if (last->GetValue())
                 break;
         }
+        assert(last != nullptr);
+
         auto res{bl_.set(true)};
 
         if (not res)
