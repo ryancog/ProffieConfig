@@ -33,6 +33,20 @@ void deactivateHierarchic(hier::Model *);
 
 } // namespace
 
+void Receiver::maybeActivate(base::Model *model) {
+    if (auto *rcvr{dynamic_cast<Receiver *>(model)})
+        rcvr->activate();
+    else if (auto *hier{dynamic_cast<hier::Model *>(model)})
+        activateHierarchic(hier);
+}
+
+void Receiver::maybeDeactivate(base::Model *model) {
+    if (auto *rcvr{dynamic_cast<Receiver *>(model)})
+        rcvr->deactivate();
+    else if (auto *hier{dynamic_cast<hier::Model *>(model)})
+        deactivateHierarchic(hier);
+}
+
 Receiver::Receiver() = default;
 
 Receiver::~Receiver() {

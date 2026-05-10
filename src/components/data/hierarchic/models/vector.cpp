@@ -66,13 +66,11 @@ void Vector::InsertAction::perform() {
 
     source<Vector>().doInsert(mPos, std::move(mModel));
 
-    if (auto rcvr{dynamic_cast<Receiver *>(raw)})
-        rcvr->activate();
+    Receiver::maybeActivate(raw);
 }
 
 void Vector::InsertAction::retract() {
-    if (auto rcvr{dynamic_cast<Receiver *>(source<Vector>().children()[mPos])})
-        rcvr->deactivate();
+    Receiver::maybeDeactivate(source<Vector>().children()[mPos]);
 
     mModel = source<Vector>().doRemove(mPos);
 }
@@ -84,8 +82,7 @@ bool Vector::RemoveAction::setup() {
 }
 
 void Vector::RemoveAction::perform() {
-    if (auto rcvr{dynamic_cast<Receiver *>(source<Vector>().children()[mPos])})
-        rcvr->deactivate();
+    Receiver::maybeDeactivate(source<Vector>().children()[mPos]);
 
     mModel = source<Vector>().doRemove(mPos);
 }
@@ -95,8 +92,7 @@ void Vector::RemoveAction::retract() {
 
     source<Vector>().doInsert(mPos, std::move(mModel));
 
-    if (auto rcvr{dynamic_cast<Receiver *>(raw)})
-        rcvr->activate();
+    Receiver::maybeActivate(raw);
 }
 
 Vector::SwapAction::SwapAction(size pos) : mPos{pos} {}

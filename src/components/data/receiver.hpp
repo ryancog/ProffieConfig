@@ -35,6 +35,9 @@ struct Model;
 } // namespace base
 
 struct DATA_EXPORT Receiver {
+    static void maybeActivate(base::Model *);
+    static void maybeDeactivate(base::Model *);
+
     Receiver(Receiver&&) = delete;
     Receiver(const Receiver&) = delete;
 
