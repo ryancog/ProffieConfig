@@ -36,10 +36,8 @@
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/static/label.hpp"
-#include "ui/static/image.hpp"
 #include "ui/types.hpp"
 #include "ui/values.hpp"
-#include "utils/parent.hpp"
 
 #include "../mainmenu.hpp"
 
