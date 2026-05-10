@@ -300,7 +300,10 @@ void Config::onNumBlades() {
 }
 
 void Config::onOSChoice() {
-    mBoardChoice.update(os()->boards_.size());
+    if (auto *ptr{os()})
+        mBoardChoice.update(ptr->boards_.size());
+    else
+        mBoardChoice.update(0);
 }
 
 Info::Info() = default;
