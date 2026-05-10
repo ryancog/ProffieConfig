@@ -43,6 +43,7 @@ struct CONFIG_EXPORT Simple : data::hier::Model {
     struct LED : data::hier::Model, data::Receiver {
         LED(Simple&);
 
+        void onActivate() override;
         std::vector<Model *> children() override;
 
         data::hier::Choice profile_;

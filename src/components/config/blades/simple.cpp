@@ -62,6 +62,10 @@ Simple::LED::LED(Simple& simple) :
     resistance_.update({.min_=0, .max_=10000, .inc_=50});
 }
 
+void Simple::LED::onActivate() {
+    onProfile();
+}
+
 auto Simple::LED::children() -> std::vector<Model *> {
     return {
         &profile_,
