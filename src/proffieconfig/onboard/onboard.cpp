@@ -59,6 +59,8 @@ onboard::Frame::Frame() :
     createMenuBar();
     bindEvents();
 
+    activate();
+
     CentreOnScreen();
     Show(true);
 }
@@ -66,6 +68,10 @@ onboard::Frame::Frame() :
 onboard::Frame::~Frame() {
     pcui::cripple(this);
     instance = nullptr;
+}
+
+void onboard::Frame::onActivate() {
+    onPhase();
 }
 
 pcui::DescriptorPtr onboard::Frame::ui() {
@@ -246,6 +252,13 @@ void onboard::Frame::bindEvents() {
     Bind(wxEVT_MENU, [this](wxCommandEvent&) {
         wxLaunchDefaultApplication(paths::logDir().native());
     }, wxID_FILE1);
+
+    static const auto phaseTable{[] {
+        data::prim::Choice::RecvTable table;
+        table.onChoice_ = data::map(&Frame::onPhase);
+        return table;
+    }()};
+    amend(mPhase, phaseTable);
 }
 
 void onboard::Frame::createMenuBar() {

@@ -47,6 +47,8 @@ struct Frame : pcui::Frame, data::Receiver {
     Frame();
     ~Frame() override;
 
+    void onActivate() override;
+
     static Frame* instance;
 
 private:
