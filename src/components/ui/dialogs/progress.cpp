@@ -44,6 +44,8 @@ ProgressDialog::ProgressDialog(
     wxSize size,
     long style
 ) : Dialog(parent, wxID_ANY, title, style) {
+
+    size.IncTo({200, 50});
     build(this, ui(mayCancel, size));
 
     if (parent) ShowWindowModal();
@@ -137,7 +139,7 @@ DescriptorPtr ProgressDialog::ui(bool mayCancel, wxSize size) {
           .data_=mData,
           .showOnBar_=true,
         }(),
-        Spacer{.size_=8}(),
+        Spacer{.size_=interControlSpacing()}(),
         DialogButtons{
           .ok_=Button{
             .win_={
