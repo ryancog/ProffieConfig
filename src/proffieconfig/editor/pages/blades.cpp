@@ -980,15 +980,11 @@ void BladesPage::onArrayChoice() {
     // Always detach first
     detachIssues();
 
-    if (arraySel.choiceIdx() != -1) {
-        using namespace config::blades;
-        auto bladeConfigs{data::context(mConfig.bladeConfigs_)};
-        auto& selModel{*bladeConfigs.children()[arraySel.choiceIdx()]};
-        auto& selected{dynamic_cast<BladeConfig&>(selModel)};
+    using namespace config::blades;
+    if (auto *array{arraySel.selected<BladeConfig>()}) {
+        attachIssues(array->issues());
 
-        attachIssues(selected.issues());
-
-        mBladeSel.bind(&selected.blades_);
+        mBladeSel.bind(&array->blades_);
 
         auto selChoice{data::context(mBladeSel.choice())};
         if (
@@ -1009,7 +1005,20 @@ void BladesPage::onBladeChoice() {
     if (bladeSel.choiceIdx() != -1)
         mLastBladeChoice = bladeSel.choiceIdx();
 
-    mSubBladeSel.bind(nullptr);
+    using namespace config::blades;
+    if (auto *blade{bladeSel.selected<Blade>()}) {
+        mSubBladeSel.bind(&blade->ws281x().splits_);
+
+        auto selChoice{data::context(mSubBladeSel.choice())};
+        if (
+            mLastSubChoice != -1 and
+            mLastSubChoice < selChoice.num()
+           ) {
+            selChoice.choose(mLastSubChoice);
+        }
+    } else {
+        mSubBladeSel.bind(nullptr);
+    }
 }
 
 void BladesPage::onSubChoice() {
