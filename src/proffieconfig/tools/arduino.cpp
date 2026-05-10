@@ -308,15 +308,6 @@ std::variant<CompileOutput, wxString> compile(
     err = precheckCompile(config, *logger.binfo(PRECHK_MSG));
     if (err) return *err;
 
-    constexpr cstring OSCHK_MSG{wxTRANSLATE("Checking OS Version...")};
-    prog.set(10, wxGetTranslation(OSCHK_MSG));
-    logger.info(OSCHK_MSG);
-
-    if (config.os() == nullptr) {
-        logger.error("Configuration doesn't have an OS Version selected, cannot compile.");
-        return _("Please select an OS Version");
-    }
-
     err = ensureCoreInstalled(
         config.os()->coreVersion_,
         config.os()->coreUrl_,
@@ -461,13 +452,9 @@ std::variant<CompileOutput, wxString> compile(
         "-b",
     };
 
-    const auto *board{config.board()};
-    if (not board) {
-        logger.error("Board not selected.");
-        return _("Please select a board version");
-    }
+    const auto& board{*config.board()};
 
-    args.push_back(board->coreId_);
+    args.push_back(board.coreId_);
     args.emplace_back("--board-options");
 
     std::string options;
@@ -481,7 +468,7 @@ std::variant<CompileOutput, wxString> compile(
 
     using versions::detail::BOARDS;
     using enum versions::detail::BoardIdx;
-    if (board->name_ == BOARDS[eBoard_Proffie_V3].name_) {
+    if (board.name_ == BOARDS[eBoard_Proffie_V3].name_) {
         options +=",dosfs=sdmmc1";
     }
 
@@ -786,6 +773,16 @@ std::optional<wxString> precheckCompile(
     const config::Config& config, logging::Branch& lBranch
 ) {
     auto& logger{lBranch.createLogger("arduino::precheckCompile()")};
+
+    if (config.os() == nullptr) {
+        logger.error("Configuration doesn't have an OS Version selected, cannot compile.");
+        return _("Please select an OS Version");
+    }
+
+    if (config.board() == nullptr) {
+        logger.error("Board not selected.");
+        return _("Please select a board");
+    }
 
     auto bladeConfigs{data::context(config.bladeConfigs_)};
     if (bladeConfigs.children().empty()) {
