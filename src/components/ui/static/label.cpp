@@ -71,6 +71,7 @@ struct Static : detail::DataWindow<wxStaticText> {
             postCreation(scaffold, desc.win_);
             setup();
 
+            activate();
             return;
         } 
 
@@ -103,7 +104,8 @@ struct Static : detail::DataWindow<wxStaticText> {
     void onActivate() override {
         DataWindow::onActivate();
 
-        SetLabel(data::context(*str_).val());
+        if (str_)
+            SetLabel(data::context(*str_).val());
     }
 
     const data::base::Model *primaryModel() override {
