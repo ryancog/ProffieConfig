@@ -98,26 +98,32 @@ struct Control : detail::DataWindow<wxToggleButton> {
     }
 
     void onButton(wxCommandEvent& evt) {
-        if (not evt.GetInt()) return;
+        if (not evt.GetInt()) {
+            SetValue(true);
+            return;
+        }
 
         auto en{freezeGetRealEnable()};
         defer { thawRealEnable(); };
 
         if (not en) return;
 
-        auto& all{GetParent()->GetChildren()};
         wxToggleButton *last{nullptr};
-        for (auto *child : all) {
-            auto *btn{static_cast<wxToggleButton *>(last)};
-            if (child != this and btn->GetValue()) {
+        for (auto *child : GetParent()->GetChildren()) {
+            auto *btn{static_cast<wxToggleButton *>(child)};
+            if (btn->GetValue()) {
                 last = btn;
                 break;
             }
         }
-        auto res{bl_.set(true)};
+        assert(last != nullptr);
 
-        if (not res)
-            last->SetValue(true);
+        auto ctxt{data::context(bl_)};
+
+        ctxt.set(true);
+
+        if (not ctxt.val())
+            SetValue(false);
     }
 
     void onSet() {

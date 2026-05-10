@@ -79,8 +79,7 @@ void Exclusive::onSet(const Model& model) {
             continue;
         }
 
-        Bool::Context bl{testBl};
-        bl.set(false);
+        testBl.set(false);
     }
 
     mSelected = selIdx;

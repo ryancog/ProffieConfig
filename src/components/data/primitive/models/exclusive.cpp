@@ -25,6 +25,7 @@ using namespace data::prim;
 
 Exclusive::Exclusive(size num) {
     init(num);
+    activate();
 }
 
 bool Exclusive::select(size idx) {
