@@ -91,8 +91,6 @@ struct ControlBase : detail::DataWindow<Ctrl> {
             }()};
             data::Receiver::amend(*clamp_, clampTable);
         }
-
-        data::Receiver::activate();
     }
 
     void onActivate() override {
@@ -280,6 +278,7 @@ struct PopUpControl : ControlBase<wxChoice> {
         const Choice::PopUp& style
     ) : unselected_{style.unselected_} {
         create(scaffold, desc);
+        activate();
     }
 
     const wxEventTypeTag<wxCommandEvent>& event() const override {
@@ -319,7 +318,9 @@ struct ListControl : ControlBase<wxListBox> {
         const detail::Scaffold& scaffold,
         const Choice& desc,
         const Choice::List&
-    ) : ControlBase(scaffold, desc) {}
+    ) : ControlBase(scaffold, desc) {
+        activate();
+    }
 
     const wxEventTypeTag<wxCommandEvent>& event() const override {
         return wxEVT_LISTBOX;
