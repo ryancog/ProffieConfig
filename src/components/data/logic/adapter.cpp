@@ -78,7 +78,7 @@ auto data::logic::operator|(const base::Model& model, IsEnabled) -> Element {
     return std::make_unique<Adapter>(model);
 }
 
-auto data::logic::operator|(const base::Bool& bl, IsSet) -> Element {
+auto data::logic::operator|(const base::Bool& model, IsSet) -> Element {
     struct Adapter : detail::Base, data::Receiver {
         Adapter(const base::Bool& bl) : bl_{bl} {
             static const auto table{[] {
@@ -113,11 +113,11 @@ auto data::logic::operator|(const base::Bool& bl, IsSet) -> Element {
         const base::Bool& bl_;
     };
 
-    return std::make_unique<Adapter>(bl);
+    return std::make_unique<Adapter>(model);
 }
 
 auto data::logic::operator|(
-    const base::Choice& choice, HasSelection sels
+    const base::Choice& model, HasSelection sels
 ) -> Element {
     struct Adapter : detail::Base, data::Receiver {
         Adapter(const base::Choice& choice, HasSelection sels) :
@@ -160,11 +160,11 @@ auto data::logic::operator|(
         HasSelection sels_;
     };
 
-    return std::make_unique<Adapter>(choice, std::move(sels));
+    return std::make_unique<Adapter>(model, std::move(sels));
 }
 
 auto data::logic::operator|(
-    const base::Exclusive& excl, HasSelection sels
+    const base::Exclusive& model, HasSelection sels
 ) -> Element {
     struct Adapter : detail::Base, data::Receiver {
         Adapter(const base::Exclusive& excl, HasSelection sels) :
@@ -207,10 +207,10 @@ auto data::logic::operator|(
         HasSelection sels_;
     };
 
-    return std::make_unique<Adapter>(excl, std::move(sels));
+    return std::make_unique<Adapter>(model, std::move(sels));
 }
 
-auto data::logic::operator|(const base::Selector& sel, CanMoveUp) -> Element {
+auto data::logic::operator|(const base::Selector& model, CanMoveUp) -> Element {
     struct Adapter : detail::Base, data::Receiver {
         Adapter(const base::Selector& sel) :
             sel_{sel} {
@@ -246,11 +246,11 @@ auto data::logic::operator|(const base::Selector& sel, CanMoveUp) -> Element {
         const base::Selector& sel_;
     };
 
-    return std::make_unique<Adapter>(sel);
+    return std::make_unique<Adapter>(model);
 }
 
 auto data::logic::operator|(
-    const base::Selector& sel, CanMoveDown
+    const base::Selector& model, CanMoveDown
 ) -> Element {
     struct Adapter : detail::Base, data::Receiver {
         Adapter(const base::Selector& sel) :
@@ -287,11 +287,11 @@ auto data::logic::operator|(
         const base::Selector& sel_;
     };
 
-    return std::make_unique<Adapter>(sel);
+    return std::make_unique<Adapter>(model);
 }
 
 auto data::logic::operator|(
-    const base::String& choice, IsEmpty
+    const base::String& model, IsEmpty
 ) -> Element {
     struct Adapter : detail::Base, data::Receiver {
         Adapter(const base::String& str) : str_{str} {
@@ -327,11 +327,11 @@ auto data::logic::operator|(
         const base::String& str_;
     };
 
-    return std::make_unique<Adapter>(choice);
+    return std::make_unique<Adapter>(model);
 }
 
 auto data::logic::operator|(
-    const base::Vector& choice, IsEmpty
+    const base::Vector& model, IsEmpty
 ) -> Element {
     struct Adapter : detail::Base, data::Receiver {
         Adapter(const base::Vector& vec) : vec_{vec} {
@@ -377,7 +377,7 @@ auto data::logic::operator|(
         const base::Vector& vec_;
     };
 
-    return std::make_unique<Adapter>(choice);
+    return std::make_unique<Adapter>(model);
 }
 
 auto data::logic::operator|(
