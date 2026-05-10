@@ -31,7 +31,7 @@
 
 namespace data::hier {
 
-// TODO: There's a lot left over from changing and leftoever ideas.
+// TODO: There's a lot left over from changing and old ideas.
 //       The intent is generally poorly conveyed, and I need to give this
 //       proper effort to clean it up eventually.
 struct DATA_EXPORT Root : Model {
