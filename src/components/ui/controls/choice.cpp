@@ -191,7 +191,9 @@ struct ControlBase : detail::DataWindow<Ctrl> {
         auto str{data::context(strModel).val()};
         auto idx{mLabelMapping[&strModel]};
 
-        detail::WindowImpl::safeCall([this, idx=idx, str=std::move(str)] {
+        detail::WindowImpl::safeCall([
+            this, idx=dataToControl(idx), str=std::move(str)
+        ] {
             Ctrl::SetString(idx, str.empty() ? mEmptyLabel : str);
         });
     }
