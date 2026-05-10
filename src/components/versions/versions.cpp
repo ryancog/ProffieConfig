@@ -637,6 +637,8 @@ std::optional<std::string> versions::downloadOS(
         return _("Could not write ProffieOS info file").ToStdString();
     }
 
+    loadLocal(logger.binfo("Reloading local..."));
+
     return std::nullopt;
 }
 
@@ -754,6 +756,8 @@ std::optional<std::string> versions::downloadProp(
         logger.error("Info file write failed: " + std::to_string(fstream.rdstate()));
         return _("Could not write prop info file").ToStdString();
     }
+
+    loadLocal(logger.binfo("Reloading local..."));
 
     return std::nullopt;
 }
