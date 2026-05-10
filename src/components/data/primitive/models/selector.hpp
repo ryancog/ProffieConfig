@@ -29,6 +29,7 @@ namespace data::prim {
 
 struct DATA_EXPORT Selector : base::Selector, Model {
     Selector();
+    ~Selector() override;
 
     base::Choice& choice() const override;
     bool bind(const base::Vector *) override;

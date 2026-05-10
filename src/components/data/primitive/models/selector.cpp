@@ -28,6 +28,10 @@ Selector::Selector() {
     activate();
 }
 
+Selector::~Selector() {
+    deactivate();
+}
+
 data::base::Choice& Selector::choice() const {
     return mChoice;
 }
