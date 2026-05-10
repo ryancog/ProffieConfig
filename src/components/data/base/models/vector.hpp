@@ -20,6 +20,7 @@
  */
 
 #include <memory>
+#include <span>
 #include <vector>
 
 #include "data/base/model.hpp"
@@ -80,7 +81,7 @@ struct DATA_EXPORT Vector::ROContext : virtual Model::ROContext {
     template <typename M = Vector>
     [[nodiscard]] auto& model() const { return Model::ROContext::model<M>(); }
 
-    [[nodiscard]] const std::vector<std::unique_ptr<Model>>&
+    [[nodiscard]] std::span<const std::unique_ptr<Model>>
         children() const LIFETIMEBOUND;
 };
 

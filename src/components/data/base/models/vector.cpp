@@ -86,7 +86,7 @@ void Vector::doSwap(size idx) {
 Vector::ROContext::ROContext(const Vector& vec) : Model::ROContext(vec) {}
 
 auto Vector::ROContext::children(
-) const -> const std::vector<std::unique_ptr<Model>>& {
+) const -> std::span<const std::unique_ptr<Model>> {
     return model().mChildren;
 }
 
