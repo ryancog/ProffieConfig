@@ -32,7 +32,7 @@ namespace config {
 
 struct Config;
 
-struct CONFIG_EXPORT Settings : data::hier::Model, private data::Receiver {
+struct CONFIG_EXPORT Settings : data::hier::Model, data::Receiver {
     struct ProcessDefinesAction;
 
     Settings(Config&);

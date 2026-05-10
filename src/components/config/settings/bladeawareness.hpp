@@ -35,8 +35,7 @@ struct Settings;
 
 namespace settings {
 
-struct CONFIG_EXPORT BladeAwareness : data::hier::Model,
-                                      private data::Receiver {
+struct CONFIG_EXPORT BladeAwareness : data::hier::Model, data::Receiver {
     BladeAwareness(Settings&);
     ~BladeAwareness() override;
 

@@ -33,7 +33,7 @@ struct Config;
 
 namespace presets {
 
-struct CONFIG_EXPORT Array : data::hier::Model, private data::Receiver {
+struct CONFIG_EXPORT Array : data::hier::Model, data::Receiver {
     Array(Config&);
     ~Array() override;
 

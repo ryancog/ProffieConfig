@@ -40,7 +40,7 @@ struct CONFIG_EXPORT Simple : data::hier::Model {
 
     std::vector<Model *> children() override;
 
-    struct LED : data::hier::Model, private data::Receiver {
+    struct LED : data::hier::Model, data::Receiver {
         LED(Simple&);
 
         std::vector<Model *> children() override;

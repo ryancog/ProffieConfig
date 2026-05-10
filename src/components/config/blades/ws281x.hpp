@@ -39,7 +39,7 @@ namespace blades {
 
 struct Blade;
 
-struct CONFIG_EXPORT WS281X : data::hier::Model, private data::Receiver {
+struct CONFIG_EXPORT WS281X : data::hier::Model, data::Receiver {
     struct Split;
 
     WS281X(Blade&);
@@ -67,8 +67,7 @@ private:
     void onSplitsModify(size);
 };
 
-struct CONFIG_EXPORT WS281X::Split : data::hier::Model, 
-                                     private data::Receiver {
+struct CONFIG_EXPORT WS281X::Split : data::hier::Model, data::Receiver {
     Split(WS281X&);
 
     std::vector<Model *> children() override;
