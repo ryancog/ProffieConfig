@@ -80,7 +80,7 @@ void WindowImpl::postCreation(
         const auto onWheel{[scrolled=scaffold.scrolled_](
             wxMouseEvent& evt
         ) {
-            scrolled->HandleOnMouseWheel(evt);
+            scrolled->ProcessWindowEvent(evt);
         }};
         win->Bind(wxEVT_MOUSEWHEEL, onWheel);
     }
