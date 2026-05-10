@@ -173,6 +173,8 @@ Window::Window(
     amend(subSel_.choice(), choiceTable);
 
     SetAutoLayout(true);
+
+    activate();
 }
 
 void Window::onActivate() {
@@ -350,6 +352,9 @@ void Window::recalcSizes() {
     }
 }
 
+// TODO: Surely this can be made less repetitive?
+// Would need potentially somewhat tedious testing on all three platforms
+// though and it works, so I'm not bothering to touch it...
 void Window::paintEvent(wxPaintEvent&) {
     wxPaintDC paintDC{this};
 
