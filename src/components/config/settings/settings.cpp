@@ -288,14 +288,15 @@ void Settings::ProcessDefinesAction::perform() {
     auto& settings{source<Settings>()};
     auto& logger{logging::Context::getGlobal().createLogger("config::Settings::ProcessDefinesAction")};
 
-    auto defineVec{data::context(settings.defines_)};
-    const auto& defines{defineVec.children()};
+    auto defines{data::context(settings.defines_)};
 
     using namespace priv;
 
     // First for builtins
-    for (auto idx{0}; idx < defines.size(); ++idx) {
-        auto& defModel{dynamic_cast<settings::Define&>(*defines[idx])};
+    for (auto idx{0}; idx < defines.children().size(); ++idx) {
+        auto& defModel{dynamic_cast<settings::Define&>(
+            *defines.children()[idx]
+        )};
         auto define{data::context(defModel.name_)};
         auto value{data::context(defModel.value_)};
 
@@ -541,15 +542,17 @@ void Settings::ProcessDefinesAction::perform() {
         }
 
         if (processed) {
-            defineVec.remove(idx);
+            defines.remove(idx);
             --idx;
         }
     }
 
     auto& config{settings.root<Config>()};
     if (auto propVec{config.propVec()}) {
-        for (auto idx{0}; idx < defines.size(); ++idx) {
-            auto& define{dynamic_cast<settings::Define&>(*defines[idx])};
+        for (auto idx{0}; idx < defines.children().size(); ++idx) {
+            auto& define{dynamic_cast<settings::Define&>(
+                *defines.children()[idx]
+            )};
             auto name{data::context(define.name_)};
             auto value{data::context(define.value_)};
             auto numVal{utils::doStringMath(value.val())};
@@ -574,7 +577,7 @@ void Settings::ProcessDefinesAction::perform() {
             }
 
             if (used) {
-                defineVec.remove(idx);
+                defines.remove(idx);
                 --idx;
             }
         }
