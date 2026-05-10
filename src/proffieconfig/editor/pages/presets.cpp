@@ -74,6 +74,10 @@ PresetsPage::PresetsPage(config::Config& config) : mConfig{config} {
     activate();
 }
 
+void PresetsPage::deinit() {
+    deactivate();
+}
+
 void PresetsPage::onActivate() {
     mArraySel.bind(&mConfig.presetArrays_);
     mDisplaySel.bind(&mConfig.bladeConfigs_);

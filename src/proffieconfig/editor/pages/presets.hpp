@@ -30,15 +30,17 @@
 
 struct PresetsPage : data::Receiver {
     PresetsPage(config::Config&);
-
-    void onActivate() override;
-    void onDeactivate() override;
+    void deinit();
 
     pcui::DescriptorPtr ui();
 
     [[nodiscard]] const data::prim::Selector& styleSel() const {
         return mStyleSel;
     }
+
+protected:
+    void onActivate() override;
+    void onDeactivate() override;
 
 private:
     pcui::DescriptorPtr selection();

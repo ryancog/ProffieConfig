@@ -90,6 +90,10 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
     activate();
 }
 
+void BladesPage::deinit() {
+    deactivate();
+}
+
 void BladesPage::onActivate() {
     mArraySel.bind(&mConfig.bladeConfigs_);
 }
@@ -99,6 +103,8 @@ void BladesPage::onDeactivate() {
         pcui::cripple(mAwarenessDlg);
         mAwarenessDlg->Destroy();
     }
+
+    mArraySel.bind(nullptr);
 }
 
 pcui::DescriptorPtr BladesPage::ui() {
