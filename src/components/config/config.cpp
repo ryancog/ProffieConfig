@@ -104,7 +104,9 @@ Config::Config() :
     activate();
 }
 
-Config::~Config() = default;
+Config::~Config() {
+    deactivate();
+}
 
 std::vector<data::hier::Model *> Config::children() {
     std::vector<data::hier::Model *> ret{
