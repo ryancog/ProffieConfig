@@ -481,6 +481,11 @@ std::variant<CompileOutput, wxString> compile(
 
     std::string compileOutput{};
     while(auto buffer = proc.read()) {
+        if (prog.cancelled()) {
+            proc.interrupt();
+            return _("Cancelled");
+        }
+
         prog.pulse();
         compileOutput += *buffer;
     }
