@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config/presets/array.hpp"
+#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "ui/build.hpp"
 #include "ui/controls/button.hpp"
@@ -114,6 +116,12 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
                 .data_=mConfig.presetArray_,
                 .style_=pcui::Choice::PopUp{
                   .unselected_=_("Select Array"),
+                },
+                .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
+                    auto ctxt{data::context(mConfig.presetArray_)};
+                    auto vec{data::context(*ctxt.bound())};
+                    auto& model{*vec.children()[idx]};
+                    return dynamic_cast<config::presets::Array&>(model).name_;
                 },
               }(),
             }(),
