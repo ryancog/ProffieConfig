@@ -45,7 +45,7 @@ pcui::DescriptorPtr PropsPage::ui() {
               .ctrl_=pcui::Choice{
                 .data_=mConfig.propChoice(),
                 .style_=pcui::Choice::PopUp{
-                  .unselected_=_("Select Prop"),
+                  .unselected_=_("Default"),
                 }
               }(),
             }(),
