@@ -65,6 +65,8 @@ struct PROCESS_EXPORT Process {
 
     Result finish();
 
+    void interrupt();
+
 private:
     void *mRef{nullptr};
 };

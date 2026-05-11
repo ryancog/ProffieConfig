@@ -306,7 +306,9 @@ bool Process::write(const std::string_view& str) {
 
 Process::Result Process::finish() {
     assert(mRef);
-    auto ret{reinterpret_cast<InternalData *>(mRef)->promise_.get_future().get()};
+
+    auto& data{*reinterpret_cast<InternalData *>(mRef)};
+    auto ret{data.promise_.get_future().get()};
     dataLock.lock();
     for (auto iter{internalDatas.begin()}; iter != internalDatas.end(); ++iter) {
         if (&*iter == mRef) {
@@ -316,6 +318,20 @@ Process::Result Process::finish() {
     }
     dataLock.unlock();
     return ret;
+}
+
+void Process::interrupt() {
+    assert(mRef);
+
+    auto& data{*reinterpret_cast<InternalData *>(mRef)};
+
+#ifdef _WIN32
+    static_assert(false);
+#else
+    kill(data.pid_, SIGINT);
+#endif
+
+    finish();
 }
 
 #ifdef _WIN32
