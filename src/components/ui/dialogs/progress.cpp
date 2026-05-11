@@ -81,7 +81,11 @@ void ProgressDialog::pulse(const wxString& message) {
 void ProgressDialog::finish(bool modalWait, const wxString& message) {
     mMessage.change(message.ToStdString());
 
-    { Progress::Data::Context ctxt{mData};
+    // The value is set to the end of the range in order to make the "OK"
+    // button appear. If not modal waiting, then there's no point to doing
+    // this, and it probably will just show the button unnecessarily.
+    if (modalWait) {
+        auto ctxt{data::context(mData)};
         ctxt.set(ctxt.range());
     }
 
