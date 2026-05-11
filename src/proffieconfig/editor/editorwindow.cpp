@@ -133,8 +133,6 @@ void EditorWindow::bindEvents() {
             true
         )};
 
-        prog->set(0, _("Initializing..."));
-
         std::thread{[this, prog, busy]() {
             arduino::verifyConfig(*mInfo.config(), *prog);
         }}.detach();

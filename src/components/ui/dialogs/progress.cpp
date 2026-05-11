@@ -45,6 +45,7 @@ ProgressDialog::ProgressDialog(
     wxSize size,
     long style
 ) : Dialog(parent, wxID_ANY, title, style) {
+    mMessage.change(_("Initializing...").ToStdString());
 
     size.IncTo({200, 50});
     build(this, ui(mayCancel, size));
