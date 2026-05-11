@@ -63,12 +63,13 @@ struct MainMenu : pcui::Frame {
 
     void removeEditor(EditorWindow *);
 
-    data::prim::Choice board_;
-    data::prim::Selector configSel_;
-
     static MainMenu* instance;
 
 private:
+    data::prim::Choice mBoardChoice;
+    data::prim::Selector mConfigSel;
+
+    std::vector<std::string> mBoards;
     std::map<config::Info *, EditorWindow *> mEditors;
 
     pcui::DescriptorPtr ui();
@@ -76,6 +77,8 @@ private:
     void createMenuBar();
     void bindEvents();
 
-    void importConfig();
+    void onAddConfig();
+    void onEditConfig();
+    void onRefreshBoards();
 };
 
