@@ -161,17 +161,25 @@ void BladeAwareness::onIDEnable() {
     bladeId_.bridgePin_.enable(ctxt.val());
     bladeId_.pullup_.enable(ctxt.val());
     bladeId_.continuous_.enable_.enable(ctxt.val());
-    // if (not set) bladeId_.continuousScanning = false;
+
+    onContinuousEnable();
+    onIDPower();
 }
 
 void BladeAwareness::onContinuousEnable() {
-    auto ctxt{data::context(bladeId_.continuous_.enable_)};
-    bladeId_.continuous_.interval_.enable(ctxt.val());
-    bladeId_.continuous_.times_.enable(ctxt.val());
+    auto id{data::context(bladeId_.enable_)};
+    auto cont{data::context(bladeId_.continuous_.enable_)};
+    auto en{id.val() and cont.val()};
+
+    bladeId_.continuous_.interval_.enable(en);
+    bladeId_.continuous_.times_.enable(en);
 }
 
 void BladeAwareness::onIDPower() {
-    auto ctxt{data::context(bladeId_.powerForId_)};
-    bladeId_.powerPins_.enable(ctxt.val());
+    auto id{data::context(bladeId_.enable_)};
+    auto pow{data::context(bladeId_.powerForId_)};
+    auto en{id.val() and pow.val()};
+
+    bladeId_.powerPins_.enable(en);
 }
 
