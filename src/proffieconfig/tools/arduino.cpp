@@ -316,7 +316,9 @@ std::variant<CompileOutput, wxString> compile(
     );
     if (err) return *err;
 
-    const auto osPath{paths::osDir() / config.os()->version_.string()};
+    const auto osPath{
+        paths::osDir() / config.os()->version_.string() / "ProffieOS"
+    };
 
     if (const auto *prop{config.prop()}) {
         constexpr cstring PROPINST_MSG{wxTRANSLATE("Installing Prop File...")};
