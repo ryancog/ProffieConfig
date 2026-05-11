@@ -115,6 +115,8 @@ void Receiver::deactivate() {
     // but exceptional cases require early deactivation.
     if (not mAttached) return;
 
+    preDeactivate();
+
     // The remaining flow mirrors activate()
     for (auto [model, map] : mRecvMap) {
         model->lock();

@@ -63,6 +63,7 @@ protected:
     Receiver();
 
     virtual void onActivate() {}
+    virtual void preDeactivate() {}
     virtual void onDeactivate() {}
 
     mutable std::recursive_mutex pMutex;
