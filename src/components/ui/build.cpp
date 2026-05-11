@@ -25,6 +25,7 @@
 #include "ui/frame.hpp"
 #include "ui/detail/helpers.hpp"
 #include "ui/detail/datawin.hpp"
+#include "ui/layout/priv/panel.hpp"
 
 namespace {
 
@@ -41,7 +42,7 @@ void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
 
     auto *parent{win};
     if (dynamic_cast<Frame *>(parent)) {
-        parent = new wxPanel(win);
+        parent = new priv::Panel(win);
     }
 
     if (not desc) return;

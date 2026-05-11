@@ -26,15 +26,16 @@
 #include <wx/panel.h>
 
 #include "ui/detail/window.hpp"
+#include "ui/layout/priv/panel.hpp"
 #include "ui/types.hpp"
 
 using namespace pcui;
 
 namespace {
 
-struct Layout : detail::Window<wxPanel> {
-    Layout(const detail::Scaffold& scaffold, const Panel& desc) {
-        Create(scaffold.childParent_);
+struct Layout : detail::Window<priv::Panel> {
+    Layout(const detail::Scaffold& scaffold, const pcui::Panel& desc) {
+        create(scaffold.childParent_);
 
 #       ifdef _WIN32
 #       ifdef __WXGTK__
