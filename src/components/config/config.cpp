@@ -353,6 +353,7 @@ std::optional<std::string> Info::save(
     fs::remove(tmpPath, errCode);
 
     mConfig->mSavedAction = ctxt.actionIndex();
+    mConfig->mIsSaved.set(true);
 
     return err;
 }
