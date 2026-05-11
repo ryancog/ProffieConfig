@@ -332,13 +332,21 @@ std::optional<std::string> parsePresets(
     uint32 start{};
 
     std::string element;
+    std::string name;
     while (presetsStream.good()) {
         if (utils::skipComment(presetsStream)) continue;
 
         if (search == eNone) {
             presetsStream >> element;
             if (element == "Preset") {
-                presetsStream >> element;
+                // The next extraction should be the name.
+                // It could be a comment, but I'm not going to worry about that
+                // for now...
+                presetsStream >> name;
+
+                // This'll take care of the [] if it's there.
+                utils::trimCppName(name);
+
                 search = ePreset_Array;
                 depth = 0;
             } else if (element == "BladeConfig") {
@@ -373,16 +381,16 @@ std::optional<std::string> parsePresets(
                     const auto data{presets.substr(start, dataEndPos - start + 1)};
                     std::optional<std::string> ret;
                     if (search == ePreset_Array) {
-                        auto array{std::make_unique<presets::Array>(config)};
+                        auto presetArrays{data::context(config.presetArrays_)};
+
+                        auto& array{presetArrays.append<presets::Array>(config)};
+                        array.name_.change(std::move(name));
 
                         ret = parsePresetArray(
                             data,
-                            *array,
+                            array,
                             *logger.binfo("Parsing preset array \"" + element + "\"...")
                         );
-
-                        auto presetArrays{data::context(config.presetArrays_)};
-                        presetArrays.append(std::move(array));
                     } else if (search == eBlade_Arrays) {
                         ret = parseBladeArrays(
                             data,
@@ -469,9 +477,9 @@ std::optional<std::string> parsePresetArray(
         if (reading == eNone) {
             if (chr == '{') {
                 reading = ePost_Brace;
-                presets.append(std::make_unique<presets::Preset>(
+                presets.append<presets::Preset>(
                     array.root<Config>()
-                ));
+                );
             }
         } else if (reading == ePost_Brace or reading == ePost_Dir) {
             if (chr == '"') {
