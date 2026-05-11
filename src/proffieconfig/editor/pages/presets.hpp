@@ -40,7 +40,7 @@ struct PresetsPage : data::Receiver {
 
 protected:
     void onActivate() override;
-    void onDeactivate() override;
+    void preDeactivate() override;
 
 private:
     pcui::DescriptorPtr selection();

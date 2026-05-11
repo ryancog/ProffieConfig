@@ -83,7 +83,7 @@ void PresetsPage::onActivate() {
     mDisplaySel.bind(&mConfig.bladeConfigs_);
 }
 
-void PresetsPage::onDeactivate() {
+void PresetsPage::preDeactivate() {
     // This'll cascade to preset and style sels
     mArraySel.bind(nullptr);
     mDisplaySel.bind(nullptr);

@@ -98,13 +98,16 @@ void BladesPage::onActivate() {
     mArraySel.bind(&mConfig.bladeConfigs_);
 }
 
+void BladesPage::preDeactivate() {
+    // Do this pre so that the handling to unbind others is still active.
+    mArraySel.bind(nullptr);
+}
+
 void BladesPage::onDeactivate() {
     if (mAwarenessDlg) {
         pcui::cripple(mAwarenessDlg);
         mAwarenessDlg->Destroy();
     }
-
-    mArraySel.bind(nullptr);
 }
 
 pcui::DescriptorPtr BladesPage::ui() {

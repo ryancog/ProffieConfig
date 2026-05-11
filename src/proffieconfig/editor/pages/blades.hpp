@@ -37,6 +37,7 @@ struct BladesPage : data::Receiver {
 
 protected:
     void onActivate() override;
+    void preDeactivate() override;
     void onDeactivate() override;
 
 private:
