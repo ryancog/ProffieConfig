@@ -91,6 +91,11 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
 }
 
 void BladesPage::deinit() {
+    if (mAwarenessDlg) {
+        pcui::cripple(mAwarenessDlg);
+        mAwarenessDlg->Destroy();
+    }
+
     deactivate();
 }
 
@@ -101,13 +106,6 @@ void BladesPage::onActivate() {
 void BladesPage::preDeactivate() {
     // Do this pre so that the handling to unbind others is still active.
     mArraySel.bind(nullptr);
-}
-
-void BladesPage::onDeactivate() {
-    if (mAwarenessDlg) {
-        pcui::cripple(mAwarenessDlg);
-        mAwarenessDlg->Destroy();
-    }
 }
 
 pcui::DescriptorPtr BladesPage::ui() {
@@ -139,14 +137,7 @@ pcui::DescriptorPtr BladesPage::selection() {
           .win_={.base_={.expand_=true}},
           .label_=_("Blade Awareness..."),
           .func_=[this](const pcui::CallbackContext& ctxt) {
-              if (not mAwarenessDlg) {
-                  mAwarenessDlg = new BladeAwarenessDlg(
-                      ctxt.topLevel_, mConfig
-                  );
-              }
-
-              mAwarenessDlg->Show();
-              mAwarenessDlg->Raise();
+              onAwarenessButton(ctxt);
           }
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
@@ -201,23 +192,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                   },
                   .exactFit_=true,
                   .func_=[this](const pcui::CallbackContext& ctxt) {
-                      if (mArrayDlg) {
-                          mArrayDlg->Show();
-                          mArrayDlg->Raise();
-                          return;
-                      }
-
-                      using namespace config::blades;
-
-                      auto sel{data::context(mArraySel)};
-                      auto& cfg{dynamic_cast<BladeConfig&>(*sel.selected())};
-                      mArrayDlg = new BladeArrayDlg(ctxt.topLevel_, cfg, false);
-                      const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
-                          if (evt.GetEventObject() == mArrayDlg) mArrayDlg = nullptr;
-                      }};
-                      mArrayDlg->Bind(wxEVT_DESTROY, onDestroy);
-
-                      mArrayDlg->Show();
+                      onEditButton(ctxt);
                   }
                 }(),
               }
@@ -232,28 +207,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                   .label_=_("Add"),
                   .exactFit_=true,
                   .func_=[this](const pcui::CallbackContext& ctxt) {
-                      // Only ever allow one of these dialogs. Not a technical
-                      // limitation, just don't want things cluttered.
-                      if (mArrayDlg)
-                          mArrayDlg->Destroy();
-
-                      auto vec{data::context(mConfig.bladeConfigs_)};
-                      auto& cfg{vec.append<config::blades::BladeConfig>(mConfig)};
-
-                      // For new creation, for things like this, it would make
-                      // more sense to create a temporary and then add it in
-                      // later on confirm, so as to not clutter the action
-                      // tree.
-                      BladeArrayDlg dlg(ctxt.topLevel_, cfg, true);
-
-                      auto res{dlg.ShowModal()};
-                      if (res != wxID_OK) {
-                          vec.remove(vec.children().size() - 1);
-                      } else {
-                          mArraySel.choice().choose(
-                              static_cast<int32>(vec.children().size() - 1)
-                          );
-                      }
+                      onAddButton(ctxt);
                   }
                 }(),
                 pcui::Spacer{.size_=pcui::interControlSpacing()}(),
@@ -264,12 +218,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                   },
                   .label_=_("Remove"),
                   .exactFit_=true,
-                  .func_=[this] {
-                      auto sel{data::context(mArraySel)};
-                      auto vec{data::context(mConfig.bladeConfigs_)};
-
-                      vec.remove(*sel.selected());
-                  }
+                  .func_=[this] { onRemoveButton(); },
                 }(),
               }
             }(),
@@ -300,11 +249,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                   .label_=pcui::syms::PLUS,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
-                  .func_=[this] {
-                      auto sel{data::context(mBladeSel)};
-                      auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
-                      vec.append(std::make_unique<config::blades::Blade>(mConfig));
-                  },
+                  .func_=[this] { onAddBladeButton(); },
                 }(),
                 pcui::Button{
                   .win_={
@@ -314,11 +259,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                   .label_=pcui::syms::MINUS,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
-                  .func_=[this] {
-                      auto sel{data::context(mBladeSel)};
-                      auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
-                      vec.remove(sel.choiceIdx());
-                  },
+                  .func_=[this] { onRemoveBladeButton(); },
                 }(),
               }
             }(),
@@ -772,13 +713,7 @@ pcui::DescriptorPtr BladesPage::splits(config::blades::WS281X& ws281x) {
             pcui::Button{
               .win_={.base_={.proportion_=1}},
               .label_=_("Add"),
-              .func_=[this, &ws281x] {
-                  auto vec{data::context(ws281x.splits_)};
-                  auto choice{data::context(mSubBladeSel.choice())};
-
-                  vec.append(std::make_unique<config::blades::WS281X::Split>(ws281x));
-                  choice.choose(static_cast<int32>(vec.children().size() - 1));
-              }
+              .func_=[this, &ws281x] { onAddSplitButton(ws281x); },
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::Button{
@@ -787,12 +722,7 @@ pcui::DescriptorPtr BladesPage::splits(config::blades::WS281X& ws281x) {
                 .enable_=mSubBladeSel.choice() | data::logic::HasSelection{},
               },
               .label_=_("Remove"),
-              .func_=[this, &ws281x] {
-                  auto sel{data::context(mSubBladeSel)};
-                  auto vec{data::context(ws281x.splits_)};
-
-                  vec.remove(*sel.selected());
-              }
+              .func_=[this, &ws281x] { onRemoveSplitButton(ws281x); },
             }(),
           }
         }(),
@@ -807,7 +737,9 @@ pcui::DescriptorPtr BladesPage::splits(config::blades::WS281X& ws281x) {
                     .children_={
                       pcui::StretchSpacer{}(),
                       pcui::Label{
-                        .win_={.base_={.proportion_=1, .align_=wxALIGN_CENTER}},
+                        .win_={
+                          .base_={.proportion_=1, .align_=wxALIGN_CENTER},
+                        },
                         .label_=_("Add SubBlades to edit them here."),
                         .color_=wxSYS_COLOUR_GRAYTEXT,
                         .wrapWidth_=120,
@@ -973,6 +905,96 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
         }(),
       }
     }();
+}
+
+void BladesPage::onAwarenessButton(const pcui::CallbackContext& ctxt) {
+    if (not mAwarenessDlg) {
+        mAwarenessDlg = new BladeAwarenessDlg(
+            ctxt.topLevel_, mConfig
+        );
+    }
+
+    mAwarenessDlg->Show();
+    mAwarenessDlg->Raise();
+}
+
+void BladesPage::onEditButton(const pcui::CallbackContext& ctxt) {
+    if (mArrayDlg) {
+        mArrayDlg->Show();
+        mArrayDlg->Raise();
+        return;
+    }
+
+    using namespace config::blades;
+
+    auto sel{data::context(mArraySel)};
+    auto& cfg{dynamic_cast<BladeConfig&>(*sel.selected())};
+    mArrayDlg = new BladeArrayDlg(ctxt.topLevel_, cfg, false);
+    const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
+        if (evt.GetEventObject() == mArrayDlg) mArrayDlg = nullptr;
+    }};
+    mArrayDlg->Bind(wxEVT_DESTROY, onDestroy);
+
+    mArrayDlg->Show();
+}
+
+void BladesPage::onAddButton(const pcui::CallbackContext& ctxt) {
+    // Only ever allow one of these dialogs. Not a technical
+    // limitation, just don't want things cluttered.
+    if (mArrayDlg)
+        mArrayDlg->Destroy();
+
+    auto vec{data::context(mConfig.bladeConfigs_)};
+    auto& cfg{vec.append<config::blades::BladeConfig>(mConfig)};
+
+    // For new creation, for things like this, it would make
+    // more sense to create a temporary and then add it in
+    // later on confirm, so as to not clutter the action
+    // tree.
+    BladeArrayDlg dlg(ctxt.topLevel_, cfg, true);
+
+    auto res{dlg.ShowModal()};
+    if (res != wxID_OK) {
+        vec.remove(vec.children().size() - 1);
+    } else {
+        mArraySel.choice().choose(
+            static_cast<int32>(vec.children().size() - 1)
+        );
+    }
+}
+
+void BladesPage::onRemoveButton() {
+    auto sel{data::context(mArraySel)};
+    auto vec{data::context(mConfig.bladeConfigs_)};
+
+    vec.remove(*sel.selected());
+}
+
+void BladesPage::onAddBladeButton() {
+    auto sel{data::context(mBladeSel)};
+    auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
+    vec.append(std::make_unique<config::blades::Blade>(mConfig));
+}
+
+void BladesPage::onRemoveBladeButton() {
+    auto sel{data::context(mBladeSel)};
+    auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
+    vec.remove(sel.choiceIdx());
+}
+
+void BladesPage::onAddSplitButton(config::blades::WS281X& ws281x) {
+    auto vec{data::context(ws281x.splits_)};
+    auto choice{data::context(mSubBladeSel.choice())};
+
+    vec.append(std::make_unique<config::blades::WS281X::Split>(ws281x));
+    choice.choose(static_cast<int32>(vec.children().size() - 1));
+}
+
+void BladesPage::onRemoveSplitButton(config::blades::WS281X& ws281x) {
+    auto sel{data::context(mSubBladeSel)};
+    auto vec{data::context(ws281x.splits_)};
+
+    vec.remove(*sel.selected());
 }
 
 void BladesPage::onArrayChoice() {

@@ -48,6 +48,17 @@ private:
     pcui::DescriptorPtr displayAndBlade();
     pcui::DescriptorPtr style();
 
+    void onEditButton(const pcui::CallbackContext&);
+    void onAddButton(const pcui::CallbackContext&);
+    void onRemoveButton();
+
+    void onAddPresetButton();
+    void onRemovePresetButton();
+
+    void onMoveUpButton();
+    void onMoveDownButton();
+    void onDuplicateButton();
+
     void onArrayChoice();
     void onPresetChoice();
     void onDisplayChoice();

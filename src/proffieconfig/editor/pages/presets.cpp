@@ -153,18 +153,18 @@ pcui::DescriptorPtr PresetsPage::selection() {
                       };
 
                       return pcui::Button{
-                          .win_={
-                              .base_={
-                                  .border_={
-                                      .size_=pcui::interControlSpacing(),
-                                      .dirs_=wxLEFT
-                                  },
-                              },
-                              .show_=not (array.issues() |
-                                      data::logic::Equals{.val_=0})
+                        .win_={
+                        .base_={
+                          .border_={
+                            .size_=pcui::interControlSpacing(),
+                            .dirs_=wxLEFT
                           },
-                              .label_=pcui::syms::NO_ENTRY,
-                              .exactFit_=true,
+                        },
+                        .show_=not (array.issues() |
+                            data::logic::Equals{.val_=0})
+                        },
+                        .label_=pcui::syms::NO_ENTRY,
+                        .exactFit_=true,
                       }();
                   }
                 }(),
@@ -182,23 +182,7 @@ pcui::DescriptorPtr PresetsPage::selection() {
                   },
                   .exactFit_=true,
                   .func_=[this](const pcui::CallbackContext& ctxt) {
-                      if (mDlg) {
-                          mDlg->Show();
-                          mDlg->Raise();
-                          return;
-                      }
-
-                      using namespace config::presets;
-
-                      auto sel{data::context(mArraySel)};
-                      auto& cfg{dynamic_cast<Array&>(*sel.selected())};
-                      mDlg = new PresetArrayDlg(ctxt.topLevel_, cfg, false);
-                      const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
-                          if (evt.GetEventObject() == mDlg) mDlg = nullptr;
-                      }};
-                      mDlg->Bind(wxEVT_DESTROY, onDestroy);
-
-                      mDlg->Show();
+                      onEditButton(ctxt);
                   }
                 }(),
               }
@@ -212,27 +196,7 @@ pcui::DescriptorPtr PresetsPage::selection() {
                   .win_={.base_={.proportion_=1}},
                   .label_=_("Add"),
                   .func_=[this](const pcui::CallbackContext& ctxt) {
-                      // Only ever allow one of these dialogs. Not a technical
-                      // limitation, just don't want things cluttered.
-                      if (mDlg) mDlg->Destroy();
-
-                      auto vec{data::context(mConfig.presetArrays_)};
-                      auto& cfg{vec.append<config::presets::Array>(mConfig)};
-
-                      PresetArrayDlg dlg(ctxt.topLevel_, cfg, true);
-
-                      auto res{dlg.ShowModal()};
-
-                      if (res != wxID_OK) {
-                          // Make sure the dialog is crippled before removing
-                          // the model it's linked to.
-                          pcui::cripple(&dlg);
-                          vec.remove(vec.children().size() - 1);
-                      } else {
-                          mArraySel.choice().choose(
-                              static_cast<int32>(vec.children().size() - 1)
-                          );
-                      }
+                      onAddButton(ctxt);
                   }
                 }(),
                 pcui::Spacer{.size_=pcui::interControlSpacing()}(),
@@ -242,12 +206,7 @@ pcui::DescriptorPtr PresetsPage::selection() {
                     .enable_=mArraySel.choice() | data::logic::HasSelection{},
                   },
                   .label_=_("Remove"),
-                  .func_=[this] {
-                      auto sel{data::context(mArraySel)};
-                      auto vec{data::context(mConfig.presetArrays_)};
-
-                      vec.remove(*sel.selected());
-                  }
+                  .func_=[this] { onRemoveButton(); },
                 }(),
               }
             }(),
@@ -288,34 +247,24 @@ pcui::DescriptorPtr PresetsPage::selection() {
                     pcui::Button{
                       .win_={
                         .base_={.minSize_=pcui::iconButtonSize()},
-                        .enable_=mArraySel.choice() | data::logic::HasSelection{},
+                        .enable_=mArraySel.choice() |
+                            data::logic::HasSelection{},
                       },
                       .label_=pcui::syms::PLUS,
                       .style_=pcui::Button::Style::Companion,
                       .exactFit_=true,
-                      .func_=[this] {
-                          auto sel{data::context(mPresetSel)};
-                          auto& vec{
-                              const_cast<data::base::Vector&>(*sel.bound())
-                          };
-                          vec.append(std::make_unique<config::presets::Preset>(mConfig));
-                      },
+                      .func_=[this] { onAddPresetButton(); },
                     }(),
                     pcui::Button{
                       .win_={
                         .base_={.minSize_=pcui::iconButtonSize()},
-                        .enable_=mPresetSel.choice() | data::logic::HasSelection{},
+                        .enable_=mPresetSel.choice() |
+                            data::logic::HasSelection{},
                       },
                       .label_=pcui::syms::MINUS,
                       .style_=pcui::Button::Style::Companion,
                       .exactFit_=true,
-                      .func_=[this] {
-                          auto sel{data::context(mPresetSel)};
-                          auto& vec{
-                              const_cast<data::base::Vector&>(*sel.bound())
-                          };
-                          vec.remove(sel.choiceIdx());
-                      },
+                      .func_=[this] { onRemovePresetButton(); },
                     }(),
                   }
                 }()
@@ -332,11 +281,7 @@ pcui::DescriptorPtr PresetsPage::selection() {
                   .label_=pcui::syms::UP_ARROW,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
-                  .func_=[this] {
-                      auto sel{data::context(mPresetSel)};
-                      auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
-                      vec.moveUp(sel.choiceIdx());
-                  }
+                  .func_=[this] { onMoveUpButton(); },
                 }(),
                 pcui::Button{
                   .win_={
@@ -346,11 +291,7 @@ pcui::DescriptorPtr PresetsPage::selection() {
                   .label_=pcui::syms::DOWN_ARROW,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
-                  .func_=[this] {
-                      auto sel{data::context(mPresetSel)};
-                      auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
-                      vec.moveDown(sel.choiceIdx());
-                  }
+                  .func_=[this] { onMoveDownButton(); },
                 }(),
                 pcui::Button{
                   .win_={
@@ -360,24 +301,7 @@ pcui::DescriptorPtr PresetsPage::selection() {
                   .label_=pcui::syms::DOUBLE_SQUARES,
                   .style_=pcui::Button::Style::Companion,
                   .exactFit_=true,
-                  .func_=[this] {
-                      auto sel{data::context(mPresetSel)};
-                      auto vec{data::context(
-                          const_cast<data::base::Vector&>(*sel.bound())
-                      )};
-
-                      auto& source{dynamic_cast<config::presets::Preset&>(
-                          *vec.children()[sel.choiceIdx()]
-                      )};
-
-                      vec.insert(
-                          sel.choiceIdx() + 1,
-                          std::make_unique<config::presets::Preset>(
-                              source, mConfig
-                          )
-                      );
-                      mPresetSel.choice().choose(sel.choiceIdx() + 1);
-                  }
+                  .func_=[this] { onDuplicateButton(); },
                 }(),
               }
             }(),
@@ -728,6 +652,104 @@ void PresetsPage::updateBladeStrings() {
     for (auto idx{count}; idx < mBladeStrings.size(); ++idx) {
         mBladeStrings[idx]->change(_("Unassigned").ToStdString());
     }
+}
+
+void PresetsPage::onEditButton(const pcui::CallbackContext& ctxt) {
+    if (mDlg) {
+        mDlg->Show();
+        mDlg->Raise();
+        return;
+    }
+
+    using namespace config::presets;
+
+    auto sel{data::context(mArraySel)};
+    auto& cfg{dynamic_cast<Array&>(*sel.selected())};
+    mDlg = new PresetArrayDlg(ctxt.topLevel_, cfg, false);
+    const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
+        if (evt.GetEventObject() == mDlg) mDlg = nullptr;
+    }};
+    mDlg->Bind(wxEVT_DESTROY, onDestroy);
+
+    mDlg->Show();
+}
+
+void PresetsPage::onAddButton(const pcui::CallbackContext& ctxt) {
+    // Only ever allow one of these dialogs. Not a technical
+    // limitation, just don't want things cluttered.
+    if (mDlg) mDlg->Destroy();
+
+    auto vec{data::context(mConfig.presetArrays_)};
+    auto& cfg{vec.append<config::presets::Array>(mConfig)};
+
+    PresetArrayDlg dlg(ctxt.topLevel_, cfg, true);
+
+    auto res{dlg.ShowModal()};
+
+    if (res != wxID_OK) {
+        // Make sure the dialog is crippled before removing
+        // the model it's linked to.
+        pcui::cripple(&dlg);
+        vec.remove(vec.children().size() - 1);
+    } else {
+        mArraySel.choice().choose(
+            static_cast<int32>(vec.children().size() - 1)
+        );
+    }
+}
+
+void PresetsPage::onRemoveButton() {
+    auto sel{data::context(mArraySel)};
+    auto vec{data::context(mConfig.presetArrays_)};
+
+    vec.remove(*sel.selected());
+}
+
+void PresetsPage::onAddPresetButton() {
+    auto sel{data::context(mPresetSel)};
+    auto& vec{
+        const_cast<data::base::Vector&>(*sel.bound())
+    };
+    vec.append(std::make_unique<config::presets::Preset>(mConfig));
+}
+
+void PresetsPage::onRemovePresetButton() {
+    auto sel{data::context(mPresetSel)};
+    auto& vec{
+        const_cast<data::base::Vector&>(*sel.bound())
+    };
+    vec.remove(sel.choiceIdx());
+}
+
+void PresetsPage::onMoveUpButton() {
+    auto sel{data::context(mPresetSel)};
+    auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
+    vec.moveUp(sel.choiceIdx());
+}
+
+void PresetsPage::onMoveDownButton() {
+    auto sel{data::context(mPresetSel)};
+    auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
+    vec.moveDown(sel.choiceIdx());
+}
+
+void PresetsPage::onDuplicateButton() {
+    auto sel{data::context(mPresetSel)};
+    auto vec{data::context(
+        const_cast<data::base::Vector&>(*sel.bound())
+    )};
+
+    auto& source{dynamic_cast<config::presets::Preset&>(
+        *vec.children()[sel.choiceIdx()]
+    )};
+
+    vec.insert(
+        sel.choiceIdx() + 1,
+        std::make_unique<config::presets::Preset>(
+            source, mConfig
+        )
+    );
+    mPresetSel.choice().choose(sel.choiceIdx() + 1);
 }
 
 void PresetsPage::onArrayChoice() {

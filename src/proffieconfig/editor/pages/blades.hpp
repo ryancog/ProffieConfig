@@ -38,7 +38,6 @@ struct BladesPage : data::Receiver {
 protected:
     void onActivate() override;
     void preDeactivate() override;
-    void onDeactivate() override;
 
 private:
     pcui::DescriptorPtr selection();
@@ -47,6 +46,17 @@ private:
     pcui::DescriptorPtr ws281x(config::blades::WS281X&);
     pcui::DescriptorPtr splits(config::blades::WS281X&);
     pcui::DescriptorPtr split(config::blades::WS281X::Split&);
+
+    void onAwarenessButton(const pcui::CallbackContext&);
+    void onEditButton(const pcui::CallbackContext&);
+    void onAddButton(const pcui::CallbackContext&);
+    void onRemoveButton();
+
+    void onAddBladeButton();
+    void onRemoveBladeButton();
+
+    void onAddSplitButton(config::blades::WS281X&);
+    void onRemoveSplitButton(config::blades::WS281X&);
 
     void onArrayChoice();
     void onBladeChoice();
