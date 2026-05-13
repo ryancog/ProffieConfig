@@ -1,5 +1,4 @@
 #include "panel.hpp"
-#include "wx/gdicmn.h"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
@@ -23,6 +22,8 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+
+#include <wx/gdicmn.h>
 
 using namespace pcui::priv;
 
