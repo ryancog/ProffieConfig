@@ -22,6 +22,7 @@
 #include <filesystem>
 #include <thread>
 
+#include <wx/display.h>
 #include <wx/filedlg.h>
 #include <wx/menu.h>
 #include <wx/toolbar.h>
@@ -42,6 +43,12 @@
 
 #include "../tools/arduino.hpp"
 
+namespace {
+
+ssize millis();
+
+} // namespace
+
 EditorWindow::EditorWindow(wxWindow *parent, config::Info& info) : 
     pcui::Frame(
         parent,
@@ -54,18 +61,25 @@ EditorWindow::EditorWindow(wxWindow *parent, config::Info& info) :
     mPropsPage(*info.config()),
     mPresetsPage(*info.config()),
     mBladesPage(*info.config()) {
+    mAnimationTimer = new wxTimer(this);
 
     createMenuBar();
     createToolBar();
 
     bindEvents();
 
-    wxCommandEvent event{wxEVT_MENU, ePage_General};
-    event.SetInt(0);
-    wxPostEvent(this, event);
+    // Immediately process this event to do initial UI build and setup toolbar
+    // state.
+    wxCommandEvent evt(wxEVT_MENU, ePage_General);
+    ProcessEvent(evt);
+
+    // Only start animations after initial setup has taken place.
+    mAnimating = true;
 }
 
-EditorWindow::~EditorWindow() = default;
+EditorWindow::~EditorWindow() {
+    delete mAnimationTimer;
+}
 
 void EditorWindow::bindEvents() {
     Bind(wxEVT_CLOSE_WINDOW, [this](wxCloseEvent& evt) {
@@ -196,11 +210,23 @@ void EditorWindow::bindEvents() {
 
     auto windowSelectionHandler{[this](wxCommandEvent& evt) {
 #       ifdef __WXOSX__
+        // For reasons I don't fully understand, probably because either myself
+        // or wxWidgets is using the controls wrong, the selection gets weird
+        // if this isn't done.
         GetToolBar()->ToggleTool(evt.GetId(), false);
         GetToolBar()->OSXSelectTool(evt.GetId());
 #       endif
+        
+        // I'm somewhat proud that w/ the optimizations I added to wxWidgets
+        // doing this redundantly isn't nearly as terrible as it used to be,
+        // but even so, no sense in being wasteful...
+        if (mCurrentPage == evt.GetId())
+            return;
 
         pcui::cripple(this);
+
+        // Set this first so it's available during the build.
+        mCurrentPage = evt.GetId();
 
         if (evt.GetId() == ePage_General) {
             pcui::build(this, mGeneralPage.ui());
@@ -217,49 +243,7 @@ void EditorWindow::bindEvents() {
     Bind(wxEVT_MENU, windowSelectionHandler, ePage_Presets);
     Bind(wxEVT_MENU, windowSelectionHandler, ePage_Blades);
 
-    /*
-    Bind(wxEVT_IDLE, [this](wxIdleEvent& evt) {
-        if (mStartMicros == -1) return;
-
-        constexpr auto RESIZE_TIME_MICROS{300 * 1000};
-        static std::chrono::microseconds::rep lastFrameMicros{0};
-
-        const wxDisplay display{this};
-        if (not display.IsOk()) return;
-
-        auto frameRate{display.GetCurrentMode().GetRefresh()};
-        // On Wayland (I assume because of course things don't work on Wayland) this doesn't work
-        if (frameRate == 0) frameRate = 60;
-        const std::chrono::microseconds::rep frameIntervalMicros{(1000 * 1000) / frameRate};
-
-        const auto nowMicros{std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now().time_since_epoch()
-        ).count()};
-        
-        if (nowMicros - lastFrameMicros < frameIntervalMicros) {
-            evt.RequestMore();
-            return;
-        }
-
-        const float64 completion{std::clamp<float64>(
-            static_cast<float64>(nowMicros - mStartMicros) / static_cast<float64>(RESIZE_TIME_MICROS),
-            0, 1
-        )};
-
-        const auto totalDelta{mBestSize - mStartSize};
-
-        const auto newSize{mStartSize + (totalDelta * completion)};
-        SetSizeHints(newSize, newSize);
-        SetSize(newSize);
-
-        if (completion == 1) {
-            configureResizing();
-            mStartMicros = -1;
-        } else {
-            evt.RequestMore();
-        }
-    });
-    */
+    Bind(wxEVT_TIMER, &EditorWindow::onTimer, this);
 }
 
 void EditorWindow::createMenuBar() {
@@ -338,50 +322,144 @@ bool EditorWindow::save() {
     return not err;
 }
 
-/*
-void EditorWindow::configureResizing() {
-    if (not generalPage or not propsPage or not bladesPage or not presetsPage) return;
+void EditorWindow::Fit() {
+    // Stop a current animation from running anymore, if there is one.
+    mAnimationTimer->Stop();
 
-    if (generalPage->IsShown()) {
-        SetSizeHints(GetSize(), GetSize());
-    } else if (propsPage->IsShown()) {
-        auto bestSize{GetBestSize()};
+    wxDisplay display(this);
+    if (not mAnimating or not display.IsOk()) {
         SetSizeHints(-1, -1, -1, -1);
-        propsPage->setToActualMinSize();
-        SetSizeHints(GetBestSize(), bestSize);
-    } else if (bladesPage->IsShown()) {
-        SetSizeHints(GetSize(), {GetSize().x, -1});
-    } else if (presetsPage->IsShown()) {
-        SetSizeHints(GetSize(), {-1, -1});
+        pcui::Frame::Fit();
+
+        configureResizing();
+        return;
     }
-    SetVirtualSize(-1, -1);
-}
-*/
-
-/*
-void EditorWindow::fitAnimated() {
-    if (not generalPage or not propsPage or not bladesPage or not presetsPage) return;
-
+    
+    // Have to free up the constraints so that GetBestSize() works properly.
     SetSizeHints(-1, -1, -1, -1);
 
-    const auto clientDelta{GetSize() - GetClientSize()};
-    if (propsPage->IsShown()) {
+    // For wxWidgets TLWs, GetBestSize is just the client size because it
+    // queries GetWindowBorderSize() w/o taking into account TLW decoration.
+    auto bestClientSize{GetBestSize()};
+    mBestSize = ClientToWindowSize(bestClientSize);
+
+    // A lot of the code in the underlying toolkits and wxWidgets is quite
+    // pessimistic, honestly, and I think even in release things struggle to
+    // hit 60fps (optimizations I'd like to continue working on, but in any
+    // case...) sometimes, but try to handle higher refresh rates also.
+    //
+    // If things take too long there's handling to drop frames in onTimer().
+    auto frameRate{display.GetCurrentMode().GetRefresh()};
+
+    // On Wayland (I assume because of course things don't work on Wayland)
+    // this doesn't work
+    if (frameRate == 0)
+        frameRate = 60;
+
+    const auto frameIntervalMillis{1000 / frameRate};
+
+    /*if (propsPage->IsShown()) {
         propsPage->setToActualBestSize();
+    }*/
+
+    // This actually does give the whole window size.
+    mStartSize = GetSize();
+
+    auto *panel{getUniqueChild()};
+
+    // Set the panel size **and** position to where it should be once
+    // done first so that GetBestSize() behaves correctly and it renders
+    // in the right spot.
+    panel->SetSize(
+        0, 0,
+        bestClientSize.x, bestClientSize.y
+    );
+
+    // To avoid lots of slow relayout, set the virtual size first,
+    // explicitly perform a layout into that end size, and prevent
+    // automatic layout during resize.
+    panel->SetVirtualSize(panel->GetBestSize());
+    panel->Layout();
+    panel->SetAutoLayout(false);
+
+    mAnimationCount = 0;
+    mAnimationStartMillis = millis();
+    mAnimationTimer->Start(frameIntervalMillis);
+}
+
+void EditorWindow::onTimer(wxTimerEvent& evt) {
+    constexpr auto RESIZE_TIME_MILLIS{300};
+
+    // The timer fires interval amount after when it is first called, so this
+    // should be incremented first, treating the first frame as the size when
+    // when the button was clicked.
+    ++mAnimationCount;
+
+    auto actualElapsed{millis() - mAnimationStartMillis};
+    auto elapsed{static_cast<ssize>(mAnimationCount * evt.GetInterval())};
+
+    // Drop the "frame," a prior one took too long.
+    while (actualElapsed - elapsed > (ssize)evt.GetInterval()) {
+        ++mAnimationCount;
+        elapsed += evt.GetInterval();
     }
 
-    mStartSize = GetSize();
-    mBestSize = GetBestSize();
-    SetVirtualSize(mBestSize - clientDelta);
-    mStartMicros = std::chrono::duration_cast<std::chrono::microseconds>(
-        std::chrono::system_clock::now().time_since_epoch()
+    const auto completion{std::clamp(
+        static_cast<float64>(elapsed) / RESIZE_TIME_MILLIS,
+        0.0, 1.0
+    )};
+
+    const auto totalDelta{mBestSize - mStartSize};
+    const auto newSize{mStartSize + (totalDelta * completion)};
+
+    // Set size hints to avoid the user being able to resize things here and
+    // cause jank.
+    SetSizeHints(newSize, newSize);
+    SetSize(newSize);
+
+    if (elapsed >= RESIZE_TIME_MILLIS) {
+        mAnimationTimer->Stop();
+
+        // Re-enable auto layout on resize, and limit resizing based on which
+        // pane is shown.
+        getUniqueChild()->SetAutoLayout(true);
+        configureResizing();
+    }
+}
+
+void EditorWindow::configureResizing() {
+    switch (mCurrentPage) {
+        case ePage_General:
+            // Fixed size.
+            SetSizeHints(GetSize(), GetSize());
+            break;
+        case ePage_Props:
+            // Prevent from growing past max content area (or whereever the
+            // display clamps the available space), but allow resizing within.
+/*
+            auto bestSize{GetBestSize()};
+            SetSizeHints(-1, -1, -1, -1);
+            propsPage->setToActualMinSize();
+            SetSizeHints(GetBestSize(), bestSize);
+*/
+            break;
+        case ePage_Presets:
+        case ePage_Blades:
+            // Allow increased size.
+            SetSizeHints(GetSize(), {-1, -1});
+            break;
+        default:
+    }
+}
+
+namespace {
+
+ssize millis() {
+    // lol, std::chrono
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()
     ).count();
 }
 
-void EditorWindow::Fit() {
-    SetSizeHints(-1, -1, -1, -1);
-    pcui::Frame::Fit();
-
-    configureResizing();
-}
-*/
+} // namespace
 

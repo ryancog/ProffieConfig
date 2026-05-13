@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/timer.h>
+
 #include "config/config.hpp"
 #include "ui/frame.hpp"
 #include "ui/types.hpp"
@@ -32,8 +34,7 @@ struct EditorWindow : pcui::Frame {
     EditorWindow(wxWindow *, config::Info&);
     ~EditorWindow() override;
 
-    // void Fit() final;
-    // void fitAnimated();
+    void Fit() final;
 
     // Handles errors
     bool save();
@@ -48,7 +49,8 @@ private:
 
     void bindEvents();
 
-    // void configureResizing();
+    void onTimer(wxTimerEvent&);
+    void configureResizing();
 
     config::Info& mInfo;
 
@@ -69,8 +71,14 @@ private:
         eID_Style_Editor,
     };
 
+    size mCurrentPage{0};
+
+    bool mAnimating{false};
+    wxTimer *mAnimationTimer;
+    size mAnimationCount;
+    ssize mAnimationStartMillis;
+
     wxSize mBestSize{-1, -1};
     wxSize mStartSize{-1, -1};
-    std::chrono::microseconds::rep mStartMicros;
 };
 
