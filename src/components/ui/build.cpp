@@ -38,14 +38,16 @@ void doCripple(wxSizer *);
 void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
     wxWindowUpdateLocker lock(win);
 
+    // Always do teardown.
     teardown(win);
+
+    // Before allocating any resources, check if there's anything to do.
+    if (not desc) return;
 
     auto *parent{win};
     if (dynamic_cast<Frame *>(parent)) {
         parent = new priv::Panel(win);
     }
-
-    if (not desc) return;
 
     // In many cases this means there's a kind of unnecessary sizer in a sizer,
     // but this is the most straightforward way to allow base (essentially just
