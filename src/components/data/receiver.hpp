@@ -57,6 +57,8 @@ struct DATA_EXPORT Receiver {
     void amend(const base::Model&, const RecvTable&);
     void repeal(const base::Model&);
 
+    void repealAllWithTable(const RecvTable&);
+
 protected:
     using RecvMap = std::map<const base::Model *, const RecvTable *>;
 

@@ -164,3 +164,12 @@ void Receiver::repeal(const base::Model& model) {
     }
 }
 
+void Receiver::repealAllWithTable(const RecvTable& test) {
+    std::lock_guard scopeLock(pMutex);
+
+    for (auto [model, table] : mRecvMap) {
+        if (table == &test)
+            repeal(*model);
+    }
+}
+
