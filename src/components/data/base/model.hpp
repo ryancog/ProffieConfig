@@ -119,16 +119,18 @@ struct DATA_EXPORT Model::ROContext {
     ROContext& operator=(const ROContext&) = delete;
     ROContext& operator=(ROContext&&) = delete;
 
+    void release();
+
     template <typename M = Model>
     [[nodiscard]] const M& model() const {
         // This is virtually inherited from, so dynamic cast is needed.
-        return dynamic_cast<const M&>(mModel);
+        return dynamic_cast<const M&>(*mModel);
     }
 
     [[nodiscard]] bool enabled() const;
 
 private:
-    const Model& mModel;
+    const Model *mModel;
 };
 
 struct DATA_EXPORT Model::Context : virtual ROContext {

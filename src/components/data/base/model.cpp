@@ -64,16 +64,23 @@ void Model::sendToReceivers(
     }
 }
 
-Model::ROContext::ROContext(const Model& model) : mModel{model} {
-    mModel.lock();
+Model::ROContext::ROContext(const Model& model) : mModel{&model} {
+    mModel->lock();
 }
 
 Model::ROContext::~ROContext() {
-    mModel.unlock();
+    release();
+}
+
+void Model::ROContext::release() {
+    if (mModel == nullptr) return;
+
+    mModel->unlock();
+    mModel = nullptr;
 }
 
 bool Model::ROContext::enabled() const {
-    return mModel.mEnabled;
+    return model().mEnabled;
 }
 
 Model::Context::Context(Model& base) : ROContext(base) {}
