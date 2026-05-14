@@ -39,9 +39,13 @@ struct UI_EXPORT Frame : wxFrame {
 
     wxWindow *getUniqueChild() const;
 
-    static void appendDefaultMenuItems(wxMenuBar *);
+    void appendDefaultMenuItems(wxMenuBar *);
 
 private:
+#   ifdef __WXOSX__
+    void onWindowMenuClose(wxCommandEvent&);
+#   endif
+
     Frame** mReference{nullptr};
 };
 
