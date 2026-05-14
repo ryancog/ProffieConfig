@@ -177,18 +177,18 @@ struct VERSIONS_EXPORT Option::Selection : detail::SettingBase,
  * A single button/control mapping to a prop action
  */
 struct VERSIONS_EXPORT Button {
-    const std::string name_;
+    std::string name_;
 
     // <Predicate, Description>
-    const std::unordered_map<std::string, std::string> descriptions_;
+    std::unordered_map<std::string, std::string> descriptions_;
 };
 
 /**
  * A collection of Button for a certain prop mode/state
  */
 struct VERSIONS_EXPORT ButtonState {
-    const std::string stateName_;
-    const std::vector<Button> buttons_;
+    std::string stateName_;
+    std::vector<Button> buttons_;
 };
 
 using Buttons = std::vector<ButtonState>;
