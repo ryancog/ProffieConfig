@@ -403,6 +403,10 @@ void Info::unload() {
         }
 
         if (not found) {
+            // `this` is about to be deleted, it can't be accessed by the
+            // context anymore
+            name.release();
+
             list.remove(*this);
         }
     }
