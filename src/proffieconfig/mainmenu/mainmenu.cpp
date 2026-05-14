@@ -22,6 +22,7 @@
 #include <fstream>
 #include <thread>
 
+#include <wx/gdicmn.h>
 #include <wx/menu.h>
 #include <wx/utils.h>
 
@@ -160,6 +161,7 @@ pcui::DescriptorPtr MainMenu::ui() {
               },
               .label_=_("Remove"),
               .exactFit_=true,
+              .func_=[this] { onRemoveConfig(); },
             }(),
           },
         }(),
@@ -427,32 +429,6 @@ void MainMenu::bindEvents() {
         }}.detach();
     }, eID_Apply_Changes);
     */
-
-    /*
-    Bind(wxEVT_BUTTON, [&](wxCommandEvent &) {
-        if (pcui::showMessage(
-                _("Are you sure you want to deleted the selected configuration?") +
-                "\n\n" +
-                _("This action cannot be undone!"),
-                _("Delete Config"),
-                wxYES_NO | wxNO_DEFAULT | wxCENTER,
-                this) == wxYES
-           ) {
-            auto *config{Config::getIfOpen(configSelection)};
-            for (auto iter{mEditors.begin()}; iter != mEditors.end(); ++iter) {
-                auto *editor{*iter};
-                if (&editor->getOpenConfig() == config) {
-                    editor->Destroy();
-                    mEditors.erase(iter);
-                    break;
-                }
-            }
-            Config::remove(static_cast<string>(configSelection));
-
-            updateConfigChoices();
-        }
-    }, eID_Remove_Config);
-    */
 }
 
 void MainMenu::onAddConfig() {
@@ -498,6 +474,49 @@ void MainMenu::onAddConfig() {
             break;
         }
     }}.detach();
+}
+
+void MainMenu::onRemoveConfig() {
+    const auto message{
+        _("Are you sure you want to deleted the selected configuration?") +
+        "\n\n" +
+        _("This action cannot be undone!"),
+    };
+    pcui::dialogs::message::Args args{
+        .caption_=_("Delete Config"),
+        .style_=wxYES_NO | wxNO_DEFAULT | wxCENTER,
+        .parent_=this,
+    };
+
+    if (pcui::showMessage(message, args) != wxYES)
+        return;
+
+    auto sel{data::context(mConfigSel)};
+    auto *info{sel.selected<config::Info>()};
+
+    auto iter{mEditors.find(info)};
+    if (iter != mEditors.end())
+        iter->second->Close(true);
+
+    auto path{info->path()};
+    std::error_code ec;
+    if (not fs::remove(path, ec)) {
+        pcui::showMessage(
+            wxString::Format(
+                _("The configuration could not be deleted: %s"),
+                ec.message()
+            ),
+            {
+                .caption_=_("Delete Config"),
+                .style_=wxOK | wxICON_ERROR
+            }
+        );
+        return;
+    }
+
+    // Unloading will remove the config from the list once it's deleted from
+    // disk.
+    info->unload();
 }
 
 void MainMenu::onEditConfig() {

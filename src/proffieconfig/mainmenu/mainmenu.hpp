@@ -78,6 +78,7 @@ private:
     void bindEvents();
 
     void onAddConfig();
+    void onRemoveConfig();
     void onEditConfig();
     void onRefreshBoards();
 };
