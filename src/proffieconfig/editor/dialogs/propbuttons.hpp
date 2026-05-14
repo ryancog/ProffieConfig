@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * proffieconfig/editor/dialogs/propbuttons.h
+ * proffieconfig/editor/dialogs/propbuttons.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/dialog.h>
+#include "config/config.hpp"
+#include "ui/dialog.hpp"
 
-#include "../editorwindow.h"
+struct PropButtonsDlg : pcui::Dialog, data::Receiver {
+    PropButtonsDlg(wxWindow *, config::Config&);
+    ~PropButtonsDlg() override;
 
-class PropButtonsDialog : public wxDialog {
-public:
-    PropButtonsDialog(EditorWindow *);
+protected:
+    void onActivate() override;
+
+private:
+    void onPropChoice();
+    void onButtonsChange(size);
+
+    void rebuildLinks();
+    void rebuildUI();
+
+    const versions::props::Prop *mCurProp;
+    const versions::props::Buttons *mCurButtons;
+    config::Config& mConfig;
 };
 

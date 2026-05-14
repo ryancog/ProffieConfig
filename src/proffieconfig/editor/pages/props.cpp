@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/logic/adapter.hpp"
+#include "ui/build.hpp"
 #include "ui/builders/choice.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/choice.hpp"
@@ -31,6 +31,24 @@
 #include "ui/values.hpp"
 
 PropsPage::PropsPage(config::Config& config) : mConfig{config} {}
+
+void PropsPage::deinit() {
+    if (mButtonsDlg) {
+        pcui::cripple(mButtonsDlg);
+
+        mButtonsDlg->CallAfter([dlg=mButtonsDlg] {
+            dlg->Destroy();
+        });
+    }
+
+    if (mInfoDlg) {
+        pcui::cripple(mInfoDlg);
+
+        mInfoDlg->CallAfter([dlg=mInfoDlg] {
+            dlg->Destroy();
+        });
+    }
+}
 
 pcui::DescriptorPtr PropsPage::ui() {
     return pcui::Stack{
@@ -53,19 +71,23 @@ pcui::DescriptorPtr PropsPage::ui() {
             pcui::Button{
               .win_={
                 .base_={.align_=wxALIGN_BOTTOM},
-                .enable_=mConfig.propChoice() | data::logic::HasSelection{},
                 .tooltip_=_("View prop creator-provided information about this prop and its intended usage."),
               },
               .label_=_("Prop Description and Usage Info..."),
+              .func_=[this](const pcui::CallbackContext& ctxt) {
+                  onInfoButton(ctxt);
+              },
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::Button{
               .win_={
                 .base_={.align_=wxALIGN_BOTTOM},
-                .enable_=mConfig.propChoice() | data::logic::HasSelection{},
                 .tooltip_=_("View button controls based on specific option settings and number of buttons."),
               },
               .label_=_("Button Controls..."),
+              .func_=[this](const pcui::CallbackContext& ctxt) {
+                  onControlsButton(ctxt);
+              },
             }(),
           }
         }(),
@@ -86,32 +108,37 @@ pcui::DescriptorPtr PropsPage::ui() {
     }();
 }
 
-/*
-void PropsPage::bindEvents() {
-    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        PropButtonsDialog(mParent).ShowModal();
-    }, ID_Buttons);
-    Bind(wxEVT_BUTTON, [&](wxCommandEvent&) {
-        auto& config{mParent->getOpenConfig()};
-        auto& prop{config.prop(config.propSelection)};
+void PropsPage::onInfoButton(const pcui::CallbackContext& ctxt) {
+    if (mInfoDlg) {
+        mInfoDlg->Show();
+        mInfoDlg->Raise();
+        return;
+    }
 
-        wxDialog infoDialog{
-            mParent,
-            wxID_ANY,
-            wxString::Format(_("%s Prop Info"), prop.name),
-            wxDefaultPosition,
-            wxDefaultSize,
-            wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP
-        };
-        auto *textSizer{new wxBoxSizer(wxVERTICAL)};
-        textSizer->Add(
-            infoDialog.CreateTextSizer(prop.info),
-            wxSizerFlags(0).Border(wxALL, 10)
-        );
-        infoDialog.SetSizer(textSizer);
-        infoDialog.DoLayoutAdaptation();
-        infoDialog.ShowModal();
-    }, ID_PropInfo);
+    mInfoDlg = new PropInfoDlg(ctxt.topLevel_, mConfig);
+
+    const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
+        if (evt.GetEventObject() == mInfoDlg) mInfoDlg = nullptr;
+    }};
+    mInfoDlg->Bind(wxEVT_DESTROY, onDestroy);
+
+    mInfoDlg->Show();
 }
-*/
+
+void PropsPage::onControlsButton(const pcui::CallbackContext& ctxt) {
+    if (mButtonsDlg) {
+        mButtonsDlg->Show();
+        mButtonsDlg->Raise();
+        return;
+    }
+
+    mButtonsDlg = new PropButtonsDlg(ctxt.topLevel_, mConfig);
+
+    const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
+        if (evt.GetEventObject() == mButtonsDlg) mButtonsDlg = nullptr;
+    }};
+    mButtonsDlg->Bind(wxEVT_DESTROY, onDestroy);
+
+    mButtonsDlg->Show();
+}
 

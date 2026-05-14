@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2023-2026 Ryan Ogurek
+ * Copyright (C) 2026 Ryan Ogurek
  *
- * proffieconfig/editor/pages/props.hpp
+ * proffieconfig/editor/dialogs/propinfo.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,24 +20,15 @@
  */
 
 #include "config/config.hpp"
+#include "ui/dialog.hpp"
 #include "ui/types.hpp"
 
-#include "../dialogs/propbuttons.hpp"
-#include "../dialogs/propinfo.hpp"
-
-struct PropsPage {
-    PropsPage(config::Config&);
-    void deinit();
-
-    pcui::DescriptorPtr ui();
+struct PropInfoDlg : pcui::Dialog {
+    PropInfoDlg(wxWindow *, config::Config&);
 
 private:
-    void onInfoButton(const pcui::CallbackContext&);
-    void onControlsButton(const pcui::CallbackContext&);
+    pcui::DescriptorPtr ui();
 
     config::Config& mConfig;
-
-    PropButtonsDlg *mButtonsDlg{nullptr};
-    PropInfoDlg *mInfoDlg{nullptr};
 };
 

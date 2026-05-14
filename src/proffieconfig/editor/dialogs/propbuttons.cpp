@@ -1,7 +1,7 @@
-#include "propbuttons.h"
+#include "propbuttons.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2026 Ryan Ogurek
+ * Copyright (C) 2025-2026 Ryan Ogurek
  *
  * proffieconfig/editor/dialogs/propbuttons.cpp
  *
@@ -19,90 +19,473 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ui/static_box.h"
+#include <wx/gdicmn.h>
+#include <wx/settings.h>
 
-PropButtonsDialog::PropButtonsDialog(EditorWindow *parent) {
-    auto& config{parent->getOpenConfig()};
-    auto& prop{config.prop(config.propSelection)};
+#include "data/context.hpp"
+#include "ui/build.hpp"
+#include "ui/dynamic_list.hpp"
+#include "ui/layout/group.hpp"
+#include "ui/layout/spacer.hpp"
+#include "ui/layout/stack.hpp"
+#include "ui/static/divider.hpp"
+#include "ui/static/label.hpp"
+#include "ui/values.hpp"
 
-    Create(
-        parent,
-        wxID_ANY,
-        prop.name + _(" Buttons"),
-        wxDefaultPosition,
-        wxDefaultSize,
-        wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP | wxRESIZE_BORDER 
-    );
+namespace {
 
-    auto *textSizer{new wxBoxSizer(wxVERTICAL)};
+extern const versions::props::Buttons defaultZeroButton;
+extern const versions::props::Buttons defaultOneButton;
+extern const versions::props::Buttons defaultTwoButton;
 
-    auto propButtons{prop.buttons(config.settings.numButtons())};
+} // namespace
 
-    if (propButtons.empty()) {
-        textSizer->Add(
-            new wxStaticText(
-                this,
-                wxID_ANY,
-                _("Selected number of buttons not supported by prop file.")
-            ),
-            wxSizerFlags{}.Border(wxALL, 10)
-        );
-    } else for (auto& [ stateName, stateButtons ] : propButtons) {
-        auto *stateSizer{new pcui::StaticBox(
-            wxVERTICAL,
-            this,
-            wxString::Format(_("Button controls while saber is %s:"), stateName)
-        )};
-        auto *controlSizer{new wxBoxSizer(wxHORIZONTAL)};
-        auto *buttonSizer{new wxBoxSizer(wxVERTICAL)};
-        auto *actionSizer{new wxBoxSizer(wxVERTICAL)};
+PropButtonsDlg::PropButtonsDlg(wxWindow *parent, config::Config& config) :
+    pcui::Dialog(parent, wxID_ANY, _("Prop Buttons")),
+    mConfig{config} {
 
-        // Must use Spacer, not \t, which caused rendering issues for Windows
-        controlSizer->AddSpacer(50);
-        controlSizer->Add(buttonSizer);
-        controlSizer->Add(actionSizer);
-        stateSizer->Add(controlSizer);
+    static const auto choiceTable{[] {
+        data::base::Choice::RecvTable table;
+        table.onChoice_=data::map(&PropButtonsDlg::onPropChoice);
+        return table;
+    }()};
+    amend(mConfig.propChoice(), choiceTable);
 
-        for (const auto& button : stateButtons) {
-            string activePredicate;
-            for (const auto& [ predicate, description ]: button.descriptions) {
-                auto setting = prop.dataMap().find(predicate);
-                if (setting == prop.dataMap().end()) continue;
+    static const auto buttonsTable{[] {
+        data::base::Vector::RecvTable table;
+        table.onInsert_=data::map(&PropButtonsDlg::onButtonsChange);
+        table.onRemove_=data::map(&PropButtonsDlg::onButtonsChange);
+        return table;
+    }()};
+    amend(mConfig.buttons_, buttonsTable);
 
-                if (setting->second->isActive()) {
-                    activePredicate = setting->first;
-                    break;
-                }
-            }
-
-            auto key = button.descriptions.find(activePredicate);
-            if (key != button.descriptions.end() && key->second != "DISABLED") {
-                buttonSizer->Add(new wxStaticText(
-                    stateSizer->childParent(),
-                    wxID_ANY,
-                    button.name
-                ));
-                actionSizer->Add(new wxStaticText(
-                    stateSizer->childParent(),
-                    wxID_ANY,
-                    " - " + key->second
-                ));
-            }
-        }
-
-        if (actionSizer->IsEmpty()) {
-            stateSizer->Destroy();
-            continue;
-        }
-        textSizer->Add(
-            stateSizer,
-            wxSizerFlags(0)
-                .Border(wxTOP | wxLEFT | wxRIGHT, 10).Expand()
-        );
-    }
-    textSizer->AddSpacer(10);
-
-    SetSizerAndFit(textSizer);
-    DoLayoutAdaptation();
+    activate();
 }
+
+PropButtonsDlg::~PropButtonsDlg() {
+    deactivate();
+}
+
+void PropButtonsDlg::onActivate() {
+    rebuildLinks();
+    rebuildUI();
+}
+
+void PropButtonsDlg::onPropChoice() {
+    rebuildLinks();
+    rebuildUI();
+}
+
+void PropButtonsDlg::onButtonsChange(size) {
+    rebuildLinks();
+    rebuildUI();
+}
+
+void PropButtonsDlg::rebuildLinks() {
+    static const auto settingTable{[] {
+        data::base::Bool::RecvTable table;
+        table.onSet_=data::map(&PropButtonsDlg::rebuildUI);
+        return table;
+    }()};
+
+    // Clear out everything from the old prop.
+    repealAllWithTable(settingTable);
+
+    auto buttons{data::context(mConfig.buttons_)};
+
+    mCurProp = mConfig.prop();
+    if (mCurProp != nullptr) {
+        mCurButtons = mCurProp->buttons(buttons.children().size());
+    } else {
+        switch (buttons.children().size()) {
+            case 0:
+                mCurButtons = &defaultZeroButton;
+                break;
+            case 1:
+                mCurButtons = &defaultOneButton;
+                break;
+            default:
+                mCurButtons = &defaultTwoButton;
+                break;
+        }
+    }
+
+    for (const auto& state : *mCurButtons) {
+        for (const auto& button : state.buttons_) {
+            for (const auto& [pred, desc] : button.descriptions_) {
+                if (pred.empty() or mCurProp == nullptr)
+                    continue;
+
+                auto *setting{mCurProp->find(pred)};
+                if (setting == nullptr)
+                    continue;
+
+                auto *bl{dynamic_cast<data::base::Bool *>(setting)};
+                if (bl == nullptr)
+                    // Really should warn on this...
+                    continue;
+
+                amend(*bl, settingTable);
+            }
+        }
+    }
+}
+
+void PropButtonsDlg::rebuildUI() {
+    pcui::Stack stack{
+      .base_={
+        .minSize_={300, 100},
+        .expand_=true,
+        .proportion_=1,
+        .border_={.size_=pcui::winEdgeSpacing(), .dirs_=wxALL},
+      },
+      .orient_=wxVERTICAL,
+    };
+
+    if (mCurButtons == nullptr) {
+        pcui::Label label{
+          .label_=_("Selected number of buttons not supported by prop file."),
+          .color_=wxSYS_COLOUR_GRAYTEXT,
+        };
+
+        stack.children_.add(label());
+
+        pcui::build(this, stack());
+        return;
+    }
+
+    int width{};
+    for (auto& state : *mCurButtons) {
+        for (auto& [name, descriptions] : state.buttons_) {
+            width = std::max(
+                width,
+                GetTextExtent(name).GetWidth()
+            );
+        }
+    }
+
+    for (auto& state : *mCurButtons) {
+        pcui::Group group{
+          .win_={.base_={.expand_=true}},
+          .label_=wxString::Format(
+            _("Button controls while saber is %s:"),
+            state.stateName_
+          ),
+          .orient_=wxHORIZONTAL,
+        };
+
+        pcui::Stack controlStack{
+          .base_={.minSize_={width, -1}},
+        };
+        pcui::Divider divider{
+          .base_={.expand_=true},
+          .orient_=wxVERTICAL,
+        };
+        pcui::Stack descStack;
+
+        bool any{false};
+        for (auto& [name, descriptions] : state.buttons_) {
+            const std::string *activeDesc{nullptr};
+            for (auto& [pred, desc] : descriptions) {
+                if (pred.empty()) {
+                    activeDesc = &desc;
+                    continue;
+                }
+
+                auto *setting{mCurProp->find(pred)};
+                if (setting == nullptr)
+                    continue;
+
+                if (setting->isActive())
+                    activeDesc = &desc;
+            }
+
+            if (activeDesc == nullptr)
+                continue;
+
+            any = true;
+
+            pcui::Label nameLabel{
+              .win_={.base_={.align_=wxALIGN_RIGHT}},
+              .label_=name,
+            };
+            pcui::Label descLabel{
+              .win_={.base_={.align_=wxALIGN_LEFT}},
+              .label_=*activeDesc,
+            };
+
+            controlStack.children_.add(nameLabel());
+            descStack.children_.add(descLabel());
+        }
+
+        if (not any)
+            continue;
+
+        group.children_.add(pcui::DynamicList{
+            controlStack(),
+            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            divider(),
+            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            descStack(),
+        });
+
+        stack.children_.add(pcui::DynamicList{
+            group(),
+            pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+        });
+    }
+
+    if (stack.children_.empty())
+        stack.children_.add(pcui::Label{.label_="CONTROLS???"}());
+    else
+        // Remove very last spacer
+        stack.children_.pop_back();
+
+    pcui::build(this, stack());
+}
+
+namespace {
+using namespace versions::props;
+
+const Buttons defaultZeroButton{[] {
+    Buttons buttons;
+
+    std::vector<Button> offButtons;
+    offButtons.push_back({
+        .name_="Twist",
+        .descriptions_={
+            {{}, "Ignite Saber"},
+        }
+    });
+    offButtons.push_back({
+        .name_="Shake while pointing up",
+        .descriptions_={
+            {{}, "Next Preset"},
+        }
+    });
+    buttons.push_back({
+        .stateName_="OFF", 
+        .buttons_=std::move(offButtons)
+    });
+
+    std::vector<Button> onButtons;
+    onButtons.push_back({
+        .name_="Twist",
+        .descriptions_={
+            {{}, "Retract Saber"},
+        }
+    });
+    onButtons.push_back({
+        .name_="Hit Blade",
+        .descriptions_={
+            {{}, "Clash"},
+        }
+    });
+    buttons.push_back({
+        .stateName_="ON",
+        .buttons_=std::move(onButtons)
+    });
+
+    return buttons;
+}()};
+
+const Buttons defaultOneButton{[] {
+    Buttons buttons;
+
+    std::vector<Button> offButtons;
+    offButtons.push_back({
+        .name_="Click",
+        .descriptions_={
+            {{}, "Ignite Saber"},
+        }
+    });
+    offButtons.push_back({
+        .name_="Double click",
+        .descriptions_={
+            {{}, "Ignite Saber Muted"},
+        }
+    });
+    offButtons.push_back({
+        .name_="Hold button and hit blade",
+        .descriptions_={
+            {{}, "Next Preset"},
+        }
+    });
+    offButtons.push_back({
+        .name_="Long click",
+        .descriptions_={
+            {{}, "Start Soundtrack"},
+        }
+    });
+    buttons.push_back({
+        .stateName_="OFF",
+        .buttons_=std::move(offButtons)
+    });
+
+    std::vector<Button> onButtons;
+    onButtons.push_back({
+        .name_="Click",
+        .descriptions_={
+            {{}, "Retract Saber"},
+        }
+    });
+    onButtons.push_back({
+        .name_="Hit blade",
+        .descriptions_={
+            {{}, "Clash"},
+        }
+    });
+    onButtons.push_back({
+        .name_="Hold button and clash",
+        .descriptions_={
+            {{}, "Lockup"},
+        }
+    });
+    onButtons.push_back({
+        .name_="Hold button and clash while pointing down",
+        .descriptions_={
+            {{}, "Drag"},
+        }
+    });
+    onButtons.push_back({
+        .name_="Hold button and stab",
+        .descriptions_={
+            {{}, "Melt"},
+        }
+    });
+    onButtons.push_back({
+        .name_="Long click",
+        .descriptions_={
+            {{}, "Force"},
+        }
+    });
+    onButtons.push_back({
+        .name_="Hold button and twist",
+        .descriptions_={
+            {{}, "Color Change"},
+        }
+    });
+    buttons.push_back({
+        .stateName_="ON",
+        .buttons_=std::move(onButtons)
+    });
+
+    return buttons;
+}()};
+
+const Buttons defaultTwoButton{[] {
+    Buttons buttons;
+
+    std::vector<Button> offButtons;
+    offButtons.push_back({
+        .name_="Click power",
+        .descriptions_={
+            {{}, "Ignite Saber"},
+        }
+    });
+    offButtons.push_back({
+        .name_="Double click power",
+        .descriptions_={
+            {{}, "Ignite Saber Muted"},
+        }
+    });
+    offButtons.push_back({
+        .name_="Hold power and hit blade",
+        .descriptions_={
+            {{}, "Next Preset"},
+        }
+    });
+    offButtons.push_back({
+        .name_="Hold aux and click power",
+        .descriptions_={
+            {{}, "Previous Preset"},
+        }
+    });
+    offButtons.push_back({
+        .name_="Long click power",
+        .descriptions_={
+            {{}, "Start Soundtrack"},
+        }
+    });
+    buttons.push_back({
+        .stateName_="OFF",
+        .buttons_=std::move(offButtons)
+    });
+
+    std::vector<Button> onButtons;
+    onButtons.push_back({
+        .name_="Click Power",
+        .descriptions_={
+            {{}, "Retract Saber"},
+        }
+    });
+    onButtons.push_back({
+        .name_="Hit blade",
+        .descriptions_={
+            {{}, "Clash"},
+        }
+    });
+    onButtons.push_back({
+        .name_="Hold power or aux and clash",
+        .descriptions_={
+            {{}, "Lockup"},
+        }
+    });
+    onButtons.push_back({
+        .name_="Hold power or aux and clash while pointing down",
+        .descriptions_={
+            {{}, "Drag"},
+        }
+    });
+    onButtons.push_back({
+        .name_="Hold power or aux and stab",
+        .descriptions_={
+            {{}, "Melt"},
+        }
+    });
+    onButtons.push_back({
+        .name_="Click aux while holding power",
+        .descriptions_={
+            {{}, "Lightning Block"},
+        }
+    });
+    onButtons.push_back({
+        .name_="Long click power",
+        .descriptions_={
+            {{}, "Force"},
+        }
+    });
+    onButtons.push_back({
+        .name_="Click aux",
+        .descriptions_={
+            {{}, "Blaster block"},
+        }
+    });
+    onButtons.push_back({
+        .name_="Hold aux and click power",
+        .descriptions_={
+            {{}, "Enter Color Change"},
+        }
+    });
+    buttons.push_back({
+        .stateName_="ON",
+        .buttons_=std::move(onButtons)
+    });
+
+    std::vector<Button> ccButtons;
+    ccButtons.push_back({
+        .name_="Hold aux and click power",
+        .descriptions_={
+            {{}, "Exit Color Change"},
+        }
+    });
+    buttons.push_back({
+        .stateName_="in Color Change",
+        .buttons_=std::move(ccButtons)
+    });
+
+    return buttons;
+}()};
+
+} // namespace
 

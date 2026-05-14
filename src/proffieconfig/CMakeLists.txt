@@ -20,6 +20,8 @@ add_executable(proffieconfig WIN32
     editor/dialogs/buttons.cpp
     editor/dialogs/customopts.cpp
     editor/dialogs/presetarray.cpp
+    editor/dialogs/propbuttons.cpp
+    editor/dialogs/propinfo.cpp
     editor/pages/general.cpp
     editor/pages/props.cpp
     editor/pages/presets.cpp

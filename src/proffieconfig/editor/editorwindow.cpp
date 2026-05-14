@@ -89,6 +89,7 @@ void EditorWindow::bindEvents() {
             if (not evt.GetVeto()) {
                 pcui::cripple(this);
                 mGeneralPage.deinit();
+                mPropsPage.deinit();
                 mPresetsPage.deinit();
                 mBladesPage.deinit();
                 mInfo.unload();
