@@ -345,9 +345,9 @@ std::optional<PropData> PropData::generate(
     );
 }
 
-auto Prop::buttons(uint32 numButtons) const -> Buttons {
-    if (mButtons.contains(numButtons)) return mButtons.at(numButtons);
-    return {};
+auto Prop::buttons(uint32 numButtons) const -> const Buttons * {
+    if (mButtons.contains(numButtons)) return &mButtons.at(numButtons);
+    return nullptr;
 }
 
 detail::SettingBase *Prop::find(const std::string& key) const {
