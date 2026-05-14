@@ -449,7 +449,13 @@ pcui::DescriptorPtr PresetsPage::displayAndBlade() {
           .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
               if (idx == 0) {
                   auto numBlades{data::context(mConfig.numBlades())};
-                  mBladeStrings.resize(numBlades.val());
+
+                  while (mBladeStrings.size() < numBlades.val()) {
+                      mBladeStrings.push_back(
+                          std::make_unique<data::prim::String>()
+                      );
+                  }
+
                   updateBladeStrings();
               }
 
