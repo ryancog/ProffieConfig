@@ -452,8 +452,6 @@ pcui::DescriptorPtr Prop::layout() {
 
         layers.push_back(std::move(layer));
     }
-
-    return nullptr;
 }
 
 void Prop::migrateFrom(const Prop& from) {
