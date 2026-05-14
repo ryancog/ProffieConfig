@@ -294,13 +294,17 @@ void MainMenu::bindEvents() {
         return true;
     }};
 
-    Bind(wxEVT_CLOSE_WINDOW, [promptClose](wxCloseEvent& event) {
-        state::saveState();
-
+    Bind(wxEVT_CLOSE_WINDOW, [this, promptClose](wxCloseEvent& event) {
         if (event.CanVeto() and not promptClose()) {
             event.Veto();
             return;
         }
+
+        state::saveState();
+
+        for (auto [info, editor] : mEditors)
+            editor->Close(true);
+
         event.Skip();
     });
 
