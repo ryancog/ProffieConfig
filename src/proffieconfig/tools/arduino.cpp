@@ -630,7 +630,7 @@ std::optional<wxString> upload(
 ) {
     auto& logger{lBranch.createLogger("arduino::upload()")};
 
-    bool isBootloader{boardPath.find("BOOTLOADER") != std::string::npos};
+    bool isBootloader{boardPath == "BOOTLOADER"};
     if (not isBootloader) {
         constexpr cstring CHECK_PRESENCE_MESSAGE{wxTRANSLATE("Checking board presence...")};
         prog.set(10, wxGetTranslation(CHECK_PRESENCE_MESSAGE));
