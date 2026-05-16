@@ -58,6 +58,8 @@
 #include "versions/detail/boards.hpp"
 #include "versions/detail/strings.hpp"
 
+#include "serialmonitor.hpp"
+
 using namespace std::chrono_literals;
 
 namespace {
@@ -648,83 +650,32 @@ std::optional<wxString> upload(
         }
     }
 
-    constexpr cstring UPLOAD_MESSAGE{wxTRANSLATE("Uploading to Proffieboard...")};
-    prog.set(65, wxGetTranslation(UPLOAD_MESSAGE));
-
-#   ifdef _WIN32
-    if (boardPath != _("BOOTLOADER RECOVERY")) {
-        // See https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#win32-device-namespaces
-        const auto safeBoardPath{R"(\\.\)" + boardPath};
-        prog.set(50, "Rebooting Proffieboard...");
-
-        auto *serialHandle{CreateFileA(
-            safeBoardPath.c_str(),
-            GENERIC_READ | GENERIC_WRITE,
-            0,
-            nullptr,
-            OPEN_EXISTING,
-            FILE_ATTRIBUTE_NORMAL,
-            nullptr
-        )};
-        if (serialHandle != INVALID_HANDLE_VALUE) {
-            DCB dcbSerialParameters = {};
-            dcbSerialParameters.DCBlength = sizeof(dcbSerialParameters);
-
-            dcbSerialParameters.BaudRate = CBR_115200;
-            dcbSerialParameters.ByteSize = 8;
-            dcbSerialParameters.StopBits = ONESTOPBIT;
-            dcbSerialParameters.Parity = NOPARITY;
-            dcbSerialParameters.fRtsControl = RTS_CONTROL_ENABLE;
-            dcbSerialParameters.fDtrControl = DTR_CONTROL_ENABLE;
-
-            SetCommState(serialHandle, &dcbSerialParameters);
-
-            DWORD bytesHandled{};
-            const char* rebootCommand = "RebootDFU\r\n";
-            WriteFile(serialHandle, rebootCommand, strlen(rebootCommand),  &bytesHandled, nullptr);
-
-            CloseHandle(serialHandle);
-            Sleep(5000);
-        }
-    }
-#   else 
-    if (boardPath.find("BOOTLOADER") == std::string::npos) {
+    if (not isBootloader) {
         prog.pulse("Rebooting Proffieboard...");
 
-        auto fd{open(boardPath.c_str(), O_RDWR | O_NOCTTY)};
-        if (fd < 0) {
+        SerialMonitor mon;
+
+        if (auto err{mon.open(boardPath)}) {
             logger.warn("Could not open board port.");
-            return _("Board was not reachable for reboot, please try again!");
+            return wxString::Format(
+                _("Board was not reachable for reboot (%d:%d)"),
+                err.rsn_, err.code_
+            );
         }
 
-        struct termios newtio;
-        memset(&newtio, 0, sizeof(newtio));
+        if (auto err{mon.write("\r\nRebootDFU\r\n")}) {
+            return wxString::Format(
+                _("Board reboot failed (%d:%d)"),
+                err.rsn_, err.code_
+            );
+        }
 
-        newtio.c_cflag = B115200 | CRTSCTS | CS8 | CLOCAL | CREAD;
-        newtio.c_iflag = IGNPAR;
-        newtio.c_oflag = (tcflag_t) NULL;
-        newtio.c_lflag &= ~ICANON; /* unset canonical */
-        newtio.c_cc[VTIME] = 1; /* 100 millis */
+        mon.close();
 
-        tcflush(fd, TCIFLUSH);
-        tcsetattr(fd, TCSANOW, &newtio);
-
-        char buf[255];
-        while(read(fd, buf, 255));
-
-        fsync(fd);
-        write(fd, "\r\n", 2);
-        write(fd, "\r\n", 2);
-        write(fd, "RebootDFU\r\n", 11);
-
-        fsync(fd);
-
-        // Ensure everything is flushed
-        std::this_thread::sleep_for(50ms);
-        close(fd);
         std::this_thread::sleep_for(5s);
     }
-#   endif
+
+    prog.pulse(_("Uploading to Proffieboard..."));
 
     Process proc;
     std::array<std::string, 3> args{
@@ -733,8 +684,6 @@ std::optional<wxString> upload(
         compileOutput.dfuFile_
     };
     proc.create(compileOutput.suffixPath_, args);
-
-    prog.pulse(wxGetTranslation(UPLOAD_MESSAGE));
 
     std::string uploadOutput;
     while (auto buffer{proc.read()}) {
