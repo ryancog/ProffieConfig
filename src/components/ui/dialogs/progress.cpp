@@ -146,7 +146,7 @@ DescriptorPtr ProgressDialog::ui(bool mayCancel, wxSize size) {
           .then_={
             Label{
               .label_=GetTitle(),
-              .font_=detail::FontData{Font::Normal}.makeFont().MakeBold(),
+              .font_=(- Font::Normal).MakeBold(),
             }(),
             Spacer{.size_=interControlSpacing()}(),
           },
