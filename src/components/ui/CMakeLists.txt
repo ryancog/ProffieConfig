@@ -53,6 +53,7 @@ add_library(ui SHARED
     controls/stepper.cpp
     controls/text.cpp
     controls/filepicker.cpp
+    controls/list.cpp
 
     layout/collapsible.cpp
     layout/group.cpp
