@@ -583,6 +583,8 @@ std::variant<CompileOutput, wxString> compile(
         ret.suffixPath_ = std::string{shortPath.data()} + "stm32l4-upload.bat";
 #       else
         ret.suffixPath_ = dfuSuffixLongPath + "stm32l4-upload";
+        // Pop off `\n` the POSIX version needs to find the path root.
+        ret.suffixPath_.erase(0, 1);
 #       endif
 
         logger.debug("Parsed upload file: " + ret.suffixPath_);
