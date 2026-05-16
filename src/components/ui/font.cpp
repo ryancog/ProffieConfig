@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/font.h>
 #include <wx/settings.h>
 
 wxFont pcui::detail::FontData::makeFont() const {
@@ -46,6 +47,9 @@ wxFont pcui::detail::FontData::makeFont() const {
     switch (std::get<Font>(*this)) {
         using enum Font;
         case Normal:
+            return sysFont;
+        case Monospace:
+            sysFont.SetFamily(wxFONTFAMILY_TELETYPE);
             return sysFont;
         case Title:
             sysFont.Scale(1.5);

@@ -29,6 +29,7 @@ namespace pcui {
 
 enum class Font {
     Normal,
+    Monospace,
     Title,
     Header,
 };
@@ -45,7 +46,7 @@ struct UI_EXPORT FontData : std::variant<Font, wxFont> {
 
 } // namespace detail
 
-wxFont operator-(Font);
+UI_EXPORT wxFont operator-(Font);
 
 } // namespace pcui
 
