@@ -42,7 +42,7 @@ struct IntCtrl : detail::DataWindow<wxSpinCtrl> {
             wxEmptyString,
             wxDefaultPosition,
             wxDefaultSize,
-            desc.win_.base_.align_ & wxALIGN_RIGHT
+            0
         );
 
         postCreation(scaffold, desc.win_);
@@ -112,7 +112,7 @@ struct DoubleCtrl : detail::DataWindow<wxSpinCtrlDouble> {
             wxEmptyString,
             wxDefaultPosition,
             wxDefaultSize,
-            desc.win_.base_.align_ & wxALIGN_RIGHT
+            0
         );
 
         postCreation(scaffold, desc.win_);

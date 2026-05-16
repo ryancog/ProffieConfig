@@ -23,10 +23,11 @@
 
 #include "data/base/models/string.hpp"
 #include "ui/bitmap.hpp"
+#include "ui/controls/detail/btnstyle.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
-
 #include "ui/types.hpp"
+
 #include "ui_export.h"
 
 namespace pcui {
@@ -34,20 +35,7 @@ namespace pcui {
 struct UI_EXPORT Button {
     struct Desc;
 
-    enum class Style {
-        /**
-         * Normal, pushbutton style.
-         */
-        Normal,
-
-        /**
-         * A button that performs a view-related action, and is intended to be
-         * displayed immediately beside that view.
-         *
-         * This corresponds to the square style on macOS
-         */
-        Companion,
-    };
+    using Style = detail::ButtonStyle;
 
     enum class BitmapMode {
         /**

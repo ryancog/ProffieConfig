@@ -22,6 +22,7 @@
 #include <wx/tglbtn.h>
 
 #include "data/context.hpp"
+#include "ui/controls/detail/btnstyle.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
 #include "ui/types.hpp"
@@ -34,13 +35,20 @@ namespace {
 struct Control : detail::DataWindow<wxToggleButton> {
     Control(const detail::Scaffold& scaffold, const ToggleButton& desc) :
         data_{desc.data_} {
+        long style{0};
+
+        if (desc.exactFit_)
+            style |= wxBU_EXACTFIT;
+
+        detail::addButtonStyle(desc.style_, style);
+
         Create(
             scaffold.childParent_,
             desc.win_.id_,
             desc.label_,
             wxDefaultPosition,
             wxDefaultSize,
-            desc.win_.base_.align_ & wxALIGN_RIGHT
+            style
         );
 
         postCreation(scaffold, desc.win_);

@@ -40,6 +40,7 @@ add_library(ui SHARED
     builders/choice.cpp
     builders/vecstack.cpp
 
+    controls/detail/btnstyle.cpp
     controls/button.cpp
     controls/toggle_button.cpp
     controls/checkbox.cpp

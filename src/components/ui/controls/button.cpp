@@ -41,16 +41,7 @@ struct Control : detail::DataWindow<wxButton> {
         long style{0};
         if (desc.exactFit_) style |= wxBU_EXACTFIT;
 
-        switch (desc.style_) {
-            using enum Button::Style;
-            case Normal:
-                style |= wxBORDER_DEFAULT;
-                break;
-            case Companion:
-                // This only does something on macOS though.
-                style |= wxBORDER_SIMPLE;
-                break;
-        }
+        detail::addButtonStyle(desc.style_, style);
 
         Create(
             scaffold.childParent_,

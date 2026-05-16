@@ -20,6 +20,7 @@
  */
 
 #include "data/base/models/bool.hpp"
+#include "ui/controls/detail/btnstyle.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
 #include "ui/types.hpp"
@@ -36,6 +37,10 @@ struct UI_EXPORT ToggleButton {
 
     wxString label_;
     data::base::Bool& data_;
+
+    using Style = detail::ButtonStyle;
+    Style style_{Style::Normal};
+    bool exactFit_{false};
 
     DescriptorPtr operator()();
 };
