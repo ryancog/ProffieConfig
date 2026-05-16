@@ -27,6 +27,8 @@
 #include "ui/frame.hpp"
 #include "ui/types.hpp"
 
+#include "dialogs/serialmonitor.hpp"
+
 struct EditorWindow;
 
 struct MainMenu : pcui::Frame {
@@ -69,5 +71,6 @@ private:
 
     std::vector<std::string> mBoards;
     std::map<config::Info *, EditorWindow *> mEditors;
+    std::set<SerialMonitorDlg *> mMonitors;
 };
 

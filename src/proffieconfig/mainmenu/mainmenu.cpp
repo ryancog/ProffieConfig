@@ -561,5 +561,31 @@ void MainMenu::onApplyConfig() {
 }
 
 void MainMenu::onOpenSerial() {
+    auto boardChoice{data::context(mBoardChoice)};
+    auto& boardPort{mBoards[boardChoice.idx()]};
+
+    for (auto *monitor : mMonitors) {
+        if (monitor->device() != boardPort) continue;
+
+        monitor->Show();
+        monitor->Raise();
+        return;
+    }
+
+    auto *dlg{new SerialMonitorDlg(this, boardPort)};
+
+    const auto onClose{[dlg, this](wxCloseEvent& evt) {
+        evt.Skip();
+
+        if (evt.GetEventObject() != dlg)
+            return;
+
+        mMonitors.erase(dlg);
+    }};
+    dlg->Bind(wxEVT_CLOSE_WINDOW, onClose);
+
+    mMonitors.insert(dlg);
+
+    dlg->Show();
 }
 
