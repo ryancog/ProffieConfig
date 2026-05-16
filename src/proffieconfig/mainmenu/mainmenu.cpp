@@ -538,7 +538,7 @@ void MainMenu::onApplyConfig() {
         auto boardChoice{data::context(mBoardChoice)};
 
         auto *info{cfgSel.selected<config::Info>()};
-        if (info == nullptr or boardChoice.idx() == -1) {
+        if (info == nullptr) {
             prog->finish(false, _("Cancelled"));
             return;
         }
@@ -551,7 +551,9 @@ void MainMenu::onApplyConfig() {
         auto name{data::context(info->name())};
         arduino::applyToBoard(
             name.val(),
-            mBoards[boardChoice.idx()],
+            boardChoice.idx() == -1
+                ? "BOOTLOADER"
+                : mBoards[boardChoice.idx()],
             *info->config(),
             *prog
         );
