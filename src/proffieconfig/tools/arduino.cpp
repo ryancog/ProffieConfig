@@ -382,7 +382,7 @@ std::variant<CompileOutput, wxString> compile(
         }
     }
 
-    const auto outName{"ProffieConfig/" + name + ".h"};
+    const auto outName{"ProffieConfig_" + name + ".h"};
     const auto configPath{osPath / "config" / outName};
 
     constexpr cstring GENERATE_MESSAGE{wxTRANSLATE("Generating configuration file...")};
