@@ -194,7 +194,7 @@ pcui::DescriptorPtr MainMenu::ui() {
               },
               .data_=mBoardChoice,
               .style_=pcui::Choice::PopUp{
-                .unselected_=_("Select Board"),
+                .unselected_=_("No Port (BOOTLOADER)"),
               },
               .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
                   return mBoards[idx];
@@ -206,13 +206,11 @@ pcui::DescriptorPtr MainMenu::ui() {
         pcui::Button{
           .win_={
             .base_={.expand_=true},
-            .enable_={
-              mConfigSel.choice() | data::logic::HasSelection{} and
-              mBoardChoice | data::logic::HasSelection{}
-            },
+            .enable_=mConfigSel.choice() | data::logic::HasSelection{},
             .tooltip_=_("Compile and upload the selected configuration to the selected Proffieboard."),
           },
           .label_=_("Apply Selected Configuration to Board"),
+          .func_=[this] { onApplyConfig(); },
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Button{
@@ -221,6 +219,7 @@ pcui::DescriptorPtr MainMenu::ui() {
             .enable_=mBoardChoice | data::logic::HasSelection{},
           },
           .label_=_("Open Serial Monitor"),
+          .func_=[this] { onOpenSerial(); },
         }(),
       }
     }();
@@ -370,65 +369,6 @@ void MainMenu::bindEvents() {
             onboard::Frame::instance = new onboard::Frame;
         }
     }, eID_Run_Setup);
-
-    /*
-    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        mNotifyData.notify(ID_AsyncStart);
-
-        auto *progDialog{new Progress(this)};
-        progDialog->SetTitle(_("Applying Changes"));
-        progDialog->Update(0, _("Initializing..."));
-
-        std::thread{[this, progDialog]() {
-            Defer defer{[this]() { mNotifyData.notify(ID_AsyncDone); }};
-
-            progDialog->Update(1, _("Opening Config..."));
-
-            auto *config{Config::getIfOpen(configSelection)};
-            const auto configWasOpen{static_cast<bool>(config)};
-            if (not configWasOpen) {
-                const auto res{Config::open(configSelection)};
-                if (const auto *err = std::get_if<string>(&res)) {
-                    progDialog->Update(100, _("Error"));
-                    auto *evt{new misc::MessageBoxEvent(
-                        misc::EVT_MSGBOX, 
-                        wxID_ANY, 
-                        *err, 
-                        _("Cannot Apply Changes")
-                    )};
-                    wxQueueEvent(this, evt);
-                    return;
-                }
-                config = std::get<Config::Config *>(res);
-            }
-
-            const auto res{
-                Arduino::applyToBoard(boardSelection, *config, progDialog)
-            };
-
-            if (const auto *err = std::get_if<string>(&res)) {
-                auto *evt{new misc::MessageBoxEvent(
-                    misc::EVT_MSGBOX,
-                    wxID_ANY,
-                    *err,
-                    _("Cannot Apply Changes")
-                )};
-                wxQueueEvent(this, evt);
-                return;
-            }
-            const auto& result{std::get<Arduino::Result>(res)};
-
-            auto *evt{new misc::MessageBoxEvent(
-                misc::EVT_MSGBOX,
-                wxID_ANY,
-                message,
-                _("Apply Changes to Board"),
-                wxOK | wxICON_INFORMATION
-            )};
-            wxQueueEvent(this, evt);
-        }}.detach();
-    }, eID_Apply_Changes);
-    */
 }
 
 void MainMenu::onAddConfig() {
@@ -520,58 +460,53 @@ void MainMenu::onRemoveConfig() {
 }
 
 void MainMenu::onEditConfig() {
-      auto choice{data::context(mConfigSel.choice())};
-      auto vec{data::context(config::list())};
-      if (choice.idx() >= vec.children().size()) return;
+    auto sel{data::context(mConfigSel)};
+    auto& info{*sel.selected<config::Info>()};
 
-      auto& info{dynamic_cast<config::Info&>(
-          *vec.children()[choice.idx()]
-      )};
+    auto err{info.load()};
+    if (err) {
+        pcui::showMessage(*err);
+        return;
+    }
 
-      auto err{info.load()};
-      if (err) {
-          pcui::showMessage(*err);
-          return;
-      }
+    auto iter{mEditors.find(&info)};
+    if (iter == mEditors.end()) {
+        auto *editor{new EditorWindow(this, info)};
 
-      auto iter{mEditors.find(&info)};
-      if (iter == mEditors.end()) {
-          auto *editor{new EditorWindow(this, info)};
+        const auto onDestroy{[this, editor](
+                wxWindowDestroyEvent& evt
+                ) {
+            evt.Skip();
+            if (evt.GetEventObject() != editor) return;
 
-          const auto onDestroy{[this, editor](
-              wxWindowDestroyEvent& evt
-          ) {
-              evt.Skip();
-              if (evt.GetEventObject() != editor) return;
+            removeEditor(editor);
+        }};
+        editor->Bind(wxEVT_DESTROY, onDestroy);
 
-              removeEditor(editor);
-          }};
-          editor->Bind(wxEVT_DESTROY, onDestroy);
+        mEditors[&info] = editor;
 
-          mEditors[&info] = editor;
-
-          editor->Show();
-      } else {
-          iter->second->Raise();
-      }
+        editor->Show();
+    } else {
+        iter->second->Raise();
+    }
 }
 
 void MainMenu::onRefreshBoards() {
     pcui::BusyTracker busy(this);
 
-    auto *progDialog{new pcui::ProgressDialog(this, _("Board Refresh"))};
+    auto *prog{new pcui::ProgressDialog(this, _("Board Refresh"))};
 
-    std::thread{[this, progDialog, busy]() {
+    std::thread{[this, prog, busy]() {
         auto choice{data::context(mBoardChoice)};
 
         std::optional<std::string> last;
         if (choice.idx() >= 0)
             last = mBoards[choice.idx()];
 
-        progDialog->pulse(_("Discovering Boards..."));
+        prog->pulse(_("Discovering Boards..."));
         mBoards = arduino::getBoards();
 
-        progDialog->set(90, _("Processing and Finalizing..."));
+        prog->set(90, _("Processing and Finalizing..."));
 
         int32 newIdx{-1};
         for (size idx{0}; idx < mBoards.size(); ++idx) {
@@ -583,7 +518,40 @@ void MainMenu::onRefreshBoards() {
 
         choice.update(mBoards.size(), newIdx);
 
-        progDialog->finish(false);
+        prog->finish(false);
     }}.detach();
+}
+
+void MainMenu::onApplyConfig() {
+    pcui::BusyTracker busy(this);
+
+    auto *prog{new pcui::ProgressDialog(this, _("Applying Changes"))};
+
+    std::thread{[this, prog, busy]() {
+        prog->set(1, _("Opening Config..."));
+
+        auto cfgSel{data::context(mConfigSel)};
+        auto boardChoice{data::context(mBoardChoice)};
+
+        auto *info{cfgSel.selected<config::Info>()};
+        if (info == nullptr or boardChoice.idx() == -1) {
+            prog->finish(false, _("Cancelled"));
+            return;
+        }
+
+        if (auto err{info->load()}) {
+            prog->finish(true, *err);
+            return;
+        }
+
+        arduino::applyToBoard(
+            mBoards[boardChoice.idx()],
+            *info->config(),
+            *prog
+        );
+    }}.detach();
+}
+
+void MainMenu::onOpenSerial() {
 }
 

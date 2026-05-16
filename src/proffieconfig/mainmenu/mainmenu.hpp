@@ -33,29 +33,14 @@ struct MainMenu : pcui::Frame {
     enum {
         // on macOS menu items cannot have ID 0
         // on Win32, for some reason ID #1 is triggerred by hitting enter in pcTextCtrl?
-        eID_Licenses = 2,
+        eID_Manage_Versions = 2,
+        eID_Update_Manifest,
+        eID_Logs,
+        eID_Licenses,
 
         eID_Docs,
         eID_Issue,
-        eID_Logs,
-
-        eID_Manage_Versions,
-        eID_Update_Manifest,
-
-        eID_Refresh_Dev,
-        eID_Apply_Changes,
-
-        eID_Open_Serial,
-        eID_Add_Config,
-        eID_Remove_Config,
-        eID_Edit_Config,
-
-        eID_Board_Selection,
-        eID_Config_Selection,
-
         eID_Run_Setup,
-        eID_Async_Start,
-        eID_Async_Done,
     };
 
     MainMenu(wxWindow * = nullptr);
@@ -66,12 +51,6 @@ struct MainMenu : pcui::Frame {
     static MainMenu* instance;
 
 private:
-    data::prim::Choice mBoardChoice;
-    data::prim::Selector mConfigSel;
-
-    std::vector<std::string> mBoards;
-    std::map<config::Info *, EditorWindow *> mEditors;
-
     pcui::DescriptorPtr ui();
 
     void createMenuBar();
@@ -80,6 +59,15 @@ private:
     void onAddConfig();
     void onRemoveConfig();
     void onEditConfig();
+
     void onRefreshBoards();
+    void onApplyConfig();
+    void onOpenSerial();
+
+    data::prim::Choice mBoardChoice;
+    data::prim::Selector mConfigSel;
+
+    std::vector<std::string> mBoards;
+    std::map<config::Info *, EditorWindow *> mEditors;
 };
 
