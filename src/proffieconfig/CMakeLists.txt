@@ -33,6 +33,7 @@ add_executable(proffieconfig WIN32
     onboard/pages/info.cpp
 
     tools/arduino.cpp
+    tools/serialmonitor.cpp
 )
 
 set_target_properties(proffieconfig PROPERTIES

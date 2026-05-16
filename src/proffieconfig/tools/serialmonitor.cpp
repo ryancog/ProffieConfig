@@ -1,7 +1,7 @@
-#include "serialmonitor.h"
+#include "serialmonitor.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024-2025 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * proffieconfig/tools/serialmonitor.cpp
  *
@@ -19,221 +19,54 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if defined(__WXOSX__) or defined(__WXGTK__)
+#include <cassert>
+
+#if defined(__APPLE__) or defined(__linux__)
 #include <fcntl.h>
+#include <sys/poll.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <termios.h>
-#elif defined(__WXMSW__)
+#include <unistd.h>
+#elif defined(_WIN32)
 #include <fileapi.h>
 #include <handleapi.h>
-#include "log/context.h"
 #else
 #error Unsupported
 #endif
 
-#include <wx/gdicmn.h>
-#include <wx/string.h>
-
-#include "ui/message.hpp"
-
-#include "../mainmenu/mainmenu.h"
-
-SerialMonitor* SerialMonitor::instance;
+SerialMonitor::SerialMonitor() = default;
 
 SerialMonitor::~SerialMonitor() {
-    instance = nullptr;
+    close();
+}
 
-    if (mDevThread.joinable()) mDevThread.join();
-    if (mListenThread.joinable()) mListenThread.join();
-    if (mWriterThread.joinable()) mWriterThread.join();
-
-#if defined(__WXOSX__) or defined(__WXGTK__)
-    close(mFd);
-#elif defined(__WXMSW__)
-    CloseHandle(mSerialHandle);
+bool SerialMonitor::isOpen() const {
+#if defined(__APPLE__) or defined(__linux__)
+    return mFd >= 0;
+#elif defined(_WIN32)
+    return mHandle != INVALID_HANDLE_VALUE;
 #   endif
 }
 
-using namespace std::chrono_literals;
-
-SerialMonitor::SerialMonitor(MainMenu* parent, const string& boardPath) : 
-    pcui::Frame(parent, wxID_ANY, "Proffie Serial") {
-    instance = this;
-
-    auto *master{new wxBoxSizer(wxVERTICAL)};
-
-    mInput = new wxTextCtrl(
-        this,
-        ID_SerialCommand,
-        wxEmptyString,
-        wxDefaultPosition,
-        wxDefaultSize,
-        wxTE_PROCESS_ENTER
-    );
-    mOutput = new wxTextCtrl(
-        this,
-        wxID_ANY,
-        wxEmptyString,
-        wxDefaultPosition,
-        wxDefaultSize,
-        wxTE_MULTILINE | wxTE_READONLY | wxTE_DONTWRAP | wxNO_BORDER
-    );
-    mOutput->SetSize(wxSize{500, 200});
-    auto font{mOutput->GetFont()};
-    font.SetFamily(wxFONTFAMILY_TELETYPE);
-    mOutput->SetFont(font);
-    mOutput->AlwaysShowScrollbars(false, false);
-
-    master->Add(mInput, wxSizerFlags().Border(wxALL, 10).Expand());
-    master->Add(mOutput, wxSizerFlags(1).Border(wxALL, 10).Expand());
-
-    bindEvents();
-    if (not openDevice(boardPath)) {
-        Destroy();
-        return;
-    }
-
-    master->SetMinSize(wxSize{450, 300});
-    SetSizerAndFit(master);
-    Show(true);
+void SerialMonitor::setOnDisconnect(std::function<void()> func) {
+    // Can only be set prior to opening.
+    assert(not isOpen());
+    mOnDisconnect = std::move(func);
 }
 
-const wxEventTypeTag<SerialMonitor::SerialDataEvent> SerialMonitor::EVT_INPUT(wxNewEventType());
-const wxEventTypeTag<SerialMonitor::SerialDataEvent> SerialMonitor::EVT_DISCON(wxNewEventType());
+Error SerialMonitor::open(const std::string& path) {
+    assert(not isOpen());
 
-void SerialMonitor::bindEvents() {
-    static bool needsTime{true};
-    constexpr auto TIME_FORMAT_STR{"%02u:%02u:%02u.%03u | "};
-    const auto timeStrLen{2 + 1 + 2 + 1 + 2 + 1 + 3 + 3};
-
-    Bind(wxEVT_TEXT_ENTER, [&](wxCommandEvent&) {
-        const auto command = mInput->GetValue();
-        mInput->Clear();
-
-        if (mHistory.empty() or mHistory.back() != command) {
-            mHistory.emplace_back(command);
-        }
-        mHistoryIdx = static_cast<int64>(mHistory.size());
-
-        if (command == "clear") {
-            mOutput->Clear();
-        } else {
-            mSendOut = command;
-
-            if (not needsTime) {
-                mOutput->AppendText('\n');
-            }
-            mOutput->AppendText("-------------> " + mHistory.back() + '\n');
-        }
-    }, ID_SerialCommand);
-
-    mInput->Bind(wxEVT_KEY_DOWN, [&](wxKeyEvent& evt) {
-        switch (evt.GetKeyCode()) {
-            case WXK_DOWN:
-            case WXK_NUMPAD_DOWN:
-                if (mHistoryIdx < static_cast<ssize_t>(mHistory.size())) {
-                    ++mHistoryIdx;
-                    if (mHistoryIdx == static_cast<ssize_t>(mHistory.size())) {
-                        mInput->SetValue({});
-                    } else {
-                        mInput->SetValue(mHistory.at(mHistoryIdx));
-                        mInput->SetInsertionPointEnd();
-                    }
-                } else {
-                    wxBell();
-                }
-                break;
-            case WXK_UP:
-            case WXK_NUMPAD_UP:
-                if (mHistoryIdx > 0) {
-                    --mHistoryIdx;
-                    mInput->SetValue(mHistory.at(mHistoryIdx));
-                    mInput->SetInsertionPointEnd();
-                } else {
-                    wxBell();
-                }
-                break;
-            default:
-                evt.Skip();
-        }
-    });
-
-    Bind(EVT_INPUT, [&](SerialDataEvent& evt) {
-        if (evt.value == '\r') {
-            const auto text{mOutput->GetValue()};
-            const auto endPos{text.rfind('\n')};
-
-            if (endPos != string::npos) {
-                if (needsTime) {
-                    mOutput->SetInsertionPoint(static_cast<int32>(endPos) + 1);
-                } else {
-                    mOutput->SetInsertionPoint(static_cast<int32>(endPos) + 1 + timeStrLen);
-                }
-            } else {
-                mOutput->SetInsertionPoint(0);
-            }
-        } else if (evt.value == '\n') {
-            needsTime = true;
-            mOutput->AppendText(evt.value);
-        } else if (isascii(evt.value)) {
-            const auto lastPos{mOutput->GetLastPosition()};
-
-            if (needsTime) {
-                // Time length + " | " + null
-                std::array<char, 12 + 3 + 1> timeBuf;
-                timespec time;
-                (void)clock_gettime(CLOCK_REALTIME, &time);
-                const auto localTime{*localtime(&time.tv_sec)};
-
-                (void)snprintf(
-                    timeBuf.data(),
-                    timeBuf.size(),
-                    TIME_FORMAT_STR,
-                    localTime.tm_hour,
-                    localTime.tm_min,
-                    localTime.tm_sec,
-                    static_cast<uint32_t>(time.tv_nsec / 1000000U)
-                );
-
-                const auto textPos{mOutput->GetInsertionPoint()};
-                if (lastPos == textPos) {
-                    mOutput->AppendText(wxString::FromAscii(timeBuf.data()));
-                } else {
-                    const auto replaceLen{lastPos - textPos};
-                    auto timeStr{wxString::FromAscii(timeBuf.data())};
-                    mOutput->Replace(textPos + 1, textPos + 1 + replaceLen, timeStr);
-                    mOutput->AppendText(timeStr.substr(replaceLen));
-                }
-
-                needsTime = false;
-            }
-
-            const auto textPos{mOutput->GetInsertionPoint()};
-            if (lastPos == textPos) {
-                mOutput->AppendText(wxString::FromAscii(evt.value));
-            } else {
-                mOutput->Replace(textPos + 1, textPos + 2, wxString::FromAscii(evt.value));
-            }
-        }
-
-        if (mAutoScroll) mOutput->ShowPosition(mOutput->GetLastPosition());
-        mOutput->Refresh();
-    }, wxID_ANY);
-
-    Bind(EVT_DISCON, [&](SerialDataEvent&) {
-        Close(true);
-    }, wxID_ANY);
-}
-
-bool SerialMonitor::openDevice(const string& boardPath) {
-#   if defined(__WXOSX__) or defined(__WXGTK__)
+#   if defined(__APPLE__) or defined(__linux__)
     struct termios newtio;
 
-    mFd = open(boardPath.c_str(), O_RDWR | O_NOCTTY);
-    if (mFd < 0) {
-        pcui::showMessage(_("Could not connect to Proffieboard."), _("Serial Connection Error"), wxICON_ERROR | wxOK, GetParent());
-        return false;
+    mFd = ::open(path.c_str(), O_RDWR | O_NOCTTY);
+    if (not isOpen()) {
+        return {
+            .rsn_ = Error::Code::Unknown,
+            .code_ = errno,
+        };
     }
 
     memset(&newtio, 0, sizeof(newtio));
@@ -242,13 +75,14 @@ bool SerialMonitor::openDevice(const string& boardPath) {
     newtio.c_iflag = IGNPAR;
     newtio.c_oflag = (tcflag_t) NULL;
     newtio.c_lflag &= ~ICANON; /* unset canonical */
-    newtio.c_cc[VTIME] = 1; /* 100 millis */
+    newtio.c_cc[VTIME] = 0; // No wait for multiple bytes
+    newtio.c_cc[VMIN] = 1; // Only wait for one byte
 
     tcflush(mFd, TCIFLUSH);
     tcsetattr(mFd, TCSANOW, &newtio);
-#   elif defined(__WXMSW__)
-    const auto safeBoardPath{R"(\\.\)" + boardPath};
-    mSerialHandle = CreateFileA(
+#   elif defined(_WIN32)
+    const auto safeBoardPath{R"(\\.\)" + path};
+    mHandle = CreateFileA(
         safeBoardPath.c_str(),
         GENERIC_READ | GENERIC_WRITE,
         0,
@@ -257,9 +91,12 @@ bool SerialMonitor::openDevice(const string& boardPath) {
         FILE_ATTRIBUTE_NORMAL,
         nullptr
     );
-    if (mSerialHandle == INVALID_HANDLE_VALUE) {
-        pcui::showMessage(_("Could not connect to Proffieboard."), _("Serial Connection Error"), wxICON_ERROR | wxOK, GetParent());
-        return false;
+    if (not isOpen()) {
+        return {
+            rsn_ = Error::Code::Unknown;
+            code_ = GetLastError();
+        }
+        return err;
     }
 
     DCB dcbSerialParameters = {};
@@ -275,115 +112,149 @@ bool SerialMonitor::openDevice(const string& boardPath) {
     SetCommState(mSerialHandle, &dcbSerialParameters);
 #   endif
 
-    createListener();
-    createWriter();
+    // Only bother setting up this loop if a handler is registered, otherwise
+    // problems will be caught by read/write.
+    if (mOnDisconnect) {
+        mDevThread = std::thread{[this] {
+            devLoop();
+        }};
+    }
 
-    mDevThread = std::thread{[this, boardPath]() {
-#   if defined(__WXOSX__) or defined(__WXGTK__)
-#   elif defined(__WXMSW__)
+    return {};
+}
+
+void SerialMonitor::close() {
+    if (not isOpen())
+        return;
+
+    if (mDevThread.joinable()) {
+        mSmphr.release();
+
+        mDevThread.join();
+    }
+
+#   if defined(__APPLE__) or defined(__linux__)
+    ::close(mFd);
+    mFd = -1;
+#   elif defined(_WIN32)
+    CloseHandle(mHandle);
+    mHandle = INVALID_HANDLE_VALUE;
 #   endif
-        struct stat info;
-        while (SerialMonitor::instance != nullptr) {
-#           if defined(__WXOSX__) or defined(__WXGTK__)
-            if (stat(boardPath.c_str(), &info) != 0) { // Check if device is still present
-#           elif defined(__WXMSW__)
-            if (not ClearCommError(mSerialHandle, nullptr, nullptr)) {
-                Log::Context::getGlobal().quickLog(
-                    Log::Severity::DBUG,
-                    "SerialMonitor",
-                    "Device closed with: " + std::to_string(GetLastError())
-                );
-#           endif
-                if (SerialMonitor::instance != nullptr) {
-                    auto *event = new SerialDataEvent(EVT_DISCON, wxID_ANY, ' ');
-                    wxQueueEvent(SerialMonitor::instance, event);
-                }
-                break;
-            }
 
-            std::this_thread::sleep_for(50ms);
-        }
-    }};
-
-    return true;
+    if (mOnDisconnect)
+        mOnDisconnect();
 }
 
-void SerialMonitor::createListener() {
-    mListenThread = std::thread{[this]() {
-        std::array<char, 256> buf;
+Error SerialMonitor::write(std::string_view msg) {
+    if (not isOpen()) {
+        return {
+            .rsn_=Error::Code::Disconnected,
+        };
+    }
 
-        while (instance != nullptr) {
-#           if defined(__WXOSX__) or defined(__WXGTK__)
-            auto bytesRead{read(mFd, buf.data(), buf.size() - 1)};
-            if (bytesRead == -1) {
-#           elif defined(__WXMSW__)
-            DWORD bytesRead{};
-            auto res{ReadFile(
-                mSerialHandle,
-                buf.data(),
-                buf.size() - 1,
-                &bytesRead,
-                nullptr
-            )};
-            if (not res) {
-                Log::Context::getGlobal().quickLog(
-                    Log::Severity::DBUG,
-                    "SerialMonitor",
-                    "Read failed (closing) with: " + std::to_string(GetLastError())
-                );
-#           endif
-                if (SerialMonitor::instance != nullptr) {
-                    auto *event = new SerialDataEvent(EVT_DISCON, wxID_ANY, ' ');
-                    wxQueueEvent(SerialMonitor::instance, event);
-                }
-                break;
-            }
-            buf[bytesRead] = '\0';
-
-
-            for (const char chr : buf) {
-                if (chr == 0) break;
-
-                auto *evt{new SerialDataEvent(EVT_INPUT, wxID_ANY, chr)};
-                wxQueueEvent(GetEventHandler(), evt);
-            }
-            std::this_thread::sleep_for(1ms);
+    const auto doWrite{[this](std::string_view str) -> Error {
+#       if defined(__APPLE__) or defined(__linux__)
+        auto res{::write(
+            mFd,
+            str.data(),
+            str.length()
+        )};
+        if (res == -1) {
+            close();
+            return {
+                .rsn_=Error::Code::Unknown,
+                .code_=errno,
+            };
         }
+#       elif defined(_WIN32)
+        DWORD bytesWritten{};
+        auto res{WriteFile(
+            mHandle,
+            NEWLINE.data(),
+            NEWLINE.length(),
+            &bytesWritten,
+            nullptr
+        )};
+        if (not res) {
+            close();
+            return {
+                .rsn_=Error::Code::Unknown,
+                .code_=GetLastError(),
+            };
+        }
+#       endif
+
+        return {};
     }};
+
+    constexpr std::string_view NEWLINE{"\r\n"};
+
+    if (auto err{doWrite(NEWLINE)})
+        return err;
+
+    if (auto err{doWrite(msg)})
+        return err;
+
+    if (auto err{doWrite(NEWLINE)})
+        return err;
+
+    return {};
 }
 
-void SerialMonitor::createWriter() {
-    mWriterThread = std::thread{[&]() {
-        while (instance != nullptr) {
-            if (not mSendOut.empty()) {
+Error SerialMonitor::read(char& chr) {
+    if (not isOpen()) {
+        return {
+            .rsn_=Error::Code::Disconnected,
+        };
+    }
 
-                mSendOut.resize(255);
-                mSendOut.at(mSendOut.size() - 2) = '\r';
-                mSendOut.at(mSendOut.size() - 1) = '\n';
+#   if defined(__APPLE__) or defined(__linux__)
+    auto res{::read(mFd, &chr, 1)};
+    if (res == -1) {
+        close();
+        return {
+            .rsn_=Error::Code::Unknown,
+            .code_=errno,
+        };
+    }
+#   elif defined(_WIN32)
+    DWORD bytesRead{};
+    auto res{ReadFile(
+        mHandle,
+        &chr,
+        1,
+        &bytesRead,
+        nullptr
+    )};
+    if (not res) {
+        close();
+        return {
+            .rsn_=Error::Code::Unknown,
+            .code_=GetLastError(),
+        };
+    }
+#   endif
 
-                constexpr string_view NEWLINE{"\r\n"};
-#               if defined(__WXOSX__) or defined(__WXGTK__)
-                write(mFd, NEWLINE.data(), NEWLINE.length());
-                write(mFd, mSendOut.data(), mSendOut.length());
-#               elif defined(__WXMSW__)
-                WriteFile(
-                    mSerialHandle,
-                    NEWLINE.data(),
-                    NEWLINE.length(),
-                    nullptr,
-                    nullptr
-                );
-                WriteFile(
-                    mSerialHandle,
-                    mSendOut.data(),
-                    mSendOut.length(),
-                    nullptr,
-                    nullptr
-                );
-#               endif
-            }
-            mSendOut.clear();
-            std::this_thread::sleep_for(1ms);
-        }
-    }};
+    return {};
 }
+
+void SerialMonitor::devLoop() {
+    while (not false) {
+#       if defined(__APPLE__) or defined(__linux__)
+        pollfd pfd{
+            .fd=mFd,
+            .events=POLLERR | POLLHUP,
+        };
+
+        if (0 < poll(&pfd, 1, 0)) {
+#       elif defined(_WIN32)
+        if (not ClearCommError(mHandle, nullptr, nullptr)) {
+#       endif
+            close();
+        }
+
+        if (mSmphr.try_acquire_for(std::chrono::seconds(1)))
+            break;
+    }
+}
+
