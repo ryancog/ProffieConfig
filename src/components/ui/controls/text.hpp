@@ -54,6 +54,13 @@ struct UI_EXPORT Text {
      */
     struct InsertLiteral {};
 
+    enum class Wrap {
+        None,
+        Character,
+        Word,
+        Best,
+    };
+
     struct SingleLine {
         /**
          * Placeholder text displayed when no text has been entered yet.
@@ -68,7 +75,6 @@ struct UI_EXPORT Text {
          * How to handle the enter key being pressed.
          */
         EnterAction onEnter_;
-
     };
 
     struct MultiLine {
@@ -77,12 +83,7 @@ struct UI_EXPORT Text {
             bool horizontal_{true};
         } scroll_;
 
-        enum class Wrap {
-            None,
-            Character,
-            Word,
-            Best,
-        } wrap_{Wrap::Best};
+        Wrap wrap_{Wrap::Best};
     };
 
     std::variant<SingleLine, MultiLine> style_;

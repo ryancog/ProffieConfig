@@ -48,7 +48,7 @@ struct Control : detail::DataWindow<wxTextCtrl> {
             style |= wxTE_PROCESS_TAB;
             style |= wxTE_MULTILINE;
             switch (mode.wrap_) {
-                using enum Text::MultiLine::Wrap;
+                using enum Text::Wrap;
                 case None:
                     style |= wxTE_DONTWRAP;
                     break;
