@@ -20,6 +20,7 @@
  */
 
 #include <functional>
+#include <mutex>
 #include <semaphore>
 #include <thread>
 
@@ -61,6 +62,8 @@ struct SerialMonitor {
 
 private:
     void devLoop();
+
+    mutable std::recursive_mutex mMutex;
 
     std::thread mDevThread;
     std::binary_semaphore mSmphr{0};

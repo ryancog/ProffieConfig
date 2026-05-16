@@ -20,6 +20,7 @@
  */
 
 #include <cassert>
+#include <mutex>
 
 #if defined(__APPLE__) or defined(__linux__)
 #include <fcntl.h>
@@ -42,6 +43,7 @@ SerialMonitor::~SerialMonitor() {
 }
 
 bool SerialMonitor::isOpen() const {
+    std::lock_guard scopeLock(mMutex);
 #if defined(__APPLE__) or defined(__linux__)
     return mFd >= 0;
 #elif defined(_WIN32)
@@ -50,12 +52,14 @@ bool SerialMonitor::isOpen() const {
 }
 
 void SerialMonitor::setOnDisconnect(std::function<void()> func) {
+    std::lock_guard scopeLock(mMutex);
     // Can only be set prior to opening.
     assert(not isOpen());
     mOnDisconnect = std::move(func);
 }
 
 Error SerialMonitor::open(const std::string& path) {
+    std::lock_guard scopeLock(mMutex);
     assert(not isOpen());
 
 #   if defined(__APPLE__) or defined(__linux__)
@@ -81,6 +85,7 @@ Error SerialMonitor::open(const std::string& path) {
     tcflush(mFd, TCIFLUSH);
     tcsetattr(mFd, TCSANOW, &newtio);
 #   elif defined(_WIN32)
+    // See https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#win32-device-namespaces
     const auto safeBoardPath{R"(\\.\)" + path};
     mHandle = CreateFileA(
         safeBoardPath.c_str(),
@@ -124,6 +129,8 @@ Error SerialMonitor::open(const std::string& path) {
 }
 
 void SerialMonitor::close() {
+    std::lock_guard scopeLock(mMutex);
+
     if (not isOpen())
         return;
 
@@ -134,6 +141,7 @@ void SerialMonitor::close() {
     }
 
 #   if defined(__APPLE__) or defined(__linux__)
+    fsync(mFd);
     ::close(mFd);
     mFd = -1;
 #   elif defined(_WIN32)
@@ -146,6 +154,8 @@ void SerialMonitor::close() {
 }
 
 Error SerialMonitor::write(std::string_view msg) {
+    std::lock_guard scopeLock(mMutex);
+
     if (not isOpen()) {
         return {
             .rsn_=Error::Code::Disconnected,
@@ -202,6 +212,8 @@ Error SerialMonitor::write(std::string_view msg) {
 }
 
 Error SerialMonitor::read(char& chr) {
+    // Don't lock here.
+
     if (not isOpen()) {
         return {
             .rsn_=Error::Code::Disconnected,
@@ -209,12 +221,39 @@ Error SerialMonitor::read(char& chr) {
     }
 
 #   if defined(__APPLE__) or defined(__linux__)
+    pollfd pfd{.fd=mFd, .events=POLLIN};
+    while (not false) {
+        // This needs to be a poll, specifically with a timeout... I don't
+        // really understand why.
+        //
+        // Just read() or a poll w/ timeout=-1 will cause things to hang for
+        // at least some amount of time.
+        auto res{poll(&pfd, 1, 50)};
+        if (res == -1) {
+            return {
+                .rsn_=Error::Code::Unknown,
+                    // .code_=errno,
+            };
+        }
+
+        if (res == 1)
+            break;
+    };
+
+    if (pfd.revents & (POLLHUP | POLLERR)) {
+        close();
+        return {
+            .rsn_=Error::Code::Unknown,
+            // .code_=errno,
+        };
+    }
+
     auto res{::read(mFd, &chr, 1)};
     if (res == -1) {
         close();
         return {
             .rsn_=Error::Code::Unknown,
-            .code_=errno,
+            .code_=errno
         };
     }
 #   elif defined(_WIN32)
