@@ -28,7 +28,7 @@
 namespace data::prim {
 
 struct DATA_EXPORT Model : virtual base::Model {
-    bool enable(bool en) override;
+    bool enable(bool en = true) override;
 
     void lock() const final;
     void unlock() const final;
