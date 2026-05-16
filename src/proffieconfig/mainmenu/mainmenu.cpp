@@ -525,7 +525,11 @@ void MainMenu::onRefreshBoards() {
 void MainMenu::onApplyConfig() {
     pcui::BusyTracker busy(this);
 
-    auto *prog{new pcui::ProgressDialog(this, _("Applying Changes"))};
+    auto *prog{new pcui::ProgressDialog(
+        this,
+        _("Applying Changes"),
+        true
+    )};
 
     std::thread{[this, prog, busy]() {
         prog->set(1, _("Opening Config..."));
