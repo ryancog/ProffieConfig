@@ -29,7 +29,6 @@
 #include "config/config.hpp"
 #include "data/context.hpp"
 #include "data/logic/adapter.hpp"
-#include "data/logic/operators.hpp"
 #include "ui/bitmap.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/choice.hpp"
@@ -98,8 +97,10 @@ pcui::DescriptorPtr MainMenu::ui() {
         // weird here.
         .border_={.size_=pcui::interGroupSpacing(), .dirs_=wxALL},
       },
+      .orient_=wxVERTICAL,
       .children_={
         pcui::Stack{
+          .base_={.expand_=true},
           .orient_=wxHORIZONTAL,
           .children_={
             pcui::Stack{
