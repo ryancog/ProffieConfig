@@ -62,6 +62,7 @@ SerialMonitorDlg::SerialMonitorDlg(wxWindow *parent, std::string str) :
     mMon.setOnDisconnect([this] { onDisconnect(); });
 
     CreateStatusBar(1);
+    SetStatusBarPane(-1);
     SetStatusText(wxString::Format(
         _("Connecting to %s..."), mDev
     ));
