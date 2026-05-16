@@ -39,6 +39,9 @@ private:
     enum {
         eID_Input = 100,
         eID_Output,
+
+        eID_Menu_Copy,
+        eID_Menu_Copy_With_Time,
     };
 
     pcui::DescriptorPtr ui();
@@ -56,6 +59,10 @@ private:
     void onKey(wxKeyEvent&);
     void onUp();
     void onDown();
+
+    void onOutputContext(wxContextMenuEvent&);
+    void onOutputMenu(wxCommandEvent&);
+    void doCopyOutput(bool);
 
     void onClose(wxCloseEvent&);
 

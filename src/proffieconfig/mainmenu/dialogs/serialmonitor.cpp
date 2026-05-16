@@ -23,11 +23,13 @@
 #include <iomanip>
 
 #include <wx/busyinfo.h>
+#include <wx/clipbrd.h>
+#include <wx/frame.h>
 #include <wx/gdicmn.h>
+#include <wx/listctrl.h>
+#include <wx/menu.h>
 #include <wx/thread.h>
 #include <wx/statusbr.h>
-#include <wx/frame.h>
-#include <wx/listctrl.h>
 
 #include "data/context.hpp"
 #include "ui/build.hpp"
@@ -152,9 +154,23 @@ void SerialMonitorDlg::bindEvents() {
     }()};
     amend(mAutoScroll, autoScrollTable);
 
-    FindWindow(eID_Input)->Bind(
+    auto *input{FindWindow(eID_Input)};
+    input->Bind(
         wxEVT_KEY_DOWN,
         &SerialMonitorDlg::onKey,
+        this
+    );
+
+    auto *output{FindWindow(eID_Output)};
+    output->Bind(
+        wxEVT_CONTEXT_MENU,
+        &SerialMonitorDlg::onOutputContext,
+        this
+    );
+
+    output->Bind(
+        wxEVT_MENU,
+        &SerialMonitorDlg::onOutputMenu,
         this
     );
 
@@ -275,6 +291,60 @@ void SerialMonitorDlg::onDown() {
         mInput.clear();
     else
         mInput.change(std::string{smHistory[mHistoryIdx]});
+}
+
+void SerialMonitorDlg::onOutputContext(wxContextMenuEvent& evt) {
+    wxMenu menu;
+    menu.Append(eID_Menu_Copy, _("Copy Output"));
+    menu.Append(eID_Menu_Copy_With_Time, _("Copy Output With Time-Stamps"));
+    static_cast<wxWindow *>(evt.GetEventObject())->PopupMenu(&menu);
+}
+
+void SerialMonitorDlg::onOutputMenu(wxCommandEvent& evt) {
+    doCopyOutput(evt.GetId() == eID_Menu_Copy_With_Time);
+}
+
+void SerialMonitorDlg::doCopyOutput(bool withStamps) {
+    auto *list{static_cast<wxListCtrl *>(FindWindow(eID_Output))};
+
+    std::string data;
+
+    long item{-1};
+    while (not false) {
+        item = list->GetNextItem(
+            item,
+            wxLIST_NEXT_ALL,
+            wxLIST_STATE_SELECTED
+        );
+
+        if (item == -1)
+            break;
+
+        if (not data.empty())
+            data.push_back('\n');
+
+        if (withStamps) {
+            data += data::context(mLines[item]->stamp_).val();
+            data.push_back(' ');
+        }
+
+        auto& var{mLines[item]->var_};
+        if (auto *ptr{std::get_if<DeviceLine>(&var)}) {
+            data += data::context(ptr->line_).val();
+        } else if (auto *ptr{std::get_if<UserLine>(&var)}) {
+            if (not withStamps)
+                data += "> ";
+
+            data += data::context(ptr->line_).val();
+        } else if (auto *ptr{std::get_if<EventLine>(&var)}) {
+            data += "???";
+        }
+    }
+
+    if (wxTheClipboard->Open()) {
+        wxTheClipboard->SetData(new wxTextDataObject(data));
+        wxTheClipboard->Close();
+    }
 }
 
 void SerialMonitorDlg::onClose(wxCloseEvent& evt) {
