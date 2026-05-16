@@ -544,7 +544,9 @@ void MainMenu::onApplyConfig() {
             return;
         }
 
+        auto name{data::context(info->name())};
         arduino::applyToBoard(
+            name.val(),
             mBoards[boardChoice.idx()],
             *info->config(),
             *prog

@@ -90,6 +90,7 @@ struct CompileOutput {
 };
 
 std::variant<CompileOutput, wxString> compile(
+    const std::string&,
     const config::Config&,
     pcui::ProgressDialog&,
     logging::Branch&
@@ -232,13 +233,14 @@ std::vector<std::string> arduino::getBoards(logging::Branch *lBranch) {
 }
 
 void arduino::applyToBoard(
+    const std::string& name,
     const std::string& boardPath,
     const config::Config& config,
     pcui::ProgressDialog& prog
 ) {
     auto& logger{logging::Context::getGlobal().createLogger("arduino::applyToBoard()")};
 
-    auto res{compile(config, prog, *logger.binfo("Compiling..."))};
+    auto res{compile(name, config, prog, *logger.binfo("Compiling..."))};
     if (auto *err{std::get_if<wxString>(&res)}) {
         prog.finish(true, *err);
         return;
@@ -270,11 +272,13 @@ void arduino::applyToBoard(
 }
 
 void arduino::verifyConfig(
-    const config::Config& config, pcui::ProgressDialog& prog
+    const std::string& name,
+    const config::Config& config,
+    pcui::ProgressDialog& prog
 ) {
     auto& logger{logging::Context::getGlobal().createLogger("arduino::verifyConfig()")};
 
-    auto res{compile(config, prog, *logger.binfo("Compiling..."))};
+    auto res{compile(name, config, prog, *logger.binfo("Compiling..."))};
     if (auto *err{std::get_if<wxString>(&res)}) {
         prog.finish(true, *err);
         return;
@@ -296,6 +300,7 @@ void arduino::verifyConfig(
 namespace {
 
 std::variant<CompileOutput, wxString> compile(
+    const std::string& name,
     const config::Config& config,
     pcui::ProgressDialog& prog,
     logging::Branch& lBranch
@@ -375,8 +380,8 @@ std::variant<CompileOutput, wxString> compile(
         }
     }
 
-    constexpr cstring CONFIG_OUT_NAME{"proffieconfig_gen.h"};
-    const auto configPath{osPath / "config" / CONFIG_OUT_NAME};
+    const auto outName{"ProffieConfig/" + name + ".h"};
+    const auto configPath{osPath / "config" / outName};
 
     constexpr cstring GENERATE_MESSAGE{wxTRANSLATE("Generating configuration file...")};
     prog.set(30, wxGetTranslation(GENERATE_MESSAGE));
@@ -422,7 +427,7 @@ std::variant<CompileOutput, wxString> compile(
            ) {
             if (not alreadyOutputConfigDefine) {
                 tmpIno << "#define CONFIG_FILE \"config/";
-                tmpIno << CONFIG_OUT_NAME << "\"\n";
+                tmpIno << outName << "\"\n";
                 alreadyOutputConfigDefine = true;
             }
         } else if (buffer.starts_with(R"(const char version[] = ")")) {

@@ -149,7 +149,8 @@ void EditorWindow::bindEvents() {
         )};
 
         std::thread{[this, prog, busy]() {
-            arduino::verifyConfig(*mInfo.config(), *prog);
+            auto name{data::context(mInfo.name())};
+            arduino::verifyConfig(name.val(), *mInfo.config(), *prog);
         }}.detach();
     }, eID_Verify);
 

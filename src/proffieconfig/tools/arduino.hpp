@@ -34,11 +34,13 @@ std::string version();
 
 void applyToBoard(
     const std::string& boardPath,
+    const std::string&,
     const config::Config&,
     pcui::ProgressDialog& progress
 );
 
 void verifyConfig(
+    const std::string&,
     const config::Config&,
     pcui::ProgressDialog& progress
 );
