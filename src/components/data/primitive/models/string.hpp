@@ -27,6 +27,9 @@
 namespace data::prim {
 
 struct DATA_EXPORT String : base::String, Model {
+    using base::String::String;
+    String(std::string&&);
+
     using base::String::change;
     bool change(std::string&&, size) override;
     bool move(size) override;

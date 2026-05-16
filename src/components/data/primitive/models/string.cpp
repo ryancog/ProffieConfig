@@ -23,6 +23,10 @@
 
 using namespace data::prim;
 
+String::String(std::string&& str) {
+    change(std::move(str));
+}
+
 bool String::change(std::string&& str, size pos) {
     std::lock_guard scopeLock(*this);
 
