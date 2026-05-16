@@ -135,8 +135,14 @@ void Process::create(std::string exec, std::span<std::string> args) {
         argv[args.size() + 1] = nullptr;
 
         execvp(exec.c_str(), argv);
-        data.promise_.set_value({.err_=Result::eExecution_Failed});
-        exit(1);
+
+        // This doesn't make it back to the parent, the child has its own
+        // memory space, duh.
+        // data.promise_.set_value({.err_=Result::eExecution_Failed});
+
+        // Don't do normal cleanup, there's all sorts of stuff from the parent
+        // polluting things.
+        _exit(1);
     } 
 
     data.pid_ = pid;
