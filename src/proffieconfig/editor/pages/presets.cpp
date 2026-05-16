@@ -528,7 +528,7 @@ pcui::DescriptorPtr PresetsPage::style() {
                   )
                 }, 
                 .style_=pcui::Text::MultiLine{
-                  .wrap_=pcui::Text::MultiLine::Wrap::None,
+                  .wrap_=pcui::Text::Wrap::None,
                 },
               };
 

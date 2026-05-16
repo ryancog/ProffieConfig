@@ -49,8 +49,7 @@ LicenseDialog::~LicenseDialog() {
 }
 
 pcui::DescriptorPtr LicenseDialog::ui() {
-    auto licenseFont{pcui::detail::FontData{}.makeFont()};
-    licenseFont.SetFamily(wxFONTFAMILY_TELETYPE);
+    auto licenseFont{- pcui::Font::Monospace};
 
     const auto licenseBoxWidth{[&] {
         int x{};
