@@ -1,4 +1,4 @@
-#pragma once
+#include "symbols.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
@@ -19,24 +19,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "utils/types.hpp"
+using namespace pcui;
 
-#include "ui_export.h"
+const cstring syms::COPYRIGHT{"\xC2\xA9"};
 
-namespace pcui::syms {
+const cstring syms::UP_ARROW{"\xE2\x86\x91"};
+const cstring syms::DOWN_ARROW{"\xE2\x86\x93"};
 
-UI_EXPORT extern const cstring COPYRIGHT;
+const cstring syms::WARNING{"\xE2\x9A\xA0"};
+const cstring syms::NO_ENTRY{"\xE2\x9B\x94\xEF\xB8\x8E"};
+const cstring syms::DOUBLE_SQUARES{"\xE2\xA7\x89"};
+const cstring syms::CLEAR{"\xE2\x8C\xA6"};
 
-UI_EXPORT extern const cstring UP_ARROW;
-UI_EXPORT extern const cstring DOWN_ARROW;
-
-UI_EXPORT extern const cstring WARNING;
-UI_EXPORT extern const cstring NO_ENTRY;
-UI_EXPORT extern const cstring DOUBLE_SQUARES;
-UI_EXPORT extern const cstring CLEAR;
-
-UI_EXPORT extern const cstring PLUS;
-UI_EXPORT extern const cstring MINUS;
-
-} // namespace pcui::syms
+const cstring syms::PLUS{"\xEF\xBC\x8B"};
+const cstring syms::MINUS{"\xEF\xBC\x8D"};
 

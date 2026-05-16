@@ -11,6 +11,7 @@ add_library(ui SHARED
     values.cpp
     bitmap.cpp
     utils.cpp
+    symbols.cpp
 
     priv/tlw.cpp
     priv/tracker.cpp
