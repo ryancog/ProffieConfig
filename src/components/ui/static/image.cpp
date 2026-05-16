@@ -50,7 +50,11 @@ struct Static : detail::Window<Widget> {
         const detail::Scaffold& scaffold,
         const Image& desc
     ) {
-        Create(scaffold.childParent_, wxID_ANY, {});
+        Create(
+            scaffold.childParent_,
+            desc.win_.id_,
+            {}
+        );
 
         postCreation(scaffold, desc.win_);
 

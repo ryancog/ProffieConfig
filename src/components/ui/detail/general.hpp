@@ -54,6 +54,8 @@ struct UI_EXPORT ChildBase {
 struct UI_EXPORT ChildWindowBase {
     ChildBase base_;
 
+    wxWindowID id_{wxID_ANY};
+
     wxSize maxSize_{wxDefaultSize};
 
     data::logic::Holder show_;

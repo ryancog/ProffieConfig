@@ -35,7 +35,7 @@ struct Layout : detail::Window<wxSplitterWindow> {
     Layout(const detail::Scaffold& scaffold, const Split& desc) {
         Create(
             scaffold.childParent_,
-            wxID_ANY,
+            desc.win_.id_,
             wxDefaultPosition,
             wxDefaultSize,
             wxSP_3DSASH | wxSP_LIVE_UPDATE

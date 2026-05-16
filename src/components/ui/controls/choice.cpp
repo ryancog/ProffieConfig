@@ -49,7 +49,7 @@ struct ControlBase : detail::DataWindow<Ctrl> {
 
         Ctrl::Create(
             scaffold.childParent_,
-            wxID_ANY,
+            desc.win_.id_,
             wxDefaultPosition,
             wxDefaultSize
         );

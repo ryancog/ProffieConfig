@@ -27,14 +27,24 @@
 
 using namespace pcui::priv;
 
-Panel::Panel(wxWindow *parent, long style, const wxString& name) {
-    create(parent, style, name);
+Panel::Panel(
+    wxWindow *parent,
+    wxWindowID id,
+    long style,
+    const wxString& name
+) {
+    create(parent, id, style, name);
 }
 
-void Panel::create(wxWindow *parent, long style, const wxString& name) {
+void Panel::create(
+    wxWindow *parent,
+    wxWindowID id,
+    long style,
+    const wxString& name
+) {
     wxPanel::Create(
         parent,
-        wxID_ANY,
+        id,
         wxDefaultPosition,
         wxDefaultSize,
         style,

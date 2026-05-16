@@ -49,7 +49,7 @@ struct Control : detail::DataWindow<wxFilePickerCtrl> {
 
         Create(
             scaffold.childParent_,
-            wxID_ANY,
+            desc.win_.id_,
             wxEmptyString,
             desc.message_,
             desc.wildcard_,

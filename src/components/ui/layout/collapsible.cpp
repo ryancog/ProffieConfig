@@ -40,7 +40,7 @@ struct Layout : detail::Window<wxCollapsiblePane> {
 
         Create(
             scaffold.childParent_,
-            wxID_ANY,
+            desc.win_.id_,
             showLabel_,
             wxDefaultPosition,
             wxDefaultSize,

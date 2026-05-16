@@ -35,6 +35,7 @@ struct Layout : detail::Window<priv::GroupBox> {
     Layout(const detail::Scaffold& scaffold, const Group& desc) {
         create(
             scaffold.childParent_,
+            desc.win_.id_,
             desc.orient_,
             desc.label_,
             desc.padded_

@@ -35,7 +35,7 @@ namespace {
 
 struct Layout : detail::Window<priv::Panel> {
     Layout(const detail::Scaffold& scaffold, const pcui::Panel& desc) {
-        create(scaffold.childParent_);
+        create(scaffold.childParent_, desc.win_.id_);
 
 #       ifdef _WIN32
 #       ifdef __WXGTK__

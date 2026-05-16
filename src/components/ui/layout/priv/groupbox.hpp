@@ -36,6 +36,7 @@ public:
     GroupBox();
     GroupBox(
         wxWindow *parent,
+        wxWindowID id,
         wxOrientation orient,
         const wxString& label,
         bool padded = true
@@ -53,6 +54,7 @@ public:
 
     void create(
         wxWindow *parent,
+        wxWindowID id,
         wxOrientation orient,
         const wxString& label,
         bool padded = true

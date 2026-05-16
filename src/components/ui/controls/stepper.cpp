@@ -38,7 +38,7 @@ struct IntCtrl : detail::DataWindow<wxSpinCtrl> {
         int_{std::get<0>(desc.data_).get()} {
         Create(
             scaffold.childParent_,
-            wxID_ANY,
+            desc.win_.id_,
             wxEmptyString,
             wxDefaultPosition,
             wxDefaultSize,
@@ -108,7 +108,7 @@ struct DoubleCtrl : detail::DataWindow<wxSpinCtrlDouble> {
         dec_{std::get<1>(desc.data_).get()} {
         Create(
             scaffold.childParent_,
-            wxID_ANY,
+            desc.win_.id_,
             wxEmptyString,
             wxDefaultPosition,
             wxDefaultSize,

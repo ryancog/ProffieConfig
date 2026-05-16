@@ -36,7 +36,7 @@ struct Control : detail::DataWindow<wxToggleButton> {
         data_{desc.data_} {
         Create(
             scaffold.childParent_,
-            wxID_ANY,
+            desc.win_.id_,
             desc.label_,
             wxDefaultPosition,
             wxDefaultSize,

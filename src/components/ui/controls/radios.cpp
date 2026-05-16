@@ -103,6 +103,7 @@ struct Box : detail::Window<priv::GroupBox> {
     Box(const detail::Scaffold& scaffold, const Radios& desc) {
         create(
             scaffold.childParent_,
+            desc.win_.id_,
             wxVERTICAL,
             desc.label_
         );

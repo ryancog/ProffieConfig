@@ -37,7 +37,7 @@ struct Control : detail::DataWindow<wxCheckListBox> {
         sel_{desc.data_} {
         Create(
             scaffold.childParent_,
-            wxID_ANY,
+            desc.win_.id_,
             wxDefaultPosition,
             wxDefaultSize
         );

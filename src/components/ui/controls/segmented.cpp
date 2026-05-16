@@ -51,7 +51,11 @@ struct Control : detail::DataWindow<wxToggleButton> {
         data::base::Bool& data,
         const detail::ChildWindowBase& win
     ) : bl_{data} {
-        Create(scaffold.childParent_, wxID_ANY, label.text_);
+        Create(
+            scaffold.childParent_,
+            wxID_ANY,
+            label.text_
+        );
 
         if (label.bmp_) {
             bmp_ = label.bmp_;
@@ -138,7 +142,7 @@ struct Control : detail::DataWindow<wxToggleButton> {
 
 struct Manager : detail::Window<priv::Panel> {
     Manager(const detail::Scaffold& scaffold, const Segmented& desc) {
-        create(scaffold.childParent_);
+        create(scaffold.childParent_, desc.win_.id_);
         auto *sizer{new wxBoxSizer(wxHORIZONTAL)};
 
         postCreation(scaffold, desc.win_);

@@ -42,26 +42,29 @@ GroupBox::GroupBox() = default;
 
 GroupBox::GroupBox(
     wxWindow *parent,
+    wxWindowID id,
     wxOrientation orient,
     const wxString& label,
     bool padded
 ) {
-    create(parent, orient, label, padded);
+    create(parent, id, orient, label, padded);
 }
 
 void GroupBox::create(
     wxWindow *parent,
+    wxWindowID id,
     wxOrientation orient,
     const wxString& label,
     bool padded
 ) {
     mPadded = padded;
 
-    wxStaticBox::Create(parent, wxID_ANY, label);
+    wxStaticBox::Create(parent, id, label);
 
     mSizer = new wxBoxSizer(orient);
     mPanel = new priv::Panel(
         this,
+        wxID_ANY,
         wxTAB_TRAVERSAL | wxNO_BORDER,
         "GroupBox Inside"
     );

@@ -36,7 +36,7 @@ struct Indicator : detail::DataWindow<wxGauge> {
         data_{desc.data_} {
         Create(
             scaffold.childParent_,
-            wxID_ANY,
+            desc.win_.id_,
             0,
             wxDefaultPosition,
             wxDefaultSize,

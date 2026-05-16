@@ -30,7 +30,7 @@ namespace {
 
 struct Layout : detail::Window<wxScrolledWindow> {
     Layout(const detail::Scaffold& scaffold, const Scrolled& desc) {
-        Create(scaffold.childParent_, wxID_ANY);
+        Create(scaffold.childParent_, desc.win_.id_);
 
         postCreation(scaffold, desc.win_);
         SetScrollRate(desc.scrollRate_.x_, desc.scrollRate_.y_);

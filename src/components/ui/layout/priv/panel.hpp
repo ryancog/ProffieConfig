@@ -28,6 +28,7 @@ public:
     Panel() = default;
     Panel(
         wxWindow *parent,
+        wxWindowID id = wxID_ANY,
         long style = wxTAB_TRAVERSAL,
         const wxString& name = wxPanelNameStr
     );
@@ -43,6 +44,7 @@ public:
 
     void create(
         wxWindow *parent,
+        wxWindowID id = wxID_ANY,
         long style = wxTAB_TRAVERSAL,
         const wxString& name = wxPanelNameStr
     );
