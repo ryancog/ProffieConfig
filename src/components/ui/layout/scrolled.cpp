@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/gdicmn.h>
 #include <wx/scrolwin.h>
 
 #include "ui/detail/window.hpp"
@@ -83,6 +84,18 @@ struct Layout : detail::Window<wxScrolledWindow> {
 } // namespace
 
 DescriptorPtr Scrolled::operator()() {
+    // Scrolled will by default return a non-zero minsize which adds a space
+    // when the sizer computes its size. This is annoying when trying to
+    // manually add the actual content minsize.
+    //
+    // Also be sure not to set it if the scrollrate is unset, to not break the
+    // custom sizing in updateSizes().
+    auto& minSize{win_.base_.minSize_};
+    if (minSize.GetWidth() == -1 and scrollRate_.x_ != -1)
+        minSize.SetWidth(0);
+    if (minSize.GetHeight() == -1 and scrollRate_.y_ != -1)
+        minSize.SetHeight(0);
+
     return std::make_unique<Scrolled::Desc>(std::move(*this));
 }
 
