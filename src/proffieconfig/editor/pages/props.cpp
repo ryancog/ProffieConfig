@@ -64,7 +64,10 @@ pcui::DescriptorPtr PropsPage::ui() {
                 .data_=mConfig.propChoice(),
                 .style_=pcui::Choice::PopUp{
                   .unselected_=_("Default"),
-                }
+                },
+                .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
+                    return (*mConfig.propVec())[idx]->name_;
+                },
               }(),
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
