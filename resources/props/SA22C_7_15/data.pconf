@@ -71,26 +71,26 @@ SETTINGS {
 
 LAYOUT {
 	HORIZONTAL ("Gesture Control") {
-                SETTING("SA22C_STAB_ON")
+		SETTING("SA22C_STAB_ON")
 		VERTICAL {
-                        SETTING("SA22C_SWING_ON")
-                        SETTING("SA22C_SWING_ON_SPEED")
+			SETTING("SA22C_SWING_ON")
+			SETTING("SA22C_SWING_ON_SPEED")
 		}
-                SETTING("SA22C_THRUST_ON")
-                SETTING("SA22C_TWIST_ON")
-                SETTING("SA22C_TWIST_OFF")
+		SETTING("SA22C_THRUST_ON")
+		SETTING("SA22C_TWIST_ON")
+		SETTING("SA22C_TWIST_OFF")
 	}
 	HORIZONTAL {
 		HORIZONTAL("Controls") {
-                        SETTING("SA22C_NO_LOCKUP_HOLD")
+			SETTING("SA22C_NO_LOCKUP_HOLD")
 		}
 		VERTICAL("Features") {
-                        SETTING("SA22C_FORCE_PUSH")
-                        SETTING("SA22C_FORCE_PUSH_LENGTH")
+			SETTING("SA22C_FORCE_PUSH")
+			SETTING("SA22C_FORCE_PUSH_LENGTH")
 		}
 		VERTICAL("Battle Mode") {
-                        SETTING("GESTURE_AUTO_BATTLE_MODE")
-                        SETTING("SA22C_LOCKUP_DELAY")
+			SETTING("GESTURE_AUTO_BATTLE_MODE")
+			SETTING("SA22C_LOCKUP_DELAY")
 		}
 	}
 }
