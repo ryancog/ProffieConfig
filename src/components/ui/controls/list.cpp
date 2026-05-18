@@ -200,6 +200,8 @@ struct Control : detail::Window<wxListCtrl> {
                 for (size col{0}; col < rowLabels.size(); ++col) {
                     auto& label{rowLabels[col]};
                     if (auto *ptr{std::get_if<1>(&label)}) {
+                        if (&ptr->get() != &model) continue;
+
                         RefreshItem(static_cast<long>(labelStart_ + idx));
                         return;
                     }
