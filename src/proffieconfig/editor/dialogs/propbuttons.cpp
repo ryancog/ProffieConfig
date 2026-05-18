@@ -135,6 +135,10 @@ void PropButtonsDlg::rebuildLinks() {
 }
 
 void PropButtonsDlg::rebuildUI() {
+    // Only cripple from sizer and below, don't deactivate `this`.
+    if (auto *sizer{GetSizer()})
+        pcui::cripple(sizer);
+
     pcui::Stack stack{
       .base_={
         .minSize_={300, 100},
