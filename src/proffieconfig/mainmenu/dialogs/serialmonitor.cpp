@@ -246,6 +246,11 @@ void SerialMonitorDlg::doAutoScroll() {
     if (not data::context(mAutoScroll).val())
         return;
 
+    // If the count/state was just futzed with, let the UI update first.
+    // Otherwise, the call to EnsureVisible() causes flicker on (at least)
+    // macOS. I'm not sure exactly why.
+    wxYield();
+
     auto *output{static_cast<wxListCtrl *>(FindWindow(eID_Output))};
     output->EnsureVisible(static_cast<long>(mLines.size() - 1));
 }
