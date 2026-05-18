@@ -85,16 +85,32 @@ pcui::DescriptorPtr SerialMonitorDlg::ui() {
       },
       .orient_=wxVERTICAL,
       .children_={
-        pcui::Text{
-          .win_={
-            .base_={.expand_=true},
-            .id_=eID_Input,
-          },
-          .data_=mInput,
-          .font_=pcui::Font::Monospace,
-          .style_=pcui::Text::SingleLine{
-            .hint_=_("Type Command"),
-            .onEnter_=[this] { onCmdEnter(); },
+        pcui::Stack{
+          .base_={.expand_=true},
+          .orient_=wxHORIZONTAL,
+          .children_={
+            pcui::Text{
+              .win_={
+                .base_={.proportion_=1},
+                .id_=eID_Input,
+              },
+              .data_=mInput,
+              .font_=pcui::Font::Monospace,
+              .style_=pcui::Text::SingleLine{
+                .hint_=_("Type Command"),
+                .onEnter_=[this] { onCmdEnter(); },
+              },
+            }(),
+            pcui::Button{
+              .win_={
+                .base_={.minSize_=pcui::iconButtonSize()},
+                .tooltip_=_("View serial monitor commands"),
+              },
+              .label_="?",
+              .style_=pcui::ToggleButton::Style::Companion,
+              .exactFit_=true,
+              .func_=[this] { doHelp(); },
+            }(),
           },
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
@@ -260,6 +276,10 @@ void SerialMonitorDlg::doAutoScroll() {
 void SerialMonitorDlg::doClear() {
     mNumLines.set(0);
     mLines.clear();
+}
+
+void SerialMonitorDlg::doHelp() {
+    wxLaunchDefaultBrowser("https://pod.hubbe.net/tools/serial-monitor-commands.html");
 }
 
 void SerialMonitorDlg::onKey(wxKeyEvent& evt) {

@@ -55,6 +55,7 @@ private:
     void doAutoScroll();
 
     void doClear();
+    void doHelp();
 
     void onKey(wxKeyEvent&);
     void onUp();
