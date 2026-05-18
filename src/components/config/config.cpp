@@ -58,13 +58,6 @@ Config::Config() :
     mBoardChoice(*this) {
     CreationScope createScope(this);
 
-    const auto propFilt{[](
-        const data::base::Choice::ROContext& ctxt, int32& idx
-    ) {
-        if (idx == -1 and ctxt.num()) idx = 0;
-    }};
-    mPropChoice.setFilter(propFilt);
-
     { 
         versions::os::Context osCtxt;
         versions::props::Context propCtxt;
@@ -303,10 +296,13 @@ void Config::onNumBlades() {
 }
 
 void Config::onOSChoice() {
-    if (auto *ptr{os()})
+    if (auto *ptr{os()}) {
         mBoardChoice.update(ptr->boards_.size());
-    else
+        mPropChoice.update(propVec()->size());
+    } else {
         mBoardChoice.update(0);
+        mPropChoice.update(0);
+    }
 }
 
 Info::Info() = default;
