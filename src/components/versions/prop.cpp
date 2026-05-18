@@ -787,11 +787,9 @@ std::vector<std::unique_ptr<detail::Data>> parseSettings(
         if (not commonData) continue;
         auto& [settingData, entryMap]{*commonData};
 
-        const auto optionData{pconf::hash(optionEntry.section()->entries_)};
-
         std::vector<OptionData::SelectionData *> selections;
 
-        const auto selectionEntries{optionData.findAll("SELECTION")};
+        const auto selectionEntries{entryMap.findAll("SELECTION")};
         for (const auto& selectionEntry : selectionEntries) {
             auto commonData{parseSettingCommon(
                 selectionEntry,
@@ -810,10 +808,14 @@ std::vector<std::unique_ptr<detail::Data>> parseSettings(
             ret.push_back(std::move(selData));
         }
 
-        ret.push_back(std::make_unique<OptionData>(
-            std::move(settingData),
-            std::move(selections)
-        ));
+        if (selections.size() > 1) {
+            ret.push_back(std::make_unique<OptionData>(
+                std::move(settingData),
+                std::move(selections)
+            ));
+        } else {
+            logger.warn("Option \"" + settingData.name_ + "\" doesn't have enough SELECTIONs, ignoring.");
+        }
     }
 
     const auto numericEntries{hashedData.findAll("NUMERIC")};
