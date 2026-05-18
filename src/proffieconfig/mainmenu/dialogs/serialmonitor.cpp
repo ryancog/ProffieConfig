@@ -118,6 +118,7 @@ pcui::DescriptorPtr SerialMonitorDlg::ui() {
             pcui::Button{
               .win_={
                 .base_={.minSize_=pcui::iconButtonSize()},
+                .tooltip_=_("Clear output"),
               },
               .label_=pcui::syms::CLEAR,
               .style_=pcui::ToggleButton::Style::Companion,
@@ -128,6 +129,7 @@ pcui::DescriptorPtr SerialMonitorDlg::ui() {
             pcui::ToggleButton{
               .win_={
                 .base_={.minSize_=pcui::iconButtonSize()},
+                .tooltip_=_("Auto-scroll to keep new messages in view"),
               },
               .label_=pcui::syms::DOWN_ARROW,
               .data_=mAutoScroll,
