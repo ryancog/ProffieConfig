@@ -428,6 +428,7 @@ void SerialMonitorDlg::connectLoop() {
     });
 
     mInput.enable();
+    mInput.focus();
     mListenThread = std::thread{[this] { listenLoop(); }};
 }
 
