@@ -55,7 +55,7 @@ bool DataWindowImpl::freezeGetRealEnable() {
 
 void DataWindowImpl::thawRealEnable() {
     if (auto *model{primaryModel()})
-        return model->unlock();
+        model->unlock();
 
     WindowImpl::thawRealEnable();
 }
