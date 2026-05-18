@@ -97,8 +97,8 @@ struct VERSIONS_EXPORT ToggleData : virtual detail::Data {
 };
 
 struct VERSIONS_EXPORT Toggle : detail::SettingBase,
-                                ToggleData,
-                                data::hier::Bool {
+                                data::hier::Bool,
+                                ToggleData {
     Toggle(Prop&, ToggleData);
     bool isActive() const override;
     bool shouldOutputDefine() const override;
@@ -113,8 +113,8 @@ struct VERSIONS_EXPORT IntegerData : virtual detail::Data {
 };
 
 struct VERSIONS_EXPORT Integer : detail::SettingBase,
-                                 IntegerData,
-                                 data::hier::Integer {
+                                 data::hier::Integer,
+                                 IntegerData {
     Integer(Prop&, IntegerData);
     bool isActive() const override;
     bool shouldOutputDefine() const override;
@@ -129,8 +129,8 @@ struct VERSIONS_EXPORT DecimalData : virtual detail::Data {
 };
 
 struct VERSIONS_EXPORT Decimal : detail::SettingBase,
-                                 DecimalData,
-                                 data::hier::Decimal {
+                                 data::hier::Decimal,
+                                 DecimalData {
     Decimal(Prop& prop, DecimalData);
     bool isActive() const override;
     bool shouldOutputDefine() const override;
@@ -147,8 +147,8 @@ struct VERSIONS_EXPORT OptionData : virtual detail::Data {
 };
 
 struct VERSIONS_EXPORT Option : detail::SettingBase, 
-                                OptionData,
-                                data::hier::Exclusive {
+                                data::hier::Exclusive,
+                                OptionData {
     struct Selection;
 
     Option(Prop&, OptionData);
@@ -165,8 +165,8 @@ struct VERSIONS_EXPORT OptionData::SelectionData : virtual detail::Data {
 };
 
 struct VERSIONS_EXPORT Option::Selection : detail::SettingBase, 
-                                           SelectionData,
-                                           data::hier::Bool {
+                                           data::hier::Bool,
+                                           SelectionData {
     Selection(data::hier::Root&, SelectionData);
     bool isActive() const override;
     bool shouldOutputDefine() const override;
