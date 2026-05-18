@@ -110,6 +110,9 @@ void PropButtonsDlg::rebuildLinks() {
         }
     }
 
+    if (mCurButtons == nullptr)
+        return;
+
     for (const auto& state : *mCurButtons) {
         for (const auto& button : state.buttons_) {
             for (const auto& [pred, desc] : button.descriptions_) {
@@ -145,7 +148,6 @@ void PropButtonsDlg::rebuildUI() {
     if (mCurButtons == nullptr) {
         pcui::Label label{
           .label_=_("Selected number of buttons not supported by prop file."),
-          .color_=wxSYS_COLOUR_GRAYTEXT,
         };
 
         stack.children_.add(label());
