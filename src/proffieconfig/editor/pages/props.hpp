@@ -29,7 +29,7 @@ struct PropsPage {
     PropsPage(config::Config&);
     void deinit();
 
-    pcui::DescriptorPtr ui();
+    pcui::DescriptorPtr ui(wxWindowID);
 
 private:
     void onInfoButton(const pcui::CallbackContext&);

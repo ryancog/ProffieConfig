@@ -50,9 +50,13 @@ void PropsPage::deinit() {
     }
 }
 
-pcui::DescriptorPtr PropsPage::ui() {
+pcui::DescriptorPtr PropsPage::ui(wxWindowID scrollID) {
     return pcui::Stack{
-      .base_={.border_={.size_=pcui::winEdgeSpacing(), .dirs_=wxALL}},
+      .base_={
+        .expand_=true,
+        .proportion_=1,
+        .border_={.size_=pcui::winEdgeSpacing(), .dirs_=wxALL},
+      },
       .orient_=wxVERTICAL,
       .children_={
         pcui::Stack{
@@ -94,18 +98,25 @@ pcui::DescriptorPtr PropsPage::ui() {
             }(),
           }
         }(),
-        pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
-        pcui::Scrolled{
-          .scrollRate_={.x_=10, .y_=10},
-          .child_=pcui::builders::Choice{
-            .data_=mConfig.propChoice(),
-            .builder_=[this](int32 idx) {
-                if (idx == -1)
-                    return pcui::Spacer{}();
+        pcui::builders::Choice{
+          .data_=mConfig.propChoice(),
+          .builder_=[this, scrollID](int32 idx) {
+              if (idx == -1)
+                  return pcui::Spacer{}();
 
-                return (*mConfig.propVec())[idx]->layout();
-            }
-          }(),
+              return pcui::Scrolled{
+                .win_={
+                  .base_={
+                    .expand_=true,
+                    .proportion_=1,
+                    .border_={.size_=pcui::interGroupSpacing(), .dirs_=wxTOP},
+                  },
+                  .id_=scrollID,
+                },
+                .scrollRate_={.x_=10, .y_=10},
+                .child_=(*mConfig.propVec())[idx]->layout(),
+              }();
+          },
         }(),
       }
     }();

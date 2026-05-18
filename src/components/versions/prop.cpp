@@ -31,9 +31,12 @@
 #include "ui/controls/checkbox.hpp"
 #include "ui/controls/radios.hpp"
 #include "ui/controls/stepper.hpp"
+#include "ui/helpers/labeled.hpp"
 #include "ui/layout/group.hpp"
+#include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/types.hpp"
+#include "ui/values.hpp"
 #include "utils/string.hpp"
 #include "versions/priv/data.hpp"
 
@@ -380,10 +383,11 @@ pcui::DescriptorPtr Prop::layout() {
     };
     std::vector<Layer> layers;
     layers.push_back({
-        .layout_ = mLayout,
-        .iter_ = mLayout.children_.begin(),
-        .stack_ = pcui::Stack {
-            .orient_ = wxVERTICAL,
+        .layout_=mLayout,
+        .iter_=mLayout.children_.begin(),
+        .stack_=pcui::Stack{
+            .base_={.expand_=true},
+            .orient_=wxVERTICAL,
         }
     });
 
@@ -394,7 +398,22 @@ pcui::DescriptorPtr Prop::layout() {
             layers.pop_back();
             if (layers.empty()) return desc;
 
-            layers.back().children().push_back(std::move(desc));
+            auto& children{layers.back().children()};
+
+            if (not children.empty()) {
+                bool groupSpaced{
+                    dynamic_cast<pcui::Group *>(children.back().get()) or
+                    dynamic_cast<pcui::Group *>(desc.get())
+                };
+                pcui::Spacer spacer{
+                  .size_=groupSpaced
+                    ? pcui::interGroupSpacing()
+                    : pcui::interControlSpacing()
+                };
+                children.push_back(spacer());
+            }
+
+            children.push_back(std::move(desc));
             continue;
         }
 
@@ -408,28 +427,80 @@ pcui::DescriptorPtr Prop::layout() {
                 continue;
             }
 
-            auto *setting{iter->second};
+            pcui::DescriptorPtr desc;
+            bool groupSpaced{false};
 
-            auto& children{layers.back().children()};
+            auto *setting{iter->second};
             if (auto *ptr{dynamic_cast<Toggle *>(setting)}) {
-                children.push_back(pcui::CheckBox{
-                    .data_ = *ptr,
-                }());
+                desc = pcui::CheckBox{
+                  .win_={
+                    .base_={.expand_=true},
+                    .tooltip_=ptr->description_
+                  },
+                  .label_=ptr->name_,
+                  .data_=*ptr,
+                }();
             } else if (auto *ptr{dynamic_cast<Option *>(setting)}) {
-                children.push_back(pcui::Radios{
-                    .data_ = *ptr,
-                }());
+                std::vector<wxString> labels;
+                labels.reserve(ptr->selections_.size());
+                for (auto *sel : ptr->selections_) {
+                    labels.emplace_back(sel->name_);
+                }
+
+                groupSpaced = true;
+                desc = pcui::Radios{
+                  .win_={
+                    .base_={.expand_=true},
+                    .tooltip_=ptr->description_
+                  },
+                  .label_=ptr->name_,
+                  .data_=*ptr,
+                  .labels_=std::move(labels),
+                }();
             } else if (auto *ptr{dynamic_cast<Integer *>(setting)}) {
-                children.push_back(pcui::Stepper{
-                    .data_ = *ptr,
-                }());
+                desc = pcui::Labeled{
+                  .win_={
+                    .base_={.expand_=true},
+                    .tooltip_=ptr->description_
+                  },
+                  .label_=ptr->name_,
+                  .orient_=wxHORIZONTAL,
+                  .ctrl_=pcui::Stepper{
+                    .win_={.base_={.proportion_=1}},
+                    .data_=*ptr,
+                  }(),
+                }();
             } else if (auto *ptr{dynamic_cast<Decimal *>(setting)}) {
-                children.push_back(pcui::Stepper{
-                    .data_ = *ptr,
-                }());
+                desc = pcui::Labeled{
+                  .win_={
+                    .base_={.expand_=true},
+                    .tooltip_=ptr->description_
+                  },
+                  .label_=ptr->name_,
+                  .orient_=wxHORIZONTAL,
+                  .ctrl_=pcui::Stepper{
+                    .win_={.base_={.proportion_=1}},
+                    .data_=*ptr,
+                  }(),
+                }();
             } else {
                 logger.warn("Setting in layout cannot be positioned: " + *id);
             }
+
+            auto& children{layers.back().children()};
+            if (not children.empty()) {
+                if (dynamic_cast<pcui::Group *>(children.back().get()))
+                    groupSpaced = true;
+
+                pcui::Spacer spacer{
+                  .size_=groupSpaced
+                    ? pcui::interGroupSpacing()
+                    : pcui::interControlSpacing()
+                };
+                children.push_back(spacer());
+            }
+
+            children.push_back(std::move(desc));
 
             continue;
         }
@@ -441,11 +512,13 @@ pcui::DescriptorPtr Prop::layout() {
         };
         if (not layout.label_.empty()) {
             layer.stack_ = pcui::Group{
+                .win_={.base_={.expand_=true}},
                 .label_ = layout.label_,
                 .orient_ = layout.orient_,
             };
         } else {
             layer.stack_ = pcui::Stack {
+                .base_={.expand_=true},
                 .orient_ = layout.orient_,
             };
         }

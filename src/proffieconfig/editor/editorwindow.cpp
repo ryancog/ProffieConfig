@@ -24,6 +24,7 @@
 
 #include <wx/display.h>
 #include <wx/filedlg.h>
+#include <wx/gdicmn.h>
 #include <wx/menu.h>
 #include <wx/toolbar.h>
 #include <wx/uri.h>
@@ -36,6 +37,7 @@
 #include "ui/dialogs/message.hpp"
 #include "ui/dialogs/progress.hpp"
 #include "ui/helpers/busy.hpp"
+#include "ui/values.hpp"
 #include "utils/defer.hpp"
 #include "utils/files.hpp"
 #include "utils/paths.hpp"
@@ -233,7 +235,7 @@ void EditorWindow::bindEvents() {
         if (evt.GetId() == ePage_General) {
             pcui::build(this, mGeneralPage.ui());
         } else if (evt.GetId() == ePage_Props) {
-            pcui::build(this, mPropsPage.ui());
+            pcui::build(this, mPropsPage.ui(eID_Props_Scrolled));
         } else if (evt.GetId() == ePage_Presets) {
             pcui::build(this, mPresetsPage.ui());
         } else if (evt.GetId() == ePage_Blades) {
@@ -343,7 +345,26 @@ void EditorWindow::Fit() {
     // For wxWidgets TLWs, GetBestSize is just the client size because it
     // queries GetWindowBorderSize() w/o taking into account TLW decoration.
     auto bestClientSize{GetBestSize()};
+
+    // if (mCurrentPage == ePage_Props)
+    if (auto *scrolled{FindWindow(eID_Props_Scrolled)}) {
+        auto scrollBest{scrolled->GetSizer()->GetMinSize()};
+
+        bestClientSize.SetWidth(std::max(
+            scrollBest.GetWidth() + (2 * pcui::winEdgeSpacing()),
+            bestClientSize.GetWidth()
+        ));
+
+        bestClientSize.SetHeight(
+            bestClientSize.GetHeight() + scrollBest.GetHeight()
+        );
+    }
+
     mBestSize = ClientToWindowSize(bestClientSize);
+
+    // Make sure that it doesn't go beyond the max visible window size.
+    // Mostly for the props page.
+    mBestSize.DecTo(display.GetClientArea().GetSize());
 
     // A lot of the code in the underlying toolkits and wxWidgets is quite
     // pessimistic, honestly, and I think even in release things struggle to
@@ -359,10 +380,6 @@ void EditorWindow::Fit() {
         frameRate = 60;
 
     const auto frameIntervalMillis{1000 / frameRate};
-
-    /*if (propsPage->IsShown()) {
-        propsPage->setToActualBestSize();
-    }*/
 
     // This actually does give the whole window size.
     mStartSize = GetSize();
@@ -432,18 +449,9 @@ void EditorWindow::onTimer(wxTimerEvent& evt) {
 void EditorWindow::configureResizing() {
     switch (mCurrentPage) {
         case ePage_General:
+        case ePage_Props:
             // Fixed size.
             SetSizeHints(GetSize(), GetSize());
-            break;
-        case ePage_Props:
-            // Prevent from growing past max content area (or whereever the
-            // display clamps the available space), but allow resizing within.
-/*
-            auto bestSize{GetBestSize()};
-            SetSizeHints(-1, -1, -1, -1);
-            propsPage->setToActualMinSize();
-            SetSizeHints(GetBestSize(), bestSize);
-*/
             break;
         case ePage_Presets:
         case ePage_Blades:

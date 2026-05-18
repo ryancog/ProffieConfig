@@ -65,6 +65,8 @@ private:
         ePage_Presets,
         ePage_Blades,
 
+        eID_Props_Scrolled,
+
         eID_Export,
         eID_Verify,
         eID_Add_Injection,
