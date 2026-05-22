@@ -334,7 +334,7 @@ std::variant<CompileOutput, wxString> compile(
 
         std::error_code err;
         const auto sourcePropHeader{
-            paths::propDir() / prop->name_ / versions::detail::HEADER_FILE_STR
+            paths::propDir() / prop->installName_ / versions::detail::HEADER_FILE_STR
         };
 
         if (not prop->filename_.empty()) {

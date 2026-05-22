@@ -229,6 +229,7 @@ std::optional<std::string> Option::Selection::generateDefineString() const {
 
 Prop::Prop(
     data::hier::Root& root,
+    std::string installName,
     std::string name,
     std::string filename,
     std::string info,
@@ -236,6 +237,7 @@ Prop::Prop(
     Layout layout,
     Errors errors
 ) : data::hier::Model(root),
+    installName_(std::move(installName)),
     name_(std::move(name)),
     filename_(std::move(filename)),
     info_(std::move(info)),
@@ -749,6 +751,7 @@ std::vector<std::unique_ptr<Prop>> Context::forVersion(
 
         auto& prop{*ret.emplace_back(new Prop(
             root,
+            versioned->name_,
             data.name_,
             data.filename_,
             data.info_,

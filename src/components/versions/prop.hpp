@@ -234,6 +234,7 @@ struct VERSIONS_EXPORT Prop : data::hier::Model, data::Receiver {
 
     void migrateFrom(const Prop&);
 
+    const std::string installName_;
     const std::string name_;
     const std::string filename_;
     const std::string info_;
@@ -243,6 +244,7 @@ private:
 
     Prop(
         data::hier::Root&,
+        std::string installName,
         std::string name,
         std::string filename,
         std::string info,
