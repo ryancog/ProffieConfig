@@ -74,6 +74,7 @@ struct CONFIG_EXPORT Config : data::hier::Root, data::Receiver {
 
     data::hier::Vector buttons_;
     data::hier::Vector injections_;
+    data::hier::Vector styles_;
 
     const data::base::Bool& isSaved() const;
 

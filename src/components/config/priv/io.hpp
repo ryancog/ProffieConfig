@@ -24,6 +24,7 @@
 
 #include <wx/translation.h>
 
+#include "config/config.hpp"
 #include "log/logger.hpp"
 #include "utils/types.hpp"
 
@@ -62,6 +63,28 @@ std::string errorMessage(
         maybeTranslate(std::forward<ARGS>(args))...
     ).ToStdString();
 }
+
+namespace io {
+
+/**
+ * Parse a config from disk
+ *
+ * @return Error message on failure. nullopt on success.
+ */
+std::optional<std::string> parse(
+    const fs::path&, Config&, logging::Branch *lBranch = nullptr
+);
+
+/**
+ * Output a config to header on disk
+ *
+ * @return Error message on failure. nullopt on success
+ */
+std::optional<std::string> generate(
+    const fs::path&, const Config&, logging::Branch *lBranch = nullptr
+);
+
+} // namespace io
 
 } // namespace config::priv
 

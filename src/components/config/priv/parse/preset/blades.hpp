@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2023-2026 Ryan Ogurek
+ * Copyright (C) 2026 Ryan Ogurek
  *
- * components/config/priv/generate/generate.hpp
+ * components/config/priv/parse/preset/blades.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,25 +19,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <filesystem>
-#include <optional>
 #include <string>
 
 #include "config/config.hpp"
-#include "log/branch.hpp"
+#include "log/logger.hpp"
 
-namespace fs = std::filesystem;
+namespace config::priv::parse::preset {
 
-namespace config::priv {
-
-/**
- * Output a config to header on disk
- *
- * @return Error message on failure. nullopt on success
- */
-std::optional<std::string> generate(
-    const fs::path&, const Config&, logging::Branch *lBranch = nullptr
+std::optional<std::string> blades(
+    const std::string&, Config&, logging::Branch&
 );
 
-} // namespace config::priv
+} // namespace config::priv::parse::preset
 

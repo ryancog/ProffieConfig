@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2025-2026 Ryan Ogurek
  *
- * components/config/presets/preset.hpp
+ * components/config/presets/preset.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,9 +23,9 @@
 
 #include <wx/translation.h>
 
+#include "config/presets/style.hpp"
 #include "data/context.hpp"
 #include "config/config.hpp"
-#include "utils/parent.hpp"
 #include "utils/string.hpp"
 
 using namespace config::presets;
@@ -146,178 +146,6 @@ auto Preset::children() -> std::vector<Model *> {
         &fontDir_,
         &track_,
         &styles_,
-    };
-}
-
-Style::Style(Config& config) :
-    Model(config),
-    comment_(root()),
-    content_(root()) {
-    CreationScope createScope(this);
-
-    const auto commentFilter{[](
-        const data::base::String::ROContext&, std::string& str, size& pos
-    ) {
-        size_t illegalPos{};
-        while (
-                (illegalPos = str.find("/*")) != std::string::npos or
-                (illegalPos = str.find("*/")) != std::string::npos
-              ) {
-            if (illegalPos < pos) pos -= std::max<size>(2, pos - illegalPos);
-            str.erase(illegalPos, 2);
-        }
-    }};
-    comment_.setFilter(commentFilter);
-
-    const auto contentFilter{[] (
-        const data::base::String::ROContext& ctxt, std::string& str, size& pos
-    ) {
-        // TODO: The replication in here is kind of ugly...
-        auto& style{utils::parent<&Style::content_>(
-            ctxt.model<data::hier::String>()
-        )};
-
-        uint32 numTrimmed{};
-
-        /*
-         * - Only allow chars for the start of a block comment. No other need 
-         *   for backslash
-         *
-         * - <>(), are self-explanatory
-         *
-         * - & for global style objects like the charging style.
-         *
-         * - : for scope resolution operator (there's scoped enums with effects)
-         *
-         * - "" may be used for the dynamic args defaults.
-         *
-         * - \n\t and ' ' are self-explanatory.
-         *
-         * - '-' for negative numbers.
-         *
-         * - '_' because it's just generally used.
-         */
-        utils::trim(
-            str,
-            {
-                .allowAlpha=true,
-                .allowNum=true,
-                .safeList="/*<>(),&_:-\"\n\t "
-            },
-            &numTrimmed,
-            pos
-        );
-        pos -= numTrimmed;
-
-        auto comment{data::context(style.comment_)};
-        const auto addToComment{[&](std::string& addStr) {
-            if (not comment.val().empty()) {
-                addStr.insert(addStr.begin(), '\n');
-            }
-
-            auto commentStr{comment.val()};
-            commentStr.append(addStr);
-
-            const auto newPos{commentStr.length()};
-            comment.change(std::move(commentStr), newPos);
-        }};
-
-        size_t illegalPos{0};
-        bool commentMove{false};
-        while (
-                (illegalPos = str.find("/*", illegalPos)) 
-                != std::string::npos
-              ) {
-            const auto terminatorPos{str.find("*/", illegalPos)};
-            const auto eraseEnd{terminatorPos == std::string::npos
-                ? std::string::npos 
-                : terminatorPos + 2
-            };
-
-            if (eraseEnd < pos) {
-                pos -= eraseEnd - illegalPos;
-            } else if (illegalPos < pos) {
-                pos = illegalPos;
-            }
-
-            const auto begin{illegalPos + 2};
-            auto substr{str.substr(begin, terminatorPos - begin)};
-            utils::trimSurroundingWhitespace(substr);
-            if (not substr.empty()) {
-                addToComment(substr);
-            }
-
-            str.erase(illegalPos, eraseEnd - illegalPos);
-            commentMove = true;
-        }
-
-        // If comment terminator but no opener, move everything before
-        // terminator into comment
-        if (
-                (illegalPos = str.rfind("*/")) != std::string::npos and 
-                str.find("/*") == std::string::npos
-           ) {
-            auto substr{str.substr(0, illegalPos)};
-            utils::trimSurroundingWhitespace(substr);
-            if (not substr.empty()) {
-                addToComment(substr);
-            }
-            const auto eraseEnd{illegalPos + 2};
-            if (eraseEnd < pos) pos -= eraseEnd;
-            else pos = 0;
-            str.erase(0, eraseEnd);
-        }
-
-        illegalPos = 0;
-        while (
-                (illegalPos = str.find("//", illegalPos))
-                != std::string::npos
-              ) {
-            const auto terminatorPos{str.find('\n', illegalPos)};
-            const auto eraseEnd{terminatorPos == std::string::npos
-                ? std::string::npos 
-                : terminatorPos + 1
-            };
-
-            if (eraseEnd < pos) {
-                pos -= eraseEnd - illegalPos;
-            } else if (illegalPos < pos) {
-                pos = illegalPos;
-            }
-
-            const auto begin{illegalPos + 2};
-            auto substr{str.substr(begin, terminatorPos - begin)};
-            utils::trimSurroundingWhitespace(substr);
-            if (not substr.empty()) {
-                addToComment(substr);
-            }
-
-            str.erase(illegalPos, eraseEnd - illegalPos);
-            commentMove = true;
-        }
-
-        if ((illegalPos = str.find(')')) != std::string::npos) {
-            str.erase(illegalPos + 1);
-            pos = std::min<size_t>(pos, illegalPos + 1);
-        }
-
-        if (commentMove) comment.focus();
-    }};
-    content_.setFilter(contentFilter);
-
-    comment_.change("ProffieConfig Default Blue AudioFlicker");
-    content_.change("StyleNormalPtr<AudioFlicker<Blue,DodgerBlue>,Blue,300,800>()");
-}
-
-Style::Style(const Style& other, Config& config) :
-    Model(config),
-    comment_(other.comment_, root()),
-    content_(other.content_, root()) {}
-
-auto Style::children() -> std::vector<Model *> {
-    return {
-        &comment_,
-        &content_,
     };
 }
 

@@ -7,8 +7,21 @@ add_library(config SHARED
     info.cpp
 
     priv/data.cpp
-    priv/parse/parse.cpp
-    priv/generate/generate.cpp
+    priv/io.cpp
+    priv/parse/preset/array.cpp
+    priv/parse/preset/blades.cpp
+    priv/parse/buttons.cpp
+    priv/parse/presets.cpp
+    priv/parse/prop.cpp
+    priv/parse/styles.cpp
+    priv/parse/top.cpp
+    priv/parse/utils.cpp
+    priv/generate/check/check.cpp
+    priv/generate/buttons.cpp
+    priv/generate/presets.cpp
+    priv/generate/prop.cpp
+    priv/generate/styles.cpp
+    priv/generate/top.cpp
 
     misc/injection.cpp
 
@@ -20,10 +33,13 @@ add_library(config SHARED
 
     presets/array.cpp
     presets/preset.cpp
+    presets/style.cpp
 
     settings/settings.cpp
     settings/bladeawareness.cpp
     settings/define.cpp
+
+    styles/style.cpp
 )
 target_link_libraries(config 
     wxWidgets

@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025-2026 Ryan Ogurek
+ * Copyright (C) 2026 Ryan Ogurek
  *
- * components/config/presets/preset.hpp
+ * components/config/priv/parse/top.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,35 +19,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/hierarchic/model.hpp"
-#include "data/hierarchic/models/string.hpp"
-#include "data/hierarchic/models/vector.hpp"
+#include <string>
 
-#include "config_export.h"
+#include "config/config.hpp"
+#include "log/logger.hpp"
 
-namespace config {
+namespace config::priv::parse {
 
-struct Config;
+std::optional<std::string> top(
+    const std::string&, Config&, logging::Branch&
+);
 
-namespace presets {
-
-struct Array;
-
-struct CONFIG_EXPORT Preset : data::hier::Model {
-    Preset(Config&);
-    Preset(const Preset&, Config&);
-
-    std::vector<Model *> children() override;
-
-    data::hier::String name_;
-    data::hier::String fontDir_;
-    // vector<string> fontDirs;
-    data::hier::String track_;
-
-    data::hier::Vector styles_;
-};
-
-} // namespace presets
-
-} // namespace config
+} // namespace config::priv::parse
 

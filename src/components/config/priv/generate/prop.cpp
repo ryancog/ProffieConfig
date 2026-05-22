@@ -1,9 +1,9 @@
-#pragma once
+#include "prop.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2025-2026 Ryan Ogurek
+ * Copyright (C) 2026 Ryan Ogurek
  *
- * components/config/presets/preset.hpp
+ * components/config/priv/generate/prop.cpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,35 +19,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/hierarchic/model.hpp"
-#include "data/hierarchic/models/string.hpp"
-#include "data/hierarchic/models/vector.hpp"
+using namespace config;
+using namespace config::priv;
 
-#include "config_export.h"
+void gen::prop(std::ostream& out, const Config& config) {
+    auto *prop{config.prop()};
 
-namespace config {
+    if (prop == nullptr) return;
+    if (prop->filename_.empty()) return;
 
-struct Config;
-
-namespace presets {
-
-struct Array;
-
-struct CONFIG_EXPORT Preset : data::hier::Model {
-    Preset(Config&);
-    Preset(const Preset&, Config&);
-
-    std::vector<Model *> children() override;
-
-    data::hier::String name_;
-    data::hier::String fontDir_;
-    // vector<string> fontDirs;
-    data::hier::String track_;
-
-    data::hier::Vector styles_;
-};
-
-} // namespace presets
-
-} // namespace config
+    out << "#ifdef CONFIG_PROP\n";
+    out << "#include \"../props/" << prop->filename_ << "\"\n";
+    out << "#endif\n";
+}
 

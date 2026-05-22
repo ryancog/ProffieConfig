@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/config/priv/parse/parse.hpp
+ * components/config/priv/parse/presets.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,21 +21,14 @@
 
 #include <string>
 
-#include <wx/translation.h>
-
 #include "config/config.hpp"
 #include "log/logger.hpp"
 
-namespace config::priv {
+namespace config::priv::parse {
 
-/**
- * Parse a config from disk
- *
- * @return Error message on failure. nullopt on success.
- */
-std::optional<std::string> parse(
-    const fs::path&, Config&, logging::Branch *lBranch = nullptr
+std::optional<std::string> presets(
+    const std::string&, Config&, logging::Branch& lBranch
 );
 
-} // namespace config::priv
+} // namespace config::priv::parse
 

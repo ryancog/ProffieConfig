@@ -22,7 +22,7 @@
 #include <filesystem>
 #include <mutex>
 
-#include "data/context.hpp"
+#include "config/presets/style.hpp"
 #include "config/blades/bladeconfig.hpp"
 #include "config/blades/simple.hpp"
 #include "config/blades/ws281x.hpp"
@@ -30,8 +30,7 @@
 #include "config/presets/preset.hpp"
 #include "config/priv/data.hpp"
 #include "config/priv/io.hpp"
-#include "config/priv/generate/generate.hpp"
-#include "config/priv/parse/parse.hpp"
+#include "data/context.hpp"
 #include "log/context.hpp"
 #include "log/severity.hpp"
 #include "utils/files.hpp"
@@ -53,6 +52,7 @@ Config::Config() :
     bladeConfigs_(*this),
     buttons_(*this),
     injections_(*this),
+    styles_(*this),
     mOsChoice(*this),
     mPropChoice(*this),
     mBoardChoice(*this) {
@@ -204,6 +204,13 @@ void Config::calcNumBlades() {
             auto& blade{dynamic_cast<blades::Blade&>(*model)};
 
             auto typeChoice{data::context(blade.type().choice())};
+
+            // This can be set to -1 via unchoose() when a blade is nullptr
+            // during parsing w/ subblades, as that's how the blade is deemed
+            // unnecessary.
+            if (typeChoice.idx() == -1)
+                continue;
+
             auto types{data::context(blade.types())};
             auto *typeModel{types.children()[typeChoice.idx()].get()};
 
@@ -333,7 +340,7 @@ std::optional<std::string> Info::save(
     std::error_code errCode;
     const auto finalPath{this->path()};
     const fs::path tmpPath{finalPath.string() + ".tmp"};
-    err = priv::generate(
+    err = priv::io::generate(
         tmpPath,
         *mConfig,
         logger.binfo("Saving \"" + name.val() + "\"...")
@@ -365,12 +372,15 @@ std::optional<std::string> Info::load() {
 
     const auto cfgPath{path()};
     if (fs::exists(cfgPath)) { 
-        auto err{priv::parse(
+        auto err{priv::io::parse(
             cfgPath,
             *mConfig,
             logger.binfo("Config (" + cfgPath.string() + ") exists, parsing...")
         )};
-        if (err) return err;
+        if (err) {
+            mConfig.reset();
+            return err;
+        }
     } else {
         logger.warn("Config (" + cfgPath.string() + ") does not exist, creating new...");
     }
@@ -527,7 +537,7 @@ std::optional<std::string> config::generate(
     std::optional<std::string> err;
     std::error_code errCode;
 
-    err = priv::generate(
+    err = priv::io::generate(
         path,
         config,
         logger.binfo("Generating config at \"" + path.string() + "\"...")
