@@ -465,6 +465,7 @@ pcui::DescriptorPtr Prop::layout() {
                 desc = pcui::Labeled{
                   .win_={
                     .base_={.expand_=true},
+                    .enable_=*ptr | data::logic::IsEnabled{},
                     .tooltip_=ptr->description_
                   },
                   .label_=ptr->name_,
@@ -478,6 +479,7 @@ pcui::DescriptorPtr Prop::layout() {
                 desc = pcui::Labeled{
                   .win_={
                     .base_={.expand_=true},
+                    .enable_=*ptr | data::logic::IsEnabled{},
                     .tooltip_=ptr->description_
                   },
                   .label_=ptr->name_,
