@@ -27,6 +27,7 @@
 #include "data/hierarchic/models/string.hpp"
 #include "data/primitive/models/bool.hpp"
 #include "data/primitive/models/number.hpp"
+#include "data/receiver.hpp"
 #include "utils/types.hpp"
 
 #include "config_export.h"
@@ -79,7 +80,7 @@ private:
     data::prim::Integer mIssues;
 };
 
-struct CONFIG_EXPORT Blade : data::hier::Model {
+struct CONFIG_EXPORT Blade : data::hier::Model, data::Receiver {
     Blade(Config&);
 
     std::vector<Model *> children() override;
@@ -100,6 +101,8 @@ struct CONFIG_EXPORT Blade : data::hier::Model {
     data::hier::Integer brightness_;
 
 private:
+    void onType();
+
     data::hier::Selector mType;
     data::hier::Vector mTypes;
 };

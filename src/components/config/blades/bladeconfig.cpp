@@ -185,6 +185,13 @@ Blade::Blade(Config& config) :
     mTypes(root()) {
     CreationScope createScope(this);
 
+    static const auto typeTable{[] {
+        data::base::Choice::RecvTable table;
+        table.onChoice_ = data::map(&Blade::onType);
+        return table;
+    }()};
+    amend(mType.choice(), typeTable);
+
     // Model used as a dummy for unassigned.
     mTypes.append(std::make_unique<WS281X>(*this));
     mTypes.append(std::make_unique<Simple>(*this));
@@ -225,5 +232,9 @@ Simple& Blade::simple() {
     const auto& model{types.children()[eSimple]};
     // NOLINTNEXTLINE suppress lifetimebound warning
     return dynamic_cast<Simple&>(*model);
+}
+
+void Blade::onType() {
+    root<Config>().calcNumBlades();
 }
 
