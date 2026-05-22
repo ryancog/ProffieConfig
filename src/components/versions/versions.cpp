@@ -24,6 +24,7 @@
 #include <memory>
 #include <sstream>
 
+#include <wx/log.h>
 #include <wx/uri.h>
 #include <wx/webrequest.h>
 #include <wx/wfstream.h>
@@ -43,7 +44,6 @@
 #include "versions/os.hpp"
 #include "versions/priv/data.hpp"
 #include "versions/prop.hpp"
-#include "wx/log.h"
 
 namespace {
 

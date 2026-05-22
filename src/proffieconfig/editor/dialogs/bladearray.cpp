@@ -36,7 +36,6 @@
 #include "ui/static/label.hpp"
 #include "ui/types.hpp"
 #include "ui/values.hpp"
-#include "wx/event.h"
 
 BladeArrayDlg::BladeArrayDlg(
     wxWindow *parent,

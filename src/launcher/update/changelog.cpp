@@ -41,7 +41,6 @@
 #include "ui/values.hpp"
 #include "utils/hash.hpp"
 #include "utils/paths.hpp"
-#include "wx/event.h"
 
 namespace {
 
