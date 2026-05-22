@@ -20,8 +20,8 @@
  */
 
 #include <string>
-
 #include <system_error>
+
 #include <wx/stdpaths.h>
 
 #if defined(_WIN32)

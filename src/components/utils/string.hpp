@@ -93,35 +93,52 @@ UTILS_EXPORT void trimForNumeric(
     uint32 countTrimIndex = -1
 );
 
-/**
- * Clears whitespace (if hit) and parses all comment strings encountered until
- * non-space is encountered.
- *
- * @param stream Stream to read from.
- *
- * @return comment(s) extracted, nullopt if none
- */
-[[nodiscard]] UTILS_EXPORT
-std::optional<std::string> extractComment(std::istream& stream);
+struct CommentData {
+    /**
+     * Stream to read data in from.
+     */
+    std::istream& stream_;
+
+    /**
+     * Output for comment string(s) read.
+     */
+    std::string out_;
+
+    /**
+     * As an input, which types of comments to read (none clears whitespace)
+     *
+     * As an output, which types were read.
+     */
+    enum : uint32 {
+        eType_None = 0,
+        eType_Line = 1U << 0,
+        eType_Block = 1U << 1,
+    };
+    uint32 type_{eType_Line | eType_Block};
+
+    /**
+     * Only extract a single comment
+     */
+    bool single_{false};
+
+    /**
+     * Skip over newlines.
+     */
+    bool skipNewlines_{true};
+
+    /**
+     * Skip over spaces.
+     */
+    bool skipSpaces_{true};
+};
 
 /**
- * Similar to extractComment(), however comment data is not parsed.
- * All comment data (including start/end conditions) are directly forwarded to
- * the string (if provided).
+ * Clears whitespace (if hit) and parses comment strings according to data
+ * params until non-comment content is encountered.
  *
- * stream positions ends at non-comment data.
- *
- * @return Whether anything was skipped.
+ * @return If a comment was parsed.
  */
-UTILS_EXPORT bool skipComment(std::istream& stream, std::string *str = nullptr);
-
-[[nodiscard]] UTILS_EXPORT
-std::vector<std::string> createEntries(const std::vector<wxString>& vec);
-
-[[nodiscard]] UTILS_EXPORT
-std::vector<std::string> createEntries(
-    const std::initializer_list<wxString>& list
-);
+[[nodiscard]] UTILS_EXPORT bool extractComments(CommentData&);
 
 /**
  * Evaluate the string for math operations

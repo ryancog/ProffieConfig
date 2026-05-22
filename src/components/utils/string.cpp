@@ -176,156 +176,144 @@ void utils::trimForNumeric(
     }
 }
 
-std::optional<std::string> utils::extractComment(std::istream& stream) {
-    enum class Reading {
-        None,
-        Line_Comment,
-        Long_Comment,
-    } reading{Reading::None};
+bool utils::extractComments(CommentData& data) {
+    uint32 typesToRead{data.type_};
+    uint32 reading{CommentData::eType_None};
 
-    const auto startPos{stream.tellg()};
+    std::string buf;
+    bool hasRead{false};
 
-    std::optional<std::string> ret;
-    std::string comment;
-    while (stream.good()) {
-        const auto chr{stream.get()};
+    data.out_.clear();
+    data.type_ = CommentData::eType_None;
 
-        if (chr < 0 or chr > 0xFF) continue;
+    while (not false) {
+        auto chr{data.stream_.get()};
+        if (not data.stream_.good())
+            return data.type_ != CommentData::eType_None;
+
+        if (chr < 0 or chr > 0x7F)
+            continue;
+
         if (
                 std::iscntrl(chr) and
                 chr != '\n' and
                 chr != '\t'
            ) continue;
 
-        if (reading == Reading::None) {
-            if (chr == '/') {
-                if (stream.peek() == '*') {
-                    reading = Reading::Long_Comment;
-                    comment.clear();
-                    stream.get();
-                } else if (stream.peek() == '/') {
-                    reading = Reading::Line_Comment;
-                    comment.clear();
-                    stream.get();
-                }
-            } else if (std::isgraph(chr)) {
-                stream.unget();
-                break;
+        if (reading == CommentData::eType_None) {
+            if (not data.skipNewlines_ and chr == '\n') {
+                data.stream_.unget();
+                return data.type_ != CommentData::eType_None;
             }
-        } else if (reading == Reading::Line_Comment) {
-            if (chr == '/' and comment.empty()) continue;
+
+            if (not data.skipSpaces_ and std::isblank(chr)) {
+                data.stream_.unget();
+                return data.type_ != CommentData::eType_None;
+            }
+
+            if (not std::isgraph(chr))
+                continue;
+
+            // Check for a comment and set reading if so.
+            if (chr == '/') {
+                if (
+                        (typesToRead & CommentData::eType_Block) and
+                        data.stream_.peek() == '*'
+                   ) {
+                    reading = CommentData::eType_Block;
+                } else if (
+                        (typesToRead & CommentData::eType_Line) and
+                        data.stream_.peek() == '/'
+                        ) {
+                    reading = CommentData::eType_Line;
+                }
+            }
+
+            // Wasn't a comment
+            if (reading == CommentData::eType_None) {
+                data.stream_.unget();
+                return data.type_ != CommentData::eType_None;
+            }
+
+            // Wait until now to check for single in order to clear whitespace
+            // before and after the single read comment.
+            if (data.single_) {
+                if (hasRead) {
+                    data.stream_.unget();
+                    return true;
+                }
+
+                hasRead = true;
+            }
+
+            // Add to what's been read.
+            data.type_ |= reading;
+            // Clear '/' or '*' from comment start.
+            data.stream_.get();
+        } else if (reading == CommentData::eType_Line) {
             if (chr == '\n') {
-                if (not ret) ret.emplace();
-                if (not ret->empty()) *ret += '\n';
-                trimSurroundingWhitespace(comment);
-                *ret += comment;
-                comment.clear();
-                reading = Reading::None;
+                if (not data.out_.empty())
+                    data.out_ += '\n';
+
+                trimSurroundingWhitespace(buf);
+
+                data.out_ += buf;
+                buf.clear();
+
+                reading = CommentData::eType_None;
+
                 continue;
             }
-            comment += static_cast<char>(chr);
-        } else if (reading == Reading::Long_Comment) {
-            bool end{chr == '*' and stream.peek() == '/'};
-            if (end or chr == '\n') {
-                if (not ret) ret.emplace();
-                if (not ret->empty()) *ret += '\n';
-                trimSurroundingWhitespace(comment);
-                while (not comment.empty() and comment.front() == '*') {
-                    comment.erase(0, 1);
+
+            buf += static_cast<char>(chr);
+        } else if (reading == CommentData::eType_Block) {
+            bool end{chr == '*' and data.stream_.peek() == '/'};
+
+            if (chr == '\n' or end) {
+                // To handle comments like:
+                // /*
+                //  *
+                //  */
+                auto framePos{buf.find(" *")};
+                if (framePos != std::string::npos)
+                    // + 3 to take care of " * "
+                    buf.erase(0, framePos + 3);
+
+                // The inner loop relies on buf.size() >= 1
+                if (not buf.empty()) {
+                    // Trim trailing whitespace
+                    for (size idx{buf.size() - 1};; --idx) {
+                        if (std::isgraph(buf[idx])) {
+                            buf.erase(idx + 1);
+                            break;
+                        }
+
+                        if (idx == 0) {
+                            // All whitespace
+                            buf.clear();
+                            break;
+                        }
+                    }
                 }
-                trimSurroundingWhitespace(comment);
-                *ret += comment;
-                comment.clear();
+
+                data.out_ += buf;
+                data.out_ += '\n';
+                buf.clear();
 
                 if (end) {
-                    reading = Reading::None;
-                    stream.get();
+                    utils::trimSurroundingWhitespace(data.out_);
+
+                    reading = CommentData::eType_None;
+                    // Eat the '/'
+                    data.stream_.get();
                 }
+
                 continue;
             }
-            comment += static_cast<char>(chr);
+
+            buf += static_cast<char>(chr);
         }
     }
-
-    if (not ret) stream.seekg(startPos);
-    return ret;
-}
-
-bool utils::skipComment(std::istream& stream, std::string *str) {
-    enum class Reading {
-        None,
-        Line_Comment,
-        Long_Comment,
-    } reading{Reading::None};
-
-    bool skipped{false};
-    while (stream.good()) {
-        const auto chr{stream.get()};
-
-        if (reading == Reading::None) {
-            if (chr == '/') {
-                if (stream.peek() == '*') {
-                    reading = Reading::Long_Comment;
-                    if (str) {
-                        skipped = true;
-                        *str += static_cast<char>(chr);
-                        *str += static_cast<char>(stream.get());
-                    }
-                    continue;
-                }
-                if (stream.peek() == '/') {
-                    reading = Reading::Line_Comment;
-                    if (str) {
-                        skipped = true;
-                        *str += static_cast<char>(chr);
-                        *str += static_cast<char>(stream.get());
-                    }
-                    continue;
-                }
-            } else if (std::isgraph(chr)) {
-                stream.unget();
-                break;
-            }
-        } else if (reading == Reading::Line_Comment) {
-            if (chr == '\n') {
-                reading = Reading::None;
-            }
-        } else if (reading == Reading::Long_Comment) {
-            if (chr == '*' and stream.peek() == '/') {
-                reading = Reading::None;
-                if (str) {
-                    skipped = true;
-                    *str += static_cast<char>(chr);
-                    *str += static_cast<char>(stream.get());
-                }
-                continue;
-            }
-        }
-
-        if (str) {
-            skipped = true;
-            *str += static_cast<char>(chr);
-        }
-    }
-
-    return skipped;
-}
-
-std::vector<std::string> utils::createEntries(
-    const std::vector<wxString>& vec
-) {
-    std::vector<std::string> entries;
-    entries.reserve(vec.size()); for (const auto& entry : vec) {
-        entries.emplace_back(entry.ToStdString());
-    }
-    return entries;
-}
-
-
-std::vector<std::string> utils::createEntries(
-    const std::initializer_list<wxString>& list
-) {
-    return utils::createEntries(static_cast<std::vector<wxString>>(list));
 }
 
 std::optional<float64> utils::doStringMath(const std::string& str) {
