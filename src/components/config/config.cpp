@@ -255,7 +255,7 @@ void Config::calcNumBlades() {
             }
         }
 
-        num += sum;
+        num = std::max(num, sum);
     }
 
     mNumBlades.set(static_cast<int32>(num));
