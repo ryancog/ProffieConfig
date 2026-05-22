@@ -36,7 +36,7 @@ void gen::styles(std::ostream& out, const Config& config) {
 
         auto name{data::context(style.name_)};
         auto comment{data::context(style.style_.comment_)};
-        auto content{data::context(style.style_.content_)};
+        auto formatted{style.style_.format(true)};
 
         if (not comment.val().empty()) {
             out << "/*\n";
@@ -50,7 +50,7 @@ void gen::styles(std::ostream& out, const Config& config) {
             out << " */\n";
         }
 
-        out << name.val() << " = " << content.val();
+        out << "using " << name.val() << " = " << formatted;
         out << ";\n\n";
     }
 
