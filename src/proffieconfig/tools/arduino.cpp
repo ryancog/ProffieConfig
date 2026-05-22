@@ -397,12 +397,12 @@ std::variant<CompileOutput, wxString> compile(
     const auto inoPath{osPath / "ProffieOS.ino"};
     const auto tmpInoPath{fs::temp_directory_path() / "ProffieOS.ino"};
     auto ino{files::openInput(inoPath)};
-    auto tmpIno{files::openOutput(tmpInoPath)};
     if (ino.fail()) {
         logger.error("Failed to open ProffieOS INO");
         return _("OS Inaccessible or Corrupted");
     }
 
+    auto tmpIno{files::openOutput(tmpInoPath)};
     if (tmpIno.fail()) {
         logger.error("Failed to open tmp ProffieOS INO");
         return _("Computer FS Error");
