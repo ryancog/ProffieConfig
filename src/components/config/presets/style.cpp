@@ -306,6 +306,8 @@ std::string Style::format(bool ignoreLength) {
         }
 
         while (not false) {
+            // Make sure current actually is current if looped.
+            current = stack.top();
             stack.pop();
 
             if (stack.empty())
@@ -329,6 +331,7 @@ std::string Style::format(bool ignoreLength) {
                 // And then parent post on new line.
                 exploded.append(depth, '\t');
                 exploded.append(parent->post_);
+
 
                 continue;
             }
