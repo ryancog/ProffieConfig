@@ -64,6 +64,14 @@ PresetsPage::PresetsPage(config::Config& config) : mConfig{config} {
     }()};
     amend(mDisplaySel.choice(), displayTable);
 
+    const auto arrayFilter{[](
+        const data::base::Choice::ROContext& ctxt, int32& idx
+    ) {
+        if (idx == -1 and ctxt.num())
+            idx = 0;
+    }};
+    mArraySel.choice().setFilter(arrayFilter);
+
     const auto displayFilter{[](
         const data::base::Choice::ROContext& ctxt, int32& idx
     ) {

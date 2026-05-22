@@ -72,6 +72,14 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
     }()};
     amend(mSubBladeSel.choice(), subTable);
 
+    const auto arrayFilter{[](
+        const data::base::Choice::ROContext& ctxt, int32& idx
+    ) {
+        if (idx == -1 and ctxt.num())
+            idx = 0;
+    }};
+    mArraySel.choice().setFilter(arrayFilter);
+
     const auto powerPinFilter{[](
         const data::base::String::ROContext&, std::string& str, size& pos
     ) {
