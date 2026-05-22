@@ -48,24 +48,24 @@ std::optional<std::string> config::priv::parse::styles(
     while (stream.good()) {
         utils::CommentData commentData{.stream_=stream};
         if (utils::extractComments(commentData)) {
-            if (reading == eStyle) {
-                if (commentData.type_ == utils::CommentData::eType_Block) {
-                    if (not comments.empty())
-                        comments += '\n';
+            if (
+                    // If there's line comments outside the style, just add it
+                    // to the comments, and not as an in-line.
+                    reading != eStyle or
+                    commentData.type_ == utils::CommentData::eType_Block
+               ) {
+                if (not comments.empty())
+                    comments += '\n';
 
-                    comments += commentData.out_;
-                } else /* Line */ {
-                    if (not bladestyle.empty())
-                        bladestyle += '\n';
-
-                    bladestyle += "// ";
-                    bladestyle += commentData.out_;
+                comments += commentData.out_;
+            } else /* Line */ {
+                if (not bladestyle.empty())
                     bladestyle += '\n';
-                }
-            }
 
-            if (not comments.empty()) comments += '\n';
-            comments += commentData.out_;
+                bladestyle += "// ";
+                bladestyle += commentData.out_;
+                bladestyle += '\n';
+            }
         }
 
         const auto chr{stream.get()};
@@ -79,22 +79,16 @@ std::optional<std::string> config::priv::parse::styles(
                     reading = eStyle_Name;
                     readHistory.clear();
                 }
-            } else if (chr == '=') {
-                reading = eStyle;
             }
         } else if (reading == eStyle_Name) {
-            if (std::isspace(chr)) {
-                if (not name.empty()) {
-                    reading = eNone;
-                }
+            if (chr == '=') {
+                reading = eStyle;
                 continue;
             }
 
             name += static_cast<char>(chr);
         } else if (reading == eStyle) {
             if (chr == ';') {
-                utils::trimWhitespaceOutsideString(bladestyle);
-
                 auto styles{data::context(config.styles_)};
 
                 // RIP quadruple nested for loops.
