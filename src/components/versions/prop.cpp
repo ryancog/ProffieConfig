@@ -175,9 +175,11 @@ OptionData::OptionData(Data data, std::vector<SelectionData *> selections) :
     Data(std::move(data)), selections_(std::move(selections)) {}
 
 Option::Option(Prop& prop, OptionData data) :
-    data::hier::Exclusive(prop.root(), data.selections_.size()),
+    data::hier::Exclusive(prop.root()),
     detail::Data(std::move(data)),
-    OptionData(std::move(data)) {}
+    OptionData(std::move(data)) {
+    init(selections_.size());
+}
 
 std::unique_ptr<data::base::Bool> Option::create(size idx) {
     // This is kind of awkward, but when the Option is first created, it'll
