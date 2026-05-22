@@ -72,6 +72,7 @@ struct DATA_EXPORT Model {
     void focus();
 
     virtual void lock() const = 0;
+    virtual bool tryLock() const = 0;
     virtual void unlock() const = 0;
 
 protected:

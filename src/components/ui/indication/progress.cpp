@@ -136,8 +136,8 @@ data::logic::Element Progress::Data::operator|(Logic logic) {
 
         ~DoneAdapter() override { deactivate(); }
 
-        void lock() override {
-            data_.lock();
+        bool tryLock() override {
+            return data_.tryLock();
         }
 
         void unlock() override {

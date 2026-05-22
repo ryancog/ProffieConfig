@@ -22,7 +22,7 @@
 namespace {
 
 struct True : data::logic::detail::Base {
-    void lock() override {}
+    bool tryLock() override { return true; }
     void unlock() override {}
 
     bool doActivate() override {
@@ -31,7 +31,7 @@ struct True : data::logic::detail::Base {
 };
 
 struct False : data::logic::detail::Base {
-    void lock() override {}
+    bool tryLock() override { return true; }
     void unlock() override {}
 
     bool doActivate() override {

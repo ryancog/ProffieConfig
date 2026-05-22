@@ -28,8 +28,8 @@ auto data::logic::operator not(
         Operator(Element&& child) :
             child_{std::move(child)} {}
 
-        void lock() override {
-            child_->lock();
+        bool tryLock() override {
+            return child_->tryLock();
         }
 
         void unlock() override {
@@ -56,9 +56,16 @@ auto data::logic::operator or(
         Operator(Element&& lhs, Element&& rhs) :
             lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
 
-        void lock() override {
-            lhs_->lock();
-            rhs_->lock();
+        bool tryLock() override {
+            if (not lhs_->tryLock())
+                return false;
+
+            if (not rhs_->tryLock()) {
+                lhs_->unlock();
+                return false;
+            }
+
+            return true;
         }
 
         void unlock() override {
@@ -106,9 +113,16 @@ auto data::logic::operator and(
         Operator(Element&& lhs, Element&& rhs) :
             lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
 
-        void lock() override {
-            lhs_->lock();
-            rhs_->lock();
+        bool tryLock() override {
+            if (not lhs_->tryLock())
+                return false;
+
+            if (not rhs_->tryLock()) {
+                lhs_->unlock();
+                return false;
+            }
+
+            return true;
         }
 
         void unlock() override {

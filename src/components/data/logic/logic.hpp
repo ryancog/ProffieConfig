@@ -43,7 +43,7 @@ struct DATA_EXPORT Base {
     /**
      * Prevent models this depends on from changing
      */
-    virtual void lock() = 0;
+    virtual bool tryLock() = 0;
     virtual void unlock() = 0;
 
 protected:

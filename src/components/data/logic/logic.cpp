@@ -63,7 +63,9 @@ Manager::Manager(Element&& child) :
 
 void Manager::lock() {
     mLock.lock();
-    mChild->lock();
+
+    // Deadlock avoidance
+    while (not mChild->tryLock());
 }
 
 void Manager::unlock() {

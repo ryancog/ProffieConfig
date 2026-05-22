@@ -53,8 +53,8 @@ auto data::logic::operator|(const base::Model& model, IsEnabled) -> Element {
         
         ~Adapter() override { deactivate(); }
 
-        void lock() override {
-            model_.lock();
+        bool tryLock() override {
+            return model_.tryLock();
         }
 
         void unlock() override {
@@ -91,8 +91,8 @@ auto data::logic::operator|(const base::Bool& model, IsSet) -> Element {
 
         ~Adapter() override { deactivate(); }
 
-        void lock() override {
-            bl_.lock();
+        bool tryLock() override {
+            return bl_.tryLock();
         }
 
         void unlock() override {
@@ -132,8 +132,8 @@ auto data::logic::operator|(
 
         ~Adapter() override { deactivate(); }
 
-        void lock() override {
-            choice_.lock();
+        bool tryLock() override {
+            return choice_.tryLock();
         }
 
         void unlock() override {
@@ -179,8 +179,8 @@ auto data::logic::operator|(
 
         ~Adapter() override { deactivate(); }
 
-        void lock() override {
-            excl_.lock();
+        bool tryLock() override {
+            return excl_.tryLock();
         }
 
         void unlock() override {
@@ -224,8 +224,8 @@ auto data::logic::operator|(const base::Selector& model, CanMoveUp) -> Element {
 
         ~Adapter() override { deactivate(); }
 
-        void lock() override {
-            sel_.lock();
+        bool tryLock() override {
+            return sel_.tryLock();
         }
 
         void unlock() override {
@@ -265,8 +265,8 @@ auto data::logic::operator|(
 
         ~Adapter() override { deactivate(); }
 
-        void lock() override {
-            sel_.lock();
+        bool tryLock() override {
+            return sel_.tryLock();
         }
 
         void unlock() override {
@@ -305,8 +305,8 @@ auto data::logic::operator|(
 
         ~Adapter() override { deactivate(); }
 
-        void lock() override {
-            str_.lock();
+        bool tryLock() override {
+            return str_.tryLock();
         }
 
         void unlock() override {
@@ -346,8 +346,8 @@ auto data::logic::operator|(
 
         ~Adapter() override { deactivate(); }
 
-        void lock() override {
-            vec_.lock();
+        bool tryLock() override {
+            return vec_.tryLock();
         }
 
         void unlock() override {
@@ -396,8 +396,8 @@ auto data::logic::operator|(
 
         ~Adapter() override { deactivate(); }
 
-        void lock() override {
-            int_.lock();
+        bool tryLock() override {
+            return int_.tryLock();
         }
 
         void unlock() override {
@@ -442,8 +442,8 @@ auto data::logic::operator|(
 
         ~Adapter() override { deactivate(); }
 
-        void lock() override {
-            int_.lock();
+        bool tryLock() override {
+            return int_.tryLock();
         }
 
         void unlock() override {

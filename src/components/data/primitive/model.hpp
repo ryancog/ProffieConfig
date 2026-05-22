@@ -31,6 +31,7 @@ struct DATA_EXPORT Model : virtual base::Model {
     bool enable(bool en = true) override;
 
     void lock() const final;
+    bool tryLock() const final;
     void unlock() const final;
 
 private:

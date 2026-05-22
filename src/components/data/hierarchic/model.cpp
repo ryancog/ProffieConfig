@@ -38,6 +38,10 @@ void Model::lock() const {
     mRoot.mMutex.lock();
 }
 
+bool Model::tryLock() const {
+    return mRoot.mMutex.try_lock();
+}
+
 void Model::unlock() const {
     mRoot.mMutex.unlock();
 }
