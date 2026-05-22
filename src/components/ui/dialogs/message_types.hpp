@@ -38,7 +38,7 @@ struct Args {
     /**
      * Window title
      */
-    const wxString& caption_{};
+    wxString caption_{};
     /**
      * Augment how/what is shown in the box.
      */
@@ -46,7 +46,7 @@ struct Args {
     /**
      * Alternative button labels
      */
-    const Labels& labels_{};
+    Labels labels_{};
     /**
      * Window to be modal over
      */
