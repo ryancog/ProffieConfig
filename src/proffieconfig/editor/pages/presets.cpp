@@ -22,6 +22,7 @@
 #include "config/blades/bladeconfig.hpp"
 #include "config/presets/array.hpp"
 #include "config/presets/preset.hpp"
+#include "config/presets/style.hpp"
 #include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"

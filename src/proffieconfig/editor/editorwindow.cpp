@@ -31,6 +31,7 @@
 
 #include "config/misc/injection.hpp"
 #include "config/presets/preset.hpp"
+#include "config/presets/style.hpp"
 #include "data/context.hpp"
 #include "ui/bitmap.hpp"
 #include "ui/build.hpp"
