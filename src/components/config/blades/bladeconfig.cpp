@@ -189,9 +189,7 @@ Blade::Blade(Config& config) :
     mTypes.append(std::make_unique<WS281X>(*this));
     mTypes.append(std::make_unique<Simple>(*this));
     mTypes.append(std::make_unique<data::hier::Model>(root()));
-
     mType.bind(&mTypes);
-    mType.choice().choose(0);
 
     brightness_.update({.min_=0, .max_=100});
     brightness_.set(100);
