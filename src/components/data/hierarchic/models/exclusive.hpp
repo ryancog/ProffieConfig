@@ -35,6 +35,12 @@ struct DATA_EXPORT Exclusive : base::Exclusive, Model {
 
     bool select(size) override;
 
+protected:
+    /**
+     * For derived, which will call init() itself.
+     */
+    Exclusive(Root&);
+
 private:
     std::unique_ptr<base::Bool> create(size) override;
 };

@@ -28,6 +28,8 @@ Exclusive::Exclusive(Root& root, size num) :
     init(num);
 }
 
+Exclusive::Exclusive(Root& root) : Model(root) {}
+
 auto Exclusive::children() -> std::vector<Model *> {
     std::vector<Model *> ret;
     ret.reserve(data().size());

@@ -28,6 +28,8 @@ Exclusive::Exclusive(size num) {
     activate();
 }
 
+Exclusive::Exclusive() = default;
+
 Exclusive::~Exclusive() {
     deactivate();
 }
