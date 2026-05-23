@@ -810,7 +810,8 @@ wxString parseError(const std::string& err, const config::Config& config) {
 
     if (err.contains("Buttons for operation")) {
         return wxString::Format(
-            _("Selected prop file:\n%s"),
+            _("%s prop file:\n%s"),
+            config.prop()->name_,
             std::strstr(err.data(), "requires")
         );
     }
