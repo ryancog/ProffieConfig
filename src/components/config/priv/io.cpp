@@ -21,6 +21,7 @@
 
 #include <cstring>
 #include <fstream>
+#include <sstream>
 
 #include <wx/translation.h>
 
@@ -51,6 +52,7 @@
 #include "log/context.hpp"
 #include "utils/files.hpp"
 #include "utils/string.hpp"
+#include "utils/types.hpp"
 
 using namespace config;
 using namespace config::priv;
@@ -66,29 +68,55 @@ std::optional<std::string> io::parse(
 ) {
     auto& logger{logging::Branch::optCreateLogger("config::parse()", lBranch)};
 
-    auto file{files::openInput(path)};
-    if (not file.is_open()) {
-        return errorMessage(logger, wxTRANSLATE("Failed to open config from %s"), path.string());
+    // Loading the entire file into memory significantly increases performance.
+    // Otherwise, all the little single-char read/unget and short seeks tend to
+    // result in misses and syscalls.
+    std::stringstream stream;
+    {
+        // std:ios::ate opens with tellg at end, so tellg() is size.
+        std::ifstream file(
+            path, std::ios::binary | std::ios::in | std::ios::ate
+        );
+
+        if (not file.is_open())
+            return errorMessage(logger, wxTRANSLATE("Failed to open config from %s"), path.string());
+
+        auto size{static_cast<ssize>(file.tellg())};
+        // This is arbitrarily chosen. It's really just to make sure there's
+        // not some horribly corrupted or otherwise egregiously wrong file
+        // where reading it would just blow up memory.
+        if (size > 1'000'000'000)
+            return errorMessage(logger, wxTRANSLATE("Config is too large (%uz)"), size);
+
+        std::string buf(size, 0);
+
+        file.seekg(0);
+        file.read(buf.data(), size);
+
+        if (file.bad())
+            return errorMessage(logger, wxTRANSLATE("Failed reading file"));
+
+        stream.str(std::move(buf));
     }
 
-    while (file.good()) {
-        utils::CommentData commentData{.stream_=file};
+    while (stream.good()) {
+        utils::CommentData commentData{.stream_=stream};
         (void)utils::extractComments(commentData);
 
-        const auto chr{file.get()};
-        if (not file.good()) break;
+        const auto chr{stream.get()};
+        if (not stream.good()) break;
 
         if (chr != '#')
             continue;
 
         auto directive{parse::cppDirective(
-            file, logger.bverbose("Parsing directive...")
+            stream, logger.bverbose("Parsing directive...")
         )};
 
         if (directive.type_ == parse::CPPDirective::Type::Include) {
             parse::tryAddInjection(config, directive.buf1_);
         } else if (directive.type_ == parse::CPPDirective::Type::Ifdef) {
-            auto sectStr{extractSection(file)};
+            auto sectStr{extractSection(stream)};
 
             if (directive.buf1_ == "CONFIG_TOP") {
                 auto err{parse::top(
@@ -130,9 +158,6 @@ std::optional<std::string> io::parse(
             }
         }
     }
-
-    if (file.bad())
-        return errorMessage(logger, wxTRANSLATE("Failed reading file"));
 
     logger.info("Parsing complete, finalizing...");
 
