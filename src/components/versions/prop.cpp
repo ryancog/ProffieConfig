@@ -202,12 +202,17 @@ bool Option::isActive() const {
 }
 
 bool Option::shouldOutputDefine() const {
-    // The Selection handles this.
-    return false;
+    auto ctxt{data::context(*this)};
+    auto& cur{dynamic_cast<Selection&>(ctxt[ctxt.selected()])};
+    return cur.shouldOutputDefine();
 }
 
 std::optional<std::string> Option::generateDefineString() const {
-    return std::nullopt;
+    // Since this is what goes into the setting list, make it responsible for
+    // forwarding the output call to what is actually selected.
+    auto ctxt{data::context(*this)};
+    auto& cur{dynamic_cast<Selection&>(ctxt[ctxt.selected()])};
+    return cur.generateDefineString();
 }
 
 OptionData::SelectionData::SelectionData(
