@@ -30,6 +30,7 @@
 #include "config/presets/preset.hpp"
 #include "config/priv/data.hpp"
 #include "config/priv/io.hpp"
+#include "config/settings/define.hpp"
 #include "data/context.hpp"
 #include "log/context.hpp"
 #include "log/severity.hpp"
@@ -67,7 +68,7 @@ Config::Config() :
             mOsVec.emplace_back(new versions::os::OS(*os));
 
             auto& propVec{mPropMap[os->version_]};
-            propVec = propCtxt.forVersion(os->version_, *this);
+            propVec = propCtxt.forVersion(os->version_, *this, &Config::processPropRecommend);
         }
     }
 
@@ -311,6 +312,18 @@ void Config::onOSChoice() {
         mPropChoice.update(0);
     }
 }
+
+void Config::processPropRecommend(
+    data::hier::Root& root, std::string_view key, std::string_view val
+) {
+    auto& config{dynamic_cast<Config&>(root)};
+
+    auto ctxt{data::context(config.settings_.defines_)};
+    ctxt.append<settings::Define>(config, std::string(key), std::string(val));
+
+    config.settings_.processDefines();
+}
+
 
 Info::Info() = default;
 

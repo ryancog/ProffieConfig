@@ -94,6 +94,10 @@ private:
     void onNumBlades();
     void onOSChoice();
 
+    static void processPropRecommend(
+        data::hier::Root&, std::string_view, std::string_view
+    );
+
     std::vector<std::unique_ptr<versions::os::OS>> mOsVec;
     std::map<
         utils::Version,

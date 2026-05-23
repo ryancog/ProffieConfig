@@ -24,6 +24,7 @@
 #include <optional>
 
 #include "data/context.hpp"
+#include "data/logic/adapter.hpp"
 #include "log/branch.hpp"
 #include "log/context.hpp"
 #include "log/logger.hpp"
@@ -84,8 +85,12 @@ detail::Data::Data(
     required_(std::move(required)),
     requireAny_(std::move(requireAny)) {}
 
-ToggleData::ToggleData(Data data, std::vector<std::string> disables) :
-    Data(std::move(data)), disables_(std::move(disables)) {}
+ToggleData::ToggleData(
+    Data data, detail::Disables disables, detail::Recommends recommends
+) :
+    Data(std::move(data)),
+    disables_(std::move(disables)),
+    recommends_(std::move(recommends)) {}
 
 Toggle::Toggle(Prop& prop, ToggleData data) :
     data::hier::Bool(prop.root()),
@@ -206,8 +211,10 @@ std::optional<std::string> Option::generateDefineString() const {
 }
 
 OptionData::SelectionData::SelectionData(
-    Data data, std::vector<std::string> disables
-) : Data(std::move(data)), disables_(std::move(disables)) {}
+    Data data, detail::Disables disables, detail::Recommends recommends
+) : Data(std::move(data)),
+    disables_(std::move(disables)),
+    recommends_(std::move(recommends)) {}
 
 Option::Selection::Selection(data::hier::Root& root, SelectionData data) :
     data::hier::Bool(root),
@@ -718,6 +725,23 @@ void Prop::onSet(const data::base::Model& model) {
             computeDisabledBy(affected)
         );
     }
+
+    if (mRecProc) {
+        const auto& recommends{[&] -> const auto& {
+            if (auto *ptr{dynamic_cast<const Toggle *>(&model)})
+                return ptr->recommends_;
+
+            if (auto *ptr{dynamic_cast<const Option::Selection *>(&model)})
+                return ptr->recommends_;
+
+            assert(0);
+            __builtin_unreachable();
+        }()};
+
+        for (auto& [key, val] : recommends) {
+            mRecProc(root(), key, val);
+        }
+    }
 }
 
 Context::Context() { priv::lock.lock(); }
@@ -735,7 +759,9 @@ const std::vector<std::unique_ptr<Versioned>>& Context::list() {
 
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 std::vector<std::unique_ptr<Prop>> Context::forVersion(
-    const utils::Version& ver, data::hier::Root& root
+    const utils::Version& ver,
+    data::hier::Root& root,
+    Prop::RecommendProcessor recProc
 ) {
     std::vector<std::unique_ptr<Prop>> ret;
 
@@ -763,6 +789,8 @@ std::vector<std::unique_ptr<Prop>> Context::forVersion(
             data.layout_,
             data.errors_
         ))};
+
+        prop.mRecProc = recProc;
 
         for (const auto& set : data.settings_) {
             data::base::Model *model{nullptr};
@@ -807,12 +835,11 @@ std::vector<std::unique_ptr<Prop>> Context::forVersion(
                 return table;
             }()};
 
-            using Selection = Option::Selection;
-
             if (auto *ptr{dynamic_cast<Toggle *>(setting.get())}) {
                 prop.amend(*ptr, table);
-            } else if (auto *ptr{dynamic_cast<Selection *>(setting.get())}) {
-                prop.amend(*ptr, table);
+            } else if (auto *ptr{dynamic_cast<Option *>(setting.get())}) {
+                for (auto *model : ptr->children())
+                    prop.amend(*model, table);
             }
         }
     }
@@ -839,6 +866,18 @@ std::vector<std::unique_ptr<detail::Data>> parseSettings(
         return pconf::valueAsList(disableEntry->value_);
     }};
 
+    const auto parseRec{[](const pconf::HashedData& data) {
+        std::vector<std::pair<std::string, std::string>> ret;
+
+        const auto setEntry{data.find("RECOMMENDS")};
+        if (auto sect{setEntry.section()}) {
+            for (auto& entry : sect->entries_)
+                ret.emplace_back(entry->name_, entry->value_.value_or(""));
+        }
+
+        return ret;
+    }};
+
     const auto toggleEntries{hashedData.findAll("TOGGLE")};
     for (const auto& toggleEntry : toggleEntries) {
         auto commonData{parseSettingCommon(
@@ -852,7 +891,8 @@ std::vector<std::unique_ptr<detail::Data>> parseSettings(
 
         ret.push_back(std::make_unique<ToggleData>(
             std::move(settingData),
-            parseDisables(entryMap)
+            parseDisables(entryMap),
+            parseRec(entryMap)
         ));
     }
 
@@ -877,12 +917,13 @@ std::vector<std::unique_ptr<detail::Data>> parseSettings(
                 false,
                 true 
             )};
-            if (not commonData)  continue;
+            if (not commonData) continue;
             auto& [settingData, entryMap]{*commonData};
 
             auto selData{std::make_unique<Option::SelectionData>(
                 std::move(settingData),
-                parseDisables(entryMap)
+                parseDisables(entryMap),
+                parseRec(entryMap)
             )};
             selections.push_back(selData.get());
             ret.push_back(std::move(selData));

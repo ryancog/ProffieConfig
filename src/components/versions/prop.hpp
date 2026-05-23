@@ -88,12 +88,16 @@ struct VERSIONS_EXPORT SettingBase : virtual detail::Data {
         generateDefineString() const = 0;
 };
 
+using Disables = std::vector<std::string>;
+using Recommends = std::vector<std::pair<std::string, std::string>>;
+
 } // namespace detail
 
 struct VERSIONS_EXPORT ToggleData : virtual detail::Data {
-    ToggleData(Data, std::vector<std::string>);
+    ToggleData(Data, detail::Disables, detail::Recommends);
 
-    const std::vector<std::string> disables_;
+    const detail::Disables disables_;
+    const detail::Recommends recommends_;
 };
 
 struct VERSIONS_EXPORT Toggle : detail::SettingBase,
@@ -159,9 +163,10 @@ struct VERSIONS_EXPORT Option : detail::SettingBase,
 };
 
 struct VERSIONS_EXPORT OptionData::SelectionData : virtual detail::Data {
-    SelectionData(Data, std::vector<std::string>);
+    SelectionData(Data, detail::Disables, detail::Recommends);
 
-    const std::vector<std::string> disables_;
+    const detail::Disables disables_;
+    const detail::Recommends recommends_;
 };
 
 struct VERSIONS_EXPORT Option::Selection : detail::SettingBase, 
@@ -223,6 +228,10 @@ struct VERSIONS_EXPORT PropData {
 };
 
 struct VERSIONS_EXPORT Prop : data::hier::Model, data::Receiver {
+    using RecommendProcessor = void (*)(
+        data::hier::Root&, std::string_view, std::string_view
+    );
+
     [[nodiscard]] std::span<const std::unique_ptr<detail::SettingBase>>
         settings() const { return mSettings; }
     [[nodiscard]] const Buttons *buttons(uint32 numButtons) const;
@@ -255,6 +264,8 @@ private:
 
     void rebuildLookup(logging::Branch * = nullptr);
     void onSet(const data::base::Model&);
+
+    RecommendProcessor mRecProc;
 
     std::vector<std::unique_ptr<detail::SettingBase>> mSettings;
     const std::map<uint32, Buttons> mButtons;
@@ -305,7 +316,9 @@ struct VERSIONS_EXPORT Context {
      * Build a set of props for version
      */
     std::vector<std::unique_ptr<Prop>> forVersion(
-        const utils::Version&, data::hier::Root&
+        const utils::Version&,
+        data::hier::Root&,
+        Prop::RecommendProcessor
     );
 };
 
