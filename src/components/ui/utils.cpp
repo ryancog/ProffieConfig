@@ -21,9 +21,28 @@
 
 #include <wx/app.h>
 #include <wx/thread.h>
+#include <wx/window.h>
 
 void pcui::safeCall(const std::function<void()>& func) {
     if (wxIsMainThread()) func();
     else wxTheApp->CallAfter(func);
+}
+
+wxWindow *pcui::getUniqueChild(const wxWindow *win) {
+    // This aims to do the same thing as wxTopLevelWindowBase::GetUniqueChild()
+    // since that's a private func, and also doesn't work for non-tlw.
+    wxWindow *ret{nullptr};
+    for (auto *child : win->GetChildren()) {
+        if (child->IsTopLevel() or not win->IsClientAreaChild(child))
+            continue;
+
+        // There's more than one client area child.
+        if (ret)
+            return nullptr;
+
+        ret = child;
+    }
+
+    return ret;
 }
 

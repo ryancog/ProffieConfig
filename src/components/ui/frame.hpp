@@ -37,8 +37,6 @@ struct UI_EXPORT Frame : wxFrame {
     void setReference(Frame**);
     void Fit() override;
 
-    wxWindow *getUniqueChild() const;
-
     void appendDefaultMenuItems(wxMenuBar *);
 
 private:

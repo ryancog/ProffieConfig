@@ -38,6 +38,7 @@
 #include "ui/dialogs/message.hpp"
 #include "ui/dialogs/progress.hpp"
 #include "ui/helpers/busy.hpp"
+#include "ui/utils.hpp"
 #include "ui/values.hpp"
 #include "utils/defer.hpp"
 #include "utils/files.hpp"
@@ -385,7 +386,7 @@ void EditorWindow::Fit() {
     // This actually does give the whole window size.
     mStartSize = GetSize();
 
-    auto *panel{getUniqueChild()};
+    auto *panel{pcui::getUniqueChild(this)};
 
     // Set the panel size **and** position to where it should be once
     // done first so that GetBestSize() behaves correctly and it renders
@@ -442,7 +443,7 @@ void EditorWindow::onTimer(wxTimerEvent& evt) {
 
         // Re-enable auto layout on resize, and limit resizing based on which
         // pane is shown.
-        getUniqueChild()->SetAutoLayout(true);
+        pcui::getUniqueChild(this)->SetAutoLayout(true);
         configureResizing();
     }
 }

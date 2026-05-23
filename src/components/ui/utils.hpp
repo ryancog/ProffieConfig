@@ -23,9 +23,16 @@
 
 #include "ui_export.h"
 
+class wxWindow;
+
 namespace pcui {
 
 UI_EXPORT void safeCall(const std::function<void()>&);
+
+/**
+ * If there's a single child of the window, get it.
+ */
+UI_EXPORT wxWindow *getUniqueChild(const wxWindow *);
 
 } // namespace pcui
 

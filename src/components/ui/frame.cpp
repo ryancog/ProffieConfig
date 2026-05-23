@@ -85,24 +85,6 @@ void Frame::Fit() {
     priv::tlw::fit<wxFrame>(this);
 }
 
-wxWindow *Frame::getUniqueChild() const {
-    // This aims to do the same thing as wxTopLevelWindowBase::GetUniqueChild()
-    // since that's a private func :/
-    wxWindow *ret{nullptr};
-    for (auto *child : GetChildren()) {
-        if (child->IsTopLevel() or not IsClientAreaChild(child))
-            continue;
-
-        // There's more than one client area child.
-        if (ret)
-            return nullptr;
-
-        ret = child;
-    }
-
-    return ret;
-}
-
 void Frame::appendDefaultMenuItems(wxMenuBar *menuBar) {
 #   ifdef __WXOSX__
     // This causes wx to remove all the menu items, insert some new ones, and
