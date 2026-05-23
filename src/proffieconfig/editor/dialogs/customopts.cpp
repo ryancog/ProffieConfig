@@ -108,10 +108,23 @@ pcui::DescriptorPtr CustomOptionsDlg::ui() {
           }
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Button{
-          .win_={.base_={.align_=wxALIGN_RIGHT}},
-          .label_=_("Add Option"),
-          .func_=[this] { addOption(); },
+        pcui::Stack{
+          .base_={.expand_=true},
+          .orient_=wxHORIZONTAL,
+          .children_={
+            pcui::Button{
+              .win_={
+                .tooltip_=_("Process the custom options, transferring any supported into the ProffieConfig GUI."),
+              },
+              .label_=_("Sync"),
+              .func_=[this] { mConfig.settings_.processDefines(); },
+            }(),
+            pcui::StretchSpacer{}(),
+            pcui::Button{
+              .label_=_("Add Option"),
+              .func_=[this] { addOption(); },
+            }(),
+          }
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         info(),
