@@ -75,19 +75,25 @@ struct Control : detail::DataWindow<wxRadioButton> {
 
         if (not en) return;
 
-        wxRadioButton *last{GetFirstInGroup()};
-        for (; last != nullptr; last = last->GetNextInGroup()) {
-            // At least on macOS, this can be sent even when the button is
-            // already selected, so don't exclude `this` from the check.
-            if (last->GetValue())
-                break;
-        }
-        assert(last != nullptr);
-
         auto res{bl_.set(true)};
 
-        if (not res)
-            last->SetValue(true);
+        if (not res) {
+            // Figure out whose bool is actually set, and update the UI
+            // accordingly.
+            wxRadioButton *cur{GetFirstInGroup()};
+            for (; cur != nullptr; cur = cur->GetNextInGroup()) {
+                auto *ctrl{dynamic_cast<Control *>(cur)};
+
+                // At least on macOS, the event can be sent even when the
+                // button is already selected, so don't exclude `this` from the
+                // check.
+                if (data::context(ctrl->bl_).val())
+                    break;
+            }
+            assert(cur != nullptr);
+
+            cur->SetValue(true);
+        }
     }
 
     void onSet() {
