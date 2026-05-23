@@ -1414,3 +1414,13 @@ BUTTONS{3} {
 		}
 	}
 }
+
+ERRORS {
+    MAP {
+        ARDUINO: "ENABLE_ALL_EDIT_OPTIONS must be defined to enable"
+        DISPLAY: {
+            "Edit Mode/Settings requires "Enable All Edit Options" on General Page"
+        }
+    }
+}
+
