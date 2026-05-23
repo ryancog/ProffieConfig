@@ -575,6 +575,16 @@ void Prop::migrateFrom(const Prop& from) {
     }
 }
 
+auto Prop::children() -> std::vector<Model *> {
+    std::vector<Model *> ret;
+
+    ret.reserve(mSettings.size());
+    for (auto& setting : mSettings)
+        ret.push_back(dynamic_cast<Model *>(setting.get()));
+
+    return ret;
+}
+
 void Prop::rebuildLookup(logging::Branch *lBranch) {
     auto& logger{logging::Branch::optCreateLogger("versions::props::Prop::rebuildLookup()", lBranch)};
 
