@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/display.h>
 #include <wx/gdicmn.h>
 #include <wx/settings.h>
 
@@ -26,10 +27,12 @@
 #include "ui/build.hpp"
 #include "ui/dynamic_list.hpp"
 #include "ui/layout/group.hpp"
+#include "ui/layout/scrolled.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/static/divider.hpp"
 #include "ui/static/label.hpp"
+#include "ui/utils.hpp"
 #include "ui/values.hpp"
 
 namespace {
@@ -41,7 +44,12 @@ extern const versions::props::Buttons defaultTwoButton;
 } // namespace
 
 PropButtonsDlg::PropButtonsDlg(wxWindow *parent, config::Config& config) :
-    pcui::Dialog(parent, wxID_ANY, _("Prop Buttons")),
+    pcui::Dialog(
+        parent,
+        wxID_ANY,
+        _("Prop Buttons"),
+        wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER
+    ),
     mConfig{config} {
 
     static const auto choiceTable{[] {
@@ -128,7 +136,8 @@ void PropButtonsDlg::rebuildLinks() {
                     // Really should warn on this...
                     continue;
 
-                amend(*bl, settingTable);
+                if (not mapped(*bl))
+                    amend(*bl, settingTable);
             }
         }
     }
@@ -141,7 +150,6 @@ void PropButtonsDlg::rebuildUI() {
 
     pcui::Stack stack{
       .base_={
-        .minSize_={300, 100},
         .expand_=true,
         .proportion_=1,
         .border_={.size_=pcui::winEdgeSpacing(), .dirs_=wxALL},
@@ -247,7 +255,38 @@ void PropButtonsDlg::rebuildUI() {
         // Remove very last spacer
         stack.children_.pop_back();
 
-    pcui::build(this, stack());
+    pcui::Scrolled desc{
+        .win_={
+          .base_={
+            .minSize_={300, 100},
+            .expand_=true,
+            .proportion_=1,
+          },
+        },
+        .scrollRate_={.x_=10, .y_=10},
+        .child_=stack(),
+    };
+    pcui::build(this, desc());
+
+    // Some props have a *lot* of controls, and these can easily go off-screen
+    // for people with lower-resolution displays (1080p and lower, which is
+    // still reasonable and plenty common).
+    //
+    // For people with such monitors, use a scrolled and do calculations to
+    // make sure that the window is best-sized to both fit as many controls as
+    // possible (all if the display is large enough), and clamp it so the
+    // window is no larger than what can be fit on-screen.
+    auto *scrolled{pcui::getUniqueChild(this)};
+    auto bestContentSize{scrolled->GetSizer()->GetMinSize()};
+    auto bestScrolledSize{scrolled->ClientToWindowSize(bestContentSize)};
+    auto bestSize{ClientToWindowSize(bestScrolledSize)};
+
+    wxDisplay display(this);
+    if (display.IsOk()) {
+        auto displayClientSize{display.GetClientArea().GetSize()};
+        bestSize.DecTo(displayClientSize);
+        SetSize(bestSize);
+    }
 }
 
 namespace {
