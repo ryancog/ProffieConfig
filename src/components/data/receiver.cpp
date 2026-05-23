@@ -81,12 +81,19 @@ void Receiver::activate() {
     // Can't double-activate.
     assert(not mAttached);
 
+    // onActivate() could potentially modify the mRecvMap, which would cause a
+    // mismatch with the model locking.
+    std::vector<const base::Model *> models;
+    models.reserve(mRecvMap.size());
+
     // First, lock everything we plan to attach to to ensure consistent state.
     // Attach can also happen here, sequentially, since nothing else will be
     // allowed to occur until unlock.
     for (auto [model, map] : mRecvMap) {
         model->lock();
         model->mReceivers.insert(this);
+
+        models.push_back(model);
     }
 
     // Set this before the callback in case it tries something silly.
@@ -100,9 +107,8 @@ void Receiver::activate() {
     if (auto *ptr{dynamic_cast<hier::Model *>(this)})
         activateHierarchic(ptr);
 
-    for (auto [model, map] : mRecvMap) {
+    for (auto *model : models)
         model->unlock();
-    }
 }
 
 void Receiver::deactivate() {
@@ -118,9 +124,15 @@ void Receiver::deactivate() {
     preDeactivate();
 
     // The remaining flow mirrors activate()
+
+    std::vector<const base::Model *> models;
+    models.reserve(mRecvMap.size());
+
     for (auto [model, map] : mRecvMap) {
         model->lock();
         model->mReceivers.erase(this);
+
+        models.push_back(model);
     }
 
     mAttached = false;
@@ -130,9 +142,8 @@ void Receiver::deactivate() {
 
     onDeactivate();
 
-    for (auto [model, map] : mRecvMap) {
+    for (auto *model : models)
         model->unlock();
-    }
 }
 
 void Receiver::amend(const base::Model& model, const RecvTable& table) {
