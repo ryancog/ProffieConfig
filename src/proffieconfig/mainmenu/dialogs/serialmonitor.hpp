@@ -37,7 +37,7 @@ struct SerialMonitorDlg : pcui::Frame, data::Receiver {
 
 private:
     enum {
-        eID_Input = 100,
+        eID_Input = wxID_HIGHEST,
         eID_Output,
 
         eID_Menu_Copy,

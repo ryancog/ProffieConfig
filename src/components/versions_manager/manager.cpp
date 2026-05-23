@@ -21,6 +21,7 @@
 
 #include <wx/button.h>
 #include <wx/dialog.h>
+#include <wx/event.h>
 #include <wx/filepicker.h>
 #include <wx/listbox.h>
 #include <wx/menu.h>
@@ -42,7 +43,7 @@
 namespace {
 
 enum {
-    eID_Refresh = 2,
+    eID_Refresh = wxID_HIGHEST,
     eID_Reset,
     eID_Show_Versions,
 

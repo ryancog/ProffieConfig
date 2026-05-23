@@ -35,7 +35,7 @@ struct MainMenu : pcui::Frame {
     enum {
         // on macOS menu items cannot have ID 0
         // on Win32, for some reason ID #1 is triggerred by hitting enter in pcTextCtrl?
-        eID_Manage_Versions = 2,
+        eID_Manage_Versions = wxID_HIGHEST,
         eID_Update_Manifest,
         eID_Logs,
         eID_Licenses,

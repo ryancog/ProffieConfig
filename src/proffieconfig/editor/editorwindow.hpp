@@ -60,7 +60,7 @@ private:
     PresetsPage mPresetsPage;
 
     enum {
-        ePage_General = 100,
+        ePage_General = wxID_HIGHEST,
         ePage_Props,
         ePage_Presets,
         ePage_Blades,

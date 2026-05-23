@@ -30,8 +30,7 @@
 namespace {
 
 enum {
-    eID_Ok = 2,
-    eID_Logs
+    eID_Logs = wxID_HIGHEST,
 };
 
 } // namespace
@@ -74,7 +73,7 @@ app::CriticalDialog::CriticalDialog(
     auto *logButton{new wxButton(this, eID_Logs, "Show Log Folder")};
     buttonSizer->Add(logButton, wxSizerFlags(1).Expand().Border(wxALL, 5));
 
-    auto *okButton{new wxButton(this, eID_Ok, "OK")};
+    auto *okButton{new wxButton(this, wxID_OK)};
     buttonSizer->Add(
         okButton,
         wxSizerFlags(1).Expand().Border(wxRIGHT | wxTOP | wxBOTTOM, 5)
@@ -85,7 +84,7 @@ app::CriticalDialog::CriticalDialog(
 
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         Close();
-    }, eID_Ok);
+    }, wxID_OK);
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         wxLaunchDefaultApplication(paths::logDir().native());
     }, eID_Logs);
