@@ -68,6 +68,11 @@ protected:
     virtual void preDeactivate() {}
     virtual void onDeactivate() {}
 
+    /**
+     * Is the model already mapped/has a table entry?
+     */
+    [[nodiscard]] bool mapped(const base::Model&) const;
+
     mutable std::recursive_mutex pMutex;
 
 private:

@@ -140,7 +140,7 @@ void Receiver::amend(const base::Model& model, const RecvTable& table) {
 
     // Don't leave a hanging reference in a prior-listed model.
     // I think it's best to require explicit repeal(), to make the flow clear.
-    assert(not mRecvMap.contains(&model));
+    assert(not mapped(model));
 
     mRecvMap[&model] = &table;
 
@@ -171,5 +171,10 @@ void Receiver::repealAllWithTable(const RecvTable& test) {
         if (table == &test)
             repeal(*model);
     }
+
+bool Receiver::mapped(const base::Model& model) const {
+    std::lock_guard scopeLock(pMutex);
+
+    return mRecvMap.contains(&model);
 }
 
