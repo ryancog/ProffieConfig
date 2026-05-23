@@ -62,7 +62,7 @@ size Exclusive::doSelect(size idx) {
     mData[idx]->set(true);
     // mSelected updated by receiver handler.
 
-    return mSelected;
+    return ret;
 }
 
 void Exclusive::onSet(const Model& model) {
