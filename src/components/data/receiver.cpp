@@ -167,10 +167,17 @@ void Receiver::repeal(const base::Model& model) {
 void Receiver::repealAllWithTable(const RecvTable& test) {
     std::lock_guard scopeLock(pMutex);
 
+    // Don't modify the map while iterating over it...
+    std::vector<const base::Model *> toRepeal;
+
     for (auto [model, table] : mRecvMap) {
         if (table == &test)
-            repeal(*model);
+            toRepeal.push_back(model);
     }
+
+    for (auto *model : toRepeal)
+        repeal(*model);
+}
 
 bool Receiver::mapped(const base::Model& model) const {
     std::lock_guard scopeLock(pMutex);
