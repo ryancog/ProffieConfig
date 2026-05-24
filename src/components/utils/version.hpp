@@ -24,6 +24,7 @@
 #include <string>
 #include <string_view>
 
+#include "utils/hash.hpp"
 #include "utils/types.hpp"
 
 #include "utils_export.h"
@@ -146,6 +147,14 @@ struct UTILS_EXPORT Version::RawOrderer {
     bool operator()(const Version&, const Version&) const;
 };
 
+template <>
+UTILS_EXPORT uint64 hash::single(const Version::VerNum&);
+
+template <>
+UTILS_EXPORT inline uint64 hash::single(const Version::Tag&);
+
+template <>
+UTILS_EXPORT uint64 hash::single(const Version&);
 
 } // namespace utils
 

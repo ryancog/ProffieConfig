@@ -26,7 +26,9 @@
 
 #include "utils/string.hpp"
 
-utils::Version::Version(std::string_view str) {
+using namespace utils;
+
+Version::Version(std::string_view str) {
     if (str.empty()) {
         err_ = Err::Str_Empty;
         return;
@@ -112,7 +114,7 @@ utils::Version::Version(std::string_view str) {
     parseLabel();
 }
 
-std::strong_ordering utils::Version::compare(const Version& other) const {
+std::strong_ordering Version::compare(const Version& other) const {
     const auto compare{[this, &other](
         auto Version::* item
     ) -> std::strong_ordering {
@@ -142,7 +144,7 @@ std::strong_ordering utils::Version::compare(const Version& other) const {
     return std::strong_ordering::equal;
 }
 
-bool utils::Version::isExact() const {
+bool Version::isExact() const {
     if (major_.mode_ != CompMode::Exact) return false;
     if (minor_.mode_ != CompMode::Exact) return false;
     if (bugfix_.mode_ != CompMode::Exact) return false;
@@ -150,7 +152,7 @@ bool utils::Version::isExact() const {
     return true;
 }
 
-std::string utils::Version::string() const {
+std::string Version::string() const {
     switch (err_) {
         using enum Err;
         case Invalid:
@@ -205,19 +207,19 @@ std::string utils::Version::string() const {
     return ret;
 }
 
-utils::Version::operator std::string() const {
+Version::operator std::string() const {
     return string();
 }
 
-utils::Version::operator bool() const { return err_ == Err::None; }
+Version::operator bool() const { return err_ == Err::None; }
 
-utils::Version utils::Version::invalid() {
+Version Version::invalid() {
     Version ret;
     ret.err_ = Err::Invalid;
     return ret;
 }
 
-std::strong_ordering utils::Version::RawComparator::operator()(
+std::strong_ordering Version::RawComparator::operator()(
     const Version& lhs, const Version& rhs
 ) const {
     const auto comp{[this, &lhs, &rhs](auto Version::* item) {
@@ -239,9 +241,33 @@ std::strong_ordering utils::Version::RawComparator::operator()(
     return comp(&Version::tag_);
 }
 
-bool utils::Version::RawOrderer::operator()(
+bool Version::RawOrderer::operator()(
     const Version& lhs, const Version& rhs
 ) const {
     return RawComparator{}(lhs, rhs) < 0;
 }
+
+template <>
+UTILS_EXPORT uint64 hash::single(const Version::VerNum& n) {
+    return hash::combine(static_cast<uint64>(n.mode_), n.val_);
+}
+
+template <>
+UTILS_EXPORT inline uint64 hash::single(const Version::Tag& t) {
+    return hash::combine(
+        static_cast<uint64>(t.mode_),
+        hash::single(t.val_)
+    );
+}
+
+template <>
+UTILS_EXPORT uint64 hash::single(const Version& v) {
+    return hash::combine(
+        static_cast<uint64>(v.err_),
+        hash::single(v.major_),
+        hash::single(v.minor_),
+        hash::single(v.bugfix_),
+        hash::single(v.tag_)
+    );
+};
 

@@ -97,3 +97,17 @@ bool SHA256::operator==(const SHA256& other) const {
 
 }
 
+// https://stackoverflow.com/a/50978188
+uint64 utils::hash::combine(uint64 a, uint64 b) {
+    auto ret{a + 0x9e3779b9 + b};
+
+    const auto m{0xE9846AFB1A615DULL};
+    ret ^= ret >> 32;
+    ret *= m;
+    ret ^= ret >> 32;
+    ret *= m;
+    ret ^= ret >> 28;
+
+    return ret;
+}
+

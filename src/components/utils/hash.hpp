@@ -62,5 +62,17 @@ private:
     std::array<uint8, 32> mValue;
 };
 
+UTILS_EXPORT uint64 combine(uint64, uint64);
+
+template <typename ...Args> requires (sizeof...(Args) > 0)
+[[nodiscard]] uint64 combine(uint64 a, uint64 b, Args... r) {
+    return combine(combine(a, b), r...);
+}
+
+template <typename T>
+[[nodiscard]] uint64 single(const T& t) {
+    return std::hash<T>{}(t);
+}
+
 } // namespace utils::hash
 
