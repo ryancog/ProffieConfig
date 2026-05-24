@@ -54,7 +54,8 @@ struct DATA_EXPORT Model : virtual base::Model {
     bool tryLock() const override;
     void unlock() const override;
 
-    virtual std::vector<Model *> children() { return {}; }
+    std::vector<Model *> children();
+    virtual std::vector<const Model *> children() const;
 
 protected:
     bool processAction(std::unique_ptr<Action>&&);

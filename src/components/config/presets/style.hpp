@@ -34,7 +34,8 @@ struct CONFIG_EXPORT Style : data::hier::Model {
     Style(Config&);
     Style(const Style&, Config&);
 
-    std::vector<Model *> children() override;
+    using Model::children;
+    std::vector<const Model *> children() const override;
 
     /**
      * @param ignoreLength Ignore the column limit when calculating whether to

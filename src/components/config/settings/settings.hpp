@@ -39,7 +39,9 @@ struct CONFIG_EXPORT Settings : data::hier::Model, data::Receiver {
     ~Settings() override;
 
     void onActivate() override;
-    std::vector<Model *> children() override;
+
+    using Model::children;
+    std::vector<const Model *> children() const override;
 
     data::hier::Bool massStorage_;
     data::hier::Bool webUsb_;

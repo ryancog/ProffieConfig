@@ -39,7 +39,8 @@ struct CONFIG_EXPORT BladeAwareness : data::hier::Model, data::Receiver {
     BladeAwareness(Settings&);
     ~BladeAwareness() override;
 
-    std::vector<Model *> children() override;
+    using Model::children;
+    std::vector<const Model *> children() const override;
 
     struct {
         data::hier::Bool enable_;

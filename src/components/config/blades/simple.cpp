@@ -33,7 +33,7 @@ Simple::Simple(Blade& blade) :
     led4_(*this),
     parent_(blade) {}
 
-auto Simple::children() -> std::vector<Model *> {
+auto Simple::children() const -> std::vector<const Model *> {
     return {
         &led1_,
         &led2_,
@@ -66,7 +66,7 @@ void Simple::LED::onActivate() {
     onProfile();
 }
 
-auto Simple::LED::children() -> std::vector<Model *> {
+auto Simple::LED::children() const -> std::vector<const Model *> {
     return {
         &profile_,
         &powerPin_,

@@ -38,13 +38,16 @@ struct Blade;
 struct CONFIG_EXPORT Simple : data::hier::Model {
     Simple(Blade&);
 
-    std::vector<Model *> children() override;
+    using Model::children;
+    std::vector<const Model *> children() const override;
 
     struct LED : data::hier::Model, data::Receiver {
         LED(Simple&);
 
         void onActivate() override;
-        std::vector<Model *> children() override;
+
+        using Model::children;
+        std::vector<const Model *> children() const override;
 
         data::hier::Choice profile_;
         data::hier::String powerPin_;

@@ -193,7 +193,7 @@ Style::Style(const Style& other, Config& config) :
     comment_(other.comment_, root()),
     content_(other.content_, root()) {}
 
-auto Style::children() -> std::vector<Model *> {
+auto Style::children() const -> std::vector<const Model *> {
     return {
         &comment_,
         &content_,

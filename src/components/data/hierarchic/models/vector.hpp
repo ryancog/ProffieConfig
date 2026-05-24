@@ -33,7 +33,8 @@ struct DATA_EXPORT Vector : base::Vector, Model {
 
     Vector(Root&);
 
-    std::vector<Model *> children() override;
+    using Model::children;
+    std::vector<const Model *> children() const override;
 
     bool insert(size, std::unique_ptr<base::Model>&&) override;
     bool remove(size) override;

@@ -109,7 +109,7 @@ void BladeConfig::onActivate() {
     recomputeIssues();
 }
 
-auto BladeConfig::children() -> std::vector<Model *> {
+auto BladeConfig::children() const -> std::vector<const Model *> {
     return {
         &blades_,
         &name_,
@@ -202,7 +202,7 @@ Blade::Blade(Config& config) :
     brightness_.set(100);
 }
 
-auto Blade::children() -> std::vector<Model *> {
+auto Blade::children() const -> std::vector<const Model *> {
     return {
         &brightness_,
         &mType,

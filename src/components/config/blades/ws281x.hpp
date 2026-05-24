@@ -44,7 +44,8 @@ struct CONFIG_EXPORT WS281X : data::hier::Model, data::Receiver {
 
     WS281X(Blade&);
 
-    std::vector<Model *> children() override;
+    using Model::children;
+    std::vector<const Model *> children() const override;
 
     data::hier::Integer length_;
 
@@ -70,7 +71,8 @@ private:
 struct CONFIG_EXPORT WS281X::Split : data::hier::Model, data::Receiver {
     Split(WS281X&);
 
-    std::vector<Model *> children() override;
+    using Model::children;
+    std::vector<const Model *> children() const override;
 
     enum Type {
         eStandard,

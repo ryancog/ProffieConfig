@@ -243,7 +243,8 @@ struct VERSIONS_EXPORT Prop : data::hier::Model, data::Receiver {
 
     void migrateFrom(const Prop&);
 
-    std::vector<Model *> children() override;
+    using Model::children;
+    std::vector<const Model *> children() const override;
 
     const std::string installName_;
     const std::string name_;

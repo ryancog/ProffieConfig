@@ -45,7 +45,7 @@ Style::Style(Config& config) :
 Style::Style(const Style& other, Config& config) :
     Model(config), name_(other.name_, config), style_(other.style_, config) {}
 
-auto Style::children() -> std::vector<Model *> {
+auto Style::children() const -> std::vector<const Model *> {
     return {
         &name_,
         &style_

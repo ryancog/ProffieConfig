@@ -34,7 +34,8 @@ struct CONFIG_EXPORT Define : data::hier::Model {
     Define(Config&, std::string&& = {}, std::string&& = {});
     ~Define() override;
 
-    std::vector<Model *> children() override;
+    using Model::children;
+    std::vector<const Model *> children() const override;
 
     data::hier::String name_;
     data::hier::String value_;

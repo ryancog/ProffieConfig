@@ -111,7 +111,7 @@ WS281X::WS281X(Blade& blade) :
     dataPin_.change("bladePin");
 }
 
-auto WS281X::children() -> std::vector<Model *> {
+auto WS281X::children() const -> std::vector<const Model *> {
     return {
         &length_,
         &dataPin_,
@@ -244,7 +244,7 @@ WS281X::Split::Split(WS281X& ws281x) :
     brightness_.set(100);
 }
 
-auto WS281X::Split::children() -> std::vector<Model *> {
+auto WS281X::Split::children() const -> std::vector<const Model *> {
     return {
         &type_,
 		&start_,

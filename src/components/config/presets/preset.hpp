@@ -37,7 +37,8 @@ struct CONFIG_EXPORT Preset : data::hier::Model {
     Preset(Config&);
     Preset(const Preset&, Config&);
 
-    std::vector<Model *> children() override;
+    using Model::children;
+    std::vector<const Model *> children() const override;
 
     data::hier::String name_;
     data::hier::String fontDir_;

@@ -580,8 +580,8 @@ void Prop::migrateFrom(const Prop& from) {
     }
 }
 
-auto Prop::children() -> std::vector<Model *> {
-    std::vector<Model *> ret;
+auto Prop::children() const -> std::vector<const Model *> {
+    std::vector<const Model *> ret;
 
     ret.reserve(mSettings.size());
     for (auto& setting : mSettings)

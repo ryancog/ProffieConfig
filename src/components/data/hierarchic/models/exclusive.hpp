@@ -31,7 +31,8 @@ struct DATA_EXPORT Exclusive : base::Exclusive, Model {
 
     Exclusive(Root&, size);
 
-    std::vector<Model *> children() override;
+    using Model::children;
+    std::vector<const Model *> children() const override;
 
     bool select(size) override;
 

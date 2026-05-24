@@ -49,7 +49,8 @@ constexpr auto MAX_NAME_LENGTH{24};
 struct CONFIG_EXPORT Config : data::hier::Root, data::Receiver {
     ~Config() override;
 
-    std::vector<Model *> children() override;
+    using Root::children;
+    std::vector<const Model *> children() const override;
 
     std::span<const std::unique_ptr<versions::os::OS>> osVec() const;
 

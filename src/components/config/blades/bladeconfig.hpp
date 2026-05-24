@@ -44,7 +44,9 @@ struct CONFIG_EXPORT BladeConfig : data::hier::Model, data::Receiver {
     BladeConfig(Config&);
 
     void onActivate() override;
-    std::vector<Model *> children() override;
+
+    using Model::children;
+    std::vector<const Model *> children() const override;
 
     data::hier::Vector blades_;
 
@@ -83,7 +85,8 @@ private:
 struct CONFIG_EXPORT Blade : data::hier::Model, data::Receiver {
     Blade(Config&);
 
-    std::vector<Model *> children() override;
+    using Model::children;
+    std::vector<const Model *> children() const override;
 
     enum Type {
         // NOLINTNEXTLINE(readability-identifier-naming)

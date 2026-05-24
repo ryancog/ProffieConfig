@@ -46,6 +46,22 @@ void Model::unlock() const {
     mRoot.mMutex.unlock();
 }
 
+std::vector<Model *> Model::children() {
+    auto tmp{const_cast<const Model *>(this)->children()};
+
+    std::vector<Model *> ret;
+    ret.reserve(tmp.size());
+
+    for (auto *ptr : tmp)
+        ret.push_back(const_cast<Model *>(ptr));
+
+    return ret;
+}
+
+std::vector<const Model *> Model::children() const {
+    return {};
+}
+
 bool Model::processAction(std::unique_ptr<Action>&& action) {
     std::lock_guard scopeLock(*this);
 

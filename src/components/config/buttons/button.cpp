@@ -71,7 +71,7 @@ Button::Button(Config& config) :
 
 Button::~Button() = default;
 
-auto Button::children() -> std::vector<Model *> {
+auto Button::children() const -> std::vector<const Model *> {
     return {
         &type_,
         &event_,

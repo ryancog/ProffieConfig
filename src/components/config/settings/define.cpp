@@ -51,7 +51,7 @@ Define::Define(
 
 Define::~Define() = default;
 
-auto Define::children() -> std::vector<Model *> {
+auto Define::children() const -> std::vector<const Model *> {
     return {
         &name_,
         &value_,

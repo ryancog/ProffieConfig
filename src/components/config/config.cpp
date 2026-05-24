@@ -102,8 +102,8 @@ Config::~Config() {
     deactivate();
 }
 
-std::vector<data::hier::Model *> Config::children() {
-    std::vector<data::hier::Model *> ret{
+auto Config::children() const -> std::vector<const Model *> {
+    std::vector<const Model *> ret{
         &settings_,
         &mPropChoice,
         &mOsChoice,

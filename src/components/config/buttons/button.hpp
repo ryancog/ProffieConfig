@@ -36,7 +36,8 @@ struct CONFIG_EXPORT Button : data::hier::Model {
     Button(Config&);
     ~Button() override;
 
-    std::vector<Model *> children() override;
+    using Model::children;
+    std::vector<const Model *> children() const override;
 
     data::hier::Choice type_;
     data::hier::Choice event_;

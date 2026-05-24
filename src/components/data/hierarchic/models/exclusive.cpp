@@ -30,13 +30,12 @@ Exclusive::Exclusive(Root& root, size num) :
 
 Exclusive::Exclusive(Root& root) : Model(root) {}
 
-auto Exclusive::children() -> std::vector<Model *> {
-    std::vector<Model *> ret;
+auto Exclusive::children() const -> std::vector<const Model *> {
+    std::vector<const Model *> ret;
     ret.reserve(data().size());
 
-    for (const auto& child : data()) {
+    for (const auto& child : data())
         ret.push_back(dynamic_cast<Model *>(child.get()));
-    }
 
     return ret;
 }

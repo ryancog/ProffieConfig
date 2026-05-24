@@ -127,7 +127,7 @@ void BladeAwareness::onActivate() {
     onIDPower();
 }
 
-auto BladeAwareness::children() -> std::vector<Model *> {
+auto BladeAwareness::children() const -> std::vector<const Model *> {
     return {
 		&bladeDetect_.enable_,
 		&bladeDetect_.pin_,

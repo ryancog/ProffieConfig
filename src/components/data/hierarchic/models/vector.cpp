@@ -28,8 +28,8 @@ Vector::Vector(Root& root) : Model(root) {}
 
 // No copy ctor. Don't know how to copy children (or if they even can be).
 
-std::vector<Model *> Vector::children() {
-    std::vector<Model *> ret;
+std::vector<const Model *> Vector::children() const {
+    std::vector<const Model *> ret;
 
     auto ctxt{context(*this)};
 

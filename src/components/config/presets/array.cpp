@@ -65,7 +65,7 @@ void Array::onActivate() {
     recomputeIssues();
 }
 
-auto Array::children() -> std::vector<Model *> {
+auto Array::children() const -> std::vector<const Model *> {
     return {
         &name_,
         &presets_,

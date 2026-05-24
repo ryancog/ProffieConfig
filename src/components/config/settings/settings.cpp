@@ -149,7 +149,7 @@ void Settings::onActivate() {
     onFilterEnableSet();
 }
 
-auto Settings::children() -> std::vector<Model *> {
+auto Settings::children() const -> std::vector<const Model *> {
     return {
 		&massStorage_,
 		&webUsb_,

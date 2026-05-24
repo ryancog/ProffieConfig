@@ -34,7 +34,8 @@ struct CONFIG_EXPORT Style : data::hier::Model {
     Style(Config&);
     Style(const Style&, Config&);
 
-    std::vector<Model *> children() override;
+    using Model::children;
+    std::vector<const Model *> children() const override;
 
     data::hier::String name_;
     presets::Style style_;

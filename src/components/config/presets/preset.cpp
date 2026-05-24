@@ -140,7 +140,7 @@ Preset::Preset(const Preset& other, Config& config) :
     ).ToStdString());
 }
 
-auto Preset::children() -> std::vector<Model *> {
+auto Preset::children() const -> std::vector<const Model *> {
     return {
         &name_,
         &fontDir_,
