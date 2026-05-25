@@ -70,12 +70,9 @@ struct Layout : wxBoxSizer, data::Receiver {
             Show(0UL, ctxt.children().empty());
         }
 
-        for (const auto& model : ctxt.children()) {
-            Add(builder_(*model)->build(childScaffold_));
-
-            if (separator_)
-                Add(separator_->build(childScaffold_));
-        }
+        auto children{ctxt.children()};
+        for (auto idx{0}; idx < children.size(); ++idx)
+            onInsert(idx);
     }
 
     void onInsert(size pos) {
