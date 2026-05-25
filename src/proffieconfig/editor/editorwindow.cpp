@@ -79,177 +79,12 @@ EditorWindow::EditorWindow(wxWindow *parent, config::Info& info) :
 
     // Only start animations after initial setup has taken place.
     mAnimating = true;
+
+    activate();
 }
 
 EditorWindow::~EditorWindow() {
     delete mAnimationTimer;
-}
-
-void EditorWindow::bindEvents() {
-    Bind(wxEVT_CLOSE_WINDOW, [this](wxCloseEvent& evt) {
-        evt.Skip();
-
-        defer {
-            if (not evt.GetVeto()) {
-                pcui::cripple(this);
-                mGeneralPage.deinit();
-                mPropsPage.deinit();
-                mPresetsPage.deinit();
-                mBladesPage.deinit();
-                mInfo.unload();
-            }
-        };
-
-        if (not evt.CanVeto()) return;
-
-        auto isSaved{data::context(mInfo.config()->isSaved())};
-        if (isSaved.val()) return;
-
-        auto name{data::context(mInfo.name())};
-
-        auto choice{pcui::showMessage(
-            wxString::Format(_("\"%s\" Has Unsaved Changes"), name.val()),
-            {
-                .caption_=_("Close Editor"),
-                .style_=wxICON_WARNING | wxYES_NO | wxCANCEL | wxCANCEL_DEFAULT,
-                .labels_={.yes_=_("Save Changes"), .no_=_("Discard Changes")},
-                .parent_=this
-            }
-        )};
-
-        if (choice == wxCANCEL or (choice == wxYES and not save())) {
-            evt.Skip(false);
-            evt.Veto();
-        }
-    });
-
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) {
-        save();
-    }, wxID_SAVE); 
-
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-        auto name{data::context(mInfo.name())};
-
-        wxFileDialog fileDlg(
-            this,
-            _("Export ProffieOS Config File"),
-            wxEmptyString,
-            name.val() + config::RAW_FILE_EXTENSION,
-            _("ProffieOS Configuration") + " (*.h)|*.h",
-            wxFD_SAVE | wxFD_OVERWRITE_PROMPT
-        );
-        if (fileDlg.ShowModal() == wxID_CANCEL) return;
-
-        config::generate(*mInfo.config(), fileDlg.GetPath().ToStdString());
-    }, eID_Export);
-
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-        pcui::BusyTracker busy;
-
-        auto *prog{new pcui::ProgressDialog(
-            this,
-            _("Verify Config"),
-            true
-        )};
-
-        std::thread{[this, prog, busy]() {
-            auto name{data::context(mInfo.name())};
-            arduino::verifyConfig(name.val(), *mInfo.config(), *prog);
-        }}.detach();
-    }, eID_Verify);
-
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-        wxFileDialog fileDialog{
-            this,
-            _("Select Injection File"),
-            wxEmptyString,
-            wxEmptyString,
-            _("C Header") + " (*.h)|*.h",
-            wxFD_FILE_MUST_EXIST | wxFD_OPEN
-        };
-        if (fileDialog.ShowModal() == wxCANCEL) return;
-
-        auto dst{
-            paths::injectionDir() / fileDialog.GetFilename().ToStdWstring()
-        };
-
-        std::error_code ec;
-        const auto src{fileDialog.GetPath().ToStdWstring()};
-        if (not files::copyOverwrite(src, dst, ec)) {
-            pcui::showMessage(
-                ec.message(),
-                {.caption_=_("Injection file could not be added.")}
-            );
-            return;
-        }
-
-        auto& config{*mInfo.config()};
-        config.injections_.append(std::make_unique<config::Injection>(
-            config, fileDialog.GetFilename().ToStdString()
-        ));
-    }, eID_Add_Injection);
-
-    Bind(wxEVT_MENU, [&](wxCommandEvent&) { 
-        std::string styleStr;
-
-        auto styleSel{data::context(mPresetsPage.styleSel())};
-        auto styleChoice{data::context(mPresetsPage.styleSel().choice())};
-        if (styleChoice.idx() != -1) {
-            auto styleVec{data::context(*styleSel.bound())};
-
-            auto& model{*styleVec.children()[styleChoice.idx()]};
-            auto& style{dynamic_cast<config::presets::Style&>(model)};
-
-            auto content{data::context(style.content_)};
-            styleStr = content.val();
-
-            utils::trimWhitespaceOutsideString(styleStr);
-        }
-
-        constexpr cstring EDITOR_URL{
-            "https://fredrik.hubbe.net/lightsaber/style_editor.html?S="
-        };
-
-        wxURI uri{EDITOR_URL + styleStr};
-        wxLaunchDefaultBrowser(uri.BuildURI());
-    }, eID_Style_Editor);
-
-    auto windowSelectionHandler{[this](wxCommandEvent& evt) {
-#       ifdef __WXOSX__
-        // For reasons I don't fully understand, probably because either myself
-        // or wxWidgets is using the controls wrong, the selection gets weird
-        // if this isn't done.
-        GetToolBar()->ToggleTool(evt.GetId(), false);
-        GetToolBar()->OSXSelectTool(evt.GetId());
-#       endif
-        
-        // I'm somewhat proud that w/ the optimizations I added to wxWidgets
-        // doing this redundantly isn't nearly as terrible as it used to be,
-        // but even so, no sense in being wasteful...
-        if (mCurrentPage == evt.GetId())
-            return;
-
-        pcui::cripple(this);
-
-        // Set this first so it's available during the build.
-        mCurrentPage = evt.GetId();
-
-        if (evt.GetId() == ePage_General) {
-            pcui::build(this, mGeneralPage.ui());
-        } else if (evt.GetId() == ePage_Props) {
-            pcui::build(this, mPropsPage.ui(eID_Props_Scrolled));
-        } else if (evt.GetId() == ePage_Presets) {
-            pcui::build(this, mPresetsPage.ui());
-        } else if (evt.GetId() == ePage_Blades) {
-            pcui::build(this, mBladesPage.ui());
-        }
-    }};
-    Bind(wxEVT_MENU, windowSelectionHandler, ePage_General);
-    Bind(wxEVT_MENU, windowSelectionHandler, ePage_Props);
-    Bind(wxEVT_MENU, windowSelectionHandler, ePage_Presets);
-    Bind(wxEVT_MENU, windowSelectionHandler, ePage_Blades);
-
-    Bind(wxEVT_TIMER, &EditorWindow::onTimer, this);
 }
 
 void EditorWindow::createMenuBar() {
@@ -313,19 +148,227 @@ void EditorWindow::createToolBar() {
     toolbar->Realize();
 }
 
-bool EditorWindow::save() {
-    auto err{mInfo.save()};
-    if (err) {
-        pcui::showMessage(
-            *err,
-            {
-                .caption_=_("Config Not Saved"),
-                .style_=wxOK | wxCENTER | wxICON_ERROR,
-                .parent_=this
-            }
-        );
+void EditorWindow::bindEvents() {
+    static const auto savedTable{[] {
+        data::base::Bool::RecvTable table;
+        table.onSet_ = data::map(&EditorWindow::onIsSaved);
+        return table;
+    }()};
+    amend(mInfo.config()->isSaved(), savedTable);
+
+    Bind(wxEVT_CLOSE_WINDOW, &EditorWindow::onClose, this);
+    Bind(wxEVT_MENU, &EditorWindow::onSave, this, wxID_SAVE);
+    Bind(wxEVT_MENU, &EditorWindow::onExport, this, eID_Export);
+    Bind(wxEVT_MENU, &EditorWindow::onVerify, this, eID_Verify);
+    Bind(wxEVT_MENU, &EditorWindow::onAddInjection, this, eID_Add_Injection);
+    Bind(wxEVT_MENU, &EditorWindow::onStyleEditor, this, eID_Style_Editor);
+    Bind(wxEVT_MENU, &EditorWindow::onPage, this, ePage_First, ePage_Last);
+    Bind(wxEVT_TIMER, &EditorWindow::onTimer, this);
+}
+
+void EditorWindow::onIsSaved() {
+    auto ctxt{data::context(mInfo.config()->isSaved())};
+
+#   ifdef __WXOSX__
+    OSXSetModified(not ctxt.val());
+#   endif
+}
+
+void EditorWindow::onClose(wxCloseEvent& evt) {
+    evt.Skip();
+
+    defer {
+        if (not evt.GetVeto()) {
+            pcui::cripple(this);
+            mGeneralPage.deinit();
+            mPropsPage.deinit();
+            mPresetsPage.deinit();
+            mBladesPage.deinit();
+            mInfo.unload();
+        }
+    };
+
+    if (not evt.CanVeto()) return;
+
+    auto isSaved{data::context(mInfo.config()->isSaved())};
+    if (isSaved.val()) return;
+
+    auto name{data::context(mInfo.name())};
+
+    auto choice{pcui::showMessage(
+        wxString::Format(_("\"%s\" Has Unsaved Changes"), name.val()),
+        {
+            .caption_=_("Close Editor"),
+            .style_=wxICON_WARNING | wxYES_NO | wxCANCEL | wxCANCEL_DEFAULT,
+            .labels_={.yes_=_("Save Changes"), .no_=_("Discard Changes")},
+            .parent_=this
+        }
+    )};
+
+    if (choice == wxCANCEL or (choice == wxYES and not save())) {
+        evt.Skip(false);
+        evt.Veto();
     }
-    return not err;
+}
+
+void EditorWindow::onSave(wxCommandEvent&) {
+    save();
+}
+
+void EditorWindow::onExport(wxCommandEvent&) {
+    auto name{data::context(mInfo.name())};
+
+    wxFileDialog fileDlg(
+        this,
+        _("Export ProffieOS Config File"),
+        wxEmptyString,
+        name.val() + config::RAW_FILE_EXTENSION,
+        _("ProffieOS Configuration") + " (*.h)|*.h",
+        wxFD_SAVE | wxFD_OVERWRITE_PROMPT
+    );
+    if (fileDlg.ShowModal() == wxID_CANCEL) return;
+
+    config::generate(*mInfo.config(), fileDlg.GetPath().ToStdString());
+}
+
+void EditorWindow::onVerify(wxCommandEvent&) {
+    pcui::BusyTracker busy;
+
+    auto *prog{new pcui::ProgressDialog(
+        this,
+        _("Verify Config"),
+        true
+    )};
+
+    std::thread{[this, prog, busy]() {
+        auto name{data::context(mInfo.name())};
+        arduino::verifyConfig(name.val(), *mInfo.config(), *prog);
+    }}.detach();
+}
+
+void EditorWindow::onAddInjection(wxCommandEvent&) {
+    wxFileDialog fileDialog{
+        this,
+        _("Select Injection File"),
+        wxEmptyString,
+        wxEmptyString,
+        _("C Header") + " (*.h)|*.h",
+        wxFD_FILE_MUST_EXIST | wxFD_OPEN
+    };
+    if (fileDialog.ShowModal() == wxCANCEL) return;
+
+    auto dst{
+        paths::injectionDir() / fileDialog.GetFilename().ToStdWstring()
+    };
+
+    std::error_code ec;
+    const auto src{fileDialog.GetPath().ToStdWstring()};
+    if (not files::copyOverwrite(src, dst, ec)) {
+        pcui::showMessage(
+            ec.message(),
+            {.caption_=_("Injection file could not be added.")}
+        );
+        return;
+    }
+
+    auto& config{*mInfo.config()};
+    config.injections_.append(std::make_unique<config::Injection>(
+        config, fileDialog.GetFilename().ToStdString()
+    ));
+}
+
+void EditorWindow::onStyleEditor(wxCommandEvent&) {
+    std::string styleStr;
+
+    auto styleSel{data::context(mPresetsPage.styleSel())};
+    auto styleChoice{data::context(mPresetsPage.styleSel().choice())};
+    if (styleChoice.idx() != -1) {
+        auto styleVec{data::context(*styleSel.bound())};
+
+        auto& model{*styleVec.children()[styleChoice.idx()]};
+        auto& style{dynamic_cast<config::presets::Style&>(model)};
+
+        auto content{data::context(style.content_)};
+        styleStr = content.val();
+
+        utils::trimWhitespaceOutsideString(styleStr);
+    }
+
+    constexpr cstring EDITOR_URL{
+        "https://fredrik.hubbe.net/lightsaber/style_editor.html?S="
+    };
+
+    wxURI uri{EDITOR_URL + styleStr};
+    wxLaunchDefaultBrowser(uri.BuildURI());
+}
+
+void EditorWindow::onPage(wxCommandEvent& evt) {
+#   ifdef __WXOSX__
+    // For reasons I don't fully understand, probably because either myself
+    // or wxWidgets is using the controls wrong, the selection gets weird
+    // if this isn't done.
+    GetToolBar()->ToggleTool(evt.GetId(), false);
+    GetToolBar()->OSXSelectTool(evt.GetId());
+#   endif
+
+    // No sense in being wasteful...
+    if (mCurrentPage == evt.GetId())
+        return;
+
+    pcui::cripple(this);
+
+    // Set this first so it's available during the build.
+    mCurrentPage = evt.GetId();
+
+    if (evt.GetId() == ePage_General) {
+        pcui::build(this, mGeneralPage.ui());
+    } else if (evt.GetId() == ePage_Props) {
+        pcui::build(this, mPropsPage.ui(eID_Props_Scrolled));
+    } else if (evt.GetId() == ePage_Presets) {
+        pcui::build(this, mPresetsPage.ui());
+    } else if (evt.GetId() == ePage_Blades) {
+        pcui::build(this, mBladesPage.ui());
+    }
+}
+
+void EditorWindow::onTimer(wxTimerEvent& evt) {
+    constexpr auto RESIZE_TIME_MILLIS{300};
+
+    // The timer fires interval amount after when it is first called, so this
+    // should be incremented first, treating the first frame as the size when
+    // when the button was clicked.
+    ++mAnimationCount;
+
+    auto actualElapsed{millis() - mAnimationStartMillis};
+    auto elapsed{static_cast<ssize>(mAnimationCount * evt.GetInterval())};
+
+    // Drop the "frame," a prior one took too long.
+    while (actualElapsed - elapsed > (ssize)evt.GetInterval()) {
+        ++mAnimationCount;
+        elapsed += evt.GetInterval();
+    }
+
+    const auto completion{std::clamp(
+        static_cast<float64>(elapsed) / RESIZE_TIME_MILLIS,
+        0.0, 1.0
+    )};
+
+    const auto totalDelta{mBestSize - mStartSize};
+    const auto newSize{mStartSize + (totalDelta * completion)};
+
+    // Set size hints to avoid the user being able to resize things here and
+    // cause jank.
+    SetSizeHints(newSize, newSize);
+    SetSize(newSize);
+
+    if (elapsed >= RESIZE_TIME_MILLIS) {
+        mAnimationTimer->Stop();
+
+        // Re-enable auto layout on resize, and limit resizing based on which
+        // pane is shown.
+        pcui::getUniqueChild(this)->SetAutoLayout(true);
+        configureResizing();
+    }
 }
 
 void EditorWindow::Fit() {
@@ -408,46 +451,6 @@ void EditorWindow::Fit() {
     mAnimationTimer->Start(frameIntervalMillis);
 }
 
-void EditorWindow::onTimer(wxTimerEvent& evt) {
-    constexpr auto RESIZE_TIME_MILLIS{300};
-
-    // The timer fires interval amount after when it is first called, so this
-    // should be incremented first, treating the first frame as the size when
-    // when the button was clicked.
-    ++mAnimationCount;
-
-    auto actualElapsed{millis() - mAnimationStartMillis};
-    auto elapsed{static_cast<ssize>(mAnimationCount * evt.GetInterval())};
-
-    // Drop the "frame," a prior one took too long.
-    while (actualElapsed - elapsed > (ssize)evt.GetInterval()) {
-        ++mAnimationCount;
-        elapsed += evt.GetInterval();
-    }
-
-    const auto completion{std::clamp(
-        static_cast<float64>(elapsed) / RESIZE_TIME_MILLIS,
-        0.0, 1.0
-    )};
-
-    const auto totalDelta{mBestSize - mStartSize};
-    const auto newSize{mStartSize + (totalDelta * completion)};
-
-    // Set size hints to avoid the user being able to resize things here and
-    // cause jank.
-    SetSizeHints(newSize, newSize);
-    SetSize(newSize);
-
-    if (elapsed >= RESIZE_TIME_MILLIS) {
-        mAnimationTimer->Stop();
-
-        // Re-enable auto layout on resize, and limit resizing based on which
-        // pane is shown.
-        pcui::getUniqueChild(this)->SetAutoLayout(true);
-        configureResizing();
-    }
-}
-
 void EditorWindow::configureResizing() {
     switch (mCurrentPage) {
         case ePage_General:
@@ -462,6 +465,21 @@ void EditorWindow::configureResizing() {
             break;
         default:
     }
+}
+
+bool EditorWindow::save() {
+    auto err{mInfo.save()};
+    if (err) {
+        pcui::showMessage(
+            *err,
+            {
+                .caption_=_("Config Not Saved"),
+                .style_=wxOK | wxCENTER | wxICON_ERROR,
+                .parent_=this
+            }
+        );
+    }
+    return not err;
 }
 
 namespace {

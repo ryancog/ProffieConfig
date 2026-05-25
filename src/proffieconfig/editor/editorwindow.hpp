@@ -19,18 +19,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/event.h>
 #include <wx/timer.h>
 
 #include "config/config.hpp"
+#include "data/receiver.hpp"
 #include "ui/frame.hpp"
-#include "ui/types.hpp"
 
 #include "pages/general.hpp"
 #include "pages/props.hpp"
 #include "pages/presets.hpp"
 #include "pages/blades.hpp"
 
-struct EditorWindow : pcui::Frame {
+struct EditorWindow : pcui::Frame, data::Receiver {
     EditorWindow(wxWindow *, config::Info&);
     ~EditorWindow() override;
 
@@ -42,14 +43,21 @@ struct EditorWindow : pcui::Frame {
     [[nodiscard]] config::Config& getOpenConfig() const;
 
 private:
-    pcui::DescriptorPtr ui();
-
     void createMenuBar();
     void createToolBar();
 
     void bindEvents();
 
+    void onIsSaved();
+    void onClose(wxCloseEvent&);
+    void onSave(wxCommandEvent&);
+    void onExport(wxCommandEvent&);
+    void onVerify(wxCommandEvent&);
+    void onAddInjection(wxCommandEvent&);
+    void onStyleEditor(wxCommandEvent&);
+    void onPage(wxCommandEvent&);
     void onTimer(wxTimerEvent&);
+
     void configureResizing();
 
     config::Info& mInfo;
@@ -71,6 +79,9 @@ private:
         eID_Verify,
         eID_Add_Injection,
         eID_Style_Editor,
+
+        ePage_First = ePage_General,
+        ePage_Last = ePage_Blades,
     };
 
     size mCurrentPage{0};
