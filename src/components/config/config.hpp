@@ -89,8 +89,7 @@ private:
 
     Config();
 
-    void onActionIdx(size);
-    void onActionClear(size);
+    void onAction();
 
     void onNumBlades();
     void onOSChoice();
@@ -112,7 +111,7 @@ private:
     data::prim::Integer mNumBlades;
     data::prim::Bool mIsSaved;
 
-    std::optional<size> mSavedAction;
+    std::optional<uint64> mSavedHash;
 };
 
 struct CONFIG_EXPORT Info : data::prim::Model {

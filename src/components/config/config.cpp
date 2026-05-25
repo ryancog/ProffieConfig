@@ -74,8 +74,7 @@ Config::Config() :
 
     static const auto selfTable{[] {
         data::hier::Root::RecvTable table;
-        table.onActionIdx_ = data::map(&Config::onActionIdx);
-        table.onActionClear_ = data::map(&Config::onActionClear);
+        table.onAction_ = data::map(&Config::onAction);
         return table;
     }()};
     amend(*this, selfTable);
@@ -288,15 +287,8 @@ void Config::syncStyles() {
     }
 }
 
-void Config::onActionIdx(size idx) {
-    mIsSaved.set(idx == mSavedAction);
-}
-
-void Config::onActionClear(size lastIdx) {
-    if (lastIdx == mSavedAction)
-        mSavedAction = Root::eAct_Idx_First;
-    else
-        mSavedAction = std::nullopt;
+void Config::onAction() {
+    mIsSaved.set(hash() == mSavedHash);
 }
 
 void Config::onNumBlades() {
@@ -368,7 +360,7 @@ std::optional<std::string> Info::save(
     }
     fs::remove(tmpPath, errCode);
 
-    mConfig->mSavedAction = ctxt.actionIndex();
+    mConfig->mSavedHash = mConfig->hash();
     mConfig->mIsSaved.set(true);
 
     return err;
@@ -397,6 +389,9 @@ std::optional<std::string> Info::load() {
     } else {
         logger.warn("Config (" + cfgPath.string() + ") does not exist, creating new...");
     }
+
+    mConfig->mSavedHash = mConfig->hash();
+    mConfig->mIsSaved.set(true);
 
     return std::nullopt;
 }
