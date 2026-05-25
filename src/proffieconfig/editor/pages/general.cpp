@@ -20,6 +20,7 @@
  */
 
 #include "config/strings.hpp"
+#include "data/logic/adapter.hpp"
 #include "ui/build.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/checkbox.hpp"
@@ -538,7 +539,11 @@ pcui::DescriptorPtr GeneralPage::audio() {
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Labeled{
-          .win_={.base_={.expand_=true}},
+          .win_={
+            .base_={.expand_=true},
+            .enable_=mConfig.settings_.filter_.cutoff_
+                | data::logic::IsEnabled{},
+          },
           .label_=_("Cutoff"),
           .orient_=wxHORIZONTAL,
           .ctrl_=pcui::Stepper{
@@ -548,7 +553,11 @@ pcui::DescriptorPtr GeneralPage::audio() {
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Labeled{
-          .win_={.base_={.expand_=true}},
+          .win_={
+            .base_={.expand_=true},
+            .enable_=mConfig.settings_.filter_.order_
+                | data::logic::IsEnabled{},
+          },
           .label_=_("Order"),
           .orient_=wxHORIZONTAL,
           .ctrl_=pcui::Stepper{
