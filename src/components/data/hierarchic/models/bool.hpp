@@ -33,6 +33,9 @@ struct DATA_EXPORT Bool : base::Bool, Model {
     Bool(const Bool&, Root&);
 
     bool set(bool) override;
+
+protected:
+    uint64 hashThis() const override;
 };
 
 struct DATA_EXPORT Bool::SetAction : Action {

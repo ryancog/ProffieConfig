@@ -40,6 +40,9 @@ struct DATA_EXPORT Selection : base::Selection, Model {
     bool setItems(std::vector<std::string>&&) override;
     bool add(std::string&&) override;
     bool remove(uint32) override;
+
+protected:
+    uint64 hashThis() const override;
 };
 
 struct DATA_EXPORT Selection::SelectAction : Action {

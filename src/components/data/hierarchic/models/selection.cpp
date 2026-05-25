@@ -20,6 +20,7 @@
  */
 
 #include "data/context.hpp"
+#include "utils/hash.hpp"
 
 using namespace data::hier;
 
@@ -58,6 +59,17 @@ bool Selection::add(std::string&& str) {
 
 bool Selection::remove(uint32 idx) {
     return processAction(std::make_unique<RemoveAction>(idx));
+}
+
+uint64 Selection::hashThis() const {
+    ROContext ctxt(*this);
+
+    auto ret{utils::hash::single(ctxt.selected())};
+
+    for (const auto& item : ctxt.items())
+        ret = utils::hash::combine(ret, utils::hash::single(item));
+
+    return ret;
 }
 
 Selection::SelectAction::SelectAction(uint32 idx, bool select) :

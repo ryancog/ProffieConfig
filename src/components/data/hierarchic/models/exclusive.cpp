@@ -20,6 +20,7 @@
  */
 
 #include "data/hierarchic/models/bool.hpp"
+#include "utils/hash.hpp"
 
 using namespace data::hier;
 
@@ -46,6 +47,15 @@ bool Exclusive::select(size idx) {
 
 std::unique_ptr<data::base::Bool> Exclusive::create(size) {
     return std::make_unique<Bool>(root());
+}
+
+uint64 Exclusive::hashThis() const {
+    ROContext ctxt(*this);
+
+    return utils::hash::combine(
+        utils::hash::single(ctxt.selected()),
+        utils::hash::single(ctxt.num())
+    );
 }
 
 Exclusive::SelectAction::SelectAction(size idx) : mIdx{idx} {}

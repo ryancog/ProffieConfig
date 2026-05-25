@@ -30,6 +30,11 @@ bool Version::set(utils::Version&& ver) {
     return processAction(std::make_unique<SetAction>(std::move(ver)));
 }
 
+uint64 Version::hashThis() const {
+    ROContext ctxt(*this);
+    return utils::hash::single(ctxt.val());
+}
+
 Version::SetAction::SetAction(utils::Version ver) : mVer{std::move(ver)} {}
 
 bool Version::SetAction::setup() {

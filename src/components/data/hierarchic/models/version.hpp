@@ -33,6 +33,9 @@ struct DATA_EXPORT Version : base::Version, Model {
     Version(const Version&, Root&);
 
     bool set(utils::Version&&) override;
+
+protected:
+    uint64 hashThis() const override;
 };
 
 struct DATA_EXPORT Version::SetAction : Action {

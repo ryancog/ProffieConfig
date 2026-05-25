@@ -36,6 +36,9 @@ struct DATA_EXPORT Selector : base::Selector, Model {
     base::Choice& choice() const override;
     bool bind(const base::Vector *) override;
 
+protected:
+    uint64 hashThis() const override;
+
 private:
     mutable Choice mChoice;
 };

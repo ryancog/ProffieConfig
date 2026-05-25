@@ -36,6 +36,9 @@ struct DATA_EXPORT String : base::String, Model {
     using base::String::change;
     bool change(std::string&&, size) override;
     bool move(size) override;
+
+protected:
+    uint64 hashThis() const override;
 };
 
 struct DATA_EXPORT String::ChangeAction : Action {

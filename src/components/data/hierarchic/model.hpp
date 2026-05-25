@@ -24,6 +24,7 @@
 
 #include "data/base/model.hpp"
 #include "data/hierarchic/action.hpp"
+#include "utils/types.hpp"
 
 #include "data_export.h"
 
@@ -57,9 +58,18 @@ struct DATA_EXPORT Model : virtual base::Model {
     std::vector<Model *> children();
     virtual std::vector<const Model *> children() const;
 
+    [[nodiscard]] uint64 hash(uint64 = 0) const;
+
 protected:
+    /**
+     * Perform hashing for this model.
+     *
+     * May be left w/o override if only the children need to be considered.
+     */
+    virtual uint64 hashThis() const;
+
     bool processAction(std::unique_ptr<Action>&&);
-    
+
 private:
     Root& mRoot;
 };

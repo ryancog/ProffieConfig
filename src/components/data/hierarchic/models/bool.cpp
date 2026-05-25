@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "utils/hash.hpp"
+
 using namespace data::hier;
 
 Bool::Bool(Root& root) : Model(root) {}
@@ -28,6 +30,10 @@ Bool::Bool(const Bool& other, Root& root) :
 
 bool Bool::set(bool val) {
     return processAction(std::make_unique<SetAction>(val));
+}
+
+uint64 Bool::hashThis() const {
+    return utils::hash::single(ROContext(*this).val());
 }
 
 Bool::SetAction::SetAction(bool val) : mValue{val} {}

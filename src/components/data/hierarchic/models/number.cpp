@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "utils/hash.hpp"
+
 using namespace data::hier;
 
 template <typename T>
@@ -36,6 +38,19 @@ bool detail::Number<T>::set(T val) {
 template <typename T>
 bool detail::Number<T>::update(Number<T>::Params params) {
     return processAction(std::make_unique<UpdateAction>(params));
+}
+
+template <typename T>
+uint64 detail::Number<T>::hashThis() const {
+    typename Number<T>::ROContext ctxt(*this);
+
+    return utils::hash::combine(
+        utils::hash::single(ctxt.val()),
+        utils::hash::single(ctxt.params().min_),
+        utils::hash::single(ctxt.params().max_),
+        utils::hash::single(ctxt.params().inc_),
+        utils::hash::single(ctxt.params().off_)
+    );
 }
 
 template <typename T>

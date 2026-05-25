@@ -35,6 +35,9 @@ struct DATA_EXPORT Choice : base::Choice, Model {
 
     bool choose(int32) override;
     bool update(uint32, int32 = -1) override;
+
+protected:
+    uint64 hashThis() const override;
 };
 
 struct DATA_EXPORT Choice::ChoiceAction : Action {

@@ -22,6 +22,7 @@
 #include <cassert>
 
 #include "data/hierarchic/root.hpp"
+#include "utils/hash.hpp"
 
 using namespace data::hier;
 
@@ -60,6 +61,21 @@ std::vector<Model *> Model::children() {
 
 std::vector<const Model *> Model::children() const {
     return {};
+}
+
+uint64 Model::hash(uint64 seed) const {
+    std::lock_guard scopeLock(*this);
+
+    auto ret{utils::hash::combine(seed, hashThis())};
+
+    for (auto *child : children())
+        ret = child->hash(ret);
+
+    return ret;
+}
+
+uint64 Model::hashThis() const {
+    return 0;
 }
 
 bool Model::processAction(std::unique_ptr<Action>&& action) {

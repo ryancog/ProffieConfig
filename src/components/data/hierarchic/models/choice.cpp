@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "utils/hash.hpp"
+
 using namespace data::hier;
 
 Choice::Choice(Root& root) : Model(root) {}
@@ -32,6 +34,14 @@ bool Choice::choose(int32 idx) {
 
 bool Choice::update(uint32 num, int32 idx) {
     return processAction(std::make_unique<UpdateAction>(num, idx));
+}
+
+uint64 Choice::hashThis() const {
+    ROContext ctxt(*this);
+    return utils::hash::combine(
+        utils::hash::single(ctxt.idx()),
+        utils::hash::single(ctxt.num())
+    );
 }
 
 Choice::ChoiceAction::ChoiceAction(int32 choice) : mIdx{choice} {}

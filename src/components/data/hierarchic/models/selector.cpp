@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "utils/hash.hpp"
+
 using namespace data::hier;
 
 Selector::Selector(Root& root) : Model(root), mChoice(root) {
@@ -34,6 +36,10 @@ data::base::Choice& Selector::choice() const {
 
 bool Selector::bind(const base::Vector *vec) {
     return processAction(std::make_unique<BindAction>(vec));
+}
+
+uint64 Selector::hashThis() const {
+    return utils::hash::single(ROContext(*this).bound());
 }
 
 Selector::BindAction::BindAction(const base::Vector *vec) : mVec{vec} {}

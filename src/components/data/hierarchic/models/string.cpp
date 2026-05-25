@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "utils/hash.hpp"
+
 using namespace data::hier;
 
 String::String(Root& root) : Model(root) {}
@@ -32,6 +34,11 @@ bool String::change(std::string&& str, size pos) {
 
 bool String::move(size pos) {
     return processAction(std::make_unique<MoveAction>(pos));
+}
+
+uint64 String::hashThis() const {
+    // Ignore position.
+    return utils::hash::single(ROContext(*this).val());
 }
 
 String::ChangeAction::ChangeAction(std::string&& str, size pos) :

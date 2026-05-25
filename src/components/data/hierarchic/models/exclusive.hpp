@@ -42,6 +42,8 @@ protected:
      */
     Exclusive(Root&);
 
+    uint64 hashThis() const override;
+
 private:
     std::unique_ptr<base::Bool> create(size) override;
 };

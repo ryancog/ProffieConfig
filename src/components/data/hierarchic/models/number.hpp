@@ -38,6 +38,9 @@ struct DATA_EXPORT Number : base::detail::Number<T>, Model {
 
     bool set(T) override;
     bool update(Number<T>::Params) override;
+
+protected:
+    uint64 hashThis() const override;
 };
 
 template <typename T>
