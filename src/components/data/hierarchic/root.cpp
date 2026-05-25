@@ -49,7 +49,7 @@ void Root::unsuppressActions(bool clearHistory) {
         mActionIdx = eAct_Idx_First;
 
         sendToReceivers(&RecvTable::onActionClear_, lastIdx);
-        sendToReceivers(&RecvTable::onActionIdx_, mActionIdx);
+        sendToReceivers(&RecvTable::onAction_);
         sendToReceivers(&RecvTable::onCanUndo_, false);
         sendToReceivers(&RecvTable::onCanRedo_, false);
     }
@@ -80,23 +80,28 @@ bool Root::capturePerformance() {
 
     if (mPerformanceNesting == 1) {
         // Increment index to the next action list.
+        //
+        // This is alright to increment before the potential call to onCanRedo_
+        // because if it is called, there is in fact actions past the current
+        // one, and it may even be useful to know what action is being
+        // replaced.
         ++mActionIdx;
         
         // If there are actions on the redo side, they need to be cleared.
         if (mActions.size() > mActionIdx) {
             sendToReceivers(&RecvTable::onCanRedo_, false);
 
-            // mActionIdx, thanks to zero-indexing, is the same as the size of
-            // the vector with *only* current actions.
+            // mActionIdx right now is the same as the size of the vector with
+            // *only* current actions (that is, one less than there will be
+            // once this performance is complete).
             //
-            // Resized smaller so that the following push will be accurate
-            // for both w/ redo and w/o redo cases.
+            // Resized so that the following `emplace_back()` will be accurate
+            // for both w/ redo and w/o redo cases. Effectively just truncating
+            // the actions, removing any available redo.
             mActions.resize(mActionIdx);
         }
 
         mActions.emplace_back();
-
-        sendToReceivers(&RecvTable::onActionIdx_, mActionIdx);
     }
 
     return true;
@@ -139,11 +144,7 @@ void Root::recordAction(std::unique_ptr<Action>&& action) {
 
     --mPerformanceNesting;
     if (mPerformanceNesting == 0) {
-        // This is the first action, undo is available now, and it was not
-        // prior.
-        if (mActions.size() == 1)
-            sendToReceivers(&RecvTable::onCanUndo_, true);
-
+        // Try coalesce before anything else
         if (
                 // There's a prior action.
                 mActionIdx > 0 and
@@ -160,6 +161,14 @@ void Root::recordAction(std::unique_ptr<Action>&& action) {
                 --mActionIdx;
             }
         }
+
+        // Call after all processing is complete.
+        sendToReceivers(&RecvTable::onAction_);
+
+        // This is the first action, undo is available now, and it was not
+        // prior.
+        if (mActions.size() == 1)
+            sendToReceivers(&RecvTable::onCanUndo_, true);
 
         mStates.pop_back();
     }
@@ -198,7 +207,7 @@ void Root::Context::undo() const {
 
     model().endReplay();
 
-    model().sendToReceivers(&RecvTable::onActionIdx_, model().mActionIdx);
+    model().sendToReceivers(&RecvTable::onAction_);
     model().sendToReceivers(&RecvTable::onCanRedo_, true);
     model().sendToReceivers(&RecvTable::onCanUndo_, canUndo());
 }
@@ -218,7 +227,7 @@ void Root::Context::redo() const {
 
     model().endReplay();
 
-    model().sendToReceivers(&RecvTable::onActionIdx_, model().mActionIdx);
+    model().sendToReceivers(&RecvTable::onAction_);
     model().sendToReceivers(&RecvTable::onCanUndo_, true);
     model().sendToReceivers(&RecvTable::onCanRedo_, canRedo());
 }

@@ -182,9 +182,9 @@ struct DATA_EXPORT Root::RecvTable : Model::RecvTable {
     Mapping<> onDetach_;
 
     /**
-     * Undone now at action
+     * At different/new action, or the action was updated.
      */
-    Mapping<size> onActionIdx_;
+    Mapping<> onAction_;
 
     /**
      * Actions have been cleared
