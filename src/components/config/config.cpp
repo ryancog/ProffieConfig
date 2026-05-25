@@ -112,9 +112,8 @@ auto Config::children() const -> std::vector<const Model *> {
         &buttons_,
     };
 
-    for (auto& [ver, vec] : mPropMap)
-        for (auto& prop : vec)
-            ret.push_back(prop.get());
+    if (auto *ptr{prop()})
+        ret.push_back(ptr);
 
     return ret;
 }
