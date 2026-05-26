@@ -467,8 +467,8 @@ void MainMenu::onEditConfig() {
         auto *editor{new EditorWindow(this, info)};
 
         const auto onDestroy{[this, editor](
-                wxWindowDestroyEvent& evt
-                ) {
+            wxWindowDestroyEvent& evt
+        ) {
             evt.Skip();
             if (evt.GetEventObject() != editor) return;
 
