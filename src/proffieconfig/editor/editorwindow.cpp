@@ -315,7 +315,9 @@ void EditorWindow::onPage(wxCommandEvent& evt) {
     if (mCurrentPage == evt.GetId())
         return;
 
-    pcui::cripple(this);
+    // Don't cripple `this`
+    if (auto *child{pcui::getUniqueChild(this)})
+        pcui::cripple(child);
 
     // Set this first so it's available during the build.
     mCurrentPage = evt.GetId();
