@@ -32,6 +32,8 @@
 #include "utils/info.hpp"
 #include "versions/info.hpp"
 
+#include "../../tools/arduino.hpp"
+
 void showAbout(wxWindow *parent) {
     wxAboutDialogInfo aboutInfo;
     const auto componentVersions{
@@ -43,9 +45,7 @@ void showAbout(wxWindow *parent) {
         "pcui: v" + pcui::version() + "\n"
         "Utils: v" + utils::version() + "\n"
         "Versions: v" + versions::version() + "\n"
-        // REVIEW
-        // "Arduino CLI: v" + arduino::version() + "\n"
-        //
+        "Arduino CLI: v" + arduino::version() + "\n"
     };
 #   ifdef __WXOSX__
     aboutInfo.SetDescription(_("All-in-one Proffieboard Management Utility"));
