@@ -61,10 +61,6 @@ MainMenu::MainMenu(wxWindow* parent) :
         wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)
     ) {
 
-    // REVIEW
-    // boardSelection.setPersistence(pcui::ChoiceData::Persistence::String);
-    // configSelection.setPersistence(pcui::ChoiceData::Persistence::String);
-
     createMenuBar();
     bindEvents();
 
@@ -224,10 +220,6 @@ pcui::DescriptorPtr MainMenu::ui() {
         }(),
       }
     }();
-
-#   if defined _WIN32 or defined __linux__
-    // boardEntries.emplace_back(_("BOOTLOADER RECOVERY").ToStdString());
-#   endif
 }
 
 void MainMenu::createMenuBar() {
