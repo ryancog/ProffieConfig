@@ -376,6 +376,8 @@ std::optional<std::string> Info::load() {
 
     mConfig.reset(new Config);
 
+    mConfig->suppressActions();
+
     const auto cfgPath{path()};
     if (fs::exists(cfgPath)) { 
         auto err{priv::io::parse(
@@ -390,6 +392,8 @@ std::optional<std::string> Info::load() {
     } else {
         logger.warn("Config (" + cfgPath.string() + ") does not exist, creating new...");
     }
+
+    mConfig->unsuppressActions();
 
     mConfig->mSavedHash = mConfig->hash();
     mConfig->mIsSaved.set(true);
