@@ -25,6 +25,7 @@ const cstring syms::COPYRIGHT{"\xC2\xA9"};
 
 const cstring syms::UP_ARROW{"\xE2\x86\x91"};
 const cstring syms::DOWN_ARROW{"\xE2\x86\x93"};
+const cstring syms::INDENT_ARROWS{"\xE2\x86\xB9"};
 
 const cstring syms::WARNING{"\xE2\x9A\xA0"};
 const cstring syms::NO_ENTRY{"\xE2\x9B\x94\xEF\xB8\x8E"};

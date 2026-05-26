@@ -29,6 +29,7 @@ UI_EXPORT extern const cstring COPYRIGHT;
 
 UI_EXPORT extern const cstring UP_ARROW;
 UI_EXPORT extern const cstring DOWN_ARROW;
+UI_EXPORT extern const cstring INDENT_ARROWS;
 
 UI_EXPORT extern const cstring WARNING;
 UI_EXPORT extern const cstring NO_ENTRY;
