@@ -26,3 +26,21 @@ using namespace config;
 Injection::Injection(Config& config, std::string&& str) :
     Model(config), filename_{std::move(str)} {}
 
+uint64 Injection::hashThis() const {
+    std::error_code ec;
+
+    // Need to make sure the file hasn't been modified by the user, this seems
+    // a reasonable way to do it (rather than hashing the whole file).
+    auto lastTime{fs::last_write_time(filename_, ec)};
+
+    // The error code is ignored here, because the value returned in lastTime
+    // is unique for errors in its own right.
+
+    return utils::hash::combine(
+        utils::hash::single(filename_),
+        // This will drop the high 64 bits. Practically, this should be perfectly
+        // fine for uniqueness.
+        static_cast<uint64>(lastTime.time_since_epoch().count())
+    );
+}
+

@@ -32,6 +32,8 @@ struct Config;
 struct CONFIG_EXPORT Injection : data::hier::Model {
     Injection(Config&, std::string&&);
 
+    uint64 hashThis() const override;
+
     std::string filename_;
 };
 
