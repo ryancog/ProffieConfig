@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/config/styles/style.hpp
+ * components/config/priv/utils/style.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,36 +19,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config/presets/style.hpp"
-#include "data/hierarchic/model.hpp"
+#include "data/base/models/string.hpp"
 
-#include "config_export.h"
+namespace config::priv::style {
 
-namespace config {
+/**
+ * Extract style comments from content.
+ *
+ * @return if extracted any.
+ */
+bool extractComments(
+    std::string& content,
+    size& pos,
+    const data::base::String::Context& comments
+);
 
-struct Config;
+void commentFilter(
+    const data::base::String::ROContext&, std::string& str, size& pos
+);
 
-namespace styles {
+/**
+ * Format the style content.
+ *
+ * @param ignoreLength Ignore the column limit when calculating whether to
+ *                     explode or not.
+ */
+std::string format(const std::string&, bool ignoreLength);
 
-struct CONFIG_EXPORT Style : data::hier::Model {
-    Style(Config&);
-    Style(const Style&, Config&);
-
-    using Model::children;
-    std::vector<const Model *> children() const override;
-
-    /**
-     * @param ignoreLength Ignore the column limit when calculating whether to
-     *                     explode or not.
-     */
-    std::string format(bool ignoreLength = false);
-
-    data::hier::String name_;
-    data::hier::String comments_;
-    data::hier::String content_;
-};
-
-} // namespace styles
-
-} // namespace config
+} // namespace config::priv::style
 

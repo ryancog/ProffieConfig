@@ -35,8 +35,8 @@ void gen::styles(std::ostream& out, const Config& config) {
         auto& style{dynamic_cast<styles::Style&>(*model)};
 
         auto name{data::context(style.name_)};
-        auto comment{data::context(style.style_.comment_)};
-        auto formatted{style.style_.format(true)};
+        auto comment{data::context(style.comments_)};
+        auto formatted{style.format(true)};
 
         if (not comment.val().empty()) {
             out << "/*\n";

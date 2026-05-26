@@ -22,6 +22,7 @@ add_library(config SHARED
     priv/generate/prop.cpp
     priv/generate/styles.cpp
     priv/generate/top.cpp
+    priv/utils/style.cpp
 
     misc/injection.cpp
 

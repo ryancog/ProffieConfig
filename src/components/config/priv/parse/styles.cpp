@@ -23,6 +23,7 @@
 
 #include "config/presets/array.hpp"
 #include "config/presets/preset.hpp"
+#include "config/priv/utils/style.hpp"
 #include "config/styles/style.hpp"
 #include "data/context.hpp"
 #include "utils/string.hpp"
@@ -95,9 +96,8 @@ std::optional<std::string> config::priv::parse::styles(
 
                 auto& style{styles.append<styles::Style>(config)};
                 style.name_.change(std::move(name));
-                style.style_.comment_.change(std::move(comments));
-                style.style_.content_.change(std::move(bladestyle));
-                style.style_.content_.change(style.style_.format());
+                style.comments_.change(std::move(comments));
+                style.content_.change(style::format(bladestyle, false));
 
                 name.clear();
                 bladestyle.clear();

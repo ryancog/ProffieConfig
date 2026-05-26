@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <optional>
+
 #include "config/blades/bladeconfig.hpp"
 #include "config/buttons/button.hpp"
 #include "config/presets/array.hpp"
@@ -26,11 +28,18 @@
 #include "config/presets/style.hpp"
 #include "config/priv/io.hpp"
 #include "config/strings.hpp"
+#include "config/styles/style.hpp"
 #include "data/context.hpp"
 
 using namespace config;
 using namespace config::priv;
 using namespace config::blades;
+
+namespace {
+
+std::optional<std::string> getStyleImbalance(const std::string&);
+
+} // namespace
 
 std::optional<std::string> gen::preCheck(
     const Config& config, logging::Branch& lBranch
@@ -222,51 +231,30 @@ std::optional<std::string> gen::preCheck(
                 const auto& model{styles.children()[styleIdx]};
                 auto& style{dynamic_cast<presets::Style&>(*model)};
 
-                std::vector<char> depth;
-
                 auto content{data::context(style.content_)};
-                for (const char chr : content.val()) {
-                    if (chr == '<' or chr == '(') {
-                        depth.push_back(chr);
-                        continue;
-                    }
-                    if (chr == '>' or chr == ')') {
-                        if (depth.empty()) {
-                            return errorMessage(
-                                logger, STYLE_ERR_STR, styleIdx, presetIdx,
-                                presetName.val(), arrayName.val(),
-                                std::string{chr}
-                            );
-                        }
-
-                        if (
-                                (chr == '>' and depth.back() != '<') or
-                                (chr == ')' and depth.back() != '(')
-                           ) {
-                            return errorMessage(
-                                logger, STYLE_ERR_STR, styleIdx, presetIdx,
-                                presetName.val(), arrayName.val(),
-                                std::string{depth.back(), chr}
-                            );
-                        }
-
-                        depth.pop_back();
-                        continue;
-                    }
-                    if (chr == '"') {
-                        if (not depth.empty() and depth.back() == '"') depth.pop_back();
-                        else depth.push_back(chr);
-                    }
-                }
-
-                if (not depth.empty()) {
+                if (auto imbalance{getStyleImbalance(content.val())}) {
                     return errorMessage(
                         logger, STYLE_ERR_STR, styleIdx, presetIdx,
                         presetName.val(), arrayName.val(),
-                        std::string{depth.back()}
+                        *imbalance
                     );
                 }
             }
+        }
+    }
+
+    auto styles{data::context(config.styles_)};
+    constexpr cstring ALIAS_ERR_STR{wxTRANSLATE("Style Alias %s has mismatched %s")};
+    for (const auto& model : styles.children()) {
+        auto& style{dynamic_cast<styles::Style&>(*model)};
+
+        auto name{data::context(style.name_)};
+
+        auto content{data::context(style.content_)};
+        if (auto imbalance{getStyleImbalance(content.val())}) {
+            return errorMessage(
+                logger, STYLE_ERR_STR, name.val(), *imbalance
+            );
         }
     }
 
@@ -291,6 +279,41 @@ std::optional<std::string> gen::preCheck(
     }
 
     return std::nullopt;
-
 }
+
+namespace {
+
+std::optional<std::string> getStyleImbalance(const std::string& style) {
+    std::vector<char> depth;
+
+    for (const char chr : style) {
+        if (chr == '<' or chr == '(') {
+            depth.push_back(chr);
+            continue;
+        }
+        if (chr == '>' or chr == ')') {
+            if (depth.empty())
+                return std::string{chr};
+
+            if (
+                    (chr == '>' and depth.back() != '<') or
+                    (chr == ')' and depth.back() != '(')
+               ) return std::string{depth.back(), chr};
+
+            depth.pop_back();
+            continue;
+        }
+        if (chr == '"') {
+            if (not depth.empty() and depth.back() == '"') depth.pop_back();
+            else depth.push_back(chr);
+        }
+    }
+
+    if (not depth.empty())
+        return std::string{depth.back()};
+
+    return std::nullopt;
+}
+
+} // namespace
 
