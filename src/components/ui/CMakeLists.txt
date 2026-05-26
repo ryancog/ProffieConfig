@@ -58,6 +58,7 @@ add_library(ui SHARED
     layout/collapsible.cpp
     layout/group.cpp
     layout/panel.cpp
+    layout/notebook.cpp
     layout/scrolled.cpp
     layout/spacer.cpp
     layout/split.cpp
