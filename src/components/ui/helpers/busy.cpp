@@ -19,34 +19,97 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cctype>
+#include <map>
+
 #include <wx/app.h>
 #include <wx/busycursor.h>
 #include <wx/thread.h>
 
+#include "utils/types.hpp"
+
 using namespace pcui;
 
-BusyTracker::BusyTracker(wxWindow *win) : mWindow{win} {
-    if (wxIsMainThread()) {
-        wxBeginBusyCursor();
-    } else {
-        const auto beginBusy{[] { wxBeginBusyCursor(); }};
+namespace {
 
-        if (mWindow) mWindow->CallAfter(beginBusy);
-        else wxTheApp->CallAfter(beginBusy);
+struct WindowData {
+    size count_;
+    wxCursor prevCursor_;
+};
+
+std::map<wxWindow *, WindowData> datas;
+
+void beginBusy(wxWindow *);
+void endBusy(wxWindow *);
+
+} // namespace
+
+BusyTracker::BusyTracker(wxWindow *win) : mWindow{win} {
+    assert(mWindow != nullptr);
+
+    if (wxIsMainThread()) {
+        beginBusy(mWindow);
+    } else {
+        // Do not capture `this`, it will likely die (stack created or in
+        // thread closure data) before the call completes.
+        mWindow->CallAfter([win=mWindow] { beginBusy(win); });
     }
 }
 
 BusyTracker::~BusyTracker() {
     if (wxIsMainThread()) {
-        wxEndBusyCursor();
+        endBusy(mWindow);
     } else {
-        const auto endBusy{[] { wxEndBusyCursor(); }};
-
-        if (mWindow) mWindow->CallAfter(endBusy);
-        else wxTheApp->CallAfter(endBusy);
+        mWindow->CallAfter([win=mWindow] { endBusy(win); });
     }
 }
 
-BusyTracker::BusyTracker(const BusyTracker& other) :
-    BusyTracker(other.mWindow) {}
+BusyTracker::BusyTracker(const BusyTracker& other) : BusyTracker(other.mWindow) {}
+
+namespace {
+
+void beginBusy(wxWindow *win) {
+    auto iter{datas.find(win)};
+
+    if (iter != datas.end()) {
+        ++iter->second.count_;
+        return;
+    }
+
+    auto& data{datas[win]};
+
+    data.count_ = 1;
+    data.prevCursor_ = win->GetCursor();
+
+    win->SetCursor(wxCURSOR_WAIT);
+
+    // TLWs must be explicitly disabled, wxWidgets won't do it.
+    // Prevent input which, e.g. when data is locked for the operation,
+    // could cause the application to hang until the operation is complete.
+    for (auto *child : win->GetChildren()) {
+        if (child->IsTopLevel())
+            child->Disable();
+    }
+}
+
+void endBusy(wxWindow *win) {
+    auto iter{datas.find(win)};
+    auto& data{iter->second};
+
+    --data.count_;
+
+    if (data.count_ > 0)
+        return;
+
+    win->SetCursor(data.prevCursor_);
+
+    for (auto *child : win->GetChildren()) {
+        if (child->IsTopLevel())
+            child->Enable();
+    }
+
+    datas.erase(iter);
+}
+
+} // namespace
 

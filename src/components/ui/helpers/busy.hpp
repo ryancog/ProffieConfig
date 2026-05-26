@@ -30,7 +30,7 @@ namespace pcui {
  * Safe to have cross thread boundaries (including non-main)
  */
 struct UI_EXPORT BusyTracker {
-    BusyTracker(wxWindow * = nullptr);
+    BusyTracker(wxWindow *);
     ~BusyTracker();
 
     BusyTracker(const BusyTracker&);

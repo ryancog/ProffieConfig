@@ -232,7 +232,7 @@ void EditorWindow::onExport(wxCommandEvent&) {
 }
 
 void EditorWindow::onVerify(wxCommandEvent&) {
-    pcui::BusyTracker busy;
+    pcui::BusyTracker busy(this);
 
     auto *prog{new pcui::ProgressDialog(
         this,
