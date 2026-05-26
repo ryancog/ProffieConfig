@@ -29,6 +29,7 @@ namespace data::prim {
 struct DATA_EXPORT Vector : base::Vector, Model {
     bool insert(size, std::unique_ptr<base::Model>&&) override;
     bool remove(size) override;
+    bool clear() override;
     bool swap(size) override;
 };
 

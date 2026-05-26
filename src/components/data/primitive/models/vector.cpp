@@ -41,6 +41,20 @@ bool Vector::remove(size pos) {
     return true;
 }
 
+bool Vector::clear() {
+    std::lock_guard scopeLock(*this);
+
+    ROContext ctxt(*this);
+
+    if (ctxt.children().empty())
+        return false;
+
+    while (not ctxt.children().empty())
+        doRemove(0);
+
+    return true;
+}
+
 bool Vector::swap(size pos) {
     std::lock_guard scopeLock(*this);
 

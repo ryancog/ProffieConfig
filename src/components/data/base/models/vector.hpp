@@ -54,6 +54,11 @@ struct DATA_EXPORT Vector : virtual Model {
     virtual bool remove(size) = 0;
 
     /**
+     * Remove all items.
+     */
+    virtual bool clear() = 0;
+
+    /**
      * Move model up or down in the list.
      */
     bool moveUp(size);
@@ -115,6 +120,8 @@ struct DATA_EXPORT Vector::Context : Model::Context, ROContext {
      * @return if found and removed
      */
     bool remove(Model&) const;
+
+    void clear() const;
 
     void moveUp(size) const;
     void moveDown(size) const;

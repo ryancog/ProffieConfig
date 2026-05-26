@@ -49,6 +49,10 @@ bool Vector::remove(size idx) {
     return processAction(std::make_unique<RemoveAction>(idx));
 }
 
+bool Vector::clear() {
+    return processAction(std::make_unique<ClearAction>());
+}
+
 bool Vector::swap(size idx) {
     return processAction(std::make_unique<SwapAction>(idx));
 }
@@ -93,6 +97,29 @@ void Vector::RemoveAction::retract() {
     source<Vector>().doInsert(mPos, std::move(mModel));
 
     Receiver::maybeActivate(raw);
+}
+
+Vector::ClearAction::ClearAction() = default;
+
+bool Vector::ClearAction::setup() {
+    return not source<Vector>().children().empty();
+}
+
+void Vector::ClearAction::perform() {
+    auto& vec{source<Vector>()};
+
+    mModels.reserve(vec.children().size());
+    while (not vec.children().empty())
+        mModels.push_back(vec.doRemove(0));
+}
+
+void Vector::ClearAction::retract() {
+    auto& vec{source<Vector>()};
+
+    for (size idx{0}; idx < mModels.size(); ++idx)
+        vec.doInsert(idx, std::move(mModels[idx]));
+
+    mModels.clear();
 }
 
 Vector::SwapAction::SwapAction(size pos) : mPos{pos} {}

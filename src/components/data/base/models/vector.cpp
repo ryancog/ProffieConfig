@@ -134,6 +134,10 @@ bool Vector::Context::remove(Model& model) const {
     return false;
 }
 
+void Vector::Context::clear() const {
+    model().clear();
+}
+
 void Vector::Context::moveUp(size idx) const {
     model().swap(idx - 1);
 }

@@ -29,6 +29,7 @@ namespace data::hier {
 struct DATA_EXPORT Vector : base::Vector, Model {
     struct InsertAction;
     struct RemoveAction;
+    struct ClearAction;
     struct SwapAction;
 
     Vector(Root&);
@@ -38,6 +39,7 @@ struct DATA_EXPORT Vector : base::Vector, Model {
 
     bool insert(size, std::unique_ptr<base::Model>&&) override;
     bool remove(size) override;
+    bool clear() override;
     bool swap(size) override;
 };
 
@@ -63,6 +65,17 @@ struct DATA_EXPORT Vector::RemoveAction : Action {
 private:
     const size mPos;
     std::unique_ptr<base::Model> mModel;
+};
+
+struct DATA_EXPORT Vector::ClearAction : Action {
+    ClearAction();
+
+    bool setup() override;
+    void perform() override;
+    void retract() override;
+
+private:
+    std::vector<std::unique_ptr<base::Model>> mModels;
 };
 
 struct DATA_EXPORT Vector::SwapAction : Action {
