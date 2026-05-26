@@ -85,6 +85,11 @@ EditorWindow::~EditorWindow() {
     delete mAnimationTimer;
 }
 
+void EditorWindow::onActivate() {
+    onCanUndo();
+    onCanRedo();
+}
+
 void EditorWindow::onDeactivate() {
     if (mInjectionDlg) {
         pcui::cripple(mInjectionDlg);
@@ -105,6 +110,10 @@ void EditorWindow::createMenuBar() {
         _("Manage Injections...") + "\tCtrl+Alt+I"
     );
 
+    auto *edit{new wxMenu};
+    edit->Append(wxID_UNDO);
+    edit->Append(wxID_REDO);
+
     auto *tools{new wxMenu};
     tools->Append(
         eID_Style_Editor,
@@ -114,6 +123,7 @@ void EditorWindow::createMenuBar() {
 
     auto *menuBar{new wxMenuBar};
     menuBar->Append(file, _("&File"));
+    menuBar->Append(edit, _("&Edit"));
     menuBar->Append(tools, _("&Tools"));
     appendDefaultMenuItems(menuBar);
 
@@ -161,11 +171,21 @@ void EditorWindow::bindEvents() {
     }()};
     amend(mInfo.config()->isSaved(), savedTable);
 
+    static const auto actionTable{[] {
+        data::hier::Root::RecvTable table;
+        table.onCanUndo_ = data::map(&EditorWindow::onCanUndo);
+        table.onCanRedo_ = data::map(&EditorWindow::onCanRedo);
+        return table;
+    }()};
+    amend(*mInfo.config(), actionTable);
+
     Bind(wxEVT_CLOSE_WINDOW, &EditorWindow::onClose, this);
     Bind(wxEVT_MENU, &EditorWindow::onSave, this, wxID_SAVE);
     Bind(wxEVT_MENU, &EditorWindow::onExport, this, eID_Export);
     Bind(wxEVT_MENU, &EditorWindow::onVerify, this, eID_Verify);
     Bind(wxEVT_MENU, &EditorWindow::onManageInjections, this, eID_Injections);
+    Bind(wxEVT_MENU, &EditorWindow::onUndo, this, wxID_UNDO);
+    Bind(wxEVT_MENU, &EditorWindow::onRedo, this, wxID_REDO);
     Bind(wxEVT_MENU, &EditorWindow::onStyleEditor, this, eID_Style_Editor);
     Bind(wxEVT_MENU, &EditorWindow::onPage, this, ePage_First, ePage_Last);
     Bind(wxEVT_TIMER, &EditorWindow::onTimer, this);
@@ -177,6 +197,16 @@ void EditorWindow::onIsSaved() {
 #   ifdef __WXOSX__
     OSXSetModified(not ctxt.val());
 #   endif
+}
+
+void EditorWindow::onCanUndo() {
+    auto ctxt{data::context(*mInfo.config())};
+    GetMenuBar()->Enable(wxID_UNDO, ctxt.canUndo());
+}
+
+void EditorWindow::onCanRedo() {
+    auto ctxt{data::context(*mInfo.config())};
+    GetMenuBar()->Enable(wxID_REDO, ctxt.canRedo());
 }
 
 void EditorWindow::onClose(wxCloseEvent& evt) {
@@ -265,6 +295,14 @@ void EditorWindow::onManageInjections(wxCommandEvent&) {
     }};
 
     mInjectionDlg->Show();
+}
+
+void EditorWindow::onUndo(wxCommandEvent&) {
+    data::context(*mInfo.config()).undo();
+}
+
+void EditorWindow::onRedo(wxCommandEvent&) {
+    data::context(*mInfo.config()).redo();
 }
 
 void EditorWindow::onStyleEditor(wxCommandEvent&) {

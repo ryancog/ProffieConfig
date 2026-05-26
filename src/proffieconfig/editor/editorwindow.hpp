@@ -42,6 +42,7 @@ struct EditorWindow : pcui::Frame, data::Receiver {
     bool save();
 
 private:
+    void onActivate() override;
     void onDeactivate() override;
 
     void createMenuBar();
@@ -50,12 +51,21 @@ private:
     void bindEvents();
 
     void onIsSaved();
+    void onCanUndo();
+    void onCanRedo();
+
     void onClose(wxCloseEvent&);
+
+    void onVerify(wxCommandEvent&);
     void onSave(wxCommandEvent&);
     void onExport(wxCommandEvent&);
-    void onVerify(wxCommandEvent&);
     void onManageInjections(wxCommandEvent&);
+
+    void onUndo(wxCommandEvent&);
+    void onRedo(wxCommandEvent&);
+
     void onStyleEditor(wxCommandEvent&);
+
     void onPage(wxCommandEvent&);
     void onTimer(wxTimerEvent&);
 
