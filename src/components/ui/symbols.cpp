@@ -32,6 +32,8 @@ const cstring syms::NO_ENTRY{"\xE2\x9B\x94\xEF\xB8\x8E"};
 const cstring syms::DOUBLE_SQUARES{"\xE2\xA7\x89"};
 const cstring syms::CLEAR{"\xE2\x8C\xA6"};
 
+const cstring syms::RELOAD{"\xE2\x86\xBB"};
+
 const cstring syms::PLUS{"\xEF\xBC\x8B"};
 const cstring syms::MINUS{"\xEF\xBC\x8D"};
 
