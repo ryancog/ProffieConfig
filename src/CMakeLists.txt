@@ -12,7 +12,6 @@ set(SHARED_COMPONENTS
     ui
     utils
     versions
-    # versions_manager
 )
 
 set(STATIC_COMPONENTS

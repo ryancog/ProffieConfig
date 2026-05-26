@@ -44,7 +44,6 @@ void showAbout(wxWindow *parent) {
         "Utils: v" + utils::version() + "\n"
         "Versions: v" + versions::version() + "\n"
         // REVIEW
-        // "Versions Manager: v" + versions_manager::version() + "\n"
         // "Arduino CLI: v" + arduino::version() + "\n"
         //
     };

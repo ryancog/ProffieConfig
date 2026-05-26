@@ -37,8 +37,6 @@ target_link_libraries(test
     process-static
     ui-static
     utils-static
-    versions-static
-    versions_manager-static
 )
 
 target_compile_definitions(test PRIVATE
