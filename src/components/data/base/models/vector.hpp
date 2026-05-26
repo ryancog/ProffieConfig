@@ -81,6 +81,11 @@ struct DATA_EXPORT Vector::ROContext : virtual Model::ROContext {
     template <typename M = Vector>
     [[nodiscard]] auto& model() const { return Model::ROContext::model<M>(); }
 
+    [[nodiscard]] std::optional<size> find(const Model&) const;
+
+    [[nodiscard]] bool canMoveUp(size) const;
+    [[nodiscard]] bool canMoveDown(size) const;
+
     [[nodiscard]] std::span<const std::unique_ptr<Model>>
         children() const LIFETIMEBOUND;
 };

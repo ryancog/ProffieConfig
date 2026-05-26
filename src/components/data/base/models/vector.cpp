@@ -85,6 +85,24 @@ void Vector::doSwap(size idx) {
 
 Vector::ROContext::ROContext(const Vector& vec) : Model::ROContext(vec) {}
 
+std::optional<size> Vector::ROContext::find(const Model& model) const {
+    for (size idx{0}; idx < children().size(); ++idx) {
+        if (children()[idx].get() != &model) continue;
+
+        return idx;
+    }
+
+    return std::nullopt;
+}
+
+bool Vector::ROContext::canMoveUp(size idx) const {
+    return idx > 0;
+}
+
+bool Vector::ROContext::canMoveDown(size idx) const {
+    return idx + 1 != model().mChildren.size();
+}
+
 auto Vector::ROContext::children(
 ) const -> std::span<const std::unique_ptr<Model>> {
     return model().mChildren;
@@ -108,10 +126,8 @@ void Vector::Context::remove(size idx) const {
 }
 
 bool Vector::Context::remove(Model& model) const {
-    for (size idx{0}; idx < children().size(); ++idx) {
-        if (children()[idx].get() != &model) continue;
-
-        remove(idx);
+    if (auto pos{find(model)}) {
+        remove(*pos);
         return true;
     }
 
