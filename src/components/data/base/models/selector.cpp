@@ -92,6 +92,9 @@ bool Selector::canMoveUp(const Choice::ROContext& ctxt) {
 }
 
 bool Selector::canMoveDown(const Choice::ROContext& ctxt) {
+    if (ctxt.idx() == -1)
+        return false;
+
     return ctxt.idx() + 1 != ctxt.num();
 }
 
