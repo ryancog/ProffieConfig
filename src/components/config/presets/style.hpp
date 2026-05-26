@@ -41,7 +41,7 @@ struct CONFIG_EXPORT Style : data::hier::Model {
      * @param ignoreLength Ignore the column limit when calculating whether to
      *                     explode or not.
      */
-    std::string format(bool ignoreLength = false);
+    [[nodiscard]] std::string format(bool ignoreLength = false);
 
     data::hier::String comment_;
     data::hier::String content_;
