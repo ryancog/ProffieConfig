@@ -50,7 +50,7 @@ Preset::Preset(Config& config) :
         uint32 numTrimmed{};
         utils::trim(
             str,
-            {.allowAlpha=true, .allowNum=true, .safeList="\\"},
+            {.allowAlpha=true, .allowNum=true, .safeList=" \\"},
             &numTrimmed,
             pos
         );
