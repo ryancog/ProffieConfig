@@ -771,8 +771,17 @@ void PresetsPage::onAddPresetButton() {
 
 void PresetsPage::onRemovePresetButton() {
     auto sel{data::context(mPresetSel)};
+    auto choice{data::context(mPresetSel.choice())};
     auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
-    vec.remove(sel.choiceIdx());
+
+    auto lastIdx{choice.idx()};
+
+    vec.remove(choice.idx());
+
+    // Try to keep selection around the area of the last one, especially for
+    // if user wants to delete several items.
+    if (lastIdx < choice.num())
+        choice.choose(lastIdx);
 }
 
 void PresetsPage::onMoveUpButton() {
