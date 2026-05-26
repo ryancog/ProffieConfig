@@ -266,11 +266,13 @@ void versions::loadLocal(logging::Branch *lBranch) {
         logger.error("Failed to load props: " + ec.message());
     }
 
-
     logger.info("Done");
 }
 
-std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
+std::optional<std::string> versions::fetch(
+    logging::Branch *lBranch,
+    pcui::ProgressDialog *prog
+) {
     auto& logger{logging::Branch::optCreateLogger("versions::fetch()", lBranch)};
 
     wxURI uri;
@@ -279,7 +281,10 @@ std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
     std::istringstream stream;
     pconf::Data data;
 
-    logger.info("Downloading prop manifest...");
+    constexpr cstring PROP_MAN_MSG{wxTRANSLATE("Downloading prop manifest...")};
+    if (prog) prog->set(10, wxGetTranslation(PROP_MAN_MSG));
+    logger.info(PROP_MAN_MSG);
+
     uri = paths::remoteAssets() + "/props/manifest.pconf";
     request = wxWebSessionSync::GetDefault().CreateRequest(
         uri.BuildURI()
@@ -293,6 +298,8 @@ std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
     }
 
     stream.str(request.GetResponse().AsString().ToStdString());
+
+    if (prog) prog->set(30, _("Processing prop manifest..."));
 
     if (not pconf::read(stream, data, logger.binfo("Reading prop manifest file..."))) {
         logger.error("Prop Manifest Parse Failed.");
@@ -357,7 +364,10 @@ std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
         }
     }
 
-    logger.info("Downloading ProffieOS manifest...");
+    constexpr cstring OS_MAN_MSG{wxTRANSLATE("Downloading ProffieOS manifest...")};
+    if (prog) prog->set(60, wxGetTranslation(OS_MAN_MSG));
+    logger.info(OS_MAN_MSG);
+
     uri = paths::remoteAssets() + "/ProffieOS/manifest.pconf";
     request = wxWebSessionSync::GetDefault().CreateRequest(
         uri.BuildURI()
@@ -372,6 +382,8 @@ std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
 
     stream.str(request.GetResponse().AsString().ToStdString());
     stream.clear();
+
+    if (prog) prog->set(80, _("Processing ProffieOS manifest..."));
 
     if (not pconf::read(stream, data, logger.binfo("Reading ProffieOS manifest file..."))) {
         logger.error("ProffieOS Manifest Parse Failed.");

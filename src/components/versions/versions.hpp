@@ -23,6 +23,7 @@
 #include <string>
 
 #include "log/branch.hpp"
+#include "ui/dialogs/progress.hpp"
 #include "utils/string.hpp"
 #include "utils/version.hpp"
 
@@ -44,7 +45,10 @@ VERSIONS_EXPORT void loadLocal(logging::Branch * = nullptr);
 /**
  * Fetch available downloads from server.
  */
-VERSIONS_EXPORT std::optional<std::string> fetch(logging::Branch * = nullptr);
+VERSIONS_EXPORT std::optional<std::string> fetch(
+    logging::Branch * = nullptr,
+    pcui::ProgressDialog * = nullptr
+);
 
 /**
  * Install default downloads for this installation.
