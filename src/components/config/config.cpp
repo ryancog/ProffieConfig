@@ -110,6 +110,8 @@ auto Config::children() const -> std::vector<const Model *> {
         &presetArrays_,
         &bladeConfigs_,
         &buttons_,
+        &injections_,
+        &styles_,
     };
 
     if (auto *ptr{prop()})
