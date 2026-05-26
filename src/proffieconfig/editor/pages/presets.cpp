@@ -789,18 +789,13 @@ void PresetsPage::onMoveDownButton() {
 
 void PresetsPage::onDuplicateButton() {
     auto sel{data::context(mPresetSel)};
-    auto vec{data::context(
-        const_cast<data::base::Vector&>(*sel.bound())
-    )};
-
-    auto& source{dynamic_cast<config::presets::Preset&>(
-        *vec.children()[sel.choiceIdx()]
-    )};
+    auto vec{data::context(const_cast<data::base::Vector&>(*sel.bound()))};
+    auto *source{sel.selected<config::presets::Preset>()};
 
     vec.insert(
         sel.choiceIdx() + 1,
         std::make_unique<config::presets::Preset>(
-            source, mConfig
+            *source, mConfig
         )
     );
     mPresetSel.choice().choose(sel.choiceIdx() + 1);

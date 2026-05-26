@@ -332,18 +332,13 @@ void StyleAliasesDlg::onMoveDownButton() {
 
 void StyleAliasesDlg::onDuplicateButton() {
     auto sel{data::context(mStyleSel)};
-    auto vec{data::context(
-        const_cast<data::base::Vector&>(*sel.bound())
-    )};
-
-    auto& source{dynamic_cast<config::styles::Style&>(
-        *vec.children()[sel.choiceIdx()]
-    )};
+    auto vec{data::context(const_cast<data::base::Vector&>(*sel.bound()))};
+    auto *source{sel.selected<config::styles::Style>()};
 
     vec.insert(
         sel.choiceIdx() + 1,
         std::make_unique<config::styles::Style>(
-            source, mConfig
+            *source, mConfig
         )
     );
     mStyleSel.choice().choose(sel.choiceIdx() + 1);
