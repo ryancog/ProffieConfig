@@ -27,6 +27,7 @@
 #include "ui/types.hpp"
 
 #include "../dialogs/presetarray.hpp"
+#include "../dialogs/stylealiases.hpp"
 
 struct PresetsPage : data::Receiver {
     PresetsPage(config::Config&);
@@ -59,6 +60,8 @@ private:
     void onMoveDownButton();
     void onDuplicateButton();
 
+    void onStylesButton(const pcui::CallbackContext&);
+
     void onArrayChoice();
     void onPresetChoice();
     void onDisplayChoice();
@@ -74,6 +77,7 @@ private:
     
     std::vector<std::unique_ptr<data::prim::String>> mBladeStrings;
 
-    PresetArrayDlg *mDlg{nullptr};
+    PresetArrayDlg *mArrayDlg{nullptr};
+    StyleAliasesDlg *mStylesDlg{nullptr};
 };
 

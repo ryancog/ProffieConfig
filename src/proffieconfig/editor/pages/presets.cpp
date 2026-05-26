@@ -84,6 +84,13 @@ PresetsPage::PresetsPage(config::Config& config) : mConfig{config} {
 }
 
 void PresetsPage::deinit() {
+    if (mStylesDlg) {
+        mStylesDlg->deinit();
+        mStylesDlg->CallAfter([dlg=mStylesDlg] {
+            dlg->Destroy();
+        });
+    }
+
     deactivate();
 }
 
@@ -123,6 +130,14 @@ pcui::DescriptorPtr PresetsPage::selection() {
       .base_={.expand_=true},
       .orient_=wxVERTICAL,
       .children_={
+        pcui::Button{
+          .win_={.base_={.expand_=true}},
+          .label_=_("Style Aliases"),
+          .func_=[this](const pcui::CallbackContext& ctxt) {
+              onStylesButton(ctxt);
+          }
+        }(),
+        pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         pcui::Group{
           .win_={.base_={.expand_=true}},
           .label_=_("Presets Array"),
@@ -138,6 +153,7 @@ pcui::DescriptorPtr PresetsPage::selection() {
                       .minSize_={150, -1},
                       .proportion_=1,
                     },
+                    .tooltip_=_("The currently-selected preset array to be edited.\nEach preset array has unique presets."),
                   },
                   .data_=mArraySel,
                   .style_=pcui::Choice::PopUp{
@@ -238,7 +254,7 @@ pcui::DescriptorPtr PresetsPage::selection() {
                       .expand_=true,
                       .proportion_=1,
                     },
-                    .tooltip_=_("The currently-selected preset array to be edited.\nEach preset array has unique presets."),
+                    .tooltip_=_("The preset to edit."),
                   },
                   .data_=mPresetSel,
                   .style_=pcui::Choice::List{},
@@ -670,9 +686,9 @@ void PresetsPage::updateBladeStrings() {
 }
 
 void PresetsPage::onEditButton(const pcui::CallbackContext& ctxt) {
-    if (mDlg) {
-        mDlg->Show();
-        mDlg->Raise();
+    if (mArrayDlg) {
+        mArrayDlg->Show();
+        mArrayDlg->Raise();
         return;
     }
 
@@ -680,19 +696,19 @@ void PresetsPage::onEditButton(const pcui::CallbackContext& ctxt) {
 
     auto sel{data::context(mArraySel)};
     auto& cfg{dynamic_cast<Array&>(*sel.selected())};
-    mDlg = new PresetArrayDlg(ctxt.topLevel_, cfg, false);
+    mArrayDlg = new PresetArrayDlg(ctxt.topLevel_, cfg, false);
     const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
-        if (evt.GetEventObject() == mDlg) mDlg = nullptr;
+        if (evt.GetEventObject() == mArrayDlg) mArrayDlg = nullptr;
     }};
-    mDlg->Bind(wxEVT_DESTROY, onDestroy);
+    mArrayDlg->Bind(wxEVT_DESTROY, onDestroy);
 
-    mDlg->Show();
+    mArrayDlg->Show();
 }
 
 void PresetsPage::onAddButton(const pcui::CallbackContext& ctxt) {
     // Only ever allow one of these dialogs. Not a technical
     // limitation, just don't want things cluttered.
-    if (mDlg) mDlg->Destroy();
+    if (mArrayDlg) mArrayDlg->Destroy();
 
     auto vec{data::context(mConfig.presetArrays_)};
     auto& cfg{vec.append<config::presets::Array>(mConfig)};
@@ -722,17 +738,13 @@ void PresetsPage::onRemoveButton() {
 
 void PresetsPage::onAddPresetButton() {
     auto sel{data::context(mPresetSel)};
-    auto& vec{
-        const_cast<data::base::Vector&>(*sel.bound())
-    };
-    vec.append(std::make_unique<config::presets::Preset>(mConfig));
+    auto vec{data::context(const_cast<data::base::Vector&>(*sel.bound()))};
+    vec.append<config::presets::Preset>(mConfig);
 }
 
 void PresetsPage::onRemovePresetButton() {
     auto sel{data::context(mPresetSel)};
-    auto& vec{
-        const_cast<data::base::Vector&>(*sel.bound())
-    };
+    auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
     vec.remove(sel.choiceIdx());
 }
 
@@ -767,11 +779,28 @@ void PresetsPage::onDuplicateButton() {
     mPresetSel.choice().choose(sel.choiceIdx() + 1);
 }
 
-void PresetsPage::onArrayChoice() {
-    if (mDlg) {
-        pcui::cripple(mDlg);
+void PresetsPage::onStylesButton(const pcui::CallbackContext& ctxt) {
+    if (mStylesDlg) {
+        mStylesDlg->Show();
+        mStylesDlg->Raise();
+        return;
+    }
 
-        mDlg->CallAfter([dlg=mDlg] {
+    mStylesDlg = new StyleAliasesDlg(ctxt.topLevel_, mConfig);
+    const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
+        if (evt.GetEventObject() == mStylesDlg)
+            mStylesDlg = nullptr;
+    }};
+    mStylesDlg->Bind(wxEVT_DESTROY, onDestroy);
+
+    mStylesDlg->Show();
+}
+
+void PresetsPage::onArrayChoice() {
+    if (mArrayDlg) {
+        pcui::cripple(mArrayDlg);
+
+        mArrayDlg->CallAfter([dlg=mArrayDlg] {
             dlg->Destroy();
         });
     }
