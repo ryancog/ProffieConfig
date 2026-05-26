@@ -23,6 +23,7 @@
 #include <cstring>
 #include <filesystem>
 #include <optional>
+#include <unordered_set>
 #include <variant>
 
 #ifdef _WIN32
@@ -46,6 +47,7 @@
 #include "config/config.hpp"
 #include "config/priv/io.hpp"
 #include "config/misc/injection.hpp"
+#include "config/styles/style.hpp"
 #include "data/context.hpp"
 #include "log/context.hpp"
 #include "log/logger.hpp"
@@ -751,6 +753,23 @@ std::optional<wxString> precheckCompile(
     if (bladeConfigs.children().empty()) {
         logger.error("Config has no blade arrays, cannot compile.");
         return _("Config must have at least one blade array to compile.");
+    }
+
+    auto styles{data::context(config.styles_)};
+    std::unordered_set<std::string> aliasNames;
+    for (auto& model : styles.children()) {
+        auto& style{dynamic_cast<config::styles::Style&>(*model)};
+
+        auto ctxt{data::context(style.name_)};
+        const auto& name{ctxt.val()};
+
+        if (aliasNames.contains(name)) {
+            constexpr cstring MSG{wxTRANSLATE("Config has style aliases with duplicate name \"%s\".")};
+            logger.error(wxString::Format(MSG, name).ToStdString());
+            return wxString::Format(wxGetTranslation(MSG), name).ToStdString();
+        }
+
+        aliasNames.insert(name);
     }
 
     return std::nullopt;
