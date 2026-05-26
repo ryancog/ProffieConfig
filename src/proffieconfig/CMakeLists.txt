@@ -20,6 +20,7 @@ add_executable(proffieconfig WIN32
     editor/dialogs/bladearray.cpp
     editor/dialogs/buttons.cpp
     editor/dialogs/customopts.cpp
+    editor/dialogs/injections.cpp
     editor/dialogs/presetarray.cpp
     editor/dialogs/propbuttons.cpp
     editor/dialogs/propinfo.cpp

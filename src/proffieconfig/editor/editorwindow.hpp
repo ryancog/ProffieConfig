@@ -30,6 +30,7 @@
 #include "pages/props.hpp"
 #include "pages/presets.hpp"
 #include "pages/blades.hpp"
+#include "dialogs/injections.hpp"
 
 struct EditorWindow : pcui::Frame, data::Receiver {
     EditorWindow(wxWindow *, config::Info&);
@@ -40,9 +41,9 @@ struct EditorWindow : pcui::Frame, data::Receiver {
     // Handles errors
     bool save();
 
-    [[nodiscard]] config::Config& getOpenConfig() const;
-
 private:
+    void onDeactivate() override;
+
     void createMenuBar();
     void createToolBar();
 
@@ -53,7 +54,7 @@ private:
     void onSave(wxCommandEvent&);
     void onExport(wxCommandEvent&);
     void onVerify(wxCommandEvent&);
-    void onAddInjection(wxCommandEvent&);
+    void onManageInjections(wxCommandEvent&);
     void onStyleEditor(wxCommandEvent&);
     void onPage(wxCommandEvent&);
     void onTimer(wxTimerEvent&);
@@ -66,6 +67,7 @@ private:
     PropsPage mPropsPage;
     BladesPage mBladesPage;
     PresetsPage mPresetsPage;
+    InjectionsDlg *mInjectionDlg{nullptr};
 
     enum {
         ePage_General = wxID_HIGHEST,
@@ -77,7 +79,7 @@ private:
 
         eID_Export,
         eID_Verify,
-        eID_Add_Injection,
+        eID_Injections,
         eID_Style_Editor,
 
         ePage_First = ePage_General,

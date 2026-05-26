@@ -41,8 +41,6 @@
 #include "ui/utils.hpp"
 #include "ui/values.hpp"
 #include "utils/defer.hpp"
-#include "utils/files.hpp"
-#include "utils/paths.hpp"
 #include "utils/string.hpp"
 
 #include "../tools/arduino.hpp"
@@ -87,6 +85,15 @@ EditorWindow::~EditorWindow() {
     delete mAnimationTimer;
 }
 
+void EditorWindow::onDeactivate() {
+    if (mInjectionDlg) {
+        pcui::cripple(mInjectionDlg);
+        mInjectionDlg->CallAfter([dlg=mInjectionDlg] {
+            dlg->Destroy();
+        });
+    }
+}
+
 void EditorWindow::createMenuBar() {
     auto *file{new wxMenu};
     file->Append(eID_Verify, _("Verify Config") + "\tCtrl+R");
@@ -94,10 +101,8 @@ void EditorWindow::createMenuBar() {
     file->Append(wxID_SAVE, _("Save Config") + "\tCtrl+S");
     file->Append(eID_Export, _("Export Config...") + "\tCtrl+Alt+S");
     file->AppendSeparator();
-    file->Append(
-        eID_Add_Injection,
-        _("Add Injection...") + "\tCtrl+Alt+I",
-        _("Add a header file to be injected into CONFIG_PRESETS during compilation.")
+    file->Append(eID_Injections,
+        _("Manage Injections...") + "\tCtrl+Alt+I"
     );
 
     auto *tools{new wxMenu};
@@ -160,7 +165,7 @@ void EditorWindow::bindEvents() {
     Bind(wxEVT_MENU, &EditorWindow::onSave, this, wxID_SAVE);
     Bind(wxEVT_MENU, &EditorWindow::onExport, this, eID_Export);
     Bind(wxEVT_MENU, &EditorWindow::onVerify, this, eID_Verify);
-    Bind(wxEVT_MENU, &EditorWindow::onAddInjection, this, eID_Add_Injection);
+    Bind(wxEVT_MENU, &EditorWindow::onManageInjections, this, eID_Injections);
     Bind(wxEVT_MENU, &EditorWindow::onStyleEditor, this, eID_Style_Editor);
     Bind(wxEVT_MENU, &EditorWindow::onPage, this, ePage_First, ePage_Last);
     Bind(wxEVT_TIMER, &EditorWindow::onTimer, this);
@@ -246,35 +251,20 @@ void EditorWindow::onVerify(wxCommandEvent&) {
     }}.detach();
 }
 
-void EditorWindow::onAddInjection(wxCommandEvent&) {
-    wxFileDialog fileDialog{
-        this,
-        _("Select Injection File"),
-        wxEmptyString,
-        wxEmptyString,
-        _("C Header") + " (*.h)|*.h",
-        wxFD_FILE_MUST_EXIST | wxFD_OPEN
-    };
-    if (fileDialog.ShowModal() == wxCANCEL) return;
-
-    auto dst{
-        paths::injectionDir() / fileDialog.GetFilename().ToStdWstring()
-    };
-
-    std::error_code ec;
-    const auto src{fileDialog.GetPath().ToStdWstring()};
-    if (not files::copyOverwrite(src, dst, ec)) {
-        pcui::showMessage(
-            ec.message(),
-            {.caption_=_("Injection file could not be added.")}
-        );
+void EditorWindow::onManageInjections(wxCommandEvent&) {
+    if (mInjectionDlg) {
+        mInjectionDlg->Show();
+        mInjectionDlg->Raise();
         return;
     }
 
-    auto& config{*mInfo.config()};
-    config.injections_.append(std::make_unique<config::Injection>(
-        config, fileDialog.GetFilename().ToStdString()
-    ));
+    mInjectionDlg = new InjectionsDlg(this, *mInfo.config());
+    const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
+        if (evt.GetEventObject() == mInjectionDlg)
+            mInjectionDlg = nullptr;
+    }};
+
+    mInjectionDlg->Show();
 }
 
 void EditorWindow::onStyleEditor(wxCommandEvent&) {
