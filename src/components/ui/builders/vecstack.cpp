@@ -206,30 +206,25 @@ struct Layout : wxBoxSizer, data::Receiver {
         });
     }
 
-    void onSwap(size) {
-        // Don't know how to do detach/insert w/o deleting the item yet.
-        assert(0);
-
-        /*
+    // TODO: On at least macOS, when things are swapped buttons don't trigger
+    // again until the mouse is moved.
+    void onSwap(size pos) {
         safeCall([this, pos] {
             // First, detach the "lower" item and bring it up above the "upper"
             // one.
-            auto *item{GetItem(sizerPos(pos + 1))};
-            Detach(sizerPos(pos + 1));
+            auto *item{DetachItem(sizerPos(pos + 1))};
             Insert(sizerPos(pos), item);
 
             if (separator_) {
                 // If there's a separator, now detach the "upper" (but now below
                 // what was formerly "lower") item and move it to where "lower"
-                // used to be (properly in between separators.
-                auto *item{GetItem(sizerPos(pos) + 1)};
-                Detach(sizerPos(pos) + 1);
+                // used to be (properly in between separators).
+                auto *item{DetachItem(sizerPos(pos) + 1)};
                 Insert(sizerPos(pos + 1), item);
             }
 
             wxBoxSizer::Layout();
         });
-        */
     }
 
     int sizerPos(size pos) {
