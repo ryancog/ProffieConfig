@@ -44,14 +44,21 @@ void Root::unsuppressActions(bool clearHistory) {
     assert(mStates.back() == State::Suppressed);
 
     if (clearHistory) {
+        auto couldUndo{canUndo()};
+        auto couldRedo{canRedo()};
+
         mActions.clear();
         const auto lastIdx{mActionIdx};
         mActionIdx = eAct_Idx_First;
 
         sendToReceivers(&RecvTable::onActionClear_, lastIdx);
         sendToReceivers(&RecvTable::onAction_);
-        sendToReceivers(&RecvTable::onCanUndo_, false);
-        sendToReceivers(&RecvTable::onCanRedo_, false);
+
+        // If could, can't anymore
+        if (couldUndo)
+            sendToReceivers(&RecvTable::onCanUndo_);
+        if (couldRedo)
+            sendToReceivers(&RecvTable::onCanRedo_);
     }
 
     mStates.pop_back();
@@ -80,17 +87,10 @@ bool Root::capturePerformance() {
 
     if (mPerformanceNesting == 1) {
         // Increment index to the next action list.
-        //
-        // This is alright to increment before the potential call to onCanRedo_
-        // because if it is called, there is in fact actions past the current
-        // one, and it may even be useful to know what action is being
-        // replaced.
         ++mActionIdx;
         
         // If there are actions on the redo side, they need to be cleared.
         if (mActions.size() > mActionIdx) {
-            sendToReceivers(&RecvTable::onCanRedo_, false);
-
             // mActionIdx right now is the same as the size of the vector with
             // *only* current actions (that is, one less than there will be
             // once this performance is complete).
@@ -99,6 +99,9 @@ bool Root::capturePerformance() {
             // for both w/ redo and w/o redo cases. Effectively just truncating
             // the actions, removing any available redo.
             mActions.resize(mActionIdx);
+
+            // Cleared; can't anymore
+            sendToReceivers(&RecvTable::onCanRedo_);
         }
 
         mActions.emplace_back();
@@ -168,10 +171,18 @@ void Root::recordAction(std::unique_ptr<Action>&& action) {
         // This is the first action, undo is available now, and it was not
         // prior.
         if (mActions.size() == 1)
-            sendToReceivers(&RecvTable::onCanUndo_, true);
+            sendToReceivers(&RecvTable::onCanUndo_);
 
         mStates.pop_back();
     }
+}
+
+bool Root::canUndo() const {
+    return mActionIdx != eAct_Idx_First;
+}
+
+bool Root::canRedo() const {
+    return mActionIdx + 1 != mActions.size();
 }
 
 Root::ROContext::ROContext(const Root& root) : Model::ROContext(root) {}
@@ -181,11 +192,11 @@ size Root::ROContext::actionIndex() const {
 }
 
 bool Root::ROContext::canUndo() const {
-    return model().mActionIdx != eAct_Idx_First;
+    return model().canUndo();
 }
 
 bool Root::ROContext::canRedo() const {
-    return model().mActionIdx + 1 != model().mActions.size();
+    return model().canRedo();
 }
 
 Root::Context::Context(Root& root) : 
@@ -196,10 +207,15 @@ void Root::Context::undo() const {
 
     if (not model().beginReplay()) return;
 
-    // Actions are in reverse order, with the last first, so can just forward
-    // iterate.
+    auto couldRedo{canRedo()};
+
+    // Actions are in reverse order
+    // Originally I thought that actions should be replayed in reverse (so
+    // forward iterated), but it makes more sense to retract in forward order
+    // because otherwise children who depend on the parent's state upon an
+    // action would be broken.
     auto& aList{model().mActions[model().mActionIdx]};
-    for (auto iter{aList.begin()}; iter != aList.end(); ++iter) {
+    for (auto iter{aList.rbegin()}; iter != aList.rend(); ++iter) {
         (*iter)->retract();
     }
 
@@ -208,14 +224,22 @@ void Root::Context::undo() const {
     model().endReplay();
 
     model().sendToReceivers(&RecvTable::onAction_);
-    model().sendToReceivers(&RecvTable::onCanRedo_, true);
-    model().sendToReceivers(&RecvTable::onCanUndo_, canUndo());
+
+    // If we couldn't before, now we can.
+    if (not couldRedo)
+        model().sendToReceivers(&RecvTable::onCanRedo_);
+
+    // We could on entry to this function
+    if (not canUndo())
+        model().sendToReceivers(&RecvTable::onCanUndo_);
 }
 
 void Root::Context::redo() const {
     if (not canRedo()) return;
 
     if (not model().beginReplay()) return;
+
+    auto couldUndo{canUndo()};
 
     ++model().mActionIdx;
 
@@ -228,7 +252,13 @@ void Root::Context::redo() const {
     model().endReplay();
 
     model().sendToReceivers(&RecvTable::onAction_);
-    model().sendToReceivers(&RecvTable::onCanUndo_, true);
-    model().sendToReceivers(&RecvTable::onCanRedo_, canRedo());
+
+    // If we couldn't before, now we can.
+    if (not couldUndo)
+        model().sendToReceivers(&RecvTable::onCanUndo_);
+
+    // We could on entry to this function
+    if (not canRedo())
+        model().sendToReceivers(&RecvTable::onCanRedo_);
 }
 

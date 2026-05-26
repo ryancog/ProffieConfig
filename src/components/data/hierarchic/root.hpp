@@ -128,6 +128,9 @@ private:
      */
     void recordAction(std::unique_ptr<Action>&&);
 
+    [[nodiscard]] bool canUndo() const;
+    [[nodiscard]] bool canRedo() const;
+
     /**
      * The index corresponds to the "current" action. The one that represents
      * the state as it is currently. To undo, that action must be undone. To
@@ -196,12 +199,12 @@ struct DATA_EXPORT Root::RecvTable : Model::RecvTable {
     /**
      * Root now has/no longer has actions to undo.
      */
-    Mapping<bool> onCanUndo_;
+    Mapping<> onCanUndo_;
 
     /**
      * Root now has/no longer has actions to redo.
      */
-    Mapping<bool> onCanRedo_;
+    Mapping<> onCanRedo_;
 };
 
 } // namespace data::hier
