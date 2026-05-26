@@ -19,24 +19,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <memory>
-
 #include "versions/priv/data.hpp"
 
 using namespace versions::os;
 
-Context::Context() { priv::lock.lock(); }
-Context::~Context() { priv::lock.unlock(); }
+OS::OS(
+    utils::Version version,
+    std::string coreUrl,
+    utils::Version coreVersion,
+    std::map<size, Board> boards
+) : version_(std::move(version)),
+    coreUrl_(std::move(coreUrl)),
+    coreVersion_(std::move(coreVersion)),
+    boards_(std::move(boards)) {}
 
-// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-std::span<const std::unique_ptr<OS>> Context::available() {
-    std::lock_guard scopeLock(priv::lock);
+OS::OS(const OS& other) :
+    OS(
+        other.version_,
+        other.coreUrl_,
+        other.coreVersion_,
+        other.boards_
+    ) {}
+
+const data::prim::Vector& versions::os::available() {
     return priv::availableOS;
 }
 
-// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-std::span<const std::unique_ptr<OS>> Context::list() {
-    std::lock_guard scopeLock(priv::lock);
+const data::prim::Vector&  versions::os::list() {
     return priv::os;
 }
 

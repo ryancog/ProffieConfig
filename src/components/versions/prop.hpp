@@ -31,6 +31,8 @@
 #include "data/hierarchic/models/bool.hpp"
 #include "data/hierarchic/models/exclusive.hpp"
 #include "data/hierarchic/models/number.hpp"
+#include "data/primitive/model.hpp"
+#include "data/primitive/models/vector.hpp"
 #include "log/branch.hpp"
 #include "pconf/types.hpp"
 #include "ui/types.hpp"
@@ -252,7 +254,11 @@ struct VERSIONS_EXPORT Prop : data::hier::Model, data::Receiver {
     const std::string info_;
 
 private:
-    friend versions::props::Context;
+    friend std::vector<std::unique_ptr<Prop>> forVersion(
+        const utils::Version&,
+        data::hier::Root&,
+        Prop::RecommendProcessor
+    );
 
     Prop(
         data::hier::Root&,
@@ -295,35 +301,30 @@ private:
     RelationMap mDisMap;
 };
 
-struct VERSIONS_EXPORT Versioned {
+struct VERSIONS_EXPORT Available : data::prim::Model {
+    Available(std::string, std::vector<utils::Version>);
+
     const std::string name_;
     const std::vector<utils::Version> supportedVersions_;
+};
+
+struct VERSIONS_EXPORT Versioned : Available {
+    Versioned(std::string, std::vector<utils::Version>, PropData);
 
     const PropData data_;
 };
 
-struct VERSIONS_EXPORT Available {
-    const std::string name_;
-    const std::vector<utils::Version> supportedVersions_;
-};
+[[nodiscard]] VERSIONS_EXPORT const data::prim::Vector& available();
+[[nodiscard]] VERSIONS_EXPORT const data::prim::Vector& list();
 
-struct VERSIONS_EXPORT Context {
-    Context();
-    ~Context();
-
-    const std::vector<Available>& available() LIFETIMEBOUND;
-
-    const std::vector<std::unique_ptr<Versioned>>& list() LIFETIMEBOUND;
-
-    /**
-     * Build a set of props for version
-     */
-    std::vector<std::unique_ptr<Prop>> forVersion(
-        const utils::Version&,
-        data::hier::Root&,
-        Prop::RecommendProcessor
-    );
-};
+/**
+ * Build a set of props for version
+ */
+[[nodiscard]] VERSIONS_EXPORT std::vector<std::unique_ptr<Prop>> forVersion(
+    const utils::Version&,
+    data::hier::Root&,
+    Prop::RecommendProcessor
+);
 
 } // namespace versions::props
 

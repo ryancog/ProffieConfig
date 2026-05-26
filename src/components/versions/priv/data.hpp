@@ -19,19 +19,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mutex>
-
-#include "versions/os.hpp"
-#include "versions/prop.hpp"
+#include "data/primitive/models/vector.hpp"
 
 namespace versions::priv {
 
-extern std::recursive_mutex lock;
-extern std::vector<std::unique_ptr<props::Versioned>> props;
-extern std::vector<std::unique_ptr<os::OS>> os;
+extern data::prim::Vector props;
+extern data::prim::Vector os;
 
-extern std::vector<std::unique_ptr<os::OS>> availableOS;
-extern std::vector<props::Available> availableProps;
+extern data::prim::Vector availableOS;
+extern data::prim::Vector availableProps;
 
 } // namespace versions::priv
 

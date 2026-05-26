@@ -20,7 +20,6 @@
  */
 
 #include <memory>
-#include <mutex>
 #include <optional>
 
 #include "data/context.hpp"
@@ -759,31 +758,37 @@ void Prop::onSet(const data::base::Model& model) {
     }
 }
 
-Context::Context() { priv::lock.lock(); }
-Context::~Context() { priv::lock.unlock(); }
+Available::Available(std::string name, std::vector<utils::Version> versions) :
+    name_(std::move(name)), supportedVersions_(std::move(versions)) {}
 
-// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-const std::vector<Available>& Context::available() {
+Versioned::Versioned(
+    std::string name,
+    std::vector<utils::Version> versions,
+    PropData data
+) : Available(std::move(name), std::move(versions)),
+    data_(std::move(data)) {}
+
+const data::prim::Vector& versions::props::available() {
     return priv::availableProps;
 }
 
-// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-const std::vector<std::unique_ptr<Versioned>>& Context::list() {
+const data::prim::Vector& versions::props::list() {
     return priv::props;
 }
 
-// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-std::vector<std::unique_ptr<Prop>> Context::forVersion(
+std::vector<std::unique_ptr<Prop>> versions::props::forVersion(
     const utils::Version& ver,
     data::hier::Root& root,
     Prop::RecommendProcessor recProc
 ) {
     std::vector<std::unique_ptr<Prop>> ret;
 
-    for (const auto& versioned : priv::props) {
+    auto ctxt{data::context(priv::props)};
+    for (const auto& model : ctxt.children()) {
+        const auto& versioned{dynamic_cast<Versioned&>(*model)};
         bool supported{false};
 
-        for (const auto& supVer : versioned->supportedVersions_) {
+        for (const auto& supVer : versioned.supportedVersions_) {
             if (supVer.compare(ver) != 0) continue;
 
             supported = true;
@@ -792,11 +797,11 @@ std::vector<std::unique_ptr<Prop>> Context::forVersion(
 
         if (not supported) continue;
 
-        const auto& data{versioned->data_};
+        const auto& data{versioned.data_};
 
         auto& prop{*ret.emplace_back(new Prop(
             root,
-            versioned->name_,
+            versioned.name_,
             data.name_,
             data.filename_,
             data.info_,

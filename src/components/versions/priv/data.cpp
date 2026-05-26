@@ -27,10 +27,9 @@ using namespace versions;
 // This probably isn't a very ideal solution, and if the ergonomics of it are
 // particularly annoying I might want to do something different.
 
-std::recursive_mutex priv::lock;
-std::vector<std::unique_ptr<props::Versioned>> priv::props;
-std::vector<std::unique_ptr<os::OS>> priv::os;
+data::prim::Vector priv::props;
+data::prim::Vector priv::os;
 
-std::vector<std::unique_ptr<os::OS>> priv::availableOS;
-std::vector<props::Available> priv::availableProps;
+data::prim::Vector priv::availableOS;
+data::prim::Vector priv::availableProps;
 

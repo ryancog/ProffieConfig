@@ -20,9 +20,9 @@
  */
 
 #include <map>
-#include <memory>
-#include <span>
 
+#include "data/primitive/model.hpp"
+#include "data/primitive/models/vector.hpp"
 #include "utils/version.hpp"
 
 #include "versions_export.h"
@@ -35,7 +35,16 @@ struct VERSIONS_EXPORT Board {
     const std::string include_;
 };
 
-struct VERSIONS_EXPORT OS {
+struct VERSIONS_EXPORT OS : data::prim::Model {
+    OS(
+        utils::Version,
+        std::string,
+        utils::Version,
+        std::map<size, Board>
+    );
+
+    OS(const OS&);
+
     const utils::Version version_;
 
     const std::string coreUrl_;
@@ -44,16 +53,8 @@ struct VERSIONS_EXPORT OS {
     const std::map<size, Board> boards_;
 };
 
-struct VERSIONS_EXPORT Context {
-    Context();
-    ~Context();
-
-    [[nodiscard]] std::span<const std::unique_ptr<OS>>
-        available() LIFETIMEBOUND;
-
-    [[nodiscard]] std::span<const std::unique_ptr<OS>>
-        list() LIFETIMEBOUND;
-};
+[[nodiscard]] VERSIONS_EXPORT const data::prim::Vector& available();
+[[nodiscard]] VERSIONS_EXPORT const data::prim::Vector& list();
 
 } // namespace versions::os
 

@@ -30,6 +30,7 @@
 #include <wx/wfstream.h>
 #include <wx/zipstrm.h>
 
+#include "data/context.hpp"
 #include "log/context.hpp"
 #include "log/logger.hpp"
 #include "pconf/utils.hpp"
@@ -59,7 +60,9 @@ void versions::loadLocal(logging::Branch *lBranch) {
     std::error_code ec{};
 
     logger.info("Loading ProffieOS Versions...");
-    priv::os.clear();
+
+    auto os{data::context(priv::os)};
+    os.clear();
     for (const auto& entry : fs::directory_iterator(paths::osDir(), ec)) {
         if (not entry.is_directory(ec)) {
             logger.warn("Non-directory OS entry found: " + entry.path().filename().string());
@@ -73,8 +76,9 @@ void versions::loadLocal(logging::Branch *lBranch) {
         }
 
         bool duplicate{false};
-        for (const auto& versionedOS : priv::os) {
-            if (versionedOS->version_.compare(version) == 0) {
+        for (const auto& model : os.children()) {
+            auto& versionedOS{dynamic_cast<os::OS&>(*model)};
+            if (versionedOS.version_.compare(version) == 0) {
                 duplicate = true;
                 break;
             }
@@ -160,12 +164,12 @@ void versions::loadLocal(logging::Branch *lBranch) {
             });
         }
 
-        priv::os.push_back(std::make_unique<os::OS>(
+        os.append<os::OS>(
             std::move(version),
             std::move(coreURL),
             std::move(coreVersion),
             std::move(boards)
-        ));
+        );
     }
 
     if (ec) {
@@ -174,7 +178,8 @@ void versions::loadLocal(logging::Branch *lBranch) {
 
     logger.info("Loading Props...");
 
-    priv::props.clear();
+    auto props{data::context(priv::props)};
+    props.clear();
     for (const auto& entry : fs::directory_iterator(paths::propDir(), ec)) {
         if (not entry.is_directory(ec)) {
             logger.warn("Non-directory prop entry found: " + entry.path().filename().string());
@@ -250,11 +255,11 @@ void versions::loadLocal(logging::Branch *lBranch) {
             continue;
         }
 
-        priv::props.emplace_back(new props::Versioned(
+        props.append<props::Versioned>(
             std::move(propName),
             std::move(versions),
             std::move(*prop)
-        ));
+        );
     }
 
     if (ec) {
@@ -294,8 +299,8 @@ std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
         return _("Could not parse prop manifest").ToStdString();
     }
 
-    { std::lock_guard scopeLock(priv::lock);
-        priv::availableProps.clear();
+    { auto ctxt{data::context(priv::availableProps)};
+        ctxt.clear();
         for (const auto& entry : data) {
             if (entry->name_ != detail::PROP_STR) continue;
             auto section{entry.section()};
@@ -348,10 +353,7 @@ std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
                 supportedVersions.push_back(std::move(ver));
             }
 
-            priv::availableProps.push_back(props::Available{
-                .name_ = name,
-                .supportedVersions_ = std::move(supportedVersions),
-            });
+            ctxt.append<props::Available>(name, std::move(supportedVersions));
         }
     }
 
@@ -376,8 +378,8 @@ std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
         return _("Could not parse ProffieOS manifest").ToStdString();
     }
 
-    { std::lock_guard scopeLock(priv::lock);
-        priv::availableOS.clear();
+    { auto ctxt{data::context(priv::availableOS)};
+        ctxt.clear();
         for (const auto& entry : data) {
             if (entry->name_ != detail::OS_STR) continue;
             auto section{entry.section()};
@@ -464,12 +466,12 @@ std::optional<std::string> versions::fetch(logging::Branch *lBranch) {
                 });
             }
 
-            priv::availableOS.emplace_back(new os::OS{
-                .version_=std::move(ver),
-                .coreUrl_=std::move(coreUrl),
-                .coreVersion_=std::move(coreVersion),
-                .boards_=std::move(boards),
-            });
+            ctxt.append<os::OS>(
+                std::move(ver),
+                std::move(coreUrl),
+                std::move(coreVersion),
+                std::move(boards)
+            );
         }
     }
 
@@ -495,8 +497,9 @@ std::optional<std::string> versions::installDefault(
     auto osDownErr{downloadOS(DEFAULT_OS_VERSION, logger.binfo("Downloading ProffieOS"))};
     if (osDownErr) return osDownErr;
 
-    { std::lock_guard scopeLock(priv::lock);
-        for (const auto& availProp : priv::availableProps) {
+    { auto ctxt{data::context(priv::availableProps)};
+        for (const auto& model : ctxt.children()) {
+            auto& availProp{dynamic_cast<props::Available&>(*model)};
             bool supportsDefault{false};
             for (const auto& ver : availProp.supportedVersions_) {
                 if (ver.compare(DEFAULT_OS_VERSION) != 0) continue;
@@ -517,17 +520,18 @@ std::optional<std::string> versions::installDefault(
 std::optional<std::string> versions::downloadOS(
     const utils::Version& ver, logging::Branch *lBranch
 ) {
-    std::lock_guard scopeLock(priv::lock);
+    auto ctxt{data::context(priv::availableOS)};
 
     auto& logger{logging::Branch::optCreateLogger("versions::downloadOS()", lBranch)};
 
     bool known{false};
     const os::OS *info{};
-    for (const auto& avail : priv::availableOS) {
-        if (avail->version_.compare(ver) != 0) continue;
+    for (const auto& model : ctxt.children()) {
+        auto& avail{dynamic_cast<os::OS&>(*model)};
+        if (avail.version_.compare(ver) != 0) continue;
 
         known = true;
-        info = avail.get();
+        info = &avail;
         break;
     }
 
@@ -645,7 +649,7 @@ std::optional<std::string> versions::downloadOS(
 std::optional<std::string> versions::downloadProp(
     const std::string& name, logging::Branch *lBranch
 ) {
-    std::lock_guard scopeLock(priv::lock);
+    auto ctxt{data::context(priv::availableProps)};
 
     /*
      * The wxWebRequestSync will call wxRemoveFile on the data tmp file if it
@@ -663,7 +667,8 @@ std::optional<std::string> versions::downloadProp(
 
     bool known{false};
     const props::Available *info{};
-    for (const auto& avail : priv::availableProps) {
+    for (const auto& model : ctxt.children()) {
+        auto& avail{dynamic_cast<props::Available&>(*model)};
         if (avail.name_ != name) continue;
 
         known = true;

@@ -60,15 +60,17 @@ Config::Config() :
     CreationScope createScope(this);
 
     { 
-        versions::os::Context osCtxt;
-        versions::props::Context propCtxt;
+        auto osCtxt{data::context(versions::os::list())};
 
-        mOsVec.reserve(osCtxt.list().size());
-        for (auto& os : osCtxt.list()) {
-            mOsVec.emplace_back(new versions::os::OS(*os));
+        mOsVec.reserve(osCtxt.children().size());
+        for (auto& model : osCtxt.children()) {
+            auto& os{dynamic_cast<versions::os::OS&>(*model)};
+            mOsVec.emplace_back(new versions::os::OS(os));
 
-            auto& propVec{mPropMap[os->version_]};
-            propVec = propCtxt.forVersion(os->version_, *this, &Config::processPropRecommend);
+            auto& propVec{mPropMap[os.version_]};
+            propVec = versions::props::forVersion(
+                os.version_, *this, &Config::processPropRecommend
+            );
         }
     }
 
