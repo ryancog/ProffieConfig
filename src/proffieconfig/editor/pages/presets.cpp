@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/gdicmn.h>
+
 #include "config/blades/bladeconfig.hpp"
 #include "config/presets/array.hpp"
 #include "config/presets/preset.hpp"
@@ -492,84 +494,109 @@ pcui::DescriptorPtr PresetsPage::displayAndBlade() {
 }
 
 pcui::DescriptorPtr PresetsPage::style() {
-    return pcui::Split{
-      .win_={.base_={
-        .minSize_={500, -1},
+    return pcui::Stack{
+      .base_={
         .expand_=true,
         .proportion_=1,
-      }},
+      },
       .orient_=wxVERTICAL,
-      .minPaneSize_=60,
-      .child1_=pcui::Stack{
-        .base_={.expand_=true, .proportion_=1},
-        .children_={
-          pcui::Label{
-            .label_=_("Comments"),
-          }(),
-          pcui::builders::Selector{
-            .data_=mStyleSel,
-            .builder_=[](data::base::Model *model) {
-              pcui::Text text{
-                .win_={
-                  .base_={.expand_=true, .proportion_=1},
-                  .tooltip_=_(
-                      "Any comments about the blade style goes here.\n"
-                      "This doesn't affect the blade style at all, but can be a place for helpful notes!"
-                  ),
-                }, 
-                .style_=pcui::Text::MultiLine{},
-              };
+      .children_={
+        pcui::Split{
+          .win_={.base_={
+            .minSize_={500, -1},
+            .expand_=true,
+            .proportion_=1,
+          }},
+          .orient_=wxVERTICAL,
+          .minPaneSize_=60,
+          .child1_=pcui::Stack{
+            .base_={.expand_=true, .proportion_=1},
+            .children_={
+              pcui::Label{
+                .label_=_("Comments"),
+              }(),
+              pcui::builders::Selector{
+                .data_=mStyleSel,
+                .builder_=[](data::base::Model *model) {
+                  pcui::Text text{
+                    .win_={
+                      .base_={.expand_=true, .proportion_=1},
+                      .tooltip_=_(
+                          "Any comments about the blade style goes here.\n"
+                          "This doesn't affect the blade style at all, but can be a place for helpful notes!"
+                      ),
+                    }, 
+                    .style_=pcui::Text::MultiLine{},
+                  };
 
-              if (model == nullptr) {
-                  text.win_.enable_ = false;
-                  text.data_ = _("Select or create preset and blade to edit style comments...");
+                  if (model == nullptr) {
+                      text.win_.enable_ = false;
+                      text.data_ = _("Select or create preset and blade to edit style comments...");
+                      return text();
+                  }
+
+                  auto *style{dynamic_cast<config::presets::Style *>(model)};
+                  text.data_ = style->comment_;
                   return text();
-              }
-
-              auto *style{dynamic_cast<config::presets::Style *>(model)};
-              text.data_ = style->comment_;
-              return text();
+                }
+              }(),
             }
           }(),
-        }
-      }(),
-      .child2_=pcui::Stack{
-        .base_={.expand_=true, .proportion_=1},
-        .children_={
-          pcui::Spacer{.size_=2}(),
-          pcui::Label{
-            .label_=_("Blade Style"),
-          }(),
-          pcui::builders::Selector{
-            .data_=mStyleSel,
-            .builder_=[](data::base::Model *model) {
-              pcui::Text text{
-                .win_={
-                  .base_={.expand_=true, .proportion_=1},
-                  .tooltip_=_(
-                      "Your blade style goes here.\n"
-                      "This is the code which sets up what animations and effects your blade (or other LED) will do.\n"
-                      "For getting/creating blade styles, see the Documentation (in \"Help->Documentation...\")."
-                  )
-                }, 
-                .style_=pcui::Text::MultiLine{
-                  .wrap_=pcui::Text::Wrap::None,
-                },
-              };
+          .child2_=pcui::Stack{
+            .base_={.expand_=true, .proportion_=1},
+            .children_={
+              pcui::Spacer{.size_=2}(),
+              pcui::Label{
+                .label_=_("Blade Style"),
+              }(),
+              pcui::builders::Selector{
+                .data_=mStyleSel,
+                .builder_=[](data::base::Model *model) {
+                  pcui::Text text{
+                    .win_={
+                      .base_={.expand_=true, .proportion_=1},
+                      .tooltip_=_(
+                          "Your blade style goes here.\n"
+                          "This is the code which sets up what animations and effects your blade (or other LED) will do.\n"
+                          "For getting/creating blade styles, see the Documentation (in \"Help->Documentation...\")."
+                      )
+                    }, 
+                    .style_=pcui::Text::MultiLine{
+                      .wrap_=pcui::Text::Wrap::None,
+                    },
+                  };
 
-              if (model == nullptr) {
-                  text.win_.enable_ = false;
-                  text.data_ = _("Select or create preset and blade to edit style...");
+                  if (model == nullptr) {
+                      text.win_.enable_ = false;
+                      text.data_ = _("Select or create preset and blade to edit style...");
+                      return text();
+                  }
+
+                  auto *style{dynamic_cast<config::presets::Style *>(model)};
+                  text.data_ = style->content_;
                   return text();
-              }
-
-              auto *style{dynamic_cast<config::presets::Style *>(model)};
-              text.data_ = style->content_;
-              return text();
+                }
+              }(),
             }
           }(),
-        }
-      }(),
+        }(),
+        pcui::Stack{
+          .orient_=wxHORIZONTAL,
+          .children_={
+            pcui::Button{
+              .win_={
+                .base_={.minSize_=pcui::iconButtonSize(true)},
+                .enable_=mStyleSel.choice() | data::logic::HasSelection{},
+                .tooltip_=_("Format style code"),
+              },
+              .label_=pcui::syms::INDENT_ARROWS,
+              .style_=pcui::Button::Style::Companion,
+              .exactFit_=true,
+              .func_=[this] { onFormatButton(); },
+            }(),
+          }
+        }(),
+      },
     }();
 }
 
@@ -777,6 +804,12 @@ void PresetsPage::onDuplicateButton() {
         )
     );
     mPresetSel.choice().choose(sel.choiceIdx() + 1);
+}
+
+void PresetsPage::onFormatButton() {
+    auto sel{data::context(mStyleSel)};
+    auto *style{sel.selected<config::presets::Style>()};
+    style->content_.change(style->format());
 }
 
 void PresetsPage::onStylesButton(const pcui::CallbackContext& ctxt) {

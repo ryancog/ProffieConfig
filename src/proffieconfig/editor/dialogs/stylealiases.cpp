@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/event.h>
 #include <wx/gdicmn.h>
 #include <wx/translation.h>
 
@@ -285,6 +286,22 @@ pcui::DescriptorPtr StyleAliasesDlg::fields() {
             }
           }(),
         }(),
+        pcui::Stack{
+          .orient_=wxHORIZONTAL,
+          .children_={
+            pcui::Button{
+              .win_={
+                .base_={.minSize_=pcui::iconButtonSize(true)},
+                .enable_=mStyleSel.choice() | data::logic::HasSelection{},
+                .tooltip_=_("Format style code"),
+              },
+              .label_=pcui::syms::INDENT_ARROWS,
+              .style_=pcui::Button::Style::Companion,
+              .exactFit_=true,
+              .func_=[this] { onFormatButton(); },
+            }(),
+          }
+        }(),
       },
     }();
 }
@@ -330,5 +347,11 @@ void StyleAliasesDlg::onDuplicateButton() {
         )
     );
     mStyleSel.choice().choose(sel.choiceIdx() + 1);
+}
+
+void StyleAliasesDlg::onFormatButton() {
+    auto sel{data::context(mStyleSel)};
+    auto *style{sel.selected<config::styles::Style>()};
+    style->content_.change(style->format());
 }
 

@@ -59,6 +59,7 @@ private:
     void onMoveUpButton();
     void onMoveDownButton();
     void onDuplicateButton();
+    void onFormatButton();
 
     void onStylesButton(const pcui::CallbackContext&);
 

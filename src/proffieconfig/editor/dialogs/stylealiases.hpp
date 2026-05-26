@@ -40,6 +40,7 @@ private:
     void onMoveUpButton();
     void onMoveDownButton();
     void onDuplicateButton();
+    void onFormatButton();
 
     config::Config& mConfig;
 
