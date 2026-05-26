@@ -41,7 +41,13 @@
 #include "ui/values.hpp"
 
 StyleAliasesDlg::StyleAliasesDlg(wxWindow *parent, config::Config& config) :
-    Dialog(parent, wxID_ANY, _("Style Aliases")), mConfig{config} {
+    Dialog(
+        parent,
+        wxID_ANY,
+        _("Style Aliases"),
+        wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER
+    ),
+    mConfig{config} {
 
     mStyleSel.bind(&mConfig.styles_);
 
