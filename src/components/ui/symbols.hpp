@@ -37,6 +37,7 @@ UI_EXPORT extern const cstring DOUBLE_SQUARES;
 UI_EXPORT extern const cstring CLEAR;
 
 UI_EXPORT extern const cstring RELOAD;
+UI_EXPORT extern const cstring CHECK;
 
 UI_EXPORT extern const cstring PLUS;
 UI_EXPORT extern const cstring MINUS;
