@@ -481,10 +481,10 @@ pcui::DescriptorPtr Prop::layout() {
                   .data_=*ptr,
                 }();
             } else if (auto *ptr{dynamic_cast<Option *>(setting)}) {
-                std::vector<wxString> labels;
-                labels.reserve(ptr->selections_.size());
+                std::vector<pcui::Radios::Radio> radios;
+                radios.reserve(ptr->selections_.size());
                 for (auto *sel : ptr->selections_) {
-                    labels.emplace_back(sel->name_);
+                    radios.push_back(pcui::Radios::Radio{.label_=sel->name_});
                 }
 
                 groupSpaced = true;
@@ -495,7 +495,7 @@ pcui::DescriptorPtr Prop::layout() {
                   },
                   .label_=ptr->name_,
                   .data_=*ptr,
-                  .labels_=std::move(labels),
+                  .radios_=std::move(radios),
                 }();
             } else if (auto *ptr{dynamic_cast<Integer *>(setting)}) {
                 desc = pcui::Labeled{
