@@ -217,6 +217,9 @@ void PropButtonsDlg::rebuildUI() {
             if (activeDesc == nullptr)
                 continue;
 
+            if (*activeDesc == "DISABLED")
+                continue;
+
             any = true;
 
             pcui::Label nameLabel{
