@@ -13,6 +13,7 @@ add_executable(proffieconfig WIN32
     mainmenu/dialogs/licenses.cpp
     mainmenu/dialogs/manifest.cpp
     mainmenu/dialogs/serialmonitor.cpp
+    mainmenu/dialogs/versions.cpp
 
     editor/editorwindow.cpp
     editor/special/splitvisualizer.cpp

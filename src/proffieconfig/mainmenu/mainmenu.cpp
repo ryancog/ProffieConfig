@@ -320,6 +320,12 @@ void MainMenu::bindEvents() {
     }, eID_Licenses);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
+        if (mVersionsDlg) {
+            mVersionsDlg->Show();
+            mVersionsDlg->Raise();
+            return;
+        }
+
         const auto warnPref{state::getPreference(
             state::ePreference_Hide_Editor_Manage_Versions_Warn
         )};
@@ -328,7 +334,10 @@ void MainMenu::bindEvents() {
                 not warnPref
             ) {
             auto res{pcui::showHideablePrompt(
-                _("Although version management can be done with editors open, some information may be lost when adding/removing props."),
+                _(
+                    "Although version management can be done with editors open, the changes won't be visible\n"
+                    "until the editor is reloaded, and you might run into oddities."
+                ),
                 {
                     .caption_=_("Please Close Editors"),
                     .style_=wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxCENTER,
@@ -343,8 +352,14 @@ void MainMenu::bindEvents() {
             if (res.id_ != wxID_OK) return;
         }
 
-        // REVIEW
-        // versions_manager::open(this, state::eID_Versions_Manager);
+        mVersionsDlg = new VersionsDlg(this);
+        const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
+            if (evt.GetEventObject() == mVersionsDlg)
+                mVersionsDlg = nullptr;
+        }};
+        mVersionsDlg->Bind(wxEVT_DESTROY, onDestroy);
+
+        mVersionsDlg->Show();
     }, eID_Manage_Versions);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {

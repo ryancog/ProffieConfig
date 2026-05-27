@@ -28,6 +28,7 @@
 #include "ui/types.hpp"
 
 #include "dialogs/serialmonitor.hpp"
+#include "dialogs/versions.hpp"
 
 struct EditorWindow;
 
@@ -72,5 +73,7 @@ private:
     std::vector<std::string> mBoards;
     std::map<config::Info *, EditorWindow *> mEditors;
     std::set<SerialMonitorDlg *> mMonitors;
+
+    VersionsDlg *mVersionsDlg{nullptr};
 };
 
