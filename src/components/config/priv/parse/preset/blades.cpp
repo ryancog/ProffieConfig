@@ -268,6 +268,12 @@ std::optional<std::string> parseBlade(
         constexpr std::string_view ZIGZAG_STR{"ZZ("};
         constexpr std::string_view LIST_STR{"WithList<"};
 
+        auto *os{blade.root<Config>().os()};
+        const auto OS_OVER_8{
+            os and
+            utils::Version(8).compare(os->version_) <= 0
+        };
+
         using enum WS281X::Split::Type;
         if (data[0] == '(') {
             splitData.type_ = eStandard;
@@ -281,7 +287,7 @@ std::optional<std::string> parseBlade(
         } else if (data.starts_with(ZIGZAG_STR)) {
             splitData.type_ = eZig_Zag;
             data.erase(0, ZIGZAG_STR.length());
-        } else if (data.starts_with(LIST_STR)) {
+        } else if (OS_OVER_8 and data.starts_with(LIST_STR)) {
             splitData.type_ = eList;
             data.erase(0, LIST_STR.length());
         } else {

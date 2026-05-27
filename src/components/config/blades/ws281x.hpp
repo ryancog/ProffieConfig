@@ -138,6 +138,10 @@ struct CONFIG_EXPORT WS281X::Split : data::hier::Model, data::Receiver {
 private:
     WS281X& mParent;
 
+    void onActivate() override;
+
+    void onOsChoice();
+
     void onType(uint32);
     void onStart();
     void onEnd();

@@ -191,6 +191,13 @@ WS281X::Split::Split(WS281X& ws281x) :
     mParent{ws281x} {
     CreationScope createScope(this);
 
+    static const auto osTable{[] {
+        data::base::Choice::RecvTable table;
+        table.onChoice_ = data::map(&Split::onOsChoice);
+        return table;
+    }()};
+    amend(root<Config>().osChoice(), osTable);
+
     // The logic for the interactions between these controls is more fragile
     // than I'd like, but I don't have a great idea of how to make it better,
     // nor do I feel like spending a particularly large amount of time on it
@@ -244,6 +251,10 @@ WS281X::Split::Split(WS281X& ws281x) :
     brightness_.set(100);
 }
 
+void WS281X::Split::onActivate() {
+    onOsChoice();
+}
+
 auto WS281X::Split::children() const -> std::vector<const Model *> {
     return {
         &type_,
@@ -283,6 +294,25 @@ std::vector<uint32> WS281X::Split::listValues() {
     }
 
     return ret;
+}
+
+void WS281X::Split::onOsChoice() {
+    auto *os{root<Config>().os()};
+    const auto OS_OVER_8{
+        os and
+        utils::Version(8).compare(os->version_) <= 0
+    };
+
+    auto *list{dynamic_cast<data::base::Bool *>(type_.children()[eList])};
+    auto ctxt{data::context(*list)};
+
+    ctxt.enable(OS_OVER_8);
+
+    // Can't use this on versions less than OS8, need to unset it.
+    if (not OS_OVER_8 and ctxt.val()) {
+        auto *standard{type_.children()[eStandard]};
+        dynamic_cast<data::base::Bool *>(standard)->set(true);
+    }
 }
 
 void WS281X::Split::onType(uint32 sel) {

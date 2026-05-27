@@ -785,12 +785,18 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
           },
           .label_=_("Type"),
           .data_=split.type_,
-          .labels_={
-            _("Standard"),
-            _("Reverse"),
-            _("Stride"),
-            _("ZigZag"),
-            _("List"),
+          .radios_={
+            pcui::Radios::Radio{.label_=_("Standard")},
+            pcui::Radios::Radio{.label_=_("Reverse")},
+            pcui::Radios::Radio{.label_=_("Stride")},
+            pcui::Radios::Radio{.label_=_("ZigZag")},
+            pcui::Radios::Radio{
+                .win_={
+                  .show_=*split.type_.children()[eList] |
+                      data::logic::IsEnabled{}
+                },
+                .label_=_("List")
+            },
           },
         }(),
         pcui::Panel{
