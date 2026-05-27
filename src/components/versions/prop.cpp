@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <optional>
+#include <unordered_set>
 
 #include "data/context.hpp"
 #include "data/logic/adapter.hpp"
@@ -333,8 +334,32 @@ std::optional<PropData> PropData::generate(
 
         buttons[numButtons] = parseButtons(
             buttonEntry.section()->entries_,
-            *logger.bdebug("Parsing buttons " + std::to_string(numButtons) + "...")
+            *logger.bdebug("Parsing BUTTONS " + std::to_string(numButtons) + "...")
         );
+
+        // Build a temp lookup set
+        std::unordered_set<std::string> settingLookup;
+        for (auto& data : settings) {
+            settingLookup.insert(data->define_);
+
+            if (auto *ptr{dynamic_cast<OptionData *>(data.get())}) {
+                for (auto *selData : ptr->selections_)
+                    settingLookup.insert(selData->define_);
+            }
+        }
+
+        // Then check to warn if there's any non-existent predicates.
+        for (auto& state : buttons[numButtons]) {
+            for (auto& button : state.buttons_) {
+                for (auto& [pred, description] : button.descriptions_) {
+                    if (pred.empty())
+                        continue;
+
+                    if (not settingLookup.contains(pred))
+                        logger.warn("Button " + button.name_ + " has description with non-existent predicate " + pred);
+                }
+            }
+        }
     }
     if (buttonEntries.empty()) {
         logger.info("No buttons entries...");
