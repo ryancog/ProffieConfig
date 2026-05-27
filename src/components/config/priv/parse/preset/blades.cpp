@@ -124,6 +124,8 @@ std::optional<std::string> parse::preset::blades(
                     auto type{data::context(blade.type())};
                     if (type.choiceIdx() == -1) {
                         logger.debug("Removing blade parser deemed unnecessary.");
+
+                        type.release();
                         blades.remove(blades.children().size() - 1);
                     }
 
