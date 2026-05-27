@@ -35,6 +35,7 @@
 #include "ui/layout/stack.hpp"
 #include "ui/static/label.hpp"
 #include "ui/values.hpp"
+#include "utils/defer.hpp"
 
 using namespace pcui;
 
@@ -90,6 +91,12 @@ void ProgressDialog::finish(bool modalWait, const wxString& message) {
     }
 
     const auto doFinish{[this, modalWait] {
+        // This should always be heap-allocated.
+        defer {
+            Close(true);
+            Destroy();
+        };
+
         // Make sure that layout updates have completed before locking things
         // up in the modal context.
         wxYield();
@@ -99,12 +106,10 @@ void ProgressDialog::finish(bool modalWait, const wxString& message) {
         // processor.
         if (data::context(mCancelled).val()) {
             // If it's been pressed, we don't wait in any case.
-            Close(true);
             return;
         }
 
         if (modalWait) ShowModal();
-        Close(true);
     }};
 
     if (wxIsMainThread()) {
