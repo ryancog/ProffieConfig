@@ -24,6 +24,9 @@
 namespace pcui {
 
 template <typename Container, typename Functor>
+requires std::is_invocable_v<
+    Functor, decltype(*std::declval<Container>().begin())
+>
 struct ForEach {
     const Container& of_;
     const Functor do_;
