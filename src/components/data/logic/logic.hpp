@@ -26,6 +26,8 @@
 
 #include "data_export.h"
 
+// TODO: Clean this up.
+
 namespace data::logic {
 
 struct Manager;
