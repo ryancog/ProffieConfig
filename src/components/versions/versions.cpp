@@ -526,6 +526,9 @@ std::optional<std::string> versions::installDefault(
                 break;
             }
 
+            if (not supportsDefault)
+                continue;
+
             auto downErr{downloadProp(
                 availProp.name_,
                 logger.binfo("Downloading Prop " + availProp.name_)
