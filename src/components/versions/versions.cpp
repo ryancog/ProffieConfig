@@ -414,7 +414,7 @@ std::optional<std::string> versions::fetch(
             std::string coreUrl{"https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json"};
             if (auto coreUrlEntry{propEntries.find(detail::CORE_URL_STR)}) {
                 if (coreUrlEntry->value_) {
-                    if (not wxURI{*coreUrlEntry->value_}.IsReference()) {
+                    if (wxURI(*coreUrlEntry->value_).IsReference()) {
                         logger.warn("ProffieOS " + verStr + " invalid coreURL: " + *coreUrlEntry->value_);
                     } else coreUrl = *coreUrlEntry->value_;
                 }
