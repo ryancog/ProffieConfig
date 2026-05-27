@@ -603,20 +603,32 @@ void Prop::rebuildLookup(logging::Branch *lBranch) {
         // just check the value and not the validity of having an empty define.
         if (setting->define_.empty()) continue;
 
-        if (mMap.contains(setting->define_)) {
-            logger.warn("Multiple settings registered under identifier \"" + setting->define_ + '"');
+        // Handle the nesting of Option
+        std::vector<detail::SettingBase *> toIterate{setting.get()};
+
+        if (auto *ptr{dynamic_cast<Option *>(setting.get())}) {
+            for (auto *selection : ptr->selections_) {
+                auto *asBase{dynamic_cast<detail::SettingBase *>(selection)};
+                toIterate.push_back(asBase);
+            }
         }
 
-        mMap[setting->define_] = setting.get();
+        for (auto *setting : toIterate) {
+            if (mMap.contains(setting->define_)) {
+                logger.warn("Multiple settings registered under identifier \"" + setting->define_ + '"');
+            }
+
+            mMap[setting->define_] = setting;
+        }
     }
 
-    for (const auto& setting : mSettings) {
+    for (const auto& [define, setting] : mMap) {
         const auto getDisables{[&] -> const std::vector<std::string> * {
             using Selection = Option::Selection;
-            if (auto *ptr{dynamic_cast<const Toggle *>(setting.get())})
+            if (auto *ptr{dynamic_cast<const Toggle *>(setting)})
                 return &ptr->disables_;
 
-            if (auto *ptr{dynamic_cast<const Selection *>(setting.get())})
+            if (auto *ptr{dynamic_cast<const Selection *>(setting)})
                 return &ptr->disables_;
 
             return nullptr;
@@ -630,7 +642,7 @@ void Prop::rebuildLookup(logging::Branch *lBranch) {
                     continue;
                 }
 
-                mDisMap[iter->second].insert(setting.get());
+                mDisMap[iter->second].insert(setting);
             }
         }
 
@@ -641,7 +653,7 @@ void Prop::rebuildLookup(logging::Branch *lBranch) {
                 continue;
             }
 
-            mReqMap[iter->second].insert(setting.get());
+            mReqMap[iter->second].insert(setting);
         }
 
         for (const auto& required : setting->requireAny_) {
@@ -651,7 +663,7 @@ void Prop::rebuildLookup(logging::Branch *lBranch) {
                 continue;
             }
 
-            mReqMap[iter->second].insert(setting.get());
+            mReqMap[iter->second].insert(setting);
         }
     }
 }
