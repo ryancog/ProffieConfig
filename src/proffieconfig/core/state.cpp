@@ -182,7 +182,7 @@ void doNecessaryMigrations() {
         // Install new ProffieOS and props data 
         if (
                 versions::fetch() or
-                versions::installDefault(true) or
+                versions::installDefault(false) or
                 // Get new stuffage for 7.15 installation
                 versions::downloadOS({7, 15})
            ) {
