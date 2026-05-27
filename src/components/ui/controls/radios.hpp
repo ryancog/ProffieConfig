@@ -37,7 +37,12 @@ struct UI_EXPORT Radios {
     wxString label_;
 
     data::base::Exclusive& data_;
-    std::vector<wxString> labels_;
+
+    struct Radio {
+        detail::ChildWindowBase win_;
+        wxString label_;
+    };
+    std::vector<Radio> radios_;
 
     DescriptorPtr operator()();
 };

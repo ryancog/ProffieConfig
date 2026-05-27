@@ -22,6 +22,7 @@
 #include <wx/radiobut.h>
 
 #include "data/context.hpp"
+#include "ui/detail/general.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/layout/priv/groupbox.hpp"
 #include "ui/detail/datawin.hpp"
@@ -122,13 +123,17 @@ struct Box : detail::Window<priv::GroupBox> {
         auto ctxt{data::context(desc.data_)};
         for (size idx{0}; idx < ctxt.num(); ++idx) {
             auto& bl{ctxt[idx]};
-            auto label{idx < desc.labels_.size()
-                ? desc.labels_[idx]
-                : "UNLABELED"
+
+            auto *data{idx < desc.radios_.size()
+                ? &desc.radios_[idx]
+                : nullptr
             };
 
             auto *radio{new Control(
-                childScaffold, label, bl, desc.win_
+                childScaffold,
+                data ? data->label_ : "LABEL???",
+                bl,
+                data ? data->win_ : detail::ChildWindowBase{}
             )};
 
             if (not childParent()->GetChildren().empty()) {
