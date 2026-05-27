@@ -172,7 +172,15 @@ Selector::ROContext::ROContext(const Selector& sel) :
 }
 
 Selector::ROContext::~ROContext() {
+    release();
+}
+
+void Selector::ROContext::release() {
+    if (released()) return;
+
     model().choice().unlock();
+
+    Model::ROContext::release();
 }
 
 const Vector *Selector::ROContext::bound() const {

@@ -71,10 +71,12 @@ private:
 
 struct DATA_EXPORT Selector::ROContext : virtual Model::ROContext {
     ROContext(const Selector&);
-    ~ROContext();
+    ~ROContext() override;
 
     template <typename M = Selector>
     [[nodiscard]] auto& model() const { return Model::ROContext::model<M>(); }
+
+    void release() override;
 
     /**
      * Currently-bound vector

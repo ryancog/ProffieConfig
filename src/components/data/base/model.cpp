@@ -73,10 +73,14 @@ Model::ROContext::~ROContext() {
 }
 
 void Model::ROContext::release() {
-    if (mModel == nullptr) return;
+    if (released()) return;
 
     mModel->unlock();
     mModel = nullptr;
+}
+
+bool Model::ROContext::released() const {
+    return mModel == nullptr;
 }
 
 bool Model::ROContext::enabled() const {

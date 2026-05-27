@@ -113,14 +113,15 @@ private:
 
 struct DATA_EXPORT Model::ROContext {
     ROContext(const Model&);
-    ~ROContext();
+    virtual ~ROContext();
 
     ROContext(const ROContext&) = delete;
     ROContext(ROContext&&) = delete;
     ROContext& operator=(const ROContext&) = delete;
     ROContext& operator=(ROContext&&) = delete;
 
-    void release();
+    virtual void release();
+    [[nodiscard]] bool released() const;
 
     template <typename M = Model>
     [[nodiscard]] const M& model() const {
@@ -136,7 +137,7 @@ private:
 
 struct DATA_EXPORT Model::Context : virtual ROContext {
     Context(Model&);
-    ~Context();
+    ~Context() override;
 
     template <typename M = Model>
     [[nodiscard]] M& model() const {
