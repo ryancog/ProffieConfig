@@ -146,15 +146,20 @@ pcui::DescriptorPtr VersionsDlg::ui() {
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::Button{
-              .label_=_("Reload Local"),
-              .func_=[this] { versions::loadLocal(); },
+              .label_=_("Reset To Defaults"),
+              .func_=[this] { onResetButton(); },
             }(),
-            pcui::StretchSpacer{.size_=pcui::interControlSpacing()}(),
+            pcui::StretchSpacer{.size_=pcui::interGroupSpacing() * 3}(),
             pcui::Button{
               .label_=_("Show Local Folder"),
               .func_=[this] {
                   wxLaunchDefaultApplication(paths::versionDir().native());
               },
+            }(),
+            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            pcui::Button{
+              .label_=_("Reload Local"),
+              .func_=[this] { versions::loadLocal(); },
             }(),
           }
         }(),
@@ -613,6 +618,65 @@ void VersionsDlg::onFetchButton() {
 
     std::thread{[this, prog, busy] {
         auto err{versions::fetch(nullptr, prog)};
+        if (err) {
+            prog->finish(true, *err);
+            return;
+        }
+
+        prog->finish(false);
+    }}.detach();
+}
+
+void VersionsDlg::onResetButton() {
+    constexpr auto FULL_RESET{wxYES};
+    constexpr auto RESTORE_DEFAULTS{wxNO};
+    auto res{pcui::showMessage(
+        _(
+            "These actions cannot be undone!\n"
+            "\n"
+            "\"Purge And Reset\" will remove any/all custom versions before restoring defaults.\n"
+            "\n"
+            "\"Restore Defaults\" will restore only default versions, preserving any custom versions."
+        ),
+        {
+            .caption_=_("Restore Defaults"),
+            .style_=wxYES_NO | wxCANCEL | wxCANCEL_DEFAULT,
+            .labels_={
+                .yes_=_("Purge And Reset"),
+                .no_=_("Restore Defaults")
+            },
+            .parent_=this
+        }
+    )};
+
+    if (res == wxCANCEL)
+        return;
+
+    if (res == FULL_RESET) {
+        auto res{pcui::showMessage(
+            _("Are you sure?"),
+            {
+                .caption_=_("Purge And Reset"),
+                .style_=wxYES_NO | wxNO_DEFAULT
+            }
+        )};
+
+        if (res != wxYES)
+            return;
+    }
+
+    pcui::BusyTracker busy(this);
+
+    auto *prog{new pcui::ProgressDialog(
+        this,
+        _("Restore Defaults"),
+        true
+    )};
+
+    std::thread{[this, res, prog, busy] {
+        prog->pulse(_("Restoring..."));
+
+        auto err{versions::installDefault(res == FULL_RESET)};
         if (err) {
             prog->finish(true, *err);
             return;

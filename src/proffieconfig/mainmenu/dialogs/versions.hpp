@@ -41,6 +41,7 @@ private:
     static pcui::DescriptorPtr osInfo(data::base::Model *);
 
     void onFetchButton();
+    void onResetButton();
 
     void onPropInstallButton();
     void onPropRemoveButton();
