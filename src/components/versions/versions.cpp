@@ -506,28 +506,37 @@ std::optional<std::string> versions::installDefault(
         }
     }
 
-    auto osDownErr{downloadOS(DEFAULT_OS_VERSION, logger.binfo("Downloading ProffieOS"))};
-    if (osDownErr) return osDownErr;
+    auto osDownErr{downloadOS(
+        DEFAULT_OS_VERSION,
+        logger.binfo("Downloading ProffieOS")
+    )};
+    if (osDownErr)
+        return osDownErr;
 
     { auto ctxt{data::context(priv::availableProps)};
         for (const auto& model : ctxt.children()) {
             auto& availProp{dynamic_cast<props::Available&>(*model)};
+
             bool supportsDefault{false};
             for (const auto& ver : availProp.supportedVersions_) {
-                if (ver.compare(DEFAULT_OS_VERSION) != 0) continue;
+                if (ver.compare(DEFAULT_OS_VERSION) != 0)
+                    continue;
 
                 supportsDefault = true;
                 break;
             }
 
-            auto downErr{downloadProp(availProp.name_, logger.binfo("Downloading Prop " + availProp.name_))};
-            if (downErr) return downErr;
+            auto downErr{downloadProp(
+                availProp.name_,
+                logger.binfo("Downloading Prop " + availProp.name_)
+            )};
+            if (downErr)
+                return downErr;
         }
     }
 
     return std::nullopt;
 }
-
 
 std::optional<std::string> versions::downloadOS(
     const utils::Version& ver, logging::Branch *lBranch
