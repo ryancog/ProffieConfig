@@ -75,17 +75,9 @@ std::optional<std::string> parse::top(
             }
             case Include:
             {
-                if (not config.os()) {
-                    // If an OS hasn't been chosen yet, choose the first
-                    // available.
-                    auto ctxt{data::context(config.osChoice())};
-
+                if (not config.os())
                     // None are available, so this must be skipped.
-                    if (ctxt.num() == 0)
-                        break;
-
-                    ctxt.choose(0);
-                }
+                    break;
 
                 auto& boards{config.os()->boards_};
                 for (auto& [id, board] : boards) {

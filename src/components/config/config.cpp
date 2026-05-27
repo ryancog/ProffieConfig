@@ -96,6 +96,14 @@ Config::Config() :
     amend(mOsChoice, osChoiceTable);
     mOsChoice.update(mOsVec.size());
 
+    // Set the default OS, if there is one, for parsing the board if the config
+    // doesn't have a OS ProffieConfig option, and as a convenience for new
+    // configs created by the user.
+    { auto ctxt{data::context(mOsChoice)};
+        if (ctxt.num() > 0)
+            ctxt.choose(0);
+    }
+
     activate();
 }
 
