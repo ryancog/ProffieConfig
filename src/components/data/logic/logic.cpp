@@ -70,7 +70,7 @@ void Manager::lock() {
 
 void Manager::unlock() {
     mChild->unlock();
-    mLock.lock();
+    mLock.unlock();
 }
 
 bool Manager::val() const {
