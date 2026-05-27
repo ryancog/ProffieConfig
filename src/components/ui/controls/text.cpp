@@ -36,7 +36,7 @@ namespace {
 struct Control : detail::DataWindow<wxTextCtrl> {
     Control(const detail::Scaffold& scaffold, const Text& desc) {
         wxString initial;
-        long style{0};
+        long style{wxTE_RICH2};
 
         if (desc.readOnly_) style |= wxTE_READONLY;
         if (desc.autoLink_) style |= wxTE_AUTO_URL;
