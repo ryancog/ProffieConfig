@@ -13,7 +13,7 @@ INFO: {
 	""
 	"The Sabersense button control system has been engineered for simplicity"
 	"and usability for 1 and 2 button lightsaber. Complex gesture controls"
-	and features like Battle Mode are NOT included."
+	"and features like Battle Mode are NOT included."
 	""
 	"The system features harmonized controls between one-button and two-button"
 	"operation without compromising the greater usability of two-button systems."
@@ -44,8 +44,8 @@ INFO: {
 	"ccchange.wav	-	Change colour"
 	"ccend.wav		-	Exit Colour Change Mode"
 	"press.wav		-	Plays button click sound on press"
-	"release.wav	-	Plays button click sound on release"		
-	"blstbgn.wav	-	Enter Multi-Blast"	
+	"release.wav	-	Plays button click sound on release"
+	"blstbgn.wav	-	Enter Multi-Blast"
 	"blstend.wav	-	Exit Multi-Blast"
 	"array.wav		-	Array Selector ident"
 	"bladeid.wav	-	BladeID Array ident"
@@ -277,7 +277,7 @@ BUTTONS{1} {
 		}
 		BUTTON("Triple Click Power") {
 			DESCRIPTION: "Enter Colour Change Menu"
-			DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
+			DESCRIPTION("SABERSENSE_NO_COLOR_CHANGE"): DISABLED
 		}
 	}
 
@@ -296,11 +296,11 @@ BUTTONS{1} {
 	STATE("in Colour Change") {
 		BUTTON("Rotate Hilt") {
 			DESCRIPTION: "Change Colour"
-			DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
+			DESCRIPTION("SABERSENSE_NO_COLOR_CHANGE"): DISABLED
 		}
 		BUTTON("Hold Power") {
 			DESCRIPTION: "Save and Exit"
-			DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
+			DESCRIPTION("SABERSENSE_NO_COLOR_CHANGE"): DISABLED
 		}
 	}
 }
@@ -360,7 +360,7 @@ BUTTONS{2} {
 			DESCRIPTION: "Start/Stop Music Track"
 		}
 		BUTTON("Triple Click Power") {
-			DESCRIPTION("SABERSENSE_ARRAY SELECTOR"): "Cycle to Next Blade Array"
+			DESCRIPTION("SABERSENSE_ARRAY_SELECTOR"): "Cycle to Next Blade Array"
 		}
 		BUTTON("Four Clicks and Hold Power") {
 			DESCRIPTION: "Reset Installer Defaults"
@@ -401,11 +401,11 @@ BUTTONS{2} {
 		}
 		BUTTON("Triple Click Power") {
 			DESCRIPTION: "Enter Colour Change Menu"
-			DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
+			DESCRIPTION("SABERSENSE_NO_COLOR_CHANGE"): DISABLED
 		}
 		BUTTON("Hold Power and Click Aux") {
 			DESCRIPTION: "Enter Colour Change Menu"
-			DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
+			DESCRIPTION("SABERSENSE_NO_COLOR_CHANGE"): DISABLED
 		}
 	}
 
@@ -427,11 +427,11 @@ BUTTONS{2} {
 	STATE("in Colour Change") {
 		BUTTON("Rotate Hilt") {
 			DESCRIPTION: "Change Colour"
-			DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
+			DESCRIPTION("SABERSENSE_NO_COLOR_CHANGE"): DISABLED
 		}
 		BUTTON("Hold Power") {
 			DESCRIPTION: "Save and Exit"
-			DESCRIPTION("SABERSENSE_DISABLE_COLOR_CHANGE"): DISABLED
+			DESCRIPTION("SABERSENSE_NO_COLOR_CHANGE"): DISABLED
 		}
 	}
 }
@@ -462,7 +462,7 @@ ERRORS {
 		}
 	}
 	MAP {
-		ARDUINO: "DISABLE_COLOR_CHANGE is not supported. Use SABERSENSE_NO_COLOR_CHANGE instead."
+		ARDUINO: "NO_COLOR_CHANGE is not supported. Use SABERSENSE_NO_COLOR_CHANGE instead."
 		DISPLAY: {
 			"General "Disable Color Change" is not supported."
 			"Use Sabersense "Disable Colour Change" instead."
