@@ -68,6 +68,12 @@ protected:
      */
     virtual uint64 hashThis() const;
 
+    /**
+     * If the children which should be hashed differ from the all model's
+     * children, the model may override this to specialize.
+     */
+    virtual std::vector<const Model *> childrenToHash() const;
+
     bool processAction(std::unique_ptr<Action>&&);
 
 private:

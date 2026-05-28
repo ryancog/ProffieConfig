@@ -53,7 +53,7 @@ std::vector<Model *> Model::children() {
     std::vector<Model *> ret;
     ret.reserve(tmp.size());
 
-    for (auto *ptr : tmp)
+    for (const auto *ptr : tmp)
         ret.push_back(const_cast<Model *>(ptr));
 
     return ret;
@@ -68,7 +68,7 @@ uint64 Model::hash(uint64 seed) const {
 
     auto ret{utils::hash::combine(seed, hashThis())};
 
-    for (auto *child : children())
+    for (const auto *child : childrenToHash())
         ret = child->hash(ret);
 
     return ret;
@@ -76,6 +76,10 @@ uint64 Model::hash(uint64 seed) const {
 
 uint64 Model::hashThis() const {
     return 0;
+}
+
+std::vector<const Model *> Model::childrenToHash() const {
+    return children();
 }
 
 bool Model::processAction(std::unique_ptr<Action>&& action) {
