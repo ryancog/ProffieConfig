@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config/blades/servo.hpp"
 #include "config/blades/simple.hpp"
 #include "config/blades/ws281x.hpp"
 #include "config/config.hpp"
@@ -185,6 +186,13 @@ Blade::Blade(Config& config) :
     mTypes(root()) {
     CreationScope createScope(this);
 
+    static const auto osTable{[] {
+        data::base::Choice::RecvTable table;
+        table.onChoice_ = data::map(&Blade::onOsChoice);
+        return table;
+    }()};
+    amend(root<Config>().osChoice(), osTable);
+
     static const auto typeTable{[] {
         data::base::Choice::RecvTable table;
         table.onChoice_ = data::map(&Blade::onType);
@@ -212,6 +220,17 @@ auto Blade::children() const -> std::vector<const Model *> {
     };
 }
 
+auto Blade::childrenToHash() const -> std::vector<const Model *> {
+    auto type{data::context(mType)};
+
+    // Only consider the currently-selected type/child.
+    return {
+        &brightness_,
+        &mType,
+        type.selected<data::hier::Model>(),
+    };
+}
+
 const data::base::Selector& Blade::type() {
     return mType;
 }
@@ -234,6 +253,39 @@ Simple& Blade::simple() {
     const auto& model{types.children()[eSimple]};
     // NOLINTNEXTLINE suppress lifetimebound warning
     return dynamic_cast<Simple&>(*model);
+}
+
+void Blade::onActivate() {
+    onOsChoice();
+}
+
+void Blade::onOsChoice() {
+    const auto *os{root<Config>().os()};
+    const auto osIsOrOver8{
+        os and
+        utils::Version(8).compare(os->version_) <= 0
+    };
+
+    auto type{data::context(mType)};
+    auto choice{data::context(mType.choice())};
+
+    if (osIsOrOver8) {
+        if (choice.num() != eOS8_Max) {
+            // This comes after so the enumerations are consistent across
+            // versions.
+            // TODO: Maybe come up with a way to rearrange these things
+            mTypes.append(std::make_unique<Servo>(*this));
+        }
+    } else {
+        if (choice.num() != eOS7_Max) {
+            // First, move the choice back before removing so that it's never
+            // unset.
+            if (choice.idx() == eServo)
+                choice.choose(eUnassigned);
+
+            mTypes.remove(eServo);
+        }
+    }
 }
 
 void Blade::onType() {

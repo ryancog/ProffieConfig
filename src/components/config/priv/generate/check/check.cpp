@@ -22,6 +22,7 @@
 #include <optional>
 
 #include "config/blades/bladeconfig.hpp"
+#include "config/blades/servo.hpp"
 #include "config/buttons/button.hpp"
 #include "config/presets/array.hpp"
 #include "config/presets/preset.hpp"
@@ -112,11 +113,12 @@ std::optional<std::string> gen::preCheck(
         auto name{data::context(bladeConfig.name_)};
         auto presetArray{data::context(bladeConfig.presetArray_)};
 
+        const auto arrayName{name.val().empty()
+            ? _("[default]")
+            : name.val()
+        };
+
         if (presetArray.choiceIdx() == -1) {
-            const auto arrayName{name.val().empty()
-                ? _("[default]")
-                : name.val()
-            };
             return errorMessage(logger, wxTRANSLATE("Blade array %s has no preset array selection"), arrayName);
         }
 
@@ -136,7 +138,7 @@ std::optional<std::string> gen::preCheck(
                 auto dataPin{data::context(blade.ws281x().dataPin_)};
 
                 if (dataPin.val().empty()) {
-                    return errorMessage(logger, wxTRANSLATE("Blade %d in array %s missing data pin"), bladeIdx, name.val());
+                    return errorMessage(logger, wxTRANSLATE("Blade %d in array %s missing data pin"), bladeIdx, arrayName);
                 }
                 // Subblade overlap
             }
@@ -159,16 +161,16 @@ std::optional<std::string> gen::preCheck(
 
                 constexpr auto SIMPLE_ERR_MSG{wxTRANSLATE("LED %d of blade %d in array %s missing power pin.")};
                 if (led1Profile.idx() != eLED_None and led1Pin.val().empty()) {
-                    return errorMessage(logger, SIMPLE_ERR_MSG, 1, bladeIdx, name.val());
+                    return errorMessage(logger, SIMPLE_ERR_MSG, 1, bladeIdx, arrayName);
                 }
                 if (led2Profile.idx() != eLED_None and led2Pin.val().empty()) {
-                    return errorMessage(logger, SIMPLE_ERR_MSG, 2, bladeIdx, name.val());
+                    return errorMessage(logger, SIMPLE_ERR_MSG, 2, bladeIdx, arrayName);
                 }
                 if (led3Profile.idx() != eLED_None and led3Pin.val().empty()) {
-                    return errorMessage(logger, SIMPLE_ERR_MSG, 3, bladeIdx, name.val());
+                    return errorMessage(logger, SIMPLE_ERR_MSG, 3, bladeIdx, arrayName);
                 }
                 if (led4Profile.idx() != eLED_None and led4Pin.val().empty()) {
-                    return errorMessage(logger, SIMPLE_ERR_MSG, 4, bladeIdx, name.val());
+                    return errorMessage(logger, SIMPLE_ERR_MSG, 4, bladeIdx, arrayName);
                 }
 
                 if (
@@ -177,8 +179,16 @@ std::optional<std::string> gen::preCheck(
                         led1Profile.idx() == eLED_None or
                         led1Profile.idx() == eLED_None
                    ) {
-                    return errorMessage(logger, wxTRANSLATE("Blade %d in array %s has no LEDs"), bladeIdx, name.val());
+                    return errorMessage(logger, wxTRANSLATE("Blade %d in array %s has no LEDs"), bladeIdx, arrayName);
                 }
+            }
+
+            if (type.choiceIdx() == Blade::eServo) {
+                auto& servo{*type.selected<Servo>()};
+                auto sigPin{data::context(servo.sigPin_)};
+
+                if (sigPin.val().empty())
+                    return errorMessage(logger, wxTRANSLATE("Blade %d in array %s missing signal pin"), bladeIdx, arrayName);
             }
         }
     }

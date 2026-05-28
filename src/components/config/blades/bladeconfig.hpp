@@ -93,6 +93,10 @@ struct CONFIG_EXPORT Blade : data::hier::Model, data::Receiver {
         eWS281X,
         eSimple,
         eUnassigned,
+        eServo,
+
+        eOS7_Max = eUnassigned + 1,
+        eOS8_Max = eServo + 1,
     };
 
     const data::base::Selector& type();
@@ -103,7 +107,13 @@ struct CONFIG_EXPORT Blade : data::hier::Model, data::Receiver {
 
     data::hier::Integer brightness_;
 
+protected:
+    std::vector<const Model *> childrenToHash() const override;
+
 private:
+    void onActivate() override;
+
+    void onOsChoice();
     void onType();
 
     data::hier::Selector mType;

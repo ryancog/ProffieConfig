@@ -26,6 +26,7 @@
 #include "config/presets/array.hpp"
 #include "config/presets/preset.hpp"
 #include "config/blades/bladeconfig.hpp"
+#include "config/blades/servo.hpp"
 #include "config/priv/io.hpp"
 #include "config/strings.hpp"
 #include "data/context.hpp"
@@ -221,6 +222,12 @@ std::optional<std::string> parseBlade(
 
     std::optional<std::string> err;
 
+    const auto *os{array.root<Config>().os()};
+    const auto osIsOrOver8{
+        os and
+        utils::Version(8).compare(os->version_) <= 0
+    };
+
     static constexpr std::string_view DIMBLADE_STR{"DimBlade("};
     const auto parseDimBlade{[&data, &logger](int32& brightness) -> std::optional<std::string> {
         if (data.starts_with(DIMBLADE_STR)) {
@@ -268,8 +275,8 @@ std::optional<std::string> parseBlade(
         constexpr std::string_view ZIGZAG_STR{"ZZ("};
         constexpr std::string_view LIST_STR{"WithList<"};
 
-        auto *os{blade.root<Config>().os()};
-        const auto osOver8{
+        const auto *os{blade.root<Config>().os()};
+        const auto osIsOrOver8{
             os and
             utils::Version(8).compare(os->version_) <= 0
         };
@@ -287,7 +294,7 @@ std::optional<std::string> parseBlade(
         } else if (data.starts_with(ZIGZAG_STR)) {
             splitData.type_ = eZig_Zag;
             data.erase(0, ZIGZAG_STR.length());
-        } else if (osOver8 and data.starts_with(LIST_STR)) {
+        } else if (osIsOrOver8 and data.starts_with(LIST_STR)) {
             splitData.type_ = eList;
             data.erase(0, LIST_STR.length());
         } else {
@@ -487,6 +494,7 @@ std::optional<std::string> parseBlade(
     static constexpr std::string_view WS281X_STR{"WS281XBladePtr<"};
     static constexpr std::string_view WS2811_STR{"WS2811BladePtr<"};
     static constexpr std::string_view SIMPLE_STR{"SimpleBladePtr<"};
+    static constexpr std::string_view SERVO_STR{"ServoBladePtr<"};
     static constexpr std::string_view NULL_STR{"NULL"};
     static constexpr std::string_view NULLPTR_STR{"nullptr"};
     if (data.starts_with(WS281X_STR)) {
@@ -724,6 +732,31 @@ std::optional<std::string> parseBlade(
            ) {
             blade.type().choice().choose(Blade::eUnassigned);
         }
+    } else if (osIsOrOver8 and data.starts_with(SERVO_STR)) {
+        if (splitData.type_ != WS281X::Split::eMax) {
+            return errorMessage(logger, wxTRANSLATE("Attempted to SubBlade servo blade"));
+        }
+
+        data.erase(0, SERVO_STR.length());
+        blade.type().choice().choose(Blade::eServo);
+
+        auto type{data::context(blade.type())};
+        auto& servo{*type.selected<blades::Servo>()};
+
+        // I don't support parsing the `SELECTOR` param, just like how I don't
+        // handle custom LED structs. Especially since the docs are so vague
+        // on it.
+        //
+        // Still though, look for `>` or `,`
+        const auto pinCommaPos{data.find_first_of(">,")};
+        if (pinCommaPos == std::string::npos) {
+            return errorMessage(logger, wxTRANSLATE("Missing end comma/chevron for Servo signal pin"));
+        }
+
+        auto pinStr{data.substr(0, pinCommaPos)};
+        data.erase(0, pinCommaPos + 1);
+
+        servo.sigPin_.change(std::move(pinStr));
     } else if (data.starts_with(NULL_STR) or data.starts_with(NULLPTR_STR)) {
         blade.type().choice().unchoose();
 

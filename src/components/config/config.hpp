@@ -89,15 +89,22 @@ struct CONFIG_EXPORT Config : data::hier::Root, data::Receiver {
     void calcNumBlades();
     void syncStyles();
 
+protected:
+    std::vector<const Model *> childrenToHash() const override;
+
 private:
     friend struct Info;
 
     Config();
 
+    void onActivate() override;
+
     void onAction();
 
     void onNumBlades();
     void onOSChoice();
+
+    std::vector<const Model *> coreChildren() const;
 
     static void processPropRecommend(
         data::hier::Root&, std::string_view, std::string_view

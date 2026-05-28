@@ -22,6 +22,7 @@
 #include <filesystem>
 #include <mutex>
 
+#include "config/blades/servo.hpp"
 #include "config/presets/style.hpp"
 #include "config/blades/bladeconfig.hpp"
 #include "config/blades/simple.hpp"
@@ -63,7 +64,7 @@ Config::Config() :
         auto osCtxt{data::context(versions::os::list())};
 
         mOsVec.reserve(osCtxt.children().size());
-        for (auto& model : osCtxt.children()) {
+        for (const auto& model : osCtxt.children()) {
             auto& os{dynamic_cast<versions::os::OS&>(*model)};
             mOsVec.emplace_back(new versions::os::OS(os));
 
@@ -111,8 +112,12 @@ Config::~Config() {
     deactivate();
 }
 
-auto Config::children() const -> std::vector<const Model *> {
-    std::vector<const Model *> ret{
+void Config::onActivate() {
+    onOSChoice();
+}
+
+auto Config::coreChildren() const -> std::vector<const Model *> {
+    return {
         &settings_,
         &mPropChoice,
         &mOsChoice,
@@ -123,8 +128,24 @@ auto Config::children() const -> std::vector<const Model *> {
         &injections_,
         &styles_,
     };
+}
 
-    if (auto *ptr{prop()})
+auto Config::children() const -> std::vector<const Model *> {
+    auto ret{coreChildren()};
+
+    for (const auto& [ver, vec] : mPropMap) {
+        for (const auto& prop : vec) {
+            ret.push_back(prop.get());
+        }
+    }
+
+    return ret;
+}
+
+auto Config::childrenToHash() const -> std::vector<const Model *> {
+    auto ret{coreChildren()};
+
+    if (const auto *ptr{prop()})
         ret.push_back(ptr);
 
     return ret;
@@ -157,7 +178,7 @@ const data::base::Choice& Config::boardChoice() const {
 }
 
 const versions::os::Board *Config::board() const {
-    auto *os{this->os()};
+    const auto *os{this->os()};
     if (os == nullptr) return nullptr;
 
     auto ctxt{data::context(mBoardChoice)};
@@ -169,7 +190,7 @@ const versions::os::Board *Config::board() const {
 
 std::optional<std::span<const std::unique_ptr<versions::props::Prop>>>
 Config::propVec() const {
-    auto *os{this->os()};
+    const auto *os{this->os()};
     if (os == nullptr) return std::nullopt;
 
     return mPropMap.find(os->version_)->second;
@@ -225,7 +246,7 @@ void Config::calcNumBlades() {
             auto types{data::context(blade.types())};
             auto *typeModel{types.children()[typeChoice.idx()].get()};
 
-            if (auto *ptr = dynamic_cast<blades::WS281X *>(typeModel)) {
+            if (auto *ptr{dynamic_cast<blades::WS281X *>(typeModel)}) {
                 auto splits{data::context(ptr->splits_)};
 
                 if (splits.children().size() == 0) {
@@ -256,13 +277,9 @@ void Config::calcNumBlades() {
                             __builtin_unreachable();
                     }
                 }
-
-                continue;
-            } 
-
-            if (auto *ptr = dynamic_cast<blades::Simple *>(typeModel)) {
+            } else {
+                // Simple, Servo, or Unassigned
                 ++sum;
-                continue;
             }
         }
 
@@ -307,7 +324,7 @@ void Config::onNumBlades() {
 }
 
 void Config::onOSChoice() {
-    if (auto *ptr{os()}) {
+    if (const auto *ptr{os()}) {
         mBoardChoice.update(ptr->boards_.size());
         mPropChoice.update(propVec()->size());
     } else {
@@ -366,7 +383,7 @@ data::logic::Element config::operator|(
         bool isTrue() {
             std::lock_guard scopeLock(config_);
 
-            auto *os{config_.os()};
+            const auto *os{config_.os()};
             if (not os)
                 return false;
 

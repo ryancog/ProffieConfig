@@ -297,8 +297,8 @@ std::vector<uint32> WS281X::Split::listValues() {
 }
 
 void WS281X::Split::onOsChoice() {
-    auto *os{root<Config>().os()};
-    const auto osOver8{
+    const auto *os{root<Config>().os()};
+    const auto osIsOrOver8{
         os and
         utils::Version(8).compare(os->version_) <= 0
     };
@@ -306,10 +306,8 @@ void WS281X::Split::onOsChoice() {
     auto *list{dynamic_cast<data::base::Bool *>(type_.children()[eList])};
     auto ctxt{data::context(*list)};
 
-    ctxt.enable(osOver8);
-
     // Can't use this on versions less than OS8, need to unset it.
-    if (not osOver8 and ctxt.val()) {
+    if (not osIsOrOver8 and ctxt.val()) {
         auto *standard{type_.children()[eStandard]};
         dynamic_cast<data::base::Bool *>(standard)->set(true);
     }

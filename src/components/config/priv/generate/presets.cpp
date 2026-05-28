@@ -22,6 +22,7 @@
 #include <sstream>
 
 #include "config/blades/bladeconfig.hpp"
+#include "config/blades/servo.hpp"
 #include "config/misc/injection.hpp"
 #include "config/presets/array.hpp"
 #include "config/presets/preset.hpp"
@@ -142,6 +143,14 @@ void genBlades(std::ostream& out, const Config& config) {
 
             if (type.choiceIdx() == blades::Blade::eUnassigned) {
                 out << "\t\tSimpleBladePtr<NoLED, NoLED, NoLED, NoLED, -1, -1, -1, -1>(),\n";
+                continue;
+            }
+
+            if (type.choiceIdx() == blades::Blade::eServo) {
+                auto& servo{*type.selected<blades::Servo>()};
+                auto pin{data::context(servo.sigPin_)};
+
+                out << "\t\tServoBladePtr<" << pin.val() << ">(),\n";
                 continue;
             }
 

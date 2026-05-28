@@ -29,6 +29,7 @@ add_library(config SHARED
     blades/bladeconfig.cpp
     blades/simple.cpp
     blades/ws281x.cpp
+    blades/servo.cpp
 
     buttons/button.cpp
 

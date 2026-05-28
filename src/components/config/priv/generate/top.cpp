@@ -165,7 +165,7 @@ void forGeneral(std::ostream& out, const Config& config) {
         }
 
         if (data::context(bladeID.continuous_.enable_).val()) {
-            auto& continuous{bladeID.continuous_};
+            const auto& continuous{bladeID.continuous_};
 
             auto itvl{data::context(continuous.interval_)};
             auto times{data::context(continuous.times_)};
@@ -371,7 +371,7 @@ void forGeneral(std::ostream& out, const Config& config) {
 }
 
 void forProp(std::ostream& out, const Config& config) {
-    auto *prop{config.prop()};
+    const auto *prop{config.prop()};
 
     if (prop == nullptr) return;
     
