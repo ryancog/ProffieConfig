@@ -27,7 +27,7 @@
 
 using namespace data::base;
 
-const Vector::RecvTable Selector::smVecTable{[] {
+const Vector::RecvTable Selector::VEC_TABLE{[] {
     Vector::RecvTable table;
     table.onInsert_ = map(&Selector::onInsert);
     table.preRemove_ = map(&Selector::preRemove);
@@ -36,14 +36,14 @@ const Vector::RecvTable Selector::smVecTable{[] {
     return table;
 }()};
 
-const Choice::RecvTable Selector::smChoiceTable{[] {
+const Choice::RecvTable Selector::CHOICE_TABLE{[] {
     Choice::RecvTable table;
     table.onChoice_ = map(&Selector::onChoice);
     return table;
 }()};
 
 void Selector::init() {
-    amend(choice(), smChoiceTable);
+    amend(choice(), CHOICE_TABLE);
 }
 
 // No copy ctor because this state can't be preserved. `other` would need to
@@ -62,7 +62,7 @@ const Vector *Selector::doBind(const Vector *vec) {
     if (mVec)
         repeal(*mVec);
 
-    auto ret{mVec};
+    const auto *ret{mVec};
     mVec = vec;
 
     // So, I've gone back and forth with this, but I think it's best to update
@@ -73,7 +73,7 @@ const Vector *Selector::doBind(const Vector *vec) {
     if (mVec) {
         auto vecCtxt{context(*mVec)};
 
-        amend(*mVec, smVecTable);
+        amend(*mVec, VEC_TABLE);
 
         // For now, if both vecs have same length the choice will persist the
         // selection automatically since no update will actually occur.
@@ -155,6 +155,7 @@ void Selector::onRemove(size pos) {
     choiceCtxt.update(vecCtxt.children().size(), idx);
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void Selector::onSwap(size pos) {
     auto ctxt{context(choice())};
 

@@ -65,8 +65,8 @@ private:
 
     const Vector *mVec{nullptr};
 
-    static const Vector::RecvTable smVecTable;
-    static const Choice::RecvTable smChoiceTable;
+    static const Vector::RecvTable VEC_TABLE;
+    static const Choice::RecvTable CHOICE_TABLE;
 };
 
 struct DATA_EXPORT Selector::ROContext : virtual Model::ROContext {
