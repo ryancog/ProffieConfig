@@ -26,9 +26,12 @@
 
 namespace color {
 
+struct UserAccent{};
+
 struct UTILS_EXPORT Dynamic {
     Dynamic(const wxColour& dark, const wxColour& light);
     Dynamic(wxSystemColour color);
+    Dynamic(UserAccent);
 
     Dynamic();
     ~Dynamic();
@@ -42,6 +45,7 @@ private:
     enum class Type {
         STANDARD,
         SYSTEM,
+        ACCENT,
     } mType;
 
     union {
@@ -53,6 +57,7 @@ private:
             wxColour light_;
         } mStd;
         wxSystemColour mSysColor;
+        UserAccent mUserAccent;
     };
 };
 

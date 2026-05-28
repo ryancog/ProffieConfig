@@ -20,12 +20,20 @@
  */
 
 #include <wx/bitmap.h>
+#include <wx/colour.h>
 #include <wx/dcmemory.h>
 #include <wx/display.h>
 #include <wx/gdicmn.h>
 #include <wx/log.h>
 #include <wx/rawbmp.h>
 #include <wx/settings.h>
+
+#if __WXOSX__
+#include <CoreFoundation/CoreFoundation.h>
+
+#include "utils/objc.hpp"
+#elif __WXMSW__
+#endif
 
 const wxColour color::DARK_BLUE{39, 74, 114};
 const wxColour color::LIGHT_BLUE{31, 99, 168};
@@ -39,6 +47,9 @@ color::Dynamic::Dynamic(const wxColour& dark, const wxColour& light) :
 
 color::Dynamic::Dynamic(wxSystemColour color) :
     mType{Type::SYSTEM}, mSysColor{color} {}
+
+color::Dynamic::Dynamic(UserAccent) :
+    mType{Type::ACCENT} {}
 
 color::Dynamic::~Dynamic() {
     if (mType == Type::STANDARD) {
@@ -59,6 +70,42 @@ wxColour color::Dynamic::color() const {
         if (not mStd.light_.IsOk()) return mStd.dark_;
 
         return isDark ? mStd.light_ : mStd.dark_;
+    }
+
+    if (mType == Type::ACCENT) {
+#       ifdef __WXOSX__
+        Class NSColor{objc_getClass("NSColor")};
+        id color{objcMessage<id>((id)NSColor, "controlAccentColor")};
+
+        Class NSColorSpace{objc_getClass("NSColorSpace")};
+        id rgbColorSpace{objcMessage<id>((id)NSColorSpace, "sRGBColorSpace")};
+
+        id rgbColor{objcMessage<id>(
+            color, "colorUsingColorSpace:", rgbColorSpace
+        )};
+
+        CGFloat red{};
+        CGFloat green{};
+        CGFloat blue{};
+        CGFloat alpha{};
+        objcMessage(
+            rgbColor,
+            "getRed:green:blue:alpha:",
+            &red, &green, &blue, &alpha
+        );
+
+        objcMessage(rgbColor, "release");
+
+        return {
+            static_cast<uint8>(red * 0xFF),
+            static_cast<uint8>(green * 0xFF),
+            static_cast<uint8>(blue * 0xFF),
+            static_cast<uint8>(alpha * 0xFF)
+        };
+#       elif __WXMSW__
+        // GetImmersiveColorFromColorSetEx
+        static_assert(false);
+#       endif
     }
 
     return wxNullColour;
@@ -83,6 +130,9 @@ color::Dynamic& color::Dynamic::operator=(const Dynamic& other) {
         case Type::SYSTEM:
             mSysColor = other.mSysColor;
             break;
+        case Type::ACCENT:
+            mUserAccent = other.mUserAccent;
+            break;
     }
 
     return *this;
@@ -94,6 +144,8 @@ color::Dynamic::operator bool() const {
             return mStd.dark_.IsOk() or mStd.light_.IsOk();
         case Type::SYSTEM:
             return mSysColor < wxSYS_COLOUR_MAX;
+        case Type::ACCENT:
+            return true;
     }
 
     assert(0);
