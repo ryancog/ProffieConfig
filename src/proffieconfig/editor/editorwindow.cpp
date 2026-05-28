@@ -131,26 +131,33 @@ void EditorWindow::createMenuBar() {
 }
 
 void EditorWindow::createToolBar() {
+    const auto makeToolbarIcon{[](cstring str) {
+        pcui::Bitmap ret(str);
+        ret.color(color::UserAccent{});
+        ret.scaleTo(32);
+        return ret.realize();
+    }};
+
     auto *toolbar{CreateToolBar(wxTB_TEXT)};
     toolbar->AddRadioTool(
         ePage_General,
         _("General"),
-        pcui::Bitmap("settings").scaleTo(32).realize()
+        makeToolbarIcon("settings")
     );
     toolbar->AddRadioTool(
         ePage_Props,
         _("Prop File"),
-        pcui::Bitmap("props").scaleTo(32).realize()
+        makeToolbarIcon("props")
     );
     toolbar->AddRadioTool(
         ePage_Presets,
         _("Presets"),
-        pcui::Bitmap("presets").scaleTo(32).realize()
+        makeToolbarIcon("presets")
     );
     toolbar->AddRadioTool(
         ePage_Blades,
         _("Blade Arrays"),
-        pcui::Bitmap("blade").scale(32).realize()
+        makeToolbarIcon("blade")
     );
 
 #   ifdef __WXMSW__
