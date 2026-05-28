@@ -23,30 +23,18 @@
 #include <wx/sizer.h>
 #include <wx/window.h>
 
-#ifdef __WXOSX__
-#include <wx/osx/menu.h>
-#include <objc/objc-runtime.h>
-#endif
-
 #include "ui/build.hpp"
 #include "ui/priv/tlw.hpp"
+
+#ifdef __WXOSX__
+#include <wx/osx/menu.h>
+
+#include "utils/objc.hpp"
+#endif
 
 using namespace pcui;
 
 namespace {
-
-#ifdef __WXOSX__
-/*
- * A lot of the Objective-C runtime is very much written in assembly, it's not
- * convenient to use in C, much less C++, but this works well enough.
- */
-template <typename Ret = void, typename ...Args>
-Ret objcMessage(id self, cstring op, Args&&... args) {
-    using Signature = Ret (*)(id, SEL, Args...);
-    auto *func{reinterpret_cast<Signature>(objc_msgSend)};
-    return func(self, sel_registerName(op), std::forward<Args>(args)...);
-}
-#endif
 
 } // namespace
 
