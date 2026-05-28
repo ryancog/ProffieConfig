@@ -28,6 +28,7 @@
 #include "data/hierarchic/root.hpp"
 #include "data/hierarchic/models/vector.hpp"
 #include "data/hierarchic/models/choice.hpp"
+#include "data/logic/logic.hpp"
 #include "data/primitive/model.hpp"
 #include "data/primitive/models/bool.hpp"
 #include "data/primitive/models/number.hpp"
@@ -47,6 +48,10 @@ constexpr cstring RAW_FILE_EXTENSION{".h"};
 constexpr auto MAX_NAME_LENGTH{24};
 
 struct CONFIG_EXPORT Config : data::hier::Root, data::Receiver {
+    struct OSIsOrOverVersion {
+        utils::Version ver_;
+    };
+
     ~Config() override;
 
     using Root::children;
@@ -113,6 +118,8 @@ private:
 
     std::optional<uint64> mSavedHash;
 };
+
+CONFIG_EXPORT data::logic::Element operator|(Config&, Config::OSIsOrOverVersion);
 
 struct CONFIG_EXPORT Info : data::prim::Model {
     const data::base::String& name();

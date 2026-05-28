@@ -60,8 +60,21 @@ struct CONFIG_EXPORT BladeAwareness : data::hier::Model, data::Receiver {
 
         struct {
             data::hier::Bool enable_;
+            data::hier::Integer low_;
+            data::hier::Integer high_;
+        } noBladeIdRange_;
+
+        struct {
+            data::hier::Bool enable_;
             data::hier::Integer interval_;
             data::hier::Integer times_;
+
+            data::hier::Bool stopWhenIgnited_;
+
+            struct {
+                data::hier::Bool enable_;
+                data::hier::Decimal mins_;
+            } timeout_;
         } continuous_;
     } bladeId_;
 
@@ -70,7 +83,11 @@ protected:
 
     void onDetectEnable();
     void onIDEnable();
+    void onNoBladeIdRangeEnable();
+    void onNoBladeIdRangeLow();
+    void onNoBladeIdRangeHigh();
     void onContinuousEnable();
+    void onContinuousTimeoutEnable();
     void onIDPower();
 };
 

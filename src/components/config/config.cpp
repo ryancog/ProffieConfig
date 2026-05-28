@@ -328,6 +328,58 @@ void Config::processPropRecommend(
 }
 
 
+data::logic::Element config::operator|(
+    Config& config, Config::OSIsOrOverVersion data
+) {
+    struct Adapter : data::logic::detail::Base, data::Receiver {
+        Adapter(const Config& config, utils::Version version) :
+            config_{config}, ver_(std::move(version)) {
+            static const auto osChoiceTable{[] {
+                data::base::Choice::RecvTable table;
+                table.onChoice_ = map(&Adapter::onChoice);
+                return table;
+            }()};
+            amend(config.osChoice(), osChoiceTable);
+        }
+
+        ~Adapter() override { deactivate(); }
+
+        bool tryLock() override {
+            return config_.tryLock();
+        }
+
+        void unlock() override {
+            config_.unlock();
+        }
+
+        bool doActivate() override {
+            std::lock_guard scopeLock(config_);
+            Receiver::activate();
+            return isTrue();
+        }
+
+        void onChoice() {
+            std::lock_guard scopeLock(*pLock);
+            onChange(isTrue());
+        }
+
+        bool isTrue() {
+            std::lock_guard scopeLock(config_);
+
+            auto *os{config_.os()};
+            if (not os)
+                return false;
+
+            return ver_.compare(os->version_) <= 0;
+        }
+
+        const Config& config_;
+        const utils::Version ver_;
+    };
+
+    return std::make_unique<Adapter>(config, std::move(data.ver_));
+}
+
 Info::Info() = default;
 
 const data::base::String& Info::name() {

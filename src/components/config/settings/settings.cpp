@@ -43,6 +43,7 @@ bool processPropDefine(
 Settings::Settings(Config& parent) :
     Model(parent),
     massStorage_(root()),
+    mountSdSetting_(root()),
     webUsb_(root()),
     bladeAwareness_(*this),
     volume_(root()),
@@ -72,10 +73,20 @@ Settings::Settings(Config& parent) :
     audioClashSuppressionLevel_(root()),
     dontUseGyroForClash_(root()),
     noRepeatRandom_(root()),
-    femaleTalkie_(root()),
+    disableNoRepeatRandom_(root()),
     killOldPlayers_(root()),
+    disableKillOldPlayers_(root()),
+    femaleTalkie_(root()),
+    enableIdleSound_(root()),
     defines_(root()) {
     CreationScope createScope(this);
+
+    static const auto massStorageTable{[] {
+        data::hier::Bool::RecvTable table;
+        table.onSet_ = data::map(&Settings::onMassStorageSet);
+        return table;
+    }()};
+    amend(massStorage_, massStorageTable);
 
     static const auto saveOptTable{[] {
         data::hier::Bool::RecvTable table;
@@ -153,6 +164,7 @@ Settings::Settings(Config& parent) :
 Settings::~Settings() = default;
 
 void Settings::onActivate() {
+    onMassStorageSet();
     onSaveOptSet();
     onBootVolumeEnable();
     onFilterEnableSet();
@@ -161,6 +173,8 @@ void Settings::onActivate() {
 auto Settings::children() const -> std::vector<const Model *> {
     return {
 		&massStorage_,
+        &mountSdSetting_,
+
 		&webUsb_,
 
 		&bladeAwareness_,
@@ -211,8 +225,11 @@ auto Settings::children() const -> std::vector<const Model *> {
 		&dontUseGyroForClash_,
 
 		&noRepeatRandom_,
-		&femaleTalkie_,
+		&disableNoRepeatRandom_,
 		&killOldPlayers_,
+		&disableKillOldPlayers_,
+		&femaleTalkie_,
+		&enableIdleSound_,
 
 		&defines_,
     };
@@ -220,6 +237,11 @@ auto Settings::children() const -> std::vector<const Model *> {
 
 void Settings::processDefines() {
     processAction(std::make_unique<ProcessDefinesAction>());
+}
+
+void Settings::onMassStorageSet() {
+    auto massStorage{data::context(massStorage_)};
+    mountSdSetting_.enable(massStorage.val());
 }
 
 void Settings::onSaveOptSet() {
@@ -282,7 +304,7 @@ void Settings::onFilterEnableSet() {
 }
 
 void Settings::onDisableTalkieSet() {
-    auto ctxt{data::context(filter_.enable_)};
+    auto ctxt{data::context(disableTalkie_)};
     femaleTalkie_.enable(not ctxt.val());
 }
 
@@ -428,6 +450,29 @@ bool processDefine(
                 str.erase(0, endPos + 1);
             }
         }
+    } else if (define.val() == NO_BLADE_ID_RANGE_STR) {
+        auto& bladeId{settings.bladeAwareness_.bladeId_};
+
+        bladeId.noBladeIdRange_.enable_.set(true);
+
+        std::string_view view{value.val()};
+        auto splitPos{view.find(',')};
+        if (splitPos != std::string::npos) {
+            auto lowStr{view.substr(0, splitPos)};
+            auto highStr{view.substr(splitPos + 1)};
+
+            auto low{utils::doStringMath(lowStr)};
+            auto high{utils::doStringMath(highStr)};
+
+            if (low and high) {
+                bladeId.noBladeIdRange_.low_.set(static_cast<int32>(*low));
+                bladeId.noBladeIdRange_.low_.set(static_cast<int32>(*high));
+            } else {
+                logger.warn("Failed to parse no blade id range");
+            }
+        } else {
+            logger.warn("Failed to find ',' in no blade id range");
+        }
     } else if (define.val() == BLADE_ID_SCAN_MILLIS_STR) {
         auto& bladeId{settings.bladeAwareness_.bladeId_};
         bladeId.continuous_.enable_.set(true);
@@ -444,6 +489,21 @@ bool processDefine(
         if (val) {
             bladeId.continuous_.times_.set(static_cast<int32>(*val));
         } else logger.warn("Failed to parse blade id scan times");
+    } else if (define.val() == BLADE_ID_SCAN_TIMEOUT_STR) {
+        auto& bladeId{settings.bladeAwareness_.bladeId_};
+
+        bladeId.continuous_.timeout_.enable_.set(true);
+
+        auto val{utils::doStringMath(value.val())};
+        if (val) {
+            bladeId.continuous_.timeout_.mins_.set(
+                *val / (60 * 1000)
+            );
+        } else logger.warn("Failed to parse blade id timeout");
+    } else if (define.val() == BLADE_ID_STOP_SCAN_WHEN_IGNITED_STR) {
+        auto& bladeId{settings.bladeAwareness_.bladeId_};
+
+        bladeId.continuous_.stopWhenIgnited_.set(true);
     } else if (define.val() == VOLUME_STR) {
         auto val{utils::doStringMath(value.val())};
         if (val) {
@@ -578,12 +638,20 @@ bool processDefine(
         settings.dontUseGyroForClash_.set(true);
     } else if (define.val() == NO_REPEAT_RANDOM_STR) {
         settings.noRepeatRandom_.set(true);
+    } else if (define.val() == DISABLE_NO_REPEAT_RANDOM_STR) {
+        settings.disableNoRepeatRandom_.set(true);
     } else if (define.val() == FEMALE_TALKIE_STR) {
         settings.femaleTalkie_.set(true);
     } else if (define.val() == DISABLE_TALKIE_STR) {
         settings.disableTalkie_.set(true);
     } else if (define.val() == KILL_OLD_PLAYERS_STR) {
         settings.killOldPlayers_.set(true);
+    } else if (define.val() == DISABLE_KILL_OLD_PLAYERS_STR) {
+        settings.disableKillOldPlayers_.set(true);
+    } else if (define.val() == ENABLE_IDLE_SOUND_STR) {
+        settings.enableIdleSound_.set(true);
+    } else if (define.val() == MOUNT_SD_SETTING_STR) {
+        settings.mountSdSetting_.set(true);
     } else {
         processed = false;
     }

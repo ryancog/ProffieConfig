@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config/blades/bladeconfig.hpp"
 #include "config/strings.hpp"
 #include "config/settings/settings.hpp"
 #include "data/context.hpp"
@@ -41,11 +42,21 @@ BladeAwareness::BladeAwareness(Settings& settings) :
         .pullup_=root(),
         .powerForId_=root(),
         .powerPins_=root(),
+        .noBladeIdRange_={
+            .enable_=root(),
+            .low_=root(),
+            .high_=root(),
+        },
         .continuous_={
             .enable_=root(),
             .interval_=root(),
-            .times_=root()
-        }
+            .times_=root(),
+            .stopWhenIgnited_=root(),
+            .timeout_={
+                .enable_=root(),
+                .mins_=root(),
+            },
+        },
     } {
     CreationScope createScope(this);
 
@@ -63,12 +74,40 @@ BladeAwareness::BladeAwareness(Settings& settings) :
     }()};
     amend(bladeId_.enable_, idEnableTable);
 
+    static const auto noBladeIdRangeEnableTable{[] {
+        data::hier::Bool::RecvTable table;
+        table.onSet_ = data::map(&BladeAwareness::onNoBladeIdRangeEnable);
+        return table;
+    }()};
+    amend(bladeId_.noBladeIdRange_.enable_, noBladeIdRangeEnableTable);
+
+    static const auto noBladeIdRangeLowTable{[] {
+        data::hier::Integer::RecvTable table;
+        table.onSet_ = data::map(&BladeAwareness::onNoBladeIdRangeLow);
+        return table;
+    }()};
+    amend(bladeId_.noBladeIdRange_.low_, noBladeIdRangeLowTable);
+
+    static const auto noBladeIdRangeHighTable{[] {
+        data::hier::Integer::RecvTable table;
+        table.onSet_ = data::map(&BladeAwareness::onNoBladeIdRangeHigh);
+        return table;
+    }()};
+    amend(bladeId_.noBladeIdRange_.high_, noBladeIdRangeHighTable);
+
     static const auto continuousEnableTable{[] {
         data::hier::Bool::RecvTable table;
         table.onSet_ = data::map(&BladeAwareness::onContinuousEnable);
         return table;
     }()};
     amend(bladeId_.continuous_.enable_, continuousEnableTable);
+
+    static const auto continuousTimeoutEnableTable{[] {
+        data::hier::Bool::RecvTable table;
+        table.onSet_ = data::map(&BladeAwareness::onContinuousTimeoutEnable);
+        return table;
+    }()};
+    amend(bladeId_.continuous_.timeout_.enable_, continuousEnableTable);
 
     static const auto idPowerTable{[] {
         data::hier::Bool::RecvTable table;
@@ -101,6 +140,15 @@ BladeAwareness::BladeAwareness(Settings& settings) :
 
     bladeId_.mode_.update(eBIDMode_Max);
     bladeId_.mode_.choose(0);
+
+    bladeId_.noBladeIdRange_.low_.update({
+        .min_=0, .max_=config::blades::NO_BLADE
+    });
+    bladeId_.noBladeIdRange_.high_.update({
+        .min_=0, .max_=config::blades::NO_BLADE
+    });
+    bladeId_.noBladeIdRange_.low_.set(100);
+    bladeId_.noBladeIdRange_.high_.set(1000);
     
     bladeId_.continuous_.times_.update({.min_=1, .max_=100});
     bladeId_.continuous_.times_.set(8);
@@ -123,7 +171,9 @@ BladeAwareness::~BladeAwareness() = default;
 void BladeAwareness::onActivate() {
     onDetectEnable();
     onIDEnable();
+    onNoBladeIdRangeEnable();
     onContinuousEnable();
+    onContinuousTimeoutEnable();
     onIDPower();
 }
 
@@ -142,9 +192,17 @@ auto BladeAwareness::children() const -> std::vector<const Model *> {
 		&bladeId_.powerForId_,
 		&bladeId_.powerPins_,
 
+        &bladeId_.noBladeIdRange_.enable_,
+        &bladeId_.noBladeIdRange_.low_,
+        &bladeId_.noBladeIdRange_.high_,
+
 		&bladeId_.continuous_.enable_,
 		&bladeId_.continuous_.interval_,
 		&bladeId_.continuous_.times_,
+		&bladeId_.continuous_.stopWhenIgnited_,
+
+		&bladeId_.continuous_.timeout_.enable_,
+		&bladeId_.continuous_.timeout_.mins_,
     };
 }
 
@@ -160,10 +218,37 @@ void BladeAwareness::onIDEnable() {
     bladeId_.powerForId_.enable(ctxt.val());
     bladeId_.bridgePin_.enable(ctxt.val());
     bladeId_.pullup_.enable(ctxt.val());
+    bladeId_.noBladeIdRange_.enable_.enable(ctxt.val());
     bladeId_.continuous_.enable_.enable(ctxt.val());
 
+    onNoBladeIdRangeEnable();
     onContinuousEnable();
     onIDPower();
+}
+
+void BladeAwareness::onNoBladeIdRangeEnable() {
+    auto id{data::context(bladeId_.enable_)};
+    auto rng{data::context(bladeId_.noBladeIdRange_.enable_)};
+    auto en{id.val() and rng.val()};
+
+    bladeId_.noBladeIdRange_.low_.enable(en);
+    bladeId_.noBladeIdRange_.high_.enable(en);
+}
+
+void BladeAwareness::onNoBladeIdRangeLow() {
+    auto low{data::context(bladeId_.noBladeIdRange_.low_)};
+    auto high{data::context(bladeId_.noBladeIdRange_.high_)};
+
+    if (low.val() > high.val())
+        high.set(low.val());
+}
+
+void BladeAwareness::onNoBladeIdRangeHigh() {
+    auto low{data::context(bladeId_.noBladeIdRange_.low_)};
+    auto high{data::context(bladeId_.noBladeIdRange_.high_)};
+
+    if (low.val() > high.val())
+        low.set(high.val());
 }
 
 void BladeAwareness::onContinuousEnable() {
@@ -173,6 +258,19 @@ void BladeAwareness::onContinuousEnable() {
 
     bladeId_.continuous_.interval_.enable(en);
     bladeId_.continuous_.times_.enable(en);
+    bladeId_.continuous_.stopWhenIgnited_.enable(en);
+    bladeId_.continuous_.timeout_.enable_.enable(en);
+
+    onContinuousTimeoutEnable();
+}
+
+void BladeAwareness::onContinuousTimeoutEnable() {
+    auto id{data::context(bladeId_.enable_)};
+    auto cont{data::context(bladeId_.continuous_.enable_)};
+    auto timeout{data::context(bladeId_.continuous_.timeout_.enable_)};
+    auto en{id.val() and cont.val() and timeout.val()};
+
+    bladeId_.continuous_.timeout_.mins_.enable(en);
 }
 
 void BladeAwareness::onIDPower() {

@@ -44,6 +44,8 @@ struct CONFIG_EXPORT Settings : data::hier::Model, data::Receiver {
     std::vector<const Model *> children() const override;
 
     data::hier::Bool massStorage_;
+    data::hier::Bool mountSdSetting_;
+
     data::hier::Bool webUsb_;
 
     // pcui::ChoiceData rfidSerial;
@@ -135,8 +137,11 @@ struct CONFIG_EXPORT Settings : data::hier::Model, data::Receiver {
     data::hier::Bool dontUseGyroForClash_;
 
     data::hier::Bool noRepeatRandom_;
-    data::hier::Bool femaleTalkie_;
+    data::hier::Bool disableNoRepeatRandom_;
     data::hier::Bool killOldPlayers_;
+    data::hier::Bool disableKillOldPlayers_;
+    data::hier::Bool femaleTalkie_;
+    data::hier::Bool enableIdleSound_;
 
     // POV Data?
 
@@ -145,6 +150,7 @@ struct CONFIG_EXPORT Settings : data::hier::Model, data::Receiver {
     data::hier::Vector defines_;
 
 protected:
+    void onMassStorageSet();
     void onSaveOptSet();
     void onVolume();
     void onBootVolumeEnable();

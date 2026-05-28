@@ -269,7 +269,7 @@ std::optional<std::string> parseBlade(
         constexpr std::string_view LIST_STR{"WithList<"};
 
         auto *os{blade.root<Config>().os()};
-        const auto OS_OVER_8{
+        const auto osOver8{
             os and
             utils::Version(8).compare(os->version_) <= 0
         };
@@ -287,7 +287,7 @@ std::optional<std::string> parseBlade(
         } else if (data.starts_with(ZIGZAG_STR)) {
             splitData.type_ = eZig_Zag;
             data.erase(0, ZIGZAG_STR.length());
-        } else if (OS_OVER_8 and data.starts_with(LIST_STR)) {
+        } else if (osOver8 and data.starts_with(LIST_STR)) {
             splitData.type_ = eList;
             data.erase(0, LIST_STR.length());
         } else {

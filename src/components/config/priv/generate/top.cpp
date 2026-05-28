@@ -76,6 +76,7 @@ void forGeneral(std::ostream& out, const Config& config) {
     }
 
     auto osVersion{config.os()->version_};
+    const auto osIsOrOver8{utils::Version(8).compare(osVersion) <= 0};
 
     outputOpt(out, OS_VERSION_STR, osVersion.string());
 
@@ -164,10 +165,26 @@ void forGeneral(std::ostream& out, const Config& config) {
         }
 
         if (data::context(bladeID.continuous_.enable_).val()) {
-            auto itvl{data::context(bladeID.continuous_.interval_)};
-            auto times{data::context(bladeID.continuous_.times_)};
+            auto& continuous{bladeID.continuous_};
+
+            auto itvl{data::context(continuous.interval_)};
+            auto times{data::context(continuous.times_)};
             outputDefine(out, BLADE_ID_SCAN_MILLIS_STR, itvl.val());
             outputDefine(out, BLADE_ID_TIMES_STR, times.val());
+
+            if (osIsOrOver8) {
+                if (data::context(continuous.timeout_.enable_).val()) {
+                    auto timeout{data::context(continuous.timeout_.mins_)};
+                    outputDefine(
+                        out,
+                        BLADE_ID_SCAN_TIMEOUT_STR,
+                        std::to_string(timeout.val()) + " * 60 * 1000"
+                    );
+                }
+
+                if (data::context(continuous.stopWhenIgnited_).val())
+                    outputDefine(out, BLADE_ID_STOP_SCAN_WHEN_IGNITED_STR);
+            }
         }
     }
 
@@ -310,7 +327,23 @@ void forGeneral(std::ostream& out, const Config& config) {
         outputDefine(out, DISABLE_TALKIE_STR);
     }
 
-    if (utils::Version{8}.compare(osVersion) > 0) {
+    if (osIsOrOver8) {
+        if (data::context(settings.enableIdleSound_).val()) {
+            outputDefine(out, ENABLE_IDLE_SOUND_STR);
+        }
+
+        if (data::context(settings.mountSdSetting_).val()) {
+            outputDefine(out, MOUNT_SD_SETTING_STR);
+        }
+
+        if (data::context(settings.disableKillOldPlayers_).val()) {
+            outputDefine(out, DISABLE_KILL_OLD_PLAYERS_STR);
+        }
+
+        if (data::context(settings.disableNoRepeatRandom_).val()) {
+            outputDefine(out, DISABLE_NO_REPEAT_RANDOM_STR);
+        }
+    } else {
         // Default on newer version
         if (data::context(settings.killOldPlayers_).val()) {
             outputDefine(out, KILL_OLD_PLAYERS_STR);

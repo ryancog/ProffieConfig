@@ -175,9 +175,12 @@ enum ColorOrder4 {
 constexpr cstring OS_VERSION_STR{"OS_VERSION"};
 constexpr cstring ENABLE_MASS_STORAGE_STR{"ENABLE_MASS_STORAGE"};
 constexpr cstring ENABLE_WEBUSB_STR{"ENABLE_WEBUSB"};
-constexpr cstring NUM_BUTTONS_STR{"NUM_BUTTONS"};
 
+constexpr cstring MOUNT_SD_SETTING_STR{"MOUNT_SD_SETTING"};
+
+constexpr cstring NUM_BUTTONS_STR{"NUM_BUTTONS"};
 constexpr cstring NUM_BLADES_STR{"NUM_BLADES"};
+
 constexpr cstring ENABLE_AUDIO_STR{"ENABLE_AUDIO"};
 constexpr cstring ENABLE_MOTION_STR{"ENABLE_MOTION"};
 constexpr cstring ENABLE_WS2811_STR{"ENABLE_WS2811"};
@@ -193,6 +196,9 @@ constexpr cstring BLADE_ID_CLASS_STR{"BLADE_ID_CLASS"};
 constexpr cstring ENABLE_POWER_FOR_ID_STR{"ENABLE_POWER_FOR_ID"};
 constexpr cstring BLADE_ID_SCAN_MILLIS_STR{"BLADE_ID_SCAN_MILLIS"};
 constexpr cstring BLADE_ID_TIMES_STR{"BLADE_ID_TIMES"};
+constexpr cstring BLADE_ID_SCAN_TIMEOUT_STR{"BLADE_ID_SCAN_TIMEOUT"};
+constexpr cstring NO_BLADE_ID_RANGE_STR{"NO_BLADE_ID_RANGE"};
+constexpr cstring BLADE_ID_STOP_SCAN_WHEN_IGNITED_STR{"BLADE_ID_STOP_SCAN_WHEN_IGNITED"};
 
 constexpr cstring VOLUME_STR{"VOLUME"};
 constexpr cstring BOOT_VOLUME_STR{"BOOT_VOLUME"};
@@ -220,8 +226,11 @@ constexpr cstring SAVE_COLOR_STR{"SAVE_COLOR_CHANGE"};
 constexpr cstring ENABLE_OLED_STR{"ENABLE_SSD1306"};
 
 constexpr cstring NO_REPEAT_RANDOM_STR{"NO_REPEAT_RANDOM"};
+constexpr cstring DISABLE_NO_REPEAT_RANDOM_STR{"DISABLE_NO_REPEAT_RANDOM"};
 constexpr cstring FEMALE_TALKIE_STR{"FEMALE_TALKIE_VOICE"};
 constexpr cstring KILL_OLD_PLAYERS_STR{"KILL_OLD_PLAYERS"};
+constexpr cstring DISABLE_KILL_OLD_PLAYERS_STR{"DISABLE_KILL_OLD_PLAYERS"};
+constexpr cstring ENABLE_IDLE_SOUND_STR{"ENABLE_IDLE_SOUND"};
 
 constexpr cstring ORIENTATION_STR{"ORIENTATION"};
 constexpr cstring ORIENTATION_ROTATION_STR{"ORIENTATION_ROTATION"};
