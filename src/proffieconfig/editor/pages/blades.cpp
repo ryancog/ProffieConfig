@@ -20,9 +20,9 @@
  */
 
 #include <wx/settings.h>
+#include <wx/gdicmn.h>
 
 #include "config/blades/bladeconfig.hpp"
-#include "config/blades/ws281x.hpp"
 #include "config/strings.hpp"
 #include "data/context.hpp"
 #include "data/logic/adapter.hpp"
@@ -283,12 +283,14 @@ pcui::DescriptorPtr BladesPage::blades() {
     ) -> pcui::DescriptorPtr {
         using namespace config::blades;
 
-        if (auto *ptr{dynamic_cast<WS281X *>(model)}) {
+        if (auto *ptr{dynamic_cast<WS281X *>(model)})
             return ws281x(*ptr);
-        }
-        if (auto *ptr{dynamic_cast<Simple *>(model)}) {
+
+        if (auto *ptr{dynamic_cast<Simple *>(model)})
             return simple(*ptr);
-        }
+
+        if (auto *ptr{dynamic_cast<Servo *>(model)})
+            return servo(*ptr);
 
         return pcui::Stack{
           .base_={.expand_=true, .proportion_=1},
@@ -342,6 +344,7 @@ pcui::DescriptorPtr BladesPage::blades() {
                     if (idx == eWS281X) return "WS281X";
                     if (idx == eSimple) return _("Simple");
                     if (idx == eUnassigned) return _("Unassigned");
+                    if (idx == eServo) return _("Servo");
                     return {};
                 }
               }(),
@@ -917,6 +920,39 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
             .data_=split.brightness_,
           }(),
         }(),
+      }
+    }();
+}
+
+pcui::DescriptorPtr BladesPage::servo(config::blades::Servo& servo) {
+    return pcui::Stack{
+      .base_={
+        .expand_=true,
+        .proportion_=1,
+      },
+      .orient_=wxVERTICAL,
+      .children_={
+        pcui::StretchSpacer{}(),
+        pcui::Group{
+          .win_={
+            .base_={
+              .minSize_={140, -1},
+              .align_=wxALIGN_CENTER,
+            },
+          },
+          .children_={
+            pcui::Labeled{
+              .win_={.base_={.expand_=true}},
+              .label_=_("Signal Pin"),
+              .orient_=wxVERTICAL,
+              .ctrl_=pcui::Text{
+                .win_={.base_={.expand_=true}},
+                .data_=servo.sigPin_,
+              }(),
+            }(),
+          }
+        }(),
+        pcui::StretchSpacer{}(),
       }
     }();
 }

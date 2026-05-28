@@ -19,9 +19,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config/config.hpp"
+#include "config/blades/servo.hpp"
 #include "config/blades/ws281x.hpp"
 #include "config/blades/simple.hpp"
+#include "config/config.hpp"
 #include "data/primitive/models/selector.hpp"
 #include "data/primitive/models/string.hpp"
 #include "ui/types.hpp"
@@ -42,10 +43,11 @@ protected:
 private:
     pcui::DescriptorPtr selection();
     pcui::DescriptorPtr blades();
-    pcui::DescriptorPtr simple(config::blades::Simple&);
+    static pcui::DescriptorPtr simple(config::blades::Simple&);
     pcui::DescriptorPtr ws281x(config::blades::WS281X&);
     pcui::DescriptorPtr splits(config::blades::WS281X&);
-    pcui::DescriptorPtr split(config::blades::WS281X::Split&);
+    static pcui::DescriptorPtr split(config::blades::WS281X::Split&);
+    static pcui::DescriptorPtr servo(config::blades::Servo&);
 
     void onAwarenessButton(const pcui::CallbackContext&);
     void onEditButton(const pcui::CallbackContext&);

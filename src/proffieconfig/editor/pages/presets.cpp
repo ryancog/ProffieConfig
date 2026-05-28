@@ -617,7 +617,7 @@ void PresetsPage::updateBladeStrings() {
             auto& blade{dynamic_cast<Blade&>(*child)};
             auto type{data::context(blade.type().choice())};
 
-            if (type.idx() == Blade::eSimple) {
+            if (type.idx() == Blade::eSimple or type.idx() == Blade::eServo) {
                 if (count == mBladeStrings.size()) return;
 
                 auto label{data::context(*mBladeStrings[count])};
@@ -625,7 +625,6 @@ void PresetsPage::updateBladeStrings() {
                     _("Blade %d"), mainIdx
                 ).ToStdString());
 
-                ++mainIdx;
                 ++count;
             } else if (type.idx() == Blade::eWS281X) {
                 auto& ws281x{blade.ws281x()};
@@ -695,15 +694,15 @@ void PresetsPage::updateBladeStrings() {
                         ++subIdx;
                     }
                 }
-
-                ++mainIdx;
             } else if (type.idx() == Blade::eUnassigned) {
                 if (count == mBladeStrings.size()) return;
 
                 mBladeStrings[count]->change(_("Unassigned").ToStdString());
 
                 ++count;
-            }
+            } else assert(0);
+
+            ++mainIdx;
         }
     }
 
