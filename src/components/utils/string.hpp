@@ -146,7 +146,7 @@ struct CommentData {
  * @return Evaluated value
  */
 [[nodiscard]] UTILS_EXPORT
-std::optional<float64> doStringMath(const std::string&);
+std::optional<float64> doStringMath(std::string_view);
 
 } // namespace utils
 

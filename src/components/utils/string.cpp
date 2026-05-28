@@ -22,7 +22,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
-#include <sstream>
+#include <iostream>
 #include <stack>
 
 #include "utils/types.hpp"
@@ -316,9 +316,7 @@ bool utils::extractComments(CommentData& data) {
     }
 }
 
-std::optional<float64> utils::doStringMath(const std::string& str) {
-    std::istringstream ss{str};
-
+std::optional<float64> utils::doStringMath(std::string_view str) {
     enum class Operator {
         ADD,
         SUB,
@@ -517,7 +515,7 @@ std::optional<float64> utils::doStringMath(const std::string& str) {
 
     std::string buf;
     int chr{};
-    while (chr = ss.get(), not ss.eof()) {
+    for (auto chr : str) {
         if (std::isspace(chr)) {
             if (buf.empty()) continue;
 
