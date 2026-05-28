@@ -792,8 +792,8 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
             pcui::Radios::Radio{.label_=_("ZigZag")},
             pcui::Radios::Radio{
                 .win_={
-                  .show_=*split.type_.children()[eList] |
-                      data::logic::IsEnabled{}
+                  .show_=split.root<config::Config>() |
+                      config::Config::OSIsOrOverVersion{.ver_={8}},
                 },
                 .label_=_("List")
             },

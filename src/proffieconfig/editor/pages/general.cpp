@@ -21,6 +21,7 @@
 
 #include "config/strings.hpp"
 #include "data/logic/adapter.hpp"
+#include "data/logic/operators.hpp"
 #include "ui/build.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/checkbox.hpp"
@@ -33,6 +34,7 @@
 #include "ui/static/divider.hpp"
 #include "ui/types.hpp"
 #include "ui/values.hpp"
+#include "wx/gdicmn.h"
 
 GeneralPage::GeneralPage(config::Config& config) : mConfig{config} {}
 
@@ -126,13 +128,28 @@ pcui::DescriptorPtr GeneralPage::setup() {
           }
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
-        pcui::CheckBox{
-          .win_={
-            .base_={.align_=wxALIGN_CENTER},
-            .tooltip_=_("Enable to access the contents of your proffieboard's SD card via the USB connection."),
-          },
-          .label_=_("Enable Mass Storage"),
-          .data_=mConfig.settings_.massStorage_,
+        pcui::Stack{
+          .base_={.align_=wxALIGN_CENTER},
+          .orient_=wxVERTICAL,
+          .children_={
+            pcui::CheckBox{
+              .win_={
+                .tooltip_=_("Enable to access the contents of your proffieboard's SD card via the USB connection."),
+              },
+              .label_=_("Enable Mass Storage"),
+              .data_=mConfig.settings_.massStorage_,
+            }(),
+            pcui::CheckBox{
+              .win_={
+                .base_={
+                  .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+                },
+                .tooltip_=_("Use the onboard menu (if enabled) or Serial Monitor (Use the \"sd\" command) to enable SD card access."),
+              },
+              .label_=_("SD Card Mount Setting"),
+              .data_=mConfig.settings_.mountSdSetting_,
+            }(),
+          }
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         pcui::CheckBox{
@@ -333,6 +350,16 @@ pcui::DescriptorPtr GeneralPage::tweaks() {
           .children_={
             pcui::CheckBox{
               .win_={
+                .show_=mConfig | config::Config::OSIsOrOverVersion{.ver_={8}},
+                .tooltip_=_("Allow playing the same audio file twice consecutively when randomly selecting."),
+              },
+              .label_=_("Disable No Repeat Random"),
+              .data_=mConfig.settings_.disableNoRepeatRandom_,
+            }(),
+            pcui::CheckBox{
+              .win_={
+                .show_=not (mConfig |
+                        config::Config::OSIsOrOverVersion{.ver_={8}}),
                 .tooltip_=_("Do not play the same audio file twice consecutively when randomly selecting."),
               },
               .label_=_("No Repeat Random"),
@@ -341,6 +368,16 @@ pcui::DescriptorPtr GeneralPage::tweaks() {
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::CheckBox{
               .win_={
+                .show_=mConfig | config::Config::OSIsOrOverVersion{.ver_={8}},
+                .tooltip_=_("Don't stop playing old sounds to ensure new sounds always play"),
+              },
+              .label_=_("Disable Kill Old Players"),
+              .data_=mConfig.settings_.disableKillOldPlayers_,
+            }(),
+            pcui::CheckBox{
+              .win_={
+                .show_=not (mConfig |
+                        config::Config::OSIsOrOverVersion{.ver_={8}}),
                 .tooltip_=_("Stop playing old sounds to ensure new sounds always play"),
               },
               .label_=_("Kill Old Players"),
@@ -361,6 +398,17 @@ pcui::DescriptorPtr GeneralPage::tweaks() {
               },
               .label_=_("Female Talkie"),
               .data_=mConfig.settings_.femaleTalkie_,
+            }(),
+            pcui::CheckBox{
+              .win_={
+                .base_={
+                  .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP}
+                },
+                .show_=mConfig | config::Config::OSIsOrOverVersion{.ver_={8}},
+                .tooltip_=_("Enable usage of the idle.wav sound file. Essentially a \"hum\" for when off."),
+              },
+              .label_=_("Enable Idle Sound"),
+              .data_=mConfig.settings_.enableIdleSound_,
             }(),
           }
         }(),

@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/gdicmn.h>
+
 #include "config/strings.hpp"
 #include "data/context.hpp"
 #include "data/logic/adapter.hpp"
@@ -33,10 +35,13 @@
 #include "ui/controls/text.hpp"
 #include "ui/helpers/labeled.hpp"
 #include "ui/layout/group.hpp"
+#include "ui/layout/panel.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
+#include "ui/static/label.hpp"
 #include "ui/symbols.hpp"
 #include "ui/values.hpp"
+#include "wx/string.h"
 
 BladeAwarenessDlg::BladeAwarenessDlg(
     wxWindow* parent, config::Config& config
@@ -181,6 +186,48 @@ pcui::DescriptorPtr BladeAwarenessDlg::idSetup() {
             .data_=bladeId.bridgePin_,
           }(),
         }(),
+        pcui::Panel{
+          .win_={
+            .base_={
+              .expand_=true,
+              .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+            },
+            .show_=mConfig | config::Config::OSIsOrOverVersion{.ver_={8}},
+            .tooltip_=_("If ID values are distinct even without ID pin, this can be used to make Blade ID essentially an alternative form of Blade Detect."),
+          },
+          .child_=pcui::Stack{
+            .base_={.expand_=true},
+            .orient_=wxVERTICAL,
+            .children_={
+              pcui::CheckBox{
+                .label_=_("\"No Blade\" ID Range"),
+                .data_=bladeId.noBladeIdRange_.enable_
+              }(),
+              pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+              pcui::Stack{
+                .base_={.expand_=true},
+                .orient_=wxHORIZONTAL,
+                .children_={
+                  pcui::Stepper{
+                    .win_={.base_={.proportion_=1}},
+                    .data_=bladeId.noBladeIdRange_.low_,
+                  }(),
+                  pcui::Label{
+                    .win_={
+                      .enable_=bladeId.noBladeIdRange_.enable_ |
+                          data::logic::IsSet{},
+                    },
+                    .label_=" – ",
+                  }(),
+                  pcui::Stepper{
+                    .win_={.base_={.proportion_=1}},
+                    .data_=bladeId.noBladeIdRange_.high_,
+                  }(),
+                }
+              }(),
+            }
+          }(),
+        }(),
       }
     }();
 }
@@ -214,7 +261,12 @@ pcui::DescriptorPtr BladeAwarenessDlg::idPower() {
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::CheckList{
-          .win_={.base_={.expand_=true}},
+          .win_={
+            .base_={
+              .expand_=true,
+              .proportion_=1,
+            },
+          },
           .data_=bladeId.powerPins_,
         }(),
         pcui::Stack{
@@ -292,6 +344,52 @@ pcui::DescriptorPtr BladeAwarenessDlg::idContinuous() {
           .ctrl_=pcui::Stepper{
             .win_={.base_={.expand_=true}},
             .data_=bladeId.continuous_.interval_,
+          }(),
+        }(),
+        pcui::Panel{
+          .win_={
+            .base_={
+              .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+            },
+            .show_=mConfig | config::Config::OSIsOrOverVersion{.ver_={8}},
+          },
+          .child_=pcui::Stack{
+            .base_={.expand_=true},
+            .orient_=wxVERTICAL,
+            .children_={
+              pcui::CheckBox{
+                .win_={
+                  .base_={
+                    .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
+                  },
+                  .show_=mConfig | config::Config::OSIsOrOverVersion{.ver_={8}},
+                },
+                .label_=_("Stop Scanning While Ignited"),
+                .data_=bladeId.continuous_.stopWhenIgnited_,
+              }(),
+              pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+              pcui::Panel{
+                .win_={
+                  .base_={.expand_=true},
+                  .tooltip_=_("Like Idle or Motion timeouts, but for ID scanning"),
+                },
+                .child_=pcui::Stack{
+                  .base_={.expand_=true},
+                  .orient_=wxHORIZONTAL,
+                  .children_={
+                    pcui::CheckBox{
+                      .label_=_("Scan Timeout"),
+                      .data_=bladeId.continuous_.timeout_.enable_,
+                    }(),
+                    pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+                    pcui::Stepper{
+                      .win_={.base_{.proportion_=1}},
+                      .data_=bladeId.continuous_.timeout_.mins_,
+                    }(),
+                  }
+                }(),
+              }(),
+            },
           }(),
         }(),
       }
