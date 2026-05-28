@@ -99,15 +99,20 @@ void Receiver::activate() {
     // Set this before the callback in case it tries something silly.
     mAttached = true;
 
+    // And activate any children
+    // Do this beforehand, since it's more reasonable that the parent may do
+    // things which affect the children/children want to respond to rather than
+    // children affecting the parent.
+    //
+    // Without something more clever, it has to be one way or the other...
+    if (auto *ptr{dynamic_cast<hier::Model *>(this)})
+        activateHierarchic(ptr);
+
     // Now that everything's locked (consistent state), the callback is free
     // to do whatever (re)setup it needs.
     onActivate();
 
-    // And activate any children
-    if (auto *ptr{dynamic_cast<hier::Model *>(this)})
-        activateHierarchic(ptr);
-
-    for (auto *model : models)
+    for (const auto *model : models)
         model->unlock();
 }
 
@@ -142,7 +147,7 @@ void Receiver::deactivate() {
 
     onDeactivate();
 
-    for (auto *model : models)
+    for (const auto *model : models)
         model->unlock();
 }
 
@@ -186,7 +191,7 @@ void Receiver::repealAllWithTable(const RecvTable& test) {
             toRepeal.push_back(model);
     }
 
-    for (auto *model : toRepeal)
+    for (const auto *model : toRepeal)
         repeal(*model);
 }
 
