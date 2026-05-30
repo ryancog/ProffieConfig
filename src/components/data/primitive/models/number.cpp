@@ -29,7 +29,7 @@ bool detail::Number<T>::set(T val) {
 
     if (not Number<T>::setupSet(val)) return false;
 
-    Number<T>::doSet(val);
+    Number<T>::doSet(false, val);
     return true;
 }
 
@@ -39,7 +39,7 @@ bool detail::Number<T>::update(Number<T>::Params params) {
 
     if (not Number<T>::setupUpdate(params)) return false;
 
-    Number<T>::doUpdate(params);
+    Number<T>::doUpdate(false, params);
     return true;
 }
 

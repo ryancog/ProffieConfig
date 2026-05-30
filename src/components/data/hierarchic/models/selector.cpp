@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "data/hierarchic/models/vector.hpp"
 #include "utils/hash.hpp"
 
 using namespace data::hier;
@@ -30,12 +31,16 @@ Selector::Selector(Root& root) : Model(root), mChoice(root) {
 Selector::Selector(const Selector& other, Root& root) :
     Model(other, root), mChoice(root) {}
 
-data::base::Choice& Selector::choice() const {
+data::hier::Choice& Selector::choice() const {
     return mChoice;
 }
 
 bool Selector::bind(const base::Vector *vec) {
     return processAction(std::make_unique<BindAction>(vec));
+}
+
+void Selector::setupVecRecv(const base::Vector *vec) {
+    respondWith(*dynamic_cast<const hier::Vector *>(vec), VEC_TABLE);
 }
 
 uint64 Selector::hashThis() const {
@@ -49,10 +54,10 @@ bool Selector::BindAction::setup() {
 }
 
 void Selector::BindAction::perform() {
-    mVec = source<Selector>().doBind(mVec);
+    mVec = source<Selector>().doBind(false, mVec);
 }
 
 void Selector::BindAction::retract() {
-    mVec = source<Selector>().doBind(mVec);
+    mVec = source<Selector>().doBind(true, mVec);
 }
 

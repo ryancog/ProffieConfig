@@ -68,7 +68,7 @@ bool Vector::InsertAction::setup() {
 void Vector::InsertAction::perform() {
     auto *raw{mModel.get()};
 
-    source<Vector>().doInsert(mPos, std::move(mModel));
+    source<Vector>().doInsert(false, mPos, std::move(mModel));
 
     Receiver::maybeActivate(raw);
 }
@@ -76,7 +76,7 @@ void Vector::InsertAction::perform() {
 void Vector::InsertAction::retract() {
     Receiver::maybeDeactivate(source<Vector>().children()[mPos]);
 
-    mModel = source<Vector>().doRemove(mPos);
+    mModel = source<Vector>().doRemove(true, mPos);
 }
 
 Vector::RemoveAction::RemoveAction(size pos) : mPos{pos} {}
@@ -88,13 +88,13 @@ bool Vector::RemoveAction::setup() {
 void Vector::RemoveAction::perform() {
     Receiver::maybeDeactivate(source<Vector>().children()[mPos]);
 
-    mModel = source<Vector>().doRemove(mPos);
+    mModel = source<Vector>().doRemove(false, mPos);
 }
 
 void Vector::RemoveAction::retract() {
     auto *raw{mModel.get()};
 
-    source<Vector>().doInsert(mPos, std::move(mModel));
+    source<Vector>().doInsert(true, mPos, std::move(mModel));
 
     Receiver::maybeActivate(raw);
 }
@@ -110,14 +110,14 @@ void Vector::ClearAction::perform() {
 
     mModels.reserve(vec.children().size());
     while (not vec.children().empty())
-        mModels.push_back(vec.doRemove(0));
+        mModels.push_back(vec.doRemove(false, 0));
 }
 
 void Vector::ClearAction::retract() {
     auto& vec{source<Vector>()};
 
     for (size idx{0}; idx < mModels.size(); ++idx)
-        vec.doInsert(idx, std::move(mModels[idx]));
+        vec.doInsert(true, idx, std::move(mModels[idx]));
 
     mModels.clear();
 }
@@ -129,10 +129,10 @@ bool Vector::SwapAction::setup() {
 }
 
 void Vector::SwapAction::perform() {
-    source<Vector>().doSwap(mPos);
+    source<Vector>().doSwap(false, mPos);
 }
 
 void Vector::SwapAction::retract() {
-    source<Vector>().doSwap(mPos);
+    source<Vector>().doSwap(true, mPos);
 }
 

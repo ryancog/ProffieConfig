@@ -23,6 +23,8 @@
 #include <set>
 
 #include "data/recvtable.hpp"
+#include "utils/hash.hpp"
+#include "utils/types.hpp"
 
 #include "data_export.h"
 
@@ -79,11 +81,43 @@ protected:
     bool setupEnable(bool&);
     void doEnable(bool);
 
+    using TryTableFunctor = std::function<void(
+        Receiver *, const data::RecvTable *)
+    >;
+
+    struct RecvTableBinding {
+        uint64 id_;
+        TryTableFunctor functor_;
+    };
+
     template <typename Table, typename... Args>
-    void sendToReceivers(
+    constexpr void sendToObservers(
         data::RecvTable::Mapping<Args...> Table::*mapping, const Args&... args
     ) const {
-        const auto tryTable{[&](
+        sendToObservers(makeRecvBinding(mapping, args...));
+    }
+
+    template <typename Table, typename... Args>
+    constexpr void responderHook(
+        data::RecvTable::Mapping<Args...> Table::*mapping, const Args&... args
+    ) const {
+        responderHook(makeRecvBinding(mapping, args...));
+    }
+
+    virtual void sendToObservers(const RecvTableBinding&) const;
+    virtual void responderHook(const RecvTableBinding&) const;
+
+    const std::set<Receiver *>& receivers() const;
+
+private:
+    friend Receiver;
+
+    template <typename Table, typename... Args>
+    constexpr RecvTableBinding makeRecvBinding(
+        data::RecvTable::Mapping<Args...> Table::*mapping,
+        const Args&... args LIFETIMEBOUND
+    ) const LIFETIMEBOUND {
+        const auto tryTable{[this, mapping, &args...](
             Receiver *receiver, const data::RecvTable *table
         ) {
             if (auto *derived{dynamic_cast<const Table *>(table)}) {
@@ -97,15 +131,15 @@ protected:
                 }
             }
         }};
-        sendToReceivers(tryTable);
+
+        return {
+            utils::hash::combine(
+                typeid(Table).hash_code(),
+                std::bit_cast<uint64>(mapping)
+            ),
+            tryTable
+        };
     }
-
-private:
-    friend Receiver;
-
-    void sendToReceivers(
-        const std::function<void(Receiver *, const data::RecvTable *)>&
-    ) const;
 
     bool mEnabled{true};
     mutable std::set<Receiver *> mReceivers;

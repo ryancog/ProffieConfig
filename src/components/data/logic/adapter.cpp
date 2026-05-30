@@ -48,7 +48,7 @@ auto data::logic::operator|(const base::Model& model, IsEnabled) -> Element {
                 table.onEnable_ = map(&Adapter::onEnabled);
                 return table;
             }()};
-            amend(model_, table);
+            observeWith(model_, table);
         }
         
         ~Adapter() override { deactivate(); }
@@ -86,7 +86,7 @@ auto data::logic::operator|(const base::Bool& model, IsSet) -> Element {
                 table.onSet_ = map(&Adapter::onSet);
                 return table;
             }()};
-            amend(bl_, table);
+            observeWith(bl_, table);
         }
 
         ~Adapter() override { deactivate(); }
@@ -127,7 +127,7 @@ auto data::logic::operator|(
                 table.onChoice_ = map(&Adapter::onChoice);
                 return table;
             }()};
-            amend(choice_, table);
+            observeWith(choice_, table);
         }
 
         ~Adapter() override { deactivate(); }
@@ -174,7 +174,7 @@ auto data::logic::operator|(
                 table.onSelection_ = map(&Adapter::onSelection);
                 return table;
             }()};
-            amend(excl_, table);
+            observeWith(excl_, table);
         }
 
         ~Adapter() override { deactivate(); }
@@ -219,7 +219,7 @@ auto data::logic::operator|(const base::Selector& model, CanMoveUp) -> Element {
                 table.onCanMoveUp_ = map(&Adapter::onCanMoveUp);
                 return table;
             }()};
-            amend(sel_, table);
+            observeWith(sel_, table);
         }
 
         ~Adapter() override { deactivate(); }
@@ -260,7 +260,7 @@ auto data::logic::operator|(
                 table.onCanMoveDown_ = map(&Adapter::onCanMoveDown);
                 return table;
             }()};
-            amend(sel_, table);
+            observeWith(sel_, table);
         }
 
         ~Adapter() override { deactivate(); }
@@ -300,7 +300,7 @@ auto data::logic::operator|(
                 table.onChange_ = map(&Adapter::onChange);
                 return table;
             }()};
-            amend(str_, table);
+            observeWith(str_, table);
         }
 
         ~Adapter() override { deactivate(); }
@@ -341,7 +341,7 @@ auto data::logic::operator|(
                 table.preRemove_ = map(&Adapter::preRemove);
                 return table;
             }()};
-            amend(vec_, table);
+            observeWith(vec_, table);
         }
 
         ~Adapter() override { deactivate(); }
@@ -391,7 +391,7 @@ auto data::logic::operator|(
                 table.onSet_ = map(&Adapter::onSet);
                 return table;
             }()};
-            amend(int_, table);
+            observeWith(int_, table);
         }
 
         ~Adapter() override { deactivate(); }
@@ -437,7 +437,7 @@ auto data::logic::operator|(
                 table.onSet_ = map(&Adapter::onSet);
                 return table;
             }()};
-            amend(int_, table);
+            observeWith(int_, table);
         }
 
         ~Adapter() override { deactivate(); }

@@ -75,10 +75,10 @@ struct DATA_EXPORT Number : virtual Model {
 
 protected:
     bool setupSet(T&);
-    T doSet(T);
+    T doSet(bool undo, T);
 
     bool setupUpdate(Params&);
-    std::pair<Params, T> doUpdate(Params, std::optional<T> = {});
+    std::pair<Params, T> doUpdate(bool undo, Params, std::optional<T> = {});
 
 private:
     void clamp(T&) const;

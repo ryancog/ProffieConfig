@@ -101,9 +101,7 @@ private:
 
     /**
      * If it is determined the action is unnecessary, the capture state may be
-     * aborted. This has the same effect as the state clearing out (in terms of
-     * restoring UI input and allowing other actions), except no effect is
-     * actually recorded.
+     * aborted.
      */
     void abortCapture();
 
@@ -113,10 +111,8 @@ private:
      * During this time UI entry is denied to ensure chronology, and cascading
      * actions are suppressed in favor of the recorded actions being
      * performed.
-     *
-     * @return If a replay is allowed right now.
      */
-    [[nodiscard]] bool beginReplay();
+    void beginReplay(bool undo, Action&);
 
     /**
      * End replay state.
@@ -124,9 +120,14 @@ private:
     void endReplay();
 
     /**
-     * According to the capture state, record action and update accordingly.
+     * Record action in current list.
      */
     void recordAction(std::unique_ptr<Action>&&);
+
+    /**
+     * Call after action has been performed to finish processing.
+     */
+    void finishCapture();
 
     [[nodiscard]] bool canUndo() const;
     [[nodiscard]] bool canRedo() const;
@@ -141,15 +142,34 @@ private:
      * only (maybe) operations afterwards.
      */
     size mActionIdx{eAct_Idx_First};
-    std::vector<std::vector<std::unique_ptr<Action>>> mActions;
+    std::vector<std::unique_ptr<Action>> mActions;
 
     enum class State {
         Normal,
         Suppressed,
         Performance,
-        Replay,
+        Replay_Undo,
+        Replay_Redo,
+
+        // Special case to check that an observer doesn't try causing actions.
+        In_Observer,
     };
     std::vector<State> mStates{State::Normal};
+
+    struct ActionFrame {
+        union {
+            // Unique identifier for the current level of responding, or 0 to
+            // indicate direct action invocations.
+            uint64 responderId_{0};
+            
+            // For replay
+            decltype(Action::mChildren)::const_iterator iter_;
+            decltype(Action::mChildren)::const_reverse_iterator rIter_;
+        };
+
+        Action *action_;
+    };
+    std::vector<ActionFrame> mActionFrames;
 
     uint32 mPerformanceNesting{0};
 
@@ -179,11 +199,6 @@ struct DATA_EXPORT Root::Context : Model::Context, ROContext {
 };
 
 struct DATA_EXPORT Root::RecvTable : Model::RecvTable {
-    /**
-     * Listener is being detached from the root.
-     */
-    Mapping<> onDetach_;
-
     /**
      * At different/new action, or the action was updated.
      */

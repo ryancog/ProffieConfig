@@ -32,7 +32,7 @@ bool String::change(std::string&& str, size pos) {
 
     if (not setupChange(str, pos)) return false;
 
-    doChange(std::move(str), pos);
+    doChange(false, std::move(str), pos);
     return true;
 }
 
@@ -41,7 +41,7 @@ bool String::move(size pos) {
 
     if (not setupMove(pos)) return false;
 
-    doMove(pos);
+    doMove(false, pos);
     return true;
 }
 

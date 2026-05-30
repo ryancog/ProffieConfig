@@ -68,13 +68,13 @@ protected:
     virtual bool swap(size) = 0;
 
     bool setupInsert(size, const std::unique_ptr<Model>&);
-    void doInsert(size, std::unique_ptr<Model>&&);
+    void doInsert(bool undoRemove, size, std::unique_ptr<Model>&&);
 
     bool setupRemove(size);
-    std::unique_ptr<Model> doRemove(size);
+    std::unique_ptr<Model> doRemove(bool undoInsert, size);
 
     bool setupSwap(size);
-    void doSwap(size);
+    void doSwap(bool undo, size);
 
 private:
     std::vector<std::unique_ptr<Model>> mChildren;

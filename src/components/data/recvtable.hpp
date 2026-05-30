@@ -45,6 +45,13 @@ struct Receiver;
 // }()};
 //
 // Which is a lot of clutter...
+//
+//
+// TODO: This same RecvTable is used for observers and responders, but there
+// are certain things which don't have a responderHook, for one reason or
+// another, and so it seems there should be some way to delineate.
+//
+// It's not an overt issue, but it's certainly misleading/confusing.
 struct DATA_EXPORT RecvTable {
     virtual ~RecvTable() = default;
 

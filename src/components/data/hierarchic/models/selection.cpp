@@ -80,11 +80,11 @@ bool Selection::SelectAction::setup() {
 }
 
 void Selection::SelectAction::perform() {
-    source<Selection>().doSelect(mIdx, mSelect);
+    source<Selection>().doSelect(false, mIdx, mSelect);
 }
 
 void Selection::SelectAction::retract() {
-    source<Selection>().doSelect(mIdx, not mSelect);
+    source<Selection>().doSelect(true, mIdx, not mSelect);
 }
 
 Selection::SetItemsAction::SetItemsAction(std::vector<std::string>&& items) :
@@ -95,14 +95,14 @@ bool Selection::SetItemsAction::setup() {
 }
 
 void Selection::SetItemsAction::perform() {
-    auto last{source<Selection>().doSetItems(std::move(mItems))};
+    auto last{source<Selection>().doSetItems(false, std::move(mItems))};
     mItems = std::move(last.first);
     mSelected = std::move(last.second);
 }
 
 void Selection::SetItemsAction::retract() {
     auto orig{source<Selection>().doSetItems(
-        std::move(mItems), std::move(mSelected)
+        true, std::move(mItems), std::move(mSelected)
     )};
     mItems = std::move(orig.first);
 }
@@ -115,11 +115,11 @@ bool Selection::InsertAction::setup() {
 }
 
 void Selection::InsertAction::perform() {
-    source<Selection>().doInsert(mIdx, std::move(mItem));
+    source<Selection>().doInsert(false, mIdx, std::move(mItem));
 }
 
 void Selection::InsertAction::retract() {
-    mItem = std::move(source<Selection>().doRemove(mIdx).first);
+    mItem = std::move(source<Selection>().doRemove(true, mIdx).first);
 }
 
 Selection::RemoveAction::RemoveAction(uint32 idx) : mIdx{idx} {}
@@ -129,12 +129,12 @@ bool Selection::RemoveAction::setup() {
 }
 
 void Selection::RemoveAction::perform() {
-    auto removed{source<Selection>().doRemove(mIdx)};
+    auto removed{source<Selection>().doRemove(false, mIdx)};
     mItem = std::move(removed.first);
     mSelected = removed.second;
 }
 
 void Selection::RemoveAction::retract() {
-    source<Selection>().doInsert(mIdx, std::move(mItem), mSelected);
+    source<Selection>().doInsert(true, mIdx, std::move(mItem), mSelected);
 }
 

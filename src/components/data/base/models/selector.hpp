@@ -47,10 +47,14 @@ protected:
     void init();
 
     bool setupBind(const Vector *);
-    const Vector *doBind(const Vector *);
+    const Vector *doBind(bool undo, const Vector *);
+
+    virtual void setupVecRecv(const base::Vector *);
 
     static bool canMoveUp(const Choice::ROContext&);
     static bool canMoveDown(const Choice::ROContext&);
+
+    static const Vector::RecvTable VEC_TABLE;
 
 private:
     void onChoice();
@@ -65,7 +69,6 @@ private:
 
     const Vector *mVec{nullptr};
 
-    static const Vector::RecvTable VEC_TABLE;
     static const Choice::RecvTable CHOICE_TABLE;
 };
 

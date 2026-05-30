@@ -48,31 +48,55 @@ bool String::setupChange(std::string& str, size& pos) {
     return str != mValue;
 }
 
-std::pair<std::string, size> String::doChange(std::string&& str, size pos) {
+std::pair<std::string, size> String::doChange(
+    bool undo, std::string&& str, size pos
+) {
+    auto moved{mPos != pos};
+
+    if (undo) {
+        if (moved)
+            responderHook(&RecvTable::onMove_);
+
+        responderHook(&RecvTable::onChange_);
+    }
+
     auto lastStr{std::move(mValue)};
     mValue = std::move(str);
 
     auto lastPos{mPos};
-    auto moved{mPos != pos};
     mPos = pos;
 
-    sendToReceivers(&RecvTable::onChange_);
+    sendToObservers(&RecvTable::onChange_);
 
     if (moved)
-        sendToReceivers(&RecvTable::onMove_);
+        sendToObservers(&RecvTable::onMove_);
+
+    if (not undo) {
+        responderHook(&RecvTable::onChange_);
+
+        if (moved)
+            responderHook(&RecvTable::onMove_);
+    }
 
     return {lastStr, mPos};
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 bool String::setupMove(size pos) {
     return pos != mPos;
 }
 
-size String::doMove(size pos) {
+size String::doMove(bool undo, size pos) {
+    if (undo)
+        responderHook(&RecvTable::onMove_);
+
     auto ret{mPos};
     mPos = pos;
 
-    sendToReceivers(&RecvTable::onMove_);
+    sendToObservers(&RecvTable::onMove_);
+
+    if (not undo)
+        responderHook(&RecvTable::onMove_);
 
     return ret;
 }

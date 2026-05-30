@@ -20,12 +20,17 @@
  */
 
 #include <cassert>
+#include <memory>
+#include <vector>
+
+#include "utils/types.hpp"
 
 #include "data_export.h"
 
 namespace data::hier {
 
 struct Model;
+struct Root;
 
 struct DATA_EXPORT Action {
     virtual ~Action();
@@ -70,8 +75,11 @@ protected:
 
 private:
     friend Model;
+    friend Root;
 
     Model *mSource{nullptr};
+
+    std::vector<std::pair<uint64, std::unique_ptr<Action>>> mChildren;
 };
 
 } // namespace data::hier

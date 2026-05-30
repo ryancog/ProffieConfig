@@ -62,10 +62,10 @@ struct DATA_EXPORT String : virtual Model {
 
 protected:
     bool setupChange(std::string&, size&);
-    std::pair<std::string, size> doChange(std::string&&, size);
+    std::pair<std::string, size> doChange(bool undo, std::string&&, size);
 
     bool setupMove(size);
-    size doMove(size);
+    size doMove(bool undo, size);
 
 private:
     Filter mFilter{nullptr};

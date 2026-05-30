@@ -38,7 +38,7 @@ struct DATA_EXPORT Version : virtual Model {
 
 protected:
     bool setupSet(utils::Version&);
-    utils::Version doSet(utils::Version&&);
+    utils::Version doSet(bool undo, utils::Version&&);
 
 private:
     utils::Version mVer;

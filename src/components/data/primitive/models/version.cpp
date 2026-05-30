@@ -28,7 +28,7 @@ bool Version::set(utils::Version&& ver) {
 
     if (not setupSet(ver)) return false;
 
-    doSet(std::move(ver));
+    doSet(false, std::move(ver));
     return true;
 }
 

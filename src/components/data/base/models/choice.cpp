@@ -43,11 +43,17 @@ bool Choice::setupChoose(int32& idx) {
     return mIdx != idx;
 }
 
-int32 Choice::doChoose(int32 idx) {
+int32 Choice::doChoose(bool undo, int32 idx) {
+    if (undo)
+        responderHook(&RecvTable::onChoice_);
+
     auto ret{mIdx};
     mIdx = idx;
 
-    sendToReceivers(&RecvTable::onChoice_);
+    sendToObservers(&RecvTable::onChoice_);
+
+    if (not undo)
+        responderHook(&RecvTable::onChoice_);
 
     return ret;
 }
@@ -71,19 +77,33 @@ bool Choice::setupUpdate(uint32 num, int32& idx) {
     return true;
 }
 
-std::pair<uint32, int32> Choice::doUpdate(uint32 num, int32 idx) {
+std::pair<uint32, int32> Choice::doUpdate(bool undo, uint32 num, int32 idx) {
     std::pair<uint32, int32> ret{mNum, mIdx};
 
     UpdateInfo info{
         .choicePreserved_=mIdx == idx
     };
 
+    if (undo) {
+        if (not info.choicePreserved_)
+            responderHook(&RecvTable::onChoice_);
+
+        responderHook(&RecvTable::onUpdate_, info);
+    }
+
     mNum = num;;
     mIdx = idx;
 
-    sendToReceivers(&RecvTable::onUpdate_, info);
-    if (not info.choicePreserved_) {
-        sendToReceivers(&RecvTable::onChoice_);
+    sendToObservers(&RecvTable::onUpdate_, info);
+
+    if (not info.choicePreserved_)
+        sendToObservers(&RecvTable::onChoice_);
+
+    if (not undo) {
+        responderHook(&RecvTable::onUpdate_, info);
+
+        if (not info.choicePreserved_)
+            responderHook(&RecvTable::onChoice_);
     }
 
     return ret;

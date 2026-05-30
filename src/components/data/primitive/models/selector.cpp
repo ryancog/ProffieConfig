@@ -41,7 +41,7 @@ bool Selector::bind(const base::Vector *vec) {
 
     if (not setupBind(vec)) return false;
 
-    doBind(vec);
+    doBind(false, vec);
     return true;
 }
 

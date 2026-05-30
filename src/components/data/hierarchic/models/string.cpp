@@ -49,13 +49,13 @@ bool String::ChangeAction::setup() {
 }
 
 void String::ChangeAction::perform() {
-    auto last{source<String>().doChange(std::move(mStr), mPos)};
+    auto last{source<String>().doChange(false, std::move(mStr), mPos)};
     mStr = std::move(last.first);
     mPos = last.second;
 }
 
 void String::ChangeAction::retract() {
-    auto orig{source<String>().doChange(std::move(mStr), mPos)};
+    auto orig{source<String>().doChange(true, std::move(mStr), mPos)};
     mStr = std::move(orig.first);
     mPos = orig.second;
 }
@@ -67,10 +67,10 @@ bool String::MoveAction::setup() {
 }
 
 void String::MoveAction::perform() {
-    mPos = source<String>().doMove(mPos);
+    mPos = source<String>().doMove(false, mPos);
 }
 
 void String::MoveAction::retract() {
-    mPos = source<String>().doMove(mPos);
+    mPos = source<String>().doMove(true, mPos);
 }
 

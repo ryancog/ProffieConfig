@@ -33,10 +33,12 @@ struct DATA_EXPORT Selector : base::Selector, Model {
     Selector(Root&);
     Selector(const Selector&, Root&);
 
-    base::Choice& choice() const override;
+    hier::Choice& choice() const override;
     bool bind(const base::Vector *) override;
 
 protected:
+    void setupVecRecv(const base::Vector *) override;
+
     uint64 hashThis() const override;
 
 private:

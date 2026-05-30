@@ -22,6 +22,7 @@
 #include <cassert>
 
 #include "data/hierarchic/root.hpp"
+#include "data/receiver.hpp"
 #include "utils/hash.hpp"
 
 using namespace data::hier;
@@ -87,17 +88,139 @@ bool Model::processAction(std::unique_ptr<Action>&& action) {
 
     action->mSource = this;
 
-    if (not action->setup()) return false;
+    if (not mRoot.capturePerformance())
+        return false;
 
-    if (not mRoot.capturePerformance()) return false;
-
-    action->perform();
-
-    if (mRoot.isActuallyCapturing()) {
-        mRoot.recordAction(std::move(action));
+    if (not action->setup()) {
+        mRoot.abortCapture();
+        return false;
     }
 
+    // About to maybe invalidate the `action` object, store the underlying
+    // pointer.
+    auto *store{action.get()};
+
+    // This needs to happen *before* `Action::perform()` as otherwise any
+    // nested actions it causes will end up being recorded before it, and
+    // things will end up in a partially-forward, partially-reverse order
+    // that's impossible to replay.
+    //
+    // E.g.:
+    // `subAct1Sub1`
+    // `subAct1`
+    // `subAct2Sub1`
+    // `subAct2`
+    // `this`
+    //
+    // Where the correct order would be this, subAct1, subAct1Sub1, subAct2,
+    // subAct2Sub1.
+    if (mRoot.isActuallyCapturing())
+        mRoot.recordAction(std::move(action));
+
+    store->perform();
+
+    if (mRoot.isActuallyCapturing())
+        mRoot.finishCapture();
+
     return true;
+}
+
+void Model::sendToObservers(const RecvTableBinding& binding) const {
+    mRoot.mStates.push_back(Root::State::In_Observer);
+
+    data::base::Model::sendToObservers(binding);
+
+    mRoot.mStates.pop_back();
+}
+
+void Model::responderHook(const RecvTableBinding& binding) const {
+    auto state{mRoot.mStates.back()};
+
+    const auto performance{[&] {
+        for (auto *receiver : receivers()) {
+            std::lock_guard scopeLock(receiver->pMutex);
+
+            auto observeIter{receiver->mRespondMap.find(this)};
+            if (observeIter != receiver->mRespondMap.end())
+                binding.functor_(receiver, observeIter->second);
+        }
+    }};
+
+    const auto undo{[&] {
+        auto& frame{mRoot.mActionFrames.back()};
+        auto& children{frame.action_->mChildren};
+
+        const auto processForId{[&](uint64 toProcess) {
+            for (; frame.rIter_ != children.rend(); ++frame.rIter_) {
+                const auto& [id, action]{*frame.rIter_};
+                if (id != toProcess)
+                    break;
+
+                auto& newFrame{mRoot.mActionFrames.emplace_back()};
+                newFrame.rIter_ = action->mChildren.rbegin();
+                newFrame.action_ = action.get();
+
+                action->retract();
+
+                mRoot.mActionFrames.pop_back();
+            }
+        }};
+
+        // First, process any non-responder actions that happened before.
+        processForId(0);
+
+        // Then any actions for this binding
+        processForId(binding.id_);
+    }};
+
+    const auto redo{[&] {
+        auto& frame{mRoot.mActionFrames.back()};
+        auto& children{frame.action_->mChildren};
+
+        const auto processForId{[&](uint64 toProcess) {
+            for (; frame.iter_ != children.end(); ++frame.iter_) {
+                const auto& [id, action]{*frame.iter_};
+                if (id != toProcess)
+                    break;
+
+                auto& newFrame{mRoot.mActionFrames.emplace_back()};
+                newFrame.iter_ = action->mChildren.begin();
+                newFrame.action_ = action.get();
+
+                action->perform();
+
+                mRoot.mActionFrames.pop_back();
+            }
+        }};
+
+        // First, process any non-responder actions that happened before.
+        processForId(0);
+
+        // Then any actions for this binding
+        processForId(binding.id_);
+    }};
+
+    switch (state) {
+        case Root::State::Suppressed:
+            // The hook should still be processed.
+            [[fallthrough]];
+        case Root::State::Performance:
+            performance();
+            break;
+        case Root::State::Replay_Undo:
+            undo();
+            break;
+        case Root::State::Replay_Redo:
+            redo();
+            break;
+        case Root::State::Normal:
+            // responderHook() was called from outside an action?
+            [[fallthrough]];
+        case Root::State::In_Observer:
+            // If this is hit, it means an observer tried to illegally perform
+            // an action. It needs to be a responder to do that.
+            abort();
+    }
 }
 
 Model::EnableAction::EnableAction(bool en) : mEnable{en} {}

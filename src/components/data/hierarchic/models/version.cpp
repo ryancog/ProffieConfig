@@ -42,10 +42,10 @@ bool Version::SetAction::setup() {
 }
 
 void Version::SetAction::perform() {
-    mVer = source<Version>().doSet(std::move(mVer));
+    mVer = source<Version>().doSet(false, std::move(mVer));
 }
 
 void Version::SetAction::retract() {
-    mVer = source<Version>().doSet(std::move(mVer));
+    mVer = source<Version>().doSet(true, std::move(mVer));
 }
 

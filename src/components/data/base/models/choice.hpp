@@ -58,10 +58,10 @@ struct DATA_EXPORT Choice : virtual Model {
 
 protected:
     bool setupChoose(int32&);
-    int32 doChoose(int32);
+    int32 doChoose(bool undo, int32);
 
     bool setupUpdate(uint32, int32&);
-    std::pair<uint32, int32> doUpdate(uint32, int32);
+    std::pair<uint32, int32> doUpdate(bool undo, uint32, int32);
 
 private:
     Filter mFilter{nullptr};
@@ -87,7 +87,7 @@ struct DATA_EXPORT Choice::Context : Model::Context, ROContext {
     [[nodiscard]] auto& model() const { return Model::Context::model<M>(); }
 
     void choose(int32) const;
-    void unchoose() const { return choose(-1); }
+    void unchoose() const { choose(-1); }
 
     void update(uint32, int32 = -1) const;
 };

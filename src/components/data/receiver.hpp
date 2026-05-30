@@ -54,9 +54,25 @@ struct DATA_EXPORT Receiver {
     void activate();
     void deactivate();
 
-    void amend(const base::Model&, const RecvTable&);
-    void repeal(const base::Model&);
+    /**
+     * Register a table whose mappings are expected (and in fact only allowed)
+     * to interact with non-data (e.g. UI) in a simple, non-stateful way.
+     *
+     * These "observers" will be called even during replay with the
+     * understanding/goal of keeping things up to date.
+     */
+    void observeWith(const base::Model&, const RecvTable&);
 
+    /**
+     * Register a table whose mappings are expected to perform computations in
+     * order to cause actions.
+     *
+     * Actions are allowed to be generated in these callbacks, and they will be
+     * processed for replay (the mappings are not called again upon replay).
+     */
+    void respondWith(const hier::Model&, const RecvTable&);
+
+    void repeal(const base::Model&);
     void repealAllWithTable(const RecvTable&);
 
 protected:
@@ -77,14 +93,16 @@ protected:
 
 private:
     friend base::Model;
+    friend hier::Model;
+
+    void amendFor(RecvMap&, const base::Model&, const RecvTable&);
 
     static void activateHierarchic(hier::Model *);
     static void deactivateHierarchic(hier::Model *);
 
-    /**
-     * To be initialized by derived on creation.
-     */
-    RecvMap mRecvMap;
+    RecvMap mObserveMap;
+    RecvMap mRespondMap;
+
     bool mAttached{false};
 };
 

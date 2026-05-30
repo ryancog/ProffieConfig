@@ -76,6 +76,11 @@ protected:
 
     bool processAction(std::unique_ptr<Action>&&);
 
+    using base::Model::sendToObservers;
+    void sendToObservers(const RecvTableBinding&) const override;
+    using base::Model::responderHook;
+    void responderHook(const RecvTableBinding&) const override;
+
 private:
     Root& mRoot;
 };

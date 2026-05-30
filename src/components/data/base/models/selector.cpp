@@ -22,6 +22,7 @@
 #include <cassert>
 
 #include "data/context.hpp"
+#include "data/hierarchic/models/vector.hpp"
 #include "data/recvtable.hpp"
 #include "utils/defer.hpp"
 
@@ -43,7 +44,7 @@ const Choice::RecvTable Selector::CHOICE_TABLE{[] {
 }()};
 
 void Selector::init() {
-    amend(choice(), CHOICE_TABLE);
+    observeWith(choice(), CHOICE_TABLE);
 }
 
 // No copy ctor because this state can't be preserved. `other` would need to
@@ -53,11 +54,16 @@ bool Selector::setupBind(const Vector *vec) {
     return mVec != vec;
 }
 
-const Vector *Selector::doBind(const Vector *vec) {
+const Vector *Selector::doBind(bool undo, const Vector *vec) {
     std::lock_guard scopeLock(pMutex);
     auto choiceCtxt{context(choice())};
 
-    sendToReceivers(&RecvTable::preRebound_);
+    sendToObservers(&RecvTable::preRebound_);
+
+    if (undo)
+        responderHook(&RecvTable::onRebound_);
+    else
+        responderHook(&RecvTable::preRebound_);
 
     if (mVec)
         repeal(*mVec);
@@ -73,7 +79,7 @@ const Vector *Selector::doBind(const Vector *vec) {
     if (mVec) {
         auto vecCtxt{context(*mVec)};
 
-        amend(*mVec, VEC_TABLE);
+        setupVecRecv(mVec);
 
         // For now, if both vecs have same length the choice will persist the
         // selection automatically since no update will actually occur.
@@ -82,9 +88,18 @@ const Vector *Selector::doBind(const Vector *vec) {
         choiceCtxt.update(0);
     }
 
-    sendToReceivers(&RecvTable::onRebound_);
+    sendToObservers(&RecvTable::onRebound_);
+
+    if (undo)
+        responderHook(&RecvTable::preRebound_);
+    else
+        responderHook(&RecvTable::onRebound_);
 
     return ret;
+}
+
+void Selector::setupVecRecv(const base::Vector *vec) {
+    observeWith(*vec, VEC_TABLE);
 }
 
 bool Selector::canMoveUp(const Choice::ROContext& ctxt) {
@@ -102,12 +117,12 @@ void Selector::onChoice() {
     auto ctxt{context(choice())};
 
     if (canMoveUp(ctxt) != mLastCanMoveUp) {
-        sendToReceivers(&RecvTable::onCanMoveUp_);
+        sendToObservers(&RecvTable::onCanMoveUp_);
         mLastCanMoveUp = canMoveUp(ctxt);
     }
 
     if (canMoveDown(ctxt) != mLastCanMoveDown) {
-        sendToReceivers(&RecvTable::onCanMoveDown_);
+        sendToObservers(&RecvTable::onCanMoveDown_);
         mLastCanMoveDown = canMoveDown(ctxt);
     }
 }

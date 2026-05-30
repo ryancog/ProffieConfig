@@ -41,7 +41,7 @@ struct DATA_EXPORT Bool : virtual Model {
 
 protected:
     bool setupSet(bool&);
-    void doSet(bool);
+    void doSet(bool undo, bool);
 
 private:
     Filter mFilter{nullptr};

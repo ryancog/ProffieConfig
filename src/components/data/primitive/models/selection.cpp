@@ -30,7 +30,7 @@ bool Selection::select(uint32 idx, bool select) {
 
     if (not setupSelect(idx, select)) return false;
 
-    doSelect(idx, select);
+    doSelect(false, idx, select);
     return true;
 }
 
@@ -43,14 +43,14 @@ bool Selection::select(std::string&& str) {
     if (idx == -1) {
         if (not setupInsert(ctxt.items().size(), str)) return false;
 
-        doInsert(ctxt.items().size(), std::move(str));
+        doInsert(false, ctxt.items().size(), std::move(str));
         return true;
     }
 
     bool select{true};
     if (not setupSelect(idx, select)) return false;
 
-    doSelect(idx, select);
+    doSelect(false, idx, select);
     return true;
 }
 
@@ -59,7 +59,7 @@ bool Selection::setItems(std::vector<std::string>&& items) {
 
     if (not setupSetItems(items)) return false;
 
-    doSetItems(std::move(items));
+    doSetItems(false, std::move(items));
     return true;
 }
 
@@ -69,7 +69,7 @@ bool Selection::add(std::string&& str) {
 
     if (not setupInsert(ctxt.items().size(), str)) return false;
 
-    doInsert(ctxt.items().size(), std::move(str));
+    doInsert(false, ctxt.items().size(), std::move(str));
     return true;
 }
 
@@ -78,7 +78,7 @@ bool Selection::remove(uint32 idx) {
 
     if (not setupRemove(idx)) return false;
 
-    doRemove(idx);
+    doRemove(false, idx);
     return true;
 }
 

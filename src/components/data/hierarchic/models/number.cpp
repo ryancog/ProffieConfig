@@ -63,12 +63,12 @@ bool detail::Number<T>::SetAction::setup() {
 
 template <typename T>
 void detail::Number<T>::SetAction::perform() {
-    mValue = source<Number<T>>().doSet(mValue);
+    mValue = source<Number<T>>().doSet(false, mValue);
 }
 
 template <typename T>
 void detail::Number<T>::SetAction::retract() {
-    mValue = source<Number<T>>().doSet(mValue);
+    mValue = source<Number<T>>().doSet(true, mValue);
 }
 
 template <typename T>
@@ -82,14 +82,14 @@ bool detail::Number<T>::UpdateAction::setup() {
 
 template <typename T>
 void detail::Number<T>::UpdateAction::perform() {
-    auto last{source<Number<T>>().doUpdate(mParams)};
+    auto last{source<Number<T>>().doUpdate(false, mParams)};
     mParams = last.first;
     mValue = last.second;
 }
 
 template <typename T>
 void detail::Number<T>::UpdateAction::retract() {
-    auto orig{source<Number<T>>().doUpdate(mParams, mValue)};
+    auto orig{source<Number<T>>().doUpdate(true, mParams, mValue)};
     mParams = orig.first;
 }
 

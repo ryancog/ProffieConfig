@@ -43,10 +43,10 @@ bool Bool::SetAction::setup() {
 }
 
 void Bool::SetAction::perform() {
-    source<Bool>().doSet(mValue);
+    source<Bool>().doSet(false, mValue);
 }
 
 void Bool::SetAction::retract() {
-    source<Bool>().doSet(not mValue);
+    source<Bool>().doSet(true, not mValue);
 }
 

@@ -51,11 +51,11 @@ bool Choice::ChoiceAction::setup() {
 }
 
 void Choice::ChoiceAction::perform() {
-    mIdx = source<Choice>().doChoose(mIdx);
+    mIdx = source<Choice>().doChoose(false, mIdx);
 }
 
 void Choice::ChoiceAction::retract() {
-    mIdx = source<Choice>().doChoose(mIdx);
+    mIdx = source<Choice>().doChoose(true, mIdx);
 }
 
 Choice::UpdateAction::UpdateAction(uint32 num, int32 idx) :
@@ -66,13 +66,13 @@ bool Choice::UpdateAction::setup() {
 }
 
 void Choice::UpdateAction::perform() {
-    auto last{source<Choice>().doUpdate(mNum, mIdx)};
+    auto last{source<Choice>().doUpdate(false, mNum, mIdx)};
     mNum = last.first;
     mIdx = last.second;
 }
 
 void Choice::UpdateAction::retract() {
-    auto orig{source<Choice>().doUpdate(mNum, mIdx)};
+    auto orig{source<Choice>().doUpdate(true, mNum, mIdx)};
     mNum = orig.first;
     mIdx = orig.second;
 }

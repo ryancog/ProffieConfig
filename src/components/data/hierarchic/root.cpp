@@ -51,14 +51,14 @@ void Root::unsuppressActions(bool clearHistory) {
         const auto lastIdx{mActionIdx};
         mActionIdx = eAct_Idx_First;
 
-        sendToReceivers(&RecvTable::onActionClear_, lastIdx);
-        sendToReceivers(&RecvTable::onAction_);
+        sendToObservers(&RecvTable::onActionClear_, lastIdx);
+        sendToObservers(&RecvTable::onAction_);
 
         // If could, can't anymore
         if (couldUndo)
-            sendToReceivers(&RecvTable::onCanUndo_);
+            sendToObservers(&RecvTable::onCanUndo_);
         if (couldRedo)
-            sendToReceivers(&RecvTable::onCanRedo_);
+            sendToObservers(&RecvTable::onCanRedo_);
     }
 
     mStates.pop_back();
@@ -67,8 +67,6 @@ void Root::unsuppressActions(bool clearHistory) {
 }
 
 bool Root::capturePerformance() {
-    std::lock_guard scopeLock(mMutex);
-
     switch (mStates.back()) {
         case State::Normal:
             mStates.push_back(State::Performance);
@@ -76,11 +74,16 @@ bool Root::capturePerformance() {
         case State::Suppressed:
             // Don't care about setting anything up for recording.
             return true;
-        case State::Replay:
-            // Nothing is allowed besides explicit perform calls from compound.
+        case State::Replay_Undo:
+        case State::Replay_Redo:
+            // Nothing is allowed besides explicit perform calls.
             return false;
         case State::Performance:
             break;
+        case State::In_Observer:
+            // If this is hit, it means an observer tried to illegally perform
+            // an action. It needs to be a responder to do that.
+            abort();
     }
 
     ++mPerformanceNesting;
@@ -101,7 +104,7 @@ bool Root::capturePerformance() {
             mActions.resize(mActionIdx);
 
             // Cleared; can't anymore
-            sendToReceivers(&RecvTable::onCanRedo_);
+            sendToObservers(&RecvTable::onCanRedo_);
         }
 
         mActions.emplace_back();
@@ -111,70 +114,129 @@ bool Root::capturePerformance() {
 }
 
 bool Root::isActuallyCapturing() {
-    std::lock_guard scopeLock(mMutex);
-
     return mStates.back() == State::Performance;
 }
 
 void Root::abortCapture() {
-    std::lock_guard scopeLock(mMutex);
+    if (not isActuallyCapturing())
+        return;
 
-    mActions.pop_back();
+    --mPerformanceNesting;
+    // Action frame hasn't been pushed yet.
+
+    // Still more to do before finalizing.
+    if (mPerformanceNesting != 0)
+        return;
+
     mStates.pop_back();
 }
 
-// The begin and end replay here aren't currently necessary (nor are the checks
-// for replay state elsewhere), since undo/redo occurs inside locked Context.
-bool Root::beginReplay() {
-    if (mStates.back() != State::Normal) return false;
+void Root::beginReplay(bool undo, Action& action) {
+    if (undo) {
+        mStates.push_back(State::Replay_Undo);
 
-    mStates.push_back(State::Replay);
-    return true;
+        // Setup starting frame.
+        auto& frame{mActionFrames.emplace_back()};
+        frame.action_ = &action;
+        frame.rIter_ = action.mChildren.rbegin();
+    } else {
+        mStates.push_back(State::Replay_Redo);
+
+        // Setup starting frame.
+        auto& frame{mActionFrames.emplace_back()};
+        frame.action_ = &action;
+        frame.iter_ = action.mChildren.begin();
+    }
 }
 
 void Root::endReplay() {
-    assert(mStates.back() == State::Replay);
+    assert(mActionFrames.size() == 1);
 
+    auto& frame{mActionFrames.back()};
+    auto& children{frame.action_->mChildren};
+
+    if (mStates.back() == State::Replay_Undo) {
+        for (; frame.rIter_ != children.rend(); ++frame.rIter_) {
+            const auto& child{*frame.rIter_};
+
+            // These should all be 0 responder id. Any others should've been
+            // caught during normal processing.
+            assert(child.first == 0);
+
+            child.second->retract();
+        }
+    } else if (mStates.back() == State::Replay_Redo) {
+        for (; frame.iter_ != children.end(); ++frame.iter_) {
+            const auto& child{*frame.iter_};
+
+            // These should all be 0 responder id. Any others should've been
+            // caught during normal processing.
+            assert(child.first == 0);
+
+            child.second->perform();
+        }
+    } else assert(0);
+
+    mActionFrames.pop_back();
     mStates.pop_back();
 }
 
 void Root::recordAction(std::unique_ptr<Action>&& action) {
-    std::lock_guard scopeLock(mMutex);
-
     assert(mStates.back() == State::Performance);
 
-    mActions[mActionIdx].push_back(std::move(action));
+    auto *raw{action.get()};
+
+    if (mActionFrames.empty()) {
+        mActions[mActionIdx] = std::move(action);
+    } else {
+        auto& curFrame{mActionFrames.back()};
+        curFrame.action_->mChildren.emplace_back(
+            curFrame.responderId_,
+            std::move(action)
+        );
+    }
+
+    auto& frame{mActionFrames.emplace_back()};
+    frame.action_ = raw;
+}
+
+void Root::finishCapture() {
+    assert(mStates.back() == State::Performance);
 
     --mPerformanceNesting;
-    if (mPerformanceNesting == 0) {
-        // Try coalesce before anything else
-        if (
-                // There's a prior action.
-                mActionIdx > 0 and
-                // For now, only try to coalesce individual actions. Other
-                // situations are more complicated that I care to deal with for
-                // now.
-                mActions[mActionIdx - 1].size() == 1 and
-                mActions[mActionIdx].size() == 1
-           ) {
-            auto& lastAct{*mActions[mActionIdx - 1][0]};
-            auto& newAct{*mActions[mActionIdx][0]};
-            if (lastAct.maybeCoalesce(newAct)) {
-                mActions.pop_back();
-                --mActionIdx;
-            }
-        }
+    mActionFrames.pop_back();
 
-        // Call after all processing is complete.
-        sendToReceivers(&RecvTable::onAction_);
+    // Still more to do before finalizing.
+    if (mPerformanceNesting != 0)
+        return;
 
-        // This is the first action, undo is available now, and it was not
-        // prior.
-        if (mActions.size() == 1)
-            sendToReceivers(&RecvTable::onCanUndo_);
+    // Try coalesce before anything else
+    // if (
+    //         // There's a prior action.
+    //         mActionIdx > 0 and
+    //         // For now, only try to coalesce individual actions. Other
+    //         // situations are more complicated than I care to deal with for
+    //         // now.
+    //         mActions[mActionIdx - 1].size() == 1 and
+    //         mActions[mActionIdx].size() == 1
+    //    ) {
+    //     auto& lastAct{*mActions[mActionIdx - 1][0]};
+    //     auto& newAct{*mActions[mActionIdx][0]};
+    //     if (lastAct.maybeCoalesce(newAct)) {
+    //         mActions.pop_back();
+    //         --mActionIdx;
+    //     }
+    // }
 
-        mStates.pop_back();
-    }
+    // Call after all processing is complete.
+    sendToObservers(&RecvTable::onAction_);
+
+    // This is the first action, undo is available now, and it was not
+    // prior.
+    if (mActions.size() == 1)
+        sendToObservers(&RecvTable::onCanUndo_);
+
+    mStates.pop_back();
 }
 
 bool Root::canUndo() const {
@@ -205,60 +267,54 @@ Root::Context::Context(Root& root) :
 void Root::Context::undo() const {
     if (not canUndo()) return;
 
-    if (not model().beginReplay()) return;
+    if (model().mStates.back() != State::Normal)
+        return;
 
     auto couldRedo{canRedo()};
 
-    // Actions are in reverse order
-    // Originally I thought that actions should be replayed in reverse (so
-    // forward iterated), but it makes more sense to retract in forward order
-    // because otherwise children who depend on the parent's state upon an
-    // action would be broken.
-    auto& aList{model().mActions[model().mActionIdx]};
-    for (auto iter{aList.rbegin()}; iter != aList.rend(); ++iter) {
-        (*iter)->retract();
-    }
+    auto& action{model().mActions[model().mActionIdx]};
+    model().beginReplay(true, *action);
+    // This will cause a cascade due to the replay state.
+    action->retract();
+    model().endReplay();
 
     --model().mActionIdx;
 
-    model().endReplay();
-
-    model().sendToReceivers(&RecvTable::onAction_);
+    model().sendToObservers(&RecvTable::onAction_);
 
     // If we couldn't before, now we can.
     if (not couldRedo)
-        model().sendToReceivers(&RecvTable::onCanRedo_);
+        model().sendToObservers(&RecvTable::onCanRedo_);
 
     // We could on entry to this function
     if (not canUndo())
-        model().sendToReceivers(&RecvTable::onCanUndo_);
+        model().sendToObservers(&RecvTable::onCanUndo_);
 }
 
 void Root::Context::redo() const {
     if (not canRedo()) return;
 
-    if (not model().beginReplay()) return;
+    if (model().mStates.back() != State::Normal)
+        return;
 
     auto couldUndo{canUndo()};
 
     ++model().mActionIdx;
 
-    // Actions are in reverse order, so reverse iterate to perform.
-    auto& aList{model().mActions[model().mActionIdx]};
-    for (auto iter{aList.rbegin()}; iter != aList.rend(); ++iter) {
-        (*iter)->perform();
-    }
-
+    auto& action{model().mActions[model().mActionIdx]};
+    model().beginReplay(false, *action);
+    // This will cause a cascade due to the replay state.
+    action->perform();
     model().endReplay();
 
-    model().sendToReceivers(&RecvTable::onAction_);
+    model().sendToObservers(&RecvTable::onAction_);
 
     // If we couldn't before, now we can.
     if (not couldUndo)
-        model().sendToReceivers(&RecvTable::onCanUndo_);
+        model().sendToObservers(&RecvTable::onCanUndo_);
 
     // We could on entry to this function
     if (not canRedo())
-        model().sendToReceivers(&RecvTable::onCanRedo_);
+        model().sendToObservers(&RecvTable::onCanRedo_);
 }
 

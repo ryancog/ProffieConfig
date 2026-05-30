@@ -27,11 +27,17 @@ bool Version::setupSet(utils::Version& ver) {
     return utils::Version::RawComparator{}(ver, mVer) != 0;
 }
 
-utils::Version Version::doSet(utils::Version&& ver) {
+utils::Version Version::doSet(bool undo, utils::Version&& ver) {
+    if (undo)
+        responderHook(&RecvTable::onSet_);
+
     auto ret{std::move(mVer)};
     mVer = std::move(ver);
 
-    sendToReceivers(&RecvTable::onSet_);
+    sendToObservers(&RecvTable::onSet_);
+
+    if (not undo)
+        responderHook(&RecvTable::onSet_);
 
     return ret;
 }

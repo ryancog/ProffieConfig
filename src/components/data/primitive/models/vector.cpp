@@ -28,7 +28,7 @@ bool Vector::insert(size pos, std::unique_ptr<base::Model>&& obj) {
 
     if (not setupInsert(pos, obj)) return false;
 
-    doInsert(pos, std::move(obj));
+    doInsert(false, pos, std::move(obj));
     return true;
 }
 
@@ -37,7 +37,7 @@ bool Vector::remove(size pos) {
 
     if (not setupRemove(pos)) return false;
 
-    doRemove(pos);
+    doRemove(false, pos);
     return true;
 }
 
@@ -50,7 +50,7 @@ bool Vector::clear() {
         return false;
 
     while (not ctxt.children().empty())
-        doRemove(0);
+        doRemove(false, 0);
 
     return true;
 }
@@ -60,7 +60,7 @@ bool Vector::swap(size pos) {
 
     if (not setupSwap(pos)) return false;
 
-    doSwap(pos);
+    doSwap(false, pos);
     return true;
 }
 

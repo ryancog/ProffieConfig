@@ -40,28 +40,38 @@ void Model::focus() {
     std::lock_guard scopeLock(*this);
     // If a UI element is attached that would respond to this, it'll focus, if
     // not, this does nothing.
-    sendToReceivers(&RecvTable::onFocus_);
+    sendToObservers(&RecvTable::onFocus_);
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 bool Model::setupEnable(bool& en) {
     return mEnabled != en;
 }
 
 void Model::doEnable(bool en) {
     mEnabled = en;
-    sendToReceivers(&RecvTable::onEnable_);
+    sendToObservers(&RecvTable::onEnable_);
 }
 
-void Model::sendToReceivers(
-    const std::function<void(Receiver *, const data::RecvTable *)>& tryTable
-) const {
+void Model::sendToObservers(const RecvTableBinding& binding) const {
     for (auto *receiver : mReceivers) {
         std::lock_guard scopeLock(receiver->pMutex);
 
-        // If the receiver is in `mReceivers` then it's guaranteed the model is
-        // in the map.
-        tryTable(receiver, receiver->mRecvMap[this]);
+        auto observeIter{receiver->mObserveMap.find(this)};
+        if (observeIter != receiver->mObserveMap.end())
+            binding.functor_(receiver, observeIter->second);
     }
+}
+
+void Model::responderHook(const RecvTableBinding&) const {
+    // This doesn't do anything. Base models don't have responders, so whenever
+    // an action requests to do the hook processing this just ignores it.
+    //
+    // The actual processing is in hier::Model
+}
+
+const std::set<data::Receiver *>& Model::receivers() const {
+    return mReceivers;
 }
 
 Model::ROContext::ROContext(const Model& model) : mModel{&model} {

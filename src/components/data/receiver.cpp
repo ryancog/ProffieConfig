@@ -81,20 +81,24 @@ void Receiver::activate() {
     // Can't double-activate.
     assert(not mAttached);
 
-    // onActivate() could potentially modify the mRecvMap, which would cause a
+    // onActivate() could potentially modify the mapping, which would cause a
     // mismatch with the model locking.
     std::vector<const base::Model *> models;
-    models.reserve(mRecvMap.size());
+    models.reserve(mObserveMap.size() + mRespondMap.size());
 
     // First, lock everything we plan to attach to to ensure consistent state.
     // Attach can also happen here, sequentially, since nothing else will be
     // allowed to occur until unlock.
-    for (auto [model, map] : mRecvMap) {
-        model->lock();
-        model->mReceivers.insert(this);
+    const auto processMap{[this, &models](const RecvMap& map) {
+        for (auto [model, table] : map) {
+            model->lock();
+            model->mReceivers.insert(this);
 
-        models.push_back(model);
-    }
+            models.push_back(model);
+        }
+    }};
+    processMap(mObserveMap);
+    processMap(mRespondMap);
 
     // Set this before the callback in case it tries something silly.
     mAttached = true;
@@ -131,14 +135,18 @@ void Receiver::deactivate() {
     // The remaining flow mirrors activate()
 
     std::vector<const base::Model *> models;
-    models.reserve(mRecvMap.size());
+    models.reserve(mObserveMap.size() + mRespondMap.size());
 
-    for (auto [model, map] : mRecvMap) {
-        model->lock();
-        model->mReceivers.erase(this);
+    const auto processMap{[this, &models](const RecvMap& map) {
+        for (auto [model, table] : map) {
+            model->lock();
+            model->mReceivers.erase(this);
 
-        models.push_back(model);
-    }
+            models.push_back(model);
+        }
+    }};
+    processMap(mObserveMap);
+    processMap(mRespondMap);
 
     mAttached = false;
 
@@ -151,14 +159,35 @@ void Receiver::deactivate() {
         model->unlock();
 }
 
-void Receiver::amend(const base::Model& model, const RecvTable& table) {
+void Receiver::observeWith(const base::Model& model, const RecvTable& table) {
+    amendFor(mObserveMap, model, table);
+}
+
+void Receiver::respondWith(const hier::Model& model, const RecvTable& table) {
+    // The idea of a responder is that it's going to cause actions.
+    // If this Receiver isn't a hierarchic model, there's not (currently) a
+    // case where it can cause an action, and this is probably a usage error.
+    //
+    // Also, make sure they're in the same hierarchy.
+    auto *self{dynamic_cast<hier::Model *>(this)};
+    assert(self and &self->root() == &model.root());
+
+    amendFor(mRespondMap, model, table);
+}
+
+void Receiver::amendFor(
+    RecvMap& map, const base::Model& model, const RecvTable& table
+) {
     std::lock_guard scopeLock(pMutex);
 
     // Don't leave a hanging reference in a prior-listed model.
     // I think it's best to require explicit repeal(), to make the flow clear.
+    //
+    // Also don't allow a table to both take on both the observe and respond
+    // roles.
     assert(not mapped(model));
 
-    mRecvMap[&model] = &table;
+    map[&model] = &table;
 
     // If things are already attached, then this needs special treatment.
     // This won't call onActivate again, if needed another hook can be added,
@@ -172,7 +201,9 @@ void Receiver::amend(const base::Model& model, const RecvTable& table) {
 void Receiver::repeal(const base::Model& model) {
     std::lock_guard scopeLock(pMutex);
 
-    mRecvMap.erase(&model);
+    // It's in one or the other, try each.
+    if (not mObserveMap.erase(&model))
+        mRespondMap.erase(&model);
 
     if (mAttached) {
         std::lock_guard scopeLock(model);
@@ -183,10 +214,15 @@ void Receiver::repeal(const base::Model& model) {
 void Receiver::repealAllWithTable(const RecvTable& test) {
     std::lock_guard scopeLock(pMutex);
 
-    // Don't modify the map while iterating over it...
+    // Don't modify the maps while iterating...
     std::vector<const base::Model *> toRepeal;
 
-    for (auto [model, table] : mRecvMap) {
+    for (auto [model, table] : mObserveMap) {
+        if (table == &test)
+            toRepeal.push_back(model);
+    }
+
+    for (auto [model, table] : mRespondMap) {
         if (table == &test)
             toRepeal.push_back(model);
     }
@@ -198,6 +234,6 @@ void Receiver::repealAllWithTable(const RecvTable& test) {
 bool Receiver::mapped(const base::Model& model) const {
     std::lock_guard scopeLock(pMutex);
 
-    return mRecvMap.contains(&model);
+    return mObserveMap.contains(&model) or mRespondMap.contains(&model);
 }
 

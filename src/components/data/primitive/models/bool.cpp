@@ -28,7 +28,7 @@ bool Bool::set(bool val) {
 
     if (not setupSet(val)) return false;
 
-    doSet(val);
+    doSet(false, val);
     return true;
 }
 

@@ -22,6 +22,7 @@
 #include <cassert>
 
 #include "data/context.hpp"
+#include "data/hierarchic/models/bool.hpp"
 
 using namespace data::base;
 
@@ -39,7 +40,10 @@ void Exclusive::init(size num) {
             table.onSet_ = map(&Exclusive::onSet);
             return table;
         }()};
-        amend(*obj, table);
+        if (auto *ptr{dynamic_cast<data::hier::Bool *>(obj.get())})
+            respondWith(*ptr, table);
+        else
+            observeWith(*obj, table);
 
         mData.push_back(std::move(obj));
     }
@@ -66,7 +70,7 @@ size Exclusive::doSelect(size idx) {
 }
 
 void Exclusive::onSet(const Model& model) {
-    auto& bl{dynamic_cast<const Bool&>(model)};
+    const auto& bl{dynamic_cast<const Bool&>(model)};
 
     if (not context(bl).val()) return;
 
@@ -83,7 +87,7 @@ void Exclusive::onSet(const Model& model) {
     }
 
     mSelected = selIdx;
-    sendToReceivers(&RecvTable::onSelection_);
+    sendToObservers(&RecvTable::onSelection_);
 }
 
 Exclusive::ROContext::ROContext(const Exclusive& excl) :

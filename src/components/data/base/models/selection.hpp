@@ -80,20 +80,20 @@ struct DATA_EXPORT Selection : virtual Model {
 
 protected:
     bool setupSelect(uint32, bool&);
-    void doSelect(uint32, bool);
+    void doSelect(bool undo, uint32, bool);
 
     bool setupSetItems(std::vector<std::string>&);
     std::pair<std::vector<std::string>, std::vector<bool>>
-    doSetItems(std::vector<std::string>&&, std::vector<bool> = {});
+    doSetItems(bool undo, std::vector<std::string>&&, std::vector<bool> = {});
 
     int32 findString(const std::string&) const;
     bool isSelected(uint32);
 
     bool setupInsert(uint32, std::string&);
-    void doInsert(uint32, std::string&&, bool sel = true);
+    void doInsert(bool removeUndo, uint32, std::string&&, bool sel = true);
 
     bool setupRemove(uint32);
-    std::pair<std::string, bool> doRemove(uint32);
+    std::pair<std::string, bool> doRemove(bool insertUndo, uint32);
 
 private:
     AddFilter mAddFilter{nullptr};

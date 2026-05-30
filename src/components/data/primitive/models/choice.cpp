@@ -28,7 +28,7 @@ bool Choice::choose(int32 idx) {
 
     if (not setupChoose(idx)) return false;
 
-    doChoose(idx);
+    doChoose(false, idx);
     return true;
 }
 
@@ -37,7 +37,7 @@ bool Choice::update(uint32 num, int32 idx) {
 
     if (not setupUpdate(num, idx)) return false;
 
-    doUpdate(num, idx);
+    doUpdate(false, num, idx);
     return true;
 }
 
