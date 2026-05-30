@@ -33,8 +33,8 @@ namespace arduino {
 std::string version();
 
 void applyToBoard(
+    const std::string& name,
     const std::string& boardPath,
-    const std::string&,
     const config::Config&,
     pcui::ProgressDialog& progress
 );
