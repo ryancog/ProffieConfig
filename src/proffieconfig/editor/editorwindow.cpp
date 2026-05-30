@@ -104,10 +104,10 @@ void EditorWindow::createMenuBar() {
     file->Append(eID_Verify, _("Verify Config") + "\tCtrl+R");
     file->AppendSeparator();
     file->Append(wxID_SAVE, _("Save Config") + "\tCtrl+S");
-    file->Append(eID_Export, _("Export Config...") + "\tCtrl+Alt+S");
+    file->Append(eID_Export, _("Export Config...") + "\tCtrl+E");
     file->AppendSeparator();
     file->Append(eID_Injections,
-        _("Manage Injections...") + "\tCtrl+Alt+I"
+        _("Manage Injections...") + "\tCtrl+I"
     );
 
     auto *edit{new wxMenu};
