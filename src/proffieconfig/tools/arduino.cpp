@@ -757,7 +757,7 @@ std::optional<wxString> precheckCompile(
 
     auto styles{data::context(config.styles_)};
     std::unordered_set<std::string> aliasNames;
-    for (auto& model : styles.children()) {
+    for (const auto& model : styles.children()) {
         auto& style{dynamic_cast<config::styles::Style&>(*model)};
 
         auto ctxt{data::context(style.name_)};
