@@ -161,7 +161,7 @@ private:
             // Unique identifier for the current level of responding, or 0 to
             // indicate direct action invocations.
             uint64 responderId_{0};
-            
+
             // For replay
             decltype(Action::mChildren)::const_iterator iter_;
             decltype(Action::mChildren)::const_reverse_iterator rIter_;
