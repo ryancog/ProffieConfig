@@ -149,6 +149,33 @@ pcui::DescriptorPtr PresetsPage::selection() {
               .base_={.expand_=true},
               .orient_=wxHORIZONTAL,
               .children_={
+                pcui::builders::Selector{
+                  .data_=mArraySel,
+                  .builder_=[](
+                      data::base::Model *model
+                  ) -> pcui::DescriptorPtr {
+                      if (not model) return pcui::Spacer{.size_=0}();
+
+                      const auto& array{
+                          *dynamic_cast<config::presets::Array *>(model)
+                      };
+
+                      return pcui::Label{
+                        .win_={
+                          .base_={
+                            .border_={
+                              .size_=pcui::interControlSpacing(),
+                              .dirs_=wxRIGHT
+                            },
+                          },
+                          .show_=not (array.issues() |
+                              data::logic::Equals{.val_=0}),
+                          .tooltip_=_("There's issues with this array, open the edit dialog to see them."),
+                        },
+                        .label_=pcui::syms::NO_ENTRY,
+                      }();
+                  }
+                }(),
                 pcui::Choice{
                   .win_={
                     .base_={
@@ -167,33 +194,6 @@ pcui::DescriptorPtr PresetsPage::selection() {
                       auto& cfg{dynamic_cast<Array&>(*vec.children()[idx])};
                       return cfg.name_;
                   },
-                }(),
-                pcui::builders::Selector{
-                  .data_=mArraySel,
-                  .builder_=[](
-                      data::base::Model *model
-                  ) -> pcui::DescriptorPtr {
-                      if (not model) return pcui::Spacer{.size_=0}();
-
-                      const auto& array{
-                          *dynamic_cast<config::presets::Array *>(model)
-                      };
-
-                      return pcui::Button{
-                        .win_={
-                        .base_={
-                          .border_={
-                            .size_=pcui::interControlSpacing(),
-                            .dirs_=wxLEFT
-                          },
-                        },
-                        .show_=not (array.issues() |
-                            data::logic::Equals{.val_=0})
-                        },
-                        .label_=pcui::syms::NO_ENTRY,
-                        .exactFit_=true,
-                      }();
-                  }
                 }(),
                 pcui::Spacer{.size_=pcui::interControlSpacing()}(),
                 pcui::Button{
