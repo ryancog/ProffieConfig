@@ -608,7 +608,7 @@ auto Prop::children() const -> std::vector<const Model *> {
     std::vector<const Model *> ret;
 
     ret.reserve(mSettings.size());
-    for (auto& setting : mSettings)
+    for (const auto& setting : mSettings)
         ret.push_back(dynamic_cast<Model *>(setting.get()));
 
     return ret;
@@ -650,16 +650,16 @@ void Prop::rebuildLookup(logging::Branch *lBranch) {
     for (const auto& [define, setting] : mMap) {
         const auto getDisables{[&] -> const std::vector<std::string> * {
             using Selection = Option::Selection;
-            if (auto *ptr{dynamic_cast<const Toggle *>(setting)})
+            if (const auto *ptr{dynamic_cast<const Toggle *>(setting)})
                 return &ptr->disables_;
 
-            if (auto *ptr{dynamic_cast<const Selection *>(setting)})
+            if (const auto *ptr{dynamic_cast<const Selection *>(setting)})
                 return &ptr->disables_;
 
             return nullptr;
         }};
 
-        if (auto *disables{getDisables()}) {
+        if (const auto *disables{getDisables()}) {
             for (const auto& disable : *disables) {
                 auto iter{mMap.find(disable)};
                 if (iter == mMap.end()) {
@@ -694,7 +694,7 @@ void Prop::rebuildLookup(logging::Branch *lBranch) {
 }
 
 void Prop::onSet(const data::base::Model& model) {
-    auto& setting{dynamic_cast<const detail::SettingBase&>(model)};
+    const auto& setting{dynamic_cast<const detail::SettingBase&>(model)};
 
     // First, grab all of the settings whose state could be affected by this
     // change.
@@ -702,10 +702,10 @@ void Prop::onSet(const data::base::Model& model) {
     std::set<detail::SettingBase *> affectedSet;
 
     const auto& disables{[&] -> const auto& {
-        if (auto *ptr{dynamic_cast<const Toggle *>(&model)})
+        if (const auto *ptr{dynamic_cast<const Toggle *>(&model)})
             return ptr->disables_;
 
-        if (auto *ptr{dynamic_cast<const Option::Selection *>(&model)})
+        if (const auto *ptr{dynamic_cast<const Option::Selection *>(&model)})
             return ptr->disables_;
 
         assert(0);
@@ -779,17 +779,18 @@ void Prop::onSet(const data::base::Model& model) {
 
     if (mRecProc) {
         const auto& recommends{[&] -> const auto& {
-            if (auto *ptr{dynamic_cast<const Toggle *>(&model)})
+            if (const auto *ptr{dynamic_cast<const Toggle *>(&model)})
                 return ptr->recommends_;
 
-            if (auto *ptr{dynamic_cast<const Option::Selection *>(&model)})
+            using Selection = Option::Selection;
+            if (const auto *ptr{dynamic_cast<const Selection *>(&model)})
                 return ptr->recommends_;
 
             assert(0);
             __builtin_unreachable();
         }()};
 
-        for (auto& [key, val] : recommends) {
+        for (const auto& [key, val] : recommends) {
             mRecProc(root(), key, val);
         }
     }
@@ -893,10 +894,10 @@ std::vector<std::unique_ptr<Prop>> versions::props::forVersion(
             }()};
 
             if (auto *ptr{dynamic_cast<Toggle *>(setting.get())}) {
-                prop.amend(*ptr, table);
+                prop.respondWith(*ptr, table);
             } else if (auto *ptr{dynamic_cast<Option *>(setting.get())}) {
                 for (auto *model : ptr->children())
-                    prop.amend(*model, table);
+                    prop.respondWith(*model, table);
             }
         }
     }
