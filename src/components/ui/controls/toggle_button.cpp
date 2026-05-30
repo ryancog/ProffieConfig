@@ -60,7 +60,7 @@ struct Control : detail::DataWindow<wxToggleButton> {
             table.onSet_ = data::map(&Control::onSet);
             return table;
         }()};
-        amend(data_, table);
+        observeWith(data_, table);
 
         activate();
     }

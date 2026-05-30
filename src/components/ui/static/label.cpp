@@ -97,7 +97,7 @@ struct Static : detail::DataWindow<wxStaticText> {
             table.onChange_ = data::map(&Static::onChange);
             return table;
         }()};
-        amend(*str_, table);
+        observeWith(*str_, table);
 
         activate();
     }

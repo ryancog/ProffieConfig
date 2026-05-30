@@ -61,7 +61,7 @@ struct Control : detail::Window<wxListCtrl> {
                 table.onSet_ = data::map(&Control::onRows);
                 return table;
             }()};
-            amend(ptr->get(), rowTable);
+            observeWith(ptr->get(), rowTable);
         }
 
         // Only handle one for now.
@@ -144,7 +144,7 @@ struct Control : detail::Window<wxListCtrl> {
                                 data::map(&Control::onLabelChange);
                             return table;
                         }()};
-                        amend(*ptr, labelTable);
+                        observeWith(*ptr, labelTable);
                     }
 
                     colLabels.push_back(std::move(label));

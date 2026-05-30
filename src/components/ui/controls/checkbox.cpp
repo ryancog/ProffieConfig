@@ -52,7 +52,7 @@ struct Control : detail::DataWindow<wxCheckBox> {
             table.onSet_ = data::map(&Control::onSet);
             return table;
         }()};
-        amend(bl_, table);
+        observeWith(bl_, table);
 
         activate();
     }

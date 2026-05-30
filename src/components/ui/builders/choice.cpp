@@ -50,7 +50,7 @@ struct ChoiceTracker : priv::Tracker, data::Receiver {
             table.onChoice_ = data::map(&ChoiceTracker::onChoice);
             return table;
         }()};
-        amend(choice_, choiceTable);
+        observeWith(choice_, choiceTable);
 
         activate();
     }

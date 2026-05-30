@@ -113,7 +113,7 @@ struct Control : detail::DataWindow<wxTextCtrl> {
             table.onMove_ = data::map(&Control::onMove);
             return table;
         }()};
-        amend(*str_, table);
+        observeWith(*str_, table);
 
         activate();
     }

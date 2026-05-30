@@ -57,7 +57,7 @@ struct Layout : wxBoxSizer, data::Receiver {
             table.onSwap_ = data::map(&Layout::onSwap);
             return table;
         }()};
-        amend(vec_, table);
+        observeWith(vec_, table);
 
         activate();
     }

@@ -88,7 +88,7 @@ struct Control : detail::DataWindow<wxButton> {
                 table.onChange_ = data::map(&Control::onChange);
                 return table;
             }()};
-            amend(*str_, table);
+            observeWith(*str_, table);
         }
 
         activate();

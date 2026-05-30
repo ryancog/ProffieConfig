@@ -53,7 +53,7 @@ struct Indicator : detail::DataWindow<wxGauge> {
             table.onPulse_ = data::map(&Indicator::onPulse);
             return table;
         }()};
-        amend(desc.data_, table);
+        observeWith(desc.data_, table);
 
         activate();
     }
@@ -131,7 +131,7 @@ data::logic::Element Progress::Data::operator|(Logic logic) {
                 return table;
             }()};
 
-            amend(data_, table);
+            observeWith(data_, table);
         }
 
         ~DoneAdapter() override { deactivate(); }
@@ -155,7 +155,7 @@ data::logic::Element Progress::Data::operator|(Logic logic) {
             Base::onChange(isTrue(data_));
         }
 
-        bool isTrue(const ROContext& ctxt) {
+        static bool isTrue(const ROContext& ctxt) {
             return ctxt.val() == ctxt.range();
         }
 
@@ -196,20 +196,20 @@ void Progress::Data::Context::set(uint32 v) const {
     auto& data{model<Data>()};
 
     data.mVal = static_cast<int32>(v);
-    data.sendToReceivers(&RecvTable::onSet_);
+    data.sendToObservers(&RecvTable::onSet_);
 }
 
 void Progress::Data::Context::setRange(uint32 r) const {
     auto& data{model<Data>()};
 
     data.mRange = r;
-    data.sendToReceivers(&RecvTable::onRange_);
+    data.sendToObservers(&RecvTable::onRange_);
 }
 
 void Progress::Data::Context::pulse() const {
     auto& data{model<Data>()};
 
     data.mVal = -1;
-    data.sendToReceivers(&RecvTable::onPulse_);
+    data.sendToObservers(&RecvTable::onPulse_);
 }
 

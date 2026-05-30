@@ -77,9 +77,12 @@ struct ControlBase : detail::DataWindow<Ctrl> {
                 table.onRebound_ = data::map(&ControlBase::onSelRebound);
                 return table;
             }()};
-            data::Receiver::amend(*sel_, selTable); } else choice_ = &std::get<0>(desc.data_).get();
+            data::Receiver::observeWith(*sel_, selTable);
+        } else {
+            choice_ = &std::get<0>(desc.data_).get();
+        }
 
-        data::Receiver::amend(*choice_, choiceTable);
+        data::Receiver::observeWith(*choice_, choiceTable);
 
         if (desc.clamp_) {
             clamp_ = &desc.clamp_->get();
@@ -89,7 +92,7 @@ struct ControlBase : detail::DataWindow<Ctrl> {
                 table.onSet_ = data::map(&ControlBase::onClampSet);
                 return table;
             }()};
-            data::Receiver::amend(*clamp_, clampTable);
+            data::Receiver::observeWith(*clamp_, clampTable);
         }
     }
 
@@ -103,7 +106,7 @@ struct ControlBase : detail::DataWindow<Ctrl> {
         if (sel_) {
             auto selCtxt{data::context(*sel_)};
             if (selCtxt.bound()) {
-                data::Receiver::amend(*selCtxt.bound(), smVecTable);
+                data::Receiver::observeWith(*selCtxt.bound(), VEC_TABLE);
             }
         }
 
@@ -148,7 +151,7 @@ struct ControlBase : detail::DataWindow<Ctrl> {
     }
 
     void preSelRebound() {
-        if (auto *ptr{data::context(*sel_).bound()})
+        if (const auto *ptr{data::context(*sel_).bound()})
             data::Receiver::repeal(*ptr);
     }
 
@@ -156,7 +159,7 @@ struct ControlBase : detail::DataWindow<Ctrl> {
         auto ctxt{data::context(*sel_)};
         if (not ctxt.bound()) return;
 
-        data::Receiver::amend(*ctxt.bound(), smVecTable);
+        data::Receiver::observeWith(*ctxt.bound(), VEC_TABLE);
     }
 
     void onClampSet() {
@@ -187,7 +190,7 @@ struct ControlBase : detail::DataWindow<Ctrl> {
     }
 
     void onLabelChange(const data::base::Model& model) {
-        auto& strModel{dynamic_cast<const data::base::String&>(model)};
+        const auto& strModel{dynamic_cast<const data::base::String&>(model)};
         auto str{data::context(strModel).val()};
         auto idx{mLabelMapping[&strModel]};
 
@@ -242,7 +245,7 @@ struct ControlBase : detail::DataWindow<Ctrl> {
                     table.onChange_ = data::map(&ControlBase::onLabelChange);
                     return table;
                 }()};
-                data::Receiver::amend(ptr->get(), labelTable);
+                data::Receiver::observeWith(ptr->get(), labelTable);
             } else {
                 str = std::move(std::get<0>(res));
             }
@@ -264,11 +267,11 @@ private:
     Choice::Labeler mLabeler;
     wxString mEmptyLabel;
 
-    static const data::base::Vector::RecvTable smVecTable;
+    static const data::base::Vector::RecvTable VEC_TABLE;
 };
 
 template <typename Ctrl>
-const data::base::Vector::RecvTable ControlBase<Ctrl>::smVecTable{[] {
+const data::base::Vector::RecvTable ControlBase<Ctrl>::VEC_TABLE{[] {
     data::base::Vector::RecvTable table;
     table.onSwap_ = data::map(&ControlBase::onVectorSwap);
     return table;

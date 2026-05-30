@@ -76,7 +76,7 @@ private:
 
 struct UI_EXPORT Progress::Data::ROContext : virtual Model::ROContext {
     ROContext(const Data&);
-    ~ROContext();
+    ~ROContext() override;
 
     [[nodiscard]] int32 val() const;
     [[nodiscard]] uint32 range() const;
@@ -84,7 +84,7 @@ struct UI_EXPORT Progress::Data::ROContext : virtual Model::ROContext {
 
 struct UI_EXPORT Progress::Data::Context : Model::Context, ROContext {
     Context(Data&);
-    ~Context();
+    ~Context() override;
 
     void set(uint32) const;
 

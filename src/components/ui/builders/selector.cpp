@@ -49,14 +49,14 @@ struct SelectorTracker : priv::Tracker, data::Receiver {
             table.onRebound_ = data::map(&SelectorTracker::onRebound);
             return table;
         }()};
-        amend(sel_, table);
+        observeWith(sel_, table);
 
         static const auto choiceTable{[] {
             data::base::Choice::RecvTable table;
             table.onChoice_ = data::map(&SelectorTracker::onChoice);
             return table;
         }()};
-        amend(sel_.choice(), choiceTable);
+        observeWith(sel_.choice(), choiceTable);
 
         activate();
     }

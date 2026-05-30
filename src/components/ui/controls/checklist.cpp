@@ -54,7 +54,7 @@ struct Control : detail::DataWindow<wxCheckListBox> {
             table.onRemove_ = data::map(&Control::onRemove);
             return table;
         }()};
-        amend(sel_, table);
+        observeWith(sel_, table);
 
         activate();
     }

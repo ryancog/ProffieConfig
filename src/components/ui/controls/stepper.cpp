@@ -55,7 +55,7 @@ struct IntCtrl : detail::DataWindow<wxSpinCtrl> {
             table.onUpdate_ = data::map(&IntCtrl::onUpdate);
             return table;
         }()};
-        amend(int_, table);
+        observeWith(int_, table);
 
         activate();
     }
@@ -125,7 +125,7 @@ struct DoubleCtrl : detail::DataWindow<wxSpinCtrlDouble> {
             table.onUpdate_ = data::map(&IntCtrl::onUpdate);
             return table;
         }()};
-        amend(dec_, table);
+        observeWith(dec_, table);
 
         activate();
     }
