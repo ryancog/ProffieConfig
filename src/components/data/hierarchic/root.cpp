@@ -89,25 +89,16 @@ bool Root::capturePerformance() {
     ++mPerformanceNesting;
 
     if (mPerformanceNesting == 1) {
-        // Increment index to the next action list.
+        // Increment index to the next action.
         ++mActionIdx;
         
-        // If there are actions on the redo side, they need to be cleared.
-        if (mActions.size() > mActionIdx) {
-            // mActionIdx right now is the same as the size of the vector with
-            // *only* current actions (that is, one less than there will be
-            // once this performance is complete).
-            //
-            // Resized so that the following `emplace_back()` will be accurate
-            // for both w/ redo and w/o redo cases. Effectively just truncating
-            // the actions, removing any available redo.
-            mActions.resize(mActionIdx);
-
-            // Cleared; can't anymore
-            sendToObservers(&RecvTable::onCanRedo_);
-        }
-
-        mActions.emplace_back();
+        // Insert rather than clear and append so that an abort can preserve
+        // things, and finish knows when to call the observers (we don't want
+        // to call the observers here.)
+        mActions.emplace(std::next(
+            mActions.begin(),
+            static_cast<ssize>(mActionIdx)
+        ));
     }
 
     return true;
@@ -127,6 +118,14 @@ void Root::abortCapture() {
     // Still more to do before finalizing.
     if (mPerformanceNesting != 0)
         return;
+
+    // This was the "root" action. Remove the empty/null entry.
+    mActions.erase(std::next(
+        mActions.begin(),
+        static_cast<ssize>(mActionIdx)
+    ));
+    // And pull back the idx.
+    --mActionIdx;
 
     mStates.pop_back();
 }
@@ -228,6 +227,15 @@ void Root::finishCapture() {
     //     }
     // }
 
+    // If there are actions on the redo side, they need to be cleared.
+    if (mActions.size() > mActionIdx + 1) {
+        // Truncate the actions, removing any available redo.
+        mActions.resize(mActionIdx + 1);
+
+        // Cleared; can't anymore
+        sendToObservers(&RecvTable::onCanRedo_);
+    }
+
     // Call after all processing is complete.
     sendToObservers(&RecvTable::onAction_);
 
@@ -278,6 +286,8 @@ void Root::Context::undo() const {
     action->retract();
     model().endReplay();
 
+    action->source<Model>().focus();
+
     --model().mActionIdx;
 
     model().sendToObservers(&RecvTable::onAction_);
@@ -306,6 +316,8 @@ void Root::Context::redo() const {
     // This will cause a cascade due to the replay state.
     action->perform();
     model().endReplay();
+
+    action->source<Model>().focus();
 
     model().sendToObservers(&RecvTable::onAction_);
 
