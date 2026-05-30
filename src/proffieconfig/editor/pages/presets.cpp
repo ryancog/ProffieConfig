@@ -50,21 +50,21 @@ PresetsPage::PresetsPage(config::Config& config) : mConfig{config} {
         table.onChoice_ = data::map(&PresetsPage::onArrayChoice);
         return table;
     }()};
-    amend(mArraySel.choice(), arrayTable);
+    observeWith(mArraySel.choice(), arrayTable);
 
     static const auto presetTable{[] {
         data::prim::Choice::RecvTable table;
         table.onChoice_ = data::map(&PresetsPage::onPresetChoice);
         return table;
     }()};
-    amend(mPresetSel.choice(), presetTable);
+    observeWith(mPresetSel.choice(), presetTable);
 
     static const auto displayTable{[] {
         data::prim::Choice::RecvTable table;
         table.onChoice_ = data::map(&PresetsPage::onDisplayChoice);
         return table;
     }()};
-    amend(mDisplaySel.choice(), displayTable);
+    observeWith(mDisplaySel.choice(), displayTable);
 
     const auto arrayFilter{[](
         const data::base::Choice::ROContext& ctxt, int32& idx

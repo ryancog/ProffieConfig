@@ -156,21 +156,21 @@ Window::Window(
         table.onRemove_ = data::map(&Window::onVecRemove);
         return table;
     }()};
-    amend(blade_.splits_, splitTable);
+    observeWith(blade_.splits_, splitTable);
 
     static const auto lengthTable{[] {
         data::base::Integer::RecvTable table;
         table.onSet_ = data::map(&Window::onLength);
         return table;
     }()};
-    amend(blade_.length_, lengthTable);
+    observeWith(blade_.length_, lengthTable);
 
     static const auto choiceTable{[] {
         data::base::Choice::RecvTable table;
         table.onChoice_ = data::map(&Window::onChoice);
         return table;
     }()};
-    amend(subSel_.choice(), choiceTable);
+    observeWith(subSel_.choice(), choiceTable);
 
     SetAutoLayout(true);
 
@@ -722,11 +722,11 @@ void Window::attachSplit(config::blades::WS281X::Split& split) {
         return table;
     }()};
 
-    amend(split.type_, typeTable);
-    amend(split.start_, intTable);
-    amend(split.end_, intTable);
-    amend(split.segments_, intTable);
-    amend(split.list_, listTable);
+    observeWith(split.type_, typeTable);
+    observeWith(split.start_, intTable);
+    observeWith(split.end_, intTable);
+    observeWith(split.segments_, intTable);
+    observeWith(split.list_, listTable);
 }
 
 void Window::detachSplit(config::blades::WS281X::Split& split) {

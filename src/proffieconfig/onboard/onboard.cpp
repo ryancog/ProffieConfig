@@ -258,7 +258,7 @@ void onboard::Frame::bindEvents() {
         table.onChoice_ = data::map(&Frame::onPhase);
         return table;
     }()};
-    amend(mPhase, phaseTable);
+    observeWith(mPhase, phaseTable);
 }
 
 void onboard::Frame::createMenuBar() {

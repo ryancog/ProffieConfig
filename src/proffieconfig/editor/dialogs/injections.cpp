@@ -294,7 +294,7 @@ data::logic::Element operator|(
                 table.onSwap_ = data::map(&Adapter::onVecChange);
                 return table;
             }()};
-            amend(config_.injections_, table);
+            observeWith(config_.injections_, table);
         }
 
         ~Adapter() override { deactivate(); }
@@ -340,7 +340,7 @@ data::logic::Element operator|(
                 table.onSwap_ = data::map(&Adapter::onVecChange);
                 return table;
             }()};
-            amend(config_.injections_, table);
+            observeWith(config_.injections_, table);
         }
 
         ~Adapter() override { deactivate(); }

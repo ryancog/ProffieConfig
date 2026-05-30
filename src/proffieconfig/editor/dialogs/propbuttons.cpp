@@ -37,9 +37,9 @@
 
 namespace {
 
-extern const versions::props::Buttons defaultZeroButton;
-extern const versions::props::Buttons defaultOneButton;
-extern const versions::props::Buttons defaultTwoButton;
+extern const versions::props::Buttons DEFAULT_ZERO_BUTTON;
+extern const versions::props::Buttons DEFAULT_ONE_BUTTON;
+extern const versions::props::Buttons DEFAULT_TWO_BUTTON;
 
 } // namespace
 
@@ -57,7 +57,7 @@ PropButtonsDlg::PropButtonsDlg(wxWindow *parent, config::Config& config) :
         table.onChoice_=data::map(&PropButtonsDlg::onPropChoice);
         return table;
     }()};
-    amend(mConfig.propChoice(), choiceTable);
+    observeWith(mConfig.propChoice(), choiceTable);
 
     static const auto buttonsTable{[] {
         data::base::Vector::RecvTable table;
@@ -65,7 +65,7 @@ PropButtonsDlg::PropButtonsDlg(wxWindow *parent, config::Config& config) :
         table.onRemove_=data::map(&PropButtonsDlg::onButtonsChange);
         return table;
     }()};
-    amend(mConfig.buttons_, buttonsTable);
+    observeWith(mConfig.buttons_, buttonsTable);
 
     activate();
 }
@@ -107,13 +107,13 @@ void PropButtonsDlg::rebuildLinks() {
     } else {
         switch (buttons.children().size()) {
             case 0:
-                mCurButtons = &defaultZeroButton;
+                mCurButtons = &DEFAULT_ZERO_BUTTON;
                 break;
             case 1:
-                mCurButtons = &defaultOneButton;
+                mCurButtons = &DEFAULT_ONE_BUTTON;
                 break;
             default:
-                mCurButtons = &defaultTwoButton;
+                mCurButtons = &DEFAULT_TWO_BUTTON;
                 break;
         }
     }
@@ -137,7 +137,7 @@ void PropButtonsDlg::rebuildLinks() {
                     continue;
 
                 if (not mapped(*bl))
-                    amend(*bl, settingTable);
+                    observeWith(*bl, settingTable);
             }
         }
     }
@@ -169,8 +169,8 @@ void PropButtonsDlg::rebuildUI() {
     }
 
     int width{};
-    for (auto& state : *mCurButtons) {
-        for (auto& [name, descriptions] : state.buttons_) {
+    for (const auto& state : *mCurButtons) {
+        for (const auto& [name, descriptions] : state.buttons_) {
             width = std::max(
                 width,
                 GetTextExtent(name).GetWidth()
@@ -178,7 +178,7 @@ void PropButtonsDlg::rebuildUI() {
         }
     }
 
-    for (auto& state : *mCurButtons) {
+    for (const auto& state : *mCurButtons) {
         pcui::Group group{
           .win_={.base_={.expand_=true}},
           .label_=wxString::Format(
@@ -198,9 +198,9 @@ void PropButtonsDlg::rebuildUI() {
         pcui::Stack descStack;
 
         bool any{false};
-        for (auto& [name, descriptions] : state.buttons_) {
+        for (const auto& [name, descriptions] : state.buttons_) {
             const std::string *activeDesc{nullptr};
-            for (auto& [pred, desc] : descriptions) {
+            for (const auto& [pred, desc] : descriptions) {
                 if (pred.empty()) {
                     activeDesc = &desc;
                     continue;
@@ -295,7 +295,7 @@ void PropButtonsDlg::rebuildUI() {
 namespace {
 using namespace versions::props;
 
-const Buttons defaultZeroButton{[] {
+const Buttons DEFAULT_ZERO_BUTTON{[] {
     Buttons buttons;
 
     std::vector<Button> offButtons;
@@ -337,7 +337,7 @@ const Buttons defaultZeroButton{[] {
     return buttons;
 }()};
 
-const Buttons defaultOneButton{[] {
+const Buttons DEFAULT_ONE_BUTTON{[] {
     Buttons buttons;
 
     std::vector<Button> offButtons;
@@ -421,7 +421,7 @@ const Buttons defaultOneButton{[] {
     return buttons;
 }()};
 
-const Buttons defaultTwoButton{[] {
+const Buttons DEFAULT_TWO_BUTTON{[] {
     Buttons buttons;
 
     std::vector<Button> offButtons;

@@ -176,7 +176,7 @@ void EditorWindow::bindEvents() {
         table.onSet_ = data::map(&EditorWindow::onIsSaved);
         return table;
     }()};
-    amend(mInfo.config()->isSaved(), savedTable);
+    observeWith(mInfo.config()->isSaved(), savedTable);
 
     static const auto actionTable{[] {
         data::hier::Root::RecvTable table;
@@ -184,7 +184,7 @@ void EditorWindow::bindEvents() {
         table.onCanRedo_ = data::map(&EditorWindow::onCanRedo);
         return table;
     }()};
-    amend(*mInfo.config(), actionTable);
+    observeWith(*mInfo.config(), actionTable);
 
     Bind(wxEVT_CLOSE_WINDOW, &EditorWindow::onClose, this);
     Bind(wxEVT_MENU, &EditorWindow::onSave, this, wxID_SAVE);

@@ -85,14 +85,14 @@ void AddConfigDialog::bindEvents() {
         table.onChange_ = data::map(&AddConfigDialog::onName);
         return table;
     }()};
-    amend(mConfigName, nameTable);
+    observeWith(mConfigName, nameTable);
     
     static const auto pathTable{[] {
         data::prim::String::RecvTable table;
         table.onChange_ = data::map(&AddConfigDialog::onPath);
         return table;
     }()};
-    amend(mImportPath, pathTable);
+    observeWith(mImportPath, pathTable);
 }
 
 pcui::DescriptorPtr AddConfigDialog::ui() {

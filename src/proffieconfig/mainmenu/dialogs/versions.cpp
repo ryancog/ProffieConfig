@@ -64,14 +64,14 @@ VersionsDlg::VersionsDlg(wxWindow *parent) :
         table.onSwap_ = data::map(&VersionsDlg::onPropInstalledChange);
         return table;
     }()};
-    amend(versions::props::list(), propInstalledTable);
+    observeWith(versions::props::list(), propInstalledTable);
 
     static const auto propAvailChoiceTable{[] {
         data::base::Choice::RecvTable table;
         table.onChoice_ = data::map(&VersionsDlg::onPropAvailChoice);
         return table;
     }()};
-    amend(mAvailPropSel.choice(), propAvailChoiceTable);
+    observeWith(mAvailPropSel.choice(), propAvailChoiceTable);
 
     static const auto osInstalledTable{[] {
         data::base::Vector::RecvTable table;
@@ -80,14 +80,14 @@ VersionsDlg::VersionsDlg(wxWindow *parent) :
         table.onSwap_ = data::map(&VersionsDlg::onOsInstalledChange);
         return table;
     }()};
-    amend(versions::os::list(), osInstalledTable);
+    observeWith(versions::os::list(), osInstalledTable);
 
     static const auto osAvailChoiceTable{[] {
         data::base::Choice::RecvTable table;
         table.onChoice_ = data::map(&VersionsDlg::onOsAvailChoice);
         return table;
     }()};
-    amend(mAvailOsSel.choice(), osAvailChoiceTable);
+    observeWith(mAvailOsSel.choice(), osAvailChoiceTable);
 
     mPropSel.bind(&versions::props::list());
     mOsSel.bind(&versions::os::list());

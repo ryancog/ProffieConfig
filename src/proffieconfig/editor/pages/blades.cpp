@@ -56,21 +56,21 @@ BladesPage::BladesPage(config::Config& config) : mConfig{config} {
         table.onChoice_ = data::map(&BladesPage::onArrayChoice);
         return table;
     }()};
-    amend(mArraySel.choice(), arrayTable);
+    observeWith(mArraySel.choice(), arrayTable);
 
     static const auto bladeTable{[] {
         data::prim::Choice::RecvTable table;
         table.onChoice_ = data::map(&BladesPage::onBladeChoice);
         return table;
     }()};
-    amend(mBladeSel.choice(), bladeTable);
+    observeWith(mBladeSel.choice(), bladeTable);
 
     static const auto subTable{[] {
         data::prim::Choice::RecvTable table;
         table.onChoice_ = data::map(&BladesPage::onSubChoice);
         return table;
     }()};
-    amend(mSubBladeSel.choice(), subTable);
+    observeWith(mSubBladeSel.choice(), subTable);
 
     const auto arrayFilter{[](
         const data::base::Choice::ROContext& ctxt, int32& idx
@@ -1117,7 +1117,7 @@ void BladesPage::attachIssues(const data::base::Integer& issues) {
         table.onSet_ = data::map(&BladesPage::onIssues);
         return table;
     }()};
-    amend(issues, issueTable);
+    observeWith(issues, issueTable);
 
     // Update the label
     onIssues();

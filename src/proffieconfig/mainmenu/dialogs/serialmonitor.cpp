@@ -164,14 +164,14 @@ void SerialMonitorDlg::bindEvents() {
         table.onChange_ = data::map(&SerialMonitorDlg::onCmdChange);
         return table;
     }()};
-    amend(mInput, inputTable);
+    observeWith(mInput, inputTable);
 
     static const auto autoScrollTable{[] {
         data::base::Bool::RecvTable table;
         table.onSet_ = data::map(&SerialMonitorDlg::onAutoScroll);
         return table;
     }()};
-    amend(mAutoScroll, autoScrollTable);
+    observeWith(mAutoScroll, autoScrollTable);
 
     auto *input{FindWindow(eID_Input)};
     input->Bind(
