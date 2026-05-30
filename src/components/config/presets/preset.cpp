@@ -94,7 +94,9 @@ Preset::Preset(Config& config) :
     }};
     fontDir_.setFilter(fontDirFilter);
 
-    const auto trackFilter{[](std::string& str, size& pos) {
+    const auto trackFilter{[](
+        const data::base::String::ROContext&, std::string& str, size& pos
+    ) {
         uint32 numTrimmed{};
         utils::trim(
             str,
@@ -105,6 +107,7 @@ Preset::Preset(Config& config) :
 
         pos -= numTrimmed;
     }};
+    track_.setFilter(trackFilter);
 
     name_.change("newpreset");
 }
