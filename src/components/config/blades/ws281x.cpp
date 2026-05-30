@@ -51,14 +51,14 @@ WS281X::WS281X(Blade& blade) :
         table.onSet_ = data::map(&WS281X::onLength);
         return table;
     }()};
-    amend(length_, lengthTable);
+    respondWith(length_, lengthTable);
 
     static const auto hasWhiteTable{[] {
         data::hier::Bool::RecvTable table;
         table.onSet_ = data::map(&WS281X::onHasWhiteSet);
         return table;
     }()};
-    amend(hasWhite_, hasWhiteTable);
+    respondWith(hasWhite_, hasWhiteTable);
 
     static const auto splitsTable{[] {
         data::hier::Vector::RecvTable table;
@@ -66,7 +66,7 @@ WS281X::WS281X(Blade& blade) :
         table.onRemove_ = data::map(&WS281X::onSplitsModify);
         return table;
     }()};
-    amend(splits_, splitsTable);
+    respondWith(splits_, splitsTable);
 
     const auto dataPinFilter{[](
         const data::base::String::ROContext&, std::string& str, size& pos
@@ -196,7 +196,7 @@ WS281X::Split::Split(WS281X& ws281x) :
         table.onChoice_ = data::map(&Split::onOsChoice);
         return table;
     }()};
-    amend(root<Config>().osChoice(), osTable);
+    respondWith(root<Config>().osChoice(), osTable);
 
     // The logic for the interactions between these controls is more fragile
     // than I'd like, but I don't have a great idea of how to make it better,
@@ -208,35 +208,35 @@ WS281X::Split::Split(WS281X& ws281x) :
         table.onSelection_ = data::map(&Split::onType);
         return table;
     }()};
-    amend(type_, typeTable);
+    respondWith(type_, typeTable);
 
     static const auto startTable{[] {
         data::base::Integer::RecvTable table;
         table.onSet_ = data::map(&Split::onStart);
         return table;
     }()};
-    amend(start_, startTable);
+    respondWith(start_, startTable);
 
     static const auto endTable{[] {
         data::base::Integer::RecvTable table;
         table.onSet_ = data::map(&Split::onEnd);
         return table;
     }()};
-    amend(end_, endTable);
+    respondWith(end_, endTable);
 
     static const auto lengthTable{[] {
         data::base::Integer::RecvTable table;
         table.onSet_ = data::map(&Split::onLength);
         return table;
     }()};
-    amend(length_, lengthTable);
+    respondWith(length_, lengthTable);
 
     static const auto segmentsTable{[] {
         data::base::Integer::RecvTable table;
         table.onSet_ = data::map(&Split::onSegments);
         return table;
     }()};
-    amend(segments_, segmentsTable);
+    respondWith(segments_, segmentsTable);
 
     length_.setFilter(lengthFilter);
     list_.setFilter(listFilter);

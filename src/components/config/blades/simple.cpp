@@ -54,7 +54,7 @@ Simple::LED::LED(Simple& simple) :
         table.onChoice_ = data::map(&LED::onProfile);
         return table;
     }()};
-    amend(profile_, profileTable);
+    respondWith(profile_, profileTable);
 
     profile_.update(eLED_Max);
     profile_.choose(eLED_None);

@@ -80,21 +80,21 @@ Config::Config() :
         table.onAction_ = data::map(&Config::onAction);
         return table;
     }()};
-    amend(*this, selfTable);
+    respondWith(*this, selfTable);
 
     static const auto numBladesTable{[] {
         data::base::Integer::RecvTable table;
         table.onSet_ = data::map(&Config::onNumBlades);
         return table;
     }()};
-    amend(mNumBlades, numBladesTable);
+    observeWith(mNumBlades, numBladesTable);
 
     static const auto osChoiceTable{[] {
         data::base::Choice::RecvTable table;
         table.onChoice_ = data::map(&Config::onOSChoice);
         return table;
     }()};
-    amend(mOsChoice, osChoiceTable);
+    respondWith(mOsChoice, osChoiceTable);
     mOsChoice.update(mOsVec.size());
 
     // Set the default OS, if there is one, for parsing the board if the config
@@ -155,11 +155,11 @@ std::span<const std::unique_ptr<versions::os::OS>> Config::osVec() const {
     return mOsVec;
 }
 
-data::base::Choice& Config::osChoice() {
+data::hier::Choice& Config::osChoice() {
     return mOsChoice;
 }
 
-const data::base::Choice& Config::osChoice() const {
+const data::hier::Choice& Config::osChoice() const {
     return mOsChoice;
 }
 
@@ -173,7 +173,7 @@ data::base::Choice& Config::boardChoice() {
     return mBoardChoice;
 }
 
-const data::base::Choice& Config::boardChoice() const {
+const data::hier::Choice& Config::boardChoice() const {
     return mBoardChoice;
 }
 
@@ -196,11 +196,11 @@ Config::propVec() const {
     return mPropMap.find(os->version_)->second;
 }
 
-data::base::Choice& Config::propChoice() {
+data::hier::Choice& Config::propChoice() {
     return mPropChoice;
 }
 
-const data::base::Choice& Config::propChoice() const {
+const data::hier::Choice& Config::propChoice() const {
     return mPropChoice;
 }
 
@@ -214,11 +214,11 @@ const versions::props::Prop *Config::prop() const {
     return (*propVec)[ctxt.idx()].get();
 }
 
-const data::base::Bool& Config::isSaved() const {
+const data::prim::Bool& Config::isSaved() const {
     return mIsSaved;
 }
 
-const data::base::Integer& Config::numBlades() const {
+const data::prim::Integer& Config::numBlades() const {
     return mNumBlades;
 }
 
@@ -356,7 +356,7 @@ data::logic::Element config::operator|(
                 table.onChoice_ = map(&Adapter::onChoice);
                 return table;
             }()};
-            amend(config.osChoice(), osChoiceTable);
+            observeWith(config.osChoice(), osChoiceTable);
         }
 
         ~Adapter() override { deactivate(); }

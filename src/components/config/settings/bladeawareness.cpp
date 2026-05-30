@@ -65,56 +65,56 @@ BladeAwareness::BladeAwareness(Settings& settings) :
         table.onSet_ = data::map(&BladeAwareness::onDetectEnable);
         return table;
     }()};
-    amend(bladeDetect_.enable_, detectEnableTable);
+    respondWith(bladeDetect_.enable_, detectEnableTable);
 
     static const auto idEnableTable{[] {
         data::hier::Bool::RecvTable table;
         table.onSet_ = data::map(&BladeAwareness::onIDEnable);
         return table;
     }()};
-    amend(bladeId_.enable_, idEnableTable);
+    respondWith(bladeId_.enable_, idEnableTable);
 
     static const auto noBladeIdRangeEnableTable{[] {
         data::hier::Bool::RecvTable table;
         table.onSet_ = data::map(&BladeAwareness::onNoBladeIdRangeEnable);
         return table;
     }()};
-    amend(bladeId_.noBladeIdRange_.enable_, noBladeIdRangeEnableTable);
+    respondWith(bladeId_.noBladeIdRange_.enable_, noBladeIdRangeEnableTable);
 
     static const auto noBladeIdRangeLowTable{[] {
         data::hier::Integer::RecvTable table;
         table.onSet_ = data::map(&BladeAwareness::onNoBladeIdRangeLow);
         return table;
     }()};
-    amend(bladeId_.noBladeIdRange_.low_, noBladeIdRangeLowTable);
+    respondWith(bladeId_.noBladeIdRange_.low_, noBladeIdRangeLowTable);
 
     static const auto noBladeIdRangeHighTable{[] {
         data::hier::Integer::RecvTable table;
         table.onSet_ = data::map(&BladeAwareness::onNoBladeIdRangeHigh);
         return table;
     }()};
-    amend(bladeId_.noBladeIdRange_.high_, noBladeIdRangeHighTable);
+    respondWith(bladeId_.noBladeIdRange_.high_, noBladeIdRangeHighTable);
 
     static const auto continuousEnableTable{[] {
         data::hier::Bool::RecvTable table;
         table.onSet_ = data::map(&BladeAwareness::onContinuousEnable);
         return table;
     }()};
-    amend(bladeId_.continuous_.enable_, continuousEnableTable);
+    respondWith(bladeId_.continuous_.enable_, continuousEnableTable);
 
     static const auto continuousTimeoutEnableTable{[] {
         data::hier::Bool::RecvTable table;
         table.onSet_ = data::map(&BladeAwareness::onContinuousTimeoutEnable);
         return table;
     }()};
-    amend(bladeId_.continuous_.timeout_.enable_, continuousEnableTable);
+    respondWith(bladeId_.continuous_.timeout_.enable_, continuousEnableTable);
 
     static const auto idPowerTable{[] {
         data::hier::Bool::RecvTable table;
         table.onSet_ = data::map(&BladeAwareness::onIDPower);
         return table;
     }()};
-    amend(bladeId_.powerForId_, idPowerTable);
+    respondWith(bladeId_.powerForId_, idPowerTable);
 
     const auto bridgePinFilter{[](
         const data::base::String::ROContext&, std::string& str, size& pos

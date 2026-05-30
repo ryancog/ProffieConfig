@@ -59,19 +59,19 @@ struct CONFIG_EXPORT Config : data::hier::Root, data::Receiver {
 
     std::span<const std::unique_ptr<versions::os::OS>> osVec() const;
 
-    data::base::Choice& osChoice();
-    const data::base::Choice& osChoice() const;
+    data::hier::Choice& osChoice();
+    const data::hier::Choice& osChoice() const;
     const versions::os::OS *os() const;
 
     data::base::Choice& boardChoice();
-    const data::base::Choice& boardChoice() const;
+    const data::hier::Choice& boardChoice() const;
     const versions::os::Board *board() const;
 
     std::optional<std::span<const std::unique_ptr<versions::props::Prop>>>
         propVec() const;
 
-    data::base::Choice& propChoice();
-    const data::base::Choice& propChoice() const;
+    data::hier::Choice& propChoice();
+    const data::hier::Choice& propChoice() const;
     const versions::props::Prop *prop() const;
 
     Settings settings_;
@@ -82,9 +82,8 @@ struct CONFIG_EXPORT Config : data::hier::Root, data::Receiver {
     data::hier::Vector injections_;
     data::hier::Vector styles_;
 
-    const data::base::Bool& isSaved() const;
-
-    const data::base::Integer& numBlades() const;
+    const data::prim::Bool& isSaved() const;
+    const data::prim::Integer& numBlades() const;
 
     void calcNumBlades();
     void syncStyles();

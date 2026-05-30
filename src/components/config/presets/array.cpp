@@ -34,14 +34,14 @@ Array::Array(Config& config) :
         table.onInsert_ = data::map(&Array::onPresetInsert);
         return table;
     }()};
-    amend(presets_, presetTable);
+    respondWith(presets_, presetTable);
 
     static const auto nameTable{[] {
         data::hier::String::RecvTable table;
         table.onChange_ = data::map(&Array::onNameChange);
         return table;
     }()};
-    amend(name_, nameTable);
+    observeWith(name_, nameTable);
 
     const auto nameFilter{[](
         const data::base::String::ROContext&, std::string& str, size& pos

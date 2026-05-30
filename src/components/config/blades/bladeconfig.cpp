@@ -42,28 +42,28 @@ BladeConfig::BladeConfig(Config& config) :
         table.onChange_ = data::map(&BladeConfig::onNameChange);
         return table;
     }()};
-    amend(name_, nameTable);
+    observeWith(name_, nameTable);
 
     static const auto idTable{[] {
         data::hier::Integer::RecvTable table;
         table.onSet_ = data::map(&BladeConfig::onID);
         return table;
     }()};
-    amend(id_, idTable);
+    observeWith(id_, idTable);
 
     static const auto noBladeIDTable{[] {
         data::hier::Bool::RecvTable table;
         table.onSet_ = data::map(&BladeConfig::onNoBladeIDSet);
         return table;
     }()};
-    amend(noBladeId_, noBladeIDTable);
+    observeWith(noBladeId_, noBladeIDTable);
 
     static const auto presetArrayTable{[] {
         data::hier::Choice::RecvTable table;
         table.onChoice_ = data::map(&BladeConfig::onPresetArrayChoice);
         return table;
     }()};
-    amend(presetArray_.choice(), presetArrayTable);
+    observeWith(presetArray_.choice(), presetArrayTable);
 
     static const auto bladesTable{[] {
         data::hier::Vector::RecvTable table;
@@ -71,7 +71,7 @@ BladeConfig::BladeConfig(Config& config) :
         table.onRemove_ = data::map(&BladeConfig::onBladesModify);
         return table;
     }()};
-    amend(blades_, bladesTable);
+    respondWith(blades_, bladesTable);
 
     const auto nameFilter{[](
         const data::base::String::ROContext&, std::string& str, size& pos
@@ -191,14 +191,14 @@ Blade::Blade(Config& config) :
         table.onChoice_ = data::map(&Blade::onOsChoice);
         return table;
     }()};
-    amend(root<Config>().osChoice(), osTable);
+    respondWith(root<Config>().osChoice(), osTable);
 
     static const auto typeTable{[] {
         data::base::Choice::RecvTable table;
         table.onChoice_ = data::map(&Blade::onType);
         return table;
     }()};
-    amend(mType.choice(), typeTable);
+    respondWith(mType.choice(), typeTable);
 
     // Model used as a dummy for unassigned.
     mTypes.append(std::make_unique<WS281X>(*this));

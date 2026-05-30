@@ -86,45 +86,45 @@ Settings::Settings(Config& parent) :
         table.onSet_ = data::map(&Settings::onMassStorageSet);
         return table;
     }()};
-    amend(massStorage_, massStorageTable);
+    respondWith(massStorage_, massStorageTable);
 
     static const auto saveOptTable{[] {
         data::hier::Bool::RecvTable table;
         table.onSet_ = data::map(&Settings::onSaveOptSet);
         return table;
     }()};
-    amend(saveState_, saveOptTable);
-    amend(enableAllEditOptions_, saveOptTable);
-    amend(dynamicBladeDimming_, saveOptTable);
-    amend(dynamicClashThreshold_, saveOptTable);
+    respondWith(saveState_, saveOptTable);
+    respondWith(enableAllEditOptions_, saveOptTable);
+    respondWith(dynamicBladeDimming_, saveOptTable);
+    respondWith(dynamicClashThreshold_, saveOptTable);
 
     static const auto volumeTable{[] {
         data::hier::Integer::RecvTable table;
         table.onSet_ = data::map(&Settings::onVolume);
         return table;
     }()};
-    amend(volume_, volumeTable);
+    respondWith(volume_, volumeTable);
 
     static const auto bootVolEnableTable{[] {
         data::hier::Bool::RecvTable table;
         table.onSet_ = data::map(&Settings::onBootVolumeEnable);
         return table;
     }()};
-    amend(bootVolume_.enable_, bootVolEnableTable);
+    respondWith(bootVolume_.enable_, bootVolEnableTable);
 
     static const auto filterEnableTable{[] {
         data::hier::Bool::RecvTable table;
         table.onSet_ = data::map(&Settings::onFilterEnableSet);
         return table;
     }()};
-    amend(filter_.enable_, filterEnableTable);
+    respondWith(filter_.enable_, filterEnableTable);
 
     static const auto disableTalkieTable{[] {
         data::hier::Bool::RecvTable table;
         table.onSet_ = data::map(&Settings::onDisableTalkieSet);
         return table;
     }()};
-    amend(disableTalkie_, disableTalkieTable);
+    respondWith(disableTalkie_, disableTalkieTable);
 
     volume_.update({.min_=0, .max_=4000, .inc_=50});
     volume_.set(1000);
