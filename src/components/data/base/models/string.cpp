@@ -78,7 +78,7 @@ std::pair<std::string, size> String::doChange(
             responderHook(&RecvTable::onMove_);
     }
 
-    return {lastStr, mPos};
+    return {lastStr, lastPos};
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
