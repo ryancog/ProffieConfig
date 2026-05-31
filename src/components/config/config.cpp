@@ -315,6 +315,19 @@ void Config::syncStyles() {
     }
 }
 
+void Config::cache(std::unique_ptr<utils::Data>&& data) {
+    mCache[hash()] = std::move(data);
+}
+
+utils::Data *Config::cache() const {
+    auto iter{mCache.find(hash())};
+
+    if (iter == mCache.end())
+        return nullptr;
+
+    return iter->second.get();
+}
+
 void Config::onAction() {
     mIsSaved.set(hash() == mSavedHash);
 }

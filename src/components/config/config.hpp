@@ -34,6 +34,7 @@
 #include "data/primitive/models/number.hpp"
 #include "data/primitive/models/string.hpp"
 #include "log/branch.hpp"
+#include "utils/data.hpp"
 #include "utils/version.hpp"
 #include "versions/os.hpp"
 #include "versions/prop.hpp"
@@ -88,6 +89,9 @@ struct CONFIG_EXPORT Config : data::hier::Root, data::Receiver {
     void calcNumBlades();
     void syncStyles();
 
+    void cache(std::unique_ptr<utils::Data>&&);
+    [[nodiscard]] utils::Data *cache() const;
+
 protected:
     std::vector<const Model *> childrenToHash() const override;
 
@@ -123,6 +127,7 @@ private:
     data::prim::Bool mIsSaved;
 
     std::optional<uint64> mSavedHash;
+    std::map<uint64, std::unique_ptr<utils::Data>> mCache;
 };
 
 CONFIG_EXPORT data::logic::Element operator|(Config&, Config::OSIsOrOverVersion);
