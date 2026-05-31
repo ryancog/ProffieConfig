@@ -20,9 +20,7 @@
  */
 
 #include <algorithm>
-#include <optional>
 #include <sstream>
-#include <stack>
 
 #include <wx/translation.h>
 
@@ -49,11 +47,17 @@ Style::Style(Config& config) :
             ctxt.model<data::hier::String>()
         )};
 
-        uint32 numTrimmed{};
+        // Extract the block comments before trimming so that special chars are
+        // preserved in block comments.
+        //
+        // They're still stripped in line comments though...
+        auto commentMove{priv::style::extractComments(
+            str, pos, style.comment_
+        )};
 
+        uint32 numTrimmed{};
         /*
-         * - Only allow chars for the start of a block comment. No other need 
-         *   for slash
+         * - Slash and star for comments and math, +-
          *
          * - <>(), are self-explanatory
          *
@@ -65,32 +69,45 @@ Style::Style(Config& config) :
          *
          * - \n\t and ' ' are self-explanatory.
          *
-         * - '-' for negative numbers.
-         *
          * - '_' because it's just generally used.
+         *
+         * - '~' Used in args
          */
         utils::trim(
             str,
             {
                 .allowAlpha=true,
                 .allowNum=true,
-                .safeList="/*<>(),&_:-\"\n\t "
+                .safeList="+-/*<>(),&_:~\"\n\t "
             },
             &numTrimmed,
             pos
         );
         pos -= numTrimmed;
 
-        auto commentMove{priv::style::extractComments(
-            str, pos, style.comment_
-        )};
-
         // Erase everything after last ), e.g. `StylePtr<...>(),` erase the
         // comma or anything else that shouldn't be there 
-        auto endPos{str.find(')')};
-        if (endPos != std::string::npos) {
+
+        // TODO: Replace with spanstream when available.
+        std::istringstream stream(str);
+        while (not stream.eof()) {
+            utils::CommentData commentData{
+                .stream_=stream,
+                .type_=utils::CommentData::eType_Line,
+            };
+            (void)utils::extractComments(commentData);
+
+            const auto chr{stream.get()};
+            if (not stream.good()) break;
+
+            if (chr == ')')
+                break;
+        }
+
+        auto endPos{static_cast<size>(stream.tellg())};
+        if (endPos < str.length()) {
             str.erase(endPos + 1);
-            pos = std::min<size_t>(pos, endPos + 1);
+            pos = std::min<size>(pos, endPos + 1);
         }
 
         if (commentMove) 

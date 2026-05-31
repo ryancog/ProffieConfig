@@ -42,6 +42,8 @@ struct Element {
 
 std::optional<std::string> tryBuildCompact(Element&);
 
+void doTrimming(Element&);
+
 void formatMultiSingleComment(size, std::string&, const std::string&);
 
 } // namespace
@@ -144,7 +146,10 @@ std::string style::format(
     while (stream.good()) {
         auto *current{stack.top()};
 
-        utils::CommentData commentData{.stream_=stream};
+        utils::CommentData commentData{
+            .stream_=stream,
+            .skipSpaces_=false,
+        };
         if (utils::extractComments(commentData)) {
             if (not current->comment_.empty())
                 current->comment_ += '\n';
@@ -200,6 +205,10 @@ std::string style::format(
         else
             current->post_ += static_cast<char>(chr);
     }
+
+    // Intentionally don't skip whitespace during the above parsing so that
+    // this can maintain whitespace in quotes.
+    doTrimming(root);
 
     // Now, go through and build the new string.
     std::string exploded;
@@ -308,6 +317,14 @@ std::optional<std::string> tryBuildCompact(Element& element) {
     ret += element.post_;
     
     return ret;
+}
+
+void doTrimming(Element& element) {
+    utils::trimWhitespaceOutsideString(element.pre_);
+    utils::trimWhitespaceOutsideString(element.post_);
+
+    for (auto& child : element.children_)
+        doTrimming(child);
 }
 
 void formatMultiSingleComment(

@@ -54,37 +54,27 @@ Style::Style(Config& config) :
             ctxt.model<data::hier::String>()
         )};
 
-        uint32 numTrimmed{};
+        auto commentMove{priv::style::extractComments(
+            str, pos, style.comments_
+        )};
 
+        uint32 numTrimmed{};
         /*
-         * - Only allow chars for the start of a block comment. No other need 
-         *   for slash
-         *
-         * - <>, is self-explanatory
-         *
-         * - : for scope resolution operator (there's scoped enums with effects)
-         *
-         * - \n\t and ' ' are self-explanatory.
-         *
-         * - '-' for negative numbers.
-         *
-         * - '_' because it's just generally used.
+         * Same as presets::Style except:
+         * - No &
+         * - No " or parents (no args)
          */
         utils::trim(
             str,
             {
                 .allowAlpha=true,
                 .allowNum=true,
-                .safeList="/*<>,_:-\n\t "
+                .safeList="+-/*<>,_:~\n\t "
             },
             &numTrimmed,
             pos
         );
         pos -= numTrimmed;
-
-        auto commentMove{priv::style::extractComments(
-            str, pos, style.comments_
-        )};
 
         if (commentMove) 
             style.comments_.focus();
