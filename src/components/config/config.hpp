@@ -105,6 +105,8 @@ private:
     void onAction();
 
     void onNumBlades();
+
+    void preOSChoice();
     void onOSChoice();
 
     std::vector<const Model *> coreChildren() const;
@@ -112,6 +114,9 @@ private:
     static void processPropRecommend(
         data::hier::Root&, std::string_view, std::string_view
     );
+
+    int32 mLastPropChoice;
+    int32 mLastOSChoice;
 
     std::vector<std::unique_ptr<versions::os::OS>> mOsVec;
     std::map<

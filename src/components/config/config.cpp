@@ -91,6 +91,7 @@ Config::Config() :
 
     static const auto osChoiceTable{[] {
         data::base::Choice::RecvTable table;
+        table.preChoice_ = data::map(&Config::preOSChoice);
         table.onChoice_ = data::map(&Config::onOSChoice);
         return table;
     }()};
@@ -113,6 +114,8 @@ Config::~Config() {
 }
 
 void Config::onActivate() {
+    mLastOSChoice = -1;
+    mLastPropChoice = -1;
     onOSChoice();
 }
 
@@ -336,10 +339,46 @@ void Config::onNumBlades() {
     syncStyles();
 }
 
+void Config::preOSChoice() {
+    auto propChoiceCtxt{data::context(mPropChoice)};
+    auto osChoiceCtxt{data::context(mOsChoice)};
+
+    mLastPropChoice = propChoiceCtxt.idx();
+    mLastOSChoice = osChoiceCtxt.idx();
+
+    // For undo, make sure the propchoice is unset over the change.
+    propChoiceCtxt.update(0, -1);
+}
+
 void Config::onOSChoice() {
     if (const auto *ptr{os()}) {
+        const versions::props::Prop *lastProp{nullptr};
+        versions::props::Prop *newProp{nullptr};
+        int32 newIdx{-1};
+
+        if (mLastOSChoice != -1 and mLastPropChoice != -1) {
+            auto lastOsVersion{mOsVec[mLastOSChoice]->version_};
+            auto& prop{mPropMap[lastOsVersion][mLastPropChoice]};
+            auto& newPropVec{mPropMap[ptr->version_]};
+
+            size idx{0};
+            for (; idx < newPropVec.size(); ++idx) {
+                if (newPropVec[idx]->name_ == prop->name_)
+                    break;
+            }
+
+            if (idx != newPropVec.size()) {
+                lastProp = prop.get();
+                newProp = newPropVec[idx].get();
+                newIdx = static_cast<int32>(idx);
+            }
+        }
+
         mBoardChoice.update(ptr->boards_.size());
-        mPropChoice.update(propVec()->size());
+        mPropChoice.update(propVec()->size(), newIdx);
+
+        if (newIdx != -1)
+            newProp->migrateFrom(*lastProp);
     } else {
         mBoardChoice.update(0);
         mPropChoice.update(0);
