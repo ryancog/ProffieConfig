@@ -93,7 +93,10 @@ struct DATA_EXPORT Choice::Context : Model::Context, ROContext {
 };
 
 struct DATA_EXPORT Choice::RecvTable : Model::RecvTable {
+    Mapping<> preChoice_;
+
     Mapping<> onChoice_;
+
     Mapping<UpdateInfo> onUpdate_;
 };
 
