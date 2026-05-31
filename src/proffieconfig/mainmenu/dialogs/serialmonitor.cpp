@@ -26,12 +26,14 @@
 #include <wx/clipbrd.h>
 #include <wx/frame.h>
 #include <wx/gdicmn.h>
+#include <wx/listbase.h>
 #include <wx/listctrl.h>
 #include <wx/menu.h>
 #include <wx/thread.h>
 #include <wx/statusbr.h>
 
 #include "data/context.hpp"
+#include "log/context.hpp"
 #include "ui/build.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/list.hpp"
@@ -187,7 +189,7 @@ void SerialMonitorDlg::bindEvents() {
         this
     );
 
-    output->Bind(
+    Bind(
         wxEVT_MENU,
         &SerialMonitorDlg::onOutputMenu,
         this
@@ -321,11 +323,11 @@ void SerialMonitorDlg::onDown() {
         mInput.change(std::string{smHistory[mHistoryIdx]});
 }
 
-void SerialMonitorDlg::onOutputContext(wxContextMenuEvent& evt) {
+void SerialMonitorDlg::onOutputContext(wxContextMenuEvent&) {
     wxMenu menu;
     menu.Append(eID_Menu_Copy, _("Copy Output"));
     menu.Append(eID_Menu_Copy_With_Time, _("Copy Output With Time-Stamps"));
-    static_cast<wxWindow *>(evt.GetEventObject())->PopupMenu(&menu);
+    PopupMenu(&menu);
 }
 
 void SerialMonitorDlg::onOutputMenu(wxCommandEvent& evt) {
@@ -337,12 +339,16 @@ void SerialMonitorDlg::doCopyOutput(bool withStamps) {
 
     std::string data;
 
+    const bool onlySelected{0 != list->GetSelectedItemCount()};
+
     long item{-1};
     while (not false) {
         item = list->GetNextItem(
             item,
             wxLIST_NEXT_ALL,
-            wxLIST_STATE_SELECTED
+            onlySelected ?
+                wxLIST_STATE_SELECTED :
+                wxLIST_STATE_DONTCARE
         );
 
         if (item == -1)
@@ -522,13 +528,15 @@ pcui::List::Label SerialMonitorDlg::getLabel(size row, size col) {
         return mLines[row]->stamp_;
 
     auto& var{mLines[row]->var_};
-    if (auto *ptr{std::get_if<DeviceLine>(&var)}) {
+
+    if (auto *ptr{std::get_if<DeviceLine>(&var)})
         return ptr->line_;
-    } else if (auto *ptr{std::get_if<UserLine>(&var)}) {
+
+    if (auto *ptr{std::get_if<UserLine>(&var)})
         return ptr->line_;
-    } else if (auto *ptr{std::get_if<EventLine>(&var)}) {
+
+    if (auto *ptr{std::get_if<EventLine>(&var)})
         return "???";
-    }
 
     assert(0);
     __builtin_unreachable();
@@ -565,7 +573,7 @@ std::string formatStamp(
     millis %= 1000;
 
     auto rawTime{std::chrono::system_clock::to_time_t(point)};
-    auto time{localtime(&rawTime)};
+    auto *time{localtime(&rawTime)};
 
     // Cannot use std::format. It accesses stuff that the macOS SDK C++
     // library doesn't have. (std::to_chars, available in 13.3)
