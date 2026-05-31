@@ -20,14 +20,14 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "utils/crypto.h"
+#include "utils/hash.hpp"
 
 // NOLINTNEXTLINE(misc-use-anonymous-namespace)
-TEST_CASE("Crypto::Hash string") {
+TEST_CASE("Hash string") {
     constexpr cstring HASH_STR{"3925fc3ca17db9b69c3ff8d456965ccc838baed6088aab52c1148e757258b077"};
-    auto hash{Crypto::Hash::parseString(HASH_STR)};
+    auto hash{utils::hash::SHA256::parseString(HASH_STR)};
 
     REQUIRE(hash);
-    REQUIRE(static_cast<string>(*hash) == HASH_STR);
+    REQUIRE(static_cast<std::string>(*hash) == HASH_STR);
 }
 

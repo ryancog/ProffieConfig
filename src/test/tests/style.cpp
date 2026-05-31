@@ -18,40 +18,76 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <fstream>
+
 #include <catch2/catch_test_macros.hpp>
 
-#include "config/preset/preset.h"
-#include "utils/string.h"
+#include "config/config.hpp"
+#include "config/presets/preset.hpp"
+#include "config/presets/style.hpp"
+#include "data/context.hpp"
+#include "utils/paths.hpp" // IWYU pragma: keep for fs::path
 
 namespace {
 
 const fs::path CONFIG_DIR{CONFIG_DIR_STR};
 
+const cstring RAW_STYLE_STR{R"(
+/* This is a comment outside the style. */
+StylePtr< // This is a comment in the style (scary).
+    // Another comment line
+            SomeSomethingOrOther<>
+>("Arg ~ ~")
+)"};
+
+const cstring PARSED_COMMENT_STR{"This is a comment outside the style."};
+
+// Note the lack of period after "(scary)". Currently, only special characters
+// are allowed in block comments
+//
+// There's also tabs in this string. I forget if there was a real reason for
+// using tabs instead of spaces, but there might've been. There's math for
+// considering tabs as 4-wide spaces in style::format(), but I don't just use
+// spaces...
+const cstring PARSED_STYLE_STR{R"(StylePtr<
+	// This is a comment in the style (scary)
+	// Another comment line
+	SomeSomethingOrOther<>
+>("Arg ~ ~"))"};
+
 } // namespace
 
 // NOLINTNEXTLINE(misc-use-anonymous-namespace)
 TEST_CASE("Styles") {
-    const cstring RAW_STYLE_STR{
-        "/* This is a comment outside the style. */           \n"
-        "StylePtr< // This is a comment in the style (scary). \n"
-        "  // Another comment line                            \n"
-        "    SomeSomethingOrOther<>                           \n"
-        ">(\"Arg ~ ~\")                                       \n"
-    };
-    const cstring COMMENT_STR{
-        "This is a comment outside the style.\n"
-        "This is a comment in the style (scary).\n"
-        "Another comment line"
-    };
-    const cstring STYLE_STR{R"(StylePtr<SomeSomethingOrOther<>>("Arg ~ ~"))"};
+    for (const auto& entry : fs::directory_iterator(paths::configDir()))
+        fs::remove_all(entry);
 
-    Config::Preset::Style style;
-    style.comment.clear();
-    style.style = RAW_STYLE_STR;
-    string styleStr{style.style};
-    Utils::trimWhitespaceOutsideString(styleStr);
+    std::ofstream file{paths::configDir() / "Test.h"};
+    REQUIRE(not file.fail());
+    file.close();
 
-    REQUIRE(styleStr == STYLE_STR);
-    REQUIRE(static_cast<string>(style.comment) == COMMENT_STR);
+    config::update();
+
+    auto list{data::context(config::list())};
+    auto& info{list.child<config::Info>(0)};
+    auto loadErr{info.load()};
+    REQUIRE(not loadErr);
+
+    auto& config{*info.config()};
+    auto presetArrays{data::context(config.presetArrays_)};
+    auto& presetArray{presetArrays.append<config::presets::Preset>(config)};
+
+    auto styles{data::context(presetArray.styles_)};
+    auto& style{styles.append<config::presets::Style>(config)};
+
+    auto content{data::context(style.content_)};
+    auto comments{data::context(style.comment_)};
+
+    comments.clear();
+    content.change(RAW_STYLE_STR);
+    content.change(style.format());
+
+    REQUIRE(comments.val() == PARSED_COMMENT_STR);
+    REQUIRE(content.val() == PARSED_STYLE_STR);
 }
 

@@ -23,12 +23,12 @@
 
 #include <wx/app.h>
 
-#include "app/app.h"
-#include "app/critical_dialog.h"
-#include "config/info.h"
-#include "ui/message.hpp"
-#include "utils/paths.h"
-#include "versions/versions.h"
+#include "app/app.hpp"
+#include "app/critical_dialog.hpp"
+#include "config/info.hpp"
+#include "ui/dialogs/message.hpp"
+#include "utils/paths.hpp"
+#include "versions/versions.hpp"
 
 class Test : public wxApp {
 public:
@@ -53,8 +53,8 @@ public:
             return false;
         }
 
-        Config::setExecutableVersion(wxSTRINGIZE(BIN_VERSION));
-        Versions::loadLocal();
+        config::setExecutableVersion(wxSTRINGIZE(BIN_VERSION));
+        versions::loadLocal();
 
         auto res{Catch::Session().run(argc, static_cast<char **>(argv))};
 
