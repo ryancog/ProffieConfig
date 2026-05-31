@@ -137,12 +137,27 @@ void Model::responderHook(const RecvTableBinding& binding) const {
     auto state{mRoot.mStates.back()};
 
     const auto performance{[&] {
+        // There won't be frames while suppressed.
+        if (state == Root::State::Performance) {
+            auto& curFrame{mRoot.mActionFrames.back()};
+
+            assert(curFrame.responderId_ == 0);
+            curFrame.responderId_ = binding.id_;
+        }
+
         for (auto *receiver : receivers()) {
             std::lock_guard scopeLock(receiver->pMutex);
 
-            auto observeIter{receiver->mRespondMap.find(this)};
-            if (observeIter != receiver->mRespondMap.end())
-                binding.functor_(receiver, observeIter->second);
+            auto iter{receiver->mRespondMap.find(this)};
+            if (iter != receiver->mRespondMap.end())
+                binding.functor_(receiver, iter->second);
+        }
+
+        if (state == Root::State::Performance) {
+            // The action frame vec could've been modified such that a
+            // reference would be invalidated, re-fetch.
+            auto& curFrame{mRoot.mActionFrames.back()};
+            curFrame.responderId_ = 0;
         }
     }};
 
