@@ -80,7 +80,7 @@ Config::Config() :
         table.onAction_ = data::map(&Config::onAction);
         return table;
     }()};
-    respondWith(*this, selfTable);
+    observeWith(*this, selfTable);
 
     static const auto numBladesTable{[] {
         data::base::Integer::RecvTable table;
