@@ -124,7 +124,7 @@ struct Box : detail::Window<priv::GroupBox> {
         for (size idx{0}; idx < ctxt.num(); ++idx) {
             auto& bl{ctxt[idx]};
 
-            auto *data{idx < desc.radios_.size()
+            const auto *data{idx < desc.radios_.size()
                 ? &desc.radios_[idx]
                 : nullptr
             };
