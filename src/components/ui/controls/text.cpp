@@ -50,7 +50,8 @@ struct Control : detail::DataWindow<wxTextCtrl> {
             switch (mode.wrap_) {
                 using enum Text::Wrap;
                 case None:
-                    style |= wxTE_DONTWRAP;
+                    if (mode.scroll_.horizontal_)
+                        style |= wxTE_DONTWRAP;
                     break;
                 case Character:
                     style |= wxTE_CHARWRAP;
@@ -62,6 +63,9 @@ struct Control : detail::DataWindow<wxTextCtrl> {
                     style |= wxTE_BESTWRAP;
                     break;
             }
+
+            if (not mode.scroll_.vertical_)
+                style |= wxTE_NO_VSCROLL;
         }
 
         if (desc.data_.index() == 0) {
@@ -226,31 +230,46 @@ wxSizerItem *Text::Desc::build(const detail::Scaffold& scaffold) const {
     detail::apply(win_.base_, item);
 
     if (const auto *ptr{std::get_if<Text::MultiLine>(&style_)}) {
+        wxSize minSize;
+
+#ifdef  __WXMSW__
+        // The # of lines function is wonky in general, apparently, and is
+        // somewhat considered deprecated by wx devs it seems.
+        //
+        // On MSW, it doesn't work right at all afaics, so here's an
+        // incorrect approximation.
+        const auto val{ctrl->GetValue()};
+        const auto numLines{1 + std::count_if(
+            val.begin(),
+            val.end(),
+            [](char c) { return c == '\n'; }
+        )};
+#       else
+        const auto numLines{ctrl->GetNumberOfLines()};
+#       endif
+
         if (not ptr->scroll_.vertical_) {
-            const auto lineHeight{ctrl->GetTextExtent('M').y};
+            const auto lineHeight{ctrl->GetCharHeight()};
             
-#ifdef      __WXMSW__
-            // The # of lines function is wonky in general, apparently, and is
-            // somewhat considered deprecated by wx devs it seems.
-            //
-            // On MSW, it doesn't work right at all afaics, so here's an
-            // incorrect approximation.
-            const auto val{ctrl->GetValue()};
-            const auto numLines{1 + std::count_if(
-                val.begin(),
-                val.end(),
-                [](char c) { return c == '\n'; }
-            )};
-#           else
-            const auto numLines{ctrl->GetNumberOfLines()};
-#           endif
-            ctrl->SetMinSize({
-                ctrl->GetMinWidth(),
-                static_cast<int32>(
-                    lineHeight * (static_cast<float64>(numLines) + 0.5)
-                )
-            });
+            minSize.y = static_cast<int32>(
+                lineHeight * (static_cast<float64>(numLines) + 0.5)
+            );
         }
+
+        if (not ptr->scroll_.horizontal_) {
+            int32 width{0};
+
+            for (int32 idx{0}; idx < numLines; ++idx) {
+                auto lineText{ctrl->GetLineText(idx)};
+                auto extent{ctrl->GetTextExtent(lineText)};
+                width = std::max(width, extent.GetWidth());
+            }
+
+            minSize.x = width + (ctrl->GetCharWidth() * 2);
+        }
+
+        minSize.IncTo(ctrl->GetMinClientSize());
+        ctrl->SetMinClientSize(minSize);
     }
 
     return item;
