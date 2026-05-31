@@ -244,6 +244,15 @@ void SerialMonitorDlg::onCmdEnter() {
     } else {
         if (auto err{mMon.write(smHistory.back())}) {
             // TODO: Display error
+            logging::Context::getGlobal().quickLog(
+                logging::Severity::Warn,
+                "SerialMonitorDlg::onCmdEnter()",
+                wxString::Format(
+                    "Error writing: %d (%d)",
+                    err.code_,
+                    err.rsn_
+                ).utf8_string()
+            );
             return;
         }
 
@@ -468,6 +477,15 @@ void SerialMonitorDlg::listenLoop() {
 
         if (auto err{mMon.read(chr)}) {
             // TODO: Display error
+            logging::Context::getGlobal().quickLog(
+                logging::Severity::Warn,
+                "SerialMonitorDlg::listenLoop()",
+                wxString::Format(
+                    "Error reading: %d (%d)",
+                    err.code_,
+                    err.rsn_
+                ).utf8_string()
+            );
             break;
         }
 
