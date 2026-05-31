@@ -558,6 +558,8 @@ void config::update() {
         }
 
         if (not found) {
+            name.release();
+
             list.remove(idx);
             --idx;
         }
