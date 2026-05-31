@@ -89,6 +89,7 @@ private:
 
         eID_Export,
         eID_Verify,
+        eID_Verify_Cacheless,
         eID_Injections,
         eID_Style_Editor,
 

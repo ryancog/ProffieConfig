@@ -32,16 +32,35 @@ namespace arduino {
 
 std::string version();
 
+struct CompileOutput {
+    int32 used_;
+    int32 total_;
+
+    std::string dfuFile_;
+
+    [[nodiscard]] float64 percent() const;
+    [[nodiscard]] wxString usageMessage() const;
+};
+
+struct CompileInfo : utils::Data {
+    CompileInfo(const config::Config& config) : source_{config} {}
+
+    const config::Config& source_;
+
+    // If this is nullopt, will recompile.
+    std::optional<CompileOutput> out_;
+};
+
 void applyToBoard(
     const std::string& name,
     const std::string& boardPath,
-    const config::Config&,
+    CompileInfo&,
     pcui::ProgressDialog& progress
 );
 
 void verifyConfig(
-    const std::string&,
-    const config::Config&,
+    const std::string& name,
+    CompileInfo&,
     pcui::ProgressDialog& progress
 );
 

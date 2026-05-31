@@ -68,32 +68,7 @@ namespace {
 
 void cli(Process& proc, std::vector<std::string>& args);
 
-struct CompileOutput {
-    int32 used_;
-    int32 total_;
-
-    std::string dfuFile_;
-    std::string suffixPath_;
-
-    [[nodiscard]] float64 percent() const {
-        return (static_cast<float64>(used_) / total_) * 100.0;
-    }
-
-    [[nodiscard]] wxString usageMessage() const {
-        static constexpr cstring USAGE_MESSAGE{wxTRANSLATE(
-            "The configuration uses %.2f%% of board space. (%d/%d)"
-        )};
-
-        return wxString::Format(
-            wxGetTranslation(USAGE_MESSAGE),
-            percent(),
-            used_,
-            total_
-        );
-    }
-};
-
-std::variant<CompileOutput, wxString> compile(
+std::variant<arduino::CompileOutput, wxString> compile(
     const std::string&,
     const config::Config&,
     pcui::ProgressDialog&,
@@ -102,8 +77,8 @@ std::variant<CompileOutput, wxString> compile(
 
 std::optional<wxString> upload(
     const std::string& boardPath,
+    const std::string& binPath,
     const config::Config&,
-    const CompileOutput&,
     pcui::ProgressDialog&,
     logging::Branch&
 );
@@ -124,6 +99,8 @@ std::optional<wxString> ensureCoreInstalled(
     logging::Logger&,
     pcui::ProgressDialog *
 );
+
+std::string dfuSuffixPath;
 
 constexpr auto MAX_ERRMESSAGE_LENGTH{1024};
 constexpr cstring ARDUINOCORE_PBV1{"proffieboard:stm32l4:Proffieboard-L433CC"};
@@ -158,6 +135,23 @@ std::string arduino::version() {
     }
 
     return output.substr(versionStart, versionEnd - versionStart);
+}
+
+float64 arduino::CompileOutput::percent() const {
+    return (static_cast<float64>(used_) / total_) * 100.0;
+}
+
+wxString arduino::CompileOutput::usageMessage() const {
+    constexpr cstring USAGE_MESSAGE{wxTRANSLATE(
+        "The configuration uses %.2f%% of board space. (%d/%d)"
+    )};
+
+    return wxString::Format(
+        wxGetTranslation(USAGE_MESSAGE),
+        percent(),
+        used_,
+        total_
+    );
 }
 
 std::vector<std::string> arduino::getBoards(logging::Branch *lBranch) {
@@ -239,23 +233,37 @@ std::vector<std::string> arduino::getBoards(logging::Branch *lBranch) {
 void arduino::applyToBoard(
     const std::string& name,
     const std::string& boardPath,
-    const config::Config& config,
+    CompileInfo& info,
     pcui::ProgressDialog& prog
 ) {
     auto& logger{logging::Context::getGlobal().createLogger("arduino::applyToBoard()")};
 
-    auto res{compile(name, config, prog, *logger.binfo("Compiling..."))};
-    if (auto *err{std::get_if<wxString>(&res)}) {
-        prog.finish(true, *err);
-        return;
-    }
+    if (not info.out_) {
+        auto res{compile(
+            name,
+            info.source_,
+            prog,
+            *logger.binfo("Compiling...")
+        )};
 
-    const auto& compileOutput{std::get<CompileOutput>(res)};
+        if (auto *err{std::get_if<wxString>(&res)}) {
+            prog.finish(
+                true,
+                wxString::Format(
+                    _("Compilation Failed:\n%s"),
+                    *err
+                )
+            );
+            return;
+        }
+
+        info.out_ = std::get<CompileOutput>(res);
+    }
 
     auto err{upload(
         boardPath,
-        config,
-        compileOutput,
+        info.out_->dfuFile_,
+        info.source_,
         prog,
         *logger.binfo("Uploading...")
     )};
@@ -266,10 +274,10 @@ void arduino::applyToBoard(
 
     logger.info("Applied Successfully");
 
-    wxString message{_("Config Verified Successfully!")};
-    if (compileOutput.total_ != -1) {
+    wxString message{_("Config Applied Successfully!")};
+    if (info.out_->total_ != -1) {
         message += "\n\n";
-        message += compileOutput.usageMessage();
+        message += info.out_->usageMessage();
     }
 
     prog.finish(true, message);
@@ -277,25 +285,33 @@ void arduino::applyToBoard(
 
 void arduino::verifyConfig(
     const std::string& name,
-    const config::Config& config,
+    CompileInfo& info,
     pcui::ProgressDialog& prog
 ) {
     auto& logger{logging::Context::getGlobal().createLogger("arduino::verifyConfig()")};
 
-    auto res{compile(name, config, prog, *logger.binfo("Compiling..."))};
-    if (auto *err{std::get_if<wxString>(&res)}) {
-        prog.finish(true, *err);
-        return;
-    }
+    if (not info.out_) {
+        auto res{compile(
+            name,
+            info.source_,
+            prog,
+            *logger.binfo("Compiling...")
+        )};
 
-    const auto& compileOutput{std::get<CompileOutput>(res)};
+        if (auto *err{std::get_if<wxString>(&res)}) {
+            prog.finish(true, *err);
+            return;
+        }
+
+        info.out_ = std::get<CompileOutput>(res);
+    }
 
     logger.info("Verified Successfully");
 
     wxString message{_("Config Verified Successfully!")};
-    if (compileOutput.total_ != -1) {
+    if (info.out_->total_ != -1) {
         message += "\n\n";
-        message += compileOutput.usageMessage();
+        message += info.out_->usageMessage();
     }
 
     prog.finish(true, message);
@@ -303,7 +319,7 @@ void arduino::verifyConfig(
 
 namespace {
 
-std::variant<CompileOutput, wxString> compile(
+std::variant<arduino::CompileOutput, wxString> compile(
     const std::string& name,
     const config::Config& config,
     pcui::ProgressDialog& prog,
@@ -514,7 +530,7 @@ std::variant<CompileOutput, wxString> compile(
         return parseError(compileOutput, config);
     }
 
-    CompileOutput ret;
+    arduino::CompileOutput ret;
 
     constexpr std::string_view DFU_STR{"ProffieOS.ino.dfu"};
 #   ifdef _WIN32
@@ -573,7 +589,7 @@ std::variant<CompileOutput, wxString> compile(
             dfuSuffixRootPos, dfuSuffixPos - dfuSuffixRootPos
         )};
 
-#       if _WIN32
+#       ifdef _WIN32
         res = GetShortPathNameA(
             dfuSuffixLongPath.c_str(), shortPath.data(), shortPath.size()
         );
@@ -582,17 +598,17 @@ std::variant<CompileOutput, wxString> compile(
             return wxGetTranslation(UTIL_ERR);
         }
 
-        ret.suffixPath_ = std::string{shortPath.data()} + "stm32l4-upload.bat";
+        dfuSuffixPath = std::string{shortPath.data()} + "stm32l4-upload.bat";
 #       else
-        ret.suffixPath_ = dfuSuffixLongPath + "stm32l4-upload";
+        dfuSuffixPath = dfuSuffixLongPath + "stm32l4-upload";
         // Pop off `\n` the POSIX version needs to find the path root.
-        ret.suffixPath_.erase(0, 1);
+        dfuSuffixPath.erase(0, 1);
 #       endif
 
-        logger.debug("Parsed upload file: " + ret.suffixPath_);
+        logger.debug("Updated DFU Suffix Path: " + dfuSuffixPath);
     }
 
-    if (ret.dfuFile_.empty() or ret.suffixPath_.empty()) {
+    if (ret.dfuFile_.empty() or dfuSuffixPath.empty()) {
         logger.error("Failed to find utilities in output: " + compileOutput);
         return wxGetTranslation(UTIL_ERR);
     }
@@ -627,8 +643,8 @@ std::variant<CompileOutput, wxString> compile(
 
 std::optional<wxString> upload(
     const std::string& boardPath,
+    const std::string& binPath,
     const config::Config& config,
-    const CompileOutput& compileOutput,
     pcui::ProgressDialog& prog,
     logging::Branch& lBranch
 ) {
@@ -685,9 +701,9 @@ std::optional<wxString> upload(
     std::array<std::string, 3> args{
         "0x1209",
         "0x6668",
-        compileOutput.dfuFile_
+        binPath
     };
-    proc.create(compileOutput.suffixPath_, args);
+    proc.create(dfuSuffixPath, args);
 
     std::string uploadOutput;
     while (auto buffer{proc.read()}) {

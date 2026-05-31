@@ -102,11 +102,23 @@ void EditorWindow::onDeactivate() {
 void EditorWindow::createMenuBar() {
     auto *file{new wxMenu};
     file->Append(eID_Verify, _("Verify Config") + "\tCtrl+R");
+    // TODO: It's be cool if I had a nice way to map Alt (Option) on macOS to
+    // Shift on Windows, or something of the sort, (but not always!).
+    // Especially for something like this where it'd be more "usual" on macOS
+    // for this to be a "hidden" option shown by holding Option, that sort of
+    // handling would be nice too.
+    //
+    // TODO: A better name for this menu item.
+    file->Append(
+        eID_Verify_Cacheless,
+        _("Force Verify Config") + "\tCtrl+Shift+R"
+    );
     file->AppendSeparator();
     file->Append(wxID_SAVE, _("Save Config") + "\tCtrl+S");
     file->Append(eID_Export, _("Export Config...") + "\tCtrl+E");
     file->AppendSeparator();
-    file->Append(eID_Injections,
+    file->Append(
+        eID_Injections,
         _("Manage Injections...") + "\tCtrl+I"
     );
 
@@ -190,6 +202,7 @@ void EditorWindow::bindEvents() {
     Bind(wxEVT_MENU, &EditorWindow::onSave, this, wxID_SAVE);
     Bind(wxEVT_MENU, &EditorWindow::onExport, this, eID_Export);
     Bind(wxEVT_MENU, &EditorWindow::onVerify, this, eID_Verify);
+    Bind(wxEVT_MENU, &EditorWindow::onVerify, this, eID_Verify_Cacheless);
     Bind(wxEVT_MENU, &EditorWindow::onManageInjections, this, eID_Injections);
     Bind(wxEVT_MENU, &EditorWindow::onUndo, this, wxID_UNDO);
     Bind(wxEVT_MENU, &EditorWindow::onRedo, this, wxID_REDO);
@@ -273,8 +286,10 @@ void EditorWindow::onExport(wxCommandEvent&) {
     config::generate(*mInfo.config(), fileDlg.GetPath().ToStdString());
 }
 
-void EditorWindow::onVerify(wxCommandEvent&) {
+void EditorWindow::onVerify(wxCommandEvent& evt) {
     pcui::BusyTracker busy(this);
+
+    bool useCache{evt.GetId() == eID_Verify};
 
     auto *prog{new pcui::ProgressDialog(
         this,
@@ -282,9 +297,22 @@ void EditorWindow::onVerify(wxCommandEvent&) {
         true
     )};
 
-    std::thread{[this, prog, busy]() {
+    std::thread{[this, prog, busy, useCache]() {
         auto name{data::context(mInfo.name())};
-        arduino::verifyConfig(name.val(), *mInfo.config(), *prog);
+        auto& config{*mInfo.config()};
+
+        arduino::CompileInfo *compInfo{nullptr};
+
+        if (useCache)
+            compInfo = static_cast<arduino::CompileInfo *>(config.cache());
+
+        if (compInfo == nullptr) {
+            auto unique{std::make_unique<arduino::CompileInfo>(config)};
+            compInfo = unique.get();
+            config.cache(std::move(unique));
+        }
+
+        arduino::verifyConfig(name.val(), *compInfo, *prog);
     }}.detach();
 }
 
