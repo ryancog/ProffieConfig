@@ -162,8 +162,6 @@ CONFIG_EXPORT const data::base::Vector& list();
  */
 CONFIG_EXPORT void update();
 
-CONFIG_EXPORT bool remove(Info&);
-
 /**
  * Similar to open, but opens from path instead of in save folder by name.
  *

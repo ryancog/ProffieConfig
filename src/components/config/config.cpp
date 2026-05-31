@@ -591,25 +591,6 @@ void config::update() {
     }
 }
 
-bool config::remove(Info& info) {
-    auto vec{data::context(priv::list)};
-
-    size idx{0};
-    for (;idx < vec.children().size(); ++idx) {
-        if (&dynamic_cast<Info&>(*vec.children()[idx]) == &info) {
-            break;
-        }
-    }
-    if (idx == vec.children().size()) return false;
-
-    std::error_code err;
-    auto res{fs::remove(info.path(), err)};
-    if (not res) return false;
-
-    vec.remove(idx);
-    return true;
-}
-
 std::optional<std::string> config::import(
     const std::string& name, const fs::path& path
 ) {
