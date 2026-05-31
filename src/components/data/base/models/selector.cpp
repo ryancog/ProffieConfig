@@ -22,7 +22,6 @@
 #include <cassert>
 
 #include "data/context.hpp"
-#include "data/hierarchic/models/vector.hpp"
 #include "data/recvtable.hpp"
 #include "utils/defer.hpp"
 
