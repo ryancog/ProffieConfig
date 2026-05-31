@@ -692,7 +692,13 @@ std::optional<wxString> upload(
 
         mon.close();
 
-        std::this_thread::sleep_for(5s);
+        // This probably isn't even necessary anymore. Before it was there as
+        // something of a band-aid over weirdness with the code that was used
+        // instead of SerialMonitor, but I don't think it's necessary.
+        //
+        // I'm going to keep a short delay for now, but it can probably be
+        // removed at some point.
+        std::this_thread::sleep_for(500ms);
     }
 
     prog.pulse(_("Uploading to Proffieboard..."));
