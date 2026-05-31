@@ -21,7 +21,7 @@
 
 #include "ui/build.hpp"
 #include "ui/builders/choice.hpp"
-#include "ui/static/label.hpp"
+#include "ui/controls/text.hpp"
 #include "ui/types.hpp"
 #include "ui/values.hpp"
 
@@ -35,7 +35,7 @@ pcui::DescriptorPtr PropInfoDlg::ui() {
     return pcui::builders::Choice{
       .data_=mConfig.propChoice(),
       .builder_=[this](int32 idx) -> pcui::DescriptorPtr {
-          pcui::Label label{
+          pcui::Text label{
             .win_={
               .base_={
                 .minSize_={300, 100},
@@ -44,14 +44,21 @@ pcui::DescriptorPtr PropInfoDlg::ui() {
                 .border_={.size_=pcui::winEdgeSpacing(), .dirs_=wxALL},
               },
             },
+            .readOnly_=true,
+            .autoLink_=true,
+            .font_=pcui::Font::Monospace,
+            .style_=pcui::Text::MultiLine{
+                .scroll_={.vertical_=false, .horizontal_=false},
+                .wrap_=pcui::Text::Wrap::None,
+            },
           };
 
           if (idx == -1) {
-              label.label_ = _("The Default ProffieOS Prop");
+              label.data_ = _("The Default ProffieOS Prop");
               label.win_.base_.align_ = wxALIGN_CENTER;
           }
           else {
-              label.label_ = mConfig.prop()->info_;
+              label.data_ = mConfig.prop()->info_;
           }
 
           return label();
