@@ -6,6 +6,7 @@ add_library(utils SHARED
     info.cpp
 
     color.cpp
+    data.cpp
     files.cpp
     hash.cpp
     paths.cpp
