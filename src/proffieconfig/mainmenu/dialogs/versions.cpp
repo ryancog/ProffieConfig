@@ -310,7 +310,7 @@ pcui::DescriptorPtr VersionsDlg::propInfo(data::base::Model *model) {
     }
 
     auto& prop{dynamic_cast<versions::props::Versioned&>(*model)};
-    auto& data{prop.data_};
+    const auto& data{prop.data_};
 
     return pcui::Stack{
       .base_={
@@ -345,7 +345,7 @@ pcui::DescriptorPtr VersionsDlg::propInfo(data::base::Model *model) {
           .label_=[&data] {
               wxString numsString;
 
-              for (auto& [num, buttons] : data.buttons_) {
+              for (const auto& [num, buttons] : data.buttons_) {
                   if (not numsString.empty())
                       numsString.append(", ");
 
@@ -781,7 +781,7 @@ void VersionsDlg::updatePropInstall() {
         auto vec{data::context(versions::props::list())};
 
         bool found{false};
-        for (auto& model : vec.children()) {
+        for (const auto& model : vec.children()) {
             auto& installed{dynamic_cast<versions::props::Versioned&>(*model)};
 
             if (installed.name_ == avail->name_) {
@@ -893,7 +893,7 @@ void VersionsDlg::updateOsInstall() {
         auto vec{data::context(versions::os::list())};
 
         bool found{false};
-        for (auto& model : vec.children()) {
+        for (const auto& model : vec.children()) {
             auto& installed{dynamic_cast<versions::os::OS&>(*model)};
 
             if (installed.version_.compare(avail->version_) == 0) {
