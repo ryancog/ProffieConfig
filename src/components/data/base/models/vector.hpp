@@ -93,6 +93,11 @@ struct DATA_EXPORT Vector::ROContext : virtual Model::ROContext {
 
     [[nodiscard]] std::span<const std::unique_ptr<Model>>
         children() const LIFETIMEBOUND;
+
+    template <typename T = Model>
+    [[nodiscard]] T& child(size idx) const LIFETIMEBOUND {
+        return dynamic_cast<T&>(*children()[idx]);
+    }
 };
 
 struct DATA_EXPORT Vector::Context : Model::Context, ROContext {
