@@ -56,6 +56,11 @@ std::optional<std::string> gen::preCheck(
         return errorMessage(logger, wxTRANSLATE("Config must have an OS Version selected."));
     }
 
+    // Similar to os above
+    if (config.board() == nullptr) {
+        return errorMessage(logger, wxTRANSLATE("Config must have a board selected."));
+    }
+
     const auto& settings{config.settings_};
     const auto& awareness{config.settings_.bladeAwareness_};
 
