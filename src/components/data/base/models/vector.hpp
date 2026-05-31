@@ -106,6 +106,7 @@ struct DATA_EXPORT Vector::Context : Model::Context, ROContext {
     void append(std::unique_ptr<Model>&&) const;
 
     template <typename T, typename ...Args>
+    requires std::is_constructible_v<T, Args...>
     T& append(Args&& ...args) const {
         auto obj{std::make_unique<T>(std::forward<Args>(args)...)};
         auto& ret{*obj};
