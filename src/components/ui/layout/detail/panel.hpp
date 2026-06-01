@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/layout/priv/panel.hpp
+ * components/ui/layout/detail/panel.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,9 +21,11 @@
 
 #include <wx/panel.h>
 
-namespace pcui::priv {
+#include "ui_export.h"
 
-class Panel : public wxPanel {
+namespace pcui::detail {
+
+class UI_EXPORT Panel : public wxPanel {
 public:
     Panel() = default;
     Panel(
@@ -50,5 +52,5 @@ public:
     );
 };
 
-} // namespace pcui::priv
+} // namespace pcui::detail
 

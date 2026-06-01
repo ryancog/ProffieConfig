@@ -25,7 +25,7 @@
 #include "ui/frame.hpp"
 #include "ui/detail/helpers.hpp"
 #include "ui/detail/datawin.hpp"
-#include "ui/layout/priv/panel.hpp"
+#include "ui/layout/detail/panel.hpp"
 
 namespace {
 
@@ -46,7 +46,7 @@ void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
 
     auto *parent{win};
     if (dynamic_cast<Frame *>(parent)) {
-        parent = new priv::Panel(win);
+        parent = new detail::Panel(win);
     }
 
     // In many cases this means there's a kind of unnecessary sizer in a sizer,

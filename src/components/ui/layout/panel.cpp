@@ -26,14 +26,14 @@
 #include <wx/panel.h>
 
 #include "ui/detail/window.hpp"
-#include "ui/layout/priv/panel.hpp"
+#include "ui/layout/detail/panel.hpp"
 #include "ui/types.hpp"
 
 using namespace pcui;
 
 namespace {
 
-struct Layout : detail::Window<priv::Panel> {
+struct Layout : detail::Window<detail::Panel> {
     Layout(const detail::Scaffold& scaffold, const pcui::Panel& desc) {
         create(scaffold.childParent_, desc.win_.id_);
 

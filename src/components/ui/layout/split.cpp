@@ -24,7 +24,7 @@
 
 #include "ui/build.hpp"
 #include "ui/detail/window.hpp"
-#include "ui/layout/priv/panel.hpp"
+#include "ui/layout/detail/panel.hpp"
 #include "ui/types.hpp"
 
 using namespace pcui;
@@ -43,8 +43,8 @@ struct Layout : detail::Window<wxSplitterWindow> {
 
         postCreation(scaffold, desc.win_);
 
-        auto *pane1{new priv::Panel(this)};
-        auto *pane2{new priv::Panel(this)};
+        auto *pane1{new detail::Panel(this)};
+        auto *pane2{new detail::Panel(this)};
 
         build(pane1, desc.child1_);
         build(pane2, desc.child2_);

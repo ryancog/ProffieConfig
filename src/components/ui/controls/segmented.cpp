@@ -26,7 +26,7 @@
 #include "data/context.hpp"
 #include "ui/detail/scaffold.hpp"
 #include "ui/detail/datawin.hpp"
-#include "ui/layout/priv/panel.hpp"
+#include "ui/layout/detail/panel.hpp"
 #include "ui/types.hpp"
 #include "utils/defer.hpp"
 
@@ -140,7 +140,7 @@ struct Control : detail::DataWindow<wxToggleButton> {
     data::base::Bool& bl_;
 };
 
-struct Manager : detail::Window<priv::Panel> {
+struct Manager : detail::Window<detail::Panel> {
     Manager(const detail::Scaffold& scaffold, const Segmented& desc) {
         create(scaffold.childParent_, desc.win_.id_);
         auto *sizer{new wxBoxSizer(wxHORIZONTAL)};

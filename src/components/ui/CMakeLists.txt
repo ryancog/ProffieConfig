@@ -64,7 +64,7 @@ add_library(ui SHARED
     layout/split.cpp
     layout/stack.cpp
     layout/priv/groupbox.cpp
-    layout/priv/panel.cpp
+    layout/detail/panel.cpp
 )
 
 target_link_libraries(ui 

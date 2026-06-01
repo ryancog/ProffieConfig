@@ -3,7 +3,7 @@
  * ProffieConfig, All-In-One Proffieboard Management Utility
  * Copyright (C) 2026 Ryan Ogurek
  *
- * components/ui/layout/priv/panel.hpp
+ * components/ui/layout/detail/panel.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 
 #include <wx/gdicmn.h>
 
-using namespace pcui::priv;
+using namespace pcui::detail;
 
 Panel::Panel(
     wxWindow *parent,

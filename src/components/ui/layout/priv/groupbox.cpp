@@ -21,7 +21,7 @@
 
 #include <wx/colour.h>
 
-#include "ui/layout/priv/panel.hpp"
+#include "ui/layout/detail/panel.hpp"
 #include "utils/types.hpp"
 
 using namespace pcui::priv;
@@ -62,7 +62,7 @@ void GroupBox::create(
     wxStaticBox::Create(parent, id, label);
 
     mSizer = new wxBoxSizer(orient);
-    mPanel = new priv::Panel(
+    mPanel = new detail::Panel(
         this,
         wxID_ANY,
         wxTAB_TRAVERSAL | wxNO_BORDER,

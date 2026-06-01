@@ -22,7 +22,7 @@
 #include <wx/notebook.h>
 
 #include "ui/build.hpp"
-#include "ui/layout/priv/panel.hpp"
+#include "ui/layout/detail/panel.hpp"
 #include "ui/detail/window.hpp"
 
 using namespace pcui;
@@ -34,8 +34,8 @@ struct Layout : detail::Window<wxNotebook> {
         Create(scaffold.childParent_, desc.win_.id_);
         postCreation(scaffold, desc.win_);
 
-        for (auto& page : desc.pages_) {
-            auto *panel{new priv::Panel(this)};
+        for (const auto& page : desc.pages_) {
+            auto *panel{new detail::Panel(this)};
 
             build(panel, page.content_);
 
