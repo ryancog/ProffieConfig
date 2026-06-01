@@ -22,6 +22,7 @@
 #include <fstream>
 #include <thread>
 
+#include <wx/app.h>
 #include <wx/gdicmn.h>
 #include <wx/menu.h>
 #include <wx/utils.h>
@@ -29,6 +30,7 @@
 #include "config/config.hpp"
 #include "data/context.hpp"
 #include "data/logic/adapter.hpp"
+#include "dialogs/preferences.hpp"
 #include "ui/bitmap.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/choice.hpp"
@@ -224,7 +226,9 @@ pcui::DescriptorPtr MainMenu::ui() {
 
 void MainMenu::createMenuBar() {
     auto *file{new wxMenu};
+    file->Append(wxID_PREFERENCES);
     file->Append(eID_Manage_Versions, _("Manage Versions..."));
+    file->AppendSeparator();
     file->Append(eID_Update_Manifest, _("Update Channel..."));
     file->AppendSeparator();
     file->Append(eID_Logs, _("Show Logs..."));
@@ -309,6 +313,13 @@ void MainMenu::bindEvents() {
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         showAbout(this);
     }, wxID_ABOUT);
+
+    Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+        if (not mPrefsDlg)
+            mPrefsDlg = new PreferencesDlg;
+
+        mPrefsDlg->show(this);
+    }, wxID_PREFERENCES);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
         wxLaunchDefaultApplication(paths::logDir().native());

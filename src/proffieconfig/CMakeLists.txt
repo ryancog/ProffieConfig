@@ -12,6 +12,7 @@ add_executable(proffieconfig WIN32
     mainmenu/dialogs/addconfig.cpp
     mainmenu/dialogs/licenses.cpp
     mainmenu/dialogs/manifest.cpp
+    mainmenu/dialogs/preferences.cpp
     mainmenu/dialogs/serialmonitor.cpp
     mainmenu/dialogs/versions.cpp
 

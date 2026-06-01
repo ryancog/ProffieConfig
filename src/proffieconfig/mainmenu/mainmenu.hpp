@@ -27,6 +27,7 @@
 #include "ui/frame.hpp"
 #include "ui/types.hpp"
 
+#include "dialogs/preferences.hpp"
 #include "dialogs/serialmonitor.hpp"
 #include "dialogs/versions.hpp"
 
@@ -75,5 +76,6 @@ private:
     std::set<SerialMonitorDlg *> mMonitors;
 
     VersionsDlg *mVersionsDlg{nullptr};
+    PreferencesDlg *mPrefsDlg{nullptr};
 };
 
