@@ -86,6 +86,10 @@ void GroupBox::create(
         // seen referenced in other Cocoa discussions), if the 1px border drawn
         // is included. With a high-DPI display (virtually all of them), these
         // values are doubled.
+        //
+        // On GTK, the window is actually positioned inside the static box
+        // client area, oddly enough, so the border position adjustments are
+        // unneeded.
         int32 topBorder{};
         int32 otherBorder{};
         GetBordersForSizer(&topBorder, &otherBorder);
@@ -108,7 +112,7 @@ void GroupBox::create(
         size.y -= otherBorder + topBorder;
 #       endif
 
-#       if defined(__WXMSW__) or defined(__WXGTK__)
+#       if defined(__WXMSW__)
         pos.x += otherBorder;
         pos.y += topBorder;
 #       elif defined(__WXOSX__)
