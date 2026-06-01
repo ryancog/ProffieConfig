@@ -35,6 +35,20 @@
 #elif __WXMSW__
 #endif
 
+namespace {
+
+#if __WXOSX__
+NSColor *getNSColor(cstring name) {
+    static Class NSColorClass{objc_getClass("NSColor")};
+    static NSColor *color{objcMessage<NSColor *>(
+        (id)NSColorClass, name
+    )};
+    return color;
+}
+#endif
+
+} // namespace
+
 const wxColour color::DARK_BLUE{39, 74, 114};
 const wxColour color::LIGHT_BLUE{31, 99, 168};
 
@@ -74,34 +88,9 @@ wxColour color::Dynamic::color() const {
 
     if (mType == Type::ACCENT) {
 #       ifdef __WXOSX__
-        Class NSColor{objc_getClass("NSColor")};
-        id color{objcMessage<id>((id)NSColor, "controlAccentColor")};
-
-        Class NSColorSpace{objc_getClass("NSColorSpace")};
-        id rgbColorSpace{objcMessage<id>((id)NSColorSpace, "sRGBColorSpace")};
-
-        id rgbColor{objcMessage<id>(
-            color, "colorUsingColorSpace:", rgbColorSpace
-        )};
-
-        CGFloat red{};
-        CGFloat green{};
-        CGFloat blue{};
-        CGFloat alpha{};
-        objcMessage(
-            rgbColor,
-            "getRed:green:blue:alpha:",
-            &red, &green, &blue, &alpha
-        );
-
-        objcMessage(rgbColor, "release");
-
-        return {
-            static_cast<uint8>(red * 0xFF),
-            static_cast<uint8>(green * 0xFF),
-            static_cast<uint8>(blue * 0xFF),
-            static_cast<uint8>(alpha * 0xFF)
-        };
+        // Needs explicit ctor
+        // NOLINTNEXTLINE(modernize-return-braced-init-list)
+        return wxColour(getNSColor("controlAccentColor"));
 #       elif __WXMSW__
         // GetImmersiveColorFromColorSetEx
         static_assert(false);
