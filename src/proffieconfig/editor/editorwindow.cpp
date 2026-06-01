@@ -131,7 +131,7 @@ void EditorWindow::createMenuBar() {
     auto *tools{new wxMenu};
     tools->Append(
         eID_Style_Editor,
-        _("Style Editor..."),
+        _("Style Editor...") + "\tCtrl+L",
         _("Open the ProffieOS style editor")
     );
 
