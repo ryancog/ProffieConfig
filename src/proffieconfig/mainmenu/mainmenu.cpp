@@ -326,8 +326,8 @@ void MainMenu::bindEvents() {
             return;
         }
 
-        const auto warnPref{state::getPreference(
-            state::ePreference_Hide_Editor_Manage_Versions_Warn
+        const auto warnPref{state::prefs::get(
+            state::prefs::Bool::Hide_Editor_Manage_Versions_Warn
         )};
         if (
                 not mEditors.empty() and
@@ -345,8 +345,8 @@ void MainMenu::bindEvents() {
                     .parent_=this,
                 }
             )};
-            state::setPreference(
-                state::ePreference_Hide_Editor_Manage_Versions_Warn,
+            state::prefs::set(
+                state::prefs::Bool::Hide_Editor_Manage_Versions_Warn,
                 res.wantsHide_
             );
             if (res.id_ != wxID_OK) return;

@@ -24,8 +24,6 @@
 #include <filesystem>
 #include <fstream>
 
-#include <wx/msgdlg.h>
-
 #include "log/context.hpp"
 #include "log/logger.hpp"
 #include "pconf/read.hpp"
@@ -35,10 +33,10 @@
 #include "utils/files.hpp"
 #include "utils/paths.hpp"
 #include "utils/version.hpp"
+#include "versions/versions.hpp"
 
 #include "../onboard/onboard.hpp"
 #include "../mainmenu/mainmenu.hpp"
-#include "versions/versions.hpp"
 
 namespace {
 
@@ -50,10 +48,72 @@ utils::Version lastVersion{};
 
 void doNecessaryMigrations();
 
-std::bitset<state::ePreference_Max> preferences;
-constexpr std::array<cstring, state::ePreference_Max> PREFERENCE_STRS{
-    "HIDE_EDITOR_MANAGE_VERSIONS_WARN"
+constexpr auto NUM_BOOL_PREFS{static_cast<size>(state::prefs::Bool::Max)};
+constexpr auto NUM_STR_PREFS{static_cast<size>(state::prefs::Str::Max)};
+constexpr auto NUM_ENUM_PREFS{static_cast<size>(state::prefs::Enum::Max)};
+
+std::bitset<NUM_BOOL_PREFS> boolPrefs;
+
+// Helpers to provide names and have no default dtor to avoid errors when
+// updating/adding preferences.
+struct BoolPrefStrings {
+    BoolPrefStrings() = delete;
+    constexpr BoolPrefStrings(cstring key) : key_{key} {}
+
+    cstring key_;
 };
+
+struct StringPrefStrings {
+    StringPrefStrings() = delete;
+    constexpr StringPrefStrings(cstring key, cstring def) :
+        key_{key}, def_{def} {}
+
+    cstring key_;
+    cstring def_;
+};
+
+struct EnumPrefStrings {
+    template <auto DEFAULT, size NUM>
+    requires
+        (static_cast<size>(decltype(DEFAULT)::Max) == NUM) and
+        (static_cast<size>(DEFAULT) < NUM)
+    static constexpr EnumPrefStrings make(cstring key, cstring (&values)[NUM]) {
+        return {key, values, NUM, static_cast<size>(DEFAULT)};
+    }
+
+    cstring key_;
+    std::span<cstring> values_;
+    size def_;
+
+private:
+    constexpr EnumPrefStrings(cstring key, cstring *values, size num, size def) :
+        key_{key}, values_{values, num}, def_{def} {}
+};
+
+constexpr std::array<BoolPrefStrings, NUM_BOOL_PREFS> BOOL_PREF_STRS{
+    "HIDE_EDITOR_MANAGE_VERSIONS_WARN",
+};
+
+std::array<std::string, NUM_STR_PREFS> strPrefs;
+
+constexpr std::array<StringPrefStrings, NUM_STR_PREFS> STR_PREF_STRS{{
+    {
+        "STYLE_EDITOR_LINK",
+        "https://fredrik.hubbe.net/lightsaber/style_editor.html?S={}"
+    },
+}};
+
+std::array<size, NUM_ENUM_PREFS> enumPrefs;
+constexpr std::array<EnumPrefStrings, NUM_ENUM_PREFS> ENUM_PREF_STRS{{
+    EnumPrefStrings::make<state::prefs::enums::AddPresetInsertion::After_Selected>(
+        "ADD_PRESET_INSERTION", (cstring[]){
+            "BEGIN",
+            "END",
+            "BEFORE_SEL",
+            "AFTER_SEL"
+        }
+    )
+}};
 
 } // namespace
 
@@ -72,12 +132,34 @@ void state::init() {
     }
 }
 
-bool state::getPreference(Preference preference) {
-    return preferences[preference];
+bool state::prefs::get(Bool pref) {
+    assert(pref < Bool::Max);
+    return boolPrefs[static_cast<size>(pref)];
 }
 
-void state::setPreference(Preference preference, bool set) {
-    preferences[preference] = set;
+void state::prefs::set(Bool pref, bool set) {
+    assert(pref < Bool::Max);
+    boolPrefs[static_cast<size>(pref)] = set;
+}
+
+std::string state::prefs::get(Str pref) {
+    assert(pref < Str::Max);
+    return strPrefs[static_cast<size>(pref)];
+}
+
+void state::prefs::set(Str pref, std::string s) {
+    assert(pref < Str::Max);
+    strPrefs[static_cast<size>(pref)] = std::move(s);
+}
+
+size state::prefs::priv::get(Enum pref) {
+    assert(pref < Enum::Max);
+    return enumPrefs[static_cast<size>(pref)];
+}
+
+void state::prefs::priv::set(Enum pref, size e) {
+    assert(pref < Enum::Max);
+    enumPrefs[static_cast<size>(pref)] = e;
 }
 
 void state::saveState() {
@@ -106,10 +188,20 @@ void state::saveState() {
         data.push_back(pconf::Entry::create(FIRSTRUN_COMPLETE_STR));
     }
 
-    for (size idx{0}; idx < ePreference_Max; ++idx) {
-        if (preferences[idx]) {
-            data.push_back(pconf::Entry::create(PREFERENCE_STRS[idx]));
-        }
+    for (size idx{0}; idx < NUM_BOOL_PREFS; ++idx) {
+        if (boolPrefs[idx])
+            data.push_back(pconf::Entry::create(BOOL_PREF_STRS[idx].key_));
+    }
+
+    for (size idx{0}; idx < NUM_STR_PREFS; ++idx) {
+        cstring key{STR_PREF_STRS[idx].key_};
+        data.push_back(pconf::Entry::create(key, strPrefs[idx]));
+    }
+
+    for (size idx{0}; idx < NUM_ENUM_PREFS; ++idx) {
+        cstring key{ENUM_PREF_STRS[idx].key_};
+        cstring val{ENUM_PREF_STRS[idx].values_[enumPrefs[idx]]};
+        data.push_back(pconf::Entry::create(key, val));
     }
 
     pconf::write(stateStream, data, logger.bdebug("Writing save file..."));
@@ -157,8 +249,43 @@ void state::loadState() {
         manifestChannel = *manifestEntry->value_;
     }
 
-    for (auto idx{0}; idx < ePreference_Max; ++idx) {
-        preferences[idx] = static_cast<bool>(hashedData.find(PREFERENCE_STRS[idx]));
+    for (size idx{0}; idx < NUM_BOOL_PREFS; ++idx) {
+        auto ptr{hashedData.find(BOOL_PREF_STRS[idx].key_)};
+        boolPrefs[idx] = static_cast<bool>(ptr);
+    }
+
+    for (size idx{0}; idx < NUM_STR_PREFS; ++idx) {
+        const auto& strings{STR_PREF_STRS[idx]};
+        auto ptr{hashedData.find(strings.key_)};
+
+        if (not ptr or not ptr->value_) {
+            strPrefs[idx] = strings.def_;
+            continue;
+        }
+
+        strPrefs[idx] = *ptr->value_;
+    }
+
+    for (size idx{0}; idx < NUM_ENUM_PREFS; ++idx) {
+        const auto& strings{ENUM_PREF_STRS[idx]};
+        auto ptr{hashedData.find(strings.key_)};
+
+        if (not ptr or not ptr->value_) {
+            enumPrefs[idx] = strings.def_;
+            continue;
+        }
+
+        size valIdx{0};
+        for (; valIdx < strings.values_.size(); ++valIdx) {
+            if (*ptr->value_ == strings.values_[valIdx])
+                break;
+        }
+
+        if (valIdx == strings.values_.size())
+            // Couldn't find valid.
+            enumPrefs[idx] = strings.def_;
+        else
+            enumPrefs[idx] = valIdx;
     }
 
     logger.info("Done");

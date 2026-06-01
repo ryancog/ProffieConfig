@@ -23,6 +23,8 @@
 
 #include <wx/window.h>
 
+#include "utils/types.hpp"
+
 namespace state {
 
 void init();
@@ -30,11 +32,73 @@ void init();
 extern bool doneWithFirstRun;
 extern std::string manifestChannel;
 
+namespace prefs {
+
 // Default is off
-enum Preference {
-    ePreference_Hide_Editor_Manage_Versions_Warn,
-    ePreference_Max
+enum class Bool : size {
+    Hide_Editor_Manage_Versions_Warn,
+    Max
 };
+
+template <Bool PREF>
+struct BoolData {
+
+};
+
+enum class Str : size {
+    Style_Editor_Link,
+    Max
+};
+
+enum class Enum : size {
+    Add_Preset_Insertion,
+    Max,
+};
+
+namespace enums {
+
+enum class AddPresetInsertion {
+    Begin,
+    End,
+    Before_Selected,
+    After_Selected,
+    Max,
+};
+
+template <Enum ENUM>
+struct Data;
+
+template <>
+struct Data<Enum::Add_Preset_Insertion> {
+    using Values = AddPresetInsertion;
+};
+
+} // namespace enums
+
+bool get(Bool);
+void set(Bool, bool);
+
+std::string get(Str);
+void set(Str, std::string);
+
+namespace priv {
+
+size get(Enum);
+void set(Enum, size);
+
+} // namespace priv
+
+template <Enum ENUM>
+auto get() {
+    return static_cast<enums::Data<ENUM>::Values>(priv::get(ENUM));
+}
+
+template <Enum ENUM>
+void set(typename enums::Data<ENUM>::Values v) {
+    priv::set(ENUM, static_cast<size>(v));
+}
+
+} // namespace prefs
 
 enum {
     eID_Main_Menu,
@@ -42,9 +106,6 @@ enum {
     eID_Editor,
     eID_Versions_Manager,
 };
-
-bool getPreference(Preference);
-void setPreference(Preference, bool);
 
 void loadState();
 void saveState();
