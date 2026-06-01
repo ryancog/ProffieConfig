@@ -44,6 +44,8 @@
 #include "ui/types.hpp"
 #include "ui/values.hpp"
 
+#include "../../core/state.hpp"
+
 PresetsPage::PresetsPage(config::Config& config) : mConfig{config} {
     static const auto arrayTable{[] {
         data::prim::Choice::RecvTable table;
@@ -765,7 +767,36 @@ void PresetsPage::onRemoveButton() {
 void PresetsPage::onAddPresetButton() {
     auto sel{data::context(mPresetSel)};
     auto vec{data::context(const_cast<data::base::Vector&>(*sel.bound()))};
-    vec.append<config::presets::Preset>(mConfig);
+
+    size insertPos{};
+    auto pref{state::prefs::get<state::prefs::Enum::Add_Preset_Insertion>()};
+    switch (pref) {
+        using enum state::prefs::enums::AddPresetInsertion;
+        case Before_Selected:
+            if (sel.choiceIdx() != -1) {
+                insertPos = sel.choiceIdx();
+                break;
+            }
+            [[fallthrough]];
+        case Begin:
+            insertPos = 0;
+            break;
+        case After_Selected:
+            if (sel.choiceIdx() != -1) {
+                insertPos = sel.choiceIdx() + 1;
+                break;
+            }
+            [[fallthrough]];
+        case End:
+            insertPos = vec.children().size();
+            break;
+        case Max:
+            assert(0);
+            __builtin_unreachable();
+    }
+
+    vec.insert(insertPos, std::make_unique<config::presets::Preset>(mConfig));
+    mPresetSel.choice().choose(static_cast<int32>(insertPos));
 }
 
 void PresetsPage::onRemovePresetButton() {
