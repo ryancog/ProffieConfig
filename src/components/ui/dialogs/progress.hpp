@@ -34,7 +34,7 @@ struct UI_EXPORT ProgressDialog : private Dialog {
         const wxString& title, 
         bool mayCancel = false,
         wxSize size = wxDefaultSize,
-        long style = wxDEFAULT_DIALOG_STYLE
+        long style = wxDEFAULT_DIALOG_STYLE & ~wxCLOSE_BOX
     );
 
     ~ProgressDialog() override;

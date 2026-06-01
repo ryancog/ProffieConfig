@@ -30,7 +30,6 @@
 #include "ui/controls/button.hpp"
 #include "ui/dialog.hpp"
 #include "ui/helpers/dialog_buttons.hpp"
-#include "ui/helpers/if.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/static/label.hpp"
@@ -51,8 +50,15 @@ ProgressDialog::ProgressDialog(
     size.IncTo({200, 50});
     build(this, ui(mayCancel, size));
 
-    if (parent) ShowWindowModal();
-    else Show();
+    // macOS has special sheet handling which allows this call to return and
+    // processing to continue. Since other platforms would block, use normal
+    // Show().
+#   if __WXOSX__
+    if (parent)
+        ShowWindowModal();
+    else
+#   endif
+        Show();
 }
 
 ProgressDialog::~ProgressDialog() {
@@ -109,7 +115,11 @@ void ProgressDialog::finish(bool modalWait, const wxString& message) {
             return;
         }
 
-        if (modalWait) ShowModal();
+	// TODO: Making it go modal is a simple and reliable way to wait in
+	// this function until "OK" is clicked, however making the window modal
+	// on non-OSX interrupts the user if they were in another window.
+        if (modalWait)
+            ShowModal();
     }};
 
     if (wxIsMainThread()) {
