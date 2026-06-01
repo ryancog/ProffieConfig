@@ -32,6 +32,7 @@
 #include "config/misc/injection.hpp"
 #include "config/presets/preset.hpp"
 #include "config/presets/style.hpp"
+#include "config/styles/style.hpp"
 #include "data/context.hpp"
 #include "ui/bitmap.hpp"
 #include "ui/build.hpp"
@@ -43,6 +44,7 @@
 #include "utils/defer.hpp"
 #include "utils/string.hpp"
 
+#include "../core/state.hpp"
 #include "../tools/arduino.hpp"
 
 namespace {
@@ -343,25 +345,52 @@ void EditorWindow::onRedo(wxCommandEvent&) {
 void EditorWindow::onStyleEditor(wxCommandEvent&) {
     std::string styleStr;
 
-    auto styleSel{data::context(mPresetsPage.styleSel())};
-    auto styleChoice{data::context(mPresetsPage.styleSel().choice())};
-    if (styleChoice.idx() != -1) {
-        auto styleVec{data::context(*styleSel.bound())};
+    // If the styles dlg has been created and is active, then try to find what
+    // style the user is working on there and show it, otherwise just find from
+    // the presets page.
+    auto *stylesDlg{mPresetsPage.stylesDlg()};
+    if (stylesDlg != nullptr and stylesDlg->IsActive()) {
+        auto styleSel{data::context(stylesDlg->styleSel())};
 
-        auto& model{*styleVec.children()[styleChoice.idx()]};
-        auto& style{dynamic_cast<config::presets::Style&>(model)};
+        if (styleSel.choiceIdx() != -1) {
+            auto styleVec{data::context(*styleSel.bound())};
 
-        auto content{data::context(style.content_)};
-        styleStr = content.val();
+            auto& model{*styleVec.children()[styleSel.choiceIdx()]};
+            auto& style{dynamic_cast<config::styles::Style&>(model)};
 
-        utils::trimWhitespaceOutsideString(styleStr);
+            auto content{data::context(style.content_)};
+            styleStr = content.val();
+
+            utils::trimWhitespaceOutsideString(styleStr);
+        }
+    } else {
+        auto styleSel{data::context(mPresetsPage.styleSel())};
+
+        if (styleSel.choiceIdx() != -1) {
+            auto styleVec{data::context(*styleSel.bound())};
+
+            auto& model{*styleVec.children()[styleSel.choiceIdx()]};
+            auto& style{dynamic_cast<config::presets::Style&>(model)};
+
+            auto content{data::context(style.content_)};
+            styleStr = content.val();
+
+            utils::trimWhitespaceOutsideString(styleStr);
+        }
     }
 
-    constexpr cstring EDITOR_URL{
-        "https://fredrik.hubbe.net/lightsaber/style_editor.html?S="
-    };
+    wxURI uri;
 
-    wxURI uri{EDITOR_URL + styleStr};
+    // Replace `{}` with the style string, if it exists in the (maybe-)user-
+    // provided link template.
+    auto editorUrl{state::prefs::get(state::prefs::Str::Style_Editor_Link)};
+    auto replacePos{editorUrl.find("{}")};
+    if (replacePos != std::string::npos) {
+        uri = editorUrl.replace(replacePos, 2, styleStr);
+    } else {
+        uri = editorUrl;
+    }
+
     wxLaunchDefaultBrowser(uri.BuildURI());
 }
 

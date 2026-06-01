@@ -39,6 +39,10 @@ struct PresetsPage : data::Receiver {
         return mStyleSel;
     }
 
+    [[nodiscard]] StyleAliasesDlg *stylesDlg() const {
+        return mStylesDlg;
+    }
+
 protected:
     void onActivate() override;
     void preDeactivate() override;

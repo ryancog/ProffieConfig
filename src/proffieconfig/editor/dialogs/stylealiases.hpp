@@ -26,8 +26,11 @@
 
 struct StyleAliasesDlg : pcui::Dialog {
     StyleAliasesDlg(wxWindow *, config::Config&);
-
     void deinit();
+
+    [[nodiscard]] const data::prim::Selector& styleSel() const {
+        return mStyleSel;
+    }
 
 private:
     pcui::DescriptorPtr ui();
