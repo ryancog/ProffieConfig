@@ -38,12 +38,14 @@
 namespace {
 
 #if __WXOSX__
-NSColor *getNSColor(cstring name) {
+wxColour getNSColor(cstring name) {
     static Class NSColorClass{objc_getClass("NSColor")};
     static NSColor *color{objcMessage<NSColor *>(
         (id)NSColorClass, name
     )};
-    return color;
+    // Needs explicit ctor
+    // NOLINTNEXTLINE(modernize-return-braced-init-list)
+    return wxColour(color);
 }
 #endif
 
@@ -53,31 +55,34 @@ const wxColour color::DARK_BLUE{39, 74, 114};
 const wxColour color::LIGHT_BLUE{31, 99, 168};
 
 color::Dynamic::Dynamic() :
-    mType{Type::STANDARD}, mStd{.dark_=wxNullColour, .light_=wxNullColour} {}
+    mType{Type::Standard}, mStd{.dark_=wxNullColour, .light_=wxNullColour} {}
 
 // Passing by value and move doesn't work because of the aggregate?
 color::Dynamic::Dynamic(const wxColour& dark, const wxColour& light) :
-    mType{Type::STANDARD}, mStd{.dark_=dark, .light_=light} {}
+    mType{Type::Standard}, mStd{.dark_=dark, .light_=light} {}
 
 color::Dynamic::Dynamic(wxSystemColour color) :
-    mType{Type::SYSTEM}, mSysColor{color} {}
+    mType{Type::System}, mSysColor{color} {}
 
 color::Dynamic::Dynamic(UserAccent) :
-    mType{Type::ACCENT} {}
+    mType{Type::Accent} {}
+
+color::Dynamic::Dynamic(Special special) :
+    mType{Type::Special}, mSpecial{special} {}
 
 color::Dynamic::~Dynamic() {
-    if (mType == Type::STANDARD) {
+    if (mType == Type::Standard) {
         mStd.dark_.~wxColour();
         mStd.light_.~wxColour();
     }
 }
 
 wxColour color::Dynamic::color() const {
-    if (mType == Type::SYSTEM) {
+    if (mType == Type::System) {
         return wxSystemSettings::GetColour(mSysColor);
     }
 
-    if (mType == Type::STANDARD) {
+    if (mType == Type::Standard) {
         auto isDark{wxSystemSettings::GetAppearance().AreAppsDark()};
 
         if (not mStd.dark_.IsOk()) return mStd.light_;
@@ -86,22 +91,32 @@ wxColour color::Dynamic::color() const {
         return isDark ? mStd.light_ : mStd.dark_;
     }
 
-    if (mType == Type::ACCENT) {
-#       ifdef __WXOSX__
-        // Needs explicit ctor
-        // NOLINTNEXTLINE(modernize-return-braced-init-list)
-        return wxColour(getNSColor("controlAccentColor"));
+    if (mType == Type::Accent) {
+#       if __WXOSX__
+        return getNSColor("controlAccentColor");
 #       elif __WXMSW__
         // GetImmersiveColorFromColorSetEx
         static_assert(false);
 #       endif
     }
 
+    if (mType == Type::Special) {
+        switch (mSpecial) {
+            case Special::Caption:
+#               if __WXOSX__
+                return getNSColor("secondaryLabelColor");
+#               else
+                return wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT);
+#               endif
+                break;
+        }
+    }
+
     return wxNullColour;
 }
 
 color::Dynamic::Dynamic(const Dynamic& other) {
-    mType = Type::STANDARD;
+    mType = Type::Standard;
     new(&mStd.light_) wxColour;
     new(&mStd.dark_) wxColour;
     *this = other;
@@ -112,15 +127,17 @@ color::Dynamic& color::Dynamic::operator=(const Dynamic& other) {
     
     mType = other.mType;
     switch (mType) {
-        case Type::STANDARD:
+        case Type::Standard:
             mStd.dark_ = other.mStd.dark_;
             mStd.light_ = other.mStd.light_;
             break;
-        case Type::SYSTEM:
+        case Type::System:
             mSysColor = other.mSysColor;
             break;
-        case Type::ACCENT:
+        case Type::Accent:
             mUserAccent = other.mUserAccent;
+        case Type::Special:
+            mSpecial = other.mSpecial;
             break;
     }
 
@@ -129,11 +146,12 @@ color::Dynamic& color::Dynamic::operator=(const Dynamic& other) {
 
 color::Dynamic::operator bool() const { 
     switch (mType) {
-        case Type::STANDARD: 
+        case Type::Standard: 
             return mStd.dark_.IsOk() or mStd.light_.IsOk();
-        case Type::SYSTEM:
+        case Type::System:
             return mSysColor < wxSYS_COLOUR_MAX;
-        case Type::ACCENT:
+        case Type::Accent:
+        case Type::Special:
             return true;
     }
 

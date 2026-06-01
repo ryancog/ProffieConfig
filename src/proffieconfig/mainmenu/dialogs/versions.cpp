@@ -44,6 +44,7 @@
 #include "ui/static/label.hpp"
 #include "ui/symbols.hpp"
 #include "ui/values.hpp"
+#include "utils/color.hpp"
 #include "utils/paths.hpp"
 #include "versions/os.hpp"
 #include "versions/prop.hpp"
@@ -562,7 +563,7 @@ pcui::DescriptorPtr VersionsDlg::osInfo(data::base::Model *model) {
         pcui::Label{
           .label_=os.coreUrl_,
           .font_=pcui::Font::Monospace,
-          .color_=wxSYS_COLOUR_INACTIVECAPTION,
+          .color_=color::Special::Caption,
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Label{
@@ -589,12 +590,12 @@ pcui::DescriptorPtr VersionsDlg::osInfo(data::base::Model *model) {
                         pcui::Label{
                           .label_='\t' + board.coreId_,
                           .font_=pcui::Font::Monospace,
-                          .color_=wxSYS_COLOUR_INACTIVECAPTION,
+                          .color_=color::Special::Caption,
                         }(),
                         pcui::Label{
                           .label_='\t' + board.include_,
                           .font_=pcui::Font::Monospace,
-                          .color_=wxSYS_COLOUR_INACTIVECAPTION,
+                          .color_=color::Special::Caption,
                         }(),
                         pcui::Spacer{.size_=2}(),
                     };

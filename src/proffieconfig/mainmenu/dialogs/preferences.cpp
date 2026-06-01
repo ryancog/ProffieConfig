@@ -37,6 +37,7 @@
 #include "ui/values.hpp"
 
 #include "../../core/state.hpp"
+#include "utils/color.hpp"
 
 using namespace state::prefs;
 
@@ -142,7 +143,7 @@ struct GeneralPanel : pcui::detail::Panel
               },
               .label_=_("Use \"{}\" to represent where to place the style contents in the link."),
               .font_=pcui::Font::Caption,
-              .color_=wxSYS_COLOUR_INACTIVECAPTION,
+              .color_=color::Special::Caption,
             }(),
           }
         }();
