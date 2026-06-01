@@ -87,9 +87,16 @@ Style::Style(Config& config) :
 
         // Erase everything after last ), e.g. `StylePtr<...>(),` erase the
         // comma or anything else that shouldn't be there 
-
+        //
         // TODO: Replace with spanstream when available.
+        //
+        // There are macros in ProffieOS, at least EASYBLADE, which may be used
+        // in styles and so depth must be traversed here to only clear things
+        // out when depth is at 0 and the closing ) is found.
+        //
+        // This intentionally silently fails on mismatch or overrun.
         std::istringstream stream(str);
+        std::vector<char> depth;
         while (not stream.eof()) {
             utils::CommentData commentData{
                 .stream_=stream,
@@ -100,8 +107,32 @@ Style::Style(Config& config) :
             const auto chr{stream.get()};
             if (not stream.good()) break;
 
-            if (chr == ')')
-                break;
+            if (chr == '<' or chr == '(') {
+                depth.push_back(static_cast<char>(chr));
+                continue;
+            }
+
+            if (chr == '>') {
+                if (depth.empty()) break;
+                if (depth.back() != '<') break;
+
+                depth.pop_back();
+                continue;
+            }
+
+            if (chr == ')') {
+                if (depth.empty()) break;
+                if (depth.back() != '(') break;
+
+                depth.pop_back();
+
+                // The end has been reached, and tellg() will report where to
+                // perform the erase, exit the loop.
+                if (depth.empty())
+                    break;
+
+                continue;
+            }
         }
 
         auto endPos{static_cast<size>(stream.tellg())};
