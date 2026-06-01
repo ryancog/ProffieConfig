@@ -65,8 +65,8 @@ struct Control : detail::Window<wxListCtrl> {
         }
 
         // Only handle one for now.
-        if (auto *ptr{std::get_if<1>(&desc.columns_)}) {
-            for (auto& col : *ptr)
+        if (const auto *ptr{std::get_if<1>(&desc.columns_)}) {
+            for (const auto& col : *ptr)
                 AppendColumn(col);
         } else {
             auto num{std::get<0>(desc.columns_)};
@@ -100,9 +100,9 @@ struct Control : detail::Window<wxListCtrl> {
         if (rowIdx < 0 or rowIdx >= labels_.size())
             return {};
 
-        auto& label{labels_[rowIdx][col]};
+        const auto& label{labels_[rowIdx][col]};
 
-        if (auto *ptr{std::get_if<1>(&label)}) {
+        if (const auto *ptr{std::get_if<1>(&label)}) {
             return data::context(ptr->get()).val();
         }
 
