@@ -425,6 +425,20 @@ void EditorWindow::onPage(wxCommandEvent& evt) {
     }
 }
 
+// TODO: If I wanted to make this more native on macOS, I could make a direct
+// Cocoa call like how wxCocoaPrefsWindow does:
+//
+//  ```
+//  // Native preferences windows resize when the selected panel changes and
+//  // the resizing is animated, so we need to override DoMoveWindow.
+//  virtual void DoMoveWindow(int x, int y, int width, int height) override
+//  {
+//      NSRect r = wxToNSRect(nullptr, wxRect(x, y, width, height));
+//      NSWindow *win = (NSWindow*)GetWXWindow();
+//      [win setFrame:r display:YES animate:YES];
+//  }
+//  ```
+
 void EditorWindow::onTimer(wxTimerEvent& evt) {
     constexpr auto RESIZE_TIME_MILLIS{300};
 
