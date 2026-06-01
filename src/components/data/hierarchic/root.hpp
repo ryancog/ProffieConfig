@@ -163,8 +163,12 @@ private:
             uint64 responderId_{0};
 
             // For replay
-            decltype(Action::mChildren)::const_iterator iter_;
-            decltype(Action::mChildren)::const_reverse_iterator rIter_;
+            // Don't use iterators, because the implementation might have non-
+            // trivial cdtors which break the union.
+            //
+            // For redo, mChildren.size() is end
+            // For undo, -1UZ is end
+            size replayIdx_;
         };
 
         Action *action_;

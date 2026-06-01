@@ -31,7 +31,7 @@ namespace detail {
 template <typename T>
 struct DATA_EXPORT Number : base::detail::Number<T>, Model {
     bool set(T) override;
-    bool update(Number<T>::Params) override;
+    bool update(typename Number<T>::Params) override;
 };
 
 } // namespace detail

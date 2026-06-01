@@ -20,6 +20,7 @@
  */
 
 #include <span>
+#include <memory>
 
 #include "data/base/model.hpp"
 #include "data/base/models/bool.hpp"

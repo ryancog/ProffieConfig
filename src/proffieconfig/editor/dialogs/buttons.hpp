@@ -29,7 +29,7 @@ struct ButtonsDlg : pcui::Dialog {
 private:
     pcui::DescriptorPtr ui();
 
-    pcui::DescriptorPtr info();
+    static pcui::DescriptorPtr info();
     static pcui::DescriptorPtr button(data::base::Model&);
 
     void addButton();

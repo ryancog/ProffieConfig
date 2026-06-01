@@ -36,13 +36,13 @@ bool detail::Number<T>::set(T val) {
 }
 
 template <typename T>
-bool detail::Number<T>::update(Number<T>::Params params) {
+bool detail::Number<T>::update(typename Number<T>::Params params) {
     return processAction(std::make_unique<UpdateAction>(params));
 }
 
 template <typename T>
 uint64 detail::Number<T>::hashThis() const {
-    typename Number<T>::ROContext ctxt(*this);
+    typename base::detail::Number<T>::ROContext ctxt(*this);
 
     return utils::hash::combine(
         utils::hash::single(ctxt.val()),
@@ -72,8 +72,9 @@ void detail::Number<T>::SetAction::retract() {
 }
 
 template <typename T>
-detail::Number<T>::UpdateAction::UpdateAction(Number<T>::Params params) :
-    mParams{params} {}
+detail::Number<T>::UpdateAction::UpdateAction(
+    typename Number<T>::Params params
+) : mParams{params} {}
 
 template <typename T>
 bool detail::Number<T>::UpdateAction::setup() {

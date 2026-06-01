@@ -572,6 +572,7 @@ void EditorWindow::configureResizing() {
             SetSizeHints(GetSize(), {-1, -1});
             break;
         default:
+            break;
     }
 }
 

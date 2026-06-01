@@ -105,7 +105,9 @@ void Frame::appendDefaultMenuItems(wxMenuBar *menuBar) {
 #   endif
 }
 
+#ifdef __WXOSX__
 void Frame::onWindowMenuClose(wxCommandEvent&) {
     Close();
 }
+#endif
 

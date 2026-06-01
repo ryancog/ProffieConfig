@@ -34,7 +34,7 @@ bool detail::Number<T>::set(T val) {
 }
 
 template <typename T>
-bool detail::Number<T>::update(Number<T>::Params params) {
+bool detail::Number<T>::update(typename Number<T>::Params params) {
     std::lock_guard scopeLock(*this);
 
     if (not Number<T>::setupUpdate(params)) return false;

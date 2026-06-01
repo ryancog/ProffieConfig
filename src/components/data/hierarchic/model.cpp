@@ -166,13 +166,13 @@ void Model::responderHook(const RecvTableBinding& binding) const {
         auto& children{frame.action_->mChildren};
 
         const auto processForId{[&](uint64 toProcess) {
-            for (; frame.rIter_ != children.rend(); ++frame.rIter_) {
-                const auto& [id, action]{*frame.rIter_};
+            for (; frame.replayIdx_ != -1UZ; --frame.replayIdx_) {
+                const auto& [id, action]{children[frame.replayIdx_]};
                 if (id != toProcess)
                     break;
 
                 auto& newFrame{mRoot.mActionFrames.emplace_back()};
-                newFrame.rIter_ = action->mChildren.rbegin();
+                newFrame.replayIdx_ = action->mChildren.size() - 1;
                 newFrame.action_ = action.get();
 
                 action->retract();
@@ -193,13 +193,13 @@ void Model::responderHook(const RecvTableBinding& binding) const {
         auto& children{frame.action_->mChildren};
 
         const auto processForId{[&](uint64 toProcess) {
-            for (; frame.iter_ != children.end(); ++frame.iter_) {
-                const auto& [id, action]{*frame.iter_};
+            for (; frame.replayIdx_ != children.size(); ++frame.replayIdx_) {
+                const auto& [id, action]{children[frame.replayIdx_]};
                 if (id != toProcess)
                     break;
 
                 auto& newFrame{mRoot.mActionFrames.emplace_back()};
-                newFrame.iter_ = action->mChildren.begin();
+                newFrame.replayIdx_ = 0;
                 newFrame.action_ = action.get();
 
                 action->perform();

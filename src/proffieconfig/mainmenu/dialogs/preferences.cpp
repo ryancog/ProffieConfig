@@ -102,9 +102,11 @@ struct GeneralPanel : pcui::detail::Panel
                       case enums::AddPresetInsertion::After_Selected:
                           return _("After Selected (or End)");
                       case enums::AddPresetInsertion::Max:
-                          assert(0);
-                          __builtin_unreachable();
+                          break;
                   }
+
+                  assert(0);
+                  __builtin_unreachable();
               },
             }(),
             pcui::Spacer{.size_=pcui::interGroupSpacing()}(),

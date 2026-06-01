@@ -23,6 +23,7 @@
 #include <mutex>
 
 #if defined(__APPLE__) or defined(__linux__)
+#include <cstring>
 #include <fcntl.h>
 #include <sys/poll.h>
 #include <sys/stat.h>

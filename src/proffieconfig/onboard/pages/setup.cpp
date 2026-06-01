@@ -127,14 +127,14 @@ void onboard::Setup::startSetup() {
 
 #       if defined(_WIN32) or defined(__linux__)
         if (not mDriverInstalled) {
-            data::String::Context{mStatusMessage}.change(
+            mStatusMessage.change(
                 _("Installing Driver...").utf8_string()
             );
 
             if (arduino::runDriverInstallation()) {
                 mDriverInstalled = true;
             } else {
-                data::String::Context{errorMessage_}.change(
+                errorMessage_.change(
                     _("Failed to install driver.").utf8_string()
                 );
                 return;

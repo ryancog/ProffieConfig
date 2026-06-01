@@ -137,14 +137,14 @@ void Root::beginReplay(bool undo, Action& action) {
         // Setup starting frame.
         auto& frame{mActionFrames.emplace_back()};
         frame.action_ = &action;
-        frame.rIter_ = action.mChildren.rbegin();
+        frame.replayIdx_ = action.mChildren.size() - 1;
     } else {
         mStates.push_back(State::Replay_Redo);
 
         // Setup starting frame.
         auto& frame{mActionFrames.emplace_back()};
         frame.action_ = &action;
-        frame.iter_ = action.mChildren.begin();
+        frame.replayIdx_ = 0;
     }
 }
 
@@ -155,8 +155,8 @@ void Root::endReplay() {
     auto& children{frame.action_->mChildren};
 
     if (mStates.back() == State::Replay_Undo) {
-        for (; frame.rIter_ != children.rend(); ++frame.rIter_) {
-            const auto& child{*frame.rIter_};
+        for (; frame.replayIdx_ != -1UZ; --frame.replayIdx_) {
+            const auto& child{children[frame.replayIdx_]};
 
             // These should all be 0 responder id. Any others should've been
             // caught during normal processing.
@@ -165,8 +165,8 @@ void Root::endReplay() {
             child.second->retract();
         }
     } else if (mStates.back() == State::Replay_Redo) {
-        for (; frame.iter_ != children.end(); ++frame.iter_) {
-            const auto& child{*frame.iter_};
+        for (; frame.replayIdx_ != children.size(); ++frame.replayIdx_) {
+            const auto& child{children[frame.replayIdx_]};
 
             // These should all be 0 responder id. Any others should've been
             // caught during normal processing.

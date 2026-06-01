@@ -44,7 +44,7 @@ namespace {
 
 constexpr auto PANEL_PADDING{3};
 
-const std::vector<wxString> pinDefaults{
+const std::vector<wxString> PIN_DEFAULTS{
     _("powerButtonPin"),
     _("auxPin"),
     _("aux2Pin"),
@@ -278,7 +278,7 @@ pcui::DescriptorPtr ButtonsDlg::button(data::base::Model& model) {
                     .win_={.base_={.proportion_=1}},
                     .data_=button.pin_,
                     .hint_=_("Board Button Pin"),
-                    .defaults_=pinDefaults,
+                    .defaults_=PIN_DEFAULTS,
                   }(),
                 }(),
                 pcui::Labeled{
@@ -337,21 +337,22 @@ void ButtonsDlg::addButton() {
             event.choose(config::eBtn_Evt_Power);
             name.change("pow");
             type.choose(config::eBtn_Type_Pullup);
-            pin.change(pinDefaults[0].utf8_string());
+            pin.change(PIN_DEFAULTS[0].utf8_string());
             break;
         case 2:
             event.choose(config::eBtn_Evt_Aux);
             name.change("aux");
             type.choose(config::eBtn_Type_Pullup);
-            pin.change(pinDefaults[1].utf8_string());
+            pin.change(PIN_DEFAULTS[1].utf8_string());
             break;
         case 3:
             event.choose(config::eBtn_Evt_Aux2);
             name.change("aux2");
             type.choose(config::eBtn_Type_Pullup);
-            pin.change(pinDefaults[2].utf8_string());
+            pin.change(PIN_DEFAULTS[2].utf8_string());
             break;
         default:
+            break;
     }
 }
 

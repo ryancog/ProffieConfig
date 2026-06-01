@@ -37,7 +37,7 @@ struct DATA_EXPORT Number : base::detail::Number<T>, Model {
     Number(const Number&, Root&);
 
     bool set(T) override;
-    bool update(Number<T>::Params) override;
+    bool update(typename Number<T>::Params) override;
 
 protected:
     uint64 hashThis() const override;
@@ -57,14 +57,14 @@ private:
 
 template <typename T>
 struct DATA_EXPORT Number<T>::UpdateAction : Action {
-    UpdateAction(Number<T>::Params);
+    UpdateAction(typename Number<T>::Params);
 
     bool setup() override;
     void perform() override;
     void retract() override;
 
 private:
-    Number<T>::Params mParams;
+    typename Number<T>::Params mParams;
     T mValue;
 };
 
