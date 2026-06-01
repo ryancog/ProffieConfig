@@ -226,13 +226,23 @@ pcui::DescriptorPtr MainMenu::ui() {
 
 void MainMenu::createMenuBar() {
     auto *file{new wxMenu};
+#   ifdef __WXOSX__
+    // TODO: The wxWidgets labeling is broken and, if it did work, outdated
+    file->Append(wxID_PREFERENCES, _("Settings...") + "\tCtrl+,");
+#   else
     file->Append(wxID_PREFERENCES);
+#   endif
     file->Append(eID_Manage_Versions, _("Manage Versions..."));
     file->AppendSeparator();
     file->Append(eID_Update_Manifest, _("Update Channel..."));
     file->AppendSeparator();
     file->Append(eID_Logs, _("Show Logs..."));
+#   ifdef __WXOSX__
+    // TODO: The wxWidgets labeling is broken
+    file->Append(wxID_ABOUT, _("About ProffieConfig"));
+#   else
     file->Append(wxID_ABOUT);
+#   endif
     file->Append(eID_Licenses, _("Licensing Information"));
     file->Append(wxID_EXIT);
 
