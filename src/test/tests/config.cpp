@@ -129,5 +129,24 @@ TEST_CASE("Config") {
             REQUIRE(style.format(true) == CONTENT);
         }
     }
+
+    SECTION("my_saber2") {
+        constexpr cstring CONFIG_NAME{"Tsukuyomi"};
+
+        auto importErr{config::import(
+            CONFIG_NAME,
+            CONFIG_DIR / (std::string(CONFIG_NAME) + ".h")
+        )};
+        REQUIRE(importErr == std::nullopt);
+
+        auto listCtxt{data::context(config::list())};
+        auto& info{dynamic_cast<config::Info&>(*listCtxt.children()[0])};
+
+        auto loadErr{info.load()};
+        REQUIRE(loadErr == std::nullopt);
+
+        // For now, the testing is just that loading/parsing doesn't raise any
+        // errors, presumably from EASYBLADE being handled wrong.
+    }
 }
 

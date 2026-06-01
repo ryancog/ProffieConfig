@@ -17,4 +17,5 @@ If you see your config/bladestyle/whatever here and you'd like attribution, or y
 `tedflex.h`: User-provided
  - Uses old `WS2811BladePtr`
 `Tsukuyomi.h`: RavenXp32 personal saber config
-
+`my_saber2.h`: ProffieOS Configuration Generator
+ - Uses EASYBLADE macro inside bladestyle

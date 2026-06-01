@@ -36,8 +36,9 @@ const cstring RAW_STYLE_STR{R"(
 /* This is a comment outside the style. */
 StylePtr< // This is a comment in the style (scary).
     // Another comment line
+            MACRO(WithStuffInside),
             SomeSomethingOrOther<>
->("Arg ~ ~")
+>("Arg ~ ~"), AndBadStuffOutside
 )"};
 
 const cstring PARSED_COMMENT_STR{"This is a comment outside the style."};
@@ -52,6 +53,7 @@ const cstring PARSED_COMMENT_STR{"This is a comment outside the style."};
 const cstring PARSED_STYLE_STR{R"(StylePtr<
 	// This is a comment in the style (scary)
 	// Another comment line
+	MACRO(WithStuffInside),
 	SomeSomethingOrOther<>
 >("Arg ~ ~"))"};
 
