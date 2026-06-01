@@ -32,6 +32,7 @@ enum class Font {
     Monospace,
     Title,
     Header,
+    Caption,
 };
 
 namespace detail {
