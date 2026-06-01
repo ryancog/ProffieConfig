@@ -164,6 +164,11 @@ std::string style::format(
         // Next child
         if (chr == ',') {
             stack.pop();
+
+            // Handle an invalid input.
+            if (stack.empty())
+                return in;
+
             auto& child{stack.top()->children_.emplace_back()};
             stack.push(&child);
             continue;
@@ -184,7 +189,7 @@ std::string style::format(
 
             // Handle an invalid input.
             if (stack.empty())
-                break;
+                return in;
 
             auto *parent{stack.top()};
             parent->post_ += '>';
