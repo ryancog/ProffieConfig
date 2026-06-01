@@ -26,12 +26,18 @@ target_link_libraries(wxWidgets INTERFACE
     wxCore
 )
 
-target_link_libraries(wxWidgets-static INTERFACE
+# Use `--start-group` and `--end-group` to handle the linking between
+# wxWidgets libraries
+set(wxWidgets-static-libraries
     wxBase-static
     wxNet-static
     wxCore-static
     wxWidgets-PNG-static
     wxWidgets-ZLib-static
+)
+
+target_link_libraries(wxWidgets-static INTERFACE
+    "$<LINK_GROUP:RESCAN,${wxWidgets-static-libraries}>"
 )
 
 if (CMAKE_SYSTEM_NAME STREQUAL Linux)
