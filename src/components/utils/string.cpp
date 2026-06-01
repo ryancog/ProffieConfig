@@ -191,8 +191,7 @@ bool utils::extractComments(CommentData& data) {
         if (not data.stream_.good())
             return data.type_ != CommentData::eType_None;
 
-        if (chr < 0 or chr > 0x7F)
-            continue;
+        // Don't skip over non-ASCII codes.
 
         if (
                 std::iscntrl(chr) and
