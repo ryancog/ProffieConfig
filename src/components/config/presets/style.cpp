@@ -137,8 +137,10 @@ Style::Style(Config& config) :
 
         auto endPos{static_cast<size>(stream.tellg())};
         if (endPos < str.length()) {
-            str.erase(endPos + 1);
-            pos = std::min<size>(pos, endPos + 1);
+            // The current tellg() is for the next character in the string,
+            // that is, past the one read, so it is used directly.
+            str.erase(endPos);
+            pos = std::min<size>(pos, endPos);
         }
 
         if (commentMove) 
