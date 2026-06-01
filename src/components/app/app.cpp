@@ -137,6 +137,17 @@ private:
 };
 
 void crashHandler(const wxString& error, const wxString& detail) {
+    // Particularly if a crash occurs late in exit, going back into UI things
+    // or even accessing globals may result in *Bad Things*:tm:, so guard
+    // against nested failures.
+    static bool tried{false};
+
+    if (tried)
+        // Can't do much, but at least provide a unique error code.
+        _exit(4);
+
+    tried = true;
+
     auto& logger{logging::Context::getGlobal().createLogger("Crash Handler")};
     logger.error(error.utf8_string());
     if (not detail.IsEmpty()) logger.error(detail.utf8_string());
@@ -146,7 +157,8 @@ void crashHandler(const wxString& error, const wxString& detail) {
         errDialog.ShowModal();
     }
 
-    _exit(1);
+    // https://tldp.org/LDP/abs/html/exitcodes.html
+    _exit(3);
 }
 
 cstring addrToStr(
