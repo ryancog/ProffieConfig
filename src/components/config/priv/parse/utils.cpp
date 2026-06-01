@@ -172,7 +172,7 @@ parse::CPPDirective parse::cppDirective(
                     utils::trimCppName(tmp, false, &numTrimmed);
 
                     if (tmp != buf) {
-                        logger.warn(wxString::Format(R"(Invalid define key "%s" trimmed to "%s")", buf, tmp).ToStdString());
+                        logger.warn(wxString::Format(R"(Invalid define key "%s" trimmed to "%s")", buf, tmp).utf8_string());
                         buf = std::move(tmp);
                     }
 
@@ -248,7 +248,7 @@ void parse::tryAddInjection(Config& config, const std::string& include) {
         file = file.substr(injectionPos + INJECTION_STR.length() + 1);
     }
 
-    logger.debug(wxString::Format("Injection file: %s", file).ToStdString()); 
+    logger.debug(wxString::Format("Injection file: %s", file).utf8_string());
 
     if (
             file.find("../") != std::string::npos or
@@ -300,7 +300,7 @@ void parse::tryAddInjection(Config& config, const std::string& include) {
             };
             if (fileDialog.ShowModal() == wxID_CANCEL) return;
 
-            auto fromStr{fileDialog.GetPath().ToStdString()};
+            auto fromStr{fileDialog.GetPath().utf8_string()};
             if (not files::copyOverwrite(fromStr, filePath, ec)) {
                 auto choice{pcui::showMessage(
                     ec.message(),

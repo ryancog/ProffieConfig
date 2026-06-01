@@ -46,7 +46,7 @@ ProgressDialog::ProgressDialog(
     wxSize size,
     long style
 ) : Dialog(parent, wxID_ANY, title, style) {
-    mMessage.change(_("Initializing...").ToStdString());
+    mMessage.change(_("Initializing...").utf8_string());
 
     size.IncTo({200, 50});
     build(this, ui(mayCancel, size));
@@ -61,7 +61,7 @@ ProgressDialog::~ProgressDialog() {
 
 void ProgressDialog::set(uint32 val, const wxString& message) {
     if (not message.empty()) {
-        mMessage.change(message.ToStdString());
+        mMessage.change(message.utf8_string());
     }
 
     mData.set(val);
@@ -73,14 +73,14 @@ void ProgressDialog::range(uint32 val) {
 
 void ProgressDialog::pulse(const wxString& message) {
     if (not message.empty()) {
-        mMessage.change(message.ToStdString());
+        mMessage.change(message.utf8_string());
     }
 
     mData.pulse();
 }
 
 void ProgressDialog::finish(bool modalWait, const wxString& message) {
-    mMessage.change(message.ToStdString());
+    mMessage.change(message.utf8_string());
 
     // The value is set to the end of the range in order to make the "OK"
     // button appear. If not modal waiting, then there's no point to doing

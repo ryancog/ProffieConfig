@@ -285,16 +285,16 @@ void onboard::Frame::onPhase() {
         case ePhase_Welcome:
         case ePhase_Setup_Prog:
         case ePhase_Setup_Done:
-            nextButton.change(_("Next").ToStdString());
+            nextButton.change(_("Next").utf8_string());
             break;
         case ePhase_Setup_Pre:
-            nextButton.change(_("Run Setup").ToStdString());
+            nextButton.change(_("Run Setup").utf8_string());
             break;
         case ePhase_Setup_Fail:
-            nextButton.change(_("Try Again").ToStdString());
+            nextButton.change(_("Try Again").utf8_string());
             break;
         case ePhase_Info:
-            nextButton.change(_("Finish").ToStdString());
+            nextButton.change(_("Finish").utf8_string());
             break;
         case ePhase_Max:
             nextButton.change("Where Are You?");

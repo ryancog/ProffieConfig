@@ -57,11 +57,11 @@ template <typename ...ARGS>
 std::string errorMessage(
     logging::Logger& logger, const wxString& msg, ARGS&&... args
 ) {
-    logger.error(wxString::Format(msg, args...).ToStdString());
+    logger.error(wxString::Format(msg, args...).utf8_string());
     return wxString::Format(
         wxGetTranslation(msg),
         maybeTranslate(std::forward<ARGS>(args))...
-    ).ToStdString();
+    ).utf8_string();
 }
 
 namespace io {

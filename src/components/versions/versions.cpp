@@ -129,7 +129,7 @@ void versions::loadLocal(logging::Branch *lBranch) {
 
             std::optional<size> knownBoard;
             for (size idx{0}; idx < detail::BOARDS.size(); ++idx) {
-                auto& board{detail::BOARDS[idx]};
+                const auto& board{detail::BOARDS[idx]};
                 if (boardEntry->label_ != board.name_) continue;
 
                 knownBoard = idx;
@@ -293,17 +293,17 @@ std::optional<std::string> versions::fetch(
     result = request.Execute();
 
     if (not result) {
-        logger.error("Prop Manifest Download Failed\n" + result.error.ToStdString());
-        return _("Could not download prop manifest").ToStdString();
+        logger.error("Prop Manifest Download Failed\n" + result.error.utf8_string());
+        return _("Could not download prop manifest").utf8_string();
     }
 
-    stream.str(request.GetResponse().AsString().ToStdString());
+    stream.str(request.GetResponse().AsString().utf8_string());
 
     if (prog) prog->set(30, _("Processing prop manifest..."));
 
     if (not pconf::read(stream, data, logger.binfo("Reading prop manifest file..."))) {
         logger.error("Prop Manifest Parse Failed.");
-        return _("Could not parse prop manifest").ToStdString();
+        return _("Could not parse prop manifest").utf8_string();
     }
 
     { auto ctxt{data::context(priv::availableProps)};
@@ -376,18 +376,18 @@ std::optional<std::string> versions::fetch(
     result = request.Execute();
 
     if (not result) {
-        logger.error("ProffieOS Manifest Download Failed\n" + result.error.ToStdString());
-        return _("Could not download ProffieOS manifest").ToStdString();
+        logger.error("ProffieOS Manifest Download Failed\n" + result.error.utf8_string());
+        return _("Could not download ProffieOS manifest").utf8_string();
     }
 
-    stream.str(request.GetResponse().AsString().ToStdString());
+    stream.str(request.GetResponse().AsString().utf8_string());
     stream.clear();
 
     if (prog) prog->set(80, _("Processing ProffieOS manifest..."));
 
     if (not pconf::read(stream, data, logger.binfo("Reading ProffieOS manifest file..."))) {
         logger.error("ProffieOS Manifest Parse Failed.");
-        return _("Could not parse ProffieOS manifest").ToStdString();
+        return _("Could not parse ProffieOS manifest").utf8_string();
     }
 
     { auto ctxt{data::context(priv::availableOS)};
@@ -443,7 +443,7 @@ std::optional<std::string> versions::fetch(
 
                 std::optional<size> knownBoard;
                 for (size idx{0}; idx < detail::BOARDS.size(); ++idx) {
-                    auto& board{detail::BOARDS[idx]};
+                    const auto& board{detail::BOARDS[idx]};
                     if (boardEntry->label_ != board.name_) continue;
 
                     knownBoard = idx;
@@ -502,7 +502,7 @@ std::optional<std::string> versions::installDefault(
         fs::create_directories(paths::versionDir(), err);
         if (err) {
             logger.error("Failed to create versions dir: " + err.message());
-            return _("Failed during setup.").ToStdString();
+            return _("Failed during setup.").utf8_string();
         }
     }
 
@@ -561,7 +561,7 @@ std::optional<std::string> versions::downloadOS(
 
     if (not known) {
         logger.error("Unknown ProffieOS version: " + static_cast<std::string>(ver));
-        return _("Unknown ProffieOS Version").ToStdString();
+        return _("Unknown ProffieOS Version").utf8_string();
     }
 
     logger.info("Downloading ProffieOS...");
@@ -575,14 +575,14 @@ std::optional<std::string> versions::downloadOS(
     auto requestResult{proffieOSRequest.Execute()};
 
     if (not requestResult) {
-        logger.error("ProffieOS Download Failed\n" + requestResult.error.ToStdString());
-        return _("Could not download ProffieOS").ToStdString();
+        logger.error("ProffieOS Download Failed\n" + requestResult.error.utf8_string());
+        return _("Could not download ProffieOS").utf8_string();
     }
 
     wxZipInputStream osZipStream{*proffieOSRequest.GetResponse().GetStream()};
     if (not osZipStream.IsOk()) {
         logger.error("Could not open ProffieOS zip: " + std::to_string(osZipStream.GetLastError()));
-        return _("Failed Opening ProffieOS ZIP").ToStdString();
+        return _("Failed Opening ProffieOS ZIP").utf8_string();
     }
 
     std::error_code ec;
@@ -594,7 +594,7 @@ std::optional<std::string> versions::downloadOS(
             paths::osDir() /
             static_cast<std::string>(ver) /
             "ProffieOS" /
-            entry->GetName().ToStdString()
+            entry->GetName().utf8_string()
         };
         fs::remove_all(filepath, ec);
         if (filepath.string().find("__MACOSX") != std::string::npos) continue;
@@ -608,7 +608,7 @@ std::optional<std::string> versions::downloadOS(
                         "Could not create dir " + filepath.string() +
                         ": " + ec.message()
                     );
-                    return wxGetTranslation(OS_EXTRACT_FAIL_MSG).ToStdString();
+                    return wxGetTranslation(OS_EXTRACT_FAIL_MSG).utf8_string();
                 }
             }
             continue;
@@ -616,13 +616,13 @@ std::optional<std::string> versions::downloadOS(
 
         if (not osZipStream.CanRead()) {
             logger.error("Failed reading ProffieOS: " + std::to_string(osZipStream.GetLastError()));
-            return wxGetTranslation(OS_EXTRACT_FAIL_MSG).ToStdString();
+            return wxGetTranslation(OS_EXTRACT_FAIL_MSG).utf8_string();
         }
 
         wxFileOutputStream outStream{filepath.string()};
         if (not outStream.IsOk()) {
             logger.error("Failed writing ProffieOS: " + std::to_string(outStream.GetLastError()));
-            return wxGetTranslation(OS_EXTRACT_FAIL_MSG).ToStdString();
+            return wxGetTranslation(OS_EXTRACT_FAIL_MSG).utf8_string();
         }
 
         osZipStream.Read(outStream);
@@ -630,7 +630,7 @@ std::optional<std::string> versions::downloadOS(
 
     if (osZipStream.GetLastError() != wxSTREAM_EOF) {
         logger.error("ProffieOS extraction finished with error: " + std::to_string(osZipStream.GetLastError()));
-        return wxGetTranslation(OS_EXTRACT_FAIL_MSG).ToStdString();
+        return wxGetTranslation(OS_EXTRACT_FAIL_MSG).utf8_string();
     }
 
     pconf::Data data;
@@ -662,7 +662,7 @@ std::optional<std::string> versions::downloadOS(
 
     if (fstream.fail()) {
         logger.error("Info file write failed: " + std::to_string(fstream.rdstate()));
-        return _("Could not write ProffieOS info file").ToStdString();
+        return _("Could not write ProffieOS info file").utf8_string();
     }
 
     // Flush prior to reload
@@ -705,7 +705,7 @@ std::optional<std::string> versions::downloadProp(
 
     if (not known) {
         logger.error("Unknown prop: " + name);
-        return _("Unknown Prop File").ToStdString();
+        return _("Unknown Prop File").utf8_string();
     }
 
     bool copyRes{};
@@ -727,19 +727,19 @@ std::optional<std::string> versions::downloadProp(
     result = request.Execute();
 
     if (not result) {
-        logger.error("Prop data download failed: " + dataURI.BuildUnescapedURI().ToStdString() + '\n' + result.error.ToStdString());
-        return _("Could not download prop").ToStdString();
+        logger.error("Prop data download failed: " + dataURI.BuildUnescapedURI().utf8_string() + '\n' + result.error.utf8_string());
+        return _("Could not download prop").utf8_string();
     }
 
     copyRes = files::copyOverwrite(
-        request.GetResponse().GetDataFile().ToStdString(),
+        request.GetResponse().GetDataFile().utf8_string(),
         paths::propDir() / name / detail::DATA_FILE_STR,
         ec
     );
 
     if (not copyRes) {
         logger.error("Failed to copy data file: " + ec.message());
-        return _("Could not copy prop data file").ToStdString();
+        return _("Could not copy prop data file").utf8_string();
     }
 
     wxURI headerURI{detail::HEADER_FILE_STR};
@@ -752,19 +752,19 @@ std::optional<std::string> versions::downloadProp(
     result = request.Execute();
 
     if (not result) {
-        logger.error("Prop header download failed: " + headerURI.BuildUnescapedURI().ToStdString() + '\n' + result.error.ToStdString());
-        return _("Could not download prop").ToStdString();
+        logger.error("Prop header download failed: " + headerURI.BuildUnescapedURI().utf8_string() + '\n' + result.error.utf8_string());
+        return _("Could not download prop").utf8_string();
     }
 
     copyRes = files::copyOverwrite(
-        request.GetResponse().GetDataFile().ToStdString(),
+        request.GetResponse().GetDataFile().utf8_string(),
         paths::propDir() / name / detail::HEADER_FILE_STR,
         ec
     );
 
     if (not copyRes) {
         logger.error("Failed to copy header file: " + ec.message());
-        return _("Could not copy prop header file").ToStdString();
+        return _("Could not copy prop header file").utf8_string();
     }
 
     pconf::Data data;
@@ -785,7 +785,7 @@ std::optional<std::string> versions::downloadProp(
 
     if (fstream.fail()) {
         logger.error("Info file write failed: " + std::to_string(fstream.rdstate()));
-        return _("Could not write prop info file").ToStdString();
+        return _("Could not write prop info file").utf8_string();
     }
 
     // Flush prior to reload

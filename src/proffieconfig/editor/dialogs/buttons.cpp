@@ -337,19 +337,19 @@ void ButtonsDlg::addButton() {
             event.choose(config::eBtn_Evt_Power);
             name.change("pow");
             type.choose(config::eBtn_Type_Pullup);
-            pin.change(pinDefaults[0].ToStdString());
+            pin.change(pinDefaults[0].utf8_string());
             break;
         case 2:
             event.choose(config::eBtn_Evt_Aux);
             name.change("aux");
             type.choose(config::eBtn_Type_Pullup);
-            pin.change(pinDefaults[1].ToStdString());
+            pin.change(pinDefaults[1].utf8_string());
             break;
         case 3:
             event.choose(config::eBtn_Evt_Aux2);
             name.change("aux2");
             type.choose(config::eBtn_Type_Pullup);
-            pin.change(pinDefaults[2].ToStdString());
+            pin.change(pinDefaults[2].utf8_string());
             break;
         default:
     }

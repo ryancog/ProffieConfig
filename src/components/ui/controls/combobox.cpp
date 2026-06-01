@@ -84,7 +84,7 @@ struct Control : detail::DataWindow<wxComboBox> {
 
         if (not en) return;
 
-        auto res{str_.change(GetValue().ToStdString(), GetInsertionPoint())};
+        auto res{str_.change(GetValue().utf8_string(), GetInsertionPoint())};
 
         if (not res) {
             auto ctxt{data::context(str_)};

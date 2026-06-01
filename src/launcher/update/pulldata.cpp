@@ -28,7 +28,6 @@
 #include <wx/richmsgdlg.h>
 
 #include "log/logger.hpp"
-#include "ui/dialogs/message.hpp"
 #include "utils/files.hpp"
 #include "utils/hash.hpp"
 #include "utils/paths.hpp"
@@ -79,7 +78,7 @@ bool Update::pullData(pcui::ProgressDialog *prog, logging::Branch& lBranch) {
         switch (evt.GetState()) {
             case wxWebRequestBase::State_Failed:
             case wxWebRequestBase::State_Unauthorized:
-                errorMessage = evt.GetErrorDescription().ToStdString();
+                errorMessage = evt.GetErrorDescription().utf8_string();
                 [[fallthrough]];
             case wxWebRequestBase::State_Completed:
             case wxWebRequestBase::State_Cancelled:

@@ -774,7 +774,7 @@ void VersionsDlg::onPropAvailChoice() {
 void VersionsDlg::updatePropInstall() {
     auto sel{data::context(mAvailPropSel)};
 
-    std::string label{_("Install").ToStdString()};
+    std::string label{_("Install").utf8_string()};
     bool enable{false};
 
     if (auto *avail{sel.selected<versions::props::Available>()}) {
@@ -793,7 +793,7 @@ void VersionsDlg::updatePropInstall() {
         enable = not found;
 
         if (found)
-            label = _("Installed").ToStdString();
+            label = _("Installed").utf8_string();
     }
 
     mPropInstall.enable(enable);
@@ -886,7 +886,7 @@ void VersionsDlg::onOsAvailChoice() {
 void VersionsDlg::updateOsInstall() {
     auto sel{data::context(mAvailOsSel)};
 
-    std::string label{_("Install").ToStdString()};
+    std::string label{_("Install").utf8_string()};
     bool enable{false};
 
     if (auto *avail{sel.selected<versions::os::OS>()}) {
@@ -905,7 +905,7 @@ void VersionsDlg::updateOsInstall() {
         enable = not found;
 
         if (found)
-            label = _("Installed").ToStdString();
+            label = _("Installed").utf8_string();
     }
 
     mOsInstall.enable(enable);

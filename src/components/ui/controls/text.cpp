@@ -143,7 +143,7 @@ struct Control : detail::DataWindow<wxTextCtrl> {
         if (not en) return;
 
         auto res{str_->change(
-            GetValue().ToStdString(), posFromInsertPoint(GetInsertionPoint())
+            GetValue().utf8_string(), posFromInsertPoint(GetInsertionPoint())
         )};
 
         if (not res) {

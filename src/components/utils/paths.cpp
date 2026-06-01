@@ -78,7 +78,7 @@ fs::path paths::approot() {
 fs::path paths::executable(Executable exec) {
     switch (exec) {
         case Executable::Current:
-            return wxStandardPaths::Get().GetExecutablePath().ToStdWstring();
+            return wxStandardPaths::Get().GetExecutablePath().utf8_string();
         case Executable::Launcher:
 #           ifdef _WIN32
             {

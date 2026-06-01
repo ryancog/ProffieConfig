@@ -140,7 +140,7 @@ Preset::Preset(const Preset& other, Config& config) :
     name.change(wxString::Format(
         formatStr,
         name.val().substr(0, newLen)
-    ).ToStdString());
+    ).utf8_string());
 }
 
 auto Preset::children() const -> std::vector<const Model *> {

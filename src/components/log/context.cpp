@@ -47,7 +47,7 @@ Context::Context(
 
     if (outputToFile) {
         const auto appName{
-            wxApp::GetGUIInstance()->GetAppName().ToStdString()
+            wxApp::GetGUIInstance()->GetAppName().utf8_string()
         };
 
         fs::create_directories(paths::logDir());

@@ -90,7 +90,7 @@ struct Control : detail::DataWindow<wxFilePickerCtrl> {
 
         if (not en) return;
 
-        auto res{str_.change(GetPath().ToStdString(), GetPath().length())};
+        auto res{str_.change(GetPath().utf8_string(), GetPath().length())};
 
         if (not res)
             SetPath(data::context(str_).val());

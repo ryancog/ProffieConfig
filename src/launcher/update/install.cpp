@@ -101,7 +101,7 @@ bool Update::pullNewFiles(
         downloadedFilename = typeFolder(file.id.type) / item.path;
         request.Start();
 
-        logger.info("Downloading " + file.id.name + " from \"" + url.BuildURI().ToStdString() + "\"...");
+        logger.info("Downloading " + file.id.name + " from \"" + url.BuildUnescapedURI().utf8_string() + "\"...");
 
         while (not requestDone) {
             auto dataReceived{request.GetBytesReceived()};
@@ -141,7 +141,7 @@ bool Update::pullNewFiles(
         if (request.GetState() != wxWebRequestBase::State_Completed) {
             auto response{request.GetResponse()};
             auto statusText{response.GetStatusText()};
-            logger.error("Download failed! " + (statusText.empty() ? "UError" : statusText.ToStdString()) + " (" + std::to_string(response.GetStatus()) + ')');
+            logger.error("Download failed! " + (statusText.empty() ? "UError" : statusText.utf8_string()) + " (" + std::to_string(response.GetStatus()) + ')');
 
             prog->finish(true, _("Failed to download file."));
 

@@ -285,7 +285,7 @@ void EditorWindow::onExport(wxCommandEvent&) {
     );
     if (fileDlg.ShowModal() == wxID_CANCEL) return;
 
-    config::generate(*mInfo.config(), fileDlg.GetPath().ToStdString());
+    config::generate(*mInfo.config(), fileDlg.GetPath().utf8_string());
 }
 
 void EditorWindow::onVerify(wxCommandEvent& evt) {

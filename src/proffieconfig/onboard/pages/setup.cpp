@@ -128,14 +128,14 @@ void onboard::Setup::startSetup() {
 #       if defined(_WIN32) or defined(__linux__)
         if (not mDriverInstalled) {
             data::String::Context{mStatusMessage}.change(
-                _("Installing Driver...").ToStdString()
+                _("Installing Driver...").utf8_string()
             );
 
             if (arduino::runDriverInstallation()) {
                 mDriverInstalled = true;
             } else {
                 data::String::Context{errorMessage_}.change(
-                    _("Failed to install driver.").ToStdString()
+                    _("Failed to install driver.").utf8_string()
                 );
                 return;
             }
@@ -143,7 +143,7 @@ void onboard::Setup::startSetup() {
 #       endif
 
         if (not mOSInstalled) {
-            mStatusMessage.change(_("Installing ProffieOS...").ToStdString());
+            mStatusMessage.change(_("Installing ProffieOS...").utf8_string());
 
             std::optional<std::string> err;
 

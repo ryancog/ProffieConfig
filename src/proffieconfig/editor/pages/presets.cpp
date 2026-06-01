@@ -625,7 +625,7 @@ void PresetsPage::updateBladeStrings() {
                 auto label{data::context(*mBladeStrings[count])};
                 label.change(wxString::Format(
                     _("Blade %d"), mainIdx
-                ).ToStdString());
+                ).utf8_string());
 
                 ++count;
             } else if (type.idx() == Blade::eWS281X) {
@@ -639,7 +639,7 @@ void PresetsPage::updateBladeStrings() {
                     auto label{data::context(*mBladeStrings[count])};
                     label.change(wxString::Format(
                         _("Blade %d"), mainIdx
-                    ).ToStdString());
+                    ).utf8_string());
 
                     ++count;
                 } else {
@@ -662,7 +662,7 @@ void PresetsPage::updateBladeStrings() {
 
                                 mBladeStrings[count]->change(wxString::Format(
                                     _("Blade %d:%d"), mainIdx, subIdx
-                                ).ToStdString());
+                                ).utf8_string());
 
                                 ++count;
                                 break;
@@ -684,7 +684,7 @@ void PresetsPage::updateBladeStrings() {
                                         mainIdx,
                                         subIdx,
                                         idx
-                                    ).ToStdString());
+                                    ).utf8_string());
 
                                     ++count;
                                 }
@@ -699,7 +699,7 @@ void PresetsPage::updateBladeStrings() {
             } else if (type.idx() == Blade::eUnassigned) {
                 if (count == mBladeStrings.size()) return;
 
-                mBladeStrings[count]->change(_("Unassigned").ToStdString());
+                mBladeStrings[count]->change(_("Unassigned").utf8_string());
 
                 ++count;
             } else assert(0);
@@ -709,7 +709,7 @@ void PresetsPage::updateBladeStrings() {
     }
 
     for (auto idx{count}; idx < mBladeStrings.size(); ++idx) {
-        mBladeStrings[idx]->change(_("Unassigned").ToStdString());
+        mBladeStrings[idx]->change(_("Unassigned").utf8_string());
     }
 }
 

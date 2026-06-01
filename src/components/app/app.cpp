@@ -138,8 +138,8 @@ private:
 
 void crashHandler(const wxString& error, const wxString& detail) {
     auto& logger{logging::Context::getGlobal().createLogger("Crash Handler")};
-    logger.error(error.ToStdString());
-    if (not detail.IsEmpty()) logger.error(detail.ToStdString());
+    logger.error(error.utf8_string());
+    if (not detail.IsEmpty()) logger.error(detail.utf8_string());
 
     if (wxIsMainThread()) {
         auto errDialog{app::CriticalDialog(error, detail)};
@@ -464,7 +464,7 @@ bool app::init() {
     auto *translations{new wxTranslations};
     wxTranslations::Set(translations);
     for (const auto& lang : translations->GetAvailableTranslations("proffieconfig")) {
-        logger.info("Found language: " + lang.ToStdString());
+        logger.info("Found language: " + lang.utf8_string());
     }
     logger.info("System language: " + std::to_string(wxUILocale::GetSystemLanguage()));
 

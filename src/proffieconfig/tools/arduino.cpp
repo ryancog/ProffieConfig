@@ -125,13 +125,13 @@ std::string arduino::version() {
     constexpr std::string_view VERSION_TAG{"Version: "};
     const auto versionTagPos{output.find(VERSION_TAG)};
     if (versionTagPos == std::string::npos) {
-        return wxGetTranslation(UNKNOWN_STR).ToStdString();
+        return wxGetTranslation(UNKNOWN_STR).utf8_string();
     }
 
     const auto versionStart{versionTagPos + VERSION_TAG.length()};
     const auto versionEnd{output.find(' ', versionStart)};
     if (versionEnd == std::string::npos) {
-        return wxGetTranslation(UNKNOWN_STR).ToStdString();
+        return wxGetTranslation(UNKNOWN_STR).utf8_string();
     }
 
     return output.substr(versionStart, versionEnd - versionStart);
@@ -210,7 +210,7 @@ std::vector<std::string> arduino::getBoards(logging::Branch *lBranch) {
         } else if (line.find("dfu") != std::string::npos) {
             const auto port{line.substr(0, line.find_first_of(" \t"))};
 
-            boards.emplace_back(_("BOOTLOADER").ToStdString() + '|' + port);
+            boards.emplace_back(_("BOOTLOADER").utf8_string() + '|' + port);
             logger.debug("Found board in bootloader mode: " + port);
         }
 
@@ -787,8 +787,8 @@ std::optional<wxString> precheckCompile(
 
         if (aliasNames.contains(name)) {
             constexpr cstring MSG{wxTRANSLATE("Config has style aliases with duplicate name \"%s\".")};
-            logger.error(wxString::Format(MSG, name).ToStdString());
-            return wxString::Format(wxGetTranslation(MSG), name).ToStdString();
+            logger.error(wxString::Format(MSG, name).utf8_string());
+            return wxString::Format(wxGetTranslation(MSG), name).utf8_string();
         }
 
         aliasNames.insert(name);
