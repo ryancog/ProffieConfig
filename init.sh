@@ -268,6 +268,7 @@ WX_FLAGS='--disable-exceptions --enable-debug_info --disable-debug --enable-pch 
 WX_FLAGS+='--disable-unsafe-conv-in-wxstring --disable-sys-libs '
 WX_FLAGS+='--without-opengl --without-expat --disable-html --disable-propgrid '
 WX_FLAGS+='--disable-aui --disable-xrc --disable-richtext --disable-webview '
+WX_FLAGS+='--disable-debugreport '
 
 if [ "$TARGET_PLATFORM" == "linux" ]; then
     WX_HOST='x86_64-linux'
