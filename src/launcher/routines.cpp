@@ -82,10 +82,14 @@ void routine::platformInstall(logging::Branch& lBranch) {
 #       endif
     }
 
-#   ifndef __APPLE__
     logger.debug("Creating " + installedExec.string());
     fs::create_directories(installedExec.parent_path(), ec);
-#   endif
+    if (ec) {
+        auto errMessage{"Failed to prepare directories for installation: " + ec.message() + " (" + std::to_string(ec.value()) + ')'};
+        logger.info(errMessage);
+        pcui::showMessage(_("Failed to install launcher"));
+        return;
+    }
 
 #   ifdef _WIN32
     logger.info("Moving launcher into install location...");
