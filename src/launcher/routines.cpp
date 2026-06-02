@@ -95,7 +95,7 @@ void routine::platformInstall(logging::Branch& lBranch) {
 
 #   ifdef _WIN32
     logger.info("Moving launcher into install location...");
-    if (not MoveFileW(currentExec.c_str(), installedExec.c_str())) {
+    if (not CopyFileW(currentExec.c_str(), installedExec.c_str(), true)) {
         ec.assign(static_cast<int32>(GetLastError()), std::system_category());
         if (ec) {
             auto errMessage{"Failed to install launcher: " + ec.message() + " (" + std::to_string(ec.value()) + ')'};
@@ -152,15 +152,11 @@ void routine::platformInstall(logging::Branch& lBranch) {
     batch.close();
     ShellExecuteA(nullptr, "open", SELFDELETE_BATCH, nullptr, nullptr, SW_HIDE);
 #   elif defined(__linux__)
-    // move
     wxCopyFile(currentExec.c_str(), installedExec.c_str());
-    (void)remove(currentExec.c_str());
 #   elif defined(__APPLE__)
     const auto currentBundle{currentExec.parent_path().parent_path().parent_path()};
     const auto applicationPath{installedExec.parent_path().parent_path().parent_path()};
     fs::copy(currentBundle, applicationPath, fs::copy_options::recursive);
-    // Cannot remove from DMG
-    fs::remove_all(currentBundle, ec);
 #   endif
 
     pcui::showMessage(_("Launcher has been installed."));
