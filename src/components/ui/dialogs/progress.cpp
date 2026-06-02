@@ -36,6 +36,10 @@
 #include "ui/values.hpp"
 #include "utils/defer.hpp"
 
+#if __WXOSX__
+#include "ui/helpers/if.hpp"
+#endif
+
 using namespace pcui;
 
 ProgressDialog::ProgressDialog(
@@ -152,7 +156,7 @@ DescriptorPtr ProgressDialog::ui(bool mayCancel, wxSize size) {
         .border_={.size_=winEdgeSpacing(), .dirs_=wxALL}
       },
       .children_={
-#       ifdef __WXOSX__
+#       if __WXOSX__
         // On macOS, if we have a parent and are going to be shown WindowModal,
         // then the title won't be used (because this'll be displayed as a
         // sheet), so add the title to the content/UI directly.
