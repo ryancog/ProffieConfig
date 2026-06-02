@@ -28,12 +28,15 @@
 #include <wx/rawbmp.h>
 #include <wx/settings.h>
 
-#if __WXOSX__
+#if __APPLE__
 #include <CoreFoundation/CoreFoundation.h>
 
 #include "utils/objc.hpp"
-#elif __WXMSW__
+#elif _WIN32
+#include <windows.h>
 #endif
+
+#include "utils/types.hpp"
 
 namespace {
 
@@ -95,8 +98,25 @@ wxColour color::Dynamic::color() const {
 #       if __WXOSX__
         return getNSColor("controlAccentColor");
 #       elif __WXMSW__
-        // GetImmersiveColorFromColorSetEx
-        static_assert(false);
+        DWORD buffer{};
+        DWORD bufferSize{sizeof(buffer)};
+        auto res{RegGetValueA(
+            HKEY_CURRENT_USER,
+            R"(Software\Microsoft\Windows\DWM)",
+            "AccentColor",
+            RRF_RT_REG_DWORD,
+            nullptr,
+            &buffer,
+            &bufferSize
+        )};
+        if (res != ERROR_SUCCESS)
+            return wxNullColour;
+
+        auto r{static_cast<uint8>((buffer >> 0) & 0xFF)};
+        auto g{static_cast<uint8>((buffer >> 8) & 0xFF)};
+        auto b{static_cast<uint8>((buffer >> 16) & 0xFF)};
+        auto a{static_cast<uint8>((buffer >> 24) & 0xFF)};
+        return {r, g, b, a};
 #       endif
     }
 
