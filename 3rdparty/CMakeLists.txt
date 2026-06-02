@@ -141,14 +141,14 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
     set(WX_SHARED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-win32-shared)
     set(WX_LIB_DIR ${WX_SHARED_DIR}/bin)
     set_target_properties(wxBase PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase.dll
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase.dll)
+        IMPORTED_LOCATION ${WX_LIB_DIR}/wxbaseu.dll
+        IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbaseu.dll)
     set_target_properties(wxNet PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase_net.dll
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase_net.dll)
+        IMPORTED_LOCATION ${WX_LIB_DIR}/wxbaseu_net.dll
+        IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbaseu_net.dll)
     set_target_properties(wxCore PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw_core.dll
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmsw_core.dll)
+        IMPORTED_LOCATION ${WX_LIB_DIR}/wxmswu_core.dll
+        IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmswu_core.dll)
 
     set(WX_STATIC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-win32-static)
     if (IS_DIRECTORY ${WX_STATIC_DIR}/lib64)

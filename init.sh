@@ -130,7 +130,7 @@ patch_rpaths() {
     elif [ "$TARGET_PLATFORM" == "win32" ]; then
         cd "${WX_INSTALL_PREFIX}-shared/bin"
 
-        RENAME_KEY='s/\(wx.*\)[0-9]\{3\}u\(.*\)_gcc_win32\.dll/\1\2.dll/p'
+        RENAME_KEY='s/\(wx.*\)[0-9]\{3\}u\(.*\)_gcc_win32\.dll/\1u\2.dll/p'
         for lib in `ls -1 | grep '.*_gcc_win32\.dll'`; do
             if ! [ -L $lib ]; then
                 NEWNAME=`echo -n $lib | sed -n $RENAME_KEY`
