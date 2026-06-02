@@ -20,6 +20,7 @@
  */
 
 #include <fstream>
+#include <future>
 #include <ranges>
 
 #include "log/logger.hpp"
@@ -38,6 +39,7 @@
 #include "ui/static/label.hpp"
 #include "ui/font.hpp"
 #include "ui/types.hpp"
+#include "ui/utils.hpp"
 #include "ui/values.hpp"
 #include "utils/hash.hpp"
 #include "utils/paths.hpp"
@@ -112,20 +114,32 @@ bool Update::promptWithChangelog(
 ) {
     auto& logger{lBranch.createLogger("Update::promptWithChangelog()")};
 
-    pcui::Dialog dlg(
-        nullptr,
-        wxID_ANY,
-        "Update Available",
-        wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER
-    );
+    std::promise<bool> promise;
 
-    pcui::build(&dlg, ui(dlg, data, log));
+    const auto prompt{[&promise, &data, &log] {
+        pcui::Dialog dlg(
+            nullptr,
+            wxID_ANY,
+            "Update Available",
+            wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER
+        );
 
-    switch (dlg.ShowModal()) {
-        case wxID_OK: return true;
-        case wxID_CANCEL: return false;
-        default: exit(0);
-    }
+        pcui::build(&dlg, ui(dlg, data, log));
+
+        switch (dlg.ShowModal()) {
+            case wxID_OK:
+                promise.set_value(true);
+                return;
+            case wxID_CANCEL:
+                promise.set_value(false);
+                return;
+            default:
+                exit(0);
+        }
+    }};
+    pcui::safeCall(prompt);
+
+    return promise.get_future().get();
 }
 
 utils::Version Update::determineCurrentVersion(

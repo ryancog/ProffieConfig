@@ -21,6 +21,7 @@
 
 #include <thread>
 #include <fstream>
+#include <future>
 #include <unordered_set>
 
 #include <wx/webrequest.h>
@@ -28,6 +29,8 @@
 #include <wx/richmsgdlg.h>
 
 #include "log/logger.hpp"
+#include "ui/dialogs/message.hpp"
+#include "ui/utils.hpp"
 #include "utils/files.hpp"
 #include "utils/hash.hpp"
 #include "utils/paths.hpp"
@@ -310,16 +313,27 @@ bool checkMessages(
             }
         }
 
-        wxRichMessageDialog dialog{
-            nullptr,
-            *contentEntry->value_,
-            isFatal ? _("ProffieConfig Launcher Critical Notice") : _("ProffieConfig Launcher Alert")
-        };
+        std::promise<void> promise;
 
-        dialog.ShowCheckBox("Do Not Show Again");
-        if (dialog.IsCheckBoxChecked()) {
-            ignoreMessageList.push_back(*contentEntry->value_);
-        }
+        const auto showMessage{[&] {
+            auto res{pcui::showHideablePrompt(
+                *contentEntry->value_,
+                {
+                    .caption_=isFatal
+                        ? _("ProffieConfig Launcher Critical Notice")
+                        : _("ProffieConfig Launcher Alert"),
+                }
+            )};
+
+            if (res.wantsHide_) {
+                ignoreMessageList.push_back(*contentEntry->value_);
+            }
+
+            promise.set_value();
+        }};
+        pcui::safeCall(showMessage);
+
+        promise.get_future().get();
 
         if (isFatal) hadFatal = true;
     }

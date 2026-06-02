@@ -175,7 +175,7 @@ public:
 
         auto data{Update::parseData(&prog, *logger.binfo("Parsing version data..."))};
         if (not data) {
-            prog.finish(true, _("Failed to parse data!\nPlease report this error."));
+            prog.finish(false);
             wxLaunchDefaultApplication(paths::logDir().native());
             return;
         }
