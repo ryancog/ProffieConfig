@@ -36,8 +36,6 @@ void doCripple(wxSizer *);
 } // namespace
 
 void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
-    wxWindowUpdateLocker lock(win);
-
     // Always do teardown.
     teardown(win);
 
@@ -58,6 +56,18 @@ void pcui::build(wxWindow *win, const DescriptorPtr& desc) {
         .childParent_=parent,
         .sizer_=sizer,
     };
+
+#   ifdef __WXMSW__
+    // This will clear the whole window while the children are being built.
+    // Otherwise it seems just a little rect in the top left is cleared, which
+    // looks odd.
+    win->Refresh();
+    win->Update();
+#   endif
+
+    // Moving the locker here seems to substantially reduce flicker for Win32
+    // I'm not sure why...
+    wxWindowUpdateLocker lock(win);
 
     auto *item{desc->build(scaffold)};
     sizer->Add(item);
