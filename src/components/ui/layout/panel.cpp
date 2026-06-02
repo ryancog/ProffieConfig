@@ -36,18 +36,6 @@ namespace {
 struct Layout : detail::Window<detail::Panel> {
     Layout(const detail::Scaffold& scaffold, const pcui::Panel& desc) {
         create(scaffold.childParent_, desc.win_.id_);
-
-#       ifdef _WIN32
-#       ifdef __WXGTK__
-        auto *hwnd{GTKGetWin32Handle()};
-#       else
-        auto *hwnd{GetHWND()};
-#       endif
-
-        auto exStyle{GetWindowLongA(hwnd, GWL_EXSTYLE)};
-        SetWindowLongA(hwnd, GWL_EXSTYLE, exStyle | WS_EX_LAYERED);
-#       endif
-
         postCreation(scaffold, desc.win_);
 
         auto *sizer{new wxBoxSizer(wxVERTICAL)};

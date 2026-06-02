@@ -23,7 +23,6 @@
 #include <cstring>
 #include <future>
 #include <list>
-#include <utility>
 
 #if defined(__APPLE__) or defined(__linux__)
 #include <unistd.h>
@@ -332,7 +331,16 @@ void Process::interrupt() {
     auto& data{*reinterpret_cast<InternalData *>(mRef)};
 
 #ifdef _WIN32
-    static_assert(false);
+    if (AttachConsole(data.id_)) {
+        SetConsoleCtrlHandler(nullptr, true);
+
+        GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0);
+        FreeConsole();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(20000));
+
+        SetConsoleCtrlHandler(nullptr, false);
+    }
 #else
     kill(data.pid_, SIGINT);
 #endif

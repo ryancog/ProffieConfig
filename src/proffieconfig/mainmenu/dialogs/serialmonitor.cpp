@@ -448,9 +448,14 @@ void SerialMonitorDlg::connectLoop() {
 
             std::array<int, 2> sizes{
                 -1,
+#               if __WXOSX__
                 GetTextExtent(errStr).GetWidth() + 10
+#               else
+                // Compensate for the drag icon area
+                GetTextExtent(errStr).GetWidth() + 30
+#               endif
             };
-            SetStatusWidths(2, sizes.data());
+            SetStatusWidths(sizes.size(), sizes.data());
         });
 
         if (mStopConnecting.try_acquire_for(CONNECT_RETRY))

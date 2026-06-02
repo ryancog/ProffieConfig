@@ -134,59 +134,39 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
     set(WX_SHARED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-win32-shared)
     set(WX_LIB_DIR ${WX_SHARED_DIR}/bin)
     set_target_properties(wxBase PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase332u_gcc_win32.dll
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase332u_gcc_win32.dll)
+        IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase.dll
+        IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase.dll)
     set_target_properties(wxNet PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase332u_net_gcc_win32.dll
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase332u_net_gcc_win32.dll)
+        IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase_net.dll
+        IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase_net.dll)
     set_target_properties(wxCore PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw332u_core_gcc_win32.dll
-        IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmsw332u_core_gcc_win32.dll)
+        IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw_core.dll
+        IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmsw_core.dll)
 
     set(WX_STATIC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-win32-static)
-    if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-        if (IS_DIRECTORY ${WX_STATIC_DIR}/lib64)
-            set(WX_LIB_DIR ${WX_STATIC_DIR}/lib64)
-        elseif(IS_DIRECTORY ${WX_STATIC_DIR}/lib)
-            set(WX_LIB_DIR ${WX_STATIC_DIR}/lib)
-        else()
-            message(FATAL_ERROR "Missing lib dir")
-        endif()
-
-        set_target_properties(wxBase-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxNet-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_net-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu_net-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxCore-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_core-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_core-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgets-PNG-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgets-ZLib-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.a)
-
-    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin)
+    if (IS_DIRECTORY ${WX_STATIC_DIR}/lib64)
+        set(WX_LIB_DIR ${WX_STATIC_DIR}/lib64)
+    elseif(IS_DIRECTORY ${WX_STATIC_DIR}/lib)
         set(WX_LIB_DIR ${WX_STATIC_DIR}/lib)
-        set_target_properties(wxBase-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxNet-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_net-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu_net-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxCore-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_core-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_core-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgets-PNG-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.a)
-        set_target_properties(wxWidgets-ZLib-static PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.a
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.a)
+    else()
+        message(FATAL_ERROR "Missing lib dir")
     endif()
+
+    set_target_properties(wxBase-static PROPERTIES
+        IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.a
+        IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu-3.3-x86_64-w64-mingw32.a)
+    set_target_properties(wxNet-static PROPERTIES
+        IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_baseu_net-3.3-x86_64-w64-mingw32.a
+        IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_baseu_net-3.3-x86_64-w64-mingw32.a)
+    set_target_properties(wxCore-static PROPERTIES
+        IMPORTED_LOCATION ${WX_LIB_DIR}/libwx_mswu_core-3.3-x86_64-w64-mingw32.a
+        IMPORTED_IMPLIB ${WX_LIB_DIR}/libwx_mswu_core-3.3-x86_64-w64-mingw32.a)
+    set_target_properties(wxWidgets-PNG-static PROPERTIES
+        IMPORTED_LOCATION ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.a
+        IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.a)
+    set_target_properties(wxWidgets-ZLib-static PROPERTIES
+        IMPORTED_LOCATION ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.a
+        IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.a)
 endif()
 
 # Use wx-config to get the proper compile and link flags

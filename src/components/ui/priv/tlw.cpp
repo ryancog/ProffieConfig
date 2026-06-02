@@ -49,9 +49,11 @@ void priv::tlw::postCreate(wxTopLevelWindow *tlw) {
     auto *hwnd{tlw->GetHWND()};
 #   endif
 
+    /*
     auto exStyle{GetWindowLongA(hwnd, GWL_EXSTYLE)};
     SetWindowLongA(hwnd, GWL_EXSTYLE, exStyle | WS_EX_LAYERED);
     SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA);
+    */
 #   endif
 }
 
@@ -81,6 +83,7 @@ void priv::tlw::bindOnCreate(wxTopLevelWindow *tlw) {
             logger.warn("Immersive dark mode setup failed: " + std::to_string(res));
         }
 
+        /*
         auto backdrop{dynamic_cast<Frame *>(tlw)
             ? DWMSBT_MAINWINDOW
             : DWMSBT_TRANSIENTWINDOW
@@ -94,6 +97,7 @@ void priv::tlw::bindOnCreate(wxTopLevelWindow *tlw) {
         if (res != S_OK) {
             logger.warn("Backdrop setup failed: " + std::to_string(res));
         }
+        */
 #       endif
     });
 }

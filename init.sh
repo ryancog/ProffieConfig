@@ -93,12 +93,12 @@ patch_rpaths() {
         RENAME_KEY='s/\(lib.*\)-.*/\1.so/p'
         for lib in `ls -1 | grep '.*-.*.so.*'`; do
             if ! [ -L $lib ]; then
-                SONAME=`echo $lib | sed -n $RENAME_KEY`
+                SONAME=`echo -n $lib | sed -n $RENAME_KEY`
                 mv -f $lib $SONAME
                 chrpath -r \$ORIGIN/../lib $SONAME &> /dev/null
                 patchelf --set-soname $SONAME $SONAME
                 for dep in `ldd $SONAME | grep 'libwx' | awk '{print $1}'`; do
-                    patchelf --replace-needed $dep `echo $dep | sed -n $RENAME_KEY` $SONAME
+                    patchelf --replace-needed $dep `echo -n $dep | sed -n $RENAME_KEY` $SONAME
                 done
             else
                 rm $lib
@@ -120,13 +120,41 @@ patch_rpaths() {
                 mv -f ${lib} $NEWNAME
                 install_name_tool -id @rpath/${NEWNAME} ${NEWNAME}
                 for dep in `otool -L ${NEWNAME} | grep $'\t.*/libwx' | awk '{print $1}'`; do
-                    CLEANED=`echo $dep | sed -n $RENAME_KEY`
+                    CLEANED=`echo -n $dep | sed -n $RENAME_KEY`
                     install_name_tool -change ${dep} @rpath/${CLEANED} ${NEWNAME}
                 done
             else
                 rm ${lib}
             fi
         done
+    elif [ "$TARGET_PLATFORM" == "win32" ]; then
+        cd "${WX_INSTALL_PREFIX}-shared/bin"
+
+        RENAME_KEY='s/\(wx.*\)[0-9]\{3\}u\(.*\)_gcc_win32\.dll/\1\2.dll/p'
+        for lib in `ls -1 | grep '.*_gcc_win32\.dll'`; do
+            if ! [ -L $lib ]; then
+                NEWNAME=`echo -n $lib | sed -n $RENAME_KEY`
+                mv -f $lib $NEWNAME
+
+                replace_in() {
+                    POSITIONS=`grep -aob $2 $1 | cut -d: -f1`
+                    for pos in $POSITIONS; do
+                        head -c ${#2} /dev/zero | dd of=$1 bs=1 seek=$pos conv=notrunc status=none
+                        echo -n $3 | dd of=$1 bs=1 seek=$pos conv=notrunc status=none
+                    done
+                }
+
+                replace_in $NEWNAME $lib $NEWNAME
+
+                for other_lib in `ls -1 | grep '.*_gcc_win32\.dll'`; do
+                    replace_in $other_lib $lib $NEWNAME
+                done
+            else
+                rm $lib
+            fi
+        done
+
+        unset IFS
     fi
 
     cd ..

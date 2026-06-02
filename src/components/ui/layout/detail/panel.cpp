@@ -58,8 +58,10 @@ void Panel::create(
     auto *hwnd{GetHWND()};
 #   endif
 
+    /*
     auto exStyle{GetWindowLongA(hwnd, GWL_EXSTYLE)};
     SetWindowLongA(hwnd, GWL_EXSTYLE, exStyle | WS_EX_LAYERED);
+    */
 #   endif
 }
 
