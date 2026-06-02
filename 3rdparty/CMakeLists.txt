@@ -36,9 +36,16 @@ set(wxWidgets-static-libraries
     wxWidgets-ZLib-static
 )
 
-target_link_libraries(wxWidgets-static INTERFACE
-    "$<LINK_GROUP:RESCAN,${wxWidgets-static-libraries}>"
-)
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
+    target_link_libraries(wxWidgets-static INTERFACE
+        "$<LINK_GROUP:RESCAN,${wxWidgets-static-libraries}>"
+    )
+else ()
+    target_link_libraries(wxWidgets-static INTERFACE
+        ${wxWidgets-static-libraries}
+    )
+endif ()
+
 
 if (CMAKE_SYSTEM_NAME STREQUAL Linux)
     set(TC_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tomcrypt/build-linux/)
