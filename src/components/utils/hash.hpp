@@ -70,8 +70,8 @@ template <typename ...Args> requires (sizeof...(Args) > 0)
 }
 
 template <typename T>
-[[nodiscard]] uint64 single(const T& t) {
-    return std::hash<T>{}(t);
+[[nodiscard]] uint64 single(const T& v) {
+    return std::hash<T>{}(v);
 }
 
 } // namespace utils::hash

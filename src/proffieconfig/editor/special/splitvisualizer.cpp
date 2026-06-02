@@ -387,30 +387,30 @@ void Window::paintEvent(wxPaintEvent&) {
     paintDC.DrawRectangle(0, 0, windowSize.x, windowSize.y);
 
     for (const auto& size : sizes_) {
-        auto splitColor{color(size.splitIdx)};
+        auto splitColor{color(size.splitIdx_)};
         bool dark{wxSystemSettings::GetAppearance().AreAppsDark()};
-        if (size.splitIdx == hoveredSplit_) {
+        if (size.splitIdx_ == hoveredSplit_) {
             splitColor = splitColor.ChangeLightness(dark ? 70 : 140);
         }
 
         paintDC.SetPen(*wxTRANSPARENT_PEN);
         paintDC.SetBrush(wxBrush(splitColor));
         paintDC.DrawRectangle(
-            0, static_cast<int32>(size.start),
-            windowSize.x, static_cast<int32>(size.length)
+            0, static_cast<int32>(size.start_),
+            windowSize.x, static_cast<int32>(size.length_)
         );
 
         wxPen borderPen{};
         borderPen.SetColour(splitColor.ChangeLightness(dark ? 120 : 85));
         borderPen.SetStyle(wxPENSTYLE_SOLID);
         paintDC.SetPen(borderPen);
-        for (auto idx{1}; idx < size.segments; ++idx) {
-            auto segmentX{size.segmentSize * idx};
+        for (auto idx{1}; idx < size.segments_; ++idx) {
+            auto segmentX{size.segmentSize_ * idx};
             paintDC.DrawLine(
                 static_cast<int32>(segmentX),
-                static_cast<int32>(size.start),
+                static_cast<int32>(size.start_),
                 static_cast<int32>(segmentX),
-                static_cast<int32>(size.start + size.length)
+                static_cast<int32>(size.start_ + size.length_)
             );
         }
 
@@ -418,43 +418,43 @@ void Window::paintEvent(wxPaintEvent&) {
             wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT)
         );
 
-        if (size.start != 0) {
-            borderPen.SetStyle(size.overlapStart
+        if (size.start_ != 0) {
+            borderPen.SetStyle(size.overlapStart_
                 ? wxPENSTYLE_DOT
                 : wxPENSTYLE_SOLID
             );
             paintDC.SetPen(borderPen);
             paintDC.DrawLine(
-                0, static_cast<int32>(size.start),
-                windowSize.x, static_cast<int32>(size.start)
+                0, static_cast<int32>(size.start_),
+                windowSize.x, static_cast<int32>(size.start_)
             );
         }
 
-        borderPen.SetStyle(size.overlapEnd
+        borderPen.SetStyle(size.overlapEnd_
             ? wxPENSTYLE_DOT
             : wxPENSTYLE_SOLID
         );
         paintDC.SetPen(borderPen);
         paintDC.DrawLine(
-            0, static_cast<int32>(size.start + size.length),
-            windowSize.x, static_cast<int32>(size.start + size.length)
+            0, static_cast<int32>(size.start_ + size.length_),
+            windowSize.x, static_cast<int32>(size.start_ + size.length_)
         );
 
         auto font{wxSystemSettings::GetFont(wxSYS_SYSTEM_FONT)};
-        if (size.splitIdx == selectedSplit_) {
+        if (size.splitIdx_ == selectedSplit_) {
             font.MakeBold();
             font.SetFractionalPointSize(font.GetFractionalPointSize() * 1.2);
         }
 
         paintDC.SetFont(font);
-        wxString numText{std::to_string(size.splitIdx)};
+        wxString numText{std::to_string(size.splitIdx_)};
         wxCoord textWidth{};
         wxCoord textHeight{};
         paintDC.GetTextExtent(numText, &textWidth, &textHeight);
         paintDC.DrawText(
             numText,
             static_cast<int32>((windowSize.x - textWidth) / 2.0),
-            static_cast<int32>(size.start + ((size.length - textHeight) / 2))
+            static_cast<int32>(size.start_ + ((size.length_ - textHeight) / 2))
         );
     }
     // paintDC.SetPen(*wxTRANSPARENT_PEN);

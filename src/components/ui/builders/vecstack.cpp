@@ -67,7 +67,7 @@ struct Layout : wxBoxSizer, data::Receiver {
 
         if (emptyElem_) {
             Add(emptyElem_);
-            Show(0UL, ctxt.children().empty());
+            Show(0UZ, ctxt.children().empty());
         }
 
         auto children{ctxt.children()};
@@ -99,7 +99,7 @@ struct Layout : wxBoxSizer, data::Receiver {
             }
 
             if (emptyElem_) {
-                Hide(0UL);
+                Hide(0UZ);
             }
 
             if (separator_ and AreAnyItemsShown()) {
@@ -195,7 +195,7 @@ struct Layout : wxBoxSizer, data::Receiver {
                 toDelete->Destroy();
 
             if (emptyElem_ and GetChildren().size() == 1) {
-                Show(0UL);
+                Show(0UZ);
             }
 
             if (auto *win{GetContainingWindow()})

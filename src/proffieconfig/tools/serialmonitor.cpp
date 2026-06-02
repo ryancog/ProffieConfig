@@ -69,8 +69,8 @@ Error SerialMonitor::open(const std::string& path) {
     mFd = ::open(path.c_str(), O_RDWR | O_NOCTTY);
     if (not isOpen()) {
         return {
-            .rsn_ = Error::Code::Unknown,
-            .code_ = errno,
+            .rsn_=Error::Code::Unknown,
+            .code_=errno,
         };
     }
 
@@ -99,10 +99,9 @@ Error SerialMonitor::open(const std::string& path) {
     );
     if (not isOpen()) {
         return {
-            rsn_ = Error::Code::Unknown;
-            code_ = GetLastError();
-        }
-        return err;
+            .rsn_=Error::Code::Unknown,
+            .code_=static_cast<int32>(GetLastError()),
+        };
     }
 
     DCB dcbSerialParameters = {};
@@ -115,7 +114,7 @@ Error SerialMonitor::open(const std::string& path) {
     dcbSerialParameters.fRtsControl = RTS_CONTROL_ENABLE;
     dcbSerialParameters.fDtrControl = DTR_CONTROL_ENABLE;
 
-    SetCommState(mSerialHandle, &dcbSerialParameters);
+    SetCommState(mHandle, &dcbSerialParameters);
 #   endif
 
     // Only bother setting up this loop if a handler is registered, otherwise
@@ -181,8 +180,8 @@ Error SerialMonitor::write(std::string_view msg) {
         DWORD bytesWritten{};
         auto res{WriteFile(
             mHandle,
-            NEWLINE.data(),
-            NEWLINE.length(),
+            str.data(),
+            str.length(),
             &bytesWritten,
             nullptr
         )};
@@ -190,7 +189,7 @@ Error SerialMonitor::write(std::string_view msg) {
             close();
             return {
                 .rsn_=Error::Code::Unknown,
-                .code_=GetLastError(),
+                .code_=static_cast<int32>(GetLastError()),
             };
         }
 #       endif
@@ -270,7 +269,7 @@ Error SerialMonitor::read(char& chr) {
         close();
         return {
             .rsn_=Error::Code::Unknown,
-            .code_=GetLastError(),
+            .code_=static_cast<int32>(GetLastError()),
         };
     }
 #   endif

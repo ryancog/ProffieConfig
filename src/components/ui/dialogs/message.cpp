@@ -35,9 +35,19 @@ int32 pcui::showMessage(
 
 #   ifdef __WXMSW__
     // for dark mode
-    wxGenericMessageDialog dlg(args.parent_, msg, caption, args.style_);
+    wxGenericMessageDialog dlg(
+        args.parent_,
+        msg,
+        caption,
+        static_cast<long>(args.style_)
+    );
 #   else
-    wxMessageDialog dlg(args.parent_, msg, caption, args.style_);
+    wxMessageDialog dlg(
+        args.parent_,
+        msg,
+        caption,
+        static_cast<long>(args.style_)
+    );
 #   endif
 
     dlg.SetOKCancelLabels(args.labels_.ok_, args.labels_.cancel_);
@@ -61,10 +71,19 @@ pcui::HideableResult pcui::showHideablePrompt(
     const auto& caption{args.caption_.empty() ? app::getName() : args.caption_};
 
 #   ifdef __WXMSW__
-    wxGenericRichMessageDialog dlg(args.parent_, msg, caption, args.style_);
+    wxGenericRichMessageDialog dlg(
+        args.parent_,
+        msg,
+        caption,
+        static_cast<long>(args.style_)
     );
 #   else
-    wxRichMessageDialog dlg(args.parent_, msg, caption, args.style_);
+    wxRichMessageDialog dlg(
+        args.parent_,
+        msg,
+        caption,
+        static_cast<long>(args.style_)
+    );
 #   endif
 
     dlg.SetOKCancelLabels(args.labels_.ok_, args.labels_.cancel_);

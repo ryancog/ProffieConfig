@@ -35,8 +35,7 @@ struct SplitVisualizer {
     pcui::DescriptorPtr operator()();
 };
 
-struct UI_EXPORT SplitVisualizer::Desc : SplitVisualizer,
-                                         pcui::detail::Descriptor {
+struct SplitVisualizer::Desc : SplitVisualizer, pcui::detail::Descriptor {
     Desc(SplitVisualizer&&);
 
     [[nodiscard]] wxSizerItem *build(

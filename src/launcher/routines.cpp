@@ -27,6 +27,8 @@
 #include <windows.h>
 #include <errhandlingapi.h>
 
+#include <wx/app.h>
+
 #include "utils/files.hpp"
 #endif
 
@@ -163,9 +165,9 @@ void routine::platformInstall(logging::Branch& lBranch) {
 
     pcui::showMessage(_("Launcher has been installed."));
 #   ifdef _WIN32
-    if (wxExecute(installedExec.c_str()) == 0) {
+    if (wxExecute(installedExec.c_str()) == 0)
         logger.warn("Failed to start launcher.");
-    }
+
     wxExit();
 #   else
     auto str{installedExec.native()};

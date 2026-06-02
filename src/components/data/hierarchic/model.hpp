@@ -96,7 +96,7 @@ private:
     bool mEnable;
 };
 
-struct Model::CreationScope {
+struct DATA_EXPORT Model::CreationScope {
     // ptr for convenience with `this`
     CreationScope(Model *);
     ~CreationScope();

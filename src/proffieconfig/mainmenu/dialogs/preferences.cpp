@@ -68,7 +68,9 @@ struct GeneralPanel : pcui::detail::Panel
     }
 
     ~GeneralPanel() override {
+#       ifdef wxHAS_PREF_EDITOR_APPLY_IMMEDIATELY
         deactivate();
+#       endif
     }
 
     pcui::DescriptorPtr ui() {
@@ -221,7 +223,9 @@ struct AdvancedPanel : pcui::detail::Panel
     }
 
     ~AdvancedPanel() override {
+#       ifdef wxHAS_PREF_EDITOR_APPLY_IMMEDIATELY
         deactivate();
+#       endif
     }
 
     pcui::DescriptorPtr ui() {

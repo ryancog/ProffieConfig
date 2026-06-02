@@ -21,6 +21,8 @@
 
 #include <wx/msgdlg.h>
 
+#include "utils/types.hpp"
+
 /**
  * This is broken out into another file w/o requiring the export header solely
  * for the app component to include.
@@ -38,11 +40,11 @@ struct Args {
     /**
      * Window title
      */
-    wxString caption_{};
+    wxString caption_;
     /**
      * Augment how/what is shown in the box.
      */
-    long style_{wxOK | wxCENTER};
+    uint64 style_{wxOK | wxCENTER};
     /**
      * Alternative button labels
      */

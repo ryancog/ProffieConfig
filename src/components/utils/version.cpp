@@ -248,20 +248,20 @@ bool Version::RawOrderer::operator()(
 }
 
 template <>
-UTILS_EXPORT uint64 hash::single(const Version::VerNum& n) {
-    return hash::combine(static_cast<uint64>(n.mode_), n.val_);
+uint64 hash::single(const Version::VerNum& v) {
+    return hash::combine(static_cast<uint64>(v.mode_), v.val_);
 }
 
 template <>
-UTILS_EXPORT inline uint64 hash::single(const Version::Tag& t) {
+uint64 hash::single(const Version::Tag& v) {
     return hash::combine(
-        static_cast<uint64>(t.mode_),
-        hash::single(t.val_)
+        static_cast<uint64>(v.mode_),
+        hash::single(v.val_)
     );
 }
 
 template <>
-UTILS_EXPORT uint64 hash::single(const Version& v) {
+uint64 hash::single(const Version& v) {
     return hash::combine(
         static_cast<uint64>(v.err_),
         hash::single(v.major_),

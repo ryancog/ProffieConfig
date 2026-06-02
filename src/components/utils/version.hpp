@@ -151,7 +151,7 @@ template <>
 UTILS_EXPORT uint64 hash::single(const Version::VerNum&);
 
 template <>
-UTILS_EXPORT inline uint64 hash::single(const Version::Tag&);
+UTILS_EXPORT uint64 hash::single(const Version::Tag&);
 
 template <>
 UTILS_EXPORT uint64 hash::single(const Version&);
