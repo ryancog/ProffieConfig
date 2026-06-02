@@ -36,7 +36,9 @@ namespace {
 struct Control : detail::DataWindow<wxTextCtrl> {
     Control(const detail::Scaffold& scaffold, const Text& desc) {
         wxString initial;
-        long style{wxTE_RICH2};
+        // This appearance is broken right now: https://github.com/wxWidgets/wxWidgets/issues/26551
+        // long style{wxTE_RICH2};
+        long style{0};
 
         if (desc.readOnly_) style |= wxTE_READONLY;
         if (desc.autoLink_) style |= wxTE_AUTO_URL;
