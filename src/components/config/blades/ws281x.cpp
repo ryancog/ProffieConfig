@@ -48,22 +48,22 @@ WS281X::WS281X(Blade& blade) :
 
     static const auto lengthTable{[] {
         data::hier::Integer::RecvTable table;
-        table.onSet_ = data::map(&WS281X::onLength);
+        table.onSet_ = data::map<&WS281X::onLength>();
         return table;
     }()};
     respondWith(length_, lengthTable);
 
     static const auto hasWhiteTable{[] {
         data::hier::Bool::RecvTable table;
-        table.onSet_ = data::map(&WS281X::onHasWhiteSet);
+        table.onSet_ = data::map<&WS281X::onHasWhiteSet>();
         return table;
     }()};
     respondWith(hasWhite_, hasWhiteTable);
 
     static const auto splitsTable{[] {
         data::hier::Vector::RecvTable table;
-        table.onInsert_ = data::map(&WS281X::onSplitsModify);
-        table.onRemove_ = data::map(&WS281X::onSplitsModify);
+        table.onInsert_ = data::map<&WS281X::onSplitsModify>();
+        table.onRemove_ = data::map<&WS281X::onSplitsModify>();
         return table;
     }()};
     respondWith(splits_, splitsTable);
@@ -193,7 +193,7 @@ WS281X::Split::Split(WS281X& ws281x) :
 
     static const auto osTable{[] {
         data::base::Choice::RecvTable table;
-        table.onChoice_ = data::map(&Split::onOsChoice);
+        table.onChoice_ = data::map<&Split::onOsChoice>();
         return table;
     }()};
     respondWith(root<Config>().osChoice(), osTable);
@@ -205,35 +205,35 @@ WS281X::Split::Split(WS281X& ws281x) :
 
     static const auto typeTable{[] {
         data::base::Selection::RecvTable table;
-        table.onSelection_ = data::map(&Split::onType);
+        table.onSelection_ = data::map<&Split::onType>();
         return table;
     }()};
     respondWith(type_, typeTable);
 
     static const auto startTable{[] {
         data::base::Integer::RecvTable table;
-        table.onSet_ = data::map(&Split::onStart);
+        table.onSet_ = data::map<&Split::onStart>();
         return table;
     }()};
     respondWith(start_, startTable);
 
     static const auto endTable{[] {
         data::base::Integer::RecvTable table;
-        table.onSet_ = data::map(&Split::onEnd);
+        table.onSet_ = data::map<&Split::onEnd>();
         return table;
     }()};
     respondWith(end_, endTable);
 
     static const auto lengthTable{[] {
         data::base::Integer::RecvTable table;
-        table.onSet_ = data::map(&Split::onLength);
+        table.onSet_ = data::map<&Split::onLength>();
         return table;
     }()};
     respondWith(length_, lengthTable);
 
     static const auto segmentsTable{[] {
         data::base::Integer::RecvTable table;
-        table.onSet_ = data::map(&Split::onSegments);
+        table.onSet_ = data::map<&Split::onSegments>();
         return table;
     }()};
     respondWith(segments_, segmentsTable);

@@ -39,36 +39,36 @@ BladeConfig::BladeConfig(Config& config) :
 
     static const auto nameTable{[] {
         data::hier::String::RecvTable table;
-        table.onChange_ = data::map(&BladeConfig::onNameChange);
+        table.onChange_ = data::map<&BladeConfig::onNameChange>();
         return table;
     }()};
     observeWith(name_, nameTable);
 
     static const auto idTable{[] {
         data::hier::Integer::RecvTable table;
-        table.onSet_ = data::map(&BladeConfig::onID);
+        table.onSet_ = data::map<&BladeConfig::onID>();
         return table;
     }()};
     observeWith(id_, idTable);
 
     static const auto noBladeIDTable{[] {
         data::hier::Bool::RecvTable table;
-        table.onSet_ = data::map(&BladeConfig::onNoBladeIDSet);
+        table.onSet_ = data::map<&BladeConfig::onNoBladeIDSet>();
         return table;
     }()};
     observeWith(noBladeId_, noBladeIDTable);
 
     static const auto presetArrayTable{[] {
         data::hier::Choice::RecvTable table;
-        table.onChoice_ = data::map(&BladeConfig::onPresetArrayChoice);
+        table.onChoice_ = data::map<&BladeConfig::onPresetArrayChoice>();
         return table;
     }()};
     observeWith(presetArray_.choice(), presetArrayTable);
 
     static const auto bladesTable{[] {
         data::hier::Vector::RecvTable table;
-        table.onInsert_ = data::map(&BladeConfig::onBladesModify);
-        table.onRemove_ = data::map(&BladeConfig::onBladesModify);
+        table.onInsert_ = data::map<&BladeConfig::onBladesModify>();
+        table.onRemove_ = data::map<&BladeConfig::onBladesModify>();
         return table;
     }()};
     respondWith(blades_, bladesTable);
@@ -188,14 +188,14 @@ Blade::Blade(Config& config) :
 
     static const auto osTable{[] {
         data::base::Choice::RecvTable table;
-        table.onChoice_ = data::map(&Blade::onOsChoice);
+        table.onChoice_ = data::map<&Blade::onOsChoice>();
         return table;
     }()};
     respondWith(root<Config>().osChoice(), osTable);
 
     static const auto typeTable{[] {
         data::base::Choice::RecvTable table;
-        table.onChoice_ = data::map(&Blade::onType);
+        table.onChoice_ = data::map<&Blade::onType>();
         return table;
     }()};
     respondWith(mType.choice(), typeTable);

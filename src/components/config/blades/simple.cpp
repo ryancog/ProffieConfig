@@ -51,7 +51,7 @@ Simple::LED::LED(Simple& simple) :
 
     static const auto profileTable{[] {
         data::hier::Choice::RecvTable table;
-        table.onChoice_ = data::map(&LED::onProfile);
+        table.onChoice_ = data::map<&LED::onProfile>();
         return table;
     }()};
     respondWith(profile_, profileTable);

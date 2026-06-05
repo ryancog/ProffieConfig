@@ -31,14 +31,14 @@ Array::Array(Config& config) :
     presets_(root()) {
     static const auto presetTable{[] {
         data::hier::Vector::RecvTable table;
-        table.onInsert_ = data::map(&Array::onPresetInsert);
+        table.onInsert_ = data::map<&Array::onPresetInsert>();
         return table;
     }()};
     respondWith(presets_, presetTable);
 
     static const auto nameTable{[] {
         data::hier::String::RecvTable table;
-        table.onChange_ = data::map(&Array::onNameChange);
+        table.onChange_ = data::map<&Array::onNameChange>();
         return table;
     }()};
     observeWith(name_, nameTable);

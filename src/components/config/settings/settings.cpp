@@ -83,14 +83,14 @@ Settings::Settings(Config& parent) :
 
     static const auto massStorageTable{[] {
         data::hier::Bool::RecvTable table;
-        table.onSet_ = data::map(&Settings::onMassStorageSet);
+        table.onSet_ = data::map<&Settings::onMassStorageSet>();
         return table;
     }()};
     respondWith(massStorage_, massStorageTable);
 
     static const auto saveOptTable{[] {
         data::hier::Bool::RecvTable table;
-        table.onSet_ = data::map(&Settings::onSaveOptSet);
+        table.onSet_ = data::map<&Settings::onSaveOptSet>();
         return table;
     }()};
     respondWith(saveState_, saveOptTable);
@@ -100,28 +100,28 @@ Settings::Settings(Config& parent) :
 
     static const auto volumeTable{[] {
         data::hier::Integer::RecvTable table;
-        table.onSet_ = data::map(&Settings::onVolume);
+        table.onSet_ = data::map<&Settings::onVolume>();
         return table;
     }()};
     respondWith(volume_, volumeTable);
 
     static const auto bootVolEnableTable{[] {
         data::hier::Bool::RecvTable table;
-        table.onSet_ = data::map(&Settings::onBootVolumeEnable);
+        table.onSet_ = data::map<&Settings::onBootVolumeEnable>();
         return table;
     }()};
     respondWith(bootVolume_.enable_, bootVolEnableTable);
 
     static const auto filterEnableTable{[] {
         data::hier::Bool::RecvTable table;
-        table.onSet_ = data::map(&Settings::onFilterEnableSet);
+        table.onSet_ = data::map<&Settings::onFilterEnableSet>();
         return table;
     }()};
     respondWith(filter_.enable_, filterEnableTable);
 
     static const auto disableTalkieTable{[] {
         data::hier::Bool::RecvTable table;
-        table.onSet_ = data::map(&Settings::onDisableTalkieSet);
+        table.onSet_ = data::map<&Settings::onDisableTalkieSet>();
         return table;
     }()};
     respondWith(disableTalkie_, disableTalkieTable);

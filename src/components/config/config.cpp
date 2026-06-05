@@ -77,22 +77,22 @@ Config::Config() :
 
     static const auto selfTable{[] {
         data::hier::Root::RecvTable table;
-        table.onAction_ = data::map(&Config::onAction);
+        table.onAction_ = data::map<&Config::onAction>();
         return table;
     }()};
     observeWith(*this, selfTable);
 
     static const auto numBladesTable{[] {
         data::base::Integer::RecvTable table;
-        table.onSet_ = data::map(&Config::onNumBlades);
+        table.onSet_ = data::map<&Config::onNumBlades>();
         return table;
     }()};
     observeWith(mNumBlades, numBladesTable);
 
     static const auto osChoiceTable{[] {
         data::base::Choice::RecvTable table;
-        table.preChoice_ = data::map(&Config::preOSChoice);
-        table.onChoice_ = data::map(&Config::onOSChoice);
+        table.preChoice_ = data::map<&Config::preOSChoice>();
+        table.onChoice_ = data::map<&Config::onOSChoice>();
         return table;
     }()};
     respondWith(mOsChoice, osChoiceTable);
@@ -405,7 +405,7 @@ data::logic::Element config::operator|(
             config_{config}, ver_(std::move(version)) {
             static const auto osChoiceTable{[] {
                 data::base::Choice::RecvTable table;
-                table.onChoice_ = map(&Adapter::onChoice);
+                table.onChoice_ = data::map<&Adapter::onChoice>();
                 return table;
             }()};
             observeWith(config.osChoice(), osChoiceTable);
