@@ -36,11 +36,13 @@ struct VERSIONS_EXPORT Board {
 };
 
 struct VERSIONS_EXPORT OS : data::prim::Model {
+    using BoardsMap = std::map<uint64, Board>;
+
     OS(
         utils::Version,
         std::string,
         utils::Version,
-        std::map<size, Board>
+        BoardsMap
     );
 
     OS(const OS&);
@@ -50,7 +52,7 @@ struct VERSIONS_EXPORT OS : data::prim::Model {
     const std::string coreUrl_;
     const utils::Version coreVersion_;
 
-    const std::map<size, Board> boards_;
+    const BoardsMap boards_;
 };
 
 [[nodiscard]] VERSIONS_EXPORT const data::prim::Vector& available();

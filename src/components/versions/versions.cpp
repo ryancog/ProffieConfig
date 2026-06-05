@@ -120,14 +120,13 @@ void versions::loadLocal(logging::Branch *lBranch) {
 
         auto& coreURL{*coreURLEntry->value_};
 
-        std::map<size, os::Board> boards;
-
+        os::OS::BoardsMap boards;
         const auto boardEntries{hashedInfoData.findAll(detail::BOARD_STR)};
         for (const auto& boardEntry : boardEntries) {
             std::string include;
             std::string coreId;
 
-            std::optional<size> knownBoard;
+            std::optional<os::OS::BoardsMap::key_type> knownBoard;
             for (size idx{0}; idx < detail::BOARDS.size(); ++idx) {
                 const auto& board{detail::BOARDS[idx]};
                 if (boardEntry->label_ != board.name_) continue;
@@ -430,7 +429,7 @@ std::optional<std::string> versions::fetch(
                 }
             }
 
-            std::map<size, os::Board> boards;
+            os::OS::BoardsMap boards;
             auto boardEntries{propEntries.findAll(detail::BOARD_STR)};
             for (auto& boardEntry : boardEntries) {
                 if (not boardEntry->label_) {
@@ -441,7 +440,7 @@ std::optional<std::string> versions::fetch(
                 std::string include;
                 std::string coreId;
 
-                std::optional<size> knownBoard;
+                std::optional<os::OS::BoardsMap::key_type> knownBoard;
                 for (size idx{0}; idx < detail::BOARDS.size(); ++idx) {
                     const auto& board{detail::BOARDS[idx]};
                     if (boardEntry->label_ != board.name_) continue;

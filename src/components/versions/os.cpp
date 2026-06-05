@@ -27,7 +27,7 @@ OS::OS(
     utils::Version version,
     std::string coreUrl,
     utils::Version coreVersion,
-    std::map<size, Board> boards
+    BoardsMap boards
 ) : version_(std::move(version)),
     coreUrl_(std::move(coreUrl)),
     coreVersion_(std::move(coreVersion)),
