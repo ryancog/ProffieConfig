@@ -281,10 +281,8 @@ void SerialMonitorDlg::doAutoScroll() {
     if (not data::context(mAutoScroll).val())
         return;
 
-    // If the count/state was just futzed with, let the UI update first.
-    // Otherwise, the call to EnsureVisible() causes flicker on (at least)
-    // macOS. I'm not sure exactly why.
-    wxYield();
+    // Do not yield here.
+    // CallAfter causes reentrance.
 
     auto *output{static_cast<wxListCtrl *>(FindWindow(eID_Output))};
     output->EnsureVisible(static_cast<long>(mLines.size() - 1));
@@ -530,7 +528,13 @@ void SerialMonitorDlg::listenLoop() {
                         break;
                     }
                 }
-                assert(data != nullptr);
+
+                // If I `clear`, then there might not be a prior one.
+                if (data == nullptr) {
+                    data = mLines.emplace_back(std::make_unique<LineData>(
+                        std::in_place_type_t<DeviceLine>{}
+                    )).get();
+                }
             }
 
             data->stamp_.change(formatStamp(std::chrono::system_clock::now()));
@@ -552,6 +556,7 @@ void SerialMonitorDlg::listenLoop() {
             mNumLines.set(static_cast<int32>(mLines.size()));
 
             doAutoScroll();
+
 #           if __WXMSW__
             // New messages don't get drawn without this.
             Refresh();
