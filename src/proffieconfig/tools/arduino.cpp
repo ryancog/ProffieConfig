@@ -190,7 +190,7 @@ std::vector<std::string> arduino::getBoards(logging::Branch *lBranch) {
 
         if (line.find("No boards found.") != std::string::npos) {
             logger.info("No boards found.");
-            break;
+            return {};
         }
 
         if (line[0] == ' ' or line[0] == '\t') {
@@ -944,6 +944,9 @@ std::optional<wxString> ensureCoreInstalled(
 }
 
 void cli(Process& proc, std::vector<std::string>& args) {
+    // TODO: I should probably use the JSON output for at least some of these
+    // things so that it's free of extra clutter and more reliable, even if I
+    // don't bother "correctly" parsing the JSON.
     args.emplace_back("--no-color");
     auto arduinoStr{(paths::binaryDir() / "arduino-cli").string()};
     proc.create(arduinoStr, args);
