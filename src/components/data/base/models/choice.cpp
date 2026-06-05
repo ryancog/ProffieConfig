@@ -46,21 +46,21 @@ bool Choice::setupChoose(int32& idx) {
 int32 Choice::doChoose(bool undo, int32 idx) {
     auto ret{mIdx};
 
-    sendToObservers(&RecvTable::preChoice_);
+    sendToObservers<&RecvTable::preChoice_>();
 
     if (undo)
-        responderHook(&RecvTable::onChoice_);
+        responderHook<&RecvTable::onChoice_>();
     else
-        responderHook(&RecvTable::preChoice_);
+        responderHook<&RecvTable::preChoice_>();
 
     mIdx = idx;
 
-    sendToObservers(&RecvTable::onChoice_);
+    sendToObservers<&RecvTable::onChoice_>();
 
     if (not undo)
-        responderHook(&RecvTable::onChoice_);
+        responderHook<&RecvTable::onChoice_>();
     else
-        responderHook(&RecvTable::preChoice_);
+        responderHook<&RecvTable::preChoice_>();
 
     return ret;
 }
@@ -91,32 +91,32 @@ std::pair<uint32, int32> Choice::doUpdate(bool undo, uint32 num, int32 idx) {
         .choicePreserved_=mIdx == idx
     };
 
-    sendToObservers(&RecvTable::preChoice_);
+    sendToObservers<&RecvTable::preChoice_>();
 
     if (undo) {
         if (not info.choicePreserved_)
-            responderHook(&RecvTable::onChoice_);
+            responderHook<&RecvTable::onChoice_>();
 
-        responderHook(&RecvTable::onUpdate_, info);
+        responderHook<&RecvTable::onUpdate_>(info);
     } else {
-        responderHook(&RecvTable::preChoice_);
+        responderHook<&RecvTable::preChoice_>();
     }
 
     mNum = num;;
     mIdx = idx;
 
-    sendToObservers(&RecvTable::onUpdate_, info);
+    sendToObservers<&RecvTable::onUpdate_>(info);
 
     if (not info.choicePreserved_)
-        sendToObservers(&RecvTable::onChoice_);
+        sendToObservers<&RecvTable::onChoice_>();
 
     if (not undo) {
-        responderHook(&RecvTable::onUpdate_, info);
+        responderHook<&RecvTable::onUpdate_>(info);
 
         if (not info.choicePreserved_)
-            responderHook(&RecvTable::onChoice_);
+            responderHook<&RecvTable::onChoice_>();
     } else {
-        responderHook(&RecvTable::preChoice_);
+        responderHook<&RecvTable::preChoice_>();
     }
 
     return ret;

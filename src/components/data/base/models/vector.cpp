@@ -46,19 +46,19 @@ bool Vector::setupInsert(size idx, const std::unique_ptr<Model>& obj) {
 
 void Vector::doInsert(bool undoRemove, size idx, std::unique_ptr<Model>&& obj) {
     if (undoRemove)
-        responderHook(&RecvTable::onRemove_, idx);
+        responderHook<&RecvTable::onRemove_>(idx);
 
     mChildren.insert(
         std::next(mChildren.begin(), static_cast<ssize>(idx)),
         std::move(obj)
     );
 
-    sendToObservers(&RecvTable::onInsert_, idx);
+    sendToObservers<&RecvTable::onInsert_>(idx);
 
     if (not undoRemove)
-        responderHook(&RecvTable::onInsert_, idx);
+        responderHook<&RecvTable::onInsert_>(idx);
     else
-        responderHook(&RecvTable::preRemove_, idx);
+        responderHook<&RecvTable::preRemove_>(idx);
 }
 
 bool Vector::setupRemove(size idx) {
@@ -68,21 +68,21 @@ bool Vector::setupRemove(size idx) {
 
 std::unique_ptr<Model> Vector::doRemove(bool undoInsert, size idx) {
     if (undoInsert)
-        responderHook(&RecvTable::onInsert_, idx);
+        responderHook<&RecvTable::onInsert_>(idx);
 
-    sendToObservers(&RecvTable::preRemove_, idx);
+    sendToObservers<&RecvTable::preRemove_>(idx);
 
     if (not undoInsert)
-        responderHook(&RecvTable::preRemove_, idx);
+        responderHook<&RecvTable::preRemove_>(idx);
 
     auto iter{std::next(mChildren.begin(), static_cast<ssize>(idx))};
     auto ret{std::move(*iter)};
     mChildren.erase(iter);
 
-    sendToObservers(&RecvTable::onRemove_, idx);
+    sendToObservers<&RecvTable::onRemove_>(idx);
 
     if (not undoInsert)
-        responderHook(&RecvTable::onRemove_, idx);
+        responderHook<&RecvTable::onRemove_>(idx);
 
     return ret;
 }
@@ -94,16 +94,16 @@ bool Vector::setupSwap(size idx) {
 
 void Vector::doSwap(bool undo, size idx) {
     if (undo)
-        responderHook(&RecvTable::onSwap_, idx);
+        responderHook<&RecvTable::onSwap_>(idx);
 
     auto tmp{std::move(mChildren[idx + 1])};
     mChildren[idx + 1] = std::move(mChildren[idx]);
     mChildren[idx] = std::move(tmp);
 
-    sendToObservers(&RecvTable::onSwap_, idx);
+    sendToObservers<&RecvTable::onSwap_>(idx);
 
     if (not undo)
-        responderHook(&RecvTable::onSwap_, idx);
+        responderHook<&RecvTable::onSwap_>(idx);
 }
 
 Vector::ROContext::ROContext(const Vector& vec) : Model::ROContext(vec) {}

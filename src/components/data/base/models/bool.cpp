@@ -37,14 +37,14 @@ bool Bool::setupSet(bool& val) {
 
 void Bool::doSet(bool undo, bool val) {
     if (undo)
-        responderHook(&RecvTable::onSet_);
+        responderHook<&RecvTable::onSet_>();
 
     mValue = val;
 
-    sendToObservers(&RecvTable::onSet_);
+    sendToObservers<&RecvTable::onSet_>();
 
     if (not undo)
-        responderHook(&RecvTable::onSet_);
+        responderHook<&RecvTable::onSet_>();
 }
 
 Bool::ROContext::ROContext(const Bool& bl) : Model::ROContext(bl) {}

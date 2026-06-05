@@ -19,7 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <functional>
 #include <set>
 
 #include "data/recvtable.hpp"
@@ -81,27 +80,25 @@ protected:
     bool setupEnable(bool&);
     void doEnable(bool);
 
-    using TryTableFunctor = std::function<void(
-        Receiver *, const data::RecvTable *)
-    >;
-
     struct RecvTableBinding {
+        constexpr RecvTableBinding(uint64 id) : id_{id} {}
+
+        virtual ~RecvTableBinding() = default;
+        virtual void tryTable(Receiver&, const data::RecvTable&) const = 0;
+
         uint64 id_;
-        TryTableFunctor functor_;
     };
 
-    template <typename Table, typename... Args>
-    constexpr void sendToObservers(
-        data::RecvTable::Mapping<Args...> Table::*mapping, const Args&... args
-    ) const {
-        sendToObservers(makeRecvBinding(mapping, args...));
+    template <auto MEM_PTR>
+    constexpr void sendToObservers(const auto&... args) const {
+        BindingImpl<MEM_PTR> binding(*this, args...);
+        sendToObservers(binding);
     }
 
-    template <typename Table, typename... Args>
-    constexpr void responderHook(
-        data::RecvTable::Mapping<Args...> Table::*mapping, const Args&... args
-    ) const {
-        responderHook(makeRecvBinding(mapping, args...));
+    template <auto MEM_PTR>
+    constexpr void responderHook(const auto&... args) const {
+        BindingImpl<MEM_PTR> binding(*this, args...);
+        responderHook(binding);
     }
 
     virtual void sendToObservers(const RecvTableBinding&) const;
@@ -112,34 +109,46 @@ protected:
 private:
     friend Receiver;
 
-    template <typename Table, typename... Args>
-    constexpr RecvTableBinding makeRecvBinding(
-        data::RecvTable::Mapping<Args...> Table::*mapping,
-        const Args&... args LIFETIMEBOUND
-    ) const LIFETIMEBOUND {
-        const auto tryTable{[this, mapping, &args...](
-            Receiver *receiver, const data::RecvTable *table
-        ) {
-            if (auto *derived{dynamic_cast<const Table *>(table)}) {
-                auto variant{derived->*mapping};
-                if (auto *ptr{std::get_if<0>(&variant)}) {
-                    if (*ptr)
-                        (*ptr)(receiver, args...);
-                } else if (auto *ptr{std::get_if<1>(&variant)}) {
-                    if (*ptr)
-                        (*ptr)(receiver, *this, args...);
-                }
-            }
-        }};
+    template <auto MEM_PTR>
+    struct BindingImpl;
 
-        return {
-            utils::hash::combine(
-                typeid(Table).hash_code(),
-                std::bit_cast<uint64>(mapping)
-            ),
-            tryTable
+    template <
+        typename Table,
+        typename ...Args,
+        data::RecvTable::Mapping<Args...> Table::*MEM_PTR
+    >
+    struct BindingImpl<MEM_PTR> : RecvTableBinding {
+        BindingImpl(const Model& model, const Args&... args) :
+            RecvTableBinding(
+                utils::hash::combine(
+                    typeid(Table).hash_code(),
+                    std::bit_cast<uint64>(MEM_PTR)
+                )
+            ), mLambda{lambda(model, args...)} {}
+
+        void tryTable(
+            Receiver& rcvr, const data::RecvTable& table
+        ) const override {
+            mLambda(rcvr, table);
+        }
+
+    private:
+        static auto lambda(const Model& model, const Args&... args) {
+            return [&model, &args...](
+                Receiver& receiver, const data::RecvTable& table
+            ) {
+                if (auto *derived{dynamic_cast<const Table *>(&table)}) {
+                    auto mapping{derived->*MEM_PTR};
+                    if (mapping.func_)
+                        mapping.func_(model, receiver, args...);
+                }
+            };
         };
-    }
+
+        decltype(lambda(
+            std::declval<Model&>(), std::declval<const Args&>()...
+        )) mLambda;
+    };
 
     bool mEnabled{true};
     mutable std::set<Receiver *> mReceivers;

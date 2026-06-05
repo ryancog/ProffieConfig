@@ -55,9 +55,9 @@ std::pair<std::string, size> String::doChange(
 
     if (undo) {
         if (moved)
-            responderHook(&RecvTable::onMove_);
+            responderHook<&RecvTable::onMove_>();
 
-        responderHook(&RecvTable::onChange_);
+        responderHook<&RecvTable::onChange_>();
     }
 
     auto lastStr{std::move(mValue)};
@@ -66,16 +66,16 @@ std::pair<std::string, size> String::doChange(
     auto lastPos{mPos};
     mPos = pos;
 
-    sendToObservers(&RecvTable::onChange_);
+    sendToObservers<&RecvTable::onChange_>();
 
     if (moved)
-        sendToObservers(&RecvTable::onMove_);
+        sendToObservers<&RecvTable::onMove_>();
 
     if (not undo) {
-        responderHook(&RecvTable::onChange_);
+        responderHook<&RecvTable::onChange_>();
 
         if (moved)
-            responderHook(&RecvTable::onMove_);
+            responderHook<&RecvTable::onMove_>();
     }
 
     return {lastStr, lastPos};
@@ -88,15 +88,15 @@ bool String::setupMove(size pos) {
 
 size String::doMove(bool undo, size pos) {
     if (undo)
-        responderHook(&RecvTable::onMove_);
+        responderHook<&RecvTable::onMove_>();
 
     auto ret{mPos};
     mPos = pos;
 
-    sendToObservers(&RecvTable::onMove_);
+    sendToObservers<&RecvTable::onMove_>();
 
     if (not undo)
-        responderHook(&RecvTable::onMove_);
+        responderHook<&RecvTable::onMove_>();
 
     return ret;
 }

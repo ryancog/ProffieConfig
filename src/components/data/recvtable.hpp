@@ -19,10 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <functional>
-#include <type_traits>
-#include <variant>
-
 #include "data_export.h"
 
 namespace data {
@@ -35,6 +31,9 @@ struct Model;
 
 struct Receiver;
 
+template <auto MP>
+consteval auto map();
+
 // TODO: Can I come up with a more brief way to use this?
 //
 // Right now my usual solution is something like:
@@ -46,7 +45,6 @@ struct Receiver;
 //
 // Which is a lot of clutter...
 //
-//
 // TODO: This same RecvTable is used for observers and responders, but there
 // are certain things which don't have a responderHook, for one reason or
 // another, and so it seems there should be some way to delineate.
@@ -56,38 +54,52 @@ struct DATA_EXPORT RecvTable {
     virtual ~RecvTable() = default;
 
     template <typename ...Args>
-    using Mapping = std::variant<
-        std::function<void(Receiver *, Args...)>,
-        std::function<void(Receiver *, const base::Model&, Args...)>
-    >;
+    struct Mapping {
+        using Func = void (*)(const base::Model&, Receiver&, Args...);
+
+        constexpr Mapping() = default;
+        constexpr Mapping(Func func) : func_{func} {}
+
+        Func func_{nullptr};
+    };
 };
 
 namespace priv {
 
-// NOTE: w/ C++26 can use std::is_virtual_base_of
-template <typename Base, typename Derived>
-concept NormalBase = requires(Base b) {
-    static_cast<Derived&>(b);
+template <auto MP>
+struct Mapper;
+
+template <
+    typename Derived,
+    typename ...Args,
+    void (Derived::*MEM_PTR)(Args...)
+>
+struct Mapper<MEM_PTR> {
+    static void mapped(
+        const base::Model&, Receiver& rcvr, Args... args
+    ) {
+        (dynamic_cast<Derived&>(rcvr).*MEM_PTR)(args...);
+    }
+};
+
+template <
+    typename Derived,
+    typename ...Args,
+    void (Derived::*MEM_PTR)(const base::Model&, Args...)
+>
+struct Mapper<MEM_PTR> {
+    static void mapped(
+        const base::Model& model, Receiver& rcvr, Args... args
+    ) {
+        (dynamic_cast<Derived&>(rcvr).*MEM_PTR)(model, args...);
+    }
 };
 
 } // namespace priv
 
-// So, this (and Mapping) originally just used normal member function ptrs, but
-// virtual Receiver bases complicate this, and while I'm sure this results in
-// something that looks truly ugly, it's fine for now, I guess.
-//
-// I was hoping for something more elegant than throwing all the ugliness of
-// <functional> around everywhere.
-template <typename Derived, typename ...Args>
-requires std::is_base_of_v<Receiver, Derived>
-std::function<void(Receiver *, Args...)> map(void (Derived::*func)(Args...)) {
-    if constexpr (priv::NormalBase<Receiver, Derived>) {
-        return std::mem_fn(static_cast<void (Receiver::*)(Args...)>(func));
-    }
-
-    return [func](Receiver *rcvr, Args... args) {
-        (dynamic_cast<Derived *>(rcvr)->*func)(args...);
-    };
+template <auto MP>
+consteval auto map() {
+    return priv::Mapper<MP>::mapped;
 }
 
 } // namespace data

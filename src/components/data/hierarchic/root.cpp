@@ -51,14 +51,14 @@ void Root::unsuppressActions(bool clearHistory) {
         const auto lastIdx{mActionIdx};
         mActionIdx = eAct_Idx_First;
 
-        sendToObservers(&RecvTable::onActionClear_, lastIdx);
-        sendToObservers(&RecvTable::onAction_);
+        sendToObservers<&RecvTable::onActionClear_>(lastIdx);
+        sendToObservers<&RecvTable::onAction_>();
 
         // If could, can't anymore
         if (couldUndo)
-            sendToObservers(&RecvTable::onCanUndo_);
+            sendToObservers<&RecvTable::onCanUndo_>();
         if (couldRedo)
-            sendToObservers(&RecvTable::onCanRedo_);
+            sendToObservers<&RecvTable::onCanRedo_>();
     }
 
     mStates.pop_back();
@@ -233,16 +233,16 @@ void Root::finishCapture() {
         mActions.resize(mActionIdx + 1);
 
         // Cleared; can't anymore
-        sendToObservers(&RecvTable::onCanRedo_);
+        sendToObservers<&RecvTable::onCanRedo_>();
     }
 
     // Call after all processing is complete.
-    sendToObservers(&RecvTable::onAction_);
+    sendToObservers<&RecvTable::onAction_>();
 
     // This is the first action, undo is available now, and it was not
     // prior.
     if (mActions.size() == 1)
-        sendToObservers(&RecvTable::onCanUndo_);
+        sendToObservers<&RecvTable::onCanUndo_>();
 
     mStates.pop_back();
 }
@@ -290,15 +290,15 @@ void Root::Context::undo() const {
 
     --model().mActionIdx;
 
-    model().sendToObservers(&RecvTable::onAction_);
+    model().sendToObservers<&RecvTable::onAction_>();
 
     // If we couldn't before, now we can.
     if (not couldRedo)
-        model().sendToObservers(&RecvTable::onCanRedo_);
+        model().sendToObservers<&RecvTable::onCanRedo_>();
 
     // We could on entry to this function
     if (not canUndo())
-        model().sendToObservers(&RecvTable::onCanUndo_);
+        model().sendToObservers<&RecvTable::onCanUndo_>();
 }
 
 void Root::Context::redo() const {
@@ -319,14 +319,14 @@ void Root::Context::redo() const {
 
     action->source<Model>().focus();
 
-    model().sendToObservers(&RecvTable::onAction_);
+    model().sendToObservers<&RecvTable::onAction_>();
 
     // If we couldn't before, now we can.
     if (not couldUndo)
-        model().sendToObservers(&RecvTable::onCanUndo_);
+        model().sendToObservers<&RecvTable::onCanUndo_>();
 
     // We could on entry to this function
     if (not canRedo())
-        model().sendToObservers(&RecvTable::onCanRedo_);
+        model().sendToObservers<&RecvTable::onCanRedo_>();
 }
 

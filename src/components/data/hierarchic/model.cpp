@@ -150,7 +150,7 @@ void Model::responderHook(const RecvTableBinding& binding) const {
 
             auto iter{receiver->mRespondMap.find(this)};
             if (iter != receiver->mRespondMap.end())
-                binding.functor_(receiver, iter->second);
+                binding.tryTable(*receiver, *iter->second);
         }
 
         if (state == Root::State::Performance) {

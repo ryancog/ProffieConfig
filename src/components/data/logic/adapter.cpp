@@ -45,7 +45,7 @@ auto data::logic::operator|(const base::Model& model, IsEnabled) -> Element {
         Adapter(const base::Model& model) : model_{model} {
             static const auto table{[] {
                 base::Model::RecvTable table;
-                table.onEnable_ = map(&Adapter::onEnabled);
+                table.onEnable_ = map<&Adapter::onEnabled>();
                 return table;
             }()};
             observeWith(model_, table);
@@ -83,7 +83,7 @@ auto data::logic::operator|(const base::Bool& model, IsSet) -> Element {
         Adapter(const base::Bool& bl) : bl_{bl} {
             static const auto table{[] {
                 base::Bool::RecvTable table;
-                table.onSet_ = map(&Adapter::onSet);
+                table.onSet_ = map<&Adapter::onSet>();
                 return table;
             }()};
             observeWith(bl_, table);
@@ -124,7 +124,7 @@ auto data::logic::operator|(
             choice_{choice}, sels_{std::move(sels)} {
             static const auto table{[] {
                 base::Choice::RecvTable table;
-                table.onChoice_ = map(&Adapter::onChoice);
+                table.onChoice_ = map<&Adapter::onChoice>();
                 return table;
             }()};
             observeWith(choice_, table);
@@ -171,7 +171,7 @@ auto data::logic::operator|(
             excl_{excl}, sels_{std::move(sels)} {
             static const auto table{[] {
                 base::Exclusive::RecvTable table;
-                table.onSelection_ = map(&Adapter::onSelection);
+                table.onSelection_ = map<&Adapter::onSelection>();
                 return table;
             }()};
             observeWith(excl_, table);
@@ -216,7 +216,7 @@ auto data::logic::operator|(const base::Selector& model, CanMoveUp) -> Element {
             sel_{sel} {
             static const auto table{[] {
                 base::Selector::RecvTable table;
-                table.onCanMoveUp_ = map(&Adapter::onCanMoveUp);
+                table.onCanMoveUp_ = map<&Adapter::onCanMoveUp>();
                 return table;
             }()};
             observeWith(sel_, table);
@@ -257,7 +257,7 @@ auto data::logic::operator|(
             sel_{sel} {
             static const auto table{[] {
                 base::Selector::RecvTable table;
-                table.onCanMoveDown_ = map(&Adapter::onCanMoveDown);
+                table.onCanMoveDown_ = map<&Adapter::onCanMoveDown>();
                 return table;
             }()};
             observeWith(sel_, table);
@@ -297,7 +297,7 @@ auto data::logic::operator|(
         Adapter(const base::String& str) : str_{str} {
             static const auto table{[] {
                 base::String::RecvTable table;
-                table.onChange_ = map(&Adapter::onChange);
+                table.onChange_ = map<&Adapter::onChange>();
                 return table;
             }()};
             observeWith(str_, table);
@@ -337,8 +337,8 @@ auto data::logic::operator|(
         Adapter(const base::Vector& vec) : vec_{vec} {
             static const auto table{[] {
                 base::Vector::RecvTable table;
-                table.onInsert_ = map(&Adapter::onInsert);
-                table.preRemove_ = map(&Adapter::preRemove);
+                table.onInsert_ = map<&Adapter::onInsert>();
+                table.preRemove_ = map<&Adapter::preRemove>();
                 return table;
             }()};
             observeWith(vec_, table);
@@ -388,7 +388,7 @@ auto data::logic::operator|(
             int_{model}, val_{val} {
             static const auto table{[] {
                 base::Integer::RecvTable table;
-                table.onSet_ = map(&Adapter::onSet);
+                table.onSet_ = map<&Adapter::onSet>();
                 return table;
             }()};
             observeWith(int_, table);
@@ -434,7 +434,7 @@ auto data::logic::operator|(
             int_{model}, equals_{equals} {
             static const auto table{[] {
                 base::Integer::RecvTable table;
-                table.onSet_ = map(&Adapter::onSet);
+                table.onSet_ = map<&Adapter::onSet>();
                 return table;
             }()};
             observeWith(int_, table);

@@ -54,15 +54,15 @@ bool detail::Number<T>::setupSet(T& val) {
 template <typename T>
 T detail::Number<T>::doSet(bool undo, T val) {
     if (undo)
-        responderHook(&RecvTable::onSet_);
+        responderHook<&RecvTable::onSet_>();
 
     auto ret{mValue};
     mValue = val;
 
-    sendToObservers(&RecvTable::onSet_);
+    sendToObservers<&RecvTable::onSet_>();
 
     if (not undo)
-        responderHook(&RecvTable::onSet_);
+        responderHook<&RecvTable::onSet_>();
 
     return ret;
 }
@@ -84,9 +84,9 @@ auto detail::Number<T>::doUpdate(
 
     if (undo) {
         if (mValue != val)
-            responderHook(&RecvTable::onSet_);
+            responderHook<&RecvTable::onSet_>();
 
-        responderHook(&RecvTable::onUpdate_);
+        responderHook<&RecvTable::onUpdate_>();
     }
 
     mParams = params;
@@ -97,16 +97,16 @@ auto detail::Number<T>::doUpdate(
         clamp(mValue);
     }
 
-    sendToObservers(&RecvTable::onUpdate_);
+    sendToObservers<&RecvTable::onUpdate_>();
 
     if (lastVal != mValue)
-        sendToObservers(&RecvTable::onSet_);
+        sendToObservers<&RecvTable::onSet_>();
 
     if (not undo) {
-        responderHook(&RecvTable::onUpdate_);
+        responderHook<&RecvTable::onUpdate_>();
 
         if (lastVal != mValue)
-            responderHook(&RecvTable::onSet_);
+            responderHook<&RecvTable::onSet_>();
     }
 
     return {lastParams, lastVal};

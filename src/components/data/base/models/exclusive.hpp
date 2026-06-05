@@ -21,6 +21,7 @@
 
 #include <span>
 #include <memory>
+#include <vector>
 
 #include "data/base/model.hpp"
 #include "data/base/models/bool.hpp"
@@ -36,7 +37,6 @@ struct DATA_EXPORT Exclusive : virtual Model, virtual Receiver {
     struct Context;
     struct RecvTable;
 
-    // TODO: This should go into a context.
     virtual bool select(size) = 0;
 
 protected:

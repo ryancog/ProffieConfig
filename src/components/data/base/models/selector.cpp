@@ -29,16 +29,16 @@ using namespace data::base;
 
 const Vector::RecvTable Selector::VEC_TABLE{[] {
     Vector::RecvTable table;
-    table.onInsert_ = map(&Selector::onInsert);
-    table.preRemove_ = map(&Selector::preRemove);
-    table.onRemove_ = map(&Selector::onRemove);
-    table.onSwap_ = map(&Selector::onSwap);
+    table.onInsert_ = map<&Selector::onInsert>();
+    table.preRemove_ = map<&Selector::preRemove>();
+    table.onRemove_ = map<&Selector::onRemove>();
+    table.onSwap_ = map<&Selector::onSwap>();
     return table;
 }()};
 
 const Choice::RecvTable Selector::CHOICE_TABLE{[] {
     Choice::RecvTable table;
-    table.onChoice_ = map(&Selector::onChoice);
+    table.onChoice_ = map<&Selector::onChoice>();
     return table;
 }()};
 
@@ -57,12 +57,12 @@ const Vector *Selector::doBind(bool undo, const Vector *vec) {
     std::lock_guard scopeLock(pMutex);
     auto choiceCtxt{context(choice())};
 
-    sendToObservers(&RecvTable::preRebound_);
+    sendToObservers<&RecvTable::preRebound_>();
 
     if (undo)
-        responderHook(&RecvTable::onRebound_);
+        responderHook<&RecvTable::onRebound_>();
     else
-        responderHook(&RecvTable::preRebound_);
+        responderHook<&RecvTable::preRebound_>();
 
     if (mVec)
         repeal(*mVec);
@@ -87,12 +87,12 @@ const Vector *Selector::doBind(bool undo, const Vector *vec) {
         choiceCtxt.update(0);
     }
 
-    sendToObservers(&RecvTable::onRebound_);
+    sendToObservers<&RecvTable::onRebound_>();
 
     if (undo)
-        responderHook(&RecvTable::preRebound_);
+        responderHook<&RecvTable::preRebound_>();
     else
-        responderHook(&RecvTable::onRebound_);
+        responderHook<&RecvTable::onRebound_>();
 
     return ret;
 }
@@ -116,12 +116,12 @@ void Selector::onChoice() {
     auto ctxt{context(choice())};
 
     if (canMoveUp(ctxt) != mLastCanMoveUp) {
-        sendToObservers(&RecvTable::onCanMoveUp_);
+        sendToObservers<&RecvTable::onCanMoveUp_>();
         mLastCanMoveUp = canMoveUp(ctxt);
     }
 
     if (canMoveDown(ctxt) != mLastCanMoveDown) {
-        sendToObservers(&RecvTable::onCanMoveDown_);
+        sendToObservers<&RecvTable::onCanMoveDown_>();
         mLastCanMoveDown = canMoveDown(ctxt);
     }
 }

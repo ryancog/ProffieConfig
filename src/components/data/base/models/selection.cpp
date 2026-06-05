@@ -43,14 +43,14 @@ bool Selection::setupSelect(uint32 idx, bool& val) {
 
 void Selection::doSelect(bool undo, uint32 idx, bool val) {
     if (undo)
-        responderHook(&RecvTable::onSelection_, idx);
+        responderHook<&RecvTable::onSelection_>(idx);
 
     mSelected[idx] = val;
 
-    sendToObservers(&RecvTable::onSelection_, idx);
+    sendToObservers<&RecvTable::onSelection_>(idx);
 
     if (not undo)
-        responderHook(&RecvTable::onSelection_, idx);
+        responderHook<&RecvTable::onSelection_>(idx);
 }
 
 bool Selection::setupSetItems(std::vector<std::string>& items) {
@@ -75,7 +75,7 @@ Selection::doSetItems(
     bool undo, std::vector<std::string>&& items, std::vector<bool> selected
 ) {
     if (undo)
-        responderHook(&RecvTable::onItems_);
+        responderHook<&RecvTable::onItems_>();
 
     auto lastItems{std::move(mItems)};
     auto lastSel{std::move(mSelected)};
@@ -89,10 +89,10 @@ Selection::doSetItems(
         mSelected = std::move(selected);
     }
 
-    sendToObservers(&RecvTable::onItems_);
+    sendToObservers<&RecvTable::onItems_>();
 
     if (not undo)
-        responderHook(&RecvTable::onItems_);
+        responderHook<&RecvTable::onItems_>();
 
     return {lastItems, lastSel};
 }
@@ -127,7 +127,7 @@ void Selection::doInsert(
     bool sel
 ) {
     if (removeUndo)
-        responderHook(&RecvTable::onRemove_, idx);
+        responderHook<&RecvTable::onRemove_>(idx);
 
     mItems.insert(
         std::next(mItems.begin(), idx),
@@ -139,16 +139,16 @@ void Selection::doInsert(
         sel
     );
 
-    sendToObservers(&RecvTable::onInsert_, idx);
+    sendToObservers<&RecvTable::onInsert_>(idx);
 
     if (sel)
-        sendToObservers(&RecvTable::onSelection_, idx);
+        sendToObservers<&RecvTable::onSelection_>(idx);
 
     if (not removeUndo) {
-        responderHook(&RecvTable::onInsert_, idx);
+        responderHook<&RecvTable::onInsert_>(idx);
 
         if (sel)
-            responderHook(&RecvTable::onSelection_, idx);
+            responderHook<&RecvTable::onSelection_>(idx);
     }
 }
 
@@ -166,9 +166,9 @@ std::pair<std::string, bool> Selection::doRemove(bool insertUndo, uint32 idx) {
 
     if (insertUndo) {
         if (lastSel)
-            responderHook(&RecvTable::onSelection_, idx);
+            responderHook<&RecvTable::onSelection_>(idx);
 
-        responderHook(&RecvTable::onInsert_, idx);
+        responderHook<&RecvTable::onInsert_>(idx);
     }
 
     // Don't move until after the hook, though.
@@ -177,10 +177,10 @@ std::pair<std::string, bool> Selection::doRemove(bool insertUndo, uint32 idx) {
     mItems.erase(itemIter);
     mSelected.erase(selIter);
 
-    sendToObservers(&RecvTable::onRemove_, idx);
+    sendToObservers<&RecvTable::onRemove_>(idx);
 
     if (not insertUndo)
-        responderHook(&RecvTable::onRemove_, idx);
+        responderHook<&RecvTable::onRemove_>(idx);
 
     return {lastStr, lastSel};
 }

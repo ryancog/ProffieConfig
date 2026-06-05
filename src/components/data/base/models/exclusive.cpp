@@ -37,7 +37,7 @@ void Exclusive::init(size num) {
 
         static const auto table{[] {
             Bool::RecvTable table;
-            table.onSet_ = map(&Exclusive::onSet);
+            table.onSet_ = map<&Exclusive::onSet>();
             return table;
         }()};
         if (auto *ptr{dynamic_cast<data::hier::Bool *>(obj.get())})
@@ -87,7 +87,7 @@ void Exclusive::onSet(const Model& model) {
     }
 
     mSelected = selIdx;
-    sendToObservers(&RecvTable::onSelection_);
+    sendToObservers<&RecvTable::onSelection_>();
 }
 
 Exclusive::ROContext::ROContext(const Exclusive& excl) :

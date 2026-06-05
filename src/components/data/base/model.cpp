@@ -40,7 +40,7 @@ void Model::focus() {
     std::lock_guard scopeLock(*this);
     // If a UI element is attached that would respond to this, it'll focus, if
     // not, this does nothing.
-    sendToObservers(&RecvTable::onFocus_);
+    sendToObservers<&RecvTable::onFocus_>();
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -50,7 +50,7 @@ bool Model::setupEnable(bool& en) {
 
 void Model::doEnable(bool en) {
     mEnabled = en;
-    sendToObservers(&RecvTable::onEnable_);
+    sendToObservers<&RecvTable::onEnable_>();
 }
 
 void Model::sendToObservers(const RecvTableBinding& binding) const {
@@ -59,7 +59,7 @@ void Model::sendToObservers(const RecvTableBinding& binding) const {
 
         auto observeIter{receiver->mObserveMap.find(this)};
         if (observeIter != receiver->mObserveMap.end())
-            binding.functor_(receiver, observeIter->second);
+            binding.tryTable(*receiver, *observeIter->second);
     }
 }
 
