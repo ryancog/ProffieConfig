@@ -31,6 +31,7 @@
 #include <wx/menu.h>
 #include <wx/thread.h>
 #include <wx/statusbr.h>
+#include <wx/wupdlock.h>
 
 #include "data/context.hpp"
 #include "log/context.hpp"
@@ -43,6 +44,7 @@
 #include "ui/layout/stack.hpp"
 #include "ui/symbols.hpp"
 #include "ui/types.hpp"
+#include "ui/utils.hpp"
 #include "ui/values.hpp"
 
 namespace {
@@ -514,6 +516,8 @@ void SerialMonitorDlg::listenLoop() {
         // Do all this on the main thread to avoid deadlock situations if
         // access to mLines needed to be locked.
         CallAfter([this, newlineForThis, chr] {
+            wxWindowUpdateLocker lock(this);
+
             LineData *data{nullptr};
             if (newlineForThis) {
                 data = mLines.emplace_back(std::make_unique<LineData>(
@@ -548,6 +552,10 @@ void SerialMonitorDlg::listenLoop() {
             mNumLines.set(static_cast<int32>(mLines.size()));
 
             doAutoScroll();
+#           if __WXMSW__
+            // New messages don't get drawn without this.
+            Refresh();
+#           endif
         });
     }
 }
