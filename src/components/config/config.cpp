@@ -21,6 +21,7 @@
 
 #include <filesystem>
 #include <mutex>
+#include <optional>
 
 #include "config/blades/servo.hpp"
 #include "config/presets/style.hpp"
@@ -168,7 +169,10 @@ const data::hier::Choice& Config::osChoice() const {
 
 const versions::os::OS *Config::os() const {
     auto ctxt{data::context(mOsChoice)};
-    if (ctxt.idx() == -1) return nullptr;
+
+    if (ctxt.idx() == -1)
+        return nullptr;
+
     return mOsVec[ctxt.idx()].get();
 }
 
@@ -182,13 +186,28 @@ const data::hier::Choice& Config::boardChoice() const {
 
 const versions::os::Board *Config::board() const {
     const auto *os{this->os()};
-    if (os == nullptr) return nullptr;
+    if (os == nullptr)
+        return nullptr;
 
     auto ctxt{data::context(mBoardChoice)};
-    if (ctxt.idx() == -1) return nullptr;
+    if (ctxt.idx() == -1)
+        return nullptr;
 
     auto iter{std::next(os->boards_.begin(), ctxt.idx())};
     return &iter->second;
+}
+
+std::optional<uint64> Config::boardId() const {
+    const auto *os{this->os()};
+    if (os == nullptr)
+        return std::nullopt;
+
+    auto ctxt{data::context(mBoardChoice)};
+    if (ctxt.idx() == -1)
+        return std::nullopt;
+
+    auto iter{std::next(os->boards_.begin(), ctxt.idx())};
+    return iter->first;
 }
 
 std::optional<std::span<const std::unique_ptr<versions::props::Prop>>>
@@ -340,44 +359,62 @@ void Config::onNumBlades() {
 }
 
 void Config::preOSChoice() {
-    auto propChoiceCtxt{data::context(mPropChoice)};
     auto osChoiceCtxt{data::context(mOsChoice)};
+    auto propChoiceCtxt{data::context(mPropChoice)};
 
-    mLastPropChoice = propChoiceCtxt.idx();
     mLastOSChoice = osChoiceCtxt.idx();
+    mLastPropChoice = propChoiceCtxt.idx();
+    mLastBoardId = boardId();
 
-    // For undo, make sure the propchoice is unset over the change.
-    propChoiceCtxt.update(0, -1);
+    // For undo, make sure mPropChoice and mBoardChoice are unset over the
+    // change.
+    propChoiceCtxt.update(0);
+    mBoardChoice.update(0);
 }
 
 void Config::onOSChoice() {
     if (const auto *ptr{os()}) {
         const versions::props::Prop *lastProp{nullptr};
         versions::props::Prop *newProp{nullptr};
-        int32 newIdx{-1};
+        int32 newPropIdx{-1};
+        int32 newBoardIdx{-1};
 
-        if (mLastOSChoice != -1 and mLastPropChoice != -1) {
-            auto lastOsVersion{mOsVec[mLastOSChoice]->version_};
-            auto& prop{mPropMap[lastOsVersion][mLastPropChoice]};
-            auto& newPropVec{mPropMap[ptr->version_]};
+        if (mLastOSChoice != -1) {
+            auto& lastOs{mOsVec[mLastOSChoice]};
 
-            size idx{0};
-            for (; idx < newPropVec.size(); ++idx) {
-                if (newPropVec[idx]->name_ == prop->name_)
-                    break;
+            if (mLastPropChoice != -1) {
+                auto& prop{mPropMap[lastOs->version_][mLastPropChoice]};
+                auto& newPropVec{mPropMap[ptr->version_]};
+
+                size idx{0};
+                for (; idx < newPropVec.size(); ++idx) {
+                    if (newPropVec[idx]->name_ == prop->name_)
+                        break;
+                }
+
+                if (idx != newPropVec.size()) {
+                    lastProp = prop.get();
+                    newProp = newPropVec[idx].get();
+                    newPropIdx = static_cast<int32>(idx);
+                }
             }
 
-            if (idx != newPropVec.size()) {
-                lastProp = prop.get();
-                newProp = newPropVec[idx].get();
-                newIdx = static_cast<int32>(idx);
+            if (mLastBoardId) {
+                int32 idx{0};
+                auto iter{lastOs->boards_.begin()};
+                for (; iter != lastOs->boards_.end(); ++iter, ++idx) {
+                    if (iter->first == *mLastBoardId) {
+                        newBoardIdx = idx;
+                        break;
+                    }
+                }
             }
         }
 
-        mBoardChoice.update(ptr->boards_.size());
-        mPropChoice.update(propVec()->size(), newIdx);
+        mBoardChoice.update(ptr->boards_.size(), newBoardIdx);
+        mPropChoice.update(propVec()->size(), newPropIdx);
 
-        if (newIdx != -1)
+        if (newPropIdx != -1)
             newProp->migrateFrom(*lastProp);
     } else {
         mBoardChoice.update(0);

@@ -67,6 +67,7 @@ struct CONFIG_EXPORT Config : data::hier::Root, data::Receiver {
     data::base::Choice& boardChoice();
     const data::hier::Choice& boardChoice() const;
     const versions::os::Board *board() const;
+    std::optional<uint64> boardId() const;
 
     std::optional<std::span<const std::unique_ptr<versions::props::Prop>>>
         propVec() const;
@@ -115,8 +116,9 @@ private:
         data::hier::Root&, std::string_view, std::string_view
     );
 
-    int32 mLastPropChoice;
     int32 mLastOSChoice;
+    int32 mLastPropChoice;
+    std::optional<uint64> mLastBoardId;
 
     std::vector<std::unique_ptr<versions::os::OS>> mOsVec;
     std::map<
