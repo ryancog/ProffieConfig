@@ -997,15 +997,16 @@ void BladesPage::onAddButton(const pcui::CallbackContext& ctxt) {
     auto vec{data::context(mConfig.bladeConfigs_)};
     auto& cfg{vec.append<config::blades::BladeConfig>(mConfig)};
 
-    // For new creation, for things like this, it would make
-    // more sense to create a temporary and then add it in
-    // later on confirm, so as to not clutter the action
-    // tree.
     BladeArrayDlg dlg(ctxt.topLevel_, cfg, true);
 
-    auto res{dlg.ShowModal()};
+    int res{};
+    { data::hier::Model::CreationScope scope(&cfg);
+        res = dlg.ShowModal();
+    }
+
     if (res != wxID_OK) {
-        vec.remove(vec.children().size() - 1);
+        // Undo append
+        data::context(mConfig).undo();
     } else {
         mArraySel.choice().choose(
             static_cast<int32>(vec.children().size() - 1)

@@ -739,17 +739,21 @@ void PresetsPage::onAddButton(const pcui::CallbackContext& ctxt) {
     if (mArrayDlg) mArrayDlg->Destroy();
 
     auto vec{data::context(mConfig.presetArrays_)};
-    auto& cfg{vec.append<config::presets::Array>(mConfig)};
+    auto& array{vec.append<config::presets::Array>(mConfig)};
 
-    PresetArrayDlg dlg(ctxt.topLevel_, cfg, true);
+    PresetArrayDlg dlg(ctxt.topLevel_, array, true);
 
-    auto res{dlg.ShowModal()};
+    int res{};
+    { data::hier::Model::CreationScope scope(&array);
+        res = dlg.ShowModal();
+    }
 
     if (res != wxID_OK) {
         // Make sure the dialog is crippled before removing
         // the model it's linked to.
         pcui::cripple(&dlg);
-        vec.remove(vec.children().size() - 1);
+        // With CreationScope suppression, this'll undo the append.
+        data::context(mConfig).undo();
     } else {
         mArraySel.choice().choose(
             static_cast<int32>(vec.children().size() - 1)

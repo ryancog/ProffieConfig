@@ -331,6 +331,8 @@ void ButtonsDlg::addButton() {
     auto type{data::context(button.type_)};
     auto pin{data::context(button.pin_)};
 
+    data::hier::Model::CreationScope scope(&button);
+
     // Assign some reasonable defaults for the first buttons created.
     switch (vec.children().size()) {
         case 1:
