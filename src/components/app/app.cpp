@@ -45,6 +45,7 @@
 #include <winreg.h>
 #include <dbghelp.h>
 #include <backtrace.h>
+#include <processthreadsapi.h>
 #endif
 
 #include <wx/snglinst.h>
@@ -142,9 +143,19 @@ void crashHandler(const wxString& error, const wxString& detail) {
     // against nested failures.
     static bool tried{false};
 
+    const auto exitNow{[](int code) {
+        // Win32 (or at least MinGW) _exit() doesn't actually exit without
+        // calling global dtors.
+#       if _WIN32
+        TerminateProcess(GetCurrentProcess(), code);
+#       else
+        _exit(code);
+#       endif
+    }};
+
     if (tried)
         // Can't do much, but at least provide a unique error code.
-        _exit(4);
+        exitNow(4);
 
     tried = true;
 
@@ -158,7 +169,7 @@ void crashHandler(const wxString& error, const wxString& detail) {
     }
 
     // https://tldp.org/LDP/abs/html/exitcodes.html
-    _exit(3);
+    exitNow(3);
 }
 
 cstring addrToStr(
