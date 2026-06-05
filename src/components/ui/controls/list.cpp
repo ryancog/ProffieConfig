@@ -58,7 +58,7 @@ struct Control : detail::Window<wxListCtrl> {
         if (auto *ptr{std::get_if<1>(&rows_)}) {
             static const auto rowTable{[] {
                 data::base::Integer::RecvTable table;
-                table.onSet_ = data::map(&Control::onRows);
+                table.onSet_ = data::map<&Control::onRows>();
                 return table;
             }()};
             observeWith(ptr->get(), rowTable);
@@ -141,7 +141,7 @@ struct Control : detail::Window<wxListCtrl> {
                         static const auto labelTable{[] {
                             data::base::String::RecvTable table;
                             table.onChange_ =
-                                data::map(&Control::onLabelChange);
+                                data::map<&Control::onLabelChange>();
                             return table;
                         }()};
                         observeWith(*ptr, labelTable);

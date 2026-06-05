@@ -52,9 +52,9 @@ struct Layout : wxBoxSizer, data::Receiver {
 
         static const auto table{[] {
             data::base::Vector::RecvTable table;
-            table.onInsert_ = data::map(&Layout::onInsert);
-            table.preRemove_ = data::map(&Layout::preRemove);
-            table.onSwap_ = data::map(&Layout::onSwap);
+            table.onInsert_ = data::map<&Layout::onInsert>();
+            table.preRemove_ = data::map<&Layout::preRemove>();
+            table.onSwap_ = data::map<&Layout::onSwap>();
             return table;
         }()};
         observeWith(vec_, table);

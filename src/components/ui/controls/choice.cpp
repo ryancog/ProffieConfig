@@ -60,10 +60,10 @@ struct ControlBase : detail::DataWindow<Ctrl> {
 
         static const auto choiceTable{[] {
             data::base::Choice::RecvTable table;
-            table.onEnable_ = data::map(&DataWindow::onEnable);
-            table.onFocus_ = data::map(&DataWindow::onFocus);
-            table.onChoice_ = data::map(&ControlBase::onChoice);
-            table.onUpdate_ = data::map(&ControlBase::onUpdate);
+            table.onEnable_ = data::map<&DataWindow::onEnable>();
+            table.onFocus_ = data::map<&DataWindow::onFocus>();
+            table.onChoice_ = data::map<&ControlBase::onChoice>();
+            table.onUpdate_ = data::map<&ControlBase::onUpdate>();
             return table;
         }()};
 
@@ -73,8 +73,8 @@ struct ControlBase : detail::DataWindow<Ctrl> {
 
             static const auto selTable{[] {
                 data::base::Selector::RecvTable table;
-                table.preRebound_ = data::map(&ControlBase::preSelRebound);
-                table.onRebound_ = data::map(&ControlBase::onSelRebound);
+                table.preRebound_ = data::map<&ControlBase::preSelRebound>();
+                table.onRebound_ = data::map<&ControlBase::onSelRebound>();
                 return table;
             }()};
             data::Receiver::observeWith(*sel_, selTable);
@@ -89,7 +89,7 @@ struct ControlBase : detail::DataWindow<Ctrl> {
 
             static const auto clampTable{[] {
                 data::base::Integer::RecvTable table;
-                table.onSet_ = data::map(&ControlBase::onClampSet);
+                table.onSet_ = data::map<&ControlBase::onClampSet>();
                 return table;
             }()};
             data::Receiver::observeWith(*clamp_, clampTable);
@@ -242,7 +242,7 @@ struct ControlBase : detail::DataWindow<Ctrl> {
 
                 static const auto labelTable{[] {
                     data::base::String::RecvTable table;
-                    table.onChange_ = data::map(&ControlBase::onLabelChange);
+                    table.onChange_ = data::map<&ControlBase::onLabelChange>();
                     return table;
                 }()};
                 data::Receiver::observeWith(ptr->get(), labelTable);
@@ -273,7 +273,7 @@ private:
 template <typename Ctrl>
 const data::base::Vector::RecvTable ControlBase<Ctrl>::VEC_TABLE{[] {
     data::base::Vector::RecvTable table;
-    table.onSwap_ = data::map(&ControlBase::onVectorSwap);
+    table.onSwap_ = data::map<&ControlBase::onVectorSwap>();
     return table;
 }()};
 

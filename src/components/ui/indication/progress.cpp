@@ -47,10 +47,10 @@ struct Indicator : detail::DataWindow<wxGauge> {
 
         static const auto table{[] {
             Progress::Data::RecvTable table;
-            table.onEnable_ = data::map(&DataWindow::onEnable);
-            table.onSet_ = data::map(&Indicator::onSet);
-            table.onRange_ = data::map(&Indicator::onRange);
-            table.onPulse_ = data::map(&Indicator::onPulse);
+            table.onEnable_ = data::map<&DataWindow::onEnable>();
+            table.onSet_ = data::map<&Indicator::onSet>();
+            table.onRange_ = data::map<&Indicator::onRange>();
+            table.onPulse_ = data::map<&Indicator::onPulse>();
             return table;
         }()};
         observeWith(desc.data_, table);
@@ -127,7 +127,7 @@ data::logic::Element Progress::Data::operator|(Logic logic) {
         DoneAdapter(const Data& data) : data_{data} {
             static const auto table{[] {
                 RecvTable table;
-                table.onSet_ = map(&DoneAdapter::onSet);
+                table.onSet_ = data::map<&DoneAdapter::onSet>();
                 return table;
             }()};
 
@@ -196,20 +196,20 @@ void Progress::Data::Context::set(uint32 v) const {
     auto& data{model<Data>()};
 
     data.mVal = static_cast<int32>(v);
-    data.sendToObservers(&RecvTable::onSet_);
+    data.sendToObservers<&RecvTable::onSet_>();
 }
 
 void Progress::Data::Context::setRange(uint32 r) const {
     auto& data{model<Data>()};
 
     data.mRange = r;
-    data.sendToObservers(&RecvTable::onRange_);
+    data.sendToObservers<&RecvTable::onRange_>();
 }
 
 void Progress::Data::Context::pulse() const {
     auto& data{model<Data>()};
 
     data.mVal = -1;
-    data.sendToObservers(&RecvTable::onPulse_);
+    data.sendToObservers<&RecvTable::onPulse_>();
 }
 

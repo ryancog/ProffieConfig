@@ -113,10 +113,10 @@ struct Control : detail::DataWindow<wxTextCtrl> {
 
         static const auto table{[] {
             data::base::String::RecvTable table;
-            table.onEnable_ = data::map(&DataWindow::onEnable);
-            table.onFocus_ = data::map(&DataWindow::onFocus);
-            table.onChange_ = data::map(&Control::onChange);
-            table.onMove_ = data::map(&Control::onMove);
+            table.onEnable_ = data::map<&DataWindow::onEnable>();
+            table.onFocus_ = data::map<&DataWindow::onFocus>();
+            table.onChange_ = data::map<&Control::onChange>();
+            table.onMove_ = data::map<&Control::onMove>();
             return table;
         }()};
         observeWith(*str_, table);

@@ -49,10 +49,10 @@ struct IntCtrl : detail::DataWindow<wxSpinCtrl> {
 
         static const auto table{[] {
             data::base::Integer::RecvTable table;
-            table.onEnable_ = data::map(&DataWindow::onEnable);
-            table.onFocus_ = data::map(&DataWindow::onFocus);
-            table.onSet_ = data::map(&IntCtrl::onSet);
-            table.onUpdate_ = data::map(&IntCtrl::onUpdate);
+            table.onEnable_ = data::map<&DataWindow::onEnable>();
+            table.onFocus_ = data::map<&DataWindow::onFocus>();
+            table.onSet_ = data::map<&IntCtrl::onSet>();
+            table.onUpdate_ = data::map<&IntCtrl::onUpdate>();
             return table;
         }()};
         observeWith(int_, table);
@@ -119,10 +119,10 @@ struct DoubleCtrl : detail::DataWindow<wxSpinCtrlDouble> {
 
         static const auto table{[] {
             data::base::Decimal::RecvTable table;
-            table.onEnable_ = data::map(&DataWindow::onEnable);
-            table.onFocus_ = data::map(&DataWindow::onFocus);
-            table.onSet_ = data::map(&IntCtrl::onSet);
-            table.onUpdate_ = data::map(&IntCtrl::onUpdate);
+            table.onEnable_ = data::map<&DataWindow::onEnable>();
+            table.onFocus_ = data::map<&DataWindow::onFocus>();
+            table.onSet_ = data::map<&IntCtrl::onSet>();
+            table.onUpdate_ = data::map<&IntCtrl::onUpdate>();
             return table;
         }()};
         observeWith(dec_, table);

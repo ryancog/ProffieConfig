@@ -79,9 +79,9 @@ struct Control : detail::DataWindow<wxToggleButton> {
 
         static const auto table{[] {
             data::base::Bool::RecvTable table;
-            table.onEnable_ = data::map(&DataWindow::onEnable);
-            table.onFocus_ = data::map(&DataWindow::onFocus);
-            table.onSet_ = data::map(&Control::onSet);
+            table.onEnable_ = data::map<&DataWindow::onEnable>();
+            table.onFocus_ = data::map<&DataWindow::onFocus>();
+            table.onSet_ = data::map<&Control::onSet>();
             return table;
         }()};
         observeWith(bl_, table);

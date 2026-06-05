@@ -46,12 +46,12 @@ struct Control : detail::DataWindow<wxCheckListBox> {
 
         static const auto table{[] {
             data::base::Selection::RecvTable table;
-            table.onEnable_ = data::map(&DataWindow::onEnable);
-            table.onFocus_ = data::map(&DataWindow::onFocus);
-            table.onSelection_ = data::map(&Control::onSelection);
-            table.onItems_ = data::map(&Control::onItems);
-            table.onInsert_ = data::map(&Control::onInsert);
-            table.onRemove_ = data::map(&Control::onRemove);
+            table.onEnable_ = data::map<&DataWindow::onEnable>();
+            table.onFocus_ = data::map<&DataWindow::onFocus>();
+            table.onSelection_ = data::map<&Control::onSelection>();
+            table.onItems_ = data::map<&Control::onItems>();
+            table.onInsert_ = data::map<&Control::onInsert>();
+            table.onRemove_ = data::map<&Control::onRemove>();
             return table;
         }()};
         observeWith(sel_, table);

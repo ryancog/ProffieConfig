@@ -62,9 +62,9 @@ struct Control : detail::DataWindow<wxFilePickerCtrl> {
 
         static const auto table{[] {
             data::base::String::RecvTable table;
-            table.onEnable_ = data::map(&DataWindow::onEnable);
-            table.onFocus_ = data::map(&DataWindow::onFocus);
-            table.onChange_ = data::map(&Control::onChange);
+            table.onEnable_ = data::map<&DataWindow::onEnable>();
+            table.onFocus_ = data::map<&DataWindow::onFocus>();
+            table.onChange_ = data::map<&Control::onChange>();
             return table;
         }()};
         observeWith(str_, table);

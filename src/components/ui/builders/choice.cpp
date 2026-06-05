@@ -47,7 +47,7 @@ struct ChoiceTracker : priv::Tracker, data::Receiver {
         choice_{desc.data_} {
         static const auto choiceTable{[] {
             data::base::Choice::RecvTable table;
-            table.onChoice_ = data::map(&ChoiceTracker::onChoice);
+            table.onChoice_ = data::map<&ChoiceTracker::onChoice>();
             return table;
         }()};
         observeWith(choice_, choiceTable);

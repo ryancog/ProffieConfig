@@ -92,9 +92,9 @@ struct Static : detail::DataWindow<wxStaticText> {
 
         static const auto table{[] {
             data::base::String::RecvTable table;
-            table.onEnable_ = data::map(&DataWindow::onEnable);
-            table.onFocus_ = data::map(&DataWindow::onFocus);
-            table.onChange_ = data::map(&Static::onChange);
+            table.onEnable_ = data::map<&DataWindow::onEnable>();
+            table.onFocus_ = data::map<&DataWindow::onFocus>();
+            table.onChange_ = data::map<&Static::onChange>();
             return table;
         }()};
         observeWith(*str_, table);
