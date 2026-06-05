@@ -34,7 +34,8 @@ BladeConfig::BladeConfig(Config& config) :
     blades_(root()),
     name_(root()),
     presetArray_(root()),
-    id_(root()) {
+    id_(root()),
+    noBladeId_(root()) {
     CreationScope createScope(this);
 
     static const auto nameTable{[] {
@@ -49,14 +50,14 @@ BladeConfig::BladeConfig(Config& config) :
         table.onSet_ = data::map<&BladeConfig::onID>();
         return table;
     }()};
-    observeWith(id_, idTable);
+    respondWith(id_, idTable);
 
     static const auto noBladeIDTable{[] {
         data::hier::Bool::RecvTable table;
         table.onSet_ = data::map<&BladeConfig::onNoBladeIDSet>();
         return table;
     }()};
-    observeWith(noBladeId_, noBladeIDTable);
+    respondWith(noBladeId_, noBladeIDTable);
 
     static const auto presetArrayTable{[] {
         data::hier::Choice::RecvTable table;
@@ -93,7 +94,7 @@ BladeConfig::BladeConfig(Config& config) :
         const data::base::Bool::ROContext& ctxt, bool& noBladeId
     ) {
         const auto& bladeConfig{utils::parent<&BladeConfig::noBladeId_>(
-            ctxt.model<data::prim::Bool>()
+            ctxt.model<data::hier::Bool>()
         )};
 
         auto id{data::context(bladeConfig.id_)};
@@ -116,6 +117,9 @@ auto BladeConfig::children() const -> std::vector<const Model *> {
         &name_,
         &presetArray_,
         &id_,
+        // This is a hierarchic model so that whenever ID or this changes
+        // there aren't issues with them needing to set each other.
+        &noBladeId_
     };
 }
 

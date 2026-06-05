@@ -22,10 +22,10 @@
 #include "config/blades/simple.hpp"
 #include "config/blades/ws281x.hpp"
 #include "data/hierarchic/model.hpp"
+#include "data/hierarchic/models/bool.hpp"
 #include "data/hierarchic/models/number.hpp"
 #include "data/hierarchic/models/selector.hpp"
 #include "data/hierarchic/models/string.hpp"
-#include "data/primitive/models/bool.hpp"
 #include "data/primitive/models/number.hpp"
 #include "data/receiver.hpp"
 #include "utils/types.hpp"
@@ -68,7 +68,7 @@ struct CONFIG_EXPORT BladeConfig : data::hier::Model, data::Receiver {
     data::hier::String name_;
     data::hier::Selector presetArray_;
     data::hier::Integer id_;
-    data::prim::Bool noBladeId_;
+    data::hier::Bool noBladeId_;
 
 private:
     void recomputeIssues();
