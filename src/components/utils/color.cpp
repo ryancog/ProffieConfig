@@ -43,9 +43,7 @@ namespace {
 #if __WXOSX__
 wxColour getNSColor(cstring name) {
     static Class NSColorClass{objc_getClass("NSColor")};
-    static NSColor *color{objcMessage<NSColor *>(
-        (id)NSColorClass, name
-    )};
+    NSColor *color{objcMessage<NSColor *>((id)NSColorClass, name)};
     // Needs explicit ctor
     // NOLINTNEXTLINE(modernize-return-braced-init-list)
     return wxColour(color);
