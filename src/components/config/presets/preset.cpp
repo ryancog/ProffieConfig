@@ -85,7 +85,7 @@ Preset::Preset(Config& config) :
         uint32 numTrimmed{};
         utils::trim(
             str,
-            {.allowAlpha=true, .allowNum=true, .safeList="/;_"},
+            {.allowAlpha=true, .allowNum=true, .safeList=" /;_-"},
             &numTrimmed,
             pos
         );
@@ -100,7 +100,7 @@ Preset::Preset(Config& config) :
         uint32 numTrimmed{};
         utils::trim(
             str,
-            {.allowAlpha=true, .allowNum=true, .safeList="./_"},
+            {.allowAlpha=true, .allowNum=true, .safeList=" ./_-"},
             &numTrimmed,
             pos
         );
