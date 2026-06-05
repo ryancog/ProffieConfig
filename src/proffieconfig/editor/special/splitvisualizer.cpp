@@ -26,12 +26,14 @@
 #endif
 
 #include <wx/dc.h>
+#include <wx/dcbuffer.h>
 #include <wx/dcclient.h>
 #include <wx/gdicmn.h>
 #include <wx/graphics.h>
 #include <wx/peninfobase.h>
 #include <wx/settings.h>
 #include <wx/window.h>
+#include <wx/wupdlock.h>
 
 #include "config/blades/ws281x.hpp"
 #include "data/context.hpp"
@@ -59,6 +61,8 @@ struct Window : data::Receiver, wxWindow {
     wxSize DoGetBestClientSize() const override;
 
     void paintEvent(wxPaintEvent&);
+    void backgroundEraseEvent(wxEraseEvent&);
+
     void mouseMoved(wxMouseEvent&);
     void mouseLeave(wxMouseEvent&);
     void mouseClick(wxMouseEvent&);
@@ -192,6 +196,7 @@ void Window::onActivate() {
     regenerateSplitData();
 
     Bind(wxEVT_PAINT, &Window::paintEvent, this);
+    Bind(wxEVT_ERASE_BACKGROUND, &Window::backgroundEraseEvent, this);
     Bind(wxEVT_MOTION, &Window::mouseMoved, this);
     Bind(wxEVT_LEAVE_WINDOW, &Window::mouseLeave, this);
     Bind(wxEVT_LEFT_UP, &Window::mouseClick, this);
@@ -356,7 +361,7 @@ void Window::recalcSizes() {
 // Would need potentially somewhat tedious testing on all three platforms
 // though and it works, so I'm not bothering to touch it...
 void Window::paintEvent(wxPaintEvent&) {
-    wxPaintDC paintDC{this};
+    wxAutoBufferedPaintDC paintDC{this};
 
     constexpr auto CORNER_RADIUS{10};
     auto windowSize{GetSize()};
@@ -601,6 +606,10 @@ void Window::paintEvent(wxPaintEvent&) {
     paintGC->EndLayer();
 #   endif
 #   endif
+}
+
+void Window::backgroundEraseEvent(wxEraseEvent&) {
+    // Do nothing
 }
 
 void Window::mouseMoved(wxMouseEvent& evt) {
