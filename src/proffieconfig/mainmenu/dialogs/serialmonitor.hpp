@@ -32,6 +32,7 @@
 // This isn't actually a dialog... put it somewhere else?
 struct SerialMonitorDlg : pcui::Frame, data::Receiver {
     SerialMonitorDlg(wxWindow *, std::string);
+    ~SerialMonitorDlg() override;
 
     [[nodiscard]] std::string_view device() const { return mDev; }
 
@@ -66,6 +67,7 @@ private:
     void doCopyOutput(bool);
 
     void onClose(wxCloseEvent&);
+    void doOnClose();
 
     void onDisconnect();
     void connectLoop();

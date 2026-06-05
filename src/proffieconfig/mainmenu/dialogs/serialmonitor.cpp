@@ -77,6 +77,10 @@ SerialMonitorDlg::SerialMonitorDlg(wxWindow *parent, std::string str) :
     mConnectThread = std::thread{[this] { connectLoop(); }};
 }
 
+SerialMonitorDlg::~SerialMonitorDlg() {
+    doOnClose();
+}
+
 pcui::DescriptorPtr SerialMonitorDlg::ui() {
     return pcui::Stack{
       .base_={
@@ -391,6 +395,11 @@ void SerialMonitorDlg::doCopyOutput(bool withStamps) {
 }
 
 void SerialMonitorDlg::onClose(wxCloseEvent& evt) {
+    doOnClose();
+    evt.Skip();
+}
+
+void SerialMonitorDlg::doOnClose() {
     pcui::cripple(this);
 
     if (mConnectThread.joinable()) {
@@ -402,14 +411,13 @@ void SerialMonitorDlg::onClose(wxCloseEvent& evt) {
     // If it's open, this'll call onDisconnect, and that'll make sure the
     // listen thread is joined.
     mMon.close();
-    
-    evt.Skip();
 }
 
 void SerialMonitorDlg::onDisconnect() {
     mInput.disable();
 
-    CallAfter([this] {
+    // Call this immediately if possible/necessary (e.g. on destroy)
+    pcui::safeCall([this] {
         SetStatusText(wxString::Format(
             _("Disconnected (%s)"), mDev
         ));
