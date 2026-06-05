@@ -432,10 +432,20 @@ bool app::init() {
 
 #   ifdef _WIN32
     // Must be done before setting control event handlers
-    if (AttachConsole(ATTACH_PARENT_PROCESS) /* or AllocConsole() */) {
+    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
         (void)freopen("CONOUT$", "w", stdout);
         (void)freopen("CONOUT$", "w", stderr);
         (void)freopen("CONIN$", "r", stdin);
+
+        // https://stackoverflow.com/a/25927081
+        std::wcin.clear();
+        std::cin.clear();
+
+        std::wcout.clear();
+        std::cout.clear();
+
+        std::wcerr.clear();
+        std::cerr.clear();
     }
 #   endif
 
