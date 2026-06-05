@@ -42,7 +42,7 @@ void showAbout(wxWindow *parent) {
         "Config: v" + config::version() + "\n"
         "Log: v" + logging::version() + "\n"
         "PConf: v" + pconf::version() + "\n"
-        "pcui: v" + pcui::version() + "\n"
+        "UI: v" + pcui::version() + "\n"
         "Utils: v" + utils::version() + "\n"
         "Versions: v" + versions::version() + "\n"
         "Arduino CLI: v" + arduino::version() + "\n"
@@ -51,8 +51,7 @@ void showAbout(wxWindow *parent) {
     aboutInfo.SetDescription(_("All-in-one Proffieboard Management Utility"));
     aboutInfo.SetVersion(
         wxSTRINGIZE(BIN_VERSION),
-        "Core: v" + wxString{wxSTRINGIZE(BIN_VERSION)} + "\n"
-        + componentVersions
+        componentVersions
     );
 #   else
     aboutInfo.SetDescription(
