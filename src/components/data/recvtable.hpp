@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <type_traits>
+
 #include "data_export.h"
 
 namespace data {
@@ -66,12 +68,19 @@ struct DATA_EXPORT RecvTable {
 
 namespace priv {
 
+// Avoid ambiguous resolution via concept constrain
+template <typename T = void, typename ...Args>
+concept ModelMapping = std::is_same_v<const base::Model&, T>;
+
+template <typename T = void, typename ...Args>
+concept PlainMapping = not ModelMapping<T, Args...>;
+
 template <auto MP>
 struct Mapper;
 
 template <
     typename Derived,
-    typename ...Args,
+    PlainMapping ...Args,
     void (Derived::*MEM_PTR)(Args...)
 >
 struct Mapper<MEM_PTR> {
@@ -84,7 +93,7 @@ struct Mapper<MEM_PTR> {
 
 template <
     typename Derived,
-    typename ...Args,
+    ModelMapping ...Args,
     void (Derived::*MEM_PTR)(const base::Model&, Args...)
 >
 struct Mapper<MEM_PTR> {
