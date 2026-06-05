@@ -560,9 +560,9 @@ void MainMenu::onApplyConfig() {
         true
     )};
 
-    bool useCache{not wxGetKeyState(WXK_CONTROL)};
+    bool clean{wxGetKeyState(WXK_CONTROL)};
 
-    std::thread{[this, prog, busy, useCache]() {
+    std::thread{[this, prog, busy, clean]() {
         prog->set(1, _("Opening Config..."));
 
         auto cfgSel{data::context(mConfigSel)};
@@ -580,16 +580,7 @@ void MainMenu::onApplyConfig() {
         }
 
         auto& config{*info->config()};
-        arduino::CompileInfo *compInfo{nullptr};
-
-        if (useCache)
-            compInfo = static_cast<arduino::CompileInfo *>(config.cache());
-
-        if (compInfo == nullptr) {
-            auto unique{std::make_unique<arduino::CompileInfo>(config)};
-            compInfo = unique.get();
-            config.cache(std::move(unique));
-        }
+        auto& compInfo{arduino::getCacheInfo(config, clean)};
 
         auto name{data::context(info->name())};
         arduino::applyToBoard(
@@ -597,7 +588,7 @@ void MainMenu::onApplyConfig() {
             boardChoice.idx() == -1
                 ? "BOOTLOADER"
                 : mBoards[boardChoice.idx()],
-            *compInfo,
+            compInfo,
             *prog
         );
     }}.detach();

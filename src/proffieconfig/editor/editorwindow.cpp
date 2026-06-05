@@ -291,7 +291,7 @@ void EditorWindow::onExport(wxCommandEvent&) {
 void EditorWindow::onVerify(wxCommandEvent& evt) {
     pcui::BusyTracker busy(this);
 
-    bool useCache{evt.GetId() == eID_Verify};
+    bool clean{evt.GetId() == eID_Verify_Cacheless};
 
     auto *prog{new pcui::ProgressDialog(
         this,
@@ -299,22 +299,11 @@ void EditorWindow::onVerify(wxCommandEvent& evt) {
         true
     )};
 
-    std::thread{[this, prog, busy, useCache]() {
+    std::thread{[this, prog, busy, clean]() {
         auto name{data::context(mInfo.name())};
         auto& config{*mInfo.config()};
-
-        arduino::CompileInfo *compInfo{nullptr};
-
-        if (useCache)
-            compInfo = static_cast<arduino::CompileInfo *>(config.cache());
-
-        if (compInfo == nullptr) {
-            auto unique{std::make_unique<arduino::CompileInfo>(config)};
-            compInfo = unique.get();
-            config.cache(std::move(unique));
-        }
-
-        arduino::verifyConfig(name.val(), *compInfo, *prog);
+        auto& compInfo{arduino::getCacheInfo(config, clean)};
+        arduino::verifyConfig(name.val(), compInfo, *prog);
     }}.detach();
 }
 

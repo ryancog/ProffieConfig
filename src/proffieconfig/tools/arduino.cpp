@@ -56,6 +56,7 @@
 #include "ui/dialogs/progress.hpp"
 #include "utils/files.hpp"
 #include "utils/paths.hpp"
+#include "utils/rand.hpp"
 #include "utils/types.hpp"
 #include "versions/detail/boards.hpp"
 #include "versions/detail/strings.hpp"
@@ -74,6 +75,8 @@ std::variant<arduino::CompileOutput, wxString> compile(
     pcui::ProgressDialog&,
     logging::Branch&
 );
+
+void processCache(arduino::CompileInfo&, logging::Logger&);
 
 std::optional<wxString> upload(
     const std::string& boardPath,
@@ -238,7 +241,9 @@ void arduino::applyToBoard(
 ) {
     auto& logger{logging::Context::getGlobal().createLogger("arduino::applyToBoard()")};
 
-    if (not info.out_) {
+    if (info.out_) {
+        logger.info("Using cached binary: " + info.out_->dfuFile_);
+    } else {
         auto res{compile(
             name,
             info.source_,
@@ -258,6 +263,7 @@ void arduino::applyToBoard(
         }
 
         info.out_ = std::get<CompileOutput>(res);
+        processCache(info, logger);
     }
 
     auto err{upload(
@@ -290,7 +296,9 @@ void arduino::verifyConfig(
 ) {
     auto& logger{logging::Context::getGlobal().createLogger("arduino::verifyConfig()")};
 
-    if (not info.out_) {
+    if (info.out_) {
+        logger.info("Using cached binary: " + info.out_->dfuFile_);
+    } else {
         auto res{compile(
             name,
             info.source_,
@@ -304,6 +312,7 @@ void arduino::verifyConfig(
         }
 
         info.out_ = std::get<CompileOutput>(res);
+        processCache(info, logger);
     }
 
     logger.info("Verified Successfully");
@@ -315,6 +324,22 @@ void arduino::verifyConfig(
     }
 
     prog.finish(true, message);
+}
+
+arduino::CompileInfo& arduino::getCacheInfo(
+    config::Config& config, bool clean
+) {
+    CompileInfo *info{nullptr};
+
+    if (not clean)
+        info = static_cast<CompileInfo *>(config.cache());
+
+    if (info == nullptr) {
+        info = new CompileInfo(config);
+        config.cache(std::unique_ptr<CompileInfo>(info));
+    }
+
+    return *info;
 }
 
 namespace {
@@ -581,6 +606,8 @@ std::variant<arduino::CompileOutput, wxString> compile(
         ret.dfuFile_ = shortPath.data();
 #       else
         ret.dfuFile_ = dfuLongPath;
+        // Pop off ' ' the POSIX version needs to find path root.
+        ret.dfuFile_.erase(0, 1);
 #       endif
 
         logger.debug("Parsed dfu file: " + ret.dfuFile_);
@@ -639,6 +666,35 @@ std::variant<arduino::CompileOutput, wxString> compile(
 
     logger.info("Success");
     return ret;
+}
+
+void processCache(arduino::CompileInfo& info, logging::Logger& logger) {
+    std::error_code ec;
+    auto path{fs::temp_directory_path(ec)};
+    if (ec) {
+        logger.warn("Couldn't get temp directory: " + ec.message());
+        return;
+    }
+
+    path /= "ProffieConfig_DFUCache";
+    fs::create_directories(path, ec);
+
+    if (ec) {
+        logger.warn("Couldn't create cache directory: " + ec.message());
+        return;
+    }
+
+    // The hash doesn't account for the name, so just come up with a
+    // probably-not-yet-existent ID for the path.
+    path /= std::to_string(utils::rand::get<uint64>());
+
+    fs::rename(info.out_->dfuFile_, path, ec);
+    if (ec) {
+        logger.warn("Couldn't cache binary: " + ec.message());
+        return;
+    }
+
+    info.out_->dfuFile_ = path;
 }
 
 std::optional<wxString> upload(

@@ -64,6 +64,10 @@ void verifyConfig(
     pcui::ProgressDialog& progress
 );
 
+[[nodiscard]] CompileInfo& getCacheInfo(
+    config::Config&, bool clean
+);
+
 std::vector<std::string> getBoards(logging::Branch * = nullptr);
 
 #if defined(_WIN32) or defined(__linux__)
