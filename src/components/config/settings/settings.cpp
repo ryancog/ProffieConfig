@@ -394,7 +394,8 @@ bool processDefine(
 
         size mode{0};
         for (; mode < eBIDMode_Max; ++mode) {
-            if (define.val().starts_with(BLADEID_MODE_STRS[mode])) break;
+            if (value.val().starts_with(BLADEID_MODE_STRS[mode]))
+                break;
         }
 
         if (mode == eBIDMode_Max) {
@@ -405,7 +406,10 @@ bool processDefine(
             std::string str{value.val()};
             str.erase(0, BLADEID_MODE_STRS[mode].length());
 
-            const auto idPinEnd{str.find(',')};
+            const auto idPinEnd{mode == eBIDMode_Snapshot
+                ? str.find('>')
+                : str.find(',')
+            };
             bladeId.pin_.change(str.substr(0, idPinEnd));
 
             if (mode == eBIDMode_External) {
