@@ -82,6 +82,10 @@ std::optional<std::string> parse::preset::array(
         utils::CommentData commentData{
             .stream_=stream,
             .single_=true,
+            .skipSpaces_=
+                reading != eDir and
+                reading != eTrack and
+                reading != eName
         };
         if (utils::extractComments(commentData)) {
             if (reading == eStyle) {
