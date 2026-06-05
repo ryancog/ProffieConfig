@@ -889,7 +889,7 @@ std::vector<std::unique_ptr<Prop>> versions::props::forVersion(
         for (const auto& setting : prop.mSettings) {
             static const auto table{[] {
                 data::base::Bool::RecvTable table;
-                table.onSet_ = data::map(&Prop::onSet);
+                table.onSet_ = data::map<&Prop::onSet>();
                 return table;
             }()};
 
