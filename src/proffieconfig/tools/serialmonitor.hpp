@@ -74,6 +74,8 @@ private:
     int mFd{-1};
 #   elif defined(_WIN32)
     HANDLE mHandle{INVALID_HANDLE_VALUE};
+    HANDLE mReadEvent;
+    HANDLE mWriteEvent;
 #   endif
 };
 

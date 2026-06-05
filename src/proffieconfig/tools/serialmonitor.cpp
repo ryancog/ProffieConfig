@@ -31,6 +31,7 @@
 #include <termios.h>
 #include <unistd.h>
 #elif defined(_WIN32)
+#include <errhandlingapi.h>
 #include <fileapi.h>
 #include <handleapi.h>
 #else
@@ -58,7 +59,6 @@ void SerialMonitor::setOnDisconnect(std::function<void()> func) {
     assert(not isOpen());
     mOnDisconnect = std::move(func);
 }
-
 Error SerialMonitor::open(const std::string& path) {
     std::lock_guard scopeLock(mMutex);
     assert(not isOpen());
@@ -94,7 +94,7 @@ Error SerialMonitor::open(const std::string& path) {
         0,
         nullptr,
         OPEN_EXISTING,
-        FILE_ATTRIBUTE_NORMAL,
+        FILE_FLAG_OVERLAPPED,
         nullptr
     );
     if (not isOpen()) {
@@ -115,6 +115,30 @@ Error SerialMonitor::open(const std::string& path) {
     dcbSerialParameters.fDtrControl = DTR_CONTROL_ENABLE;
 
     SetCommState(mHandle, &dcbSerialParameters);
+
+    // Read starts signaled for synchronization
+    mReadEvent = CreateEventA(nullptr, true, true, nullptr);
+    if (mReadEvent == nullptr) {
+        CloseHandle(mHandle);
+        mHandle = INVALID_HANDLE_VALUE;
+
+        return {
+            .rsn_=Error::Code::Unknown,
+            .code_=static_cast<int32>(GetLastError()),
+        };
+    }
+
+    mWriteEvent = CreateEventA(nullptr, true, false, nullptr);
+    if (mWriteEvent == nullptr) {
+        CloseHandle(mReadEvent);
+        CloseHandle(mHandle);
+        mHandle = INVALID_HANDLE_VALUE;
+
+        return {
+            .rsn_=Error::Code::Unknown,
+            .code_=static_cast<int32>(GetLastError()),
+        };
+    }
 #   endif
 
     // Only bother setting up this loop if a handler is registered, otherwise
@@ -129,26 +153,31 @@ Error SerialMonitor::open(const std::string& path) {
 }
 
 void SerialMonitor::close() {
-    std::lock_guard scopeLock(mMutex);
+    { std::lock_guard scopeLock(mMutex);
 
-    if (not isOpen())
-        return;
+        if (not isOpen())
+            return;
 
-    if (mDevThread.joinable()) {
-        mSmphr.release();
+        if (mDevThread.joinable()) {
+            mSmphr.release();
 
-        mDevThread.join();
+            mDevThread.join();
+        }
+
+#       if __APPLE__ or __linux__
+        fsync(mFd);
+        ::close(mFd);
+        mFd = -1;
+#       elif _WIN32
+        CloseHandle(mReadEvent);
+        CloseHandle(mWriteEvent);
+
+        CloseHandle(mHandle);
+        mHandle = INVALID_HANDLE_VALUE;
+#       endif
     }
 
-#   if defined(__APPLE__) or defined(__linux__)
-    fsync(mFd);
-    ::close(mFd);
-    mFd = -1;
-#   elif defined(_WIN32)
-    CloseHandle(mHandle);
-    mHandle = INVALID_HANDLE_VALUE;
-#   endif
-
+    // Call outside of lock
     if (mOnDisconnect)
         mOnDisconnect();
 }
@@ -177,16 +206,40 @@ Error SerialMonitor::write(std::string_view msg) {
             };
         }
 #       elif defined(_WIN32)
+        BOOL res{};
         DWORD bytesWritten{};
-        auto res{WriteFile(
+        OVERLAPPED overlapped;
+        memset(&overlapped, 0, sizeof overlapped);
+        overlapped.hEvent = mWriteEvent;
+
+        res = WriteFile(
             mHandle,
             str.data(),
             str.length(),
             &bytesWritten,
-            nullptr
-        )};
-        if (not res) {
+            &overlapped
+        );
+        if (res)
+            // Completed
+            return {};
+
+        auto err{GetLastError()};
+        if (err != ERROR_IO_PENDING) {
             close();
+            return {
+                .rsn_=Error::Code::Unknown,
+                .code_=static_cast<int32>(err),
+            };
+        }
+
+        res = GetOverlappedResult(
+            mHandle,
+            &overlapped,
+            &bytesWritten,
+            true
+        );
+
+        if (not res) {
             return {
                 .rsn_=Error::Code::Unknown,
                 .code_=static_cast<int32>(GetLastError()),
@@ -214,13 +267,82 @@ Error SerialMonitor::write(std::string_view msg) {
 Error SerialMonitor::read(char& chr) {
     // Don't lock here.
 
+#   if _WIN32
+    // On Linux it's kind of okay to access mHandle outside of the lock, since
+    // if it's invalid (because closed or explicitly set invalid), the read()
+    // will fail.
+    //
+    // Here though, the mHandle is read twice, so I want to make sure the value
+    // is stored. In both cases accessing the HANDLE or FD runs the risk of it
+    // being closed then re-opened (especially on Linux) afaik...
+    HANDLE handle{};
+    DWORD bytesRead{};
+    OVERLAPPED overlapped;
+    BOOL res{};
+
+    while (not false) {
+        std::lock_guard scopeLock(mMutex);
+        if (not isOpen()) {
+            return {
+                .rsn_=Error::Code::Disconnected,
+            };
+        }
+
+        // Wait for any previous read to have finished.
+        auto wait{WaitForSingleObject(mReadEvent, 50)};
+        if (wait != WAIT_OBJECT_0)
+            continue;
+
+        ResetEvent(mReadEvent);
+
+        // Start Read in lock to ensure there's not a race after the above
+        // wait.
+        memset(&overlapped, 0, sizeof overlapped);
+        overlapped.hEvent = mReadEvent;
+        res = ReadFile(
+            mHandle,
+            &chr,
+            1,
+            &bytesRead,
+            &overlapped
+        );
+        if (res)
+            // Completed
+            return {};
+
+        auto err{GetLastError()};
+        if (err != ERROR_IO_PENDING) {
+            close();
+            return {
+                .rsn_=Error::Code::Unknown,
+                .code_=static_cast<int32>(err),
+            };
+        }
+
+        handle = mHandle;
+        break;
+    }
+
+    res = GetOverlappedResult(
+        mHandle,
+        &overlapped,
+        &bytesRead,
+        true
+    );
+
+    if (not res) {
+        return {
+            .rsn_=Error::Code::Unknown,
+            .code_=static_cast<int32>(GetLastError()),
+        };
+    }
+#   elif __APPLE__ or __linux__
     if (not isOpen()) {
         return {
             .rsn_=Error::Code::Disconnected,
         };
     }
 
-#   if defined(__APPLE__) or defined(__linux__)
     pollfd pfd{.fd=mFd, .events=POLLIN};
     while (not false) {
         // This needs to be a poll, specifically with a timeout... I don't
@@ -254,22 +376,6 @@ Error SerialMonitor::read(char& chr) {
         return {
             .rsn_=Error::Code::Unknown,
             .code_=errno
-        };
-    }
-#   elif defined(_WIN32)
-    DWORD bytesRead{};
-    auto res{ReadFile(
-        mHandle,
-        &chr,
-        1,
-        &bytesRead,
-        nullptr
-    )};
-    if (not res) {
-        close();
-        return {
-            .rsn_=Error::Code::Unknown,
-            .code_=static_cast<int32>(GetLastError()),
         };
     }
 #   endif
