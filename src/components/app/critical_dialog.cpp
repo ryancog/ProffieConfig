@@ -83,9 +83,6 @@ app::CriticalDialog::CriticalDialog(
     SetSizerAndFit(sizer);
 
     Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-        Close();
-    }, wxID_OK);
-    Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         wxLaunchDefaultApplication(paths::logDir().native());
     }, eID_Logs);
 }
