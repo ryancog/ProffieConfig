@@ -163,14 +163,14 @@ pcui::DescriptorPtr SerialMonitorDlg::ui() {
 void SerialMonitorDlg::bindEvents() {
     static const auto inputTable{[] {
         data::base::String::RecvTable table;
-        table.onChange_ = data::map(&SerialMonitorDlg::onCmdChange);
+        table.onChange_ = data::map<&SerialMonitorDlg::onCmdChange>();
         return table;
     }()};
     observeWith(mInput, inputTable);
 
     static const auto autoScrollTable{[] {
         data::base::Bool::RecvTable table;
-        table.onSet_ = data::map(&SerialMonitorDlg::onAutoScroll);
+        table.onSet_ = data::map<&SerialMonitorDlg::onAutoScroll>();
         return table;
     }()};
     observeWith(mAutoScroll, autoScrollTable);

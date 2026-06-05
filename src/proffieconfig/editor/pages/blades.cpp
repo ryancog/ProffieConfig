@@ -53,21 +53,21 @@
 BladesPage::BladesPage(config::Config& config) : mConfig{config} {
     static const auto arrayTable{[] {
         data::prim::Choice::RecvTable table;
-        table.onChoice_ = data::map(&BladesPage::onArrayChoice);
+        table.onChoice_ = data::map<&BladesPage::onArrayChoice>();
         return table;
     }()};
     observeWith(mArraySel.choice(), arrayTable);
 
     static const auto bladeTable{[] {
         data::prim::Choice::RecvTable table;
-        table.onChoice_ = data::map(&BladesPage::onBladeChoice);
+        table.onChoice_ = data::map<&BladesPage::onBladeChoice>();
         return table;
     }()};
     observeWith(mBladeSel.choice(), bladeTable);
 
     static const auto subTable{[] {
         data::prim::Choice::RecvTable table;
-        table.onChoice_ = data::map(&BladesPage::onSubChoice);
+        table.onChoice_ = data::map<&BladesPage::onSubChoice>();
         return table;
     }()};
     observeWith(mSubBladeSel.choice(), subTable);
@@ -1114,7 +1114,7 @@ void BladesPage::attachIssues(const data::base::Integer& issues) {
 
     static const auto issueTable{[] {
         data::base::Integer::RecvTable table;
-        table.onSet_ = data::map(&BladesPage::onIssues);
+        table.onSet_ = data::map<&BladesPage::onIssues>();
         return table;
     }()};
     observeWith(issues, issueTable);

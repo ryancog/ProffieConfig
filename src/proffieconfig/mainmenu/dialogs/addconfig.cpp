@@ -82,14 +82,14 @@ AddConfigDialog::Result AddConfigDialog::getResult() {
 void AddConfigDialog::bindEvents() {
     static const auto nameTable{[] {
         data::prim::String::RecvTable table;
-        table.onChange_ = data::map(&AddConfigDialog::onName);
+        table.onChange_ = data::map<&AddConfigDialog::onName>();
         return table;
     }()};
     observeWith(mConfigName, nameTable);
     
     static const auto pathTable{[] {
         data::prim::String::RecvTable table;
-        table.onChange_ = data::map(&AddConfigDialog::onPath);
+        table.onChange_ = data::map<&AddConfigDialog::onPath>();
         return table;
     }()};
     observeWith(mImportPath, pathTable);

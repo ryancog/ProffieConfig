@@ -56,7 +56,7 @@ struct GeneralPanel : pcui::detail::Panel
 #       ifdef wxHAS_PREF_EDITOR_APPLY_IMMEDIATELY
         static const auto insertionTable{[] {
             data::base::Choice::RecvTable table;
-            table.onChoice_ = data::map(&GeneralPanel::onPresetInsertion);
+            table.onChoice_ = data::map<&GeneralPanel::onPresetInsertion>();
             return table;
         }()};
         observeWith(mPresetInsertion, insertionTable);

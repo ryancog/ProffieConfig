@@ -289,9 +289,9 @@ data::logic::Element operator|(
             config_{injection_.root<config::Config>()} {
             static const auto table{[] {
                 data::base::Vector::RecvTable table;
-                table.preRemove_ = data::map(&Adapter::onVecChange);
-                table.onInsert_ = data::map(&Adapter::onVecChange);
-                table.onSwap_ = data::map(&Adapter::onVecChange);
+                table.preRemove_ = data::map<&Adapter::onVecChange>();
+                table.onInsert_ = data::map<&Adapter::onVecChange>();
+                table.onSwap_ = data::map<&Adapter::onVecChange>();
                 return table;
             }()};
             observeWith(config_.injections_, table);
@@ -335,9 +335,9 @@ data::logic::Element operator|(
             config_{injection_.root<config::Config>()} {
             static const auto table{[] {
                 data::base::Vector::RecvTable table;
-                table.preRemove_ = data::map(&Adapter::onVecChange);
-                table.onInsert_ = data::map(&Adapter::onVecChange);
-                table.onSwap_ = data::map(&Adapter::onVecChange);
+                table.preRemove_ = data::map<&Adapter::onVecChange>();
+                table.onInsert_ = data::map<&Adapter::onVecChange>();
+                table.onSwap_ = data::map<&Adapter::onVecChange>();
                 return table;
             }()};
             observeWith(config_.injections_, table);

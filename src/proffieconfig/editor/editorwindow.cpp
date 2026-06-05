@@ -187,15 +187,15 @@ void EditorWindow::createToolBar() {
 void EditorWindow::bindEvents() {
     static const auto savedTable{[] {
         data::base::Bool::RecvTable table;
-        table.onSet_ = data::map(&EditorWindow::onIsSaved);
+        table.onSet_ = data::map<&EditorWindow::onIsSaved>();
         return table;
     }()};
     observeWith(mInfo.config()->isSaved(), savedTable);
 
     static const auto actionTable{[] {
         data::hier::Root::RecvTable table;
-        table.onCanUndo_ = data::map(&EditorWindow::onCanUndo);
-        table.onCanRedo_ = data::map(&EditorWindow::onCanRedo);
+        table.onCanUndo_ = data::map<&EditorWindow::onCanUndo>();
+        table.onCanRedo_ = data::map<&EditorWindow::onCanRedo>();
         return table;
     }()};
     observeWith(*mInfo.config(), actionTable);

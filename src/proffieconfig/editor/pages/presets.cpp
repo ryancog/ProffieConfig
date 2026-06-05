@@ -49,21 +49,21 @@
 PresetsPage::PresetsPage(config::Config& config) : mConfig{config} {
     static const auto arrayTable{[] {
         data::prim::Choice::RecvTable table;
-        table.onChoice_ = data::map(&PresetsPage::onArrayChoice);
+        table.onChoice_ = data::map<&PresetsPage::onArrayChoice>();
         return table;
     }()};
     observeWith(mArraySel.choice(), arrayTable);
 
     static const auto presetTable{[] {
         data::prim::Choice::RecvTable table;
-        table.onChoice_ = data::map(&PresetsPage::onPresetChoice);
+        table.onChoice_ = data::map<&PresetsPage::onPresetChoice>();
         return table;
     }()};
     observeWith(mPresetSel.choice(), presetTable);
 
     static const auto displayTable{[] {
         data::prim::Choice::RecvTable table;
-        table.onChoice_ = data::map(&PresetsPage::onDisplayChoice);
+        table.onChoice_ = data::map<&PresetsPage::onDisplayChoice>();
         return table;
     }()};
     observeWith(mDisplaySel.choice(), displayTable);

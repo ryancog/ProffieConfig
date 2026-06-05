@@ -151,23 +151,23 @@ Window::Window(
 
     static const auto splitTable{[] {
         data::base::Vector::RecvTable table;
-        table.onInsert_ = data::map(&Window::onVecInsert);
-        table.preRemove_ = data::map(&Window::preVecRemove);
-        table.onRemove_ = data::map(&Window::onVecRemove);
+        table.onInsert_ = data::map<&Window::onVecInsert>();
+        table.preRemove_ = data::map<&Window::preVecRemove>();
+        table.onRemove_ = data::map<&Window::onVecRemove>();
         return table;
     }()};
     observeWith(blade_.splits_, splitTable);
 
     static const auto lengthTable{[] {
         data::base::Integer::RecvTable table;
-        table.onSet_ = data::map(&Window::onLength);
+        table.onSet_ = data::map<&Window::onLength>();
         return table;
     }()};
     observeWith(blade_.length_, lengthTable);
 
     static const auto choiceTable{[] {
         data::base::Choice::RecvTable table;
-        table.onChoice_ = data::map(&Window::onChoice);
+        table.onChoice_ = data::map<&Window::onChoice>();
         return table;
     }()};
     observeWith(subSel_.choice(), choiceTable);
@@ -706,19 +706,19 @@ void Window::onSplitChange() {
 void Window::attachSplit(config::blades::WS281X::Split& split) {
     static const auto typeTable{[] {
         data::base::Exclusive::RecvTable table;
-        table.onSelection_ = data::map(&Window::onSplitChange);
+        table.onSelection_ = data::map<&Window::onSplitChange>();
         return table;
     }()};
 
     static const auto intTable{[] {
         data::base::Integer::RecvTable table;
-        table.onSet_ = data::map(&Window::onSplitChange);
+        table.onSet_ = data::map<&Window::onSplitChange>();
         return table;
     }()};
 
     static const auto listTable{[] {
         data::base::String::RecvTable table;
-        table.onChange_ = data::map(&Window::onSplitChange);
+        table.onChange_ = data::map<&Window::onSplitChange>();
         return table;
     }()};
 

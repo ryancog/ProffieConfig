@@ -255,7 +255,7 @@ void onboard::Frame::bindEvents() {
 
     static const auto phaseTable{[] {
         data::prim::Choice::RecvTable table;
-        table.onChoice_ = data::map(&Frame::onPhase);
+        table.onChoice_ = data::map<&Frame::onPhase>();
         return table;
     }()};
     observeWith(mPhase, phaseTable);

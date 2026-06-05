@@ -60,32 +60,32 @@ VersionsDlg::VersionsDlg(wxWindow *parent) :
 
     static const auto propInstalledTable{[] {
         data::base::Vector::RecvTable table;
-        table.onInsert_ = data::map(&VersionsDlg::onPropInstalledChange);
-        table.onRemove_ = data::map(&VersionsDlg::onPropInstalledChange);
-        table.onSwap_ = data::map(&VersionsDlg::onPropInstalledChange);
+        table.onInsert_ = data::map<&VersionsDlg::onPropInstalledChange>();
+        table.onRemove_ = data::map<&VersionsDlg::onPropInstalledChange>();
+        table.onSwap_ = data::map<&VersionsDlg::onPropInstalledChange>();
         return table;
     }()};
     observeWith(versions::props::list(), propInstalledTable);
 
     static const auto propAvailChoiceTable{[] {
         data::base::Choice::RecvTable table;
-        table.onChoice_ = data::map(&VersionsDlg::onPropAvailChoice);
+        table.onChoice_ = data::map<&VersionsDlg::onPropAvailChoice>();
         return table;
     }()};
     observeWith(mAvailPropSel.choice(), propAvailChoiceTable);
 
     static const auto osInstalledTable{[] {
         data::base::Vector::RecvTable table;
-        table.onInsert_ = data::map(&VersionsDlg::onOsInstalledChange);
-        table.onRemove_ = data::map(&VersionsDlg::onOsInstalledChange);
-        table.onSwap_ = data::map(&VersionsDlg::onOsInstalledChange);
+        table.onInsert_ = data::map<&VersionsDlg::onOsInstalledChange>();
+        table.onRemove_ = data::map<&VersionsDlg::onOsInstalledChange>();
+        table.onSwap_ = data::map<&VersionsDlg::onOsInstalledChange>();
         return table;
     }()};
     observeWith(versions::os::list(), osInstalledTable);
 
     static const auto osAvailChoiceTable{[] {
         data::base::Choice::RecvTable table;
-        table.onChoice_ = data::map(&VersionsDlg::onOsAvailChoice);
+        table.onChoice_ = data::map<&VersionsDlg::onOsAvailChoice>();
         return table;
     }()};
     observeWith(mAvailOsSel.choice(), osAvailChoiceTable);

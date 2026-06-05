@@ -54,15 +54,15 @@ PropButtonsDlg::PropButtonsDlg(wxWindow *parent, config::Config& config) :
 
     static const auto choiceTable{[] {
         data::base::Choice::RecvTable table;
-        table.onChoice_=data::map(&PropButtonsDlg::onPropChoice);
+        table.onChoice_=data::map<&PropButtonsDlg::onPropChoice>();
         return table;
     }()};
     observeWith(mConfig.propChoice(), choiceTable);
 
     static const auto buttonsTable{[] {
         data::base::Vector::RecvTable table;
-        table.onInsert_=data::map(&PropButtonsDlg::onButtonsChange);
-        table.onRemove_=data::map(&PropButtonsDlg::onButtonsChange);
+        table.onInsert_=data::map<&PropButtonsDlg::onButtonsChange>();
+        table.onRemove_=data::map<&PropButtonsDlg::onButtonsChange>();
         return table;
     }()};
     observeWith(mConfig.buttons_, buttonsTable);
@@ -92,7 +92,7 @@ void PropButtonsDlg::onButtonsChange(size) {
 void PropButtonsDlg::rebuildLinks() {
     static const auto settingTable{[] {
         data::base::Bool::RecvTable table;
-        table.onSet_=data::map(&PropButtonsDlg::rebuildUI);
+        table.onSet_=data::map<&PropButtonsDlg::rebuildUI>();
         return table;
     }()};
 
