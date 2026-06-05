@@ -153,7 +153,7 @@ void crashHandler(const wxString& error, const wxString& detail) {
     if (not detail.IsEmpty()) logger.error(detail.utf8_string());
 
     if (wxIsMainThread()) {
-        auto errDialog{app::CriticalDialog(error, detail)};
+        app::CriticalDialog errDialog(error, detail);
         errDialog.ShowModal();
     }
 

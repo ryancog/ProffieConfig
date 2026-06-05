@@ -49,7 +49,8 @@ public:
         }
 
         if (not app::init()) {
-            app::CriticalDialog dlg{_("Initialization Failed")};
+            app::CriticalDialog dlg(_("Initialization Failed"));
+            dlg.ShowModal();
             return false;
         }
 
