@@ -588,12 +588,12 @@ pcui::DescriptorPtr VersionsDlg::osInfo(data::base::Model *model) {
                     return {
                         pcui::Label{.label_=board.name_}(),
                         pcui::Label{
-                          .label_='\t' + board.coreId_,
+                          .label_="    " + board.coreId_,
                           .font_=pcui::Font::Monospace,
                           .color_=color::Special::Caption,
                         }(),
                         pcui::Label{
-                          .label_='\t' + board.include_,
+                          .label_="    " + board.include_,
                           .font_=pcui::Font::Monospace,
                           .color_=color::Special::Caption,
                         }(),
