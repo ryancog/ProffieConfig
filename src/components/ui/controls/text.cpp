@@ -234,36 +234,48 @@ wxSizerItem *Text::Desc::build(const detail::Scaffold& scaffold) const {
     if (const auto *ptr{std::get_if<Text::MultiLine>(&style_)}) {
         wxSize minSize;
 
-#ifdef  __WXMSW__
         // The # of lines function is wonky in general, apparently, and is
         // somewhat considered deprecated by wx devs it seems.
         //
-        // On MSW, it doesn't work right at all afaics, so here's an
-        // incorrect approximation.
-        const auto val{ctrl->GetValue()};
-        const auto numLines{1 + std::count_if(
-            val.begin(),
-            val.end(),
-            [](char c) { return c == '\n'; }
-        )};
-#       else
-        const auto numLines{ctrl->GetNumberOfLines()};
-#       endif
+        // On MSW, it doesn't work right at all, and tries to count physical/
+        // displayed lines rather than logical ones. GetLineText is similarly
+        // unhelpful for MSW.
+        //
+        // Since GetLineText under the hood, for at least macOS, isn't any more
+        // interesting than what you'd expect, just do this for all platforms.
+        const auto val{ctrl->GetValue().utf8_string()};
+        auto computeLines{[](const std::string& val) {
+            std::vector<std::string_view> lines;
+            lines.resize(1);
+
+            auto startIter{val.begin()};
+            for (auto iter{val.begin()}; iter != val.end(); ++iter) {
+                if (*iter == '\n') {
+                    lines.emplace_back(startIter, iter);
+                    startIter = std::next(iter);
+                }
+            }
+            lines.emplace_back(startIter, val.end());
+
+            return lines;
+        }};
+        auto lines{computeLines(val)};
 
         if (not ptr->scroll_.vertical_) {
             const auto lineHeight{ctrl->GetCharHeight()};
             
             minSize.y = static_cast<int32>(
-                lineHeight * (static_cast<float64>(numLines) + 0.5)
+                lineHeight * (static_cast<float64>(lines.size()) + 0.5)
             );
         }
 
         if (not ptr->scroll_.horizontal_) {
             int32 width{0};
 
-            for (int32 idx{0}; idx < numLines; ++idx) {
-                auto lineText{ctrl->GetLineText(idx)};
-                auto extent{ctrl->GetTextExtent(lineText)};
+            for (int32 idx{0}; idx < lines.size(); ++idx) {
+                // This has to be a wxString to pass to GetTextExtent().
+                wxString line(lines[idx]);
+                auto extent{ctrl->GetTextExtent(line)};
                 width = std::max(width, extent.GetWidth());
             }
 
