@@ -55,16 +55,21 @@ void Selection::doSelect(bool undo, uint32 idx, bool val) {
 
 bool Selection::setupSetItems(std::vector<std::string>& items) {
     for (auto iter{items.begin()}; iter != items.end();) {
-        if (mAddFilter) mAddFilter(*this, *iter);
+        if (mAddFilter)
+            mAddFilter(*this, *iter);
 
-        if (iter->empty()) iter = items.erase(iter);
-        else ++iter;
+        if (iter->empty())
+            iter = items.erase(iter);
+        else
+            ++iter;
     }
 
-    if (mItems.size() != items.size()) return true;
+    if (mItems.size() != items.size())
+        return true;
 
     for (size idx{0}; idx < items.size(); ++idx) {
-        if (mItems[idx] != items[idx]) return true;
+        if (mItems[idx] != items[idx])
+            return true;
     }
 
     return false;
@@ -125,7 +130,8 @@ bool Selection::isSelected(uint32 idx) {
 bool Selection::setupInsert(uint32 idx, std::string& str) {
     assert(idx <= mItems.size());
 
-    if (mAddFilter) mAddFilter(*this, str);
+    if (mAddFilter)
+        mAddFilter(*this, str);
 
     return not str.empty();
 }
