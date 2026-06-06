@@ -86,7 +86,7 @@ WS281X::WS281X(Blade& blade) :
     const auto powerPinPruner{[](
         const data::base::Selection::ROContext&, uint32 idx
     ) {
-        return idx >= 6;
+        return idx > 6;
     }};
     powerPins_.setPruner(powerPinPruner);
 

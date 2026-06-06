@@ -134,7 +134,7 @@ BladeAwareness::BladeAwareness(Settings& settings) :
     const auto powerPinPruner{[](
         const data::base::Selection::ROContext&, uint32 idx
     ) {
-        return idx >= 6;
+        return idx > 6;
     }};
     bladeId_.powerPins_.setPruner(powerPinPruner);
 
