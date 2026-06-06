@@ -85,7 +85,9 @@ BladeConfig::BladeConfig(Config& config) :
             pos
         );
 
-        for (auto& chr : str) chr = static_cast<char>(std::tolower(chr));
+        for (auto& chr : str)
+            chr = static_cast<char>(std::tolower(chr));
+
         pos -= numTrimmed;
     }};
     name_.setFilter(nameFilter);
