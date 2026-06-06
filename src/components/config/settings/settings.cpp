@@ -445,11 +445,14 @@ bool processDefine(
             auto powerPins{data::context(bladeId.powerPins_)};
 
             while (not false) {
-                const auto endPos{str.find(',')};
+                // Keep searching for ',' and don't bother with '>'.
+                // The filter will catch it.
+                auto endPos{str.find(',')};
 
                 powerPins.select(str.substr(0, endPos));
 
-                if (endPos == std::string::npos) break;
+                if (endPos == std::string::npos)
+                    break;
 
                 str.erase(0, endPos + 1);
             }
