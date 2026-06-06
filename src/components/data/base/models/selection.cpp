@@ -98,10 +98,20 @@ Selection::doSetItems(
 }
 
 int32 Selection::findString(const std::string& str) const {
+    // Make sure to check against what's actually going to be added, if this
+    // isn't found.
+    //
+    // TODO: This feels like the wrong place to do this, and also might be
+    // unexpected in the filter function...
+    auto tmp{str};
+    if (mAddFilter)
+        mAddFilter(*this, tmp);
+
     for (uint32 idx{0}; idx < mItems.size(); ++idx) {
         const auto& item{mItems[idx]};
 
-        if (item == str) return static_cast<int32>(idx);
+        if (item == tmp)
+            return static_cast<int32>(idx);
     }
 
     return -1;
