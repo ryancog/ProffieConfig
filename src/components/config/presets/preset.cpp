@@ -79,35 +79,25 @@ Preset::Preset(Config& config) :
     }};
     name_.setFilter(nameFilter);
 
-    const auto fontDirFilter{[](
+    const auto pathFilter{[](
         const data::base::String::ROContext&, std::string& str, size& pos
     ) {
         uint32 numTrimmed{};
         utils::trim(
             str,
-            {.allowAlpha=true, .allowNum=true, .safeList=" /;_-"},
+            {
+                .allowAlpha=true,
+                .allowNum=true,
+                .safeList="() ./;_-'",
+            },
             &numTrimmed,
             pos
         );
 
         pos -= numTrimmed;
     }};
-    fontDir_.setFilter(fontDirFilter);
-
-    const auto trackFilter{[](
-        const data::base::String::ROContext&, std::string& str, size& pos
-    ) {
-        uint32 numTrimmed{};
-        utils::trim(
-            str,
-            {.allowAlpha=true, .allowNum=true, .safeList=" ./_-"},
-            &numTrimmed,
-            pos
-        );
-
-        pos -= numTrimmed;
-    }};
-    track_.setFilter(trackFilter);
+    fontDir_.setFilter(pathFilter);
+    track_.setFilter(pathFilter);
 
     name_.change("newpreset");
 }
