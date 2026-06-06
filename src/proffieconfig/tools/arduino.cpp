@@ -857,15 +857,16 @@ std::optional<wxString> precheckCompile(
 }
 
 wxString parseError(const std::string& err, const config::Config& config) {
+    // Don't handle errors which are location-sensitive.
+    // I.e. keep any syntax-type errors that ProffieConfig pre-check doesn't
+    // catch to make sure the full error is presented to the user.
+    //
+    // If there are specific cases I want to test for like that, they need to
+    // happen during pre-checking where I can provide in-ProffieConfig
+    // reference to the error "location," not here.
+
     if (err.contains("select Proffieboard")) {
         return "Please ensure you've selected the correct board in General";
-    }
-
-    if (err.contains("expected unqualified-id")) {
-        return _(
-            "Please make sure there are no brackets in your styles (such as \"{\" or \"}\")\n"
-            "and there is nothing missing or extra from your style! (such as parentheses or \"<>\")"
-        );
     }
 
     if (err.contains(/* region FLASH */"overflowed")) {
@@ -952,9 +953,13 @@ wxString parseError(const std::string& err, const config::Config& config) {
     }
 
     if (err.contains("error:")) {
+        constexpr std::string_view FILE_PREFIX_STR{"/ProffieConfig "};
         const auto errPos{err.find("error:")};
-        const auto fileData{err.rfind('/', errPos)};
-        return err.substr(fileData + 1, MAX_ERRMESSAGE_LENGTH);
+        const auto fileData{err.rfind(FILE_PREFIX_STR, errPos)};
+        return err.substr(
+            fileData + FILE_PREFIX_STR.length(),
+            MAX_ERRMESSAGE_LENGTH
+        );
     }
 
     return wxString::Format(
