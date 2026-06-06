@@ -697,7 +697,7 @@ void processCache(arduino::CompileInfo& info, logging::Logger& logger) {
         return;
     }
 
-    info.out_->dfuFile_ = path;
+    info.out_->dfuFile_ = path.string();
 }
 
 std::optional<wxString> upload(
