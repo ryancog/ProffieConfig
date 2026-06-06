@@ -116,7 +116,7 @@ BladeAwareness::BladeAwareness(Settings& settings) :
     }()};
     respondWith(bladeId_.powerForId_, idPowerTable);
 
-    const auto bridgePinFilter{[](
+    const auto pinFilter{[](
         const data::base::String::ROContext&, std::string& str, size& pos
     ) {
         uint32 numTrimmed{};
@@ -129,7 +129,8 @@ BladeAwareness::BladeAwareness(Settings& settings) :
 
         pos -= numTrimmed;
     }};
-    bladeId_.bridgePin_.setFilter(bridgePinFilter);
+    bladeId_.pin_.setFilter(pinFilter);
+    bladeId_.bridgePin_.setFilter(pinFilter);
 
     const auto powerPinPruner{[](
         const data::base::Selection::ROContext&, uint32 idx
