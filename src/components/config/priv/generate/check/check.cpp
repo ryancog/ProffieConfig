@@ -80,7 +80,7 @@ std::optional<std::string> gen::preCheck(
         auto mode{data::context(awareness.bladeId_.mode_)};
         auto bridgePin{data::context(awareness.bladeId_.bridgePin_)};
         if (mode.idx() == eBIDMode_Bridged and bridgePin.val().empty()) {
-            return errorMessage(logger, wxTRANSLATE("Pullup Pin cannot be empty."));
+            return errorMessage(logger, wxTRANSLATE("Blade ID Bridge Pin cannot be empty."));
         }
     }
 
