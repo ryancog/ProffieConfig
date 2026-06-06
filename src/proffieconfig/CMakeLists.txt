@@ -44,7 +44,7 @@ add_executable(proffieconfig WIN32
 set_target_properties(proffieconfig PROPERTIES
     OUTPUT_NAME "ProffieConfig"
     DESCRIPTION "ProffieConfig" # Windows is stupid so this isn't actually a description
-    BIN_VERSION 1.9.2
+    BIN_VERSION 1.9.3
 )
 
 target_link_libraries(proffieconfig 
