@@ -137,6 +137,12 @@ BladeAwareness::BladeAwareness(Settings& settings) :
         return idx > 6;
     }};
     bladeId_.powerPins_.setPruner(powerPinPruner);
+    const auto powerPinFilter{[](
+        const data::base::Selection::ROContext&, std::string& str
+    ) {
+        utils::trimCppName(str, true);
+    }};
+    bladeId_.powerPins_.setAddFilter(powerPinFilter);
 
     bladeId_.mode_.update(eBIDMode_Max);
     bladeId_.mode_.choose(0);

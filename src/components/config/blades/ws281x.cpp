@@ -89,6 +89,12 @@ WS281X::WS281X(Blade& blade) :
         return idx > 6;
     }};
     powerPins_.setPruner(powerPinPruner);
+    const auto powerPinFilter{[](
+        const data::base::Selection::ROContext&, std::string& str
+    ) {
+        utils::trimCppName(str, true);
+    }};
+    powerPins_.setAddFilter(powerPinFilter);
 
     powerPins_.setItems({
         "bladePowerPin1",
