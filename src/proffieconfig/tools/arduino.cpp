@@ -425,7 +425,10 @@ std::variant<arduino::CompileOutput, wxString> compile(
         }
     }
 
-    const auto outName{"ProffieConfig_" + name + ".h"};
+    // Use a prefix on the name, "ProffieConfig" so that the core config
+    // headers can't be overwritten. I could check for this elsewhere, but it's
+    // a lot easier to just prevent it this way.
+    const auto outName{"ProffieConfig " + name + ".h"};
     const auto configPath{osPath / "config" / outName};
 
     constexpr cstring GENERATE_MESSAGE{wxTRANSLATE("Generating configuration file...")};
