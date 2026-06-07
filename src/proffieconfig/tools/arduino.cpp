@@ -869,6 +869,13 @@ wxString parseError(const std::string& err, const config::Config& config) {
         return "Please ensure you've selected the correct board in General";
     }
 
+    if (err.contains("out of memory allocating")) {
+        return _(
+            "The compiler ran out of memory. Your config must be very large.\n"
+            "If you're not sure what to do, reach out to me or post on The Crucible with your config."
+        );
+    }
+
     if (err.contains(/* region FLASH */"overflowed")) {
         constexpr std::string_view OVERFLOW_PREFIX{"region `FLASH' overflowed by "};
 
