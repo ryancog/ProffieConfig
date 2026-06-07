@@ -121,8 +121,8 @@ struct DoubleCtrl : detail::DataWindow<wxSpinCtrlDouble> {
             data::base::Decimal::RecvTable table;
             table.onEnable_ = data::map<&DataWindow::onEnable>();
             table.onFocus_ = data::map<&DataWindow::onFocus>();
-            table.onSet_ = data::map<&IntCtrl::onSet>();
-            table.onUpdate_ = data::map<&IntCtrl::onUpdate>();
+            table.onSet_ = data::map<&DoubleCtrl::onSet>();
+            table.onUpdate_ = data::map<&DoubleCtrl::onUpdate>();
             return table;
         }()};
         observeWith(dec_, table);
