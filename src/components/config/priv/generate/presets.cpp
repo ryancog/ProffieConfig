@@ -200,20 +200,19 @@ void genBlades(std::ostream& out, const Config& config) {
                 // Generate a list of selected first and then use that to
                 // generate the actual output so that it's known when on the
                 // last item for ", "
-                std::vector<std::string> selected;
+                std::vector<size> selected;
 
                 auto powerPins{data::context(ws281x.powerPins_)};
                 for (size idx{0}; idx < powerPins.items().size(); ++idx) {
-                    if (not powerPins.selected()[idx]) continue;
-
-                    selected.push_back(powerPins.items()[idx]);
+                    if (powerPins.selected()[idx])
+                        selected.push_back(idx);
                 }
 
-                for (size idx{0}; idx < selected.size(); ++idx) {
-                    bladeStr << selected[idx];
-
-                    if (idx + 1 < selected.size())
+                for (auto idx : selected) {
+                    if (idx != selected.front())
                         bladeStr << ", ";
+
+                    bladeStr << powerPins.items()[idx];
                 }
 
                 bladeStr << ">>()";

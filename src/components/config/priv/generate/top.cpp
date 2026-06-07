@@ -153,11 +153,21 @@ void forGeneral(std::ostream& out, const Config& config) {
            ) {
             std::string powerString{POWER_PINS_STR};
 
-            for (auto idx{0}; idx < powerPins.items().size(); ++idx) {
-                if (not powerPins.selected()[idx]) continue;
+            // Generate a list of selected first and then use that to
+            // generate the actual output so that it's known when on the
+            // last item for ", "
+            std::vector<size> selected;
+
+            for (size idx{0}; idx < powerPins.items().size(); ++idx) {
+                if (powerPins.selected()[idx])
+                    selected.push_back(idx);
+            }
+
+            for (auto idx : selected) {
+                if (idx != selected.front())
+                    powerString += ", ";
 
                 powerString += powerPins.items()[idx];
-                if (idx + 1 < powerPins.items().size()) powerString += ", ";
             }
 
             powerString += ">\n";
