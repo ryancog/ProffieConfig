@@ -53,12 +53,24 @@ void routine::launch(logging::Branch& lBranch) {
     logger.info("Launching ProffieConfig...");
     auto exec{paths::executable(paths::Executable::Main)};
 #   ifdef _WIN32
+    // TODO: I've seen at least one case where this returns a success but no
+    // ProffieConfig process starts. At least, none appears to start and they
+    // see no `ProffieConfig.log` indicating a crash.
+    //
+    // Maybe they had an AV (they claimed they didn't, but?) that blocked it,
+    // or maybe there's some subtle issue here for some people?
     if (0 == wxExecute(exec.native())) {
         logger.warn("ProffieConfig main binary missing/failed to start.");
     }
 
     // TODO: This is a race, but one that seems unlikely to cause issues most
     // of the time. It's ugly in any case.
+    //
+    // I think when I wrote this comment, I was referring to this process
+    // holding the exclusion mutex. I've not seen this problem crop up for
+    // anyone yet, but I really should add a way to disable that mutex
+    // immediately before launching the new process (Unless the way Windows
+    // manages these things makes it not matter, but I doubt it).
     exit(0);
 #   elif defined(__APPLE__) or defined(__linux__)
     auto str{exec.native()};
