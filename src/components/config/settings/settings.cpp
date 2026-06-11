@@ -678,6 +678,9 @@ bool processPropDefine(
     for (const auto& prop : propVec) {
         auto *setting{prop->find(name.val())};
 
+        if (setting == nullptr)
+            continue;
+
         using namespace versions::props;
 
         if (auto *ptr{dynamic_cast<data::hier::Bool *>(setting)}) {
