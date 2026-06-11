@@ -28,6 +28,7 @@
 #include "config/presets/array.hpp"
 #include "config/presets/preset.hpp"
 #include "config/presets/style.hpp"
+#include "config/settings/define.hpp"
 #include "config/styles/style.hpp"
 #include "config/strings.hpp"
 #include "data/context.hpp"
@@ -77,6 +78,13 @@ TEST_CASE("Config") {
             REQUIRE(data::context(cfg.settings_.pliOffTime_).val() == 120);
             REQUIRE(data::context(cfg.settings_.idleOffTime_).val() == 10);
             REQUIRE(data::context(cfg.settings_.motionTimeout_).val() == 15);
+
+            auto defines{data::context(cfg.settings_.defines_)};
+            REQUIRE(defines.children().size() == 1);
+
+            auto& define{defines.child<settings::Define>(0)};
+            REQUIRE(data::context(define.name_).val() == "RFID_SERIAL");
+            REQUIRE(data::context(define.value_).val() == "3");
         }
 
         { auto bladeConfigs{data::context(cfg.bladeConfigs_)};
