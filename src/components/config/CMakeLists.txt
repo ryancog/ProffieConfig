@@ -56,5 +56,5 @@ target_link_libraries(config
 )
 
 include(../Component.cmake)
-setup_component_and_static(config 1.1.3)
+setup_component_and_static(config 1.1.5)
 
