@@ -624,7 +624,7 @@ void PresetsPage::updateBladeStrings() {
 
                 auto label{data::context(*mBladeStrings[count])};
                 label.change(wxString::Format(
-                    _("Blade %d"), mainIdx
+                    _("Blade %zu"), mainIdx
                 ).utf8_string());
 
                 ++count;
@@ -638,7 +638,7 @@ void PresetsPage::updateBladeStrings() {
 
                     auto label{data::context(*mBladeStrings[count])};
                     label.change(wxString::Format(
-                        _("Blade %d"), mainIdx
+                        _("Blade %zu"), mainIdx
                     ).utf8_string());
 
                     ++count;
@@ -661,7 +661,7 @@ void PresetsPage::updateBladeStrings() {
                                 if (count == mBladeStrings.size()) return;
 
                                 mBladeStrings[count]->change(wxString::Format(
-                                    _("Blade %d:%d"), mainIdx, subIdx
+                                    _("Blade %zu:%zu"), mainIdx, subIdx
                                 ).utf8_string());
 
                                 ++count;
@@ -680,7 +680,7 @@ void PresetsPage::updateBladeStrings() {
 
                                     auto& label{*mBladeStrings[count]};
                                     label.change(wxString::Format(
-                                        _("Blade %d:%d:%d"),
+                                        _("Blade %zu:%zu:%zu"),
                                         mainIdx,
                                         subIdx,
                                         idx

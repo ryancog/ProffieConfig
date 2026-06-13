@@ -86,7 +86,7 @@ std::optional<std::string> io::parse(
         // not some horribly corrupted or otherwise egregiously wrong file
         // where reading it would just blow up memory.
         if (size > 1'000'000'000)
-            return errorMessage(logger, wxTRANSLATE("Config is too large (%uz)"), size);
+            return errorMessage(logger, wxTRANSLATE("Config is too large (%zu)"), size);
 
         std::string buf(size, 0);
 

@@ -220,7 +220,7 @@ std::optional<std::string> gen::preCheck(
         }
     }
 
-    constexpr cstring STYLE_ERR_STR{wxTRANSLATE("Bladestyle %d in preset %d (%s) in array %s has mismatched %s")};
+    constexpr cstring STYLE_ERR_STR{wxTRANSLATE("Bladestyle %zu in preset %zu (%s) in array %s has mismatched %s")};
     for (const auto& model : presetArrays.children()) {
         auto& presetArray{dynamic_cast<presets::Array&>(*model)};
 
@@ -228,7 +228,7 @@ std::optional<std::string> gen::preCheck(
         auto presets{data::context(presetArray.presets_)};
 
         for (
-                auto presetIdx{0};
+                size presetIdx{0};
                 presetIdx < presets.children().size();
                 ++presetIdx
             ) {
@@ -239,7 +239,7 @@ std::optional<std::string> gen::preCheck(
             auto styles{data::context(preset.styles_)};
 
             for (
-                    auto styleIdx{0};
+                    size styleIdx{0};
                     styleIdx < styles.children().size();
                     ++styleIdx
                 ) {
@@ -268,7 +268,7 @@ std::optional<std::string> gen::preCheck(
         auto content{data::context(style.content_)};
         if (auto imbalance{getStyleImbalance(content.val())}) {
             return errorMessage(
-                logger, STYLE_ERR_STR, name.val(), *imbalance
+                logger, ALIAS_ERR_STR, name.val(), *imbalance
             );
         }
     }

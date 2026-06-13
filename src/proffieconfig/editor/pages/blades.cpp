@@ -243,7 +243,7 @@ pcui::DescriptorPtr BladesPage::selection() {
               .data_=mBladeSel,
               .style_=pcui::Choice::List{},
               .labeler_=[](uint32 idx) -> pcui::Choice::Label {
-                  return wxString::Format(_("Blade %d"), idx);
+                  return wxString::Format(_("Blade %u"), idx);
               }
             }(),
             pcui::Stack{
@@ -713,7 +713,7 @@ pcui::DescriptorPtr BladesPage::splits(config::blades::WS281X& ws281x) {
             .unselected_=_("Select SubBlade"),
           },
           .labeler_=[](uint32 idx) -> pcui::Choice::Label {
-              return wxString::Format(_("SubBlade %d"), idx);
+              return wxString::Format(_("SubBlade %u"), idx);
           }
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
