@@ -2,8 +2,6 @@
 #
 # 3rdparty/CMakeLists.txt
 
-# add_library(tomcrypt SHARED IMPORTED GLOBAL)
-# target_include_directories(tomcrypt INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/tomcrypt/src/headers)
 add_library(tomcrypt-static STATIC IMPORTED GLOBAL)
 target_include_directories(tomcrypt-static INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/tomcrypt/src/headers)
 
@@ -40,17 +38,14 @@ if (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
     target_link_libraries(wxWidgets-static INTERFACE
         "$<LINK_GROUP:RESCAN,${wxWidgets-static-libraries}>"
     )
-else ()
+else()
     target_link_libraries(wxWidgets-static INTERFACE
         ${wxWidgets-static-libraries}
     )
-endif ()
-
+endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL Linux)
     set(TC_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tomcrypt/build-linux/)
-    # set_target_properties(tomcrypt PROPERTIES
-    #     IMPORTED_LOCATION ${TC_LIB_DIR}/libtomcrypt.so)
     set_target_properties(tomcrypt-static PROPERTIES
         IMPORTED_LOCATION ${TC_LIB_DIR}/libtomcrypt.a)
 
@@ -124,16 +119,58 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
 		IMPORTED_LOCATION ${WX_LIB_DIR}/libwxpng-3.3.a)
     set_target_properties(wxWidgets-ZLib-static PROPERTIES
 		IMPORTED_LOCATION ${WX_LIB_DIR}/libwxzlib-3.3.a)
-
 elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
+    set_target_properties(tomcrypt-static PROPERTIES
+        IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/tomcrypt/build-win32/tomcrypt.lib)
+
+    if (CMAKE_BUILD_TYPE STREQUAL Debug)
+        set(WX_SHARED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-win32-shared-dbg)
+        set(WX_LIB_DIR ${WX_SHARED_DIR}/lib/vc_x64_dll)
+        set(WX_LIB_INCLUDE_DIR ${WX_LIB_DIR}/mswud)
+        set_target_properties(wxBase PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase333ud_vc_x64_custom.dll
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase33ud.lib)
+        set_target_properties(wxNet PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase333ud_net_vc_x64_custom.dll
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase33ud_net.lib)
+        set_target_properties(wxCore PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw333ud_core_vc_x64_custom.dll
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmsw33ud_core.lib)
+    else()
+        set(WX_SHARED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-win32-shared-rel)
+        set(WX_LIB_DIR ${WX_SHARED_DIR}/lib/vc_x64_dll)
+        set(WX_LIB_INCLUDE_DIR ${WX_LIB_DIR}/mswu)
+        set_target_properties(wxBase PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase333u_vc_x64_custom.dll
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase33u.lib)
+        set_target_properties(wxNet PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase333u_net_vc_x64_custom.dll
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase33u_net.lib)
+        set_target_properties(wxCore PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw333u_core_vc_x64_custom.dll
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmsw33u_core.lib)
+    endif()
+
+    set(WX_STATIC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-win32-static)
+    set(WX_LIB_DIR ${WX_STATIC_DIR}/lib/vc_x64_lib)
+    set_target_properties(wxBase-static PROPERTIES
+        IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase33u.lib)
+    set_target_properties(wxNet-static PROPERTIES
+        IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase33u_net.lib)
+    set_target_properties(wxCore-static PROPERTIES
+        IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw33u_core.lib)
+    set_target_properties(wxWidgets-PNG-static PROPERTIES
+        IMPORTED_LOCATION ${WX_LIB_DIR}/wxpng.lib)
+    set_target_properties(wxWidgets-ZLib-static PROPERTIES
+        IMPORTED_LOCATION ${WX_LIB_DIR}/wxzlib.lib)
+
+elseif (CROSS_COMPILE STREQUAL Windows)
     add_library(libbacktrace STATIC IMPORTED GLOBAL)
     set_target_properties(libbacktrace PROPERTIES
         IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/libbacktrace/install-win32/lib/libbacktrace.a
         INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/libbacktrace/install-win32/include)
 
     set(TC_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tomcrypt/build-win32/)
-    # set_target_properties(tomcrypt PROPERTIES
-    #     IMPORTED_IMPLIB ${TC_LIB_DIR}/tomcrypt.dll)
     set_target_properties(tomcrypt-static PROPERTIES
         IMPORTED_LOCATION ${TC_LIB_DIR}/libtomcrypt.a
         IMPORTED_IMPLIB ${TC_LIB_DIR}/libtomcrypt.a)
@@ -176,78 +213,89 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
         IMPORTED_IMPLIB ${WX_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.a)
 endif()
 
-# Use wx-config to get the proper compile and link flags
-set(WX_SHARED_CONFIG "${WX_SHARED_DIR}/bin/wx-config")
-set(WX_STATIC_CONFIG "${WX_STATIC_DIR}/bin/wx-config")
+if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+    target_compile_definitions(wxWidgets INTERFACE WXUSINGDLL __WXMSW__=1)
+    target_include_directories(wxWidgets INTERFACE
+        ${WX_SHARED_DIR}/include/msvc
+        ${WX_LIB_INCLUDE_DIR})
 
-function(process_wx_cxxflags CONFIG TARGET)
-    execute_process(
-        COMMAND ${CONFIG} --cxxflags
-        OUTPUT_VARIABLE WX_CXXFLAGS
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
+    target_compile_definitions(wxWidgets-static INTERFACE __WXMSW__=1)
+    target_include_directories(wxWidgets-static INTERFACE
+        ${WX_STATIC_DIR}/include/msvc
+        ${WX_LIB_INCLUDE_DIR})
+else()
+    # Use wx-config to get the proper compile and link flags
+    set(WX_SHARED_CONFIG "${WX_SHARED_DIR}/bin/wx-config")
+    set(WX_STATIC_CONFIG "${WX_STATIC_DIR}/bin/wx-config")
 
-    # Extract and correctly place cxxflags
-    string(REPLACE " " ";" WX_CXXFLAG_LIST "${WX_CXXFLAGS}")
-    foreach(FLAG ${WX_CXXFLAG_LIST})
-        string(FIND "${FLAG}" "-I" pos)
-        if (pos EQUAL -1)
-            target_compile_options(${TARGET} INTERFACE ${FLAG})
-        else()
-            string(SUBSTRING ${FLAG} 2 -1 FLAG)
-            target_include_directories(${TARGET} INTERFACE ${FLAG})
-        endif()
-    endforeach()
-endfunction()
+    function(process_wx_cxxflags CONFIG TARGET)
+        execute_process(
+            COMMAND ${CONFIG} --cxxflags
+            OUTPUT_VARIABLE WX_CXXFLAGS
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
 
-function(process_wx_ldflags CONFIG TARGET)
-    execute_process(
-        COMMAND ${CONFIG} --libs
-        OUTPUT_VARIABLE WX_LDFLAGS
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
+        # Extract and correctly place cxxflags
+        string(REPLACE " " ";" WX_CXXFLAG_LIST "${WX_CXXFLAGS}")
+        foreach(FLAG ${WX_CXXFLAG_LIST})
+            string(FIND "${FLAG}" "-I" pos)
+            if (pos EQUAL -1)
+                target_compile_options(${TARGET} INTERFACE ${FLAG})
+            else()
+                string(SUBSTRING ${FLAG} 2 -1 FLAG)
+                target_include_directories(${TARGET} INTERFACE ${FLAG})
+            endif()
+        endforeach()
+    endfunction()
 
-    string(REPLACE " " ";" WX_LDFLAG_LIST "${WX_LDFLAGS}")
-    foreach(FLAG ${WX_LDFLAG_LIST})
-        string(FIND "${FLAG}" "-framework" pos)
-        if (NOT pos EQUAL -1)
-            set(FOUND_FRAMEWORK true)
-            continue()
-        endif()
+    function(process_wx_ldflags CONFIG TARGET)
+        execute_process(
+            COMMAND ${CONFIG} --libs
+            OUTPUT_VARIABLE WX_LDFLAGS
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
 
-        # Ignore all -lwx links... CMake will handle those
-        string(FIND "${FLAG}" "-lwx" pos1)
-        if (NOT pos1 EQUAL -1)
-            continue()
-        endif()
+        string(REPLACE " " ";" WX_LDFLAG_LIST "${WX_LDFLAGS}")
+        foreach(FLAG ${WX_LDFLAG_LIST})
+            string(FIND "${FLAG}" "-framework" pos)
+            if (NOT pos EQUAL -1)
+                set(FOUND_FRAMEWORK true)
+                continue()
+            endif()
 
-        # Ignore all other libwx links... CMake will handle those
-        string(FIND "${FLAG}" "libwx" pos1)
-        if (NOT pos1 EQUAL -1)
-            continue()
-        endif()
+            # Ignore all -lwx links... CMake will handle those
+            string(FIND "${FLAG}" "-lwx" pos1)
+            if (NOT pos1 EQUAL -1)
+                continue()
+            endif()
 
-        if (FOUND_FRAMEWORK)
-            set(FLAG "-framework ${FLAG}")
-            set(FOUND_FRAMEWORK false)
-        endif()
+            # Ignore all other libwx links... CMake will handle those
+            string(FIND "${FLAG}" "libwx" pos1)
+            if (NOT pos1 EQUAL -1)
+                continue()
+            endif()
 
-        target_link_libraries(${TARGET} INTERFACE "${FLAG}")
-    endforeach()
-endfunction()
+            if (FOUND_FRAMEWORK)
+                set(FLAG "-framework ${FLAG}")
+                set(FOUND_FRAMEWORK false)
+            endif()
 
-process_wx_cxxflags(${WX_SHARED_CONFIG} wxWidgets)
-process_wx_cxxflags(${WX_STATIC_CONFIG} wxWidgets-static)
+            target_link_libraries(${TARGET} INTERFACE "${FLAG}")
+        endforeach()
+    endfunction()
 
-process_wx_ldflags(${WX_SHARED_CONFIG} wxWidgets)
-process_wx_ldflags(${WX_STATIC_CONFIG} wxWidgets-static)
+    process_wx_cxxflags(${WX_SHARED_CONFIG} wxWidgets)
+    process_wx_cxxflags(${WX_STATIC_CONFIG} wxWidgets-static)
+
+    process_wx_ldflags(${WX_SHARED_CONFIG} wxWidgets)
+    process_wx_ldflags(${WX_STATIC_CONFIG} wxWidgets-static)
+endif()
 
 set(3RDPARTY_INSTALL_FILES
     $<TARGET_FILE:wxBase>
     $<TARGET_FILE:wxNet>
     $<TARGET_FILE:wxCore>
 )
-
 install(FILES ${3RDPARTY_INSTALL_FILES} DESTINATION ${INSTALL_LIB_DIR})
 
 if (CMAKE_BUILD_TYPE STREQUAL Release)
@@ -265,3 +313,4 @@ if (CMAKE_BUILD_TYPE STREQUAL Release)
         "
     )
 endif()
+

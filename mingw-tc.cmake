@@ -1,4 +1,4 @@
-set(CMAKE_SYSTEM_NAME Windows)
+set(CROSS_COMPILE Windows)
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
     # The cstd lib stuff had *issues* linking shared and I don't feel like troubleshooting them.

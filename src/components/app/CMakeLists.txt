@@ -19,7 +19,12 @@ include(../Component.cmake)
 setup_component_and_static(app 1.1.2)
 
 if (CMAKE_SYSTEM_NAME STREQUAL Windows) 
-    target_link_libraries(app libbacktrace dbghelp imagehlp)
-    target_link_libraries(app-static libbacktrace dbghelp imagehlp)
+    target_link_libraries(app dbghelp imagehlp)
+    target_link_libraries(app-static dbghelp imagehlp)
+endif()
+
+if (CROSS_COMPILE STREQUAL Windows)
+    target_link_libraries(app libbacktrace)
+    target_link_libraries(app-static libbacktrace)
 endif()
 
