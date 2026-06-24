@@ -250,7 +250,7 @@ void onboard::Frame::bindEvents() {
     });
 
     Bind(wxEVT_MENU, [this](wxCommandEvent&) {
-        wxLaunchDefaultApplication(paths::logDir().native());
+        wxLaunchDefaultApplication(paths::logDir().string());
     }, wxID_FILE1);
 
     static const auto phaseTable{[] {

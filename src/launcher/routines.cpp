@@ -87,7 +87,7 @@ void routine::launch(logging::Branch& lBranch) {
     // manages these things makes it not matter, but I doubt it).
     wxExit();
 #   elif defined(__APPLE__) or defined(__linux__)
-    auto str{exec.native()};
+    auto str{exec.string()};
     std::array<char *, 2> argv{ str.data(), nullptr };
     execvp(argv[0], argv.data());
     logger.error("ProffieConfig main binary missing/failed to start.");
@@ -213,7 +213,7 @@ void routine::platformInstall(logging::Branch& lBranch) {
 
     wxExit();
 #   else
-    auto str{installedExec.native()};
+    auto str{installedExec.string()};
     const decltype(str.data()) argv[2]{
         str.data(),
         nullptr,

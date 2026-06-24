@@ -50,7 +50,7 @@ Bitmap::Bitmap(std::string_view src, Type type) {
         case Type::Normal:
             LoadFile(
                 (paths::resourceDir() / "icons" /
-                (std::string{src} + ".png")).native(),
+                (std::string{src} + ".png")).string(),
                 wxBITMAP_TYPE_PNG
             );
             break;
