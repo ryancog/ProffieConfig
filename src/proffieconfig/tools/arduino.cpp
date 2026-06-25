@@ -405,9 +405,10 @@ std::variant<arduino::CompileOutput, wxString> compile(
         constexpr cstring PROPINST_MSG{wxTRANSLATE("Installing Injection Files...")};
         prog.set(25, wxGetTranslation(PROPINST_MSG));
 
-        std::error_code err;
-        if (not fs::create_directories(injectionsDest, err)) {
-            logger.error("Failed to create injections dir: " + err.message());
+        std::error_code ec;
+        fs::create_directories(injectionsDest, ec);
+        if (ec) {
+            logger.error("Failed to create injections dir: " + ec.message());
             return _("OS FS Error");
         }
     }
