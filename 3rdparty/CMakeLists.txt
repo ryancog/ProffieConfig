@@ -128,41 +128,54 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
         set(WX_LIB_DIR ${WX_SHARED_DIR}/lib/vc_x64_dll)
         set(WX_LIB_INCLUDE_DIR ${WX_LIB_DIR}/mswud)
         set_target_properties(wxBase PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase333ud_vc_x64_custom.dll
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase33ud.lib)
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxbaseud.dll
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbaseud.lib)
         set_target_properties(wxNet PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase333ud_net_vc_x64_custom.dll
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase33ud_net.lib)
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxbaseud_net.dll
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbaseud_net.lib)
         set_target_properties(wxCore PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw333ud_core_vc_x64_custom.dll
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmsw33ud_core.lib)
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxmswud_core.dll
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmswud_core.lib)
+
+        set(WX_STATIC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-win32-static-dbg)
+        set(WX_LIB_DIR ${WX_STATIC_DIR}/lib/vc_x64_lib)
+        set_target_properties(wxBase-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase33ud.lib)
+        set_target_properties(wxNet-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase33ud_net.lib)
+        set_target_properties(wxCore-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw33ud_core.lib)
+        set_target_properties(wxWidgets-PNG-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxpngd.lib)
+        set_target_properties(wxWidgets-ZLib-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxzlibd.lib)
     else()
         set(WX_SHARED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-win32-shared-rel)
         set(WX_LIB_DIR ${WX_SHARED_DIR}/lib/vc_x64_dll)
         set(WX_LIB_INCLUDE_DIR ${WX_LIB_DIR}/mswu)
         set_target_properties(wxBase PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase333u_vc_x64_custom.dll
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase33u.lib)
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxbaseu.dll
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbaseu.lib)
         set_target_properties(wxNet PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase333u_net_vc_x64_custom.dll
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbase33u_net.lib)
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxbaseu_net.dll
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxbaseu_net.lib)
         set_target_properties(wxCore PROPERTIES
-            IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw333u_core_vc_x64_custom.dll
-            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmsw33u_core.lib)
-    endif()
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxmswu_core.dll
+            IMPORTED_IMPLIB ${WX_LIB_DIR}/wxmswu_core.lib)
 
-    set(WX_STATIC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-win32-static)
-    set(WX_LIB_DIR ${WX_STATIC_DIR}/lib/vc_x64_lib)
-    set_target_properties(wxBase-static PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase33u.lib)
-    set_target_properties(wxNet-static PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase33u_net.lib)
-    set_target_properties(wxCore-static PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw33u_core.lib)
-    set_target_properties(wxWidgets-PNG-static PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/wxpng.lib)
-    set_target_properties(wxWidgets-ZLib-static PROPERTIES
-        IMPORTED_LOCATION ${WX_LIB_DIR}/wxzlib.lib)
+        set(WX_STATIC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wxWidgets/install-win32-static-rel)
+        set(WX_LIB_DIR ${WX_STATIC_DIR}/lib/vc_x64_lib)
+        set_target_properties(wxBase-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase33u.lib)
+        set_target_properties(wxNet-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxbase33u_net.lib)
+        set_target_properties(wxCore-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxmsw33u_core.lib)
+        set_target_properties(wxWidgets-PNG-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxpng.lib)
+        set_target_properties(wxWidgets-ZLib-static PROPERTIES
+            IMPORTED_LOCATION ${WX_LIB_DIR}/wxzlib.lib)
+    endif()
 
 elseif (CROSS_COMPILE STREQUAL Windows)
     add_library(libbacktrace STATIC IMPORTED GLOBAL)
