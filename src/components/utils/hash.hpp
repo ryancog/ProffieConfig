@@ -20,6 +20,7 @@
  */
 
 #include <array>
+#include <bit>
 #include <iostream>
 #include <optional>
 #include <string>
@@ -72,6 +73,22 @@ template <typename ...Args> requires (sizeof...(Args) > 0)
 template <typename T>
 [[nodiscard]] uint64 single(const T& v) {
     return std::hash<T>{}(v);
+}
+
+template <typename Type, typename Class>
+[[nodiscard]] uint64 single(Type Class::*mp) {
+    if constexpr (sizeof(mp) == sizeof(uint64)) {
+        std::bit_cast<uint64>(mp);
+    } else {
+        uint64 v;
+
+        for (size idx{ 0 }; idx < sizeof(mp); ++idx) {
+            auto byte{reinterpret_cast<uint8*>(&mp)[idx]};
+            v |= static_cast<uint64>(byte) << (8 * idx);
+        }
+
+        return v;
+    }
 }
 
 } // namespace utils::hash

@@ -132,7 +132,7 @@ private:
             RecvTableBinding(
                 utils::hash::combine(
                     typeid(Table).hash_code(),
-                    std::bit_cast<uint64>(MEM_PTR)
+                    utils::hash::single(MEM_PTR)
                 )
             ), mLambda{lambda(model, args...)} {}
 
