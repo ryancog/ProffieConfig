@@ -35,6 +35,7 @@
 #include <fileapi.h>
 #include <handleapi.h>
 #include <namedpipeapi.h>
+#include <shellapi.h>
 #include <winnt.h>
 #endif
 
