@@ -20,6 +20,7 @@
  */
 
 #include <algorithm>
+#include <utility>
 
 #include "config/config.hpp"
 #include "config/blades/bladeconfig.hpp"
@@ -344,8 +345,7 @@ void WS281X::Split::onType(uint32 sel) {
         case eList:
             break;
         case eMax:
-            assert(0);
-            __builtin_unreachable();
+            std::unreachable();
     }
 
     root<Config>().calcNumBlades();

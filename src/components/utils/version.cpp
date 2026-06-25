@@ -23,6 +23,7 @@
 #include <compare>
 #include <string>
 #include <sys/types.h>
+#include <utility>
 
 #include "utils/string.hpp"
 
@@ -125,8 +126,7 @@ std::strong_ordering Version::compare(const Version& other) const {
                 return std::strong_ordering::equal;
         }
 
-        assert(0);
-        __builtin_unreachable();
+        std::unreachable();
     }};
 
     auto majorRes{compare(&Version::major_)};

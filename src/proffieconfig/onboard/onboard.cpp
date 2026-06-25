@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <utility>
+
 #include <wx/menu.h>
 
 #include "data/context.hpp"
@@ -196,8 +198,7 @@ pcui::DescriptorPtr onboard::Frame::ui() {
                       case ePhase_Welcome:
                       case ePhase_Setup_Prog:
                       case ePhase_Max:
-                          assert(0);
-                          __builtin_unreachable();
+                          std::unreachable();
                           break;
                   }
               },
@@ -229,8 +230,7 @@ pcui::DescriptorPtr onboard::Frame::ui() {
                           break;
                       case ePhase_Setup_Prog:
                       case ePhase_Max:
-                          assert(0);
-                          __builtin_unreachable();
+                          std::unreachable();
                   }
               }
             }(),

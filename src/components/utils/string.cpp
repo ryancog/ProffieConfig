@@ -24,6 +24,7 @@
 #include <cmath>
 #include <iostream>
 #include <stack>
+#include <utility>
 
 #include "utils/types.hpp"
 
@@ -356,7 +357,7 @@ std::optional<float64> utils::doStringMath(std::string_view str) {
                 assert(0);
             }
 
-            __builtin_unreachable();
+            std::unreachable();
         }};
 
         const auto apply{[](float64 a, Operator op, float64 b) -> float64 {
@@ -372,7 +373,7 @@ std::optional<float64> utils::doStringMath(std::string_view str) {
                     assert(0);
             }
 
-            __builtin_unreachable();
+            std::unreachable();
         }};
 
         while (layer.size() > 1) {
@@ -499,10 +500,10 @@ std::optional<float64> utils::doStringMath(std::string_view str) {
                 case PAREN_L:
                 case PAREN_R:
                     // Parens should've been handled above.
-                    assert(0);
+                    break;
             }
 
-            __builtin_unreachable();
+            std::unreachable();
         }
 
         layer.back().op_ = op;

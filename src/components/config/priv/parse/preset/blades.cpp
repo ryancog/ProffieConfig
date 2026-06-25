@@ -20,6 +20,7 @@
  */
 
 #include <sstream>
+#include <utility>
 
 #include <wx/translation.h>
 
@@ -617,8 +618,7 @@ std::optional<std::string> parseBlade(
                 case 2: return simple.led3_;
                 case 3: return simple.led4_;
                 default:
-                    assert(0);
-                    __builtin_unreachable();
+                    std::unreachable();
             }
         }};
 

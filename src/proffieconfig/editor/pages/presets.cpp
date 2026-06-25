@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <utility>
+
 #include <wx/gdicmn.h>
 
 #include "config/blades/bladeconfig.hpp"
@@ -691,7 +693,7 @@ void PresetsPage::updateBladeStrings() {
                                 break;
                             }
                             case eMax:
-                                __builtin_unreachable();
+                                std::unreachable();
                         }
                         ++subIdx;
                     }
@@ -795,8 +797,7 @@ void PresetsPage::onAddPresetButton() {
             insertPos = vec.children().size();
             break;
         case Max:
-            assert(0);
-            __builtin_unreachable();
+            std::unreachable();
     }
 
     vec.insert(insertPos, std::make_unique<config::presets::Preset>(mConfig));

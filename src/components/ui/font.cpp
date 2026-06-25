@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <utility>
+
 #include <wx/font.h>
 #include <wx/settings.h>
 
@@ -61,8 +63,7 @@ wxFont pcui::detail::FontData::makeFont() const {
             return sysFont.Scale(0.8);
         }
 
-    assert(0);
-    __builtin_unreachable();
+    std::unreachable();
 }
 
 wxFont pcui::operator-(Font style) {

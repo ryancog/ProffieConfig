@@ -21,6 +21,7 @@
 
 #include <chrono>
 #include <iomanip>
+#include <utility>
 
 #include <wx/busyinfo.h>
 #include <wx/clipbrd.h>
@@ -582,8 +583,7 @@ pcui::List::Label SerialMonitorDlg::getLabel(size row, size col) {
     if (auto *ptr{std::get_if<EventLine>(&var)})
         return "???";
 
-    assert(0);
-    __builtin_unreachable();
+    std::unreachable();
 
     /*
     for (auto line : mLines) {

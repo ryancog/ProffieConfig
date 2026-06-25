@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <utility>
+
 #include <wx/preferences.h>
 #include <wx/settings.h>
 
@@ -106,8 +108,7 @@ struct GeneralPanel : pcui::detail::Panel
                           break;
                   }
 
-                  assert(0);
-                  __builtin_unreachable();
+                  std::unreachable();
               },
             }(),
             pcui::Spacer{.size_=pcui::interGroupSpacing()}(),

@@ -22,6 +22,7 @@
 #include <filesystem>
 #include <mutex>
 #include <optional>
+#include <utility>
 
 #include "config/blades/servo.hpp"
 #include "config/presets/style.hpp"
@@ -295,8 +296,7 @@ void Config::calcNumBlades() {
                             sum += data::context(split.segments_).val();
                             break;
                         default:
-                            assert(0);
-                            __builtin_unreachable();
+                            std::unreachable();
                     }
                 }
             } else {
