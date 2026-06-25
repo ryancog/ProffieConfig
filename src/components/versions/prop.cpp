@@ -1162,7 +1162,8 @@ std::optional<std::pair<detail::Data, pconf::HashedData>> parseSettingCommon(
     return std::pair{
         detail::Data(
             std::move(name),
-            *entry->label_,
+            // This is allowed to be nullopt here in some cases.
+            entry->label_.value_or(""),
             std::move(description),
             std::move(required),
             std::move(requireAny)
