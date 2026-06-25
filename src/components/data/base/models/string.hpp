@@ -31,9 +31,9 @@ namespace data::base {
 // TODO: The actions for this would like to be more space efficient, and
 //       preserve things like selection?
 struct DATA_EXPORT String : virtual Model {
-    struct ROContext;
-    struct Context;
-    struct RecvTable;
+    struct DATA_EXPORT ROContext;
+    struct DATA_EXPORT Context;
+    struct DATA_EXPORT RecvTable;
 
     using Filter = void (*)(const ROContext&, std::string&, size&);
 

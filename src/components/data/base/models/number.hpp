@@ -33,9 +33,9 @@ namespace detail {
 
 template <typename T>
 struct DATA_EXPORT Number : virtual Model {
-    struct ROContext;
-    struct Context;
-    struct RecvTable;
+    struct DATA_EXPORT ROContext;
+    struct DATA_EXPORT Context;
+    struct DATA_EXPORT RecvTable;
 
     using Filter = void (*)(const ROContext&, T&);
 

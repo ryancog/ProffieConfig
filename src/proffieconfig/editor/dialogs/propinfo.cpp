@@ -55,7 +55,7 @@ pcui::DescriptorPtr PropInfoDlg::ui() {
 
           if (idx == -1) {
               label.data_ = _("The Default ProffieOS Prop");
-              label.win_.base_.align_ = wxALIGN_CENTER;
+              label.align_ = pcui::Text::Align::Center;
           }
           else {
               label.data_ = mConfig.prop()->info_;

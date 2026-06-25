@@ -76,7 +76,8 @@ target_link_libraries(ui
 include(../Component.cmake)
 setup_component_and_static(ui 1.1.2)
 
-if (CMAKE_SYSTEM_NAME STREQUAL Windows) 
+if (CMAKE_SYSTEM_NAME STREQUAL Windows OR CROSS_COMPILE STREQUAL Windows)
     target_link_libraries(ui dwmapi)
     target_link_libraries(ui-static dwmapi)
 endif()
+

@@ -23,8 +23,10 @@
 
 #ifdef _WIN32
 #include <fstream>
-#include <shlobj.h>
+
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <shlobj.h>
 #include <errhandlingapi.h>
 
 #include <wx/app.h>
@@ -170,13 +172,6 @@ void routine::platformInstall(logging::Branch& lBranch) {
     setValue("UninstallString", '"' + installedExec.string() + "\" uninstall");
 
     RegCloseKey(hKey);
-
-    auto self{paths::executable().string()};
-    constexpr cstring SELFDELETE_BATCH{"C:\\TEMP\\PCFLDel.bat"};
-    auto batch{files::openOutput(SELFDELETE_BATCH)};
-    batch << "@echo off\n:Repeat\ndel \"" << self << "\"\nif exist \"" << self << "\" goto Repeat\ndel \"%~f0\"\n";
-    batch.close();
-    ShellExecuteA(nullptr, "open", SELFDELETE_BATCH, nullptr, nullptr, SW_HIDE);
 #   elif defined(__linux__)
     wxCopyFile(currentExec.c_str(), installedExec.c_str());
 #   elif defined(__APPLE__)

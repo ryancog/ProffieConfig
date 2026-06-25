@@ -27,7 +27,6 @@
 #include "data/context.hpp"
 #include "config/config.hpp"
 #include "config/priv/utils/style.hpp"
-#include "utils/parent.hpp"
 #include "utils/string.hpp"
 
 using namespace config::presets;
@@ -43,9 +42,7 @@ Style::Style(Config& config) :
     const auto contentFilter{[] (
         const data::base::String::ROContext& ctxt, std::string& str, size& pos
     ) {
-        auto& style{utils::parent<&Style::content_>(
-            ctxt.model<data::hier::String>()
-        )};
+        auto& style{ctxt.model().refAs<Style>()};
 
         // Extract the block comments before trimming so that special chars are
         // preserved in block comments.
@@ -146,6 +143,7 @@ Style::Style(Config& config) :
         if (commentMove) 
             style.comment_.focus();
     }};
+    content_.ref_ = this;
     content_.setFilter(contentFilter);
 
     comment_.change("ProffieConfig Default Blue AudioFlicker");

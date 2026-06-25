@@ -154,7 +154,7 @@ struct CONFIG_EXPORT Info : data::prim::Model {
     const std::unique_ptr<Config>& config();
 
 private:
-    friend void update();
+    friend CONFIG_EXPORT void update();
 
     Info();
 

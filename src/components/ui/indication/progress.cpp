@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <utility>
+
 #include <wx/event.h>
 #include <wx/gauge.h>
 
@@ -168,8 +170,7 @@ data::logic::Element Progress::Data::operator|(Logic logic) {
             break;
     }
 
-    assert(0);
-    __builtin_unreachable();
+    std::unreachable();
 }
 
 Progress::Data::ROContext::ROContext(const Data& data) :

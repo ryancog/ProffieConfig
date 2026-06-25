@@ -214,6 +214,28 @@ struct VERSIONS_EXPORT Layout {
 };
 
 struct VERSIONS_EXPORT PropData {
+    // MSVC
+    PropData(const PropData&) = delete;
+    PropData& operator=(const PropData&) = delete;
+    PropData(PropData&&) = default;
+
+    PropData(
+        std::string name,
+        std::string filename,
+        std::string info,
+        std::vector<std::unique_ptr<detail::Data>> settings,
+        std::map<uint32, Buttons> buttons,
+        Layout layout,
+        Errors errors
+    ) : name_(std::move(name)),
+        filename_(std::move(filename)),
+        info_(std::move(info_)),
+        settings_(std::move(settings)),
+        buttons_(std::move(buttons)),
+        layout_(std::move(layout)),
+        errors_(std::move(errors)) {}
+
+
     static std::optional<PropData> generate(
         const pconf::HashedData& data,
         logging::Branch *lBranch
@@ -230,6 +252,10 @@ struct VERSIONS_EXPORT PropData {
 };
 
 struct VERSIONS_EXPORT Prop : data::hier::Model, data::Receiver {
+    // MSVC
+    Prop(const Prop&) = delete;
+    Prop& operator=(const Prop&) = delete;
+
     using RecommendProcessor = void (*)(
         data::hier::Root&, std::string_view, std::string_view
     );
@@ -254,7 +280,7 @@ struct VERSIONS_EXPORT Prop : data::hier::Model, data::Receiver {
     const std::string info_;
 
 private:
-    friend std::vector<std::unique_ptr<Prop>> forVersion(
+    friend VERSIONS_EXPORT std::vector<std::unique_ptr<Prop>> forVersion(
         const utils::Version&,
         data::hier::Root&,
         Prop::RecommendProcessor

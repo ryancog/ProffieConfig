@@ -1,19 +1,23 @@
 # ProffieConfig, The All-In-One Proffieboard Management Utility!
 
 cmake_minimum_required(VERSION 3.31)
-set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum OS X deployment version" FORCE)
-if (CMAKE_BUILD_TYPE STREQUAL Release)
+if (CMAKE_SYSTEM_NAME STREQUAL Darwin AND CMAKE_BUILD_TYPE STREQUAL Release)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum OS X deployment version" FORCE)
     set(CMAKE_OSX_ARCHITECTURES arm64;x86_64 CACHE STRING "Build universal binary" FORCE)
 endif()
 
 project(ProffieConfig)
 
-if (NOT (CMAKE_HOST_SYSTEM_NAME STREQUAL Linux OR CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin))
+if (NOT (
+    CMAKE_HOST_SYSTEM_NAME STREQUAL Linux OR
+    CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin OR
+    CMAKE_HOST_SYSTEM_NAME STREQUAL Windows
+))
     # Rip Windows
     message(FATAL_ERROR "Building on this platform is not supported.")
 endif()
 
-if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+if (CROSS_COMPILE STREQUAL Windows)
     message(NOTICE "Configuring as cross-compile for Windows.")
 else()
     message(NOTICE "Configuring as native build for ${CMAKE_HOST_SYSTEM_NAME}...")
@@ -37,9 +41,23 @@ set(CMAKE_REPRODUCIBLE_BUILD ON)
 cmake_path(GET CMAKE_CURRENT_BINARY_DIR FILENAME BUILD_NAME)
 set(INSTALL_DIR ${CMAKE_CURRENT_LIST_DIR}/deploy/${BUILD_NAME})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHs-c- /D_HAS_EXCEPTIONS=0")
+    # This is a hack because I can't figure out how to otherwise solve the
+    # "No Target Architecture" error in `windows.h`
+    add_compile_definitions(_AMD64_)
+    # I guess because wx has it?
+    add_link_options(/NODEFAULTLIB:LIBCMT)
+    # add_link_options(/NODEFAULTLIB:MSVCRT)
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
+endif()
+
 if (CMAKE_SYSTEM_NAME STREQUAL Linux)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
+elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
+    add_compile_definitions(UNICODE _UNICODE)
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL Release)
@@ -52,17 +70,17 @@ if (CMAKE_BUILD_TYPE STREQUAL Release)
         set(REL_LINK_FLAGS "-Wl,--gc-sections -Wl,--strip-all -Wl,--as-needed")
         set(PLATFORM_SHORTNAME linux)
     elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
+        set(PLATFORM_SHORTNAME win32)
+    elseif (CROSS_COMPILE STREQUAL Windows)
+        set(PLATFORM_SHORTNAME win32)
         set(REL_COMP_FLAGS "-s -ffunction-sections -fdata-sections")
         set(REL_LINK_FLAGS "-Wl,--gc-sections -Wl,--strip-all -Wl,--as-needed")
-        set(PLATFORM_SHORTNAME win32)
-    endif()
-    if (CMAKE_SYSTEM_NAME STREQUAL Linux OR CMAKE_SYSTEM_NAME STREQUAL Windows) 
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${REL_COMP_FLAGS} -fno-record-gcc-switches")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${REL_COMP_FLAGS} -fno-record-gcc-switches")
-    endif()
-    if (CMAKE_SYSTEM_NAME STREQUAL Windows)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${REL_LINK_FLAGS} -Wl,--build-id=none -Wl,--no-insert-timestamp")
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${REL_LINK_FLAGS} -Wl,--build-id=none -Wl,--no-insert-timestamp")
+    endif()
+    if (CMAKE_SYSTEM_NAME STREQUAL Linux OR CROSS_COMPILE STREQUAL Windows)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${REL_COMP_FLAGS} -fno-record-gcc-switches")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${REL_COMP_FLAGS} -fno-record-gcc-switches")
     endif()
 endif()
 
@@ -76,7 +94,6 @@ if (CMAKE_BUILD_TYPE STREQUAL Debug)
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-install(FILES ${CMAKE_BINARY_DIR}/compile_commands.json DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
 
 if (LOCAL_BUILD)
     set(INSTALL_ITEM_DIR ${INSTALL_DIR}/items)
@@ -85,7 +102,7 @@ else()
     set(INSTALL_ITEM_DIR ${CMAKE_CURRENT_LIST_DIR}/staging/${PLATFORM_SHORTNAME})
 endif()
 
-if (LOCAL_BUILD AND CMAKE_SYSTEM_NAME STREQUAL Windows)
+if (LOCAL_BUILD AND (CMAKE_SYSTEM_NAME STREQUAL Windows OR CROSS_COMPILE STREQUAL Windows))
     set(INSTALL_BIN_DIR ${INSTALL_ITEM_DIR}/bin)
     set(INSTALL_COMPONENTS_DIR ${INSTALL_BIN_DIR})
     set(INSTALL_LIB_DIR ${INSTALL_BIN_DIR})
@@ -97,11 +114,12 @@ else()
     set(INSTALL_RESOURCE_DIR ${INSTALL_ITEM_DIR}/resources)
 endif()
 
-
 if (
         CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
         CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"
 )
+    install(FILES ${CMAKE_BINARY_DIR}/compile_commands.json DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
+
     add_compile_definitions(LIFETIMEBOUND=[[clang::lifetimebound]])
 else()
     add_compile_definitions(LIFETIMEBOUND=)

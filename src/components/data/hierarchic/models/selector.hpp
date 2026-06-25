@@ -28,7 +28,7 @@
 namespace data::hier {
 
 struct DATA_EXPORT Selector : base::Selector, Model {
-    struct BindAction;
+    struct DATA_EXPORT BindAction;
 
     Selector(Root&);
     Selector(const Selector&, Root&);

@@ -27,8 +27,8 @@
 namespace data::hier {
 
 struct DATA_EXPORT String : base::String, Model {
-    struct ChangeAction;
-    struct MoveAction;
+    struct DATA_EXPORT ChangeAction;
+    struct DATA_EXPORT MoveAction;
 
     String(Root&);
     String(const String&, Root&);

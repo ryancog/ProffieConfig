@@ -38,7 +38,7 @@ function(setup_target TARGET)
             configure_file(${CMAKE_SOURCE_DIR}/resources/templates/Info.plist.in ${CMAKE_CURRENT_BINARY_DIR}/Info.plist)
             set_target_properties(${TARGET} PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_BINARY_DIR}/Info.plist)
         endif()
-    elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
+    elseif (CMAKE_SYSTEM_NAME STREQUAL Windows OR CROSS_COMPILE STREQUAL Windows)
         set(RPATH "ThisMeansNothing")
 
         get_target_property(DESCRIPTION ${TARGET} DESCRIPTION)

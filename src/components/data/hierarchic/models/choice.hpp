@@ -27,8 +27,8 @@
 namespace data::hier {
 
 struct DATA_EXPORT Choice : base::Choice, Model {
-    struct ChoiceAction;
-    struct UpdateAction;
+    struct DATA_EXPORT ChoiceAction;
+    struct DATA_EXPORT UpdateAction;
 
     Choice(Root&);
     Choice(const Choice&, Root&);

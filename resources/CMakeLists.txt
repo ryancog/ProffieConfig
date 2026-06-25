@@ -25,7 +25,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
     install(PROGRAMS bin/macOS/arduino-cli DESTINATION ${INSTALL_BIN_DIR})
 elseif (CMAKE_SYSTEM_NAME STREQUAL Linux)
     install(PROGRAMS bin/Linux/arduino-cli DESTINATION ${INSTALL_BIN_DIR})
-elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
+elseif (CMAKE_SYSTEM_NAME STREQUAL Windows OR CROSS_COMPILE STREQUAL Windows)
     install(PROGRAMS 
         bin/Win32/arduino-cli.exe 
         bin/Win32/proffie-dfu-setup.exe

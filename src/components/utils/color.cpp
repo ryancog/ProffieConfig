@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <utility>
+
 #include <wx/bitmap.h>
 #include <wx/colour.h>
 #include <wx/dcmemory.h>
@@ -33,6 +35,7 @@
 
 #include "utils/objc.hpp"
 #elif _WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 
@@ -173,7 +176,6 @@ color::Dynamic::operator bool() const {
             return true;
     }
 
-    assert(0);
-    __builtin_unreachable();
+    std::unreachable();
 }
 

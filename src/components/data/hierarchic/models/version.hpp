@@ -27,7 +27,7 @@
 namespace data::hier {
 
 struct DATA_EXPORT Version : base::Version, Model {
-    struct SetAction;
+    struct DATA_EXPORT SetAction;
 
     Version(Root&);
     Version(const Version&, Root&);

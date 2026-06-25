@@ -30,7 +30,6 @@
 #include "ui/layout/stack.hpp"
 #include "ui/static/label.hpp"
 #include "utils/defer.hpp"
-#include "utils/parent.hpp"
 #include "versions/versions.hpp"
 
 #include "../onboard.hpp"
@@ -39,7 +38,7 @@
 #include "../../tools/arduino.hpp"
 #endif
 
-onboard::Setup::Setup() {
+onboard::Setup::Setup(Frame& parent) : mParent{parent} {
     mLoadingTimer = new wxTimer();
     mLoadingTimer->Start(50);
     mLoadingTimer->Bind(wxEVT_TIMER, [this](wxTimerEvent&) {
@@ -80,14 +79,14 @@ pcui::DescriptorPtr onboard::Setup::ui() {
         pcui::Spacer{10}(),
         pcui::Label{
           .win_{
-            .show_=utils::parent<&Frame::mSetupPage>(*this).mPhase |
+            .show_=mParent.mPhase |
               data::logic::HasSelection{{Frame::ePhase_Setup_Done}}
           },
           .label_=_("The installation completed successfully. Press \"Next\" to continue..."),
         }(),
         pcui::Label{
           .win_={
-            .show_=utils::parent<&Frame::mSetupPage>(*this).mPhase |
+            .show_=mParent.mPhase |
               data::logic::HasSelection{{Frame::ePhase_Setup_Prog}}
           },
           .label_=mStatusMessage,
@@ -96,7 +95,7 @@ pcui::DescriptorPtr onboard::Setup::ui() {
           .win_={
             .base_={.expand_=true},
             .maxSize_={300, -1},
-            .show_=utils::parent<&Frame::mSetupPage>(*this).mPhase |
+            .show_=mParent.mPhase |
               data::logic::HasSelection{{Frame::ePhase_Setup_Prog}}
           },
           .data_=mProgress,
@@ -106,8 +105,9 @@ pcui::DescriptorPtr onboard::Setup::ui() {
 }
 
 void onboard::Setup::startSetup() {
-    auto& phaseModel{utils::parent<&Frame::mSetupPage>(*this).mPhase};
+    auto& phaseModel{mParent.mPhase};
     auto phase{data::context(phaseModel)};
+
     assert(
         phase.idx() == Frame::ePhase_Setup_Pre or
         phase.idx() == Frame::ePhase_Setup_Fail

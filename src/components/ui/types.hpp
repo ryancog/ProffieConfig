@@ -20,6 +20,7 @@
  */
 
 #include <memory>
+#include <variant>
 
 #include <wx/toplevel.h>
 #include <wx/window.h>

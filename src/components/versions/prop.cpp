@@ -22,6 +22,7 @@
 #include <memory>
 #include <optional>
 #include <unordered_set>
+#include <utility>
 
 #include "data/context.hpp"
 #include "data/logic/adapter.hpp"
@@ -708,8 +709,7 @@ void Prop::onSet(const data::base::Model& model) {
         if (const auto *ptr{dynamic_cast<const Option::Selection *>(&model)})
             return ptr->disables_;
 
-        assert(0);
-        __builtin_unreachable();
+        std::unreachable();
     }()};
 
     for (const auto& disable : disables) {
@@ -786,8 +786,7 @@ void Prop::onSet(const data::base::Model& model) {
             if (const auto *ptr{dynamic_cast<const Selection *>(&model)})
                 return ptr->recommends_;
 
-            assert(0);
-            __builtin_unreachable();
+            std::unreachable();
         }()};
 
         for (const auto& [key, val] : recommends) {
@@ -1163,7 +1162,8 @@ std::optional<std::pair<detail::Data, pconf::HashedData>> parseSettingCommon(
     return std::pair{
         detail::Data(
             std::move(name),
-            *entry->label_,
+            // This is allowed to be nullopt here in some cases.
+            entry->label_.value_or(""),
             std::move(description),
             std::move(required),
             std::move(requireAny)

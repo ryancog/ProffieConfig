@@ -35,9 +35,9 @@ namespace data::hier {
 //       The intent is generally poorly conveyed, and I need to give this
 //       proper effort to clean it up eventually.
 struct DATA_EXPORT Root : Model {
-    struct ROContext;
-    struct Context;
-    struct RecvTable;
+    struct DATA_EXPORT ROContext;
+    struct DATA_EXPORT Context;
+    struct DATA_EXPORT RecvTable;
 
     ~Root() override;
 

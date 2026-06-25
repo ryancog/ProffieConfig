@@ -30,8 +30,10 @@
 
 namespace onboard {
 
+struct Frame;
+
 struct Setup {
-    Setup();
+    Setup(Frame&);
     ~Setup();
 
     pcui::DescriptorPtr ui();
@@ -41,6 +43,7 @@ struct Setup {
     data::prim::String errorMessage_;
 
 private:
+    Frame& mParent;
     wxTimer *mLoadingTimer{nullptr};
 
     pcui::Progress::Data mProgress;

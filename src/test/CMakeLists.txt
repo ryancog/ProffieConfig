@@ -23,9 +23,11 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-target_compile_options(Catch2 PRIVATE
-    -fexceptions
-)
+if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    target_compile_options(Catch2 PRIVATE
+        -fexceptions
+    )
+endif()
 
 target_link_libraries(test
     Catch2::Catch2

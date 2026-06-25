@@ -30,7 +30,7 @@
 
 namespace data::logic {
 
-struct Manager;
+struct DATA_EXPORT Manager;
 
 namespace detail {
 
@@ -87,7 +87,7 @@ struct DATA_EXPORT Element : std::unique_ptr<detail::Base> {
     operator bool() = delete;
 };
 
-struct Receiver;
+struct DATA_EXPORT Receiver;
 
 struct DATA_EXPORT Manager {
     Manager(Element&&);

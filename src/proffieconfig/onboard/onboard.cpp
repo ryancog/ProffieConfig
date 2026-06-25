@@ -19,6 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <utility>
+
 #include <wx/menu.h>
 
 #include "data/context.hpp"
@@ -47,7 +49,8 @@ onboard::Frame::Frame() :
         _("ProffieConfig First-Time Setup"),
         wxSYSTEM_MENU | wxCLOSE_BOX | wxMINIMIZE_BOX |
         wxCAPTION | wxCLIP_CHILDREN
-    ) {
+    ),
+    mSetupPage(*this) {
 
     { auto phase{data::context(mPhase)};
         phase.update(ePhase_Max);
@@ -196,8 +199,7 @@ pcui::DescriptorPtr onboard::Frame::ui() {
                       case ePhase_Welcome:
                       case ePhase_Setup_Prog:
                       case ePhase_Max:
-                          assert(0);
-                          __builtin_unreachable();
+                          std::unreachable();
                           break;
                   }
               },
@@ -229,8 +231,7 @@ pcui::DescriptorPtr onboard::Frame::ui() {
                           break;
                       case ePhase_Setup_Prog:
                       case ePhase_Max:
-                          assert(0);
-                          __builtin_unreachable();
+                          std::unreachable();
                   }
               }
             }(),

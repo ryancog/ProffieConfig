@@ -76,6 +76,16 @@ struct DATA_EXPORT Model {
     virtual bool tryLock() const = 0;
     virtual void unlock() const = 0;
 
+    /**
+     * Store reference data with the model.
+     */
+    void *ref_{nullptr};
+
+    template <typename T>
+    T& refAs() const {
+        return *reinterpret_cast<T *>(ref_);
+    }
+
 protected:
     bool setupEnable(bool&);
     void doEnable(bool);
@@ -122,7 +132,7 @@ private:
             RecvTableBinding(
                 utils::hash::combine(
                     typeid(Table).hash_code(),
-                    std::bit_cast<uint64>(MEM_PTR)
+                    utils::hash::single(MEM_PTR)
                 )
             ), mLambda{lambda(model, args...)} {}
 

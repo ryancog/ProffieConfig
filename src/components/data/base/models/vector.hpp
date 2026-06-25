@@ -31,9 +31,9 @@
 namespace data::base {
 
 struct DATA_EXPORT Vector : virtual Model {
-    struct ROContext;
-    struct Context;
-    struct RecvTable;
+    struct DATA_EXPORT ROContext;
+    struct DATA_EXPORT Context;
+    struct DATA_EXPORT RecvTable;
 
     Vector() = default;
     Vector(const Vector&) = delete;

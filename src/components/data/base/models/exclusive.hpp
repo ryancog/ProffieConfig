@@ -33,9 +33,14 @@
 namespace data::base {
 
 struct DATA_EXPORT Exclusive : virtual Model, virtual Receiver {
-    struct ROContext;
-    struct Context;
-    struct RecvTable;
+    // MSVC
+    Exclusive() = default;
+    Exclusive(const Exclusive&) = delete;
+    Exclusive& operator=(const Exclusive&) = delete;
+
+    struct DATA_EXPORT ROContext;
+    struct DATA_EXPORT Context;
+    struct DATA_EXPORT RecvTable;
 
     virtual bool select(size) = 0;
 

@@ -27,7 +27,7 @@
 namespace data::hier {
 
 struct DATA_EXPORT Exclusive : base::Exclusive, Model {
-    struct SelectAction;
+    struct DATA_EXPORT SelectAction;
 
     Exclusive(Root&, size);
 

@@ -30,10 +30,11 @@
 #include <sys/wait.h>
 #include <sys/poll.h>
 #elif defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include <fileapi.h>
 #include <handleapi.h>
 #include <namedpipeapi.h>
-#include <windows.h>
 #include <winnt.h>
 #endif
 
@@ -154,18 +155,18 @@ void Process::create(std::string exec, std::span<std::string> args) {
     pipeAttributes.lpSecurityDescriptor = nullptr;
 
     bool pipeSuccess{true};
-    pipeSuccess &= CreatePipe(
+    pipeSuccess &= static_cast<bool>(CreatePipe(
         &data.parentFromChild_[0],
         &data.parentFromChild_[1],
         &pipeAttributes,
         0
-    );
-    pipeSuccess &= CreatePipe(
+    ));
+    pipeSuccess &= static_cast<bool>(CreatePipe(
         &data.childFromParent_[0],
         &data.childFromParent_[1],
         &pipeAttributes,
         0
-    );
+    ));
 
     if (not pipeSuccess) {
         data.promise_.set_value({.err_=Result::eConnection_Failed});
@@ -271,7 +272,7 @@ std::optional<std::string> Process::read() {
         &numBytes,
         nullptr
     )};
-    if (not peekResult) {
+    if (not peekResult or numBytes == 0) {
         return std::nullopt;
     }
 

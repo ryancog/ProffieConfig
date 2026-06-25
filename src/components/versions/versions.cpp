@@ -48,7 +48,7 @@
 
 namespace {
 
-constexpr utils::Version DEFAULT_OS_VERSION{8, 10};
+const utils::Version DEFAULT_OS_VERSION(8, 10);
 
 } // namespace
 

@@ -61,6 +61,12 @@ struct UI_EXPORT Text {
         Best,
     };
 
+    enum class Align {
+        Left,
+        Center,
+        Right,
+    };
+
     struct SingleLine {
         /**
          * Placeholder text displayed when no text has been entered yet.
@@ -87,6 +93,7 @@ struct UI_EXPORT Text {
     };
 
     std::variant<SingleLine, MultiLine> style_;
+    Align align_{Align::Left};
 
     DescriptorPtr operator()();
 };

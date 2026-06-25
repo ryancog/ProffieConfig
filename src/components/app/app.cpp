@@ -25,27 +25,31 @@
 #include <span>
 #include <string>
 
-#if defined(__linux__) or defined(__APPLE__)
+#if __linux__ or __APPLE__
 #include <array>
 #include <dlfcn.h>
 #include <execinfo.h>
 #include <unistd.h>
 #endif
 
-#if defined(__linux__)
+#if __linux__
 #include <sys/ucontext.h>
 #endif
 
-#if defined(_WIN32) and defined(__WXGTK__)
+#if _WIN32 and __WXGTK__
 #include <dwmapi.h>
 #endif
 
 #ifdef _WIN32
 #include <wincon.h>
+#include <windef.h>
 #include <winreg.h>
 #include <dbghelp.h>
-#include <backtrace.h>
 #include <processthreadsapi.h>
+#if __has_include(<backtrace.h>)
+    #define USE_LIBBACKTRACE 1
+    #include <backtrace.h>
+#endif
 #endif
 
 #include <wx/snglinst.h>
@@ -80,7 +84,7 @@ app::ShowMessageFunc *showMessage;
 // SYMBOL_INFO. This structure formalizes that.
 struct SymbolInfo {
     SymbolInfo() {
-#       if defined(_WIN32)
+#       if _WIN32
         memset(&mInfo, 0, sizeof(SYMBOL_INFO));
         // The extra byte for null term is in the SYMBOL_INFO struct
         mInfo.MaxNameLen = mName.size();
@@ -88,51 +92,51 @@ struct SymbolInfo {
 #       endif
     }
 
-#   if defined(_WIN32)
+#   if _WIN32
     [[nodiscard]] SYMBOL_INFO *raw() { return &mInfo; }
-#   elif defined(__APPLE__) or defined(__linux__)
+#   elif __APPLE__ or __linux__
     [[nodiscard]] Dl_info *raw() { return &mInfo; }
 #   endif
 
     [[nodiscard]] cstring name() const { 
-#       if defined(_WIN32)
+#       if _WIN32
         return mInfo.NameLen ? mInfo.Name : nullptr;
-#       elif defined(__APPLE__) or defined(__linux__)
+#       elif __APPLE__ or __linux__
         return mInfo.dli_sname;
 #       endif
     };
 
     [[nodiscard]] void *addr() const {
-#       if defined(_WIN32)
+#       if _WIN32
         return reinterpret_cast<void *>(mInfo.Address);
-#       elif defined(__APPLE__) or defined(__linux__)
+#       elif __APPLE__ or __linux__
         return mInfo.dli_saddr;
 #       endif
     };
 
     [[nodiscard]] cstring filename() const {
-#       if defined(_WIN32)
+#       if _WIN32
         (void)this;
         return nullptr;
-#       elif defined(__APPLE__) or defined(__linux__)
+#       elif __APPLE__ or __linux__
         return mInfo.dli_fname;
 #       endif
     }
 
     [[nodiscard]] void *fileAddr() const {
-#       if defined(_WIN32)
+#       if _WIN32
         (void)this;
         return nullptr;
-#       elif defined(__APPLE__) or defined(__linux__)
+#       elif __APPLE__ or __linux__
         return mInfo.dli_fbase;
 #       endif
     }
 
 private:
-#   if defined(_WIN32)
+#   if _WIN32
     SYMBOL_INFO mInfo;
     std::array<char, 255> mName;
-#   elif defined(__APPLE__) or defined(__linux__)
+#   elif __APPLE__ or __linux__
     Dl_info mInfo;
 #   endif
 };
@@ -184,11 +188,11 @@ cstring addrToStr(
 };
 
 void fillSymbolInfo(void *frame, SymbolInfo& info) {
-#if defined(__linux__) or defined(__APPLE__)
+#if __linux__ or __APPLE__
     if (dladdr(frame, info.raw()) == 0) {
         return;
     } 
-#elif defined(_WIN32)
+#elif _WIN32
     const auto errCB{[&](cstring /* msg */, int /* errnum */) {
         info.raw()->NameLen = 0;
         info.raw()->Address = 0;
@@ -237,6 +241,7 @@ void fillSymbolInfo(void *frame, SymbolInfo& info) {
         info.raw()
     );
 
+#if USE_LIBBACKTRACE
     if (res) return;
 
     static backtrace_state *state{backtrace_create_state(
@@ -259,6 +264,7 @@ void fillSymbolInfo(void *frame, SymbolInfo& info) {
         info.raw()->Address = 0;
     }
 #endif
+#endif
 }
 
 wxString generateBacktrace(void *pc, std::span<void *> frames) {
@@ -271,7 +277,7 @@ wxString generateBacktrace(void *pc, std::span<void *> frames) {
 
         fillSymbolInfo(frame, info);
 
-#       if defined(__APPLE__) and defined(__x86_64__)
+#       if __APPLE__ and __x86_64__
         auto& str{inSigFrames ? droppedFramesStr : framesStr};
 
         (void)pc; // Suppress the unused diagnostic
@@ -323,22 +329,22 @@ wxString generateBacktrace(void *pc, std::span<void *> frames) {
         droppedFramesStr;
 }
 
-#if defined(__linux__) or defined(__APPLE__)
+#if __linux__ or __APPLE__
 void sigHandler(int sig, siginfo_t *info, void *ucontext) {
     const auto *context{reinterpret_cast<ucontext_t *>(ucontext)};
 
     wxString detailAppStr{'\n'};
     void *const programCounter{reinterpret_cast<void *>([context]() {
-#       if defined(__linux__)
-#       if defined(__x86_64__)
+#       if __linux__
+#       if __x86_64__
         return context->uc_mcontext.gregs[REG_RIP];
 #       endif
-#       elif defined(__APPLE__)
-#       if defined(__x86_64__)
+#       elif __APPLE__
+#       if __x86_64__
         return context->uc_mcontext->__ss.__rip;
-#       elif defined(__i386__)
+#       elif __i386__
         return context->uc_mcontext->__ss.__eip;
-#       elif defined(__aarch64__)
+#       elif __aarch64__
         return context->uc_mcontext->__ss.__pc;
 #       endif
 #       endif
@@ -356,8 +362,8 @@ void sigHandler(int sig, siginfo_t *info, void *ucontext) {
 
     crashHandler(errStr, backtraceStr);
 }
-#elif defined(_WIN32)
-WINAPI LONG exceptionFilter(LPEXCEPTION_POINTERS exception) {
+#elif _WIN32
+LONG WINAPI exceptionFilter(LPEXCEPTION_POINTERS exception) {
     wxString signame;
     switch (exception->ExceptionRecord->ExceptionCode) {
         case EXCEPTION_ACCESS_VIOLATION:
@@ -449,7 +455,7 @@ bool app::init() {
     }
 #   endif
 
-#   if defined(__linux__) or defined(__APPLE__)
+#   if __linux__ or __APPLE__
     struct sigaction act{};
     act.sa_flags = SA_SIGINFO;
     act.sa_sigaction = sigHandler;
@@ -461,7 +467,7 @@ bool app::init() {
        ) {
         logger.warn("Signal handlers could not be registered: " + std::to_string(errno));
     }
-#   elif defined(_WIN32)
+#   elif _WIN32
     SetUnhandledExceptionFilter(exceptionFilter);
 #   endif
 
@@ -474,7 +480,7 @@ bool app::init() {
 
     logger.info("First-stage app initialization complete.");
 
-#   if defined(_WIN32) and defined(__WXGTK__)
+#   if _WIN32 and __WXGTK__
     SetEnvironmentVariableA("GTK_CSD", "0");
     constexpr cstring DARK_THEME{"Adwaita:dark"};
     constexpr cstring LIGHT_THEME{"Adwaita"};
@@ -516,7 +522,7 @@ bool app::init() {
     return true;
 }
 
-#if defined(_WIN32)
+#if _WIN32
 APP_EXPORT [[nodiscard]] bool app::darkMode() { 
     DWORD buffer{};
     DWORD bufferSize{sizeof(buffer)};

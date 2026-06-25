@@ -24,6 +24,7 @@
 #include <cmath>
 #include <iostream>
 #include <stack>
+#include <utility>
 
 #include "utils/types.hpp"
 
@@ -317,15 +318,15 @@ bool utils::extractComments(CommentData& data) {
 
 std::optional<float64> utils::doStringMath(std::string_view str) {
     enum class Operator {
-        ADD,
-        SUB,
-        MUL,
-        DIV,
+        Add,
+        Sub,
+        Mul,
+        Div,
 
-        NEG,
+        Neg,
 
-        PAREN_L,
-        PAREN_R,
+        Paren_L,
+        Paren_R,
     };
     struct OpPair {
         float64 val_;
@@ -343,36 +344,40 @@ std::optional<float64> utils::doStringMath(std::string_view str) {
         const auto opPrio{[](Operator op) -> int32 {
             switch (op) {
                 using enum Operator;
-                case ADD:
-                case SUB:
-                return 1;
-                case MUL:
-                case DIV:
-                return 2;
-                case NEG:
-                return 3;
-                case PAREN_L:
-                case PAREN_R:
-                assert(0);
+                case Add:
+                case Sub:
+                    return 1;
+                case Mul:
+                case Div:
+                    return 2;
+                case Neg:
+                    return 3;
+                case Paren_L:
+                case Paren_R:
+                    break;
             }
 
-            __builtin_unreachable();
+            std::unreachable();
         }};
 
         const auto apply{[](float64 a, Operator op, float64 b) -> float64 {
             switch (op) {
                 using enum Operator;
-                case ADD: return a + b;
-                case NEG:
-                case SUB: return a - b;
-                case MUL: return a * b;
-                case DIV: return a / b;
-                case PAREN_L:
-                case PAREN_R:
-                    assert(0);
+                case Add:
+                    return a + b;
+                case Neg:
+                case Sub:
+                    return a - b;
+                case Mul:
+                    return a * b;
+                case Div:
+                    return a / b;
+                case Paren_L:
+                case Paren_R:
+                    break;
             }
 
-            __builtin_unreachable();
+            std::unreachable();
         }};
 
         while (layer.size() > 1) {
@@ -408,12 +413,12 @@ std::optional<float64> utils::doStringMath(std::string_view str) {
     const auto parseOp{[](char c) -> std::optional<Operator> {
         switch (c) {
             using enum Operator;
-            case '+': return ADD;
-            case '-': return SUB;
-            case '*': return MUL;
-            case '/': return DIV;
-            case '(': return PAREN_L;
-            case ')': return PAREN_R;
+            case '+': return Add;
+            case '-': return Sub;
+            case '*': return Mul;
+            case '/': return Div;
+            case '(': return Paren_L;
+            case ')': return Paren_R;
             default: return std::nullopt;
         }
     }};
@@ -445,7 +450,7 @@ std::optional<float64> utils::doStringMath(std::string_view str) {
     const auto pushOp{[&](Operator op) -> bool {
         auto& layer{stack.top()};
 
-        if (op == Operator::PAREN_L) {
+        if (op == Operator::Paren_L) {
             if (not stack.top().empty() and not stack.top().back().op_) {
                 // If this isn't the start, or there's no operator preceeding
                 // the paren, then we have a situation like `5 (smth)` which,
@@ -460,7 +465,7 @@ std::optional<float64> utils::doStringMath(std::string_view str) {
             return true;
         }
 
-        if (op == Operator::PAREN_R) {
+        if (op == Operator::Paren_R) {
             // There isn't an extra layer started by a previous '('
             if (stack.size() == 1) return false;
 
@@ -479,30 +484,30 @@ std::optional<float64> utils::doStringMath(std::string_view str) {
         if (layer.empty() or layer.back().op_) {
             switch (op) {
                 using enum Operator;
-                case ADD:
+                case Add:
                     // E.g. 7 - +6, add is noop
                     return true;
-                case SUB:
+                case Sub:
                 {
                     // Push new pair for high-priority negation op.
                     auto& opPair{layer.emplace_back()};
                     opPair.val_ = 0;
-                    opPair.op_ = NEG;
+                    opPair.op_ = Neg;
                     return true;
                 }
-                case MUL:
-                case DIV:
-                    // MUL and DIV cannot appear before a num.
+                case Mul:
+                case Div:
+                    // Mul and DIV cannot appear before a num.
                     return false;
-                case NEG:
+                case Neg:
                     // Cannot push a neg, it is synthesized automatically.
-                case PAREN_L:
-                case PAREN_R:
+                case Paren_L:
+                case Paren_R:
                     // Parens should've been handled above.
-                    assert(0);
+                    break;
             }
 
-            __builtin_unreachable();
+            std::unreachable();
         }
 
         layer.back().op_ = op;

@@ -22,7 +22,6 @@
 #include "config/config.hpp"
 #include "config/priv/utils/style.hpp"
 #include "data/context.hpp"
-#include "utils/parent.hpp"
 #include "utils/string.hpp"
 
 using namespace config::styles;
@@ -50,9 +49,7 @@ Style::Style(Config& config) :
     const auto contentFilter{[] (
         const data::base::String::ROContext& ctxt, std::string& str, size& pos
     ) {
-        auto& style{utils::parent<&Style::content_>(
-            ctxt.model<data::hier::String>()
-        )};
+        auto& style{ctxt.model().refAs<Style>()};
 
         auto commentMove{priv::style::extractComments(
             str, pos, style.comments_
@@ -79,6 +76,7 @@ Style::Style(Config& config) :
         if (commentMove) 
             style.comments_.focus();
     }};
+    content_.ref_ = this;
     content_.setFilter(contentFilter);
 
     content_.change("Layers<Black>");

@@ -24,7 +24,6 @@
 #include "config/blades/ws281x.hpp"
 #include "config/config.hpp"
 #include "data/context.hpp"
-#include "utils/parent.hpp"
 #include "utils/string.hpp"
 
 using namespace config::blades;
@@ -95,14 +94,13 @@ BladeConfig::BladeConfig(Config& config) :
     const auto noBladeIdFilter{[](
         const data::base::Bool::ROContext& ctxt, bool& noBladeId
     ) {
-        const auto& bladeConfig{utils::parent<&BladeConfig::noBladeId_>(
-            ctxt.model<data::hier::Bool>()
-        )};
+        const auto& bladeConfig{ctxt.model().refAs<BladeConfig>()};
 
         auto id{data::context(bladeConfig.id_)};
         if (id.val() == NO_BLADE)
             noBladeId = true;
     }};
+    noBladeId_.ref_ = this;
     noBladeId_.setFilter(noBladeIdFilter);
 
     id_.update({.min_=0, .max_=NO_BLADE});
