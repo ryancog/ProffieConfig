@@ -154,6 +154,7 @@ patch_rpaths() {
             fi
         done
 
+        # I don't remember why this is here...
         unset IFS
     fi
 
