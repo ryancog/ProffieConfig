@@ -47,6 +47,9 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # This is a hack because I can't figure out how to otherwise solve the
     # "No Target Architecture" error in `windows.h`
     add_compile_definitions(_AMD64_)
+    # I guess because wx has it?
+    add_link_options(/NODEFAULTLIB:LIBCMT)
+    # add_link_options(/NODEFAULTLIB:MSVCRT)
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
 endif()
@@ -87,11 +90,6 @@ if (CMAKE_BUILD_TYPE STREQUAL Debug)
     if (NOT CMAKE_SYSTEM_NAME STREQUAL Windows)
         add_compile_options(-fsanitize=address)
         add_link_options(-fsanitize=address)
-    endif()
-
-    if (CMAKE_SYSTEM_NAME STREQUAL Windows)
-        add_link_options(/NODEFAULTLIB:LIBCMT)
-        add_link_options(/NODEFAULTLIB:MSVCRT)
     endif()
 endif()
 
