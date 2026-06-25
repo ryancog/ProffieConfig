@@ -21,7 +21,9 @@
 
 #include <cassert>
 #include <memory>
+#include <utility>
 #include <vector>
+#include <list>
 
 #include "utils/types.hpp"
 

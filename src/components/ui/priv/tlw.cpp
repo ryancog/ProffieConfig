@@ -22,8 +22,9 @@
 #include <wx/toplevel.h>
 
 #ifdef _WIN32
-#include <dwmapi.h>
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <dwmapi.h>
 
 #include "app/app.hpp"
 #include "log/context.hpp"

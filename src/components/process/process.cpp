@@ -30,10 +30,11 @@
 #include <sys/wait.h>
 #include <sys/poll.h>
 #elif defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include <fileapi.h>
 #include <handleapi.h>
 #include <namedpipeapi.h>
-#include <windows.h>
 #include <winnt.h>
 #endif
 

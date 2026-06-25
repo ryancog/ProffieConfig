@@ -27,9 +27,10 @@
 #include <variant>
 
 #ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include <fileapi.h>
 #include <handleapi.h>
-#include <windows.h>
 #include <synchapi.h>
 #else
 #include <thread>
