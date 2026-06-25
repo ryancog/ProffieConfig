@@ -49,7 +49,8 @@ onboard::Frame::Frame() :
         _("ProffieConfig First-Time Setup"),
         wxSYSTEM_MENU | wxCLOSE_BOX | wxMINIMIZE_BOX |
         wxCAPTION | wxCLIP_CHILDREN
-    ) {
+    ),
+    mSetupPage(*this) {
 
     { auto phase{data::context(mPhase)};
         phase.update(ePhase_Max);

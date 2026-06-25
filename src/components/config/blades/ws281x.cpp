@@ -29,7 +29,6 @@
 #include "data/base/models/selection.hpp"
 #include "data/context.hpp"
 #include "data/hierarchic/models/number.hpp"
-#include "utils/parent.hpp"
 #include "utils/string.hpp"
 
 using namespace config::blades;
@@ -245,7 +244,10 @@ WS281X::Split::Split(WS281X& ws281x) :
     }()};
     respondWith(segments_, segmentsTable);
 
+    length_.ref_ = this;
     length_.setFilter(lengthFilter);
+
+    list_.ref_ = this;
     list_.setFilter(listFilter);
 
     auto parentLen{data::context(ws281x.length_)};
@@ -428,9 +430,7 @@ void WS281X::Split::onSegments() {
 void WS281X::Split::lengthFilter(
     const data::base::Integer::ROContext& ctxt, int32& len
 ) {
-    auto& split{utils::parent<&Split::length_>(
-        ctxt.model<data::hier::Integer>()
-    )};
+    auto& split{ctxt.model().refAs<Split>()};
     auto parentLen{data::context(split.mParent.length_)};
 
     if (len > parentLen.val())
@@ -440,9 +440,7 @@ void WS281X::Split::lengthFilter(
 void WS281X::Split::listFilter(
     const data::base::String::ROContext& ctxt, std::string& str, size& pos
 ) {
-    auto& split{utils::parent<&Split::list_>(
-        ctxt.model<data::hier::String>()
-    )};
+    auto& split{ctxt.model().refAs<Split>()};
     auto parentLen{data::context(split.mParent.length_)};
 
     for (auto idx{0}; idx < str.size(); ++idx) {
