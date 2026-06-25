@@ -77,8 +77,14 @@ struct EnumPrefStrings {
     requires
         (static_cast<size>(decltype(DEFAULT)::Max) == NUM) and
         (static_cast<size>(DEFAULT) < NUM)
-    static constexpr EnumPrefStrings make(cstring key, cstring (&values)[NUM]) {
-        return {key, values, NUM, static_cast<size>(DEFAULT)};
+    static constexpr EnumPrefStrings make(
+        cstring key, std::array<cstring, NUM> values
+    ) {
+        // TODO: Make all this less error-prone and ugly.
+        // Make sure the data is stored statically. The array passed in
+        // probably is treated as a temporary.
+        static std::array statValues{values};
+        return {key, statValues.data(), NUM, static_cast<size>(DEFAULT)};
     }
 
     cstring key_;
@@ -104,9 +110,9 @@ constexpr std::array<StringPrefStrings, NUM_STR_PREFS> STR_PREF_STRS{{
 }};
 
 std::array<size, NUM_ENUM_PREFS> enumPrefs;
-constexpr std::array<EnumPrefStrings, NUM_ENUM_PREFS> ENUM_PREF_STRS{{
+const std::array<EnumPrefStrings, NUM_ENUM_PREFS> ENUM_PREF_STRS{{
     EnumPrefStrings::make<state::prefs::enums::AddPresetInsertion::After_Selected>(
-        "ADD_PRESET_INSERTION", (cstring[]){
+        "ADD_PRESET_INSERTION", std::array{
             "BEGIN",
             "END",
             "BEFORE_SEL",
