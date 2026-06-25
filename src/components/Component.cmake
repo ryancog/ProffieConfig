@@ -5,6 +5,13 @@ include(${_COMPONENT_LIST_DIR}/../Common.cmake)
 function(setup_component TARGET VERSION)
     target_include_directories(${TARGET} PUBLIC ${_COMPONENT_LIST_DIR}) # Include components/
 
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        # Make it consistent with MinGW and the manifest.pconf
+        set_target_properties(${TARGET} PROPERTIES
+            PREFIX lib
+        )
+    endif()
+
     set_target_properties(${TARGET} PROPERTIES
         CXX_VISIBILITY_PRESET hidden
         VISIBILITY_INLINES_HIDDEN YES
