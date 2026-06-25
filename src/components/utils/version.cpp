@@ -22,7 +22,7 @@
 #include <charconv>
 #include <compare>
 #include <string>
-#include <sys/types.h>
+#include <string_view>
 #include <utility>
 
 #include "utils/string.hpp"
@@ -36,9 +36,8 @@ Version::Version(std::string_view str) {
     }
 
     std::string_view convStr{str};
-    const cstring end{str.end()};
 
-    auto parseNum{[this, &convStr, &end](VerNum& num) {
+    auto parseNum{[this, &convStr](VerNum& num) {
         auto res{std::from_chars(
             convStr.data(),
             convStr.data() + convStr.length(),
@@ -78,7 +77,8 @@ Version::Version(std::string_view str) {
 
 
     parseNum(major_);
-    if (err_ != Err::None or convStr.data() == end) return;
+    if (err_ != Err::None or convStr.empty())
+        return;
 
     if (convStr[0] == '.') {
         // Jump over '.'
@@ -92,7 +92,8 @@ Version::Version(std::string_view str) {
     }
 
     parseNum(minor_);
-    if (err_ != Err::None or convStr.data() == end) return;
+    if (err_ != Err::None or convStr.empty())
+        return;
 
     if (convStr[0] == '.') {
         // Jump over '.'
@@ -106,7 +107,9 @@ Version::Version(std::string_view str) {
     }
 
     parseNum(bugfix_);
-    if (err_ != Err::None or convStr.data() == end) return;
+    if (err_ != Err::None or convStr.empty())
+        return;
+
     if (convStr[0] != '-') {
         err_ = Err::Str_Invalid;
         return;
