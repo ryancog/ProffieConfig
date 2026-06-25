@@ -19,15 +19,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _MSC_VER
 #include <cxxabi.h>
 #include <memory>
 #include <string>
+#endif
 
 #include "utils/types.hpp"
 
 namespace utils {
 
 inline std::string demangle(cstring str) {
+#   ifndef _MSC_VER
     int32 result{};
     std::unique_ptr<char, void(*)(void*)> res{abi::__cxa_demangle(
         str,
@@ -37,6 +40,9 @@ inline std::string demangle(cstring str) {
     ), free};
     if (result != 0) return str;
     return res.get();
+#   else
+    return str;
+#   endif
 }
 
 } // namespace utils
