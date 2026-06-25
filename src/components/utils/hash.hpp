@@ -77,14 +77,17 @@ template <typename T>
 
 template <typename Type, typename Class>
 [[nodiscard]] uint64 single(Type Class::*mp) {
-    if constexpr (sizeof(mp) == sizeof(uint64)) {
-        std::bit_cast<uint64>(mp);
+    if constexpr (sizeof mp == sizeof(uint64)) {
+        return std::bit_cast<uint64>(mp);
     } else {
-        uint64 v;
+        uint64 v{0};
 
-        for (size idx{ 0 }; idx < sizeof(mp); ++idx) {
-            auto byte{reinterpret_cast<uint8*>(&mp)[idx]};
-            v |= static_cast<uint64>(byte) << (8 * idx);
+        static_assert(sizeof mp % sizeof(uint64) == 0);
+        constexpr auto NUM_SECTS{sizeof mp / sizeof(uint64)};
+
+        for (size idx{0}; idx < NUM_SECTS; ++idx) {
+            auto sect{reinterpret_cast<uint64 *>(&mp)[idx]};
+            v = combine(v, sect);
         }
 
         return v;
