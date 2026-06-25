@@ -177,6 +177,9 @@ Window::Window(
     observeWith(subSel_.choice(), choiceTable);
 
     SetAutoLayout(true);
+#   if __WXMSW__
+    SetBackgroundStyle(wxBG_STYLE_PAINT);
+#   endif
 
     activate();
 }
@@ -387,7 +390,7 @@ void Window::paintEvent(wxPaintEvent&) {
     }
 
     paintDC.SetBrush(wxBrush(
-        wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOX)
+        wxSystemSettings::GetColour(wxSYS_COLOUR_INFOBK)
     ));
     paintDC.DrawRectangle(0, 0, windowSize.x, windowSize.y);
 
