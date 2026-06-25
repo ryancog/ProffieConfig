@@ -154,18 +154,18 @@ void Process::create(std::string exec, std::span<std::string> args) {
     pipeAttributes.lpSecurityDescriptor = nullptr;
 
     bool pipeSuccess{true};
-    pipeSuccess &= CreatePipe(
+    pipeSuccess &= static_cast<bool>(CreatePipe(
         &data.parentFromChild_[0],
         &data.parentFromChild_[1],
         &pipeAttributes,
         0
-    );
-    pipeSuccess &= CreatePipe(
+    ));
+    pipeSuccess &= static_cast<bool>(CreatePipe(
         &data.childFromParent_[0],
         &data.childFromParent_[1],
         &pipeAttributes,
         0
-    );
+    ));
 
     if (not pipeSuccess) {
         data.promise_.set_value({.err_=Result::eConnection_Failed});
@@ -271,7 +271,7 @@ std::optional<std::string> Process::read() {
         &numBytes,
         nullptr
     )};
-    if (not peekResult) {
+    if (not peekResult or numBytes == 0) {
         return std::nullopt;
     }
 
