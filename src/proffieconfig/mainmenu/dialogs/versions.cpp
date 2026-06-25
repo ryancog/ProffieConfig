@@ -296,7 +296,6 @@ pcui::DescriptorPtr VersionsDlg::propInfo(data::base::Model *model) {
               .win_={
                 .base_={
                   .minSize_=minSize,
-                  .expand_=true,
                   .proportion_=1,
                   .align_=wxALIGN_CENTER,
                 },
@@ -517,7 +516,6 @@ pcui::DescriptorPtr VersionsDlg::osInfo(data::base::Model *model) {
               .win_={
                 .base_={
                   .minSize_=minSize,
-                  .expand_=true,
                   .proportion_=1,
                   .align_=wxALIGN_CENTER,
                 },
