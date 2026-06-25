@@ -259,7 +259,7 @@ void InjectionsDlg::onDownButton(config::Injection& injection) {
 
 void InjectionsDlg::onEditButton(config::Injection& injection) {
     auto path{paths::injectionDir() / injection.filename_};
-    wxLaunchDefaultApplication(path.native());
+    wxLaunchDefaultApplication(path.string());
 }
 
 void InjectionsDlg::onRemoveButton(config::Injection& injection) {

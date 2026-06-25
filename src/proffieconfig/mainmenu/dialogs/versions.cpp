@@ -154,7 +154,7 @@ pcui::DescriptorPtr VersionsDlg::ui() {
             pcui::Button{
               .label_=_("Show Local Folder"),
               .func_=[this] {
-                  wxLaunchDefaultApplication(paths::versionDir().native());
+                  wxLaunchDefaultApplication(paths::versionDir().string());
               },
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),

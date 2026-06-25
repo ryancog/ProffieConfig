@@ -75,7 +75,7 @@ bool Update::pullData(pcui::ProgressDialog *prog, logging::Branch& lBranch) {
     bool requestComplete{false};
     auto handleRequestEvent{[&](wxWebRequestEvent& evt) {
         if (evt.GetState() == wxWebRequest::State_Completed) {
-            wxCopyFile(evt.GetDataFile(), manifestFile().native());
+            wxCopyFile(evt.GetDataFile(), manifestFile().string());
         }
 
         switch (evt.GetState()) {

@@ -177,14 +177,14 @@ public:
         auto data{Update::parseData(&prog, *logger.binfo("Parsing version data..."))};
         if (not data) {
             prog.finish(false);
-            wxLaunchDefaultApplication(paths::logDir().native());
+            wxLaunchDefaultApplication(paths::logDir().string());
             return;
         }
 
         if (data->bundles.empty()) {
             logger.error("No valid bundles found!");
             prog.finish(true, _("No valid version bundles found!\nPlease report this error."));
-            wxLaunchDefaultApplication(paths::logDir().native());
+            wxLaunchDefaultApplication(paths::logDir().string());
             if (action_ == Action::Launch) routine::launch(*logger.binfo("Launching in lieu of valid update data."));
             return;
         }

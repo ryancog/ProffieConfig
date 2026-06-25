@@ -332,7 +332,7 @@ void MainMenu::bindEvents() {
     }, wxID_PREFERENCES);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
-        wxLaunchDefaultApplication(paths::logDir().native());
+        wxLaunchDefaultApplication(paths::logDir().string());
     }, eID_Logs);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {

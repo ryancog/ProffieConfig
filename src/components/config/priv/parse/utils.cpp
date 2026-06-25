@@ -281,7 +281,8 @@ void parse::tryAddInjection(Config& config, const std::string& include) {
         )};
         if (wxYES != registerChoice) return;
 
-        if (not fs::create_directories(filePath.parent_path(), ec)) {
+        fs::create_directories(filePath.parent_path(), ec);
+        if (ec) {
             pcui::showMessage(
                 ec.message(),
                 {.caption_=_("Injection file directory could not be created.")}

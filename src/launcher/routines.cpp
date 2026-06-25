@@ -53,13 +53,27 @@ void routine::launch(logging::Branch& lBranch) {
     logger.info("Launching ProffieConfig...");
     auto exec{paths::executable(paths::Executable::Main)};
 #   ifdef _WIN32
-    // TODO: I've seen at least one case where this returns a success but no
-    // ProffieConfig process starts. At least, none appears to start and they
-    // see no `ProffieConfig.log` indicating a crash.
-    //
-    // Maybe they had an AV (they claimed they didn't, but?) that blocked it,
-    // or maybe there's some subtle issue here for some people?
-    if (0 == wxExecute(exec.native())) {
+    PROCESS_INFORMATION procInfo;
+    STARTUPINFOA startupInfo;
+    memset(&startupInfo, 0, sizeof startupInfo);
+    startupInfo.cb = sizeof startupInfo;
+
+    auto procSuccess{CreateProcessA(
+        nullptr,
+        exec.string().data(),
+        nullptr,
+        nullptr,
+        false,
+        0,
+        nullptr,
+        nullptr,
+        &startupInfo,
+        &procInfo
+    )};
+    if (procSuccess) {
+        CloseHandle(procInfo.hProcess);
+        CloseHandle(procInfo.hThread);
+    } else {
         logger.warn("ProffieConfig main binary missing/failed to start.");
     }
 
@@ -71,9 +85,9 @@ void routine::launch(logging::Branch& lBranch) {
     // anyone yet, but I really should add a way to disable that mutex
     // immediately before launching the new process (Unless the way Windows
     // manages these things makes it not matter, but I doubt it).
-    exit(0);
+    wxExit();
 #   elif defined(__APPLE__) or defined(__linux__)
-    auto str{exec.native()};
+    auto str{exec.string()};
     std::array<char *, 2> argv{ str.data(), nullptr };
     execvp(argv[0], argv.data());
     logger.error("ProffieConfig main binary missing/failed to start.");
@@ -173,12 +187,33 @@ void routine::platformInstall(logging::Branch& lBranch) {
 
     pcui::showMessage(_("Launcher has been installed."));
 #   ifdef _WIN32
-    if (wxExecute(installedExec.c_str()) == 0)
+    PROCESS_INFORMATION procInfo;
+    STARTUPINFOA startupInfo;
+    memset(&startupInfo, 0, sizeof startupInfo);
+    startupInfo.cb = sizeof startupInfo;
+
+    auto procSuccess{CreateProcessA(
+        nullptr,
+        installedExec.string().data(),
+        nullptr,
+        nullptr,
+        false,
+        0,
+        nullptr,
+        nullptr,
+        &startupInfo,
+        &procInfo
+    )};
+    if (procSuccess) {
+        CloseHandle(procInfo.hProcess);
+        CloseHandle(procInfo.hThread);
+    } else {
         logger.warn("Failed to start launcher.");
+    }
 
     wxExit();
 #   else
-    auto str{installedExec.native()};
+    auto str{installedExec.string()};
     const decltype(str.data()) argv[2]{
         str.data(),
         nullptr,
