@@ -274,7 +274,15 @@ wxSizerItem *Text::Desc::build(const detail::Scaffold& scaffold) const {
 
             for (int32 idx{0}; idx < lines.size(); ++idx) {
                 // This has to be a wxString to pass to GetTextExtent().
-                wxString line(lines[idx]);
+                //
+                // The explicit call to wxString::assign is used because MSVC
+                // tries to dynamically link the declared-in-line forwarding
+                // ctor.
+                //
+                // Not the first time I've seen MSVC try to handle inlined
+                // definitions as extern... silly MSVC
+                wxString line;
+                line.assign(lines[idx].data(), lines[idx].length());
                 auto extent{ctrl->GetTextExtent(line)};
                 width = std::max(width, extent.GetWidth());
             }
