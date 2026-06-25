@@ -131,7 +131,7 @@ struct Box : detail::Window<priv::GroupBox> {
 
             auto *radio{new Control(
                 childScaffold,
-                data ? data->label_ : "LABEL???",
+                data ? data->label_ : wxString("LABEL???"),
                 bl,
                 data ? data->win_ : detail::ChildWindowBase{}
             )};
