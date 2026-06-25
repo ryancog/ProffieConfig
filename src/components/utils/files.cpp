@@ -20,9 +20,10 @@
  */
 
 #ifdef _WIN32
+#include <wx/dlimpexp.h>
 #include <errhandlingapi.h>
 // NOLINTNEXTLINE(readability-identifier-naming)
-extern "C" __attribute__((dllimport)) int CopyFileA(const char *, const char *, int);
+extern "C" WXIMPORT int CopyFileA(const char *, const char *, int);
 #endif
 
 bool files::copyOverwrite(
