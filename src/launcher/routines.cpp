@@ -52,8 +52,16 @@ constexpr auto SUB_KEY{LR"(Software\Microsoft\Windows\CurrentVersion\Uninstall\P
 
 void routine::launch(logging::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Routine::launch()")};
-    logger.info("Launching ProffieConfig...");
+
+    // Explicitly make a var for the execString.
+    // I don't know if it's actually the problem or what, but without doing so
+    // MSVC CreateProcessA seems to be fiddly.
+    //
+    // Both Win32 and POSIX, and the log need it anyways.
     auto exec{paths::executable(paths::Executable::Main)};
+    auto execString{exec.string()};
+    logger.info("Launching ProffieConfig (" + execString + ")...");
+
 #   ifdef _WIN32
     PROCESS_INFORMATION procInfo;
     STARTUPINFOA startupInfo;
@@ -62,7 +70,7 @@ void routine::launch(logging::Branch& lBranch) {
 
     auto procSuccess{CreateProcessA(
         nullptr,
-        exec.string().data(),
+        execString.data(),
         nullptr,
         nullptr,
         false,
@@ -76,7 +84,7 @@ void routine::launch(logging::Branch& lBranch) {
         CloseHandle(procInfo.hProcess);
         CloseHandle(procInfo.hThread);
     } else {
-        logger.warn("ProffieConfig main binary missing/failed to start.");
+        logger.warn("Failed to launch ProffieConfig: " + std::to_string(GetLastError()));
     }
 
     // TODO: This is a race, but one that seems unlikely to cause issues most
@@ -89,8 +97,7 @@ void routine::launch(logging::Branch& lBranch) {
     // manages these things makes it not matter, but I doubt it).
     wxExit();
 #   elif defined(__APPLE__) or defined(__linux__)
-    auto str{exec.string()};
-    std::array<char *, 2> argv{ str.data(), nullptr };
+    std::array<char *, 2> argv{ execString.data(), nullptr };
     execvp(argv[0], argv.data());
     logger.error("ProffieConfig main binary missing/failed to start.");
     exit(1);
