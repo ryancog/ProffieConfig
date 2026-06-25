@@ -27,10 +27,10 @@
 namespace data::hier {
 
 struct DATA_EXPORT Vector : base::Vector, Model {
-    struct InsertAction;
-    struct RemoveAction;
-    struct ClearAction;
-    struct SwapAction;
+    struct DATA_EXPORT InsertAction;
+    struct DATA_EXPORT RemoveAction;
+    struct DATA_EXPORT ClearAction;
+    struct DATA_EXPORT SwapAction;
 
     Vector(Root&);
 

@@ -30,8 +30,8 @@ namespace detail {
 
 template <typename T>
 struct DATA_EXPORT Number : base::detail::Number<T>, Model {
-    struct SetAction;
-    struct UpdateAction;
+    struct DATA_EXPORT SetAction;
+    struct DATA_EXPORT UpdateAction;
 
     Number(Root&);
     Number(const Number&, Root&);

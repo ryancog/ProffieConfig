@@ -36,8 +36,8 @@ struct Root;
  * Basis for data model structures.
  */
 struct DATA_EXPORT Model : virtual base::Model {
-    struct CreationScope;
-    struct EnableAction;
+    struct DATA_EXPORT CreationScope;
+    struct DATA_EXPORT EnableAction;
 
     Model(Root&);
     Model(const Model&, Root&);

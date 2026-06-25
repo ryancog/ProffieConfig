@@ -27,7 +27,7 @@
 namespace data::hier {
 
 struct DATA_EXPORT Bool : base::Bool, Model {
-    struct SetAction;
+    struct DATA_EXPORT SetAction;
 
     Bool(Root&);
     Bool(const Bool&, Root&);

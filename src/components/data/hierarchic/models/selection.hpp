@@ -27,10 +27,10 @@
 namespace data::hier {
 
 struct DATA_EXPORT Selection : base::Selection, Model {
-    struct SelectAction;
-    struct SetItemsAction;
-    struct InsertAction;
-    struct RemoveAction;
+    struct DATA_EXPORT SelectAction;
+    struct DATA_EXPORT SetItemsAction;
+    struct DATA_EXPORT InsertAction;
+    struct DATA_EXPORT RemoveAction;
 
     Selection(Root&);
     Selection(const Selection&, Root&);

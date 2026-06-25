@@ -35,9 +35,9 @@ namespace data::base {
 //       for power pins, whose elements are intrinsically non-localized,
 //       unique strings.
 struct DATA_EXPORT Selection : virtual Model {
-    struct ROContext;
-    struct Context;
-    struct RecvTable;
+    struct DATA_EXPORT ROContext;
+    struct DATA_EXPORT Context;
+    struct DATA_EXPORT RecvTable;
 
     using AddFilter = void (*)(const ROContext&, std::string&);
 

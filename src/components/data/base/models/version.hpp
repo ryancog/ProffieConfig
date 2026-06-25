@@ -27,9 +27,9 @@
 namespace data::base {
 
 struct DATA_EXPORT Version : virtual Model {
-    struct ROContext;
-    struct Context;
-    struct RecvTable;
+    struct DATA_EXPORT ROContext;
+    struct DATA_EXPORT Context;
+    struct DATA_EXPORT RecvTable;
 
     Version() = default;
     Version(const Version&);

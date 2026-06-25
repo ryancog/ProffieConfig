@@ -46,7 +46,7 @@ DATA_EXPORT Element operator|(const base::Bool&, IsSet);
  * If no values are provided, checks that the data has a valid selection. E.g.
  * not -1 for a choice
  */
-struct DATA_EXPORT HasSelection : std::set<int32> {};
+struct HasSelection : std::set<int32> {};
 
 DATA_EXPORT Element operator|(const base::Choice&, HasSelection);
 
@@ -60,19 +60,19 @@ struct CanMoveDown {};
 
 DATA_EXPORT Element operator|(const base::Selector&, CanMoveDown);
 
-struct DATA_EXPORT IsEmpty {};
+struct IsEmpty {};
 
 DATA_EXPORT Element operator|(const base::String&, IsEmpty);
 
 DATA_EXPORT Element operator|(const base::Vector&, IsEmpty);
 
-struct DATA_EXPORT BitAnd {
+struct BitAnd {
     int32 val_;
 };
 
 DATA_EXPORT Element operator|(const base::Integer&, BitAnd);
 
-struct DATA_EXPORT Equals {
+struct Equals {
     int32 val_;
 };
 

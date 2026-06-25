@@ -33,6 +33,10 @@ struct Model;
 struct Root;
 
 struct DATA_EXPORT Action {
+    // MSVC is too stupid to do this.
+    Action(const Action&) = delete;
+    Action& operator=(const Action&) = delete;
+
     virtual ~Action();
 
     /**
