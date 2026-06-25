@@ -40,8 +40,24 @@ struct Control : detail::DataWindow<wxTextCtrl> {
         // long style{wxTE_RICH2};
         long style{0};
 
-        if (desc.readOnly_) style |= wxTE_READONLY;
-        if (desc.autoLink_) style |= wxTE_AUTO_URL;
+        switch (desc.align_) {
+            using enum Text::Align;
+            case Left:
+                style |= wxTE_LEFT;
+                break;
+            case Center:
+                style |= wxTE_CENTRE;
+                break;
+            case Right:
+                style |= wxTE_RIGHT;
+                break;
+        }
+
+        if (desc.readOnly_)
+            style |= wxTE_READONLY;
+
+        if (desc.autoLink_)
+            style |= wxTE_AUTO_URL;
 
         if (const auto *ptr{std::get_if<Text::SingleLine>(&desc.style_)}) {
             onEnter_ = ptr->onEnter_;
