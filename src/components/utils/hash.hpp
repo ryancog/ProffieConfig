@@ -77,22 +77,30 @@ template <typename T>
 
 template <typename Type, typename Class>
 [[nodiscard]] uint64 single(Type Class::*mp) {
-    if constexpr (sizeof mp == sizeof(uint64)) {
-        return std::bit_cast<uint64>(mp);
-    } else {
-        uint64 v{0};
+    // This is kind of a convolted function, but the idea is that the
+    // smallest memptr size is 32-bits, and that larger ones are
+    // multiples of that to make the hashing simpler.
+    //
+    // Clang/GCC memptrs are uint64 on 64-bit platforms, but on MSVC it
+    // varies, and it seems the smallest is 32-bit (and some are larger?)
+    static_assert(sizeof mp % sizeof(uint32) == 0);
 
-        static_assert(sizeof mp % sizeof(uint64) == 0);
-        constexpr auto NUM_SECTS{sizeof mp / sizeof(uint64)};
+    constexpr auto NUM_UINT64{sizeof mp / sizeof(uint64)};
+    constexpr auto TRAILING_UINT32{sizeof mp % sizeof(uint64) != 0};
 
-        for (size idx{0}; idx < NUM_SECTS; ++idx) {
-            auto sect{reinterpret_cast<uint64 *>(&mp)[idx]};
-            v = combine(v, sect);
-        }
-
-        return v;
+    uint64 ret{ 0 };
+    for (size idx{ 0 }; idx < NUM_UINT64; ++idx) {
+        auto sect{ reinterpret_cast<uint64*>(&mp)[idx] };
+        ret = combine(ret, sect);
     }
+
+    if (TRAILING_UINT32) {
+        auto *trailing64Ptr{&reinterpret_cast<uint64 *>(&mp)[NUM_UINT64]};
+        auto *trailingPtr{reinterpret_cast<uint32 *>(trailing64Ptr)};
+        ret = combine(ret, *trailingPtr);
+    }
+
+    return ret;
 }
 
 } // namespace utils::hash
-
