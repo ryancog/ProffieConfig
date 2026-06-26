@@ -432,7 +432,7 @@ pcui::DescriptorPtr ui(
                     .orient_=wxVERTICAL,
                     .children_={
                       pcui::ForEach{
-                        .of_=notesRange,
+                        .of_=notesRange | std::views::reverse,
                         .do_=makeNoteItem,
                       }(),
                       pcui::If{
