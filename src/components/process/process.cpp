@@ -24,12 +24,12 @@
 #include <future>
 #include <list>
 
-#if defined(__APPLE__) or defined(__linux__)
+#if __APPLE__ or __linux__
 #include <unistd.h>
 #include <csignal>
 #include <sys/wait.h>
 #include <sys/poll.h>
-#elif defined(_WIN32)
+#elif _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <fileapi.h>
@@ -41,19 +41,19 @@
 
 namespace {
 
-#if defined(__APPLE__)
+#if __APPLE__
 using PidType = pid_t;
-#elif defined(__linux__)
+#elif __linux__
 using PidType = __pid_t;
 #endif
 
 struct InternalData {
     std::promise<Process::Result> promise_;
-#   if defined(__APPLE__) or defined(__linux__)
+#   if __APPLE__ or __linux__
     int parentFromChild_[2];
     int childFromParent_[2];
     PidType pid_{-1};
-#   elif defined(_WIN32)
+#   elif _WIN32
     HANDLE parentFromChild_[2];
     HANDLE childFromParent_[2];
     DWORD id_;
@@ -63,7 +63,7 @@ struct InternalData {
 std::mutex dataLock;
 std::list<InternalData> internalDatas;
 
-#if defined(__APPLE__) or defined(__linux__)
+#if __APPLE__ or __linux__
 bool sigHandled{false};
 void onChildExit(int);
 #endif
@@ -90,7 +90,7 @@ void Process::create(std::string exec, std::span<std::string> args) {
     dataLock.unlock();
     mRef = &data;
 
-#   if defined(__APPLE__) or defined(__linux__)
+#   if __APPLE__ or __linux__
     if (not sigHandled) {
         sigHandled = true;
         struct sigaction act{};
@@ -149,7 +149,7 @@ void Process::create(std::string exec, std::span<std::string> args) {
     data.pid_ = pid;
     close(data.childFromParent_[0]);
     close(data.parentFromChild_[1]);
-#   elif defined(_WIN32)
+#   elif _WIN32
     SECURITY_ATTRIBUTES pipeAttributes;
     pipeAttributes.nLength = sizeof pipeAttributes;
     pipeAttributes.bInheritHandle = true;
@@ -235,8 +235,6 @@ void Process::create(std::string exec, std::span<std::string> args) {
             });
         }
 
-        CloseHandle(data.childFromParent_[1]);
-        CloseHandle(data.parentFromChild_[0]);
         CloseHandle(procHandle);
         dataLock.unlock();
     }}.detach();
@@ -249,7 +247,7 @@ std::optional<std::string> Process::read() {
     assert(mRef);
     InternalData& data{*reinterpret_cast<InternalData *>(mRef)};
 
-#   if defined(__APPLE__) or defined(__linux__)
+#   if __APPLE__ or __linux__
     std::string ret;
     ret.resize(2048);
 
@@ -263,7 +261,7 @@ std::optional<std::string> Process::read() {
     }
 
     return ret;
-#   elif defined(_WIN32)
+#   elif _WIN32
     DWORD numBytes{};
     auto peekResult{PeekNamedPipe(
         data.parentFromChild_[0],
@@ -273,9 +271,8 @@ std::optional<std::string> Process::read() {
         &numBytes,
         nullptr
     )};
-    if (not peekResult or numBytes == 0) {
+    if (not peekResult)
         return std::nullopt;
-    }
 
     std::string ret;
     ret.resize(numBytes);
@@ -286,9 +283,8 @@ std::optional<std::string> Process::read() {
         nullptr,
         nullptr
     )};
-    if (not readResult) {
+    if (not readResult)
         return std::nullopt;
-    }
 
     return ret;
 #   endif
@@ -298,9 +294,9 @@ bool Process::write(const std::string_view& str) {
     assert(mRef);
     InternalData& data{*reinterpret_cast<InternalData *>(mRef)};
 
-#   if defined(__APPLE__) or defined(__linux__)
+#   if __APPLE__ or __linux__
     return -1 != ::write(data.childFromParent_[1], str.data(), str.size());
-#   elif defined(_WIN32)
+#   elif _WIN32
     return WriteFile(
         data.childFromParent_[1],
         str.data(),
@@ -319,6 +315,14 @@ Process::Result Process::finish() {
     dataLock.lock();
     for (auto iter{internalDatas.begin()}; iter != internalDatas.end(); ++iter) {
         if (&*iter == mRef) {
+#           if __APPLE__ or __linux__
+            close(data.childFromParent_[1]);
+            close(data.parentFromChild_[0]);
+#           elif _WIN32
+            CloseHandle(data.childFromParent_[1]);
+            CloseHandle(data.parentFromChild_[0]);
+#           endif
+
             internalDatas.erase(iter);
             break;
         }
@@ -332,7 +336,7 @@ void Process::interrupt() {
 
     auto& data{*reinterpret_cast<InternalData *>(mRef)};
 
-#ifdef _WIN32
+#if _WIN32
     if (AttachConsole(data.id_)) {
         SetConsoleCtrlHandler(nullptr, true);
 
@@ -350,7 +354,7 @@ void Process::interrupt() {
     finish();
 }
 
-#ifdef _WIN32
+#if _WIN32
 Process::Result Process::elevatedProcess(
     cstring exec, const std::span<std::string>& args
 ) {
@@ -394,7 +398,7 @@ Process::Result Process::elevatedProcess(
 #endif
 
 namespace {
-#if defined(__APPLE__) or defined(__linux__)
+#if __APPLE__ or __linux__
     
 void onChildExit(int sig) {
     assert(sig == SIGCHLD);
@@ -426,9 +430,6 @@ void onChildExit(int sig) {
                     .systemResult_=signal
                 });
             }
-
-            close(data.childFromParent_[1]);
-            close(data.parentFromChild_[0]);
         }
         dataLock.unlock();
     }
