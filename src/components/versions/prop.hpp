@@ -229,12 +229,11 @@ struct VERSIONS_EXPORT PropData {
         Errors errors
     ) : name_(std::move(name)),
         filename_(std::move(filename)),
-        info_(std::move(info_)),
+        info_(std::move(info)),
         settings_(std::move(settings)),
         buttons_(std::move(buttons)),
         layout_(std::move(layout)),
         errors_(std::move(errors)) {}
-
 
     static std::optional<PropData> generate(
         const pconf::HashedData& data,
