@@ -52,32 +52,60 @@ bool Update::pullNewFiles(
     logging::Branch& lBranch
 ) {
     auto& logger{lBranch.createLogger("Update::pullNewFiles()")};
+    std::error_code ec;
 
     prog->set(0, "Preparing to download new files...");
-    std::promise<void> requestPromise;
+    std::promise<bool> requestPromise;
     fs::path downloadedFilename;
     Update::ItemType type{};
 
-    fs::remove_all(stagingFolder());
+    // Allow this to fail?
+    fs::remove_all(stagingFolder(), ec);
 
     auto stateHandler{[&](wxWebRequestEvent& evt) {
-        if (evt.GetState() == wxWebRequest::State_Completed) {
+        const auto doHandleCompleted{[&] -> bool {
             auto filePath{stagingFolder() / downloadedFilename};
-            fs::create_directories(filePath.parent_path());
-            fs::copy_file(evt.GetDataFile().ToStdWstring(), filePath);
-            if (type == Update::EXEC) {
-                fs::permissions(filePath, fs::perms::owner_exec | fs::perms::others_exec, fs::perm_options::add);
+
+            fs::create_directories(filePath.parent_path(), ec);
+            if (ec) {
+                logger.error("Couldn't create " + filePath.parent_path().string() + ": " + ec.message());
+                return false;
             }
-        }
+
+            auto srcPath{evt.GetDataFile().utf8_string()};
+            files::copyOverwrite(srcPath, filePath, ec);
+            if (ec) {
+                logger.error("Couldn't copy " + srcPath + " to " + filePath.string() + ": " + ec.message());
+                return false;
+            }
+
+            if (type == Update::EXEC) {
+                fs::permissions(
+                    filePath,
+                    fs::perms::owner_exec | fs::perms::others_exec,
+                    fs::perm_options::add,
+                    ec
+                );
+
+                if (ec) {
+                    logger.error("Couldn't enable execution permission for " + filePath.string() + ": " + ec.message());
+                    return false;
+                }
+            }
+
+            return true;
+        }};
 
         switch (evt.GetState()) {
-            case wxWebRequest::State_Unauthorized:
             case wxWebRequest::State_Completed:
+                requestPromise.set_value(doHandleCompleted());
+                break;
+            case wxWebRequest::State_Unauthorized:
             case wxWebRequest::State_Failed:
             case wxWebRequest::State_Cancelled:
-                requestPromise.set_value();
+            default:
+                requestPromise.set_value(true);
                 break;
-            default: break;
         }
     }};
 
@@ -171,10 +199,18 @@ bool Update::pullNewFiles(
                 wxTheApp->CallAfter(doCancel);
                 cancelPromise.get_future().get();
 
-                fs::remove_all(stagingFolder());
+                fs::remove_all(stagingFolder(), ec);
 
                 return false;
             }
+        }
+
+        if (future.get() == false) {
+            // Error should've been logged above.
+            prog->finish(true, _("Failed processing downloaded file."));
+
+            fs::remove_all(stagingFolder(), ec);
+            return false;
         }
 
         if (request.GetState() != wxWebRequestBase::State_Completed) {
@@ -184,7 +220,7 @@ bool Update::pullNewFiles(
 
             prog->finish(true, _("Failed to download file."));
 
-            fs::remove_all(stagingFolder());
+            fs::remove_all(stagingFolder(), ec);
             return false;
         }
     }
@@ -192,13 +228,14 @@ bool Update::pullNewFiles(
     return true;
 }
 
-void Update::installFiles(
+bool Update::installFiles(
     const Changelog& changelog,
     const Data& data,
-    pcui::ProgressDialog * /*prog*/,
+    pcui::ProgressDialog *prog,
     logging::Branch& lBranch
 ) {
     auto& logger{lBranch.createLogger("Update::pullNewFiles()")};
+    std::error_code ec;
 
     auto baseTypePath{[](ItemType type) -> fs::path {
         switch (type) {
@@ -223,7 +260,11 @@ void Update::installFiles(
         auto path{baseTypePath(file.type)};
         path /= item.path;
 
-        fs::remove(path);
+        fs::remove(path, ec);
+        if (ec) {
+            logger.error("Couldn't remove " + path.string() + ": " + ec.message());
+            return false;
+        }
     }
 
     for (const auto& file : changelog.changedFiles) {
@@ -233,25 +274,64 @@ void Update::installFiles(
         auto path{baseTypePath(file.id.type)};
 #       ifdef __APPLE__
         if (file.id.type == ItemType::EXEC and item.path == "ProffieConfig") {
-            fs::create_directories(paths::executable(paths::Executable::Main).parent_path());
-            fs::copy_file(
-                stagingFolder() / typeFolder(file.id.type) / item.path,
-                paths::executable(paths::Executable::Main),
-                fs::copy_options::overwrite_existing
-            );
+            auto execPath{paths::executable(paths::Executable::Main)};
+            auto execParentPath{execPath.parent_path()};
 
-            const auto resourcesPath{paths::executable(paths::Executable::Main).parent_path().parent_path() / "Resources"};
-            fs::create_directories(resourcesPath);
-            fs::copy_file(
-                paths::executable(paths::Executable::Launcher).parent_path().parent_path() / "Resources" / "icon.icns", 
-                resourcesPath / "icon.icns",
-                fs::copy_options::overwrite_existing
-            );
+            fs::create_directories(execParentPath, ec);
+            if (ec) {
+                logger.error("Couldn't create " + execParentPath.string() + ": " + ec.message());
+                return false;
+            }
 
-            auto infoStream{files::openOutput(
+            auto srcFile{stagingFolder() / typeFolder(file.id.type) / item.path};
+            fs::copy_file(
+                srcFile,
+                execPath,
+                fs::copy_options::overwrite_existing,
+                ec
+            );
+            if (ec) {
+                logger.error("Couldn't copy " + srcFile.string() + " to " + execPath.string() + ": " + ec.message());
+                return false;
+            }
+
+            const auto resourcesPath{
                 paths::executable(paths::Executable::Main)
-                    .parent_path().parent_path() / "Info.plist"
-            )};
+                    .parent_path().parent_path() /
+                "Resources"
+            };
+            fs::create_directories(resourcesPath, ec);
+            if (ec) {
+                logger.error("Couldn't create " + resourcesPath.string() + ec.message());
+                return false;
+            }
+
+            const auto launcherIconPath{
+                paths::executable(paths::Executable::Launcher)
+                    .parent_path().parent_path() /
+                "Resources" /
+                "icon.icns"
+            };
+            const auto destIconPath{
+                resourcesPath / "icon.icns"
+            };
+            fs::copy_file(
+                launcherIconPath,
+                destIconPath,
+                fs::copy_options::overwrite_existing,
+                ec
+            );
+            if (ec) {
+                logger.error("Couldn't copy " + launcherIconPath.string() + " to " + destIconPath.string() + ": " + ec.message());
+                return false;
+            }
+
+            const auto infoFilePath{
+                paths::executable(paths::Executable::Main)
+                    .parent_path().parent_path() /
+                "Info.plist"
+            };
+            auto infoStream{files::openOutput(infoFilePath)};
             infoStream << 
                 R"(<?xml version="1.0" encoding="UTF-8"?>)" "\n"
                 R"(<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">)" "\n"
@@ -276,26 +356,49 @@ void Update::installFiles(
                 "</dict>\n"
                 "</plist>\n";
             infoStream.close();
-        } else {
-            path /= fs::path{item.path};
-            fs::remove(path);
-            fs::create_directories(path.parent_path());
-            fs::copy_file(stagingFolder() / typeFolder(file.id.type) / item.path, path, fs::copy_options::overwrite_existing);
+
+            if (infoStream.fail()) {
+                logger.error("Failed to write executable info file at " + infoFilePath.string());
+                return false;
+            }
         }
-#       else
-        path /= fs::path{item.path};
-        fs::remove(path);
-        fs::create_directories(path.parent_path());
-        std::error_code err;
-        files::copyOverwrite(
-            stagingFolder() / typeFolder(file.id.type) / fs::path{item.path},
-            path,
-            err
-        );
+        else
 #       endif
+        {
+            path /= fs::path{item.path};
+
+            // Allow this to fail.
+            // I don't remember why it's explicitly removed before even with
+            // copy_file set to overwrite but I think there was a reason.
+            fs::remove(path, ec);
+
+            fs::create_directories(path.parent_path(), ec);
+            if (ec) {
+                logger.error("Failed to create " + path.parent_path().string() + ": " + ec.message());
+                return false;
+            }
+
+            auto srcPath{
+                stagingFolder() / typeFolder(file.id.type) / item.path
+            };
+            files::copyOverwrite(
+                srcPath,
+                path,
+                ec
+            );
+            if (ec) {
+                logger.error("Failed to copy " + srcPath.string() + " to " + path.string() + ": " + ec.message());
+                return false;
+            }
+        }
     }
 
-    fs::remove_all(stagingFolder());
+    fs::remove_all(stagingFolder(), ec);
+    if (ec) {
+        logger.warn("Couldn't remove staging folder " + stagingFolder().string() + ": " + ec.message());
+    }
+
+    return true;
 }
 
 namespace {

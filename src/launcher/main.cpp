@@ -105,7 +105,7 @@ public:
                 return false;
             }
         } else {
-            if (not fs::exists(paths::executable(paths::Executable::Main))) {
+            if (not fs::exists(paths::executable(paths::Executable::Main), err)) {
                 action_ = Action::First_Install;
                 logger.info("Main ProffieConfig binary missing, update/install routine required.");
 
@@ -231,7 +231,16 @@ public:
             return;
         }
 
-        Update::installFiles(changelog, data.value(), &prog, *logger.binfo("Installing files..."));
+        if (not Update::installFiles(changelog, data.value(), &prog, *logger.binfo("Installing files..."))) {
+            prog.finish(false);
+
+            app::CriticalDialog dlg(
+                _("File Installation Failed") + "\n\n" +
+                _("Please try again later, or check the logs if the error persists.")
+            );
+            dlg.ShowModal();
+            return;
+        }
 
         prog.pulse();
         prog.finish(action_ == Action::First_Install, _("Installed"));
@@ -260,7 +269,7 @@ public:
         )};
         if (wxYES == choice) {
             prog.set(70, "Purging user data...");
-            fs::remove_all(paths::dataDir());
+            fs::remove_all(paths::dataDir(), err);
         }
 
         prog.set(90, "Removing platform setup...");
@@ -274,7 +283,7 @@ public:
         const auto currentBundle{
             paths::executable().parent_path().parent_path().parent_path()
         };
-        fs::remove_all(currentBundle);
+        fs::remove_all(currentBundle, err);
 #       elif defined (_WIN32)
         MoveFileExW(
             paths::executable().c_str(),

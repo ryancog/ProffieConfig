@@ -181,7 +181,12 @@ void routine::platformInstall(logging::Branch& lBranch) {
 #   elif defined(__APPLE__)
     const auto currentBundle{currentExec.parent_path().parent_path().parent_path()};
     const auto applicationPath{installedExec.parent_path().parent_path().parent_path()};
-    fs::copy(currentBundle, applicationPath, fs::copy_options::recursive);
+    fs::copy(currentBundle, applicationPath, fs::copy_options::recursive, ec);
+    if (ec) {
+        logger.info("Couldn't copy " + currentBundle.string() + " to " + applicationPath.string() + ": " + ec.message());
+        pcui::showMessage(_("Failed to install launcher"));
+        return;
+    }
 #   endif
 
     pcui::showMessage(_("Launcher has been installed."));

@@ -34,7 +34,7 @@ namespace Update {
     logging::Branch&
 );
 
-void installFiles(
+[[nodiscard]] bool installFiles(
     const Changelog& changelog,
     const Data& data,
     pcui::ProgressDialog *,
