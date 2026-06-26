@@ -97,7 +97,19 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if (LOCAL_BUILD)
     set(INSTALL_ITEM_DIR ${INSTALL_DIR}/items)
-    add_compile_definitions(APP_DEPLOY_PATH="${INSTALL_ITEM_DIR}")
+
+    set(APP_DEPLOY_PATH ${INSTALL_ITEM_DIR})
+
+    if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+        execute_process(
+            COMMAND cmd /c for %I in ("${APP_DEPLOY_PATH}") do @echo %~sI
+            OUTPUT_VARIABLE APP_DEPLOY_PATH
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        string(REPLACE "\\" "/" APP_DEPLOY_PATH "${APP_DEPLOY_PATH}")
+    endif()
+
+    add_compile_definitions(APP_DEPLOY_PATH="${APP_DEPLOY_PATH}")
 else()
     set(INSTALL_ITEM_DIR ${CMAKE_CURRENT_LIST_DIR}/staging/${PLATFORM_SHORTNAME})
 endif()
