@@ -24,6 +24,7 @@
 #include <ranges>
 #include <span>
 #include <string>
+#include <memory>
 
 #if __linux__ or __APPLE__
 #include <array>
@@ -77,7 +78,7 @@ namespace {
 constexpr auto NUM_STACK_FRAMES{64};
 
 // TODO: Segfaults on close on GTK
-wxSingleInstanceChecker singleInstance;
+std::unique_ptr<wxSingleInstanceChecker> singleInstance;
 app::ShowMessageFunc *showMessage;
 
 // Win32 assumes/requires the char array comes immediately after the
@@ -418,8 +419,11 @@ LONG WINAPI exceptionFilter(LPEXCEPTION_POINTERS exception) {
 } // namespace
 
 bool app::setupExclusion(const std::string& lockName) {
-    singleInstance.Create(wxString{lockName} + '-' + wxGetUserId());
-    if (singleInstance.IsAnotherRunning()) {
+    assert(not singleInstance);
+
+    singleInstance = std::make_unique<wxSingleInstanceChecker>();
+    singleInstance->Create(wxString{lockName} + '-' + wxGetUserId());
+    if (singleInstance->IsAnotherRunning()) {
         auto res{showMessage(
             _("It looks like ProffieConfig is already running, continuing may break things!"),
             {
@@ -431,6 +435,10 @@ bool app::setupExclusion(const std::string& lockName) {
     }
 
     return true;
+}
+
+void app::releaseExclusion() {
+    singleInstance.reset();
 }
 
 bool app::init() {

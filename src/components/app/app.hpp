@@ -35,6 +35,11 @@ namespace app {
 [[nodiscard]] APP_EXPORT bool setupExclusion(const std::string& lockName);
 
 /**
+ * Release one-instance-only lock
+ */
+APP_EXPORT void releaseExclusion();
+
+/**
  * Initialize an application
  *
  * @return if the app should continue running or not.
