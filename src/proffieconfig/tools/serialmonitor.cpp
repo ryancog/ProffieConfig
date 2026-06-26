@@ -161,7 +161,15 @@ void SerialMonitor::close() {
         if (mDevThread.joinable()) {
             mSmphr.release();
 
-            mDevThread.join();
+            // If close is being called from the dev thread, it'll acquire the
+            // semaphore once returning from here and should exit just fine.
+            //
+            // Can't join() here otherwise it'll deadlock, but joinable()
+            // needs to become false, so detach().
+            if (std::this_thread::get_id() == mDevThread.get_id())
+                mDevThread.detach();
+            else
+                mDevThread.join();
         }
 
 #       if __APPLE__ or __linux__
