@@ -19,11 +19,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <thread>
 #include <fstream>
 #include <future>
+#include <thread>
 #include <unordered_set>
 
+#include <wx/app.h>
 #include <wx/webrequest.h>
 #include <wx/utils.h>
 #include <wx/richmsgdlg.h>
@@ -31,6 +32,7 @@
 #include "log/logger.hpp"
 #include "ui/dialogs/message.hpp"
 #include "ui/utils.hpp"
+#include "utils/defer.hpp"
 #include "utils/files.hpp"
 #include "utils/hash.hpp"
 #include "utils/paths.hpp"
@@ -71,8 +73,8 @@ bool Update::pullData(pcui::ProgressDialog *prog, logging::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Update::pullData()")};
 
     std::string errorMessage;
+    std::promise<void> donePromise;
 
-    bool requestComplete{false};
     auto handleRequestEvent{[&](wxWebRequestEvent& evt) {
         if (evt.GetState() == wxWebRequest::State_Completed) {
             wxCopyFile(evt.GetDataFile(), manifestFile().string());
@@ -85,7 +87,7 @@ bool Update::pullData(pcui::ProgressDialog *prog, logging::Branch& lBranch) {
                 [[fallthrough]];
             case wxWebRequestBase::State_Completed:
             case wxWebRequestBase::State_Cancelled:
-                requestComplete = true;
+                donePromise.set_value();
             default: break;
         }
     }};
@@ -102,29 +104,45 @@ bool Update::pullData(pcui::ProgressDialog *prog, logging::Branch& lBranch) {
         pullFrom += "/manifest.pconf";
     }
 
-    auto webSession{wxWebSession::New()};
-    auto request{webSession.CreateRequest(getEventHandler(), pullFrom)};
-    request.SetStorage(wxWebRequest::Storage_File);
-    getEventHandler()->Bind(wxEVT_WEBREQUEST_STATE, handleRequestEvent);
+    wxWebRequest request;
+    const auto doStart{[&] {
+        getEventHandler()->Bind(wxEVT_WEBREQUEST_STATE, handleRequestEvent);
+
+        request = wxWebSession::GetDefault().CreateRequest(
+            getEventHandler(), pullFrom
+        );
+        request.SetStorage(wxWebRequest::Storage_File);
+        request.Start();
+    }};
+    wxTheApp->CallAfter(doStart);
+
+    defer {
+        std::promise<void> promise;
+        const auto doUnbind{[&] {
+            getEventHandler()->Unbind(
+                wxEVT_WEBREQUEST_STATE,
+                handleRequestEvent
+            );
+            promise.set_value();
+        }};
+        wxTheApp->CallAfter(doUnbind);
+        promise.get_future().get();
+    };
 
     constexpr cstring MSG{"Pulling version data..."};
     logger.info(MSG);
     prog->pulse(MSG);
-    request.Start();
 
-    while (not requestComplete) {
+    auto future{donePromise.get_future()};
+    const auto itvl{std::chrono::milliseconds(50)};
+    while (std::future_status::ready != future.wait_for(itvl)) {
         prog->pulse();
 
         if (prog->cancelled()) {
             logger.info("Canceled.");
             return false;
         }
-
-        wxYield();
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
-
-    getEventHandler()->Unbind(wxEVT_WEBREQUEST_STATE, handleRequestEvent);
 
     if (request.GetState() != wxWebRequestSync::State_Completed) {
         const auto statusCode{request.GetResponse().GetStatus()};

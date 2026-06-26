@@ -21,6 +21,7 @@
 
 #include <chrono>
 #include <filesystem>
+#include <future>
 #include <thread>
 
 #include <wx/webrequest.h>
@@ -53,7 +54,7 @@ bool Update::pullNewFiles(
     auto& logger{lBranch.createLogger("Update::pullNewFiles()")};
 
     prog->set(0, "Preparing to download new files...");
-    bool requestDone{};
+    std::promise<void> requestPromise;
     fs::path downloadedFilename;
     Update::ItemType type{};
 
@@ -74,14 +75,29 @@ bool Update::pullNewFiles(
             case wxWebRequest::State_Completed:
             case wxWebRequest::State_Failed:
             case wxWebRequest::State_Cancelled:
-                requestDone = true;
+                requestPromise.set_value();
                 break;
             default: break;
         }
     }};
 
-    getEventHandler()->Bind(wxEVT_WEBREQUEST_STATE, stateHandler);
-    defer { getEventHandler()->Unbind(wxEVT_WEBREQUEST_STATE, stateHandler); };
+    std::promise<void> bindPromise;
+    const auto doBind{[&] {
+        getEventHandler()->Bind(wxEVT_WEBREQUEST_STATE, stateHandler);
+        bindPromise.set_value();
+    }};
+    wxTheApp->CallAfter(doBind);
+    bindPromise.get_future().get();
+
+    defer {
+        std::promise<void> promise;
+        const auto doUnbind{[&] {
+            getEventHandler()->Unbind(wxEVT_WEBREQUEST_STATE, stateHandler);
+            promise.set_value();
+        }};
+        wxTheApp->CallAfter(doUnbind);
+        promise.get_future().get();
+    };
 
     for (uint64 idx{0}; idx < changelog.changedFiles.size(); ++idx) {
         const auto& file{changelog.changedFiles[idx]};
@@ -92,18 +108,36 @@ bool Update::pullNewFiles(
         type = file.id.type;
         itemURLString += '/' + typeFolder(type).string() + '/';
         itemURLString += static_cast<std::string>(file.hash);
+        downloadedFilename = typeFolder(file.id.type) / item.path;
+
+        // Ugly way to reset the promise for reuse.
+        requestPromise.~promise();
+        new (&requestPromise) decltype(requestPromise);
 
         wxURI url{itemURLString};
-        auto request{wxWebSession::GetDefault().CreateRequest(getEventHandler(), url.BuildURI())};
-        request.SetStorage(wxWebRequestBase::Storage_File);
+        wxWebRequest request;
 
-        requestDone = false;
-        downloadedFilename = typeFolder(file.id.type) / item.path;
-        request.Start();
+        std::promise<void> startPromise;
+        const auto doStart{[&] {
+            request = wxWebSession::GetDefault().CreateRequest(
+                getEventHandler(), url.BuildURI()
+            );
+            request.SetStorage(wxWebRequestBase::Storage_File);
+            request.Start();
+
+            startPromise.set_value();
+        }};
+        wxTheApp->CallAfter(doStart);
 
         logger.info("Downloading " + file.id.name + " from \"" + url.BuildUnescapedURI().utf8_string() + "\"...");
 
-        while (not requestDone) {
+        // Wait until actually started so the request object'll be valid when
+        // querying received/expected to receive.
+        startPromise.get_future().get();
+
+        auto future{requestPromise.get_future()};
+        const auto itvl{std::chrono::milliseconds(50)};
+        while (std::future_status::ready != future.wait_for(itvl)) {
             auto dataReceived{request.GetBytesReceived()};
             auto dataTotal{request.GetBytesExpectedToReceive()};
             auto progress{dataReceived == 0 ? 0 : dataReceived * 100 / dataTotal};
@@ -129,13 +163,18 @@ bool Update::pullNewFiles(
 
             if (prog->cancelled()) {
                 logger.info("Downloads canceled.");
-                request.Cancel();
+
+                std::promise<void> cancelPromise;
+                const auto doCancel{[&] {
+                    request.Cancel();
+                }};
+                wxTheApp->CallAfter(doCancel);
+                cancelPromise.get_future().get();
+
                 fs::remove_all(stagingFolder());
+
                 return false;
             }
-
-            wxYield();
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
 
         if (request.GetState() != wxWebRequestBase::State_Completed) {
