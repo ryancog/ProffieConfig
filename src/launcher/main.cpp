@@ -76,6 +76,12 @@ public:
             return false;
         }
 
+        // The progress dialog (and probably others) can trigger this,
+        // particularly when a background thread is still running/doing work,
+        // such as when the progress disappears prior to launching, so disable
+        // it otherwise things'll subtly race!!
+        SetExitOnFrameDelete(false);
+
         logger_ = &logging::Context::getGlobal().createLogger("Launcher");
         auto& logger{*logger_};
 
