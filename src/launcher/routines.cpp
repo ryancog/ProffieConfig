@@ -38,6 +38,8 @@
 #include <pwd.h>
 #endif
 
+#include "app/app.hpp"
+#include "app/critical_dialog.hpp"
 #include "ui/dialogs/message.hpp"
 #include "utils/paths.hpp"
 #include "log/logger.hpp"
@@ -53,11 +55,9 @@ constexpr auto SUB_KEY{LR"(Software\Microsoft\Windows\CurrentVersion\Uninstall\P
 void routine::launch(logging::Branch& lBranch) {
     auto& logger{lBranch.createLogger("Routine::launch()")};
 
-    // Explicitly make a var for the execString.
-    // I don't know if it's actually the problem or what, but without doing so
-    // MSVC CreateProcessA seems to be fiddly.
-    //
-    // Both Win32 and POSIX, and the log need it anyways.
+    // Make sure to not interfere with the new process.
+    app::releaseExclusion();
+
     auto exec{paths::executable(paths::Executable::Main)};
     auto execString{exec.string()};
     logger.info("Launching ProffieConfig (" + execString + ")...");
@@ -80,26 +80,23 @@ void routine::launch(logging::Branch& lBranch) {
         &startupInfo,
         &procInfo
     )};
-    if (procSuccess) {
-        CloseHandle(procInfo.hProcess);
-        CloseHandle(procInfo.hThread);
-    } else {
+    if (not procSuccess) {
         logger.warn("Failed to launch ProffieConfig: " + std::to_string(GetLastError()));
+
+        app::CriticalDialog dlg(_("Failed to launch ProffieConfig"));
+        dlg.ShowModal();
     }
 
-    // TODO: This is a race, but one that seems unlikely to cause issues most
-    // of the time. It's ugly in any case.
-    //
-    // I think when I wrote this comment, I was referring to this process
-    // holding the exclusion mutex. I've not seen this problem crop up for
-    // anyone yet, but I really should add a way to disable that mutex
-    // immediately before launching the new process (Unless the way Windows
-    // manages these things makes it not matter, but I doubt it).
     wxExit();
 #   elif defined(__APPLE__) or defined(__linux__)
     std::array<char *, 2> argv{ execString.data(), nullptr };
     execvp(argv[0], argv.data());
-    logger.error("ProffieConfig main binary missing/failed to start.");
+
+    logger.warn("Failed to launch ProffieConfig: " + std::to_string(errno));
+
+    app::CriticalDialog dlg(_("Failed to launch ProffieConfig"));
+    dlg.ShowModal();
+
     exit(1);
 #   endif
 }
@@ -188,6 +185,9 @@ void routine::platformInstall(logging::Branch& lBranch) {
 #   endif
 
     pcui::showMessage(_("Launcher has been installed."));
+
+    app::releaseExclusion();
+
 #   ifdef _WIN32
     PROCESS_INFORMATION procInfo;
     STARTUPINFOA startupInfo;
@@ -210,10 +210,11 @@ void routine::platformInstall(logging::Branch& lBranch) {
         CloseHandle(procInfo.hProcess);
         CloseHandle(procInfo.hThread);
     } else {
-        logger.warn("Failed to start launcher.");
-    }
+        logger.warn("Failed to start launcher: " + std::to_string(GetLastError()));
 
-    wxExit();
+        app::CriticalDialog dlg(_("Failed to start Launcher"));
+        dlg.ShowModal();
+    }
 #   else
     auto str{installedExec.string()};
     const decltype(str.data()) argv[2]{
@@ -221,8 +222,14 @@ void routine::platformInstall(logging::Branch& lBranch) {
         nullptr,
     };
     execvp(argv[0], argv);
-    logger.warn("Failed to start launcher.");
+
+    logger.warn("Failed to start launcher: " + std::to_string(errno));
+
+    app::CriticalDialog dlg(_("Failed to start Launcher"));
+    dlg.ShowModal();
 #   endif
+
+    // This function doesn't handle exiting.
 }
 
 void routine::platformUninstall() {
