@@ -50,6 +50,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # I guess because wx has it?
     add_link_options(/NODEFAULTLIB:LIBCMT)
     # add_link_options(/NODEFAULTLIB:MSVCRT)
+
+    add_compile_options(/FS)
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
 endif()
