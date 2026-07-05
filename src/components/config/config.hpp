@@ -76,14 +76,6 @@ struct CONFIG_EXPORT Config : data::hier::Root, data::Receiver {
     const data::hier::Choice& propChoice() const;
     const versions::props::Prop *prop() const;
 
-    Settings settings_;
-    data::hier::Vector presetArrays_;
-    data::hier::Vector bladeConfigs_;
-
-    data::hier::Vector buttons_;
-    data::hier::Vector injections_;
-    data::hier::Vector styles_;
-
     const data::prim::Bool& isSaved() const;
     const data::prim::Integer& numBlades() const;
 
@@ -92,6 +84,25 @@ struct CONFIG_EXPORT Config : data::hier::Root, data::Receiver {
 
     void cache(std::unique_ptr<utils::Data>&&);
     [[nodiscard]] utils::Data *cache() const;
+
+private:
+    // Initialization of Settings (and maybe others in the future) depends on
+    // the choice members being initialized prior, so order them to make sure
+    // that happens.
+    data::hier::Choice mOsChoice;
+    data::hier::Choice mPropChoice;
+    data::hier::Choice mBoardChoice;
+
+    data::prim::Integer mNumBlades;
+
+public:
+    Settings settings_;
+    data::hier::Vector presetArrays_;
+    data::hier::Vector bladeConfigs_;
+
+    data::hier::Vector buttons_;
+    data::hier::Vector injections_;
+    data::hier::Vector styles_;
 
 protected:
     std::vector<const Model *> childrenToHash() const override;
@@ -126,13 +137,8 @@ private:
         std::vector<std::unique_ptr<versions::props::Prop>>,
         utils::Version::RawOrderer
     > mPropMap;
-    data::hier::Choice mOsChoice;
-    data::hier::Choice mPropChoice;
-    data::hier::Choice mBoardChoice;
 
-    data::prim::Integer mNumBlades;
     data::prim::Bool mIsSaved;
-
     std::optional<uint64> mSavedHash;
     std::map<uint64, std::unique_ptr<utils::Data>> mCache;
 };

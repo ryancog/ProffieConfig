@@ -51,15 +51,15 @@ fs::path savePath(const std::string&);
 } // namespace
 
 Config::Config() :
+    mOsChoice(*this),
+    mPropChoice(*this),
+    mBoardChoice(*this),
     settings_(*this),
     presetArrays_(*this),
     bladeConfigs_(*this),
     buttons_(*this),
     injections_(*this),
-    styles_(*this),
-    mOsChoice(*this),
-    mPropChoice(*this),
-    mBoardChoice(*this) {
+    styles_(*this) {
     CreationScope createScope(this);
 
     { 
