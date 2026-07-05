@@ -48,6 +48,11 @@ struct CONFIG_EXPORT Settings : data::hier::Model, data::Receiver {
 
     data::hier::Bool webUsb_;
 
+    struct {
+        data::hier::Bool enable_;
+        data::hier::String specTemplate_;
+    } menu_;
+
     // pcui::ChoiceData rfidSerial;
 
     settings::BladeAwareness bladeAwareness_;
@@ -156,6 +161,9 @@ protected:
     void onBootVolumeEnable();
     void onFilterEnableSet();
     void onDisableTalkieSet();
+
+    void prePropChoice();
+    void onPropChoice();
 };
 
 /**

@@ -346,6 +346,15 @@ void forGeneral(std::ostream& out, const Config& config) {
             outputDefine(out, MOUNT_SD_SETTING_STR);
         }
 
+        const auto& menu{settings.menu_};
+        if (
+                auto ctxt{data::context(menu.enable_)};
+                ctxt.enabled() and ctxt.val()
+           ) {
+            auto specTemplate{data::context(menu.specTemplate_)};
+            outputDefine(out, MENU_SPEC_TEMPLATE_STR, specTemplate.val());
+        }
+
         if (data::context(settings.disableKillOldPlayers_).val()) {
             outputDefine(out, DISABLE_KILL_OLD_PLAYERS_STR);
         }

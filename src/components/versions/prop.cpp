@@ -71,6 +71,7 @@ Layout parseLayout(
 
 Buttons parseButtons(const pconf::Data&, logging::Branch&);
 Errors parseErrors(const pconf::Data&, logging::Branch&);
+MenuSupport parseMenuSupport(const pconf::Data&, logging::Branch&);
 
 } // namespace
 
@@ -248,6 +249,7 @@ Prop::Prop(
     std::string name,
     std::string filename,
     std::string info,
+    std::optional<MenuSupport> menuSupport,
     std::map<uint32, Buttons> buttons,
     Layout layout,
     Errors errors
@@ -256,6 +258,7 @@ Prop::Prop(
     name_(std::move(name)),
     filename_(std::move(filename)),
     info_(std::move(info)),
+    menuSupport_(std::move(menuSupport)),
     mButtons(std::move(buttons)),
     mLayout(std::move(layout)),
     mErrors(std::move(errors)) {}
@@ -378,10 +381,22 @@ std::optional<PropData> PropData::generate(
         );
     }
 
+    std::optional<MenuSupport> menuSupport;
+    const auto menuSupportEntry{data.find("MENU_SUPPORT")};
+    if (menuSupportEntry and menuSupportEntry.section()) {
+        menuSupport = parseMenuSupport(
+            menuSupportEntry.section()->entries_,
+            *logger.bdebug("Parsing menu support...")
+        );
+    } else {
+        logger.info("No menu support section...");
+    }
+
     return std::make_optional<PropData>(
         std::move(name),
         std::move(filename),
         std::move(info),
+        std::move(menuSupport),
         std::move(settings),
         std::move(buttons),
         std::move(layout),
@@ -842,6 +857,7 @@ std::vector<std::unique_ptr<Prop>> versions::props::forVersion(
             data.name_,
             data.filename_,
             data.info_,
+            data.menuSupport_,
             data.buttons_,
             data.layout_,
             data.errors_
@@ -1353,6 +1369,25 @@ Errors parseErrors(const pconf::Data& data, logging::Branch& lBranch) {
         }
 
         ret.emplace_back(*arduinoEntry->value_, *displayEntry->value_);
+    }
+
+    return ret;
+}
+
+MenuSupport parseMenuSupport(
+    const pconf::Data& data, logging::Branch& lBranch
+) {
+    auto& logger{lBranch.createLogger("Versions::parseMenuSupport()")};
+
+    MenuSupport ret;
+
+    auto hashedData{pconf::hash(data)};
+
+    auto defaultEntry{hashedData.find("DEFAULT")};
+    if (defaultEntry and defaultEntry->value_) {
+        ret.defaultSpecTemplate_ = *defaultEntry->value_;
+    } else {
+        logger.debug("No default spec template.");
     }
 
     return ret;

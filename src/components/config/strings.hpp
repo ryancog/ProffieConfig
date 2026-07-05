@@ -177,6 +177,7 @@ constexpr cstring ENABLE_MASS_STORAGE_STR{"ENABLE_MASS_STORAGE"};
 constexpr cstring ENABLE_WEBUSB_STR{"ENABLE_WEBUSB"};
 
 constexpr cstring MOUNT_SD_SETTING_STR{"MOUNT_SD_SETTING"};
+constexpr cstring MENU_SPEC_TEMPLATE_STR{"MENU_SPEC_TEMPLATE"};
 
 constexpr cstring NUM_BUTTONS_STR{"NUM_BUTTONS"};
 constexpr cstring NUM_BLADES_STR{"NUM_BLADES"};

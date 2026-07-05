@@ -45,6 +45,10 @@ Settings::Settings(Config& parent) :
     massStorage_(root()),
     mountSdSetting_(root()),
     webUsb_(root()),
+    menu_{
+        .enable_=root(),
+        .specTemplate_=root(),
+    },
     bladeAwareness_(*this),
     volume_(root()),
     bootVolume_{.enable_=root(), .value_=root()},
@@ -125,6 +129,28 @@ Settings::Settings(Config& parent) :
         return table;
     }()};
     respondWith(disableTalkie_, disableTalkieTable);
+
+    const auto menuSpecTemplateFilter{[](
+        const data::base::String::ROContext&, std::string& str, size& pos
+    ) {
+        uint32 numTrimmed{};
+        utils::trimCppName(
+            str,
+            false,
+            &numTrimmed,
+            pos
+        );
+        pos -= numTrimmed;
+    }};
+    menu_.specTemplate_.setFilter(menuSpecTemplateFilter);
+
+    static const auto propChoiceTable{[] {
+        data::hier::Choice::RecvTable table;
+        table.preChoice_ = data::map<&Settings::prePropChoice>();
+        table.onChoice_ = data::map<&Settings::onPropChoice>();
+        return table;
+    }()};
+    observeWith(root<Config>().propChoice(), propChoiceTable);
 
     volume_.update({.min_=0, .max_=4000, .inc_=50});
     volume_.set(1000);
@@ -306,6 +332,36 @@ void Settings::onFilterEnableSet() {
 void Settings::onDisableTalkieSet() {
     auto ctxt{data::context(disableTalkie_)};
     femaleTalkie_.enable(not ctxt.val());
+}
+
+void Settings::prePropChoice() {
+    const auto *prop{root<Config>().prop()};
+    if (not prop or not prop->menuSupport_)
+        return;
+
+    /*
+     * If the menu spec template currently chosen is the prop's default, clear
+     * it out. This generally makes sense but also allows for the new prop
+     * selection to fill in its own default according to the below logic.
+     */
+    const auto menuSpec{data::context(menu_.specTemplate_)};
+    if (prop->menuSupport_->defaultSpecTemplate_ == menuSpec.val())
+        menuSpec.clear();
+}
+
+void Settings::onPropChoice() {
+    const auto *prop{root<Config>().prop()};
+    auto menuEn{data::context(menu_.enable_)};
+    menuEn.enable(prop and prop->menuSupport_);
+
+    /*
+     * If this prop supports the menu system and there's no menu spec currently
+     * specified (empty), then change the menu spec to the prop's preferred
+     * default.
+     */
+    const auto menuSpec{data::context(menu_.specTemplate_)};
+    if (menuEn.enabled() and menuSpec.val().empty())
+        menuSpec.change(std::string(prop->menuSupport_->defaultSpecTemplate_));
 }
 
 Settings::ProcessDefinesAction::ProcessDefinesAction() = default;
@@ -659,6 +715,9 @@ bool processDefine(
         settings.enableIdleSound_.set(true);
     } else if (define.val() == MOUNT_SD_SETTING_STR) {
         settings.mountSdSetting_.set(true);
+    } else if (define.val() == MENU_SPEC_TEMPLATE_STR) {
+        settings.menu_.enable_.set(true);
+        settings.menu_.specTemplate_.change(std::string(value.val()));
     } else {
         processed = false;
     }

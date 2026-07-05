@@ -213,6 +213,10 @@ struct VERSIONS_EXPORT Layout {
     std::vector<std::variant<std::string, Layout>> children_;
 };
 
+struct VERSIONS_EXPORT MenuSupport {
+    std::string defaultSpecTemplate_;
+};
+
 struct VERSIONS_EXPORT PropData {
     // MSVC
     PropData(const PropData&) = delete;
@@ -223,6 +227,7 @@ struct VERSIONS_EXPORT PropData {
         std::string name,
         std::string filename,
         std::string info,
+        std::optional<MenuSupport> menuSupport,
         std::vector<std::unique_ptr<detail::Data>> settings,
         std::map<uint32, Buttons> buttons,
         Layout layout,
@@ -230,6 +235,7 @@ struct VERSIONS_EXPORT PropData {
     ) : name_(std::move(name)),
         filename_(std::move(filename)),
         info_(std::move(info)),
+        menuSupport_(std::move(menuSupport)),
         settings_(std::move(settings)),
         buttons_(std::move(buttons)),
         layout_(std::move(layout)),
@@ -243,6 +249,8 @@ struct VERSIONS_EXPORT PropData {
     std::string name_;
     std::string filename_;
     std::string info_;
+
+    std::optional<MenuSupport> menuSupport_;
 
     std::vector<std::unique_ptr<detail::Data>> settings_;
     std::map<uint32, Buttons> buttons_;
@@ -278,6 +286,8 @@ struct VERSIONS_EXPORT Prop : data::hier::Model, data::Receiver {
     const std::string filename_;
     const std::string info_;
 
+    const std::optional<MenuSupport> menuSupport_;
+
 private:
     friend VERSIONS_EXPORT std::vector<std::unique_ptr<Prop>> forVersion(
         const utils::Version&,
@@ -291,6 +301,7 @@ private:
         std::string name,
         std::string filename,
         std::string info,
+        std::optional<MenuSupport> menuSupport,
         std::map<uint32, Buttons> buttons,
         Layout layout,
         Errors errors
