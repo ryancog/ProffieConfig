@@ -42,7 +42,7 @@ struct MainMenu : pcui::Frame {
         eID_Logs,
         eID_Licenses,
 
-        eID_Docs,
+        eID_Guides,
         eID_Issue,
         eID_Run_Setup,
     };
