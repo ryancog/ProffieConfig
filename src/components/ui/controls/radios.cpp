@@ -21,6 +21,7 @@
 
 #include <wx/radiobut.h>
 
+#include "data/base/models/exclusive.hpp"
 #include "data/context.hpp"
 #include "ui/detail/general.hpp"
 #include "ui/detail/scaffold.hpp"
@@ -107,7 +108,8 @@ struct Control : detail::DataWindow<wxRadioButton> {
 };
 
 struct Box : detail::Window<priv::GroupBox> {
-    Box(const detail::Scaffold& scaffold, const Radios& desc) {
+    Box(const detail::Scaffold& scaffold, const Radios& desc) :
+        excl_{desc.data_} {
         create(
             scaffold.childParent_,
             desc.win_.id_,
@@ -117,10 +119,17 @@ struct Box : detail::Window<priv::GroupBox> {
 
         postCreation(scaffold, desc.win_);
 
+        static const auto table{[] {
+            data::base::Exclusive::RecvTable table;
+            table.onEnable_ = data::map<&Box::onEnable>();
+            return table;
+        }()};
+        observeWith(excl_, table);
+
         auto childScaffold{scaffold};
         childScaffold.childParent_ = childParent();
 
-        auto ctxt{data::context(desc.data_)};
+        auto ctxt{data::context(excl_)};
         for (size idx{0}; idx < ctxt.num(); ++idx) {
             auto& bl{ctxt[idx]};
 
@@ -146,6 +155,20 @@ struct Box : detail::Window<priv::GroupBox> {
 
         activate();
     }
+
+    void onActivate() override {
+        Enable(data::context(excl_).enabled());
+    }
+
+    // TODO: This assumes that disabling the contents is either purely visual,
+    // or that user interaction with the children when it's expected to be
+    // disabled won't cause issues!
+    void onEnable(const data::base::Model& model) {
+        auto ctxt{data::context(model)};
+        safeCall([this, en=ctxt.enabled()] { Enable(en); });
+    }
+
+    const data::base::Exclusive& excl_;
 };
 
 } // namespace
