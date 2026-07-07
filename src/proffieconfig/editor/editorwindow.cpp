@@ -141,6 +141,19 @@ void EditorWindow::createMenuBar() {
     menuBar->Append(tools, _("&Tools"));
     appendDefaultMenuItems(menuBar);
 
+    const auto helpStr{_("&Help")};
+    const auto helpIdx{menuBar->FindMenu(helpStr)};
+    auto *help{
+        helpIdx == wxNOT_FOUND
+            ? new wxMenu
+            : menuBar->GetMenu(helpIdx)
+    };
+
+    help->Append(
+        eID_POD,
+        _("ProffieOS Documentation...")
+    );
+
     SetMenuBar(menuBar);
 }
 
@@ -209,6 +222,7 @@ void EditorWindow::bindEvents() {
     Bind(wxEVT_MENU, &EditorWindow::onUndo, this, wxID_UNDO);
     Bind(wxEVT_MENU, &EditorWindow::onRedo, this, wxID_REDO);
     Bind(wxEVT_MENU, &EditorWindow::onStyleEditor, this, eID_Style_Editor);
+    Bind(wxEVT_MENU, &EditorWindow::onPOD, this, eID_POD);
     Bind(wxEVT_MENU, &EditorWindow::onPage, this, ePage_First, ePage_Last);
     Bind(wxEVT_TIMER, &EditorWindow::onTimer, this);
 }
@@ -381,6 +395,11 @@ void EditorWindow::onStyleEditor(wxCommandEvent&) {
     }
 
     wxLaunchDefaultBrowser(uri.BuildURI());
+}
+
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+void EditorWindow::onPOD(wxCommandEvent&) {
+    wxLaunchDefaultBrowser("https://pod.hubbe.net");
 }
 
 void EditorWindow::onPage(wxCommandEvent& evt) {
