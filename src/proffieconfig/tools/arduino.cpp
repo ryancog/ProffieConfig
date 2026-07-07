@@ -855,6 +855,17 @@ std::optional<wxString> precheckCompile(
         aliasNames.insert(name);
     }
 
+    if (const auto *prop{config.prop()}) {
+        auto buttonsCtxt{data::context(config.buttons_)};
+        const auto numButtons{buttonsCtxt.children().size()};
+        const auto *buttons{prop->buttons(numButtons)};
+        if (not buttons) {
+            constexpr cstring MSG{wxTRANSLATE("Prop %s does not support %zu buttons.")};
+            logger.error(wxString::Format(MSG, prop->name_, numButtons).utf8_string());
+            return wxString::Format(wxGetTranslation(MSG), prop->name_, numButtons).utf8_string();
+        }
+    }
+
     return std::nullopt;
 }
 
