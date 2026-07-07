@@ -397,12 +397,14 @@ void forGeneral(std::ostream& out, const Config& config) {
 void forProp(std::ostream& out, const Config& config) {
     const auto *prop{config.prop()};
 
-    if (prop == nullptr) return;
+    if (prop == nullptr)
+        return;
     
     for (const auto& setting : prop->settings()) {
         auto output{setting->generateDefineString()};
 
-        if (not output) continue;
+        if (not output)
+            continue;
 
         out << priv::DEFINE_STR << *output << '\n';
     }
