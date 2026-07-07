@@ -49,12 +49,18 @@ struct Context;
 namespace detail {
 
 struct VERSIONS_EXPORT Data {
+    struct Require {
+        bool external_{false};
+        bool inverted_{false};
+        std::string key_;
+    };
+
     Data(
         std::string,
         std::string,
         std::string,
-        std::vector<std::string>,
-        std::vector<std::string>
+        std::vector<Require>,
+        std::vector<Require>
     );
     Data(Data&&) = default;
     Data(const Data&) = default;
@@ -64,8 +70,8 @@ struct VERSIONS_EXPORT Data {
     const std::string define_;
     const std::string description_;
 
-    const std::vector<std::string> required_;
-    const std::vector<std::string> requireAny_;
+    const std::vector<Require> required_;
+    const std::vector<Require> requireAny_;
 };
 
 // The consistency of these state getters generally relies on the underlying
@@ -267,6 +273,15 @@ struct VERSIONS_EXPORT Prop : data::hier::Model, data::Receiver {
         data::hier::Root&, std::string_view, std::string_view
     );
 
+    enum class ExternalRequireResult {
+        Inactive,
+        Active,
+        Not_Found,
+    };
+    using ExternalRequireProcessor = ExternalRequireResult (*)(
+        data::hier::Root&, std::string_view
+    );
+
     [[nodiscard]] std::span<const std::unique_ptr<detail::SettingBase>>
         settings() const { return mSettings; }
     [[nodiscard]] const Buttons *buttons(uint32 numButtons) const;
@@ -277,6 +292,8 @@ struct VERSIONS_EXPORT Prop : data::hier::Model, data::Receiver {
     [[nodiscard]] pcui::DescriptorPtr layout();
 
     void migrateFrom(const Prop&);
+
+    void markExternalModified(std::string_view);
 
     using Model::children;
     std::vector<const Model *> children() const override;
@@ -292,7 +309,8 @@ private:
     friend VERSIONS_EXPORT std::vector<std::unique_ptr<Prop>> forVersion(
         const utils::Version&,
         data::hier::Root&,
-        Prop::RecommendProcessor
+        Prop::RecommendProcessor,
+        Prop::ExternalRequireProcessor
     );
 
     Prop(
@@ -308,9 +326,11 @@ private:
     );
 
     void rebuildLookup(logging::Branch * = nullptr);
+    void recomputeState(detail::SettingBase&);
     void onSet(const data::base::Model&);
 
     RecommendProcessor mRecProc;
+    ExternalRequireProcessor mExtReqProc;
 
     std::vector<std::unique_ptr<detail::SettingBase>> mSettings;
     const std::map<uint32, Buttons> mButtons;
@@ -329,12 +349,18 @@ private:
     //
     // E.g. If `OPTION1` `REQUIRES` `OPTION2`, then the mapping is:
     // mReqMap[`OPTION2`] = {`OPTION1`}
-    RelationMap mReqMap;
+    RelationMap mRequiredByMap;
     // <Disabled, Disabled By>
     //
     // E.g. If `OPTION1` `DISABLE`s `OPTION2`, then the mapping is:
     // mReqMap[`OPTION2`] = {`OPTION1`}
-    RelationMap mDisMap;
+    RelationMap mDisabledByMap;
+
+    using ExtRelationMap = std::unordered_map<
+        std::string_view, std::set<detail::SettingBase *>
+    >;
+    // <Ext Key, Setting>
+    ExtRelationMap mExtReqMap;
 };
 
 struct VERSIONS_EXPORT Available : data::prim::Model {
@@ -359,7 +385,8 @@ struct VERSIONS_EXPORT Versioned : Available {
 [[nodiscard]] VERSIONS_EXPORT std::vector<std::unique_ptr<Prop>> forVersion(
     const utils::Version&,
     data::hier::Root&,
-    Prop::RecommendProcessor
+    Prop::RecommendProcessor,
+    Prop::ExternalRequireProcessor
 );
 
 } // namespace versions::props

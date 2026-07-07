@@ -72,7 +72,10 @@ Config::Config() :
 
             auto& propVec{mPropMap[os.version_]};
             propVec = versions::props::forVersion(
-                os.version_, *this, &Config::processPropRecommend
+                os.version_,
+                *this,
+                &Config::processPropRecommend,
+                &Config::processPropExternalRequire
             );
         }
     }
@@ -433,6 +436,12 @@ void Config::processPropRecommend(
     config.settings_.processDefines();
 }
 
+versions::props::Prop::ExternalRequireResult
+Config::processPropExternalRequire(
+    data::hier::Root& root, std::string_view key
+) {
+    return Not_Found;
+}
 
 data::logic::Element config::operator|(
     Config& config, Config::OSIsOrOverVersion data

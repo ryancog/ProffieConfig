@@ -79,8 +79,8 @@ detail::Data::Data(
     std::string name,
     std::string define,
     std::string description,
-    std::vector<std::string> required,
-    std::vector<std::string> requireAny
+    std::vector<Require> required,
+    std::vector<Require> requireAny
 ) : name_(std::move(name)),
     define_(std::move(define)),
     description_(std::move(description)),
@@ -109,7 +109,8 @@ bool Toggle::shouldOutputDefine() const {
 }
 
 std::optional<std::string> Toggle::generateDefineString() const {
-    if (not shouldOutputDefine()) return std::nullopt;
+    if (not shouldOutputDefine())
+        return std::nullopt;
 
     return define_;
 }
@@ -172,7 +173,8 @@ bool Decimal::shouldOutputDefine() const {
 }
 
 std::optional<std::string> Decimal::generateDefineString() const {
-    if (not shouldOutputDefine()) return std::nullopt;
+    if (not shouldOutputDefine())
+        return std::nullopt;
 
     auto ctxt{data::context(*this)};
     return define_ + ' ' + std::to_string(ctxt.val());
@@ -204,12 +206,18 @@ bool Option::isActive() const {
 }
 
 bool Option::shouldOutputDefine() const {
+    if (not isActive())
+        return false;
+
     auto ctxt{data::context(*this)};
     auto& cur{dynamic_cast<Selection&>(ctxt[ctxt.selected()])};
     return cur.shouldOutputDefine();
 }
 
 std::optional<std::string> Option::generateDefineString() const {
+    if (not shouldOutputDefine())
+        return std::nullopt;
+
     // Since this is what goes into the setting list, make it responsible for
     // forwarding the output call to what is actually selected.
     auto ctxt{data::context(*this)};
@@ -238,7 +246,8 @@ bool Option::Selection::shouldOutputDefine() const {
 }
 
 std::optional<std::string> Option::Selection::generateDefineString() const {
-    if (not shouldOutputDefine()) return std::nullopt;
+    if (not shouldOutputDefine())
+        return std::nullopt;
 
     return define_;
 }
@@ -620,6 +629,11 @@ void Prop::migrateFrom(const Prop& from) {
     }
 }
 
+void Prop::markExternalModified(std::string_view str) {
+    for (auto *setting : mExtReqMap[str])
+        recomputeState(*setting);
+}
+
 auto Prop::children() const -> std::vector<const Model *> {
     std::vector<const Model *> ret;
 
@@ -634,8 +648,9 @@ void Prop::rebuildLookup(logging::Branch *lBranch) {
     auto& logger{logging::Branch::optCreateLogger("versions::props::Prop::rebuildLookup()", lBranch)};
 
     mMap.clear();
-    mReqMap.clear();
-    mDisMap.clear();
+    mRequiredByMap.clear();
+    mDisabledByMap.clear();
+    mExtReqMap.clear();
 
     // First build the id->setting map, and then use it to build others
 
@@ -683,30 +698,93 @@ void Prop::rebuildLookup(logging::Branch *lBranch) {
                     continue;
                 }
 
-                mDisMap[iter->second].insert(setting);
+                mDisabledByMap[iter->second].insert(setting);
             }
         }
 
-        for (const auto& required : setting->required_) {
-            auto iter{mMap.find(required)};
+        const auto processRequire{[&](const detail::Data::Require& req) {
+            if (req.external_) {
+                auto res{mExtReqProc(root(), req.key_)};
+                if (res == ExternalRequireResult::Not_Found) {
+                    logger.warn("Unknown external requires \"" + req.key_ + "\" for \"" + setting->define_ + '"');
+                    return;
+                } 
+
+                mExtReqMap[req.key_].insert(setting);
+                return;
+            }
+
+            auto iter{mMap.find(req.key_)};
             if (iter == mMap.end()) {
-                logger.warn("Unknown requires \"" + required + "\" for \"" + setting->define_ + '"');
-                continue;
+                logger.warn("Unknown requires \"" + req.key_ + "\" for \"" + setting->define_ + '"');
+                return;
             }
 
-            mReqMap[iter->second].insert(setting);
-        }
+            mRequiredByMap[iter->second].insert(setting);
+        }};
 
-        for (const auto& required : setting->requireAny_) {
-            auto iter{mMap.find(required)};
-            if (iter == mMap.end()) {
-                logger.warn("Unknown any requires \"" + required + "\" for \"" + setting->define_ + '"');
-                continue;
-            }
+        for (const auto& req : setting->required_)
+            processRequire(req);
 
-            mReqMap[iter->second].insert(setting);
-        }
+        for (const auto& req : setting->requireAny_)
+            processRequire(req);
     }
+}
+
+void Prop::recomputeState(detail::SettingBase& setting) {
+    const auto computeRequire{[this](const detail::Data::Require& req) {
+        bool reqVal{};
+
+        if (req.external_) {
+            auto res{mExtReqProc(root(), req.key_)};
+            // If the external require isn't found, consider it inactive.
+            reqVal = (res == ExternalRequireResult::Active);
+        } else {
+            auto iter{mMap.find(req.key_)};
+
+            if (iter == mMap.end())
+                // If the require isn't found, consider it inactive.
+                reqVal = false;
+            else
+                reqVal = iter->second->isActive();
+        }
+
+        if (req.inverted_)
+            reqVal = not reqVal;
+
+        return reqVal;
+    }};
+
+    const auto computeRequired{[&] {
+        for (const auto& req : setting.required_)
+            if (not computeRequire(req))
+                return false;
+
+        return true;
+    }};
+
+    const auto computeRequireAny{[&] {
+        if (setting.requireAny_.empty())
+            return true;
+
+        for (const auto& req : setting.requireAny_)
+            if (computeRequire(req))
+                return true;
+
+        return false;
+    }};
+
+    const auto computeDisabledBy{[&] {
+        for (const auto& disabledBy : mDisabledByMap[&setting])
+            if (disabledBy->isActive())
+                return false;
+
+        return true;
+    }};
+
+    dynamic_cast<data::base::Model&>(setting).enable(
+        computeRequired() and computeRequireAny() and computeDisabledBy()
+    );
 }
 
 void Prop::onSet(const data::base::Model& model) {
@@ -737,60 +815,12 @@ void Prop::onSet(const data::base::Model& model) {
         affectedSet.insert(iter->second);
     }
 
-    for (auto *requiredBy : mReqMap[&setting]) {
+    for (auto *requiredBy : mRequiredByMap[&setting])
         affectedSet.insert(requiredBy);
-    }
 
     // And then fully compute the state for each.
-
-    const auto computeRequired{[&](detail::SettingBase *setting) {
-        for (const auto& required : setting->required_) {
-            auto iter{mMap.find(required)};
-
-            if (iter == mMap.end())
-                // Issues were already logged during map generation.
-                continue;
-
-            if (not iter->second->isActive())
-                return false;
-        }
-
-        return true;
-    }};
-
-    const auto computeRequireAny{[&](detail::SettingBase *setting) {
-        if (setting->requireAny_.empty()) return true;
-
-        for (const auto& reqAny : setting->requireAny_) {
-            auto iter{mMap.find(reqAny)};
-
-            if (iter == mMap.end())
-                // Issues were already logged during map generation.
-                continue;
-
-            if (iter->second->isActive())
-                return true;
-
-        }
-
-        return false;
-    }};
-
-    const auto computeDisabledBy{[&](detail::SettingBase *setting) {
-        for (const auto& disabledBy : mDisMap[setting]) {
-            if (disabledBy->isActive()) return false;
-        }
-
-        return true;
-    }};
-
-    for (auto *affected : affectedSet) {
-        dynamic_cast<data::base::Model *>(affected)->enable(
-            computeRequired(affected) and
-            computeRequireAny(affected) and
-            computeDisabledBy(affected)
-        );
-    }
+    for (auto *affected : affectedSet)
+        recomputeState(*affected);
 
     if (mRecProc) {
         const auto& recommends{[&] -> const auto& {
@@ -831,7 +861,8 @@ const data::prim::Vector& versions::props::list() {
 std::vector<std::unique_ptr<Prop>> versions::props::forVersion(
     const utils::Version& ver,
     data::hier::Root& root,
-    Prop::RecommendProcessor recProc
+    Prop::RecommendProcessor recProc,
+    Prop::ExternalRequireProcessor extReqProc
 ) {
     std::vector<std::unique_ptr<Prop>> ret;
 
@@ -864,6 +895,7 @@ std::vector<std::unique_ptr<Prop>> versions::props::forVersion(
         ))};
 
         prop.mRecProc = recProc;
+        prop.mExtReqProc = extReqProc;
 
         for (const auto& set : data.settings_) {
             data::base::Model *model{nullptr};
@@ -1159,20 +1191,47 @@ std::optional<std::pair<detail::Data, pconf::HashedData>> parseSettingCommon(
         data.erase(descEntry);
     }
 
-    std::vector<std::string> requireAny;
+    const auto processRequire{[](std::string& raw) {
+        detail::Data::Require ret;
 
-    const auto requireAnyEntry{data.find("REQUIREANY")};
-    if (requireAnyEntry and requireAnyEntry->value_) {
-        requireAny = pconf::valueAsList(requireAnyEntry->value_);
-        data.erase(requireAnyEntry);
-    }
+        if (raw[0] == '~') {
+            ret.inverted_ = true;
+            raw.erase(0, 1);
+        }
 
-    std::vector<std::string> required;
+        if (raw[0] == '@') {
+            ret.external_ = true;
+            raw.erase(0, 1);
+        }
+
+        ret.key_ = std::move(raw);
+        return ret;
+    }};
+
+    std::vector<detail::Data::Require> required;
 
     const auto requiredEntry{data.find("REQUIRE")};
     if (requiredEntry and requiredEntry->value_) {
-        required = pconf::valueAsList(requiredEntry->value_);
+        auto rawVec{pconf::valueAsList(requiredEntry->value_)};
+        required.reserve(rawVec.size());
+
+        for (auto& raw : rawVec)
+            required.push_back(processRequire(raw));
+
         data.erase(requiredEntry);
+    }
+
+    std::vector<detail::Data::Require> requireAny;
+
+    const auto requireAnyEntry{data.find("REQUIREANY")};
+    if (requireAnyEntry and requireAnyEntry->value_) {
+        auto rawVec{pconf::valueAsList(requireAnyEntry->value_)};
+        required.reserve(rawVec.size());
+
+        for (auto& raw : rawVec)
+            required.push_back(processRequire(raw));
+
+        data.erase(requireAnyEntry);
     }
 
     return std::pair{

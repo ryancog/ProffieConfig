@@ -127,6 +127,11 @@ private:
         data::hier::Root&, std::string_view, std::string_view
     );
 
+    static versions::props::Prop::ExternalRequireResult
+    processPropExternalRequire(
+        data::hier::Root&, std::string_view
+    );
+
     int32 mLastOSChoice;
     int32 mLastPropChoice;
     std::optional<uint64> mLastBoardId;
