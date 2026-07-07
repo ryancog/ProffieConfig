@@ -74,6 +74,7 @@ struct CONFIG_EXPORT Config : data::hier::Root, data::Receiver {
 
     data::hier::Choice& propChoice();
     const data::hier::Choice& propChoice() const;
+    versions::props::Prop *prop();
     const versions::props::Prop *prop() const;
 
     const data::prim::Bool& isSaved() const;

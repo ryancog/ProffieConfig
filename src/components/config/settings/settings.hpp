@@ -164,6 +164,8 @@ protected:
 
     void prePropChoice();
     void onPropChoice();
+
+    void onMenuEnable();
 };
 
 /**

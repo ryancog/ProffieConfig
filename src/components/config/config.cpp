@@ -33,6 +33,7 @@
 #include "config/presets/preset.hpp"
 #include "config/priv/data.hpp"
 #include "config/priv/io.hpp"
+#include "config/priv/keys.hpp"
 #include "config/settings/define.hpp"
 #include "data/context.hpp"
 #include "log/context.hpp"
@@ -228,6 +229,12 @@ data::hier::Choice& Config::propChoice() {
 
 const data::hier::Choice& Config::propChoice() const {
     return mPropChoice;
+}
+
+versions::props::Prop *Config::prop() {
+    return const_cast<versions::props::Prop *>(
+        const_cast<const Config&>(*this).prop()
+    );
 }
 
 const versions::props::Prop *Config::prop() const {
@@ -440,6 +447,18 @@ versions::props::Prop::ExternalRequireResult
 Config::processPropExternalRequire(
     data::hier::Root& root, std::string_view key
 ) {
+    using enum versions::props::Prop::ExternalRequireResult;
+    auto& config{dynamic_cast<Config&>(root)};
+
+    const auto get{[](data::hier::Bool& b) {
+        return data::context(b).val()
+            ? Active
+            : Inactive;
+    }};
+
+    if (key == priv::keys::SETTINGS_MENU_ENABLE)
+        return get(config.settings_.menu_.enable_);
+
     return Not_Found;
 }
 

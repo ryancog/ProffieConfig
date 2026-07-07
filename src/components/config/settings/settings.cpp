@@ -21,6 +21,7 @@
 
 #include "config/config.hpp"
 #include "config/priv/io.hpp"
+#include "config/priv/keys.hpp"
 #include "config/strings.hpp"
 #include "config/settings/define.hpp"
 #include "data/context.hpp"
@@ -129,6 +130,13 @@ Settings::Settings(Config& parent) :
         return table;
     }()};
     respondWith(disableTalkie_, disableTalkieTable);
+
+    static const auto menuEnableTable{[] {
+        data::hier::Bool::RecvTable table;
+        table.onSet_ = data::map<&Settings::onMenuEnable>();
+        return table;
+    }()};
+    respondWith(menu_.enable_, menuEnableTable);
 
     const auto menuSpecTemplateFilter{[](
         const data::base::String::ROContext&, std::string& str, size& pos
@@ -372,6 +380,11 @@ void Settings::onPropChoice() {
     const auto menuSpec{data::context(menu_.specTemplate_)};
     if (prop and menuEn.enabled() and menuSpec.val().empty())
         menuSpec.change(std::string(prop->menuSupport_->defaultSpecTemplate_));
+}
+
+void Settings::onMenuEnable() {
+    if (auto *prop{root<Config>().prop()})
+        prop->markExternalModified(priv::keys::SETTINGS_MENU_ENABLE);
 }
 
 Settings::ProcessDefinesAction::ProcessDefinesAction() = default;
