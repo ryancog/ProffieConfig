@@ -144,22 +144,23 @@ SETTINGS {
 
 	OPTION("EDIT_MODE") {
 		NAME: "Edit Mode"
+		REQUIRE: "~@Settings:Menu:Enable"
 		SELECTION {
 			NAME: "No Edit Mode"
 		}
 		SELECTION("FETT263_EDIT_MODE_MENU") {
 			NAME: "Edit Mode"
 			DESCRIPTION: "Enable Edit Mode Menu System (Advanced on-the-fly saber controls, includes everything from Edit Settings)\nRequires ENABLE_ALL_EDIT_OPTIONS in Custom Options (General Page)"
-            RECOMMENDS {
-                ENABLE_ALL_EDIT_OPTIONS
-            }
+			RECOMMENDS {
+				ENABLE_ALL_EDIT_OPTIONS
+			}
 		}
 		SELECTION("FETT263_EDIT_SETTINGS_MENU") {
 			NAME: "Edit Settings"
 			DESCRIPTION: "Enable Edit Settings Menu (Volume, Clash Threshold, Blade Length, Gestures/Controls, Brightness)\nRequires ENABLE_ALL_EDIT_OPTIONS in Custom Options (General Page)" 
-            RECOMMENDS {
-                ENABLE_ALL_EDIT_OPTIONS
-            }
+			RECOMMENDS {
+				ENABLE_ALL_EDIT_OPTIONS
+			}
 		}
 	}
 
@@ -1416,11 +1417,14 @@ BUTTONS{3} {
 }
 
 ERRORS {
-    MAP {
-        ARDUINO: "ENABLE_ALL_EDIT_OPTIONS must be defined to enable"
-        DISPLAY: {
-            "Edit Mode/Settings requires "Enable All Edit Options" on General Page"
-        }
-    }
+	MAP {
+		ARDUINO: "ENABLE_ALL_EDIT_OPTIONS must be defined to enable"
+		DISPLAY: {
+			"Edit Mode/Settings requires "Enable All Edit Options" on General Page"
+		}
+	}
 }
 
+MENU_SUPPORT {
+	DEFAULT: "FETT263_MENU_SPEC"
+}
