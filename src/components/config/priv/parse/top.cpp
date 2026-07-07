@@ -79,8 +79,8 @@ std::optional<std::string> parse::top(
                     // None are available, so this must be skipped.
                     break;
 
-                auto& boards{config.os()->boards_};
-                for (auto& [id, board] : boards) {
+                const auto& boards{config.os()->boards_};
+                for (const auto& [id, board] : boards) {
                     if (board.include_ != directive.buf1_) continue;
 
                     config.boardChoice().choose(static_cast<int32>(id));
