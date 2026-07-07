@@ -45,7 +45,7 @@ void DataWindowImpl::onFocus() {
 
 bool DataWindowImpl::freezeGetRealEnable() {
     bool modelEn{true};
-    if (auto *model{primaryModel()}) {
+    if (const auto *model{primaryModel()}) {
         model->lock();
         modelEn = data::context(*model).enabled();
     }
@@ -54,14 +54,14 @@ bool DataWindowImpl::freezeGetRealEnable() {
 }
 
 void DataWindowImpl::thawRealEnable() {
-    if (auto *model{primaryModel()})
+    if (const auto *model{primaryModel()})
         model->unlock();
 
     WindowImpl::thawRealEnable();
 }
 
 bool DataWindowImpl::visualEnableOverride() {
-    if (auto *model{primaryModel()})
+    if (const auto *model{primaryModel()})
         return data::context(*model).enabled();
 
     return true;
