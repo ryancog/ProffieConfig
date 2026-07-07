@@ -44,3 +44,4 @@ private:
     ButtonsDlg *mButtonDlg{nullptr};
     CustomOptionsDlg *mOptionsDlg{nullptr};
 };
+
