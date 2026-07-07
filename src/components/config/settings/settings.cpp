@@ -150,7 +150,7 @@ Settings::Settings(Config& parent) :
         table.onChoice_ = data::map<&Settings::onPropChoice>();
         return table;
     }()};
-    observeWith(root<Config>().propChoice(), propChoiceTable);
+    respondWith(root<Config>().propChoice(), propChoiceTable);
 
     volume_.update({.min_=0, .max_=4000, .inc_=50});
     volume_.set(1000);
@@ -185,6 +185,9 @@ Settings::Settings(Config& parent) :
 
     audioClashSuppressionLevel_.update({.min_=1, .max_=50});
     audioClashSuppressionLevel_.set(10);
+
+    // Update menu spec stuff.
+    onPropChoice();
 }
 
 Settings::~Settings() = default;
@@ -339,11 +342,9 @@ void Settings::prePropChoice() {
     if (not prop or not prop->menuSupport_)
         return;
 
-    /*
-     * If the menu spec template currently chosen is the prop's default, clear
-     * it out. This generally makes sense but also allows for the new prop
-     * selection to fill in its own default according to the below logic.
-     */
+    // If the menu spec template currently chosen is the prop's default, clear
+    // it out. This generally makes sense but also allows for the new prop
+    // selection to fill in its own default according to the below logic.
     const auto menuSpec{data::context(menu_.specTemplate_)};
     if (prop->menuSupport_->defaultSpecTemplate_ == menuSpec.val())
         menuSpec.clear();
@@ -352,15 +353,19 @@ void Settings::prePropChoice() {
 void Settings::onPropChoice() {
     const auto *prop{root<Config>().prop()};
     auto menuEn{data::context(menu_.enable_)};
-    menuEn.enable(prop and prop->menuSupport_);
 
-    /*
-     * If this prop supports the menu system and there's no menu spec currently
-     * specified (empty), then change the menu spec to the prop's preferred
-     * default.
-     */
+    // Enable if no prop selected (default prop), or if the prop explicitly
+    // calls out support for the menu system.
+    menuEn.enable(not prop or prop->menuSupport_);
+
+    // If this prop supports the menu system and there's no menu spec currently
+    // specified (empty), then change the menu spec to the prop's preferred
+    // default.
+    //
+    // In the case of the default prop (`not prop`), the field is left empty,
+    // and config::DEFAULT_MENU_SPEC_STR is used during output.
     const auto menuSpec{data::context(menu_.specTemplate_)};
-    if (menuEn.enabled() and menuSpec.val().empty())
+    if (prop and menuEn.enabled() and menuSpec.val().empty())
         menuSpec.change(std::string(prop->menuSupport_->defaultSpecTemplate_));
 }
 
