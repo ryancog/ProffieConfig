@@ -352,7 +352,12 @@ void forGeneral(std::ostream& out, const Config& config) {
                 ctxt.enabled() and ctxt.val()
            ) {
             auto specTemplate{data::context(menu.specTemplate_)};
-            outputDefine(out, MENU_SPEC_TEMPLATE_STR, specTemplate.val());
+
+            auto specTemplateVal{specTemplate.val()};
+            if (specTemplateVal.empty())
+                specTemplateVal = DEFAULT_MENU_SPEC_STR;
+
+            outputDefine(out, MENU_SPEC_TEMPLATE_STR, specTemplateVal);
         }
 
         if (data::context(settings.disableKillOldPlayers_).val()) {

@@ -141,6 +141,11 @@ Settings::Settings(Config& parent) :
             pos
         );
         pos -= numTrimmed;
+
+        if (str == DEFAULT_MENU_SPEC_STR) {
+            str.clear();
+            pos = 0;
+        }
     }};
     menu_.specTemplate_.setFilter(menuSpecTemplateFilter);
 
