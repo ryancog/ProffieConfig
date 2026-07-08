@@ -264,8 +264,8 @@ bool pconf::read(
 
                     if (*iter == '}') {
                         auto res{std::from_chars(
-                            mark.base(),
-                            iter.base(),
+                            &*mark,
+                            &*iter,
                             stack.top()->back()->labelNum_.emplace()
                         )};
 
