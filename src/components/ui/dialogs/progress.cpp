@@ -119,9 +119,9 @@ void ProgressDialog::finish(bool modalWait, const wxString& message) {
             return;
         }
 
-	// TODO: Making it go modal is a simple and reliable way to wait in
-	// this function until "OK" is clicked, however making the window modal
-	// on non-OSX interrupts the user if they were in another window.
+        // TODO: Making it go modal is a simple and reliable way to wait in
+        // this function until "OK" is clicked, however making the window modal
+        // on non-OSX interrupts the user if they were in another window.
         if (modalWait)
             ShowModal();
     }};
