@@ -69,7 +69,9 @@ Layout parseLayout(
     logging::Branch&
 );
 
-Buttons parseButtons(const pconf::Data&, logging::Branch&);
+Buttons parseButtons(
+    const pconf::Data&, const std::map<uint32, Buttons>&, logging::Branch&
+);
 Errors parseErrors(const pconf::Data&, logging::Branch&);
 MenuSupport parseMenuSupport(const pconf::Data&, logging::Branch&);
 
@@ -361,6 +363,7 @@ std::optional<PropData> PropData::generate(
 
         buttons[numButtons] = parseButtons(
             buttonEntry.section()->entries_,
+            buttons,
             *logger.bdebug("Parsing BUTTONS " + std::to_string(numButtons) + "...")
         );
 
@@ -1322,14 +1325,41 @@ Layout parseLayout(
 
 Buttons parseButtons(
     const pconf::Data& data,
+    const std::map<uint32, Buttons>& buttons,
     logging::Branch& lBranch
 ) {
     auto& logger{lBranch.createLogger("Versions::parseButtons()")};
     const auto hashedData{pconf::hash(data)};
 
     Buttons ret{};
+    const Buttons *inherit{nullptr};
 
     for (const auto& stateEntry : data) {
+        if (stateEntry->name_ == "INHERIT") {
+            if (not ret.empty()) {
+                logger.warn("Inherit entry in buttons must appear at start, ignoring...");
+                continue;
+            }
+
+            if (not stateEntry->labelNum_) {
+                logger.warn("Inherit entry missing num label, ignoring...");
+                continue;
+            }
+
+            auto iter{buttons.find(*stateEntry->labelNum_)};
+            if (iter == buttons.end()) {
+                logger.warn("Inherit entry wants unknown " + std::to_string(*stateEntry->labelNum_) + ", ignoring...");
+                continue;
+            }
+
+            if (inherit) {
+                logger.warn("Multiple inherit entries unsupported, ignoring...");
+                continue;
+            }
+
+            inherit = &iter->second;
+        }
+
         if (stateEntry->name_ != "STATE") {
             logger.warn("Skipping " + stateEntry->name_ + " entry in buttons...");
             continue;
@@ -1404,6 +1434,58 @@ Buttons parseButtons(
         }
 
         ret.emplace_back(stateEntry->label_.value(), buttons);
+    }
+
+    if (inherit) {
+        // Reverse iterate so not-found insertion ends up (kind of) correct.
+        // NOTE: For reasons I don't really understand, copying of ButtonState
+        // and Button only works if the ctor is referenced explicitly.
+        for (
+                auto sIter{inherit->rbegin()};
+                sIter != inherit->rend();
+                ++sIter
+            ) {
+            const auto& inheritState{*sIter};
+            ButtonState *retState{nullptr};
+            for (auto& state : ret) {
+                if (state.stateName_ == inheritState.stateName_) {
+                    retState = &state;
+                    break;
+                }
+            }
+
+            // Can just insert the whole inherit state.
+            if (not retState) {
+                ret.insert(ret.begin(), ButtonState(inheritState));
+                continue;
+            }
+
+            // Same as above
+            for (
+                    auto bIter{inheritState.buttons_.rbegin()};
+                    bIter != inheritState.buttons_.rend();
+                    ++bIter
+                ) {
+                const auto& inheritButton{*bIter};
+
+                Button *retButton{nullptr};
+                for (auto& button : retState->buttons_) {
+                    if (button.name_ == inheritButton.name_) {
+                        retButton = &button;
+                        break;
+                    }
+                }
+
+                if (retButton) {
+                    *retButton = Button(inheritButton);
+                } else {
+                    retState->buttons_.insert(
+                        retState->buttons_.begin(),
+                        Button(inheritButton)
+                    );
+                }
+            }
+        }
     }
 
     return ret;
