@@ -343,6 +343,35 @@ std::optional<PropData> PropData::generate(
         );
     }
 
+    // Warn on duplicate and unused settings/those not in layout.
+    {
+        std::unordered_set<std::string> settingStrings;
+        for (auto& setting : settings) {
+            if (dynamic_cast<Option::SelectionData *>(setting.get()))
+                continue;
+
+            auto [iter, inserted]{settingStrings.insert(setting->define_)};
+            if (not inserted) {
+                logger.warn("Duplicate settings for " + setting->define_);
+            }
+        }
+
+        const auto processLayout{[&](auto self, const Layout& layout) -> void {
+            for (const auto& child : layout.children_) {
+                if (const auto *ptr{std::get_if<std::string>(&child)}) {
+                    settingStrings.erase(*ptr);
+                } else if (const auto *ptr{std::get_if<Layout>(&child)}) {
+                    self(self, *ptr);
+                }
+            }
+        }};
+        processLayout(processLayout, layout);
+
+        for (const auto& str : settingStrings) {
+            logger.warn("Unused setting " + str);
+        }
+    }
+
     std::map<uint32, Buttons> buttons;
 
     const auto buttonEntries{data.findAll("BUTTONS")};
