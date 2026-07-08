@@ -46,15 +46,22 @@ namespace versions::props {
 struct Prop;
 struct Context;
 
+struct VERSIONS_EXPORT Require {
+    Require() = default;
+    Require(std::string&&);
+    Require(const Require&) = default;
+    Require(Require&&) = default;
+
+    bool operator==(const Require&) const = default;
+
+    bool external_{false};
+    bool inverted_{false};
+    std::string key_;
+};
+
 namespace detail {
 
 struct VERSIONS_EXPORT Data {
-    struct Require {
-        bool external_{false};
-        bool inverted_{false};
-        std::string key_;
-    };
-
     Data(
         std::string,
         std::string,
@@ -193,7 +200,7 @@ struct VERSIONS_EXPORT Button {
     std::string name_;
 
     // <Predicate, Description>
-    std::unordered_map<std::string, std::string> descriptions_;
+    std::vector<std::pair<Require, std::string>> descriptions_;
 };
 
 /**

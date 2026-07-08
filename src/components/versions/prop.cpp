@@ -75,6 +75,20 @@ MenuSupport parseMenuSupport(const pconf::Data&, logging::Branch&);
 
 } // namespace
 
+Require::Require(std::string&& raw) {
+    if (raw[0] == '~') {
+        inverted_ = true;
+        raw.erase(0, 1);
+    }
+
+    if (raw[0] == '@') {
+        external_ = true;
+        raw.erase(0, 1);
+    }
+
+    key_ = std::move(raw);
+}
+
 detail::Data::Data(
     std::string name,
     std::string define,
@@ -365,11 +379,15 @@ std::optional<PropData> PropData::generate(
         for (auto& state : buttons[numButtons]) {
             for (auto& button : state.buttons_) {
                 for (auto& [pred, description] : button.descriptions_) {
-                    if (pred.empty())
+                    if (pred.external_)
+                        // TODO: No way to warn about this.
                         continue;
 
-                    if (not settingLookup.contains(pred))
-                        logger.warn("Button " + button.name_ + " has description with non-existent predicate " + pred);
+                    if (pred.key_.empty())
+                        continue;
+
+                    if (not settingLookup.contains(pred.key_))
+                        logger.warn("Button " + button.name_ + " has description with non-existent predicate " + pred.key_);
                 }
             }
         }
@@ -702,7 +720,7 @@ void Prop::rebuildLookup(logging::Branch *lBranch) {
             }
         }
 
-        const auto processRequire{[&](const detail::Data::Require& req) {
+        const auto processRequire{[&](const Require& req) {
             if (req.external_) {
                 auto res{mExtReqProc(root(), req.key_)};
                 if (res == ExternalRequireResult::Not_Found) {
@@ -732,7 +750,7 @@ void Prop::rebuildLookup(logging::Branch *lBranch) {
 }
 
 void Prop::recomputeState(detail::SettingBase& setting) {
-    const auto computeRequire{[this](const detail::Data::Require& req) {
+    const auto computeRequire{[this](const Require& req) {
         bool reqVal{};
 
         if (req.external_) {
@@ -1191,24 +1209,7 @@ std::optional<std::pair<detail::Data, pconf::HashedData>> parseSettingCommon(
         data.erase(descEntry);
     }
 
-    const auto processRequire{[](std::string& raw) {
-        detail::Data::Require ret;
-
-        if (raw[0] == '~') {
-            ret.inverted_ = true;
-            raw.erase(0, 1);
-        }
-
-        if (raw[0] == '@') {
-            ret.external_ = true;
-            raw.erase(0, 1);
-        }
-
-        ret.key_ = std::move(raw);
-        return ret;
-    }};
-
-    std::vector<detail::Data::Require> required;
+    std::vector<Require> required;
 
     const auto requiredEntry{data.find("REQUIRE")};
     if (requiredEntry and requiredEntry->value_) {
@@ -1216,12 +1217,12 @@ std::optional<std::pair<detail::Data, pconf::HashedData>> parseSettingCommon(
         required.reserve(rawVec.size());
 
         for (auto& raw : rawVec)
-            required.push_back(processRequire(raw));
+            required.emplace_back(std::move(raw));
 
         data.erase(requiredEntry);
     }
 
-    std::vector<detail::Data::Require> requireAny;
+    std::vector<Require> requireAny;
 
     const auto requireAnyEntry{data.find("REQUIREANY")};
     if (requireAnyEntry and requireAnyEntry->value_) {
@@ -1229,7 +1230,7 @@ std::optional<std::pair<detail::Data, pconf::HashedData>> parseSettingCommon(
         required.reserve(rawVec.size());
 
         for (auto& raw : rawVec)
-            required.push_back(processRequire(raw));
+            required.emplace_back(std::move(raw));
 
         data.erase(requireAnyEntry);
     }
@@ -1362,7 +1363,7 @@ Buttons parseButtons(
                 continue;
             }
 
-            std::unordered_map<std::string, std::string> descriptions;
+            std::vector<std::pair<Require, std::string>> descriptions;
             const auto& descEntries{buttonEntry.section()->entries_};
             for (const auto& descEntry : descEntries) {
                 if (descEntry->name_ != "DESCRIPTION") {
@@ -1375,15 +1376,25 @@ Buttons parseButtons(
                     continue;
                 }
 
-                const auto [iter, success]{descriptions.try_emplace(
-                    descEntry->label_.value_or(""),
-                    descEntry->value_.value()
-                )};
+                Require newReq(descEntry->label_.value_or(""));
+                bool duplicate{false};
+                for (const auto& [req, desc] : descriptions) {
+                    if (req == newReq) {
+                        duplicate = true;
+                        break;
+                    }
+                }
 
-                if (not success) {
+                if (duplicate) {
                     if (not descEntry->label_) logger.warn("Skipping duplicate base button description...");
                     else logger.warn("Skipping duplicate \"" + *descEntry->label_ + "\" button description...");
+                    continue;
                 }
+
+                descriptions.emplace_back(
+                    std::move(newReq),
+                    descEntry->value_.value()
+                );
             }
 
             buttons.push_back(Button{
