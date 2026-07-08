@@ -1396,7 +1396,7 @@ Buttons parseButtons(
         const auto& buttonEntries{stateEntry.section()->entries_};
         for (const auto& buttonEntry : buttonEntries) {
             if (buttonEntry->name_ != "BUTTON") {
-                logger.warn("Skipping " + stateEntry->name_ + " entry in buttons state...");
+                logger.warn("Skipping " + buttonEntry->name_ + " entry in buttons state...");
                 continue;
             }
 
@@ -1414,7 +1414,7 @@ Buttons parseButtons(
             const auto& descEntries{buttonEntry.section()->entries_};
             for (const auto& descEntry : descEntries) {
                 if (descEntry->name_ != "DESCRIPTION") {
-                    logger.warn("Skipping " + stateEntry->name_ + " entry in button...");
+                    logger.warn("Skipping " + descEntry->name_ + " entry in button...");
                     continue;
                 }
 
