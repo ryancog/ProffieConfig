@@ -21,9 +21,9 @@
 
 pconf::HashedData pconf::hash(const Data& data) {
     HashedData ret;
-    for (const auto& entry : data) {
+
+    for (const auto& entry : data)
         ret[entry->name_].push_back(entry);
-    }
 
     return ret;
 }
@@ -31,17 +31,20 @@ pconf::HashedData pconf::hash(const Data& data) {
 std::vector<std::string> pconf::valueAsList(
     const std::optional<std::string>& optStr
 ) {
-    if (not optStr) return {};
+    if (not optStr)
+        return {};
 
     std::vector<std::string> ret;
-    auto str{*optStr};
+    std::string_view view{*optStr};
 
     while (true) {
-        const auto end{str.find('\n')};
-        ret.push_back(str.substr(0, end));
+        const auto end{view.find('\n')};
+        ret.emplace_back(view.substr(0, end));
 
-        if (end == std::string::npos) break;
-        str = str.substr(end + 1);
+        if (end == std::string::npos)
+            break;
+
+        view = view.substr(end + 1);
     }
 
     return ret;
@@ -50,13 +53,15 @@ std::vector<std::string> pconf::valueAsList(
 std::optional<std::string> pconf::listAsValue(
     const std::vector<std::string>& list
 ) {
-    if (list.empty()) return std::nullopt;
+    if (list.empty())
+        return std::nullopt;
 
     std::string ret;
     for (const auto& str : list) {
         ret += str;
         ret += '\n';
     }
+
     // Pop last newline
     ret.pop_back();
 
