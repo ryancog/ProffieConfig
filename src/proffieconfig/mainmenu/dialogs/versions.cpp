@@ -673,6 +673,12 @@ void VersionsDlg::onResetButton() {
     }}.detach();
 }
 
+// FIXME: When calling this function repeatedly, a memory leak can be observed.
+// My first guess would be from the ProgressDialog, but it should Destroy()
+// itself on finish(), so I'm not sure.
+//
+// It's not large enough for me to worry about immediately, but it probably
+// would like some attention.
 void VersionsDlg::onPropInstallButton() {
     pcui::BusyTracker busy(this);
 
