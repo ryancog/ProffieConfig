@@ -1,9 +1,13 @@
 # ProffieConfig, The All-In-One Proffieboard Management Utility!
 
 cmake_minimum_required(VERSION 3.31)
-if (CMAKE_SYSTEM_NAME STREQUAL Darwin AND CMAKE_BUILD_TYPE STREQUAL Release)
+
+if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum OS X deployment version" FORCE)
-    set(CMAKE_OSX_ARCHITECTURES arm64;x86_64 CACHE STRING "Build universal binary" FORCE)
+
+    if (NOT LOCAL_BUILD)
+        set(CMAKE_OSX_ARCHITECTURES arm64;x86_64 CACHE STRING "Build universal binary" FORCE)
+    endif()
 endif()
 
 project(ProffieConfig)
