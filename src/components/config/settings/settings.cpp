@@ -21,6 +21,7 @@
 
 #include "config/config.hpp"
 #include "config/priv/io.hpp"
+#include "config/priv/keys.hpp"
 #include "config/strings.hpp"
 #include "config/settings/define.hpp"
 #include "data/context.hpp"
@@ -45,6 +46,10 @@ Settings::Settings(Config& parent) :
     massStorage_(root()),
     mountSdSetting_(root()),
     webUsb_(root()),
+    menu_{
+        .enable_=root(),
+        .specTemplate_=root(),
+    },
     bladeAwareness_(*this),
     volume_(root()),
     bootVolume_{.enable_=root(), .value_=root()},
@@ -126,6 +131,40 @@ Settings::Settings(Config& parent) :
     }()};
     respondWith(disableTalkie_, disableTalkieTable);
 
+    static const auto menuEnableTable{[] {
+        data::hier::Bool::RecvTable table;
+        table.onSet_ = data::map<&Settings::onMenuEnable>();
+        return table;
+    }()};
+    respondWith(menu_.enable_, menuEnableTable);
+
+    const auto menuSpecTemplateFilter{[](
+        const data::base::String::ROContext&, std::string& str, size& pos
+    ) {
+        uint32 numTrimmed{};
+        utils::trimCppName(
+            str,
+            false,
+            &numTrimmed,
+            pos
+        );
+        pos -= numTrimmed;
+
+        if (str == DEFAULT_MENU_SPEC_STR) {
+            str.clear();
+            pos = 0;
+        }
+    }};
+    menu_.specTemplate_.setFilter(menuSpecTemplateFilter);
+
+    static const auto propChoiceTable{[] {
+        data::hier::Choice::RecvTable table;
+        table.preChoice_ = data::map<&Settings::prePropChoice>();
+        table.onChoice_ = data::map<&Settings::onPropChoice>();
+        return table;
+    }()};
+    respondWith(root<Config>().propChoice(), propChoiceTable);
+
     volume_.update({.min_=0, .max_=4000, .inc_=50});
     volume_.set(1000);
 
@@ -159,6 +198,9 @@ Settings::Settings(Config& parent) :
 
     audioClashSuppressionLevel_.update({.min_=1, .max_=50});
     audioClashSuppressionLevel_.set(10);
+
+    // Update menu spec stuff.
+    onPropChoice();
 }
 
 Settings::~Settings() = default;
@@ -306,6 +348,43 @@ void Settings::onFilterEnableSet() {
 void Settings::onDisableTalkieSet() {
     auto ctxt{data::context(disableTalkie_)};
     femaleTalkie_.enable(not ctxt.val());
+}
+
+void Settings::prePropChoice() {
+    const auto *prop{root<Config>().prop()};
+    if (not prop or not prop->menuSupport_)
+        return;
+
+    // If the menu spec template currently chosen is the prop's default, clear
+    // it out. This generally makes sense but also allows for the new prop
+    // selection to fill in its own default according to the below logic.
+    const auto menuSpec{data::context(menu_.specTemplate_)};
+    if (prop->menuSupport_->defaultSpecTemplate_ == menuSpec.val())
+        menuSpec.clear();
+}
+
+void Settings::onPropChoice() {
+    const auto *prop{root<Config>().prop()};
+    auto menuEn{data::context(menu_.enable_)};
+
+    // Enable if no prop selected (default prop), or if the prop explicitly
+    // calls out support for the menu system.
+    menuEn.enable(not prop or prop->menuSupport_);
+
+    // If this prop supports the menu system and there's no menu spec currently
+    // specified (empty), then change the menu spec to the prop's preferred
+    // default.
+    //
+    // In the case of the default prop (`not prop`), the field is left empty,
+    // and config::DEFAULT_MENU_SPEC_STR is used during output.
+    const auto menuSpec{data::context(menu_.specTemplate_)};
+    if (prop and menuEn.enabled() and menuSpec.val().empty())
+        menuSpec.change(std::string(prop->menuSupport_->defaultSpecTemplate_));
+}
+
+void Settings::onMenuEnable() {
+    if (auto *prop{root<Config>().prop()})
+        prop->markExternalModified(priv::keys::SETTINGS_MENU_ENABLE);
 }
 
 Settings::ProcessDefinesAction::ProcessDefinesAction() = default;
@@ -659,6 +738,9 @@ bool processDefine(
         settings.enableIdleSound_.set(true);
     } else if (define.val() == MOUNT_SD_SETTING_STR) {
         settings.mountSdSetting_.set(true);
+    } else if (define.val() == MENU_SPEC_TEMPLATE_STR) {
+        settings.menu_.enable_.set(true);
+        settings.menu_.specTemplate_.change(std::string(value.val()));
     } else {
         processed = false;
     }

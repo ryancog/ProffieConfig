@@ -150,16 +150,16 @@ SETTINGS {
 		SELECTION("FETT263_EDIT_MODE_MENU") {
 			NAME: "Edit Mode"
 			DESCRIPTION: "Enable Edit Mode Menu System (Advanced on-the-fly saber controls, includes everything from Edit Settings)\nRequires ENABLE_ALL_EDIT_OPTIONS in Custom Options (General Page)"
-            RECOMMENDS {
-                ENABLE_ALL_EDIT_OPTIONS
-            }
+			RECOMMENDS {
+				ENABLE_ALL_EDIT_OPTIONS
+			}
 		}
 		SELECTION("FETT263_EDIT_SETTINGS_MENU") {
 			NAME: "Edit Settings"
 			DESCRIPTION: "Enable Edit Settings Menu (Volume, Clash Threshold, Blade Length, Gestures/Controls, Brightness)\nRequires ENABLE_ALL_EDIT_OPTIONS in Custom Options (General Page)" 
-            RECOMMENDS {
-                ENABLE_ALL_EDIT_OPTIONS
-            }
+			RECOMMENDS {
+				ENABLE_ALL_EDIT_OPTIONS
+			}
 		}
 	}
 
@@ -190,7 +190,9 @@ SETTINGS {
 
 	TOGGLE("FETT263_SAVE_GESTURE_OFF") {
 		NAME: "Save Gesture Off"
-		DESCRIPTION: "Save "Gesture Sleep" setting to turn gesture ignitions and retractions off on boot"
+		DESCRIPTION: {
+			"Save "Gesture Sleep" setting to turn gesture ignitions and retractions off on boot"
+		}
 	}
 
 	TOGGLE("FETT263_FORCE_PUSH") {
@@ -214,7 +216,9 @@ SETTINGS {
 
 	TOGGLE("FETT263_SPIN_MODE") {
 		NAME: "Spin Mode"
-		DESCRIPTION: "Enables toggle for "Spin" Mode which disables all clash/stab/lockup effects to allow for spinning and flourishes."
+		DESCRIPTION: {
+			"Enables toggle for "Spin" Mode which disables all clash/stab/lockup effects to allow for spinning and flourishes."
+		}
 		DISABLE: "FETT263_SAVE_CHOREOGRAPHY", "FETT263_HOLD_BUTTON_LOCKUP"
 	}
 	TOGGLE("FETT263_MOTION_WAKE_POWER_BUTTON") {
@@ -261,7 +265,9 @@ SETTINGS {
 	}
 	TOGGLE("FETT263_DISABLE_MULTI_BLAST") {
 		NAME: "Disable Multi-Blast"
-		DESCRIPTION: "Disables "Multi-Blast" Mode"
+		DESCRIPTION: {
+			"Disables "Multi-Blast" Mode"
+		}
 		DISABLE: "FETT263_DISABLE_MULTI_BLAST_TOGGLE"
 	}
 	TOGGLE("FETT263_TRACK_PLAYER_NO_PROMPTS") {
@@ -301,7 +307,9 @@ SETTINGS {
 	}
 	TOGGLE("FETT263_SAY_COLOR_LIST_CC") {
 		NAME: "Say Color List CC"
-		DESCRIPTION: "Spoken Color Names replace default sounds during Color Change "CC" Color List Mode (requires .wav files)"
+		DESCRIPTION: {
+			"Spoken Color Names replace default sounds during Color Change "CC" Color List Mode (requires .wav files)"
+		}
 	}
 	TOGGLE("FETT263_SAY_BATTERY_VOLTS") {
 		NAME: "Say Battery Volts"
@@ -324,7 +332,9 @@ SETTINGS {
 	}
 	NUMERIC("FETT263_LOCKUP_DELAY") {
 		NAME: "Lockup Delay (ms)"
-		DESCRIPTION: "This is the "delay" in millis to determine Clash vs Lockup in Battle Mode"
+		DESCRIPTION: {
+			"This is the "delay" in millis to determine Clash vs Lockup in Battle Mode"
+		}
 		MIN: 0
 		MAX: 3000
 		DEFAULT: 200
@@ -346,12 +356,16 @@ SETTINGS {
 
 	TOGGLE("FETT263_SPECIAL_ABILITIES") {
 		NAME: "Special Abilities"
-		DESCRIPTION: "This enables 8 "Special Ability" controls (style controlled), 4 while ON, 4 while OFF.\nSpecial Abilities are controlled by the style and can vary in every preset, they are "user" defined effects/capabilities."
+		DESCRIPTION: {
+			"This enables 8 "Special Ability" controls (style controlled), 4 while ON, 4 while OFF.\nSpecial Abilities are controlled by the style and can vary in every preset, they are "user" defined effects/capabilities."
+		}
 		DISABLE: "FETT263_SAVE_CHOREOGRAPHY", "FETT263_MULTI_PHASE"
 	}
 	TOGGLE("FETT263_MULTI_PHASE") {
 		NAME: "Multi-Phase"
-		DESCRIPTION: "This will enable a preset change while ON to create a "Multi-Phase" saber effect"
+		DESCRIPTION: {
+			"This will enable a preset change while ON to create a "Multi-Phase" saber effect"
+		}
 		DISABLE: "FETT263_SPECIAL_ABILITIES"
 	}
 }
@@ -711,13 +725,17 @@ BUTTONS{1} {
 
 	STATE("in Edit Mode") {
 		BUTTON("Turn Right") {
-			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Rotate Forward, Increase Value, Confirm "Yes""
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): {
+				"Rotate Forward, Increase Value, Confirm "Yes""
+			}
 		}
 		BUTTON("Hold and Turn Right") {
 			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Increment by 5 (Fonts, Tracks, Blade Length), Increment by 500 (Ignition Time, Ignition Delay, Retraction Time, Retraction Delay), Increment by 5000 (Ignition Option2, Retraction Option2)"
 		}
 		BUTTON("Turn Left") {
-			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Rotate Back, Decrease Value, Confirm "No""
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): {
+				"Rotate Back, Decrease Value, Confirm "No""
+			}
 		}
 		BUTTON("Hold and Turn Left") {
 			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Increment by 5 (Fonts, Tracks, Blade Length), Increment by 500 (Ignition Time, Ignition Delay, Retraction Time, Retraction Delay), Icrement by 5000 (Ignition Option2, Retraction Option2)" 
@@ -732,19 +750,25 @@ BUTTONS{1} {
 			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Go To Main Menu (From Sub-Menu), Exit Edit Mode (From Main Menu)"
 		}
 		BUTTON("Double Click and Hold") {
-			DESCRIPTION("FETT263_EDIT_MODE_MENU"): ""Color List" and "Adjust Color Hue" Zoom Mode (release to save)"
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): {
+				""Color List" and "Adjust Color Hue" Zoom Mode (release to save)"
+			}
 		}
 	}
 
 	STATE("in Edit Settings") {
 		BUTTON("Turn Right") {
-			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Rotate Forward, Increase Value, Confirm "Yes""
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): {
+				"Rotate Forward, Increase Value, Confirm "Yes""
+			}
 		}
 		BUTTON("Hold and Turn Right") {
 			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Increment by 5 (Blade Length)"
 		}
 		BUTTON("Turn Left") {
-			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Rotate Back, Decrease Value, Confirm "No""
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): {
+				"Rotate Back, Decrease Value, Confirm "No""
+			}
 		}
 		BUTTON("Hold and Turn Left") {
 			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Increment by 5 (Blade Length)"
@@ -1038,13 +1062,17 @@ BUTTONS{2} {
 
 	STATE("in Edit Mode") {
 		BUTTON("Turn Right") {
-			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Rotate Forward, Increase Value, Confirm "Yes""
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): {
+				"Rotate Forward, Increase Value, Confirm "Yes""
+			}
 		}
 		BUTTON("Hold Power and Turn Right") {
 			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Increment by 5 (Fonts, Tracks, Blade Length), Increment by 500 (Ignition Time, Ignition Delay, Retraction Time, Retraction Delay), Increment by 5000 (Ignition Option2, Retraction Option2)"
 		}
 		BUTTON("Turn Left") {
-			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Rotate Back, Decrease Value, Confirm "No""
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): {
+				"Rotate Back, Decrease Value, Confirm "No""
+			}
 		}
 		BUTTON("Hold Power and Turn Left") {
 			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Increment by 5 (Fonts, Tracks, Blade Length), Increment by 500 (Ignition Time, Ignition Delay, Retraction Time, Retraction Delay), Icrement by 5000 (Ignition Option2, Retraction Option2)" 
@@ -1059,19 +1087,25 @@ BUTTONS{2} {
 			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Go To Main Menu (From Sub-Menu), Exit Edit Mode (From Main Menu)"
 		}
 		BUTTON("Hold Power while turning") {
-			DESCRIPTION("FETT263_EDIT_MODE_MENU"): ""Color List" and "Adjust Color Hue" Zoom Mode (release to save)"
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): {
+				""Color List" and "Adjust Color Hue" Zoom Mode (release to save)"
+			}
 		}
 	}
 
 	STATE("in Edit Settings") {
 		BUTTON("Turn Right") {
-			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Rotate Forward, Increase Value, Confirm "Yes""
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): {
+				"Rotate Forward, Increase Value, Confirm "Yes""
+			}
 		}
 		BUTTON("Hold Power and Turn Right") {
 			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Increment by 5 (Blade Length)"
 		}
 		BUTTON("Turn Left") {
-			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Rotate Back, Decrease Value, Confirm "No""
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): {
+				"Rotate Back, Decrease Value, Confirm "No""
+			}
 		}
 		BUTTON("Hold Power and Turn Left") {
 			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Increment by 5 (Blade Length)"
@@ -1365,13 +1399,17 @@ BUTTONS{3} {
 
 	STATE("in Edit Mode") {
 		BUTTON("Turn Right") {
-			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Rotate Forward, Increase Value, Confirm "Yes""
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): {
+				"Rotate Forward, Increase Value, Confirm "Yes""
+			}
 		}
 		BUTTON("Hold Power and Turn Right") {
 			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Increment by 5 (Fonts, Tracks, Blade Length), Increment by 500 (Ignition Time, Ignition Delay, Retraction Time, Retraction Delay), Increment by 5000 (Ignition Option2, Retraction Option2)"
 		}
 		BUTTON("Turn Left") {
-			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Rotate Back, Decrease Value, Confirm "No""
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): {
+				"Rotate Back, Decrease Value, Confirm "No""
+			}
 		}
 		BUTTON("Hold Power and Turn Left") {
 			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Increment by 5 (Fonts, Tracks, Blade Length), Increment by 500 (Ignition Time, Ignition Delay, Retraction Time, Retraction Delay), Icrement by 5000 (Ignition Option2, Retraction Option2)" 
@@ -1386,19 +1424,25 @@ BUTTONS{3} {
 			DESCRIPTION("FETT263_EDIT_MODE_MENU"): "Go To Main Menu (From Sub-Menu), Exit Edit Mode (From Main Menu)"
 		}
 		BUTTON("Hold Power while turning") {
-			DESCRIPTION("FETT263_EDIT_MODE_MENU"): ""Color List" and "Adjust Color Hue" Zoom Mode (release to save)"
+			DESCRIPTION("FETT263_EDIT_MODE_MENU"): {
+				""Color List" and "Adjust Color Hue" Zoom Mode (release to save)"
+			}
 		}
 	}
 
 	STATE("in Edit Settings") {
 		BUTTON("Turn Right") {
-			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Rotate Forward, Increase Value, Confirm "Yes""
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): {
+				"Rotate Forward, Increase Value, Confirm "Yes""
+			}
 		}
 		BUTTON("Hold Power and Turn Right") {
 			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Increment by 5 (Blade Length)"
 		}
 		BUTTON("Turn Left") {
-			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Rotate Back, Decrease Value, Confirm "No""
+			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): {
+				"Rotate Back, Decrease Value, Confirm "No""
+			}
 		}
 		BUTTON("Hold Power and Turn Left") {
 			DESCRIPTION("FETT263_EDIT_SETTINGS_MENU"): "Increment by 5 (Blade Length)"
@@ -1416,11 +1460,10 @@ BUTTONS{3} {
 }
 
 ERRORS {
-    MAP {
-        ARDUINO: "ENABLE_ALL_EDIT_OPTIONS must be defined to enable"
-        DISPLAY: {
-            "Edit Mode/Settings requires "Enable All Edit Options" on General Page"
-        }
-    }
+	MAP {
+		ARDUINO: "ENABLE_ALL_EDIT_OPTIONS must be defined to enable"
+		DISPLAY: {
+			"Edit Mode/Settings requires "Enable All Edit Options" on General Page"
+		}
+	}
 }
-

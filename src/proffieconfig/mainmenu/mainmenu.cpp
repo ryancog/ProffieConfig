@@ -258,7 +258,7 @@ void MainMenu::createMenuBar() {
             : menuBar->GetMenu(helpIdx)
     };
     help->Append(
-        eID_Docs,
+        eID_Guides,
         _("Guides...\tCtrl+H"),
         _("Open the ProffieConfig guides in your web browser")
     );
@@ -388,8 +388,8 @@ void MainMenu::bindEvents() {
     }, eID_Update_Manifest);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-        wxLaunchDefaultBrowser("https://github.com/ryancog/ProffieConfig/blob/master/docs");
-    }, eID_Docs);
+        wxLaunchDefaultBrowser(paths::website() + "/guides");
+    }, eID_Guides);
     Bind(wxEVT_MENU, [&](wxCommandEvent&) {
         wxLaunchDefaultBrowser("https://github.com/ryancog/ProffieConfig/issues/new");
     }, eID_Issue);

@@ -27,14 +27,15 @@
 #include "ui/controls/checkbox.hpp"
 #include "ui/controls/choice.hpp"
 #include "ui/controls/stepper.hpp"
+#include "ui/controls/text.hpp"
 #include "ui/helpers/labeled.hpp"
 #include "ui/layout/group.hpp"
+#include "ui/layout/panel.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/static/divider.hpp"
 #include "ui/types.hpp"
 #include "ui/values.hpp"
-#include "wx/gdicmn.h"
 
 GeneralPage::GeneralPage(config::Config& config) : mConfig{config} {}
 
@@ -55,6 +56,7 @@ pcui::DescriptorPtr GeneralPage::ui() {
       .orient_=wxHORIZONTAL,
       .children_={
         pcui::Stack{
+          .base_={.expand_=true},
           .orient_=wxVERTICAL,
           .children_={
             setup(),
@@ -228,10 +230,7 @@ pcui::DescriptorPtr GeneralPage::installation() {
           }(),
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Divider{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Labeled{
           .win_={
@@ -299,10 +298,7 @@ pcui::DescriptorPtr GeneralPage::installation() {
           }
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Divider{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::CheckBox{
           .win_={
@@ -312,10 +308,7 @@ pcui::DescriptorPtr GeneralPage::installation() {
           .data_=mConfig.settings_.enableOled_,
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Divider{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Button{
           .win_={
@@ -341,7 +334,12 @@ pcui::DescriptorPtr GeneralPage::installation() {
 
 pcui::DescriptorPtr GeneralPage::tweaks() {
     return pcui::Group{
-      .win_={.base_={.expand_=true}},
+      .win_={
+        .base_={
+          .expand_=true,
+          .proportion_=1,
+        },
+      },
       .label_=_("Tweaks"),
       .orient_=wxHORIZONTAL,
       .children_={
@@ -476,10 +474,7 @@ pcui::DescriptorPtr GeneralPage::editing() {
           .data_=mConfig.settings_.enableAllEditOptions_,
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Divider{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::CheckBox{
           .win_={
@@ -515,10 +510,7 @@ pcui::DescriptorPtr GeneralPage::editing() {
           .data_=mConfig.settings_.saveClashThreshold_,
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Divider{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::CheckBox{
           .label_=_("Dynamic Blade Dimming"),
@@ -533,6 +525,54 @@ pcui::DescriptorPtr GeneralPage::editing() {
         pcui::CheckBox{
           .label_=_("Dynamic Blade Length"),
           .data_=mConfig.settings_.dynamicBladeLength_,
+        }(),
+        pcui::Panel{
+          .win_={
+            .base_={.expand_=true},
+            .show_=mConfig | config::Config::OSIsOrOverVersion{.ver_={8}},
+            .enable_=mConfig.settings_.menu_.enable_ |
+                data::logic::IsEnabled{},
+          },
+          .child_=pcui::Stack{
+            .base_={
+              .expand_=true,
+            },
+            .orient_=wxVERTICAL,
+            .children_={
+              pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+              pcui::Divider{}(),
+              pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+              pcui::CheckBox{
+                .win_={
+                  .tooltip_={
+                    _("ProffieOS has a built-in menu system supported by some prop files.") + "\n" +
+                    _("For more information, see the POD page \"Navigating the menu system.\"")
+                  },
+                },
+                .label_=_("Menu System"),
+                .data_=mConfig.settings_.menu_.enable_,
+              }(),
+              pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+              pcui::Labeled{
+                .win_={
+                  .base_={.expand_=true},
+                  .enable_=mConfig.settings_.menu_.enable_ |
+                      data::logic::IsSet{},
+                  .tooltip_={
+                    _("The spec template determines which menus your saber uses.")
+                  },
+                },
+                .label_=_("Spec Template"),
+                .ctrl_=pcui::Text{
+                  .win_={.base_={.expand_=true}},
+                  .data_=mConfig.settings_.menu_.specTemplate_,
+                  .style_=pcui::Text::SingleLine{
+                    .hint_=config::DEFAULT_MENU_SPEC_STR,
+                  },
+                }(),
+              }(),
+            },
+          }(),
         }(),
       }
     }();
@@ -576,10 +616,7 @@ pcui::DescriptorPtr GeneralPage::audio() {
           }
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Divider{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::CheckBox{
           .label_=_("Enable Filtering"),
@@ -614,10 +651,7 @@ pcui::DescriptorPtr GeneralPage::audio() {
           }(),
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Divider{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Labeled{
           .win_={.base_={.expand_=true}},

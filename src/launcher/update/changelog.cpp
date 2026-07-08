@@ -439,10 +439,7 @@ pcui::DescriptorPtr ui(
                         .cond_=not notesRange.empty(),
                         .then_={
                           pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-                          pcui::Divider{
-                          .base_={.expand_=true},
-                          .orient_=wxHORIZONTAL,
-                          }(),
+                          pcui::Divider{}(),
                           pcui::Spacer{.size_=pcui::interControlSpacing()}(),
                         }
                       }(),

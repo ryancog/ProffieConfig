@@ -83,7 +83,7 @@ void Frame::appendDefaultMenuItems(wxMenuBar *menuBar) {
     wxMenuBar::SetAutoWindowMenu(false);
 
     // Still use the wxMenu stuff, can grab the NSMenu from there.
-    auto window{new wxMenu};
+    auto *window{new wxMenu};
 
     // Can't use the NSApp global, dynamically fetch it with
     // +[NSApplication sharedApplication]

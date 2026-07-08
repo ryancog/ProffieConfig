@@ -346,6 +346,20 @@ void forGeneral(std::ostream& out, const Config& config) {
             outputDefine(out, MOUNT_SD_SETTING_STR);
         }
 
+        const auto& menu{settings.menu_};
+        if (
+                auto ctxt{data::context(menu.enable_)};
+                ctxt.enabled() and ctxt.val()
+           ) {
+            auto specTemplate{data::context(menu.specTemplate_)};
+
+            auto specTemplateVal{specTemplate.val()};
+            if (specTemplateVal.empty())
+                specTemplateVal = DEFAULT_MENU_SPEC_STR;
+
+            outputDefine(out, MENU_SPEC_TEMPLATE_STR, specTemplateVal);
+        }
+
         if (data::context(settings.disableKillOldPlayers_).val()) {
             outputDefine(out, DISABLE_KILL_OLD_PLAYERS_STR);
         }
@@ -383,12 +397,14 @@ void forGeneral(std::ostream& out, const Config& config) {
 void forProp(std::ostream& out, const Config& config) {
     const auto *prop{config.prop()};
 
-    if (prop == nullptr) return;
+    if (prop == nullptr)
+        return;
     
     for (const auto& setting : prop->settings()) {
         auto output{setting->generateDefineString()};
 
-        if (not output) continue;
+        if (not output)
+            continue;
 
         out << priv::DEFINE_STR << *output << '\n';
     }

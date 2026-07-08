@@ -121,23 +121,34 @@ void PropButtonsDlg::rebuildLinks() {
     if (mCurButtons == nullptr)
         return;
 
+    // There's nothing to observe for the default prop/mappings.
+    if (mCurProp == nullptr)
+        return;
+
     for (const auto& state : *mCurButtons) {
         for (const auto& button : state.buttons_) {
             for (const auto& [pred, desc] : button.descriptions_) {
-                if (pred.empty() or mCurProp == nullptr)
-                    continue;
+                data::hier::Bool *setting{};
 
-                auto *setting{mCurProp->find(pred)};
+                if (pred.external_) {
+                    setting = dynamic_cast<data::hier::Bool *>(
+                        mConfig.getByKey(pred.key_)
+                    );
+                } else {
+                    if (pred.key_.empty())
+                        continue;
+
+                    setting = dynamic_cast<data::hier::Bool *>(
+                        mCurProp->find(pred.key_)
+                    );
+                }
+
+                // Really should warn on this...
                 if (setting == nullptr)
                     continue;
 
-                auto *bl{dynamic_cast<data::base::Bool *>(setting)};
-                if (bl == nullptr)
-                    // Really should warn on this...
-                    continue;
-
-                if (not mapped(*bl))
-                    observeWith(*bl, settingTable);
+                if (not mapped(*setting))
+                    observeWith(*setting, settingTable);
             }
         }
     }
@@ -191,26 +202,33 @@ void PropButtonsDlg::rebuildUI() {
         pcui::Stack controlStack{
           .base_={.minSize_={width, -1}},
         };
-        pcui::Divider divider{
-          .base_={.expand_=true},
-          .orient_=wxVERTICAL,
-        };
         pcui::Stack descStack;
 
         bool any{false};
         for (const auto& [name, descriptions] : state.buttons_) {
             const std::string *activeDesc{nullptr};
             for (const auto& [pred, desc] : descriptions) {
-                if (pred.empty()) {
+                if (pred.external_) {
+                    auto *setting{dynamic_cast<data::hier::Bool *>(
+                        mConfig.getByKey(pred.key_)
+                    )};
+                    if (not setting)
+                        continue;
+
+                    auto ctxt{data::context(*setting)};
+                    if (ctxt.enabled() and ctxt.val())
+                        activeDesc = &desc;
+
+                    continue;
+                }
+
+                if (pred.key_.empty()) {
                     activeDesc = &desc;
                     continue;
                 }
 
-                auto *setting{mCurProp->find(pred)};
-                if (setting == nullptr)
-                    continue;
-
-                if (setting->isActive())
+                auto *setting{mCurProp->find(pred.key_)};
+                if (setting and setting->isActive())
                     activeDesc = &desc;
             }
 
@@ -241,7 +259,7 @@ void PropButtonsDlg::rebuildUI() {
         group.children_.add(pcui::DynamicList{
             controlStack(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-            divider(),
+            pcui::Divider{}(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             descStack(),
         });

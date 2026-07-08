@@ -23,6 +23,7 @@
 #include <optional>
 #include <unordered_set>
 #include <utility>
+#include <variant>
 
 #include "data/context.hpp"
 #include "data/logic/adapter.hpp"
@@ -37,6 +38,7 @@
 #include "ui/layout/group.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
+#include "ui/static/divider.hpp"
 #include "ui/types.hpp"
 #include "ui/values.hpp"
 #include "utils/string.hpp"
@@ -69,17 +71,34 @@ Layout parseLayout(
     logging::Branch&
 );
 
-Buttons parseButtons(const pconf::Data&, logging::Branch&);
+Buttons parseButtons(
+    const pconf::Data&, const std::map<uint32, Buttons>&, logging::Branch&
+);
 Errors parseErrors(const pconf::Data&, logging::Branch&);
+MenuSupport parseMenuSupport(const pconf::Data&, logging::Branch&);
 
 } // namespace
+
+Require::Require(std::string&& raw) {
+    if (raw[0] == '~') {
+        inverted_ = true;
+        raw.erase(0, 1);
+    }
+
+    if (raw[0] == '@') {
+        external_ = true;
+        raw.erase(0, 1);
+    }
+
+    key_ = std::move(raw);
+}
 
 detail::Data::Data(
     std::string name,
     std::string define,
     std::string description,
-    std::vector<std::string> required,
-    std::vector<std::string> requireAny
+    std::vector<Require> required,
+    std::vector<Require> requireAny
 ) : name_(std::move(name)),
     define_(std::move(define)),
     description_(std::move(description)),
@@ -108,7 +127,8 @@ bool Toggle::shouldOutputDefine() const {
 }
 
 std::optional<std::string> Toggle::generateDefineString() const {
-    if (not shouldOutputDefine()) return std::nullopt;
+    if (not shouldOutputDefine())
+        return std::nullopt;
 
     return define_;
 }
@@ -171,7 +191,8 @@ bool Decimal::shouldOutputDefine() const {
 }
 
 std::optional<std::string> Decimal::generateDefineString() const {
-    if (not shouldOutputDefine()) return std::nullopt;
+    if (not shouldOutputDefine())
+        return std::nullopt;
 
     auto ctxt{data::context(*this)};
     return define_ + ' ' + std::to_string(ctxt.val());
@@ -203,12 +224,18 @@ bool Option::isActive() const {
 }
 
 bool Option::shouldOutputDefine() const {
+    if (not isActive())
+        return false;
+
     auto ctxt{data::context(*this)};
     auto& cur{dynamic_cast<Selection&>(ctxt[ctxt.selected()])};
     return cur.shouldOutputDefine();
 }
 
 std::optional<std::string> Option::generateDefineString() const {
+    if (not shouldOutputDefine())
+        return std::nullopt;
+
     // Since this is what goes into the setting list, make it responsible for
     // forwarding the output call to what is actually selected.
     auto ctxt{data::context(*this)};
@@ -237,7 +264,8 @@ bool Option::Selection::shouldOutputDefine() const {
 }
 
 std::optional<std::string> Option::Selection::generateDefineString() const {
-    if (not shouldOutputDefine()) return std::nullopt;
+    if (not shouldOutputDefine())
+        return std::nullopt;
 
     return define_;
 }
@@ -248,6 +276,7 @@ Prop::Prop(
     std::string name,
     std::string filename,
     std::string info,
+    std::optional<MenuSupport> menuSupport,
     std::map<uint32, Buttons> buttons,
     Layout layout,
     Errors errors
@@ -256,6 +285,7 @@ Prop::Prop(
     name_(std::move(name)),
     filename_(std::move(filename)),
     info_(std::move(info)),
+    menuSupport_(std::move(menuSupport)),
     mButtons(std::move(buttons)),
     mLayout(std::move(layout)),
     mErrors(std::move(errors)) {}
@@ -313,6 +343,35 @@ std::optional<PropData> PropData::generate(
         );
     }
 
+    // Warn on duplicate and unused settings/those not in layout.
+    {
+        std::unordered_set<std::string> settingStrings;
+        for (auto& setting : settings) {
+            if (dynamic_cast<Option::SelectionData *>(setting.get()))
+                continue;
+
+            auto [iter, inserted]{settingStrings.insert(setting->define_)};
+            if (not inserted) {
+                logger.warn("Duplicate settings for " + setting->define_);
+            }
+        }
+
+        const auto processLayout{[&](auto self, const Layout& layout) -> void {
+            for (const auto& child : layout.children_) {
+                if (const auto *ptr{std::get_if<std::string>(&child)}) {
+                    settingStrings.erase(*ptr);
+                } else if (const auto *ptr{std::get_if<Layout>(&child)}) {
+                    self(self, *ptr);
+                }
+            }
+        }};
+        processLayout(processLayout, layout);
+
+        for (const auto& str : settingStrings) {
+            logger.warn("Unused setting " + str);
+        }
+    }
+
     std::map<uint32, Buttons> buttons;
 
     const auto buttonEntries{data.findAll("BUTTONS")};
@@ -335,6 +394,7 @@ std::optional<PropData> PropData::generate(
 
         buttons[numButtons] = parseButtons(
             buttonEntry.section()->entries_,
+            buttons,
             *logger.bdebug("Parsing BUTTONS " + std::to_string(numButtons) + "...")
         );
 
@@ -353,11 +413,15 @@ std::optional<PropData> PropData::generate(
         for (auto& state : buttons[numButtons]) {
             for (auto& button : state.buttons_) {
                 for (auto& [pred, description] : button.descriptions_) {
-                    if (pred.empty())
+                    if (pred.external_)
+                        // TODO: No way to warn about this.
                         continue;
 
-                    if (not settingLookup.contains(pred))
-                        logger.warn("Button " + button.name_ + " has description with non-existent predicate " + pred);
+                    if (pred.key_.empty())
+                        continue;
+
+                    if (not settingLookup.contains(pred.key_))
+                        logger.warn("Button " + button.name_ + " has description with non-existent predicate " + pred.key_);
                 }
             }
         }
@@ -378,10 +442,22 @@ std::optional<PropData> PropData::generate(
         );
     }
 
+    std::optional<MenuSupport> menuSupport;
+    const auto menuSupportEntry{data.find("MENU_SUPPORT")};
+    if (menuSupportEntry and menuSupportEntry.section()) {
+        menuSupport = parseMenuSupport(
+            menuSupportEntry.section()->entries_,
+            *logger.bdebug("Parsing menu support...")
+        );
+    } else {
+        logger.info("No menu support section...");
+    }
+
     return std::make_optional<PropData>(
         std::move(name),
         std::move(filename),
         std::move(info),
+        std::move(menuSupport),
         std::move(settings),
         std::move(buttons),
         std::move(layout),
@@ -460,6 +536,15 @@ pcui::DescriptorPtr Prop::layout() {
 
         const auto& child{*layers.back().iter_};
         ++layers.back().iter_;
+
+        if (std::holds_alternative<Layout::Divider>(child)) {
+            auto& children{layers.back().children()};
+            children.push_back(pcui::Spacer{
+              .size_=pcui::interControlSpacing()
+            }());
+            children.push_back(pcui::Divider{}());
+            continue;
+        }
 
         if (const auto *id{std::get_if<std::string>(&child)}) {
             auto iter{mMap.find(*id)};
@@ -605,6 +690,11 @@ void Prop::migrateFrom(const Prop& from) {
     }
 }
 
+void Prop::markExternalModified(std::string_view str) {
+    for (auto *setting : mExtReqMap[str])
+        recomputeState(*setting);
+}
+
 auto Prop::children() const -> std::vector<const Model *> {
     std::vector<const Model *> ret;
 
@@ -619,8 +709,9 @@ void Prop::rebuildLookup(logging::Branch *lBranch) {
     auto& logger{logging::Branch::optCreateLogger("versions::props::Prop::rebuildLookup()", lBranch)};
 
     mMap.clear();
-    mReqMap.clear();
-    mDisMap.clear();
+    mRequiredByMap.clear();
+    mDisabledByMap.clear();
+    mExtReqMap.clear();
 
     // First build the id->setting map, and then use it to build others
 
@@ -668,30 +759,93 @@ void Prop::rebuildLookup(logging::Branch *lBranch) {
                     continue;
                 }
 
-                mDisMap[iter->second].insert(setting);
+                mDisabledByMap[iter->second].insert(setting);
             }
         }
 
-        for (const auto& required : setting->required_) {
-            auto iter{mMap.find(required)};
+        const auto processRequire{[&](const Require& req) {
+            if (req.external_) {
+                auto res{mExtReqProc(root(), req.key_)};
+                if (res == ExternalRequireResult::Not_Found) {
+                    logger.warn("Unknown external requires \"" + req.key_ + "\" for \"" + setting->define_ + '"');
+                    return;
+                } 
+
+                mExtReqMap[req.key_].insert(setting);
+                return;
+            }
+
+            auto iter{mMap.find(req.key_)};
             if (iter == mMap.end()) {
-                logger.warn("Unknown requires \"" + required + "\" for \"" + setting->define_ + '"');
-                continue;
+                logger.warn("Unknown requires \"" + req.key_ + "\" for \"" + setting->define_ + '"');
+                return;
             }
 
-            mReqMap[iter->second].insert(setting);
-        }
+            mRequiredByMap[iter->second].insert(setting);
+        }};
 
-        for (const auto& required : setting->requireAny_) {
-            auto iter{mMap.find(required)};
-            if (iter == mMap.end()) {
-                logger.warn("Unknown any requires \"" + required + "\" for \"" + setting->define_ + '"');
-                continue;
-            }
+        for (const auto& req : setting->required_)
+            processRequire(req);
 
-            mReqMap[iter->second].insert(setting);
-        }
+        for (const auto& req : setting->requireAny_)
+            processRequire(req);
     }
+}
+
+void Prop::recomputeState(detail::SettingBase& setting) {
+    const auto computeRequire{[this](const Require& req) {
+        bool reqVal{};
+
+        if (req.external_) {
+            auto res{mExtReqProc(root(), req.key_)};
+            // If the external require isn't found, consider it inactive.
+            reqVal = (res == ExternalRequireResult::Active);
+        } else {
+            auto iter{mMap.find(req.key_)};
+
+            if (iter == mMap.end())
+                // If the require isn't found, consider it inactive.
+                reqVal = false;
+            else
+                reqVal = iter->second->isActive();
+        }
+
+        if (req.inverted_)
+            reqVal = not reqVal;
+
+        return reqVal;
+    }};
+
+    const auto computeRequired{[&] {
+        for (const auto& req : setting.required_)
+            if (not computeRequire(req))
+                return false;
+
+        return true;
+    }};
+
+    const auto computeRequireAny{[&] {
+        if (setting.requireAny_.empty())
+            return true;
+
+        for (const auto& req : setting.requireAny_)
+            if (computeRequire(req))
+                return true;
+
+        return false;
+    }};
+
+    const auto computeDisabledBy{[&] {
+        for (const auto& disabledBy : mDisabledByMap[&setting])
+            if (disabledBy->isActive())
+                return false;
+
+        return true;
+    }};
+
+    dynamic_cast<data::base::Model&>(setting).enable(
+        computeRequired() and computeRequireAny() and computeDisabledBy()
+    );
 }
 
 void Prop::onSet(const data::base::Model& model) {
@@ -722,60 +876,12 @@ void Prop::onSet(const data::base::Model& model) {
         affectedSet.insert(iter->second);
     }
 
-    for (auto *requiredBy : mReqMap[&setting]) {
+    for (auto *requiredBy : mRequiredByMap[&setting])
         affectedSet.insert(requiredBy);
-    }
 
     // And then fully compute the state for each.
-
-    const auto computeRequired{[&](detail::SettingBase *setting) {
-        for (const auto& required : setting->required_) {
-            auto iter{mMap.find(required)};
-
-            if (iter == mMap.end())
-                // Issues were already logged during map generation.
-                continue;
-
-            if (not iter->second->isActive())
-                return false;
-        }
-
-        return true;
-    }};
-
-    const auto computeRequireAny{[&](detail::SettingBase *setting) {
-        if (setting->requireAny_.empty()) return true;
-
-        for (const auto& reqAny : setting->requireAny_) {
-            auto iter{mMap.find(reqAny)};
-
-            if (iter == mMap.end())
-                // Issues were already logged during map generation.
-                continue;
-
-            if (iter->second->isActive())
-                return true;
-
-        }
-
-        return false;
-    }};
-
-    const auto computeDisabledBy{[&](detail::SettingBase *setting) {
-        for (const auto& disabledBy : mDisMap[setting]) {
-            if (disabledBy->isActive()) return false;
-        }
-
-        return true;
-    }};
-
-    for (auto *affected : affectedSet) {
-        dynamic_cast<data::base::Model *>(affected)->enable(
-            computeRequired(affected) and
-            computeRequireAny(affected) and
-            computeDisabledBy(affected)
-        );
-    }
+    for (auto *affected : affectedSet)
+        recomputeState(*affected);
 
     if (mRecProc) {
         const auto& recommends{[&] -> const auto& {
@@ -816,7 +922,8 @@ const data::prim::Vector& versions::props::list() {
 std::vector<std::unique_ptr<Prop>> versions::props::forVersion(
     const utils::Version& ver,
     data::hier::Root& root,
-    Prop::RecommendProcessor recProc
+    Prop::RecommendProcessor recProc,
+    Prop::ExternalRequireProcessor extReqProc
 ) {
     std::vector<std::unique_ptr<Prop>> ret;
 
@@ -842,12 +949,14 @@ std::vector<std::unique_ptr<Prop>> versions::props::forVersion(
             data.name_,
             data.filename_,
             data.info_,
+            data.menuSupport_,
             data.buttons_,
             data.layout_,
             data.errors_
         ))};
 
         prop.mRecProc = recProc;
+        prop.mExtReqProc = extReqProc;
 
         for (const auto& set : data.settings_) {
             data::base::Model *model{nullptr};
@@ -1143,20 +1252,30 @@ std::optional<std::pair<detail::Data, pconf::HashedData>> parseSettingCommon(
         data.erase(descEntry);
     }
 
-    std::vector<std::string> requireAny;
-
-    const auto requireAnyEntry{data.find("REQUIREANY")};
-    if (requireAnyEntry and requireAnyEntry->value_) {
-        requireAny = pconf::valueAsList(requireAnyEntry->value_);
-        data.erase(requireAnyEntry);
-    }
-
-    std::vector<std::string> required;
+    std::vector<Require> required;
 
     const auto requiredEntry{data.find("REQUIRE")};
     if (requiredEntry and requiredEntry->value_) {
-        required = pconf::valueAsList(requiredEntry->value_);
+        auto rawVec{pconf::valueAsList(requiredEntry->value_)};
+        required.reserve(rawVec.size());
+
+        for (auto& raw : rawVec)
+            required.emplace_back(std::move(raw));
+
         data.erase(requiredEntry);
+    }
+
+    std::vector<Require> requireAny;
+
+    const auto requireAnyEntry{data.find("REQUIREANY")};
+    if (requireAnyEntry and requireAnyEntry->value_) {
+        auto rawVec{pconf::valueAsList(requireAnyEntry->value_)};
+        required.reserve(rawVec.size());
+
+        for (auto& raw : rawVec)
+            required.emplace_back(std::move(raw));
+
+        data.erase(requireAnyEntry);
     }
 
     return std::pair{
@@ -1212,6 +1331,11 @@ Layout parseLayout(
             continue;
         } 
 
+        if (entry->name_ == "DIVIDER") {
+            layers.back().layout_.children_.emplace_back(Layout::Divider{});
+            continue;
+        }
+
         wxOrientation orient{};
         if (entry->name_ == "HORIZONTAL") {
             orient = wxHORIZONTAL;
@@ -1246,14 +1370,42 @@ Layout parseLayout(
 
 Buttons parseButtons(
     const pconf::Data& data,
+    const std::map<uint32, Buttons>& buttons,
     logging::Branch& lBranch
 ) {
     auto& logger{lBranch.createLogger("Versions::parseButtons()")};
     const auto hashedData{pconf::hash(data)};
 
     Buttons ret{};
+    const Buttons *inherit{nullptr};
 
     for (const auto& stateEntry : data) {
+        if (stateEntry->name_ == "INHERIT") {
+            if (not ret.empty()) {
+                logger.warn("Inherit entry in buttons must appear at start, ignoring...");
+                continue;
+            }
+
+            if (not stateEntry->labelNum_) {
+                logger.warn("Inherit entry missing num label, ignoring...");
+                continue;
+            }
+
+            auto iter{buttons.find(*stateEntry->labelNum_)};
+            if (iter == buttons.end()) {
+                logger.warn("Inherit entry wants unknown " + std::to_string(*stateEntry->labelNum_) + ", ignoring...");
+                continue;
+            }
+
+            if (inherit) {
+                logger.warn("Multiple inherit entries unsupported, ignoring...");
+                continue;
+            }
+
+            inherit = &iter->second;
+            continue;
+        }
+
         if (stateEntry->name_ != "STATE") {
             logger.warn("Skipping " + stateEntry->name_ + " entry in buttons...");
             continue;
@@ -1273,7 +1425,7 @@ Buttons parseButtons(
         const auto& buttonEntries{stateEntry.section()->entries_};
         for (const auto& buttonEntry : buttonEntries) {
             if (buttonEntry->name_ != "BUTTON") {
-                logger.warn("Skipping " + stateEntry->name_ + " entry in buttons state...");
+                logger.warn("Skipping " + buttonEntry->name_ + " entry in buttons state...");
                 continue;
             }
 
@@ -1287,11 +1439,11 @@ Buttons parseButtons(
                 continue;
             }
 
-            std::unordered_map<std::string, std::string> descriptions;
+            std::vector<std::pair<Require, std::string>> descriptions;
             const auto& descEntries{buttonEntry.section()->entries_};
             for (const auto& descEntry : descEntries) {
                 if (descEntry->name_ != "DESCRIPTION") {
-                    logger.warn("Skipping " + stateEntry->name_ + " entry in button...");
+                    logger.warn("Skipping " + descEntry->name_ + " entry in button...");
                     continue;
                 }
 
@@ -1300,15 +1452,25 @@ Buttons parseButtons(
                     continue;
                 }
 
-                const auto [iter, success]{descriptions.try_emplace(
-                    descEntry->label_.value_or(""),
-                    descEntry->value_.value()
-                )};
+                Require newReq(descEntry->label_.value_or(""));
+                bool duplicate{false};
+                for (const auto& [req, desc] : descriptions) {
+                    if (req == newReq) {
+                        duplicate = true;
+                        break;
+                    }
+                }
 
-                if (not success) {
+                if (duplicate) {
                     if (not descEntry->label_) logger.warn("Skipping duplicate base button description...");
                     else logger.warn("Skipping duplicate \"" + *descEntry->label_ + "\" button description...");
+                    continue;
                 }
+
+                descriptions.emplace_back(
+                    std::move(newReq),
+                    descEntry->value_.value()
+                );
             }
 
             buttons.push_back(Button{
@@ -1318,6 +1480,58 @@ Buttons parseButtons(
         }
 
         ret.emplace_back(stateEntry->label_.value(), buttons);
+    }
+
+    if (inherit) {
+        // Reverse iterate so not-found insertion ends up (kind of) correct.
+        // NOTE: For reasons I don't really understand, copying of ButtonState
+        // and Button only works if the ctor is referenced explicitly.
+        for (
+                auto sIter{inherit->rbegin()};
+                sIter != inherit->rend();
+                ++sIter
+            ) {
+            const auto& inheritState{*sIter};
+            ButtonState *retState{nullptr};
+            for (auto& state : ret) {
+                if (state.stateName_ == inheritState.stateName_) {
+                    retState = &state;
+                    break;
+                }
+            }
+
+            // Can just insert the whole inherit state.
+            if (not retState) {
+                ret.insert(ret.begin(), ButtonState(inheritState));
+                continue;
+            }
+
+            // Same as above
+            for (
+                    auto bIter{inheritState.buttons_.rbegin()};
+                    bIter != inheritState.buttons_.rend();
+                    ++bIter
+                ) {
+                const auto& inheritButton{*bIter};
+
+                Button *retButton{nullptr};
+                for (auto& button : retState->buttons_) {
+                    if (button.name_ == inheritButton.name_) {
+                        retButton = &button;
+                        break;
+                    }
+                }
+
+                if (retButton) {
+                    *retButton = Button(inheritButton);
+                } else {
+                    retState->buttons_.insert(
+                        retState->buttons_.begin(),
+                        Button(inheritButton)
+                    );
+                }
+            }
+        }
     }
 
     return ret;
@@ -1353,6 +1567,25 @@ Errors parseErrors(const pconf::Data& data, logging::Branch& lBranch) {
         }
 
         ret.emplace_back(*arduinoEntry->value_, *displayEntry->value_);
+    }
+
+    return ret;
+}
+
+MenuSupport parseMenuSupport(
+    const pconf::Data& data, logging::Branch& lBranch
+) {
+    auto& logger{lBranch.createLogger("Versions::parseMenuSupport()")};
+
+    MenuSupport ret;
+
+    auto hashedData{pconf::hash(data)};
+
+    auto defaultEntry{hashedData.find("DEFAULT")};
+    if (defaultEntry and defaultEntry->value_) {
+        ret.defaultSpecTemplate_ = *defaultEntry->value_;
+    } else {
+        logger.debug("No default spec template.");
     }
 
     return ret;

@@ -31,7 +31,8 @@ void WindowImpl::onDeactivate() {
 }
 
 bool WindowImpl::freezeGetRealEnable() {
-    if (not mEnable) return true;
+    if (not mEnable)
+        return true;
 
     mEnable->lock();
     return mEnable->val();

@@ -33,6 +33,7 @@
 #include "config/presets/preset.hpp"
 #include "config/priv/data.hpp"
 #include "config/priv/io.hpp"
+#include "config/priv/keys.hpp"
 #include "config/settings/define.hpp"
 #include "data/context.hpp"
 #include "log/context.hpp"
@@ -51,15 +52,15 @@ fs::path savePath(const std::string&);
 } // namespace
 
 Config::Config() :
+    mOsChoice(*this),
+    mPropChoice(*this),
+    mBoardChoice(*this),
     settings_(*this),
     presetArrays_(*this),
     bladeConfigs_(*this),
     buttons_(*this),
     injections_(*this),
-    styles_(*this),
-    mOsChoice(*this),
-    mPropChoice(*this),
-    mBoardChoice(*this) {
+    styles_(*this) {
     CreationScope createScope(this);
 
     { 
@@ -72,7 +73,10 @@ Config::Config() :
 
             auto& propVec{mPropMap[os.version_]};
             propVec = versions::props::forVersion(
-                os.version_, *this, &Config::processPropRecommend
+                os.version_,
+                *this,
+                &Config::processPropRecommend,
+                &Config::processPropExternalRequire
             );
         }
     }
@@ -227,6 +231,12 @@ const data::hier::Choice& Config::propChoice() const {
     return mPropChoice;
 }
 
+versions::props::Prop *Config::prop() {
+    return const_cast<versions::props::Prop *>(
+        const_cast<const Config&>(*this).prop()
+    );
+}
+
 const versions::props::Prop *Config::prop() const {
     auto propVec{this->propVec()};
     if (not propVec) return nullptr;
@@ -337,6 +347,13 @@ void Config::syncStyles() {
     }
 }
 
+data::hier::Model *Config::getByKey(std::string_view key) {
+    if (key == priv::keys::SETTINGS_MENU_ENABLE)
+        return &settings_.menu_.enable_;
+
+    return nullptr;
+}
+
 void Config::cache(std::unique_ptr<utils::Data>&& data) {
     mCache[hash()] = std::move(data);
 }
@@ -433,6 +450,19 @@ void Config::processPropRecommend(
     config.settings_.processDefines();
 }
 
+versions::props::Prop::ExternalRequireResult
+Config::processPropExternalRequire(
+    data::hier::Root& root, std::string_view key
+) {
+    using enum versions::props::Prop::ExternalRequireResult;
+    auto& config{dynamic_cast<Config&>(root)};
+
+    auto *setting{config.getByKey(key)};
+    if (auto *blSet{dynamic_cast<data::hier::Bool *>(setting)})
+        return data::context(*blSet).val() ? Active : Inactive;
+
+    return Not_Found;
+}
 
 data::logic::Element config::operator|(
     Config& config, Config::OSIsOrOverVersion data

@@ -65,6 +65,7 @@ private:
     void onRedo(wxCommandEvent&);
 
     void onStyleEditor(wxCommandEvent&);
+    void onPOD(wxCommandEvent&);
 
     void onPage(wxCommandEvent&);
     void onTimer(wxTimerEvent&);
@@ -92,6 +93,8 @@ private:
         eID_Verify_Cacheless,
         eID_Injections,
         eID_Style_Editor,
+
+        eID_POD,
 
         ePage_First = ePage_General,
         ePage_Last = ePage_Blades,

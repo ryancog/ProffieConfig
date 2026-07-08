@@ -19,492 +19,378 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
+#include <charconv>
 #include <iostream>
+#include <stack>
+#include <variant>
 
 #include "log/logger.hpp"
+#include "utils/string.hpp"
 
-namespace {
-
-// All these return false on a critical error condition.
-void parseName(
-    const std::string&, std::optional<std::string>&, logging::Branch&
-);
-
-bool parseLabel(
-    const std::string&, std::optional<std::string>&, logging::Branch&
-);
-
-bool parseLabelNum(
-    const std::string&, std::optional<uint32>&, logging::Branch&
-);
-
-bool parseValue(
-    const std::string&,
-    std::istream&,
-    std::optional<std::string>&,
-    logging::Branch&
-);
-
-bool parseSinglelineValue(
-    const std::string&, std::optional<std::string>&, logging::Branch&
-);
-
-bool parseMultilineValue(
-    std::istream&, std::optional<std::string>&, logging::Branch&
-);
-
-bool readEntry(
-    std::istream&, pconf::EntryPtr& out, bool& isSect, logging::Branch&
-);
-
-bool readSection(
-    std::istream&, pconf::SectionPtr& out, logging::Branch&
-);
-
-enum class CommentMode {
-    /**
-     * Ignore if in a pair of `""`
-     */
-    Ignore_Quoted,
-    /**
-     * Ignore if surrounded by `""` at all. (Multiline value mode)
-     */
-    Ignore_Mutliline_Quoted,
-};
-
-bool readline(std::istream&, std::string&, CommentMode);
-
-} // namespace
-
-bool pconf::read(std::istream& inStream, Data& out, logging::Branch *lBranch) {
+bool pconf::read(
+    std::istream& inStream,
+    Data& out,
+    logging::Branch *lBranch
+) {
     auto& logger{logging::Branch::optCreateLogger("pconf::read()", lBranch)};
 
+    enum class LineType {
+        Entry,
+        Multiline,
+    } type{LineType::Entry};
+
+    std::stack<std::vector<EntryPtr> *> stack;
+
     out.clear();
-    bool isSect{};
-    while (inStream.good() and not inStream.eof()) {
-        EntryPtr entry;
-        if (not readEntry(inStream, entry, isSect, *logger.bverbose("Reading line (for entry)..."))) {
-            logger.error("Failed reading pconf.");
-            return false;
-        }
-        if (not entry and not isSect) continue;
+    stack.push(&out);
 
-        if (entry) {
-            out.push_back(std::move(entry));
-        } else {
-            SectionPtr sect;
-            if (not readSection(inStream, sect, *logger.bverbose("Reading section..."))) {
-                logger.error("Failed reading pconf.");
-                return false;
-            }
-            if (not sect) continue;
-            out.emplace_back(sect);
-        }
-    }
-
-    return true;
-}
-
-namespace {
-
-bool readEntry(
-    std::istream& inStream,
-    pconf::EntryPtr& out,
-    bool& isSect,
-    logging::Branch& lBranch
-) {
-    auto& logger{lBranch.createLogger("pconf::readEntry()")};
-
-    out.reset();
-    isSect = false;
     std::string line;
-    auto prevLinePos{inStream.tellg()};
+    for (size lineNo{0}; std::getline(inStream, line); ++lineNo) {
+        // Handle comments
+        [&] {
+            bool inQuote{false};
+            bool lastWasSlash{false};
+            for (size idx{0}; idx < line.size(); ++idx) {
+                auto chr{line[idx]};
 
-    if (not readline(inStream, line, CommentMode::Ignore_Quoted)) {
-        logger.verbose("Reached end of stream.");
-        return true;
-    }
+                if (not inQuote and chr == '/') {
+                    if (lastWasSlash) {
+                        // Trim everything on line after "//"
+                        line.erase(idx - 1);
+                        break;
+                    }
 
-    auto numOpenBraces{std::count(line.begin(), line.end(), '{')};
-    auto numCloseBraces{std::count(line.begin(), line.end(), '}')};
-    auto openBracePos{line.find('{')};
-    auto closeBracePos{line.find('}')};
-    auto hasSeperator{line.find(':') != std::string::npos};
+                    lastWasSlash = true;
+                    continue;
+                }
 
-    bool correctNumBraces{
-        ((numOpenBraces == 0 or numOpenBraces == 1) and (numCloseBraces == numOpenBraces - 1 or numCloseBraces == numOpenBraces)) ||
-        ((numOpenBraces == 2) and (numCloseBraces == numOpenBraces - 1))
-    };
-    if (not correctNumBraces) {
-        auto closeCondition{numCloseBraces == 1 and numOpenBraces == 0};
-        if (closeCondition) {
-            logger.verbose("Found close condition.");
-            return true;
-        } 
+                lastWasSlash = false;
 
-        logger.error("Bad brace setup!");
-        return false;
-    }
-
-    isSect = (numOpenBraces - numCloseBraces == 1) and (openBracePos <= closeBracePos) and not hasSeperator;
-    if (isSect) {
-        inStream.seekg(prevLinePos);
-        logger.verbose("Found section.");
-        return true;
-    }
-
-    std::optional<std::string> name;
-    parseName(line, name, *logger.bverbose("Attempting to parse entry name..."));
-    if (not name) {
-        logger.verbose("Line not an entry/missing name.");
-        return true;
-    }
-
-    out = pconf::Entry::create(*name);
-    if (not parseValue(
-            line,
-            inStream,
-            out->value_,
-            *logger.bverbose("Parsing entry \"" + name.value() + "\" value...")
-        )) return false;
-
-    if (not parseLabel(
-            line,
-            out->label_,
-            *logger.bverbose("Parsing entry \"" + name.value() + "\" label...")
-        )) return false;
-
-    if (not parseLabelNum(
-            line,
-            out->labelNum_,
-            *logger.bverbose("Parsing entry \"" + name.value() + "\" number label...")
-        )) return false;
-
-    return true;
-}
-
-bool readSection(
-    std::istream& inStream, pconf::SectionPtr& out, logging::Branch& lBranch
-) {
-    auto& logger{lBranch.createLogger("pconf::readSection()")};
-
-    out.reset();
-    std::string line;
-    if (not readline(inStream, line, CommentMode::Ignore_Quoted)) return true;
-
-    std::optional<std::string> name;
-
-    parseName(line, name, *logger.bverbose("Attempting to parse section name..."));
-    if (not name) {
-        logger.error("Read this as a section, but missing name. Must be a formatting error!");
-        return false;
-    }
-
-    out = pconf::Section::create(*name);
-
-    if (not parseLabel(
-            line,
-            out->label_,
-            *logger.bverbose("Parsing section \"" + name.value() + "\" label...")
-        )) return false;
-
-    if (not parseLabelNum(
-            line,
-            out->labelNum_,
-            *logger.bverbose("Parsing section \"" + name.value() + "\" number label...")
-        )) return false;
-
-    bool foundSect{false};
-    while (inStream.good() and not inStream.eof()) {
-        auto startPos{inStream.tellg()};
-        pconf::EntryPtr entry;
-
-        if (not readEntry(
-                inStream,
-                entry,
-                foundSect,
-                *logger.bverbose("Reading line (for entry)...")
-            )) return false;
-
-        if (foundSect) {
-            pconf::SectionPtr subSect;
-
-            if (not readSection(
-                    inStream,
-                    subSect,
-                    *logger.bverbose("Reading section...")
-                )) return false;
-
-            if (not subSect) continue;
-
-            out->entries_.emplace_back(subSect);
-            continue;
-        }
-
-        if (not entry) {
-            // Check for section end
-            inStream.seekg(startPos);
-            readline(inStream, line, CommentMode::Ignore_Quoted);
-
-            if (line.find('}') != std::string::npos) return true;
-
-            continue;
-        }
-
-        out->entries_.push_back(entry);
-    }
-
-    logger.error("Reached end of stream before section closing, formatting error!");
-    return false;
-}
-
-void parseName(
-    const std::string& line,
-    std::optional<std::string>& out,
-    logging::Branch& lBranch
-) {
-    auto& logger{lBranch.createLogger("pconf::parseName()")};
-
-    out = std::nullopt;
-    auto bracePos{line.find('{')};
-    auto parenPos{line.find('(')};
-    auto separatorPos{line.find(':')};
-
-    auto nameBegin{line.find_first_not_of(" \t")};
-    auto spacePos{line.find_first_of(" \t{(", nameBegin)};
-    if (nameBegin == spacePos) {
-        logger.verbose("Could not find name.");
-        return;
-    }
-
-    auto nameEnd{std::min({separatorPos, spacePos, bracePos, parenPos})};
-    out = line.substr(nameBegin, nameEnd - nameBegin);
-}
-
-bool parseValue(
-    const std::string& line,
-    std::istream& inStream,
-    std::optional<std::string>& out,
-    logging::Branch& lBranch
-) {
-    auto& logger{lBranch.createLogger("pconf::parseValue()")};
-
-    out = std::nullopt;
-    auto separatorPos{line.find(':')};
-    bool hasSeperator{separatorPos != std::string::npos};
-
-    if (not hasSeperator) {
-        logger.verbose("No separator, no value.");
-        return true;
-    }
-
-    auto bracePos{line.find('{')};
-    auto isMultiline{
-        bracePos != std::string::npos and separatorPos < bracePos
-    };
-
-    if (isMultiline) {
-        return parseMultilineValue(
-            inStream,
-            out,
-            *logger.bverbose("Value is multiline, parsing...")
-        );
-    }
-
-    return parseSinglelineValue(
-        line.substr(separatorPos + 1),
-        out,
-        *logger.bverbose("Value is single-line, parsing...")
-    );
-}
-
-bool parseSinglelineValue(
-    const std::string& line,
-    std::optional<std::string>& out,
-    logging::Branch& lBranch
-) {
-    auto& logger{lBranch.createLogger("pconf::parseSingleLineValue()")};
-
-    bool usesQuotes{line.find('"') != std::string::npos};
-    bool record{false};
-
-    out = "";
-    for (auto idx{0}; idx < line.length(); ++idx) {
-        const char chr{line[idx]};
-        if (usesQuotes and chr == '"') {
-            record = not record;
-            continue;
-        } 
-        
-        if (not record and chr == ',') {
-            *out += '\n';
-            continue;
-        }
-
-        // If `not record` is true, it doesn't matter if we're using quotes or not.
-        // `not record` is always true when not using quotes
-        if (not record and std::isspace(chr)) continue;
-
-        if (not usesQuotes or record) *out += chr;
-    }
-
-    if (usesQuotes and record) {
-        logger.warn("Entry value w/ quotes not terminated before EOL! (" + line + ")");
-        return false;
-    }
-
-    if (out->empty()) out = std::nullopt;
-
-    return true;
-}
-
-bool parseMultilineValue(
-    std::istream& inStream,
-    std::optional<std::string>& out,
-    logging::Branch& lBranch
-) {
-    auto& logger{lBranch.createLogger("pconf::parseMultilineValue()")};
-
-    out = "";
-    std::string buf;
-    while (readline(inStream, buf, CommentMode::Ignore_Mutliline_Quoted)) {
-        auto quoteBegin{buf.find('"')};
-        auto quoteEnd{buf.rfind('"')};
-        if (quoteBegin == std::string::npos or quoteBegin == quoteEnd) {
-            if (buf.find('}') != std::string::npos) {
-                // Pop off trailing newline
-                // Don't trim whitespace. That's intentional for a multiline
-                out->pop_back();
-                return true;
+                if (chr == '"')
+                    inQuote = not inQuote;
             }
+        }();
+
+        utils::trimSurroundingWhitespace(line);
+        if (line.empty())
             continue;
-        }
 
-        *out += buf.substr(quoteBegin + 1, quoteEnd - quoteBegin - 1) + '\n';
-    }
+        const auto expectMsg{[lineNo](
+            std::string_view expect,
+            std::variant<std::monostate, std::string_view, char> got = {}
+        ) {
+            std::string ret;
+            ret += "Expected ";
+            ret += expect;
 
-    logger.error("Reached end of segment before closed, formatting issue!");
-    return false;
-}
+            if (not std::holds_alternative<std::monostate>(got)) {
+                ret += " but got ";
 
-bool parseLabel(
-    const std::string& line, std::optional<std::string>& out, logging::Branch& lBranch
-) {
-    auto& logger{lBranch.createLogger("pconf::parseLabel()")};
-
-    out = "";
-    bool inParens{false};
-    bool inQuotes{false};
-
-    for (char character : line) {
-        if (character == ':') {
-            out = std::nullopt;
-            return true;
-        }
-        if (character == '"' and not inParens) {
-            out = std::nullopt;
-            return true;
-        }
-
-        if (not inParens and character == '(') {
-            inParens = true;
-            continue;
-        }
-
-        if (character == '"' and inParens) {
-            if (inQuotes) return true;
-            inQuotes = true;
-            continue;
-        }
-
-        if (inQuotes) *out += character;
-    }
-
-    if (inQuotes) {
-        logger.error("Quotes not closed before EOL! (" + line + ')');
-        return false;
-    } 
-
-    if (out->empty()) out = std::nullopt;
-    return true;
-}
-
-bool parseLabelNum(
-    const std::string& line,
-    std::optional<uint32>& out,
-    logging::Branch& lBranch
-) {
-    auto& logger{lBranch.createLogger("pconf::parseLabelNum()")};
-
-    out = std::nullopt;
-    auto numCloseBraces{std::count(line.begin(), line.end(), '}')};
-    if (numCloseBraces != 1) return true;
-
-    auto openBracePos{line.find('{')};
-    auto closeBracePos{line.find('}')};
-    bool bracesInOrder{openBracePos < closeBracePos};
-    if (not bracesInOrder or closeBracePos == std::string::npos) {
-        logger.error("Entry has malplaced numeric label braces! (" + line + ")");
-        return false;
-    }
-
-    const auto parseString{line.substr(
-        openBracePos + 1,
-        closeBracePos - openBracePos - 1
-    )};
-    if (parseString.empty() or not std::isdigit(parseString[0])) {
-        return true;
-    }
-
-    out = strtoul(parseString.c_str(), nullptr, 0);
-    return true;
-}
-
-bool readline(std::istream& stream, std::string& out, CommentMode mode) {
-    if (not std::getline(stream, out)) return false;
-
-    if (mode == CommentMode::Ignore_Quoted) {
-        bool inQuote{false};
-        bool sawSlash{false};
-        for (size idx{0}; idx < out.size(); ++idx) {
-            char chr{out[idx]};
-
-            if (chr == '"') {
-                inQuote = not inQuote;
-            } else if (chr == '/') {
-                if (sawSlash and not inQuote) {
-                    out.erase(idx - 1);
-                    break;
+                if (auto *ptr{std::get_if<std::string_view>(&got)}) {
+                    ret += *ptr;
+                } else {
+                    ret += '\'';
+                    ret += std::get<char>(got);
+                    ret += '\'';
                 }
             }
 
-            sawSlash = chr == '/';
-        }
-    } else if (mode == CommentMode::Ignore_Mutliline_Quoted) {
-        auto firstQuotePos{out.find('"')};
-        auto lastQuotePos{out.rfind('"')};
+            ret += " on line ";
+            ret += std::to_string(lineNo);
+            return ret;
+        }};
 
-        bool sawSlash{false};
-        for (size idx{0}; idx < out.size(); ++idx) {
-            char chr{out[idx]};
+        const auto earlyMsg{[lineNo](
+            std::string_view when
+        ) {
+            std::string ret;
+            ret += "Unexpected line end when ";
+            ret += when;
+            ret += " on line ";
+            ret += std::to_string(lineNo);
+            return ret;
+        }};
 
-            if (
-                    chr == '/' and
-                    sawSlash and
-                    idx > firstQuotePos and
-                    idx < lastQuotePos
-               ) {
-                out.erase(idx - 1);
-                break;
+        if (line.front() == '}') {
+            switch (type) {
+                case LineType::Entry:
+                    // End of section
+                    if (stack.size() == 1) {
+                        logger.error(expectMsg("entry", "section-end"));
+                        return false;
+                    }
+
+                    stack.pop();
+                    break;
+                case LineType::Multiline:
+                    type = LineType::Entry;
+                    break;
             }
 
-            sawSlash = chr == '/';
+            continue;
+        }
+
+        if (type == LineType::Multiline) {
+            if (line.front() != '"') {
+                logger.error(expectMsg("multiline start quote", line.front()));
+                return false;
+            }
+
+            if (line.size() < 2) {
+                logger.error(earlyMsg("parsing multiline"));
+                return false;
+            }
+
+            if (line.back() != '"') {
+                logger.error(expectMsg("multiline end quote", line.back()));
+                return false;
+            }
+
+            auto& value{*stack.top()->back()->value_};
+
+            if (not value.empty())
+                value.push_back('\n');
+
+            value.append(std::string_view(
+                std::next(line.begin()),
+                std::prev(line.end())
+            ));
+
+            continue;
+        }
+
+        enum class Reading {
+            Name,
+            Label_Start,
+            Label,
+            Label_End,
+            NLabel,
+            Post_Label,
+            Value,
+            Value_Unquoted,
+            Value_In,
+            Value_Out,
+        } reading{Reading::Name};
+
+        auto mark{line.begin()};
+        const auto mkEnt{[&](decltype(line.begin()) end) {
+            stack.top()->push_back(Entry::create(std::string(mark, end)));
+            utils::trimSurroundingWhitespace(stack.top()->back()->name_);
+        }};
+
+        const auto convToSect{[&]() {
+            auto& back{stack.top()->back()};
+
+            back = Section::create(
+                std::move(back->name_),
+                std::move(back->label_),
+                back->labelNum_
+            );
+
+            stack.push(&back.section()->entries_);
+        }};
+
+        for (auto iter{line.begin()}; iter != line.end(); ++iter) {
+            switch (reading) {
+                case Reading::Name:
+                    if (*iter == '{') {
+                        mkEnt(iter);
+
+                        if (std::next(iter) == line.end()) {
+                            convToSect();
+
+                            // Make sure line-end handler below doesn't
+                            // duplicate the entry creation.
+                            reading = Reading::Value;
+
+                            // Loop will exit on continue
+                            continue;
+                        }
+
+                        mark = std::next(iter);
+                        reading = Reading::NLabel;
+                        continue;
+                    }
+
+                    if (*iter == '(') {
+                        mkEnt(iter);
+                        reading = Reading::Label_Start;
+                        continue;
+                    }
+
+                    if (*iter == ':') {
+                        mkEnt(iter);
+
+                        // See comment in Post_Label case
+                        stack.top()->back()->value_.emplace();
+                        mark = std::next(iter);
+                        reading = Reading::Value;
+                        continue;
+                    }
+                    break;
+                case Reading::Label_Start:
+                    if (std::isspace(*iter))
+                        continue;
+
+                    if (*iter != '"') {
+                        logger.error(expectMsg("label start quote", *iter));
+                        return false;
+                    }
+
+                    mark = std::next(iter);
+                    reading = Reading::Label;
+                    break;
+                case Reading::Label:
+                    if (*iter == '"') {
+                        reading = Reading::Label_End;
+                        stack.top()->back()->label_ = {mark, iter};
+                    }
+
+                    break;
+                case Reading::Label_End:
+                    if (std::isspace(*iter))
+                        continue;
+
+                    if (*iter != ')') {
+                        logger.error(expectMsg("label end paren", *iter));
+                        return false;
+                    }
+
+                    reading = Reading::Post_Label;
+                    break;
+                case Reading::NLabel:
+                    if (std::isdigit(*iter))
+                        continue;
+
+                    if (*iter == '}') {
+                        auto res{std::from_chars(
+                            mark.base(),
+                            iter.base(),
+                            stack.top()->back()->labelNum_.emplace()
+                        )};
+
+                        if (res.ec != std::errc{}) {
+                            logger.error("Failed to parse label num (" + std::to_string(static_cast<size>(res.ec)) + ") on line " + std::to_string(lineNo));
+                            return false;
+                        }
+
+                        reading = Reading::Post_Label;
+                        continue;
+                    }
+
+                    logger.error(expectMsg("decimal digit for num label", *iter));
+                    return false;
+                case Reading::Post_Label:
+                    if (std::isspace(*iter))
+                        continue;
+
+                    if (*iter == '{') {
+                        if (std::next(iter) != line.end()) {
+                            logger.error(expectMsg("section-start to be at line end"));
+                            return false;
+                        }
+
+                        convToSect();
+                        // Loop will exit on continue
+                        continue;
+                    }
+
+                    if (*iter != ':') {
+                        logger.error(expectMsg("value-separator", *iter));
+                        return false;
+                    }
+
+                    // The presence of `:` means the value should be considered
+                    // present, even if empty (and both single- and multi-line
+                    // parsing relies on this).
+                    stack.top()->back()->value_.emplace();
+                    // Setup mark for unquoted value
+                    mark = std::next(iter);
+                    reading = Reading::Value;
+                    break;
+                case Reading::Value:
+                    if (*iter == '{') {
+                        if (std::next(iter) != line.end()) {
+                            logger.error(expectMsg("multiline-start to be at line end"));
+                            return false;
+                        }
+
+                        // The loop will exit on continue, and next reading
+                        // will be for multiline value.
+                        type = LineType::Multiline;
+                        continue;
+                    }
+
+                    [[fallthrough]];
+                case Reading::Value_Out:
+                    if (std::isspace(*iter) or *iter == ',')
+                        continue;
+
+                    if (*iter == '"') {
+                        reading = Reading::Value_In;
+                        mark = std::next(iter);
+                        continue;
+                    }
+
+                    if (reading != Reading::Value) {
+                        logger.error(expectMsg("value start quote", *iter));
+                        return false;
+                    }
+
+                    [[fallthrough]];
+                case Reading::Value_Unquoted:
+                    // This could move iter to the end and break early I guess,
+                    // or maybe have some sort of checking for a valid subset
+                    // of characters, but just leave it here and be permissive
+                    // for now.
+                    reading = Reading::Value_Unquoted;
+                    break;
+                case Reading::Value_In:
+                    if (*iter == '"') {
+                        auto& value{*stack.top()->back()->value_};
+
+                        if (not value.empty())
+                            value.push_back('\n');
+
+                        value.append(std::string_view(mark, iter));
+                        reading = Reading::Value_Out;
+                    }
+                    break;
+            }
+        }
+
+        switch (reading) {
+            case Reading::Name:
+                // The line was already checked to not be empty.
+                mkEnt(line.end());
+                break;
+            case Reading::Label_Start:
+                logger.error(expectMsg("label start quote", "line end"));
+                return false;
+            case Reading::Label:
+                logger.error(expectMsg("label end quote", "line end"));
+                return false;
+            case Reading::Label_End:
+                logger.error(expectMsg("label end paren", "line end"));
+                return false;
+            case Reading::NLabel:
+                logger.error(expectMsg("num label end brace", "line end"));
+                return false;
+            case Reading::Value_In:
+                logger.error(expectMsg("value end quote", "line end"));
+                return false;
+            case Reading::Post_Label:
+            case Reading::Value:
+            case Reading::Value_Out:
+                // All of these are find to end on, and ent has already been
+                // made, so nothing more to do.
+                break;
+            case Reading::Value_Unquoted:
+                stack.top()->back()->value_ = std::string(mark, line.end());
+                break;
         }
     }
 
     return true;
 }
-
-} // namespace
 

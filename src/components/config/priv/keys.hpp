@@ -1,9 +1,9 @@
 #pragma once
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2023-2026 Ryan Ogurek
+ * Copyright (C) 2026 Ryan Ogurek
  *
- * proffieconfig/editor/pages/general.hpp
+ * components/config/priv/keys.hpp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,29 +19,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config/config.hpp"
-#include "ui/types.hpp"
+#include "utils/types.hpp"
 
-#include "../dialogs/buttons.hpp"
-#include "../dialogs/customopts.hpp"
+/**
+ * This is largely a placeholder for a more robust system of key-access into
+ * `Config`, but I don't have a serious need nor care to do any work for that
+ * now.
+ */
+namespace config::priv::keys {
 
-struct GeneralPage {
-    GeneralPage(config::Config&);
-    void deinit();
+constexpr cstring SETTINGS_MENU_ENABLE{"Settings:Menu:Enable"};
 
-    pcui::DescriptorPtr ui();
-
-private:
-    pcui::DescriptorPtr setup();
-    pcui::DescriptorPtr misc();
-    pcui::DescriptorPtr installation();
-    pcui::DescriptorPtr tweaks();
-    pcui::DescriptorPtr editing();
-    pcui::DescriptorPtr audio();
-
-    config::Config& mConfig;
-
-    ButtonsDlg *mButtonDlg{nullptr};
-    CustomOptionsDlg *mOptionsDlg{nullptr};
-};
+} // namespace config::priv::keys
 

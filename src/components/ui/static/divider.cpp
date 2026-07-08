@@ -22,6 +22,7 @@
 #include <wx/statline.h>
 
 #include "ui/types.hpp"
+#include "wx/gdicmn.h"
 
 using namespace pcui;
 
@@ -33,9 +34,22 @@ Divider::Desc::Desc(Divider&& div) :
     Divider(std::move(div)) {}
 
 wxSizerItem *Divider::Desc::build(const detail::Scaffold& scaffold) const {
-    auto *text{new wxStaticLine(scaffold.childParent_, wxID_ANY)};
-    auto *item{new wxSizerItem(text)};
-    detail::apply(base_, item);
+    int orient{};
+    if (auto *box{dynamic_cast<wxBoxSizer *>(scaffold.sizer_)}) {
+        orient = box->GetOrientation();
+    } else {
+        // Only box sizer is used currently.
+        assert(0);
+    }
+
+    auto *line{new wxStaticLine(
+        scaffold.childParent_,
+        wxID_ANY,
+        wxDefaultPosition,
+        wxDefaultSize,
+        orient
+    )};
+    auto *item{new wxSizerItem(line, 0, wxEXPAND)};
     return item;
 }
 

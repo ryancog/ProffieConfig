@@ -99,10 +99,7 @@ pcui::DescriptorPtr InjectionsDlg::ui() {
                   .base_={.expand_=true},
                   .children_={
                     pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
-                    pcui::Divider{
-                      .base_={.expand_=true},
-                      .orient_=wxHORIZONTAL,
-                    }(),
+                    pcui::Divider{}(),
                     pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
                   }
                 }(),

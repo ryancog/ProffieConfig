@@ -46,6 +46,19 @@ namespace versions::props {
 struct Prop;
 struct Context;
 
+struct VERSIONS_EXPORT Require {
+    Require() = default;
+    Require(std::string&&);
+    Require(const Require&) = default;
+    Require(Require&&) = default;
+
+    bool operator==(const Require&) const = default;
+
+    bool external_{false};
+    bool inverted_{false};
+    std::string key_;
+};
+
 namespace detail {
 
 struct VERSIONS_EXPORT Data {
@@ -53,8 +66,8 @@ struct VERSIONS_EXPORT Data {
         std::string,
         std::string,
         std::string,
-        std::vector<std::string>,
-        std::vector<std::string>
+        std::vector<Require>,
+        std::vector<Require>
     );
     Data(Data&&) = default;
     Data(const Data&) = default;
@@ -64,8 +77,8 @@ struct VERSIONS_EXPORT Data {
     const std::string define_;
     const std::string description_;
 
-    const std::vector<std::string> required_;
-    const std::vector<std::string> requireAny_;
+    const std::vector<Require> required_;
+    const std::vector<Require> requireAny_;
 };
 
 // The consistency of these state getters generally relies on the underlying
@@ -187,7 +200,7 @@ struct VERSIONS_EXPORT Button {
     std::string name_;
 
     // <Predicate, Description>
-    std::unordered_map<std::string, std::string> descriptions_;
+    std::vector<std::pair<Require, std::string>> descriptions_;
 };
 
 /**
@@ -208,9 +221,15 @@ struct VERSIONS_EXPORT ErrorMapping {
 using Errors = std::vector<ErrorMapping>;
 
 struct VERSIONS_EXPORT Layout {
+    struct Divider {};
+
     wxOrientation orient_;
     wxString label_;
-    std::vector<std::variant<std::string, Layout>> children_;
+    std::vector<std::variant<std::string, Divider, Layout>> children_;
+};
+
+struct VERSIONS_EXPORT MenuSupport {
+    std::string defaultSpecTemplate_;
 };
 
 struct VERSIONS_EXPORT PropData {
@@ -223,6 +242,7 @@ struct VERSIONS_EXPORT PropData {
         std::string name,
         std::string filename,
         std::string info,
+        std::optional<MenuSupport> menuSupport,
         std::vector<std::unique_ptr<detail::Data>> settings,
         std::map<uint32, Buttons> buttons,
         Layout layout,
@@ -230,6 +250,7 @@ struct VERSIONS_EXPORT PropData {
     ) : name_(std::move(name)),
         filename_(std::move(filename)),
         info_(std::move(info)),
+        menuSupport_(std::move(menuSupport)),
         settings_(std::move(settings)),
         buttons_(std::move(buttons)),
         layout_(std::move(layout)),
@@ -243,6 +264,8 @@ struct VERSIONS_EXPORT PropData {
     std::string name_;
     std::string filename_;
     std::string info_;
+
+    std::optional<MenuSupport> menuSupport_;
 
     std::vector<std::unique_ptr<detail::Data>> settings_;
     std::map<uint32, Buttons> buttons_;
@@ -259,6 +282,15 @@ struct VERSIONS_EXPORT Prop : data::hier::Model, data::Receiver {
         data::hier::Root&, std::string_view, std::string_view
     );
 
+    enum class ExternalRequireResult {
+        Inactive,
+        Active,
+        Not_Found,
+    };
+    using ExternalRequireProcessor = ExternalRequireResult (*)(
+        data::hier::Root&, std::string_view
+    );
+
     [[nodiscard]] std::span<const std::unique_ptr<detail::SettingBase>>
         settings() const { return mSettings; }
     [[nodiscard]] const Buttons *buttons(uint32 numButtons) const;
@@ -270,6 +302,8 @@ struct VERSIONS_EXPORT Prop : data::hier::Model, data::Receiver {
 
     void migrateFrom(const Prop&);
 
+    void markExternalModified(std::string_view);
+
     using Model::children;
     std::vector<const Model *> children() const override;
 
@@ -278,11 +312,14 @@ struct VERSIONS_EXPORT Prop : data::hier::Model, data::Receiver {
     const std::string filename_;
     const std::string info_;
 
+    const std::optional<MenuSupport> menuSupport_;
+
 private:
     friend VERSIONS_EXPORT std::vector<std::unique_ptr<Prop>> forVersion(
         const utils::Version&,
         data::hier::Root&,
-        Prop::RecommendProcessor
+        Prop::RecommendProcessor,
+        Prop::ExternalRequireProcessor
     );
 
     Prop(
@@ -291,15 +328,18 @@ private:
         std::string name,
         std::string filename,
         std::string info,
+        std::optional<MenuSupport> menuSupport,
         std::map<uint32, Buttons> buttons,
         Layout layout,
         Errors errors
     );
 
     void rebuildLookup(logging::Branch * = nullptr);
+    void recomputeState(detail::SettingBase&);
     void onSet(const data::base::Model&);
 
     RecommendProcessor mRecProc;
+    ExternalRequireProcessor mExtReqProc;
 
     std::vector<std::unique_ptr<detail::SettingBase>> mSettings;
     const std::map<uint32, Buttons> mButtons;
@@ -318,12 +358,18 @@ private:
     //
     // E.g. If `OPTION1` `REQUIRES` `OPTION2`, then the mapping is:
     // mReqMap[`OPTION2`] = {`OPTION1`}
-    RelationMap mReqMap;
+    RelationMap mRequiredByMap;
     // <Disabled, Disabled By>
     //
     // E.g. If `OPTION1` `DISABLE`s `OPTION2`, then the mapping is:
     // mReqMap[`OPTION2`] = {`OPTION1`}
-    RelationMap mDisMap;
+    RelationMap mDisabledByMap;
+
+    using ExtRelationMap = std::unordered_map<
+        std::string_view, std::set<detail::SettingBase *>
+    >;
+    // <Ext Key, Setting>
+    ExtRelationMap mExtReqMap;
 };
 
 struct VERSIONS_EXPORT Available : data::prim::Model {
@@ -348,7 +394,8 @@ struct VERSIONS_EXPORT Versioned : Available {
 [[nodiscard]] VERSIONS_EXPORT std::vector<std::unique_ptr<Prop>> forVersion(
     const utils::Version&,
     data::hier::Root&,
-    Prop::RecommendProcessor
+    Prop::RecommendProcessor,
+    Prop::ExternalRequireProcessor
 );
 
 } // namespace versions::props

@@ -93,7 +93,7 @@ private:
     );
 };
 
-struct PCONF_EXPORT Section : public Entry {
+struct PCONF_EXPORT Section : Entry {
     [[nodiscard]] static SectionPtr create(
         std::string name,
         std::optional<std::string> label = std::nullopt,
