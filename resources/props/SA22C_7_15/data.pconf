@@ -9,7 +9,9 @@ INFO: {
 SETTINGS {
 	TOGGLE("SA22C_STAB_ON") {
 		NAME: "Stab to Turn On"
-		DESCRIPTION: "A quick "stab" motion will ignite the saber." 
+		DESCRIPTION: {
+			"A quick "stab" motion will ignite the saber."
+		}
 	}
 	TOGGLE("SA22C_SWING_ON") {
 		NAME: "Swing to Turn On"
@@ -26,15 +28,21 @@ SETTINGS {
 	}
 	TOGGLE("SA22C_THRUST_ON") {
 		NAME: "Thrust to Turn On"
-		DESCRIPTION: "A quick "thrust" motion will ignite the saber."
+		DESCRIPTION: {
+			"A quick "thrust" motion will ignite the saber."
+		}
 	}
 	TOGGLE("SA22C_TWIST_ON") {
 		NAME: "Twist to Turn On"
-		DESCRIPTION: "A quick "twist" motion will ignite the saber."
+		DESCRIPTION: {
+			"A quick "twist" motion will ignite the saber."
+		}
 	}
 	TOGGLE("SA22C_TWIST_OFF") {
 		NAME: "Twist to Turn Off"
-		DESCRIPTION: "A quick "twist" motion will retract the saber."
+		DESCRIPTION: {
+			"A quick "twist" motion will retract the saber."
+		}
 	}
 
 	TOGGLE("SA22C_NO_LOCKUP_HOLD") {
@@ -44,7 +52,9 @@ SETTINGS {
 
 	TOGGLE("SA22C_FORCE_PUSH") {
 		NAME: "Enable Force Push"
-		DESCRIPTION: "Enable force push sound effects when doing a "push" gesture with the saber."
+		DESCRIPTION: {
+			"Enable force push sound effects when doing a "push" gesture with the saber."
+		}
 	}
 	NUMERIC("SA22C_FORCE_PUSH_LENGTH") {
 		NAME: "Force Push Length"

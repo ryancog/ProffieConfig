@@ -204,7 +204,7 @@ BUTTONS{3} {
 			DESCRIPTION("CAIWYN_BUTTON_LOCKUP"): "Lockup"
 		}
 		BUTTON("Hold Aux2 and Press Aux") {
-			DESCRIPTION("CAIWYN_BUTTON_LOCKUP", "CAIWYN_BUTTON_CLASH"): "Lightning Block"
+			DESCRIPTION("CAIWYN_BUTTON_LOCKUP"): "Lightning Block"
 		}
 		BUTTON("Double Click and Hold Aux") {
 			DESCRIPTION: "Enter Volume Menu (first click will trigger blaster block)"

@@ -67,25 +67,35 @@ SETTINGS {
 	}
 	TOGGLE("BC_STAB_ON") {
 		NAME: "Stab to Turn On"
-		DESCRIPTION: "A quick "stab" motion will ignite the saber." 
+		DESCRIPTION: {
+			"A quick "stab" motion will ignite the saber."
+		}
 	}
 	TOGGLE("BC_THRUST_ON") {
 		NAME: "Thrust to Turn On"
-		DESCRIPTION: "A quick "thrust" motion will ignite the saber."
+		DESCRIPTION: {
+			"A quick "thrust" motion will ignite the saber."
+		}
 	}
 	TOGGLE("BC_TWIST_ON") {
 		NAME: "Twist to Turn On"
-		DESCRIPTION: "A quick "twist" motion will ignite the saber."
+		DESCRIPTION: {
+			"A quick "twist" motion will ignite the saber."
+		}
 	}
 	TOGGLE("BC_TWIST_OFF") {
 		NAME: "Twist to Turn Off"
-		DESCRIPTION: "A quick "twist" motion will retract the saber."
+		DESCRIPTION: {
+			"A quick "twist" motion will retract the saber."
+		}
 	}
 
 
 	TOGGLE("BC_FORCE_PUSH") {
 		NAME: "Enable Force Push"
-		DESCRIPTION: "Enable force push sound effects when doing a "push" gesture with the saber."
+		DESCRIPTION: {
+			"Enable force push sound effects when doing a "push" gesture with the saber."
+		}
 	}
 	NUMERIC("BC_FORCE_PUSH_LENGTH") {
 		NAME: "Force Push Length"
@@ -221,7 +231,7 @@ BUTTONS{1} {
 		}
 		BUTTON("Hold and Clash") {
 			DESCRIPTION("BC_NO_BM"): "Lockup"
-			DESCRIPTION: "Lockup (in Battle Mode, clash and stay there; pull away to end)")
+			DESCRIPTION: "Lockup (in Battle Mode, clash and stay there; pull away to end)"
 		}
 		BUTTON("Hold and Clash while Pointing Down") {
 			DESCRIPTION: "Drag"
@@ -347,7 +357,7 @@ BUTTONS{2} {
 		}
 		BUTTON("Hold Aux and Clash") {
 			DESCRIPTION("BC_NO_BM"): "Lockup"
-			DESCRIPTION: "Lockup (in Battle Mode, clash and stay there; pull away to end)")
+			DESCRIPTION: "Lockup (in Battle Mode, clash and stay there; pull away to end)"
 		}
 		BUTTON("Hold Aux and Clash while Pointing Down") {
 			DESCRIPTION: "Drag"
