@@ -221,9 +221,11 @@ struct VERSIONS_EXPORT ErrorMapping {
 using Errors = std::vector<ErrorMapping>;
 
 struct VERSIONS_EXPORT Layout {
+    struct Divider {};
+
     wxOrientation orient_;
     wxString label_;
-    std::vector<std::variant<std::string, Layout>> children_;
+    std::vector<std::variant<std::string, Divider, Layout>> children_;
 };
 
 struct VERSIONS_EXPORT MenuSupport {

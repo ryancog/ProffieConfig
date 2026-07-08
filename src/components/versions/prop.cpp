@@ -23,6 +23,7 @@
 #include <optional>
 #include <unordered_set>
 #include <utility>
+#include <variant>
 
 #include "data/context.hpp"
 #include "data/logic/adapter.hpp"
@@ -37,6 +38,7 @@
 #include "ui/layout/group.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
+#include "ui/static/divider.hpp"
 #include "ui/types.hpp"
 #include "ui/values.hpp"
 #include "utils/string.hpp"
@@ -505,6 +507,15 @@ pcui::DescriptorPtr Prop::layout() {
 
         const auto& child{*layers.back().iter_};
         ++layers.back().iter_;
+
+        if (std::holds_alternative<Layout::Divider>(child)) {
+            auto& children{layers.back().children()};
+            children.push_back(pcui::Spacer{
+              .size_=pcui::interControlSpacing()
+            }());
+            children.push_back(pcui::Divider{}());
+            continue;
+        }
 
         if (const auto *id{std::get_if<std::string>(&child)}) {
             auto iter{mMap.find(*id)};
@@ -1290,6 +1301,11 @@ Layout parseLayout(
             layers.back().layout_.children_.emplace_back(*entry->label_);
             continue;
         } 
+
+        if (entry->name_ == "DIVIDER") {
+            layers.back().layout_.children_.emplace_back(Layout::Divider{});
+            continue;
+        }
 
         wxOrientation orient{};
         if (entry->name_ == "HORIZONTAL") {
