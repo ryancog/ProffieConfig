@@ -347,6 +347,13 @@ void Config::syncStyles() {
     }
 }
 
+data::hier::Model *Config::getByKey(std::string_view key) {
+    if (key == priv::keys::SETTINGS_MENU_ENABLE)
+        return &settings_.menu_.enable_;
+
+    return nullptr;
+}
+
 void Config::cache(std::unique_ptr<utils::Data>&& data) {
     mCache[hash()] = std::move(data);
 }
@@ -450,14 +457,9 @@ Config::processPropExternalRequire(
     using enum versions::props::Prop::ExternalRequireResult;
     auto& config{dynamic_cast<Config&>(root)};
 
-    const auto get{[](data::hier::Bool& b) {
-        return data::context(b).val()
-            ? Active
-            : Inactive;
-    }};
-
-    if (key == priv::keys::SETTINGS_MENU_ENABLE)
-        return get(config.settings_.menu_.enable_);
+    auto *setting{config.getByKey(key)};
+    if (auto *blSet{dynamic_cast<data::hier::Bool *>(setting)})
+        return data::context(*blSet).val() ? Active : Inactive;
 
     return Not_Found;
 }

@@ -83,6 +83,8 @@ struct CONFIG_EXPORT Config : data::hier::Root, data::Receiver {
     void calcNumBlades();
     void syncStyles();
 
+    [[nodiscard]] data::hier::Model *getByKey(std::string_view);
+
     void cache(std::unique_ptr<utils::Data>&&);
     [[nodiscard]] utils::Data *cache() const;
 
