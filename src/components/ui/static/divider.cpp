@@ -49,7 +49,7 @@ wxSizerItem *Divider::Desc::build(const detail::Scaffold& scaffold) const {
         wxDefaultSize,
         orient
     )};
-    auto *item{new wxSizerItem(line)};
+    auto *item{new wxSizerItem(line, 0, wxEXPAND)};
     return item;
 }
 
