@@ -68,7 +68,7 @@ INFO: {
 	"EFFECT_USER5 through 8 work when blade is OFF."
 	"USER 3, 4, 7, 8 are done "while pointing up" on 1 button setups, or the AUX button for 2 button sabers."
 	""
-	"EFFECT_POWERSAVE        - PowerSave Dim Blade. Blade style should use a Mix or an AlphaL that applies"
+	"EFFECT_POWERSAVE		 - PowerSave Dim Blade. Blade style should use a Mix or an AlphaL that applies"
 	"													a transparent amount of Black to the base blade color."
 	"													Layer example: 50% brightness reduction"
 	"													EffectSequence<EFFECT_POWERSAVE,AlphaL<Black,Int<16384>>,AlphaL<Black,Int<0>>>"
@@ -223,111 +223,112 @@ BUTTONS{1} {
 		}
 		BUTTON("2 clicks held") {
 			DESCRIPTION: "blade length edit"
-            DESCRIPTION("@Settings:Menu:Enable"): "OS system menu"
+			DESCRIPTION("@Settings:Menu:Enable"): "OS system menu"
 		}
 		BUTTON("3 clicks") {
-            DESCRIPTION: "quote"
-        }
+			DESCRIPTION: "quote"
+		}
 		BUTTON("3 clicks pointing down") {
-            DESCRIPTION: "toggle sequential or random quotes"
-        }
+			DESCRIPTION: "toggle sequential or random quotes"
+		}
 		BUTTON("3 clicks long") {
-            DESCRIPTION: "on-demand battery level"
-        }
+			DESCRIPTION: "on-demand battery level"
+		}
 		BUTTON("3 clicks held") {
-            DESCRIPTION: "spoken battery level in percentage"
-        }
+			DESCRIPTION: "spoken battery level in percentage"
+		}
 		BUTTON("3 clicks held pointing down") {
-            DESCRIPTION: "spoken battery level in volts"
-        }
+			DESCRIPTION: "spoken battery level in volts"
+		}
 		BUTTON("4 clicks") {
-            DESCRIPTION: "play / stop track"
-        }
+			DESCRIPTION: "play / stop track"
+		}
 		BUTTON("4 clicks long") {
-            DESCRIPTION: "manually trigger blade ID scan"
-        }
+			DESCRIPTION: "manually trigger blade ID scan"
+		}
 		BUTTON("4 clicks held") {
-            DESCRIPTION: "manually switch to next blade array"
-        }
-    }
-    STATE("in volume menu") {
-        BUTTON("rotate right") {
-            DESCRIPTION: "volume UP"
-        }
-        BUTTON("rotate left") {
-            DESCRIPTION: "volume DOWN"
-        }
-        BUTTON("1 click held") {
-            DESCRIPTION: "quick MAX volume"
-        }
-        BUTTON("2 clicks held") {
-            DESCRIPTION: "quick MIN volume"
-        }
-    }
-    STATE("ON") {
-        BUTTON("1 click") {
-            DESCRIPTION: "blaster deflection"
-        }
-        BUTTON("1 click held") {
-            DESCRIPTION: "turn blade OFF"
-        }
-        BUTTON("1 click held pointing up") {
-            DESCRIPTION: "turn blade OFF bypass postoff"
-        }
-        BUTTON("1 click held then twist pointing up") {
-            DESCRIPTION: "first preset fast"
-        }
-        BUTTON("1 click held then twist") {
-            DESCRIPTION: "next preset fast"
-        }
-        BUTTON("1 click held then twist pointing down") {
-            DESCRIPTION: "previous preset fast"
-        }
-        BUTTON("1 click held then clash") {
-            DESCRIPTION: "lockup"
-        BUTTON("1 click held then clash pointing down") {
-            DESCRIPTION: "drag"
-        }
-        BUTTON("1 click held then rotate left") {
-            DESCRIPTION: "user effect 1"
-        }
-        BUTTON("1 click held then rotate right") {
-            DESCRIPTION: "user effect 2"
-        }
-        BUTTON("2 clicks") {
-            DESCRIPTION: "blaster deflection"
-        }
-        BUTTON("2 clicks long") {
-            DESCRIPTION: "force"
-        }
-        BUTTON("2 clicks long pointing up") {
-            DESCRIPTION: "toggle battle mode"
-        }
-        BUTTON("2 clicks held") {
-            DESCRIPTION: "lightning block"
-        }
-        BUTTON("3 clicks") {
-            DESCRIPTION: "quote"
-        }
-        BUTTON("3 clicks pointing down") {
-            DESCRIPTION: "toggle sequential or random quotes"
-        }
-        BUTTON("3 clicks long") {
-            DESCRIPTION: "revert colorchange to config"
-        }
-        BUTTON("3 clicks held") {
-            DESCRIPTION: "color change mode"
-        }
-        BUTTON("4 clicks") {
-            DESCRIPTION: "play / stop track"
-        }
-        BUTTON("4 clicks held pointing up") {
-            DESCRIPTION: "dim"
-        }
-        BUTTON("4 clicks held pointing down")
-            DESCRIPTION: "toggle spam blasts"
-        }
-    }
+			DESCRIPTION: "manually switch to next blade array"
+		}
+	}
+	STATE("in volume menu") {
+		BUTTON("rotate right") {
+			DESCRIPTION: "volume UP"
+		}
+		BUTTON("rotate left") {
+			DESCRIPTION: "volume DOWN"
+		}
+		BUTTON("1 click held") {
+			DESCRIPTION: "quick MAX volume"
+		}
+		BUTTON("2 clicks held") {
+			DESCRIPTION: "quick MIN volume"
+		}
+	}
+	STATE("ON") {
+		BUTTON("1 click") {
+			DESCRIPTION: "blaster deflection"
+		}
+		BUTTON("1 click held") {
+			DESCRIPTION: "turn blade OFF"
+		}
+		BUTTON("1 click held pointing up") {
+			DESCRIPTION: "turn blade OFF bypass postoff"
+		}
+		BUTTON("1 click held then twist pointing up") {
+			DESCRIPTION: "first preset fast"
+		}
+		BUTTON("1 click held then twist") {
+			DESCRIPTION: "next preset fast"
+		}
+		BUTTON("1 click held then twist pointing down") {
+			DESCRIPTION: "previous preset fast"
+		}
+		BUTTON("1 click held then clash") {
+			DESCRIPTION: "lockup"
+		}
+		BUTTON("1 click held then clash pointing down") {
+			DESCRIPTION: "drag"
+		}
+		BUTTON("1 click held then rotate left") {
+			DESCRIPTION: "user effect 1"
+		}
+		BUTTON("1 click held then rotate right") {
+			DESCRIPTION: "user effect 2"
+		}
+		BUTTON("2 clicks") {
+			DESCRIPTION: "blaster deflection"
+		}
+		BUTTON("2 clicks long") {
+			DESCRIPTION: "force"
+		}
+		BUTTON("2 clicks long pointing up") {
+			DESCRIPTION: "toggle battle mode"
+		}
+		BUTTON("2 clicks held") {
+			DESCRIPTION: "lightning block"
+		}
+		BUTTON("3 clicks") {
+			DESCRIPTION: "quote"
+		}
+		BUTTON("3 clicks pointing down") {
+			DESCRIPTION: "toggle sequential or random quotes"
+		}
+		BUTTON("3 clicks long") {
+			DESCRIPTION: "revert colorchange to config"
+		}
+		BUTTON("3 clicks held") {
+			DESCRIPTION: "color change mode"
+		}
+		BUTTON("4 clicks") {
+			DESCRIPTION: "play / stop track"
+		}
+		BUTTON("4 clicks held pointing up") {
+			DESCRIPTION: "dim"
+		}
+		BUTTON("4 clicks held pointing down") {
+			DESCRIPTION: "toggle spam blasts"
+		}
+	}
 }
 
 BUTTONS{2} {
@@ -373,20 +374,20 @@ BUTTONS{2} {
 		}
 		BUTTON("2 clicks held") {
 			DESCRIPTION: "blade length edit"
-            DESCRIPTION("@Settings:Menu:Enable"): "OS system menu"
+			DESCRIPTION("@Settings:Menu:Enable"): "OS system menu"
 		}
 		BUTTON("3 clicks POW") {
-            DESCRIPTION: "quote"
-        }
+			DESCRIPTION: "quote"
+		}
 		BUTTON("3 clicks POW pointing down") {
-            DESCRIPTION: "toggle sequential or random quotes"
-        }
+			DESCRIPTION: "toggle sequential or random quotes"
+		}
 		BUTTON("4 clicks long") {
-            DESCRIPTION: "manually trigger blade ID scan"
-        }
+			DESCRIPTION: "manually trigger blade ID scan"
+		}
 		BUTTON("4 clicks held") {
-            DESCRIPTION: "manually switch to next blade array"
-        }
+			DESCRIPTION: "manually switch to next blade array"
+		}
 		BUTTON("Hold AUX then click POW") {
 			DESCRIPTION: "spoken battery level in percentage"
 		}
@@ -401,19 +402,19 @@ BUTTONS{2} {
 		}
 	}
 	STATE("in volume menu") {
-        BUTTON("rotate right") {
-            DESCRIPTION: "volume UP"
-        }
-        BUTTON("rotate left") {
-            DESCRIPTION: "volume DOWN"
-        }
-        BUTTON("1 click POW held") {
-            DESCRIPTION: "quick MAX volume"
-        }
-        BUTTON("1 click AUX held") {
-            DESCRIPTION: "quick MIN volume"
-        }
-    }
+		BUTTON("rotate right") {
+			DESCRIPTION: "volume UP"
+		}
+		BUTTON("rotate left") {
+			DESCRIPTION: "volume DOWN"
+		}
+		BUTTON("1 click POW held") {
+			DESCRIPTION: "quick MAX volume"
+		}
+		BUTTON("1 click AUX held") {
+			DESCRIPTION: "quick MIN volume"
+		}
+	}
 	STATE("ON") {
 		BUTTON("1 click POW") {
 			DESCRIPTION: "blaster deflection"
@@ -470,20 +471,20 @@ BUTTONS{2} {
 			DESCRIPTION: "blaster deflection"
 		}
 		BUTTON("3 clicks POW") {
-            DESCRIPTION: "quote"
-        }
+			DESCRIPTION: "quote"
+		}
 		BUTTON("3 clicks POW pointing down") {
-            DESCRIPTION: "toggle sequential or random quotes"
-        }
+			DESCRIPTION: "toggle sequential or random quotes"
+		}
 		BUTTON("3 clicks POW long") {
-            DESCRIPTION: "revert colorchange to config"
-        }
+			DESCRIPTION: "revert colorchange to config"
+		}
 		BUTTON("3 clicks POW held") {
-            DESCRIPTION: "color change mode"
-        }
+			DESCRIPTION: "color change mode"
+		}
 		BUTTON("4 clicks POW held pointing down") {
-            DESCRIPTION: "toggle spam blasts"
-        }
+			DESCRIPTION: "toggle spam blasts"
+		}
 		BUTTON("Hold POW then click AUX") {
 			DESCRIPTION: "lightning block"
 		}
@@ -503,6 +504,6 @@ BUTTONS{2} {
 }
 
 MENU_SUPPORT {
-    DEFAULT: "BcMenuSpec"
+	DEFAULT: "BcMenuSpec"
 }
 
