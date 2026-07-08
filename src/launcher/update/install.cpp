@@ -103,8 +103,10 @@ bool Update::pullNewFiles(
             case wxWebRequest::State_Unauthorized:
             case wxWebRequest::State_Failed:
             case wxWebRequest::State_Cancelled:
-            default:
                 requestPromise.set_value(true);
+                break;
+            case wxWebRequestBase::State_Idle:
+            case wxWebRequestBase::State_Active:
                 break;
         }
     }};
@@ -195,17 +197,19 @@ bool Update::pullNewFiles(
                 std::promise<void> cancelPromise;
                 const auto doCancel{[&] {
                     request.Cancel();
+                    cancelPromise.set_value();
                 }};
                 wxTheApp->CallAfter(doCancel);
                 cancelPromise.get_future().get();
 
                 fs::remove_all(stagingFolder(), ec);
 
+                prog->finish(false);
                 return false;
             }
         }
 
-        if (future.get() == false) {
+        if (not future.get()) {
             // Error should've been logged above.
             prog->finish(true, _("Failed processing downloaded file."));
 

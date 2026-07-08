@@ -162,6 +162,9 @@ public:
         } else if (action_ == Action::Uninstall) {
             uninstall();
         }
+
+        // Procedure is done or error occurred, exit.
+        wxExit();
     }
 
     void checkAndUpdate() const {
@@ -223,11 +226,12 @@ public:
         prog.show();
 
         if (not Update::pullNewFiles(changelog, data.value(), &prog, *logger.binfo("Downloading new files..."))) {
-            prog.finish(false);
+            // pullNewFiles() handles prog finish
 
             logger.info("Aborting update after failed download.");
 
-            if (action_ == Action::Launch) routine::launch(*logger.binfo("Launching..."));
+            if (action_ == Action::Launch)
+                routine::launch(*logger.binfo("Launching..."));
             return;
         }
 
