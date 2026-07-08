@@ -245,15 +245,21 @@ SETTINGS {
 
 	TOGGLE("FETT263_DISABLE_CHANGE_FONT") {
 		NAME: "Disable Change Font"
-		DESCRIPTION: "Disables the "on-the-fly" Change Font option"
+		DESCRIPTION: {
+			"Disables the "on-the-fly" Change Font option"
+		}
 	}
 	TOGGLE("FETT263_DISABLE_CHANGE_STYLE") {
 		NAME: "Disable Change Style"
-		DESCRIPTION: "Disables the "on-the-fly" Change Style option"
+		DESCRIPTION: {
+			"Disables the "on-the-fly" Change Style option"
+		}
 	}
 	TOGGLE("FETT263_DISABLE_COPY_PRESET") {
 		NAME: "Disable Copy Preset"
-		DESCRIPTION: "Disables the "on-the-fly" Copy Preset option"
+		DESCRIPTION: {
+			"Disables the "on-the-fly" Copy Preset option"
+		}
 	}
 	TOGGLE("FETT263_DISABLE_BM_TOGGLE") {
 		NAME: "Disable Battle Mode Toggle"
