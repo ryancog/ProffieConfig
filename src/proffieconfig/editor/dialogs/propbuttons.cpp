@@ -202,10 +202,6 @@ void PropButtonsDlg::rebuildUI() {
         pcui::Stack controlStack{
           .base_={.minSize_={width, -1}},
         };
-        pcui::Divider divider{
-          .base_={.expand_=true},
-          .orient_=wxVERTICAL,
-        };
         pcui::Stack descStack;
 
         bool any{false};
@@ -263,7 +259,7 @@ void PropButtonsDlg::rebuildUI() {
         group.children_.add(pcui::DynamicList{
             controlStack(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-            divider(),
+            pcui::Divider{}(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             descStack(),
         });

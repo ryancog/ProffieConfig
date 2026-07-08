@@ -124,7 +124,7 @@ pcui::DescriptorPtr onboard::Frame::ui() {
           }
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
-        pcui::Divider{.base_={.expand_=true}}(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         pcui::Stack{
           .base_={

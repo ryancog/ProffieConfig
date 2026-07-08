@@ -19,9 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/gdicmn.h>
-
-#include "ui/detail/general.hpp"
 #include "ui/types.hpp"
 
 #include "ui_export.h"
@@ -30,11 +27,6 @@ namespace pcui {
 
 struct UI_EXPORT Divider {
     struct Desc;
-
-    // TODO: Make these base w/ C++ P2287.
-    detail::ChildBase base_;
-    wxOrientation orient_{wxHORIZONTAL};
-
     DescriptorPtr operator()();
 };
 

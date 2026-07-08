@@ -230,10 +230,7 @@ pcui::DescriptorPtr GeneralPage::installation() {
           }(),
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Divider{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Labeled{
           .win_={
@@ -301,10 +298,7 @@ pcui::DescriptorPtr GeneralPage::installation() {
           }
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Divider{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::CheckBox{
           .win_={
@@ -314,10 +308,7 @@ pcui::DescriptorPtr GeneralPage::installation() {
           .data_=mConfig.settings_.enableOled_,
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Divider{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Button{
           .win_={
@@ -483,10 +474,7 @@ pcui::DescriptorPtr GeneralPage::editing() {
           .data_=mConfig.settings_.enableAllEditOptions_,
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Divider{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::CheckBox{
           .win_={
@@ -522,10 +510,7 @@ pcui::DescriptorPtr GeneralPage::editing() {
           .data_=mConfig.settings_.saveClashThreshold_,
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Divider{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::CheckBox{
           .label_=_("Dynamic Blade Dimming"),
@@ -555,10 +540,7 @@ pcui::DescriptorPtr GeneralPage::editing() {
             .orient_=wxVERTICAL,
             .children_={
               pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-              pcui::Divider{
-                .base_={.expand_=true},
-                .orient_=wxHORIZONTAL
-              }(),
+              pcui::Divider{}(),
               pcui::Spacer{.size_=pcui::interControlSpacing()}(),
               pcui::CheckBox{
                 .win_={
@@ -634,10 +616,7 @@ pcui::DescriptorPtr GeneralPage::audio() {
           }
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Divider{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::CheckBox{
           .label_=_("Enable Filtering"),
@@ -672,10 +651,7 @@ pcui::DescriptorPtr GeneralPage::audio() {
           }(),
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Divider{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Labeled{
           .win_={.base_={.expand_=true}},

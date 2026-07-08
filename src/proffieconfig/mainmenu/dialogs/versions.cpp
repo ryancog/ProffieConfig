@@ -211,10 +211,7 @@ pcui::DescriptorPtr VersionsDlg::props() {
           }
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
-        pcui::Divider{
-            .base_={.expand_=true},
-            .orient_=wxVERTICAL,
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         pcui::Stack{
           .base_={.expand_=true},
@@ -325,10 +322,7 @@ pcui::DescriptorPtr VersionsDlg::propInfo(data::base::Model *model) {
           .font_=pcui::Font::Header,
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Divider{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL,
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         pcui::Label{
           .label_=wxString::Format(_("Display Name: %s"), data.name_),
@@ -431,10 +425,7 @@ pcui::DescriptorPtr VersionsDlg::os() {
           }
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
-        pcui::Divider{
-            .base_={.expand_=true},
-            .orient_=wxVERTICAL,
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         pcui::Stack{
           .base_={.expand_=true},
@@ -547,10 +538,7 @@ pcui::DescriptorPtr VersionsDlg::osInfo(data::base::Model *model) {
           .font_=pcui::Font::Header,
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Divider{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL,
-        }(),
+        pcui::Divider{}(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         pcui::Label{
           .label_=wxString::Format(
