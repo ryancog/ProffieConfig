@@ -708,7 +708,10 @@ void VersionsDlg::onPropInstallButton() {
                 break;
         }
 
-        mPropSel.choice().choose(static_cast<int32>(idx));
+        // Loading the downloaded prop could fail, and it might not be
+        // available!
+        if (idx != children.size())
+            mPropSel.choice().choose(static_cast<int32>(idx));
     }}.detach();
 }
 
