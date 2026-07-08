@@ -1374,6 +1374,7 @@ Buttons parseButtons(
             }
 
             inherit = &iter->second;
+            continue;
         }
 
         if (stateEntry->name_ != "STATE") {
