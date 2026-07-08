@@ -24,6 +24,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <wx/gdicmn.h>
@@ -50,7 +51,10 @@ struct VERSIONS_EXPORT Require {
     Require() = default;
     Require(std::string&&);
     Require(const Require&) = default;
+#   if not _MSC_VER
+    // move ctor breaks MSVC??
     Require(Require&&) = default;
+#   endif
 
     bool operator==(const Require&) const = default;
 
