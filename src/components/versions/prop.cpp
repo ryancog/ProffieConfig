@@ -1270,10 +1270,10 @@ std::optional<std::pair<detail::Data, pconf::HashedData>> parseSettingCommon(
     const auto requireAnyEntry{data.find("REQUIREANY")};
     if (requireAnyEntry and requireAnyEntry->value_) {
         auto rawVec{pconf::valueAsList(requireAnyEntry->value_)};
-        required.reserve(rawVec.size());
+        requireAny.reserve(rawVec.size());
 
         for (auto& raw : rawVec)
-            required.emplace_back(std::move(raw));
+            requireAny.emplace_back(std::move(raw));
 
         data.erase(requireAnyEntry);
     }
