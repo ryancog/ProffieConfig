@@ -959,42 +959,38 @@ std::vector<std::unique_ptr<Prop>> versions::props::forVersion(
         prop.mExtReqProc = extReqProc;
 
         for (const auto& set : data.settings_) {
-            data::base::Model *model{nullptr};
-            detail::SettingBase *setting{nullptr};
+            detail::SettingBase *setting{};
+
+            using OptSelData = Option::SelectionData;
 
             if (auto *ptr{dynamic_cast<ToggleData *>(set.get())}) {
                 auto *toggle{new Toggle(prop, *ptr)};
                 setting = toggle;
-                model = toggle;
             } else if (auto *ptr{dynamic_cast<OptionData *>(set.get())}) {
                 auto *option{new Option(prop, *ptr)};
                 setting = option;
-                model = option;
             } else if (auto *ptr{dynamic_cast<IntegerData *>(set.get())}) {
                 auto *integer{new Integer(prop, *ptr)};
                 setting = integer;
-                model = integer;
             } else if (auto *ptr{dynamic_cast<DecimalData *>(set.get())}) {
                 auto *decimal{new Decimal(prop, *ptr)};
                 setting = decimal;
-                model = decimal;
+            } else if (auto *ptr{dynamic_cast<OptSelData *>(set.get())}) {
+                // This is present in PropData, but isn't added to
+                // Prop::mSettings. I don't really remember the justifications
+                // for why, probably there's a lot of "that's the way it was"
+                // and not wanting to bother things.
+                continue;
+            } else {
+                std::unreachable();
             }
 
-            if (setting)
-                prop.mSettings.emplace_back(setting);
-
-            if (
-                    model and 
-                    (not set->requireAny_.empty() or
-                     not set->required_.empty())
-               ) {
-                model->disable();
-            }
+            prop.mSettings.emplace_back(setting);
         }
 
         prop.rebuildLookup();
 
-        for (const auto& setting : prop.mSettings) {
+        for (auto& setting : prop.mSettings) {
             static const auto table{[] {
                 data::base::Bool::RecvTable table;
                 table.onSet_ = data::map<&Prop::onSet>();
@@ -1006,6 +1002,22 @@ std::vector<std::unique_ptr<Prop>> versions::props::forVersion(
             } else if (auto *ptr{dynamic_cast<Option *>(setting.get())}) {
                 for (auto *model : ptr->children())
                     prop.respondWith(*model, table);
+            }
+        }
+
+        // Now, the prop is setup, all settings are added, the lookup tables
+        // are built, and responders are registered. Recompute the state of
+        // all settings to make sure they're correct.
+        for (auto& setting : prop.mSettings) {
+            prop.recomputeState(*setting);
+
+            if (auto *ptr{dynamic_cast<Option *>(setting.get())}) {
+                for (auto& child : ptr->children()) {
+                    // All children are Option::Selection, and need to be
+                    // recomputed themselves also.
+                    auto& setting{dynamic_cast<detail::SettingBase&>(*child)};
+                    prop.recomputeState(setting);
+                }
             }
         }
     }
