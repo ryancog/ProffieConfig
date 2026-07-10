@@ -403,7 +403,7 @@ void Settings::ProcessDefinesAction::perform() {
     using namespace priv;
 
     // First for builtins
-    for (auto idx{0}; idx < defines.children().size(); ++idx) {
+    for (size idx{0}; idx < defines.children().size(); ++idx) {
         auto& define{dynamic_cast<settings::Define&>(
             *defines.children()[idx]
         )};
@@ -416,16 +416,39 @@ void Settings::ProcessDefinesAction::perform() {
 
     auto& config{settings.root<Config>()};
     if (auto propVec{config.propVec()}) {
-        for (auto idx{0}; idx < defines.children().size(); ++idx) {
+        // So, interestingly, this can be reentrant if a prop setting has
+        // RECOMMENDS entries, which will cause a new define to be added, then
+        // this action is re-performed.
+        //
+        // To handle this, the index variable is handled as a flag, tracking
+        // re-entrancy. By checking if the idx is set to "done" value (~0),
+        // it can know if processing should proceed after call.
+        //
+        // See also the handling in processPropDefine.
+        thread_local size idx;
+
+        // It doesn't matter if a run is already going, because presumably this
+        // was called in response to modification (currently only RECOMMENDS
+        // addition), so restart/reprocess from beginning to be sure.
+        idx = 0;
+
+        for (; idx < defines.children().size(); ++idx) {
             auto& define{dynamic_cast<settings::Define&>(
                 *defines.children()[idx]
             )};
 
-            if (processPropDefine(*propVec, define)) {
+            if (
+                    processPropDefine(*propVec, define) and
+                    // Naturally, the max value will also exit the loop
+                    idx != ~0UZ
+               ) {
                 defines.remove(idx);
                 --idx;
             }
         }
+
+        // Done, set as flag for any operations "above" this one.
+        idx = ~0UZ;
     }
 }
 
@@ -752,13 +775,16 @@ bool processPropDefine(
     std::span<const std::unique_ptr<versions::props::Prop>> propVec,
     settings::Define& define
 ) {
-    auto name{data::context(define.name_)};
-    auto value{data::context(define.value_)};
-    auto numVal{utils::doStringMath(value.val())};
+    // Since the re-entrancy of the caller (see comments there) due to setting
+    // things here could cause modification, these values need to be saved,
+    // rather than relying on the define to stay valid.
+    auto name{data::context(define.name_).val()};
+    auto value{data::context(define.value_).val()};
+    auto numVal{utils::doStringMath(value)};
 
     bool used{false};
     for (const auto& prop : propVec) {
-        auto *setting{prop->find(name.val())};
+        auto *setting{prop->find(name)};
 
         if (setting == nullptr)
             continue;
