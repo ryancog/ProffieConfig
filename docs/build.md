@@ -7,21 +7,27 @@ If you're simply trying to download and use ProffieConfig, go [here](https://pro
 ---
 ### Notes and Disclaimers
 
-Building ProffieConfig requires installing certain system-level packages, and there's not an in-depth explanation of how to do much of that.
+ProffieConfig's build *stuff* has only been tested on (all x86) macOS (Monterey through Sequoia), Windows 10, and Linux (OpenSUSE Tumbleweed, Debian Trixie). Other platforms and/or architectures will probably require some (potentially significant) additional effort and modification to make things work.
 
-ProffieConfig's build system(s) have only been tested on (all x86) OpenSUSE (Tumbleweed, Early 2025), Debian (Trixie), macOS (Monterey through Sequoia), and Windows 10. Other Linux distributions may have quirks with their build tools that require troubleshooting. Other architectures will also probably require some (potentially significant) additional effort and modification to the build scrips. Feel free to reach out and/or submit a PR if you are building elsewhere.
+#### Regarding MinGW (Building on macOS or Linux for Windows)
 
-Building for Windows can be done either on Windows w/ MSVC, or on macOS or Linux w/ MinGW.
-- Windows w/ MSVC is recommended, both for convenience and because MinGW seems to have some serious performance problems.
-- For MinGW, it can be installed via homebrew on macOS or with the system package manager on Linux (note mxe seems too far out of date)
+*MinGW is strongly recommended against.* Here's a few reasons why, lol:
 
-With MinGW, I've recently encountered an issue with a typeinfo operator== being duplicated (added to stdc++ static lib and compiled into application code), despite being marked inline. There's some chatter around this online, but I simply added `__attribute__((always_inline))` to its signature in typeinfo header, as suggested. This means modifying system headers.
+Building on Windows w/ MSVC is, probably easier, and MinGW currently seems to have issues. It produces binaries that have severe performance and memory usage issues, making it impractical to use.
 
-For MSVC, currently the scripts expect Microsoft Visual Studio 2022 Visual C/C++ to be installed (specifically community edition, since there's separate paths for those) to access the vcvars64.bat/environment setup script. The MSVC setup in particular isn't made to be in any way robust right now.
+Some commonly distributed versions of MinGW (e.g. via mxe) are out of date as of the time of writing and cannot be used to compile ProffieConfig.
+
+I've encountered an issue with a typeinfo operator== being duplicated (added to stdc++ static lib and compiled into application code), despite being marked inline. To fix this, I simply added `__attribute__((always_inline))` to its signature in typeinfo header, as seems to be suggested from discussions around it. This means modifying system headers.
+
+## Prerequisites
+
+1. You'll need a C++ build toolchain. AppleClang on macOS (Xcode command line utilities), MSVC on Windows (Visual Studio 2022), and GCC or Clang on Linux (or MinGW for Windows cross-compile, but see the notes that it's not recommended).
+
+2. On Linux especially, (and least so on Windows) building ProffieConfig's prerequisites may require additional 3rd party "devel" packages to be installed. `init.sh` will fail without them, but there's otherwise not a formal list.
+
+3. In order to download the ProffieConfig repository properly, you'll need to install [git](https://git-scm.com). You'll also need [git-lfs](git-lfs.com), otherwise some files won't be downloaded correctly and **you'll run into issues later**.
 
 ## Get the Code
-
-First things first, you'll need the code installed onto your computer. It's best to use `git` for this:
 
 Open a terminal, move to the directory you want to save the ProffieConfig sources to, and run:
 ```
@@ -71,7 +77,7 @@ For the sake of convention, I structure the directories such that at ProffieConf
 - `build`
 - `deploy`
 
-Inside each I create folders in the convention of `[platform]-[buildtype]`. e.g. `build/macOS-debug`.
+Inside each I create folders in the convention of `[platform]-[buildtype]`. e.g. `build/macOS-rel`.
 You should build for `rel` or "Release" mode almost always.
 
 In case you haven't picked up on it by now, there's only really 4(.5) ways ProffieConfig can be built.
@@ -96,9 +102,9 @@ cmake -S . -B build/win32-rel -DCMAKE_BUILD_TYPE=Release -DLOCAL_BUILD=ON --tool
 ```
 *for MinGW on macOS `-G Ninja` must also be added. Makefiles don't work on macOS for Windows*
 
-Once the configuration completes, `cd` to the newly-created build directory. (e.g. `build/linux-debug`)
+Once the configuration completes, `cd` to the newly-created build directory. (e.g. `build/linux-rel`)
 
-### Local Builds
+### An Aside on Local Builds
 
 When ProffieConfig is built by me for people to use, the binaries ultimately are distributed onto my server in order for the ProffieConfig Launcher to manage installation and updates.
 
