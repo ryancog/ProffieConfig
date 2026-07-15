@@ -22,12 +22,9 @@ If you have any comments, questions, concerns, or otherwise want to get in conta
 - [@Ryryog25 on Discord](https://discord.gg/HQmSrxezRs)
 - [ryryog25 on The Crucible](https://crucible.hubbe.net/u/ryryog25/summary)
 
-## To-Do (Non-Exhaustive)
-- Expand pre-checker capabilities (ongoing)
-- Implement interface for `using` syntax (not just the ability to parse)
-- Add blade nicknames
-- Add warnings for soft config fails.
-- Take over the world ;)
+## To-Do
+
+There are no major feature-based additional items (if you're curious, search the codebase for "TODO"), so I guess that just leaves one thing... iykyk.
 
 ## Additional Info
 
