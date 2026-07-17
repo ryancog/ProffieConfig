@@ -2,7 +2,10 @@
 
 cmake_minimum_required(VERSION 3.31)
 
-if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
+# Use CMAKE_HOST_SYSTEM_NAME because CMAKE_SYSTEM_NAME is not defined prior to
+# project(), and both of these variables must be set before that.
+# They must also be CACHE STRING FORCE... because... idrk.
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum OS X deployment version" FORCE)
 
     if (NOT LOCAL_BUILD)
