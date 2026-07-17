@@ -10,6 +10,16 @@ add_library(log SHARED
     branch.cpp
     message.cpp
 )
+
+set(headers
+    logger.hpp
+    severity.hpp
+    info.hpp
+    context.hpp
+    branch.hpp
+    message.hpp
+)
+
 target_link_libraries(log
     wxWidgets
 
@@ -17,5 +27,5 @@ target_link_libraries(log
 )
 
 include(../Component.cmake)
-setup_component_and_static(log 1.0.10)
+setup_component_and_static(log 1.0.10 ${headers})
 

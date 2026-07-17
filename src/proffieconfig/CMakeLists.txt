@@ -41,6 +41,40 @@ add_executable(proffieconfig WIN32
     tools/serialmonitor.cpp
 )
 
+set(headers
+    tools/serialmonitor.hpp
+    tools/arduino.hpp
+    core/state.hpp
+    core/licenses.hpp
+    onboard/onboard.hpp
+    onboard/pages/info.hpp
+    onboard/pages/setup.hpp
+    onboard/pages/welcome.hpp
+    mainmenu/dialogs/versions.hpp
+    mainmenu/dialogs/addconfig.hpp
+    mainmenu/dialogs/serialmonitor.hpp
+    mainmenu/dialogs/manifest.hpp
+    mainmenu/dialogs/licenses.hpp
+    mainmenu/dialogs/about.hpp
+    mainmenu/dialogs/preferences.hpp
+    mainmenu/mainmenu.hpp
+    editor/editorwindow.hpp
+    editor/special/splitvisualizer.hpp
+    editor/dialogs/injections.hpp
+    editor/dialogs/presetarray.hpp
+    editor/dialogs/customopts.hpp
+    editor/dialogs/bladearray.hpp
+    editor/dialogs/buttons.hpp
+    editor/dialogs/awareness.hpp
+    editor/dialogs/propinfo.hpp
+    editor/dialogs/stylealiases.hpp
+    editor/dialogs/propbuttons.hpp
+    editor/pages/blades.hpp
+    editor/pages/presets.hpp
+    editor/pages/general.hpp
+    editor/pages/props.hpp
+)
+
 set_target_properties(proffieconfig PROPERTIES
     OUTPUT_NAME "ProffieConfig"
     DESCRIPTION "ProffieConfig" # Windows is stupid so this isn't actually a description
@@ -60,7 +94,7 @@ target_link_libraries(proffieconfig
 )
 
 include (../Common.cmake)
-setup_target(proffieconfig)
+setup_target(proffieconfig ${headers})
 
 if (CMAKE_SYSTEM_NAME STREQUAL Windows)
     add_custom_command(TARGET proffieconfig POST_BUILD

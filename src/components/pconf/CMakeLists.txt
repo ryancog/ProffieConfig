@@ -10,8 +10,16 @@ add_library(pconf SHARED
     types.cpp
 )
 
+set(headers
+    info.hpp
+    read.hpp
+    write.hpp
+    utils.hpp
+    types.hpp
+)
+
 target_link_libraries(pconf log)
 
 include(../Component.cmake)
-setup_component_and_static(pconf 1.1.0)
+setup_component_and_static(pconf 1.1.0 ${headers})
 

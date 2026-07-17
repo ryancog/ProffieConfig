@@ -8,6 +8,12 @@ add_library(app SHARED
     info.cpp
 )
 
+set(headers
+    critical_dialog.hpp
+    info.hpp
+    app.hpp
+)
+
 target_link_libraries(app
     wxWidgets
 
@@ -16,7 +22,7 @@ target_link_libraries(app
 )
 
 include(../Component.cmake)
-setup_component_and_static(app 1.1.3)
+setup_component_and_static(app 1.1.3 ${headers})
 
 if (CMAKE_SYSTEM_NAME STREQUAL Windows) 
     target_link_libraries(app dbghelp imagehlp)

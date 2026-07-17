@@ -236,6 +236,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL Windows)
     target_include_directories(wxWidgets-static INTERFACE
         ${WX_STATIC_DIR}/include/msvc
         ${WX_LIB_INCLUDE_DIR})
+
 else()
     # Use wx-config to get the proper compile and link flags
     set(WX_SHARED_CONFIG "${WX_SHARED_DIR}/bin/wx-config")
@@ -298,11 +299,14 @@ else()
     endfunction()
 
     process_wx_cxxflags(${WX_SHARED_CONFIG} wxWidgets)
-    process_wx_cxxflags(${WX_STATIC_CONFIG} wxWidgets-static)
-
     process_wx_ldflags(${WX_SHARED_CONFIG} wxWidgets)
+
+    process_wx_cxxflags(${WX_STATIC_CONFIG} wxWidgets-static)
     process_wx_ldflags(${WX_STATIC_CONFIG} wxWidgets-static)
 endif()
+
+target_precompile_headers(wxWidgets INTERFACE <wx/wxprec.h>)
+target_precompile_headers(wxWidgets-static INTERFACE <wx/wxprec.h>)
 
 set(3RDPARTY_INSTALL_FILES
     $<TARGET_FILE:wxBase>

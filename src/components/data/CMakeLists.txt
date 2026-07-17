@@ -46,10 +46,51 @@ add_library(data SHARED
     primitive/models/version.cpp
 )
 
+set(headers
+    recvtable.hpp
+    hierarchic/action.hpp
+    hierarchic/models/bool.hpp
+    hierarchic/models/selector.hpp
+    hierarchic/models/selection.hpp
+    hierarchic/models/number.hpp
+    hierarchic/models/vector.hpp
+    hierarchic/models/version.hpp
+    hierarchic/models/choice.hpp
+    hierarchic/models/exclusive.hpp
+    hierarchic/models/string.hpp
+    hierarchic/model.hpp
+    hierarchic/root.hpp
+    receiver.hpp
+    primitive/models/bool.hpp
+    primitive/models/selector.hpp
+    primitive/models/selection.hpp
+    primitive/models/number.hpp
+    primitive/models/vector.hpp
+    primitive/models/version.hpp
+    primitive/models/choice.hpp
+    primitive/models/exclusive.hpp
+    primitive/models/string.hpp
+    primitive/model.hpp
+    logic/adapter.hpp
+    logic/operators.hpp
+    logic/logic.hpp
+    context.hpp
+    base/models/bool.hpp
+    base/models/selector.hpp
+    base/models/selection.hpp
+    base/models/number.hpp
+    base/models/vector.hpp
+    base/models/version.hpp
+    base/models/choice.hpp
+    base/models/exclusive.hpp
+    base/models/string.hpp
+    base/model.hpp
+)
+
 target_link_libraries(data
     utils
 )
 
 include(../Component.cmake)
-setup_component_and_static(data 1.0.3)
+setup_component_and_static(data 1.0.3 ${headers})
 

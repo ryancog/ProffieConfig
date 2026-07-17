@@ -2,7 +2,7 @@
 
 # src/Common.cmake
 
-function(setup_target TARGET)
+function(setup_target TARGET HEADERS)
     get_target_property(BIN_VERSION ${TARGET} BIN_VERSION)
     if (BIN_VERSION STREQUAL "BIN_VERSION-NOTFOUND")
         message(FATAL_ERROR "No version set for ${TARGET}")
@@ -71,4 +71,6 @@ function(setup_target TARGET)
     )
 
     target_compile_definitions(${TARGET} PRIVATE BIN_VERSION=${BIN_VERSION})
+
+    target_precompile_headers(${TARGET} PUBLIC ${HEADERS})
 endfunction()

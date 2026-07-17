@@ -43,6 +43,44 @@ add_library(config SHARED
 
     styles/style.cpp
 )
+
+set(headers
+    misc/injection.hpp
+    settings/settings.hpp
+    settings/bladeawareness.hpp
+    settings/define.hpp
+    info.hpp
+    buttons/button.hpp
+    config.hpp
+    blades/ws281x.hpp
+    blades/simple.hpp
+    blades/servo.hpp
+    blades/bladeconfig.hpp
+    strings.hpp
+    styles/style.hpp
+    priv/keys.hpp
+    priv/io.hpp
+    priv/parse/preset/array.hpp
+    priv/parse/preset/blades.hpp
+    priv/parse/styles.hpp
+    priv/parse/prop.hpp
+    priv/parse/buttons.hpp
+    priv/parse/top.hpp
+    priv/parse/presets.hpp
+    priv/parse/utils.hpp
+    priv/utils/style.hpp
+    priv/generate/styles.hpp
+    priv/generate/prop.hpp
+    priv/generate/buttons.hpp
+    priv/generate/top.hpp
+    priv/generate/presets.hpp
+    priv/generate/check/check.hpp
+    priv/data.hpp
+    presets/preset.hpp
+    presets/array.hpp
+    presets/style.hpp
+)
+
 target_link_libraries(config 
     wxWidgets
 
@@ -56,5 +94,5 @@ target_link_libraries(config
 )
 
 include(../Component.cmake)
-setup_component_and_static(config 1.2.1)
+setup_component_and_static(config 1.2.1 ${headers})
 

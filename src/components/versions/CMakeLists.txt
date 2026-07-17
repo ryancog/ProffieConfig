@@ -11,6 +11,16 @@ add_library(versions SHARED
     info.cpp
 )
 
+set(headers
+    info.hpp
+    versions.hpp
+    prop.hpp
+    detail/boards.hpp
+    detail/strings.hpp
+    priv/data.hpp
+    os.hpp
+)
+
 target_link_libraries(versions
     wxWidgets
 
@@ -19,5 +29,5 @@ target_link_libraries(versions
 )
 
 include(../Component.cmake)
-setup_component_and_static(versions 1.2.2)
+setup_component_and_static(versions 1.2.2 ${headers})
 

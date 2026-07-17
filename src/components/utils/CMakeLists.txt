@@ -15,11 +15,27 @@ add_library(utils SHARED
     version.cpp
 )
 
+set(headers
+    paths.hpp
+    hash.hpp
+    info.hpp
+    files.hpp
+    objc.hpp
+    rand.hpp
+    version.hpp
+    string.hpp
+    data.hpp
+    color.hpp
+    demangle.hpp
+    types.hpp
+    defer.hpp
+)
+
 target_link_libraries(utils
     wxWidgets
     tomcrypt-static
 )
 
 include(../Component.cmake)
-setup_component_and_static(utils 1.0.16)
+setup_component_and_static(utils 1.0.16 ${headers})
 

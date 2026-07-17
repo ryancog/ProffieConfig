@@ -67,6 +67,68 @@ add_library(ui SHARED
     layout/detail/panel.cpp
 )
 
+set(headers
+    info.hpp
+    build.hpp
+    values.hpp
+    builders/selector.hpp
+    builders/vecstack.hpp
+    builders/choice.hpp
+    layout/spacer.hpp
+    layout/group.hpp
+    layout/detail/panel.hpp
+    layout/priv/groupbox.hpp
+    layout/notebook.hpp
+    layout/stack.hpp
+    layout/panel.hpp
+    layout/scrolled.hpp
+    layout/collapsible.hpp
+    layout/split.hpp
+    symbols.hpp
+    indication/progress.hpp
+    controls/combobox.hpp
+    controls/styledtext.hpp
+    controls/list.hpp
+    controls/segmented.hpp
+    controls/choice.hpp
+    controls/filepicker.hpp
+    controls/detail/btnstyle.hpp
+    controls/radios.hpp
+    controls/checklist.hpp
+    controls/stepper.hpp
+    controls/checkbox.hpp
+    controls/button.hpp
+    controls/text.hpp
+    controls/toggle_button.hpp
+    dialog.hpp
+    detail/scaffold.hpp
+    detail/window.hpp
+    detail/helpers.hpp
+    detail/general.hpp
+    detail/descriptor.hpp
+    detail/datawin.hpp
+    priv/tlw.hpp
+    priv/tracker.hpp
+    font.hpp
+    static/label.hpp
+    static/divider.hpp
+    static/hyperlink.hpp
+    static/image.hpp
+    dialogs/progress.hpp
+    dialogs/message_types.hpp
+    dialogs/message.hpp
+    utils.hpp
+    types.hpp
+    frame.hpp
+    helpers/dialog_buttons.hpp
+    helpers/if.hpp
+    helpers/foreach.hpp
+    helpers/busy.hpp
+    helpers/labeled.hpp
+    bitmap.hpp
+    dynamic_list.hpp
+)
+
 target_link_libraries(ui 
     wxWidgets
     app
@@ -74,7 +136,7 @@ target_link_libraries(ui
 )
 
 include(../Component.cmake)
-setup_component_and_static(ui 1.1.4)
+setup_component_and_static(ui 1.1.4 ${headers})
 
 if (CMAKE_SYSTEM_NAME STREQUAL Windows OR CROSS_COMPILE STREQUAL Windows)
     target_link_libraries(ui dwmapi)

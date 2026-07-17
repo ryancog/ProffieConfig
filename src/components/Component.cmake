@@ -2,7 +2,7 @@ include(GenerateExportHeader)
 set(_COMPONENT_LIST_DIR ${CMAKE_CURRENT_LIST_DIR})
 include(${_COMPONENT_LIST_DIR}/../Common.cmake)
 
-function(setup_component TARGET VERSION)
+function(setup_component TARGET VERSION HEADERS)
     target_include_directories(${TARGET} PUBLIC ${_COMPONENT_LIST_DIR}) # Include components/
 
     if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -24,11 +24,11 @@ function(setup_component TARGET VERSION)
     )
     target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
-    setup_target(${TARGET})
+    setup_target(${TARGET} ${HEADERS})
 endfunction()
 
-function(setup_component_and_static TARGET VERSION)
-    setup_component(${TARGET} ${VERSION})
+function(setup_component_and_static TARGET VERSION HEADERS)
+    setup_component(${TARGET} ${VERSION} ${HEADERS})
 
     get_target_property(SOURCES ${TARGET} SOURCES)
     add_library(${TARGET}-static STATIC ${SOURCES})
@@ -55,6 +55,6 @@ function(setup_component_and_static TARGET VERSION)
     target_compile_definitions(${TARGET}-static PUBLIC ${TARGET_UPPER}_STATIC_DEFINE)
     target_include_directories(${TARGET}-static PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
-    setup_target(${TARGET}-static)
+    setup_target(${TARGET}-static ${HEADERS})
 endfunction()
 

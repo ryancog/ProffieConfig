@@ -21,6 +21,13 @@ add_executable(launcher WIN32 MACOSX_BUNDLE
     ${ICON_PATH}
 )
 
+set(headers
+    routines.hpp
+    update/update.hpp
+    update/install.hpp
+    update/changelog.hpp
+    update/pulldata.hpp
+)
 
 set_target_properties(launcher PROPERTIES
     OUTPUT_NAME "ProffieConfig"
@@ -42,5 +49,5 @@ target_link_libraries(launcher
 )
 
 include(../Common.cmake)
-setup_target(launcher)
+setup_target(launcher ${headers})
 

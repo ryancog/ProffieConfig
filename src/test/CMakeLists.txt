@@ -46,7 +46,7 @@ target_compile_definitions(test PRIVATE
 )
 
 include (../Common.cmake)
-setup_target(test)
+setup_target(test "")
 
 install(TARGETS test DESTINATION ${PROJECT_SOURCE_DIR} OPTIONAL)
 
