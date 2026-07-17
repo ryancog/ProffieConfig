@@ -84,6 +84,11 @@ void Frame::appendDefaultMenuItems(wxMenuBar *menuBar) {
 
     // Still use the wxMenu stuff, can grab the NSMenu from there.
     auto *window{new wxMenu};
+    // On older macOS versions (e.g. Ventura), the menu must be added to the
+    // menu bar before calling `[NSApp setWindowsMenu:]` otherwise an internal
+    // consistency Objective-C exception occurs, the thread seems to be killed,
+    // and Bad Things:tm: happen.
+    menuBar->Append(window, _("&Window"));
 
     // Can't use the NSApp global, dynamically fetch it with
     // +[NSApplication sharedApplication]
@@ -100,7 +105,6 @@ void Frame::appendDefaultMenuItems(wxMenuBar *menuBar) {
     window->Append(wxID_CLOSE, "Close\tCtrl+W");
     Bind(wxEVT_MENU, &Frame::onWindowMenuClose, this, wxID_CLOSE);
 
-    menuBar->Append(window, _("&Window"));
     menuBar->Append(new wxMenu, _("&Help"));
 #   endif
 }
