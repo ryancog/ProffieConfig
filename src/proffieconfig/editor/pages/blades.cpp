@@ -505,7 +505,10 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
           .orient_=wxVERTICAL,
           .children_={
             pcui::Labeled{
-              .win_={.base_={.expand_=true}},
+              .win_={
+                .base_={.expand_=true},
+                .tooltip_=_("The number of pixels in your blade (total)."),
+              },
               .label_=_("Number of Pixels"),
               .orient_=wxHORIZONTAL,
               .ctrl_=pcui::Stepper{
@@ -863,7 +866,6 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
           .ctrl_=pcui::Stepper{
             .win_={
               .base_={.expand_=true},
-              .tooltip_=_("The number of pixels in your blade (total)."),
             },
             .data_=split.length_,
           }(),
