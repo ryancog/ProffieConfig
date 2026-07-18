@@ -26,12 +26,6 @@
 #include "ui/build.hpp"
 #include "ui/priv/tlw.hpp"
 
-#ifdef __WXOSX__
-#include <wx/osx/menu.h>
-
-#include "utils/objc.hpp"
-#endif
-
 using namespace pcui;
 
 namespace {
@@ -75,36 +69,27 @@ void Frame::Fit() {
 
 void Frame::appendDefaultMenuItems(wxMenuBar *menuBar) {
 #   ifdef __WXOSX__
-    // This causes wx to remove all the menu items, insert some new ones, and
-    // then call -[NSApplication setWindowsMenu:]. I want to add items to the
-    // Window menu though. I don't fully understand the problem wx was trying
-    // to solve removing all the menu items (it claims they might be duplicated
-    // in some cases otherwise), but anyways...
-    wxMenuBar::SetAutoWindowMenu(false);
+    // TODO: So, for now, I think it's best to not bother with CMD+W to close
+    // a window. It doesn't actually work like one might expect when, e.g.,
+    // a dialog is opened, and it should go in the "File" type menu, not the
+    // window menu, in any case.
+    //
+    // Even if I want it in the window menu, it requires fiddling with
+    // wxWidgets' handling to disable its auto window menu management (which
+    // clears all menu items) and call -[NSApplication setWindowsMenu:] at some
+    // point, and that can only be called after -[NSApplication setMainMenu:],
+    // apparently, otherwise an exception occurs in some cases, at least on
+    // older macOS versions (e.g. Ventura), and maybe newer ones, since calling
+    // it otherwise seems clearly unintended.
+    //
+    // Really on macOS there should just be one "master" menu bar, and thus
+    // quite a different approach than the very Windows-centric one wxWidgets
+    // is biased towards. :/
+    //
+    // window->Append(wxID_CLOSE, "Close\tCtrl+W");
+    // Bind(wxEVT_MENU, &Frame::onWindowMenuClose, this, wxID_CLOSE);
 
-    // Still use the wxMenu stuff, can grab the NSMenu from there.
-    auto *window{new wxMenu};
-    // On older macOS versions (e.g. Ventura), the menu must be added to the
-    // menu bar before calling `[NSApp setWindowsMenu:]` otherwise an internal
-    // consistency Objective-C exception occurs, the thread seems to be killed,
-    // and Bad Things:tm: happen.
-    menuBar->Append(window, _("&Window"));
-
-    // Can't use the NSApp global, dynamically fetch it with
-    // +[NSApplication sharedApplication]
-    Class NSApplication{objc_getClass("NSApplication")};
-    id NSApp{objcMessage<id>((id)NSApplication, "sharedApplication")};
-    // [NSApp setWindowsMenu:] does special handling to add the default menu
-    // items. wxWidgets manually adds these, but ignore that for now.
-    // "Minimize" (CMD+M) : -[NSWindow performMiniaturize:]
-    // "Zoom" (none) : -[NSWindow performZoom:]
-    // "Bring All to Front" (none) : -[NSApplication arrangInFront:]
-    objcMessage(NSApp, "setWindowsMenu:", window->GetHMenu());
-
-    // And now can treat the menu like normal.
-    window->Append(wxID_CLOSE, "Close\tCtrl+W");
-    Bind(wxEVT_MENU, &Frame::onWindowMenuClose, this, wxID_CLOSE);
-
+    menuBar->Append(new wxMenu, _("&Window"));
     menuBar->Append(new wxMenu, _("&Help"));
 #   endif
 }
