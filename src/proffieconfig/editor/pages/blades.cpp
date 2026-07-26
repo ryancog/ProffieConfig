@@ -193,7 +193,10 @@ pcui::DescriptorPtr BladesPage::selection() {
                 pcui::Spacer{.size_=pcui::interControlSpacing()}(),
                 pcui::Button{
                   .win_={
-                    .base_={.expand_=true},
+                    .base_={
+                      .minSize_=pcui::iconButtonSize(),
+                      .expand_=true,
+                    },
                     .enable_=mArraySel.choice() | data::logic::HasSelection{},
                   },
                   .bitmap_={
