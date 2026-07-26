@@ -19,10 +19,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <wx/gdicmn.h>
 #include <wx/statline.h>
 
 #include "ui/types.hpp"
-#include "wx/gdicmn.h"
 
 using namespace pcui;
 
@@ -47,7 +47,7 @@ wxSizerItem *Divider::Desc::build(const detail::Scaffold& scaffold) const {
         wxID_ANY,
         wxDefaultPosition,
         wxDefaultSize,
-        orient
+        orient == wxVERTICAL ? wxLI_HORIZONTAL : wxLI_VERTICAL
     )};
     auto *item{new wxSizerItem(line, 0, wxEXPAND)};
     return item;
