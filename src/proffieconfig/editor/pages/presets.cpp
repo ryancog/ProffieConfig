@@ -171,6 +171,7 @@ pcui::DescriptorPtr PresetsPage::selection() {
                               .size_=pcui::interControlSpacing(),
                               .dirs_=wxRIGHT
                             },
+                            .align_=wxALIGN_CENTER,
                           },
                           .show_=not (array.issues() |
                               data::logic::Equals{.val_=0}),
