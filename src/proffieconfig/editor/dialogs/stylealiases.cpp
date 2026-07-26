@@ -93,7 +93,7 @@ pcui::DescriptorPtr StyleAliasesDlg::selection() {
                 pcui::Choice{
                   .win_={
                     .base_={
-                      .minSize_={-1, 300},
+                      .minSize_={150, 300},
                       .expand_=true,
                       .proportion_=1,
                     },
