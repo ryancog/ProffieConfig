@@ -193,6 +193,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                 pcui::Spacer{.size_=pcui::interControlSpacing()}(),
                 pcui::Button{
                   .win_={
+                    .base_={.expand_=true},
                     .enable_=mArraySel.choice() | data::logic::HasSelection{},
                   },
                   .bitmap_={
@@ -213,7 +214,6 @@ pcui::DescriptorPtr BladesPage::selection() {
                 pcui::Button{
                   .win_={.base_={.proportion_=1}},
                   .label_=_("Add"),
-                  .exactFit_=true,
                   .func_=[this](const pcui::CallbackContext& ctxt) {
                       onAddButton(ctxt);
                   }
@@ -225,7 +225,6 @@ pcui::DescriptorPtr BladesPage::selection() {
                     .enable_=mArraySel.choice() | data::logic::HasSelection{},
                   },
                   .label_=_("Remove"),
-                  .exactFit_=true,
                   .func_=[this] { onRemoveButton(); },
                 }(),
               }
