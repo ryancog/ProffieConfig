@@ -61,6 +61,13 @@ check_exec automake
 check_exec autoconf
 check_exec autogen
 check_exec nasm
+check_exec getconf
+
+num_proc() {
+    getconf _NPROCESSORS_ONLN
+}
+
+echo "Using `num_proc` processors..."
 
 do_with_log() {
     # 1: Human process name
@@ -191,13 +198,13 @@ else
     if [ "$TARGET_PLATFORM" == "macOS" ]; then
         do_with_log \
             "Building shared (x86)" \
-            "make -f makefile.shared -j`nproc --all` CC=\"clang -maes -target x86_64-apple-darwin\"" \
+            "make -f makefile.shared -j`num_proc` CC=\"clang -maes -target x86_64-apple-darwin\"" \
             build_x86
         make clean &> /dev/null
         mv libtomcrypt.dylib libtomcrypt-x86_64.dylib
         do_with_log \
             "Building shared (arm64)" \
-            "make -f makefile.shared -j`nproc --all` CC=\"clang -target arm64-apple-darwin\"" \
+            "make -f makefile.shared -j`num_proc` CC=\"clang -target arm64-apple-darwin\"" \
             build_arm64
         make clean &> /dev/null
         mv libtomcrypt.dylib libtomcrypt-arm64.dylib
@@ -209,7 +216,7 @@ else
     else
         do_with_log \
             "Building shared" \
-            "make -f makefile.shared -j`nproc --all` $BUILD_FLAGS" \
+            "make -f makefile.shared -j`num_proc` $BUILD_FLAGS" \
             build
     fi
     export LDFLAGS=$OLD_LDFLAGS
@@ -217,13 +224,13 @@ else
     if [ "$TARGET_PLATFORM" == "macOS" ]; then
         do_with_log \
             "Building static (x86)" \
-            "make -j`nproc --all` CC=\"clang -maes -arch x86_64\"" \
+            "make -j`num_proc` CC=\"clang -maes -arch x86_64\"" \
             build_x86
         make clean &> /dev/null
         mv libtomcrypt.a libtomcrypt-x86_64.a
         do_with_log \
             "Building static (arm64)" \
-            "make -j`nproc --all` CC=\"clang -arch arm64\"" \
+            "make -j`num_proc` CC=\"clang -arch arm64\"" \
             build_arm64
         make clean &> /dev/null
         mv libtomcrypt.a libtomcrypt-arm64.a
@@ -235,7 +242,7 @@ else
     else
         do_with_log \
             "Building static" \
-            "make -j`nproc --all` $BUILD_FLAGS" \
+            "make -j`num_proc` $BUILD_FLAGS" \
             build
     fi
 
@@ -269,7 +276,7 @@ cd $ROOT_DIR
 #
 #     do_with_log \
 #         "Building" \
-#         "make -j`nproc --all`" \
+#         "make -j`num_proc`" \
 #         build
 #
 #     do_with_log \
@@ -343,7 +350,7 @@ else
 
     do_with_log \
         "Building static" \
-        "make -j`nproc --all`" \
+        "make -j`num_proc`" \
         build
 
     do_with_log \
@@ -369,7 +376,7 @@ else
 
     do_with_log \
         "Building shared" \
-        "make -j`nproc --all`" \
+        "make -j`num_proc`" \
         build
 
     do_with_log \
