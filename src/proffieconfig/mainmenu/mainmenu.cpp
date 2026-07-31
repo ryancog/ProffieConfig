@@ -532,6 +532,12 @@ void MainMenu::onRefreshBoards() {
         if (choice.idx() >= 0)
             last = mBoards[choice.idx()];
 
+        // Besides just resetting the count to zero while doing the update,
+        // this is necessary in the case where the same number of boards is
+        // reported. If the choice wasn't cleared here, it'll never re-fetch
+        // the string(s).
+        choice.update(0);
+
         prog->pulse(_("Discovering Boards..."));
         mBoards = arduino::getBoards();
 
