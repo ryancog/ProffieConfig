@@ -32,6 +32,7 @@ _deps
 CMakeUserPresets.json
 
 .DS_Store
+*.dmg
 
 *.bak
 *.log
