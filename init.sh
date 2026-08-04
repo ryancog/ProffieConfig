@@ -187,7 +187,7 @@ else
         fi
     fi
 
-    make clean &> /dev/null
+    # make clean &> /dev/null
 
     if [ "$TARGET_PLATFORM" == "win32" ]; then
         export LDFLAGS="-static-libstdc++ -static-libgcc"
@@ -338,8 +338,8 @@ WX_BUILD_DIR=build-$TARGET_PLATFORM
 if [ -d install-${TARGET_PLATFORM}-static ]; then
     echo "    wxWidgets static already built, skipping! (Remove install-${TARGET_PLATFORM}-static to reset)"
 else
-    rm -rf $WX_BUILD_DIR-static
-    rm -rf $WX_INSTALL_PREFIX-static
+    # rm -rf $WX_BUILD_DIR-static
+    # rm -rf $WX_INSTALL_PREFIX-static
     mkdir -p $WX_BUILD_DIR-static
     cd $WX_BUILD_DIR-static
 
@@ -364,8 +364,8 @@ fi
 if [ -d install-${TARGET_PLATFORM}-shared ]; then
     echo "    wxWidgets shared already built, skipping! (Remove install-${TARGET_PLATFORM}-shared to reset)"
 else
-    rm -rf $WX_BUILD_DIR-shared
-    rm -rf $WX_INSTALL_PREFIX-shared
+    # rm -rf $WX_BUILD_DIR-shared
+    # rm -rf $WX_INSTALL_PREFIX-shared
     mkdir -p $WX_BUILD_DIR-shared
     cd $WX_BUILD_DIR-shared
 
@@ -397,8 +397,8 @@ cd 3rdparty/libbacktrace
 if [ -d install-$TARGET_PLATFORM ]; then
     echo "    libbacktrace already built, skipping! (Remove install-$TARGET_PLATFORM to reset)"
 else
-    rm -rf install-$TARGET_PLATFORM
-    rm -rf build-$TARGET_PLATFORM
+    # rm -rf install-$TARGET_PLATFORM
+    # rm -rf build-$TARGET_PLATFORM
     mkdir -p build-$TARGET_PLATFORM
     cd build-$TARGET_PLATFORM
 
