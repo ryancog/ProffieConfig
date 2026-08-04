@@ -457,15 +457,9 @@ pcui::DescriptorPtr ui(
               .ok_=pcui::Button{
                 .label_="Update Now",
                 .default_=true,
-                .func_=[&dlg] {
-                  dlg.EndModal(wxID_OK);
-                }
               }(),
               .cancel_=pcui::Button{
                 .label_="Remind Me Later",
-                .func_=[&dlg] {
-                  dlg.EndModal(wxID_CANCEL);
-                }
               }(),
             }(),
           }

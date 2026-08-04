@@ -122,24 +122,18 @@ struct Control : detail::DataWindow<wxButton> {
         layoutAndFitFor(this);
     }
 
-    void onPress(wxCommandEvent&) {
+    void onPress(wxCommandEvent& evt) {
         auto en{freezeGetRealEnable()};
         defer { thawRealEnable(); };
 
-        if (not en) return;
+        if (not en)
+            return;
 
-        callback();
-    }
-
-    void onChange() {
-        safeCall([this, str=data::context(*str_).val()]() {
-            SetLabel(str);
-        });
-    }
-
-    void callback() {
         if (const auto *ptr{std::get_if<0>(&func_)}) {
-            if (*ptr) (*ptr)();
+            if (*ptr)
+                (*ptr)();
+            else
+                evt.Skip();
         } else if (const auto *ptr{std::get_if<1>(&func_)}) {
             if (*ptr) {
                 CallbackContext ctxt{
@@ -150,8 +144,16 @@ struct Control : detail::DataWindow<wxButton> {
                 };
 
                 (*ptr)(ctxt);
+            } else {
+                evt.Skip();
             }
         }
+    }
+
+    void onChange() {
+        safeCall([this, str=data::context(*str_).val()]() {
+            SetLabel(str);
+        });
     }
 
     Bitmap bmp_;

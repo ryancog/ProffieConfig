@@ -165,15 +165,9 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
           .ok_=pcui::Button{
             .label_=mayCancel ? _("OK") : _("Close"),
             .default_=true,
-            .func_=[this]() {
-                EndModal(wxID_OK);
-            },
           }(),
           .cancel_=mayCancel ? pcui::Button{
             .label_=_("Cancel"),
-            .func_=[this]() {
-                EndModal(wxID_CANCEL);
-            },
           }() : nullptr,
         }(),
       }

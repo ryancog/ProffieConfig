@@ -47,7 +47,7 @@ PresetArrayDlg::PresetArrayDlg(
                 evt.GetKeyCode() == WXK_NUMPAD_ENTER) and
                 issues.val() == 0
            ) {
-            EndModal(wxID_OK);
+            EndDialog(wxID_OK);
         } else evt.Skip();
     });
 }
@@ -106,15 +106,9 @@ pcui::DescriptorPtr PresetArrayDlg::ui(bool mayCancel) {
             },
             .label_=mayCancel ? _("OK") : _("Close"),
             .default_=true,
-            .func_=[this]() {
-                EndModal(wxID_OK);
-            },
           }(),
           .cancel_=mayCancel ? pcui::Button{
             .label_=_("Cancel"),
-            .func_=[this]() {
-                EndModal(wxID_CANCEL);
-            },
           }() : nullptr,
         }(),
       }

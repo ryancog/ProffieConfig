@@ -50,9 +50,11 @@ Dialog::Dialog(
     priv::tlw::postCreate(this);
 
     Bind(wxEVT_CHAR_HOOK, [this](wxKeyEvent& evt) {
-        if (evt.GetKeyCode() == WXK_ESCAPE) EndModal(wxID_CANCEL);
-        // Don't always skip, otherwise, on macOS, the bell is rung.
-        else evt.Skip();
+        if (evt.GetKeyCode() == WXK_ESCAPE)
+            EndDialog(wxID_CANCEL);
+        else 
+            // Don't always skip, otherwise, on macOS, the bell is rung.
+            evt.Skip();
     });
 }
 

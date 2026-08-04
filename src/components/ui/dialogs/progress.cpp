@@ -187,9 +187,6 @@ DescriptorPtr ProgressDialog::ui(bool mayCancel, wxSize size) {
               .show_=mData | Progress::Logic::Is_Done,
             },
             .label_=_("OK"),
-            .func_=[this] {
-                EndModal(wxID_OK);
-            },
           }(),
           .cancel_=mayCancel ? Button{
             .win_={

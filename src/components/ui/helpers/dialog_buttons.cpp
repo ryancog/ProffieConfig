@@ -44,58 +44,78 @@ wxSizerItem *DialogButtons::Desc::build(const detail::Scaffold& scaffold) const 
     // The fact that the spacers don't go away more smart is a little
     // unfortunate, but not a practical concern right now.
 
+    const auto addSpacingOnLeft{[](wxSizerItem *item) {
+        item->SetBorder(interGroupSpacing());
+        const auto nonDirMask{item->GetFlag() & ~wxDIRECTION_MASK};
+        item->SetFlag(nonDirMask | wxLEFT);
+    }};
+
+    const auto maybeSetId{[](wxWindow *win, wxWindowID id) {
+        // Check if current ID is an auto ID, and change it if it is.
+        auto cur{win->GetId()};
+        if (wxID_AUTO_LOWEST <= cur and cur <= wxID_AUTO_HIGHEST)
+            win->SetId(id);
+    }};
+
+    const auto setupOK{[&](wxSizerItem *item) {
+        if (auto *win{item->GetWindow()})
+            maybeSetId(win, wxID_OK);
+    }};
+
+    const auto setupCancel{[&](wxSizerItem *item) {
+        if (auto *win{item->GetWindow()})
+            maybeSetId(win, wxID_CANCEL);
+    }};
+
+    const auto setupApply{[&](wxSizerItem *item) {
+        if (auto *win{item->GetWindow()})
+            maybeSetId(win, wxID_APPLY);
+    }};
+
 #   ifdef _WIN32
     // Ok then Cancel then Apply on right
     sizer->AddStretchSpacer();
 
     if (ok_) {
-        sizer->Add(ok_->build(childScaffold));
+        auto *item{ok_->build(childScaffold)};
+        setupOK(item);
+        sizer->Add(item);
     }
 
     if (cancel_) {
         auto *item{cancel_->build(childScaffold)};
-
-        item->SetBorder(interGroupSpacing());
-        const auto nonDirMask{item->GetFlag() & ~wxDIRECTION_MASK};
-        item->SetFlag(nonDirMask | wxLEFT);
-
+        setupCancel(item);
+        addSpacingOnLeft(item);
         sizer->Add(item);
     }
 
     if (apply_) {
         auto *item{apply_->build(childScaffold)};
-
-        item->SetBorder(interGroupSpacing());
-        const auto nonDirMask{item->GetFlag() & ~wxDIRECTION_MASK};
-        item->SetFlag(nonDirMask | wxLEFT);
-
+        setupApply(item);
+        addSpacingOnLeft(item);
         sizer->Add(item);
     }
 #   else // macOS, GTK
     // Apply Far left, Cancel then Ok on right
     if (apply_) {
-        sizer->Add(apply_->build(childScaffold));
+        auto *item{apply_->build(childScaffold)};
+        setupApply(item);
+        sizer->Add(item);
     }
 
     sizer->AddStretchSpacer();
 
     if (cancel_) {
         auto *item{cancel_->build(childScaffold)};
-
-        item->SetBorder(interGroupSpacing());
-        const auto nonDirMask{item->GetFlag() & ~wxDIRECTION_MASK};
-        item->SetFlag(nonDirMask | wxLEFT);
-
+        setupCancel(item);
+        addSpacingOnLeft(item);
         sizer->Add(item);
     }
 
     if (ok_) {
         auto *item{ok_->build(childScaffold)};
-
-        item->SetBorder(interGroupSpacing());
-        const auto nonDirMask{item->GetFlag() & ~wxDIRECTION_MASK};
-        item->SetFlag(nonDirMask | wxLEFT);
-
+        setupOK(item);
+        addSpacingOnLeft(item);
         sizer->Add(item);
     }
 #   endif
