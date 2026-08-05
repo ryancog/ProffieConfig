@@ -22,7 +22,9 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include "config/blades/bladeconfig.hpp"
 #include "config/config.hpp"
+#include "config/presets/array.hpp"
 #include "config/presets/preset.hpp"
 #include "config/presets/style.hpp"
 #include "data/context.hpp"
@@ -72,24 +74,73 @@ TEST_CASE("Styles") {
 
     auto list{data::context(config::list())};
     auto& info{list.child<config::Info>(0)};
-    auto loadErr{info.load()};
-    REQUIRE(not loadErr);
+    { auto loadErr{info.load()};
+        REQUIRE(not loadErr);
 
-    auto& config{*info.config()};
-    auto presetArrays{data::context(config.presetArrays_)};
-    auto& presetArray{presetArrays.append<config::presets::Preset>(config)};
+        auto& config{*info.config()};
 
-    auto styles{data::context(presetArray.styles_)};
-    auto& style{styles.append<config::presets::Style>(config)};
+        auto presetArrays{data::context(config.presetArrays_)};
+        auto& presetArray{presetArrays.append<config::presets::Array>(config)};
+        // Saving also requires a name
+        presetArray.name_.change("presets");
 
-    auto content{data::context(style.content_)};
-    auto comments{data::context(style.comment_)};
+        auto presets{data::context(presetArray.presets_)};
+        auto& preset{presets.append<config::presets::Preset>(config)};
 
-    comments.clear();
-    content.change(RAW_STYLE_STR);
-    content.change(style.format());
+        auto styles{data::context(preset.styles_)};
+        auto& style{styles.append<config::presets::Style>(config)};
 
-    REQUIRE(comments.val() == PARSED_COMMENT_STR);
-    REQUIRE(content.val() == PARSED_STYLE_STR);
+        auto content{data::context(style.content_)};
+        auto comments{data::context(style.comment_)};
+
+        comments.clear();
+        content.change(RAW_STYLE_STR);
+        content.change(style.format());
+
+        REQUIRE(comments.val() == PARSED_COMMENT_STR);
+        REQUIRE(content.val() == PARSED_STYLE_STR);
+
+        // Board needs to be selected to save
+        // 0 should be most recent.
+        config.boardChoice().choose(0);
+
+        // Add a blade array and blade so the preset is used.
+        auto bladeConfigs{data::context(config.bladeConfigs_)};
+        auto& bladeConfig{bladeConfigs.append<config::blades::BladeConfig>(config)};
+        bladeConfig.presetArray_.choice().choose(0);
+        auto blades{data::context(bladeConfig.blades_)};
+        auto& blade{blades.append<config::blades::Blade>(config)};
+    }
+
+    // Save and reload and make sure the style was reparsed correctly, since it
+    // has to make it through the whole parsing pipeline unscathed, as opposed
+    // to just the field filtering.
+    auto saveErr{info.save()};
+    REQUIRE(not saveErr);
+
+    info.unload();
+    { auto loadErr{info.load()};
+        REQUIRE(not loadErr);
+
+        auto& config{*info.config()};
+
+        auto presetArrays{data::context(config.presetArrays_)};
+        REQUIRE(presetArrays.children().size() == 1);
+        auto& presetArray{presetArrays.child<config::presets::Array>(0)};
+
+        auto presets{data::context(presetArray.presets_)};
+        REQUIRE(presets.children().size() == 1);
+        auto& preset{presets.child<config::presets::Preset>(0)};
+
+        auto styles{data::context(preset.styles_)};
+        REQUIRE(styles.children().size() == 1);
+        auto& style{styles.child<config::presets::Style>(0)};
+
+        auto content{data::context(style.content_)};
+        auto comments{data::context(style.comment_)};
+
+        REQUIRE(comments.val() == PARSED_COMMENT_STR);
+        REQUIRE(content.val() == PARSED_STYLE_STR);
+    }
 }
 

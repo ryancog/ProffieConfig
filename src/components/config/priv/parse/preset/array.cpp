@@ -85,7 +85,9 @@ std::optional<std::string> parse::preset::array(
             .skipSpaces_=
                 reading != eDir and
                 reading != eTrack and
-                reading != eName
+                reading != eName and
+                // For reading style args
+                depth.empty()
         };
         if (utils::extractComments(commentData)) {
             if (reading == eStyle) {
