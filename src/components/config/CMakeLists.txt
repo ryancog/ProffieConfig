@@ -94,5 +94,5 @@ target_link_libraries(config
 )
 
 include(../Component.cmake)
-setup_component_and_static(config 1.2.1 ${headers})
+setup_component_and_static(config 1.2.2 ${headers})
 
