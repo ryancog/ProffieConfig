@@ -153,7 +153,11 @@ Style::Style(Config& config) :
 Style::Style(const Style& other, Config& config) :
     Model(config),
     comment_(other.comment_, root()),
-    content_(other.content_, root()) {}
+    content_(other.content_, root()) {
+    // TODO: It'd be nice to have a more convenient way of making sure this
+    // happens, but I don't have any particularly good ideas right now.
+    content_.ref_ = this;
+}
 
 auto Style::children() const -> std::vector<const Model *> {
     return {

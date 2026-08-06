@@ -88,7 +88,9 @@ Style::Style(const Style& other, Config& config) :
     Model(config),
     name_(other.name_, config),
     comments_(other.comments_, config),
-    content_(other.content_, config) {}
+    content_(other.content_, config) {
+    content_.ref_ = this;
+}
 
 auto Style::children() const -> std::vector<const Model *> {
     return {
