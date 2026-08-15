@@ -51,6 +51,10 @@ struct UI_EXPORT ProgressDialog : private Dialog {
     void show(bool = true);
     void hide() { show(false); }
 
+    [[nodiscard]] wxWindow *parent() const;
+    [[nodiscard]] wxString title() const;
+    [[nodiscard]] bool cancellable() const;
+
 private:
     DescriptorPtr ui(bool, wxSize);
 

@@ -181,6 +181,18 @@ void ProgressDialog::show(bool show) {
     CallAfter([this, show] { Show(show); });
 }
 
+wxWindow *ProgressDialog::parent() const {
+    return GetParent();
+}
+
+wxString ProgressDialog::title() const {
+    return GetTitle();
+}
+
+bool ProgressDialog::cancellable() const {
+    return FindWindow(wxID_CANCEL);
+}
+
 DescriptorPtr ProgressDialog::ui(bool mayCancel, wxSize size) {
     return Stack{
       .base_={
