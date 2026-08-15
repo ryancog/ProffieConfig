@@ -57,19 +57,32 @@ wxSizerItem *DialogButtons::Desc::build(const detail::Scaffold& scaffold) const 
             win->SetId(id);
     }};
 
+    const auto maybeSetLabel{[](wxWindow *win, const wxString& label) {
+        if (not win->GetLabel().IsEmpty())
+            return;
+
+        win->SetLabel(label);
+    }};
+
     const auto setupOK{[&](wxSizerItem *item) {
-        if (auto *win{item->GetWindow()})
+        if (auto *win{item->GetWindow()}) {
             maybeSetId(win, wxID_OK);
+            maybeSetLabel(win, _("OK"));
+        }
     }};
 
     const auto setupCancel{[&](wxSizerItem *item) {
-        if (auto *win{item->GetWindow()})
+        if (auto *win{item->GetWindow()}) {
             maybeSetId(win, wxID_CANCEL);
+            maybeSetLabel(win, _("Cancel"));
+        }
     }};
 
     const auto setupApply{[&](wxSizerItem *item) {
-        if (auto *win{item->GetWindow()})
+        if (auto *win{item->GetWindow()}) {
             maybeSetId(win, wxID_APPLY);
+            maybeSetLabel(win, _("Apply"));
+        }
     }};
 
 #   ifdef _WIN32
