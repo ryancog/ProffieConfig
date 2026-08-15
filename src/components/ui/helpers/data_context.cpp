@@ -35,7 +35,7 @@ void pcui::priv::doGuiDataLock(const data::base::Model& model) {
         return;
 
     auto *prog{new pcui::ProgressDialog(
-        wxGetActiveWindow(),
+        wxGetTopLevelParent(wxWindow::FindFocus()),
         _("Data In Use")
     )};
     prog->pulse(_("An operation is in progress, please wait..."));
