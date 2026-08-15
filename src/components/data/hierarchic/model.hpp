@@ -52,7 +52,7 @@ struct DATA_EXPORT Model : virtual base::Model {
     bool enable(bool en) override;
 
     void lock() const override;
-    bool tryLock() const override;
+    bool tryLock(std::chrono::steady_clock::duration = {}) const override;
     void unlock() const override;
 
     std::vector<Model *> children();

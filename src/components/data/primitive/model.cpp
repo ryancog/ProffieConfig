@@ -32,8 +32,8 @@ void Model::lock() const {
     mMutex.lock();
 }
 
-bool Model::tryLock() const {
-    return mMutex.try_lock();
+bool Model::tryLock(std::chrono::steady_clock::duration d) const {
+    return mMutex.try_lock_for(d);
 }
 
 void Model::unlock() const {

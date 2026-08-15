@@ -177,7 +177,7 @@ private:
 
     uint32 mPerformanceNesting{0};
 
-    std::recursive_mutex mMutex;
+    std::recursive_timed_mutex mMutex;
 };
 
 struct DATA_EXPORT Root::ROContext : virtual Model::ROContext {

@@ -31,11 +31,11 @@ struct DATA_EXPORT Model : virtual base::Model {
     bool enable(bool en = true) override;
 
     void lock() const final;
-    bool tryLock() const final;
+    bool tryLock(std::chrono::steady_clock::duration = {}) const final;
     void unlock() const final;
 
 private:
-    mutable std::recursive_mutex mMutex;
+    mutable std::recursive_timed_mutex mMutex;
 };
 
 } // namespace data::prim

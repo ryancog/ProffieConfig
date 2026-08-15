@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <chrono>
 #include <set>
 
 #include "data/recvtable.hpp"
@@ -73,7 +74,7 @@ struct DATA_EXPORT Model {
     void focus();
 
     virtual void lock() const = 0;
-    virtual bool tryLock() const = 0;
+    virtual bool tryLock(std::chrono::steady_clock::duration = {}) const = 0;
     virtual void unlock() const = 0;
 
     /**
