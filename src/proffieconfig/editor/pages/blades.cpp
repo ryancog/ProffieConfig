@@ -134,11 +134,7 @@ pcui::DescriptorPtr BladesPage::ui() {
 
 pcui::DescriptorPtr BladesPage::selection() {
     return pcui::Stack{
-      .base_={
-        .minSize_={200, -1},
-        .expand_=true,
-        .proportion_=1,
-      },
+      .base_={.expand_=true},
       .orient_=wxVERTICAL,
       .children_={
         pcui::Button{
@@ -174,7 +170,10 @@ pcui::DescriptorPtr BladesPage::selection() {
                 }(),
                 pcui::Choice{
                   .win_={
-                    .base_={.proportion_=1},
+                    .base_={
+                      .minSize_={150, -1},
+                      .proportion_=1,
+                    },
                     .tooltip_=_("The currently-selected Blade Array to edit."),
                   },
                   .data_=mArraySel,
@@ -503,7 +502,12 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
       .orient_=wxHORIZONTAL,
       .children_={
         pcui::Group{
-          .win_={.base_={.expand_=true}},
+          .win_={
+            .base_={
+              .expand_=true,
+              .proportion_=1,
+            },
+          },
           .orient_=wxVERTICAL,
           .children_={
             pcui::Labeled{
@@ -695,7 +699,7 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         SplitVisualizer{
-          .base_={.expand_=true, .proportion_=1},
+          .base_={.expand_=true},
           .blade_=ws281x,
           .subSel_=mSubBladeSel,
         }(),
@@ -707,7 +711,7 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
 
 pcui::DescriptorPtr BladesPage::splits(config::blades::WS281X& ws281x) {
     return pcui::Group{
-      .win_={.base_={.expand_=true, .proportion_=4}},
+      .win_={.base_={.expand_=true, .proportion_=1}},
       .label_=_("SubBlades"),
       .orient_=wxVERTICAL,
       .children_={
