@@ -737,6 +737,7 @@ void Window::attachSplit(config::blades::WS281X::Split& split) {
     observeWith(split.type_, typeTable);
     observeWith(split.start_, intTable);
     observeWith(split.end_, intTable);
+    observeWith(split.length_, intTable);
     observeWith(split.segments_, intTable);
     observeWith(split.list_, listTable);
 }
