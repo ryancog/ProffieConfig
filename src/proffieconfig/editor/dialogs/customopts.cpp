@@ -20,11 +20,11 @@
  */
 
 #include "config/settings/define.hpp"
-#include "data/context.hpp"
 #include "ui/build.hpp"
 #include "ui/builders/vecstack.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/text.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/layout/group.hpp"
 #include "ui/layout/scrolled.hpp"
 #include "ui/layout/spacer.hpp"
@@ -188,7 +188,7 @@ pcui::DescriptorPtr CustomOptionsDlg::option(data::base::Model& model) {
               // Removing the model will destroy this UI first, and the UI
               // cannot be destroyed from inside the callback.
               ctxt.topLevel_->CallAfter([&vec, &model] {
-                  auto vecCtxt{data::context(vec)};
+                  auto vecCtxt{pcui::guiDataContext(vec)};
                   vecCtxt.remove(model);
               });
           }
@@ -198,7 +198,7 @@ pcui::DescriptorPtr CustomOptionsDlg::option(data::base::Model& model) {
 }
 
 void CustomOptionsDlg::addOption() {
-    auto vec{data::context(mConfig.settings_.defines_)};
+    auto vec{pcui::guiDataContext(mConfig.settings_.defines_)};
     vec.append(std::make_unique<config::settings::Define>(mConfig));
 }
 

@@ -20,7 +20,6 @@
  */
 
 #include "config/presets/array.hpp"
-#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "ui/build.hpp"
 #include "ui/controls/button.hpp"
@@ -29,6 +28,7 @@
 #include "ui/controls/text.hpp"
 #include "ui/controls/toggle_button.hpp"
 #include "ui/dialog.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/helpers/dialog_buttons.hpp"
 #include "ui/helpers/labeled.hpp"
 #include "ui/layout/spacer.hpp"
@@ -117,8 +117,8 @@ pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {
                   .unselected_=_("Select Array"),
                 },
                 .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-                    auto ctxt{data::context(mConfig.presetArray_)};
-                    auto vec{data::context(*ctxt.bound())};
+                    auto ctxt{pcui::guiDataContext(mConfig.presetArray_)};
+                    auto vec{pcui::guiDataContext(*ctxt.bound())};
                     auto& model{*vec.children()[idx]};
                     return dynamic_cast<config::presets::Array&>(model).name_;
                 },

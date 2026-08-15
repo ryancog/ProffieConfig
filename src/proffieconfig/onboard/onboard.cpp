@@ -23,15 +23,15 @@
 
 #include <wx/menu.h>
 
-#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
 #include "ui/bitmap.hpp"
 #include "ui/controls/button.hpp"
+#include "ui/dialogs/message.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/layout/panel.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
-#include "ui/dialogs/message.hpp"
 #include "ui/static/divider.hpp"
 #include "ui/static/image.hpp"
 #include "ui/values.hpp"
@@ -52,7 +52,7 @@ onboard::Frame::Frame() :
     ),
     mSetupPage(*this) {
 
-    { auto phase{data::context(mPhase)};
+    { auto phase{pcui::guiDataContext(mPhase)};
         phase.update(ePhase_Max);
         phase.choose(ePhase_Welcome);
     }
@@ -185,7 +185,7 @@ pcui::DescriptorPtr onboard::Frame::ui() {
               },
               .label_=_("Back"),
               .func_=[this] {
-                  auto phase{data::context(mPhase)};
+                  auto phase{pcui::guiDataContext(mPhase)};
 
                   switch (static_cast<Phase>(phase.idx())) {
                       case ePhase_Setup_Pre:
@@ -208,7 +208,7 @@ pcui::DescriptorPtr onboard::Frame::ui() {
             pcui::Button{
               .label_=mNextButton,
               .func_=[this] {
-                  auto phase{data::context(mPhase)};
+                  auto phase{pcui::guiDataContext(mPhase)};
 
                   switch (static_cast<Phase>(phase.idx())) {
                       case ePhase_Welcome:
@@ -275,12 +275,12 @@ void onboard::Frame::createMenuBar() {
 }
 
 void onboard::Frame::onPhase() {
-    auto phase{data::context(mPhase)};
+    auto phase{pcui::guiDataContext(mPhase)};
 
-    auto mayCancel{data::context(mMayCancel)};
-    auto maySkip{data::context(mMaySkip)};
-    auto mayGoBack{data::context(mMayGoBack)};
-    auto nextButton{data::context(mNextButton)};
+    auto mayCancel{pcui::guiDataContext(mMayCancel)};
+    auto maySkip{pcui::guiDataContext(mMaySkip)};
+    auto mayGoBack{pcui::guiDataContext(mMayGoBack)};
+    auto nextButton{pcui::guiDataContext(mNextButton)};
 
     switch (static_cast<Phase>(phase.idx())) {
         case ePhase_Welcome:
@@ -316,7 +316,7 @@ void onboard::Frame::onPhase() {
             pcui::showMessage(
                 _("Dependency installation failed, please try again.") +
                 "\n\n" +
-                data::context(mSetupPage.errorMessage_).val(),
+                pcui::guiDataContext(mSetupPage.errorMessage_).val(),
                 {
                     .caption_=_("Installation Failure"),
                     .style_=wxOK | wxCENTER,

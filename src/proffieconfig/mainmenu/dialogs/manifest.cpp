@@ -21,12 +21,12 @@
 
 #include <wx/event.h>
 
-#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
 #include "ui/build.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/text.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/helpers/dialog_buttons.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
@@ -67,7 +67,7 @@ ManifestDialog::ManifestDialog(MainMenu *mainMenu) :
             .label_=_("Save"),
             .default_=true,
             .func_=[this] {
-                auto str{data::context(mText)};
+                auto str{pcui::guiDataContext(mText)};
                 if (str.val() == STABLE_CHANNEL) state::manifestChannel.clear();
                 else state::manifestChannel = str.val();
 

@@ -25,7 +25,6 @@
 #include <wx/gdicmn.h>
 #include <wx/settings.h>
 
-#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "ui/build.hpp"
 #include "ui/builders/selector.hpp"
@@ -35,6 +34,7 @@
 #include "ui/dialogs/message.hpp"
 #include "ui/dialogs/progress.hpp"
 #include "ui/helpers/busy.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/helpers/foreach.hpp"
 #include "ui/layout/notebook.hpp"
 #include "ui/layout/scrolled.hpp"
@@ -194,8 +194,8 @@ pcui::DescriptorPtr VersionsDlg::props() {
               .data_=mAvailPropSel.choice(),
               .style_=pcui::Choice::List{},
               .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-                  auto ctxt{data::context(mAvailPropSel)};
-                  auto vecCtxt{data::context(*ctxt.bound())};
+                  auto ctxt{pcui::guiDataContext(mAvailPropSel)};
+                  auto vecCtxt{pcui::guiDataContext(*ctxt.bound())};
 
                   return dynamic_cast<versions::props::Available&>(
                       *vecCtxt.children()[idx]
@@ -230,8 +230,8 @@ pcui::DescriptorPtr VersionsDlg::props() {
               .data_=mPropSel.choice(),
               .style_=pcui::Choice::List{},
               .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-                  auto ctxt{data::context(mPropSel)};
-                  auto vecCtxt{data::context(*ctxt.bound())};
+                  auto ctxt{pcui::guiDataContext(mPropSel)};
+                  auto vecCtxt{pcui::guiDataContext(*ctxt.bound())};
                   return dynamic_cast<versions::props::Versioned&>(
                       *vecCtxt.children()[idx]
                   ).name_;
@@ -408,8 +408,8 @@ pcui::DescriptorPtr VersionsDlg::os() {
               .data_=mAvailOsSel.choice(),
               .style_=pcui::Choice::List{},
               .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-                  auto ctxt{data::context(mAvailOsSel)};
-                  auto vecCtxt{data::context(*ctxt.bound())};
+                  auto ctxt{pcui::guiDataContext(mAvailOsSel)};
+                  auto vecCtxt{pcui::guiDataContext(*ctxt.bound())};
 
                   return dynamic_cast<versions::os::OS&>(
                       *vecCtxt.children()[idx]
@@ -444,8 +444,8 @@ pcui::DescriptorPtr VersionsDlg::os() {
               .data_=mOsSel.choice(),
               .style_=pcui::Choice::List{},
               .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-                  auto ctxt{data::context(mOsSel)};
-                  auto vecCtxt{data::context(*ctxt.bound())};
+                  auto ctxt{pcui::guiDataContext(mOsSel)};
+                  auto vecCtxt{pcui::guiDataContext(*ctxt.bound())};
                   return dynamic_cast<versions::os::OS&>(
                       *vecCtxt.children()[idx]
                   ).version_.string();
@@ -688,7 +688,7 @@ void VersionsDlg::onPropInstallButton() {
     )};
 
     std::thread{[this, busy, prog] {
-        auto ctxt{data::context(mAvailPropSel)};
+        auto ctxt{pcui::guiDataContext(mAvailPropSel)};
         auto *avail{ctxt.selected<versions::props::Available>()};
 
         prog->pulse(_("Downloading files..."));
@@ -701,7 +701,7 @@ void VersionsDlg::onPropInstallButton() {
 
         prog->finish(false);
 
-        auto installedVec{data::context(versions::props::list())};
+        auto installedVec{pcui::guiDataContext(versions::props::list())};
 
         size idx{0};
         auto children{installedVec.children()};
@@ -740,7 +740,7 @@ void VersionsDlg::onPropRemoveButton() {
         _("Remove Prop")
     )};
 
-    auto ctxt{data::context(mPropSel)};
+    auto ctxt{pcui::guiDataContext(mPropSel)};
     auto *versioned{ctxt.selected<versions::props::Versioned>()};
 
     prog->set(30, _("Purging files..."));
@@ -768,13 +768,13 @@ void VersionsDlg::onPropAvailChoice() {
 }
 
 void VersionsDlg::updatePropInstall() {
-    auto sel{data::context(mAvailPropSel)};
+    auto sel{pcui::guiDataContext(mAvailPropSel)};
 
     std::string label{_("Install").utf8_string()};
     bool enable{false};
 
     if (auto *avail{sel.selected<versions::props::Available>()}) {
-        auto vec{data::context(versions::props::list())};
+        auto vec{pcui::guiDataContext(versions::props::list())};
 
         bool found{false};
         for (const auto& model : vec.children()) {
@@ -805,7 +805,7 @@ void VersionsDlg::onOsInstallButton() {
     )};
 
     std::thread{[this, busy, prog] {
-        auto ctxt{data::context(mAvailOsSel)};
+        auto ctxt{pcui::guiDataContext(mAvailOsSel)};
         auto *avail{ctxt.selected<versions::os::OS>()};
 
         prog->pulse(_("Downloading files..."));
@@ -818,7 +818,7 @@ void VersionsDlg::onOsInstallButton() {
 
         prog->finish(false);
 
-        auto installedVec{data::context(versions::os::list())};
+        auto installedVec{pcui::guiDataContext(versions::os::list())};
 
         size idx{0};
         auto children{installedVec.children()};
@@ -852,7 +852,7 @@ void VersionsDlg::onOsRemoveButton() {
         _("Remove ProffieOS Version")
     )};
 
-    auto ctxt{data::context(mOsSel)};
+    auto ctxt{pcui::guiDataContext(mOsSel)};
     auto *installed{ctxt.selected<versions::os::OS>()};
 
     prog->set(30, _("Purging files..."));
@@ -880,13 +880,13 @@ void VersionsDlg::onOsAvailChoice() {
 }
 
 void VersionsDlg::updateOsInstall() {
-    auto sel{data::context(mAvailOsSel)};
+    auto sel{pcui::guiDataContext(mAvailOsSel)};
 
     std::string label{_("Install").utf8_string()};
     bool enable{false};
 
     if (auto *avail{sel.selected<versions::os::OS>()}) {
-        auto vec{data::context(versions::os::list())};
+        auto vec{pcui::guiDataContext(versions::os::list())};
 
         bool found{false};
         for (const auto& model : vec.children()) {

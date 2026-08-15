@@ -24,7 +24,6 @@
 
 #include "config/buttons/button.hpp"
 #include "config/strings.hpp"
-#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "ui/build.hpp"
 #include "ui/builders/vecstack.hpp"
@@ -33,6 +32,7 @@
 #include "ui/controls/combobox.hpp"
 #include "ui/controls/stepper.hpp"
 #include "ui/controls/text.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/helpers/labeled.hpp"
 #include "ui/layout/group.hpp"
 #include "ui/layout/scrolled.hpp"
@@ -309,7 +309,7 @@ pcui::DescriptorPtr ButtonsDlg::button(data::base::Model& model) {
               // Removing the model will destroy this UI first, and the UI
               // cannot be destroyed from inside the callback.
               ctxt.topLevel_->CallAfter([&vec, &model] {
-                  auto vecCtxt{data::context(vec)};
+                  auto vecCtxt{pcui::guiDataContext(vec)};
                   vecCtxt.remove(model);
               });
           }
@@ -319,14 +319,14 @@ pcui::DescriptorPtr ButtonsDlg::button(data::base::Model& model) {
 }
 
 void ButtonsDlg::addButton() {
-    auto vec{data::context(mConfig.buttons_)};
+    auto vec{pcui::guiDataContext(mConfig.buttons_)};
     auto& button{vec.append<config::buttons::Button>(mConfig)};
 
-    auto event{data::context(button.event_)};
-    auto name{data::context(button.name_)};
+    auto event{pcui::guiDataContext(button.event_)};
+    auto name{pcui::guiDataContext(button.name_)};
 
-    auto type{data::context(button.type_)};
-    auto pin{data::context(button.pin_)};
+    auto type{pcui::guiDataContext(button.type_)};
+    auto pin{pcui::guiDataContext(button.pin_)};
 
     data::hier::Model::CreationScope scope(&button);
 

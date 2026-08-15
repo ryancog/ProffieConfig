@@ -36,8 +36,8 @@
 #include <wx/wupdlock.h>
 
 #include "config/blades/ws281x.hpp"
-#include "data/context.hpp"
 #include "ui/utils.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "utils/rand.hpp"
 
 constexpr auto MIN_SEGMENT_SIZE{12};
@@ -185,8 +185,8 @@ Window::Window(
 }
 
 void Window::onActivate() {
-    auto vecCtxt{data::context(blade_.splits_)};
-    auto choiceCtxt{data::context(subSel_.choice())};
+    auto vecCtxt{pcui::guiDataContext(blade_.splits_)};
+    auto choiceCtxt{pcui::guiDataContext(subSel_.choice())};
 
     for (const auto& model : vecCtxt.children()) {
         auto& split{dynamic_cast<config::blades::WS281X::Split&>(*model)};
@@ -228,8 +228,8 @@ wxSize Window::DoGetBestClientSize() const {
 }
 
 void Window::regenerateSplitData() {
-    auto splitVec{data::context(blade_.splits_)};
-    auto length{data::context(blade_.length_)};
+    auto splitVec{pcui::guiDataContext(blade_.splits_)};
+    auto length{pcui::guiDataContext(blade_.length_)};
 
     splitData_.clear();
 
@@ -249,13 +249,13 @@ void Window::regenerateSplitData() {
             *splitVec.children()[idx]
         )};
 
-        auto type{data::context(split.type_)};
+        auto type{pcui::guiDataContext(split.type_)};
 
         using enum config::blades::WS281X::Split::Type;
 
-        auto start{data::context(split.start_)};
-        auto length{data::context(split.length_)};
-        auto segments{data::context(split.segments_)};
+        auto start{pcui::guiDataContext(split.start_)};
+        auto length{pcui::guiDataContext(split.length_)};
+        auto segments{pcui::guiDataContext(split.segments_)};
 
         if (type.selected() == eStandard or type.selected() == eReverse) {
             SplitData data;
@@ -302,7 +302,7 @@ void Window::regenerateSplitData() {
 }
 
 void Window::recalcSizes() {
-    auto length{data::context(blade_.length_)};
+    auto length{pcui::guiDataContext(blade_.length_)};
 
     sizes_.clear();
 
@@ -637,10 +637,10 @@ void Window::mouseLeave(wxMouseEvent&) {
 void Window::mouseClick(wxMouseEvent&) {
     if (hoveredSplit_ == -1) return;
 
-    auto splits{data::context(blade_.splits_)};
+    auto splits{pcui::guiDataContext(blade_.splits_)};
     if (hoveredSplit_ >= splits.children().size()) return;
 
-    auto subSel{data::context(subSel_.choice())};
+    auto subSel{pcui::guiDataContext(subSel_.choice())};
     subSel.choose(hoveredSplit_);
 }
 
@@ -665,7 +665,7 @@ const wxColour& Window::color(uint32 idx) {
 }
 
 void Window::onVecInsert(size pos) {
-    auto splits{data::context(blade_.splits_)};
+    auto splits{pcui::guiDataContext(blade_.splits_)};
 
     const auto& model{splits.children()[pos]};
     auto& split{dynamic_cast<config::blades::WS281X::Split&>(*model)};
@@ -679,7 +679,7 @@ void Window::onVecInsert(size pos) {
 }
 
 void Window::preVecRemove(size pos) {
-    auto splits{data::context(blade_.splits_)};
+    auto splits{pcui::guiDataContext(blade_.splits_)};
 
     const auto& model{splits.children()[pos]};
     auto& split{dynamic_cast<config::blades::WS281X::Split&>(*model)};
@@ -702,7 +702,7 @@ void Window::onLength() {
 }
 
 void Window::onChoice() {
-    pcui::safeCall([this, idx=data::context(subSel_).choiceIdx()] {
+    pcui::safeCall([this, idx=pcui::guiDataContext(subSel_).choiceIdx()] {
         selectedSplit_ = idx;
         Refresh();
     });

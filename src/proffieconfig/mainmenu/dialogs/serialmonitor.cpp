@@ -34,13 +34,13 @@
 #include <wx/statusbr.h>
 #include <wx/wupdlock.h>
 
-#include "data/context.hpp"
 #include "log/context.hpp"
 #include "ui/build.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/list.hpp"
 #include "ui/controls/text.hpp"
 #include "ui/controls/toggle_button.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/symbols.hpp"
@@ -211,7 +211,7 @@ void SerialMonitorDlg::onCmdChange() {
         // non-main thread.
         return;
 
-    auto ctxt{data::context(mInput)};
+    auto ctxt{pcui::guiDataContext(mInput)};
 
     if (mHistoryIdx == smHistory.size())
         // Already where history should be.
@@ -226,7 +226,7 @@ void SerialMonitorDlg::onCmdChange() {
 }
 
 void SerialMonitorDlg::onCmdEnter() {
-    auto ctxt{data::context(mInput)};
+    auto ctxt{pcui::guiDataContext(mInput)};
 
     bool found{false};
     for (auto iter{smHistory.rbegin()}; iter != smHistory.rend(); ++iter) {
@@ -279,7 +279,7 @@ void SerialMonitorDlg::onAutoScroll() {
 }
 
 void SerialMonitorDlg::doAutoScroll() {
-    if (not data::context(mAutoScroll).val())
+    if (not pcui::guiDataContext(mAutoScroll).val())
         return;
 
     // Do not yield here.
@@ -372,18 +372,18 @@ void SerialMonitorDlg::doCopyOutput(bool withStamps) {
             data.push_back('\n');
 
         if (withStamps) {
-            data += data::context(mLines[item]->stamp_).val();
+            data += pcui::guiDataContext(mLines[item]->stamp_).val();
             data.push_back(' ');
         }
 
         auto& var{mLines[item]->var_};
         if (auto *ptr{std::get_if<DeviceLine>(&var)}) {
-            data += data::context(ptr->line_).val();
+            data += pcui::guiDataContext(ptr->line_).val();
         } else if (auto *ptr{std::get_if<UserLine>(&var)}) {
             if (not withStamps)
                 data += "> ";
 
-            data += data::context(ptr->line_).val();
+            data += pcui::guiDataContext(ptr->line_).val();
         } else if (auto *ptr{std::get_if<EventLine>(&var)}) {
             data += "???";
         }
@@ -542,7 +542,7 @@ void SerialMonitorDlg::listenLoop() {
 
             auto& devLine{std::get<DeviceLine>(data->var_)};
             if (std::isgraph(chr) or std::isblank(chr)) {
-                auto ctxt{data::context(devLine.line_)};
+                auto ctxt{pcui::guiDataContext(devLine.line_)};
                 if (ctxt.pos() < ctxt.val().size()) {
                     auto tmp{ctxt.val()};
                     tmp[ctxt.pos()] = chr;
@@ -567,7 +567,7 @@ void SerialMonitorDlg::listenLoop() {
 }
 
 pcui::List::Label SerialMonitorDlg::getLabel(size row, size col) {
-    auto ctxt{data::context(mNumLines)};
+    auto ctxt{pcui::guiDataContext(mNumLines)};
 
     if (col == 0)
         return mLines[row]->stamp_;

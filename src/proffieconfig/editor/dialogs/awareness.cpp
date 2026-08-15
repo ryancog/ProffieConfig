@@ -22,7 +22,6 @@
 #include <wx/gdicmn.h>
 
 #include "config/strings.hpp"
-#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
 #include "ui/build.hpp"
@@ -33,6 +32,7 @@
 #include "ui/controls/combobox.hpp"
 #include "ui/controls/stepper.hpp"
 #include "ui/controls/text.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/helpers/labeled.hpp"
 #include "ui/layout/group.hpp"
 #include "ui/layout/panel.hpp"
@@ -41,7 +41,6 @@
 #include "ui/static/label.hpp"
 #include "ui/symbols.hpp"
 #include "ui/values.hpp"
-#include "wx/string.h"
 
 BladeAwarenessDlg::BladeAwarenessDlg(
     wxWindow* parent, config::Config& config
@@ -236,12 +235,12 @@ pcui::DescriptorPtr BladeAwarenessDlg::idPower() {
     auto& bladeId{mConfig.settings_.bladeAwareness_.bladeId_};
 
     const auto onAddPowerPin{[this, &bladeId] {
-        auto entry{data::context(mPowerPinAddField)};
+        auto entry{pcui::guiDataContext(mPowerPinAddField)};
 
         // Could be empty coming from add field enter action.
         if (entry.val().empty()) return;
 
-        auto powerPins{data::context(bladeId.powerPins_)};
+        auto powerPins{pcui::guiDataContext(bladeId.powerPins_)};
 
         powerPins.select(std::string{entry.val()});
         entry.clear();

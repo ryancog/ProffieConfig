@@ -24,7 +24,6 @@
 #include <wx/filedlg.h>
 
 #include "config/config.hpp"
-#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
 #include "ui/build.hpp"
@@ -32,6 +31,7 @@
 #include "ui/controls/filepicker.hpp"
 #include "ui/controls/segmented.hpp"
 #include "ui/controls/text.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/helpers/dialog_buttons.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
@@ -68,9 +68,9 @@ void AddConfigDialog::onActivate() {
 }
 
 AddConfigDialog::Result AddConfigDialog::getResult() {
-    auto name{data::context(mConfigName)};
-    auto path{data::context(mImportPath)};
-    auto mode{data::context(mMode)};
+    auto name{pcui::guiDataContext(mConfigName)};
+    auto path{pcui::guiDataContext(mImportPath)};
+    auto mode{pcui::guiDataContext(mMode)};
 
     return {
         .mode_=static_cast<Result::Mode>(mode.selected()),
@@ -188,13 +188,13 @@ pcui::DescriptorPtr AddConfigDialog::ui() {
 }
 
 void AddConfigDialog::onName() {
-    auto name{data::context(mConfigName)};
+    auto name{pcui::guiDataContext(mConfigName)};
 
     bool dupName{false};
-    auto list{data::context(config::list())};
+    auto list{pcui::guiDataContext(config::list())};
     for (const auto& model : list.children()) {
         auto& exist{dynamic_cast<config::Info&>(*model)};
-        auto existName{data::context(exist.name())};
+        auto existName{pcui::guiDataContext(exist.name())};
         if (existName.val() != name.val()) continue;
 
         dupName = true;
@@ -215,13 +215,13 @@ void AddConfigDialog::onName() {
 }
 
 void AddConfigDialog::onPath() {
-    auto path{data::context(mImportPath)};
+    auto path{pcui::guiDataContext(mImportPath)};
 
     mNeedImportPath.set(path.val().empty());
 
     fs::path fsPath{path.val()};
     if (fsPath.has_stem()) {
-        auto configName{data::context(mConfigName)};
+        auto configName{pcui::guiDataContext(mConfigName)};
         configName.change(fsPath.stem().string());
     }
 }

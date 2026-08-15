@@ -28,7 +28,6 @@
 #include <wx/utils.h>
 
 #include "config/config.hpp"
-#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "dialogs/preferences.hpp"
 #include "ui/bitmap.hpp"
@@ -36,6 +35,7 @@
 #include "ui/controls/choice.hpp"
 #include "ui/dialogs/progress.hpp"
 #include "ui/helpers/busy.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/dialogs/message.hpp"
@@ -136,7 +136,7 @@ pcui::DescriptorPtr MainMenu::ui() {
                 .unselected_=_("Select Config"),
               },
               .labeler_=[this](uint32 sel) -> pcui::Choice::Label {
-                  auto vec{data::context(config::list())};
+                  auto vec{pcui::guiDataContext(config::list())};
                   if (sel >= vec.children().size()) return {};
 
                   auto& info{dynamic_cast<config::Info&>(*vec.children()[sel])};
@@ -281,7 +281,7 @@ void MainMenu::bindEvents() {
         for (auto [info, editor] : mEditors) {
             if (
                     info->config() and
-                    data::context(info->config()->isSaved()).val()
+                    pcui::guiDataContext(info->config()->isSaved()).val()
                ) {
                 continue;
             }
@@ -429,13 +429,13 @@ void MainMenu::onAddConfig() {
             }
         }
 
-        auto configSel{data::context(mConfigSel)};
-        auto vec{data::context(*configSel.bound())};
-        auto choice{data::context(mConfigSel.choice())};
+        auto configSel{pcui::guiDataContext(mConfigSel)};
+        auto vec{pcui::guiDataContext(*configSel.bound())};
+        auto choice{pcui::guiDataContext(mConfigSel.choice())};
 
         for (size idx{0}; idx < vec.children().size(); ++idx) {
             auto& info{dynamic_cast<config::Info&>(*vec.children()[idx])};
-            auto nameCtxt{data::context(info.name())};
+            auto nameCtxt{pcui::guiDataContext(info.name())};
 
             if (nameCtxt.val() != result.name_) continue;
 
@@ -460,7 +460,7 @@ void MainMenu::onRemoveConfig() {
     if (pcui::showMessage(message, args) != wxYES)
         return;
 
-    auto sel{data::context(mConfigSel)};
+    auto sel{pcui::guiDataContext(mConfigSel)};
     auto *info{sel.selected<config::Info>()};
 
     auto iter{mEditors.find(info)};
@@ -489,7 +489,7 @@ void MainMenu::onRemoveConfig() {
 }
 
 void MainMenu::onEditConfig() {
-    auto sel{data::context(mConfigSel)};
+    auto sel{pcui::guiDataContext(mConfigSel)};
     auto& info{*sel.selected<config::Info>()};
 
     auto err{info.load()};
@@ -526,7 +526,7 @@ void MainMenu::onRefreshBoards() {
     auto *prog{new pcui::ProgressDialog(this, _("Board Refresh"))};
 
     std::thread{[this, prog, busy]() {
-        auto choice{data::context(mBoardChoice)};
+        auto choice{pcui::guiDataContext(mBoardChoice)};
 
         std::optional<std::string> last;
         if (choice.idx() >= 0)
@@ -571,8 +571,8 @@ void MainMenu::onApplyConfig() {
     std::thread{[this, prog, busy, clean]() {
         prog->set(1, _("Opening Config..."));
 
-        auto cfgSel{data::context(mConfigSel)};
-        auto boardChoice{data::context(mBoardChoice)};
+        auto cfgSel{pcui::guiDataContext(mConfigSel)};
+        auto boardChoice{pcui::guiDataContext(mBoardChoice)};
 
         auto *info{cfgSel.selected<config::Info>()};
         if (info == nullptr) {
@@ -588,7 +588,7 @@ void MainMenu::onApplyConfig() {
         auto& config{*info->config()};
         auto& compInfo{arduino::getCacheInfo(config, clean)};
 
-        auto name{data::context(info->name())};
+        auto name{pcui::guiDataContext(info->name())};
         arduino::applyToBoard(
             name.val(),
             boardChoice.idx() == -1
@@ -601,7 +601,7 @@ void MainMenu::onApplyConfig() {
 }
 
 void MainMenu::onOpenSerial() {
-    auto boardChoice{data::context(mBoardChoice)};
+    auto boardChoice{pcui::guiDataContext(mBoardChoice)};
     auto& boardPort{mBoards[boardChoice.idx()]};
 
     for (auto *monitor : mMonitors) {

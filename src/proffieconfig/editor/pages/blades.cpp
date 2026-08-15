@@ -24,7 +24,6 @@
 
 #include "config/blades/bladeconfig.hpp"
 #include "config/strings.hpp"
-#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
 #include "ui/build.hpp"
@@ -38,6 +37,7 @@
 #include "ui/controls/stepper.hpp"
 #include "ui/controls/text.hpp"
 #include "ui/helpers/labeled.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/layout/group.hpp"
 #include "ui/layout/panel.hpp"
 #include "ui/layout/spacer.hpp"
@@ -183,7 +183,7 @@ pcui::DescriptorPtr BladesPage::selection() {
                   },
                   .emptyLabel_=_("[default]"),
                   .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-                      auto vec{data::context(mConfig.bladeConfigs_)};
+                      auto vec{pcui::guiDataContext(mConfig.bladeConfigs_)};
                       auto& cfg{dynamic_cast<config::blades::BladeConfig&>(
                           *vec.children()[idx]
                       )};
@@ -474,10 +474,10 @@ pcui::DescriptorPtr BladesPage::simple(config::blades::Simple& simple) {
 pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
     auto& blade{ws281x.parent_};
 
-    { auto ctxt{data::context(mSubBladeSel)};
+    { auto ctxt{pcui::guiDataContext(mSubBladeSel)};
         ctxt.bind(&ws281x.splits_);
 
-        auto selChoice{data::context(mSubBladeSel.choice())};
+        auto selChoice{pcui::guiDataContext(mSubBladeSel.choice())};
         if (
                 mLastSubChoice != -1 and
                 mLastSubChoice < selChoice.num()
@@ -487,12 +487,12 @@ pcui::DescriptorPtr BladesPage::ws281x(config::blades::WS281X& ws281x) {
     }
 
     const auto onAddPowerPin{[this, &ws281x] {
-        auto entry{data::context(mPowerPinAddField)};
+        auto entry{pcui::guiDataContext(mPowerPinAddField)};
 
         // Could be empty coming from add field enter action.
         if (entry.val().empty()) return;
 
-        auto powerPins{data::context(ws281x.powerPins_)};
+        auto powerPins{pcui::guiDataContext(ws281x.powerPins_)};
 
         powerPins.select(std::string{entry.val()});
         entry.clear();
@@ -814,7 +814,7 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
               .border_={.size_=pcui::interGroupSpacing(), .dirs_=wxTOP},
             },
             .show_=[&] {
-                auto type{data::context(split.type_)};
+                auto type{pcui::guiDataContext(split.type_)};
                 return 
                     (type[eStandard] | data::logic::IsSet{}) or
                     (type[eReverse] | data::logic::IsSet{}) or
@@ -855,7 +855,7 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
               .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
             },
             .show_=[&] {
-                auto type{data::context(split.type_)};
+                auto type{pcui::guiDataContext(split.type_)};
                 return 
                     (type[eStandard] | data::logic::IsSet{}) or
                     (type[eReverse] | data::logic::IsSet{}) or
@@ -879,7 +879,7 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
               .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
             },
             .show_=[&] {
-                auto type{data::context(split.type_)};
+                auto type{pcui::guiDataContext(split.type_)};
                 return 
                     (type[eStride] | data::logic::IsSet{}) or
                     (type[eZig_Zag] | data::logic::IsSet{});
@@ -902,7 +902,7 @@ pcui::DescriptorPtr BladesPage::split(config::blades::WS281X::Split& split) {
               .border_={.size_=pcui::interControlSpacing(), .dirs_=wxTOP},
             },
             .show_=[&] {
-                auto type{data::context(split.type_)};
+                auto type{pcui::guiDataContext(split.type_)};
                 return type[eList] | data::logic::IsSet{};
             }(),
             .tooltip_=_("Data goes along each LED according to their order in the list")
@@ -981,7 +981,7 @@ void BladesPage::onEditButton(const pcui::CallbackContext& ctxt) {
 
     using namespace config::blades;
 
-    auto sel{data::context(mArraySel)};
+    auto sel{pcui::guiDataContext(mArraySel)};
     auto& cfg{dynamic_cast<BladeConfig&>(*sel.selected())};
     mArrayDlg = new BladeArrayDlg(ctxt.topLevel_, cfg, false);
     const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
@@ -998,7 +998,7 @@ void BladesPage::onAddButton(const pcui::CallbackContext& ctxt) {
     if (mArrayDlg)
         mArrayDlg->Destroy();
 
-    auto vec{data::context(mConfig.bladeConfigs_)};
+    auto vec{pcui::guiDataContext(mConfig.bladeConfigs_)};
     auto& cfg{vec.append<config::blades::BladeConfig>(mConfig)};
 
     BladeArrayDlg dlg(ctxt.topLevel_, cfg, true);
@@ -1010,7 +1010,7 @@ void BladesPage::onAddButton(const pcui::CallbackContext& ctxt) {
 
     if (res != wxID_OK) {
         // Undo append
-        data::context(mConfig).undo();
+        pcui::guiDataContext(mConfig).undo();
     } else {
         mArraySel.choice().choose(
             static_cast<int32>(vec.children().size() - 1)
@@ -1019,35 +1019,35 @@ void BladesPage::onAddButton(const pcui::CallbackContext& ctxt) {
 }
 
 void BladesPage::onRemoveButton() {
-    auto sel{data::context(mArraySel)};
-    auto vec{data::context(mConfig.bladeConfigs_)};
+    auto sel{pcui::guiDataContext(mArraySel)};
+    auto vec{pcui::guiDataContext(mConfig.bladeConfigs_)};
 
     vec.remove(*sel.selected());
 }
 
 void BladesPage::onAddBladeButton() {
-    auto sel{data::context(mBladeSel)};
+    auto sel{pcui::guiDataContext(mBladeSel)};
     auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
     vec.append(std::make_unique<config::blades::Blade>(mConfig));
 }
 
 void BladesPage::onRemoveBladeButton() {
-    auto sel{data::context(mBladeSel)};
+    auto sel{pcui::guiDataContext(mBladeSel)};
     auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
     vec.remove(sel.choiceIdx());
 }
 
 void BladesPage::onAddSplitButton(config::blades::WS281X& ws281x) {
-    auto vec{data::context(ws281x.splits_)};
-    auto choice{data::context(mSubBladeSel.choice())};
+    auto vec{pcui::guiDataContext(ws281x.splits_)};
+    auto choice{pcui::guiDataContext(mSubBladeSel.choice())};
 
     vec.append(std::make_unique<config::blades::WS281X::Split>(ws281x));
     choice.choose(static_cast<int32>(vec.children().size() - 1));
 }
 
 void BladesPage::onRemoveSplitButton(config::blades::WS281X& ws281x) {
-    auto sel{data::context(mSubBladeSel)};
-    auto vec{data::context(ws281x.splits_)};
+    auto sel{pcui::guiDataContext(mSubBladeSel)};
+    auto vec{pcui::guiDataContext(ws281x.splits_)};
 
     vec.remove(*sel.selected());
 }
@@ -1061,7 +1061,7 @@ void BladesPage::onArrayChoice() {
         });
     }
 
-    auto arraySel{data::context(mArraySel)};
+    auto arraySel{pcui::guiDataContext(mArraySel)};
 
     // Always detach first
     detachIssues();
@@ -1072,7 +1072,7 @@ void BladesPage::onArrayChoice() {
 
         mBladeSel.bind(&array->blades_);
 
-        auto selChoice{data::context(mBladeSel.choice())};
+        auto selChoice{pcui::guiDataContext(mBladeSel.choice())};
         if (
                 mLastBladeChoice != -1 and
                 mLastBladeChoice < selChoice.num()
@@ -1085,7 +1085,7 @@ void BladesPage::onArrayChoice() {
 }
 
 void BladesPage::onBladeChoice() {
-    auto bladeSel{data::context(mBladeSel)};
+    auto bladeSel{pcui::guiDataContext(mBladeSel)};
 
     // Only preserve real choices.
     if (bladeSel.choiceIdx() != -1)
@@ -1095,7 +1095,7 @@ void BladesPage::onBladeChoice() {
     if (auto *blade{bladeSel.selected<Blade>()}) {
         mSubBladeSel.bind(&blade->ws281x().splits_);
 
-        auto selChoice{data::context(mSubBladeSel.choice())};
+        auto selChoice{pcui::guiDataContext(mSubBladeSel.choice())};
         if (
             mLastSubChoice != -1 and
             mLastSubChoice < selChoice.num()
@@ -1108,7 +1108,7 @@ void BladesPage::onBladeChoice() {
 }
 
 void BladesPage::onSubChoice() {
-    auto subSel{data::context(mSubBladeSel)};
+    auto subSel{pcui::guiDataContext(mSubBladeSel)};
 
     if (subSel.choiceIdx() != -1)
         mLastSubChoice = subSel.choiceIdx();
@@ -1137,7 +1137,7 @@ void BladesPage::detachIssues() {
 }
 
 void BladesPage::onIssues() {
-    auto issues{data::context(*mIssues)};
+    auto issues{pcui::guiDataContext(*mIssues)};
 
     using enum config::blades::BladeConfig::Issues;
 

@@ -27,7 +27,6 @@
 #include "config/presets/array.hpp"
 #include "config/presets/preset.hpp"
 #include "config/presets/style.hpp"
-#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
 #include "ui/bitmap.hpp"
@@ -36,6 +35,7 @@
 #include "ui/controls/button.hpp"
 #include "ui/controls/choice.hpp"
 #include "ui/controls/text.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/helpers/labeled.hpp"
 #include "ui/layout/group.hpp"
 #include "ui/layout/spacer.hpp"
@@ -194,7 +194,7 @@ pcui::DescriptorPtr PresetsPage::selection() {
                     .unselected_=_("Select Array"),
                   },
                   .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-                      auto vec{data::context(mConfig.presetArrays_)};
+                      auto vec{pcui::guiDataContext(mConfig.presetArrays_)};
                       using namespace config::presets;
                       auto& cfg{dynamic_cast<Array&>(*vec.children()[idx])};
                       return cfg.name_;
@@ -266,8 +266,8 @@ pcui::DescriptorPtr PresetsPage::selection() {
                   .data_=mPresetSel,
                   .style_=pcui::Choice::List{},
                   .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-                      auto sel{data::context(mPresetSel)};
-                      auto vec{data::context(*sel.bound())};
+                      auto sel{pcui::guiDataContext(mPresetSel)};
+                      auto vec{pcui::guiDataContext(*sel.bound())};
                       using namespace config::presets;
                       auto& cfg{dynamic_cast<Preset&>(*vec.children()[idx])};
                       return cfg.name_;
@@ -461,8 +461,8 @@ pcui::DescriptorPtr PresetsPage::displayAndBlade() {
           },
           .emptyLabel_=_("[default]"),
           .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-              auto displaySel{data::context(mDisplaySel)};
-              auto vec{data::context(*displaySel.bound())};
+              auto displaySel{pcui::guiDataContext(mDisplaySel)};
+              auto vec{pcui::guiDataContext(*displaySel.bound())};
               auto& array{dynamic_cast<config::blades::BladeConfig&>(
                   *vec.children()[idx]
               )};
@@ -480,7 +480,7 @@ pcui::DescriptorPtr PresetsPage::displayAndBlade() {
           .style_=pcui::Choice::List{},
           .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
               if (idx == 0) {
-                  auto numBlades{data::context(mConfig.numBlades())};
+                  auto numBlades{pcui::guiDataContext(mConfig.numBlades())};
 
                   while (mBladeStrings.size() < numBlades.val()) {
                       mBladeStrings.push_back(
@@ -610,22 +610,22 @@ pcui::DescriptorPtr PresetsPage::style() {
 void PresetsPage::updateBladeStrings() {
     using namespace config::blades;
 
-    auto displaySel{data::context(mDisplaySel)};
+    auto displaySel{pcui::guiDataContext(mDisplaySel)};
     
     size count{0};
 
     if (auto *bladeCfg{displaySel.selected<BladeConfig>()}) {
-        auto bladeVec{data::context(bladeCfg->blades_)};
+        auto bladeVec{pcui::guiDataContext(bladeCfg->blades_)};
         size labelIdx{0};
         size mainIdx{0};
         for (const auto& child : bladeVec.children()) {
             auto& blade{dynamic_cast<Blade&>(*child)};
-            auto type{data::context(blade.type().choice())};
+            auto type{pcui::guiDataContext(blade.type().choice())};
 
             if (type.idx() == Blade::eSimple or type.idx() == Blade::eServo) {
                 if (count == mBladeStrings.size()) return;
 
-                auto label{data::context(*mBladeStrings[count])};
+                auto label{pcui::guiDataContext(*mBladeStrings[count])};
                 label.change(wxString::Format(
                     _("Blade %zu"), mainIdx
                 ).utf8_string());
@@ -634,12 +634,12 @@ void PresetsPage::updateBladeStrings() {
             } else if (type.idx() == Blade::eWS281X) {
                 auto& ws281x{blade.ws281x()};
 
-                auto splits{data::context(ws281x.splits_)};
+                auto splits{pcui::guiDataContext(ws281x.splits_)};
 
                 if (splits.children().empty()) {
                     if (count == mBladeStrings.size()) return;
 
-                    auto label{data::context(*mBladeStrings[count])};
+                    auto label{pcui::guiDataContext(*mBladeStrings[count])};
                     label.change(wxString::Format(
                         _("Blade %zu"), mainIdx
                     ).utf8_string());
@@ -650,7 +650,7 @@ void PresetsPage::updateBladeStrings() {
                     for (const auto& child : splits.children()) {
                         auto& split{dynamic_cast<WS281X::Split&>(*child)};
 
-                        auto type{data::context(split.type_)};
+                        auto type{pcui::guiDataContext(split.type_)};
                         auto selType{static_cast<WS281X::Split::Type>(
                             type.selected()
                         )};
@@ -673,7 +673,7 @@ void PresetsPage::updateBladeStrings() {
                             case eStride:
                             case eZig_Zag:
                             {
-                                auto segments{data::context(split.segments_)};
+                                auto segments{pcui::guiDataContext(split.segments_)};
                                 for (
                                         size idx{0};
                                         idx < segments.val();
@@ -725,7 +725,7 @@ void PresetsPage::onEditButton(const pcui::CallbackContext& ctxt) {
 
     using namespace config::presets;
 
-    auto sel{data::context(mArraySel)};
+    auto sel{pcui::guiDataContext(mArraySel)};
     auto& cfg{dynamic_cast<Array&>(*sel.selected())};
     mArrayDlg = new PresetArrayDlg(ctxt.topLevel_, cfg, false);
     const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
@@ -741,7 +741,7 @@ void PresetsPage::onAddButton(const pcui::CallbackContext& ctxt) {
     // limitation, just don't want things cluttered.
     if (mArrayDlg) mArrayDlg->Destroy();
 
-    auto vec{data::context(mConfig.presetArrays_)};
+    auto vec{pcui::guiDataContext(mConfig.presetArrays_)};
     auto& array{vec.append<config::presets::Array>(mConfig)};
 
     PresetArrayDlg dlg(ctxt.topLevel_, array, true);
@@ -756,7 +756,7 @@ void PresetsPage::onAddButton(const pcui::CallbackContext& ctxt) {
         // the model it's linked to.
         pcui::cripple(&dlg);
         // With CreationScope suppression, this'll undo the append.
-        data::context(mConfig).undo();
+        pcui::guiDataContext(mConfig).undo();
     } else {
         mArraySel.choice().choose(
             static_cast<int32>(vec.children().size() - 1)
@@ -765,15 +765,16 @@ void PresetsPage::onAddButton(const pcui::CallbackContext& ctxt) {
 }
 
 void PresetsPage::onRemoveButton() {
-    auto sel{data::context(mArraySel)};
-    auto vec{data::context(mConfig.presetArrays_)};
+    auto sel{pcui::guiDataContext(mArraySel)};
+    auto vec{pcui::guiDataContext(mConfig.presetArrays_)};
 
     vec.remove(*sel.selected());
 }
 
 void PresetsPage::onAddPresetButton() {
-    auto sel{data::context(mPresetSel)};
-    auto vec{data::context(const_cast<data::base::Vector&>(*sel.bound()))};
+    auto sel{pcui::guiDataContext(mPresetSel)};
+    auto& bound{const_cast<data::base::Vector&>(*sel.bound())};
+    auto vec{pcui::guiDataContext(bound)};
 
     size insertPos{};
     auto pref{state::prefs::get<state::prefs::Enum::Add_Preset_Insertion>()};
@@ -806,8 +807,8 @@ void PresetsPage::onAddPresetButton() {
 }
 
 void PresetsPage::onRemovePresetButton() {
-    auto sel{data::context(mPresetSel)};
-    auto choice{data::context(mPresetSel.choice())};
+    auto sel{pcui::guiDataContext(mPresetSel)};
+    auto choice{pcui::guiDataContext(mPresetSel.choice())};
     auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
 
     auto lastIdx{choice.idx()};
@@ -821,20 +822,21 @@ void PresetsPage::onRemovePresetButton() {
 }
 
 void PresetsPage::onMoveUpButton() {
-    auto sel{data::context(mPresetSel)};
+    auto sel{pcui::guiDataContext(mPresetSel)};
     auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
     vec.moveUp(sel.choiceIdx());
 }
 
 void PresetsPage::onMoveDownButton() {
-    auto sel{data::context(mPresetSel)};
+    auto sel{pcui::guiDataContext(mPresetSel)};
     auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
     vec.moveDown(sel.choiceIdx());
 }
 
 void PresetsPage::onDuplicateButton() {
-    auto sel{data::context(mPresetSel)};
-    auto vec{data::context(const_cast<data::base::Vector&>(*sel.bound()))};
+    auto sel{pcui::guiDataContext(mPresetSel)};
+    auto& bound{const_cast<data::base::Vector&>(*sel.bound())};
+    auto vec{pcui::guiDataContext(bound)};
     auto *source{sel.selected<config::presets::Preset>()};
 
     vec.insert(
@@ -847,7 +849,7 @@ void PresetsPage::onDuplicateButton() {
 }
 
 void PresetsPage::onFormatButton() {
-    auto sel{data::context(mStyleSel)};
+    auto sel{pcui::guiDataContext(mStyleSel)};
     auto *style{sel.selected<config::presets::Style>()};
     style->content_.change(style->format());
 }
@@ -878,8 +880,8 @@ void PresetsPage::onArrayChoice() {
         });
     }
 
-    auto arraySel{data::context(mArraySel)};
-    auto presetSel{data::context(mPresetSel)};
+    auto arraySel{pcui::guiDataContext(mArraySel)};
+    auto presetSel{pcui::guiDataContext(mPresetSel)};
 
     data::base::Vector *presets{nullptr};
     if (arraySel.choiceIdx() != -1) {
@@ -891,8 +893,8 @@ void PresetsPage::onArrayChoice() {
 }
 
 void PresetsPage::onPresetChoice() {
-    auto presetSel{data::context(mPresetSel)};
-    auto styleSel{data::context(mStyleSel)};
+    auto presetSel{pcui::guiDataContext(mPresetSel)};
+    auto styleSel{pcui::guiDataContext(mStyleSel)};
 
     data::base::Vector *styles{nullptr};
     using namespace config::presets;

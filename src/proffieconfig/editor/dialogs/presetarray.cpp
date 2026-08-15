@@ -20,11 +20,11 @@
  */
 
 #include "config/presets/array.hpp"
-#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "ui/build.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/text.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/helpers/dialog_buttons.hpp"
 #include "ui/helpers/labeled.hpp"
 #include "ui/layout/spacer.hpp"
@@ -41,7 +41,7 @@ PresetArrayDlg::PresetArrayDlg(
     pcui::build(this, ui(mayCancel));
 
     Bind(wxEVT_CHAR_HOOK, [this](wxKeyEvent& evt) {
-        auto issues{data::context(mArray.issues())};
+        auto issues{pcui::guiDataContext(mArray.issues())};
         if (
                 (evt.GetKeyCode() == WXK_RETURN or
                 evt.GetKeyCode() == WXK_NUMPAD_ENTER) and

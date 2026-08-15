@@ -24,13 +24,13 @@
 #include <wx/preferences.h>
 #include <wx/settings.h>
 
-#include "data/context.hpp"
 #include "data/receiver.hpp"
 #include "data/primitive/models/choice.hpp"
 #include "data/primitive/models/string.hpp"
 #include "ui/build.hpp"
 #include "ui/controls/choice.hpp"
 #include "ui/controls/text.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/layout/detail/panel.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
@@ -161,12 +161,12 @@ struct GeneralPanel : pcui::detail::Panel
 
 #   ifndef wxHAS_PREF_EDITOR_APPLY_IMMEDIATELY
     bool TransferDataFromWindow() override {
-        auto insertCtxt{data::context(mPresetInsertion)};
+        auto insertCtxt{pcui::guiDataContext(mPresetInsertion)};
         set<Enum::Add_Preset_Insertion>(
             static_cast<enums::AddPresetInsertion>(insertCtxt.idx())
         );
 
-        auto editorCtxt{data::context(mStyleEditor)};
+        auto editorCtxt{pcui::guiDataContext(mStyleEditor)};
         set(Str::Style_Editor_Link, editorCtxt.val());
 
         state::saveState();
@@ -178,7 +178,7 @@ struct GeneralPanel : pcui::detail::Panel
 private:
 #   ifdef wxHAS_PREF_EDITOR_APPLY_IMMEDIATELY
     void onPresetInsertion() {
-        auto insertCtxt{data::context(mPresetInsertion)};
+        auto insertCtxt{pcui::guiDataContext(mPresetInsertion)};
         set<Enum::Add_Preset_Insertion>(
             static_cast<enums::AddPresetInsertion>(insertCtxt.idx())
         );
@@ -187,7 +187,7 @@ private:
     }
 
     void onStyleEditor() {
-        auto editorCtxt{data::context(mStyleEditor)};
+        auto editorCtxt{pcui::guiDataContext(mStyleEditor)};
         set(Str::Style_Editor_Link, editorCtxt.val());
 
         state::saveState();

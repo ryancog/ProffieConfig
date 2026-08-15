@@ -23,9 +23,9 @@
 #include <wx/gdicmn.h>
 #include <wx/settings.h>
 
-#include "data/context.hpp"
 #include "ui/build.hpp"
 #include "ui/dynamic_list.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/layout/group.hpp"
 #include "ui/layout/scrolled.hpp"
 #include "ui/layout/spacer.hpp"
@@ -99,7 +99,7 @@ void PropButtonsDlg::rebuildLinks() {
     // Clear out everything from the old prop.
     repealAllWithTable(settingTable);
 
-    auto buttons{data::context(mConfig.buttons_)};
+    auto buttons{pcui::guiDataContext(mConfig.buttons_)};
 
     mCurProp = mConfig.prop();
     if (mCurProp != nullptr) {
@@ -215,7 +215,7 @@ void PropButtonsDlg::rebuildUI() {
                     if (not setting)
                         continue;
 
-                    auto ctxt{data::context(*setting)};
+                    auto ctxt{pcui::guiDataContext(*setting)};
                     if (ctxt.enabled() and ctxt.val())
                         activeDesc = &desc;
 

@@ -25,13 +25,13 @@
 
 #include "config/config.hpp"
 #include "config/misc/injection.hpp"
-#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "ui/build.hpp"
 #include "ui/builders/vecstack.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/dialog.hpp"
 #include "ui/dialogs/message.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/layout/group.hpp"
 #include "ui/layout/scrolled.hpp"
 #include "ui/layout/spacer.hpp"
@@ -244,13 +244,13 @@ void InjectionsDlg::onAddButton() {
 
 void InjectionsDlg::onUpButton(config::Injection& injection) {
     auto& config{injection.root<config::Config>()};
-    auto ctxt{data::context(config.injections_)};
+    auto ctxt{pcui::guiDataContext(config.injections_)};
     ctxt.moveUp(*ctxt.find(injection));
 }
 
 void InjectionsDlg::onDownButton(config::Injection& injection) {
     auto& config{injection.root<config::Config>()};
-    auto ctxt{data::context(config.injections_)};
+    auto ctxt{pcui::guiDataContext(config.injections_)};
     ctxt.moveDown(*ctxt.find(injection));
 }
 
@@ -271,7 +271,7 @@ void InjectionsDlg::onRemoveButton(config::Injection& injection) {
         return;
 
     auto& config{injection.root<config::Config>()};
-    auto ctxt{data::context(config.injections_)};
+    auto ctxt{pcui::guiDataContext(config.injections_)};
     ctxt.remove(injection);
 }
 
@@ -305,14 +305,14 @@ data::logic::Element operator|(
         }
 
         bool doActivate() override {
-            auto ctxt{data::context(config_.injections_)};
+            auto ctxt{pcui::guiDataContext(config_.injections_)};
             Receiver::activate();
             return ctxt.canMoveUp(*ctxt.find(injection_));
         }
 
         void onVecChange(size) {
             std::lock_guard scopeLock(*pLock);
-            auto ctxt{data::context(config_.injections_)};
+            auto ctxt{pcui::guiDataContext(config_.injections_)};
             onChange(ctxt.canMoveUp(*ctxt.find(injection_)));
         }
 
@@ -351,14 +351,14 @@ data::logic::Element operator|(
         }
 
         bool doActivate() override {
-            auto ctxt{data::context(config_.injections_)};
+            auto ctxt{pcui::guiDataContext(config_.injections_)};
             Receiver::activate();
             return ctxt.canMoveDown(*ctxt.find(injection_));
         }
 
         void onVecChange(size) {
             std::lock_guard scopeLock(*pLock);
-            auto ctxt{data::context(config_.injections_)};
+            auto ctxt{pcui::guiDataContext(config_.injections_)};
             onChange(ctxt.canMoveDown(*ctxt.find(injection_)));
         }
 

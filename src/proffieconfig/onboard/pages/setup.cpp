@@ -24,8 +24,8 @@
 #include <wx/sizer.h>
 #include <wx/time.h>
 
-#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/static/label.hpp"
@@ -106,7 +106,7 @@ pcui::DescriptorPtr onboard::Setup::ui() {
 
 void onboard::Setup::startSetup() {
     auto& phaseModel{mParent.mPhase};
-    auto phase{data::context(phaseModel)};
+    auto phase{pcui::guiDataContext(phaseModel)};
 
     assert(
         phase.idx() == Frame::ePhase_Setup_Pre or
@@ -118,7 +118,7 @@ void onboard::Setup::startSetup() {
     std::thread{[this, &phaseModel]() {
         bool success{false};
         defer {
-            auto phase{data::context(phaseModel)};
+            auto phase{pcui::guiDataContext(phaseModel)};
             phase.choose(success
                 ? Frame::ePhase_Setup_Done
                 : Frame::ePhase_Setup_Fail

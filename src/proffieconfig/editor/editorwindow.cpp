@@ -33,12 +33,12 @@
 #include "config/presets/preset.hpp"
 #include "config/presets/style.hpp"
 #include "config/styles/style.hpp"
-#include "data/context.hpp"
 #include "ui/bitmap.hpp"
 #include "ui/build.hpp"
 #include "ui/dialogs/message.hpp"
 #include "ui/dialogs/progress.hpp"
 #include "ui/helpers/busy.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/utils.hpp"
 #include "ui/values.hpp"
 #include "utils/defer.hpp"
@@ -58,7 +58,7 @@ EditorWindow::EditorWindow(wxWindow *parent, config::Info& info) :
         parent,
         wxID_ANY,
         // TODO: Add receiver and update name on change.
-        data::context(info.name()).val()
+        pcui::guiDataContext(info.name()).val()
     ),
     mInfo{info},
     mGeneralPage(*info.config()),
@@ -228,7 +228,7 @@ void EditorWindow::bindEvents() {
 }
 
 void EditorWindow::onIsSaved() {
-    auto ctxt{data::context(mInfo.config()->isSaved())};
+    auto ctxt{pcui::guiDataContext(mInfo.config()->isSaved())};
 
 #   ifdef __WXOSX__
     OSXSetModified(not ctxt.val());
@@ -236,12 +236,12 @@ void EditorWindow::onIsSaved() {
 }
 
 void EditorWindow::onCanUndo() {
-    auto ctxt{data::context(*mInfo.config())};
+    auto ctxt{pcui::guiDataContext(*mInfo.config())};
     GetMenuBar()->Enable(wxID_UNDO, ctxt.canUndo());
 }
 
 void EditorWindow::onCanRedo() {
-    auto ctxt{data::context(*mInfo.config())};
+    auto ctxt{pcui::guiDataContext(*mInfo.config())};
     GetMenuBar()->Enable(wxID_REDO, ctxt.canRedo());
 }
 
@@ -261,10 +261,10 @@ void EditorWindow::onClose(wxCloseEvent& evt) {
 
     if (not evt.CanVeto()) return;
 
-    auto isSaved{data::context(mInfo.config()->isSaved())};
+    auto isSaved{pcui::guiDataContext(mInfo.config()->isSaved())};
     if (isSaved.val()) return;
 
-    auto name{data::context(mInfo.name())};
+    auto name{pcui::guiDataContext(mInfo.name())};
 
     auto choice{pcui::showMessage(
         wxString::Format(_("\"%s\" Has Unsaved Changes"), name.val()),
@@ -287,7 +287,7 @@ void EditorWindow::onSave(wxCommandEvent&) {
 }
 
 void EditorWindow::onExport(wxCommandEvent&) {
-    auto name{data::context(mInfo.name())};
+    auto name{pcui::guiDataContext(mInfo.name())};
 
     wxFileDialog fileDlg(
         this,
@@ -314,7 +314,7 @@ void EditorWindow::onVerify(wxCommandEvent& evt) {
     )};
 
     std::thread{[this, prog, busy, clean]() {
-        auto name{data::context(mInfo.name())};
+        auto name{pcui::guiDataContext(mInfo.name())};
         auto& config{*mInfo.config()};
         auto& compInfo{arduino::getCacheInfo(config, clean)};
         arduino::verifyConfig(name.val(), compInfo, *prog);
@@ -338,11 +338,11 @@ void EditorWindow::onManageInjections(wxCommandEvent&) {
 }
 
 void EditorWindow::onUndo(wxCommandEvent&) {
-    data::context(*mInfo.config()).undo();
+    pcui::guiDataContext(*mInfo.config()).undo();
 }
 
 void EditorWindow::onRedo(wxCommandEvent&) {
-    data::context(*mInfo.config()).redo();
+    pcui::guiDataContext(*mInfo.config()).redo();
 }
 
 void EditorWindow::onStyleEditor(wxCommandEvent&) {
@@ -353,29 +353,29 @@ void EditorWindow::onStyleEditor(wxCommandEvent&) {
     // the presets page.
     auto *stylesDlg{mPresetsPage.stylesDlg()};
     if (stylesDlg != nullptr and stylesDlg->IsActive()) {
-        auto styleSel{data::context(stylesDlg->styleSel())};
+        auto styleSel{pcui::guiDataContext(stylesDlg->styleSel())};
 
         if (styleSel.choiceIdx() != -1) {
-            auto styleVec{data::context(*styleSel.bound())};
+            auto styleVec{pcui::guiDataContext(*styleSel.bound())};
 
             auto& model{*styleVec.children()[styleSel.choiceIdx()]};
             auto& style{dynamic_cast<config::styles::Style&>(model)};
 
-            auto content{data::context(style.content_)};
+            auto content{pcui::guiDataContext(style.content_)};
             styleStr = content.val();
 
             utils::trimWhitespaceOutsideString(styleStr);
         }
     } else {
-        auto styleSel{data::context(mPresetsPage.styleSel())};
+        auto styleSel{pcui::guiDataContext(mPresetsPage.styleSel())};
 
         if (styleSel.choiceIdx() != -1) {
-            auto styleVec{data::context(*styleSel.bound())};
+            auto styleVec{pcui::guiDataContext(*styleSel.bound())};
 
             auto& model{*styleVec.children()[styleSel.choiceIdx()]};
             auto& style{dynamic_cast<config::presets::Style&>(model)};
 
-            auto content{data::context(style.content_)};
+            auto content{pcui::guiDataContext(style.content_)};
             styleStr = content.val();
 
             utils::trimWhitespaceOutsideString(styleStr);

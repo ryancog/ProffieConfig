@@ -24,10 +24,10 @@
 #include <wx/translation.h>
 
 #include "config/styles/style.hpp"
-#include "data/context.hpp"
 #include "data/logic/adapter.hpp"
 #include "ui/build.hpp"
 #include "ui/builders/selector.hpp"
+#include "ui/helpers/data_context.hpp"
 #include "ui/helpers/labeled.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/choice.hpp"
@@ -101,8 +101,8 @@ pcui::DescriptorPtr StyleAliasesDlg::selection() {
                   .data_=mStyleSel,
                   .style_=pcui::Choice::List{},
                   .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-                      auto sel{data::context(mStyleSel)};
-                      auto vec{data::context(*sel.bound())};
+                      auto sel{pcui::guiDataContext(mStyleSel)};
+                      auto vec{pcui::guiDataContext(*sel.bound())};
                       using namespace config::styles;
                       auto& style{dynamic_cast<Style&>(*vec.children()[idx])};
                       return style.name_;
@@ -313,32 +313,34 @@ pcui::DescriptorPtr StyleAliasesDlg::fields() {
 }
 
 void StyleAliasesDlg::onAddButton() {
-    auto sel{data::context(mStyleSel)};
-    auto vec{data::context(const_cast<data::base::Vector&>(*sel.bound()))};
+    auto sel{pcui::guiDataContext(mStyleSel)};
+    auto& bound{const_cast<data::base::Vector&>(*sel.bound())};
+    auto vec{pcui::guiDataContext(bound)};
     vec.append<config::styles::Style>(mConfig);
 }
 
 void StyleAliasesDlg::onRemoveButton() {
-    auto sel{data::context(mStyleSel)};
+    auto sel{pcui::guiDataContext(mStyleSel)};
     auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
     vec.remove(sel.choiceIdx());
 }
 
 void StyleAliasesDlg::onMoveUpButton() {
-    auto sel{data::context(mStyleSel)};
+    auto sel{pcui::guiDataContext(mStyleSel)};
     auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
     vec.moveUp(sel.choiceIdx());
 }
 
 void StyleAliasesDlg::onMoveDownButton() {
-    auto sel{data::context(mStyleSel)};
+    auto sel{pcui::guiDataContext(mStyleSel)};
     auto& vec{const_cast<data::base::Vector&>(*sel.bound())};
     vec.moveDown(sel.choiceIdx());
 }
 
 void StyleAliasesDlg::onDuplicateButton() {
-    auto sel{data::context(mStyleSel)};
-    auto vec{data::context(const_cast<data::base::Vector&>(*sel.bound()))};
+    auto sel{pcui::guiDataContext(mStyleSel)};
+    auto& bound{const_cast<data::base::Vector&>(*sel.bound())};
+    auto vec{pcui::guiDataContext(bound)};
     auto *source{sel.selected<config::styles::Style>()};
 
     vec.insert(
@@ -351,7 +353,7 @@ void StyleAliasesDlg::onDuplicateButton() {
 }
 
 void StyleAliasesDlg::onFormatButton() {
-    auto sel{data::context(mStyleSel)};
+    auto sel{pcui::guiDataContext(mStyleSel)};
     auto *style{sel.selected<config::styles::Style>()};
     style->content_.change(style->format());
 }
