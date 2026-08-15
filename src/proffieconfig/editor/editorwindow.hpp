@@ -41,6 +41,8 @@ struct EditorWindow : pcui::Frame, data::Receiver {
     // Handles errors
     bool save();
 
+    wxSize DoGetBestClientSize() const override;
+
 private:
     void onActivate() override;
     void onDeactivate() override;
@@ -70,6 +72,7 @@ private:
     void onPage(wxCommandEvent&);
     void onTimer(wxTimerEvent&);
 
+    bool allowGrow() const;
     void configureResizing();
 
     config::Info& mInfo;
@@ -107,7 +110,7 @@ private:
     size mAnimationCount;
     ssize mAnimationStartMillis;
 
-    wxSize mBestSize{-1, -1};
+    wxSize mTargetSize{-1, -1};
     wxSize mStartSize{-1, -1};
 };
 

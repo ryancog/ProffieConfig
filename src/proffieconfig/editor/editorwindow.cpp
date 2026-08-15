@@ -469,7 +469,7 @@ void EditorWindow::onTimer(wxTimerEvent& evt) {
         0.0, 1.0
     )};
 
-    const auto totalDelta{mBestSize - mStartSize};
+    const auto totalDelta{mTargetSize - mStartSize};
     const auto newSize{mStartSize + (totalDelta * completion)};
 
     // Set size hints to avoid the user being able to resize things here and
@@ -485,6 +485,26 @@ void EditorWindow::onTimer(wxTimerEvent& evt) {
         pcui::getUniqueChild(this)->SetAutoLayout(true);
         configureResizing();
     }
+}
+
+wxSize EditorWindow::DoGetBestClientSize() const {
+    auto bestClientSize{pcui::getUniqueChild(this)->GetBestSize()};
+
+    // if (mCurrentPage == ePage_Props)
+    if (auto *scrolled{FindWindow(eID_Props_Scrolled)}) {
+        auto scrollBest{scrolled->GetSizer()->GetMinSize()};
+
+        bestClientSize.SetWidth(std::max(
+            scrollBest.GetWidth() + (2 * pcui::winEdgeSpacing()),
+            bestClientSize.GetWidth()
+        ));
+
+        bestClientSize.SetHeight(
+            bestClientSize.GetHeight() + scrollBest.GetHeight()
+        );
+    }
+
+    return bestClientSize;
 }
 
 void EditorWindow::Fit() {
@@ -505,27 +525,18 @@ void EditorWindow::Fit() {
 
     // For wxWidgets TLWs, GetBestSize is just the client size because it
     // queries GetWindowBorderSize() w/o taking into account TLW decoration.
-    auto bestClientSize{GetBestSize()};
+    auto targetClientSize{GetBestSize()};
 
-    // if (mCurrentPage == ePage_Props)
-    if (auto *scrolled{FindWindow(eID_Props_Scrolled)}) {
-        auto scrollBest{scrolled->GetSizer()->GetMinSize()};
+    // If re-layout is happening on a page that allows growing, don't shrink
+    // from where the user may have previously grown the window.
+    if (allowGrow())
+        targetClientSize.IncTo(GetClientSize());
 
-        bestClientSize.SetWidth(std::max(
-            scrollBest.GetWidth() + (2 * pcui::winEdgeSpacing()),
-            bestClientSize.GetWidth()
-        ));
-
-        bestClientSize.SetHeight(
-            bestClientSize.GetHeight() + scrollBest.GetHeight()
-        );
-    }
-
-    mBestSize = ClientToWindowSize(bestClientSize);
+    mTargetSize = ClientToWindowSize(targetClientSize);
 
     // Make sure that it doesn't go beyond the max visible window size.
     // Mostly for the props page.
-    mBestSize.DecTo(display.GetClientArea().GetSize());
+    mTargetSize.DecTo(display.GetClientArea().GetSize());
 
     // A lot of the code in the underlying toolkits and wxWidgets is quite
     // pessimistic, honestly, and I think even in release things struggle to
@@ -552,7 +563,7 @@ void EditorWindow::Fit() {
     // in the right spot.
     panel->SetSize(
         0, 0,
-        bestClientSize.x, bestClientSize.y
+        targetClientSize.x, targetClientSize.y
     );
 
     // To avoid lots of slow relayout, set the virtual size first,
@@ -567,21 +578,23 @@ void EditorWindow::Fit() {
     mAnimationTimer->Start(frameIntervalMillis);
 }
 
-void EditorWindow::configureResizing() {
+bool EditorWindow::allowGrow() const {
     switch (mCurrentPage) {
-        case ePage_General:
-        case ePage_Props:
-            // Fixed size.
-            SetSizeHints(GetSize(), GetSize());
-            break;
         case ePage_Presets:
         case ePage_Blades:
-            // Allow increased size.
-            SetSizeHints(GetSize(), {-1, -1});
-            break;
+            return true;
         default:
-            break;
+            return false;
     }
+}
+
+void EditorWindow::configureResizing() {
+    auto bestSize{ClientToWindowSize(DoGetBestClientSize())};
+
+    if (allowGrow())
+        SetSizeHints(bestSize, {-1, -1});
+    else
+        SetSizeHints(bestSize, bestSize);
 }
 
 bool EditorWindow::save() {
