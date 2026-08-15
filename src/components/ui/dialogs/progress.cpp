@@ -82,10 +82,10 @@ ProgressDialog::ProgressDialog(
     // expects dialogs to often(?) be created on the stack, shown with
     // ShowModal(), etc.
     Bind(wxEVT_SHOW, [this](wxShowEvent& evt) {
-        if (evt.GetEventObject() != this) {
-            evt.Skip();
+        evt.Skip();
+
+        if (evt.GetEventObject() != this)
             return;
-        }
 
         if (not evt.IsShown())
             // NOTE: This should always be heap-allocated.
