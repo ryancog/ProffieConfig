@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "data/context.hpp"
+#include "ui/helpers/data_context.hpp"
 
 using namespace pcui::detail;
 
@@ -47,7 +47,7 @@ bool DataWindowImpl::freezeGetRealEnable() {
     bool modelEn{true};
     if (const auto *model{primaryModel()}) {
         model->lock();
-        modelEn = data::context(*model).enabled();
+        modelEn = pcui::guiDataContext(*model).enabled();
     }
 
     return WindowImpl::freezeGetRealEnable() and modelEn;
@@ -62,7 +62,7 @@ void DataWindowImpl::thawRealEnable() {
 
 bool DataWindowImpl::visualEnableOverride() {
     if (const auto *model{primaryModel()})
-        return data::context(*model).enabled();
+        return pcui::guiDataContext(*model).enabled();
 
     return true;
 }

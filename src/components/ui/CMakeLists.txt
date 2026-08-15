@@ -34,6 +34,7 @@ add_library(ui SHARED
     indication/progress.cpp
 
     helpers/busy.cpp
+    helpers/data_context.cpp
     helpers/dialog_buttons.cpp
     helpers/labeled.cpp
 
@@ -120,6 +121,7 @@ set(headers
     utils.hpp
     types.hpp
     frame.hpp
+    helpers/data_context.hpp
     helpers/dialog_buttons.hpp
     helpers/if.hpp
     helpers/foreach.hpp
