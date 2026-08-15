@@ -22,6 +22,7 @@
 #include <future>
 
 #include <wx/thread.h>
+#include <wx/evtloop.h>
 
 #include "data/context.hpp"
 #include "data/logic/adapter.hpp"
@@ -34,7 +35,6 @@
 #include "ui/layout/stack.hpp"
 #include "ui/static/label.hpp"
 #include "ui/values.hpp"
-#include "utils/defer.hpp"
 
 #if __WXOSX__
 #include "ui/helpers/if.hpp"
@@ -54,15 +54,43 @@ ProgressDialog::ProgressDialog(
     size.IncTo({200, 50});
     build(this, ui(mayCancel, size));
 
-    // macOS has special sheet handling which allows this call to return and
-    // processing to continue. Since other platforms would block, use normal
-    // Show().
+    if (parent) {
 #   if __WXOSX__
-    if (parent)
+        // macOS has special sheet handling which allows this call to return and
+        // processing to continue. Since other platforms would block, use normal
+        // Show().
         ShowWindowModal();
-    else
-#   endif
+#   else
+        // Mimic window modality by disabling parent.
+        parent->Disable();
+        Bind(wxEVT_DESTROY, [parent](wxWindowDestroyEvent& evt) {
+            evt.Skip();
+
+            // NOTE: Reparenting shouldn't be an issue, but if it ever is, this
+            // will break!
+            parent->Enable();
+        });
+
         Show();
+#   endif
+    } else {
+        Show();
+    }
+
+    // Dialogs are kind of odd in that they just hide themselves when done
+    // rather than destroying like normal. Presumably this is because wxWidgets
+    // expects dialogs to often(?) be created on the stack, shown with
+    // ShowModal(), etc.
+    Bind(wxEVT_SHOW, [this](wxShowEvent& evt) {
+        if (evt.GetEventObject() != this) {
+            evt.Skip();
+            return;
+        }
+
+        if (not evt.IsShown())
+            // NOTE: This should always be heap-allocated.
+            Destroy();
+    });
 }
 
 ProgressDialog::~ProgressDialog() {
@@ -101,12 +129,6 @@ void ProgressDialog::finish(bool modalWait, const wxString& message) {
     }
 
     const auto doFinish{[this, modalWait] {
-        // This should always be heap-allocated.
-        defer {
-            Close(true);
-            Destroy();
-        };
-
         // Make sure that layout updates have completed before locking things
         // up in the modal context.
         wxYield();
@@ -116,14 +138,24 @@ void ProgressDialog::finish(bool modalWait, const wxString& message) {
         // processor.
         if (data::context(mCancelled).val()) {
             // If it's been pressed, we don't wait in any case.
+            EndDialog(wxID_CANCEL);
             return;
         }
 
-        // TODO: Making it go modal is a simple and reliable way to wait in
-        // this function until "OK" is clicked, however making the window modal
-        // on non-OSX interrupts the user if they were in another window.
-        if (modalWait)
-            ShowModal();
+        if (not modalWait) {
+            EndDialog(wxID_OK);
+            return;
+        }
+
+        wxGUIEventLoop loop;
+
+        Bind(wxEVT_DESTROY, [&loop](wxWindowDestroyEvent& evt) {
+            evt.Skip();
+            loop.Exit();
+        });
+
+        Show();
+        loop.Run();
     }};
 
     if (wxIsMainThread()) {
