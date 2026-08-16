@@ -92,5 +92,5 @@ target_link_libraries(data
 )
 
 include(../Component.cmake)
-setup_component_and_static(data 1.0.3 ${headers})
+setup_component_and_static(data 1.0.4 ${headers})
 
