@@ -36,11 +36,20 @@ void detail::Number<T>::setFilter(Filter filter) {
 
 template <typename T>
 void detail::Number<T>::clamp(T& val) const {
-    val = std::clamp<T>(
-        (((val - mParams.off_) / mParams.inc_) * mParams.inc_) + mParams.off_,
+    auto clamped{std::clamp<T>(
+        val,
         mParams.min_,
         mParams.max_
-    );
+    )};
+
+    // Force align to offset
+    clamped = ((clamped / mParams.inc_) * mParams.inc_) + mParams.off_;
+
+    // Alignment may have pushed things over.
+    if (clamped > mParams.max_)
+        clamped -= mParams.inc_;
+
+    val = clamped;
 }
 
 template <typename T>
@@ -69,8 +78,11 @@ T detail::Number<T>::doSet(bool undo, T val) {
 
 template <typename T>
 bool detail::Number<T>::setupUpdate(Params& params) {
-    assert(params.min_ <= params.max_);
-    assert(params.off_ < params.inc_);
+    assert(params.off_ >= 0);
+    assert(params.inc_ > params.off_ );
+    // If an offset is being used, then the min/max range must be at least as
+    // wide as inc_ to account for it.
+    assert(params.min_ + params.off_ <= params.max_);
 
     return mParams != params;
 }

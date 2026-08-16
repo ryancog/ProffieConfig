@@ -39,7 +39,7 @@ bool Exclusive::select(size idx) {
 
     if (not setupSelect(idx)) return false;
 
-    doSelect(idx);
+    doSelect(false, idx);
     return true;
 }
 

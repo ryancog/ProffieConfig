@@ -21,7 +21,6 @@
 
 #include <cassert>
 
-#include "data/context.hpp"
 #include "data/hierarchic/models/bool.hpp"
 
 using namespace data::base;
@@ -57,37 +56,33 @@ std::span<const std::unique_ptr<Bool>> Exclusive::data() const {
 
 bool Exclusive::setupSelect(size& idx) {
     assert(idx < mData.size());
-    return true;
+    return mSelected != idx;
 }
 
-size Exclusive::doSelect(size idx) {
-    auto ret{mSelected};
+size Exclusive::doSelect(bool undo, size sel) {
+    if (undo)
+        responderHook<&RecvTable::onSelection_>();
 
-    mData[idx]->set(true);
-    // mSelected updated by receiver handler.
+    for (size idx{0}; idx < mData.size(); ++idx)
+        mData[idx]->set(idx == sel);
+
+    auto ret{mSelected};
+    mSelected = sel;
+    sendToObservers<&RecvTable::onSelection_>();
+
+    if (not undo)
+        responderHook<&RecvTable::onSelection_>();
 
     return ret;
 }
 
 void Exclusive::onSet(const Model& model) {
-    const auto& bl{dynamic_cast<const Bool&>(model)};
-
-    if (not context(bl).val()) return;
-
-    size selIdx{};
     for (size idx{0}; idx < mData.size(); ++idx) {
-        auto& testBl{*mData[idx]};
-
-        if (&testBl == &bl) {
-            selIdx = idx;
-            continue;
+        if (mData[idx].get() == &model) {
+            select(idx);
+            break;
         }
-
-        testBl.set(false);
     }
-
-    mSelected = selIdx;
-    sendToObservers<&RecvTable::onSelection_>();
 }
 
 Exclusive::ROContext::ROContext(const Exclusive& excl) :

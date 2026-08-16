@@ -142,7 +142,7 @@ private:
 
     void onOsChoice();
 
-    void onType(uint32);
+    void onType();
     void onStart();
     void onEnd();
     void onLength();

@@ -33,14 +33,14 @@
 namespace data::base {
 
 struct DATA_EXPORT Exclusive : virtual Model, virtual Receiver {
+    struct DATA_EXPORT ROContext;
+    struct DATA_EXPORT Context;
+    struct DATA_EXPORT RecvTable;
+
     // MSVC
     Exclusive() = default;
     Exclusive(const Exclusive&) = delete;
     Exclusive& operator=(const Exclusive&) = delete;
-
-    struct DATA_EXPORT ROContext;
-    struct DATA_EXPORT Context;
-    struct DATA_EXPORT RecvTable;
 
     virtual bool select(size) = 0;
 
@@ -53,7 +53,7 @@ protected:
     virtual std::unique_ptr<Bool> create(size) = 0;
 
     bool setupSelect(size&);
-    size doSelect(size);
+    size doSelect(bool undo, size);
 
 private:
     void onSet(const Model&);

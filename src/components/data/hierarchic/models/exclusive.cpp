@@ -65,10 +65,10 @@ bool Exclusive::SelectAction::setup() {
 }
 
 void Exclusive::SelectAction::perform() {
-    mIdx = source<Exclusive>().doSelect(mIdx);
+    mIdx = source<Exclusive>().doSelect(false, mIdx);
 }
 
 void Exclusive::SelectAction::retract() {
-    mIdx = source<Exclusive>().doSelect(mIdx);
+    mIdx = source<Exclusive>().doSelect(true, mIdx);
 }
 

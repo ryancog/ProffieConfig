@@ -138,9 +138,8 @@ void WS281X::onLength() {
         auto& split{dynamic_cast<Split&>(*model)};
 
         auto segments{data::context(split.segments_)};
-        if (segments.val() > length.val()) {
-            data::context(split.type_)[Split::eStandard].set(true);
-        }
+        if (segments.val() > length.val())
+            split.type_.select(Split::eStandard);
 
         { auto start{data::context(split.start_)};
             auto params{start.params()};
@@ -210,7 +209,7 @@ WS281X::Split::Split(WS281X& ws281x) :
     // right now.
 
     static const auto typeTable{[] {
-        data::base::Selection::RecvTable table;
+        data::base::Exclusive::RecvTable table;
         table.onSelection_ = data::map<&Split::onType>();
         return table;
     }()};
@@ -322,8 +321,8 @@ void WS281X::Split::onOsChoice() {
     }
 }
 
-void WS281X::Split::onType(uint32 sel) {
-    switch (static_cast<Type>(sel)) {
+void WS281X::Split::onType() {
+    switch (static_cast<Type>(data::context(type_).selected())) {
         case eStandard:
         case eReverse:
             { auto length{data::context(length_)};
@@ -336,6 +335,7 @@ void WS281X::Split::onType(uint32 sel) {
             { auto end{data::context(end_)};
                 auto params{end.params()};
                 params.inc_ = 1;
+                params.off_ = 0;
                 end.update(params);
             }
             break;
@@ -358,13 +358,21 @@ void WS281X::Split::onStart() {
     auto start{data::context(start_)};
     auto end{data::context(end_)};
     auto length{data::context(length_)};
+    auto type{data::context(type_)};
 
-    auto endParams{end.params()};
-    endParams.off_ = (start.val() % segments.val()) - 1;
-    end.update(endParams);
+    if (auto endParams{end.params()}; endParams.inc_ != 1) {
+        // Normally, incrementing start keeps end where it's at unless the two
+        // are right up against each other, but since leaving end the same would
+        // cause the length to shrink each time start is changed when inc != 1,
+        // push end along with it in this case.
 
-    if (endParams.inc_ != 1) {
-        end.set(start.val() + length.val() - 1);
+        // Grab this before updating end params maybe clobbers it.
+        auto lengthVal{length.val()};
+
+        endParams.off_ = (start.val() + segments.val() - 1) % segments.val();
+        end.update(endParams);
+
+        end.set(start.val() + lengthVal - 1);
     } else {
         if (start.val() > end.val()) {
             end.set(start.val());
@@ -379,7 +387,7 @@ void WS281X::Split::onEnd() {
     auto end{data::context(end_)};
 
     if (start.val() > end.val()) {
-        start.set(end.val() - start.params().inc_ + 1);
+        start.set(end.val());
     }
 
     length_.set(end.val() - start.val() + 1);
@@ -420,7 +428,7 @@ void WS281X::Split::onSegments() {
 
     { auto params{end.params()};
         params.inc_ = segments.val();
-        params.off_ = (start.val() % segments.val()) - 1;
+        params.off_ = (start.val() + segments.val() - 1) % segments.val();
         end.update(params);
     }
 
