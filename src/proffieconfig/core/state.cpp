@@ -118,6 +118,14 @@ const std::array<EnumPrefStrings, NUM_ENUM_PREFS> ENUM_PREF_STRS{{
             "BEFORE_SEL",
             "AFTER_SEL"
         }
+    ),
+    EnumPrefStrings::make<state::prefs::enums::HandleKeepSaveFiles::Ignore_Alert>(
+        "HandleKeepSaveFiles", std::array{
+            "Ignore_Alert",
+            "Ignore",
+            "Allow_Hide_Unused",
+            "Allow"
+        }
     )
 }};
 

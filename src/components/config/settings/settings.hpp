@@ -48,6 +48,8 @@ struct CONFIG_EXPORT Settings : data::hier::Model, data::Receiver {
 
     data::hier::Bool webUsb_;
 
+    data::hier::Bool keepSaveFiles_;
+
     struct {
         data::hier::Bool enable_;
         data::hier::String specTemplate_;

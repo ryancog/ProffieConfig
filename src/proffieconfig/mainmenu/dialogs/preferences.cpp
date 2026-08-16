@@ -63,6 +63,13 @@ struct GeneralPanel : pcui::detail::Panel
         }()};
         observeWith(mPresetInsertion, insertionTable);
 
+        static const auto styleTable{[] {
+            data::base::String::RecvTable table;
+            table.onChange_ = data::map<&GeneralPanel::onStyleEditor>();
+            return table;
+        }()};
+        observeWith(mStyleEditor, styleTable);
+
         activate();
 #       endif
 
@@ -72,6 +79,50 @@ struct GeneralPanel : pcui::detail::Panel
     ~GeneralPanel() override {
         pcui::cripple(this);
     }
+
+    bool TransferDataToWindow() override {
+        mPresetInsertion.choose(static_cast<int32>(
+            get<Enum::Add_Preset_Insertion>()
+        ));
+        mStyleEditor.change(get(Str::Style_Editor_Link));
+
+        return true;
+    }
+
+#   ifndef wxHAS_PREF_EDITOR_APPLY_IMMEDIATELY
+    bool TransferDataFromWindow() override {
+        setPresetInsertion();
+        setStyleEditor();
+        state::saveState();
+
+        return true;
+    }
+#   endif
+
+private:
+    void setPresetInsertion() {
+        auto insertCtxt{pcui::guiDataContext(mPresetInsertion)};
+        set<Enum::Add_Preset_Insertion>(
+            static_cast<enums::AddPresetInsertion>(insertCtxt.idx())
+        );
+    }
+
+    void setStyleEditor() {
+        auto editorCtxt{pcui::guiDataContext(mStyleEditor)};
+        set(Str::Style_Editor_Link, editorCtxt.val());
+    }
+
+#   ifdef wxHAS_PREF_EDITOR_APPLY_IMMEDIATELY
+    void onPresetInsertion() {
+        setPresetInsertion();
+        state::saveState();
+    }
+
+    void onStyleEditor() {
+        setStyleEditor();
+        state::saveState();
+    }
+#   endif
 
     pcui::DescriptorPtr ui() {
         return pcui::Stack{
@@ -150,50 +201,6 @@ struct GeneralPanel : pcui::detail::Panel
         }();
     }
 
-    bool TransferDataToWindow() override {
-        mPresetInsertion.choose(static_cast<int32>(
-            get<Enum::Add_Preset_Insertion>()
-        ));
-        mStyleEditor.change(get(Str::Style_Editor_Link));
-
-        return true;
-    }
-
-#   ifndef wxHAS_PREF_EDITOR_APPLY_IMMEDIATELY
-    bool TransferDataFromWindow() override {
-        auto insertCtxt{pcui::guiDataContext(mPresetInsertion)};
-        set<Enum::Add_Preset_Insertion>(
-            static_cast<enums::AddPresetInsertion>(insertCtxt.idx())
-        );
-
-        auto editorCtxt{pcui::guiDataContext(mStyleEditor)};
-        set(Str::Style_Editor_Link, editorCtxt.val());
-
-        state::saveState();
-
-        return true;
-    }
-#   endif
-
-private:
-#   ifdef wxHAS_PREF_EDITOR_APPLY_IMMEDIATELY
-    void onPresetInsertion() {
-        auto insertCtxt{pcui::guiDataContext(mPresetInsertion)};
-        set<Enum::Add_Preset_Insertion>(
-            static_cast<enums::AddPresetInsertion>(insertCtxt.idx())
-        );
-
-        state::saveState();
-    }
-
-    void onStyleEditor() {
-        auto editorCtxt{pcui::guiDataContext(mStyleEditor)};
-        set(Str::Style_Editor_Link, editorCtxt.val());
-
-        state::saveState();
-    }
-#   endif
-
     data::prim::Choice mPresetInsertion;
     data::prim::String mStyleEditor;
 };
@@ -207,14 +214,24 @@ struct GeneralPage : wxStockPreferencesPage {
     }
 };
 
-/*
 struct AdvancedPanel : pcui::detail::Panel
 #   ifdef wxHAS_PREF_EDITOR_APPLY_IMMEDIATELY
     , data::Receiver
 #   endif
     {
     AdvancedPanel(wxWindow *parent) : Panel(parent) {
+        mHandleKeepSavefiles.update(static_cast<size>(
+            enums::HandleKeepSaveFiles::Max
+        ));
+
 #       ifdef wxHAS_PREF_EDITOR_APPLY_IMMEDIATELY
+        static const auto savefilesTable{[] {
+            data::base::Choice::RecvTable table;
+            table.onChoice_ = data::map<&AdvancedPanel::onSavefiles>();
+            return table;
+        }()};
+        observeWith(mHandleKeepSavefiles, savefilesTable);
+
         activate();
 #       endif
 
@@ -225,6 +242,37 @@ struct AdvancedPanel : pcui::detail::Panel
         pcui::cripple(this);
     }
 
+    bool TransferDataToWindow() override {
+        mHandleKeepSavefiles.choose(static_cast<int32>(
+            get<Enum::Handle_Keep_Save_Files>()
+        ));
+        return true;
+    }
+
+#   ifndef wxHAS_PREF_EDITOR_APPLY_IMMEDIATELY
+    bool TransferDataFromWindow() override {
+        setHandleKeepSavefiles();
+        state::saveState();
+
+        return true;
+    }
+#endif
+
+private:
+    void setHandleKeepSavefiles() {
+        auto handleKeepSavefiles{pcui::guiDataContext(mHandleKeepSavefiles)};
+        set<Enum::Handle_Keep_Save_Files>(
+            static_cast<enums::HandleKeepSaveFiles>(handleKeepSavefiles.idx())
+        );
+    }
+
+#   ifdef wxHAS_PREF_EDITOR_APPLY_IMMEDIATELY
+    void onSavefiles() {
+        setHandleKeepSavefiles();
+        state::saveState();
+    }
+#   endif
+
     pcui::DescriptorPtr ui() {
         return pcui::Stack{
           .base_={
@@ -232,18 +280,43 @@ struct AdvancedPanel : pcui::detail::Panel
           },
           .orient_=wxVERTICAL,
           .children_={
+            pcui::Label{
+              .label_=_("Keep Savefiles When Programming is:"),
+            }(),
+            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            pcui::Choice{
+              .win_={
+                .base_={
+                  .border_={
+                    .size_=pcui::interGroupSpacing() * 2,
+                    .dirs_=wxLEFT
+                  },
+                },
+              },
+              .data_=mHandleKeepSavefiles,
+              .labeler_=[](uint32 idx) -> pcui::Choice::Label {
+                  switch (static_cast<enums::HandleKeepSaveFiles>(idx)) {
+                      using enum enums::HandleKeepSaveFiles;
+                      case Ignore_Alert:
+                        return _("Ignored, and an alert is shown if used");
+                      case Ignore:
+                        return _("Ignored");
+                      case Allow_Hide_Unused:
+                        return _("Allowed, but normally hidden");
+                      case Allow:
+                        return _("Allowed");
+                      case Max:
+                        break;
+                  }
+
+                  std::unreachable();
+              },
+            }(),
           }
         }();
     }
 
-    bool TransferDataToWindow() override {
-        return true;
-    }
-
-    bool TransferDataFromWindow() override {
-        return true; }
-
-private:
+    data::prim::Choice mHandleKeepSavefiles;
 };
 
 struct AdvancedPage : wxStockPreferencesPage {
@@ -254,13 +327,12 @@ struct AdvancedPage : wxStockPreferencesPage {
         return new AdvancedPanel(parent);
     }
 };
-*/
 
 } // namespace
 
 PreferencesDlg::PreferencesDlg() {
     mEditor.AddPage(new GeneralPage);
-    // mEditor.AddPage(new AdvancedPage);
+    mEditor.AddPage(new AdvancedPage);
 }
 
 void PreferencesDlg::show(wxWindow *parent) {

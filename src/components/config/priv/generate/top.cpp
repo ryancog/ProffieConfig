@@ -124,6 +124,11 @@ void forGeneral(std::ostream& out, const Config& config) {
     auto buttons{data::context(config.buttons_)};
     outputDefine(out, NUM_BUTTONS_STR, buttons.children().size());
 
+    if (data::context(settings.keepSaveFiles_).val()) {
+        out << "// WARNING: This option is advanced and may be confusing: https://pod.hubbe.net/config/keeping-edits-when-uploading.html\n";
+        outputDefine(out, KEEP_SAVEFILES_STR);
+    }
+
     const auto& bladeDetect{settings.bladeAwareness_.bladeDetect_};
     if (data::context(bladeDetect.enable_).val()) {
         auto pin{data::context(bladeDetect.pin_)};

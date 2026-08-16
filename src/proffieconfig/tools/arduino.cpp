@@ -59,6 +59,7 @@
 #include "ui/build.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/text.hpp"
+#include "ui/dialogs/message.hpp"
 #include "ui/dialogs/progress.hpp"
 #include "ui/helpers/dialog_buttons.hpp"
 #include "ui/helpers/if.hpp"
@@ -75,6 +76,7 @@
 #include "versions/detail/strings.hpp"
 
 #include "serialmonitor.hpp"
+#include "../core/state.hpp"
 
 using namespace std::chrono_literals;
 

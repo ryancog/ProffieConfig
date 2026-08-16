@@ -37,6 +37,8 @@
 #include "ui/types.hpp"
 #include "ui/values.hpp"
 
+#include "../../core/state.hpp"
+
 GeneralPage::GeneralPage(config::Config& config) : mConfig{config} {}
 
 void GeneralPage::deinit() {
@@ -436,6 +438,28 @@ pcui::DescriptorPtr GeneralPage::tweaks() {
               },
               .label_=_("Disable Diagnostic Commands"),
               .data_=mConfig.settings_.disableDiagnosticCommands_,
+            }(),
+            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            pcui::CheckBox{
+              .win_={
+                .show_=[&] -> data::logic::Holder {
+                    using namespace state::prefs;
+                    using enum enums::HandleKeepSaveFiles;
+
+                    auto pref{get<Enum::Handle_Keep_Save_Files>()};
+                    if (pref == Allow)
+                        return true;
+
+                    if (pref == Allow_Hide_Unused)
+                        return mConfig.settings_.keepSaveFiles_ |
+                            data::logic::IsSet{};
+
+                    return false;
+                }(),
+                .tooltip_=_("A somewhat difficult-to-particularly scary ."),
+              },
+              .label_=_("Keep Savefiles When Programming"),
+              .data_=mConfig.settings_.keepSaveFiles_,
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::Button{

@@ -52,6 +52,7 @@ enum class Str : size {
 
 enum class Enum : size {
     Add_Preset_Insertion,
+    Handle_Keep_Save_Files,
     Max,
 };
 
@@ -65,12 +66,25 @@ enum class AddPresetInsertion {
     Max,
 };
 
+enum class HandleKeepSaveFiles {
+    Ignore_Alert,
+    Ignore,
+    Allow_Hide_Unused,
+    Allow,
+    Max,
+};
+
 template <Enum ENUM>
 struct Data;
 
 template <>
 struct Data<Enum::Add_Preset_Insertion> {
     using Values = AddPresetInsertion;
+};
+
+template <>
+struct Data<Enum::Handle_Keep_Save_Files> {
+    using Values = HandleKeepSaveFiles;
 };
 
 } // namespace enums

@@ -35,6 +35,8 @@
 #include "ui/types.hpp"
 #include "ui/values.hpp"
 
+#include "../../tools/config.hpp"
+
 CustomOptionsDlg::CustomOptionsDlg(wxWindow *parent, config::Config& config) :
     pcui::Dialog(
         parent,
@@ -114,7 +116,10 @@ pcui::DescriptorPtr CustomOptionsDlg::ui() {
                 .tooltip_=_("Process the custom options, transferring any supported into the ProffieConfig GUI."),
               },
               .label_=_("Sync"),
-              .func_=[this] { mConfig.settings_.processDefines(); },
+              .func_=[this] {
+                  mConfig.settings_.processDefines();
+                  extraConfigOptionProcessing(mConfig);
+              },
             }(),
             pcui::StretchSpacer{}(),
             pcui::Button{

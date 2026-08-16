@@ -38,12 +38,14 @@ add_executable(proffieconfig WIN32
     onboard/pages/info.cpp
 
     tools/arduino.cpp
+    tools/config.cpp
     tools/serialmonitor.cpp
 )
 
 set(headers
-    tools/serialmonitor.hpp
     tools/arduino.hpp
+    tools/config.hpp
+    tools/serialmonitor.hpp
     core/state.hpp
     core/licenses.hpp
     onboard/onboard.hpp

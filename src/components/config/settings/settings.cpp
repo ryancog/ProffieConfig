@@ -46,6 +46,7 @@ Settings::Settings(Config& parent) :
     massStorage_(root()),
     mountSdSetting_(root()),
     webUsb_(root()),
+    keepSaveFiles_(root()),
     menu_{
         .enable_=root(),
         .specTemplate_=root(),
@@ -218,6 +219,8 @@ auto Settings::children() const -> std::vector<const Model *> {
         &mountSdSetting_,
 
 		&webUsb_,
+
+		&keepSaveFiles_,
 
 		&bladeAwareness_,
 
@@ -480,12 +483,13 @@ bool processDefine(
             define.val() == ENABLE_WS2811_STR or
             define.val() == ENABLE_SD_STR or
             define.val() == SHARED_POWER_PINS_STR or
-            define.val() == KEEP_SAVEFILES_STR or
             define.val() == NUM_BUTTONS_STR
        ) {
         // Do nothing
     // } else if (define.val() == RFID_SERIAL_STR) {
     // TODO: Not Yet Implemented
+    } else if (define.val() == KEEP_SAVEFILES_STR) {
+        settings.keepSaveFiles_.set(true);
     } else if (define.val() == BLADE_DETECT_PIN_STR) {
         auto& bladeDetect{settings.bladeAwareness_.bladeDetect_};
         bladeDetect.enable_.set(true);

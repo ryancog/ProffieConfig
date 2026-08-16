@@ -48,6 +48,7 @@
 #include "../onboard/onboard.hpp"
 #include "../editor/editorwindow.hpp"
 #include "../tools/arduino.hpp"
+#include "../tools/config.hpp"
 #include "dialogs/about.hpp"
 #include "dialogs/addconfig.hpp"
 #include "dialogs/licenses.hpp"
@@ -586,6 +587,7 @@ void MainMenu::onApplyConfig() {
         }
 
         auto& config{*info->config()};
+        extraConfigOptionProcessing(config);
         auto& compInfo{arduino::getCacheInfo(config, clean)};
 
         auto name{pcui::guiDataContext(info->name())};

@@ -46,6 +46,7 @@
 
 #include "../core/state.hpp"
 #include "../tools/arduino.hpp"
+#include "../tools/config.hpp"
 
 namespace {
 
@@ -315,7 +316,10 @@ void EditorWindow::onVerify(wxCommandEvent& evt) {
 
     std::thread{[this, prog, busy, clean]() {
         auto name{pcui::guiDataContext(mInfo.name())};
+
         auto& config{*mInfo.config()};
+        extraConfigOptionProcessing(config);
+
         auto& compInfo{arduino::getCacheInfo(config, clean)};
         arduino::verifyConfig(name.val(), compInfo, *prog);
     }}.detach();
