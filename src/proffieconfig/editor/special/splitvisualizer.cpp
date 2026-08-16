@@ -55,7 +55,7 @@ struct Window : data::Receiver, wxWindow {
 
     bool Layout() override;
 
-    void regenerateSplitData();
+    bool regenerateSplitData();
     void recalcSizes();
 
     wxSize DoGetBestClientSize() const override;
@@ -83,6 +83,7 @@ struct Window : data::Receiver, wxWindow {
         uint32 segments_;
     };
 
+    std::mutex splitLock_;
     std::vector<SplitData> splitData_;
     int32 selectedSplit_{-1};
     int32 hoveredSplit_{-1};
@@ -227,21 +228,23 @@ wxSize Window::DoGetBestClientSize() const {
     return minSize;
 }
 
-void Window::regenerateSplitData() {
+bool Window::regenerateSplitData() {
+    std::lock_guard scopeLock(splitLock_);
+
     auto splitVec{pcui::guiDataContext(blade_.splits_)};
-    auto length{pcui::guiDataContext(blade_.length_)};
+    auto bladeLength{pcui::guiDataContext(blade_.length_)};
 
     splitData_.clear();
 
     if (splitVec.children().empty()) {
         SplitData data;
         data.start_ = 0;
-        data.length_ = length.val();
+        data.length_ = bladeLength.val();
         data.splitIdx_ = 0;
         data.segments_ = 0;
 
         splitData_.push_back(data);
-        return;
+        return true;
     }
 
     for (auto idx{0}; idx < splitVec.children().size(); ++idx) {
@@ -256,6 +259,13 @@ void Window::regenerateSplitData() {
         auto start{pcui::guiDataContext(split.start_)};
         auto length{pcui::guiDataContext(split.length_)};
         auto segments{pcui::guiDataContext(split.segments_)};
+
+        // It's possible this can happen if the values aren't done settling,
+        // bail out for now assuming another notification is coming.
+        if (start.val() + length.val() > bladeLength.val()) {
+            splitData_.clear();
+            return false;
+        }
 
         if (type.selected() == eStandard or type.selected() == eReverse) {
             SplitData data;
@@ -299,9 +309,13 @@ void Window::regenerateSplitData() {
             }
         }
     }
+
+    return true;
 }
 
 void Window::recalcSizes() {
+    std::lock_guard scopedLock(splitLock_);
+
     auto length{pcui::guiDataContext(blade_.length_)};
 
     sizes_.clear();
@@ -671,11 +685,8 @@ void Window::onVecInsert(size pos) {
     auto& split{dynamic_cast<config::blades::WS281X::Split&>(*model)};
 
     attachSplit(split);
-
-    pcui::safeCall([this] {
-        regenerateSplitData();
-        Layout();
-    });
+    if (regenerateSplitData())
+        pcui::safeCall([this] { Layout(); });
 }
 
 void Window::preVecRemove(size pos) {
@@ -688,17 +699,13 @@ void Window::preVecRemove(size pos) {
 }
 
 void Window::onVecRemove(size) {
-    pcui::safeCall([this] {
-        regenerateSplitData();
-        Layout();
-    });
+    if (regenerateSplitData())
+        pcui::safeCall([this] { Layout(); });
 }
 
 void Window::onLength() {
-    pcui::safeCall([this] {
-        regenerateSplitData();
-        Layout();
-    });
+    if (regenerateSplitData())
+        pcui::safeCall([this] { Layout(); });
 }
 
 void Window::onChoice() {
@@ -709,10 +716,8 @@ void Window::onChoice() {
 }
 
 void Window::onSplitChange() {
-    pcui::safeCall([this] {
-        regenerateSplitData();
-        Layout();
-    });
+    if (regenerateSplitData())
+        pcui::safeCall([this] { Layout(); });
 }
 
 void Window::attachSplit(config::blades::WS281X::Split& split) {
