@@ -233,6 +233,20 @@ void EditorWindow::onIsSaved() {
 
 #   ifdef __WXOSX__
     OSXSetModified(not ctxt.val());
+#   else
+    if (ctxt.val()) {
+        auto title{GetTitle()};
+        if (not title.empty() and title[0] == '*')
+            title = title.substr(1);
+
+        SetTitle(title);
+    } else {
+        auto title{GetTitle()};
+        if (title.empty() or title[0] != '*')
+            title = '*' + title;
+
+        SetTitle(title);
+    }
 #   endif
 }
 
