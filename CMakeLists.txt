@@ -151,3 +151,7 @@ add_subdirectory(resources)
 add_subdirectory(src)
 # add_subdirectory(tests EXCLUDE_FROM_ALL)
 
+if (CMAKE_BUILD_TYPE STREQUAL Release AND CMAKE_SYSTEM_NAME STREQUAL Darwin)
+    install(SCRIPT cmake/CheckLibraries.cmake)
+endif()
+

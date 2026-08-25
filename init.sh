@@ -312,7 +312,10 @@ if [ "$TARGET_PLATFORM" == "linux" ]; then
     WX_PLATFORM_FLAGS='--with-gtk=3'
 elif [ "$TARGET_PLATFORM" == "macOS" ]; then
     WX_HOST='x86_64-apple-darwin --enable-universal_binary=x86_64,arm64 --with-macosx-version-min=11.0'
-    WX_PLATFORM_FLAGS='--with-osx'
+    # I'm not sure why curl is a default on macOS, that seems silly, but
+    # explicitly disable it... it pulls in external (non-standard system)
+    # libraries.
+    WX_PLATFORM_FLAGS='--with-osx --without-libcurl'
 elif [ "$TARGET_PLATFORM" == "win32" ]; then
     if [ "$BUILD_PLATFORM" == "linux" ]; then
         export LDFLAGS="-static-libstdc++ -static-libgcc"
