@@ -29,5 +29,5 @@ target_link_libraries(versions
 )
 
 include(../Component.cmake)
-setup_component_and_static(versions 1.2.2 ${headers})
+setup_component_and_static(versions 1.3.0 ${headers})
 
