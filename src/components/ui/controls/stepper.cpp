@@ -19,8 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wx/spinctrl.h>
 #include <wx/colour.h>
+#include <wx/spinctrl.h>
+#include <wx/textctrl.h>
 
 #include "data/base/models/number.hpp"
 #include "data/context.hpp"
@@ -42,7 +43,7 @@ struct IntCtrl : detail::DataWindow<wxSpinCtrl> {
             wxEmptyString,
             wxDefaultPosition,
             wxDefaultSize,
-            0
+            wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER
         );
 
         postCreation(scaffold, desc.win_);
@@ -69,6 +70,7 @@ struct IntCtrl : detail::DataWindow<wxSpinCtrl> {
         SetValue(ctxt.val());
 
         Bind(wxEVT_SPINCTRL, &IntCtrl::onSpin, this);
+        Bind(wxEVT_TEXT_ENTER, &IntCtrl::onEnter, this);
     }
 
     const data::base::Model *primaryModel() override {
@@ -82,6 +84,20 @@ struct IntCtrl : detail::DataWindow<wxSpinCtrl> {
         if (not en) return;
 
         auto res{int_.set(evt.GetValue())};
+
+        if (not res)
+            SetValue(data::context(int_).val());
+    }
+
+    void onEnter(wxCommandEvent&) {
+        auto en{freezeGetRealEnable()};
+        defer { thawRealEnable(); };
+
+        if (not en)
+            return;
+
+        SetValue(GetTextValue());
+        auto res{int_.set(GetValue())};
 
         if (not res)
             SetValue(data::context(int_).val());
@@ -112,7 +128,7 @@ struct DoubleCtrl : detail::DataWindow<wxSpinCtrlDouble> {
             wxEmptyString,
             wxDefaultPosition,
             wxDefaultSize,
-            0
+            wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER
         );
 
         postCreation(scaffold, desc.win_);
@@ -139,6 +155,7 @@ struct DoubleCtrl : detail::DataWindow<wxSpinCtrlDouble> {
         SetValue(ctxt.val());
 
         Bind(wxEVT_SPINCTRLDOUBLE, &DoubleCtrl::onSpin, this);
+        Bind(wxEVT_TEXT_ENTER, &DoubleCtrl::onEnter, this);
     }
 
     const data::base::Model *primaryModel() override {
@@ -152,6 +169,20 @@ struct DoubleCtrl : detail::DataWindow<wxSpinCtrlDouble> {
         if (not en) return;
 
         auto res{dec_.set(evt.GetValue())};
+
+        if (not res)
+            SetValue(data::context(dec_).val());
+    }
+    
+    void onEnter(wxCommandEvent&) {
+        auto en{freezeGetRealEnable()};
+        defer { thawRealEnable(); };
+
+        if (not en)
+            return;
+
+        SetValue(GetTextValue());
+        auto res{dec_.set(GetValue())};
 
         if (not res)
             SetValue(data::context(dec_).val());
