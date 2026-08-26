@@ -57,6 +57,10 @@ VERSIONS_EXPORT std::optional<std::string> installDefault(
     bool purge, logging::Branch * = nullptr
 );
 
+VERSIONS_EXPORT std::optional<std::string> installAllForOS(
+    const utils::Version&, logging::Branch * = nullptr
+);
+
 VERSIONS_EXPORT std::optional<std::string> downloadOS(
     const utils::Version&, logging::Branch * = nullptr
 );

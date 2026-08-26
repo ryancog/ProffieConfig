@@ -505,8 +505,16 @@ std::optional<std::string> versions::installDefault(
         }
     }
 
+    return installAllForOS(DEFAULT_OS_VERSION, logger.binfo("Installing"));
+}
+
+std::optional<std::string> versions::installAllForOS(
+    const utils::Version& version, logging::Branch *lBranch
+) {
+    auto& logger{logging::Branch::optCreateLogger("versions::installAllForOS()", lBranch)};
+
     auto osDownErr{downloadOS(
-        DEFAULT_OS_VERSION,
+        version,
         logger.binfo("Downloading ProffieOS")
     )};
     if (osDownErr)
@@ -518,7 +526,7 @@ std::optional<std::string> versions::installDefault(
 
             bool supportsDefault{false};
             for (const auto& ver : availProp.supportedVersions_) {
-                if (ver.compare(DEFAULT_OS_VERSION) != 0)
+                if (ver.compare(version) != 0)
                     continue;
 
                 supportsDefault = true;

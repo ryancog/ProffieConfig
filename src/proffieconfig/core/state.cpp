@@ -310,7 +310,15 @@ namespace {
 void doNecessaryMigrations() {
     std::error_code err;
     
-    // REVIEW
+    const auto showVersionsError{[] {
+        pcui::showMessage(
+            _("You should visit the versions manager to retry installing the defaults soon."),
+            {
+                .caption_=_("Versions Download Failed"),
+                .style_=wxOK | wxCENTER | wxICON_WARNING
+            }
+        );
+    }};
 
     if (lastVersion.compare(utils::Version{1, 8}) < 0) {
         // Purge old ProffieOS and props data 
@@ -327,14 +335,14 @@ void doNecessaryMigrations() {
                 // Get new stuffage for 7.15 installation
                 versions::downloadOS({7, 15})
            ) {
-            pcui::showMessage(
-                _("You should visit the versions manager to retry fetching the defaults soon."),
-                {
-                    .caption_=_("Versions Download Failed"),
-                    .style_=wxOK | wxCENTER | wxICON_WARNING
-                }
-            );
+            showVersionsError();
         }
+    }
+
+    if (lastVersion.compare(utils::Version{1, 9, 9}) < 0) {
+        // Forgot to update 7.15 prop data :/
+        if (versions::fetch() or versions::installAllForOS({7, 15}))
+            showVersionsError();
     }
 
     state::saveState();
