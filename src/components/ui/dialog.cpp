@@ -49,6 +49,8 @@ Dialog::Dialog(
 
     priv::tlw::postCreate(this);
 
+    // Normally the wxDialog EVT_CHAR_HOOK handler only will dismiss the dialog
+    // via ESC if there's a button with GetEscapeId() id.
     Bind(wxEVT_CHAR_HOOK, [this](wxKeyEvent& evt) {
         if (evt.GetKeyCode() == WXK_ESCAPE)
             EndDialog(wxID_CANCEL);

@@ -42,6 +42,18 @@
 
 using namespace pcui;
 
+// NOTE: This uses a Dialog (and not a Frame) because the ShowWindowModal()
+// behavior is used. Since it's always supposed to be heap-allocated though, the
+// close and button handling needs to be overridden in order to close/destroy.
+//
+// I'm not a huge fan of the fact that there's not a straightforward way to
+// handle a heap-created dialog.
+//
+// Previously, I tried to just hook EVT_SHOW to catch hiding and destroy then,
+// but that ignores the fact that the dialog may be legitimately hidden other
+// times besides close, so the more cumbersome approach of handling all the
+// "close" flows is needed.
+
 ProgressDialog::ProgressDialog(
     wxWindow *parent,
     const wxString& title,
@@ -53,6 +65,21 @@ ProgressDialog::ProgressDialog(
 
     size.IncTo({200, 50});
     build(this, ui(mayCancel, size));
+
+    // Intercept the usual Dialog handling (which calls EndDialog)
+    Bind(wxEVT_CLOSE_WINDOW, [this](wxCloseEvent&) {
+        Destroy();
+    });
+
+    // Override the char hook handling to close instead of passing along to the
+    // dialog functions which will just hide.
+    Bind(wxEVT_CHAR_HOOK, [this](wxKeyEvent& evt) {
+        if (evt.GetKeyCode() == WXK_ESCAPE)
+            Close();
+        else 
+            // Don't always skip, otherwise, on macOS, the bell is rung.
+            evt.Skip();
+    });
 
     if (parent) {
 #   if __WXOSX__
@@ -76,21 +103,6 @@ ProgressDialog::ProgressDialog(
     } else {
         Show();
     }
-
-    // Dialogs are kind of odd in that they just hide themselves when done
-    // rather than destroying like normal. Presumably this is because wxWidgets
-    // expects dialogs to often(?) be created on the stack, shown with
-    // ShowModal(), etc.
-    Bind(wxEVT_SHOW, [this](wxShowEvent& evt) {
-        evt.Skip();
-
-        if (evt.GetEventObject() != this)
-            return;
-
-        if (not evt.IsShown())
-            // NOTE: This should always be heap-allocated.
-            Destroy();
-    });
 }
 
 ProgressDialog::~ProgressDialog() {
@@ -231,6 +243,10 @@ DescriptorPtr ProgressDialog::ui(bool mayCancel, wxSize size) {
               .show_=mData | Progress::Logic::Is_Done,
             },
             .label_=_("OK"),
+            .func_=[this] {
+                // Do this manually, normal handling for a dialog won't.
+                Close();
+            }
           }(),
           .cancel_=mayCancel ? Button{
             .win_={
