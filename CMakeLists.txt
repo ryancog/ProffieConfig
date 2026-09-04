@@ -94,7 +94,7 @@ if (CMAKE_BUILD_TYPE STREQUAL Release)
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
-    set(LOCAL_BUILD TRUE)
+    set(LOCAL_BUILD TRUE CACHE BOOL "Use Local Deployment Paths")
 
     if (NOT CMAKE_SYSTEM_NAME STREQUAL Windows)
         add_compile_options(-fsanitize=address)
