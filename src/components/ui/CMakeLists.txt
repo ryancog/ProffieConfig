@@ -138,7 +138,7 @@ target_link_libraries(ui
 )
 
 include(../Component.cmake)
-setup_component_and_static(ui 1.2.1 ${headers})
+setup_component_and_static(ui 1.2.2 ${headers})
 
 if (CMAKE_SYSTEM_NAME STREQUAL Windows OR CROSS_COMPILE STREQUAL Windows)
     target_link_libraries(ui dwmapi)
