@@ -150,12 +150,12 @@ void ProgressDialog::finish(bool modalWait, const wxString& message) {
         // processor.
         if (data::context(mCancelled).val()) {
             // If it's been pressed, we don't wait in any case.
-            EndDialog(wxID_CANCEL);
+            Close();
             return;
         }
 
         if (not modalWait) {
-            EndDialog(wxID_OK);
+            Close();
             return;
         }
 
