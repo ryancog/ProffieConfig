@@ -32,7 +32,7 @@ set(headers
 set_target_properties(launcher PROPERTIES
     OUTPUT_NAME "ProffieConfig"
     DESCRIPTION "ProffieConfig Launcher" # Windows is stupid so this isn't actually a description
-    BIN_VERSION 1.0.12
+    BIN_VERSION 1.0.13
     TRANSLATIONS es
     MACOSX_BUNDLE_GUI_IDENTIFIER "com.kafrenetrading.proffieconfiglauncher"
     MACOSX_BUNDLE_ICON_FILE "icon.icns"
