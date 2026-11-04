@@ -65,6 +65,12 @@ std::optional<std::string> config::priv::parse::presets(
                 if (directive.type_ == CPPDirective::Type::Include)
                     tryAddInjection(config, directive.buf1_);
 
+                // NOTE: I could store macros and do substitution, but since
+                // that's not a great practice and is only really used in a
+                // couple of configs, just ignore them and let the bladestyles
+                // (if there's even any that use whatever macro) fail during
+                // verification.
+
                 continue;
             }
 
