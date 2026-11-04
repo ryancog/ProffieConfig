@@ -26,6 +26,7 @@
 #include <stack>
 #include <utility>
 
+#include "utils/defer.hpp"
 #include "utils/types.hpp"
 
 void utils::trimWhitespace(std::string& str) {
@@ -187,8 +188,11 @@ bool utils::extractComments(CommentData& data) {
     data.out_.clear();
     data.type_ = CommentData::eType_None;
 
+    char last_chr{0};
     while (not false) {
         auto chr{data.stream_.get()};
+        defer { last_chr = chr; };
+
         if (not data.stream_.good())
             return data.type_ != CommentData::eType_None;
 
@@ -198,7 +202,26 @@ bool utils::extractComments(CommentData& data) {
                 std::iscntrl(chr) and
                 chr != '\n' and
                 chr != '\t'
-           ) continue;
+           ) {
+            // Make sure control characters don't interfere w/ last_chr
+            // recording. Now the deferral won't change last_chr.
+            chr = last_chr;
+            continue;
+        }
+
+        // Fortunately, though admittedly misleading, extractComments() is also
+        // largely used as a whitespace handler. This means the handling for
+        // line continuations here should cover them throughout most parsing.
+        if (chr == '\n' and last_chr == '\\') {
+            // Pop the backslash from the buffer if it was recorded.
+            if (reading != CommentData::eType_None) {
+                assert(buf.back() == '\\');
+                buf.pop_back();
+            }
+
+            // The newline is "escaped" and ignored.
+            continue;
+        }
 
         if (reading == CommentData::eType_None) {
             if (not data.skipNewlines_ and chr == '\n') {
