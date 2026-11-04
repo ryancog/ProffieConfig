@@ -926,13 +926,13 @@ Error precheckCompile(
     auto& logger{lBranch.createLogger("arduino::precheckCompile()")};
 
     if (config.os() == nullptr) {
-        logger.error("Configuration doesn't have an OS Version selected, cannot compile.");
-        return Error::Simple | _("Please select an OS Version");
+        logger.error("Configuration doesn't have an OS version selected, cannot compile.");
+        return Error::Simple | _("Please select an OS version in the editor");
     }
 
     if (config.board() == nullptr) {
-        logger.error("Board not selected.");
-        return Error::Simple | _("Please select a board");
+        logger.error("Board version not selected.");
+        return Error::Simple | _("Please select a board version in the editor");
     }
 
     auto bladeConfigs{data::context(config.bladeConfigs_)};
