@@ -39,6 +39,10 @@
 #include "update/changelog.hpp"
 #include "update/install.hpp"
 
+#if _WIN32
+#include "vcredist.hpp"
+#endif
+
 /**
  * This stuff works well enough, but virtually all the code in the launcher
  * is ugly. It could do with a lot of work at some point.
@@ -303,5 +307,24 @@ public:
 };
 
 // NOLINTNEXTLINE(misc-use-internal-linkage)
+#if _WIN32
+wxIMPLEMENT_APP_NO_MAIN(Launcher);
+
+extern "C" int WINAPI WinMain(
+    wxIN HINSTANCE hInstance,
+    wxIN_OPT HINSTANCE hPrevInstance,
+    wxIN wxCmdLineArgType lpCmdLine,
+    wxIN int nShowCmd
+) {
+    if (not check_vcredist()) {
+        show_redist_message();
+        return 0;
+    }
+
+    wxDISABLE_DEBUG_SUPPORT();
+    return wxEntry(hInstance, hPrevInstance, lpCmdLine, nShowCmd);
+}
+#else
 wxIMPLEMENT_APP(Launcher);
+#endif
 

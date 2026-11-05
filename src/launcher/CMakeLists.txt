@@ -21,6 +21,18 @@ add_executable(launcher WIN32 MACOSX_BUNDLE
     ${ICON_PATH}
 )
 
+if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+    target_sources(launcher PRIVATE vcredist.cpp)
+
+    # Use statically-linked runtime library for the launcher.
+    set_target_properties(launcher PROPERTIES
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    # This isn't linked normally because w/ wxWidgets DLLs there's conflicts,
+    # so add it back.
+    target_link_libraries(launcher libcmt)
+endif()
+
 set(headers
     routines.hpp
     update/update.hpp

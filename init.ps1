@@ -101,15 +101,19 @@ if ((Test-Path -Path "install-win32-static-dbg") -and (Test-Path -Path "install-
         Remove-Item -Path "build-win32-static-dbg" -Recurse -Force | out-null
     }
 
+    # Using statically-linked VC++ runtimes, also.
+
     Write-Output "    Configuring static..."
     cmake -S . -B build-win32-static-rel `
         -DCMAKE_INSTALL_PREFIX=install-win32-static-rel `
         -DwxBUILD_SHARED=OFF `
+        -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded `
         -DCMAKE_BUILD_TYPE=Release $wxFlags
 
     cmake -S . -B build-win32-static-dbg `
         -DCMAKE_INSTALL_PREFIX=install-win32-static-dbg `
         -DwxBUILD_SHARED=OFF `
+        -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDebug `
         -DCMAKE_BUILD_TYPE=Debug $wxFlags
 
     Write-Output "    Building static..."

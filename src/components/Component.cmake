@@ -39,6 +39,13 @@ function(setup_component_and_static TARGET VERSION HEADERS)
         BIN_VERSION ${VERSION}
     )
 
+    if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+        # Use statically-linked runtime library
+        set_target_properties(${TARGET}-static PROPERTIES
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+        )
+    endif()
+
     get_target_property(LINK_LIBRARIES ${TARGET} LINK_LIBRARIES)
     if (NOT LINK_LIBRARIES STREQUAL "LINK_LIBRARIES-NOTFOUND")
         foreach(LIB IN LISTS LINK_LIBRARIES)
