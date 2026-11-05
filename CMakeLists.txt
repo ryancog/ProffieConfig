@@ -49,8 +49,8 @@ cmake_path(GET CMAKE_CURRENT_BINARY_DIR FILENAME BUILD_NAME)
 set(INSTALL_DIR ${CMAKE_CURRENT_LIST_DIR}/deploy/${BUILD_NAME})
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    # string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHs-c- /D_HAS_EXCEPTIONS=0")
+    string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHs-c- /D_HAS_EXCEPTIONS=0")
     # This is a hack because I can't figure out how to otherwise solve the
     # "No Target Architecture" error in `windows.h`
     add_compile_definitions(_AMD64_)
@@ -59,6 +59,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # add_link_options(/NODEFAULTLIB:MSVCRT)
 
     add_compile_options(/FS)
+
+    set(CMAKE_VS_USE_DEBUG_LIBRARIES "$<CONFIG:Debug>")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
 endif()
@@ -69,7 +71,7 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
     add_compile_definitions(UNICODE _UNICODE)
 endif()
 
-if (CMAKE_BUILD_TYPE STREQUAL Release)
+if (CMAKE_BUILD_TYPE STREQUAL Release OR CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
     if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
         set(REL_COMP_FLAGS "")
         set(REL_LINK_FLAGS "")
