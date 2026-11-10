@@ -37,24 +37,22 @@ namespace prefs {
 // Default is off
 enum class Bool : size {
     Hide_Editor_Manage_Versions_Warn,
-    Max
+    Bool_Max
 };
-
-template <Bool PREF>
-struct BoolData {
-
-};
+using enum Bool;
 
 enum class Str : size {
     Style_Editor_Link,
-    Max
+    Str_Max
 };
+using enum Str;
 
 enum class Enum : size {
     Add_Preset_Insertion,
     Handle_Keep_Save_Files,
-    Max,
+    Enum_Max,
 };
+using enum Enum;
 
 namespace enums {
 
@@ -77,15 +75,16 @@ enum class HandleKeepSaveFiles {
 template <Enum ENUM>
 struct Data;
 
-template <>
-struct Data<Enum::Add_Preset_Insertion> {
-    using Values = AddPresetInsertion;
-};
+#define ENUM_MAP(pref, enum) \
+    template <>                 \
+    struct Data<Enum::pref> {   \
+        using Values = enum;    \
+    };
 
-template <>
-struct Data<Enum::Handle_Keep_Save_Files> {
-    using Values = HandleKeepSaveFiles;
-};
+ENUM_MAP(Add_Preset_Insertion, AddPresetInsertion);
+ENUM_MAP(Handle_Keep_Save_Files, HandleKeepSaveFiles);
+
+#undef ENUM_MAP
 
 } // namespace enums
 

@@ -48,11 +48,14 @@ utils::Version lastVersion{};
 
 void doNecessaryMigrations();
 
-constexpr auto NUM_BOOL_PREFS{static_cast<size>(state::prefs::Bool::Max)};
-constexpr auto NUM_STR_PREFS{static_cast<size>(state::prefs::Str::Max)};
-constexpr auto NUM_ENUM_PREFS{static_cast<size>(state::prefs::Enum::Max)};
+constexpr auto NUM_BOOL_PREFS{static_cast<size>(state::prefs::Bool_Max)};
+constexpr auto NUM_STR_PREFS{static_cast<size>(state::prefs::Str_Max)};
+constexpr auto NUM_ENUM_PREFS{static_cast<size>(state::prefs::Enum_Max)};
 
+std::mutex pref_mutex;
 std::bitset<NUM_BOOL_PREFS> boolPrefs;
+std::array<std::string, NUM_STR_PREFS> strPrefs;
+std::array<size, NUM_ENUM_PREFS> enumPrefs;
 
 // Helpers to provide names and have no default dtor to avoid errors when
 // updating/adding preferences.
@@ -100,8 +103,6 @@ constexpr std::array<BoolPrefStrings, NUM_BOOL_PREFS> BOOL_PREF_STRS{
     "HIDE_EDITOR_MANAGE_VERSIONS_WARN",
 };
 
-std::array<std::string, NUM_STR_PREFS> strPrefs;
-
 constexpr std::array<StringPrefStrings, NUM_STR_PREFS> STR_PREF_STRS{{
     {
         "STYLE_EDITOR_LINK",
@@ -109,7 +110,6 @@ constexpr std::array<StringPrefStrings, NUM_STR_PREFS> STR_PREF_STRS{{
     },
 }};
 
-std::array<size, NUM_ENUM_PREFS> enumPrefs;
 const std::array<EnumPrefStrings, NUM_ENUM_PREFS> ENUM_PREF_STRS{{
     EnumPrefStrings::make<state::prefs::enums::AddPresetInsertion::After_Selected>(
         "ADD_PRESET_INSERTION", std::array{
@@ -147,32 +147,44 @@ void state::init() {
 }
 
 bool state::prefs::get(Bool pref) {
-    assert(pref < Bool::Max);
+    assert(pref < Bool_Max);
+
+    std::lock_guard lk(pref_mutex);
     return boolPrefs[static_cast<size>(pref)];
 }
 
 void state::prefs::set(Bool pref, bool set) {
-    assert(pref < Bool::Max);
+    assert(pref < Bool_Max);
+
+    std::lock_guard lk(pref_mutex);
     boolPrefs[static_cast<size>(pref)] = set;
 }
 
 std::string state::prefs::get(Str pref) {
-    assert(pref < Str::Max);
+    assert(pref < Str_Max);
+
+    std::lock_guard lk(pref_mutex);
     return strPrefs[static_cast<size>(pref)];
 }
 
 void state::prefs::set(Str pref, std::string s) {
-    assert(pref < Str::Max);
+    assert(pref < Str_Max);
+
+    std::lock_guard lk(pref_mutex);
     strPrefs[static_cast<size>(pref)] = std::move(s);
 }
 
 size state::prefs::priv::get(Enum pref) {
-    assert(pref < Enum::Max);
+    assert(pref < Enum_Max);
+
+    std::lock_guard lk(pref_mutex);
     return enumPrefs[static_cast<size>(pref)];
 }
 
 void state::prefs::priv::set(Enum pref, size e) {
-    assert(pref < Enum::Max);
+    assert(pref < Enum_Max);
+
+    std::lock_guard lk(pref_mutex);
     enumPrefs[static_cast<size>(pref)] = e;
 }
 
