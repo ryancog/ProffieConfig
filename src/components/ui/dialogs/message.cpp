@@ -19,81 +19,90 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <future>
+
 #include <wx/msgdlg.h>
 #include <wx/richmsgdlg.h>
-#ifdef __WXMSW__
-#include <wx/generic/richmsgdlgg.h>
-#endif
 
 #include "app/app.hpp"
+#include "ui/utils.hpp"
+
+#if __WXMSW__
+#include <wx/generic/richmsgdlgg.h>
+
+// for dark mode
+using MessageDialogType = wxGenericMessageDialog;
+using RichMessageDialogType = wxGenericRichMessageDialog;
+#else
+using MessageDialogType = wxMessageDialog;
+using RichMessageDialogType = wxRichMessageDialog;
+#endif
 
 int32 pcui::showMessage(
     const wxString& msg,
     const dialogs::message::Args& args
 ) {
-    const auto& caption{args.caption_.empty() ? app::getName() : args.caption_};
+    std::promise<int32> promise;
 
-#   ifdef __WXMSW__
-    // for dark mode
-    wxGenericMessageDialog dlg(
-        args.parent_,
-        msg,
-        caption,
-        static_cast<long>(args.style_)
-    );
-#   else
-    wxMessageDialog dlg(
-        args.parent_,
-        msg,
-        caption,
-        static_cast<long>(args.style_)
-    );
-#   endif
+    const auto show_dialog{[&] {
+        const auto& caption{args.caption_.empty()
+            ? app::getName()
+            : args.caption_
+        };
+        MessageDialogType dlg(
+            args.parent_,
+            msg,
+            caption,
+            static_cast<long>(args.style_)
+        );
 
-    dlg.SetOKCancelLabels(args.labels_.ok_, args.labels_.cancel_);
-    dlg.SetYesNoLabels(args.labels_.yes_, args.labels_.no_);
+        dlg.SetOKCancelLabels(args.labels_.ok_, args.labels_.cancel_);
+        dlg.SetYesNoLabels(args.labels_.yes_, args.labels_.no_);
 
-    auto ret{dlg.ShowModal()};
-    switch (ret) {
-        case wxID_OK: return wxOK;
-        case wxID_CANCEL: return wxCANCEL;
-        case wxID_YES: return wxYES;
-        case wxID_NO: return wxNO;
-        case wxID_HELP: return wxHELP;
-        default: return 0;
-    }
+        auto res{dlg.ShowModal()};
+        promise.set_value([res] {
+            switch (res) {
+                case wxID_OK: return wxOK;
+                case wxID_CANCEL: return wxCANCEL;
+                case wxID_YES: return wxYES;
+                case wxID_NO: return wxNO;
+                case wxID_HELP: return wxHELP;
+                default: return 0;
+            }
+        }());
+    }};
+
+    pcui::safeCall(show_dialog);
+    return promise.get_future().get();
 }
 
 pcui::HideableResult pcui::showHideablePrompt(
     const wxString& msg,
     const dialogs::message::Args& args
 ) {
-    const auto& caption{args.caption_.empty() ? app::getName() : args.caption_};
+    std::promise<HideableResult> promise;
 
-#   ifdef __WXMSW__
-    wxGenericRichMessageDialog dlg(
-        args.parent_,
-        msg,
-        caption,
-        static_cast<long>(args.style_)
-    );
-#   else
-    wxRichMessageDialog dlg(
-        args.parent_,
-        msg,
-        caption,
-        static_cast<long>(args.style_)
-    );
-#   endif
+    const auto show_dialog{[&] {
+        RichMessageDialogType dlg(
+            args.parent_,
+            msg,
+            args.caption_.empty()
+                ? app::getName()
+                : args.caption_,
+            static_cast<long>(args.style_)
+        );
 
-    dlg.SetOKCancelLabels(args.labels_.ok_, args.labels_.cancel_);
-    dlg.SetYesNoLabels(args.labels_.yes_, args.labels_.no_);
+        dlg.SetOKCancelLabels(args.labels_.ok_, args.labels_.cancel_);
+        dlg.SetYesNoLabels(args.labels_.yes_, args.labels_.no_);
+        dlg.ShowCheckBox(_("Do Not Show Again"));
 
-    dlg.ShowCheckBox(_("Do Not Show Again"));
+        HideableResult result;
+        result.id_ = dlg.ShowModal();
+        result.wantsHide_ = dlg.IsCheckBoxChecked();
+        promise.set_value(result);
+    }};
 
-    HideableResult ret;
-    ret.id_ = dlg.ShowModal();
-    ret.wantsHide_ = dlg.IsCheckBoxChecked();
-    return ret;
+    pcui::safeCall(show_dialog);
+    return promise.get_future().get();
 }
 
