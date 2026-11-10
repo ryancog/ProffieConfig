@@ -501,7 +501,7 @@ void MainMenu::onEditConfig() {
 
     auto iter{mEditors.find(&info)};
     if (iter == mEditors.end()) {
-        auto *editor{new EditorWindow(this, info)};
+        auto *editor{new EditorWindow(info)};
 
         const auto onDestroy{[this, editor](
             wxWindowDestroyEvent& evt

@@ -33,7 +33,7 @@
 #include "dialogs/injections.hpp"
 
 struct EditorWindow : pcui::Frame, data::Receiver {
-    EditorWindow(wxWindow *, config::Info&);
+    EditorWindow(config::Info&);
     ~EditorWindow() override;
 
     void Fit() final;

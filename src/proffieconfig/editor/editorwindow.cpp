@@ -54,9 +54,9 @@ ssize millis();
 
 } // namespace
 
-EditorWindow::EditorWindow(wxWindow *parent, config::Info& info) : 
+EditorWindow::EditorWindow(config::Info& info) : 
     pcui::Frame(
-        parent,
+        nullptr,
         wxID_ANY,
         // TODO: Add receiver and update name on change.
         pcui::guiDataContext(info.name()).val()
