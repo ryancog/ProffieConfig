@@ -755,10 +755,6 @@ void MainMenu::io_notify_cb(void *arg, io_iterator_t iter) {
         if (object == IO_OBJECT_NULL)
             break;
 
-        io_name_t name;
-        IORegistryEntryGetName(object, name);
-        printf("Device %s\n", name);
-
         IOObjectRelease(object);
     }
 
