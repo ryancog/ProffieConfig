@@ -99,6 +99,7 @@ include (../Common.cmake)
 setup_target(proffieconfig ${headers})
 
 if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+    target_link_libraries(proffieconfig setupapi cfgmgr32)
     add_custom_command(TARGET proffieconfig POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:proffieconfig> $<TARGET_FILE_DIR:proffieconfig>
         COMMAND_EXPAND_LISTS

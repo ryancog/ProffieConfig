@@ -75,13 +75,37 @@ SerialMonitorDlg::SerialMonitorDlg(wxWindow *parent, std::string str) :
     pcui::build(this, ui());
     bindEvents();
 
-    activate();
-
-    mConnectThread = std::thread{[this] { connectLoop(); }};
+    reconnect();
 }
 
 SerialMonitorDlg::~SerialMonitorDlg() {
-    doOnClose();
+    pcui::cripple(this);
+    disconnect();
+}
+
+void SerialMonitorDlg::disconnect() {
+    if (not active())
+        return;
+
+    deactivate();
+
+    if (mConnectThread.joinable()) {
+        mStopConnecting.release();
+
+        mConnectThread.join();
+    }
+
+    // If it's open, this'll call onDisconnect, and that'll make sure the
+    // listen thread is joined.
+    mMon.close();
+}
+
+void SerialMonitorDlg::reconnect() {
+    if (active())
+        return;
+
+    activate();
+    mConnectThread = std::thread{[this] { connectLoop(); }};
 }
 
 pcui::DescriptorPtr SerialMonitorDlg::ui() {
@@ -396,22 +420,8 @@ void SerialMonitorDlg::doCopyOutput(bool withStamps) {
 }
 
 void SerialMonitorDlg::onClose(wxCloseEvent& evt) {
-    doOnClose();
+    disconnect();
     evt.Skip();
-}
-
-void SerialMonitorDlg::doOnClose() {
-    pcui::cripple(this);
-
-    if (mConnectThread.joinable()) {
-        mStopConnecting.release();
-
-        mConnectThread.join();
-    }
-
-    // If it's open, this'll call onDisconnect, and that'll make sure the
-    // listen thread is joined.
-    mMon.close();
 }
 
 void SerialMonitorDlg::onDisconnect() {
