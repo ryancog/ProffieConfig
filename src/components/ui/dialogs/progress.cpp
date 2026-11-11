@@ -90,13 +90,6 @@ ProgressDialog::ProgressDialog(
 #   else
         // Mimic window modality by disabling parent.
         parent->Disable();
-        Bind(wxEVT_DESTROY, [parent](wxWindowDestroyEvent& evt) {
-            evt.Skip();
-
-            // NOTE: Reparenting shouldn't be an issue, but if it ever is, this
-            // will break!
-            parent->Enable();
-        });
 
         Show();
 #   endif
@@ -144,6 +137,14 @@ void ProgressDialog::finish(bool modalWait, const wxString& message) {
         // Make sure that layout updates have completed before locking things
         // up in the modal context.
         wxYield();
+
+#       if not defined(__WXOSX__)
+        if (auto *parent{GetParent()})
+            // Re-enable here before this dialog is destroyed so there's an
+            // enable window to activate/bring to focus, and the application
+            // doesn't lose focus.
+            parent->Enable();
+#       endif
 
         // The data has been set as finished and the cancel button therefore is
         // hidden. Now check if the cancel button wasn't handled by the data
