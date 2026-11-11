@@ -23,6 +23,8 @@
 
 #if _WIN32
 #include <cfgmgr32.h>
+#elif __APPLE__
+#include <IOKit/IOKitLib.h>
 #endif
 
 #include "config/config.hpp"
@@ -67,6 +69,8 @@ private:
         PCM_NOTIFY_EVENT_DATA,
         DWORD
     );
+#   elif __APPLE__
+    static void io_notify_cb(void *, io_iterator_t);
 #   endif
 
     pcui::DescriptorPtr ui();
@@ -96,6 +100,11 @@ private:
 
 #   if _WIN32
     HCMNOTIFICATION m_pnp_notify_handle;
+#   elif __APPLE__
+    IONotificationPortRef m_io_notify_port;
+    io_iterator_t m_io_device_iter{IO_OBJECT_NULL};
+    io_iterator_t m_io_serial_iter{IO_OBJECT_NULL};
+    io_iterator_t m_io_removed_iter{IO_OBJECT_NULL};
 #   endif
 };
 

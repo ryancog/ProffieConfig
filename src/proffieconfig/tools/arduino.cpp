@@ -23,8 +23,8 @@
 #include <cstring>
 #include <filesystem>
 #include <optional>
+#include <thread>
 #include <unordered_set>
-#include <variant>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -35,9 +35,9 @@
 #include <handleapi.h>
 #include <setupapi.h>
 #include <synchapi.h>
-#else
-#include <thread>
-#include <termios.h>
+#elif __APPLE__
+#include <CoreFoundation/CoreFoundation.h>
+#include <IOKit/IOKitLib.h>
 #endif
 
 #include <wx/dialog.h>
@@ -61,7 +61,6 @@
 #include "ui/build.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/text.hpp"
-#include "ui/dialogs/message.hpp"
 #include "ui/dialogs/progress.hpp"
 #include "ui/helpers/dialog_buttons.hpp"
 #include "ui/helpers/if.hpp"
@@ -79,7 +78,6 @@
 #include "versions/detail/strings.hpp"
 
 #include "serialmonitor.hpp"
-#include "../core/state.hpp"
 
 using namespace std::chrono_literals;
 
@@ -211,6 +209,15 @@ std::vector<arduino::Port> arduino::getBoards(logging::Branch *lBranch) {
     bool found_bootloader{false};
     std::vector<arduino::Port> boards;
 
+    struct USBID {
+        uint16 vid_;
+        uint16 pid_;
+
+        bool operator==(const USBID&) const = default;
+    };
+    constexpr USBID PROFFIE_OS_ID{.vid_=0x1209, .pid_=0x6668};
+    constexpr USBID BOOTLOADER_ID{.vid_=0x0483, .pid_=0xDF11};
+
 #   if _WIN32
     // Retrieve the device info list for all connected USB devices.
     HDEVINFO info_set{SetupDiGetClassDevsA(
@@ -242,7 +249,7 @@ std::vector<arduino::Port> arduino::getBoards(logging::Branch *lBranch) {
     SP_DEVINFO_DATA info_data;
     info_data.cbSize = sizeof info_data;
     for (DWORD idx{0}; SetupDiEnumDeviceInfo(info_set, idx, &info_data); ++idx) {
-        const auto check_usb_id{[&](uint16 check_vid, uint16 check_pid) {
+        const auto check_usb_id{[&](USBID check_id) {
             BOOL reg_success{};
 
             // See how much to allocate to retrieve.
@@ -340,7 +347,7 @@ std::vector<arduino::Port> arduino::getBoards(logging::Branch *lBranch) {
                 if (not from_chars(pid_pos, pid_end_pos, pid))
                     continue;
 
-                if (vid == check_vid and pid == check_pid)
+                if (vid == check_id.vid_ and pid == check_id.pid_)
                     return true;
             }
 
@@ -351,7 +358,7 @@ std::vector<arduino::Port> arduino::getBoards(logging::Branch *lBranch) {
         // the ProffieOS Serial ID.
         if (
                 info_data.ClassGuid == GUID_DEVCLASS_PORTS and
-                check_usb_id(0x1209, 0x6668)
+                check_usb_id(PROFFIE_OS_ID)
            ) {
             HKEY hkey{SetupDiOpenDevRegKey(
                 info_set,
@@ -410,7 +417,7 @@ std::vector<arduino::Port> arduino::getBoards(logging::Branch *lBranch) {
         // yet.
         if (
                 info_data.ClassGuid == GUID_DEVCLASS_USBDEVICE and
-                check_usb_id(0x0483, 0xDF11) and
+                check_usb_id(BOOTLOADER_ID) and
                 not found_bootloader
            ) {
             auto& port{boards.emplace_back()};
@@ -426,6 +433,131 @@ std::vector<arduino::Port> arduino::getBoards(logging::Branch *lBranch) {
     );
     if (ec.value() != ERROR_NO_MORE_ITEMS)
         logger.warn("Failed enumerating USB devices: " + ec.message());
+#   elif __APPLE__
+    io_iterator_t iter{IO_OBJECT_NULL};
+    IOServiceGetMatchingServices(
+        kIOMasterPortDefault,
+        IOServiceMatching("IOUSBHostDevice"),
+        &iter
+    );
+    defer { IOObjectRelease(iter); };
+
+    const auto entry_property_uint16{[](
+        io_registry_entry_t entry,
+        CFStringRef key
+    ) -> std::optional<uint16> {
+        CFTypeRef property{IORegistryEntryCreateCFProperty(
+            entry,
+            key,
+            kCFAllocatorDefault,
+            0
+        )};
+        if (property == nil)
+            return std::nullopt;
+
+        defer { CFRelease(property); };
+
+        if (CFGetTypeID(property) != CFNumberGetTypeID())
+            return std::nullopt;
+
+        CFNumberRef number{(CFNumberRef)property};
+
+        SInt32 value{};
+        if (CFNumberGetValue(number, kCFNumberSInt32Type, &value))
+            return value;
+
+        return std::nullopt;
+    }};
+
+    const auto entry_property_string{[](
+        io_registry_entry_t entry,
+        CFStringRef key
+    ) -> std::optional<std::string> {
+        CFTypeRef property{IORegistryEntryCreateCFProperty(
+            entry,
+            key,
+            kCFAllocatorDefault,
+            0
+        )};
+        if (property == nil)
+            return std::nullopt;
+
+        defer { CFRelease(property); };
+
+        if (CFGetTypeID(property) != CFStringGetTypeID())
+            return std::nullopt;
+
+        CFStringRef string{(CFStringRef)property};
+        std::string ret;
+
+        ret.resize(CFStringGetLength(string));
+        auto converted{CFStringGetCString(
+            string,
+            ret.data(),
+            ret.length() + 1,
+            kCFStringEncodingUTF8
+        )};
+        if (not converted)
+            return std::nullopt;
+
+        return ret;
+    }};
+
+    while (not false) {
+        auto entry{IOIteratorNext(iter)};
+        if (entry == IO_OBJECT_NULL)
+            break;
+
+        defer { IOObjectRelease(entry); };
+
+        const auto vid{entry_property_uint16(entry, CFSTR("idVendor"))};
+        const auto pid{entry_property_uint16(entry, CFSTR("idProduct"))};
+        if (not vid or not pid)
+            continue;
+
+        USBID id{.vid_=*vid, .pid_=*pid};
+        if (id == PROFFIE_OS_ID) {
+            // Go down the hierarchy to find the callout device.
+            io_iterator_t cu_iter{IO_OBJECT_NULL};
+            IORegistryEntryCreateIterator(
+                entry,
+                kIOServicePlane,
+                kIORegistryIterateRecursively,
+                &cu_iter
+            );
+            defer { IOObjectRelease(cu_iter); };
+
+            std::optional<std::string> cu_dev;
+            while (not false) {
+                IOObjectRelease(entry);
+                entry = IOIteratorNext(cu_iter);
+                if (entry == IO_OBJECT_NULL)
+                    break;
+
+                if (not IOObjectConformsTo(entry, "IOSerialBSDClient"))
+                    continue;
+
+                cu_dev = entry_property_string(entry, CFSTR("IOCalloutDevice"));
+                if (cu_dev)
+                    break;
+            }
+
+            if (not cu_dev)
+                continue;
+
+            auto& port{boards.emplace_back()};
+            port.type_ = Port::Type::Proffie;
+            port.serial_path_ = std::move(*cu_dev);
+            continue;
+        }
+
+        if (id == BOOTLOADER_ID and not found_bootloader) {
+            auto& port{boards.emplace_back()};
+            port.type_ = Port::Type::Bootloader;
+            found_bootloader = true;
+            continue;
+        }
+    }
 #   endif
 
     logger.info("Discovered " + std::to_string(boards.size()) + " boards.");
