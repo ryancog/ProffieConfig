@@ -57,6 +57,7 @@ struct InternalData {
 #   elif _WIN32
     HANDLE parentFromChild_[2];
     HANDLE childFromParent_[2];
+    HANDLE handle_;
     DWORD id_;
 #   endif
 };
@@ -211,9 +212,9 @@ void Process::create(std::string exec, std::span<std::string> args) {
     }
 
     data.id_ = procInfo.dwProcessId;
+    data.handle_ = procInfo.hThread;
     CloseHandle(data.parentFromChild_[1]);
     CloseHandle(data.childFromParent_[0]);
-    CloseHandle(procInfo.hThread);
 
     std::thread{[&data, id=procInfo.dwProcessId, procHandle=procInfo.hProcess]() {
         WaitForSingleObject(procHandle, INFINITE);
@@ -322,6 +323,7 @@ Process::Result Process::finish() {
 #           elif _WIN32
             CloseHandle(data.childFromParent_[1]);
             CloseHandle(data.parentFromChild_[0]);
+            CloseHandle(data.handle_);
 #           endif
 
             internalDatas.erase(iter);
@@ -344,7 +346,7 @@ void Process::interrupt() {
         GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0);
         FreeConsole();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(20000));
+        WaitForSingleObject(data.handle_, 2'000);
 
         SetConsoleCtrlHandler(nullptr, false);
     }
