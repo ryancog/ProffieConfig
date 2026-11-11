@@ -46,7 +46,14 @@ DATA_EXPORT Element operator|(const base::Bool&, IsSet);
  * If no values are provided, checks that the data has a valid selection. E.g.
  * not -1 for a choice
  */
-struct HasSelection : std::set<int32> {};
+struct HasSelection : std::set<int32> {
+    HasSelection(
+        std::set<int32> set = {},
+        std::function<bool(uint32)> validator = [](uint32) { return true; }
+    ) : std::set<int32>(std::move(set)), validator_(std::move(validator)) {}
+
+    std::function<bool(uint32)> validator_;
+};
 
 DATA_EXPORT Element operator|(const base::Choice&, HasSelection);
 

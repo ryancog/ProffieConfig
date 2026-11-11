@@ -152,8 +152,13 @@ auto data::logic::operator|(
         }
 
         bool isTrue(int32 choice) {
-            if (sels_.empty()) return choice != -1;
-            return sels_.contains(choice);
+            if (sels_.empty() and choice == -1)
+                return false;
+
+            if (not sels_.empty() and not sels_.contains(choice))
+                return false;
+
+            return sels_.validator_(choice);
         }
 
         const base::Choice& choice_;
@@ -199,8 +204,11 @@ auto data::logic::operator|(
         }
 
         bool isTrue(size sel) {
-            if (sels_.empty()) return sel != -1;
-            return sels_.contains(static_cast<int32>(sel));
+            auto int_sel{static_cast<int32>(sel)};
+            if (not sels_.empty() and not sels_.contains(int_sel))
+                return false;
+
+            return sels_.validator_(int_sel);
         }
 
         const base::Exclusive& excl_;
