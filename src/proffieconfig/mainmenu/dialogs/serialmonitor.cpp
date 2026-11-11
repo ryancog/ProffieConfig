@@ -84,7 +84,7 @@ SerialMonitorDlg::~SerialMonitorDlg() {
 }
 
 void SerialMonitorDlg::disconnect() {
-    if (not mMon.isOpen())
+    if (not active())
         return;
 
     deactivate();
@@ -101,7 +101,7 @@ void SerialMonitorDlg::disconnect() {
 }
 
 void SerialMonitorDlg::reconnect() {
-    if (mMon.isOpen())
+    if (active())
         return;
 
     activate();
