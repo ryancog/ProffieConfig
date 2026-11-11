@@ -51,24 +51,41 @@ struct CompileInfo : utils::Data {
     std::optional<CompileOutput> out_;
 };
 
+struct Port {
+    enum class Type {
+        Bootloader,
+        Proffie,
+    };
+
+    Type type_{Type::Bootloader};
+    std::string serial_path_;
+
+    // TODO: Determining the libusb path seems possible, but non-trivial, at
+    // least for Windows. The Arduino stuff doesn't handle this anyways, so
+    // don't bother. Detecting the presence of any device in bootloader mode is
+    // good enough for now.
+
+    bool operator==(const Port&) const = default;
+};
+
 void applyToBoard(
     const std::string& name,
-    const std::string& boardPath,
+    const arduino::Port&,
     CompileInfo&,
-    pcui::ProgressDialog& progress
+    pcui::ProgressDialog&
 );
 
 void verifyConfig(
     const std::string& name,
     CompileInfo&,
-    pcui::ProgressDialog& progress
+    pcui::ProgressDialog&
 );
 
 [[nodiscard]] CompileInfo& getCacheInfo(
     config::Config&, bool clean
 );
 
-std::vector<std::string> getBoards(logging::Branch * = nullptr);
+std::vector<Port> getBoards(logging::Branch * = nullptr);
 
 #if defined(_WIN32) or defined(__linux__)
 bool runDriverInstallation();

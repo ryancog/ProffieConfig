@@ -30,8 +30,10 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
+#include <devguid.h>
 #include <fileapi.h>
 #include <handleapi.h>
+#include <setupapi.h>
 #include <synchapi.h>
 #else
 #include <thread>
@@ -67,6 +69,7 @@
 #include "ui/layout/stack.hpp"
 #include "ui/static/label.hpp"
 #include "ui/values.hpp"
+#include "utils/defer.hpp"
 #include "utils/files.hpp"
 #include "utils/paths.hpp"
 #include "utils/rand.hpp"
@@ -123,9 +126,8 @@ Error compile(
 void processCache(arduino::CompileInfo&, logging::Logger&);
 
 Error upload(
-    const std::string& boardPath,
+    const arduino::Port&,
     const std::string& binPath,
-    const config::Config&,
     pcui::ProgressDialog&,
     logging::Branch&
 );
@@ -147,7 +149,10 @@ Error ensureCoreInstalled(
     pcui::ProgressDialog *
 );
 
-std::string dfuSuffixPath;
+std::string dfu_util_path;
+
+constexpr cstring FALLBACK_CORE_VER{"3.6"};
+constexpr cstring FALLBACK_CORE_URL{"https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json"};
 
 constexpr cstring ARDUINOCORE_PBV1{"proffieboard:stm32l4:Proffieboard-L433CC"};
 constexpr cstring ARDUINOCORE_PBV2{"proffieboard:stm32l4:ProffieboardV2-L433CC"};
@@ -200,85 +205,236 @@ wxString arduino::CompileOutput::usageMessage() const {
     );
 }
 
-std::vector<std::string> arduino::getBoards(logging::Branch *lBranch) {
+std::vector<arduino::Port> arduino::getBoards(logging::Branch *lBranch) {
     auto& logger{logging::Branch::optCreateLogger("arduino::getBoards()", lBranch)};
 
-    std::vector<std::string> boards;
-    std::array<char, 32> buffer;
+    bool found_bootloader{false};
+    std::vector<arduino::Port> boards;
 
-    Process proc;
-    std::vector<std::string> args{
-        "board",
-        "list",
-    };
-    cli(proc, args);
-
-    struct Result {
-        Result(std::string port, bool isProffie) :
-            port_{std::move(port)}, isProffie_{isProffie} {}
-
-        std::string port_;
-        bool isProffie_{false};
-    };
-
-    std::vector<Result> results;
-
-    std::string output;
-    while (auto buffer{proc.read()}) {
-        output += *buffer;
+#   if _WIN32
+    // Retrieve the device info list for all connected USB devices.
+    HDEVINFO info_set{SetupDiGetClassDevsA(
+        nullptr,
+        "USB",
+        nullptr,
+        DIGCF_ALLCLASSES | DIGCF_PRESENT
+    )};
+    if (info_set == INVALID_HANDLE_VALUE) {
+        std::error_code ec(
+            static_cast<int32>(GetLastError()),
+            std::system_category()
+        );
+        logger.error("Failed retrieving USB device info list: " + ec.message());
+        return {};
     }
 
-    proc.finish();
-
-    auto lineEndPos{output.find('\n')};
-    while (not false) {
-        const auto line{output.substr(0, lineEndPos)};
-
-        if (line.find("No boards found.") != std::string::npos) {
-            logger.info("No boards found.");
-            return {};
+    // Make sure it's cleaned up once we're done here.
+    defer {
+        if (not SetupDiDestroyDeviceInfoList(info_set)) {
+            std::error_code ec(
+                static_cast<int32>(GetLastError()),
+                std::system_category()
+            );
+            logger.warn("Failed destroying device info list: " + ec.message());
         }
+    };
 
-        if (line[0] == ' ' or line[0] == '\t') {
-            if (results.empty()) continue;
+    SP_DEVINFO_DATA info_data;
+    info_data.cbSize = sizeof info_data;
+    for (DWORD idx{0}; SetupDiEnumDeviceInfo(info_set, idx, &info_data); ++idx) {
+        const auto check_usb_id{[&](uint16 check_vid, uint16 check_pid) {
+            BOOL reg_success{};
 
-            if (line.find("proffieboard") != std::string::npos) {
-                results.back().isProffie_ = true;
+            // See how much to allocate to retrieve.
+            DWORD reg_length{};
+            reg_success = SetupDiGetDeviceRegistryPropertyA(
+                info_set,
+                &info_data,
+                SPDRP_HARDWAREID,
+                nullptr,
+                nullptr,
+                0,
+                &reg_length
+            );
+            if (not reg_success) {
+                // It seems counterintuitive, but this function still returns
+                // this error even with the buffer null and size 0? Whatever...
+                if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+                    return false;
             }
-        } else if (line.find("serial") != std::string::npos) {
-            const auto port{line.substr(0, line.find_first_of(" \t"))};
-            const auto isProffie{
-                line.find("proffieboard") != std::string::npos
-            };
 
-            results.emplace_back(port, isProffie);
-            logger.debug("Found board: " + port);
-        } else if (line.find("dfu") != std::string::npos) {
-            const auto port{line.substr(0, line.find_first_of(" \t"))};
+            char *buf{new char[reg_length]};
+            defer { delete[] buf; };
 
-            boards.emplace_back(_("BOOTLOADER").utf8_string() + '|' + port);
-            logger.debug("Found board in bootloader mode: " + port);
+            // Fetch data
+            DWORD reg_type{};
+            reg_success = SetupDiGetDeviceRegistryPropertyA(
+                info_set,
+                &info_data,
+                SPDRP_HARDWAREID,
+                &reg_type,
+                (PBYTE)buf,
+                reg_length,
+                nullptr
+            );
+            if (not reg_success)
+                return false;
+
+            // Sanity check the data type, so we know the null-termination is
+            // there, otherwise Bad Things might happen.
+            if (reg_type != REG_MULTI_SZ)
+                return false;
+
+            // Then test each entry to see if one matching the VID and PID
+            // can be found.
+            std::string_view view;
+            for (
+                    // Iteration begins at the buffer start, the first string
+                    std::size_t buf_idx{0};
+                    // Create a view, which will automatically find the null
+                    // terminator, then test to see if the string is empty, if
+                    // it is, that's the end.
+                    view = &buf[buf_idx], not view.empty();
+                    // Jump to the next string in the buffer
+                    buf_idx += view.length() + 1
+                ) {
+                constexpr std::string_view VID_MARK{"VID_"};
+                constexpr std::string_view PID_MARK{"&PID_"};
+
+                const auto vid_mark_pos{view.find(VID_MARK)};
+                if (vid_mark_pos == std::string::npos)
+                    continue;
+
+                const auto pid_mark_pos{view.find(PID_MARK)};
+                if (pid_mark_pos == std::string::npos)
+                    continue;
+
+                const auto vid_pos{vid_mark_pos + VID_MARK.length()};
+                const auto pid_pos{pid_mark_pos + PID_MARK.length()};
+
+                const auto vid_end_pos{pid_mark_pos};
+                // If there isn't another "&", then npos is the right value.
+                const auto pid_end_pos{view.find('&', pid_pos)};
+
+                const auto from_chars{[&](
+                    std::size_t begin,
+                    std::size_t end,
+                    uint16& v
+                ) {
+                    auto [ptr, ec]{std::from_chars(
+                        &view[begin],
+                        end == std::string::npos
+                            ? &*view.end()
+                            : &view[end],
+                        v,
+                        16
+                    )};
+                    return ec == std::errc();
+                }};
+
+                uint16 vid{};
+                if (not from_chars(vid_pos, vid_end_pos, vid))
+                    continue;
+
+                uint16 pid{};
+                if (not from_chars(pid_pos, pid_end_pos, pid))
+                    continue;
+
+                if (vid == check_vid and pid == check_pid)
+                    return true;
+            }
+
+            return false;
+        }};
+
+        // If this USB device is a COM port, check if its hardware ID matches
+        // the ProffieOS Serial ID.
+        if (
+                info_data.ClassGuid == GUID_DEVCLASS_PORTS and
+                check_usb_id(0x1209, 0x6668)
+           ) {
+            HKEY hkey{SetupDiOpenDevRegKey(
+                info_set,
+                &info_data,
+                DICS_FLAG_GLOBAL,
+                0,
+                DIREG_DEV,
+                KEY_READ
+            )};
+            if (hkey == INVALID_HANDLE_VALUE) {
+                std::error_code ec(
+                    static_cast<int32>(GetLastError()),
+                    std::system_category()
+                );
+                logger.info("Failed opening device registry: " + ec.message());
+                continue;
+            }
+
+            std::error_code ec;
+            DWORD reg_length{};
+            char *buf{nullptr};
+            defer { delete[] buf; };
+
+            auto get_value{[&] -> std::error_code {
+                auto err{RegGetValueA(
+                    hkey,
+                    nullptr,
+                    "PortName",
+                    RRF_RT_REG_SZ,
+                    nullptr,
+                    buf,
+                    &reg_length
+                )};
+                return {
+                    static_cast<int32>(err),
+                    std::system_category()
+                };
+            }};
+            if (
+                    // Read to get length, alloc buf, then read again
+                    (ec = get_value()) or
+                    (buf = new char[reg_length], ec = get_value())
+               ) logger.info("Failed reading device port: " + ec.message());
+
+            auto& port{boards.emplace_back()};
+            port.type_ = Port::Type::Proffie;
+            port.serial_path_ = buf;
+            continue;
         }
 
-        if (lineEndPos == std::string::npos) break;
+        // The generic USBDevice setup class GUID isn't defined anywhere?
+        constexpr GUID GUID_DEVCLASS_USBDEVICE{0x88bae032L, 0x5a81, 0x49f0, {0xbc, 0x3d, 0xa4, 0xff, 0x13, 0x82, 0x16, 0xd6}};
 
-        output = output.substr(lineEndPos + 1);
-        lineEndPos = output.find('\n');
+        // If this USB device is a generic USB device, check if its hardware ID
+        // matches the STM32 BOOTLOADER ID and that bootloader hasn't been found
+        // yet.
+        if (
+                info_data.ClassGuid == GUID_DEVCLASS_USBDEVICE and
+                check_usb_id(0x0483, 0xDF11) and
+                not found_bootloader
+           ) {
+            auto& port{boards.emplace_back()};
+            port.type_ = Port::Type::Bootloader;
+            found_bootloader = true;
+            continue;
+        }
     }
 
-    for (const auto& result : results) {
-        if (not result.isProffie_) continue;
+    std::error_code ec(
+        static_cast<int32>(GetLastError()),
+        std::system_category()
+    );
+    if (ec.value() != ERROR_NO_MORE_ITEMS)
+        logger.warn("Failed enumerating USB devices: " + ec.message());
+#   endif
 
-        logger.info("Reporting board: " + result.port_);
-        boards.emplace_back(result.port_);
-    }
-
+    logger.info("Discovered " + std::to_string(boards.size()) + " boards.");
     return boards;
 }
 
 void arduino::applyToBoard(
     const std::string& name,
-    const std::string& boardPath,
+    const arduino::Port& port,
     CompileInfo& info,
     pcui::ProgressDialog& prog
 ) {
@@ -305,9 +461,8 @@ void arduino::applyToBoard(
     }
 
     auto err{upload(
-        boardPath,
+        port,
         info.out_->dfuFile_,
-        info.source_,
         prog,
         *logger.binfo("Uploading...")
     )};
@@ -390,8 +545,8 @@ bool arduino::runDriverInstallation() {
     Process proc;
 
     auto err{ensureCoreInstalled(
-        "3.6",
-        "https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json",
+        FALLBACK_CORE_VER,
+        FALLBACK_CORE_URL,
         logger,
         nullptr
     )};
@@ -664,85 +819,98 @@ Error compile(
         return parseError(compileOutput, config);
     }
 
-    constexpr std::string_view DFU_STR{"ProffieOS.ino.dfu"};
+    constexpr std::string_view DFU_FILE_STR{"ProffieOS.ino.dfu"};
 #   ifdef _WIN32
     constexpr std::string_view DFU_SUFFIX_STR{"dfu-suffix.exe"};
-    constexpr std::string_view ROOT_SUFFIX_STR{"C:\\"};
-    constexpr std::string_view ROOT_DFU_STR{"C:\\"};
+    constexpr std::string_view DFU_FILE_ROOT_STR{"C:\\"};
+    constexpr std::string_view DFU_SUFFIX_ROOT_STR{"C:\\"};
 #   else
     // Because "dfu-suffix" appears in other output and not just invocation,
     // search for "-v" as a hacky way of differentiation.
     constexpr std::string_view DFU_SUFFIX_STR{"dfu-suffix -v"};
     // Similarly the root on unix-like systems is not distinct like on
     // Windows, so a bit of finangling is needed.
-    constexpr std::string_view ROOT_SUFFIX_STR{"\n/"};
-    constexpr std::string_view ROOT_DFU_STR{" /"};
+    constexpr std::string_view DFU_FILE_ROOT_STR{" /"};
+    constexpr std::string_view DFU_SUFFIX_ROOT_STR{"\n/"};
 #   endif
     constexpr cstring UTIL_ERR{wxTRANSLATE("Failed to find required utilities")};
-    auto dfuPos{compileOutput.rfind(DFU_STR)};
-    auto dfuRootPos{compileOutput.rfind(ROOT_DFU_STR, dfuPos)};
-    auto dfuSuffixPos{compileOutput.rfind(DFU_SUFFIX_STR)};
-    auto dfuSuffixRootPos{compileOutput.rfind(ROOT_SUFFIX_STR, dfuSuffixPos)};
+
+    const auto dfu_file_pos{compileOutput.rfind(DFU_FILE_STR)};
+    const auto dfu_file_root_pos{compileOutput.rfind(
+        DFU_FILE_ROOT_STR,
+        dfu_file_pos
+    )};
+    const auto dfu_suffix_pos{compileOutput.rfind(DFU_SUFFIX_STR)};
+    const auto dfu_suffix_root_pos{compileOutput.rfind(
+        DFU_SUFFIX_ROOT_STR,
+        dfu_suffix_pos
+    )};
+
     if (
-            dfuPos != std::string::npos and
-            dfuRootPos != std::string::npos and
-            dfuSuffixPos != std::string::npos and
-            dfuSuffixRootPos != std::string::npos
+            dfu_file_pos != std::string::npos and
+            dfu_file_root_pos != std::string::npos and
+            dfu_suffix_pos != std::string::npos and
+            dfu_suffix_root_pos != std::string::npos
        ) {
         logger.debug("Parsing utility paths...");
 
 #       ifdef _WIN32
-        std::array<char, MAX_PATH> shortPath;
+        std::array<char, MAX_PATH> short_path;
         DWORD res{};
 #       endif
 
-        const auto dfuLongPath{compileOutput.substr(
-            dfuRootPos,
-            dfuPos - dfuRootPos + DFU_STR.length()
+        const auto dfu_file_long_path{compileOutput.substr(
+            dfu_file_root_pos,
+            dfu_file_pos - dfu_file_root_pos + DFU_FILE_STR.length()
         )};
 
 #       ifdef _WIN32
         res = GetShortPathNameA(
-            dfuLongPath.c_str(), shortPath.data(), shortPath.size()
+            dfu_file_long_path.c_str(),
+            short_path.data(),
+            short_path.size()
         );
         if (res == 0) {
-            logger.error("Failed to find dfu file in output: " + compileOutput);
+            logger.error("Failed to convert DFU file long path: " + dfu_file_long_path);
             return Error::Simple | wxGetTranslation(UTIL_ERR);
         }
 
-        out.dfuFile_ = shortPath.data();
+        out.dfuFile_ = short_path.data();
 #       else
-        out.dfuFile_ = dfuLongPath;
+        out.dfuFile_ = dfu_file_long_path;
         // Pop off ' ' the POSIX version needs to find path root.
         out.dfuFile_.erase(0, 1);
 #       endif
 
         logger.debug("Parsed dfu file: " + out.dfuFile_);
 
-        const auto dfuSuffixLongPath{compileOutput.substr(
-            dfuSuffixRootPos, dfuSuffixPos - dfuSuffixRootPos
+        const auto dfu_suffix_long_path{compileOutput.substr(
+            dfu_suffix_root_pos,
+            dfu_suffix_pos - dfu_suffix_root_pos
         )};
 
 #       ifdef _WIN32
         res = GetShortPathNameA(
-            dfuSuffixLongPath.c_str(), shortPath.data(), shortPath.size()
+            dfu_suffix_long_path.c_str(),
+            short_path.data(),
+            short_path.size()
         );
         if (res == 0) {
-            logger.error("Failed to find dfu suffix in output: " + compileOutput);
+            logger.error("Failed to convert dfu-suffix long path: " + dfu_suffix_long_path);
             return Error::Simple | wxGetTranslation(UTIL_ERR);
         }
 
-        dfuSuffixPath = std::string{shortPath.data()} + "stm32l4-upload.bat";
+        dfu_util_path = std::string{short_path.data()} + "dfu-util.exe";
 #       else
-        dfuSuffixPath = dfuSuffixLongPath + "stm32l4-upload";
+        dfu_util_path = dfu_suffix_long_path + "dfu-util";
         // Pop off `\n` the POSIX version needs to find the path root.
-        dfuSuffixPath.erase(0, 1);
+        dfu_util_path.erase(0, 1);
 #       endif
 
-        logger.debug("Updated DFU Suffix Path: " + dfuSuffixPath);
+        logger.debug("Updated DFU util Path: " + dfu_util_path);
     }
 
-    if (out.dfuFile_.empty() or dfuSuffixPath.empty()) {
+    if (out.dfuFile_.empty() or dfu_util_path.empty()) {
         logger.error("Failed to find utilities in output: " + compileOutput);
         return Error::Simple | wxGetTranslation(UTIL_ERR);
     }
@@ -805,41 +973,23 @@ void processCache(arduino::CompileInfo& info, logging::Logger& logger) {
 }
 
 Error upload(
-    const std::string& boardPath,
+    const arduino::Port& port,
     const std::string& binPath,
-    const config::Config& config,
     pcui::ProgressDialog& prog,
     logging::Branch& lBranch
 ) {
     auto& logger{lBranch.createLogger("arduino::upload()")};
 
-    bool isBootloader{boardPath == "BOOTLOADER"};
-    if (not isBootloader) {
-        constexpr cstring CHECK_PRESENCE_MESSAGE{wxTRANSLATE("Checking board presence...")};
-        prog.set(10, wxGetTranslation(CHECK_PRESENCE_MESSAGE));
+    std::size_t num_tries{1};
+    if (port.type_ == arduino::Port::Type::Proffie) {
+        num_tries = 10;
 
-        auto boards{arduino::getBoards(logger.binfo(CHECK_PRESENCE_MESSAGE))};
-        bool found{false};
-        for (const auto& path : boards) {
-            if (path == boardPath) {
-                found = true;
-                break;
-            }
-        }
-
-        if (not found) {
-            logger.warn("Board was not found.");
-            return Error::Simple | _("Please make sure your board is connected and selected, then try again!");
-        }
-    }
-
-    if (not isBootloader) {
         prog.pulse("Rebooting Proffieboard...");
 
         SerialMonitor mon;
-
-        if (auto err{mon.open(boardPath)}) {
+        if (auto err{mon.open(port.serial_path_)}) {
             logger.warn("Could not open board port.");
+
             return Error::Simple | wxString::Format(
                 _("Board was not reachable for reboot (%d:%d)"),
                 err.rsn_, err.code_
@@ -854,69 +1004,73 @@ Error upload(
         }
 
         mon.close();
-
-        // This probably isn't even necessary anymore. Before it was there as
-        // something of a band-aid over weirdness with the code that was used
-        // instead of SerialMonitor, but I don't think it's necessary.
-        //
-        // I'm going to keep a short delay for now, but it can probably be
-        // removed at some point.
-        std::this_thread::sleep_for(500ms);
     }
 
     prog.pulse(_("Uploading to Proffieboard..."));
 
-    Process proc;
-    std::array<std::string, 3> args{
-        "0x1209",
-        "0x6668",
-        binPath
-    };
-    proc.create(dfuSuffixPath, args);
+    for (; num_tries; --num_tries) {
+        // A short delay to backoff and/or let the board actually reboot.
+        std::this_thread::sleep_for(500ms);
 
-    std::string uploadOutput;
-    while (auto buffer{proc.read()}) {
-        const auto percentPos{buffer->find('%')};
-        if (percentPos != std::string::npos and percentPos >= 3) {
-            const auto percent{strtoul(
-                &(*buffer)[percentPos - 3], nullptr, 10
-            )};
+        Process proc;
+        std::string args[]{
+            // Device w/ ProffieOS Serial Runtime ID and STM32 BOOTLOADER DFU mode
+            // ID. Afaics, the runtime ID is just used to validate the DFU file.
+            "-d", "1209:6668,0483:df11",
+            // Alt Zero, Internal Flash
+            "-a", "0",
+            // DfuSe needs the address specified, despite the warning in dfu-util's
+            // manpage giving general advice otherwise.
+            // `:leave` triggers a reset to normal application code after download.
+            "-s", "0x08000000:leave",
+            // "Download" this DFU binary
+            "-D", binPath,
+        };
+        proc.create(dfu_util_path, args);
 
-            prog.set(percent);
-            logger.verbose("Progress: " + std::to_string(percent) + '%');
+        std::string output;
+        while (auto buffer{proc.read()}) {
+            const auto percent_pos{buffer->find('%')};
+            if (percent_pos != std::string::npos and percent_pos >= 3) {
+                const auto percent{strtoul(
+                    &(*buffer)[percent_pos - 3], nullptr, 10
+                )};
+
+                prog.set(percent);
+                logger.verbose("Progress: " + std::to_string(percent) + '%');
+            }
+
+            output += *buffer;
         }
 
-        uploadOutput += *buffer;
+        auto res{proc.finish()};
+        if (res.err_ and res.err_ != Process::Result::eExited_With_Failure) {
+            logger.error(
+                "Process error: " + std::to_string(res.err_) + ':' +
+                std::to_string(res.systemResult_) +
+                "\n" + output
+            );
+            return Error::Simple | _("Upload process failed");
+        }
+
+        if (output.contains("File downloaded successfully")) {
+            logger.info("Success");
+            return Error::None;
+        }
+
+        if (output.contains("No DFU capable USB device available"))
+            continue;
+
+        if (output.contains("Cannot open DFU device")) {
+            return Error::Simple | _("Looks like there's some problems accessing the Proffieboard.") + '\n' +
+                _("Try re-installing the Proffie driver, and make sure you don't have other software which might interfere.");
+        }
+
+        logger.error("Unknown error: " + output);
+        return Error::Simple | _("Unknown error during upload");
     }
 
-    if (
-            uploadOutput.rfind("error") != std::string::npos or
-            uploadOutput.rfind("FAIL") != std::string::npos
-       ) {
-        logger.error(uploadOutput);
-        return parseError(uploadOutput, config);
-    }
-
-    auto res{proc.finish()};
-    if (res.err_) {
-        logger.error(
-            "Process error: " + std::to_string(res.err_) + ':' +
-            std::to_string(res.systemResult_) +
-            "\n" + uploadOutput
-        );
-        return Error::Simple | ("Upload Process Reported Error");
-    }
-
-    // TODO: Don't remember if this happens on non-msw so guard it for now
-#   ifdef _WIN32
-    if (uploadOutput.find("File downloaded successfully") == std::string::npos) {
-        logger.error(uploadOutput);
-        return parseError(uploadOutput, config);
-    }
-#   endif
-
-    logger.info("Success");
-    return Error::None;
+    return Error::Simple | _("Could not connect to Proffieboard for upload.");
 }
 
 Error precheckCompile(
@@ -1039,29 +1193,6 @@ Error parseError(const std::string& err, const config::Config& config) {
         );
     }
 
-    if (err.contains("Cannot open DFU device")) {
-        return Error::Simple | _("Looks like there's some problems accessing the Proffieboard.") + '\n' +
-            _("Try re-installing the Proffie driver, and make sure you don't have other software which might interfere.");
-    }
-
-    if (
-        err.contains("\n1") and
-        err.contains("\n2") and
-        err.contains("\n3") and
-        err.contains("\n4") and
-        err.contains("\n5") and
-        err.contains("\n6") and
-        err.contains("\n7") and
-        err.contains("\n8") and
-        err.contains("\n9")
-       ) {
-        return Error::Simple | _("Could not connect to Proffieboard for upload.");
-    }
-
-    if (err.contains("No DFU capable USB device available")) {
-        return Error::Simple | _("No Proffieboard in BOOTLOADER mode found.");
-    }
-
     if (const auto *prop{config.prop()}) {
         for (const auto& [ arduino, display ] : prop->errors()) {
             if (err.find(arduino) != std::string::npos) {
@@ -1158,9 +1289,6 @@ Error ensureCoreInstalled(
 }
 
 void cli(Process& proc, std::vector<std::string>& args) {
-    // TODO: I should probably use the JSON output for at least some of these
-    // things so that it's free of extra clutter and more reliable, even if I
-    // don't bother "correctly" parsing the JSON.
     args.emplace_back("--no-color");
     auto arduinoStr{(paths::binaryDir() / "arduino-cli").string()};
     proc.create(arduinoStr, args);

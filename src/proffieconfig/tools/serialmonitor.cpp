@@ -59,7 +59,8 @@ void SerialMonitor::setOnDisconnect(std::function<void()> func) {
     assert(not isOpen());
     mOnDisconnect = std::move(func);
 }
-Error SerialMonitor::open(const std::string& path) {
+
+SerialMonitor::Error SerialMonitor::open(const std::string& path) {
     std::lock_guard scopeLock(mMutex);
     assert(not isOpen());
 
@@ -69,7 +70,7 @@ Error SerialMonitor::open(const std::string& path) {
     mFd = ::open(path.c_str(), O_RDWR | O_NOCTTY);
     if (not isOpen()) {
         return {
-            .rsn_=Error::Code::Unknown,
+            .rsn_=Error::Unknown,
             .code_=errno,
         };
     }
@@ -98,9 +99,13 @@ Error SerialMonitor::open(const std::string& path) {
         nullptr
     );
     if (not isOpen()) {
+        auto err{GetLastError()};
+        if (err == ERROR_ACCESS_DENIED)
+            return {.rsn_=Error::In_Use};
+
         return {
-            .rsn_=Error::Code::Unknown,
-            .code_=static_cast<int32>(GetLastError()),
+            .rsn_=Error::Unknown,
+            .code_=static_cast<int32>(err),
         };
     }
 
@@ -123,7 +128,7 @@ Error SerialMonitor::open(const std::string& path) {
         mHandle = INVALID_HANDLE_VALUE;
 
         return {
-            .rsn_=Error::Code::Unknown,
+            .rsn_=Error::Unknown,
             .code_=static_cast<int32>(GetLastError()),
         };
     }
@@ -135,7 +140,7 @@ Error SerialMonitor::open(const std::string& path) {
         mHandle = INVALID_HANDLE_VALUE;
 
         return {
-            .rsn_=Error::Code::Unknown,
+            .rsn_=Error::Unknown,
             .code_=static_cast<int32>(GetLastError()),
         };
     }
@@ -190,12 +195,12 @@ void SerialMonitor::close() {
         mOnDisconnect();
 }
 
-Error SerialMonitor::write(std::string_view msg) {
+SerialMonitor::Error SerialMonitor::write(std::string_view msg) {
     std::lock_guard scopeLock(mMutex);
 
     if (not isOpen()) {
         return {
-            .rsn_=Error::Code::Disconnected,
+            .rsn_=Error::Disconnected,
         };
     }
 
@@ -209,7 +214,7 @@ Error SerialMonitor::write(std::string_view msg) {
         if (res == -1) {
             close();
             return {
-                .rsn_=Error::Code::Unknown,
+                .rsn_=Error::Unknown,
                 .code_=errno,
             };
         }
@@ -235,7 +240,7 @@ Error SerialMonitor::write(std::string_view msg) {
         if (err != ERROR_IO_PENDING) {
             close();
             return {
-                .rsn_=Error::Code::Unknown,
+                .rsn_=Error::Unknown,
                 .code_=static_cast<int32>(err),
             };
         }
@@ -249,7 +254,7 @@ Error SerialMonitor::write(std::string_view msg) {
 
         if (not res) {
             return {
-                .rsn_=Error::Code::Unknown,
+                .rsn_=Error::Unknown,
                 .code_=static_cast<int32>(GetLastError()),
             };
         }
@@ -272,7 +277,7 @@ Error SerialMonitor::write(std::string_view msg) {
     return {};
 }
 
-Error SerialMonitor::read(char& chr) {
+SerialMonitor::Error SerialMonitor::read(char& chr) {
     // Don't lock here.
 
 #   if _WIN32
@@ -292,7 +297,7 @@ Error SerialMonitor::read(char& chr) {
         std::lock_guard scopeLock(mMutex);
         if (not isOpen()) {
             return {
-                .rsn_=Error::Code::Disconnected,
+                .rsn_=Error::Disconnected,
             };
         }
 
@@ -322,7 +327,7 @@ Error SerialMonitor::read(char& chr) {
         if (err != ERROR_IO_PENDING) {
             close();
             return {
-                .rsn_=Error::Code::Unknown,
+                .rsn_=Error::Unknown,
                 .code_=static_cast<int32>(err),
             };
         }
@@ -340,14 +345,14 @@ Error SerialMonitor::read(char& chr) {
 
     if (not res) {
         return {
-            .rsn_=Error::Code::Unknown,
+            .rsn_=Error::Unknown,
             .code_=static_cast<int32>(GetLastError()),
         };
     }
 #   elif __APPLE__ or __linux__
     if (not isOpen()) {
         return {
-            .rsn_=Error::Code::Disconnected,
+            .rsn_=Error::Disconnected,
         };
     }
 
@@ -361,7 +366,7 @@ Error SerialMonitor::read(char& chr) {
         auto res{poll(&pfd, 1, 50)};
         if (res == -1) {
             return {
-                .rsn_=Error::Code::Unknown,
+                .rsn_=Error::Unknown,
                     // .code_=errno,
             };
         }
@@ -373,7 +378,7 @@ Error SerialMonitor::read(char& chr) {
     if (pfd.revents & (POLLHUP | POLLERR)) {
         close();
         return {
-            .rsn_=Error::Code::Unknown,
+            .rsn_=Error::Unknown,
             // .code_=errno,
         };
     }
@@ -382,7 +387,7 @@ Error SerialMonitor::read(char& chr) {
     if (res == -1) {
         close();
         return {
-            .rsn_=Error::Code::Unknown,
+            .rsn_=Error::Unknown,
             .code_=errno
         };
     }

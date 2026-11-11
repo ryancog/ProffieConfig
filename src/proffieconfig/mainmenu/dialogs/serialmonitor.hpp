@@ -36,6 +36,9 @@ struct SerialMonitorDlg : pcui::Frame, data::Receiver {
 
     [[nodiscard]] std::string_view device() const { return mDev; }
 
+    void disconnect();
+    void reconnect();
+
 private:
     enum {
         eID_Input = wxID_HIGHEST,
@@ -67,7 +70,6 @@ private:
     void doCopyOutput(bool);
 
     void onClose(wxCloseEvent&);
-    void doOnClose();
 
     void onDisconnect();
     void connectLoop();

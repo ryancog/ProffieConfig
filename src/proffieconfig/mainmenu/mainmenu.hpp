@@ -21,6 +21,10 @@
 
 #include <map>
 
+#if _WIN32
+#include <cfgmgr32.h>
+#endif
+
 #include "config/config.hpp"
 #include "data/primitive/models/choice.hpp"
 #include "data/primitive/models/selector.hpp"
@@ -33,7 +37,7 @@
 
 struct EditorWindow;
 
-struct MainMenu : pcui::Frame {
+struct MainMenu : pcui::Frame, data::Receiver {
     enum {
         // on macOS menu items cannot have ID 0
         // on Win32, for some reason ID #1 is triggerred by hitting enter in pcTextCtrl?
@@ -55,27 +59,43 @@ struct MainMenu : pcui::Frame {
     static MainMenu* instance;
 
 private:
+#   if _WIN32
+    static DWORD CALLBACK pnp_notify_cb(
+        HCMNOTIFICATION,
+        PVOID,
+        CM_NOTIFY_ACTION,
+        PCM_NOTIFY_EVENT_DATA,
+        DWORD
+    );
+#   endif
+
     pcui::DescriptorPtr ui();
 
     void createMenuBar();
     void bindEvents();
+    void refresh_boards();
 
+    void on_board_choice();
     void onAddConfig();
     void onRemoveConfig();
     void onEditConfig();
 
-    void onRefreshBoards();
     void onApplyConfig();
     void onOpenSerial();
 
     data::prim::Choice mBoardChoice;
     data::prim::Selector mConfigSel;
 
-    std::vector<std::string> mBoards;
+    std::string m_last_serial_selected;
+    std::vector<arduino::Port> mBoards;
     std::map<config::Info *, EditorWindow *> mEditors;
     std::set<SerialMonitorDlg *> mMonitors;
 
     VersionsDlg *mVersionsDlg{nullptr};
     PreferencesDlg *mPrefsDlg{nullptr};
+
+#   if _WIN32
+    HCMNOTIFICATION m_pnp_notify_handle;
+#   endif
 };
 

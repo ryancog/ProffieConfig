@@ -29,6 +29,7 @@
 
 #include "config/config.hpp"
 #include "data/logic/adapter.hpp"
+#include "data/logic/operators.hpp"
 #include "dialogs/preferences.hpp"
 #include "ui/bitmap.hpp"
 #include "ui/controls/button.hpp"
@@ -73,10 +74,35 @@ MainMenu::MainMenu(wxWindow* parent) :
 
     pcui::build(this, ui());
 
+    activate();
+
+#   if _WIN32
+    CM_NOTIFY_FILTER filter;
+    filter.cbSize = sizeof filter;
+    filter.Flags = CM_NOTIFY_FILTER_FLAG_ALL_INTERFACE_CLASSES;
+    filter.FilterType = CM_NOTIFY_FILTER_TYPE_DEVICEINTERFACE;
+    std::memset(
+        &filter.u.DeviceInterface.ClassGuid,
+        0,
+        sizeof filter.u.DeviceInterface.ClassGuid
+    );
+    CM_Register_Notification(
+        &filter,
+        this,
+        pnp_notify_cb,
+        &m_pnp_notify_handle
+    );
+#   endif
+    refresh_boards();
+
     Show();
 }
 
 MainMenu::~MainMenu() {
+#   if _WIN32
+    CM_Unregister_Notification(m_pnp_notify_handle);
+#   endif
+
     pcui::cripple(this);
 }
 
@@ -136,9 +162,10 @@ pcui::DescriptorPtr MainMenu::ui() {
               .style_=pcui::Choice::PopUp{
                 .unselected_=_("Select Config"),
               },
-              .labeler_=[this](uint32 sel) -> pcui::Choice::Label {
+              .labeler_=[](uint32 sel) -> pcui::Choice::Label {
                   auto vec{pcui::guiDataContext(config::list())};
-                  if (sel >= vec.children().size()) return {};
+                  if (sel >= vec.children().size())
+                      return {};
 
                   auto& info{dynamic_cast<config::Info&>(*vec.children()[sel])};
                   return info.name();
@@ -175,38 +202,39 @@ pcui::DescriptorPtr MainMenu::ui() {
           .func_=[this] { onEditConfig(); },
         }(),
         pcui::Spacer{.size_=20}(),
-        pcui::Stack{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL,
-          .children_={
-            pcui::Button{
-              .win_={
-                .tooltip_=_("Generate an up-to-date list of connected boards."),
-              },
-              .label_=_("Refresh Boards"),
-              .func_=[this] { onRefreshBoards(); },
-            }(),
-            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-            pcui::Choice{
-              .win_={
-                .base_={.proportion_=1},
-                .tooltip_=_("Select the Proffieboard to connect to.\nThese IDs are assigned by the OS, and can vary."),
-              },
-              .data_=mBoardChoice,
-              .style_=pcui::Choice::PopUp{
-                .unselected_=_("No Port (BOOTLOADER)"),
-              },
-              .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-                  return mBoards[idx];
+        pcui::Choice{
+          .win_={
+            .base_={.expand_=true},
+            .tooltip_=_("Select the Proffieboard to connect to.\nThese IDs are assigned by the OS, and can vary."),
+          },
+          .data_=mBoardChoice,
+          .style_=pcui::Choice::PopUp{
+            .unselected_=_("Select Port..."),
+          },
+          .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
+              auto& board{mBoards[idx]};
+              switch (board.type_) {
+                  using enum arduino::Port::Type;
+                  case Bootloader:
+                      return _("Bootloader");
+                  case Proffie:
+                      return wxString::Format(
+                            _("Proffieboard (%s)"),
+                            board.serial_path_
+                      );
               }
-            }(),
+
+              std::unreachable();
           }
         }(),
         pcui::Spacer{.size_=pcui::interControlSpacing()}(),
         pcui::Button{
           .win_={
             .base_={.expand_=true},
-            .enable_=mConfigSel.choice() | data::logic::HasSelection{},
+            .enable_={
+              mConfigSel.choice() | data::logic::HasSelection{} and
+              mBoardChoice | data::logic::HasSelection{}
+            },
             .tooltip_=_("Compile and upload the selected configuration to the selected Proffieboard."),
           },
           .label_=_("Apply Selected Configuration to Board"),
@@ -216,7 +244,11 @@ pcui::DescriptorPtr MainMenu::ui() {
         pcui::Button{
           .win_={
             .base_={.expand_=true},
-            .enable_=mBoardChoice | data::logic::HasSelection{},
+            .enable_=mBoardChoice | data::logic::HasSelection{{},
+              [this](uint32 idx) {
+                  return mBoards[idx].type_ == arduino::Port::Type::Proffie;
+              }
+            },
           },
           .label_=_("Open Serial Monitor"),
           .func_=[this] { onOpenSerial(); },
@@ -399,6 +431,52 @@ void MainMenu::bindEvents() {
             onboard::Frame::instance = new onboard::Frame;
         }
     }, eID_Run_Setup);
+
+    static const auto board_choice_table{[] {
+        data::prim::Choice::RecvTable table;
+        table.onChoice_ = data::map<&MainMenu::on_board_choice>();
+        return table;
+    }()};
+    observeWith(mBoardChoice, board_choice_table);
+}
+
+void MainMenu::refresh_boards() {
+    std::thread{[this]() {
+        auto choice{data::context(mBoardChoice)};
+
+        // Besides just resetting the count to zero while doing the update,
+        // this is necessary in the case where the same number of boards is
+        // reported. If the choice wasn't cleared here, it'll never re-fetch
+        // the string(s).
+        choice.update(0);
+
+        mBoards = arduino::getBoards();
+
+        int32 new_idx{-1};
+        for (size idx{0}; idx < mBoards.size(); ++idx) {
+            if (mBoards[idx].serial_path_ == m_last_serial_selected) {
+                new_idx = static_cast<int32>(idx);
+                break;
+            }
+        }
+
+        if (new_idx == -1 and not mBoards.empty())
+            new_idx = 0;
+
+        choice.update(mBoards.size(), new_idx);
+    }}.detach();
+}
+
+void MainMenu::on_board_choice() {
+    auto board_choice{pcui::guiDataContext(mBoardChoice)};
+    if (board_choice.idx() < 0)
+        return;
+
+    const auto& port{mBoards[board_choice.idx()]};
+    if (port.type_ != arduino::Port::Type::Proffie)
+        return;
+
+    m_last_serial_selected = port.serial_path_;
 }
 
 void MainMenu::onAddConfig() {
@@ -521,43 +599,6 @@ void MainMenu::onEditConfig() {
     }
 }
 
-void MainMenu::onRefreshBoards() {
-    pcui::BusyTracker busy(this);
-
-    auto *prog{new pcui::ProgressDialog(this, _("Board Refresh"))};
-
-    std::thread{[this, prog, busy]() {
-        auto choice{pcui::guiDataContext(mBoardChoice)};
-
-        std::optional<std::string> last;
-        if (choice.idx() >= 0)
-            last = mBoards[choice.idx()];
-
-        // Besides just resetting the count to zero while doing the update,
-        // this is necessary in the case where the same number of boards is
-        // reported. If the choice wasn't cleared here, it'll never re-fetch
-        // the string(s).
-        choice.update(0);
-
-        prog->pulse(_("Discovering Boards..."));
-        mBoards = arduino::getBoards();
-
-        prog->set(90, _("Processing and Finalizing..."));
-
-        int32 newIdx{-1};
-        for (size idx{0}; idx < mBoards.size(); ++idx) {
-            if (mBoards[idx] == last) {
-                newIdx = static_cast<int32>(idx);
-                break;
-            }
-        }
-
-        choice.update(mBoards.size(), newIdx);
-
-        prog->finish(false);
-    }}.detach();
-}
-
 void MainMenu::onApplyConfig() {
     pcui::BusyTracker busy(this);
 
@@ -590,15 +631,29 @@ void MainMenu::onApplyConfig() {
         extraConfigOptionProcessing(config);
         auto& compInfo{arduino::getCacheInfo(config, clean)};
 
+        const auto& port{mBoards[boardChoice.idx()]};
+
+        // If there's an open serial monitor for this port, it needs to be
+        // suspended so that the board can be accessed for reboot.
+        SerialMonitorDlg *suspended_monitor{nullptr};
+        for (auto *monitor : mMonitors) {
+            if (monitor->device() == port.serial_path_) {
+                suspended_monitor = monitor;
+                suspended_monitor->disconnect();
+                break;
+            }
+        }
+
         auto name{pcui::guiDataContext(info->name())};
         arduino::applyToBoard(
             name.val(),
-            boardChoice.idx() == -1
-                ? "BOOTLOADER"
-                : mBoards[boardChoice.idx()],
+            port,
             compInfo,
             *prog
         );
+
+        if (suspended_monitor)
+            suspended_monitor->reconnect();
     }}.detach();
 }
 
@@ -607,14 +662,15 @@ void MainMenu::onOpenSerial() {
     auto& boardPort{mBoards[boardChoice.idx()]};
 
     for (auto *monitor : mMonitors) {
-        if (monitor->device() != boardPort) continue;
+        if (monitor->device() != boardPort.serial_path_)
+            continue;
 
         monitor->Show();
         monitor->Raise();
         return;
     }
 
-    auto *dlg{new SerialMonitorDlg(this, boardPort)};
+    auto *dlg{new SerialMonitorDlg(this, boardPort.serial_path_)};
 
     const auto onClose{[dlg, this](wxCloseEvent& evt) {
         evt.Skip();
@@ -630,4 +686,17 @@ void MainMenu::onOpenSerial() {
 
     dlg->Show();
 }
+
+#if _WIN32
+DWORD CALLBACK MainMenu::pnp_notify_cb(
+    HCMNOTIFICATION,
+    PVOID arg,
+    CM_NOTIFY_ACTION,
+    PCM_NOTIFY_EVENT_DATA,
+    DWORD
+) {
+    reinterpret_cast<MainMenu *>(arg)->refresh_boards();
+    return ERROR_SUCCESS;
+}
+#endif
 

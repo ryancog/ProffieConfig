@@ -32,23 +32,27 @@
 
 #include "utils/types.hpp"
 
-struct Error {
-    enum class Code {
-        None,
-        Disconnected,
-        Unknown,
-    } rsn_{Code::None};
-
-    /**
-     * Platform-specific error code.
-     */
-    int32 code_{0};
-
-    // Was there an error?
-    explicit operator bool() const { return rsn_ != Code::None; }
-};
-
 struct SerialMonitor {
+    struct Error {
+        enum class Code {
+            None,
+            Disconnected,
+            In_Use,
+            Unknown,
+        };
+        using enum Code;
+
+        Code rsn_{Code::None};
+
+        /**
+         * Platform-specific error code.
+         */
+        int32 code_{0};
+
+        // Was there an error?
+        explicit operator bool() const { return rsn_ != Code::None; }
+    };
+
     SerialMonitor();
     ~SerialMonitor();
 
