@@ -1010,7 +1010,7 @@ Error upload(
 
     for (; num_tries; --num_tries) {
         // A short delay to backoff and/or let the board actually reboot.
-        std::this_thread::sleep_for(500ms);
+        std::this_thread::sleep_for(1'000ms);
 
         Process proc;
         std::string args[]{
