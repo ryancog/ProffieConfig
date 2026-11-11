@@ -149,7 +149,6 @@ Error ensureCoreInstalled(
 
 std::string dfuSuffixPath;
 
-constexpr auto MAX_ERRMESSAGE_LENGTH{1024};
 constexpr cstring ARDUINOCORE_PBV1{"proffieboard:stm32l4:Proffieboard-L433CC"};
 constexpr cstring ARDUINOCORE_PBV2{"proffieboard:stm32l4:ProffieboardV2-L433CC"};
 constexpr cstring ARDUINOCORE_PBV3{"proffieboard:stm32l4:ProffieboardV3-L452RE"};
@@ -1075,20 +1074,48 @@ Error parseError(const std::string& err, const config::Config& config) {
         }
     }
 
-    if (err.contains("error:")) {
-        constexpr std::string_view FILE_PREFIX_STR{"/ProffieConfig "};
-        const auto errPos{err.find("error:")};
-        const auto fileData{err.rfind(FILE_PREFIX_STR, errPos)};
-        return Error::Detailed | err.substr(
-            fileData + FILE_PREFIX_STR.length(),
-            MAX_ERRMESSAGE_LENGTH
-        );
+    if (auto err_pos{err.find("error:")}; err_pos != std::string::npos) {
+        // Reverse search to find where the error line started, first looking
+        // for the ProffieOS directory, and then the config prefix.
+        // This should provide a relatively correct printout starting at the
+        // actual error text. And the full output is in the log file in any
+        // case.
+
+#       if _WIN32
+#           define SEP "\\"
+#       else
+#           define SEP "/"
+#       endif
+        constexpr std::string_view DIR_PREFIX{SEP "ProffieOS" SEP};
+        constexpr std::string_view CONFIG_PREFIX{SEP "ProffieConfig "};
+#       undef SEP
+
+        const auto dir_pos{err.rfind(DIR_PREFIX, err_pos)};
+        if (dir_pos == std::string::npos)
+            return Error::Detailed | err.substr(err_pos);
+
+        // Find the config prefix within the subview that wraps the dir
+        // prefix and the error marker
+        const auto dir_substr{std::string_view(err).substr(
+            dir_pos,
+            err_pos - dir_pos
+        )};
+        const auto config_prefix_pos{dir_substr.find(CONFIG_PREFIX)};
+        if (config_prefix_pos == std::string::npos)
+            return Error::Detailed | err.substr(dir_pos);
+
+        // Calculate position where config name starts, note that
+        // config_prefix_pos is an index into the subview.
+        const auto config_pos{
+            dir_pos +
+            config_prefix_pos +
+            CONFIG_PREFIX.length()
+        };
+
+        return Error::Detailed | err.substr(config_pos);
     }
 
-    return Error::Detailed | wxString::Format(
-        _("Unknown error:\n%s"),
-        err.substr(0, MAX_ERRMESSAGE_LENGTH)
-    );
+    return Error::Detailed | err;
 }
 
 Error ensureCoreInstalled(
