@@ -947,11 +947,12 @@ pcui::DescriptorPtr MainMenu::config_entry(data::base::Model& model) {
 
                     const auto color{config_sel.selected() == &m_info
                         ? color::Dynamic(color::UserAccent{}).color()
-                        : wxNullColour
+                        : wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT)
                     };
                     auto *divider{m_window->FindWindow(eID_Config_Entry_Line)};
                     // You'd think this would be foreground, but nope.
                     divider->SetBackgroundColour(color);
+                    divider->Refresh();
                 }
 
             private:
@@ -994,9 +995,16 @@ pcui::DescriptorPtr MainMenu::config_entry(data::base::Model& model) {
               .ellipsize_=pcui::Label::Ellipsize::Middle,
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-            pcui::Divider{
-              .base_={.minSize_={-1, 3}},
-              .id_=eID_Config_Entry_Line,
+            // Can't recolor Divider on MSW, so just keep things consistent,
+            // and use an empty panel everywhere.
+            pcui::Panel{
+              .win_={
+                .base_={
+                  .minSize_={-1, 3},
+                  .expand_=true
+                },
+                .id_=eID_Config_Entry_Line,
+              },
             }(),
           }
         }(),
