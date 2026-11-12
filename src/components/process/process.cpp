@@ -346,7 +346,14 @@ void Process::interrupt() {
         GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0);
         FreeConsole();
 
-        WaitForSingleObject(data.handle_, 2'000);
+        if (WAIT_OBJECT_0 != WaitForSingleObject(data.handle_, 2'000)) {
+            // If the process hasn't exited yet, forcefully terminate it.
+            TerminateProcess(data.handle_, 1);
+        }
+    
+        // Need a little extra wait to make sure, apparently?
+        // Without this, this process will receive the event and die sometimes.
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
         SetConsoleCtrlHandler(nullptr, false);
     }
