@@ -38,14 +38,16 @@ struct Layout : detail::Window<detail::Panel> {
         create(scaffold.childParent_, desc.win_.id_);
         postCreation(scaffold, desc.win_);
 
-        auto *sizer{new wxBoxSizer(wxVERTICAL)};
+        if (desc.child_) {
+            auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
-        auto childScaffold{scaffold};
-        childScaffold.childParent_ = this;
-        childScaffold.sizer_ = sizer;
+            auto child_scaffold{scaffold};
+            child_scaffold.childParent_ = this;
+            child_scaffold.sizer_ = sizer;
 
-        sizer->Add(desc.child_->build(childScaffold));
-        SetSizer(sizer);
+            sizer->Add(desc.child_->build(child_scaffold));
+            SetSizer(sizer);
+        }
 
         activate();
     }
