@@ -29,8 +29,8 @@ namespace pcui {
 struct UI_EXPORT Divider {
     struct Desc;
 
-    wxWindowID id_{wxID_ANY};
     detail::ChildBase base_;
+    wxWindowID id_{wxID_ANY};
 
     DescriptorPtr operator()();
 };

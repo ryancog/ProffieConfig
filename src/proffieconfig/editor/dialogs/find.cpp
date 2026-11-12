@@ -134,11 +134,11 @@ void FindDlg::bind_events() {
 }
 
 struct FindDlg::FoundStyle : FindDlg::Found {
-    const std::vector<std::string>& path() const final {
+    [[nodiscard]] const std::vector<std::string>& path() const final {
         return path_;
     }
 
-    const std::string& snippet() const final {
+    [[nodiscard]] const std::string& snippet() const final {
         return snippet_;
     }
 
@@ -167,7 +167,7 @@ struct FindDlg::FoundStyle : FindDlg::Found {
             if (array_idx == arrays_children.size())
                 return;
 
-            array_choice.choose(array_idx);
+            array_choice.choose(static_cast<int32>(array_idx));
         }
 
         {
@@ -182,7 +182,7 @@ struct FindDlg::FoundStyle : FindDlg::Found {
             if (preset_idx == presets_children.size())
                 return;
 
-            preset_choice.choose(preset_idx);
+            preset_choice.choose(static_cast<int32>(preset_idx));
         }
 
         {
@@ -197,7 +197,7 @@ struct FindDlg::FoundStyle : FindDlg::Found {
             if (style_idx == styles_children.size())
                 return;
 
-            style_choice.choose(style_idx);
+            style_choice.choose(static_cast<int32>(style_idx));
             auto& style{*style_sel.selected<config::presets::Style>()};
             auto content{pcui::guiDataContext(style.content_)};
             if (matched_.first < content.val().size())
@@ -260,7 +260,7 @@ void FindDlg::on_find() {
                     ).val();
                 } else {
                     blade_string = wxString::Format(
-                        _("Style %u"),
+                        _("Style %zu"),
                         idx
                     ).utf8_string();
                 }
@@ -295,7 +295,7 @@ void FindDlg::on_find() {
         }
     }
 
-    num_found.set(m_found.size());
+    num_found.set(static_cast<int32>(m_found.size()));
 }
 
 FindDlg::Found::~Found() = default;

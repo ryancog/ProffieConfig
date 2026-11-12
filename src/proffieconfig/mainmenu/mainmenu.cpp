@@ -203,9 +203,9 @@ pcui::DescriptorPtr MainMenu::ui() {
 
     return pcui::Stack{
       .base_={
+        .minSize_={800, 550},
         .expand_=true,
         .proportion_=1,
-        .minSize_={800, 550}
       },
       .orient_=wxHORIZONTAL,
       .children_={
@@ -276,8 +276,8 @@ pcui::DescriptorPtr MainMenu::ui() {
                 pcui::Choice{
                   .win_={
                     .base_={.expand_=true},
-                    .tooltip_=_("Select the Proffieboard to connect to.\nThese IDs are assigned by the OS, and can vary."),
                     .id_=eID_Port_Choice,
+                    .tooltip_=_("Select the Proffieboard to connect to.\nThese IDs are assigned by the OS, and can vary."),
                   },
                   .data_=mBoardChoice,
                   .style_=pcui::Choice::PopUp{
@@ -311,11 +311,11 @@ pcui::DescriptorPtr MainMenu::ui() {
                 },
                 .tooltip_=_("Compile and upload the selected configuration to the selected Proffieboard."),
               },
+              .label_=_("Apply Config"),
               .bitmap_={
                 .src_=button_bitmap("chip"),
                 .mode_=pcui::Button::BitmapMode::Maintain,
               },
-              .label_=_("Apply Config"),
               .font_=button_font,
               .func_=[this] { onApplyConfig(); },
             }(),
@@ -329,22 +329,22 @@ pcui::DescriptorPtr MainMenu::ui() {
                   }
                 },
               },
+              .label_=_("Serial Monitor"),
               .bitmap_={
                 .src_=button_bitmap("serial_monitor"),
                 .mode_=pcui::Button::BitmapMode::Maintain,
               },
-              .label_=_("Serial Monitor"),
               .font_=button_font,
               .func_=[this] { onOpenSerial(); },
             }(),
             pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
             pcui::Button{
               .win_={.base_={.expand_=true}},
+              .label_=_("Version Management"),
               .bitmap_={
                 .src_=button_bitmap("management"),
                 .mode_=pcui::Button::BitmapMode::Maintain,
               },
-              .label_=_("Version Management"),
               .font_=button_font,
               .func_=[this] { on_manage_versions(); },
             }(),
@@ -385,10 +385,10 @@ pcui::DescriptorPtr MainMenu::ui() {
                     },
                   },
                   .data_=config::list(),
-                  .separator_=pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
                   .builder_=[this](data::base::Model& model) {
                       return config_entry(model);
                   },
+                  .separator_=pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
                 }(),
               }(),
               pcui::Divider{
@@ -412,6 +412,7 @@ pcui::DescriptorPtr MainMenu::ui() {
                 .children_={
                   pcui::StretchSpacer{}(),
                   pcui::Button{
+                    .label_=_("Add Config"),
                     .bitmap_={
                       .src_=[] {
                           pcui::Bitmap bmp("new");
@@ -421,7 +422,6 @@ pcui::DescriptorPtr MainMenu::ui() {
                       }(),
                       .mode_=pcui::Button::BitmapMode::Maintain,
                     },
-                    .label_=_("Add Config"),
                     .func_=[this] { on_add_config(); },
                   }(),
                 }
@@ -978,13 +978,13 @@ pcui::DescriptorPtr MainMenu::config_entry(data::base::Model& model) {
           .children_={
             pcui::Label{
               .win_={
-                .base_={.proportion_=1, .expand_=true},
+                .base_={.expand_=true, .proportion_=1},
                 .id_=eID_Config_Entry_Label,
                 .maxSize_={300, -1},
               },
               .label_=info.name(),
-              .ellipsize_=pcui::Label::Ellipsize::Middle,
               .font_=(- pcui::Font::Normal).MakeBold(),
+              .ellipsize_=pcui::Label::Ellipsize::Middle,
             }(),
             pcui::Spacer{.size_=pcui::interControlSpacing()}(),
             pcui::Divider{
@@ -996,21 +996,21 @@ pcui::DescriptorPtr MainMenu::config_entry(data::base::Model& model) {
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         pcui::Button{
           .win_={.base_={.expand_=true}},
-          .exactFit_=true,
           .bitmap_={
             .src_=button_bitmap("edit"),
             .mode_=pcui::Button::BitmapMode::Maintain,
           },
+          .exactFit_=true,
           .func_=[this, &info] { on_edit_config(info); },
         }(),
         pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
         pcui::Button{
           .win_={.base_={.expand_=true}},
-          .exactFit_=true,
           .bitmap_={
             .src_=button_bitmap("trash"),
             .mode_=pcui::Button::BitmapMode::Maintain,
           },
+          .exactFit_=true,
           .func_=[this, &info] {
               // Must be deferred since it'll destroy this UI.
               CallAfter([this, &info] {
