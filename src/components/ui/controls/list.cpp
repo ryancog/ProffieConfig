@@ -45,6 +45,9 @@ struct Control : detail::Window<wxListCtrl> {
         if (std::holds_alternative<size>(desc.columns_))
             style |= wxLC_NO_HEADER;
 
+        if (not desc.multi_selection_)
+            style |= wxLC_SINGLE_SEL;
+
         Create(
             scaffold.childParent_,
             desc.win_.id_,
@@ -217,8 +220,26 @@ struct Control : detail::Window<wxListCtrl> {
         auto widthLeft{GetClientSize().GetWidth()};
         for (int col{0}; col < numColumns; ++col) {
             int bestWidth{0};
+
+            {
+                wxListItem header;
+                GetColumn(col, header);
+
+                int width{};
+                GetTextExtent(
+                    header.GetText(),
+                    &width,
+                    nullptr,
+                    nullptr,
+                    nullptr,
+                    &itemAttr_.GetFont()
+                );
+
+                bestWidth = std::max(bestWidth, width);
+            }
+
             for (size row{0}; row < numRows; ++row) {
-                const auto text{OnGetItemText(
+                const auto text{GetItemText(
                     static_cast<long>(labelStart_ + row),
                     col
                 )};

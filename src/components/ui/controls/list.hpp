@@ -42,6 +42,8 @@ struct UI_EXPORT List {
     using Rows = std::variant<size, RefWrap<const data::base::Integer>>;
     Rows rows_;
 
+    bool multi_selection_{true};
+
     using Label = std::variant<wxString, RefWrap<const data::base::String>>;
 
     /**
