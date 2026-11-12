@@ -137,6 +137,12 @@ target_link_libraries(ui
     data
 )
 
+if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
+    set_source_files_properties(layout/panel.cpp PROPERTIES
+        LANGUAGE OBJCXX
+    )
+endif()
+
 include(../Component.cmake)
 setup_component_and_static(ui 1.2.2 ${headers})
 

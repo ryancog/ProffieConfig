@@ -82,6 +82,8 @@ struct UI_EXPORT Bitmap : private wxBitmap {
      */
     explicit operator bool() const;
 
+    [[nodiscard]] wxSize size() const { return GetDIPSize(); }
+
     /**
      * Generate a bitmap suitable for UI usage according to the transformations
      * applied.

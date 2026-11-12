@@ -30,8 +30,6 @@
 namespace pcui::detail {
 
 struct UI_EXPORT WindowImpl : data::Receiver {
-    void onDeactivate() override;
-
     /**
      * Freeze the and fetch the current enable state, preventing anything from
      * modifying it.
@@ -62,6 +60,9 @@ protected:
 
     virtual void updateSizes();
 
+    void onActivate() override;
+    void onDeactivate() override;
+
 private:
     struct ShowReceiver : data::logic::Receiver {
         ShowReceiver(WindowImpl *win);
@@ -85,6 +86,9 @@ private:
 
     wxSize mMinSize;
     wxSize mMaxSize;
+
+    std::function<void(wxWindow *)> m_activate_cb;
+    std::function<void(wxWindow *)> m_deactivate_cb;
 };
 
 /**

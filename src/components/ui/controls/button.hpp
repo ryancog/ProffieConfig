@@ -26,6 +26,7 @@
 #include "ui/controls/detail/btnstyle.hpp"
 #include "ui/detail/descriptor.hpp"
 #include "ui/detail/general.hpp"
+#include "ui/font.hpp"
 #include "ui/types.hpp"
 
 #include "ui_export.h"
@@ -63,6 +64,8 @@ struct UI_EXPORT Button {
     } bitmap_;
 
     Style style_{Style::Normal};
+
+    detail::FontData font_;
 
     bool exactFit_{false};
 

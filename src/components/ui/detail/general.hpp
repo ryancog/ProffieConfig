@@ -73,6 +73,9 @@ struct UI_EXPORT ChildWindowBase {
      * Useful inside scrolled.
      */
     bool forwardMouse_{false};
+
+    std::function<void(wxWindow *)> on_activate_;
+    std::function<void(wxWindow *)> on_deactivate_;
 };
 
 /**

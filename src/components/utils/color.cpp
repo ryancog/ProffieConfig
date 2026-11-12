@@ -31,9 +31,7 @@
 #include <wx/settings.h>
 
 #if __APPLE__
-#include <CoreFoundation/CoreFoundation.h>
-
-#include "utils/objc.hpp"
+#import <AppKit/AppKit.h>
 #elif _WIN32
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -41,20 +39,6 @@
 #endif
 
 #include "utils/types.hpp"
-
-namespace {
-
-#if __WXOSX__
-wxColour getNSColor(cstring name) {
-    static Class NSColorClass{objc_getClass("NSColor")};
-    NSColor *color{objcMessage<NSColor *>((id)NSColorClass, name)};
-    // Needs explicit ctor
-    // NOLINTNEXTLINE(modernize-return-braced-init-list)
-    return wxColour(color);
-}
-#endif
-
-} // namespace
 
 const wxColour color::DARK_BLUE{39, 74, 114};
 const wxColour color::LIGHT_BLUE{31, 99, 168};
@@ -98,7 +82,7 @@ wxColour color::Dynamic::color() const {
 
     if (mType == Type::Accent) {
 #       if __WXOSX__
-        return getNSColor("controlAccentColor");
+        return wxColour([NSColor controlAccentColor]);
 #       elif __WXMSW__
         DWORD buffer{};
         DWORD bufferSize{sizeof(buffer)};
@@ -126,7 +110,7 @@ wxColour color::Dynamic::color() const {
         switch (mSpecial) {
             case Special::Caption:
 #               if __WXOSX__
-                return getNSColor("secondaryLabelColor");
+                return wxColour([NSColor secondaryLabelColor]);
 #               else
                 return wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT);
 #               endif

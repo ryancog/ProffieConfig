@@ -32,6 +32,12 @@ struct UI_EXPORT Panel {
     // TODO: Make this a base w/ C++ P2287.
     detail::ChildWindowBase win_;
 
+    enum class Tint {
+        Normal,
+        Content,
+    };
+    Tint tint_{Tint::Normal};
+
     DescriptorPtr child_;
 
     DescriptorPtr operator()();

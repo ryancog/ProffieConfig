@@ -19,10 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
+#if __WXOSX__
+#import <AppKit/AppKit.h>
 #endif
 
 #include <wx/panel.h>
@@ -67,6 +65,25 @@ wxSizerItem *Panel::Desc::build(const detail::Scaffold& scaffold) const {
 
     auto *item{new wxSizerItem(panel)};
     detail::apply(win_.base_, item);
+
+#   if __WXOSX__
+    if (tint_ == Tint::Content) {
+        auto view{panel->GetHandle()};
+        auto effect_view{[NSVisualEffectView new]};
+        effect_view.material = NSVisualEffectMaterialContentBackground;
+
+        [view addSubview:effect_view positioned:NSWindowBelow relativeTo:nil];
+        [effect_view release];
+
+        effect_view.translatesAutoresizingMaskIntoConstraints = false;
+        [NSLayoutConstraint activateConstraints:@[
+            [view.topAnchor constraintEqualToAnchor:effect_view.topAnchor],
+            [view.bottomAnchor constraintEqualToAnchor:effect_view.bottomAnchor],
+            [view.leadingAnchor constraintEqualToAnchor:effect_view.leadingAnchor],
+            [view.trailingAnchor constraintEqualToAnchor:effect_view.trailingAnchor],
+        ]];
+    }
+#   endif
 
     return item;
 }

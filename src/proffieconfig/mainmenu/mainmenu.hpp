@@ -43,14 +43,17 @@ struct MainMenu : pcui::Frame, data::Receiver {
     enum {
         // on macOS menu items cannot have ID 0
         // on Win32, for some reason ID #1 is triggerred by hitting enter in pcTextCtrl?
-        eID_Manage_Versions = wxID_HIGHEST,
-        eID_Update_Manifest,
+        eID_Update_Manifest = wxID_HIGHEST,
         eID_Logs,
         eID_Licenses,
 
         eID_Guides,
         eID_Issue,
         eID_Run_Setup,
+
+        eID_Port_Choice,
+        eID_Config_Entry_Label,
+        eID_Config_Entry_Line,
     };
 
     MainMenu(wxWindow * = nullptr);
@@ -80,12 +83,20 @@ private:
     void refresh_boards();
 
     void on_board_choice();
-    void onAddConfig();
-    void onRemoveConfig();
-    void onEditConfig();
+    void on_add_config();
+
+    bool check_config_valid(
+        const data::base::Vector::ROContext&,
+        config::Info&
+    );
+    void on_remove_config(config::Info&);
+    void on_edit_config(config::Info&);
 
     void onApplyConfig();
     void onOpenSerial();
+    void on_manage_versions();
+
+    pcui::DescriptorPtr config_entry(data::base::Model&);
 
     data::prim::Choice mBoardChoice;
     data::prim::Selector mConfigSel;

@@ -39,8 +39,8 @@ struct UI_EXPORT VecStack {
     const data::base::Vector& data_;
 
     using Builder = std::function<DescriptorPtr(data::base::Model&)>;
-
     Builder builder_;
+
     DescriptorPtr separator_;
     DescriptorPtr empty_;
 

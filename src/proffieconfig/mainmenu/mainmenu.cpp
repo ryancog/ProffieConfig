@@ -27,21 +27,31 @@
 #include <wx/menu.h>
 #include <wx/utils.h>
 
+#if __WXOSX__
+#import <AppKit/AppKit.h>
+#endif
+
 #include "config/config.hpp"
 #include "data/logic/adapter.hpp"
 #include "data/logic/operators.hpp"
 #include "dialogs/preferences.hpp"
 #include "ui/bitmap.hpp"
+#include "ui/builders/vecstack.hpp"
 #include "ui/controls/button.hpp"
 #include "ui/controls/choice.hpp"
 #include "ui/dialogs/progress.hpp"
 #include "ui/helpers/busy.hpp"
 #include "ui/helpers/data_context.hpp"
+#include "ui/layout/group.hpp"
+#include "ui/layout/panel.hpp"
+#include "ui/layout/scrolled.hpp"
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/dialogs/message.hpp"
+#include "ui/static/divider.hpp"
 #include "ui/static/image.hpp"
 #include "ui/static/label.hpp"
+#include "ui/utils.hpp"
 #include "ui/values.hpp"
 #include "utils/paths.hpp"
 
@@ -73,6 +83,21 @@ MainMenu::MainMenu(wxWindow* parent) :
     config::update();
 
     pcui::build(this, ui());
+
+    // I don't have a great way with the current layout system to constrain this
+    // otherwise :/
+    { 
+        auto *port_choice{FindWindow(eID_Port_Choice)};
+        port_choice->SetMaxSize({port_choice->GetSize().x, -1});
+    }
+
+#   if __WXOSX__
+    auto view{GetHandle()};
+    auto window{view.window};
+    window.titleVisibility = NSWindowTitleHidden;
+    window.titlebarAppearsTransparent = true;
+    window.styleMask |= NSWindowStyleMaskFullSizeContentView;
+#   endif
 
     activate();
 
@@ -165,142 +190,244 @@ void MainMenu::removeEditor(EditorWindow *editor) {
 }
 
 pcui::DescriptorPtr MainMenu::ui() {
+    auto button_font{- pcui::Font::Normal};
+    button_font.SetWeight(wxFONTWEIGHT_BOLD);
+    button_font.SetPointSize(14);
+
+    const auto button_bitmap{[](cstring str) {
+        pcui::Bitmap bmp(str);
+        bmp.color(color::UserAccent{});
+        bmp.scaleTo(24);
+        return bmp.realize();
+    }};
+
     return pcui::Stack{
       .base_={
-        // This is such a small and dense window the usual spacing looks
-        // weird here.
-        .border_={.size_=pcui::interGroupSpacing(), .dirs_=wxALL},
+        .expand_=true,
+        .proportion_=1,
+        .minSize_={800, 550}
       },
-      .orient_=wxVERTICAL,
+      .orient_=wxHORIZONTAL,
       .children_={
         pcui::Stack{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL,
+          .base_={
+            .expand_=true,
+            .border_={
+              .size_=pcui::winEdgeSpacing(),
+              .dirs_=wxALL
+            },
+          },
+          .orient_=wxVERTICAL,
           .children_={
+#           if __WXOSX__
+            // Spacer past the traffic light region.
+            // Combined with the usual edge border should give a proper result.
+            pcui::Spacer{
+              .size_=[this] {
+                  auto view{GetHandle()};
+                  auto window{view.window};
+                  // The contentLayoutRect is in non-flipped coordinates. That
+                  // is, they originate from the bottom left, so to figure out
+                  // the spacing, compute against frame height.
+                  auto content_height{window.contentLayoutRect.size.height};
+                  auto frame_height{window.frame.size.height};
+                  auto safe_inset{frame_height - content_height};
+                  // It looks a little too far spaced out though, so also
+                  // subtract just a little.
+                  return static_cast<int32>(safe_inset) - 4;
+              }()
+            }(),
+#           endif
             pcui::Stack{
+              .base_={.expand_=true},
+              .orient_=wxHORIZONTAL,
               .children_={
-                pcui::Label{
-                  .label_="ProffieConfig",
-#                 if defined(__WXGTK__) or defined(__WXMSW__)
-                  .font_=wxFontInfo{20}.Bold(),
-#                 elif defined (__WXOSX__)
-                  .font_=wxFontInfo{30}.Bold(),
-#                 endif
+                pcui::Stack{
+                  .orient_=wxVERTICAL,
+                  .children_={
+                    pcui::Label{
+                      .label_="ProffieConfig",
+#                     if defined(__WXGTK__) or defined(__WXMSW__)
+                      .font_=wxFontInfo{20}.Bold(),
+#                     elif defined (__WXOSX__)
+                      .font_=wxFontInfo{30}.Bold(),
+#                     endif
+                    }(),
+                    pcui::Label{
+                      .label_=_("Created by Ryryog25"),
+                    }(),
+                  },
                 }(),
-                pcui::Label{
-                  .label_=_("Created by Ryryog25"),
-                }(),
+                pcui::Spacer{.size_=20}(),
+                pcui::StretchSpacer{}(),
+                pcui::Image{
+                  .win_={.maxSize_={64, 64}},
+                  .src_=pcui::Bitmap("icon"),
+                }()
               },
             }(),
-            pcui::Spacer{.size_=20}(),
-            pcui::StretchSpacer{}(),
-            pcui::Image{
-              .win_={.maxSize_={64, 64}},
-              .src_=pcui::Bitmap("icon"),
-            }()
-          },
-        }(),
-        pcui::Spacer{.size_=20}(),
-        pcui::Stack{
-          .base_={.expand_=true},
-          .orient_=wxHORIZONTAL,
-          .children_={
-            pcui::Choice{
-              .win_={.base_={.proportion_=1}},
-              .data_=mConfigSel,
-              .style_=pcui::Choice::PopUp{
-                .unselected_=_("Select Config"),
+            pcui::StretchSpacer{.size_=20, .proportion_=1}(),
+            pcui::Group{
+              .win_={
+                .base_={.expand_=true},
               },
-              .labeler_=[](uint32 sel) -> pcui::Choice::Label {
-                  auto vec{pcui::guiDataContext(config::list())};
-                  if (sel >= vec.children().size())
-                      return {};
+              .label_=_("Connected Boards"),
+              .children_={
+                pcui::Choice{
+                  .win_={
+                    .base_={.expand_=true},
+                    .tooltip_=_("Select the Proffieboard to connect to.\nThese IDs are assigned by the OS, and can vary."),
+                    .id_=eID_Port_Choice,
+                  },
+                  .data_=mBoardChoice,
+                  .style_=pcui::Choice::PopUp{
+                    .unselected_=_("Select Port..."),
+                  },
+                  .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
+                      auto& board{mBoards[idx]};
+                      switch (board.type_) {
+                          using enum arduino::Port::Type;
+                          case Bootloader:
+                              return _("Bootloader");
+                          case Proffie:
+                              return wxString::Format(
+                                    _("Proffieboard (%s)"),
+                                    board.serial_path_
+                              );
+                      }
 
-                  auto& info{dynamic_cast<config::Info&>(*vec.children()[sel])};
-                  return info.name();
+                      std::unreachable();
+                  }
+                }(),
               }
             }(),
-            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-            pcui::Button{
-              // On GTK, the exactfit shrinks button height smaller than the
-              // PopUp Choice
-              .win_={.base_={.expand_=true}},
-              .label_=_("Add"),
-              .exactFit_=true,
-              .func_=[this] { onAddConfig(); },
-            }(),
-            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            pcui::StretchSpacer{.size_=20, .proportion_=3}(),
             pcui::Button{
               .win_={
                 .base_={.expand_=true},
-                .enable_=mConfigSel.choice() | data::logic::HasSelection{},
+                .enable_={
+                  mConfigSel.choice() | data::logic::HasSelection{} and
+                  mBoardChoice | data::logic::HasSelection{}
+                },
+                .tooltip_=_("Compile and upload the selected configuration to the selected Proffieboard."),
               },
-              .label_=_("Remove"),
-              .exactFit_=true,
-              .func_=[this] { onRemoveConfig(); },
+              .bitmap_={
+                .src_=button_bitmap("chip"),
+                .mode_=pcui::Button::BitmapMode::Maintain,
+              },
+              .label_=_("Apply Config"),
+              .font_=button_font,
+              .func_=[this] { onApplyConfig(); },
+            }(),
+            pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+            pcui::Button{
+              .win_={
+                .base_={.expand_=true},
+                .enable_=mBoardChoice | data::logic::HasSelection{{},
+                  [this](uint32 idx) {
+                      return mBoards[idx].type_ == arduino::Port::Type::Proffie;
+                  }
+                },
+              },
+              .bitmap_={
+                .src_=button_bitmap("serial_monitor"),
+                .mode_=pcui::Button::BitmapMode::Maintain,
+              },
+              .label_=_("Serial Monitor"),
+              .font_=button_font,
+              .func_=[this] { onOpenSerial(); },
+            }(),
+            pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+            pcui::Button{
+              .win_={.base_={.expand_=true}},
+              .bitmap_={
+                .src_=button_bitmap("management"),
+                .mode_=pcui::Button::BitmapMode::Maintain,
+              },
+              .label_=_("Version Management"),
+              .font_=button_font,
+              .func_=[this] { on_manage_versions(); },
             }(),
           },
         }(),
-        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Button{
+        pcui::Divider{}(),
+        pcui::Panel{
           .win_={
-            .base_={.expand_=true},
-            .enable_=mConfigSel.choice() | data::logic::HasSelection{},
-          },
-          .label_=_("Edit Selected Configuration"),
-          .func_=[this] { onEditConfig(); },
-        }(),
-        pcui::Spacer{.size_=20}(),
-        pcui::Choice{
-          .win_={
-            .base_={.expand_=true},
-            .tooltip_=_("Select the Proffieboard to connect to.\nThese IDs are assigned by the OS, and can vary."),
-          },
-          .data_=mBoardChoice,
-          .style_=pcui::Choice::PopUp{
-            .unselected_=_("Select Port..."),
-          },
-          .labeler_=[this](uint32 idx) -> pcui::Choice::Label {
-              auto& board{mBoards[idx]};
-              switch (board.type_) {
-                  using enum arduino::Port::Type;
-                  case Bootloader:
-                      return _("Bootloader");
-                  case Proffie:
-                      return wxString::Format(
-                            _("Proffieboard (%s)"),
-                            board.serial_path_
-                      );
-              }
-
-              std::unreachable();
-          }
-        }(),
-        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Button{
-          .win_={
-            .base_={.expand_=true},
-            .enable_={
-              mConfigSel.choice() | data::logic::HasSelection{} and
-              mBoardChoice | data::logic::HasSelection{}
-            },
-            .tooltip_=_("Compile and upload the selected configuration to the selected Proffieboard."),
-          },
-          .label_=_("Apply Selected Configuration to Board"),
-          .func_=[this] { onApplyConfig(); },
-        }(),
-        pcui::Spacer{.size_=pcui::interControlSpacing()}(),
-        pcui::Button{
-          .win_={
-            .base_={.expand_=true},
-            .enable_=mBoardChoice | data::logic::HasSelection{{},
-              [this](uint32 idx) {
-                  return mBoards[idx].type_ == arduino::Port::Type::Proffie;
-              }
+            .base_={
+              .expand_=true,
+              .proportion_=1,
             },
           },
-          .label_=_("Open Serial Monitor"),
-          .func_=[this] { onOpenSerial(); },
+          .tint_=pcui::Panel::Tint::Content,
+          .child_=pcui::Stack{
+            .base_={
+              .expand_=true,
+              .proportion_=1,
+              .border_={
+                .size_=pcui::winEdgeSpacing(),
+                .dirs_=wxBOTTOM
+              },
+            },
+            .orient_=wxVERTICAL,
+            .children_={
+              pcui::Scrolled{
+                .win_={
+                  .base_={.expand_=true, .proportion_=1},
+                },
+                .scrollRate_{.y_=4},
+                .child_=pcui::builders::VecStack{
+                  .base_={
+                    .expand_=true,
+                    .proportion_=1,
+                    .border_{
+                     .size_=pcui::winEdgeSpacing(),
+                     .dirs_=wxALL,
+                    },
+                  },
+                  .data_=config::list(),
+                  .separator_=pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+                  .builder_=[this](data::base::Model& model) {
+                      return config_entry(model);
+                  },
+                }(),
+              }(),
+              pcui::Divider{
+                .base_={
+                  .border_={
+                    .size_=pcui::winEdgeSpacing(),
+                    .dirs_=wxLEFT | wxRIGHT
+                  },
+                },
+              }(),
+              pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+              pcui::Stack{
+                .base_={
+                  .expand_=true,
+                  .border_={
+                    .size_=pcui::winEdgeSpacing(),
+                    .dirs_=wxLEFT | wxRIGHT,
+                  },
+                },
+                .orient_=wxHORIZONTAL,
+                .children_={
+                  pcui::StretchSpacer{}(),
+                  pcui::Button{
+                    .bitmap_={
+                      .src_=[] {
+                          pcui::Bitmap bmp("new");
+                          bmp.color(color::UserAccent{});
+                          bmp.scaleTo(20);
+                          return bmp.realize();
+                      }(),
+                      .mode_=pcui::Button::BitmapMode::Maintain,
+                    },
+                    .label_=_("Add Config"),
+                    .func_=[this] { on_add_config(); },
+                  }(),
+                }
+              }(),
+            },
+          }(),
         }(),
       }
     }();
@@ -314,8 +441,6 @@ void MainMenu::createMenuBar() {
 #   else
     file->Append(wxID_PREFERENCES);
 #   endif
-    file->Append(eID_Manage_Versions, _("Manage Versions..."));
-    file->AppendSeparator();
     file->Append(eID_Update_Manifest, _("Update Channel..."));
     file->AppendSeparator();
     file->Append(eID_Logs, _("Show Logs..."));
@@ -423,49 +548,6 @@ void MainMenu::bindEvents() {
     }, eID_Licenses);
 
     Bind(wxEVT_MENU, [&](wxCommandEvent &) {
-        if (mVersionsDlg) {
-            mVersionsDlg->Show();
-            mVersionsDlg->Raise();
-            return;
-        }
-
-        const auto warnPref{state::prefs::get(
-            state::prefs::Bool::Hide_Editor_Manage_Versions_Warn
-        )};
-        if (
-                not mEditors.empty() and
-                not warnPref
-            ) {
-            auto res{pcui::showHideablePrompt(
-                _(
-                    "Although version management can be done with editors open, the changes won't be visible\n"
-                    "until the editor is reloaded, and you might run into oddities."
-                ),
-                {
-                    .caption_=_("Please Close Editors"),
-                    .style_=wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxCENTER,
-                    .labels_={.ok_=_("Proceed")},
-                    .parent_=this,
-                }
-            )};
-            state::prefs::set(
-                state::prefs::Bool::Hide_Editor_Manage_Versions_Warn,
-                res.wantsHide_
-            );
-            if (res.id_ != wxID_OK) return;
-        }
-
-        mVersionsDlg = new VersionsDlg(this);
-        const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
-            if (evt.GetEventObject() == mVersionsDlg)
-                mVersionsDlg = nullptr;
-        }};
-        mVersionsDlg->Bind(wxEVT_DESTROY, onDestroy);
-
-        mVersionsDlg->Show();
-    }, eID_Manage_Versions);
-
-    Bind(wxEVT_MENU, [&](wxCommandEvent &) {
         ManifestDialog(this).ShowModal();
     }, eID_Update_Manifest);
 
@@ -528,7 +610,7 @@ void MainMenu::on_board_choice() {
     m_last_serial_selected = port.serial_path_;
 }
 
-void MainMenu::onAddConfig() {
+void MainMenu::on_add_config() {
     AddConfigDialog dlg(this);
     if (dlg.ShowModal() != wxID_OK) return;
 
@@ -573,12 +655,32 @@ void MainMenu::onAddConfig() {
     }}.detach();
 }
 
-void MainMenu::onRemoveConfig() {
-    const auto message{
-        _("Are you sure you want to deleted the selected configuration?") +
+bool MainMenu::check_config_valid(
+    const data::base::Vector::ROContext& configs,
+    config::Info& info
+) {
+    // In case the UI desyncs, makes sure info is actually an object in the list
+    // and isn't dead memory. Worst case the data was reallocated and we just
+    // end up dealing with some other (valid) config.
+    for (const auto& model : configs.children()) {
+        if (model.get() == &info)
+            return true;
+    }
+
+    return false;
+}
+
+void MainMenu::on_remove_config(config::Info& info) {
+    auto configs{pcui::guiDataContext(config::list())};
+    if (not check_config_valid(configs, info))
+        return;
+
+    const auto message{wxString::Format(
+        _("Are you sure you want to delete the configuration \"%s\"?") +
         "\n\n" +
         _("This action cannot be undone!"),
-    };
+        pcui::guiDataContext(info.name()).val()
+    )};
     pcui::dialogs::message::Args args{
         .caption_=_("Delete Config"),
         .style_=wxYES_NO | wxNO_DEFAULT | wxCENTER,
@@ -588,14 +690,11 @@ void MainMenu::onRemoveConfig() {
     if (pcui::showMessage(message, args) != wxYES)
         return;
 
-    auto sel{pcui::guiDataContext(mConfigSel)};
-    auto *info{sel.selected<config::Info>()};
-
-    auto iter{mEditors.find(info)};
+    auto iter{mEditors.find(&info)};
     if (iter != mEditors.end())
         iter->second->Close(true);
 
-    auto path{info->path()};
+    auto path{info.path()};
     std::error_code ec;
     if (not fs::remove(path, ec)) {
         pcui::showMessage(
@@ -613,12 +712,13 @@ void MainMenu::onRemoveConfig() {
 
     // Unloading will remove the config from the list once it's deleted from
     // disk.
-    info->unload();
+    info.unload();
 }
 
-void MainMenu::onEditConfig() {
-    auto sel{pcui::guiDataContext(mConfigSel)};
-    auto& info{*sel.selected<config::Info>()};
+void MainMenu::on_edit_config(config::Info& info) {
+    auto configs{pcui::guiDataContext(config::list())};
+    if (not check_config_valid(configs, info))
+        return;
 
     auto err{info.load()};
     if (err) {
@@ -734,6 +834,192 @@ void MainMenu::onOpenSerial() {
     mMonitors.insert(dlg);
 
     dlg->Show();
+}
+
+void MainMenu::on_manage_versions() {
+    if (mVersionsDlg) {
+        mVersionsDlg->Show();
+        mVersionsDlg->Raise();
+        return;
+    }
+
+    const auto warnPref{state::prefs::get(
+        state::prefs::Bool::Hide_Editor_Manage_Versions_Warn
+    )};
+    if (
+            not mEditors.empty() and
+            not warnPref
+        ) {
+        auto res{pcui::showHideablePrompt(
+            _(
+                "Although version management can be done with editors open, the changes won't be visible\n"
+                "until the editor is reloaded, and you might run into oddities."
+            ),
+            {
+                .caption_=_("Please Close Editors"),
+                .style_=wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxCENTER,
+                .labels_={.ok_=_("Proceed")},
+                .parent_=this,
+            }
+        )};
+        state::prefs::set(
+            state::prefs::Bool::Hide_Editor_Manage_Versions_Warn,
+            res.wantsHide_
+        );
+        if (res.id_ != wxID_OK) return;
+    }
+
+    mVersionsDlg = new VersionsDlg(this);
+    const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
+        if (evt.GetEventObject() == mVersionsDlg)
+            mVersionsDlg = nullptr;
+    }};
+    mVersionsDlg->Bind(wxEVT_DESTROY, onDestroy);
+
+    mVersionsDlg->Show();
+}
+
+pcui::DescriptorPtr MainMenu::config_entry(data::base::Model& model) {
+    auto& info{dynamic_cast<config::Info&>(model)};
+
+    const auto button_bitmap{[](cstring str) {
+        pcui::Bitmap bmp(str);
+        bmp.color(color::UserAccent{});
+        bmp.scaleTo(20);
+        return bmp.realize();
+    }};
+
+    return pcui::Group{
+      .win_={
+        .base_={.expand_=true},
+        .on_activate_=[this, &info](wxWindow *win) {
+            const auto on_click{[this, &info](wxMouseEvent&) {
+                auto config_list{pcui::guiDataContext(config::list())};
+                auto configs{config_list.children()};
+                for (size idx{0}; idx < configs.size(); ++idx) {
+                    if (&info == configs[idx].get()) {
+                        mConfigSel.choice().choose(static_cast<int32>(idx));
+                        break;
+                    }
+                }
+            }};
+            auto *label{win->FindWindow(eID_Config_Entry_Label)};
+            auto *divider{win->FindWindow(eID_Config_Entry_Line)};
+
+            // Select this item when clicked.
+            label->Bind(wxEVT_LEFT_UP, on_click);
+            divider->Bind(wxEVT_LEFT_UP, on_click);
+            auto *parent{divider->GetParent()};
+            while (not false) {
+                parent->Bind(wxEVT_LEFT_UP, on_click);
+
+                if (parent == win)
+                    break;
+
+                parent = parent->GetParent();
+            }
+
+            struct Receiver : wxSizerItem, data::Receiver {
+                Receiver(
+                    MainMenu *mainmenu,
+                    wxWindow *window,
+                    config::Info& info
+                ) : wxSizerItem(0, 0),
+                    m_mainmenu{mainmenu},
+                    m_window{window},
+                    m_info(info) {}
+
+                void onActivate() override {
+                    on_choice();
+                }
+
+                void on_choice() {
+                    auto config_sel{pcui::guiDataContext(
+                        m_mainmenu->mConfigSel
+                    )};
+
+                    const auto color{config_sel.selected() == &m_info
+                        ? color::Dynamic(color::UserAccent{}).color()
+                        : wxNullColour
+                    };
+                    auto *divider{m_window->FindWindow(eID_Config_Entry_Line)};
+                    // You'd think this would be foreground, but nope.
+                    divider->SetBackgroundColour(color);
+                }
+
+            private:
+                MainMenu *m_mainmenu;
+                wxWindow *m_window;
+                config::Info& m_info;
+            };
+
+            // Handle selection.
+            auto *receiver{new Receiver(this, win, info)};
+            // pcui::Group immediate window doesn't have a sizer.
+            pcui::getUniqueChild(win)->GetSizer()->Add(receiver);
+
+            static const auto choice_table{[] {
+                data::prim::Choice::RecvTable table;
+                table.onChoice_ = data::map<&Receiver::on_choice>();
+                return table;
+            }()};
+            receiver->observeWith(mConfigSel.choice(), choice_table);
+            receiver->activate();
+
+            // Receiver will be deactivated with normal crippling and destroyed
+            // as part of the window hierarchy.
+        },
+      },
+      .orient_=wxHORIZONTAL,
+      .children_={
+        pcui::Stack{
+          .base_={.proportion_=1},
+          .orient_=wxVERTICAL,
+          .children_={
+            pcui::Label{
+              .win_={
+                .base_={.proportion_=1, .expand_=true},
+                .id_=eID_Config_Entry_Label,
+                .maxSize_={300, -1},
+              },
+              .label_=info.name(),
+              .ellipsize_=pcui::Label::Ellipsize::Middle,
+              .font_=(- pcui::Font::Normal).MakeBold(),
+            }(),
+            pcui::Spacer{.size_=pcui::interControlSpacing()}(),
+            pcui::Divider{
+              .base_={.minSize_={-1, 3}},
+              .id_=eID_Config_Entry_Line,
+            }(),
+          }
+        }(),
+        pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+        pcui::Button{
+          .win_={.base_={.expand_=true}},
+          .exactFit_=true,
+          .bitmap_={
+            .src_=button_bitmap("edit"),
+            .mode_=pcui::Button::BitmapMode::Maintain,
+          },
+          .func_=[this, &info] { on_edit_config(info); },
+        }(),
+        pcui::Spacer{.size_=pcui::interGroupSpacing()}(),
+        pcui::Button{
+          .win_={.base_={.expand_=true}},
+          .exactFit_=true,
+          .bitmap_={
+            .src_=button_bitmap("trash"),
+            .mode_=pcui::Button::BitmapMode::Maintain,
+          },
+          .func_=[this, &info] {
+              // Must be deferred since it'll destroy this UI.
+              CallAfter([this, &info] {
+                  on_remove_config(info);
+              });
+          }
+        }(),
+      }
+    }();
 }
 
 #if _WIN32

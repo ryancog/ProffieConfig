@@ -20,7 +20,6 @@ set(headers
     hash.hpp
     info.hpp
     files.hpp
-    objc.hpp
     rand.hpp
     version.hpp
     string.hpp
@@ -35,6 +34,12 @@ target_link_libraries(utils
     wxWidgets
     tomcrypt-static
 )
+
+if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
+    set_source_files_properties(color.cpp PROPERTIES
+        LANGUAGE OBJCXX
+    )
+endif()
 
 include(../Component.cmake)
 setup_component_and_static(utils 1.0.16 ${headers})

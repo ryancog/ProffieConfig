@@ -23,13 +23,6 @@
 
 using namespace pcui::detail;
 
-void WindowImpl::onDeactivate() {
-    mShowReceiver.reset();
-    mShow.reset();
-    mEnableReceiver.reset();
-    mEnable.reset();
-}
-
 bool WindowImpl::freezeGetRealEnable() {
     if (not mEnable)
         return true;
@@ -56,6 +49,9 @@ void WindowImpl::postCreation(
     const Scaffold& scaffold, const ChildWindowBase& desc
 ) {
     auto *win{dynamic_cast<wxWindow *>(this)};
+
+    m_activate_cb = desc.on_activate_;
+    m_deactivate_cb = desc.on_deactivate_;
 
     mMinSize = desc.base_.minSize_;
     mMaxSize = desc.maxSize_;
@@ -104,15 +100,33 @@ void WindowImpl::updateSizes() {
 
     win->SetMinSize({-1, -1});
 
-    auto minSize{mMinSize};
-    minSize.IncTo(win->GetBestSize());
+    auto max_size{mMaxSize};
+    max_size.SetDefaults(win->GetMaxSize());
+    win->SetMaxSize(max_size);
 
-    if (mMaxSize.IsFullySpecified()) {
-        minSize.DecTo(mMaxSize);
-        win->SetMaxSize(mMaxSize);
-    }
+    auto min_size{mMinSize};
+    min_size.IncTo(win->GetBestSize());
+    min_size.DecToIfSpecified(mMaxSize);
+    win->SetMinSize(min_size);
+}
 
-    win->SetMinSize(minSize);
+void WindowImpl::onActivate() {
+    Receiver::onActivate();
+
+    if (m_activate_cb)
+        m_activate_cb(dynamic_cast<wxWindow *>(this));
+}
+
+void WindowImpl::onDeactivate() {
+    Receiver::onDeactivate();
+
+    if (m_deactivate_cb)
+        m_deactivate_cb(dynamic_cast<wxWindow *>(this));
+
+    mShowReceiver.reset();
+    mShow.reset();
+    mEnableReceiver.reset();
+    mEnable.reset();
 }
 
 WindowImpl::ShowReceiver::ShowReceiver(WindowImpl *win) : mWin{win} {

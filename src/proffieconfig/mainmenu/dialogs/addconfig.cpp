@@ -166,7 +166,7 @@ pcui::DescriptorPtr AddConfigDialog::ui() {
           },
           .label_=_("Please choose a configuration file to import"),
         }(),
-        pcui::StretchSpacer{}(),
+        pcui::StretchSpacer{.size_=pcui::interControlSpacing()}(),
         pcui::DialogButtons{
           .ok_=pcui::Button{
             .win_{

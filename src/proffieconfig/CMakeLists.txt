@@ -66,12 +66,13 @@ set(headers
     editor/dialogs/injections.hpp
     editor/dialogs/presetarray.hpp
     editor/dialogs/customopts.hpp
+    editor/dialogs/awareness.hpp
     editor/dialogs/bladearray.hpp
     editor/dialogs/buttons.hpp
-    editor/dialogs/awareness.hpp
     editor/dialogs/propinfo.hpp
     editor/dialogs/stylealiases.hpp
     editor/dialogs/propbuttons.hpp
+    editor/dialogs/find.hpp
     editor/pages/blades.hpp
     editor/pages/presets.hpp
     editor/pages/general.hpp
@@ -95,6 +96,12 @@ target_link_libraries(proffieconfig
     config
     process
 )
+
+if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
+    set_source_files_properties(mainmenu/mainmenu.cpp PROPERTIES
+        LANGUAGE OBJCXX
+    )
+endif()
 
 include (../Common.cmake)
 setup_target(proffieconfig ${headers})

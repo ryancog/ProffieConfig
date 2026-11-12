@@ -35,7 +35,26 @@ namespace {
 
 struct Static : detail::DataWindow<wxStaticText> {
     Static(const detail::Scaffold& scaffold, const Label& desc) {
-        const auto style{desc.win_.base_.align_};
+        long style{desc.win_.base_.align_};
+
+        if (desc.ellipsize_ != Label::Ellipsize::None) {
+            style |= wxST_NO_AUTORESIZE;
+
+            switch (desc.ellipsize_) {
+                using enum Label::Ellipsize;
+                case None:
+                    break;
+                case Start:
+                    style |= wxST_ELLIPSIZE_START;
+                    break;
+                case Middle:
+                    style |= wxST_ELLIPSIZE_MIDDLE;
+                    break;
+                case End:
+                    style |= wxST_ELLIPSIZE_END;
+                    break;
+            }
+        }
 
         const auto setup{[&] {
             if (desc.color_) {

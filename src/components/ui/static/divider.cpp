@@ -27,6 +27,7 @@
 using namespace pcui;
 
 DescriptorPtr Divider::operator()() {
+    base_.expand_ = true;
     return std::make_unique<Divider::Desc>(std::move(*this));
 }
 
@@ -44,12 +45,14 @@ wxSizerItem *Divider::Desc::build(const detail::Scaffold& scaffold) const {
 
     auto *line{new wxStaticLine(
         scaffold.childParent_,
-        wxID_ANY,
+        id_,
         wxDefaultPosition,
         wxDefaultSize,
         orient == wxVERTICAL ? wxLI_HORIZONTAL : wxLI_VERTICAL
     )};
-    auto *item{new wxSizerItem(line, 0, wxEXPAND)};
+    auto *item{new wxSizerItem(line)};
+    detail::apply(base_, item);
+
     return item;
 }
 

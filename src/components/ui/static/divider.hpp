@@ -20,6 +20,7 @@
  */
 
 #include "ui/types.hpp"
+#include "ui/detail/general.hpp"
 
 #include "ui_export.h"
 
@@ -27,6 +28,10 @@ namespace pcui {
 
 struct UI_EXPORT Divider {
     struct Desc;
+
+    wxWindowID id_{wxID_ANY};
+    detail::ChildBase base_;
+
     DescriptorPtr operator()();
 };
 

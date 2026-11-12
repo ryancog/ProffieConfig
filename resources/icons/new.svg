@@ -26,13 +26,13 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#505050"
      inkscape:document-units="px"
-     inkscape:zoom="4.4453125"
-     inkscape:cx="-35.318102"
-     inkscape:cy="17.884007"
+     inkscape:zoom="17.78125"
+     inkscape:cx="13.469244"
+     inkscape:cy="11.950791"
      inkscape:window-width="1424"
      inkscape:window-height="1053"
-     inkscape:window-x="440"
-     inkscape:window-y="270"
+     inkscape:window-x="2560"
+     inkscape:window-y="242"
      inkscape:window-maximized="0"
      inkscape:current-layer="layer1"
      showgrid="false" />
@@ -86,7 +86,7 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:none;fill-rule:evenodd;stroke:#1f63a8;stroke-width:2.10047;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;paint-order:markers fill stroke;stroke-opacity:1"
+       style="fill:none;fill-rule:evenodd;stroke:#1f63a8;stroke-width:1.25098;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
        id="rect5"
        width="14.579324"
        height="14.579325"
@@ -94,15 +94,15 @@
        y="8.7103405"
        rx="3.2168059"
        ry="3.3738339"
-       transform="matrix(1.9184895,0,0,1.9184888,-14.695832,-14.695827)"
+       transform="matrix(2.0214394,0,0,2.0214393,-16.343032,-16.343034)"
        mask="none" />
     <path
-       style="fill:none;stroke:#1f63a8;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:none;stroke:#1f63a8;stroke-width:2.52251187;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        d="M 15.19099,6.8399222 V 24.933902"
        id="path1"
        transform="matrix(1,0,0,0.90522397,0.80901,1.6187864)" />
     <path
-       style="fill:none;stroke:#1f63a8;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:none;stroke:#1f63a8;stroke-width:2.4674272;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        d="M 7.3171261,15.19099 H 24.456699"
        id="path2"
        transform="matrix(0.94609291,0,0,1,0.9695047,0.80901)" />

@@ -13,7 +13,7 @@ if (CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin)
     endif()
 endif()
 
-project(ProffieConfig)
+project(ProffieConfig CXX)
 
 if (NOT (
     CMAKE_HOST_SYSTEM_NAME STREQUAL Linux OR
@@ -22,6 +22,10 @@ if (NOT (
 ))
     # Rip Windows
     message(FATAL_ERROR "Building on this platform is not supported.")
+endif()
+
+if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
+    enable_language(OBJCXX)
 endif()
 
 if (CROSS_COMPILE STREQUAL Windows)

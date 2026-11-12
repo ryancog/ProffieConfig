@@ -41,6 +41,14 @@ struct UI_EXPORT Label {
     color::Dynamic color_;
     int32 wrapWidth_{-1};
 
+    enum class Ellipsize {
+        None,
+        Start,
+        Middle,
+        End,
+    };
+    Ellipsize ellipsize_{Ellipsize::None};
+
     DescriptorPtr operator()();
 };
 
