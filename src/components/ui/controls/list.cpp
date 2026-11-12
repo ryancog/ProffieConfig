@@ -167,11 +167,15 @@ struct Control : detail::Window<wxListCtrl> {
         labels_ = std::move(newLabels);
         labelStart_ = start;
 
-        recomputeColumns();
+        // See below, seemingly it also cannot be called from within the cache
+        // event, and probably others...
+        CallAfter([this] { recomputeColumns(); });
     }
 
     void onSizeEvent(wxSizeEvent& evt) {
-        recomputeColumns();
+        // SetColumnWidth cannot be called from within the size event:
+        // https://github.com/wxWidgets/wxWidgets/issues/26394
+        CallAfter([this] { recomputeColumns(); });
         evt.Skip();
     }
 
