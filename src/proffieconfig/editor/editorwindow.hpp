@@ -30,20 +30,22 @@
 #include "pages/props.hpp"
 #include "pages/presets.hpp"
 #include "pages/blades.hpp"
+#include "dialogs/find.hpp"
 #include "dialogs/injections.hpp"
 
 struct EditorWindow : pcui::Frame, data::Receiver {
     EditorWindow(config::Info&);
     ~EditorWindow() override;
 
-    void Fit() final;
-
     // Handles errors
     bool save();
 
     wxSize DoGetBestClientSize() const override;
+    void Fit() final;
 
 private:
+    friend struct FindDlg;
+
     void onActivate() override;
     void onDeactivate() override;
 
@@ -66,6 +68,7 @@ private:
     void onUndo(wxCommandEvent&);
     void onRedo(wxCommandEvent&);
 
+    void on_find(wxCommandEvent&);
     void onStyleEditor(wxCommandEvent&);
     void onPOD(wxCommandEvent&);
 
@@ -82,6 +85,7 @@ private:
     BladesPage mBladesPage;
     PresetsPage mPresetsPage;
     InjectionsDlg *mInjectionDlg{nullptr};
+    FindDlg *m_find_dlg{nullptr};
 
     enum {
         ePage_General = wxID_HIGHEST,
@@ -96,6 +100,7 @@ private:
         eID_Verify_Cacheless,
         eID_Injections,
         eID_Style_Editor,
+        eID_Find,
 
         eID_POD,
 

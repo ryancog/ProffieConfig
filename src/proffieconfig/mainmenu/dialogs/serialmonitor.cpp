@@ -1,7 +1,7 @@
 #include "serialmonitor.hpp"
 /*
  * ProffieConfig, All-In-One Proffieboard Management Utility
- * Copyright (C) 2024-2025 Ryan Ogurek
+ * Copyright (C) 2024-2026 Ryan Ogurek
  *
  * proffieconfig/mainmenu/dialogs/serialmonitor.cpp
  *

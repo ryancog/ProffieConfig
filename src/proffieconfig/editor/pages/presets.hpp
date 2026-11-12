@@ -48,6 +48,8 @@ protected:
     void preDeactivate() override;
 
 private:
+    friend struct FindDlg;
+
     pcui::DescriptorPtr selection();
     pcui::DescriptorPtr fields();
     pcui::DescriptorPtr displayAndBlade();

@@ -100,6 +100,12 @@ void EditorWindow::onDeactivate() {
             dlg->Destroy();
         });
     }
+    if (m_find_dlg) {
+        pcui::cripple(m_find_dlg);
+        m_find_dlg->CallAfter([dlg=m_find_dlg] {
+            dlg->Destroy();
+        });
+    }
 }
 
 void EditorWindow::createMenuBar() {
@@ -130,6 +136,10 @@ void EditorWindow::createMenuBar() {
     edit->Append(wxID_REDO);
 
     auto *tools{new wxMenu};
+    tools->Append(
+        eID_Find,
+        _("Find...") + "\tCtrl+F"
+    );
     tools->Append(
         eID_Style_Editor,
         _("Style Editor...") + "\tCtrl+L",
@@ -222,6 +232,7 @@ void EditorWindow::bindEvents() {
     Bind(wxEVT_MENU, &EditorWindow::onManageInjections, this, eID_Injections);
     Bind(wxEVT_MENU, &EditorWindow::onUndo, this, wxID_UNDO);
     Bind(wxEVT_MENU, &EditorWindow::onRedo, this, wxID_REDO);
+    Bind(wxEVT_MENU, &EditorWindow::on_find, this, eID_Find);
     Bind(wxEVT_MENU, &EditorWindow::onStyleEditor, this, eID_Style_Editor);
     Bind(wxEVT_MENU, &EditorWindow::onPOD, this, eID_POD);
     Bind(wxEVT_MENU, &EditorWindow::onPage, this, ePage_First, ePage_Last);
@@ -361,6 +372,14 @@ void EditorWindow::onUndo(wxCommandEvent&) {
 
 void EditorWindow::onRedo(wxCommandEvent&) {
     pcui::guiDataContext(*mInfo.config()).redo();
+}
+
+void EditorWindow::on_find(wxCommandEvent&) {
+    if (not m_find_dlg)
+        m_find_dlg = new FindDlg(this);
+
+    m_find_dlg->Show();
+    m_find_dlg->Raise();
 }
 
 void EditorWindow::onStyleEditor(wxCommandEvent&) {
