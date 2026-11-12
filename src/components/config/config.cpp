@@ -656,8 +656,9 @@ void config::update() {
         auto name{data::context(info.mName)};
 
         bool found{false};
-        for (const auto& file : files) {
-            if (file == name.val()) {
+        for (auto iter{files.begin()}; iter != files.end(); ++iter) {
+            if (*iter == name.val()) {
+                files.erase(iter);
                 found = true;
                 break;
             }
@@ -672,22 +673,20 @@ void config::update() {
     }
 
     for (const auto& file : files) {
-        bool found{false};
-        for (size idx{0}; idx < list.children().size(); ++idx) {
-            auto& info{dynamic_cast<Info&>(*list.children()[idx])};
-            auto name{data::context(info.mName)};
-
-            if (name.val() == file) {
-                found = true;
-                break;
-            }
-        }
-
-        if (found) continue;
-
         auto info{std::unique_ptr<Info>{new Info}};
         info->mName.change(std::string(file));
-        list.append(std::move(info));
+
+        // Sort alphabetically
+        size idx{0};
+        auto children{list.children()};
+        for (; idx < children.size(); ++idx) {
+            auto& info{dynamic_cast<Info&>(*children[idx])};
+            auto name{data::context(info.name())};
+            if (file < name.val())
+                break;
+        }
+
+        list.insert(idx, std::move(info));
     }
 
     if (err) {
