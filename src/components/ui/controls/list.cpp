@@ -223,6 +223,10 @@ struct Control : detail::Window<wxListCtrl> {
 
             {
                 wxListItem header;
+                // The mask controls what data will be filled in the call to
+                // GetColumn().
+                header.SetMask(wxLIST_MASK_TEXT);
+
                 GetColumn(col, header);
 
                 int width{};
