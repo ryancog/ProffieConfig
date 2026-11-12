@@ -373,6 +373,13 @@ pcui::DescriptorPtr MainMenu::ui() {
               pcui::Scrolled{
                 .win_={
                   .base_={.expand_=true, .proportion_=1},
+                  .on_activate_=[this](wxWindow *win) {
+                      // Unselect when clicking background
+                      const auto on_click{[this](wxMouseEvent&) {
+                          mConfigSel.choice().unchoose();
+                      }};
+                      win->Bind(wxEVT_LEFT_UP, on_click);
+                  }
                 },
                 .scrollRate_{.y_=4},
                 .child_=pcui::builders::VecStack{
