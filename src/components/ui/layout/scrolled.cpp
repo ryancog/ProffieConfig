@@ -38,12 +38,12 @@ struct Layout : detail::Window<wxScrolledWindow> {
 
         auto *sizer{new wxBoxSizer(wxVERTICAL)};
 
-        auto childScaffold{scaffold};
-        childScaffold.childParent_ = this;
-        childScaffold.scrolled_ = this;
-        childScaffold.sizer_ = sizer;
+        auto child_scaffold{scaffold};
+        child_scaffold.childParent_ = this;
+        child_scaffold.scrolled_ = this;
+        child_scaffold.sizer_ = sizer;
 
-        sizer->Add(desc.child_->build(childScaffold));
+        sizer->Add(desc.child_->build(child_scaffold));
         SetSizer(sizer);
 
         activate();
@@ -55,29 +55,29 @@ struct Layout : detail::Window<wxScrolledWindow> {
         if (GetSizer() == nullptr) return;
 
         // Do not reset min size, it was recalc'd in WinBase::updateSizes()
-        auto bestSize{GetBestSize()};
+        auto best_size{GetBestSize()};
 
-        int scrollX{};
-        int scrollY{};
-        GetScrollPixelsPerUnit(&scrollX, &scrollY);
+        int scroll_x{};
+        int scroll_y{};
+        GetScrollPixelsPerUnit(&scroll_x, &scroll_y);
 
-        const auto virtSize{GetSizer()->CalcMin()};
+        const auto virt_size{GetSizer()->CalcMin()};
 
-        if (scrollX == -1) {
-            bestSize.SetWidth(std::max(
-                bestSize.GetWidth(),
-                virtSize.GetWidth()
+        if (scroll_x == -1) {
+            best_size.SetWidth(std::max(
+                best_size.GetWidth(),
+                virt_size.GetWidth()
             ));
         }
 
-        if (scrollY == -1) {
-            bestSize.SetHeight(std::max(
-                bestSize.GetHeight(),
-                virtSize.GetHeight()
+        if (scroll_y == -1) {
+            best_size.SetHeight(std::max(
+                best_size.GetHeight(),
+                virt_size.GetHeight()
             ));
         }
 
-        SetMinSize(bestSize);
+        SetMinSize(best_size);
     }
 };
 
@@ -90,11 +90,11 @@ DescriptorPtr Scrolled::operator()() {
     //
     // Also be sure not to set it if the scrollrate is unset, to not break the
     // custom sizing in updateSizes().
-    auto& minSize{win_.base_.minSize_};
-    if (minSize.GetWidth() == -1 and scrollRate_.x_ != -1)
-        minSize.SetWidth(0);
-    if (minSize.GetHeight() == -1 and scrollRate_.y_ != -1)
-        minSize.SetHeight(0);
+    auto& min_size{win_.base_.minSize_};
+    if (min_size.GetWidth() == -1 and scrollRate_.x_ != -1)
+        min_size.SetWidth(0);
+    if (min_size.GetHeight() == -1 and scrollRate_.y_ != -1)
+        min_size.SetHeight(0);
 
     return std::make_unique<Scrolled::Desc>(std::move(*this));
 }
