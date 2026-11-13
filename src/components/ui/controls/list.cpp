@@ -119,11 +119,22 @@ struct Control : detail::Window<wxListCtrl> {
     void onCacheEvent(wxListEvent& evt) {
         std::lock_guard scopeLock(pMutex);
 
+        {
+            // Cache events may be generated when the range is already cached.
+            // In that case, skip processing.
+            // This is not only a performance optimization, but also avoids
+            // jitter from recalculating the column widths with potentially
+            // different cache ranges, which is an issue on Win32.
+            auto cached_from{labelStart_};
+            auto cached_to{cached_from + labels_.size()};
+            if (
+                    cached_from <= evt.GetCacheFrom() and
+                    evt.GetCacheTo() <= cached_to
+               ) return;
+        }
+
         auto start{evt.GetCacheFrom()};
         auto num{evt.GetCacheTo() - start + 1};
-
-        if (start == labelStart_ and num == labels_.size())
-            return;
 
         std::vector<std::vector<List::Label>> newLabels;
         const auto oldLabelEnd{labelStart_ + labels_.size()};
