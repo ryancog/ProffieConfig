@@ -428,7 +428,7 @@ void SerialMonitorDlg::onDisconnect() {
     mInput.disable();
 
     // Call this immediately if possible/necessary (e.g. on destroy)
-    pcui::safeCall([this] {
+    pcui::safe_call([this] {
         SetStatusText(wxString::Format(
             _("Disconnected (%s)"), mDev
         ));

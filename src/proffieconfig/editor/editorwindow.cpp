@@ -241,7 +241,7 @@ void EditorWindow::bindEvents() {
 
 void EditorWindow::onIsSaved() {
     auto saved{pcui::guiDataContext(mInfo.config()->isSaved()).val()};
-    pcui::safeCall([this, saved] {
+    pcui::safe_call([this, saved] {
 #       ifdef __WXOSX__
         OSXSetModified(not saved);
 #       else
@@ -454,7 +454,7 @@ void EditorWindow::onPage(wxCommandEvent& evt) {
         return;
 
     // Don't cripple `this`
-    if (auto *child{pcui::getUniqueChild(this)})
+    if (auto *child{pcui::get_unique_child(this)})
         pcui::cripple(child);
 
     // Set this first so it's available during the build.
@@ -520,13 +520,13 @@ void EditorWindow::onTimer(wxTimerEvent& evt) {
 
         // Re-enable auto layout on resize, and limit resizing based on which
         // pane is shown.
-        pcui::getUniqueChild(this)->SetAutoLayout(true);
+        pcui::get_unique_child(this)->SetAutoLayout(true);
         configureResizing();
     }
 }
 
 wxSize EditorWindow::DoGetBestClientSize() const {
-    auto bestClientSize{pcui::getUniqueChild(this)->GetBestSize()};
+    auto bestClientSize{pcui::get_unique_child(this)->GetBestSize()};
 
     // if (mCurrentPage == ePage_Props)
     if (auto *scrolled{FindWindow(eID_Props_Scrolled)}) {
@@ -594,7 +594,7 @@ void EditorWindow::Fit() {
     // This actually does give the whole window size.
     mStartSize = GetSize();
 
-    auto *panel{pcui::getUniqueChild(this)};
+    auto *panel{pcui::get_unique_child(this)};
 
     // Set the panel size **and** position to where it should be once
     // done first so that GetBestSize() behaves correctly and it renders

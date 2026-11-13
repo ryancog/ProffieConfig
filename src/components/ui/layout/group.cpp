@@ -27,6 +27,10 @@
 #include "ui/detail/window.hpp"
 #include "ui/types.hpp"
 
+#if __WXMSW__
+#include "ui/layout/detail/panel.hpp"
+#endif
+
 using namespace pcui;
 
 namespace {
@@ -43,17 +47,50 @@ struct Layout : detail::Window<priv::GroupBox> {
 
         postCreation(scaffold, desc.win_);
 
-        detail::Scaffold childScaffold{scaffold};
-        childScaffold.childParent_ = childParent();
-        childScaffold.sizer_ = sizer();
+        detail::Scaffold child_scaffold{scaffold};
+        child_scaffold.childParent_ = childParent();
+        child_scaffold.sizer_ = sizer();
 
-        for (const auto& child : desc.children_) {
-            sizer()->Add(child->build(childScaffold));
-        }
+        for (const auto& child : desc.children_)
+            sizer()->Add(child->build(child_scaffold));
 
         activate();
     }
 };
+
+#if __WXMSW__
+// On MSW, there's a spacing left above the static box for the label, even if
+// there is no label. To avoid this, a panel w/ border is used instead, which
+// achieves the same visual effect.
+struct Unlabeled : detail::Window<detail::Panel> {
+    Unlabeled(const detail::Scaffold& scaffold, const Group& desc) {
+        create(scaffold.childParent_, desc.win_.id_, wxBORDER_SIMPLE);
+        postCreation(scaffold, desc.win_);
+
+        auto *sizer{new wxBoxSizer(desc.orient_)};
+        auto *content_sizer{sizer};
+
+        if (desc.padded_) {
+            content_sizer = new wxBoxSizer(desc.orient_);
+
+            // The border size of 5 is hardcoded in wxWidgets
+            // src/msw/statbox.cpp as CHILDREN_OFFSET.
+            sizer->Add(content_sizer, 1, wxEXPAND | wxALL, 5);
+        }
+
+        detail::Scaffold child_scaffold{scaffold};
+        child_scaffold.childParent_ = this;
+        child_scaffold.sizer_ = content_sizer;
+
+        for (const auto& child : desc.children_)
+            content_sizer->Add(child->build(child_scaffold));
+
+        SetSizer(sizer);
+
+        activate();
+    }
+};
+#endif
 
 } // namespace
 
@@ -65,7 +102,16 @@ Group::Desc::Desc(Group&& data) :
     Group{std::move(data)} {}
 
 wxSizerItem *Group::Desc::build(const detail::Scaffold& scaffold) const {
+#   if __WXMSW__
+    wxWindow *box{};
+    if (label_.empty()) {
+        box = new Unlabeled(scaffold, *this);
+    } else {
+        box = new Layout(scaffold, *this);
+    }
+#   else
     auto *box{new Layout(scaffold, *this)};
+#   endif
 
     auto *item{new wxSizerItem(box)};
     detail::apply(win_.base_, item);

@@ -967,8 +967,7 @@ pcui::DescriptorPtr MainMenu::config_entry(data::base::Model& model) {
 
             // Handle selection.
             auto *receiver{new Receiver(this, win, info)};
-            // pcui::Group immediate window doesn't have a sizer.
-            pcui::getUniqueChild(win)->GetSizer()->Add(receiver);
+            pcui::find_sizer(win)->Add(receiver);
 
             static const auto choice_table{[] {
                 data::prim::Choice::RecvTable table;

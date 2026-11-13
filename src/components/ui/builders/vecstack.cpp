@@ -85,7 +85,7 @@ struct Layout : wxBoxSizer, data::Receiver {
         // In all GUI operations, `pos` is captured solely for the GUI
         // functions. The data is accessed separately, as it may be out of
         // sync.
-        safeCall([this, pos, mapIter] {
+        safe_call([this, pos, mapIter] {
             // To lock map_
             std::lock_guard scopeLock(pMutex);
 
@@ -144,7 +144,7 @@ struct Layout : wxBoxSizer, data::Receiver {
         }
         assert(iter != map_.end());
 
-        safeCall([this, pos, iter] {
+        safe_call([this, pos, iter] {
             // To lock map_
             std::lock_guard scopeLock(pMutex);
 
@@ -209,7 +209,7 @@ struct Layout : wxBoxSizer, data::Receiver {
     // TODO: On at least macOS, when things are swapped buttons don't trigger
     // again until the mouse is moved.
     void onSwap(size pos) {
-        safeCall([this, pos] {
+        safe_call([this, pos] {
             // First, detach the "lower" item and bring it up above the "upper"
             // one.
             auto *item{DetachItem(sizerPos(pos + 1))};

@@ -36,7 +36,7 @@ void Tracker::doRebuild() {
     if (mLast)
         cripple(mLast);
 
-    safeCall([this] { 
+    safe_call([this] { 
         buildAndReplace();
     });
 }

@@ -27,12 +27,19 @@ class wxWindow;
 
 namespace pcui {
 
-UI_EXPORT void safeCall(const std::function<void()>&);
+UI_EXPORT void safe_call(const std::function<void()>&);
 
 /**
  * If there's a single child of the window, get it.
  */
-UI_EXPORT wxWindow *getUniqueChild(const wxWindow *);
+[[nodiscard]] UI_EXPORT wxWindow *get_unique_child(const wxWindow *);
+
+/**
+ * For whenever just "some" sizer is needed, for inserting a receiver, and
+ * mainly specifically for pcui::Group, where there may or may not be a sizer
+ * immediately within a window, it varies between platforms and style.
+ */
+[[nodiscard]] UI_EXPORT wxSizer *find_sizer(const wxWindow *);
 
 } // namespace pcui
 

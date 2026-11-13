@@ -72,7 +72,7 @@ int32 pcui::showMessage(
         }());
     }};
 
-    pcui::safeCall(show_dialog);
+    pcui::safe_call(show_dialog);
     return promise.get_future().get();
 }
 
@@ -102,7 +102,7 @@ pcui::HideableResult pcui::showHideablePrompt(
         promise.set_value(result);
     }};
 
-    pcui::safeCall(show_dialog);
+    pcui::safe_call(show_dialog);
     return promise.get_future().get();
 }
 

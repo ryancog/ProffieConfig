@@ -1427,7 +1427,7 @@ void cli(Process& proc, std::vector<std::string>& args) {
 }
 
 void Error::show(pcui::ProgressDialog& prog) const {
-    pcui::safeCall([err=*this, &prog] {
+    pcui::safe_call([err=*this, &prog] {
         err.doShow(prog);
     });
 }

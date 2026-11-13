@@ -137,7 +137,7 @@ bool Update::promptWithChangelog(
                 exit(0);
         }
     }};
-    pcui::safeCall(prompt);
+    pcui::safe_call(prompt);
 
     return promise.get_future().get();
 }

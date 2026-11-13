@@ -686,7 +686,7 @@ void Window::onVecInsert(size pos) {
 
     attachSplit(split);
     if (regenerateSplitData())
-        pcui::safeCall([this] { Layout(); });
+        pcui::safe_call([this] { Layout(); });
 }
 
 void Window::preVecRemove(size pos) {
@@ -700,16 +700,16 @@ void Window::preVecRemove(size pos) {
 
 void Window::onVecRemove(size) {
     if (regenerateSplitData())
-        pcui::safeCall([this] { Layout(); });
+        pcui::safe_call([this] { Layout(); });
 }
 
 void Window::onLength() {
     if (regenerateSplitData())
-        pcui::safeCall([this] { Layout(); });
+        pcui::safe_call([this] { Layout(); });
 }
 
 void Window::onChoice() {
-    pcui::safeCall([this, idx=pcui::guiDataContext(subSel_).choiceIdx()] {
+    pcui::safe_call([this, idx=pcui::guiDataContext(subSel_).choiceIdx()] {
         selectedSplit_ = idx;
         Refresh();
     });
@@ -717,7 +717,7 @@ void Window::onChoice() {
 
 void Window::onSplitChange() {
     if (regenerateSplitData())
-        pcui::safeCall([this] { Layout(); });
+        pcui::safe_call([this] { Layout(); });
 }
 
 void Window::attachSplit(config::blades::WS281X::Split& split) {

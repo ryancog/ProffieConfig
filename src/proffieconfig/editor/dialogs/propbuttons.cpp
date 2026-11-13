@@ -297,7 +297,7 @@ void PropButtonsDlg::rebuildUI() {
     // make sure that the window is best-sized to both fit as many controls as
     // possible (all if the display is large enough), and clamp it so the
     // window is no larger than what can be fit on-screen.
-    auto *scrolled{pcui::getUniqueChild(this)};
+    auto *scrolled{pcui::get_unique_child(this)};
     auto bestContentSize{scrolled->GetSizer()->GetMinSize()};
     auto bestScrolledSize{scrolled->ClientToWindowSize(bestContentSize)};
     auto bestSize{ClientToWindowSize(bestScrolledSize)};
