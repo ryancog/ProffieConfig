@@ -23,8 +23,9 @@
 #include "ui/dialog.hpp"
 #include "ui/types.hpp"
 
-struct PropInfoDlg : pcui::Dialog {
+struct PropInfoDlg final : pcui::Dialog {
     PropInfoDlg(wxWindow *, config::Config&);
+    ~PropInfoDlg() final;
 
 private:
     pcui::DescriptorPtr ui();

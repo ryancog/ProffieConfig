@@ -67,6 +67,10 @@ InjectionsDlg::InjectionsDlg(wxWindow *parent, config::Config& config) :
     pcui::build(this, ui());
 }
 
+InjectionsDlg::~InjectionsDlg() {
+    pcui::cripple(this);
+}
+
 pcui::DescriptorPtr InjectionsDlg::ui() {
     return pcui::Stack{
       .base_={

@@ -47,9 +47,15 @@ PresetArrayDlg::PresetArrayDlg(
                 evt.GetKeyCode() == WXK_NUMPAD_ENTER) and
                 issues.val() == 0
            ) {
-            EndDialog(wxID_OK);
-        } else evt.Skip();
+            emulate_button(wxID_OK);
+        } else {
+            evt.Skip();
+        }
     });
+}
+
+PresetArrayDlg::~PresetArrayDlg() {
+    pcui::cripple(this);
 }
 
 pcui::DescriptorPtr PresetArrayDlg::ui(bool mayCancel) {

@@ -24,9 +24,9 @@
 
 struct MainMenu;
 
-struct LicenseDialog : pcui::Dialog {
+struct LicenseDialog final : pcui::Dialog {
     LicenseDialog(MainMenu *);
-    ~LicenseDialog() override;
+    ~LicenseDialog() final;
 
 private:
     pcui::DescriptorPtr ui();

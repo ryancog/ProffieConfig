@@ -24,8 +24,10 @@
 #include "ui/dialog.hpp"
 #include "ui/types.hpp"
 
-struct StyleAliasesDlg : pcui::Dialog {
+struct StyleAliasesDlg final : pcui::Dialog {
     StyleAliasesDlg(wxWindow *, config::Config&);
+    ~StyleAliasesDlg() final;
+
     void deinit();
 
     [[nodiscard]] const data::prim::Selector& styleSel() const {

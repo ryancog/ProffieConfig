@@ -44,7 +44,7 @@ extern const versions::props::Buttons DEFAULT_TWO_BUTTON;
 } // namespace
 
 PropButtonsDlg::PropButtonsDlg(wxWindow *parent, config::Config& config) :
-    pcui::Dialog(
+    Dialog(
         parent,
         wxID_ANY,
         _("Prop Buttons"),
@@ -71,7 +71,7 @@ PropButtonsDlg::PropButtonsDlg(wxWindow *parent, config::Config& config) :
 }
 
 PropButtonsDlg::~PropButtonsDlg() {
-    deactivate();
+    pcui::cripple(this);
 }
 
 void PropButtonsDlg::onActivate() {

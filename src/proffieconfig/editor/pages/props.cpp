@@ -28,6 +28,7 @@
 #include "ui/layout/spacer.hpp"
 #include "ui/layout/stack.hpp"
 #include "ui/types.hpp"
+#include "ui/utils.hpp"
 #include "ui/values.hpp"
 
 PropsPage::PropsPage(config::Config& config) : mConfig{config} {}
@@ -50,7 +51,7 @@ void PropsPage::deinit() {
     }
 }
 
-pcui::DescriptorPtr PropsPage::ui(wxWindowID scrollID) {
+pcui::DescriptorPtr PropsPage::ui(wxWindowID scroll_id) {
     return pcui::Stack{
       .base_={
         .expand_=true,
@@ -100,7 +101,7 @@ pcui::DescriptorPtr PropsPage::ui(wxWindowID scrollID) {
         }(),
         pcui::builders::Choice{
           .data_=mConfig.propChoice(),
-          .builder_=[this, scrollID](int32 idx) {
+          .builder_=[this, scroll_id](int32 idx) {
               if (idx == -1)
                   return pcui::Spacer{}();
 
@@ -111,7 +112,7 @@ pcui::DescriptorPtr PropsPage::ui(wxWindowID scrollID) {
                     .proportion_=1,
                     .border_={.size_=pcui::interGroupSpacing(), .dirs_=wxTOP},
                   },
-                  .id_=scrollID,
+                  .id_=scroll_id,
                 },
                 .scrollRate_={.x_=10, .y_=10},
                 .child_=(*mConfig.propVec())[idx]->layout(),
@@ -123,36 +124,24 @@ pcui::DescriptorPtr PropsPage::ui(wxWindowID scrollID) {
 }
 
 void PropsPage::onInfoButton(const pcui::CallbackContext& ctxt) {
-    if (mInfoDlg) {
-        mInfoDlg->Show();
-        mInfoDlg->Raise();
-        return;
+    if (not mInfoDlg) {
+        mInfoDlg = new PropInfoDlg(ctxt.topLevel_, mConfig);
+        mInfoDlg->destroy_on_close();
+        pcui::tie_ptr_to_window(mInfoDlg);
     }
 
-    mInfoDlg = new PropInfoDlg(ctxt.topLevel_, mConfig);
-
-    const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
-        if (evt.GetEventObject() == mInfoDlg) mInfoDlg = nullptr;
-    }};
-    mInfoDlg->Bind(wxEVT_DESTROY, onDestroy);
-
     mInfoDlg->Show();
+    mInfoDlg->Raise();
 }
 
 void PropsPage::onControlsButton(const pcui::CallbackContext& ctxt) {
-    if (mButtonsDlg) {
-        mButtonsDlg->Show();
-        mButtonsDlg->Raise();
-        return;
+    if (not mButtonsDlg) {
+        mButtonsDlg = new PropButtonsDlg(ctxt.topLevel_, mConfig);
+        mButtonsDlg->destroy_on_close();
+        pcui::tie_ptr_to_window(mButtonsDlg);
     }
 
-    mButtonsDlg = new PropButtonsDlg(ctxt.topLevel_, mConfig);
-
-    const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
-        if (evt.GetEventObject() == mButtonsDlg) mButtonsDlg = nullptr;
-    }};
-    mButtonsDlg->Bind(wxEVT_DESTROY, onDestroy);
-
     mButtonsDlg->Show();
+    mButtonsDlg->Raise();
 }
 

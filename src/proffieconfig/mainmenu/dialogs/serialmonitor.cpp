@@ -57,7 +57,7 @@ std::string formatStamp(std::chrono::system_clock::time_point, bool = false);
 std::vector<std::string> SerialMonitorDlg::smHistory;
 
 SerialMonitorDlg::SerialMonitorDlg(wxWindow *parent, std::string str) :
-    pcui::Frame(parent, wxID_ANY, _("Serial Monitor")),
+    Frame(parent, wxID_ANY, _("Serial Monitor")),
     mDev(std::move(str)) {
 
     mInput.disable();
@@ -79,8 +79,10 @@ SerialMonitorDlg::SerialMonitorDlg(wxWindow *parent, std::string str) :
 }
 
 SerialMonitorDlg::~SerialMonitorDlg() {
-    pcui::cripple(this);
+    // Disconnect before crippling, otherwise disconnect() won't do anything!
     disconnect();
+
+    pcui::cripple(this);
 }
 
 void SerialMonitorDlg::disconnect() {

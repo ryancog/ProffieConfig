@@ -24,8 +24,9 @@
 #include "ui/dialog.hpp"
 #include "ui/types.hpp"
 
-struct InjectionsDlg : pcui::Dialog {
+struct InjectionsDlg final : pcui::Dialog {
     InjectionsDlg(wxWindow *, config::Config&);
+    ~InjectionsDlg() final;
 
 private:
     pcui::DescriptorPtr ui();

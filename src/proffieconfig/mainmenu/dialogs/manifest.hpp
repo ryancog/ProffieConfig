@@ -24,9 +24,9 @@
 
 struct MainMenu;
 
-struct ManifestDialog : pcui::Dialog {
+struct ManifestDialog final : pcui::Dialog {
     ManifestDialog(MainMenu *);
-    ~ManifestDialog() override;
+    ~ManifestDialog() final;
 
 private:
     data::prim::String mText;

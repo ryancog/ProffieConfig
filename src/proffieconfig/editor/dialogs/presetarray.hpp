@@ -23,8 +23,9 @@
 #include "ui/dialog.hpp"
 #include "ui/types.hpp"
 
-struct PresetArrayDlg : pcui::Dialog {
+struct PresetArrayDlg final : pcui::Dialog {
     PresetArrayDlg(wxWindow *, config::presets::Array&, bool mayCancel);
+    ~PresetArrayDlg() final;
 
 private:
     pcui::DescriptorPtr ui(bool);

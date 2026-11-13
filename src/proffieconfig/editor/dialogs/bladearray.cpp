@@ -41,9 +41,13 @@ BladeArrayDlg::BladeArrayDlg(
     wxWindow *parent,
     config::blades::BladeConfig& config,
     bool mayCancel
-) : pcui::Dialog(parent, wxID_ANY, _("Edit Blade Array")),
+) : Dialog(parent, wxID_ANY, _("Edit Blade Array")),
     mConfig{config} {
     pcui::build(this, ui(mayCancel));
+}
+
+BladeArrayDlg::~BladeArrayDlg() {
+    pcui::cripple(this);
 }
 
 pcui::DescriptorPtr BladeArrayDlg::ui(bool mayCancel) {

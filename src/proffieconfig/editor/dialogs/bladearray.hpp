@@ -23,8 +23,9 @@
 #include "ui/dialog.hpp"
 #include "ui/types.hpp"
 
-struct BladeArrayDlg : pcui::Dialog {
+struct BladeArrayDlg final : pcui::Dialog {
     BladeArrayDlg(wxWindow *, config::blades::BladeConfig&, bool mayCancel);
+    ~BladeArrayDlg() final;
 
 private:
     pcui::DescriptorPtr ui(bool);

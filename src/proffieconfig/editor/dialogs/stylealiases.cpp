@@ -54,6 +54,10 @@ StyleAliasesDlg::StyleAliasesDlg(wxWindow *parent, config::Config& config) :
     pcui::build(this, ui());
 }
 
+StyleAliasesDlg::~StyleAliasesDlg() {
+    pcui::cripple(this);
+}
+
 void StyleAliasesDlg::deinit() {
     pcui::cripple(this);
 

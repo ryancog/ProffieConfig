@@ -1444,15 +1444,7 @@ void Error::doShow(pcui::ProgressDialog& prog) const {
         prog.title(),
         wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER
     )};
-    dlg->Bind(wxEVT_SHOW, [dlg](wxShowEvent& evt) {
-        evt.Skip();
-
-        if (evt.GetEventObject() != dlg)
-            return;
-
-        if (not evt.IsShown())
-            dlg->Destroy();
-    });
+    dlg->destroy_on_close();
 
     prog.finish(false);
 

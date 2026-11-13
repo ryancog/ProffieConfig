@@ -352,19 +352,14 @@ void EditorWindow::onVerify(wxCommandEvent& evt) {
 }
 
 void EditorWindow::onManageInjections(wxCommandEvent&) {
-    if (mInjectionDlg) {
-        mInjectionDlg->Show();
-        mInjectionDlg->Raise();
-        return;
+    if (not mInjectionDlg) {
+        mInjectionDlg = new InjectionsDlg(this, *mInfo.config());
+        mInjectionDlg->destroy_on_close();
+        pcui::tie_ptr_to_window(mInjectionDlg);
     }
 
-    mInjectionDlg = new InjectionsDlg(this, *mInfo.config());
-    const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
-        if (evt.GetEventObject() == mInjectionDlg)
-            mInjectionDlg = nullptr;
-    }};
-
     mInjectionDlg->Show();
+    mInjectionDlg->Raise();
 }
 
 void EditorWindow::onUndo(wxCommandEvent&) {
@@ -376,8 +371,11 @@ void EditorWindow::onRedo(wxCommandEvent&) {
 }
 
 void EditorWindow::on_find(wxCommandEvent&) {
-    if (not m_find_dlg)
+    if (not m_find_dlg) {
         m_find_dlg = new FindDlg(this);
+        m_find_dlg->destroy_on_close();
+        pcui::tie_ptr_to_window(m_find_dlg);
+    }
 
     m_find_dlg->Show();
     m_find_dlg->Raise();

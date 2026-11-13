@@ -44,6 +44,7 @@
 #include "ui/static/label.hpp"
 #include "ui/symbols.hpp"
 #include "ui/types.hpp"
+#include "ui/utils.hpp"
 #include "ui/values.hpp"
 
 #include "../../core/state.hpp"
@@ -717,29 +718,26 @@ void PresetsPage::updateBladeStrings() {
 }
 
 void PresetsPage::onEditButton(const pcui::CallbackContext& ctxt) {
-    if (mArrayDlg) {
-        mArrayDlg->Show();
-        mArrayDlg->Raise();
-        return;
+    if (not mArrayDlg) {
+        using namespace config::presets;
+
+        auto sel{pcui::guiDataContext(mArraySel)};
+        auto& cfg{dynamic_cast<Array&>(*sel.selected())};
+
+        mArrayDlg = new PresetArrayDlg(ctxt.topLevel_, cfg, false);
+        mArrayDlg->destroy_on_close();
+        pcui::tie_ptr_to_window(mArrayDlg);
     }
 
-    using namespace config::presets;
-
-    auto sel{pcui::guiDataContext(mArraySel)};
-    auto& cfg{dynamic_cast<Array&>(*sel.selected())};
-    mArrayDlg = new PresetArrayDlg(ctxt.topLevel_, cfg, false);
-    const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
-        if (evt.GetEventObject() == mArrayDlg) mArrayDlg = nullptr;
-    }};
-    mArrayDlg->Bind(wxEVT_DESTROY, onDestroy);
-
     mArrayDlg->Show();
+    mArrayDlg->Raise();
 }
 
 void PresetsPage::onAddButton(const pcui::CallbackContext& ctxt) {
     // Only ever allow one of these dialogs. Not a technical
     // limitation, just don't want things cluttered.
-    if (mArrayDlg) mArrayDlg->Destroy();
+    if (mArrayDlg)
+        mArrayDlg->Close(true);
 
     auto vec{pcui::guiDataContext(mConfig.presetArrays_)};
     auto& array{vec.append<config::presets::Array>(mConfig)};
@@ -855,20 +853,14 @@ void PresetsPage::onFormatButton() {
 }
 
 void PresetsPage::onStylesButton(const pcui::CallbackContext& ctxt) {
-    if (mStylesDlg) {
-        mStylesDlg->Show();
-        mStylesDlg->Raise();
-        return;
+    if (not mStylesDlg) {
+        mStylesDlg = new StyleAliasesDlg(ctxt.topLevel_, mConfig);
+        mStylesDlg->destroy_on_close();
+        pcui::tie_ptr_to_window(mStylesDlg);
     }
 
-    mStylesDlg = new StyleAliasesDlg(ctxt.topLevel_, mConfig);
-    const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
-        if (evt.GetEventObject() == mStylesDlg)
-            mStylesDlg = nullptr;
-    }};
-    mStylesDlg->Bind(wxEVT_DESTROY, onDestroy);
-
     mStylesDlg->Show();
+    mStylesDlg->Raise();
 }
 
 void PresetsPage::onArrayChoice() {

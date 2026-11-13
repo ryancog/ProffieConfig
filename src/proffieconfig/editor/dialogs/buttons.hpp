@@ -23,8 +23,9 @@
 #include "ui/dialog.hpp"
 #include "ui/types.hpp"
 
-struct ButtonsDlg : pcui::Dialog {
+struct ButtonsDlg final : pcui::Dialog {
     ButtonsDlg(wxWindow *, config::Config&);
+    ~ButtonsDlg() final;
 
 private:
     pcui::DescriptorPtr ui();

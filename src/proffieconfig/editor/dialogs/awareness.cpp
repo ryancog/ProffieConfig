@@ -44,7 +44,7 @@
 
 BladeAwarenessDlg::BladeAwarenessDlg(
     wxWindow* parent, config::Config& config
-) : pcui::Dialog(
+) : Dialog(
         parent,
         wxID_ANY,
         _("Blade Awareness")
@@ -52,6 +52,10 @@ BladeAwarenessDlg::BladeAwarenessDlg(
     mConfig(config) {
 
     pcui::build(this, ui());
+}
+
+BladeAwarenessDlg::~BladeAwarenessDlg() {
+    pcui::cripple(this);
 }
 
 pcui::DescriptorPtr BladeAwarenessDlg::ui() {

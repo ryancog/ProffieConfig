@@ -23,8 +23,9 @@
 #include "ui/dialog.hpp"
 #include "ui/types.hpp"
 
-struct BladeAwarenessDlg : pcui::Dialog {
+struct BladeAwarenessDlg final : pcui::Dialog {
     BladeAwarenessDlg(wxWindow *, config::Config&);
+    ~BladeAwarenessDlg() final;
 
 private:
     pcui::DescriptorPtr ui();

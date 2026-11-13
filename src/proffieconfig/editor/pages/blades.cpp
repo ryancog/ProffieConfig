@@ -45,6 +45,7 @@
 #include "ui/static/label.hpp"
 #include "ui/symbols.hpp"
 #include "ui/types.hpp"
+#include "ui/utils.hpp"
 #include "ui/values.hpp"
 #include "utils/string.hpp"
 
@@ -967,9 +968,9 @@ pcui::DescriptorPtr BladesPage::servo(config::blades::Servo& servo) {
 
 void BladesPage::onAwarenessButton(const pcui::CallbackContext& ctxt) {
     if (not mAwarenessDlg) {
-        mAwarenessDlg = new BladeAwarenessDlg(
-            ctxt.topLevel_, mConfig
-        );
+        mAwarenessDlg = new BladeAwarenessDlg(ctxt.topLevel_, mConfig);
+        mAwarenessDlg->destroy_on_close();
+        pcui::tie_ptr_to_window(mAwarenessDlg);
     }
 
     mAwarenessDlg->Show();
@@ -987,11 +988,10 @@ void BladesPage::onEditButton(const pcui::CallbackContext& ctxt) {
 
     auto sel{pcui::guiDataContext(mArraySel)};
     auto& cfg{dynamic_cast<BladeConfig&>(*sel.selected())};
+
     mArrayDlg = new BladeArrayDlg(ctxt.topLevel_, cfg, false);
-    const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
-        if (evt.GetEventObject() == mArrayDlg) mArrayDlg = nullptr;
-    }};
-    mArrayDlg->Bind(wxEVT_DESTROY, onDestroy);
+    mArrayDlg->destroy_on_close();
+    pcui::tie_ptr_to_window(mArrayDlg);
 
     mArrayDlg->Show();
 }
@@ -1000,7 +1000,7 @@ void BladesPage::onAddButton(const pcui::CallbackContext& ctxt) {
     // Only ever allow one of these dialogs. Not a technical
     // limitation, just don't want things cluttered.
     if (mArrayDlg)
-        mArrayDlg->Destroy();
+        mArrayDlg->Close(true);
 
     auto vec{pcui::guiDataContext(mConfig.bladeConfigs_)};
     auto& cfg{vec.append<config::blades::BladeConfig>(mConfig)};

@@ -22,12 +22,12 @@
 #include "config/config.hpp"
 #include "ui/dialog.hpp"
 
-struct PropButtonsDlg : pcui::Dialog, data::Receiver {
+struct PropButtonsDlg final : pcui::Dialog, data::Receiver {
     PropButtonsDlg(wxWindow *, config::Config&);
-    ~PropButtonsDlg() override;
+    ~PropButtonsDlg() final;
 
 protected:
-    void onActivate() override;
+    void onActivate() final;
 
 private:
     void onPropChoice();

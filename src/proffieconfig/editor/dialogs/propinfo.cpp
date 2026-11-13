@@ -31,6 +31,10 @@ PropInfoDlg::PropInfoDlg(wxWindow *parent, config::Config& config) :
     pcui::build(this, ui());
 }
 
+PropInfoDlg::~PropInfoDlg() {
+    pcui::cripple(this);
+}
+
 pcui::DescriptorPtr PropInfoDlg::ui() {
     return pcui::builders::Choice{
       .data_=mConfig.propChoice(),

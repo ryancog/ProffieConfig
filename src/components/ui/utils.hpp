@@ -41,5 +41,20 @@ UI_EXPORT void safe_call(const std::function<void()>&);
  */
 [[nodiscard]] UI_EXPORT wxSizer *find_sizer(const wxWindow *);
 
+/**
+ * Tie a window pointer to the window it points to, so that it is nulled
+ * whenever the window is destroyed.
+ */
+template <std::derived_from<wxWindow> T>
+inline void tie_ptr_to_window(T *& ptr) {
+    ptr->Bind(wxEVT_DESTROY, [&ptr](wxWindowDestroyEvent& evt) {
+        evt.Skip();
+
+        if (evt.GetEventObject() == ptr)
+            ptr = nullptr;
+    });
+}
+
+
 } // namespace pcui
 

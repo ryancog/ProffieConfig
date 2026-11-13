@@ -22,8 +22,9 @@
 #include "config/config.hpp"
 #include "ui/dialog.hpp"
 
-struct CustomOptionsDlg : pcui::Dialog {
+struct CustomOptionsDlg final : pcui::Dialog {
     CustomOptionsDlg(wxWindow *, config::Config&);
+    ~CustomOptionsDlg() final;
 
 private:
     pcui::DescriptorPtr ui();

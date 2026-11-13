@@ -25,9 +25,9 @@
 #include "ui/dialog.hpp"
 #include "ui/types.hpp"
 
-struct VersionsDlg : pcui::Dialog, data::Receiver {
+struct VersionsDlg final : pcui::Dialog, data::Receiver {
     VersionsDlg(wxWindow *);
-    ~VersionsDlg() override;
+    ~VersionsDlg() final;
 
 private:
     void onActivate() override;

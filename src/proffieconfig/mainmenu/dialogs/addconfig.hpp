@@ -27,9 +27,9 @@
 
 struct MainMenu;
 
-struct AddConfigDialog : pcui::Dialog, data::Receiver {
+struct AddConfigDialog final : pcui::Dialog, data::Receiver {
     AddConfigDialog(MainMenu *);
-    ~AddConfigDialog() override;
+    ~AddConfigDialog() final;
 
     MainMenu *parent_{nullptr};
 
@@ -46,7 +46,7 @@ struct AddConfigDialog : pcui::Dialog, data::Receiver {
     Result getResult();
 
 protected:
-    void onActivate() override;
+    void onActivate() final;
 
 private:
     pcui::DescriptorPtr ui();

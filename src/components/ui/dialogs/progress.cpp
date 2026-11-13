@@ -66,10 +66,9 @@ ProgressDialog::ProgressDialog(
     size.IncTo({200, 50});
     build(this, ui(mayCancel, size));
 
-    // Intercept the usual Dialog handling (which calls EndDialog)
-    Bind(wxEVT_CLOSE_WINDOW, [this](wxCloseEvent&) {
-        Destroy();
-    });
+    // Progress dialogs are expected to always be heap-allocated, because
+    // they're expected to be used across threads for some operation.
+    destroy_on_close();
 
     // Override the char hook handling to close instead of passing along to the
     // dialog functions which will just hide.
@@ -139,11 +138,20 @@ void ProgressDialog::finish(bool modalWait, const wxString& message) {
         wxYield();
 
 #       if not defined(__WXOSX__)
-        if (auto *parent{GetParent()})
-            // Re-enable here before this dialog is destroyed so there's an
-            // enable window to activate/bring to focus, and the application
-            // doesn't lose focus.
-            parent->Enable();
+        // Bind to defer the re-enable until the user is done with the progress
+        // dialog. If it was re-enabled here and modal waiting was requested,
+        // unbounded event loop nesting would be pretty easy (presumably the
+        // operations could be restarted once the parent dialog is re-enabled),
+        // which isn't strictly-speaking a problem, but I'd prefer to avoid it.
+        Bind(wxEVT_CLOSE_WINDOW, [this](wxCloseEvent& evt) {
+            evt.Skip();
+
+            if (auto *parent{GetParent()})
+                // Re-enable here before this dialog is destroyed so there's an
+                // enable window to activate/bring to focus, and the application
+                // doesn't lose focus.
+                parent->Enable();
+        });
 #       endif
 
         // The data has been set as finished and the cancel button therefore is

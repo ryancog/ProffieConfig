@@ -29,10 +29,9 @@
 
 #include "../../tools/serialmonitor.hpp"
 
-// This isn't actually a dialog... put it somewhere else?
-struct SerialMonitorDlg : pcui::Frame, data::Receiver {
+struct SerialMonitorDlg final : pcui::Frame, data::Receiver {
     SerialMonitorDlg(wxWindow *, std::string);
-    ~SerialMonitorDlg() override;
+    ~SerialMonitorDlg() final;
 
     [[nodiscard]] std::string_view device() const { return mDev; }
 

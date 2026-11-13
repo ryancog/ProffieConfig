@@ -623,7 +623,9 @@ void MainMenu::on_board_choice() {
 
 void MainMenu::on_add_config() {
     AddConfigDialog dlg(this);
-    if (dlg.ShowModal() != wxID_OK) return;
+
+    if (dlg.ShowModal() != wxID_OK)
+        return;
 
     pcui::BusyTracker busy(this);
 
@@ -848,46 +850,39 @@ void MainMenu::onOpenSerial() {
 }
 
 void MainMenu::on_manage_versions() {
-    if (mVersionsDlg) {
-        mVersionsDlg->Show();
-        mVersionsDlg->Raise();
-        return;
-    }
-
-    const auto warnPref{state::prefs::get(
-        state::prefs::Bool::Hide_Editor_Manage_Versions_Warn
-    )};
-    if (
-            not mEditors.empty() and
-            not warnPref
-        ) {
-        auto res{pcui::showHideablePrompt(
-            _(
-                "Although version management can be done with editors open, the changes won't be visible\n"
-                "until the editor is reloaded, and you might run into oddities."
-            ),
-            {
-                .caption_=_("Please Close Editors"),
-                .style_=wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxCENTER,
-                .labels_={.ok_=_("Proceed")},
-                .parent_=this,
-            }
+    if (not mVersionsDlg) {
+        const auto warn_pref{state::prefs::get(
+            state::prefs::Bool::Hide_Editor_Manage_Versions_Warn
         )};
-        state::prefs::set(
-            state::prefs::Bool::Hide_Editor_Manage_Versions_Warn,
-            res.wantsHide_
-        );
-        if (res.id_ != wxID_OK) return;
-    }
+        if (not mEditors.empty() and not warn_pref) {
+            auto res{pcui::showHideablePrompt(
+                _(
+                    "Although version management can be done with editors open, the changes won't be visible\n"
+                    "until the editor is reloaded, and you might run into oddities."
+                ),
+                {
+                    .caption_=_("Please Close Editors"),
+                    .style_=wxOK | wxCANCEL | wxCANCEL_DEFAULT | wxCENTER,
+                    .labels_={.ok_=_("Proceed")},
+                    .parent_=this,
+                }
+            )};
+            state::prefs::set(
+                state::prefs::Bool::Hide_Editor_Manage_Versions_Warn,
+                res.wantsHide_
+            );
 
-    mVersionsDlg = new VersionsDlg(this);
-    const auto onDestroy{[this](wxWindowDestroyEvent& evt) {
-        if (evt.GetEventObject() == mVersionsDlg)
-            mVersionsDlg = nullptr;
-    }};
-    mVersionsDlg->Bind(wxEVT_DESTROY, onDestroy);
+            if (res.id_ != wxID_OK)
+                return;
+        }
+
+        mVersionsDlg = new VersionsDlg(this);
+        mVersionsDlg->destroy_on_close();
+        pcui::tie_ptr_to_window(mVersionsDlg);
+    }
 
     mVersionsDlg->Show();
+    mVersionsDlg->Raise();
 }
 
 pcui::DescriptorPtr MainMenu::config_entry(data::base::Model& model) {

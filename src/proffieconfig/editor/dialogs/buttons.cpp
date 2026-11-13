@@ -64,6 +64,10 @@ ButtonsDlg::ButtonsDlg(wxWindow *parent, config::Config& config) :
     pcui::build(this, ui());
 }
 
+ButtonsDlg::~ButtonsDlg() {
+    pcui::cripple(this);
+}
+
 pcui::DescriptorPtr ButtonsDlg::ui() {
     return pcui::Stack{
       .base_={

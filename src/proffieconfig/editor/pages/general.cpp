@@ -35,6 +35,7 @@
 #include "ui/layout/stack.hpp"
 #include "ui/static/divider.hpp"
 #include "ui/types.hpp"
+#include "ui/utils.hpp"
 #include "ui/values.hpp"
 
 #include "../../core/state.hpp"
@@ -324,6 +325,8 @@ pcui::DescriptorPtr GeneralPage::installation() {
           .func_=[this](pcui::CallbackContext ctxt) {
               if (not mButtonDlg) {
                   mButtonDlg = new ButtonsDlg(ctxt.topLevel_, mConfig);
+                  mButtonDlg->destroy_on_close();
+                  pcui::tie_ptr_to_window(mButtonDlg);
               }
 
               mButtonDlg->Show();
@@ -468,8 +471,11 @@ pcui::DescriptorPtr GeneralPage::tweaks() {
               .func_=[this](pcui::CallbackContext ctxt) {
                   if (not mOptionsDlg) {
                       mOptionsDlg = new CustomOptionsDlg(
-                          ctxt.topLevel_, mConfig
+                          ctxt.topLevel_,
+                          mConfig
                       );
+                      mOptionsDlg->destroy_on_close();
+                      pcui::tie_ptr_to_window(mOptionsDlg);
                   }
 
                   mOptionsDlg->Show();

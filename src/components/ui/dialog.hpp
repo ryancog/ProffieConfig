@@ -36,6 +36,20 @@ public:
     ~Dialog() override;
 
     void Fit() override;
+
+    void destroy_on_close();
+    void emulate_button(int);
+
+private:
+    // Should not be used, because it doesn't account for destroy_on_close()
+    // having been called, and the handling that should happen in that case.
+    //
+    // As an alternative, use emulate_button()
+    using wxDialog::EndDialog;
+    using wxDialog::AcceptAndClose;
+
+    void on_close(wxCloseEvent&);
+    void on_button(wxCommandEvent&);
 };
 
 } // namespace pcui

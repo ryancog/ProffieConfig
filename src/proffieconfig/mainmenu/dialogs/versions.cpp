@@ -51,7 +51,7 @@
 #include "versions/versions.hpp"
 
 VersionsDlg::VersionsDlg(wxWindow *parent) :
-    pcui::Dialog(
+    Dialog(
         parent,
         wxID_ANY,
         _("Versions Manager"),

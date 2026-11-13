@@ -26,9 +26,9 @@
 
 struct EditorWindow;
 
-struct FindDlg : pcui::Dialog {
+struct FindDlg final : pcui::Dialog {
     FindDlg(EditorWindow *);
-    ~FindDlg() override;
+    ~FindDlg() final;
 
 private:
     enum {

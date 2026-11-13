@@ -48,6 +48,10 @@ CustomOptionsDlg::CustomOptionsDlg(wxWindow *parent, config::Config& config) :
     pcui::build(this, ui());
 }
 
+CustomOptionsDlg::~CustomOptionsDlg() {
+    pcui::cripple(this);
+}
+
 pcui::DescriptorPtr CustomOptionsDlg::ui() {
     return pcui::Stack{
       .base_={
