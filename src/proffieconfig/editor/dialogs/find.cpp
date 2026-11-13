@@ -54,7 +54,7 @@ FindDlg::~FindDlg() {
 pcui::DescriptorPtr FindDlg::ui() {
     return pcui::Stack{
       .base_{
-        .minSize_={300, 200},
+        .minSize_={400, 300},
         .expand_=true,
         .proportion_=1,
         .border_={.size_=pcui::winEdgeSpacing(), .dirs_=wxALL},
