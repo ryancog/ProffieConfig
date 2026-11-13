@@ -78,8 +78,22 @@ struct Layout : detail::Window<detail::Panel> {
 #   if not __WXOSX__
     static wxColour get_background_color() {
         auto dark{wxSystemSettings::GetAppearance().AreAppsDark()};
+#       if __WXMSW__
+        // Probably some weird historical thing: while the panel is colored as
+        // wxSYS_COLOUR_WINDOW in dark mode, in light mode, it's
+        // wxSYS_COLOUR_BTNFACE/wxSYS_COLOUR_FRAMEBK, and buttons are actually
+        // colored a bit lighter.
+        if (not dark) {
+            auto color{wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK)};
+            return color.ChangeLightness(140);
+        }
+
         auto color{wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW)};
-        return color.ChangeLightness(dark ? 80 : 120);
+        return color.ChangeLightness(70);
+#       else
+        auto color{wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW)};
+        return color.ChangeLightness(dark ? 70 : 140);
+#       endif
     }
     
     static void on_sys_color_changed(wxSysColourChangedEvent& evt) {
