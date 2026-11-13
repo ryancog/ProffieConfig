@@ -23,6 +23,7 @@
 #include <cstring>
 #include <future>
 #include <list>
+#include <utility>
 
 #if __APPLE__ or __linux__
 #include <unistd.h>
