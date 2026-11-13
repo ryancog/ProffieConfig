@@ -192,7 +192,11 @@ void MainMenu::removeEditor(EditorWindow *editor) {
 pcui::DescriptorPtr MainMenu::ui() {
     auto button_font{- pcui::Font::Normal};
     button_font.SetWeight(wxFONTWEIGHT_BOLD);
+#   if __WXMSW__
+    button_font.SetPointSize(12);
+#   else
     button_font.SetPointSize(14);
+#   endif
 
     const auto button_bitmap{[](cstring str) {
         pcui::Bitmap bmp(str);
