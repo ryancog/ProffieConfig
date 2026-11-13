@@ -24,6 +24,7 @@
 #endif
 
 #include <wx/panel.h>
+#include <wx/settings.h>
 
 #include "ui/detail/window.hpp"
 #include "ui/layout/detail/panel.hpp"
@@ -49,8 +50,44 @@ struct Layout : detail::Window<detail::Panel> {
             SetSizer(sizer);
         }
 
+        if (desc.tint_ == pcui::Panel::Tint::Content) {
+#           if __WXOSX__
+            auto view{GetHandle()};
+            auto effect_view{[NSVisualEffectView new]};
+            effect_view.material = NSVisualEffectMaterialContentBackground;
+
+            [view addSubview:effect_view positioned:NSWindowBelow relativeTo:nil];
+            [effect_view release];
+
+            effect_view.translatesAutoresizingMaskIntoConstraints = false;
+            [NSLayoutConstraint activateConstraints:@[
+                [view.topAnchor constraintEqualToAnchor:effect_view.topAnchor],
+                [view.bottomAnchor constraintEqualToAnchor:effect_view.bottomAnchor],
+                [view.leadingAnchor constraintEqualToAnchor:effect_view.leadingAnchor],
+                [view.trailingAnchor constraintEqualToAnchor:effect_view.trailingAnchor],
+            ]];
+#           else
+            Bind(wxEVT_SYS_COLOUR_CHANGED, on_sys_color_changed);
+            SetOwnBackgroundColour(get_background_color());
+#           endif
+        }
+
         activate();
     }
+
+#   if not __WXOSX__
+    static wxColour get_background_color() {
+        auto dark{wxSystemSettings::GetAppearance().AreAppsDark()};
+        auto color{wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW)};
+        return color.ChangeLightness(dark ? 80 : 120);
+    }
+    
+    static void on_sys_color_changed(wxSysColourChangedEvent& evt) {
+        evt.Skip();
+        auto *panel{static_cast<Layout *>(evt.GetEventObject())};
+        panel->SetOwnBackgroundColour(get_background_color());
+    }
+#   endif
 };
 
 } // namespace
@@ -67,25 +104,6 @@ wxSizerItem *Panel::Desc::build(const detail::Scaffold& scaffold) const {
 
     auto *item{new wxSizerItem(panel)};
     detail::apply(win_.base_, item);
-
-#   if __WXOSX__
-    if (tint_ == Tint::Content) {
-        auto view{panel->GetHandle()};
-        auto effect_view{[NSVisualEffectView new]};
-        effect_view.material = NSVisualEffectMaterialContentBackground;
-
-        [view addSubview:effect_view positioned:NSWindowBelow relativeTo:nil];
-        [effect_view release];
-
-        effect_view.translatesAutoresizingMaskIntoConstraints = false;
-        [NSLayoutConstraint activateConstraints:@[
-            [view.topAnchor constraintEqualToAnchor:effect_view.topAnchor],
-            [view.bottomAnchor constraintEqualToAnchor:effect_view.bottomAnchor],
-            [view.leadingAnchor constraintEqualToAnchor:effect_view.leadingAnchor],
-            [view.trailingAnchor constraintEqualToAnchor:effect_view.trailingAnchor],
-        ]];
-    }
-#   endif
 
     return item;
 }
