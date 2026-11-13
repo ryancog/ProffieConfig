@@ -45,16 +45,16 @@ struct PROCESS_EXPORT Process {
             eUnknown,
         } err_;
 
-        int64 systemResult_{0};
+        int64 system_result_{0};
     };
 
     /**
      * Create a new process
      */
-    void create(std::string exec, std::span<std::string> args = {});
+    void create(std::string exec, std::span<const std::string> args = {});
 
 #   ifdef _WIN32
-    static Result elevatedProcess(
+    static Result elevated_process(
         cstring exec, const std::span<std::string>& args = {}
     );
 #   endif
@@ -68,6 +68,6 @@ struct PROCESS_EXPORT Process {
     void interrupt();
 
 private:
-    void *mRef{nullptr};
+    void *m_ref{nullptr};
 };
 

@@ -51,59 +51,68 @@ using PidType = __pid_t;
 struct InternalData {
     std::promise<Process::Result> promise_;
 #   if __APPLE__ or __linux__
-    int parentFromChild_[2];
-    int childFromParent_[2];
+    int parent_from_child_[2];
+    int child_from_parent_[2];
     PidType pid_{-1};
 #   elif _WIN32
-    HANDLE parentFromChild_[2];
-    HANDLE childFromParent_[2];
+    HANDLE parent_from_child_[2];
+    HANDLE child_from_parent_[2];
     HANDLE handle_;
     DWORD id_;
 #   endif
 };
 
-std::mutex dataLock;
-std::list<InternalData> internalDatas;
+std::mutex data_lock;
+std::list<InternalData> internal_datas;
 
 #if __APPLE__ or __linux__
-bool sigHandled{false};
-void onChildExit(int);
+bool sig_handled{false};
+void on_child_exit(int);
+#endif
+
+#if _WIN32
+std::string create_quoted(std::string);
 #endif
 
 } // namespace
 
 Process::~Process() {
-    if (not mRef) return;
+    if (not m_ref)
+        return;
 
-    dataLock.lock();
-    for (auto iter{internalDatas.begin()}; iter != internalDatas.end(); ++iter) {
-        if (&*iter == mRef) {
-            internalDatas.erase(iter);
+    std::lock_guard lk(data_lock);
+    for (
+            auto iter{internal_datas.begin()};
+            iter != internal_datas.end();
+            ++iter
+        ) {
+        if (&*iter == m_ref) {
+            internal_datas.erase(iter);
             break;
         }
     }
-    dataLock.unlock();
 }
 
-void Process::create(std::string exec, std::span<std::string> args) {
-    assert(not mRef);
-    dataLock.lock();
-    auto& data{internalDatas.emplace_back()};
-    dataLock.unlock();
-    mRef = &data;
+void Process::create(std::string exec, std::span<const std::string> args) {
+    assert(not m_ref);
+
+    { std::lock_guard lk(data_lock);
+        m_ref = &internal_datas.emplace_back();
+    }
+    auto& data{*reinterpret_cast<InternalData *>(m_ref)};
 
 #   if __APPLE__ or __linux__
-    if (not sigHandled) {
-        sigHandled = true;
+    if (not sig_handled) {
+        sig_handled = true;
         struct sigaction act{};
         act.sa_flags = SA_NOCLDSTOP;
-        act.sa_handler = onChildExit;
+        act.sa_handler = on_child_exit;
         sigaction(SIGCHLD, &act, nullptr);
     }
 
     if (
-            pipe(data.childFromParent_) == -1 or
-            pipe(data.parentFromChild_) == -1
+            pipe(data.child_from_parent_) == -1 or
+            pipe(data.parent_from_child_) == -1
        ) {
         data.promise_.set_value({.err_=Result::eConnection_Failed});
         return;
@@ -116,12 +125,12 @@ void Process::create(std::string exec, std::span<std::string> args) {
     }
 
     if (pid == 0) {
-        dup2(data.childFromParent_[0], STDIN_FILENO);
-        dup2(data.parentFromChild_[1], STDOUT_FILENO);
-        dup2(data.parentFromChild_[1], STDERR_FILENO);
+        dup2(data.child_from_parent_[0], STDIN_FILENO);
+        dup2(data.parent_from_child_[1], STDOUT_FILENO);
+        dup2(data.parent_from_child_[1], STDERR_FILENO);
 
-        close(data.childFromParent_[1]);
-        close(data.parentFromChild_[0]);
+        close(data.child_from_parent_[1]);
+        close(data.parent_from_child_[0]);
 
         char **argv{new char *[args.size() + 2]};
         argv[0] = new char[exec.length() + 1];
@@ -129,10 +138,10 @@ void Process::create(std::string exec, std::span<std::string> args) {
         argv[0][exec.length()] = 0;
 
         for (auto idx{0}; idx < args.size(); ++idx) {
-            auto *& argPtr{argv[idx + 1]};
-            argPtr = new char[args[idx].length() + 1];
-            memcpy(argPtr, args[idx].data(), args[idx].length());
-            argPtr[args[idx].length()] = 0;
+            auto *& arg_ptr{argv[idx + 1]};
+            arg_ptr = new char[args[idx].length() + 1];
+            memcpy(arg_ptr, args[idx].data(), args[idx].length());
+            arg_ptr[args[idx].length()] = 0;
         }
 
         argv[args.size() + 1] = nullptr;
@@ -149,96 +158,97 @@ void Process::create(std::string exec, std::span<std::string> args) {
     } 
 
     data.pid_ = pid;
-    close(data.childFromParent_[0]);
-    close(data.parentFromChild_[1]);
+    close(data.child_from_parent_[0]);
+    close(data.parent_from_child_[1]);
 #   elif _WIN32
-    SECURITY_ATTRIBUTES pipeAttributes;
-    pipeAttributes.nLength = sizeof pipeAttributes;
-    pipeAttributes.bInheritHandle = true;
-    pipeAttributes.lpSecurityDescriptor = nullptr;
+    SECURITY_ATTRIBUTES pipe_attributes;
+    pipe_attributes.nLength = sizeof pipe_attributes;
+    pipe_attributes.bInheritHandle = true;
+    pipe_attributes.lpSecurityDescriptor = nullptr;
 
-    bool pipeSuccess{true};
-    pipeSuccess &= static_cast<bool>(CreatePipe(
-        &data.parentFromChild_[0],
-        &data.parentFromChild_[1],
-        &pipeAttributes,
+    bool pipe_success{true};
+    pipe_success &= static_cast<bool>(CreatePipe(
+        &data.parent_from_child_[0],
+        &data.parent_from_child_[1],
+        &pipe_attributes,
         0
     ));
-    pipeSuccess &= static_cast<bool>(CreatePipe(
-        &data.childFromParent_[0],
-        &data.childFromParent_[1],
-        &pipeAttributes,
+    pipe_success &= static_cast<bool>(CreatePipe(
+        &data.child_from_parent_[0],
+        &data.child_from_parent_[1],
+        &pipe_attributes,
         0
     ));
 
-    if (not pipeSuccess) {
+    if (not pipe_success) {
         data.promise_.set_value({.err_=Result::eConnection_Failed});
         return;
     }
 
-    STARTUPINFOA startupInfo;
-    PROCESS_INFORMATION procInfo;
-    memset(&startupInfo, 0, sizeof startupInfo);
-    startupInfo.cb = sizeof startupInfo;
-    startupInfo.hStdError = data.parentFromChild_[1];
-    startupInfo.hStdOutput = data.parentFromChild_[1];
-    startupInfo.hStdInput = data.childFromParent_[0];
-    startupInfo.dwFlags |= STARTF_USESTDHANDLES;
+    STARTUPINFOA startup_info;
+    PROCESS_INFORMATION proc_info;
+    memset(&startup_info, 0, sizeof startup_info);
+    startup_info.cb = sizeof startup_info;
+    startup_info.hStdError = data.parent_from_child_[1];
+    startup_info.hStdOutput = data.parent_from_child_[1];
+    startup_info.hStdInput = data.child_from_parent_[0];
+    startup_info.dwFlags |= STARTF_USESTDHANDLES;
 
-    std::string execBuffer{std::move(exec)};
+    std::string command_line{};
+    command_line = create_quoted(std::move(exec));
     for (const auto& arg : args) {
-        execBuffer += ' ';
-        execBuffer += arg;
+        command_line += ' ';
+        command_line += create_quoted(arg);
     }
 
-    auto procSuccess{CreateProcessA(
+    auto proc_success{CreateProcessA(
         nullptr,
-        execBuffer.data(),
+        command_line.data(),
         nullptr,
         nullptr,
         true,
         CREATE_NO_WINDOW,
         nullptr,
         nullptr,
-        &startupInfo,
-        &procInfo
+        &startup_info,
+        &proc_info
     )};
-    if (not procSuccess) {
+    if (not proc_success) {
         data.promise_.set_value({
             .err_=Result::eCreation_Failed,
-            .systemResult_=GetLastError()
+            .system_result_=GetLastError()
         });
         return;
     }
 
-    data.id_ = procInfo.dwProcessId;
-    data.handle_ = procInfo.hThread;
-    CloseHandle(data.parentFromChild_[1]);
-    CloseHandle(data.childFromParent_[0]);
+    data.id_ = proc_info.dwProcessId;
+    data.handle_ = proc_info.hThread;
+    CloseHandle(data.parent_from_child_[1]);
+    CloseHandle(data.child_from_parent_[0]);
 
-    std::thread{[&data, id=procInfo.dwProcessId, procHandle=procInfo.hProcess]() {
-        WaitForSingleObject(procHandle, INFINITE);
-        DWORD exitCode{};
-        GetExitCodeProcess(procHandle, &exitCode);
+    std::thread{[&data, proc_handle=proc_info.hProcess]() {
+        WaitForSingleObject(proc_handle, INFINITE);
+        DWORD exit_code{};
+        GetExitCodeProcess(proc_handle, &exit_code);
 
         // Needs to lock so data remains valid
-        dataLock.lock();
-        if (exitCode == 0) {
+        std::lock_guard lk(data_lock);
+
+        if (exit_code == 0) {
             data.promise_.set_value({.err_=Result::eSuccess});
-        } else if (exitCode >= ERROR_SEVERITY_ERROR) {
+        } else if (exit_code >= ERROR_SEVERITY_ERROR) {
             data.promise_.set_value({
                 .err_=Result::eCrashed,
-                .systemResult_=exitCode
+                .system_result_=exit_code
             });
         } else {
             data.promise_.set_value({
                 .err_=Result::eExited_With_Failure,
-                .systemResult_=exitCode
+                .system_result_=exit_code
             });
         }
 
-        CloseHandle(procHandle);
-        dataLock.unlock();
+        CloseHandle(proc_handle);
     }}.detach();
 #   else
 #   error Unsupported
@@ -246,17 +256,20 @@ void Process::create(std::string exec, std::span<std::string> args) {
 }
 
 std::optional<std::string> Process::read() {
-    assert(mRef);
-    InternalData& data{*reinterpret_cast<InternalData *>(mRef)};
+    assert(m_ref);
+    InternalData& data{*reinterpret_cast<InternalData *>(m_ref)};
 
 #   if __APPLE__ or __linux__
     std::string ret;
     ret.resize(2048);
 
     while (not false) {
-        auto res{::read(data.parentFromChild_[0], ret.data(), ret.size())};
-        if (res == -1 and errno == EINTR) continue;
-        if (res == -1 or res == 0) return std::nullopt;
+        auto res{::read(data.parent_from_child_[0], ret.data(), ret.size())};
+        if (res == -1 and errno == EINTR)
+            continue;
+
+        if (res == -1 or res == 0)
+            return std::nullopt;
 
         ret.resize(res);
         break;
@@ -264,28 +277,28 @@ std::optional<std::string> Process::read() {
 
     return ret;
 #   elif _WIN32
-    DWORD numBytes{};
-    auto peekResult{PeekNamedPipe(
-        data.parentFromChild_[0],
+    DWORD num_bytes{};
+    auto peek_result{PeekNamedPipe(
+        data.parent_from_child_[0],
         nullptr,
         0,
         nullptr,
-        &numBytes,
+        &num_bytes,
         nullptr
     )};
-    if (not peekResult)
+    if (not peek_result)
         return std::nullopt;
 
     std::string ret;
-    ret.resize(numBytes);
-    auto readResult{ReadFile(
-        data.parentFromChild_[0],
+    ret.resize(num_bytes);
+    auto read_result{ReadFile(
+        data.parent_from_child_[0],
         ret.data(),
         ret.size(),
         nullptr,
         nullptr
     )};
-    if (not readResult)
+    if (not read_result)
         return std::nullopt;
 
     return ret;
@@ -293,14 +306,14 @@ std::optional<std::string> Process::read() {
 }
 
 bool Process::write(const std::string_view& str) {
-    assert(mRef);
-    InternalData& data{*reinterpret_cast<InternalData *>(mRef)};
+    assert(m_ref);
+    InternalData& data{*reinterpret_cast<InternalData *>(m_ref)};
 
 #   if __APPLE__ or __linux__
-    return -1 != ::write(data.childFromParent_[1], str.data(), str.size());
+    return -1 != ::write(data.child_from_parent_[1], str.data(), str.size());
 #   elif _WIN32
     return WriteFile(
-        data.childFromParent_[1],
+        data.child_from_parent_[1],
         str.data(),
         str.size(),
         nullptr,
@@ -310,34 +323,39 @@ bool Process::write(const std::string_view& str) {
 }
 
 Process::Result Process::finish() {
-    assert(mRef);
+    assert(m_ref);
 
-    auto& data{*reinterpret_cast<InternalData *>(mRef)};
+    auto& data{*reinterpret_cast<InternalData *>(m_ref)};
     auto ret{data.promise_.get_future().get()};
-    dataLock.lock();
-    for (auto iter{internalDatas.begin()}; iter != internalDatas.end(); ++iter) {
-        if (&*iter == mRef) {
+
+    std::lock_guard lk(data_lock);
+    for (
+            auto iter{internal_datas.begin()};
+            iter != internal_datas.end();
+            ++iter
+        ) {
+        if (&*iter == m_ref) {
 #           if __APPLE__ or __linux__
-            close(data.childFromParent_[1]);
-            close(data.parentFromChild_[0]);
+            close(data.child_from_parent_[1]);
+            close(data.parent_from_child_[0]);
 #           elif _WIN32
-            CloseHandle(data.childFromParent_[1]);
-            CloseHandle(data.parentFromChild_[0]);
+            CloseHandle(data.child_from_parent_[1]);
+            CloseHandle(data.parent_from_child_[0]);
             CloseHandle(data.handle_);
 #           endif
 
-            internalDatas.erase(iter);
+            internal_datas.erase(iter);
             break;
         }
     }
-    dataLock.unlock();
+
     return ret;
 }
 
 void Process::interrupt() {
-    assert(mRef);
+    assert(m_ref);
 
-    auto& data{*reinterpret_cast<InternalData *>(mRef)};
+    auto& data{*reinterpret_cast<InternalData *>(m_ref)};
 
 #if _WIN32
     if (AttachConsole(data.id_)) {
@@ -365,42 +383,53 @@ void Process::interrupt() {
 }
 
 #if _WIN32
-Process::Result Process::elevatedProcess(
+Process::Result Process::elevated_process(
     cstring exec, const std::span<std::string>& args
 ) {
-    std::string argBuffer{};
+    std::string arg_buffer{};
     for (auto& arg : args) {
-        if (not argBuffer.empty()) argBuffer += ' ';
-        argBuffer += arg;
+        if (not arg_buffer.empty())
+            arg_buffer += ' ';
+
+        arg_buffer += create_quoted(arg);
     }
 
-    SHELLEXECUTEINFOA execInfo;
-    memset(&execInfo, 0, sizeof execInfo);
-    execInfo.cbSize = sizeof execInfo;
-    execInfo.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_NOCLOSEPROCESS;
-    execInfo.lpVerb = "runas";
-    execInfo.lpFile = exec;
-    execInfo.lpParameters = argBuffer.c_str();
-    execInfo.nShow = SW_SHOW;
+    SHELLEXECUTEINFOA exec_info;
+    std::memset(&exec_info, 0, sizeof exec_info);
+    exec_info.cbSize = sizeof exec_info;
+    exec_info.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_NOCLOSEPROCESS;
+    exec_info.lpVerb = "runas";
+    exec_info.lpFile = exec;
+    exec_info.lpParameters = arg_buffer.c_str();
+    exec_info.nShow = SW_SHOW;
 
     Result ret;
 
-    if (ShellExecuteExA(&execInfo)) {
-        WaitForSingleObject(execInfo.hProcess, INFINITE);
-        DWORD exitCode{};
-        GetExitCodeProcess(execInfo.hProcess, &exitCode);
+    if (ShellExecuteExA(&exec_info)) {
+        WaitForSingleObject(exec_info.hProcess, INFINITE);
+        DWORD exit_code{};
+        GetExitCodeProcess(exec_info.hProcess, &exit_code);
 
-        if (exitCode == 0) {
+        if (exit_code == 0) {
             ret = {.err_=Result::eSuccess};
-        } else if (exitCode >= ERROR_SEVERITY_ERROR) {
-            ret = {.err_=Result::eCrashed, .systemResult_=exitCode};
+        } else if (exit_code >= ERROR_SEVERITY_ERROR) {
+            ret = {
+                .err_=Result::eCrashed,
+                .system_result_=exit_code
+            };
         } else {
-            ret = {.err_=Result::eExited_With_Failure, .systemResult_=exitCode};
+            ret = {
+                .err_=Result::eExited_With_Failure,
+                .system_result_=exit_code
+            };
         }
 
-        CloseHandle(execInfo.hProcess);
+        CloseHandle(exec_info.hProcess);
     } else {
-        ret = {.err_=Result::eCreation_Failed, .systemResult_=GetLastError()};
+        ret = {
+            .err_=Result::eCreation_Failed,
+            .system_result_=GetLastError()
+        };
     }
 
     return ret;
@@ -408,43 +437,86 @@ Process::Result Process::elevatedProcess(
 #endif
 
 namespace {
+
 #if __APPLE__ or __linux__
-    
-void onChildExit(int sig) {
+void on_child_exit(int sig) {
     assert(sig == SIGCHLD);
     int status{};
     PidType pid{};
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
         // Ugly macro stuff false-positive
         // NOLINTNEXTLINE(readability-simplify-boolean-expr)
-        if (not WIFEXITED(status) and not WIFSIGNALED(status)) continue;
+        if (not WIFEXITED(status) and not WIFSIGNALED(status))
+            continue;
 
-        dataLock.lock();
-        for (auto& data : internalDatas) {
-            if (data.pid_ != pid) continue;
+        std::lock_guard lk(data_lock);
+        for (auto& data : internal_datas) {
+            if (data.pid_ != pid)
+                continue;
 
             if (WIFEXITED(status)) {
-                auto exitStatus{WEXITSTATUS(status)};
-                if (exitStatus == 0) {
+                auto exit_status{WEXITSTATUS(status)};
+                if (exit_status == 0) {
                     data.promise_.set_value({.err_=Process::Result::eSuccess});
                 } else {
                     data.promise_.set_value({
                         .err_=Process::Result::eExited_With_Failure,
-                        .systemResult_=exitStatus
+                        .system_result_=exit_status
                     });
                 }
             } else {
                 auto signal{WTERMSIG(status)};
                 data.promise_.set_value({
                     .err_=Process::Result::eCrashed,
-                    .systemResult_=signal
+                    .system_result_=signal
                 });
             }
         }
-        dataLock.unlock();
     }
 }
-
 #endif
+
+#if _WIN32
+std::string create_quoted(std::string str) {
+    // As other people have pointed out, it feels a little silly this isn't a
+    // function provided by Microsoft's libraries.
+    // Function derived from procedure explained here:
+    // https://web.archive.org/web/20161228144344/https://blogs.msdn.microsoft.com/twistylittlepassagesallalike/2011/04/23/everyone-quotes-command-line-arguments-the-wrong-way/
+
+    for (auto iter{str.begin()}; iter != str.end(); ++iter) {
+        // First, count contiguous backslashes (if any), since they might
+        // require special handling.
+        size num_backslashes{};
+        while (iter != str.end() and *iter == '\\') {
+            ++num_backslashes;
+            ++iter;
+        }
+
+        // If backslashes are at the end of the string, they need to be
+        // duplicated to be escaped. (otherwise they'll interfere with the
+        // terminating quotation mark).
+        if (iter == str.end()) {
+            str.insert(str.end(), num_backslashes, '\\');
+            break;
+        }
+
+        // Quotes need to be escaped, and also the consumed backslashes need
+        // to be, otherwise there'll be misinterpretation because of the quote.
+        if (*iter == '"') {
+            str.insert(iter, num_backslashes + 1, '\\');
+            continue;
+        }
+
+        // Anything else doesn't need modification.
+    }
+
+    // Wrap the whole thing in the enclosing quotes.
+    str.insert(str.begin(), '"');
+    str.insert(str.end(), '"');
+
+    return str;
+}
+#endif
+
 } // namespace
 

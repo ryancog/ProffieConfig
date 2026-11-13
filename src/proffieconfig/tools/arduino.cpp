@@ -713,11 +713,11 @@ bool arduino::runDriverInstallation() {
     auto result{proc.finish()};
 #   elif defined(_WIN32)
     auto driverStr{(paths::binaryDir() / "proffie-dfu-setup.exe").string()};
-    auto result{Process::elevatedProcess(driverStr.c_str())};
+    auto result{Process::elevated_process(driverStr.c_str())};
 #   endif
 
     if (result.err_) {
-        logger.error("Installation failed with error " + std::to_string(result.err_) + ":" + std::to_string(result.systemResult_));
+        logger.error("Installation failed with error " + std::to_string(result.err_) + ":" + std::to_string(result.system_result_));
         return false;
     }
 
@@ -940,7 +940,7 @@ Error compile(
     if (res.err_) {
         logger.error(
             "Process error: " + std::to_string(res.err_) + ':' +
-            std::to_string(res.systemResult_) + "\n" +
+            std::to_string(res.system_result_) + "\n" +
             compileOutput
         );
         return parseError(compileOutput, config);
@@ -1179,7 +1179,7 @@ Error upload(
         if (res.err_ and res.err_ != Process::Result::eExited_With_Failure) {
             logger.error(
                 "Process error: " + std::to_string(res.err_) + ':' +
-                std::to_string(res.systemResult_) +
+                std::to_string(res.system_result_) +
                 "\n" + output
             );
             return Error::Simple | _("Upload process failed");
@@ -1411,7 +1411,7 @@ Error ensureCoreInstalled(
     if (res.err_) {
         logger.error(
             "Process error: " + std::to_string(res.err_) + ':' +
-            std::to_string(res.systemResult_) +
+            std::to_string(res.system_result_) +
             "\n" + coreInstallOutput
         );
         return Error::Simple | _("Could Not Install Core");
