@@ -143,7 +143,10 @@ struct Control : detail::DataWindow<wxTextCtrl> {
     void onActivate() override {
         DataWindow::onActivate();
 
-        SetValue(data::context(*str_).val());
+        auto string{data::context(*str_)};
+
+        SetValue(string.val());
+        SetInsertionPoint(insertPointFromPos(string.pos()));
 
         Bind(wxEVT_TEXT, &Control::onText, this);
         if (onEnter_.index() != 0)
