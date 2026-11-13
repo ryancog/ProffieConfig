@@ -58,19 +58,26 @@ struct Control : detail::DataWindow<wxButton> {
         if (desc.bitmap_.src_) {
             bmp_ = desc.bitmap_.src_;
 
-            const auto updateBitmap{[this]() {
+            const auto update_bitmap{[this]() {
                 SetBitmap(bmp_.realize());
+#               if __WXMSW__
+                // I don't really understand how these values correlate to the
+                // underlying calculation, because it's not totally
+                // straightforward, but this provides more reasonable padding
+                // for Windows, particularly with larger bitmaps.
+                SetBitmapMargins(6, 0);
+#               endif
             }};
 
             Bind(
                 wxEVT_SYS_COLOUR_CHANGED,
-                [updateBitmap](wxSysColourChangedEvent& evt) {
+                [update_bitmap](wxSysColourChangedEvent& evt) {
                     evt.Skip();
-                    updateBitmap();
+                    update_bitmap();
                 }
             );
 
-            updateBitmap();
+            update_bitmap();
         }
 
         SetFont(desc.font_.makeFont());
@@ -89,7 +96,7 @@ struct Control : detail::DataWindow<wxButton> {
                 data::base::String::RecvTable table;
                 table.onEnable_ = data::map<&DataWindow::onEnable>();
                 table.onFocus_ = data::map<&DataWindow::onFocus>();
-                table.onChange_ = data::map<&Control::onChange>();
+                table.onChange_ = data::map<&Control::on_change>();
                 return table;
             }()};
             observeWith(*str_, table);
@@ -104,7 +111,7 @@ struct Control : detail::DataWindow<wxButton> {
         if (str_)
             SetLabel(data::context(*str_).val());
 
-        Bind(wxEVT_BUTTON, &Control::onPress, this);
+        Bind(wxEVT_BUTTON, &Control::on_press, this);
     }
 
     const data::base::Model *primaryModel() override {
@@ -126,7 +133,7 @@ struct Control : detail::DataWindow<wxButton> {
         layoutAndFitFor(this);
     }
 
-    void onPress(wxCommandEvent& evt) {
+    void on_press(wxCommandEvent& evt) {
         auto en{freezeGetRealEnable()};
         defer { thawRealEnable(); };
 
@@ -154,7 +161,7 @@ struct Control : detail::DataWindow<wxButton> {
         }
     }
 
-    void onChange() {
+    void on_change() {
         safeCall([this, str=data::context(*str_).val()]() {
             SetLabel(str);
         });
