@@ -68,7 +68,7 @@ struct Layout : detail::Window<detail::Panel> {
             ]];
 #           else
             Bind(wxEVT_SYS_COLOUR_CHANGED, on_sys_color_changed);
-            SetOwnBackgroundColour(get_background_color());
+            SetBackgroundColour(get_background_color());
 #           endif
         }
 
