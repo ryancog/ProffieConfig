@@ -58,6 +58,14 @@ struct Control : detail::DataWindow<wxButton> {
         if (desc.bitmap_.src_) {
             bmp_ = desc.bitmap_.src_;
 
+#           if __WXGTK__
+            // Images are shown on the left on other platforms, so even though
+            // it means aligning everything to the left on GTK, make it
+            // consistent. IMO centered (and thus unaligned) images just look
+            // bad.
+            style |= wxBU_LEFT;
+#           endif
+
             const auto update_bitmap{[this]() {
                 SetBitmap(bmp_.realize());
 #               if __WXMSW__
@@ -179,15 +187,17 @@ DescriptorPtr Button::operator()() {
         // The proper in-button size for a bitmap depends on the platform
         switch (bitmap_.mode_) {
             case BitmapMode::Clamped:
-#               if defined(__WXOSX__)
+#               if __WXOSX__ or __WXGTK__
                 bitmap_.src_.pad(1, 16, wxVERTICAL);
-#               elif defined(__WXGTK__)
-                bitmap_.src_.pad(2, 16, wxVERTICAL);
 #               elif defined(__WXMSW__)
                 bitmap_.src_.scaleTo(12, wxVERTICAL);
 #               endif
                 break;
             case BitmapMode::Maintain:
+#               if __WXGTK__
+                bitmap_.src_.pad(2);
+#               endif
+
                 if (win_.base_.minSize_.GetHeight() == wxDefaultCoord)
                     win_.base_.minSize_.SetHeight(bitmap_.src_.size().y + 12);
                 break;

@@ -81,24 +81,24 @@ Bitmap::Bitmap(const wxIcon& icon) : wxBitmap(icon) {}
 #endif
 
 Bitmap& Bitmap::scale(float64 scale) {
-#   ifdef _WIN32
+    auto size{GetDIPSize()};
+
     static_cast<wxBitmap&>(*this) = ConvertToImage().Scale(
-        static_cast<int32>(GetWidth() / scale),
-        static_cast<int32>(GetHeight() / scale)
+        static_cast<int32>(size.GetWidth() * scale),
+        static_cast<int32>(size.GetHeight() * scale)
     );
-#   else
-    SetScaleFactor(GetScaleFactor() * scale);
-#   endif
 
     return *this;
 }
 
 Bitmap& Bitmap::scaleTo(uint32 dim, wxOrientation orient) {
+    auto size{GetDIPSize()};
+
     float64 scaler{};
     if (orient == wxHORIZONTAL) {
-        scaler = GetLogicalWidth() / dim;
+        scaler = static_cast<float64>(dim) / size.GetWidth();
     } else {
-        scaler = GetLogicalHeight() / dim;
+        scaler = static_cast<float64>(dim) / size.GetHeight();
     }
 
     scale(scaler);
@@ -107,39 +107,22 @@ Bitmap& Bitmap::scaleTo(uint32 dim, wxOrientation orient) {
 }
 
 Bitmap& Bitmap::pad(
-    uint32 padding, int32 withDim, wxOrientation orient
+    uint32 padding,
+    int32 with_dim,
+    wxOrientation orient
 ) {
-    if (withDim == -1) {
-        auto size{GetLogicalSize()};
-        withDim = orient == wxHORIZONTAL ? size.GetWidth() : size.GetHeight();
+    if (with_dim != -1) {
+        // If dimension is specified, scale this down to fit w/ padding first.
+        scaleTo(with_dim - (padding * 2), orient);
     }
 
-    assert(padding * 2 < withDim);
-    const auto adjustedDim{withDim - (padding * 2)};
+    auto size{GetDIPSize()};
+    size.IncBy(2 * static_cast<int32>(padding));
 
-    float64 retScaler{};
-    wxRealPoint offset; 
-    if (orient == wxHORIZONTAL) {
-        retScaler = static_cast<float64>(withDim) / GetLogicalWidth();
-
-        const auto padScaler{GetLogicalHeight() / GetLogicalWidth()};
-        offset = {static_cast<float64>(padding), padScaler * padding};
-    } else {
-        retScaler = static_cast<float64>(withDim) / GetLogicalHeight();
-
-        const auto padScaler{GetLogicalWidth() / GetLogicalHeight()};
-        offset = {padScaler * padding, static_cast<float64>(padding)};
-    }
-    wxSize retSize{GetLogicalSize() * retScaler};
-
-    scaleTo(adjustedDim, orient);
-
-    wxBitmap padded(retSize, 32);
-    padded.UseAlpha();
-
-    wxMemoryDC dc(padded);
-    dc.SetBackground(*wxTRANSPARENT_BRUSH);
-    dc.Clear();
+    wxPoint offset(
+        static_cast<int32>(padding),
+        static_cast<int32>(padding)
+    );
 
 #   ifdef __WXGTK__
     // On GTK, images seem fairly biased towards drawing in the upper left,
@@ -148,12 +131,17 @@ Bitmap& Bitmap::pad(
     offset.x += 1;
 #   endif
 
-    dc.DrawBitmap(*this, offset);
+    wxBitmap padded(GetScaleFactor() * size, 32);
+    padded.UseAlpha();
+    padded.SetScaleFactor(GetScaleFactor());
 
-    dc.SelectObject(wxNullBitmap);
+    { wxMemoryDC dc(padded);
+        dc.SetBackground(*wxTRANSPARENT_BRUSH);
+        dc.Clear();
+        dc.DrawBitmap(*this, offset);
+    }
 
     static_cast<wxBitmap&>(*this) = std::move(padded);
-
     return *this;
 }
 

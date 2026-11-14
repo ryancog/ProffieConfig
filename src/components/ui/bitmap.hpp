@@ -60,16 +60,15 @@ struct UI_EXPORT Bitmap : private wxBitmap {
     Bitmap& scaleTo(uint32 dim, wxOrientation = wxHORIZONTAL);
 
     /**
-     * Utility function to scale down bitmap actual contents and pad with given
-     * number of pixels on all sides.
+     * Utility function to pad bitmap with given number of pixels on all sides.
      *
-     * Bitmap dimensions must be > padding * 2
-     *
-     * @param withDim if specified, will scale the bitmap to a target dimension
-     *                instead of maintaining the current size.
+     * @param with_dim if specified, will scale the bitmap to a target dimension
+     *                 instead of maintaining the current size.
      */
     Bitmap& pad(
-        uint32 padding, int32 withDim = -1, wxOrientation = wxHORIZONTAL
+        uint32 padding,
+        int32 with_dim = -1,
+        wxOrientation = wxHORIZONTAL
     );
 
     /**
