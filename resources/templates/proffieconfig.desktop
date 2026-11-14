@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=ProffieConfig
+Exec=ProffieConfig
+Icon=proffieconfig
+Comment=All-In-One Proffie Management Utility
+StartupNotify=true
+Categories=Utility;
+Type=Application
+

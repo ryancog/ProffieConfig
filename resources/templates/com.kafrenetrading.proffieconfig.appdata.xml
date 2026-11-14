@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+	<id>com.kafrenetrading.proffieconfig</id>
+	<metadata_license>CC0-1.0</metadata_license>
+	<project_license>GPL-3.0</project_license>
+	<name>ProffieConfig</name>
+	<summary>The All-In-One Proffie Management Utility</summary>
+	<description>
+		<p>ProffieConfig allows you to more easily customize your Proffieboard, providing a GUI interface to nearly all of Proffie's features and the ability for more advanced customization, to make it easy to get started, and easy to keep exploring when you're ready.</p>
+	</description>
+	<launchable type="desktop-id">proffieconfig.desktop</launchable>
+	<url type="homepage">https://proffieconfig.kafrenetrading.com/</url>
+	<screenshots>
+		<screenshot type="default">
+			<image>https://proffieconfig.kafrenetrading.com/assets/media/screenshots/0-main.png</image>
+		</screenshot>
+	</screenshots>
+	<provides>
+		<id>proffieconfig.desktop</id>
+	</provides>
+    <content_rating type="oars-1.1"></content_rating>
+</component>

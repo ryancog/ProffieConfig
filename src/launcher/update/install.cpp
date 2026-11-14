@@ -356,7 +356,7 @@ bool Update::installFiles(
                 "   <key>LSMinimumSystemVersion</key>\n"
                 "   <string>11.0</string>\n"
                 "   <key>NSHumanReadableCopyright</key>\n"
-                "   <string>Copyright (C) 2024 Ryan Ogurek</string>\n"
+                "   <string>Copyright (C) 2024-2026 Ryan Ogurek</string>\n"
                 "</dict>\n"
                 "</plist>\n";
             infoStream.close();

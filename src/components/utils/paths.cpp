@@ -94,7 +94,8 @@ fs::path paths::executable(Executable exec) {
                 return fs::path{shortPath.data()} / "ProffieConfig.exe";
             }
 #           elif defined(__linux__)
-            return fs::path(getpwuid(getuid())->pw_dir) / ".proffieconfig" / "ProffieConfig";
+            // This is only used by the launcher, so it's fine.
+            return executable(Executable::Current);
 #           elif defined(__APPLE__)
             return fs::path(getpwuid(getuid())->pw_dir) / "Applications" / "ProffieConfig.app" / "Contents" / "MacOS" / "ProffieConfig";
 #           endif
