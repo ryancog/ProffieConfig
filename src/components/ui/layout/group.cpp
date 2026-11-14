@@ -27,7 +27,7 @@
 #include "ui/detail/window.hpp"
 #include "ui/types.hpp"
 
-#if __WXMSW__
+#if __WXMSW__ or __WXGTK__
 #include "ui/layout/detail/panel.hpp"
 #endif
 
@@ -58,13 +58,13 @@ struct Layout : detail::Window<priv::GroupBox> {
     }
 };
 
-#if __WXMSW__
+#if __WXMSW__ or __WXGTK__
 // On MSW, there's a spacing left above the static box for the label, even if
 // there is no label. To avoid this, a panel w/ border is used instead, which
 // achieves the same visual effect.
 struct Unlabeled : detail::Window<detail::Panel> {
     Unlabeled(const detail::Scaffold& scaffold, const Group& desc) {
-        create(scaffold.childParent_, desc.win_.id_, wxBORDER_SIMPLE);
+        create(scaffold.childParent_, desc.win_.id_, wxBORDER_STATIC);
         postCreation(scaffold, desc.win_);
 
         auto *sizer{new wxBoxSizer(desc.orient_)};
@@ -73,9 +73,15 @@ struct Unlabeled : detail::Window<detail::Panel> {
         if (desc.padded_) {
             content_sizer = new wxBoxSizer(desc.orient_);
 
-            // The border size of 5 is hardcoded in wxWidgets
+#           if __WXMSW__
+            // The border size is hardcoded in wxWidgets
             // src/msw/statbox.cpp as CHILDREN_OFFSET.
-            sizer->Add(content_sizer, 1, wxEXPAND | wxALL, 5);
+            const auto border{5};
+#           elif __WXGTK__
+            // And this was arbitrality chosen in layout/priv/groupbox.cpp
+            const auto border{10};
+#           endif
+            sizer->Add(content_sizer, 1, wxEXPAND | wxALL, border);
         }
 
         detail::Scaffold child_scaffold{scaffold};
@@ -102,7 +108,7 @@ Group::Desc::Desc(Group&& data) :
     Group{std::move(data)} {}
 
 wxSizerItem *Group::Desc::build(const detail::Scaffold& scaffold) const {
-#   if __WXMSW__
+#   if __WXMSW__ or __WXGTK__
     wxWindow *box{};
     if (label_.empty()) {
         box = new Unlabeled(scaffold, *this);
