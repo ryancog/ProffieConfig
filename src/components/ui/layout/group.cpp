@@ -64,7 +64,15 @@ struct Layout : detail::Window<priv::GroupBox> {
 // achieves the same visual effect.
 struct Unlabeled : detail::Window<detail::Panel> {
     Unlabeled(const detail::Scaffold& scaffold, const Group& desc) {
-        create(scaffold.childParent_, desc.win_.id_, wxBORDER_STATIC);
+        create(
+            scaffold.childParent_,
+            desc.win_.id_,
+#           if __WXGTK__
+            wxBORDER_RAISED
+#           else
+            wxBORDER_SIMPLE
+#           endif
+        );
         postCreation(scaffold, desc.win_);
 
         auto *sizer{new wxBoxSizer(desc.orient_)};

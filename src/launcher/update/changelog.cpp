@@ -356,29 +356,26 @@ pcui::DescriptorPtr ui(
       .base_={.expand_=true, .proportion_=1},
       .orient_=wxHORIZONTAL,
       .children_={
-        pcui::Stack{
-          .children_={
-            // TODO: Why is this in its own sizer?
-            pcui::Image{
-              .win_={
-                .base_={
-                  .border_={
-                    .size_=20,
-                    .dirs_=wxLEFT | wxTOP | wxBOTTOM
-                  }
-                },
-                .maxSize_={96, 96}
-              },
-              .src_={
-#               if defined(__APPLE__)
-                pcui::Bitmap("icon", pcui::Bitmap::Type::Resource)
-#               elif defined(_WIN32)
-                wxICON(ApplicationIcon)
-#               endif
-              },
-            }(),
-          }
+#       if not __WXGTK__
+        pcui::Image{
+          .win_={
+            .base_={
+              .border_={
+                .size_=20,
+                .dirs_=wxLEFT | wxTOP | wxBOTTOM
+              }
+            },
+            .maxSize_={96, 96}
+          },
+          .src_={
+#           if defined(__APPLE__)
+            pcui::Bitmap("icon", pcui::Bitmap::Type::Resource)
+#           elif defined(_WIN32)
+            wxICON(ApplicationIcon)
+#           endif
+          },
         }(),
+#       endif
         pcui::Stack{
           .base_={
             .minSize_={600, 400},
@@ -415,6 +412,7 @@ pcui::DescriptorPtr ui(
             }(),
             pcui::Group{
               .win_={.base_={.expand_=true, .proportion_=1}},
+              .padded_=false,
               .children_={
                 pcui::Scrolled{
                   .win_={
