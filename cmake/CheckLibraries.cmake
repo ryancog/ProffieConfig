@@ -1,9 +1,6 @@
 
-file(READ "${CMAKE_BINARY_DIR}/install_manifest.txt" INSTALLED_FILES)
-string(REGEX MATCHALL "[^\n]+" INSTALLED_FILES ${INSTALLED_FILES})
-
 # Make sure I'm not pulling in Homebrew or MacPorts dependencies...
-foreach (FILE ${INSTALLED_FILES})
+foreach (FILE IN LISTS CMAKE_INSTALL_MANIFEST_FILES)
     execute_process(
         COMMAND otool -L ${FILE}
         OUTPUT_VARIABLE OTOOL_OUTPUT
