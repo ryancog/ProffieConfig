@@ -99,84 +99,14 @@ MainMenu::MainMenu(wxWindow* parent) :
     window.styleMask |= NSWindowStyleMaskFullSizeContentView;
 #   endif
 
-    activate();
-
-#   if _WIN32
-    CM_NOTIFY_FILTER filter;
-    filter.cbSize = sizeof filter;
-    filter.Flags = CM_NOTIFY_FILTER_FLAG_ALL_INTERFACE_CLASSES;
-    filter.FilterType = CM_NOTIFY_FILTER_TYPE_DEVICEINTERFACE;
-    std::memset(
-        &filter.u.DeviceInterface.ClassGuid,
-        0,
-        sizeof filter.u.DeviceInterface.ClassGuid
-    );
-    CM_Register_Notification(
-        &filter,
-        this,
-        pnp_notify_cb,
-        &m_pnp_notify_handle
-    );
-    refresh_boards();
-#   elif __APPLE__
-    m_io_notify_port = IONotificationPortCreate(kIOMasterPortDefault);
-    CFRunLoopAddSource(
-        CFRunLoopGetCurrent(),
-        IONotificationPortGetRunLoopSource(m_io_notify_port),
-        kCFRunLoopDefaultMode
-    );
-    IOServiceAddMatchingNotification(
-        m_io_notify_port,
-        kIOFirstMatchNotification,
-        IOServiceMatching("IOUSBHostDevice"),
-        io_notify_cb,
-        this,
-        &m_io_device_iter
-    );
-    // It may take a moment for the serial object to get setup, so an extra
-    // notification needs to be setup for that, in addition to the usual usb
-    // matching for bootloader.
-    IOServiceAddMatchingNotification(
-        m_io_notify_port,
-        kIOFirstMatchNotification,
-        IOServiceMatching("IOSerialBSDClient"),
-        io_notify_cb,
-        this,
-        &m_io_serial_iter
-    );
-    IOServiceAddMatchingNotification(
-        m_io_notify_port,
-        kIOTerminatedNotification,
-        IOServiceMatching("IOUSBHostDevice"),
-        io_notify_cb,
-        this,
-        &m_io_removed_iter
-    );
-    io_notify_cb(this, m_io_device_iter);
-    io_notify_cb(this, m_io_serial_iter);
-    io_notify_cb(this, m_io_removed_iter);
-#   endif
+    data::Receiver::activate();
+    ports::Listener::activate();
 
     Show();
 }
 
 MainMenu::~MainMenu() {
-#   if _WIN32
-    CM_Unregister_Notification(m_pnp_notify_handle);
-#   elif __APPLE__
-    IOObjectRelease(m_io_device_iter);
-    IOObjectRelease(m_io_serial_iter);
-    IOObjectRelease(m_io_removed_iter);
-
-    CFRunLoopRemoveSource(
-        CFRunLoopGetCurrent(),
-        IONotificationPortGetRunLoopSource(m_io_notify_port),
-        kCFRunLoopDefaultMode
-    );
-
-    IONotificationPortDestroy(m_io_notify_port);
-#   endif
-
+    ports::Listener::deactivate();
     pcui::cripple(this);
 }
 
@@ -582,8 +512,8 @@ void MainMenu::bindEvents() {
     observeWith(mBoardChoice, board_choice_table);
 }
 
-void MainMenu::refresh_boards() {
-    std::thread{[this]() {
+void MainMenu::on_port_update() {
+    std::thread{[this] {
         auto choice{data::context(mBoardChoice)};
 
         // Besides just resetting the count to zero while doing the update,
@@ -1043,30 +973,4 @@ pcui::DescriptorPtr MainMenu::config_entry(data::base::Model& model) {
       }
     }();
 }
-
-#if _WIN32
-DWORD CALLBACK MainMenu::pnp_notify_cb(
-    HCMNOTIFICATION,
-    PVOID arg,
-    CM_NOTIFY_ACTION,
-    PCM_NOTIFY_EVENT_DATA,
-    DWORD
-) {
-    reinterpret_cast<MainMenu *>(arg)->refresh_boards();
-    return ERROR_SUCCESS;
-}
-#elif __APPLE__
-void MainMenu::io_notify_cb(void *arg, io_iterator_t iter) {
-    // Drain the iterator to re-arm the notification
-    while (not false) {
-        auto object{IOIteratorNext(iter)};
-        if (object == IO_OBJECT_NULL)
-            break;
-
-        IOObjectRelease(object);
-    }
-
-    reinterpret_cast<MainMenu *>(arg)->refresh_boards();
-}
-#endif
 
