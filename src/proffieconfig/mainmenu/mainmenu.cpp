@@ -898,13 +898,14 @@ pcui::DescriptorPtr MainMenu::config_entry(data::base::Model& model) {
     return pcui::Group{
       .win_={
         .base_={.expand_=true},
-        .on_activate_=[this, &info](wxWindow *win) {
-            const auto on_click{[this, &info](wxMouseEvent&) {
+        .on_activate_=[mainmenu=this, &info](wxWindow *win) {
+            const auto on_click{[mainmenu, &info](wxMouseEvent&) {
                 auto config_list{pcui::guiDataContext(config::list())};
                 auto configs{config_list.children()};
                 for (size idx{0}; idx < configs.size(); ++idx) {
                     if (&info == configs[idx].get()) {
-                        mConfigSel.choice().choose(static_cast<int32>(idx));
+                        auto& config_choice{mainmenu->mConfigSel.choice()};
+                        config_choice.choose(static_cast<int32>(idx));
                         break;
                     }
                 }
@@ -968,7 +969,7 @@ pcui::DescriptorPtr MainMenu::config_entry(data::base::Model& model) {
             };
 
             // Handle selection.
-            auto *receiver{new Receiver(this, win, info)};
+            auto *receiver{new Receiver(mainmenu, win, info)};
             pcui::find_sizer(win)->Add(receiver);
 
             static const auto choice_table{[] {
@@ -976,7 +977,8 @@ pcui::DescriptorPtr MainMenu::config_entry(data::base::Model& model) {
                 table.onChoice_ = data::map<&Receiver::on_choice>();
                 return table;
             }()};
-            receiver->observeWith(mConfigSel.choice(), choice_table);
+            auto& config_choice{mainmenu->mConfigSel.choice()};
+            receiver->observeWith(config_choice, choice_table);
             receiver->activate();
 
             // Receiver will be deactivated with normal crippling and destroyed
