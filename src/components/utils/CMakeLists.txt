@@ -42,5 +42,5 @@ if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
 endif()
 
 include(../Component.cmake)
-setup_component_and_static(utils 1.0.16 ${headers})
+setup_component_and_static(utils 1.0.17 ${headers})
 

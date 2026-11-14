@@ -144,7 +144,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
 endif()
 
 include(../Component.cmake)
-setup_component_and_static(ui 1.2.2 ${headers})
+setup_component_and_static(ui 1.2.3 ${headers})
 
 if (CMAKE_SYSTEM_NAME STREQUAL Windows OR CROSS_COMPILE STREQUAL Windows)
     target_link_libraries(ui dwmapi)

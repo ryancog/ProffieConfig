@@ -84,7 +84,7 @@ set(headers
 set_target_properties(proffieconfig PROPERTIES
     OUTPUT_NAME "ProffieConfig"
     DESCRIPTION "ProffieConfig" # Windows is stupid so this isn't actually a description
-    BIN_VERSION 1.9.9
+    BIN_VERSION 2.0.0
 )
 
 target_link_libraries(proffieconfig 

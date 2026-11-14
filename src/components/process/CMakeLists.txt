@@ -11,5 +11,5 @@ set(headers
 )
 
 include(../Component.cmake)
-setup_component_and_static(process 1.1.1 ${headers})
+setup_component_and_static(process 1.1.2 ${headers})
 
