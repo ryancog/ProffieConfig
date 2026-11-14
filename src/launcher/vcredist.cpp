@@ -22,6 +22,8 @@
 #include <commctrl.h>
 #include <winerror.h>
 
+#include "utils/defer.hpp"
+
 namespace {
 
 HRESULT CALLBACK task_dialog_cb(
@@ -54,6 +56,8 @@ bool check_vcredist() {
     )};
     if (err != ERROR_SUCCESS)
         return false;
+
+    defer { RegCloseKey(hkey); };
 
     const auto get_reg_dword{[&](cstring value, DWORD& dword) -> bool {
         DWORD len{sizeof dword};
