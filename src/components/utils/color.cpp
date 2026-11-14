@@ -36,6 +36,8 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
+
+#include "utils/types.hpp"
 #endif
 
 const wxColour color::DARK_BLUE{39, 74, 114};

@@ -30,7 +30,6 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
-#include <devguid.h>
 #include <fileapi.h>
 #include <handleapi.h>
 #include <synchapi.h>

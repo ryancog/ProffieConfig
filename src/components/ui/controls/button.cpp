@@ -190,7 +190,7 @@ DescriptorPtr Button::operator()() {
 #               if __WXOSX__ or __WXGTK__
                 bitmap_.src_.pad(1, 16, wxVERTICAL);
 #               elif defined(__WXMSW__)
-                bitmap_.src_.scaleTo(12, wxVERTICAL);
+                bitmap_.src_.scale_to(12, wxVERTICAL);
 #               endif
                 break;
             case BitmapMode::Maintain:

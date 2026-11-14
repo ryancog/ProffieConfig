@@ -21,6 +21,7 @@
 
 #if _WIN32
 #include <cfgmgr32.h>
+#include <devguid.h>
 #include <setupapi.h>
 #elif __APPLE__
 #include <CoreFoundation/CoreFoundation.h>
