@@ -522,7 +522,7 @@ std::optional<std::string> Enumerated::serial_path() const {
 }
 
 #if __APPLE__
-std::optional<uint16> property_uint16(
+std::optional<uint16> Enumerated::property_uint16(
     io_registry_entry_t entry,
     CFStringRef key
 ) {
@@ -549,7 +549,7 @@ std::optional<uint16> property_uint16(
     return std::nullopt;
 }
 
-std::optional<std::string> property_string(
+std::optional<std::string> Enumerated::property_string(
     io_registry_entry_t entry,
     CFStringRef key
 ) {
@@ -574,7 +574,7 @@ std::optional<std::string> property_string(
     auto converted{CFStringGetCString(
         string,
         ret.data(),
-        ret.length() + 1,
+        static_cast<CFIndex>(ret.length() + 1),
         kCFStringEncodingUTF8
     )};
     if (not converted)
