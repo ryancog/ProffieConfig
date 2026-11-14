@@ -38,8 +38,6 @@
 #include <windows.h>
 #endif
 
-#include "utils/types.hpp"
-
 const wxColour color::DARK_BLUE{39, 74, 114};
 const wxColour color::LIGHT_BLUE{31, 99, 168};
 
@@ -67,17 +65,19 @@ color::Dynamic::~Dynamic() {
 }
 
 wxColour color::Dynamic::color() const {
-    if (mType == Type::System) {
+    if (mType == Type::System)
         return wxSystemSettings::GetColour(mSysColor);
-    }
 
     if (mType == Type::Standard) {
-        auto isDark{wxSystemSettings::GetAppearance().AreAppsDark()};
+        auto is_dark{wxSystemSettings::GetAppearance().AreAppsDark()};
 
-        if (not mStd.dark_.IsOk()) return mStd.light_;
-        if (not mStd.light_.IsOk()) return mStd.dark_;
+        if (not mStd.dark_.IsOk())
+            return mStd.light_;
 
-        return isDark ? mStd.light_ : mStd.dark_;
+        if (not mStd.light_.IsOk())
+            return mStd.dark_;
+
+        return is_dark ? mStd.light_ : mStd.dark_;
     }
 
     if (mType == Type::Accent) {
@@ -103,6 +103,9 @@ wxColour color::Dynamic::color() const {
         auto b{static_cast<uint8>((buffer >> 16) & 0xFF)};
         auto a{static_cast<uint8>((buffer >> 24) & 0xFF)};
         return {r, g, b, a};
+#       else
+        // ProffieConfig Blue
+        return {0x1F, 0x63, 0xA8, 0xFF};
 #       endif
     }
 
