@@ -2,7 +2,7 @@
 # 
 # test/CMakeLists.txt
 
-add_executable(test EXCLUDE_FROM_ALL 
+add_executable(test WIN32 EXCLUDE_FROM_ALL 
     main.cpp
 
     tests/hash.cpp
@@ -23,14 +23,23 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # See launcher/CMakeLists.txt
+    # Use statically-linked runtime libraries.
+    set_target_properties(Catch2 PROPERTIES
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set_target_properties(test PROPERTIES
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+    target_link_libraries(test libcmt)
+else()
     target_compile_options(Catch2 PRIVATE
         -fexceptions
     )
 endif()
 
 target_link_libraries(test
-    Catch2::Catch2
+    Catch2
 
     app-static
     config-static

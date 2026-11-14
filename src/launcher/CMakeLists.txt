@@ -21,7 +21,7 @@ add_executable(launcher WIN32 MACOSX_BUNDLE
     ${ICON_PATH}
 )
 
-if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_sources(launcher PRIVATE vcredist.cpp)
 
     # Use statically-linked runtime library for the launcher.
