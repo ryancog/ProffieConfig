@@ -925,6 +925,13 @@ pcui::DescriptorPtr MainMenu::config_entry(data::base::Model& model) {
                 parent = parent->GetParent();
             }
 
+#           if __WXGTK__
+            // GTK boxes don't have bg by default, give them one.
+            win->SetBackgroundColour(wxSystemSettings::GetColour(
+                wxSYS_COLOUR_FRAMEBK
+            ));
+#           endif
+
             struct Receiver : wxSizerItem, data::Receiver {
                 Receiver(
                     MainMenu *mainmenu,
