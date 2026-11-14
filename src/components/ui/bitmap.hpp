@@ -31,7 +31,7 @@ namespace pcui {
 struct UI_EXPORT Bitmap : private wxBitmap {
     enum class Type {
         Normal,
-#       ifdef __APPLE__
+#       if __APPLE__
         Resource,
 #       endif
     };
@@ -42,7 +42,7 @@ struct UI_EXPORT Bitmap : private wxBitmap {
     Bitmap(const wxBitmap&);
     Bitmap(wxBitmap&&);
 
-#   ifdef _WIN32
+#   if _WIN32
     Bitmap(const wxIcon&);
 #   endif
 
@@ -57,7 +57,7 @@ struct UI_EXPORT Bitmap : private wxBitmap {
     /**
      * Same as above, but calculates the float scale from a given dimension.
      */
-    Bitmap& scaleTo(uint32 dim, wxOrientation = wxHORIZONTAL);
+    Bitmap& scale_to(uint32 dim, wxOrientation = wxHORIZONTAL);
 
     /**
      * Utility function to pad bitmap with given number of pixels on all sides.
@@ -90,7 +90,7 @@ struct UI_EXPORT Bitmap : private wxBitmap {
     [[nodiscard]] wxBitmap realize() const;
 
 private:
-    color::Dynamic mColor;
+    color::Dynamic m_color;
 };
 
 } // namespace pcui

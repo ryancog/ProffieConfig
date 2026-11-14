@@ -33,9 +33,8 @@ namespace {
 const wxColour DARK_BLUE{39, 74, 114};
 const wxColour LIGHT_BLUE{31, 99, 168};
 
-void generateMissingBMP(wxBitmap&, const wxSize& = wxDefaultSize);
-
-void doColor(wxBitmap&, const color::Dynamic&);
+wxBitmap generate_missing_bmp(const wxSize& = wxDefaultSize);
+void do_color(wxBitmap&, const color::Dynamic&);
 
 } // namespace
 
@@ -44,7 +43,7 @@ Bitmap::Bitmap() = default;
 Bitmap::Bitmap(std::string_view src, Type type) {
     // In this function, the load can trigger a log dialog if not found. I use
     // the missing bitmap as a fallback, so the dialog is unwanted.
-    wxLogNull noErrors;
+    wxLogNull no_errors;
 
     switch (type) {
         case Type::Normal:
@@ -54,7 +53,7 @@ Bitmap::Bitmap(std::string_view src, Type type) {
                 wxBITMAP_TYPE_PNG
             );
             break;
-#       ifdef __APPLE__
+#       if __APPLE__
         case Type::Resource:
             LoadFile(
                 wxString{src},
@@ -64,23 +63,28 @@ Bitmap::Bitmap(std::string_view src, Type type) {
 #       endif
     }
 
-    if (not IsOk()) generateMissingBMP(*this);
+    if (not IsOk())
+        return;
 
     wxDisplay display(0U);
     // TODO: Always fetching the first display is not a great way of doing
     // this, and I don't recall in what situations it's even necessary!
-    if (display.IsOk()) SetScaleFactor(display.GetScaleFactor());
+    if (display.IsOk())
+        SetScaleFactor(display.GetScaleFactor());
 }
 
 Bitmap::Bitmap(const wxBitmap& other) : wxBitmap(other) {}
 
 Bitmap::Bitmap(wxBitmap&& other) : wxBitmap(std::move(other)) {}
 
-#ifdef _WIN32
+#if _WIN32
 Bitmap::Bitmap(const wxIcon& icon) : wxBitmap(icon) {}
 #endif
 
 Bitmap& Bitmap::scale(float64 scale) {
+    if (not IsOk())
+        return *this;
+
     auto size{GetDIPSize()};
 
     static_cast<wxBitmap&>(*this) = ConvertToImage().Scale(
@@ -91,7 +95,10 @@ Bitmap& Bitmap::scale(float64 scale) {
     return *this;
 }
 
-Bitmap& Bitmap::scaleTo(uint32 dim, wxOrientation orient) {
+Bitmap& Bitmap::scale_to(uint32 dim, wxOrientation orient) {
+    if (not IsOk())
+        return *this;
+
     auto size{GetDIPSize()};
 
     float64 scaler{};
@@ -111,10 +118,12 @@ Bitmap& Bitmap::pad(
     int32 with_dim,
     wxOrientation orient
 ) {
-    if (with_dim != -1) {
+    if (not IsOk())
+        return *this;
+
+    if (with_dim != -1)
         // If dimension is specified, scale this down to fit w/ padding first.
-        scaleTo(with_dim - (padding * 2), orient);
-    }
+        scale_to(with_dim - (padding * 2), orient);
 
     auto size{GetDIPSize()};
     size.IncBy(2 * static_cast<int32>(padding));
@@ -124,7 +133,7 @@ Bitmap& Bitmap::pad(
         static_cast<int32>(padding)
     );
 
-#   ifdef __WXGTK__
+#   if __WXGTK__
     // On GTK, images seem fairly biased towards drawing in the upper left,
     // particularly the left, so this is a hacky way to try and level that
     // out.
@@ -146,7 +155,7 @@ Bitmap& Bitmap::pad(
 }
 
 Bitmap& Bitmap::color(const color::Dynamic& dyn) {
-    mColor = dyn;
+    m_color = dyn;
     return *this;
 }
 
@@ -155,59 +164,74 @@ Bitmap::operator bool() const {
 }
 
 wxBitmap Bitmap::realize() const {
-    wxBitmap ret{static_cast<const wxBitmap&>(*this)};
-    doColor(ret, mColor);
+    if (not IsOk())
+        return generate_missing_bmp();
+
+    wxBitmap ret(static_cast<const wxBitmap&>(*this));
+    do_color(ret, m_color);
+
     return ret;
 }
 
 namespace {
 
-void generateMissingBMP(wxBitmap& bmp, const wxSize& size) {
-    int32 dimension{};
-    if (size.GetX() == -1 and size.GetY() == -1) dimension = 32;
-    else dimension = std::max(size.x, size.y);
+wxBitmap generate_missing_bmp(const wxSize& size) {
+    const int32 dimension{[&] {
+        int32 ret{std::max(size.GetWidth(), size.GetHeight())};
 
-    bmp.Create(dimension, dimension, 32);
+        if (ret == wxDefaultCoord)
+            return 32;
+
+        return ret;
+    }()};
+
+    wxBitmap bmp(dimension, dimension, 32);
     bmp.UseAlpha(true);
-    wxMemoryDC bmpDC{bmp};
-    bmpDC.SetFont(wxFont{
-        dimension,
-        wxFONTFAMILY_MODERN,
-        wxFONTSTYLE_NORMAL,
-        wxFONTWEIGHT_BOLD
-    });
 
-    bmpDC.SetBrush(*wxTRANSPARENT_BRUSH);
-    bmpDC.DrawRectangle(0, 0, dimension, dimension);
-    bmpDC.SetBrush(wxBrush(LIGHT_BLUE));
-    bmpDC.DrawRoundedRectangle(0, 0, dimension, dimension, 4);
+    { wxMemoryDC dc(bmp);
+        dc.SetFont(wxFont{
+            static_cast<int32>(dimension * 0.8),
+            wxFONTFAMILY_MODERN,
+            wxFONTSTYLE_NORMAL,
+            wxFONTWEIGHT_BOLD
+        });
 
-    auto extent{bmpDC.GetTextExtent("?")};
-    extent /= 2;
-    dimension /= 2;
-    bmpDC.SetTextForeground(DARK_BLUE);
-    bmpDC.DrawText("?", dimension - extent.x, dimension - extent.y);
+        dc.SetBrush(*wxTRANSPARENT_BRUSH);
+        dc.DrawRectangle(0, 0, dimension, dimension);
+
+        dc.SetBrush(wxBrush(LIGHT_BLUE));
+        dc.DrawRoundedRectangle(0, 0, dimension, dimension, 4);
+
+        const auto extent{dc.GetTextExtent("?")};
+        const auto margin{wxSize(dimension, dimension) - extent};
+        dc.SetTextForeground(DARK_BLUE);
+        dc.DrawText("?", margin.x / 2, margin.y / 2);
+    }
+
+    return bmp;
 }
 
-void doColor(wxBitmap& bmp, const color::Dynamic& dyn) {
+void do_color(wxBitmap& bmp, const color::Dynamic& dyn) {
     const auto color{dyn.color()};
-    if (not color.IsOk()) return;
+    if (not color.IsOk())
+        return;
 
     wxAlphaPixelData data(bmp);
-    if (not data) return;
+    if (not data)
+        return;
 
     auto iter{data.GetPixels()};
-    for (auto yIdx{0}; yIdx < data.GetHeight(); ++yIdx) {
-        wxAlphaPixelData::Iterator rowStart = iter;
+    for (auto y_idx{0}; y_idx < data.GetHeight(); ++y_idx) {
+        wxAlphaPixelData::Iterator row_start = iter;
 
-        for (auto xIdx{0}; xIdx < data.GetWidth(); ++xIdx, ++iter) {
+        for (auto x_idx{0}; x_idx < data.GetWidth(); ++x_idx, ++iter) {
             if (iter.Alpha() > 0) {
-#               ifdef _WIN32
+#               if _WIN32
                 // Idk man windows is funky with its bitmaps.
-                auto alphaScale{static_cast<float64>(iter.Alpha()) / 0xFF};
-                iter.Red() = static_cast<uint8>(color.Red() * alphaScale);
-                iter.Green() = static_cast<uint8>(color.Green() * alphaScale);
-                iter.Blue() = static_cast<uint8>(color.Blue() * alphaScale);
+                auto alpha_scale{static_cast<float64>(iter.Alpha()) / 0xFF};
+                iter.Red() = static_cast<uint8>(color.Red() * alpha_scale);
+                iter.Green() = static_cast<uint8>(color.Green() * alpha_scale);
+                iter.Blue() = static_cast<uint8>(color.Blue() * alpha_scale);
 #               else
                 iter.Red() = color.Red();
                 iter.Green() = color.Green();
@@ -216,7 +240,7 @@ void doColor(wxBitmap& bmp, const color::Dynamic& dyn) {
             }
         }
 
-        iter = rowStart;
+        iter = row_start;
         iter.OffsetY(data, 1);
     }
 }

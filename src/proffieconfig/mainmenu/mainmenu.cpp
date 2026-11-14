@@ -201,7 +201,7 @@ pcui::DescriptorPtr MainMenu::ui() {
     const auto button_bitmap{[](cstring str) {
         pcui::Bitmap bmp(str);
         bmp.color(color::UserAccent{});
-        bmp.scaleTo(24);
+        bmp.scale_to(24);
         return bmp.realize();
     }};
 
@@ -428,7 +428,7 @@ pcui::DescriptorPtr MainMenu::ui() {
                       .src_=[] {
                           pcui::Bitmap bmp("new");
                           bmp.color(color::UserAccent{});
-                          bmp.scaleTo(20);
+                          bmp.scale_to(20);
                           return bmp.realize();
                       }(),
                       .mode_=pcui::Button::BitmapMode::Maintain,
@@ -891,7 +891,7 @@ pcui::DescriptorPtr MainMenu::config_entry(data::base::Model& model) {
     const auto button_bitmap{[](cstring str) {
         pcui::Bitmap bmp(str);
         bmp.color(color::UserAccent{});
-        bmp.scaleTo(20);
+        bmp.scale_to(20);
         return bmp.realize();
     }};
 

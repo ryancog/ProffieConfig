@@ -172,7 +172,7 @@ void EditorWindow::createToolBar() {
     const auto makeToolbarIcon{[](cstring str) {
         pcui::Bitmap ret(str);
         ret.color(color::UserAccent{});
-        ret.scaleTo(32);
+        ret.scale_to(32);
         return ret.realize();
     }};
 
