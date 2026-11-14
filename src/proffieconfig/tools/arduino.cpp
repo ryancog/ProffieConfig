@@ -33,11 +33,7 @@
 #include <devguid.h>
 #include <fileapi.h>
 #include <handleapi.h>
-#include <setupapi.h>
 #include <synchapi.h>
-#elif __APPLE__
-#include <CoreFoundation/CoreFoundation.h>
-#include <IOKit/IOKitLib.h>
 #endif
 
 #include <wx/dialog.h>
@@ -68,7 +64,6 @@
 #include "ui/layout/stack.hpp"
 #include "ui/static/label.hpp"
 #include "ui/values.hpp"
-#include "utils/defer.hpp"
 #include "utils/files.hpp"
 #include "utils/paths.hpp"
 #include "utils/rand.hpp"
@@ -77,6 +72,7 @@
 #include "versions/detail/boards.hpp"
 #include "versions/detail/strings.hpp"
 
+#include "ports.hpp"
 #include "serialmonitor.hpp"
 
 using namespace std::chrono_literals;
@@ -209,356 +205,32 @@ std::vector<arduino::Port> arduino::getBoards(logging::Branch *lBranch) {
     bool found_bootloader{false};
     std::vector<arduino::Port> boards;
 
-    struct USBID {
-        uint16 vid_;
-        uint16 pid_;
+    constexpr ports::USBID PROFFIE_OS_ID{.vid_=0x1209, .pid_=0x6668};
+    constexpr ports::USBID BOOTLOADER_ID{.vid_=0x0483, .pid_=0xDF11};
 
-        bool operator==(const USBID&) const = default;
-    };
-    constexpr USBID PROFFIE_OS_ID{.vid_=0x1209, .pid_=0x6668};
-    constexpr USBID BOOTLOADER_ID{.vid_=0x0483, .pid_=0xDF11};
+    const auto on_enumerate{[&](const ports::Enumerated& enumerated) {
+        auto id{enumerated.id()};
 
-#   if _WIN32
-    // Retrieve the device info list for all connected USB devices.
-    HDEVINFO info_set{SetupDiGetClassDevsA(
-        nullptr,
-        "USB",
-        nullptr,
-        DIGCF_ALLCLASSES | DIGCF_PRESENT
-    )};
-    if (info_set == INVALID_HANDLE_VALUE) {
-        std::error_code ec(
-            static_cast<int32>(GetLastError()),
-            std::system_category()
-        );
-        logger.error("Failed retrieving USB device info list: " + ec.message());
-        return {};
-    }
+        if (PROFFIE_OS_ID == id) {
+            auto serial_path{enumerated.serial_path()};
+            if (not serial_path)
+                return;
 
-    // Make sure it's cleaned up once we're done here.
-    defer {
-        if (not SetupDiDestroyDeviceInfoList(info_set)) {
-            std::error_code ec(
-                static_cast<int32>(GetLastError()),
-                std::system_category()
-            );
-            logger.warn("Failed destroying device info list: " + ec.message());
-        }
-    };
+            auto& board{boards.emplace_back()};
+            board.type_ = Port::Type::Proffie;
+            board.serial_path_ = *serial_path;
 
-    SP_DEVINFO_DATA info_data;
-    info_data.cbSize = sizeof info_data;
-    for (DWORD idx{0}; SetupDiEnumDeviceInfo(info_set, idx, &info_data); ++idx) {
-        const auto check_usb_id{[&](USBID check_id) {
-            BOOL reg_success{};
-
-            // See how much to allocate to retrieve.
-            DWORD reg_length{};
-            reg_success = SetupDiGetDeviceRegistryPropertyA(
-                info_set,
-                &info_data,
-                SPDRP_HARDWAREID,
-                nullptr,
-                nullptr,
-                0,
-                &reg_length
-            );
-            if (not reg_success) {
-                // It seems counterintuitive, but this function still returns
-                // this error even with the buffer null and size 0? Whatever...
-                if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-                    return false;
-            }
-
-            char *buf{new char[reg_length]};
-            defer { delete[] buf; };
-
-            // Fetch data
-            DWORD reg_type{};
-            reg_success = SetupDiGetDeviceRegistryPropertyA(
-                info_set,
-                &info_data,
-                SPDRP_HARDWAREID,
-                &reg_type,
-                (PBYTE)buf,
-                reg_length,
-                nullptr
-            );
-            if (not reg_success)
-                return false;
-
-            // Sanity check the data type, so we know the null-termination is
-            // there, otherwise Bad Things might happen.
-            if (reg_type != REG_MULTI_SZ)
-                return false;
-
-            // Then test each entry to see if one matching the VID and PID
-            // can be found.
-            std::string_view view;
-            for (
-                    // Iteration begins at the buffer start, the first string
-                    std::size_t buf_idx{0};
-                    // Create a view, which will automatically find the null
-                    // terminator, then test to see if the string is empty, if
-                    // it is, that's the end.
-                    view = &buf[buf_idx], not view.empty();
-                    // Jump to the next string in the buffer
-                    buf_idx += view.length() + 1
-                ) {
-                constexpr std::string_view VID_MARK{"VID_"};
-                constexpr std::string_view PID_MARK{"&PID_"};
-
-                const auto vid_mark_pos{view.find(VID_MARK)};
-                if (vid_mark_pos == std::string::npos)
-                    continue;
-
-                const auto pid_mark_pos{view.find(PID_MARK)};
-                if (pid_mark_pos == std::string::npos)
-                    continue;
-
-                const auto vid_pos{vid_mark_pos + VID_MARK.length()};
-                const auto pid_pos{pid_mark_pos + PID_MARK.length()};
-
-                const auto vid_end_pos{pid_mark_pos};
-                // If there isn't another "&", then npos is the right value.
-                const auto pid_end_pos{view.find('&', pid_pos)};
-
-                const auto from_chars{[&](
-                    std::size_t begin,
-                    std::size_t end,
-                    uint16& v
-                ) {
-                    auto [ptr, ec]{std::from_chars(
-                        &view[begin],
-                        end == std::string::npos
-                            ? &*view.end()
-                            : &view[end],
-                        v,
-                        16
-                    )};
-                    return ec == std::errc();
-                }};
-
-                uint16 vid{};
-                if (not from_chars(vid_pos, vid_end_pos, vid))
-                    continue;
-
-                uint16 pid{};
-                if (not from_chars(pid_pos, pid_end_pos, pid))
-                    continue;
-
-                if (vid == check_id.vid_ and pid == check_id.pid_)
-                    return true;
-            }
-
-            return false;
-        }};
-
-        // If this USB device is a COM port, check if its hardware ID matches
-        // the ProffieOS Serial ID.
-        if (
-                info_data.ClassGuid == GUID_DEVCLASS_PORTS and
-                check_usb_id(PROFFIE_OS_ID)
-           ) {
-            HKEY hkey{SetupDiOpenDevRegKey(
-                info_set,
-                &info_data,
-                DICS_FLAG_GLOBAL,
-                0,
-                DIREG_DEV,
-                KEY_READ
-            )};
-            if (hkey == INVALID_HANDLE_VALUE) {
-                std::error_code ec(
-                    static_cast<int32>(GetLastError()),
-                    std::system_category()
-                );
-                logger.info("Failed opening device registry: " + ec.message());
-                continue;
-            }
-
-            std::error_code ec;
-            DWORD reg_length{};
-            char *buf{nullptr};
-            defer { delete[] buf; };
-
-            auto get_value{[&] -> std::error_code {
-                auto err{RegGetValueA(
-                    hkey,
-                    nullptr,
-                    "PortName",
-                    RRF_RT_REG_SZ,
-                    nullptr,
-                    buf,
-                    &reg_length
-                )};
-                return {
-                    static_cast<int32>(err),
-                    std::system_category()
-                };
-            }};
-            if (
-                    // Read to get length, alloc buf, then read again
-                    (ec = get_value()) or
-                    (buf = new char[reg_length], ec = get_value())
-               ) logger.info("Failed reading device port: " + ec.message());
-
-            auto& port{boards.emplace_back()};
-            port.type_ = Port::Type::Proffie;
-            port.serial_path_ = buf;
-            continue;
+            return;
         }
 
-        // The generic USBDevice setup class GUID isn't defined anywhere?
-        constexpr GUID GUID_DEVCLASS_USBDEVICE{0x88bae032L, 0x5a81, 0x49f0, {0xbc, 0x3d, 0xa4, 0xff, 0x13, 0x82, 0x16, 0xd6}};
+        if (BOOTLOADER_ID == id) {
+            auto& board{boards.emplace_back()};
+            board.type_ = Port::Type::Bootloader;
 
-        // If this USB device is a generic USB device, check if its hardware ID
-        // matches the STM32 BOOTLOADER ID and that bootloader hasn't been found
-        // yet.
-        if (
-                info_data.ClassGuid == GUID_DEVCLASS_USBDEVICE and
-                check_usb_id(BOOTLOADER_ID) and
-                not found_bootloader
-           ) {
-            auto& port{boards.emplace_back()};
-            port.type_ = Port::Type::Bootloader;
-            found_bootloader = true;
-            continue;
+            return;
         }
-    }
-
-    std::error_code ec(
-        static_cast<int32>(GetLastError()),
-        std::system_category()
-    );
-    if (ec.value() != ERROR_NO_MORE_ITEMS)
-        logger.warn("Failed enumerating USB devices: " + ec.message());
-#   elif __APPLE__
-    io_iterator_t iter{IO_OBJECT_NULL};
-    IOServiceGetMatchingServices(
-        kIOMasterPortDefault,
-        IOServiceMatching("IOUSBHostDevice"),
-        &iter
-    );
-    defer { IOObjectRelease(iter); };
-
-    const auto entry_property_uint16{[](
-        io_registry_entry_t entry,
-        CFStringRef key
-    ) -> std::optional<uint16> {
-        CFTypeRef property{IORegistryEntryCreateCFProperty(
-            entry,
-            key,
-            kCFAllocatorDefault,
-            0
-        )};
-        if (property == nil)
-            return std::nullopt;
-
-        defer { CFRelease(property); };
-
-        if (CFGetTypeID(property) != CFNumberGetTypeID())
-            return std::nullopt;
-
-        CFNumberRef number{(CFNumberRef)property};
-
-        SInt32 value{};
-        if (CFNumberGetValue(number, kCFNumberSInt32Type, &value))
-            return value;
-
-        return std::nullopt;
     }};
-
-    const auto entry_property_string{[](
-        io_registry_entry_t entry,
-        CFStringRef key
-    ) -> std::optional<std::string> {
-        CFTypeRef property{IORegistryEntryCreateCFProperty(
-            entry,
-            key,
-            kCFAllocatorDefault,
-            0
-        )};
-        if (property == nil)
-            return std::nullopt;
-
-        defer { CFRelease(property); };
-
-        if (CFGetTypeID(property) != CFStringGetTypeID())
-            return std::nullopt;
-
-        CFStringRef string{(CFStringRef)property};
-        std::string ret;
-
-        ret.resize(CFStringGetLength(string));
-        auto converted{CFStringGetCString(
-            string,
-            ret.data(),
-            ret.length() + 1,
-            kCFStringEncodingUTF8
-        )};
-        if (not converted)
-            return std::nullopt;
-
-        return ret;
-    }};
-
-    while (not false) {
-        auto entry{IOIteratorNext(iter)};
-        if (entry == IO_OBJECT_NULL)
-            break;
-
-        defer { IOObjectRelease(entry); };
-
-        const auto vid{entry_property_uint16(entry, CFSTR("idVendor"))};
-        const auto pid{entry_property_uint16(entry, CFSTR("idProduct"))};
-        if (not vid or not pid)
-            continue;
-
-        USBID id{.vid_=*vid, .pid_=*pid};
-        if (id == PROFFIE_OS_ID) {
-            // Go down the hierarchy to find the callout device.
-            io_iterator_t cu_iter{IO_OBJECT_NULL};
-            IORegistryEntryCreateIterator(
-                entry,
-                kIOServicePlane,
-                kIORegistryIterateRecursively,
-                &cu_iter
-            );
-            defer { IOObjectRelease(cu_iter); };
-
-            std::optional<std::string> cu_dev;
-            while (not false) {
-                IOObjectRelease(entry);
-                entry = IOIteratorNext(cu_iter);
-                if (entry == IO_OBJECT_NULL)
-                    break;
-
-                if (not IOObjectConformsTo(entry, "IOSerialBSDClient"))
-                    continue;
-
-                cu_dev = entry_property_string(entry, CFSTR("IOCalloutDevice"));
-                if (cu_dev)
-                    break;
-            }
-
-            if (not cu_dev)
-                continue;
-
-            auto& port{boards.emplace_back()};
-            port.type_ = Port::Type::Proffie;
-            port.serial_path_ = std::move(*cu_dev);
-            continue;
-        }
-
-        if (id == BOOTLOADER_ID and not found_bootloader) {
-            auto& port{boards.emplace_back()};
-            port.type_ = Port::Type::Bootloader;
-            found_bootloader = true;
-            continue;
-        }
-    }
-#   endif
+    ports::enumerate(on_enumerate);
 
     logger.info("Discovered " + std::to_string(boards.size()) + " boards.");
     return boards;
