@@ -331,32 +331,25 @@ bool checkMessages(
             }
         }
 
-        std::promise<void> promise;
-
-        const auto showMessage{[&] {
-            auto res{pcui::showHideablePrompt(
-                *contentEntry->value_,
-                {
-                    .caption_=isFatal
-                        ? _("ProffieConfig Launcher Critical Notice")
-                        : _("ProffieConfig Launcher Alert"),
-                }
-            )};
-
-            if (res.wantsHide_) {
-                ignoreMessageList.push_back(*contentEntry->value_);
+        auto res{pcui::showHideablePrompt(
+            *contentEntry->value_,
+            {
+                .caption_=isFatal
+                    ? _("ProffieConfig Launcher Critical Notice")
+                    : _("ProffieConfig Launcher Alert"),
             }
+        )};
 
-            promise.set_value();
-        }};
-        pcui::safeCall(showMessage);
+        if (res.wantsHide_)
+            ignoreMessageList.push_back(*contentEntry->value_);
 
-        promise.get_future().get();
-
-        if (isFatal) hadFatal = true;
+        if (isFatal)
+            hadFatal = true;
     }
 
-    if (not ignoreMessageEntry) ignoreMessageEntry = pconf::Section::create(IGNORED_MESSAGES_STR);
+    if (not ignoreMessageEntry)
+        ignoreMessageEntry = pconf::Section::create(IGNORED_MESSAGES_STR);
+
     ignoreMessageEntry->value_ = pconf::listAsValue(ignoreMessageList);
     const auto tmpPath{paths::stateFile().append(".tmp")};
     auto tmpFile{files::openOutput(tmpPath)};
