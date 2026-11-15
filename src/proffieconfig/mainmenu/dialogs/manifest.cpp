@@ -77,9 +77,6 @@ ManifestDialog::ManifestDialog(MainMenu *mainMenu) :
           }(),
           .cancel_=pcui::Button{
             .label_=_("Cancel"),
-            .func_=[this] {
-                Close();
-            }
           }(),
           .apply_=pcui::Button{
             .label_=_("Reset to Default"),
