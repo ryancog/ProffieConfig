@@ -856,8 +856,12 @@ pcui::DescriptorPtr MainMenu::config_entry(data::base::Model& model) {
                 parent = parent->GetParent();
             }
 
-#           if __WXGTK__
+#           if __WXGTK__ or __WXMSW__
             // GTK boxes don't have bg by default, give them one.
+            // On windows, and maybe GTK is actually the same, the background is
+            // inherited from the section background, so it needs to be set
+            // there also. macOS has its own fancier style for the box, so it
+            // doesn't need it.
             win->SetBackgroundColour(wxSystemSettings::GetColour(
                 wxSYS_COLOUR_FRAMEBK
             ));
