@@ -75,6 +75,7 @@ void Dialog::Fit() {
 }
 
 void Dialog::destroy_on_close() {
+    Bind(wxEVT_BUTTON, &Dialog::on_button, this);
     Bind(wxEVT_CLOSE_WINDOW, &Dialog::on_close, this);
 }
 
